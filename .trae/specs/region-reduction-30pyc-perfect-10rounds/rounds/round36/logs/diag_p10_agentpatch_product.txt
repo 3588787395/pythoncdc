@@ -1,0 +1,8 @@
+watched orelse-emission lines executed during the f-generator run:
+product:
+   |STORE = {}
+   |def f(tc):
+   |    enumerate(tc)
+   |    c.isdigit()
+   |    tc = tc[:i]
+   |    return tc in STORE

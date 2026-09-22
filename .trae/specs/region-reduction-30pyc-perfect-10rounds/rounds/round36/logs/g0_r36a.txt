@@ -1,0 +1,60 @@
+CORE=D:/Temp/r36gate/r36/mirr_r36a
+r36_01_witness_for_body_is_if_with_sideeffect_break  PASS  official 2/2  strict ok 
+      | def f(tc):
+      |     for i, c in enumerate(tc):
+      |         if c.isdigit():
+      |             tc = tc[:i]
+      |             break
+      |     return tc in STORE
+      | 
+r36_02_witness_exit_is_call_with_default             PASS  official 2/2  strict ok 
+      | def f(tc):
+      |     for i, c in enumerate(tc):
+      |         if c.isdigit():
+      |             tc = tc[:i]
+      |             break
+      |     return STORE.get(tc, 3)
+      | 
+r36_03_control_statement_between_loop_and_exit       PASS  official 2/2  strict ok 
+      | def f(tc):
+      |     for i, c in enumerate(tc):
+      |         if c.isdigit():
+      |             tc = tc[:i]
+      |             break
+      |     tc = tc.strip()
+      |     return tc in STORE
+      | 
+r36_04_control_break_without_sideeffect              PASS  official 2/2  strict ok 
+      | def f(tc):
+      |     for i, c in enumerate(tc):
+      |         if c.isdigit():
+      |             break
+      |     return tc in STORE
+      | 
+r36_05_control_for_else_break_target_differs         PASS  official 2/2  strict ok 
+      | def f(tc):
+      |     for i, c in enumerate(tc):
+      |         if c.isdigit():
+      |             tc = tc[:i]
+      |             break
+      |     else:
+      |         tc = 'x'
+      |     return tc in STORE
+      | 
+r36_06_control_body_has_leading_statement            PASS  official 2/2  strict ok 
+      | def f(tc):
+      |     for i, c in enumerate(tc):
+      |         n = len(tc)
+      |         if c.isdigit():
+      |             tc = tc[:i]
+      |             break
+      |     return tc in STORE
+      | 
+r36_07_control_no_break_at_all                       PASS  official 2/2  strict ok 
+      | def f(tc):
+      |     for i, c in enumerate(tc):
+      |         if c.isdigit():
+      |             tc = tc[:i]
+      |     return tc in STORE
+      | 
+PASS 7 / 7

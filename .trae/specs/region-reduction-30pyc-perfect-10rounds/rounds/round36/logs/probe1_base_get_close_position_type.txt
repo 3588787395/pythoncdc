@@ -1,0 +1,18 @@
+official  39/41   product baseOK.py
+  mismatch get_close_position_type                        orig=30 decomp=9 jump=0 true=29
+    first_diff {"index": 1, "orig_op": "LOAD_GLOBAL", "decomp_op": "LOAD_FAST", "orig_arg": "enumerate", "decomp_arg": "self"}
+  mismatch has_close_position_type                        orig=27 decomp=6 jump=0 true=26
+    first_diff {"index": 1, "orig_op": "LOAD_GLOBAL", "decomp_op": "LOAD_FAST", "orig_arg": "enumerate", "decomp_arg": "transaction_code"}
+
+strict   kind='seq_len' defect=True msg='orig=30 decomp=9'  lo=30 ld=9 delta=-21
+
+== hunks (non-equal only) ==
+  delete   orig[1:22] @2..106 -> decomp[1:1] @2..0
+      orig  ['LOAD_GLOBAL', 'LOAD_FAST', 'CALL', 'GET_ITER', 'FOR_ITER', 'UNPACK_SEQUENCE', 'STORE_FAST', 'STORE_FAST', 'LOAD_FAST', 'LOAD_METHOD', 'CALL', 'POP_JUMP_IF_FALSE', 'LOAD_FAST', 'LOAD_CONST', 'LOAD_FAST', 'BUILD_SLICE', 'BINARY_SUBSCR', 'STORE_FAST', 'POP_TOP', 'JUMP', 'JUMP']
+      decomp []
+      orig args [('RESUME', '0'), ('LOAD_GLOBAL', "'enumerate'"), ('LOAD_FAST', "'transaction_code'"), ('CALL', '1'), ('GET_ITER', 'None'), ('FOR_ITER', '<JUMP>'), ('UNPACK_SEQUENCE', '2'), ('STORE_FAST', "'i'"), ('STORE_FAST', "'c'"), ('LOAD_FAST', "'c'"), ('LOAD_METHOD', "'isdigit'"), ('CALL', '0'), ('POP_JUMP_IF_FALSE', '<JUMP>'), ('LOAD_FAST', "'transaction_code'"), ('LOAD_CONST', 'None'), ('LOAD_FAST', "'i'"), ('BUILD_SLICE', '2'), ('BINARY_SUBSCR', 'None'), ('STORE_FAST', "'transaction_code'"), ('POP_TOP', 'None'), ('JUMP', '<JUMP>'), ('JUMP', '<JUMP>'), ('LOAD_FAST', "'self'"), ('LOAD_ATTR', "'_store'"), ('LOAD_METHOD', "'get'")]
+      decp args [('RESUME', '0'), ('LOAD_FAST', "'self'"), ('LOAD_ATTR', "'_store'"), ('LOAD_METHOD', "'get'")]
+
+== product text get_close_position_type lines 313..314 (def indent 4) ==
+ 313|    def get_close_position_type(self, transaction_code):
+ 314|        return self._store.get(transaction_code, FutureCloseStyle.CLOSE)

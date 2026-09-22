@@ -4814,7 +4814,7 @@ AST 映射规则:
                     for s in stmts:
                         if isinstance(s, dict) and s.get('type') == 'If':
                             _body = s.get('body', [])
-                            _orelse = s.get('orelse', [])
+                            _orelse = s.get('orelse') or []
                             if (len(_body) == 1 and isinstance(_body[0], dict) and _body[0].get('type') == 'Break'):
                                 for _bk_off, _ret in _break_to_return_map.items():
                                     s = dict(s)

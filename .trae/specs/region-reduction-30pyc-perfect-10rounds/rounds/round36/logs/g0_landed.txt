@@ -1,0 +1,47 @@
+CORE=F:\Downloads\pythoncdc-main
+r36_01_witness_for_body_is_if_with_sideeffect_break  FAIL  official 1/2  strict f seq_len lo=26 ld=5 delta-21 | f 26/5
+      hunk delete f[1:22]@2 ['LOAD_GLOBAL', 'LOAD_FAST', 'CALL', 'GET_ITER', 'FOR_ITER', 'UNPACK_SEQUENCE', 'STORE_FAST', 'STORE_FAST', 'LOAD_FAST', 'LOAD_METHOD', 'CALL', 'POP_JUMP_FORWARD_IF_FALSE', 'LOAD_FAST', 'LOAD_CONST', 'LOAD_FAST', 'BUILD_SLICE', 'BINARY_SUBSCR', 'STORE_FAST', 'POP_TOP', 'JUMP_FORWARD', 'JUMP_BACKWARD'] -> f[1:1]@2 []
+      | def f(tc):
+      |     return tc in STORE
+      | 
+r36_02_witness_exit_is_call_with_default             FAIL  official 1/2  strict f seq_len lo=28 ld=7 delta-21 | f 28/7
+      hunk delete f[1:22]@2 ['LOAD_GLOBAL', 'LOAD_FAST', 'CALL', 'GET_ITER', 'FOR_ITER', 'UNPACK_SEQUENCE', 'STORE_FAST', 'STORE_FAST', 'LOAD_FAST', 'LOAD_METHOD', 'CALL', 'POP_JUMP_FORWARD_IF_FALSE', 'LOAD_FAST', 'LOAD_CONST', 'LOAD_FAST', 'BUILD_SLICE', 'BINARY_SUBSCR', 'STORE_FAST', 'POP_TOP', 'JUMP_FORWARD', 'JUMP_BACKWARD'] -> f[1:1]@2 []
+      | def f(tc):
+      |     return STORE.get(tc, 3)
+      | 
+r36_03_control_statement_between_loop_and_exit       FAIL  official 1/2  strict f seq_len lo=30 ld=9 delta-21 | f 30/9
+      hunk delete f[1:22]@2 ['LOAD_GLOBAL', 'LOAD_FAST', 'CALL', 'GET_ITER', 'FOR_ITER', 'UNPACK_SEQUENCE', 'STORE_FAST', 'STORE_FAST', 'LOAD_FAST', 'LOAD_METHOD', 'CALL', 'POP_JUMP_FORWARD_IF_FALSE', 'LOAD_FAST', 'LOAD_CONST', 'LOAD_FAST', 'BUILD_SLICE', 'BINARY_SUBSCR', 'STORE_FAST', 'POP_TOP', 'JUMP_FORWARD', 'JUMP_BACKWARD'] -> f[1:1]@2 []
+      | def f(tc):
+      |     tc = tc.strip()
+      |     return tc in STORE
+      | 
+r36_04_control_break_without_sideeffect              PASS  official 2/2  strict ok 
+      | def f(tc):
+      |     for i, c in enumerate(tc):
+      |         if c.isdigit():
+      |             break
+      |     return tc in STORE
+      | 
+r36_05_control_for_else_break_target_differs         PASS  official 2/2  strict ok 
+      | def f(tc):
+      |     for i, c in enumerate(tc):
+      |         if c.isdigit():
+      |             tc = tc[:i]
+      |             break
+      |     else:
+      |         tc = 'x'
+      |     return tc in STORE
+      | 
+r36_06_control_body_has_leading_statement            FAIL  official 1/2  strict f seq_len lo=30 ld=5 delta-25 | f 30/5
+      hunk delete f[1:26]@2 ['LOAD_GLOBAL', 'LOAD_FAST', 'CALL', 'GET_ITER', 'FOR_ITER', 'UNPACK_SEQUENCE', 'STORE_FAST', 'STORE_FAST', 'LOAD_GLOBAL', 'LOAD_FAST', 'CALL', 'STORE_FAST', 'LOAD_FAST', 'LOAD_METHOD', 'CALL', 'POP_JUMP_FORWARD_IF_FALSE', 'LOAD_FAST', 'LOAD_CONST', 'LOAD_FAST', 'BUILD_SLICE', 'BINARY_SUBSCR', 'STORE_FAST', 'POP_TOP', 'JUMP_FORWARD', 'JUMP_BACKWARD'] -> f[1:1]@2 []
+      | def f(tc):
+      |     return tc in STORE
+      | 
+r36_07_control_no_break_at_all                       PASS  official 2/2  strict ok 
+      | def f(tc):
+      |     for i, c in enumerate(tc):
+      |         if c.isdigit():
+      |             tc = tc[:i]
+      |     return tc in STORE
+      | 
+PASS 3 / 7

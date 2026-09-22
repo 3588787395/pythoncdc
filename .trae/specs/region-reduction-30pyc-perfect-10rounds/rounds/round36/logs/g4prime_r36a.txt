@@ -1,0 +1,8 @@
+--- base.pyc  vs  D:/Temp/r36gate/r36/pre_land_baseOK.py
+  DEFECT <module>.OverNightOrder.__init__                           [seq_len] orig=172 decomp=148  orig=172 decomp=148 delta=-24
+  DEFECT <module>.FutureSettingStore.get_close_position_type        [seq_len] orig=30 decomp=9  orig=30 decomp=9 delta=-21
+  DEFECT <module>.FutureSettingStore.has_close_position_type        [seq_len] orig=27 decomp=6  orig=27 decomp=6 delta=-21
+  strict clean 60/63  sigma-defect=3  sum_abs_delta=66
+--- base.pyc  vs  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/baseOK.py
+  DEFECT <module>.OverNightOrder.__init__                           [seq_len] orig=172 decomp=148  orig=172 decomp=148 delta=-24
+  strict clean 62/63  sigma-defect=1  sum_abs_delta=24

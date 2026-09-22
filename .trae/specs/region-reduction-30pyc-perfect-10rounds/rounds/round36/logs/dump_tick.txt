@@ -1,0 +1,575 @@
+--- ORIGINAL <module>.Strategy.tick_worker_thread  co_code len=1426 ---
+  @0    RESUME                   ''                           line=301
+  @2    LOAD_FAST                'self'                       line=306
+  @4    LOAD_ATTR                '_engine'                   
+  @14   LOAD_ATTR                'config'                    
+  @24   LOAD_ATTR                'strategy'                  
+  @34   LOAD_ATTR                'accounts'                  
+  @44   STORE_FAST               'accounts'                  
+  @46   NOP                      ''                           line=307
+  @48   NOP                      ''                           line=308
+  @50   LOAD_FAST                'self'                       line=311
+  @52   LOAD_ATTR                '_engine'                   
+  @62   LOAD_ATTR                'data_proxy'                
+  @72   LOAD_METHOD              'is_trading_date'           
+  @94   LOAD_GLOBAL              'datetime'                  
+  @106  LOAD_ATTR                'date'                      
+  @116  LOAD_METHOD              'today'                     
+  @138  PRECALL                  ''                          
+  @142  CALL                     ''                          
+  @152  PRECALL                  ''                          
+  @156  CALL                     ''                          
+  @166  POP_JUMP_FORWARD_IF_TRUE 'to 210'                     -> 210
+  @168  LOAD_GLOBAL              'NULL + time'                line=312
+  @180  LOAD_ATTR                'sleep'                     
+  @190  LOAD_CONST               '60'                        
+  @192  PRECALL                  ''                          
+  @196  CALL                     ''                          
+  @206  POP_TOP                  ''                          
+  @208  JUMP_BACKWARD            'to 48'                      line=313 -> 48
+  @210  LOAD_GLOBAL              'datetime'                   line=314
+  @222  LOAD_ATTR                'datetime'                  
+  @232  LOAD_METHOD              'now'                       
+  @254  PRECALL                  ''                          
+  @258  CALL                     ''                          
+  @268  STORE_FAST               'now'                       
+  @270  LOAD_FAST                'now'                        line=315
+  @272  LOAD_METHOD              'strftime'                  
+  @294  LOAD_CONST               "'%H:%M:%S'"                
+  @296  PRECALL                  ''                          
+  @300  CALL                     ''                          
+  @310  STORE_FAST               'dt_strf'                   
+  @312  LOAD_GLOBAL              'AccountType'                line=318
+  @324  LOAD_ATTR                'FUTURE'                    
+  @334  LOAD_ATTR                'value'                     
+  @344  LOAD_FAST                'accounts'                  
+  @346  CONTAINS_OP              ''                          
+  @348  POP_JUMP_FORWARD_IF_FALSE 'to 822'                     -> 822
+  @350  LOAD_FAST                'self'                       line=319
+  @352  LOAD_METHOD              'is_future_tradetime_now'   
+  @374  LOAD_FAST                'dt_strf'                   
+  @376  PRECALL                  ''                          
+  @380  CALL                     ''                          
+  @390  POP_JUMP_FORWARD_IF_FALSE 'to 512'                     -> 512
+  @392  LOAD_FAST                'self'                       line=320
+  @394  LOAD_ATTR                '_tick_queue'               
+  @404  LOAD_METHOD              'put'                       
+  @426  LOAD_FAST                'now'                       
+  @428  LOAD_GLOBAL              'EventEnum'                 
+  @440  LOAD_ATTR                'HANDLE_TICK'               
+  @450  BUILD_TUPLE              ''                          
+  @452  PRECALL                  ''                          
+  @456  CALL                     ''                          
+  @466  POP_TOP                  ''                          
+  @468  LOAD_GLOBAL              'NULL + time'                line=321
+  @480  LOAD_ATTR                'sleep'                     
+  @490  LOAD_CONST               '3'                         
+  @492  PRECALL                  ''                          
+  @496  CALL                     ''                          
+  @506  POP_TOP                  ''                          
+  @508  EXTENDED_ARG             ''                          
+  @510  JUMP_FORWARD             'to 1286'                    -> 1286
+  @512  LOAD_FAST                'dt_strf'                    line=324
+  @514  LOAD_CONST               "'15:15:00'"                
+  @516  COMPARE_OP               '>'                         
+  @522  POP_JUMP_FORWARD_IF_TRUE 'to 568'                     -> 568
+  @524  LOAD_FAST                'dt_strf'                   
+  @526  LOAD_CONST               "'08:30:00'"                
+  @528  COMPARE_OP               '<'                         
+  @534  POP_JUMP_FORWARD_IF_TRUE 'to 568'                     -> 568
+  @536  LOAD_CONST               "'11:30:00'"                
+  @538  LOAD_FAST                'dt_strf'                   
+  @540  SWAP                     ''                          
+  @542  COPY                     ''                          
+  @544  COMPARE_OP               '<'                         
+  @550  POP_JUMP_FORWARD_IF_FALSE 'to 564'                     -> 564
+  @552  LOAD_CONST               "'12:30:00'"                
+  @554  COMPARE_OP               '<'                         
+  @560  POP_JUMP_FORWARD_IF_FALSE 'to 612'                     -> 612
+  @562  JUMP_FORWARD             'to 568'                     -> 568
+  @564  POP_TOP                  ''                          
+  @566  JUMP_FORWARD             'to 612'                     -> 612
+  @568  LOAD_GLOBAL              'NULL + time'                line=325
+  @580  LOAD_ATTR                'sleep'                     
+  @590  LOAD_CONST               '60'                        
+  @592  PRECALL                  ''                          
+  @596  CALL                     ''                          
+  @606  POP_TOP                  ''                          
+  @608  EXTENDED_ARG             ''                          
+  @610  JUMP_FORWARD             'to 1286'                    -> 1286
+  @612  LOAD_CONST               "'08:30:00'"                 line=326
+  @614  LOAD_FAST                'dt_strf'                   
+  @616  SWAP                     ''                          
+  @618  COPY                     ''                          
+  @620  COMPARE_OP               '<='                        
+  @626  POP_JUMP_FORWARD_IF_FALSE 'to 640'                     -> 640
+  @628  LOAD_CONST               "'08:59:00'"                
+  @630  COMPARE_OP               '<'                         
+  @636  POP_JUMP_FORWARD_IF_TRUE 'to 674'                     -> 674
+  @638  JUMP_FORWARD             'to 642'                     -> 642
+  @640  POP_TOP                  ''                          
+  @642  LOAD_CONST               "'12:30:00'"                
+  @644  LOAD_FAST                'dt_strf'                   
+  @646  SWAP                     ''                          
+  @648  COPY                     ''                          
+  @650  COMPARE_OP               '<='                        
+  @656  POP_JUMP_FORWARD_IF_FALSE 'to 670'                     -> 670
+  @658  LOAD_CONST               "'12:59:00'"                
+  @660  COMPARE_OP               '<'                         
+  @666  POP_JUMP_FORWARD_IF_FALSE 'to 718'                     -> 718
+  @668  JUMP_FORWARD             'to 674'                     -> 674
+  @670  POP_TOP                  ''                          
+  @672  JUMP_FORWARD             'to 718'                     -> 718
+  @674  LOAD_GLOBAL              'NULL + time'                line=327
+  @686  LOAD_ATTR                'sleep'                     
+  @696  LOAD_CONST               '60'                        
+  @698  PRECALL                  ''                          
+  @702  CALL                     ''                          
+  @712  POP_TOP                  ''                          
+  @714  EXTENDED_ARG             ''                          
+  @716  JUMP_FORWARD             'to 1286'                    -> 1286
+  @718  LOAD_CONST               "'08:59:00'"                 line=329
+  @720  LOAD_FAST                'dt_strf'                   
+  @722  SWAP                     ''                          
+  @724  COPY                     ''                          
+  @726  COMPARE_OP               '<='                        
+  @732  POP_JUMP_FORWARD_IF_FALSE 'to 746'                     -> 746
+  @734  LOAD_CONST               "'09:00:00'"                
+  @736  COMPARE_OP               '<'                         
+  @742  POP_JUMP_FORWARD_IF_TRUE 'to 780'                     -> 780
+  @744  JUMP_FORWARD             'to 748'                     -> 748
+  @746  POP_TOP                  ''                          
+  @748  LOAD_CONST               "'12:59:00'"                
+  @750  LOAD_FAST                'dt_strf'                   
+  @752  SWAP                     ''                          
+  @754  COPY                     ''                          
+  @756  COMPARE_OP               '<='                        
+  @762  POP_JUMP_FORWARD_IF_FALSE 'to 776'                     -> 776
+  @764  LOAD_CONST               "'13:00:00'"                
+  @766  COMPARE_OP               '<'                         
+  @772  POP_JUMP_FORWARD_IF_FALSE 'to 820'                     -> 820
+  @774  JUMP_FORWARD             'to 780'                     -> 780
+  @776  POP_TOP                  ''                          
+  @778  JUMP_FORWARD             'to 1286'                    -> 1286
+  @780  LOAD_GLOBAL              'NULL + time'                line=330
+  @792  LOAD_ATTR                'sleep'                     
+  @802  LOAD_CONST               '0.5'                       
+  @804  PRECALL                  ''                          
+  @808  CALL                     ''                          
+  @818  POP_TOP                  ''                          
+  @820  JUMP_FORWARD             'to 1286'                    -> 1286
+  @822  LOAD_FAST                'self'                       line=333
+  @824  LOAD_METHOD              'is_stock_tradetime_now'    
+  @846  LOAD_FAST                'dt_strf'                   
+  @848  PRECALL                  ''                          
+  @852  CALL                     ''                          
+  @862  POP_JUMP_FORWARD_IF_FALSE 'to 982'                     -> 982
+  @864  LOAD_FAST                'self'                       line=334
+  @866  LOAD_ATTR                '_tick_queue'               
+  @876  LOAD_METHOD              'put'                       
+  @898  LOAD_FAST                'now'                       
+  @900  LOAD_GLOBAL              'EventEnum'                 
+  @912  LOAD_ATTR                'HANDLE_TICK'               
+  @922  BUILD_TUPLE              ''                          
+  @924  PRECALL                  ''                          
+  @928  CALL                     ''                          
+  @938  POP_TOP                  ''                          
+  @940  LOAD_GLOBAL              'NULL + time'                line=335
+  @952  LOAD_ATTR                'sleep'                     
+  @962  LOAD_CONST               '3'                         
+  @964  PRECALL                  ''                          
+  @968  CALL                     ''                          
+  @978  POP_TOP                  ''                          
+  @980  JUMP_FORWARD             'to 1286'                    -> 1286
+  @982  LOAD_FAST                'dt_strf'                    line=338
+  @984  LOAD_CONST               "'15:00:00'"                
+  @986  COMPARE_OP               '>'                         
+  @992  POP_JUMP_FORWARD_IF_TRUE 'to 1038'                    -> 1038
+  @994  LOAD_FAST                'dt_strf'                   
+  @996  LOAD_CONST               "'09:00:00'"                
+  @998  COMPARE_OP               '<'                         
+  @1004 POP_JUMP_FORWARD_IF_TRUE 'to 1038'                    -> 1038
+  @1006 LOAD_CONST               "'11:30:00'"                
+  @1008 LOAD_FAST                'dt_strf'                   
+  @1010 SWAP                     ''                          
+  @1012 COPY                     ''                          
+  @1014 COMPARE_OP               '<'                         
+  @1020 POP_JUMP_FORWARD_IF_FALSE 'to 1034'                    -> 1034
+  @1022 LOAD_CONST               "'12:30:00'"                
+  @1024 COMPARE_OP               '<'                         
+  @1030 POP_JUMP_FORWARD_IF_FALSE 'to 1080'                    -> 1080
+  @1032 JUMP_FORWARD             'to 1038'                    -> 1038
+  @1034 POP_TOP                  ''                          
+  @1036 JUMP_FORWARD             'to 1080'                    -> 1080
+  @1038 LOAD_GLOBAL              'NULL + time'                line=339
+  @1050 LOAD_ATTR                'sleep'                     
+  @1060 LOAD_CONST               '60'                        
+  @1062 PRECALL                  ''                          
+  @1066 CALL                     ''                          
+  @1076 POP_TOP                  ''                          
+  @1078 JUMP_FORWARD             'to 1286'                    -> 1286
+  @1080 LOAD_CONST               "'09:00:00'"                 line=340
+  @1082 LOAD_FAST                'dt_strf'                   
+  @1084 SWAP                     ''                          
+  @1086 COPY                     ''                          
+  @1088 COMPARE_OP               '<='                        
+  @1094 POP_JUMP_FORWARD_IF_FALSE 'to 1108'                    -> 1108
+  @1096 LOAD_CONST               "'09:29:00'"                
+  @1098 COMPARE_OP               '<'                         
+  @1104 POP_JUMP_FORWARD_IF_TRUE 'to 1142'                    -> 1142
+  @1106 JUMP_FORWARD             'to 1110'                    -> 1110
+  @1108 POP_TOP                  ''                          
+  @1110 LOAD_CONST               "'12:30:00'"                
+  @1112 LOAD_FAST                'dt_strf'                   
+  @1114 SWAP                     ''                          
+  @1116 COPY                     ''                          
+  @1118 COMPARE_OP               '<='                        
+  @1124 POP_JUMP_FORWARD_IF_FALSE 'to 1138'                    -> 1138
+  @1126 LOAD_CONST               "'12:59:00'"                
+  @1128 COMPARE_OP               '<'                         
+  @1134 POP_JUMP_FORWARD_IF_FALSE 'to 1184'                    -> 1184
+  @1136 JUMP_FORWARD             'to 1142'                    -> 1142
+  @1138 POP_TOP                  ''                          
+  @1140 JUMP_FORWARD             'to 1184'                    -> 1184
+  @1142 LOAD_GLOBAL              'NULL + time'                line=341
+  @1154 LOAD_ATTR                'sleep'                     
+  @1164 LOAD_CONST               '60'                        
+  @1166 PRECALL                  ''                          
+  @1170 CALL                     ''                          
+  @1180 POP_TOP                  ''                          
+  @1182 JUMP_FORWARD             'to 1286'                    -> 1286
+  @1184 LOAD_CONST               "'09:29:00'"                 line=343
+  @1186 LOAD_FAST                'dt_strf'                   
+  @1188 SWAP                     ''                          
+  @1190 COPY                     ''                          
+  @1192 COMPARE_OP               '<='                        
+  @1198 POP_JUMP_FORWARD_IF_FALSE 'to 1212'                    -> 1212
+  @1200 LOAD_CONST               "'09:30:00'"                
+  @1202 COMPARE_OP               '<'                         
+  @1208 POP_JUMP_FORWARD_IF_TRUE 'to 1246'                    -> 1246
+  @1210 JUMP_FORWARD             'to 1214'                    -> 1214
+  @1212 POP_TOP                  ''                          
+  @1214 LOAD_CONST               "'12:59:00'"                
+  @1216 LOAD_FAST                'dt_strf'                   
+  @1218 SWAP                     ''                          
+  @1220 COPY                     ''                          
+  @1222 COMPARE_OP               '<='                        
+  @1228 POP_JUMP_FORWARD_IF_FALSE 'to 1242'                    -> 1242
+  @1230 LOAD_CONST               "'13:00:00'"                
+  @1232 COMPARE_OP               '<'                         
+  @1238 POP_JUMP_FORWARD_IF_FALSE 'to 1286'                    -> 1286
+  @1240 JUMP_FORWARD             'to 1246'                    -> 1246
+  @1242 POP_TOP                  ''                          
+  @1244 JUMP_FORWARD             'to 1286'                    -> 1286
+  @1246 LOAD_GLOBAL              'NULL + time'                line=344
+  @1258 LOAD_ATTR                'sleep'                     
+  @1268 LOAD_CONST               '0.5'                       
+  @1270 PRECALL                  ''                          
+  @1274 CALL                     ''                          
+  @1284 POP_TOP                  ''                          
+  @1286 EXTENDED_ARG             ''                           line=308
+  @1288 JUMP_BACKWARD            'to 50'                      -> 50
+  @1290 PUSH_EXC_INFO            ''                          
+  @1292 LOAD_GLOBAL              'Exception'                  line=345
+  @1304 CHECK_EXC_MATCH          ''                          
+  @1306 POP_JUMP_FORWARD_IF_FALSE 'to 1418'                    -> 1418
+  @1308 POP_TOP                  ''                          
+  @1310 LOAD_GLOBAL              'NULL + system_log'          line=346
+  @1322 LOAD_ATTR                'error'                     
+  @1332 LOAD_CONST               "'tick_worker_thread执行异常,异常信息为:{}'"
+  @1334 LOAD_METHOD              'format'                    
+  @1356 LOAD_GLOBAL              'NULL + get_traceback_message'
+  @1368 PRECALL                  ''                          
+  @1372 CALL                     ''                          
+  @1382 PRECALL                  ''                          
+  @1386 CALL                     ''                          
+  @1396 PRECALL                  ''                          
+  @1400 CALL                     ''                          
+  @1410 POP_TOP                  ''                          
+  @1412 POP_EXCEPT               ''                          
+  @1414 LOAD_CONST               'None'                      
+  @1416 RETURN_VALUE             ''                          
+  @1418 RERAISE                  ''                           line=345
+  @1420 COPY                     ''                          
+  @1422 POP_EXCEPT               ''                          
+  @1424 RERAISE                  ''                          
+--- DECOMPILED <module>.Strategy.tick_worker_thread  co_code len=1380 ---
+  @0    RESUME                   ''                           line=216
+  @2    LOAD_FAST                'self'                       line=221
+  @4    LOAD_ATTR                '_engine'                   
+  @14   LOAD_ATTR                'config'                    
+  @24   LOAD_ATTR                'strategy'                  
+  @34   LOAD_ATTR                'accounts'                  
+  @44   STORE_FAST               'accounts'                  
+  @46   NOP                      ''                           line=222
+  @48   NOP                      ''                           line=223
+  @50   LOAD_FAST                'self'                       line=224
+  @52   LOAD_ATTR                '_engine'                   
+  @62   LOAD_ATTR                'data_proxy'                
+  @72   LOAD_METHOD              'is_trading_date'           
+  @94   LOAD_GLOBAL              'datetime'                  
+  @106  LOAD_ATTR                'date'                      
+  @116  LOAD_METHOD              'today'                     
+  @138  PRECALL                  ''                          
+  @142  CALL                     ''                          
+  @152  PRECALL                  ''                          
+  @156  CALL                     ''                          
+  @166  POP_JUMP_FORWARD_IF_TRUE 'to 210'                     -> 210
+  @168  LOAD_GLOBAL              'NULL + time'                line=225
+  @180  LOAD_ATTR                'sleep'                     
+  @190  LOAD_CONST               '60'                        
+  @192  PRECALL                  ''                          
+  @196  CALL                     ''                          
+  @206  POP_TOP                  ''                          
+  @208  JUMP_BACKWARD            'to 48'                      line=226 -> 48
+  @210  LOAD_GLOBAL              'datetime'                   line=227
+  @222  LOAD_ATTR                'datetime'                  
+  @232  LOAD_METHOD              'now'                       
+  @254  PRECALL                  ''                          
+  @258  CALL                     ''                          
+  @268  STORE_FAST               'now'                       
+  @270  LOAD_FAST                'now'                        line=228
+  @272  LOAD_METHOD              'strftime'                  
+  @294  LOAD_CONST               "'%H:%M:%S'"                
+  @296  PRECALL                  ''                          
+  @300  CALL                     ''                          
+  @310  STORE_FAST               'dt_strf'                   
+  @312  LOAD_GLOBAL              'AccountType'                line=229
+  @324  LOAD_ATTR                'FUTURE'                    
+  @334  LOAD_ATTR                'value'                     
+  @344  LOAD_FAST                'accounts'                  
+  @346  CONTAINS_OP              ''                          
+  @348  EXTENDED_ARG             ''                          
+  @350  POP_JUMP_FORWARD_IF_FALSE 'to 1196'                    -> 1196
+  @352  LOAD_FAST                'self'                       line=230
+  @354  LOAD_METHOD              'is_future_tradetime_now'   
+  @376  LOAD_FAST                'dt_strf'                   
+  @378  PRECALL                  ''                          
+  @382  CALL                     ''                          
+  @392  POP_JUMP_FORWARD_IF_FALSE 'to 514'                     -> 514
+  @394  LOAD_FAST                'self'                       line=231
+  @396  LOAD_ATTR                '_tick_queue'               
+  @406  LOAD_METHOD              'put'                       
+  @428  LOAD_FAST                'now'                       
+  @430  LOAD_GLOBAL              'EventEnum'                 
+  @442  LOAD_ATTR                'HANDLE_TICK'               
+  @452  BUILD_TUPLE              ''                          
+  @454  PRECALL                  ''                          
+  @458  CALL                     ''                          
+  @468  POP_TOP                  ''                          
+  @470  LOAD_GLOBAL              'NULL + time'                line=232
+  @482  LOAD_ATTR                'sleep'                     
+  @492  LOAD_CONST               '3'                         
+  @494  PRECALL                  ''                          
+  @498  CALL                     ''                          
+  @508  POP_TOP                  ''                          
+  @510  EXTENDED_ARG             ''                          
+  @512  JUMP_FORWARD             'to 1240'                    -> 1240
+  @514  LOAD_FAST                'dt_strf'                    line=233
+  @516  LOAD_CONST               "'15:15:00'"                
+  @518  COMPARE_OP               '>'                         
+  @524  EXTENDED_ARG             ''                          
+  @526  POP_JUMP_FORWARD_IF_TRUE 'to 1194'                    -> 1194
+  @528  LOAD_FAST                'dt_strf'                   
+  @530  LOAD_CONST               "'08:30:00'"                
+  @532  COMPARE_OP               '<'                         
+  @538  EXTENDED_ARG             ''                          
+  @540  POP_JUMP_FORWARD_IF_TRUE 'to 1194'                    -> 1194
+  @542  LOAD_CONST               "'11:30:00'"                 line=234
+  @544  LOAD_FAST                'dt_strf'                   
+  @546  SWAP                     ''                          
+  @548  COPY                     ''                          
+  @550  COMPARE_OP               '<'                         
+  @556  POP_JUMP_FORWARD_IF_FALSE 'to 570'                     -> 570
+  @558  LOAD_CONST               "'12:30:00'"                
+  @560  COMPARE_OP               '<'                         
+  @566  POP_JUMP_FORWARD_IF_FALSE 'to 618'                     -> 618
+  @568  JUMP_FORWARD             'to 574'                     -> 574
+  @570  POP_TOP                  ''                          
+  @572  JUMP_FORWARD             'to 618'                     -> 618
+  @574  LOAD_GLOBAL              'NULL + time'                line=235
+  @586  LOAD_ATTR                'sleep'                     
+  @596  LOAD_CONST               '60'                        
+  @598  PRECALL                  ''                          
+  @602  CALL                     ''                          
+  @612  POP_TOP                  ''                          
+  @614  EXTENDED_ARG             ''                          
+  @616  JUMP_FORWARD             'to 1240'                    -> 1240
+  @618  LOAD_CONST               "'08:30:00'"                 line=236
+  @620  LOAD_FAST                'dt_strf'                   
+  @622  SWAP                     ''                          
+  @624  COPY                     ''                          
+  @626  COMPARE_OP               '<='                        
+  @632  POP_JUMP_FORWARD_IF_FALSE 'to 646'                     -> 646
+  @634  LOAD_CONST               "'08:59:00'"                
+  @636  COMPARE_OP               '<'                         
+  @642  POP_JUMP_FORWARD_IF_TRUE 'to 680'                     -> 680
+  @644  JUMP_FORWARD             'to 648'                     -> 648
+  @646  POP_TOP                  ''                          
+  @648  LOAD_CONST               "'12:30:00'"                
+  @650  LOAD_FAST                'dt_strf'                   
+  @652  SWAP                     ''                          
+  @654  COPY                     ''                          
+  @656  COMPARE_OP               '<='                        
+  @662  POP_JUMP_FORWARD_IF_FALSE 'to 676'                     -> 676
+  @664  LOAD_CONST               "'12:59:00'"                
+  @666  COMPARE_OP               '<'                         
+  @672  POP_JUMP_FORWARD_IF_FALSE 'to 724'                     -> 724
+  @674  JUMP_FORWARD             'to 680'                     -> 680
+  @676  POP_TOP                  ''                          
+  @678  JUMP_FORWARD             'to 724'                     -> 724
+  @680  LOAD_GLOBAL              'NULL + time'                line=237
+  @692  LOAD_ATTR                'sleep'                     
+  @702  LOAD_CONST               '60'                        
+  @704  PRECALL                  ''                          
+  @708  CALL                     ''                          
+  @718  POP_TOP                  ''                          
+  @720  EXTENDED_ARG             ''                          
+  @722  JUMP_FORWARD             'to 1240'                    -> 1240
+  @724  LOAD_FAST                'self'                       line=238
+  @726  LOAD_METHOD              'is_stock_tradetime_now'    
+  @748  LOAD_FAST                'dt_strf'                   
+  @750  PRECALL                  ''                          
+  @754  CALL                     ''                          
+  @764  POP_JUMP_FORWARD_IF_FALSE 'to 884'                     -> 884
+  @766  LOAD_FAST                'self'                       line=239
+  @768  LOAD_ATTR                '_tick_queue'               
+  @778  LOAD_METHOD              'put'                       
+  @800  LOAD_FAST                'now'                       
+  @802  LOAD_GLOBAL              'EventEnum'                 
+  @814  LOAD_ATTR                'HANDLE_TICK'               
+  @824  BUILD_TUPLE              ''                          
+  @826  PRECALL                  ''                          
+  @830  CALL                     ''                          
+  @840  POP_TOP                  ''                          
+  @842  LOAD_GLOBAL              'NULL + time'                line=240
+  @854  LOAD_ATTR                'sleep'                     
+  @864  LOAD_CONST               '3'                         
+  @866  PRECALL                  ''                          
+  @870  CALL                     ''                          
+  @880  POP_TOP                  ''                          
+  @882  JUMP_FORWARD             'to 1240'                    -> 1240
+  @884  LOAD_FAST                'dt_strf'                    line=241
+  @886  LOAD_CONST               "'15:00:00'"                
+  @888  COMPARE_OP               '>'                         
+  @894  POP_JUMP_FORWARD_IF_TRUE 'to 1194'                    -> 1194
+  @896  LOAD_FAST                'dt_strf'                   
+  @898  LOAD_CONST               "'09:00:00'"                
+  @900  COMPARE_OP               '<'                         
+  @906  POP_JUMP_FORWARD_IF_TRUE 'to 1194'                    -> 1194
+  @908  LOAD_CONST               "'11:30:00'"                 line=242
+  @910  LOAD_FAST                'dt_strf'                   
+  @912  SWAP                     ''                          
+  @914  COPY                     ''                          
+  @916  COMPARE_OP               '<'                         
+  @922  POP_JUMP_FORWARD_IF_FALSE 'to 936'                     -> 936
+  @924  LOAD_CONST               "'12:30:00'"                
+  @926  COMPARE_OP               '<'                         
+  @932  POP_JUMP_FORWARD_IF_FALSE 'to 982'                     -> 982
+  @934  JUMP_FORWARD             'to 940'                     -> 940
+  @936  POP_TOP                  ''                          
+  @938  JUMP_FORWARD             'to 982'                     -> 982
+  @940  LOAD_GLOBAL              'NULL + time'                line=243
+  @952  LOAD_ATTR                'sleep'                     
+  @962  LOAD_CONST               '60'                        
+  @964  PRECALL                  ''                          
+  @968  CALL                     ''                          
+  @978  POP_TOP                  ''                          
+  @980  JUMP_FORWARD             'to 1240'                    -> 1240
+  @982  LOAD_CONST               "'09:00:00'"                 line=244
+  @984  LOAD_FAST                'dt_strf'                   
+  @986  SWAP                     ''                          
+  @988  COPY                     ''                          
+  @990  COMPARE_OP               '<='                        
+  @996  POP_JUMP_FORWARD_IF_FALSE 'to 1010'                    -> 1010
+  @998  LOAD_CONST               "'09:29:00'"                
+  @1000 COMPARE_OP               '<'                         
+  @1006 POP_JUMP_FORWARD_IF_TRUE 'to 1044'                    -> 1044
+  @1008 JUMP_FORWARD             'to 1012'                    -> 1012
+  @1010 POP_TOP                  ''                          
+  @1012 LOAD_CONST               "'12:30:00'"                
+  @1014 LOAD_FAST                'dt_strf'                   
+  @1016 SWAP                     ''                          
+  @1018 COPY                     ''                          
+  @1020 COMPARE_OP               '<='                        
+  @1026 POP_JUMP_FORWARD_IF_FALSE 'to 1040'                    -> 1040
+  @1028 LOAD_CONST               "'12:59:00'"                
+  @1030 COMPARE_OP               '<'                         
+  @1036 POP_JUMP_FORWARD_IF_FALSE 'to 1086'                    -> 1086
+  @1038 JUMP_FORWARD             'to 1044'                    -> 1044
+  @1040 POP_TOP                  ''                          
+  @1042 JUMP_FORWARD             'to 1086'                    -> 1086
+  @1044 LOAD_GLOBAL              'NULL + time'                line=245
+  @1056 LOAD_ATTR                'sleep'                     
+  @1066 LOAD_CONST               '60'                        
+  @1068 PRECALL                  ''                          
+  @1072 CALL                     ''                          
+  @1082 POP_TOP                  ''                          
+  @1084 JUMP_FORWARD             'to 1240'                    -> 1240
+  @1086 LOAD_CONST               "'09:29:00'"                 line=246
+  @1088 LOAD_FAST                'dt_strf'                   
+  @1090 SWAP                     ''                          
+  @1092 COPY                     ''                          
+  @1094 COMPARE_OP               '<='                        
+  @1100 POP_JUMP_FORWARD_IF_FALSE 'to 1114'                    -> 1114
+  @1102 LOAD_CONST               "'09:30:00'"                
+  @1104 COMPARE_OP               '<'                         
+  @1110 POP_JUMP_FORWARD_IF_TRUE 'to 1148'                    -> 1148
+  @1112 JUMP_FORWARD             'to 1116'                    -> 1116
+  @1114 POP_TOP                  ''                          
+  @1116 LOAD_CONST               "'12:59:00'"                
+  @1118 LOAD_FAST                'dt_strf'                   
+  @1120 SWAP                     ''                          
+  @1122 COPY                     ''                          
+  @1124 COMPARE_OP               '<='                        
+  @1130 POP_JUMP_FORWARD_IF_FALSE 'to 1144'                    -> 1144
+  @1132 LOAD_CONST               "'13:00:00'"                
+  @1134 COMPARE_OP               '<'                         
+  @1140 POP_JUMP_FORWARD_IF_FALSE 'to 1190'                    -> 1190
+  @1142 JUMP_FORWARD             'to 1148'                    -> 1148
+  @1144 POP_TOP                  ''                          
+  @1146 JUMP_FORWARD             'to 1190'                    -> 1190
+  @1148 LOAD_GLOBAL              'NULL + time'                line=247
+  @1160 LOAD_ATTR                'sleep'                     
+  @1170 LOAD_CONST               '0.5'                       
+  @1172 PRECALL                  ''                          
+  @1176 CALL                     ''                          
+  @1186 POP_TOP                  ''                          
+  @1188 JUMP_FORWARD             'to 1240'                    -> 1240
+  @1190 EXTENDED_ARG             ''                           line=249
+  @1192 JUMP_BACKWARD            'to 48'                      -> 48
+  @1194 JUMP_FORWARD             'to 1240'                    -> 1240
+  @1196 LOAD_FAST                'self'                       line=250
+  @1198 LOAD_METHOD              'is_stock_tradetime_now'    
+  @1220 LOAD_FAST                'dt_strf'                   
+  @1222 PRECALL                  ''                          
+  @1226 CALL                     ''                          
+  @1236 POP_JUMP_FORWARD_IF_FALSE 'to 1240'                    -> 1240
+  @1238 NOP                      ''                           line=251
+  @1240 EXTENDED_ARG             ''                           line=223
+  @1242 JUMP_BACKWARD            'to 50'                      -> 50
+  @1244 PUSH_EXC_INFO            ''                          
+  @1246 LOAD_GLOBAL              'Exception'                  line=252
+  @1258 CHECK_EXC_MATCH          ''                          
+  @1260 POP_JUMP_FORWARD_IF_FALSE 'to 1372'                    -> 1372
+  @1262 POP_TOP                  ''                          
+  @1264 LOAD_GLOBAL              'NULL + system_log'          line=253
+  @1276 LOAD_ATTR                'error'                     
+  @1286 LOAD_CONST               "'tick_worker_thread执行异常,异常信息为:{}'"
+  @1288 LOAD_METHOD              'format'                    
+  @1310 LOAD_GLOBAL              'NULL + get_traceback_message'
+  @1322 PRECALL                  ''                          
+  @1326 CALL                     ''                          
+  @1336 PRECALL                  ''                          
+  @1340 CALL                     ''                          
+  @1350 PRECALL                  ''                          
+  @1354 CALL                     ''                          
+  @1364 POP_TOP                  ''                          
+  @1366 POP_EXCEPT               ''                           line=254
+  @1368 LOAD_CONST               'None'                      
+  @1370 RETURN_VALUE             ''                          
+  @1372 RERAISE                  ''                           line=252
+  @1374 COPY                     ''                          
+  @1376 POP_EXCEPT               ''                          
+  @1378 RERAISE                  ''                          
+filtered orig=268 decomp=247

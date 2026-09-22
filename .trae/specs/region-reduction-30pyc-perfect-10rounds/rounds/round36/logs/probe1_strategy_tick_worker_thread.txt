@@ -1,0 +1,58 @@
+official  23/24   product strategyOK.py
+  mismatch tick_worker_thread                             orig=268 decomp=247 jump=32 true=113
+    first_diff {"index": 114, "orig_op": "LOAD_CONST", "decomp_op": "LOAD_FAST", "orig_arg": "08:59:00", "decomp_arg": "self"}
+
+strict   kind='seq_len' defect=True msg='orig=268 decomp=247'  lo=268 ld=247 delta=-21
+
+== hunks (non-equal only) ==
+  delete   orig[114:143] @718..820 -> decomp[114:114] @724..722
+      orig  ['LOAD_CONST', 'LOAD_FAST', 'SWAP', 'COPY', 'COMPARE_OP', 'POP_JUMP_IF_FALSE', 'LOAD_CONST', 'COMPARE_OP', 'POP_JUMP_IF_TRUE', 'JUMP', 'POP_TOP', 'LOAD_CONST', 'LOAD_FAST', 'SWAP', 'COPY', 'COMPARE_OP', 'POP_JUMP_IF_FALSE', 'LOAD_CONST', 'COMPARE_OP', 'POP_JUMP_IF_FALSE', 'JUMP', 'POP_TOP', 'JUMP', 'LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_CONST', 'CALL', 'POP_TOP', 'JUMP']
+      decomp []
+      orig args [('CALL', '1'), ('POP_TOP', 'None'), ('JUMP', '<JUMP>'), ('LOAD_CONST', "'08:59:00'"), ('LOAD_FAST', "'dt_strf'"), ('SWAP', '2'), ('COPY', '2'), ('COMPARE_OP', "'<='"), ('POP_JUMP_IF_FALSE', '<JUMP>'), ('LOAD_CONST', "'09:00:00'"), ('COMPARE_OP', "'<'"), ('POP_JUMP_IF_TRUE', '<JUMP>'), ('JUMP', '<JUMP>'), ('POP_TOP', 'None'), ('LOAD_CONST', "'12:59:00'"), ('LOAD_FAST', "'dt_strf'"), ('SWAP', '2'), ('COPY', '2'), ('COMPARE_OP', "'<='"), ('POP_JUMP_IF_FALSE', '<JUMP>'), ('LOAD_CONST', "'13:00:00'"), ('COMPARE_OP', "'<'"), ('POP_JUMP_IF_FALSE', '<JUMP>'), ('JUMP', '<JUMP>'), ('POP_TOP', 'None'), ('JUMP', '<JUMP>'), ('LOAD_GLOBAL', "'time'"), ('LOAD_ATTR', "'sleep'"), ('LOAD_CONST', '0.5'), ('CALL', '1'), ('POP_TOP', 'None'), ('JUMP', '<JUMP>'), ('LOAD_FAST', "'self'"), ('LOAD_METHOD', "'is_stock_tradetime_now'"), ('LOAD_FAST', "'dt_strf'")]
+      decp args [('CALL', '1'), ('POP_TOP', 'None'), ('JUMP', '<JUMP>'), ('LOAD_FAST', "'self'"), ('LOAD_METHOD', "'is_stock_tradetime_now'"), ('LOAD_FAST', "'dt_strf'")]
+  insert   orig[247:247] @1290..1288 -> decomp[218:226] @1192..1242
+      orig  []
+      decomp ['JUMP', 'JUMP', 'LOAD_FAST', 'LOAD_METHOD', 'LOAD_FAST', 'CALL', 'POP_JUMP_IF_FALSE', 'JUMP']
+      orig args [('CALL', '1'), ('POP_TOP', 'None'), ('JUMP', '<JUMP>'), ('PUSH_EXC_INFO', 'None'), ('LOAD_GLOBAL', "'Exception'"), ('CHECK_EXC_MATCH', 'None')]
+      decp args [('CALL', '1'), ('POP_TOP', 'None'), ('JUMP', '<JUMP>'), ('JUMP', '<JUMP>'), ('JUMP', '<JUMP>'), ('LOAD_FAST', "'self'"), ('LOAD_METHOD', "'is_stock_tradetime_now'"), ('LOAD_FAST', "'dt_strf'"), ('CALL', '1'), ('POP_JUMP_IF_FALSE', '<JUMP>'), ('JUMP', '<JUMP>'), ('PUSH_EXC_INFO', 'None'), ('LOAD_GLOBAL', "'Exception'"), ('CHECK_EXC_MATCH', 'None')]
+
+== product text tick_worker_thread lines 216..254 (def indent 4) ==
+ 216|    def tick_worker_thread(self):
+ 217|        """
+ 218|        往队列里添加事件
+ 219|        :return:
+ 220|        """
+ 221|        accounts = self._engine.config.strategy.accounts
+ 222|        try:
+ 223|            while True:
+ 224|                if not self._engine.data_proxy.is_trading_date(datetime.date.today()):
+ 225|                    time.sleep(60)
+ 226|                    continue
+ 227|                now = datetime.datetime.now()
+ 228|                dt_strf = now.strftime('%H:%M:%S')
+ 229|                if AccountType.FUTURE.value in accounts:
+ 230|                    if self.is_future_tradetime_now(dt_strf):
+ 231|                        self._tick_queue.put((now, EventEnum.HANDLE_TICK))
+ 232|                        time.sleep(3)
+ 233|                    elif not (dt_strf > '15:15:00' or dt_strf < '08:30:00'):
+ 234|                        if '11:30:00' < dt_strf < '12:30:00':
+ 235|                            time.sleep(60)
+ 236|                        elif '08:30:00' <= dt_strf < '08:59:00' or '12:30:00' <= dt_strf < '12:59:00':
+ 237|                            time.sleep(60)
+ 238|                        elif self.is_stock_tradetime_now(dt_strf):
+ 239|                            self._tick_queue.put((now, EventEnum.HANDLE_TICK))
+ 240|                            time.sleep(3)
+ 241|                        elif not (dt_strf > '15:00:00' or dt_strf < '09:00:00'):
+ 242|                            if '11:30:00' < dt_strf < '12:30:00':
+ 243|                                time.sleep(60)
+ 244|                            elif '09:00:00' <= dt_strf < '09:29:00' or '12:30:00' <= dt_strf < '12:59:00':
+ 245|                                time.sleep(60)
+ 246|                            elif '09:29:00' <= dt_strf < '09:30:00' or '12:59:00' <= dt_strf < '13:00:00':
+ 247|                                time.sleep(0.5)
+ 248|                            else:
+ 249|                                continue
+ 250|                elif self.is_stock_tradetime_now(dt_strf):
+ 251|                    pass
+ 252|        except Exception:
+ 253|            system_log.error('tick_worker_thread执行异常,异常信息为:{}'.format(get_traceback_message()))
+ 254|            return None

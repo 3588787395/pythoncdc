@@ -1,0 +1,14 @@
+Round 36 core identity (post-land, written by the orchestrator after land36.py --apply)
+file                     core/cfg/region_ast_generator.py
+pre-land  raw sha256[:20] 92c8c2aabdcd37b9f32b   bytes 2984322
+                         (== HEAD 703be216 blob; asserted byte-equal to mirr_head by r36c.py build)
+post-land raw sha256[:20] bbfe1a414032436921ab   bytes 2984324
+post-land norm sha256[:20] 761d927617bd162b5d9f   (CRLF->LF normalised text)
+line endings: CRLF 48418 == LF 48418 (uniform)   UTF-8 BOM True   compile() OK
+git HEAD blob before commit (still the pre-land object) e230b70c830fb015c530
+patch: spec36a.json, 1 edit, +0/-0 lines, 2984322 -> 2984324 bytes (2 bytes of text)
+  at :4817 in _loop_generate_for -> _fold_break_to_return:
+    -  _orelse = s.get('orelse', [])
+    +  _orelse = s.get('orelse') or []
+landing proof: land36.py dry-run and --apply both assert  replay == measured mirror mirr_r36a
+target product identity: tracked baseOK.py == build_r36a product, 18163 bytes, sha256[:16] 15bbbf460c0ddc5e

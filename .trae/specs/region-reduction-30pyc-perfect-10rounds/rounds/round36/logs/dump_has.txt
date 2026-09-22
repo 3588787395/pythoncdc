@@ -1,0 +1,38 @@
+--- ORIGINAL <module>.FutureSettingStore.has_close_position_type  co_code len=126 ---
+  @0    RESUME                   ''                           line=428
+  @2    LOAD_GLOBAL              'NULL + enumerate'           line=429
+  @14   LOAD_FAST                'transaction_code'          
+  @16   PRECALL                  ''                          
+  @20   CALL                     ''                          
+  @30   GET_ITER                 ''                          
+  @32   FOR_ITER                 'to 108'                     -> 108
+  @34   UNPACK_SEQUENCE          ''                          
+  @38   STORE_FAST               'i'                         
+  @40   STORE_FAST               'c'                         
+  @42   LOAD_FAST                'c'                          line=430
+  @44   LOAD_METHOD              'isdigit'                   
+  @66   PRECALL                  ''                          
+  @70   CALL                     ''                          
+  @80   POP_JUMP_FORWARD_IF_FALSE 'to 106'                     -> 106
+  @82   LOAD_FAST                'transaction_code'           line=431
+  @84   LOAD_CONST               'None'                      
+  @86   LOAD_FAST                'i'                         
+  @88   BUILD_SLICE              ''                          
+  @90   BINARY_SUBSCR            ''                          
+  @100  STORE_FAST               'transaction_code'          
+  @102  POP_TOP                  ''                           line=432
+  @104  JUMP_FORWARD             'to 108'                     -> 108
+  @106  JUMP_BACKWARD            'to 32'                      line=430 -> 32
+  @108  LOAD_FAST                'transaction_code'           line=433
+  @110  LOAD_FAST                'self'                      
+  @112  LOAD_ATTR                '_store'                    
+  @122  CONTAINS_OP              ''                          
+  @124  RETURN_VALUE             ''                          
+--- DECOMPILED <module>.FutureSettingStore.has_close_position_type  co_code len=20 ---
+  @0    RESUME                   ''                           line=315
+  @2    LOAD_FAST                'transaction_code'           line=316
+  @4    LOAD_FAST                'self'                      
+  @6    LOAD_ATTR                '_store'                    
+  @16   CONTAINS_OP              ''                          
+  @18   RETURN_VALUE             ''                          
+filtered orig=27 decomp=6
