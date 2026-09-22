@@ -1,0 +1,6 @@
+case           status                 nbad   sum|d| detail / probe
+ctrl40         CLEAN                  0      0      
+r40c_controls  CLEAN                  0      0      
+r40w_witness   CLEAN                  0      0      
+src            CLEAN                  0      0      
+CORE=D:\Temp\r38gate\r38m\mirr_r40a2 BAT=bat40 cases=4 CLEAN=4 DEFECT=0

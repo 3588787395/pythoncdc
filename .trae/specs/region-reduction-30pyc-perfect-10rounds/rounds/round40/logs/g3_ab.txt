@@ -1,0 +1,4 @@
+MOVED  F:/Downloads/pythoncdc-main/test_repros/round3/r3_04_loop_branch_continue_lost.pyc  gained=[] lost=[]
+MOVED  F:/Downloads/pythoncdc-main/test_repros/round3/r3_04_loop_branch_continue_lost_dec.pyc  gained=[] lost=[]
+TALLY SAME=105 IMPROVED=0 REGRESSION=0 MOVED=2 ERR=0  (unpaired lists=0)
+files fully matched: a=77 b=77

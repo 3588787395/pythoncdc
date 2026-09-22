@@ -1,0 +1,2 @@
+F:/Downloads/pythoncdc-main/test_repros/round40_merge_not_a_merge/pyc/r40w_witness.pyc
+F:/Downloads/pythoncdc-main/test_repros/round40_merge_not_a_merge/pyc/r40c_controls.pyc

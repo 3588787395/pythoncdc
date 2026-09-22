@@ -1,0 +1,7 @@
+G6 index diff, baseline = the index as committed by round 39 (git HEAD blob), not the working copy
+(G5 already ran single on IQCommon/util/common_func.pyc, which writes its own row back).
+total_functions unchanged for all 402 rows; rows whose fields moved beyond the round stamp: 3
+
+F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc  bytecode_match_rate 0.8095238095238095->0.9047619047619048  matched_functions 17->19
+F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc  bytecode_match_rate 0.9166666666666666->0.9583333333333334  matched_functions 22->23
+F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc  bytecode_match_rate 0.8271604938271605->0.8395061728395061  matched_functions 67->68

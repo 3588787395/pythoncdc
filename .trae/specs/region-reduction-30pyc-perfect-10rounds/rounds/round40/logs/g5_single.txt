@@ -1,0 +1,36 @@
+G5 replay archive — Round 40
+============================
+
+Command (cwd = repo root):
+  python -X utf8 scripts/pyc_batch_verify.py single F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc
+
+Index safety proof for the replay:
+  pyc_index.json sha256[:20] before = d00a1d63d727843b6f26
+  pyc_index.json sha256[:20] after  = d00a1d63d727843b6f26   -> INDEX-UNCHANGED-BY-G5-REPLAY
+  (single writes its own row back; the replay reproduced the G6 values, so it moved nothing.)
+
+Target reading: total_functions 21 / matched_functions 19 / match_rate 90.48%
+  -> fill_kline_data and fill_kline_data_by_pre are gone from the mismatch table;
+     the 2 remaining rows are pre-existing carry-forwards, untouched by R40-A2.
+
+Canary (load-bearing anchor, must stay byte-identical round over round):
+  site-packages/fly/data/quotationOK.py sha256[:20] = 3f2242e73d7fd56a0096  (re-measured after landing)
+
+Below is the verbatim stdout of the command.
+
+[SINGLE] F:\Downloads\pythoncdc-main\site-packages\IQCommon\util\common_func.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\IQCommon\util\common_funcOK.py
+  source: 16185 chars
+
+字节码 diff 报告:
+  decompile_status:   partial
+  total_functions:   21
+  matched_functions: 19
+  match_rate:        90.48%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+  mismatches (2):
+    - get_crontab_execute_time: orig=93 decomp=81 jump_diffs=2 true_diffs=48
+      first_diff: {'index': 45, 'orig_op': 'LOAD_FAST', 'decomp_op': 'LOAD_GLOBAL', 'orig_arg': 'script_time_info', 'decomp_arg': 'hour_info'}
+    - get_kline_time_by_frequency_array: orig=231 decomp=228 jump_diffs=0 true_diffs=45
+      first_diff: {'index': 185, 'orig_op': 'LOAD_FAST', 'decomp_op': 'LOAD_GLOBAL', 'orig_arg': 'freq_k_minute', 'decomp_arg': 'np'}

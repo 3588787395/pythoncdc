@@ -1,0 +1,2 @@
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round40_merge_not_a_merge/pyc/r40w_witness.pyc", "arm": "head", "sha": "2347aae1e25cc4e7", "total_functions": 4, "matched_functions": 1, "mism": [["r40w_c4_inner_continue", 30, 29, 4, 8], ["r40w_s2_or", 25, 24, 2, 8], ["r40w_s7_nested", 30, 29, 4, 8]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round40_merge_not_a_merge/pyc/r40c_controls.pyc", "arm": "head", "sha": "0530b82dad888d1c", "total_functions": 10, "matched_functions": 10, "mism": []}

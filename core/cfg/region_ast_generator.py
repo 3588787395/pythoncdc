@@ -17111,7 +17111,39 @@ AST 映射规则:
                                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
                                           and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
                                                                'JUMP_FORWARD', 'JUMP_ABSOLUTE')]
-                        if not _mb_meaningful:
+                        # [R40-A2] 区域归约算法原则 1（每块 = 前导语句 + 唯一终止符）+ 原则 2
+                        # （每块唯一归属）：merge_block 只有真的汇合两臂时才是 merge。
+                        # 判据全部为结构事实：① then 臂的任何块都不以 merge_block 为后继；
+                        # ② then 臂的每条尾块（在 then_blocks 内无后继者）的终结边都是无条件
+                        # 跳转且目标恰为包围本 if 的循环头。①+② 一起才证明两臂互斥、各自
+                        # 回到循环头，merge_block 不是汇合点而是假臂本体：留在原处由父循环
+                        # 按自然回边次序发射时，AST 上 if 的 orelse 为 None，真臂尾的
+                        # JUMP_BACKWARD 与假臂尾的 JUMP_BACKWARD 在重编译时塌缩成同一条
+                        # （实测少发一条），假臂在 AST 上成为无终止符的摊平分支。
+                        # 归约方式：认给 else_blocks 并撤销 merge 角色，由 else 臂生成器发射。
+                        # 与既有纯度判据互斥并联：纯 merge 分支逐字保留，不改变其世界。
+                        _mb_then_escapes = False
+                        _mb_tset = set(region.then_blocks or [])
+                        if _mb_tset:
+                            _mb_reaches = any(
+                                region.merge_block in set(_mb_b.successors or ())
+                                for _mb_b in _mb_tset)
+                            _mb_tails = [_mb_b for _mb_b in _mb_tset
+                                         if not (set(_mb_b.successors or ()) & _mb_tset)]
+                            _mb_all_escape = bool(_mb_tails)
+                            for _mb_ttb in _mb_tails:
+                                _mb_ttl = _mb_ttb.get_last_instruction()
+                                if not (_mb_ttl is not None
+                                        and _mb_ttl.opname in ('JUMP_BACKWARD',
+                                                              'JUMP_BACKWARD_NO_INTERRUPT',
+                                                              'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                        and isinstance(_mb_ttl.argval, int)
+                                        and self.cfg.get_block_by_offset(
+                                            _mb_ttl.argval) is _loop_hdr):
+                                    _mb_all_escape = False
+                                    break
+                            _mb_then_escapes = _mb_all_escape and not _mb_reaches
+                        if not _mb_meaningful or _mb_then_escapes:
                             region.else_blocks = [region.merge_block]
                             region.merge_block = None
             else_stmts = self._if_generate_else_branch(region)

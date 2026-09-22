@@ -1811,3 +1811,57 @@
           恰好给出唯一区分项，故先按函数拆 A/B 差异集（`NEW`/`GONE`）再谈收紧判据。
           残余：`get_all_real_daily_kline` 是合流型站点（前驱 ≥2），与子形状 B 同族，不得靠放宽
           私有性一项去够；下一轮 G2′ 加入本轮电池（head 侧见证 `DEFECT 1` 即天然阳性对照）。
+- [x] Task 40: 落地 R40-A2 —— 子形状 B 的第二种成因（merge_block 根本不汇合两臂）：
+      `_if_generate_normal` 的 merge→else 提升门只看「merge 块是否无有意义指令」，本轮补上
+      「then 臂是否整体逃逸回循环头」这一结构判据，修 4 个函数（记录 `rounds/round40/DIAGNOSIS.md`
+      ＋ `rounds/round40/OUTCOME.md`，靶日志 `rounds/round40/logs/`）
+  - [x] SubTask 40.1: 靶轮字节确证 commit `a8225d82`、核 sha256[:20] `cc1254fa30410f2b9954`
+          （2 988 464 字节 / CRLF 48 474 / BOM 在位 / `core/` 干净）；Round 39 的两条 push
+          （`065633a8` + `a8225d82`）本轮补交成功，`git rev-list --count refs/remotes/origin/main..HEAD` = 0。
+          全部测量在私有镜像 `mirr_head`（建臂后即断言与工作区字节全等）上做。
+  - [x] SubTask 40.2: 目标池实测（`logs/pool40.py` 先断言 402 条全为 39 轮盖章、核 sha 未移动、
+          HEAD blob 与工作区全等）：`files 402 partial 27 sum_deficit 95 deficit1 5 deficit2 11`。
+  - [x] SubTask 40.3: 采纳前复核（38.8 教训升级为前置检查）：本轮不新起诊断线，而是复核 Round 38 线 A
+          遗留在 `D:/Temp/r39diagB/ANALYSIS.md` 的线索，三项都在**落地字节**上重做 ——
+          ①发射点仍在原位（`def _if_generate_normal` 16638，门 17099–17117 逐字未变，
+          `if not _mb_meaningful:` 全文唯一）；②锚点 LF 归一后出现 1 次 ⇒ 建臂断言通过；
+          ③四条靶行仍为 partial（17/21、22/24、67/81、38/44），R39-B 未顺带修掉。
+          并纠正旧文档路径错误：`fly/data/real_quote.pyc` 不存在，`one_prod_to_dataframe` 宿主是
+          `IQData/plugins/plugin_system_realquote/real_quote.pyc`。
+  - [x] SubTask 40.4: 根因定位在**归属层**：锚点 `IQCommon/util/common_func.pyc :: fill_kline_data`
+          严格尺 `orig=60 decomp=59`、缺 `@188 JUMP_BACKWARD -> 138`。`B@190` 一身二职 —— IfRegion 拿它当
+          `merge_block/exit`，父 LoopRegion 拿它当 `back_edge_block`；但它的前驱只有假出口 `B@154`，
+          真臂 `B@166` 直指循环头。于是 `else_blocks=[]` ⇒ `orelse` 冻结为 None ⇒ 该块改由父循环按
+          自然回边次序发射，AST 上 if 与假臂成为同级兄弟，两条臂尾回边在重编译时塌缩成一条。
+  - [x] SubTask 40.5: 候选分级 —— 宽版 R40-A（**某条** then 尾块逃向循环头即提升）与收紧版 R40-A2
+          （①then 臂任何块都不以 merge 为后继 且 ②**每条** then 尾块都无条件跳回循环头）。
+          取舍理由是证明力而非经验：两条尾块时「一条逃逸」不能否定 merge 角色。判别式负对照
+          `r40c_1_two_tails` 正是这个形状；`r40c_5_merge_join` 否定「只看假臂单一前驱」，
+          `r40c_3_break` 否定把 `break` 当 `continue`。两版都写进 `logs/`（spec40a / spec40a2），只落地 A2。
+  - [x] SubTask 40.6: G0 合成见证先对**落地字节**跑（Round 39 教训：G0 必须与被判的臂同源）——
+          head `DEFECT s2_or:seq_-1; s7_nested:seq_-1; c4_inner_continue:seq_-1`，
+          与语料无关的三支见证全部差一条 `JUMP_BACKWARD`；`mirr_r40a` / `mirr_r40a2` 双臂 `0 bad`，
+          五支负对照双臂均 CLEAN。新电池入库 `test_repros/round40_merge_not_a_merge/`，
+          落地前读数 `r40w_witness 1/4`、`r40c_controls 10/10`。
+  - [x] SubTask 40.7: G1（deficit-1 五支 + deficit-2 十一支）`IMPROVED 1 / REGRESSION 0`
+          （`IQData/utils/common_func.pyc 22/24→23/24`）；G2′（reprobat59 + Round 39 电池，61 条目）
+          `SAME=60 REGRESSION=0`；G3（anchors107）`SAME=105 REGRESSION=0`；三处 MOVED 行经逐字段核对
+          双臂都是满匹配（`r3_04_loop_branch_continue_lost 3/3`），只是产物字节变了。
+  - [x] SubTask 40.8: G4 全 402 双臂 A/B（唯一发货判据，head 臂与工作区字节全等）：
+          `SAME=366 IMPROVED=3 REGRESSION=0 MOVED=33 ERR=0`，head Σmatched=5651 与 G6 前索引同值
+          （内部一致性），候选 Σ=5655；`files fully matched a=375 b=375`。33 行 MOVED 逐行核对
+          `gained=[] lost=[]` 且 per-file 计数不变；唯一指令数变化是
+          `real_quote.pyc::get_cache_l2_data_by_one` 产物离原码更近一条（仍不匹配，非回归）。
+  - [x] SubTask 40.9: 落地为字节精确重放（`land38.py land --spec=spec40a2.json --mirror=mirr_r40a2 --apply`，
+          先断言「重放 == 被测镜像字节」）：2 988 464 → 2 991 175 字节、CRLF 48 474 → 48 506、BOM 在位、
+          sha256[:20] `cc1254fa30410f2b9954` → `f1cde2536f9fa2c9033b`、diff +33/−1。
+          G4′ 用落地字节对 36 个受影响文件的**提交产物**重做严格尺：`fixed=4 broken=0`
+          （`fill_kline_data`、`fill_kline_data_by_pre`×2、`is_delisting_stock_real`）。
+          G5 `single` 靶 `IQCommon/util/common_func.pyc` 17/21 → 19/21，金丝雀
+          `site-packages/fly/data/quotationOK.py` 复测更正：`3f2242e73d7fd56a0096` 是 Round 39 的结转值（＝当时 HEAD blob 的 CRLF 形），本轮改后为 `b94d3247f7e4b49f48bb`（183 261 → 183 298 B，4 增 3 删）：`get_option_info` 内 `if/continue` 平铺被改渲为 `elif`/`else`，两支指令等价 ⇒ 官方 `143/143` 不变、严格尺 `change_his_to_forward`／`get_trend` 在双臂同为 still-defective。9 支承重金丝雀复测：3 支产物文本移动（另两支是 `plugin_manager` 孪生，`10/10`、`9/9` 均保持），0 支掉官方函数；全语料产物移动 36 支中 33 支官方计数不变、3 支上升、0 支下降（`logs/g5_canary_audit.txt`）。⇒ G5 金丝雀判据由「逐字节不变」更正为「承重文件不得掉官方函数」，下一轮基线重新导出到 `D:/Temp/r40gate/canary_shas_landed40.txt`。
+  - [x] SubTask 40.10: G6 `batch --all --round 40` 读完 402 条、`failed_pyc 0`；索引差异 =
+          402 条 `last_tested_round → 40` 加 仅 3 支文件的字段变化：IQCommon/util/common_func.pyc ['bytecode_match_rate 0.8095238095238095->0.9047619047619048', 'matched_functions 17->19']；IQData/utils/common_func.pyc ['bytecode_match_rate 0.9166666666666666->0.9583333333333334', 'matched_functions 22->23']；fly/data/quote.pyc ['bytecode_match_rate 0.8271604938271605->0.8395061728395061', 'matched_functions 67->68']；G7 `stats` 原样见 OUTCOME §三。
+  - [x] SubTask 40.11: 移交 —— 同族第二子形状（`one_prod_to_dataframe` 两支，多块 then 臂**中段**的
+          `continue`：缺块 `B@1818→742` 既非该区域 then 尾、`merge=1972` 也不等于 `back_edge_block=1864`）
+          R40-A2 正确地不去碰它，需另立一条「臂内逃逸块归属」判据；下一轮 G2′ = `reprobat61`（63 条目）、
+          G3 = `anchors109`（109 条目）；结转台账本轮未触碰。
