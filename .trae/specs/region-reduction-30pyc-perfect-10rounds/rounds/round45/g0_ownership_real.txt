@@ -1,0 +1,41 @@
+
+########## REGIONS (5 top, 5 total, 8 blocks)
+IfRegion RegionType.IF entry=B112 exit=- cond=B112 then=[B264] else=[B268] merge=B264
+   elif_cond=[] elif_bodies=[] final_else=[]
+   blocks=[B112,B194,B260,B264,B268]
+  Region RegionType.BASIC entry=B258 exit=- cond=- then=[] else=[] merge=-
+     elif_cond=[] elif_bodies=[] final_else=[]
+     blocks=[B258]
+IfRegion RegionType.IF_ELIF_CHAIN entry=B0 exit=B268 cond=B0 then=[B68] else=[B112,B194,B260,B258,B264] merge=B268
+   elif_cond=[B112] elif_bodies=[[B194,B258,B264]] final_else=[B260]
+   blocks=[B0,B68,B112,B194,B258,B260,B264]
+  Region RegionType.BASIC entry=B0 exit=- cond=- then=[] else=[] merge=-
+     elif_cond=[] elif_bodies=[] final_else=[]
+     blocks=[B0]
+  Region RegionType.BASIC entry=B68 exit=- cond=- then=[] else=[] merge=-
+     elif_cond=[] elif_bodies=[] final_else=[]
+     blocks=[B68]
+  IfRegion RegionType.IF entry=B112 exit=- cond=B112 then=[B264] else=[B268] merge=B264
+     elif_cond=[] elif_bodies=[] final_else=[]
+     blocks=[B112,B194,B260,B264,B268]
+    Region RegionType.BASIC entry=B258 exit=- cond=- then=[] else=[] merge=-
+       elif_cond=[] elif_bodies=[] final_else=[]
+       blocks=[B258]
+Region RegionType.BASIC entry=B0 exit=- cond=- then=[] else=[] merge=-
+   elif_cond=[] elif_bodies=[] final_else=[]
+   blocks=[B0]
+Region RegionType.BASIC entry=B68 exit=- cond=- then=[] else=[] merge=-
+   elif_cond=[] elif_bodies=[] final_else=[]
+   blocks=[B68]
+Region RegionType.BASIC entry=B258 exit=- cond=- then=[] else=[] merge=-
+   elif_cond=[] elif_bodies=[] final_else=[]
+   blocks=[B258]
+########## ownership
+  B0    term=POP_JUMP_FORWARD_IF_FALSE 112  succ=['B68', 'B112'] preds=[] owner=IfRegion(RegionType.IF_ELIF_CHAIN)
+  B68   term=RETURN_VALUE                   succ=[] preds=['B0'] owner=IfRegion(RegionType.IF_ELIF_CHAIN)
+  B112  term=POP_JUMP_FORWARD_IF_FALSE 260  succ=['B194', 'B260'] preds=['B0'] owner=IfRegion(RegionType.IF_ELIF_CHAIN)
+  B194  term=POP_JUMP_FORWARD_IF_FALSE 268  succ=['B268', 'B258'] preds=['B112'] owner=IfRegion(RegionType.IF_ELIF_CHAIN)
+  B258  term=JUMP_FORWARD 264               succ=['B264'] preds=['B194'] owner=IfRegion(RegionType.IF_ELIF_CHAIN)
+  B260  term=JUMP_FORWARD 268               succ=['B268'] preds=['B112'] owner=IfRegion(RegionType.IF_ELIF_CHAIN)
+  B264  term=RETURN_VALUE                   succ=[] preds=['B258'] owner=IfRegion(RegionType.IF_ELIF_CHAIN)
+  B268  term=RETURN_VALUE                   succ=[] preds=['B194', 'B260'] owner=IfRegion(RegionType.IF)

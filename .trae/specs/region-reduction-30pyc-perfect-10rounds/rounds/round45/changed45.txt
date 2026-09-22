@@ -1,0 +1,2 @@
+F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc
+F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc

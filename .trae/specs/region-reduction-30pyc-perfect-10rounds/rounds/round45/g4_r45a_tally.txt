@@ -1,0 +1,9 @@
+NOLANDED D:/Temp/r43gate/g0pyc/nc_controls.pyc
+NOLANDED D:/Temp/r43gate/g0pyc/nc_controls2.pyc
+NOLANDED D:/Temp/r43gate/g0pyc/r43d_01_guardchain_then_while.pyc
+NOLANDED D:/Temp/r43gate/g0pyc/r43d_02_compound_cond_control.pyc
+UP   wizard_quant_api.pyc                   50/53 -> 51/53
+MOVED quote_handler.pyc                     51/57
+   b+ ['get_index_stocks_local', 150, 60, 0, 92]
+   a+ ['get_index_stocks_local', 149, 54, 5, 97]
+SUM files=544 same=539 gained=1 lost=0

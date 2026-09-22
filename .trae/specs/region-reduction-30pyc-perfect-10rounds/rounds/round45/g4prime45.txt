@@ -1,0 +1,5 @@
+== IQCommon/strategy/wizard_quant_api.pyc  strict-defective a=5 b=4
+   FIXED   <module>.region_mean_desicion   [seq_len orig=51 decomp=52]
+== fly/data/quote_handler.pyc  strict-defective a=7 b=7
+   CHANGED <module>.get_index_stocks_local  a=[seq_len orig=151 decomp=56] b=[seq_len orig=151 decomp=60]
+G4-prime affected=2 fixed=1 broken=0 changed=1
