@@ -835,3 +835,15 @@
           `r26_a_break_prefix_nested` 与 R26-A 同族，须以其 `ANALYSIS.md` 对已落地字节复测后再谈判据；
           ③ B3/#39 异常尾声复制、`DefaultMatcher.match` 大块换位、#42/#43/#44 仍未收口；
           ④ `events` 函数的残余缺口 19 条列 D2 过量发射族复测。
+
+- [x] Task 26 收口补记（提交 `481a8e84` 之后，落地字节不变，只补证与换仪器）：
+  - [x] 26.7-a G0/G1 数字改按**已提交复现**重测：`test_repros/round26_break_prefix/r26a_01_break_prefix_in_while.pyc`
+    对 `mirr_head`（落地前字节）读 `3/4` 且 `drain orig=35 decomp=31`，对落地字节读 `4/4` 且 `mism=[]`；
+    原始记录 `rounds/round26/logs/g0_head.jsonl`、`g0_landed.jsonl`。
+  - [x] 26.7-b R26-A 的合成复现并入锚点电池：92 → 93 例（名单 `rounds/round26/logs/anchors93.txt`），
+    落地字节基线 `rounds/round26/logs/base_landed93.jsonl`（93 条记录、error 0、空读数 0）。
+  - [x] 26.7-c 零副作用金丝雀换成 `site-packages/fly/simtradding/request_data_transform.pyc`
+    （官方 `2/2`，且 R26-A 的全量 A/B 把它留在未变动集合内），基线产物 sha `1d9eebd2932ec072`
+    （`rounds/round26/logs/canary1.txt` + `canary_landed.jsonl`）；`quotation.pyc` 自 R25 起是承重锚点。
+  - [ ] 26.7-d push：github.com:443 间歇不可达（同时 `api.github.com` 可达、token 经 `/user` 校验为有效且未过期），
+    补证提交待网络恢复后 push，并断言 `refs/remotes/origin/main..HEAD` 为 0。
