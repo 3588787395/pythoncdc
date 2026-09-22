@@ -1,0 +1,7 @@
+<module>.save_testds_to_json  save_testds_to_json
+  filtered orig=314 decomp=310 delta=-4   non-equal blocks=1
+  H1 delete   orig[302:306] @1976..1982  ->  decomp[302:302] @1978..1976   n=4/0
+        o  @1976  ('None', 'POP_EXCEPT')
+        o  @1978  ('None', 'POP_EXCEPT')
+        o  @1980  ('None', 'LOAD_CONST')
+        o  @1982  ('None', 'RETURN_VALUE')

@@ -1,0 +1,12 @@
+Round 34 harness smoke test (before any candidate exists) -- proves build/land replay, NOT a measurement.
+core sha256[:20] before/after = 2d3a5d51d114da77d3d4 (asserted again after); core never written (no --apply).
+
+$ r34c.py build --spec=spec_hst.json --dst=hst   # spec = comment-only edit at unique anchor 'def _is_cleanup_only_no_return'
+mirrors built: head pristine == worktree bytes, cand patched (1 edits, core/cfg/region_ast_generator.py, BOM=True, nl=CRLF)
+
+$ land34.py land --spec=spec_hst.json --mirror=mirr_hst   (no --apply)
+spec spec_hst.json  file core/cfg/region_ast_generator.py  edits 1  inserted lines 1  nl=CRLF  BOM=True
+replay == measured mirror bytes: OK (region_ast_generator.py, 2981329 bytes)   [landed mirror is 2981305 = 24 bytes shorter: the +1 comment line]
+dry run; pass --apply to write ...core/cfg/region_ast_generator.py
+
+throwaway arm mirr_hst + spec_hst.json deleted; mirr_head kept (used by g4_head).

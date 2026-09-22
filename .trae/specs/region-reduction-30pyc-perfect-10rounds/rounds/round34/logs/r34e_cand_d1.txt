@@ -1,0 +1,14 @@
+G1  deficit-1 pool (7 files): head/landed arm vs rejected arm `cand` = R34-E
+    a-side = landed_d1.jsonl (core 2d3a5d51d114da77d3d4), b-side = r34e_cand_d1.jsonl
+    verdict per file is the product sha; mism = [name, orig, decomp, jump_diffs, true_diffs].
+    SAME = byte-identical product; TOUCHED = bytes differ but matched/total unchanged,
+    i.e. the official file-level reading neither improves nor regresses.
+SAME       instance.pyc                       31/32 -> 31/32  landed=[["_init_config", 86, 84, 1, 37]]  cand=[["_init_config", 86, 84, 1, 37]]
+SAME       replace_utils.pyc                  8/9 -> 8/9  landed=[["decrypt_database_url", 295, 324, 1, 250]]  cand=[["decrypt_database_url", 295, 324, 1, 250]]
+SAME       strategy.pyc                       23/24 -> 23/24  landed=[["tick_worker_thread", 268, 247, 32, 113]]  cand=[["tick_worker_thread", 268, 247, 32, 113]]
+TOUCHED    default_event_source.pyc           13/14 -> 13/14  landed=[["events", 510, 508, 2, 157]]  cand=[["events", 510, 509, 2, 155]]
+SAME       realtime_event_source.pyc          11/12 -> 11/12  landed=[["clock_worker", 1275, 1291, 15, 480]]  cand=[["clock_worker", 1275, 1291, 15, 480]]
+SAME       matcher.pyc                        16/17 -> 16/17  landed=[["match", 713, 689, 9, 524]]  cand=[["match", 713, 689, 9, 524]]
+SAME       function.pyc                       14/15 -> 14/15  landed=[["save_testds_to_json", 314, 310, 19, 8]]  cand=[["save_testds_to_json", 314, 310, 19, 8]]
+TALLY SAME=6 IMPROVED=0 REGRESSED=0  (touched but file-level unchanged: 1)
+events reading: 510/508 j2 t157 -> [["events", 510, 509, 2, 155]]  (file still 13/14, no flip)

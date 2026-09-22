@@ -1,0 +1,12 @@
+Round 34 close-out core/product integrity probe (fresh measurement at archive time)
+HEAD = 762e8213
+core/cfg/region_ast_generator.py raw sha256[:20] = 2d3a5d51d114da77d3d4 (canonical landed identity)
+  BOM present: True   size: 2981305
+  worktree-normalised (CRLF->LF, BOM kept) sha256[:20] = 473193456cc137c62217
+  HEAD blob  normalised (CRLF->LF)          sha256[:20] = 473193456cc137c62217
+  => worktree normalised == HEAD blob normalised: True (core.autocrlf=true stores LF blobs)
+git status --porcelain -- core           : ''
+git status --porcelain -- site-packages  : ''
+git status --porcelain -- test_repros    : ''
+git status --porcelain -- pyc_index.json : ''
+=> Round 34 shipped no predicate: core untouched, no product or index write-back.

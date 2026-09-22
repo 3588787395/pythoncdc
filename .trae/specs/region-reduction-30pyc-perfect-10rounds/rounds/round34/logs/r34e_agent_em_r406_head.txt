@@ -1,0 +1,26 @@
+core arm: F:/Downloads/pythoncdc-main
+[IN ] cfg=f header=6
+[IN ] cfg=f header=118
+[CALL] cfg=f header=118
+[FOR] cfg=f header@118 has_break=False is_async=False
+      else_blocks=[] break_blocks=[] back_edge=158 cond_block=None for_iter_exit=Block 10 (offset 160-160):
+  L 10 > 160: JUMP_BACKWARD 78
+  Predecessors: 6
+  Successors: 2
+      parent=IfRegion
+      AST-> For(no-orelse)
+[BRANCH] in=[220] depth=0 -> stmts=['Return']
+[CALL] cfg=f header=6
+[FOR] cfg=f header@6 has_break=False is_async=False
+      else_blocks=[220] break_blocks=[] back_edge=218 cond_block=None for_iter_exit=Block 14 (offset 220-228):
+  [EXIT]
+  L 13 > 220: LOAD_CONST 4
+        222: LOAD_CONST 5
+        224: LOAD_CONST 2
+        226: BUILD_CONST_KEY_MAP 2
+        228: RETURN_VALUE
+  Predecessors: 2
+      else block@220   preds=[6] succs=[] term=RETURN_VALUE
+      parent=NoneType
+      AST-> LIST[For(no-orelse),Return]
+product 479 bytes (probe-local)

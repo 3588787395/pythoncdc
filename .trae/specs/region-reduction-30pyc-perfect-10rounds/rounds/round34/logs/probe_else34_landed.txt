@@ -1,0 +1,21 @@
+##### F:/Downloads/pythoncdc-main/test_repros/round4/r4_06_continue_after_nested_for_dropped.pyc
+=== cfg=f
+  lr.hdr  eb   preds        succs      term                     landed_strip r34e_excl  E1_backedge  E1_parenthdr  E2_backjump_to_other_header   (parent hdr,backedge)
+     118   160 [118]        [6]        JUMP_BACKWARD->6         True           True       False        False         True     [(6, 218)]
+       6   220 [6]          []         RETURN_VALUE             False          True       False        False         False    [(118, 158)]
+##### F:/Downloads/pythoncdc-main/test_repros/round4/r4_07_continue_after_two_nested_fors.pyc
+=== cfg=f
+  lr.hdr  eb   preds        succs      term                     landed_strip r34e_excl  E1_backedge  E1_parenthdr  E2_backjump_to_other_header   (parent hdr,backedge)
+     210   252 [210]        [6]        JUMP_BACKWARD->6         True           True       False        False         True     [(6, 362)]
+     118   196 [118]        [210]      GET_ITER                 True           True       False        False         False    [(6, 362)]
+       6   364 [6]          []         RETURN_VALUE             False          True       False        False         False    [(210, 250), (118, 194)]
+##### F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc
+=== cfg=events
+  lr.hdr  eb   preds        succs      term                     landed_strip r34e_excl  E1_backedge  E1_parenthdr  E2_backjump_to_other_header   (parent hdr,backedge)
+    2708  3208 [2708]       [3214]     JUMP_FORWARD->3214       True           True       False        False         False    [(2476, 3210), (2374, 3214)]
+    2708  3214 [2556, 3208] [2374]     JUMP_BACKWARD->2374      True           False      True         False         True     [(2476, 3210), (2374, 3214)]
+    1236  1606 [1236]       [828]      JUMP_BACKWARD->828       True           True       False        False         True     [(828, 2182)]
+    2116  2182 [2116]       [828]      JUMP_BACKWARD->828       True           True       True         False         True     [(828, 2182)]
+    2374  3324 [2374]       []         RETURN_VALUE             False          True       False        False         False    [(2708, 3206), (2476, 3210)]
+     828  2318 [828]        []         RETURN_VALUE             False          True       False        False         False    [(1236, 1468), (2116, 2118)]
+=== probe done (3 pycs)

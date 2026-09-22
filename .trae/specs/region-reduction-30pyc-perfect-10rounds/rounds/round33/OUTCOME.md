@@ -91,9 +91,17 @@ last instrs 均为 `['LOAD_METHOD','PRECALL','CALL']`）。`logs/probe_*_pre.txt
   重数」，禁读内容同一性与指令条数；与 R31-C 的纯 `discard` 判据同教义反侧。
 * 已知风险上界：R33-A 扩大了 BFS 可达集，多条 return 链时先找到哪一条依赖 `successors` 集合弹出序；
   本轮 402 文件 A/B 为 `MOVED=0`，但这不是结构保证 —— 若出现同函数多链形状，先加「链择优」判据。
-* 残余 deficit-1 六个：`_init_config 86/84 j1 t37`、`decrypt_database_url 295/324 j1 t250`、
-  `tick_worker_thread 268/247 j32 t113`、`events 510/508 j2 t157`、`clock_worker 1275/1291 j15 t480`、
-  `match 713/689 j9 t524`；`wizard_quant_api.pyc 49/53` 的 4 个函数（本轮 canary 读数同上）。
+* 残余靶子：本节上一版写成「deficit-1 六个」，经 Round 34 池实测订正 —— 那六个是 deficit-1 池中的
+  六个函数签名，而 `wizard_quant_api.pyc 49/53` 的 deficit 是 **4**、根本不在 deficit-1 之列。
+  落地字节（762e8213）上真实的 deficit-1 池是 7 个文件、每个恰一个缺陷函数
+  （`round34/logs/landed_d1.jsonl`，归档前的测量输出）：`instance.pyc 31/32 :: _init_config 86/84 j1 t37`、
+  `replace_utils.pyc 8/9 :: decrypt_database_url 295/324 j1 t250`、
+  `strategy.pyc 23/24 :: tick_worker_thread 268/247 j32 t113`、
+  `default_event_source.pyc 13/14 :: events 510/508 j2 t157`、
+  `realtime_event_source.pyc 11/12 :: clock_worker 1275/1291 j15 t480`、
+  `matcher.pyc 16/17 :: match 713/689 j9 t524`、
+  `function.pyc 14/15 :: save_testds_to_json 314/310 j19 t8`（= 上一条线 B 移交）。
+  `wizard_quant_api.pyc 49/53` 的 4 个函数（本轮 canary 读数同上）作为 deficit-4 另行登记。
 * 锚点电池须扩为 104：在 102 之上加 `test_repros/round33_return_through_statement/r33a_witness.pyc`
   （落地字节上应读 `17/17`）与本轮靶子 `IQCommon/utils.pyc`（`22/22`）。见证的 `.pyc` 受 `.gitignore`
   管、不入册（与 Round 32 两个合成件同例），下轮须由受跟踪的 `r33a_witness.py` 以

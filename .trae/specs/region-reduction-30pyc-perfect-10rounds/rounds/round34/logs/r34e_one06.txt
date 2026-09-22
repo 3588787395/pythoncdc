@@ -1,0 +1,1 @@
+F:/Downloads/pythoncdc-main/test_repros/round4/r4_06_continue_after_nested_for_dropped.pyc

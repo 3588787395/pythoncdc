@@ -1,0 +1,464 @@
+# Source Generated with Decompyle++ (Python version)
+# File: function.pyc (Python 3.11)
+
+global THREAD_STATUS
+import datetime
+import json
+import numpy as np
+import os
+import pytz
+from IQCommon import pandas as pd
+from IQCommon.common import SERVER_TYPE
+from IQCommon.exception import get_traceback_message
+from IQCommon.const import BACKTEST_INFO_FILE
+from IQEngine.const import EntrustDirection
+from IQEngine.utils import strategy_log, system_log
+from IQEngine.utils.i18n import get_local_text as _
+from IQCommon.util.fileio_utils import FileIO, FileLock
+FIRST_LINE = """,algo_volatility,algorithm_period_return,alpha,benchmark_period_return,benchmark_volatility,beta,capital_used,ending_cash,ending_exposure,ending_value,excess_return,gross_leverage,information,long_exposure,long_value,longs_count,max_drawdown,max_leverage,net_leverage,orders,period_close,period_label,period_open,pnl,portfolio_value,positions,returns,sharpe,short_exposure,short_value,shorts_count,sortino,starting_cash,starting_exposure,starting_value,trading_days,transactions,treasury_period_return,annual_return,benchmark_annual_return,excess_annual_return,daily_win_ratio,trade_win_ratio,profit_loss_ratio,win_time,lost_time,code_return,hold_days_info,month_return,hold_ratio,hold_ratio_mean,txn_count
+"""
+COLUMNS = FIRST_LINE[1:-1].split(',')
+THREAD_STATUS = False
+def local_to_utc(local_dt, utc_format='%Y-%m-%dT%H:%M:%S.000Z'):
+    local_tz = pytz.timezone('Asia/Chongqing')
+    if isinstance(local_dt, datetime.date):
+        local_format = '%Y-%m-%d %H:%M:%S'
+        dt = datetime.datetime.strptime(local_dt.strftime(local_format), local_format)
+    elif isinstance(local_dt, datetime.datetime):
+        dt = local_dt
+    else:
+        raise RuntimeError(_('不支持的时间类型'))
+    local_dt = local_tz.localize(dt, is_dst=None)
+    utc_dt = local_dt.astimezone(pytz.utc)
+    return utc_dt.strftime(utc_format)
+def save_profit_json(trade_dir_path, trade_id, profit_file_index, minute_result, frequency):
+    if profit_file_index == 0:
+        max_num = 0
+        for filename in os.listdir(os.path.join(trade_dir_path, 'result', trade_id)):
+            if 'profit' in filename:
+                current_num = int(filename.replace('profit', '').split('.')[0])
+                if current_num > max_num:
+                    max_num = current_num
+            profit_file_index = max_num
+    date = pd.Timestamp(datetime.datetime.strptime(datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.utc))
+    new_index = date.to_pydatetime().strftime('%Y-%m-%d 01:30:00') if frequency == '1d' else date.to_pydatetime().strftime('%Y-%m-%d %H:%M:%S')
+    columns = ['algorithm_period_return', 'benchmark_period_return', 'total_value', 'current_price', 'annual_return']
+    new_data = []
+    for column in columns:
+        new_data.append(minute_result[column][0] if isinstance(minute_result[column], np.ndarray) else minute_result[column])
+    if profit_file_index > 0:
+        profit_file_path = f'{trade_dir_path!s}/result/{trade_id!s}/profit{str(profit_file_index)!s}.json'
+        data = FileIO(profit_file_path).read(return_type='dict')
+        if data is None:
+            system_log.error('save_profit_json error: %s' % get_traceback_message())
+            error_path = f'{trade_dir_path!s}/result/{trade_id!s}/error{str(profit_file_index)!s}.json'
+            os.system(f'cp {profit_file_path!s} {error_path!s}')
+            data = {'columns': ['algorithm_period_return', 'benchmark_period_return', 'pretotal', 'preprice', 'year_algorithm_period_return'], 'index': [], 'data': []}
+        if len(data['data']) >= 50:
+            profit_file_index = profit_file_index + 1
+            profit_file_path = f'{trade_dir_path!s}/result/{trade_id!s}/profit{str(profit_file_index)!s}.json'
+            data = {'columns': ['algorithm_period_return', 'benchmark_period_return', 'pretotal', 'preprice', 'year_algorithm_period_return'], 'index': [], 'data': []}
+            data['index'].append(new_index)
+            data['data'].append(new_data)
+        else:
+            profit_file_path = f'{trade_dir_path!s}/result/{trade_id!s}/profit{str(profit_file_index)!s}.json'
+            data['index'].append(new_index)
+            data['data'].append(new_data)
+    else:
+        profit_file_index = profit_file_index + 1
+        profit_file_path = f'{trade_dir_path!s}/result/{trade_id!s}/profit{str(profit_file_index)!s}.json'
+        data = {'columns': ['algorithm_period_return', 'benchmark_period_return', 'pretotal', 'preprice', 'year_algorithm_period_return'], 'index': [], 'data': []}
+        data['index'].append(new_index)
+        data['data'].append(new_data)
+    FileIO(profit_file_path).write(data, data_type='dict')
+def create_positions_stats(daily_result):
+    base_position = {'long_pnl': 0.0, 'short_amount': 0, 'short_price': 0, 'last_sale_price': None, 'amount': 0, 'today_long_amount': 0, 'contract_multiplier': 1, 'margin': 0, 'type': None, 'long_price': 0, 'side': 'long', 'symbol': None, 'short_pnl': 0.0, 'cost_basis': None, 'security': None, 'long_amount': 0, 'sid': {'security_end_date': '2116-02-20T23:53:38.427Z', 'security_start_date': '1970-01-01T00:00:00.000Z', 'exchange': None, 'start_date': '1970-01-01T00:00:00.000Z', 'asset_name': None}, 'today_short_amount': 0, 'enable_amount': 0, 'short_cost_basis': 0.0, 'long_cost_basis': 0.0, 'stop': None, 'init_time': None}
+    positions = []
+    if 'STOCK_positions' in daily_result:
+        for _position in daily_result['STOCK_positions']:
+            if not _position['long_create_time']:
+                continue
+            position = base_position.copy()
+            position['cost_basis'] = _position['avg_price']
+            position['short_price'] = _position['last_price']
+            position['last_sale_price'] = _position['last_price']
+            position['long_price'] = _position['last_price']
+            position['amount'] = _position['amount']
+            position['enable_amount'] = _position['sellable']
+            position['type'] = 'stock'
+            position['security'] = _position['symbol'].replace('.XSHG', '.SS').replace('.XSHE', '.SZ')
+            position['symbol'] = _position['symbol'].replace('.XSHG', '.SS').replace('.XSHE', '.SZ')
+            if _position['long_create_time']:
+                position['init_time'] = _position['long_create_time'].strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                position['init_time'] = ''
+            positions.append(position)
+    if 'FUTURE_positions' in daily_result:
+        for _position in daily_result['FUTURE_positions']:
+            if not (_position['long_create_time'] or _position['short_create_time']):
+                continue
+            side = None
+            position_long = base_position.copy()
+            position_short = base_position.copy()
+            if int(_position['buy_amount']) > 0:
+                position_long['type'] = 'future'
+                position_long['security'] = _position['symbol']
+                position_long['symbol'] = _position['symbol']
+                position_long['margin'] = _position['margin']
+                position_long['contract_multiplier'] = _position['contract_multiplier']
+                position_long['last_sale_price'] = _position['last_price']
+                position_long['long_amount'] = _position['buy_amount']
+                position_long['today_long_amount'] = _position['buy_today_amount']
+                position_long['long_price'] = _position['buy_avg_open_price']
+                position_long['long_pnl'] = _position['buy_pnl']
+                position_long['long_cost_basis'] = _position['long_cost_basis']
+                position_long['cost_basis'] = _position['long_cost_basis']
+                position_long['amount'] = position_long['long_amount']
+                position_long['side'] = 'long'
+                if _position['long_create_time']:
+                    position_long['init_time'] = _position['long_create_time'].strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    position_long['init_time'] = ''
+                positions.append(position_long)
+            if int(_position['sell_amount']) > 0:
+                position_short['type'] = 'future'
+                position_short['security'] = _position['symbol']
+                position_short['symbol'] = _position['symbol']
+                position_short['margin'] = _position['margin']
+                position_short['contract_multiplier'] = _position['contract_multiplier']
+                position_short['last_sale_price'] = _position['last_price']
+                position_short['short_amount'] = _position['sell_amount']
+                position_short['today_short_amount'] = _position['sell_today_amount']
+                position_short['short_price'] = _position['sell_avg_open_price']
+                position_short['short_pnl'] = _position['sell_pnl']
+                position_short['short_cost_basis'] = _position['short_cost_basis']
+                position_short['cost_basis'] = _position['short_cost_basis']
+                position_short['amount'] = position_short['short_amount']
+                position_short['side'] = 'short'
+                if _position['short_create_time']:
+                    position_short['init_time'] = _position['short_create_time'].strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    position_short['init_time'] = ''
+                positions.append(position_short)
+    if 'OPTION_positions' in daily_result:
+        for _position in daily_result['OPTION_positions']:
+            if not (_position['long_create_time'] or _position['short_create_time']):
+                continue
+            side = None
+            position_long = base_position.copy()
+            position_short = base_position.copy()
+            position_covered = base_position.copy()
+            if int(_position['buy_amount']) > 0:
+                position_long['type'] = 'future'
+                position_long['security'] = _position['symbol']
+                position_long['symbol'] = _position['symbol']
+                position_long['margin'] = _position['margin']
+                position_long['contract_multiplier'] = _position['contract_multiplier']
+                position_long['last_sale_price'] = _position['last_price']
+                position_long['long_amount'] = _position['buy_amount']
+                position_long['long_price'] = _position['buy_avg_holding_price']
+                position_long['long_pnl'] = _position['buy_pnl']
+                position_long['long_cost_basis'] = _position['buy_avg_holding_price']
+                position_long['cost_basis'] = _position['buy_avg_holding_price']
+                position_long['amount'] = _position['buy_amount']
+                position_long['side'] = 'long'
+                if _position['long_create_time']:
+                    position_long['init_time'] = _position['long_create_time'].strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    position_long['init_time'] = ''
+                positions.append(position_long)
+            if int(_position['sell_amount']) > 0:
+                position_short['type'] = 'future'
+                position_short['security'] = _position['symbol']
+                position_short['symbol'] = _position['symbol']
+                position_short['margin'] = _position['margin']
+                position_short['contract_multiplier'] = _position['contract_multiplier']
+                position_short['last_sale_price'] = _position['last_price']
+                position_short['short_amount'] = _position['sell_amount']
+                position_short['short_price'] = _position['sell_avg_holding_price']
+                position_short['short_pnl'] = _position['sell_pnl']
+                position_short['short_cost_basis'] = _position['sell_avg_holding_price']
+                position_short['cost_basis'] = _position['sell_avg_holding_price']
+                position_short['amount'] = _position['sell_amount']
+                position_short['side'] = 'short'
+                if _position['short_create_time']:
+                    position_short['init_time'] = _position['short_create_time'].strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    position_short['init_time'] = ''
+                positions.append(position_short)
+            if int(_position['covered_amount']) > 0:
+                position_covered['type'] = 'future'
+                position_covered['security'] = _position['symbol']
+                position_covered['symbol'] = _position['symbol']
+                position_covered['margin'] = _position['margin']
+                position_covered['contract_multiplier'] = _position['contract_multiplier']
+                position_covered['last_sale_price'] = _position['last_price']
+                position_covered['covered_amount'] = _position['covered_amount']
+                position_covered['covered_price'] = _position['covered_avg_holding_price']
+                position_covered['covered_pnl'] = _position['covered_pnl']
+                position_covered['covered_cost_basis'] = _position['covered_avg_holding_price']
+                position_covered['cost_basis'] = _position['covered_avg_holding_price']
+                position_covered['amount'] = _position['covered_amount']
+                position_covered['side'] = 'short'
+                if _position['short_create_time']:
+                    position_covered['init_time'] = _position['short_create_time'].strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    position_covered['init_time'] = ''
+                positions.append(position_covered)
+    return positions
+def create_orders_stats(daily_result):
+    base_order = {'priceGear': 0, 'created': None, 'amount': 0, 'commission': 0, 'id': None, 'status': None, 'cancel_amount': 0, 'stop': None, 'clear': True, 'child_mother': None, 'filled': 0, 'reason': None, 'limit': None, 'stop_reached': False, 'dt': None, 'sid': {'security_end_date': '2116-02-20T23:53:38.427Z', 'security_start_date': '1970-01-01T00:00:00.000Z', 'exchange': None, 'start_date': '1970-01-01T00:00:00.000Z', 'asset_name': None}, 'limit_reached': False}
+    _orders = []
+    orders = daily_result['summary']['daily_orders']
+    future_positions = []
+    if 'FUTURE_positions' in daily_result.keys():
+        future_positions = daily_result['FUTURE_positions']
+    for _order in orders:
+        order = base_order.copy()
+        order['id'] = _order.order_id
+        order['symbol'] = _order.symbol.replace('.XSHG', '.SS').replace('.XSHE', '.SZ')
+        order['security'] = _order.symbol.replace('.XSHG', '.SS').replace('.XSHE', '.SZ')
+        order['amount'] = _order.amount if _order.entrust_direction == EntrustDirection.BUY else -_order.amount
+        order['status'] = _order.status
+        order['commission'] = _order.transaction_cost
+        order['created'] = str(_order.datetime.date())
+        order['dt'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+        order['cancel_amount'] = _order.amount if _order.entrust_direction == EntrustDirection.BUY else -_order.amount
+        order['filled'] = _order.filled_amount if _order.entrust_direction == EntrustDirection.BUY else -_order.filled_amount
+        if len(future_positions) > 0:
+            for position in future_positions:
+                if _order.symbol in position.values():
+                    contract_multiplier = position.get('contract_multiplier')
+                    order['contract_multiplier'] = contract_multiplier
+                    if _order.futures_direction == 'OPEN':
+                        if _order.entrust_direction == EntrustDirection.BUY:
+                            side = 'long'
+                        else:
+                            side = 'short'
+                    elif _order.entrust_direction == EntrustDirection.BUY:
+                        side = 'short'
+                    else:
+                        side = 'long'
+                    order['side'] = side
+                    if side == 'long':
+                        order['amount'] = _order.amount if _order.entrust_direction == EntrustDirection.BUY else -_order.amount
+                        continue
+                    order['amount'] = -_order.amount if _order.entrust_direction == EntrustDirection.BUY else _order.amount
+        _orders.append(order)
+    return _orders
+def create_transactions_stats(daily_result):
+    base_transaction = {'sid': {'exchange': None, 'asset_name': None, 'security_end_date': '2116-02-20T23:53:38.427Z', 'start_date': '1970-01-01T00:00:00.000Z', 'security_start_date': '1970-01-01T00:00:00.000Z'}, 'price': None, 'amount': None, 'message': None, 'security': None, 'dt': None, 'exchange_fees': 0.0, 'tax_cost': 0.0, 'commission': None, 'symbol': None, 'order_id': None, 'income_ratio': None, 'create_position_type': None}
+    _transactions = []
+    trades = daily_result['trades']
+    future_positions = []
+    positions = []
+    if 'FUTURE_positions' in daily_result.keys():
+        positions = daily_result['FUTURE_positions']
+    if 'OPTION_positions' in daily_result.keys():
+        positions = daily_result['OPTION_positions']
+    for trade in trades:
+        transaction = base_transaction.copy()
+        transaction['order_id'] = trade['order_id']
+        transaction['income_ratio'] = trade.get('income_ratio', 0.0)
+        transaction['create_position_type'] = trade.get('create_position_type')
+        transaction['sid']['asset_name'] = trade.get('name')
+        transaction['symbol'] = trade['symbol'].replace('.XSHG', '.SS').replace('.XSHE', '.SZ')
+        transaction['security'] = trade['symbol'].replace('.XSHG', '.SS').replace('.XSHE', '.SZ')
+        transaction['price'] = trade['last_price']
+        transaction['amount'] = trade['last_amount'] if trade['entrust_direction'] == 'BUY' else -trade['last_amount']
+        transaction['commission'] = trade['commission'] + trade['tax']
+        transaction['dt'] = datetime.datetime.strptime(trade['trading_datetime'], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
+        if len(positions) > 0:
+            for position in positions:
+                if trade['symbol'] in position.values():
+                    contract_multiplier = position.get('contract_multiplier')
+                    transaction['contract_multiplier'] = contract_multiplier
+                    if trade.get('futures_direction') == 'OPEN':
+                        if trade['entrust_direction'] == 'BUY':
+                            side = 'long'
+                        else:
+                            side = 'short'
+                    elif trade['entrust_direction'] == 'SELL':
+                        side = 'long'
+                    else:
+                        side = 'short'
+                    transaction['side'] = side
+                    if side == 'long':
+                        transaction['amount'] = trade['last_amount'] if trade['futures_direction'] == 'OPEN' else -trade['last_amount']
+                        continue
+                    transaction['amount'] = -trade['last_amount'] if trade['futures_direction'] == 'OPEN' else trade['last_amount']
+        _transactions.append(transaction)
+    return _transactions
+def create_daily_stats(daily_result, is_csv=False, need_dataframe=True):
+    risk_result = daily_result['risk_result']
+    portfolio = daily_result['portfolio']
+    summary = daily_result['summary']
+    for account in ('STOCK_account', 'FUTURE_account', 'OPTION_account', 'HKS_account'):
+        if account in daily_result:
+            if is_csv:
+                daily_dts = [daily_result[account]['date'].strftime('%Y-%m-%d 07:00:00')]
+            else:
+                daily_dts = [local_to_utc(daily_result[account]['date'])]
+            period_close = daily_result[account]['date'].strftime('%Y-%m-%dT07:00:00.000Z')
+            period_label = daily_result[account]['date'].strftime('%Y-%m')
+            period_open = daily_result[account]['date'].strftime('%Y-%m-%dT01:31:00.000Z')
+            break
+    else:
+        daily_dts = None
+    if need_dataframe:
+        orders = []
+        positions = []
+        transactions = []
+        data = [[risk_result['algorithm_volatility'], summary['total_returns'], risk_result['alpha'], summary.get('benchmark_total_returns'), risk_result['benchmark_volatility'], risk_result['beta'], portfolio['total_value'] - portfolio['cash'], portfolio['cash'], None, None, risk_result['excess_return'], None, risk_result['info_ratio'], None, None, 1, risk_result['max_drawdown'], None, None, orders, period_close, period_label, period_open, summary['daily_pnl'], portfolio['portfolio_value'], positions, summary['returns'], risk_result['sharp'], 0, 0, 0, risk_result['sortino'], summary['starting_cash'], portfolio['market_value'], portfolio['market_value'], summary['trading_days'], transactions, None, risk_result['annual_return'], risk_result['benchmark_annual_return'], risk_result['excess_annual_return'], risk_result['daily_win_ratio'], risk_result['trade_win_ratio'], risk_result['profit_loss_ratio'], risk_result['win_time'], risk_result['lost_time'], risk_result['statistic_info'], risk_result['hold_days_info'], risk_result['month_return'], portfolio['hold_ratio'], risk_result['hold_ratio_mean'], summary['txn_count']]]
+        daily_stats = pd.DataFrame(data=data, columns=COLUMNS, index=daily_dts)
+    else:
+        orders = create_orders_stats(daily_result)
+        positions = create_positions_stats(daily_result)
+        transactions = create_transactions_stats(daily_result)
+        daily_stats = [daily_dts[0], risk_result['algorithm_volatility'], summary['total_returns'], risk_result['alpha'], summary.get('benchmark_total_returns'), risk_result['benchmark_volatility'], risk_result['beta'], portfolio['total_value'] - portfolio['cash'], portfolio['cash'], None, None, risk_result['excess_return'], None, risk_result['info_ratio'], None, None, 1, risk_result['max_drawdown'], None, None, orders, period_close, period_label, period_open, summary['daily_pnl'], portfolio['portfolio_value'], positions, summary['returns'], risk_result['sharp'], 0, 0, 0, risk_result['sortino'], summary['starting_cash'], portfolio['market_value'], portfolio['market_value'], summary['trading_days'], transactions, None, risk_result['annual_return'], risk_result['benchmark_annual_return'], risk_result['excess_annual_return'], risk_result['daily_win_ratio'], risk_result['trade_win_ratio'], risk_result['profit_loss_ratio'], risk_result['win_time'], risk_result['lost_time'], risk_result['statistic_info'], risk_result['hold_days_info'], risk_result['month_return'], portfolio['hold_ratio'], risk_result['hold_ratio_mean'], summary['txn_count']]
+    return daily_stats
+def save_testds_to_json(trade_dir_path, trade_id, testds_file_index, daily_result):
+    if testds_file_index == 0:
+        max_num = 0
+        for filename in os.listdir(os.path.join(trade_dir_path, 'result', trade_id)):
+            if 'testds_to_json' in filename:
+                current_num = int(filename.replace('testds_to_json', '').split('.')[0])
+                if current_num > max_num:
+                    max_num = current_num
+        testds_file_index = max_num
+        testds_file_path = os.path.join(trade_dir_path, 'result', trade_id, 'testds_to_json' + str(testds_file_index) + '.json')
+        if not os.path.exists(testds_file_path):
+            testds_file_index += 1
+            ds = create_daily_stats(daily_result)
+        else:
+            data = json.loads(open(testds_file_path, 'r').readline())
+            df = pd.DataFrame(data.get('data'), index=data.get('index'), columns=data.get('columns'))
+            if len(df) >= 50:
+                testds_file_index += 1
+                ds = create_daily_stats(daily_result)
+            else:
+                ds = create_daily_stats(daily_result)
+                ds = df.append(ds)
+    testds_file_path = os.path.join(trade_dir_path, 'result', trade_id, 'testds_to_json' + str(testds_file_index) + '.json')
+    try:
+        ds.to_json(testds_file_path, date_format='iso', orient='split')
+        return None
+    except BaseException:
+        strategy_log.error('更新{}文件失败'.format(testds_file_path))
+        try:
+            pd.set_option('display.max_columns', None)
+            pd.set_option('display.max_rows', None)
+            pd.set_option('display.width', 5000)
+            strategy_log.error(ds)
+            return None
+        except BaseException:
+            system_log.error('打印ds失败')
+            try:
+                testds_file_path = os.path.join(trade_dir_path, 'result', trade_id, 'testds_to_json.csv')
+                ds.to_csv(testds_file_path, index=False)
+            except BaseException:
+                system_log.error('保存{}文件失败'.format(testds_file_path))
+                try:
+                    testds_file_path = os.path.join(trade_dir_path, 'result', trade_id, 'testds_to_json.txt')
+                    with open(testds_file_path, 'w') as fw:
+                        fw.write(ds.to_string(index=False))
+                except BaseException:
+                    system_log.error('保存{}文件失败'.format(testds_file_path))
+            return None
+def get_update_backtest_info_writer(backtest_dir_path, backtest_id, user_id):
+    if SERVER_TYPE == '1':
+        backtest_info_path = os.path.join(backtest_dir_path, user_id, BACKTEST_INFO_FILE)
+    else:
+        backtest_info_path = os.path.join(backtest_dir_path, BACKTEST_INFO_FILE)
+    def backtest_info_writer(daily_result):
+        with FileLock(backtest_info_path):
+            file_io = FileIO(backtest_info_path)
+            csv_reader = file_io.read(return_type='csv_reader')
+            write_info = []
+            exchange_flag = False
+            for _row in csv_reader:
+                if _row[0] == backtest_id:
+                    _row[10] = daily_result['summary']['total_returns']
+                    _row[11] = daily_result['risk_result']['max_drawdown']
+                    _row[12] = daily_result['summary']['current_days']
+                    exchange_flag = True
+                write_info.append(_row)
+            if len(write_info) > 0 and exchange_flag is True:
+                file_io.write(write_info, mode='w', data_type='list')
+    return backtest_info_writer
+def get_testds_to_csv_writer(backtest_dir_path, backtest_id, user_id):
+    if SERVER_TYPE == '1':
+        testds_to_json_file_path = os.path.join(backtest_dir_path, user_id, backtest_id, 'testds_to_json.csv')
+    else:
+        testds_to_json_file_path = os.path.join(backtest_dir_path, backtest_id, 'testds_to_json.csv')
+    backtest_info_writer = get_update_backtest_info_writer(backtest_dir_path, backtest_id, user_id)
+    def csv_writer(daily_result, is_end=False):
+        global THREAD_STATUS
+        record_list = []
+        file_io = FileIO(testds_to_json_file_path)
+        is_new = len(file_io.read(return_type='csv_reader')) == 1
+        if is_new:
+            if len(daily_result['record'].keys()) > 0:
+                first_line = ''
+                for key in daily_result['record'].keys():
+                    first_line = first_line + ',' + 'a_%s' % key
+                first_line = (first_line + FIRST_LINE)[:-1].split(',')
+            else:
+                first_line = FIRST_LINE[:-1].split(',')
+            file_io.write([first_line], data_type='list')
+        elif len(daily_result['record'].keys()) > 0:
+            df = file_io.read(index_col=0)
+            first_line = list(df.columns)
+            new_line = ''
+            for key in daily_result['record'].keys():
+                new_line = new_line + ',' + 'a_%s' % key
+            new_line = (new_line + FIRST_LINE)[:-1].split(',')[1:]
+            if len(first_line) < len(new_line):
+                df = df.reindex(columns=new_line)
+                file_io.write(df)
+        backtest_info_writer(daily_result)
+        new_line = create_daily_stats(daily_result, True, False)
+        if len(daily_result['record'].keys()) > 0:
+            record_list[1:1] = list(daily_result['record'].values())
+        if len(new_line) > 0:
+            new_line[1:1] = record_list
+        file_io.write([new_line], mode='a', data_type='list')
+        if is_end:
+            end_content = """2200-01-01 07:00:00,0.0
+"""
+            file_io.write(''.join(end_content), mode='a', data_type='str')
+            file_io.write(''.join(end_content), mode='a', data_type='str')
+            THREAD_STATUS = True
+            return None
+        else:
+            return None
+    return csv_writer
+def except_for_testds_to_csv(backtest_id_path, first_line=False):
+    testds_to_json_file_path = os.path.join(backtest_id_path, 'testds_to_json.csv')
+    file_io = FileIO(testds_to_json_file_path)
+    def write_info():
+        file_io.write(''.join(end_content), mode='a', data_type='str')
+        file_io.write(''.join(end_content), mode='a', data_type='str')
+    def overwrite_info():
+        file_io.write(FIRST_LINE, data_type='str')
+        write_info()
+    if not first_line:
+        end_content = """2200-01-01 07:00:00,0.0
+"""
+        if os.path.exists(testds_to_json_file_path):
+            if os.path.getsize(testds_to_json_file_path) == 0:
+                overwrite_info()
+                return None
+            else:
+                csv_reader = file_io.read(return_type='csv_reader')
+                if csv_reader[0][1:] == COLUMNS:
+                    write_info()
+                    return None
+                else:
+                    overwrite_info()
+                    return None
+        else:
+            overwrite_info()
+            return None
+    else:
+        file_io.write(FIRST_LINE, data_type='str')

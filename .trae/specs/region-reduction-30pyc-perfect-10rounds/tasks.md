@@ -1351,9 +1351,98 @@
           物化的发射侧判据，须读「终块无后继 ＋ 跨臂前驱重数」，禁读内容同一性与指令条数，与
           R31-C 的纯 `discard` 判据同教义反侧；②R33-A 扩大了 BFS 可达集，同一函数多条 return 链时
           先找到哪一条依赖 `successors` 集合弹出序——本轮 402 文件 `MOVED=0` 是实测而非结构保证，
-          若出现同函数多链形状须先加「链择优」判据；③残余 deficit-1 六个：`_init_config 86/84`、
+          若出现同函数多链形状须先加「链择优」判据；③残余 deficit-1 六个（Round 34 订正：deficit-1 池实测是 **7 个文件**，第七个即本条 ① 移交的 `save_testds_to_json 314/310`；`wizard_quant_api.pyc 49/53` 的 deficit 是 4、不在 deficit-1 之列。逐文件读数见 `rounds/round34/logs/landed_d1.txt`）：`_init_config 86/84`、
           `decrypt_database_url 295/324`、`tick_worker_thread 268/247`、`events 510/508`、
           `clock_worker 1275/1291`、`match 713/689`，另 `wizard_quant_api.pyc 49/53` 的 4 个函数；
           ④锚点电池须扩为 104：在 102 之上加 `test_repros/round33_return_through_statement/
           r33a_witness.pyc`（落地字节上须读 `17/17`）与本轮靶子 `IQCommon/utils.pyc`（`22/22`）；
           ⑤旧移交未动：#61 R30-B3 ＋ 语料外合成见证 `r29x_01 <module> 142/138`。
+- [x] Task 34: Round 34 —— 两条诊断线都被门禁/测量否证 ⇒ 本轮 `core/` 零改动、无发货判据（记录 `rounds/round34/arm-design.md` ＋ `rounds/round34/OUTCOME.md`）
+  - [x] SubTask 34.1: 目标池按落地字节实测（`rounds/round34/logs/pool34.txt`，直读 Round 33 G6 回写的索引，
+          工具 `logs/tool_pool34.py`）：`baseline(landed round33 index, HEAD 762e8213, core sha
+          2d3a5d51d114da77d3d4): files 402 partial 30 sum_deficit 100 deficit1 7 deficit2 12`。
+          池内断言：`len==402`、`Σfunction_count==5746`、`Σmatched_functions==5646`、
+          `all(last_tested_round==33)`、落地核 `sha256[:20]` 与 `git cat-file blob
+          HEAD:core/cfg/region_ast_generator.py` 正规化全等、`git status --porcelain -- core` 为空；
+          七个 deficit-1 文件逐个 `--arm=landed` 复测，每个恰有一个缺陷函数（`logs/landed_d1.txt`），
+          12 个 deficit-2 同尺留档（`logs/landed_d2.txt`，0 error）。
+  - [x] SubTask 34.2: 基线电池建齐（G2′／G3 的「改前」侧）。承重锚点扩为 **104** ＝ Round 33 的 102
+          （由 `anchors98` ＋ Round 31/32 四件合成件重建，并与 `round33/logs/list_anchors102.txt`
+          逐条比对全等）＋ `test_repros/round33_return_through_statement/r33a_witness.pyc` ＋
+          本轮靶子 `site-packages/IQCommon/utils.pyc`；落地臂读数 `logs/a104_landed.jsonl` ＝ 104 条、
+          0 error、74 条全匹配（其余 30 条非全匹配是锚点固有性质：它们钉住已知残余形状，
+          G3 的判据是「候选 vs 落地逐条 SAME=104」而不是「104 全匹配」），两个新锚分别读 `17/17`、
+          `22/22`，与 Round 33 §七 预告一致。上一轮合成复现电池扩为 **39** ＝ `reprobat38` ＋
+          `r33a_witness.pyc`，落地臂 `logs/b39_landed.jsonl` ＝ 39 条、0 error、28 条全匹配。
+  - [x] SubTask 34.3: 索引时效性证明兼 G4「改前」侧：全 402 文件在 `head` 臂（落地字节的镜像）整批复测
+          → `logs/g4_head.all.jsonl`（402 条、402 唯一路径、0 error、0 个 zero-total，
+          `Σmatched 5646 / Σtotal 5746`），再与 `pyc_index.json` 逐文件比对 matched／count／
+          由匹配推得的 `ok`／`partial` 三项 → `logs/index_vs_head_arm34.txt` 记 **0 冲突**。
+          即 Round 33 回写的索引在 Round 34 的落地字节上仍逐文件成立，候选臂 A/B 的起点无需重推。
+  - [x] SubTask 34.4: 落地管线先冒烟、后造候选（`logs/harness_smoke34.txt`）：以一条「只加注释行」的临时
+          spec 走通 `build`（镜像 `mirr_head` 与工作树字节全等、`mirr_cand` 为该 spec 打上 1 处编辑，
+          BOM＋CRLF 保持）与 `land` 的重放判据 `replay == measured mirror bytes: OK`
+          （2981329 字节，比落地镜像 2981305 恰多那一行注释），并验证不带 `--apply` 时拒绝写盘；
+          临时臂用完即删，核仍是 `2d3a5d51d114da77d3d4`。
+  - [x] SubTask 34.5: 线 B（代理 A2）候选 R34-E 由编排方从**落地字节重新派生**并与 A2 提案逐字节相同
+          （`logs/tool_mk_spec34e.py` → `byte-for-byte identical to A2 proposal: True`）：
+          anchor 在 `core/cfg/region_analyzer.py:4494` 唯一，候选文本 `compile()` 通过，引用的每个符号
+          都在同一作用域内已被既有代码使用；`region_analyzer.py` 无 BOM、纯 CRLF 26995 行、
+          正规化 sha256[:20] `2f7c18c2e7b7e3851a2b` == HEAD blob ⇒ 工作树未被代理写过。
+  - [x] SubTask 34.6: 门禁严格串行。G1（deficit-1 池 7 文件）`SAME=6 IMPROVED=0 REGRESSED=0`，第 7 行是
+          唯一被触及的靶子 `default_event_source.pyc`：其 `events 510/508 j2 t157 → 510/509 j2 t155`
+          （取回 1 条指令、文件级不翻转）⇒ 与 Round 31 §六「该靶子需两条判据」一致（`logs/r34e_cand_d1.txt`）。
+          G2′（39 件合成复现）`SAME=37 IMPROVED=0 REGRESSION=2 MOVED=0 ERR=0`、
+          `files fully matched: a=28 b=26`（`logs/r34e_g2prime_cand_ab.txt`），两条回退正是已固定的
+          `test_repros/round4/r4_06_continue_after_nested_for_dropped.pyc 2/2 → 1/2`（`f 56/55 j3 t19`）
+          与 `r4_07_continue_after_two_nested_fors.pyc 2/2 → 1/2`（`f 84/83 j3 t25`），单件复跑排除分片伪影
+          （`logs/r34e_one06.txt`／`logs/r34e_one06_cand.jsonl`）；A2 自己在 104 锚点上的 A/B 独立给出
+          `SAME=99 REGRESSION=4 MOVED=1`（`logs/r34e_agent_g3_ab.txt`）。⇒ **电池尺 FAIL，不进入 G3／G4。**
+  - [x] SubTask 34.7: 否证的根因是**字节码层欠定**，不是判据措辞不够细。只读探针
+          （`logs/tool_probe_else34.py` → `logs/probe_else34_landed.txt`，原样重算被包裹方法自己的
+          `parent_loops`／`parent_body`／`spurious`，再并排打印 A2 的入边独占性与两条出路事实）量出六行：
+          加「eb 尾指令是跳向别的环头的回边」一条确实同时排除 `r4_06`／`r4_07` 的 continue 落点并保留
+          靶子真正想要的 `else` 落点，但 `r4_07` 里子环之后兄弟环的 `GET_ITER` 块与该真实落点在全部
+          可读结构事实上**同形**。原因：`for …: else: S` 与「子环后紧跟同一条语句 `S`」在 `S` 本就紧随
+          其后的场合编译出同一个 CFG —— `FOR_ITER` 的耗尽边目标就是 `S` 的块 ⇒「只在正常耗尽时进入」
+          既不能证明也不能否证 else 的存在；落地把 `eb ∈ parent_body` 一律判为 spurious 是有意的启发式
+          取舍（Round 30 R30-C1 同族）。⇒ R34-E 与其 E2 细化（暂名 R34-F）一并否证，
+          `events` 的残余（1 条指令＋2 个跳转槽）改判为需源码级消歧信息，不再从 else 归属侧进攻。
+  - [x] SubTask 34.8: 线 A（代理 A1 撞 150 轮次上限、未交 `ANALYSIS.md`，编排方接手并重跑一手测量）
+          根因链闭合：①靶子 code object 的 `@1976 POP_EXCEPT / @1978 POP_EXCEPT / @1980 LOAD_CONST(None)
+          / @1982 RETURN_VALUE` 就是唯一缺失四条，且与原始异常表多出的 `start=1976 end=1978 target=1994
+          depth=1` 同段（`logs/a1_exc_table.txt`）；②落地产物全文只有两条 `return None`（最内层 `try` 体尾
+          ＋最外层 handler 体尾），**函数级缩进 4 的终止 `return None` 一条都没有**
+          （`logs/a1_landed_functionOK.py`）；③站点＝`region_ast_generator.py:24687-24694`（handler 块
+          自身 role=RETURN 时就地发 `Return(None)`）＋ `:24707-24734` 的 R13 后继扫描 —— 后者只有
+          CONTINUE/PURE_CONTINUE 与 BREAK/PURE_BREAK 两条臂，且都再要求后继属于某 `has_finally` 区域的
+          `finally_copy_blocks`；靶子的 `@1956 → @1976`（单条 `POP_EXCEPT` 纯清理块）两条臂都不进，
+          于是 `@1976`／`@1978` 从未被任何区域认领，在区域树上留下两个孤儿 BASIC 区域
+          `R19`/`R20`（`logs/a1_regions.txt`，父区域 members 均不含）。
+  - [x] SubTask 34.9: 候选 R35-A **只写设计、未写未测未发货**：给 R13 后继扫描加第三条臂，沿既有
+          `_cleanup_only_ops` 白名单（`_is_cleanup_only_no_return`，`:25496`）穿过纯清理块，直到一个
+          过滤后恰为 `LOAD_CONST(None) + RETURN_VALUE` 的块，补发 `Return(None)` 并把链上块记入
+          `generated_blocks`。不发货的理由是**已量出的附带损伤**：A1 的语料级产物侧剥离实验
+          （`logs/tool_corpus_drop.py`，46 文件／79 个「文本以 `return None` 收尾」的函数／8 片
+          `logs/corpus_drop.f{0..7}.jsonl`，汇总 `logs/corpus_drop_summary.txt`）显示靶子
+          `save_testds_to_json delta −4 → 0`（证明缺的正是这条终止 return），但同尺下另有三例反向变差：
+          `instance.pyc :: Instance._get_manage_info 0 → +1`、`trade_info_utils.pyc
+          :: query_trade_strategy_info`（长度不变但转为有缺陷）、`query_strategy_id 0 → −1`
+          ⇒ R35-A 必须先有一条同层的「该清理链是否就是函数唯一收尾出口」守卫把三例挡在外面；
+          带着已知附带损伤去跑 G4 不是裁决，是赌博。
+  - [x] SubTask 34.10: 方法论收获：①**电池先于语料**再次兑现 —— R34-E 在 G1（语料靶子）净收益、
+          在 G2′（合成复现）破两个已固定形状，只看 G1 就会把它送进 G4；本轮省下全量 402 A/B 与一次回滚；
+          ②代理线的上限是结构性的（两条线各用满 150 轮次／157、181 次工具调用都没交 `ANALYSIS.md`，
+          但都交出可复用的一手测量）⇒ 后续轮次把「语料级附带损伤扫描」从代理任务里剥出来由编排方自跑，
+          给代理的交付物压缩成「一个函数 ＋ 一个站点」的单选题；③「不可判」也是一条可交付结论，
+          写清它比再试第三个变体更省未来轮次。
+  - [x] SubTask 34.11: 收口：本轮 `core/` 零改动、受跟踪产物零改动、`pyc_index.json` 不回写
+          （`logs/core_pristine34.txt`：核 raw sha `2d3a5d51d114da77d3d4`、正规化与 HEAD blob 全等，
+          `git status --porcelain` 对 `core`／`site-packages`／`test_repros`／`pyc_index.json` 四项全空），
+          既未改核也未改产物 ⇒ 不存在索引滞后，不需要 G5／G6／G7。移交 Round 35：①R35-A（根因链已闭合，
+          先决条件是那条同层守卫，可用 A1 的 `corpus_drop` 尺子先做产物侧预筛）；②`events` 改判字节码层
+          欠定，勿再从 else 归属侧进攻；③deficit-1 其余五个未动（`_init_config 86/84` 受 R16 J1 在册反例
+          保护、`decrypt_database_url 295/324`、`tick_worker_thread 268/247`、`clock_worker 1275/1291`、
+          `match 713/689`）；④#61 R30-B3 ＋ 语料外见证 `r29x_01 <module> 142/138` 继续在册；
+          ⑤`logs/list_anchors104.txt`／`logs/list_reprobat39.txt` 与本轮 `head` 臂 402 读数
+          （`logs/g4_head.all.jsonl`）可直接复用为下轮 G4 的「改前」侧，只要开工前核 sha 未变。

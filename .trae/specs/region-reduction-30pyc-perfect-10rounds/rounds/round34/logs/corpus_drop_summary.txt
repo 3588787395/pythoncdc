@@ -1,0 +1,28 @@
+A1 产物侧剥离实验（R35-A 附带损伤预筛，非门禁）
+尺子：对每个「文本以 return None 收尾」的函数，删掉最后一条缩进 4 的 return None，
+      用严格尺比较 落地产物 vs 剥离产物 的指令序列（lo=orig 长度，ld=decomp 长度，
+      delta=ld-lo，blocks=缺陷块数）。delta 归零＝该 return None 本就不该发射。
+探针：tool_corpus_drop.py，8 片 corpus_drop.f{0..7}.jsonl
+
+分片读数（每片末行）：
+  shard f0: PROBED=6 defect_before=0 defect_after=0 IMPROVED=0 REGRESSED=0 UNCHANGED=6 (files=51)
+  shard f1: PROBED=11 defect_before=0 defect_after=1 IMPROVED=0 REGRESSED=1 UNCHANGED=10 (files=51)
+  shard f2: PROBED=6 defect_before=0 defect_after=0 IMPROVED=0 REGRESSED=0 UNCHANGED=6 (files=50)
+  shard f3: PROBED=16 defect_before=0 defect_after=0 IMPROVED=0 REGRESSED=0 UNCHANGED=16 (files=50)
+  shard f4: PROBED=4 defect_before=2 defect_after=2 IMPROVED=0 REGRESSED=0 UNCHANGED=4 (files=50)
+  shard f5: PROBED=8 defect_before=0 defect_after=0 IMPROVED=0 REGRESSED=0 UNCHANGED=8 (files=50)
+  shard f6: PROBED=6 defect_before=3 defect_after=2 IMPROVED=1 REGRESSED=0 UNCHANGED=5 (files=50)
+  shard f7: PROBED=22 defect_before=5 defect_after=7 IMPROVED=0 REGRESSED=2 UNCHANGED=20 (files=50)
+
+总探测函数数 = 79，覆盖文件数 = 46，landed/dropped 读数有差异的函数 = 4
+
+差异行：
+  instance.pyc                       <module>.Instance._get_manage_info         landed: defect=False delta+0 lo=26 ld=26 blk=0 | dropped: defect=True  delta+1 lo=26 ld=27 blk=1
+  function.pyc                       <module>.save_testds_to_json               landed: defect=True  delta-4 lo=314 ld=310 blk=1 | dropped: defect=False delta+0 lo=314 ld=314 blk=0
+  trade_info_utils.pyc               <module>.query_trade_strategy_info         landed: defect=False delta+0 lo=112 ld=112 blk=0 | dropped: defect=True  delta+0 lo=112 ld=112 blk=3
+  trade_info_utils.pyc               <module>.query_strategy_id                 landed: defect=False delta+0 lo=106 ld=106 blk=0 | dropped: defect=True  delta-1 lo=106 ld=105 blk=2
+
+⇒ 靶子 function.pyc::save_testds_to_json 的 delta 由 −4 归零（证明缺的正是这条终止 return None），
+   但同尺下另有三个函数反向变差 ⇒ R35-A 发货前必须有一条同层守卫把它们挡在外面：
+   instance.pyc::Instance._get_manage_info 0 → +1、trade_info_utils.pyc::query_trade_strategy_info（转为有缺陷）、
+   trade_info_utils.pyc::query_strategy_id 0 → −1。

@@ -1,0 +1,7 @@
+MOVED  F:/Downloads/pythoncdc-main/test_repros/round30_enclosing_loop_backedge_break/r30c_w2.pyc  gained=[] lost=[]
+REGRESSION F:/Downloads/pythoncdc-main/test_repros/round4/r4_06_continue_after_nested_for_dropped.pyc  2/2 -> 1/2
+REGRESSION F:/Downloads/pythoncdc-main/test_repros/round4/r4_06_continue_after_nested_for_dropped_dec.pyc  2/2 -> 1/2
+REGRESSION F:/Downloads/pythoncdc-main/test_repros/round4/r4_07_continue_after_two_nested_fors.pyc  2/2 -> 1/2
+REGRESSION F:/Downloads/pythoncdc-main/test_repros/round4/r4_07_continue_after_two_nested_fors_dec.pyc  2/2 -> 1/2
+TALLY SAME=99 IMPROVED=0 REGRESSION=4 MOVED=1 ERR=0  (unpaired lists=0)
+files fully matched: a=74 b=70

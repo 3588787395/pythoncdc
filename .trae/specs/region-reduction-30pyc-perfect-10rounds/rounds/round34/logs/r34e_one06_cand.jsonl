@@ -1,0 +1,1 @@
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round4/r4_06_continue_after_nested_for_dropped.pyc", "arm": "cand", "sha": "00c57b786e33cf2a", "total_functions": 2, "matched_functions": 1, "mism": [["f", 56, 55, 3, 19]]}

@@ -1,0 +1,9 @@
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round2/r2_04_return_in_loop_finally.pyc", "arm": "cand", "sha": "d3494fe9bc81e375", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round2/r2_09_bool_cond_invert.pyc", "arm": "cand", "sha": "27e87a2ac514b84b", "total_functions": 2, "matched_functions": 1, "mism": [["create_user_code", 93, 98, 7, 32]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round26_break_prefix/r26a_01_break_prefix_in_while.pyc", "arm": "cand", "sha": "1e563e2eb45da044", "total_functions": 4, "matched_functions": 4, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round3/r3_02b_fstring_conv_probe.pyc", "arm": "cand", "sha": "582ac7368653f528", "total_functions": 8, "matched_functions": 8, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round3/r3_03d_while_sleep_probe.pyc", "arm": "cand", "sha": "08c0eb56ed9c5882", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round3/r3_03_while_retry_loop.pyc", "arm": "cand", "sha": "b2b17b41a082f94e", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round3/r3_10_try_except_block_scramble.pyc", "arm": "cand", "sha": "aea058cb80d90d49", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round4/r4_04_boolop_merge_subscr_target.pyc", "arm": "cand", "sha": "314d15f8b947c4cf", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round4/r4_03_boolop_merge_attr_target.pyc", "arm": "cand", "sha": "bc24168bce0b2a39", "total_functions": 2, "matched_functions": 2, "mism": []}

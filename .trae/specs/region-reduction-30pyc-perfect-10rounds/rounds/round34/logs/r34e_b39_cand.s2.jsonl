@@ -1,0 +1,10 @@
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round2/r2_03_finally_is_not_none.pyc", "arm": "cand", "sha": "2f05228523529f3b", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round2/r2_07_with_lock_dropped.pyc", "arm": "cand", "sha": "617f8631ad74b6f1", "total_functions": 8, "matched_functions": 7, "mism": [["trade_operation", 63, 32, 2, 39]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round2/r2_10_except_tail_loop_cond.pyc", "arm": "cand", "sha": "55cc15c13fbbaa12", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round28_or_tail_conjunct/r28a_01_or_tail_as_nested_conjunct.pyc", "arm": "cand", "sha": "93016718c7a6de30", "total_functions": 4, "matched_functions": 4, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round3/r3_02_fstring_log_dropped.pyc", "arm": "cand", "sha": "2d5f511a3c66a48f", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round3/r3_06_pseudo_ternary_subscript.pyc", "arm": "cand", "sha": "ad366518122f7ce8", "total_functions": 3, "matched_functions": 2, "mism": [["build_current_period_df", 115, 108, 5, 12]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round3/r3_07_ternary_assign_degraded.pyc", "arm": "cand", "sha": "762fd28079e18a33", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round4/r4_01_boolop_merge_swallows_following_stmts.pyc", "arm": "cand", "sha": "f5b6e2f1dc280c57", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round3/r3_13_break_gather_layout.pyc", "arm": "cand", "sha": "41a2330dda93a646", "total_functions": 2, "matched_functions": 1, "mism": [["one_prod_to_dataframe", 65, 65, 1, 8]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round33_return_through_statement/r33a_witness.pyc", "arm": "cand", "sha": "a3046b2a7b1513e6", "total_functions": 17, "matched_functions": 17, "mism": []}

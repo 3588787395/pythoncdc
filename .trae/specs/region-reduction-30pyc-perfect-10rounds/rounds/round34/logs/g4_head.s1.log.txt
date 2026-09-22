@@ -1,0 +1,131 @@
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+D:/Temp/r34gate/r34/build_head/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r34gate/r34/build_head/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r34gate/r34/build_head/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r34gate/r34/build_head/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r34gate/r34/build_head/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r34gate/r34/build_head/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r34gate/r34/build_head/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r34gate/r34/build_head/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r34gate/r34/build_head/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r34gate/r34/build_head/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+head __init__.pyc                 1/1  []  
+head klinedata.pyc                40/45  [['_all_bars_of_cache', 229, 230, 3, 176], ['get_all_real_daily_kline', 188, 187, 3, 26], ['get_history_new', 322, 321, 3, 37], ['get_multiminute_his_data', 479, 478, 7, 16], ['kline_datetime_list', 389, 390, 8, 235]]  
+head __init__.pyc                 1/1  []  
+head __init__.pyc                 1/1  []  
+head basic_data_source.pyc        8/8  []  
+head history_bar_storage.pyc      4/4  []  
+head enumerate.pyc                18/18  []  
+head i18n.pyc                     5/5  []  
+head instance.pyc                 31/32  [['_init_config', 86, 84, 1, 37]]  
+head common.pyc                   3/3  []  
+head strategy.pyc                 2/2  []  
+head trade_schedule.pyc           6/6  []  
+head crypto_utils.pyc             9/9  []  
+head file_delete.pyc              4/4  []  
+head replace_utils.pyc            8/9  [['decrypt_database_url', 295, 324, 1, 250]]  
+head strategy_info_utils.pyc      28/28  []  
+head user_info_utils.pyc          9/9  []  
+head __init__.pyc                 1/1  []  
+head api_helper.pyc               4/4  []  
+head const.pyc                    1/1  []  
+head data_cache.pyc               20/20  []  
+head base_storage.pyc             5/5  []  
+head default_history_quote.pyc    4/4  []  
+head market_storage.pyc           7/7  []  
+head __init__.pyc                 1/1  []  
+head fly_enum.pyc                 1/1  []  
+head plugin_manager.pyc           10/10  []  
+head web_socket_client.pyc        7/7  []  
+head data_source_func.pyc         5/5  []  
+head api_basicdata.pyc            25/25  []  
+head client_db.pyc                9/9  []  
+head api_db.pyc                   2/2  []  
+head __init__.pyc                 6/6  []  
+head __init__.pyc                 1/1  []  
+head calexrights_func.pyc         8/8  []  
+head api.pyc                      11/11  []  
+head history_data_source.pyc      16/18  [['get_kline_by_count', 854, 841, 3, 807], ['get_price', 550, 544, 4, 475]]  
+head gtn_request.pyc              6/6  []  
+head __init__.pyc                 6/6  []  
+head __init__.pyc                 6/6  []  
+head arg_checker.pyc              39/39  []  
+head datetime_func.pyc            25/25  []  
+head __init__.pyc                 1/1  []  
+head profiler_func.pyc            13/13  []  
+head __init__.pyc                 1/1  []  
+head base_position.pyc            18/18  []  
+head __init__.pyc                 1/1  []  
+head helper.pyc                   4/4  []  
+head __init__.pyc                 1/1  []  
+head commission.pyc               10/10  []  
+head __init__.pyc                 1/1  []  
+head executor.pyc                 10/10  []  
+head slippage.pyc                 7/7  []  
+head strategy_loader.pyc          9/9  []  
+head asset_mixin.pyc              16/16  []  
+head exrights_storage.pyc         6/6  []  
+head interface.pyc                105/105  []  
+head base_api.pyc                 6/6  []  
+head const.pyc                    9/9  []  
+head individual_api_backtest.pyc  3/3  []  
+head order_api_trade.pyc          24/24  []  
+head real_api_trade.pyc           3/3  []  
+head bar.pyc                      22/22  []  
+head open_platform.pyc            19/19  []  
+head fly_bar_storage.pyc          9/9  []  
+head __init__.pyc                 1/1  []  
+head live_hks_account.pyc         21/21  []  
+head __init__.pyc                 1/1  []  
+head __init__.pyc                 1/1  []  
+head live_option_position.pyc     51/51  []  
+head __init__.pyc                 13/13  []  
+head factor_event_source.pyc      5/5  []  
+head commission.pyc               18/18  []  
+head __init__.pyc                 8/10  [['setup', 320, 253, 1, 293], ['trade_logs_control', 189, 190, 1, 144]]  
+head json_persistance.pyc         7/7  []  
+head __init__.pyc                 32/35  [['_on_publish_after_trading_end', 486, 481, 3, 33], ['_save_testds_to_csv', 71, 68, 7, 19], ['get_TradeMode_trades', 1839, 1753, 4, 1620]]  
+head base_validator.pyc           6/6  []  
+head time_validator.pyc           5/5  []  
+head __init__.pyc                 6/6  []  
+head function.pyc                 69/71  [['get_entrust_item_info', 535, 531, 5, 139], ['order_entrust_info_handle', 220, 224, 8, 149]]  
+head ptrade_option_broker.pyc     10/10  []  
+head trade_stock_account.pyc      13/13  []  
+head bcolz_help.pyc               5/5  []  
+head decorator.pyc                3/3  []  
+head i18n.pyc                     5/5  []  
+head profiler_func.pyc            15/15  []  
+head scheduler.pyc                42/45  [['get_checked_time', 106, 106, 0, 43], ['is_run_interval_time_now', 225, 201, 2, 173], ['run_daily', 77, 71, 0, 56]]  
+head __init__.pyc                 1/1  []  
+head convert.pyc                  8/8  []  
+head fly_exception.pyc            8/8  []  
+head function.pyc                 4/4  []  
+head inform_info.pyc              4/4  []  
+head op_station.pyc               11/11  []  
+head __init__.pyc                 1/1  []  
+head __init__.pyc                 1/1  []  
+head load_daily.pyc               23/23  []  
+head event_priority.pyc           1/1  []  
+head logger.pyc                   28/30  [['logging_process', 99, 95, 2, 62], ['write_logging_thread', 113, 113, 1, 40]]  
+head oauth2.pyc                   11/11  []  
+head pboxAccount_jupyterhub.pyc   4/4  []  
+head request_data_transform.pyc   2/2  []  

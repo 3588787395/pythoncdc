@@ -1,0 +1,74 @@
+regions=21 blocks=54
+R0   FOR_LOOP           entry=120    id=93744 n_mem=7    members=[14, 120, 122, 132, 264, 268, 270]
+       children         = [R@122, R@132]
+R1   TRY_EXCEPT         entry=1614   id=90544 n_mem=19   members=[1612, 1614, 1714, 1798, 1828, 1830, 1836, 1838, 1846, 1864, 1944, 1948, 1950, 1960, 1962, 1984, 1986, 1992, 1994]
+       children         = []
+R2   TRY_EXCEPT         entry=1398   id=91376 n_mem=17   members=[1396, 1398, 1514, 1532, 1612, 1614, 1714, 1798, 1844, 1950, 1956, 1960, 1962, 1984, 1986, 1992, 1994]
+       children         = [R@1614, R@1614]
+R3   TRY_EXCEPT         entry=1162   id=92272 n_mem=15   members=[1160, 1162, 1328, 1334, 1354, 1396, 1398, 1512, 1962, 1968, 1970, 1984, 1986, 1992, 1994]
+       children         = [R@1398]
+R4   TRY_EXCEPT         entry=1008   id=93040 n_mem=10   members=[1008, 1056, 1060, 1080, 1160, 1162, 1328, 1986, 1992, 1994]
+       children         = [R@1162, R@1056]
+R5   WITH               entry=1614   id=94576 n_mem=5    members=[1614, 1714, 1798, 1822, 1830]
+       children         = []
+       exit_block       = 1844
+R6   IF_THEN_ELSE       entry=484    id=97328 n_mem=3    members=[484, 786, 828]
+       children         = [R@484, R@786, R@828]
+R7   IF_THEN_ELSE       entry=274    id=98288 n_mem=5    members=[274, 442, 484, 786, 828]
+       children         = [R@274, R@442, R@484]
+R8   IF_THEN            entry=132    id=99248 n_mem=2    members=[132, 264]
+       children         = []
+R9   IF_THEN            entry=122    id=144  n_mem=3    members=[122, 132, 264]
+       children         = []
+R10  IF_THEN            entry=0      id=848  n_mem=4    members=[0, 14, 120, 270]
+       children         = [R@0, R@120]
+R11  BASIC              entry=0      id=99824 n_mem=1    members=[0]
+       children         = []
+R12  BASIC              entry=274    id=656  n_mem=1    members=[274]
+       children         = []
+R13  BASIC              entry=442    id=720  n_mem=1    members=[442]
+       children         = []
+R14  BASIC              entry=484    id=94320 n_mem=1    members=[484]
+       children         = []
+R15  BASIC              entry=786    id=1808 n_mem=1    members=[786]
+       children         = []
+R16  BASIC              entry=828    id=2064 n_mem=1    members=[828]
+       children         = []
+R17  BASIC              entry=900    id=2256 n_mem=1    members=[900]
+       children         = []
+R18  BASIC              entry=1056   id=2448 n_mem=1    members=[1056]
+       children         = []
+R19  BASIC              entry=1976   id=38736 n_mem=1    members=[1976]
+       children         = []
+R20  BASIC              entry=1978   id=2000 n_mem=1    members=[1978]
+       children         = []
+=== block -> region (tail) ===
+B@1512  role=EXCEPT_STORE       region=R@1162/TRY_EXCEPT
+B@1514  role=EXCEPT_HANDLER     region=R@1398/TRY_EXCEPT
+B@1532  role=EXCEPT_STORE       region=R@1398/TRY_EXCEPT
+B@1612  role=EXCEPT_STORE       region=R@1614/TRY_EXCEPT
+B@1614  role=TRY_BODY           region=R@1614/TRY_EXCEPT
+B@1714  role=TRY_BODY           region=R@1614/TRY_EXCEPT
+B@1798  role=TRY_BODY           region=R@1614/TRY_EXCEPT
+B@1822  role=NORMAL             region=R@1614/WITH
+B@1828  role=TRY_BODY           region=R@1614/TRY_EXCEPT
+B@1830  role=TRY_BODY           region=R@1614/TRY_EXCEPT
+B@1836  role=TRY_BODY           region=R@1614/TRY_EXCEPT
+B@1838  role=TRY_BODY           region=R@1614/TRY_EXCEPT
+B@1844  role=EXCEPT_STORE       region=R@1398/TRY_EXCEPT
+B@1846  role=EXCEPT_HANDLER     region=R@1614/TRY_EXCEPT
+B@1864  role=EXCEPT_STORE       region=R@1614/TRY_EXCEPT
+B@1944  role=EXCEPT_STORE       region=R@1614/TRY_EXCEPT
+B@1948  role=PURE_JUMP          region=R@1614/TRY_EXCEPT
+B@1950  role=RERAISE            region=R@1614/TRY_EXCEPT
+B@1956  role=EXCEPT_STORE       region=R@1398/TRY_EXCEPT
+B@1960  role=PURE_JUMP          region=R@1614/TRY_EXCEPT
+B@1962  role=RERAISE            region=R@1614/TRY_EXCEPT
+B@1968  role=EXCEPT_STORE       region=R@1162/TRY_EXCEPT
+B@1970  role=EXCEPT_STORE       region=R@1162/TRY_EXCEPT
+B@1976  role=PURE_JUMP          region=R@1976/BASIC
+B@1978  role=RETURN             region=R@1978/BASIC
+B@1984  role=PURE_JUMP          region=R@1614/TRY_EXCEPT
+B@1986  role=RERAISE            region=R@1614/TRY_EXCEPT
+B@1992  role=PURE_JUMP          region=R@1614/TRY_EXCEPT
+B@1994  role=RETURN             region=R@1614/TRY_EXCEPT

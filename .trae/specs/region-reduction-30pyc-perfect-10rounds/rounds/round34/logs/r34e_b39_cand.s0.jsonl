@@ -1,0 +1,10 @@
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round2/r2_01_set_trade_status_collapse.pyc", "arm": "cand", "sha": "b181076233842020", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round2/r2_05_nested_if_merge.pyc", "arm": "cand", "sha": "692817df764e1077", "total_functions": 2, "matched_functions": 1, "mism": [["kill", 67, 75, 1, 41]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round2/r2_11_minimal_with_break.pyc", "arm": "cand", "sha": "36fb2863dc9f112b", "total_functions": 3, "matched_functions": 2, "mism": [["f", 55, 52, 1, 37]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round27_elif_pure_head/r27a_01_elif_head_after_raise.pyc", "arm": "cand", "sha": "505aa95ed2f2cd8f", "total_functions": 4, "matched_functions": 4, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round3/r3_01_fstring_log_mangled.pyc", "arm": "cand", "sha": "b6a4ade959049186", "total_functions": 7, "matched_functions": 6, "mism": [["get_price", 83, 54, 0, 77]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round3/r3_03c_while_body_probe.pyc", "arm": "cand", "sha": "602c0f7731820c3d", "total_functions": 4, "matched_functions": 4, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round3/r3_05_converge_return_misattrib.pyc", "arm": "cand", "sha": "b4048d408025070b", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round3/r3_09_nested_if_else_flatten.pyc", "arm": "cand", "sha": "e6cc308479e2ccc9", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round3/r3_11_implicit_return_shift.pyc", "arm": "cand", "sha": "2835b490647e85e4", "total_functions": 3, "matched_functions": 2, "mism": [["check_frequency", 84, 83, 2, 64]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round4/r4_05_boolop_merge_inside_try.pyc", "arm": "cand", "sha": "b695e7157c756b23", "total_functions": 2, "matched_functions": 2, "mism": []}

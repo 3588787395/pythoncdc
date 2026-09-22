@@ -1,0 +1,1 @@
+arm 'cand' was R34-E; REJECTED at G2' (2 regressions). mirr_cand renamed mirr_r34e_rejected; all r34e_* files are that candidate's evidence. A fresh candidate must rebuild mirr_cand.
