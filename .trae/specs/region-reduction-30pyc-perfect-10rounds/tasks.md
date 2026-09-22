@@ -1176,3 +1176,81 @@
           留作字面债。锚点新要求：落地核上 `r31a_witness.pyc` 必须 `3/4`、`r31a_control.pyc` 必须
           `5/7` 且失败对只能是 `c2`/`c6`；Round 32 电池 = `anchors100.txt`（本轮 `anchors98.txt` ＋
           这两个新件）。重生成合成件时 `py_compile` 必须显式传 `cfile`，电池读的是同名同级 `.pyc`。
+- [x] Task 32: 落地 R32-C —— 推导式前导语句扫描器不得把 `POP_TOP` 当填充噪声：它是「栈上的值
+          被丢弃」的语句终止符，遇到即闭合此前累积的栈上表达式并作为一条 `Expr` 发射（原则 1
+          块 = 前导语句 + 尾终止，要求同一文件内调用方终止判据与被调方噪声过滤表同层一致；累积段
+          为空时与既有行为逐字节相同）。修 `IQCommon/utils.pyc :: load_ini`（`18/13 → matched`）与
+          `IQCommon/strategy/wizard_quant_api.pyc :: get_strategy_finance_factor_info`
+          （`28/18 → matched`），函数级净收益 `+2`，文件级零翻转、`MOVED=0`。站点：第三个核文件
+          `core/cfg/comprehension_generator.py:621`，`+13/-1` 行，落地核 sha
+          `fa43dbc9e878eeacbfe0` 与实测镜像 `mirr_c` 逐字节相同。
+  - [x] SubTask 32.1: 目标池按落地字节实测（`logs/pool32.txt` 首行，直读 Round 31 G6 回写的索引）：
+          `baseline(landed round31 index, HEAD dca5bbff): files 402 partial 31 sum_deficit 103
+          deficit1 7`；七个 deficit-1 文件在落地核上逐个 `single` 复测存档
+          （`logs/landed_d1.txt`），另把 13 个 deficit-2 文件同尺读一遍
+          （`logs/landed_d2.txt`），因为本轮假设形状「一条语句整条消失」在 deficit-2 一侧更常见。
+          电池按 Round 31 新要求建成 `anchors100.txt`（98 旧锚 ＋ `r31a_witness`／`r31a_control`）。
+  - [x] SubTask 32.2: 线 A（只诊断代理，靶子 `risk_calculation/function.pyc ::
+          save_testds_to_json 314/310`）**整条不可沿用**：它报称的全 402 A/B
+          `SAME=379 IMPROVED=0 REGRESSION=1 MOVED=22` 在其私有目录内无任何产物；它归因的两个标志名
+          `handler_hoisted_excepthand`／`pending_trailing_suppressed_handlers` 在 `core/` 全树 grep
+          零命中。⇒ 数字与名词都不进入记录，该形状回到未诊断状态，Round 33 须从落地字节自行重建
+          证据（其探针原样留档 `logs/A-p13_pred.log.txt`、候选 `logs/A-candidate-spec.json`）。
+  - [x] SubTask 32.3: 线 B（只诊断代理，靶子 `strategy.pyc :: tick_worker_thread 268/247`）的
+          「R31-C 过火」归因被编排方一手否证：Round 31 归档 `g4_ab402_sha.txt` 里 `strategy.pyc`
+          属 400 个 SAME 之一（R31-C 根本没改该文件字节），且该 `268/247` 在 Round 30 落地核上已
+          如此；其 `oauth2.pyc 71/72` 与实测 `11/11` 冲突（该文件只有 11 个函数）。只收其块级观察
+          （兄弟分支入口块被并入停止集）为未经证实的线索。
+  - [x] SubTask 32.4: 线 C（取，编排方自己发现并发货）。一手根因链：hunk `filtered orig=18
+          decomp=13 delta=-5、非等价块 1 个` → 逐条指令转储（该函数无跳转，`jump_diffs=0`）→
+          定位 `comprehension_generator.py:621-623` 的噪声过滤表把 `POP_TOP` 与 `RESUME/NOP/CACHE/
+          PUSH_NULL` 并列 `continue`，而其调用方（`region_ast_generator.py:43514`，自身终止判据
+          `:273-278`）把 `pre_comp_instrs` 末尾的 `STORE/POP_TOP/IMPORT` 认作语句边界 ⇒ 两侧对同一
+          op 的层级答案不一致，`open(...).read()` 这类丢弃值语句在「同块还构造推导式」时整条消失。
+  - [x] SubTask 32.5: 判据只读同层结构事实（一个 opname 类在语句流里的角色 ＋「栈上是否已有累积
+          值」这一局部结构状态），不读名字／常量／绝对偏移／条数／函数名，也不针对推导式种类；
+          归约方式是「补回一条结构上已存在的语句」，重建失败或累积段为空即回落原路径。这是本轮唯一
+          发货判据。代码内注释标签 `R32-C` 与发货名一致，无 Round 31 那类字面债。
+  - [x] SubTask 32.6: G0 严格串行通过。首件合成见证（10 函数，5 见证＋5 CONTROL）落地核
+          `7/10`（`w1 17/12 j0`、`w2 17/12 j0`、`w3 19/14 j0`）→ 发货核 `10/10`；扩样（17 函数）
+          `12/17 → 17/17`，5 条 CONTROL 两把核下逐字节同；靶子 `utils.pyc 20/22 → 21/22`，CONTROL
+          文件 `quotation.pyc 143/143`、`oauth2.pyc 11/11` 两把核 `SAME`。见证已提升为跟踪复现
+          `test_repros/round32_pop_stmt_terminator/r32c_repro.py`（py sha16 `bee5b67200bf3cd7`）。
+  - [x] SubTask 32.7: G2′ 上一轮 38 合成复现 `{"SAME": 38}`；G3 承重锚点 100
+          `{"SAME": 100, "MOVED": 0}`；G4 全 402 A/B（sha 优先，发货判据）
+          `SAME=400 IMPROVED=2 REGRESSION=0 MOVED=0 ERR=0`、`files fully matched: a=371 b=371`
+          （两个 IMPROVED 即 §32.4 两靶）；G4-d1 七个 deficit-1 文件 `SAME=7`（本判据与它们无交集，
+          故不声称触及 Round 31 移交的任一靶子）；G4′ 逐个变化产物严格尺 `utils 24/26 σ2 Σ7 →
+          25/26 σ1 Σ2`、`wizard 49/56 σ7 Σ22 → 50/56 σ6 Σ12`。
+  - [x] SubTask 32.8: G5 `single` 八块：两靶 `utils 21/22`、`wizard 49/53`；金丝雀 `flytools
+          65/65`、`quotation 143/143`、`oauth2 11/11` 全保持；残余 `strategy 23/24`、`matcher
+          16/17`、`default_event_source 13/14` 逐条同形。G6 `batch --index pyc_index.json --all
+          --round 32` 末条 `[402/402]`、索引回写标记恰 1 次、崩溃标记 0 行。G7 `stats` 存
+          `logs/stats32.txt`： `total_pyc 402 / verified_pyc 402 / ok_pyc 371 / partial_pyc 31 / failed_pyc 0 / total_functions 5746 / matched_functions 5645 / cumulative_match_rate 98.24%`；
+          索引改动逐字段核对见 `logs/index_delta32.txt`（402 条全部只被重打 round 戳 31→32，真实
+          字段改动恰 2 条 = 两靶文件的 `matched_functions 20→21`／`48→49` 与各自 rate，二者
+          `decompile_status` 仍 `partial`）。受跟踪产物变化 2 份（`logs/products_sha.txt`）：
+          `IQCommon/utilsOK.py`（sha16 `44cb899bf07e0197`）与
+          `IQCommon/strategy/wizard_quant_apiOK.py`（sha16 `8081d9342d523bc5`），均与测量臂产物
+          逐字节相同；`MOVED=0` ⇒ 本轮无「ok 文件产物文本变化」新增在册观察项。
+  - [x] SubTask 32.9: 方法论收获：① 代理报告里要写进记录的**每一个**标识符（符号名、行号、
+          tally）都必须由编排方 grep 或重跑一次才入库，否则该线只留线索、不进移交清单（本轮线 A
+          的两个符号名与整份 tally 都无据）；②「同层一致」也包括同一文件内调用方与被调方对同一
+          op 的自洽，审噪声过滤表时要与它的调用方终止判据成对读；③「只删不增」不是教条，但「增」
+          必须是补回结构上已存在之物——配合「累积段为空即逐字节同形」的守卫，本轮拿到零附带文本
+          变化的 A/B；④ 假设形状要在 deficit-1 与 deficit-2 两侧的池子里都量（本形状只在 deficit-2
+          命中）。
+  - [x] SubTask 32.10: 移交 Round 33：① `IQCommon/utils.pyc :: load_yaml 55/55 j0 t32`（等长
+          错位，`first_diff index=22 LOAD_FAST(loader) vs POP_TOP`）——该文件 `21/22` 的唯一
+          blocker，与本轮「少一条语句」不同形状；② `function.pyc 14/15 :: save_testds_to_json
+          314/310`（本轮 G4-d1 `SAME=7` 未触及）＝**未诊断**，须自行重建证据（代理的名词接线结论
+          与 tally 不得沿用）；
+          ③ `wizard_quant_api.pyc` 四既有 unmatched（`calculate_di 75/73`、`params_analysis
+          133/126`、`region_mean_desicion 50/48`、`wizard_quant_check_limit 91/90`）；④ #61
+          R30-B3 ＋ 语料外见证 `r29x_01 <module> 142/138`；⑤ 未动残余 `tick_worker_thread
+          268/247`、`match 713/689`、`events 510/508 j2`、`quote 67/81`、
+          `decrypt_database_url 295/324`、`instance._init_config 86/84`（R16 J1 在册反例，受保护
+          勿再取）、`clock_worker` D2/D3；⑥ 七个 deficit-1 文件本轮未触及，下轮池须重测。
+          锚点新要求：Round 33 电池 = `anchors102.txt`（`anchors100` ＋ 本轮
+          `r32c_witness.pyc`、`r32c_repro.pyc`，各自内嵌 CONTROL）；落地核上必须读
+          `witness 10/10`、`repro 17/17`。重生成合成件时 `py_compile` 必须显式传 `cfile`。

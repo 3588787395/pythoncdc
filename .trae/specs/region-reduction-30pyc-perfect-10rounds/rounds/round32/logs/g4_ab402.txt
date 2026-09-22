@@ -1,0 +1,3 @@
+IMPROVED   IQCommon/strategy/wizard_quant_api.pyc                         a= 48/ 53 b= 49/ 53  a_mism=[['calculate_di', 75, 73, 0, 45], ['get_strategy_finance_factor_info', 28, 18, 0, 18], ['params_analysis', 133, 126, 1, 117], ['region_mean_desicion', 50, 48, 2, 2], ['wizard_quant_check_limit', 91, 90, 2, 10]] b_mism=[['calculate_di', 75, 73, 0, 45], ['params_analysis', 133, 126, 1, 117], ['region_mean_desicion', 50, 48, 2, 2], ['wizard_quant_check_limit', 91, 90, 2, 10]]
+IMPROVED   IQCommon/utils.pyc                                             a= 20/ 22 b= 21/ 22  a_mism=[['load_ini', 18, 13, 0, 13], ['load_yaml', 55, 55, 0, 32]] b_mism=[['load_yaml', 55, 55, 0, 32]]
+--- tally --- {"SAME": 400, "IMPROVED": 2, "REGRESSION": 0, "MOVED": 0, "other": 0}

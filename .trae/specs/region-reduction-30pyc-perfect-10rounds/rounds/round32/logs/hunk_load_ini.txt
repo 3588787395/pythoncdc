@@ -1,0 +1,8 @@
+<module>.load_ini  load_ini
+  filtered orig=18 decomp=13 delta=-5   non-equal blocks=1
+  H1 delete   orig[5:10] @40..80  ->  decomp[5:5] @40..38   n=5/0
+        o  @40    ("'config'", 'LOAD_FAST')
+        o  @42    ("'read'", 'LOAD_METHOD')
+        o  @64    ("'path'", 'LOAD_FAST')
+        o  @70    ('1', 'CALL')
+        o  @80    ('None', 'POP_TOP')

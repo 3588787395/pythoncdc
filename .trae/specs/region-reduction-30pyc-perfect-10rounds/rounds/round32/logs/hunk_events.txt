@@ -1,0 +1,18 @@
+<module>.DefaultEventSource.events  events
+  filtered orig=512 decomp=510 delta=-2   non-equal blocks=2
+  H1 delete   orig[352:367] @2380..2472  ->  decomp[352:352] @2382..2378   n=15/0
+        o  @2380  ("'day'", 'LOAD_FAST')
+        o  @2382  ("'to_pydatetime'", 'LOAD_METHOD')
+        o  @2408  ('0', 'CALL')
+        o  @2418  ("'date'", 'STORE_FAST')
+        o  @2420  ('None', 'LOAD_CONST')
+        o  @2422  ("'last_tick'", 'STORE_FAST')
+  H2 replace  orig[481:483] @3208..3212  ->  decomp[466:481] @3116..3208   n=2/15
+        o  @3208  ('<JUMP>', 'JUMP')
+        o  @3212  ('<JUMP>', 'JUMP')
+        d  @3116  ("'day'", 'LOAD_FAST')
+        d  @3118  ("'to_pydatetime'", 'LOAD_METHOD')
+        d  @3144  ('0', 'CALL')
+        d  @3154  ("'date'", 'STORE_FAST')
+        d  @3156  ('None', 'LOAD_CONST')
+        d  @3158  ("'last_tick'", 'STORE_FAST')

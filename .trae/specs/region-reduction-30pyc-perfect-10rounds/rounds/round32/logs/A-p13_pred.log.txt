@@ -1,0 +1,187 @@
+=== _generate_handler_body_statements lines 25596..26587 ===
+  25608: - [W13 fix] 跨块栈传值 return 链：SWAP n; POP_TOP; RETURN(_CONST)
+  25702: return self._generate_block_statements(block)
+  26585: return stmts
+--- handler-block@1060
+      nstmt                      0
+      types                      []
+      body_ops                   PUSH_EXC_INFO LOAD_GLOBAL CHECK_EXC_MATCH POP_JUMP_FORWARD_IF_FALSE
+      len_chain>=1               True
+      last RETURN_VALUE          False
+      prev LOAD_CONST            False
+      argval None                True
+      chain all POP_EXCEPT       False
+      no successors              False
+      preds                      [1008]
+      pred_ops                   [['LOAD_FAST', 'LOAD_METHOD', 'LOAD_FAST', 'LOAD_CONST', 'LOAD_CONST', 'KW_NAMES', 'PRECALL', 'CALL', 'POP_TOP']]
+      preds all pure POP_EXCEPT  False
+--- handler-block@1080
+      nstmt                      1
+      types                      ['Expr']
+      body_ops                   POP_TOP LOAD_GLOBAL LOAD_ATTR LOAD_CONST LOAD_METHOD LOAD_FAST PRECALL CALL PRECALL CALL POP_TOP
+      len_chain>=1               True
+      last RETURN_VALUE          False
+      prev LOAD_CONST            False
+      argval None                False
+      chain all POP_EXCEPT       False
+      no successors              False
+      preds                      [1060]
+      pred_ops                   [['PUSH_EXC_INFO', 'LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_FORWARD_IF_FALSE']]
+      preds all pure POP_EXCEPT  False
+--- handler-block@1334
+      nstmt                      0
+      types                      []
+      body_ops                   PUSH_EXC_INFO LOAD_GLOBAL CHECK_EXC_MATCH POP_JUMP_FORWARD_IF_FALSE
+      len_chain>=1               True
+      last RETURN_VALUE          False
+      prev LOAD_CONST            False
+      argval None                True
+      chain all POP_EXCEPT       False
+      no successors              False
+      preds                      [1162]
+      pred_ops                   [['LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_FAST', 'PRECALL', 'CALL', 'POP_TOP']]
+      preds all pure POP_EXCEPT  False
+--- handler-block@1354
+      nstmt                      1
+      types                      ['Expr']
+      body_ops                   POP_TOP LOAD_GLOBAL LOAD_ATTR LOAD_CONST PRECALL CALL POP_TOP
+      len_chain>=1               True
+      last RETURN_VALUE          False
+      prev LOAD_CONST            False
+      argval None                False
+      chain all POP_EXCEPT       False
+      no successors              False
+      preds                      [1334]
+      pred_ops                   [['PUSH_EXC_INFO', 'LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_FORWARD_IF_FALSE']]
+      preds all pure POP_EXCEPT  False
+--- handler-block@1514
+      nstmt                      0
+      types                      []
+      body_ops                   PUSH_EXC_INFO LOAD_GLOBAL CHECK_EXC_MATCH POP_JUMP_FORWARD_IF_FALSE
+      len_chain>=1               True
+      last RETURN_VALUE          False
+      prev LOAD_CONST            False
+      argval None                True
+      chain all POP_EXCEPT       False
+      no successors              False
+      preds                      [1398]
+      pred_ops                   [['LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_METHOD', 'LOAD_FAST', 'LOAD_CONST', 'LOAD_FAST', 'LOAD_CONST', 'PRECALL', 'CALL', 'STORE_FAST', 'LOAD_FAST', 'LOAD_METHOD', 'LOAD_FAST', 'LOAD_CONST', 'KW_NAMES', 'PRECALL', 'CALL', 'POP_TOP']]
+      preds all pure POP_EXCEPT  False
+--- handler-block@1532
+      nstmt                      1
+      types                      ['Expr']
+      body_ops                   POP_TOP LOAD_GLOBAL LOAD_ATTR LOAD_CONST LOAD_METHOD LOAD_FAST PRECALL CALL PRECALL CALL POP_TOP
+      len_chain>=1               True
+      last RETURN_VALUE          False
+      prev LOAD_CONST            False
+      argval None                False
+      chain all POP_EXCEPT       False
+      no successors              False
+      preds                      [1514]
+      pred_ops                   [['PUSH_EXC_INFO', 'LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_FORWARD_IF_FALSE']]
+      preds all pure POP_EXCEPT  False
+--- handler-block@1846
+      nstmt                      0
+      types                      []
+      body_ops                   PUSH_EXC_INFO LOAD_GLOBAL CHECK_EXC_MATCH POP_JUMP_FORWARD_IF_FALSE
+      len_chain>=1               True
+      last RETURN_VALUE          False
+      prev LOAD_CONST            False
+      argval None                True
+      chain all POP_EXCEPT       False
+      no successors              False
+      preds                      [1614, 1798, 1838, 1830]
+      pred_ops                   [['LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_METHOD', 'LOAD_FAST', 'LOAD_CONST', 'LOAD_FAST', 'LOAD_CONST', 'PRECALL', 'CALL', 'STORE_FAST', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_CONST', 'PRECALL', 'CALL', 'BEFORE_WITH'], ['LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'JUMP_FORWARD'], ['POP_EXCEPT', 'POP_TOP', 'POP_TOP'], ['COPY', 'POP_EXCEPT', 'RERAISE']]
+      preds all pure POP_EXCEPT  False
+--- handler-block@1864
+      nstmt                      1
+      types                      ['Expr']
+      body_ops                   POP_TOP LOAD_GLOBAL LOAD_ATTR LOAD_CONST LOAD_METHOD LOAD_FAST PRECALL CALL PRECALL CALL POP_TOP
+      len_chain>=1               True
+      last RETURN_VALUE          False
+      prev LOAD_CONST            False
+      argval None                False
+      chain all POP_EXCEPT       False
+      no successors              False
+      preds                      [1846]
+      pred_ops                   [['PUSH_EXC_INFO', 'LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_FORWARD_IF_FALSE']]
+      preds all pure POP_EXCEPT  False
+--- handler-block@1944
+      nstmt                      0
+      types                      []
+      body_ops                   POP_EXCEPT JUMP_FORWARD
+      len_chain>=1               False
+      last RETURN_VALUE          False
+      prev LOAD_CONST            False
+      argval None                True
+      chain all POP_EXCEPT       False
+      no successors              False
+      preds                      [1864]
+      pred_ops                   [['POP_TOP', 'LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_CONST', 'LOAD_METHOD', 'LOAD_FAST', 'PRECALL', 'CALL', 'PRECALL', 'CALL', 'POP_TOP']]
+      preds all pure POP_EXCEPT  False
+--- handler-block@1844
+      nstmt                      0
+      types                      []
+      body_ops                   JUMP_FORWARD
+      len_chain>=1               False
+      last RETURN_VALUE          False
+      prev LOAD_CONST            False
+      argval None                False
+      chain all POP_EXCEPT       False
+      no successors              False
+      preds                      [1798, 1838]
+      pred_ops                   [['LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'JUMP_FORWARD'], ['POP_EXCEPT', 'POP_TOP', 'POP_TOP']]
+      preds all pure POP_EXCEPT  False
+--- handler-block@1956
+      nstmt                      0
+      types                      []
+      body_ops                   POP_EXCEPT JUMP_FORWARD
+      len_chain>=1               False
+      last RETURN_VALUE          False
+      prev LOAD_CONST            False
+      argval None                True
+      chain all POP_EXCEPT       False
+      no successors              False
+      preds                      [1844, 1944]
+      pred_ops                   [['JUMP_FORWARD'], ['POP_EXCEPT', 'JUMP_FORWARD']]
+      preds all pure POP_EXCEPT  False
+--- handler-block@1512
+      nstmt                      0
+      types                      []
+      body_ops                   JUMP_FORWARD
+      len_chain>=1               False
+      last RETURN_VALUE          False
+      prev LOAD_CONST            False
+      argval None                False
+      chain all POP_EXCEPT       False
+      no successors              False
+      preds                      [1398]
+      pred_ops                   [['LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_METHOD', 'LOAD_FAST', 'LOAD_CONST', 'LOAD_FAST', 'LOAD_CONST', 'PRECALL', 'CALL', 'STORE_FAST', 'LOAD_FAST', 'LOAD_METHOD', 'LOAD_FAST', 'LOAD_CONST', 'KW_NAMES', 'PRECALL', 'CALL', 'POP_TOP']]
+      preds all pure POP_EXCEPT  False
+--- handler-block@1968
+      nstmt                      0
+      types                      []
+      body_ops                   POP_EXCEPT
+      len_chain>=1               False
+      last RETURN_VALUE          False
+      prev LOAD_CONST            False
+      argval None                False
+      chain all POP_EXCEPT       False
+      no successors              False
+      preds                      [1512]
+      pred_ops                   [['JUMP_FORWARD']]
+      preds all pure POP_EXCEPT  False
+--- handler-block@1970
+      nstmt                      1
+      types                      ['Return']
+      body_ops                   POP_EXCEPT LOAD_CONST RETURN_VALUE
+      len_chain>=1               True
+      last RETURN_VALUE          True
+      prev LOAD_CONST            True
+      argval None                True
+      chain all POP_EXCEPT       True
+      no successors              True
+      preds                      [1968]
+      pred_ops                   [['POP_EXCEPT']]
+      preds all pure POP_EXCEPT  True
+product chars=29629 ; return None present at line [345, 353, 367, 432, 434, 451, 456, 459, 462]

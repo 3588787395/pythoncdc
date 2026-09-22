@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/comprehension_generator.py",
+ "edits": [
+  {
+   "anchor": "        for instr in pre_instrs:\n            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP'):\n                continue\n",
+   "repl": "        for instr in pre_instrs:\n            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):\n                continue\n            if instr.opname == 'POP_TOP':\n                # [R32-C 同层判据 · 原则 1 块 = 前导语句 + 尾终止] POP_TOP 是「栈上的值被\n                # 丢弃」的语句终止符，不是填充指令 —— 调用方把「pre_comp_instrs 末尾是\n                # STORE/POP_TOP/IMPORT」当作语句边界，本扫描器却把同一 op 当噪声滤掉，\n                # 两侧必须同层一致。它闭合此前累积的栈上表达式并作为 Expr 语句发射；累积\n                # 段为空（该行没有值被丢弃）时与既有行为逐字节相同。\n                if current_instrs:\n                    _r32c_expr = self.expr_reconstructor.reconstruct(current_instrs)\n                    if _r32c_expr:\n                        stmts.append({'type': 'Expr', 'value': _r32c_expr})\n                current_instrs = []\n                continue\n"
+  }
+ ]
+}

@@ -619,7 +619,19 @@ class ComprehensionGenerator:
             _import_is_from = False
 
         for instr in pre_instrs:
-            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP'):
+            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            if instr.opname == 'POP_TOP':
+                # [R32-C 同层判据 · 原则 1 块 = 前导语句 + 尾终止] POP_TOP 是「栈上的值被
+                # 丢弃」的语句终止符，不是填充指令 —— 调用方把「pre_comp_instrs 末尾是
+                # STORE/POP_TOP/IMPORT」当作语句边界，本扫描器却把同一 op 当噪声滤掉，
+                # 两侧必须同层一致。它闭合此前累积的栈上表达式并作为 Expr 语句发射；累积
+                # 段为空（该行没有值被丢弃）时与既有行为逐字节相同。
+                if current_instrs:
+                    _r32c_expr = self.expr_reconstructor.reconstruct(current_instrs)
+                    if _r32c_expr:
+                        stmts.append({'type': 'Expr', 'value': _r32c_expr})
+                current_instrs = []
                 continue
             if instr.opname == 'IMPORT_NAME':
                 # Flush previous import if any

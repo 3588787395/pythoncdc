@@ -1,0 +1,85 @@
+### site-packages/IQCommon/utils.pyc
+[SINGLE] F:\Downloads\pythoncdc-main\site-packages\IQCommon\utils.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\IQCommon\utilsOK.py
+  source: 7324 chars
+字节码 diff 报告:
+  decompile_status:   partial
+  total_functions:   22
+  matched_functions: 21
+  match_rate:        95.45%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+  mismatches (1):
+    - load_yaml: orig=55 decomp=55 jump_diffs=0 true_diffs=32
+      first_diff: {'index': 22, 'orig_op': 'LOAD_FAST', 'decomp_op': 'POP_TOP', 'orig_arg': 'loader', 'decomp_arg': None}
+### site-packages/IQCommon/strategy/wizard_quant_api.pyc
+[SINGLE] F:\Downloads\pythoncdc-main\site-packages\IQCommon\strategy\wizard_quant_api.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\IQCommon\strategy\wizard_quant_apiOK.py
+  source: 31817 chars
+字节码 diff 报告:
+  decompile_status:   partial
+  total_functions:   53
+  matched_functions: 49
+  match_rate:        92.45%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+  mismatches (4):
+    - calculate_di: orig=75 decomp=73 jump_diffs=0 true_diffs=45
+      first_diff: {'index': 29, 'orig_op': 'LOAD_CLOSURE', 'decomp_op': 'BUILD_TUPLE', 'orig_arg': 'low', 'decomp_arg': 1}
+    - params_analysis: orig=133 decomp=126 jump_diffs=1 true_diffs=117
+      first_diff: {'index': 14, 'orig_op': 'JUMP_FORWARD', 'decomp_op': 'LOAD_CONST', 'orig_arg': 48, 'decomp_arg': None}
+    - region_mean_desicion: orig=50 decomp=48 jump_diffs=2 true_diffs=2
+      first_diff: {'index': 48, 'type': 'missing_in_decomp', 'orig_op': 'LOAD_CONST', 'orig_arg': False}
+    - wizard_quant_check_limit: orig=91 decomp=90 jump_diffs=2 true_diffs=10
+      first_diff: {'index': 81, 'orig_op': 'JUMP_BACKWARD', 'decomp_op': 'PUSH_EXC_INFO', 'orig_arg': 92, 'decomp_arg': None}
+### site-packages/fly/common/flytools.pyc
+[SINGLE] F:\Downloads\pythoncdc-main\site-packages\fly\common\flytools.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\fly\common\flytoolsOK.py
+  source: 36098 chars
+字节码 diff 报告:
+  decompile_status:   ok
+  total_functions:   65
+  matched_functions: 65
+  match_rate:        100.00%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+### site-packages/fly/data/quotation.pyc
+[SINGLE] F:\Downloads\pythoncdc-main\site-packages\fly\data\quotation.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\fly\data\quotationOK.py
+  source: 176734 chars
+字节码 diff 报告:
+  decompile_status:   ok
+  total_functions:   143
+  matched_functions: 143
+  match_rate:        100.00%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+### site-packages/fly/oauthenticator/oauth2.pyc
+[SINGLE] F:\Downloads\pythoncdc-main\site-packages\fly\oauthenticator\oauth2.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\fly\oauthenticator\oauth2OK.py
+  source: 7015 chars
+字节码 diff 报告:
+  decompile_status:   ok
+  total_functions:   11
+  matched_functions: 11
+  match_rate:        100.00%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+### site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc
+  decompile_status:   partial
+  total_functions:   24
+  matched_functions: 23
+  match_rate:        95.83%
+    - tick_worker_thread: orig=268 decomp=247 jump_diffs=32 true_diffs=113
+### site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc
+  decompile_status:   partial
+  total_functions:   17
+  matched_functions: 16
+  match_rate:        94.12%
+    - match: orig=713 decomp=689 jump_diffs=9 true_diffs=524
+### site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc
+  decompile_status:   partial
+  total_functions:   14
+  matched_functions: 13
+  match_rate:        92.86%
+    - events: orig=510 decomp=508 jump_diffs=2 true_diffs=157

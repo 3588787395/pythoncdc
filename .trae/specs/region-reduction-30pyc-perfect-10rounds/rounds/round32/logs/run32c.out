@@ -1,0 +1,29 @@
+@@@ G2' 38-synthetic battery (head vs c)
+@@@ rc=0
+@@@ rc=0
+@@@ rc=0
+--- tally --- {"SAME": 38, "IMPROVED": 0, "REGRESSION": 0, "MOVED": 0, "other": 0}
+@@@ G3 100-anchor battery
+@@@ rc=0
+@@@ rc=0
+@@@ rc=0
+--- tally --- {"SAME": 100, "IMPROVED": 0, "REGRESSION": 0, "MOVED": 0, "other": 0}
+@@@ G4 full-402 A/B (head 4 shards, c 4 shards, sha-first)
+ab402_head.jsonl 402
+ab402_c.jsonl 402
+@@@ rc=0
+IMPROVED F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc  48/53 -> 49/53
+IMPROVED F:/Downloads/pythoncdc-main/site-packages/IQCommon/utils.pyc  20/22 -> 21/22
+TALLY SAME=400 IMPROVED=2 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=371 b=371
+@@@ rc=0
+IMPROVED   IQCommon/strategy/wizard_quant_api.pyc                         a= 48/ 53 b= 49/ 53  a_mism=[['calculate_di', 75, 73, 0, 45], ['get_strategy_finance_factor_info', 28, 18, 0, 18], ['params_analysis', 133, 126, 1, 117], ['region_mean_desicion', 50, 48, 2, 2], ['wizard_quant_check_limit', 91, 90, 2, 10]] b_mism=[['calculate_di', 75, 73, 0, 45], ['params_analysis', 133, 126, 1, 117], ['region_mean_desicion', 50, 48, 2, 2], ['wizard_quant_check_limit', 91, 90, 2, 10]]
+IMPROVED   IQCommon/utils.pyc                                             a= 20/ 22 b= 21/ 22  a_mism=[['load_ini', 18, 13, 0, 13], ['load_yaml', 55, 55, 0, 32]] b_mism=[['load_yaml', 55, 55, 0, 32]]
+--- tally --- {"SAME": 400, "IMPROVED": 2, "REGRESSION": 0, "MOVED": 0, "other": 0}
+@@@ G4-d1 seven one-function-away files
+@@@ rc=0
+@@@ rc=0
+@@@ rc=0
+TALLY SAME=7 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=0 b=0
+@@@ R32-C GATES DONE

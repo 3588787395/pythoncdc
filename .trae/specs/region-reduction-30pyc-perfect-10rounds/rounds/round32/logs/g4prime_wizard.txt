@@ -1,0 +1,17 @@
+--- wizard_quant_api.pyc  vs  build_head/IQCommon__strategy__wizard_quant_apiOK.py
+  DEFECT <module>.filter_desicion                                   [seq_len] orig=179 decomp=181  orig=179 decomp=181 delta=+2
+  DEFECT <module>.params_analysis                                   [seq_len] orig=134 decomp=128  orig=134 decomp=128 delta=-6
+  DEFECT <module>.region_mean_desicion                              [seq_len] orig=51 decomp=52  orig=51 decomp=52 delta=+1
+  DEFECT <module>.get_DMI.calculate_di                              [seq_len] orig=81 decomp=79  orig=81 decomp=79 delta=-2
+  DEFECT <module>.init_stock_pool_filter                            [target_diff] #33 JUMP 终点 orig=("'security_pool_info'", 'LOAD_FAST') decomp=("'final_stocks'", 'LOAD_FAST')  orig=155 decomp=155 delta=+0
+  DEFECT <module>.get_strategy_finance_factor_info                  [seq_len] orig=29 decomp=19  orig=29 decomp=19 delta=-10
+  DEFECT <module>.wizard_quant_check_limit                          [seq_len] orig=91 decomp=90  orig=91 decomp=90 delta=-1
+  strict clean 49/56  sigma-defect=7  sum_abs_delta=22
+--- wizard_quant_api.pyc  vs  build_c/IQCommon__strategy__wizard_quant_apiOK.py
+  DEFECT <module>.filter_desicion                                   [seq_len] orig=179 decomp=181  orig=179 decomp=181 delta=+2
+  DEFECT <module>.params_analysis                                   [seq_len] orig=134 decomp=128  orig=134 decomp=128 delta=-6
+  DEFECT <module>.region_mean_desicion                              [seq_len] orig=51 decomp=52  orig=51 decomp=52 delta=+1
+  DEFECT <module>.get_DMI.calculate_di                              [seq_len] orig=81 decomp=79  orig=81 decomp=79 delta=-2
+  DEFECT <module>.init_stock_pool_filter                            [target_diff] #33 JUMP 终点 orig=("'security_pool_info'", 'LOAD_FAST') decomp=("'final_stocks'", 'LOAD_FAST')  orig=155 decomp=155 delta=+0
+  DEFECT <module>.wizard_quant_check_limit                          [seq_len] orig=91 decomp=90  orig=91 decomp=90 delta=-1
+  strict clean 50/56  sigma-defect=6  sum_abs_delta=12

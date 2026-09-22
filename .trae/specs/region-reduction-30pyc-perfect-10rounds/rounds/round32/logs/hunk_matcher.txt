@@ -1,0 +1,21 @@
+<module>.DefaultMatcher.match  Matcher.match
+  filtered orig=715 decomp=689 delta=-26   non-equal blocks=3
+  H1 delete   orig[182:463] @1322..3206  ->  decomp[182:182] @1322..1320   n=281/0
+        o  @1322  ('<JUMP>', 'JUMP')
+        o  @1324  ("'order'", 'LOAD_FAST')
+        o  @1326  ("'asset'", 'LOAD_ATTR')
+        o  @1336  ("'symbol'", 'LOAD_ATTR')
+        o  @1346  ('None', 'LOAD_CONST')
+        o  @1348  ('3', 'LOAD_CONST')
+  H2 delete   orig[575:579] @3952..3966  ->  decomp[294:294] @2064..2062   n=4/0
+        o  @3952  ('<JUMP>', 'JUMP')
+        o  @3954  ("'order'", 'LOAD_FAST')
+        o  @3956  ("'unfilled_amount'", 'LOAD_ATTR')
+        o  @3966  ("'fill'", 'STORE_FAST')
+  H3 insert   orig[713:713] @4964..4962  ->  decomp[428:687] @3060..4860   n=0/259
+        d  @3060  ("'order'", 'LOAD_FAST')
+        d  @3062  ("'unfilled_amount'", 'LOAD_ATTR')
+        d  @3072  ("'fill'", 'STORE_FAST')
+        d  @3076  ('<JUMP>', 'JUMP')
+        d  @3078  ("'order'", 'LOAD_FAST')
+        d  @3080  ("'asset'", 'LOAD_ATTR')

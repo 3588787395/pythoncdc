@@ -1,0 +1,41 @@
+--- ORIGINAL <module>.load_ini  co_code len=142 ---
+  @0    RESUME                   ''                           line=45
+  @2    LOAD_GLOBAL              'NULL + configparser'        line=46
+  @14   LOAD_ATTR                'ConfigParser'              
+  @24   PRECALL                  ''                          
+  @28   CALL                     ''                          
+  @38   STORE_FAST               'config'                    
+  @40   LOAD_FAST                'config'                     line=47
+  @42   LOAD_METHOD              'read'                      
+  @64   LOAD_FAST                'path'                      
+  @66   PRECALL                  ''                          
+  @70   CALL                     ''                          
+  @80   POP_TOP                  ''                          
+  @82   LOAD_CONST               '<code>'                     line=48
+  @84   MAKE_FUNCTION            ''                          
+  @86   LOAD_FAST                'config'                     line=53
+  @88   LOAD_METHOD              'values'                    
+  @110  PRECALL                  ''                          
+  @114  CALL                     ''                          
+  @124  GET_ITER                 ''                           line=48
+  @126  PRECALL                  ''                          
+  @130  CALL                     ''                          
+  @140  RETURN_VALUE             ''                          
+--- DECOMPILED <module>.load_ini  co_code len=100 ---
+  @0    RESUME                   ''                           line=34
+  @2    LOAD_GLOBAL              'NULL + configparser'        line=35
+  @14   LOAD_ATTR                'ConfigParser'              
+  @24   PRECALL                  ''                          
+  @28   CALL                     ''                          
+  @38   STORE_FAST               'config'                    
+  @40   LOAD_CONST               '<code>'                     line=36
+  @42   MAKE_FUNCTION            ''                          
+  @44   LOAD_FAST                'config'                    
+  @46   LOAD_METHOD              'values'                    
+  @68   PRECALL                  ''                          
+  @72   CALL                     ''                          
+  @82   GET_ITER                 ''                          
+  @84   PRECALL                  ''                          
+  @88   CALL                     ''                          
+  @98   RETURN_VALUE             ''                          
+filtered orig=18 decomp=13
