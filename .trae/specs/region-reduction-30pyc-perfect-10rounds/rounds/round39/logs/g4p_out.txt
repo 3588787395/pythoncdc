@@ -1,0 +1,15 @@
+before(HEAD)   strict ok=50/56
+    <module>.filter_desicion                       seq_len orig=179 decomp=181
+    <module>.params_analysis                       seq_len orig=134 decomp=128
+    <module>.region_mean_desicion                  seq_len orig=51 decomp=52
+    <module>.get_DMI.calculate_di                  seq_len orig=81 decomp=79
+    <module>.init_stock_pool_filter                target_diff #33 JUMP 终点 orig=("'security_pool_info'", 'LOAD_FAST') decomp=("'final_stocks'", 'LOAD_FAST')
+    <module>.wizard_quant_check_limit              seq_len orig=91 decomp=90
+after(landed)  strict ok=51/56
+    <module>.filter_desicion                       seq_len orig=179 decomp=181
+    <module>.params_analysis                       seq_len orig=134 decomp=128
+    <module>.region_mean_desicion                  seq_len orig=51 decomp=52
+    <module>.get_DMI.calculate_di                  seq_len orig=81 decomp=79
+    <module>.init_stock_pool_filter                target_diff #33 JUMP 终点 orig=("'security_pool_info'", 'LOAD_FAST') decomp=("'final_stocks'", 'LOAD_FAST')
+FIXED  : ['<module>.wizard_quant_check_limit']
+BROKEN : []

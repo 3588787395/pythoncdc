@@ -1,0 +1,13 @@
+TALLY SAME=5 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=0 b=0
+TALLY SAME=11 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=0 b=0
+TALLY SAME=2 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=0 b=0
+IMPROVED F:\Downloads\pythoncdc-main\site-packages\IQCommon\strategy\wizard_quant_api.pyc  49/53 -> 50/53
+TALLY SAME=8 IMPROVED=1 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=0 b=0
+TALLY SAME=59 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=48 b=48
+TALLY SAME=107 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=77 b=77

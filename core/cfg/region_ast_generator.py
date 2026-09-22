@@ -21561,6 +21561,59 @@ AST 映射规则:
                         self.generated_blocks.add(_succ)
                         self.generated_offsets.add(_succ.start_offset)
                         break
+        # [R39-B] 区域归约算法原则 1（每块 = 前导语句 + 唯一终止符）+ 原则 2
+        # （每块唯一归属）：臂尾回边块必须由本臂发射。判据全部为结构事实：本臂
+        # 最后一条已发射语句所属块 L 以直落（终止符非 JUMP）结束，L 的唯一后继 T
+        # 是「只含一条 JUMP_BACKWARD→当前循环 header」的纯回边块，且 T 不属于本
+        # 区域块集、未被发射、不是该循环指定的 back_edge_block（循环体自然尾），
+        # 并且 T 是本臂私有：T 的唯一前驱就是 L。最后一条把「源码级显式 continue」
+        # 与「臂落到链外合流点」分开——实测中合流型后继（前驱数 >1，含该区域的
+        # merge_block 与循环 back_edge_block）一律不可认领：那些直落本无 continue，
+        # 补上会给重编译多出一条 JUMP_BACKWARD。私有型则 T 是源码 continue 的唯一
+        # 实体：留在链外发射时它会与真正的循环尾回边块塌缩成同一条 JUMP_BACKWARD
+        # （臂尾终止符少发一条）。归约方式：T 认给本臂末条语句之后，以 T 的直落
+        # 身份标已生成，链外扫描自然不再重复发射。AST 映射：Continue。
+        _r39_loop = getattr(self, '_current_loop', None)
+        _r39_hdr = getattr(_r39_loop, 'header_block', None) if _r39_loop else None
+        if (stmts and blocks and region is not None and _r39_hdr is not None
+                and not (isinstance(stmts[-1], dict)
+                         and stmts[-1].get('type') == 'Continue')):
+            _r39_tail = None
+            for _r39_b in reversed(list(blocks)):
+                if _r39_b in self.generated_blocks:
+                    _r39_tail = _r39_b
+                    break
+            _r39_succs = [s for s in (list(_r39_tail.successors)
+                                         if _r39_tail is not None else [])
+                              if s.start_offset > _r39_tail.start_offset
+                              and not (list(getattr(s, 'instructions', None) or [])
+                                       and s.get_first_instruction().opname in
+                                       ('PUSH_EXC_INFO', 'WITH_EXCEPT_START'))]
+            if len(_r39_succs) == 1:
+                _r39_T = _r39_succs[0]
+                _r39_Tlast = _r39_T.get_last_instruction()
+                _r39_Llast = _r39_tail.get_last_instruction()
+                _r39_be = set(getattr(_r39_loop, 'back_edge_blocks', None) or [])
+                if getattr(_r39_loop, 'back_edge_block', None) is not None:
+                    _r39_be.add(_r39_loop.back_edge_block)
+                _r39_Tpreds = list(getattr(_r39_T, 'predecessors', None) or [])
+                if (_r39_T not in self.generated_blocks
+                        and _r39_T not in list(blocks)
+                        and _r39_T not in (getattr(region, 'blocks', None) or set())
+                        and _r39_T not in _r39_be
+                        and len(_r39_Tpreds) == 1
+                        and _r39_Tpreds[0] is _r39_tail
+                        and len(list(getattr(_r39_T, 'instructions', None) or [])) == 1
+                        and _r39_Llast is not None
+                        and 'JUMP' not in _r39_Llast.opname
+                        and _r39_Tlast is not None
+                        and _r39_Tlast.opname in ('JUMP_BACKWARD',
+                                                  'JUMP_BACKWARD_NO_INTERRUPT')
+                        and isinstance(_r39_Tlast.argval, int)
+                        and self.cfg.get_block_by_offset(_r39_Tlast.argval) is _r39_hdr):
+                    stmts.append({'type': 'Continue'})
+                    self.generated_blocks.add(_r39_T)
+                    self.generated_offsets.add(_r39_T.start_offset)
         return stmts
 
     def _try_generate_conditional_break(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:

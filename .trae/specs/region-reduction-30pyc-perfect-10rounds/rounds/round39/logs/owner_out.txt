@@ -1,0 +1,131 @@
+--- ORIGINAL bytecode of target(s) ---
+  [<module>.ctl_two_cont]
+  1           0 RESUME                   0
+
+  2           2 LOAD_FAST                1 (ks)
+              4 GET_ITER
+        >>    6 FOR_ITER                43 (to 94)
+              8 STORE_FAST               2 (k)
+
+  3          10 NOP
+
+  4          12 LOAD_FAST                2 (k)
+             14 LOAD_CONST               1 (3)
+             16 COMPARE_OP               4 (>)
+             22 POP_JUMP_FORWARD_IF_FALSE     6 (to 36)
+
+  5          24 LOAD_CONST               2 (1)
+             26 LOAD_FAST                0 (d)
+             28 LOAD_FAST                2 (k)
+             30 STORE_SUBSCR
+
+  6          34 JUMP_BACKWARD           15 (to 6)
+
+  7     >>   36 LOAD_FAST                2 (k)
+             38 LOAD_CONST               3 (0)
+             40 COMPARE_OP               0 (<)
+             46 POP_JUMP_FORWARD_IF_FALSE     6 (to 60)
+
+  8          48 LOAD_CONST               4 (-1)
+             50 LOAD_FAST                0 (d)
+             52 LOAD_FAST                2 (k)
+             54 STORE_SUBSCR
+
+  9          58 JUMP_BACKWARD           27 (to 6)
+
+  7     >>   60 JUMP_BACKWARD           28 (to 6)
+        >>   62 PUSH_EXC_INFO
+
+ 10          64 LOAD_GLOBAL              0 (Exception)
+             76 CHECK_EXC_MATCH
+             78 POP_JUMP_FORWARD_IF_FALSE     3 (to 86)
+             80 POP_TOP
+
+ 11          82 POP_EXCEPT
+             84 JUMP_BACKWARD           40 (to 6)
+
+ 10     >>   86 RERAISE                  0
+        >>   88 COPY                     3
+             90 POP_EXCEPT
+             92 RERAISE                  1
+
+ 12     >>   94 LOAD_FAST                0 (d)
+             96 RETURN_VALUE
+ExceptionTable:
+  12 to 32 -> 62 [1]
+  36 to 56 -> 62 [1]
+  62 to 80 -> 88 [2] lasti
+  86 to 86 -> 88 [2] lasti
+
+================ CFG ctl_two_cont ================
+--- CFG blocks (16) ---
+  blk @0    n=3   term=GET_ITER->-                      owner=LoopRegion@6           role=NORMAL
+  blk @6    n=1   term=FOR_ITER->94                     owner=LoopRegion@6           role=LOOP_HEADER
+  blk @8    n=2   term=NOP->-                           owner=LoopRegion@6           role=LOOP_BODY
+  blk @12   n=4   term=POP_JUMP_FORWARD_IF_FALSE->36    owner=TryExceptRegion@12     role=LOOP_BODY
+  blk @24   n=4   term=STORE_SUBSCR->-                  owner=TryExceptRegion@12     role=LOOP_BODY
+  blk @34   n=1   term=JUMP_BACKWARD->6                 owner=TryExceptRegion@12     role=PURE_CONTINUE
+  blk @36   n=4   term=POP_JUMP_FORWARD_IF_FALSE->60    owner=TryExceptRegion@12     role=LOOP_BODY
+  blk @48   n=4   term=STORE_SUBSCR->-                  owner=TryExceptRegion@12     role=LOOP_BODY
+  blk @58   n=1   term=JUMP_BACKWARD->6                 owner=LoopRegion@6           role=PURE_CONTINUE
+  blk @60   n=1   term=JUMP_BACKWARD->6                 owner=TryExceptRegion@12     role=LOOP_BACK_EDGE
+  blk @62   n=4   term=POP_JUMP_FORWARD_IF_FALSE->86    owner=TryExceptRegion@12     role=LOOP_BODY
+  blk @80   n=1   term=POP_TOP->-                       owner=TryExceptRegion@12     role=LOOP_BODY
+  blk @82   n=2   term=JUMP_BACKWARD->6                 owner=TryExceptRegion@12     role=CONTINUE
+  blk @86   n=1   term=RERAISE->0                       owner=TryExceptRegion@12     role=PURE_JUMP
+  blk @88   n=3   term=RERAISE->1                       owner=TryExceptRegion@12     role=RETURN
+  blk @94   n=2   term=RETURN_VALUE->-                  owner=LoopRegion@6           role=LOOP_ELSE
+--- regions (4) ---
+  LoopRegion     entry@6    parent=NONE               blocks=[0, 6, 8, 12, 24, 34, 36, 48, 58, 60, 62, 80, 82, 94]
+        header_block         [6]
+        condition_block      []
+        back_edge_block      [60]
+        body_blocks          [6, 8, 12, 24, 34, 36, 48, 58, 60, 62, 80, 82]
+        else_blocks          [94]
+        init_blocks          []
+        break_blocks         []
+        back_edge_blocks     [60]
+        pre_condition_blocks []
+        condition_chain_blocks []
+        children             ['TryExceptRegion@12']
+  TryExceptRegion entry@12   parent=LoopRegion@6       blocks=[12, 24, 34, 36, 48, 60, 62, 80, 82, 86, 88]
+  IfRegion       entry@36   parent=TryExceptRegion@12 blocks=[36, 48]
+        condition_block      [36]
+        merge_block          [6]
+        then_blocks          [48]
+        else_blocks          []
+        elif_conditions      []
+        elif_final_else      []
+        chained_compare_blocks []
+  IfRegion       entry@12   parent=TryExceptRegion@12 blocks=[12, 24, 34, 36, 48]
+        condition_block      [12]
+        merge_block          [6]
+        then_blocks          [24, 34]
+        else_blocks          [36, 48]
+        elif_conditions      []
+        elif_final_else      []
+        chained_compare_blocks []
+--- blocks terminating in JUMP_BACKWARD ---
+  @34   -> 6    target_is_loop_header=True  owner=TryExceptRegion@12     role=PURE_CONTINUE  n=1 term=JUMP_BACKWARD->6
+  @58   -> 6    target_is_loop_header=True  owner=LoopRegion@6           role=PURE_CONTINUE  n=1 term=JUMP_BACKWARD->6
+  @60   -> 6    target_is_loop_header=True  owner=TryExceptRegion@12     role=LOOP_BACK_EDGE n=1 term=JUMP_BACKWARD->6
+  @82   -> 6    target_is_loop_header=True  owner=TryExceptRegion@12     role=CONTINUE       n=2 term=JUMP_BACKWARD->6
+================ PRODUCT ================
+# Source Generated with Decompyle++ (Python version)
+# File: probe_owner.pyc (Python 3.11)
+
+def ctl_two_cont(d, ks):
+    for k in ks:
+        try:
+            if k > 3:
+                d[k] = 1
+                continue
+            elif k < 0:
+                d[k] = -1
+            continue
+        except Exception:
+            pass
+    return d
+
+strict <module>                 (None, 'ok', None)
+strict <module>.ctl_two_cont    ('seq_len', 'orig=37 decomp=36', True)

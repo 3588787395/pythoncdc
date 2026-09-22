@@ -1,0 +1,4 @@
+case           status                 nbad   sum|d| detail / probe
+r39c_controls  CLEAN                  0      0      
+r39w_witness   CLEAN                  0      0      
+CORE=D:\Temp\r38gate\r38m\mirr_build_r39b BAT=round39_arm_tail_continue cases=2 CLEAN=2 DEFECT=0

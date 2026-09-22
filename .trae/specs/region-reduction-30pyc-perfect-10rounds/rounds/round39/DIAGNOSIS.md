@@ -107,4 +107,91 @@ R100 认为「merge 已带这条回边」于是吞掉臂尾那条 —— 而产�
 （`region_analyzer` 的 `else_blocks` / merge 归属，与 Round 37 落地的 R37-A 同一层），
 而不是再在 `region_ast_generator.py` 的发射判据里找。
 
+## 八、§六 遗留的那一手已经做完：块 @58 的 owner 与判据（候选 R39-A）
 
+`logs/probe_owner.py`（在 `RegionAnalyzer.analyze` 外套壳，核内零改动）实测合成见证
+`logs/src39.py :: ctl_two_cont`（16 块）的归属层：
+
+| 块 | 终止符 | `block_to_region` | `block_roles` | 备注 |
+|----|--------|-------------------|----------------|------|
+| @34 | JUMP_BACKWARD→6 | TryExceptRegion@12 | PURE_CONTINUE | then 臂尾，**在** `then_blocks=[24,34]` 里 ⇒ 臂内发出 Continue |
+| @58 | JUMP_BACKWARD→6 | **LoopRegion@6** | PURE_CONTINUE | elif 臂尾，**不在** `else_blocks=[36,48]` 里 |
+| @60 | JUMP_BACKWARD→6 | TryExceptRegion@12 | LOOP_BACK_EDGE | = `LoopRegion.back_edge_block`（`back_edge_blocks=[60]`） |
+
+即 §七 推断成立：臂尾回边块没有被认给那条臂，它被循环区域认领。
+`logs/probe_trace.py`（包住 `_generate_region/_process_if_blocks/_if_generate_*`，记录每次
+调用新吃掉的块与返回的语句树）给出发射序：`_process_if_blocks([36,48], IfRegion@12)` 返回
+`[If(then=[Assign] orelse=[])]`（臂尾无终止符）→ 链外 `_process_if_blocks([58], None)` 返回
+`[Continue]` → @60 被 try 区域吸收不出语句。产物因此只剩一条 `JUMP_BACKWARD`。
+
+**目标源码形状已用编译器反证**（`logs/candcmp.py` + `logs/cand_c1.py`）：把那条 `continue`
+放进臂内、链外不补，重编译后与原字节码**逐条 37/37 同偏移一致**（`strict (None,'ok',None)`）。
+⇒ 缺的不是新语句，而是这条 `Continue` 的**归属位置**。
+
+**语料同构性**：同一探针跑 `site-packages/IQCommon/strategy/wizard_quant_api.pyc ::
+wizard_quant_check_limit`（28 块，链有 7 个臂）⇒ 前 6 个臂的 PURE_CONTINUE 块（@112/@152/…/@316）
+都在各臂的 `then_blocks` 内并发出了 `Continue`；只有末臂 @330 的尾块 **@340 owner=LoopRegion@92、
+role=PURE_CONTINUE**，而 @342 是 `back_edge_block/LOOP_BACK_EDGE` —— 与见证逐字同形。
+
+**R39-A（同层判据，站点 `_process_if_blocks` 末尾）**：本臂最后一条已发射语句所属块 L
+（终止符不含 `JUMP`）的**直落后继**（后继里排除 `start_offset` 更靠前的与以
+`PUSH_EXC_INFO`/`WITH_EXCEPT_START` 开头的异常入口块）唯一确定为 T，且 T 只含一条
+`JUMP_BACKWARD→当前循环 header`、T ∉ 本区域块集、T 未被认领、且 T **不是**该循环的
+`back_edge_block`/`back_edge_blocks` ⇒ T 是源码级显式 `continue` 的唯一实体，认给本臂：
+`stmts.append({'type':'Continue'})` 并标记 T 已生成（链外扫描不再重复发射）。
+
+第一版把「直落后继」写成 `len(L.successors)==1` ⇒ G0 无效果。`logs/probe39g.py` 逐条评估
+判据才看清：@330 在 try 保护区内，`successors=[340, 344]`（344 是 `PUSH_EXC_INFO` 异常入口），
+唯一后继判据永远不成立。改成上面的异常入口排除后：
+
+```
+G0（电池 test_repros/round39_arm_tail_continue/，驱动器 logs/g0_head.txt / g0_r39a.txt）
+  head  镜像：r39w_witness DEFECT 1  ctl_two_cont:seq_-1   r39c_controls CLEAN
+  r39a  镜像：r39w_witness CLEAN 0                          r39c_controls CLEAN   （无 DEGRADED / 无 EXC）
+```
+5 支对照（`ctl_plain_elif` / `ctl_single_cont` / `ctl_elif_more_body` / `ctl_tail_cont` /
+`ctl_while_tail`）改前改后皆 CLEAN，其中 `ctl_tail_cont` 正是「链外显式 continue == 循环自身
+`back_edge_block`」的负对照，被 `T 不是 back_edge_block` 这一项挡住。
+
+
+
+
+## 九、G4 否证 R39-A（过火 16 处）⇒ 实测分离出「私有 vs 合流」一项 ⇒ R39-B
+
+**R39-A 的 G4（402 文件 A/B，`logs/g4_r39a_perfunc.txt`）**：
+
+```
+TALLY SAME=383 IMPROVED=0 REGRESSION=16 MOVED=3 ERR=0   files fully matched: a=375 b=366
+```
+
+但它并非无用 —— 靶确实被它修好了：`wizard_quant_api :: wizard_quant_check_limit`
+`orig=91 decomp=90` ⇒ **匹配**（该文件计数不变只因同时碰坏了 `add_to_strategy_info 38/39`），
+`klinedata :: get_all_real_daily_kline 188/187 → 188/188`（指令数复原，仍差 5 条）。
+破的 16 处全是同一方向：**产物比原始多一条指令**（`orig=N decomp=N+1`）＝多补了一条
+`continue`，重编译便多出一条 `JUMP_BACKWARD`。⇒ 形状判据只差「私有 vs 合流」这一条区分。
+
+**实测判据（`logs/probe39h.py` → `logs/h_out.txt`：在 `_process_if_blocks` 每个返回点，
+把候选臂尾直落后继逐条评估，含前驱集／merge／back_edge／owner，只测不改）**：
+
+| 站点 | 臂尾 L | 候选 T | T 的前驱 | 是本区域 `merge_block` | 是循环 `back_edge_block` | 判别 |
+|---|---|---|---|---|---|---|
+| `wizard_quant_check_limit` 末臂 | @330 | @340 | **[@330]** | 否 | 否（@342 才是） | 应认 ⇒ 认了就修好 |
+| `add_to_strategy_info` | @264 | @394 | [10, @264] | 否 | **是** | 不应认（R39-A 认了 ⇒ +1） |
+| `add_to_strategy_info` | @92 | @222 | [84, @92] | **是** | 否 | 不应认（R39-A 认了 ⇒ +1） |
+| `get_vip_user_info` | @832 | @854 | [562, @832] | **是** | 否 | 不应认（R39-A 认了 ⇒ +1） |
+
+⇒ 分界不在「是否纯回边块」「是否属于本区域块集」，而在**归属的私有性**：源码里那条显式
+`continue` 对应的回边块只有一个前驱、且那个前驱恰是本臂末块；前驱 ≥2 的后继（含本
+`IfRegion` 的 `merge_block` 与循环自身的 `back_edge_block`）表示「臂自然落到链外合流点」，
+那里源码本没有 `continue`。这正是原则 2（每块唯一归属）读在臂尾上的形态：私有的才归本臂。
+
+**R39-B（同层判据，站点与 R39-A 同为 `_process_if_blocks` 末尾）**＝R39-A 的判据串 ＋
+两项 `len(T.predecessors) == 1 and T.predecessors[0] is L`。规格 `logs/spec39b.json`
+（由 `logs/mkspec39b.py` 派生，插入 53 行）。门禁结果与落地见 `OUTCOME.md`。
+
+**纠正 §八 的一处记录错误**：§八 写「r39a 镜像 G0 ⇒ `r39w_witness CLEAN 0`」，而归档
+`logs/g0_r39a.txt` 实为 `r39w_witness DEFECT 1  ctl_two_cont:seq_-1`，且
+`test_repros/out_r39a/r39w_witness.py` 与 head 产物逐字节相同 ⇒ **R39-A 在合成见证上根本没触发**，
+它只在语料上触发。（未再追这条差异的成因：加上私有性一项后见证与语料同时触发，见
+`logs/g0_r39b.txt` 的 `cases=2 CLEAN=2 DEFECT=0`，说明该项正是见证所缺的一条。）
+教训并入采纳前置检查：**G0 电池必须在同一镜像臂上重跑并留档，不能沿用另一次构建的结论**。

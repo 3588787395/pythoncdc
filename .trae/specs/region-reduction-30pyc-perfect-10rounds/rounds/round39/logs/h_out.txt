@@ -1,0 +1,41 @@
+SITE FIX  wizard_quant_check_limit           arm=[54] tail=54(STORE_FAST) hdr=None
+     {'c': 60, 'n': 6, 'term': ('GET_ITER', None), 'fired': False, 'preds': [0, 54], 'merge': True, 'backedge': False, 'role': 'None', 'own': 'LoopRegion@92', 'in_arm_blocks': False, 'in_region': False, 'in_gen': False}
+SITE FIX  wizard_quant_check_limit           arm=[94] tail=94(NOP) hdr=92
+     {'c': 108, 'n': 2, 'term': ('POP_JUMP_FORWARD_IF_NOT_NONE', 114), 'fired': False, 'preds': [94], 'merge': False, 'backedge': False, 'role': 'None', 'own': 'TryExceptRegion@108', 'in_arm_blocks': False, 'in_region': set(), 'in_gen': False}
+SITE FIX  wizard_quant_check_limit           arm=[330] tail=330(STORE_SUBSCR) hdr=92
+     {'c': 340, 'n': 1, 'term': ('JUMP_BACKWARD', 92), 'fired': True, 'preds': [330], 'merge': False, 'backedge': False, 'role': 'None', 'own': 'LoopRegion@92', 'in_arm_blocks': False, 'in_region': False, 'in_gen': False}
+SITE FIX  wizard_quant_check_limit           arm=[318, 330] tail=330(STORE_SUBSCR) hdr=92
+     {'c': 340, 'n': 1, 'term': ('JUMP_BACKWARD', 92), 'fired': True, 'preds': [330], 'merge': False, 'backedge': False, 'role': 'None', 'own': 'LoopRegion@92', 'in_arm_blocks': False, 'in_region': False, 'in_gen': False}
+SITE FIX  wizard_quant_check_limit           arm=[278, 306, 316, 318, 330] tail=330(STORE_SUBSCR) hdr=92
+     {'c': 340, 'n': 1, 'term': ('JUMP_BACKWARD', 92), 'fired': True, 'preds': [330], 'merge': False, 'backedge': False, 'role': 'None', 'own': 'LoopRegion@92', 'in_arm_blocks': False, 'in_region': False, 'in_gen': False}
+SITE FIX  wizard_quant_check_limit           arm=[238, 276, 278, 306, 316, 318, 330] tail=330(STORE_SUBSCR) hdr=92
+     {'c': 340, 'n': 1, 'term': ('JUMP_BACKWARD', 92), 'fired': True, 'preds': [330], 'merge': False, 'backedge': False, 'role': 'None', 'own': 'LoopRegion@92', 'in_arm_blocks': False, 'in_region': False, 'in_gen': False}
+SITE FIX  wizard_quant_check_limit           arm=[216, 236, 238, 276, 278, 306, 316, 318, 330] tail=330(STORE_SUBSCR) hdr=92
+     {'c': 340, 'n': 1, 'term': ('JUMP_BACKWARD', 92), 'fired': True, 'preds': [330], 'merge': False, 'backedge': False, 'role': 'None', 'own': 'LoopRegion@92', 'in_arm_blocks': False, 'in_region': False, 'in_gen': False}
+SITE FIX  wizard_quant_check_limit           arm=[176, 214, 216, 236, 238, 276, 278, 306, 316, 318, 330] tail=330(STORE_SUBSCR) hdr=92
+     {'c': 340, 'n': 1, 'term': ('JUMP_BACKWARD', 92), 'fired': True, 'preds': [330], 'merge': False, 'backedge': False, 'role': 'None', 'own': 'LoopRegion@92', 'in_arm_blocks': False, 'in_region': False, 'in_gen': False}
+SITE FIX  wizard_quant_check_limit           arm=[154, 174, 176, 214, 216, 236, 238, 276, 278, 306, 316, 318, 330] tail=330(STORE_SUBSCR) hdr=92
+     {'c': 340, 'n': 1, 'term': ('JUMP_BACKWARD', 92), 'fired': True, 'preds': [330], 'merge': False, 'backedge': False, 'role': 'None', 'own': 'LoopRegion@92', 'in_arm_blocks': False, 'in_region': False, 'in_gen': False}
+SITE FIX  wizard_quant_check_limit           arm=[114, 152, 154, 174, 176, 214, 216, 236, 238, 276, 278, 306, 316, 318, 330] tail=330(STORE_SUBSCR) hdr=92
+     {'c': 340, 'n': 1, 'term': ('JUMP_BACKWARD', 92), 'fired': True, 'preds': [330], 'merge': False, 'backedge': False, 'role': 'None', 'own': 'LoopRegion@92', 'in_arm_blocks': False, 'in_region': False, 'in_gen': False}
+### FIX wizard_quant_check_limit: 19 if-arm returns inspected
+SITE REG  add_to_strategy_info               arm=[264] tail=264(POP_TOP) hdr=8
+     {'c': 394, 'n': 1, 'term': ('JUMP_BACKWARD', 8), 'fired': True, 'preds': [10, 264], 'merge': False, 'backedge': True, 'role': 'None', 'own': 'LoopRegion@8', 'in_arm_blocks': False, 'in_region': False, 'in_gen': False}
+SITE REG  add_to_strategy_info               arm=[264] tail=264(POP_TOP) hdr=8
+     {'c': 394, 'n': 1, 'term': ('JUMP_BACKWARD', 8), 'fired': True, 'preds': [10, 264], 'merge': False, 'backedge': True, 'role': 'None', 'own': 'LoopRegion@8', 'in_arm_blocks': False, 'in_region': False, 'in_gen': False}
+SITE REG  add_to_strategy_info               arm=[92] tail=92(POP_TOP) hdr=8
+     {'c': 222, 'n': 1, 'term': ('JUMP_BACKWARD', 8), 'fired': True, 'preds': [84, 92], 'merge': True, 'backedge': False, 'role': 'None', 'own': 'LoopRegion@8', 'in_arm_blocks': False, 'in_region': False, 'in_gen': False}
+### REG add_to_strategy_info: 20 if-arm returns inspected
+SITE REG  get_vip_user_info                  arm=[642, 750, 832] tail=832(STORE_SUBSCR) hdr=512
+     {'c': 854, 'n': 1, 'term': ('JUMP_BACKWARD', 512), 'fired': True, 'preds': [562, 832], 'merge': True, 'backedge': False, 'role': 'None', 'own': 'LoopRegion@512', 'in_arm_blocks': False, 'in_region': False, 'in_gen': False}
+SITE REG  get_vip_user_info                  arm=[562, 642, 854, 750, 832] tail=832(STORE_SUBSCR) hdr=512
+     {'c': 854, 'n': 1, 'term': ('JUMP_BACKWARD', 512), 'fired': True, 'preds': [562, 832], 'merge': False, 'backedge': False, 'role': 'None', 'own': 'LoopRegion@512', 'in_arm_blocks': True, 'in_region': True, 'in_gen': True}
+SITE REG  get_vip_user_info                  arm=[938, 1046, 1130] tail=1130(STORE_SUBSCR) hdr=512
+     {'c': 1152, 'n': 2, 'term': ('JUMP_BACKWARD', 512), 'fired': False, 'preds': [856, 1130], 'merge': True, 'backedge': False, 'role': 'None', 'own': 'LoopRegion@512', 'in_arm_blocks': False, 'in_region': False, 'in_gen': False}
+SITE REG  get_vip_user_info                  arm=[300, 388, 508, 512, 516, 562, 856, 642, 854, 938, 1152, 750, 832, 1046, 1130] tail=1130(STORE_SUBSCR) hdr=244
+     {'c': 1152, 'n': 2, 'term': ('JUMP_BACKWARD', 512), 'fired': False, 'preds': [856, 1130], 'merge': False, 'backedge': False, 'role': 'None', 'own': 'LoopRegion@512', 'in_arm_blocks': True, 'in_region': True, 'in_gen': True}
+### REG get_vip_user_info: 13 if-arm returns inspected
+!! missing site-packages/IQCommon/db/db_base.pyc
+!! missing site-packages/IQData/analysis/strategy.pyc
+!! missing site-packages/IQCommon/util/fly_data_source.pyc
+!! missing site-packages/IQEngine/klinedata.pyc

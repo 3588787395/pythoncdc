@@ -1,0 +1,90 @@
+# -*- coding: utf-8 -*-
+"""Round 39 line A: emit spec39b.json (candidate R39-B) for the mirror harness.
+
+R39-B = R39-A + the measured discriminator: the arm-tail pure back-edge block
+must be **arm-private** (its only predecessor is the arm's last block), not a
+join with the rest of the loop body.
+"""
+import io
+import json
+import os
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.stdout.reconfigure(encoding='utf-8')
+
+ANCHOR = (
+    '                        self.generated_blocks.add(_succ)\n'
+    '                        self.generated_offsets.add(_succ.start_offset)\n'
+    '                        break\n'
+    '        return stmts'
+)
+
+REPL = (
+    '                        self.generated_blocks.add(_succ)\n'
+    '                        self.generated_offsets.add(_succ.start_offset)\n'
+    '                        break\n'
+    '        # [R39-B] 区域归约算法原则 1（每块 = 前导语句 + 唯一终止符）+ 原则 2\n'
+    '        # （每块唯一归属）：臂尾回边块必须由本臂发射。判据全部为结构事实：本臂\n'
+    '        # 最后一条已发射语句所属块 L 以直落（终止符非 JUMP）结束，L 的唯一后继 T\n'
+    '        # 是「只含一条 JUMP_BACKWARD→当前循环 header」的纯回边块，且 T 不属于本\n'
+    '        # 区域块集、未被发射、不是该循环指定的 back_edge_block（循环体自然尾），\n'
+    '        # 并且 T 是本臂私有：T 的唯一前驱就是 L。最后一条把「源码级显式 continue」\n'
+    '        # 与「臂落到链外合流点」分开——实测中合流型后继（前驱数 >1，含该区域的\n'
+    '        # merge_block 与循环 back_edge_block）一律不可认领：那些直落本无 continue，\n'
+    '        # 补上会给重编译多出一条 JUMP_BACKWARD。私有型则 T 是源码 continue 的唯一\n'
+    '        # 实体：留在链外发射时它会与真正的循环尾回边块塌缩成同一条 JUMP_BACKWARD\n'
+    '        # （臂尾终止符少发一条）。归约方式：T 认给本臂末条语句之后，以 T 的直落\n'
+    '        # 身份标已生成，链外扫描自然不再重复发射。AST 映射：Continue。\n'
+    '        _r39_loop = getattr(self, \'_current_loop\', None)\n'
+    '        _r39_hdr = getattr(_r39_loop, \'header_block\', None) if _r39_loop else None\n'
+    '        if (stmts and blocks and region is not None and _r39_hdr is not None\n'
+    '                and not (isinstance(stmts[-1], dict)\n'
+    '                         and stmts[-1].get(\'type\') == \'Continue\')):\n'
+    '            _r39_tail = None\n'
+    '            for _r39_b in reversed(list(blocks)):\n'
+    '                if _r39_b in self.generated_blocks:\n'
+    '                    _r39_tail = _r39_b\n'
+    '                    break\n'
+    '            _r39_succs = [s for s in (list(_r39_tail.successors)\n'
+    '                                         if _r39_tail is not None else [])\n'
+    '                              if s.start_offset > _r39_tail.start_offset\n'
+    '                              and not (list(getattr(s, \'instructions\', None) or [])\n'
+    '                                       and s.get_first_instruction().opname in\n'
+    '                                       (\'PUSH_EXC_INFO\', \'WITH_EXCEPT_START\'))]\n'
+    '            if len(_r39_succs) == 1:\n'
+    '                _r39_T = _r39_succs[0]\n'
+    '                _r39_Tlast = _r39_T.get_last_instruction()\n'
+    '                _r39_Llast = _r39_tail.get_last_instruction()\n'
+    '                _r39_be = set(getattr(_r39_loop, \'back_edge_blocks\', None) or [])\n'
+    '                if getattr(_r39_loop, \'back_edge_block\', None) is not None:\n'
+    '                    _r39_be.add(_r39_loop.back_edge_block)\n'
+    '                _r39_Tpreds = list(getattr(_r39_T, \'predecessors\', None) or [])\n'
+    '                if (_r39_T not in self.generated_blocks\n'
+    '                        and _r39_T not in list(blocks)\n'
+    '                        and _r39_T not in (getattr(region, \'blocks\', None) or set())\n'
+    '                        and _r39_T not in _r39_be\n'
+    '                        and len(_r39_Tpreds) == 1\n'
+    '                        and _r39_Tpreds[0] is _r39_tail\n'
+    '                        and len(list(getattr(_r39_T, \'instructions\', None) or [])) == 1\n'
+    '                        and _r39_Llast is not None\n'
+    '                        and \'JUMP\' not in _r39_Llast.opname\n'
+    '                        and _r39_Tlast is not None\n'
+    '                        and _r39_Tlast.opname in (\'JUMP_BACKWARD\',\n'
+    '                                                  \'JUMP_BACKWARD_NO_INTERRUPT\')\n'
+    '                        and isinstance(_r39_Tlast.argval, int)\n'
+    '                        and self.cfg.get_block_by_offset(_r39_Tlast.argval) is _r39_hdr):\n'
+    '                    stmts.append({\'type\': \'Continue\'})\n'
+    '                    self.generated_blocks.add(_r39_T)\n'
+    '                    self.generated_offsets.add(_r39_T.start_offset)\n'
+    '        return stmts'
+)
+
+assert ANCHOR.count('\n') == 3
+assert REPL.endswith('        return stmts')
+print('inserted line delta', REPL.count('\n') - ANCHOR.count('\n'))
+spec = {'file': 'core/cfg/region_ast_generator.py', 'anchor': ANCHOR, 'repl': REPL}
+out = os.path.join(HERE, 'spec39b.json')
+io.open(out, 'w', encoding='utf-8', newline='\n').write(
+    json.dumps(spec, ensure_ascii=False, indent=1))
+print('wrote', out, 'repl lines', REPL.count('\n') + 1)

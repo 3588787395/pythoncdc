@@ -1,3 +1,274 @@
+--- ORIGINAL bytecode of target(s) ---
+  [<module>.wizard_quant_check_limit]
+1039           0 RESUME                   0
+
+1041           2 LOAD_GLOBAL              1 (NULL + isinstance)
+              14 LOAD_FAST                0 (security)
+              16 LOAD_GLOBAL              2 (six)
+              28 LOAD_ATTR                2 (string_types)
+              38 PRECALL                  2
+              42 CALL                     2
+              52 POP_JUMP_FORWARD_IF_FALSE     3 (to 60)
+
+1042          54 LOAD_FAST                0 (security)
+              56 BUILD_LIST               1
+              58 STORE_FAST               0 (security)
+
+1043     >>   60 LOAD_GLOBAL              7 (NULL + dict)
+              72 PRECALL                  0
+              76 CALL                     0
+              86 STORE_FAST               4 (return_data)
+
+1044          88 LOAD_FAST                0 (security)
+              90 GET_ITER
+         >>   92 FOR_ITER               132 (to 358)
+              94 STORE_FAST               5 (stock)
+
+1045          96 LOAD_CONST               1 (0)
+              98 LOAD_FAST                4 (return_data)
+             100 LOAD_FAST                5 (stock)
+             102 STORE_SUBSCR
+
+1046         106 NOP
+
+1047         108 LOAD_FAST                1 (last_close_array)
+             110 POP_JUMP_FORWARD_IF_NOT_NONE     1 (to 114)
+
+1048         112 JUMP_BACKWARD           11 (to 92)
+
+1049     >>  114 LOAD_GLOBAL              9 (NULL + len)
+             126 LOAD_FAST                1 (last_close_array)
+             128 PRECALL                  1
+             132 CALL                     1
+             142 LOAD_CONST               2 (1)
+             144 COMPARE_OP               0 (<)
+             150 POP_JUMP_FORWARD_IF_FALSE     1 (to 154)
+
+1050         152 JUMP_BACKWARD           31 (to 92)
+
+1051     >>  154 LOAD_FAST                1 (last_close_array)
+             156 LOAD_CONST               3 (-1)
+             158 BINARY_SUBSCR
+             168 STORE_FAST               6 (stock_close)
+
+1052         170 LOAD_FAST                2 (high_limit_array)
+             172 POP_JUMP_FORWARD_IF_NOT_NONE     1 (to 176)
+
+1053         174 JUMP_BACKWARD           42 (to 92)
+
+1054     >>  176 LOAD_GLOBAL              9 (NULL + len)
+             188 LOAD_FAST                2 (high_limit_array)
+             190 PRECALL                  1
+             194 CALL                     1
+             204 LOAD_CONST               2 (1)
+             206 COMPARE_OP               0 (<)
+             212 POP_JUMP_FORWARD_IF_FALSE     1 (to 216)
+
+1055         214 JUMP_BACKWARD           62 (to 92)
+
+1056     >>  216 LOAD_FAST                2 (high_limit_array)
+             218 LOAD_CONST               3 (-1)
+             220 BINARY_SUBSCR
+             230 STORE_FAST               7 (stock_high_limit)
+
+1057         232 LOAD_FAST                3 (low_limit_array)
+             234 POP_JUMP_FORWARD_IF_NOT_NONE     1 (to 238)
+
+1058         236 JUMP_BACKWARD           73 (to 92)
+
+1059     >>  238 LOAD_GLOBAL              9 (NULL + len)
+             250 LOAD_FAST                3 (low_limit_array)
+             252 PRECALL                  1
+             256 CALL                     1
+             266 LOAD_CONST               2 (1)
+             268 COMPARE_OP               0 (<)
+             274 POP_JUMP_FORWARD_IF_FALSE     1 (to 278)
+
+1060         276 JUMP_BACKWARD           93 (to 92)
+
+1061     >>  278 LOAD_FAST                3 (low_limit_array)
+             280 LOAD_CONST               3 (-1)
+             282 BINARY_SUBSCR
+             292 STORE_FAST               8 (stock_low_limit)
+
+1062         294 LOAD_FAST                7 (stock_high_limit)
+             296 LOAD_FAST                6 (stock_close)
+             298 COMPARE_OP               2 (==)
+             304 POP_JUMP_FORWARD_IF_FALSE     6 (to 318)
+
+1063         306 LOAD_CONST               2 (1)
+             308 LOAD_FAST                4 (return_data)
+             310 LOAD_FAST                5 (stock)
+             312 STORE_SUBSCR
+
+1064         316 JUMP_BACKWARD          113 (to 92)
+
+1065     >>  318 LOAD_FAST                8 (stock_low_limit)
+             320 LOAD_FAST                6 (stock_close)
+             322 COMPARE_OP               2 (==)
+             328 POP_JUMP_FORWARD_IF_FALSE     6 (to 342)
+
+1066         330 LOAD_CONST               3 (-1)
+             332 LOAD_FAST                4 (return_data)
+             334 LOAD_FAST                5 (stock)
+             336 STORE_SUBSCR
+
+1067         340 JUMP_BACKWARD          125 (to 92)
+
+1065     >>  342 JUMP_BACKWARD          126 (to 92)
+         >>  344 PUSH_EXC_INFO
+
+1068         346 POP_TOP
+
+1069         348 POP_EXCEPT
+             350 JUMP_BACKWARD          130 (to 92)
+         >>  352 COPY                     3
+             354 POP_EXCEPT
+             356 RERAISE                  1
+
+1070     >>  358 LOAD_FAST                4 (return_data)
+             360 RETURN_VALUE
+ExceptionTable:
+  108 to 110 -> 344 [1]
+  114 to 150 -> 344 [1]
+  154 to 172 -> 344 [1]
+  176 to 212 -> 344 [1]
+  216 to 234 -> 344 [1]
+  238 to 274 -> 344 [1]
+  278 to 314 -> 344 [1]
+  318 to 338 -> 344 [1]
+  344 to 346 -> 352 [2] lasti
+
+================ CFG wizard_quant_check_limit ================
+--- CFG blocks (28) ---
+  blk @0    n=8   term=POP_JUMP_FORWARD_IF_FALSE->60    owner=IfRegion@0             role=IF_CONDITION
+  blk @54   n=3   term=STORE_FAST->-                    owner=IfRegion@0             role=IF_THEN
+  blk @60   n=6   term=GET_ITER->-                      owner=LoopRegion@92          role=NORMAL
+  blk @92   n=1   term=FOR_ITER->358                    owner=LoopRegion@92          role=LOOP_HEADER
+  blk @94   n=6   term=NOP->-                           owner=LoopRegion@92          role=LOOP_BODY
+  blk @108  n=2   term=POP_JUMP_FORWARD_IF_NOT_NONE->114 owner=TryExceptRegion@108    role=LOOP_BODY
+  blk @112  n=1   term=JUMP_BACKWARD->92                owner=TryExceptRegion@108    role=PURE_CONTINUE
+  blk @114  n=7   term=POP_JUMP_FORWARD_IF_FALSE->154   owner=TryExceptRegion@108    role=LOOP_BODY
+  blk @152  n=1   term=JUMP_BACKWARD->92                owner=TryExceptRegion@108    role=PURE_CONTINUE
+  blk @154  n=6   term=POP_JUMP_FORWARD_IF_NOT_NONE->176 owner=TryExceptRegion@108    role=LOOP_BODY
+  blk @174  n=1   term=JUMP_BACKWARD->92                owner=TryExceptRegion@108    role=PURE_CONTINUE
+  blk @176  n=7   term=POP_JUMP_FORWARD_IF_FALSE->216   owner=TryExceptRegion@108    role=LOOP_BODY
+  blk @214  n=1   term=JUMP_BACKWARD->92                owner=TryExceptRegion@108    role=PURE_CONTINUE
+  blk @216  n=6   term=POP_JUMP_FORWARD_IF_NOT_NONE->238 owner=TryExceptRegion@108    role=LOOP_BODY
+  blk @236  n=1   term=JUMP_BACKWARD->92                owner=TryExceptRegion@108    role=PURE_CONTINUE
+  blk @238  n=7   term=POP_JUMP_FORWARD_IF_FALSE->278   owner=TryExceptRegion@108    role=LOOP_BODY
+  blk @276  n=1   term=JUMP_BACKWARD->92                owner=TryExceptRegion@108    role=PURE_CONTINUE
+  blk @278  n=8   term=POP_JUMP_FORWARD_IF_FALSE->318   owner=TryExceptRegion@108    role=LOOP_BODY
+  blk @306  n=4   term=STORE_SUBSCR->-                  owner=TryExceptRegion@108    role=LOOP_BODY
+  blk @316  n=1   term=JUMP_BACKWARD->92                owner=TryExceptRegion@108    role=PURE_CONTINUE
+  blk @318  n=4   term=POP_JUMP_FORWARD_IF_FALSE->342   owner=TryExceptRegion@108    role=LOOP_BODY
+  blk @330  n=4   term=STORE_SUBSCR->-                  owner=TryExceptRegion@108    role=LOOP_BODY
+  blk @340  n=1   term=JUMP_BACKWARD->92                owner=LoopRegion@92          role=PURE_CONTINUE
+  blk @342  n=1   term=JUMP_BACKWARD->92                owner=TryExceptRegion@108    role=LOOP_BACK_EDGE
+  blk @344  n=2   term=POP_TOP->-                       owner=TryExceptRegion@108    role=LOOP_BODY
+  blk @348  n=2   term=JUMP_BACKWARD->92                owner=TryExceptRegion@108    role=CONTINUE
+  blk @352  n=3   term=RERAISE->1                       owner=TryExceptRegion@108    role=RETURN
+  blk @358  n=2   term=RETURN_VALUE->-                  owner=LoopRegion@92          role=LOOP_ELSE
+--- regions (13) ---
+  LoopRegion     entry@92   parent=NONE               blocks=[60, 92, 94, 108, 112, 114, 152, 154, 174, 176, 214, 216, 236, 238, 276, 278, 306, 316, 318, 330, 340, 342, 344, 348, 358]
+        header_block         [92]
+        condition_block      []
+        back_edge_block      [342]
+        body_blocks          [92, 94, 108, 112, 114, 152, 154, 174, 176, 214, 216, 236, 238, 276, 278, 306, 316, 318, 330, 340, 342, 344, 348]
+        else_blocks          [358]
+        init_blocks          []
+        break_blocks         []
+        back_edge_blocks     [342]
+        pre_condition_blocks []
+        condition_chain_blocks []
+        children             ['TryExceptRegion@108']
+  TryExceptRegion entry@108  parent=LoopRegion@92      blocks=[108, 112, 114, 152, 154, 174, 176, 214, 216, 236, 238, 276, 278, 306, 316, 318, 330, 342, 344, 348, 352]
+  IfRegion       entry@318  parent=TryExceptRegion@108 blocks=[318, 330]
+        condition_block      [318]
+        merge_block          [92]
+        then_blocks          [330]
+        else_blocks          []
+        elif_conditions      []
+        elif_final_else      []
+        chained_compare_blocks []
+  IfRegion       entry@278  parent=TryExceptRegion@108 blocks=[278, 306, 316, 318, 330]
+        condition_block      [278]
+        merge_block          [92]
+        then_blocks          [306, 316]
+        else_blocks          [318, 330]
+        elif_conditions      []
+        elif_final_else      []
+        chained_compare_blocks []
+  IfRegion       entry@238  parent=TryExceptRegion@108 blocks=[238, 276, 278, 306, 316, 318, 330]
+        condition_block      [238]
+        merge_block          [92]
+        then_blocks          [276]
+        else_blocks          [278, 306, 316, 318, 330]
+        elif_conditions      []
+        elif_final_else      []
+        chained_compare_blocks []
+  IfRegion       entry@216  parent=TryExceptRegion@108 blocks=[216, 236, 238, 276, 278, 306, 316, 318, 330]
+        condition_block      [216]
+        merge_block          [92]
+        then_blocks          [236]
+        else_blocks          [238, 276, 278, 306, 316, 318, 330]
+        elif_conditions      []
+        elif_final_else      []
+        chained_compare_blocks []
+  IfRegion       entry@176  parent=TryExceptRegion@108 blocks=[176, 214, 216, 236, 238, 276, 278, 306, 316, 318, 330]
+        condition_block      [176]
+        merge_block          [92]
+        then_blocks          [214]
+        else_blocks          [216, 236, 238, 276, 278, 306, 316, 318, 330]
+        elif_conditions      []
+        elif_final_else      []
+        chained_compare_blocks []
+  IfRegion       entry@154  parent=TryExceptRegion@108 blocks=[154, 174, 176, 214, 216, 236, 238, 276, 278, 306, 316, 318, 330]
+        condition_block      [154]
+        merge_block          [92]
+        then_blocks          [174]
+        else_blocks          [176, 214, 216, 236, 238, 276, 278, 306, 316, 318, 330]
+        elif_conditions      []
+        elif_final_else      []
+        chained_compare_blocks []
+  IfRegion       entry@114  parent=TryExceptRegion@108 blocks=[114, 152, 154, 174, 176, 214, 216, 236, 238, 276, 278, 306, 316, 318, 330]
+        condition_block      [114]
+        merge_block          [92]
+        then_blocks          [152]
+        else_blocks          [154, 174, 176, 214, 216, 236, 238, 276, 278, 306, 316, 318, 330]
+        elif_conditions      []
+        elif_final_else      []
+        chained_compare_blocks []
+  IfRegion       entry@108  parent=TryExceptRegion@108 blocks=[108, 112, 114, 152, 154, 174, 176, 214, 216, 236, 238, 276, 278, 306, 316, 318, 330]
+        condition_block      [108]
+        merge_block          [92]
+        then_blocks          [112]
+        else_blocks          [114, 152, 154, 174, 176, 214, 216, 236, 238, 276, 278, 306, 316, 318, 330]
+        elif_conditions      []
+        elif_final_else      []
+        chained_compare_blocks []
+  IfRegion       entry@0    parent=NONE               blocks=[0, 54]
+        condition_block      [0]
+        merge_block          [60]
+        then_blocks          [54]
+        else_blocks          []
+        elif_conditions      []
+        elif_final_else      []
+        chained_compare_blocks []
+  Region         entry@0    parent=IfRegion@0         blocks=[0]
+  Region         entry@54   parent=IfRegion@0         blocks=[54]
+--- blocks terminating in JUMP_BACKWARD ---
+  @112  -> 92   target_is_loop_header=True  owner=TryExceptRegion@108    role=PURE_CONTINUE  n=1 term=JUMP_BACKWARD->92
+  @152  -> 92   target_is_loop_header=True  owner=TryExceptRegion@108    role=PURE_CONTINUE  n=1 term=JUMP_BACKWARD->92
+  @174  -> 92   target_is_loop_header=True  owner=TryExceptRegion@108    role=PURE_CONTINUE  n=1 term=JUMP_BACKWARD->92
+  @214  -> 92   target_is_loop_header=True  owner=TryExceptRegion@108    role=PURE_CONTINUE  n=1 term=JUMP_BACKWARD->92
+  @236  -> 92   target_is_loop_header=True  owner=TryExceptRegion@108    role=PURE_CONTINUE  n=1 term=JUMP_BACKWARD->92
+  @276  -> 92   target_is_loop_header=True  owner=TryExceptRegion@108    role=PURE_CONTINUE  n=1 term=JUMP_BACKWARD->92
+  @316  -> 92   target_is_loop_header=True  owner=TryExceptRegion@108    role=PURE_CONTINUE  n=1 term=JUMP_BACKWARD->92
+  @340  -> 92   target_is_loop_header=True  owner=LoopRegion@92          role=PURE_CONTINUE  n=1 term=JUMP_BACKWARD->92
+  @342  -> 92   target_is_loop_header=True  owner=TryExceptRegion@108    role=LOOP_BACK_EDGE n=1 term=JUMP_BACKWARD->92
+  @348  -> 92   target_is_loop_header=True  owner=TryExceptRegion@108    role=CONTINUE       n=2 term=JUMP_BACKWARD->92
+================ PRODUCT ================
 # Source Generated with Decompyle++ (Python version)
 # File: wizard_quant_api.pyc (Python 3.11)
 
@@ -751,7 +1022,6 @@ def wizard_quant_check_limit(security, last_close_array, high_limit_array, low_l
                             continue
                         elif stock_low_limit == stock_close:
                             return_data[stock] = -1
-                            continue
             continue
         except:
             pass
@@ -770,3 +1040,60 @@ def get_data_flag(factor_config_list):
         if flag:
             return True
     return False
+
+strict <module>                 (None, 'ok', None)
+strict <module>.factor_decision (None, 'ok', None)
+strict <module>.get_factor_value (None, 'ok', None)
+strict <module>.filter_desicion ('seq_len', 'orig=179 decomp=181', True)
+strict <module>.params_analysis ('seq_len', 'orig=134 decomp=128', True)
+strict <module>.up_v_desicion   (None, 'ok', None)
+strict <module>.down_v_desicion (None, 'ok', None)
+strict <module>.region_v_desicion (None, 'ok', None)
+strict <module>.up_mean_desicion (None, 'ok', None)
+strict <module>.down_mean_desicion (None, 'ok', None)
+strict <module>.region_mean_desicion ('seq_len', 'orig=51 decomp=52', True)
+strict <module>.golden_cross_desicion (None, 'ok', None)
+strict <module>.death_cross_desicion (None, 'ok', None)
+strict <module>.get_change_rate (None, 'ok', None)
+strict <module>.get_wave_rate   (None, 'ok', None)
+strict <module>.get_volatility  (None, 'ok', None)
+strict <module>.get_MA          (None, 'ok', None)
+strict <module>.get_WR          (None, 'ok', None)
+strict <module>.get_boll        (None, 'ok', None)
+strict <module>.get_MOM         (None, 'ok', None)
+strict <module>.get_MTM         (None, 'ok', None)
+strict <module>.get_BIAS        (None, 'ok', None)
+strict <module>.get_DMI         (None, 'ok', None)
+strict <module>.get_DMI.calculate_di ('seq_len', 'orig=81 decomp=79', True)
+strict <module>.get_DMI.calculate_di.<genexpr> (None, 'ok', None)
+strict <module>.get_DMI.calculate_adx (None, 'ok', None)
+strict <module>.get_DMI.calculate_adx.<genexpr> (None, 'ok', None)
+strict <module>.get_OBV         (None, 'ok', None)
+strict <module>.init_stock_pool_filter ('target_diff', '#33 JUMP 终点 orig=("\'security_pool_info\'", \'LOAD_FAST\') decomp=("\'final_stocks\'", \'LOAD_FAST\')', True)
+strict <module>.ST_stock_filter (None, 'ok', None)
+strict <module>.HALT_stock_filter (None, 'ok', None)
+strict <module>.DELISTING_stock_filter (None, 'ok', None)
+strict <module>.KCB_stock_filter (None, 'ok', None)
+strict <module>.CYB_stock_filter (None, 'ok', None)
+strict <module>.SH_ZB_stock_filter (None, 'ok', None)
+strict <module>.SZ_ZB_stock_filter (None, 'ok', None)
+strict <module>.positive_reverse_factor_trans (None, 'ok', None)
+strict <module>.positive_reverse_factor_trans.<lambda> (None, 'ok', None)
+strict <module>.get_rank_data   (None, 'ok', None)
+strict <module>.get_rank_data.<lambda> (None, 'ok', None)
+strict <module>.float_replace   (None, 'ok', None)
+strict <module>.array_data_float_replace (None, 'ok', None)
+strict <module>.array_data_float_replace.<listcomp> (None, 'ok', None)
+strict <module>.update_file_json (None, 'ok', None)
+strict <module>.volume_filter   (None, 'ok', None)
+strict <module>.amount_trans    (None, 'ok', None)
+strict <module>.get_config      (None, 'ok', None)
+strict <module>.read_config_file (None, 'ok', None)
+strict <module>.get_strategy_finance_factor_info (None, 'ok', None)
+strict <module>.get_strategy_finance_factor_info.add_to_strategy_info (None, 'ok', None)
+strict <module>.get_strategy_finance_factor_info.<dictcomp> (None, 'ok', None)
+strict <module>.get_strategy_turnover_ratio_factor_max_count (None, 'ok', None)
+strict <module>.get_strategy_turnover_ratio_factor_max_count.add_to_strategy_info (None, 'ok', None)
+strict <module>.wizard_quant_check_limit ('seq_len', 'orig=91 decomp=90', True)
+strict <module>.get_data_flag   (None, 'ok', None)
+strict <module>.get_data_flag.check_factor (None, 'ok', None)

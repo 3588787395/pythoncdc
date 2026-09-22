@@ -1,0 +1,37 @@
+
+### generate(ctl_two_cont) final consumed offsets: [34, 36, 48, 58]
+### result shape: ['type' 'name' 'args' 'body' 'decorator_list' 'returns']
+{"tag": "_process_if_blocks", "args": [[8], null], "consumed_offsets": [], "consumed_blocks": [8], "result": "[]"}
+{"tag": "_process_if_blocks", "args": [[24, 34], "IfRegion@12"], "consumed_offsets": [34], "consumed_blocks": [24, 34], "result": "[Assign Continue]"}
+{"tag": "_if_generate_then_branch", "args": ["IfRegion@12"], "consumed_offsets": [34], "consumed_blocks": [24, 34], "result": "[Assign Continue]"}
+{"tag": "_process_if_blocks", "args": [[48], "IfRegion@36"], "consumed_offsets": [], "consumed_blocks": [48], "result": "[Assign]"}
+{"tag": "_if_generate_then_branch", "args": ["IfRegion@36"], "consumed_offsets": [], "consumed_blocks": [48], "result": "[Assign]"}
+{"tag": "_if_generate_normal", "args": ["IfRegion@36"], "consumed_offsets": [], "consumed_blocks": [36, 48], "result": "dict"}
+{"tag": "_generate_region", "args": ["IfRegion@36"], "consumed_offsets": [], "consumed_blocks": [36, 48], "result": "dict"}
+{"tag": "_process_if_blocks", "args": [[36, 48], "IfRegion@12"], "consumed_offsets": [36, 48], "consumed_blocks": [36, 48], "result": "[If(then=[Assign] orelse=[])]"}
+{"tag": "_if_generate_normal", "args": ["IfRegion@12"], "consumed_offsets": [34, 36, 48], "consumed_blocks": [12, 24, 34, 36, 48], "result": "dict"}
+{"tag": "_generate_region", "args": ["IfRegion@12"], "consumed_offsets": [34, 36, 48], "consumed_blocks": [12, 24, 34, 36, 48], "result": "dict"}
+{"tag": "_generate_region", "args": ["TryExceptRegion@12"], "consumed_offsets": [34, 36, 48], "consumed_blocks": [12, 24, 34, 36, 48, 60, 62, 80, 82, 86, 88], "result": "dict"}
+{"tag": "_process_if_blocks", "args": [[58], null], "consumed_offsets": [58], "consumed_blocks": [58], "result": "[Continue]"}
+{"tag": "_loop_generate_body", "args": ["LoopRegion@6"], "consumed_offsets": [34, 36, 48, 58], "consumed_blocks": [6, 8, 12, 24, 34, 36, 48, 58, 60, 62, 80, 82, 86, 88], "result": "[Try(body=[If(then=[Assign Continue] orelse=[If(then=[Assign] orelse=[])]) Continue] handlers=['[Pass]'])]"}
+{"tag": "_process_if_blocks", "args": [[94], null], "consumed_offsets": [], "consumed_blocks": [94], "result": "[Return]"}
+{"tag": "_generate_region", "args": ["LoopRegion@6"], "consumed_offsets": [34, 36, 48, 58], "consumed_blocks": [6, 8, 12, 24, 34, 36, 48, 58, 60, 62, 80, 82, 86, 88, 94], "result": "[For(body=[Try(body=[If(then=[Assign Continue] orelse=[If(then=[Assign] orelse=[])]) Continue] handlers=['[Pass]'])] orelse=[]) Return]"}
+================ PRODUCT ================
+# Source Generated with Decompyle++ (Python version)
+# File: probe_trace.pyc (Python 3.11)
+
+def ctl_two_cont(d, ks):
+    for k in ks:
+        try:
+            if k > 3:
+                d[k] = 1
+                continue
+            elif k < 0:
+                d[k] = -1
+            continue
+        except Exception:
+            pass
+    return d
+
+strict <module>                 (None, 'ok', None)
+strict <module>.ctl_two_cont    ('seq_len', 'orig=37 decomp=36', True)
