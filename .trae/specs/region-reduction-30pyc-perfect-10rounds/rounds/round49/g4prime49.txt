@@ -1,0 +1,3 @@
+== IQCommon/api/klinedata.pyc  strict-defective a=11 b=10
+   FIXED   <module>.get_history_new   [seq_len orig=322 decomp=323]
+G4-prime affected=1 fixed=1 broken=0 changed=0

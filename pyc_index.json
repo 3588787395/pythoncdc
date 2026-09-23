@@ -6,7 +6,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -17,7 +17,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -28,7 +28,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -39,7 +39,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -50,7 +50,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -59,12 +59,12 @@
     "size": 117633,
     "function_count": 45,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8888888888888888,
+    "bytecode_match_rate": 0.9111111111111111,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 10,
     "status": "pending",
-    "matched_functions": 40
+    "matched_functions": 41
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/wrapper.pyc",
@@ -73,7 +73,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -84,7 +84,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 47,
     "note": "index-corrected: R16-A flip verified both rulers (official 47/47, strict 49/49)"
@@ -96,7 +96,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -107,7 +107,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -118,7 +118,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -129,7 +129,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.8787878787878788,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 4,
     "status": "pending",
     "matched_functions": 29,
@@ -142,7 +142,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 44
   },
@@ -153,7 +153,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -164,7 +164,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 4,
     "status": "pending",
     "matched_functions": 14,
@@ -177,7 +177,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 8
   },
@@ -188,7 +188,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -199,7 +199,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 8
   },
@@ -210,7 +210,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -221,7 +221,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 8
   },
@@ -232,7 +232,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9166666666666666,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 4,
     "status": "pending",
     "matched_functions": 22
@@ -244,7 +244,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -255,7 +255,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 0,
     "status": "pending",
     "matched_functions": 19
@@ -267,7 +267,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -278,7 +278,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -289,7 +289,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 18
   },
@@ -300,7 +300,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 32
   },
@@ -311,7 +311,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 11
   },
@@ -322,7 +322,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9354838709677419,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 29,
@@ -335,7 +335,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -346,7 +346,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 22
   },
@@ -357,7 +357,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 18,
@@ -370,7 +370,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -381,7 +381,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.96875,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 3,
     "status": "pending",
     "matched_functions": 31
@@ -393,7 +393,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 9
   },
@@ -404,7 +404,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 14
   },
@@ -415,7 +415,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -426,7 +426,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 3
   },
@@ -437,7 +437,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -448,7 +448,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 11
@@ -460,7 +460,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 35
@@ -472,7 +472,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -483,7 +483,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9622641509433962,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 4,
     "status": "pending",
     "matched_functions": 51
@@ -495,7 +495,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -506,7 +506,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -517,7 +517,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -528,7 +528,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 3,
     "status": "pending",
     "matched_functions": 10,
@@ -541,7 +541,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 8
@@ -553,7 +553,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9047619047619048,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 6,
     "status": "pending",
     "matched_functions": 19
@@ -565,7 +565,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 9
@@ -577,7 +577,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 26
@@ -589,7 +589,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 7
   },
@@ -600,7 +600,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -611,7 +611,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -622,7 +622,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.8571428571428571,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 3,
     "status": "pending",
     "matched_functions": 12
@@ -634,7 +634,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -645,7 +645,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -656,7 +656,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.8888888888888888,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 3,
     "status": "pending",
     "matched_functions": 8
@@ -668,7 +668,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -679,7 +679,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -690,7 +690,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -701,7 +701,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 5,
     "status": "pending",
     "matched_functions": 28
@@ -713,7 +713,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -724,7 +724,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.95,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 16,
     "status": "pending",
     "matched_functions": 38
@@ -736,7 +736,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -747,7 +747,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 9,
@@ -760,7 +760,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 14
   },
@@ -771,7 +771,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 3,
     "status": "pending",
     "matched_functions": 22
@@ -783,7 +783,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -794,7 +794,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -805,7 +805,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -816,7 +816,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.92,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 23
@@ -828,7 +828,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -839,7 +839,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -850,7 +850,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -861,7 +861,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -872,7 +872,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -883,7 +883,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -894,7 +894,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -905,7 +905,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 51
   },
@@ -916,7 +916,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -927,7 +927,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 20
   },
@@ -938,7 +938,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 10
   },
@@ -949,7 +949,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -960,7 +960,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -971,7 +971,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -982,7 +982,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -993,7 +993,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 7
   },
@@ -1004,7 +1004,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 14
   },
@@ -1015,7 +1015,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -1026,7 +1026,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 11
   },
@@ -1037,7 +1037,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 8
   },
@@ -1048,7 +1048,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -1059,7 +1059,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 7
   },
@@ -1070,7 +1070,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 9,
     "note": "round12: dictcomp-return fall-through fix verified (single verify 100%)"
@@ -1082,7 +1082,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1093,7 +1093,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1104,7 +1104,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -1115,7 +1115,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 34
   },
@@ -1126,7 +1126,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 5
@@ -1138,7 +1138,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 14
   },
@@ -1149,7 +1149,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -1160,7 +1160,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 42
   },
@@ -1171,7 +1171,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -1182,7 +1182,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 9
   },
@@ -1193,7 +1193,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 10,
     "note": "R17-A flip: pyc_batch_verify.py single => ok, 10/10, match_rate 100.00%. Root cause was criterion(4) (outer-else-not-in-loop exemption) of the D2 guard in _build_elif_region; per-function recheck also clean"
@@ -1205,7 +1205,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 17
   },
@@ -1216,7 +1216,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 11
   },
@@ -1227,7 +1227,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1238,7 +1238,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 7
@@ -1250,7 +1250,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -1261,7 +1261,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -1272,7 +1272,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1283,7 +1283,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -1294,7 +1294,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -1305,7 +1305,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 18
   },
@@ -1316,7 +1316,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -1327,7 +1327,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 25
   },
@@ -1338,7 +1338,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -1349,7 +1349,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1360,7 +1360,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -1371,7 +1371,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 9
@@ -1383,7 +1383,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -1394,7 +1394,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 16
   },
@@ -1405,7 +1405,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1416,7 +1416,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -1427,7 +1427,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -1438,7 +1438,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 21
   },
@@ -1449,7 +1449,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1460,7 +1460,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1471,7 +1471,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 8
@@ -1483,7 +1483,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 30
   },
@@ -1494,7 +1494,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -1505,7 +1505,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -1516,7 +1516,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1527,7 +1527,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 33
   },
@@ -1538,7 +1538,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 41
   },
@@ -1549,7 +1549,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 8,
     "note": "R17-A improved: per-function recheck 6/8 -> 7/8, one jump-target-drift defect remains; bytecode_diff still reports 8/8, so decompile_status stays ok (the tool-verified number is unchanged, not a new claim)"
@@ -1561,7 +1561,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 24
   },
@@ -1572,7 +1572,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -1583,7 +1583,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1594,7 +1594,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 11
   },
@@ -1605,7 +1605,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 3
   },
@@ -1616,7 +1616,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -1627,7 +1627,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -1638,7 +1638,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.8888888888888888,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 3,
     "status": "pending",
     "matched_functions": 16
@@ -1650,7 +1650,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -1661,7 +1661,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1672,7 +1672,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -1683,7 +1683,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1694,7 +1694,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1705,7 +1705,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 15
   },
@@ -1716,7 +1716,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 9
   },
@@ -1727,7 +1727,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1738,7 +1738,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -1749,7 +1749,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -1760,7 +1760,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 4,
     "status": "pending",
     "matched_functions": 18
@@ -1772,7 +1772,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1783,7 +1783,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 13
   },
@@ -1794,7 +1794,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.8863636363636364,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 10,
     "status": "pending",
     "matched_functions": 39
@@ -1806,7 +1806,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 17
@@ -1818,7 +1818,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 39,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
@@ -1830,7 +1830,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 7
   },
@@ -1841,7 +1841,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 8,
     "note": "R17-A improved: per-function recheck 6/8 -> 7/8 (duplicate-source twin of IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc); bytecode_diff still 8/8"
@@ -1853,7 +1853,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9583333333333334,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 5,
     "status": "pending",
     "matched_functions": 23
@@ -1865,7 +1865,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 25
@@ -1877,7 +1877,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 29
   },
@@ -1888,7 +1888,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 3
   },
@@ -1899,7 +1899,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -1910,7 +1910,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -1921,7 +1921,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 26
   },
@@ -1932,7 +1932,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1943,7 +1943,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -1954,7 +1954,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 13
@@ -1966,7 +1966,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -1977,7 +1977,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -1988,7 +1988,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -1999,7 +1999,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2010,7 +2010,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 3
   },
@@ -2021,7 +2021,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2032,7 +2032,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 12
   },
@@ -2043,7 +2043,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 0,
     "status": "pending",
     "matched_functions": 18
@@ -2055,7 +2055,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 52
   },
@@ -2066,7 +2066,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 50
   },
@@ -2077,7 +2077,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 0,
     "status": "pending",
     "matched_functions": 23
@@ -2089,7 +2089,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2100,7 +2100,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 0,
     "status": "pending",
     "matched_functions": 48,
@@ -2113,7 +2113,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -2124,7 +2124,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2135,7 +2135,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -2146,7 +2146,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2157,7 +2157,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 11,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
@@ -2169,7 +2169,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 38
   },
@@ -2180,7 +2180,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2191,7 +2191,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 58
   },
@@ -2202,7 +2202,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 58
   },
@@ -2213,7 +2213,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -2224,7 +2224,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 10
   },
@@ -2235,7 +2235,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 9
   },
@@ -2246,7 +2246,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2257,7 +2257,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 67
   },
@@ -2268,7 +2268,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2279,7 +2279,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 10
   },
@@ -2290,7 +2290,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -2301,7 +2301,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 17
@@ -2313,7 +2313,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 10,
@@ -2326,7 +2326,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2337,7 +2337,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 9
   },
@@ -2348,7 +2348,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 9,
     "note": "R17-A flip: pyc_batch_verify.py single => ok, 9/9, match_rate 100.00%. Duplicate-source twin of IQData/manager/plugin_manager.pyc, same D2 criterion(4) removal"
@@ -2360,7 +2360,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 7
   },
@@ -2371,7 +2371,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2382,7 +2382,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 19,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
@@ -2394,7 +2394,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 31
   },
@@ -2405,7 +2405,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 9
   },
@@ -2416,7 +2416,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 11
@@ -2428,7 +2428,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -2439,7 +2439,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2450,7 +2450,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 16
@@ -2462,7 +2462,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 13
   },
@@ -2473,7 +2473,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 9,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
@@ -2485,7 +2485,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2496,7 +2496,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -2507,7 +2507,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 7,
     "note": "round12: dictcomp-return fall-through fix verified (single verify 100%)"
@@ -2519,7 +2519,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 14
   },
@@ -2530,7 +2530,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -2541,7 +2541,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 13,
     "status": "pending",
     "matched_functions": 105
@@ -2553,7 +2553,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 3
   },
@@ -2564,7 +2564,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2575,7 +2575,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 7
   },
@@ -2586,7 +2586,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -2597,7 +2597,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 62
   },
@@ -2608,7 +2608,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 10
   },
@@ -2619,7 +2619,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 20,
@@ -2632,7 +2632,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 9
   },
@@ -2643,7 +2643,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2654,7 +2654,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 41,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
@@ -2666,7 +2666,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 3,
     "status": "pending",
     "matched_functions": 18
@@ -2678,7 +2678,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 3
   },
@@ -2689,7 +2689,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -2700,7 +2700,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9411764705882353,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 5,
     "status": "pending",
     "matched_functions": 32
@@ -2712,7 +2712,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 10
   },
@@ -2723,7 +2723,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 0,
     "status": "pending",
     "matched_functions": 24
@@ -2735,7 +2735,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 12
   },
@@ -2746,7 +2746,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 8
   },
@@ -2757,7 +2757,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -2768,7 +2768,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 3
   },
@@ -2779,7 +2779,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 13
   },
@@ -2790,7 +2790,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 15,
@@ -2803,7 +2803,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2814,7 +2814,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 22
   },
@@ -2825,7 +2825,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 108
   },
@@ -2836,7 +2836,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2847,7 +2847,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 8
@@ -2859,7 +2859,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 19
   },
@@ -2870,7 +2870,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2881,7 +2881,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 3,
     "status": "pending",
     "matched_functions": 24
@@ -2893,7 +2893,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 7
   },
@@ -2904,7 +2904,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 9
   },
@@ -2915,7 +2915,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 70
   },
@@ -2926,7 +2926,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 8
   },
@@ -2937,7 +2937,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -2948,7 +2948,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -2959,7 +2959,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 20
   },
@@ -2970,7 +2970,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 30
   },
@@ -2981,7 +2981,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 22
   },
@@ -2992,7 +2992,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 21
   },
@@ -3003,7 +3003,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 23
   },
@@ -3014,7 +3014,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 31
   },
@@ -3025,7 +3025,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 25
   },
@@ -3036,7 +3036,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -3047,7 +3047,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 8
   },
@@ -3058,7 +3058,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -3069,7 +3069,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 11
   },
@@ -3080,7 +3080,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -3091,7 +3091,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 72
@@ -3103,7 +3103,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 64
   },
@@ -3114,7 +3114,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 16
   },
@@ -3125,7 +3125,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 51
   },
@@ -3136,7 +3136,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 12
   },
@@ -3147,7 +3147,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 60
   },
@@ -3158,7 +3158,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 37
@@ -3170,7 +3170,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 13,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
@@ -3182,7 +3182,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 6
@@ -3194,7 +3194,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -3205,7 +3205,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9285714285714286,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 13
@@ -3217,7 +3217,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -3228,7 +3228,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9166666666666666,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 3,
     "status": "pending",
     "matched_functions": 11
@@ -3240,7 +3240,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -3251,7 +3251,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -3262,7 +3262,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 18
@@ -3274,7 +3274,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 14
@@ -3286,7 +3286,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 7
   },
@@ -3297,7 +3297,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 10
   },
@@ -3308,7 +3308,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 9
@@ -3320,7 +3320,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -3331,7 +3331,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9411764705882353,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 16
@@ -3343,7 +3343,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 15
@@ -3355,7 +3355,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 7
@@ -3367,7 +3367,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 10
   },
@@ -3378,7 +3378,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -3389,7 +3389,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 11
   },
@@ -3400,7 +3400,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9142857142857143,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 6,
     "status": "pending",
     "matched_functions": 32
@@ -3412,7 +3412,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 6,
     "status": "pending",
     "matched_functions": 15
@@ -3424,7 +3424,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 29
   },
@@ -3435,7 +3435,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -3446,7 +3446,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -3457,7 +3457,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 8
   },
@@ -3468,7 +3468,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -3479,7 +3479,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -3490,7 +3490,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -3501,7 +3501,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -3512,7 +3512,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 24,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
@@ -3524,7 +3524,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 26,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
@@ -3536,7 +3536,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -3547,7 +3547,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 57
   },
@@ -3558,7 +3558,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 3
   },
@@ -3569,7 +3569,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 10
   },
@@ -3580,7 +3580,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.971830985915493,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 5,
     "status": "pending",
     "matched_functions": 69
@@ -3592,7 +3592,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 11,
@@ -3605,7 +3605,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 10,
@@ -3618,7 +3618,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 3,
     "status": "pending",
     "matched_functions": 9,
@@ -3631,7 +3631,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 10,
@@ -3644,7 +3644,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 0,
     "status": "pending",
     "matched_functions": 4
@@ -3656,7 +3656,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.8823529411764706,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 16,
     "status": "pending",
     "matched_functions": 105,
@@ -3669,7 +3669,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -3680,7 +3680,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 13
   },
@@ -3691,7 +3691,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -3702,7 +3702,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 3,
     "status": "pending",
     "matched_functions": 32
@@ -3714,7 +3714,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 43,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
@@ -3726,7 +3726,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -3737,7 +3737,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 21
@@ -3749,7 +3749,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -3760,7 +3760,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 17
   },
@@ -3771,7 +3771,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 3
   },
@@ -3782,7 +3782,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -3793,7 +3793,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 29
   },
@@ -3804,7 +3804,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 8
   },
@@ -3815,7 +3815,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -3826,7 +3826,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -3837,7 +3837,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 14,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
@@ -3849,7 +3849,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -3860,7 +3860,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 15
@@ -3872,7 +3872,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -3883,7 +3883,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -3894,7 +3894,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -3905,7 +3905,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9333333333333333,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 13,
     "status": "pending",
     "matched_functions": 42
@@ -3917,7 +3917,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 9,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
@@ -3929,7 +3929,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -3940,7 +3940,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -3951,7 +3951,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -3962,7 +3962,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 7
@@ -3974,7 +3974,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 6,
@@ -3987,7 +3987,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -3998,7 +3998,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 8
@@ -4010,7 +4010,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 6
   },
@@ -4021,7 +4021,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -4032,7 +4032,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -4043,7 +4043,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 8
   },
@@ -4054,7 +4054,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -4065,7 +4065,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 7
   },
@@ -4076,7 +4076,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 3,
     "status": "pending",
     "matched_functions": 65
@@ -4088,7 +4088,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -4099,7 +4099,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 29
@@ -4111,7 +4111,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 16
@@ -4123,7 +4123,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 10
   },
@@ -4134,7 +4134,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -4145,7 +4145,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -4156,7 +4156,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 10
@@ -4168,7 +4168,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 35
   },
@@ -4179,7 +4179,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 11
@@ -4191,7 +4191,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -4202,7 +4202,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 8,
     "status": "pending",
     "matched_functions": 28
@@ -4214,7 +4214,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4,
     "note": "R17-A flip: pyc_batch_verify.py single => ok, 4/4, match_rate 100.00%. Previously the same loop-nested else-arm flattening dropped/duplicated 8 instructions per function"
@@ -4226,7 +4226,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -4237,7 +4237,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 143,
     "note": "R5-A change reverted: gained 1 func here but crashed 2 other files"
@@ -4249,7 +4249,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.8518518518518519,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 15,
     "status": "pending",
     "matched_functions": 69
@@ -4261,7 +4261,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9122807017543859,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 14,
     "status": "pending",
     "matched_functions": 52
@@ -4273,7 +4273,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -4284,7 +4284,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 25
@@ -4296,7 +4296,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -4307,7 +4307,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   },
@@ -4318,7 +4318,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 3,
     "status": "pending",
     "matched_functions": 23
@@ -4330,7 +4330,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -4341,7 +4341,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -4352,7 +4352,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 19,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
@@ -4364,7 +4364,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -4375,7 +4375,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 5
   },
@@ -4386,7 +4386,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -4397,7 +4397,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 9
   },
@@ -4408,7 +4408,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9333333333333333,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 28
@@ -4420,7 +4420,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -4431,7 +4431,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -4442,7 +4442,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 14
@@ -4454,7 +4454,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 1,
     "status": "pending",
     "matched_functions": 11
@@ -4466,7 +4466,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 1
   },
@@ -4477,7 +4477,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 3
   },
@@ -4488,7 +4488,7 @@
     "decompile_status": "partial",
     "bytecode_match_rate": 0.9130434782608695,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 4,
     "status": "pending",
     "matched_functions": 21
@@ -4500,7 +4500,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 4
   },
@@ -4511,7 +4511,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 137
@@ -4523,7 +4523,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 3,
     "status": "pending",
     "matched_functions": 38
@@ -4535,7 +4535,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "mismatch_count": 2,
     "status": "pending",
     "matched_functions": 38
@@ -4547,7 +4547,7 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 48,
+    "last_tested_round": 49,
     "status": "pending",
     "matched_functions": 2
   }

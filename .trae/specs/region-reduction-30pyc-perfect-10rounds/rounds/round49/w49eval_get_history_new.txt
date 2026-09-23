@@ -1,0 +1,15 @@
+get_history_new        H=1556   T=1574   E=1626   merge=1674    FIRE->None   {'closure': 3, 'else_in_closure': False, 'cands': []}
+get_history_new        H=1396   T=1448   E=1472   merge=1472    FIRE->None   {'closure': 4, 'else_in_closure': False, 'cands': []}
+get_history_new        H=1264   T=1350   E=1354   merge=None    FIRE->None   {'closure': 1, 'else_in_closure': False, 'cands': []}
+get_history_new        H=1140   T=1230   E=1248   merge=1264    FIRE->None   {'closure': 10, 'else_in_closure': False, 'cands': []}
+get_history_new        H=1098   T=1140   E=1550   merge=1678    FIRE->None   {'closure': 12, 'else_in_closure': False, 'cands': []}
+get_history_new        H=940    T=1048   E=1096   merge=1096    FIRE->None   {'closure': 1, 'else_in_closure': False, 'cands': []}
+get_history_new        H=790    T=938    E=940    merge=788     FIRE->None   {'closure': 16, 'else_in_closure': False, 'cands': []}
+get_history_new        H=714    T=748    E=1098   merge=1098    FIRE->None   {'closure': 7, 'else_in_closure': False, 'cands': []}
+get_history_new        H=676    T=714    E=1098   merge=1098    FIRE->None   {'closure': 8, 'else_in_closure': False, 'cands': []}
+get_history_new        H=478    T=520    E=560    merge=622     FIRE->None   {'closure': 26, 'else_in_closure': False, 'cands': []}
+get_history_new        H=354    T=468    E=474    merge=478     FIRE->None   {'closure': 29, 'else_in_closure': False, 'cands': []}
+get_history_new        H=312    T=350    E=354    merge=None    FIRE->None   {'closure': 1, 'else_in_closure': False, 'cands': []}
+get_history_new        H=298    T=312    E=1556   merge=1678    FIRE->1678   {'closure': 33, 'else_in_closure': False, 'cands': [(1678, [1674], 'RETURN_VALUE')]}
+get_history_new        H=98     T=102    E=154    merge=154     FIRE->None   {'closure': 1, 'else_in_closure': False, 'cands': []}
+get_history_new        H=0      T=50     E=56     merge=56      FIRE->None   {'closure': 1, 'else_in_closure': False, 'cands': []}

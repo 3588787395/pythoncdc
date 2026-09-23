@@ -1,0 +1,24 @@
+[
+ {
+  "w": "w49_21_and_nested_arms",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "w49_22_no_and",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "w49_23_no_early",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "w49_24_or_cond",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.target seq_len orig=42 decomp=24"
+  ]
+ }
+]
