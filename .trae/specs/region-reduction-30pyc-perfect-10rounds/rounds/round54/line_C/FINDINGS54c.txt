@@ -1,0 +1,200 @@
+R54-c DIAGNOSIS -- kwarg-with-conditional-expression call statements lost whole
+================================================================================
+Scratch: D:/Temp/r54cdiag/    Repo untouched (no writes to F:/Downloads/pythoncdc-main).
+Rulers used: _r10_strict_check.py (strict), scripts/pyc_batch_verify.py (official, via r54c.py run).
+
+--------------------------------------------------------------------------------
+1. GROUND TRUTH  (files: gt54c.txt, gt54c_base.py/gt54c_base.txt)
+--------------------------------------------------------------------------------
+Target file site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc
+official tally 32/34, strict defects re-measured verbatim:
+
+  <module>.base_order    target_diff #136 POP_JUMP_IF_TRUE endpoint
+                         orig=("'order_obj'", LOAD_FAST)
+                         decomp=("'生成订单，订单号:{order_id}，可转债代码：{symbol}，数量：{side}{share}'", LOAD_CONST)
+  <module>.future_order  seq_len orig=101 decomp=93   (-8)
+  <module>.option_order  seq_len orig=83  decomp=74   (-9)
+
+base_order: instruction-count/token alignment shows ZERO missing and ZERO extra
+instructions (ALIGN opcodes: [] -- difflib over the strict token stream), i.e. the
+kwarg-ternary call statement IS emitted (product line 62, byte-identical stream):
+    strategy_log.info(info.format(order_id=..., symbol=..., side=<tern>, share=...))
+Its only defect is the POP_JUMP_IF_TRUE at token #136 (offset 890, `is_trade()` guard)
+which in the original skips the whole statement body to offset 1124 but in the product
+lands at 926 -- inside the guarded body.  base_order is therefore NOT this family
+(nothing is lost; it is a jump-target/if-merge defect: the emitted source folds
+`if not is_trade():` into `elif is_trade() or asset.symbol[:2] in ('11','12'):`).
+
+future_order -- 14 instructions missing, grouped by ORIGINAL source line:
+  line 458  414 LOAD_GLOBAL strategy_log | 426 LOAD_ATTR info
+  line 459  436 LOAD_CONST fmt | 438 LOAD_METHOD format | 644 KW_NAMES | 650 CALL
+  line 460  460 LOAD_FAST order_ | 462 LOAD_ATTR order_id
+  line 461  472 LOAD_FAST order_ | 474 LOAD_ATTR symbol
+  line 462  552 LOAD_CONST '买入' | 556 LOAD_CONST '卖出'
+  line 464  632 LOAD_FAST order_ | 634 LOAD_ATTR amount
+  plus 6 EXTRA instructions (a `LOAD_FAST order_ ... LOAD_METHOD upper` prefix at
+  product line 225 and `LOAD_CONST None; RETURN_VALUE` at 212).
+  => ONE statement is gone: strategy_log.info('<fmt>'.format(order_id=…, symbol=…,
+     side=<tern>, oper=<tern>, share=…)); the `oper` ternary got mis-bound as
+     order_.futures_direction.value.upper(<tern>) (product line 225).
+
+option_order -- 19 missing / 10 extra, missing grouped by original line:
+  line 486  206 LOAD_GLOBAL strategy_log | 218 LOAD_ATTR info
+  line 487  228 LOAD_CONST fmt | 230 LOAD_METHOD format | 510 KW_NAMES | 516 CALL
+  line 488  254 LOAD_ATTR order_id
+  line 489  264 LOAD_FAST order_ | 266 LOAD_ATTR symbol
+  line 491  8 instrs of the `oper` ternary (352,398,408,410,416,418,420,422)
+  line 492  424 LOAD_FAST order_ | 426 LOAD_ATTR amount
+  => same single statement (6 kwargs, ternaries at slots side/oper/hedge_type);
+     product lines 244/245 keep the orphan arms:
+       244| '买入' if order_.entrust_direction.value.upper() == 'BUY' else '卖出'
+       245| order_.hedge_type.value.upper('非备兑类型委托' if ... else '备兑类型委托')
+
+--------------------------------------------------------------------------------
+2. MEASURED BAIL SITE (instrumented mirror, D:/Temp/r54cdiag/mirr_diagall,
+   spec D:/Temp/r54cdiag/spec_diag54call.json built by mkdiag54c.py + mkdiag54c2.py;
+   log diagall_order_api.log, per-witness diagall_s03_*.log)
+--------------------------------------------------------------------------------
+Order_api.pyc, tail-of-chain region of option_order (entry 424) and future_order (558):
+
+ [R54C2 GATE] entry=424 merge_ops=['KW_NAMES','PRECALL','CALL','PRECALL','CALL']
+     PRED_MULTI_ELEM=False PRED_CALL_CHAIN=True PRED_RECEIVER_METHOD=False
+     PRED_MAKE_FUNC=False PRED_TERN_CALLABLE=False PRED_BINOP=False
+     PRED_SHOULD_RECONSTRUCT=True n_preload=1 kw_names_ops=1
+ [R54C2 RECON] entry=424 PRED_RECON_NONE=True type=NoneType n_kw=-1
+ [R54C2 CALLSITE_MC_S34805] entry=424 PRED_MC_RETURNED=False
+ [R54C2 CALLSITE_MC_S36743] entry=424 PRED_MC_RETURNED=False
+ [R54C2 FALLBACK_POPTOP] entry=424 PRED_POPTOP_IN_ARMS=False
+ [R54C WALK_STOP] entry=424 chain=[424] final_merge=510 PRED_BACKWARD_EXTENDS=True
+     back_entries=[350] PRED_IS_CHAIN_TAIL=True tail_chain=[]
+ [R54C BAIL7_SLOT] i=1 n_names=6 n_tern=1 kw_start=0 total_args=1 entry=424
+     chain=[424] PRED_FIRST_CONSECUTIVE_PREFIX=False
+ [R54C CALLSITE] entry=424 PRED_BUILDER_RETURNED=False
+
+and identically for future_order:
+ [R54C WALK_STOP] entry=558 chain=[558] final_merge=632 PRED_BACKWARD_EXTENDS=True
+     back_entries=[414] PRED_IS_CHAIN_TAIL=True tail_chain=[]
+ [R54C BAIL7_SLOT] i=1 n_names=5 n_tern=1 kw_start=0 total_args=1 entry=558
+     chain=[558] PRED_FIRST_CONSECUTIVE_PREFIX=False
+
+Round-50 line numbers are stale but its claims are REPRODUCED (region_ast_generator.py:
+builder def 41498, unique call site 36952 -- both verified against the worktree).
+
+ADDITIONAL measured fact (this is (c)): the SAME statement is first offered to
+_try_build_ternary_merge_consumer_expr (region_ast_generator.py:39591, call sites
+34805 / 34967 / 36743) which sets PRED_SHOULD_RECONSTRUCT=True and then gets
+PRED_RECON_NONE=True: expr_reconstructor.reconstruct returns None on a merge block that
+starts with KW_NAMES (it has no KW_NAMES support at all -- grep: KW_NAMES is handled in
+core/cfg/ast_generator_v2.py and cfg_builder.py only).  In the one case where the
+reconstructor does return (base_order entry 936, PRED_CALL_CHAIN=True) the returned node
+is a Call with n_kw=0 -- the kwargs are silently dropped there.
+
+ANSWER: (a) and (b) are BOTH live and jointly fatal, and they are downstream of (c):
+  (a) CONFIRMED  BAIL7_SLOT literal lines above -- the kwarg-slot loop `return None`.
+  (b) CONFIRMED  PRED_IS_CHAIN_TAIL=True / PRED_BACKWARD_EXTENDS=True / tail_chain=[]
+      -- the region handed in is the chain tail (424 / 558); the head/middle members
+      (350, 414 and the region entering at them) never reach the builder.
+  (c) ALSO TRUE and FIRST in program order: the merge-consumer reconstruct attempt
+      (PRED_SHOULD_RECONSTRUCT=True -> PRED_RECON_NONE=True) fails because the
+      reconstruct path cannot express KW_NAMES, and the tail's CALL that the builder
+      binds to is the OUTER call (total_args=1) rather than the `.format` call owning
+      the kwargs.
+Fixing (a) alone cannot recover the statement: with only 1 of 3 ternaries in the chain
+and total_args=1, no slot assembly can succeed.  Fixing (b) alone also cannot: measured
+by arm sk1 (inert).  The implementer must (i) hand the builder the chain HEAD, (ii) let
+it enumerate every value of the statement in bytecode order (member preload siblings +
+member ternary values) instead of the "first consecutive slots" precondition, and
+(iii) bind the KW_NAMES-owning CALL, not the last CALL in the merge block.
+
+--------------------------------------------------------------------------------
+3. PROBE FIRING PROOF (firesweep54c.py, logs firesweep0..3.log, firesweep_wide0.log,
+   diagall_t0*.log) -- 17 of 22 probes observed firing:
+   WALK_STOP, BAIL3_NO_KWCALL, BAIL6_TERN_GT_ARGS, BAIL7_SLOT, BAIL8_NO_FUNC, BUILD_OK,
+   CALLSITE, GATE, RECON, BAIL_NO_RECONSTRUCT, BAIL_STORE, BAIL_RAISE, FALLBACK_POPTOP,
+   FCI_OK, CALLSITE_MC_S34805, CALLSITE_MC_S34967, CALLSITE_MC_S36743.
+   Never fired (defensive early exits, upstream of the fired bails, in the SAME patched
+   slices whose sibling prints do fire): BAIL1_NO_MERGE, BAIL2_CHAIN_MERGE_NONE,
+   BAIL4_NO_TUPLE, BAIL5_NESTED_NONE, R54C2 BAIL_EMPTY.  Inputs tried: 33 witnesses,
+   the 27 partial-corpus files, 24 already-clean files, 4 targeted witnesses.
+
+--------------------------------------------------------------------------------
+4. WITNESS BATTERY (dir wit54c, runner bat54c.py = copy of r53gate/bat53.py)
+   landed core:  battery: MISMATCH=21 MATCH=12 ERROR=0 of 33   (bat53_land33.json)
+   (32-witness snapshot: MISMATCH=20 MATCH=12, bat53_land32.json)
+   MATCH (must stay byte-exact, and does):
+     w07_ctl_plain_call  w08_ctl_plain_kw  w10_ctl_bare_tern_assign
+     s01_guarded_fmt_1tern_last  s02_guarded_fmt_1tern_first  s05_assign_fmt_1tern_last
+     s07_ctl_guarded_fmt_all_plain_kw  s08_ctl_guarded_fmt_tern_positional
+     s09_ctl_guarded_fmt_positional_only  s10_guarded_tern_positional_after_plain
+     s11_guarded_fmt_tern_arms_calls  s12_guarded_fmt_nested_tern_kw
+   NOT byte-exact in the landed core (control that fails, honestly reported):
+     w09_ctl_single_tern_kw  f(k=a if c else b)  seq_len orig=13 decomp=11 -- the call
+       statement is emitted as `return f(k=...)`: a DIFFERENT defect
+       (_try_build_ternary_merge_consumer_expr FCI_OK path / is_return binding).
+       Same mechanism explains w01/w15 seq_diff #18/#21 ('a',LOAD_FAST)->(None,LOAD_CONST).
+   The statement-loss family (this family) -- smallest first:
+     s14_unguarded_fmt_2tern_kwonly  log.info('s {s} o {o}'.format(s=<t>, o=<t>))
+                                    seq_len orig=21 decomp=9   <-- SMALLEST reproducer
+     s13_unguarded_fmt_2tern         +1 plain kwarg            orig=22 decomp=9
+     s03_guarded_fmt_2tern_last      guarded, 3 kwargs         orig=26 decomp=19 (-7)
+     s06_guarded_fmt_2tern_noncontig terns in slots 1 and 3    orig=27 decomp=19 (-8)
+     w16_guarded_real_shape          = option_order shape, 6 kwargs / 3 terns
+                                    orig=33 decomp=25 (-8, matches future_order -8)
+     w05 / w06 / w12 / w02 / w03 / w04 / w13 / w14 / w16 ... see bat53_land33.json
+   Trigger measured: ONE ternary kwarg in the same .format-under-a-method shape is fine
+   (s01, s02, s05, s11, s12 all MATCH); TWO ternary kwargs is what loses the statement.
+
+--------------------------------------------------------------------------------
+5. CANDIDATE PREDICATES (specs spec_sk1/2/3.json, built with r54c.py build, NOTHING LANDED)
+   All discriminators are over region types / block identity / kwarg-slot structure only.
+
+   SK1  core/cfg/region_ast_generator.py, _try_build_ternary_kwarg_call, anchor lines
+        41519-41522 (`ternary_chain = [region]` block).
+        Predicate: while exactly one r in self.regions with isinstance(r, TernaryRegion)
+        and r.merge_block == head.entry, prepend r -- i.e. re-root the chain on its
+        OUTERMOST ternary (region-predecessor relation, no offsets).
+        Battery sk1_w32: MISMATCH=21 MATCH=12, changed witnesses: NONE (inert).
+        Corpus g0_sk1.jsonl: order_api 32/34, future_order 101/92, option_order 83/73 --
+        byte-identical to landed.  FALSIFIED.
+
+   SK2  same file, SK1 plus the slot loop at 41621-41633 replaced by per-slot assembly
+        (each chain member contributes the values built inside its OWN condition block,
+        minus the callable at index 0 of the head member, then its ternary value) and the
+        `num_ternaries > total_args` guard at 41583 disabled.
+        Battery sk2_w32: MISMATCH=21 MATCH=12, but 11 witnesses MOVE THE WRONG WAY
+        (s03 19->9, s15 19->9, s06 19->9, w16 25->12, w05 9->10, w06 15->13,
+        s13 9->10, s14 9->10); only w12 moves 18->19.  Still MISMATCH (wrong shape).
+        Corpus g0_sk2.jsonl: future_order 101/18 (was 92), option_order 83/56 (was 73)
+        -- strictly worse; products degrade to `if c:` blocks with docstring arms.
+        FALSIFIED as written; the slot-assembly idea is only viable together with the
+        CALL-selection fix and with the head member actually reaching this builder.
+
+   SK3  same file, 41544-41548: bind kw_names_instr/CALL pair to the FIRST CALL after
+        the last KW_NAMES (the call the kwargs belong to) instead of the last CALL.
+        Battery sk3_w32: MISMATCH=21 MATCH=12, changed witnesses: NONE.
+        Corpus g0_sk3.jsonl identical to landed (order_api 32/34).  FALSIFIED alone;
+        it is a necessary sub-fix (total_args=1 evidence above) for any real repair.
+
+   Recommendation for the implementer: SK1 + SK3 + SK2's slot enumeration as ONE change,
+   plus KW_NAMES support in expr_reconstructor (or an explicit bail so the reconstruct
+   path stops returning n_kw=0 Calls), and re-check base_order's #136 separately.
+
+--------------------------------------------------------------------------------
+6. CENSUS (census54c.py / census54c2.py; logs census54c.log, census2.log;
+   census54c2.json) -- over the 27 pyc_index.json entries with
+   matched_functions < function_count (1078 code objects scanned):
+
+   code objects containing >=1 call with a conditional-expression kwarg value
+   (structural: KW_NAMES-terminated call whose argument span carries a
+    POP_JUMP_IF_* + arm-JUMP ternary signature):            6
+   ... of which the product has FEWER such calls = "not emitted as a call": 4
+     order_api.pyc            :: <module>.future_order                 tern 1 -> 0
+     order_api.pyc            :: <module>.option_order                 tern 1 -> 0
+     plugin_system_log/__init__.pyc :: <module>.DefaultLogger.setup    tern 2 -> 0  (9/10)
+     plugin_system_trade/trade_live_broker.pyc
+                                :: <module>.TradeLiveBroker._process_order tern 2 -> 1 (105/119)
+   NOT 0 outside the three: two further sites exist.  Both live in functions with much
+   larger unrelated losses (setup 320->255, _process_order 454->399), so attribution to
+   THIS mechanism is probable but not proven there; order_api's base_order does NOT
+   appear (its ternary-kwarg call survives), consistent with section 1.
+--------------------------------------------------------------------------------

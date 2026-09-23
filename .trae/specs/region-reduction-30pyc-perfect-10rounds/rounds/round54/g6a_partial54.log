@@ -1,0 +1,72 @@
+[BATCH] index=pyc_index.json, max_count=None, round=54, include_ok=False
+[BATCH] index=pyc_index.json
+[BATCH] total=402, pending=27, round=54, include_ok=False
+----------------------------------------------------------------------
+[1/27] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc
+    PARTIAL: 45 funcs, 42 matched, rate=93.33%
+[2/27] F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/main.pyc
+    PARTIAL: 33 funcs, 29 matched, rate=87.88%
+[3/27] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc
+    PARTIAL: 24 funcs, 22 matched, rate=91.67%
+[4/27] F:/Downloads/pythoncdc-main/site-packages/IQCommon/graph.pyc
+    PARTIAL: 31 funcs, 29 matched, rate=93.55%
+[5/27] F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/instance.pyc
+    PARTIAL: 32 funcs, 31 matched, rate=96.88%
+[6/27] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc
+    PARTIAL: 53 funcs, 51 matched, rate=96.23%
+[7/27] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc
+    PARTIAL: 21 funcs, 19 matched, rate=90.48%
+[8/27] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/fileio_utils.pyc
+    PARTIAL: 14 funcs, 12 matched, rate=85.71%
+[9/27] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/replace_utils.pyc
+    PARTIAL: 9 funcs, 8 matched, rate=88.89%
+[10/27] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc
+    PARTIAL: 40 funcs, 38 matched, rate=95.00%
+[11/27] F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc
+    PARTIAL: 25 funcs, 23 matched, rate=92.00%
+[12/27] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc
+    PARTIAL: 18 funcs, 16 matched, rate=88.89%
+[13/27] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc
+    PARTIAL: 44 funcs, 39 matched, rate=88.64%
+[14/27] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc
+    PARTIAL: 24 funcs, 23 matched, rate=95.83%
+[15/27] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc
+    PARTIAL: 34 funcs, 32 matched, rate=94.12%
+[16/27] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc
+    PARTIAL: 14 funcs, 13 matched, rate=92.86%
+[17/27] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc
+    PARTIAL: 12 funcs, 11 matched, rate=91.67%
+[18/27] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc
+    PARTIAL: 10 funcs, 9 matched, rate=90.00%
+[19/27] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc
+    PARTIAL: 17 funcs, 16 matched, rate=94.12%
+[20/27] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc
+    PARTIAL: 35 funcs, 32 matched, rate=91.43%
+[21/27] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc
+    PARTIAL: 71 funcs, 69 matched, rate=97.18%
+[22/27] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc
+    PARTIAL: 119 funcs, 105 matched, rate=88.24%
+[23/27] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc
+    PARTIAL: 45 funcs, 42 matched, rate=93.33%
+[24/27] F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc
+    PARTIAL: 81 funcs, 70 matched, rate=86.42%
+[25/27] F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc
+    PARTIAL: 57 funcs, 54 matched, rate=94.74%
+[26/27] F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc
+    PARTIAL: 30 funcs, 28 matched, rate=93.33%
+[27/27] F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc
+    PARTIAL: 23 funcs, 21 matched, rate=91.30%
+----------------------------------------------------------------------
+[BATCH] index written back: pyc_index.json
+
+======================================================================
+累计统计:
+  total_pyc:             402
+  verified_pyc:          402
+  ok_pyc:                375
+  partial_pyc:           27
+  failed_pyc:            0
+  total_functions:       5746
+  matched_functions:     5669
+  cumulative_match_rate: 98.66%
+======================================================================

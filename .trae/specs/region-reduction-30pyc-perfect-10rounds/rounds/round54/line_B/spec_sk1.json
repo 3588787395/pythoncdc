@@ -1,0 +1,1 @@
+{"files": [{"file": "core/cfg/region_ast_generator.py", "edits": [{"anchor": "                            and not self._is_loop_tail_convergence_block(block)):", "repl": "                            and not self._is_loop_tail_convergence_block(block)\n                            and not self._msk_shape(block, region)):", "note": "21274-21274"}]}]}

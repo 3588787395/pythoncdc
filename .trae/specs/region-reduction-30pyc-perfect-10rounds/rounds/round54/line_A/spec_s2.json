@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "                if _prev_instrs and _prev_instrs[-1].opname in ('LOAD_FAST', 'LOAD_NAME',\n                                                                  'LOAD_GLOBAL', 'LOAD_DEREF',\n                                                                  'LOAD_ATTR', 'LOAD_METHOD'):",
+   "repl": "                if _prev_instrs and _prev_instrs[-1].opname in ('LOAD_FAST', 'LOAD_NAME',\n                                                                  'LOAD_GLOBAL', 'LOAD_DEREF',\n                                                                  'LOAD_ATTR', 'LOAD_METHOD', 'IS_OP', 'CONTAINS_OP', 'COMPARE_OP'):"
+  }
+ ]
+}

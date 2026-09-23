@@ -2428,3 +2428,68 @@
           （OUTCOME.md + `wit53/` 12 支 + `wit53b/` 10 支 + 三臂 spec/生成脚本 +
           G0/G1/G2′/G3/G4/G4′/G5/G6/G7 日志与 jsonl + 6 支产物 diff）。起始 HEAD `7cbae7d2`
           （Round 52 记录），落地前 `git status --porcelain core/ pycdc.py` 为空。
+  - [x] SubTask 54.1: 测试工程师——本轮四线并行取证（线 A 区域归属、线 B 伪造尾随 `continue`、
+          线 C 三元 kwarg 调用丢语句、线 D 四胞胎 `api_get_from_zeromq`），发货靶定在**新开辟的
+          第四族**：`site-packages/fly/data/quote_handler.pyc :: <module>.is_delisting_stock_local`
+          严格 `seq_len orig=97 decomp=95` + 其 `<dictcomp> orig=39 decomp=25`（官方 `52/57`）。
+          `dis` 地面真值：推导式元素值是**嵌套三元链**（外层 `POP_JUMP_IF_FALSE -> 106`、
+          内层 `192 POP_JUMP_IF_FALSE -> 198`、merge `200 LIST_APPEND/MAP_ADD`，源码行 299-302），
+          产物却把内层条件与内层 true 臂整段丢掉、只留最后常量（`quote_handlerOK.py:203` 的
+          `... else False for stock in stocks_bk`）。复现体 `rounds/round54/wit54comp/` 12 支：
+          落地前 `MISMATCH=8 MATCH=4`、落地后 **12/12 MATCH**，4 支阴性对照（单三元推导式、
+          赋值式/调用实参式/循环体式嵌套三元）两臂均 MATCH ⇒ 推导式元素上下文是必需条件。
+  - [x] SubTask 54.2: 修复工程师——落地 **R54-COMP**（`core/cfg/comprehension_generator.py ::
+          _detect_comp_ternary`，`1733-1746 → 1733-1749`，+13/−4 行单 hunk）：false 值区域内若仍有
+          **前向**条件跳转（`BACKWARD` 是推导式 filter 回边，排除），该区域本身即另一个三元区域 ⇒
+          以 `false_start` 为新扫描起点**递归归约**为 `IfExp` 抽象节点，外层以 `orelse` 持有；
+          递归未命中时 `false_expr is None` 逐字回落原重建调用，判据严格附加。只用运算码类别与
+          区域切片边界，不读名字/常量/绝对偏移/指令数。发货面另以静态可达性证明：
+          `reach54.py` 枚举 `site-packages` 全部 1719 支 pyc 的 1642 个推导式码对象，
+          「≥2 条前向条件跳转」形状只有 **3 个 / 2 支文件**，实测 `wizard_quant_apiOK.py` 逐字节不变、
+          `quote_handlerOK.py` 只有 1 行变化（984 行不变）。
+  - [x] SubTask 54.3: 门禁——G0 16 靶逐函数仅 `quote_handler 65/72 → 67/72`、合计
+          `760/851 → 762/851`、其余 15 靶逐字未变（含 `quotation 148/150`、`klinedata 56/63`）；
+          电池 12/12；**G4 全量 544 路径 A/B `TALLY SAME=543 IMPROVED=1 REGRESSION=0 MOVED=0 ERR=0`**
+          （`quote_handler 52/57 → 54/57`，`files fully matched 485 → 485`）；
+          **G4′ 受影响文件逐码对象 `FIXED is_delisting_stock_local` + `FIXED ...<dictcomp>`、
+          `BROKEN=0`、严格缺陷 `7 → 5`**。G1/G2′/G3 以 G4 全集 A/B 覆盖（同一 `r45full.txt` 544 路径，
+          A 侧复用 Round 53 通过门禁并逐字节落地的 `g453_c53a.jsonl`）。
+  - [x] SubTask 54.4: 落地与收口——`land54.py` 先内存应用 spec，只有与通过门禁的臂
+          `mirr_c54comp/core/cfg/comprehension_generator.py` **逐字节相同**才写盘；
+          G5 落地核重跑 ⇒ 电池 12/12、金丝雀 `fly/data/quotation.pyc` 官方 `143/143`／strict
+          `148/150`（缺陷集合逐字同）、`test_repros/round16_sink` 15/15 MATCH、
+          `quote_handler` 落地产物与臂产物逐字节相同；G6 先跑 partial 批（27 支 0 failed）再跑
+          `batch --index pyc_index.json --all --round 54` **402 verified / 0 failed**，
+          全量重跑仅 1 支 `*OK.py` 变化（工具生成，无手改产物）；
+          G7 `stats`：`total_functions 5746`（分母未动）、`matched_functions 5667 → 5669`、
+          `cumulative_match_rate 98.63% → 98.66%`。`pyc_index.json` 值域变化仅 2 条
+          （`quote_handler 52 → 54` 与其 rate），纯 CRLF 4553 行、裸 LF 0。字节面：
+          `comprehension_generator fa43dbc9e878eeacbfe0 → 00903b60ef2411cb6b37`
+          （102 871 → 104 143 B，CRLF 1960、裸 LF 0、无 BOM），`region_analyzer`/`region_ast_generator`
+          逐字节未动，落地前 `git status --porcelain core/ pycdc.py` 为空。
+  - [x] SubTask 54.5: 否证与移交（Round 55）——**线 A 不发货**：诊断臂 `spec_s2.json` 能把
+          `market_time :: is_open` 推到严格 `10/10`，但实测否决两条硬反例
+          （`quotation 148/150 → 147/150`：`get_quote`/`fetch_quote_and_index` 塌成 `orig=82 decomp=1`；
+          `klinedata 56/63 → 55/63`：新增 `_is_same_type_date 97/71`），`spec_s1.json` 对靶产物逐字节惰；
+          且该报告引用的 `_try_build_if_region`/`_build_if_region_from_block`/
+          `_try_build_ternary_conditional` 三个符号经 grep **在仓库中不存在**，机制叙述作废，
+          可用形状仅保留「被判为 else 臂头的块其正常流不落声称 merge」（`210` 假边去 `316`、merge `258`）。
+          **线 C 三枚草图（SK1/SK2/SK3）全部否证**，根因改判为 `_try_build_ternary_merge_consumer_expr`
+          （`region_ast_generator.py:39591`）向 `expr_reconstructor` 取值时拿到 `None`——通用重建器
+          **不支持 `KW_NAMES`**，且绑定的是外层 `CALL`（`total_args=1`）而非持有 kwargs 的 `.format` 调用；
+          最小复现 `wit54c/s14_unguarded_fmt_2tern_kwonly.py 21/9`（两个三元 kwarg 才触发）、
+          实形 `w16_guarded_real_shape.py 33/25`，33 例电池落地态 `21 MISMATCH / 12 MATCH`；
+          普查（27 partial / 1078 码对象）6 个形状、4 个真丢语句：`future_order`、`option_order` 加
+          `plugin_system_log :: DefaultLogger.setup`（2→0）与 `trade_live_broker :: _process_order`（2→1）
+          ⇒ Round 55 首选靶＝`KW_NAMES` 表达式重建支持。`base_order [target_diff] #136` 经对齐证明
+          **不属此族**（0 丢 0 增，仅 `POP_JUMP_IF_TRUE` 目标 1124→926）。
+          Round 55 靶另以操作数用量差（`loss54.py`）量化：`DefaultLogger.setup -65` 丢整段语句组且
+          **多出 5 条跳转** ⇒ 若级联被吸收（Round 48/49 merge 归属线）；`get_kline_local -78` 丢 10×
+          `BUILD_SLICE` 与 5× `STORE_FAST end_time` ⇒ 循环体丢语句；`get_TradeMode_trades -90` 以
+          `COPY`/`SWAP` 损失为主 ⇒ 每出口 except 尾声族（F2）。全语料 117 条严格缺陷中仅 **1** 条为
+          推导式形状 ⇒ 不得再走推导式路线。线 B/D 诊断在本轮结束时仍未收口（产物在
+          `D:/Temp/r54bdiag/`、`D:/Temp/r54ddiag/`），Round 55 先复核再定靶。
+          本轮起子代理池触发每日配额上限，Round 55 预备诊断代理被拒，相关取证改由主线完成。
+          归档 `rounds/round54/`（OUTCOME.md + wit54comp 12 支 + spec/落地/门禁脚本 +
+          G0/G4/G4′/G5/G6/G7 日志与 jsonl + `reach54.log` 可达性证明 + line_A/line_B/line_C 旁支物证）。
+          起始 HEAD `3a825236`（Round 53 记录），落地前 `git status --porcelain core/ pycdc.py` 为空。

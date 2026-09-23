@@ -1730,10 +1730,23 @@ class ComprehensionGenerator:
         if true_expr is None:
             return None
 
-        # 重建false值表达式
-        false_expr = self.expr_reconstructor.reconstruct(false_instrs)
+        # 重建false值表达式。嵌套三元链归约（innermost→outermost）：CPython 对
+        # `a if c else (b if d else e)` 在 false 区域内再生成一次「条件 → 前向条件跳转
+        # → true 臂 → JUMP_FORWARD 到同一个 merge」，即 false 区域本身又是一个三元区域。
+        # 识别条件：false_instrs 内含至少一条前向条件跳转（BACKWARD 条件是推导式的 filter
+        # 回边，不算）。归约方式：以 false_start 为新的扫描起点递归调用本方法，先把内层
+        # 三元归约为一个 IfExp 抽象节点，再由外层持有为 orelse——内层区域整体作为父节点的
+        # 一个抽象结点，符合「每块唯一归属」。AST 映射：IfExp(test, body, IfExp(...))。
+        # 递归返回 None（内层并非三元，或通用重建器本就能处理）时逐字回落到原路径，
+        # 因此该判据是严格附加的，不改变任何现有可正常重建的产物结构。
+        false_expr = None
+        if any(_fi.opname in CONDITIONAL_JUMP_OPS and 'BACKWARD' not in _fi.opname
+               for _fi in false_instrs):
+            false_expr = self._detect_comp_ternary(all_instrs, false_start - 1, append_idx)
         if false_expr is None:
-            return None
+            false_expr = self.expr_reconstructor.reconstruct(false_instrs)
+            if false_expr is None:
+                return None
 
         # walrus(ternary) 模式检测：ternary merge 块后跟
         # COPY 1 + STORE_* 序列（walrus 副作用捕获），将 IfExp 包装为

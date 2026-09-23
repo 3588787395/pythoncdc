@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "                if not _neg_or_chain:\n                    return None\n        return chain",
+   "repl": "                if not _neg_or_chain:\n                    return None\n        return chain\n\n        # [R54-S1 sketch] prepend the leading operand A.\n        if chain:\n            _s1_head, _s1_hop = chain[0]\n            _s1_member = set(id(b) for b, _ in chain)\n            for _s1_p in list(_s1_head.predecessors):\n                if id(_s1_p) in _s1_member:\n                    continue\n                if self.block_to_region.get(_s1_p) is not None:\n                    continue\n                _s1_pl = _s1_p.get_last_instruction()\n                if (_s1_pl is None or getattr(_s1_pl, 'argval', None) is None\n                        or _s1_pl.opname not in\n                        (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)):\n                    continue\n                _s1_taken = self.cfg.get_block_by_offset(_s1_pl.argval)\n                if _s1_taken is None or id(_s1_taken) not in _s1_member:\n                    continue\n                _s1_ft = next((s for s in _s1_p.successors\n                              if s.start_offset != _s1_pl.argval), None)\n                if _s1_ft is not _s1_head:\n                    continue\n                _s1_op = 'or' if 'IF_TRUE' in _s1_pl.opname else 'and'\n                chain.insert(0, (_s1_p, _s1_op))\n                break\n        return chain"
+  }
+ ]
+}
