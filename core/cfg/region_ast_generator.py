@@ -10081,6 +10081,40 @@ AST 映射规则:
                     if not _then_stmts:
                         _then_stmts = [{'type': 'Pass'}]
                 # [R02 fix] 同 then 分支：CONTINUE 角色但含有效语句时保留语句
+                # [R47-A] 区域归约算法原则 1（每块 = 前导语句 + 恰一个终结符）+
+                # 原则 2（每块唯一归属、归属者必发射）+ 原则 4（父引用子入口）：
+                # 循环头块的条件跳转在本方法里被成对取 then/else 两臂（`_is_if_false`
+                # 只决定极性）。但 `_else_succ` 可能并不是 else 臂，而只是 then 臂之后
+                # 的**顺序后继块**：当 then 臂末块不以任一跳转结束（其唯一后继就是
+                # 落入块）且该落入块恰为 `_else_succ` 时，字节码里并不存在「跳过 else 臂」
+                # 的无条件跳转，`if A: X` 与紧随其后的后继语句是两个平铺区域。此时把
+                # `_else_succ` 当 else 臂发射，必须凭空补一条 JUMP_FORWARD 才成立（多发射
+                # 1 条指令、其后整体偏移），且语义由「两个独立 if」错成「if/elif」。
+                # 本判据只读结构事实：① then 臂不是 continue 臂；② `_else_succ` 不是头块
+                # 自身；③ `_else_succ` ∈ then 末块的后继集；④ then 末块的终结符不属于任一
+                # 跳转类（FORWARD/BACKWARD_JUMP_OPS）⇒ ③ 的可达性只能是落入；⑤ then 臂入口
+                # 块不是任何子区域的入口（则臂尾就是它自己，④ 才等价于「臂尾」）；
+                # ⑥ `_else_succ` 仍在当前循环区域的 blocks 内且尚未发射 ⇒ 它的发射责任
+                # 归还给循环体的顺序归约（原则 2）。
+                # 反证：真 else 臂的 then 臂末块必以无条件前向跳转跳过 else 臂（④ 假），
+                # 或其唯一后继不是 `_else_succ`（③ 假）。
+                _r47_ter = self.region_analyzer.get_entry_region_for_block(_then_succ)
+                _r47_loop = self._current_loop
+                _r47_last = _then_succ.get_last_instruction()
+                if (not _then_is_continue and _else_succ is not None
+                        and _else_succ is not block
+                        and _else_succ in (list(_then_succ.successors) or [])
+                        and _r47_last is not None
+                        and _r47_last.opname not in FORWARD_JUMP_OPS
+                        and _r47_last.opname not in BACKWARD_JUMP_OPS
+                        and (_r47_ter is None or _r47_ter.entry is not _then_succ)
+                        and _r47_loop is not None
+                        and _else_succ in (getattr(_r47_loop, 'blocks', None) or set())
+                        and _else_succ not in self.generated_blocks):
+                    self.generated_blocks.add(_then_succ)
+                    self.generated_offsets.add(_then_succ.start_offset)
+                    _hdr_stmts.append({'type': 'If', 'test': _expr, 'body': _then_stmts})
+                    return
                 if _else_is_continue:
                     _else_stmts = self._generate_block_statements(_else_succ)
                     _has_real_else = any(

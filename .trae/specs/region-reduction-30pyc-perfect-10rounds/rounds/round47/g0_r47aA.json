@@ -1,0 +1,49 @@
+{
+ "w47_witness.py": {
+  "defective": [
+   [
+    "<module>.w47_07_then_arm_multi_block_in_while",
+    "seq_len orig=44 decomp=45"
+   ]
+  ],
+  "sigs": [
+   [
+    "<module>",
+    "63f60997afd32476"
+   ],
+   [
+    "<module>.w47_01_two_ifs_in_while",
+    "0e24a1abc15a8b94"
+   ],
+   [
+    "<module>.w47_02_true_else_in_while",
+    "46735e45888f87aa"
+   ],
+   [
+    "<module>.w47_03_true_elif_in_while",
+    "9c22d7bbe5336d2e"
+   ],
+   [
+    "<module>.w47_04_two_ifs_at_func_level",
+    "7691ff53bfd8a542"
+   ],
+   [
+    "<module>.w47_05_two_ifs_in_for",
+    "e5efce8a2fa3089c"
+   ],
+   [
+    "<module>.w47_06_two_ifs_in_cond_while",
+    "1d66c95f04fee882"
+   ],
+   [
+    "<module>.w47_07_then_arm_multi_block_in_while",
+    "5645146766540f7e"
+   ],
+   [
+    "<module>.w47_08_three_sequential_ifs_in_while",
+    "5700ebbea89a7093"
+   ]
+  ],
+  "n": 9
+ }
+}

@@ -1,0 +1,255 @@
+{
+ "w47_witness.py": {
+  "n": 9,
+  "defective": [
+   [
+    "<module>.w47_07_then_arm_multi_block_in_while",
+    "seq_len orig=44 decomp=45"
+   ]
+  ],
+  "sigs": [
+   [
+    "<module>",
+    "63f60997afd32476",
+    "63f60997afd32476"
+   ],
+   [
+    "<module>.w47_01_two_ifs_in_while",
+    "0e24a1abc15a8b94",
+    "0e24a1abc15a8b94"
+   ],
+   [
+    "<module>.w47_02_true_else_in_while",
+    "46735e45888f87aa",
+    "46735e45888f87aa"
+   ],
+   [
+    "<module>.w47_03_true_elif_in_while",
+    "9c22d7bbe5336d2e",
+    "9c22d7bbe5336d2e"
+   ],
+   [
+    "<module>.w47_04_two_ifs_at_func_level",
+    "7691ff53bfd8a542",
+    "7691ff53bfd8a542"
+   ],
+   [
+    "<module>.w47_05_two_ifs_in_for",
+    "e5efce8a2fa3089c",
+    "e5efce8a2fa3089c"
+   ],
+   [
+    "<module>.w47_06_two_ifs_in_cond_while",
+    "1d66c95f04fee882",
+    "1d66c95f04fee882"
+   ],
+   [
+    "<module>.w47_07_then_arm_multi_block_in_while",
+    "5645146766540f7e",
+    "5a2df3b9ab624893"
+   ],
+   [
+    "<module>.w47_08_three_sequential_ifs_in_while",
+    "5700ebbea89a7093",
+    "5700ebbea89a7093"
+   ]
+  ]
+ },
+ "r47_tryret_witness.py": {
+  "n": 15,
+  "defective": [
+   [
+    "<module>.r47_01_try_tail_return",
+    "seq_len orig=50 decomp=52"
+   ],
+   [
+    "<module>.r47_04_try_tail_return_call",
+    "seq_len orig=47 decomp=49"
+   ],
+   [
+    "<module>.r47_05_try_except_noreraise",
+    "seq_len orig=49 decomp=51"
+   ]
+  ],
+  "sigs": [
+   [
+    "<module>",
+    "1acd03a802eded25",
+    "1acd03a802eded25"
+   ],
+   [
+    "<module>.r47_01_try_tail_return",
+    "67844c2e812a11f7",
+    "7603b9d550a4ffd5"
+   ],
+   [
+    "<module>.r47_01_try_tail_return.<listcomp>",
+    "5d1667ce12a3017d",
+    "5d1667ce12a3017d"
+   ],
+   [
+    "<module>.r47_02_try_tail_bare_return",
+    "86db47554848edba",
+    "86db47554848edba"
+   ],
+   [
+    "<module>.r47_02_try_tail_bare_return.<listcomp>",
+    "5d1667ce12a3017d",
+    "5d1667ce12a3017d"
+   ],
+   [
+    "<module>.r47_03_no_try_tail_return",
+    "109d220f0d52e0fa",
+    "109d220f0d52e0fa"
+   ],
+   [
+    "<module>.r47_03_no_try_tail_return.<listcomp>",
+    "5d1667ce12a3017d",
+    "5d1667ce12a3017d"
+   ],
+   [
+    "<module>.r47_04_try_tail_return_call",
+    "2ded5d55480dd40a",
+    "87af6f0d3d3b5c7e"
+   ],
+   [
+    "<module>.r47_04_try_tail_return_call.<listcomp>",
+    "5d1667ce12a3017d",
+    "5d1667ce12a3017d"
+   ],
+   [
+    "<module>.r47_05_try_except_noreraise",
+    "c3428771d76d6eba",
+    "0ccd952761fea5a5"
+   ],
+   [
+    "<module>.r47_05_try_except_noreraise.<listcomp>",
+    "5d1667ce12a3017d",
+    "5d1667ce12a3017d"
+   ],
+   [
+    "<module>.r47_06_try_mid_return_tail_nothing",
+    "3bd1111f3666282b",
+    "3bd1111f3666282b"
+   ],
+   [
+    "<module>.r47_06_try_mid_return_tail_nothing.<listcomp>",
+    "5d1667ce12a3017d",
+    "5d1667ce12a3017d"
+   ],
+   [
+    "<module>.r47_07_try_tail_return_attr",
+    "1197f9e5b636594b",
+    "1197f9e5b636594b"
+   ],
+   [
+    "<module>.r47_08_try_tail_return_const",
+    "461f338fffd7769d",
+    "461f338fffd7769d"
+   ]
+  ]
+ },
+ "r46b_witness.py": {
+  "n": 5,
+  "defective": [],
+  "sigs": [
+   [
+    "<module>",
+    "3ebf598ba567f2c0",
+    "3ebf598ba567f2c0"
+   ],
+   [
+    "<module>.nc_02_plain_if_tail",
+    "0e9656fa7cfcb0f6",
+    "0e9656fa7cfcb0f6"
+   ],
+   [
+    "<module>.nc_03_chain_merge_returnonly",
+    "13b59e4455654c34",
+    "13b59e4455654c34"
+   ],
+   [
+    "<module>.nc_04_chain_no_tail",
+    "13b59e4455654c34",
+    "13b59e4455654c34"
+   ],
+   [
+    "<module>.r46b_01_tail_region_at_merge",
+    "02efc9fdaf562e5c",
+    "02efc9fdaf562e5c"
+   ]
+  ]
+ },
+ "r45e_witnesses.py": {
+  "n": 4,
+  "defective": [],
+  "sigs": [
+   [
+    "<module>",
+    "07c632624333452c",
+    "07c632624333452c"
+   ],
+   [
+    "<module>.arm_continuation_repro",
+    "55e9301c982768f4",
+    "55e9301c982768f4"
+   ],
+   [
+    "<module>.no_tail_repro",
+    "08c91dd238f37d7b",
+    "08c91dd238f37d7b"
+   ],
+   [
+    "<module>.region_mean_repro",
+    "a4afb9a4de8c97fe",
+    "a4afb9a4de8c97fe"
+   ]
+  ]
+ },
+ "r45e2_controls.py": {
+  "n": 8,
+  "defective": [],
+  "sigs": [
+   [
+    "<module>",
+    "dba8eceee4a86ea6",
+    "dba8eceee4a86ea6"
+   ],
+   [
+    "<module>.w_all_return_no_tail",
+    "62c27ae68191fbe8",
+    "62c27ae68191fbe8"
+   ],
+   [
+    "<module>.w_chain_in_loop",
+    "36dfd46f9de00086",
+    "36dfd46f9de00086"
+   ],
+   [
+    "<module>.w_chain_merge_implicit",
+    "fb0cad4b5072b098",
+    "fb0cad4b5072b098"
+   ],
+   [
+    "<module>.w_chain_tail_jump",
+    "ef7f2b0395b217c6",
+    "ef7f2b0395b217c6"
+   ],
+   [
+    "<module>.w_elif_else_tail",
+    "0d5842ff9ba9efe0",
+    "0d5842ff9ba9efe0"
+   ],
+   [
+    "<module>.w_nested_chain_in_arm",
+    "dc4e5a8075846c4c",
+    "dc4e5a8075846c4c"
+   ],
+   [
+    "<module>.w_plain_if_tail",
+    "4c9eff030122c64a",
+    "4c9eff030122c64a"
+   ]
+  ]
+ }
+}
