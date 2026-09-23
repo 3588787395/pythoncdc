@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "            if _chain_merge_candidates:\n",
+   "repl": "            # 区域归约算法原则 2（每块唯一归属）+ 原则 4（父区域按入口块引用子区域）：\n            # 已被某个三元（表达式）区域认领、且其入口块不在本链结构内的块，不得作链的\n            # merge 候选。失败模式（order_api 的 future_order / option_order 偏移 130）：\n            # `if order_ is None: return None` 的 then 臂硬退出、merge 留空，链式兜底把\n            # 下一条语句的条件头 178 当作 elif 条件，并把 178 之后那条语句里三元区域的\n            # 两臂块（344=JUMP_FORWARD、348=LOAD_CONST，均属 TernaryRegion@206）认作\n            # elif body 与 final_else，取二者共同后继 350 作 merge ⇒ 整条\n            # `strategy_log.info(...format(...))` 语句失去归属者，三元漏成兄弟语句。\n            _r50b_struct = {block} | set(then_blocks) | set(else_blocks)\n            for _r50b_c in elif_info.get(\"conditions\", []):\n                _r50b_struct.add(_r50b_c)\n            for _r50b_body in elif_info.get(\"bodies\", []):\n                _r50b_struct.update(_r50b_body)\n            _r50b_struct.update(elif_info.get(\"final_else\", []))\n            _r50b_owned = set()\n            for _r50b_tr in self._filter_regions(ternary_regions or [], TernaryRegion):\n                if _r50b_tr.entry in _r50b_struct:\n                    continue\n                _r50b_owned.update(getattr(_r50b_tr, 'blocks', None) or ())\n            _chain_merge_candidates -= _r50b_owned\n            if _chain_merge_candidates:\n"
+  }
+ ]
+}

@@ -1,0 +1,16 @@
+[
+ {
+  "w": "r50_controls",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r50_target_shape",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.shape_exit_then_ternary_pos seq_len orig=21 decomp=19",
+   "<module>.shape_exit_then_ternary_stmt seq_len orig=28 decomp=26",
+   "<module>.shape_exit_then_two_ternary_kw seq_len orig=37 decomp=35"
+  ]
+ }
+]

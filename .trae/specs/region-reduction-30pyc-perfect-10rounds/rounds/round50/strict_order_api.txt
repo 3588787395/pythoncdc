@@ -1,0 +1,7 @@
+  DEFECT 33/36  IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc
+           - <module>.base_order: [target_diff] #136 POP_JUMP_IF_TRUE 终点 orig=("'order_obj'", 'LOAD_FAST') decomp=("'生成订单，订单号:{order_id}，可转债代码：{symbol}，数量：{side}{share}'", 'LOAD_CONST')
+           - <module>.future_order: [seq_len] orig=101 decomp=93
+           - <module>.option_order: [seq_len] orig=83 decomp=74
+
+文件级：全部一致 0 / 1，有真缺陷 1
+函数级：严格一致 33 / 36

@@ -1,0 +1,44 @@
+### 1) 逐函数 strict（三臂产物，无需重新反编译）
+==== head50
+   base_order                   [target_diff] #136 POP_JUMP_IF_TRUE 终点 orig=("'order_obj'", 'LOAD_FAST') decomp=("'生成订单，订单号:{order_id}，可转债代码：{symbol}，数量：{side}{share}'", 'LOAD_CONST')
+   future_order                 [seq_len] orig=101 decomp=93
+   option_order                 [seq_len] orig=83 decomp=74
+==== r50b
+   base_order                   [target_diff] #136 POP_JUMP_IF_TRUE 终点 orig=("'order_obj'", 'LOAD_FAST') decomp=("'生成订单，订单号:{order_id}，可转债代码：{symbol}，数量：{side}{share}'", 'LOAD_CONST')
+   future_order                 [seq_len] orig=101 decomp=93
+   option_order                 [seq_len] orig=83 decomp=74
+==== r50e
+   base_order                   [target_diff] #136 POP_JUMP_IF_TRUE 终点 orig=("'order_obj'", 'LOAD_FAST') decomp=("'生成订单，订单号:{order_id}，可转债代码：{symbol}，数量：{side}{share}'", 'LOAD_CONST')
+   future_order                 [seq_len] orig=101 decomp=79
+   option_order                 [seq_len] orig=83 decomp=65
+==== r50a
+   future_order                 [seq_len] orig=101 decomp=77
+   option_order                 [seq_len] orig=83 decomp=65
+
+### 2) 链 merge 候选：落地 vs r50b（option_order H=130）
+-- landed --
+R50CHAIN H= 130  conds= [178]  bodies= [[344]]  fe= [348]  exits= [[], [350], [350]]  nonempty= 2  cands= [350]  tris= [(424, [424, 504, 508, 510]), (350, [350, 418, 422, 424]), (206, [206, 344, 348, 350])]
+-- r50b --
+R50CHAIN H= 130  conds= [178]  bodies= [[344]]  fe= [348]  exits= [[], [350], [350]]  nonempty= 2  cands= []  struct= [130, 174, 178, 344, 348]  tris= [(424, [424, 504, 508, 510]), (350, [350, 418, 422, 424]), (206, [206, 344, 348, 350])]  owned= [206, 344, 348, 350, 418, 422, 424, 504, 508, 510]
+
+### 3) r50e 早站点判据命中（option_order H=130）
+R50E H= 130  then= 174  else= 178  else_succs= [542, 206]  else_preds= [130]  then_last= RETURN_VALUE  else_last= POP_JUMP_FORWARD_IF_TRUE  PRED= True  merge= None
+
+### 4) 生成器 bail 路径（落地核 + 仅加打印的镜像）
+      1 R50GEN preload_kwarg i= 1 ('order_id', 'symbol', 'side', 'oper', 'share') 1 558
+      1 R50GEN preload_kwarg i= 1 ('order_id', 'symbol', 'side', 'oper', 'share', 'hedge_type') 1 424
+
+### 5) option_order 产物差异（落地 vs r50e）
+1c1
+< ===== option_order (19 lines) =====
+---
+> ===== option_order (16 lines) =====
+14,18c14,15
+<     elif is_trade() or order_.entrust_direction.value.upper() == 'BUY':
+<         pass
+<     else:
+<         """卖出"""
+<     '买入' if order_.entrust_direction.value.upper() == 'BUY' else '卖出'
+---
+>     if not is_trade():
+>         '买入' if order_.entrust_direction.value.upper() == 'BUY' else '卖出'
