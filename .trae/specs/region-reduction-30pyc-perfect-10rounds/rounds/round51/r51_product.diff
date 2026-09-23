@@ -1,0 +1,40 @@
+diff --git a/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py b/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py
+index ba6897e1..7853dc71 100644
+--- a/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py
++++ b/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py
+@@ -1442,6 +1442,8 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
+                                                 cash_replace = 0
+                                             elif in_cash_replace_flag == 1:
+                                                 cash_replace = 2
++                                            else:
++                                                pass
+                                         else:
+                                             pass
+                                     if 'position_replace_flag' in stock_info.keys() and stock_info.get('position_replace_flag', None) is not None:
+@@ -2022,7 +2024,7 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
+                         code += '.SS'
+                     elif code[0] == '3' or code[:3] == '002' or code[:3] == '000' or code[:2] == '15':
+                         code += '.SZ'
+-                    while False:
++                    else:
+                         pass
+                     stock_out_info = dict()
+                     stock_out_info['stock_name'] = result[i].get('stock_name')
+@@ -2069,7 +2071,7 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
+                         code += '.SS'
+                     elif code[0] == '3' or code[:3] == '002' or code[:3] == '000' or code[:2] == '15':
+                         code += '.SZ'
+-                    while False:
++                    else:
+                         pass
+                     stock_out_info = {}
+                     if result[i].get('exchange_type') == '1':
+@@ -2121,7 +2123,7 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
+                         code += '.SS'
+                     elif code[0] == '3' or code[:3] == '002' or code[:3] == '000' or code[:2] == '15':
+                         code += '.SZ'
+-                    while False:
++                    else:
+                         pass
+                     stock_out_info = {}
+                     stock_out_info['exchange_type'] = exchange_type

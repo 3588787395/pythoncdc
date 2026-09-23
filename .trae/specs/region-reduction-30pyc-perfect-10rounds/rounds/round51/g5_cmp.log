@@ -1,0 +1,14 @@
+IQCommon/api/klinedata.pyc                                     ==cand   2a1b07953266d963 41/45 same-as-head
+IQCommon/common/main.pyc                                       ==cand   9a15a1b3122a7b1f 29/33 same-as-head
+IQCommon/strategy/wizard_quant_api.pyc                         ==cand   6f08c711b8339c5a 51/53 same-as-head
+IQCommon/util/common_func.pyc                                  ==cand   9b0e0ba3b096e901 19/21 same-as-head
+IQData/plugins/plugin_system_realquote/real_quote.pyc          ==cand   e0f8686992d2fefd 39/44 same-as-head
+IQData/utils/common_func.pyc                                   ==cand   59ed5d27453befd3 23/24 same-as-head
+IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc         ==cand   5e59c43ab22b72f1 32/34 same-as-head
+IQEngine/plugins/plugin_system_log/__init__.pyc                ==cand   b75a9343db29af1f 9/10 same-as-head
+IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc     ==cand   6b94a929e1004a0f 105/119 MOVED-vs-head
+fly/data/quotation.pyc                                         ==cand   857956e7f8d9e97c 143/143 same-as-head
+fly/data/quote.pyc                                             ==cand   2a133f5c5dc30bc6 69/81 same-as-head
+fly/data/quote_handler.pyc                                     ==cand   5be303fab0969e33 52/57 same-as-head
+landed==cand: 12/12, differing=0
+mism equal to cand: True

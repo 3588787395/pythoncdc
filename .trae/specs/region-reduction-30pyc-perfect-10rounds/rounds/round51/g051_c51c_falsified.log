@@ -1,0 +1,30 @@
+core = D:\Temp\r51b\mirr_c51c\core
+---- TARGETS ----
+ges/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc 101/123 _process_cancel_order [seq_len] orig=295 decomp=296 | _process_order [seq_len] orig=454 decomp=399 | _process_tick_order [target_diff] #27 JUMP 终点 orig=("'len'", 'LOAD_GL
+site-packages/fly/data/quote_handler.pyc                        65/72  get_Ashares_local [seq_len] orig=75 decomp=77 | get_index_stocks_local [seq_len] orig=151 decomp=150 | get_industry_stocks_local [seq_len] orig=89 decomp=88 | get_kline_b
+site-packages/fly/data/quote.pyc                                71/89  api_get_from_multi_zeromq [target_diff] #175 JUMP 终点 orig=("'_connec'", 'LOAD_FAST') decomp=("'first_stockAddress'", 'LOAD_FAST') | api_get_from_zeromq [target_diff] #157
+packages/IQData/plugins/plugin_system_realquote/real_quote.pyc  39/45  api_get_from_zeromq [target_diff] #150 JUMP 终点 orig=("'_connec'", 'LOAD_FAST') decomp=("'first_address'", 'LOAD_FAST') | get_cache_l2_data [seq_len] orig=337 decomp=336 |
+site-packages/IQCommon/api/klinedata.pyc                        53/63  _all_bars_of_cache [seq_len] orig=230 decomp=231 | get_all_real_daily_kline [seq_len] orig=188 decomp=187 | get_all_real_minute_kline [target_diff] #54 POP_JUMP_IF_FALSE 
+site-packages/IQCommon/common/main.pyc                          28/31  api_get_from_zeromq [target_diff] #101 JUMP 终点 orig=("'_connect'", 'LOAD_FAST') decomp=("'first_address'", 'LOAD_FAST') | get_same_shard_server_ip_inf [seq_len] orig=192 
+ackages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc  33/36  base_order [target_diff] #136 POP_JUMP_IF_TRUE 终点 orig=("'order_obj'", 'LOAD_FAST') decomp=("'生成订单，订单号:{order_id}，可转债代码：{symbol}，数量：{side}{share}'", 'LOAD_CONST') | futur
+site-packages/IQCommon/strategy/wizard_quant_api.pyc            52/56  filter_desicion [seq_len] orig=179 decomp=181 | calculate_di [seq_len] orig=81 decomp=79 | init_stock_pool_filter [target_diff] #33 JUMP 终点 orig=("'security_pool_info'", 
+site-packages/IQCommon/util/common_func.pyc                     20/22  get_crontab_execute_time [seq_len] orig=92 decomp=80 | get_kline_time_by_frequency_ [seq_len] orig=232 decomp=229
+site-packages/IQData/utils/common_func.pyc                      26/27  handle_exrights [seq_len] orig=276 decomp=268
+site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc    9/10  setup [seq_len] orig=320 decomp=255
+site-packages/fly/data/quotation.pyc                           148/150 change_his_to_forward [target_diff] #250 POP_JUMP_IF_FALSE 终点 orig=("'preindex'", 'LOAD_FAST') decomp=(None, 'FOR_ITER') | get_trend [target_diff] #10 POP_JUMP_IF_FALSE 终
+---- BATTERY D:/Temp/r51mine/wit51 ----
+r51a_01                    MATCH     
+r51a_02                    MATCH     
+r51a_03                    MATCH     
+r51a_04                    MISMATCH  <module>.f seq_len orig=32 decomp=31
+r51a_05                    MATCH     
+r51a_06                    MATCH     
+r51a_07                    MATCH     
+r51b_01                    MATCH     
+r51b_02                    MATCH     
+r51b_03                    MATCH     
+r51b_04                    MATCH     
+r51b_05                    MATCH     
+r51b_06                    MISMATCH  <module>.f seq_len orig=33 decomp=32
+r51b_07                    MATCH     
+battery: MISMATCH=2 MATCH=12 ERROR=0 of 14

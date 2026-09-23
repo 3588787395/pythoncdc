@@ -1,0 +1,4 @@
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc  gained=["['etf_basket_order', 693, 693, 11, 216]"] lost=["['etf_basket_order', 693, 692, 12, 431]"]
+    ~ etf_basket_order [693, 692, 12, 431] -> [693, 693, 11, 216]
+TALLY SAME=543 IMPROVED=0 REGRESSION=0 MOVED=1 ERR=0  (unpaired lists=0)
+files fully matched: a=484 b=484
