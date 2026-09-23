@@ -1,0 +1,86 @@
+diff --git a/site-packages/IQCommon/api/klinedataOK.py b/site-packages/IQCommon/api/klinedataOK.py
+index 175241e1..48fdec34 100644
+--- a/site-packages/IQCommon/api/klinedataOK.py
++++ b/site-packages/IQCommon/api/klinedataOK.py
+@@ -170,5 +170,5 @@ def _all_bars_of_cache(symbol, start_time, end_time, frequency, asset):
+     if start_date < '20050101' <= end_date:
+         start_date = '20050101'
+-    elif history_cache == 1:
++    if history_cache == 1:
+         error_no, data = get_cache(symbol, frequency, start_date, end_date)
+         if error_no == 0:
+@@ -910,8 +910,7 @@ def kline_datetime_list(count, query_date, frequency, include=False, bussiness_t
+                             if not include:
+                                 min_count -= 1
+-                        else:
+-                            min_datetime = change_dt_2_int(convert_int_to_datetime(tmp_end_datetime) - datetime.timedelta(minutes=min_count), frequency)
+-                            if tmp_end_datetime >= pm_open_datetime and min_datetime <= pm_open_datetime:
+-                                min_datetime = change_dt_2_int(convert_int_to_datetime(min_datetime) - datetime.timedelta(minutes=90), frequency)
++                        min_datetime = change_dt_2_int(convert_int_to_datetime(tmp_end_datetime) - datetime.timedelta(minutes=min_count), frequency)
++                        if tmp_end_datetime >= pm_open_datetime and min_datetime <= pm_open_datetime:
++                            min_datetime = change_dt_2_int(convert_int_to_datetime(min_datetime) - datetime.timedelta(minutes=90), frequency)
+                     _df_nan_data = get_kline_time_by_frequency_array(frequency, query_date, bussiness_type)
+                     if not include:
+@@ -1357,4 +1356,6 @@ def get_price_common(symbols, start_date=None, end_date=None, frequency=Frequenc
+             strategy_log.error('count不能小于等于0')
+             return None
++        else:
++            pass
+     elif count is not None:
+         strategy_log.error('start_date, count只能支持一个有效参数')
+diff --git a/site-packages/IQData/api/api_baseOK.py b/site-packages/IQData/api/api_baseOK.py
+index 93805649..26397bbe 100644
+--- a/site-packages/IQData/api/api_baseOK.py
++++ b/site-packages/IQData/api/api_baseOK.py
+@@ -316,9 +316,7 @@ def get_history_df(symbol, count, query_date, frequency=Frequency.DAILY.value, f
+                 if am_close_market_datetime < tmp_end_datetime <= pm_open_market_datetime:
+                     tmp_end_datetime = am_close_market_datetime
+-                    if include:
+-                        min_count -= 1
+-                    else:
+-                        min_datetime = change_dt_2_int(convert_int_to_datetime(tmp_end_datetime) - datetime.timedelta(minutes=min_count), frequency)
+-                if min_datetime <= pm_open_market_datetime:
++                min_count -= 1
++                min_datetime = change_dt_2_int(convert_int_to_datetime(tmp_end_datetime) - datetime.timedelta(minutes=min_count), frequency)
++                if tmp_end_datetime > pm_open_market_datetime and min_datetime <= pm_open_market_datetime:
+                     min_datetime = change_dt_2_int(convert_int_to_datetime(min_datetime) - datetime.timedelta(minutes=90), frequency)
+             elif int(frequency[:-1]) >= 5:
+diff --git a/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_tradeOK.py b/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_tradeOK.py
+index 4ae9b2bf..56c9e509 100644
+--- a/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_tradeOK.py
++++ b/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_tradeOK.py
+@@ -71,4 +71,6 @@ def order_market(security, amount, market_type=None, limit_price=None):
+                     strategy_log.error('市价委托上证科创板股票时市价类型仅支持0、1、2、4类型，委托取消')
+                     return None
++                else:
++                    pass
+             else:
+                 if limit_price is None:
+diff --git a/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py b/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py
+index 7853dc71..356d70fb 100644
+--- a/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py
++++ b/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py
+@@ -1679,7 +1679,11 @@ class TradeLiveBroker(AbstractBroker, AbstractPersistable):
+                                 strategy_log.error('市价委托上证科创板股票时市价类型仅支持0、1、2、4类型，委托取消')
+                                 return None
++                            else:
++                                pass
+                         elif market_type not in (1, 4):
+                             strategy_log.error('市价委托上证非科创板股票时市价类型仅支持1、4类型，委托取消')
+                             return None
++                        else:
++                            pass
+                     elif limit_price is None:
+                         strategy_log.error('市价委托上证股票时保护限价limit_price为必传字段，委托取消')
+diff --git a/site-packages/fly/data/quoteOK.py b/site-packages/fly/data/quoteOK.py
+index c4ebd941..bc20126c 100644
+--- a/site-packages/fly/data/quoteOK.py
++++ b/site-packages/fly/data/quoteOK.py
+@@ -911,6 +911,5 @@ class Quote:
+         if 11 >= len(s) >= 9:
+             self.trade_log.error('请输入正确的标的代码')
+-        else:
+-            assert 11 >= len(s) >= 9, '请输入正确的标的代码'
++        assert 11 >= len(s) >= 9, '请输入正确的标的代码'
+         if s.split('.')[1] not in ('SS', 'SZ', 'CCFX', 'XDCE', 'XSGE', 'XZCE', 'XBHS'):
+             self.trade_log.error("请输入标的代码以'SS','SZ','CCFX','XDCE','XSGE','XZCE'结尾")

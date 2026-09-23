@@ -1,0 +1,5 @@
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc  gained=[] lost=[]
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc  gained=[] lost=[]
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc  gained=[] lost=[]
+TALLY SAME=541 IMPROVED=0 REGRESSION=0 MOVED=3 ERR=0  (unpaired lists=0)
+files fully matched: a=484 b=484

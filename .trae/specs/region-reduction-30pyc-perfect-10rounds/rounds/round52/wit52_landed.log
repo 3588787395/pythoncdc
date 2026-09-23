@@ -1,0 +1,16 @@
+core = F:\Downloads\pythoncdc-main\core
+r51a_01                    MATCH     
+r51a_02                    MATCH     
+r51a_03                    MATCH     
+r51a_04                    MISMATCH  <module>.f seq_len orig=32 decomp=31
+r51a_05                    MATCH     
+r51a_06                    MATCH     
+r51a_07                    MATCH     
+r51b_01                    MATCH     
+r51b_02                    MATCH     
+r51b_03                    MATCH     
+r51b_04                    MATCH     
+r51b_05                    MATCH     
+r51b_06                    MISMATCH  <module>.f seq_len orig=33 decomp=32
+r51b_07                    MATCH     
+battery landed: MISMATCH=2 MATCH=12 ERROR=0 of 14

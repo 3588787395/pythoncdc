@@ -1,0 +1,76 @@
+[
+ {
+  "w": "r51a_01",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r51a_02",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r51a_03",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r51a_04",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.f seq_len orig=32 decomp=31"
+  ]
+ },
+ {
+  "w": "r51a_05",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r51a_06",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r51a_07",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r51b_01",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r51b_02",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r51b_03",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r51b_04",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r51b_05",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r51b_06",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.f seq_len orig=33 decomp=32"
+  ]
+ },
+ {
+  "w": "r51b_07",
+  "verdict": "MATCH",
+  "detail": []
+ }
+]

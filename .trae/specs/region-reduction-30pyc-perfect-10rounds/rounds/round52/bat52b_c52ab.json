@@ -1,0 +1,64 @@
+[
+ {
+  "w": "r52b_01_join_after_chain",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r52b_02_real_else_control",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r52b_03_chain_then_elif",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r52b_04_negated_chain",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r52b_05_value_context_sibling",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r52b_06_chain_in_loop_body",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r52b_07_multi_statement_join",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r52b_08_two_chains_sequential",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r52b_09_chain_inside_or",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w seq_len orig=18 decomp=20"
+  ]
+ },
+ {
+  "w": "r52b_10_chain_in_try",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r52b_11_chain_then_fallout",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r52b_12_four_operand_chain",
+  "verdict": "MATCH",
+  "detail": []
+ }
+]
