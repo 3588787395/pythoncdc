@@ -1,0 +1,76 @@
+[
+ {
+  "w": "r53_01_chain_or_operand",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w seq_len orig=18 decomp=20"
+  ]
+ },
+ {
+  "w": "r53_02_chain_and_operand",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r53_03_operand_or_chain",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w target_diff #2 POP_JUMP_IF_TRUE 终点 orig=('2', 'LOAD_CONST') decomp=(\"'x'\", 'LOAD_FAST')"
+  ]
+ },
+ {
+  "w": "r53_04_operand_and_chain",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r53_05_chain_or_chain",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w seq_len orig=28 decomp=30"
+  ]
+ },
+ {
+  "w": "r53_06_chain_and_compare",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r53_07_neg_chain_or_operand",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w target_diff #9 POP_JUMP_IF_FALSE 终点 orig=('2', 'LOAD_CONST') decomp=(\"'x'\", 'LOAD_FAST')"
+  ]
+ },
+ {
+  "w": "r53_08_chain_or_with_real_else",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r53_09_chain_or_in_loop",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w seq_len orig=31 decomp=32"
+  ]
+ },
+ {
+  "w": "r53_10_nested_if_control",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r53_11_nested_if_else_control",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w seq_len orig=22 decomp=25"
+  ]
+ },
+ {
+  "w": "r53_12_chain_or_then_sibling",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w seq_len orig=20 decomp=22"
+  ]
+ }
+]

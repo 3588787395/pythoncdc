@@ -1,0 +1,25 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "                op_type = 'and' if 'FALSE' in last.opname else 'or'\n            chain.append((current, op_type))",
+   "repl": "                op_type = 'and' if 'FALSE' in last.opname else 'or'\n            chain.append((current, op_type))\n            print('[R53 append] start=%s cur=%s term=%s->%s op=%s chain=%s' % (\n                start_block.start_offset, current.start_offset, last.opname, last.argval,\n                op_type, [(b.start_offset, o) for b, o in chain]))"
+  },
+  {
+   "anchor": "                    if not _normal_or and not _not_or_chain and (not _equivalent_exits or _is_scenario_b_ternary):\n                        chain.pop()\n                        break",
+   "repl": "                    if not _normal_or and not _not_or_chain and (not _equivalent_exits or _is_scenario_b_ternary):\n                        print('[R53 POP] start=%s chain=%s op=%s prev=%s firstJT=%s curJT=%s eq=%s sbt=%s normOR=%s notOR=%s' % (\n                            start_block.start_offset, [(b.start_offset, o) for b, o in chain],\n                            op_type, prev_op,\n                            None if first_jump_target is None else first_jump_target.start_offset,\n                            None if cur_jump_target is None else cur_jump_target.start_offset,\n                            _equivalent_exits, _is_scenario_b_ternary, _normal_or, _not_or_chain))\n                        chain.pop()\n                        break"
+  },
+  {
+   "anchor": "                if len(_w14_kept) >= 2:\n                    chain = _w14_kept\n                else:\n                    return None",
+   "repl": "                print('[R53 TRIM?] start=%s chain=%s t0=%s lastFT=%s kept=%s' % (\n                    start_block.start_offset, [(b.start_offset, o) for b, o in chain],\n                    None if _w14_t0 is None else _w14_t0.start_offset,\n                    None if _w14_last_ft is None else _w14_last_ft.start_offset,\n                    [(b.start_offset, o) for b, o in _w14_kept]))\n                if len(_w14_kept) >= 2:\n                    chain = _w14_kept\n                else:\n                    return None"
+  },
+  {
+   "anchor": "            if not _w14_all_true_jump:\n                chain = [(_w14_blk, 'and') for _w14_blk, _ in chain]",
+   "repl": "            if not _w14_all_true_jump:\n                chain = [(_w14_blk, 'and') for _w14_blk, _ in chain]\n            print('[R53 UNIFORM->and] start=%s chain=%s' % (\n                start_block.start_offset, [(b.start_offset, o) for b, o in chain]))"
+  },
+  {
+   "anchor": "            chain = self._detect_boolop_conditional_chain(block, claimed, skip_claimed_check=_skip_claimed)\n            if chain is None or len(chain) < 1:",
+   "repl": "            chain = self._detect_boolop_conditional_chain(block, claimed, skip_claimed_check=_skip_claimed)\n            print('[R53 RESULT] start=%s -> %s' % (block.start_offset,\n                None if chain is None else [(b.start_offset, o) for b, o in chain]))\n            if chain is None or len(chain) < 1:"
+  }
+ ]
+}

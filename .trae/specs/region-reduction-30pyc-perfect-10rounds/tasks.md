@@ -2370,3 +2370,61 @@
           归档 `rounds/round52/`（OUTCOME.md + `wit52/` 14 支 + `wit52b/` 12 支 + 两臂 spec/生成脚本 +
           G0/G1/G2′/G3/G4/G4′/G5/G6/G7 日志与 jsonl + 产物 diff）。起始 HEAD `bc134e10`（Round 50 记录），
           落地前 `git status --porcelain core/ pycdc.py` 为空。
+  - [x] SubTask 53.1: 测试工程师——先用带打印镜像核 `mirr_diag53` 取证再定靶：靶
+          `site-packages/IQCommon/api/klinedata.pyc :: <module>._all_bars_of_cache
+          [target_diff] #24` 一族，实测地面真相是**布尔运算重新结合**
+          （源码 `A or (B and C)` 被发成 `(A or B) and C`）。复现体两批共 22 支：
+          `wit53b/` 10 支（`or/and` 混合链族，落地前 `MISMATCH=6 MATCH=4`）与 `wit53/`
+          12 支（链嵌 boolop 归属族，`MISMATCH=7 MATCH=5`）。逐指令证据：`r53_13` 的
+          `0 POP_JUMP_FORWARD_IF_TRUE to 38`（A 真 → 臂体）与 `14/26 POP_JUMP_FORWARD_IF_FALSE
+          to 42`（B、C 同段 → 出口）被链检测弹出末元 ⇒ 父 `IfRegion` 把 26 当成第二个条件块。
+  - [x] SubTask 53.2: 语料普查否证（先量再改）——`wit53/` 那批的形状（if 条件块的 fall-through
+          后继本身是 `BoolOpRegion` 成员）在 27 支 partial 文件的 **1123 个 code object 上 0 命中**
+          （检测逻辑在 `r53_01` 上验证过可命中，故 0 是真实结论）⇒ 该族只有合成证据、不进入本轮
+          判据；改打有真实命中的重新结合族（G0 15 靶内 4 支：`klinedata` 3 + `scheduler` 1；
+          G1/G2′ 内另有 2 支：`replace_utils :: log_request`、`strategy :: tick_publish_thread`
+          ⇒ 与 G4′ 的 `fixed=6` 同一集合）。
+  - [x] SubTask 53.3: 修复工程师——落地 **R53-A**（`core/cfg/region_analyzer.py ::
+          _detect_boolop_conditional_chain` 运算元出口一致性检验的弹出站点，`25231-25262`，
+          单 hunk +32/−1、净 +31 行）：原检验拿链末元短路目标与 `chain[0]` 的短路目标比，
+          而 `chain[0]` 属**另一个运算段**——CPython 把前一段的短路边射进后一段入口（`or` 首元
+          的 TRUE 目标就是臂体），跨段比较必然不等。补「同运算段出口一致」豁免：自 `chain[-2]`
+          沿同标签回溯得末段头块，若末段头短路目标 `is` 当前运算元短路目标 ⇒ 当前块是本段真成员，
+          链保留；否则仍弹出交父 `IfRegion`（原则 2「每块唯一归属」、原则 3「嵌套即抽象节点」）。
+          只读区域标签与块的后继关系，不读名字/常量/偏移/指令数；未命中逐字节不变。
+  - [x] SubTask 53.4: 门禁（候选臂与落地核双跑，严格串行）——G0 15 靶 strict 合计
+          `747/841 → 751/841`（`klinedata 53/63→56/63`、`scheduler 46/52→47/52`，其余 13 靶逐字
+          不变）、`wit53b` 电池 `6/4 → 4/6`（`r53_13`、`r53_21` 转正）、`wit53` 电池两臂 `7/12` 不变；
+          G1 `SAME=16 REGRESSION=0 MOVED=1`；G2′ 143 `SAME=142 MOVED=1`；G3 109 `SAME=108 MOVED=1`；
+          G4 全量 544 `TALLY SAME=538 IMPROVED=0 REGRESSION=0 MOVED=6 ERR=0`、
+          `files fully matched 485 → 485`；G4′ 6 支逐 code object `fixed=6 broken=0 changed=1`
+          （strict ok `klinedata 53→56`、`jq_trans_module 61→61`、`replace_utils 7→8`、
+          `strategy 25→26`、`scheduler 46→47`、`market_time 9→9` ⇒ `201 → 207`）。
+  - [x] SubTask 53.5: 落地与收口——`land53.py` 先在内存应用 spec（锚点 `count==1`）并与通过门禁的
+          臂 `mirr_c53a/core/cfg/region_analyzer.py` **逐字节相同**后才写盘；G5 落地核重跑 6 支受影响
+          pyc ⇒ 产物与臂产物 6/6 逐字节相同、金丝雀 `fly/data/quotation.pyc` 官方 `143/143`／
+          strict `148/150` 逐字不变、`test_repros/round16_sink` `15/15 MATCH`；G6
+          `batch --index pyc_index.json --all --round 53` 402 verified / 0 failed，全量重跑后仅
+          6 支 `*OK.py` 变化（＝ G4 的 MOVED 集合，无手改产物），`pyc_index.json` 值域零变化
+          （`git diff -U0` 非 `last_tested_round` 行数 = 0，仅 402 条轮次戳 `52→53`，仍纯 CRLF 4553 行）；
+          字节面 `region_analyzer 66553c66939e9e9242f4 → b10ee76b55754f09e945`（1 689 673 →
+          1 691 897 B，CRLF 27 148 → 27 179、裸 LF 0、无 BOM），`region_ast_generator` 逐字节未动
+          （`c36cf1fe7dad68377c80`）；G7 `stats` 逐字 `total_pyc 402 / verified 402 / ok_pyc 375 /
+          partial_pyc 27 / failed_pyc 0 / total_functions 5746 / matched_functions 5667 /
+          cumulative_match_rate 98.63%` —— **本轮官方尺零位移**，收益全在 strict 尺（+6 函数逐条
+          字节一致），按两把尺子口径不入任何率值。
+  - [x] SubTask 53.6: 否证与移交——**R53-B 否证**：给 R53-A 加「链只允许 1 个运算段边界」可表性
+          合取（`_r53_boundaries <= 1`）后 `scheduler :: run_weekly` 的真修复被撤回（FIXED→无）而
+          `market_time :: is_open` 的 `+2` 依旧，`mirr_c53b` 与 `mirr_c53a` 在该文件产物逐字节相同
+          ⇒ 判别式不是段边界数，该合取不上线。**移交 Round 54 线 A**：`fly/common/market_time.pyc ::
+          is_open` dis 地面真值是 `(A and B) or (C and D)`（`184 IF_FALSE->210`、`208 IF_TRUE->258`、
+          `232/256 IF_FALSE->316`），检测器并非从 A 进入——A 被父 `IfRegion` 占为条件，子链自 B 起呈
+          `B or (C and D)` 二段形故命中 R53-A；保留 D 后 strict 缺陷从 `target_diff #27`（等长、错结合）
+          变为 `seq_len orig=67 decomp=69`（结合正确、但函数尾 `return False` 被 sink 逻辑折成
+          `else:`），strict ok `9/10` 与官方 `10/10` 均不变 ⇒ 开证点在发射侧「链汇合块逃出所在臂」。
+          同族余支：`r53_14_and_or_return +2`、`r53_16_or_and_while −2`、`r53_17_neg_or_and +2`、
+          `r53_22_or_and_in_loop +1`；Round 50 三元链 kwarg 线（`order_api :: future_order 101/93`、
+          `option_order 83/74`、`base_order [target_diff] #136`）仍未动。归档 `rounds/round53/`
+          （OUTCOME.md + `wit53/` 12 支 + `wit53b/` 10 支 + 三臂 spec/生成脚本 +
+          G0/G1/G2′/G3/G4/G4′/G5/G6/G7 日志与 jsonl + 6 支产物 diff）。起始 HEAD `7cbae7d2`
+          （Round 52 记录），落地前 `git status --porcelain core/ pycdc.py` 为空。

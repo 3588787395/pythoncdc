@@ -1,0 +1,50 @@
+--- before/IQCommon__api__klinedataOK.py
++++ r53a/IQCommon__api__klinedataOK.py
+@@ -167,5 +167,5 @@
+     end_date = str(end_time)[0:8]
+-    if (start_date > end_date or start_date < '20050101') and end_date < '20050101':
++    if start_date > end_date or start_date < '20050101' and end_date < '20050101':
+         return np.array([], dtype=LIST_DTYPE)
+-    if start_date < '20050101' <= end_date:
++    elif start_date < '20050101' <= end_date:
+         start_date = '20050101'
+@@ -520,7 +520,6 @@
+         dividends_stock = []
+-        if fq is not None and dividends_all is not None and isinstance(fields, str) and fields not in tmp_fields or isinstance(fields, list):
+-            if len(set(fields).intersection(set(tmp_fields))) == 0:
+-                need_exrights = 0
+-            elif fq in DIVIDEND_CALC_TYPE:
+-                dividends_stock = dividends_all.keys()
++        if fq is None or dividends_all is None or isinstance(fields, str) and fields not in tmp_fields or isinstance(fields, list) and len(set(fields).intersection(set(tmp_fields))) == 0:
++            need_exrights = 0
++        elif fq in DIVIDEND_CALC_TYPE:
++            dividends_stock = dividends_all.keys()
+         for symbol in symbols:
+@@ -746,8 +745,7 @@
+             tmp_fields = CAL_EXRIGHTS_COLUMNS
+-            if fq is not None and dividends_all is not None and isinstance(fields, str) and fields not in tmp_fields or isinstance(fields, list):
+-                if len(set(fields).intersection(set(tmp_fields))) == 0:
+-                    need_exrights = 0
+-                elif fq in DIVIDEND_CALC_TYPE:
+-                    dividends_stock = dividends_all.keys()
+-                    need_exrights = 1
++            if fq is None or dividends_all is None or isinstance(fields, str) and fields not in tmp_fields or isinstance(fields, list) and len(set(fields).intersection(set(tmp_fields))) == 0:
++                need_exrights = 0
++            elif fq in DIVIDEND_CALC_TYPE:
++                dividends_stock = dividends_all.keys()
++                need_exrights = 1
+             start_000300, end_000300 = get_benchmark_datetime(count, fix_query_date, frequency, fields, include, execution_date)
+@@ -835,8 +833,7 @@
+         tmp_fields = CAL_EXRIGHTS_COLUMNS
+-        if fq is not None and dividends_all is not None and isinstance(fields, str) and fields not in tmp_fields or isinstance(fields, list):
+-            if len(set(fields).intersection(set(tmp_fields))) == 0:
+-                need_exrights = 0
+-            elif fq in DIVIDEND_CALC_TYPE:
+-                dividends_stock = dividends_all.keys()
+-                need_exrights = 1
++        if fq is None or dividends_all is None or isinstance(fields, str) and fields not in tmp_fields or isinstance(fields, list) and len(set(fields).intersection(set(tmp_fields))) == 0:
++            need_exrights = 0
++        elif fq in DIVIDEND_CALC_TYPE:
++            dividends_stock = dividends_all.keys()
++            need_exrights = 1
+         for symbol in symbols:

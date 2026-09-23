@@ -1,0 +1,89 @@
+{
+ "fixed": 6,
+ "broken": 0,
+ "changed": 1,
+ "rows": [
+  {
+   "path": "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\klinedata.pyc",
+   "ok_head": 53,
+   "ok_cand": 56,
+   "total": 63,
+   "diff": [
+    [
+     "<module>._all_bars_of_cache",
+     "target_diff #24 POP_JUMP_IF_TRUE 终点 orig=(\"'np'\", 'LOAD_GLOBAL') decomp=(\"'end_date'\", 'LOAD_FAST')",
+     "ok"
+    ],
+    [
+     "<module>.get_kline_by_date_new",
+     "target_diff #36 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=(\"'isinstance'\", 'LOAD_GLOBAL')",
+     "ok"
+    ],
+    [
+     "<module>.get_multiminute_his_data_by_date",
+     "target_diff #272 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=(\"'isinstance'\", 'LOAD_GLOBAL')",
+     "ok"
+    ]
+   ]
+  },
+  {
+   "path": "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\strategy\\jq_trans_module.pyc",
+   "ok_head": 61,
+   "ok_cand": 61,
+   "total": 63,
+   "diff": []
+  },
+  {
+   "path": "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\util\\replace_utils.pyc",
+   "ok_head": 7,
+   "ok_cand": 8,
+   "total": 9,
+   "diff": [
+    [
+     "<module>.log_request",
+     "target_diff #11 POP_JUMP_IF_TRUE 终点 orig=(\"'logging'\", 'LOAD_GLOBAL') decomp=(\"'isinstance'\", 'LOAD_GLOBAL')",
+     "ok"
+    ]
+   ]
+  },
+  {
+   "path": "F:\\Downloads\\pythoncdc-main\\site-packages\\IQEngine\\plugins\\plugin_fly_data\\strategy\\strategy.pyc",
+   "ok_head": 25,
+   "ok_cand": 26,
+   "total": 27,
+   "diff": [
+    [
+     "<module>.Strategy.tick_publish_thread",
+     "target_diff #44 POP_JUMP_IF_TRUE 终点 orig=(\"'system_log'\", 'LOAD_GLOBAL') decomp=(\"'current_dt'\", 'LOAD_FAST')",
+     "ok"
+    ]
+   ]
+  },
+  {
+   "path": "F:\\Downloads\\pythoncdc-main\\site-packages\\IQEngine\\utils\\scheduler.pyc",
+   "ok_head": 46,
+   "ok_cand": 47,
+   "total": 52,
+   "diff": [
+    [
+     "<module>.Scheduler.run_weekly",
+     "target_diff #14 POP_JUMP_IF_NOT_NONE 终点 orig=(\"'strategy_log'\", 'LOAD_GLOBAL') decomp=(\"'weekday'\", 'LOAD_FAST')",
+     "ok"
+    ]
+   ]
+  },
+  {
+   "path": "F:\\Downloads\\pythoncdc-main\\site-packages\\fly\\common\\market_time.pyc",
+   "ok_head": 9,
+   "ok_cand": 9,
+   "total": 10,
+   "diff": [
+    [
+     "<module>.MarketTime.is_open",
+     "target_diff #27 POP_JUMP_IF_FALSE 终点 orig=(\"'current_dt'\", 'LOAD_FAST') decomp=('False', 'LOAD_CONST')",
+     "seq_len orig=67 decomp=69"
+    ]
+   ]
+  }
+ ]
+}

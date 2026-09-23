@@ -1,0 +1,38 @@
+--- before/IQCommon__strategy__jq_trans_moduleOK.py
++++ r53a/IQCommon__strategy__jq_trans_moduleOK.py
+@@ -249,10 +249,9 @@
+             count_tmp = position_params_info.split(',')[1]
+-            if ')' not in stock_tmp or '[' in stock_tmp:
+-                if ']' not in stock_tmp:
+-                    count = position_params_info.split(',')[-1]
+-                    stock = position_params_info.replace(count, '')
+-                    stock = stock[:-1]
+-                else:
+-                    stock = stock_tmp
+-                    count = count_tmp
++            if ')' not in stock_tmp or '[' in stock_tmp and ']' not in stock_tmp:
++                count = position_params_info.split(',')[-1]
++                stock = position_params_info.replace(count, '')
++                stock = stock[:-1]
++            else:
++                stock = stock_tmp
++                count = count_tmp
+         new_args = []
+@@ -317,10 +316,9 @@
+             count_tmp = position_params_info.split(',')[1]
+-            if ')' not in stock_tmp or '[' in stock_tmp:
+-                if ']' not in stock_tmp:
+-                    count = position_params_info.split(',')[-1]
+-                    stock = position_params_info.replace(count, '')
+-                    stock = stock[:-1]
+-                else:
+-                    stock = stock_tmp
+-                    count = count_tmp
++            if ')' not in stock_tmp or '[' in stock_tmp and ']' not in stock_tmp:
++                count = position_params_info.split(',')[-1]
++                stock = position_params_info.replace(count, '')
++                stock = stock[:-1]
++            else:
++                stock = stock_tmp
++                count = count_tmp
+         new_args = []

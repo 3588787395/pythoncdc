@@ -1,0 +1,85 @@
+[
+ {
+  "w": "r16s_01_anchor_plugin_manager_shape",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r16s_02_anchor_module_scope",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r16s_03_anchor_no_boolop",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r16s_04_anchor_minimal_two_arm_loop",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r16s_05_anchor_while_instead_of_for",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r16s_06_neg_nested_if_no_tail",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r16s_07_neg_tail_after_chain",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r16s_08_neg_no_enclosing_loop",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r16s_09_neg_nested_if_in_then_arm",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r16s_10_anchor_tail_with_control_exit",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r16s_11_anchor_deep_outer_chain",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r16s_12_neg_no_statement_after_chain",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r16s_13_probe_tail_with_try_except",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r16s_14_unconf_sink_arm_then_return",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r16s_15_anchor_class_method_scope",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "run_all",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.main seq_len orig=288 decomp=281",
+   "<module>.run_one seq_len orig=236 decomp=228"
+  ]
+ }
+]

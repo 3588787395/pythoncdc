@@ -1,0 +1,14 @@
+{
+ "targets": [
+  {
+   "path": "IQCommon/util/replace_utils.pyc",
+   "strict_matched": 7,
+   "total": 9,
+   "defects": [
+    "<module>.decrypt_database_url [seq_len] orig=295 decomp=324",
+    "<module>.log_request [target_diff] #11 POP_JUMP_IF_TRUE 终点 orig=(\"'logging'\", 'LOAD_GLOBAL') decomp=(\"'isinstance'\", 'LOAD_GLOBAL')"
+   ]
+  }
+ ],
+ "battery": []
+}

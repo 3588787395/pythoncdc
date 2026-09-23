@@ -1,0 +1,64 @@
+[
+ {
+  "w": "r53_13_or_and_return",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w target_diff #4 POP_JUMP_IF_TRUE 终点 orig=('1', 'LOAD_CONST') decomp=(\"'b'\", 'LOAD_FAST')"
+  ]
+ },
+ {
+  "w": "r53_14_and_or_return",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w seq_len orig=17 decomp=19"
+  ]
+ },
+ {
+  "w": "r53_15_or_and_or",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r53_16_or_and_while",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w seq_len orig=38 decomp=36"
+  ]
+ },
+ {
+  "w": "r53_17_neg_or_and",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w seq_len orig=17 decomp=19"
+  ]
+ },
+ {
+  "w": "r53_18_paren_or_and_control",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r53_19_and_paren_or_control",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r53_20_or_and_assignment",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r53_21_or_and_elif",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w target_diff #13 POP_JUMP_IF_TRUE 终点 orig=('1', 'LOAD_CONST') decomp=(\"'b'\", 'LOAD_FAST')"
+  ]
+ },
+ {
+  "w": "r53_22_or_and_in_loop",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w seq_len orig=33 decomp=34"
+  ]
+ }
+]

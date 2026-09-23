@@ -25228,7 +25228,38 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                     _ft_next = next(iter(_ft_walk.successors))
                             _ft_walk = _ft_next
                             _walk_count += 1
-                    if not _normal_or and not _not_or_chain and (not _equivalent_exits or _is_scenario_b_ternary):
+                    # [R53-A] Same-operator-run exit consistency. This test compares the
+                    # tail operand's short-circuit target with chain[0]'s, but in
+                    # `A or (B and C)` / `A and (B or C)` chain[0] belongs to a
+                    # DIFFERENT operator run: CPython routes A's short-circuit to
+                    # the other run's entry (for an 'or' head, straight into the
+                    # body), while every operand of one run jumps to that run's
+                    # own shared exit (B and C are both POP_JUMP_IF_FALSE -> exit).
+                    # So the cross-run comparison is not evidence of a swallowed
+                    # nested-if condition. Region-reduction principle 2 (a block
+                    # has exactly one owner at this level) says the discriminator
+                    # is the run the tail operand actually reduces against: if the
+                    # head of the maximal same-operator run holding `current`
+                    # shares `current`'s exit target, `current` is a genuine
+                    # operand of that run and the chain must be preserved; only
+                    # when it differs is the tail an outer/nested condition block
+                    # that belongs to the parent IfRegion.
+                    _r53_run_head = None
+                    _r53_rh_i = len(chain) - 2
+                    while _r53_rh_i >= 0 and chain[_r53_rh_i][1] == op_type:
+                        _r53_run_head = chain[_r53_rh_i][0]
+                        _r53_rh_i -= 1
+                    _r53_run_head_jt = None
+                    if _r53_run_head is not None:
+                        _r53_rh_last = _r53_run_head.get_last_instruction()
+                        if (_r53_rh_last is not None
+                                and getattr(_r53_rh_last, 'argval', None) is not None):
+                            _r53_run_head_jt = self.cfg.get_block_by_offset(_r53_rh_last.argval)
+                    _r53_same_run_exit = (_r53_run_head_jt is not None
+                                           and _r53_run_head_jt is cur_jump_target)
+                    if (not _normal_or and not _not_or_chain
+                            and (not _equivalent_exits or _is_scenario_b_ternary)
+                            and not _r53_same_run_exit):
                         chain.pop()
                         break
             # [Round 2 修复] await 作为后续操作数：`x or await g()` 中第一个

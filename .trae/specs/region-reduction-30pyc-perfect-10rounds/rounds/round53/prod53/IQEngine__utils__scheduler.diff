@@ -1,0 +1,10 @@
+--- before/IQEngine__utils__schedulerOK.py
++++ r53a/IQEngine__utils__schedulerOK.py
+@@ -210,5 +210,4 @@
+         minute_time = self.get_checked_time(minute_time)
+-        if weekday is not None and tradingday is None:
+-            if weekday is None and tradingday is None:
+-                strategy_log.error(user_exc(ValueError(_('weekday/tradingday至少传一个'))))
++        if weekday is not None and tradingday is not None or weekday is None and tradingday is None:
++            strategy_log.error(user_exc(ValueError(_('weekday/tradingday至少传一个'))))
+         if weekday is not None:

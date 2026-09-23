@@ -1,0 +1,13 @@
+{
+ "targets": [
+  {
+   "path": "IQCommon/util/replace_utils.pyc",
+   "strict_matched": 8,
+   "total": 9,
+   "defects": [
+    "<module>.decrypt_database_url [seq_len] orig=295 decomp=324"
+   ]
+  }
+ ],
+ "battery": []
+}

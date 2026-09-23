@@ -1,0 +1,13 @@
+--- before/IQEngine__plugins__plugin_fly_data__strategy__strategyOK.py
++++ r53a/IQEngine__plugins__plugin_fly_data__strategy__strategyOK.py
+@@ -180,6 +180,6 @@
+                         continue
+-                    elif (current_dt - dt).seconds > 3 or (current_dt - dt).seconds == 3:
+-                        if (current_dt - dt).microseconds > 0:
+-                            system_log.debug(f'当前系统时间[{current_dt!s}]与事件时间[{dt!s}]超过3s，无法触发，获取下一个事件')
+-                            continue
++                    elif (current_dt - dt).seconds > 3 or (current_dt - dt).seconds == 3 and (current_dt - dt).microseconds > 0:
++                        system_log.debug(f'当前系统时间[{current_dt!s}]与事件时间[{dt!s}]超过3s，无法触发，获取下一个事件')
++                        continue
++                    else:
+                         event = Event(tick_event_type, calendar_dt=dt, trading_dt=dt)

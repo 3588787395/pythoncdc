@@ -1,0 +1,22 @@
+--- before/IQCommon__util__replace_utilsOK.py
++++ r53a/IQCommon__util__replace_utilsOK.py
+@@ -23,11 +23,10 @@
+     request = handler.request
+-    if status == 304 or status < 300:
+-        if isinstance(handler, (StaticFileHandler, HealthCheckHandler)):
+-            log_level = logging.DEBUG
+-        elif status < 400:
+-            log_level = logging.INFO
+-        elif status < 500:
+-            log_level = logging.WARNING
+-        else:
+-            log_level = logging.ERROR
++    if status == 304 or status < 300 and isinstance(handler, (StaticFileHandler, HealthCheckHandler)):
++        log_level = logging.DEBUG
++    elif status < 400:
++        log_level = logging.INFO
++    elif status < 500:
++        log_level = logging.WARNING
++    else:
++        log_level = logging.ERROR
+     uri = _scrub_uri(request.uri)
