@@ -1,0 +1,123 @@
+====================================================================================================
+### main :: <module>.api_get_from_zeromq        (F:\Downloads\pythoncdc-main\site-packages\IQCommon\common\main.pyc)
+  strict: target_diff #101 JUMP 终点 orig=("'_connect'", 'LOAD_FAST') decomp=("'first_address'", 'LOAD_FAST') (defect=True)  orig-filtered-len=213 decomp-filtered-len=213
+    --- ORIGINAL pyc (idx first divergence=101) ---
+      89   458  LOAD_FAST                      _get_socket_message      
+      90   460  LOAD_FAST                      params                   
+      91   462  LOAD_FAST                      address                  
+      92   464  LOAD_FAST                      context                  
+      93   466  LOAD_FAST                      socket                   
+      94   472  CALL                                                    
+      95   482  UNPACK_SEQUENCE                                         
+      96   486  STORE_FAST                     message                  
+      97   488  STORE_FAST                     context                  
+      98   490  STORE_FAST                     socket                   
+      99   492  LOAD_CONST                     True                     
+     100   494  STORE_FAST                     _connect                 
+     101   496  JUMP_FORWARD                   to 636                   JUMP->off=636 land=(636, 'LOAD_FAST', '_connect')
+     102   498  PUSH_EXC_INFO                                           
+     103   500  LOAD_GLOBAL                    BaseException            
+     104   512  CHECK_EXC_MATCH                                         
+     105   514  POP_JUMP_FORWARD_IF_FALSE      to 616                   JUMP->off=616 land=(616, 'RERAISE', '')
+     106   516  POP_TOP                                                 
+     107   518  PUSH_NULL                                               
+     108   520  LOAD_FAST                      user_log                 
+     109   522  LOAD_ATTR                      error                    
+     110   532  LOAD_CONST                     'zeromq与服务端'             
+     111   534  LOAD_FAST                      address                  
+     112   536  FORMAT_VALUE                   str                      
+     113   538  LOAD_CONST                     '建立链接失败，错误信息：'           
+     114   540  LOAD_GLOBAL                    NULL + get_traceback_message 
+     115   556  CALL                                                    
+     116   566  FORMAT_VALUE                   str                      
+     117   568  BUILD_STRING                                            
+    --- RECOMPILED FROM PRODUCT (same window) ---
+      89   458  LOAD_FAST                      _get_socket_message      
+      90   460  LOAD_FAST                      params                   
+      91   462  LOAD_FAST                      address                  
+      92   464  LOAD_FAST                      context                  
+      93   466  LOAD_FAST                      socket                   
+      94   472  CALL                                                    
+      95   482  UNPACK_SEQUENCE                                         
+      96   486  STORE_FAST                     message                  
+      97   488  STORE_FAST                     context                  
+      98   490  STORE_FAST                     socket                   
+      99   492  LOAD_CONST                     True                     
+     100   494  STORE_FAST                     _connect                 
+     101   496  JUMP_FORWARD                   to 624                   JUMP->off=624 land=(624, 'LOAD_FAST', 'first_address')
+     102   498  PUSH_EXC_INFO                                           
+     103   500  LOAD_GLOBAL                    BaseException            
+     104   512  CHECK_EXC_MATCH                                         
+     105   514  POP_JUMP_FORWARD_IF_FALSE      to 616                   JUMP->off=616 land=(616, 'RERAISE', '')
+     106   516  POP_TOP                                                 
+     107   518  PUSH_NULL                                               
+     108   520  LOAD_FAST                      user_log                 
+     109   522  LOAD_ATTR                      error                    
+     110   532  LOAD_CONST                     'zeromq与服务端'             
+     111   534  LOAD_FAST                      address                  
+     112   536  FORMAT_VALUE                   str                      
+     113   538  LOAD_CONST                     '建立链接失败，错误信息：'           
+     114   540  LOAD_GLOBAL                    NULL + get_traceback_message 
+     115   556  CALL                                                    
+     116   566  FORMAT_VALUE                   str                      
+     117   568  BUILD_STRING                                            
+  ALL DIVERGENCES (1):
+    #101  target_diff off=496   orig JUMP_FORWARD                   to 636         tgt=636    land=(636, 'LOAD_FAST', '_connect')  ||  decomp JUMP_FORWARD                   to 624         tgt=624    land=(624, 'LOAD_FAST', 'first_address')
+    orig@#101: off=496 JUMP_FORWARD to 636  jump=True target_off=636 landed=(636, 'LOAD_FAST', '_connect')
+    decomp@#101: off=496 JUMP_FORWARD to 624  jump=True target_off=624 landed=(624, 'LOAD_FAST', 'first_address')
+  ---- emitted source in mainOK.py ----
+  56| def api_get_from_zeromq(params, individual=False, user_log=None):
+  57|     def _get_params_address(next_address=False, _user_log=None):
+  58|         address = _get_valid_address(StockREPAddress, _next_address=next_address)
+  59|         return address
+  60|     def _get_socket_message(params, address, context=None, socket=None, init=False):
+  61|         if context is None:
+  62|             context = zmq.Context()
+  63|         if socket is None:
+  64|             socket = context.socket(zmq.REQ)
+  65|             socket.setsockopt(zmq.LINGER, 0)
+  66|             socket.setsockopt(zmq.RCVTIMEO, 30000)
+  67|         elif not init:
+  68|             socket.close()
+  69|             socket = context.socket(zmq.REQ)
+  70|             socket.setsockopt(zmq.LINGER, 0)
+  71|             socket.setsockopt(zmq.RCVTIMEO, 30000)
+  72|         socket.connect(address)
+  73|         socket.send_string(params)
+  74|         message = socket.recv()
+  75|         socket.close()
+  76|         context.term()
+  77|         return (message, context, socket)
+  78|     context = zmq.Context()
+  79|     socket = context.socket(zmq.REQ)
+  80|     socket.setsockopt(zmq.LINGER, 0)
+  81|     socket.setsockopt(zmq.RCVTIMEO, 30000)
+  82|     address = _get_params_address(next_address=True, _user_log=user_log)
+  83|     message = []
+  84|     try:
+  85|         params = str(params)
+  86|         message, context, socket = _get_socket_message(params, address, context, socket, init=True)
+  87|     except BaseException:
+  88|         user_log.error('zeromq与服务端%s建立链接失败，请求数据异常' % address)
+  89|         first_address = address
+  90|         _connect = False
+  91|         address = _get_params_address(next_address=True, _user_log=user_log)
+  92|         while first_address != address:
+  93|             try:
+  94|                 message, context, socket = _get_socket_message(params, address, context, socket)
+  95|                 _connect = True
+  96|             except BaseException:
+  97|                 user_log.error(f'zeromq与服务端{address!s}建立链接失败，错误信息：{get_traceback_message()!s}')
+  98|                 address = _get_params_address(next_address=True, _user_log=user_log)
+  99|         if not _connect:
+ 100|             user_log.error('zeromq与服务端建立链接失败，错误信息：%s' % get_traceback_message())
+ 101|             return (None, 1)
+ 102|     if message and len(message) > 0:
+ 103|         try:
+ 104|             message = eval(message.decode())
+ 105|             return (message, 0)
+ 106|         except BaseException:
+ 107|             user_log.error(f'eval转化数据异常，参数：{params!s}，异常信息：{get_traceback_message()!s}，数据内容：{message!s}')
+ 108|             return (None, 1)
+ 109|     user_log.error('zeromq获取数据为空，参数为：%s' % params)
+ 110|     return (None, -1)

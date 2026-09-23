@@ -2493,3 +2493,49 @@
           归档 `rounds/round54/`（OUTCOME.md + wit54comp 12 支 + spec/落地/门禁脚本 +
           G0/G4/G4′/G5/G6/G7 日志与 jsonl + `reach54.log` 可达性证明 + line_A/line_B/line_C 旁支物证）。
           起始 HEAD `3a825236`（Round 53 记录），落地前 `git status --porcelain core/ pycdc.py` 为空。
+  - [x] SubTask 55.1: 测试工程师——四线取证后发货靶定为**严格 `target_diff`（官方不可见）的循环内
+          `break` 丢失族**：`api_get_from_zeromq` 四胞胎（`fly/data/quote.pyc`、
+          `IQData/plugins/plugin_system_realquote/real_quote.pyc`、`IQCommon/common/main.pyc`、
+          `fly/common/common.pyc`）加 `fly/dumpload/load_daily.pyc` 与 `quote ::
+          api_get_from_multi_zeromq`，共 6 支函数。`dis` 地面真值（`line_D_gt_*.txt`）：CPython 把
+          循环内 `break` 编成「只含一条前向无条件跳转的中转块」，发射端在 try 体/臂收尾处漏发
+          `Break` ⇒ 本块正常流顺中转块后继继续跑，长度不变而跳转终点错位。电池 `wit54d/` 17 支
+          （含 `r54_14/15/16/17` 阴性对照）落地核 `MISMATCH=8 MATCH=9`。
+  - [x] SubTask 55.2: 修复工程师——落地 **R55-A**（`core/cfg/region_ast_generator.py ::
+          _generate_block_statements`，净核锚点 `42113`，+41 行单 hunk）：七个合取——处在循环体内
+          ∧ 末尾语句非终止型 ∧ 正常后继（剔异常边）唯一 ∧ 该后继为纯跳转块且末指令前向无条件跳转
+          ∧ 块角色属 `BlockRole.BREAK/PURE_BREAK` ∧ 未被认领 ∧ **其唯一前驱即本块**；命中即消费该
+          中转块（`generated_blocks`/`generated_offsets`）并 `stmts += [Break]`。只用块角色、后继/
+          前驱关系与认领状态，不读名字/常量/绝对偏移/指令数。第 ⑦ 合取由实测反例逼出：
+          `flytools :: get_host_mem` 的 break 属外层 `if` 体、中转块前驱 ≥2，缺 ⑦ 时 G4′ 报
+          `FIXED=6 BROKEN=1`，补 ⑦ 后 `FIXED=6 BROKEN=0` 且电池不减。
+  - [x] SubTask 55.3: 门禁（严格串行）——电池 `8/9 → 3/14`；G0 16 靶严格合计 `762/851 → 766/851`
+          （`quote 72→74`、`real_quote 39→40`、`main 28→29`），其余 13 靶逐字未变；
+          G4 全量 544 路径（A 侧＝当前落地核产物）`SAME=535 IMPROVED=0 REGRESSION=0 MOVED=9 ERR=0`；
+          G4′ 对 9 支 MOVED 逐码对象复核 `FIXED=6 BROKEN=0 CHANGED=0`，另 3 支经产物 diff 证明为
+          `try: ... else: break` → `try: ... break` 的**字节码等价**改写（严格与官方均无变化）。
+  - [x] SubTask 55.4: 落地与收口——`land55.py` 先内存应用 spec 且与门禁臂 `mirr_r55br2` **逐字节相同**
+          才写盘（BOM 保留、裸 LF 0、CRLF 48 777→48 816、sha `c36cf1fe7dad68377c80 →
+          2a2e5d81bea58afaee47`）；G5 落地核 8 支产物与臂产物 8/8 逐字节相同＋金丝雀 `quotation`
+          官方 `143/143`／strict `148/150` 逐字不变＋`round16_sink` 15/15；
+          G6 `batch --index pyc_index.json --all --round 55` 402 verified / 0 failed，
+          仅 8 支 `*OK.py` 变化＝MOVED 集合、无手改产物；G7 `stats` `5746 / 5669 / 98.66%`
+          **与 Round 54 相同：本轮官方尺零位移、严格 +6**（`target_diff` 是官方尺盲区，
+          见 Round 53 记录）；`pyc_index.json` 非轮次戳变化行数 0。
+  - [x] SubTask 55.5: 否证、入库与移交（Round 56）——三元 kwarg 线两枚候选
+          （`banked_spec_r55a.json` 绑错 CALL＋callee 回收＋尾随 CALL 包裹；
+          `banked_spec_r55b.json` 按操作数栈序通用装配）把 33 例 `wit54c` 电池从 `12 → 16 MATCH`
+          并把真实 `future_order` 形 `w16` 修到逐字节 ok，但 **G0 与四支相关 pyc 产物逐字节未变**
+          ⇒ 零语料收益、按「每轮至少解决一支 pyc」不单独发货，判据与根因（`41544-41548` 取块内
+          最后一个 CALL 错误；`41623-41628` 在 `len(kw_names) > 三元数` 时静默弹回，真实形状为
+          位置/关键字实参交错）入册待续；Round 56 主靶取线 A 修复工程师交付
+          `D:/Temp/r54impl/final_spec.json`（`_detect_boolop_conditional_chain` 净核 `24443-24464`，
+          +94 行，合取 (1)-(5) 以「短路边落在下一运算段入口」为凭据；自报 760→763、电池 24→30、
+          549 支 pyc 仅 12 站点/5 模块开火、新反例 `IQEngine/core/bar._history_bars` 由 (5) 排除），
+          **须在最新核上重建臂并由我独立复核 G0/G4/G4′ 后方可落地**；其报告还纠正本轮简报的一处
+          机制叙述（R53 豁免当时确已成立、被弹块是 `258` 体块，根因在 `[R54-03-sbhasbody-reject]`）。
+          同族残留 `r54_03/05/09` 需 unify 阶段三元 3 操作元链截断处理（另一族）；
+          `base_order #136` 与线 B（伪造尾随 `continue`）仍未收口。归档 `rounds/round55/`
+          （OUTCOME.md + wit54d 17 支 + 判据 spec/脚本 + G0/G4/G4′/G5/G6/G7 日志与 jsonl +
+          三元线入库 spec + 线 D 物证 + 线 A 修复交付）。起始 HEAD `a0379e63`（Round 54 记录），
+          落地前 `git status --porcelain core/ pycdc.py` 为空。

@@ -1,0 +1,135 @@
+====================================================================================================
+### real_quote :: <module>.RealQuoteData.api_get_from_zeromq        (F:\Downloads\pythoncdc-main\site-packages\IQData\plugins\plugin_system_realquote\real_quote.pyc)
+  strict: target_diff #150 JUMP 终点 orig=("'_connec'", 'LOAD_FAST') decomp=("'first_address'", 'LOAD_FAST') (defect=True)  orig-filtered-len=313 decomp-filtered-len=313
+    --- ORIGINAL pyc (idx first divergence=150) ---
+     138   750  LOAD_FAST                      _get_socket_message      
+     139   752  LOAD_FAST                      params                   
+     140   754  LOAD_FAST                      address                  
+     141   756  LOAD_FAST                      context                  
+     142   758  LOAD_FAST                      socket                   
+     143   764  CALL                                                    
+     144   774  UNPACK_SEQUENCE                                         
+     145   778  STORE_FAST                     message                  
+     146   780  STORE_FAST                     context                  
+     147   782  STORE_FAST                     socket                   
+     148   784  LOAD_CONST                     True                     
+     149   786  STORE_FAST                     _connec                  
+     150   788  JUMP_FORWARD                   to 1056                  JUMP->off=1056 land=(1056, 'LOAD_FAST', '_connec')
+     151   790  PUSH_EXC_INFO                                           
+     152   792  LOAD_GLOBAL                    Exception                
+     153   804  CHECK_EXC_MATCH                                         
+     154   806  POP_JUMP_FORWARD_IF_FALSE      to 1036                  JUMP->off=1036 land=(1036, 'RERAISE', '')
+     155   808  STORE_FAST                     e                        
+     156   810  LOAD_GLOBAL                    NULL + system_log        
+     157   822  LOAD_ATTR                      debug                    
+     158   832  LOAD_GLOBAL                    NULL + _                 
+     159   844  LOAD_CONST                     'zeromq与服务端{}建立链接失败，请求数据异常' 
+     160   846  LOAD_METHOD                    format                   
+     161   868  LOAD_FAST                      address                  
+     162   874  CALL                                                    
+     163   888  CALL                                                    
+     164   902  CALL                                                    
+     165   912  POP_TOP                                                 
+     166   914  LOAD_GLOBAL                    NULL + system_log        
+    --- RECOMPILED FROM PRODUCT (same window) ---
+     138   750  LOAD_FAST                      _get_socket_message      
+     139   752  LOAD_FAST                      params                   
+     140   754  LOAD_FAST                      address                  
+     141   756  LOAD_FAST                      context                  
+     142   758  LOAD_FAST                      socket                   
+     143   764  CALL                                                    
+     144   774  UNPACK_SEQUENCE                                         
+     145   778  STORE_FAST                     message                  
+     146   780  STORE_FAST                     context                  
+     147   782  STORE_FAST                     socket                   
+     148   784  LOAD_CONST                     True                     
+     149   786  STORE_FAST                     _connec                  
+     150   788  JUMP_FORWARD                   to 1044                  JUMP->off=1044 land=(1044, 'LOAD_FAST', 'first_address')
+     151   790  PUSH_EXC_INFO                                           
+     152   792  LOAD_GLOBAL                    Exception                
+     153   804  CHECK_EXC_MATCH                                         
+     154   806  POP_JUMP_FORWARD_IF_FALSE      to 1036                  JUMP->off=1036 land=(1036, 'RERAISE', '')
+     155   808  STORE_FAST                     e                        
+     156   810  LOAD_GLOBAL                    NULL + system_log        
+     157   822  LOAD_ATTR                      debug                    
+     158   832  LOAD_GLOBAL                    NULL + _                 
+     159   844  LOAD_CONST                     'zeromq与服务端{}建立链接失败，请求数据异常' 
+     160   846  LOAD_METHOD                    format                   
+     161   868  LOAD_FAST                      address                  
+     162   874  CALL                                                    
+     163   888  CALL                                                    
+     164   902  CALL                                                    
+     165   912  POP_TOP                                                 
+     166   914  LOAD_GLOBAL                    NULL + system_log        
+  ALL DIVERGENCES (1):
+    #150  target_diff off=788   orig JUMP_FORWARD                   to 1056        tgt=1056   land=(1056, 'LOAD_FAST', '_connec')  ||  decomp JUMP_FORWARD                   to 1044        tgt=1044   land=(1044, 'LOAD_FAST', 'first_address')
+    orig@#150: off=788 JUMP_FORWARD to 1056  jump=True target_off=1056 landed=(1056, 'LOAD_FAST', '_connec')
+    decomp@#150: off=788 JUMP_FORWARD to 1044  jump=True target_off=1044 landed=(1044, 'LOAD_FAST', 'first_address')
+  ---- emitted source in real_quoteOK.py ----
+ 116|     def api_get_from_zeromq(self, params, individual=False):
+ 117|         def _get_params_address(params, universe, individual):
+ 118|             if 'market_codes' in params:
+ 119|                 address = self._get_valid_address(self.StockREQAddress)
+ 120|             else:
+ 121|                 address = self.get_remote_address(universe, 'req', individual=individual)
+ 122|             return address
+ 123|         def _get_socket_message(params, address, context=None, socket=None, init=False):
+ 124|             if context is None:
+ 125|                 context = zmq.Context()
+ 126|             if socket is None:
+ 127|                 socket = context.socket(zmq.REQ)
+ 128|                 socket.setsockopt(zmq.LINGER, 0)
+ 129|                 socket.setsockopt(zmq.RCVTIMEO, 30000)
+ 130|             elif not init:
+ 131|                 socket.close()
+ 132|                 socket = context.socket(zmq.REQ)
+ 133|                 socket.setsockopt(zmq.LINGER, 0)
+ 134|                 socket.setsockopt(zmq.RCVTIMEO, 30000)
+ 135|             socket.connect(address)
+ 136|             socket.send_string(params)
+ 137|             message = socket.recv()
+ 138|             socket.close()
+ 139|             context.term()
+ 140|             return (message, context, socket)
+ 141|         context = zmq.Context()
+ 142|         socket = context.socket(zmq.REQ)
+ 143|         socket.setsockopt(zmq.LINGER, 0)
+ 144|         socket.setsockopt(zmq.RCVTIMEO, 30000)
+ 145|         try:
+ 146|             universe = eval(params)[1:][0]
+ 147|             universe = universe if isinstance(universe, str) else universe[0]
+ 148|         except Exception as e:
+ 149|             system_log.debug(get_traceback_message())
+ 150|             universe = None
+ 151|         address = _get_params_address(params, universe, individual)
+ 152|         try:
+ 153|             message, context, socket = _get_socket_message(params, address, context, socket, init=True)
+ 154|         except Exception as ex:
+ 155|             system_log.debug(_('zeromq与服务端{}建立链接失败，请求数据异常'.format(address)))
+ 156|             first_address = address
+ 157|             _connec = False
+ 158|             self._next_address = True
+ 159|             address = _get_params_address(params, universe, individual)
+ 160|             while first_address != address:
+ 161|                 try:
+ 162|                     message, context, socket = _get_socket_message(params, address, context, socket)
+ 163|                     _connec = True
+ 164|                 except Exception as e:
+ 165|                     system_log.debug(_('zeromq与服务端{}建立链接失败，请求数据异常'.format(address)))
+ 166|                     system_log.debug(get_traceback_message())
+ 167|                     self._next_address = True
+ 168|                     address = _get_params_address(params, universe, individual)
+ 169|             if not _connec:
+ 170|                 strategy_log.warning('无行情数据返回, 请联系管理员处理！')
+ 171|                 system_log.debug(_('zeromq与服务端建立链接失败，请求数据异常, 异常:{}'.format(ex)))
+ 172|                 return (None, 1)
+ 173|         if message and len(message) > 0:
+ 174|             try:
+ 175|                 message = eval(message.decode())
+ 176|                 return (message, 0)
+ 177|             except Exception as e:
+ 178|                 system_log.debug(_('eval转化数据异常，参数为{}, 异常:{}').format(params[:50], e))
+ 179|                 system_log.debug(_('数据内容{}').format(message))
+ 180|                 return (None, 1)
+ 181|         system_log.debug(_('zeromq获取数据为空，参数为{}').format(params[:50]))
+ 182|         return (None, -1)

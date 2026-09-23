@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "            region.break_blocks = sorted(verified_break_blocks, key=lambda b: b.start_offset)\n            region.continue_map = continue_map",
+   "repl": "            region.break_blocks = sorted(verified_break_blocks, key=lambda b: b.start_offset)\n            region.continue_map = continue_map\n                        # [R54-D S2 sketch] adopt the pure-jump break tail into the loop body so the loop\n            # renderer's existing BREAK-role path emits `break`.\n            for _s2_b in sorted(verified_break_blocks, key=lambda b: b.start_offset):\n                _s2_l = _s2_b.get_last_instruction()\n                if (_s2_l is not None and _s2_l.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')\n                        and all(_i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'EXTENDED_ARG', 'NOP',\n                                             'CACHE', 'POP_BLOCK') for _i in _s2_b.instructions)\n                        and _s2_b not in region.body_blocks\n                        and any(_p in region_blocks for _p in _s2_b.predecessors)):\n                    region.body_blocks = list(region.body_blocks) + [_s2_b]\n                    region.blocks = set(region.blocks) | {_s2_b}\n            "
+  }
+ ]
+}

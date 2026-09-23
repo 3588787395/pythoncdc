@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_ast_generator.py",
+ "edits": [
+  {
+   "anchor": "        stmts = self._generate_block_statements_body(block, _cjb_parent)\n        self._mark_with_exit_return_explicit(block, stmts)\n        return stmts",
+   "repl": "        stmts = self._generate_block_statements_body(block, _cjb_parent)\n        self._mark_with_exit_return_explicit(block, stmts)\n        # [R54-D S1 sketch] try-arm tail: a BREAK-role pure-jump successor is a user `break`.\n        if (stmts and self._current_loop is not None\n                and stmts[-1].get('type') not in ('Break', 'Return', 'Raise', 'Continue')):\n            _s1_succs = [s for s in block.successors\n                         if s not in (getattr(block, 'exception_successors', None) or [])]\n            if len(_s1_succs) == 1:\n                _s1_s = _s1_succs[0]\n                _s1_role = self.region_analyzer.get_block_role(_s1_s)\n                _s1_last = _s1_s.get_last_instruction()\n                _s1_pure = all(i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'EXTENDED_ARG',\n                                            'NOP', 'CACHE', 'POP_BLOCK') for i in _s1_s.instructions)\n                if (_s1_pure and _s1_s not in self.generated_blocks and _s1_last is not None\n                        and _s1_role in (BlockRole.BREAK, BlockRole.PURE_BREAK)\n                        and _s1_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')):\n                    stmts.append({'type': 'Break'})\n                    self.generated_blocks.add(_s1_s)\n                    self.generated_offsets.add(_s1_s.start_offset)\n        \n        return stmts"
+  }
+ ]
+}

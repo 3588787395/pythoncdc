@@ -1,0 +1,93 @@
+[
+ {
+  "w": "r54_01_zmq_quote_shape_break",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r54_02_nobreak_control_asis",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r54_03_zmq_swap_handler_class",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r54_04_zmq_multi_two_loops",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r54_05_zmq_main_shape_nested_defs",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r54_06_zmq_bare_break_no_store",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r54_07_neg_cond_break_in_trybody",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r54_08_neg_while_true_break_in_try",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w seq_len orig=34 decomp=32"
+  ]
+ },
+ {
+  "w": "r54_09_neg_for_else_break_in_handler",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w seq_diff #22 orig=('None', 'POP_EXCEPT') decomp=('<JUMP>', 'JUMP')"
+  ]
+ },
+ {
+  "w": "r54_10_forloop_in_handler_trybody_break",
+  "verdict": "MISMATCH",
+  "detail": [
+   "<module>.w seq_len orig=64 decomp=63"
+  ]
+ },
+ {
+  "w": "r54_11_neg_continue_in_handler",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r54_12_neg_plain_while_break_no_try",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r54_13_neg_nested_while_break_inner",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r54_14_neg_try_finally_break_after",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r54_15_zmq_break_no_handler",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r54_16_neg_or_and_return",
+  "verdict": "MATCH",
+  "detail": []
+ },
+ {
+  "w": "r54_17_neg_try_except_else_finally",
+  "verdict": "MATCH",
+  "detail": []
+ }
+]

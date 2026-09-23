@@ -1,0 +1,17 @@
+IQEngine/plugins/plugin_system_trade/trade_liv strict 101/123  defects=22
+fly/data/quote_handler.pyc                     strict  65/ 72  defects=7
+fly/data/quote.pyc                             strict  72/ 89  defects=17
+IQData/plugins/plugin_system_realquote/real_qu strict  39/ 45  defects=6
+IQCommon/api/klinedata.pyc                     strict  56/ 63  defects=7
+IQCommon/common/main.pyc                       strict  28/ 31  defects=3
+IQEngine/plugins/plugin_fly_data/fly_api/order strict  33/ 36  defects=3
+IQCommon/strategy/wizard_quant_api.pyc         strict  52/ 56  defects=4
+IQCommon/util/common_func.pyc                  strict  20/ 22  defects=2
+IQData/utils/common_func.pyc                   strict  26/ 27  defects=1
+IQEngine/plugins/plugin_system_log/__init__.py strict   9/ 10  defects=1
+fly/data/quotation.pyc                         strict 148/150  defects=2
+IQEngine/plugins/plugin_system_risk_calculatio strict  32/ 37  defects=5
+IQEngine/utils/scheduler.pyc                   strict  47/ 52  defects=5
+IQCommon/data/finance.pyc                      strict  23/ 28  defects=5
+fly/common/market_time.pyc                     strict   9/ 10  defects=1
+TOTAL strict 760/851

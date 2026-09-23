@@ -1,0 +1,21 @@
+{
+ "file": "core/cfg/region_ast_generator.py",
+ "edits": [
+  {
+   "anchor": "        if kw_names_instr is None or call_instr is None:\n            return None\n",
+   "repl": "        print('[D1] chain=%d final_merge=%s kw@%s call@%s call.arg=%s'\n              % (len(ternary_chain),\n                 None if final_merge is None else final_merge.start_offset,\n                 None if kw_names_instr is None else kw_names_instr.offset,\n                 None if call_instr is None else call_instr.offset,\n                 None if call_instr is None else call_instr.arg))\n        if kw_names_instr is None or call_instr is None:\n            return None\n"
+  },
+  {
+   "anchor": "        func_call_info = region.func_call_info\n        if func_call_info:\n            func_expr = func_call_info.get('func')\n",
+   "repl": "        func_call_info = region.func_call_info\n        print('[D2] fci=%s keys=%s kwarg_count=%d total_args=%d n_tern=%d'\n              % (bool(func_call_info),\n                 sorted(func_call_info) if isinstance(func_call_info, dict) else None,\n                 kwarg_count, total_args, num_ternaries))\n        _d55_pre = self._compute_ternary_cond_preload_exprs(region)\n        print('[D4] n_pre=%d types=%s' % (\n              len(_d55_pre), [p.get('type') for p in _d55_pre]))\n        for _d55_q in _d55_pre:\n            print('     PRE', str(_d55_q)[:260])\n        if func_call_info:\n            func_expr = func_call_info.get('func')\n"
+  },
+  {
+   "anchor": "                            _kwarg_call = self._try_build_ternary_kwarg_call(\n",
+   "repl": "                            print('[D3] call-site reached, entry=%s' % (\n                                None if region is None else getattr(\n                                    region, 'start_offset', None)))\n                            _kwarg_call = self._try_build_ternary_kwarg_call(\n"
+  },
+  {
+   "anchor": "        for i in merge_instrs:\n            if i.opname == 'KW_NAMES':\n                kw_names_instr = i\n            elif i.opname == 'CALL':\n                call_instr = i\n",
+   "repl": "        _d55_seen_kw = False\n        for i in merge_instrs:\n            if i.opname == 'KW_NAMES' and kw_names_instr is None:\n                kw_names_instr = i\n                _d55_seen_kw = True\n            elif _d55_seen_kw and i.opname == 'CALL' and call_instr is None:\n                call_instr = i\n                break\n"
+  }
+ ]
+}

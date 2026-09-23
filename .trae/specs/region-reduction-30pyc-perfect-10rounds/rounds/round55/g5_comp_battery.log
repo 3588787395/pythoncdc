@@ -1,0 +1,14 @@
+core = F:\Downloads\pythoncdc-main\core
+w55_01_dictcomp_nested_ternary.py          MATCH
+w55_02_listcomp_nested_ternary.py          MATCH
+w55_03_comp_single_ternary.py              MATCH
+w55_04_plain_nested_ternary.py             MATCH
+w55_05_dictcomp_value_notin.py             MATCH
+w55_06_setcomp_element.py                  MATCH
+w55_07_genexp_element.py                   MATCH
+w55_08_listcomp_three_levels.py            MATCH
+w55_09_dictcomp_key_nested.py              MATCH
+w55_10_comp_element_calls.py               MATCH
+w55_11_ctrl_nested_ternary_func_arg.py     MATCH
+w55_12_ctrl_nested_ternary_in_loop.py      MATCH
+battery[landed]: MISMATCH=0 MATCH=12 of 12

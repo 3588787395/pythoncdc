@@ -42112,6 +42112,45 @@ AST 映射规则:
         """
         stmts = self._generate_block_statements_body(block, _cjb_parent)
         self._mark_with_exit_return_explicit(block, stmts)
+        # [R55-A] 识别条件：本块处在循环体内（self._current_loop 非空），其语句
+        # 序列末尾不是任何终止型语句（Break/Return/Raise/Continue），而本块的**正常**
+        # 后继（剔除异常表隐式边）恰好只有一个，且该后继是**纯跳转块**（块内只有
+        # JUMP_FORWARD/JUMP_ABSOLUTE 与 EXTENDED_ARG/NOP/CACHE/POP_BLOCK 噪声），其块角色
+        # 为 BREAK/PURE_BREAK，且尚未被任何区域认领。此形状即 try 体（或 if 臂）以
+        # `break` 收尾：CPython 把 break 编成「跳到循环出口的中转块」，该中转块只有
+        # 一条无条件跳转、被 break 语句独占，故发射端若不补 Break，本块正常流会顺着
+        # 出口块之后的代码继续跑 —— 表现为长度相同、跳转终点错位（严格 target_diff，
+        # 官方按索引对齐看不见；实测 quote/real_quote/main 三支同名 zmq 取数函数）。
+        # 归约方式：把该纯跳转后继判为本块的收尾语句消费掉（加入 generated_blocks /
+        # generated_offsets，令其不再作为独立语句发射），符合「每块唯一归属」与
+        # 「内层→外层单向归约」——不读名字/常量/绝对偏移/指令数，只用块角色、
+        # 后继集合与认领状态。
+        # AST 映射：stmts += [Break]；被消费的中转块由 break 语句重编译时自然再生。
+        # 反向排除：中转块若还有别的前驱（≥2），说明它是本块之外的结构也会落入的
+        # 汇合块，break 属于更外一层（实测 flytools::get_host_mem 的 break 在
+        # `if 'Mem' in ...` 体内而非内层 if 体内），故要求该块唯一前驱就是本块。
+        if (stmts and self._current_loop is not None
+                and stmts[-1].get('type') not in ('Break', 'Return', 'Raise', 'Continue')):
+            _r55_succs = [s for s in block.successors
+                          if s not in (getattr(block, 'exception_successors', None) or [])]
+            if len(_r55_succs) == 1:
+                _r55_s = _r55_succs[0]
+                _r55_role = self.region_analyzer.get_block_role(_r55_s)
+                _r55_last = _r55_s.get_last_instruction()
+                _r55_pure = all(
+                    i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'EXTENDED_ARG',
+                                  'NOP', 'CACHE', 'POP_BLOCK')
+                    for i in _r55_s.instructions)
+                _r55_ps = [p for p in (getattr(_r55_s, 'predecessors', None) or [])
+                             if p is not _r55_s]
+                if (_r55_pure and _r55_s not in self.generated_blocks
+                        and len(_r55_ps) == 1 and _r55_ps[0] is block
+                        and _r55_last is not None
+                        and _r55_role in (BlockRole.BREAK, BlockRole.PURE_BREAK)
+                        and _r55_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')):
+                    stmts.append({'type': 'Break'})
+                    self.generated_blocks.add(_r55_s)
+                    self.generated_offsets.add(_r55_s.start_offset)
         return stmts
 
     def _generate_block_statements_body(self, block: BasicBlock, _cjb_parent: BasicBlock = None) -> List[Dict[str, Any]]:
