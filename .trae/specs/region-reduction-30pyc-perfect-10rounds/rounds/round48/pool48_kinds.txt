@@ -1,0 +1,81 @@
+  2 seq_len orig=75
+  2 seq_len orig=295
+  2 seq_diff #18
+  2 noise:None ok
+  2 seq_len orig=123
+  2 seq_len orig=230
+  2 seq_len orig=122
+  1 seq_len orig=81
+  1 seq_len orig=134
+  1 seq_len orig=92
+  1 seq_len orig=232
+  1 seq_len orig=98
+  1 seq_diff #42
+  1 seq_len orig=436
+  1 seq_len orig=42
+  1 seq_len orig=857
+  1 seq_len orig=553
+  1 seq_len orig=715
+  1 seq_len orig=488
+  1 seq_len orig=1843
+  1 seq_len orig=113
+  1 seq_len orig=159
+  1 seq_len orig=512
+  1 seq_len orig=87
+  1 seq_len orig=345
+  1 seq_len orig=304
+  1 seq_len orig=337
+  1 seq_len orig=253
+  1 seq_len orig=259
+  1 seq_len orig=606
+  1 seq_len orig=225
+  1 seq_len orig=118
+  1 seq_len orig=331
+  1 seq_len orig=88
+  1 seq_len orig=314
+  1 seq_len orig=703
+  1 seq_len orig=245
+  1 seq_len orig=477
+  1 seq_len orig=171
+  1 seq_len orig=364
+  1 seq_len orig=309
+  1 seq_len orig=205
+  1 seq_diff #119
+  1 seq_len orig=1276
+  1 seq_len orig=129
+  1 seq_len orig=760
+  1 seq_len orig=97
+  1 seq_len orig=188
+  1 seq_len orig=322
+  1 seq_len orig=481
+  1 seq_len orig=390
+  1 seq_len orig=192
+  1 seq_len orig=195
+  1 seq_len orig=973
+  1 seq_len orig=1742
+  1 seq_len orig=101
+  1 seq_len orig=83
+  1 seq_len orig=535
+  1 seq_len orig=220
+  1 seq_len orig=454
+  1 seq_len orig=350
+  1 seq_len orig=114
+  1 seq_len orig=156
+  1 seq_len orig=696
+  1 seq_len orig=379
+  1 seq_len orig=80
+  1 seq_len orig=144
+  1 seq_len orig=201
+  1 seq_len orig=215
+  1 seq_len orig=1075
+  1 seq_len orig=94
+  1 seq_len orig=103
+  1 seq_diff #71
+--- target_diff-only, equal length (cheapest shapes) ---
+--- seq_diff (equal length, opname differs) ---
+   fileio_utils.pyc                             write                          637/637 #42 orig=('None', 'LOAD_CONST') decomp=('<JUMP>', 'JUMP')
+   real_quote.pyc                               get_cache_l2_data_by_one       321/320 #18 orig=('<JUMP>', 'JUMP') decomp=('None', 'POP_TOP')
+   scheduler.pyc                                get_checked_time               106/106 #18 orig=("'divmod'", 'LOAD_GLOBAL') decomp=('<JUMP>', 'JUMP')
+   graph.pyc                                    _process_task_queue            378/378 #119 orig=('None', 'LOAD_CONST') decomp=('<JUMP>', 'JUMP')
+   logger.pyc                                   write_logging_thread           113/113 #71 orig=("'msgs'", 'LOAD_FAST') decomp=('<JUMP>', 'JUMP')
+TOTAL 80

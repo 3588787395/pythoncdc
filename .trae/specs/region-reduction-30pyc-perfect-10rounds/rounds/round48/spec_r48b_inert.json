@@ -1,0 +1,13 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "    def _if_arm_is_sink(self, arm_blocks, stop_set=None) -> bool:",
+   "repl": "    def _arm_is_pred_closed(self, arm_blocks) -> bool:\n        \"\"\"识别条件（分支臂对**前驱**封闭）：臂内除入口块外的每一块，其正常前驱\n        （排除异常表隐式边）必须仍在臂内。\n\n        【为什么需要】汇点塌陷在选定 merge := else_succ 后按新 merge 有界重收集臂。\n        若重收集把某个「还被臂外代码前驱」的块扫进臂内（典型：函数级共享尾部\n        `return <expr>` 块——then 臂显式跳向它、父序列另一端顺序落入它），则该块被\n        臂就地发射一次，父落点因已在 generated_blocks 而整块不发射 ⇒ 另一条路径的\n        语句凭空消失（本例：函数退化为隐式 `return None`）。前驱封闭正是「臂不得把\n        臂外路径的汇合点据为己有」的同层结构表述。\n\n        【归约方式】不封闭 ⇒ 撤销本次汇点塌陷（不改 merge、不改臂），交回正常归约。\n        【AST 映射】无（仅取消 If(test, sink_arm, []) 这一条塌陷映射）。\n        \"\"\"\n        _arm = set(arm_blocks)\n        if not _arm:\n            return False\n        _ent = arm_blocks[0]\n        for _b in _arm:\n            if _b is _ent:\n                continue\n            for _p in (getattr(_b, 'predecessors', None) or set()):\n                if _p in _arm:\n                    continue\n                if _b in (getattr(_p, 'exception_successors', None) or set()):\n                    continue\n                return False\n        return True\n\n    def _if_arm_is_sink(self, arm_blocks, stop_set=None) -> bool:"
+  },
+  {
+   "anchor": "                    merge = else_succ\n                    then_blocks = self._collect_branch_blocks(then_succ, merge, then_stop)",
+   "repl": "                    _r48_tb = self._collect_branch_blocks(then_succ, else_succ, then_stop)\n                    if self._arm_is_pred_closed(_r48_tb):\n                        merge = else_succ\n                        then_blocks = _r48_tb"
+  }
+ ]
+}

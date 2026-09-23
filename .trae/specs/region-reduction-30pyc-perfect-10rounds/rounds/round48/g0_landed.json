@@ -1,0 +1,81 @@
+{
+ "w48_witness.py": {
+  "defective": [
+   [
+    "<module>.s1_else_head_if_then_tail",
+    "target_diff #16 JUMP 终点 orig=(\"'n'\", 'LOAD_FAST') decomp=(\"'_set'\", 'LOAD_GLOBAL')"
+   ],
+   [
+    "<module>.s2_else_head_if_own_else_tail",
+    "target_diff #16 JUMP 终点 orig=(\"'n'\", 'LOAD_FAST') decomp=(\"'_set'\", 'LOAD_GLOBAL')"
+   ],
+   [
+    "<module>.s3_else_head_if_then_tail_two_tails",
+    "target_diff #18 JUMP 终点 orig=(\"'n'\", 'LOAD_FAST') decomp=(\"'_set'\", 'LOAD_GLOBAL')"
+   ],
+   [
+    "<module>.w1_close_shape",
+    "seq_len orig=82 decomp=75"
+   ],
+   [
+    "<module>.w2_close_shape_twin",
+    "seq_len orig=68 decomp=61"
+   ]
+  ],
+  "sigs": [
+   [
+    "<module>",
+    "7e7ff5a2e7d46b25"
+   ],
+   [
+    "<module>._set",
+    "177895f1ff6ec9d2"
+   ],
+   [
+    "<module>.c1_real_elif_no_else",
+    "efdb1969d23605a4"
+   ],
+   [
+    "<module>.c2_real_elif_else",
+    "1b18e067360d9303"
+   ],
+   [
+    "<module>.c3_else_head_nested_if_with_own_else",
+    "e85c7bda661d61f6"
+   ],
+   [
+    "<module>.c4_plain_if_else_two_arms",
+    "db49bfbb54c154cc"
+   ],
+   [
+    "<module>.c5_elif_chain_all_terminal",
+    "53824473f25535da"
+   ],
+   [
+    "<module>.c6_real_elif_then_nested_head_tail",
+    "f9aefaa88e7bdc19"
+   ],
+   [
+    "<module>.s1_else_head_if_then_tail",
+    "a90836c06993aaaf"
+   ],
+   [
+    "<module>.s2_else_head_if_own_else_tail",
+    "1b18e067360d9303"
+   ],
+   [
+    "<module>.s3_else_head_if_then_tail_two_tails",
+    "cde450978695f53e"
+   ],
+   [
+    "<module>.w1_close_shape",
+    "cc643e36e53fade8"
+   ],
+   [
+    "<module>.w2_close_shape_twin",
+    "bca60b320446f8e5"
+   ]
+  ],
+  "n": 13
+ }
+}

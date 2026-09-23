@@ -1,0 +1,63 @@
+core = D:/Temp/r43gate/mirr_r48bA
+<module>.<lambda>                                          clean None ok
+<module>._align_data_to_benchmark                          clean None ok
+<module>._align_data_to_benchmark.<dictcomp>               clean None ok
+<module>._all_bars_of_cache                                DEFECT seq_len orig=230 decomp=231
+<module>._all_bars_of_cache.<listcomp>                     clean None ok
+<module>._all_bars_of_range                                clean None ok
+<module>._is_same_type_date                                clean None ok
+<module>.check_datetime_common                             clean None ok
+<module>.check_fields_function                             clean None ok
+<module>.deal_hq_list_to_cacahe                            clean None ok
+<module>.get_all_real_daily_kline                          DEFECT seq_len orig=188 decomp=187
+<module>.get_all_real_daily_kline.<dictcomp>               clean None ok
+<module>.get_all_real_daily_kline.<dictcomp>.<listcomp>    clean None ok
+<module>.get_all_real_minute_kline                         DEFECT target_diff #54 POP_JUMP_IF_FALSE 终点 orig=("'system_log'", 'LOAD_GLOBAL') decomp=("'fq'", 'LOAD_FAST')
+<module>.get_all_real_minute_kline.<dictcomp>              clean None ok
+<module>.get_all_real_minute_kline.<dictcomp>.<listcomp>   clean None ok
+<module>.get_all_real_minute_kline_bk                      clean None ok
+<module>.get_bar_by_zmq                                    clean None ok
+<module>.get_bar_by_zmq.<listcomp>                         clean None ok
+<module>.get_benchmark_datetime                            clean None ok
+<module>.get_cache                                         clean None ok
+<module>.get_date_and_count                                clean None ok
+<module>.get_exrights_data                                 clean None ok
+<module>.get_exrights_data.<listcomp>                      clean None ok
+<module>.get_history_common                                DEFECT target_diff #41 POP_JUMP_IF_NONE 终点 orig=("'is_dict'", 'LOAD_FAST') decomp=("'fields'", 'LOAD_FAST')
+<module>.get_history_date_and_count_ifalse                 clean None ok
+<module>.get_history_date_and_count_itrue                  clean None ok
+<module>.get_history_new                                   DEFECT seq_len orig=322 decomp=323
+<module>.get_kline_binary                                  clean None ok
+<module>.get_kline_by_count                                clean None ok
+<module>.get_kline_by_count.<dictcomp>                     clean None ok
+<module>.get_kline_by_count.<dictcomp>.<listcomp>          clean None ok
+<module>.get_kline_by_count_new                            DEFECT target_diff #161 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=("'symbols'", 'LOAD_FAST')
+<module>.get_kline_by_count_new.<dictcomp>                 clean None ok
+<module>.get_kline_by_count_new.<dictcomp>.<listcomp>      clean None ok
+<module>.get_kline_by_date_ndarray                         clean None ok
+<module>.get_kline_by_date_new                             DEFECT target_diff #36 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=("'isinstance'", 'LOAD_GLOBAL')
+<module>.get_kline_by_date_new.<dictcomp>                  clean None ok
+<module>.get_kline_by_date_new.<dictcomp>.<listcomp>       clean None ok
+<module>.get_kline_by_date_one                             clean None ok
+<module>.get_kline_by_date_one.<dictcomp>                  clean None ok
+<module>.get_kline_by_date_one.<dictcomp>.<listcomp>       clean None ok
+<module>.get_multiminute_his_data                          DEFECT seq_len orig=481 decomp=482
+<module>.get_multiminute_his_data_by_date                  DEFECT target_diff #272 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=("'isinstance'", 'LOAD_GLOBAL')
+<module>.get_post_data                                     clean None ok
+<module>.get_post_data.<listcomp>                          clean None ok
+<module>.get_pre_date                                      clean None ok
+<module>.get_price_common                                  DEFECT target_diff #114 POP_JUMP_IF_NONE 终点 orig=("'frequency'", 'LOAD_FAST') decomp=("'is_dict'", 'LOAD_FAST
+<module>.get_stk_data                                      clean None ok
+<module>.initialize_data_source                            clean None ok
+<module>.initialize_trading_dates                          clean None ok
+<module>.klineCacheData_to_dict                            clean None ok
+<module>.klineCacheData_to_dict.<dictcomp>                 clean None ok
+<module>.klineCacheData_to_dict.<dictcomp>.<listcomp>      clean None ok
+<module>.kline_datetime_list                               DEFECT seq_len orig=390 decomp=391
+<module>.nd_array_to_datetime_index                        clean None ok
+<module>.np_tp_pd                                          clean None ok
+<module>.stk_history_day_complex                           clean None ok
+<module>.stk_history_day_complex.<listcomp>                clean None ok
+<module>.stk_resample_days_bars                            clean None ok
+<module>.stk_resample_days_orderddict                      clean None ok
+<module>.to_pd_result                                      clean None ok

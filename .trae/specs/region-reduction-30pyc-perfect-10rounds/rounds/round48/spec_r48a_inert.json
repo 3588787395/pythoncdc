@@ -1,0 +1,13 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "    def _if_arm_is_sink(self, arm_blocks, stop_set=None) -> bool:",
+   "repl": "    def _arm_is_pred_closed(self, arm_blocks) -> bool:\n        \"\"\"识别条件（分支臂对**前驱**封闭）：臂内除入口块外的每一块，其正常前驱\n        （排除异常表隐式边）必须仍在臂内。\n\n        【为什么需要】汇点判定只沿正方向看「臂内块的后继是否出臂」，看不到反方向：\n        臂可经显式跳转把一个**同时被臂外代码顺序落入**的块收进臂内——典型就是函数级\n        共享尾部 `return <expr>` 块（then 臂显式跳向它，else 臂/父序列顺序落入它）。\n        此时该块归属臂、由臂在臂尾就地发射（臂被渲染成提前 return），而臂外那条落点\n        路径再走到同一物理块时它已在 generated_blocks 中 ⇒ 整块不再发射，函数退化为\n        隐式 `return None`。这违反原则 2 的完整含义：一个承载两条前驱路径的物理块被\n        单边发射，另一条路径的语句凭空消失。前驱封闭正是「臂不曾把臂外路径的汇合点\n        据为己有」的同层结构表述；既有的 return-None 特例只是它的一个手工子集。\n\n        【归约方式】不封闭 ⇒ 本臂不作汇点塌陷，merge 交由后续正常计算与兜底路径处理。\n        【AST 映射】无（仅取消 If(test, sink_arm, []) 这一条塌陷映射）。\n        \"\"\"\n        _arm = set(arm_blocks)\n        if not _arm:\n            return False\n        _ent = arm_blocks[0]\n        for _b in _arm:\n            if _b is _ent:\n                continue\n            for _p in (getattr(_b, 'predecessors', None) or set()):\n                if _p in _arm:\n                    continue\n                if _b in (getattr(_p, 'exception_successors', None) or set()):\n                    continue\n                return False\n        return True\n\n    def _if_arm_is_sink(self, arm_blocks, stop_set=None) -> bool:"
+  },
+  {
+   "anchor": "                        and self._if_arm_is_sink(then_blocks, then_stop)):",
+   "repl": "                        and self._arm_is_pred_closed(then_blocks)\n                        and self._if_arm_is_sink(then_blocks, then_stop)):"
+  }
+ ]
+}

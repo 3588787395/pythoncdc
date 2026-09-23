@@ -19011,6 +19011,32 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                         'RAISE_VARARGS', 'RERAISE'))
                 if not _d2_terminal:
                     return None
+            # [R48-C 同层谓词 · 链汇合的前驱侧对偶] 区域归约算法原则 1（块 = 前导
+            # 语句 + 恰好一个终结子）＋原则 2（每块唯一归属且归属者必须发射）：
+            # inner_merge 是 first_else 两臂的声称汇合块，故 first_else 的 then 臂
+            # （inner_then_blocks）必须【进入】它——即 inner_merge 至少有一个前驱落在
+            # 本臂块集内。若无任何臂内前驱，则该臂以绕开 inner_merge 的前向跳转落到
+            # 更远处的块（CPython 对 if/elif 链的每个臂末都跳向链汇合点），
+            # 说明 inner_merge 只是 else 侧自己那个嵌套 if 的汇合点、其后还有属于外层
+            # else 体的尾随语句 ⇒ first_else 不是 elif 条件而是 else 体首句，链解释不成立。
+            # 汇合侧要求：inner_merge 恰有一个后继（直线续延：落到后继语句首块或以
+            # JUMP_FORWARD 跳向它）。若它自身仍是分支块（POP_JUMP_* 两个后继），则它是
+            # 后一条兄弟语句的条件块而非本嵌套 if 的汇合点，前驱判据在此无从分辨，
+            # 保持沉默（实测 check_datetime_common 的误拒正是该形状）。
+            # 返回 None 后调用方按 IF_THEN_ELSE 建区，尾随块留在 else 体内（原则 2），
+            # merge 块不再是无主块（原则 4：父以 entry 引用子区域）。
+            # 与上方 _d2 守卫同一取材域（inner_merge / merge_ / inner_then_blocks 的
+            # predecessors/successors 关系与终结子类别），不读名字、常量、绝对偏移、
+            # 指令数、历史清单；覆盖 _d2 的盲区：臂以 RETURN 终态使 merge_ 为 None 时
+            # _d2 永不触发。
+            if (inner_merge is not None
+                    and inner_merge is not merge_
+                    and len(inner_merge.successors or []) == 1
+                    and inner_then_blocks):
+                _r48c_arm = set(inner_then_blocks)
+                if not any(_r48c_p in _r48c_arm
+                           for _r48c_p in inner_merge.predecessors):
+                    return None
             inner_else_blocks = self._collect_branch_blocks(inner_else_succ, inner_merge, {inner_then_succ} | _inner_boundary_stop)
             # 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即
             # 抽象节点）：镜像外层 IfRegion 的 try/with handler 块过滤

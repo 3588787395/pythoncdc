@@ -1,0 +1,6 @@
+F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc
+F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/finance_data_source.pyc
+F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc
+F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc
+F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc
+F:/Downloads/pythoncdc-main/test_repros/round31_arm_terminal_join/r31a_witness.pyc
