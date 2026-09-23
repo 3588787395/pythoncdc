@@ -1,0 +1,88 @@
+{
+ "r46b_witness.py": {
+  "defective": [],
+  "sigs": [
+   [
+    "<module>",
+    "3ebf598ba567f2c0"
+   ],
+   [
+    "<module>.nc_02_plain_if_tail",
+    "0e9656fa7cfcb0f6"
+   ],
+   [
+    "<module>.nc_03_chain_merge_returnonly",
+    "13b59e4455654c34"
+   ],
+   [
+    "<module>.nc_04_chain_no_tail",
+    "13b59e4455654c34"
+   ],
+   [
+    "<module>.r46b_01_tail_region_at_merge",
+    "02efc9fdaf562e5c"
+   ]
+  ],
+  "n": 5
+ },
+ "r45e_witnesses.py": {
+  "defective": [],
+  "sigs": [
+   [
+    "<module>",
+    "07c632624333452c"
+   ],
+   [
+    "<module>.arm_continuation_repro",
+    "55e9301c982768f4"
+   ],
+   [
+    "<module>.no_tail_repro",
+    "08c91dd238f37d7b"
+   ],
+   [
+    "<module>.region_mean_repro",
+    "a4afb9a4de8c97fe"
+   ]
+  ],
+  "n": 4
+ },
+ "r45e2_controls.py": {
+  "defective": [],
+  "sigs": [
+   [
+    "<module>",
+    "dba8eceee4a86ea6"
+   ],
+   [
+    "<module>.w_all_return_no_tail",
+    "62c27ae68191fbe8"
+   ],
+   [
+    "<module>.w_chain_in_loop",
+    "36dfd46f9de00086"
+   ],
+   [
+    "<module>.w_chain_merge_implicit",
+    "fb0cad4b5072b098"
+   ],
+   [
+    "<module>.w_chain_tail_jump",
+    "ef7f2b0395b217c6"
+   ],
+   [
+    "<module>.w_elif_else_tail",
+    "0d5842ff9ba9efe0"
+   ],
+   [
+    "<module>.w_nested_chain_in_arm",
+    "dc4e5a8075846c4c"
+   ],
+   [
+    "<module>.w_plain_if_tail",
+    "4c9eff030122c64a"
+   ]
+  ],
+  "n": 8
+ }
+}

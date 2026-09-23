@@ -12539,7 +12539,35 @@ AST 映射规则:
             _mb45_meaningful = [i for i in _mb45.instructions
                                 if i.opname not in ('RESUME', 'NOP', 'CACHE')]
             if not self._is_implicit_return_block(_mb45_meaningful):
-                _tail45 = self._generate_block_statements(_mb45)
+                # 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）（R46-B）：
+                # R45-A 只补发 merge 块的裸语句。若该块的**归属区域**恰以该块为入口，
+                # 则该块是「链后的兄弟区域」的起点，发射责任是整个兄弟区域而非它的裸
+                # 语句：裸语句丢掉块终止符携带的条件与两臂，兄弟区域随之整段消失。
+                # 识别条件（同层判据，只读结构事实，不读名字/常量/绝对偏移/历史）：
+                #   ① 该块有归属区域 owner；② owner 非本链、亦非本链之父；
+                #   ③ owner.entry 即该块（它是 owner 的入口，而非 owner 臂内的块）；
+                #   ④ 该块在 owner 的归属块集内；⑤ owner 此刻尚未发射；
+                #   ⑥ owner 的块全部未被任何发射路径登记。
+                # 归约方式：owner 作抽象节点整区域发射，接在链 result 之后（原则 4）。
+                # 危害形态：site-packages/fly/data/quote_handler.pyc ::
+                #   <module>.get_index_stocks_local 链尾 merge 块 = 其后 if/else 兄弟区域的
+                #   入口，落地态整段兄弟区域消失（严格尺 151 条指令只发射 56 条），
+                #   本判据补发至 150 条（残余 1 条属 with 出口跳转桩族，非本形状）。
+                # 与 R45-A 的关系：其见证里 merge 块是后代区域的 else 臂（③ 为假），
+                # 本判据为假 ⇒ 逐字节沿用 R45-A 的裸语句补发路径。
+                _own46 = self.region_analyzer.block_to_region.get(_mb45)
+                if (_own46 is not None and _own46 is not region
+                        and _own46 is not region.parent
+                        and _own46.entry is _mb45 and _mb45 in _own46.blocks
+                        and id(_own46) not in self._generated_regions
+                        and not (set(_own46.blocks) & self.generated_blocks)):
+                    _rg46 = self._generate_region(_own46)
+                    if isinstance(_rg46, dict):
+                        _tail45 = [_rg46]
+                    else:
+                        _tail45 = list(_rg46) if _rg46 else []
+                else:
+                    _tail45 = self._generate_block_statements(_mb45)
                 if _tail45:
                     self.generated_blocks.add(_mb45)
                     self.generated_offsets.add(_mb45.start_offset)

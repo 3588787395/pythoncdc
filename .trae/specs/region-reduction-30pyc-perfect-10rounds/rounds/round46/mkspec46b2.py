@@ -1,0 +1,62 @@
+# -*- coding: utf-8 -*-
+"""Derive spec_r46b2.json from the landed bytes: R46-B with the house-format doc block.
+
+Anchor must occur exactly once in the landed generator; the inserted code is byte-identical
+to the gated R46-B arm, only the comment lines are rewritten.
+"""
+import io
+import json
+import sys
+
+REPO = r'F:\Downloads\pythoncdc-main'
+REL = 'core/cfg/region_ast_generator.py'
+src = io.open(REPO + '/' + REL, encoding='utf-8-sig', newline='').read()
+nl = '\r\n' if '\r\n' in src else '\n'
+u = src.replace(nl, '\n')
+
+anchor = (
+    "            if not self._is_implicit_return_block(_mb45_meaningful):\n"
+    "                _tail45 = self._generate_block_statements(_mb45)\n"
+    "                if _tail45:\n"
+)
+repl = (
+    "            if not self._is_implicit_return_block(_mb45_meaningful):\n"
+    "                # 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）（R46-B）：\n"
+    "                # R45-A 只补发 merge 块的裸语句。若该块的**归属区域**恰以该块为入口，\n"
+    "                # 则该块是「链后的兄弟区域」的起点，发射责任是整个兄弟区域而非它的裸\n"
+    "                # 语句：裸语句丢掉块终止符携带的条件与两臂，兄弟区域随之整段消失。\n"
+    "                # 识别条件（同层判据，只读结构事实，不读名字/常量/绝对偏移/历史）：\n"
+    "                #   ① 该块有归属区域 owner；② owner 非本链、亦非本链之父；\n"
+    "                #   ③ owner.entry 即该块（它是 owner 的入口，而非 owner 臂内的块）；\n"
+    "                #   ④ 该块在 owner 的归属块集内；⑤ owner 此刻尚未发射；\n"
+    "                #   ⑥ owner 的块全部未被任何发射路径登记。\n"
+    "                # 归约方式：owner 作抽象节点整区域发射，接在链 result 之后（原则 4）。\n"
+    "                # 危害形态：site-packages/fly/data/quote_handler.pyc ::\n"
+    "                #   <module>.get_index_stocks_local 链尾 merge 块 = 其后 if/else 兄弟区域的\n"
+    "                #   入口，落地态整段兄弟区域消失（严格尺 151 条指令只发射 56 条），\n"
+    "                #   本判据补发至 150 条（残余 1 条属 with 出口跳转桩族，非本形状）。\n"
+    "                # 与 R45-A 的关系：其见证里 merge 块是后代区域的 else 臂（③ 为假），\n"
+    "                # 本判据为假 ⇒ 逐字节沿用 R45-A 的裸语句补发路径。\n"
+    "                _own46 = self.region_analyzer.block_to_region.get(_mb45)\n"
+    "                if (_own46 is not None and _own46 is not region\n"
+    "                        and _own46 is not region.parent\n"
+    "                        and _own46.entry is _mb45 and _mb45 in _own46.blocks\n"
+    "                        and id(_own46) not in self._generated_regions\n"
+    "                        and not (set(_own46.blocks) & self.generated_blocks)):\n"
+    "                    _rg46 = self._generate_region(_own46)\n"
+    "                    if isinstance(_rg46, dict):\n"
+    "                        _tail45 = [_rg46]\n"
+    "                    else:\n"
+    "                        _tail45 = list(_rg46) if _rg46 else []\n"
+    "                else:\n"
+    "                    _tail45 = self._generate_block_statements(_mb45)\n"
+    "                if _tail45:\n"
+)
+n = u.count(anchor)
+assert n == 1, 'anchor occurrences=%d' % n
+delta = repl.count('\n') - anchor.count('\n')
+assert delta == 28, 'inserted lines=%d' % delta
+assert u.count(repl) == 0, 'patch already applied'
+io.open(sys.argv[1], 'w', encoding='utf-8').write(json.dumps(
+    {'file': REL, 'anchor': anchor, 'repl': repl, 'count': 1}, ensure_ascii=False))
+print('spec ok: anchor unique, +%d lines' % delta)

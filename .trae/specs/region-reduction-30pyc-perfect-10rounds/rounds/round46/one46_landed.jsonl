@@ -1,0 +1,1 @@
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round2/r2_02_guard_early_return_dec_dec.pyc", "arm": "landed", "sha": "f7ebd869c2e72bb7", "total_functions": 2, "matched_functions": 1, "mism": [["query_strategy_id", 91, 97, 0, 74]]}
