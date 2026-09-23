@@ -2539,3 +2539,46 @@
           （OUTCOME.md + wit54d 17 支 + 判据 spec/脚本 + G0/G4/G4′/G5/G6/G7 日志与 jsonl +
           三元线入库 spec + 线 D 物证 + 线 A 修复交付）。起始 HEAD `a0379e63`（Round 54 记录），
           落地前 `git status --porcelain core/ pycdc.py` 为空。
+  - [x] SubTask 56.1: 复核工程师——把 Round 55 修复工程师交付的 `market_time` 判据
+          （`_detect_boolop_conditional_chain` 内 `_sb_has_body` 门 `POP_JUMP_FORWARD_IF_FALSE` 支，
+          净核锚点 `24443-24464`，+94 行）**在当前核（已含 R54-COMP、R55-A）上重建臂**
+          `D:/Temp/r54gate/mirr_m56a` 并独立跑门禁，不采信其自报数字；同时接受其对我方记录的
+          更正：R53-A 豁免当时确已成立、被弹出的是体块 `258`，真正否决点为
+          `[R54-03-sbhasbody-reject]`（块 0，`stmt_offs=[42,58,114,156,160]`），
+          Round 54 简报中「检测器从 B 进入、R53-A 未触发」的叙述作废。
+  - [x] SubTask 56.2: 落地 **R56-A**：原白名单测试或入 `_r54_mixed` 五合取——跳目标 `J` 为判定块
+          ∧ 另一后继 `F` 亦判定块且 `T_F ≠ J`、`T_F` 在 `J` 之后 ∧ `F` 的另一后继恰为 `J`（两段汇流）
+          ∧ `T_J ≠ T_F` 且 `T_J` 在 `T_F` 之后（跳过汇合点落到更远处）∧ `J` 的正常后继 `K` 与 `T_J`
+          共出口（`J`、`K` 同一运算段）。凭据：否则普通领会把**父区域 merge 放进其子 BoolOpRegion 的
+          内部块**（实测 `blk 210 owner=BoolOpRegion@186 role=NORMAL`、父 `merge=210`），违反
+          「每块唯一归属 / 父层只引用子区域入口」；合取为假时代码逐字回到原测试 ⇒ 严格附加。
+          修 `site-packages/fly/common/market_time.pyc :: MarketTime.is_open seq_len orig=67 decomp=69`
+          ⇒ 该文件成为**双尺全清**（官方 10/10、严格 10/10），发射为扁平
+          `if A and B or C and D:` 且 `return False` 回到兄弟位。
+  - [x] SubTask 56.3: 门禁（严格串行）——G0 16 靶 `766/851 → 767/851` 且仅靶文件移动，
+          两处 Round 54 硬否决复验清除（`quotation 148/150` 缺陷集合逐字同、`klinedata 56/63`、
+          `_is_same_type_date` 未出现）；39 例电池 `MISMATCH 15 → 9 / MATCH 24 → 30`、
+          **broken=0** 且臂的失败集为落地态失败集的真子集；G4 全量 544 路径
+          （A 侧＝Round 55 落地态产物运行）`SAME=543 IMPROVED=0 REGRESSION=0 MOVED=1 ERR=0`；
+          另按点名反例逐支核对产物逐字节相同：`IQEngine/core/bar.pyc`（合取 (5) 排除的
+          `(X and Y) or Z` 形状，82/85 不变）、`klinedata`、`quotation`、`trade_live_broker`。
+  - [x] SubTask 56.4: 落地与收口——`land56.py` 先内存应用 spec 且与门禁臂 `mirr_m56a` **逐字节相同**
+          才写盘（`region_analyzer b10ee76b55754f09e945 → ae6f21e5d22fd05112ba`，
+          `1 691 897 → 1 699 508 B`，CRLF 27 179→27 273、裸 LF 0、无 BOM）；G5 落地核
+          `market_time` 产物与臂逐字节相同＋39 例电池 30 MATCH＋金丝雀 `quotation` 官方 `143/143`／
+          strict `148/150` 逐字不变＋`round16_sink` 15/15；G6 `batch --index pyc_index.json --all
+          --round 56` **402 verified / 0 failed**、全量重跑仅 1 支 `*OK.py` 变化（＝靶文件，工具生成）、
+          重生成后 `market_time` 严格 `10/10 defects=[]`；G7 `stats` `5746 / 5669 / 98.66%`
+          **连续第三轮官方尺零位移**（`market_time` 官方计数本来就是 10/10，官方尺以跳转/噪声容忍
+          判定，对这类长度型缺陷同样失明），`pyc_index.json` 非轮次戳变化行数 0、纯 CRLF 4553 行。
+  - [x] SubTask 56.5: 遗留与移交（Round 57）——合取 (5) 为承重条件（去 (5) 的 `i1` 变体重新破坏
+          `bar._history_bars`：`58/58 → 57/58` 并凭空造出 `if not (X and Y)`），不得为扩大命中删除；
+          电池余 9 项中 `w54_21/22` 属统一阶段「三元操作元为 3 项链」截断的另一族；
+          Round 55 入库的两枚三元 kwarg 候选仍语料零触发，续做前须先解释「`w16` 复刻可修而真实
+          `future_order` 不动」的差异；未收口清单：`base_order [target_diff] #136`、
+          线 B 伪造尾随 `continue`（`_on_set_positions 297/298`、`finance ::
+          func_get_fundamentals_daily_data 192/193`）、三大损失 `DefaultLogger.setup -65`、
+          `get_kline_local -78`、`get_TradeMode_trades -90`。全量现状 `5669/5746`（98.66%）、
+          27 支 partial、77 支官方不匹配函数。归档 `rounds/round56/`（OUTCOME.md + 判据 spec/hunk +
+          G0/G4/G5/G6/G7 日志与 jsonl + 复核脚本）。起始 HEAD `e8bb2cc0`（Round 55 记录），
+          落地前 `git status --porcelain core/ pycdc.py` 为空。

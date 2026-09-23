@@ -24445,9 +24445,103 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 if i.offset < _sb_last.offset
                                 and i.opname not in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME')]
                 # [W14 修复] 同上：属性链真值测试（and 短路模式）适用回溯。
-                if _prev_instrs and _prev_instrs[-1].opname in ('LOAD_FAST', 'LOAD_NAME',
+                # [R54-A] 混合优先级布尔链（`(A and B) or (C and D)`）首操作数块的
+                # 入口放行——`market_time.MarketTime.is_open` 的 `+2` 缺陷。
+                # 识别条件（只用块集/前驱后继/指令结构类，不看名字、常量、绝对偏移）：
+                #   本块末条为正向 FALSE 短路跳转，其跳转目标 J 与另一后继 F 满足
+                #   (1) J 以正向条件跳转结尾——J 是"做判断的块"，不是 merge/兄弟语句
+                #       入口（merge 入口若真是 else/merge，它承接的是已算完的值，
+                #       结构上不可能自己再短路）；
+                #   (2) F 同样以正向条件跳转结尾，且 F 的短路目标 T_F 落在 J 之后
+                #       （T_F 才是本 if 的 then 体入口）；
+                #   (3) F 的另一后继恰为 J——两条 run 在 J 汇合，即 J 是 F 所在 run
+                #       的短路出口，正是"下一 run 的入口"；
+                #   (4) J 的短路目标 T_J 存在、T_J != T_F 且 T_J 在块序上晚于 T_F
+                #       （实测 is_open: A 假边到 C、B 真边到 then 体 258、C/D 假边
+                #       共享出口 316，316 跨过 258 落在其后的兄弟语句上）；
+                #   (5) 由 J 的 normal 后继 K 出发：K 也以正向条件跳转结尾，且 K 的
+                #       短路目标就是 T_J——J 与 K 同属**一条 run**（同一 run 的所有
+                #       操作数共享同一出口），故 J 是第二 run 的首操作数而非末端。
+                # 归约方式：命中即把 `_cond_start_offset` 沿栈深回溯到本操作数起点
+                #   （复用本分支已有的回溯体，与 R38/W14 同一机制），使块内**先于该
+                #   操作数**的语句不再被 `_sb_has_body` 当作 if 体，BoolOp 链得以在
+                #   首操作数块启动；不命中则与本方法现状逐字节一致。
+                # AST 映射：链 [(A,'and'),(B,'or'),(C,'and'),(D,'and')] 由
+                #   _try_unify_mixed_boolop_chain 统一为单个 ast.BoolOp，父 IfRegion
+                #   得到扁平条件 `A and B or C and D`，then=T_F、出口=T_J，
+                #   `return False` 回到 if 之后的兄弟语句位置。
+                # 结构依据（原则 1/2/4）：CPython 3.11 对 (A∧B)∨(C∧D) 的降级把 A 的
+                #   假边指向第二 run 入口 C，而不是 if 的 merge。若仍按"普通条件头"
+                #   归约，父区域的 merge 就是 C，而 C 随后被自己 then 臂内的子
+                #   BoolOpRegion 吸收为其**内部成员**（实测 ownership:
+                #   blk 210 owner=BoolOpRegion@186 role=NORMAL，父 merge=210 却在子
+                #   区域内），直接违反"每块唯一归属"与"父区域只引用子区域 ENTRY"。
+                #   本条件在**识别时**排除该误归约，不做任何后处理、不跨层改归属。
+                # 反向排除 A（s2 草案的回归位置，即本候选与它的差集）：单 run 的 `A and B`
+                #   （`quotation/klinedata._is_same_type_date` 的
+                #   `a[0]==b[0] and a[1]==b[1]`）首操作数假边就是 if 的 merge/兄弟
+                #   语句入口 `LOAD_CONST False; RETURN_VALUE`——它不做判断，条件 (1)
+                #   失败；且第二操作数的短路目标就是 J，条件 (2)(3) 同时失败。s2 草案
+                #   只按"末条指令是 COMPARE_OP"放宽，在该处新建 BoolOpRegion@14 把
+                #   本属嵌套 if 的 J 抢成操作数（IfRegion@14 的 condition_block 落在
+                #   自身块集之外），故丢 26 条指令；本候选按上述结构合取放宽，不触发。
+                # 反向排除 B（第二 run 只有一名操作数）：`X and Y or Z`
+                #   （实测 `IQEngine/core/bar._history_bars`）虽满足 (1)-(4)，但其
+                #   J=Z 的 normal 后继是 then 体而非同出口的下一名操作数，条件 (5)
+                #   失败，故本候选在该处保持 head 现状（官方尺 58/58）；三操作数混合
+                #   链被截断成 `if not (X and Y)` 属 BoolOp 统一阶段的其他族缺陷，
+                #   不在本 hunk 内顺手改。
+
+                _r54_mixed = False
+                if _prev_instrs and getattr(_sb_last, 'argval', None) is not None:
+                    _r54_j = self.cfg.get_block_by_offset(_sb_last.argval)
+                    _r54_f = None
+                    for _r54_s in start_block.successors:
+                        if _r54_s is not _r54_j:
+                            _r54_f = _r54_s
+                            break
+                    if (_r54_j is not None and _r54_j is not start_block
+                            and _r54_f is not None and _r54_f is not start_block):
+                        _r54_j_last = _r54_j.get_last_instruction()
+                        _r54_f_last = _r54_f.get_last_instruction()
+                        if (_r54_j_last is not None
+                                and _r54_j_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                and getattr(_r54_j_last, 'argval', None) is not None
+                                and _r54_f_last is not None
+                                and _r54_f_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                and getattr(_r54_f_last, 'argval', None) is not None):
+                            _r54_tj = self.cfg.get_block_by_offset(_r54_j_last.argval)
+                            _r54_tf = self.cfg.get_block_by_offset(_r54_f_last.argval)
+                            _r54_f_ft = None
+                            for _r54_s in _r54_f.successors:
+                                if _r54_s is not _r54_tf:
+                                    _r54_f_ft = _r54_s
+                                    break
+                            # J 的 normal 后继 K：第二 run 的第二名操作数，
+                            # 必须与 J 共享同一短路出口 T_J。
+                            _r54_k = None
+                            for _r54_s in _r54_j.successors:
+                                if _r54_s is not _r54_tj:
+                                    _r54_k = _r54_s
+                                    break
+                            _r54_k_last = (_r54_k.get_last_instruction()
+                                           if _r54_k is not None else None)
+                            _r54_k_shares_exit = bool(
+                                _r54_k_last is not None
+                                and _r54_k_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                and getattr(_r54_k_last, 'argval', None) is not None
+                                and self.cfg.get_block_by_offset(_r54_k_last.argval)
+                                is _r54_tj)
+                            _r54_mixed = bool(
+                                _r54_tf is not None and _r54_tf is not _r54_j
+                                and _r54_tf.start_offset > _r54_j.start_offset
+                                and _r54_f_ft is _r54_j
+                                and _r54_tj is not None and _r54_tj is not _r54_tf
+                                and _r54_tj.start_offset > _r54_tf.start_offset
+                                and _r54_k_shares_exit)
+                if _r54_mixed or (_prev_instrs and _prev_instrs[-1].opname in ('LOAD_FAST', 'LOAD_NAME',
                                                                   'LOAD_GLOBAL', 'LOAD_DEREF',
-                                                                  'LOAD_ATTR', 'LOAD_METHOD'):
+                                                                  'LOAD_ATTR', 'LOAD_METHOD')):
                     if _prev_instrs[-1].opname in ('LOAD_ATTR', 'LOAD_METHOD'):
                         _w14_attr_relaxed = True
                     _depth = -1
