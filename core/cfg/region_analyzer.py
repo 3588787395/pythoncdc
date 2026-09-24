@@ -4329,7 +4329,26 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     if (_r30c1_last is not None
                             and _r30c1_last.opname in BACKWARD_JUMP_OPS
                             and _r30c1_last.argval != header.start_offset):
-                        continue
+                        # [R58-B] 识别条件——候选块末指令为向后跳转（旧 R30-C1
+                        #   直接拒），但循环体内存在经 JUMP_FORWARD/JUMP_ABSOLUTE
+                        #   直入该候选的前驱：那是显式 break 边，候选块是 break
+                        #   落点；落点自身再 JUMP_BACKWARD 只是续外层循环
+                        #   （内层 for 的 break 落在外层 while 回边块上，
+                        #   default_event_source @3184→@3210→@2476 形态）。
+                        # 归约方式——豁免 R30-C1，继续核验并入 verified；
+                        #   无前向跳转前驱时维持旧拒（纯外层回边块仍排除）。
+                        # AST 映射——has_break=True、break_blocks 含该落点，
+                        #   生成器据此保留 for 的 Break 与 orelse。
+                        _r58_has_fwd_pred = False
+                        for _r58_pred in break_block.predecessors:
+                            if _r58_pred in body:
+                                _r58_plast = _r58_pred.get_last_instruction()
+                                if (_r58_plast is not None
+                                        and _r58_plast.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')):
+                                    _r58_has_fwd_pred = True
+                                    break
+                        if not _r58_has_fwd_pred:
+                            continue
                     if any(pred in _r102_reachable for pred in break_block.predecessors):
                         verified_break_blocks.add(break_block)
                         if break_block in body:
@@ -4713,7 +4732,25 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     _cond_exit = self.cfg.get_block_by_offset(_cond_last.argval)
                     if _cond_exit and not self._check_block_has_trailing_return_none(_cond_exit):
                         _cond_exit_targets.add(_cond_exit)
-            spurious = [eb for eb in lr.else_blocks if eb in parent_body and eb not in _cond_exit_targets]
+            # [R58-B] 识别条件——for-else 的 else 体是 break 桩：
+            #   else 块 == 当前循环 metadata['for_iter_exit']（FOR_ITER
+            #   耗尽落入的 `else: break` 跳出外层循环形态），且该块虽在
+            #   父循环 body_blocks 内（break 语句词法上位于父循环体中），
+            #   但语义上是本子循环自然出口的 else 归约结果。
+            #   注：cleanup 在 _annotate_all_roles 之前执行（L1789 vs
+            #   L1791），block_roles 全为 NORMAL，不可用角色判据；须用
+            #   region 创建时已写入的 metadata（L4389）。
+            # 归约方式——不从 else_blocks 剔除（旧判据只看
+            #   `eb in parent_body` 即判 spurious，把 default_event_source
+            #   内层 for 的 for_iter_exit PURE_BREAK@3208 误删 → else_blocks
+            #   被清空 → 生成器把 for 后无条件 break 发成 while 恒退出）。
+            # AST 映射——保留 LoopRegion.else_blocks，_generate_loop 照常
+            #   发射 For.orelse = [Break]。
+            _r58_fie = lr.metadata.get('for_iter_exit') if isinstance(lr.metadata, dict) else None
+            spurious = [eb for eb in lr.else_blocks
+                        if eb in parent_body
+                        and eb not in _cond_exit_targets
+                        and eb is not _r58_fie]
             if not spurious:
                 continue
             for eb in spurious:
@@ -5276,6 +5313,23 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 post_else = succ
                                 break
                 if post_else and post_else != for_iter_exit:
+                    # [R58-B] 识别条件——for_iter_exit 为纯跳转块（单条
+                    #   JUMP_FORWARD/JUMP_ABSOLUTE）且 break 目标与之分叉
+                    #   （post_else ≠ for_iter_exit，已有 break 证据）：
+                    #   即 `for...else: break` 形态——FOR_ITER 耗尽落入
+                    #   break 桩，跳向外层退出，与 body 内 break（跳
+                    #   post_else 续流）分道扬镳。
+                    # 归约方式——else 仅含 for_iter_exit 自身；不 BFS
+                    #   （旧 BFS 从 3208 跟到跳转目标 3214，把外层退出
+                    #   续流误吞入 else）；并绕过「纯跳转过滤」（break
+                    #   桩是真实控制流，非无体 trampoline）。
+                    # AST 映射——else_blocks=[for_iter_exit]，
+                    #   LoopRegion.orelse=[Break]。
+                    _r58_fe_instrs = [i for i in for_iter_exit.instructions
+                                      if i.opname not in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME')]
+                    if (len(_r58_fe_instrs) == 1
+                            and _r58_fe_instrs[0].opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')):
+                        return [for_iter_exit], natural_exit
                     else_blocks = []
                     visited = set()
                     stack = [for_iter_exit]

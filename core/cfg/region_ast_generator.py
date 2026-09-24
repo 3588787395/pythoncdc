@@ -4774,6 +4774,44 @@ AST 映射规则:
                     _filtered_else_blocks.sort(key=lambda b: b.start_offset)
             else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
 
+        # [R58-B] for-else 纯跳转 else 归约为 Break。
+        # 识别条件——for 循环有 else_blocks，但 _if_generate_branch_stmts 产出
+        # 为空（else 块仅含 PURE_JUMP/NOISE，无用户语句），且所有 else 块的
+        # 直接后继均落在某个祖先 LoopRegion 的 break_blocks 中。
+        # 归约方式——该纯跳转在字节码层即「for 正常耗尽 → 跳入祖先循环的
+        # break 目标」，语义为在 else 子句中执行 break 祖先循环（如
+        # default_event_source for@2708 的 else@3208 JUMP_FORWARD→3214，
+        # 3214 ∈ while@2476.break_blocks）；归约为 [{'type': 'Break'}]。
+        # AST 映射——For.orelse = [Break]，编译器对 for-else 中的 break
+        # 生成与原字节码一致的前向跳转。
+        if (not else_stmts and _filtered_else_blocks
+                and region.region_type == RegionType.FOR_LOOP):
+            _r58_anc_break_targets = set()
+            _r58_anc = region.parent
+            while _r58_anc is not None:
+                if isinstance(_r58_anc, LoopRegion) and _r58_anc.break_blocks:
+                    _r58_anc_break_targets.update(_r58_anc.break_blocks)
+                _r58_anc = getattr(_r58_anc, 'parent', None)
+            if _r58_anc_break_targets:
+                _r58_all_jump_to_break = True
+                for _r58_eb in _filtered_else_blocks:
+                    _r58_meaningful = [i for i in _r58_eb.instructions
+                                       if i.opname not in NOISE_OPS
+                                       and i.opname not in PURE_JUMP_OPS
+                                       and i.opname not in CONDITIONAL_JUMP_OPS
+                                       and i.opname not in ('POP_TOP', 'EXTENDED_ARG')]
+                    if _r58_meaningful:
+                        _r58_all_jump_to_break = False
+                        break
+                    if not any(_s in _r58_anc_break_targets for _s in _r58_eb.successors):
+                        _r58_all_jump_to_break = False
+                        break
+                if _r58_all_jump_to_break:
+                    else_stmts = [{'type': 'Break'}]
+                    for _r58_eb in _filtered_else_blocks:
+                        self.generated_blocks.add(_r58_eb)
+                        self.generated_offsets.add(_r58_eb.start_offset)
+
         # 过滤for循环else子句中多余的return None（隐式函数返回，非for-else语义）
         if else_stmts:
             _non_trivial = [s for s in else_stmts if not self._is_trailing_return_none_statement(s)]
@@ -4965,6 +5003,76 @@ AST 映射规则:
             output.extend(_sequential_after_loop)
             return output
         return result
+
+    def _r58_collect_break_target_stmts(self, region: LoopRegion, body_set: set) -> List[Dict[str, Any]]:
+        """[R58-B] 收集 while/for 非平凡 break 目标块的顺序语句。
+
+        识别条件——region.has_break=True 且 break 目标块含非平凡代码
+        （非 PURE_JUMP/条件跳转/POP_TOP/EXTENDED_ARG 清理），该块是
+        循环后顺序代码入口（如 default_event_source while@2476 的
+        break 目标 3214 = `dt = date.replace; yield AFTER_TRADING_END`）。
+        归约方式——查找以其为 entry 的 If/Loop/Try 区域则递归生成，
+        否则直接生成块语句及其非 RETURN 后继；标记 generated 防重复。
+        AST 映射——返回语句列表，调用方追加到循环节点之后。
+        """
+        sequential: List[Dict[str, Any]] = []
+        if not getattr(region, 'has_break', False):
+            return sequential
+        processed = set()
+        for bb in region.break_blocks:
+            if bb in body_set or bb.start_offset in processed:
+                continue
+            meaningful = [i for i in bb.instructions
+                          if i.opname not in NOISE_OPS
+                          and i.opname not in PURE_JUMP_OPS
+                          and i.opname not in CONDITIONAL_JUMP_OPS
+                          and i.opname not in ('POP_TOP', 'EXTENDED_ARG')]
+            if not meaningful:
+                continue
+            bb_region = (self.region_analyzer.get_entry_region_for_block(bb)
+                         or self.region_analyzer.get_region_for_block(bb))
+            if bb_region is region:
+                bb_region = None
+            if bb_region and isinstance(bb_region, (IfRegion, LoopRegion, TryExceptRegion)):
+                bb_rid = id(bb_region)
+                if bb_rid not in self._generated_regions and bb_rid not in self._generating_regions:
+                    self.generated_blocks.discard(bb)
+                    self.generated_offsets.discard(bb.start_offset)
+                    bb_ast = self._generate_region(bb_region)
+                    if bb_ast:
+                        if isinstance(bb_ast, list):
+                            sequential.extend(bb_ast)
+                        else:
+                            sequential.append(bb_ast)
+                    processed.add(bb.start_offset)
+                    for b in bb_region.blocks:
+                        self.generated_blocks.add(b)
+                        self.generated_offsets.add(b.start_offset)
+                    self._generated_regions.add(bb_rid)
+                else:
+                    bb_stmts = self._generate_block_statements(bb)
+                    if bb_stmts:
+                        sequential.extend(bb_stmts)
+                    self.generated_blocks.add(bb)
+                    self.generated_offsets.add(bb.start_offset)
+                    processed.add(bb.start_offset)
+            elif bb not in self.generated_blocks:
+                bb_stmts = self._generate_block_statements(bb)
+                if bb_stmts:
+                    sequential.extend(bb_stmts)
+                self.generated_blocks.add(bb)
+                self.generated_offsets.add(bb.start_offset)
+                processed.add(bb.start_offset)
+                for succ in bb.successors:
+                    if succ not in body_set and succ not in (region.else_blocks or []) and succ not in self.generated_blocks:
+                        succ_role = self.region_analyzer.get_block_role(succ)
+                        if succ_role not in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                            succ_stmts = self._generate_block_statements(succ)
+                            if succ_stmts:
+                                sequential.extend(succ_stmts)
+                            self.generated_blocks.add(succ)
+                            self.generated_offsets.add(succ.start_offset)
+        return sequential
 
     def _loop_generate_while(self, region: LoopRegion, skip_store_targets: Set[str] = None) -> Dict[str, Any]:
         pre_stmts = []
@@ -5235,6 +5343,10 @@ AST 映射规则:
                             pass
                         else:
                             _can_merge = False
+                # [R58-B] while True 早退路径也须发射非平凡 break 目标后的
+                # 顺序语句（dt/yield 等），否则整段丢失。
+                _r58_seq = self._r58_collect_break_target_stmts(
+                    region, set(region.body_blocks) | {region.header_block})
                 if _can_merge:
                     _inner = body_stmts[0]
                     _rest = [s for s in body_stmts[1:]
@@ -5242,9 +5354,11 @@ AST 映射规则:
                     output = list(pre_stmts)
                     output.append(_inner)
                     output.extend(_rest)
+                    output.extend(_r58_seq)
                     return output
                 output = list(pre_stmts)
                 output.append(result)
+                output.extend(_r58_seq)
                 return output
 
             if region.is_while_true and cond_block == region.header_block:
@@ -5259,8 +5373,11 @@ AST 映射规则:
                     output.append(body_stmts[0])
                     output.extend(body_stmts[1:])
                     return output
+                _r58_seq_b = self._r58_collect_break_target_stmts(
+                    region, set(region.body_blocks) | {region.header_block})
                 output = list(pre_stmts)
                 output.append(result)
+                output.extend(_r58_seq_b)
                 return output
 
             if region.is_while_true and cond_block == region.header_block:
@@ -6448,6 +6565,20 @@ AST 映射规则:
                     if _bk_block and _bk_block not in self.generated_blocks:
                         self.generated_blocks.add(_bk_block)
                         self.generated_offsets.add(_bk_block.start_offset)
+            # [R58-B] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
+            #   识别条件——while.has_break=True 且 break 目标块含非平凡代码
+            #   （非 PURE_JUMP/条件跳转/清理指令），该块是循环后顺序代码入口
+            #   （如 default_event_source while@2476 的 break 目标 3214 =
+            #   `dt = date.replace; yield AFTER_TRADING_END`）。
+            # 归约方式——与 for 路径 R102 同构：查找以其为 entry 的
+            #   If/Loop/Try 区域则递归生成，否则直接生成块语句；追加到
+            #   _sequential_after_loop 并标记 generated。旧 while 路径仅有
+            #   break→return 折叠，非平凡 break 目标被吸入 region_blocks 却
+            #   从不发射 → 循环后 dt/yield 整段丢失。
+            # AST 映射——While 节点后随顺序语句列表返回。
+            _bb_processed_offsets_w = set()
+            _r58_seq_main = self._r58_collect_break_target_stmts(region, _body_set_w)
+            _sequential_after_loop.extend(_r58_seq_main)
         else:
             _sequential_after_loop = else_stmts
             else_stmts = []
@@ -6546,6 +6677,38 @@ AST 映射规则:
                 _nlc_id_r08 = id(_r08_nested_loop_child)
                 if (_nlc_id_r08 not in self._generated_regions
                         and _nlc_id_r08 not in self._generating_regions):
+                    # [R58-A] 识别条件：r08 路径即将把子循环整体插入
+                    # body_stmts，而 body_blocks_no_header 中可能仍滞留
+                    # 偏移 < 子入口的普通前缀块（for 体内 while 之前的
+                    # date/last_tick/last_dt/dt_before_day_trading 赋值，
+                    # 块@2378 在子 while 入口@2476 之前被 dispatch 判为
+                    # 非处理、入 pending，随后 r08 先插 while 且 continue，
+                    # 绕过下方 dispatch 前 flush，前缀被 _loop_postprocess
+                    # 甩到 while 之后——违反「父引用子入口」下前缀必须先于
+                    # 子区域入口发射的顺序归约）。
+                    # 归约方式：与 6622 行 dispatch 前 flush 同构——先发射
+                    # 偏移更小的前缀，再插入子循环；仅偏移 >= 子入口的
+                    # pending 留给 postprocess（while 之后的 dt/yield）。
+                    # AST 映射：body_stmts += 前缀语句；再 body_stmts +=
+                    # 子循环（While/For 节点）。
+                    if body_blocks_no_header and _r08_nested_loop_child.entry is not None:
+                        _r58_cur_off = _r08_nested_loop_child.entry.start_offset
+                        _r58_before = [b for b in body_blocks_no_header
+                                       if b.start_offset < _r58_cur_off]
+                        if _r58_before:
+                            _r58_after = [b for b in body_blocks_no_header
+                                          if b.start_offset >= _r58_cur_off]
+                            _r58_branch = self._if_generate_branch_stmts(_r58_before)
+                            if _r58_branch and body_stmts:
+                                _r58_last = body_stmts[-1].get('type') if isinstance(body_stmts[-1], dict) else None
+                                if _r58_last in ('Try', 'If', 'For', 'While', 'With'):
+                                    while (_r58_branch and isinstance(_r58_branch[0], dict)
+                                           and _r58_branch[0].get('type') == 'Continue'):
+                                        _r58_branch.pop(0)
+                            if _r58_branch:
+                                body_stmts.extend(_r58_branch)
+                            body_blocks_no_header.clear()
+                            body_blocks_no_header.extend(_r58_after)
                     nested_ast = self._generate_region(_r08_nested_loop_child)
                     if nested_ast:
                         if isinstance(nested_ast, list):
