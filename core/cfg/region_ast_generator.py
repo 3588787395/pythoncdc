@@ -3276,6 +3276,60 @@ class RegionASTGenerator:
                     # with 生成失败：恢复 generated 标记，退回纯 ternary 结果
                     for _wb in _overlap_wr.blocks:
                         self.generated_blocks.add(_wb)
+            # [R59-B Fix2] Ternary merge_block 同为未生成结构区域
+            # （If/Loop/Try/Match/Assert/BoolOp）entry 时的统一 claim。
+            # 识别条件：ternary 已生成，其 merge_block 是另一尚未
+            # _generated/_generating 的上述结构区域的 entry（双角色
+            # 入口）——与上方 With overlap 同构，扩展到全部结构类型。
+            # 归约方式：解除该结构区域非 ternary 块的 generated 标记
+            # （保留已生成 TernaryRegion.blocks，原则 2 唯一归属），
+            # 丢弃 merge_block 的 generated 标记，立即
+            # _generate_region(structured) 自底向上归约并并入结果，
+            # 成功后重新标记其全部块与 _generated_regions。
+            # AST 映射：父序列引用 ternary 归约结果 + 结构区域抽象
+            # 节点（如 IfRegion→If(ibc BoolOp 条件)），不再被
+            # emit 的伪 If 合成或 try body 的 skip 吞掉。
+            if _ternary_ast is not None and region.merge_block is not None:
+                _r59_claim_sr = None
+                _r59_sr_types = (
+                    IfRegion, LoopRegion, TryExceptRegion,
+                    MatchRegion, AssertRegion, BoolOpRegion,
+                )
+                for _r2s in self.regions:
+                    if (_r2s is not region
+                            and isinstance(_r2s, _r59_sr_types)
+                            and _r2s.entry is region.merge_block
+                            and id(_r2s) not in self._generated_regions
+                            and id(_r2s) not in self._generating_regions):
+                        _r59_claim_sr = _r2s
+                        break
+                if _r59_claim_sr is not None:
+                    _r59_keep = set()
+                    for _tr in self.regions:
+                        if isinstance(_tr, TernaryRegion) and id(_tr) in self._generated_regions:
+                            _r59_keep.update(id(b) for b in _tr.blocks)
+                    for _cb in _r59_claim_sr.blocks:
+                        if id(_cb) not in _r59_keep and _cb in self.generated_blocks:
+                            self.generated_blocks.discard(_cb)
+                    if region.merge_block in self.generated_blocks:
+                        self.generated_blocks.discard(region.merge_block)
+                    self._generated_regions.discard(id(_r59_claim_sr))
+                    self._generating_regions.discard(id(_r59_claim_sr))
+                    _r59_sr_ast = self._generate_region(_r59_claim_sr)
+                    if _r59_sr_ast:
+                        if isinstance(_ternary_ast, list):
+                            if isinstance(_r59_sr_ast, list):
+                                _ternary_ast = _ternary_ast + _r59_sr_ast
+                            else:
+                                _ternary_ast = _ternary_ast + [_r59_sr_ast]
+                        else:
+                            if isinstance(_r59_sr_ast, list):
+                                _ternary_ast = [_ternary_ast] + _r59_sr_ast
+                            else:
+                                _ternary_ast = [_ternary_ast, _r59_sr_ast]
+                    for _cb in _r59_claim_sr.blocks:
+                        self.generated_blocks.add(_cb)
+                    self._generated_regions.add(id(_r59_claim_sr))
             return _ternary_ast
         elif region.region_type == RegionType.PASS:
             return {'type': 'Pass'}
@@ -17220,6 +17274,22 @@ AST 映射规则:
                                 _is_then_target = _jt_block in region.then_blocks if _jt_block and region.then_blocks else False
                                 if _is_then_target:
                                     _part = _flip_is_none_compare(_part)
+                            # [R59-B Fix3] or 链首段负极性（R13c
+                            # `if not A or B:`）：首块末跳 IF_FALSE→then
+            # 入口（A 假则 not A 真、短路进 then），expr_reconstructor
+            # 重建的是裸 A；须取反为 not A 才与源码/重编译一致
+            # （IF_FALSE→then 对偶于正常 or 的 IF_TRUE→then）。
+            # 识别条件：op=or、末跳 IF_FALSE、跳转目标 ∈ then_blocks。
+            # 归约方式：_negate_expr(_part) 包 not()（保留 Compare
+            # 运算符，镜像 _negate_expr 一次正确原则）。
+            # AST 映射：BoolOp(or, [not A, B]) → 重编译 IF_FALSE→then。
+                            elif (_cb_last
+                                  and 'IF_FALSE' in _cb_last.opname
+                                  and _cb_last.argval is not None):
+                                _jt_block = self.region_analyzer.cfg.get_block_by_offset(_cb_last.argval)
+                                _is_then_target = _jt_block in region.then_blocks if _jt_block and region.then_blocks else False
+                                if _is_then_target:
+                                    _part = _negate_expr(_part)
                         elif _chain_op == 'and' and _cb_last and 'TRUE' in _cb_last.opname:
                             _part = _flip_contains_compare(_part) if (_part.get('type') == 'Compare' and any((o.get('type') if isinstance(o, dict) else o) in ('In', 'NotIn', 'in', 'not in') for o in (_part.get('ops') or []))) else _negate_expr(_part)
                         _main_parts.append(_part)
@@ -38067,10 +38137,40 @@ AST 映射规则:
             results.extend(post_extra)
             return
         _cond_expr = _last['value']
+        # [R59-B Fix1] merge 块同为未生成结构区域 entry 时让位。
+        # 识别条件：本 TernaryRegion 的 merge_block 恰是另一未生成
+        # （非 _generated/_generating）结构区域（If/Loop/Try/With/
+        # Match/Assert/BoolOp）的 entry——双角色入口（原则 2 冲突）。
+        # 归约方式：不合成伪 If；post_extra 仅保留条件前缀语句
+        # （[-1] 是条件表达式 Expr，由结构区域自重建），结构区域
+        # 的归约由 _generate_region 的 R59-B Fix2 claim 路径触发。
+        # AST 映射：父序列收到 ternary + 前缀语句；If 结构由
+        # IfRegion→_if_generate_normal 正规生成（含 ibc BoolOp 条件）。
+        _r59_exc = set(getattr(region.merge_block, 'exception_successors', None) or ())
+        _r59_claimable = (
+            IfRegion, LoopRegion, TryExceptRegion, WithRegion,
+            MatchRegion, AssertRegion, BoolOpRegion,
+        )
+        for _other in self.regions:
+            if _other is region:
+                continue
+            if id(_other) in self._generated_regions or id(_other) in self._generating_regions:
+                continue
+            if (getattr(_other, 'entry', None) is region.merge_block
+                    and isinstance(_other, _r59_claimable)):
+                results.extend(post_extra[:-1])
+                return
         _if_jump_is_true = 'IF_TRUE' in _merge_last.opname
         _fallthrough = None
         _jump_target = None
+        # [R59-B Fix1] 后继扫描剔除异常表边：try 体内 merge 块的
+        # exception_successors（如 PUSH_EXC_INFO 处理器）不是条件跳转的
+        # fallthrough/jump 目标；不排除会把 _jump_target 覆写为异常块，
+        # _continuation 越界吞掉 then/merge 全部块（原则 1 自底向上 +
+        # 原则 2 每块唯一归属——异常边不参与正常控制流归约）。
         for _succ in region.merge_block.successors:
+            if _succ in _r59_exc:
+                continue
             if _succ.start_offset == _merge_last.offset + 2:
                 _fallthrough = _succ
             else:
@@ -40026,6 +40126,56 @@ AST 映射规则:
                         _rest_stmts = _rest_stmts[:-1]
                         continue
                     break
+                # [R59-B Fix4b] _rest 尾部为纯 LOAD_* 段且 merge_block
+                # 剔异常后唯一正常后继恰为单条 RETURN_VALUE 独立块
+                # （跨块 return：值压栈在本块、RETURN 在后继块）→ 尾部
+                # Expr 联结为 Return(X)，后继标 generated（原则 2）。
+                # 识别条件：末指令 LOAD_*、尾段无 STORE/POP/跳转、
+                # 后继有效指令仅 RETURN。
+                # 归约方式：_rest_stmts[-1] Expr→Return(_explicit_return)。
+                # AST 映射：post_extra 尾为 Return(url)，避免裸 Expr 蒸发
+                # 为 POP_TOP 与后继 Return(None) 错位。
+                if (_rest_clean
+                        and _rest_clean[-1].opname.startswith('LOAD_')
+                        and _rest_stmts
+                        and isinstance(_rest_stmts[-1], dict)
+                        and _rest_stmts[-1].get('type') == 'Expr'):
+                    _r59u_split = 0
+                    for _r59u_i, _r59u_ins in enumerate(_rest_clean):
+                        if _r59u_ins.opname in (
+                                'POP_TOP', 'STORE_FAST', 'STORE_NAME',
+                                'STORE_GLOBAL', 'STORE_DEREF', 'STORE_SUBSCR',
+                                'STORE_ATTR', 'RETURN_VALUE', 'RETURN_CONST',
+                                'JUMP_FORWARD', 'JUMP_BACKWARD'):
+                            _r59u_split = _r59u_i + 1
+                    _r59u_tail = _rest_clean[_r59u_split:]
+                    if _r59u_tail and all(
+                            i.opname.startswith('LOAD_')
+                            or i.opname in ('LOAD_METHOD', 'LOAD_ATTR',
+                                            'LOAD_SUPER_ATTR')
+                            for i in _r59u_tail):
+                        _r59u_exc = set(getattr(
+                            region.merge_block, 'exception_successors', None) or ())
+                        _r59u_normal = [
+                            s for s in (region.merge_block.successors or [])
+                            if s not in _r59u_exc]
+                        if len(_r59u_normal) == 1:
+                            _r59u_succ = _r59u_normal[0]
+                            _r59u_sm = [
+                                i for i in (_r59u_succ.instructions or [])
+                                if i.opname not in (
+                                    'RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                            if (len(_r59u_sm) == 1
+                                    and _r59u_sm[0].opname in (
+                                        'RETURN_VALUE', 'RETURN_CONST')):
+                                _rest_stmts[-1] = {
+                                    'type': 'Return',
+                                    '_explicit_return': True,
+                                    'value': _rest_stmts[-1].get('value'),
+                                }
+                                self.generated_blocks.add(_r59u_succ)
+                                self.generated_offsets.add(
+                                    _r59u_succ.start_offset)
                 if _rest_stmts:
                     region.post_consumer_extra_stmts = _rest_stmts
 
@@ -42806,6 +42956,61 @@ AST 映射规则:
                             self.generated_blocks.add(_w24_succ)
                             self.generated_offsets.add(_w24_succ.start_offset)
                             return _w24_stmts
+
+        # [R59-B Fix4] 块尾 LOAD_* + 唯一正常后继为 RETURN_VALUE
+        # 独立块 → 联结为 Return(X)。
+        # 识别条件：本块末指令是 LOAD_*（值压栈未消费）、剔除
+        # exception_successors 后唯一正常后继的全部有效指令恰为
+        # 单条 RETURN_VALUE（跨块 return 形态，如 try 体内
+        # `...; return url` 被基本块边界切开）。
+        # 归约方式：按最后一条语句终结符（POP_TOP/STORE_*）切分
+        # 前缀语句与尾部值表达式；前缀经
+        # _build_statements_from_instructions 发射，尾部重建为
+        # Return 值；两块均标 generated（原则 2 唯一归属）。
+        # AST 映射：[...prefix_stmts, Return(X)]，避免尾部 LOAD
+        # 被发成裸 Expr、RETURN 独立块发成 Return(None)。
+        _r59t_last = block.get_last_instruction()
+        if _r59t_last is not None and _r59t_last.opname.startswith('LOAD_'):
+            _r59t_exc = set(getattr(block, 'exception_successors', None) or ())
+            _r59t_normal = [s for s in block.successors if s not in _r59t_exc]
+            if len(_r59t_normal) == 1:
+                _r59t_succ = _r59t_normal[0]
+                _r59t_sm = [i for i in _r59t_succ.instructions
+                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                if (len(_r59t_sm) == 1
+                        and _r59t_sm[0].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                    _r59t_split = 0
+                    for _r59t_i, _r59t_ins in enumerate(block.instructions):
+                        if _r59t_ins.opname in (
+                                'POP_TOP', 'STORE_FAST', 'STORE_NAME',
+                                'STORE_GLOBAL', 'STORE_DEREF', 'STORE_SUBSCR',
+                                'STORE_ATTR', 'RETURN_VALUE', 'RETURN_CONST'):
+                            _r59t_split = _r59t_i + 1
+                    _r59t_pre = block.instructions[:_r59t_split]
+                    _r59t_val = block.instructions[_r59t_split:]
+                    if _r59t_val and all(
+                            i.opname.startswith('LOAD_')
+                            or i.opname in ('LOAD_METHOD', 'LOAD_ATTR', 'LOAD_SUPER_ATTR')
+                            for i in _r59t_val):
+                        self.expr_reconstructor.reset()
+                        _r59t_expr = self.expr_reconstructor.reconstruct(_r59t_val)
+                        if _r59t_expr is not None:
+                            _r59t_stmts = []
+                            if _r59t_pre:
+                                _r59t_pre_stmts = self._build_statements_from_instructions(
+                                    _r59t_pre, block)
+                                if _r59t_pre_stmts:
+                                    _r59t_stmts.extend(_r59t_pre_stmts)
+                            _r59t_stmts.append({
+                                'type': 'Return',
+                                '_explicit_return': True,
+                                'value': _r59t_expr,
+                            })
+                            self.generated_blocks.add(block)
+                            self.generated_offsets.add(block.start_offset)
+                            self.generated_blocks.add(_r59t_succ)
+                            self.generated_offsets.add(_r59t_succ.start_offset)
+                            return _r59t_stmts
 
         import os as _os_dbg
         if _os_dbg.environ.get('R23N6_DEBUG2'):
