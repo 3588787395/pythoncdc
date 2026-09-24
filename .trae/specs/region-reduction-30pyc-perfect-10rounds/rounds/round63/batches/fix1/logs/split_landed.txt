@@ -1,0 +1,8 @@
+block instrs=21 offsets=[1696, 1698, 1708, 1718, 1720, 1722, 1732, 1742, 1764, 1766, 1768, 1772, 1782, 1784, 1786, 1788, 1798, 1808, 1810, 1812, 1818]
+forward depth: 1696:LOAD_FAST(+1)=1 1698:LOAD_ATTR(+0)=1 1708:LOAD_ATTR(+0)=1 1718:STORE_FAST(-1)=0 1720:LOAD_FAST(+1)=1 1722:LOAD_ATTR(+0)=1 1732:LOAD_ATTR(+0)=1 1742:LOAD_METHOD(+1)=2 1764:LOAD_FAST(+1)=3 1766:LOAD_CONST(+1)=4 1768:PRECALL(-2)=2 1772:CALL(-1)=1 1782:STORE_FAST(-1)=0 1784:LOAD_FAST(+1)=1 1786:LOAD_FAST(+1)=2 1788:LOAD_ATTR(+0)=2 1798:LOAD_ATTR(+0)=2 1808:SWAP(+0)=2 1810:COPY(+1)=3 1812:COMPARE_OP(-1)=2 1818:JUMP_IF_FALSE_OR_POP(+0)=2
+terminator=JUMP_IF_FALSE_OR_POP in_forward_cond=False in_short_circuit=True
+x=12 offset=1782
+strict-prefix: EMPTY
+last-store offs=[1696, 1782] -> 2 stmts
+    {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'stock_listed_date', 'ctx': 'Store'}], 'value': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'order', 'ctx': 'Load', 'lineno': 227}, 'attr': 'asset', 'ctx': 'Load', 'lineno': None, 'is_method_form': False}, 'attr': 'listed_date', 'ctx': 'Load', 'lineno': None, 'is_method_form': True}}
+    {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'next_trading_date', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'self', 'ctx': 'Load', 'lineno': 228}, 'attr': '_engine', 'ctx': 'Load', 'lineno': None, 'is_method_form': False}, 'attr': 'data_proxy', 'ctx': 'Load', 'line

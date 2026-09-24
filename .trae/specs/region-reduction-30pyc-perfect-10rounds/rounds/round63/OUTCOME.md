@@ -15,8 +15,15 @@
 | diag5 | 下单 API 族 | `cand_r63b5_hdrjt.json` / `hdrjt2.json` | 拒（见证缺陷量不变且新丢 `i += 1` / 内层 `break`，c2 变体更差） |
 
 实现阶段另派 2 个单变量代理：fix1（生成器 chainstore）、fix2（分析器 boolop_exit）。
-fix1/fix2 均未自行留下 ANALYSIS.md，其工作区分析由集中验证方依据其 `dump/` 自产记录补写
-（`batches/fix1/ANALYSIS.md`、`batches/fix2/ANALYSIS.md`，逐条注明可回溯来源）。
+fix2 交付了自写分析（子代理在集中验证方补写之后返回并追加了自己的附录，其附录更正了首版表格
+把 `b4x`（单变量分析器臂）与 `f2`（blunt 整体关闭）两个标签写反、以及把 `f3` 说成
+「去掉 store 门控」之处；更正后的读数与归属见 `batches/fix2/ANALYSIS.md`）。
+fix1 未留下 ANALYSIS.md，其工作区分析由集中验证方依据其 `dump/` 自产记录补写。
+两支的独立复核：`fix2/dump/b4x_402.jsonl` vs `fix2/dump/f2_402.jsonl`（201+201，402 条不同路径）
+经集中重跑 `SAME=402 IMPROVED=0 REGRESSION=0 MOVED=0` ⇒ P5 值块扩展在本语料两臂逐字节等价，
+窄门控的理由是保留 P5 本职用途，不是全量收益。fix2 另提示：工作树 `core/` 于 04:20:39
+被集中落地改写，其后任何 `--arm=landed` 读数代表 R63 而非 R62（已核对其 landed 列复现
+R62 基线 5675/381，故仍为轮初态）。
 
 ## 2. 修到完全 OK 的 pyc（本轮 mandate）
 
@@ -56,7 +63,7 @@ G2 single  quotation.pyc                     官方 143/143；严格 148/150 缺
 G3 batch --index pyc_index.json --all --round 63   402 verified / 0 failed / ok 382 / partial 20
 G4 stats                                    5746 funcs / 5677 matched / 98.80%
 G5 影响面  402 A/B（轮 f4_402 → mirr_final）  SAME=398 IMPROVED=1 REGRESSION=0 MOVED=3，文件 381→382
-G6 电池    落地字节 16 项                     matched 42 / clean 7 / worse-than-landed 0
+G6 电池    落地字节 17 项                     matched 44 / clean 8 / worse-than-landed 0
 ```
 
 独立印证：fix1 进程在落地后重读的 402 支（`fix1/dump/wl.jsonl`）与集中镜像读数
@@ -85,18 +92,28 @@ G6 电池    落地字节 16 项                     matched 42 / clean 7 / wors
 
 ## 6. 移交下一轮的线索
 
-1. `tern_slot` 与 `boolop_exit` 是**成对生效**（各自单独用都会在对方负责的形状上砸开缺口，
+1. **`matcher.pyc` 到不了 17/17 的第二处缺陷（R64 头号）**：`match` 的 orig 索引
+   `180..462`（282 条指令，源码 219-232 区段、偏移 1314..~3200）被整体投到产物尾部
+   （decomp 428..713 / 偏移 3060..4980），而 `if self._volume_limit:`（原 292 行 / 产物 161 行）
+   占了前面的槽。落地臂与 chainstore 候选臂的 `probe_align` hunk 表**逐字节相同**
+   （RATIO 0.5926 vs 0.5818）⇒ 与本轮改动无关的既有位移缺陷，fix1 §4 有 hunk 明细。
+2. `tern_slot` 与 `boolop_exit` 是**成对生效**（各自单独用都会在对方负责的形状上砸开缺口，
    实测见 `batches/fix2/ANALYSIS.md` 表格）。与记忆 `analyzer-generator-pair-inertness` 同形。
    后续对分析器块归属的改动必须与生成器让位判据一起过电池。
-2. `region.entry in r.blocks` 这类「跨层次全集包含」判据在 `_generate_region` 各分支里仍有同族
+3. `region.entry in r.blocks` 这类「跨层次全集包含」判据在 `_generate_region` 各分支里仍有同族
    写法（diag4 的 ANALYSIS 记录了同函数 IF@216 的成因：then 臂全路径 return 把 402 并成 elif）。
-3. diag1 f-string 尾部落地后 `r63_ft4` 仍 d=-9、`probe_r63b2_cases2` d=-94：
-   b2（尾比较 + return）与 b5（下单头跳转）两支的判据未收敛，其 FACTS 已给出探针读数。
-4. `flyAccount._do_request` 的过冲（官方 +7 / 严格 +9）发生在 b4 成对上，根因站点 diag5 已指到
+4. 两支 b4 变体已证伪，勿重试：`f3`（按块内容含 STORE 即拒，被吞的 128 本就不含 STORE，
+   缺的是结构事实）；`f2`（整体关闭值块扩展）与落地窄门控在全量 402 上**逐字节等价**
+   （`ab --a=b4x_402 --b=f2_402` → SAME=402），说明 P5 扩展在本语料值上下文 inert。
+5. `flyAccount._do_request` 的过冲（官方 +7 / 严格 +9）发生在 b4 成对上，根因站点 diag5 已指到
    `_loop_build_if_with_exit_branches`（落地后位于 region_ast_generator.py:10470；diag5 读到的
-   :10444 是落地前行号）的臂极性选择；
-   需要一条「补发臂不得重复汇合后语句」的合取，而不是回退（回退臂 `mirr_nog1` 未跑完，
-   其 `dump/wn.jsonl` 停在 185/402）。
+   :10444 是落地前行号）的臂极性选择；需要一条「补发臂不得重复汇合后语句」的合取，
+   而不是回退（回退臂 `mirr_nog1` 未跑完，其 `dump/wn.jsonl` 停在 185/402）。
+6. `_boolop_resolve_merge` 在 get_kline_by_count 上给出的 `merge=374`（真出口应是 172）本轮未动，
+   属另一判据，fix2 §证伪 5 留给 R64。
+7. 未收敛的两批判据（各自 FACTS 已留探针读数，勿在电池外重试）：b2 尾比较 + return
+   （`probe_r63b2_cases2` 仍 d=-94、`repro_r63b2_tail_cmp_return` d=-24），
+   b5 下单头跳转（`r63b5_w1` d=-1）；b1 f-string 尾落仍有 `r63_ft4` d=-9。
 
 ## 7. 归档
 

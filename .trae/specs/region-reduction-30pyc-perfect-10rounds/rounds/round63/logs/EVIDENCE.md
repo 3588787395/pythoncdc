@@ -60,6 +60,7 @@ b1f f-string tail + fix1 chain-store) + `fix2/specs/cand_r63b4_boolop_exit.json`
 both `py_compile` OK.
 
 Pinned battery (16 items = 10 R63 repros + 6 R62 dd witnesses), landed → combo(b4s+fix2):
+(pre-landing prediction; superseded by F.3, which measures 17 items on the landed bytes)
 ```
 matched 39 -> 42   clean 5 -> 7   REGRESSION=0 IMPROVED=2 MOVED=1 SAME=13
   IMPROVED round63_b4/r63b4_tern_in_elif_chain.pyc   2/3 -> 3/3
@@ -94,6 +95,15 @@ MOVED    flyAccount            _do_request [436,429,2,379] -> [436,443,2,384]
 files fully matched: a=381 b=382      summed matched: 5675 -> 5677
 ```
 
+Per-edit attribution of the three MOVED rows (each measured single-variable, so the
+combo's blast radius is not read as one undifferentiated block):
+
+| row | belongs to | evidence |
+|---|---|---|
+| `matcher` 713/689 → 715/715 | fix1 chainstore | fix1 `nog1` vs fresh `landed`: MOVED=1, only this product's text changes |
+| `trade_live_broker` 106 → 123 | diag1 b1f fstail | fix2 `b4c_402` (no fstail) already sits at 106; only the combo reaches 123 |
+| `flyAccount` 429 → 443 | the b4 pair | `fix2/dump/b4c_402.jsonl` row == `dump/p402_final.jsonl` row `[436,443,2,384]`; fix1 helper enters=0 there |
+
 ### F.2 Landed-byte re-measurement (independent of the mirror)
 `fix1/dump/wl.jsonl` is a *separate process* that read the live worktree after landing.
 Cross-checked against `dump/p402_final.jsonl`: 402/402 records paired, zero unpaired,
@@ -102,11 +112,23 @@ summed matched 5677 = 5677, fully-matched files 382 = 382, and per-file
 different text sha — the two runs differ only in that product's bytes, official count
 unchanged). The landed worktree therefore reproduces the measured combo.
 
-### F.3 Battery on the LANDED bytes (`logs_g6_battery_landed.txt`, 16 items)
-matched 42, clean 7 (r63b3 2/2, r63b4_tern 3/3, r63b4_cond_boolop 13/13, r62f_r102name,
-w_B, w_C, w_D 2/2), `candidate columns worse-than-landed on 0 repro(s)`.
-Residual deficits carried as known debt: r63_ft4 d=-9, probe_r63b2_cases d=-18,
-probe_r63b2_cases2 d=-94, repro_r63b2_tail_cmp_return d=-24, r63b5_w1 d=-1, w_A d=-4, w_E d=-2.
+### F.3 Battery on the LANDED bytes - 17 items (`logs_g6b_battery17.txt`, 44/60 matched, clean 8)
+Clean: r63b3 2/2, r63b4_tern 3/3, fix1 `r63b3_chainstore_prefix` 2/2,
+fix2 `r63b4_cond_boolop_stmt_steal` 13/13, r62f_r102name 2/2, w_B 2/2, w_C 2/2, w_D 2/2.
+`candidate columns worse-than-landed on 0 repro(s)` (single-arm run: the landed column is
+its own baseline, so the line records that the shipped bytes break nothing in the battery).
+Residual deficits carried as known debt: probe_r63b2_cases2 d=-94,
+repro_r63b2_tail_cmp_return d=-24, probe_r63b2_cases d=-18, r63_ft4 d=-9, w_A d=-4,
+w_E d=-2, r63b5_w1 d=-1, plus r63_ft / r63_ft2 bad=1 at d=+0 (shape, not loss).
+`closeout63.py` discovery was widened from `round63_b*` to `round63_b* + round63_fix*` so the
+two implementer repros are in the set; this supersedes the 16-item reading
+(`logs_g6_battery_landed.txt`: matched 42, clean 7).
+
+fix1 returned after the first table and measured its own edit **single-variable**
+(`nog1` -> fresh `landed`, 402 files): `REGRESSION=0 IMPROVED=0 MOVED=1 SAME=401`,
+matched 5677 -> 5677, clean 382 -> 382, exactly 1 product text changed (the target);
+R62 pinned shapes `MOVED=0 SAME=6` with all 6 shas identical to `r63gate/dump/sh_landed.jsonl`.
+That reading supersedes the mismatched `wl/wg` pair adjudicated in F.6.
 
 ### F.4 Official serial gate on the landed worktree
 ```
@@ -141,9 +163,25 @@ fix1 wg-vs-wl pair  REJECTED as evidence: base mismatch proved at byte level —
       own witness is the matcher row in F.1.
 fix1 mirr_nog1      comparator only (spec note: "never landed"); wn.jsonl stopped at 185/402
       when the agent died, so no conclusion was drawn from it.
-fix2 f3             (store-gate removed) 16/18 on target and 11/13 on its own repro -> falsified
-fix2 b4x            (expansion switched off wholesale) target stops at 17/18; 402: SAME=401
-      IMPROVED=1 REGRESSION=0, files 381 -> 381 — strictly dominated by the narrow gate.
+fix2 f3             (content predicate: reject value blocks containing STORE) 16/18 on target
+      (854/852, -13 shrinks to -2) and 11/13 on its own repro -> falsified; the swallowed
+      block 128 contains no STORE, so the missing fact is structural.
+fix2 f2             (blunt: switch the value-block expansion off wholesale) is
+      **byte-identical to the landed narrow gate on the whole corpus**:
+      `h62.py ab --a=fix2/dump/b4x_402.jsonl --b=fix2/dump/f2_402.jsonl` ->
+      SAME=402 IMPROVED=0 REGRESSION=0 MOVED=0, files 381 = 381 (f2_402 = f2_402a+b, 201+201,
+      402 distinct paths). So P5's expansion is inert on this corpus either way; the narrow
+      gate was shipped to keep P5's legitimate value-context job, not for a measured gain.
+fix2 arm labels     CORRECTED after the first central pass: `b4x` is the single-variable
+      analyzer candidate (its mirror's generator == pre-landing `b9778ee0…`/3 059 418),
+      `f2` is the blunt variant. The central table had these two swapped and called `f3`
+      "store-gate removed"; readings unchanged, attribution fixed in
+      `batches/fix2/ANALYSIS.md`.
+fix2 landed-arm note the agent flags that the worktree `core/` was rewritten externally at
+      04:20:39, so any `--arm=landed` process started afterwards measures R63, not R62.
+      Cross-checked: `fix2/dump/landed_402.jsonl` reproduces the R62 baseline exactly
+      (target 16/18, diag4 151, shapes 10, corpus 5675 / clean 381), so its "landed" column
+      is the R62 state despite the later file mtime.
 diag2 c1            (analyzer, batch 2) inert on its own named witness — renamed FALSIFIED_*
 ```
 

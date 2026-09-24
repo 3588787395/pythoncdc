@@ -1,0 +1,20 @@
+repro pycs discovered: 17  (round63 batches + 6 pinned R62 witnesses)
+repro                                                          landed                
+round63_b1/r63_ft.pyc                                          1/2 bad=1 d=+0        
+round63_b1/r63_ft2.pyc                                         1/2 bad=1 d=+0        
+round63_b1/r63_ft4.pyc                                         1/2 bad=1 d=-9        
+round63_b2/probe_r63b2_cases.pyc                               6/9 bad=3 d=-18       
+round63_b2/probe_r63b2_cases2.pyc                              3/9 bad=6 d=-94       
+round63_b2/repro_r63b2_tail_cmp_return.pyc                     1/2 bad=1 d=-24       
+round63_b3/r63b3_chained_value_ctx_prefix.pyc                  2/2 bad=0 d=+0        
+round63_b4/r63b4_tern_in_elif_chain.pyc                        3/3 bad=0 d=+0        
+round63_b5/r63b5_w1.pyc                                        1/2 bad=1 d=-1        
+round63_fix1/r63b3_chainstore_prefix.pyc                       2/2 bad=0 d=+0        
+round63_fix2/r63b4_cond_boolop_stmt_steal.pyc                  13/13 bad=0 d=+0      
+r62f_r102name.pyc                                              2/2 bad=0 d=+0        
+w_A_tern_in_call_then_reassign.pyc                             1/2 bad=1 d=-4        
+w_B_two_such_calls.pyc                                         2/2 bad=0 d=+0        
+w_C_attr_then_reassign.pyc                                     2/2 bad=0 d=+0        
+w_D_plain_no_ternary.pyc                                       2/2 bad=0 d=+0        
+w_E_kwarg_tern_two_loops.pyc                                   1/2 bad=1 d=-2        
+candidate columns worse-than-landed on 0 repro(s)
