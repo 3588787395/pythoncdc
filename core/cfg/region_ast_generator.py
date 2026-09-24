@@ -333,8 +333,17 @@ class RegionASTGenerator:
     def block_role(self, block: 'BasicBlock') -> 'BlockRole':
         return self.region_analyzer.get_block_role(block)
 
-    def _split_block_condition_prefix(self, block: Optional['BasicBlock']) -> List['Instruction']:
+    def _split_block_condition_prefix(self, block: Optional['BasicBlock'],
+                                      terminator_ops: Optional[frozenset] = None
+                                      ) -> List['Instruction']:
         """按 CPython 栈纪律把「以条件跳转结尾的直线块」切分为前导语句指令段。
+
+        terminator_ops: 可选的「块尾条件消费指令」集合。默认 None 即既有严格集合
+        （FORWARD_CONDITIONAL_JUMP_OPS | NONE_CHECK_OPS），Assert/Loop 两个既有消费者
+        行为逐字节不变。[R63-b3] 允许调用方把语义同族的短路条件消费指令
+        （JUMP_IF_FALSE_OR_POP / JUMP_IF_TRUE_OR_POP，CPython 3.11 链式比较与 and/or
+        链的展开形式）纳入终止符：它们在「真」边弹出条件值、在「假」边保留条件值，
+        块尾同样存在「被消费的条件值」，前向栈归零判据一字不动地成立。
 
         **算法依据（结构判据，非模式匹配）**
         基本块的定义即「极大直线指令序列，控制流只在块末转移」。若块末是条件跳转，
@@ -385,7 +394,13 @@ class RegionASTGenerator:
         terminator = instrs[-1]
         # 块末必须是条件跳转：只有此时块尾存在「被消费的条件值」，切分才有意义。
         # 无条件跳转/RETURN/RAISE 结尾的块不具此结构，直接返回空。
-        if terminator.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | NONE_CHECK_OPS):
+        # [R63-b3] 终止符集合由调用方按语义同族放宽（见 terminator_ops 形参说明）；
+        # 默认集合下判据与既有实现完全一致。
+        # 识别条件：块末指令在某一控制流边上消费栈顶条件值。
+        # 归约方式：块整体仍归其区域，块内「栈已归零」的前导段单独成语句层。
+        # AST 映射：前导段 -> 若干条 ast.Assign/ast.Expr（由调用方归约，本方法不产 AST）。
+        if terminator.opname not in (terminator_ops if terminator_ops is not None
+                                      else (FORWARD_CONDITIONAL_JUMP_OPS | NONE_CHECK_OPS)):
             return []
         depth = 0
         last_zero = -1
@@ -3181,7 +3196,29 @@ class RegionASTGenerator:
             should_skip = False
             for r in self.regions:
                 if r is not region and isinstance(r, IfRegion) and r.region_type.name == 'IF_ELIF_CHAIN':
-                    if r.entry == region.entry or (region.entry and region.entry in r.blocks):
+                    # [R63-B4 Fix1] IF_ELIF_CHAIN 对嵌套三元区域的让位判据：由
+                    # 「跨区域跨层次的 blocks 全集包含」收窄为「同层结构身份」。
+                    # 识别条件（两条之一，均为本层可见的结构事实）：
+                    #   (1) r.entry is region.entry —— 三元区域入口就是该 elif 链
+                    #       区域的入口块，即链头条件表达式本身（如
+                    #       `if a: ... elif (x if c else y): ...`）；
+                    #   (2) region.parent is r —— 三元区域的**直接父区域**就是该
+                    #       elif 链区域，即三元平铺挂在链臂的语句序列里，链在归约
+                    #       本臂时会自行发射它（flyAccount._do_request 的
+                    #       TERN@1254/1992/2014 属此类）。
+                    # 归约方式：命中才让位。不命中时该三元位于链的**某个子
+                    #   IfRegion 臂内**（get_price 的 TERN@358 直接父是嵌套
+                    #   IfRegion@302，@302 才是 @216 链在本层看到的唯一抽象节点），
+                    #   按原则 3「嵌套即抽象节点」外层链不得越过子区域、按其内部
+                    #   块名再认领；按原则 2 该块的唯一发射者是其直接父臂。
+                    #   原判据 `region.entry in r.blocks` 把整棵子树的所有块都当成
+                    #   链的可认领集合，违反原则 4「父层只引用子区域入口」，实测把
+                    #   嵌套 if 的 else 臂整条语句吞掉。
+                    # AST 映射：让位 ⇒ 三元并入 elif 链的 test / 臂语句，由链发射；
+                    #   不让位 ⇒ 三元在其直接父臂内归约为 ast.Return(ast.IfExp)，
+                    #   get_price L470 的 `return EMPTY_BAR_NP_ARRAY if fields is
+                    #   None else EMPTY_BAR_NP_ARRAY[fields]` 复原。
+                    if r.entry is region.entry or getattr(region, 'parent', None) is r:
                         should_skip = True
                         break
             # 守卫：ternary 的 merge_block 是某个 WithRegion 的 entry
@@ -34163,6 +34200,148 @@ AST 映射规则:
             ],
         }
 
+    # ==================================================================
+    # [R63-b3] 值语境链式比较区域（TernaryRegion + merge_context=='store'）
+    #   CPython 3.11 把 `x = a <= b <= c` 展开为
+    #     LOAD a; LOAD b; SWAP 2; COPY 2; COMPARE_OP; JUMP_IF_FALSE_OR_POP L
+    #     | LOAD c; COMPARE_OP; JUMP_FORWARD M        <- 链的第二段比较
+    #   L: SWAP 2; POP_TOP                            <- 清理臂（丢弃 c，留 False）
+    #   M: STORE x
+    #  区域分析器把这条短路基线建成 TernaryRegion(cond=含前导语句的直线块,
+    #  true_value_block=链第二段, false_value_block=清理臂, merge_block=STORE x)。
+    #  该「三元」的两个值臂都不是值分支，IfExp 合取判据必然为空，于是整个区域
+    #  一个 AST 都不产出（见证：matcher.pyc::match 的 L227/L228/L229 三句 26 条
+    #  指令整体丢失）。正确归约是**无三元外壳**的 Assign(Name, Compare)。
+    # ==================================================================
+    def _r63b3_is_chain_cleanup_arm(self, block: Optional['BasicBlock']) -> bool:
+        """判据：块是否为链式比较短路的**清理臂**（只消费、不产出值）。
+
+        识别条件（纯结构，不含偏移/函数名/阈值特例）：
+          (1) 块非空，且每条指令都属于「栈重排 / 值丢弃 / 无条件跳转 / 噪声」族
+              （SWAP、COPY、POP_TOP、JUMP_FORWARD、JUMP_BACKWARD、JUMP_ABSOLUTE、
+              NOP、RESUME、CACHE、PUSH_NULL）——即块内**不存在任何产出值的指令**
+              （LOAD_*、BUILD_*、CALL、COMPARE_OP、STORE_* 全部排除）；
+          (2) 至少有一条 POP_TOP（被丢弃的、链上尚未求值的那个右操作数）；
+          (3) 逐条 CPython 栈效应之和 <= 0（该臂向汇合点不压新值）。
+        归约方式：满足上述条件的块不可能承载三元的「值分支」语义（值分支必须向
+          汇合点交出一个值），它是 `a op b op c` 的短路清理臂，与链的其余指令同属
+          **一个** Compare 抽象节点，本身不参与归约。
+        AST 映射：无——本判据为真时由调用方把整个区域归约为
+          ast.Assign(targets=[Name], value=Compare)。
+        """
+        if block is None:
+            return False
+        _shuffle_ops = frozenset({
+            'SWAP', 'COPY', 'POP_TOP', 'JUMP_FORWARD', 'JUMP_BACKWARD',
+            'JUMP_ABSOLUTE', 'NOP', 'RESUME', 'CACHE', 'PUSH_NULL',
+        })
+        instrs = list(block.instructions)
+        if not instrs:
+            return False
+        if not all(i.opname in _shuffle_ops for i in instrs):
+            return False
+        if not any(i.opname == 'POP_TOP' for i in instrs):
+            return False
+        _net = 0
+        for i in instrs:
+            _e = self._instruction_stack_effect(i)
+            if _e is None:
+                return False
+            _net += _e
+        return _net <= 0
+
+    def _r63b3_reduce_value_ctx_chain_store(
+            self, region: 'TernaryRegion', cond_expr: Optional[Dict[str, Any]],
+            pre_stmts: List[Dict[str, Any]],
+            skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
+        """值语境链式比较区域的语句级归约（无 IfExp 外壳）。
+
+        识别条件（四条结构判据合取，任一不满足即返回 None，交由既有路径处理）：
+          (1) 区域是 store 语境赋值：merge_context=='store' 且 value_target 非空，
+              且 merge_block 首条非噪声指令恰为 STORE_<value_target>——该值在字节码
+              里的唯一落点（「父引用子入口」中的入口即这条消费指令）；
+          (2) 条件块已被区域数据归约为**完整**链式比较：chained_compare_ops 长度
+              >=2 且 cond_expr 非空（由 _build_chained_compare_from_region_data 产出）；
+          (3) 该「三元」的两臂其实是链自身的短路结构：true_value_block 出现在
+              chained_compare_blocks 里（它就是链的下一段比较块），且
+              false_value_block 满足 _r63b3_is_chain_cleanup_arm（清理臂，无值）；
+          (4) 前导语句划界安全：按纯栈深判据 _split_block_condition_prefix（终止符
+              放宽到短路跳转族）切出的前导段之后，条件块剩余指令里仍留有链的第一个
+              比较指令——前导段绝不吃掉链本身。
+        归约方式（自底向上 / 每块唯一归属 / 一次正确）：整个区域归约为**一个**
+          Assign 抽象节点，不再套 IfExp 外壳（链式比较的短路不是分支）；条件块内
+          已完结的前导语句按栈深归零点切出，经 pre_stmts 随本 Assign 一同返回父
+          序列（与 _build_ternary_boolop_condition 对 condition_chain_blocks 的既有
+          划界同一实现、同一发射通道）；区域成员块登记为已生成，merge_block 只被
+          消费掉首条 STORE_*，其后指令仍由父序列按块发射。
+        AST 映射：
+          TernaryRegion(store 语境链式比较) ->
+            ast.Assign(targets=[Name(value_target, Store)],
+                       value=ast.Compare(left, ops=[LtE, LtE, ...],
+                                         comparators=[..., ...]))
+          块内前导段 -> 若干条 ast.Assign / ast.Expr，位置在该 Assign 之前（源码顺序）。
+        """
+        if cond_expr is None:
+            return None
+        if getattr(region, 'merge_context', None) != 'store':
+            return None
+        _vt = getattr(region, 'value_target', None)
+        if not _vt:
+            return None
+        if skip_store_targets and _vt in skip_store_targets:
+            return None
+        _ops = getattr(region, 'chained_compare_ops', None) or []
+        if len(_ops) < 2:
+            return None
+        _tvb = getattr(region, 'true_value_block', None)
+        _fvb = getattr(region, 'false_value_block', None)
+        if _tvb is None or _fvb is None:
+            return None
+        if not any(_cb is _tvb for _cb in (getattr(region, 'chained_compare_blocks', None) or [])):
+            return None
+        if not self._r63b3_is_chain_cleanup_arm(_fvb):
+            return None
+        _mb = getattr(region, 'merge_block', None)
+        if _mb is None:
+            return None
+        _mb_instrs = [i for i in _mb.instructions
+                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        if not _mb_instrs:
+            return None
+        _sink = _mb_instrs[0]
+        if not str(_sink.opname).startswith('STORE_') or _sink.argval != _vt:
+            return None
+        _cond_block = getattr(region, 'condition_block', None)
+        if _cond_block is None or not _cond_block.instructions:
+            return None
+        _prefix = self._split_block_condition_prefix(
+            _cond_block,
+            FORWARD_CONDITIONAL_JUMP_OPS | NONE_CHECK_OPS | SHORT_CIRCUIT_JUMP_OPS)
+        _all = list(_cond_block.instructions)
+        if _prefix:
+            _rest = _all[len(_prefix):]
+            if not _rest or not any(
+                    i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP') for i in _rest):
+                return None
+            _pstmts = self._build_statements_from_instructions(_prefix, _cond_block)
+            if not _pstmts:
+                # 前导段非空却归约不出语句：划界不成立，保守让位给既有路径。
+                return None
+            pre_stmts.extend(_pstmts)
+        results = list(pre_stmts)
+        if skip_store_targets:
+            results = [s for s in results
+                       if not (s.get('type') == 'Assign' and
+                               s.get('targets', [{}])[0].get('id') in skip_store_targets)]
+        results.append({
+            'type': 'Assign',
+            'targets': [{'type': 'Name', 'id': _vt, 'ctx': 'Store'}],
+            'value': cond_expr,
+        })
+        for _b in region.blocks:
+            self.generated_blocks.add(_b)
+        return results
+
     def _generate_ternary(self, region: TernaryRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
         """生成 TernaryRegion 的 AST 语句列表
 
@@ -34420,6 +34599,10 @@ AST 映射规则:
             if cond_expr is not None:
                 for _cb in region.chained_compare_blocks:
                     self.generated_blocks.add(_cb)
+                _r63b3_stmts = self._r63b3_reduce_value_ctx_chain_store(
+                    region, cond_expr, pre_stmts, skip_store_targets)
+                if _r63b3_stmts is not None:
+                    return _r63b3_stmts
         elif (cond_block
               and self.region_analyzer._is_chained_compare_header(cond_block)
               and not getattr(region, 'chained_compare_ops', None)):
@@ -34437,6 +34620,10 @@ AST 映射规则:
                 if cond_expr is not None:
                     for _cb in region.chained_compare_blocks:
                         self.generated_blocks.add(_cb)
+                    _r63b3_stmts = self._r63b3_reduce_value_ctx_chain_store(
+                        region, cond_expr, pre_stmts, skip_store_targets)
+                    if _r63b3_stmts is not None:
+                        return _r63b3_stmts
                 else:
                     region.chained_compare_ops = []
                     region.chained_compare_blocks = []
@@ -40676,6 +40863,246 @@ AST 映射规则:
             return 1, (instr.arg or 0) + 1
         return 0, 0
 
+    def _fstring_parts_from_segment(self, seg):
+        """f-string 相邻两个 FORMAT_VALUE 之间的指令段归约为片段列表。
+
+        [R63 Fix1] 识别条件: 段内逐条正向单趟模拟（表达式重建器的单条指令语义
+        表，与 _ternary_prefix_stack_effect / _instruction_stack_effect 同族），
+        段末栈（去掉 PUSH_NULL 标记）即该段产出的值序列：**栈顶**被段后的
+        FORMAT_VALUE 消费成 FormattedValue；栈底若干项只有**全部**是字面量
+        Constant 时才是 f-string 的字面量段（CPython 先压字面量、后求值插值
+        表达式，故字面量必在栈底侧）。整段全是 LOAD_CONST 时全部按字面量处理。
+        归约方式: 段自底向上独立归约——段起点是上一个 FORMAT_VALUE，彼时栈为
+        空，故不存在跨块数据流外溢；解释不了（栈底出现非字面量、下溢、模拟异
+        常）即返回 None，由调用方退回既有扫描，不新增逃逸口。
+        AST 映射: 字面量 -> Constant(value=...)；操作数 ->
+        FormattedValue(value=归约节点, conversion=0, format_spec=None)，与
+        BUILD_STRING 的弹出个数一一对应。
+        """
+        if not seg:
+            return []
+        try:
+            self.expr_reconstructor.reset()
+            self.expr_reconstructor.stack = []
+            for _si in seg:
+                self.expr_reconstructor._process_instruction(_si)
+            _st = [s for s in self.expr_reconstructor.stack
+                   if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+        except Exception:
+            return None
+        if not _st:
+            return None
+        _all_const = all(isinstance(_s, dict) and _s.get('type') == 'Constant'
+                         for _s in _st)
+        if _all_const and len(_st) == len(seg) and all(
+                _i.opname == 'LOAD_CONST' for _i in seg):
+            # 整段只有 LOAD_CONST：全是字面量（与既有行为一致，无被格式化的操作数）
+            return [{'type': 'Constant', 'value': _s.get('value')} for _s in _st]
+        for _s in _st[:-1]:
+            if not (isinstance(_s, dict) and _s.get('type') == 'Constant'):
+                return None
+        _parts = [{'type': 'Constant', 'value': _s.get('value')} for _s in _st[:-1]]
+        _operand = _st[-1]
+        if not isinstance(_operand, dict) or not _operand.get('type'):
+            return None
+        _parts.append({
+            'type': 'FormattedValue',
+            'value': _operand,
+            'conversion': 0,
+            'format_spec': None,
+        })
+        return _parts
+
+    def _ternary_pending_callee(self, cond_block):
+        """最外层三元条件块中跨块待定的被调对象。
+
+        [R63 Fix2] 识别条件: cond_block 末条条件跳转之前的前缀里存在
+        LOAD_METHOD / PUSH_NULL+LOAD_* / LOAD_GLOBAL|NULL 形态的被调对象压栈，
+        且该压栈在本块内未被任何 CALL 消费（消费点在区域出口块，见
+        _try_wrap_fstring_pending_call 的尾部判据）。判据与既有
+        is_call_pattern 分支的 func 前缀重建完全同源，非新机制。
+        归约方式: 前缀自底向上归约为单个表达式节点（Name 或 Attribute 链）。
+        AST 映射: Call(func=该节点, args=[f-string]) 的 func 槽位。
+        """
+        if cond_block is None:
+            return None
+        _cond_instrs = [i for i in cond_block.instructions
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        _cond_last = cond_block.get_last_instruction()
+        _cond_end_idx = len(_cond_instrs)
+        if _cond_last and _cond_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                                | SHORT_CIRCUIT_JUMP_OPS):
+            for _ci_idx in range(len(_cond_instrs) - 1, -1, -1):
+                if _cond_instrs[_ci_idx] is _cond_last:
+                    _cond_end_idx = _ci_idx
+                    break
+        _prefix = _cond_instrs[:_cond_end_idx]
+        _method_idx = None
+        _push_null_idx = None
+        for _idx, _i in enumerate(_prefix):
+            if _i.opname == 'LOAD_METHOD':
+                _method_idx = _idx
+                break
+            if _i.opname == 'PUSH_NULL':
+                _push_null_idx = _idx
+                break
+            if (_i.opname == 'LOAD_GLOBAL' and _i.arg is not None
+                    and (_i.arg & 1)):
+                _push_null_idx = _idx
+                break
+        if _method_idx is not None and _method_idx > 0:
+            _obj_chain = []
+            _j = _method_idx - 1
+            while _j >= 0:
+                _ji = _prefix[_j]
+                if _ji.opname == 'LOAD_ATTR':
+                    _obj_chain.insert(0, ('attr', _ji.argval))
+                    _j -= 1
+                    continue
+                if _ji.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL',
+                                  'LOAD_DEREF'):
+                    _obj_chain.insert(0, ('base_name', _ji.argval))
+                    break
+                if _ji.opname == 'LOAD_CONST':
+                    _obj_chain.insert(0, ('base_const', _ji.argval))
+                    break
+                break
+            if _obj_chain:
+                _base = _obj_chain[0]
+                if _base[0] == 'base_name':
+                    _obj_expr = {'type': 'Name', 'id': _base[1], 'ctx': 'Load'}
+                elif _base[0] == 'base_const':
+                    _obj_expr = {'type': 'Constant', 'value': _base[1]}
+                else:
+                    _obj_expr = None
+                if _obj_expr is not None:
+                    for _kind, _name in _obj_chain[1:]:
+                        _obj_expr = {
+                            'type': 'Attribute',
+                            'value': _obj_expr,
+                            'attr': _name,
+                            'ctx': 'Load',
+                        }
+                    return {
+                        'type': 'Attribute',
+                        'value': _obj_expr,
+                        'attr': _prefix[_method_idx].argval,
+                        'ctx': 'Load',
+                    }
+        elif _push_null_idx is not None and _push_null_idx + 1 < len(_prefix):
+            _func_i = _prefix[_push_null_idx + 1]
+            if _func_i.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST',
+                                  'LOAD_DEREF'):
+                return {'type': 'Name', 'id': _func_i.argval, 'ctx': 'Load'}
+            elif _func_i.opname == 'LOAD_ATTR' and _push_null_idx > 0:
+                _obj_i = _prefix[_push_null_idx - 1]
+                if _obj_i.opname.startswith('LOAD_'):
+                    return {
+                        'type': 'Attribute',
+                        'value': {'type': 'Name', 'id': _obj_i.argval,
+                                  'ctx': 'Load'},
+                        'attr': _func_i.argval,
+                        'ctx': 'Load',
+                    }
+        # [R63 Fix2a] 3.11 亦把"空对象标记"编码进 LOAD_GLOBAL 自身的低位标志
+        # （dis 显示 `LOAD_GLOBAL 1 (NULL + name)`，无独立 PUSH_NULL 指令），
+        # 此时被调对象名就是该 LOAD_GLOBAL 的名字，其后连续 LOAD_ATTR 构成属性链。
+        if _push_null_idx is not None:
+            _bi = _prefix[_push_null_idx]
+            if (_bi.opname in ('LOAD_GLOBAL', 'LOAD_NAME', 'LOAD_FAST',
+                               'LOAD_DEREF')
+                    and isinstance(_bi.argval, str)):
+                _expr = {'type': 'Name', 'id': _bi.argval, 'ctx': 'Load'}
+                for _ai in _prefix[_push_null_idx + 1:]:
+                    if _ai.opname in ('LOAD_ATTR', 'LOAD_METHOD')                             and isinstance(_ai.argval, str):
+                        _expr = {
+                            'type': 'Attribute',
+                            'value': _expr,
+                            'attr': _ai.argval,
+                            'ctx': 'Load',
+                        }
+                    else:
+                        break
+                if _expr['type'] == 'Attribute':
+                    return _expr
+        return None
+
+    def _try_wrap_fstring_pending_call(self, region, innermost_merge, joined_str):
+        """f-string 是跨块待定调用的实参时，把整条归约为表达式语句 + 后续语句。
+
+        [R63 Fix2] 识别条件（全部为栈形态判据，单向数据流）：
+          1. 内层三元 merge_block 的 BUILD_STRING 之后紧跟 PRECALL/KW_NAMES*
+             + CALL，即 f-string 自身是某个调用的实参（不是被 return 的值）；
+          2. 该 CALL 只接受 1 个实参（就是本 f-string），多实参时跨块实参的
+             归属未定，保守退回既有路径；
+          3. CALL 的结果由 POP_TOP 丢弃（语句级调用，返回值不入栈）；
+          4. 被调对象由最外层三元 cond_block 压栈且本块内未消费
+             （_ternary_pending_callee）。
+        归约方式: 区域整体（cond_block 前缀 + 链上各三元 + merge 段）归约为
+        单个 Call 节点；CALL 之后的剩余指令依「每块唯一归属」交
+        post_consumer_extra_stmts 归父语句序列（与既有 STORE_SUBSCR 分支同
+        一约定），隐式 return None 依旧剥离。
+        AST 映射: Expr(Call(Attr(obj,'m'), [JoinedStr])) + 后续语句
+        （本例为 Return(Constant False)）。
+        """
+        if innermost_merge is None:
+            return None
+        eff = [i for i in innermost_merge.instructions
+               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        _bs = None
+        for _k, _i in enumerate(eff):
+            if _i.opname == 'BUILD_STRING':
+                _bs = _k
+        if _bs is None or _bs + 1 >= len(eff):
+            return None
+        _tail = eff[_bs + 1:]
+        _j = 0
+        while _j < len(_tail) and _tail[_j].opname in ('PRECALL', 'KW_NAMES'):
+            _j += 1
+        if _j == 0 or _j >= len(_tail) or _tail[_j].opname != 'CALL':
+            return None
+        if (_tail[_j].arg or 0) != 1:
+            return None
+        _callee = self._ternary_pending_callee(region.condition_block)
+        if _callee is None:
+            return None
+        _rest = _tail[_j + 1:]
+        while _rest and _rest[0].opname in ('CACHE', 'NOP'):
+            _rest = _rest[1:]
+        if not _rest or _rest[0].opname != 'POP_TOP':
+            return None
+        _rest = [i for i in _rest[1:]
+                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        while (len(_rest) >= 2 and _rest[-1].opname == 'RETURN_VALUE'
+               and _rest[-2].opname == 'LOAD_CONST'
+               and _rest[-2].argval is None):
+            _rest = _rest[:-2]
+        while (_rest and _rest[-1].opname == 'RETURN_CONST'
+               and _rest[-1].argval is None):
+            _rest = _rest[:-1]
+        if _rest:
+            try:
+                _extra = self._build_statements_from_instructions(list(_rest))
+            except Exception:
+                _extra = []
+            while (_extra and isinstance(_extra[-1], dict)
+                   and _extra[-1].get('type') == 'Return'
+                   and isinstance(_extra[-1].get('value'), dict)
+                   and _extra[-1]['value'].get('type') == 'Constant'
+                   and _extra[-1]['value'].get('value') is None):
+                _extra = _extra[:-1]
+            if _extra:
+                region.post_consumer_extra_stmts = _extra
+        return {
+            'type': 'Expr',
+            'value': {
+                'type': 'Call',
+                'func': _callee,
+                'args': [joined_str],
+                'keywords': [],
+            },
+        }
+
     def _try_build_ternary_chained_container(self, region: TernaryRegion,
                                                ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """[Round9-11 / R4-P1] Outer ternary's merge_block is an inner
@@ -41032,22 +41459,69 @@ AST 映射规则:
                 if _last_merge is not None:
                     _lm_instrs = [i for i in _last_merge.instructions
                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    _after_fv = False
+                    # [R63 Fix1] 链尾 FORMAT_VALUE 的操作数可以是任意自包含子表达式
+                    # 识别条件: 内层三元 merge_block 中，链上最后一个三元的
+                    #   FORMAT_VALUE 之后还可能出现 FORMAT_VALUE，其操作数不是裸
+                    #   LOAD_CONST 而是完整求值序列（如 `{error_dict.get('info')}`
+                    #   = LOAD_FAST+LOAD_METHOD+LOAD_CONST+PRECALL+CALL）。判据为
+                    #   段内栈形态（见 _fstring_parts_from_segment），与既有
+                    #   _ternary_prefix_stack_effect 同族，非形态特例。
+                    # 归约方式: 以 FORMAT_VALUE 为界把 merge_block 切成若干段，每段
+                    #   自底向上独立归约（段起点栈为空，跨块不外溢）；首个
+                    #   FORMAT_VALUE 格式化的是链上三元结果（已在上面按 elts 计入），
+                    #   其段必须为空，否则整体退回既有扫描。
+                    # AST 映射: 字面量段 -> Constant；操作数段 -> FormattedValue，
+                    #   与 BUILD_STRING 的弹出个数一一对应，JoinedStr 不再被截断。
+                    _tail_parts = []
+                    _tail_seg = []
+                    _tail_fv = 0
+                    _tail_ok = True
                     for _li in _lm_instrs:
-                        if _li.opname == 'FORMAT_VALUE':
-                            _after_fv = True
+                        if _li.opname == 'BUILD_STRING':
+                            break
+                        if _li.opname != 'FORMAT_VALUE':
+                            _tail_seg.append(_li)
                             continue
-                        if _after_fv:
-                            if _li.opname == 'LOAD_CONST':
-                                _fstring_parts.append({
-                                    'type': 'Constant', 'value': _li.argval,
-                                })
-                            elif _li.opname == 'BUILD_STRING':
+                        if _tail_fv == 0:
+                            if _tail_seg:
+                                _tail_ok = False
                                 break
+                        else:
+                            _parsed = self._fstring_parts_from_segment(_tail_seg)
+                            if _parsed is None:
+                                _tail_ok = False
+                                break
+                            _tail_parts.extend(_parsed)
+                        _tail_seg = []
+                        _tail_fv += 1
+                    if _tail_seg:
+                        _tail_ok = False
+                    if _tail_ok:
+                        _fstring_parts.extend(_tail_parts)
+                    else:
+                        _after_fv = False
+                        for _li in _lm_instrs:
+                            if _li.opname == 'FORMAT_VALUE':
+                                _after_fv = True
+                                continue
+                            if _after_fv:
+                                if _li.opname == 'LOAD_CONST':
+                                    _fstring_parts.append({
+                                        'type': 'Constant', 'value': _li.argval,
+                                    })
+                                elif _li.opname == 'BUILD_STRING':
+                                    break
             _joined_str = {
                 'type': 'JoinedStr',
                 'values': _fstring_parts,
             }
+            # [R63 Fix2] f-string 作为跨块待定调用的实参（callee 在区域入口压栈、
+            # 在区域出口消费）时先尝试整体归约为该调用语句，判据见
+            # _try_wrap_fstring_pending_call；不满足再退回既有 Assign/Return/Expr。
+            _fs_call_stmt = self._try_wrap_fstring_pending_call(
+                region, innermost_merge, _joined_str)
+            if _fs_call_stmt is not None:
+                return _fs_call_stmt
             # Determine wrapping from innermost merge_block.
             if innermost_merge is not None:
                 _im_eff = [i for i in innermost_merge.instructions

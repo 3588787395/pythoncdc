@@ -1,0 +1,6 @@
+D:/Temp/opencode/r62gate/dd/r62f_r102name.pyc
+D:/Temp/opencode/r62gate/dd/w_A_tern_in_call_then_reassign.pyc
+D:/Temp/opencode/r62gate/dd/w_B_two_such_calls.pyc
+D:/Temp/opencode/r62gate/dd/w_C_attr_then_reassign.pyc
+D:/Temp/opencode/r62gate/dd/w_D_plain_no_ternary.pyc
+D:/Temp/opencode/r62gate/dd/w_E_kwarg_tern_two_loops.pyc

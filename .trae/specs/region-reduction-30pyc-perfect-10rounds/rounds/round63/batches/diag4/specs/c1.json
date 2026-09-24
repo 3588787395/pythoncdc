@@ -1,0 +1,1 @@
+{"file": "core/cfg/region_ast_generator.py", "edits": [{"anchor": "                    if r.entry == region.entry or (region.entry and region.entry in r.blocks):", "repl": "                    if r.entry == region.entry:"}]}

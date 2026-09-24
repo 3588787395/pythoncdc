@@ -1,0 +1,1 @@
+{"file": "core/cfg/region_analyzer.py", "edits": [{"anchor": "        _BOOLOP_CHAIN_JUMPS = FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS\n        _all_ternary_cond_c = True\n", "repl": "        _BOOLOP_CHAIN_JUMPS = FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS\n        _all_ternary_cond_c = False\n"}]}

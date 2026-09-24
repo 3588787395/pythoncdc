@@ -1,0 +1,9 @@
+{
+  "file": "core/cfg/region_analyzer.py",
+  "edits": [
+    {
+      "anchor": "            elif len(_non_empty_exits) == 1:\n                _chain_merge_candidates = set(_non_empty_exits[0])",
+      "repl": "            elif len(_non_empty_exits) == 1:\n                # [R63 B2] 识别条件: elif 链各臂末端后继中只有唯一一臂给出非空退出集\n                # （其余臂均以 RETURN/RAISE 终结）。此时该集合未必是整条链的汇合点，\n                # 完全可能只是那一臂**自身内部**的延续块 —— 如臂尾\n                # `return (a < x < b) or (c < x < d)` 的短路求值汇合块，它归臂内的\n                # BoolOpRegion / 链式比较 IfRegion 所有。\n                # 归约方式: 区域归约原则 2（每块唯一归属）—— 链的 merge 块必须位于\n                # 所有臂之外；把臂内块认作链汇合点，会使该块所属语句被上层链区域\n                # 接管后不再由臂发射，臂尾整条语句丢失（IQEngine/utils/scheduler.pyc\n                # Scheduler.run_interval_trade.is_run_interval_time_now 缺 24 条指令）。\n                # 故仅对「单臂贡献」这一支按纯结构判据剔除属于本链结构\n                # （block / 条件块 / then_blocks / 各 body / final_else）的候选；\n                # 多臂交集支与 _fe_set / R25 支一律不动。\n                # AST 映射: 剔除后 merge 仍为 None，链区域不引用该块，父层亦不引用；\n                # 该块由其所属子区域作为臂的末端语句发射为 Return。\n                _r63b2_arm_owned = {block}\n                _r63b2_arm_owned.update(then_blocks)\n                for _r63b2_c in elif_info.get(\"conditions\", []):\n                    _r63b2_arm_owned.add(_r63b2_c)\n                for _r63b2_b in elif_info.get(\"bodies\", []):\n                    _r63b2_arm_owned.update(_r63b2_b)\n                for _r63b2_f in elif_info.get(\"final_else\", []):\n                    _r63b2_arm_owned.add(_r63b2_f)\n                _chain_merge_candidates = {\n                    _r63b2_b2 for _r63b2_b2 in _non_empty_exits[0]\n                    if _r63b2_b2 not in _r63b2_arm_owned}"
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+# Round 63 — OUTCOME
+
+起始 HEAD `96a5f310`（Round 62 记录）。轮初 21 支 partial（`stats` 5746/5675/98.76%，ok 381）。
+
+## 1. 本轮形态
+
+按指令「针对剩余的 partial，分成 5 批由 5 个子代理快速完成，再集中验证回退」执行：
+
+| 批 | 覆盖 pyc | 交付 | 集中判定 |
+|---|---|---|---|
+| diag1 | common_func / trade_info_utils / … | `cand_fstail3.json`（3 edit） | **采纳** |
+| diag2 | scheduler 族 | `FALSIFIED_cand_chainmerge_armowned.json` + `NONE.md` | 拒（自有见证上实测 INERT） |
+| diag3 | matcher / trade function 族 | `cand_r63_claim.json` + `NONE.md` | 部分（转交 fix1 → chainstore） |
+| diag4 | 行情/风控 API 族 | `cand_r63b4_tern_slot.json`（1 edit） | **采纳** |
+| diag5 | 下单 API 族 | `cand_r63b5_hdrjt.json` / `hdrjt2.json` | 拒（见证缺陷量不变且新丢 `i += 1` / 内层 `break`，c2 变体更差） |
+
+实现阶段另派 2 个单变量代理：fix1（生成器 chainstore）、fix2（分析器 boolop_exit）。
+fix1/fix2 均未自行留下 ANALYSIS.md，其工作区分析由集中验证方依据其 `dump/` 自产记录补写
+（`batches/fix1/ANALYSIS.md`、`batches/fix2/ANALYSIS.md`，逐条注明可回溯来源）。
+
+## 2. 修到完全 OK 的 pyc（本轮 mandate）
+
+`site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc`
+官方 **18/18 100.00%**，`history_data_sourceOK.py` 由工具链重写（源 31 915 字符）。
+达成靠**成对**两支（单用任一支只能到 17/18）：
+
+- 生成器 `[R63-B4 Fix1]`（region_ast_generator.py:3221）：`_generate_region` 的
+  TernaryRegion 让位判据由 `region.entry in r.blocks`（跨区域跨层次全集包含，违反
+  「父层只引用子区域入口」）收窄为 `r.entry is region.entry or region.parent is r`
+  的同层结构身份 → 复原 `get_price` L470 的 `return B if fields is None else B[fields]`。
+- 分析器 `[R63-B4 Fix2]`（region_analyzer.py:24415）：条件语境 BoolOp 短路链不再把
+  语句体首块/汇合块吸为三元值块（`_all_ternary_cond_c = not (is_condition_context and merge is not None)`）
+  → 复原 `get_kline_by_count` L625 三元 return 与 L628-630 的赋值和 `if asset['type']=='FUTURE'`。
+
+## 3. 落地集
+
+`core/cfg/region_ast_generator.py`：合并 spec `final_region_ast_generator.py.json`，
+**9 edit / +474 行**（= b4s tern_slot 1 + b1f f-string tail 3 + fix1 chainstore 5）。
+BOM + 纯 CRLF 保留，sha256 `7ec41fa2f9cdd5d62c1a`，3 086 600 B，CRLF 49 937，裸 LF 0，
+`py_compile` + `ast` OK，与测量镜像 `mirr_final` 逐字节相同（`landproof` 33/33 core 文件）。
+
+`core/cfg/region_analyzer.py`：**1 edit / +22 行**，无 BOM + 纯 CRLF，
+sha256 `c694d2514eb2f2b21ccf`，1 721 959 B，CRLF 27 590，`py_compile` OK。
+
+三处判据均按「识别条件 / 归约方式 / AST 映射」三要素写入注释（fix1 的两个 helper 另附
+纯结构判据：`_r63b3_is_chain_cleanup_arm` 只用指令族 + 至少一条 POP_TOP + 栈效应和 ≤0；
+`_r63b3_reduce_value_ctx_chain_store` 四条结构合取，任一不满足即返回 None 交回既有路径）。
+无偏移特例、无函数名白名单、无阈值。
+
+## 4. 门禁（严格串行，全部实测）
+
+```
+G1 single  靶 history_data_source.pyc        18/18 100.00%
+G2 single  quotation.pyc                     官方 143/143；严格 148/150 缺陷集逐字未变
+           market_time.pyc                   官方 10/10 + 严格 10/10
+G3 batch --index pyc_index.json --all --round 63   402 verified / 0 failed / ok 382 / partial 20
+G4 stats                                    5746 funcs / 5677 matched / 98.80%
+G5 影响面  402 A/B（轮 f4_402 → mirr_final）  SAME=398 IMPROVED=1 REGRESSION=0 MOVED=3，文件 381→382
+G6 电池    落地字节 16 项                     matched 42 / clean 7 / worse-than-landed 0
+```
+
+独立印证：fix1 进程在落地后重读的 402 支（`fix1/dump/wl.jsonl`）与集中镜像读数
+**402/402 逐支 (matched, sha) 相同**，合计 5677、完全匹配 382。
+
+索引逐条比对 HEAD：402 条目无增删，401 条仅 `last_tested_round` 变化，唯一实质变化即靶条目。
+被改动的生成产物恰 4 支 `*OK.py`（靶 + matcher + trade_live_broker + flyAccount），
+与 G5 的 IMPROVED/MOVED 集合一致；未手改任何反编译产物。
+
+## 5. 附带改善与残余（如实记录）
+
+附带改善（官方计数不变的 MOVED，按指令不计作「解决一支」）：
+- `matcher.pyc :: match` 指令 713/689 → **715/715** 完全对齐，严格缺陷由 `seq_len` 转为 `seq_diff #182`
+  （缺指令变顺序），官方仍 16/17。
+- `trade_live_broker.pyc :: fund_transfer` 123/88 → **123/123** 长度对齐（残余一条
+  FORMAT_VALUE 常量），`market_fund_transfer` 缺 27 → 缺 17。
+- `flyAccount.pyc :: _do_request` 429 → 443（orig 436，官方口径过冲 +7；严格口径 431 → 445）：
+  **该过冲由落地前的一对（`tern_slot` + `boolop_exit`）引入**，chainstore/fstail 在此文件上
+  逐字节中性（fix2 的 `b4c_402` 与 `mirr_final` 读数同为 `[436,443,2,384]`）。作为漂移债务移交。
+
+残余严格缺陷（本轮引入的形状变化，官方无感）：
+`get_kline_by_count` 857/859、`get_price` 553/555（原 844/549 缺 13/4，缺失变 +2 过冲）。
+
+20 支 partial 清单见 `logs/targets_partial21.txt` 与 `pyc_index.json` 轮次戳；
+本轮 mandate 满足（≥1 支修到完全 OK 且 quotation + 批量回归通过）。
+
+## 6. 移交下一轮的线索
+
+1. `tern_slot` 与 `boolop_exit` 是**成对生效**（各自单独用都会在对方负责的形状上砸开缺口，
+   实测见 `batches/fix2/ANALYSIS.md` 表格）。与记忆 `analyzer-generator-pair-inertness` 同形。
+   后续对分析器块归属的改动必须与生成器让位判据一起过电池。
+2. `region.entry in r.blocks` 这类「跨层次全集包含」判据在 `_generate_region` 各分支里仍有同族
+   写法（diag4 的 ANALYSIS 记录了同函数 IF@216 的成因：then 臂全路径 return 把 402 并成 elif）。
+3. diag1 f-string 尾部落地后 `r63_ft4` 仍 d=-9、`probe_r63b2_cases2` d=-94：
+   b2（尾比较 + return）与 b5（下单头跳转）两支的判据未收敛，其 FACTS 已给出探针读数。
+4. `flyAccount._do_request` 的过冲（官方 +7 / 严格 +9）发生在 b4 成对上，根因站点 diag5 已指到
+   `_loop_build_if_with_exit_branches`（落地后位于 region_ast_generator.py:10470；diag5 读到的
+   :10444 是落地前行号）的臂极性选择；
+   需要一条「补发臂不得重复汇合后语句」的合取，而不是回退（回退臂 `mirr_nog1` 未跑完，
+   其 `dump/wn.jsonl` 停在 185/402）。
+
+## 7. 归档
+
+`batches/diag1..5`、`batches/fix1..2`（含 specs 与被拒臂）、`logs/EVIDENCE.md`（A–F 六节，
+F 节为落地后终读）、`logs/gate/`（G1–G6 原始输出 + 合并 spec）、`logs/targets_partial21.txt`、
+`logs/shapes_r62.txt`。最小复现入库 `test_repros/round63_{b1,b2,b3,b4,b5,fix2}/`（10 组 .py/.pyc）。
