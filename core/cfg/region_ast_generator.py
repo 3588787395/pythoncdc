@@ -22168,6 +22168,37 @@ AST 映射规则:
                     _succ_role = self.region_analyzer.get_block_role(_succ)
                     _succ_last = _succ.get_last_instruction()
                     if _succ_last and _succ_last.opname == 'RETURN_VALUE':
+                        # [R60 Fix1] 识别条件：当前为 then 臂（branch=='then'）、
+                        # 后继纯 return 且 ∉ 本 IfRegion.blocks、then 末块以
+                        # 无条件跳转（JUMP_FORWARD/JUMP_ABSOLUTE）直达该 return、
+                        # 且该 return 已被外层 Try/Loop/With/Match 区域登记
+                        # （原则 4：父区域持有该块，将由其 try 体/循环体发射）。
+                        # 归约方式：不拉入 then 体——它是 if 之后的共享 return
+                        # （或 try 体尾），拉入会把 post-if return 错误内联进
+                        # then（异常表与官方不一致）。else 落空（非跳转）拉入
+                        # 仍保留，那是 else 内的 return。AST 映射：
+                        # If(test, then_body, orelse) 之后由父区域发 Return。
+                        if (branch == 'then'
+                                and region is not None
+                                and _succ not in (getattr(region, 'blocks', None) or [])):
+                            _r60_blk_last = block.get_last_instruction()
+                            _r60_jump_to_succ = (
+                                _r60_blk_last is not None
+                                and _r60_blk_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                and self.cfg.get_block_by_offset(_r60_blk_last.argval) is _succ)
+                            if _r60_jump_to_succ:
+                                _r60_ext_owner = False
+                                for _r60_r in self.region_analyzer.regions:
+                                    if _r60_r is region:
+                                        continue
+                                    if not isinstance(_r60_r, (TryExceptRegion, LoopRegion,
+                                                               WithRegion, MatchRegion)):
+                                        continue
+                                    if _succ in (getattr(_r60_r, 'blocks', None) or []):
+                                        _r60_ext_owner = True
+                                        break
+                                if _r60_ext_owner:
+                                    continue
                         # 后继是 RETURN 块，生成 return 语句
                         _ret_stmts = self._generate_block_statements(_succ)
                         if _ret_stmts:
@@ -33239,7 +33270,17 @@ AST 映射规则:
                     _li = _lc.get_last_instruction()
                     if _li and _li.argval is not None:
                         _jt = self.cfg.get_block_by_offset(_li.argval)
+                        # [R60 Fix2] 识别条件：链末块后继扫描只取正常控制流边
+                        # （剔除 exception_successors，如 PUSH_EXC_INFO 处理器）。
+                        # 归约方式：异常表边不参与 if-like then 判定——try 保护
+                        # 内的 BoolOp（merge 为纯 return）会因异常后继 ∉
+                        # region.blocks 被误判为 if-like，错误降级为 If+pass。
+                        # AST 映射：仍走 Return(boolop_expr) / Expr(boolop_expr)
+                        # 归约，不落入 else 的 If 分支。
+                        _r60_exc = set(getattr(_lc, 'exception_successors', None) or ())
                         for _s in _lc.successors:
+                            if _s in _r60_exc:
+                                continue
                             if _s is not _jt and _s not in region.blocks:
                                 _has_if_like_then = True
                                 break
