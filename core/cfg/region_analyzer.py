@@ -2620,6 +2620,130 @@ class RegionAnalyzer:
                 return _exit
         return None
 
+    def _r57e_in_loop_branch_convergence(self, then_succ: BasicBlock, else_succ: BasicBlock,
+                                         loop_region, exclude: Set[BasicBlock],
+                                         current_merge: Optional[BasicBlock] = None) -> Optional[BasicBlock]:
+        """[R57-E] 循环内两臂前向跳转唯一公共目标兜底（真汇聚点被 NCPD 后推时）。
+
+        【识别条件】（结构性判据，不读名字/常量/绝对偏移/指令数）
+        条件块在循环内且已有 merge 时调用（不论 merge 是否在循环块集内——
+        循环块集可含循环体末端汇块，membership 判据拦不住被后推的 merge）。
+        两臂各自沿正常控制流游走收集「汇合投票」：
+        - 无条件前向跳转（JUMP_FORWARD/JUMP_ABSOLUTE）：目标在循环内且不在
+          条件结构排除集时记一票，不再深入（该跳转即臂体出口）；
+        - 前向条件跳转/短路跳转/普通顺序指令：仅沿循环内、非排除集、非异常
+          边的正常后继继续游走；
+        - 回边、后向条件跳转、终态（RETURN/RAISE）：停止游走且不投票——以
+          continue/break/return 离开的臂不参与汇合，循环出口/回边永不当选。
+        替换触发需同时满足：①两臂投票集合存在【唯一】公共目标 T；②当前
+        merge 不在任一臂的投票集里（没有任何臂直接跳向它——若臂直接跳向
+        当前 merge，该 merge 有一手结构证据，保持原判）；③T ≠ merge。
+        或单侧触发（一侧票集为空且该侧全程以回边/终态/出循环收束＝纯
+        continue/break/return 臂）：另一侧「出口票」（票目标未被本侧游走
+        进入＝非臂内中转）唯一，且该目标存在本侧可达集之外的前驱（兄弟
+        臂外部汇入 ⇒ 更外层链的公共汇合点）。两者均不满足返回 None。
+        「某臂以 continue 离开」使 NCPD 把共同后必经块后推到更晚的循环体
+        末端块（它可能仍在循环块集内），而各非退出臂实际无条件跳向更近的
+        唯一公共汇聚块 T——此时 T 才是臂体真实汇聚点。
+
+        【归约方式】返回 T 作为 if/elif 的 merge：_collect_branch_blocks 在 T
+        处停止，公共尾部块不再被两臂双归属，归还父区（循环体）顺序归约，
+        恢复区域归约算法原则 2（每块唯一归属）。判据不命中时返回 None，
+        调用方逐字保持原 merge（严格附加，零行为差）。
+
+        【AST 映射】merge=T 后 IfRegion（IF_THEN_ELSE/IF_ELIF_CHAIN）的
+        merge_block=T；各臂在 T 处汇合，公共尾语句作为父级兄弟节点发射，
+        ast.If 链不再把公共尾内联进每个臂体。
+        """
+        loop_blocks = set(loop_region.blocks)
+
+        def _r57e_votes(entry):
+            """返回 (votes, visited, all_exit)。
+
+            votes: 循环内、非排除集的无条件前向跳转目标（臂体出口票）；
+            visited: 游走实际进入过的块（臂内中转目标 ∈ visited）；
+            all_exit: 本次游走的每个终结点都以回边/终态/出循环前向跳转/
+            排除集跳转收束（没有「因边界截断而语义未明」的悬空末端）——
+            纯 continue/break/return 退出的臂票集为空且 all_exit=True。
+            """
+            votes = set()
+            visited = {entry}
+            worklist = [entry]
+            all_exit = True
+            while worklist:
+                cur = worklist.pop(0)
+                last = cur.get_last_instruction()
+                if last is None:
+                    all_exit = False
+                    continue
+                _op = last.opname
+                if _op in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE',
+                           'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT') \
+                        or _op in BACKWARD_CONDITIONAL_JUMP_OPS:
+                    continue
+                if _op in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                    _tgt = (self.cfg.get_block_by_offset(last.argval)
+                            if last.argval is not None else None)
+                    if (_tgt is not None and _tgt is not cur
+                            and _tgt in loop_blocks and _tgt not in exclude):
+                        votes.add(_tgt)
+                    continue
+                _exc = getattr(cur, 'exception_successors', None) or set()
+                _expanded = False
+                for _s in cur.successors:
+                    if _s in _exc:
+                        continue
+                    if _s not in loop_blocks:
+                        _expanded = True  # 出循环正常边：出口收束
+                        continue
+                    if _s in exclude or _s in visited:
+                        continue
+                    visited.add(_s)
+                    worklist.append(_s)
+                    _expanded = True
+                # 条件跳转两路都被排除集截断、或顺序后继全被截断：末端语义
+                # 未明（可能是排除集即真汇合，但无法在本侧证明），不算纯退出。
+                if (cur.successors and not _expanded
+                        and _op not in FORWARD_CONDITIONAL_JUMP_OPS
+                        and _op not in SHORT_CIRCUIT_JUMP_OPS):
+                    all_exit = False
+            return votes, visited, all_exit
+
+        _votes_then, _vis_then, _exit_then = _r57e_votes(then_succ)
+        _votes_else, _vis_else, _exit_else = _r57e_votes(else_succ)
+        if current_merge is not None and current_merge in (_votes_then | _votes_else):
+            return None
+        _common = _votes_then & _votes_else
+        if len(_common) == 1:
+            _t = next(iter(_common))
+            if current_merge is None or _t is not current_merge:
+                return _t
+            return None
+        if _common:
+            return None
+        # [R57-E 单侧规则] 一侧票集为空且该侧全程以回边/终态/出循环收束
+        # （纯 continue/break/return 臂，不参与汇合——ANALYSIS §4.2：退出臂
+        # 不参与 merge 可达性），另一侧取「出口票」= 票目标未被本侧游走进入
+        # （非臂内中转跳），且唯一，且该目标存在不属于本侧可达集的前驱
+        # （兄弟臂从外部汇入 ⇒ 目标是更外层链的公共汇合点，而非本臂内部
+        # 中继）。命中返回该目标；否则逐字保持原 merge（严格附加）。
+        if _exit_else and not _votes_else and _votes_then:
+            _exit_votes = _votes_then - _vis_then
+            if len(_exit_votes) == 1:
+                _t = next(iter(_exit_votes))
+                if (current_merge is None or _t is not current_merge) and any(
+                        p not in _vis_then for p in _t.predecessors):
+                    return _t
+            return None
+        if _exit_then and not _votes_then and _votes_else:
+            _exit_votes = _votes_else - _vis_else
+            if len(_exit_votes) == 1:
+                _t = next(iter(_exit_votes))
+                if (current_merge is None or _t is not current_merge) and any(
+                        p not in _vis_else for p in _t.predecessors):
+                    return _t
+            return None
+        return None
 
     def _collect_blocks_on_path(self, entry: BasicBlock, exit_block: BasicBlock, stop_set: Optional[Set[BasicBlock]] = None) -> Set[BasicBlock]:
         result: Set[BasicBlock] = set()
@@ -5165,6 +5289,15 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         if cur not in body_set:
                             else_blocks.append(cur)
                         for succ in cur.successors:
+                            # [识别条件] 后继仅经异常边可达（∈ exception_successors，
+                            # 如 try 的 handler 入口及其续块 POP_TOP/POP_EXCEPT 清理流）
+                            # [归约方式] for-else BFS 只沿正常控制流扩展，异常路径
+                            # 归属 TryExceptRegion（每块唯一归属），不得吞入
+                            # LoopRegion.else_blocks（function.pyc 内层 for 混入
+                            # handler 错误日志/POP_EXCEPT 块根因）
+                            # [AST 映射] 不进入 orelse，handler 仍由 try 区域发射
+                            if succ in cur.exception_successors:
+                                continue
                             if succ not in visited and succ != post_else:
                                 stack.append(succ)
                     result = sorted(else_blocks, key=lambda b: b.start_offset) if else_blocks else None
@@ -5179,6 +5312,24 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                   if b not in _with_cleanup_blocks
                                   and (b == for_iter_exit or not self._is_early_return_block(b))
                                   and not self._is_except_handler_block(b)]
+                        # [识别条件] 过滤后 else 仅剩纯跳转块（无实质语句，
+                        # 如 JUMP_BACKWARD 回外层头 / JUMP_* 落点）
+                        # [归约方式] 无实质 else 体时不建立 for-else（与无 break
+                        # 路径的 _fe_is_pure_jump 判据对称，避免伪 orelse）
+                        # [AST 映射] LoopRegion.orelse=None，循环后代码走顺序发射
+                        if result:
+                            _else_only_pure_jump = True
+                            for _eb in result:
+                                _eb_meaningful = [i for i in _eb.instructions
+                                                  if i.opname not in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME')]
+                                if not _eb_meaningful or not (
+                                        len(_eb_meaningful) == 1
+                                        and _eb_meaningful[0].opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                                                         'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')):
+                                    _else_only_pure_jump = False
+                                    break
+                            if _else_only_pure_jump:
+                                return None, natural_exit
                         # [Round 32 fix] else_blocks 越界裁剪：见
                         # _clamp_loop_else_to_enclosing_try。try 内循环的
                         # 正常出口续流经 finally 内联副本进入 try 之后的
@@ -16785,13 +16936,25 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # 重算合并点（_compute_in_loop_if_merge）。
             if merge is not None:
                 _loop = self._find_enclosing_loop(block)
-                if _loop is not None and merge not in _loop.blocks:
+                if _loop is not None:
                     _exclude = {block, then_succ, else_succ,
                                      _else_succ_original} | chain_blocks
-                    _merge = self._compute_in_loop_if_merge(
-                        then_succ, else_succ, _loop, _exclude)
-                    if _merge is not None:
-                        merge = _merge
+                    if merge not in _loop.blocks:
+                        _merge = self._compute_in_loop_if_merge(
+                            then_succ, else_succ, _loop, _exclude)
+                        if _merge is not None:
+                            merge = _merge
+                    # [R57-E] 循环内两臂唯一公共前向跳转目标兜底（不论
+                    # 当前 merge 是否在循环块集内——循环块集可含循环体末端
+                    # 汇块，membership 判据拦不住被 continue 臂后推的
+                    # NCPD merge）。判据见方法 docstring：唯一公共臂跳
+                    # 目标 T ∧ 当前 merge 无臂直接跳转证据 ∧ T≠merge。
+                    # 命中即以 T 为 merge（臂体在 T 处停止收集，公共尾
+                    # 归还父区）；否则逐字保持原 merge（严格附加）。
+                    _merge_e = self._r57e_in_loop_branch_convergence(
+                        then_succ, else_succ, _loop, _exclude, merge)
+                    if _merge_e is not None:
+                        merge = _merge_e
 
             # 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
             # 当 then_succ 以 JUMP_BACKWARD 终止、且目标为包围循环的循环头（continue
@@ -17992,8 +18155,64 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             _lb_target = self.cfg.get_block_by_offset(_lb_last.argval) if _lb_last.argval is not None else None
                             if _lb_target and _lb_target not in _loop_all_blocks:
                                 _break_target_blocks.add(_lb_target)
+                    # [R57-D] 识别条件 → 归约方式 → AST 映射。
+                    # 识别条件（全部结构性质，不读名字/常量值/绝对偏移/指令数）：
+                    #   ① back_edge_block 被收进 else 臂；② merge 非 None 且在
+                    #     循环体内；③ 条件块的 FALSE 族条件跳转目标就是该
+                    #     back_edge_block（它确为本 if 的直接 else 入口）；
+                    #   ④ back_edge_block 以**无条件** JUMP_BACKWARD/NO_INTERRUPT
+                    #     终结（continue 形态；while 回边重检的条件回跳
+                    #     POP_JUMP_BACKWARD_IF_* 不匹配——Phase 4 回归修复
+                    #     保护不受影响）；⑤ then 臂存在以 JUMP_FORWARD/
+                    #     JUMP_ABSOLUTE 汇入 merge 的块（then 跳越 else 臂的
+                    #     经典 if/else 布局，R116b 同款 any 判据）。
+                    # 归约方式：满足全部判据时 back_edge 块从
+                    # `_loop_body_only.discard` 的过滤中豁免（保留在
+                    # else_blocks），归 IfRegion 所有（嵌套即抽象节点：else
+                    # 臂里的 continue 是用户源码语句，循环通过引用 IfRegion
+                    # 入口归约，不再直接认领该块）。
+                    # AST 映射：IfRegion.orelse = [log.error(...); continue]，
+                    # merge 作为循环体序列中 if 之后的兄弟语句发射。
+                    # 失败模式（实测 r57_08 / plugin_system_
+                    # trade.order_entrust_info_handle）：else 臂以 continue
+                    # 收尾时该臂被 back_edge 过滤清空 → if 丢失 else，共享尾
+                    # 被提升为无条件兄弟语句，else 内容变成 continue 后的
+                    # 死代码（严格尺 seq_len −10）。
+                    _r57d_keep_be = None
+                    if (_loop_region.back_edge_block is not None
+                            and _loop_region.back_edge_block in else_blocks
+                            and merge is not None
+                            and merge in set(_loop_region.body_blocks)
+                            and then_blocks):
+                        _r57_be = _loop_region.back_edge_block
+                        _r57_be_last = _r57_be.get_last_instruction()
+                        _r57_cb = condition_block if condition_block is not None else block
+                        _r57_else_succ = None
+                        if _r57_cb is not None:
+                            _r57_cj = _r57_cb.get_last_instruction()
+                            if (_r57_cj is not None
+                                    and _r57_cj.opname in ('POP_JUMP_FORWARD_IF_FALSE',
+                                                            'POP_JUMP_FORWARD_IF_TRUE',
+                                                            'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE')
+                                    and _r57_cj.argval is not None):
+                                _r57_else_succ = self.cfg.get_block_by_offset(_r57_cj.argval)
+                        if (_r57_be_last is not None
+                                and _r57_be_last.opname in ('JUMP_BACKWARD',
+                                                             'JUMP_BACKWARD_NO_INTERRUPT')
+                                and _r57_else_succ is _r57_be):
+                            _r57_then_jumps_merge = False
+                            for _r57_tb in then_blocks:
+                                _r57_tl = _r57_tb.get_last_instruction()
+                                if (_r57_tl is not None
+                                        and _r57_tl.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                        and _r57_tl.argval is not None
+                                        and self.cfg.get_block_by_offset(_r57_tl.argval) is merge):
+                                    _r57_then_jumps_merge = True
+                                    break
+                            if _r57_then_jumps_merge:
+                                _r57d_keep_be = _r57_be
                     then_blocks = [b for b in then_blocks if b not in _break_target_blocks]
-                    else_blocks = [b for b in else_blocks if b in _loop_body_only or self._block_exits_loop(b, _loop_region)]
+                    else_blocks = [b for b in else_blocks if b in _loop_body_only or b is _r57d_keep_be or self._block_exits_loop(b, _loop_region)]
         # 区域归约算法·IF_THEN merge 候选识别：
         # 当 merge=None 且 else_blocks 为空时，then_blocks 可能包含了实际的
         # merge 点（所有 then 分支的共同后继）。典型场景（log_request 中

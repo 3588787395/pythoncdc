@@ -1634,6 +1634,40 @@ class RegionASTGenerator:
                         break
                 if _has_meaningful_return:
                     continue
+                # [R57-B] 识别条件: BASIC 区域内存在纯 None-return 块
+                # （跳过 RESUME/NOP/CACHE 后恰为 LOAD_CONST None + RETURN_VALUE /
+                # RETURN_CONST）且其前驱数 ≥ 2。
+                # 归约方式: 不预标记 generated（不按异常清理块吞掉），交由顶级
+                # 区域循环按 BASIC 区域正常发射 `return None` 语句。
+                # AST 映射: 该块发射为 Return(Constant(None))。
+                # 实证依据（CPython 3.11 控制实验，本机 3.11.7）:
+                #   - 隐式函数尾声（源码无尾随 return）按路径**内联**——
+                #     `if/else`（无尾随 return）then 臂内直接 LOAD_CONST None +
+                #     RETURN_VALUE，无 JUMP_FORWARD、无共享尾声块；单前驱
+                #     （fall-through 或条件跳转）的纯 None-return 块只出现在
+                #     循环/with 出口等位置，丢弃后重编译逐指令再生（旧行为，
+                #     字节码等价）。
+                #   - 显式 `return None` 才产生**共享 return 块**：臂以
+                #     JUMP_FORWARD / fall-through 汇入同一块（前驱 ≥ 2）。
+                #     丢弃它会让重编译源码退化为隐式形状（按臂内联尾声），
+                #     指令序列错位（严格尺 seq_len +1，实测
+                #     plugin_system_trade.cancel_order_ex_handle）。
+                #   - try/except 后的隐式尾声若恰为 ≥2 前驱共享块，发射
+                #     `return None` 重编译仍逐指令一致（共享块再生），无回归
+                #     风险——判据保守取「前驱 ≥ 2」而非「存在无条件跳转前驱」。
+                # 判据只读块内容类别与前驱计数（结构性质），不读名字/常量值/
+                # 绝对偏移/指令数; 仅新增跳过预标记的分支，其余形状行为逐字
+                # 保持（严格附加）。
+                _r57b_explicit_ret = False
+                for _cl_b in _cl_region.blocks:
+                    _cl_b_instrs = [i for i in _cl_b.instructions
+                                    if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+                    if (self._is_implicit_return_block(_cl_b_instrs)
+                            and len(getattr(_cl_b, 'predecessors', None) or []) >= 2):
+                        _r57b_explicit_ret = True
+                        break
+                if _r57b_explicit_ret:
+                    continue
                 for _cl_b in _cl_region.blocks:
                     self.generated_blocks.add(_cl_b)
                     self.generated_offsets.add(_cl_b.start_offset)
@@ -12514,9 +12548,25 @@ AST 映射规则:
                     continue
                 if not isinstance(_nr, (TryExceptRegion, WithRegion, MatchRegion)):
                     continue
-                if region.merge_block in _nr.blocks:
-                    _mb_in_nested_structural = True
-                    break
+                if region.merge_block not in _nr.blocks:
+                    continue
+                # [R57-B Fix3] 祖先结构区域不算嵌套：识别条件——该 Try/With/Match
+                # 沿 region.parent 链可达（本 IfRegion 嵌在其 blocks 内，而非
+                # 嵌套在本 if 臂内的子结构）。归约方式：祖先压不住 elif 后置发射
+                # （merge 归本链作链后兄弟语句），仅后代结构可压制
+                # （原则 4 父引用子入口；只读 parent 链与 blocks 归属，不读名字/偏移）。
+                # AST 映射：elif 后置照常发射 merge；后代结构内的 merge 仍不发。
+                _r57b_anc = region.parent
+                _r57b_is_ancestor = False
+                while _r57b_anc is not None:
+                    if _r57b_anc is _nr:
+                        _r57b_is_ancestor = True
+                        break
+                    _r57b_anc = getattr(_r57b_anc, 'parent', None)
+                if _r57b_is_ancestor:
+                    continue
+                _mb_in_nested_structural = True
+                break
             _should_emit_elif = False
             _mb_is_ancestor_if_merge = False
             if not _mb_in_nested_structural:
@@ -17809,9 +17859,25 @@ AST 映射规则:
                     continue
                 if not isinstance(_nr, (TryExceptRegion, WithRegion, MatchRegion)):
                     continue
-                if region.merge_block in _nr.blocks:
-                    _mb_in_nested_structural = True
-                    break
+                if region.merge_block not in _nr.blocks:
+                    continue
+                # [R57-B Fix3] 祖先结构区域不算嵌套：识别条件——该 Try/With/Match
+                # 沿 region.parent 链可达（本 IfRegion 嵌在其 blocks 内，而非
+                # 嵌套在本 if 臂内的子结构）。归约方式：祖先压不住 post-if 发射
+                # （merge 归本 IfRegion 作 if 后兄弟语句），仅后代结构可压制
+                # （原则 4 父引用子入口；只读 parent 链与 blocks 归属，不读名字/偏移）。
+                # AST 映射：post-if 照常发射 merge；后代结构内的 merge 仍不发。
+                _r57b_anc = region.parent
+                _r57b_is_ancestor = False
+                while _r57b_anc is not None:
+                    if _r57b_anc is _nr:
+                        _r57b_is_ancestor = True
+                        break
+                    _r57b_anc = getattr(_r57b_anc, 'parent', None)
+                if _r57b_is_ancestor:
+                    continue
+                _mb_in_nested_structural = True
+                break
             _should_emit = False
             if not _mb_in_nested_structural:
                 _then_block_set = set(region.then_blocks)
@@ -21042,7 +21108,25 @@ AST 映射规则:
                     bs = self._generate_block_statements(block)
                     if bs:
                         stmts.extend(bs)
-                    stmts.append({'type': 'Break'})
+                    # [R57-B Fix1] 共享 break 桩：识别条件——BREAK/PURE_BREAK 角色
+                    # 块带有效语句，且其全部非异常正常后继恰为本 IfRegion.merge_block，
+                    # 且该 merge 角色亦为 BREAK/PURE_BREAK（两路均汇入同一 break 中转桩，
+                    # 真臂 fall-through 与条件假边双前驱，属 if 后兄弟语句而非臂内 break）。
+                    # 归约方式：仅发射块内有效语句、不追加 Break，且不认领 merge——
+                    # 交由父层/后置路径把 merge 作为 if 后兄弟 Break 发射一次
+                    # （原则 2 每块唯一归属 + 原则 4 父引用子入口，不读名字/常量/偏移/指令数）。
+                    # AST 映射：stmts += 有效语句；merge 的 Break 由 post-if 或兄弟扫描发射。
+                    _r57b_skip_shared = False
+                    if region is not None and getattr(region, 'merge_block', None) is not None:
+                        _r57b_non_exc = [s for s in block.successors
+                                          if s not in (getattr(block, 'exception_successors', None) or [])]
+                        if (_r57b_non_exc
+                                and all(s is region.merge_block for s in _r57b_non_exc)
+                                and self.region_analyzer.get_block_role(region.merge_block)
+                                in (BlockRole.BREAK, BlockRole.PURE_BREAK)):
+                            _r57b_skip_shared = True
+                    if not _r57b_skip_shared:
+                        stmts.append({'type': 'Break'})
                     self.generated_blocks.add(block)
                     self.generated_offsets.add(block.start_offset)
                     continue
@@ -22615,17 +22699,42 @@ AST 映射规则:
                     _bn_else_block = normal_succ[0]
                 _bn_then_stmts = []
                 _bn_else_stmts = [{'type': 'Break'}]
+                # [R57-B Fix2] 共享 merge 不吞：识别条件——break+normal 映射中，
+                # break 后继恰为包含本条件块的某 IfRegion.merge_block（真臂正常后继
+                # 与条件假边均汇入该 merge，两路在 if 后重逢，非独占 else 出口）。
+                # 归约方式：该侧不发 Break、orelse 置空（或 then 置空），且不把
+                # break 目标记为 generated——交父层把 merge 作 if 后兄弟语句发射
+                # （原则 2 每块唯一归属 + 原则 4；只读区域结构与后继，不读名字/偏移）。
+                # AST 映射：If(test, body=正常臂, orelse=[])；merge 由 post-if/兄弟发射。
+                _r57b_break_is_shared_merge = False
+                _r57b_shared_merge_blk = break_succ[0]
+                for _cr in self.region_analyzer.regions:
+                    if not isinstance(_cr, IfRegion):
+                        continue
+                    if getattr(_cr, 'merge_block', None) is not _r57b_shared_merge_blk:
+                        continue
+                    if (block in (_cr.then_blocks or [])
+                            or block in (_cr.else_blocks or [])
+                            or getattr(_cr, 'condition_block', None) is block
+                            or block in (_cr.elif_conditions or [])
+                            or any(block in _body for _body in (_cr.elif_bodies or []))
+                            or block in (_cr.elif_final_else or [])):
+                        _r57b_break_is_shared_merge = True
+                        break
                 _bn_then_role = self.region_analyzer.get_block_role(_bn_then_block)
                 _bn_then_is_break = (_bn_then_block == break_succ[0])
                 if _bn_then_is_break:
-                    _bn_then_pre = self._generate_block_statements(_bn_then_block)
-                    _bn_then_pre_user = [s for s in _bn_then_pre if s.get('type') not in ('Break', 'Continue')]
-                    if _bn_then_pre_user:
-                        _bn_then_stmts = _bn_then_pre_user + [{'type': 'Break'}]
+                    if _r57b_break_is_shared_merge:
+                        _bn_then_stmts = []
                     else:
-                        _bn_then_stmts = [{'type': 'Break'}]
-                    if _bn_then_block not in self.generated_blocks:
-                        self.generated_blocks.add(_bn_then_block)
+                        _bn_then_pre = self._generate_block_statements(_bn_then_block)
+                        _bn_then_pre_user = [s for s in _bn_then_pre if s.get('type') not in ('Break', 'Continue')]
+                        if _bn_then_pre_user:
+                            _bn_then_stmts = _bn_then_pre_user + [{'type': 'Break'}]
+                        else:
+                            _bn_then_stmts = [{'type': 'Break'}]
+                        if _bn_then_block not in self.generated_blocks:
+                            self.generated_blocks.add(_bn_then_block)
                 elif _bn_then_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
                     _ret_ast = self._generate_return_ast(_bn_then_block)
                     _bn_then_stmts = [_ret_ast] if _ret_ast else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
@@ -22649,7 +22758,9 @@ AST 映射规则:
                 _bn_else_role = self.region_analyzer.get_block_role(_bn_else_block)
                 _bn_else_is_break = (_bn_else_block == break_succ[0])
                 _bn_else_meaningful_skipped = False
-                if _bn_else_is_break:
+                if _bn_else_is_break and _r57b_break_is_shared_merge:
+                    _bn_else_stmts = []
+                elif _bn_else_is_break:
                     _bn_else_pre = self._generate_block_statements(_bn_else_block)
                     _bn_else_pre_user = [s for s in _bn_else_pre if s.get('type') not in ('Break', 'Continue')]
                     if _bn_else_pre_user:
@@ -22708,7 +22819,7 @@ AST 映射规则:
                             'orelse': _bn_else_stmts}
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
-                if break_succ[0] not in self.generated_blocks:
+                if break_succ[0] not in self.generated_blocks and not _r57b_break_is_shared_merge:
                     self.generated_blocks.add(break_succ[0])
                 if normal_succ[0] not in self.generated_blocks:
                     if not (_bn_else_meaningful_skipped and normal_succ[0] == _bn_else_block):
@@ -38737,8 +38848,28 @@ AST 映射规则:
             # Pattern A: ternary is value; merge contains obj+key loads after
             # the ternary result lands on stack.
             if before_store:
+                # [R57-A] 识别条件: before_store 含消费指令（CALL/BINARY_OP/
+                # BUILD_* 等非纯 LOAD）∧ cond 前置加载栈非空（callable/兄弟
+                # 操作数在三元条件之前入栈，如 ``out['k'] = int(float(T))`` 的
+                # LOAD_GLOBAL int + LOAD_GLOBAL float）。旧版仅以 [ternary] 为
+                # 初始栈重放，CALL 弹 (args+1) 时 callable 不在栈上而下溢，
+                # 三元被丢弃 ⇒ 栈长 < 3 ⇒ 误落 Pattern B（把前置语句重建栈的
+                # 末两个元素当 (value, obj)，产生 ``item[T] = float``）。
+                # 归约方式: 以 preload_exprs + [ternary] 为初始栈自底向上重放
+                # before_store，CALL 链逐层归约（float(T) → int(float(T))）。
+                # AST 映射: STORE_SUBSCR 弹 [value, obj, key] ⇒
+                # value=_reg_stack[-3]、obj=_reg_stack[-2]、key=_reg_stack[-1]；
+                # preload 为空时 _reg_stack[-3] is ternary_expr，与旧行为逐字
+                # 一致（严格附加）。
+                # 依「自底向上归约」: 三元是内层抽象节点，外层 CALL 链通过
+                # 重放归约为父表达式节点; 依「父引用子入口」: 父 Assign 通过
+                # merge_block 的消费指令引用三元子入口; 依「每块唯一归属」:
+                # 消费链（CALL 链 + obj/key 加载 + STORE_SUBSCR）整体归属
+                # TernaryRegion 父赋值节点，不拆分为独立语句。
+                _pl_exprs_a = self._compute_ternary_cond_preload_exprs(region)
                 self.expr_reconstructor.reset()
-                self.expr_reconstructor.stack = [ternary_expr]
+                self.expr_reconstructor.stack = (list(_pl_exprs_a) + [ternary_expr]
+                                                 if _pl_exprs_a else [ternary_expr])
                 for _instr in before_store:
                     if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                         continue
@@ -38748,6 +38879,7 @@ AST 映射规则:
                 if len(_reg_stack) >= 3:
                     key_expr = _reg_stack[-1]
                     obj_expr = _reg_stack[-2]
+                    _value_expr_a = _reg_stack[-3]
                     target = {
                         'type': 'Subscript',
                         'value': obj_expr,
@@ -38757,7 +38889,7 @@ AST 映射规则:
                     return {
                         'type': 'Assign',
                         'targets': [target],
-                        'value': ternary_expr,
+                        'value': _value_expr_a,
                     }
 
             # Pattern B: ternary is key; merge is just STORE_SUBSCR. The value
@@ -38831,8 +38963,14 @@ AST 映射规则:
             # Pattern A: ternary is value; merge contains obj load after the
             # ternary result lands on stack.
             if before_store:
+                # [R57-A] 同 STORE_SUBSCR 分支: 以 preload_exprs + [ternary]
+                # 为初始栈重放 before_store（CALL 链消费 callable 前置加载），
+                # AST 映射按 STORE_ATTR 弹 [value, obj] ⇒ value=stack[-2]、
+                # obj=stack[-1]；preload 为空时 value is ternary_expr（严格附加）。
+                _pl_exprs_attr = self._compute_ternary_cond_preload_exprs(region)
                 self.expr_reconstructor.reset()
-                self.expr_reconstructor.stack = [ternary_expr]
+                self.expr_reconstructor.stack = (list(_pl_exprs_attr) + [ternary_expr]
+                                                 if _pl_exprs_attr else [ternary_expr])
                 for _instr in before_store:
                     if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                         continue
@@ -38841,6 +38979,7 @@ AST 映射规则:
                               if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
                 if len(_reg_stack) >= 2:
                     obj_expr = _reg_stack[-1]
+                    _value_expr_attr = _reg_stack[-2]
                     target = {
                         'type': 'Attribute',
                         'value': obj_expr,
@@ -38850,7 +38989,7 @@ AST 映射规则:
                     return {
                         'type': 'Assign',
                         'targets': [target],
-                        'value': ternary_expr,
+                        'value': _value_expr_attr,
                     }
 
             # Pattern A2: ternary as attr assign TARGET obj.
@@ -42101,6 +42240,48 @@ AST 映射规则:
                 stmt['_explicit_return'] = True
             break
 
+    def _mark_shared_return_explicit(self, block: BasicBlock,
+                                     stmts: List[Dict[str, Any]]) -> None:
+        """[R57-C] 给「多前驱共享 return-None 块」产生的 return None 打指令背书。
+
+        **算法依据（实证形状，CPython 3.11 控制实验）**
+        隐式函数尾声按路径内联（`if/else` 无尾随 return 时 then/else 臂各自
+        内联 LOAD_CONST None + RETURN_VALUE，无共享块）；只有源码显式
+        `return None` 才产生**共享 return 块**（臂以 JUMP_FORWARD /
+        fall-through 汇入同一块，前驱 ≥ 2）。该块产生的 `return None` 是
+        **源码语句**，不是编译器补的隐式返回。
+
+        **归约方式 / AST 映射**
+        单前驱（fall-through 或条件跳转）的纯 None-return 块维持旧行为
+        （可按隐式尾声消费——重编译逐指令再生，字节码等价）；前驱 ≥ 2 的
+        纯 None-return 块按显式语句发射。_explicit_return 是本项目既有的
+        「指令背书」通道（code_generator._filter_trailing_return_none
+        R15-10 据此不过滤），本方法只把共享块的结构性结论接到该通道上，
+        不新增后处理。判据只读块内容类别与前驱计数，不读名字/常量值/
+        绝对偏移/指令数（结构性质）。
+
+        与 generate() 顶级 cleanup 预标记的 [R57-B] 判据互补：R57-B 让该块
+        **不被吞掉**（进入正常生成），R57-C 让生成出的语句**不被发射端
+        过滤**；两者缺一，`return None` 均会丢失（严格尺 seq_len +1，
+        实测 plugin_system_trade.cancel_order_ex_handle）。
+        """
+        if not stmts:
+            return
+        _blk_instrs = [i for i in block.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if not self._is_implicit_return_block(_blk_instrs):
+            return
+        if len(getattr(block, 'predecessors', None) or []) < 2:
+            return
+        last = stmts[-1]
+        if not isinstance(last, dict) or last.get('type') != 'Return':
+            return
+        val = last.get('value')
+        if val is None or (isinstance(val, dict)
+                           and val.get('type') == 'Constant'
+                           and val.get('value') is None):
+            last['_explicit_return'] = True
+
     def _generate_block_statements(self, block: BasicBlock, _cjb_parent: BasicBlock = None) -> List[Dict[str, Any]]:
         """[Round 02 F5] 薄包装：块语句生成 + with 出口块 return 的指令背书。
 
@@ -42112,6 +42293,7 @@ AST 映射规则:
         """
         stmts = self._generate_block_statements_body(block, _cjb_parent)
         self._mark_with_exit_return_explicit(block, stmts)
+        self._mark_shared_return_explicit(block, stmts)
         # [R55-A] 识别条件：本块处在循环体内（self._current_loop 非空），其语句
         # 序列末尾不是任何终止型语句（Break/Return/Raise/Continue），而本块的**正常**
         # 后继（剔除异常表隐式边）恰好只有一个，且该后继是**纯跳转块**（块内只有

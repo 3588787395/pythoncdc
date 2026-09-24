@@ -1,0 +1,19 @@
+{"file": "r57_01_ifelse_tail_return_none.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_02_elifchain_tail_return_none.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_03_ifelse_tail_return_value.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_04_ternary_int_float_subscr_store.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_05_ternary_single_call_subscr_store.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_06_ternary_int_float_name_assign.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_07_elif3_continue_shared_tail.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_08_ifelse_continue_shared_tail.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_09_shared_break_trampoline.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_10_try_nested_for_handler.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_11_order_entrust_integration.py", "status": "MISMATCH", "defects": [{"fn": "<module>", "kind": "seq_len", "msg": "orig=7 decomp=9"}, {"fn": "<module>.order_entrust_info_handle", "kind": "seq_len", "msg": "orig=169 decomp=158"}], "error": null, "functions": 2}
+{"file": "r57_12_neg_ifelse_implicit_end.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_13_neg_unique_pred_break.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_14_neg_try_single_for_handler.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_15_elif_chain_noelse_shared_tail.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_16_ifelse_tail_return_none_bare.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_17_ternary_int_single_subscr_store.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_18_ternary_int_float_extra_store.py", "status": "MATCH", "defects": [], "error": null, "functions": 2}
+{"file": "r57_19_full_fidelity_order_entrust.py", "status": "MISMATCH", "defects": [{"fn": "<module>", "kind": "seq_len", "msg": "orig=7 decomp=9"}, {"fn": "<module>.order_entrust_info_handle", "kind": "seq_len", "msg": "orig=221 decomp=193"}], "error": null, "functions": 2}
