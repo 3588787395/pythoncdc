@@ -4747,6 +4747,27 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             # AST 映射——保留 LoopRegion.else_blocks，_generate_loop 照常
             #   发射 For.orelse = [Break]。
             _r58_fie = lr.metadata.get('for_iter_exit') if isinstance(lr.metadata, dict) else None
+            # [R61] FIE 豁免收窄：须为纯跳转桩且后继落入父循环 break_blocks
+            # （对齐 R58 gen Fix5 的 for-else break 桩形态），否则清空豁免让
+            # 旧 cleanup 正常剔除 victims 所需的伪 else。
+            if _r58_fie is not None:
+                _fie_ops = [i.opname for i in _r58_fie.instructions
+                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG')]
+                _fie_pure = bool(_fie_ops) and all(
+                    o in ('POP_TOP', 'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                          'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                    for o in _fie_ops)
+                _anc_break = set()
+                for pl2 in parent_loops:
+                    _anc_break.update(getattr(pl2, 'break_blocks', None) or [])
+                _fie_succ_in_break = False
+                if _fie_pure:
+                    for s2 in _r58_fie.successors:
+                        if s2 in _anc_break:
+                            _fie_succ_in_break = True
+                            break
+                if not (_fie_pure and _fie_succ_in_break):
+                    _r58_fie = None
             spurious = [eb for eb in lr.else_blocks
                         if eb in parent_body
                         and eb not in _cond_exit_targets
@@ -16999,6 +17020,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         if _merge is not None:
                             merge = _merge
                     # [R57-E] 循环内两臂唯一公共前向跳转目标兜底（不论
+                    # [R61] 若当前 merge 已是循环头则拒绝替换（create_portfolio 负例）。
                     # 当前 merge 是否在循环块集内——循环块集可含循环体末端
                     # 汇块，membership 判据拦不住被 continue 臂后推的
                     # NCPD merge）。判据见方法 docstring：唯一公共臂跳
@@ -17007,7 +17029,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     # 归还父区）；否则逐字保持原 merge（严格附加）。
                     _merge_e = self._r57e_in_loop_branch_convergence(
                         then_succ, else_succ, _loop, _exclude, merge)
-                    if _merge_e is not None:
+                    if _merge_e is not None and merge is not getattr(_loop, 'header_block', None):
                         merge = _merge_e
 
             # 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：

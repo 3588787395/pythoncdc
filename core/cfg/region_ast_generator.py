@@ -210,6 +210,29 @@ def _is_duplicated_cleanup_exit_return(analyzer, block, stmts):
     return False
 
 
+def _r61_is_pure_jump_stub(block) -> bool:
+    """[R61] merge 是纯跳转中转桩：剥噪声后仅 POP_TOP + 无条件跳转。
+
+    识别条件：块指令（剔 RESUME/NOP/CACHE/EXTENDED_ARG）非空且全属
+    {POP_TOP, JUMP_FORWARD, JUMP_ABSOLUTE, JUMP_BACKWARD, JUMP_BACKWARD_NO_INTERRUPT}。
+    归约方式：R57 Fix1 的共享 break 跳过仅在此形态下生效；真实条件 merge
+    仍按臂内 Break 发射（create_daily_stats 负例）。
+    AST 映射：跳过时 merge 由父层 post-if 发一次 Break；否则 stmts+=Break。
+    """
+    if block is None:
+        return False
+    seen = False
+    for ins in block.instructions:
+        op = ins.opname
+        if op in ("RESUME", "NOP", "CACHE", "EXTENDED_ARG"):
+            continue
+        seen = True
+        if op not in ("POP_TOP", "JUMP_FORWARD", "JUMP_ABSOLUTE",
+                      "JUMP_BACKWARD", "JUMP_BACKWARD_NO_INTERRUPT"):
+            return False
+    return seen
+
+
 class _IfRegionProxy:
     """[Phase 7 根因 A] IfRegion-like 代理，供 while 条件路径复用 if 条件路径的
     compare-ternary 构建逻辑（_build_ternary_wrapped_expr）。
@@ -17283,13 +17306,19 @@ AST 映射规则:
             # 归约方式：_negate_expr(_part) 包 not()（保留 Compare
             # 运算符，镜像 _negate_expr 一次正确原则）。
             # AST 映射：BoolOp(or, [not A, B]) → 重编译 IF_FALSE→then。
+            # [R61] Fix3 收窄：In/NotIn Compare 头不 _negate_expr（api_base），其余保持（replace_utils）。
                             elif (_cb_last
                                   and 'IF_FALSE' in _cb_last.opname
                                   and _cb_last.argval is not None):
                                 _jt_block = self.region_analyzer.cfg.get_block_by_offset(_cb_last.argval)
                                 _is_then_target = _jt_block in region.then_blocks if _jt_block and region.then_blocks else False
                                 if _is_then_target:
-                                    _part = _negate_expr(_part)
+                                    # [R61] In/NotIn Compare 头不取反：CONTAINS 极性由跳转对偶吸收，包 not 会翻 arg。
+                                    _part = (_negate_expr(_part) if not (isinstance(_part, dict)
+                                        and _part.get('type') == 'Compare'
+                                        and any((o.get('type') if isinstance(o, dict) else o)
+                                               in ('In', 'NotIn', 'in', 'not in')
+                                               for o in (_part.get('ops') or []))) else _part)
                         elif _chain_op == 'and' and _cb_last and 'TRUE' in _cb_last.opname:
                             _part = _flip_contains_compare(_part) if (_part.get('type') == 'Compare' and any((o.get('type') if isinstance(o, dict) else o) in ('In', 'NotIn', 'in', 'not in') for o in (_part.get('ops') or []))) else _negate_expr(_part)
                         _main_parts.append(_part)
@@ -21349,6 +21378,7 @@ AST 映射规则:
                     # 交由父层/后置路径把 merge 作为 if 后兄弟 Break 发射一次
                     # （原则 2 每块唯一归属 + 原则 4 父引用子入口，不读名字/常量/偏移/指令数）。
                     # AST 映射：stmts += 有效语句；merge 的 Break 由 post-if 或兄弟扫描发射。
+                    #   （R61）另须 merge 为纯跳转中转桩（_r61_is_pure_jump_stub）。
                     _r57b_skip_shared = False
                     if region is not None and getattr(region, 'merge_block', None) is not None:
                         _r57b_non_exc = [s for s in block.successors
@@ -21356,7 +21386,8 @@ AST 映射规则:
                         if (_r57b_non_exc
                                 and all(s is region.merge_block for s in _r57b_non_exc)
                                 and self.region_analyzer.get_block_role(region.merge_block)
-                                in (BlockRole.BREAK, BlockRole.PURE_BREAK)):
+                                in (BlockRole.BREAK, BlockRole.PURE_BREAK)
+                                and _r61_is_pure_jump_stub(region.merge_block)):
                             _r57b_skip_shared = True
                     if not _r57b_skip_shared:
                         stmts.append({'type': 'Break'})
