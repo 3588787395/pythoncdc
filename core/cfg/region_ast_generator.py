@@ -4581,15 +4581,23 @@ AST 映射规则:
                             elif getattr(_tr, 'merge_context', None) == 'store':
                                 _r102_tern_store_attr = True
                 if _fis_pre_stmts and (_r102_tern_merge_targets or _r102_tern_store_attr):
+                    # [R62 Fix4] 识别条件: 只有前缀的**首条**语句才可能是子 TernaryRegion
+                    # 的 merge 写回本体（join 块以幸存臂开头，紧跟其 STORE）；其后的语句
+                    # 是本 For 区域自己的前置独立语句。按目标名通配过滤会把
+                    # `x = f(三元)` 之后另一次 `x = g(x)` 一起吞掉（B 形状，setup 的 -7）。
+                    # 归约方式: 写回抑制只作用于 index 0，其余 pre_stmts 全部保留 ——
+                    # 子区域在父区域内已是单个抽象节点，父层不得吞并自己的成员语句。
+                    # AST 映射: 被抑制者由 TernaryRegion 发射；保留者逐条归为
+                    # Assign/Expr，与循环迭代准备（iter_expr）分离。
                     _filtered_pre = []
-                    for _ps in _fis_pre_stmts:
+                    for _r62_pi, _ps in enumerate(_fis_pre_stmts):
                         _ps_tgts = _ps.get('targets') if isinstance(_ps, dict) else None
-                        if (_ps_tgts and len(_ps_tgts) == 1
+                        if (_r62_pi == 0 and _ps_tgts and len(_ps_tgts) == 1
                                 and isinstance(_ps_tgts[0], dict)
                                 and _ps_tgts[0].get('type') == 'Name'
                                 and _ps_tgts[0].get('id') in _r102_tern_merge_targets):
                             continue
-                        if (_r102_tern_store_attr
+                        if (_r62_pi == 0 and _r102_tern_store_attr
                                 and _ps_tgts and len(_ps_tgts) == 1
                                 and isinstance(_ps_tgts[0], dict)
                                 and _ps_tgts[0].get('type') == 'Attribute'):
@@ -34606,11 +34614,17 @@ AST 映射规则:
                 # TernaryRegion's condition preload.
                 if func_call_skip > 0:
                     _check_end = push_null_idx if push_null_idx is not None else func_call_skip
-                    _has_store_before_push_null = any(
+                    # [R62 Fix1] 识别条件: call preload 之前出现任意 STORE_*
+                    # （含 STORE_ATTR/STORE_SUBSCR 路径赋值），前缀是独立
+                    # 语句而非纯实参装载。归约方式: 复位 func_call_skip=0，
+                    # 由下方 STORE 分支切进 pre_stmts。AST 映射: 每条 STORE_*
+                    # 归约为独立 Assign，三元只拥有其后的条件表达式。
+                    _r62_has_store_before_push_null = any(
                         cond_instrs_raw[k].opname in (
-                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                            'STORE_ATTR', 'STORE_SUBSCR')
                         for k in range(0, _check_end))
-                    if _has_store_before_push_null:
+                    if _r62_has_store_before_push_null:
                         func_call_skip = 0
 
             cond_instrs = cond_instrs_raw[func_call_skip:]
@@ -35318,13 +35332,24 @@ AST 映射规则:
             # 依「父引用子入口」: parent container references chained ternaries
             #   via merge_block → entry links.
             if region.merge_block is not None:
+                # [R62 Fix2] 识别条件: 外层已是独立 store 赋值
+                # (merge_context=='store' 且 value_target 已设) 时，内层
+                # container_type 仅来自 merge 块后续无关 BUILD_*（如 for
+                # 迭代元组），不构成真容器链（真容器链外层 vt 为 None）。
+                # 归约方式: 跳过 chained_container 早触发，外层走
+                # value_target store 路径、内层独立生成。AST 映射: 两条
+                # 独立 Assign(x=IfExp, y=IfExp)，而非错误 Tuple(IfExp, IfExp)。
+                _r62_outer_is_independent_store = (
+                    getattr(region, 'merge_context', None) == 'store'
+                    and getattr(region, 'value_target', None) is not None)
                 _has_chained_container_inner = False
-                for _r in self.regions:
-                    if (isinstance(_r, TernaryRegion) and _r is not region
-                            and _r.entry is region.merge_block
-                            and getattr(_r, 'container_type', None) is not None):
-                        _has_chained_container_inner = True
-                        break
+                if not _r62_outer_is_independent_store:
+                    for _r in self.regions:
+                        if (isinstance(_r, TernaryRegion) and _r is not region
+                                and _r.entry is region.merge_block
+                                and getattr(_r, 'container_type', None) is not None):
+                            _has_chained_container_inner = True
+                            break
                 if _has_chained_container_inner:
                     _chained_container_stmt = self._try_build_ternary_chained_container(
                         region, ternary_expr)
