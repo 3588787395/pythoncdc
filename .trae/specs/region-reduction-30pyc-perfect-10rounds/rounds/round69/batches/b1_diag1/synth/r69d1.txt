@@ -1,0 +1,2 @@
+D:/Temp/opencode/r69gate/diag1/synth/r69d1_atco.pyc
+D:/Temp/opencode/r69gate/diag1/synth/r69d1_gma.pyc

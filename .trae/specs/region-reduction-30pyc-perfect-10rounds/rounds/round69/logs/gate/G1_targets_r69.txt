@@ -1,0 +1,15 @@
+G1 official ruler on the 10 partial targets (landed -> m69)
+======================================================================
+site-packages/IQCommon/api/klinedata.pyc        43/45  d=2   |d|=1    ->  43/45  d=2   |d|=1     SAME
+site-packages/IQCommon/util/fileio_utils.pyc    12/14  d=2   |d|=4    ->  12/14  d=2   |d|=4     SAME
+site-packages/IQCommon/util/trade_info_utils.pyc  39/40  d=1   |d|=2    ->  39/40  d=1   |d|=2     SAME
+site-packages/IQData/api/api_base.pyc           24/25  d=1   |d|=0    ->  24/25  d=1   |d|=0     SAME
+site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc  40/44  d=4   |d|=5    ->  40/44  d=4   |d|=5     SAME
+site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc  32/34  d=2   |d|=19   ->  32/34  d=2   |d|=19    SAME
+site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc  11/12  d=1   |d|=11   ->  11/12  d=1   |d|=11    SAME
+site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc  33/35  d=2   |d|=8    ->  33/35  d=2   |d|=6     MOVED
+site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc 108/119 d=11  |d|=85   -> 109/119 d=10  |d|=85    IMPROVED
+site-packages/fly/data/quote.pyc                70/81  d=11  |d|=121  ->  72/81  d=9   |d|=62    IMPROVED
+
+TALLY ERR=0 IMPROVED=2 MOVED=1 REGRESSION=0 SAME=7
+file fully cleared (flagship if >=1): none

@@ -6064,6 +6064,32 @@ AST 映射规则:
                                     pre_expr = self.expr_reconstructor.reconstruct(segment)
                                     if pre_expr and isinstance(pre_expr, dict) and pre_expr.get('type') == 'Assign':
                                         pre_stmts.append(pre_expr)
+                                    # [R69-diag2-A while cond-chain prefix: a complete non-Assign statement must not be dropped]
+                                    # 识别条件（结构判据，只读本链块自身的字段，不查任何其他区域/层的归属）：
+                                    #   (1) 本段是上方切分器在本链块内切出的完整语句段——段尾指令即语句终结符
+                                    #       （STORE_FAST/STORE_NAME/STORE_GLOBAL/STORE_DEREF/STORE_ATTR/STORE_SUBSCR/POP_TOP），
+                                    #       正是 L6032 与 L6048 两处切段判据本身；由块内值栈回到 0 的栈纪律保证。
+                                    #       块尾条件跳转消费的条件求值段段尾是 LOAD/COMPARE 等非终结指令，不满足 (1)，
+                                    #       永不受本规则影响；
+                                    #   (2) 上面 reconstruct 未产出 Assign（表达式语句重建为 ast.Expr，或返回 None）；
+                                    #   (3) 有 UNPACK 的段已在上方分支处理，不会落到此地。
+                                    #   (1)∧(2) ⇒ 这是一条被旧的 type == 'Assign' 判据误杀的完整语句。实测：quote.pyc 的
+                                    #       check_limit / initImagedata / get_real_from_zeromq 各丢 1 条 self.log.quote.<m>(f'...')，
+                                    #       合成 synth/r69diag2_whilepre.py landed 1/2 复现该丢失。
+                                    # 归约方式：走与同函数回边重检分段器（本文件 L6149-6165）逐字相同的三级重建
+                                    #       _build_store_statement → _build_statement，产出即 append 进本区域自己的 pre_stmts，
+                                    #       位置保持该段在 segments 中的原序（位于 While 之前、与 While 同层的兄弟语句）。
+                                    #       不改 block_to_region、不新增区域、不新增 self 或帧内状态、不抑制任何已发射语句，
+                                    #       单向数据流一次正确（只 append 不回改）；条件段（末段）不进 pre_stmts。
+                                    # AST 映射：ast.Expr（表达式语句）或既有 Assign/AugAssign，作为与 ast.While 同层的
+                                    #       前置兄弟语句发射——不是 ast.While.test 的子节点，也不是 While.body 的子节点。
+                                    elif segment[-1].opname in (
+                                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                            'STORE_ATTR', 'STORE_SUBSCR', 'POP_TOP'):
+                                        _r69a_stmt = self._build_store_statement(segment) or self._build_statement(segment)
+                                        if _r69a_stmt:
+                                            pre_stmts.append(_r69a_stmt)
+
                 boolop_cond_var_names = set()
                 for chain_block, _ in boolop_for_while.op_chain:
                     for i in chain_block.instructions:
@@ -9816,7 +9842,40 @@ AST 映射规则:
                 _after = (_arg >> 8) & 0xFF
                 _unpack_info = {'value': _val, 'targets': [], 'count': _before + 1 + _after, 'is_starred': True, 'starred_idx': _before}
                 _hdr_instrs = []
+                continue            # [R69-diag5 A1] 循环 header 块前缀中的 import 语句
+            # 识别条件：仅看**本 header 块自身的指令序列**——出现 IMPORT_NAME
+            #   （其前两条是该 import 的 LOAD_CONST level / LOAD_CONST fromlist
+            #   实参，其后紧随 IMPORT_FROM / IMPORT_STAR，再由 STORE_* + POP_TOP
+            #   收尾）。判据全部是同层（单块指令流）结构身份：不跨区域、不按名字/
+            #   偏移、不新增任何 self/region 状态。
+            # 归约方式：对 IMPORT_NAME 调 _process_instruction 产出 ImportFrom 并
+            #   推入 _hdr_stmts，随即清空 _hdr_instrs；IMPORT_FROM / IMPORT_STAR 是
+            #   该语句的组成部分，清缓冲后直接跳过；后续 STORE_* 到达时缓冲已空，
+            #   _build_store_statement 返回 None（value_instrs 为空），POP_TOP 因缓冲
+            #   为空被既有分支跳过——即 import 的收尾指令不再并进表达式缓冲。
+            #   反例（未加此分支时的失败模式）：_hdr_instrs 累积
+            #   LOAD_CONST level + LOAD_CONST fromlist + IMPORT_NAME + IMPORT_FROM
+            #   后在 STORE_FAST 交给 _build_store_statement，退化成
+            #   THREAD_STATUS = ('THREAD_STATUS',)，IMPORT 三条静默丢失（Δ-4）——
+            #   与本文件 :7110-7114 注释自述的失败模式完全一致，也与既有两处同名
+            #   分支 _loop_extract_for_iter_pre_stmts(:7115) /
+            #   _loop_extract_pre_stmts_from_block(:7287) 逐条同构；本改动只是把
+            #   同一分支镜像到缺失的 header 处理器，不新建谓词、不改发射次序。
+            # AST 映射：ast.ImportFrom(module=..., names=[alias], level=0)，作为该
+            #   循环 header 的前缀语句，与 header 内后续的 break 条件 if 同层。
+            if _instr.opname == 'IMPORT_NAME':
+                _hdr_instrs = []
+                _r69a_imp = self._process_instruction(_instr, block, [])
+                if _r69a_imp:
+                    if isinstance(_r69a_imp, list):
+                        _hdr_stmts.extend(_r69a_imp)
+                    else:
+                        _hdr_stmts.append(_r69a_imp)
                 continue
+            if _instr.opname in ('IMPORT_FROM', 'IMPORT_STAR'):
+                _hdr_instrs = []
+                continue
+
             if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 _is_walrus = len(_hdr_instrs) >= 2 and _hdr_instrs[-1].opname == 'COPY' and _hdr_instrs[-1].arg == 1
                 if _unpack_info is not None:

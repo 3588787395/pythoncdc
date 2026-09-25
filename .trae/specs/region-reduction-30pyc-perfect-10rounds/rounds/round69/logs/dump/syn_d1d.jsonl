@@ -1,0 +1,2 @@
+{"path": "D:/Temp/opencode/r69gate/diag1/synth/r69d1_atco.pyc", "arm": "d1d", "sha": "b8a2c3f8ddd12982", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "D:/Temp/opencode/r69gate/diag1/synth/r69d1_gma.pyc", "arm": "d1d", "sha": "e7832029c3350953", "total_functions": 2, "matched_functions": 1, "mism": [["r69d1_gma", 48, 60, 2, 14]]}

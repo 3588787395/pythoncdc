@@ -19635,10 +19635,27 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             result = {'conditions': conditions, 'bodies': bodies, 'final_else': final_else}
 
             if _shared_block is not None:
+                # [R69-diag1 链尾合并豁免·臂末判据放宽] 三要素
+                # 识别条件（同层次结构身份，只读本链自身字段）：共享块
+                #   _shared_block 存在，且本链任一臂体块 inner_then_blocks[i]
+                #   以【直落或 FOR_ITER 出口】方式汇入 _shared_block（该臂末块
+                #   末条指令不是 JUMP*/RETURN*/RAISE/RERAISE 这类显式转移），
+                #   同时 _shared_block 自身末条指令是前向条件跳转
+                #   （FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS）。
+                # 归约方式：满足则置 _sb_then_falls_through=True，放弃 shared-block
+                #   双角色（不注入 final_else / shared_block_info），共享块留给
+                #   其自身 IfRegion 以独立 if 语句渲染；臂体自然汇入该 if。
+                # AST 映射：If.orelse 不再把共享块当 else 体重复发射，
+                #   链尾共享块生成链后的兄弟 if 语句（ast.If），臂体语句完整保留。
+                # 原判据只看 inner_then_blocks[-1]（臂尾块）——当臂以循环回边块
+                # （JUMP_BACKWARD）收尾时臂尾块不是汇入共享块的那一块，豁免失效，
+                # 于是链的 MERGE 被误注入 final_else，产物多出一条重复 elif
+                # （trade_live_broker.after_trading_cancel_order 155/155 hunks=3）。
                 _sb_then_falls_through = False
                 if inner_then_blocks:
-                    _sb_then_last = inner_then_blocks[-1]
-                    if _shared_block in _sb_then_last.successors:
+                    for _sb_then_last in inner_then_blocks:
+                        if _shared_block not in _sb_then_last.successors:
+                            continue
                         _sb_tl_last = _sb_then_last.get_last_instruction()
                         if _sb_tl_last is None or _sb_tl_last.opname not in (
                             'JUMP_FORWARD', 'JUMP_ABSOLUTE',
@@ -19648,6 +19665,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             _sb_first_cond = _shared_block.get_last_instruction()
                             if _sb_first_cond and _sb_first_cond.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
                                 _sb_then_falls_through = True
+                                break
                 if _sb_then_falls_through:
                     # [P1-1c 链自然汇合豁免] 当共享块（inner_else_succ）本身是
                     # 某个已识别下游 IfRegion 的条件入口块（它将被作为独立的

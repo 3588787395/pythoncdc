@@ -1,0 +1,3 @@
+D:/Temp/opencode/r69gate/diag5/synth/t_n3.pyc
+D:/Temp/opencode/r69gate/diag5/synth/t_n2.pyc
+D:/Temp/opencode/r69gate/diag5/synth/try_A.pyc

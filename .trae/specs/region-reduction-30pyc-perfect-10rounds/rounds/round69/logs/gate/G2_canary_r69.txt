@@ -1,0 +1,8 @@
+G2 canary product sha (byte-for-byte) landed -> m69
+======================================================================
+site-packages/IQCommon/util/datetime_func.pyc e711b8ea86d49a15 -> e711b8ea86d49a15  SAME
+site-packages/IQData/utils/datetime_func.pyc 9d09af09249da177 -> 9d09af09249da177  SAME
+site-packages/fly/common/market_time.pyc af77224b34b203c4 -> af77224b34b203c4  SAME
+site-packages/fly/data/quotation.pyc 4d41187e356544e0 -> 4d41187e356544e0  SAME
+
+G2 canary: SAME=4/4  PASS

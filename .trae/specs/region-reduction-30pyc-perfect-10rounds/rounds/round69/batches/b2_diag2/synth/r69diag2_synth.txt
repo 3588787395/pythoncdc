@@ -1,0 +1,2 @@
+D:/Temp/opencode/r69gate/diag2/synth/r69diag2_whilepre.pyc
+D:/Temp/opencode/r69gate/diag2/synth/r69diag2_whilepre2.pyc

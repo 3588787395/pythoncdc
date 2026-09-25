@@ -1,0 +1,21 @@
+G2 STRICT ruler on the 4 canary products (landed vs m69); products are byte-identical (SAME=4) so strict rows must match
+====================================================================================================
+--- arm=landed ---
+quotation.pyc                                                          strict 148/150  missing=0 extra=0
+      change_his_to_forward                          [target_diff] #250 POP_JUMP_IF_FALSE 缁堢偣 orig=("'preindex'", 'LOAD_FAST') decomp=(None, 'FOR_ITER')
+      get_trend                                      [target_diff] #10 POP_JUMP_IF_FALSE 缁堢偣 orig=("'date'", 'LOAD_FAST') decomp=("'api_get'", 'LOAD_GLOBAL')
+market_time.pyc                                                        strict 10/10  missing=0 extra=0
+datetime_func.pyc                                                      strict 26/26  missing=0 extra=0
+datetime_func.pyc                                                      strict 25/25  missing=0 extra=0
+STRICT TOTAL ok=209 / functions=211 / defects=2
+
+--- arm=m69 ---
+quotation.pyc                                                          strict 148/150  missing=0 extra=0
+      change_his_to_forward                          [target_diff] #250 POP_JUMP_IF_FALSE 缁堢偣 orig=("'preindex'", 'LOAD_FAST') decomp=(None, 'FOR_ITER')
+      get_trend                                      [target_diff] #10 POP_JUMP_IF_FALSE 缁堢偣 orig=("'date'", 'LOAD_FAST') decomp=("'api_get'", 'LOAD_GLOBAL')
+market_time.pyc                                                        strict 10/10  missing=0 extra=0
+datetime_func.pyc                                                      strict 26/26  missing=0 extra=0
+datetime_func.pyc                                                      strict 25/25  missing=0 extra=0
+STRICT TOTAL ok=209 / functions=211 / defects=2
+
+verdict: products byte-identical => strict results identical: PASS
