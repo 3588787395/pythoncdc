@@ -1,0 +1,3 @@
+D:/Temp/opencode/r66gate/diag3/synth/r66d3_shared_store.pyc
+D:/Temp/opencode/r66gate/diag3/synth/r66d3_var.pyc
+D:/Temp/opencode/r66gate/diag3/synth/r66d3_pred.pyc

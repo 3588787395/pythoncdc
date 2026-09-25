@@ -1,0 +1,4 @@
+{"path": "D:/Temp/opencode/r66gate/diag1/synth/r66_empty_then_join.pyc", "arm": "d3", "sha": "afdc9da76d428afb", "total_functions": 3, "matched_functions": 2, "mism": [["j1", 17, 16, 1, 12]]}
+{"path": "D:/Temp/opencode/r66gate/diag4/synth/r66d4_augsub.pyc", "arm": "d3", "sha": "43d24de17b4c1ecc", "total_functions": 2, "matched_functions": 1, "mism": [["probe", 94, 78, 2, 62]]}
+{"path": "D:/Temp/opencode/r66gate/diag5/synth/r66_else.pyc", "arm": "d3", "sha": "c71645d3f1a8bfa0", "total_functions": 3, "matched_functions": 2, "mism": [["wrapped", 43, 43, 0, 17]]}
+{"path": "D:/Temp/opencode/r66gate/diag6/synth/r66_delrepro.pyc", "arm": "d3", "sha": "21b75c993caea2e0", "total_functions": 3, "matched_functions": 1, "mism": [["p_a", 36, 33, 0, 27], ["p_b", 16, 14, 0, 15]]}

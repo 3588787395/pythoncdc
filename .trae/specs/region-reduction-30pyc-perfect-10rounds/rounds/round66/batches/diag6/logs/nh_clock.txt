@@ -1,0 +1,419 @@
+# realtime_event_source.pyc :: clock_worker   orig=1442 decomp=1458  substantive-hunks=14
+HUNK insert   orig[768:768]@5596(0) decomp[768:769]@5598(1)
+   .  5592 JUMP_FORWARD                 to 5598
+   .  5594 LOAD_FAST                    pre_trading_update_time_str
+   .  5596 STORE_FAST                   pre_trading_update_time
+      5598 NOP                          
+   .  5600 LOAD_DEREF                   self
+   .  5602 LOAD_ATTR                    active
+   .  5612 EXTENDED_ARG                 
+HUNK delete   orig[876:877]@6318(1) decomp[877:877]@6310(0)
+   .  6282 LOAD_METHOD                  is_holiday_today
+   .  6304 PRECALL                      
+   .  6308 CALL                         
+      6318 EXTENDED_ARG                 
+   .  6320 POP_JUMP_FORWARD_IF_FALSE    to 6846
+   .  6322 LOAD_FAST                    now_date
+   .  6324 LOAD_DEREF                   self
+HUNK insert   orig[913:913]@6486(0) decomp[913:914]@6496(1)
+   .  6482 LOAD_FAST                    now_date
+   .  6484 LOAD_DEREF                   self
+   .  6486 STORE_ATTR                   pre_before_trading_date
+      6496 JUMP_FORWARD                 to 6750
+   .  6498 LOAD_FAST                    now_date
+   .  6500 LOAD_DEREF                   self
+   .  6502 LOAD_ATTR                    before_trading_date
+HUNK insert   orig[945:945]@6650(0) decomp[946:947]@6654(1)
+   .  6638 PRECALL                      
+   .  6642 CALL                         
+   .  6652 STORE_FAST                   holiday_not_do_before
+      6654 EXTENDED_ARG                 
+   .  6656 JUMP_FORWARD                 to 9142
+   .  6658 PUSH_EXC_INFO                
+   .  6660 LOAD_GLOBAL                  AttributeError
+HUNK insert   orig[954:954]@6678(0) decomp[956:957]@6684(1)
+   .  6678 LOAD_CONST                   '0'
+   .  6680 STORE_FAST                   holiday_not_do_before
+   .  6682 POP_EXCEPT                   
+      6684 EXTENDED_ARG                 
+   .  6686 JUMP_FORWARD                 to 9142
+   .  6688 RERAISE                      
+   .  6690 COPY                         
+HUNK delete   orig[959:976]@6690(17) decomp[962:962]@6694(0)
+   .  6684 COPY                         
+   .  6686 POP_EXCEPT                   
+   .  6688 RERAISE                      
+      6690 LOAD_FAST                    holiday_not_do_before
+      6692 LOAD_CONST                   '0'
+      6694 COMPARE_OP                   ==
+      6700 POP_JUMP_FORWARD_IF_FALSE    to 6778
+      6702 LOAD_DEREF                   self
+      6704 LOAD_ATTR                    event_queue
+      6714 LOAD_METHOD                  put
+      6736 LOAD_FAST                    dt
+      6738 LOAD_GLOBAL                  EventEnum
+      6750 LOAD_ATTR                    BEFORE_TRADING_START
+      6760 BUILD_TUPLE                  
+      6762 PRECALL                      
+      6766 CALL                         
+      6776 POP_TOP                      
+      6778 LOAD_FAST                    now_date
+      6780 LOAD_DEREF                   self
+      6782 STORE_ATTR                   before_trading_date
+   .  6792 LOAD_GLOBAL                  NULL + time
+   .  6804 LOAD_ATTR                    sleep
+   .  6814 LOAD_GLOBAL                  FPS
+HUNK insert   orig[984:984]@6844(0) decomp[970:972]@6750(2)
+   .  6744 POP_TOP                      
+   .  6746 EXTENDED_ARG                 
+   .  6748 JUMP_BACKWARD                to 5600
+      6750 EXTENDED_ARG                 
+      6752 JUMP_FORWARD                 to 9142
+   .  6754 LOAD_DEREF                   self
+   .  6756 LOAD_ATTR                    is_rebuild
+   .  6766 LOAD_CONST                   '1'
+HUNK insert   orig[1039:1039]@7178(0) decomp[1027:1028]@7092(1)
+   .  7074 LOAD_DEREF                   self
+   .  7076 LOAD_ATTR                    pre_before_trading_date
+   .  7086 COMPARE_OP                   >
+      7092 EXTENDED_ARG                 
+   .  7094 POP_JUMP_FORWARD_IF_FALSE    to 9126
+   .  7096 LOAD_FAST                    pre_before_trading
+   .  7098 LOAD_FAST                    now_time
+HUNK replace  orig[1097:1110]@7492(13) decomp[1086:1088]@7402(2)
+   .  7486 POP_TOP                      
+   .  7488 LOAD_CONST                   None
+   .  7490 RETURN_VALUE                 
+      7492 LOAD_DEREF                   self
+      7494 LOAD_ATTR                    event_queue
+      7504 LOAD_METHOD                  put
+      7526 LOAD_FAST                    dt
+      7528 LOAD_GLOBAL                  EventEnum
+      7540 LOAD_ATTR                    PRE_BEFORE_TRADING_START
+      7550 BUILD_TUPLE                  
+      7552 PRECALL                      
+      7556 CALL                         
+      7566 POP_TOP                      
+      7568 LOAD_FAST                    now_date
+      7570 LOAD_DEREF                   self
+      7572 STORE_ATTR                   pre_before_trading_date
+   .  7582 LOAD_FAST                    now_date
+   .  7584 LOAD_DEREF                   self
+   .  7586 LOAD_ATTR                    before_trading_date
+   .  7396 POP_TOP                      
+   .  7398 LOAD_CONST                   None
+   .  7400 RETURN_VALUE                 
+      7402 EXTENDED_ARG                 
+      7404 JUMP_FORWARD                 to 9126
+   .  7406 LOAD_FAST                    now_date
+   .  7408 LOAD_DEREF                   self
+   .  7410 LOAD_ATTR                    before_trading_date
+HUNK insert   orig[1114:1114]@7596(0) decomp[1092:1093]@7426(1)
+   .  7408 LOAD_DEREF                   self
+   .  7410 LOAD_ATTR                    before_trading_date
+   .  7420 COMPARE_OP                   >
+      7426 EXTENDED_ARG                 
+   .  7428 POP_JUMP_FORWARD_IF_FALSE    to 9126
+   .  7430 LOAD_FAST                    before_trading
+   .  7432 LOAD_FAST                    now_time
+HUNK delete   orig[1131:1132]@7664(1) decomp[1110:1110]@7484(0)
+   .  7646 LOAD_DEREF                   self
+   .  7648 LOAD_ATTR                    initial_trading_date
+   .  7658 COMPARE_OP                   ==
+      7664 EXTENDED_ARG                 
+   .  7666 POP_JUMP_FORWARD_IF_FALSE    to 8592
+   .  7668 LOAD_CONST                   None
+   .  7670 STORE_FAST                   broker_persist
+HUNK delete   orig[1192:1304]@7972(112) decomp[1170:1170]@7794(0)
+   .  7966 COPY                         
+   .  7968 POP_EXCEPT                   
+   .  7970 RERAISE                      
+      7972 LOAD_FAST                    persist_flag
+      7974 LOAD_CONST                   False
+      7976 IS_OP                        
+      7978 POP_JUMP_FORWARD_IF_FALSE    to 8170
+      7980 LOAD_GLOBAL                  NULL + set_trade_stop_status
+      7992 LOAD_DEREF                   self
+      7994 LOAD_ATTR                    _engine
+      8004 LOAD_ATTR                    config
+      8014 LOAD_ATTR                    strategy
+      8024 LOAD_ATTR                    trade_id
+      8034 PRECALL                      
+      8038 CALL                         
+      8048 POP_TOP                      
+      8050 LOAD_GLOBAL                  NULL + system_log
+      8062 LOAD_ATTR                    error
+      8072 LOAD_CONST                   '获取交易持久化对象超时，系统退出'
+      8074 PRECALL                      
+      8078 CALL                         
+      8088 POP_TOP                      
+      8090 LOAD_DEREF                   self
+      8092 LOAD_ATTR                    event_queue
+      8102 LOAD_METHOD                  put
+      8124 LOAD_FAST                    dt
+      8126 LOAD_GLOBAL                  EventEnum
+      8138 LOAD_ATTR                    SYSTEM_EXIT
+      8148 BUILD_TUPLE                  
+      8150 PRECALL                      
+      8154 CALL                         
+      8164 POP_TOP                      
+      8166 LOAD_CONST                   None
+      8168 RETURN_VALUE                 
+      8170 LOAD_FAST                    now_date
+      8172 LOAD_DEREF                   self
+      8174 STORE_ATTR                   before_trading_date
+      8184 NOP                          
+      8186 LOAD_GLOBAL                  NULL + str
+      8198 LOAD_DEREF                   self
+      8200 LOAD_ATTR                    _engine
+      8210 LOAD_ATTR                    config
+      8220 LOAD_ATTR                    user
+      8230 LOAD_ATTR                    server_restart_not_do_before
+      8240 PRECALL                      
+      8244 CALL                         
+      8254 STORE_FAST                   server_restart_do_before_type
+      8256 JUMP_FORWARD                 to 8294
+      8258 PUSH_EXC_INFO                
+      8260 LOAD_GLOBAL                  AttributeError
+      8272 CHECK_EXC_MATCH              
+      8274 POP_JUMP_FORWARD_IF_FALSE    to 8286
+      8276 POP_TOP                      
+      8278 LOAD_CONST                   '0'
+      8280 STORE_FAST                   server_restart_do_before_type
+      8282 POP_EXCEPT                   
+      8284 JUMP_FORWARD                 to 8294
+      8286 RERAISE                      
+      8288 COPY                         
+      8290 POP_EXCEPT                   
+      8292 RERAISE                      
+      8294 LOAD_FAST                    server_restart_do_before_type
+      8296 LOAD_CONST                   '0'
+      8298 COMPARE_OP                   ==
+      8304 POP_JUMP_FORWARD_IF_FALSE    to 8350
+      8306 LOAD_DEREF                   self
+      8308 LOAD_METHOD                  put_before_trading_start
+      8330 PRECALL                      
+      8334 CALL                         
+      8344 POP_TOP                      
+      8346 EXTENDED_ARG                 
+      8348 JUMP_FORWARD                 to 9194
+      8350 LOAD_FAST                    broker_persist
+      8352 POP_JUMP_FORWARD_IF_NONE     to 8588
+      8354 LOAD_FAST                    broker_persist
+      8356 LOAD_METHOD                  get
+      8378 LOAD_CONST                   'on_before_trading_start_time'
+      8380 PRECALL                      
+      8384 CALL                         
+      8394 STORE_FAST                   on_before_trading_start_time_info
+      8396 LOAD_FAST                    on_before_trading_start_time_info
+      8398 POP_JUMP_FORWARD_IF_NONE     to 8588
+      8400 LOAD_FAST                    now_date
+      8402 LOAD_METHOD                  strftime
+      8424 LOAD_CONST                   '%Y-%m-%d'
+      8426 PRECALL                      
+      8430 CALL                         
+      8440 STORE_FAST                   today_date
+      8442 LOAD_FAST                    today_date
+      8444 LOAD_FAST                    on_before_trading_start_time_info
+      8446 CONTAINS_OP                  
+      8448 POP_JUMP_FORWARD_IF_FALSE    to 8548
+      8450 LOAD_FAST                    on_before_trading_start_time_info
+      8452 LOAD_FAST                    today_date
+      8454 BINARY_SUBSCR                
+      8464 STORE_FAST                   today_info
+      8466 LOAD_GLOBAL                  NULL + len
+      8478 LOAD_FAST                    today_info
+      8480 PRECALL                      
+      8484 CALL                         
+      8494 LOAD_CONST                   0
+      8496 COMPARE_OP                   ==
+      8502 POP_JUMP_FORWARD_IF_FALSE    to 8544
+      8504 LOAD_DEREF                   self
+      8506 LOAD_METHOD                  put_before_trading_start
+      8528 PRECALL                      
+      8532 CALL                         
+      8542 POP_TOP                      
+      8544 EXTENDED_ARG                 
+      8546 JUMP_FORWARD                 to 9194
+      8548 LOAD_DEREF                   self
+      8550 LOAD_METHOD                  put_before_trading_start
+      8572 PRECALL                      
+      8576 CALL                         
+      8586 POP_TOP                      
+   .  8588 EXTENDED_ARG                 
+   .  8590 JUMP_FORWARD                 to 9194
+   .  8592 PUSH_NULL                    
+HUNK insert   orig[1408:1408]@9194(0) decomp[1274:1409]@8404(135)
+   .  8390 CALL                         
+   .  8400 POP_TOP                      
+   .  8402 LOAD_DEREF                   self
+      8404 LOAD_ATTR                    before_trading_date
+      8414 LOAD_DEREF                   self
+      8416 LOAD_ATTR                    initial_trading_date
+      8426 COMPARE_OP                   ==
+      8432 EXTENDED_ARG                 
+      8434 POP_JUMP_FORWARD_IF_FALSE    to 9050
+      8436 LOAD_FAST                    persist_flag
+      8438 LOAD_CONST                   False
+      8440 IS_OP                        
+      8442 POP_JUMP_FORWARD_IF_FALSE    to 8634
+      8444 LOAD_GLOBAL                  NULL + set_trade_stop_status
+      8456 LOAD_DEREF                   self
+      8458 LOAD_ATTR                    _engine
+      8468 LOAD_ATTR                    config
+      8478 LOAD_ATTR                    strategy
+      8488 LOAD_ATTR                    trade_id
+      8498 PRECALL                      
+      8502 CALL                         
+      8512 POP_TOP                      
+      8514 LOAD_GLOBAL                  NULL + system_log
+      8526 LOAD_ATTR                    error
+      8536 LOAD_CONST                   '获取交易持久化对象超时，系统退出'
+      8538 PRECALL                      
+      8542 CALL                         
+      8552 POP_TOP                      
+      8554 LOAD_DEREF                   self
+      8556 LOAD_ATTR                    event_queue
+      8566 LOAD_METHOD                  put
+      8588 LOAD_FAST                    dt
+      8590 LOAD_GLOBAL                  EventEnum
+      8602 LOAD_ATTR                    SYSTEM_EXIT
+      8612 BUILD_TUPLE                  
+      8614 PRECALL                      
+      8618 CALL                         
+      8628 POP_TOP                      
+      8630 LOAD_CONST                   None
+      8632 RETURN_VALUE                 
+      8634 LOAD_FAST                    now_date
+      8636 LOAD_DEREF                   self
+      8638 STORE_ATTR                   before_trading_date
+      8648 NOP                          
+      8650 LOAD_GLOBAL                  NULL + str
+      8662 LOAD_DEREF                   self
+      8664 LOAD_ATTR                    _engine
+      8674 LOAD_ATTR                    config
+      8684 LOAD_ATTR                    user
+      8694 LOAD_ATTR                    server_restart_not_do_before
+      8704 PRECALL                      
+      8708 CALL                         
+      8718 STORE_FAST                   server_restart_do_before_type
+      8720 JUMP_FORWARD                 to 8758
+      8722 PUSH_EXC_INFO                
+      8724 LOAD_GLOBAL                  AttributeError
+      8736 CHECK_EXC_MATCH              
+      8738 POP_JUMP_FORWARD_IF_FALSE    to 8750
+      8740 POP_TOP                      
+      8742 LOAD_CONST                   '0'
+      8744 STORE_FAST                   server_restart_do_before_type
+      8746 POP_EXCEPT                   
+      8748 JUMP_FORWARD                 to 8758
+      8750 RERAISE                      
+      8752 COPY                         
+      8754 POP_EXCEPT                   
+      8756 RERAISE                      
+      8758 LOAD_FAST                    server_restart_do_before_type
+      8760 LOAD_CONST                   '0'
+      8762 COMPARE_OP                   ==
+      8768 POP_JUMP_FORWARD_IF_FALSE    to 8812
+      8770 LOAD_DEREF                   self
+      8772 LOAD_METHOD                  put_before_trading_start
+      8794 PRECALL                      
+      8798 CALL                         
+      8808 POP_TOP                      
+      8810 JUMP_FORWARD                 to 9126
+      8812 LOAD_FAST                    broker_persist
+      8814 POP_JUMP_FORWARD_IF_NONE     to 9048
+      8816 LOAD_FAST                    broker_persist
+      8818 LOAD_METHOD                  get
+      8840 LOAD_CONST                   'on_before_trading_start_time'
+      8842 PRECALL                      
+      8846 CALL                         
+      8856 STORE_FAST                   on_before_trading_start_time_info
+      8858 LOAD_FAST                    on_before_trading_start_time_info
+      8860 POP_JUMP_FORWARD_IF_NONE     to 9048
+      8862 LOAD_FAST                    now_date
+      8864 LOAD_METHOD                  strftime
+      8886 LOAD_CONST                   '%Y-%m-%d'
+      8888 PRECALL                      
+      8892 CALL                         
+      8902 STORE_FAST                   today_date
+      8904 LOAD_FAST                    today_date
+      8906 LOAD_FAST                    on_before_trading_start_time_info
+      8908 CONTAINS_OP                  
+      8910 POP_JUMP_FORWARD_IF_FALSE    to 9008
+      8912 LOAD_FAST                    on_before_trading_start_time_info
+      8914 LOAD_FAST                    today_date
+      8916 BINARY_SUBSCR                
+      8926 STORE_FAST                   today_info
+      8928 LOAD_GLOBAL                  NULL + len
+      8940 LOAD_FAST                    today_info
+      8942 PRECALL                      
+      8946 CALL                         
+      8956 LOAD_CONST                   0
+      8958 COMPARE_OP                   ==
+      8964 POP_JUMP_FORWARD_IF_FALSE    to 9006
+      8966 LOAD_DEREF                   self
+      8968 LOAD_METHOD                  put_before_trading_start
+      8990 PRECALL                      
+      8994 CALL                         
+      9004 POP_TOP                      
+      9006 JUMP_FORWARD                 to 9126
+      9008 LOAD_DEREF                   self
+      9010 LOAD_METHOD                  put_before_trading_start
+      9032 PRECALL                      
+      9036 CALL                         
+      9046 POP_TOP                      
+      9048 JUMP_FORWARD                 to 9126
+      9050 PUSH_NULL                    
+      9052 LOAD_FAST                    check_trading_time
+      9054 LOAD_FAST                    am_open
+      9056 LOAD_FAST                    am_close
+      9058 LOAD_FAST                    pm_open
+      9060 LOAD_FAST                    pm_close
+      9062 LOAD_FAST                    pm_over
+      9064 LOAD_DEREF                   self
+      9066 LOAD_ATTR                    _engine
+      9076 LOAD_ATTR                    config
+      9086 LOAD_ATTR                    strategy
+      9096 LOAD_ATTR                    frequency
+      9106 LOAD_FAST                    now_time
+      9108 PRECALL                      
+      9112 CALL                         
+      9122 POP_JUMP_FORWARD_IF_FALSE    to 9126
+      9124 NOP                          
+      9126 LOAD_DEREF                   self
+   .  9128 LOAD_ATTR                    active
+   .  9138 EXTENDED_ARG                 
+   .  9140 POP_JUMP_BACKWARD_IF_TRUE    to 5616
+HUNK replace  orig[1411:1413]@9210(2) decomp[1412:1429]@9142(17)
+   .  9196 LOAD_ATTR                    active
+   .  9206 EXTENDED_ARG                 
+   .  9208 POP_JUMP_BACKWARD_IF_TRUE    to 5614
+      9210 LOAD_CONST                   None
+      9212 RETURN_VALUE                 
+   .  9214 LOAD_CONST                   None
+   .  9216 RETURN_VALUE                 
+   .  9218 PUSH_EXC_INFO                
+   .  9128 LOAD_ATTR                    active
+   .  9138 EXTENDED_ARG                 
+   .  9140 POP_JUMP_BACKWARD_IF_TRUE    to 5616
+      9142 LOAD_FAST                    holiday_not_do_before
+      9144 LOAD_CONST                   '0'
+      9146 COMPARE_OP                   ==
+      9152 POP_JUMP_FORWARD_IF_FALSE    to 9230
+      9154 LOAD_DEREF                   self
+      9156 LOAD_ATTR                    event_queue
+      9166 LOAD_METHOD                  put
+      9188 LOAD_FAST                    dt
+      9190 LOAD_GLOBAL                  EventEnum
+      9202 LOAD_ATTR                    BEFORE_TRADING_START
+      9212 BUILD_TUPLE                  
+      9214 PRECALL                      
+      9218 CALL                         
+      9228 POP_TOP                      
+      9230 LOAD_FAST                    now_date
+      9232 LOAD_DEREF                   self
+      9234 STORE_ATTR                   before_trading_date
+   .  9244 LOAD_CONST                   None
+   .  9246 RETURN_VALUE                 
+   .  9248 PUSH_EXC_INFO                

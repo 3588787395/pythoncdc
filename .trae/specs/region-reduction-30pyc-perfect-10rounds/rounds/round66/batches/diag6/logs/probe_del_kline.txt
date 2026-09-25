@@ -1,0 +1,12 @@
+_generate_block_statements_body    blk=374 n=0 hasOP=False offs=None..None -> ['Assign', 'Assign', 'Expr', 'Assign', 'Assign', 'Assign', 'Return']
+_generate_block_statements_body    blk=896 n=0 hasOP=False offs=None..None -> ['Expr']
+_generate_block_statements_body    blk=950 n=0 hasOP=False offs=None..None -> []
+_generate_block_statements_body    blk=952 n=0 hasOP=False offs=None..None -> ['Assign', 'Assign']
+_generate_stmts_from_instrs        blk=1296 n=8 hasOP=False offs=1298..1328 -> ['Assign']
+_build_effective_stmts             blk=1296 n=1 hasOP=False offs=1296..1296 -> []
+_generate_block_statements_body    blk=1334 n=0 hasOP=False offs=None..None -> ['Return']
+<built-in function compile>--- product written, del lines:
+28 def get_kline_time_by_frequency_array(frequency, _query_date, bussiness_type='STOCK'):
+224             del fre_k_minute[0]
+229             del fre_k_minute[0]
+235         del datetime_list[0]

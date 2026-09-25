@@ -1,0 +1,55 @@
+# logger.pyc :: write_logging_thread   orig=127 decomp=128  substantive-hunks=3
+HUNK delete   orig[78:87]@368(9) decomp[78:78]@366(0)
+   .   356 LOAD_FAST                    q
+   .   358 LOAD_CONST                   0
+   .   360 COMPARE_OP                   >
+   .   366 POP_JUMP_BACKWARD_IF_TRUE    to 64
+       368 LOAD_FAST                    msgs
+       370 POP_JUMP_FORWARD_IF_FALSE    to 424
+       372 LOAD_FAST                    self
+       374 LOAD_ATTR                    logger_bt
+       384 LOAD_METHOD                  info
+       406 LOAD_FAST                    msgs
+       408 PRECALL                      
+       412 CALL                         
+       422 POP_TOP                      
+   .   424 JUMP_FORWARD                 to 666
+   .   426 LOAD_FAST                    self
+   .   428 LOAD_ATTR                    status
+   .   438 POP_JUMP_FORWARD_IF_FALSE    to 662
+HUNK replace  orig[122:123]@660(1) decomp[113:115]@604(2)
+   .   642 LOAD_CONST                   0
+   .   644 PRECALL                      
+   .   648 CALL                         
+   .   658 POP_TOP                      
+       660 JUMP_FORWARD                 to 666
+   .   662 LOAD_CONST                   None
+   .   664 RETURN_VALUE                 
+   .   666 EXTENDED_ARG                 
+   .   668 JUMP_BACKWARD                to 4
+   .   586 LOAD_CONST                   0
+   .   588 PRECALL                      
+   .   592 CALL                         
+   .   602 POP_TOP                      
+       604 EXTENDED_ARG                 
+       606 JUMP_BACKWARD                to 2
+   .   608 LOAD_CONST                   None
+   .   610 RETURN_VALUE                 
+   .   612 LOAD_FAST                    msgs
+   .   614 POP_JUMP_FORWARD_IF_FALSE    to 668
+HUNK insert   orig[125:125]@664(0) decomp[117:126]@612(9)
+   .   604 EXTENDED_ARG                 
+   .   606 JUMP_BACKWARD                to 2
+   .   608 LOAD_CONST                   None
+   .   610 RETURN_VALUE                 
+       612 LOAD_FAST                    msgs
+       614 POP_JUMP_FORWARD_IF_FALSE    to 668
+       616 LOAD_FAST                    self
+       618 LOAD_ATTR                    logger_bt
+       628 LOAD_METHOD                  info
+       650 LOAD_FAST                    msgs
+       652 PRECALL                      
+       656 CALL                         
+       666 POP_TOP                      
+   .   668 EXTENDED_ARG                 
+   .   670 JUMP_BACKWARD                to 4

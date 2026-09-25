@@ -1,0 +1,53 @@
+# strategy.pyc :: tick_worker_thread   orig=294 decomp=293  substantive-hunks=5
+HUNK delete   orig[90:97]@568(7) decomp[90:90]@566(0)
+   .   564 POP_TOP                      
+   .   566 JUMP_FORWARD                 to 612
+       568 LOAD_GLOBAL                  NULL + time
+       580 LOAD_ATTR                    sleep
+       590 LOAD_CONST                   60
+       592 PRECALL                      
+       596 CALL                         
+       606 POP_TOP                      
+       608 EXTENDED_ARG                 
+   .   610 JUMP_FORWARD                 to 1286
+   .   612 LOAD_CONST                   '08:30:00'
+HUNK delete   orig[127:128]@714(1) decomp[120:120]@670(0)
+   .   702 CALL                         
+   .   712 POP_TOP                      
+       714 EXTENDED_ARG                 
+   .   716 JUMP_FORWARD                 to 1286
+   .   718 LOAD_CONST                   '08:59:00'
+HUNK insert   orig[155:155]@802(0) decomp[147:153]@760(6)
+   .   748 LOAD_ATTR                    sleep
+   .   758 LOAD_CONST                   0.5
+       760 PRECALL                      
+       764 CALL                         
+       774 POP_TOP                      
+       776 LOAD_GLOBAL                  NULL + time
+       788 LOAD_ATTR                    sleep
+       798 LOAD_CONST                   60
+   .   800 PRECALL                      
+   .   804 CALL                         
+HUNK delete   orig[202:208]@1038(6) decomp[200:200]@1032(0)
+   .  1034 POP_TOP                      
+   .  1036 JUMP_FORWARD                 to 1080
+      1038 LOAD_GLOBAL                  NULL + time
+      1050 LOAD_ATTR                    sleep
+      1060 LOAD_CONST                   60
+      1062 PRECALL                      
+      1066 CALL                         
+      1076 POP_TOP                      
+   .  1078 JUMP_FORWARD                 to 1286
+   .  1080 LOAD_CONST                   '09:00:00'
+HUNK insert   orig[268:268]@1284(0) decomp[260:267]@1242(7)
+   .  1230 CALL                         
+   .  1240 POP_TOP                      
+      1242 JUMP_FORWARD                 to 1284
+      1244 LOAD_GLOBAL                  NULL + time
+      1256 LOAD_ATTR                    sleep
+      1266 LOAD_CONST                   60
+      1268 PRECALL                      
+      1272 CALL                         
+      1282 POP_TOP                      
+   .  1284 EXTENDED_ARG                 
+   .  1286 JUMP_BACKWARD                to 50

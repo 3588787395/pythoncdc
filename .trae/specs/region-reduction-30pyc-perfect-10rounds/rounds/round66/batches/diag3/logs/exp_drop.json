@@ -1,0 +1,5 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "anchor": "        if (block is self.entry\n                and self.entry is not analyzer.cfg.entry_block):\n            return True\n        return False",
+ "repl": "        if block is self.entry:\n            return True\n        return False"
+}

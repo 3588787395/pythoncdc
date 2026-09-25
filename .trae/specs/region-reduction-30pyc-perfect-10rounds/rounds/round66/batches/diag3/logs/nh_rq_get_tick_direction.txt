@@ -1,0 +1,76 @@
+# real_quote.pyc :: get_tick_direction   orig=297 decomp=299  substantive-hunks=3
+HUNK insert   orig[161:161]@858(0) decomp[161:162]@860(1)
+   .   856 POP_JUMP_BACKWARD_IF_TRUE    to 420
+   .   858 LOAD_FAST                    redata
+       860 EXTENDED_ARG                 
+   .   862 POP_JUMP_FORWARD_IF_FALSE    to 1412
+   .   864 LOAD_FAST                    redata
+HUNK delete   orig[172:202]@942(30) decomp[173:173]@942(0)
+   .   930 CALL                         
+   .   940 STORE_FAST                   redata
+       942 JUMP_FORWARD                 to 1106
+       944 LOAD_FAST                    flag
+       946 LOAD_CONST                   1
+       948 COMPARE_OP                   ==
+       954 POP_JUMP_FORWARD_IF_FALSE    to 1024
+       956 LOAD_GLOBAL                  NULL + system_log
+       968 LOAD_ATTR                    debug
+       978 LOAD_GLOBAL                  NULL + _
+       990 LOAD_CONST                   '分笔数据转化异常，默认返回空值'
+       992 PRECALL                      
+       996 CALL                         
+      1006 PRECALL                      
+      1010 CALL                         
+      1020 POP_TOP                      
+      1022 JUMP_FORWARD                 to 1102
+      1024 LOAD_FAST                    flag
+      1026 LOAD_CONST                   -1
+      1028 COMPARE_OP                   ==
+      1034 POP_JUMP_FORWARD_IF_FALSE    to 1102
+      1036 LOAD_GLOBAL                  NULL + system_log
+      1048 LOAD_ATTR                    debug
+      1058 LOAD_GLOBAL                  NULL + _
+      1070 LOAD_CONST                   '分笔数据返回空值'
+      1072 PRECALL                      
+      1076 CALL                         
+      1086 PRECALL                      
+      1090 CALL                         
+      1100 POP_TOP                      
+      1102 LOAD_FAST                    redata
+      1104 RETURN_VALUE                 
+   .  1106 NOP                          
+   .  1108 LOAD_FAST                    redata
+HUNK insert   orig[297:297]@1572(0) decomp[268:299]@1412(31)
+   .  1408 LOAD_FAST                    pd_dict
+   .  1410 RETURN_VALUE                 
+      1412 LOAD_FAST                    flag
+      1414 LOAD_CONST                   1
+      1416 COMPARE_OP                   ==
+      1422 POP_JUMP_FORWARD_IF_FALSE    to 1492
+      1424 LOAD_GLOBAL                  NULL + system_log
+      1436 LOAD_ATTR                    debug
+      1446 LOAD_GLOBAL                  NULL + _
+      1458 LOAD_CONST                   '分笔数据转化异常，默认返回空值'
+      1460 PRECALL                      
+      1464 CALL                         
+      1474 PRECALL                      
+      1478 CALL                         
+      1488 POP_TOP                      
+      1490 JUMP_FORWARD                 to 1570
+      1492 LOAD_FAST                    flag
+      1494 LOAD_CONST                   -1
+      1496 COMPARE_OP                   ==
+      1502 POP_JUMP_FORWARD_IF_FALSE    to 1570
+      1504 LOAD_GLOBAL                  NULL + system_log
+      1516 LOAD_ATTR                    debug
+      1526 LOAD_GLOBAL                  NULL + _
+      1538 LOAD_CONST                   '分笔数据返回空值'
+      1540 PRECALL                      
+      1544 CALL                         
+      1554 PRECALL                      
+      1558 CALL                         
+      1568 POP_TOP                      
+      1570 LOAD_FAST                    redata
+      1572 RETURN_VALUE                 
+      1574 LOAD_CONST                   None
+      1576 RETURN_VALUE                 

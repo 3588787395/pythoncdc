@@ -1,0 +1,23 @@
+# trade_live_broker.pyc :: get_all_orders   orig=87 decomp=90  substantive-hunks=2
+HUNK delete   orig[61:65]@346(4) decomp[61:61]@336(0)
+   .   332 LOAD_FAST                    result
+   .   334 LOAD_FAST                    self
+   .   336 STORE_ATTR                   all_orders
+       346 JUMP_FORWARD                 to 362
+       348 LOAD_FAST                    self
+       350 LOAD_ATTR                    all_orders
+       360 STORE_FAST                   result
+   .   362 LOAD_DEREF                   security
+   .   364 POP_JUMP_FORWARD_IF_NOT_NONE to 370
+   .   366 LOAD_FAST                    result
+HUNK insert   orig[87:87]@452(0) decomp[83:90]@438(7)
+   .   432 RETURN_VALUE                 
+   .   434 BUILD_LIST                   
+   .   436 RETURN_VALUE                 
+       438 LOAD_FAST                    self
+       440 LOAD_ATTR                    all_orders
+       450 STORE_FAST                   result
+       452 LOAD_CONST                   None
+       454 RETURN_VALUE                 
+       456 LOAD_CONST                   None
+       458 RETURN_VALUE                 

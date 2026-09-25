@@ -1,0 +1,18 @@
+== TryRegion entry@6 try_span=(0,130) handlers=[170] blocks=[0, 6, 56, 100, 170, 202, 320, 350, 378, 382, 384]
+   try_blocks=[6, 56, 100]
+   handler_blocks=[]
+   else_blocks=[] orelse=[]
+   except_handlers=[({'type': 'Tuple', 'elts': [{'type': 'Name', 'id': 'ValueError', 'ctx': 'Load', 'lineno': 234}, {'type': 'Name', 'id': 'TypeError', 'ctx': 'Load', 'lineno': None}], 'ctx': 'Load', 'lineno': None}, None, [202, 320, 350, 378])]
+   has_finally=False finally=[]
+   _find_try_else_blocks -> []
+   block@try_offset_end = 130  in_region_blocks=False w11=True
+   parent=TryExceptRegion@130 children=[]
+== TryRegion entry@130 try_span=(0,434) handlers=[436] blocks=[0, 6, 56, 100, 130, 170, 202, 320, 350, 378, 382, 384, 390, 434, 436, 468, 470, 620, 630, 638, 640]
+   try_blocks=[6, 56, 100, 130, 202, 320, 350, 378, 382, 384, 390]
+   handler_blocks=[]
+   else_blocks=[434] orelse=[]
+   except_handlers=[({'type': 'Tuple', 'elts': [{'type': 'Name', 'id': 'ValueError', 'ctx': 'Load', 'lineno': 244}, {'type': 'Name', 'id': 'TypeError', 'ctx': 'Load', 'lineno': None}], 'ctx': 'Load', 'lineno': None}, 'e', [468, 470, 620])]
+   has_finally=False finally=[]
+   _find_try_else_blocks -> [434]
+   block@try_offset_end = 434  in_region_blocks=True w11=True
+   parent=NoneType@None children=['TryExceptRegion@6']

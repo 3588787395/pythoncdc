@@ -1,0 +1,14 @@
+    6 LOAD_FAST                  etf_code                               L2026
+    8 POP_JUMP_FORWARD_IF_FALSE  to 12                                  LNone
+   10 JUMP_FORWARD               to 56                                  L2027
+   12 LOAD_GLOBAL                NULL + strategy_log                    L2029
+   24 LOAD_ATTR                  warning                                LNone
+   34 LOAD_CONST                 '未传入ETF代码，查询失败'                        LNone
+   36 PRECALL                                                           LNone
+   40 CALL                                                              LNone
+   50 POP_TOP                                                           LNone
+   52 LOAD_FAST                  info_out                               L2030
+   54 RETURN_VALUE                                                      LNone
+   56 BUILD_LIST                                                        L2031
+   58 STORE_FAST                 in_stock                               LNone
+   60 LOAD_GLOBAL                NULL + isinstance                      L2032

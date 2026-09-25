@@ -1,0 +1,17 @@
+# quote.pyc :: load_bars_from_hundsun   orig=526 decomp=529  substantive-hunks=3
+HUNK replace  orig[5:8]@46(3) decomp[5:6]@46(1)
+        46 LOAD_CONST                   '调用函数load_bars_from_hundsun，参数为：stocks='
+        48 LOAD_FAST                    stocks
+        50 LOAD_CONST                   None
+        46 LOAD_CONST                   '调用函数load_bars_from_hundsun，参数为：stocks=stocksNone'
+HUNK delete   orig[9:11]@54(2) decomp[7:7]@48(0)
+        54 BUILD_SLICE                  
+        56 BINARY_SUBSCR                
+HUNK insert   orig[49:49]@256(0) decomp[45:52]@242(7)
+       242 LOAD_GLOBAL                  os
+       254 LOAD_ATTR                    path
+       264 LOAD_METHOD                  exists
+       286 LOAD_GLOBAL                  DumploadDailyFile
+       298 PRECALL                      
+       302 CALL                         
+       312 POP_TOP                      

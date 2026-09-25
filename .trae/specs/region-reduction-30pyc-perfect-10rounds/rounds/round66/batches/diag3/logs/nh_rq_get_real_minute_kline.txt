@@ -1,0 +1,108 @@
+# real_quote.pyc :: get_real_minute_kline   orig=280 decomp=287  substantive-hunks=6
+HUNK insert   orig[18:18]@102(0) decomp[18:19]@108(1)
+   .   100 LOAD_CONST                   1
+   .   102 COMPARE_OP                   ==
+       108 EXTENDED_ARG                 
+   .   110 POP_JUMP_FORWARD_IF_FALSE    to 1118
+   .   112 LOAD_FAST                    symbol
+HUNK insert   orig[46:46]@262(0) decomp[47:48]@270(1)
+   .   262 LOAD_CONST                   0
+   .   264 COMPARE_OP                   >
+       270 EXTENDED_ARG                 
+   .   272 POP_JUMP_FORWARD_IF_FALSE    to 1104
+   .   274 LOAD_FAST                    flag
+HUNK insert   orig[50:50]@274(0) decomp[52:53]@284(1)
+   .   276 LOAD_CONST                   0
+   .   278 COMPARE_OP                   ==
+       284 EXTENDED_ARG                 
+   .   286 POP_JUMP_FORWARD_IF_FALSE    to 1104
+   .   288 LOAD_GLOBAL                  NULL + np
+HUNK delete   orig[65:100]@356(35) decomp[68:68]@360(0)
+   .   344 CALL                         
+   .   354 STORE_FAST                   kline
+       356 JUMP_FORWARD                 to 570
+       358 LOAD_GLOBAL                  EMPTY_DAY_BAR_NP_ARRAY
+       370 RETURN_VALUE                 
+       372 LOAD_GLOBAL                  datetime
+       384 LOAD_ATTR                    datetime
+       394 LOAD_METHOD                  now
+       416 PRECALL                      
+       420 CALL                         
+       430 LOAD_METHOD                  strftime
+       452 LOAD_CONST                   '%Y%m%d'
+       454 PRECALL                      
+       458 CALL                         
+       468 STORE_FAST                   start_date
+       470 LOAD_FAST                    start_date
+       472 STORE_FAST                   end_date
+       474 LOAD_FAST                    self
+       476 LOAD_METHOD                  get_kline_by_date_ndarray
+       498 LOAD_FAST                    symbol
+       500 LOAD_FAST                    start_date
+       502 LOAD_FAST                    end_date
+       504 LOAD_FAST                    frequency_int
+       506 PRECALL                      
+       510 CALL                         
+       520 STORE_FAST                   kline
+       522 LOAD_GLOBAL                  NULL + len
+       534 LOAD_FAST                    kline
+       536 PRECALL                      
+       540 CALL                         
+       550 LOAD_CONST                   0
+       552 COMPARE_OP                   >
+       558 POP_JUMP_FORWARD_IF_FALSE    to 570
+       560 LOAD_CONST                   0
+       562 LOAD_FAST                    kline
+       564 LOAD_CONST                   'unlimited'
+       566 STORE_SUBSCR                 
+   .   570 LOAD_FAST                    fq
+   .   572 POP_JUMP_FORWARD_IF_NONE     to 578
+HUNK insert   orig[101:101]@570(0) decomp[69:70]@364(1)
+   .   360 STORE_FAST                   kline
+   .   362 LOAD_FAST                    fq
+       364 EXTENDED_ARG                 
+   .   366 POP_JUMP_FORWARD_IF_NONE     to 1104
+   .   368 LOAD_FAST                    ex_info
+HUNK insert   orig[252:252]@1308(0) decomp[221:259]@1104(38)
+   .  1100 LOAD_FAST                    kline
+   .  1102 RETURN_VALUE                 
+      1104 LOAD_GLOBAL                  EMPTY_DAY_BAR_NP_ARRAY
+      1116 RETURN_VALUE                 
+      1118 LOAD_GLOBAL                  datetime
+      1130 LOAD_ATTR                    datetime
+      1140 LOAD_METHOD                  now
+      1162 PRECALL                      
+      1166 CALL                         
+      1176 LOAD_METHOD                  strftime
+      1198 LOAD_CONST                   '%Y%m%d'
+      1200 PRECALL                      
+      1204 CALL                         
+      1214 STORE_FAST                   start_date
+      1216 LOAD_FAST                    start_date
+      1218 STORE_FAST                   end_date
+      1220 LOAD_FAST                    self
+      1222 LOAD_METHOD                  get_kline_by_date_ndarray
+      1244 LOAD_FAST                    symbol
+      1246 LOAD_FAST                    start_date
+      1248 LOAD_FAST                    end_date
+      1250 LOAD_FAST                    frequency_int
+      1252 PRECALL                      
+      1256 CALL                         
+      1266 STORE_FAST                   kline
+      1268 LOAD_GLOBAL                  NULL + len
+      1280 LOAD_FAST                    kline
+      1282 PRECALL                      
+      1286 CALL                         
+      1296 LOAD_CONST                   0
+      1298 COMPARE_OP                   >
+      1304 POP_JUMP_FORWARD_IF_FALSE    to 1320
+      1306 LOAD_CONST                   0
+      1308 LOAD_FAST                    kline
+      1310 LOAD_CONST                   'unlimited'
+      1312 STORE_SUBSCR                 
+      1316 LOAD_CONST                   None
+      1318 RETURN_VALUE                 
+      1320 LOAD_CONST                   None
+      1322 RETURN_VALUE                 
+   .  1324 PUSH_EXC_INFO                
+   .  1326 LOAD_GLOBAL                  Exception

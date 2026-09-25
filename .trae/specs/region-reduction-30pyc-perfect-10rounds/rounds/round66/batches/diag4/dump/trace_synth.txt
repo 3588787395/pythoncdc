@@ -1,0 +1,53 @@
+### output lines with suspicious subscript-assign:
+               'win'[1] = s
+               'profit'[a - b] = s
+               'tot'[1] = s
+### TOP CALL COUNTS
+region_analyzer.py         <genexpr>                                      5214
+region_ast_generator.py    <genexpr>                                      451
+region_analyzer.py         <listcomp>                                     263
+region_analyzer.py         _has_match_op                                  152
+region_ast_generator.py    _convert_lambda_function_objects               143
+region_ast_generator.py    <listcomp>                                     126
+region_ast_generator.py    _eff                                           79
+region_analyzer.py         <lambda>                                       64
+region_analyzer.py         _filter_regions                                62
+region_analyzer.py         _is_except_star_framework_block                56
+region_analyzer.py         is_block_entry                                 33
+region_analyzer.py         _is_match_subject_block                        32
+region_ast_generator.py    _normalize_stmt_node                           31
+region_analyzer.py         _is_case_pattern_block                         24
+region_analyzer.py         _is_simple_match_case_block                    24
+region_analyzer.py         _is_wildcard_match_block                       24
+region_analyzer.py         _is_none_match_block                           24
+region_ast_generator.py    <lambda>                                       22
+region_analyzer.py         get_region_for_block                           21
+region_analyzer.py         get_block_role                                 21
+region_analyzer.py         get_entry_region_for_block                     17
+region_ast_generator.py    _normalize_stmt_lists                          15
+region_ast_generator.py    _has_explicit_return_recursive                 14
+region_analyzer.py         _should_use_dynamic_priority                   10
+region_analyzer.py         _detect_ternary_pattern                        9
+region_analyzer.py         _can_be_ternary_header                         9
+region_analyzer.py         _assign_region_role                            9
+region_analyzer.py         _has_with_exit_call                            9
+region_analyzer.py         _check_block_has_trailing_return_none          9
+region_analyzer.py         _detect_chained_compare_pattern                8
+region_analyzer.py         iter_descendants                               8
+region_analyzer.py         _collect_branch_blocks                         6
+region_ast_generator.py    _peel_one                                      6
+region_ast_generator.py    _is_trailing_return_none_statement             6
+region_ast_generator.py    block_role                                     5
+region_analyzer.py         _find_enclosing_loop                           5
+region_ast_generator.py    _process_if_blocks                             5
+region_ast_generator.py    _is_implicit_return_block                      5
+region_analyzer.py         _find_enclosing_region                         4
+region_ast_generator.py    _build_store_statement                         4
+### EVENT DUMPS (7)
+{"fn": "_split_subscr_operands", "file": "region_ast_generator.py", "lineno": 2624}
+{"fn": "_split_subscr_operands", "file": "region_ast_generator.py", "lineno": 2624}
+{"fn": "_split_subscr_operands", "file": "region_ast_generator.py", "lineno": 2624}
+{"fn": "_build_effective_stmts", "file": "region_ast_generator.py", "lineno": 2756}
+{"fn": "_build_subscript_assign", "file": "region_ast_generator.py", "lineno": 49198}
+{"fn": "_build_subscript_assign", "file": "region_ast_generator.py", "lineno": 49198}
+{"fn": "_build_subscript_assign", "file": "region_ast_generator.py", "lineno": 49198}

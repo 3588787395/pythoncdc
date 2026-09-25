@@ -1,0 +1,142 @@
+# real_quote.pyc :: one_prod_to_ndarray   orig=659 decomp=665  substantive-hunks=7
+HUNK replace  orig[153:155]@634(2) decomp[153:162]@634(9)
+   .   630 BUILD_STRING                 
+   .   632 STORE_FAST                   temp_time
+       634 EXTENDED_ARG                 
+       636 JUMP_FORWARD                 to 1530
+   .   638 LOAD_GLOBAL                  NULL + len
+   .   650 LOAD_FAST                    v
+   .   630 BUILD_STRING                 
+   .   632 STORE_FAST                   temp_time
+       634 LOAD_FAST                    data_dict
+       636 LOAD_CONST                   'datetime'
+       638 BINARY_SUBSCR                
+       648 LOAD_METHOD                  append
+       670 LOAD_FAST                    temp_time
+       672 PRECALL                      
+       676 CALL                         
+       686 POP_TOP                      
+       688 JUMP_BACKWARD                to 454
+   .   690 LOAD_GLOBAL                  NULL + len
+   .   702 LOAD_FAST                    v
+HUNK insert   orig[201:201]@792(0) decomp[208:237]@846(29)
+   .   842 BUILD_STRING                 
+   .   844 STORE_FAST                   temp_time
+       846 LOAD_GLOBAL                  NULL + int
+       858 LOAD_FAST                    temp_time
+       860 LOAD_CONST                   11
+       862 LOAD_CONST                   13
+       864 BUILD_SLICE                  
+       866 BINARY_SUBSCR                
+       876 PRECALL                      
+       880 CALL                         
+       890 LOAD_CONST                   16
+       892 COMPARE_OP                   >=
+       898 POP_JUMP_FORWARD_IF_FALSE    to 906
+       900 POP_TOP                      
+       902 EXTENDED_ARG                 
+       904 JUMP_FORWARD                 to 1732
+       906 LOAD_GLOBAL                  NULL + int
+       918 LOAD_FAST                    temp_time
+       920 LOAD_CONST                   11
+       922 LOAD_CONST                   13
+       924 BUILD_SLICE                  
+       926 BINARY_SUBSCR                
+       936 PRECALL                      
+       940 CALL                         
+       950 LOAD_CONST                   9
+       952 COMPARE_OP                   <
+       958 POP_JUMP_FORWARD_IF_FALSE    to 966
+       960 POP_TOP                      
+       962 EXTENDED_ARG                 
+       964 JUMP_FORWARD                 to 1732
+       966 POP_TOP                      
+   .   968 EXTENDED_ARG                 
+   .   970 JUMP_FORWARD                 to 1732
+HUNK replace  orig[249:250]@954(1) decomp[285:287]@1128(2)
+   .   950 BUILD_STRING                 
+   .   952 STORE_FAST                   temp_time
+       954 JUMP_FORWARD                 to 1418
+   .   956 LOAD_GLOBAL                  NULL + len
+   .   968 LOAD_FAST                    v
+   .  1124 BUILD_STRING                 
+   .  1126 STORE_FAST                   temp_time
+      1128 EXTENDED_ARG                 
+      1130 JUMP_BACKWARD                to 454
+   .  1132 LOAD_GLOBAL                  NULL + len
+   .  1144 LOAD_FAST                    v
+HUNK replace  orig[292:293]@1096(1) decomp[329:331]@1272(2)
+   .  1092 BUILD_STRING                 
+   .  1094 STORE_FAST                   temp_time
+      1096 JUMP_FORWARD                 to 1418
+   .  1098 LOAD_GLOBAL                  NULL + len
+   .  1110 LOAD_FAST                    v
+   .  1268 BUILD_STRING                 
+   .  1270 STORE_FAST                   temp_time
+      1272 EXTENDED_ARG                 
+      1274 JUMP_BACKWARD                to 454
+   .  1276 LOAD_GLOBAL                  NULL + len
+   .  1288 LOAD_FAST                    v
+HUNK replace  orig[335:336]@1238(1) decomp[373:375]@1416(2)
+   .  1234 BUILD_STRING                 
+   .  1236 STORE_FAST                   temp_time
+      1238 JUMP_FORWARD                 to 1418
+   .  1240 LOAD_GLOBAL                  NULL + len
+   .  1252 LOAD_FAST                    v
+   .  1412 BUILD_STRING                 
+   .  1414 STORE_FAST                   temp_time
+      1416 EXTENDED_ARG                 
+      1418 JUMP_BACKWARD                to 454
+   .  1420 LOAD_GLOBAL                  NULL + len
+   .  1432 LOAD_FAST                    v
+HUNK replace  orig[386:387]@1412(1) decomp[425:427]@1592(2)
+   .  1408 BUILD_STRING                 
+   .  1410 STORE_FAST                   temp_time
+      1412 JUMP_FORWARD                 to 1418
+   .  1414 POP_TOP                      
+   .  1416 JUMP_FORWARD                 to 1720
+   .  1588 BUILD_STRING                 
+   .  1590 STORE_FAST                   temp_time
+      1592 EXTENDED_ARG                 
+      1594 JUMP_BACKWARD                to 454
+   .  1596 POP_TOP                      
+   .  1598 JUMP_FORWARD                 to 1732
+HUNK delete   orig[389:423]@1418(34) decomp[429:429]@1598(0)
+   .  1414 POP_TOP                      
+   .  1416 JUMP_FORWARD                 to 1720
+      1418 LOAD_GLOBAL                  NULL + int
+      1430 LOAD_FAST                    temp_time
+      1432 LOAD_CONST                   11
+      1434 LOAD_CONST                   13
+      1436 BUILD_SLICE                  
+      1438 BINARY_SUBSCR                
+      1448 PRECALL                      
+      1452 CALL                         
+      1462 LOAD_CONST                   16
+      1464 COMPARE_OP                   >=
+      1470 POP_JUMP_FORWARD_IF_TRUE     to 1526
+      1472 LOAD_GLOBAL                  NULL + int
+      1484 LOAD_FAST                    temp_time
+      1486 LOAD_CONST                   11
+      1488 LOAD_CONST                   13
+      1490 BUILD_SLICE                  
+      1492 BINARY_SUBSCR                
+      1502 PRECALL                      
+      1506 CALL                         
+      1516 LOAD_CONST                   9
+      1518 COMPARE_OP                   <
+      1524 POP_JUMP_FORWARD_IF_FALSE    to 1530
+      1526 POP_TOP                      
+      1528 JUMP_FORWARD                 to 1720
+      1530 LOAD_FAST                    data_dict
+      1532 LOAD_CONST                   'datetime'
+      1534 BINARY_SUBSCR                
+      1544 LOAD_METHOD                  append
+      1566 LOAD_FAST                    temp_time
+      1568 PRECALL                      
+      1572 CALL                         
+      1582 POP_TOP                      
+      1584 EXTENDED_ARG                 
+      1586 JUMP_BACKWARD                to 454
+   .  1588 LOAD_FAST                    fields
+   .  1590 LOAD_FAST                    i

@@ -1,0 +1,18 @@
+== TryRegion entry@304 try_span=(302,354) handlers=[356] blocks=[302, 304, 356, 374, 490, 494, 496, 592, 600, 602]
+   try_blocks=[304]
+   handler_blocks=[]
+   else_blocks=[] orelse=[]
+   except_handlers=[('BaseException', None, [374, 490])]
+   has_finally=False finally=[]
+   _find_try_else_blocks -> []
+   block@try_offset_end = 354  in_region_blocks=False w11=True
+   parent=TryExceptRegion@44 children=[]
+== TryRegion entry@44 try_span=(42,84) handlers=[88] blocks=[42, 44, 84, 88, 106, 108, 150, 152, 214, 302, 304, 354, 496, 502, 532, 582, 592, 600, 602]
+   try_blocks=[44]
+   handler_blocks=[]
+   else_blocks=[84] orelse=[]
+   except_handlers=[('OSError', 'e', [106, 108, 150, 152, 214, 302, 304, 354, 502, 532, 582])]
+   has_finally=False finally=[]
+   _find_try_else_blocks -> []
+   block@try_offset_end = 84  in_region_blocks=True w11=False
+   parent=LoopRegion@42 children=['TryExceptRegion@304', 'IfRegion@108', 'IfRegion@152']

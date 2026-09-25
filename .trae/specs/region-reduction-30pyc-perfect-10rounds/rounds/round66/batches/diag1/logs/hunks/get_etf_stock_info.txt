@@ -1,0 +1,10 @@
+# trade_live_broker.pyc :: get_etf_stock_info   orig=157 decomp=159  substantive-hunks=1
+HUNK insert   orig[5:5]@8(0) decomp[5:7]@10(2)
+   .     4 STORE_FAST                   info_out
+   .     6 LOAD_FAST                    etf_code
+   .     8 POP_JUMP_FORWARD_IF_FALSE    to 16
+        10 BUILD_LIST                   
+        12 STORE_FAST                   in_stock
+   .    14 JUMP_FORWARD                 to 60
+   .    16 LOAD_GLOBAL                  NULL + strategy_log
+   .    28 LOAD_ATTR                    warning

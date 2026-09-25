@@ -1,0 +1,25 @@
+# real_quote.pyc :: get_cache_l2_data_by_one   orig=355 decomp=356  substantive-hunks=3
+HUNK insert   orig[20:20]@78(0) decomp[20:21]@88(1)
+   .    74 PRECALL                      
+   .    78 CALL                         
+        88 POP_TOP                      
+   .    90 JUMP_FORWARD                 to 94
+   .    92 NOP                          
+HUNK replace  orig[21:23]@90(2) decomp[22:23]@92(1)
+   .    78 CALL                         
+   .    88 JUMP_FORWARD                 to 92
+        90 LOAD_CONST                   200
+        92 STORE_FAST                   data_count
+   .    94 LOAD_GLOBAL                  NULL + isinstance
+   .   106 LOAD_FAST                    symbols
+   .    88 POP_TOP                      
+   .    90 JUMP_FORWARD                 to 94
+        92 NOP                          
+   .    94 LOAD_GLOBAL                  NULL + isinstance
+   .   106 LOAD_FAST                    symbols
+HUNK insert   orig[134:134]@584(0) decomp[134:135]@588(1)
+   .   582 LOAD_FAST                    code
+   .   584 STORE_SUBSCR                 
+       588 JUMP_BACKWARD                to 336
+   .   590 JUMP_BACKWARD                to 336
+   .   592 LOAD_FAST                    individual_data_in_dict

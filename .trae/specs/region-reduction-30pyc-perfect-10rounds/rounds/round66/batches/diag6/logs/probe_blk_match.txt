@@ -1,0 +1,10 @@
+# GEN wrapped 244 callables
+GEN._try_deferred_return_in_loop                   blk=1324 -> None
+GEN.block_role                                     blk=1324 -> BlockRole
+GEN._build_attr_target_unpack                      blk=1324 -> None
+GEN._reconstruct_await_block_stmts                 blk=1324 -> None
+GEN.block_role                                     blk=1324 -> BlockRole
+GEN._generate_block_statements_body                blk=1324 None -> []
+GEN._mark_with_exit_return_explicit                blk=1324 list(0) -> None
+GEN._mark_shared_return_explicit                   blk=1324 list(0) -> None
+GEN._generate_block_statements                     blk=1324 -> []

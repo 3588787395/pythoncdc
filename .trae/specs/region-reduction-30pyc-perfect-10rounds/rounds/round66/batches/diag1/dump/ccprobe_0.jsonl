@@ -1,0 +1,3 @@
+{"f": "slippage.pyc", "fn": "<module>", "e": 66, "then": [124], "elseb": [126], "cc": [96], "merge": 130, "rt": "IF_THEN_ELSE", "efree": true, "owner": "LoopRegion", "owner_entry": 64, "mblanks": []}
+{"f": "slippage.pyc", "fn": "create_new_price", "e": 66, "then": [124], "elseb": [126], "cc": [96], "merge": 130, "rt": "IF_THEN_ELSE", "efree": true, "owner": "LoopRegion", "owner_entry": 64, "mblanks": []}
+{"f": "slippage.pyc", "fn": "check_and_return", "e": 66, "then": [124], "elseb": [126], "cc": [96], "merge": 130, "rt": "IF_THEN_ELSE", "efree": true, "owner": "LoopRegion", "owner_entry": 64, "mblanks": []}

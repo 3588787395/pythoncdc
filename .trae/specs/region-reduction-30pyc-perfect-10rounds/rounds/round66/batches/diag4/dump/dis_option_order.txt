@@ -1,0 +1,115 @@
+=== option_order firstlineno=470 args=('asset', 'amount', 'entrust_direction', 'futures_direction', 'limit_price', 'hedge_type', 'engine', 'style', 'order_') ===
+      -- line 470: 
+      0 RESUME                         
+      -- line 476: 
+      2 LOAD_GLOBAL                    NULL + Engine
+     14 LOAD_ATTR                      instance
+     24 PRECALL                        
+     28 CALL                           
+     38 STORE_FAST                     engine
+      -- line 477: 
+     40 LOAD_FAST                      limit_price
+     42 POP_JUMP_FORWARD_IF_NONE       to 102
+      -- line 478: 
+     44 LOAD_GLOBAL                    NULL + LimitOrder
+     56 LOAD_GLOBAL                    NULL + float
+     68 LOAD_FAST                      limit_price
+     70 PRECALL                        
+     74 CALL                           
+     84 PRECALL                        
+     88 CALL                           
+     98 STORE_FAST                     style
+    100 JUMP_FORWARD                   to 130
+      -- line 480: 
+    102 LOAD_GLOBAL                    NULL + MarketOrder
+    114 PRECALL                        
+    118 CALL                           
+    128 STORE_FAST                     style
+      -- line 482: 
+    130 LOAD_GLOBAL                    NULL + iq_order
+    142 LOAD_FAST                      asset
+    144 LOAD_FAST                      amount
+    146 LOAD_FAST                      entrust_direction
+    148 LOAD_FAST                      style
+    150 LOAD_FAST                      futures_direction
+    152 LOAD_FAST                      hedge_type
+    154 PRECALL                        
+    158 CALL                           
+    168 STORE_FAST                     order_
+      -- line 483: 
+    170 LOAD_FAST                      order_
+    172 POP_JUMP_FORWARD_IF_NOT_NONE   to 178
+      -- line 484: 
+    174 LOAD_CONST                     None
+    176 RETURN_VALUE                   
+      -- line 485: 
+    178 LOAD_GLOBAL                    NULL + is_trade
+    190 PRECALL                        
+    194 CALL                           
+    204 POP_JUMP_FORWARD_IF_TRUE       to 542
+      -- line 486: 
+    206 LOAD_GLOBAL                    NULL + strategy_log
+    218 LOAD_ATTR                      info
+      -- line 487: 
+    228 LOAD_CONST                     '生成订单，订单号：{order_id}，合约代码：{symbol}，方向：{side}{oper}，数量：{share}手, {hedge_type}'
+    230 LOAD_METHOD                    format
+      -- line 488: 
+    252 LOAD_FAST                      order_
+    254 LOAD_ATTR                      order_id
+      -- line 489: 
+    264 LOAD_FAST                      order_
+    266 LOAD_ATTR                      symbol
+      -- line 490: 
+    276 LOAD_FAST                      order_
+    278 LOAD_ATTR                      entrust_direction
+    288 LOAD_ATTR                      value
+    298 LOAD_METHOD                    upper
+    320 PRECALL                        
+    324 CALL                           
+    334 LOAD_CONST                     'BUY'
+    336 COMPARE_OP                     ==
+    342 POP_JUMP_FORWARD_IF_FALSE      to 348
+    344 LOAD_CONST                     '买入'
+    346 JUMP_FORWARD                   to 350
+    348 LOAD_CONST                     '卖出'
+      -- line 491: 
+    350 LOAD_FAST                      order_
+    352 LOAD_ATTR                      futures_direction
+    362 LOAD_ATTR                      value
+    372 LOAD_METHOD                    upper
+    394 PRECALL                        
+    398 CALL                           
+    408 LOAD_CONST                     'OPEN'
+    410 COMPARE_OP                     ==
+    416 POP_JUMP_FORWARD_IF_FALSE      to 422
+    418 LOAD_CONST                     '开仓'
+    420 JUMP_FORWARD                   to 424
+    422 LOAD_CONST                     '平仓'
+      -- line 492: 
+    424 LOAD_FAST                      order_
+    426 LOAD_ATTR                      amount
+      -- line 493: 
+    436 LOAD_FAST                      order_
+    438 LOAD_ATTR                      hedge_type
+    448 LOAD_ATTR                      value
+    458 LOAD_METHOD                    upper
+    480 PRECALL                        
+    484 CALL                           
+    494 LOAD_CONST                     'SPECULATION'
+    496 COMPARE_OP                     ==
+    502 POP_JUMP_FORWARD_IF_FALSE      to 508
+    504 LOAD_CONST                     '非备兑类型委托'
+    506 JUMP_FORWARD                   to 510
+    508 LOAD_CONST                     '备兑类型委托'
+      -- line 487: 
+    510 KW_NAMES                       
+    512 PRECALL                        
+    516 CALL                           
+      -- line 486: 
+    526 PRECALL                        
+    530 CALL                           
+    540 POP_TOP                        
+      -- line 496: 
+    542 LOAD_FAST                      order_
+    544 LOAD_ATTR                      order_id
+    554 RETURN_VALUE                   

@@ -1,0 +1,19 @@
+# real_quote.pyc :: get_cache_l2_data   orig=375 decomp=375  substantive-hunks=2
+HUNK insert   orig[20:20]@78(0) decomp[20:21]@88(1)
+   .    74 PRECALL                      
+   .    78 CALL                         
+        88 POP_TOP                      
+   .    90 JUMP_FORWARD                 to 94
+   .    92 NOP                          
+HUNK replace  orig[21:23]@90(2) decomp[22:23]@92(1)
+   .    78 CALL                         
+   .    88 JUMP_FORWARD                 to 92
+        90 LOAD_CONST                   200
+        92 STORE_FAST                   data_count
+   .    94 LOAD_GLOBAL                  NULL + isinstance
+   .   106 LOAD_FAST                    symbols
+   .    88 POP_TOP                      
+   .    90 JUMP_FORWARD                 to 94
+        92 NOP                          
+   .    94 LOAD_GLOBAL                  NULL + isinstance
+   .   106 LOAD_FAST                    symbols

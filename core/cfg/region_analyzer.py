@@ -20946,7 +20946,106 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             """
 
             if not _can_be_ternary_header(block):
-                return None
+                # [R66-diag3 value-context chained-compare gate]
+                # 识别条件（四项均为结构判据，与 IfRegion.can_be_ternary_header 中
+                #   [R24-A] 例外的拒绝面严格互补）：
+                #   a) block 同时是 CFG 入口块与某 chained_compare IfRegion 的
+                #      entry —— 正是 [R24-A] 的 `self.entry is not
+                #      analyzer.cfg.entry_block` 合取所拒的那一种；
+                #   b) 该链末段块的两条出边（true 边可经单 JUMP_FORWARD 连接块
+                #      重定向，与 Phase-7-D 直判分支同一处理）都是
+                #      _is_single_expression_block 值块；
+                #   c) 两值块各以唯一出边汇合于同一 merge 块，且该 merge 块首条
+                #      非噪声指令为 STORE_*（merge_context='store'：栈上值被消
+                #      费）。语句级链式 if 必在 c)/b) 失败 —— 其 jump 边落在
+                #      POP_TOP cleanup 块上，该块不是单表达式值块。
+                #   d) 头部块自身不含任何已完结语句（块内无 STORE_*、无
+                #      POP_TOP）：撤销会让 TernaryRegion 独占整个头部块，若该块
+                #      还携带前导已完结语句（如 `k = 1`）则撤销会丢语句，故此时
+                #      不撤销、维持原拒绝行为。
+                # 归约方式（原则 2 每块唯一归属 + 原则 3 嵌套即抽象节点）：值语境
+                #   链不是语句，其块归属随后由 Phase-7-D 直判分支
+                #   (_is_chained_compare_header + _detect_chained_compare_pattern,
+                #   即本函数 elif _cc_direct_info 分支) 建出的 TernaryRegion；故把
+                #   该 chained_compare IfRegion 从 self.regions / block_to_region /
+                #   conditional_regions（= analyze() 的 chained_compare_regions 列
+                #   表对象，1465 行按引用传入，故撤销对父列表同样生效）三处一并
+                #   撤销，随后复查 _can_be_ternary_header；仍拒则原样回滚并维持
+                #   拒绝。撤销的是「区域归属」，不发射式抑制。
+                # AST 映射：ast.If(test=ast.Compare(chops), body=[ast.Expr(v1)],
+                #   orelse=[ast.Expr(v2)]) 与 merge 块 STORE_FAST 的游离赋值
+                #   → ast.Assign(targets=[ast.Name(id=merge.store)],
+                #   value=ast.IfExp(test=ast.Compare(chops), body=v1, orelse=v2))。
+                _r66_region = None
+                for _r in self.regions:
+                    if (isinstance(_r, IfRegion)
+                            and _r.region_type == RegionType.IF
+                            and _r.entry is block
+                            and block is self.cfg.entry_block):
+                        _r66_ops = getattr(_r, 'chained_compare_ops', None)
+                        if (_r66_ops and len(_r66_ops) >= 2
+                                and getattr(_r, 'chained_compare_blocks', None)):
+                            _r66_region = _r
+                        break
+                if _r66_region is None:
+                    return None
+                _r66_last = ([block] + list(_r66_region.chained_compare_blocks))[-1]
+                _r66_l = _r66_last.get_last_instruction()
+                if not (_r66_l and _r66_l.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                    return None
+                _r66_succs = sorted(_r66_last.conditional_successors,
+                                    key=lambda s: s.start_offset)
+                if len(_r66_succs) != 2:
+                    return None
+                _r66_true = next((s for s in _r66_succs
+                                  if s.start_offset != _r66_l.argval), None)
+                _r66_false = next((s for s in _r66_succs
+                                   if s.start_offset == _r66_l.argval), None)
+                if not (_r66_true and _r66_false):
+                    return None
+                _r66_eff = [i for i in _r66_true.instructions
+                            if i.opname not in NOISE_OPS]
+                if (len(_r66_eff) == 1 and _r66_eff[0].opname == 'JUMP_FORWARD'
+                        and _r66_eff[0].argval is not None):
+                    _r66_hop = self.cfg.get_block_by_offset(_r66_eff[0].argval)
+                    if _r66_hop is not None:
+                        _r66_true = _r66_hop
+                if not (self._is_single_expression_block(_r66_true)
+                        and self._is_single_expression_block(_r66_false)):
+                    return None
+                _r66_ts = [s for s in _r66_true.successors]
+                _r66_fs = [s for s in _r66_false.successors]
+                if (len(_r66_ts) != 1 or len(_r66_fs) != 1
+                        or _r66_ts[0] is not _r66_fs[0]):
+                    return None
+                _r66_merge_first = [i for i in _r66_ts[0].instructions
+                                    if i.opname not in NOISE_OPS]
+                if not (_r66_merge_first
+                        and _r66_merge_first[0].opname.startswith('STORE')):
+                    return None
+                if any(i.opname.startswith('STORE') or i.opname == 'POP_TOP'
+                       for i in block.instructions):
+                    return None
+                _r66_saved = [b for b in _r66_region.blocks
+                              if self.block_to_region.get(b) is _r66_region]
+                _r66_in_list = _r66_region in conditional_regions
+                _r66_idx = (conditional_regions.index(_r66_region)
+                            if _r66_in_list else -1)
+                for _b in _r66_saved:
+                    del self.block_to_region[_b]
+                _r66_in_regions = _r66_region in self.regions
+                if _r66_in_regions:
+                    self.regions.remove(_r66_region)
+                if _r66_in_list:
+                    conditional_regions.remove(_r66_region)
+                if not _can_be_ternary_header(block):
+                    for _b in _r66_saved:
+                        self.block_to_region[_b] = _r66_region
+                    if _r66_in_regions:
+                        self.regions.append(_r66_region)
+                    if _r66_in_list:
+                        conditional_regions.insert(_r66_idx, _r66_region)
+                    return None
             last_instr = block.get_last_instruction()
             heads = sorted(block.conditional_successors, key=lambda s: s.start_offset)
             if len(heads) != 2:

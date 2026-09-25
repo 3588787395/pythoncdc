@@ -1,0 +1,3 @@
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round65_diag2/fs2.pyc", "arm": "p3", "sha": "f360a6728e4c724d", "total_functions": 10, "matched_functions": 5, "mism": [["v1", 13, 11, 0, 3], ["v3", 15, 11, 0, 14], ["v6", 15, 11, 0, 5], ["v7", 24, 24, 0, 1], ["v8", 33, 27, 0, 14]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round65_diag2/fsrepro.pyc", "arm": "p3", "sha": "7f63b1b719bddd9f", "total_functions": 7, "matched_functions": 7, "mism": []}
+{"path": "D:/Temp/opencode/r66gate/diag2/synth/r66p1.pyc", "arm": "p3", "sha": "fe2da7b22a559fd9", "total_functions": 5, "matched_functions": 2, "mism": [["w1", 29, 26, 0, 9], ["w2", 29, 24, 0, 11], ["w3", 22, 20, 0, 3]]}

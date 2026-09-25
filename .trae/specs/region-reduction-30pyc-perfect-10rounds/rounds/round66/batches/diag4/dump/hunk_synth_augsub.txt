@@ -1,0 +1,46 @@
+# r66d4_augsub.pyc :: probe   orig=98 decomp=80  substantive-hunks=6
+HUNK delete   orig[32:35]@132(3) decomp[32:32]@130(0)
+   .   128 LOAD_FAST                    s
+   .   130 LOAD_CONST                   'win'
+       132 COPY                         
+       134 COPY                         
+       136 BINARY_SUBSCR                
+   .   146 LOAD_CONST                   1
+   .   148 BINARY_OP                    +=
+HUNK delete   orig[36:39]@148(3) decomp[33:33]@132(0)
+   .   136 BINARY_SUBSCR                
+   .   146 LOAD_CONST                   1
+       148 BINARY_OP                    +=
+       152 SWAP                         
+       154 SWAP                         
+   .   156 STORE_SUBSCR                 
+   .   160 LOAD_FAST                    s
+HUNK delete   orig[42:45]@164(3) decomp[36:36]@140(0)
+   .   160 LOAD_FAST                    s
+   .   162 LOAD_CONST                   'profit'
+       164 COPY                         
+       166 COPY                         
+       168 BINARY_SUBSCR                
+   .   178 LOAD_FAST                    a
+   .   180 LOAD_FAST                    b
+HUNK delete   orig[48:51]@186(3) decomp[39:39]@146(0)
+   .   180 LOAD_FAST                    b
+   .   182 BINARY_OP                    -
+       186 BINARY_OP                    +=
+       190 SWAP                         
+       192 SWAP                         
+   .   194 STORE_SUBSCR                 
+   .   198 LOAD_FAST                    s
+HUNK delete   orig[54:57]@202(3) decomp[42:42]@156(0)
+   .   198 LOAD_FAST                    s
+   .   200 LOAD_CONST                   'tot'
+       202 COPY                         
+       204 COPY                         
+       206 BINARY_SUBSCR                
+   .   216 LOAD_CONST                   1
+   .   218 BINARY_OP                    +=
+HUNK delete   orig[58:61]@218(3) decomp[43:43]@158(0)
+   .   206 BINARY_SUBSCR                
+   .   216 LOAD_CONST                   1
+       218 BINARY_OP                    +=
+       222 

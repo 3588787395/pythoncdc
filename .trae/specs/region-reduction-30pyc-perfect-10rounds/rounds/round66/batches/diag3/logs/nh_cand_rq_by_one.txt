@@ -1,0 +1,5 @@
+# real_quote.pyc :: get_cache_l2_data_by_one   orig=355 decomp=356  substantive-hunks=1
+HUNK insert   orig[134:134]@584(0) decomp[134:135]@588(1)
+   .   584 STORE_SUBSCR                 
+       588 JUMP_BACKWARD                to 336
+   .   590 JUMP_BACKWARD                to 336

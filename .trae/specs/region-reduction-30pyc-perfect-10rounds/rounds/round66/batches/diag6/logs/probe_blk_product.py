@@ -1,0 +1,195 @@
+# Source Generated with Decompyle++ (Python version)
+# File: matcher.pyc (Python 3.11)
+
+import six
+from collections import defaultdict
+from IQEngine.interface import AbstractMatcher
+from IQEngine.const import MatcherType, LimitMode, EntrustDirection, OrderType
+from IQEngine.utils import check_price
+from IQEngine.account import Trade
+from IQEngine.core.events import Event, EventEnum
+from IQEngine.utils.i18n import get_local_text as _
+from IQEngine.utils import strategy_log
+from IQCommon.util.wrapper_utils import check_arg
+class DefaultMatcher(AbstractMatcher):
+    __doc__ = """
+    模拟撮合类
+    
+    此对象负责对订单进行撮合
+    """
+    CURRENT_BAR_MATCH = [MatcherType.CURRENT_BAR_CLOSE, MatcherType.CURRENT_BAR_OPEN, MatcherType.CURRENT_BAR_HIGH, MatcherType.CURRENT_BAR_LOW]
+    def __init__(self, engine):
+        self._commission = None
+        self._slippage = None
+        self._tax = None
+        self._calendar_dt = None
+        self._trading_dt = None
+        self._matching_type = MatcherType.CURRENT_BAR_CLOSE
+        self._engine = engine
+        self._deal_price_adapter = None
+        self._volume_limit = None
+        self._volume_ratio = None
+        self._init_matcher()
+    def _init_matcher(self):
+        self._turnover = defaultdict(int)
+        self._price_limit = True
+        if self._engine.config.strategy.volume_limit is None:
+            True
+        else:
+            self._engine.config.strategy.volume_limit
+        self._volume_limit = None
+        if self._engine.config.strategy.volume_ratio is None:
+            return 0.25
+        else:
+            return self._engine.config.strategy.volume_ratio
+        self._volume_ratio = None
+        self._deal_price_adapter = self._create_deal_price_adapter()
+    def set_matching_type(self, matching_type):
+        """
+        撮合模式，默认收盘价撮合，支持最新价/收盘价/开盘价/最高价/最低价设置
+        """
+        if isinstance(matching_type, MatcherType):
+            self._matching_type = matching_type
+        elif isinstance(matching_type, six.string_types):
+            self._matching_type = MatcherType(matching_type.upper())
+        if isinstance(self._matching_type, MatcherType):
+            raise AssertionError
+        else:
+            self._deal_price_adapter = self._create_deal_price_adapter()
+    def set_volume_ratio(self, volume_ratio):
+        """
+        设置成交比例
+        :param volume_ratio: 成交比例
+        :return:
+        """
+        if self._volume_limit:
+            self._volume_ratio = volume_ratio
+            return None
+        else:
+            strategy_log.warning(_('当前模式为非限制成交数量模式,接口参数设置失效'))
+    def get_volume_ratio(self):
+        return self._volume_ratio
+    @check_arg
+    def set_limit_mode(self, limit_mode=LimitMode.LIMIT):
+        """
+        设置成交数量限制模式，默认限制，成交比例的限制生效
+        :param limit_mode: 限制模式
+        :return:
+        """
+        if limit_mode.upper() not in (LimitMode.LIMIT.value, LimitMode.UNLIMITED.value):
+            strategy_log.warning(_("设置限制模式入参数有误,设置失效, 请输入'LIMIT'或'UNLIMITED'"))
+            return None
+        elif limit_mode.upper() == LimitMode.UNLIMITED.value:
+            self._volume_limit = False
+            return None
+        else:
+            self._volume_limit = True
+    def get_volume_limit(self):
+        return self._volume_limit
+    def _create_deal_price_adapter(self):
+        """
+        获取交易价格，收盘价或者下根bar的价格
+        """
+        adapter_dict = {MatcherType.CURRENT_BAR_CLOSE: self._get_current_close, MatcherType.CURRENT_BAR_OPEN: self._get_current_open, MatcherType.CURRENT_BAR_HIGH: self._get_current_high, MatcherType.CURRENT_BAR_LOW: self._get_current_low, MatcherType.NEXT_BAR_CLOSE: self._get_current_close, MatcherType.NEXT_BAR_OPEN: self._get_current_open, MatcherType.NEXT_BAR_HIGH: self._get_current_high, MatcherType.NEXT_BAR_LOW: self._get_current_low}
+        return adapter_dict[self._matching_type]
+    def _get_current_open(self, symbol):
+        """
+        获取当前周期开盘价
+        """
+        try:
+            return self._engine.bar_dict[symbol].open
+            return None
+        except (KeyError, TypeError):
+            return 0
+    def _get_current_close(self, symbol):
+        """
+        获取当前周期收盘价
+        """
+        try:
+            return self._engine.bar_dict[symbol].close
+            return None
+        except (KeyError, TypeError):
+            return 0
+    def _get_current_high(self, symbol):
+        """
+        获取当前周期最高价
+        """
+        try:
+            return self._engine.bar_dict[symbol].high
+            return None
+        except (KeyError, TypeError):
+            return 0
+    def _get_current_low(self, symbol):
+        """
+        获取当前周期最低价
+        """
+        try:
+            return self._engine.bar_dict[symbol].low
+            return None
+        except (KeyError, TypeError):
+            return 0
+    def update(self, calendar_dt, trading_dt):
+        self._turnover.clear()
+        self._calendar_dt = calendar_dt
+        self._trading_dt = trading_dt
+    @property
+    def is_current_match(self):
+        if self._matching_type in self.CURRENT_BAR_MATCH:
+            return True
+        else:
+            return False
+    def match(self, open_orders):
+        delisted_date = asset.delisted_date.date()
+        if delisted_date == self._trading_dt.date():
+            reason = _('订单撤销: 当前合约 [{symbol}] 已经退市，无法进行交易，退市日期 [{delisted_date}]').format(symbol=asset.symbol, delisted_date=delisted_date)
+        else:
+            reason = _('订单撤销: 获取当前周期的数据失败 [{symbol}]').format(symbol=asset.symbol)
+        order.mark_rejected(reason)
+        self._engine.event_bus.publish_event(Event(EventEnum.ON_TRADE_RSP, trade=order, order=order))
+        price = self._engine.slippage.calculate_trade_price(order, deal_price)
+        trading_date = self._engine.trading_dt.strftime('%Y%m%d')
+        gem_change_date = str(self._engine.config.plugins.plugin_system_risk_control.gem_change_date)
+        stock_listed_date = order.asset.listed_date
+        stock_listed_date_str = stock_listed_date.strftime('%Y%m%d')
+        if deal_price <= self._engine.data_cache.get_limit_down(asset.symbol):
+            pass
+        stock_listed_date <= self._engine.trading_dt
+        next_trading_date
+        if deal_price <= self._engine.data_cache.get_limit_down(asset.symbol):
+            pass
+        reason = _('订单撤销: [{symbol}]撮合价格超涨停价').format(symbol=asset.symbol)
+        order.mark_rejected(reason)
+        self._engine.event_bus.publish_event(Event(EventEnum.ON_TRADE_RSP, trade=order, order=order))
+        if deal_price <= self._engine.data_cache.get_limit_down(asset.symbol):
+            reason = _('订单撤销: [{symbol}]撮合价格超跌停价').format(symbol=asset.symbol)
+            order.mark_rejected(reason)
+            self._engine.event_bus.publish_event(Event(EventEnum.ON_TRADE_RSP, trade=order, order=order))
+        else:
+            while False:
+                pass
+        bar = self._engine.bar_dict[asset.symbol]
+        reason = _('订单撤销:  当前bar交易量不足  {symbol}  bar.volume {bar_volume}').format(symbol=asset.symbol, bar_volume=bar.volume)
+        order.mark_cancelled(reason)
+        volume_limit = round(bar.volume * self._volume_ratio) - self._turnover[asset.symbol]
+        volume_limit = volume_limit // asset.trade_unit * asset.trade_unit
+        if order.type == OrderType.MARKET.value:
+            reason = _('订单撤销: 当前bar交易量不足 {symbol} volume {order_volume}').format(symbol=asset.symbol, order_volume=order.amount)
+            order.mark_cancelled(reason)
+        else:
+        fill = min(order.unfilled_amount, volume_limit)
+        if fill < order.amount:
+            strategy_log.warning(f'后端服务 当前策略成交比例设置为：{self._engine.matcher.get_volume_ratio()!s}，委托数量{order.amount!s}超过当前周期可成交数量，撮合成交数量调整为{fill!s}')
+        fill = order.unfilled_amount
+        position = account.positions.get_or_create(asset.symbol)
+        trade = Trade.create_trade(order_id=order.order_id, price=price, amount=fill, entrust_direction=order.entrust_direction, futures_direction=order.futures_direction, hedge_type=order.hedge_type, asset=asset, frozen_price=order.frozen_price, close_today_amount=position.cal_close_today_amount(fill, order.entrust_direction))
+        trade._commission = self._engine.commission.calculate_commission(trade)
+        trade._tax = self._engine.commission.calculate_tax(trade)
+        order.fill(trade)
+        self._turnover[asset.symbol] += fill
+        self._engine.event_bus.publish_event(Event(EventEnum.ORDER_TRADE, account=account, trade=trade, order=order))
+        self._engine.event_bus.publish_event(Event(EventEnum.ON_TRADE_RSP, trade=trade, order=order))
+        if order.unfilled_amount != 0:
+            reason = _('Order Cancelled: market order {symbol} volume {order_volume} is larger than {volume_percent_limit} percent of current bar volume, fill {filled_volume} actually').format(symbol=asset.symbol, order_volume=order.amount, filled_volume=order.filled_amount, volume_percent_limit=self._volume_ratio * 100.0)
+            order.mark_cancelled(reason, user_warn=False)
+            self._engine.event_bus.publish_event(Event(EventEnum.ON_TRADE_RSP, trade=order, order=order))
+        else:

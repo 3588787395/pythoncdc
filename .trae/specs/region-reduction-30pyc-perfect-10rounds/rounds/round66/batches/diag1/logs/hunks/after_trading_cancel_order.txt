@@ -1,0 +1,26 @@
+# trade_live_broker.pyc :: after_trading_cancel_order   orig=177 decomp=180  substantive-hunks=2
+HUNK replace  orig[33:34]@164(1) decomp[33:35]@164(2)
+   .   158 LOAD_FAST                    order
+   .   160 STORE_FAST                   order_param
+   .   162 POP_TOP                      
+       164 JUMP_FORWARD                 to 168
+   .   166 JUMP_BACKWARD                to 132
+   .   168 LOAD_GLOBAL                  NULL + isinstance
+   .   180 LOAD_FAST                    order_param
+   .   158 LOAD_FAST                    order
+   .   160 STORE_FAST                   order_param
+   .   162 POP_TOP                      
+       164 LOAD_CONST                   None
+       166 RETURN_VALUE                 
+   .   168 JUMP_BACKWARD                to 132
+   .   170 LOAD_CONST                   None
+   .   172 RETURN_VALUE                 
+HUNK insert   orig[35:35]@166(0) decomp[36:38]@170(2)
+   .   164 LOAD_CONST                   None
+   .   166 RETURN_VALUE                 
+   .   168 JUMP_BACKWARD                to 132
+       170 LOAD_CONST                   None
+       172 RETURN_VALUE                 
+   .   174 LOAD_GLOBAL                  NULL + isinstance
+   .   186 LOAD_FAST                    order_param
+   .   188 LOAD_GLOBAL                  str

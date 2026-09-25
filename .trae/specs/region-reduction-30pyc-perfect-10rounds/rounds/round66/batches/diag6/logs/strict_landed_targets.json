@@ -1,0 +1,102 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc",
+  "product": "D:/Temp/opencode/r66gate/diag6/build_landed/fly__loggerOK.py",
+  "functions": 64,
+  "ok": 62,
+  "bad": [
+   [
+    "<module>.Backtest.write_logging_thread",
+    "seq_diff",
+    "#71 orig=(\"'msgs'\", 'LOAD_FAST') decomp=('<JUMP>', 'JUMP')"
+   ],
+   [
+    "<module>.SafeFileHandler.check_baseFilename",
+    "target_diff",
+    "#14 POP_JUMP_IF_TRUE 终点 orig=('1', 'LOAD_CONST') decomp=('0', 'LOAD_CONST')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc",
+  "product": "D:/Temp/opencode/r66gate/diag6/build_landed/IQEngine__plugins__plugin_system_matcher__matcherOK.py",
+  "functions": 17,
+  "ok": 16,
+  "bad": [
+   [
+    "<module>.DefaultMatcher.match",
+    "seq_diff",
+    "#182 orig=('<JUMP>', 'JUMP') decomp=(\"'self'\", 'LOAD_FAST')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+  "product": "D:/Temp/opencode/r66gate/diag6/build_landed/IQEngine__plugins__plugin_system_event_source__realtime_event_sourceOK.py",
+  "functions": 12,
+  "ok": 10,
+  "bad": [
+   [
+    "<module>.RealtimeEventSource.clock_worker",
+    "seq_len",
+    "orig=1276 decomp=1287"
+   ],
+   [
+    "<module>.RealtimeEventSource.get_one_event",
+    "seq_len",
+    "orig=19 decomp=20"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc",
+  "product": "D:/Temp/opencode/r66gate/diag6/build_landed/IQData__utils__common_funcOK.py",
+  "functions": 27,
+  "ok": 26,
+  "bad": [
+   [
+    "<module>.handle_exrights",
+    "seq_len",
+    "orig=276 decomp=268"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc",
+  "product": "D:/Temp/opencode/r66gate/diag6/build_landed/IQData__api__api_baseOK.py",
+  "functions": 27,
+  "ok": 26,
+  "bad": [
+   [
+    "<module>.get_history_df",
+    "seq_len",
+    "orig=1742 decomp=1719"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc",
+  "product": "D:/Temp/opencode/r66gate/diag6/build_landed/IQCommon__util__common_funcOK.py",
+  "functions": 22,
+  "ok": 21,
+  "bad": [
+   [
+    "<module>.get_kline_time_by_frequency_array",
+    "seq_len",
+    "orig=232 decomp=229"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ }
+]

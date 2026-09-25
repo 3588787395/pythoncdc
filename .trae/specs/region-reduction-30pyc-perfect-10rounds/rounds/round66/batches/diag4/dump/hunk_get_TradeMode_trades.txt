@@ -1,0 +1,113 @@
+# __init__.pyc :: get_TradeMode_trades   orig=1970 decomp=1928  substantive-hunks=14
+HUNK delete   orig[198:201]@962(3) decomp[198:198]@960(0)
+   .   950 LOAD_ATTR                    TradeMode_trade_statistic
+   .   960 LOAD_CONST                   'win_time'
+       962 COPY                         
+       964 COPY                         
+       966 BINARY_SUBSCR                
+   .   976 LOAD_CONST                   1
+   .   978 BINARY_OP                    +=
+HUNK delete   orig[202:205]@978(3) decomp[199:199]@962(0)
+   .   966 BINARY_SUBSCR                
+   .   976 LOAD_CONST                   1
+       978 BINARY_OP                    +=
+       982 SWAP                         
+       984 SWAP                         
+   .   986 STORE_SUBSCR                 
+   .   990 LOAD_FAST                    self
+HUNK delete   orig[209:212]@1004(3) decomp[203:203]@980(0)
+   .   992 LOAD_ATTR                    TradeMode_trade_statistic
+   .  1002 LOAD_CONST                   'profit'
+      1004 COPY                         
+      1006 COPY                         
+      1008 BINARY_SUBSCR                
+   .  1018 LOAD_FAST                    trade_v
+   .  1020 LOAD_FAST                    init_hold_v
+HUNK delete   orig[215:218]@1026(3) decomp[206:206]@986(0)
+   .  1020 LOAD_FAST                    init_hold_v
+   .  1022 BINARY_OP                    -
+      1026 BINARY_OP                    +=
+      1030 SWAP                         
+      1032 SWAP                         
+   .  1034 STORE_SUBSCR                 
+   .  1038 LOAD_FAST                    self
+HUNK delete   orig[222:225]@1052(3) decomp[210:210]@1006(0)
+   .  1040 LOAD_ATTR                    TradeMode_trade_statistic
+   .  1050 LOAD_CONST                   'total_time'
+      1052 COPY                         
+      1054 COPY                         
+      1056 BINARY_SUBSCR                
+   .  1066 LOAD_CONST                   1
+   .  1068 BINARY_OP                    +=
+HUNK delete   orig[226:229]@1068(3) decomp[211:211]@1008(0)
+   .  1056 BINARY_SUBSCR                
+   .  1066 LOAD_CONST                   1
+      1068 BINARY_OP                    +=
+      1072 SWAP                         
+      1074 SWAP                         
+   .  1076 STORE_SUBSCR                 
+   .  1080 JUMP_BACKWARD                to 810
+HUNK delete   orig[312:315]@1464(3) decomp[294:294]@1396(0)
+   .  1452 LOAD_ATTR                    TradeMode_trade_statistic
+   .  1462 LOAD_CONST                   'win_time'
+      1464 COPY                         
+      1466 COPY                         
+      1468 BINARY_SUBSCR                
+   .  1478 LOAD_CONST                   1
+   .  1480 BINARY_OP                    +=
+HUNK delete   orig[316:319]@1480(3) decomp[295:295]@1398(0)
+   .  1468 BINARY_SUBSCR                
+   .  1478 LOAD_CONST                   1
+      1480 BINARY_OP                    +=
+      1484 SWAP                         
+      1486 SWAP                         
+   .  1488 STORE_SUBSCR                 
+   .  1492 LOAD_FAST                    self
+HUNK delete   orig[323:326]@1506(3) decomp[299:299]@1416(0)
+   .  1494 LOAD_ATTR                    TradeMode_trade_statistic
+   .  1504 LOAD_CONST                   'profit'
+      1506 COPY                         
+      1508 COPY                         
+      1510 BINARY_SUBSCR                
+   .  1520 LOAD_FAST                    trade_v
+   .  1522 LOAD_FAST                    init_hold_v
+HUNK delete   orig[329:332]@1528(3) decomp[302:302]@1422(0)
+   .  1522 LOAD_FAST                    init_hold_v
+   .  1524 BINARY_OP                    -
+      1528 BINARY_OP                    +=
+      1532 SWAP                         
+      1534 SWAP                         
+   .  1536 STORE_SUBSCR                 
+   .  1540 LOAD_FAST                    self
+HUNK delete   orig[336:339]@1554(3) decomp[306:306]@1442(0)
+   .  1542 LOAD_ATTR                    TradeMode_trade_statistic
+   .  1552 LOAD_CONST                   'total_time'
+      1554 COPY                         
+      1556 COPY                         
+      1558 BINARY_SUBSCR                
+   .  1568 LOAD_CONST                   1
+   .  1570 BINARY_OP                    +=
+HUNK delete   orig[340:343]@1570(3) decomp[307:307]@1444(0)
+   .  1558 BINARY_SUBSCR                
+   .  1568 LOAD_CONST                   1
+      1570 BINARY_OP                    +=
+      1574 SWAP                         
+      1576 SWAP                         
+   .  1578 STORE_SUBSCR                 
+   .  1582 EXTENDED_ARG                 
+HUNK delete   orig[1048:1051]@4816(3) decomp[1012:1012]@4682(0)
+   .  4804 LOAD_ATTR                    TradeMode_trade_statistic
+   .  4814 LOAD_CONST                   'profit'
+      4816 COPY                         
+      4818 COPY                         
+      4820 BINARY_SUBSCR                
+   .  4830 LOAD_FAST                    dif_sum
+   .  4832 BINARY_OP                    +=
+HUNK delete   orig[1052:1055]@4832(3) decomp[1013:1013]@4684(0)
+   .  4820 BINARY_SUBSCR                
+   .  4830 LOAD_FAST                    dif_sum
+      4832 BINARY_OP                    +=
+      4836 SWAP                         
+      4838 SWAP                         
+   .  4840 STORE_SUBSCR                 
+   .  4844 EXTENDED_ARG                 

@@ -1,0 +1,49 @@
+=== F:/Downloads/pythoncdc-main/test_repros/round65_diag2/fs2.pyc mark=  entries=11
+[0]
+_generate_ternary ret: {'type': 'Return', 'value': {'type': 'JoinedStr', 'values': [{'type': 'Constant', 'value': 'p', 'lineno': 4}, {'type': 'FormattedValue', 'value': {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}, 'body': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'orelse': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}}, 'conversion': 0, 'format_spec': None}, {'type': 'Constant', 'value': 'q'}]}}
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49025 <- _build_class_def:2991 <- generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3305
+[1]
+_generate_ternary ret: {'type': 'Return', 'value': {'type': 'JoinedStr', 'values': [{'type': 'Constant', 'value': 'p', 'lineno': 8}, {'type': 'FormattedValue', 'value': {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}, 'body': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'orelse': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}}, 'conversion': 0, 'format_spec': None}, {'type': 'Constant', 'value': 'q'}]}}
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49025 <- _build_class_def:2991 <- generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3305
+[2]
+_generate_ternary ret: {'type': 'Return', 'value': {'type': 'JoinedStr', 'values': [{'type': 'Name', 'id': 'print', 'ctx': 'Load', 'lineno': 11}, {'type': 'Constant', 'value': 'p', 'lineno': None}, {'type': 'FormattedValue', 'value': {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}, 'body': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'orelse': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}}, 'conversion': 0, 'format_spec': None}, {'type': 'Constant', 'value': 'q'}]}}
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49025 <- _build_class_def:2991 <- generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3305
+[3]
+_generate_ternary ret: {'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'self', 'ctx': 'Load'}, 'attr': 'log', 'ctx': 'Load'}, 'attr': 'debug', 'ctx': 'Load'}, 'args': [{'type': 'JoinedStr', 'values': [{'type': 'Constant', 'value': 'p', 'lineno': None}, {'type': 'FormattedValue', 'value': {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}, 'body': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'orelse': {'
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49025 <- _build_class_def:2991 <- generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3305
+[4]
+_generate_ternary ret: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'x', 'ctx': 'Store'}], 'value': {'type': 'Constant', 'value': 1, 'lineno': 16}}
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49025 <- _build_class_def:2991 <- generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3305
+[5]
+_generate_ternary ret: {'type': 'Return', 'value': {'type': 'Name', 'id': 'x', 'ctx': 'Load', 'lineno': 17}}
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49025 <- _build_class_def:2991 <- generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3305
+[6]
+_generate_ternary ret: {'type': 'Return', 'value': {'type': 'JoinedStr', 'values': [{'type': 'Constant', 'value': 'p', 'lineno': 25}, {'type': 'FormattedValue', 'value': {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}, 'body': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'orelse': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}}, 'conversion': 0, 'format_spec': None}, {'type': 'Constant', 'value': 'q'}]}}
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49025 <- _build_class_def:2991 <- generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3305
+[7]
+_generate_ternary ret: {'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'self', 'ctx': 'Load'}, 'attr': 'log', 'ctx': 'Load'}, 'attr': 'debug', 'ctx': 'Load'}, 'args': [{'type': 'JoinedStr', 'values': [{'type': 'Name', 'id': 'self', 'ctx': 'Load', 'lineno': 30}, {'type': 'Constant', 'value': 'p', 'lineno': None}, {'type': 'FormattedValue', 'value': {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}, 'body': {'type': 'N
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3182 <- _generate_loop:4403 <- _loop_generate_for:4798 <- _loop_generate_body:6935 <- _loop_dispatch_block:7634 <- _loop_handle_child_region_entry:11284
+[8]
+_generate_ternary ret: {'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'self', 'ctx': 'Load'}, 'attr': 'log', 'ctx': 'Load'}, 'attr': 'quote', 'ctx': 'Load'}, 'attr': 'debug', 'ctx': 'Load'}, 'args': [{'type': 'JoinedStr', 'values': [{'type': 'Constant', 'value': 'A', 'lineno': None}, {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Constant', 'value': None, 'lineno': None}, {'type': 'FormattedValue'
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49025 <- _build_class_def:2991 <- generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3305
+[9]
+_generate_ternary ret: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'z', 'ctx': 'Store'}], 'value': {'type': 'Constant', 'value': 3, 'lineno': 35}}
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49025 <- _build_class_def:2991 <- generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3305
+[10]
+_generate_ternary ret: {'type': 'Return', 'value': {'type': 'Name', 'id': 'z', 'ctx': 'Load', 'lineno': 36}}
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49025 <- _build_class_def:2991 <- generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3305
+
+=== product lines with mark ===
+
+=== duplicate AST dict ids: 0 of 11 ===

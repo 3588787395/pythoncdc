@@ -1,0 +1,495 @@
+# quote.pyc :: build_current_period_df   orig=124 decomp=113  substantive-hunks=2
+HUNK delete   orig[3:4]@14(1) decomp[3:3]@4(0)
+        14 EXTENDED_ARG                 
+HUNK replace  orig[109:121]@516(12) decomp[108:110]@514(2)
+       516 LOAD_FAST                    tempdict
+       518 LOAD_CONST                   'is_open'
+       520 STORE_SUBSCR                 
+       524 LOAD_GLOBAL                  NULL + pandas
+       536 LOAD_ATTR                    DataFrame
+       546 LOAD_FAST                    tempdict
+       548 LOAD_FAST                    index
+       550 KW_NAMES                     
+       552 PRECALL                      
+       556 CALL                         
+       566 STORE_FAST                   tmp
+       568 LOAD_FAST                    tmp
+       514 POP_TOP                      
+       516 LOAD_CONST                   None
+
+# quote.pyc :: check_frequency   orig=132 decomp=133  substantive-hunks=2
+HUNK replace  orig[107:109]@456(2) decomp[107:108]@456(1)
+       456 LOAD_CONST                   None
+       458 RETURN_VALUE                 
+       456 JUMP_FORWARD                 to 558
+HUNK insert   orig[132:132]@562(0) decomp[131:133]@562(2)
+       562 LOAD_CONST                   None
+       564 RETURN_VALUE                 
+
+# quote.pyc :: check_limit   orig=356 decomp=334  substantive-hunks=1
+HUNK delete   orig[54:76]@286(22) decomp[54:54]@284(0)
+       286 LOAD_FAST                    self
+       288 LOAD_ATTR                    log
+       298 LOAD_ATTR                    quote
+       308 LOAD_METHOD                  info
+       330 LOAD_CONST                   '在线获取snapshot数据判断涨跌停,包括'
+       332 LOAD_FAST                    tmp_universe
+       334 LOAD_CONST                   None
+       336 LOAD_CONST                   10
+       338 BUILD_SLICE                  
+       340 BINARY_SUBSCR                
+       350 FORMAT_VALUE                 str
+       352 LOAD_CONST                   '等'
+       354 LOAD_GLOBAL                  NULL + len
+       366 LOAD_FAST                    tmp_universe
+       368 PRECALL                      
+       372 CALL                         
+       382 FORMAT_VALUE                 str
+       384 LOAD_CONST                   '只代码'
+       386 BUILD_STRING                 
+       388 PRECALL                      
+       392 CALL                         
+       402 POP_TOP                      
+
+# quote.pyc :: get_individual_data   orig=354 decomp=354  substantive-hunks=4
+HUNK insert   orig[167:167]@884(0) decomp[167:168]@886(1)
+       886 EXTENDED_ARG                 
+HUNK delete   orig[178:206]@968(28) decomp[179:179]@968(0)
+       968 JUMP_FORWARD                 to 1124
+       970 LOAD_FAST                    flag
+       972 LOAD_CONST                   1
+       974 COMPARE_OP                   ==
+       980 POP_JUMP_FORWARD_IF_FALSE    to 1046
+       982 LOAD_FAST                    self
+       984 LOAD_ATTR                    log
+       994 LOAD_ATTR                    quote
+      1004 LOAD_METHOD                  info
+      1026 LOAD_CONST                   '逐笔数据转化异常，默认返回空值'
+      1028 PRECALL                      
+      1032 CALL                         
+      1042 POP_TOP                      
+      1044 JUMP_FORWARD                 to 1120
+      1046 LOAD_FAST                    flag
+      1048 LOAD_CONST                   -1
+      1050 COMPARE_OP                   ==
+      1056 POP_JUMP_FORWARD_IF_FALSE    to 1120
+      1058 LOAD_FAST                    self
+      1060 LOAD_ATTR                    log
+      1070 LOAD_ATTR                    quote
+      1080 LOAD_METHOD                  info
+      1102 LOAD_CONST                   '逐笔数据返回空值'
+      1104 PRECALL                      
+      1108 CALL                         
+      1118 POP_TOP                      
+      1120 LOAD_CONST                   None
+      1122 RETURN_VALUE                 
+HUNK insert   orig[352:352]@1882(0) decomp[325:350]@1730(25)
+      1730 LOAD_FAST                    flag
+      1732 LOAD_CONST                   1
+      1734 COMPARE_OP                   ==
+      1740 POP_JUMP_FORWARD_IF_FALSE    to 1806
+      1742 LOAD_FAST                    self
+      1744 LOAD_ATTR                    log
+      1754 LOAD_ATTR                    quote
+      1764 LOAD_METHOD                  info
+      1786 LOAD_CONST                   '逐笔数据转化异常，默认返回空值'
+      1788 PRECALL                      
+      1792 CALL                         
+      1802 POP_TOP                      
+      1804 JUMP_FORWARD                 to 1880
+      1806 LOAD_FAST                    flag
+      1808 LOAD_CONST                   -1
+      1810 COMPARE_OP                   ==
+      1816 POP_JUMP_FORWARD_IF_FALSE    to 1880
+      1818 LOAD_FAST                    self
+      1820 LOAD_ATTR                    log
+      1830 LOAD_ATTR                    quote
+      1840 LOAD_METHOD                  info
+      1862 LOAD_CONST                   '逐笔数据返回空值'
+      1864 PRECALL                      
+      1868 CALL                         
+      1878 POP_TOP                      
+HUNK insert   orig[354:354]@1886(0) decomp[352:354]@1884(2)
+      1884 LOAD_CONST                   None
+      1886 RETURN_VALUE                 
+
+# quote.pyc :: get_price   orig=256 decomp=254  substantive-hunks=3
+HUNK replace  orig[5:8]@46(3) decomp[5:6]@46(1)
+        46 LOAD_CONST                   '调用函数get_price，参数为：stocks='
+        48 LOAD_FAST                    security
+        50 LOAD_CONST                   None
+        46 LOAD_CONST                   '调用函数get_price，参数为：stocks=securityNone'
+HUNK delete   orig[9:11]@54(2) decomp[7:7]@48(0)
+        54 BUILD_SLICE                  
+        56 BINARY_SUBSCR                
+HUNK replace  orig[66:67]@326(1) decomp[62:65]@310(3)
+       326 POP_JUMP_FORWARD_IF_NONE     to 726
+       310 LOAD_CONST                   None
+       312 IS_OP                        
+       314 POP_TOP                      
+
+# quote.pyc :: get_real_from_zeromq   orig=793 decomp=767  substantive-hunks=8
+HUNK delete   orig[36:60]@192(24) decomp[36:36]@190(0)
+       192 LOAD_FAST                    self
+       194 LOAD_ATTR                    log
+       204 LOAD_ATTR                    quote
+       214 LOAD_METHOD                  debug
+       236 LOAD_CONST                   '在线获取real数据，参数为'
+       238 LOAD_FAST                    params
+       240 LOAD_CONST                   None
+       242 LOAD_CONST                   10
+       244 BUILD_SLICE                  
+       246 BINARY_SUBSCR                
+       256 FORMAT_VALUE                 str
+       258 LOAD_CONST                   '等'
+       260 LOAD_GLOBAL                  NULL + len
+       272 LOAD_FAST                    params
+       274 PRECALL                      
+       278 CALL                         
+       288 LOAD_CONST                   1
+       290 BINARY_OP                    -
+       294 FORMAT_VALUE                 str
+       296 LOAD_CONST                   '只代码'
+       298 BUILD_STRING                 
+       300 PRECALL                      
+       304 CALL                         
+       314 POP_TOP                      
+HUNK insert   orig[150:150]@788(0) decomp[126:127]@666(1)
+       666 EXTENDED_ARG                 
+HUNK delete   orig[161:191]@872(30) decomp[138:138]@748(0)
+       872 JUMP_FORWARD                 to 1032
+       874 LOAD_FAST                    flag
+       876 LOAD_CONST                   1
+       878 COMPARE_OP                   ==
+       884 POP_JUMP_FORWARD_IF_FALSE    to 950
+       886 LOAD_FAST                    self
+       888 LOAD_ATTR                    log
+       898 LOAD_ATTR                    quote
+       908 LOAD_METHOD                  info
+       930 LOAD_CONST                   'real数据转化异常，默认返回空值'
+       932 PRECALL                      
+       936 CALL                         
+       946 POP_TOP                      
+       948 JUMP_FORWARD                 to 1024
+       950 LOAD_FAST                    flag
+       952 LOAD_CONST                   -1
+       954 COMPARE_OP                   ==
+       960 POP_JUMP_FORWARD_IF_FALSE    to 1024
+       962 LOAD_FAST                    self
+       964 LOAD_ATTR                    log
+       974 LOAD_ATTR                    quote
+       984 LOAD_METHOD                  info
+      1006 LOAD_CONST                   'real数据返回空值'
+      1008 PRECALL                      
+      1012 CALL                         
+      1022 POP_TOP                      
+      1024 LOAD_CONST                   None
+      1026 LOAD_FAST                    flag
+      1028 BUILD_TUPLE                  
+      1030 RETURN_VALUE                 
+HUNK delete   orig[741:742]@3922(1) decomp[688:688]@3630(0)
+      3922 UNPACK_SEQUENCE              
+HUNK delete   orig[743:745]@3928(2) decomp[689:689]@3640(0)
+      3928 STORE_FAST                   exc_obj
+      3930 STORE_FAST                   exc_tb
+HUNK replace  orig[748:749]@3966(1) decomp[692:693]@3676(1)
+      3966 LOAD_FAST                    exc_tb
+      3676 LOAD_GLOBAL                  exc_tb
+HUNK replace  orig[761:762]@4044(1) decomp[705:706]@3764(1)
+      4044 LOAD_FAST                    exc_tb
+      3764 LOAD_GLOBAL                  exc_tb
+HUNK insert   orig[793:793]@4192(0) decomp[737:767]@3924(30)
+      3924 LOAD_FAST                    flag
+      3926 LOAD_CONST                   1
+      3928 COMPARE_OP                   ==
+      3934 POP_JUMP_FORWARD_IF_FALSE    to 4002
+      3936 LOAD_FAST                    self
+      3938 LOAD_ATTR                    log
+      3948 LOAD_ATTR                    quote
+      3958 LOAD_METHOD                  info
+      3980 LOAD_CONST                   'real数据转化异常，默认返回空值'
+      3982 PRECALL                      
+      3986 CALL                         
+      3996 POP_TOP                      
+      3998 LOAD_CONST                   None
+      4000 RETURN_VALUE                 
+      4002 LOAD_FAST                    flag
+      4004 LOAD_CONST                   -1
+      4006 COMPARE_OP                   ==
+      4012 POP_JUMP_FORWARD_IF_FALSE    to 4080
+      4014 LOAD_FAST                    self
+      4016 LOAD_ATTR                    log
+      4026 LOAD_ATTR                    quote
+      4036 LOAD_METHOD                  info
+      4058 LOAD_CONST                   'real数据返回空值'
+      4060 PRECALL                      
+      4064 CALL                         
+      4074 POP_TOP                      
+      4076 LOAD_CONST                   None
+      4078 RETURN_VALUE                 
+      4080 LOAD_CONST                   None
+      4082 RETURN_VALUE                 
+
+# quote.pyc :: initImagedata   orig=273 decomp=251  substantive-hunks=1
+HUNK delete   orig[38:60]@204(22) decomp[38:38]@202(0)
+       204 LOAD_FAST                    self
+       206 LOAD_ATTR                    log
+       216 LOAD_ATTR                    quote
+       226 LOAD_METHOD                  debug
+       248 LOAD_CONST                   '初始化imagedata,在线获取snapshot数据,包括'
+       250 LOAD_FAST                    universe
+       252 LOAD_CONST                   None
+       254 LOAD_CONST                   10
+       256 BUILD_SLICE                  
+       258 BINARY_SUBSCR                
+       268 FORMAT_VALUE                 str
+       270 LOAD_CONST                   '等'
+       272 LOAD_GLOBAL                  NULL + len
+       284 LOAD_FAST                    universe
+       286 PRECALL                      
+       290 CALL                         
+       300 FORMAT_VALUE                 str
+       302 LOAD_CONST                   '只代码'
+       304 BUILD_STRING                 
+       306 PRECALL                      
+       310 CALL                         
+       320 POP_TOP                      
+
+# quote.pyc :: load_bars_from_hundsun   orig=526 decomp=580  substantive-hunks=3
+HUNK replace  orig[5:8]@46(3) decomp[5:6]@46(1)
+        46 LOAD_CONST                   '调用函数load_bars_from_hundsun，参数为：stocks='
+        48 LOAD_FAST                    stocks
+        50 LOAD_CONST                   None
+        46 LOAD_CONST                   '调用函数load_bars_from_hundsun，参数为：stocks=stocksNone'
+HUNK delete   orig[9:11]@54(2) decomp[7:7]@48(0)
+        54 BUILD_SLICE                  
+        56 BINARY_SUBSCR                
+HUNK insert   orig[49:49]@256(0) decomp[45:103]@242(58)
+       242 LOAD_GLOBAL                  os
+       254 LOAD_ATTR                    path
+       264 LOAD_METHOD                  exists
+       286 LOAD_GLOBAL                  DumploadDailyFile
+       298 PRECALL                      
+       302 CALL                         
+       312 POP_TOP                      
+       314 LOAD_FAST                    self
+       316 LOAD_ATTR                    log
+       326 LOAD_ATTR                    quote
+       336 LOAD_METHOD                  debug
+       358 LOAD_CONST                   '调用函数load_bars_from_hundsun，参数为：stocks=stocksNone'
+       360 LOAD_CONST                   10
+       362 FORMAT_VALUE                 str
+       364 LOAD_CONST                   '等'
+       366 LOAD_GLOBAL                  NULL + isinstance
+       378 LOAD_FAST                    stocks
+       380 LOAD_GLOBAL                  list
+       392 PRECALL                      
+       396 CALL                         
+       406 POP_JUMP_FORWARD_IF_FALSE    to 438
+       408 LOAD_GLOBAL                  NULL + len
+       420 LOAD_FAST                    stocks
+       422 PRECALL                      
+       426 CALL                         
+       436 JUMP_FORWARD                 to 440
+       438 LOAD_CONST                   1
+       440 FORMAT_VALUE                 str
+       442 LOAD_CONST                   '只代码,typet='
+       444 LOAD_FAST                    typet
+       446 FORMAT_VALUE                 str
+       448 LOAD_CONST                   ',start='
+       450 LOAD_FAST                    start
+       452 FORMAT_VALUE                 str
+       454 LOAD_CONST                   ',end='
+       456 LOAD_FAST                    end
+       458 FORMAT_VALUE                 str
+       460 BUILD_STRING                 
+       462 PRECALL                      
+       466 CALL                         
+       476 POP_TOP                      
+       478 LOAD_GLOBAL                  NULL + collections
+       490 LOAD_ATTR                    OrderedDict
+       500 PRECALL                      
+       504 CALL                         
+       514 STORE_FAST                   data
+       516 LOAD_GLOBAL                  NULL + pandas
+       528 LOAD_ATTR                    Panel
+       538 PRECALL                      
+       542 CALL                         
+       552 STORE_FAST                   retpanel
+       554 LOAD_GLOBAL                  os
+       566 LOAD_ATTR                    path
+       576 LOAD_METHOD                  exists
+       598 LOAD_GLOBAL                  DumploadDailyFile
+       610 PRECALL                      
+       614 CALL                         
+       624 POP_TOP                      
+
+# quote.pyc :: load_get_price   orig=185 decomp=181  substantive-hunks=3
+HUNK replace  orig[5:8]@46(3) decomp[5:6]@46(1)
+        46 LOAD_CONST                   '调用函数load_get_price，参数为：stocks='
+        48 LOAD_FAST                    stocks
+        50 LOAD_CONST                   None
+        46 LOAD_CONST                   '调用函数load_get_price，参数为：stocks=stocksNone'
+HUNK delete   orig[9:11]@54(2) decomp[7:7]@48(0)
+        54 BUILD_SLICE                  
+        56 BINARY_SUBSCR                
+HUNK replace  orig[58:59]@282(1) decomp[54:55]@266(1)
+       282 POP_JUMP_FORWARD_IF_FALSE    to 486
+       266 POP_TOP                      
+
+# quote.pyc :: run_individual_transform   orig=412 decomp=359  substantive-hunks=11
+HUNK delete   orig[105:112]@640(7) decomp[105:105]@638(0)
+       640 LOAD_FAST                    socket
+       642 LOAD_METHOD                  recv
+       664 PRECALL                      
+       668 CALL                         
+       678 STORE_FAST                   message
+       680 LOAD_FAST                    message
+       682 POP_JUMP_FORWARD_IF_FALSE    to 1050
+HUNK delete   orig[113:121]@686(8) decomp[106:106]@640(0)
+       686 LOAD_GLOBAL                  NULL + eval
+       698 LOAD_FAST                    message
+       700 LOAD_METHOD                  decode
+       722 PRECALL                      
+       726 CALL                         
+       736 PRECALL                      
+       740 CALL                         
+       750 STORE_FAST                   message
+HUNK replace  orig[174:179]@1050(5) decomp[159:161]@940(2)
+      1050 LOAD_FAST                    self
+      1052 LOAD_ATTR                    log
+      1062 LOAD_ATTR                    quote
+      1072 LOAD_METHOD                  warning
+      1094 LOAD_CONST                   '逐笔数据返回为空'
+       940 LOAD_FAST                    socket
+       942 LOAD_METHOD                  recv
+HUNK replace  orig[181:185]@1110(4) decomp[163:164]@978(1)
+      1110 POP_TOP                      
+      1112 EXTENDED_ARG                 
+      1114 JUMP_BACKWARD                to 586
+      1116 LOAD_GLOBAL                  NULL + list
+       978 STORE_FAST                   message
+HUNK delete   orig[186:207]@1130(21) decomp[165:165]@980(0)
+      1130 LOAD_METHOD                  keys
+      1152 PRECALL                      
+      1156 CALL                         
+      1166 PRECALL                      
+      1170 CALL                         
+      1180 LOAD_CONST                   0
+      1182 BINARY_SUBSCR                
+      1192 STORE_FAST                   stocks
+      1194 LOAD_FAST                    message
+      1196 LOAD_METHOD                  get
+      1218 LOAD_FAST                    stocks
+      1220 PRECALL                      
+      1224 CALL                         
+      1234 STORE_FAST                   real_data
+      1236 LOAD_FAST                    real_data
+      1238 POP_JUMP_FORWARD_IF_FALSE    to 1620
+      1240 LOAD_FAST                    real_data
+      1242 LOAD_METHOD                  get
+      1264 LOAD_CONST                   'transaction'
+      1266 PRECALL                      
+      1270 CALL                         
+HUNK delete   orig[224:225]@1352(1) decomp[182:182]@1052(0)
+      1352 JUMP_FORWARD                 to 1578
+HUNK insert   orig[272:272]@1602(0) decomp[229:238]@1304(9)
+      1304 PRECALL                      
+      1308 CALL                         
+      1318 POP_TOP                      
+      1320 JUMP_FORWARD                 to 1384
+      1322 LOAD_FAST                    self
+      1324 LOAD_ATTR                    log
+      1334 LOAD_ATTR                    quote
+      1344 LOAD_METHOD                  warning
+      1366 LOAD_CONST                   '逐笔数据返回为空'
+HUNK delete   orig[381:403]@2204(22) decomp[347:347]@1958(0)
+      2204 EXTENDED_ARG                 
+      2206 POP_JUMP_BACKWARD_IF_TRUE    to 638
+      2208 LOAD_FAST                    socket
+      2210 LOAD_METHOD                  close
+      2232 PRECALL                      
+      2236 CALL                         
+      2246 POP_TOP                      
+      2248 LOAD_FAST                    context
+      2250 LOAD_METHOD                  term
+      2272 PRECALL                      
+      2276 CALL                         
+      2286 POP_TOP                      
+      2288 LOAD_FAST                    self
+      2290 LOAD_ATTR                    log
+      2300 LOAD_ATTR                    quote
+      2310 LOAD_METHOD                  debug
+      2332 LOAD_CONST                   '结束第%s次逐笔订阅'
+      2334 LOAD_FAST                    self
+      2336 LOAD_ATTR                    _individual_subscribe_count
+      2346 BINARY_OP                    %
+      2350 PRECALL                      
+      2354 CALL                         
+HUNK replace  orig[406:407]@2378(1) decomp[350:351]@1982(1)
+      2378 LOAD_METHOD                  set
+      1982 LOAD_METHOD                  isSet
+HUNK replace  orig[409:410]@2414(1) decomp[353:355]@2018(2)
+      2414 POP_TOP                      
+      2018 EXTENDED_ARG                 
+      2020 POP_JUMP_BACKWARD_IF_TRUE    to 638
+HUNK insert   orig[412:412]@2418(0) decomp[357:359]@2026(2)
+      2026 LOAD_CONST                   None
+      2028 RETURN_VALUE                 
+
+# quote.pyc :: run_tick_socket   orig=347 decomp=348  substantive-hunks=4
+HUNK insert   orig[14:14]@64(0) decomp[14:15]@66(1)
+        66 EXTENDED_ARG                 
+HUNK delete   orig[24:25]@136(1) decomp[25:25]@136(0)
+       136 EXTENDED_ARG                 
+HUNK delete   orig[93:117]@528(24) decomp[93:93]@526(0)
+       528 LOAD_FAST                    self
+       530 LOAD_ATTR                    log
+       540 LOAD_ATTR                    quote
+       550 LOAD_METHOD                  warning
+       572 LOAD_CONST                   'tick数据返回为空'
+       574 PRECALL                      
+       578 CALL                         
+       588 POP_TOP                      
+       590 LOAD_FAST                    userLock
+       592 LOAD_METHOD                  acquire
+       614 PRECALL                      
+       618 CALL                         
+       628 POP_TOP                      
+       630 LOAD_CONST                   -1
+       632 LOAD_FAST                    dataDict
+       634 LOAD_CONST                   'updateflag'
+       636 STORE_SUBSCR                 
+       640 LOAD_FAST                    userLock
+       642 LOAD_METHOD                  release
+       664 PRECALL                      
+       668 CALL                         
+       678 POP_TOP                      
+       680 LOAD_CONST                   None
+       682 RETURN_VALUE                 
+HUNK insert   orig[229:229]@1274(0) decomp[205:230]@1120(25)
+      1120 JUMP_FORWARD                 to 1278
+      1122 LOAD_FAST                    self
+      1124 LOAD_ATTR                    log
+      1134 LOAD_ATTR                    quote
+      1144 LOAD_METHOD                  warning
+      1166 LOAD_CONST                   'tick数据返回为空'
+      1168 PRECALL                      
+      1172 CALL                         
+      1182 POP_TOP                      
+      1184 LOAD_FAST                    userLock
+      1186 LOAD_METHOD                  acquire
+      1208 PRECALL                      
+      1212 CALL                         
+      1222 POP_TOP                      
+      1224 LOAD_CONST                   -1
+      1226 LOAD_FAST                    dataDict
+      1228 LOAD_CONST                   'updateflag'
+      1230 STORE_SUBSCR                 
+      1234 LOAD_FAST                    userLock
+      1236 LOAD_METHOD                  release
+      1258 PRECALL                      
+      1262 CALL                         
+      1272 POP_TOP                      
+      1274 LOAD_CONST                   None
+      1276 RETURN_VALUE                 

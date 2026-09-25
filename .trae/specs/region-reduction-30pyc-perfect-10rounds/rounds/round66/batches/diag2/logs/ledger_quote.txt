@@ -1,0 +1,23 @@
+=== F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc mark=调用函数load_bars_from_hundsun  entries=4
+[0]
+_try_wrap_fstring_pending_call ret: {'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'self', 'ctx': 'Load'}, 'attr': 'log', 'ctx': 'Load'}, 'attr': 'quote', 'ctx': 'Load'}, 'attr': 'debug', 'ctx': 'Load'}, 'args': [{'type': 'JoinedStr', 'values': [{'type': 'Constant', 'value': '调用函数load_bars_from_hundsun，参数为：stocks='
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=_generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49025 <- _build_class_def:2991 <- generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3305 <- _generate_ternary:36258
+[1]
+_generate_ternary ret: {'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'self', 'ctx': 'Load'}, 'attr': 'log', 'ctx': 'Load'}, 'attr': 'quote', 'ctx': 'Load'}, 'attr': 'debug', 'ctx': 'Load'}, 'args': [{'type': 'JoinedStr', 'values': [{'type': 'Constant', 'value': '调用函数load_bars_from_hundsun，参数为：stocks='  ***SAME-DICT-AS-#0***
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49025 <- _build_class_def:2991 <- generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3305
+[2]
+_try_wrap_fstring_pending_call ret: {'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'self', 'ctx': 'Load'}, 'attr': 'log', 'ctx': 'Load'}, 'attr': 'quote', 'ctx': 'Load'}, 'attr': 'debug', 'ctx': 'Load'}, 'args': [{'type': 'JoinedStr', 'values': [{'type': 'Constant', 'value': '调用函数load_bars_from_hundsun，参数为：stocks='
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=_build_class_def:2991 <- generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3184 <- _generate_if:11630 <- _if_generate_normal:17577 <- _generate_chain_head_prefix_assign:16998 <- _generate_ternary:36258
+[3]
+_generate_ternary ret: {'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'self', 'ctx': 'Load'}, 'attr': 'log', 'ctx': 'Load'}, 'attr': 'quote', 'ctx': 'Load'}, 'attr': 'debug', 'ctx': 'Load'}, 'args': [{'type': 'JoinedStr', 'values': [{'type': 'Constant', 'value': '调用函数load_bars_from_hundsun，参数为：stocks='  ***SAME-DICT-AS-#2***
+   region=TernaryRegion cond=? merge=? ctx=fstring vt=__fstring_target__ blocks=['?', '?', '?', '?']
+   stack=_build_store_statement:49025 <- _build_class_def:2991 <- generate:1301 <- _generate_block_statements:43625 <- _generate_block_statements_body:47067 <- _build_store_statement:49004 <- _build_function_def:2074 <- generate:1754 <- _generate_region:3184 <- _generate_if:11630 <- _if_generate_normal:17577 <- _generate_chain_head_prefix_assign:16998
+
+=== product lines with mark ===
+383|         self.log.quote.debug(f'调用函数load_bars_from_hundsun，参数为：stocks=stocksNone{10!s}等{len(stocks) if isinstance(stocks, list) else 1!s}只代码,typet={typet!s},start={start!s},end={end!s}')
+387|         self.log.quote.debug(f'调用函数load_bars_from_hundsun，参数为：stocks=stocksNone{10!s}等{len(stocks) if isinstance(stocks, list) else 1!s}只代码,typet={typet!s},start={start!s},end={end!s}')
+
+=== duplicate AST dict ids: 2 of 4 ===

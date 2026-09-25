@@ -1,0 +1,11 @@
+--- DECOMP get_cache_l2_data ---
+     56 POP_TOP                        
+     58 JUMP_FORWARD                   to 92
+     60 LOAD_GLOBAL                    NULL + int
+     72 LOAD_FAST                      data_count
+     74 PRECALL                        
+     78 CALL                           
+     88 POP_TOP                        
+     90 JUMP_FORWARD                   to 94
+     92 NOP                            
+     94 LOAD_GLOBAL                    NULL + isinstance

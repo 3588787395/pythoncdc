@@ -1,0 +1,5 @@
+
+total chain_head calls=0 ; marker-emitting=0 ; fstring-owner=0
+
+product marker lines:
+383|         self.log.quote.debug(f'调用函数load_bars_from_hundsun，参数为：stocks=stocksNone{10!s}等{len(stocks) if isinstance(stocks,

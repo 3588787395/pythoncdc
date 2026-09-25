@@ -1,0 +1,42 @@
+# trade_live_broker.pyc :: _trade_status_handle   orig=130 decomp=126  substantive-hunks=3
+HUNK delete   orig[7:17]@44(10) decomp[7:7]@42(0)
+   .    28 PRECALL                      
+   .    32 CALL                         
+   .    42 POP_TOP                      
+        44 NOP                          
+        46 LOAD_GLOBAL                  NULL + get_trade_status
+        58 LOAD_FAST                    self
+        60 LOAD_ATTR                    trade_id
+        70 LOAD_CONST                   True
+        72 KW_NAMES                     
+        74 PRECALL                      
+        78 CALL                         
+        88 LOAD_FAST                    self
+        90 STORE_ATTR                   trade_info
+   .   100 LOAD_FAST                    self
+   .   102 LOAD_ATTR                    trade_info
+   .   112 LOAD_CONST                   2
+HUNK insert   orig[122:122]@828(0) decomp[112:118]@774(6)
+   .   758 PRECALL                      
+   .   762 CALL                         
+   .   772 POP_TOP                      
+       774 LOAD_FAST                    self
+       776 LOAD_ATTR                    trade_status
+       786 LOAD_FAST                    trade_status
+       788 COMPARE_OP                   !=
+       794 EXTENDED_ARG                 
+       796 POP_JUMP_BACKWARD_IF_TRUE    to 94
+   .   798 LOAD_GLOBAL                  NULL + time
+   .   810 LOAD_ATTR                    sleep
+   .   820 LOAD_CONST                   0.5
+HUNK replace  orig[128:130]@870(2) decomp[124:126]@838(2)
+   .   854 PRECALL                      
+   .   858 CALL                         
+   .   868 POP_TOP                      
+       870 EXTENDED_ARG                 
+       872 JUMP_BACKWARD                to 46
+   .   822 PRECALL                      
+   .   826 CALL                         
+   .   836 POP_TOP                      
+       838 LOAD_CONST                   None
+       840 RETURN_VALUE                 

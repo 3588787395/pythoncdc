@@ -7216,6 +7216,31 @@ AST 映射规则:
                     _pre_stmts.append(_stmt)
                 _buf = []
                 continue
+            # [R66-diag6-A for-iter-delete-terminator]
+            # 识别条件：for_iter_setup 块（含 GET_ITER 的直线块）的「前置语句段」中，
+            #   DELETE_SUBSCR / DELETE_ATTR 是一条已归约语句的终止指令：它弹出自己的
+            #   操作数、不产出栈值，因此与本轮终止符集合里已有的 STORE_* /
+            #   STORE_SUBSCR / STORE_ATTR / POP_TOP 处于同一层次、同一粒度（同块直线
+            #   指令流内的语句边界），非跨块、非跨层次判据。
+            #   同层次结构同一性佐证：_loop_extract_self_loop_stmts 与
+            #   _generate_stmts_from_instrs 对同一「直线块语句流」已各有一份 DELETE
+            #   终止符；本方法（for_iter_setup 版）缺该终止符，故 DELETE 前驱 LOAD 段
+            #   留在缓冲区并被下一条 STORE 归并吞掉（get_kline_... 的 `del x[0]`）。
+            # 归约方式：buf+[DELETE_*] 交 _build_delete_stmt 归约为一条语句；归约成功
+            #   才清空缓冲（该段指令已整条归属此语句，不再参与下一条语句的值重建）；
+            #   归约失败则原样保留缓冲，行为与改前逐字相同（无新增抑制路径）。
+            # AST 映射：Delete(targets=[Subscript(ctx='Del') | Attribute(ctx='Del')])，
+            #   即 `del c[k]` / `del o.a`，与 _build_delete_stmt 既有映射一致。
+            if _instr.opname in ('DELETE_SUBSCR', 'DELETE_ATTR'):
+                _buf.append(_instr)
+                _del_stmts = self._build_delete_stmt(_instr, _buf)
+                if _del_stmts:
+                    if isinstance(_del_stmts, list):
+                        _pre_stmts.extend(_del_stmts)
+                    else:
+                        _pre_stmts.append(_del_stmts)
+                    _buf = []
+                continue
             # POP_TOP 作为 CALL 表达式语句的终结符
             # （如 `DataFrame_temp.update(...)`）。当 _buf 中含 CALL 时，POP_TOP
             # 标志一个独立表达式语句，必须构建为 Expr 语句，否则会被推入
@@ -16848,6 +16873,49 @@ AST 映射规则:
                 if _ti.opname.startswith(('JUMP', 'POP_JUMP')):
                     continue
                 return False
+        # [R66-diag1 E1 单测试空臂不得吞并 if/else 之后的汇合块]
+        # 识别条件：三条都只读**本区域自身的字段**，且第 (2) 条复用上面刚用过的那条
+        #   同层过滤器（`_noise_ops` ∪ `JUMP*`/`POP_JUMP*` ⇒ 该臂不含语句），不新建谓词：
+        #   (1) 能走到此处 ⇒ then 臂已被判为无语句；
+        #   (2) 把同一条过滤器原样作用到本区域自己的 `region.else_blocks`，结论是 else 臂
+        #       **含**有效语句 ⇒ 本区域是源码级真 if/else（而非 else 缺失的单臂形状，
+        #       也而非假出口落在纯清理块的人造双臂）；
+        #   (3) `region.chained_compare_blocks` 为空 ⇒ 条件是单一测试，本区域不存在
+        #       「比较链假出口跨过真身」的旋转布局，即 W15-C 立论的那条布局不成立。
+        #   (2)∧(3) 合取时唯一可能的源码形状是 `if cond: pass` `else: <含语句的臂>`：
+        #     CPython 3.11 把非空 then 体物理排在「条件测试」与「else 体」之间，故单一
+        #     POP_JUMP 测试 + 空 then 臂 + 非空 else 臂只可能来自源码写了 pass。实测
+        #     3.11.7：`pass` 发射 0 条指令，空臂只剩一条打上 pass 行号的
+        #     JUMP_FORWARD→汇合点。此时 merge_block 是 if/else **之后**的顺序续接点，
+        #     归父区域语句序列所有，不是空臂的真身（真身被吞 ⇒ 后继语句重复发射一次）。
+        #   反例（必须保留 W15-C，实测读数见 FACTS 全 402 表）：chained_compare_blocks
+        #   非空的比较链旋转臂——slippage::create_new_price cc=[96]、check_strategy
+        #   cc=[820]/[1180]、strategy::tick_worker_thread cc=[552]/[1022]（else 臂含语句
+        #   但 cc 非空，第 (3) 条把它挡在门外）、scheduler cc=[1366]；else 臂为空的单臂
+        #   if（handlers::perform_rollover else=[]）由第 (2) 条挡住；
+        #   repro_r63b2_tail_cmp_return::case_elif_try_tail_return cc=[1266] 亦保留。
+        # 归约方式：返回 False ⇒ 调用方（同文件 _if_generate_normal 的 W15-C 拼接，
+        #   L17916）不再执行 `_merge_then_stmts` 并入，也不再对 merge_block 做
+        #   discard/add 的二次认领；then 体保留 _if_generate_then_branch 已产出的合成
+        #   `{'type': 'Pass'}`，merge_block 回到父序列按既有次序发射一次。只收紧一条
+        #   既有判据的成立条件：不改发射次序、不新增区域/帧内状态、不抑制任何语句发射。
+        # AST 映射：IfRegion(then_blocks 全为跳转/连接件 ∧ else_blocks 含有效语句 ∧
+        #   chained_compare_blocks 为空 ∧ merge_block ∉ then_blocks∪else_blocks) ⇒
+        #   ast.If(body=[ast.Pass], orelse=[else 臂语句])；merge_block 的语句节点是与该
+        #   ast.If **同层**的后继兄弟节点，而不是 ast.If.body 的子节点。
+        _r66e1_else_has_stmt = False
+        for _r66e1_eb in (region.else_blocks or []):
+            for _r66e1_ei in _r66e1_eb.instructions:
+                if _r66e1_ei.opname in _noise_ops:
+                    continue
+                if _r66e1_ei.opname.startswith(('JUMP', 'POP_JUMP')):
+                    continue
+                _r66e1_else_has_stmt = True
+                break
+            if _r66e1_else_has_stmt:
+                break
+        if _r66e1_else_has_stmt and not (getattr(region, 'chained_compare_blocks', None) or []):
+            return False
         # 区域归约算法原则 3（嵌套即抽象节点）+ 原则 2（每块唯一归属）：
         # 当本 IfRegion 的 merge_block 同时是祖先 IfRegion 的 merge_block 时，
         # 它是共享汇合点（then 和 else 在祖先层级都到达此块），不是真臂专属。
@@ -16983,6 +17051,25 @@ AST 映射规则:
                     or id(_r) in self._generating_regions):
                 continue
             if isinstance(_r, BoolOpRegion) and not _r.value_target:
+                continue
+            # [R66-d2 P4] 链首前缀赋值的同层唯一归属守卫（重复发射消除）。
+            # 识别条件: 候选表达式区域自身的 blocks 已全部登记在
+            #   self.generated_blocks，即该区域的指令流在本次调用之前已由语句
+            #   walk 认领并发射完毕（实测 quote.load_bars_from_hundsun 的
+            #   merge_ctx=='fstring' 三元区：序言处 _generate_region 已生成它
+            #   并标记其 4 个块，本方法被调用时的快照为 mask=GGGG、
+            #   id(region) 尚未进入 _generated_regions）。
+            # 归约方式: 与同一循环里既有的 `id(_r) in self._generated_regions
+            #   / self._generating_regions`「已生成或生成中即不再认领」守卫同
+            #   级同性质，只读区域自身状态；不引入名字/偏移/阈值判据，不做跨
+            #   区域跨层次包含，也不抑制任何区域的正常发射（首次发射路径不经
+            #   本方法）。
+            # AST 映射: 不新增映射。合法链首前缀赋值（`first = lo <= x <= hi;`）
+            #   的链首块此刻尚未被所属 IfRegion 认领（其 generated_blocks.add
+            #   发生在 pre_stmts 生成之后的 _disc_ok 收尾里），故其
+            #   all-blocks-generated 恒为 False，守卫只在重复认领时生效。
+            if _r.blocks and all(_gb in self.generated_blocks
+                                 for _gb in _r.blocks):
                 continue
             _owner = _r
             break
@@ -26553,6 +26640,58 @@ AST 映射规则:
                     self.generated_offsets.add(_r65_b.start_offset)
                     self._generated_regions.add(id(_r65_r))
                     break
+
+            # [R66-diag5-B try-tail-unprotected-else]
+            # 识别条件（同层次结构身份：只用本 region 自身的异常表字段与该块
+            #   自身的指令，无函数名/文件名/偏移阈值特判，无跨区域跨层次认领）：
+            #   (1) region 为 TryExceptRegion 且 try_offset_end <
+            #       min(handler_entry_blocks) —— 本 try 的保护跨度在体尾提前
+            #       收尾，handler 仍在它之后；本 try 无 finalbody、无已登记
+            #       orelse、try_offset_end 处不是 analyzer 已认领的 else_blocks；
+            #   (2) CFG 中起点恰为 try_offset_end 的块 B 通过 analyzer 既有判据
+            #       _w11_unprotected_else_candidate：B 不被本 try 保护、以
+            #       JUMP_FORWARD 终结、不含异常框架指令，且本 try 至少一个
+            #       handler 块以同一 JUMP_FORWARD 目标正常退出（异常路径与
+            #       正常路径在同一 merge 汇合）——该目标在 try ∪ handlers 之后；
+            #   (3) B 尚未生成，也不在本 region 的 post-try 队列里。
+            # 机制（CPython 3.11 实测发射形状，dis._parse_exception_table 可验）：
+            #   try/except/else 的 else 体发射在保护跨度终点与首个 handler 入口
+            #   之间，末尾一个 JUMP_FORWARD 跳过整个 handler 区间。当该 try 又
+            #   嵌在外层 try 的保护跨度内时，else 块被外层区域唯一归属，
+            #   _find_try_else_blocks 只遍历本区域 blocks 因而看不到它，外层
+            #   顺序发射器把它当成 try 语句之后的兄弟语句排在 handler 之后
+            #   （IQEngine/utils/scheduler.get_checked_time：106/106、
+            #   jumpdiff=0、truediff=43 的纯换位）。
+            # 归约方式：把 B 的语句作为本抽象节点的 else 子结构并入其 ast.Try
+            #   的 orelse，并按原则 2（每块唯一归属）登记 B 已生成，令外层兄弟
+            #   序列随后自然不再发射它；区域边界与父子关系不变。
+            # AST 映射：B → ast.Try(body, handlers, orelse=stmts(B)) 的 else 分支
+            #   （与既有 else_blocks→Try.orelse 映射同一目标节点，只是识别域从
+            #   「本区域块」补全为「保护跨度终点处的那一个块」）。
+            _r66_tail_off = getattr(region, 'try_offset_end', None)
+            _r66_hdl_offs = [b.start_offset for b in
+                             (getattr(region, 'handler_entry_blocks', None) or [])
+                             if b is not None]
+            _r66_else_offs = [b.start_offset for b in
+                              (getattr(region, 'else_blocks', None) or [])
+                              if b is not None]
+            if (isinstance(try_ast, dict) and try_ast.get('type') == 'Try'
+                    and try_ast.get('handlers')
+                    and not try_ast.get('orelse') and not try_ast.get('finalbody')
+                    and _r66_tail_off is not None and _r66_hdl_offs
+                    and _r66_tail_off < min(_r66_hdl_offs)
+                    and _r66_tail_off not in _r66_else_offs):
+                _r66_b = self.cfg.get_block_by_offset(_r66_tail_off)
+                if (_r66_b is not None and _r66_b.start_offset == _r66_tail_off
+                        and _r66_b not in self.generated_blocks
+                        and _r66_b not in _post_try_blocks_r19n2
+                        and self.region_analyzer._w11_unprotected_else_candidate(
+                            region, _r66_b)):
+                    _r66_estmts = self._generate_block_statements(_r66_b)
+                    if _r66_estmts:
+                        try_ast['orelse'] = _r66_estmts
+                        self.generated_blocks.add(_r66_b)
+                        self.generated_offsets.add(_r66_b.start_offset)
 
             if _post_try_stmts_r19n2:
                 if isinstance(try_ast, list):
@@ -36177,6 +36316,44 @@ AST 映射规则:
                         elif pi.opname == 'LOAD_CONST':
                             _stack.append({'type': 'Constant', 'value': pi.argval})
                     fstring_parts = _stack
+                    # [R66-d2 P3] 前缀以 FORMAT_VALUE 为右界逐段归约（C1b 同族判据）。
+                    # 识别条件: cond_block 前缀里以 FORMAT_VALUE 收尾的一段是一个
+                    #   完整插值组——段顶操作数被该 FORMAT_VALUE 消费、段底其余项
+                    #   全为字面量 Constant（判据即既有 _fstring_parts_from_segment
+                    #   的单趟栈模拟，与 [R65-d3 C1b] 在 merge 尾段所用者同层次同族）；
+                    #   不引入函数名/文件名/偏移/阈值条件，也不跨区域跨层次包含。
+                    # 归约方式: 完整段整体归约为 字面量 Constant + 单个 FormattedValue
+                    #   （段内 LOAD_FAST/LOAD_CONST/BUILD_SLICE/BINARY_SUBSCR/
+                    #   PRECALL+CALL 等自包含求值序列由表达式重建器折叠成一个操作数
+                    #   节点）；结尾不完整段仍走上方改前的逐条 LOAD_* 扫描；任一段
+                    #   解释不了（返回 None）即整条前缀退回改前结果，无新增逃逸口。
+                    # AST 映射: JoinedStr.values = [Constant | FormattedValue(<完整
+                    #   表达式>)]，插值表达式的多条 LOAD_* 不再被拆成多个假字面量。
+                    if cond_val_start is not None and cond_val_start > 0:
+                        _p3_parts = []
+                        _p3_seg = []
+                        _p3_ok = True
+                        for _p3_pi in cond_block_instrs[
+                                _r65_callee_skip:cond_val_start]:
+                            if _p3_pi.opname != 'FORMAT_VALUE':
+                                _p3_seg.append(_p3_pi)
+                                continue
+                            _p3_parsed = self._fstring_parts_from_segment(
+                                _p3_seg, _p3_pi)
+                            if _p3_parsed is None:
+                                _p3_ok = False
+                                break
+                            _p3_parts.extend(_p3_parsed)
+                            _p3_seg = []
+                        if _p3_ok and _p3_parts:
+                            _p3_tail = []
+                            for _p3_ti in _p3_seg:
+                                if _p3_ti.opname.startswith('LOAD_'):
+                                    _p3_te = self.expr_reconstructor.reconstruct(
+                                        [_p3_ti])
+                                    if _p3_te:
+                                        _p3_tail.append(_p3_te)
+                            fstring_parts = _p3_parts + _p3_tail
                 # ternary是最后一个FormattedValue（merge_block的FORMAT_VALUE格式化它）
                 _r65_chain_part = {
                     'type': 'FormattedValue',
@@ -41453,6 +41630,23 @@ AST 映射规则:
                         break
                 if _expr['type'] == 'Attribute':
                     return _expr
+                # [R66-d2 P1] 裸名跨块待定被调对象与属性链 callee 同层。
+                # 识别条件: 前缀里以「空对象标记」形态出现的 callee —— 3.11 把
+                #   NULL 标记编码进 LOAD_GLOBAL 操作数低位（dis 显示
+                #   `NULL + name`，无独立 PUSH_NULL 指令），其后既无 LOAD_ATTR
+                #   也无 LOAD_METHOD 属性链（如 `print(f"...")`、`len(f"...")`
+                #   这类单实参裸名调用）。与上方 LOAD_METHOD 分支、
+                #   [R63 Fix2a] Attribute 分支同层次：同一条「本块内未被 CALL
+                #   消费的 callee 压栈」判据，仅补上属性链长度为 0 的退化形状，
+                #   不含函数名/文件名/偏移/阈值条件。
+                # 归约方式: callee 归约为单个 Name 节点（ctx='Load'），不再因
+                #   属性链为空而整体判为「无待定被调对象」。
+                # AST 映射: Call(func=<Name>, args=[JoinedStr]) 的 func 槽位；
+                #   并令 [R65-d3 C1a]（前缀 callee 剔除）与 C1c（f-string 语句
+                #   包裹）在裸名调用上生效——JoinedStr.values 不再混入 callee 名
+                #   渲染出的假字面量，语句也不再被降级为 return。
+                if _expr['type'] == 'Name' and _expr.get('id'):
+                    return _expr
         return None
 
     def _try_wrap_fstring_pending_call(self, region, innermost_merge, joined_str):
@@ -44367,6 +44561,29 @@ AST 映射规则:
                             _eff_expr_instrs = []
                             continue
                         if _instr.opname == 'STORE_SUBSCR' and len(_eff_expr_instrs) >= MIN_INSTRS_FOR_SUBSCR_ASSIGN:
+                            # [R66-diag4 D1 augsub-continue-role] CONTINUE 角色块的增强下标赋值重建。
+                            # 识别条件：栈上表达式串含 in-place BINARY_OP(arg>=13) 且其后至少一条 SWAP，
+                            #   且含 COPY(arg>=2) 目标复制 —— 即 CPython 3.11 `c[k] op= v` 的读回协议
+                            #   `LOAD c, LOAD k, COPY, COPY, BINARY_SUBSCR, <v>, BINARY_OP(自增), SWAP, SWAP,
+                            #   STORE_SUBSCR`；与 _build_effective_stmts 里 [R102 fix] 的判据同一层次
+                            #   （块内语句切分器）、同一结构身份（栈协议特征，不含名字/偏移/阈值）。
+                            # 归约方式：把整串连同本条 STORE_SUBSCR 委托给同层次语句构造器
+                            #   _build_subscript_assign 做栈模拟重建；返回 None 时原样落回下方既有的
+                            #   _split_subscr_operands 切分路径（零退化）。
+                            # AST 映射：AugAssign(target=Subscript(value=容器, slice=键), op=自增运算符,
+                            #   value=右值)；未命中/委托失败仍是 Assign(targets=[Subscript], value=…)。
+                            _r66d4_aug = any(
+                                _r66d4_i.opname == 'BINARY_OP' and _r66d4_i.arg is not None and _r66d4_i.arg >= 13
+                                and any(_r66d4_s.opname == 'SWAP'
+                                            for _r66d4_s in _eff_expr_instrs[_r66d4_e + 1:])
+                                for _r66d4_e, _r66d4_i in enumerate(_eff_expr_instrs))
+                            if _r66d4_aug and any(_r66d4_c.opname == 'COPY' and _r66d4_c.arg is not None
+                                                 and _r66d4_c.arg >= 2 for _r66d4_c in _eff_expr_instrs):
+                                _r66d4_stmt = self._build_subscript_assign(_eff_expr_instrs + [_instr])
+                                if _r66d4_stmt is not None:
+                                    _eff_stmts.append(_r66d4_stmt)
+                                    _eff_expr_instrs = []
+                                    continue
                             # 栈效应切分支持多指令容器（data.loc = LOAD+LOAD_ATTR）。
                             _split = self._split_subscr_operands(_eff_expr_instrs)
                             if _split is not None:

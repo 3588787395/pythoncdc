@@ -1,0 +1,18 @@
+== TryRegion entry@12 try_span=(10,28) handlers=[30] blocks=[10, 12, 28, 30, 38, 42]
+   try_blocks=[12]
+   handler_blocks=[]
+   else_blocks=[28] orelse=[]
+   except_handlers=[(None, None, [30, 38])]
+   has_finally=False finally=[]
+   _find_try_else_blocks -> [28]
+   block@try_offset_end = 28  in_region_blocks=True w11=True
+   parent=IfRegion@0 children=[]
+== TryRegion entry@100 try_span=(98,116) handlers=[118] blocks=[98, 100, 116, 118, 126, 130]
+   try_blocks=[100]
+   handler_blocks=[]
+   else_blocks=[116] orelse=[]
+   except_handlers=[(None, None, [118, 126])]
+   has_finally=False finally=[]
+   _find_try_else_blocks -> [116]
+   block@try_offset_end = 116  in_region_blocks=True w11=True
+   parent=IfRegion@86 children=[]

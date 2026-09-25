@@ -1,0 +1,10 @@
+_do_request: regions=33 TernaryRegion=8
+  Ternary@2056  merge_block=2154 merge_context='str' func_call_info=False
+  Ternary@2014  merge_block=2032 merge_context='NoneType' func_call_info=False
+  Ternary@1992  merge_block=2010 merge_context='NoneType' func_call_info=False
+  Ternary@1770  merge_block=1798 merge_context='NoneType' func_call_info=False
+  Ternary@1310  merge_block=1354 merge_context='NoneType' func_call_info=False
+  Ternary@1254  merge_block=1284 merge_context='NoneType' func_call_info=False
+  Ternary@296   merge_block=314 merge_context='NoneType' func_call_info=False
+  Ternary@280   merge_block=292 merge_context='NoneType' func_call_info=False
+  merge_context is None: 7

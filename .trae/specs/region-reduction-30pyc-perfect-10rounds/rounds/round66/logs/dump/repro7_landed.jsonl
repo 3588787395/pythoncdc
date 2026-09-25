@@ -1,0 +1,7 @@
+{"path": "D:/Temp/opencode/r66gate/diag1/synth/r66_empty_then_join.pyc", "arm": "landed", "sha": "afdc9da76d428afb", "total_functions": 3, "matched_functions": 2, "mism": [["j1", 17, 16, 1, 12]]}
+{"path": "D:/Temp/opencode/r66gate/diag4/synth/r66d4_augsub.pyc", "arm": "landed", "sha": "43d24de17b4c1ecc", "total_functions": 2, "matched_functions": 1, "mism": [["probe", 94, 78, 2, 62]]}
+{"path": "D:/Temp/opencode/r66gate/diag5/synth/r66_else.pyc", "arm": "landed", "sha": "c71645d3f1a8bfa0", "total_functions": 3, "matched_functions": 2, "mism": [["wrapped", 43, 43, 0, 17]]}
+{"path": "D:/Temp/opencode/r66gate/diag6/synth/r66_delrepro.pyc", "arm": "landed", "sha": "21b75c993caea2e0", "total_functions": 3, "matched_functions": 1, "mism": [["p_a", 36, 33, 0, 27], ["p_b", 16, 14, 0, 15]]}
+{"path": "D:/Temp/opencode/r66gate/diag3/synth/r66d3_shared_store.pyc", "arm": "landed", "sha": "7018fd9fb50e7650", "total_functions": 3, "matched_functions": 2, "mism": [["p1", 33, 31, 2, 15]]}
+{"path": "D:/Temp/opencode/r66gate/diag3/synth/r66d3_var.pyc", "arm": "landed", "sha": "73c711f5e5caf770", "total_functions": 6, "matched_functions": 3, "mism": [["v2", 27, 21, 0, 7], ["v3", 29, 27, 2, 15], ["v5", 30, 28, 2, 11]]}
+{"path": "D:/Temp/opencode/r66gate/diag3/synth/r66d3_pred.pyc", "arm": "landed", "sha": "7422f4c38e258007", "total_functions": 3, "matched_functions": 1, "mism": [["v6", 36, 34, 2, 16], ["v7", 25, 21, 0, 5]]}

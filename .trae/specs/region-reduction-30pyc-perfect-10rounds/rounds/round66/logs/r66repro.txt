@@ -1,0 +1,4 @@
+D:/Temp/opencode/r66gate/diag1/synth/r66_empty_then_join.pyc
+D:/Temp/opencode/r66gate/diag4/synth/r66d4_augsub.pyc
+D:/Temp/opencode/r66gate/diag5/synth/r66_else.pyc
+D:/Temp/opencode/r66gate/diag6/synth/r66_delrepro.pyc

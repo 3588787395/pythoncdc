@@ -1,0 +1,16 @@
+CFG get_kline_time_by_frequency_array: 11 blocks, 11 regions
+TOP REGIONS (1):
+  IfRegion@0 blocks=[0, 374, 572, 686, 896, 950, 952, 1070, 1294, 1334] then_blocks=[374] else_blocks=[572, 686, 896, 950, 952, 1070, 1294, 1334] children=['Region@0', 'Region@374', 'IfRegion@572', 'LoopRegion@1294']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 374, 572, 686, 896, 950, 952, 1070, 1294, 1334] then_blocks=[374] else_blocks=[572, 686, 896, 950, 952, 1070, 1294, 1334] children=['Region@0', 'Region@374', 'IfRegion@572', 'LoopRegion@1294']
+  Region@0 blocks=[0] children=[]
+  Region@374 blocks=[374] children=[]
+  IfRegion@572 blocks=[572, 686, 896, 950, 952] then_blocks=[686, 896, 950] else_blocks=[952] children=['Region@572', 'IfRegion@686', 'Region@950', 'Region@952']
+  Region@572 blocks=[572] children=[]
+  IfRegion@686 blocks=[686, 896] then_blocks=[896] children=['Region@686', 'Region@896']
+  Region@686 blocks=[686] children=[]
+  Region@896 blocks=[896] children=[]
+  Region@950 blocks=[950] children=[]
+  Region@952 blocks=[952] children=[]
+  LoopRegion@1294 blocks=[1070, 1294, 1296, 1334] else_blocks=[1334] body_blocks=[1294, 1296] children=[]

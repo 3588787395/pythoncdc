@@ -1,0 +1,81 @@
+# fs2.pyc :: v1   orig=13 decomp=11  substantive-hunks=1
+HUNK delete   orig[10:12]@20(2) decomp[10:10]@18(0)
+   .    18 BUILD_STRING                 
+        20 STORE_FAST                   x
+        22 LOAD_FAST                    x
+   .    24 RETURN_VALUE                 
+# fs2.pyc :: v3   orig=16 decomp=11  substantive-hunks=2
+HUNK replace  orig[1:3]@2(2) decomp[1:2]@2(1)
+   .     0 RESUME                       
+         2 LOAD_GLOBAL                  NULL + print
+        14 LOAD_CONST                   'p'
+   .    16 LOAD_FAST                    c
+   .     0 RESUME                       
+         2 LOAD_CONST                   'printp'
+   .     4 LOAD_FAST                    c
+HUNK delete   orig[11:15]@32(4) decomp[10:10]@18(0)
+   .    30 BUILD_STRING                 
+        32 PRECALL                      
+        36 CALL                         
+        46 POP_TOP                      
+        48 LOAD_CONST                   1
+   .    50 RETURN_VALUE                 
+# fs2.pyc :: v6   orig=15 decomp=11  substantive-hunks=1
+HUNK delete   orig[10:14]@20(4) decomp[10:10]@18(0)
+   .    18 BUILD_STRING                 
+        20 LOAD_CONST                   1
+        22 BUILD_LIST                   
+        24 STORE_FAST                   d
+        26 LOAD_FAST                    d
+   .    28 RETURN_VALUE                 
+# fs2.pyc :: v7   orig=25 decomp=25  substantive-hunks=1
+HUNK replace  orig[8:9]@44(1) decomp[8:9]@44(1)
+   .    22 LOAD_METHOD                  debug
+        44 LOAD_CONST                   'p'
+   .    46 LOAD_FAST                    c
+   .    22 LOAD_METHOD                  debug
+        44 LOAD_CONST                   'selfp'
+   .    46 LOAD_FAST                    c
+# fs2.pyc :: v8   orig=34 decomp=24  substantive-hunks=3
+HUNK replace  orig[5:8]@46(3) decomp[5:6]@46(1)
+   .    24 LOAD_METHOD                  debug
+        46 LOAD_CONST                   'A'
+        48 LOAD_FAST                    a
+        50 LOAD_CONST                   None
+   .    52 LOAD_CONST                   1
+   .    24 LOAD_METHOD                  debug
+        46 LOAD_CONST                   'AaNone'
+   .    48 LOAD_CONST                   1
+HUNK delete   orig[9:11]@54(2) decomp[7:7]@48(0)
+   .    52 LOAD_CONST                   1
+        54 BUILD_SLICE                  
+        56 BINARY_SUBSCR                
+   .    66 FORMAT_VALUE                 
+HUNK replace  orig[19:26]@82(7) decomp[15:16]@66(1)
+   .    80 FORMAT_VALUE                 
+        82 LOAD_CONST                   'C'
+        84 LOAD_FAST                    b
+        86 FORMAT_VALUE                 
+        88 LOAD_CONST                   'D'
+        90 LOAD_FAST                    c
+        92 FORMAT_VALUE                 
+        94 LOAD_CONST                   'E'
+   .    96 BUILD_STRING                 
+   .    64 FORMAT_VALUE                 
+        66 LOAD_CONST                   'CDE'
+   .    68 BUILD_STRING                 
+# fsrepro.pyc :: m_b   orig=43 decomp=39  substantive-hunks=2
+HUNK replace  orig[5:8]@46(3) decomp[5:6]@46(1)
+   .    24 LOAD_METHOD                  debug
+        46 LOAD_CONST                   '调用函数get_price，参数为：stocks='
+        48 LOAD_FAST                    security
+        50 LOAD_CONST                   None
+   .    52 LOAD_CONST                   10
+   .    24 LOAD_METHOD                  debug
+        46 LOAD_CONST                   '调用函数get_price，参数为：stocks=securityNone'
+   .    48 LOAD_CONST                   10
+HUNK delete   orig[9:11]@54(2) decomp[7:7]@48(0)
+   .    52 LOAD_CONST                   10
+        54 BUILD_SLICE                  
+        56 BINARY_SUBSCR                
+   .    66 FORMAT_VALUE                 

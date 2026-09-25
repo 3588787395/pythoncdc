@@ -1,0 +1,10 @@
+chain-head prefix-assign calls recorded: 4
+
+quote.pyc                  head=?                  out=['Expr:?.debug', 'Assign:data', 'Assign:retpanel', 'Expr:?.exists']
+        owner TernaryRegion ctx=fstring   cond=?                mask=GGGG   allblk_gen=True  gen_id=True ing_id=False
+r63b3_chainstore_prefix.pyc head=None               out=None
+        ERROR RuntimeError('Failed to load F:/Downloads/pythoncdc-main/test_repros/round63_b3/r63b3_chainstore_prefix.pyc')
+r64d1b_closed_exit_prefix.pyc head=None               out=None
+        ERROR RuntimeError('Failed to load F:/Downloads/pythoncdc-main/test_repros/round64_diag1b/r64d1b_closed_exit_prefix.pyc')
+r65_trytail.pyc            head=None               out=None
+        ERROR RuntimeError('Failed to load F:/Downloads/pythoncdc-main/test_repros/round65_diag2/r65_trytail.pyc')

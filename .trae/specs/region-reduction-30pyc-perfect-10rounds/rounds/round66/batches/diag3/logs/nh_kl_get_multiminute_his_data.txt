@@ -1,0 +1,22 @@
+# klinedata.pyc :: get_multiminute_his_data   orig=535 decomp=536  substantive-hunks=2
+HUNK replace  orig[518:519]@2708(1) decomp[518:520]@2708(2)
+   .  2704 EXTENDED_ARG                 
+   .  2706 JUMP_BACKWARD                to 1468
+      2708 JUMP_FORWARD                 to 2758
+   .  2710 LOAD_GLOBAL                  NULL + get_kline_by_count_new
+   .  2722 LOAD_FAST                    symbols
+   .  2704 EXTENDED_ARG                 
+   .  2706 JUMP_BACKWARD                to 1468
+      2708 LOAD_FAST                    his_data_dict
+      2710 RETURN_VALUE                 
+   .  2712 LOAD_GLOBAL                  NULL + get_kline_by_count_new
+   .  2724 LOAD_FAST                    symbols
+HUNK replace  orig[533:534]@2758(1) decomp[534:535]@2760(1)
+   .  2746 CALL                         
+   .  2756 STORE_FAST                   his_data_dict
+      2758 LOAD_FAST                    his_data_dict
+   .  2760 RETURN_VALUE                 
+   .  2748 CALL                         
+   .  2758 STORE_FAST                   his_data_dict
+      2760 LOAD_CONST                   None
+   .  2762 RETURN_VALUE                 

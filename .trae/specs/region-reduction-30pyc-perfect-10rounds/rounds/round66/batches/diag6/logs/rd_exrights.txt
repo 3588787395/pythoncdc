@@ -1,0 +1,26 @@
+CFG handle_exrights: 33 blocks, 20 regions
+TOP REGIONS (2):
+  IfRegion@0 blocks=[0, 14, 88, 404, 488, 496, 580, 886, 940, 1000, 1024, 1028, 1294, 1336, 1392, 1486, 1540] then_blocks=[14, 88, 404, 488, 496, 580, 886, 940, 1000, 1024, 1028, 1294, 1336, 1392, 1486, 1540] inline_boolop_chains={1414376692496: {'blocks': [BasicBlock(1, offset=0-4, instrs=3), BasicBlock(2, offset=6-12, instrs=4)], 'op': 'and'}} children=['BoolOpRegion@0', 'Region@14', 'IfRegion@88', 'IfRegion@488', 'LoopRegion@886', 'IfRegion@1000', 'LoopRegion@1294']
+  TernaryRegion@64 blocks=[64, 68, 72, 86] children=[]
+
+FULL TREE BY ENTRY:
+  BoolOpRegion@0 blocks=[0, 6] children=[]
+  IfRegion@0 blocks=[0, 14, 88, 404, 488, 496, 580, 886, 940, 1000, 1024, 1028, 1294, 1336, 1392, 1486, 1540] then_blocks=[14, 88, 404, 488, 496, 580, 886, 940, 1000, 1024, 1028, 1294, 1336, 1392, 1486, 1540] inline_boolop_chains={1414376692496: {'blocks': [BasicBlock(1, offset=0-4, instrs=3), BasicBlock(2, offset=6-12, instrs=4)], 'op': 'and'}} children=['BoolOpRegion@0', 'Region@14', 'IfRegion@88', 'IfRegion@488', 'LoopRegion@886', 'IfRegion@1000', 'LoopRegion@1294']
+  Region@14 blocks=[14] children=[]
+  TernaryRegion@64 blocks=[64, 68, 72, 86] children=[]
+  IfRegion@88 blocks=[88, 404] then_blocks=[404] children=['Region@88', 'Region@404']
+  Region@88 blocks=[88] children=[]
+  Region@404 blocks=[404] children=[]
+  IfRegion@488 blocks=[488, 496] then_blocks=[496] children=['Region@488', 'Region@496']
+  Region@488 blocks=[488] children=[]
+  Region@496 blocks=[496] children=[]
+  LoopRegion@886 blocks=[580, 886, 888, 940, 942, 998] body_blocks=[886, 888, 940, 942, 998] children=['LoopRegion@940']
+  LoopRegion@940 blocks=[888, 940, 942] body_blocks=[940, 942] children=[]
+  IfRegion@1000 blocks=[1000, 1024] then_blocks=[1024] children=['Region@1000', 'Region@1024']
+  Region@1000 blocks=[1000] children=[]
+  Region@1024 blocks=[1024] children=[]
+  LoopRegion@1294 blocks=[1028, 1294, 1296, 1336, 1338, 1388, 1392, 1394, 1444, 1482, 1486, 1488, 1538, 1540] else_blocks=[1540] body_blocks=[1294, 1296, 1336, 1338, 1388, 1392, 1394, 1444, 1482, 1486, 1488, 1538] children=['LoopRegion@1336', 'LoopRegion@1392', 'IfRegion@1444']
+  LoopRegion@1336 blocks=[1296, 1336, 1338] body_blocks=[1336, 1338] children=[]
+  LoopRegion@1392 blocks=[1388, 1392, 1394] body_blocks=[1392, 1394] children=[]
+  IfRegion@1444 blocks=[1444, 1482, 1486, 1488] then_blocks=[1482, 1486, 1488] children=['LoopRegion@1486']
+  LoopRegion@1486 blocks=[1482, 1486, 1488] body_blocks=[1486, 1488] children=[]

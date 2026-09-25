@@ -1,0 +1,15 @@
+### _build_store_statement  arg=1070..1154  block=1070
+    region_ast_generator.py:7158 _loop_extract_for_iter_pre_stmts  |  _stmt = self._build_store_statement(_buf, block=block)
+    region_ast_generator.py:4580 _loop_generate_for  |  _fis_pre_stmts, _fis_iter_instrs = self._loop_extract_for_iter_pre_stmts(instrs, for_iter_
+    region_ast_generator.py:4403 _generate_loop  |  result = self._loop_generate_for(region)
+    region_ast_generator.py:3182 _generate_region  |  return self._generate_loop(region, skip_store_targets=skip_store_targets)
+    region_ast_generator.py:15401 _if_generate_else_branch  |  _child_ast_c3 = self._generate_region(_child_c3)
+    region_ast_generator.py:17873 _if_generate_normal  |  else_stmts = self._if_generate_else_branch(region)
+    region_ast_generator.py:11630 _generate_if  |  return self._if_generate_normal(region)
+    region_ast_generator.py:3184 _generate_region  |  return self._generate_if(region)
+    region_ast_generator.py:1754 generate  |  region_ast = self._generate_region(region)
+    region_ast_generator.py:2074 _build_function_def  |  nested_ast = nested_gen.generate()
+    region_ast_generator.py:49004 _build_store_statement  |  func_def = self._build_function_def(func_obj=value)
+    region_ast_generator.py:47067 _generate_block_statements_body  |  store_stmt = self._build_store_statement(stmt_instrs + [instr], block=block)
+    region_ast_generator.py:43625 _generate_block_statements  |  stmts = self._generate_block_statements_body(block, _cjb_parent)
+    -> dict

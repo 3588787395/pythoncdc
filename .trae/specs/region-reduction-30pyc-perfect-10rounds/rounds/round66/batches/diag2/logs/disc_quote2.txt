@@ -1,0 +1,5 @@
+chain-head prefix-assign calls recorded: 1
+
+quote.pyc                    head=?                  out=['Expr:?.debug', 'Assign:data', 'Assign:retpanel', 'Expr:?.exists']
+        PRE TernaryRegion ctx=fstring   cond=?            mask=GGGG   allblk_gen=True  gen_id=False ing_id=False hkey=False
+        POST TernaryRegion ctx=fstring   cond=?            mask=GGGG   allblk_gen=True  gen_id=True  ing_id=False hkey=False

@@ -1,0 +1,300 @@
+=== get_kline_time_by_frequency_array firstlineno=51 args=('frequency', '_query_date', 'bussiness_type', 'NEW_EMPTY_BAR_NP_ARRAY', 'name_array', 'today_date', 'kline_ndarray', 'datetime_list', 'freq_k_minute', 'i') ===
+      0 MAKE_CELL                      _start_time
+      -- line 51: 
+      2 RESUME                         
+      -- line 52: 
+      4 LOAD_GLOBAL                    NULL + np
+     16 LOAD_ATTR                      array
+     26 BUILD_LIST                     
+     28 LOAD_GLOBAL                    NULL + np
+     40 LOAD_ATTR                      dtype
+      -- line 53: 
+     50 LOAD_CONST                     'datetime'
+     52 LOAD_GLOBAL                    np
+     64 LOAD_ATTR                      int64
+     74 BUILD_TUPLE                    
+      -- line 54: 
+     76 LOAD_CONST                     'open'
+     78 LOAD_GLOBAL                    float
+     90 BUILD_TUPLE                    
+      -- line 55: 
+     92 LOAD_CONST                     'close'
+     94 LOAD_GLOBAL                    float
+    106 BUILD_TUPLE                    
+      -- line 56: 
+    108 LOAD_CONST                     'high'
+    110 LOAD_GLOBAL                    float
+    122 BUILD_TUPLE                    
+      -- line 57: 
+    124 LOAD_CONST                     'low'
+    126 LOAD_GLOBAL                    float
+    138 BUILD_TUPLE                    
+      -- line 58: 
+    140 LOAD_CONST                     'volume'
+    142 LOAD_GLOBAL                    float
+    154 BUILD_TUPLE                    
+      -- line 59: 
+    156 LOAD_CONST                     'money'
+    158 LOAD_GLOBAL                    float
+    170 BUILD_TUPLE                    
+      -- line 60: 
+    172 LOAD_CONST                     'is_open'
+    174 LOAD_GLOBAL                    np
+    186 LOAD_ATTR                      int64
+    196 BUILD_TUPLE                    
+      -- line 61: 
+    198 LOAD_CONST                     'preclose'
+    200 LOAD_GLOBAL                    float
+    212 BUILD_TUPLE                    
+      -- line 62: 
+    214 LOAD_CONST                     'high_limit'
+    216 LOAD_GLOBAL                    float
+    228 BUILD_TUPLE                    
+      -- line 63: 
+    230 LOAD_CONST                     'low_limit'
+    232 LOAD_GLOBAL                    float
+    244 BUILD_TUPLE                    
+      -- line 64: 
+    246 LOAD_CONST                     'unlimited'
+    248 LOAD_GLOBAL                    np
+    260 LOAD_ATTR                      int64
+    270 BUILD_TUPLE                    
+      -- line 65: 
+    272 LOAD_CONST                     'price'
+    274 LOAD_GLOBAL                    float
+    286 BUILD_TUPLE                    
+      -- line 52: 
+    288 BUILD_LIST                     
+    290 PRECALL                        
+    294 CALL                           
+    304 KW_NAMES                       
+    306 PRECALL                        
+    310 CALL                           
+    320 STORE_FAST                     NEW_EMPTY_BAR_NP_ARRAY
+      -- line 66: 
+    322 LOAD_GLOBAL                    NULL + copy
+    334 LOAD_ATTR                      deepcopy
+    344 LOAD_FAST                      NEW_EMPTY_BAR_NP_ARRAY
+    346 PRECALL                        
+    350 CALL                           
+    360 STORE_FAST                     name_array
+      -- line 67: 
+    362 LOAD_FAST                      frequency
+    364 LOAD_CONST                     '1d'
+    366 COMPARE_OP                     ==
+    372 POP_JUMP_FORWARD_IF_FALSE      to 572
+      -- line 68: 
+    374 LOAD_FAST                      _query_date
+    376 LOAD_CONST                     10000
+    378 BINARY_OP                      //
+    382 STORE_FAST                     today_date
+      -- line 69: 
+    384 LOAD_GLOBAL                    NULL + np
+    396 LOAD_ATTR                      empty
+    406 LOAD_CONST                     1
+    408 LOAD_FAST                      name_array
+    410 LOAD_ATTR                      dtype
+    420 KW_NAMES                       
+    422 PRECALL                        
+    426 CALL                           
+    436 STORE_FAST                     kline_ndarray
+      -- line 70: 
+    438 LOAD_FAST                      kline_ndarray
+    440 LOAD_METHOD                    fill
+    462 LOAD_GLOBAL                    np
+    474 LOAD_ATTR                      nan
+    484 PRECALL                        
+    488 CALL                           
+    498 POP_TOP                        
+      -- line 71: 
+    500 LOAD_CONST                     0
+    502 LOAD_FAST                      kline_ndarray
+    504 LOAD_CONST                     'is_open'
+    506 STORE_SUBSCR                   
+      -- line 72: 
+    510 LOAD_CONST                     0
+    512 LOAD_FAST                      kline_ndarray
+    514 LOAD_CONST                     'unlimited'
+    516 STORE_SUBSCR                   
+      -- line 73: 
+    520 LOAD_GLOBAL                    NULL + int
+    532 LOAD_FAST                      today_date
+    534 PRECALL                        
+    538 CALL                           
+    548 LOAD_FAST                      kline_ndarray
+    550 LOAD_CONST                     'datetime'
+    552 BINARY_SUBSCR                  
+    562 LOAD_CONST                     0
+    564 STORE_SUBSCR                   
+      -- line 74: 
+    568 LOAD_FAST                      kline_ndarray
+    570 RETURN_VALUE                   
+      -- line 75: 
+    572 LOAD_GLOBAL                    datetime
+    584 LOAD_ATTR                      datetime
+    594 LOAD_METHOD                    strptime
+    616 LOAD_GLOBAL                    NULL + str
+    628 LOAD_FAST                      _query_date
+    630 LOAD_CONST                     10000
+    632 BINARY_OP                      //
+    636 PRECALL                        
+    640 CALL                           
+    650 LOAD_CONST                     '0930'
+    652 BINARY_OP                      +
+    656 LOAD_CONST                     '%Y%m%d%H%M'
+    658 PRECALL                        
+    662 CALL                           
+    672 STORE_DEREF                    _start_time
+      -- line 76: 
+    674 LOAD_FAST                      bussiness_type
+    676 LOAD_CONST                     'HKS'
+    678 COMPARE_OP                     ==
+    684 POP_JUMP_FORWARD_IF_FALSE      to 952
+      -- line 77: 
+    686 LOAD_CLOSURE                   _start_time
+    688 BUILD_TUPLE                    
+    690 LOAD_CONST                     <code object <listcomp> at 0x000001D594E54BB0, file "./fly_docker_py311/IQCommon/util/common_func.py", line 77>
+    692 MAKE_FUNCTION                  closure
+      -- line 78: 
+    694 LOAD_GLOBAL                    NULL + range
+    706 LOAD_CONST                     391
+    708 PRECALL                        
+    712 CALL                           
+      -- line 77: 
+    722 GET_ITER                       
+    724 PRECALL                        
+    728 CALL                           
+    738 STORE_FAST                     datetime_list
+      -- line 79: 
+    740 LOAD_FAST                      datetime_list
+    742 LOAD_CONST                     None
+    744 LOAD_CONST                     None
+    746 LOAD_GLOBAL                    NULL + int
+    758 LOAD_FAST                      frequency
+    760 LOAD_CONST                     None
+    762 LOAD_CONST                     -1
+    764 BUILD_SLICE                    
+    766 BINARY_SUBSCR                  
+    776 PRECALL                        
+    780 CALL                           
+    790 BUILD_SLICE                    
+    792 BINARY_SUBSCR                  
+    802 STORE_FAST                     freq_k_minute
+      -- line 80: 
+    804 LOAD_GLOBAL                    NULL + len
+    816 LOAD_FAST                      datetime_list
+    818 PRECALL                        
+    822 CALL                           
+    832 LOAD_CONST                     1
+    834 BINARY_OP                      -
+    838 LOAD_GLOBAL                    NULL + int
+    850 LOAD_FAST                      frequency
+    852 LOAD_CONST                     None
+    854 LOAD_CONST                     -1
+    856 BUILD_SLICE                    
+    858 BINARY_SUBSCR                  
+    868 PRECALL                        
+    872 CALL                           
+    882 BINARY_OP                      %
+    886 LOAD_CONST                     0
+    888 COMPARE_OP                     !=
+    894 POP_JUMP_FORWARD_IF_FALSE      to 950
+      -- line 81: 
+    896 LOAD_FAST                      freq_k_minute
+    898 LOAD_METHOD                    append
+    920 LOAD_FAST                      datetime_list
+    922 LOAD_CONST                     -1
+    924 BINARY_SUBSCR                  
+    934 PRECALL                        
+    938 CALL                           
+    948 POP_TOP                        
+    950 JUMP_FORWARD                   to 1070
+      -- line 83: 
+    952 LOAD_CLOSURE                   _start_time
+    954 BUILD_TUPLE                    
+    956 LOAD_CONST                     <code object <listcomp> at 0x000001D594E54D20, file "./fly_docker_py311/IQCommon/util/common_func.py", line 83>
+    958 MAKE_FUNCTION                  closure
+      -- line 84: 
+    960 LOAD_GLOBAL                    NULL + range
+    972 LOAD_CONST                     331
+    974 PRECALL                        
+    978 CALL                           
+      -- line 83: 
+    988 GET_ITER                       
+    990 PRECALL                        
+    994 CALL                           
+   1004 STORE_FAST                     datetime_list
+      -- line 85: 
+   1006 LOAD_FAST                      datetime_list
+   1008 LOAD_CONST                     None
+   1010 LOAD_CONST                     None
+   1012 LOAD_GLOBAL                    NULL + int
+   1024 LOAD_FAST                      frequency
+   1026 LOAD_CONST                     None
+   1028 LOAD_CONST                     -1
+   1030 BUILD_SLICE                    
+   1032 BINARY_SUBSCR                  
+   1042 PRECALL                        
+   1046 CALL                           
+   1056 BUILD_SLICE                    
+   1058 BINARY_SUBSCR                  
+   1068 STORE_FAST                     freq_k_minute
+      -- line 86: 
+   1070 LOAD_FAST                      freq_k_minute
+   1072 LOAD_CONST                     0
+   1074 DELETE_SUBSCR                  
+      -- line 87: 
+   1076 LOAD_GLOBAL                    NULL + np
+   1088 LOAD_ATTR                      empty
+   1098 LOAD_GLOBAL                    NULL + len
+   1110 LOAD_FAST                      freq_k_minute
+   1112 PRECALL                        
+   1116 CALL                           
+   1126 LOAD_FAST                      name_array
+   1128 LOAD_ATTR                      dtype
+   1138 KW_NAMES                       
+   1140 PRECALL                        
+   1144 CALL                           
+   1154 STORE_FAST                     kline_ndarray
+      -- line 88: 
+   1156 LOAD_FAST                      kline_ndarray
+   1158 LOAD_METHOD                    fill
+   1180 LOAD_GLOBAL                    np
+   1192 LOAD_ATTR                      nan
+   1202 PRECALL                        
+   1206 CALL                           
+   1216 POP_TOP                        
+      -- line 89: 
+   1218 LOAD_CONST                     0
+   1220 LOAD_FAST                      kline_ndarray
+   1222 LOAD_CONST                     'is_open'
+   1224 STORE_SUBSCR                   
+      -- line 90: 
+   1228 LOAD_CONST                     0
+   1230 LOAD_FAST                      kline_ndarray
+   1232 LOAD_CONST                     'unlimited'
+   1234 STORE_SUBSCR                   
+      -- line 91: 
+   1238 LOAD_GLOBAL                    NULL + range
+   1250 LOAD_GLOBAL                    NULL + len
+   1262 LOAD_FAST                      freq_k_minute
+   1264 PRECALL                        
+   1268 CALL                           
+   1278 PRECALL                        
+   1282 CALL                           
+   1292 GET_ITER                       
+   1294 FOR_ITER                       to 1334
+   1296 STORE_FAST                     i
+      -- line 92: 
+   1298 LOAD_FAST                      freq_k_minute
+   1300 LOAD_FAST                      i
+   1302 BINARY_SUBSCR                  
+   1312 LOAD_FAST                      kline_ndarray
+   1314 LOAD_CONST                     'datetime'
+   1316 BINARY_SUBSCR                  
+   1326 LOAD_FAST                      i
+   1328 STORE_SUBSCR                   
+   1332 JUMP_BACKWARD                  to 1294
+      -- line 93: 
+   1334 LOAD_FAST                      kline_ndarray
+   1336 RETURN_VALUE                   

@@ -1,0 +1,11 @@
+======================================================================
+累计统计:
+  total_pyc:             402
+  verified_pyc:          402
+  ok_pyc:                386
+  partial_pyc:           16
+  failed_pyc:            0
+  total_functions:       5746
+  matched_functions:     5698
+  cumulative_match_rate: 99.16%
+======================================================================

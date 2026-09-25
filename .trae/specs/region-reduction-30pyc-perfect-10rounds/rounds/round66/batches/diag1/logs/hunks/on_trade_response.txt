@@ -1,0 +1,54 @@
+# trade_live_broker.pyc :: on_trade_response   orig=448 decomp=446  substantive-hunks=3
+HUNK delete   orig[327:328]@1766(1) decomp[327:327]@1764(0)
+   .  1760 JUMP_FORWARD                 to 1764
+   .  1762 JUMP_BACKWARD                to 1608
+   .  1764 LOAD_FAST                    match_flag
+      1766 EXTENDED_ARG                 
+   .  1768 POP_JUMP_FORWARD_IF_TRUE     to 2360
+   .  1770 LOAD_GLOBAL                  NULL + system_log
+   .  1782 LOAD_ATTR                    debug
+HUNK insert   orig[376:376]@1992(0) decomp[375:390]@1992(15)
+   .  1986 COPY                         
+   .  1988 POP_EXCEPT                   
+   .  1990 RERAISE                      
+      1992 LOAD_GLOBAL                  NULL + system_log
+      2004 LOAD_ATTR                    debug
+      2014 LOAD_CONST                   '后端服务，宿主机配置为策略不接收非本交易触发的主推%s'
+      2016 LOAD_FAST                    entrust_no
+      2018 BINARY_OP                    %
+      2022 PRECALL                      
+      2026 CALL                         
+      2036 POP_TOP                      
+      2038 LOAD_FAST                    self
+      2040 LOAD_ATTR                    on_trade_response_list
+      2050 LOAD_METHOD                  append
+      2072 LOAD_FAST                    event
+      2074 PRECALL                      
+      2078 CALL                         
+      2088 POP_TOP                      
+   .  2090 LOAD_FAST                    receive_other_response
+   .  2092 LOAD_CONST                   '1'
+   .  2094 COMPARE_OP                   ==
+HUNK delete   orig[420:436]@2260(16) decomp[434:434]@2354(0)
+   .  2244 PRECALL                      
+   .  2248 CALL                         
+   .  2258 POP_TOP                      
+      2260 JUMP_FORWARD                 to 2360
+      2262 LOAD_GLOBAL                  NULL + system_log
+      2274 LOAD_ATTR                    debug
+      2284 LOAD_CONST                   '后端服务，宿主机配置为策略不接收非本交易触发的主推%s'
+      2286 LOAD_FAST                    entrust_no
+      2288 BINARY_OP                    %
+      2292 PRECALL                      
+      2296 CALL                         
+      2306 POP_TOP                      
+      2308 LOAD_FAST                    self
+      2310 LOAD_ATTR                    on_trade_response_list
+      2320 LOAD_METHOD                  append
+      2342 LOAD_FAST                    event
+      2344 PRECALL                      
+      2348 CALL                         
+      2358 POP_TOP                      
+   .  2360 LOAD_GLOBAL                  NULL + len
+   .  2372 LOAD_FAST                    events
+   .  2374 PRECALL                      

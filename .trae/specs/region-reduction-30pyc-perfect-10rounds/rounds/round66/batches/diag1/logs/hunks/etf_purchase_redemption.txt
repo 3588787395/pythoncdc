@@ -1,0 +1,64 @@
+# trade_live_broker.pyc :: etf_purchase_redemption   orig=427 decomp=415  substantive-hunks=5
+HUNK replace  orig[383:387]@2274(4) decomp[383:384]@2274(1)
+   .  2258 PRECALL                      
+   .  2262 CALL                         
+   .  2272 POP_TOP                      
+      2274 LOAD_GLOBAL                  NULL + strategy_log
+      2286 LOAD_ATTR                    info
+      2296 LOAD_GLOBAL                  NULL + _
+      2308 LOAD_CONST                   '生成订单，订单号：'
+   .  2310 LOAD_FAST                    order
+   .  2312 LOAD_ATTR                    order_id
+   .  2322 FORMAT_VALUE                 str
+   .  2258 PRECALL                      
+   .  2262 CALL                         
+   .  2272 POP_TOP                      
+      2274 LOAD_CONST                   'list_info00orderstrresultentrust_noselforderorderselfstrord
+   .  2276 LOAD_FAST                    order
+   .  2278 FORMAT_VALUE                 str
+   .  2280 LOAD_CONST                   ' 代码：'
+HUNK delete   orig[388:389]@2312(1) decomp[385:385]@2276(0)
+   .  2296 LOAD_GLOBAL                  NULL + _
+   .  2308 LOAD_CONST                   '生成订单，订单号：'
+   .  2310 LOAD_FAST                    order
+      2312 LOAD_ATTR                    order_id
+   .  2322 FORMAT_VALUE                 str
+   .  2324 LOAD_CONST                   ' 代码：'
+   .  2326 LOAD_FAST                    order
+HUNK delete   orig[392:393]@2328(1) decomp[388:388]@2282(0)
+   .  2322 FORMAT_VALUE                 str
+   .  2324 LOAD_CONST                   ' 代码：'
+   .  2326 LOAD_FAST                    order
+      2328 LOAD_ATTR                    symbol
+   .  2338 FORMAT_VALUE                 str
+   .  2340 LOAD_CONST                   ' 数量：'
+   .  2342 LOAD_FAST                    order
+HUNK replace  orig[394:395]@2340(1) decomp[389:390]@2286(1)
+   .  2326 LOAD_FAST                    order
+   .  2328 LOAD_ATTR                    symbol
+   .  2338 FORMAT_VALUE                 str
+      2340 LOAD_CONST                   ' 数量：'
+   .  2342 LOAD_FAST                    order
+   .  2344 LOAD_ATTR                    entrust_direction
+   .  2354 LOAD_GLOBAL                  EntrustDirection
+   .  2280 LOAD_CONST                   ' 代码：'
+   .  2282 LOAD_FAST                    order
+   .  2284 FORMAT_VALUE                 str
+      2286 LOAD_CONST                   ' 数量：order'
+   .  2288 LOAD_FAST                    order
+   .  2290 LOAD_ATTR                    entrust_direction
+   .  2300 LOAD_GLOBAL                  EntrustDirection
+HUNK delete   orig[411:418]@2424(7) decomp[406:406]@2368(0)
+   .  2410 CALL                         
+   .  2420 FORMAT_VALUE                 str
+   .  2422 BUILD_STRING                 
+      2424 PRECALL                      
+      2428 CALL                         
+      2438 PRECALL                      
+      2442 CALL                         
+      2452 POP_TOP                      
+      2454 LOAD_FAST                    order
+      2456 LOAD_ATTR                    order_id
+   .  2466 RETURN_VALUE                 
+   .  2468 LOAD_GLOBAL                  NULL + strategy_log
+   .  2480 LOAD_ATTR                    error

@@ -1,0 +1,72 @@
+# order_api.pyc :: option_order   orig=94 decomp=85  substantive-hunks=6
+HUNK delete   orig[39:43]@206(4) decomp[39:39]@204(0)
+   .   194 CALL                         
+   .   204 POP_JUMP_FORWARD_IF_TRUE     to 542
+       206 LOAD_GLOBAL                  NULL + strategy_log
+       218 LOAD_ATTR                    info
+       228 LOAD_CONST                   '生成订单，订单号：{order_id}，合约代码：{symbol}，方向：{side}{oper}，数量：{share
+       230 LOAD_METHOD                  format
+   .   252 LOAD_FAST                    order_
+   .   254 LOAD_ATTR                    order_id
+HUNK replace  orig[44:47]@254(3) decomp[40:50]@208(10)
+   .   230 LOAD_METHOD                  format
+   .   252 LOAD_FAST                    order_
+       254 LOAD_ATTR                    order_id
+       264 LOAD_FAST                    order_
+       266 LOAD_ATTR                    symbol
+   .   276 LOAD_FAST                    order_
+   .   278 LOAD_ATTR                    entrust_direction
+   .   204 POP_JUMP_FORWARD_IF_TRUE     to 274
+   .   206 LOAD_FAST                    order_
+       208 LOAD_ATTR                    entrust_direction
+       218 LOAD_ATTR                    value
+       228 LOAD_METHOD                  upper
+       250 PRECALL                      
+       254 CALL                         
+       264 LOAD_CONST                   'BUY'
+       266 COMPARE_OP                   ==
+       272 POP_JUMP_FORWARD_IF_FALSE    to 276
+       274 JUMP_FORWARD                 to 278
+       276 NOP                          
+   .   278 LOAD_FAST                    order_
+   .   280 LOAD_ATTR                    entrust_direction
+HUNK insert   orig[59:59]@348(0) decomp[62:63]@352(1)
+   .   348 JUMP_FORWARD                 to 352
+   .   350 LOAD_CONST                   '卖出'
+       352 POP_TOP                      
+   .   354 LOAD_FAST                    order_
+   .   356 LOAD_ATTR                    hedge_type
+HUNK replace  orig[60:61]@352(1) decomp[64:65]@356(1)
+   .   348 LOAD_CONST                   '卖出'
+   .   350 LOAD_FAST                    order_
+       352 LOAD_ATTR                    futures_direction
+   .   362 LOAD_ATTR                    value
+   .   372 LOAD_METHOD                  upper
+   .   352 POP_TOP                      
+   .   354 LOAD_FAST                    order_
+       356 LOAD_ATTR                    hedge_type
+   .   366 LOAD_ATTR                    value
+   .   376 LOAD_METHOD                  upper
+HUNK delete   orig[63:73]@394(10) decomp[67:67]@376(0)
+   .   362 LOAD_ATTR                    value
+   .   372 LOAD_METHOD                  upper
+       394 PRECALL                      
+       398 CALL                         
+       408 LOAD_CONST                   'OPEN'
+       410 COMPARE_OP                   ==
+       416 POP_JUMP_FORWARD_IF_FALSE    to 422
+       418 LOAD_CONST                   '开仓'
+       420 JUMP_FORWARD                 to 424
+       422 LOAD_CONST                   '平仓'
+       424 LOAD_FAST                    order_
+       426 LOAD_ATTR                    amount
+   .   436 LOAD_FAST                    order_
+   .   438 LOAD_ATTR                    hedge_type
+HUNK delete   orig[85:88]@510(3) decomp[79:79]@470(0)
+   .   506 JUMP_FORWARD                 to 510
+   .   508 LOAD_CONST                   '备兑类型委托'
+       510 KW_NAMES                     
+       512 PRECALL                      
+       516 CALL                         
+   .   526 PRECALL                      
+   .   530 CALL                         

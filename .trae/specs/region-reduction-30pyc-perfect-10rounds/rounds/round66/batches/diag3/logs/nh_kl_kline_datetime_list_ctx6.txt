@@ -1,0 +1,136 @@
+# klinedata.pyc :: kline_datetime_list   orig=413 decomp=417  substantive-hunks=7
+HUNK insert   orig[133:133]@556(0) decomp[133:134]@558(1)
+   .   544 POP_JUMP_FORWARD_IF_FALSE    to 556
+   .   546 LOAD_FAST                    time_count
+   .   548 LOAD_CONST                   90
+   .   550 BINARY_OP                    -=
+   .   554 STORE_FAST                   time_count
+   .   556 LOAD_FAST                    include
+       558 EXTENDED_ARG                 
+   .   560 POP_JUMP_FORWARD_IF_TRUE     to 1712
+   .   562 LOAD_FAST                    frequency
+   .   564 LOAD_GLOBAL                  Frequency
+   .   576 LOAD_ATTR                    MINUTE
+   .   586 LOAD_ATTR                    value
+   .   596 COMPARE_OP                   ==
+HUNK insert   orig[139:139]@594(0) decomp[140:141]@602(1)
+   .   560 POP_JUMP_FORWARD_IF_TRUE     to 1712
+   .   562 LOAD_FAST                    frequency
+   .   564 LOAD_GLOBAL                  Frequency
+   .   576 LOAD_ATTR                    MINUTE
+   .   586 LOAD_ATTR                    value
+   .   596 COMPARE_OP                   ==
+       602 EXTENDED_ARG                 
+   .   604 POP_JUMP_FORWARD_IF_FALSE    to 1712
+   .   606 LOAD_FAST                    query_date
+   .   608 LOAD_FAST                    am_open_datetime
+   .   610 LOAD_FAST                    pm_open_datetime
+   .   612 BUILD_TUPLE                  
+   .   614 CONTAINS_OP                  
+HUNK insert   orig[145:145]@610(0) decomp[147:148]@616(1)
+   .   604 POP_JUMP_FORWARD_IF_FALSE    to 1712
+   .   606 LOAD_FAST                    query_date
+   .   608 LOAD_FAST                    am_open_datetime
+   .   610 LOAD_FAST                    pm_open_datetime
+   .   612 BUILD_TUPLE                  
+   .   614 CONTAINS_OP                  
+       616 EXTENDED_ARG                 
+   .   618 POP_JUMP_FORWARD_IF_FALSE    to 1712
+   .   620 LOAD_FAST                    pm_open_datetime
+   .   622 LOAD_FAST                    query_date
+   .   624 SWAP                         
+   .   626 COPY                         
+   .   628 COMPARE_OP                   >
+HUNK replace  orig[160:165]@654(5) decomp[163:165]@660(2)
+   .   638 POP_JUMP_FORWARD_IF_TRUE     to 666
+   .   640 JUMP_FORWARD                 to 644
+   .   642 POP_TOP                      
+   .   644 LOAD_FAST                    query_date
+   .   646 LOAD_FAST                    pm_close_datetime
+   .   648 COMPARE_OP                   >
+       654 POP_JUMP_FORWARD_IF_TRUE     to 666
+       656 LOAD_FAST                    time_count
+       658 LOAD_CONST                   1
+       660 BINARY_OP                    -=
+       664 STORE_FAST                   time_count
+   .   666 LOAD_FAST                    am_open_datetime
+   .   668 STORE_FAST                   min_datetime
+   .   670 LOAD_FAST                    frequency
+   .   672 LOAD_GLOBAL                  Frequency
+   .   684 LOAD_ATTR                    MINUTE
+   .   694 LOAD_ATTR                    value
+   .   644 POP_JUMP_FORWARD_IF_TRUE     to 664
+   .   646 JUMP_FORWARD                 to 650
+   .   648 POP_TOP                      
+   .   650 LOAD_FAST                    query_date
+   .   652 LOAD_FAST                    pm_close_datetime
+   .   654 COMPARE_OP                   >
+       660 EXTENDED_ARG                 
+       662 POP_JUMP_FORWARD_IF_FALSE    to 1702
+   .   664 LOAD_FAST                    am_open_datetime
+   .   666 STORE_FAST                   min_datetime
+   .   668 LOAD_FAST                    frequency
+   .   670 LOAD_GLOBAL                  Frequency
+   .   682 LOAD_ATTR                    MINUTE
+   .   692 LOAD_ATTR                    value
+HUNK replace  orig[330:335]@1362(5) decomp[330:331]@1360(1)
+   .  1346 POP_JUMP_FORWARD_IF_TRUE     to 1374
+   .  1348 JUMP_FORWARD                 to 1352
+   .  1350 POP_TOP                      
+   .  1352 LOAD_FAST                    query_date
+   .  1354 LOAD_FAST                    pm_open_datetime
+   .  1356 COMPARE_OP                   >
+      1362 POP_JUMP_FORWARD_IF_TRUE     to 1374
+      1364 LOAD_FAST                    max_len_real_data
+      1366 LOAD_CONST                   1
+      1368 BINARY_OP                    -=
+      1372 STORE_FAST                   max_len_real_data
+   .  1374 LOAD_FAST                    max_len_real_data
+   .  1376 LOAD_FAST                    count
+   .  1378 COMPARE_OP                   >
+   .  1384 POP_JUMP_FORWARD_IF_FALSE    to 1390
+   .  1386 LOAD_FAST                    count
+   .  1388 JUMP_FORWARD                 to 1392
+   .  1344 POP_JUMP_FORWARD_IF_TRUE     to 1362
+   .  1346 JUMP_FORWARD                 to 1350
+   .  1348 POP_TOP                      
+   .  1350 LOAD_FAST                    query_date
+   .  1352 LOAD_FAST                    pm_open_datetime
+   .  1354 COMPARE_OP                   >
+      1360 POP_JUMP_FORWARD_IF_FALSE    to 1382
+   .  1362 LOAD_FAST                    max_len_real_data
+   .  1364 LOAD_FAST                    count
+   .  1366 COMPARE_OP                   >
+   .  1372 POP_JUMP_FORWARD_IF_FALSE    to 1378
+   .  1374 LOAD_FAST                    count
+   .  1376 JUMP_FORWARD                 to 1380
+HUNK insert   orig[342:342]@1390(0) decomp[338:342]@1380(4)
+   .  1364 LOAD_FAST                    count
+   .  1366 COMPARE_OP                   >
+   .  1372 POP_JUMP_FORWARD_IF_FALSE    to 1378
+   .  1374 LOAD_FAST                    count
+   .  1376 JUMP_FORWARD                 to 1380
+   .  1378 LOAD_FAST                    max_len_real_data
+      1380 STORE_FAST                   max_len_real_data
+      1382 LOAD_FAST                    max_len_real_data
+      1384 LOAD_CONST                   1
+      1386 BINARY_OP                    -=
+   .  1390 STORE_FAST                   max_len_real_data
+   .  1392 LOAD_FAST                    max_len_real_data
+   .  1394 LOAD_CONST                   0
+   .  1396 COMPARE_OP                   <
+   .  1402 POP_JUMP_FORWARD_IF_FALSE    to 1408
+   .  1404 LOAD_CONST                   0
+HUNK insert   orig[411:411]@1702(0) decomp[411:415]@1702(4)
+   .  1682 LOAD_FAST                    max_len_real_data
+   .  1684 UNARY_NEGATIVE               
+   .  1686 LOAD_CONST                   None
+   .  1688 BUILD_SLICE                  
+   .  1690 BINARY_SUBSCR                
+   .  1700 STORE_FAST                   df_nan_data
+      1702 LOAD_FAST                    time_count
+      1704 LOAD_CONST                   1
+      1706 BINARY_OP                    -=
+      1710 STORE_FAST                   time_count
+   .  1712 LOAD_FAST                    df_nan_data
+   .  1714 RETURN_VALUE                 

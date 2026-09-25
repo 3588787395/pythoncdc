@@ -1,0 +1,58 @@
+# common_func.pyc :: handle_exrights   orig=304 decomp=297  substantive-hunks=4
+HUNK insert   orig[2:2]@2(0) decomp[2:3]@4(1)
+   .     0 RESUME                       
+   .     2 LOAD_FAST                    tmp_dividends
+         4 EXTENDED_ARG                 
+   .     6 POP_JUMP_FORWARD_IF_FALSE    to 1474
+   .     8 LOAD_FAST                    symbol
+   .    10 LOAD_FAST                    tmp_dividends
+HUNK replace  orig[6:15]@12(9) decomp[7:8]@14(1)
+   .     6 LOAD_FAST                    symbol
+   .     8 LOAD_FAST                    tmp_dividends
+   .    10 CONTAINS_OP                  
+        12 POP_JUMP_FORWARD_IF_TRUE     to 64
+        14 LOAD_GLOBAL                  NULL + len
+        26 LOAD_FAST                    tmp_dividends
+        28 LOAD_FAST                    symbol
+        30 BINARY_SUBSCR                
+        40 PRECALL                      
+        44 CALL                         
+        54 LOAD_CONST                   0
+        56 COMPARE_OP                   ==
+   .    62 POP_JUMP_FORWARD_IF_FALSE    to 88
+   .    64 LOAD_FAST                    fields
+   .    66 POP_JUMP_FORWARD_IF_NOT_NONE to 72
+   .     8 LOAD_FAST                    symbol
+   .    10 LOAD_FAST                    tmp_dividends
+   .    12 CONTAINS_OP                  
+        14 EXTENDED_ARG                 
+   .    16 POP_JUMP_FORWARD_IF_FALSE    to 1474
+   .    18 LOAD_FAST                    tmp_dividends
+   .    20 LOAD_FAST                    symbol
+HUNK delete   orig[16:24]@64(8) decomp[9:9]@16(0)
+   .    54 LOAD_CONST                   0
+   .    56 COMPARE_OP                   ==
+   .    62 POP_JUMP_FORWARD_IF_FALSE    to 88
+        64 LOAD_FAST                    fields
+        66 POP_JUMP_FORWARD_IF_NOT_NONE to 72
+        68 LOAD_FAST                    real_data
+        70 JUMP_FORWARD                 to 86
+        72 LOAD_FAST                    real_data
+        74 LOAD_FAST                    fields
+        76 BINARY_SUBSCR                
+        86 RETURN_VALUE                 
+   .    88 LOAD_FAST                    tmp_dividends
+   .    90 LOAD_FAST                    symbol
+   .    92 BINARY_SUBSCR                
+HUNK insert   orig[304:304]@1542(0) decomp[289:297]@1474(8)
+   .  1468 JUMP_BACKWARD                to 1224
+   .  1470 LOAD_FAST                    real_data_tmp
+   .  1472 RETURN_VALUE                 
+      1474 LOAD_FAST                    fields
+      1476 POP_JUMP_FORWARD_IF_NOT_NONE to 1482
+      1478 LOAD_FAST                    real_data
+      1480 JUMP_FORWARD                 to 1496
+      1482 LOAD_FAST                    real_data
+      1484 LOAD_FAST                    fields
+      1486 BINARY_SUBSCR                
+      1496 RETURN_VALUE                 

@@ -1,0 +1,23 @@
+# trade_live_broker.pyc :: get_max_amount   orig=218 decomp=233  substantive-hunks=1
+HUNK insert   orig[212:212]@1014(0) decomp[212:227]@1016(15)
+   .  1000 PRECALL                      
+   .  1004 CALL                         
+   .  1014 STORE_FAST                   max_amount
+      1016 JUMP_FORWARD                 to 1124
+      1018 LOAD_GLOBAL                  NULL + int
+      1030 LOAD_GLOBAL                  NULL + float
+      1042 LOAD_FAST                    result
+      1044 LOAD_CONST                   0
+      1046 BINARY_SUBSCR                
+      1056 LOAD_METHOD                  get
+      1078 LOAD_CONST                   'enable_buy_amount'
+      1080 PRECALL                      
+      1084 CALL                         
+      1094 PRECALL                      
+      1098 CALL                         
+      1108 PRECALL                      
+      1112 CALL                         
+      1122 STORE_FAST                   max_amount
+   .  1124 LOAD_FAST                    max_amount
+   .  1126 LOAD_FAST                    out_info
+   .  1128 LOAD_FAST                    sid

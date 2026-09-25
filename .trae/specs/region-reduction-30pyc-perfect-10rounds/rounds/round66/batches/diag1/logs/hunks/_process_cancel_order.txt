@@ -1,0 +1,69 @@
+# trade_live_broker.pyc :: _process_cancel_order   orig=344 decomp=344  substantive-hunks=6
+HUNK delete   orig[7:8]@44(1) decomp[7:7]@42(0)
+   .    28 PRECALL                      
+   .    32 CALL                         
+   .    42 POP_TOP                      
+        44 NOP                          
+   .    46 LOAD_GLOBAL                  NULL + len
+   .    58 LOAD_FAST                    self
+   .    60 LOAD_ATTR                    pending_cancel_orders
+HUNK replace  orig[269:270]@1606(1) decomp[268:270]@1604(2)
+   .  1590 PRECALL                      
+   .  1594 CALL                         
+   .  1604 POP_TOP                      
+      1606 JUMP_FORWARD                 to 1826
+   .  1608 LOAD_FAST                    error_dict
+   .  1610 LOAD_METHOD                  get
+   .  1632 LOAD_CONST                   'error_no'
+   .  1588 PRECALL                      
+   .  1592 CALL                         
+   .  1602 POP_TOP                      
+      1604 LOAD_CONST                   None
+      1606 RETURN_VALUE                 
+   .  1608 LOAD_FAST                    error_dict
+   .  1610 LOAD_METHOD                  get
+   .  1632 LOAD_CONST                   'error_no'
+HUNK replace  orig[285:286]@1710(1) decomp[285:286]@1710(1)
+   .  1700 LOAD_CONST                   '7'
+   .  1702 COMPARE_OP                   ==
+   .  1708 POP_JUMP_FORWARD_IF_FALSE    to 1712
+      1710 JUMP_FORWARD                 to 1822
+   .  1712 LOAD_GLOBAL                  NULL + strategy_log
+   .  1724 LOAD_ATTR                    error
+   .  1734 LOAD_GLOBAL                  NULL + _
+   .  1700 LOAD_CONST                   '7'
+   .  1702 COMPARE_OP                   ==
+   .  1708 POP_JUMP_FORWARD_IF_FALSE    to 1712
+      1710 NOP                          
+   .  1712 LOAD_GLOBAL                  NULL + strategy_log
+   .  1724 LOAD_ATTR                    error
+   .  1734 LOAD_GLOBAL                  NULL + _
+HUNK delete   orig[301:303]@1822(2) decomp[301:301]@1820(0)
+   .  1806 PRECALL                      
+   .  1810 CALL                         
+   .  1820 POP_TOP                      
+      1822 EXTENDED_ARG                 
+      1824 JUMP_BACKWARD                to 44
+   .  1826 JUMP_FORWARD                 to 2000
+   .  1828 PUSH_EXC_INFO                
+   .  1830 LOAD_GLOBAL                  BaseException
+HUNK insert   orig[325:325]@1928(0) decomp[323:325]@1926(2)
+   .  1920 COPY                         
+   .  1922 POP_EXCEPT                   
+   .  1924 RERAISE                      
+      1926 EXTENDED_ARG                 
+      1928 JUMP_BACKWARD                to 44
+   .  1930 LOAD_GLOBAL                  NULL + strategy_log
+   .  1942 LOAD_ATTR                    error
+   .  1952 LOAD_GLOBAL                  NULL + _
+HUNK replace  orig[342:344]@2040(2) decomp[342:344]@2040(2)
+   .  2024 PRECALL                      
+   .  2028 CALL                         
+   .  2038 POP_TOP                      
+      2040 EXTENDED_ARG                 
+      2042 JUMP_BACKWARD                to 46
+   .  2024 PRECALL                      
+   .  2028 CALL                         
+   .  2038 POP_TOP                      
+      2040 LOAD_CONST                   None
+      2042 RETURN_VALUE                 

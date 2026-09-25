@@ -1,0 +1,11 @@
+--- ORIG get_cache_l2_data ---
+     56 POP_TOP                        
+     58 JUMP_FORWARD                   to 90
+     60 LOAD_GLOBAL                    NULL + int
+     72 LOAD_FAST                      data_count
+     74 PRECALL                        
+     78 CALL                           
+     88 JUMP_FORWARD                   to 92
+     90 LOAD_CONST                     200
+     92 STORE_FAST                     data_count
+     94 LOAD_GLOBAL                    NULL + isinstance

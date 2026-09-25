@@ -1,0 +1,220 @@
+# trade_live_broker.pyc :: ipo_stocks_order   orig=1206 decomp=1214  substantive-hunks=14
+HUNK delete   orig[530:531]@2810(1) decomp[530:530]@2800(0)
+   .  2784 LOAD_GLOBAL                  list
+   .  2796 PRECALL                      
+   .  2800 CALL                         
+      2810 EXTENDED_ARG                 
+   .  2812 POP_JUMP_FORWARD_IF_TRUE     to 3378
+   .  2814 LOAD_FAST                    submarket_type
+   .  2816 LOAD_CONST                   ('0', '1', '2', '3')
+HUNK insert   orig[551:551]@2882(0) decomp[550:551]@2886(1)
+   .  2876 LOAD_FAST                    submarket_type
+   .  2878 LOAD_CONST                   '0'
+   .  2880 COMPARE_OP                   ==
+      2886 EXTENDED_ARG                 
+   .  2888 POP_JUMP_FORWARD_IF_FALSE    to 6266
+   .  2890 LOAD_FAST                    stock_code
+   .  2892 LOAD_CONST                   None
+HUNK replace  orig[656:657]@3258(1) decomp[656:658]@3258(2)
+   .  3252 POP_TOP                      
+   .  3254 EXTENDED_ARG                 
+   .  3256 JUMP_BACKWARD                to 2380
+      3258 JUMP_FORWARD                 to 3378
+   .  3260 LOAD_FAST                    sub_stock_type
+   .  3262 LOAD_CONST                   'G1'
+   .  3264 COMPARE_OP                   !=
+   .  3252 POP_TOP                      
+   .  3254 EXTENDED_ARG                 
+   .  3256 JUMP_BACKWARD                to 2380
+      3258 EXTENDED_ARG                 
+      3260 JUMP_BACKWARD                to 2380
+   .  3262 LOAD_FAST                    sub_stock_type
+   .  3264 LOAD_CONST                   'G1'
+   .  3266 COMPARE_OP                   !=
+HUNK insert   orig[688:688]@3376(0) decomp[689:691]@3380(2)
+   .  3374 POP_TOP                      
+   .  3376 EXTENDED_ARG                 
+   .  3378 JUMP_BACKWARD                to 2380
+      3380 EXTENDED_ARG                 
+      3382 JUMP_BACKWARD                to 2380
+   .  3384 LOAD_FAST                    new_stock
+   .  3386 LOAD_METHOD                  get
+   .  3408 LOAD_CONST                   'last_price'
+HUNK insert   orig[698:698]@3434(0) decomp[701:702]@3446(1)
+   .  3428 LOAD_ATTR                    account_type
+   .  3438 LOAD_CONST                   'PTRADE_INTERFACE'
+   .  3440 COMPARE_OP                   ==
+      3446 EXTENDED_ARG                 
+   .  3448 POP_JUMP_FORWARD_IF_FALSE    to 6266
+   .  3450 LOAD_FAST                    self
+   .  3452 LOAD_ATTR                    cb_order_flag
+HUNK insert   orig[703:703]@3456(0) decomp[707:708]@3466(1)
+   .  3452 LOAD_ATTR                    cb_order_flag
+   .  3462 LOAD_CONST                   False
+   .  3464 IS_OP                        
+      3466 EXTENDED_ARG                 
+   .  3468 POP_JUMP_FORWARD_IF_FALSE    to 6266
+   .  3470 LOAD_FAST                    self
+   .  3472 LOAD_ATTR                    broker
+HUNK insert   orig[710:710]@3494(0) decomp[715:716]@3510(1)
+   .  3492 LOAD_ATTR                    node_type
+   .  3502 LOAD_CONST                   '8'
+   .  3504 COMPARE_OP                   ==
+      3510 EXTENDED_ARG                 
+   .  3512 POP_JUMP_FORWARD_IF_FALSE    to 6204
+   .  3514 LOAD_FAST                    stock_type
+   .  3516 LOAD_CONST                   'Y'
+HUNK delete   orig[720:735]@3524(15) decomp[726:726]@3534(0)
+   .  3518 BUILD_LIST                   
+   .  3520 BUILD_TUPLE                  
+   .  3522 CONTAINS_OP                  
+      3524 POP_JUMP_FORWARD_IF_FALSE    to 3572
+      3526 LOAD_GLOBAL                  NULL + strategy_log
+      3538 LOAD_ATTR                    error
+      3548 LOAD_CONST                   '账户无可转债交易权限，代码【%s】无法进行新股申购业务'
+      3550 LOAD_FAST                    stock_code
+      3552 BINARY_OP                    %
+      3556 PRECALL                      
+      3560 CALL                         
+      3570 POP_TOP                      
+      3572 EXTENDED_ARG                 
+      3574 JUMP_BACKWARD                to 2380
+      3576 JUMP_FORWARD                 to 3640
+      3578 LOAD_FAST                    sub_stock_type
+      3580 LOAD_CONST                   'G1'
+      3582 COMPARE_OP                   ==
+   .  3588 POP_JUMP_FORWARD_IF_FALSE    to 3640
+   .  3590 LOAD_GLOBAL                  NULL + strategy_log
+   .  3602 LOAD_ATTR                    error
+HUNK replace  orig[797:798]@3938(1) decomp[788:789]@3886(1)
+   .  3932 LOAD_CONST                   0
+   .  3934 STORE_FAST                   enable_amount
+   .  3936 EXTENDED_ARG                 
+      3938 JUMP_FORWARD                 to 5584
+   .  3940 LOAD_FAST                    response
+   .  3942 LOAD_METHOD                  get
+   .  3964 LOAD_CONST                   'enable_amount'
+   .  3880 LOAD_CONST                   0
+   .  3882 STORE_FAST                   enable_amount
+   .  3884 EXTENDED_ARG                 
+      3886 JUMP_BACKWARD                to 2380
+   .  3888 LOAD_FAST                    response
+   .  3890 LOAD_METHOD                  get
+   .  3912 LOAD_CONST                   'enable_amount'
+HUNK replace  orig[806:807]@3986(1) decomp[797:798]@3934(1)
+   .  3972 CALL                         
+   .  3982 STORE_FAST                   enable_amount
+   .  3984 EXTENDED_ARG                 
+      3986 JUMP_FORWARD                 to 5584
+   .  3988 LOAD_FAST                    sub_stock_type
+   .  3990 LOAD_CONST                   'G1'
+   .  3992 COMPARE_OP                   ==
+   .  3920 CALL                         
+   .  3930 STORE_FAST                   enable_amount
+   .  3932 EXTENDED_ARG                 
+      3934 JUMP_BACKWARD                to 2380
+   .  3936 LOAD_FAST                    sub_stock_type
+   .  3938 LOAD_CONST                   'G1'
+   .  3940 COMPARE_OP                   ==
+HUNK insert   orig[810:810]@3992(0) decomp[801:802]@3946(1)
+   .  3936 LOAD_FAST                    sub_stock_type
+   .  3938 LOAD_CONST                   'G1'
+   .  3940 COMPARE_OP                   ==
+      3946 EXTENDED_ARG                 
+   .  3948 POP_JUMP_FORWARD_IF_TRUE     to 6200
+   .  3950 LOAD_FAST                    self
+   .  3952 LOAD_ATTR                    broker
+HUNK delete   orig[971:972]@5058(1) decomp[963:963]@5006(0)
+   .  5042 PRECALL                      
+   .  5046 CALL                         
+   .  5056 STORE_FAST                   enable_amount
+      5058 EXTENDED_ARG                 
+   .  5060 JUMP_FORWARD                 to 5584
+   .  5062 LOAD_GLOBAL                  NULL + min
+   .  5074 LOAD_FAST                    subequity_dict
+HUNK delete   orig[1028:1056]@5476(28) decomp[1019:1019]@5422(0)
+   .  5460 PRECALL                      
+   .  5464 CALL                         
+   .  5474 STORE_FAST                   enable_amount
+      5476 JUMP_FORWARD                 to 5584
+      5478 LOAD_GLOBAL                  NULL + system_log
+      5490 LOAD_ATTR                    debug
+      5500 LOAD_CONST                   '代码：'
+      5502 LOAD_FAST                    stock_code
+      5504 FORMAT_VALUE                 str
+      5506 LOAD_CONST                   '，交易类别：'
+      5508 LOAD_FAST                    exchange_type
+      5510 FORMAT_VALUE                 str
+      5512 LOAD_CONST                   '，柜台类型：'
+      5514 LOAD_FAST                    self
+      5516 LOAD_ATTR                    broker
+      5526 LOAD_ATTR                    trade_account
+      5536 LOAD_ATTR                    node_type
+      5546 FORMAT_VALUE                 str
+      5548 LOAD_CONST                   '，证券类别：'
+      5550 LOAD_FAST                    stock_type
+      5552 FORMAT_VALUE                 str
+      5554 LOAD_CONST                   '，证券子类：'
+      5556 LOAD_FAST                    sub_stock_type
+      5558 FORMAT_VALUE                 str
+      5560 LOAD_CONST                   '，无法执行打新操作'
+      5562 BUILD_STRING                 
+      5564 PRECALL                      
+      5568 CALL                         
+      5578 POP_TOP                      
+      5580 EXTENDED_ARG                 
+      5582 JUMP_BACKWARD                to 2380
+   .  5584 LOAD_FAST                    enable_amount
+   .  5586 LOAD_CONST                   0
+   .  5588 COMPARE_OP                   ==
+HUNK insert   orig[1204:1204]@6252(0) decomp[1167:1212]@6094(45)
+   .  6086 STORE_SUBSCR                 
+   .  6090 EXTENDED_ARG                 
+   .  6092 JUMP_BACKWARD                to 2380
+      6094 LOAD_GLOBAL                  NULL + system_log
+      6106 LOAD_ATTR                    debug
+      6116 LOAD_CONST                   '代码：'
+      6118 LOAD_FAST                    stock_code
+      6120 FORMAT_VALUE                 str
+      6122 LOAD_CONST                   '，交易类别：'
+      6124 LOAD_FAST                    exchange_type
+      6126 FORMAT_VALUE                 str
+      6128 LOAD_CONST                   '，柜台类型：'
+      6130 LOAD_FAST                    self
+      6132 LOAD_ATTR                    broker
+      6142 LOAD_ATTR                    trade_account
+      6152 LOAD_ATTR                    node_type
+      6162 FORMAT_VALUE                 str
+      6164 LOAD_CONST                   '，证券类别：'
+      6166 LOAD_FAST                    stock_type
+      6168 FORMAT_VALUE                 str
+      6170 LOAD_CONST                   '，证券子类：'
+      6172 LOAD_FAST                    sub_stock_type
+      6174 FORMAT_VALUE                 str
+      6176 LOAD_CONST                   '，无法执行打新操作'
+      6178 BUILD_STRING                 
+      6180 PRECALL                      
+      6184 CALL                         
+      6194 POP_TOP                      
+      6196 EXTENDED_ARG                 
+      6198 JUMP_BACKWARD                to 2380
+      6200 EXTENDED_ARG                 
+      6202 JUMP_BACKWARD                to 2380
+      6204 LOAD_FAST                    sub_stock_type
+      6206 LOAD_CONST                   'G1'
+      6208 COMPARE_OP                   ==
+      6214 POP_JUMP_FORWARD_IF_FALSE    to 6266
+      6216 LOAD_GLOBAL                  NULL + strategy_log
+      6228 LOAD_ATTR                    error
+      6238 LOAD_CONST                   '账户无可转债交易权限，代码【%s】无法进行新股申购业务'
+      6240 LOAD_FAST                    stock_code
+      6242 BINARY_OP                    %
+      6246 PRECALL                      
+      6250 CALL                         
+      6260 POP_TOP                      
+      6262 EXTENDED_ARG                 
+      6264 JUMP_BACKWARD                to 2380
+      6266 EXTENDED_ARG                 
+      6268 JUMP_BACKWARD                to 2380
+   .  6270 LOAD_FAST                    out_info
+   .  6272 RETURN_VALUE                 

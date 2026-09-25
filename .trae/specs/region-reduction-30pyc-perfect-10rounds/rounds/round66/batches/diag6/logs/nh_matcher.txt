@@ -1,0 +1,669 @@
+# matcher.pyc :: match   orig=800 decomp=809  substantive-hunks=4
+HUNK insert   orig[168:168]@1064(0) decomp[168:169]@1066(1)
+   .  1052 BINARY_SUBSCR                
+   .  1062 LOAD_CONST                   ('300', '688', '689')
+   .  1064 CONTAINS_OP                  
+      1066 EXTENDED_ARG                 
+   .  1068 POP_JUMP_FORWARD_IF_FALSE    to 3078
+   .  1070 LOAD_FAST                    order
+   .  1072 LOAD_ATTR                    entrust_direction
+HUNK delete   orig[207:519]@1320(312) decomp[208:208]@1320(0)
+   .  1314 POP_JUMP_FORWARD_IF_FALSE    to 1320
+   .  1316 EXTENDED_ARG                 
+   .  1318 JUMP_BACKWARD                to 6
+      1320 EXTENDED_ARG                 
+      1322 JUMP_FORWARD                 to 2464
+      1324 LOAD_FAST                    order
+      1326 LOAD_ATTR                    asset
+      1336 LOAD_ATTR                    symbol
+      1346 LOAD_CONST                   None
+      1348 LOAD_CONST                   3
+      1350 BUILD_SLICE                  
+      1352 BINARY_SUBSCR                
+      1362 LOAD_CONST                   '300'
+      1364 COMPARE_OP                   ==
+      1370 POP_JUMP_FORWARD_IF_FALSE    to 1384
+      1372 LOAD_FAST                    trading_date
+      1374 LOAD_FAST                    gem_change_date
+      1376 COMPARE_OP                   <
+      1382 POP_JUMP_FORWARD_IF_TRUE     to 1444
+      1384 LOAD_FAST                    order
+      1386 LOAD_ATTR                    asset
+      1396 LOAD_ATTR                    symbol
+      1406 LOAD_CONST                   None
+      1408 LOAD_CONST                   3
+      1410 BUILD_SLICE                  
+      1412 BINARY_SUBSCR                
+      1422 LOAD_CONST                   '300'
+      1424 COMPARE_OP                   ==
+      1430 POP_JUMP_FORWARD_IF_FALSE    to 1696
+      1432 LOAD_FAST                    stock_listed_date_str
+      1434 LOAD_FAST                    gem_change_date
+      1436 COMPARE_OP                   <
+      1442 POP_JUMP_FORWARD_IF_FALSE    to 1696
+      1444 LOAD_FAST                    order
+      1446 LOAD_ATTR                    entrust_direction
+      1456 LOAD_GLOBAL                  EntrustDirection
+      1468 LOAD_ATTR                    BUY
+      1478 COMPARE_OP                   ==
+      1484 POP_JUMP_FORWARD_IF_FALSE    to 1570
+      1486 LOAD_FAST                    deal_price
+      1488 LOAD_FAST                    self
+      1490 LOAD_ATTR                    _engine
+      1500 LOAD_ATTR                    data_cache
+      1510 LOAD_METHOD                  get_limit_up
+      1532 LOAD_FAST                    asset
+      1534 LOAD_ATTR                    symbol
+      1544 PRECALL                      
+      1548 CALL                         
+      1558 COMPARE_OP                   >=
+      1564 POP_JUMP_FORWARD_IF_FALSE    to 1570
+      1566 EXTENDED_ARG                 
+      1568 JUMP_BACKWARD                to 6
+      1570 LOAD_FAST                    order
+      1572 LOAD_ATTR                    entrust_direction
+      1582 LOAD_GLOBAL                  EntrustDirection
+      1594 LOAD_ATTR                    SELL
+      1604 COMPARE_OP                   ==
+      1610 POP_JUMP_FORWARD_IF_FALSE    to 1696
+      1612 LOAD_FAST                    deal_price
+      1614 LOAD_FAST                    self
+      1616 LOAD_ATTR                    _engine
+      1626 LOAD_ATTR                    data_cache
+      1636 LOAD_METHOD                  get_limit_down
+      1658 LOAD_FAST                    asset
+      1660 LOAD_ATTR                    symbol
+      1670 PRECALL                      
+      1674 CALL                         
+      1684 COMPARE_OP                   <=
+      1690 POP_JUMP_FORWARD_IF_FALSE    to 1696
+      1692 EXTENDED_ARG                 
+      1694 JUMP_BACKWARD                to 6
+      1696 LOAD_FAST                    order
+      1698 LOAD_ATTR                    asset
+      1708 LOAD_ATTR                    listed_date
+      1718 STORE_FAST                   stock_listed_date
+      1720 LOAD_FAST                    self
+      1722 LOAD_ATTR                    _engine
+      1732 LOAD_ATTR                    data_proxy
+      1742 LOAD_METHOD                  get_next_trading_date
+      1764 LOAD_FAST                    stock_listed_date
+      1766 LOAD_CONST                   5
+      1768 PRECALL                      
+      1772 CALL                         
+      1782 STORE_FAST                   next_trading_date
+      1784 LOAD_FAST                    stock_listed_date
+      1786 LOAD_FAST                    self
+      1788 LOAD_ATTR                    _engine
+      1798 LOAD_ATTR                    trading_dt
+      1808 SWAP                         
+      1810 COPY                         
+      1812 COMPARE_OP                   <=
+      1818 JUMP_IF_FALSE_OR_POP         to 1830
+      1820 LOAD_FAST                    next_trading_date
+      1822 COMPARE_OP                   <=
+      1828 JUMP_FORWARD                 to 1834
+      1830 SWAP                         
+      1832 POP_TOP                      
+      1834 STORE_FAST                   is_first_five_trading_days
+      1836 LOAD_FAST                    order
+      1838 LOAD_ATTR                    asset
+      1848 LOAD_ATTR                    symbol
+      1858 LOAD_CONST                   None
+      1860 LOAD_CONST                   3
+      1862 BUILD_SLICE                  
+      1864 BINARY_SUBSCR                
+      1874 LOAD_CONST                   '300'
+      1876 COMPARE_OP                   ==
+      1882 POP_JUMP_FORWARD_IF_FALSE    to 2164
+      1884 LOAD_FAST                    trading_date
+      1886 LOAD_FAST                    gem_change_date
+      1888 COMPARE_OP                   >=
+      1894 POP_JUMP_FORWARD_IF_FALSE    to 2164
+      1896 LOAD_FAST                    stock_listed_date_str
+      1898 LOAD_FAST                    gem_change_date
+      1900 COMPARE_OP                   >=
+      1906 POP_JUMP_FORWARD_IF_FALSE    to 2164
+      1908 LOAD_FAST                    is_first_five_trading_days
+      1910 POP_JUMP_FORWARD_IF_TRUE     to 2164
+      1912 LOAD_FAST                    order
+      1914 LOAD_ATTR                    entrust_direction
+      1924 LOAD_GLOBAL                  EntrustDirection
+      1936 LOAD_ATTR                    BUY
+      1946 COMPARE_OP                   ==
+      1952 POP_JUMP_FORWARD_IF_FALSE    to 2038
+      1954 LOAD_FAST                    deal_price
+      1956 LOAD_FAST                    self
+      1958 LOAD_ATTR                    _engine
+      1968 LOAD_ATTR                    data_cache
+      1978 LOAD_METHOD                  get_limit_up
+      2000 LOAD_FAST                    asset
+      2002 LOAD_ATTR                    symbol
+      2012 PRECALL                      
+      2016 CALL                         
+      2026 COMPARE_OP                   >=
+      2032 POP_JUMP_FORWARD_IF_FALSE    to 2038
+      2034 EXTENDED_ARG                 
+      2036 JUMP_BACKWARD                to 6
+      2038 LOAD_FAST                    order
+      2040 LOAD_ATTR                    entrust_direction
+      2050 LOAD_GLOBAL                  EntrustDirection
+      2062 LOAD_ATTR                    SELL
+      2072 COMPARE_OP                   ==
+      2078 POP_JUMP_FORWARD_IF_FALSE    to 2164
+      2080 LOAD_FAST                    deal_price
+      2082 LOAD_FAST                    self
+      2084 LOAD_ATTR                    _engine
+      2094 LOAD_ATTR                    data_cache
+      2104 LOAD_METHOD                  get_limit_down
+      2126 LOAD_FAST                    asset
+      2128 LOAD_ATTR                    symbol
+      2138 PRECALL                      
+      2142 CALL                         
+      2152 COMPARE_OP                   <=
+      2158 POP_JUMP_FORWARD_IF_FALSE    to 2164
+      2160 EXTENDED_ARG                 
+      2162 JUMP_BACKWARD                to 6
+      2164 LOAD_FAST                    order
+      2166 LOAD_ATTR                    asset
+      2176 LOAD_ATTR                    symbol
+      2186 LOAD_CONST                   None
+      2188 LOAD_CONST                   3
+      2190 BUILD_SLICE                  
+      2192 BINARY_SUBSCR                
+      2202 LOAD_CONST                   ('688', '689')
+      2204 CONTAINS_OP                  
+      2206 POP_JUMP_FORWARD_IF_FALSE    to 2464
+      2208 LOAD_FAST                    is_first_five_trading_days
+      2210 POP_JUMP_FORWARD_IF_TRUE     to 2464
+      2212 LOAD_FAST                    order
+      2214 LOAD_ATTR                    entrust_direction
+      2224 LOAD_GLOBAL                  EntrustDirection
+      2236 LOAD_ATTR                    BUY
+      2246 COMPARE_OP                   ==
+      2252 POP_JUMP_FORWARD_IF_FALSE    to 2338
+      2254 LOAD_FAST                    deal_price
+      2256 LOAD_FAST                    self
+      2258 LOAD_ATTR                    _engine
+      2268 LOAD_ATTR                    data_cache
+      2278 LOAD_METHOD                  get_limit_up
+      2300 LOAD_FAST                    asset
+      2302 LOAD_ATTR                    symbol
+      2312 PRECALL                      
+      2316 CALL                         
+      2326 COMPARE_OP                   >=
+      2332 POP_JUMP_FORWARD_IF_FALSE    to 2338
+      2334 EXTENDED_ARG                 
+      2336 JUMP_BACKWARD                to 6
+      2338 LOAD_FAST                    order
+      2340 LOAD_ATTR                    entrust_direction
+      2350 LOAD_GLOBAL                  EntrustDirection
+      2362 LOAD_ATTR                    SELL
+      2372 COMPARE_OP                   ==
+      2378 POP_JUMP_FORWARD_IF_FALSE    to 2464
+      2380 LOAD_FAST                    deal_price
+      2382 LOAD_FAST                    self
+      2384 LOAD_ATTR                    _engine
+      2394 LOAD_ATTR                    data_cache
+      2404 LOAD_METHOD                  get_limit_down
+      2426 LOAD_FAST                    asset
+      2428 LOAD_ATTR                    symbol
+      2438 PRECALL                      
+      2442 CALL                         
+      2452 COMPARE_OP                   <=
+      2458 POP_JUMP_FORWARD_IF_FALSE    to 2464
+      2460 EXTENDED_ARG                 
+      2462 JUMP_BACKWARD                to 6
+      2464 EXTENDED_ARG                 
+      2466 JUMP_FORWARD                 to 3210
+      2468 LOAD_FAST                    self
+      2470 LOAD_ATTR                    _price_limit
+      2480 EXTENDED_ARG                 
+      2482 POP_JUMP_FORWARD_IF_FALSE    to 3208
+      2484 LOAD_FAST                    order
+      2486 LOAD_ATTR                    entrust_direction
+      2496 LOAD_GLOBAL                  EntrustDirection
+      2508 LOAD_ATTR                    BUY
+      2518 COMPARE_OP                   ==
+      2524 POP_JUMP_FORWARD_IF_FALSE    to 2846
+      2526 LOAD_FAST                    deal_price
+      2528 LOAD_FAST                    self
+      2530 LOAD_ATTR                    _engine
+      2540 LOAD_ATTR                    data_cache
+      2550 LOAD_METHOD                  get_limit_up
+      2572 LOAD_FAST                    asset
+      2574 LOAD_ATTR                    symbol
+      2584 PRECALL                      
+      2588 CALL                         
+      2598 COMPARE_OP                   >=
+      2604 POP_JUMP_FORWARD_IF_FALSE    to 2846
+      2606 LOAD_GLOBAL                  NULL + _
+      2618 LOAD_CONST                   '订单撤销: [{symbol}]撮合价格超涨停价'
+      2620 PRECALL                      
+      2624 CALL                         
+      2634 LOAD_METHOD                  format
+      2656 LOAD_FAST                    asset
+      2658 LOAD_ATTR                    symbol
+      2668 KW_NAMES                     
+      2670 PRECALL                      
+      2674 CALL                         
+      2684 STORE_FAST                   reason
+      2686 LOAD_FAST                    order
+      2688 LOAD_METHOD                  mark_rejected
+      2710 LOAD_FAST                    reason
+      2712 PRECALL                      
+      2716 CALL                         
+      2726 POP_TOP                      
+      2728 LOAD_FAST                    self
+      2730 LOAD_ATTR                    _engine
+      2740 LOAD_ATTR                    event_bus
+      2750 LOAD_METHOD                  publish_event
+      2772 LOAD_GLOBAL                  NULL + Event
+      2784 LOAD_GLOBAL                  EventEnum
+      2796 LOAD_ATTR                    ON_TRADE_RSP
+      2806 LOAD_FAST                    order
+      2808 LOAD_FAST                    order
+      2810 KW_NAMES                     
+      2812 PRECALL                      
+      2816 CALL                         
+      2826 PRECALL                      
+      2830 CALL                         
+      2840 POP_TOP                      
+      2842 EXTENDED_ARG                 
+      2844 JUMP_BACKWARD                to 6
+      2846 LOAD_FAST                    order
+      2848 LOAD_ATTR                    entrust_direction
+      2858 LOAD_GLOBAL                  EntrustDirection
+      2870 LOAD_ATTR                    SELL
+      2880 COMPARE_OP                   ==
+      2886 POP_JUMP_FORWARD_IF_FALSE    to 3208
+      2888 LOAD_FAST                    deal_price
+      2890 LOAD_FAST                    self
+      2892 LOAD_ATTR                    _engine
+      2902 LOAD_ATTR                    data_cache
+      2912 LOAD_METHOD                  get_limit_down
+      2934 LOAD_FAST                    asset
+      2936 LOAD_ATTR                    symbol
+      2946 PRECALL                      
+      2950 CALL                         
+      2960 COMPARE_OP                   <=
+      2966 POP_JUMP_FORWARD_IF_FALSE    to 3208
+      2968 LOAD_GLOBAL                  NULL + _
+      2980 LOAD_CONST                   '订单撤销: [{symbol}]撮合价格超跌停价'
+      2982 PRECALL                      
+      2986 CALL                         
+      2996 LOAD_METHOD                  format
+      3018 LOAD_FAST                    asset
+      3020 LOAD_ATTR                    symbol
+      3030 KW_NAMES                     
+      3032 PRECALL                      
+      3036 CALL                         
+      3046 STORE_FAST                   reason
+      3048 LOAD_FAST                    order
+      3050 LOAD_METHOD                  mark_rejected
+      3072 LOAD_FAST                    reason
+      3074 PRECALL                      
+      3078 CALL                         
+      3088 POP_TOP                      
+      3090 LOAD_FAST                    self
+      3092 LOAD_ATTR                    _engine
+      3102 LOAD_ATTR                    event_bus
+      3112 LOAD_METHOD                  publish_event
+      3134 LOAD_GLOBAL                  NULL + Event
+      3146 LOAD_GLOBAL                  EventEnum
+      3158 LOAD_ATTR                    ON_TRADE_RSP
+      3168 LOAD_FAST                    order
+      3170 LOAD_FAST                    order
+      3172 KW_NAMES                     
+      3174 PRECALL                      
+      3178 CALL                         
+      3188 PRECALL                      
+      3192 CALL                         
+      3202 POP_TOP                      
+      3204 EXTENDED_ARG                 
+      3206 JUMP_BACKWARD                to 6
+      3208 NOP                          
+   .  3210 LOAD_FAST                    self
+   .  3212 LOAD_ATTR                    _volume_limit
+   .  3222 EXTENDED_ARG                 
+HUNK delete   orig[644:648]@3952(4) decomp[333:333]@2062(0)
+   .  3936 PRECALL                      
+   .  3940 CALL                         
+   .  3950 POP_TOP                      
+      3952 JUMP_FORWARD                 to 3968
+      3954 LOAD_FAST                    order
+      3956 LOAD_ATTR                    unfilled_amount
+      3966 STORE_FAST                   fill
+   .  3968 LOAD_FAST                    account
+   .  3970 LOAD_ATTR                    positions
+   .  3980 LOAD_METHOD                  get_or_create
+HUNK insert   orig[798:798]@4962(0) decomp[483:807]@3060(324)
+   .  3054 POP_TOP                      
+   .  3056 EXTENDED_ARG                 
+   .  3058 JUMP_BACKWARD                to 6
+      3060 LOAD_FAST                    order
+      3062 LOAD_ATTR                    unfilled_amount
+      3072 STORE_FAST                   fill
+      3074 EXTENDED_ARG                 
+      3076 JUMP_BACKWARD                to 6
+      3078 LOAD_FAST                    order
+      3080 LOAD_ATTR                    asset
+      3090 LOAD_ATTR                    symbol
+      3100 LOAD_CONST                   None
+      3102 LOAD_CONST                   3
+      3104 BUILD_SLICE                  
+      3106 BINARY_SUBSCR                
+      3116 LOAD_CONST                   '300'
+      3118 COMPARE_OP                   ==
+      3124 EXTENDED_ARG                 
+      3126 POP_JUMP_FORWARD_IF_FALSE    to 4232
+      3128 LOAD_FAST                    trading_date
+      3130 LOAD_FAST                    gem_change_date
+      3132 COMPARE_OP                   <
+      3138 EXTENDED_ARG                 
+      3140 POP_JUMP_FORWARD_IF_TRUE     to 4232
+      3142 LOAD_FAST                    order
+      3144 LOAD_ATTR                    asset
+      3154 LOAD_ATTR                    symbol
+      3164 LOAD_CONST                   None
+      3166 LOAD_CONST                   3
+      3168 BUILD_SLICE                  
+      3170 BINARY_SUBSCR                
+      3180 LOAD_CONST                   '300'
+      3182 COMPARE_OP                   ==
+      3188 EXTENDED_ARG                 
+      3190 POP_JUMP_FORWARD_IF_FALSE    to 4232
+      3192 LOAD_FAST                    stock_listed_date_str
+      3194 LOAD_FAST                    gem_change_date
+      3196 COMPARE_OP                   <
+      3202 EXTENDED_ARG                 
+      3204 POP_JUMP_FORWARD_IF_FALSE    to 4232
+      3206 LOAD_FAST                    order
+      3208 LOAD_ATTR                    entrust_direction
+      3218 LOAD_GLOBAL                  EntrustDirection
+      3230 LOAD_ATTR                    BUY
+      3240 COMPARE_OP                   ==
+      3246 POP_JUMP_FORWARD_IF_FALSE    to 3332
+      3248 LOAD_FAST                    deal_price
+      3250 LOAD_FAST                    self
+      3252 LOAD_ATTR                    _engine
+      3262 LOAD_ATTR                    data_cache
+      3272 LOAD_METHOD                  get_limit_up
+      3294 LOAD_FAST                    asset
+      3296 LOAD_ATTR                    symbol
+      3306 PRECALL                      
+      3310 CALL                         
+      3320 COMPARE_OP                   >=
+      3326 POP_JUMP_FORWARD_IF_FALSE    to 3332
+      3328 EXTENDED_ARG                 
+      3330 JUMP_BACKWARD                to 6
+      3332 LOAD_FAST                    order
+      3334 LOAD_ATTR                    entrust_direction
+      3344 LOAD_GLOBAL                  EntrustDirection
+      3356 LOAD_ATTR                    SELL
+      3366 COMPARE_OP                   ==
+      3372 POP_JUMP_FORWARD_IF_FALSE    to 3458
+      3374 LOAD_FAST                    deal_price
+      3376 LOAD_FAST                    self
+      3378 LOAD_ATTR                    _engine
+      3388 LOAD_ATTR                    data_cache
+      3398 LOAD_METHOD                  get_limit_down
+      3420 LOAD_FAST                    asset
+      3422 LOAD_ATTR                    symbol
+      3432 PRECALL                      
+      3436 CALL                         
+      3446 COMPARE_OP                   <=
+      3452 POP_JUMP_FORWARD_IF_FALSE    to 3458
+      3454 EXTENDED_ARG                 
+      3456 JUMP_BACKWARD                to 6
+      3458 LOAD_FAST                    order
+      3460 LOAD_ATTR                    asset
+      3470 LOAD_ATTR                    listed_date
+      3480 STORE_FAST                   stock_listed_date
+      3482 LOAD_FAST                    self
+      3484 LOAD_ATTR                    _engine
+      3494 LOAD_ATTR                    data_proxy
+      3504 LOAD_METHOD                  get_next_trading_date
+      3526 LOAD_FAST                    stock_listed_date
+      3528 LOAD_CONST                   5
+      3530 PRECALL                      
+      3534 CALL                         
+      3544 STORE_FAST                   next_trading_date
+      3546 LOAD_FAST                    stock_listed_date
+      3548 LOAD_FAST                    self
+      3550 LOAD_ATTR                    _engine
+      3560 LOAD_ATTR                    trading_dt
+      3570 SWAP                         
+      3572 COPY                         
+      3574 COMPARE_OP                   <=
+      3580 JUMP_IF_FALSE_OR_POP         to 3592
+      3582 LOAD_FAST                    next_trading_date
+      3584 COMPARE_OP                   <=
+      3590 JUMP_FORWARD                 to 3596
+      3592 SWAP                         
+      3594 POP_TOP                      
+      3596 STORE_FAST                   is_first_five_trading_days
+      3598 LOAD_FAST                    order
+      3600 LOAD_ATTR                    asset
+      3610 LOAD_ATTR                    symbol
+      3620 LOAD_CONST                   None
+      3622 LOAD_CONST                   3
+      3624 BUILD_SLICE                  
+      3626 BINARY_SUBSCR                
+      3636 LOAD_CONST                   '300'
+      3638 COMPARE_OP                   ==
+      3644 EXTENDED_ARG                 
+      3646 POP_JUMP_FORWARD_IF_FALSE    to 4232
+      3648 LOAD_FAST                    trading_date
+      3650 LOAD_FAST                    gem_change_date
+      3652 COMPARE_OP                   >=
+      3658 EXTENDED_ARG                 
+      3660 POP_JUMP_FORWARD_IF_FALSE    to 4232
+      3662 LOAD_FAST                    stock_listed_date_str
+      3664 LOAD_FAST                    gem_change_date
+      3666 COMPARE_OP                   >=
+      3672 EXTENDED_ARG                 
+      3674 POP_JUMP_FORWARD_IF_FALSE    to 4232
+      3676 LOAD_FAST                    is_first_five_trading_days
+      3678 POP_JUMP_FORWARD_IF_TRUE     to 3802
+      3680 LOAD_FAST                    order
+      3682 LOAD_ATTR                    entrust_direction
+      3692 LOAD_GLOBAL                  EntrustDirection
+      3704 LOAD_ATTR                    BUY
+      3714 COMPARE_OP                   ==
+      3720 POP_JUMP_FORWARD_IF_FALSE    to 3806
+      3722 LOAD_FAST                    deal_price
+      3724 LOAD_FAST                    self
+      3726 LOAD_ATTR                    _engine
+      3736 LOAD_ATTR                    data_cache
+      3746 LOAD_METHOD                  get_limit_up
+      3768 LOAD_FAST                    asset
+      3770 LOAD_ATTR                    symbol
+      3780 PRECALL                      
+      3784 CALL                         
+      3794 COMPARE_OP                   >=
+      3800 POP_JUMP_FORWARD_IF_FALSE    to 3806
+      3802 EXTENDED_ARG                 
+      3804 JUMP_BACKWARD                to 6
+      3806 LOAD_FAST                    order
+      3808 LOAD_ATTR                    entrust_direction
+      3818 LOAD_GLOBAL                  EntrustDirection
+      3830 LOAD_ATTR                    SELL
+      3840 COMPARE_OP                   ==
+      3846 POP_JUMP_FORWARD_IF_FALSE    to 3932
+      3848 LOAD_FAST                    deal_price
+      3850 LOAD_FAST                    self
+      3852 LOAD_ATTR                    _engine
+      3862 LOAD_ATTR                    data_cache
+      3872 LOAD_METHOD                  get_limit_down
+      3894 LOAD_FAST                    asset
+      3896 LOAD_ATTR                    symbol
+      3906 PRECALL                      
+      3910 CALL                         
+      3920 COMPARE_OP                   <=
+      3926 POP_JUMP_FORWARD_IF_FALSE    to 3932
+      3928 EXTENDED_ARG                 
+      3930 JUMP_BACKWARD                to 6
+      3932 LOAD_FAST                    order
+      3934 LOAD_ATTR                    asset
+      3944 LOAD_ATTR                    symbol
+      3954 LOAD_CONST                   None
+      3956 LOAD_CONST                   3
+      3958 BUILD_SLICE                  
+      3960 BINARY_SUBSCR                
+      3970 LOAD_CONST                   ('688', '689')
+      3972 CONTAINS_OP                  
+      3974 POP_JUMP_FORWARD_IF_FALSE    to 4232
+      3976 LOAD_FAST                    is_first_five_trading_days
+      3978 POP_JUMP_FORWARD_IF_TRUE     to 4102
+      3980 LOAD_FAST                    order
+      3982 LOAD_ATTR                    entrust_direction
+      3992 LOAD_GLOBAL                  EntrustDirection
+      4004 LOAD_ATTR                    BUY
+      4014 COMPARE_OP                   ==
+      4020 POP_JUMP_FORWARD_IF_FALSE    to 4106
+      4022 LOAD_FAST                    deal_price
+      4024 LOAD_FAST                    self
+      4026 LOAD_ATTR                    _engine
+      4036 LOAD_ATTR                    data_cache
+      4046 LOAD_METHOD                  get_limit_up
+      4068 LOAD_FAST                    asset
+      4070 LOAD_ATTR                    symbol
+      4080 PRECALL                      
+      4084 CALL                         
+      4094 COMPARE_OP                   >=
+      4100 POP_JUMP_FORWARD_IF_FALSE    to 4106
+      4102 EXTENDED_ARG                 
+      4104 JUMP_BACKWARD                to 6
+      4106 LOAD_FAST                    order
+      4108 LOAD_ATTR                    entrust_direction
+      4118 LOAD_GLOBAL                  EntrustDirection
+      4130 LOAD_ATTR                    SELL
+      4140 COMPARE_OP                   ==
+      4146 POP_JUMP_FORWARD_IF_FALSE    to 4232
+      4148 LOAD_FAST                    deal_price
+      4150 LOAD_FAST                    self
+      4152 LOAD_ATTR                    _engine
+      4162 LOAD_ATTR                    data_cache
+      4172 LOAD_METHOD                  get_limit_down
+      4194 LOAD_FAST                    asset
+      4196 LOAD_ATTR                    symbol
+      4206 PRECALL                      
+      4210 CALL                         
+      4220 COMPARE_OP                   <=
+      4226 POP_JUMP_FORWARD_IF_FALSE    to 4232
+      4228 EXTENDED_ARG                 
+      4230 JUMP_BACKWARD                to 6
+      4232 EXTENDED_ARG                 
+      4234 JUMP_BACKWARD                to 6
+      4236 LOAD_FAST                    self
+      4238 LOAD_ATTR                    _price_limit
+      4248 EXTENDED_ARG                 
+      4250 POP_JUMP_FORWARD_IF_FALSE    to 4978
+      4252 LOAD_FAST                    order
+      4254 LOAD_ATTR                    entrust_direction
+      4264 LOAD_GLOBAL                  EntrustDirection
+      4276 LOAD_ATTR                    BUY
+      4286 COMPARE_OP                   ==
+      4292 POP_JUMP_FORWARD_IF_FALSE    to 4614
+      4294 LOAD_FAST                    deal_price
+      4296 LOAD_FAST                    self
+      4298 LOAD_ATTR                    _engine
+      4308 LOAD_ATTR                    data_cache
+      4318 LOAD_METHOD                  get_limit_up
+      4340 LOAD_FAST                    asset
+      4342 LOAD_ATTR                    symbol
+      4352 PRECALL                      
+      4356 CALL                         
+      4366 COMPARE_OP                   >=
+      4372 POP_JUMP_FORWARD_IF_FALSE    to 4614
+      4374 LOAD_GLOBAL                  NULL + _
+      4386 LOAD_CONST                   '订单撤销: [{symbol}]撮合价格超涨停价'
+      4388 PRECALL                      
+      4392 CALL                         
+      4402 LOAD_METHOD                  format
+      4424 LOAD_FAST                    asset
+      4426 LOAD_ATTR                    symbol
+      4436 KW_NAMES                     
+      4438 PRECALL                      
+      4442 CALL                         
+      4452 STORE_FAST                   reason
+      4454 LOAD_FAST                    order
+      4456 LOAD_METHOD                  mark_rejected
+      4478 LOAD_FAST                    reason
+      4480 PRECALL                      
+      4484 CALL                         
+      4494 POP_TOP                      
+      4496 LOAD_FAST                    self
+      4498 LOAD_ATTR                    _engine
+      4508 LOAD_ATTR                    event_bus
+      4518 LOAD_METHOD                  publish_event
+      4540 LOAD_GLOBAL                  NULL + Event
+      4552 LOAD_GLOBAL                  EventEnum
+      4564 LOAD_ATTR                    ON_TRADE_RSP
+      4574 LOAD_FAST                    order
+      4576 LOAD_FAST                    order
+      4578 KW_NAMES                     
+      4580 PRECALL                      
+      4584 CALL                         
+      4594 PRECALL                      
+      4598 CALL                         
+      4608 POP_TOP                      
+      4610 EXTENDED_ARG                 
+      4612 JUMP_BACKWARD                to 6
+      4614 LOAD_FAST                    order
+      4616 LOAD_ATTR                    entrust_direction
+      4626 LOAD_GLOBAL                  EntrustDirection
+      4638 LOAD_ATTR                    SELL
+      4648 COMPARE_OP                   ==
+      4654 POP_JUMP_FORWARD_IF_FALSE    to 4976
+      4656 LOAD_FAST                    deal_price
+      4658 LOAD_FAST                    self
+      4660 LOAD_ATTR                    _engine
+      4670 LOAD_ATTR                    data_cache
+      4680 LOAD_METHOD                  get_limit_down
+      4702 LOAD_FAST                    asset
+      4704 LOAD_ATTR                    symbol
+      4714 PRECALL                      
+      4718 CALL                         
+      4728 COMPARE_OP                   <=
+      4734 POP_JUMP_FORWARD_IF_FALSE    to 4976
+      4736 LOAD_GLOBAL                  NULL + _
+      4748 LOAD_CONST                   '订单撤销: [{symbol}]撮合价格超跌停价'
+      4750 PRECALL                      
+      4754 CALL                         
+      4764 LOAD_METHOD                  format
+      4786 LOAD_FAST                    asset
+      4788 LOAD_ATTR                    symbol
+      4798 KW_NAMES                     
+      4800 PRECALL                      
+      4804 CALL                         
+      4814 STORE_FAST                   reason
+      4816 LOAD_FAST                    order
+      4818 LOAD_METHOD                  mark_rejected
+      4840 LOAD_FAST                    reason
+      4842 PRECALL                      
+      4846 CALL                         
+      4856 POP_TOP                      
+      4858 LOAD_FAST                    self
+      4860 LOAD_ATTR                    _engine
+      4870 LOAD_ATTR                    event_bus
+      4880 LOAD_METHOD                  publish_event
+      4902 LOAD_GLOBAL                  NULL + Event
+      4914 LOAD_GLOBAL                  EventEnum
+      4926 LOAD_ATTR                    ON_TRADE_RSP
+      4936 LOAD_FAST                    order
+      4938 LOAD_FAST                    order
+      4940 KW_NAMES                     
+      4942 PRECALL                      
+      4946 CALL                         
+      4956 PRECALL                      
+      4960 CALL                         
+      4970 POP_TOP                      
+      4972 EXTENDED_ARG                 
+      4974 JUMP_BACKWARD                to 6
+      4976 NOP                          
+      4978 EXTENDED_ARG                 
+      4980 JUMP_BACKWARD                to 6
+   .  4982 LOAD_CONST                   None
+   .  4984 RETURN_VALUE                 

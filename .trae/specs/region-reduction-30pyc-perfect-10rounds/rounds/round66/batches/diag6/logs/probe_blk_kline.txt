@@ -1,0 +1,9 @@
+# GEN wrapped 244 callables
+GEN.block_role                                     blk=1070 -> BlockRole
+GEN._try_deferred_return_in_loop                   blk=1070 -> None
+GEN._build_store_statement                         instrs(1070..1154) -> {Assign}
+GEN._loop_extract_for_iter_pre_stmts               instrs(1070..1292) blk=1070 -> tuple
+GEN._generate_block_statements_body                blk=1070 None -> [Assign,Expr,Assign,Assign,For,Return]
+GEN._mark_with_exit_return_explicit                blk=1070 list(6) -> None
+GEN._mark_shared_return_explicit                   blk=1070 list(6) -> None
+GEN._generate_block_statements                     blk=1070 -> [Assign,Expr,Assign,Assign,For,Return]

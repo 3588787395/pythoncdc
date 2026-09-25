@@ -1,0 +1,50 @@
+##### IQCommon/util/common_func difflines=6
+    --- 
+    +++ 
+    @@ -48,2 +48,3 @@
+                 freq_k_minute = datetime_list[::int(frequency[:-1])]
+    +        del freq_k_minute[0]
+             kline_ndarray = np.empty(shape=len(freq_k_minute), dtype=name_array.dtype)
+##### risk_calculation/__init__ difflines=25
+    --- 
+    +++ 
+    @@ -603,5 +603,5 @@
+                             elif trade_v > init_hold_v:
+    -                            'win_time'[1] = self.TradeMode_trade_statistic
+    -                            'profit'[trade_v - init_hold_v] = self.TradeMode_trade_statistic
+    -                            'total_time'[1] = self.TradeMode_trade_statistic
+    +                            self.TradeMode_trade_statistic['win_time'] += 1
+    +                            self.TradeMode_trade_statistic['profit'] += trade_v - init_hold_v
+    +                            self.TradeMode_trade_statistic['total_time'] += 1
+                                 continue
+    @@ -620,5 +620,5 @@
+                                 elif trade_v > init_hold_v:
+    -                                'win_time'[1] = self.TradeMode_trade_statistic
+    -                                'profit'[trade_v - init_hold_v] = self.TradeMode_trade_statistic
+    -                                'total_time'[1] = self.TradeMode_trade_statistic
+    +                                self.TradeMode_trade_statistic['win_time'] += 1
+    +                                self.TradeMode_trade_statistic['profit'] += trade_v - init_hold_v
+    +                                self.TradeMode_trade_statistic['total_time'] += 1
+                                     continue
+    @@ -720,3 +720,3 @@
+                         if dif_sum > 0:
+    -                        'profit'[dif_sum] = self.TradeMode_trade_statistic
+    +                        self.TradeMode_trade_statistic['profit'] += dif_sum
+                             continue
+##### trade_live_broker difflines=7
+    --- 
+    +++ 
+    @@ -1343,3 +1343,3 @@
+             if etf_code:
+    -            in_stock = []
+    +            pass
+             else:
+##### scheduler difflines=8
+    --- 
+    +++ 
+    @@ -155,3 +155,4 @@
+                     minute = minute_time.minute
+    -            hour, minute = divmod(minute_time, 100)
+    +            else:
+    +                hour, minute = divmod(minute_time, 100)
+                 minute_time = self._day_minutes(hour, minute)

@@ -1,0 +1,17 @@
+    6 LOAD_FAST                  etf_code                               L1343
+    8 POP_JUMP_FORWARD_IF_FALSE  to 16                                  LNone
+   10 BUILD_LIST                                                        L1344
+   12 STORE_FAST                 in_stock                               LNone
+   14 JUMP_FORWARD               to 60                                  LNone
+   16 LOAD_GLOBAL                NULL + strategy_log                    L1346
+   28 LOAD_ATTR                  warning                                LNone
+   38 LOAD_CONST                 '未传入ETF代码，查询失败'                        LNone
+   40 PRECALL                                                           LNone
+   44 CALL                                                              LNone
+   54 POP_TOP                                                           LNone
+   56 LOAD_FAST                  info_out                               L1347
+   58 RETURN_VALUE                                                      LNone
+   60 BUILD_LIST                                                        L1348
+   62 STORE_FAST                 in_stock                               LNone
+   64 LOAD_GLOBAL                NULL + isinstance                      L1349
+   76 LOAD_FAST                  security                               LNone

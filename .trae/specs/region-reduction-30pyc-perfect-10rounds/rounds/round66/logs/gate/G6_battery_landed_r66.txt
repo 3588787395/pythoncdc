@@ -1,0 +1,34 @@
+repro pycs discovered: 31  (round63 batches + 11 pinned R62 witnesses)
+repro                                                          landed                
+round63_b1/r63_ft.pyc                                          2/2 bad=0 d=+0        
+round63_b1/r63_ft2.pyc                                         2/2 bad=0 d=+0        
+round63_b1/r63_ft4.pyc                                         2/2 bad=0 d=+0        
+round63_b2/probe_r63b2_cases.pyc                               7/9 bad=2 d=+2        
+round63_b2/probe_r63b2_cases2.pyc                              7/9 bad=2 d=+0        
+round63_b2/repro_r63b2_tail_cmp_return.pyc                     2/2 bad=0 d=+0        
+round63_b3/r63b3_chained_value_ctx_prefix.pyc                  2/2 bad=0 d=+0        
+round63_b4/r63b4_tern_in_elif_chain.pyc                        3/3 bad=0 d=+0        
+round63_b5/r63b5_w1.pyc                                        1/2 bad=1 d=-1        
+round63_fix1/r63b3_chainstore_prefix.pyc                       2/2 bad=0 d=+0        
+round63_fix2/r63b4_cond_boolop_stmt_steal.pyc                  13/13 bad=0 d=+0      
+round64_diag1/r64d1b_closed_exit_prefix.pyc                    2/2 bad=0 d=+0        
+round64_diag1/r64d1b_sibdispatch_attempt.pyc                   4/4 bad=0 d=+0        
+round64_diag2/r64d2_chain_yield_sibling_entry.pyc              2/2 bad=0 d=+0        
+round64_diag2/r64d2_valuectx_consumer.pyc                      2/2 bad=0 d=+0        
+round64_diag3/r64d3_postif_join.pyc                            2/2 bad=0 d=+0        
+round64_diag4/r64d4_boolop_poptop_merge.pyc                    3/3 bad=0 d=+0        
+round64_diag4/r64d4_deferred_prefix.pyc                        3/3 bad=0 d=+0        
+round64_diag5/r64d5_contsink.pyc                               1/2 bad=1 d=+0        
+round65_diag1/r65_trytail.pyc                                  8/9 bad=1 d=-3        
+round65_diag1/r65_trytail_w.pyc                                8/8 bad=0 d=+0        
+round65_diag2/fs2.pyc                                          6/10 bad=4 d=-12      
+round65_diag2/fsrepro.pyc                                      7/7 bad=0 d=+0        
+round65_diag5/r65d5_probe.pyc                                  2/2 bad=0 d=+0        
+round66_diag1/r66_empty_then_join.pyc                          3/3 bad=0 d=+0        
+round66_diag3/r66d3_pred.pyc                                   2/3 bad=1 d=-2        
+round66_diag3/r66d3_shared_store.pyc                           3/3 bad=0 d=+0        
+round66_diag3/r66d3_var.pyc                                    6/6 bad=0 d=+0        
+round66_diag4/r66d4_augsub.pyc                                 2/2 bad=0 d=+0        
+round66_diag5/r66_else.pyc                                     3/3 bad=0 d=+0        
+round66_diag6/r66_delrepro.pyc                                 3/3 bad=0 d=+0        
+candidate columns worse-than-landed on 0 repro(s)

@@ -1,0 +1,196 @@
+# scheduler.pyc :: get_checked_time   orig=122 decomp=122  substantive-hunks=2
+HUNK delete   orig[23:31]@130(8) decomp[23:23]@128(0)
+   .   114 PRECALL                      
+   .   118 CALL                         
+   .   128 STORE_FAST                   minute_time
+       130 LOAD_GLOBAL                  NULL + divmod
+       142 LOAD_FAST                    minute_time
+       144 LOAD_CONST                   100
+       146 PRECALL                      
+       150 CALL                         
+       160 UNPACK_SEQUENCE              
+       164 STORE_FAST                   hour
+       166 STORE_FAST                   minute
+   .   168 JUMP_FORWARD                 to 390
+   .   170 PUSH_EXC_INFO                
+   .   172 LOAD_GLOBAL                  ValueError
+HUNK insert   orig[71:71]@388(0) decomp[63:71]@352(8)
+   .   346 COPY                         
+   .   348 POP_EXCEPT                   
+   .   350 RERAISE                      
+       352 LOAD_GLOBAL                  NULL + divmod
+       364 LOAD_FAST                    minute_time
+       366 LOAD_CONST                   100
+       368 PRECALL                      
+       372 CALL                         
+       382 UNPACK_SEQUENCE              
+       386 STORE_FAST                   hour
+       388 STORE_FAST                   minute
+   .   390 LOAD_FAST                    self
+   .   392 LOAD_METHOD                  _day_minutes
+   .   414 LOAD_FAST                    hour
+# wizard_quant_api.pyc :: params_analysis   orig=144 decomp=137  substantive-hunks=3
+HUNK replace  orig[10:11]@28(1) decomp[10:12]@28(2)
+   .    14 LOAD_CONST                   -1
+   .    16 BINARY_SUBSCR                
+   .    26 STORE_FAST                   value
+        28 JUMP_FORWARD                 to 48
+   .    30 PUSH_EXC_INFO                
+   .    32 POP_TOP                      
+   .    34 LOAD_FAST                    value
+   .    14 LOAD_CONST                   -1
+   .    16 BINARY_SUBSCR                
+   .    26 STORE_FAST                   value
+        28 LOAD_CONST                   None
+        30 RETURN_VALUE                 
+   .    32 PUSH_EXC_INFO                
+   .    34 POP_TOP                      
+   .    36 LOAD_FAST                    value
+HUNK replace  orig[16:17]@40(1) decomp[17:19]@42(2)
+   .    34 LOAD_FAST                    value
+   .    36 STORE_FAST                   value
+   .    38 POP_EXCEPT                   
+        40 JUMP_FORWARD                 to 48
+   .    42 COPY                         
+   .    44 POP_EXCEPT                   
+   .    46 RERAISE                      
+   .    36 LOAD_FAST                    value
+   .    38 STORE_FAST                   value
+   .    40 POP_EXCEPT                   
+        42 LOAD_CONST                   None
+        44 RETURN_VALUE                 
+   .    46 COPY                         
+   .    48 POP_EXCEPT                   
+   .    50 RERAISE                      
+HUNK delete   orig[20:29]@48(9) decomp[22:22]@50(0)
+   .    42 COPY                         
+   .    44 POP_EXCEPT                   
+   .    46 RERAISE                      
+        48 LOAD_FAST                    filter_type
+        50 LOAD_FAST                    value
+        52 LOAD_GLOBAL                  NULL + float
+        64 LOAD_FAST                    value_params
+        66 PRECALL                      
+        70 CALL                         
+        80 LOAD_CONST                   ('filter_type', 'value', 'ob_value')
+        82 BUILD_CONST_KEY_MAP          
+        84 RETURN_VALUE                 
+   .    86 LOAD_FAST                    filter_type
+   .    88 LOAD_CONST                   'region_v'
+   .    90 COMPARE_OP                   ==
+# fileio_utils.pyc :: write   orig=720 decomp=721  substantive-hunks=4
+HUNK replace  orig[47:56]@206(9) decomp[47:49]@206(2)
+   .   200 DICT_MERGE                   
+   .   202 CALL_FUNCTION_EX             
+   .   204 POP_TOP                      
+       206 NOP                          
+       208 LOAD_CONST                   None
+       210 LOAD_CONST                   None
+       212 LOAD_CONST                   None
+       214 PRECALL                      
+       218 CALL                         
+       228 POP_TOP                      
+       230 LOAD_CONST                   True
+       232 RETURN_VALUE                 
+   .   234 LOAD_FAST                    data_type
+   .   236 LOAD_CONST                   'dict'
+   .   238 COMPARE_OP                   ==
+   .   200 DICT_MERGE                   
+   .   202 CALL_FUNCTION_EX             
+   .   204 POP_TOP                      
+       206 EXTENDED_ARG                 
+       208 JUMP_FORWARD                 to 778
+   .   210 LOAD_FAST                    data_type
+   .   212 LOAD_CONST                   'dict'
+   .   214 COMPARE_OP                   ==
+HUNK insert   orig[178:178]@798(0) decomp[171:180]@776(9)
+   .   762 CALL                         
+   .   772 POP_TOP                      
+   .   774 LOAD_CONST                   False
+       776 RETURN_VALUE                 
+       778 NOP                          
+       780 LOAD_CONST                   None
+       782 LOAD_CONST                   None
+       784 LOAD_CONST                   None
+       786 PRECALL                      
+       790 CALL                         
+       800 POP_TOP                      
+       802 LOAD_CONST                   True
+   .   804 RETURN_VALUE                 
+   .   806 LOAD_FAST                    self
+   .   808 LOAD_ATTR                    file_format
+HUNK replace  orig[679:681]@2908(2) decomp[681:682]@2912(1)
+   .  2892 PRECALL                      
+   .  2896 CALL                         
+   .  2906 POP_TOP                      
+      2908 LOAD_CONST                   False
+      2910 RETURN_VALUE                 
+   .  2912 PUSH_EXC_INFO                
+   .  2914 WITH_EXCEPT_START            
+   .  2916 POP_JUMP_FORWARD_IF_TRUE     to 2926
+   .  2896 PRECALL                      
+   .  2900 CALL                         
+   .  2910 POP_TOP                      
+      2912 JUMP_FORWARD                 to 2936
+   .  2914 PUSH_EXC_INFO                
+   .  2916 WITH_EXCEPT_START            
+   .  2918 POP_JUMP_FORWARD_IF_TRUE     to 2928
+HUNK replace  orig[692:693]@2934(1) decomp[693:694]@2936(1)
+   .  2928 POP_EXCEPT                   
+   .  2930 POP_TOP                      
+   .  2932 POP_TOP                      
+      2934 LOAD_CONST                   None
+   .  2936 RETURN_VALUE                 
+   .  2938 PUSH_EXC_INFO                
+   .  2940 LOAD_GLOBAL                  BaseException
+   .  2930 POP_EXCEPT                   
+   .  2932 POP_TOP                      
+   .  2934 POP_TOP                      
+      2936 LOAD_CONST                   False
+   .  2938 RETURN_VALUE                 
+   .  2940 PUSH_EXC_INFO                
+   .  2942 LOAD_GLOBAL                  BaseException
+# fileio_utils.pyc :: acquire   orig=114 decomp=108  substantive-hunks=3
+HUNK insert   orig[48:48]@300(0) decomp[48:56]@302(8)
+   .   286 PRECALL                      
+   .   290 CALL                         
+   .   300 POP_TOP                      
+       302 JUMP_FORWARD                 to 354
+       304 LOAD_GLOBAL                  NULL + time
+       316 LOAD_ATTR                    sleep
+       326 LOAD_FAST                    self
+       328 LOAD_ATTR                    delay
+       338 PRECALL                      
+       342 CALL                         
+       352 POP_TOP                      
+   .   354 NOP                          
+   .   356 LOAD_GLOBAL                  NULL + os
+   .   368 LOAD_ATTR                    unlink
+HUNK delete   orig[87:99]@532(12) decomp[95:95]@582(0)
+   .   516 PRECALL                      
+   .   520 CALL                         
+   .   530 RAISE_VARARGS                
+       532 LOAD_GLOBAL                  NULL + time
+       544 LOAD_ATTR                    sleep
+       554 LOAD_FAST                    self
+       556 LOAD_ATTR                    delay
+       566 PRECALL                      
+       570 CALL                         
+       580 POP_TOP                      
+       582 POP_EXCEPT                   
+       584 LOAD_CONST                   None
+       586 STORE_FAST                   e
+       588 DELETE_FAST                  e
+       590 JUMP_FORWARD                 to 608
+   .   592 LOAD_CONST                   None
+   .   594 STORE_FAST                   e
+   .   596 DELETE_FAST                  e
+HUNK delete   orig[107:109]@608(2) decomp[103:103]@598(0)
+   .   602 COPY                         
+   .   604 POP_EXCEPT                   
+   .   606 RERAISE                      
+       608 EXTENDED_ARG                 
+       610 JUMP_BACKWARD                to 42
+   .   612 LOAD_CONST                   True
+   .   614 LOAD_FAST                    self
+   .   616 STORE_ATTR                   is_locked

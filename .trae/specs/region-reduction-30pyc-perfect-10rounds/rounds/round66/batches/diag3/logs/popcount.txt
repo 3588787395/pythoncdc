@@ -1,0 +1,6 @@
+landed real_quote {'pop_lines': [25362, 25574, 25630, 25748], 'pop_hits': {'25362': 0, '25574': 0, '25630': 0, '25748': 3}, 'gate_reached': 0}
+landed klinedata {'pop_lines': [25362, 25574, 25630, 25748], 'pop_hits': {'25362': 0, '25574': 0, '25630': 0, '25748': 11}, 'gate_reached': 0}
+landed synth {'pop_lines': [25362, 25574, 25630, 25748], 'pop_hits': {'25362': 0, '25574': 0, '25630': 0, '25748': 0}, 'gate_reached': 0}
+Traceback (most recent call last):
+  File "<stdin>", line 19, in <module>
+AssertionError

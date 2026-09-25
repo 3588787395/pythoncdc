@@ -1,0 +1,20 @@
+products identical=398 changed=4 unresolved=0
+   CHANGED IQCommon/util/common_func.pyc
+   CHANGED IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc
+   CHANGED IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc
+   CHANGED IQEngine/utils/scheduler.pyc
+official instruction-gap sum landed=418  m66b=375
+matched functions landed=5693  m66b=5697
+fully matched files landed=385  m66b=386
+--- IQCommon/util/common_func.pyc
+    landed: ["['get_kline_time_by_frequency_array', 231, 228, 0, 45]"]
+    m66b: []
+--- IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc
+    landed: ["['_on_publish_after_trading_end', 486, 481, 3, 33]", "['_save_testds_to_csv', 71, 68, 7, 19]", "['get_TradeMode_trades', 1839, 1801, 4, 1617]"]
+    m66b: ["['_on_publish_after_trading_end', 486, 481, 3, 33]", "['_save_testds_to_csv', 71, 68, 7, 19]"]
+--- IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc
+    landed: ["['_process_cancel_order', 293, 292, 16, 43]", "['_process_order', 454, 396, 9, 349]", "['_sync_worker', 349, 347, 0, 296]", "['_trade_status_handle', 114, 112, 0, 107]", "['after_trading_cancel_order', 155, 155, 3, 122]", "['etf_basket_order', 693, 693, 11, 216]", "['etf_purchase_redemption', 377, 369, 1, 37]", "['get_all_orders', 79, 78, 2, 24]", "['get_etf_stock_info', 144, 146, 1, 139]", "['get_max_amount', 201, 213, 2, 18]", "['ipo_stocks_order', 1075, 1076, 10, 437]", "['on_order_response', 445, 444, 6, 57]", "['on_trade_response', 392, 391, 6, 57]"]
+    m66b: ["['_process_cancel_order', 293, 292, 16, 43]", "['_process_order', 454, 396, 9, 349]", "['_sync_worker', 349, 347, 0, 296]", "['_trade_status_handle', 114, 112, 0, 107]", "['after_trading_cancel_order', 155, 155, 3, 122]", "['etf_basket_order', 693, 693, 11, 216]", "['etf_purchase_redemption', 377, 369, 1, 37]", "['get_all_orders', 79, 78, 2, 24]", "['get_max_amount', 201, 213, 2, 18]", "['ipo_stocks_order', 1075, 1076, 10, 437]", "['on_order_response', 445, 444, 6, 57]", "['on_trade_response', 392, 391, 6, 57]"]
+--- IQEngine/utils/scheduler.pyc
+    landed: ["['get_checked_time', 106, 106, 0, 43]", "['run_daily', 77, 71, 0, 56]"]
+    m66b: ["['run_daily', 77, 71, 0, 56]"]

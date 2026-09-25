@@ -1,0 +1,108 @@
+=== decomp firstlineno 205
+      0 RESUME                         
+      2 LOAD_GLOBAL                    NULL + Engine
+     14 LOAD_ATTR                      instance
+     24 PRECALL                        
+     28 CALL                           
+     38 STORE_FAST                     engine
+     40 LOAD_FAST                      limit_price
+     42 POP_JUMP_FORWARD_IF_NONE       to 102
+     44 LOAD_GLOBAL                    NULL + LimitOrder
+     56 LOAD_GLOBAL                    NULL + float
+     68 LOAD_FAST                      limit_price
+     70 PRECALL                        
+     74 CALL                           
+     84 PRECALL                        
+     88 CALL                           
+     98 STORE_FAST                     style
+    100 JUMP_FORWARD                   to 130
+    102 LOAD_GLOBAL                    NULL + MarketOrder
+    114 PRECALL                        
+    118 CALL                           
+    128 STORE_FAST                     style
+    130 LOAD_FAST                      engine
+    132 LOAD_ATTR                      config
+    142 LOAD_ATTR                      strategy
+    152 LOAD_ATTR                      run_type
+    162 LOAD_GLOBAL                    RunType
+    174 LOAD_ATTR                      BACKTEST
+    184 COMPARE_OP                     !=
+    190 POP_JUMP_FORWARD_IF_FALSE      to 634
+    192 LOAD_CONST                     '88'
+    194 LOAD_FAST                      asset
+    196 LOAD_ATTR                      symbol
+    206 CONTAINS_OP                    
+    208 POP_JUMP_FORWARD_IF_FALSE      to 266
+    210 LOAD_GLOBAL                    NULL + IQInvalidArgument
+    222 LOAD_GLOBAL                    NULL + _
+    234 LOAD_CONST                     'Main Future contracts[88] are not supported in paper trading.'
+    236 PRECALL                        
+    240 CALL                           
+    250 PRECALL                        
+    254 CALL                           
+    264 RAISE_VARARGS                  
+    266 LOAD_CONST                     '99'
+    268 LOAD_FAST                      asset
+    270 LOAD_ATTR                      symbol
+    280 CONTAINS_OP                    
+    282 POP_JUMP_FORWARD_IF_FALSE      to 340
+    284 LOAD_GLOBAL                    NULL + IQInvalidArgument
+    296 LOAD_GLOBAL                    NULL + _
+    308 LOAD_CONST                     'Index Future contracts[99] are not supported in paper trading.'
+    310 PRECALL                        
+    314 CALL                           
+    324 PRECALL                        
+    328 CALL                           
+    338 RAISE_VARARGS                  
+    340 LOAD_GLOBAL                    NULL + iq_order
+    352 LOAD_FAST                      asset
+    354 LOAD_FAST                      amount
+    356 LOAD_FAST                      entrust_direction
+    358 LOAD_FAST                      style
+    360 LOAD_FAST                      futures_direction
+    362 PRECALL                        
+    366 CALL                           
+    376 STORE_FAST                     order_
+    378 LOAD_FAST                      order_
+    380 POP_JUMP_FORWARD_IF_NOT_NONE   to 386
+    382 LOAD_CONST                     None
+    384 RETURN_VALUE                   
+    386 LOAD_GLOBAL                    NULL + is_trade
+    398 PRECALL                        
+    402 CALL                           
+    412 POP_JUMP_FORWARD_IF_TRUE       to 482
+    414 LOAD_FAST                      order_
+    416 LOAD_ATTR                      entrust_direction
+    426 LOAD_ATTR                      value
+    436 LOAD_METHOD                    upper
+    458 PRECALL                        
+    462 CALL                           
+    472 LOAD_CONST                     'BUY'
+    474 COMPARE_OP                     ==
+    480 POP_JUMP_FORWARD_IF_FALSE      to 484
+    482 JUMP_FORWARD                   to 486
+    484 NOP                            
+    486 LOAD_FAST                      order_
+    488 LOAD_ATTR                      futures_direction
+    498 LOAD_ATTR                      value
+    508 LOAD_METHOD                    upper
+    530 LOAD_FAST                      order_
+    532 LOAD_ATTR                      futures_direction
+    542 LOAD_ATTR                      value
+    552 LOAD_METHOD                    upper
+    574 PRECALL                        
+    578 CALL                           
+    588 LOAD_CONST                     'OPEN'
+    590 COMPARE_OP                     ==
+    596 POP_JUMP_FORWARD_IF_FALSE      to 602
+    598 LOAD_CONST                     '开仓'
+    600 JUMP_FORWARD                   to 604
+    602 LOAD_CONST                     '平仓'
+    604 PRECALL                        
+    608 CALL                           
+    618 POP_TOP                        
+    620 LOAD_FAST                      order_
+    622 LOAD_ATTR                      order_id
+    632 RETURN_VALUE                   
+    634 LOAD_CONST                     None
+    636 RETURN_VALUE                   

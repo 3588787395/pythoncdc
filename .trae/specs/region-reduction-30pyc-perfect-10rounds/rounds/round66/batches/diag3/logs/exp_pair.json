@@ -1,0 +1,13 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "        if (block is self.entry\n                and self.entry is not analyzer.cfg.entry_block):\n            return True\n        return False",
+   "repl": "        if block is self.entry:\n            return True\n        return False"
+  },
+  {
+   "anchor": "            match_regions = [r for r in match_regions if not _region_overlaps_with_ternary(r)]\n            assert_regions = [r for r in assert_regions if not _region_overlaps_with_ternary(r)]",
+   "repl": "            match_regions = [r for r in match_regions if not _region_overlaps_with_ternary(r)]\n            assert_regions = [r for r in assert_regions if not _region_overlaps_with_ternary(r)]\n            # [R66-diag3-pair] DIAGNOSTIC ONLY: release chained-compare IfRegions\n            # whose entry block has been consumed by a TernaryRegion (same-level\n            # structural identity as the match/assert filter above).\n            _cc_released = []\n            for _cr in list(chained_compare_regions):\n                for _tb in _ternary_block_sets:\n                    if _cr.entry is not None and _cr.entry in _tb:\n                        _cc_released.append(_cr)\n                        break\n            for _cr in _cc_released:\n                chained_compare_regions.remove(_cr)\n                if _cr in self.regions:\n                    self.regions.remove(_cr)\n                for _rb in _cr.blocks:\n                    if self.block_to_region.get(_rb) is _cr:\n                        del self.block_to_region[_rb]"
+  }
+ ]
+}
