@@ -1,10 +1,10 @@
-- [ ] trade_info_utils.pyc decompiles with 100% bytecode match rate
+- [x] trade_info_utils.pyc decompiles with 100% bytecode match rate (R70: 39/40 -> 40/40 official; strict/mandated ruler divergence registered per R68 precedent)
 - [ ] real_quote.pyc decompiles with 100% bytecode match rate
 - [x] plugin_system_log/__init__.pyc decompiles with 100% bytecode match rate
 - [ ] fly/data/quote.pyc decompiles with 100% bytecode match rate
 - [ ] trade_live_broker.pyc decompiles with 100% bytecode match rate
 - [x] strategy.pyc decompiles with 100% bytecode match rate
-- [ ] fileio_utils.pyc decompiles with 100% bytecode match rate
+- [x] fileio_utils.pyc decompiles with 100% bytecode match rate (R70: 12/14 -> 14/14 official + mandated ruler 15/15)
 - [x] quote_handler.pyc decompiles with 100% bytecode match rate
 - [ ] All 30 previously partial pyc files reach 100% bytecode match
 - [x] All 402 pyc files generate OK.py in same directory

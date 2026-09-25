@@ -1,0 +1,15 @@
+{
+ "name": "cand_r70_r57e_exc_handler_visited",
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "        - 前向条件跳转/短路跳转/普通顺序指令：仅沿循环内、非排除集、非异常\n          边的正常后继继续游走；",
+   "repl": "        - 前向条件跳转/短路跳转/普通顺序指令：仅沿循环内、非排除集的后继继续\n          游走；**含本臂 try 区经异常边派生的 handler 后继**（异常后继与本臂\n          try 块同层次：从本臂已游走到的块经 exception_successors 一步可达即\n          属本臂 try 区）——若跳过，handler 内的前驱块不在 visited，下面单侧\n          规则会把「try 体越过 handler 的 JUMP_FORWARD」的 handler 前驱误判成\n          兄弟臂外部汇入。"
+  },
+  {
+   "anchor": "                _exc = getattr(cur, 'exception_successors', None) or set()\n                _expanded = False\n                for _s in cur.successors:\n                    if _s in _exc:\n                        continue\n                    if _s not in loop_blocks:\n                        _expanded = True  # 出循环正常边：出口收束\n                        continue\n                    if _s in exclude or _s in visited:\n                        continue\n                    visited.add(_s)\n                    worklist.append(_s)\n                    _expanded = True",
+   "repl": "                # [R70-diag1-B1 · R57-E 臂游走纳入本臂 try 区 handler]\n                # 【识别条件】（同层次结构身份，不读名字/常量/偏移/计数）：游走中\n                #   当前块 cur 的后继里含异常后继 exc——exc 由本臂 try 块沿异常边\n                #   唯一派生、与 cur 同层（同属本臂 try 区），故其子图属于本臂，\n                #   必须进 visited；据此单侧规则的 T.predecessors ⊆ visited 成立\n                #   时，「try 体越过 handler 的 JUMP_FORWARD」就不再是臂出口票的\n                #   外部汇入（handler 内前驱是本臂自己的块）。\n                # 【归约方式】handler 块进 visited ⇒ 单侧规则不命中 ⇒ 逐字保持\n                #   NCPD 算出的 merge（调用方 L17155 只在 _merge_e 非 None 时覆盖），\n                #   臂体收集到真汇聚点，不破坏「innermost→outermost、每块每层唯一\n                #   归属」；判据不命中时零行为差（严格附加）。\n                # 【AST 映射】merge 不被改写 ⇒ ast.If 的 body/orelse 保持源序，\n                #   内层 if 留在本臂 body 内，不被提升到对侧 orelse 之后。\n                _expanded = False\n                for _s in cur.successors:\n                    if _s not in loop_blocks:\n                        _expanded = True  # 出循环正常边：出口收束\n                        continue\n                    if _s in exclude or _s in visited:\n                        continue\n                    visited.add(_s)\n                    worklist.append(_s)\n                    _expanded = True"
+  }
+ ],
+ "note": "R70 diag1 根因 B: R57-E single-side external-predecessor fooled by skipped exception edges"
+}

@@ -2677,3 +2677,42 @@
         与 `test_repros/round69_diag{1..5}/` 9 支最小复现（每目录 README 记 landed→m69 读数，
         仓库只入库 `.py`）；提交并 push。交接：R70 开局先取单支全清目标，
         **`provision70` 的 `PY_FILES` 需改用 `closeout69.py`**（电池清单已含 round68/69 见证）
+
+- [x] Task 70: Round 70 — 中心续做五连复测 + 合并落地 **m70**（采纳 3 件、拆臂证伪回退 1 件、NONE 2 支），
+      region_analyzer 7 处编辑，**fileio_utils 修到双尺全清（mandate 达成）+ trade_info_utils 官方全清**，
+      官方尺 5712 → **5717/5746 = 99.50%**、ok 392 → **394**、partial 10 → **8**、failed 0
+  - [x] SubTask 70.1: 承接上一会话 r70gate 诊断成果（provision70 PY_FILES 已改用 closeout69.py 82 项电池；
+        diag1..diag5 FACTS/specs 在位）——中心把 4 份候选 spec 规范化入 center/specs 并 mbuild70 重建镜像
+        （c1 2 edits、c2 2 files/2 edits、c3 2 edits、c4 3 edits，锚点断言全过）
+  - [x] SubTask 70.2: 中心五连复测（10 支合集 + 金丝雀 4 sha + 82 项电池 + 严格差分 + 合成咬合）——
+        c1 trade_live_broker 109→111/119（合成 r70_exc_r57e 1/2→2/2）、c3 trade_info 39→40/40、
+        c4 fileio 12→14/14（合成 witness 1/2→2/2）采纳；**c2 拆臂证伪**（T1 单上 get_price 230→251 过冲
+        + risk_calculation 33→32/35 回归、T3 单上惰性）按 ADR-1 整件回退；diag5 两支 NONE（三签名纠缠
+        需成对落地 + 2254 汇合点归属未钉死）
+  - [x] SubTask 70.3: 合并与落地 —— mkfinal70 m70（region_analyzer 7 edits，逐条「前序编辑后 anchor 恰 1 次」
+        断言全过）→ mbuild70 m70 出 mirr_m70 → 合并臂全量复测（10 支 IMPROVED=3 SAME=6 MOVED=1 REG=0、
+        canary 4 sha SAME、电池 worse=0、严格 441/488、合成 2/2×2）→ land70 --apply（dry-run 断言
+        replay==mirror）；落地字节 1 763 461 B、sha256 20e2c9fc941aaa4f、无 BOM、CRLF 28140、裸 LF 0；
+        landproof mirr_m70 33/33 same diff=0；G0 跨层模式 landed=2/1/0 → merged=2/1/0 **0 新增**
+  - [x] SubTask 70.4: 修到完全 OK 的 pyc（mandate ≥1 达成）—— fileio_utils 12/14 → **14/14 官方全清**
+        且 mandated ruler（scripts/pyc_verify.py，pylingual compare_pyc）**15/15 = 100%**、严格缺陷集空
+        ⇒ 双尺全清旗舰；trade_info_utils 39/40 → **40/40 官方全清**（mandated 36/41、严格 target_diff #94
+        仍红 ⇒ 按 R68 matcher 先例登记尺子分歧，旗舰不取）
+  - [x] SubTask 70.5: 门禁（严格串行，全过）—— G0 三支语法 OK + 跨层 0 新增；G1 IMPROVED=3 SAME=6 MOVED=1
+        REG=0 ERR=0、fully matched 0→2；G2 金丝雀 4 sha 逐字节同 + 严格两臂 209/211 缺陷 2 同 R69；
+        G3 batch --round 70 **402 verified/0 failed** + **mandated ruler 首录 402 支 6498/6623 = 98.11%**
+        （346 文件全等、0 compile_error/error，8 分片）；G4 stats **5746/5717/99.50%**（matched +5、
+        ok 394）；G4′ 严格 436 → **441/488 缺陷 47**、FIXED 5、NEW=0（换 kind 2 条均为同函数）；G5 索引
+        402→402、round-stamp-only 399、**substantive=3 全改善**；G5′ blast changed=8 identical=394
+        unresolved=0 **REGRESSED=0**（3 改善 + 1 纯位移 + 4 文本移位 elif 重排，b4 四支严格 187→189
+        缺陷 5→3）；G6 电池 82 项三候选臂 + m70 臂 worse=0；G7 见证 82 项 head vs m70 worse=0；
+        G8 402 OK.py 在位 + py_compile bad=0 + Traceback 0
+  - [x] SubTask 70.6: 副作用与尺子分歧裁定（如实入档）—— 4 支文本移位（graph/backtest_info_utils/
+        ptrade_broker/ptradeAccount）经 head 镜像归因 + run-to-run 确定性验证，官方计数全等且
+        fully matched、严格尺纯改善；G1 MOVED=1 = realtime_event_source（|Δ| 11→10 改善）；
+        G4′ 换 kind 2 条无新增缺陷函数；mandated ruler 402 读数为 R70 首录基线（R69 无可比列）
+  - [x] SubTask 70.7: 归档与提交 —— rounds/round70/（OUTCOME.md 8 节 + logs/EVIDENCE.md A–G +
+        logs/gate G0–G8 + G3v + Land70_landproof + logs/dump 各臂 jsonl/strict json/8 分片 mandated 报告 +
+        specs 合并件与 5 份候选件 + batches diag1..diag5 FACTS/BRIEF + b0_diag2_rejected 拆臂证据 +
+        scripts 15 份，114+ 文件）与 test_repros/round70_diag{1,2,3,4}/ 见证（每目录 README 记
+        landed→m70 读数，diag2 为回退件诚实见证）；提交并 push

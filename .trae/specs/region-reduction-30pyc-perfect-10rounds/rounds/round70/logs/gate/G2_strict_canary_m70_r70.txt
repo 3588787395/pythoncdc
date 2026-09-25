@@ -1,0 +1,8 @@
+G2 strict ruler on the 4 canary targets (arm=m70)
+======================================================================
+quotation.pyc                strict 148/150 defects=2
+market_time.pyc              strict 10/10 defects=0
+datetime_func.pyc            strict 26/26 defects=0
+datetime_func.pyc            strict 25/25 defects=0
+
+STRICT TOTAL ok=209/211 defects=2

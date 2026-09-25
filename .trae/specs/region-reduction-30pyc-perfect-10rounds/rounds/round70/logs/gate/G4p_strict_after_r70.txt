@@ -1,0 +1,14 @@
+G4p strict ruler on the 10 partial targets (landed -> m70)
+======================================================================
+__init__.pyc@plugin_system_risk_calculation    ok  34/37  d=3   -> ok  34/37  d=3    IMPROVED
+api_base.pyc@api                               ok  26/27  d=1   -> ok  26/27  d=1    IMPROVED
+fileio_utils.pyc@util                          ok  13/15  d=2   -> ok  15/15  d=0    IMPROVED
+klinedata.pyc@api                              ok  58/63  d=5   -> ok  58/63  d=5    IMPROVED
+order_api.pyc@fly_api                          ok  33/36  d=3   -> ok  33/36  d=3    IMPROVED
+quote.pyc@data                                 ok  76/89  d=13  -> ok  76/89  d=13   IMPROVED
+real_quote.pyc@plugin_system_realquote         ok  41/45  d=4   -> ok  41/45  d=4    IMPROVED
+realtime_event_source.pyc@plugin_system_event_source ok  11/12  d=1   -> ok  11/12  d=1    IMPROVED
+trade_info_utils.pyc@util                      ok  37/41  d=4   -> ok  38/41  d=3    IMPROVED
+trade_live_broker.pyc@plugin_system_trade      ok 107/123 d=16  -> ok 109/123 d=14   IMPROVED
+
+STRICT TOTAL ok 436/488 -> ok 441/488 ; defects 52 -> 47

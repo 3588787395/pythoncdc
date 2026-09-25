@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "        _tail_ops = ('LOAD_', 'COMPARE_OP', 'CONTAINS_OP', 'IS_OP', 'UNARY_',\n                     'BINARY_OP', 'PUSH_NULL', 'CALL', 'GET_', 'MAKE_',\n                     'LOAD_METHOD', 'LOAD_ATTR')\n",
+   "repl": "        # [R70-diag2 T2 3.11 调用前导] 识别条件：消费者之后到块末条件跳转之间\n        #   是一段完整的操作数构造指令；PRECALL 是 CPython 3.11 每个 CALL 必有的\n        #   前导，栈效应为 0、不产生值，属操作数构造的一部分。\n        # 归约方式：仅放宽本块自身指令白名单，不改变归并点/分支边界计算。\n        # AST 映射：无新节点类型，仅让既有 ast.If(test=复合条件) 可被判定。\n        _tail_ops = ('LOAD_', 'COMPARE_OP', 'CONTAINS_OP', 'IS_OP', 'UNARY_',\n                     'BINARY_OP', 'PUSH_NULL', 'CALL', 'GET_', 'MAKE_',\n                     'LOAD_METHOD', 'LOAD_ATTR', 'PRECALL')\n"
+  }
+ ]
+}

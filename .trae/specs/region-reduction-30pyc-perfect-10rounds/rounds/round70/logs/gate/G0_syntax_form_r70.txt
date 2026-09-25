@@ -1,0 +1,8 @@
+G0 syntax / form gate (round 70, repository bytes after landing)
+======================================================================
+core/cfg/region_ast_generator.py     bytes=3199517  sha256=240ecbaea36eeb7073be0a4d0f527992c1292b34f86b74a757d16b0c00a43716 BOM=True  CRLF=51368  bareLF=0 ast OK / py_compile OK cross-layer-pattern=2
+core/cfg/region_analyzer.py          bytes=1763461  sha256=20e2c9fc941aaa4f010c23d46425e498432978f14589b52dcda4bbb7f85ce4df BOM=False CRLF=28140  bareLF=0 ast OK / py_compile OK cross-layer-pattern=1
+core/cfg/comprehension_generator.py  bytes=108192   sha256=be5490c1118c7199fe0a5c23d93e466663c82c813bccc9a73c68d602d323978d BOM=False CRLF=2016   bareLF=0 ast OK / py_compile OK cross-layer-pattern=0
+
+cross-layer pattern set (landed=2/1/0, merged=2/1/0, new=0): zero-new OK
+G0 verdict: PASS

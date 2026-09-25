@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_ast_generator.py",
+ "edits": [
+  {
+   "anchor": "            if _extra:\n                region.post_consumer_extra_stmts = _extra\n",
+   "repl": "            # [R70-diag2 T1-F f-string 归并块尾属下一个 if]\n            # 识别条件（同层次结构身份，与 STORE 路径 R36 守卫同源）：承载方必须是\n            #   IfRegion，其 entry 就是本三元的 merge_block，且它除 merge_block 外\n            #   还拥有自己的块（then/else/条件链），即 R13c「f-string 归并块承载\n            #   下一个 if」。同 entry 的 TernaryRegion 不算承载方（尾段归本三元）。\n            # 归约方式：POP_TOP 消费者之后的尾段是那个 if 的块前缀与条件，\n            #   不折叠进本三元的 post_consumer_extra_stmts（只删不增）。\n            # AST 映射：三元只发射 Expr(Call)；尾段由下游 IfRegion 发射为块前缀\n            #   + ast.If，消除前缀双发射。\n            if _extra:\n                for _r70f in self.regions:\n                    if (not isinstance(_r70f, IfRegion)\n                            or _r70f is region\n                            or getattr(_r70f, 'entry', None) is not region.merge_block\n                            or not (set(getattr(_r70f, 'blocks', ()) or ())\n                                    - {region.merge_block})):\n                        continue\n                    _extra = []\n                    break\n            if _extra:\n                region.post_consumer_extra_stmts = _extra\n"
+  }
+ ]
+}

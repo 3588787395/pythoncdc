@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "                else:\n                    if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:\n                        import traceback\n                        print(f\" block@342 skip: not contains_block\", flush=True)\n                    return True\n",
+   "repl": "                else:\n                    # [R70-diag2 T1 三元归并块承载后继 if]\n                    # 识别条件（结构判据）：block_region 是 TernaryRegion 且其\n                    #   merge_block is block（本块是三元值归并点）、块末指令 ∈\n                    #   FORWARD_CONDITIONAL_JUMP_OPS、两条条件后继均在该三元 blocks\n                    #   之外，且真/假值臂已在本块内被语句级消费者终结\n                    #   （复用 _ternary_merge_hosts_next_if 的语言级语句边界不变量）。\n                    # 归约方式：本块不再被三元的「每块唯一归属」屏蔽规则 skip，\n                    #   交给后续三元 owner 扫描置 _ternary_merge_if_entry 并建 IfRegion；\n                    #   三元区域仍作为抽象子节点由块前缀指令发射（原则 2 的显式例外，\n                    #   与 loop_condition_blocks、值上下文 BoolOp merge 例外同源；\n                    #   仅读本区域自身字段，无跨区域跨层次包含）。\n                    # AST 映射：块前缀发射三元 Expr(value) 语句，随后发射\n                    #   ast.If(test=块尾条件, body=then, orelse=else)。\n                    if (isinstance(block_region, TernaryRegion)\n                            and self._ternary_merge_hosts_next_if(block, block_region)):\n                        pass\n                    else:\n                        if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:\n                            import traceback\n                            print(f\" block@342 skip: not contains_block\", flush=True)\n                        return True\n"
+  }
+ ]
+}

@@ -1,0 +1,15 @@
+G1 official ruler on the 10 partial targets (landed -> m70)
+======================================================================
+__init__.pyc@plugin_system_risk_calculation     33/35  d=2   |d|=6    ->  33/35  d=2   |d|=6     SAME
+api_base.pyc@api                                24/25  d=1   |d|=0    ->  24/25  d=1   |d|=0     SAME
+fileio_utils.pyc@util                           12/14  d=2   |d|=4    ->  14/14  d=0   |d|=0     IMPROVED
+klinedata.pyc@api                               43/45  d=2   |d|=1    ->  43/45  d=2   |d|=1     SAME
+order_api.pyc@fly_api                           32/34  d=2   |d|=19   ->  32/34  d=2   |d|=19    SAME
+quote.pyc@data                                  72/81  d=9   |d|=62   ->  72/81  d=9   |d|=62    SAME
+real_quote.pyc@plugin_system_realquote          40/44  d=4   |d|=5    ->  40/44  d=4   |d|=5     SAME
+realtime_event_source.pyc@plugin_system_event_source  11/12  d=1   |d|=11   ->  11/12  d=1   |d|=10    MOVED
+trade_info_utils.pyc@util                       39/40  d=1   |d|=2    ->  40/40  d=0   |d|=0     IMPROVED
+trade_live_broker.pyc@plugin_system_trade      109/119 d=10  |d|=85   -> 111/119 d=8   |d|=83    IMPROVED
+
+TALLY ERR=0 IMPROVED=3 MOVED=1 REGRESSION=0 SAME=6
+files fully cleared: 2 (fileio_utils.pyc@util, trade_info_utils.pyc@util)

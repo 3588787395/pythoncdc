@@ -1,0 +1,346 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "product": "D:/Temp/opencode/r70gate/center/build_r70c4/IQEngine__plugins__plugin_system_trade__trade_live_brokerOK.py",
+  "functions": 123,
+  "ok": 107,
+  "bad": [
+   [
+    "<module>.TradeLiveBroker._process_cancel_order",
+    "seq_len",
+    "orig=295 decomp=297"
+   ],
+   [
+    "<module>.TradeLiveBroker._process_order",
+    "seq_len",
+    "orig=454 decomp=399"
+   ],
+   [
+    "<module>.TradeLiveBroker._process_tick_order",
+    "target_diff",
+    "#27 JUMP 终点 orig=(\"'len'\", 'LOAD_GLOBAL') decomp=(\"'self'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.TradeLiveBroker._sync_worker",
+    "seq_len",
+    "orig=350 decomp=347"
+   ],
+   [
+    "<module>.TradeLiveBroker._trade_status_handle",
+    "seq_len",
+    "orig=114 decomp=112"
+   ],
+   [
+    "<module>.TradeLiveBroker.etf_basket_order",
+    "seq_diff",
+    "#254 orig=(\"'strategy_log'\", 'LOAD_GLOBAL') decomp=(\"'entrust_price'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.TradeLiveBroker.etf_purchase_redemption",
+    "seq_len",
+    "orig=379 decomp=369"
+   ],
+   [
+    "<module>.TradeLiveBroker.get_ipo_stocks",
+    "target_diff",
+    "#189 POP_JUMP_IF_TRUE 终点 orig=(\"'str'\", 'LOAD_GLOBAL') decomp=(None, 'FOR_ITER')"
+   ],
+   [
+    "<module>.TradeLiveBroker.get_max_amount",
+    "seq_len",
+    "orig=201 decomp=213"
+   ],
+   [
+    "<module>.TradeLiveBroker.ipo_stocks_order",
+    "seq_diff",
+    "#624 orig=(\"'new_stock'\", 'LOAD_FAST') decomp=('<JUMP>', 'JUMP')"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_order_response",
+    "seq_len",
+    "orig=449 decomp=448"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_order_response_list_handle",
+    "target_diff",
+    "#23 POP_JUMP_IF_NONE 终点 orig=(\"'entrust_no'\", 'LOAD_FAST') decomp=(None, 'FOR_ITER')"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_pre_before_trading_start",
+    "target_diff",
+    "#4 POP_JUMP_IF_FALSE 终点 orig=(\"'self'\", 'LOAD_FAST') decomp=(\"'datetime'\", 'LOAD_GLOBAL')"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_trade_response",
+    "seq_len",
+    "orig=396 decomp=395"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_trade_response_list_handle",
+    "target_diff",
+    "#23 POP_JUMP_IF_NONE 终点 orig=(\"'entrust_no'\", 'LOAD_FAST') decomp=(None, 'FOR_ITER')"
+   ],
+   [
+    "<module>.TradeLiveBroker.rzrq_credit_order",
+    "target_diff",
+    "#406 JUMP 终点 orig=(\"'Order'\", 'LOAD_GLOBAL') decomp=(\"'EntrustDirection'\", 'LOAD_GLOBAL')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc",
+  "product": "D:/Temp/opencode/r70gate/center/build_r70c4/fly__data__quoteOK.py",
+  "functions": 89,
+  "ok": 76,
+  "bad": [
+   [
+    "<module>.Quote.build_current_period_df",
+    "seq_len",
+    "orig=118 decomp=109"
+   ],
+   [
+    "<module>.Quote.change_his_to_backward",
+    "target_diff",
+    "#213 POP_JUMP_IF_TRUE 终点 orig=(\"'data'\", 'LOAD_FAST') decomp=('None', 'POP_TOP')"
+   ],
+   [
+    "<module>.Quote.change_his_to_forward",
+    "target_diff",
+    "#241 POP_JUMP_IF_FALSE 终点 orig=(\"'preindex'\", 'LOAD_FAST') decomp=(None, 'FOR_ITER')"
+   ],
+   [
+    "<module>.Quote.check_frequency",
+    "seq_len",
+    "orig=123 decomp=124"
+   ],
+   [
+    "<module>.Quote.check_industry_code",
+    "seq_diff",
+    "#159 orig=('0', 'CONTAINS_OP') decomp=('1', 'CONTAINS_OP')"
+   ],
+   [
+    "<module>.Quote.get_individual_data",
+    "seq_len",
+    "orig=314 decomp=313"
+   ],
+   [
+    "<module>.Quote.get_price",
+    "seq_len",
+    "orig=230 decomp=232"
+   ],
+   [
+    "<module>.Quote.get_real_from_zeromq",
+    "seq_len",
+    "orig=703 decomp=700"
+   ],
+   [
+    "<module>.Quote.load_bars_from_hundsun",
+    "seq_len",
+    "orig=477 decomp=483"
+   ],
+   [
+    "<module>.Quote.load_get_price",
+    "seq_diff",
+    "#53 orig=('<JUMP>', 'POP_JUMP_IF_FALSE') decomp=('None', 'POP_TOP')"
+   ],
+   [
+    "<module>.Quote.run_individual_transform",
+    "seq_len",
+    "orig=364 decomp=321"
+   ],
+   [
+    "<module>.Quote.run_tick_socket",
+    "seq_len",
+    "orig=309 decomp=310"
+   ],
+   [
+    "<module>.Quote.run_tick_transform",
+    "target_diff",
+    "#56 POP_JUMP_IF_FALSE 终点 orig=(\"'len'\", 'LOAD_GLOBAL') decomp=(\"'self'\", 'LOAD_FAST')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+  "product": "D:/Temp/opencode/r70gate/center/build_r70c4/IQData__plugins__plugin_system_realquote__real_quoteOK.py",
+  "functions": 45,
+  "ok": 41,
+  "bad": [
+   [
+    "<module>.RealQuoteData.get_cache_l2_data_by_one",
+    "seq_len",
+    "orig=321 decomp=322"
+   ],
+   [
+    "<module>.RealQuoteData.get_real_minute_kline",
+    "seq_len",
+    "orig=253 decomp=256"
+   ],
+   [
+    "<module>.RealQuoteData.get_tick_direction",
+    "seq_len",
+    "orig=259 decomp=260"
+   ],
+   [
+    "<module>.RealQuoteData.one_prod_to_ndarray",
+    "seq_len",
+    "orig=606 decomp=608"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+  "product": "D:/Temp/opencode/r70gate/center/build_r70c4/IQCommon__api__klinedataOK.py",
+  "functions": 63,
+  "ok": 58,
+  "bad": [
+   [
+    "<module>.get_history_common",
+    "target_diff",
+    "#41 POP_JUMP_IF_NONE 终点 orig=(\"'is_dict'\", 'LOAD_FAST') decomp=(\"'fields'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_kline_by_count_new",
+    "target_diff",
+    "#161 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=(\"'symbols'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_multiminute_his_data",
+    "seq_len",
+    "orig=481 decomp=482"
+   ],
+   [
+    "<module>.get_price_common",
+    "target_diff",
+    "#114 POP_JUMP_IF_NONE 终点 orig=(\"'frequency'\", 'LOAD_FAST') decomp=(\"'is_dict'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.kline_datetime_list",
+    "seq_diff",
+    "#151 orig=('<JUMP>', 'POP_JUMP_IF_TRUE') decomp=('<JUMP>', 'POP_JUMP_IF_FALSE')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
+  "product": "D:/Temp/opencode/r70gate/center/build_r70c4/IQEngine__plugins__plugin_fly_data__fly_api__order_apiOK.py",
+  "functions": 36,
+  "ok": 33,
+  "bad": [
+   [
+    "<module>.base_order",
+    "target_diff",
+    "#136 POP_JUMP_IF_TRUE 终点 orig=(\"'order_obj'\", 'LOAD_FAST') decomp=(\"'生成订单，订单号:{order_id}，可转债代码：{symbol}，数量：{side}{share}'\", 'LOAD_CONST')"
+   ],
+   [
+    "<module>.future_order",
+    "seq_len",
+    "orig=101 decomp=93"
+   ],
+   [
+    "<module>.option_order",
+    "seq_len",
+    "orig=83 decomp=74"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+  "product": "D:/Temp/opencode/r70gate/center/build_r70c4/IQEngine__plugins__plugin_system_risk_calculation____init__OK.py",
+  "functions": 37,
+  "ok": 34,
+  "bad": [
+   [
+    "<module>.PluginRiskCalculation._on_publish_after_trading_end",
+    "seq_len",
+    "orig=488 decomp=481"
+   ],
+   [
+    "<module>.PluginRiskCalculation._on_set_positions",
+    "seq_len",
+    "orig=297 decomp=298"
+   ],
+   [
+    "<module>.PluginRiskCalculation._save_testds_to_csv",
+    "seq_len",
+    "orig=75 decomp=72"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/fileio_utils.pyc",
+  "product": "D:/Temp/opencode/r70gate/center/build_r70c4/IQCommon__util__fileio_utilsOK.py",
+  "functions": 15,
+  "ok": 15,
+  "bad": [],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+  "product": "D:/Temp/opencode/r70gate/center/build_r70c4/IQCommon__util__trade_info_utilsOK.py",
+  "functions": 41,
+  "ok": 38,
+  "bad": [
+   [
+    "<module>.get_trade_status",
+    "target_diff",
+    "#70 FOR_ITER 终点 orig=(\"'return_trade_info'\", 'LOAD_FAST') decomp=(\"'count'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_trade_unit_info",
+    "seq_len",
+    "orig=240 decomp=241"
+   ],
+   [
+    "<module>.trade_operation",
+    "seq_len",
+    "orig=304 decomp=302"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc",
+  "product": "D:/Temp/opencode/r70gate/center/build_r70c4/IQData__api__api_baseOK.py",
+  "functions": 27,
+  "ok": 26,
+  "bad": [
+   [
+    "<module>.get_history_df",
+    "seq_diff",
+    "#419 orig=('<JUMP>', 'POP_JUMP_IF_TRUE') decomp=('<JUMP>', 'POP_JUMP_IF_FALSE')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+  "product": "D:/Temp/opencode/r70gate/center/build_r70c4/IQEngine__plugins__plugin_system_event_source__realtime_event_sourceOK.py",
+  "functions": 12,
+  "ok": 11,
+  "bad": [
+   [
+    "<module>.RealtimeEventSource.clock_worker",
+    "seq_len",
+    "orig=1276 decomp=1287"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ }
+]

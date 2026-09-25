@@ -2659,8 +2659,12 @@ class RegionAnalyzer:
         两臂各自沿正常控制流游走收集「汇合投票」：
         - 无条件前向跳转（JUMP_FORWARD/JUMP_ABSOLUTE）：目标在循环内且不在
           条件结构排除集时记一票，不再深入（该跳转即臂体出口）；
-        - 前向条件跳转/短路跳转/普通顺序指令：仅沿循环内、非排除集、非异常
-          边的正常后继继续游走；
+        - 前向条件跳转/短路跳转/普通顺序指令：仅沿循环内、非排除集的后继继续
+          游走；**含本臂 try 区经异常边派生的 handler 后继**（异常后继与本臂
+          try 块同层次：从本臂已游走到的块经 exception_successors 一步可达即
+          属本臂 try 区）——若跳过，handler 内的前驱块不在 visited，下面单侧
+          规则会把「try 体越过 handler 的 JUMP_FORWARD」的 handler 前驱误判成
+          兄弟臂外部汇入。
         - 回边、后向条件跳转、终态（RETURN/RAISE）：停止游走且不投票——以
           continue/break/return 离开的臂不参与汇合，循环出口/回边永不当选。
         替换触发需同时满足：①两臂投票集合存在【唯一】公共目标 T；②当前
@@ -2716,11 +2720,21 @@ class RegionAnalyzer:
                             and _tgt in loop_blocks and _tgt not in exclude):
                         votes.add(_tgt)
                     continue
-                _exc = getattr(cur, 'exception_successors', None) or set()
+                # [R70-diag1-B1 · R57-E 臂游走纳入本臂 try 区 handler]
+                # 【识别条件】（同层次结构身份，不读名字/常量/偏移/计数）：游走中
+                #   当前块 cur 的后继里含异常后继 exc——exc 由本臂 try 块沿异常边
+                #   唯一派生、与 cur 同层（同属本臂 try 区），故其子图属于本臂，
+                #   必须进 visited；据此单侧规则的 T.predecessors ⊆ visited 成立
+                #   时，「try 体越过 handler 的 JUMP_FORWARD」就不再是臂出口票的
+                #   外部汇入（handler 内前驱是本臂自己的块）。
+                # 【归约方式】handler 块进 visited ⇒ 单侧规则不命中 ⇒ 逐字保持
+                #   NCPD 算出的 merge（调用方 L17155 只在 _merge_e 非 None 时覆盖），
+                #   臂体收集到真汇聚点，不破坏「innermost→outermost、每块每层唯一
+                #   归属」；判据不命中时零行为差（严格附加）。
+                # 【AST 映射】merge 不被改写 ⇒ ast.If 的 body/orelse 保持源序，
+                #   内层 if 留在本臂 body 内，不被提升到对侧 orelse 之后。
                 _expanded = False
                 for _s in cur.successors:
-                    if _s in _exc:
-                        continue
                     if _s not in loop_blocks:
                         _expanded = True  # 出循环正常边：出口收束
                         continue
@@ -5535,6 +5549,30 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     cond_exit_targets.append(cond_exit)
         loop_successors = list(set(loop_successors))
 
+        # [R70 diag4 · 循环出口候选同层判据]
+        # 【识别条件】WHILE 循环且 condition_block 为 None（while-true，不存在条件假值
+        # 驱动的 else 入口）；候选循环出口 S 仍属 loop_successors，但 S 可由「循环体
+        # 真身」(body_set 去 header) 沿前向边、不经 header 抵达——S 落在循环代码之内，
+        # 只是该路径以 raise/return 收尾、进不了自然回边，故此前未进自然循环体。
+        # 仅读自身 body_set/header/后继关系（同层），不读偏移、不读函数/文件名。
+        # 【归约方式】取消该 S 的「循环出口」认领；全部被取消时按既有「无循环出口」
+        # 路径返回 (None, None)，不新增、不删除任何其他块。
+        # 【AST 映射】S 及其后继归其所在嵌套区域（TryExceptRegion / IfRegion）发射；
+        # LoopRegion 不再产出 else 子句，也不再把 S 注入 boundary_stop，使嵌套 if 的
+        # 臂收集能覆盖其自身的 try/except（fileio_utils::FileLock.acquire 形态根因）。
+        if loop_successors and loop_type == RegionType.WHILE_LOOP and condition_block is None:
+            _r70_inner = set(body_set) - {header}
+            _r70_seen = set(_r70_inner)
+            _r70_stack = list(_r70_inner)
+            while _r70_stack:
+                _r70_cur = _r70_stack.pop()
+                for _r70_succ in _r70_cur.successors:
+                    if _r70_succ is header or _r70_succ in _r70_seen:
+                        continue
+                    _r70_seen.add(_r70_succ)
+                    _r70_stack.append(_r70_succ)
+            loop_successors = [s for s in loop_successors if s not in _r70_seen]
+
         if not loop_successors:
             return None, None
 
@@ -6488,11 +6526,27 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         if _cur_jt is not None and _cur_jt not in body_set and (_cur_jt != natural_exit or (for_iter_exit and _cur_jt == for_iter_exit)):
                             _is_except_block = any(i.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE') for i in _cur.instructions)
                             if not _is_except_block:
-                                if for_iter_exit and _cur_jt == for_iter_exit:
+                                # [R70 diag4 · break 目标同层判据]
+                                # 【识别条件】R102 有界 DFS 的候选块 _cur 以无条件前向跳转
+                                # 指向 _cur_jt，_cur_jt 不在 body_set，但已在 block_to_region
+                                # 中归某个既有区域 R 且 R.entry ∈ body_set —— _cur_jt 仍由
+                                # 「循环体内起始的区域」（嵌套 try 的 try 体 / handler）持有，
+                                # 落在循环代码之内，不是循环外的 break 落点。
+                                # 只读自身 block_to_region / body_set / 块末条跳转与后继，
+                                # 不读偏移、不读函数名/文件名、不读阈值。
+                                # 【归约方式】不把 _cur 认作 break；不新增、不删除任何其他块。
+                                # 【AST 映射】_cur 与 _cur_jt 归其所属嵌套区域 / 嵌套 if 的臂
+                                # 发射；LoopRegion 不吸纳 _cur，故 boundary_stop 不再把
+                                # _cur_jt 当循环出口，嵌套 if 的 then 臂才能覆盖其后续语句
+                                # （fileio_utils::FileLock.acquire 内层 try 出口形态根因）。
+                                _r70_reg = self.block_to_region.get(_cur_jt)
+                                _r70_in_loop = (_r70_reg is not None
+                                                and getattr(_r70_reg, 'entry', None) in body_set)
+                                if not _r70_in_loop and for_iter_exit and _cur_jt == for_iter_exit:
                                     break_blocks_set.add(_cur)
-                                elif for_iter_exit and _cur_jt.start_offset >= for_iter_exit.start_offset:
+                                elif not _r70_in_loop and for_iter_exit and _cur_jt.start_offset >= for_iter_exit.start_offset:
                                     break_blocks_set.add(_cur)
-                                elif not for_iter_exit:
+                                elif not _r70_in_loop and not for_iter_exit:
                                     break_blocks_set.add(_cur)
                     for _ns in _cur.successors:
                         if _ns in body_set or _ns in _r102_visited:
@@ -11635,6 +11689,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         has_nested = True
                         break
                 if has_nested:
+                    continue
+                # [R70 diag4] 识别条件：_is_with_exit_cleanup 块存在某个后继，其起始偏移落在
+                # [body_start, exc_target) 内（同层：仍在本层异常表条目 target == exc_target
+                # 的保护范围之内）。
+                # 归约方式：该块是 with 体内 return 之前由 CPython 内联发射的
+                # __exit__(None,None,None) 调用块，不是 with 的正常收尾；跳过它继续
+                # 向后扩展，使后续 return 语句仍归入 with 体。
+                # AST 映射：body_end 延伸覆盖内联 __exit__ 之后的 return 块，return 仍作
+                # 为 WithRegion.with_blocks 内的语句发射，不被抬到 with 之后。
+                if any(body_start <= s.start_offset < exc_target for s in block.successors):
                     continue
                 max_end = min(max_end, block.start_offset)
                 break
@@ -17675,6 +17739,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     and any(self._is_return_none_block(s)
                             for s in else_succ.successors))
                 if (not _25b_else_is_cond and _25b_same_loop and not _25b_shared_rn
+                        and not self._25b_then_arm_orphan_return_none(then_blocks, else_succ)
                         and self._if_arm_is_sink(then_blocks, then_stop)):
                     merge = else_succ
                     then_blocks = self._collect_branch_blocks(then_succ, merge, then_stop)
@@ -26717,6 +26782,66 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     break
             current = ft_succ
         return chain if len(chain) >= 1 else None
+
+    def _25b_then_arm_orphan_return_none(self, then_blocks, else_succ) -> bool:
+        """[R70] [25b] 汇点臂判据的同层保真守卫（else 臂不塌缩）。
+
+        识别条件：在 merge is None 的候选点上，先按 [25b] 原判据取本臂 then_blocks
+        与兄弟臂入口 else_succ；若存在一个「裸 return None 块」B 同时满足：
+        ① B 可由本臂任一块沿 CFG 后继（含异常表隐式边）前向到达；
+        ② B 不在已收集的本臂块集内，且从 else_succ 前向不可达 B；
+        ③ B 不属于任何以本臂块为入口的子区域（with/loop/try/内层 if 的 blocks），
+           即 B 与本条件块同层，不是臂内子区域自己的出口语句；
+        则 B 是编译器为 then 臂真实出口排出的函数级隐式 return None 落点：then 臂
+        的「汇点性」来自 with/try 压制路径掉出臂外并终止于该落点，而 else_succ 在
+        B 之前另起，说明 else_succ 是 else 体，不是 if 之后的顺序语句。
+
+        归约方式：命中时跳过 merge := else_succ，merge 保持 None、对侧臂仍按
+        else_blocks 收集；只改归属不增删——不新增块、语句或发射。
+
+        AST 映射：If(test, then_body, else_body) 保留 orelse，后继语句挂父 SEQ。
+        """
+        _then = {b.start_offset for b in then_blocks}
+        _b2r = self.block_to_region
+
+        def _reg_entry(reg):
+            _e = getattr(reg, 'entry', None)
+            return getattr(_e, 'start_offset', None)
+
+        _nested = [r for r in list(_b2r.values()) if _reg_entry(r) in _then]
+        _inner_ifs = [(e, r) for e, r in (self._ifregion_by_entry or {}).items()
+                      if getattr(e, 'start_offset', None) in _then]
+
+        def _in_nested(b):
+            _off = b.start_offset
+            for r in _nested:
+                if any(x.start_offset == _off for x in r.blocks):
+                    return True
+            for _e, r in _inner_ifs:
+                if any(x.start_offset == _off for x in r.blocks):
+                    return True
+            return False
+
+        def _reach(starts):
+            seen, st, byoff = set(), list(starts), {}
+            while st:
+                b = st.pop()
+                if b.start_offset in seen:
+                    continue
+                seen.add(b.start_offset)
+                byoff[b.start_offset] = b
+                st.extend(b.successors)
+            return seen, byoff
+
+        _ra, _ra_by = _reach(then_blocks)
+        _re, _ = _reach([else_succ])
+        for off in sorted(_ra - _then - _re):
+            b = _ra_by[off]
+            if _in_nested(b):
+                continue
+            if self._is_return_none_block(b):
+                return True
+        return False
 
     def _if_arm_is_sink(self, arm_blocks, stop_set=None) -> bool:
         """识别条件（分支臂汇点判定）：已收集分支臂在 CFG 上是汇点——

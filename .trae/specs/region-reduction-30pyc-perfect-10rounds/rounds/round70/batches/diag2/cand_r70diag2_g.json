@@ -1,0 +1,34 @@
+{
+ "files": [
+  {
+   "file": "core/cfg/region_analyzer.py",
+   "edits": [
+    {
+     "anchor": "                else:\n                    if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:\n                        import traceback\n                        print(f\" block@342 skip: not contains_block\", flush=True)\n                    return True\n",
+     "repl": "                else:\n                    # [R70-diag2 T1 三元归并块承载后继 if]\n                    # 识别条件（结构判据）：block_region 是 TernaryRegion 且其\n                    #   merge_block is block（本块是三元值归并点）、块末指令 ∈\n                    #   FORWARD_CONDITIONAL_JUMP_OPS、且三元值已在本块内被语句级\n                    #   消费者终结（复用 _ternary_merge_hosts_next_if 的语言级语句\n                    #   边界不变量：消费者之后才允许出现块尾条件跳转）。\n                    # 归约方式：本块不再被三元的每块唯一归属屏蔽规则 skip，交给\n                    #   后续三元 owner 扫描置 _ternary_merge_if_entry 并建 IfRegion；\n                    #   三元区域仍归 TernaryRegion（原则 2 的显式例外，与\n                    #   loop_condition_blocks、值上下文 BoolOp merge 例外同源；仅读\n                    #   本区域自身字段，无跨区域跨层次包含）。\n                    # AST 映射：三元 Expr(value) 语句由 TernaryRegion 发射一次，\n                    #   块尾条件与 then/else 由新 IfRegion 发射为 ast.If。\n                    if (isinstance(block_region, TernaryRegion)\n                            and self._ternary_merge_hosts_next_if(block, block_region)):\n                        pass\n                    else:\n                        if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:\n                            import traceback\n                            print(f\" block@342 skip: not contains_block\", flush=True)\n                        return True\n"
+    },
+    {
+     "anchor": "            all_condition_blocks = {condition_block} | chain_blocks\n",
+     "repl": "            all_condition_blocks = {condition_block} | chain_blocks\n            if _ternary_merge_if_entry is not None:\n                # [R70-diag2 T1-C 三元内部块不进本 if 的条件区]\n                # 识别条件：本块已被 R13c 判定为「三元语句归并点 + 块尾条件跳转\n                #   属于下一个 if」（_ternary_merge_if_entry 非空）。\n                # 归约方式：_ternary_merge_if_entry.blocks 中除本归并块外的块已按\n                #   每块唯一归属归 TernaryRegion，仅从条件块集合摘除（只删不增）；\n                #   chain_blocks 保持不变，其作为分支收集停止集的既有语义不改。\n                #   由此 IfRegion.blocks 不再吞并三元的条件/值臂块，父子层次按\n                #   offset range 恢复为「三元在前、if 在后」的同层兄弟。\n                # AST 映射：三元 Expr 语句只由 TernaryRegion 发射一次，IfRegion\n                #   只发射块前缀、条件与 then/else，无前缀双发射。\n                all_condition_blocks -= (_ternary_merge_if_entry.blocks - {condition_block})\n"
+    }
+   ]
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "edits": [
+    {
+     "anchor": "                                if (isinstance(r, IfRegion) and r.entry is other.merge_block\n                                    and getattr(other, 'merge_context', None) == 'compare'):\n                                    pass\n",
+     "repl": "                                if (isinstance(r, IfRegion) and r.entry is other.merge_block\n                                    and (getattr(other, 'merge_context', None) == 'compare'\n                                         or self.region_analyzer._ternary_merge_hosts_next_if(\n                                             other.merge_block, other))):\n                                    pass\n"
+    },
+    {
+     "anchor": "            if _rest_clean:\n                _rest_stmts = self._build_statements_from_instructions(\n                    list(_rest_clean))\n",
+     "repl": "            # [R70-diag2 T1-E 归并块尾不折叠成三元的 post-extra]\n            # 识别条件（同层次结构身份，与既有 STORE 路径 R36 双色彩守卫同源）：\n            #   本三元的 merge_block 同时是另一个非 BASIC 区域的 entry，且该区域\n            #   除 merge_block 外还拥有自己的块（then/else/条件链等）——即 R13c\n            #   「归并块承载下一个 if」已成立。\n            # 归约方式：消费者（POP_TOP/RETURN）之后的尾段是那个 if 的块前缀与\n            #   条件，不再折叠进本三元的 post_consumer_extra_stmts（只删不增）。\n            # AST 映射：三元只发射到语句消费者；尾段由下游 IfRegion 发射为\n            #   块前缀 + ast.If，无前缀双发射。\n            for _r70d in self.regions:\n                if (_r70d is region\n                        or getattr(_r70d, 'entry', None) is not region.merge_block\n                        or getattr(_r70d, 'region_type', None) == RegionType.BASIC\n                        or not (set(getattr(_r70d, 'blocks', ()) or ())\n                                - {region.merge_block})):\n                    continue\n                _rest_clean = []\n                break\n            if _rest_clean:\n                _rest_stmts = self._build_statements_from_instructions(\n                    list(_rest_clean))\n"
+    },
+    {
+     "anchor": "            if _extra:\n                region.post_consumer_extra_stmts = _extra\n",
+     "repl": "            # [R70-diag2 T1-F f-string 归并块尾属下一个 if]\n            # 识别条件（同层次结构身份，与 STORE 路径 R36 守卫同源）：\n            #   本三元的 merge_block 同时是另一个非 BASIC 区域的 entry，且该区域\n            #   除 merge_block 外还拥有自己的块（then/else/条件链等），即 R13c\n            #   「f-string 归并块承载下一个 if」已成立。\n            # 归约方式：POP_TOP 消费者之后的尾段是那个 if 的块前缀与条件，\n            #   不折叠进本三元的 post_consumer_extra_stmts（只删不增）。\n            # AST 映射：三元只发射 Expr(Call)；尾段由下游 IfRegion 发射为块前缀\n            #   + ast.If，消除前缀双发射。\n            if _extra:\n                for _r70f in self.regions:\n                    if (_r70f is region\n                            or getattr(_r70f, 'entry', None) is not region.merge_block\n                            or getattr(_r70f, 'region_type', None) == RegionType.BASIC\n                            or not (set(getattr(_r70f, 'blocks', ()) or ())\n                                    - {region.merge_block})):\n                        continue\n                    _extra = []\n                    break\n            if _extra:\n                region.post_consumer_extra_stmts = _extra\n"
+    }
+   ]
+  }
+ ]
+}

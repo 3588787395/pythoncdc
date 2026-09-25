@@ -1,0 +1,55 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/graph.pyc",
+  "product": "D:/Temp/opencode/r70gate/center/build_m70/IQCommon__graphOK.py",
+  "functions": 34,
+  "ok": 34,
+  "bad": [],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/backtest_info_utils.pyc",
+  "product": "D:/Temp/opencode/r70gate/center/build_m70/IQCommon__util__backtest_info_utilsOK.py",
+  "functions": 10,
+  "ok": 10,
+  "bad": [],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc",
+  "product": "D:/Temp/opencode/r70gate/center/build_m70/IQEngine__plugins__plugin_system_trade__ptrade_brokerOK.py",
+  "functions": 11,
+  "ok": 10,
+  "bad": [
+   [
+    "<module>.PtradeBroker.create_portfolio",
+    "seq_len",
+    "orig=512 decomp=513"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc",
+  "product": "D:/Temp/opencode/r70gate/center/build_m70/fly__simtradding__ptradeAccountOK.py",
+  "functions": 137,
+  "ok": 135,
+  "bad": [
+   [
+    "<module>.PtradeAccount.order_response_order_update",
+    "seq_len",
+    "orig=99 decomp=98"
+   ],
+   [
+    "<module>.PtradeAccount.trade_response_order_update",
+    "seq_len",
+    "orig=118 decomp=117"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ }
+]

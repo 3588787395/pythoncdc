@@ -1,0 +1,14 @@
+G5p product blast radius (shipped *OK.py, HEAD(R69) -> worktree(R70))
+======================================================================
+changed=8 identical=394 unresolved=0
+  IQCommon/graphOK.py                                                      TEXT-MOVE else:if -> elif re-emission, official counts equal (4/4 fully matched both arms), strict b4 187/192->189/192 defects 5->3
+  IQCommon/util/backtest_info_utilsOK.py                                   TEXT-MOVE re-nesting, official counts equal, strict improved (same b4 set)
+  IQCommon/util/fileio_utilsOK.py                                          IMPROVED official 12/14->14/14 (mandated ruler 15/15)
+  IQCommon/util/trade_info_utilsOK.py                                      IMPROVED official 39/40->40/40
+  IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py   MOVED clock_worker decomp 1286->1285, hunk/true equal, |d| 11->10
+  IQEngine/plugins/plugin_system_trade/ptrade_brokerOK.py                  TEXT-MOVE re-nesting, official counts equal (fully matched both arms)
+  IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py              IMPROVED official 109/119->111/119
+  fly/simtradding/ptradeAccountOK.py                                       TEXT-MOVE re-nesting, official counts equal (fully matched both arms)
+
+REGRESSED=0  (evidence: G3 402 verified/0 failed; G6/G7 batteries worse=0; canary 4-sha SAME;
+             strict canary 209/211 both arms; b4 strict defects 5->3 improved; no NEW defect funcs in G4p)
