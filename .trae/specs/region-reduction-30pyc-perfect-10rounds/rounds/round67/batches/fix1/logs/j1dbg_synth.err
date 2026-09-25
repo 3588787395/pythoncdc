@@ -1,0 +1,2 @@
+[J1HIT] cfg=v3 blk=98 blocks=[68, 98] | R=IfRegion e=98 cb=98 mb=None x=None nb=5 then=[102] else=[106, 148, 176] par=NoneType | L=LoopRegion e=20 h=20 x=None nb=4 bodyhas=False elsehas=False blkgen=False
+[J1HIT] cfg=v4 blk=80 blocks=[66, 80] | R=IfRegion e=80 cb=80 mb=None x=None nb=3 then=[84] else=[88] par=NoneType | L=LoopRegion e=18 h=18 x=None nb=4 bodyhas=False elsehas=False blkgen=False

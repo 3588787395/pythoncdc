@@ -1,0 +1,3 @@
+{"path": "D:/Temp/opencode/r67gate/diag6/synth/r67d6_boolop_ternary.pyc", "arm": "m67g", "sha": "0a343eab6fb8efbf", "total_functions": 6, "matched_functions": 5, "mism": [["<genexpr>", 51, 39, 2, 34]]}
+{"path": "D:/Temp/opencode/r67gate/diag6/synth/r67d6_boolop_ternary2.pyc", "arm": "m67g", "sha": "1608b1a5012695a7", "total_functions": 8, "matched_functions": 6, "mism": [["<genexpr>", 31, 27, 1, 22], ["<listcomp>", 43, 31, 2, 29]]}
+{"path": "D:/Temp/opencode/r67gate/diag6/synth/r67d6_whiletrue_headif.pyc", "arm": "m67g", "sha": "b91b1d7951a2df85", "total_functions": 2, "matched_functions": 1, "mism": [["w1", 39, 39, 1, 13]]}

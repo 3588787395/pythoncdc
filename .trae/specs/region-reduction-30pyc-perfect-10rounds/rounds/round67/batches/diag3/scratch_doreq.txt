@@ -1,0 +1,205 @@
+# flyAccount.pyc :: _do_request   orig=471 decomp=480  substantive-hunks=21
+HUNK insert   orig[60:60]@292(0) decomp[60:62]@294(2)
+   .   290 BUILD_LIST                   
+   .   292 BUILD_TUPLE                  
+       294 POP_TOP                      
+       296 LOAD_CONST                   None
+   .   298 RETURN_VALUE                 
+   .   300 LOAD_CONST                   'error_no'
+HUNK replace  orig[61:62]@296(1) decomp[63:64]@300(1)
+   .   292 BUILD_TUPLE                  
+   .   294 RETURN_VALUE                 
+       296 LOAD_CONST                   -1
+   .   298 LOAD_CONST                   '异步发送失败，请先绑定通知函数'
+   .   300 LOAD_CONST                   ('error_no', 'error_info')
+   .   296 LOAD_CONST                   None
+   .   298 RETURN_VALUE                 
+       300 LOAD_CONST                   'error_no'
+   .   302 LOAD_CONST                   '异步发送失败，请先绑定通知函数'
+   .   304 BUILD_MAP                    
+HUNK replace  orig[63:65]@300(2) decomp[65:66]@304(1)
+   .   296 LOAD_CONST                   -1
+   .   298 LOAD_CONST                   '异步发送失败，请先绑定通知函数'
+       300 LOAD_CONST                   ('error_no', 'error_info')
+       302 BUILD_CONST_KEY_MAP          
+   .   304 LOAD_FAST                    is_dict
+   .   306 POP_JUMP_FORWARD_IF_FALSE    to 312
+   .   300 LOAD_CONST                   'error_no'
+   .   302 LOAD_CONST                   '异步发送失败，请先绑定通知函数'
+       304 BUILD_MAP                    
+   .   306 LOAD_FAST                    is_dict
+   .   308 POP_JUMP_FORWARD_IF_FALSE    to 314
+HUNK insert   orig[71:71]@314(0) decomp[72:74]@318(2)
+   .   314 BUILD_LIST                   
+   .   316 BUILD_TUPLE                  
+       318 POP_TOP                      
+       320 LOAD_CONST                   None
+   .   322 RETURN_VALUE                 
+   .   324 BUILD_LIST                   
+HUNK replace  orig[245:246]@1254(1) decomp[248:249]@1260(1)
+   .  1242 CALL                         
+   .  1252 STORE_FAST                   error_info
+      1254 LOAD_FAST                    return_code
+   .  1256 LOAD_FAST                    error_info
+   .  1258 LOAD_CONST                   ('error_no', 'error_info')
+   .  1248 CALL                         
+   .  1258 STORE_FAST                   error_info
+      1260 LOAD_CONST                   'error_no'
+   .  1262 LOAD_FAST                    error_info
+   .  1264 BUILD_MAP                    
+HUNK replace  orig[247:249]@1258(2) decomp[250:251]@1264(1)
+   .  1254 LOAD_FAST                    return_code
+   .  1256 LOAD_FAST                    error_info
+      1258 LOAD_CONST                   ('error_no', 'error_info')
+      1260 BUILD_CONST_KEY_MAP          
+   .  1262 LOAD_FAST                    is_dict
+   .  1264 POP_JUMP_FORWARD_IF_FALSE    to 1282
+   .  1260 LOAD_CONST                   'error_no'
+   .  1262 LOAD_FAST                    error_info
+      1264 BUILD_MAP                    
+   .  1266 LOAD_FAST                    is_dict
+   .  1268 POP_JUMP_FORWARD_IF_FALSE    to 1286
+HUNK insert   orig[257:257]@1284(0) decomp[259:261]@1290(2)
+   .  1286 LOAD_FAST                    response
+   .  1288 BUILD_TUPLE                  
+      1290 POP_TOP                      
+      1292 LOAD_CONST                   None
+   .  1294 RETURN_VALUE                 
+   .  1296 LOAD_FAST                    return_code
+HUNK replace  orig[269:270]@1326(1) decomp[273:274]@1334(1)
+   .  1320 BINARY_OP                    %
+   .  1324 STORE_FAST                   error_info
+      1326 LOAD_GLOBAL                  T2SDK_REQUEST_ERROR
+   .  1338 LOAD_FAST                    error_info
+   .  1340 LOAD_CONST                   ('error_no', 'error_info')
+   .  1328 BINARY_OP                    %
+   .  1332 STORE_FAST                   error_info
+      1334 LOAD_CONST                   'error_no'
+   .  1336 LOAD_FAST                    error_info
+   .  1338 BUILD_MAP                    
+HUNK replace  orig[271:273]@1340(2) decomp[275:276]@1338(1)
+   .  1326 LOAD_GLOBAL                  T2SDK_REQUEST_ERROR
+   .  1338 LOAD_FAST                    error_info
+      1340 LOAD_CONST                   ('error_no', 'error_info')
+      1342 BUILD_CONST_KEY_MAP          
+   .  1344 LOAD_FAST                    is_dict
+   .  1346 POP_JUMP_FORWARD_IF_FALSE    to 1352
+   .  1334 LOAD_CONST                   'error_no'
+   .  1336 LOAD_FAST                    error_info
+      1338 BUILD_MAP                    
+   .  1340 LOAD_FAST                    is_dict
+   .  1342 POP_JUMP_FORWARD_IF_FALSE    to 1348
+HUNK insert   orig[279:279]@1354(0) decomp[282:284]@1352(2)
+   .  1348 BUILD_LIST                   
+   .  1350 BUILD_TUPLE                  
+      1352 POP_TOP                      
+      1354 LOAD_CONST                   None
+   .  1356 RETURN_VALUE                 
+   .  1358 LOAD_CONST                   'Session已失效'
+HUNK replace  orig[360:361]@1780(1) decomp[365:366]@1780(1)
+   .  1774 BINARY_OP                    %
+   .  1778 STORE_FAST                   error_info
+      1780 LOAD_FAST                    return_code
+   .  1782 LOAD_FAST                    error_info
+   .  1784 LOAD_CONST                   ('error_no', 'error_info')
+   .  1774 BINARY_OP                    %
+   .  1778 STORE_FAST                   error_info
+      1780 LOAD_CONST                   'error_no'
+   .  1782 LOAD_FAST                    error_info
+   .  1784 BUILD_MAP                    
+HUNK replace  orig[362:364]@1784(2) decomp[367:368]@1784(1)
+   .  1780 LOAD_FAST                    return_code
+   .  1782 LOAD_FAST                    error_info
+      1784 LOAD_CONST                   ('error_no', 'error_info')
+      1786 BUILD_CONST_KEY_MAP          
+   .  1788 LOAD_FAST                    is_dict
+   .  1790 POP_JUMP_FORWARD_IF_FALSE    to 1796
+   .  1780 LOAD_CONST                   'error_no'
+   .  1782 LOAD_FAST                    error_info
+      1784 BUILD_MAP                    
+   .  1786 LOAD_FAST                    is_dict
+   .  1788 POP_JUMP_FORWARD_IF_FALSE    to 1794
+HUNK insert   orig[370:370]@1798(0) decomp[374:376]@1798(2)
+   .  1794 BUILD_LIST                   
+   .  1796 BUILD_TUPLE                  
+      1798 POP_TOP                      
+      1800 LOAD_CONST                   None
+   .  1802 RETURN_VALUE                 
+   .  1804 LOAD_CONST                   '客户交易密码错误'
+HUNK replace  orig[404:405]@1992(1) decomp[410:411]@1994(1)
+   .  1988 POP_TOP                      
+   .  1990 RAISE_VARARGS                
+      1992 LOAD_FAST                    return_code
+   .  1994 LOAD_FAST                    error_info
+   .  1996 LOAD_CONST                   ('error_no', 'error_info')
+   .  1990 POP_TOP                      
+   .  1992 RAISE_VARARGS                
+      1994 LOAD_CONST                   'error_no'
+   .  1996 LOAD_FAST                    error_info
+   .  1998 BUILD_MAP                    
+HUNK replace  orig[406:408]@1996(2) decomp[412:413]@1998(1)
+   .  1992 LOAD_FAST                    return_code
+   .  1994 LOAD_FAST                    error_info
+      1996 LOAD_CONST                   ('error_no', 'error_info')
+      1998 BUILD_CONST_KEY_MAP          
+   .  2000 LOAD_FAST                    is_dict
+   .  2002 POP_JUMP_FORWARD_IF_FALSE    to 2008
+   .  1994 LOAD_CONST                   'error_no'
+   .  1996 LOAD_FAST                    error_info
+      1998 BUILD_MAP                    
+   .  2000 LOAD_FAST                    is_dict
+   .  2002 POP_JUMP_FORWARD_IF_FALSE    to 2008
+HUNK insert   orig[414:414]@2010(0) decomp[419:421]@2012(2)
+   .  2008 LOAD_FAST                    response
+   .  2010 BUILD_TUPLE                  
+      2012 POP_TOP                      
+      2014 LOAD_CONST                   None
+   .  2016 RETURN_VALUE                 
+   .  2018 LOAD_CONST                   'error_no'
+HUNK replace  orig[415:416]@2014(1) decomp[422:423]@2018(1)
+   .  2010 BUILD_TUPLE                  
+   .  2012 RETURN_VALUE                 
+      2014 LOAD_FAST                    return_code
+   .  2016 LOAD_FAST                    error_info
+   .  2018 LOAD_CONST                   ('error_no', 'error_info')
+   .  2014 LOAD_CONST                   None
+   .  2016 RETURN_VALUE                 
+      2018 LOAD_CONST                   'error_no'
+   .  2020 LOAD_FAST                    error_info
+   .  2022 BUILD_MAP                    
+HUNK replace  orig[417:419]@2018(2) decomp[424:425]@2022(1)
+   .  2014 LOAD_FAST                    return_code
+   .  2016 LOAD_FAST                    error_info
+      2018 LOAD_CONST                   ('error_no', 'error_info')
+      2020 BUILD_CONST_KEY_MAP          
+   .  2022 LOAD_FAST                    is_dict
+   .  2024 POP_JUMP_FORWARD_IF_FALSE    to 2030
+   .  2018 LOAD_CONST                   'error_no'
+   .  2020 LOAD_FAST                    error_info
+      2022 BUILD_MAP                    
+   .  2024 LOAD_FAST                    is_dict
+   .  2026 POP_JUMP_FORWARD_IF_FALSE    to 2032
+HUNK insert   orig[425:425]@2032(0) decomp[431:433]@2036(2)
+   .  2032 BUILD_LIST                   
+   .  2034 BUILD_TUPLE                  
+      2036 POP_TOP                      
+      2038 LOAD_CONST                   None
+   .  2040 RETURN_VALUE                 
+   .  2042 PUSH_EXC_INFO                
+HUNK replace  orig[457:458]@2168(1) decomp[465:466]@2174(1)
+   .  2164 LOAD_FAST                    result
+   .  2166 BUILD_TUPLE                  
+      2168 SWAP                         
+   .  2170 POP_EXCEPT                   
+   .  2172 LOAD_CONST                   None
+   .  2170 LOAD_FAST                    result
+   .  2172 BUILD_TUPLE                  
+      2174 POP_TOP                      
+   .  2176 POP_EXCEPT                   
+   .  2178 LOAD_CONST                   None
+HUNK insert   orig[462:462]@2176(0) decomp[470:471]@2184(1)
+   .  2180 STORE_FAST                   e
+   .  2182 DELETE_FAST                  e
+      2184 LOAD_CONST                   None
+   .  2186 RETURN_VALUE                 
+   .  2188 LOAD_CONST                   None

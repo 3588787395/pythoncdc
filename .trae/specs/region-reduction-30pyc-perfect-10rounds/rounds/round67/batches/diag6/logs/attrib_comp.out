@@ -1,0 +1,5 @@
+##### wizard_quant_api.pyc
+  _detect_comp_ternary: cond_jump@20(POP_JUMP_FORWARD_IF_FALSE->202) cond_instrs=[7:20] n_in_cond=13 EXTRA same-target cond jumps after it (i.e. boolop operands LOST) = 1  -> IfExp
+  _detect_comp_ternary: cond_jump@20(POP_JUMP_FORWARD_IF_FALSE->202) cond_instrs=[7:20] n_in_cond=13 EXTRA same-target cond jumps after it (i.e. boolop operands LOST) = 1  -> IfExp
+##### r67d6_boolop_ternary.pyc
+  _detect_comp_ternary: cond_jump@20(POP_JUMP_FORWARD_IF_FALSE->162) cond_instrs=[7:20] n_in_cond=13 EXTRA same-target cond jumps after it (i.e. boolop operands LOST) = 1  -> IfExp

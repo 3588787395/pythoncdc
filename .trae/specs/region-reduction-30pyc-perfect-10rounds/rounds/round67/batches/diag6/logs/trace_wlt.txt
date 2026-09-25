@@ -1,0 +1,132 @@
+_generate_block_statements 
+_generate_block_statements_body 
+_build_attr_target_unpack 
+ -> NoneType
+ -> list[0]
+ -> list[0]
+_generate_region Region@0
+_generate_basic_region Region@0
+ -> list[0]
+==== -> list[0]
+_generate_region LoopRegion@4
+_generate_loop LoopRegion@4
+_build_store_statement 
+_build_class_def 
+==== -> NoneType
+ -> dict:Assign
+_generate_region LoopRegion@48
+_generate_loop LoopRegion@48
+_build_store_statement 
+ -> dict:Assign
+_generate_if IfRegion@64
+_generate_value_context_chain_compare_assign IfRegion@64
+ -> NoneType
+_build_store_statement 
+ -> dict:AugAssign
+_build_store_statement 
+ -> dict:Assign
+_generate_region IfRegion@228
+_generate_if IfRegion@228
+_generate_value_context_chain_compare_assign IfRegion@228
+ -> NoneType
+_generate_block_statements 
+_generate_block_statements_body 
+_build_attr_target_unpack 
+ -> NoneType
+_build_store_statement 
+ -> dict:Assign
+ -> list[2]dict:Expr
+ -> list[2]dict:Expr
+======== -> dict:If
+==== -> dict:If
+_generate_block_statements 
+_generate_block_statements_body 
+_build_attr_target_unpack 
+ -> NoneType
+_build_statement 
+==== -> NoneType
+ -> list[1]dict:Expr
+ -> list[1]dict:Expr
+_generate_block_statements 
+_generate_block_statements_body 
+_build_attr_target_unpack 
+ -> NoneType
+_build_store_statement 
+ -> dict:Assign
+ -> list[1]dict:Assign
+ -> list[1]dict:Assign
+======== -> list[4]dict:AugAssign
+====== -> list[2]dict:Assign
+==== -> list[2]dict:Assign
+_generate_region IfRegion@426
+_generate_if IfRegion@426
+_generate_value_context_chain_compare_assign IfRegion@426
+ -> NoneType
+_generate_region IfRegion@440
+_generate_if IfRegion@440
+_generate_value_context_chain_compare_assign IfRegion@440
+ -> NoneType
+_build_statement 
+_build_class_def 
+==== -> NoneType
+==== -> dict:Expr
+_generate_block_statements 
+_generate_block_statements_body 
+_build_attr_target_unpack 
+ -> NoneType
+_build_statement 
+==== -> NoneType
+ -> list[1]dict:Expr
+ -> list[1]dict:Expr
+_generate_region IfRegion@564
+_generate_if IfRegion@564
+_generate_value_context_chain_compare_assign IfRegion@564
+ -> NoneType
+_generate_block_statements 
+_generate_block_statements_body 
+_build_attr_target_unpack 
+ -> NoneType
+ -> list[1]dict:Expr
+ -> list[1]dict:Expr
+======== -> dict:If
+==== -> dict:If
+_generate_block_statements 
+_generate_block_statements_body 
+_build_attr_target_unpack 
+ -> NoneType
+_build_statement 
+==== -> NoneType
+ -> list[0]
+ -> list[0]
+======== -> list[2]dict:Expr
+==== -> list[2]dict:Expr
+_build_effective_stmts 
+ -> list[0]
+======== -> dict:If
+==== -> dict:If
+_generate_region IfRegion@368
+_generate_if IfRegion@368
+_generate_value_context_chain_compare_assign IfRegion@368
+ -> NoneType
+_generate_block_statements 
+_generate_block_statements_body 
+_build_attr_target_unpack 
+ -> NoneType
+ -> list[1]dict:Expr
+ -> list[1]dict:Expr
+======== -> dict:If
+==== -> dict:If
+_generate_block_statements 
+_generate_block_statements_body 
+_build_attr_target_unpack 
+ -> NoneType
+_build_statement 
+==== -> NoneType
+ -> list[0]
+ -> list[0]
+====== -> list[1]dict:While
+==== -> list[1]dict:While
+_build_function_def 'write_logging_thread'
+= -> dict:FunctionDef
+===== RESULT =====
+

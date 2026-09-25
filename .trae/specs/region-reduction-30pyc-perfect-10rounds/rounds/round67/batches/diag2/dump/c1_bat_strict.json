@@ -1,0 +1,126 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round63_b1/r63_ft.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round63_b1__r63_ftOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round63_b1/r63_ft2.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round63_b1__r63_ft2OK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round63_b1/r63_ft4.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round63_b1__r63_ft4OK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round63_b2/probe_r63b2_cases.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round63_b2__probe_r63b2_casesOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round63_b2/probe_r63b2_cases2.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round63_b2__probe_r63b2_cases2OK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round63_b2/repro_r63b2_tail_cmp_return.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round63_b2__repro_r63b2_tail_cmp_returnOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round63_b3/r63b3_chained_value_ctx_prefix.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round63_b3__r63b3_chained_value_ctx_prefixOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round63_b4/r63b4_tern_in_elif_chain.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round63_b4__r63b4_tern_in_elif_chainOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round63_b5/r63b5_w1.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round63_b5__r63b5_w1OK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round63_fix1/r63b3_chainstore_prefix.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round63_fix1__r63b3_chainstore_prefixOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round63_fix2/r63b4_cond_boolop_stmt_steal.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round63_fix2__r63b4_cond_boolop_stmt_stealOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round64_diag1/r64d1b_closed_exit_prefix.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round64_diag1__r64d1b_closed_exit_prefixOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round64_diag1/r64d1b_sibdispatch_attempt.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round64_diag1__r64d1b_sibdispatch_attemptOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round64_diag2/r64d2_chain_yield_sibling_entry.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round64_diag2__r64d2_chain_yield_sibling_entryOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round64_diag2/r64d2_valuectx_consumer.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round64_diag2__r64d2_valuectx_consumerOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round64_diag3/r64d3_postif_join.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round64_diag3__r64d3_postif_joinOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round64_diag4/r64d4_boolop_poptop_merge.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round64_diag4__r64d4_boolop_poptop_mergeOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round64_diag4/r64d4_deferred_prefix.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round64_diag4__r64d4_deferred_prefixOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round64_diag5/r64d5_contsink.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round64_diag5__r64d5_contsinkOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round65_diag1/r65_trytail.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round65_diag1__r65_trytailOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round65_diag1/r65_trytail_w.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round65_diag1__r65_trytail_wOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round65_diag2/fs2.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round65_diag2__fs2OK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round65_diag2/fsrepro.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round65_diag2__fsreproOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round65_diag5/r65d5_probe.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round65_diag5__r65d5_probeOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round66_diag1/r66_empty_then_join.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round66_diag1__r66_empty_then_joinOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round66_diag3/r66d3_pred.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round66_diag3__r66d3_predOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round66_diag3/r66d3_shared_store.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round66_diag3__r66d3_shared_storeOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round66_diag3/r66d3_var.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round66_diag3__r66d3_varOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round66_diag4/r66d4_augsub.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round66_diag4__r66d4_augsubOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round66_diag5/r66_else.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round66_diag5__r66_elseOK.py"
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round66_diag6/r66_delrepro.pyc",
+  "error": "no product __Downloads__pythoncdc-main__test_repros__round66_diag6__r66_delreproOK.py"
+ }
+]

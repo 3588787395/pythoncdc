@@ -1,0 +1,77 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag4/build_landed/IQCommon__util__trade_info_utilsOK.py",
+  "functions": 41,
+  "ok": 36,
+  "bad": [
+   [
+    "<module>.get_trade_list",
+    "seq_len",
+    "orig=345 decomp=329"
+   ],
+   [
+    "<module>.get_trade_status",
+    "target_diff",
+    "#70 FOR_ITER 终点 orig=(\"'return_trade_info'\", 'LOAD_FAST') decomp=(\"'count'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_trade_unit_info",
+    "seq_len",
+    "orig=240 decomp=241"
+   ],
+   [
+    "<module>.set_trade_status",
+    "target_diff",
+    "#113 JUMP 终点 orig=(\"'count'\", 'LOAD_FAST') decomp=(\"'exchange_flag'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.trade_operation",
+    "seq_len",
+    "orig=304 decomp=302"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/fileio_utils.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag4/build_landed/IQCommon__util__fileio_utilsOK.py",
+  "functions": 15,
+  "ok": 13,
+  "bad": [
+   [
+    "<module>.FileIO.write",
+    "seq_diff",
+    "#42 orig=('None', 'LOAD_CONST') decomp=('<JUMP>', 'JUMP')"
+   ],
+   [
+    "<module>.FileLock.acquire",
+    "seq_len",
+    "orig=98 decomp=93"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag4/build_landed/IQEngine__plugins__plugin_system_event_source__realtime_event_sourceOK.py",
+  "functions": 12,
+  "ok": 10,
+  "bad": [
+   [
+    "<module>.RealtimeEventSource.clock_worker",
+    "seq_len",
+    "orig=1276 decomp=1287"
+   ],
+   [
+    "<module>.RealtimeEventSource.get_one_event",
+    "seq_len",
+    "orig=19 decomp=20"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ }
+]

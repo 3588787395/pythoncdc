@@ -1,0 +1,82 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag3/build_c1/IQCommon__api__klinedataOK.py",
+  "functions": 63,
+  "ok": 56,
+  "bad": [
+   [
+    "<module>.get_all_real_daily_kline",
+    "seq_len",
+    "orig=188 decomp=187"
+   ],
+   [
+    "<module>.get_all_real_minute_kline",
+    "target_diff",
+    "#54 POP_JUMP_IF_FALSE 终点 orig=(\"'system_log'\", 'LOAD_GLOBAL') decomp=(\"'fq'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_history_common",
+    "target_diff",
+    "#41 POP_JUMP_IF_NONE 终点 orig=(\"'is_dict'\", 'LOAD_FAST') decomp=(\"'fields'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_kline_by_count_new",
+    "target_diff",
+    "#161 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=(\"'symbols'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_multiminute_his_data",
+    "seq_len",
+    "orig=481 decomp=482"
+   ],
+   [
+    "<module>.get_price_common",
+    "target_diff",
+    "#114 POP_JUMP_IF_NONE 终点 orig=(\"'frequency'\", 'LOAD_FAST') decomp=(\"'is_dict'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.kline_datetime_list",
+    "seq_diff",
+    "#151 orig=('<JUMP>', 'POP_JUMP_IF_TRUE') decomp=('<JUMP>', 'POP_JUMP_IF_FALSE')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag3/build_c1/fly__simtradding__flyAccountOK.py",
+  "functions": 23,
+  "ok": 21,
+  "bad": [
+   [
+    "<module>.TradeAccount._do_request",
+    "seq_len",
+    "orig=436 decomp=431"
+   ],
+   [
+    "<module>.TradeAccount.init_connection",
+    "seq_len",
+    "orig=42 decomp=41"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag3/build_c1/IQData__api__api_baseOK.py",
+  "functions": 27,
+  "ok": 26,
+  "bad": [
+   [
+    "<module>.get_history_df",
+    "seq_len",
+    "orig=1742 decomp=1719"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ }
+]

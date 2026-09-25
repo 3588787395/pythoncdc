@@ -1,0 +1,2 @@
+D:/Temp/opencode/r67gate/diag4/synth/r67d4_handler_continue.pyc
+D:/Temp/opencode/r67gate/diag4/synth/r67d4_controls.pyc

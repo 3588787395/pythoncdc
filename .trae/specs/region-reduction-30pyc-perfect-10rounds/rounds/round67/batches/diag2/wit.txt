@@ -1,0 +1,2 @@
+F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc
+F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc

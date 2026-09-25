@@ -1,0 +1,354 @@
+# trade_live_broker.pyc :: _process_order   orig=520 decomp=464  substantive-hunks=27
+HUNK delete   orig[7:8]@44(1) decomp[7:7]@42(0)
+   .    28 PRECALL                      
+   .    32 CALL                         
+   .    42 POP_TOP                      
+        44 NOP                          
+   .    46 LOAD_GLOBAL                  NULL + len
+   .    58 LOAD_FAST                    self
+   .    60 LOAD_ATTR                    open_orders
+HUNK insert   orig[76:76]@448(0) decomp[75:76]@452(1)
+   .   434 LOAD_ATTR                    account_type
+   .   444 LOAD_CONST                   'PTRADE_INTERFACE'
+   .   446 COMPARE_OP                   ==
+       452 EXTENDED_ARG                 
+   .   454 POP_JUMP_FORWARD_IF_FALSE    to 2666
+   .   456 LOAD_FAST                    order
+   .   458 LOAD_ATTR                    symbol
+HUNK insert   orig[85:85]@496(0) decomp[85:86]@498(1)
+   .   474 BINARY_SUBSCR                
+   .   484 LOAD_GLOBAL                  CB_CODE_RULES
+   .   496 CONTAINS_OP                  
+       498 EXTENDED_ARG                 
+   .   500 POP_JUMP_FORWARD_IF_FALSE    to 2666
+   .   502 LOAD_FAST                    order
+   .   504 LOAD_ATTR                    symbol
+HUNK insert   orig[91:91]@524(0) decomp[92:93]@528(1)
+   .   514 LOAD_FAST                    self
+   .   516 LOAD_ATTR                    all_cb_list
+   .   526 CONTAINS_OP                  
+       528 EXTENDED_ARG                 
+   .   530 POP_JUMP_FORWARD_IF_FALSE    to 2610
+   .   532 LOAD_FAST                    self
+   .   534 LOAD_ATTR                    cb_order_flag
+HUNK delete   orig[108:109]@622(1) decomp[110:110]@624(0)
+   .   608 LOAD_FAST                    order
+   .   610 STORE_ATTR                   _status
+   .   620 EXTENDED_ARG                 
+       622 JUMP_BACKWARD                to 44
+   .   624 JUMP_FORWARD                 to 686
+   .   626 LOAD_GLOBAL                  NULL + strategy_log
+   .   638 LOAD_ATTR                    error
+HUNK delete   orig[110:121]@626(11) decomp[111:111]@626(0)
+   .   620 EXTENDED_ARG                 
+   .   622 JUMP_BACKWARD                to 44
+   .   624 JUMP_FORWARD                 to 686
+       626 LOAD_GLOBAL                  NULL + strategy_log
+       638 LOAD_ATTR                    error
+       648 LOAD_CONST                   '可转债代码%s识别失败，无法进行可转债交易权限判断'
+       650 LOAD_FAST                    order
+       652 LOAD_ATTR                    symbol
+       662 BINARY_OP                    %
+       666 PRECALL                      
+       670 CALL                         
+       680 POP_TOP                      
+       682 EXTENDED_ARG                 
+       684 JUMP_BACKWARD                to 44
+   .   686 LOAD_FAST                    self
+   .   688 LOAD_ATTR                    account_type
+   .   698 LOAD_CONST                   ('PTRADE_FUTURE_INTERFACE', 'PTRADE_OPTION_INTERFACE')
+HUNK replace  orig[149:150]@852(1) decomp[139:140]@794(1)
+   .   838 CALL                         
+   .   848 POP_TOP                      
+   .   850 EXTENDED_ARG                 
+       852 JUMP_BACKWARD                to 44
+   .   854 LOAD_GLOBAL                  NULL + int
+   .   866 LOAD_FAST                    amount
+   .   868 PRECALL                      
+   .   780 CALL                         
+   .   790 POP_TOP                      
+   .   792 EXTENDED_ARG                 
+       794 JUMP_FORWARD                 to 2666
+   .   796 LOAD_GLOBAL                  NULL + int
+   .   808 LOAD_FAST                    amount
+   .   810 PRECALL                      
+HUNK replace  orig[229:230]@1364(1) decomp[219:220]@1306(1)
+   .  1350 LOAD_FAST                    order
+   .  1352 STORE_ATTR                   _status
+   .  1362 EXTENDED_ARG                 
+      1364 JUMP_BACKWARD                to 44
+   .  1366 LOAD_FAST                    error_dict
+   .  1368 LOAD_METHOD                  get
+   .  1390 LOAD_CONST                   'error_no'
+   .  1292 LOAD_FAST                    order
+   .  1294 STORE_ATTR                   _status
+   .  1304 EXTENDED_ARG                 
+      1306 JUMP_FORWARD                 to 2666
+   .  1308 LOAD_FAST                    error_dict
+   .  1310 LOAD_METHOD                  get
+   .  1332 LOAD_CONST                   'error_no'
+HUNK replace  orig[263:264]@1578(1) decomp[253:254]@1520(1)
+   .  1564 LOAD_FAST                    order
+   .  1566 STORE_ATTR                   _status
+   .  1576 EXTENDED_ARG                 
+      1578 JUMP_BACKWARD                to 44
+   .  1580 LOAD_FAST                    order
+   .  1582 LOAD_ATTR                    amount
+   .  1592 STORE_FAST                   order_amount
+   .  1506 LOAD_FAST                    order
+   .  1508 STORE_ATTR                   _status
+   .  1518 EXTENDED_ARG                 
+      1520 JUMP_FORWARD                 to 2666
+   .  1522 LOAD_FAST                    order
+   .  1524 LOAD_ATTR                    amount
+   .  1534 STORE_FAST                   order_amount
+HUNK delete   orig[275:290]@1638(15) decomp[265:265]@1578(0)
+   .  1632 POP_JUMP_FORWARD_IF_FALSE    to 1802
+   .  1634 LOAD_CONST                   '股票'
+   .  1636 STORE_FAST                   type_str
+      1638 LOAD_GLOBAL                  NULL + strategy_log
+      1650 LOAD_ATTR                    info
+      1660 LOAD_GLOBAL                  NULL + _
+      1672 LOAD_CONST                   '生成订单，订单号：'
+      1674 LOAD_FAST                    order
+      1676 LOAD_ATTR                    order_id
+      1686 FORMAT_VALUE                 str
+      1688 LOAD_CONST                   ' '
+      1690 LOAD_FAST                    type_str
+      1692 FORMAT_VALUE                 str
+      1694 LOAD_CONST                   '代码：'
+      1696 LOAD_FAST                    order
+      1698 LOAD_ATTR                    symbol
+      1708 FORMAT_VALUE                 str
+      1710 LOAD_CONST                   ' 数量：'
+   .  1712 LOAD_FAST                    order
+   .  1714 LOAD_ATTR                    entrust_direction
+   .  1724 LOAD_GLOBAL                  EntrustDirection
+HUNK replace  orig[296:297]@1754(1) decomp[271:272]@1622(1)
+   .  1736 LOAD_ATTR                    BUY
+   .  1746 COMPARE_OP                   ==
+   .  1752 POP_JUMP_FORWARD_IF_FALSE    to 1758
+      1754 LOAD_CONST                   '买入'
+   .  1756 JUMP_FORWARD                 to 1760
+   .  1758 LOAD_CONST                   '卖出'
+   .  1760 FORMAT_VALUE                 str
+   .  1604 LOAD_ATTR                    BUY
+   .  1614 COMPARE_OP                   ==
+   .  1620 POP_JUMP_FORWARD_IF_FALSE    to 1626
+      1622 EXTENDED_ARG                 
+   .  1624 JUMP_FORWARD                 to 2496
+   .  1626 EXTENDED_ARG                 
+   .  1628 JUMP_FORWARD                 to 2496
+HUNK delete   orig[298:308]@1758(10) decomp[273:273]@1624(0)
+   .  1752 POP_JUMP_FORWARD_IF_FALSE    to 1758
+   .  1754 LOAD_CONST                   '买入'
+   .  1756 JUMP_FORWARD                 to 1760
+      1758 LOAD_CONST                   '卖出'
+      1760 FORMAT_VALUE                 str
+      1762 LOAD_FAST                    order_amount
+      1764 FORMAT_VALUE                 str
+      1766 BUILD_STRING                 
+      1768 PRECALL                      
+      1772 CALL                         
+      1782 PRECALL                      
+      1786 CALL                         
+      1796 POP_TOP                      
+   .  1798 EXTENDED_ARG                 
+   .  1800 JUMP_FORWARD                 to 2912
+   .  1802 LOAD_FAST                    order
+HUNK delete   orig[323:324]@1902(1) decomp[288:288]@1728(0)
+   .  1886 PRECALL                      
+   .  1890 CALL                         
+   .  1900 CONTAINS_OP                  
+      1902 EXTENDED_ARG                 
+   .  1904 POP_JUMP_FORWARD_IF_FALSE    to 2430
+   .  1906 LOAD_FAST                    order
+   .  1908 LOAD_ATTR                    futures_direction
+HUNK delete   orig[352:360]@2092(8) decomp[316:316]@1916(0)
+   .  2086 POP_TOP                      
+   .  2088 EXTENDED_ARG                 
+   .  2090 JUMP_FORWARD                 to 2912
+      2092 LOAD_GLOBAL                  NULL + strategy_log
+      2104 LOAD_ATTR                    info
+      2114 LOAD_CONST                   '生成订单，订单号：{order_id}，期权合约代码：{symbol}，方向：{side}{oper}，数量：{sha
+      2116 LOAD_METHOD                  format
+      2138 LOAD_FAST                    order
+      2140 LOAD_ATTR                    order_id
+      2150 LOAD_FAST                    order
+      2152 LOAD_ATTR                    symbol
+   .  2162 LOAD_FAST                    order
+   .  2164 LOAD_ATTR                    entrust_direction
+   .  2174 LOAD_ATTR                    value
+HUNK delete   orig[369:372]@2230(3) decomp[325:325]@1984(0)
+   .  2220 LOAD_CONST                   'BUY'
+   .  2222 COMPARE_OP                   ==
+   .  2228 POP_JUMP_FORWARD_IF_FALSE    to 2234
+      2230 LOAD_CONST                   '买入'
+      2232 JUMP_FORWARD                 to 2236
+      2234 LOAD_CONST                   '卖出'
+   .  2236 LOAD_FAST                    order
+   .  2238 LOAD_ATTR                    futures_direction
+   .  2248 LOAD_ATTR                    value
+HUNK delete   orig[381:382]@2304(1) decomp[334:334]@2052(0)
+   .  2294 LOAD_CONST                   'OPEN'
+   .  2296 COMPARE_OP                   ==
+   .  2302 POP_JUMP_FORWARD_IF_FALSE    to 2308
+      2304 LOAD_CONST                   '开仓'
+   .  2306 JUMP_FORWARD                 to 2310
+   .  2308 LOAD_CONST                   '平仓'
+   .  2310 LOAD_FAST                    order
+HUNK replace  orig[383:386]@2308(3) decomp[335:336]@2056(1)
+   .  2302 POP_JUMP_FORWARD_IF_FALSE    to 2308
+   .  2304 LOAD_CONST                   '开仓'
+   .  2306 JUMP_FORWARD                 to 2310
+      2308 LOAD_CONST                   '平仓'
+      2310 LOAD_FAST                    order
+      2312 LOAD_ATTR                    amount
+   .  2322 LOAD_FAST                    order
+   .  2324 LOAD_ATTR                    hedge_type
+   .  2334 LOAD_ATTR                    value
+   .  2046 COMPARE_OP                   ==
+   .  2052 POP_JUMP_FORWARD_IF_FALSE    to 2056
+   .  2054 JUMP_FORWARD                 to 2058
+      2056 NOP                          
+   .  2058 LOAD_FAST                    order
+   .  2060 LOAD_ATTR                    hedge_type
+   .  2070 LOAD_ATTR                    value
+HUNK delete   orig[395:396]@2390(1) decomp[345:345]@2124(0)
+   .  2380 LOAD_CONST                   'SPECULATION'
+   .  2382 COMPARE_OP                   ==
+   .  2388 POP_JUMP_FORWARD_IF_FALSE    to 2394
+      2390 LOAD_CONST                   '非备兑类型委托'
+   .  2392 JUMP_FORWARD                 to 2396
+   .  2394 LOAD_CONST                   '备兑类型委托'
+   .  2396 KW_NAMES                     
+HUNK delete   orig[397:404]@2394(7) decomp[346:346]@2126(0)
+   .  2388 POP_JUMP_FORWARD_IF_FALSE    to 2394
+   .  2390 LOAD_CONST                   '非备兑类型委托'
+   .  2392 JUMP_FORWARD                 to 2396
+      2394 LOAD_CONST                   '备兑类型委托'
+      2396 KW_NAMES                     
+      2398 PRECALL                      
+      2402 CALL                         
+      2412 PRECALL                      
+      2416 CALL                         
+      2426 POP_TOP                      
+   .  2428 JUMP_FORWARD                 to 2912
+   .  2430 LOAD_GLOBAL                  NULL + strategy_log
+   .  2442 LOAD_ATTR                    info
+HUNK replace  orig[405:413]@2430(8) decomp[347:348]@2130(1)
+   .  2416 CALL                         
+   .  2426 POP_TOP                      
+   .  2428 JUMP_FORWARD                 to 2912
+      2430 LOAD_GLOBAL                  NULL + strategy_log
+      2442 LOAD_ATTR                    info
+      2452 LOAD_CONST                   '生成订单，订单号：{order_id}，期货合约代码：{symbol}，方向：{side}{oper}，数量：{sha
+      2454 LOAD_METHOD                  format
+      2476 LOAD_FAST                    order
+      2478 LOAD_ATTR                    order_id
+      2488 LOAD_FAST                    order
+      2490 LOAD_ATTR                    symbol
+   .  2500 LOAD_FAST                    order
+   .  2502 LOAD_ATTR                    entrust_direction
+   .  2512 LOAD_ATTR                    value
+   .  2124 POP_JUMP_FORWARD_IF_FALSE    to 2128
+   .  2126 JUMP_FORWARD                 to 2496
+   .  2128 JUMP_FORWARD                 to 2496
+      2130 JUMP_FORWARD                 to 2496
+   .  2132 LOAD_FAST                    order
+   .  2134 LOAD_ATTR                    entrust_direction
+   .  2144 LOAD_ATTR                    value
+HUNK delete   orig[422:425]@2568(3) decomp[357:357]@2198(0)
+   .  2558 LOAD_CONST                   'BUY'
+   .  2560 COMPARE_OP                   ==
+   .  2566 POP_JUMP_FORWARD_IF_FALSE    to 2572
+      2568 LOAD_CONST                   '买入'
+      2570 JUMP_FORWARD                 to 2574
+      2572 LOAD_CONST                   '卖出'
+   .  2574 LOAD_FAST                    order
+   .  2576 LOAD_ATTR                    futures_direction
+   .  2586 LOAD_ATTR                    value
+HUNK delete   orig[434:435]@2642(1) decomp[366:366]@2266(0)
+   .  2632 LOAD_CONST                   'OPEN'
+   .  2634 COMPARE_OP                   ==
+   .  2640 POP_JUMP_FORWARD_IF_FALSE    to 2646
+      2642 LOAD_CONST                   '开仓'
+   .  2644 JUMP_FORWARD                 to 2648
+   .  2646 LOAD_CONST                   '平仓'
+   .  2648 LOAD_FAST                    order
+HUNK replace  orig[436:445]@2646(9) decomp[367:368]@2270(1)
+   .  2640 POP_JUMP_FORWARD_IF_FALSE    to 2646
+   .  2642 LOAD_CONST                   '开仓'
+   .  2644 JUMP_FORWARD                 to 2648
+      2646 LOAD_CONST                   '平仓'
+      2648 LOAD_FAST                    order
+      2650 LOAD_ATTR                    amount
+      2660 KW_NAMES                     
+      2662 PRECALL                      
+      2666 CALL                         
+      2676 PRECALL                      
+      2680 CALL                         
+      2690 POP_TOP                      
+   .  2692 LOAD_FAST                    order
+   .  2694 LOAD_METHOD                  set_entrust_no
+   .  2716 LOAD_FAST                    response
+   .  2260 COMPARE_OP                   ==
+   .  2266 POP_JUMP_FORWARD_IF_FALSE    to 2270
+   .  2268 JUMP_FORWARD                 to 2272
+      2270 NOP                          
+   .  2272 LOAD_FAST                    order
+   .  2274 LOAD_METHOD                  set_entrust_no
+   .  2296 LOAD_FAST                    response
+HUNK insert   orig[476:476]@2910(0) decomp[399:401]@2492(2)
+   .  2476 PRECALL                      
+   .  2480 CALL                         
+   .  2490 POP_TOP                      
+      2492 JUMP_FORWARD                 to 2496
+      2494 NOP                          
+   .  2496 LOAD_FAST                    self
+   .  2498 LOAD_ATTR                    engine
+   .  2508 LOAD_ATTR                    event_bus
+HUNK insert   orig[487:487]@2998(0) decomp[412:422]@2592(10)
+   .  2576 KW_NAMES                     
+   .  2578 PRECALL                      
+   .  2582 CALL                         
+      2592 PRECALL                      
+      2596 CALL                         
+      2606 POP_TOP                      
+      2608 JUMP_FORWARD                 to 2666
+      2610 LOAD_GLOBAL                  NULL + strategy_log
+      2622 LOAD_ATTR                    error
+      2632 LOAD_CONST                   '可转债代码%s识别失败，无法进行可转债交易权限判断'
+      2634 LOAD_FAST                    order
+      2636 LOAD_ATTR                    symbol
+      2646 BINARY_OP                    %
+   .  2650 PRECALL                      
+   .  2654 CALL                         
+   .  2664 POP_TOP                      
+HUNK insert   orig[512:512]@3126(0) decomp[447:456]@2770(9)
+   .  2764 COPY                         
+   .  2766 POP_EXCEPT                   
+   .  2768 RERAISE                      
+      2770 LOAD_GLOBAL                  NULL + len
+      2782 LOAD_FAST                    self
+      2784 LOAD_ATTR                    open_orders
+      2794 PRECALL                      
+      2798 CALL                         
+      2808 LOAD_CONST                   0
+      2810 COMPARE_OP                   >
+      2816 EXTENDED_ARG                 
+      2818 POP_JUMP_BACKWARD_IF_TRUE    to 94
+   .  2820 LOAD_GLOBAL                  NULL + time
+   .  2832 LOAD_ATTR                    sleep
+   .  2842 LOAD_CONST                   0.001
+HUNK replace  orig[518:520]@3168(2) decomp[462:464]@2860(2)
+   .  3152 PRECALL                      
+   .  3156 CALL                         
+   .  3166 POP_TOP                      
+      3168 EXTENDED_ARG                 
+      3170 JUMP_BACKWARD                to 46
+   .  2844 PRECALL                      
+   .  2848 CALL                         
+   .  2858 POP_TOP                      
+      2860 LOAD_CONST                   None
+      2862 RETURN_VALUE                 

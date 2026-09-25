@@ -1,0 +1,32 @@
+arm=b1 core=D:\Temp/opencode/r67gate/diag1/mirr_b1\core\cfg
+CFG _process_order: 63 blocks, 20 regions
+TernaryRegion@1634 blocks=[1634, 1754, 1758, 1760] cond=1634 tv=Block 25 (offset 1754-1756):
+        1754: LOAD_CONST 26
+        1756: JUMP_FORWARD 1
+  Predecessors: 24
+  Successors: 49, 27 fv=[None] merge=1760 vt='__fstring_target__' mc='fstring'
+TernaryRegion@2092 blocks=[2092, 2230, 2234, 2236] cond=2092 tv=Block 32 (offset 2230-2232):
+        2230: LOAD_CONST 26
+        2232: JUMP_FORWARD 1
+  Predecessors: 31
+  Successors: 49, 34 fv=[None] merge=2236 vt='__compare_target__' mc='compare'
+TernaryRegion@2236 blocks=[2236, 2304, 2308, 2310] cond=2236 tv=Block 35 (offset 2304-2306):
+        2304: LOAD_CONST 36
+        2306: JUMP_FORWARD 1
+  Predecessors: 34
+  Successors: 49, 37 fv=[None] merge=2310 vt='__compare_target__' mc='compare'
+TernaryRegion@2310 blocks=[2310, 2390, 2394, 2396] cond=2310 tv=Block 38 (offset 2390-2392):
+        2390: LOAD_CONST 39
+        2392: JUMP_FORWARD 1
+  Predecessors: 37
+  Successors: 40, 49 fv=[None] merge=2396 vt=None mc=None
+TernaryRegion@2430 blocks=[2430, 2568, 2572, 2574] cond=2430 tv=Block 42 (offset 2568-2570):
+        2568: LOAD_CONST 26
+        2570: JUMP_FORWARD 1
+  Predecessors: 41
+  Successors: 49, 44 fv=[None] merge=2574 vt='__compare_target__' mc='compare'
+TernaryRegion@2574 blocks=[2574, 2642, 2646, 2648] cond=2574 tv=Block 45 (offset 2642-2644):
+        2642: LOAD_CONST 36
+        2644: JUMP_FORWARD 1
+  Predecessors: 44
+  Successors: 49, 47 fv=[None] merge=2648 vt=None mc='store'

@@ -1,0 +1,2 @@
+                    _hb_role = self.region_analyzer.get_block_role(hb)
+                    if _hb_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):

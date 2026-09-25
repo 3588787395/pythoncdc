@@ -1,0 +1,3 @@
+                if any(i.opname.startswith('STORE') or i.opname == 'POP_TOP'
+                       for i in block.instructions):
+                    return None

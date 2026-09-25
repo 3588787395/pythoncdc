@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "D:\Temp\opencode\r67gate\diag5\nhunks.py", line 83, in <module>
+    main(sys.argv[1], sys.argv[2], sys.argv[3], int(kw.get('ctx', 6)))
+  File "D:\Temp\opencode\r67gate\diag5\nhunks.py", line 58, in main
+    assert len(oc) == 1, [c.co_firstlineno for c in oc]
+           ^^^^^^^^^^^^
+AssertionError: [72, 255]

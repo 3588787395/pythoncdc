@@ -1,0 +1,2 @@
+{"path": "D:/Temp/opencode/r67gate/diag4/synth/r67d4_handler_continue.pyc", "arm": "hc", "sha": "1d36616b1e2c8117", "total_functions": 4, "matched_functions": 4, "mism": []}
+{"path": "D:/Temp/opencode/r67gate/diag4/synth/r67d4_controls.pyc", "arm": "hc", "sha": "634c9d019e742fc9", "total_functions": 8, "matched_functions": 7, "mism": [["c3_cont_cond", 20, 20, 0, 17]]}

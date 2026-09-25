@@ -1,0 +1,15 @@
+DIFF /PluginRiskCalculation#18/_on_set_positions#9  orig=336 decomp=337 hunks=2
+   replace  orig[256:258]=['EXTENDED_ARG ', 'JUMP_BACKWARD J']  decomp[256:257]=['JUMP_FORWARD J']
+   insert   orig[302:302]=[]  decomp[301:303]=['EXTENDED_ARG ', 'JUMP_BACKWARD J']
+DIFF /PluginRiskCalculation#18/_on_publish_after_trading_end#10 orig=531 decomp=523 hunks=2
+   delete   orig[482:483]=['NOP ']  decomp[482:482]=[]
+   replace  orig[491:499]=['JUMP_FORWARD J', 'LOAD_GLOBAL NULL + time', 'LOAD_ATTR sleep', 'LOAD_CONST 0.01', 'PRECALL ', 'CALL ']  decomp[490:491]=['NOP ']
+DIFF /PluginRiskCalculation#18/_save_testds_to_csv#28 orig=81 decomp=75 hunks=7
+   insert   orig[16:16]=[]  decomp[16:17]=['NOP ']
+   replace  orig[37:38]=['JUMP_BACKWARD J']  decomp[38:39]=['JUMP_FORWARD J']
+   delete   orig[58:59]=['LOAD_CONST 0']  decomp[59:59]=[]
+   delete   orig[60:62]=['IMPORT_NAME IQEngine.plugins.plugin_system_risk_calculation.function', 'IMPORT_FROM THREAD_STATUS']  decomp[60:60]=[]
+   delete   orig[63:64]=['POP_TOP ']  decomp[61:61]=[]
+   replace  orig[66:68]=['LOAD_CONST None', 'RETURN_VALUE ']  decomp[63:64]=['JUMP_FORWARD J']
+   delete   orig[79:81]=['LOAD_CONST None', 'RETURN_VALUE ']  decomp[75:75]=[]
+TOTAL differing code objects: 3 of 43

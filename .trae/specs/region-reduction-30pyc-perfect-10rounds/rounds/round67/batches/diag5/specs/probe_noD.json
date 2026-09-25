@@ -1,0 +1,10 @@
+{
+ "name": "probe_noD",
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "                if any(i.opname.startswith('STORE') or i.opname == 'POP_TOP'\n                       for i in block.instructions):\n                    return None\n",
+   "repl": ""
+  }
+ ]
+}

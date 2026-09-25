@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "D:\Temp\opencode\r67gate\diag6\nhunks.py", line 83, in <module>
+    main(sys.argv[1], sys.argv[2], sys.argv[3], int(kw.get('ctx', 6)))
+  File "D:\Temp\opencode\r67gate\diag6\nhunks.py", line 59, in main
+    dc = [c for c in walk(compile(io.open(okpy, encoding='utf-8').read(), okpy, 'exec'), [])
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'build_landed/IQEngine__plugins__plugin_system_risk_calculation__OK.py'

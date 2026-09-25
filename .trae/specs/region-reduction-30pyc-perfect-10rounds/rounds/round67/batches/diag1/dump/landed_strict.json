@@ -1,0 +1,102 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag1/build_landed/IQEngine__plugins__plugin_system_trade__trade_live_brokerOK.py",
+  "functions": 123,
+  "ok": 105,
+  "bad": [
+   [
+    "<module>.TradeLiveBroker._process_cancel_order",
+    "seq_len",
+    "orig=295 decomp=296"
+   ],
+   [
+    "<module>.TradeLiveBroker._process_order",
+    "seq_len",
+    "orig=454 decomp=399"
+   ],
+   [
+    "<module>.TradeLiveBroker._process_tick_order",
+    "target_diff",
+    "#27 JUMP 终点 orig=(\"'len'\", 'LOAD_GLOBAL') decomp=(\"'self'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.TradeLiveBroker._sync_worker",
+    "seq_len",
+    "orig=350 decomp=347"
+   ],
+   [
+    "<module>.TradeLiveBroker._trade_status_handle",
+    "seq_len",
+    "orig=114 decomp=112"
+   ],
+   [
+    "<module>.TradeLiveBroker.after_trading_cancel_order",
+    "seq_len",
+    "orig=156 decomp=159"
+   ],
+   [
+    "<module>.TradeLiveBroker.etf_basket_order",
+    "seq_diff",
+    "#254 orig=(\"'strategy_log'\", 'LOAD_GLOBAL') decomp=(\"'entrust_price'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.TradeLiveBroker.etf_purchase_redemption",
+    "seq_len",
+    "orig=379 decomp=369"
+   ],
+   [
+    "<module>.TradeLiveBroker.get_all_orders",
+    "seq_len",
+    "orig=80 decomp=83"
+   ],
+   [
+    "<module>.TradeLiveBroker.get_ipo_stocks",
+    "target_diff",
+    "#189 POP_JUMP_IF_TRUE 终点 orig=(\"'str'\", 'LOAD_GLOBAL') decomp=(None, 'FOR_ITER')"
+   ],
+   [
+    "<module>.TradeLiveBroker.get_max_amount",
+    "seq_len",
+    "orig=201 decomp=213"
+   ],
+   [
+    "<module>.TradeLiveBroker.ipo_stocks_order",
+    "seq_len",
+    "orig=1075 decomp=1076"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_order_response",
+    "seq_len",
+    "orig=449 decomp=448"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_order_response_list_handle",
+    "target_diff",
+    "#23 POP_JUMP_IF_NONE 终点 orig=(\"'entrust_no'\", 'LOAD_FAST') decomp=(None, 'FOR_ITER')"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_pre_before_trading_start",
+    "target_diff",
+    "#4 POP_JUMP_IF_FALSE 终点 orig=(\"'self'\", 'LOAD_FAST') decomp=(\"'datetime'\", 'LOAD_GLOBAL')"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_trade_response",
+    "seq_len",
+    "orig=396 decomp=395"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_trade_response_list_handle",
+    "target_diff",
+    "#23 POP_JUMP_IF_NONE 终点 orig=(\"'entrust_no'\", 'LOAD_FAST') decomp=(None, 'FOR_ITER')"
+   ],
+   [
+    "<module>.TradeLiveBroker.rzrq_credit_order",
+    "target_diff",
+    "#406 JUMP 终点 orig=(\"'Order'\", 'LOAD_GLOBAL') decomp=(\"'EntrustDirection'\", 'LOAD_GLOBAL')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ }
+]

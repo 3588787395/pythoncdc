@@ -1,0 +1,32 @@
+[
+ {
+  "pyc": "D:/Temp/opencode/r67gate/diag4/synth/r67d4_handler_continue.pyc",
+  "product": "D:/Temp/opencode/r67gate/center/build_landed/D___Temp__opencode__r67gate__diag4__synth__r67d4_handler_continueOK.py",
+  "functions": 4,
+  "ok": 3,
+  "bad": [
+   [
+    "<module>.s1",
+    "seq_len",
+    "orig=15 decomp=16"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "D:/Temp/opencode/r67gate/diag4/synth/r67d4_controls.pyc",
+  "product": "D:/Temp/opencode/r67gate/center/build_landed/D___Temp__opencode__r67gate__diag4__synth__r67d4_controlsOK.py",
+  "functions": 8,
+  "ok": 7,
+  "bad": [
+   [
+    "<module>.c3_cont_cond",
+    "seq_len",
+    "orig=20 decomp=21"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ }
+]

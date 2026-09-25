@@ -1,0 +1,3 @@
+D:/Temp/opencode/r67gate/diag5/synth/r67_ccprefix.pyc
+D:/Temp/opencode/r67gate/diag5/synth/r67_ccprefix2.pyc
+D:/Temp/opencode/r67gate/diag5/synth/r67_site2.pyc

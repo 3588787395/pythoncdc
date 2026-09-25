@@ -1,0 +1,77 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag5/build_landed/IQData__plugins__plugin_system_realquote__real_quoteOK.py",
+  "functions": 45,
+  "ok": 41,
+  "bad": [
+   [
+    "<module>.RealQuoteData.get_cache_l2_data_by_one",
+    "seq_len",
+    "orig=321 decomp=322"
+   ],
+   [
+    "<module>.RealQuoteData.get_real_minute_kline",
+    "seq_len",
+    "orig=253 decomp=256"
+   ],
+   [
+    "<module>.RealQuoteData.get_tick_direction",
+    "seq_len",
+    "orig=259 decomp=260"
+   ],
+   [
+    "<module>.RealQuoteData.one_prod_to_ndarray",
+    "seq_len",
+    "orig=606 decomp=608"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag5/build_landed/IQEngine__plugins__plugin_fly_data__fly_api__order_apiOK.py",
+  "functions": 36,
+  "ok": 33,
+  "bad": [
+   [
+    "<module>.base_order",
+    "target_diff",
+    "#136 POP_JUMP_IF_TRUE 终点 orig=(\"'order_obj'\", 'LOAD_FAST') decomp=(\"'生成订单，订单号:{order_id}，可转债代码：{symbol}，数量：{side}{share}'\", 'LOAD_CONST')"
+   ],
+   [
+    "<module>.future_order",
+    "seq_len",
+    "orig=101 decomp=93"
+   ],
+   [
+    "<module>.option_order",
+    "seq_len",
+    "orig=83 decomp=74"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag5/build_landed/IQEngine__utils__schedulerOK.py",
+  "functions": 52,
+  "ok": 50,
+  "bad": [
+   [
+    "<module>.Scheduler.run_daily",
+    "seq_len",
+    "orig=84 decomp=75"
+   ],
+   [
+    "<module>.Scheduler.run_daily.func_wrapper",
+    "seq_len",
+    "orig=219 decomp=215"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ }
+]

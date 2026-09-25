@@ -1,0 +1,27 @@
+DIFF <root>                                         orig=222 decomp=217 hunks=2
+   delete   orig[73:74]=['NOP ']  decomp[73:73]=[]
+   delete   orig[80:84]=['NOP ', 'NOP ', 'NOP ', 'NOP ']  decomp[79:79]=[]
+DIFF /filter_desicion#10                            orig=195 decomp=197 hunks=1
+   insert   orig[195:195]=[]  decomp[195:197]=['LOAD_CONST None', 'RETURN_VALUE ']
+DIFF /params_analysis#11                            orig=144 decomp=137 hunks=3
+   replace  orig[10:11]=['JUMP_FORWARD J']  decomp[10:12]=['LOAD_CONST None', 'RETURN_VALUE ']
+   replace  orig[16:17]=['JUMP_FORWARD J']  decomp[17:19]=['LOAD_CONST None', 'RETURN_VALUE ']
+   delete   orig[20:29]=['LOAD_FAST filter_type', 'LOAD_FAST value', 'LOAD_GLOBAL NULL + float', 'LOAD_FAST value_params', 'PRECALL ', 'CALL ']  decomp[22:22]=[]
+DIFF /get_DMI#31/calculate_di#1                     orig=90 decomp=88 hunks=2
+   delete   orig[38:39]=['LOAD_CLOSURE low']  decomp[38:38]=[]
+   delete   orig[56:57]=['LOAD_CLOSURE high']  decomp[55:55]=[]
+DIFF /get_DMI#31/calculate_di#1/<genexpr>#3         orig=64 decomp=40 hunks=1
+   delete   orig[32:56]=['LOAD_DEREF low', 'LOAD_FAST i', 'LOAD_CONST 1', 'BINARY_OP +', 'UNARY_NEGATIVE ', 'BINARY_SUBSCR ']  decomp[32:32]=[]
+DIFF /get_DMI#31/calculate_di#1/<genexpr>#4         orig=64 decomp=40 hunks=1
+   delete   orig[32:56]=['LOAD_DEREF high', 'LOAD_FAST i', 'UNARY_NEGATIVE ', 'BINARY_SUBSCR ', 'LOAD_DEREF high', 'LOAD_FAST i']  decomp[32:32]=[]
+DIFF /init_stock_pool_filter#33                     orig=175 decomp=175 hunks=2
+   delete   orig[28:29]=['NOP ']  decomp[28:28]=[]
+   insert   orig[37:37]=[]  decomp[36:37]=['EXTENDED_ARG ']
+DIFF /ST_stock_filter#34                            orig=91 decomp=90 hunks=1
+   delete   orig[3:4]=['NOP ']  decomp[3:3]=[]
+DIFF /HALT_stock_filter#35                          orig=91 decomp=90 hunks=1
+   delete   orig[3:4]=['NOP ']  decomp[3:3]=[]
+DIFF /read_config_file#51                           orig=1081 decomp=1079 hunks=2
+   delete   orig[445:446]=['NOP ']  decomp[445:445]=[]
+   delete   orig[513:514]=['NOP ']  decomp[512:512]=[]
+TOTAL differing code objects: 10 of 58

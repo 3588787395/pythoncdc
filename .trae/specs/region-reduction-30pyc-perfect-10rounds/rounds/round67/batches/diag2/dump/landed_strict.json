@@ -1,0 +1,117 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag2/build_landed/fly__data__quoteOK.py",
+  "functions": 89,
+  "ok": 74,
+  "bad": [
+   [
+    "<module>.Quote.build_current_period_df",
+    "seq_len",
+    "orig=118 decomp=109"
+   ],
+   [
+    "<module>.Quote.change_his_to_backward",
+    "target_diff",
+    "#213 POP_JUMP_IF_TRUE 终点 orig=(\"'data'\", 'LOAD_FAST') decomp=('None', 'POP_TOP')"
+   ],
+   [
+    "<module>.Quote.change_his_to_forward",
+    "target_diff",
+    "#241 POP_JUMP_IF_FALSE 终点 orig=(\"'preindex'\", 'LOAD_FAST') decomp=(None, 'FOR_ITER')"
+   ],
+   [
+    "<module>.Quote.check_frequency",
+    "seq_len",
+    "orig=123 decomp=124"
+   ],
+   [
+    "<module>.Quote.check_industry_code",
+    "seq_diff",
+    "#159 orig=('0', 'CONTAINS_OP') decomp=('1', 'CONTAINS_OP')"
+   ],
+   [
+    "<module>.Quote.check_limit",
+    "seq_len",
+    "orig=331 decomp=311"
+   ],
+   [
+    "<module>.Quote.get_individual_data",
+    "seq_len",
+    "orig=314 decomp=313"
+   ],
+   [
+    "<module>.Quote.get_price",
+    "seq_len",
+    "orig=230 decomp=232"
+   ],
+   [
+    "<module>.Quote.get_real_from_zeromq",
+    "seq_len",
+    "orig=703 decomp=678"
+   ],
+   [
+    "<module>.Quote.initImagedata",
+    "seq_len",
+    "orig=245 decomp=225"
+   ],
+   [
+    "<module>.Quote.load_bars_from_hundsun",
+    "seq_len",
+    "orig=477 decomp=483"
+   ],
+   [
+    "<module>.Quote.load_get_price",
+    "seq_diff",
+    "#53 orig=('<JUMP>', 'POP_JUMP_IF_FALSE') decomp=('None', 'POP_TOP')"
+   ],
+   [
+    "<module>.Quote.run_individual_transform",
+    "seq_len",
+    "orig=364 decomp=321"
+   ],
+   [
+    "<module>.Quote.run_tick_socket",
+    "seq_len",
+    "orig=309 decomp=310"
+   ],
+   [
+    "<module>.Quote.run_tick_transform",
+    "target_diff",
+    "#135 POP_JUMP_IF_FALSE 终点 orig=(\"'self'\", 'LOAD_FAST') decomp=(\"'len'\", 'LOAD_GLOBAL')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag2/build_landed/IQData__utils__common_funcOK.py",
+  "functions": 27,
+  "ok": 26,
+  "bad": [
+   [
+    "<module>.handle_exrights",
+    "seq_len",
+    "orig=276 decomp=268"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag2/build_landed/IQEngine__plugins__plugin_system_matcher__matcherOK.py",
+  "functions": 17,
+  "ok": 16,
+  "bad": [
+   [
+    "<module>.DefaultMatcher.match",
+    "seq_diff",
+    "#182 orig=('<JUMP>', 'JUMP') decomp=(\"'self'\", 'LOAD_FAST')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ }
+]

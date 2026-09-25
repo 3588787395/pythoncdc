@@ -1,0 +1,17 @@
+# wizard_quant_api.pyc :: calculate_di   orig=90 decomp=88  substantive-hunks=2
+HUNK delete   orig[38:39]@152(1) decomp[38:38]@150(0)
+   .   136 STORE_FAST                   tr
+   .   138 LOAD_GLOBAL                  NULL + sum
+   .   150 LOAD_CLOSURE                 high
+       152 LOAD_CLOSURE                 low
+   .   154 BUILD_TUPLE                  
+   .   156 LOAD_CONST                   <code object <genexpr> at 0x00000177507CDC50, file "./fly_do
+   .   158 MAKE_FUNCTION                closure
+HUNK delete   orig[56:57]@240(1) decomp[55:55]@226(0)
+   .   216 CALL                         
+   .   226 STORE_FAST                   dmp
+   .   228 LOAD_GLOBAL                  NULL + sum
+       240 LOAD_CLOSURE                 high
+   .   242 LOAD_CLOSURE                 low
+   .   244 BUILD_TUPLE                  
+   .   246 LOAD_CONST                   <code object <genexpr> at 0x00000177507CDDE0, file "./fly_do

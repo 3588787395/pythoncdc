@@ -1,0 +1,208 @@
+== BLOCKS (78) ==
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+  blk None   end=?      succs=[] preds=[] ninstr=?
+== REGION PARENTAGE (49) ==
+  LoopRegion       entry=6      parent=TOP                blocks=[0, 6, 10, 114, 222, 306, 386, 546, 664, 706, 728, 732, 774, 796, 800, 816, 1068, 1110, 1190, 1194, 1236, 1316, 1320, 1324, 1372, 1384, 1432, 1444, 1486, 1566, 1570, 1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 2468, 2484, 2526, 2606, 2846, 2888, 2968, 3208, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960, 4964]
+  IfRegion         entry=10     parent=LoopRegion@6       blocks=[10, 114, 222, 306, 386, 546, 664, 706, 728, 732, 774, 796, 800, 816, 1068, 1110, 1190, 1194, 1236, 1316, 1320, 1324, 1372, 1384, 1432, 1444, 1486, 1566, 1570, 1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 2468, 2484, 2526, 2606, 2846, 2888, 3208, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=114    parent=LoopRegion@6       blocks=[114, 222, 306]
+  IfRegion         entry=546    parent=LoopRegion@6       blocks=[546, 664, 706, 728, 732, 774, 796, 800, 816, 1068, 1110, 1190, 1194, 1236, 1316, 1320, 1324, 1372, 1384, 1432, 1444, 1486, 1566, 1570, 1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 2468, 2484, 2526, 2606, 2846, 2888, 3208]
+  IfRegion         entry=664    parent=LoopRegion@6       blocks=[664, 706, 728, 732, 774, 796, 800, 816, 1068, 1110, 1190, 1194, 1236, 1316, 1320, 1324, 1372, 1384, 1432, 1444, 1486, 1566, 1570, 1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=706    parent=LoopRegion@6       blocks=[706, 728, 732, 774, 796, 800, 816, 1068, 1110, 1190, 1194, 1236, 1316, 1320, 1324, 1372, 1384, 1432, 1444, 1486, 1566, 1570, 1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=732    parent=LoopRegion@6       blocks=[732, 774, 796, 800, 816, 1068, 1110, 1190, 1194, 1236, 1316, 1320, 1324, 1372, 1384, 1432, 1444, 1486, 1566, 1570, 1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=774    parent=LoopRegion@6       blocks=[774, 796, 800, 816, 1068, 1110, 1190, 1194, 1236, 1316, 1320, 1324, 1372, 1384, 1432, 1444, 1486, 1566, 1570, 1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=800    parent=LoopRegion@6       blocks=[800, 816, 1068, 1110, 1190, 1194, 1236, 1316, 1320, 1324, 1372, 1384, 1432, 1444, 1486, 1566, 1570, 1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460]
+  IfRegion         entry=816    parent=LoopRegion@6       blocks=[816, 1068, 1110, 1190, 1194, 1236, 1316, 1320, 1324, 1372, 1384, 1432, 1444, 1486, 1566, 1570, 1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460]
+  IfRegion         entry=1068   parent=LoopRegion@6       blocks=[1068, 1110, 1190, 1194, 1236, 1316, 1320, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=1110   parent=LoopRegion@6       blocks=[1110, 1190, 1194, 1236, 1316, 1320, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=1194   parent=LoopRegion@6       blocks=[1194, 1236, 1316]
+  IfRegion         entry=1236   parent=LoopRegion@6       blocks=[1236, 1316]
+  IfRegion         entry=1324   parent=LoopRegion@6       blocks=[1324, 1372, 1444, 1486, 1566, 1570, 1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=1372   parent=LoopRegion@6       blocks=[1372, 1384, 1432, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=1384   parent=LoopRegion@6       blocks=[1384, 1432, 1444, 1486, 1566, 1570, 1612, 1692]
+  IfRegion         entry=1432   parent=LoopRegion@6       blocks=[1432, 1444, 1486, 1566, 1570, 1612, 1692]
+  IfRegion         entry=1444   parent=LoopRegion@6       blocks=[1444, 1486, 1566, 1570, 1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=1486   parent=LoopRegion@6       blocks=[1486, 1566, 1570, 1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=1570   parent=LoopRegion@6       blocks=[1570, 1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=1612   parent=LoopRegion@6       blocks=[1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  BoolOpRegion     entry=1696   parent=LoopRegion@6       blocks=[1696, 1820, 1830, 1834]
+  TernaryRegion    entry=1696   parent=LoopRegion@6       blocks=[1696, 1820, 1830]
+  IfRegion         entry=1834   parent=LoopRegion@6       blocks=[1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160]
+  IfRegion         entry=1884   parent=LoopRegion@6       blocks=[1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160]
+  IfRegion         entry=1896   parent=LoopRegion@6       blocks=[1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160]
+  IfRegion         entry=1908   parent=LoopRegion@6       blocks=[1908, 1912, 1954, 2034, 2038, 2080, 2160]
+  IfRegion         entry=1912   parent=LoopRegion@6       blocks=[1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=1954   parent=LoopRegion@6       blocks=[1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=2038   parent=LoopRegion@6       blocks=[2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=2080   parent=LoopRegion@6       blocks=[2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=2164   parent=LoopRegion@6       blocks=[2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460]
+  IfRegion         entry=2208   parent=LoopRegion@6       blocks=[2208, 2212, 2254, 2334, 2338, 2380, 2460]
+  IfRegion         entry=2212   parent=LoopRegion@6       blocks=[2212, 2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=2254   parent=LoopRegion@6       blocks=[2254, 2334, 2338, 2380, 2460, 2464, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=2338   parent=LoopRegion@6       blocks=[2338, 2380, 2460]
+  IfRegion         entry=2380   parent=LoopRegion@6       blocks=[2380, 2460]
+  IfRegion         entry=2468   parent=LoopRegion@6       blocks=[2468, 2484, 2526, 2606, 2846, 2888, 2968]
+  IfRegion         entry=2484   parent=LoopRegion@6       blocks=[2484, 2526, 2606, 2846, 2888, 3208, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=2526   parent=LoopRegion@6       blocks=[2526, 2606, 2846, 2888, 3208, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  IfRegion         entry=2846   parent=LoopRegion@6       blocks=[2846, 2888, 2968]
+  IfRegion         entry=2888   parent=LoopRegion@6       blocks=[2888, 2968]
+  IfRegion         entry=3210   parent=LoopRegion@6       blocks=[3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954]
+  IfRegion         entry=3226   parent=LoopRegion@6       blocks=[3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3968, 4678, 4960]
+  IfRegion         entry=3432   parent=LoopRegion@6       blocks=[3432, 3574, 3626, 3760, 3764, 3828, 3952, 3968, 4678, 4960]
+  IfRegion         entry=3574   parent=LoopRegion@6       blocks=[3574, 3626]
+  IfRegion         entry=3764   parent=LoopRegion@6       blocks=[3764, 3828]
+  IfRegion         entry=3968   parent=LoopRegion@6       blocks=[3968, 4678]
+== COVERAGE (blocks claimed by >=1 region) ==
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED
+  blk None   -> UNCLAIMED

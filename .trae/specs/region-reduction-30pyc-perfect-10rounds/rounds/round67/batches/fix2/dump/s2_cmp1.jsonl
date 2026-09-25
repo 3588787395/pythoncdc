@@ -1,0 +1,1 @@
+{"path": "D:/Temp/opencode/r67gate/diag6/synth/r67d6_boolop_ternary2.pyc", "arm": "cmp1", "sha": "1608b1a5012695a7", "total_functions": 8, "matched_functions": 6, "mism": [["<genexpr>", 31, 27, 1, 22], ["<listcomp>", 43, 31, 2, 29]]}

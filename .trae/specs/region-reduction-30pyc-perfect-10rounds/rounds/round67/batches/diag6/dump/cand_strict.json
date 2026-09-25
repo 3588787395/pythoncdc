@@ -1,0 +1,77 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag6/build_r67d6w1/IQCommon__strategy__wizard_quant_apiOK.py",
+  "functions": 56,
+  "ok": 52,
+  "bad": [
+   [
+    "<module>.filter_desicion",
+    "seq_len",
+    "orig=179 decomp=181"
+   ],
+   [
+    "<module>.get_DMI.calculate_di",
+    "seq_len",
+    "orig=81 decomp=79"
+   ],
+   [
+    "<module>.init_stock_pool_filter",
+    "target_diff",
+    "#33 JUMP 终点 orig=(\"'security_pool_info'\", 'LOAD_FAST') decomp=(\"'final_stocks'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.params_analysis",
+    "seq_len",
+    "orig=134 decomp=128"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag6/build_r67d6w1/IQEngine__plugins__plugin_system_risk_calculation____init__OK.py",
+  "functions": 37,
+  "ok": 34,
+  "bad": [
+   [
+    "<module>.PluginRiskCalculation._on_publish_after_trading_end",
+    "seq_len",
+    "orig=488 decomp=481"
+   ],
+   [
+    "<module>.PluginRiskCalculation._on_set_positions",
+    "seq_len",
+    "orig=297 decomp=298"
+   ],
+   [
+    "<module>.PluginRiskCalculation._save_testds_to_csv",
+    "seq_len",
+    "orig=75 decomp=68"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag6/build_r67d6w1/fly__loggerOK.py",
+  "functions": 64,
+  "ok": 62,
+  "bad": [
+   [
+    "<module>.Backtest.write_logging_thread",
+    "seq_len",
+    "orig=113 decomp=41"
+   ],
+   [
+    "<module>.SafeFileHandler.check_baseFilename",
+    "target_diff",
+    "#14 POP_JUMP_IF_TRUE 终点 orig=('1', 'LOAD_CONST') decomp=('0', 'LOAD_CONST')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ }
+]

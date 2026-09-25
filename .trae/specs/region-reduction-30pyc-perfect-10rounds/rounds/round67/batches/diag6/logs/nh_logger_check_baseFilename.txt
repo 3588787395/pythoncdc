@@ -1,0 +1,1 @@
+# logger.pyc :: check_baseFilename   orig=34 decomp=34  substantive-hunks=0

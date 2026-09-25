@@ -1,0 +1,28 @@
+products identical=396 changed=6 unresolved=0
+   CHANGED IQCommon/strategy/wizard_quant_api.pyc
+   CHANGED IQData/api/api_base.pyc
+   CHANGED IQData/utils/common_func.pyc
+   CHANGED IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc
+   CHANGED IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc
+   CHANGED fly/data/quote.pyc
+official instruction-gap sum landed=328  m67g=296
+matched functions landed=5698  m67g=5701
+fully matched files landed=386  m67g=387
+--- IQCommon/strategy/wizard_quant_api.pyc
+    landed: ["['calculate_di', 75, 73, 0, 45]", "['params_analysis', 133, 126, 1, 117]"]
+    m67g: ["['params_analysis', 133, 126, 1, 117]"]
+--- IQData/api/api_base.pyc
+    landed: ["['get_history_df', 1742, 1719, 14, 1277]"]
+    m67g: ["['get_history_df', 1742, 1740, 14, 1263]"]
+--- IQData/utils/common_func.pyc
+    landed: ["['handle_exrights', 276, 268, 1, 263]"]
+    m67g: []
+--- IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc
+    landed: ["['clock_worker', 1275, 1286, 10, 481]"]
+    m67g: ["['clock_worker', 1275, 1286, 10, 481]"]
+--- IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc
+    landed: ["['_process_cancel_order', 293, 292, 16, 43]", "['_process_order', 454, 396, 9, 349]", "['_sync_worker', 349, 347, 0, 296]", "['_trade_status_handle', 114, 112, 0, 107]", "['after_trading_cancel_order', 155, 155, 3, 122]", "['etf_basket_order', 693, 693, 11, 216]", "['etf_purchase_redemption', 377, 369, 1, 37]", "['get_all_orders', 79, 78, 2, 24]", "['get_max_amount', 201, 213, 2, 18]", "['ipo_stocks_order', 1075, 1076, 10, 437]", "['on_order_response', 445, 444, 6, 57]", "['on_trade_response', 392, 391, 6, 57]"]
+    m67g: ["['_process_cancel_order', 293, 292, 16, 43]", "['_process_order', 454, 396, 9, 349]", "['_sync_worker', 349, 347, 0, 296]", "['_trade_status_handle', 114, 112, 0, 107]", "['after_trading_cancel_order', 155, 155, 3, 122]", "['etf_basket_order', 693, 693, 11, 216]", "['etf_purchase_redemption', 377, 369, 1, 37]", "['get_max_amount', 201, 213, 2, 18]", "['ipo_stocks_order', 1075, 1076, 10, 437]", "['on_order_response', 445, 444, 6, 57]", "['on_trade_response', 392, 391, 6, 57]"]
+--- fly/data/quote.pyc
+    landed: ["['build_current_period_df', 115, 108, 5, 12]", "['check_frequency', 121, 120, 1, 21]", "['check_limit', 330, 311, 2, 248]", "['get_individual_data', 312, 311, 1, 156]", "['get_price', 230, 232, 0, 172]", "['get_real_from_zeromq', 703, 678, 0, 660]", "['initImagedata', 243, 225, 0, 190]", "['load_bars_from_hundsun', 477, 483, 0, 410]", "['load_get_price', 171, 171, 0, 1]", "['run_individual_transform', 362, 321, 2, 263]", "['run_tick_socket', 306, 307, 2, 228]"]
+    m67g: ["['build_current_period_df', 115, 108, 5, 12]", "['check_frequency', 121, 120, 1, 21]", "['check_limit', 330, 311, 2, 248]", "['get_individual_data', 312, 311, 1, 156]", "['get_price', 230, 232, 0, 172]", "['get_real_from_zeromq', 703, 678, 0, 660]", "['initImagedata', 243, 225, 0, 190]", "['load_bars_from_hundsun', 477, 483, 0, 410]", "['load_get_price', 171, 171, 0, 1]", "['run_individual_transform', 362, 321, 2, 263]", "['run_tick_socket', 306, 307, 2, 228]"]

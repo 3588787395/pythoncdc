@@ -1,0 +1,132 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag2/build_landed/IQCommon__api__klinedataOK.py",
+  "functions": 63,
+  "ok": 56,
+  "bad": [
+   [
+    "<module>.get_all_real_daily_kline",
+    "seq_len",
+    "orig=188 decomp=187"
+   ],
+   [
+    "<module>.get_all_real_minute_kline",
+    "target_diff",
+    "#54 POP_JUMP_IF_FALSE 终点 orig=(\"'system_log'\", 'LOAD_GLOBAL') decomp=(\"'fq'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_history_common",
+    "target_diff",
+    "#41 POP_JUMP_IF_NONE 终点 orig=(\"'is_dict'\", 'LOAD_FAST') decomp=(\"'fields'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_kline_by_count_new",
+    "target_diff",
+    "#161 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=(\"'symbols'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_multiminute_his_data",
+    "seq_len",
+    "orig=481 decomp=482"
+   ],
+   [
+    "<module>.get_price_common",
+    "target_diff",
+    "#114 POP_JUMP_IF_NONE 终点 orig=(\"'frequency'\", 'LOAD_FAST') decomp=(\"'is_dict'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.kline_datetime_list",
+    "seq_diff",
+    "#151 orig=('<JUMP>', 'POP_JUMP_IF_TRUE') decomp=('<JUMP>', 'POP_JUMP_IF_FALSE')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc",
+  "product": "D:/Temp/opencode/r67gate/diag2/build_landed/fly__data__quoteOK.py",
+  "functions": 89,
+  "ok": 74,
+  "bad": [
+   [
+    "<module>.Quote.build_current_period_df",
+    "seq_len",
+    "orig=118 decomp=109"
+   ],
+   [
+    "<module>.Quote.change_his_to_backward",
+    "target_diff",
+    "#213 POP_JUMP_IF_TRUE 终点 orig=(\"'data'\", 'LOAD_FAST') decomp=('None', 'POP_TOP')"
+   ],
+   [
+    "<module>.Quote.change_his_to_forward",
+    "target_diff",
+    "#241 POP_JUMP_IF_FALSE 终点 orig=(\"'preindex'\", 'LOAD_FAST') decomp=(None, 'FOR_ITER')"
+   ],
+   [
+    "<module>.Quote.check_frequency",
+    "seq_len",
+    "orig=123 decomp=124"
+   ],
+   [
+    "<module>.Quote.check_industry_code",
+    "seq_diff",
+    "#159 orig=('0', 'CONTAINS_OP') decomp=('1', 'CONTAINS_OP')"
+   ],
+   [
+    "<module>.Quote.check_limit",
+    "seq_len",
+    "orig=331 decomp=311"
+   ],
+   [
+    "<module>.Quote.get_individual_data",
+    "seq_len",
+    "orig=314 decomp=313"
+   ],
+   [
+    "<module>.Quote.get_price",
+    "seq_len",
+    "orig=230 decomp=232"
+   ],
+   [
+    "<module>.Quote.get_real_from_zeromq",
+    "seq_len",
+    "orig=703 decomp=678"
+   ],
+   [
+    "<module>.Quote.initImagedata",
+    "seq_len",
+    "orig=245 decomp=225"
+   ],
+   [
+    "<module>.Quote.load_bars_from_hundsun",
+    "seq_len",
+    "orig=477 decomp=483"
+   ],
+   [
+    "<module>.Quote.load_get_price",
+    "seq_diff",
+    "#53 orig=('<JUMP>', 'POP_JUMP_IF_FALSE') decomp=('None', 'POP_TOP')"
+   ],
+   [
+    "<module>.Quote.run_individual_transform",
+    "seq_len",
+    "orig=364 decomp=321"
+   ],
+   [
+    "<module>.Quote.run_tick_socket",
+    "seq_len",
+    "orig=309 decomp=310"
+   ],
+   [
+    "<module>.Quote.run_tick_transform",
+    "target_diff",
+    "#135 POP_JUMP_IF_FALSE 终点 orig=(\"'self'\", 'LOAD_FAST') decomp=(\"'len'\", 'LOAD_GLOBAL')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ }
+]

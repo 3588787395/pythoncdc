@@ -1,0 +1,15 @@
+CFG write_logging_thread: 20 blocks, 9 regions
+TOP REGIONS (2):
+  Region@0 blocks=[0] children=[]
+  LoopRegion@4 blocks=[4, 48, 64, 228, 232, 288, 342, 356, 368, 372, 424, 426, 440, 522, 564, 620, 660, 662, 666] body_blocks=[4, 48, 64, 228, 232, 288, 342, 356, 368, 372, 424, 426, 440, 522, 564, 620, 660, 662, 666] children=['LoopRegion@48', 'IfRegion@368', 'IfRegion@426', 'IfRegion@440', 'IfRegion@564']
+
+FULL TREE BY ENTRY:
+  Region@0 blocks=[0] children=[]
+  LoopRegion@4 blocks=[4, 48, 64, 228, 232, 288, 342, 356, 368, 372, 424, 426, 440, 522, 564, 620, 660, 662, 666] body_blocks=[4, 48, 64, 228, 232, 288, 342, 356, 368, 372, 424, 426, 440, 522, 564, 620, 660, 662, 666] children=['LoopRegion@48', 'IfRegion@368', 'IfRegion@426', 'IfRegion@440', 'IfRegion@564']
+  LoopRegion@48 blocks=[48, 64, 228, 232, 288, 342, 356] body_blocks=[64, 228, 232, 288, 342, 356] children=['IfRegion@64', 'IfRegion@228']
+  IfRegion@64 blocks=[64, 228, 232, 288, 342] then_blocks=[228, 232, 288] else_blocks=[342] children=[]
+  IfRegion@228 blocks=[228, 232] then_blocks=[232] children=[]
+  IfRegion@368 blocks=[368, 372] then_blocks=[372] children=[]
+  IfRegion@426 blocks=[426, 440, 522, 564, 620, 660, 662, 666] then_blocks=[440, 522, 564, 620, 660, 666] else_blocks=[662] children=[]
+  IfRegion@440 blocks=[440, 522, 564, 620, 660] then_blocks=[522] else_blocks=[564, 620, 660] children=[]
+  IfRegion@564 blocks=[564, 620] then_blocks=[620] children=[]

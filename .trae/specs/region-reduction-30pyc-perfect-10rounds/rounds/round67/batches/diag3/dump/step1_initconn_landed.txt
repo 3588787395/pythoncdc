@@ -1,0 +1,61 @@
+# flyAccount.pyc :: init_connection   orig=45 decomp=44  substantive-hunks=3
+HUNK replace  orig[18:19]@98(1) decomp[18:20]@98(2)
+   .    70 UNPACK_SEQUENCE              
+   .    74 STORE_FAST                   error_no
+   .    76 STORE_FAST                   error_info
+   .    78 LOAD_FAST                    error_no
+   .    80 LOAD_GLOBAL                  SUCCESS
+   .    92 COMPARE_OP                   !=
+        98 POP_JUMP_FORWARD_IF_FALSE    to 172
+   .   100 LOAD_FAST                    i
+   .   102 LOAD_CONST                   3
+   .   104 COMPARE_OP                   <
+   .   110 POP_JUMP_FORWARD_IF_FALSE    to 154
+   .   112 LOAD_GLOBAL                  NULL + time
+   .   124 LOAD_ATTR                    sleep
+   .    70 UNPACK_SEQUENCE              
+   .    74 STORE_FAST                   error_no
+   .    76 STORE_FAST                   error_info
+   .    78 LOAD_FAST                    error_no
+   .    80 LOAD_GLOBAL                  SUCCESS
+   .    92 COMPARE_OP                   !=
+        98 POP_JUMP_FORWARD_IF_TRUE     to 102
+       100 JUMP_FORWARD                 to 174
+   .   102 LOAD_FAST                    i
+   .   104 LOAD_CONST                   3
+   .   106 COMPARE_OP                   <
+   .   112 POP_JUMP_FORWARD_IF_FALSE    to 166
+   .   114 LOAD_GLOBAL                  NULL + time
+   .   126 LOAD_ATTR                    sleep
+HUNK delete   orig[29:33]@152(4) decomp[30:30]@152(0)
+   .   112 LOAD_GLOBAL                  NULL + time
+   .   124 LOAD_ATTR                    sleep
+   .   134 LOAD_CONST                   1
+   .   136 PRECALL                      
+   .   140 CALL                         
+   .   150 POP_TOP                      
+       152 JUMP_FORWARD                 to 160
+       154 LOAD_CONST                   'init_connection创建连接超时,请稍后再试'
+       156 STORE_FAST                   error_info
+       158 JUMP_FORWARD                 to 176
+   .   160 LOAD_FAST                    i
+   .   162 LOAD_CONST                   1
+   .   164 BINARY_OP                    +=
+   .   168 STORE_FAST                   i
+   .   170 JUMP_FORWARD                 to 174
+   .   172 JUMP_FORWARD                 to 176
+HUNK insert   orig[38:38]@170(0) decomp[35:37]@166(2)
+   .   152 POP_TOP                      
+   .   154 LOAD_FAST                    i
+   .   156 LOAD_CONST                   1
+   .   158 BINARY_OP                    +=
+   .   162 STORE_FAST                   i
+   .   164 JUMP_FORWARD                 to 172
+       166 LOAD_CONST                   'init_connection创建连接超时,请稍后再试'
+       168 STORE_FAST                   error_info
+   .   170 JUMP_FORWARD                 to 174
+   .   172 JUMP_BACKWARD                to 8
+   .   174 LOAD_FAST                    error_no
+   .   176 LOAD_FAST                    error_info
+   .   178 LOAD_CONST                   ('error_no', 'error_info')
+   .   180 BUILD_CONST_KEY_MAP          

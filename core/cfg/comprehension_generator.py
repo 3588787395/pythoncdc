@@ -1616,6 +1616,58 @@ class ComprehensionGenerator:
         # 记录最后一个 BACKWARD filter 跳转的索引，
         # cond_instrs 从此之后开始（跳过 filter 条件指令）。
         last_filter_end = store_idx
+
+        # [R67-fix2 聚合布尔三元测试] 三元 test 为布尔运算链（A and B / A or B）时，CPython 3.11
+        # 为每个操作数各发一条条件跳转，且这些「假出口」共享同一目标偏移（见 dis 实证）。R10 的扫描
+        # 在第一条前向条件跳转处 break，cond_instrs 只截到第一个操作数，IfExp 的 test 因此丢掉其余
+        # 操作数，被丢的指令区段整段从产物消失。
+        # 识别条件（全部为本存储区内的结构判据，不涉及名字/文件/偏移阈值）：
+        #   ① j0 处为 CONDITIONAL_JUMP_OPS 中的前向跳转（opname 不含 BACKWARD）且目标
+        #      tgt0 = argval 满足 j0.offset < tgt0 < append_offset（三元特征：跳过 Then 分支落到
+        #      Else 值，而非跳出整个元素）；
+        #   ② j0 为「假出口」型跳转（IF_FALSE / IF_NONE，即真分支为空）；IF_TRUE 首跳不属于本规则，
+        #      沿用 R10 原路径；
+        #   ③ 在 (j0, tgt0) 区间内继续出现的条件跳转，其目标仍等于 tgt0 者并入链；
+        #      区间内若出现 BACKWARD 条件跳转（= if 过滤器语义，R10 甄别）或跳往其它目标者，
+        #      链不纯，整条三元返回 None 交回既有 genexpr 路径，保持原保守行为。
+        # 归约方式：cond_jump_idx 取链上最后一条跳转索引；条件指令区仍按
+        #   all_instrs[last_filter_end + 1 : cond_jump_idx] 切取（既有通道不变），于是链上每条
+        #   「操作数计算段 + 其共享假出口跳转」串成一条连续指令流；假出口本身不产生值，共享假出口
+        #   的连续条件跳转即在表达式重建器中折叠为 BoolOp。Else 分支定位（`for j in range
+        #   (cond_jump_idx+1, ...)` 找 pop_jump_if_true 目标）与 R5 表达式切片守卫均不改动。
+        # AST 映射：ast.IfExp(test=<BoolOp 折叠后的多操作数测试>, body=<Then 分支>, orelse=
+        #   <Else 常量>) —— 与单操作数情形同一条 ast.IfExp 通道，仅 test 子树由单 Compare 变为
+        #   BoolOp(and/or, [Compare, Compare, ...])。
+        def _r67_boolop_chain_end(instrs, start_i, stop_i, append_off):
+            """instrs[start_i] 为前向假出口型条件跳转时，返回与之共享假出口的最后一条条件跳转索引。
+
+            不满足 ①②③ 者返回 None（单操作数情形由调用方沿用 R10 原索引；链不纯者返回 None 保守放弃）。
+            """
+            j0 = start_i
+            op0 = instrs[j0].opname
+            if 'BACKWARD' in op0:
+                return None
+            if 'IF_FALSE' not in op0 and 'IF_NONE' not in op0:
+                return None
+            tgt0 = instrs[j0].argval if hasattr(instrs[j0], 'argval') else None
+            if tgt0 is None or tgt0 <= instrs[j0].offset or tgt0 >= append_off:
+                return None
+            last_j = j0
+            for k in range(j0 + 1, stop_i):
+                kin = instrs[k]
+                if kin.offset >= tgt0:
+                    break
+                if kin.opname not in CONDITIONAL_JUMP_OPS:
+                    continue
+                kt = kin.argval if hasattr(kin, 'argval') else None
+                if 'BACKWARD' in kin.opname or kt is None:
+                    return None
+                if kt == tgt0:
+                    last_j = k
+                else:
+                    return None
+            return last_j if last_j != j0 else None
+
         for idx in range(store_idx + 1, append_idx):
             instr = all_instrs[idx]
             if instr.opname in CONDITIONAL_JUMP_OPS:
@@ -1647,7 +1699,11 @@ class ComprehensionGenerator:
                                 break
                         if has_backward_after:
                             return None
-                        cond_jump_idx = idx
+                        # [R67-fix2] 同假出口的布尔链：条件区延伸到链上最后一条跳转，
+                        # 使 reconstruct 收到全部操作数；单操作数时沿用 R10 原索引。
+                        _chain_end = _r67_boolop_chain_end(
+                            all_instrs, idx, append_idx, append_offset)
+                        cond_jump_idx = idx if _chain_end is None else _chain_end
                         break
                 # 跳转目标在LIST_APPEND之后 → 过滤器模式，不是三元
                 return None
@@ -1658,9 +1714,9 @@ class ComprehensionGenerator:
         cond_instr = all_instrs[cond_jump_idx]
         false_target_offset = cond_instr.argval
 
-        # 分离条件指令、true值指令、false值指令
-        # 条件指令从最后一个 filter 跳转之后开始，
-        # 避免把 filter 条件指令包含进 ternary cond 表达式。
+        # 分离条件指令：从最后一个过滤器之后到条件跳转之前
+        # （[R67-fix2] cond_jump_idx 可为布尔链的最后一条共享假出口跳转，见上）。
+        # cond_instrs 从此之后开始（跳过 filter 条件指令）。
         cond_instrs = all_instrs[last_filter_end + 1:cond_jump_idx]
 
         # 找到true值和false值的指令范围

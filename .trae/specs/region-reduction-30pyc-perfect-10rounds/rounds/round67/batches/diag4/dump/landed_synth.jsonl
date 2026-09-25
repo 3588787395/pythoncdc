@@ -1,0 +1,2 @@
+{"path": "D:/Temp/opencode/r67gate/diag4/synth/r67d4_handler_continue.pyc", "arm": "landed", "sha": "2fdf4a0e1e74bd12", "total_functions": 4, "matched_functions": 4, "mism": []}
+{"path": "D:/Temp/opencode/r67gate/diag4/synth/r67d4_controls.pyc", "arm": "landed", "sha": "b5fea6b53735a1d9", "total_functions": 8, "matched_functions": 7, "mism": [["c3_cont_cond", 20, 21, 0, 18]]}

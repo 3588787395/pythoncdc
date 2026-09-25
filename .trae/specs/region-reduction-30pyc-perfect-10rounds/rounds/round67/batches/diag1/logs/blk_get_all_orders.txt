@@ -1,0 +1,37 @@
+== BLOCKS get_all_orders (12) ==
+ blk@0     id=1    n=9   term=                           succ=[362, 26]              pred=[]
+ blk@26    id=2    n=15  term=                           succ=[146, 348]             pred=[0]
+ blk@146   id=3    n=15  term=                           succ=[228]                  pred=[26]
+ blk@228   id=4    n=1   term=                           succ=[230, 332]             pred=[146, 230]
+ blk@230   id=5    n=18  term=                           succ=[228]                  pred=[228]
+ blk@332   id=6    n=4   term=                           succ=[362]                  pred=[228]
+ blk@348   id=7    n=3   term=                           succ=[362]                  pred=[26]
+ blk@362   id=8    n=2   term=                           succ=[366, 370]             pred=[0, 332, 348]
+ blk@366   id=9    n=2   term=                           succ=[]                     pred=[362]
+ blk@370   id=10   n=7   term=                           succ=[422, 450]             pred=[362]
+ blk@422   id=11   n=9   term=                           succ=[]                     pred=[370]
+ blk@450   id=12   n=2   term=                           succ=[]                     pred=[370]
+== REGIONS (12) ==
+ IfRegion                   entry@0     blocks=[0, 26, 146, 228, 332, 348] parent=None
+        condition_block  @0
+        merge_block      @362
+        exit             @362
+        children: ['Region@0', 'IfRegion@26']
+ Region                     entry@0     blocks=[0] parent=IfRegion@0
+ IfRegion                   entry@26    blocks=[26, 146, 228, 332, 348] parent=IfRegion@0
+        condition_block  @26
+        merge_block      @362
+        exit             @362
+        children: ['Region@26', 'LoopRegion@228', 'Region@348']
+ Region                     entry@26    blocks=[26] parent=IfRegion@26
+ LoopRegion                 entry@228   blocks=[146, 228, 230, 332] parent=IfRegion@26
+        header_block     @228
+ Region                     entry@348   blocks=[348] parent=IfRegion@26
+ IfRegion                   entry@362   blocks=[362, 366, 370, 422, 450] parent=None
+        condition_block  @362
+        children: ['Region@362', 'Region@366', 'Region@370', 'Region@422', 'Region@450']
+ Region                     entry@362   blocks=[362] parent=IfRegion@362
+ Region                     entry@366   blocks=[366] parent=IfRegion@362
+ Region                     entry@370   blocks=[370] parent=IfRegion@362
+ Region                     entry@422   blocks=[422] parent=IfRegion@362
+ Region                     entry@450   blocks=[450] parent=IfRegion@362

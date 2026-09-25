@@ -1,0 +1,2 @@
+arm=landed core=F:\Downloads/pythoncdc-main\core\cfg
+CFG _process_order: 63 blocks, 19 regions

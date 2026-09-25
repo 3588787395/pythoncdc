@@ -19896,6 +19896,43 @@ AST 映射规则:
                 return False
         return True
 
+    def _handler_backedge_is_explicit_continue(self, hb) -> bool:
+        """[R67-diag4-A try-handler-backedge-explicit-continue] except 处理器纯回边块判定。
+
+        识别条件：正在生成的 TryExceptRegion 的某个 handler body 块 hb 仅由异常清理
+        指令（RESUME/NOP/CACHE/PUSH_NULL/POP_TOP/POP_EXCEPT/COPY）加一条无条件
+        JUMP_BACKWARD 组成，该回边的目标块恰为当前循环的 header_block（CPython 的
+        continue 汇合点），且 hb 本身就是该循环登记的唯一回边块
+        （loop.back_edge_block is hb）——循环体内不存在另一个独立收尾回边块。
+        CPython 对 `while True: try: return ... except E: pass` 编译出的是 handler 尾
+        POP_EXCEPT + JUMP_FORWARD 指向循环尾的独立回边块（探针 c1_pass_true/
+        p_true2），只有源码写显式 `continue` 才产生 POP_EXCEPT + JUMP_BACKWARD 直达
+        header（探针 s1/c_true2/c_cond）；for 形两形态字节等价（探针 c4_cont_for），
+        故本判据在 for 上不产生差异。
+        归约方式：handler body 尚无其它语句时，把该纯回边块归约为一条显式控制流
+        语句，而不是交给循环结构隐式再生回边——隐式再生会额外物化出 JUMP_FORWARD
+        加循环尾 JUMP_BACKWARD 两条指令（realtime_event_source::get_one_event
+        22->23、synth s1 18->19 的严格尺 seq_len 缺陷即此形状）。
+        AST 映射：ExceptHandler.body 追加 {'type': 'Continue'}，渲染为 `continue`；
+        块内无用户语句故不发射其它节点，handler 也不再落 `pass` 兜底。
+        """
+        if not self._current_loop:
+            return False
+        _hc_hdr = getattr(self._current_loop, 'header_block', None)
+        if _hc_hdr is None or getattr(self._current_loop, 'back_edge_block', None) is not hb:
+            return False
+        _hc_last = hb.get_last_instruction()
+        if (_hc_last is None
+                or _hc_last.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                or _hc_last.argval is None):
+            return False
+        if self.cfg.get_block_by_offset(_hc_last.argval) is not _hc_hdr:
+            return False
+        _hc_noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP', 'POP_EXCEPT', 'COPY')
+        if any(i.opname not in _hc_noise for i in hb.instructions[:-1]):
+            return False
+        return True
+
     def _if_extract_condition_from_instructions(self, region: IfRegion, cond_block: 'BasicBlock', cond_instrs: List) -> Dict[str, Any]:
         # [Round 2 修复] 当 cond_block 属于某个多操作数 BoolOpRegion 时
         # （如 `if x or await g():` 中 await 的 truthy 测试块），条件应
@@ -21930,6 +21967,63 @@ AST 映射规则:
                 _rid = id(_region)
                 if (_rid not in self._generated_regions
                         and _rid not in self._generating_regions):
+                    # [R67-fix1 J3 无自身汇合点的顶层兄弟区域不得在循环发射中被认领]
+                    # 识别条件：五条全部只读**本帧自身参数 + _region 自身字段 +
+                    #   self._current_loop 自身字段**；不扫描任何其它区域的 blocks 集合
+                    #   （无 `x in r.blocks` 式跨区/跨层包含判据），无函数名/文件名/字面
+                    #   偏移/计数阈值，无新增 self 状态：
+                    #   (1) `region is None` —— 本帧是 _if_generate_branch_stmts 的 standalone
+                    #       调用（L23602），没有 owning 区域（文档串 L21922-21927 声明的正用途
+                    #       是 loop else body 续接）；
+                    #   (2) `self._current_loop is not None` —— 发射栈当前正在归约某个
+                    #       LoopRegion，本帧返回的 stmts 会被并到 for/while 语句**内部**；
+                    #   (3) `getattr(_region, 'parent', None) is None` —— 待认领入口区域是本函数
+                    #       区域森林的顶层区域，归 generate() 顶层区域循环（L1754）所有并排放；
+                    #   (4) `block is _region.entry` —— 本块恰是该区域的**自身 entry**（而非
+                    #       is_block_entry 也接受的 condition_block / header_block），区域作为
+                    #       完整单元整体推迟才安全；
+                    #   (5) `getattr(_region, 'merge_block', None) is None` ∧
+                    #       `getattr(_region, 'exit', None) is None` —— 该顶层区域**自身没有
+                    #       汇合点/出口**，即它是函数语句序列的尾段区域，推迟认领不会让任何
+                    #       「if 之后的续接块」在本帧丢失归属。
+                    #   实测命中面（arm=j1dbg 逐帧读数，logs/j1dbg_{synth,targets,canary}.err）：
+                    #     正例 v3   blocks=[68,98]   R=IfRegion e=98  cb=98  mb=None x=None
+                    #               nb=5 then=[102]        else=[106,148,176] par=None
+                    #     正例 v4   blocks=[66,80]   R=IfRegion e=80  cb=80  mb=None x=None
+                    #     正例 get_all_orders blocks=[332,362] R=IfRegion e=362 cb=362
+                    #               mb=None x=None nb=5 then=[366] else=[370,422,450] par=None
+                    #     反例 quotation::get_trend blocks=[158,206] R=IfRegion e=206 cb=206
+                    #               mb=220 x=220 nb=2 then=[210] else=[] —— 第 (5) 条把它挡住。
+                    # 为何更宽的 J1 被否决（两条硬性门槛读数，本判据即据此收窄）：
+                    #   J1 = (1)(2)(3) 三条，缺 (4)(5)。实测（arm=j1，specs/cand_r67_j1.json 原样）：
+                    #   (a) canary **quotation.pyc 仍 143/143 但产物 sha 从 4d41187e356544e0 移开**
+                    #       （本 dir 复测 3eb76e512df9ab1e）⇒ canary 要求逐字节相同，**门槛失败**；
+                    #   (b) 具名目标本 dir 复测为 **108/119（get_all_orders 已清）**，未复现
+                    #       diag1 记下的 ERR（RuntimeError('Failed to decompile ...')）；两条读数
+                    #       都记在这里，无论哪条成立 J1 都不可落地。
+                    #   移开 canary 的正是第 (5) 条挡住的反例形状：被认领的顶层 IfRegion 自带
+                    #   merge_block/exit=220，standalone 尾扫必须穿过它继续发射，跳过认领会改写
+                    #   该处产物字节。
+                    #   另：diag1 记账的「standalone blocks 是单块」收窄实测**不成立**——四个命中
+                    #   帧的 blocks 参数都是 2 个块（[循环尾块, 外层 if 汇合块]），加 `len(blocks)
+                    #   == 1` 判据后补丁完全失效（arm=j2 复现仍 6/7），故本判据改用 (4)(5) 两条
+                    #   _region 自身字段收窄。
+                    # 归约方式：命中时**不在本层认领**——既不 _generate_region(_region)，也不把
+                    #   _region.blocks 写进 generated_blocks / _generated_regions，直接 continue
+                    #   让本次 standalone 调用返回空语句；该区域回到它真正的所有者（顶层区域循环）
+                    #   按既有次序发射**恰好一次**。不删除、不抑制任何语句，只把发射层级从
+                    #   「循环体内部」归还给「函数体顶层语句序列」。
+                    # AST 映射：IfRegion(parent=None ∧ merge=None ∧ exit=None) → 与外层 ast.If
+                    #   **平级**的兄弟 ast.If，位于函数体语句序列；现状把它塞进 ast.For 之后 ⇒
+                    #   then 臂多吞一整段，且 elif 分支内 listcomp 的 ast.Return 被重复发射一次
+                    #   （get_all_orders 指纹 orig=79 decomp=78 jumpdiff=2 truediff=24）。
+                    if (region is None and self._current_loop is not None
+                            and getattr(_region, 'parent', None) is None
+                            and block is _region.entry
+                            and getattr(_region, 'merge_block', None) is None
+                            and getattr(_region, 'exit', None) is None):
+                        continue
+                    self._generating_regions.add(_rid)
                     self._generating_regions.add(_rid)
                     try:
                         _ast = self._generate_region(_region)
@@ -25771,6 +25865,14 @@ AST 映射规则:
                     # BREAK/PURE_BREAK 时生成 Break 语句。否则 _generate_handler_body_statements
                     # 会将 POP_EXCEPT+JUMP_BACKWARD 过滤为空，导致 handler body
                     # 被填充为 pass（如 te001 的 `except ValueError: continue` → `pass`）。
+                    _hb_role = self.region_analyzer.get_block_role(hb)
+                    if (_hb_role == BlockRole.LOOP_BACK_EDGE and not handler_body
+                            and self._handler_backedge_is_explicit_continue(hb)):
+                        # [R67-diag4-A] handler 以纯回边块收尾 = 源码显式 continue，
+                        # 不是循环的隐式迭代（判据见上面同名方法）。
+                        handler_body.append({'type': 'Continue'})
+                        self.generated_blocks.add(hb)
+                        continue
                     _hb_role = self.region_analyzer.get_block_role(hb)
                     if _hb_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
                         # [Round 32 fix] 区域归约算法原则 2（每块唯一归属）+
@@ -34782,6 +34884,59 @@ AST 映射规则:
             self.generated_blocks.add(_b)
         return results
 
+    def _r67_split_cc_ternary_stmt_prefix(self, region: 'TernaryRegion',
+                                          pre_stmts: List[Dict[str, Any]]) -> None:
+        # [R67-diag5 值语境链式比较三元：头块前导已完结语句的同层拆分]
+        # 识别条件（三条，全部只读**本区域自身的字段**与该块自身的栈深，不查任何
+        #   其他区域/层次的归属，无函数名/文件名/偏移/阈值）：
+        #   (1) 本区域的三元条件是 chained compare：`chained_compare_ops` 长度 >= 2
+        #       且 `chained_compare_blocks` 非空 —— 与本候选唯一调用点（
+        #       `_generate_ternary` Phase-7-D 分支，landed L35031-35033）所依据的
+        #       是**同一条**结构性判据，即「本判据只在该分支已经认定条件是
+        #       chained compare 之后才可能成立」，不另立第二套条件识别；
+        #   (2) `condition_block` 末指令消费栈顶条件值，故
+        #       _split_block_condition_prefix 的纯栈深划界成立且切出的前导段非空
+        #       —— 前导段的定义即「执行完毕后值栈回到块入口深度 0 的**已完结**语句」
+        #       （与 AssertRegion.condition_block、旋转 while 的 LoopRegion.
+        #       condition_block、_r63b3_reduce_value_ctx_chain_store 用的是同一条
+        #       划界，不新建谓词）；
+        #   (3) 前导段之后的剩余指令里仍留有链的比较指令
+        #       （COMPARE_OP / IS_OP / CONTAINS_OP）——拆分点绝不落在链内部。
+        # 归约方式（原则 1「每块 = 前导语句 + 恰一个终止符」+ 原则 3「嵌套即抽象
+        #   节点」）：块整体**仍**归本三元区域（不改 block_to_region、不改
+        #   generated_blocks 的既有登记），仅把块内栈深已归零的前导段经
+        #   _build_statements_from_instructions 归约为语句后 extend 进 pre_stmts，
+        #   由 _generate_ternary 既有的 `results = list(pre_stmts)` 通道随本三元一同
+        #   返回父序列 —— 与 _r63b3_reduce_value_ctx_chain_store 在同一分支上的既有
+        #   做法一字不动地同构，只是那条路径的 (3) 要求「两臂都是链自身的短路结构」，
+        #   真三元的值臂不满足，于是前导段此前无人发射（语句整段丢失）。
+        #   任一步不成立即原样返回（保守退化到落地行为），不新增区域、不新增帧内/
+        #   self 状态、不抑制任何发射。
+        # AST 映射：前导段 -> 若干条 ast.Assign / ast.Expr，位置与该三元的
+        #   ast.Assign(targets=[Name(value_target)], value=ast.IfExp(test=ast.Compare,
+        #   body=<true>, orelse=<false>)) **同层**且在前（源码顺序），而不是 IfExp 的
+        #   子节点，也不是任何嵌套语句的臂内节点。
+        _ops = getattr(region, 'chained_compare_ops', None) or []
+        if len(_ops) < 2 or not (getattr(region, 'chained_compare_blocks', None) or []):
+            return
+        _cond = getattr(region, 'condition_block', None)
+        if _cond is None or not _cond.instructions:
+            return
+        _prefix = self._split_block_condition_prefix(
+            _cond,
+            FORWARD_CONDITIONAL_JUMP_OPS | NONE_CHECK_OPS | SHORT_CIRCUIT_JUMP_OPS)
+        if not _prefix:
+            return
+        _all = list(_cond.instructions)
+        _rest = _all[len(_prefix):]
+        if not _rest or not any(
+                i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP') for i in _rest):
+            return
+        _pstmts = self._build_statements_from_instructions(_prefix, _cond)
+        if not _pstmts:
+            return
+        pre_stmts.extend(_pstmts)
+
     def _generate_ternary(self, region: TernaryRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
         """生成 TernaryRegion 的 AST 语句列表
 
@@ -35043,6 +35198,7 @@ AST 映射规则:
                     region, cond_expr, pre_stmts, skip_store_targets)
                 if _r63b3_stmts is not None:
                     return _r63b3_stmts
+                self._r67_split_cc_ternary_stmt_prefix(region, pre_stmts)
         elif (cond_block
               and self.region_analyzer._is_chained_compare_header(cond_block)
               and not getattr(region, 'chained_compare_ops', None)):

@@ -1,0 +1,1 @@
+NOTICE (center, written after provisioning): battery.txt in this directory was refreshed to the 31-item R67 list (dump/reprolist67.txt). The R66-era 24-line copy gives 93/104 and is NOT the baseline in BRIEF.md. If your battery.txt line count is not 31, do not trust any battery reading you already produced; re-run --arm=landed over battery.txt before comparing.

@@ -1,0 +1,8 @@
+# klinedata.pyc :: get_all_real_daily_kline   orig=216 decomp=214  substantive-hunks=1
+HUNK delete   orig[185:187]@898(2) decomp[185:185]@896(0)
+   .   894 EXTENDED_ARG                 
+   .   896 JUMP_BACKWARD                to 86
+       898 EXTENDED_ARG                 
+       900 JUMP_BACKWARD                to 86
+   .   902 PUSH_EXC_INFO                
+   .   904 LOAD_GLOBAL                  BaseException

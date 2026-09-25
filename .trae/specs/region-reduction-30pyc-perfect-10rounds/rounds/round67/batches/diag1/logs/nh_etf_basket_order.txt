@@ -1,0 +1,37 @@
+# trade_live_broker.pyc :: etf_basket_order   orig=769 decomp=769  substantive-hunks=2
+HUNK delete   orig[274:285]@1328(11) decomp[274:274]@1326(0)
+   .  1322 POP_TOP                      
+   .  1324 LOAD_CONST                   None
+   .  1326 RETURN_VALUE                 
+      1328 LOAD_GLOBAL                  NULL + strategy_log
+      1340 LOAD_ATTR                    warning
+      1350 LOAD_CONST                   '该股票【%s】行情数据异常'
+      1352 LOAD_FAST                    stock
+      1354 BINARY_OP                    %
+      1358 PRECALL                      
+      1362 CALL                         
+      1372 POP_TOP                      
+      1374 POP_TOP                      
+      1376 LOAD_CONST                   None
+      1378 RETURN_VALUE                 
+   .  1380 LOAD_FAST                    entrust_price
+   .  1382 LOAD_FAST                    stock_entrust_price
+   .  1384 LOAD_FAST                    stock
+HUNK insert   orig[527:527]@2498(0) decomp[516:527]@2448(11)
+   .  2440 STORE_SUBSCR                 
+   .  2444 EXTENDED_ARG                 
+   .  2446 JUMP_BACKWARD                to 480
+      2448 LOAD_GLOBAL                  NULL + strategy_log
+      2460 LOAD_ATTR                    warning
+      2470 LOAD_CONST                   '该股票【%s】行情数据异常'
+      2472 LOAD_FAST                    stock
+      2474 BINARY_OP                    %
+      2478 PRECALL                      
+      2482 CALL                         
+      2492 POP_TOP                      
+      2494 POP_TOP                      
+      2496 LOAD_CONST                   None
+      2498 RETURN_VALUE                 
+   .  2500 LOAD_FAST                    etf_stock_list
+   .  2502 LOAD_METHOD                  copy
+   .  2524 PRECALL                      

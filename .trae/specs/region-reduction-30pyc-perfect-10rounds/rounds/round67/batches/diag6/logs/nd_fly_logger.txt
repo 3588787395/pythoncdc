@@ -1,0 +1,5 @@
+DIFF /Backtest#12/write_logging_thread#4            orig=127 decomp=128 hunks=3
+   delete   orig[78:87]=['LOAD_FAST msgs', 'POP_JUMP_FORWARD_IF_FALSE J', 'LOAD_FAST self', 'LOAD_ATTR logger_bt', 'LOAD_METHOD info', 'LOAD_FAST msgs']  decomp[78:78]=[]
+   replace  orig[122:123]=['JUMP_FORWARD J']  decomp[113:115]=['EXTENDED_ARG ', 'JUMP_BACKWARD J']
+   insert   orig[125:125]=[]  decomp[117:126]=['LOAD_FAST msgs', 'POP_JUMP_FORWARD_IF_FALSE J', 'LOAD_FAST self', 'LOAD_ATTR logger_bt', 'LOAD_METHOD info', 'LOAD_FAST msgs']
+TOTAL differing code objects: 1 of 64

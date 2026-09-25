@@ -1,0 +1,1 @@
+[J1HIT] cfg=get_trend blk=206 blocks=[158, 206] | R=IfRegion e=206 cb=206 mb=220 x=220 nb=2 then=[210] else=[] par=NoneType | L=LoopRegion e=84 h=84 x=None nb=4 bodyhas=False elsehas=False blkgen=False

@@ -1,0 +1,26 @@
+[
+ {
+  "pyc": "D:/Temp/opencode/r67gate/diag4/synth/r67d4_handler_continue.pyc",
+  "ok": 3,
+  "n": 4,
+  "bad": [
+   [
+    "<module>.s1",
+    "seq_len",
+    "orig=15 decomp=16"
+   ]
+  ]
+ },
+ {
+  "pyc": "D:/Temp/opencode/r67gate/diag4/synth/r67d4_controls.pyc",
+  "ok": 7,
+  "n": 8,
+  "bad": [
+   [
+    "<module>.c3_cont_cond",
+    "seq_len",
+    "orig=20 decomp=21"
+   ]
+  ]
+ }
+]

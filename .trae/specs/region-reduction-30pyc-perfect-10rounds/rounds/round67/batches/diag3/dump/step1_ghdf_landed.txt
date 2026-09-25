@@ -1,0 +1,190 @@
+# api_base.pyc :: get_history_df   orig=1900 decomp=1873  substantive-hunks=8
+HUNK replace  orig[457:462]@2242(5) decomp[457:458]@2242(1)
+   .  2226 POP_JUMP_FORWARD_IF_TRUE     to 2254
+   .  2228 JUMP_FORWARD                 to 2232
+   .  2230 POP_TOP                      
+   .  2232 LOAD_FAST                    cur_datetime
+   .  2234 LOAD_FAST                    pm_close_market_datetime
+   .  2236 COMPARE_OP                   >
+      2242 POP_JUMP_FORWARD_IF_TRUE     to 2254
+      2244 LOAD_FAST                    time_count
+      2246 LOAD_CONST                   1
+      2248 BINARY_OP                    -=
+      2252 STORE_FAST                   time_count
+   .  2254 LOAD_FAST                    frequency
+   .  2256 LOAD_GLOBAL                  Frequency
+   .  2268 LOAD_ATTR                    MINUTE
+   .  2278 LOAD_ATTR                    value
+   .  2288 COMPARE_OP                   ==
+   .  2294 POP_JUMP_FORWARD_IF_FALSE    to 2318
+   .  2226 POP_JUMP_FORWARD_IF_TRUE     to 2244
+   .  2228 JUMP_FORWARD                 to 2232
+   .  2230 POP_TOP                      
+   .  2232 LOAD_FAST                    cur_datetime
+   .  2234 LOAD_FAST                    pm_close_market_datetime
+   .  2236 COMPARE_OP                   >
+      2242 POP_JUMP_FORWARD_IF_FALSE    to 2570
+   .  2244 LOAD_FAST                    frequency
+   .  2246 LOAD_GLOBAL                  Frequency
+   .  2258 LOAD_ATTR                    MINUTE
+   .  2268 LOAD_ATTR                    value
+   .  2278 COMPARE_OP                   ==
+   .  2284 POP_JUMP_FORWARD_IF_FALSE    to 2308
+HUNK replace  orig[522:527]@2506(5) decomp[518:519]@2496(1)
+   .  2490 POP_JUMP_FORWARD_IF_TRUE     to 2518
+   .  2492 JUMP_FORWARD                 to 2496
+   .  2494 POP_TOP                      
+   .  2496 LOAD_FAST                    _query_date
+   .  2498 LOAD_FAST                    pm_close_market_datetime
+   .  2500 COMPARE_OP                   >
+      2506 POP_JUMP_FORWARD_IF_TRUE     to 2518
+      2508 LOAD_FAST                    max_len_real_data
+      2510 LOAD_CONST                   1
+      2512 BINARY_OP                    -=
+      2516 STORE_FAST                   max_len_real_data
+   .  2518 LOAD_FAST                    max_len_real_data
+   .  2520 LOAD_FAST                    count
+   .  2522 COMPARE_OP                   >
+   .  2528 POP_JUMP_FORWARD_IF_FALSE    to 2534
+   .  2530 LOAD_FAST                    count
+   .  2532 JUMP_FORWARD                 to 2536
+   .  2480 POP_JUMP_FORWARD_IF_TRUE     to 2498
+   .  2482 JUMP_FORWARD                 to 2486
+   .  2484 POP_TOP                      
+   .  2486 LOAD_FAST                    _query_date
+   .  2488 LOAD_FAST                    pm_close_market_datetime
+   .  2490 COMPARE_OP                   >
+      2496 POP_JUMP_FORWARD_IF_FALSE    to 2518
+   .  2498 LOAD_FAST                    max_len_real_data
+   .  2500 LOAD_FAST                    count
+   .  2502 COMPARE_OP                   >
+   .  2508 POP_JUMP_FORWARD_IF_FALSE    to 2514
+   .  2510 LOAD_FAST                    count
+   .  2512 JUMP_FORWARD                 to 2516
+HUNK insert   orig[534:534]@2534(0) decomp[526:530]@2516(4)
+   .  2500 LOAD_FAST                    count
+   .  2502 COMPARE_OP                   >
+   .  2508 POP_JUMP_FORWARD_IF_FALSE    to 2514
+   .  2510 LOAD_FAST                    count
+   .  2512 JUMP_FORWARD                 to 2516
+   .  2514 LOAD_FAST                    max_len_real_data
+      2516 STORE_FAST                   max_len_real_data
+      2518 LOAD_FAST                    max_len_real_data
+      2520 LOAD_CONST                   1
+      2522 BINARY_OP                    -=
+   .  2526 STORE_FAST                   max_len_real_data
+   .  2528 LOAD_FAST                    max_len_real_data
+   .  2530 LOAD_CONST                   0
+   .  2532 COMPARE_OP                   <
+   .  2538 POP_JUMP_FORWARD_IF_FALSE    to 2544
+   .  2540 LOAD_CONST                   0
+HUNK insert   orig[552:552]@2578(0) decomp[548:552]@2570(4)
+   .  2554 LOAD_FAST                    max_len_real_data
+   .  2556 LOAD_FAST                    count
+   .  2558 COMPARE_OP                   >
+   .  2564 POP_JUMP_FORWARD_IF_FALSE    to 2570
+   .  2566 LOAD_FAST                    count
+   .  2568 STORE_FAST                   min_count
+      2570 LOAD_FAST                    time_count
+      2572 LOAD_CONST                   1
+      2574 BINARY_OP                    -=
+      2578 STORE_FAST                   time_count
+   .  2580 LOAD_FAST                    frequency
+   .  2582 LOAD_GLOBAL                  Frequency
+   .  2594 LOAD_ATTR                    MINUTE
+   .  2604 LOAD_ATTR                    value
+   .  2614 COMPARE_OP                   ==
+   .  2620 POP_JUMP_FORWARD_IF_FALSE    to 2930
+HUNK delete   orig[584:586]@2690(2) decomp[584:584]@2688(0)
+   .  2678 POP_JUMP_FORWARD_IF_FALSE    to 2704
+   .  2680 JUMP_FORWARD                 to 2686
+   .  2682 POP_TOP                      
+   .  2684 JUMP_FORWARD                 to 2704
+   .  2686 LOAD_FAST                    am_close_market_datetime
+   .  2688 STORE_FAST                   tmp_end_datetime
+      2690 LOAD_FAST                    include
+      2692 POP_JUMP_FORWARD_IF_TRUE     to 2704
+   .  2694 LOAD_FAST                    min_count
+   .  2696 LOAD_CONST                   1
+   .  2698 BINARY_OP                    -=
+   .  2702 STORE_FAST                   min_count
+   .  2704 LOAD_GLOBAL                  NULL + change_dt_2_int
+   .  2716 LOAD_GLOBAL                  NULL + convert_int_to_datetime
+HUNK delete   orig[1034:1035]@4968(1) decomp[1032:1032]@4958(0)
+   .  4934 STORE_FAST                   len_real_data
+   .  4936 LOAD_FAST                    fq
+   .  4938 LOAD_GLOBAL                  DIVIDEND_CALC_TYPE
+   .  4950 LOAD_CONST                   1
+   .  4952 BINARY_SUBSCR                
+   .  4962 COMPARE_OP                   ==
+      4968 EXTENDED_ARG                 
+   .  4970 POP_JUMP_FORWARD_IF_FALSE    to 6896
+   .  4972 LOAD_FAST                    len_real_data
+   .  4974 LOAD_CONST                   0
+   .  4976 COMPARE_OP                   >
+   .  4982 EXTENDED_ARG                 
+   .  4984 POP_JUMP_FORWARD_IF_FALSE    to 6896
+HUNK delete   orig[1039:1063]@4982(24) decomp[1036:1036]@4970(0)
+   .  4962 COMPARE_OP                   ==
+   .  4968 EXTENDED_ARG                 
+   .  4970 POP_JUMP_FORWARD_IF_FALSE    to 6896
+   .  4972 LOAD_FAST                    len_real_data
+   .  4974 LOAD_CONST                   0
+   .  4976 COMPARE_OP                   >
+      4982 EXTENDED_ARG                 
+      4984 POP_JUMP_FORWARD_IF_FALSE    to 6896
+      4986 LOAD_FAST                    engine_obj
+      4988 LOAD_ATTR                    basic_data_handler
+      4998 LOAD_METHOD                  get_dividend
+      5020 LOAD_FAST                    symbol
+      5022 LOAD_CONST                   None
+      5024 PRECALL                      
+      5028 CALL                         
+      5038 STORE_FAST                   tmp_dividends
+      5040 LOAD_FAST                    tmp_dividends
+      5042 POP_JUMP_FORWARD_IF_FALSE    to 5102
+      5044 LOAD_FAST                    symbol
+      5046 LOAD_FAST                    tmp_dividends
+      5048 CONTAINS_OP                  
+      5050 POP_JUMP_FORWARD_IF_TRUE     to 5102
+      5052 LOAD_GLOBAL                  NULL + len
+      5064 LOAD_FAST                    tmp_dividends
+      5066 LOAD_FAST                    symbol
+      5068 BINARY_SUBSCR                
+      5078 PRECALL                      
+      5082 CALL                         
+      5092 LOAD_CONST                   0
+      5094 COMPARE_OP                   ==
+   .  5100 POP_JUMP_FORWARD_IF_FALSE    to 5126
+   .  5102 LOAD_FAST                    fields
+   .  5104 POP_JUMP_FORWARD_IF_NOT_NONE to 5110
+   .  5106 LOAD_FAST                    real_data
+   .  5108 JUMP_FORWARD                 to 5124
+   .  5110 LOAD_FAST                    real_data
+HUNK replace  orig[1072:1073]@5126(1) decomp[1045:1046]@5002(1)
+   .  5106 LOAD_FAST                    real_data
+   .  5108 JUMP_FORWARD                 to 5124
+   .  5110 LOAD_FAST                    real_data
+   .  5112 LOAD_FAST                    fields
+   .  5114 BINARY_SUBSCR                
+   .  5124 RETURN_VALUE                 
+      5126 LOAD_FAST                    tmp_dividends
+   .  5128 LOAD_FAST                    symbol
+   .  5130 BINARY_SUBSCR                
+   .  5140 STORE_FAST                   dividends
+   .  5142 LOAD_CONST                   <code object <dictcomp> at 0x00000261666E3530, file "./fly_d
+   .  5144 MAKE_FUNCTION                
+   .  5146 LOAD_FAST                    dividends
+   .  4982 LOAD_FAST                    real_data
+   .  4984 JUMP_FORWARD                 to 5000
+   .  4986 LOAD_FAST                    real_data
+   .  4988 LOAD_FAST                    fields
+   .  4990 BINARY_SUBSCR                
+   .  5000 RETURN_VALUE                 
+      5002 LOAD_GLOBAL                  tmp_dividends
+   .  5014 LOAD_FAST                    symbol
+   .  5016 BINARY_SUBSCR                
+   .  5026 STORE_FAST                   dividends
+   .  5028 LOAD_CONST                   <code object <dictcomp> at 0x00000261666E3D30, file "build_l
+   .  5030 MAKE_FUNCTION                
+   .  5032 LOAD_FAST                    dividends
