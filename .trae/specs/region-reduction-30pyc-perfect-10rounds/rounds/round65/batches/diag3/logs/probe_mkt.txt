@@ -1,0 +1,14 @@
+REGIONS=9
+TERNARY entry=242 blocks=[282, 284, 242, 278] merge=284 cond=242 ctx='fstring' container='call' dict_key=False
+    blk@282   n=1  LOAD_CONST@282(深A)
+    blk@284   n=14  FORMAT_VALUE@284((<class 'str) LOAD_CONST@286(失败，错误原因：) LOAD_FAST@288(error_dict) LOAD_METHOD@290(get) LOAD_CONST@312(error_info) PRECALL@314(1) CALL@318(1) FORMAT_VALUE@328((<class 'str) BUILD_STRING@330(4) PRECALL@332(1) CALL@336(1) POP_TOP@346 LOAD_CONST@348(False) RETURN_VALUE@350
+    blk@242   n=7  LOAD_GLOBAL@242(strategy_log) LOAD_ATTR@254(error) LOAD_CONST@264(转入) LOAD_FAST@266(exchange_typ) LOAD_CONST@268(1) COMPARE_OP@270(==) POP_JUMP_FORWARD_IF_FALSE@276(282)
+    blk@278   n=2  LOAD_CONST@278(沪A) JUMP_FORWARD@280(284)
+TERNARY entry=352 blocks=[352, 388, 392, 394] merge=394 cond=352 ctx='fstring' container='call' dict_key=False
+    blk@352   n=7  LOAD_GLOBAL@352(strategy_log) LOAD_ATTR@364(info) LOAD_CONST@374(转入) LOAD_FAST@376(exchange_typ) LOAD_CONST@378(1) COMPARE_OP@380(==) POP_JUMP_FORWARD_IF_FALSE@386(392)
+    blk@388   n=2  LOAD_CONST@388(沪A) JUMP_FORWARD@390(394)
+    blk@392   n=1  LOAD_CONST@392(深A)
+    blk@394   n=10  FORMAT_VALUE@394((<class 'str) LOAD_CONST@396(成功，入参金额：) LOAD_FAST@398(occur_balanc) FORMAT_VALUE@400((<class 'str) BUILD_STRING@402(4) PRECALL@404(1) CALL@408(1) POP_TOP@418 LOAD_CONST@420(True) RETURN_VALUE@422
+--- GENERATE ---
+--- done
+AST len=5386

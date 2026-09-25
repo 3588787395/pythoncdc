@@ -1,0 +1,4 @@
+R65D2STMT rid=1718903217808 merge=144 tailfrom=14 nblk=32
+R65D2STMT rid=1718903217808 merge=144 tailfrom=14 nblk=32
+R65D2STMT rid=1718950808976 merge=144 tailfrom=17 nblk=34
+R65D2STMT rid=1718902871312 merge=144 tailfrom=20 nblk=42

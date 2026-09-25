@@ -1,0 +1,157 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+  "product": "D:/Temp/opencode/r65gate/diag4/build_n3/IQData__plugins__plugin_system_realquote__real_quoteOK.py",
+  "functions": 45,
+  "ok": 40,
+  "bad": [
+   [
+    "<module>.RealQuoteData.get_cache_l2_data",
+    "seq_len",
+    "orig=337 decomp=351"
+   ],
+   [
+    "<module>.RealQuoteData.get_cache_l2_data_by_one",
+    "seq_len",
+    "orig=321 decomp=336"
+   ],
+   [
+    "<module>.RealQuoteData.get_real_minute_kline",
+    "seq_len",
+    "orig=253 decomp=256"
+   ],
+   [
+    "<module>.RealQuoteData.get_tick_direction",
+    "seq_len",
+    "orig=259 decomp=260"
+   ],
+   [
+    "<module>.RealQuoteData.one_prod_to_ndarray",
+    "seq_len",
+    "orig=606 decomp=608"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+  "product": "D:/Temp/opencode/r65gate/diag4/build_n3/IQCommon__api__klinedataOK.py",
+  "functions": 63,
+  "ok": 54,
+  "bad": [
+   [
+    "<module>.get_all_real_daily_kline",
+    "seq_len",
+    "orig=188 decomp=187"
+   ],
+   [
+    "<module>.get_all_real_minute_kline",
+    "target_diff",
+    "#54 POP_JUMP_IF_FALSE 终点 orig=(\"'system_log'\", 'LOAD_GLOBAL') decomp=(\"'fq'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_history_common",
+    "target_diff",
+    "#41 POP_JUMP_IF_NONE 终点 orig=(\"'is_dict'\", 'LOAD_FAST') decomp=(\"'fields'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_kline_by_count_new",
+    "target_diff",
+    "#161 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=(\"'symbols'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_kline_by_date_new",
+    "target_diff",
+    "#36 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=(\"'symbols'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_multiminute_his_data",
+    "seq_len",
+    "orig=481 decomp=482"
+   ],
+   [
+    "<module>.get_multiminute_his_data_by_date",
+    "target_diff",
+    "#272 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=(\"'symbols'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_price_common",
+    "target_diff",
+    "#114 POP_JUMP_IF_NONE 终点 orig=(\"'frequency'\", 'LOAD_FAST') decomp=(\"'is_dict'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.kline_datetime_list",
+    "seq_diff",
+    "#151 orig=('<JUMP>', 'POP_JUMP_IF_TRUE') decomp=('<JUMP>', 'POP_JUMP_IF_FALSE')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+  "product": "D:/Temp/opencode/r65gate/diag4/build_n3/IQEngine__plugins__plugin_system_risk_calculation____init__OK.py",
+  "functions": 37,
+  "ok": 33,
+  "bad": [
+   [
+    "<module>.PluginRiskCalculation._on_publish_after_trading_end",
+    "seq_len",
+    "orig=488 decomp=481"
+   ],
+   [
+    "<module>.PluginRiskCalculation._on_set_positions",
+    "seq_len",
+    "orig=297 decomp=298"
+   ],
+   [
+    "<module>.PluginRiskCalculation._save_testds_to_csv",
+    "seq_len",
+    "orig=75 decomp=68"
+   ],
+   [
+    "<module>.PluginRiskCalculation.get_TradeMode_trades",
+    "seq_len",
+    "orig=1843 decomp=1801"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+  "product": "D:/Temp/opencode/r65gate/diag4/build_n3/IQCommon__util__trade_info_utilsOK.py",
+  "functions": 41,
+  "ok": 36,
+  "bad": [
+   [
+    "<module>.get_trade_list",
+    "seq_len",
+    "orig=345 decomp=329"
+   ],
+   [
+    "<module>.get_trade_status",
+    "target_diff",
+    "#70 FOR_ITER 终点 orig=(\"'return_trade_info'\", 'LOAD_FAST') decomp=(\"'count'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_trade_unit_info",
+    "seq_len",
+    "orig=240 decomp=241"
+   ],
+   [
+    "<module>.set_trade_status",
+    "target_diff",
+    "#113 JUMP 终点 orig=(\"'count'\", 'LOAD_FAST') decomp=(\"'exchange_flag'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.trade_operation",
+    "seq_len",
+    "orig=304 decomp=302"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ }
+]

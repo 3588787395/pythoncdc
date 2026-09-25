@@ -1,0 +1,14 @@
+CFG market_fund_transfer: 13 blocks, 9 regions
+TOP REGIONS (1):
+  IfRegion@0 blocks=[0, 10, 60, 82, 126, 242, 278, 282, 284, 352, 388, 392, 394] then_blocks=[10] else_blocks=[60, 82, 126, 242, 278, 282, 284, 352, 388, 392, 394] elif_conditions=[60] children=['Region@0', 'Region@10', 'Region@60', 'Region@82', 'IfRegion@126']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 10, 60, 82, 126, 242, 278, 282, 284, 352, 388, 392, 394] then_blocks=[10] else_blocks=[60, 82, 126, 242, 278, 282, 284, 352, 388, 392, 394] elif_conditions=[60] children=['Region@0', 'Region@10', 'Region@60', 'Region@82', 'IfRegion@126']
+  Region@0 blocks=[0] children=[]
+  Region@10 blocks=[10] children=[]
+  Region@60 blocks=[60] children=[]
+  Region@82 blocks=[82] children=[]
+  IfRegion@126 blocks=[126, 242, 278, 282, 284, 352, 388, 392, 394] then_blocks=[242, 278, 282, 284] else_blocks=[352, 388, 392, 394] children=['Region@126', 'TernaryRegion@242', 'TernaryRegion@352']
+  Region@126 blocks=[126] children=[]
+  TernaryRegion@242 blocks=[242, 278, 282, 284] children=[]
+  TernaryRegion@352 blocks=[352, 388, 392, 394] children=[]

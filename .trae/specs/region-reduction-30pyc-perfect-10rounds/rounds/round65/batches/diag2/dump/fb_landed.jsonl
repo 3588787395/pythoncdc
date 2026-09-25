@@ -1,0 +1,2 @@
+{"path": "fb.pyc", "arm": "landed", "error": "RuntimeError('Failed to load fb.pyc')"}
+{"path": "D:/Temp/opencode/r65gate/diag2/synth/fb.pyc", "arm": "landed", "sha": "0aa188f76b086f88", "total_functions": 10, "matched_functions": 9, "mism": [["b8", 56, 37, 0, 39]]}

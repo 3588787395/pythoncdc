@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "D:\Temp\opencode\r65gate\diag3\probe_owner.py", line 126, in <module>
+    main()
+  File "D:\Temp\opencode\r65gate\diag3\probe_owner.py", line 98, in main
+    _se = G._generate_stmt_expression
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'RegionASTGenerator' has no attribute '_generate_stmt_expression'

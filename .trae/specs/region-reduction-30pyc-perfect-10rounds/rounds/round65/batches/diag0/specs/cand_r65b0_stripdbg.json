@@ -1,0 +1,74 @@
+{
+ "file": "core/cfg/region_ast_generator.py",
+ "id": "cand_r65b0_stripdbg",
+ "purpose": "R65 tech-debt batch diag0: remove the 13 residual `import os as _os_dbg*` debug imports in core/cfg/region_ast_generator.py plus the env-gated print statements that exist solely to serve them. No product bytes may change.",
+ "inert_because": "Every one of the 13 aliases is read exactly once, always as `if <alias>.environ.get(ENV):`. The gate harness sets none of R7_DEBUG_IFGEN / R30_13_DEBUG / R23N6_DEBUG / R23N6_DEBUG2..5 / R23N6_TRACE, so all 13 gates evaluate false and no gated body ever executes. There is NO file I/O at any of the 13 sites (no .open / path.join / .write).",
+ "merge_note": "13 independent single-purpose anchors, one per debug site; sites L47347-L47371 are four adjacent non-overlapping anchors (else/else/elif/else) that must be applied in listed order.",
+ "edits": [
+  {
+   "anchor": "                        import os as _os_dbg5\n                        if _os_dbg5.environ.get('R7_DEBUG_IFGEN') == '1' and b.start_offset in (192, 584):\n                            import sys as _sys_dbg5\n                            _ch_entries = [type(_c).__name__ + '@' + str(_c.entry.start_offset) if getattr(_c, 'entry', None) else type(_c).__name__ for _c in getattr(_nr, 'children', [])]\n                            print(f\" _nested_if check block={b.start_offset} IfRegion@{_nr.entry.start_offset} has_boolop_child={_has_boolop_child} children={_ch_entries} _nr.blocks={[blk.start_offset for blk in _nr.blocks]} _block_set={sorted(x.start_offset for x in _block_set)}\", file=_sys_dbg5.stderr)\n",
+   "repl": "",
+   "note": "delete L20961-20965 : _os_dbg5 / R7_DEBUG_IFGEN  (nested-if BoolOp child probe)"
+  },
+  {
+   "anchor": "                                    import os as _os_dbg4\n                                    if _os_dbg4.environ.get('R7_DEBUG_IFGEN') == '1':\n                                        import sys as _sys_dbg4\n                                        print(f\" _nested_if_entry_generate[boolop_child] block={b.start_offset} IfRegion@{_nr.entry.start_offset}\", file=_sys_dbg4.stderr)\n",
+   "repl": "",
+   "note": "delete L20999-21002 : _os_dbg4 / R7_DEBUG_IFGEN  (nested_if_entry_generate probe)"
+  },
+  {
+   "anchor": "                            import os as _os_dbg_13\n                            if _os_dbg_13.environ.get('R30_13_DEBUG'):\n                                import sys as _sys_dbg_13\n                                _fcb_dbg = op_chain[0][0] if op_chain else None\n                                print(f\" value_target={region.value_target} merge={region.merge_block.start_offset} _si={_si} _pre_store={[(i.opname, i.argval) for i in _pre_store]} first_chain={_fcb_dbg.start_offset if _fcb_dbg else None}\", file=_sys_dbg_13.stderr)\n",
+   "repl": "",
+   "note": "delete L33020-33024 : _os_dbg_13 / R30_13_DEBUG  (boolop value-stack prefix probe; ADJACENT TO R64-D4-B)"
+  },
+  {
+   "anchor": "        import os as _os_dbg\n        if _os_dbg.environ.get('R23N6_DEBUG2'):\n            _has_bt2 = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)\n            if _has_bt2:\n                import sys as _sys_dbg\n                _last_op = [i.opname for i in block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')][-3:]\n                print(f\" _generate_block_statements block@{block.start_offset} try_depth={self._try_depth} last3ops={_last_op} succs={[s.start_offset for s in block.successors]}\", file=_sys_dbg.stderr)\n",
+   "repl": "",
+   "note": "delete L43773-43779 : _os_dbg / R23N6_DEBUG2     (block reached _generate_block_statements_body)"
+  },
+  {
+   "anchor": "        import os as _os_dbg_main\n        if _os_dbg_main.environ.get('R23N6_DEBUG5'):\n            _has_bt2_main = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)\n            if _has_bt2_main:\n                import sys as _sys_dbg_main\n                print(f\" block@{block.start_offset} reached main stmts processing (block_role={_block_role}, try_depth={self._try_depth})\", file=_sys_dbg_main.stderr)\n",
+   "repl": "",
+   "note": "delete L44507-44512 : _os_dbg_main / R23N6_DEBUG5(reached main stmts processing)"
+  },
+  {
+   "anchor": "            import os as _os_dbg_lf\n            if _os_dbg_lf.environ.get('R23N6_DEBUG4'):\n                _has_bt2_lf = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)\n                if _has_bt2_lf:\n                    import sys as _sys_dbg_lf\n                    print(f\" block@{block.start_offset} reached leftover stmt_instrs (count={len(stmt_instrs)}, last_op={stmt_instrs[-1].opname if stmt_instrs else None})\", file=_sys_dbg_lf.stderr)\n",
+   "repl": "",
+   "note": "delete L47086-47091 : _os_dbg_lf / R23N6_DEBUG4  (reached leftover stmt_instrs)"
+  },
+  {
+   "anchor": "        # 追踪 block@456 是否到达此处\n        import os as _os_dbg_r23n6_trace\n        if _os_dbg_r23n6_trace.environ.get('R23N6_TRACE'):\n            _has_bt2_trace = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)\n            if _has_bt2_trace:\n                import sys as _sys_dbg_trace\n                _stmt_types_trace = [s.get('type') if isinstance(s, dict) else type(s).__name__ for s in stmts]\n                print(f\" block@{block.start_offset} reached post-stmt_instrs stmts_count={len(stmts)} types={_stmt_types_trace} try_depth={self._try_depth}\", file=_sys_dbg_trace.stderr)\n\n",
+   "repl": "",
+   "note": "delete L47245-47253 : _os_dbg_r23n6_trace / R23N6_TRACE (+ its debug-only comment L47245)"
+  },
+  {
+   "anchor": "        import os as _os_dbg_pre\n        if _os_dbg_pre.environ.get('R23N6_DEBUG3'):\n            _has_bt2_pre = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)\n            if _has_bt2_pre:\n                import sys as _sys_dbg_pre\n                _stmt_types = [s.get('type') if isinstance(s, dict) else type(s).__name__ for s in stmts]\n                print(f\" pre-fix block@{block.start_offset} try_depth={self._try_depth} stmts_count={len(stmts)} stmt_types={_stmt_types}\", file=_sys_dbg_pre.stderr)\n",
+   "repl": "",
+   "note": "delete L47294-47300 : _os_dbg_pre / R23N6_DEBUG3 (pre return-promotion probe)"
+  },
+  {
+   "anchor": "                        import os as _os_dbg\n                        if _os_dbg.environ.get('R23N6_DEBUG'):\n                            import sys as _sys_dbg\n                            print(f\" block@{block.start_offset} try_depth={self._try_depth} chain={[b.start_offset for b in _chain]}\", file=_sys_dbg.stderr)\n",
+   "repl": "",
+   "note": "delete L47331-47334 : _os_dbg / R23N6_DEBUG      (return-chain found)"
+  },
+  {
+   "anchor": "                    else:\n                        import os as _os_dbg\n                        if _os_dbg.environ.get('R23N6_DEBUG'):\n                            import sys as _sys_dbg\n                            print(f\" block@{block.start_offset} try_depth={self._try_depth} NO chain (last instrs: {[i.opname for i in _non_noise_r23n6[-3:]]})\", file=_sys_dbg.stderr)\n",
+   "repl": "",
+   "note": "delete L47347-47351 : _os_dbg / R23N6_DEBUG      (else: of `if _chain:` - body debug-only, clause removed)"
+  },
+  {
+   "anchor": "            else:\n                import os as _os_dbg\n                if _os_dbg.environ.get('R23N6_DEBUG'):\n                    import sys as _sys_dbg\n                    print(f\" block@{block.start_offset} try_depth={self._try_depth} last_stmt is not Expr: {_last_stmt!r}\", file=_sys_dbg.stderr)\n",
+   "repl": "",
+   "note": "delete L47352-47356 : _os_dbg / R23N6_DEBUG      (else: of inner isinstance - body debug-only, clause removed)"
+  },
+  {
+   "anchor": "        elif stmts:\n            import os as _os_dbg\n            if _os_dbg.environ.get('R23N6_DEBUG'):\n                import sys as _sys_dbg\n                _last_stmt = stmts[-1]\n                _is_expr = isinstance(_last_stmt, dict) and _last_stmt.get('type') == 'Expr'\n                if _is_expr:\n                    print(f\" block@{block.start_offset} try_depth={self._try_depth} SKIPPED (try_depth=0) but last is Expr\", file=_sys_dbg.stderr)\n",
+   "repl": "",
+   "note": "delete L47357-47364 : _os_dbg / R23N6_DEBUG      (elif stmts: - body debug-only, clause removed)"
+  },
+  {
+   "anchor": "        else:\n            import os as _os_dbg\n            if _os_dbg.environ.get('R23N6_DEBUG'):\n                import sys as _sys_dbg\n                _has_bt2 = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)\n                if _has_bt2:\n                    print(f\" block@{block.start_offset} try_depth={self._try_depth} EMPTY stmts (block has BUILD_TUPLE 2)\", file=_sys_dbg.stderr)\n",
+   "repl": "",
+   "note": "delete L47365-47371 : _os_dbg / R23N6_DEBUG      (else: - body debug-only, clause removed)"
+  }
+ ]
+}

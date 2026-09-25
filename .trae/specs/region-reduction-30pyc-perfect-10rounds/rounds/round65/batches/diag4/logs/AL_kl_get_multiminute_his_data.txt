@@ -1,0 +1,38 @@
+orig candidates=[[1009]] decomp candidates=[[724]]
+orig=535 decomp=536  ratio=0.9860  opcodes=[('replace', 19, 20, 19, 20), ('replace', 24, 25, 24, 25), ('replace', 161, 162, 161, 162), ('replace', 202, 203, 202, 203), ('replace', 204, 205, 204, 205), ('replace', 518, 519, 518, 520), ('replace', 533, 534, 534, 535)]
+HUNK replace  orig[19:20]@66 decomp[19:20]@66
+  ### ORIG only:
+       66 POP_JUMP_FORWARD_IF_FALSE  to 2710
+  ### DECOMP only:
+       66 POP_JUMP_FORWARD_IF_FALSE  to 2712
+HUNK replace  orig[24:25]@80 decomp[24:25]@80
+  ### ORIG only:
+       80 POP_JUMP_FORWARD_IF_FALSE  to 2710
+  ### DECOMP only:
+       80 POP_JUMP_FORWARD_IF_FALSE  to 2712
+HUNK replace  orig[161:162]@822 decomp[161:162]@822
+  ### ORIG only:
+      822 JUMP_FORWARD               to 2758
+  ### DECOMP only:
+      822 JUMP_FORWARD               to 2708
+HUNK replace  orig[202:203]@1088 decomp[202:203]@1088
+  ### ORIG only:
+     1088 POP_JUMP_FORWARD_IF_NONE   to 1314
+  ### DECOMP only:
+     1088 POP_JUMP_FORWARD_IF_NONE   to 1382
+HUNK replace  orig[204:205]@1092 decomp[204:205]@1092
+  ### ORIG only:
+     1092 POP_JUMP_FORWARD_IF_NONE   to 1314
+  ### DECOMP only:
+     1092 POP_JUMP_FORWARD_IF_NONE   to 1382
+HUNK replace  orig[518:519]@2708 decomp[518:520]@2708
+  ### ORIG only:
+     2708 JUMP_FORWARD               to 2758
+  ### DECOMP only:
+     2708 LOAD_FAST                  his_data_dict
+     2710 RETURN_VALUE               
+HUNK replace  orig[533:534]@2758 decomp[534:535]@2760
+  ### ORIG only:
+     2758 LOAD_FAST                  his_data_dict
+  ### DECOMP only:
+     2760 LOAD_CONST                 None

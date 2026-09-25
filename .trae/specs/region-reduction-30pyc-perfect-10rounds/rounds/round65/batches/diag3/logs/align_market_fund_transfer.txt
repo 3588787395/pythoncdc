@@ -1,0 +1,72 @@
+orig candidates=[[4389]] decomp candidates=[[3005]]
+orig=100 decomp=80  ratio=0.7778  opcodes=[('replace', 55, 59, 55, 57), ('replace', 62, 63, 60, 61), ('replace', 64, 65, 62, 63), ('replace', 66, 74, 64, 66), ('delete', 75, 79, 67, 67), ('replace', 80, 83, 68, 69), ('replace', 86, 87, 72, 73), ('replace', 88, 89, 74, 75), ('replace', 90, 91, 76, 77), ('delete', 92, 94, 78, 78), ('delete', 95, 99, 79, 79)]
+HUNK replace  orig[55:59]@240 decomp[55:57]@240
+  ### ORIG only:
+      240 POP_JUMP_FORWARD_IF_FALSE  to 352
+      242 LOAD_GLOBAL                NULL + strategy_log
+      254 LOAD_ATTR                  error
+      264 LOAD_CONST                 '转入'
+  ### DECOMP only:
+      240 POP_JUMP_FORWARD_IF_FALSE  to 270
+      242 LOAD_CONST                 'strategy_log转入'
+HUNK replace  orig[62:63]@276 decomp[60:61]@254
+  ### ORIG only:
+      276 POP_JUMP_FORWARD_IF_FALSE  to 282
+  ### DECOMP only:
+      254 POP_JUMP_FORWARD_IF_FALSE  to 260
+HUNK replace  orig[64:65]@280 decomp[62:63]@258
+  ### ORIG only:
+      280 JUMP_FORWARD               to 284
+  ### DECOMP only:
+      258 JUMP_FORWARD               to 262
+HUNK replace  orig[66:74]@284 decomp[64:66]@262
+  ### ORIG only:
+      284 FORMAT_VALUE               str
+      286 LOAD_CONST                 '失败，错误原因：'
+      288 LOAD_FAST                  error_dict
+      290 LOAD_METHOD                get
+      312 LOAD_CONST                 'error_info'
+      314 PRECALL                    
+      318 CALL                       
+      328 FORMAT_VALUE               str
+  ### DECOMP only:
+      262 FORMAT_VALUE               
+      264 LOAD_CONST                 '失败，错误原因：error_info'
+HUNK delete   orig[75:79]@332 decomp[67:67]@-
+  ### ORIG only:
+      332 PRECALL                    
+      336 CALL                       
+      346 POP_TOP                    
+      348 LOAD_CONST                 False
+HUNK replace  orig[80:83]@352 decomp[68:69]@270
+  ### ORIG only:
+      352 LOAD_GLOBAL                NULL + strategy_log
+      364 LOAD_ATTR                  info
+      374 LOAD_CONST                 '转入'
+  ### DECOMP only:
+      270 LOAD_CONST                 'strategy_log转入'
+HUNK replace  orig[86:87]@386 decomp[72:73]@282
+  ### ORIG only:
+      386 POP_JUMP_FORWARD_IF_FALSE  to 392
+  ### DECOMP only:
+      282 POP_JUMP_FORWARD_IF_FALSE  to 288
+HUNK replace  orig[88:89]@390 decomp[74:75]@286
+  ### ORIG only:
+      390 JUMP_FORWARD               to 394
+  ### DECOMP only:
+      286 JUMP_FORWARD               to 290
+HUNK replace  orig[90:91]@394 decomp[76:77]@290
+  ### ORIG only:
+      394 FORMAT_VALUE               str
+  ### DECOMP only:
+      290 FORMAT_VALUE               
+HUNK delete   orig[92:94]@398 decomp[78:78]@-
+  ### ORIG only:
+      398 LOAD_FAST                  occur_balance
+      400 FORMAT_VALUE               str
+HUNK delete   orig[95:99]@404 decomp[79:79]@-
+  ### ORIG only:
+      404 PRECALL                    
+      408 CALL                       
+      418 POP_TOP                    
+      420 LOAD_CONST                 True

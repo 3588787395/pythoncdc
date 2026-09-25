@@ -1,0 +1,98 @@
+orig candidates=[[968]] decomp candidates=[[660]]
+orig=355 decomp=356  ratio=0.9395  opcodes=[('replace', 12, 13, 12, 13), ('replace', 15, 16, 15, 16), ('replace', 20, 23, 20, 23), ('replace', 77, 78, 77, 78), ('replace', 106, 107, 106, 107), ('insert', 135, 135, 135, 136), ('replace', 138, 139, 139, 140), ('replace', 167, 168, 168, 169), ('replace', 172, 173, 173, 174), ('replace', 181, 182, 182, 183), ('replace', 230, 232, 231, 233), ('replace', 235, 236, 236, 237), ('replace', 238, 239, 239, 240), ('replace', 247, 248, 248, 249), ('replace', 270, 271, 271, 272), ('replace', 285, 286, 286, 287), ('replace', 319, 321, 320, 322), ('replace', 334, 335, 335, 336)]
+HUNK replace  orig[12:13]@52 decomp[12:13]@52
+  ### ORIG only:
+       52 POP_JUMP_FORWARD_IF_FALSE  to 90
+  ### DECOMP only:
+       52 POP_JUMP_FORWARD_IF_FALSE  to 92
+HUNK replace  orig[15:16]@58 decomp[15:16]@58
+  ### ORIG only:
+       58 JUMP_FORWARD               to 90
+  ### DECOMP only:
+       58 JUMP_FORWARD               to 92
+HUNK replace  orig[20:23]@88 decomp[20:23]@88
+  ### ORIG only:
+       88 JUMP_FORWARD               to 92
+       90 LOAD_CONST                 200
+       92 STORE_FAST                 data_count
+  ### DECOMP only:
+       88 POP_TOP                    
+       90 JUMP_FORWARD               to 94
+       92 NOP                        
+HUNK replace  orig[77:78]@336 decomp[77:78]@336
+  ### ORIG only:
+      336 FOR_ITER                   to 590
+  ### DECOMP only:
+      336 FOR_ITER                   to 592
+HUNK replace  orig[106:107]@468 decomp[106:107]@468
+  ### ORIG only:
+      468 POP_JUMP_FORWARD_IF_FALSE  to 538
+  ### DECOMP only:
+      468 POP_JUMP_FORWARD_IF_FALSE  to 590
+HUNK insert   orig[135:135]@- decomp[135:136]@590
+  ### DECOMP only:
+      590 JUMP_BACKWARD              to 336
+HUNK replace  orig[138:139]@600 decomp[139:140]@602
+  ### ORIG only:
+      600 POP_JUMP_FORWARD_IF_FALSE  to 616
+  ### DECOMP only:
+      602 POP_JUMP_FORWARD_IF_FALSE  to 618
+HUNK replace  orig[167:168]@742 decomp[168:169]@744
+  ### ORIG only:
+      742 POP_JUMP_FORWARD_IF_FALSE  to 1108
+  ### DECOMP only:
+      744 POP_JUMP_FORWARD_IF_FALSE  to 1110
+HUNK replace  orig[172:173]@752 decomp[173:174]@754
+  ### ORIG only:
+      752 FOR_ITER                   to 1106
+  ### DECOMP only:
+      754 FOR_ITER                   to 1108
+HUNK replace  orig[181:182]@800 decomp[182:183]@802
+  ### ORIG only:
+      800 POP_JUMP_FORWARD_IF_TRUE   to 852
+  ### DECOMP only:
+      802 POP_JUMP_FORWARD_IF_TRUE   to 854
+HUNK replace  orig[230:232]@1104 decomp[231:233]@1106
+  ### ORIG only:
+     1104 JUMP_BACKWARD              to 752
+     1106 JUMP_FORWARD               to 1592
+  ### DECOMP only:
+     1106 JUMP_BACKWARD              to 754
+     1108 JUMP_FORWARD               to 1594
+HUNK replace  orig[235:236]@1118 decomp[236:237]@1120
+  ### ORIG only:
+     1118 POP_JUMP_FORWARD_IF_FALSE  to 1548
+  ### DECOMP only:
+     1120 POP_JUMP_FORWARD_IF_FALSE  to 1550
+HUNK replace  orig[238:239]@1124 decomp[239:240]@1126
+  ### ORIG only:
+     1124 FOR_ITER                   to 1280
+  ### DECOMP only:
+     1126 FOR_ITER                   to 1282
+HUNK replace  orig[247:248]@1172 decomp[248:249]@1174
+  ### ORIG only:
+     1172 POP_JUMP_FORWARD_IF_TRUE   to 1224
+  ### DECOMP only:
+     1174 POP_JUMP_FORWARD_IF_TRUE   to 1226
+HUNK replace  orig[270:271]@1278 decomp[271:272]@1280
+  ### ORIG only:
+     1278 JUMP_BACKWARD              to 1124
+  ### DECOMP only:
+     1280 JUMP_BACKWARD              to 1126
+HUNK replace  orig[285:286]@1364 decomp[286:287]@1366
+  ### ORIG only:
+     1364 FOR_ITER                   to 1546
+  ### DECOMP only:
+     1366 FOR_ITER                   to 1548
+HUNK replace  orig[319:321]@1544 decomp[320:322]@1546
+  ### ORIG only:
+     1544 JUMP_BACKWARD              to 1364
+     1546 JUMP_FORWARD               to 1592
+  ### DECOMP only:
+     1546 JUMP_BACKWARD              to 1366
+     1548 JUMP_FORWARD               to 1594
+HUNK replace  orig[334:335]@1612 decomp[335:336]@1614
+  ### ORIG only:
+     1612 POP_JUMP_FORWARD_IF_FALSE  to 1696
+  ### DECOMP only:
+     1614 POP_JUMP_FORWARD_IF_FALSE  to 1698

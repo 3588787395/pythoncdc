@@ -1,0 +1,116 @@
+FUNC _process_cancel_order  filtered orig=295 decomp=296 deficit=-1
+HUNK replace  orig[29:30] off 250..250   decomp[29:30] off 248..248  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      250 JUMP_FORWARD                   to 312
+  ### DECOMP-only (EXTRA / relocated):
+      248 JUMP_FORWARD                   to 310
+HUNK replace  orig[49:50] off 348..348   decomp[49:50] off 346..346  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      348 POP_JUMP_FORWARD_IF_NOT_NONE   to 418
+  ### DECOMP-only (EXTRA / relocated):
+      346 POP_JUMP_FORWARD_IF_NOT_NONE   to 416
+HUNK replace  orig[62:63] off 440..440   decomp[62:63] off 438..438  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      440 POP_JUMP_FORWARD_IF_FALSE      to 514
+  ### DECOMP-only (EXTRA / relocated):
+      438 POP_JUMP_FORWARD_IF_FALSE      to 512
+HUNK replace  orig[73:74] off 512..512   decomp[73:74] off 510..510  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      512 JUMP_FORWARD                   to 926
+  ### DECOMP-only (EXTRA / relocated):
+      510 JUMP_FORWARD                   to 924
+HUNK replace  orig[78:79] off 534..534   decomp[78:79] off 532..532  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      534 POP_JUMP_FORWARD_IF_FALSE      to 608
+  ### DECOMP-only (EXTRA / relocated):
+      532 POP_JUMP_FORWARD_IF_FALSE      to 606
+HUNK replace  orig[89:90] off 606..606   decomp[89:90] off 604..604  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      606 JUMP_FORWARD                   to 926
+  ### DECOMP-only (EXTRA / relocated):
+      604 JUMP_FORWARD                   to 924
+HUNK replace  orig[94:95] off 628..628   decomp[94:95] off 626..626  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      628 POP_JUMP_FORWARD_IF_FALSE      to 690
+  ### DECOMP-only (EXTRA / relocated):
+      626 POP_JUMP_FORWARD_IF_FALSE      to 688
+HUNK replace  orig[103:104] off 688..688   decomp[103:104] off 686..686  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      688 JUMP_FORWARD                   to 926
+  ### DECOMP-only (EXTRA / relocated):
+      686 JUMP_FORWARD                   to 924
+HUNK replace  orig[108:109] off 710..710   decomp[108:109] off 708..708  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      710 POP_JUMP_FORWARD_IF_FALSE      to 784
+  ### DECOMP-only (EXTRA / relocated):
+      708 POP_JUMP_FORWARD_IF_FALSE      to 782
+HUNK replace  orig[119:120] off 782..782   decomp[119:120] off 780..780  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      782 JUMP_FORWARD                   to 926
+  ### DECOMP-only (EXTRA / relocated):
+      780 JUMP_FORWARD                   to 924
+HUNK replace  orig[124:125] off 804..804   decomp[124:125] off 802..802  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      804 POP_JUMP_FORWARD_IF_FALSE      to 866
+  ### DECOMP-only (EXTRA / relocated):
+      802 POP_JUMP_FORWARD_IF_FALSE      to 864
+HUNK replace  orig[133:134] off 864..864   decomp[133:134] off 862..862  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      864 JUMP_FORWARD                   to 926
+  ### DECOMP-only (EXTRA / relocated):
+      862 JUMP_FORWARD                   to 924
+HUNK replace  orig[147:148] off 944..944   decomp[147:148] off 942..942  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      944 POP_JUMP_FORWARD_IF_FALSE      to 1826
+  ### DECOMP-only (EXTRA / relocated):
+      942 POP_JUMP_FORWARD_IF_FALSE      to 1822
+HUNK replace  orig[176:177] off 1098..1098   decomp[176:177] off 1096..1096  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1098 POP_JUMP_FORWARD_IF_FALSE      to 1336
+  ### DECOMP-only (EXTRA / relocated):
+     1096 POP_JUMP_FORWARD_IF_FALSE      to 1334
+HUNK replace  orig[182:183] off 1142..1142   decomp[182:183] off 1140..1140  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1142 POP_JUMP_FORWARD_IF_FALSE      to 1336
+  ### DECOMP-only (EXTRA / relocated):
+     1140 POP_JUMP_FORWARD_IF_FALSE      to 1334
+HUNK replace  orig[203:204] off 1334..1334   decomp[203:204] off 1332..1332  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1334 JUMP_FORWARD                   to 1526
+  ### DECOMP-only (EXTRA / relocated):
+     1332 JUMP_FORWARD                   to 1524
+HUNK replace  orig[232:233] off 1606..1606   decomp[232:234] off 1604..1606  (o=1 d=2)
+  ### ORIG-only (MISSING from decomp):
+     1606 JUMP_FORWARD                   to 1826
+  ### DECOMP-only (EXTRA / relocated):
+     1604 LOAD_CONST                     None
+     1606 RETURN_VALUE                   
+HUNK delete   orig[247:248] off 1710..1710   decomp[248:248] off -..-  (o=1 d=0)
+  ### ORIG-only (MISSING from decomp):
+     1710 JUMP_FORWARD                   to 1822
+HUNK replace  orig[260:262] off 1824..1826   decomp[260:261] off 1822..1822  (o=2 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1824 JUMP_BACKWARD                  to 44
+     1826 JUMP_FORWARD                   to 2000
+  ### DECOMP-only (EXTRA / relocated):
+     1822 JUMP_FORWARD                   to 1926
+HUNK replace  orig[265:266] off 1844..1844   decomp[264:265] off 1840..1840  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1844 POP_JUMP_FORWARD_IF_FALSE      to 1922
+  ### DECOMP-only (EXTRA / relocated):
+     1840 POP_JUMP_FORWARD_IF_FALSE      to 1918
+HUNK replace  orig[276:277] off 1920..1920   decomp[275:276] off 1916..1916  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1920 JUMP_FORWARD                   to 2000
+  ### DECOMP-only (EXTRA / relocated):
+     1916 JUMP_FORWARD                   to 1926
+HUNK insert   orig[281:281] off 1930..1928   decomp[280:281] off 1928..1928  (o=0 d=1)
+  ### DECOMP-only (EXTRA / relocated):
+     1928 JUMP_BACKWARD                  to 44
+HUNK replace  orig[294:295] off 2042..2042   decomp[294:296] off 2040..2042  (o=1 d=2)
+  ### ORIG-only (MISSING from decomp):
+     2042 JUMP_BACKWARD                  to 46
+  ### DECOMP-only (EXTRA / relocated):
+     2040 LOAD_CONST                     None
+     2042 RETURN_VALUE                   
+SUMMARY missing_run_instrs=23 extra_run_instrs=24

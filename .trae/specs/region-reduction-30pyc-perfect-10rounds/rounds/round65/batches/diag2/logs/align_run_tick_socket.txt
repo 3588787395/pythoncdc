@@ -1,0 +1,144 @@
+orig candidates=[[2153]] decomp candidates=[[1423]]
+orig=347 decomp=348  ratio=0.8748  opcodes=[('replace', 14, 15, 14, 16), ('replace', 24, 26, 25, 26), ('delete', 93, 117, 93, 93), ('replace', 134, 135, 110, 111), ('replace', 142, 143, 118, 119), ('replace', 203, 204, 179, 180), ('replace', 210, 211, 186, 187), ('replace', 218, 219, 194, 195), ('replace', 220, 221, 196, 197), ('replace', 222, 223, 198, 199), ('insert', 229, 229, 205, 230), ('replace', 230, 231, 231, 232), ('replace', 236, 237, 237, 238), ('replace', 253, 254, 254, 255), ('replace', 256, 258, 257, 259), ('replace', 259, 260, 260, 261), ('replace', 269, 270, 270, 271), ('replace', 272, 273, 273, 274), ('replace', 330, 331, 331, 332)]
+HUNK replace  orig[14:15]@66 decomp[14:16]@66
+  ### ORIG only:
+       66 POP_JUMP_FORWARD_IF_FALSE  to 528
+  ### DECOMP only:
+       66 EXTENDED_ARG               
+       68 POP_JUMP_FORWARD_IF_FALSE  to 1122
+HUNK replace  orig[24:26]@136 decomp[25:26]@138
+  ### ORIG only:
+      136 EXTENDED_ARG               
+      138 JUMP_FORWARD               to 684
+  ### DECOMP only:
+      138 JUMP_FORWARD               to 528
+HUNK delete   orig[93:117]@528 decomp[93:93]@-
+  ### ORIG only:
+      528 LOAD_FAST                  self
+      530 LOAD_ATTR                  log
+      540 LOAD_ATTR                  quote
+      550 LOAD_METHOD                warning
+      572 LOAD_CONST                 'tick数据返回为空'
+      574 PRECALL                    
+      578 CALL                       
+      588 POP_TOP                    
+      590 LOAD_FAST                  userLock
+      592 LOAD_METHOD                acquire
+      614 PRECALL                    
+      618 CALL                       
+      628 POP_TOP                    
+      630 LOAD_CONST                 -1
+      632 LOAD_FAST                  dataDict
+      634 LOAD_CONST                 'updateflag'
+      636 STORE_SUBSCR               
+      640 LOAD_FAST                  userLock
+      642 LOAD_METHOD                release
+      664 PRECALL                    
+      668 CALL                       
+      678 POP_TOP                    
+      680 LOAD_CONST                 None
+      682 RETURN_VALUE               
+HUNK replace  orig[134:135]@806 decomp[110:111]@650
+  ### ORIG only:
+      806 POP_JUMP_FORWARD_IF_FALSE  to 1276
+  ### DECOMP only:
+      650 POP_JUMP_FORWARD_IF_FALSE  to 1120
+HUNK replace  orig[142:143]@842 decomp[118:119]@686
+  ### ORIG only:
+      842 POP_JUMP_FORWARD_IF_FALSE  to 1190
+  ### DECOMP only:
+      686 POP_JUMP_FORWARD_IF_FALSE  to 1034
+HUNK replace  orig[203:204]@1144 decomp[179:180]@988
+  ### ORIG only:
+     1144 POP_JUMP_FORWARD_IF_FALSE  to 1188
+  ### DECOMP only:
+      988 POP_JUMP_FORWARD_IF_FALSE  to 1032
+HUNK replace  orig[210:211]@1188 decomp[186:187]@1032
+  ### ORIG only:
+     1188 JUMP_FORWARD               to 1276
+  ### DECOMP only:
+     1032 JUMP_FORWARD               to 1278
+HUNK replace  orig[218:219]@1224 decomp[194:195]@1068
+  ### ORIG only:
+     1224 POP_JUMP_FORWARD_IF_FALSE  to 1276
+  ### DECOMP only:
+     1068 POP_JUMP_FORWARD_IF_FALSE  to 1120
+HUNK replace  orig[220:221]@1228 decomp[196:197]@1072
+  ### ORIG only:
+     1228 POP_JUMP_FORWARD_IF_NONE   to 1276
+  ### DECOMP only:
+     1072 POP_JUMP_FORWARD_IF_NONE   to 1120
+HUNK replace  orig[222:223]@1232 decomp[198:199]@1076
+  ### ORIG only:
+     1232 POP_JUMP_FORWARD_IF_FALSE  to 1276
+  ### DECOMP only:
+     1076 POP_JUMP_FORWARD_IF_FALSE  to 1120
+HUNK insert   orig[229:229]@- decomp[205:230]@1120
+  ### DECOMP only:
+     1120 JUMP_FORWARD               to 1278
+     1122 LOAD_FAST                  self
+     1124 LOAD_ATTR                  log
+     1134 LOAD_ATTR                  quote
+     1144 LOAD_METHOD                warning
+     1166 LOAD_CONST                 'tick数据返回为空'
+     1168 PRECALL                    
+     1172 CALL                       
+     1182 POP_TOP                    
+     1184 LOAD_FAST                  userLock
+     1186 LOAD_METHOD                acquire
+     1208 PRECALL                    
+     1212 CALL                       
+     1222 POP_TOP                    
+     1224 LOAD_CONST                 -1
+     1226 LOAD_FAST                  dataDict
+     1228 LOAD_CONST                 'updateflag'
+     1230 STORE_SUBSCR               
+     1234 LOAD_FAST                  userLock
+     1236 LOAD_METHOD                release
+     1258 PRECALL                    
+     1262 CALL                       
+     1272 POP_TOP                    
+     1274 LOAD_CONST                 None
+     1276 RETURN_VALUE               
+HUNK replace  orig[230:231]@1278 decomp[231:232]@1280
+  ### ORIG only:
+     1278 JUMP_FORWARD               to 1864
+  ### DECOMP only:
+     1280 JUMP_FORWARD               to 1866
+HUNK replace  orig[236:237]@1316 decomp[237:238]@1318
+  ### ORIG only:
+     1316 POP_JUMP_FORWARD_IF_FALSE  to 1516
+  ### DECOMP only:
+     1318 POP_JUMP_FORWARD_IF_FALSE  to 1518
+HUNK replace  orig[253:254]@1432 decomp[254:255]@1434
+  ### ORIG only:
+     1432 POP_JUMP_FORWARD_IF_FALSE  to 1446
+  ### DECOMP only:
+     1434 POP_JUMP_FORWARD_IF_FALSE  to 1448
+HUNK replace  orig[256:258]@1442 decomp[257:259]@1444
+  ### ORIG only:
+     1442 POP_JUMP_FORWARD_IF_FALSE  to 1512
+     1444 JUMP_FORWARD               to 1450
+  ### DECOMP only:
+     1444 POP_JUMP_FORWARD_IF_FALSE  to 1514
+     1446 JUMP_FORWARD               to 1452
+HUNK replace  orig[259:260]@1448 decomp[260:261]@1450
+  ### ORIG only:
+     1448 JUMP_FORWARD               to 1512
+  ### DECOMP only:
+     1450 JUMP_FORWARD               to 1514
+HUNK replace  orig[269:270]@1514 decomp[270:271]@1516
+  ### ORIG only:
+     1514 JUMP_FORWARD               to 1864
+  ### DECOMP only:
+     1516 JUMP_FORWARD               to 1866
+HUNK replace  orig[272:273]@1530 decomp[273:274]@1532
+  ### ORIG only:
+     1530 POP_JUMP_FORWARD_IF_FALSE  to 1856
+  ### DECOMP only:
+     1532 POP_JUMP_FORWARD_IF_FALSE  to 1858
+HUNK replace  orig[330:331]@1846 decomp[331:332]@1848
+  ### ORIG only:
+     1846 JUMP_FORWARD               to 1864
+  ### DECOMP only:
+     1848 JUMP_FORWARD               to 1866

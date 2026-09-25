@@ -1,0 +1,88 @@
+FUNC etf_purchase_redemption  filtered orig=379 decomp=355 deficit=24
+HUNK replace  orig[60:61] off 412..412   decomp[60:61] off 412..412  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      412 POP_JUMP_FORWARD_IF_FALSE      to 2468
+  ### DECOMP-only (EXTRA / relocated):
+      412 POP_JUMP_FORWARD_IF_FALSE      to 2260
+HUNK replace  orig[273:277] off 1854..1878   decomp[273:275] off 1854..1856  (o=4 d=2)
+  ### ORIG-only (MISSING from decomp):
+     1854 POP_JUMP_FORWARD_IF_FALSE      to 1966
+     1856 LOAD_GLOBAL                    NULL + strategy_log
+     1868 LOAD_ATTR                      error
+     1878 LOAD_CONST                     '后端服务 '
+  ### DECOMP-only (EXTRA / relocated):
+     1854 POP_JUMP_FORWARD_IF_FALSE      to 1884
+     1856 LOAD_CONST                     'strategy_log后端服务 '
+HUNK replace  orig[280:281] off 1890..1890   decomp[278:279] off 1868..1868  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1890 POP_JUMP_FORWARD_IF_FALSE      to 1896
+  ### DECOMP-only (EXTRA / relocated):
+     1868 POP_JUMP_FORWARD_IF_FALSE      to 1874
+HUNK replace  orig[282:283] off 1894..1894   decomp[280:281] off 1872..1872  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1894 JUMP_FORWARD                   to 1898
+  ### DECOMP-only (EXTRA / relocated):
+     1872 JUMP_FORWARD                   to 1876
+HUNK replace  orig[284:291] off 1898..1942   decomp[282:284] off 1876..1878  (o=7 d=2)
+  ### ORIG-only (MISSING from decomp):
+     1898 FORMAT_VALUE                   str
+     1900 LOAD_CONST                     '失败:'
+     1902 LOAD_FAST                      resen
+     1904 LOAD_METHOD                    get
+     1926 LOAD_CONST                     'error_info'
+     1932 CALL                           
+     1942 FORMAT_VALUE                   str
+  ### DECOMP-only (EXTRA / relocated):
+     1876 FORMAT_VALUE                   
+     1878 LOAD_CONST                     '失败:error_info'
+HUNK delete   orig[292:295] off 1950..1962   decomp[285:285] off -..-  (o=3 d=0)
+  ### ORIG-only (MISSING from decomp):
+     1950 CALL                           
+     1960 POP_TOP                        
+     1962 LOAD_CONST                     None
+HUNK replace  orig[339:343] off 2274..2308   decomp[329:330] off 2192..2192  (o=4 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2274 LOAD_GLOBAL                    NULL + strategy_log
+     2286 LOAD_ATTR                      info
+     2296 LOAD_GLOBAL                    NULL + _
+     2308 LOAD_CONST                     '生成订单，订单号：'
+  ### DECOMP-only (EXTRA / relocated):
+     2192 LOAD_CONST                     'resultlist_info00orderstrresultentrust_noselforderorderselfstrorderselforderselforderstrategy_log_生成订单，订单号：'
+HUNK delete   orig[344:345] off 2312..2312   decomp[331:331] off -..-  (o=1 d=0)
+  ### ORIG-only (MISSING from decomp):
+     2312 LOAD_ATTR                      order_id
+HUNK delete   orig[348:349] off 2328..2328   decomp[334:334] off -..-  (o=1 d=0)
+  ### ORIG-only (MISSING from decomp):
+     2328 LOAD_ATTR                      symbol
+HUNK replace  orig[350:351] off 2340..2340   decomp[335:336] off 2204..2204  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2340 LOAD_CONST                     ' 数量：'
+  ### DECOMP-only (EXTRA / relocated):
+     2204 LOAD_CONST                     ' 数量：order'
+HUNK replace  orig[356:357] off 2382..2382   decomp[341:342] off 2246..2246  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2382 POP_JUMP_FORWARD_IF_FALSE      to 2388
+  ### DECOMP-only (EXTRA / relocated):
+     2246 POP_JUMP_FORWARD_IF_FALSE      to 2252
+HUNK replace  orig[358:359] off 2386..2386   decomp[343:344] off 2250..2250  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2386 JUMP_FORWARD                   to 2390
+  ### DECOMP-only (EXTRA / relocated):
+     2250 JUMP_FORWARD                   to 2254
+HUNK replace  orig[360:365] off 2390..2420   decomp[345:346] off 2254..2254  (o=5 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2390 FORMAT_VALUE                   str
+     2392 LOAD_GLOBAL                    NULL + abs
+     2404 LOAD_FAST                      amount
+     2410 CALL                           
+     2420 FORMAT_VALUE                   str
+  ### DECOMP-only (EXTRA / relocated):
+     2254 FORMAT_VALUE                   
+HUNK delete   orig[366:371] off 2428..2456   decomp[347:347] off -..-  (o=5 d=0)
+  ### ORIG-only (MISSING from decomp):
+     2428 CALL                           
+     2442 CALL                           
+     2452 POP_TOP                        
+     2454 LOAD_FAST                      order
+     2456 LOAD_ATTR                      order_id
+SUMMARY missing_run_instrs=36 extra_run_instrs=12

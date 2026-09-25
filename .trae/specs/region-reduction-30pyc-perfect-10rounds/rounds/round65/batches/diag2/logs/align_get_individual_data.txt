@@ -1,0 +1,114 @@
+orig candidates=[[2302]] decomp candidates=[[1556]]
+orig=354 decomp=354  ratio=0.8927  opcodes=[('replace', 167, 168, 167, 169), ('delete', 178, 206, 179, 179), ('replace', 209, 210, 182, 183), ('replace', 223, 224, 196, 197), ('replace', 231, 232, 204, 205), ('replace', 256, 257, 229, 230), ('replace', 264, 265, 237, 238), ('replace', 267, 268, 240, 241), ('replace', 276, 277, 249, 250), ('replace', 301, 302, 274, 275), ('replace', 323, 324, 296, 297), ('insert', 352, 352, 325, 350), ('insert', 354, 354, 352, 354)]
+HUNK replace  orig[167:168]@886 decomp[167:169]@886
+  ### ORIG only:
+      886 POP_JUMP_FORWARD_IF_FALSE  to 970
+  ### DECOMP only:
+      886 EXTENDED_ARG               
+      888 POP_JUMP_FORWARD_IF_FALSE  to 1730
+HUNK delete   orig[178:206]@968 decomp[179:179]@-
+  ### ORIG only:
+      968 JUMP_FORWARD               to 1124
+      970 LOAD_FAST                  flag
+      972 LOAD_CONST                 1
+      974 COMPARE_OP                 ==
+      980 POP_JUMP_FORWARD_IF_FALSE  to 1046
+      982 LOAD_FAST                  self
+      984 LOAD_ATTR                  log
+      994 LOAD_ATTR                  quote
+     1004 LOAD_METHOD                info
+     1026 LOAD_CONST                 '逐笔数据转化异常，默认返回空值'
+     1028 PRECALL                    
+     1032 CALL                       
+     1042 POP_TOP                    
+     1044 JUMP_FORWARD               to 1120
+     1046 LOAD_FAST                  flag
+     1048 LOAD_CONST                 -1
+     1050 COMPARE_OP                 ==
+     1056 POP_JUMP_FORWARD_IF_FALSE  to 1120
+     1058 LOAD_FAST                  self
+     1060 LOAD_ATTR                  log
+     1070 LOAD_ATTR                  quote
+     1080 LOAD_METHOD                info
+     1102 LOAD_CONST                 '逐笔数据返回空值'
+     1104 PRECALL                    
+     1108 CALL                       
+     1118 POP_TOP                    
+     1120 LOAD_CONST                 None
+     1122 RETURN_VALUE               
+HUNK replace  orig[209:210]@1130 decomp[182:183]@976
+  ### ORIG only:
+     1130 POP_JUMP_FORWARD_IF_FALSE  to 1676
+  ### DECOMP only:
+      976 POP_JUMP_FORWARD_IF_FALSE  to 1522
+HUNK replace  orig[223:224]@1218 decomp[196:197]@1064
+  ### ORIG only:
+     1218 POP_JUMP_FORWARD_IF_FALSE  to 1394
+  ### DECOMP only:
+     1064 POP_JUMP_FORWARD_IF_FALSE  to 1240
+HUNK replace  orig[231:232]@1264 decomp[204:205]@1110
+  ### ORIG only:
+     1264 POP_JUMP_FORWARD_IF_TRUE   to 1338
+  ### DECOMP only:
+     1110 POP_JUMP_FORWARD_IF_TRUE   to 1184
+HUNK replace  orig[256:257]@1392 decomp[229:230]@1238
+  ### ORIG only:
+     1392 JUMP_FORWARD               to 1632
+  ### DECOMP only:
+     1238 JUMP_FORWARD               to 1478
+HUNK replace  orig[264:265]@1448 decomp[237:238]@1294
+  ### ORIG only:
+     1448 POP_JUMP_FORWARD_IF_FALSE  to 1632
+  ### DECOMP only:
+     1294 POP_JUMP_FORWARD_IF_FALSE  to 1478
+HUNK replace  orig[267:268]@1454 decomp[240:241]@1300
+  ### ORIG only:
+     1454 FOR_ITER                   to 1632
+  ### DECOMP only:
+     1300 FOR_ITER                   to 1478
+HUNK replace  orig[276:277]@1502 decomp[249:250]@1348
+  ### ORIG only:
+     1502 POP_JUMP_FORWARD_IF_TRUE   to 1576
+  ### DECOMP only:
+     1348 POP_JUMP_FORWARD_IF_TRUE   to 1422
+HUNK replace  orig[301:302]@1630 decomp[274:275]@1476
+  ### ORIG only:
+     1630 JUMP_BACKWARD              to 1454
+  ### DECOMP only:
+     1476 JUMP_BACKWARD              to 1300
+HUNK replace  orig[323:324]@1758 decomp[296:297]@1604
+  ### ORIG only:
+     1758 POP_JUMP_FORWARD_IF_FALSE  to 1876
+  ### DECOMP only:
+     1604 POP_JUMP_FORWARD_IF_FALSE  to 1722
+HUNK insert   orig[352:352]@- decomp[325:350]@1730
+  ### DECOMP only:
+     1730 LOAD_FAST                  flag
+     1732 LOAD_CONST                 1
+     1734 COMPARE_OP                 ==
+     1740 POP_JUMP_FORWARD_IF_FALSE  to 1806
+     1742 LOAD_FAST                  self
+     1744 LOAD_ATTR                  log
+     1754 LOAD_ATTR                  quote
+     1764 LOAD_METHOD                info
+     1786 LOAD_CONST                 '逐笔数据转化异常，默认返回空值'
+     1788 PRECALL                    
+     1792 CALL                       
+     1802 POP_TOP                    
+     1804 JUMP_FORWARD               to 1880
+     1806 LOAD_FAST                  flag
+     1808 LOAD_CONST                 -1
+     1810 COMPARE_OP                 ==
+     1816 POP_JUMP_FORWARD_IF_FALSE  to 1880
+     1818 LOAD_FAST                  self
+     1820 LOAD_ATTR                  log
+     1830 LOAD_ATTR                  quote
+     1840 LOAD_METHOD                info
+     1862 LOAD_CONST                 '逐笔数据返回空值'
+     1864 PRECALL                    
+     1868 CALL                       
+     1878 POP_TOP                    
+HUNK insert   orig[354:354]@- decomp[352:354]@1884
+  ### DECOMP only:
+     1884 LOAD_CONST                 None
+     1886 RETURN_VALUE               

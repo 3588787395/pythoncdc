@@ -1,0 +1,375 @@
+FUNC _sync_worker  filtered orig=349 decomp=347 deficit=2
+HUNK replace  orig[48:81] off 362..702   decomp[48:49] off 362..362  (o=33 d=1)
+  ### ORIG-only (MISSING from decomp):
+      362 POP_JUMP_FORWARD_IF_TRUE       to 704
+      364 LOAD_GLOBAL                    NULL + int
+      376 LOAD_GLOBAL                    datetime
+      388 LOAD_ATTR                      datetime
+      398 LOAD_METHOD                    now
+      424 CALL                           
+      434 LOAD_METHOD                    strftime
+      456 LOAD_CONST                     '%H%M'
+      462 CALL                           
+      476 CALL                           
+      486 LOAD_GLOBAL                    NULL + int
+      498 LOAD_FAST                      post_after_trading
+      504 CALL                           
+      514 COMPARE_OP                     >=
+      520 POP_JUMP_FORWARD_IF_TRUE       to 704
+      522 LOAD_GLOBAL                    holiday_sync_account
+      534 LOAD_CONST                     '0'
+      536 COMPARE_OP                     ==
+      542 POP_JUMP_FORWARD_IF_FALSE      to 702
+      544 LOAD_FAST                      self
+      546 LOAD_ATTR                      engine
+      556 LOAD_ATTR                      data_proxy
+      566 LOAD_METHOD                    is_trading_date
+      588 LOAD_GLOBAL                    datetime
+      600 LOAD_ATTR                      datetime
+      610 LOAD_METHOD                    now
+      636 CALL                           
+      646 LOAD_METHOD                    date
+      672 CALL                           
+      686 CALL                           
+      698 POP_JUMP_FORWARD_IF_TRUE       to 1214
+      700 JUMP_FORWARD                   to 704
+      702 JUMP_FORWARD                   to 1214
+  ### DECOMP-only (EXTRA / relocated):
+      362 POP_JUMP_FORWARD_IF_FALSE      to 562
+HUNK delete   orig[95:107] off 866..988   decomp[63:63] off -..-  (o=12 d=0)
+  ### ORIG-only (MISSING from decomp):
+      866 LOAD_FAST                      pre_before_trading
+      868 COMPARE_OP                     <
+      874 POP_JUMP_BACKWARD_IF_TRUE      to 704
+      876 LOAD_GLOBAL                    NULL + int
+      888 LOAD_GLOBAL                    datetime
+      900 LOAD_ATTR                      datetime
+      910 LOAD_METHOD                    now
+      936 CALL                           
+      946 LOAD_METHOD                    strftime
+      968 LOAD_CONST                     '%H%M'
+      974 CALL                           
+      988 CALL                           
+HUNK delete   orig[111:196] off 1032..1872   decomp[67:67] off -..-  (o=85 d=0)
+  ### ORIG-only (MISSING from decomp):
+     1032 POP_JUMP_BACKWARD_IF_TRUE      to 704
+     1034 LOAD_GLOBAL                    holiday_sync_account
+     1046 LOAD_CONST                     '0'
+     1048 COMPARE_OP                     ==
+     1054 POP_JUMP_FORWARD_IF_FALSE      to 1212
+     1056 LOAD_FAST                      self
+     1058 LOAD_ATTR                      engine
+     1068 LOAD_ATTR                      data_proxy
+     1078 LOAD_METHOD                    is_trading_date
+     1100 LOAD_GLOBAL                    datetime
+     1112 LOAD_ATTR                      datetime
+     1122 LOAD_METHOD                    now
+     1148 CALL                           
+     1158 LOAD_METHOD                    date
+     1184 CALL                           
+     1198 CALL                           
+     1208 POP_JUMP_BACKWARD_IF_FALSE     to 704
+     1214 LOAD_FAST                      self
+     1216 LOAD_ATTR                      engine
+     1226 LOAD_ATTR                      data_proxy
+     1236 LOAD_METHOD                    is_trading_date
+     1258 LOAD_GLOBAL                    datetime
+     1270 LOAD_ATTR                      datetime
+     1280 LOAD_METHOD                    now
+     1306 CALL                           
+     1316 LOAD_METHOD                    date
+     1342 CALL                           
+     1356 CALL                           
+     1368 POP_JUMP_FORWARD_IF_FALSE      to 1890
+     1370 LOAD_FAST                      self
+     1372 LOAD_ATTR                      reconnect_flag
+     1382 LOAD_CONST                     False
+     1384 IS_OP                          
+     1386 POP_JUMP_FORWARD_IF_FALSE      to 1890
+     1388 LOAD_GLOBAL                    datetime
+     1400 LOAD_ATTR                      datetime
+     1410 LOAD_METHOD                    now
+     1436 CALL                           
+     1446 LOAD_METHOD                    date
+     1472 CALL                           
+     1482 LOAD_FAST                      self
+     1484 LOAD_ATTR                      first_run_date
+     1494 COMPARE_OP                     ==
+     1500 POP_JUMP_FORWARD_IF_FALSE      to 1524
+     1502 LOAD_FAST                      self
+     1504 LOAD_ATTR                      first_run_time
+     1514 LOAD_CONST                     900
+     1516 COMPARE_OP                     <
+     1522 POP_JUMP_FORWARD_IF_TRUE       to 1638
+     1524 LOAD_GLOBAL                    datetime
+     1536 LOAD_ATTR                      datetime
+     1546 LOAD_METHOD                    now
+     1572 CALL                           
+     1582 LOAD_METHOD                    date
+     1608 CALL                           
+     1618 LOAD_FAST                      self
+     1620 LOAD_ATTR                      first_run_date
+     1630 COMPARE_OP                     !=
+     1636 POP_JUMP_FORWARD_IF_FALSE      to 1890
+     1638 LOAD_GLOBAL                    NULL + int
+     1650 LOAD_GLOBAL                    datetime
+     1662 LOAD_ATTR                      datetime
+     1672 LOAD_METHOD                    now
+     1698 CALL                           
+     1708 LOAD_METHOD                    strftime
+     1730 LOAD_CONST                     '%H%M'
+     1736 CALL                           
+     1750 CALL                           
+     1760 LOAD_CONST                     900
+     1762 COMPARE_OP                     >=
+     1768 POP_JUMP_FORWARD_IF_FALSE      to 1890
+     1770 LOAD_GLOBAL                    NULL + system_log
+     1782 LOAD_ATTR                      debug
+     1792 LOAD_CONST                     '后端服务操作账户开始执行自动重登录'
+     1798 CALL                           
+     1808 POP_TOP                        
+     1810 LOAD_GLOBAL                    NULL + reconnect
+     1822 LOAD_FAST                      self
+     1824 LOAD_ATTR                      broker
+     1834 LOAD_ATTR                      trade_account
+     1844 LOAD_FAST                      self
+     1846 LOAD_ATTR                      trade_id
+     1860 CALL                           
+     1870 POP_JUMP_FORWARD_IF_TRUE       to 1876
+     1872 LOAD_CONST                     None
+HUNK delete   orig[197:200] off 1876..1880   decomp[68:68] off -..-  (o=3 d=0)
+  ### ORIG-only (MISSING from decomp):
+     1876 LOAD_CONST                     True
+     1878 LOAD_FAST                      self
+     1880 STORE_ATTR                     reconnect_flag
+HUNK replace  orig[213:214] off 2024..2024   decomp[81:82] off 696..696  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2024 POP_JUMP_FORWARD_IF_FALSE      to 2066
+  ### DECOMP-only (EXTRA / relocated):
+      696 POP_JUMP_FORWARD_IF_FALSE      to 738
+HUNK replace  orig[218:220] off 2062..2064   decomp[86:88] off 734..736  (o=2 d=2)
+  ### ORIG-only (MISSING from decomp):
+     2062 POP_JUMP_FORWARD_IF_FALSE      to 2886
+     2064 JUMP_FORWARD                   to 2072
+  ### DECOMP-only (EXTRA / relocated):
+      734 POP_JUMP_FORWARD_IF_FALSE      to 1716
+      736 JUMP_FORWARD                   to 744
+HUNK replace  orig[221:222] off 2070..2070   decomp[89:90] off 742..742  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2070 JUMP_FORWARD                   to 2886
+  ### DECOMP-only (EXTRA / relocated):
+      742 JUMP_FORWARD                   to 1716
+HUNK replace  orig[232:233] off 2112..2112   decomp[100:101] off 784..784  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2112 POP_JUMP_FORWARD_IF_TRUE       to 2136
+  ### DECOMP-only (EXTRA / relocated):
+      784 POP_JUMP_FORWARD_IF_TRUE       to 808
+HUNK replace  orig[237:238] off 2134..2134   decomp[105:106] off 806..806  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2134 POP_JUMP_FORWARD_IF_FALSE      to 2168
+  ### DECOMP-only (EXTRA / relocated):
+      806 POP_JUMP_FORWARD_IF_FALSE      to 840
+HUNK replace  orig[251:252] off 2190..2190   decomp[119:120] off 862..862  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2190 JUMP_FORWARD                   to 2214
+  ### DECOMP-only (EXTRA / relocated):
+      862 JUMP_FORWARD                   to 886
+HUNK replace  orig[254:255] off 2196..2196   decomp[122:123] off 868..868  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2196 POP_JUMP_FORWARD_IF_TRUE       to 2206
+  ### DECOMP-only (EXTRA / relocated):
+      868 POP_JUMP_FORWARD_IF_TRUE       to 878
+HUNK delete   orig[263:279] off 2214..2372   decomp[131:131] off -..-  (o=16 d=0)
+  ### ORIG-only (MISSING from decomp):
+     2214 LOAD_GLOBAL                    NULL + abs
+     2226 LOAD_GLOBAL                    datetime
+     2238 LOAD_ATTR                      datetime
+     2248 LOAD_METHOD                    now
+     2274 CALL                           
+     2284 LOAD_FAST                      self
+     2286 LOAD_ATTR                      sync_account_time
+     2296 BINARY_OP                      -
+     2300 LOAD_METHOD                    total_seconds
+     2326 CALL                           
+     2340 CALL                           
+     2350 STORE_FAST                     time_difference
+     2352 LOAD_FAST                      time_difference
+     2354 LOAD_GLOBAL                    sync_max_time
+     2366 COMPARE_OP                     >
+     2372 POP_JUMP_FORWARD_IF_FALSE      to 2378
+HUNK replace  orig[282:283] off 2380..2380   decomp[134:135] off 892..892  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2380 POP_JUMP_FORWARD_IF_FALSE      to 2492
+  ### DECOMP-only (EXTRA / relocated):
+      892 POP_JUMP_FORWARD_IF_FALSE      to 1004
+HUNK replace  orig[299:300] off 2538..2538   decomp[151:152] off 1050..1050  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2538 POP_JUMP_FORWARD_IF_FALSE      to 2580
+  ### DECOMP-only (EXTRA / relocated):
+     1050 POP_JUMP_FORWARD_IF_FALSE      to 1092
+HUNK replace  orig[311:312] off 2626..2626   decomp[163:164] off 1138..1138  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2626 POP_JUMP_FORWARD_IF_FALSE      to 2668
+  ### DECOMP-only (EXTRA / relocated):
+     1138 POP_JUMP_FORWARD_IF_FALSE      to 1180
+HUNK replace  orig[335:336] off 2842..2842   decomp[187:188] off 1354..1354  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2842 POP_JUMP_FORWARD_IF_FALSE      to 2884
+  ### DECOMP-only (EXTRA / relocated):
+     1354 POP_JUMP_FORWARD_IF_FALSE      to 1394
+HUNK replace  orig[340:342] off 2880..2882   decomp[192:194] off 1390..1392  (o=2 d=2)
+  ### ORIG-only (MISSING from decomp):
+     2880 POP_JUMP_BACKWARD_IF_TRUE      to 2072
+     2882 JUMP_FORWARD                   to 2886
+  ### DECOMP-only (EXTRA / relocated):
+     1390 POP_JUMP_FORWARD_IF_TRUE       to 1400
+     1392 JUMP_FORWARD                   to 1396
+HUNK insert   orig[343:343] off 2886..2884   decomp[195:341] off 1398..2826  (o=0 d=146)
+  ### DECOMP-only (EXTRA / relocated):
+     1398 JUMP_BACKWARD                  to 562
+     1400 LOAD_GLOBAL                    NULL + abs
+     1412 LOAD_GLOBAL                    datetime
+     1424 LOAD_ATTR                      datetime
+     1434 LOAD_METHOD                    now
+     1460 CALL                           
+     1470 LOAD_FAST                      self
+     1472 LOAD_ATTR                      sync_account_time
+     1482 BINARY_OP                      -
+     1486 LOAD_METHOD                    total_seconds
+     1512 CALL                           
+     1526 CALL                           
+     1536 STORE_FAST                     time_difference
+     1538 LOAD_FAST                      pre_before_trading
+     1540 LOAD_GLOBAL                    NULL + int
+     1552 LOAD_GLOBAL                    datetime
+     1564 LOAD_ATTR                      datetime
+     1574 LOAD_METHOD                    now
+     1600 CALL                           
+     1610 LOAD_METHOD                    strftime
+     1632 LOAD_CONST                     '%H%M'
+     1638 CALL                           
+     1652 CALL                           
+     1662 SWAP                           
+     1664 COPY                           
+     1666 COMPARE_OP                     <=
+     1672 POP_JUMP_FORWARD_IF_FALSE      to 1714
+     1674 LOAD_GLOBAL                    NULL + int
+     1686 LOAD_FAST                      post_after_trading
+     1692 CALL                           
+     1702 COMPARE_OP                     <
+     1710 POP_JUMP_BACKWARD_IF_TRUE      to 744
+     1712 JUMP_FORWARD                   to 1716
+     1714 POP_TOP                        
+     1716 LOAD_GLOBAL                    NULL + int
+     1728 LOAD_GLOBAL                    datetime
+     1740 LOAD_ATTR                      datetime
+     1750 LOAD_METHOD                    now
+     1776 CALL                           
+     1786 LOAD_METHOD                    strftime
+     1808 LOAD_CONST                     '%H%M'
+     1814 CALL                           
+     1828 CALL                           
+     1838 LOAD_FAST                      pre_before_trading
+     1840 COMPARE_OP                     <
+     1846 POP_JUMP_FORWARD_IF_FALSE      to 1982
+     1850 LOAD_GLOBAL                    NULL + int
+     1862 LOAD_GLOBAL                    datetime
+     1874 LOAD_ATTR                      datetime
+     1884 LOAD_METHOD                    now
+     1910 CALL                           
+     1920 LOAD_METHOD                    strftime
+     1942 LOAD_CONST                     '%H%M'
+     1948 CALL                           
+     1962 CALL                           
+     1972 LOAD_FAST                      pre_before_trading
+     1974 COMPARE_OP                     <
+     1980 POP_JUMP_BACKWARD_IF_TRUE      to 1848
+     1982 LOAD_GLOBAL                    holiday_sync_account
+     1994 LOAD_CONST                     '0'
+     1996 COMPARE_OP                     ==
+     2002 POP_JUMP_FORWARD_IF_FALSE      to 2160
+     2004 LOAD_FAST                      self
+     2006 LOAD_ATTR                      engine
+     2016 LOAD_ATTR                      data_proxy
+     2026 LOAD_METHOD                    is_trading_date
+     2048 LOAD_GLOBAL                    datetime
+     2060 LOAD_ATTR                      datetime
+     2070 LOAD_METHOD                    now
+     2096 CALL                           
+     2106 LOAD_METHOD                    date
+     2132 CALL                           
+     2146 CALL                           
+     2156 POP_JUMP_FORWARD_IF_TRUE       to 2160
+     2160 LOAD_FAST                      self
+     2162 LOAD_ATTR                      engine
+     2172 LOAD_ATTR                      data_proxy
+     2182 LOAD_METHOD                    is_trading_date
+     2204 LOAD_GLOBAL                    datetime
+     2216 LOAD_ATTR                      datetime
+     2226 LOAD_METHOD                    now
+     2252 CALL                           
+     2262 LOAD_METHOD                    date
+     2288 CALL                           
+     2302 CALL                           
+     2314 POP_JUMP_FORWARD_IF_FALSE      to 2836
+     2316 LOAD_FAST                      self
+     2318 LOAD_ATTR                      reconnect_flag
+     2328 LOAD_CONST                     False
+     2330 IS_OP                          
+     2332 POP_JUMP_FORWARD_IF_FALSE      to 2836
+     2334 LOAD_GLOBAL                    datetime
+     2346 LOAD_ATTR                      datetime
+     2356 LOAD_METHOD                    now
+     2382 CALL                           
+     2392 LOAD_METHOD                    date
+     2418 CALL                           
+     2428 LOAD_FAST                      self
+     2430 LOAD_ATTR                      first_run_date
+     2440 COMPARE_OP                     ==
+     2446 POP_JUMP_FORWARD_IF_FALSE      to 2836
+     2448 LOAD_FAST                      self
+     2450 LOAD_ATTR                      first_run_time
+     2460 LOAD_CONST                     900
+     2462 COMPARE_OP                     <
+     2468 POP_JUMP_FORWARD_IF_TRUE       to 2584
+     2470 LOAD_GLOBAL                    datetime
+     2482 LOAD_ATTR                      datetime
+     2492 LOAD_METHOD                    now
+     2518 CALL                           
+     2528 LOAD_METHOD                    date
+     2554 CALL                           
+     2564 LOAD_FAST                      self
+     2566 LOAD_ATTR                      first_run_date
+     2576 COMPARE_OP                     !=
+     2582 POP_JUMP_FORWARD_IF_FALSE      to 2836
+     2584 LOAD_GLOBAL                    NULL + int
+     2596 LOAD_GLOBAL                    datetime
+     2608 LOAD_ATTR                      datetime
+     2618 LOAD_METHOD                    now
+     2644 CALL                           
+     2654 LOAD_METHOD                    strftime
+     2676 LOAD_CONST                     '%H%M'
+     2682 CALL                           
+     2696 CALL                           
+     2706 LOAD_CONST                     900
+     2708 COMPARE_OP                     >=
+     2714 POP_JUMP_FORWARD_IF_FALSE      to 2836
+     2716 LOAD_GLOBAL                    NULL + system_log
+     2728 LOAD_ATTR                      debug
+     2738 LOAD_CONST                     '后端服务操作账户开始执行自动重登录'
+     2744 CALL                           
+     2754 POP_TOP                        
+     2756 LOAD_GLOBAL                    NULL + reconnect
+     2768 LOAD_FAST                      self
+     2770 LOAD_ATTR                      broker
+     2780 LOAD_ATTR                      trade_account
+     2790 LOAD_FAST                      self
+     2792 LOAD_ATTR                      trade_id
+     2806 CALL                           
+     2816 POP_JUMP_FORWARD_IF_TRUE       to 2822
+     2818 LOAD_CONST                     None
+     2820 RETURN_VALUE                   
+     2822 LOAD_CONST                     True
+     2824 LOAD_FAST                      self
+     2826 STORE_ATTR                     reconnect_flag
+SUMMARY missing_run_instrs=163 extra_run_instrs=161

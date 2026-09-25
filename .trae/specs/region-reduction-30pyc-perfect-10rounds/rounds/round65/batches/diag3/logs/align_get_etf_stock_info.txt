@@ -1,0 +1,93 @@
+orig candidates=[[2024]] decomp candidates=[[1341]]
+orig=157 decomp=126  ratio=0.7915  opcodes=[('replace', 4, 6, 4, 8), ('delete', 14, 47, 16, 16), ('replace', 54, 55, 23, 24), ('replace', 76, 77, 45, 46), ('replace', 80, 81, 49, 50), ('replace', 83, 84, 52, 53), ('replace', 92, 93, 61, 62), ('replace', 105, 106, 74, 75), ('replace', 119, 121, 88, 90), ('replace', 128, 129, 97, 98), ('replace', 141, 142, 110, 111)]
+HUNK replace  orig[4:6]@8 decomp[4:8]@8
+  ### ORIG only:
+        8 POP_JUMP_FORWARD_IF_FALSE  to 12
+       10 JUMP_FORWARD               to 56
+  ### DECOMP only:
+        8 POP_JUMP_FORWARD_IF_FALSE  to 16
+       10 BUILD_LIST                 
+       12 STORE_FAST                 in_stock
+       14 JUMP_FORWARD               to 60
+HUNK delete   orig[14:47]@56 decomp[16:16]@-
+  ### ORIG only:
+       56 BUILD_LIST                 
+       58 STORE_FAST                 in_stock
+       60 LOAD_GLOBAL                NULL + isinstance
+       72 LOAD_FAST                  security
+       74 LOAD_GLOBAL                list
+       86 PRECALL                    
+       90 CALL                       
+      100 POP_JUMP_FORWARD_IF_FALSE  to 206
+      102 LOAD_GLOBAL                NULL + len
+      114 LOAD_FAST                  security
+      116 PRECALL                    
+      120 CALL                       
+      130 LOAD_CONST                 1
+      132 COMPARE_OP                 >
+      138 POP_JUMP_FORWARD_IF_FALSE  to 146
+      140 LOAD_FAST                  security
+      142 STORE_FAST                 in_stock
+      144 JUMP_FORWARD               to 208
+      146 LOAD_GLOBAL                NULL + len
+      158 LOAD_FAST                  security
+      160 PRECALL                    
+      164 CALL                       
+      174 LOAD_CONST                 1
+      176 COMPARE_OP                 ==
+      182 POP_JUMP_FORWARD_IF_FALSE  to 202
+      184 LOAD_FAST                  security
+      186 LOAD_CONST                 0
+      188 BINARY_SUBSCR              
+      198 STORE_FAST                 security
+      200 JUMP_FORWARD               to 208
+      202 LOAD_CONST                 None
+      204 RETURN_VALUE               
+      206 NOP                        
+HUNK replace  orig[54:55]@252 decomp[23:24]@104
+  ### ORIG only:
+      252 POP_JUMP_FORWARD_IF_FALSE  to 698
+  ### DECOMP only:
+      104 POP_JUMP_FORWARD_IF_FALSE  to 550
+HUNK replace  orig[76:77]@388 decomp[45:46]@240
+  ### ORIG only:
+      388 POP_JUMP_FORWARD_IF_NOT_NONE to 394
+  ### DECOMP only:
+      240 POP_JUMP_FORWARD_IF_NOT_NONE to 246
+HUNK replace  orig[80:81]@396 decomp[49:50]@248
+  ### ORIG only:
+      396 POP_JUMP_FORWARD_IF_FALSE  to 554
+  ### DECOMP only:
+      248 POP_JUMP_FORWARD_IF_FALSE  to 406
+HUNK replace  orig[83:84]@402 decomp[52:53]@254
+  ### ORIG only:
+      402 FOR_ITER                   to 552
+  ### DECOMP only:
+      254 FOR_ITER                   to 404
+HUNK replace  orig[92:93]@428 decomp[61:62]@280
+  ### ORIG only:
+      428 POP_JUMP_FORWARD_IF_FALSE  to 496
+  ### DECOMP only:
+      280 POP_JUMP_FORWARD_IF_FALSE  to 348
+HUNK replace  orig[105:106]@494 decomp[74:75]@346
+  ### ORIG only:
+      494 JUMP_BACKWARD              to 402
+  ### DECOMP only:
+      346 JUMP_BACKWARD              to 254
+HUNK replace  orig[119:121]@550 decomp[88:90]@402
+  ### ORIG only:
+      550 JUMP_BACKWARD              to 402
+      552 JUMP_FORWARD               to 698
+  ### DECOMP only:
+      402 JUMP_BACKWARD              to 254
+      404 JUMP_FORWARD               to 550
+HUNK replace  orig[128:129]@576 decomp[97:98]@428
+  ### ORIG only:
+      576 POP_JUMP_FORWARD_IF_FALSE  to 644
+  ### DECOMP only:
+      428 POP_JUMP_FORWARD_IF_FALSE  to 496
+HUNK replace  orig[141:142]@642 decomp[110:111]@494
+  ### ORIG only:
+      642 JUMP_FORWARD               to 698
+  ### DECOMP only:
+      494 JUMP_FORWARD               to 550

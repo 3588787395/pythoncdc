@@ -1,0 +1,186 @@
+orig candidates=[[2048]] decomp candidates=[[1306]]
+orig=412 decomp=359  ratio=0.8457  opcodes=[('replace', 103, 104, 103, 104), ('delete', 105, 112, 105, 105), ('replace', 113, 122, 106, 107), ('replace', 125, 126, 110, 111), ('replace', 174, 179, 159, 161), ('replace', 181, 185, 163, 164), ('replace', 186, 208, 165, 166), ('delete', 224, 225, 182, 182), ('replace', 230, 231, 187, 188), ('replace', 247, 248, 204, 205), ('replace', 253, 254, 210, 211), ('replace', 275, 276, 232, 242), ('replace', 281, 282, 247, 248), ('replace', 298, 299, 264, 265), ('replace', 301, 303, 267, 269), ('replace', 304, 305, 270, 271), ('replace', 314, 315, 280, 281), ('replace', 317, 318, 283, 284), ('replace', 361, 362, 327, 328), ('delete', 381, 403, 347, 347), ('replace', 406, 407, 350, 351), ('replace', 409, 410, 353, 355), ('insert', 412, 412, 357, 359)]
+HUNK replace  orig[103:104]@636 decomp[103:104]@636
+  ### ORIG only:
+      636 POP_JUMP_FORWARD_IF_FALSE  to 2208
+  ### DECOMP only:
+      636 POP_JUMP_FORWARD_IF_FALSE  to 2026
+HUNK delete   orig[105:112]@640 decomp[105:105]@-
+  ### ORIG only:
+      640 LOAD_FAST                  socket
+      642 LOAD_METHOD                recv
+      664 PRECALL                    
+      668 CALL                       
+      678 STORE_FAST                 message
+      680 LOAD_FAST                  message
+      682 POP_JUMP_FORWARD_IF_FALSE  to 1050
+HUNK replace  orig[113:122]@686 decomp[106:107]@642
+  ### ORIG only:
+      686 LOAD_GLOBAL                NULL + eval
+      698 LOAD_FAST                  message
+      700 LOAD_METHOD                decode
+      722 PRECALL                    
+      726 CALL                       
+      736 PRECALL                    
+      740 CALL                       
+      750 STORE_FAST                 message
+      752 JUMP_FORWARD               to 1116
+  ### DECOMP only:
+      642 JUMP_FORWARD               to 940
+HUNK replace  orig[125:126]@770 decomp[110:111]@660
+  ### ORIG only:
+      770 POP_JUMP_FORWARD_IF_FALSE  to 1042
+  ### DECOMP only:
+      660 POP_JUMP_FORWARD_IF_FALSE  to 932
+HUNK replace  orig[174:179]@1050 decomp[159:161]@940
+  ### ORIG only:
+     1050 LOAD_FAST                  self
+     1052 LOAD_ATTR                  log
+     1062 LOAD_ATTR                  quote
+     1072 LOAD_METHOD                warning
+     1094 LOAD_CONST                 '逐笔数据返回为空'
+  ### DECOMP only:
+      940 LOAD_FAST                  socket
+      942 LOAD_METHOD                recv
+HUNK replace  orig[181:185]@1110 decomp[163:164]@978
+  ### ORIG only:
+     1110 POP_TOP                    
+     1112 EXTENDED_ARG               
+     1114 JUMP_BACKWARD              to 586
+     1116 LOAD_GLOBAL                NULL + list
+  ### DECOMP only:
+      978 STORE_FAST                 message
+HUNK replace  orig[186:208]@1130 decomp[165:166]@982
+  ### ORIG only:
+     1130 LOAD_METHOD                keys
+     1152 PRECALL                    
+     1156 CALL                       
+     1166 PRECALL                    
+     1170 CALL                       
+     1180 LOAD_CONST                 0
+     1182 BINARY_SUBSCR              
+     1192 STORE_FAST                 stocks
+     1194 LOAD_FAST                  message
+     1196 LOAD_METHOD                get
+     1218 LOAD_FAST                  stocks
+     1220 PRECALL                    
+     1224 CALL                       
+     1234 STORE_FAST                 real_data
+     1236 LOAD_FAST                  real_data
+     1238 POP_JUMP_FORWARD_IF_FALSE  to 1620
+     1240 LOAD_FAST                  real_data
+     1242 LOAD_METHOD                get
+     1264 LOAD_CONST                 'transaction'
+     1266 PRECALL                    
+     1270 CALL                       
+     1280 POP_JUMP_FORWARD_IF_FALSE  to 1354
+  ### DECOMP only:
+      982 POP_JUMP_FORWARD_IF_FALSE  to 1322
+HUNK delete   orig[224:225]@1352 decomp[182:182]@-
+  ### ORIG only:
+     1352 JUMP_FORWARD               to 1578
+HUNK replace  orig[230:231]@1394 decomp[187:188]@1094
+  ### ORIG only:
+     1394 POP_JUMP_FORWARD_IF_FALSE  to 1468
+  ### DECOMP only:
+     1094 POP_JUMP_FORWARD_IF_FALSE  to 1168
+HUNK replace  orig[247:248]@1466 decomp[204:205]@1166
+  ### ORIG only:
+     1466 JUMP_FORWARD               to 1578
+  ### DECOMP only:
+     1166 JUMP_FORWARD               to 1278
+HUNK replace  orig[253:254]@1508 decomp[210:211]@1208
+  ### ORIG only:
+     1508 POP_JUMP_FORWARD_IF_FALSE  to 1578
+  ### DECOMP only:
+     1208 POP_JUMP_FORWARD_IF_FALSE  to 1278
+HUNK replace  orig[275:276]@1620 decomp[232:242]@1320
+  ### ORIG only:
+     1620 JUMP_FORWARD               to 2116
+  ### DECOMP only:
+     1320 JUMP_FORWARD               to 1384
+     1322 LOAD_FAST                  self
+     1324 LOAD_ATTR                  log
+     1334 LOAD_ATTR                  quote
+     1344 LOAD_METHOD                warning
+     1366 LOAD_CONST                 '逐笔数据返回为空'
+     1368 PRECALL                    
+     1372 CALL                       
+     1382 POP_TOP                    
+     1384 JUMP_FORWARD               to 1880
+HUNK replace  orig[281:282]@1658 decomp[247:248]@1422
+  ### ORIG only:
+     1658 POP_JUMP_FORWARD_IF_FALSE  to 1858
+  ### DECOMP only:
+     1422 POP_JUMP_FORWARD_IF_FALSE  to 1622
+HUNK replace  orig[298:299]@1774 decomp[264:265]@1538
+  ### ORIG only:
+     1774 POP_JUMP_FORWARD_IF_FALSE  to 1788
+  ### DECOMP only:
+     1538 POP_JUMP_FORWARD_IF_FALSE  to 1552
+HUNK replace  orig[301:303]@1784 decomp[267:269]@1548
+  ### ORIG only:
+     1784 POP_JUMP_FORWARD_IF_FALSE  to 1854
+     1786 JUMP_FORWARD               to 1792
+  ### DECOMP only:
+     1548 POP_JUMP_FORWARD_IF_FALSE  to 1618
+     1550 JUMP_FORWARD               to 1556
+HUNK replace  orig[304:305]@1790 decomp[270:271]@1554
+  ### ORIG only:
+     1790 JUMP_FORWARD               to 1854
+  ### DECOMP only:
+     1554 JUMP_FORWARD               to 1618
+HUNK replace  orig[314:315]@1856 decomp[280:281]@1620
+  ### ORIG only:
+     1856 JUMP_FORWARD               to 2116
+  ### DECOMP only:
+     1620 JUMP_FORWARD               to 1880
+HUNK replace  orig[317:318]@1872 decomp[283:284]@1636
+  ### ORIG only:
+     1872 POP_JUMP_FORWARD_IF_FALSE  to 2108
+  ### DECOMP only:
+     1636 POP_JUMP_FORWARD_IF_FALSE  to 1872
+HUNK replace  orig[361:362]@2098 decomp[327:328]@1862
+  ### ORIG only:
+     2098 JUMP_FORWARD               to 2116
+  ### DECOMP only:
+     1862 JUMP_FORWARD               to 1880
+HUNK delete   orig[381:403]@2204 decomp[347:347]@-
+  ### ORIG only:
+     2204 EXTENDED_ARG               
+     2206 POP_JUMP_BACKWARD_IF_TRUE  to 638
+     2208 LOAD_FAST                  socket
+     2210 LOAD_METHOD                close
+     2232 PRECALL                    
+     2236 CALL                       
+     2246 POP_TOP                    
+     2248 LOAD_FAST                  context
+     2250 LOAD_METHOD                term
+     2272 PRECALL                    
+     2276 CALL                       
+     2286 POP_TOP                    
+     2288 LOAD_FAST                  self
+     2290 LOAD_ATTR                  log
+     2300 LOAD_ATTR                  quote
+     2310 LOAD_METHOD                debug
+     2332 LOAD_CONST                 '结束第%s次逐笔订阅'
+     2334 LOAD_FAST                  self
+     2336 LOAD_ATTR                  _individual_subscribe_count
+     2346 BINARY_OP                  %
+     2350 PRECALL                    
+     2354 CALL                       
+HUNK replace  orig[406:407]@2378 decomp[350:351]@1982
+  ### ORIG only:
+     2378 LOAD_METHOD                set
+  ### DECOMP only:
+     1982 LOAD_METHOD                isSet
+HUNK replace  orig[409:410]@2414 decomp[353:355]@2018
+  ### ORIG only:
+     2414 POP_TOP                    
+  ### DECOMP only:
+     2018 EXTENDED_ARG               
+     2020 POP_JUMP_BACKWARD_IF_TRUE  to 638
+HUNK insert   orig[412:412]@- decomp[357:359]@2026
+  ### DECOMP only:
+     2026 LOAD_CONST                 None
+     2028 RETURN_VALUE               

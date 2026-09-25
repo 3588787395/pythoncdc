@@ -1,0 +1,47 @@
+orig candidates=[[3704]] decomp candidates=[[2500]]
+orig=177 decomp=180  ratio=0.9468  opcodes=[('replace', 19, 20, 19, 20), ('replace', 23, 24, 23, 24), ('replace', 29, 30, 29, 30), ('replace', 33, 34, 33, 35), ('insert', 35, 35, 36, 38), ('replace', 40, 41, 43, 44), ('replace', 76, 77, 79, 80), ('replace', 81, 82, 84, 85), ('replace', 106, 107, 109, 110)]
+HUNK replace  orig[19:20]@116 decomp[19:20]@116
+  ### ORIG only:
+      116 POP_JUMP_FORWARD_IF_FALSE  to 168
+  ### DECOMP only:
+      116 POP_JUMP_FORWARD_IF_FALSE  to 174
+HUNK replace  orig[23:24]@132 decomp[23:24]@132
+  ### ORIG only:
+      132 FOR_ITER                   to 168
+  ### DECOMP only:
+      132 FOR_ITER                   to 170
+HUNK replace  orig[29:30]@156 decomp[29:30]@156
+  ### ORIG only:
+      156 POP_JUMP_FORWARD_IF_FALSE  to 166
+  ### DECOMP only:
+      156 POP_JUMP_FORWARD_IF_FALSE  to 168
+HUNK replace  orig[33:34]@164 decomp[33:35]@164
+  ### ORIG only:
+      164 JUMP_FORWARD               to 168
+  ### DECOMP only:
+      164 LOAD_CONST                 None
+      166 RETURN_VALUE               
+HUNK insert   orig[35:35]@- decomp[36:38]@170
+  ### DECOMP only:
+      170 LOAD_CONST                 None
+      172 RETURN_VALUE               
+HUNK replace  orig[40:41]@208 decomp[43:44]@214
+  ### ORIG only:
+      208 POP_JUMP_FORWARD_IF_FALSE  to 214
+  ### DECOMP only:
+      214 POP_JUMP_FORWARD_IF_FALSE  to 220
+HUNK replace  orig[76:77]@434 decomp[79:80]@440
+  ### ORIG only:
+      434 POP_JUMP_FORWARD_IF_FALSE  to 448
+  ### DECOMP only:
+      440 POP_JUMP_FORWARD_IF_FALSE  to 454
+HUNK replace  orig[81:82]@446 decomp[84:85]@452
+  ### ORIG only:
+      446 JUMP_FORWARD               to 458
+  ### DECOMP only:
+      452 JUMP_FORWARD               to 464
+HUNK replace  orig[106:107]@558 decomp[109:110]@564
+  ### ORIG only:
+      558 POP_JUMP_FORWARD_IF_FALSE  to 674
+  ### DECOMP only:
+      564 POP_JUMP_FORWARD_IF_FALSE  to 680

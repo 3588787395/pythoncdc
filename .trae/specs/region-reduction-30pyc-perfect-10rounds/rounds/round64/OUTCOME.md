@@ -106,9 +106,12 @@ MOVED 三支（计数不变、产物变化）已逐支归属：
 4. `get_kline_binary` 的 closed-shared-exit 判据本轮只收窄到「前缀闭合于同一 T 且 current 两边
    都不到 T」；`klinedata` 的 De Morgan 形态（`if fq is None or dividends_all is None or …`）
    被它改写后 jumpdiff 3→5，R65 应加一条「被 pop 的块自身就是 or-run 首块时不 pop」的同层判据再测。
-5. 技术债：`region_ast_generator.py` 里残留 **10 处 `import os as _os_dbg_*`** 调试导入
-   （L32916、L44320、L46899、L47059、L47107 等），行为中性但是垃圾代码；须用「产物 402 支逐字节
-   相同」作门禁单独清理。
+5. 技术债：`region_ast_generator.py` 里残留 **13 处 `import os as _os_dbg*`** 调试导入
+   （L20961、L20999、L33020、L43773、L44507、L47086、L47246、L47294、L47331、L47348、L47353、
+   L47358、L47366；`grep -c` 在最终落地字节上实测，且全仓库只有这一个文件残留），
+   行为中性但是垃圾代码；须用「产物 402 支逐字节
+   相同」作门禁单独清理。（本条首版写「10 处 L32916/L44320/…」，是在未落 R64 编辑的旧文本上
+   数的，2026-09-25 收尾时在最终字节上重测为 13 处，已按实测定数改写。）
 
 ## 7. 归档
 

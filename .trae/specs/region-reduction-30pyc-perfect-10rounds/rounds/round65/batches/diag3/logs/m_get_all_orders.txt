@@ -1,0 +1,39 @@
+FUNC get_all_orders  filtered orig=79 decomp=82 deficit=-3
+HUNK replace  orig[7:8] off 24..24   decomp[7:8] off 24..24  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+       24 POP_JUMP_FORWARD_IF_FALSE      to 362
+  ### DECOMP-only (EXTRA / relocated):
+       24 POP_JUMP_FORWARD_IF_FALSE      to 456
+HUNK replace  orig[20:21] off 144..144   decomp[20:21] off 144..144  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      144 POP_JUMP_FORWARD_IF_FALSE      to 348
+  ### DECOMP-only (EXTRA / relocated):
+      144 POP_JUMP_FORWARD_IF_FALSE      to 438
+HUNK delete   orig[55:59] off 346..360   decomp[55:55] off -..-  (o=4 d=0)
+  ### ORIG-only (MISSING from decomp):
+      346 JUMP_FORWARD                   to 362
+      348 LOAD_FAST                      self
+      350 LOAD_ATTR                      all_orders
+      360 STORE_FAST                     result
+HUNK replace  orig[60:61] off 364..364   decomp[56:57] off 348..348  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      364 POP_JUMP_FORWARD_IF_NOT_NONE   to 370
+  ### DECOMP-only (EXTRA / relocated):
+      348 POP_JUMP_FORWARD_IF_NOT_NONE   to 354
+HUNK replace  orig[68:69] off 420..420   decomp[64:65] off 404..404  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      420 POP_JUMP_FORWARD_IF_FALSE      to 450
+  ### DECOMP-only (EXTRA / relocated):
+      404 POP_JUMP_FORWARD_IF_FALSE      to 434
+HUNK replace  orig[71:72] off 426..426   decomp[67:68] off 410..410  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      426 LOAD_CONST                     <code object <listcomp> at 0x000001FF4FF40300, file "./fly_docker_py311/IQEngine/plugins/plugin_system_trade/trade_live_broker.py", line 3766>
+  ### DECOMP-only (EXTRA / relocated):
+      410 LOAD_CONST                     <code object <listcomp> at 0x000001FF4FF407B0, file "build_landed/IQEngine__plugins__plugin_system_trade__trade_live_brokerOK.py", line 2542>
+Traceback (most recent call last):
+  File "D:\Temp\opencode\r65gate\diag3\malign.py", line 92, in <module>
+    main(sys.argv[1], sys.argv[2], sys.argv[3])
+  File "D:\Temp\opencode\r65gate\diag3\malign.py", line 74, in main
+    tag, i1, i2, A[i1][2], A[i2 - 1][2], j1, j2,
+                 ~^^^^
+IndexError: list index out of range

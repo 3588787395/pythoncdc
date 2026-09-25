@@ -1,0 +1,210 @@
+orig candidates=[[149]] decomp candidates=[[42]]
+orig=383 decomp=363  ratio=0.8070  opcodes=[('replace', 120, 121, 120, 121), ('replace', 160, 161, 160, 161), ('replace', 163, 164, 163, 164), ('replace', 167, 168, 167, 168), ('replace', 173, 174, 173, 174), ('replace', 181, 194, 181, 182), ('replace', 206, 207, 194, 195), ('replace', 208, 209, 196, 197), ('replace', 214, 221, 202, 203), ('replace', 231, 232, 213, 214), ('replace', 237, 238, 219, 220), ('replace', 248, 249, 230, 231), ('replace', 254, 255, 236, 237), ('replace', 260, 261, 242, 282), ('replace', 272, 314, 293, 294), ('replace', 320, 322, 300, 302), ('replace', 332, 333, 312, 313), ('replace', 341, 342, 321, 322), ('replace', 346, 347, 326, 327), ('replace', 355, 356, 335, 336), ('replace', 359, 360, 339, 340), ('replace', 376, 377, 356, 357)]
+HUNK replace  orig[120:121]@656 decomp[120:121]@656
+  ### ORIG only:
+      656 POP_JUMP_FORWARD_IF_FALSE  to 1524
+  ### DECOMP only:
+      656 POP_JUMP_FORWARD_IF_FALSE  to 1406
+HUNK replace  orig[160:161]@816 decomp[160:161]@816
+  ### ORIG only:
+      816 FOR_ITER                   to 1524
+  ### DECOMP only:
+      816 FOR_ITER                   to 1406
+HUNK replace  orig[163:164]@822 decomp[163:164]@822
+  ### ORIG only:
+      822 POP_JUMP_FORWARD_IF_NOT_NONE to 1142
+  ### DECOMP only:
+      822 POP_JUMP_FORWARD_IF_NOT_NONE to 1028
+HUNK replace  orig[167:168]@834 decomp[167:168]@834
+  ### ORIG only:
+      834 POP_JUMP_FORWARD_IF_FALSE  to 1012
+  ### DECOMP only:
+      834 POP_JUMP_FORWARD_IF_FALSE  to 932
+HUNK replace  orig[173:174]@858 decomp[173:174]@858
+  ### ORIG only:
+      858 POP_JUMP_FORWARD_IF_FALSE  to 1010
+  ### DECOMP only:
+      858 POP_JUMP_FORWARD_IF_FALSE  to 930
+HUNK replace  orig[181:194]@886 decomp[181:182]@886
+  ### ORIG only:
+      886 POP_JUMP_FORWARD_IF_FALSE  to 1010
+      888 LOAD_FAST                  item
+      890 LOAD_CONST                 'strategyType'
+      892 BINARY_SUBSCR              
+      902 LOAD_GLOBAL                NULL + list
+      914 LOAD_GLOBAL                NULL + CUSTOM_STRATEGY_TYPE_DICT
+      926 LOAD_ATTR                  values
+      936 PRECALL                    
+      940 CALL                       
+      950 PRECALL                    
+      954 CALL                       
+      964 CONTAINS_OP                
+      966 POP_JUMP_FORWARD_IF_FALSE  to 1010
+  ### DECOMP only:
+      886 POP_JUMP_FORWARD_IF_FALSE  to 930
+HUNK replace  orig[206:207]@1034 decomp[194:195]@954
+  ### ORIG only:
+     1034 POP_JUMP_FORWARD_IF_FALSE  to 1140
+  ### DECOMP only:
+      954 POP_JUMP_FORWARD_IF_FALSE  to 1026
+HUNK replace  orig[208:209]@1038 decomp[196:197]@958
+  ### ORIG only:
+     1038 POP_JUMP_FORWARD_IF_FALSE  to 1064
+  ### DECOMP only:
+      958 POP_JUMP_FORWARD_IF_FALSE  to 984
+HUNK replace  orig[214:221]@1062 decomp[202:203]@982
+  ### ORIG only:
+     1062 POP_JUMP_FORWARD_IF_FALSE  to 1140
+     1064 LOAD_FAST                  item
+     1066 LOAD_CONST                 'strategyType'
+     1068 BINARY_SUBSCR              
+     1078 LOAD_GLOBAL                COMMON_STRATEGY_TYPE
+     1090 COMPARE_OP                 ==
+     1096 POP_JUMP_FORWARD_IF_FALSE  to 1140
+  ### DECOMP only:
+      982 POP_JUMP_FORWARD_IF_FALSE  to 1026
+HUNK replace  orig[231:232]@1152 decomp[213:214]@1038
+  ### ORIG only:
+     1152 POP_JUMP_FORWARD_IF_FALSE  to 1218
+  ### DECOMP only:
+     1038 POP_JUMP_FORWARD_IF_FALSE  to 1104
+HUNK replace  orig[237:238]@1172 decomp[219:220]@1058
+  ### ORIG only:
+     1172 POP_JUMP_FORWARD_IF_FALSE  to 1216
+  ### DECOMP only:
+     1058 POP_JUMP_FORWARD_IF_FALSE  to 1102
+HUNK replace  orig[248:249]@1228 decomp[230:231]@1114
+  ### ORIG only:
+     1228 POP_JUMP_FORWARD_IF_FALSE  to 1330
+  ### DECOMP only:
+     1114 POP_JUMP_FORWARD_IF_FALSE  to 1214
+HUNK replace  orig[254:255]@1248 decomp[236:237]@1134
+  ### ORIG only:
+     1248 POP_JUMP_FORWARD_IF_FALSE  to 1326
+  ### DECOMP only:
+     1134 POP_JUMP_FORWARD_IF_FALSE  to 1212
+HUNK replace  orig[260:261]@1282 decomp[242:282]@1168
+  ### ORIG only:
+     1282 POP_JUMP_FORWARD_IF_FALSE  to 1326
+  ### DECOMP only:
+     1168 POP_JUMP_FORWARD_IF_FALSE  to 1212
+     1170 LOAD_FAST                  trades
+     1172 LOAD_METHOD                append
+     1194 LOAD_FAST                  item
+     1196 PRECALL                    
+     1200 CALL                       
+     1210 POP_TOP                    
+     1212 JUMP_BACKWARD              to 814
+     1214 LOAD_FAST                  strategy_type
+     1216 LOAD_CONST                 'strategy_active_deleted'
+     1218 COMPARE_OP                 ==
+     1224 POP_JUMP_FORWARD_IF_FALSE  to 1290
+     1226 LOAD_FAST                  item
+     1228 LOAD_CONST                 'status'
+     1230 BINARY_SUBSCR              
+     1240 LOAD_CONST                 ('0', '5')
+     1242 CONTAINS_OP                
+     1244 POP_JUMP_FORWARD_IF_FALSE  to 1288
+     1246 LOAD_FAST                  trades
+     1248 LOAD_METHOD                append
+     1270 LOAD_FAST                  item
+     1272 PRECALL                    
+     1276 CALL                       
+     1286 POP_TOP                    
+     1288 JUMP_BACKWARD              to 814
+     1290 LOAD_FAST                  item
+     1292 LOAD_CONST                 'status'
+     1294 BINARY_SUBSCR              
+     1304 LOAD_CONST                 ('0', '5')
+     1306 CONTAINS_OP                
+     1308 POP_JUMP_FORWARD_IF_FALSE  to 1402
+     1310 LOAD_FAST                  item
+     1312 LOAD_CONST                 'strategyType'
+     1314 BINARY_SUBSCR              
+     1324 LOAD_GLOBAL                NULL + str
+     1336 LOAD_FAST                  strategy_type
+     1338 PRECALL                    
+     1342 CALL                       
+     1352 COMPARE_OP                 ==
+     1358 POP_JUMP_FORWARD_IF_FALSE  to 1402
+HUNK replace  orig[272:314]@1340 decomp[293:294]@1416
+  ### ORIG only:
+     1340 POP_JUMP_FORWARD_IF_FALSE  to 1408
+     1342 LOAD_FAST                  item
+     1344 LOAD_CONST                 'status'
+     1346 BINARY_SUBSCR              
+     1356 LOAD_CONST                 ('0', '5')
+     1358 CONTAINS_OP                
+     1360 POP_JUMP_FORWARD_IF_FALSE  to 1404
+     1362 LOAD_FAST                  trades
+     1364 LOAD_METHOD                append
+     1386 LOAD_FAST                  item
+     1388 PRECALL                    
+     1392 CALL                       
+     1402 POP_TOP                    
+     1404 EXTENDED_ARG               
+     1406 JUMP_BACKWARD              to 814
+     1408 LOAD_FAST                  item
+     1410 LOAD_CONST                 'status'
+     1412 BINARY_SUBSCR              
+     1422 LOAD_CONST                 ('0', '5')
+     1424 CONTAINS_OP                
+     1426 POP_JUMP_FORWARD_IF_FALSE  to 1520
+     1428 LOAD_FAST                  item
+     1430 LOAD_CONST                 'strategyType'
+     1432 BINARY_SUBSCR              
+     1442 LOAD_GLOBAL                NULL + str
+     1454 LOAD_FAST                  strategy_type
+     1456 PRECALL                    
+     1460 CALL                       
+     1470 COMPARE_OP                 ==
+     1476 POP_JUMP_FORWARD_IF_FALSE  to 1520
+     1478 LOAD_FAST                  trades
+     1480 LOAD_METHOD                append
+     1502 LOAD_FAST                  item
+     1504 PRECALL                    
+     1508 CALL                       
+     1518 POP_TOP                    
+     1520 EXTENDED_ARG               
+     1522 JUMP_BACKWARD              to 814
+     1524 LOAD_FAST                  strategy_type
+     1526 LOAD_CONST                 'strategy_active_deleted'
+  ### DECOMP only:
+     1416 POP_JUMP_FORWARD_IF_FALSE  to 1616
+HUNK replace  orig[320:322]@1572 decomp[300:302]@1454
+  ### ORIG only:
+     1572 POP_JUMP_FORWARD_IF_FALSE  to 1734
+     1574 LOAD_CONST                 <code object <listcomp> at 0x0000029985D37630, file "./fly_docker_py311/IQCommon/util/trade_info_utils.py", line 238>
+  ### DECOMP only:
+     1454 POP_JUMP_FORWARD_IF_FALSE  to 1616
+     1456 LOAD_CONST                 <code object <listcomp> at 0x00000299865F4130, file "build_landed/IQCommon__util__trade_info_utilsOK.py", line 100>
+HUNK replace  orig[332:333]@1606 decomp[312:313]@1488
+  ### ORIG only:
+     1606 FOR_ITER                   to 1668
+  ### DECOMP only:
+     1488 FOR_ITER                   to 1550
+HUNK replace  orig[341:342]@1654 decomp[321:322]@1536
+  ### ORIG only:
+     1654 POP_JUMP_FORWARD_IF_FALSE  to 1666
+  ### DECOMP only:
+     1536 POP_JUMP_FORWARD_IF_FALSE  to 1548
+HUNK replace  orig[346:347]@1666 decomp[326:327]@1548
+  ### ORIG only:
+     1666 JUMP_BACKWARD              to 1606
+  ### DECOMP only:
+     1548 JUMP_BACKWARD              to 1488
+HUNK replace  orig[355:356]@1734 decomp[335:336]@1616
+  ### ORIG only:
+     1734 JUMP_FORWARD               to 1844
+  ### DECOMP only:
+     1616 JUMP_FORWARD               to 1726
+HUNK replace  orig[359:360]@1752 decomp[339:340]@1634
+  ### ORIG only:
+     1752 POP_JUMP_FORWARD_IF_FALSE  to 1836
+  ### DECOMP only:
+     1634 POP_JUMP_FORWARD_IF_FALSE  to 1718
+HUNK replace  orig[376:377]@1834 decomp[356:357]@1716
+  ### ORIG only:
+     1834 JUMP_FORWARD               to 1844
+  ### DECOMP only:
+     1716 JUMP_FORWARD               to 1726

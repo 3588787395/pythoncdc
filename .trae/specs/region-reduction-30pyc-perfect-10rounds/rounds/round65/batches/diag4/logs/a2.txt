@@ -1,0 +1,157 @@
+orig candidates=[[582]] decomp candidates=[[372]]
+orig=280 decomp=287  ratio=0.8078  opcodes=[('replace', 18, 19, 18, 20), ('replace', 46, 47, 47, 49), ('replace', 50, 51, 52, 54), ('replace', 53, 54, 56, 57), ('delete', 65, 100, 68, 68), ('replace', 101, 102, 69, 71), ('replace', 103, 104, 72, 73), ('replace', 153, 154, 122, 123), ('replace', 160, 161, 129, 130), ('replace', 174, 176, 143, 145), ('replace', 183, 184, 152, 153), ('replace', 224, 225, 193, 194), ('replace', 236, 237, 205, 206), ('replace', 248, 250, 217, 219), ('insert', 251, 251, 220, 258), ('replace', 255, 256, 262, 263)]
+HUNK replace  orig[18:19]@108 decomp[18:20]@108
+  ### ORIG only:
+      108 POP_JUMP_FORWARD_IF_FALSE  to 372
+  ### DECOMP only:
+      108 EXTENDED_ARG               
+      110 POP_JUMP_FORWARD_IF_FALSE  to 1118
+HUNK replace  orig[46:47]@268 decomp[47:49]@270
+  ### ORIG only:
+      268 POP_JUMP_FORWARD_IF_FALSE  to 358
+  ### DECOMP only:
+      270 EXTENDED_ARG               
+      272 POP_JUMP_FORWARD_IF_FALSE  to 1104
+HUNK replace  orig[50:51]@280 decomp[52:54]@284
+  ### ORIG only:
+      280 POP_JUMP_FORWARD_IF_FALSE  to 358
+  ### DECOMP only:
+      284 EXTENDED_ARG               
+      286 POP_JUMP_FORWARD_IF_FALSE  to 1104
+HUNK replace  orig[53:54]@304 decomp[56:57]@310
+  ### ORIG only:
+      304 LOAD_CONST                 <code object <listcomp> at 0x00000290475F95C0, file "./fly_docker_py311/IQData/plugins/plugin_system_realquote/real_quote.py", line 591>
+  ### DECOMP only:
+      310 LOAD_CONST                 <code object <listcomp> at 0x00000290475F94D0, file "build_landed/IQData__plugins__plugin_system_realquote__real_quoteOK.py", line 380>
+HUNK delete   orig[65:100]@356 decomp[68:68]@-
+  ### ORIG only:
+      356 JUMP_FORWARD               to 570
+      358 LOAD_GLOBAL                EMPTY_DAY_BAR_NP_ARRAY
+      370 RETURN_VALUE               
+      372 LOAD_GLOBAL                datetime
+      384 LOAD_ATTR                  datetime
+      394 LOAD_METHOD                now
+      416 PRECALL                    
+      420 CALL                       
+      430 LOAD_METHOD                strftime
+      452 LOAD_CONST                 '%Y%m%d'
+      454 PRECALL                    
+      458 CALL                       
+      468 STORE_FAST                 start_date
+      470 LOAD_FAST                  start_date
+      472 STORE_FAST                 end_date
+      474 LOAD_FAST                  self
+      476 LOAD_METHOD                get_kline_by_date_ndarray
+      498 LOAD_FAST                  symbol
+      500 LOAD_FAST                  start_date
+      502 LOAD_FAST                  end_date
+      504 LOAD_FAST                  frequency_int
+      506 PRECALL                    
+      510 CALL                       
+      520 STORE_FAST                 kline
+      522 LOAD_GLOBAL                NULL + len
+      534 LOAD_FAST                  kline
+      536 PRECALL                    
+      540 CALL                       
+      550 LOAD_CONST                 0
+      552 COMPARE_OP                 >
+      558 POP_JUMP_FORWARD_IF_FALSE  to 570
+      560 LOAD_CONST                 0
+      562 LOAD_FAST                  kline
+      564 LOAD_CONST                 'unlimited'
+      566 STORE_SUBSCR               
+HUNK replace  orig[101:102]@572 decomp[69:71]@364
+  ### ORIG only:
+      572 POP_JUMP_FORWARD_IF_NONE   to 578
+  ### DECOMP only:
+      364 EXTENDED_ARG               
+      366 POP_JUMP_FORWARD_IF_NONE   to 1104
+HUNK replace  orig[103:104]@576 decomp[72:73]@370
+  ### ORIG only:
+      576 POP_JUMP_FORWARD_IF_NOT_NONE to 582
+  ### DECOMP only:
+      370 POP_JUMP_FORWARD_IF_NOT_NONE to 376
+HUNK replace  orig[153:154]@872 decomp[122:123]@666
+  ### ORIG only:
+      872 FOR_ITER                   to 966
+  ### DECOMP only:
+      666 FOR_ITER                   to 760
+HUNK replace  orig[160:161]@906 decomp[129:130]@700
+  ### ORIG only:
+      906 FOR_ITER                   to 964
+  ### DECOMP only:
+      700 FOR_ITER                   to 758
+HUNK replace  orig[174:176]@962 decomp[143:145]@756
+  ### ORIG only:
+      962 JUMP_BACKWARD              to 906
+      964 JUMP_BACKWARD              to 872
+  ### DECOMP only:
+      756 JUMP_BACKWARD              to 700
+      758 JUMP_BACKWARD              to 666
+HUNK replace  orig[183:184]@988 decomp[152:153]@782
+  ### ORIG only:
+      988 POP_JUMP_FORWARD_IF_FALSE  to 994
+  ### DECOMP only:
+      782 POP_JUMP_FORWARD_IF_FALSE  to 788
+HUNK replace  orig[224:225]@1210 decomp[193:194]@1004
+  ### ORIG only:
+     1210 FOR_ITER                   to 1306
+  ### DECOMP only:
+     1004 FOR_ITER                   to 1100
+HUNK replace  orig[236:237]@1252 decomp[205:206]@1046
+  ### ORIG only:
+     1252 FOR_ITER                   to 1304
+  ### DECOMP only:
+     1046 FOR_ITER                   to 1098
+HUNK replace  orig[248:250]@1302 decomp[217:219]@1096
+  ### ORIG only:
+     1302 JUMP_BACKWARD              to 1252
+     1304 JUMP_BACKWARD              to 1210
+  ### DECOMP only:
+     1096 JUMP_BACKWARD              to 1046
+     1098 JUMP_BACKWARD              to 1004
+HUNK insert   orig[251:251]@- decomp[220:258]@1102
+  ### DECOMP only:
+     1102 RETURN_VALUE               
+     1104 LOAD_GLOBAL                EMPTY_DAY_BAR_NP_ARRAY
+     1116 RETURN_VALUE               
+     1118 LOAD_GLOBAL                datetime
+     1130 LOAD_ATTR                  datetime
+     1140 LOAD_METHOD                now
+     1162 PRECALL                    
+     1166 CALL                       
+     1176 LOAD_METHOD                strftime
+     1198 LOAD_CONST                 '%Y%m%d'
+     1200 PRECALL                    
+     1204 CALL                       
+     1214 STORE_FAST                 start_date
+     1216 LOAD_FAST                  start_date
+     1218 STORE_FAST                 end_date
+     1220 LOAD_FAST                  self
+     1222 LOAD_METHOD                get_kline_by_date_ndarray
+     1244 LOAD_FAST                  symbol
+     1246 LOAD_FAST                  start_date
+     1248 LOAD_FAST                  end_date
+     1250 LOAD_FAST                  frequency_int
+     1252 PRECALL                    
+     1256 CALL                       
+     1266 STORE_FAST                 kline
+     1268 LOAD_GLOBAL                NULL + len
+     1280 LOAD_FAST                  kline
+     1282 PRECALL                    
+     1286 CALL                       
+     1296 LOAD_CONST                 0
+     1298 COMPARE_OP                 >
+     1304 POP_JUMP_FORWARD_IF_FALSE  to 1320
+     1306 LOAD_CONST                 0
+     1308 LOAD_FAST                  kline
+     1310 LOAD_CONST                 'unlimited'
+     1312 STORE_SUBSCR               
+     1316 LOAD_CONST                 None
+     1318 RETURN_VALUE               
+     1320 LOAD_CONST                 None
+HUNK replace  orig[255:256]@1326 decomp[262:263]@1340
+  ### ORIG only:
+     1326 POP_JUMP_FORWARD_IF_FALSE  to 1426
+  ### DECOMP only:
+     1340 POP_JUMP_FORWARD_IF_FALSE  to 1440

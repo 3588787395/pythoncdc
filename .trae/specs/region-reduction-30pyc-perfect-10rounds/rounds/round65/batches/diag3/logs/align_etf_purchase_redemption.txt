@@ -1,0 +1,93 @@
+orig candidates=[[2250]] decomp candidates=[[1528]]
+orig=427 decomp=398  ratio=0.9358  opcodes=[('replace', 69, 70, 69, 70), ('replace', 309, 313, 309, 311), ('replace', 316, 317, 314, 315), ('replace', 318, 319, 316, 317), ('replace', 320, 328, 318, 320), ('delete', 329, 333, 321, 321), ('replace', 383, 387, 371, 372), ('delete', 388, 389, 373, 373), ('delete', 392, 393, 376, 376), ('replace', 394, 395, 377, 378), ('replace', 400, 401, 383, 384), ('replace', 402, 403, 385, 386), ('replace', 404, 410, 387, 388), ('delete', 411, 418, 389, 389)]
+HUNK replace  orig[69:70]@412 decomp[69:70]@412
+  ### ORIG only:
+      412 POP_JUMP_FORWARD_IF_FALSE  to 2468
+  ### DECOMP only:
+      412 POP_JUMP_FORWARD_IF_FALSE  to 2260
+HUNK replace  orig[309:313]@1854 decomp[309:311]@1854
+  ### ORIG only:
+     1854 POP_JUMP_FORWARD_IF_FALSE  to 1966
+     1856 LOAD_GLOBAL                NULL + strategy_log
+     1868 LOAD_ATTR                  error
+     1878 LOAD_CONST                 '后端服务 '
+  ### DECOMP only:
+     1854 POP_JUMP_FORWARD_IF_FALSE  to 1884
+     1856 LOAD_CONST                 'strategy_log后端服务 '
+HUNK replace  orig[316:317]@1890 decomp[314:315]@1868
+  ### ORIG only:
+     1890 POP_JUMP_FORWARD_IF_FALSE  to 1896
+  ### DECOMP only:
+     1868 POP_JUMP_FORWARD_IF_FALSE  to 1874
+HUNK replace  orig[318:319]@1894 decomp[316:317]@1872
+  ### ORIG only:
+     1894 JUMP_FORWARD               to 1898
+  ### DECOMP only:
+     1872 JUMP_FORWARD               to 1876
+HUNK replace  orig[320:328]@1898 decomp[318:320]@1876
+  ### ORIG only:
+     1898 FORMAT_VALUE               str
+     1900 LOAD_CONST                 '失败:'
+     1902 LOAD_FAST                  resen
+     1904 LOAD_METHOD                get
+     1926 LOAD_CONST                 'error_info'
+     1928 PRECALL                    
+     1932 CALL                       
+     1942 FORMAT_VALUE               str
+  ### DECOMP only:
+     1876 FORMAT_VALUE               
+     1878 LOAD_CONST                 '失败:error_info'
+HUNK delete   orig[329:333]@1946 decomp[321:321]@-
+  ### ORIG only:
+     1946 PRECALL                    
+     1950 CALL                       
+     1960 POP_TOP                    
+     1962 LOAD_CONST                 None
+HUNK replace  orig[383:387]@2274 decomp[371:372]@2192
+  ### ORIG only:
+     2274 LOAD_GLOBAL                NULL + strategy_log
+     2286 LOAD_ATTR                  info
+     2296 LOAD_GLOBAL                NULL + _
+     2308 LOAD_CONST                 '生成订单，订单号：'
+  ### DECOMP only:
+     2192 LOAD_CONST                 'resultlist_info00orderstrresultentrust_noselforderorderselfstrorderselforderselforderstrategy_log_生成订单，订单号：'
+HUNK delete   orig[388:389]@2312 decomp[373:373]@-
+  ### ORIG only:
+     2312 LOAD_ATTR                  order_id
+HUNK delete   orig[392:393]@2328 decomp[376:376]@-
+  ### ORIG only:
+     2328 LOAD_ATTR                  symbol
+HUNK replace  orig[394:395]@2340 decomp[377:378]@2204
+  ### ORIG only:
+     2340 LOAD_CONST                 ' 数量：'
+  ### DECOMP only:
+     2204 LOAD_CONST                 ' 数量：order'
+HUNK replace  orig[400:401]@2382 decomp[383:384]@2246
+  ### ORIG only:
+     2382 POP_JUMP_FORWARD_IF_FALSE  to 2388
+  ### DECOMP only:
+     2246 POP_JUMP_FORWARD_IF_FALSE  to 2252
+HUNK replace  orig[402:403]@2386 decomp[385:386]@2250
+  ### ORIG only:
+     2386 JUMP_FORWARD               to 2390
+  ### DECOMP only:
+     2250 JUMP_FORWARD               to 2254
+HUNK replace  orig[404:410]@2390 decomp[387:388]@2254
+  ### ORIG only:
+     2390 FORMAT_VALUE               str
+     2392 LOAD_GLOBAL                NULL + abs
+     2404 LOAD_FAST                  amount
+     2406 PRECALL                    
+     2410 CALL                       
+     2420 FORMAT_VALUE               str
+  ### DECOMP only:
+     2254 FORMAT_VALUE               
+HUNK delete   orig[411:418]@2424 decomp[389:389]@-
+  ### ORIG only:
+     2424 PRECALL                    
+     2428 CALL                       
+     2438 PRECALL                    
+     2442 CALL                       
+     2452 POP_TOP                    
+     2454 LOAD_FAST                  order
+     2456 LOAD_ATTR                  order_id

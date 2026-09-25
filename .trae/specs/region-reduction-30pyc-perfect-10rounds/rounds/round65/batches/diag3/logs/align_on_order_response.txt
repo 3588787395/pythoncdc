@@ -1,0 +1,78 @@
+orig candidates=[[1472]] decomp candidates=[[918]]
+orig=511 decomp=509  ratio=0.9529  opcodes=[('replace', 16, 17, 16, 17), ('replace', 390, 392, 390, 391), ('replace', 403, 404, 402, 403), ('replace', 425, 426, 424, 425), ('replace', 429, 430, 428, 429), ('replace', 434, 435, 433, 434), ('insert', 439, 439, 438, 453), ('replace', 442, 443, 456, 457), ('replace', 466, 467, 480, 481), ('delete', 483, 499, 497, 497)]
+HUNK replace  orig[16:17]@102 decomp[16:17]@102
+  ### ORIG only:
+      102 POP_JUMP_FORWARD_IF_FALSE  to 2786
+  ### DECOMP only:
+      102 POP_JUMP_FORWARD_IF_FALSE  to 2782
+HUNK replace  orig[390:392]@2148 decomp[390:391]@2148
+  ### ORIG only:
+     2148 EXTENDED_ARG               
+     2150 POP_JUMP_FORWARD_IF_TRUE   to 2742
+  ### DECOMP only:
+     2148 POP_JUMP_FORWARD_IF_TRUE   to 2472
+HUNK replace  orig[403:404]@2218 decomp[402:403]@2216
+  ### ORIG only:
+     2218 POP_JUMP_FORWARD_IF_FALSE  to 2644
+  ### DECOMP only:
+     2216 POP_JUMP_FORWARD_IF_FALSE  to 2374
+HUNK replace  orig[425:426]@2338 decomp[424:425]@2336
+  ### ORIG only:
+     2338 JUMP_FORWARD               to 2376
+  ### DECOMP only:
+     2336 JUMP_FORWARD               to 2472
+HUNK replace  orig[429:430]@2356 decomp[428:429]@2354
+  ### ORIG only:
+     2356 POP_JUMP_FORWARD_IF_FALSE  to 2368
+  ### DECOMP only:
+     2354 POP_JUMP_FORWARD_IF_FALSE  to 2366
+HUNK replace  orig[434:435]@2366 decomp[433:434]@2364
+  ### ORIG only:
+     2366 JUMP_FORWARD               to 2376
+  ### DECOMP only:
+     2364 JUMP_FORWARD               to 2472
+HUNK insert   orig[439:439]@- decomp[438:453]@2374
+  ### DECOMP only:
+     2374 LOAD_GLOBAL                NULL + system_log
+     2386 LOAD_ATTR                  debug
+     2396 LOAD_CONST                 '后端服务，宿主机配置为策略不接收非本交易触发的主推%s'
+     2398 LOAD_FAST                  entrust_no
+     2400 BINARY_OP                  %
+     2404 PRECALL                    
+     2408 CALL                       
+     2418 POP_TOP                    
+     2420 LOAD_FAST                  self
+     2422 LOAD_ATTR                  on_order_response_list
+     2432 LOAD_METHOD                append
+     2454 LOAD_FAST                  event
+     2456 PRECALL                    
+     2460 CALL                       
+     2470 POP_TOP                    
+HUNK replace  orig[442:443]@2386 decomp[456:457]@2482
+  ### ORIG only:
+     2386 POP_JUMP_FORWARD_IF_FALSE  to 2550
+  ### DECOMP only:
+     2482 POP_JUMP_FORWARD_IF_FALSE  to 2646
+HUNK replace  orig[466:467]@2548 decomp[480:481]@2644
+  ### ORIG only:
+     2548 JUMP_FORWARD               to 2742
+  ### DECOMP only:
+     2644 JUMP_FORWARD               to 2738
+HUNK delete   orig[483:499]@2642 decomp[497:497]@-
+  ### ORIG only:
+     2642 JUMP_FORWARD               to 2742
+     2644 LOAD_GLOBAL                NULL + system_log
+     2656 LOAD_ATTR                  debug
+     2666 LOAD_CONST                 '后端服务，宿主机配置为策略不接收非本交易触发的主推%s'
+     2668 LOAD_FAST                  entrust_no
+     2670 BINARY_OP                  %
+     2674 PRECALL                    
+     2678 CALL                       
+     2688 POP_TOP                    
+     2690 LOAD_FAST                  self
+     2692 LOAD_ATTR                  on_order_response_list
+     2702 LOAD_METHOD                append
+     2724 LOAD_FAST                  event
+     2726 PRECALL                    
+     2730 CALL                       
+     2740 POP_TOP                    

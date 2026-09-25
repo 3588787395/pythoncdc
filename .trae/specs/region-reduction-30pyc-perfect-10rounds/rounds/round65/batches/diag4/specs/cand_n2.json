@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "                    _r64_cj = (self.cfg.get_block_by_offset(last.argval)\n                               if getattr(last, 'argval', None) is not None\n                               else None)\n                    if (_r64_closed and _r64_cj is not _r64_T\n                            and ft_succ is not _r64_T):\n                        chain.pop()\n                        break\n",
+   "repl": "                    _r64_cj = (self.cfg.get_block_by_offset(last.argval)\n                               if getattr(last, 'argval', None) is not None\n                               else None)\n                    # [R65-diag4 n2 run-head-exemption] literal hand-off reading: the\n                    # popped block is the run head itself -> the run has only one\n                    # operand left, so the pop destroys the run instead of closing it.\n                    if (_r64_closed and _r64_cj is not _r64_T\n                            and ft_succ is not _r64_T\n                            and current is not chain[0][0]\n                            and len(chain) > 3):\n                        chain.pop()\n                        break\n"
+  }
+ ]
+}

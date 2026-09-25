@@ -11581,7 +11581,45 @@ AST 映射规则:
                     if self._boolop_merge_owner_for(
                             region, include_generating=True,
                             include_generated=True) is None:
-                        return []
+                        # [R65-D5-A] 双生 common_func::get_kline_time_by_section 的
+                        # `if datetime_list_section[-1] in datetime_list:` 整条语句被吞
+                        # （两支 .pyc 元组逐字相同 orig=210 decomp=190 jumpdiff=0 true=84）。
+                        # 机制：IfRegion@530 的 merge_block 恰是其**后继兄弟** IfRegion@618
+                        # 的 entry；@530 发射时把汇合块登记进 generated_blocks，@618 便在
+                        # 「entry 已生成」判据（L11528）上被误判成「本区域已发射」，落到
+                        # L11584 return []，整条 if 连同 then 块 638 一起消失。
+                        # 识别条件（三条同层次结构事实，只看本区域与前驱区域的
+                        # entry / merge_block / then_blocks / block_to_region 身份）：
+                        #   (a) block_to_region[region.entry] is region —— 原则 2「每块
+                        #       唯一归属」：entry 块的归属区域就是本区域本身，没有任何
+                        #       BoolOp/Ternary 子区域认领它（IfRegion@530 的 entry 归
+                        #       BoolOpRegion@530，所以它重入时不会误触发）；
+                        #   (b) 本区域仍有未发射的臂块：then_blocks/else_blocks 里存在不在
+                        #       generated_blocks 的块（@618 的 then 块 638 未发射）—— 若整条
+                        #       if 真已被某处发射，其臂块必然已被同时认领；
+                        #   (c) 这个 generated 标记只可能是**前驱区域的汇合点记账**：存在
+                        #       另一区域 pr 使 pr.merge_block is region.entry 且
+                        #       pr.entry is not region.entry。汇合块只记录「控制流跳到此」，
+                        #       pr 并不负责发射此块的指令（原则 4：父/兄弟只引用子入口）。
+                        # 归约方式：三条同时成立 ⇒ 撤销「entry 已生成 ⇒ 本区域已发射」这一
+                        #   推断，不 return []，继续走 _detect_if_region_as_while_loop 与
+                        #   _if_generate_normal，由本区域自行认领 entry 并重建条件。
+                        # AST 映射：ast.If(test=由 entry 块尾 POP_JUMP_IF_FALSE 重建的
+                        #   Compare(..., In, ...)，body=then_blocks 语句，orelse 空)，即复原
+                        #   `if x[-1] in lst: lst.append(x[-1])`。
+                        # 成对要求：本编辑只找回被吞的 if 语句；同一函数里另一条丢失语句
+                        #   （and 链首块 entry 的前缀赋值）由同文件 [R65-D5-B] 找回，
+                        #   缺一支该函数都过不了字节码门禁。
+                        _r65d5a_merge_entry_sibling = (
+                            self.region_analyzer.block_to_region.get(region.entry) is region
+                            and any(_b not in self.generated_blocks
+                                    for _b in (list(region.then_blocks or [])
+                                               + list(region.else_blocks or [])))
+                            and any(_pr is not region and _pr.entry is not region.entry
+                                    and getattr(_pr, 'merge_block', None) is region.entry
+                                    for _pr in self.regions))
+                        if not _r65d5a_merge_entry_sibling:
+                            return []
         for r in self.regions:
             if r is not region and isinstance(r, IfRegion) and hasattr(r, 'elif_conditions') and r.elif_conditions:
                 if region.entry in r.elif_conditions:
@@ -17345,6 +17383,56 @@ AST 映射规则:
         # 覆盖，仅依赖 generated_blocks 标记判断是否需要提取。
         if (region.entry is not None and region.entry is not cond_block):
             _should_extract_entry = (region.entry not in self.generated_blocks)
+            if not _should_extract_entry:
+                # [R65-D5-B] 双生 common_func::get_kline_time_by_section 的
+                # `datetime_list = datetime_list[offset:]` 丢失（两支 .pyc 元组逐字相同：
+                # orig=210 decomp=190 jumpdiff=0 true=84；单加本编辑→197/true=63）。
+                # 机制：`if datetime_list and int(frequency[:-1]) >= 5:` 的分析端形态是
+                #   IfRegion@530(condition_block=558, inline_boolop_chains=[[530,558],'and'],
+                #   block_to_region[530] is 本 IfRegion) + 直接子 BoolOpRegion@530
+                #   (blocks=[530,558], value_target=None, op_chain=[530,558])。
+                #   generate() 的 L745「and 链首块 == entry」passthrough 分支据此**故意**
+                #   不在入口处理里发射 entry 前缀语句、也不登记 _entry_prefix_emitted_blocks，
+                #   把发射权显式让给本方法的 entry != cond_block 分支；但 BoolOpRegion 是
+                #   条件上下文模式（_generate_boolop_impl 只写 condition_expr、不产出语句、
+                #   return None），却把链成员块 530 登记进了 generated_blocks。于是
+                #   L17347 判 entry 已 generated ⇒ 跳过前缀提取 ⇒ 落在块 530 里的那条完整
+                #   赋值语句既不属于 BoolOp 操作数、也没人发射，整条消失。
+                # 识别条件（四条同层次父子结构事实，均为区域归约算法内部身份，不含
+                #   函数名/文件名/偏移阈值/字面量计数）：
+                #   (a) region.entry is not cond_block —— 链首块不是主条件块（外层 if 已给）；
+                #   (b) block_to_region[region.entry] is region —— 原则 2「每块唯一归属」：
+                #       entry 块的分析端归属就是本 IfRegion（scheduler::run_weekly 的块 0
+                #       归属是普通 Region@0，故该处不触发，不会重复发射）；
+                #   (c) region 有**直接子** BoolOpRegion c 使 c.entry is region.entry、
+                #       not c.value_target（条件上下文模式，c 不产出任何语句）、且
+                #       region.entry 出现在 c.op_chain 成员里 —— 精确刻画「generated 标记
+                #       只来自 c 的操作数认领」这一 provenance；
+                #   (d) region.entry not in self._entry_prefix_emitted_blocks —— 前缀语句
+                #       **尚未**被 generate() 的任何入口通道发射过（该集合就是本文件既有的
+                #       provenance 记账，L766/996/1102，并被 L6010/29383 以同样用途引用）。
+                # 归约方式：四条同时成立 ⇒ 撤销该 generated 标记对前缀提取的封锁，照常调用
+                #   _if_extract_cond_instructions(region.entry, region)。该方法已有的
+                #   「cond_block 是 TernaryRegion.merge_block 时跳过首个 STORE_*」规则负责
+                #   排除块首属于三元汇合的 STORE_FAST offset，故不会重复发射 `offset = ...`；
+                #   条件操作数本身仍由下方 _if_extract_condition_from_instructions /
+                #   _discover_predicate_and_chain 负责，前缀提取不触碰。
+                # AST 映射：pre_stmts = [ast.Assign(targets=[Name datetime_list],
+                #   value=Subscript(Name datetime_list, Slice(None, None, Name offset)))]，
+                #   置于 If(test=BoolOp(and,[Name datetime_list, Compare(...)])) 之前。
+                # 成对要求：本编辑只找回链首块的前缀赋值；同函数另一条丢失语句（汇合块
+                #   即兄弟入口的整条 if）由同文件 [R65-D5-A] 找回，缺一支过不了门禁。
+                _r65d5b_deferred_head = (
+                    self.region_analyzer.block_to_region.get(region.entry) is region
+                    and region.entry not in self._entry_prefix_emitted_blocks
+                    and any(isinstance(_r65d5b_c, BoolOpRegion)
+                            and _r65d5b_c.entry is region.entry
+                            and not getattr(_r65d5b_c, 'value_target', None)
+                            and any(_r65d5b_b is region.entry
+                                    for _r65d5b_b, _r65d5b_op in (_r65d5b_c.op_chain or []))
+                            for _r65d5b_c in (getattr(region, 'children', None) or [])))
+                if _r65d5b_deferred_head:
+                    _should_extract_entry = True
             if _should_extract_entry:
                 _entry_pre_stmts, _ = self._if_extract_cond_instructions(region.entry, region)
                 if _entry_pre_stmts:
@@ -26391,6 +26479,80 @@ AST 映射规则:
                 if _pt_stmts:
                     _post_try_stmts_r19n2.extend(_pt_stmts)
                 self.generated_blocks.add(_ptb)
+
+            # [R65-diag1-A try-body-tail-return-none]
+            # 识别条件（同层次结构身份，全部取自本层可见的区域字段与块角色）：
+            #   (1) region 为 TryExceptRegion，其 try_offset_end 与
+            #       handler_entry_blocks 都来自异常表保护跨度，且
+            #       try_offset_end < min(handler_entry_blocks) —— 保护跨度在
+            #       try 体末尾就结束了，handler 仍在它之后；
+            #   (2) 同层存在一个 BASIC 兄弟区域 R：type(R) is Region、
+            #       region_type is RegionType.BASIC、单块 B、
+            #       B.start_offset == try_offset_end、
+            #       R.has_trailing_return_none 为真、B 无任何后继块、
+            #       R.parent is region.parent；
+            #   (3) 该 try 无 finalbody（带 finally 时体尾 return 必须走
+            #       finally 清理，不属于本形态）。
+            # 机制：CPython 把 try 体最后一条语句发射在保护跨度之外，于是
+            #   `try: ... / return None / except: ...` 里的 return None 落在
+            #   offset == try_offset_end 的独立终止块中。它是 try 体的末条
+            #   语句，而不是 try/except 语句之后的兄弟代码；把它留在兄弟序列
+            #   里发射会重排 try 体末语句与 handler 的先后（IQCommon.graph
+            #   ._process_task_queue 的 566 / 1114 两处，同长度 jumpdiff=1）。
+            # 归约方式：把 R 的语句并入 region 这个抽象节点的 ast.Try.body
+            #   末尾，并按原则 2（每块唯一归属）把 B 标记为已生成，父层兄弟
+            #   序列随后自然不再发射它。区域边界与父子关系不变，不引入跨层
+            #   或按名字/偏移阈值的启发式。
+            # AST 映射：R → ast.Return(value=Constant(None))，位置从
+            #   TryExceptRegion 的兄弟语句槽移到 ast.Try.body 的末条语句。
+            _r65_tail_off = getattr(region, 'try_offset_end', None)
+            _r65_hdl_offs = [b.start_offset for b in
+                             (getattr(region, 'handler_entry_blocks', None) or [])
+                             if b is not None]
+            if (isinstance(try_ast, dict) and try_ast.get('type') == 'Try'
+                    and not try_ast.get('finalbody')
+                    and _r65_tail_off is not None and _r65_hdl_offs
+                    and _r65_tail_off < min(_r65_hdl_offs)):
+                for _r65_r in self.region_analyzer.regions:
+                    if _r65_r is region or type(_r65_r) is not Region:
+                        continue
+                    if getattr(_r65_r, 'region_type', None) is not RegionType.BASIC:
+                        continue
+                    if not getattr(_r65_r, 'has_trailing_return_none', False):
+                        continue
+                    if getattr(_r65_r, 'parent', None) is not getattr(region, 'parent', None):
+                        continue
+                    _r65_bs = sorted(_r65_r.blocks, key=lambda b: b.start_offset)
+                    if len(_r65_bs) != 1:
+                        continue
+                    _r65_b = _r65_bs[0]
+                    if _r65_b.start_offset != _r65_tail_off or _r65_b.successors:
+                        continue
+                    if _r65_b in self.generated_blocks:
+                        continue
+                    _r65_stmts = self._generate_block_statements(_r65_b)
+                    if not _r65_stmts:
+                        continue
+                    _r65_ok = True
+                    for _r65_s in _r65_stmts:
+                        if not isinstance(_r65_s, dict) or _r65_s.get('type') != 'Return':
+                            _r65_ok = False
+                            break
+                        _r65_v = _r65_s.get('value')
+                        if _r65_v is None:
+                            continue
+                        if (isinstance(_r65_v, dict) and _r65_v.get('type') == 'Constant'
+                                and _r65_v.get('value') is None):
+                            continue
+                        _r65_ok = False
+                        break
+                    if not _r65_ok:
+                        continue
+                    try_ast['body'] = list(try_ast.get('body') or []) + _r65_stmts
+                    self.generated_blocks.add(_r65_b)
+                    self.generated_offsets.add(_r65_b.start_offset)
+                    self._generated_regions.add(id(_r65_r))
+                    break
 
             if _post_try_stmts_r19n2:
                 if isinstance(try_ast, list):
@@ -35944,9 +36106,45 @@ AST 映射规则:
                         cond_val_start = _ci_idx
                         break
                 # 提取f-string前缀部分并重建为JoinedStr values
+                # [R65-d3 C1a] 前缀里的「跨块待定被调对象」压栈链剔除。
+                # 识别条件: 本区域 cond_block 的前缀（栈效应切出的 cond_val_start
+                #   之前）以一段本地未消费的 callee 链开头 ——
+                #   [PUSH_NULL]? LOAD_{GLOBAL,NAME,FAST,DEREF} (LOAD_ATTR|LOAD_METHOD)*
+                #   且其后继（若存在）只会压新值（PUSH_NULL/LOAD_*/BUILD_*），即该链
+                #   不在本块内被 FORMAT_VALUE/CALL/STORE_*/BINARY_*/COMPARE_OP 消费；
+                #   并要求 _ternary_pending_callee(cond_block) 认得同一条链（与既有
+                #   [R63 Fix2]「被调对象由区域入口压栈、在区域出口消费」同一判据）。
+                # 归约方式: 该链归外层 Call.func，不作为 JoinedStr 的片段；前缀扫描
+                #   从链之后开始，其余指令的处理与改前逐字节相同。
+                # AST 映射: Call(func=<Attribute/Name 节点>, args=[JoinedStr]) 的
+                #   func 槽位；JoinedStr.values 不再混入 callee 名渲染出的假字面量。
+                _r65_callee_skip = 0
+                if cond_val_start is not None and cond_val_start > 0:
+                    _r65_pre = cond_block_instrs[:cond_val_start]
+                    _r65_k = (1 if (_r65_pre
+                                    and _r65_pre[0].opname == 'PUSH_NULL') else 0)
+                    if (_r65_k < len(_r65_pre)
+                            and _r65_pre[_r65_k].opname in (
+                                'LOAD_GLOBAL', 'LOAD_NAME', 'LOAD_FAST',
+                                'LOAD_DEREF')):
+                        _r65_e = _r65_k + 1
+                        while (_r65_e < len(_r65_pre)
+                               and _r65_pre[_r65_e].opname in (
+                                   'LOAD_ATTR', 'LOAD_METHOD')):
+                            _r65_e += 1
+                        _r65_nxt = (_r65_pre[_r65_e]
+                                    if _r65_e < len(_r65_pre) else None)
+                        _r65_pushy = (_r65_nxt is None
+                                      or _r65_nxt.opname == 'PUSH_NULL'
+                                      or _r65_nxt.opname.startswith('LOAD_')
+                                      or _r65_nxt.opname.startswith('BUILD_'))
+                        if (_r65_pushy and self._ternary_pending_callee(
+                                cond_block) is not None):
+                            _r65_callee_skip = _r65_e
                 fstring_parts = []
                 if cond_val_start is not None and cond_val_start > 0:
-                    _prefix_instrs = cond_block_instrs[:cond_val_start]
+                    _prefix_instrs = cond_block_instrs[
+                        _r65_callee_skip:cond_val_start]
                     _stack = []
                     for pi in _prefix_instrs:
                         if pi.opname.startswith('LOAD_'):
@@ -35980,15 +36178,63 @@ AST 映射规则:
                             _stack.append({'type': 'Constant', 'value': pi.argval})
                     fstring_parts = _stack
                 # ternary是最后一个FormattedValue（merge_block的FORMAT_VALUE格式化它）
-                fstring_parts.append({
+                _r65_chain_part = {
                     'type': 'FormattedValue',
                     'value': ternary_expr,
                     'conversion': 0,
                     'format_spec': None,
-                })
+                }
+                fstring_parts.append(_r65_chain_part)
+                _mb_instrs = []
                 if region.merge_block:
                     _mb_instrs = [i for i in region.merge_block.instructions
-                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                      'PUSH_NULL')]
+                # [R65-d3 C1b] 链尾自包含插值段归约 + conversion 回填：把既有
+                # [R63 Fix1]/[R64-B2] 两条判据接到独立（非链式）f-string 分支。
+                # 识别条件: 以 FORMAT_VALUE 为界把 merge_block 切成若干段；第一个
+                #   FORMAT_VALUE 格式化的是本区域链上三元的结果，其段必须为空；其后
+                #   每个 FORMAT_VALUE 之前的段必须能被 _fstring_parts_from_segment
+                #   单趟栈模拟解释（段底全为字面量 Constant、段顶即被格式化操作数）。
+                #   判据与 _try_build_ternary_chained_container 的链尾分支完全同源，
+                #   无偏移阈值、无函数名、无字面量计数。
+                # 归约方式: 逐段自底向上归约为 Constant / FormattedValue；链上三元
+                #   与尾部插值的 conversion 一律取「消费它的那条 FORMAT_VALUE 自带的
+                #   操作数低 2 位」(_r64b1_fv_conversion)。任一段解释不了即整体退回
+                #   既有「首个 FORMAT_VALUE 之后逐条收 LOAD_CONST」扫描，不新增逃逸口。
+                # AST 映射: JoinedStr.values 尾部由 {expr!s} 形式的 FormattedValue
+                #   组成，不再把插值里的 LOAD_CONST 当成字面量、也不再截断尾段。
+                _r65_tail_parts = []
+                _r65_seg = []
+                _r65_fv = 0
+                _r65_tail_ok = True
+                _r65_chain_conv = None
+                for _mi in _mb_instrs:
+                    if _mi.opname == 'BUILD_STRING':
+                        break
+                    if _mi.opname != 'FORMAT_VALUE':
+                        _r65_seg.append(_mi)
+                        continue
+                    if _r65_fv == 0:
+                        if _r65_seg:
+                            _r65_tail_ok = False
+                            break
+                        _r65_chain_conv = self._r64b1_fv_conversion(_mi)
+                    else:
+                        _r65_parsed = self._fstring_parts_from_segment(
+                            _r65_seg, _mi)
+                        if _r65_parsed is None:
+                            _r65_tail_ok = False
+                            break
+                        _r65_tail_parts.extend(_r65_parsed)
+                    _r65_seg = []
+                    _r65_fv += 1
+                if _r65_seg:
+                    _r65_tail_ok = False
+                if _r65_tail_ok:
+                    _r65_chain_part['conversion'] = _r65_chain_conv or 0
+                    fstring_parts.extend(_r65_tail_parts)
+                elif region.merge_block:
                     _after_fv = False
                     for _mi in _mb_instrs:
                         if _mi.opname == 'FORMAT_VALUE':
@@ -36005,6 +36251,20 @@ AST 映射规则:
                     'type': 'JoinedStr',
                     'values': fstring_parts,
                 }
+                # [R65-d3 C1c] f-string 是跨块待定调用的实参时整体归约为语句调用，
+                # 判据与 AST 映射见 _try_wrap_fstring_pending_call（[R63 Fix2]）。
+                # 既有链式路径已在其出口调用它，独立路径此前漏调，导致
+                # `x.y(f"...{ternary}...")` 被降级成 `return f"..."` 并丢失后续语句。
+                _r65_stmt = self._try_wrap_fstring_pending_call(
+                    region, region.merge_block, joined_str)
+                if _r65_stmt is not None:
+                    results.append(_r65_stmt)
+                    _r65_post = getattr(region, 'post_consumer_extra_stmts', None)
+                    if _r65_post:
+                        results.extend(_r65_post)
+                    for block in region.blocks:
+                        self.generated_blocks.add(block)
+                    return results
                 # 检查merge_block是否有RETURN_VALUE
                 has_return = False
                 if region.merge_block:

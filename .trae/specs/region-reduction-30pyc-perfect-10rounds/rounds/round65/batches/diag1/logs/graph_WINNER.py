@@ -1,0 +1,464 @@
+# Source Generated with Decompyle++ (Python version)
+# File: graph.pyc (Python 3.11)
+
+import abc
+import six
+import copy
+import traceback
+import networkx as nx
+from functools import reduce
+from collections import OrderedDict
+from IQCommon.exception import get_traceback_message
+from IQCommon.logger import system_log
+def create_task_id():
+    """
+    :return:
+    """
+    from datetime import datetime
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')
+    return timestamp
+class ModelRelation(object):
+    __doc__ = """
+
+    """
+    def __init__(self, node_name, p_node_name, task_id):
+        """
+
+        :param node_name:
+        :param p_node_name:
+        :param task_id:
+        """
+        self._node_name = node_name
+        self._p_node_name = p_node_name
+        self._task_id = task_id
+        self._factor_status = None
+    @property
+    def node_name(self):
+        """
+
+        :return:
+        """
+        return self._node_name
+    @property
+    def p_node_name(self):
+        """
+
+        :return:
+        """
+        return self._p_node_name
+    @property
+    def task_id(self):
+        """
+
+        :return:
+        """
+        return self._task_id
+    @property
+    def factor_status(self):
+        """
+
+        :return:
+        """
+        return self._factor_status
+    def upd_factor_status(self, status):
+        """
+
+        :param key:
+        :param value:
+        :return:
+        """
+        self._factor_status = status
+class ABCGraph(six.with_metaclass(abc.ABCMeta)):
+    __doc__ = """
+
+    """
+    @abc.abstractmethod
+    def create_graph(self, *args, **kwargs):
+        raise NotImplementedError
+class ModelGraph(ABCGraph):
+    __doc__ = """
+
+    """
+    def __init__(self):
+        """
+
+        """
+        self._graph = nx.DiGraph()
+        self._relation = {}
+    def create_graph(self, *args, **kwargs):
+        """
+
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        return_dict = {'error_no': 0, 'error_info': ''}
+        try:
+            node_list = kwargs['node_list']
+            _edges = []
+            for _info in node_list:
+                if len(_info.p_node_name) != 0:
+                    _key = (f'{_info.p_company_id!s}_{_info.p_node_name!s}', f'{_info.company_id!s}_{_info.node_name!s}')
+                    _edges.append(_key)
+                relation_key = f'{_info.company_id!s}_{_info.node_name!s}'
+                try:
+                    relation_value = self._relation[relation_key]
+                    relation_value.append(_info)
+                    self._relation[relation_key] = relation_value
+                except KeyError:
+                    system_log.error('异常信息: %s' % get_traceback_message())
+                    self._relation[relation_key] = [_info]
+            self._graph.add_edges_from(_edges)
+            return return_dict
+        except BaseException:
+            return_dict['error_no'] = -1
+            error_info = get_traceback_message()
+            return_dict['error_info'] = error_info
+            system_log.error('异常信息为：%s ' % error_info)
+            return return_dict
+    def create_full_graph(self, *args, **kwargs):
+        """
+
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        return_dict = {'error_no': 0, 'error_info': ''}
+        try:
+            node_list = kwargs['node_list']
+            _nodes = []
+            _edges = []
+            for _info in node_list:
+                if len(_info.p_node_name) != 0:
+                    _key = (f'{_info.p_company_id!s}_{_info.p_node_name!s}', f'{_info.company_id!s}_{_info.node_name!s}')
+                    _edges.append(_key)
+                else:
+                    _key = f'{_info.company_id!s}_{_info.node_name!s}'
+                    _nodes.append(_key)
+                relation_key = f'{_info.company_id!s}_{_info.node_name!s}'
+                try:
+                    relation_value = self._relation[relation_key]
+                    relation_value.append(_info)
+                    self._relation[relation_key] = relation_value
+                except KeyError:
+                    system_log.error('异常信息: %s' % get_traceback_message())
+                    self._relation[relation_key] = [_info]
+            self._graph.add_nodes_from(_nodes)
+            self._graph.add_edges_from(_edges)
+            return return_dict
+        except BaseException:
+            return_dict['error_no'] = -1
+            error_info = get_traceback_message()
+            return_dict['error_info'] = error_info
+            system_log.error('异常信息为：%s ' % error_info)
+            return return_dict
+    def append_graph(self, edges):
+        """
+
+        :param edges:
+        :return:
+        """
+        self._graph.add_edges_from(edges)
+    def get_graph(self):
+        """
+
+        :return:
+        """
+        return self._graph
+    def get_graph_relation(self):
+        """
+        获取新增/删除节点后的有向图连通关系
+        :return:
+        """
+        return_dict = {'error_no': 0, 'error_info': '', 'data': {}}
+        try:
+            tmp_del_task = self._refine_graph_relation()
+            error_return, add_task, upd_task, del_task = self._get_influence_task()
+            if error_return['error_no'] != 0:
+                return_dict['error_no'] = error_return['error_no']
+                return_dict['error_info'] = error_return['error_info']
+                return return_dict
+            del_task.update(tmp_del_task)
+            return_dict['data']['add'] = add_task
+            return_dict['data']['upd'] = upd_task
+            return_dict['data']['del'] = del_task
+            return return_dict
+        except BaseException:
+            return_dict['error_no'] = -1
+            error_info = get_traceback_message()
+            return_dict['error_info'] = error_info
+            system_log.error('异常信息为：%s ' % error_info)
+            return return_dict
+    def _get_graph_task_id(self, graph):
+        """
+        获取同一连通子图中对应的task_id
+        :param graph:
+        :return:
+        """
+        task_id_list = []
+        for _node in graph.nodes:
+            model_relations = self._relation[_node]
+            for _relation in model_relations:
+                if len(_relation.task_id) > 0:
+                    task_id_list.append(_relation.task_id)
+        return list(set(task_id_list))
+    def _get_predecessor_task_id(self, graph, node):
+        """
+        获取父节点task_id
+        :param graph
+        :param node:
+        :return:
+        """
+        predecessors = list(graph.predecessors(node))
+        if len(predecessors) > 0:
+            p_task_id = self._relation[predecessors[0]][0].task_id
+        else:
+            p_task_id = self._relation[node][0].task_id
+        return p_task_id
+    def _update_relation_task_id(self, node, task_id):
+        """
+        更新指定关系中对应的task_id
+        :param node:
+        :param task_id:
+        :return:
+        """
+        for _relation in self._relation[node]:
+            _relation.task_id = task_id
+    def _refine_graph_relation(self):
+        """
+
+        :return:
+        """
+        del_task = {}
+        for _key, relations in self._relation.items():
+            if len(relations) > 0 and relations[0].factor_status == 3:
+                del_task[relations[0].task_id] = {}
+                connected_nodes = nx.node_connected_component(self._graph.to_undirected(), _key)
+                for _cn in connected_nodes:
+                    for _ra in self._relation[_cn]:
+                        _ra.task_id = ''
+                self._graph.remove_node(_key)
+        return del_task
+    def _get_topological_sort(self, graph):
+        """
+
+        :param graph:
+        :return:
+        """
+        error_dict = {'error_no': 0, 'error_info': ''}
+        try:
+            sorted_data = ';'.join(self._topological_sort(graph))
+            result = [_d.split(',') for _d in sorted_data.split(';')]
+            return (error_dict, result)
+            return None
+        except BaseException:
+            error_dict['error_no'] = -1
+            error_info = get_traceback_message()
+            error_dict['error_info'] = error_info
+            system_log.error('异常信息为：%s ' % error_info)
+            return (error_dict, None)
+    def _topological_sort(self, graph):
+        """
+        拓扑排序获取任务执行优先级
+        :param graph:
+        :return: list of list
+        """
+        sort_data = {}
+        for _node in graph.nodes:
+            sort_data[_node] = set(graph.predecessors(_node))
+        for k, v in sort_data.items():
+            v.discard(k)
+        extra_items_in_deps = reduce(set.union, sort_data.values()) - set(sort_data.keys())
+        sort_data.update({item: set() for item in extra_items_in_deps})
+        while True:
+            ordered = set((item for item, dep in sort_data.items() if not dep))
+            if not ordered:
+                break
+            yield ','.join(sorted(ordered))
+            sort_data = {item: dep - ordered for item, dep in sort_data.items() if item not in ordered}
+    def _get_influence_task(self):
+        """
+        获取连通图变化影响task信息
+        :return:
+        """
+        error_dict = {'error_no': 0, 'error_info': ''}
+        add_task = {}
+        upd_task = {}
+        del_task = {}
+        try:
+            for _con in nx.connected_components(self._graph.to_undirected()):
+                subgraph = self._graph.subgraph(list(_con))
+                task_id_list = self._get_graph_task_id(subgraph)
+                if len(task_id_list) == 0:
+                    task_id = create_task_id()
+                    graph_action = 0
+                elif len(task_id_list) > 1:
+                    task_id = create_task_id()
+                    graph_action = 2
+                else:
+                    task_id = task_id_list[0]
+                    graph_action = 1
+                error_return, data_return = self._get_topological_sort(subgraph)
+                if error_return['error_no'] != 0 or data_return is None:
+                    error_dict['error_no'] = error_return['error_no']
+                    error_dict['error_info'] = error_return['error_info']
+                    return (error_dict, None, None, None)
+                level_length = len(data_return)
+                for _level in reversed(range(level_length)):
+                    for _node in data_return[_level]:
+                        error_return = self._get_task_relation(subgraph, data_return, _level, _node, task_id, add_task, upd_task, del_task, graph_action)
+                        if error_return['error_no'] != 0:
+                            error_dict['error_no'] = error_return['error_no']
+                            error_dict['error_info'] = error_return['error_info']
+                            return (error_dict, None, None, None)
+            return (error_dict, add_task, upd_task, del_task)
+            return None
+        except BaseException:
+            error_dict['error_no'] = -1
+            error_info = get_traceback_message()
+            error_dict['error_info'] = error_info
+            system_log.error('异常信息为：%s ' % error_info)
+            return (error_dict, None, None, None)
+    def _get_task_relation(self, graph, result, level, node, task_id, add_task, upd_task, del_task, graph_action):
+        """
+        获取ADD/UPD/DEL task信息
+        :param graph:
+        :param result:
+        :param level:
+        :param node:
+        :param task_id:
+        :param add_task:
+        :param upd_task:
+        :param del_task:
+        :param graph_action:
+        :return:
+        """
+        error_dict = {'error_no': 0, 'error_info': ''}
+        try:
+            if graph_action == 0:
+                self._update_relation_task_id(node, task_id)
+                self._process_task_queue(add_task, graph, result, level, node, task_id)
+            elif graph_action == 1:
+                self._process_task_queue(upd_task, graph, result, level, node, task_id)
+            else:
+                old_task_id = self._get_predecessor_task_id(graph, node)
+                self._process_task_queue(del_task, graph, result, level, node, old_task_id)
+                self._process_task_queue(add_task, graph, result, level, node, task_id)
+                self._update_relation_task_id(node, task_id)
+            return error_dict
+        except BaseException:
+            error_dict['error_no'] = -1
+            error_info = get_traceback_message()
+            error_dict['error_info'] = error_info
+            system_log.error('异常信息为：%s ' % error_info)
+            return error_dict
+    def _process_task_queue(self, queue, graph, result, level, node, task_id):
+        """
+
+        :param queue:
+        :param graph:
+        :param result:
+        :param level:
+        :param node:
+        :param task_id:
+        :return:
+        """
+        if level == 0:
+            try:
+                tmp_node_dict = queue[task_id]
+                try:
+                    value_list = tmp_node_dict['head']
+                    value_list.append(node)
+                    tmp_node_dict['head'] = value_list
+                    queue[task_id] = tmp_node_dict
+                except KeyError:
+                    system_log.error('异常信息: %s' % get_traceback_message())
+                    tmp_node_dict['head'] = [node]
+                    queue[task_id] = tmp_node_dict
+                try:
+                    value_list = tmp_node_dict[node]
+                    nodes = [_n[1] for _n in nx.edges(graph, node)]
+                    value_list.append(nodes)
+                    tmp_node_dict[node] = value_list
+                    queue[task_id] = tmp_node_dict
+                    return None
+                except KeyError:
+                    system_log.error('异常信息: %s' % get_traceback_message())
+                    tmp_node_dict[node] = [_n[1] for _n in nx.edges(graph, node)]
+                    queue[task_id] = tmp_node_dict
+            except KeyError:
+                system_log.error('异常信息: %s' % get_traceback_message())
+                node_dict = OrderedDict()
+                node_dict['head'] = [node]
+                if len(result) == 1:
+                    node_dict[node] = ['end']
+                else:
+                    node_dict[node] = [_n[1] for _n in nx.edges(graph, node)]
+                queue[task_id] = node_dict
+                return None
+            return None
+        else:
+            if level == len(result) - 1:
+                try:
+                    tmp_node_dict = queue[task_id]
+                    try:
+                        value_list = tmp_node_dict[node]
+                        value_list.append('end')
+                        tmp_node_dict[node] = value_list
+                        queue[task_id] = tmp_node_dict
+                        return None
+                    except KeyError:
+                        system_log.error('异常信息: %s' % get_traceback_message())
+                        tmp_node_dict[node] = ['end']
+                        queue[task_id] = tmp_node_dict
+                except KeyError:
+                    system_log.error('异常信息: %s' % get_traceback_message())
+                    node_dict = OrderedDict()
+                    node_dict[node] = ['end']
+                    queue[task_id] = node_dict
+                    return None
+            try:
+                tmp_node_dict = queue[task_id]
+                try:
+                    value_list = tmp_node_dict[node]
+                    node_ids = [_n[1] for _n in nx.edges(graph, node)]
+                    value_list.append(node_ids)
+                    tmp_node_dict[node] = value_list
+                    queue[task_id] = tmp_node_dict
+                    return None
+                except KeyError:
+                    system_log.error('异常信息: %s' % get_traceback_message())
+                    tmp_node_dict[node] = [_n[1] for _n in nx.edges(graph, node)]
+                    queue[task_id] = tmp_node_dict
+                    return None
+            except KeyError:
+                system_log.error('异常信息: %s' % get_traceback_message())
+                node_dict = OrderedDict()
+                node_dict[node] = [_n[1] for _n in nx.edges(graph, node)]
+                queue[task_id] = node_dict
+                return None
+    def is_cycle(self):
+        """
+        判断有向图是否有环
+        :return:
+        """
+        try:
+            nx.find_cycle(self._graph)
+            return True
+        except nx.exception.NetworkXNoCycle:
+            system_log.error('异常信息: %s' % get_traceback_message())
+            return False
+    def get_descendants(self, node):
+        """
+        获取指定节点子节点
+        :param node:
+        :return:
+        """
+        return list(nx.descendants(self._graph, node))
+    def get_ancestors(self, node):
+        """
+
+        :param node:
+        :return:
+        """
+        return list(nx.ancestors(self._graph, node))

@@ -1,0 +1,67 @@
+orig candidates=[[853]] decomp candidates=[[535]]
+orig=81 decomp=75  ratio=0.8077  opcodes=[('insert', 16, 16, 16, 17), ('replace', 18, 19, 19, 20), ('replace', 30, 31, 31, 32), ('replace', 34, 35, 35, 36), ('replace', 37, 38, 38, 39), ('replace', 50, 52, 51, 53), ('replace', 54, 55, 55, 56), ('replace', 57, 59, 58, 59), ('delete', 60, 62, 60, 60), ('delete', 63, 64, 61, 61), ('replace', 65, 68, 62, 64), ('replace', 76, 77, 72, 73), ('delete', 79, 81, 75, 75)]
+HUNK insert   orig[16:16]@- decomp[16:17]@108
+  ### DECOMP only:
+      108 NOP                        
+HUNK replace  orig[18:19]@120 decomp[19:20]@122
+  ### ORIG only:
+      120 POP_JUMP_FORWARD_IF_TRUE   to 262
+  ### DECOMP only:
+      122 POP_JUMP_FORWARD_IF_TRUE   to 264
+HUNK replace  orig[30:31]@184 decomp[31:32]@186
+  ### ORIG only:
+      184 JUMP_FORWARD               to 218
+  ### DECOMP only:
+      186 JUMP_FORWARD               to 220
+HUNK replace  orig[34:35]@202 decomp[35:36]@204
+  ### ORIG only:
+      202 POP_JUMP_FORWARD_IF_FALSE  to 210
+  ### DECOMP only:
+      204 POP_JUMP_FORWARD_IF_FALSE  to 212
+HUNK replace  orig[37:38]@208 decomp[38:39]@210
+  ### ORIG only:
+      208 JUMP_BACKWARD              to 108
+  ### DECOMP only:
+      210 JUMP_FORWARD               to 220
+HUNK replace  orig[50:52]@244 decomp[51:53]@246
+  ### ORIG only:
+      244 POP_JUMP_FORWARD_IF_FALSE  to 248
+      246 JUMP_FORWARD               to 262
+  ### DECOMP only:
+      246 POP_JUMP_FORWARD_IF_FALSE  to 250
+      248 JUMP_FORWARD               to 264
+HUNK replace  orig[54:55]@260 decomp[55:56]@262
+  ### ORIG only:
+      260 POP_JUMP_BACKWARD_IF_FALSE to 122
+  ### DECOMP only:
+      262 POP_JUMP_BACKWARD_IF_FALSE to 124
+HUNK replace  orig[57:59]@274 decomp[58:59]@276
+  ### ORIG only:
+      274 POP_JUMP_FORWARD_IF_TRUE   to 354
+      276 LOAD_CONST                 0
+  ### DECOMP only:
+      276 POP_JUMP_FORWARD_IF_TRUE   to 342
+HUNK delete   orig[60:62]@280 decomp[60:60]@-
+  ### ORIG only:
+      280 IMPORT_NAME                IQEngine.plugins.plugin_system_risk_calculation.function
+      282 IMPORT_FROM                THREAD_STATUS
+HUNK delete   orig[63:64]@286 decomp[61:61]@-
+  ### ORIG only:
+      286 POP_TOP                    
+HUNK replace  orig[65:68]@290 decomp[62:64]@284
+  ### ORIG only:
+      290 POP_JUMP_FORWARD_IF_FALSE  to 296
+      292 LOAD_CONST                 None
+      294 RETURN_VALUE               
+  ### DECOMP only:
+      284 POP_JUMP_FORWARD_IF_FALSE  to 288
+      286 JUMP_FORWARD               to 342
+HUNK replace  orig[76:77]@348 decomp[72:73]@340
+  ### ORIG only:
+      348 POP_JUMP_BACKWARD_IF_FALSE to 276
+  ### DECOMP only:
+      340 POP_JUMP_BACKWARD_IF_FALSE to 278
+HUNK delete   orig[79:81]@354 decomp[75:75]@-
+  ### ORIG only:
+      354 LOAD_CONST                 None
+      356 RETURN_VALUE               

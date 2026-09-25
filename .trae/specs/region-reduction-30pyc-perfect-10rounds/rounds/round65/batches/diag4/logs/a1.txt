@@ -1,0 +1,118 @@
+orig candidates=[[1266]] decomp candidates=[[946]]
+orig=297 decomp=299  ratio=0.8624  opcodes=[('replace', 7, 8, 7, 8), ('replace', 161, 162, 161, 163), ('delete', 172, 202, 173, 173), ('replace', 204, 205, 175, 176), ('replace', 208, 209, 179, 180), ('replace', 219, 220, 190, 191), ('replace', 228, 229, 199, 200), ('replace', 256, 257, 227, 228), ('replace', 268, 269, 239, 240), ('replace', 272, 273, 243, 244), ('replace', 286, 287, 257, 258), ('insert', 297, 297, 268, 299)]
+HUNK replace  orig[7:8]@34 decomp[7:8]@34
+  ### ORIG only:
+       34 POP_JUMP_FORWARD_IF_FALSE  to 1570
+  ### DECOMP only:
+       34 POP_JUMP_FORWARD_IF_FALSE  to 1574
+HUNK replace  orig[161:162]@860 decomp[161:163]@860
+  ### ORIG only:
+      860 POP_JUMP_FORWARD_IF_FALSE  to 944
+  ### DECOMP only:
+      860 EXTENDED_ARG               
+      862 POP_JUMP_FORWARD_IF_FALSE  to 1412
+HUNK delete   orig[172:202]@942 decomp[173:173]@-
+  ### ORIG only:
+      942 JUMP_FORWARD               to 1106
+      944 LOAD_FAST                  flag
+      946 LOAD_CONST                 1
+      948 COMPARE_OP                 ==
+      954 POP_JUMP_FORWARD_IF_FALSE  to 1024
+      956 LOAD_GLOBAL                NULL + system_log
+      968 LOAD_ATTR                  debug
+      978 LOAD_GLOBAL                NULL + _
+      990 LOAD_CONST                 '分笔数据转化异常，默认返回空值'
+      992 PRECALL                    
+      996 CALL                       
+     1006 PRECALL                    
+     1010 CALL                       
+     1020 POP_TOP                    
+     1022 JUMP_FORWARD               to 1102
+     1024 LOAD_FAST                  flag
+     1026 LOAD_CONST                 -1
+     1028 COMPARE_OP                 ==
+     1034 POP_JUMP_FORWARD_IF_FALSE  to 1102
+     1036 LOAD_GLOBAL                NULL + system_log
+     1048 LOAD_ATTR                  debug
+     1058 LOAD_GLOBAL                NULL + _
+     1070 LOAD_CONST                 '分笔数据返回空值'
+     1072 PRECALL                    
+     1076 CALL                       
+     1086 PRECALL                    
+     1090 CALL                       
+     1100 POP_TOP                    
+     1102 LOAD_FAST                  redata
+     1104 RETURN_VALUE               
+HUNK replace  orig[204:205]@1110 decomp[175:176]@948
+  ### ORIG only:
+     1110 POP_JUMP_FORWARD_IF_FALSE  to 1392
+  ### DECOMP only:
+      948 POP_JUMP_FORWARD_IF_FALSE  to 1230
+HUNK replace  orig[208:209]@1122 decomp[179:180]@960
+  ### ORIG only:
+     1122 POP_JUMP_FORWARD_IF_FALSE  to 1128
+  ### DECOMP only:
+      960 POP_JUMP_FORWARD_IF_FALSE  to 966
+HUNK replace  orig[219:220]@1174 decomp[190:191]@1012
+  ### ORIG only:
+     1174 FOR_ITER                   to 1388
+  ### DECOMP only:
+     1012 FOR_ITER                   to 1226
+HUNK replace  orig[228:229]@1222 decomp[199:200]@1060
+  ### ORIG only:
+     1222 POP_JUMP_FORWARD_IF_TRUE   to 1332
+  ### DECOMP only:
+     1060 POP_JUMP_FORWARD_IF_TRUE   to 1170
+HUNK replace  orig[256:257]@1386 decomp[227:228]@1224
+  ### ORIG only:
+     1386 JUMP_BACKWARD              to 1174
+  ### DECOMP only:
+     1224 JUMP_BACKWARD              to 1012
+HUNK replace  orig[268:269]@1458 decomp[239:240]@1296
+  ### ORIG only:
+     1458 JUMP_FORWARD               to 1570
+  ### DECOMP only:
+     1296 JUMP_FORWARD               to 1408
+HUNK replace  orig[272:273]@1476 decomp[243:244]@1314
+  ### ORIG only:
+     1476 POP_JUMP_FORWARD_IF_FALSE  to 1562
+  ### DECOMP only:
+     1314 POP_JUMP_FORWARD_IF_FALSE  to 1400
+HUNK replace  orig[286:287]@1552 decomp[257:258]@1390
+  ### ORIG only:
+     1552 JUMP_FORWARD               to 1570
+  ### DECOMP only:
+     1390 JUMP_FORWARD               to 1408
+HUNK insert   orig[297:297]@- decomp[268:299]@1412
+  ### DECOMP only:
+     1412 LOAD_FAST                  flag
+     1414 LOAD_CONST                 1
+     1416 COMPARE_OP                 ==
+     1422 POP_JUMP_FORWARD_IF_FALSE  to 1492
+     1424 LOAD_GLOBAL                NULL + system_log
+     1436 LOAD_ATTR                  debug
+     1446 LOAD_GLOBAL                NULL + _
+     1458 LOAD_CONST                 '分笔数据转化异常，默认返回空值'
+     1460 PRECALL                    
+     1464 CALL                       
+     1474 PRECALL                    
+     1478 CALL                       
+     1488 POP_TOP                    
+     1490 JUMP_FORWARD               to 1570
+     1492 LOAD_FAST                  flag
+     1494 LOAD_CONST                 -1
+     1496 COMPARE_OP                 ==
+     1502 POP_JUMP_FORWARD_IF_FALSE  to 1570
+     1504 LOAD_GLOBAL                NULL + system_log
+     1516 LOAD_ATTR                  debug
+     1526 LOAD_GLOBAL                NULL + _
+     1538 LOAD_CONST                 '分笔数据返回空值'
+     1540 PRECALL                    
+     1544 CALL                       
+     1554 PRECALL                    
+     1558 CALL                       
+     1568 POP_TOP                    
+     1570 LOAD_FAST                  redata
+     1572 RETURN_VALUE               
+     1574 LOAD_CONST                 None
+     1576 RETURN_VALUE               

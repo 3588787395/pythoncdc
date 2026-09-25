@@ -1,0 +1,2 @@
+D:/Temp/opencode/r65gate/diag5/synth/v1.pyc
+D:/Temp/opencode/r65gate/diag5/synth/v2.pyc

@@ -25596,8 +25596,37 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     _r64_cj = (self.cfg.get_block_by_offset(last.argval)
                                if getattr(last, 'argval', None) is not None
                                else None)
+                    # [R65-diag4 n1 operand-rejoin exemption] Same-level structural
+                    # identity for the short-circuit run: current is still a MEMBER of
+                    # this operator run whenever one of its own two edges reaches the
+                    # run's shared target T within one conditional hop -- either
+                    # directly (already covered above) or through its successor block's
+                    # own short-circuit edge.  That is exactly the lowering of
+                    # `A or B or (C and D):` (De Morgan-guard shape): C is the head of
+                    # the run's last operand, D's short-circuit edge jumps to T, and C's
+                    # other edge is the run's negative exit.  In that case the run has
+                    # NOT closed at T, so the pop must not fire.
+                    # 识别条件：chain 前缀已全部汇入 T，但 current 的某条后继边（ft_succ 或
+                    # _r64_cj）自身末指令是短路/条件跳转且落到 T。
+                    # 归约方式：current（连同其后继）保留为本 BoolOp run 的操作数，chain 不弹出，
+                    # walk 继续；BoolOpRegion 的 op_chain 覆盖 A、B、(C and D)。
+                    # AST 映射：BoolOp(or, [A, B, BoolOp(and, [C, D])]) →
+                    # `if A or B or (C and D): body`，而不是将 current 拆成下一条语句的 IfRegion
+                    # （拆开会把 C 的极性翻转并把 D 变成孤块）。
+                    _r64_rejoin = False
+                    for _r64_s in (ft_succ, _r64_cj):
+                        if _r64_s is None:
+                            continue
+                        _r64_sl = _r64_s.get_last_instruction()
+                        if (_r64_sl is not None
+                                and _r64_sl.opname in BOOLOP_CHAIN_JUMPS
+                                and getattr(_r64_sl, 'argval', None) is not None
+                                and self.cfg.get_block_by_offset(_r64_sl.argval) is _r64_T):
+                            _r64_rejoin = True
+                            break
                     if (_r64_closed and _r64_cj is not _r64_T
-                            and ft_succ is not _r64_T):
+                            and ft_succ is not _r64_T
+                            and not _r64_rejoin):
                         chain.pop()
                         break
             if len(chain) >= 2:

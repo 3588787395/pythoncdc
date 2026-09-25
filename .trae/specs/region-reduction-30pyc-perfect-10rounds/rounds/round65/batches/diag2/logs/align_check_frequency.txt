@@ -1,0 +1,22 @@
+orig candidates=[[1335]] decomp candidates=[[988]]
+orig=132 decomp=133  ratio=0.9660  opcodes=[('replace', 76, 77, 76, 77), ('replace', 107, 109, 107, 108), ('replace', 112, 113, 111, 112), ('insert', 132, 132, 131, 133)]
+HUNK replace  orig[76:77]@310 decomp[76:77]@310
+  ### ORIG only:
+      310 POP_JUMP_FORWARD_IF_FALSE  to 560
+  ### DECOMP only:
+      310 POP_JUMP_FORWARD_IF_FALSE  to 562
+HUNK replace  orig[107:109]@456 decomp[107:108]@456
+  ### ORIG only:
+      456 LOAD_CONST                 None
+      458 RETURN_VALUE               
+  ### DECOMP only:
+      456 JUMP_FORWARD               to 558
+HUNK replace  orig[112:113]@476 decomp[111:112]@474
+  ### ORIG only:
+      476 POP_JUMP_FORWARD_IF_FALSE  to 552
+  ### DECOMP only:
+      474 POP_JUMP_FORWARD_IF_FALSE  to 550
+HUNK insert   orig[132:132]@- decomp[131:133]@562
+  ### DECOMP only:
+      562 LOAD_CONST                 None
+      564 RETURN_VALUE               

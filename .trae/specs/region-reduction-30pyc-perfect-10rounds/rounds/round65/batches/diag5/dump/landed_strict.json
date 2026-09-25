@@ -1,0 +1,162 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+  "product": "D:/Temp/opencode/r65gate/diag5/build_landed/IQEngine__utils__schedulerOK.py",
+  "functions": 52,
+  "ok": 49,
+  "bad": [
+   [
+    "<module>.Scheduler.get_checked_time",
+    "seq_diff",
+    "#18 orig=(\"'divmod'\", 'LOAD_GLOBAL') decomp=('<JUMP>', 'JUMP')"
+   ],
+   [
+    "<module>.Scheduler.run_daily",
+    "seq_len",
+    "orig=84 decomp=75"
+   ],
+   [
+    "<module>.Scheduler.run_daily.func_wrapper",
+    "seq_len",
+    "orig=219 decomp=215"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc",
+  "product": "D:/Temp/opencode/r65gate/diag5/build_landed/fly__simtradding__flyAccountOK.py",
+  "functions": 23,
+  "ok": 21,
+  "bad": [
+   [
+    "<module>.TradeAccount._do_request",
+    "seq_len",
+    "orig=436 decomp=445"
+   ],
+   [
+    "<module>.TradeAccount.init_connection",
+    "seq_len",
+    "orig=42 decomp=41"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
+  "product": "D:/Temp/opencode/r65gate/diag5/build_landed/IQEngine__plugins__plugin_fly_data__fly_api__order_apiOK.py",
+  "functions": 36,
+  "ok": 33,
+  "bad": [
+   [
+    "<module>.base_order",
+    "target_diff",
+    "#136 POP_JUMP_IF_TRUE 终点 orig=(\"'order_obj'\", 'LOAD_FAST') decomp=(\"'生成订单，订单号:{order_id}，可转债代码：{symbol}，数量：{side}{share}'\", 'LOAD_CONST')"
+   ],
+   [
+    "<module>.future_order",
+    "seq_len",
+    "orig=101 decomp=93"
+   ],
+   [
+    "<module>.option_order",
+    "seq_len",
+    "orig=83 decomp=74"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc",
+  "product": "D:/Temp/opencode/r65gate/diag5/build_landed/IQCommon__util__common_funcOK.py",
+  "functions": 22,
+  "ok": 20,
+  "bad": [
+   [
+    "<module>.get_kline_time_by_frequency_array",
+    "seq_len",
+    "orig=232 decomp=229"
+   ],
+   [
+    "<module>.get_kline_time_by_section",
+    "seq_len",
+    "orig=211 decomp=191"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc",
+  "product": "D:/Temp/opencode/r65gate/diag5/build_landed/IQData__utils__common_funcOK.py",
+  "functions": 27,
+  "ok": 25,
+  "bad": [
+   [
+    "<module>.get_kline_time_by_section",
+    "seq_len",
+    "orig=211 decomp=191"
+   ],
+   [
+    "<module>.handle_exrights",
+    "seq_len",
+    "orig=276 decomp=268"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/fileio_utils.pyc",
+  "product": "D:/Temp/opencode/r65gate/diag5/build_landed/IQCommon__util__fileio_utilsOK.py",
+  "functions": 15,
+  "ok": 13,
+  "bad": [
+   [
+    "<module>.FileIO.write",
+    "seq_diff",
+    "#42 orig=('None', 'LOAD_CONST') decomp=('<JUMP>', 'JUMP')"
+   ],
+   [
+    "<module>.FileLock.acquire",
+    "seq_len",
+    "orig=98 decomp=93"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc",
+  "product": "D:/Temp/opencode/r65gate/diag5/build_landed/IQCommon__strategy__wizard_quant_apiOK.py",
+  "functions": 56,
+  "ok": 52,
+  "bad": [
+   [
+    "<module>.filter_desicion",
+    "seq_len",
+    "orig=179 decomp=181"
+   ],
+   [
+    "<module>.get_DMI.calculate_di",
+    "seq_len",
+    "orig=81 decomp=79"
+   ],
+   [
+    "<module>.init_stock_pool_filter",
+    "target_diff",
+    "#33 JUMP 终点 orig=(\"'security_pool_info'\", 'LOAD_FAST') decomp=(\"'final_stocks'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.params_analysis",
+    "seq_len",
+    "orig=134 decomp=128"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ }
+]

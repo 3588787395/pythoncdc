@@ -1,0 +1,69 @@
+FUNC market_fund_transfer  filtered orig=94 decomp=77 deficit=17
+HUNK replace  orig[52:56] off 240..264   decomp[52:54] off 240..242  (o=4 d=2)
+  ### ORIG-only (MISSING from decomp):
+      240 POP_JUMP_FORWARD_IF_FALSE      to 352
+      242 LOAD_GLOBAL                    NULL + strategy_log
+      254 LOAD_ATTR                      error
+      264 LOAD_CONST                     '转入'
+  ### DECOMP-only (EXTRA / relocated):
+      240 POP_JUMP_FORWARD_IF_FALSE      to 270
+      242 LOAD_CONST                     'strategy_log转入'
+HUNK replace  orig[59:60] off 276..276   decomp[57:58] off 254..254  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      276 POP_JUMP_FORWARD_IF_FALSE      to 282
+  ### DECOMP-only (EXTRA / relocated):
+      254 POP_JUMP_FORWARD_IF_FALSE      to 260
+HUNK replace  orig[61:62] off 280..280   decomp[59:60] off 258..258  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      280 JUMP_FORWARD                   to 284
+  ### DECOMP-only (EXTRA / relocated):
+      258 JUMP_FORWARD                   to 262
+HUNK replace  orig[63:70] off 284..328   decomp[61:63] off 262..264  (o=7 d=2)
+  ### ORIG-only (MISSING from decomp):
+      284 FORMAT_VALUE                   str
+      286 LOAD_CONST                     '失败，错误原因：'
+      288 LOAD_FAST                      error_dict
+      290 LOAD_METHOD                    get
+      312 LOAD_CONST                     'error_info'
+      318 CALL                           
+      328 FORMAT_VALUE                   str
+  ### DECOMP-only (EXTRA / relocated):
+      262 FORMAT_VALUE                   
+      264 LOAD_CONST                     '失败，错误原因：error_info'
+HUNK delete   orig[71:74] off 336..348   decomp[64:64] off -..-  (o=3 d=0)
+  ### ORIG-only (MISSING from decomp):
+      336 CALL                           
+      346 POP_TOP                        
+      348 LOAD_CONST                     False
+HUNK replace  orig[75:78] off 352..374   decomp[65:66] off 270..270  (o=3 d=1)
+  ### ORIG-only (MISSING from decomp):
+      352 LOAD_GLOBAL                    NULL + strategy_log
+      364 LOAD_ATTR                      info
+      374 LOAD_CONST                     '转入'
+  ### DECOMP-only (EXTRA / relocated):
+      270 LOAD_CONST                     'strategy_log转入'
+HUNK replace  orig[81:82] off 386..386   decomp[69:70] off 282..282  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      386 POP_JUMP_FORWARD_IF_FALSE      to 392
+  ### DECOMP-only (EXTRA / relocated):
+      282 POP_JUMP_FORWARD_IF_FALSE      to 288
+HUNK replace  orig[83:84] off 390..390   decomp[71:72] off 286..286  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      390 JUMP_FORWARD                   to 394
+  ### DECOMP-only (EXTRA / relocated):
+      286 JUMP_FORWARD                   to 290
+HUNK replace  orig[85:86] off 394..394   decomp[73:74] off 290..290  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      394 FORMAT_VALUE                   str
+  ### DECOMP-only (EXTRA / relocated):
+      290 FORMAT_VALUE                   
+HUNK delete   orig[87:89] off 398..400   decomp[75:75] off -..-  (o=2 d=0)
+  ### ORIG-only (MISSING from decomp):
+      398 LOAD_FAST                      occur_balance
+      400 FORMAT_VALUE                   str
+HUNK delete   orig[90:93] off 408..420   decomp[76:76] off -..-  (o=3 d=0)
+  ### ORIG-only (MISSING from decomp):
+      408 CALL                           
+      418 POP_TOP                        
+      420 LOAD_CONST                     True
+SUMMARY missing_run_instrs=27 extra_run_instrs=10

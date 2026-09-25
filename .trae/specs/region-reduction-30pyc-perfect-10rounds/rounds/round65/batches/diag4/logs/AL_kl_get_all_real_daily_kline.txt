@@ -1,0 +1,31 @@
+orig candidates=[[1555]] decomp candidates=[[1149]]
+orig=216 decomp=214  ratio=0.9721  opcodes=[('replace', 17, 18, 17, 18), ('replace', 112, 113, 112, 113), ('replace', 164, 165, 164, 165), ('replace', 169, 170, 169, 170), ('delete', 185, 187, 185, 185), ('replace', 190, 191, 188, 189)]
+HUNK replace  orig[17:18]@88 decomp[17:18]@88
+  ### ORIG only:
+       88 FOR_ITER                   to 1044
+  ### DECOMP only:
+       88 FOR_ITER                   to 1040
+HUNK replace  orig[112:113]@580 decomp[112:113]@580
+  ### ORIG only:
+      580 LOAD_CONST                 <code object <dictcomp> at 0x0000022A1A6F0730, file "./fly_docker_py311/IQCommon/api/klinedata.py", line 1580>
+  ### DECOMP only:
+      580 LOAD_CONST                 <code object <dictcomp> at 0x0000022A1A6F0A30, file "build_landed/IQCommon__api__klinedataOK.py", line 1171>
+HUNK replace  orig[164:165]@842 decomp[164:165]@842
+  ### ORIG only:
+      842 JUMP_FORWARD               to 898
+  ### DECOMP only:
+      842 JUMP_FORWARD               to 894
+HUNK replace  orig[169:170]@854 decomp[169:170]@854
+  ### ORIG only:
+      854 JUMP_FORWARD               to 898
+  ### DECOMP only:
+      854 JUMP_FORWARD               to 894
+HUNK delete   orig[185:187]@898 decomp[185:185]@-
+  ### ORIG only:
+      898 EXTENDED_ARG               
+      900 JUMP_BACKWARD              to 86
+HUNK replace  orig[190:191]@918 decomp[188:189]@914
+  ### ORIG only:
+      918 POP_JUMP_FORWARD_IF_FALSE  to 1036
+  ### DECOMP only:
+      914 POP_JUMP_FORWARD_IF_FALSE  to 1032

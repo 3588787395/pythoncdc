@@ -1,0 +1,75 @@
+F:/Downloads/pythoncdc-main/site-packages/IQCommon/graph.pyc  30/31 deficit=1  sha=cacb7a75faa2
+      _process_task_queue                            orig=378   decomp=378   SAME-LEN  jumpdiff=1   true=118
+F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc  24/25 deficit=1  sha=bb400ce80d91
+      get_history_df                                 orig=1742  decomp=1719  UNDER 23  jumpdiff=14  true=1277
+F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc  11/12 deficit=1  sha=4c7c325acf8e
+      clock_worker                                   orig=1275  decomp=1286  OVER +11  jumpdiff=10  true=481
+F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc  16/17 deficit=1  sha=74f9b8dcce12
+      match                                          orig=715   decomp=715   SAME-LEN  jumpdiff=10  true=517
+F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc  29/30 deficit=1  sha=64852de5112c
+      write_logging_thread                           orig=113   decomp=113   SAME-LEN  jumpdiff=1   true=40
+F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc  51/53 deficit=2  sha=6f08c711b833
+      params_analysis                                orig=133   decomp=126   UNDER 7   jumpdiff=1   true=117
+      calculate_di                                   orig=75    decomp=73    UNDER 2   jumpdiff=0   true=45
+F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc  19/21 deficit=2  sha=d93288c70cba
+      get_kline_time_by_section                      orig=210   decomp=190   UNDER 20  jumpdiff=0   true=84
+      get_kline_time_by_frequency_array              orig=231   decomp=228   UNDER 3   jumpdiff=0   true=45
+F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/fileio_utils.pyc  12/14 deficit=2  sha=3e3051014298
+      acquire                                        orig=96    decomp=93    UNDER 3   jumpdiff=3   true=52
+      write                                          orig=637   decomp=637   SAME-LEN  jumpdiff=4   true=519
+F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc  38/40 deficit=2  sha=d242839f547b
+      get_trade_list                                 orig=339   decomp=323   UNDER 16  jumpdiff=14  true=148
+      trade_operation                                orig=304   decomp=302   UNDER 2   jumpdiff=2   true=40
+F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc  22/24 deficit=2  sha=937f64d6c619
+      get_kline_time_by_section                      orig=210   decomp=190   UNDER 20  jumpdiff=0   true=84
+      handle_exrights                                orig=276   decomp=268   UNDER 8   jumpdiff=1   true=263
+F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc  32/34 deficit=2  sha=5e59c43ab22b
+      option_order                                   orig=83    decomp=73    UNDER 10  jumpdiff=3   true=39
+      future_order                                   orig=101   decomp=92    UNDER 9   jumpdiff=2   true=36
+F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc  43/45 deficit=2  sha=d809b238385b
+      run_daily                                      orig=77    decomp=71    UNDER 6   jumpdiff=0   true=56
+      get_checked_time                               orig=106   decomp=106   SAME-LEN  jumpdiff=0   true=43
+F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc  21/23 deficit=2  sha=e58c7d8dbc8f
+      init_connection                                orig=42    decomp=41    UNDER 1   jumpdiff=0   true=25
+      _do_request                                    orig=436   decomp=443   OVER +7   jumpdiff=2   true=384
+F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc  42/45 deficit=3  sha=3cf5d75eb4b1
+      get_all_real_daily_kline                       orig=188   decomp=187   UNDER 1   jumpdiff=3   true=26
+      get_multiminute_his_data                       orig=479   decomp=478   UNDER 1   jumpdiff=5   true=16
+      kline_datetime_list                            orig=389   decomp=389   SAME-LEN  jumpdiff=9   true=228
+F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc  32/35 deficit=3  sha=8f1e9d4ea252
+      get_TradeMode_trades                           orig=1839  decomp=1801  UNDER 38  jumpdiff=4   true=1617
+      _on_publish_after_trading_end                  orig=486   decomp=481   UNDER 5   jumpdiff=3   true=33
+      _save_testds_to_csv                            orig=71    decomp=68    UNDER 3   jumpdiff=7   true=19
+F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc  39/44 deficit=5  sha=36cb2fa07daa
+      get_cache_l2_data                              orig=337   decomp=335   UNDER 2   jumpdiff=2   true=313
+      get_cache_l2_data_by_one                       orig=321   decomp=320   UNDER 1   jumpdiff=2   true=300
+      get_tick_direction                             orig=259   decomp=258   UNDER 1   jumpdiff=3   true=102
+      get_real_minute_kline                          orig=253   decomp=254   OVER +1   jumpdiff=3   true=197
+      one_prod_to_ndarray                            orig=605   decomp=607   OVER +2   jumpdiff=5   true=424
+F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc  70/81 deficit=11  sha=d58b7a100e25
+      get_price                                      orig=230   decomp=188   UNDER 42  jumpdiff=0   true=227
+      run_individual_transform                       orig=362   decomp=321   UNDER 41  jumpdiff=2   true=263
+      load_get_price                                 orig=171   decomp=136   UNDER 35  jumpdiff=1   true=167
+      get_real_from_zeromq                           orig=703   decomp=678   UNDER 25  jumpdiff=0   true=660
+      check_limit                                    orig=330   decomp=311   UNDER 19  jumpdiff=2   true=248
+      initImagedata                                  orig=243   decomp=225   UNDER 18  jumpdiff=0   true=190
+      build_current_period_df                        orig=115   decomp=108   UNDER 7   jumpdiff=5   true=12
+      load_bars_from_hundsun                         orig=477   decomp=470   UNDER 7   jumpdiff=0   true=464
+      check_frequency                                orig=121   decomp=120   UNDER 1   jumpdiff=1   true=21
+      get_individual_data                            orig=312   decomp=311   UNDER 1   jumpdiff=1   true=156
+      run_tick_socket                                orig=306   decomp=307   OVER +1   jumpdiff=2   true=228
+F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc  105/119 deficit=14  sha=9ffe016a73cd
+      _process_order                                 orig=454   decomp=396   UNDER 58  jumpdiff=9   true=349
+      get_etf_stock_info                             orig=144   decomp=117   UNDER 27  jumpdiff=1   true=139
+      etf_purchase_redemption                        orig=377   decomp=355   UNDER 22  jumpdiff=2   true=100
+      market_fund_transfer                           orig=94    decomp=77    UNDER 17  jumpdiff=1   true=41
+      _sync_worker                                   orig=349   decomp=347   UNDER 2   jumpdiff=0   true=296
+      _trade_status_handle                           orig=114   decomp=112   UNDER 2   jumpdiff=0   true=107
+      _process_cancel_order                          orig=293   decomp=292   UNDER 1   jumpdiff=16  true=43
+      get_all_orders                                 orig=79    decomp=78    UNDER 1   jumpdiff=2   true=24
+      on_order_response                              orig=445   decomp=444   UNDER 1   jumpdiff=6   true=57
+      on_trade_response                              orig=392   decomp=391   UNDER 1   jumpdiff=6   true=57
+      after_trading_cancel_order                     orig=155   decomp=155   SAME-LEN  jumpdiff=3   true=122
+      etf_basket_order                               orig=693   decomp=693   SAME-LEN  jumpdiff=11  true=216
+      ipo_stocks_order                               orig=1075  decomp=1076  OVER +1   jumpdiff=10  true=437
+      get_max_amount                                 orig=201   decomp=213   OVER +12  jumpdiff=2   true=18

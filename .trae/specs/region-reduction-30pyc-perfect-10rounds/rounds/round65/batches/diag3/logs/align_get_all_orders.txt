@@ -1,0 +1,42 @@
+orig candidates=[[3748]] decomp candidates=[[2528]]
+orig=87 decomp=90  ratio=0.8814  opcodes=[('replace', 8, 9, 8, 9), ('replace', 23, 24, 23, 24), ('delete', 61, 65, 61, 61), ('replace', 66, 67, 62, 63), ('replace', 75, 76, 71, 72), ('replace', 78, 79, 74, 75), ('insert', 87, 87, 83, 90)]
+HUNK replace  orig[8:9]@24 decomp[8:9]@24
+  ### ORIG only:
+       24 POP_JUMP_FORWARD_IF_FALSE  to 362
+  ### DECOMP only:
+       24 POP_JUMP_FORWARD_IF_FALSE  to 456
+HUNK replace  orig[23:24]@144 decomp[23:24]@144
+  ### ORIG only:
+      144 POP_JUMP_FORWARD_IF_FALSE  to 348
+  ### DECOMP only:
+      144 POP_JUMP_FORWARD_IF_FALSE  to 438
+HUNK delete   orig[61:65]@346 decomp[61:61]@-
+  ### ORIG only:
+      346 JUMP_FORWARD               to 362
+      348 LOAD_FAST                  self
+      350 LOAD_ATTR                  all_orders
+      360 STORE_FAST                 result
+HUNK replace  orig[66:67]@364 decomp[62:63]@348
+  ### ORIG only:
+      364 POP_JUMP_FORWARD_IF_NOT_NONE to 370
+  ### DECOMP only:
+      348 POP_JUMP_FORWARD_IF_NOT_NONE to 354
+HUNK replace  orig[75:76]@420 decomp[71:72]@404
+  ### ORIG only:
+      420 POP_JUMP_FORWARD_IF_FALSE  to 450
+  ### DECOMP only:
+      404 POP_JUMP_FORWARD_IF_FALSE  to 434
+HUNK replace  orig[78:79]@426 decomp[74:75]@410
+  ### ORIG only:
+      426 LOAD_CONST                 <code object <listcomp> at 0x00000289F7B3A1F0, file "./fly_docker_py311/IQEngine/plugins/plugin_system_trade/trade_live_broker.py", line 3766>
+  ### DECOMP only:
+      410 LOAD_CONST                 <code object <listcomp> at 0x00000289F7B3A6A0, file "build_landed/IQEngine__plugins__plugin_system_trade__trade_live_brokerOK.py", line 2542>
+HUNK insert   orig[87:87]@- decomp[83:90]@438
+  ### DECOMP only:
+      438 LOAD_FAST                  self
+      440 LOAD_ATTR                  all_orders
+      450 STORE_FAST                 result
+      452 LOAD_CONST                 None
+      454 RETURN_VALUE               
+      456 LOAD_CONST                 None
+      458 RETURN_VALUE               

@@ -1,0 +1,65 @@
+FUNC _trade_status_handle  filtered orig=114 decomp=112 deficit=2
+HUNK delete   orig[6:14] off 46..90   decomp[6:6] off -..-  (o=8 d=0)
+  ### ORIG-only (MISSING from decomp):
+       46 LOAD_GLOBAL                    NULL + get_trade_status
+       58 LOAD_FAST                      self
+       60 LOAD_ATTR                      trade_id
+       70 LOAD_CONST                     True
+       72 KW_NAMES                       
+       78 CALL                           
+       88 LOAD_FAST                      self
+       90 STORE_ATTR                     trade_info
+HUNK replace  orig[23:24] off 148..148   decomp[15:16] off 92..92  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      148 POP_JUMP_FORWARD_IF_FALSE      to 830
+  ### DECOMP-only (EXTRA / relocated):
+       92 POP_JUMP_FORWARD_IF_FALSE      to 798
+HUNK replace  orig[30:31] off 184..184   decomp[22:23] off 128..128  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      184 POP_JUMP_FORWARD_IF_FALSE      to 296
+  ### DECOMP-only (EXTRA / relocated):
+      128 POP_JUMP_FORWARD_IF_FALSE      to 240
+HUNK replace  orig[41:42] off 294..294   decomp[33:34] off 238..238  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      294 JUMP_BACKWARD                  to 44
+  ### DECOMP-only (EXTRA / relocated):
+      238 JUMP_BACKWARD                  to 70
+HUNK replace  orig[45:46] off 316..316   decomp[37:38] off 260..260  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      316 POP_JUMP_FORWARD_IF_TRUE       to 340
+  ### DECOMP-only (EXTRA / relocated):
+      260 POP_JUMP_FORWARD_IF_TRUE       to 284
+HUNK replace  orig[49:50] off 338..338   decomp[41:42] off 282..282  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      338 POP_JUMP_FORWARD_IF_FALSE      to 452
+  ### DECOMP-only (EXTRA / relocated):
+      282 POP_JUMP_FORWARD_IF_FALSE      to 396
+HUNK replace  orig[65:66] off 472..472   decomp[57:58] off 416..416  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      472 POP_JUMP_FORWARD_IF_FALSE      to 722
+  ### DECOMP-only (EXTRA / relocated):
+      416 POP_JUMP_FORWARD_IF_FALSE      to 666
+HUNK replace  orig[92:93] off 678..678   decomp[84:85] off 622..622  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      678 POP_JUMP_FORWARD_IF_FALSE      to 720
+  ### DECOMP-only (EXTRA / relocated):
+      622 POP_JUMP_FORWARD_IF_FALSE      to 664
+HUNK replace  orig[97:98] off 720..720   decomp[89:90] off 664..664  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      720 JUMP_FORWARD                   to 830
+  ### DECOMP-only (EXTRA / relocated):
+      664 JUMP_FORWARD                   to 774
+HUNK insert   orig[108:108] off 830..828   decomp[100:105] off 774..796  (o=0 d=5)
+  ### DECOMP-only (EXTRA / relocated):
+      774 LOAD_FAST                      self
+      776 LOAD_ATTR                      trade_status
+      786 LOAD_FAST                      trade_status
+      788 COMPARE_OP                     !=
+      796 POP_JUMP_BACKWARD_IF_TRUE      to 94
+HUNK replace  orig[113:114] off 872..872   decomp[110:112] off 838..840  (o=1 d=2)
+  ### ORIG-only (MISSING from decomp):
+      872 JUMP_BACKWARD                  to 46
+  ### DECOMP-only (EXTRA / relocated):
+      838 LOAD_CONST                     None
+      840 RETURN_VALUE                   
+SUMMARY missing_run_instrs=17 extra_run_instrs=15

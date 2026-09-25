@@ -1,0 +1,253 @@
+FUNC _process_order  filtered orig=454 decomp=396 deficit=58
+HUNK replace  orig[12:13] off 94..94   decomp[12:13] off 92..92  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+       94 POP_JUMP_FORWARD_IF_FALSE      to 3128
+  ### DECOMP-only (EXTRA / relocated):
+       92 POP_JUMP_FORWARD_IF_FALSE      to 2820
+HUNK replace  orig[31:32] off 256..256   decomp[31:32] off 254..254  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      256 JUMP_FORWARD                   to 318
+  ### DECOMP-only (EXTRA / relocated):
+      254 JUMP_FORWARD                   to 316
+HUNK replace  orig[48:49] off 358..358   decomp[48:49] off 356..356  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      358 POP_JUMP_FORWARD_IF_FALSE      to 418
+  ### DECOMP-only (EXTRA / relocated):
+      356 POP_JUMP_FORWARD_IF_FALSE      to 416
+HUNK replace  orig[65:66] off 454..454   decomp[65:66] off 454..454  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      454 POP_JUMP_FORWARD_IF_FALSE      to 686
+  ### DECOMP-only (EXTRA / relocated):
+      454 POP_JUMP_FORWARD_IF_FALSE      to 2666
+HUNK replace  orig[74:75] off 498..498   decomp[74:75] off 500..500  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      498 POP_JUMP_FORWARD_IF_FALSE      to 686
+  ### DECOMP-only (EXTRA / relocated):
+      500 POP_JUMP_FORWARD_IF_FALSE      to 2666
+HUNK replace  orig[80:81] off 526..526   decomp[80:81] off 530..530  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      526 POP_JUMP_FORWARD_IF_FALSE      to 626
+  ### DECOMP-only (EXTRA / relocated):
+      530 POP_JUMP_FORWARD_IF_FALSE      to 2610
+HUNK replace  orig[85:86] off 544..544   decomp[85:86] off 548..548  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      544 POP_JUMP_FORWARD_IF_FALSE      to 624
+  ### DECOMP-only (EXTRA / relocated):
+      548 POP_JUMP_FORWARD_IF_FALSE      to 628
+HUNK replace  orig[95:106] off 622..684   decomp[95:96] off 626..626  (o=11 d=1)
+  ### ORIG-only (MISSING from decomp):
+      622 JUMP_BACKWARD                  to 44
+      624 JUMP_FORWARD                   to 686
+      626 LOAD_GLOBAL                    NULL + strategy_log
+      638 LOAD_ATTR                      error
+      648 LOAD_CONST                     '可转债代码%s识别失败，无法进行可转债交易权限判断'
+      650 LOAD_FAST                      order
+      652 LOAD_ATTR                      symbol
+      662 BINARY_OP                      %
+      670 CALL                           
+      680 POP_TOP                        
+      684 JUMP_BACKWARD                  to 44
+  ### DECOMP-only (EXTRA / relocated):
+      626 JUMP_FORWARD                   to 2666
+HUNK replace  orig[110:111] off 702..702   decomp[100:101] off 644..644  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      702 POP_JUMP_FORWARD_IF_FALSE      to 854
+  ### DECOMP-only (EXTRA / relocated):
+      644 POP_JUMP_FORWARD_IF_FALSE      to 796
+HUNK replace  orig[120:121] off 792..792   decomp[110:111] off 734..734  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      792 POP_JUMP_FORWARD_IF_FALSE      to 854
+  ### DECOMP-only (EXTRA / relocated):
+      734 POP_JUMP_FORWARD_IF_FALSE      to 796
+HUNK replace  orig[129:130] off 852..852   decomp[119:120] off 794..794  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      852 JUMP_BACKWARD                  to 44
+  ### DECOMP-only (EXTRA / relocated):
+      794 JUMP_FORWARD                   to 2666
+HUNK replace  orig[177:178] off 1200..1200   decomp[167:168] off 1142..1142  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1200 POP_JUMP_FORWARD_IF_FALSE      to 1366
+  ### DECOMP-only (EXTRA / relocated):
+     1142 POP_JUMP_FORWARD_IF_FALSE      to 1308
+HUNK replace  orig[199:200] off 1364..1364   decomp[189:190] off 1306..1306  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1364 JUMP_BACKWARD                  to 44
+  ### DECOMP-only (EXTRA / relocated):
+     1306 JUMP_FORWARD                   to 2666
+HUNK replace  orig[206:207] off 1414..1414   decomp[196:197] off 1356..1356  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1414 POP_JUMP_FORWARD_IF_FALSE      to 1580
+  ### DECOMP-only (EXTRA / relocated):
+     1356 POP_JUMP_FORWARD_IF_FALSE      to 1522
+HUNK replace  orig[228:229] off 1578..1578   decomp[218:219] off 1520..1520  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1578 JUMP_BACKWARD                  to 44
+  ### DECOMP-only (EXTRA / relocated):
+     1520 JUMP_FORWARD                   to 2666
+HUNK replace  orig[236:237] off 1632..1632   decomp[226:227] off 1574..1574  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1632 POP_JUMP_FORWARD_IF_FALSE      to 1802
+  ### DECOMP-only (EXTRA / relocated):
+     1574 POP_JUMP_FORWARD_IF_FALSE      to 1630
+HUNK delete   orig[239:254] off 1638..1710   decomp[229:229] off -..-  (o=15 d=0)
+  ### ORIG-only (MISSING from decomp):
+     1638 LOAD_GLOBAL                    NULL + strategy_log
+     1650 LOAD_ATTR                      info
+     1660 LOAD_GLOBAL                    NULL + _
+     1672 LOAD_CONST                     '生成订单，订单号：'
+     1674 LOAD_FAST                      order
+     1676 LOAD_ATTR                      order_id
+     1686 FORMAT_VALUE                   str
+     1688 LOAD_CONST                     ' '
+     1690 LOAD_FAST                      type_str
+     1692 FORMAT_VALUE                   str
+     1694 LOAD_CONST                     '代码：'
+     1696 LOAD_FAST                      order
+     1698 LOAD_ATTR                      symbol
+     1708 FORMAT_VALUE                   str
+     1710 LOAD_CONST                     ' 数量：'
+HUNK replace  orig[259:271] off 1752..1800   decomp[234:237] off 1620..1628  (o=12 d=3)
+  ### ORIG-only (MISSING from decomp):
+     1752 POP_JUMP_FORWARD_IF_FALSE      to 1758
+     1754 LOAD_CONST                     '买入'
+     1756 JUMP_FORWARD                   to 1760
+     1758 LOAD_CONST                     '卖出'
+     1760 FORMAT_VALUE                   str
+     1762 LOAD_FAST                      order_amount
+     1764 FORMAT_VALUE                   str
+     1766 BUILD_STRING                   
+     1772 CALL                           
+     1786 CALL                           
+     1796 POP_TOP                        
+     1800 JUMP_FORWARD                   to 2912
+  ### DECOMP-only (EXTRA / relocated):
+     1620 POP_JUMP_FORWARD_IF_FALSE      to 1626
+     1624 JUMP_FORWARD                   to 2496
+     1628 JUMP_FORWARD                   to 2496
+HUNK replace  orig[282:283] off 1904..1904   decomp[248:249] off 1730..1730  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1904 POP_JUMP_FORWARD_IF_FALSE      to 2430
+  ### DECOMP-only (EXTRA / relocated):
+     1730 POP_JUMP_FORWARD_IF_FALSE      to 2132
+HUNK replace  orig[290:291] off 1972..1972   decomp[256:257] off 1798..1798  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1972 POP_JUMP_FORWARD_IF_FALSE      to 2092
+  ### DECOMP-only (EXTRA / relocated):
+     1798 POP_JUMP_FORWARD_IF_FALSE      to 1918
+HUNK replace  orig[305:314] off 2090..2152   decomp[271:272] off 1916..1916  (o=9 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2090 JUMP_FORWARD                   to 2912
+     2092 LOAD_GLOBAL                    NULL + strategy_log
+     2104 LOAD_ATTR                      info
+     2114 LOAD_CONST                     '生成订单，订单号：{order_id}，期权合约代码：{symbol}，方向：{side}{oper}，数量：{share}手, {hedge_type}'
+     2116 LOAD_METHOD                    format
+     2138 LOAD_FAST                      order
+     2140 LOAD_ATTR                      order_id
+     2150 LOAD_FAST                      order
+     2152 LOAD_ATTR                      symbol
+  ### DECOMP-only (EXTRA / relocated):
+     1916 JUMP_FORWARD                   to 2496
+HUNK replace  orig[321:325] off 2228..2234   decomp[279:280] off 1984..1984  (o=4 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2228 POP_JUMP_FORWARD_IF_FALSE      to 2234
+     2230 LOAD_CONST                     '买入'
+     2232 JUMP_FORWARD                   to 2236
+     2234 LOAD_CONST                     '卖出'
+  ### DECOMP-only (EXTRA / relocated):
+     1984 POP_JUMP_FORWARD_IF_FALSE      to 2130
+HUNK replace  orig[332:338] off 2302..2312   decomp[287:288] off 2052..2052  (o=6 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2302 POP_JUMP_FORWARD_IF_FALSE      to 2308
+     2304 LOAD_CONST                     '开仓'
+     2306 JUMP_FORWARD                   to 2310
+     2308 LOAD_CONST                     '平仓'
+     2310 LOAD_FAST                      order
+     2312 LOAD_ATTR                      amount
+  ### DECOMP-only (EXTRA / relocated):
+     2052 POP_JUMP_FORWARD_IF_FALSE      to 2056
+HUNK replace  orig[345:362] off 2388..2490   decomp[295:299] off 2124..2130  (o=17 d=4)
+  ### ORIG-only (MISSING from decomp):
+     2388 POP_JUMP_FORWARD_IF_FALSE      to 2394
+     2390 LOAD_CONST                     '非备兑类型委托'
+     2392 JUMP_FORWARD                   to 2396
+     2394 LOAD_CONST                     '备兑类型委托'
+     2396 KW_NAMES                       
+     2402 CALL                           
+     2416 CALL                           
+     2426 POP_TOP                        
+     2428 JUMP_FORWARD                   to 2912
+     2430 LOAD_GLOBAL                    NULL + strategy_log
+     2442 LOAD_ATTR                      info
+     2452 LOAD_CONST                     '生成订单，订单号：{order_id}，期货合约代码：{symbol}，方向：{side}{oper}，数量：{share}手'
+     2454 LOAD_METHOD                    format
+     2476 LOAD_FAST                      order
+     2478 LOAD_ATTR                      order_id
+     2488 LOAD_FAST                      order
+     2490 LOAD_ATTR                      symbol
+  ### DECOMP-only (EXTRA / relocated):
+     2124 POP_JUMP_FORWARD_IF_FALSE      to 2128
+     2126 JUMP_FORWARD                   to 2496
+     2128 JUMP_FORWARD                   to 2496
+     2130 JUMP_FORWARD                   to 2496
+HUNK replace  orig[369:373] off 2566..2572   decomp[306:307] off 2198..2198  (o=4 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2566 POP_JUMP_FORWARD_IF_FALSE      to 2572
+     2568 LOAD_CONST                     '买入'
+     2570 JUMP_FORWARD                   to 2574
+     2572 LOAD_CONST                     '卖出'
+  ### DECOMP-only (EXTRA / relocated):
+     2198 POP_JUMP_FORWARD_IF_FALSE      to 2494
+HUNK replace  orig[380:390] off 2640..2690   decomp[314:315] off 2266..2266  (o=10 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2640 POP_JUMP_FORWARD_IF_FALSE      to 2646
+     2642 LOAD_CONST                     '开仓'
+     2644 JUMP_FORWARD                   to 2648
+     2646 LOAD_CONST                     '平仓'
+     2648 LOAD_FAST                      order
+     2650 LOAD_ATTR                      amount
+     2660 KW_NAMES                       
+     2666 CALL                           
+     2680 CALL                           
+     2690 POP_TOP                        
+  ### DECOMP-only (EXTRA / relocated):
+     2266 POP_JUMP_FORWARD_IF_FALSE      to 2270
+HUNK replace  orig[428:429] off 3024..3024   decomp[353:363] off 2608..2666  (o=1 d=10)
+  ### ORIG-only (MISSING from decomp):
+     3024 JUMP_FORWARD                   to 3128
+  ### DECOMP-only (EXTRA / relocated):
+     2608 JUMP_FORWARD                   to 2666
+     2610 LOAD_GLOBAL                    NULL + strategy_log
+     2622 LOAD_ATTR                      error
+     2632 LOAD_CONST                     '可转债代码%s识别失败，无法进行可转债交易权限判断'
+     2634 LOAD_FAST                      order
+     2636 LOAD_ATTR                      symbol
+     2646 BINARY_OP                      %
+     2654 CALL                           
+     2664 POP_TOP                        
+     2666 JUMP_FORWARD                   to 2770
+HUNK replace  orig[432:433] off 3042..3042   decomp[366:367] off 2684..2684  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     3042 POP_JUMP_FORWARD_IF_FALSE      to 3120
+  ### DECOMP-only (EXTRA / relocated):
+     2684 POP_JUMP_FORWARD_IF_FALSE      to 2762
+HUNK replace  orig[443:444] off 3118..3118   decomp[377:378] off 2760..2760  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     3118 JUMP_FORWARD                   to 3128
+  ### DECOMP-only (EXTRA / relocated):
+     2760 JUMP_FORWARD                   to 2770
+HUNK insert   orig[448:448] off 3128..3126   decomp[382:389] off 2770..2818  (o=0 d=7)
+  ### DECOMP-only (EXTRA / relocated):
+     2770 LOAD_GLOBAL                    NULL + len
+     2782 LOAD_FAST                      self
+     2784 LOAD_ATTR                      open_orders
+     2798 CALL                           
+     2808 LOAD_CONST                     0
+     2810 COMPARE_OP                     >
+     2818 POP_JUMP_BACKWARD_IF_TRUE      to 94
+HUNK replace  orig[453:454] off 3170..3170   decomp[394:396] off 2860..2862  (o=1 d=2)
+  ### ORIG-only (MISSING from decomp):
+     3170 JUMP_BACKWARD                  to 46
+  ### DECOMP-only (EXTRA / relocated):
+     2860 LOAD_CONST                     None
+     2862 RETURN_VALUE                   
+SUMMARY missing_run_instrs=109 extra_run_instrs=51

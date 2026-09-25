@@ -1,0 +1,261 @@
+orig candidates=[[539]] decomp candidates=[[382]]
+orig=526 decomp=518  ratio=0.8793  opcodes=[('replace', 1, 8, 1, 2), ('delete', 9, 11, 3, 3), ('replace', 18, 19, 10, 11), ('replace', 23, 24, 15, 16), ('insert', 25, 25, 17, 23), ('replace', 26, 36, 24, 28), ('replace', 38, 41, 30, 33), ('replace', 43, 49, 35, 41), ('replace', 56, 57, 48, 49), ('replace', 61, 62, 53, 54), ('replace', 67, 68, 59, 60), ('replace', 84, 85, 76, 77), ('replace', 102, 103, 94, 95), ('replace', 121, 122, 113, 114), ('replace', 127, 128, 119, 120), ('replace', 152, 153, 144, 145), ('replace', 158, 159, 150, 151), ('replace', 184, 185, 176, 177), ('replace', 224, 225, 216, 217), ('replace', 276, 277, 268, 269), ('replace', 290, 291, 282, 283), ('replace', 305, 306, 297, 298), ('replace', 309, 310, 301, 302), ('replace', 321, 322, 313, 314), ('replace', 324, 325, 316, 317), ('replace', 330, 331, 322, 323), ('replace', 333, 334, 325, 326), ('replace', 349, 350, 341, 342), ('replace', 353, 354, 345, 346), ('replace', 365, 366, 357, 358), ('replace', 368, 369, 360, 361), ('replace', 371, 372, 363, 364), ('replace', 380, 381, 372, 373), ('replace', 385, 386, 377, 378), ('replace', 404, 405, 396, 397), ('replace', 410, 411, 402, 403), ('replace', 435, 436, 427, 428), ('replace', 441, 442, 433, 434), ('replace', 466, 467, 458, 459), ('replace', 470, 471, 462, 463), ('replace', 474, 475, 466, 467), ('replace', 487, 488, 479, 480), ('replace', 497, 498, 489, 490), ('replace', 501, 502, 493, 494), ('replace', 513, 514, 505, 506)]
+HUNK replace  orig[1:8]@2 decomp[1:2]@2
+  ### ORIG only:
+        2 LOAD_FAST                  self
+        4 LOAD_ATTR                  log
+       14 LOAD_ATTR                  quote
+       24 LOAD_METHOD                debug
+       46 LOAD_CONST                 '调用函数load_bars_from_hundsun，参数为：stocks='
+       48 LOAD_FAST                  stocks
+       50 LOAD_CONST                 None
+  ### DECOMP only:
+        2 LOAD_CONST                 'self调用函数load_bars_from_hundsun，参数为：stocks=stocksNone'
+HUNK delete   orig[9:11]@54 decomp[3:3]@-
+  ### ORIG only:
+       54 BUILD_SLICE                
+       56 BINARY_SUBSCR              
+HUNK replace  orig[18:19]@110 decomp[10:11]@50
+  ### ORIG only:
+      110 POP_JUMP_FORWARD_IF_FALSE  to 142
+  ### DECOMP only:
+       50 POP_JUMP_FORWARD_IF_FALSE  to 82
+HUNK replace  orig[23:24]@140 decomp[15:16]@80
+  ### ORIG only:
+      140 JUMP_FORWARD               to 144
+  ### DECOMP only:
+       80 JUMP_FORWARD               to 84
+HUNK insert   orig[25:25]@- decomp[17:23]@84
+  ### DECOMP only:
+       84 FORMAT_VALUE               
+       86 LOAD_CONST                 '只代码,typet=,start=,end='
+       88 BUILD_STRING               
+       90 POP_TOP                    
+       92 LOAD_CONST                 'self调用函数load_bars_from_hundsun，参数为：stocks=stocksNone'
+       94 LOAD_CONST                 10
+HUNK replace  orig[26:36]@146 decomp[24:28]@98
+  ### ORIG only:
+      146 LOAD_CONST                 '只代码,typet='
+      148 LOAD_FAST                  typet
+      150 FORMAT_VALUE               str
+      152 LOAD_CONST                 ',start='
+      154 LOAD_FAST                  start
+      156 FORMAT_VALUE               str
+      158 LOAD_CONST                 ',end='
+      160 LOAD_FAST                  end
+      162 FORMAT_VALUE               str
+      164 BUILD_STRING               
+  ### DECOMP only:
+       98 LOAD_CONST                 '等'
+      100 LOAD_GLOBAL                NULL + isinstance
+      112 LOAD_FAST                  stocks
+      114 LOAD_GLOBAL                list
+HUNK replace  orig[38:41]@180 decomp[30:33]@140
+  ### ORIG only:
+      180 POP_TOP                    
+      182 LOAD_GLOBAL                NULL + collections
+      194 LOAD_ATTR                  OrderedDict
+  ### DECOMP only:
+      140 POP_JUMP_FORWARD_IF_FALSE  to 172
+      142 LOAD_GLOBAL                NULL + len
+      154 LOAD_FAST                  stocks
+HUNK replace  orig[43:49]@218 decomp[35:41]@170
+  ### ORIG only:
+      218 STORE_FAST                 data
+      220 LOAD_GLOBAL                NULL + pandas
+      232 LOAD_ATTR                  Panel
+      242 PRECALL                    
+      246 CALL                       
+      256 STORE_FAST                 retpanel
+  ### DECOMP only:
+      170 JUMP_FORWARD               to 174
+      172 LOAD_CONST                 1
+      174 FORMAT_VALUE               
+      176 LOAD_CONST                 '只代码,typet=,start=,end='
+      178 BUILD_STRING               
+      180 POP_TOP                    
+HUNK replace  orig[56:57]@330 decomp[48:49]@254
+  ### ORIG only:
+      330 POP_JUMP_FORWARD_IF_FALSE  to 1532
+  ### DECOMP only:
+      254 POP_JUMP_FORWARD_IF_FALSE  to 1456
+HUNK replace  orig[61:62]@344 decomp[53:54]@268
+  ### ORIG only:
+      344 POP_JUMP_FORWARD_IF_FALSE  to 1532
+  ### DECOMP only:
+      268 POP_JUMP_FORWARD_IF_FALSE  to 1456
+HUNK replace  orig[67:68]@386 decomp[59:60]@310
+  ### ORIG only:
+      386 POP_JUMP_FORWARD_IF_FALSE  to 394
+  ### DECOMP only:
+      310 POP_JUMP_FORWARD_IF_FALSE  to 318
+HUNK replace  orig[84:85]@462 decomp[76:77]@386
+  ### ORIG only:
+      462 POP_JUMP_FORWARD_IF_FALSE  to 544
+  ### DECOMP only:
+      386 POP_JUMP_FORWARD_IF_FALSE  to 468
+HUNK replace  orig[102:103]@572 decomp[94:95]@496
+  ### ORIG only:
+      572 POP_JUMP_FORWARD_IF_TRUE   to 1532
+  ### DECOMP only:
+      496 POP_JUMP_FORWARD_IF_TRUE   to 1456
+HUNK replace  orig[121:122]@688 decomp[113:114]@612
+  ### ORIG only:
+      688 POP_JUMP_FORWARD_IF_FALSE  to 710
+  ### DECOMP only:
+      612 POP_JUMP_FORWARD_IF_FALSE  to 634
+HUNK replace  orig[127:128]@708 decomp[119:120]@632
+  ### ORIG only:
+      708 JUMP_IF_TRUE_OR_POP        to 712
+  ### DECOMP only:
+      632 JUMP_IF_TRUE_OR_POP        to 636
+HUNK replace  orig[152:153]@848 decomp[144:145]@772
+  ### ORIG only:
+      848 POP_JUMP_FORWARD_IF_FALSE  to 870
+  ### DECOMP only:
+      772 POP_JUMP_FORWARD_IF_FALSE  to 794
+HUNK replace  orig[158:159]@868 decomp[150:151]@792
+  ### ORIG only:
+      868 JUMP_IF_TRUE_OR_POP        to 872
+  ### DECOMP only:
+      792 JUMP_IF_TRUE_OR_POP        to 796
+HUNK replace  orig[184:185]@1034 decomp[176:177]@958
+  ### ORIG only:
+     1034 POP_JUMP_FORWARD_IF_FALSE  to 1174
+  ### DECOMP only:
+      958 POP_JUMP_FORWARD_IF_FALSE  to 1098
+HUNK replace  orig[224:225]@1236 decomp[216:217]@1160
+  ### ORIG only:
+     1236 POP_JUMP_FORWARD_IF_FALSE  to 1532
+  ### DECOMP only:
+     1160 POP_JUMP_FORWARD_IF_FALSE  to 1456
+HUNK replace  orig[276:277]@1544 decomp[268:269]@1468
+  ### ORIG only:
+     1544 POP_JUMP_FORWARD_IF_FALSE  to 1608
+  ### DECOMP only:
+     1468 POP_JUMP_FORWARD_IF_FALSE  to 1532
+HUNK replace  orig[290:291]@1648 decomp[282:283]@1572
+  ### ORIG only:
+     1648 POP_JUMP_FORWARD_IF_FALSE  to 1788
+  ### DECOMP only:
+     1572 POP_JUMP_FORWARD_IF_FALSE  to 1722
+HUNK replace  orig[305:306]@1708 decomp[297:298]@1632
+  ### ORIG only:
+     1708 POP_JUMP_FORWARD_IF_NONE   to 1776
+  ### DECOMP only:
+     1632 POP_JUMP_FORWARD_IF_NONE   to 1700
+HUNK replace  orig[309:310]@1716 decomp[301:302]@1640
+  ### ORIG only:
+     1716 POP_JUMP_FORWARD_IF_FALSE  to 1776
+  ### DECOMP only:
+     1640 POP_JUMP_FORWARD_IF_FALSE  to 1700
+HUNK replace  orig[321:322]@1778 decomp[313:314]@1702
+  ### ORIG only:
+     1778 LOAD_FAST                  data
+  ### DECOMP only:
+     1702 LOAD_GLOBAL                data
+HUNK replace  orig[324:325]@1786 decomp[316:317]@1720
+  ### ORIG only:
+     1786 JUMP_FORWARD               to 1976
+  ### DECOMP only:
+     1720 JUMP_FORWARD               to 1920
+HUNK replace  orig[330:331]@1828 decomp[322:323]@1762
+  ### ORIG only:
+     1828 POP_JUMP_FORWARD_IF_FALSE  to 1976
+  ### DECOMP only:
+     1762 POP_JUMP_FORWARD_IF_FALSE  to 1920
+HUNK replace  orig[333:334]@1834 decomp[325:326]@1768
+  ### ORIG only:
+     1834 FOR_ITER                   to 1976
+  ### DECOMP only:
+     1768 FOR_ITER                   to 1920
+HUNK replace  orig[349:350]@1896 decomp[341:342]@1830
+  ### ORIG only:
+     1896 POP_JUMP_FORWARD_IF_NONE   to 1964
+  ### DECOMP only:
+     1830 POP_JUMP_FORWARD_IF_NONE   to 1898
+HUNK replace  orig[353:354]@1904 decomp[345:346]@1838
+  ### ORIG only:
+     1904 POP_JUMP_FORWARD_IF_FALSE  to 1964
+  ### DECOMP only:
+     1838 POP_JUMP_FORWARD_IF_FALSE  to 1898
+HUNK replace  orig[365:366]@1966 decomp[357:358]@1900
+  ### ORIG only:
+     1966 LOAD_FAST                  data
+  ### DECOMP only:
+     1900 LOAD_GLOBAL                data
+HUNK replace  orig[368:369]@1974 decomp[360:361]@1918
+  ### ORIG only:
+     1974 JUMP_BACKWARD              to 1834
+  ### DECOMP only:
+     1918 JUMP_BACKWARD              to 1768
+HUNK replace  orig[371:372]@1998 decomp[363:364]@1942
+  ### ORIG only:
+     1998 LOAD_FAST                  data
+  ### DECOMP only:
+     1942 LOAD_GLOBAL                data
+HUNK replace  orig[380:381]@2036 decomp[372:373]@1990
+  ### ORIG only:
+     2036 LOAD_FAST                  data
+  ### DECOMP only:
+     1990 LOAD_GLOBAL                data
+HUNK replace  orig[385:386]@2060 decomp[377:378]@2024
+  ### ORIG only:
+     2060 POP_JUMP_FORWARD_IF_FALSE  to 2420
+  ### DECOMP only:
+     2024 POP_JUMP_FORWARD_IF_FALSE  to 2384
+HUNK replace  orig[404:405]@2176 decomp[396:397]@2140
+  ### ORIG only:
+     2176 POP_JUMP_FORWARD_IF_FALSE  to 2198
+  ### DECOMP only:
+     2140 POP_JUMP_FORWARD_IF_FALSE  to 2162
+HUNK replace  orig[410:411]@2196 decomp[402:403]@2160
+  ### ORIG only:
+     2196 JUMP_IF_TRUE_OR_POP        to 2200
+  ### DECOMP only:
+     2160 JUMP_IF_TRUE_OR_POP        to 2164
+HUNK replace  orig[435:436]@2336 decomp[427:428]@2300
+  ### ORIG only:
+     2336 POP_JUMP_FORWARD_IF_FALSE  to 2358
+  ### DECOMP only:
+     2300 POP_JUMP_FORWARD_IF_FALSE  to 2322
+HUNK replace  orig[441:442]@2356 decomp[433:434]@2320
+  ### ORIG only:
+     2356 JUMP_IF_TRUE_OR_POP        to 2360
+  ### DECOMP only:
+     2320 JUMP_IF_TRUE_OR_POP        to 2324
+HUNK replace  orig[466:467]@2466 decomp[458:459]@2430
+  ### ORIG only:
+     2466 POP_JUMP_FORWARD_IF_FALSE  to 2778
+  ### DECOMP only:
+     2430 POP_JUMP_FORWARD_IF_FALSE  to 2742
+HUNK replace  orig[470:471]@2488 decomp[462:463]@2452
+  ### ORIG only:
+     2488 POP_JUMP_FORWARD_IF_FALSE  to 2684
+  ### DECOMP only:
+     2452 POP_JUMP_FORWARD_IF_FALSE  to 2648
+HUNK replace  orig[474:475]@2496 decomp[466:467]@2460
+  ### ORIG only:
+     2496 POP_JUMP_FORWARD_IF_FALSE  to 2600
+  ### DECOMP only:
+     2460 POP_JUMP_FORWARD_IF_FALSE  to 2564
+HUNK replace  orig[487:488]@2598 decomp[479:480]@2562
+  ### ORIG only:
+     2598 JUMP_FORWARD               to 2778
+  ### DECOMP only:
+     2562 JUMP_FORWARD               to 2742
+HUNK replace  orig[497:498]@2682 decomp[489:490]@2646
+  ### ORIG only:
+     2682 JUMP_FORWARD               to 2778
+  ### DECOMP only:
+     2646 JUMP_FORWARD               to 2742
+HUNK replace  orig[501:502]@2694 decomp[493:494]@2658
+  ### ORIG only:
+     2694 POP_JUMP_FORWARD_IF_FALSE  to 2778
+  ### DECOMP only:
+     2658 POP_JUMP_FORWARD_IF_FALSE  to 2742
+HUNK replace  orig[513:514]@2790 decomp[505:506]@2754
+  ### ORIG only:
+     2790 POP_JUMP_FORWARD_IF_TRUE   to 2840
+  ### DECOMP only:
+     2754 POP_JUMP_FORWARD_IF_TRUE   to 2804

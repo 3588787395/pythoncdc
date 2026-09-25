@@ -1,0 +1,9 @@
+repro pycs discovered: 19  (round63 batches + 11 pinned R62 witnesses)
+Traceback (most recent call last):
+  File "D:\Temp\opencode\r65gate\closeout65.py", line 122, in <module>
+    sys.exit(battery(sys.argv[2:] or ['landed']))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Temp\opencode\r65gate\closeout65.py", line 61, in battery
+    io.open(lf, 'w', encoding='utf-8', newline='\n').write('\n'.join(paths) + '\n')
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'D:/Temp/opencode/r65gate/dump/reprolist64.txt'

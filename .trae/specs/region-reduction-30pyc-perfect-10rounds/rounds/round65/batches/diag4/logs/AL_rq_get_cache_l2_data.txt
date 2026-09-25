@@ -1,0 +1,21 @@
+orig candidates=[[1038]] decomp candidates=[[731]]
+orig=375 decomp=375  ratio=0.9867  opcodes=[('replace', 12, 13, 12, 13), ('replace', 15, 16, 15, 16), ('replace', 20, 23, 20, 23)]
+HUNK replace  orig[12:13]@52 decomp[12:13]@52
+  ### ORIG only:
+       52 POP_JUMP_FORWARD_IF_FALSE  to 90
+  ### DECOMP only:
+       52 POP_JUMP_FORWARD_IF_FALSE  to 92
+HUNK replace  orig[15:16]@58 decomp[15:16]@58
+  ### ORIG only:
+       58 JUMP_FORWARD               to 90
+  ### DECOMP only:
+       58 JUMP_FORWARD               to 92
+HUNK replace  orig[20:23]@88 decomp[20:23]@88
+  ### ORIG only:
+       88 JUMP_FORWARD               to 92
+       90 LOAD_CONST                 200
+       92 STORE_FAST                 data_count
+  ### DECOMP only:
+       88 POP_TOP                    
+       90 JUMP_FORWARD               to 94
+       92 NOP                        

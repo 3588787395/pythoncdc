@@ -1,0 +1,316 @@
+=== initImagedata firstlineno=2210 args=('self', 'universe', 'dataDict', 'userLock', 'imagedata', 'params', 'item', 'redata', 'flag', 'count', 'key', 'returnDf', 'defaultshot') ===
+      -- line 2210: 
+      0 RESUME                         
+      -- line 2211: 
+      2 LOAD_FAST                      dataDict
+      4 LOAD_CONST                     'imagedata'
+      6 BINARY_SUBSCR                  
+     16 STORE_FAST                     imagedata
+      -- line 2212: 
+     18 LOAD_CONST                     'snapshot'
+     20 BUILD_LIST                     
+     22 STORE_FAST                     params
+      -- line 2213: 
+     24 LOAD_GLOBAL                    NULL + isinstance
+     36 LOAD_FAST                      universe
+     38 LOAD_GLOBAL                    str
+     50 PRECALL                        
+     54 CALL                           
+     64 POP_JUMP_FORWARD_IF_FALSE      to 110
+      -- line 2214: 
+     66 LOAD_FAST                      params
+     68 LOAD_METHOD                    append
+     90 LOAD_FAST                      universe
+     92 PRECALL                        
+     96 CALL                           
+    106 POP_TOP                        
+    108 JUMP_FORWARD                   to 204
+      -- line 2215: 
+    110 LOAD_GLOBAL                    NULL + isinstance
+    122 LOAD_FAST                      universe
+    124 LOAD_GLOBAL                    list
+    136 PRECALL                        
+    140 CALL                           
+    150 POP_JUMP_FORWARD_IF_FALSE      to 204
+      -- line 2216: 
+    152 LOAD_FAST                      universe
+    154 GET_ITER                       
+    156 FOR_ITER                       to 204
+    158 STORE_FAST                     item
+      -- line 2217: 
+    160 LOAD_FAST                      params
+    162 LOAD_METHOD                    append
+    184 LOAD_FAST                      item
+    186 PRECALL                        
+    190 CALL                           
+    200 POP_TOP                        
+    202 JUMP_BACKWARD                  to 156
+      -- line 2218: 
+    204 LOAD_FAST                      self
+    206 LOAD_ATTR                      log
+    216 LOAD_ATTR                      quote
+    226 LOAD_METHOD                    debug
+    248 LOAD_CONST                     '初始化imagedata,在线获取snapshot数据,包括'
+    250 LOAD_FAST                      universe
+    252 LOAD_CONST                     None
+    254 LOAD_CONST                     10
+    256 BUILD_SLICE                    
+    258 BINARY_SUBSCR                  
+    268 FORMAT_VALUE                   str
+    270 LOAD_CONST                     '等'
+    272 LOAD_GLOBAL                    NULL + len
+    284 LOAD_FAST                      universe
+    286 PRECALL                        
+    290 CALL                           
+    300 FORMAT_VALUE                   str
+    302 LOAD_CONST                     '只代码'
+    304 BUILD_STRING                   
+    306 PRECALL                        
+    310 CALL                           
+    320 POP_TOP                        
+      -- line 2219: 
+    322 LOAD_FAST                      self
+    324 LOAD_METHOD                    api_get_from_multi_zeromq
+    346 LOAD_GLOBAL                    NULL + str
+    358 LOAD_FAST                      params
+    360 PRECALL                        
+    364 CALL                           
+    374 PRECALL                        
+    378 CALL                           
+    388 UNPACK_SEQUENCE                
+    392 STORE_FAST                     redata
+    394 STORE_FAST                     flag
+      -- line 2220: 
+    396 LOAD_CONST                     0
+    398 STORE_FAST                     count
+      -- line 2221: 
+    400 LOAD_FAST                      redata
+    402 POP_JUMP_FORWARD_IF_TRUE       to 794
+    404 LOAD_FAST                      count
+    406 LOAD_CONST                     3
+    408 COMPARE_OP                     <
+    414 POP_JUMP_FORWARD_IF_FALSE      to 794
+      -- line 2222: 
+    416 LOAD_GLOBAL                    NULL + time
+    428 LOAD_ATTR                      sleep
+    438 LOAD_CONST                     3
+    440 PRECALL                        
+    444 CALL                           
+    454 POP_TOP                        
+      -- line 2223: 
+    456 LOAD_FAST                      flag
+    458 LOAD_CONST                     1
+    460 COMPARE_OP                     ==
+    466 POP_JUMP_FORWARD_IF_FALSE      to 576
+      -- line 2224: 
+    468 LOAD_FAST                      self
+    470 LOAD_ATTR                      log
+    480 LOAD_ATTR                      quote
+    490 LOAD_METHOD                    info
+    512 LOAD_CONST                     '获取snapshot数据异常，现在进行第'
+    514 LOAD_GLOBAL                    NULL + str
+    526 LOAD_FAST                      count
+    528 LOAD_CONST                     1
+    530 BINARY_OP                      +
+    534 PRECALL                        
+    538 CALL                           
+    548 BINARY_OP                      +
+    552 LOAD_CONST                     '次重试'
+    554 BINARY_OP                      +
+    558 PRECALL                        
+    562 CALL                           
+    572 POP_TOP                        
+    574 JUMP_FORWARD                   to 694
+      -- line 2225: 
+    576 LOAD_FAST                      flag
+    578 LOAD_CONST                     -1
+    580 COMPARE_OP                     ==
+    586 POP_JUMP_FORWARD_IF_FALSE      to 694
+      -- line 2226: 
+    588 LOAD_FAST                      self
+    590 LOAD_ATTR                      log
+    600 LOAD_ATTR                      quote
+    610 LOAD_METHOD                    info
+    632 LOAD_CONST                     '获取snapshot数据返回为空，现在进行第'
+    634 LOAD_GLOBAL                    NULL + str
+    646 LOAD_FAST                      count
+    648 LOAD_CONST                     1
+    650 BINARY_OP                      +
+    654 PRECALL                        
+    658 CALL                           
+    668 BINARY_OP                      +
+    672 LOAD_CONST                     '次重试'
+    674 BINARY_OP                      +
+    678 PRECALL                        
+    682 CALL                           
+    692 POP_TOP                        
+      -- line 2227: 
+    694 LOAD_FAST                      self
+    696 LOAD_METHOD                    api_get_from_multi_zeromq
+    718 LOAD_GLOBAL                    NULL + str
+    730 LOAD_FAST                      params
+    732 PRECALL                        
+    736 CALL                           
+    746 PRECALL                        
+    750 CALL                           
+    760 UNPACK_SEQUENCE                
+    764 STORE_FAST                     redata
+    766 STORE_FAST                     flag
+      -- line 2228: 
+    768 LOAD_FAST                      count
+    770 LOAD_CONST                     1
+    772 BINARY_OP                      +=
+    776 STORE_FAST                     count
+      -- line 2221: 
+    778 LOAD_FAST                      redata
+    780 POP_JUMP_FORWARD_IF_TRUE       to 794
+    782 LOAD_FAST                      count
+    784 LOAD_CONST                     3
+    786 COMPARE_OP                     <
+    792 POP_JUMP_BACKWARD_IF_TRUE      to 416
+      -- line 2229: 
+    794 LOAD_FAST                      redata
+    796 POP_JUMP_FORWARD_IF_FALSE      to 1040
+      -- line 2230: 
+    798 LOAD_FAST                      redata
+    800 LOAD_METHOD                    keys
+    822 PRECALL                        
+    826 CALL                           
+    836 GET_ITER                       
+    838 FOR_ITER                       to 936
+    840 STORE_FAST                     key
+      -- line 2231: 
+    842 LOAD_FAST                      self
+    844 LOAD_METHOD                    get_real_tick
+    866 LOAD_FAST                      key
+    868 LOAD_FAST                      redata
+    870 LOAD_METHOD                    get
+    892 LOAD_FAST                      key
+    894 PRECALL                        
+    898 CALL                           
+    908 PRECALL                        
+    912 CALL                           
+    922 STORE_FAST                     returnDf
+      -- line 2232: 
+    924 LOAD_FAST                      returnDf
+    926 LOAD_FAST                      imagedata
+    928 LOAD_FAST                      key
+    930 STORE_SUBSCR                   
+    934 JUMP_BACKWARD                  to 838
+      -- line 2233: 
+    936 LOAD_FAST                      userLock
+    938 LOAD_METHOD                    acquire
+    960 PRECALL                        
+    964 CALL                           
+    974 POP_TOP                        
+      -- line 2234: 
+    976 LOAD_FAST                      imagedata
+    978 LOAD_FAST                      dataDict
+    980 LOAD_CONST                     'imagedata'
+    982 STORE_SUBSCR                   
+      -- line 2235: 
+    986 LOAD_FAST                      flag
+    988 LOAD_FAST                      dataDict
+    990 LOAD_CONST                     'updateflag'
+    992 STORE_SUBSCR                   
+      -- line 2236: 
+    996 LOAD_FAST                      userLock
+    998 LOAD_METHOD                    release
+   1020 PRECALL                        
+   1024 CALL                           
+   1034 POP_TOP                        
+   1036 LOAD_CONST                     None
+   1038 RETURN_VALUE                   
+      -- line 2238: 
+   1040 LOAD_FAST                      flag
+   1042 LOAD_CONST                     1
+   1044 COMPARE_OP                     ==
+   1050 POP_JUMP_FORWARD_IF_FALSE      to 1116
+      -- line 2239: 
+   1052 LOAD_FAST                      self
+   1054 LOAD_ATTR                      log
+   1064 LOAD_ATTR                      quote
+   1074 LOAD_METHOD                    info
+   1096 LOAD_CONST                     'snapshot数据转化异常,未完成初始化镜像数据,默认填充为0'
+   1098 PRECALL                        
+   1102 CALL                           
+   1112 POP_TOP                        
+   1114 JUMP_FORWARD                   to 1190
+      -- line 2240: 
+   1116 LOAD_FAST                      flag
+   1118 LOAD_CONST                     -1
+   1120 COMPARE_OP                     ==
+   1126 POP_JUMP_FORWARD_IF_FALSE      to 1190
+      -- line 2241: 
+   1128 LOAD_FAST                      self
+   1130 LOAD_ATTR                      log
+   1140 LOAD_ATTR                      quote
+   1150 LOAD_METHOD                    info
+   1172 LOAD_CONST                     'snapshot数据返回空值,未完成初始化镜像数据,默认填充为0'
+   1174 PRECALL                        
+   1178 CALL                           
+   1188 POP_TOP                        
+      -- line 2242: 
+   1190 LOAD_FAST                      self
+   1192 LOAD_METHOD                    get_default_snapshot
+   1214 PRECALL                        
+   1218 CALL                           
+   1228 STORE_FAST                     defaultshot
+      -- line 2243: 
+   1230 LOAD_GLOBAL                    NULL + isinstance
+   1242 LOAD_FAST                      universe
+   1244 LOAD_GLOBAL                    str
+   1256 PRECALL                        
+   1260 CALL                           
+   1270 POP_JUMP_FORWARD_IF_FALSE      to 1284
+      -- line 2244: 
+   1272 LOAD_FAST                      defaultshot
+   1274 LOAD_FAST                      imagedata
+   1276 LOAD_FAST                      universe
+   1278 STORE_SUBSCR                   
+   1282 JUMP_FORWARD                   to 1382
+      -- line 2245: 
+   1284 LOAD_GLOBAL                    NULL + isinstance
+   1296 LOAD_FAST                      universe
+   1298 LOAD_GLOBAL                    list
+   1310 PRECALL                        
+   1314 CALL                           
+   1324 POP_JUMP_FORWARD_IF_FALSE      to 1382
+      -- line 2246: 
+   1326 LOAD_FAST                      universe
+   1328 GET_ITER                       
+   1330 FOR_ITER                       to 1382
+   1332 STORE_FAST                     item
+      -- line 2247: 
+   1334 LOAD_FAST                      defaultshot
+   1336 LOAD_METHOD                    copy
+   1358 PRECALL                        
+   1362 CALL                           
+   1372 LOAD_FAST                      imagedata
+   1374 LOAD_FAST                      item
+   1376 STORE_SUBSCR                   
+   1380 JUMP_BACKWARD                  to 1330
+      -- line 2248: 
+   1382 LOAD_FAST                      userLock
+   1384 LOAD_METHOD                    acquire
+   1406 PRECALL                        
+   1410 CALL                           
+   1420 POP_TOP                        
+      -- line 2249: 
+   1422 LOAD_FAST                      imagedata
+   1424 LOAD_FAST                      dataDict
+   1426 LOAD_CONST                     'imagedata'
+   1428 STORE_SUBSCR                   
+      -- line 2250: 
+   1432 LOAD_FAST                      flag
+   1434 LOAD_FAST                      dataDict
+   1436 LOAD_CONST                     'updateflag'
+   1438 STORE_SUBSCR                   
+      -- line 2251: 
+   1442 LOAD_FAST                      userLock
+   1444 LOAD_METHOD                    release
+   1466 PRECALL                        
+   1470 CALL                           
+   1480 POP_TOP                        
+   1482 LOAD_CONST                     None
+   1484 RETURN_VALUE                   

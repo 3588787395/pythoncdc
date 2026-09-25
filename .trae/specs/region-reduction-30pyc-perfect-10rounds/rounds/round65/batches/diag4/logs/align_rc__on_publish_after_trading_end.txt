@@ -1,0 +1,32 @@
+orig candidates=[[291]] decomp candidates=[[180]]
+orig=531 decomp=523  ratio=0.9829  opcodes=[('replace', 230, 231, 230, 231), ('replace', 460, 461, 460, 461), ('replace', 481, 483, 481, 482), ('replace', 490, 499, 489, 491)]
+HUNK replace  orig[230:231]@1352 decomp[230:231]@1352
+  ### ORIG only:
+     1352 LOAD_CONST                 <code object <lambda> at 0x000001F9D0D57D30, file "./fly_docker_py311/IQEngine/plugins/plugin_system_risk_calculation/__init__.py", line 343>
+  ### DECOMP only:
+     1352 LOAD_CONST                 <code object <lambda> at 0x000001F9D1240230, file "build_landed/IQEngine__plugins__plugin_system_risk_calculation____init__OK.py", line 220>
+HUNK replace  orig[460:461]@2652 decomp[460:461]@2652
+  ### ORIG only:
+     2652 POP_JUMP_FORWARD_IF_FALSE  to 2808
+  ### DECOMP only:
+     2652 POP_JUMP_FORWARD_IF_FALSE  to 2764
+HUNK replace  orig[481:483]@2744 decomp[481:482]@2744
+  ### ORIG only:
+     2744 POP_JUMP_FORWARD_IF_FALSE  to 2808
+     2746 NOP                        
+  ### DECOMP only:
+     2744 POP_JUMP_FORWARD_IF_FALSE  to 2764
+HUNK replace  orig[490:499]@2762 decomp[489:491]@2760
+  ### ORIG only:
+     2762 POP_JUMP_FORWARD_IF_FALSE  to 2766
+     2764 JUMP_FORWARD               to 2808
+     2766 LOAD_GLOBAL                NULL + time
+     2778 LOAD_ATTR                  sleep
+     2788 LOAD_CONST                 0.01
+     2790 PRECALL                    
+     2794 CALL                       
+     2804 POP_TOP                    
+     2806 JUMP_BACKWARD              to 2748
+  ### DECOMP only:
+     2760 POP_JUMP_FORWARD_IF_FALSE  to 2764
+     2762 NOP                        

@@ -1,0 +1,306 @@
+orig candidates=[[3274]] decomp candidates=[[2205]]
+orig=1206 decomp=1214  ratio=0.9256  opcodes=[('replace', 454, 455, 454, 455), ('replace', 470, 471, 470, 471), ('replace', 530, 532, 530, 531), ('replace', 535, 536, 534, 535), ('replace', 542, 543, 541, 542), ('replace', 546, 547, 545, 546), ('replace', 551, 552, 550, 552), ('replace', 617, 618, 617, 618), ('replace', 624, 625, 624, 625), ('replace', 656, 657, 656, 658), ('replace', 660, 661, 661, 662), ('insert', 688, 688, 689, 691), ('replace', 698, 699, 701, 703), ('replace', 703, 704, 707, 709), ('replace', 710, 711, 715, 717), ('replace', 714, 715, 720, 721), ('replace', 720, 736, 726, 727), ('replace', 750, 751, 741, 742), ('replace', 777, 778, 768, 769), ('replace', 797, 798, 788, 789), ('replace', 806, 807, 797, 798), ('replace', 810, 811, 801, 803), ('replace', 817, 818, 809, 810), ('replace', 821, 822, 813, 814), ('replace', 829, 830, 821, 822), ('replace', 841, 842, 833, 834), ('replace', 853, 854, 845, 846), ('replace', 860, 861, 852, 853), ('replace', 872, 873, 864, 865), ('replace', 899, 900, 891, 892), ('replace', 929, 930, 921, 922), ('replace', 945, 946, 937, 938), ('replace', 971, 973, 963, 964), ('replace', 1001, 1002, 992, 993), ('delete', 1028, 1056, 1019, 1019), ('replace', 1059, 1060, 1022, 1023), ('replace', 1083, 1084, 1046, 1047), ('replace', 1094, 1095, 1057, 1058), ('replace', 1108, 1109, 1071, 1072), ('replace', 1113, 1114, 1076, 1077), ('replace', 1131, 1132, 1094, 1095), ('replace', 1151, 1152, 1114, 1115), ('replace', 1170, 1171, 1133, 1134), ('insert', 1204, 1204, 1167, 1212)]
+HUNK replace  orig[454:455]@2382 decomp[454:455]@2382
+  ### ORIG only:
+     2382 FOR_ITER                   to 6254
+  ### DECOMP only:
+     2382 FOR_ITER                   to 6270
+HUNK replace  orig[470:471]@2494 decomp[470:471]@2494
+  ### ORIG only:
+     2494 POP_JUMP_FORWARD_IF_TRUE   to 2540
+  ### DECOMP only:
+     2494 POP_JUMP_FORWARD_IF_TRUE   to 2516
+HUNK replace  orig[530:532]@2810 decomp[530:531]@2810
+  ### ORIG only:
+     2810 EXTENDED_ARG               
+     2812 POP_JUMP_FORWARD_IF_TRUE   to 3378
+  ### DECOMP only:
+     2810 POP_JUMP_FORWARD_IF_TRUE   to 2874
+HUNK replace  orig[535:536]@2820 decomp[534:535]@2818
+  ### ORIG only:
+     2820 POP_JUMP_FORWARD_IF_FALSE  to 2878
+  ### DECOMP only:
+     2818 POP_JUMP_FORWARD_IF_FALSE  to 2876
+HUNK replace  orig[542:543]@2862 decomp[541:542]@2860
+  ### ORIG only:
+     2862 POP_JUMP_FORWARD_IF_FALSE  to 2878
+  ### DECOMP only:
+     2860 POP_JUMP_FORWARD_IF_FALSE  to 2876
+HUNK replace  orig[546:547]@2874 decomp[545:546]@2872
+  ### ORIG only:
+     2874 POP_JUMP_FORWARD_IF_FALSE  to 2878
+  ### DECOMP only:
+     2872 POP_JUMP_FORWARD_IF_FALSE  to 2876
+HUNK replace  orig[551:552]@2888 decomp[550:552]@2886
+  ### ORIG only:
+     2888 POP_JUMP_FORWARD_IF_FALSE  to 2954
+  ### DECOMP only:
+     2886 EXTENDED_ARG               
+     2888 POP_JUMP_FORWARD_IF_FALSE  to 6266
+HUNK replace  orig[617:618]@3096 decomp[617:618]@3096
+  ### ORIG only:
+     3096 POP_JUMP_FORWARD_IF_FALSE  to 3378
+  ### DECOMP only:
+     3096 POP_JUMP_FORWARD_IF_FALSE  to 3384
+HUNK replace  orig[624:625]@3138 decomp[624:625]@3138
+  ### ORIG only:
+     3138 POP_JUMP_FORWARD_IF_FALSE  to 3260
+  ### DECOMP only:
+     3138 POP_JUMP_FORWARD_IF_FALSE  to 3262
+HUNK replace  orig[656:657]@3258 decomp[656:658]@3258
+  ### ORIG only:
+     3258 JUMP_FORWARD               to 3378
+  ### DECOMP only:
+     3258 EXTENDED_ARG               
+     3260 JUMP_BACKWARD              to 2380
+HUNK replace  orig[660:661]@3270 decomp[661:662]@3272
+  ### ORIG only:
+     3270 POP_JUMP_FORWARD_IF_FALSE  to 3378
+  ### DECOMP only:
+     3272 POP_JUMP_FORWARD_IF_FALSE  to 3380
+HUNK insert   orig[688:688]@- decomp[689:691]@3380
+  ### DECOMP only:
+     3380 EXTENDED_ARG               
+     3382 JUMP_BACKWARD              to 2380
+HUNK replace  orig[698:699]@3440 decomp[701:703]@3446
+  ### ORIG only:
+     3440 POP_JUMP_FORWARD_IF_FALSE  to 3640
+  ### DECOMP only:
+     3446 EXTENDED_ARG               
+     3448 POP_JUMP_FORWARD_IF_FALSE  to 6266
+HUNK replace  orig[703:704]@3458 decomp[707:709]@3466
+  ### ORIG only:
+     3458 POP_JUMP_FORWARD_IF_FALSE  to 3640
+  ### DECOMP only:
+     3466 EXTENDED_ARG               
+     3468 POP_JUMP_FORWARD_IF_FALSE  to 6266
+HUNK replace  orig[710:711]@3500 decomp[715:717]@3510
+  ### ORIG only:
+     3500 POP_JUMP_FORWARD_IF_FALSE  to 3578
+  ### DECOMP only:
+     3510 EXTENDED_ARG               
+     3512 POP_JUMP_FORWARD_IF_FALSE  to 6204
+HUNK replace  orig[714:715]@3512 decomp[720:721]@3524
+  ### ORIG only:
+     3512 POP_JUMP_FORWARD_IF_FALSE  to 3576
+  ### DECOMP only:
+     3524 POP_JUMP_FORWARD_IF_FALSE  to 3588
+HUNK replace  orig[720:736]@3524 decomp[726:727]@3536
+  ### ORIG only:
+     3524 POP_JUMP_FORWARD_IF_FALSE  to 3572
+     3526 LOAD_GLOBAL                NULL + strategy_log
+     3538 LOAD_ATTR                  error
+     3548 LOAD_CONST                 '账户无可转债交易权限，代码【%s】无法进行新股申购业务'
+     3550 LOAD_FAST                  stock_code
+     3552 BINARY_OP                  %
+     3556 PRECALL                    
+     3560 CALL                       
+     3570 POP_TOP                    
+     3572 EXTENDED_ARG               
+     3574 JUMP_BACKWARD              to 2380
+     3576 JUMP_FORWARD               to 3640
+     3578 LOAD_FAST                  sub_stock_type
+     3580 LOAD_CONST                 'G1'
+     3582 COMPARE_OP                 ==
+     3588 POP_JUMP_FORWARD_IF_FALSE  to 3640
+  ### DECOMP only:
+     3536 POP_JUMP_FORWARD_IF_FALSE  to 3584
+HUNK replace  orig[750:751]@3660 decomp[741:742]@3608
+  ### ORIG only:
+     3660 POP_JUMP_FORWARD_IF_FALSE  to 3988
+  ### DECOMP only:
+     3608 POP_JUMP_FORWARD_IF_FALSE  to 3936
+HUNK replace  orig[777:778]@3840 decomp[768:769]@3788
+  ### ORIG only:
+     3840 POP_JUMP_FORWARD_IF_FALSE  to 3940
+  ### DECOMP only:
+     3788 POP_JUMP_FORWARD_IF_FALSE  to 3888
+HUNK replace  orig[797:798]@3938 decomp[788:789]@3886
+  ### ORIG only:
+     3938 JUMP_FORWARD               to 5584
+  ### DECOMP only:
+     3886 JUMP_BACKWARD              to 2380
+HUNK replace  orig[806:807]@3986 decomp[797:798]@3934
+  ### ORIG only:
+     3986 JUMP_FORWARD               to 5584
+  ### DECOMP only:
+     3934 JUMP_BACKWARD              to 2380
+HUNK replace  orig[810:811]@3998 decomp[801:803]@3946
+  ### ORIG only:
+     3998 POP_JUMP_FORWARD_IF_TRUE   to 4054
+  ### DECOMP only:
+     3946 EXTENDED_ARG               
+     3948 POP_JUMP_FORWARD_IF_TRUE   to 6200
+HUNK replace  orig[817:818]@4040 decomp[809:810]@3990
+  ### ORIG only:
+     4040 POP_JUMP_FORWARD_IF_FALSE  to 4100
+  ### DECOMP only:
+     3990 POP_JUMP_FORWARD_IF_FALSE  to 4050
+HUNK replace  orig[821:822]@4052 decomp[813:814]@4002
+  ### ORIG only:
+     4052 POP_JUMP_FORWARD_IF_FALSE  to 4100
+  ### DECOMP only:
+     4002 POP_JUMP_FORWARD_IF_FALSE  to 4050
+HUNK replace  orig[829:830]@4098 decomp[821:822]@4048
+  ### ORIG only:
+     4098 JUMP_FORWARD               to 5584
+  ### DECOMP only:
+     4048 JUMP_FORWARD               to 6094
+HUNK replace  orig[841:842]@4182 decomp[833:834]@4132
+  ### ORIG only:
+     4182 POP_JUMP_FORWARD_IF_FALSE  to 5478
+  ### DECOMP only:
+     4132 POP_JUMP_FORWARD_IF_FALSE  to 6094
+HUNK replace  orig[853:854]@4260 decomp[845:846]@4210
+  ### ORIG only:
+     4260 POP_JUMP_FORWARD_IF_FALSE  to 5276
+  ### DECOMP only:
+     4210 POP_JUMP_FORWARD_IF_FALSE  to 5224
+HUNK replace  orig[860:861]@4304 decomp[852:853]@4254
+  ### ORIG only:
+     4304 POP_JUMP_FORWARD_IF_FALSE  to 4778
+  ### DECOMP only:
+     4254 POP_JUMP_FORWARD_IF_FALSE  to 4728
+HUNK replace  orig[872:873]@4370 decomp[864:865]@4320
+  ### ORIG only:
+     4370 POP_JUMP_FORWARD_IF_FALSE  to 4562
+  ### DECOMP only:
+     4320 POP_JUMP_FORWARD_IF_FALSE  to 4512
+HUNK replace  orig[899:900]@4560 decomp[891:892]@4510
+  ### ORIG only:
+     4560 JUMP_FORWARD               to 5584
+  ### DECOMP only:
+     4510 JUMP_FORWARD               to 5424
+HUNK replace  orig[929:930]@4776 decomp[921:922]@4726
+  ### ORIG only:
+     4776 JUMP_FORWARD               to 5584
+  ### DECOMP only:
+     4726 JUMP_FORWARD               to 5424
+HUNK replace  orig[945:946]@4870 decomp[937:938]@4820
+  ### ORIG only:
+     4870 POP_JUMP_FORWARD_IF_FALSE  to 5062
+  ### DECOMP only:
+     4820 POP_JUMP_FORWARD_IF_FALSE  to 5010
+HUNK replace  orig[971:973]@5058 decomp[963:964]@5008
+  ### ORIG only:
+     5058 EXTENDED_ARG               
+     5060 JUMP_FORWARD               to 5584
+  ### DECOMP only:
+     5008 JUMP_FORWARD               to 5424
+HUNK replace  orig[1001:1002]@5274 decomp[992:993]@5222
+  ### ORIG only:
+     5274 JUMP_FORWARD               to 5584
+  ### DECOMP only:
+     5222 JUMP_FORWARD               to 5424
+HUNK delete   orig[1028:1056]@5476 decomp[1019:1019]@-
+  ### ORIG only:
+     5476 JUMP_FORWARD               to 5584
+     5478 LOAD_GLOBAL                NULL + system_log
+     5490 LOAD_ATTR                  debug
+     5500 LOAD_CONST                 '代码：'
+     5502 LOAD_FAST                  stock_code
+     5504 FORMAT_VALUE               str
+     5506 LOAD_CONST                 '，交易类别：'
+     5508 LOAD_FAST                  exchange_type
+     5510 FORMAT_VALUE               str
+     5512 LOAD_CONST                 '，柜台类型：'
+     5514 LOAD_FAST                  self
+     5516 LOAD_ATTR                  broker
+     5526 LOAD_ATTR                  trade_account
+     5536 LOAD_ATTR                  node_type
+     5546 FORMAT_VALUE               str
+     5548 LOAD_CONST                 '，证券类别：'
+     5550 LOAD_FAST                  stock_type
+     5552 FORMAT_VALUE               str
+     5554 LOAD_CONST                 '，证券子类：'
+     5556 LOAD_FAST                  sub_stock_type
+     5558 FORMAT_VALUE               str
+     5560 LOAD_CONST                 '，无法执行打新操作'
+     5562 BUILD_STRING               
+     5564 PRECALL                    
+     5568 CALL                       
+     5578 POP_TOP                    
+     5580 EXTENDED_ARG               
+     5582 JUMP_BACKWARD              to 2380
+HUNK replace  orig[1059:1060]@5594 decomp[1022:1023]@5434
+  ### ORIG only:
+     5594 POP_JUMP_FORWARD_IF_FALSE  to 5646
+  ### DECOMP only:
+     5434 POP_JUMP_FORWARD_IF_FALSE  to 5486
+HUNK replace  orig[1083:1084]@5694 decomp[1046:1047]@5534
+  ### ORIG only:
+     5694 POP_JUMP_FORWARD_IF_FALSE  to 5726
+  ### DECOMP only:
+     5534 POP_JUMP_FORWARD_IF_FALSE  to 5566
+HUNK replace  orig[1094:1095]@5746 decomp[1057:1058]@5586
+  ### ORIG only:
+     5746 POP_JUMP_FORWARD_IF_FALSE  to 5802
+  ### DECOMP only:
+     5586 POP_JUMP_FORWARD_IF_FALSE  to 5642
+HUNK replace  orig[1108:1109]@5800 decomp[1071:1072]@5640
+  ### ORIG only:
+     5800 JUMP_FORWARD               to 5952
+  ### DECOMP only:
+     5640 JUMP_FORWARD               to 5792
+HUNK replace  orig[1113:1114]@5822 decomp[1076:1077]@5662
+  ### ORIG only:
+     5822 POP_JUMP_FORWARD_IF_FALSE  to 5888
+  ### DECOMP only:
+     5662 POP_JUMP_FORWARD_IF_FALSE  to 5728
+HUNK replace  orig[1131:1132]@5886 decomp[1094:1095]@5726
+  ### ORIG only:
+     5886 JUMP_FORWARD               to 5952
+  ### DECOMP only:
+     5726 JUMP_FORWARD               to 5792
+HUNK replace  orig[1151:1152]@6000 decomp[1114:1115]@5840
+  ### ORIG only:
+     6000 POP_JUMP_FORWARD_IF_FALSE  to 6098
+  ### DECOMP only:
+     5840 POP_JUMP_FORWARD_IF_FALSE  to 5938
+HUNK replace  orig[1170:1171]@6096 decomp[1133:1134]@5936
+  ### ORIG only:
+     6096 JUMP_FORWARD               to 6194
+  ### DECOMP only:
+     5936 JUMP_FORWARD               to 6034
+HUNK insert   orig[1204:1204]@- decomp[1167:1212]@6094
+  ### DECOMP only:
+     6094 LOAD_GLOBAL                NULL + system_log
+     6106 LOAD_ATTR                  debug
+     6116 LOAD_CONST                 '代码：'
+     6118 LOAD_FAST                  stock_code
+     6120 FORMAT_VALUE               str
+     6122 LOAD_CONST                 '，交易类别：'
+     6124 LOAD_FAST                  exchange_type
+     6126 FORMAT_VALUE               str
+     6128 LOAD_CONST                 '，柜台类型：'
+     6130 LOAD_FAST                  self
+     6132 LOAD_ATTR                  broker
+     6142 LOAD_ATTR                  trade_account
+     6152 LOAD_ATTR                  node_type
+     6162 FORMAT_VALUE               str
+     6164 LOAD_CONST                 '，证券类别：'
+     6166 LOAD_FAST                  stock_type
+     6168 FORMAT_VALUE               str
+     6170 LOAD_CONST                 '，证券子类：'
+     6172 LOAD_FAST                  sub_stock_type
+     6174 FORMAT_VALUE               str
+     6176 LOAD_CONST                 '，无法执行打新操作'
+     6178 BUILD_STRING               
+     6180 PRECALL                    
+     6184 CALL                       
+     6194 POP_TOP                    
+     6196 EXTENDED_ARG               
+     6198 JUMP_BACKWARD              to 2380
+     6200 EXTENDED_ARG               
+     6202 JUMP_BACKWARD              to 2380
+     6204 LOAD_FAST                  sub_stock_type
+     6206 LOAD_CONST                 'G1'
+     6208 COMPARE_OP                 ==
+     6214 POP_JUMP_FORWARD_IF_FALSE  to 6266
+     6216 LOAD_GLOBAL                NULL + strategy_log
+     6228 LOAD_ATTR                  error
+     6238 LOAD_CONST                 '账户无可转债交易权限，代码【%s】无法进行新股申购业务'
+     6240 LOAD_FAST                  stock_code
+     6242 BINARY_OP                  %
+     6246 PRECALL                    
+     6250 CALL                       

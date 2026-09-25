@@ -1,0 +1,21 @@
+orig candidates=[[281]] decomp candidates=[[127]]
+orig=339 decomp=337  ratio=0.9882  opcodes=[('replace', 59, 60, 59, 60), ('replace', 108, 109, 108, 109), ('delete', 296, 298, 296, 296), ('replace', 316, 317, 314, 315)]
+HUNK replace  orig[59:60]@412 decomp[59:60]@412
+  ### ORIG only:
+      412 POP_JUMP_FORWARD_IF_FALSE  to 1468
+  ### DECOMP only:
+      412 POP_JUMP_FORWARD_IF_FALSE  to 1464
+HUNK replace  orig[108:109]@676 decomp[108:109]@676
+  ### ORIG only:
+      676 POP_JUMP_FORWARD_IF_FALSE  to 1000
+  ### DECOMP only:
+      676 POP_JUMP_FORWARD_IF_FALSE  to 1042
+HUNK delete   orig[296:298]@1464 decomp[296:296]@-
+  ### ORIG only:
+     1464 LOAD_CONST                 None
+     1466 RETURN_VALUE               
+HUNK replace  orig[316:317]@1542 decomp[314:315]@1538
+  ### ORIG only:
+     1542 POP_JUMP_FORWARD_IF_FALSE  to 1628
+  ### DECOMP only:
+     1538 POP_JUMP_FORWARD_IF_FALSE  to 1624

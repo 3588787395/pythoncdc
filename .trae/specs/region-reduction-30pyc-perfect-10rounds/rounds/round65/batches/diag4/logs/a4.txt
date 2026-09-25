@@ -1,0 +1,410 @@
+orig candidates=[[894]] decomp candidates=[[569]]
+orig=1970 decomp=1928  ratio=0.9533  opcodes=[('replace', 50, 51, 50, 51), ('replace', 162, 163, 162, 163), ('replace', 169, 170, 169, 170), ('replace', 194, 195, 194, 195), ('delete', 198, 201, 198, 198), ('delete', 202, 205, 199, 199), ('delete', 209, 212, 203, 203), ('delete', 215, 218, 206, 206), ('delete', 222, 225, 210, 210), ('delete', 226, 229, 211, 211), ('replace', 283, 284, 265, 266), ('replace', 301, 302, 283, 284), ('replace', 308, 309, 290, 291), ('delete', 312, 315, 294, 294), ('delete', 316, 319, 295, 295), ('delete', 323, 326, 299, 299), ('delete', 329, 332, 302, 302), ('delete', 336, 339, 306, 306), ('delete', 340, 343, 307, 307), ('replace', 393, 394, 357, 358), ('replace', 403, 404, 367, 368), ('replace', 409, 410, 373, 374), ('replace', 437, 439, 401, 403), ('replace', 440, 441, 404, 405), ('replace', 476, 477, 440, 441), ('replace', 486, 487, 450, 451), ('replace', 515, 516, 479, 480), ('replace', 563, 564, 527, 528), ('replace', 625, 626, 589, 590), ('replace', 640, 641, 604, 605), ('replace', 685, 686, 649, 650), ('replace', 695, 696, 659, 660), ('replace', 713, 714, 677, 678), ('replace', 718, 719, 682, 683), ('replace', 723, 724, 687, 688), ('replace', 771, 772, 735, 736), ('replace', 783, 784, 747, 748), ('replace', 837, 838, 801, 802), ('replace', 899, 900, 863, 864), ('replace', 914, 915, 878, 879), ('replace', 959, 960, 923, 924), ('replace', 969, 970, 933, 934), ('replace', 986, 987, 950, 951), ('replace', 991, 992, 955, 956), ('replace', 996, 997, 960, 961), ('replace', 1044, 1045, 1008, 1009), ('delete', 1048, 1051, 1012, 1012), ('delete', 1052, 1055, 1013, 1013), ('replace', 1057, 1058, 1015, 1016), ('replace', 1073, 1074, 1031, 1032), ('replace', 1081, 1082, 1039, 1040), ('replace', 1091, 1092, 1049, 1050), ('replace', 1097, 1098, 1055, 1056), ('replace', 1128, 1130, 1086, 1088), ('replace', 1131, 1132, 1089, 1090), ('replace', 1167, 1168, 1125, 1126), ('replace', 1177, 1178, 1135, 1136), ('replace', 1220, 1221, 1178, 1179), ('replace', 1278, 1279, 1236, 1237), ('replace', 1395, 1396, 1353, 1354)]
+HUNK replace  orig[50:51]@260 decomp[50:51]@260
+  ### ORIG only:
+      260 POP_JUMP_FORWARD_IF_FALSE  to 1752
+  ### DECOMP only:
+      260 POP_JUMP_FORWARD_IF_FALSE  to 1620
+HUNK replace  orig[162:163]@812 decomp[162:163]@812
+  ### ORIG only:
+      812 FOR_ITER                   to 1748
+  ### DECOMP only:
+      812 FOR_ITER                   to 1616
+HUNK replace  orig[169:170]@828 decomp[169:170]@828
+  ### ORIG only:
+      828 POP_JUMP_FORWARD_IF_FALSE  to 1242
+  ### DECOMP only:
+      828 POP_JUMP_FORWARD_IF_FALSE  to 1176
+HUNK replace  orig[194:195]@946 decomp[194:195]@946
+  ### ORIG only:
+      946 POP_JUMP_FORWARD_IF_FALSE  to 1082
+  ### DECOMP only:
+      946 POP_JUMP_FORWARD_IF_FALSE  to 1016
+HUNK delete   orig[198:201]@962 decomp[198:198]@-
+  ### ORIG only:
+      962 COPY                       
+      964 COPY                       
+      966 BINARY_SUBSCR              
+HUNK delete   orig[202:205]@978 decomp[199:199]@-
+  ### ORIG only:
+      978 BINARY_OP                  +=
+      982 SWAP                       
+      984 SWAP                       
+HUNK delete   orig[209:212]@1004 decomp[203:203]@-
+  ### ORIG only:
+     1004 COPY                       
+     1006 COPY                       
+     1008 BINARY_SUBSCR              
+HUNK delete   orig[215:218]@1026 decomp[206:206]@-
+  ### ORIG only:
+     1026 BINARY_OP                  +=
+     1030 SWAP                       
+     1032 SWAP                       
+HUNK delete   orig[222:225]@1052 decomp[210:210]@-
+  ### ORIG only:
+     1052 COPY                       
+     1054 COPY                       
+     1056 BINARY_SUBSCR              
+HUNK delete   orig[226:229]@1068 decomp[211:211]@-
+  ### ORIG only:
+     1068 BINARY_OP                  +=
+     1072 SWAP                       
+     1074 SWAP                       
+HUNK replace  orig[283:284]@1330 decomp[265:266]@1264
+  ### ORIG only:
+     1330 POP_JUMP_FORWARD_IF_FALSE  to 1744
+  ### DECOMP only:
+     1264 POP_JUMP_FORWARD_IF_FALSE  to 1612
+HUNK replace  orig[301:302]@1430 decomp[283:284]@1364
+  ### ORIG only:
+     1430 POP_JUMP_FORWARD_IF_FALSE  to 1438
+  ### DECOMP only:
+     1364 POP_JUMP_FORWARD_IF_FALSE  to 1372
+HUNK replace  orig[308:309]@1448 decomp[290:291]@1382
+  ### ORIG only:
+     1448 POP_JUMP_FORWARD_IF_FALSE  to 1586
+  ### DECOMP only:
+     1382 POP_JUMP_FORWARD_IF_FALSE  to 1454
+HUNK delete   orig[312:315]@1464 decomp[294:294]@-
+  ### ORIG only:
+     1464 COPY                       
+     1466 COPY                       
+     1468 BINARY_SUBSCR              
+HUNK delete   orig[316:319]@1480 decomp[295:295]@-
+  ### ORIG only:
+     1480 BINARY_OP                  +=
+     1484 SWAP                       
+     1486 SWAP                       
+HUNK delete   orig[323:326]@1506 decomp[299:299]@-
+  ### ORIG only:
+     1506 COPY                       
+     1508 COPY                       
+     1510 BINARY_SUBSCR              
+HUNK delete   orig[329:332]@1528 decomp[302:302]@-
+  ### ORIG only:
+     1528 BINARY_OP                  +=
+     1532 SWAP                       
+     1534 SWAP                       
+HUNK delete   orig[336:339]@1554 decomp[306:306]@-
+  ### ORIG only:
+     1554 COPY                       
+     1556 COPY                       
+     1558 BINARY_SUBSCR              
+HUNK delete   orig[340:343]@1570 decomp[307:307]@-
+  ### ORIG only:
+     1570 BINARY_OP                  +=
+     1574 SWAP                       
+     1576 SWAP                       
+HUNK replace  orig[393:394]@1774 decomp[357:358]@1642
+  ### ORIG only:
+     1774 POP_JUMP_FORWARD_IF_FALSE  to 4924
+  ### DECOMP only:
+     1642 POP_JUMP_FORWARD_IF_FALSE  to 4770
+HUNK replace  orig[403:404]@1824 decomp[367:368]@1692
+  ### ORIG only:
+     1824 FOR_ITER                   to 1950
+  ### DECOMP only:
+     1692 FOR_ITER                   to 1818
+HUNK replace  orig[409:410]@1838 decomp[373:374]@1706
+  ### ORIG only:
+     1838 FOR_ITER                   to 1948
+  ### DECOMP only:
+     1706 FOR_ITER                   to 1816
+HUNK replace  orig[437:439]@1946 decomp[401:403]@1814
+  ### ORIG only:
+     1946 JUMP_BACKWARD              to 1838
+     1948 JUMP_BACKWARD              to 1824
+  ### DECOMP only:
+     1814 JUMP_BACKWARD              to 1706
+     1816 JUMP_BACKWARD              to 1692
+HUNK replace  orig[440:441]@1952 decomp[404:405]@1820
+  ### ORIG only:
+     1952 POP_JUMP_FORWARD_IF_TRUE   to 1958
+  ### DECOMP only:
+     1820 POP_JUMP_FORWARD_IF_TRUE   to 1826
+HUNK replace  orig[476:477]@2166 decomp[440:441]@2034
+  ### ORIG only:
+     2166 FOR_ITER                   to 4920
+  ### DECOMP only:
+     2034 FOR_ITER                   to 4766
+HUNK replace  orig[486:487]@2224 decomp[450:451]@2092
+  ### ORIG only:
+     2224 POP_JUMP_FORWARD_IF_NONE   to 2404
+  ### DECOMP only:
+     2092 POP_JUMP_FORWARD_IF_NONE   to 2272
+HUNK replace  orig[515:516]@2402 decomp[479:480]@2270
+  ### ORIG only:
+     2402 JUMP_FORWARD               to 2420
+  ### DECOMP only:
+     2270 JUMP_FORWARD               to 2288
+HUNK replace  orig[563:564]@2602 decomp[527:528]@2470
+  ### ORIG only:
+     2602 POP_JUMP_FORWARD_IF_TRUE   to 3668
+  ### DECOMP only:
+     2470 POP_JUMP_FORWARD_IF_TRUE   to 3536
+HUNK replace  orig[625:626]@2948 decomp[589:590]@2816
+  ### ORIG only:
+     2948 LOAD_CONST                 <code object <lambda> at 0x0000027EBB8E0130, file "./fly_docker_py311/IQEngine/plugins/plugin_system_risk_calculation/__init__.py", line 1000>
+  ### DECOMP only:
+     2816 LOAD_CONST                 <code object <lambda> at 0x0000027EBB8E0930, file "build_landed/IQEngine__plugins__plugin_system_risk_calculation____init__OK.py", line 666>
+HUNK replace  orig[640:641]@3012 decomp[604:605]@2880
+  ### ORIG only:
+     3012 LOAD_CONST                 <code object <lambda> at 0x0000027EBB8E0230, file "./fly_docker_py311/IQEngine/plugins/plugin_system_risk_calculation/__init__.py", line 1003>
+  ### DECOMP only:
+     2880 LOAD_CONST                 <code object <lambda> at 0x0000027EBB8E0A30, file "build_landed/IQEngine__plugins__plugin_system_risk_calculation____init__OK.py", line 668>
+HUNK replace  orig[685:686]@3234 decomp[649:650]@3102
+  ### ORIG only:
+     3234 FOR_ITER                   to 3376
+  ### DECOMP only:
+     3102 FOR_ITER                   to 3244
+HUNK replace  orig[695:696]@3282 decomp[659:660]@3150
+  ### ORIG only:
+     3282 POP_JUMP_FORWARD_IF_FALSE  to 3374
+  ### DECOMP only:
+     3150 POP_JUMP_FORWARD_IF_FALSE  to 3242
+HUNK replace  orig[713:714]@3350 decomp[677:678]@3218
+  ### ORIG only:
+     3350 POP_JUMP_FORWARD_IF_FALSE  to 3364
+  ### DECOMP only:
+     3218 POP_JUMP_FORWARD_IF_FALSE  to 3232
+HUNK replace  orig[718:719]@3362 decomp[682:683]@3230
+  ### ORIG only:
+     3362 JUMP_BACKWARD              to 3234
+  ### DECOMP only:
+     3230 JUMP_BACKWARD              to 3102
+HUNK replace  orig[723:724]@3374 decomp[687:688]@3242
+  ### ORIG only:
+     3374 JUMP_BACKWARD              to 3234
+  ### DECOMP only:
+     3242 JUMP_BACKWARD              to 3102
+HUNK replace  orig[771:772]@3554 decomp[735:736]@3422
+  ### ORIG only:
+     3554 POP_JUMP_FORWARD_IF_FALSE  to 3600
+  ### DECOMP only:
+     3422 POP_JUMP_FORWARD_IF_FALSE  to 3468
+HUNK replace  orig[783:784]@3598 decomp[747:748]@3466
+  ### ORIG only:
+     3598 JUMP_FORWARD               to 3668
+  ### DECOMP only:
+     3466 JUMP_FORWARD               to 3536
+HUNK replace  orig[837:838]@3850 decomp[801:802]@3718
+  ### ORIG only:
+     3850 POP_JUMP_FORWARD_IF_TRUE   to 4916
+  ### DECOMP only:
+     3718 POP_JUMP_FORWARD_IF_TRUE   to 4762
+HUNK replace  orig[899:900]@4196 decomp[863:864]@4064
+  ### ORIG only:
+     4196 LOAD_CONST                 <code object <lambda> at 0x0000027EBB8E0330, file "./fly_docker_py311/IQEngine/plugins/plugin_system_risk_calculation/__init__.py", line 1039>
+  ### DECOMP only:
+     4064 LOAD_CONST                 <code object <lambda> at 0x0000027EBB8E0B30, file "build_landed/IQEngine__plugins__plugin_system_risk_calculation____init__OK.py", line 700>
+HUNK replace  orig[914:915]@4260 decomp[878:879]@4128
+  ### ORIG only:
+     4260 LOAD_CONST                 <code object <lambda> at 0x0000027EBB8E0430, file "./fly_docker_py311/IQEngine/plugins/plugin_system_risk_calculation/__init__.py", line 1042>
+  ### DECOMP only:
+     4128 LOAD_CONST                 <code object <lambda> at 0x0000027EBB8E0C30, file "build_landed/IQEngine__plugins__plugin_system_risk_calculation____init__OK.py", line 702>
+HUNK replace  orig[959:960]@4482 decomp[923:924]@4350
+  ### ORIG only:
+     4482 FOR_ITER                   to 4622
+  ### DECOMP only:
+     4350 FOR_ITER                   to 4490
+HUNK replace  orig[969:970]@4530 decomp[933:934]@4398
+  ### ORIG only:
+     4530 POP_JUMP_FORWARD_IF_FALSE  to 4620
+  ### DECOMP only:
+     4398 POP_JUMP_FORWARD_IF_FALSE  to 4488
+HUNK replace  orig[986:987]@4596 decomp[950:951]@4464
+  ### ORIG only:
+     4596 POP_JUMP_FORWARD_IF_FALSE  to 4610
+  ### DECOMP only:
+     4464 POP_JUMP_FORWARD_IF_FALSE  to 4478
+HUNK replace  orig[991:992]@4608 decomp[955:956]@4476
+  ### ORIG only:
+     4608 JUMP_BACKWARD              to 4482
+  ### DECOMP only:
+     4476 JUMP_BACKWARD              to 4350
+HUNK replace  orig[996:997]@4620 decomp[960:961]@4488
+  ### ORIG only:
+     4620 JUMP_BACKWARD              to 4482
+  ### DECOMP only:
+     4488 JUMP_BACKWARD              to 4350
+HUNK replace  orig[1044:1045]@4800 decomp[1008:1009]@4668
+  ### ORIG only:
+     4800 POP_JUMP_FORWARD_IF_FALSE  to 4848
+  ### DECOMP only:
+     4668 POP_JUMP_FORWARD_IF_FALSE  to 4694
+HUNK delete   orig[1048:1051]@4816 decomp[1012:1012]@-
+  ### ORIG only:
+     4816 COPY                       
+     4818 COPY                       
+     4820 BINARY_SUBSCR              
+HUNK delete   orig[1052:1055]@4832 decomp[1013:1013]@-
+  ### ORIG only:
+     4832 BINARY_OP                  +=
+     4836 SWAP                       
+     4838 SWAP                       
+HUNK replace  orig[1057:1058]@4846 decomp[1015:1016]@4692
+  ### ORIG only:
+     4846 JUMP_BACKWARD              to 2164
+  ### DECOMP only:
+     4692 JUMP_BACKWARD              to 2032
+HUNK replace  orig[1073:1074]@4918 decomp[1031:1032]@4764
+  ### ORIG only:
+     4918 JUMP_BACKWARD              to 2164
+  ### DECOMP only:
+     4764 JUMP_BACKWARD              to 2032
+HUNK replace  orig[1081:1082]@4946 decomp[1039:1040]@4792
+  ### ORIG only:
+     4946 POP_JUMP_FORWARD_IF_FALSE  to 7486
+  ### DECOMP only:
+     4792 POP_JUMP_FORWARD_IF_FALSE  to 7332
+HUNK replace  orig[1091:1092]@4996 decomp[1049:1050]@4842
+  ### ORIG only:
+     4996 FOR_ITER                   to 5136
+  ### DECOMP only:
+     4842 FOR_ITER                   to 4982
+HUNK replace  orig[1097:1098]@5010 decomp[1055:1056]@4856
+  ### ORIG only:
+     5010 FOR_ITER                   to 5134
+  ### DECOMP only:
+     4856 FOR_ITER                   to 4980
+HUNK replace  orig[1128:1130]@5132 decomp[1086:1088]@4978
+  ### ORIG only:
+     5132 JUMP_BACKWARD              to 5010
+     5134 JUMP_BACKWARD              to 4996
+  ### DECOMP only:
+     4978 JUMP_BACKWARD              to 4856
+     4980 JUMP_BACKWARD              to 4842
+HUNK replace  orig[1131:1132]@5138 decomp[1089:1090]@4984
+  ### ORIG only:
+     5138 POP_JUMP_FORWARD_IF_TRUE   to 5144
+  ### DECOMP only:
+     4984 POP_JUMP_FORWARD_IF_TRUE   to 4990
+HUNK replace  orig[1167:1168]@5352 decomp[1125:1126]@5198
+  ### ORIG only:
+     5352 FOR_ITER                   to 7482
+  ### DECOMP only:
+     5198 FOR_ITER                   to 7328
+HUNK replace  orig[1177:1178]@5410 decomp[1135:1136]@5256
+  ### ORIG only:
+     5410 POP_JUMP_FORWARD_IF_NONE   to 5678
+  ### DECOMP only:
+     5256 POP_JUMP_FORWARD_IF_NONE   to 5524
+HUNK replace  orig[1220:1221]@5676 decomp[1178:1179]@5522
+  ### ORIG only:
+     5676 JUMP_FORWARD               to 5702
+  ### DECOMP only:
+     5522 JUMP_FORWARD               to 5548
+HUNK replace  orig[1278:1279]@5916 decomp[1236:1237]@5762
+  ### ORIG only:
+     5916 POP_JUMP_FORWARD_IF_TRUE   to 6282
+  ### DECOMP only:
+     5762 POP_JUMP_FORWARD_IF_TRUE   to 6128
+HUNK replace  orig[1395:1396]@6514 decomp[1353:1354]@6360
+  ### ORIG only:
+     6514 POP_JUMP_FORWARD_IF_TRUE   to 6880
+  ### DECOMP only:
+     6360 POP_JUMP_FORWARD_IF_TRUE   to 6726
+HUNK replace  orig[1512:1513]@7112 decomp[1470:1471]@6958
+  ### ORIG only:
+     7112 POP_JUMP_FORWARD_IF_TRUE   to 7478
+  ### DECOMP only:
+     6958 POP_JUMP_FORWARD_IF_TRUE   to 7324
+HUNK replace  orig[1580:1581]@7480 decomp[1538:1539]@7326
+  ### ORIG only:
+     7480 JUMP_BACKWARD              to 5350
+  ### DECOMP only:
+     7326 JUMP_BACKWARD              to 5196
+HUNK replace  orig[1588:1589]@7508 decomp[1546:1547]@7354
+  ### ORIG only:
+     7508 POP_JUMP_FORWARD_IF_FALSE  to 9214
+  ### DECOMP only:
+     7354 POP_JUMP_FORWARD_IF_FALSE  to 9060
+HUNK replace  orig[1598:1599]@7558 decomp[1556:1557]@7404
+  ### ORIG only:
+     7558 FOR_ITER                   to 7670
+  ### DECOMP only:
+     7404 FOR_ITER                   to 7516
+HUNK replace  orig[1604:1605]@7572 decomp[1562:1563]@7418
+  ### ORIG only:
+     7572 FOR_ITER                   to 7668
+  ### DECOMP only:
+     7418 FOR_ITER                   to 7514
+HUNK replace  orig[1629:1631]@7666 decomp[1587:1589]@7512
+  ### ORIG only:
+     7666 JUMP_BACKWARD              to 7572
+     7668 JUMP_BACKWARD              to 7558
+  ### DECOMP only:
+     7512 JUMP_BACKWARD              to 7418
+     7514 JUMP_BACKWARD              to 7404
+HUNK replace  orig[1632:1633]@7672 decomp[1590:1591]@7518
+  ### ORIG only:
+     7672 POP_JUMP_FORWARD_IF_TRUE   to 7678
+  ### DECOMP only:
+     7518 POP_JUMP_FORWARD_IF_TRUE   to 7524
+HUNK replace  orig[1668:1669]@7886 decomp[1626:1627]@7732
+  ### ORIG only:
+     7886 FOR_ITER                   to 9218
+  ### DECOMP only:
+     7732 FOR_ITER                   to 9064
+HUNK replace  orig[1678:1679]@7944 decomp[1636:1637]@7790
+  ### ORIG only:
+     7944 POP_JUMP_FORWARD_IF_NONE   to 8036
+  ### DECOMP only:
+     7790 POP_JUMP_FORWARD_IF_NONE   to 7882
+HUNK replace  orig[1693:1694]@8034 decomp[1651:1652]@7880
+  ### ORIG only:
+     8034 JUMP_FORWARD               to 8044
+  ### DECOMP only:
+     7880 JUMP_FORWARD               to 7890
+HUNK replace  orig[1710:1711]@8096 decomp[1668:1669]@7942
+  ### ORIG only:
+     8096 POP_JUMP_FORWARD_IF_TRUE   to 9210
+  ### DECOMP only:
+     7942 POP_JUMP_FORWARD_IF_TRUE   to 9056
+HUNK replace  orig[1777:1778]@8454 decomp[1735:1736]@8300
+  ### ORIG only:
+     8454 LOAD_CONST                 <code object <lambda> at 0x0000027EBB8E0530, file "./fly_docker_py311/IQEngine/plugins/plugin_system_risk_calculation/__init__.py", line 1179>
+  ### DECOMP only:
+     8300 LOAD_CONST                 <code object <lambda> at 0x0000027EBB8E0D30, file "build_landed/IQEngine__plugins__plugin_system_risk_calculation____init__OK.py", line 821>
+HUNK replace  orig[1792:1793]@8518 decomp[1750:1751]@8364
+  ### ORIG only:
+     8518 LOAD_CONST                 <code object <lambda> at 0x0000027EBB8E0630, file "./fly_docker_py311/IQEngine/plugins/plugin_system_risk_calculation/__init__.py", line 1181>
+  ### DECOMP only:
+     8364 LOAD_CONST                 <code object <lambda> at 0x0000027EBB8E0E30, file "build_landed/IQEngine__plugins__plugin_system_risk_calculation____init__OK.py", line 823>
+HUNK replace  orig[1841:1842]@8748 decomp[1799:1800]@8594
+  ### ORIG only:
+     8748 FOR_ITER                   to 8958
+  ### DECOMP only:
+     8594 FOR_ITER                   to 8804
+HUNK replace  orig[1851:1853]@8796 decomp[1809:1811]@8642
+  ### ORIG only:
+     8796 POP_JUMP_FORWARD_IF_FALSE  to 8800
+     8798 JUMP_BACKWARD              to 8748
+  ### DECOMP only:
+     8642 POP_JUMP_FORWARD_IF_FALSE  to 8646
+     8644 JUMP_BACKWARD              to 8594
+HUNK replace  orig[1861:1862]@8844 decomp[1819:1820]@8690
+  ### ORIG only:
+     8844 POP_JUMP_FORWARD_IF_FALSE  to 8956
+  ### DECOMP only:
+     8690 POP_JUMP_FORWARD_IF_FALSE  to 8802
+HUNK replace  orig[1879:1880]@8912 decomp[1837:1838]@8758
+  ### ORIG only:
+     8912 POP_JUMP_FORWARD_IF_FALSE  to 8936
+  ### DECOMP only:
+     8758 POP_JUMP_FORWARD_IF_FALSE  to 8782
+HUNK replace  orig[1888:1889]@8934 decomp[1846:1847]@8780
+  ### ORIG only:
+     8934 JUMP_BACKWARD              to 8748
+  ### DECOMP only:
+     8780 JUMP_BACKWARD              to 8594
+HUNK replace  orig[1897:1898]@8956 decomp[1855:1856]@8802
+  ### ORIG only:
+     8956 JUMP_BACKWARD              to 8748
+  ### DECOMP only:
+     8802 JUMP_BACKWARD              to 8594
+HUNK replace  orig[1965:1966]@9212 decomp[1923:1924]@9058
+  ### ORIG only:
+     9212 JUMP_BACKWARD              to 7884
+  ### DECOMP only:
+     9058 JUMP_BACKWARD              to 7730

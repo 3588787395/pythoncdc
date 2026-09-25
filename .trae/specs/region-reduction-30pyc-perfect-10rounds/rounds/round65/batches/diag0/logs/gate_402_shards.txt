@@ -1,0 +1,12 @@
+--- shard 0 ---
+TALLY SAME=101 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=97 b=97
+--- shard 1 ---
+TALLY SAME=101 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=97 b=97
+--- shard 2 ---
+TALLY SAME=100 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=97 b=97
+--- shard 3 ---
+TALLY SAME=100 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=93 b=93

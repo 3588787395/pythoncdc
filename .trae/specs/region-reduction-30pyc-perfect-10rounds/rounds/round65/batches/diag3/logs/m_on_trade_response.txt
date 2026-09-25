@@ -1,0 +1,73 @@
+FUNC on_trade_response  filtered orig=396 decomp=395 deficit=1
+HUNK replace  orig[13:14] off 102..102   decomp[13:14] off 102..102  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      102 POP_JUMP_FORWARD_IF_FALSE      to 2404
+  ### DECOMP-only (EXTRA / relocated):
+      102 POP_JUMP_FORWARD_IF_FALSE      to 2400
+HUNK replace  orig[289:290] off 1768..1768   decomp[289:290] off 1766..1766  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1768 POP_JUMP_FORWARD_IF_TRUE       to 2360
+  ### DECOMP-only (EXTRA / relocated):
+     1766 POP_JUMP_FORWARD_IF_TRUE       to 2090
+HUNK replace  orig[300:301] off 1836..1836   decomp[300:301] off 1834..1834  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1836 POP_JUMP_FORWARD_IF_FALSE      to 2262
+  ### DECOMP-only (EXTRA / relocated):
+     1834 POP_JUMP_FORWARD_IF_FALSE      to 1992
+HUNK replace  orig[319:320] off 1956..1956   decomp[319:320] off 1954..1954  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1956 JUMP_FORWARD                   to 1994
+  ### DECOMP-only (EXTRA / relocated):
+     1954 JUMP_FORWARD                   to 2090
+HUNK replace  orig[323:324] off 1974..1974   decomp[323:324] off 1972..1972  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1974 POP_JUMP_FORWARD_IF_FALSE      to 1986
+  ### DECOMP-only (EXTRA / relocated):
+     1972 POP_JUMP_FORWARD_IF_FALSE      to 1984
+HUNK replace  orig[328:329] off 1984..1984   decomp[328:329] off 1982..1982  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     1984 JUMP_FORWARD                   to 1994
+  ### DECOMP-only (EXTRA / relocated):
+     1982 JUMP_FORWARD                   to 2090
+HUNK insert   orig[333:333] off 1994..1992   decomp[333:346] off 1992..2088  (o=0 d=13)
+  ### DECOMP-only (EXTRA / relocated):
+     1992 LOAD_GLOBAL                    NULL + system_log
+     2004 LOAD_ATTR                      debug
+     2014 LOAD_CONST                     '后端服务，宿主机配置为策略不接收非本交易触发的主推%s'
+     2016 LOAD_FAST                      entrust_no
+     2018 BINARY_OP                      %
+     2026 CALL                           
+     2036 POP_TOP                        
+     2038 LOAD_FAST                      self
+     2040 LOAD_ATTR                      on_trade_response_list
+     2050 LOAD_METHOD                    append
+     2072 LOAD_FAST                      event
+     2078 CALL                           
+     2088 POP_TOP                        
+HUNK replace  orig[336:337] off 2004..2004   decomp[349:350] off 2100..2100  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2004 POP_JUMP_FORWARD_IF_FALSE      to 2168
+  ### DECOMP-only (EXTRA / relocated):
+     2100 POP_JUMP_FORWARD_IF_FALSE      to 2264
+HUNK replace  orig[357:358] off 2166..2166   decomp[370:371] off 2262..2262  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+     2166 JUMP_FORWARD                   to 2360
+  ### DECOMP-only (EXTRA / relocated):
+     2262 JUMP_FORWARD                   to 2356
+HUNK delete   orig[372:386] off 2260..2358   decomp[385:385] off -..-  (o=14 d=0)
+  ### ORIG-only (MISSING from decomp):
+     2260 JUMP_FORWARD                   to 2360
+     2262 LOAD_GLOBAL                    NULL + system_log
+     2274 LOAD_ATTR                      debug
+     2284 LOAD_CONST                     '后端服务，宿主机配置为策略不接收非本交易触发的主推%s'
+     2286 LOAD_FAST                      entrust_no
+     2288 BINARY_OP                      %
+     2296 CALL                           
+     2306 POP_TOP                        
+     2308 LOAD_FAST                      self
+     2310 LOAD_ATTR                      on_trade_response_list
+     2320 LOAD_METHOD                    append
+     2342 LOAD_FAST                      event
+     2348 CALL                           
+     2358 POP_TOP                        
+SUMMARY missing_run_instrs=22 extra_run_instrs=21

@@ -1,0 +1,47 @@
+FUNC after_trading_cancel_order  filtered orig=156 decomp=159 deficit=-3
+HUNK replace  orig[16:17] off 116..116   decomp[16:17] off 116..116  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      116 POP_JUMP_FORWARD_IF_FALSE      to 168
+  ### DECOMP-only (EXTRA / relocated):
+      116 POP_JUMP_FORWARD_IF_FALSE      to 174
+HUNK replace  orig[20:21] off 132..132   decomp[20:21] off 132..132  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      132 FOR_ITER                       to 168
+  ### DECOMP-only (EXTRA / relocated):
+      132 FOR_ITER                       to 170
+HUNK replace  orig[26:27] off 156..156   decomp[26:27] off 156..156  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      156 POP_JUMP_FORWARD_IF_FALSE      to 166
+  ### DECOMP-only (EXTRA / relocated):
+      156 POP_JUMP_FORWARD_IF_FALSE      to 168
+HUNK replace  orig[30:31] off 164..164   decomp[30:32] off 164..166  (o=1 d=2)
+  ### ORIG-only (MISSING from decomp):
+      164 JUMP_FORWARD                   to 168
+  ### DECOMP-only (EXTRA / relocated):
+      164 LOAD_CONST                     None
+      166 RETURN_VALUE                   
+HUNK insert   orig[32:32] off 168..166   decomp[33:35] off 170..172  (o=0 d=2)
+  ### DECOMP-only (EXTRA / relocated):
+      170 LOAD_CONST                     None
+      172 RETURN_VALUE                   
+HUNK replace  orig[36:37] off 208..208   decomp[39:40] off 214..214  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      208 POP_JUMP_FORWARD_IF_FALSE      to 214
+  ### DECOMP-only (EXTRA / relocated):
+      214 POP_JUMP_FORWARD_IF_FALSE      to 220
+HUNK replace  orig[68:69] off 434..434   decomp[71:72] off 440..440  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      434 POP_JUMP_FORWARD_IF_FALSE      to 448
+  ### DECOMP-only (EXTRA / relocated):
+      440 POP_JUMP_FORWARD_IF_FALSE      to 454
+HUNK replace  orig[73:74] off 446..446   decomp[76:77] off 452..452  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      446 JUMP_FORWARD                   to 458
+  ### DECOMP-only (EXTRA / relocated):
+      452 JUMP_FORWARD                   to 464
+HUNK replace  orig[97:98] off 558..558   decomp[100:101] off 564..564  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      558 POP_JUMP_FORWARD_IF_FALSE      to 674
+  ### DECOMP-only (EXTRA / relocated):
+      564 POP_JUMP_FORWARD_IF_FALSE      to 680
+SUMMARY missing_run_instrs=8 extra_run_instrs=11

@@ -1,0 +1,50 @@
+orig candidates=[[520]] decomp candidates=[[364]]
+orig=124 decomp=113  ratio=0.8861  opcodes=[('replace', 3, 5, 3, 4), ('replace', 12, 13, 11, 12), ('replace', 19, 20, 18, 19), ('replace', 68, 69, 67, 68), ('replace', 104, 105, 103, 104), ('replace', 106, 107, 105, 106), ('replace', 109, 121, 108, 110)]
+HUNK replace  orig[3:5]@14 decomp[3:4]@14
+  ### ORIG only:
+       14 EXTENDED_ARG               
+       16 POP_JUMP_FORWARD_IF_TRUE   to 572
+  ### DECOMP only:
+       14 POP_JUMP_FORWARD_IF_TRUE   to 520
+HUNK replace  orig[12:13]@52 decomp[11:12]@50
+  ### ORIG only:
+       52 POP_JUMP_FORWARD_IF_FALSE  to 84
+  ### DECOMP only:
+       50 POP_JUMP_FORWARD_IF_FALSE  to 82
+HUNK replace  orig[19:20]@82 decomp[18:19]@80
+  ### ORIG only:
+       82 JUMP_FORWARD               to 118
+  ### DECOMP only:
+       80 JUMP_FORWARD               to 116
+HUNK replace  orig[68:69]@334 decomp[67:68]@332
+  ### ORIG only:
+      334 LOAD_CONST                 <code object <lambda> at 0x0000021A5F509D40, file "./fly_docker_py311/fly/data/quote.py", line 532>
+  ### DECOMP only:
+      332 LOAD_CONST                 <code object <lambda> at 0x0000021A5F509E30, file "build_landed/fly__data__quoteOK.py", line 376>
+HUNK replace  orig[104:105]@506 decomp[103:104]@504
+  ### ORIG only:
+      506 POP_JUMP_FORWARD_IF_FALSE  to 512
+  ### DECOMP only:
+      504 POP_JUMP_FORWARD_IF_FALSE  to 510
+HUNK replace  orig[106:107]@510 decomp[105:106]@508
+  ### ORIG only:
+      510 JUMP_FORWARD               to 514
+  ### DECOMP only:
+      508 JUMP_FORWARD               to 512
+HUNK replace  orig[109:121]@516 decomp[108:110]@514
+  ### ORIG only:
+      516 LOAD_FAST                  tempdict
+      518 LOAD_CONST                 'is_open'
+      520 STORE_SUBSCR               
+      524 LOAD_GLOBAL                NULL + pandas
+      536 LOAD_ATTR                  DataFrame
+      546 LOAD_FAST                  tempdict
+      548 LOAD_FAST                  index
+      550 KW_NAMES                   
+      552 PRECALL                    
+      556 CALL                       
+      566 STORE_FAST                 tmp
+      568 LOAD_FAST                  tmp
+  ### DECOMP only:
+      514 POP_TOP                    
+      516 LOAD_CONST                 None

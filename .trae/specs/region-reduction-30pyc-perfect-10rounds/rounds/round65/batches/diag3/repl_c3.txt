@@ -1,0 +1,197 @@
+                # 提取f-string前缀部分并重建为JoinedStr values
+                # [R65-d3 C1a] 前缀里的「跨块待定被调对象」压栈链剔除。
+                # 识别条件: 本区域 cond_block 的前缀（栈效应切出的 cond_val_start
+                #   之前）以一段本地未消费的 callee 链开头 ——
+                #   [PUSH_NULL]? LOAD_{GLOBAL,NAME,FAST,DEREF} (LOAD_ATTR|LOAD_METHOD)*
+                #   且其后继（若存在）只会压新值（PUSH_NULL/LOAD_*/BUILD_*），即该链
+                #   不在本块内被 FORMAT_VALUE/CALL/STORE_*/BINARY_*/COMPARE_OP 消费；
+                #   并要求 _ternary_pending_callee(cond_block) 认得同一条链（与既有
+                #   [R63 Fix2]「被调对象由区域入口压栈、在区域出口消费」同一判据）。
+                # 归约方式: 该链归外层 Call.func，不作为 JoinedStr 的片段；前缀扫描
+                #   从链之后开始，其余指令的处理与改前逐字节相同。
+                # AST 映射: Call(func=<Attribute/Name 节点>, args=[JoinedStr]) 的
+                #   func 槽位；JoinedStr.values 不再混入 callee 名渲染出的假字面量。
+                _r65_callee_skip = 0
+                if cond_val_start is not None and cond_val_start > 0:
+                    _r65_pre = cond_block_instrs[:cond_val_start]
+                    _r65_k = (1 if (_r65_pre
+                                    and _r65_pre[0].opname == 'PUSH_NULL') else 0)
+                    if (_r65_k < len(_r65_pre)
+                            and _r65_pre[_r65_k].opname in (
+                                'LOAD_GLOBAL', 'LOAD_NAME', 'LOAD_FAST',
+                                'LOAD_DEREF')):
+                        _r65_e = _r65_k + 1
+                        while (_r65_e < len(_r65_pre)
+                               and _r65_pre[_r65_e].opname in (
+                                   'LOAD_ATTR', 'LOAD_METHOD')):
+                            _r65_e += 1
+                        _r65_nxt = (_r65_pre[_r65_e]
+                                    if _r65_e < len(_r65_pre) else None)
+                        _r65_pushy = (_r65_nxt is None
+                                      or _r65_nxt.opname == 'PUSH_NULL'
+                                      or _r65_nxt.opname.startswith('LOAD_')
+                                      or _r65_nxt.opname.startswith('BUILD_'))
+                        if (_r65_pushy and self._ternary_pending_callee(
+                                cond_block) is not None):
+                            _r65_callee_skip = _r65_e
+                fstring_parts = []
+                if cond_val_start is not None and cond_val_start > 0:
+                    _prefix_instrs = cond_block_instrs[
+                        _r65_callee_skip:cond_val_start]
+                    _stack = []
+                    for pi in _prefix_instrs:
+                        if pi.opname.startswith('LOAD_'):
+                            _pe = self.expr_reconstructor.reconstruct([pi])
+                            if _pe:
+                                _stack.append(_pe)
+                        elif pi.opname == 'FORMAT_VALUE':
+                            if _stack:
+                                _val = _stack.pop()
+                                flags = pi.arg if pi.arg is not None else 0
+                                # [Round6-12/13/14] FORMAT_VALUE flags: bit0-1 = conversion
+                                # (0=none, 1=str, 2=repr, 3=ascii), bit2 = has format_spec.
+                                # 旧 elif 链 `if flags & 1: 1 elif flags & 2: 2 elif flags & 3: 3`
+                                # 对 !a (flags=3) 错误返回 1（3&1=1 先命中）。flags&3 是 2-bit
+                                # 数值，应直接掩码取值，不能用 elif 链。
+                                conversion = flags & 3
+                                format_spec = None
+                                if flags & 4 and _stack:
+                                    _fs = _stack.pop()
+                                    if isinstance(_fs, dict) and _fs.get('type') == 'Constant':
+                                        format_spec = _fs.get('value')
+                                    else:
+                                        format_spec = _fs
+                                _stack.append({
+                                    'type': 'FormattedValue',
+                                    'value': _val,
+                                    'conversion': conversion,
+                                    'format_spec': format_spec,
+                                })
+                        elif pi.opname == 'LOAD_CONST':
+                            _stack.append({'type': 'Constant', 'value': pi.argval})
+                    fstring_parts = _stack
+                # ternary是最后一个FormattedValue（merge_block的FORMAT_VALUE格式化它）
+                _r65_chain_part = {
+                    'type': 'FormattedValue',
+                    'value': ternary_expr,
+                    'conversion': 0,
+                    'format_spec': None,
+                }
+                fstring_parts.append(_r65_chain_part)
+                _mb_instrs = []
+                if region.merge_block:
+                    _mb_instrs = [i for i in region.merge_block.instructions
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                      'PUSH_NULL')]
+                # [R65-d3 C1b] 链尾自包含插值段归约 + conversion 回填：把既有
+                # [R63 Fix1]/[R64-B2] 两条判据接到独立（非链式）f-string 分支。
+                # 识别条件: 以 FORMAT_VALUE 为界把 merge_block 切成若干段；第一个
+                #   FORMAT_VALUE 格式化的是本区域链上三元的结果，其段必须为空；其后
+                #   每个 FORMAT_VALUE 之前的段必须能被 _fstring_parts_from_segment
+                #   单趟栈模拟解释（段底全为字面量 Constant、段顶即被格式化操作数）。
+                #   判据与 _try_build_ternary_chained_container 的链尾分支完全同源，
+                #   无偏移阈值、无函数名、无字面量计数。
+                # 归约方式: 逐段自底向上归约为 Constant / FormattedValue；链上三元
+                #   与尾部插值的 conversion 一律取「消费它的那条 FORMAT_VALUE 自带的
+                #   操作数低 2 位」(_r64b1_fv_conversion)。任一段解释不了即整体退回
+                #   既有「首个 FORMAT_VALUE 之后逐条收 LOAD_CONST」扫描，不新增逃逸口。
+                # AST 映射: JoinedStr.values 尾部由 {expr!s} 形式的 FormattedValue
+                #   组成，不再把插值里的 LOAD_CONST 当成字面量、也不再截断尾段。
+                _r65_tail_parts = []
+                _r65_seg = []
+                _r65_fv = 0
+                _r65_tail_ok = True
+                _r65_chain_conv = None
+                for _mi in _mb_instrs:
+                    if _mi.opname == 'BUILD_STRING':
+                        break
+                    if _mi.opname != 'FORMAT_VALUE':
+                        _r65_seg.append(_mi)
+                        continue
+                    if _r65_fv == 0:
+                        if _r65_seg:
+                            _r65_tail_ok = False
+                            break
+                        _r65_chain_conv = self._r64b1_fv_conversion(_mi)
+                    else:
+                        _r65_parsed = self._fstring_parts_from_segment(
+                            _r65_seg, _mi)
+                        if _r65_parsed is None:
+                            _r65_tail_ok = False
+                            break
+                        _r65_tail_parts.extend(_r65_parsed)
+                    _r65_seg = []
+                    _r65_fv += 1
+                if _r65_seg:
+                    _r65_tail_ok = False
+                if _r65_tail_ok:
+                    _r65_chain_part['conversion'] = _r65_chain_conv or 0
+                    fstring_parts.extend(_r65_tail_parts)
+                elif region.merge_block:
+                    _after_fv = False
+                    for _mi in _mb_instrs:
+                        if _mi.opname == 'FORMAT_VALUE':
+                            _after_fv = True
+                            continue
+                        if _after_fv:
+                            if _mi.opname == 'LOAD_CONST':
+                                fstring_parts.append({
+                                    'type': 'Constant', 'value': _mi.argval,
+                                })
+                            elif _mi.opname == 'BUILD_STRING':
+                                break
+                joined_str = {
+                    'type': 'JoinedStr',
+                    'values': fstring_parts,
+                }
+                # [R65-d3 C1c] f-string 是跨块待定调用的实参时整体归约为语句调用，
+                # 判据与 AST 映射见 _try_wrap_fstring_pending_call（[R63 Fix2]）。
+                # 既有链式路径已在其出口调用它，独立路径此前漏调，导致
+                # `x.y(f"...{ternary}...")` 被降级成 `return f"..."` 并丢失后续语句。
+                _r65_stmt = self._try_wrap_fstring_pending_call(
+                    region, region.merge_block, joined_str)
+                # [R65-d3 C3] 同层次结构判据（每块唯一归属）：仅当没有任何外层
+                # 三元区域与本区域共享同一 merge_block 且其 merge_context 也是
+                # 'fstring' 时，本区域才独占 merge_block 的尾部语句。
+                # 外层同为 fstring 上下文时（fly/data/quote.pyc:
+                # load_bars_from_hundsun：外层 TernaryRegion@8
+                # blocks=[8,22,613,66,82] 内嵌 TernaryRegion@22 blocks=[22,66,82]，
+                # 二者 merge_block 同为 82），尾块语句由外层
+                # _generate_block_statements(82) 的指令行走 emit，本处若再 extend
+                # post_consumer_extra_stmts 就重复 emit（477/470 -> 477/524）。
+                # 外层是 store 上下文时（trade_live_broker.pyc:market_fund_transfer
+                # TernaryRegion@167 ctx=store 内嵌 @374 ctx=fstring，共享 merge=392）
+                # 外层行走不重发尾块，必须由本区域补发，否则 return False /
+                # strategy_log.info(...) / return True 整段丢失。
+                _r65_own_tail = True
+                for _r65_or in self.regions:
+                    if (_r65_or is not region
+                            and region.merge_block is not None
+                            and region.merge_block in (getattr(_r65_or, 'blocks', None) or [])
+                            and getattr(_r65_or, 'merge_context', None) == 'fstring'):
+                        _r65_own_tail = False
+                        break
+                if _r65_stmt is not None and _r65_own_tail:
+                    results.append(_r65_stmt)
+                    _r65_post = getattr(region, 'post_consumer_extra_stmts', None)
+                    if _r65_post:
+                        results.extend(_r65_post)
+                    for block in region.blocks:
+                        self.generated_blocks.add(block)
+                    return results
+                elif _r65_stmt is not None:
+                    # 尾块归属外层 fstring 区域：只替换被降级的表达式语句，
+                    # 不追加尾语句、不提前 return（尾语句由外层行走 emit 一次）。
+                    results.append(_r65_stmt)
+                else:
+                    # 检查merge_block是否有RETURN_VALUE
+                    has_return = False
+                    if region.merge_block:
+                        for instr in region.merge_block.instructions:
+                            if instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                has_return = True
+                                break
+                    if has_return:
+                        results.append({'type': 'Return', 'value': joined_str})
+                    else:
+                        results.append({'type': 'Expr', 'value': joined_str})

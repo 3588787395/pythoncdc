@@ -1,0 +1,29 @@
+orig candidates=[[2385]] decomp candidates=[[1606]]
+orig=218 decomp=233  ratio=0.9579  opcodes=[('replace', 174, 175, 174, 175), ('replace', 197, 198, 197, 198), ('insert', 212, 212, 212, 227)]
+HUNK replace  orig[174:175]@776 decomp[174:175]@776
+  ### ORIG only:
+      776 POP_JUMP_FORWARD_IF_TRUE   to 802
+  ### DECOMP only:
+      776 POP_JUMP_FORWARD_IF_TRUE   to 1018
+HUNK replace  orig[197:198]@908 decomp[197:198]@908
+  ### ORIG only:
+      908 JUMP_FORWARD               to 1016
+  ### DECOMP only:
+      908 JUMP_FORWARD               to 1124
+HUNK insert   orig[212:212]@- decomp[212:227]@1016
+  ### DECOMP only:
+     1016 JUMP_FORWARD               to 1124
+     1018 LOAD_GLOBAL                NULL + int
+     1030 LOAD_GLOBAL                NULL + float
+     1042 LOAD_FAST                  result
+     1044 LOAD_CONST                 0
+     1046 BINARY_SUBSCR              
+     1056 LOAD_METHOD                get
+     1078 LOAD_CONST                 'enable_buy_amount'
+     1080 PRECALL                    
+     1084 CALL                       
+     1094 PRECALL                    
+     1098 CALL                       
+     1108 PRECALL                    
+     1112 CALL                       
+     1122 STORE_FAST                 max_amount

@@ -1,0 +1,26 @@
+FUNC get_max_amount  filtered orig=201 decomp=213 deficit=-12
+HUNK replace  orig[163:164] off 776..776   decomp[163:164] off 776..776  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      776 POP_JUMP_FORWARD_IF_TRUE       to 802
+  ### DECOMP-only (EXTRA / relocated):
+      776 POP_JUMP_FORWARD_IF_TRUE       to 1018
+HUNK replace  orig[183:184] off 908..908   decomp[183:184] off 908..908  (o=1 d=1)
+  ### ORIG-only (MISSING from decomp):
+      908 JUMP_FORWARD                   to 1016
+  ### DECOMP-only (EXTRA / relocated):
+      908 JUMP_FORWARD                   to 1124
+HUNK insert   orig[195:195] off 1016..1014   decomp[195:207] off 1016..1122  (o=0 d=12)
+  ### DECOMP-only (EXTRA / relocated):
+     1016 JUMP_FORWARD                   to 1124
+     1018 LOAD_GLOBAL                    NULL + int
+     1030 LOAD_GLOBAL                    NULL + float
+     1042 LOAD_FAST                      result
+     1044 LOAD_CONST                     0
+     1046 BINARY_SUBSCR                  
+     1056 LOAD_METHOD                    get
+     1078 LOAD_CONST                     'enable_buy_amount'
+     1084 CALL                           
+     1098 CALL                           
+     1112 CALL                           
+     1122 STORE_FAST                     max_amount
+SUMMARY missing_run_instrs=2 extra_run_instrs=14
