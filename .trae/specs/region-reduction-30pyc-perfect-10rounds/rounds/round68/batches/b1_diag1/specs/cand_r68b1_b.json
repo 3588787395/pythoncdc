@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "            elif isinstance(region, LoopRegion):\n                if block in region.blocks:\n                    _all_boundary |= region.get_if_branch_boundary_stop(block)\n        return _all_boundary",
+   "repl": "            elif isinstance(region, LoopRegion):\n                if block in region.blocks:\n                    _all_boundary |= region.get_if_branch_boundary_stop(block)\n            # [R68-B·外层 IfRegion 汇合点边界] 嵌套即抽象节点：内层 if 的\n            # 分支臂是外层 IfRegion 区间的子集，而外层 merge/exit 恒不在\n            # 外层 blocks 内，故不可能合法地出现在内层分支臂中。识别条件 =\n            # 条件块属于某个已归约 IfRegion.blocks；归约方式 = 把该外层\n            # merge 并入 BFS stop，使分支体在真正的外部汇合点（兄弟分支\n            # 出口 / 父区域 merge）止步，不再越过汇合点吸收后继块；\n            # AST 映射 = 被挡下的后继块回归其真实父级顶点序列按偏移补发，\n            # 分支臂只保留本臂独有前缀。\n            elif isinstance(region, IfRegion):\n                if block in (region.blocks or ()):\n                    _r68b_merge = region.merge_block or region.exit\n                    if _r68b_merge is not None:\n                        _all_boundary.add(_r68b_merge)\n        return _all_boundary"
+  }
+ ]
+}

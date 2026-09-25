@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_ast_generator.py",
+ "rationale": "R68 diag6: BUILD_CONST_KEY_MAP pops arg+1 items in ternary preload sibling-split stack model",
+ "targets": [
+  "fly/simtradding/flyAccount.pyc"
+ ],
+ "anchor": "        if op == 'BUILD_STRING':\n            return 1, instr.arg or 0\n        if op.startswith('BUILD_'):\n            return 1, instr.arg or 0\n        if op in ('PRECALL', 'POP_TOP'):",
+ "repl": "        if op == 'BUILD_STRING':\n            return 1, instr.arg or 0\n        if op == 'BUILD_CONST_KEY_MAP':\n            # [R68-diag6] 栈语义表同层次修正（识别条件/归约方式/AST 映射三要素）：\n            # 识别条件：本表服务 _split_preload_into_siblings / _split_raise_from_stmts，\n            #   输入是三元 cond_block 前缀指令链；其中 BUILD_CONST_KEY_MAP 按 CPython\n            #   操作码语义弹出 arg 个 value + 1 个常量键元组，共 arg+1 项（非 arg 项）。\n            # 归约方式：兄弟切片边界由真实栈深度反向游走确定。旧表少弹 1 项，多键\n            #   常量键字典的首个 value 被切到独立兄弟切片，dict 切片键数比值数多 1，\n            #   重建整体错位一格（flyAccount._do_request {'error_no': -1, 'error_info': s}\n            #   退化为 {'error_no': s}；order_api 同族）。\n            # AST 映射：修正后整条前缀作为单一切片交给 expr_reconstructor.reconstruct，\n            #   其既有 BUILD_CONST_KEY_MAP 分支重建 Dict(keys=键元组常量, values=arg 项)，\n            #   keys/values 一一对应，不新增任何映射规则。\n            return 1, (instr.arg or 0) + 1\n        if op.startswith('BUILD_'):\n            return 1, instr.arg or 0\n        if op in ('PRECALL', 'POP_TOP'):"
+}

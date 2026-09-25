@@ -1,0 +1,13 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "                            if not _elif:\n                                merge = else_succ",
+   "repl": "                            if (not _elif) or merge is _header:\n                                merge = else_succ"
+  },
+  {
+   "anchor": "        # 外部性判定（异常边经 exception_successors 排除）。\n        if len(collected) > 1 and not merge:\n            in_set = set(collected)",
+   "repl": "        # 外部性判定（异常边经 exception_successors 排除）。\n        # [R68-B] 适用范围扩到有 merge 的收集：分支体以 continue/break/return\n        # 收尾时该臂永不抵达 merge，BFS 会越过真正的汇合点（兄弟分支出口 /\n        # 父区域 merge）继续吸收后继块，违反「每块唯一归属」。识别条件 =\n        # 收集块存在集外且不在 stop 内的前驱；归约方式 = 逐点迭代剪枝直至\n        # 收敛；AST 映射 = 被剪除块回归其真实父序列，分支体只保留本臂独有\n        # 前缀。\n        if len(collected) > 1:\n            in_set = set(collected)"
+  }
+ ]
+}

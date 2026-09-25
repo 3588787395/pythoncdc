@@ -1,0 +1,17 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "        # 外部性判定（异常边经 exception_successors 排除）。\n        if len(collected) > 1 and not merge:\n            in_set = set(collected)",
+   "repl": "        # 外部性判定（异常边经 exception_successors 排除）。\n        # [R68-B] 适用范围扩到有 merge 的收集：分支体以 continue/break/return\n        # 收尾时该臂永不抵达 merge，BFS 会越过真正的汇合点（兄弟分支出口 /\n        # 父区域 merge）继续吸收后继块，违反「每块唯一归属」。识别条件 =\n        # 收集块存在集外且不在 stop 内的前驱；归约方式 = 逐点迭代剪枝直至\n        # 收敛，再做 entry 可达性收敛；AST 映射 = 被剪除块回归其真实父级\n        # 顶点序列按偏移补发，分支体只保留本臂独有前缀。无 merge 时照旧\n        # 全量剪枝；有 merge 时每块另经 R68-E 支配性守卫，避免误剪被本臂\n        # 入口支配的合法体内块。\n        if len(collected) > 1:\n            in_set = set(collected)"
+  },
+  {
+   "anchor": "                        if _w14_b in _w14_p.exception_successors:\n                            continue\n                        if _w14_p not in in_set and _w14_p not in stop:",
+   "repl": "                        if _w14_b in _w14_p.exception_successors:\n                            continue\n                        # [R68-E·分支体支配性守卫] 有 merge 边界的收集里，若\n                        # 本臂入口支配候选块，则从函数入口到该块的每条路径都\n                        # 必经本臂入口，它在结构上属于本臂，集外前驱只是嵌套\n                        # 子区域尾部回流（fly/common/market_time::trade_is_open\n                        # 的跳块汇入共享 return False 形态），不构成越界，禁止\n                        # 剪枝。识别条件 = merge 非空 且 entry ∈ block.dominators；\n                        # 归约方式 = 跳过该块的外部前驱剪枝；AST 映射 = 共享尾\n                        # 块保留在本臂末尾。入口未支配的块仍按 R68-B 正常剪除\n                        # （IQEngine/plugin_system_matcher::match 越汇合点吸收\n                        # 兄弟分支出口的形态）。\n                        if (merge is not None and entry is not None\n                                and getattr(_w14_b, 'dominators', None)\n                                and entry in _w14_b.dominators):\n                            continue\n                        if _w14_p not in in_set and _w14_p not in stop:"
+  },
+  {
+   "anchor": "            ent = getattr(region, 'entry', None)\n            if (ent is not None and ent in in_set) \\\n                    or any(b in in_set for b in rblocks):",
+   "repl": "            ent = getattr(region, 'entry', None)\n            # [R68-C·循环豁免收紧] 外层循环（entry 不在本臂内）包住整个\n            # 函数体，其块集与任何收集集必有交集；若据此 `any(...)` 豁免，\n            # 外部前驱剪枝在外层循环体内永远失效。识别条件 = 子结构是\n            # LoopRegion 且其 entry 不在收集集内（循环未嵌套在本臂中）；\n            # 归约方式 = 跳过该循环的豁免判定，让外部前驱剪枝正常生效；\n            # AST 映射 = 被挡下的后继块回归其真实父级顶点序列按偏移补发。\n            if isinstance(region, LoopRegion) and not (ent is not None and ent in in_set):\n                continue\n            if (ent is not None and ent in in_set) \\\n                    or any(b in in_set for b in rblocks):"
+  }
+ ]
+}

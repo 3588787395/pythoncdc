@@ -1,0 +1,17 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "        # 外部性判定（异常边经 exception_successors 排除）。\n        if len(collected) > 1 and not merge:\n            in_set = set(collected)",
+   "repl": "        # 外部性判定（异常边经 exception_successors 排除）。\n        # [R68-B] 适用范围扩到有 merge 的收集：分支体以 continue/break/return\n        # 收尾时该臂永不抵达 merge，BFS 会越过真正的汇合点（兄弟分支出口 /\n        # 父区域 merge）继续吸收后继块，违反「每块唯一归属」。识别条件 =\n        # 收集块存在集外且不在 stop 内的前驱；归约方式 = 逐点迭代剪枝直至\n        # 收敛，再做 entry 可达性收敛；AST 映射 = 被剪除块回归其真实父级\n        # 顶点序列按偏移补发，分支体只保留本臂独有前缀。循环回边/异常边\n        # 前驱属合法体内结构，不参与外部性判定（异常边经 exception_successors\n        # 排除；外层循环经 R68-C 豁免收紧排除；内层子 if 经 R68-D 排除）。\n        if len(collected) > 1:\n            in_set = set(collected)"
+  },
+  {
+   "anchor": "            ent = getattr(region, 'entry', None)\n            if (ent is not None and ent in in_set) \\\n                    or any(b in in_set for b in rblocks):",
+   "repl": "            ent = getattr(region, 'entry', None)\n            # [R68-C·循环豁免收紧] 外层循环（entry 不在本臂内）包住整个\n            # 函数体，其块集与任何收集集必有交集；若据此 `any(...)` 豁免，\n            # 外部前驱剪枝在外层循环体内永远失效。识别条件 = 子结构是\n            # LoopRegion 且其 entry 不在收集集内（循环未嵌套在本臂中）；\n            # 归约方式 = 跳过该循环的豁免判定，让外部前驱剪枝正常生效；\n            # AST 映射 = 被挡下的后继块回归其真实父级顶点序列按偏移补发。\n            if isinstance(region, LoopRegion) and not (ent is not None and ent in in_set):\n                continue\n            if (ent is not None and ent in in_set) \\\n                    or any(b in in_set for b in rblocks):"
+  },
+  {
+   "anchor": "        for region in self.regions:\n            if not isinstance(region, (TryExceptRegion, WithRegion,\n                                       LoopRegion, MatchRegion)):\n                continue",
+   "repl": "        # [R68-D·内层子 if 出口前驱] 嵌套在本臂内的子 IfRegion 尾部跳转\n        # （如共享尾 return / JUMP_FORWARD 汇入本臂末尾）是合法的体内结构，\n        # 其前驱块归子 if 区域所有、不在本臂收集集内，若不豁免会把本臂末尾\n        # 共享块剪掉（fly/common/market_time::trade_is_open 的 return False\n        # 形态）。识别条件 = 前驱属于某个已归约 IfRegion 且该子区域与本臂\n        # 有交集；归约方式 = 视为子结构出口不计外部性；AST 映射 = 共享尾块\n        # 保留在本臂末尾。外层 IfRegion 不受影响：其 entry 在本臂外，按\n        # R68-C 同理由在下方 `ent in in_set` 判定中自然不成立。\n        for region in self.regions:\n            if not isinstance(region, (TryExceptRegion, WithRegion,\n                                       LoopRegion, MatchRegion, IfRegion)):\n                continue"
+  }
+ ]
+}

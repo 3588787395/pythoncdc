@@ -404,6 +404,34 @@ class IfRegion(Region):
     def is_block_entry(self, block) -> bool:
         return self.condition_block == block or self.entry == block
 
+    def contains_block(self, block) -> bool:
+        # [R68-diag5] IfRegion 此前未覆写 contains_block，继承 Region 基类
+        # 的恒 False 实现。`_should_skip_block_for_if_region` 里
+        # `elif block_region is not None:` 分支把 `not contains_block(block)`
+        # 读作「该块不属于它已登记的区域」从而 return True；而该分支只有在
+        # loop_regions 非空时才可达（函数内没有任何循环时在上方
+        # `if not loop_regions: return False` 提前返回）。于是同一结构在
+        # 无循环函数里被放行、在含任意循环的函数里被否掉：比较链 IfRegion
+        # 的 then 臂入口块（比较链归约时一并登记进 block_to_region）自身就是
+        # 一个嵌套 if 的条件块，被判定为「不属于本区域」后整体跳过，内层
+        # IfRegion 不再建出——`if not include:` 守卫从 AST 消失、
+        # `min_count -= 1` 被提到外层（IQData/api/api_base.pyc ::
+        # get_history_df 原 55 条指令反编译成 53 条，真值差 25）。
+        # 【识别条件】只读本区域自己的块集成员关系：block 是否在
+        # self.blocks 里（self.blocks 就是 _build_basic_if_region /
+        # _build_chained_compare_region 归入本区域的条件块、比较链块、
+        # then/else/merge 块），不读块名、常量、偏移、指令数或任何清单。
+        # 【归约方式】返回 True 后不再落进「not contains_block ⇒ return True」
+        # 这条捷径，改走该方法尾部的 cond_succs_check；块不在任何
+        # LoopRegion 内时判为不跳过，内层条件块照常建出 IfRegion，外层
+        # 比较链区域仍以 then_blocks 引用它（原则 4：父以子区域入口引用），
+        # 两臂互斥与每块唯一归属由既有 then/else/merge 归属维持不变。
+        # 【AST 映射】比较链 then 臂恢复成嵌套 If 节点
+        # [If(not include): min_count -= 1]，body 的指令顺序与原字节码
+        # 逐条一致（守卫条件与其体内赋值在原字节码里同属一个基本块序列），
+        # 不引入新节点类型，也不改动任何区域的 blocks/then_blocks/merge_block。
+        return block in (self.blocks or set())
+
     def else_block_conflict(self, block) -> bool:
         return False
 
@@ -16810,7 +16838,36 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             _main_ft_next = None
                             _main_cur_last = _main_current.get_last_instruction()
                             if _main_cur_last and _main_cur_last.argval is not None:
+                                # [R68-b2 and-chain] 与同一段里的 or 链游走
+                                #   （上方 R13c「同上：or 短路链沿正常后继行走，
+                                #   异常表边排除」）用**同一条**判据：只沿正常后继前进。
+                                #   识别条件（只读**本块自身**字段，无跨层区域/块包含、
+                                #   无名称/文件/偏移/计数启发、无新增 self 状态）：
+                                #   候选后继不在 _main_current.exception_successors 内 ——
+                                #   该集合是本 code object 异常表登记的**本块自己的**出边
+                                #   （try/with 体内的 unwind 边），不是本 and 链的下一段；
+                                #   归约方式：_main_ft_next 取首个「未访问、非本块条件跳转
+                                #   目标、非异常出边」的正常后继，取不到即 break，链在
+                                #   此终止（原行为不变）；
+                                #   AST 映射：链块 [entry, seg1, seg2, ...] →
+                                #   IfRegion.test = BoolOp(And, [A, B, C, ...])，链末块
+                                #   重定向为 condition_block（真正的 then/else 分支点），
+                                #   每个合取支一条 AST 子节点，一条不多一条不少。
+                                #   实测反例：scheduler::run_daily 的 func_wrapper
+                                #   `if self._is_trading_day_today() and hour == current_hour
+                                #   and minute == current_minute:` —— B 段块@462 的后继
+                                #   集合含异常出边块@690（PUSH_EXC_INFO 清理，末指令
+                                #   POP_JUMP_IF_TRUE），按集合序先命中它并 break，链只
+                                #   拼到 [406, 462]，第三合取支 C（LOAD_DEREF minute /
+                                #   LOAD_FAST current_minute / COMPARE_OP == /
+                                #   POP_JUMP_FORWARD_IF_FALSE）4 条指令整体丢失，产物退化
+                                #   为 `... and hour == current_hour`；同时 hour/minute 的
+                                #   MAKE_CELL/LOAD_CLOSURE 随之消失。
+                                _main_cur_exc = (getattr(_main_current, 'exception_successors',
+                                                        None) or set())
                                 for _s in _main_current.successors:
+                                    if _s in _main_cur_exc:
+                                        continue
                                     if _s.start_offset not in _main_visited and _s.start_offset != _main_cur_last.argval:
                                         _main_ft_next = _s
                                         break
@@ -19685,7 +19742,36 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         # 的共同后继，排除 condition/final_else/then_blocks[0]/block 自身），
         # 然后用正确的 merge 重新收集 then_blocks（BFS 在 merge 处终止）。
         if merge is None and elif_info.get("bodies") and then_blocks:
-            _then_exit_succs = set(then_blocks[0].successors)
+            # [R68-diag5] 臂出口取证必须只认真正「离开本臂」的控制流边。
+            # 原式取 then_blocks[0].successors。当臂入口块以【直落】(fall-through)
+            # 结束（末条指令不是跳转/分支/返回/抛出——wizard 里是一条 NOP，它单独
+            # 成块只因 try 体的异常表边界在此切块）时，该「后继」只是同一条直线
+            # 流水的下一块，即【本臂内部块】，不是臂出口。此时若链的其余各臂与
+            # final_else 全以 RETURN_VALUE 终结（后继为空），`_non_empty_exits` 就
+            # 只剩这一条内部边，下方 `len(_non_empty_exits) == 1` 把它认成链汇合块
+            # merge，本方法尾部再以 merge=臂内块 重收 then 臂 ⇒ 臂被截断成首块，
+            # 嵌套区域之后的语句永久从 AST 消失（wizard_quant_api.params_analysis
+            # 第一臂的 `return {..., float(value_params)}`，9 条指令，133/126）。
+            # 【识别条件】只读本臂入口块自身的末条指令 opname 与它的后继集：
+            #   末条指令显式转移控制（JUMP*/POP_JUMP*/BRANCH*/RETURN*/RAISE/RERAISE）
+            #   ⇒ 其后继才是臂出口；否则臂出口集为空（控制流仍在本臂内）。
+            # 【归约方式】以该臂出口集参与 `_chain_merge_candidates` 的交集/唯一后继
+            # 判定；候选为空时 merge 保持 None，不重收 then 臂，臂体保留首次
+            # _collect_branch_blocks 得到的完整块表（嵌套区域 + 其后继语句）。
+            # 【AST 映射】If.body = [Try, ..., Return] 完整语句序列，与 elif 臂经
+            # _process_if_blocks 得到的形态一致；不引入新节点类型。
+            _then_entry = then_blocks[0]
+            _then_entry_last = _then_entry.get_last_instruction()
+            _then_exit_succs = (
+                set(_then_entry.successors)
+                if _then_entry_last is not None and (
+                    _then_entry_last.opname.startswith('JUMP')
+                    or _then_entry_last.opname.startswith('POP_JUMP')
+                    or _then_entry_last.opname.startswith('BRANCH')
+                    or _then_entry_last.opname in ('RETURN_VALUE', 'RETURN_CONST',
+                                                    'RAISE_VARARGS', 'RERAISE'))
+                else set()
+            )
             _all_branch_exits = [_then_exit_succs]
             for _body in elif_info["bodies"]:
                 if _body:
@@ -26849,7 +26935,14 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         # 错位。适用范围：仅无界收集（merge=None）场景——有 merge 边界的
         # 收集已由 merge 终止；循环回边/异常边前驱属合法体内结构，不参与
         # 外部性判定（异常边经 exception_successors 排除）。
-        if len(collected) > 1 and not merge:
+        # [R68-B] 适用范围扩到有 merge 的收集：分支体以 continue/break/return
+        # 收尾时该臂永不抵达 merge，BFS 会越过真正的汇合点（兄弟分支出口 /
+        # 父区域 merge）继续吸收后继块，违反「每块唯一归属」。识别条件 =
+        # 收集块存在集外且不在 stop 内的前驱；归约方式 = 逐点迭代剪枝直至
+        # 收敛，再做 entry 可达性收敛；AST 映射 = 被剪除块回归其真实父级
+        # 顶点序列按偏移补发，分支体只保留本臂独有前缀。无 merge 时照旧
+        # 全量剪枝；有 merge 时每块另经 R68-E 守卫，避免误剪本臂合法体内块。
+        if len(collected) > 1:
             in_set = set(collected)
             _w14_pruned = True
             while _w14_pruned:
@@ -26893,6 +26986,29 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             continue
                     for _w14_p in _w14_b.predecessors:
                         if _w14_b in _w14_p.exception_successors:
+                            continue
+                        # [R68-E·有 merge 收集的剪枝守卫] 有 merge 边界的收集
+                        # 里，满足任一条件即禁止外部前驱剪枝：
+                        #  (a) entry 支配候选块——从函数入口到该块的每条路径
+                        #      都必经本臂入口，块在结构上属本臂，集外前驱只是
+                        #      嵌套子区域尾部回流（fly/common/market_time::
+                        #      trade_is_open 的跳块汇入共享 return False 形态）；
+                        #  (b) 集外前驱支配 entry——该前驱位于本区域入口的上游
+                        #      （是通向整个区域的必经块），它对臂内块的直连边是
+                        #      区域级共享边而非跨臂越界（fly/data/quotation::
+                        #      change_his_to_forward 的前置条件跳块直连 else 体
+                        #      形态）。
+                        # 识别条件 = entry ∈ block.dominators 或
+                        #  pred ∈ entry.dominators；归约方式 = 跳过该块的外部
+                        #  前驱剪枝；AST 映射 = 体内块留在本臂末尾。既非入口
+                        #  支配、前驱又位于臂外的越界吸收块
+                        #  （IQEngine/plugin_system_matcher::match 的兄弟分支
+                        #  出口 2464 及其后继）仍按 R68-B 正常剪除。
+                        if (merge is not None and entry is not None
+                                and ((getattr(_w14_b, 'dominators', None)
+                                      and entry in _w14_b.dominators)
+                                     or (getattr(entry, 'dominators', None)
+                                         and _w14_p in entry.dominators))):
                             continue
                         if _w14_p not in in_set and _w14_p not in stop:
                             # [R14b] 子结构区域出口前驱（try/with/loop 尾声
@@ -26950,6 +27066,14 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             if pred_block not in rblocks:
                 continue
             ent = getattr(region, 'entry', None)
+            # [R68-C·循环豁免收紧] 外层循环（entry 不在本臂内）包住整个
+            # 函数体，其块集与任何收集集必有交集；若据此 `any(...)` 豁免，
+            # 外部前驱剪枝在外层循环体内永远失效。识别条件 = 子结构是
+            # LoopRegion 且其 entry 不在收集集内（循环未嵌套在本臂中）；
+            # 归约方式 = 跳过该循环的豁免判定，让外部前驱剪枝正常生效；
+            # AST 映射 = 被挡下的后继块回归其真实父级顶点序列按偏移补发。
+            if isinstance(region, LoopRegion) and not (ent is not None and ent in in_set):
+                continue
             if (ent is not None and ent in in_set) \
                     or any(b in in_set for b in rblocks):
                 if isinstance(region, TryExceptRegion):

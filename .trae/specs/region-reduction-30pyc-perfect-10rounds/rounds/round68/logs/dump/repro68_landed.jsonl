@@ -1,0 +1,28 @@
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag1/e1.pyc", "arm": "landed", "sha": "65165dad4aca4495", "total_functions": 4, "matched_functions": 3, "mism": [["e1", 38, 40, 3, 12]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag1/m2_r68.pyc", "arm": "landed", "sha": "cee1eea70d4d7e5b", "total_functions": 17, "matched_functions": 17, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag1/m_r68.pyc", "arm": "landed", "sha": "b4702efa122bfbe8", "total_functions": 18, "matched_functions": 17, "mism": [["m0", 509, 509, 15, 2]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag1/s_r68.pyc", "arm": "landed", "sha": "875e88ab2fcbee95", "total_functions": 11, "matched_functions": 8, "mism": [["s1", 31, 24, 0, 29], ["s2", 28, 26, 0, 4], ["s3", 65, 53, 0, 60]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag1/xp_atco.pyc", "arm": "landed", "sha": "3ab580834abe5f78", "total_functions": 7, "matched_functions": 6, "mism": [["<module>", 292, 292, 0, 1]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag1/xp_atco2.pyc", "arm": "landed", "sha": "9413e9b015df1cee", "total_functions": 8, "matched_functions": 6, "mism": [["<module>", 348, 273, 3, 137]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag3/r68_big_sinkreturn.pyc", "arm": "landed", "sha": "fec8e828ed2cec1c", "total_functions": 3, "matched_functions": 1, "mism": [["<module>", 57, 57, 0, 36], ["sink_big_sinkreturn", 479, 478, 3, 16]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag3/r68_sink_continue.pyc", "arm": "landed", "sha": "defe1b5c73b40bbb", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag3/r68_sink_return.pyc", "arm": "landed", "sha": "f93aba58c829c166", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag3/r68_sink_tailreturn.pyc", "arm": "landed", "sha": "2afae72e40edceab", "total_functions": 4, "matched_functions": 4, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag3/r68b2_cell_tuple.pyc", "arm": "landed", "sha": "1f70ee2a6e692f8c", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag3/r68b2_cell_tuple_body.pyc", "arm": "landed", "sha": "bfe601276b514aca", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag4/r68b3_headif.pyc", "arm": "landed", "sha": "e9a0252f10a236cb", "total_functions": 7, "matched_functions": 4, "mism": [["w1", 59, 59, 3, 8], ["w2", 57, 57, 3, 8], ["w3", 53, 52, 1, 16]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag4/r68d4_orchain.pyc", "arm": "landed", "sha": "ccc58df7d37a002b", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag4/r68d4_s2.pyc", "arm": "landed", "sha": "87c57d9c15bfc753", "total_functions": 7, "matched_functions": 7, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag4/r68d4_s3.pyc", "arm": "landed", "sha": "85e5c40b2a2b82b9", "total_functions": 5, "matched_functions": 5, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag5/r68b4_apib_inc1.pyc", "arm": "landed", "sha": "98a844fedff9fd88", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag5/r68b4_apib_inc2.pyc", "arm": "landed", "sha": "237818ae27413f62", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag5/r68b4_apib_inc3.pyc", "arm": "landed", "sha": "d0f27ff2505b2789", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag5/r68b4_apib_inc4.pyc", "arm": "landed", "sha": "c58d70ffe7a53c2c", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag5/r68b4_apib_inc5.pyc", "arm": "landed", "sha": "2d1b2280bef4092d", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag5/r68b4_apib_inc6.pyc", "arm": "landed", "sha": "fb310e29e9e5c63b", "total_functions": 2, "matched_functions": 1, "mism": [["r68b4_apib_inc6", 41, 41, 5, 10]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag5/r68b4_apib_inc7.pyc", "arm": "landed", "sha": "1ff2d361ef0fde41", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag5/r68d5_trymerge.pyc", "arm": "landed", "sha": "5620143dcdb98c4e", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag6/r68d6_handler_return.pyc", "arm": "landed", "sha": "2681d5b9729660be", "total_functions": 4, "matched_functions": 4, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag6/r68d6_handler_return2.pyc", "arm": "landed", "sha": "20575edf676bc1fb", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag6/r68d6_tuple_ternary.pyc", "arm": "landed", "sha": "a8e947b05f12b017", "total_functions": 4, "matched_functions": 4, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round68_diag6/r68d6_tuple_ternary2.pyc", "arm": "landed", "sha": "48cce81e99b6b829", "total_functions": 3, "matched_functions": 3, "mism": []}

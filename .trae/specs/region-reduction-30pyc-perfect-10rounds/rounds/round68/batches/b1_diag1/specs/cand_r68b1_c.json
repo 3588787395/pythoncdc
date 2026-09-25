@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "            ent = getattr(region, 'entry', None)\n            if (ent is not None and ent in in_set) \\\n                    or any(b in in_set for b in rblocks):",
+   "repl": "            ent = getattr(region, 'entry', None)\n            # [R68-C·循环豁免收紧] 外层循环（entry 不在本臂内）包住整个\n            # 函数体，其块集与任何收集集必有交集；若据此 `any(...)` 豁免，\n            # 外部前驱剪枝（W14-C）在外层循环体内永远失效，分支体会越过\n            # 真正的外部汇合点吸收后继块（原形态：if 的 then 越过汇合点\n            # 吞掉 sibling 分支出口与父区域 merge 之后的全部块）。识别\n            # 条件 = 子结构是 LoopRegion 且其 entry 不在收集集内（循环\n            # 未嵌套在本臂中）；归约方式 = 跳过该循环的豁免判定，让外部\n            # 前驱剪枝正常生效；AST 映射 = 被挡下的后继块回归其真实父级\n            # 顶点序列按偏移补发，分支臂只保留本臂独有前缀。\n            if isinstance(region, LoopRegion) and not (ent is not None and ent in in_set):\n                continue\n            if (ent is not None and ent in in_set) \\\n                    or any(b in in_set for b in rblocks):"
+  }
+ ]
+}

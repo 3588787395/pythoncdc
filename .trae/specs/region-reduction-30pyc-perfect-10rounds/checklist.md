@@ -1,16 +1,16 @@
 - [ ] trade_info_utils.pyc decompiles with 100% bytecode match rate
 - [ ] real_quote.pyc decompiles with 100% bytecode match rate
-- [ ] plugin_system_log/__init__.pyc decompiles with 100% bytecode match rate
+- [x] plugin_system_log/__init__.pyc decompiles with 100% bytecode match rate
 - [ ] fly/data/quote.pyc decompiles with 100% bytecode match rate
 - [ ] trade_live_broker.pyc decompiles with 100% bytecode match rate
-- [ ] strategy.pyc decompiles with 100% bytecode match rate
+- [x] strategy.pyc decompiles with 100% bytecode match rate
 - [ ] fileio_utils.pyc decompiles with 100% bytecode match rate
-- [ ] quote_handler.pyc decompiles with 100% bytecode match rate
+- [x] quote_handler.pyc decompiles with 100% bytecode match rate
 - [ ] All 30 previously partial pyc files reach 100% bytecode match
-- [ ] All 402 pyc files generate OK.py in same directory
-- [ ] Batch regression test passes: python scripts/pyc_batch_verify.py batch --round N
-- [ ] No regressions: previously ok files remain ok
-- [ ] All OK.py files are valid Python (py_compile succeeds)
+- [x] All 402 pyc files generate OK.py in same directory
+- [x] Batch regression test passes: python scripts/pyc_batch_verify.py batch --round N
+- [x] No regressions: previously ok files remain ok
+- [x] All OK.py files are valid Python (py_compile succeeds)
 - [ ] try/except region boundary errors fixed (POP_EXCEPT placement)
 - [ ] Control flow structural errors fixed (JUMP_FORWARD placement)
 - [ ] Variable scope resolution fixed (LOAD_GLOBAL vs LOAD_FAST)

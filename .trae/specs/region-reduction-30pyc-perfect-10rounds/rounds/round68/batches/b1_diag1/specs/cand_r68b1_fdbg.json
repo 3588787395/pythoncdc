@@ -1,0 +1,21 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "        # 外部性判定（异常边经 exception_successors 排除）。\n        if len(collected) > 1 and not merge:\n            in_set = set(collected)",
+   "repl": "        # 外部性判定（异常边经 exception_successors 排除）。\n        if len(collected) > 1:\n            in_set = set(collected)"
+  },
+  {
+   "anchor": "            ent = getattr(region, 'entry', None)\n            if (ent is not None and ent in in_set) \\\n                    or any(b in in_set for b in rblocks):",
+   "repl": "            ent = getattr(region, 'entry', None)\n            if isinstance(region, LoopRegion) and not (ent is not None and ent in in_set):\n                continue\n            if (ent is not None and ent in in_set) \\\n                    or any(b in in_set for b in rblocks):"
+  },
+  {
+   "anchor": "        if not in_set:\n            return False\n        for region in self.regions:",
+   "repl": "        if not in_set:\n            return False\n        _r68d_ns = [_s for _s in (pred_block.successors or [])\n                    if _s not in (getattr(pred_block, 'exception_successors', None) or ())]\n        _dw = open(r'D:/Temp/opencode/r68gate/diag1/w14dbg3.txt', 'a')\n        _dw.write('EXEMPTCHK pred=%s ns=%s in_set_hit=%s\\n' % (\n            getattr(pred_block, 'start_offset', None),\n            [getattr(x, 'start_offset', None) for x in _r68d_ns],\n            all(x in in_set for x in _r68d_ns) if _r68d_ns else 'EMPTY'))\n        _dw.close()\n        if _r68d_ns and all(_s in in_set for _s in _r68d_ns):\n            return True\n        for region in self.regions:"
+  },
+  {
+   "anchor": "                        if _w14_b in _w14_p.exception_successors:\n                            continue\n                        if _w14_p not in in_set and _w14_p not in stop:\n                            # [R14b] 子结构区域出口前驱（try/with/loop 尾声\n                            # 回流分支体内部）不构成外部性，禁止剪枝\n                            if self._w14_pred_is_child_structural_exit(\n                                    _w14_p, in_set):\n                                continue\n                            collected.remove(_w14_b)",
+   "repl": "                        if _w14_b in _w14_p.exception_successors:\n                            continue\n                        if _w14_p not in in_set and _w14_p not in stop:\n                            # [R14b] 子结构区域出口前驱（try/with/loop 尾声\n                            # 回流分支体内部）不构成外部性，禁止剪枝\n                            if self._w14_pred_is_child_structural_exit(\n                                    _w14_p, in_set):\n                                continue\n                            _dw = open(r'D:/Temp/opencode/r68gate/diag1/w14dbg3.txt', 'a')\n                            _dw.write('PRUNE entry=%s b=%s pred=%s merge=%s n=%s\\n' % (\n                                getattr(entry, 'start_offset', None),\n                                getattr(_w14_b, 'start_offset', None),\n                                getattr(_w14_p, 'start_offset', None),\n                                getattr(merge, 'start_offset', None), len(collected)))\n                            _dw.close()\n                            collected.remove(_w14_b)"
+  }
+ ]
+}

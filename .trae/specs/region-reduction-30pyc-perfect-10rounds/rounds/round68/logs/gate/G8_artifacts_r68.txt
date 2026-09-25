@@ -1,0 +1,6 @@
+G8 artifacts audit (round 68)
+index entries      : 402
+OK.py present      : 402 (missing 0)
+py_compile bad     : 0
+batch G3 FAIL/Traceback hits : 0 (only filename hits errors.pyc / user_error.pyc and the failed_pyc field)
+notes : SyntaxWarning only (fly/dumpload/load_dailyOK.py, fly/oauthenticator/hsidOK.py use `is` with a literal); no syntax errors

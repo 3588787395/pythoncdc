@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "                            if not _elif:\n                                merge = else_succ",
+   "repl": "                            if (not _elif) or merge is _header:\n                                merge = else_succ"
+  }
+ ]
+}

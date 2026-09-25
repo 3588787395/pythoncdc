@@ -2582,3 +2582,53 @@
           27 支 partial、77 支官方不匹配函数。归档 `rounds/round56/`（OUTCOME.md + 判据 spec/hunk +
           G0/G4/G5/G6/G7 日志与 jsonl + 复核脚本）。起始 HEAD `e8bb2cc0`（Round 55 记录），
           落地前 `git status --porcelain core/ pycdc.py` 为空。
+
+- [x] Task 68: Round 68 —— 5 批只读诊断子代理 + 中心集中验证合并 **m68**（采纳 5 件、回退 0 件），
+      落地 2 个 core 文件 17 处编辑，5 支 pyc 修到 100%，官方尺 5701 → **5709/5746 = 99.36%**、
+      ok 387 → **392**、partial 15 → **10**、failed 0
+  - [x] SubTask 68.1: 分批与交付 —— 15 支 partial 按 `max(严格缺陷, 官方 gap)` 贪心分 **5 批**
+        （工作区 `diag1`/`diag3`/`diag4`/`diag5`/`diag6`，每批 1 个只读诊断代理，402 全量扫描归中心）；
+        `diag2`（`quote`+`matcher` 名下）唯一候选 `cand_r68_else_join_cut.json` 按 ADR-1 **自行撤回**
+        （实测 matcher 715/715 → 713/466、quote 70/81 → 64/81），留档 `batches/b0_diag2/`。
+  - [x] SubTask 68.2: ADR-1 判据更正（中心按此执行）—— 把「缺陷族 Σ|orig−decomp| 净减少」拆成两条：
+        缺失/过冲族（`seq_len`）维持 Σ|Δ| 净减且不得以少发射换；纯位移族（counts 相等且严格尺为
+        `seq_diff`/`target_diff`）改为「归一化 hunk 数严格下降 + `first_diff` 回移 + Σ|Δ| 不升 +
+        严格尺不得新增 `target_diff`」，位移族必须成对落地、只做 (a) 一律拒。
+        理由是实测：diag2 的 `matcher::match` counts 恒等、Σ|Δ| 恒为 121，原判据会系统性杀掉
+        当前第一大残余族（位移族）的正确候选。
+  - [x] SubTask 68.3: 合并与落地 —— `mkfinal68.py m68 <6 份 spec>`（analyzer 6 edits + generator
+        11 edits，链式锚点断言全过）→ `mbuild68c.py m68` 出镜像 `mirr_m68` → `land68.py land --apply`；
+        `region_analyzer.py` 6 edit、+126/−2、1 753 093 B、sha256 `27089306098c35dc1f3a`、无 BOM、
+        裸 LF 0、27 998 行；`region_ast_generator.py` 11 edit、+591/−64、3 193 950 B、
+        sha256 `3cd0fcd6cbd7446c3703`、BOM 保留、裸 LF 0、51 310 行；`comprehension_generator.py`
+        未改（sha `be5490c1118c7199fe0a` 不变）；`landproof mirr_m68` **33/33 same=33 diff=0**，
+        与实测镜像逐字节相同；跨层 `region.entry in r.blocks` 型模式 HEAD=2/2（analyzer）、
+        3/3（generator）、0/0（comprehension）⇒ 本轮 **0 新增**。
+  - [x] SubTask 68.4: 修到 100% 的 5 支（mandate ≥1）—— `IQEngine/utils/scheduler.pyc`
+        44→**45/45**（G1：missing/extra 皆空 + 严格 52/52）、`fly/simtradding/flyAccount.pyc`
+        21→**23/23**（严格 23/23，双尺全清）、`wizard_quant_api` 52→**53/53**、`fly/logger`
+        29→**30/30**、`plugin_system_matcher/matcher.pyc` 16→**17/17**（严格仍 `target_diff #192`，
+        官方尺跳转容差计入 ⇒ 本轮旗舰取双尺全清的 scheduler/flyAccount）。
+  - [x] SubTask 68.5: 门禁（严格串行）—— G0 `ast`+`py_compile` OK、形态零新增；G1 双靶双尺全清；
+        G2 金丝雀 4 支产物 sha 与 R67 归档逐字节相同（`4d41187e356544e0`/`af77224b34b203c4`/
+        `e711b8ea86d49a15`/`9d09af09249da177`）、官方 143/143+10/10+26/26+25/25、严格 **209/211**
+        且缺陷集逐字同 R67；G3 `batch --index pyc_index.json --all --round 68` **402 verified /
+        0 failed**；G4 `stats` **5746/5709/99.36%**（matched +8、全清文件 387→392）；
+        G4′ 严格 15 支发布产物 **632/700 → 641/700**、缺陷函数 68→**59**、FIXED 13、
+        NEW 4 全为既有函数换 kind（无新增缺陷函数）；G5 索引 402→402、added/removed 0、
+        round-stamp-only 395、**substantive=7 且全为改善**；G5′ blast identical 388 / changed 14 /
+        unresolved 0、**regressed=0**、Σ|Δ| 296→**256**；G6 电池 45 项 174→**182/200**、
+        缺陷函数 26→**18**（fewer 6、WORSE 0、errors 0）；G7 见证 28 支
+        `SAME=16 IMPROVED=10 REGRESSION=0 MOVED=2 ERR=0`、全匹配 10→20；G8 402/402 `*OK.py`
+        在位 + `py_compile` bad=0。
+  - [x] SubTask 68.6: 副作用与尺子分歧裁定（如实入档）—— `fileio::write`
+        `[637,637,4,519] → [637,636,0,38]`（hunk 4→0、true-diff 519→38、Σ|Δ| 0→1 为唯一上升支、
+        文件仍 12/14）按 ADR-1 第 2 条判「改善后仍红」非回退；`api_data`/`resource_utils`/
+        `function`/`quote` 缺陷集合逐字相同仅产物文本变；`matcher` 官方 17/17 与严格 `target_diff
+        #192` 的分歧登记为**尺子覆盖问题**（OUTCOME §6/§8），旗舰不取该支。
+  - [x] SubTask 68.7: 归档与提交 —— `rounds/round68/`（OUTCOME.md 8 节 + logs/EVIDENCE.md A–G +
+        logs/gate G0–G8 原始输出 + logs/dump 各臂 jsonl + specs 含 ADR-1 + batches `b0`–`b5` 含
+        被撤回件与未采纳中间候选 + 复核脚本，206 文件）与 `test_repros/round68_diag{1,3,4,5,6}/`
+        28 支最小复现（每目录 README 列 prev→landed 读数，仓库只入库 `.py`）；
+        `checklist.md` 勾选 plugin_system_log / strategy / quote_handler / 402 OK.py /
+        批量回归 / 无回归 / py_compile 共 7 项；提交并 push。

@@ -1,0 +1,93 @@
+﻿==================== core/cfg/region_analyzer.py edits 6
+ edit0 tags=['[R68-diag5]']
+   anchor_head='    def is_block_entry(self, block) -> bool:'
+   cmt: # 鐨?then 鑷傚叆鍙ｅ潡锛堟瘮杈冮摼褰掔害鏃朵竴骞剁櫥璁拌繘 block_to_region锛夎嚜韬氨鏄?
+   cmt: # IfRegion 涓嶅啀寤哄嚭鈥斺€擿if not include:` 瀹堝崼浠?AST 娑堝け銆?
+   cmt: # 銆愯瘑鍒潯浠躲€戝彧璇绘湰鍖哄煙鑷繁鐨勫潡闆嗘垚鍛樺叧绯伙細block 鏄惁鍦?
+   cmt: # 銆愬綊绾︽柟寮忋€戣繑鍥?True 鍚庝笉鍐嶈惤杩涖€宯ot contains_block 鈬?return True銆?
+ edit1 tags=['[R68-b2 and-chain]']
+   anchor_head='                                for _s in _main_current.successors:'
+   cmt: #   璇嗗埆鏉′欢锛堝彧璇?*鏈潡鑷韩**瀛楁锛屾棤璺ㄥ眰鍖哄煙/鍧楀寘鍚€?
+   cmt: #   褰掔害鏂瑰紡锛歘main_ft_next 鍙栭涓€屾湭璁块棶銆侀潪鏈潡鏉′欢璺宠浆
+   cmt: #   AST 鏄犲皠锛氶摼鍧?[entry, seg1, seg2, ...] 鈫?
+   cmt: #   姣忎釜鍚堝彇鏀竴鏉?AST 瀛愯妭鐐癸紝涓€鏉′笉澶氫竴鏉′笉灏戙€?
+ edit2 tags=['[R68-diag5]']
+   anchor_head='            _then_exit_succs = set(then_blocks[0].successors)'
+   cmt: # 宓屽鍖哄煙涔嬪悗鐨勮鍙ユ案涔呬粠 AST 娑堝け锛坵izard_quant_api.params_analysis
+   cmt: # 銆愯瘑鍒潯浠躲€戝彧璇绘湰鑷傚叆鍙ｅ潡鑷韩鐨勬湯鏉℃寚浠?opname 涓庡畠鐨勫悗缁ч泦锛?
+   cmt: # 銆愬綊绾︽柟寮忋€戜互璇ヨ噦鍑哄彛闆嗗弬涓?`_chain_merge_candidates` 鐨勪氦闆?鍞竴鍚庣户
+   cmt: # 銆怉ST 鏄犲皠銆慖f.body = [Try, ..., Return] 瀹屾暣璇彞搴忓垪锛屼笌 elif 鑷傜粡
+ edit3 tags=['[R68-B]']
+   anchor_head='        # 澶栭儴鎬у垽瀹氾紙寮傚父杈圭粡 exception_successors 鎺掗櫎锛夈€?
+   cmt: # 鐖跺尯鍩?merge锛夌户缁惛鏀跺悗缁у潡锛岃繚鍙嶃€屾瘡鍧楀敮涓€褰掑睘銆嶃€傝瘑鍒潯浠?=
+   cmt: # 鏀堕泦鍧楀瓨鍦ㄩ泦澶栦笖涓嶅湪 stop 鍐呯殑鍓嶉┍锛涘綊绾︽柟寮?= 閫愮偣杩唬鍓灊鐩磋嚦
+   cmt: # 鏀舵暃锛屽啀鍋?entry 鍙揪鎬ф敹鏁涳紱AST 鏄犲皠 = 琚壀闄ゅ潡鍥炲綊鍏剁湡瀹炵埗绾?
+ edit4 tags=['[R68-E路鏈?merge 鏀堕泦鐨勫壀鏋濆畧鍗玗']
+   anchor_head='                        if _w14_b in _w14_p.exception_successors:'
+   cmt: # 璇嗗埆鏉′欢 = entry 鈭?block.dominators 鎴?
+   cmt: #  pred 鈭?entry.dominators锛涘綊绾︽柟寮?= 璺宠繃璇ュ潡鐨勫閮?
+   cmt: #  鍓嶉┍鍓灊锛汚ST 鏄犲皠 = 浣撳唴鍧楃暀鍦ㄦ湰鑷傛湯灏俱€傛棦闈炲叆鍙?
+ edit5 tags=['[R68-C路寰幆璞佸厤鏀剁揣]']
+   anchor_head="            ent = getattr(region, 'entry', None)"
+   cmt: # 澶栭儴鍓嶉┍鍓灊鍦ㄥ灞傚惊鐜綋鍐呮案杩滃け鏁堛€傝瘑鍒潯浠?= 瀛愮粨鏋勬槸
+   cmt: # 褰掔害鏂瑰紡 = 璺宠繃璇ュ惊鐜殑璞佸厤鍒ゅ畾锛岃澶栭儴鍓嶉┍鍓灊姝ｅ父鐢熸晥锛?
+   cmt: # AST 鏄犲皠 = 琚尅涓嬬殑鍚庣户鍧楀洖褰掑叾鐪熷疄鐖剁骇椤剁偣搴忓垪鎸夊亸绉昏ˉ鍙戙€?
+==================== core/cfg/region_ast_generator.py edits 11
+ edit0 tags=[]
+   anchor_head='                self.generated_blocks.add(_then_succ)'
+ edit1 tags=['[R68-b3 淇]']
+   anchor_head='    def _loop_build_if_with_exit_branches(self, _expr, _is_if_false, _fall_through, _jump_block,'
+   cmt: 璇嗗埆鏉′欢锛堝悓灞傛缁撴瀯韬唤锛屽彧璇绘湰鍖哄煙鑷韩瀛楁锛夛細鍊欓€夊潡蹇呴』鍚屾椂婊¤冻
+   cmt: 褰掔害鏂瑰紡锛氬€欓€夋槸 region.children 鐨勭洿鎺ュ瓙鍖哄煙鍏ュ彛鏃舵暣妫电敓鎴愬苟鎶樺彔杩?then 鑷傦紱
+   cmt: 鐧昏 generated_blocks / _generated_regions锛岄殢鍚庡惊鐜綋椤哄簭褰掔害浼氳烦杩囧畠浠紝
+   cmt: AST 鏄犲皠锛欼f(test=_expr, body=[<then 鑷傚墠缂€ + 鎶樺彔杩涙潵鐨勭画鎺ュ潡>],
+ edit2 tags=['[R68-diag6/b5 init-if fold]', '[R68-diag6/b5 init-if]']
+   anchor_head='    def _loop_build_if_with_exit_branches(self, _expr, _is_if_false, _fall_through, _jump_block,'
+   cmt: # 璇嗗埆鏉′欢锛堝叏閮ㄥ彧璇绘湰璋冪敤鐐瑰凡绠楀ソ鐨勫舰鍙傚瓧娈典笌鏈潡鑷韩韬唤锛屾棤璺ㄥ尯鍩熻法灞傛寮曠敤銆?
+   cmt: #       LOAD_CONST/STORE_FAST 涔熻鎸ゅ埌 if 涔嬪悗锛夛紱
+   cmt: # 褰掔害鏂瑰紡锛歵hen/else 涓よ噦鍏辩敤鍚屼竴鏉″嚭鐜噦褰掔害 `_r68_branch`銆傞潪鍑哄彛鍧楅噷鑻ュ畠鏈韩鏄?
+   cmt: # AST 鏄犲皠锛歚If(test=_negate_expr(_expr) if _negate else _expr, body=then_stmts,
+ edit3 tags=['[R68-b2 cell-swap]']
+   anchor_head='                        _c2_val_instrs = [i for i in pre_instrs'
+   cmt: # 璇嗗埆鏉′欢锛堜笁鏉″叏閮ㄥ彧璇?*鏈潡鑷韩**瀛楁涓庢湰鍧楄嚜韬寚浠ゅ簭鍒楋紝
+   cmt: # 褰掔害鏂瑰紡锛歋WAP 鍙湪鏍堜笂鎹綅銆佷笉浜х敓鍊硷紝鏁呭厛鎶婂畠浠庡€兼鍓旈櫎锛?
+   cmt: #   鍐嶇敱鍘熸湁 C2 褰掔害鎶?N 涓?STORE 鏁翠綋褰掔害涓?*涓€鏉?*
+   cmt: # AST 鏄犲皠锛欰ssign(Tuple(t1..tN), Tuple(v1..vN))锛寁_i 鎸夊帇鏍堝簭
+ edit4 tags=['[R68-D4-ORCHAIN-TAIL]']
+   anchor_head='                            elif (_cb_last'
+   cmt: # (1) 璇嗗埆鏉′欢锛堝悓灞傛缁撴瀯韬唤锛屽彧璇绘湰鍖哄煙鑷韩瀛楁涓庢湰鍖哄煙閾炬潯鐩級锛?
+   cmt: # (2) 褰掔害鏂瑰紡锛氫笉鏁翠綋鏇挎崲锛岃€屾槸閲嶇粍鈥斺€斿厛鎶?b1..bn 鎶樻垚 BoolOp(or, parts) 浣滀负
+   cmt: # (3) AST 鏄犲皠锛欼f(test=BoolOp(and,[BoolOp(or,[...]), <tail>]))銆侰Python 鍦ㄦ祴璇曡澧冧笅
+ edit5 tags=['[R68-diag3 C3]']
+   anchor_head='                if _has_explicit_continue:'
+   cmt: # 璇嗗埆鏉′欢锛堜簲鏉″叏閮ㄥ彧璇?*鏈尯鍩?鏈潡/鏈惊鐜嚜韬?*鐨勫瓧娈碉紝鏃犺法灞傛鍖呭惈銆?
+   cmt: # 褰掔害鏂瑰紡锛氭妸 Continue 浣滀负鏈?if 缁撴灉鐨?*鍏勫紵璇彞**杩藉姞鍦?if 涔嬪悗锛堣惤鍦ㄨ鑷?
+   cmt: # AST 鏄犲皠锛欼fRegion(merge_block 涓虹函鍥炶竟鍧椾笖闈炴湰寰幆鐧昏灏惧潡 鈭?鍓嶉┍鍏ㄥ湪鏈尯鍩?
+   cmt: #       鍙戝皠渚т笌褰掔害渚у湪姝や簰鐩稿嵃璇侊紱鏍囩缂哄け锛圢one/绌鸿〃锛夋椂**涓嶅彂灏?*锛?
+ edit6 tags=['[R68-b3 淇]']
+   anchor_head='            if role == BlockRole.LOOP_BACK_EDGE:'
+   cmt: # 璇嗗埆鏉′欢锛氬潡瑙掕壊涓?LOOP_BACK_EDGE 涓斿叾鎸囦护鍓旈櫎鍣０鍚庝粛涓虹┖鈥斺€?
+   cmt: # 褰掔害鏂瑰紡锛歟ffective 涓虹┖鏃惰蛋涓嬫柟 else 鍒嗘敮锛堜笉琛ュ彂鏄惧紡 Continue锛夛紝
+   cmt: # AST 鏄犲皠锛欳ontinue 鑺傜偣缂虹渷锛屽潡鍐呮棤鐢ㄦ埛璇彞鍙彂灏勩€?
+ edit7 tags=['[R68-diag6]']
+   anchor_head='                                    if _has_return_sink:'
+   cmt: # 璇嗗埆鏉′欢: 鏃㈡湁 merge 鍧楁湯鏉?RETURN 涓?GET_AWAITABLE 杞涓ゆ潯
+   cmt: # 褰掔害鏂瑰紡: S 骞跺叆鏈鍙ュ彂灏勶紙璁板叆 generated_blocks锛屾潨缁濆叾琚嫭绔?
+   cmt: # AST 鏄犲皠: results.append Return(_merge_consumer_expr)锛屼笌鏃㈡湁
+ edit8 tags=['[R68-diag6/b5]']
+   anchor_head='                                if (_eff'
+   cmt: # [R68-diag6/b5] Pattern A2-AS锛堣瘑鍒潯浠?褰掔害鏂瑰紡/AST 鏄犲皠涓夎绱狅級銆?
+   cmt: # 璇嗗埆鏉′欢锛堝叏閮ㄤ负鏈尯鍩?鏈潡鑷韩缁撴瀯韬唤锛屾棤璺ㄥ尯鍩熻法灞傛寮曠敤锛夛細
+   cmt: #       SWAP, POP_EXCEPT, LOAD_CONST, STORE_FAST,
+   cmt: #       DELETE_FAST, RETURN_VALUE锛堟棦涓嶇煭缂轰篃涓嶆孩鍑猴級锛屼笖
+ edit9 tags=['[R68-diag6]']
+   anchor_head="        if op == 'BUILD_STRING':"
+   cmt: # 璇嗗埆鏉′欢: 鏈〃鏈嶅姟 _split_preload_into_siblings / _split_raise_from_stmts锛?
+   cmt: # 褰掔害鏂瑰紡: 鍏勫紵鍒囩墖杈圭晫鐢辩湡瀹炴爤娣卞害鍙嶅悜娓歌蛋纭畾銆傛棫琛ㄥ皯寮?1 椤癸紝澶氶敭
+   cmt: # AST 鏄犲皠: 淇鍚庢暣鏉″墠缂€浣滀负鍗曚竴鍒囩墖浜ょ粰 expr_reconstructor.reconstruct锛?
+ edit10 tags=['[R68-b2 cell-swap]']
+   anchor_head='                    _s2_stores = [instr]'
+   cmt: #   璇嗗埆鏉′欢锛堝彧璇?*鏈潡鑷韩**鎸囦护搴忓垪涓庢湰鍧楄嚜韬?pending 娈碉級锛?
+   cmt: #   褰掔害鏂瑰紡锛氱洰鏍囨寜 STORE 婧愬簭锛堜笉鍙嶈浆锛夛紝鍊间粛鍙栬〃杈惧紡鏍堟爤椤?
+   cmt: #     鍏朵綑瀹堝崼涓庡綊绾﹁矾寰勪竴瀛椾笉鍔ㄣ€?
+   cmt: #   AST 鏄犲皠锛欰ssign(Tuple(t1..tN 婧愬簭), Tuple(v1..vN 鍘嬫爤搴?)锛?

@@ -1,0 +1,17 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "                            if not _elif:\n                                merge = else_succ",
+   "repl": "                            if (not _elif) or merge is _header:\n                                merge = else_succ"
+  },
+  {
+   "anchor": "        # 错位。适用范围：仅无界收集（merge=None）场景——有 merge 边界的\n        # 收集已由 merge 终止；循环回边/异常边前驱属合法体内结构，不参与\n        # 外部性判定（异常边经 exception_successors 排除）。\n        if len(collected) > 1 and not merge:",
+   "repl": "        # 错位。适用范围：外部前驱判据与是否已知 merge 无关——merge 只保证\n        # BFS 在汇合点止步；若分支体因嵌套关系越过外部汇合点（兄弟分支出口/\n        # 父区域 merge），仍会把非本臂块吸入（matcher::match 的 if-continue\n        # 形态：then 吸收 sibling 出口与其后的父区域块，导致 2464+2468..3208\n        # 被错发到函数尾）。识别条件 = 块的前驱不在本臂集内也不在 stop 内；\n        # 归约方式 = 反向逐点剪枝至收敛，再做 entry 可达性收敛；AST 映射 =\n        # 被剪除块回归其真实父级顶点序列按偏移补发，分支臂只保留本臂独有\n        # 前缀。循环回边/异常边前驱属合法体内结构，不参与外部性判定（异常边\n        # 经 exception_successors 排除）。\n        if len(collected) > 1:"
+  },
+  {
+   "anchor": "            ent = getattr(region, 'entry', None)\n            if (ent is not None and ent in in_set) \\\n                    or any(b in in_set for b in rblocks):",
+   "repl": "            ent = getattr(region, 'entry', None)\n            # [R68-C·循环豁免收紧] 外层循环（entry 不在本臂内）包住整个\n            # 函数体，其块集与任何收集集必有交集；若据此 `any(...)` 豁免，\n            # 外部前驱剪枝在外层循环体内永远失效。识别条件 = 子结构是\n            # LoopRegion 且其 entry 不在收集集内（循环未嵌套在本臂中）；\n            # 归约方式 = 跳过该循环的豁免判定，让外部前驱剪枝正常生效；\n            # AST 映射 = 被挡下的后继块回归其真实父级顶点序列按偏移补发。\n            if isinstance(region, LoopRegion) and not (ent is not None and ent in in_set):\n                continue\n            if (ent is not None and ent in in_set) \\\n                    or any(b in in_set for b in rblocks):"
+  }
+ ]
+}

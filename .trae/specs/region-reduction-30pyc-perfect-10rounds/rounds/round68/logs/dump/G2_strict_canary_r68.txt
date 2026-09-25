@@ -1,0 +1,49 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+  "product": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotationOK.py",
+  "functions": 150,
+  "ok": 148,
+  "bad": [
+   [
+    "<module>.change_his_to_forward",
+    "target_diff",
+    "#250 POP_JUMP_IF_FALSE 终点 orig=(\"'preindex'\", 'LOAD_FAST') decomp=(None, 'FOR_ITER')"
+   ],
+   [
+    "<module>.get_trend",
+    "target_diff",
+    "#10 POP_JUMP_IF_FALSE 终点 orig=(\"'date'\", 'LOAD_FAST') decomp=(\"'api_get'\", 'LOAD_GLOBAL')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/market_time.pyc",
+  "product": "F:/Downloads/pythoncdc-main/site-packages/fly/common/market_timeOK.py",
+  "functions": 10,
+  "ok": 10,
+  "bad": [],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/datetime_func.pyc",
+  "product": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/datetime_funcOK.py",
+  "functions": 26,
+  "ok": 26,
+  "bad": [],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/datetime_func.pyc",
+  "product": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/datetime_funcOK.py",
+  "functions": 25,
+  "ok": 25,
+  "bad": [],
+  "missing": [],
+  "extra": []
+ }
+]

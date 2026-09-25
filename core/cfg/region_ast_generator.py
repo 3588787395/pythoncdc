@@ -10486,79 +10486,292 @@ AST 映射规则:
                         _else_stmts = self._generate_block_statements(_else_succ)
                     if not _else_stmts:
                         _else_stmts = [{'type': 'Pass'}]
+                if not _then_is_continue:
+                    _r68_first = self.region_analyzer.get_entry_region_for_block(_then_succ)
+                    _r68_fold_ok = _r68_first is None
+                    if _r68_first is not None:
+                        _r68_fold_ok = (
+                            _r68_first.entry is _then_succ
+                            and id(_r68_first) in self._generated_regions
+                            and all(_b in self.generated_blocks
+                                    for _b in (_r68_first.blocks or [])))
+                    if _r68_fold_ok and self._current_loop is not None:
+                        self._fold_header_then_continuation(
+                            self._current_loop, block, _else_succ, _then_succ, _then_stmts)
                 self.generated_blocks.add(_then_succ)
                 self.generated_offsets.add(_then_succ.start_offset)
                 self.generated_blocks.add(_else_succ)
                 self.generated_offsets.add(_else_succ.start_offset)
                 _hdr_stmts.append({'type': 'If', 'test': _expr, 'body': _then_stmts, 'orelse': _else_stmts})
 
+    def _fold_header_then_continuation(self, region: 'LoopRegion', header_block,
+                                       else_succ, then_succ, then_stmts) -> None:
+        """[R68-b3 修复] 循环头条件 if 的 then 臂续接块折叠（三要素齐备）。
+
+        识别条件（同层次结构身份，只读本区域自身字段）：候选块必须同时满足
+          ① 在 region.blocks 内，且不是 region.header_block / region.condition_block /
+             region.back_edge_block / region.entry / region.else_blocks（本区域自身结构
+             身份），不是本 if 另一臂入口 else_succ，且尚未发射（generated_blocks）；
+          ② 不在「从 else_succ 出发、只沿 region.blocks 内后继、且不越过①中结构块」的
+             可达集 else_reach 中——落入其中即两臂汇合点，属于 if 之后的顺序语句，
+             不属于 then 臂；
+          ③ 起点是 then 臂入口 then_succ：若它是某区域的 entry（则 then 臂语句已由该
+             区域生成）取该区域的出口后继，否则取 then_succ 自身的后继；候选按偏移顺序
+             逐个考察，命中①或②任一失败立即停止。
+        归约方式：候选是 region.children 的直接子区域入口时整棵生成并折叠进 then 臂；
+          候选不属于其它区域时发射其块语句并折叠进 then 臂；两者都按「每块唯一归属」
+          登记 generated_blocks / _generated_regions，随后循环体顺序归约会跳过它们，
+          不再把它们重复发射到循环体尾部（位移缺陷的直接成因）。
+        AST 映射：If(test=_expr, body=[<then 臂前缀 + 折叠进来的续接块>],
+                      orelse=[<else 臂>])。
+        """
+        if then_succ is None or else_succ is None:
+            return
+        _fold_blocks = getattr(region, 'blocks', None)
+        if not _fold_blocks:
+            return
+        _structural = set()
+        for _sb in (getattr(region, 'header_block', None),
+                    getattr(region, 'condition_block', None),
+                    getattr(region, 'back_edge_block', None),
+                    getattr(region, 'entry', None), header_block):
+            if _sb is not None:
+                _structural.add(_sb)
+        for _eb in (getattr(region, 'else_blocks', None) or []):
+            if _eb is not None:
+                _structural.add(_eb)
+        else_reach = set()
+        _stack = [else_succ]
+        while _stack:
+            _b = _stack.pop()
+            if _b is None or _b in else_reach or _b in _structural:
+                continue
+            if _b not in _fold_blocks:
+                continue
+            else_reach.add(_b)
+            for _s in (_b.successors or []):
+                _stack.append(_s)
+        _first = self.region_analyzer.get_entry_region_for_block(then_succ)
+        if _first is not None and _first.entry is then_succ:
+            frontier = [s for b in (_first.blocks or [])
+                        for s in (b.successors or [])
+                        if s is not None and s not in (_first.blocks or [])]
+        else:
+            frontier = list(then_succ.successors or [])
+        _guard = 0
+        while frontier and _guard < 64:
+            _guard += 1
+            frontier = sorted(frontier, key=lambda _x: getattr(_x, 'start_offset', 0))
+            _cand = frontier.pop(0)
+            if (_cand is None or _cand in _structural or _cand is else_succ
+                    or _cand not in _fold_blocks or _cand in else_reach
+                    or _cand in self.generated_blocks):
+                break
+            _child = None
+            for _c in (region.children or []):
+                if _c.entry is _cand:
+                    _child = _c
+                    break
+            if _child is None:
+                _er = self.region_analyzer.get_entry_region_for_block(_cand)
+                if _er is not None and _er is not region:
+                    break
+                _br = self.region_analyzer.get_region_for_block(_cand)
+                if _br is not None and _br is not region:
+                    break
+                for _s0 in (self._generate_block_statements(_cand) or []):
+                    then_stmts.append(_s0)
+                self.generated_blocks.add(_cand)
+                self.generated_offsets.add(_cand.start_offset)
+                frontier = list(_cand.successors or []) + frontier
+                continue
+            if (id(_child) in self._generated_regions
+                    or id(_child) in self._generating_regions):
+                break
+            _ast = self._generate_region(_child)
+            if _ast:
+                then_stmts.extend(_ast if isinstance(_ast, list) else [_ast])
+            for _b in (_child.blocks or []):
+                self.generated_blocks.add(_b)
+                self.generated_offsets.add(_b.start_offset)
+            self._generated_regions.add(id(_child))
+            frontier = ([s for b in (_child.blocks or [])
+                         for s in (b.successors or [])
+                         if s is not None and s not in (_child.blocks or [])]
+                        + frontier)
+
     def _loop_build_if_with_exit_branches(self, _expr, _is_if_false, _fall_through, _jump_block,
                                           _exit_succs, _block_succ_break, _block_succ_return,
                                           _hdr_stmts: List[Dict[str, Any]]) -> None:
-        if _is_if_false:
-            _then_succ = _fall_through
-            _else_succ = _jump_block
-            _negate = False
-        else:
-            _then_succ = _jump_block
-            _else_succ = _fall_through
-            _negate = False
-        _then_is_exit = _then_succ in _exit_succs
-        _else_is_exit = _else_succ in _exit_succs
-        if _else_is_exit and not _then_is_exit:
-            _then_succ, _else_succ = _else_succ, _then_succ
-            _negate = True
-        _then_stmts: List[Dict[str, Any]] = []
-        _else_stmts: List[Dict[str, Any]] = []
-        if _then_succ in _exit_succs:
-            if _then_succ in _block_succ_break:
-                # R26-A 区域归约算法原则 1（每块内部次序）：出环臂块若只在跳转之外还带
-                # 自己的前导语句（block role 非 PURE_BREAK），裸 `Break` 会把这些语句整段丢掉。
-                # 与下方 `_block_succ_return` 分支的 role 分派同构，也与 L8965-8974
-                # `_jt_user_stmts + [Break]` 已落地形状同构：先发射块内前导语句，再接 Break。
-                _r26_break_role = self.region_analyzer.get_block_role(_then_succ)
-                if _r26_break_role == BlockRole.PURE_BREAK:
-                    _then_stmts = [{'type': 'Break'}]
+        # [R68-diag6/b5 init-if] 出环条件 if 的 then/else 归属、条件极性与臂后继语句（判据三要素）。
+        # 识别条件（全部只读本调用点已算好的形参字段与本块自身身份，无跨区域跨层次引用、
+        # 无名字/偏移/阈值启发、不新增 self 状态）：
+        #   调用方 `_loop_handle_exit_successors` 已断言 `_fall_through`/`_jump_block` 至少一个
+        #   属于 `_exit_succs`，且 `_is_if_false = 'IF_FALSE' in 该条件跳转 opcode`。条件跳转的
+        #   语义恒为「IF_FALSE：假时跳 `_jump_block`、真时落 `_fall_through`；IF_TRUE：真时跳
+        #   `_jump_block`、假时落 `_fall_through`」，于是
+        #   (1) then 臂恒 = `_fall_through`、else 臂恒 = `_jump_block` —— 不再按「哪一臂是出口」
+        #       交换两臂（旧行为在 ft=体、jt=出口 时把出口换进 then 并把测试取反，得到
+        #       `if not C: break`，else 臂整体被既有收敛丢掉，重编译出 POP_JUMP_IF_TRUE +
+        #       JUMP_FORWARD 而非 orig 的 POP_JUMP_IF_FALSE，指令数多 1，inner else 臂的
+        #       LOAD_CONST/STORE_FAST 也被挤到 if 之后）；
+        #   (2) `_expr` 是重建出的**被测试栈顶值** C（CPython 3.11 把源码里的 `not` 折进跳转
+        #       极性），故源码级条件为 `C`（IF_FALSE）/`not C`（IF_TRUE），即
+        #       `_negate = not _is_if_false`。
+        # 归约方式：then/else 两臂共用同一条出环臂归约 `_r68_branch`。非出口块里若它本身是
+        #   某 IfRegion 的 entry（结构判据与既有 `_loop_handle_child_region_entry` 同源：
+        #   `get_entry_region_for_block(b).entry is b`，只读本块身份），改走
+        #   `_generate_block_statements(b)` 的既有条件分派把该 if 原样发射出来，随后
+        #   (a) 按本块条件跳转的极性把臂入口块角色为 BREAK 的臂补上 `Break` —— 条件 if 的
+        #       无条件前跳被 `_generate_block_statements` 当跳转 opcode 过滤、不产生语句，
+        #       不补就丢出环语句、重编译少一条 JUMP_FORWARD；
+        #   (b) 逐个补发该区域里尚未认领的块（flyAccount.init_connection 的 `i += 1` 位于
+        #       内层 if 之后、外层 if 体之内的兄弟位置，只有按 `region.blocks` 里剩余块补发
+        #       才不会被 `_generate_region` 按 `then_blocks=[内层if体, 后继体]` 折进 then 臂）；
+        #   (c) 记入 generated_blocks/offsets 并认领该区域。若该分派没有产出 If 节点（臂是
+        #       别的区域 entry 等提前返回），回退既有 `_generate_region` 认领路径，逐字节沿用
+        #       旧行为。其余非出口块回退既有 `_generate_block_statements`（空则 Pass）。
+        #   出口块里 PURE_BREAK → 裸 Break、其它 BREAK 角色 → 块内前导语句 + Break、
+        #   RETURN/RETURN_NONE → 返回值 Return、既非 BREAK 也非 RETURN 角色 → 既有裸 Break
+        #   兜底（不认领该块，逐字节沿用旧行为）。保留既有「then 臂含 Break 时不再发射 else
+        #   臂」收敛（实测该收敛只在 `_fall_through` 本身是出口-Break 时触发，此时新旧两臂
+        #   赋值与取反结果完全一致，改动生效面被限制在「ft=体、jt=出口」这一类）。
+        # AST 映射：`If(test=_negate_expr(_expr) if _negate else _expr, body=then_stmts,
+        #   orelse=else_stmts)`；臂补发的 `Break` 追加在该臂语句列表末尾（已含出环语句时
+        #   不重复补），区域剩余块的语句依序追加在该 If 之后；
+        #   `_else_succ is None` 或 else 臂被上述收敛跳过时省略 orelse。
+        def _r68_branch(_blk):
+            if _blk is None:
+                return None
+            if _blk not in _exit_succs:
+                _r68_er = self.region_analyzer.get_entry_region_for_block(_blk)
+                if (_r68_er is not None and isinstance(_r68_er, IfRegion)
+                        and getattr(_r68_er, 'entry', None) is _blk
+                        and _blk not in self.generated_blocks
+                        and id(_r68_er) not in self._generated_regions
+                        and id(_r68_er) not in self._generating_regions):
+                    _r68_st = self._generate_block_statements(_blk) or []
+                    _r68_if_node = None
+                    for _r68_n in reversed(_r68_st):
+                        if isinstance(_r68_n, dict) and _r68_n.get('type') == 'If':
+                            _r68_if_node = _r68_n
+                            break
+                    if _r68_if_node is None:
+                        _r68_ast = self._generate_region(_r68_er)
+                        _st = (_r68_ast if isinstance(_r68_ast, list)
+                               else ([_r68_ast] if _r68_ast else []))
+                        for _b in _r68_er.blocks:
+                            self.generated_blocks.add(_b)
+                        self._generated_regions.add(id(_r68_er))
+                        if _st:
+                            return _st
+                        return [{'type': 'Pass'}]
+                    _r68_cj = None
+                    for _r68_i in _blk.instructions:
+                        if (_r68_i.opname in CONDITIONAL_JUMP_OPS
+                                or _r68_i.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                or _r68_i.opname in BACKWARD_CONDITIONAL_JUMP_OPS):
+                            _r68_cj = _r68_i
+                            break
+                    if _r68_cj is None:
+                        _r68_cj = _blk.get_last_instruction()
+                    if _r68_cj is not None:
+                        for _r68_s in _blk.conditional_successors:
+                            _r68_key = ('orelse'
+                                        if _r68_s.start_offset == _r68_cj.argval
+                                        else 'body')
+                            if self.region_analyzer.get_block_role(_r68_s) not in (
+                                    BlockRole.BREAK, BlockRole.PURE_BREAK):
+                                continue
+                            _r68_arm = _r68_if_node.get(_r68_key)
+                            if not _r68_arm:
+                                _r68_if_node[_r68_key] = [{'type': 'Break'}]
+                                continue
+                            if isinstance(_r68_arm[-1], dict) and _r68_arm[-1].get('type') in (
+                                    'Break', 'Continue', 'Return', 'Raise'):
+                                continue
+                            if _r68_arm == [{'type': 'Pass'}]:
+                                _r68_arm[0] = {'type': 'Break'}
+                                continue
+                            _r68_arm.append({'type': 'Break'})
+                    for _r68_b in _r68_er.blocks:
+                        if _r68_b in self.generated_blocks:
+                            continue
+                        _r68_s2 = self._generate_block_statements(_r68_b) or []
+                        self.generated_blocks.add(_r68_b)
+                        self.generated_offsets.add(_r68_b.start_offset)
+                        _r68_st.extend(_r68_s2)
+                    self.generated_blocks.add(_blk)
+                    self.generated_offsets.add(_blk.start_offset)
+                    self._generated_regions.add(id(_r68_er))
+                    if not _r68_st:
+                        _r68_st = [{'type': 'Pass'}]
+                    return _r68_st
+                _st = self._generate_block_statements(_blk) or []
+                if not _st:
+                    _st = [{'type': 'Pass'}]
+                self.generated_blocks.add(_blk)
+                self.generated_offsets.add(_blk.start_offset)
+                return _st
+            if _blk in _block_succ_break:
+                _r68_role = self.region_analyzer.get_block_role(_blk)
+                if _r68_role == BlockRole.PURE_BREAK:
+                    _st = [{'type': 'Break'}]
                 else:
-                    _r26_bs = self._generate_block_statements(_then_succ) or []
-                    _r26_user = [s for s in _r26_bs if s.get('type') not in ('Break', 'Continue')]
-                    _then_stmts = _r26_user + [{'type': 'Break'}]
-                    self.generated_blocks.add(_then_succ)
-                    self.generated_offsets.add(_then_succ.start_offset)
-            elif _then_succ in _block_succ_return:
-                _then_role = self.region_analyzer.get_block_role(_then_succ)
-                if _then_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
-                    _ret_ast = self._generate_return_ast(_then_succ)
-                    _then_stmts = [_ret_ast] if _ret_ast else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
+                    _r68_bs = self._generate_block_statements(_blk) or []
+                    _r68_user = [s for s in _r68_bs
+                                 if s.get('type') not in ('Break', 'Continue')]
+                    _st = _r68_user + [{'type': 'Break'}]
+                self.generated_blocks.add(_blk)
+                self.generated_offsets.add(_blk.start_offset)
+                return _st
+            if _blk in _block_succ_return:
+                _r68_role = self.region_analyzer.get_block_role(_blk)
+                if _r68_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                    _ret_ast = self._generate_return_ast(_blk)
+                    _st = ([_ret_ast] if _ret_ast else
+                           [{'type': 'Return',
+                             'value': {'type': 'Constant', 'value': None}}])
                 else:
-                    _rs = self._generate_block_statements(_then_succ)
-                    _then_stmts = _rs if _rs else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
-                self.generated_blocks.add(_then_succ)
-                self.generated_offsets.add(_then_succ.start_offset)
-            else:
-                _then_stmts = [{'type': 'Break'}]
-        else:
-            _then_stmts = self._generate_block_statements(_then_succ)
-            if not _then_stmts:
-                _then_stmts = [{'type': 'Pass'}]
-            self.generated_blocks.add(_then_succ)
-            self.generated_offsets.add(_then_succ.start_offset)
-        if _else_succ and _else_succ not in _exit_succs:
-            _then_has_break = any(s.get('type') == 'Break' for s in _then_stmts)
-            if _then_has_break:
-                pass
-            else:
-                _else_stmts = self._generate_block_statements(_else_succ)
-                if not _else_stmts:
-                    _else_stmts = [{'type': 'Pass'}]
-                self.generated_blocks.add(_else_succ)
-                self.generated_offsets.add(_else_succ.start_offset)
+                    _rs = self._generate_block_statements(_blk)
+                    _st = (_rs if _rs else
+                           [{'type': 'Return',
+                             'value': {'type': 'Constant', 'value': None}}])
+                self.generated_blocks.add(_blk)
+                self.generated_offsets.add(_blk.start_offset)
+                return _st
+            return [{'type': 'Break'}]
+        _then_succ = _fall_through
+        _else_succ = _jump_block
+        _negate = not _is_if_false
+        _then_stmts = _r68_branch(_then_succ) or [{'type': 'Pass'}]
+        _else_stmts = None
+        if _else_succ is not None and not any(s.get('type') == 'Break'
+                                              for s in _then_stmts):
+            _else_stmts = _r68_branch(_else_succ)
         _cond_expr = _negate_expr(_expr) if _negate else _expr
-        if _else_stmts:
-            _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': _then_stmts, 'orelse': _else_stmts})
+        # [R68-diag6/b5 init-if fold] 空 then 臂折叠（判据三要素）。
+        # 识别条件（只读本函数刚发射出的臂语句列表形状，无跨区域跨层次引用、无名字/偏移/
+        # 阈值启发）：then 臂恰好为单元素 `[{'type': 'Pass'}]`（`_r68_branch` 对「该块是
+        # 别的区域 entry、`_generate_block_statements` 返回空」的回退形状），且 else 臂非空。
+        # 归约方式：该形状的源码是 `if C: <空> else: S`，CPython 必须在空 then 臂末尾插一条
+        #   JUMP_FORWARD 跳过 else 臂（实测 test_repros/round67_diag4::c3_cont_cond 因此多
+        #   1 条指令）；按 if 的结构等价 `if C: <空> else: S` ≡ `if not C: S` 把 else 臂整体
+        #   搬进 then 臂并取反条件，只在臂语句列表恰为单元素 Pass 时触发。
+        # AST 映射：`If(test=_expr if _negate else _negate_expr(_expr), body=_else_stmts)`，
+        #   省略 orelse（`_negate` 已为真时 `_cond_expr` 已是 `not _expr`，直接回用避免
+        #   双重取反）；非该形状时仍按 `If(test=_cond_expr, body=_then_stmts,
+        #   orelse=_else_stmts or 省略)` 发射。
+        if _else_stmts and _then_stmts == [{'type': 'Pass'}]:
+            _hdr_stmts.append({'type': 'If',
+                               'test': _expr if _negate else _negate_expr(_expr),
+                               'body': _else_stmts})
+        elif _else_stmts:
+            _hdr_stmts.append({'type': 'If', 'test': _cond_expr,
+                               'body': _then_stmts, 'orelse': _else_stmts})
         else:
-            _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': _then_stmts})
-
+            _hdr_stmts.append({'type': 'If', 'test': _cond_expr,
+                               'body': _then_stmts})
     def _loop_process_natural_back_edge(self, block: BasicBlock, back_edge_stmts: List[Dict[str, Any]],
                                          back_edge_source_blocks: List[Tuple[BasicBlock, int]] = None) -> bool:
         """处理自然回边块（条件重检查），返回是否已处理"""
@@ -14264,6 +14477,46 @@ AST 映射规则:
                         _c2_has_swap = any(i.opname == 'SWAP' for i in _c2_val_instrs)
                         _c2_has_unpack = any(i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')
                                              for i in _c2_val_instrs)
+                        # [R68-b2 cell-swap] BUG B 补支：SWAP N 终结的连续 STORE 是
+                        # 「目标为 cell 变量」的固定长元组赋值（源序存储），与上方
+                        # 无 SWAP 的反源序形态互斥可辨，两种形态不可同时成立。
+                        # 识别条件（三条全部只读**本块自身**字段与本块自身指令序列，
+                        # 无跨层次区域/块包含、无名称/文件/偏移/计数启发、无新增 self
+                        # 状态）：
+                        #   (1) 本块自身指令序列中从当前 STORE 起有连续 N>=2 个简单名
+                        #       STORE_*（_c2_stores / _c2_n，已按本块 _iter_instrs 量得，
+                        #       N 由该连续段长度给出，不是外部常量）；
+                        #   (2) 本块自己的 pending 值段 pre_instrs 去噪后的**末条**指令
+                        #       是 SWAP 且其 arg == N，且值段内 SWAP 恰好一条 ——
+                        #       CPython 3.11 对这类赋值生成 <e1>...<eN> + SWAP N +
+                        #       STORE t1..tN：N 个 RHS 先按源序压栈，SWAP N 把最深的 e1
+                        #       顶到 TOS，随后**源序**存储；无 SWAP 形态则是**反源序**
+                        #       存储，其值段末条不可能是 SWAP，故 (2) 是二者的分界；
+                        #   (3) 剔除该 SWAP 后表达式栈重建深度 >= N（N 个 RHS 各占一帧）。
+                        # 归约方式：SWAP 只在栈上换位、不产生值，故先把它从值段剔除，
+                        #   再由原有 C2 归约把 N 个 STORE 整体归约为**一条**
+                        #   Assign(Tuple(targets), Tuple(values))；目标按 STORE 源序
+                        #   （不反转），值按压栈序；不吞本块后续任何指令、不抑制任何
+                        #   既有语句、不新增区域/帧内状态。
+                        # AST 映射：Assign(Tuple(t1..tN), Tuple(v1..vN))，v_i 按压栈序
+                        #   与 t_i 按源序一一对应；重编译元组字面量赋值会重新生成
+                        #   SWAP N + 源序 STORE，逐字节复现原字节码。实测反例：
+                        #   scheduler::run_daily 源码 `hour, minute = int(time_info[0]),
+                        #   int(time_info[1])`（hour/minute 是 cell），落地产物只余
+                        #   `hour = int(time_info[0])`，缺失 `minute = int(time_info[1])`
+                        #   及其 MAKE_CELL minute / STORE_DEREF minute / LOAD_CLOSURE
+                        #   minute（nested_diff 4 处 delete）；合成 r68b2_cell_tuple
+                        #   同形同因（该块以 if 条件结尾，前缀走本路径，整块检测不可达）。
+                        _c2_swap_src_order = False
+                        if _c2_has_swap and not _c2_has_unpack and _c2_val_instrs:
+                            _c2_sw_last = _c2_val_instrs[-1]
+                            if (_c2_sw_last.opname == 'SWAP'
+                                    and (_c2_sw_last.arg or 0) == _c2_n
+                                    and sum(1 for _i in _c2_val_instrs
+                                            if _i.opname == 'SWAP') == 1):
+                                _c2_has_swap = False
+                                _c2_swap_src_order = True
+                                _c2_val_instrs = _c2_val_instrs[:-1]
                         if not _c2_has_swap and not _c2_has_unpack:
                             self.expr_reconstructor.reset()
                             for _c2_vi in _c2_val_instrs:
@@ -14271,13 +14524,15 @@ AST 映射规则:
                             _c2_stack = [s for s in self.expr_reconstructor.stack
                                          if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
                             if len(_c2_stack) >= _c2_n:
-                                # STORE 按反源序排列（first store 弹 TOS = 最后加载值）。
+                                # STORE 按反源序排列（first store 弹 TOS = 最后加载值）；
+                                # 带 SWAP N 终结时 STORE 已是源序，目标不再反转。
                                 _c2_targets = [{
                                     'type': 'Name',
                                     'id': _s.argval if _s.argval else f'var_{_s.arg}',
                                     'ctx': 'Store',
                                     'lineno': _s.starts_line,
-                                } for _s in reversed(_c2_stores)]
+                                } for _s in (_c2_stores if _c2_swap_src_order
+                                             else reversed(_c2_stores))]
                                 _c2_rhs_elts = [_c2_stack[-_c2_n + _si] for _si in range(_c2_n)]
                                 _c2_rhs_expr = ({
                                     'type': 'Tuple', 'elts': _c2_rhs_elts, 'ctx': 'Load',
@@ -17585,7 +17840,39 @@ AST 映射规则:
                             _part = _flip_contains_compare(_part) if (_part.get('type') == 'Compare' and any((o.get('type') if isinstance(o, dict) else o) in ('In', 'NotIn', 'in', 'not in') for o in (_part.get('ops') or []))) else _negate_expr(_part)
                         _main_parts.append(_part)
             if len(_main_parts) >= 2:
+                # [R68-D4-ORCHAIN-TAIL] or 链折叠条件必须保留链尾已折入的 and 尾巴。
+                # 缺陷（trade_info_utils.get_trade_list L204-206 / L209-211）：源码
+                #   if item['status'] != '2' and (not op_station or item['op_station'] == op_station):
+                #       if item['strategyType'] in list(CUSTOM_STRATEGY_TYPE_DICT.values()):
+                #           trades.append(item)
+                # 分析端把嵌套 if 的真后继条件块（与链末块 bn 同一 merge）折进 bn 的条件，
+                # _if_extract_condition_from_instructions 因此返回 BoolOp(and,[C,D])；旧代码用
+                # BoolOp(or,[B,C]) 整体替换 condition，D 支被丢弃（官方尺 16 条指令缺失），
+                # 产物只剩 `... and (B or C)` + 无条件 append。
+                # (1) 识别条件（同层次结构身份，只读本区域自身字段与本区域链条目）：
+                #     a. 本区域 inline_boolop_chains 命中 cond_block 的条目 op == 'or'（链 b1..bn，bn == cond_block）；
+                #     b. 已抽出的 condition 为 BoolOp 且 op == 'and' 且 len(values) >= 2；
+                #     c. values[0] 与 _main_parts[-1]（链末块 bn 自身指令重建的表达式）结构相等，
+                #        即 condition 的首支正是 bn，其余支是 bn 真后继上被折叠进来的尾巴
+                #        （尾块已由 BoolOpRegion 路径标记 generated，不再单独发射）。
+                # (2) 归约方式：不整体替换，而是重组——先把 b1..bn 折成 BoolOp(or, parts) 作为
+                #     and 的首支，and 的其余支原样接在其后，得 BoolOp(and,[BoolOp(or,b1..bn),tail...])；
+                #     判据不成立时走原路径，产物逐字节不变。
+                # (3) AST 映射：If(test=BoolOp(and,[BoolOp(or,[...]), <tail>]))。CPython 在测试语境下
+                #     把 `if (b1 or ... or bn) and t:` 编译为 b1..bn 的短路链（bn 真时 fallthrough
+                #     进 t 求值）+ t 的 POP_JUMP_IF_FALSE 到同一 merge，与原始字节码逐条一致。
+                _r68d4_extracted = condition
                 condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _main_parts}
+                if (_chain_op == 'or' and isinstance(_r68d4_extracted, dict)
+                        and _r68d4_extracted.get('type') == 'BoolOp'
+                        and _r68d4_extracted.get('op') == 'and'
+                        and isinstance(_r68d4_extracted.get('values'), list)
+                        and len(_r68d4_extracted['values']) >= 2
+                        and _r68d4_extracted['values'][0] == _main_parts[-1]):
+                    condition = {'type': 'BoolOp', 'op': 'and',
+                                 'values': [{'type': 'BoolOp', 'op': _chain_op,
+                                             'values': list(_main_parts)}]
+                                        + list(_r68d4_extracted['values'][1:])}
                 if _main_ibc.get('negate'):
                     condition = {'type': 'UnaryOp', 'op': 'not', 'operand': condition}
                 for _cb in _chain_blocks[1:]:
@@ -18357,6 +18644,85 @@ AST 映射规则:
                         if_result = [if_result, _cont]
                     self.generated_blocks.add(_blk)
                     self.generated_offsets.add(_blk.start_offset)
+        # [R68-diag3 C3] 与上一支**互补**的显式 continue 再生（上一支要求
+        #   merge_block is back_edge_block，本支要求 merge_block 不是 back_edge_block，
+        #   两支互斥，不可能同时命中）。
+        # 识别条件（五条全部只读**本区域/本块/本循环自身**的字段，无跨层次包含、
+        #   无名称/常量/偏移/计数启发、无新增 self 状态）：
+        #   (1) 处于循环上下文中：self._current_loop 及其 header_block 均非 None；
+        #   (2) 本 IfRegion 有 merge_block，且 merge_block 不在本区域自己的
+        #       then_blocks/else_blocks 内（它是语句之后的汇合点，不是某条臂的体块）；
+        #   (3) merge_block **不是**本循环登记的自然回边块：
+        #       merge_block is not _current_loop.back_edge_block
+        #       且 merge_block not in _current_loop.back_edge_blocks
+        #       ——自然回边由 For/While 节点重编译隐式再生，一条循环只有这一个载体
+        #       （analyzer L4402 region.back_edge_blocks = {back_edge_block}）；
+        #   (4) merge_block 是**纯**回边块：无有意义指令（RESUME/NOP/CACHE/PUSH_NULL/
+        #       JUMP_BACKWARD 之外无其它指令），且末指令 JUMP_BACKWARD(_NO_INTERRUPT)
+        #       的目标块 is 本循环 header_block —— 即这条边只可能是一跳回循环头；
+        #   (5) merge_block 的**全部**前驱都属于本区域的 blocks：进入该汇合点的
+        #       路径只有本 if 语句的各条臂 ⇒ 本 if 语句之后源码必然紧跟一条
+        #       无条件控制语句（此处：continue），而不是与后续语句共享汇合点。
+        #   (1)-(5) 同时成立 ⇒ 本 if/else 是其所在臂的末条语句，且臂末还有一条源码级
+        #   显式 continue；此时按上一支判据（merge==back_edge_block）不成立而**整条丢失**
+        #   该 continue，产物少一条 JUMP_BACKWARD。实测：
+        #   klinedata::get_all_real_daily_kline 216/214（IfRegion@856.merge=894，
+        #   LoopRegion@86.back_edge_block=898，continue_map{894:'CONTINUE'}）；
+        #   合成 r68_sink_continue 52/51（IfRegion@56.merge=94，back_edge_block=96）。
+        # 归约方式：把 Continue 作为本 if 结果的**兄弟语句**追加在 if 之后（落在该臂
+        #   内），并把 merge_block 标记为已生成，防止循环体尾块处理器再消费一次；
+        #   不改发射次序、不抑制任何既有语句、不新增区域/帧内状态。
+        # AST 映射：IfRegion(merge_block 为纯回边块且非本循环登记尾块 ∧ 前驱全在本区域
+        #   内) → [ast.If(test, then, orelse), ast.Continue]，Continue 与该臂末尾源码里
+        #   显式写下的 continue 语句一一对应。
+        # [R68-diag3 C3] 两条追加合取项（都是**本区域/本循环自身字段**，见上方三要素注释）：
+        #   (6) 本 IfRegion 同时有非空 then_blocks 与非空 else_blocks —— 汇合点由
+        #       **完整 if/else** 的两条臂进入（源码在该 if/else 之后还写了一条 continue）；
+        #       单臂 `if c: <臂>` 的汇合点是「条件假出口 + then 臂落点」共享的自然尾形，
+        #       实测反例：wizard_quant_api::read_config_file IfRegion@4282(then=1 else=0,
+        #       merge@4298 纯回边, contmap='CONTINUE') 与 trade_live_broker::get_ipo_stocks
+        #       IfRegion@2190(then=1 else=0, merge@2212) 若不过滤会各多发射 1 条
+        #       JUMP_BACKWARD（956→957、453→454），该条把这两处挡在门外。
+        #   (7) 本循环区域自己的 continue_map 把该汇合点标为 'CONTINUE'（不是
+        #       'LOOP_BACK_EDGE'）：analyzer _detect_break_continue 已按「是否
+        #       natural_back_edge / 是否支配 header」独立判定过同一条边的身份，
+        #       发射侧与归约侧在此互相印证；标签缺失（None/空表）时**不发射**，
+        #       逐字节退回落地行为。
+        def _r68c3_lab(_lp, _mb):
+            _cm = getattr(_lp, 'continue_map', None) or {}
+            for _ck in _cm:
+                if _ck is _mb:
+                    return _cm[_ck]
+            return None
+        _r68c3_loop = self._current_loop
+        _r68c3_hdr = getattr(_r68c3_loop, 'header_block', None) if _r68c3_loop else None
+        _r68c3_mb = getattr(region, 'merge_block', None)
+        if (_r68c3_loop is not None and _r68c3_hdr is not None and _r68c3_mb is not None
+                and _r68c3_mb not in (region.then_blocks or [])
+                and _r68c3_mb not in (region.else_blocks or [])
+                and _r68c3_mb is not getattr(_r68c3_loop, 'back_edge_block', None)
+                and _r68c3_mb not in set(getattr(_r68c3_loop, 'back_edge_blocks', None) or ())
+                and all(_r68c3_p in region.blocks
+                        for _r68c3_p in (getattr(_r68c3_mb, 'predecessors', None) or []))
+                and (region.then_blocks or []) and (region.else_blocks or [])
+                and _r68c3_lab(_r68c3_loop, _r68c3_mb) == 'CONTINUE'
+                and (getattr(_r68c3_mb, 'predecessors', None) or [])):
+            _r68c3_last = _r68c3_mb.get_last_instruction()
+            if (_r68c3_last is not None
+                    and _r68c3_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                    and _r68c3_last.argval is not None
+                    and self.cfg.get_block_by_offset(_r68c3_last.argval) is _r68c3_hdr
+                    and not [i for i in _r68c3_mb.instructions
+                             if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                             'EXTENDED_ARG')]):
+                _r68c3_cont = {'type': 'Continue'}
+                if isinstance(if_result, list):
+                    if_result = if_result + [_r68c3_cont]
+                else:
+                    if_result = [if_result, _r68c3_cont]
+                self.generated_blocks.add(_r68c3_mb)
+                self.generated_offsets.add(_r68c3_mb.start_offset)
         # 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
         # 当 IfRegion.merge_block 同时是其内嵌 LoopRegion 的 else_blocks（for_iter_exit）
         # 时，R15-N5 修复会让 LoopRegion 跳过 merge_block（避免在 if body 内重复输出
@@ -22088,8 +22454,17 @@ AST 映射规则:
             # self._total_cash += position.market_value + del self._positions[symbol])
             # where effective_instructions only captures the first statement.
             if role == BlockRole.LOOP_BACK_EDGE:
+                # [R68-b3 修复] 纯连接回边块的有效指令判定必须剔除 EXTENDED_ARG。
+                # 识别条件：块角色为 LOOP_BACK_EDGE 且其指令剔除噪声后仍为空——
+                # 只剩 JUMP_BACKWARD（回边由循环结构本身再生）与 EXTENDED_ARG
+                # （参数扩展前缀，全库既定噪声，见 W14 修复）。
+                # 归约方式：effective 为空时走下方 else 分支（不补发显式 Continue），
+                # 否则会把纯汇合回边块误判为「含用户指令的显式 continue」，
+                # 在循环体尾多插一条 continue（重编译多出后向跳转）。
+                # AST 映射：Continue 节点缺省，块内无用户语句可发射。
                 effective = [i for i in block.instructions
                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                 'EXTENDED_ARG',
                                                  'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
             if role == BlockRole.LOOP_BACK_EDGE and effective is not None:
                 if self._current_loop and self._is_with_exit_back_edge(block):
@@ -36061,6 +36436,39 @@ AST 映射规则:
                                                     break
                                     if _has_return_sink:
                                         break
+                    # [R68-diag6] 返回汇点补全（三要素）。
+                    # 识别条件: 既有 merge 块末条 RETURN 与 GET_AWAITABLE 轮询两条
+                    #   汇点判据均未命中时，merge_block 的正常后继（**排除**首个有效
+                    #   指令为 PUSH_EXC_INFO 的异常处理器入口块——与 TryExcept 入口
+                    #   切分 L1263 同一处理器身份判据）恰有一个块 S；S 的指令序列
+                    #   （去 NOP/CACHE/EXTENDED_ARG/RESUME）恰为单条 RETURN_VALUE/
+                    #   RETURN_CONST；S 的唯一前驱就是 merge_block。该形状源于异常
+                    #   表边界把 try 块尾 [BUILD_TUPLE]|[RETURN_VALUE] 切成两块。
+                    # 归约方式: S 并入本语句发射（记入 generated_blocks，杜绝其被独立
+                    #   重放成落出 return None 伪像），区域按 Return 收口。栈数据流
+                    #   唯一: merge_block 消费指令把区域值收成恰 1 个栈项，S 单前驱、
+                    #   单指令 RETURN 消费该项，无其他读者。
+                    # AST 映射: results.append Return(_merge_consumer_expr)，与既有
+                    #   merge 块末条 RETURN_VALUE 汇点分支（本函数同一 append）同型。
+                    if not _has_return_sink and region.merge_block:
+                        _r68_norm = []
+                        for _r68_c in region.merge_block.successors:
+                            _r68_ops0 = [i.opname for i in _r68_c.instructions
+                                         if i.opname not in ('NOP', 'CACHE',
+                                                             'EXTENDED_ARG', 'RESUME')]
+                            if _r68_ops0 and _r68_ops0[0] == 'PUSH_EXC_INFO':
+                                continue
+                            _r68_norm.append((_r68_c, _r68_ops0))
+                        if len(_r68_norm) == 1:
+                            _r68_s, _r68_ops = _r68_norm[0]
+                            if (len(_r68_ops) == 1
+                                    and _r68_ops[0] in ('RETURN_VALUE',
+                                                        'RETURN_CONST')
+                                    and _r68_s not in self.generated_blocks
+                                    and list(getattr(_r68_s, 'predecessors', [])
+                                             or []) == [region.merge_block]):
+                                _has_return_sink = True
+                                self.generated_blocks.add(_r68_s)
                     if _has_return_sink:
                         results.append({'type': 'Return', 'value': _merge_consumer_expr})
                     else:
@@ -38049,6 +38457,80 @@ AST 映射规则:
                                         for block in region.blocks:
                                             self.generated_blocks.add(block)
                                         _handled = True
+                                elif _eff and _eff[0].opname == 'SWAP':
+                                    # [R68-diag6/b5] Pattern A2-AS（识别条件/归约方式/AST 映射三要素）。
+                                    # 识别条件（全部为本区域/本块自身结构身份，无跨区域跨层次引用）：
+                                    #   (1) 本 TernaryRegion 的 merge_block 有 STORE_* 消费点，其
+                                    #       `_non_noise_remaining`（STORE_* 之后的本块残值指令）非空且
+                                    #       不含 POP_TOP/RETURN_VALUE —— 即块内残值是一条待求值表达式；
+                                    #   (2) merge_block 的唯一非异常后继 S0（`exception_successors`
+                                    #       排除法，与 A2 既有判据同一本块字段）以 SWAP 开头；
+                                    #   (3) 沿「唯一非异常后继」逐块前行，把各块有效指令
+                                    #       （去 NOISE_OPS）串接，恰好等于 CPython 3.11
+                                    #       `except E as e:` 正常退出链六元组
+                                    #       SWAP, POP_EXCEPT, LOAD_CONST, STORE_FAST,
+                                    #       DELETE_FAST, RETURN_VALUE（既不短缺也不溢出），且
+                                    #       LOAD_CONST 的 argval 为 None、STORE_FAST 与
+                                    #       DELETE_FAST 的 argrepr 相同（自绑自解异常名身份，按 argval 名字比较）；
+                                    #   (4) 链上每块都不在 generated_blocks、都不属于本 region.blocks
+                                    #       （每块唯一归属，未被任何其他区域先行发射）。
+                                    # 归约方式：该链语义 = 「把残值换回栈顶 → 弹出异常状态 →
+                                    #   del e → RETURN 消费栈顶值」，中间无任何其他读者；故把
+                                    #   merge_block 残值指令段归约为 Return 表达式，并把链上
+                                    #   各块记入 generated_blocks，阻止它们被外层再次独立发射成
+                                    #   `POP_TOP; ...; return None` 的落出伪像。
+                                    # AST 映射：results.append({'type':'Return',
+                                    #   'value': reconstruct(_non_noise_remaining)})，与紧邻上方
+                                    #   A2「merge 残值 + 直接 RETURN 后继」分支同一 AST 形状。
+                                    _r68_expect = ('SWAP', 'POP_EXCEPT',
+                                                   'LOAD_CONST', 'STORE_FAST',
+                                                   'DELETE_FAST', 'RETURN_VALUE')
+                                    _r68_ops = []
+                                    _r68_blocks = []
+                                    _r68_seen = set()
+                                    _cur = _succs[0]
+                                    _r68_ok = True
+                                    while len(_r68_ops) < len(_r68_expect):
+                                        if (_cur is None
+                                                or id(_cur) in _r68_seen
+                                                or _cur in self.generated_blocks
+                                                or _cur in region.blocks):
+                                            _r68_ok = False
+                                            break
+                                        _r68_seen.add(id(_cur))
+                                        _sig = [i for i in _cur.instructions
+                                                if i.opname not in NOISE_OPS]
+                                        if not _sig:
+                                            _r68_ok = False
+                                            break
+                                        _r68_ops.extend(_sig)
+                                        _r68_blocks.append(_cur)
+                                        _ex = getattr(_cur,
+                                                      'exception_successors',
+                                                      None) or set()
+                                        _nxt = [s for s in _cur.successors
+                                                if s not in _ex]
+                                        _cur = (_nxt[0] if len(_nxt) == 1
+                                                else None)
+                                    if (_r68_ok
+                                            and len(_r68_ops) == len(_r68_expect)
+                                            and tuple(i.opname
+                                                     for i in _r68_ops) == _r68_expect
+                                            and _r68_ops[2].argval is None
+                                            and _r68_ops[3].argval
+                                            == _r68_ops[4].argval):
+                                        _expr = self.expr_reconstructor.reconstruct(
+                                            list(_non_noise_remaining))
+                                        if _expr is not None:
+                                            results.append({
+                                                'type': 'Return',
+                                                'value': _expr,
+                                            })
+                                            for _b in _r68_blocks:
+                                                self.generated_blocks.add(_b)
+                                            for block in region.blocks:
+                                                self.generated_blocks.add(block)
+                                            _handled = True
                             if _handled:
                                 pass  # return 已发射，跳过后续 _build_statements 路径
                             else:
@@ -39084,6 +39566,18 @@ AST 映射规则:
             return 1, 1 if (instr.arg or 0) < 2 else 2
         if op == 'BUILD_STRING':
             return 1, instr.arg or 0
+        if op == 'BUILD_CONST_KEY_MAP':
+            # [R68-diag6] 栈语义表同层次修正（三要素）。
+            # 识别条件: 本表服务 _split_preload_into_siblings / _split_raise_from_stmts，
+            #   输入是三元 cond_block 前缀指令链；其中 BUILD_CONST_KEY_MAP 按 CPython
+            #   操作码语义弹出 arg 个 value + 1 个常量键元组，共 arg+1 项（非 arg 项）。
+            # 归约方式: 兄弟切片边界由真实栈深度反向游走确定。旧表少弹 1 项，多键
+            #   常量键字典的首个 value 被切到独立兄弟切片，dict 切片键数比值数多 1，
+            #   重建整体错位一格（flyAccount._do_request 的 error_dict 退化形状）。
+            # AST 映射: 修正后整条前缀作为单一切片交给 expr_reconstructor.reconstruct，
+            #   其既有 BUILD_CONST_KEY_MAP 分支重建 Dict(keys=键元组常量, values=arg 项)，
+            #   keys/values 一一对应，不新增任何映射规则。
+            return 1, (instr.arg or 0) + 1
         if op.startswith('BUILD_'):
             return 1, instr.arg or 0
         if op in ('PRECALL', 'POP_TOP'):
@@ -47390,7 +47884,8 @@ AST 映射规则:
                 if instr.opname in _STORE_OPS_R19N3 and stmt_instrs:
                     _s2_stores = [instr]
                     _s2_blk = block.instructions
-                    _s2_bi = _s2_blk.index(instr) + 1
+                    _s2_first_idx = _s2_blk.index(instr)
+                    _s2_bi = _s2_first_idx + 1
                     while _s2_bi < len(_s2_blk):
                         _s2_ni = _s2_blk[_s2_bi]
                         if _s2_ni.opname in _STORE_OPS_R19N3:
@@ -47405,6 +47900,37 @@ AST 映射规则:
                         _s2_has_unpack = any(i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')
                                              for i in _s2_val_instrs)
                         _s2_has_copy = any(i.opname == 'COPY' for i in _s2_val_instrs)
+                        # [R68-b2 cell-swap] 本块自身指令序里紧邻这串 STORE 之前若有一条
+                        #   SWAP N（N == 连续 STORE 段长度），则该元组赋值的目标是 cell
+                        #   变量：CPython 3.11 先按**源序**压 N 个 RHS、SWAP N 把最深的
+                        #   第一个值顶到 TOS，再**源序**存储。SWAP 属于 SKIP_OPS，永远
+                        #   进不了 stmt_instrs，故上面的 _s2_has_swap 恒为 False、看不
+                        #   见它，SIG2 按无 SWAP 的反源序布局反转目标，产物写成
+                        #   `minute, hour = (...)`，重编译后两条 STORE_DEREF 互换。
+                        #   识别条件（只读**本块自身**指令序列与本块自身 pending 段）：
+                        #     (1) 本块自身指令中从当前 STORE 起连续 N>=2 个简单名
+                        #         STORE_*（_s2_stores）；
+                        #     (2) 跳过 RESUME/NOP/CACHE/PUSH_NULL 后，紧邻首 STORE 的
+                        #         前一条本块指令是 SWAP 且其 arg == N —— 与无 SWAP 形态
+                        #         （反源序存储）互斥可辨；
+                        #     (3) 表达式栈重建深度 >= N。
+                        #   归约方式：目标按 STORE 源序（不反转），值仍取表达式栈栈顶
+                        #     N 个元素（SWAP 不在 stmt_instrs 内，栈序即压栈源序）；
+                        #     其余守卫与归约路径一字不动。
+                        #   AST 映射：Assign(Tuple(t1..tN 源序), Tuple(v1..vN 压栈序))，
+                        #     重编译元组字面量赋值重新生成 SWAP N + 源序 STORE，复现原
+                        #     字节码（合成 r68b2_cell_tuple_body 2/3 -> 3/3）。
+                        _s2_swap_src_order = False
+                        _s2_prev = None
+                        for _s2_pi in range(_s2_first_idx - 1, -1, -1):
+                            _s2_p0 = _s2_blk[_s2_pi]
+                            if _s2_p0.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                                continue
+                            _s2_prev = _s2_p0
+                            break
+                        if (_s2_prev is not None and _s2_prev.opname == 'SWAP'
+                                and (_s2_prev.arg or 0) == len(_s2_stores)):
+                            _s2_swap_src_order = True
                         if not _s2_has_swap and not _s2_has_unpack and not _s2_has_copy:
                             self.expr_reconstructor.reset()
                             for _s2_vi in _s2_val_instrs:
@@ -47417,7 +47943,8 @@ AST 映射规则:
                                     'id': _s.argval if _s.argval else f'var_{_s.arg}',
                                     'ctx': 'Store',
                                     'lineno': _s.starts_line,
-                                } for _s in reversed(_s2_stores)]
+                                } for _s in (_s2_stores if _s2_swap_src_order
+                                             else reversed(_s2_stores))]
                                 _s2_rhs_elts = [_s2_stack[-len(_s2_stores) + _si]
                                                  for _si in range(len(_s2_stores))]
                                 _s2_rhs_expr = ({

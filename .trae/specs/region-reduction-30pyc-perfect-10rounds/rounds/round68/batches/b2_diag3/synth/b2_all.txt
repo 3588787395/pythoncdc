@@ -1,0 +1,6 @@
+D:/Temp/opencode/r68gate/diag3/synth\r68_big_sinkreturn.pyc
+D:/Temp/opencode/r68gate/diag3/synth\r68_sink_continue.pyc
+D:/Temp/opencode/r68gate/diag3/synth\r68_sink_return.pyc
+D:/Temp/opencode/r68gate/diag3/synth\r68_sink_tailreturn.pyc
+D:/Temp/opencode/r68gate/diag3/synth\r68b2_cell_tuple.pyc
+D:/Temp/opencode/r68gate/diag3/synth\r68b2_cell_tuple_body.pyc

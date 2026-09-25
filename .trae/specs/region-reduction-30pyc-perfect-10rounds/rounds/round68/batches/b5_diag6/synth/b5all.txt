@@ -1,0 +1,4 @@
+D:/Temp/opencode/r68gate/diag6/synth/r68d6_handler_return.pyc
+D:/Temp/opencode/r68gate/diag6/synth/r68d6_handler_return2.pyc
+D:/Temp/opencode/r68gate/diag6/synth/r68d6_tuple_ternary.pyc
+D:/Temp/opencode/r68gate/diag6/synth/r68d6_tuple_ternary2.pyc
