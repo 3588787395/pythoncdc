@@ -1,0 +1,57 @@
+CFG blocks:
+  0 succ=[4] exc=[] preds=[]
+  4 succ=[8, 512] exc=[512] preds=[0]
+  8 succ=[14, 486] exc=[486] preds=[4]
+  14 succ=[16, 432, 486] exc=[486] preds=[8, 130, 388]
+  16 succ=[38, 388, 486] exc=[486] preds=[14]
+  38 succ=[54, 74, 486] exc=[486] preds=[16]
+  54 succ=[74, 486] exc=[486] preds=[38]
+  74 succ=[98, 118, 486] exc=[486] preds=[38, 54]
+  98 succ=[118, 486] exc=[486] preds=[74]
+  118 succ=[130, 280, 486] exc=[486] preds=[74, 98]
+  130 succ=[14, 486] exc=[486] preds=[118]
+  280 succ=[292, 334, 486] exc=[486] preds=[118]
+  292 succ=[334, 486] exc=[486] preds=[280]
+  334 succ=[346, 388, 486] exc=[486] preds=[280, 292]
+  346 succ=[388, 486] exc=[486] preds=[334]
+  388 succ=[14, 486] exc=[486] preds=[16, 334, 346]
+  432 succ=[460, 486] exc=[486] preds=[14]
+  460 succ=[484, 512] exc=[512] preds=[432]
+  484 succ=[] exc=[] preds=[460]
+  486 succ=[492, 494, 500] exc=[494] preds=[8, 14, 16, 38, 54, 74, 98, 118, 130, 280, 292, 334, 346, 388, 432]
+  492 succ=[494] exc=[494] preds=[486]
+  494 succ=[512] exc=[512] preds=[486, 492, 500]
+  500 succ=[494, 502] exc=[494] preds=[486]
+  502 succ=[508, 512] exc=[512] preds=[500]
+  508 succ=[] exc=[] preds=[502]
+  512 succ=[530, 538, 540] exc=[540] preds=[4, 460, 494, 502]
+  530 succ=[532, 540] exc=[540] preds=[512]
+  532 succ=[] exc=[] preds=[530]
+  538 succ=[540] exc=[540] preds=[512]
+  540 succ=[] exc=[] preds=[512, 530, 538]
+
+CALLS (12):
+  entry=346 merge=388 stop=[14, 388, 432, 460, 486, 508, 512] -> [346]
+  entry=388 merge=388 stop=[14, 346, 432, 460, 486, 508, 512] -> []
+  entry=292 merge=334 stop=[14, 334, 432, 460, 486, 508, 512] -> [292]
+  entry=334 merge=334 stop=[14, 292, 432, 460, 486, 508, 512] -> []
+  entry=130 merge=14 stop=[14, 280, 432, 460, 486, 508, 512] -> [130]
+  entry=280 merge=14 stop=[14, 130, 432, 460, 486, 508, 512] -> [280, 292, 334, 346, 388]
+  entry=98 merge=118 stop=[14, 118, 432, 460, 486, 508, 512] -> [98]
+  entry=118 merge=118 stop=[14, 98, 432, 460, 486, 508, 512] -> []
+  entry=54 merge=74 stop=[14, 74, 432, 460, 486, 508, 512] -> [54]
+  entry=74 merge=74 stop=[14, 54, 432, 460, 486, 508, 512] -> []
+  entry=38 merge=388 stop=[14, 388, 432, 460, 486, 508, 512] -> [38, 54, 74, 98, 118, 130, 280, 292, 334, 346]
+  entry=388 merge=388 stop=[14, 38, 432, 460, 486, 508, 512] -> []
+
+FINAL REGIONS (10):
+  LoopRegion@14 blocks=[8, 14, 16, 38, 54, 74, 98, 118, 130, 280, 292, 334, 346, 388, 432] exit=None
+  TryExceptRegion@4 blocks=[0, 4, 8, 14, 16, 38, 54, 74, 98, 118, 130, 280, 292, 334, 346, 388, 432, 460, 484, 492, 494, 500, 502, 508, 512, 530, 532, 538, 540] exit=None
+  WithRegion@4 blocks=[4, 8, 14, 16, 38, 54, 74, 98, 118, 130, 280, 292, 334, 346, 388, 432, 460, 484, 486, 494, 508] exit=None
+  IfRegion@334 cond=334 then_blocks=[346] else_blocks=[] merge=388 exit=388
+  IfRegion@280 cond=280 then_blocks=[292] else_blocks=[] merge=334 exit=334
+  IfRegion@118 cond=118 then_blocks=[130] else_blocks=[280, 292, 334, 346, 388] merge=14 exit=14
+  IfRegion@74 cond=74 then_blocks=[98] else_blocks=[] merge=118 exit=118
+  IfRegion@38 cond=38 then_blocks=[54] else_blocks=[] merge=74 exit=74
+  IfRegion@16 cond=16 then_blocks=[38, 54, 74, 98, 118, 130, 280, 292, 334, 346] else_blocks=[] merge=388 exit=388
+  Region@0 blocks=[0] exit=None

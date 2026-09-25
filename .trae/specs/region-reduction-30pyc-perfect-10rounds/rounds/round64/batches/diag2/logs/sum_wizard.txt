@@ -1,0 +1,9 @@
+=== get_DMI.calculate_di [landed/wizard] orig=90 decomp=88 hunks=4 lost=7 gained=5
+   replace  n=1    REPLACE orig[24:25]@74 L385  <->  decomp[24:25]@74 L261
+   replace  n=3    REPLACE orig[38:41]@152 L388  <->  decomp[38:40]@152 L262
+   delete   n=1    MISSING orig[56:57] @240..240 src=L390  (decomp resumes @238 L263)
+   replace  n=2    REPLACE orig[58:60]@244 L390  <->  decomp[56:58]@240 L263
+=== params_analysis [landed/wizard] orig=144 decomp=137 hunks=3 lost=11 gained=4
+   replace  n=2    REPLACE orig[10:11]@28 L147  <->  decomp[10:12]@28 L104
+   replace  n=2    REPLACE orig[16:17]@40 L149  <->  decomp[17:19]@42 L106
+   delete   n=9    MISSING orig[20:29] @48..84 src=L151  (decomp resumes @52 L107)

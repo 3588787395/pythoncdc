@@ -1,0 +1,10 @@
+round63_b1/r63_ft.pyc                                      r63  1/2  -> landed  2/2 
+round63_b1/r63_ft2.pyc                                     r63  1/2  -> landed  2/2 
+round63_b2/probe_r63b2_cases.pyc                           r63  6/9  -> landed  7/9 
+round63_b2/probe_r63b2_cases2.pyc                          r63  3/9  -> landed  7/9 
+round63_b2/repro_r63b2_tail_cmp_return.pyc                 r63  1/2  -> landed  2/2 
+round64_diag1/r64d1b_closed_exit_prefix.pyc                r63  1/2  -> landed  2/2 
+round64_diag2/r64d2_chain_yield_sibling_entry.pyc          r63  1/2  -> landed  2/2 
+round64_diag2/r64d2_valuectx_consumer.pyc                  r63  1/2  -> landed  2/2 
+round64_diag4/r64d4_boolop_poptop_merge.pyc                r63  2/3  -> landed  3/3 
+repros 19   r63 49 matched / 7 clean  ->  landed 61 matched / 14 clean

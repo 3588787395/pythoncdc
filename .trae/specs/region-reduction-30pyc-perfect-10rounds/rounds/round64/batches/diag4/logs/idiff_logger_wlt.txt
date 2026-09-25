@@ -1,0 +1,46 @@
+=== <module>.Backtest.write_logging_thread : token len orig=113 decomp=113  identical=False
+    non-equal blocks=2  ratio=0.9292
+  delete   orig[  71:  79](n=8) decomp[  71:  71](n=0)
+      orig  src-lines [113, 114]   decomp src-lines []
+       O   68 off= 358 ln=101   LOAD_CONST 0
+       O   69 off= 360 ln=101   COMPARE_OP >
+       O   70 off= 366 ln=101   POP_JUMP_BACKWARD_IF_TRUE to 64
+     > O   71 off= 368 ln=113   LOAD_FAST msgs
+     > O   72 off= 370 ln=113   POP_JUMP_FORWARD_IF_FALSE to 424
+     > O   73 off= 372 ln=114   LOAD_FAST self
+     > O   74 off= 374 ln=114   LOAD_ATTR logger_bt
+     > O   75 off= 384 ln=114   LOAD_METHOD info
+     > O   76 off= 406 ln=114   LOAD_FAST msgs
+     > O   77 off= 412 ln=114   CALL 
+     > O   78 off= 422 ln=114   POP_TOP 
+       O   79 off= 424 ln=None  JUMP_FORWARD to 666
+       O   80 off= 426 ln=116   LOAD_FAST self
+       O   81 off= 428 ln=116   LOAD_ATTR status
+      ----
+       D   68 off= 358 ln=78    LOAD_CONST 0
+       D   69 off= 360 ln=78    COMPARE_OP >
+       D   70 off= 366 ln=78    POP_JUMP_BACKWARD_IF_TRUE to 64
+       D   71 off= 368 ln=None  JUMP_FORWARD to 612
+       D   72 off= 370 ln=90    LOAD_FAST self
+       D   73 off= 372 ln=90    LOAD_ATTR status
+
+  insert   orig[ 112: 112](n=0) decomp[ 104: 112](n=8)
+      orig  src-lines []   decomp src-lines [99, 100]
+       O  109 off= 660 ln=None  JUMP_FORWARD to 666
+       O  110 off= 662 ln=124   LOAD_CONST None
+       O  111 off= 664 ln=124   RETURN_VALUE 
+       O  112 off= 668 ln=97    JUMP_BACKWARD to 4
+      ----
+       D  101 off= 606 ln=96    JUMP_BACKWARD to 2
+       D  102 off= 608 ln=98    LOAD_CONST None
+       D  103 off= 610 ln=98    RETURN_VALUE 
+     > D  104 off= 612 ln=99    LOAD_FAST msgs
+     > D  105 off= 614 ln=99    POP_JUMP_FORWARD_IF_FALSE to 668
+     > D  106 off= 616 ln=100   LOAD_FAST self
+     > D  107 off= 618 ln=100   LOAD_ATTR logger_bt
+     > D  108 off= 628 ln=100   LOAD_METHOD info
+     > D  109 off= 650 ln=100   LOAD_FAST msgs
+     > D  110 off= 656 ln=100   CALL 
+     > D  111 off= 666 ln=100   POP_TOP 
+       D  112 off= 670 ln=74    JUMP_BACKWARD to 4
+

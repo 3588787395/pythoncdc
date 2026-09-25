@@ -1,0 +1,432 @@
+orig candidates=[[120]] decomp candidates=[[54]]
+orig=1442 decomp=1458  ratio=0.8786  opcodes=[('replace', 717, 718, 717, 718), ('replace', 723, 724, 723, 724), ('insert', 768, 768, 768, 769), ('replace', 771, 772, 772, 773), ('replace', 788, 789, 789, 790), ('replace', 811, 812, 812, 813), ('replace', 837, 838, 838, 839), ('replace', 843, 844, 844, 845), ('replace', 848, 849, 849, 850), ('replace', 876, 878, 877, 878), ('replace', 882, 883, 882, 883), ('replace', 899, 900, 899, 900), ('insert', 913, 913, 913, 914), ('replace', 917, 918, 918, 919), ('replace', 923, 924, 924, 925), ('replace', 926, 928, 927, 929), ('replace', 934, 935, 935, 936), ('replace', 945, 946, 946, 948), ('replace', 949, 950, 951, 952), ('replace', 954, 955, 956, 958), ('delete', 959, 976, 962, 962), ('replace', 983, 984, 969, 972), ('replace', 988, 989, 976, 977), ('replace', 993, 994, 981, 982), ('replace', 1018, 1019, 1006, 1007), ('replace', 1039, 1040, 1027, 1029), ('replace', 1045, 1046, 1034, 1035), ('replace', 1048, 1050, 1037, 1039), ('replace', 1056, 1057, 1045, 1046), ('replace', 1061, 1062, 1050, 1051), ('replace', 1078, 1079, 1067, 1068), ('replace', 1097, 1110, 1086, 1088), ('replace', 1114, 1115, 1092, 1094), ('replace', 1120, 1121, 1099, 1100), ('replace', 1123, 1125, 1102, 1104), ('replace', 1131, 1133, 1110, 1111), ('replace', 1142, 1143, 1120, 1121), ('replace', 1160, 1161, 1138, 1139), ('replace', 1164, 1165, 1142, 1143), ('replace', 1175, 1176, 1153, 1154), ('replace', 1187, 1188, 1165, 1166), ('insert', 1192, 1192, 1170, 1280), ('replace', 1195, 1196, 1283, 1284), ('replace', 1236, 1237, 1324, 1325), ('replace', 1240, 1241, 1328, 1329), ('replace', 1245, 1246, 1333, 1334), ('replace', 1253, 1254, 1341, 1342), ('replace', 1259, 1261, 1347, 1348), ('replace', 1262, 1263, 1349, 1350), ('replace', 1270, 1271, 1357, 1358), ('replace', 1280, 1281, 1367, 1368), ('replace', 1291, 1292, 1378, 1379), ('replace', 1297, 1299, 1384, 1385), ('replace', 1304, 1306, 1390, 1391), ('replace', 1321, 1328, 1406, 1408), ('replace', 1329, 1336, 1409, 1416), ('replace', 1341, 1342, 1421, 1422), ('replace', 1348, 1413, 1428, 1429), ('replace', 1418, 1419, 1434, 1435)]
+HUNK replace  orig[717:718]@5270 decomp[717:718]@5270
+  ### ORIG only:
+     5270 LOAD_CONST                 <code object check_handle_date at 0x00000188609B6BB0, file "./fly_docker_py311/IQEngine/plugins/plugin_system_event_source/realtime_event_source.py", line 380>
+  ### DECOMP only:
+     5270 LOAD_CONST                 <code object check_handle_date at 0x00000188609B5530, file "D:/Temp/opencode/r64gate/diag1/build_c3k/IQEngine__plugins__plugin_system_event_source__realtime_event_sourceOK.py", line 204>
+HUNK replace  orig[723:724]@5282 decomp[723:724]@5282
+  ### ORIG only:
+     5282 LOAD_CONST                 <code object check_handle_date at 0x0000018860FA88F0, file "./fly_docker_py311/IQEngine/plugins/plugin_system_event_source/realtime_event_source.py", line 383>
+  ### DECOMP only:
+     5282 LOAD_CONST                 <code object check_handle_date at 0x0000018860FA8C70, file "D:/Temp/opencode/r64gate/diag1/build_c3k/IQEngine__plugins__plugin_system_event_source__realtime_event_sourceOK.py", line 207>
+HUNK insert   orig[768:768]@- decomp[768:769]@5598
+  ### DECOMP only:
+     5598 NOP                        
+HUNK replace  orig[771:772]@5612 decomp[772:773]@5614
+  ### ORIG only:
+     5612 POP_JUMP_FORWARD_IF_FALSE  to 9214
+  ### DECOMP only:
+     5614 POP_JUMP_FORWARD_IF_FALSE  to 9142
+HUNK replace  orig[788:789]@5736 decomp[789:790]@5738
+  ### ORIG only:
+     5736 POP_JUMP_FORWARD_IF_FALSE  to 5902
+  ### DECOMP only:
+     5738 POP_JUMP_FORWARD_IF_FALSE  to 5904
+HUNK replace  orig[811:812]@5900 decomp[812:813]@5902
+  ### ORIG only:
+     5900 POP_JUMP_BACKWARD_IF_TRUE  to 5738
+  ### DECOMP only:
+     5902 POP_JUMP_BACKWARD_IF_TRUE  to 5740
+HUNK replace  orig[837:838]@6056 decomp[838:839]@6058
+  ### ORIG only:
+     6056 POP_JUMP_FORWARD_IF_FALSE  to 6280
+  ### DECOMP only:
+     6058 POP_JUMP_FORWARD_IF_FALSE  to 6282
+HUNK replace  orig[843:844]@6088 decomp[844:845]@6090
+  ### ORIG only:
+     6088 POP_JUMP_FORWARD_IF_FALSE  to 6280
+  ### DECOMP only:
+     6090 POP_JUMP_FORWARD_IF_FALSE  to 6282
+HUNK replace  orig[848:849]@6110 decomp[849:850]@6112
+  ### ORIG only:
+     6110 POP_JUMP_FORWARD_IF_FALSE  to 6280
+  ### DECOMP only:
+     6112 POP_JUMP_FORWARD_IF_FALSE  to 6282
+HUNK replace  orig[876:878]@6318 decomp[877:878]@6320
+  ### ORIG only:
+     6318 EXTENDED_ARG               
+     6320 POP_JUMP_FORWARD_IF_FALSE  to 6846
+  ### DECOMP only:
+     6320 POP_JUMP_FORWARD_IF_FALSE  to 6754
+HUNK replace  orig[882:883]@6342 decomp[882:883]@6342
+  ### ORIG only:
+     6342 POP_JUMP_FORWARD_IF_FALSE  to 6374
+  ### DECOMP only:
+     6342 POP_JUMP_FORWARD_IF_FALSE  to 6750
+HUNK replace  orig[899:900]@6404 decomp[899:900]@6404
+  ### ORIG only:
+     6404 POP_JUMP_FORWARD_IF_FALSE  to 6496
+  ### DECOMP only:
+     6404 POP_JUMP_FORWARD_IF_FALSE  to 6498
+HUNK insert   orig[913:913]@- decomp[913:914]@6496
+  ### DECOMP only:
+     6496 JUMP_FORWARD               to 6750
+HUNK replace  orig[917:918]@6516 decomp[918:919]@6518
+  ### ORIG only:
+     6516 POP_JUMP_FORWARD_IF_FALSE  to 6548
+  ### DECOMP only:
+     6518 POP_JUMP_FORWARD_IF_FALSE  to 6750
+HUNK replace  orig[923:924]@6532 decomp[924:925]@6534
+  ### ORIG only:
+     6532 POP_JUMP_FORWARD_IF_FALSE  to 6546
+  ### DECOMP only:
+     6534 POP_JUMP_FORWARD_IF_FALSE  to 6548
+HUNK replace  orig[926:928]@6542 decomp[927:929]@6544
+  ### ORIG only:
+     6542 POP_JUMP_FORWARD_IF_TRUE   to 6580
+     6544 JUMP_FORWARD               to 6548
+  ### DECOMP only:
+     6544 POP_JUMP_FORWARD_IF_TRUE   to 6750
+     6546 JUMP_FORWARD               to 6550
+HUNK replace  orig[934:935]@6578 decomp[935:936]@6580
+  ### ORIG only:
+     6578 POP_JUMP_FORWARD_IF_FALSE  to 6792
+  ### DECOMP only:
+     6580 POP_JUMP_FORWARD_IF_FALSE  to 6696
+HUNK replace  orig[945:946]@6652 decomp[946:948]@6654
+  ### ORIG only:
+     6652 JUMP_FORWARD               to 6690
+  ### DECOMP only:
+     6654 EXTENDED_ARG               
+     6656 JUMP_FORWARD               to 9142
+HUNK replace  orig[949:950]@6670 decomp[951:952]@6674
+  ### ORIG only:
+     6670 POP_JUMP_FORWARD_IF_FALSE  to 6682
+  ### DECOMP only:
+     6674 POP_JUMP_FORWARD_IF_FALSE  to 6688
+HUNK replace  orig[954:955]@6680 decomp[956:958]@6684
+  ### ORIG only:
+     6680 JUMP_FORWARD               to 6690
+  ### DECOMP only:
+     6684 EXTENDED_ARG               
+     6686 JUMP_FORWARD               to 9142
+HUNK delete   orig[959:976]@6690 decomp[962:962]@-
+  ### ORIG only:
+     6690 LOAD_FAST                  holiday_not_do_before
+     6692 LOAD_CONST                 '0'
+     6694 COMPARE_OP                 ==
+     6700 POP_JUMP_FORWARD_IF_FALSE  to 6778
+     6702 LOAD_DEREF                 self
+     6704 LOAD_ATTR                  event_queue
+     6714 LOAD_METHOD                put
+     6736 LOAD_FAST                  dt
+     6738 LOAD_GLOBAL                EventEnum
+     6750 LOAD_ATTR                  BEFORE_TRADING_START
+     6760 BUILD_TUPLE                
+     6762 PRECALL                    
+     6766 CALL                       
+     6776 POP_TOP                    
+     6778 LOAD_FAST                  now_date
+     6780 LOAD_DEREF                 self
+     6782 STORE_ATTR                 before_trading_date
+HUNK replace  orig[983:984]@6844 decomp[969:972]@6748
+  ### ORIG only:
+     6844 JUMP_BACKWARD              to 5598
+  ### DECOMP only:
+     6748 JUMP_BACKWARD              to 5600
+     6750 EXTENDED_ARG               
+     6752 JUMP_FORWARD               to 9142
+HUNK replace  orig[988:989]@6866 decomp[976:977]@6774
+  ### ORIG only:
+     6866 POP_JUMP_FORWARD_IF_FALSE  to 7164
+  ### DECOMP only:
+     6774 POP_JUMP_FORWARD_IF_FALSE  to 7072
+HUNK replace  orig[993:994]@6888 decomp[981:982]@6796
+  ### ORIG only:
+     6888 POP_JUMP_FORWARD_IF_FALSE  to 7164
+  ### DECOMP only:
+     6796 POP_JUMP_FORWARD_IF_FALSE  to 7072
+HUNK replace  orig[1018:1019]@7046 decomp[1006:1007]@6954
+  ### ORIG only:
+     7046 POP_JUMP_FORWARD_IF_FALSE  to 7164
+  ### DECOMP only:
+     6954 POP_JUMP_FORWARD_IF_FALSE  to 7072
+HUNK replace  orig[1039:1040]@7184 decomp[1027:1029]@7092
+  ### ORIG only:
+     7184 POP_JUMP_FORWARD_IF_FALSE  to 7216
+  ### DECOMP only:
+     7092 EXTENDED_ARG               
+     7094 POP_JUMP_FORWARD_IF_FALSE  to 9126
+HUNK replace  orig[1045:1046]@7200 decomp[1034:1035]@7110
+  ### ORIG only:
+     7200 POP_JUMP_FORWARD_IF_FALSE  to 7214
+  ### DECOMP only:
+     7110 POP_JUMP_FORWARD_IF_FALSE  to 7124
+HUNK replace  orig[1048:1050]@7210 decomp[1037:1039]@7120
+  ### ORIG only:
+     7210 POP_JUMP_FORWARD_IF_TRUE   to 7248
+     7212 JUMP_FORWARD               to 7216
+  ### DECOMP only:
+     7120 POP_JUMP_FORWARD_IF_TRUE   to 7158
+     7122 JUMP_FORWARD               to 7126
+HUNK replace  orig[1056:1057]@7246 decomp[1045:1046]@7156
+  ### ORIG only:
+     7246 POP_JUMP_FORWARD_IF_FALSE  to 7582
+  ### DECOMP only:
+     7156 POP_JUMP_FORWARD_IF_FALSE  to 7406
+HUNK replace  orig[1061:1062]@7268 decomp[1050:1051]@7178
+  ### ORIG only:
+     7268 POP_JUMP_FORWARD_IF_FALSE  to 7492
+  ### DECOMP only:
+     7178 POP_JUMP_FORWARD_IF_FALSE  to 7402
+HUNK replace  orig[1078:1079]@7370 decomp[1067:1068]@7280
+  ### ORIG only:
+     7370 POP_JUMP_FORWARD_IF_FALSE  to 7492
+  ### DECOMP only:
+     7280 POP_JUMP_FORWARD_IF_FALSE  to 7402
+HUNK replace  orig[1097:1110]@7492 decomp[1086:1088]@7402
+  ### ORIG only:
+     7492 LOAD_DEREF                 self
+     7494 LOAD_ATTR                  event_queue
+     7504 LOAD_METHOD                put
+     7526 LOAD_FAST                  dt
+     7528 LOAD_GLOBAL                EventEnum
+     7540 LOAD_ATTR                  PRE_BEFORE_TRADING_START
+     7550 BUILD_TUPLE                
+     7552 PRECALL                    
+     7556 CALL                       
+     7566 POP_TOP                    
+     7568 LOAD_FAST                  now_date
+     7570 LOAD_DEREF                 self
+     7572 STORE_ATTR                 pre_before_trading_date
+  ### DECOMP only:
+     7402 EXTENDED_ARG               
+     7404 JUMP_FORWARD               to 9126
+HUNK replace  orig[1114:1115]@7602 decomp[1092:1094]@7426
+  ### ORIG only:
+     7602 POP_JUMP_FORWARD_IF_FALSE  to 7634
+  ### DECOMP only:
+     7426 EXTENDED_ARG               
+     7428 POP_JUMP_FORWARD_IF_FALSE  to 9126
+HUNK replace  orig[1120:1121]@7618 decomp[1099:1100]@7444
+  ### ORIG only:
+     7618 POP_JUMP_FORWARD_IF_FALSE  to 7632
+  ### DECOMP only:
+     7444 POP_JUMP_FORWARD_IF_FALSE  to 7458
+HUNK replace  orig[1123:1125]@7628 decomp[1102:1104]@7454
+  ### ORIG only:
+     7628 POP_JUMP_FORWARD_IF_TRUE   to 7668
+     7630 JUMP_FORWARD               to 7634
+  ### DECOMP only:
+     7454 POP_JUMP_FORWARD_IF_TRUE   to 7492
+     7456 JUMP_FORWARD               to 7460
+HUNK replace  orig[1131:1133]@7664 decomp[1110:1111]@7490
+  ### ORIG only:
+     7664 EXTENDED_ARG               
+     7666 POP_JUMP_FORWARD_IF_FALSE  to 8592
+  ### DECOMP only:
+     7490 POP_JUMP_FORWARD_IF_FALSE  to 7800
+HUNK replace  orig[1142:1143]@7706 decomp[1120:1121]@7530
+  ### ORIG only:
+     7706 FOR_ITER                   to 7972
+  ### DECOMP only:
+     7530 FOR_ITER                   to 7796
+HUNK replace  orig[1160:1161]@7816 decomp[1138:1139]@7640
+  ### ORIG only:
+     7816 JUMP_FORWARD               to 7972
+  ### DECOMP only:
+     7640 JUMP_FORWARD               to 7796
+HUNK replace  orig[1164:1165]@7834 decomp[1142:1143]@7658
+  ### ORIG only:
+     7834 POP_JUMP_FORWARD_IF_FALSE  to 7964
+  ### DECOMP only:
+     7658 POP_JUMP_FORWARD_IF_FALSE  to 7788
+HUNK replace  orig[1175:1176]@7888 decomp[1153:1154]@7712
+  ### ORIG only:
+     7888 POP_JUMP_FORWARD_IF_FALSE  to 7960
+  ### DECOMP only:
+     7712 POP_JUMP_FORWARD_IF_FALSE  to 7784
+HUNK replace  orig[1187:1188]@7962 decomp[1165:1166]@7786
+  ### ORIG only:
+     7962 JUMP_BACKWARD              to 7706
+  ### DECOMP only:
+     7786 JUMP_BACKWARD              to 7530
+HUNK insert   orig[1192:1192]@- decomp[1170:1280]@7796
+  ### DECOMP only:
+     7796 EXTENDED_ARG               
+     7798 JUMP_FORWARD               to 8402
+     7800 PUSH_NULL                  
+     7802 LOAD_FAST                  check_trading_time
+     7804 LOAD_FAST                  am_open
+     7806 LOAD_FAST                  am_close
+     7808 LOAD_FAST                  pm_open
+     7810 LOAD_FAST                  pm_close
+     7812 LOAD_FAST                  pm_over
+     7814 LOAD_DEREF                 self
+     7816 LOAD_ATTR                  _engine
+     7826 LOAD_ATTR                  config
+     7836 LOAD_ATTR                  strategy
+     7846 LOAD_ATTR                  frequency
+     7856 LOAD_FAST                  now_time
+     7858 PRECALL                    
+     7862 CALL                       
+     7872 POP_JUMP_FORWARD_IF_FALSE  to 8112
+     7874 PUSH_NULL                  
+     7876 LOAD_FAST                  check_handle_date
+     7878 LOAD_FAST                  now_date
+     7880 PRECALL                    
+     7884 CALL                       
+     7894 POP_JUMP_FORWARD_IF_FALSE  to 8060
+     7896 LOAD_DEREF                 self
+     7898 LOAD_ATTR                  _engine
+     7908 LOAD_METHOD                set_current_stage
+     7930 LOAD_GLOBAL                EventEnum
+     7942 LOAD_ATTR                  HANDLE_DATA
+     7952 PRECALL                    
+     7956 CALL                       
+     7966 POP_TOP                    
+     7968 LOAD_DEREF                 self
+     7970 LOAD_ATTR                  event_queue
+     7980 LOAD_METHOD                put
+     8002 LOAD_FAST                  dt
+     8004 LOAD_GLOBAL                EventEnum
+     8016 LOAD_ATTR                  HANDLE_DATA
+     8026 BUILD_TUPLE                
+     8028 PRECALL                    
+HUNK replace  orig[1195:1196]@7978 decomp[1283:1284]@8442
+  ### ORIG only:
+     7978 POP_JUMP_FORWARD_IF_FALSE  to 8170
+  ### DECOMP only:
+     8442 POP_JUMP_FORWARD_IF_FALSE  to 8634
+HUNK replace  orig[1236:1237]@8256 decomp[1324:1325]@8720
+  ### ORIG only:
+     8256 JUMP_FORWARD               to 8294
+  ### DECOMP only:
+     8720 JUMP_FORWARD               to 8758
+HUNK replace  orig[1240:1241]@8274 decomp[1328:1329]@8738
+  ### ORIG only:
+     8274 POP_JUMP_FORWARD_IF_FALSE  to 8286
+  ### DECOMP only:
+     8738 POP_JUMP_FORWARD_IF_FALSE  to 8750
+HUNK replace  orig[1245:1246]@8284 decomp[1333:1334]@8748
+  ### ORIG only:
+     8284 JUMP_FORWARD               to 8294
+  ### DECOMP only:
+     8748 JUMP_FORWARD               to 8758
+HUNK replace  orig[1253:1254]@8304 decomp[1341:1342]@8768
+  ### ORIG only:
+     8304 POP_JUMP_FORWARD_IF_FALSE  to 8350
+  ### DECOMP only:
+     8768 POP_JUMP_FORWARD_IF_FALSE  to 8812
+HUNK replace  orig[1259:1261]@8346 decomp[1347:1348]@8810
+  ### ORIG only:
+     8346 EXTENDED_ARG               
+     8348 JUMP_FORWARD               to 9194
+  ### DECOMP only:
+     8810 JUMP_FORWARD               to 9126
+HUNK replace  orig[1262:1263]@8352 decomp[1349:1350]@8814
+  ### ORIG only:
+     8352 POP_JUMP_FORWARD_IF_NONE   to 8588
+  ### DECOMP only:
+     8814 POP_JUMP_FORWARD_IF_NONE   to 9048
+HUNK replace  orig[1270:1271]@8398 decomp[1357:1358]@8860
+  ### ORIG only:
+     8398 POP_JUMP_FORWARD_IF_NONE   to 8588
+  ### DECOMP only:
+     8860 POP_JUMP_FORWARD_IF_NONE   to 9048
+HUNK replace  orig[1280:1281]@8448 decomp[1367:1368]@8910
+  ### ORIG only:
+     8448 POP_JUMP_FORWARD_IF_FALSE  to 8548
+  ### DECOMP only:
+     8910 POP_JUMP_FORWARD_IF_FALSE  to 9008
+HUNK replace  orig[1291:1292]@8502 decomp[1378:1379]@8964
+  ### ORIG only:
+     8502 POP_JUMP_FORWARD_IF_FALSE  to 8544
+  ### DECOMP only:
+     8964 POP_JUMP_FORWARD_IF_FALSE  to 9006
+HUNK replace  orig[1297:1299]@8544 decomp[1384:1385]@9006
+  ### ORIG only:
+     8544 EXTENDED_ARG               
+     8546 JUMP_FORWARD               to 9194
+  ### DECOMP only:
+     9006 JUMP_FORWARD               to 9126
+HUNK replace  orig[1304:1306]@8588 decomp[1390:1391]@9048
+  ### ORIG only:
+     8588 EXTENDED_ARG               
+     8590 JUMP_FORWARD               to 9194
+  ### DECOMP only:
+     9048 JUMP_FORWARD               to 9126
+HUNK replace  orig[1321:1328]@8664 decomp[1406:1408]@9122
+  ### ORIG only:
+     8664 POP_JUMP_FORWARD_IF_FALSE  to 8904
+     8666 PUSH_NULL                  
+     8668 LOAD_FAST                  check_handle_date
+     8670 LOAD_FAST                  now_date
+     8672 PRECALL                    
+     8676 CALL                       
+     8686 POP_JUMP_FORWARD_IF_FALSE  to 8852
+  ### DECOMP only:
+     9122 POP_JUMP_FORWARD_IF_FALSE  to 9126
+     9124 NOP                        
+HUNK replace  orig[1329:1336]@8690 decomp[1409:1416]@9128
+  ### ORIG only:
+     8690 LOAD_ATTR                  _engine
+     8700 LOAD_METHOD                set_current_stage
+     8722 LOAD_GLOBAL                EventEnum
+     8734 LOAD_ATTR                  HANDLE_DATA
+     8744 PRECALL                    
+     8748 CALL                       
+     8758 POP_TOP                    
+  ### DECOMP only:
+     9128 LOAD_ATTR                  active
+     9138 EXTENDED_ARG               
+     9140 POP_JUMP_BACKWARD_IF_TRUE  to 5616
+     9142 LOAD_FAST                  holiday_not_do_before
+     9144 LOAD_CONST                 '0'
+     9146 COMPARE_OP                 ==
+     9152 POP_JUMP_FORWARD_IF_FALSE  to 9230
+HUNK replace  orig[1341:1342]@8808 decomp[1421:1422]@9202
+  ### ORIG only:
+     8808 LOAD_ATTR                  HANDLE_DATA
+  ### DECOMP only:
+     9202 LOAD_ATTR                  BEFORE_TRADING_START
+HUNK replace  orig[1348:1413]@8840 decomp[1428:1429]@9234
+  ### ORIG only:
+     8840 STORE_ATTR                 handle_data_date
+     8850 JUMP_FORWARD               to 9194
+     8852 LOAD_GLOBAL                NULL + time
+     8864 LOAD_ATTR                  sleep
+     8874 LOAD_GLOBAL                TIME_SLEEP_1M
+     8886 PRECALL                    
+     8890 CALL                       
+     8900 POP_TOP                    
+     8902 JUMP_FORWARD               to 9194
+     8904 LOAD_FAST                  now_date
+     8906 LOAD_DEREF                 self
+     8908 LOAD_ATTR                  before_trading_date
+     8918 COMPARE_OP                 ==
+     8924 POP_JUMP_FORWARD_IF_FALSE  to 9144
+     8926 LOAD_FAST                  now_date
+     8928 LOAD_DEREF                 self
+     8930 LOAD_ATTR                  after_trading_date
+     8940 COMPARE_OP                 >
+     8946 POP_JUMP_FORWARD_IF_FALSE  to 9144
+     8948 LOAD_FAST                  delay_after_trading
+     8950 LOAD_FAST                  now_time
+     8952 SWAP                       
+     8954 COPY                       
+     8956 COMPARE_OP                 >=
+     8962 POP_JUMP_FORWARD_IF_FALSE  to 8976
+     8964 LOAD_FAST                  after_trading
+     8966 COMPARE_OP                 >=
+     8972 POP_JUMP_FORWARD_IF_FALSE  to 9144
+     8974 JUMP_FORWARD               to 8980
+     8976 POP_TOP                    
+     8978 JUMP_FORWARD               to 9144
+     8980 LOAD_DEREF                 self
+     8982 LOAD_ATTR                  _engine
+     8992 LOAD_METHOD                set_current_stage
+     9014 LOAD_GLOBAL                EventEnum
+     9026 LOAD_ATTR                  AFTER_TRADING_END
+     9036 PRECALL                    
+     9040 CALL                       
+     9050 POP_TOP                    
+     9052 LOAD_DEREF                 self
+  ### DECOMP only:
+     9234 STORE_ATTR                 before_trading_date
+HUNK replace  orig[1418:1419]@9234 decomp[1434:1435]@9264
+  ### ORIG only:
+     9234 POP_JUMP_FORWARD_IF_FALSE  to 9322
+  ### DECOMP only:
+     9264 POP_JUMP_FORWARD_IF_FALSE  to 9352

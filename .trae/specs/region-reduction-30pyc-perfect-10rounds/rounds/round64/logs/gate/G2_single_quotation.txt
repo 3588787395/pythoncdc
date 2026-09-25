@@ -1,0 +1,17 @@
+[SINGLE] F:\Downloads\pythoncdc-main\site-packages\fly\data\quotation.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\fly\data\quotationOK.py
+  source: 176722 chars
+
+字节码 diff 报告:
+  decompile_status:   ok
+  total_functions:   143
+  matched_functions: 143
+  match_rate:        100.00%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+  DEFECT 148/150  fly/data/quotation.pyc
+           - <module>.change_his_to_forward: [target_diff] #250 POP_JUMP_IF_FALSE 终点 orig=("'preindex'", 'LOAD_FAST') decomp=(None, 'FOR_ITER')
+           - <module>.get_trend: [target_diff] #10 POP_JUMP_IF_FALSE 终点 orig=("'date'", 'LOAD_FAST') decomp=("'api_get'", 'LOAD_GLOBAL')
+
+文件级：全部一致 0 / 1，有真缺陷 1
+函数级：严格一致 148 / 150

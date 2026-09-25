@@ -1,0 +1,45 @@
+=== <module>.FileLock.acquire : token len orig=98 decomp=93  identical=False
+    non-equal blocks=3  ratio=0.9005
+  insert   orig[  40:  40](n=0) decomp[  40:  47](n=7)
+      orig  src-lines []   decomp src-lines [85, 87]
+       O   39 off= 300 ln=127   POP_TOP 
+       O   40 off= 304 ln=129   LOAD_GLOBAL NULL + os
+      ----
+       D   39 off= 300 ln=85    POP_TOP 
+     > D   40 off= 302 ln=85    JUMP_FORWARD to 354
+     > D   41 off= 304 ln=87    LOAD_GLOBAL NULL + time
+     > D   42 off= 316 ln=87    LOAD_ATTR sleep
+     > D   43 off= 326 ln=87    LOAD_FAST self
+     > D   44 off= 328 ln=87    LOAD_ATTR delay
+     > D   45 off= 342 ln=87    CALL 
+     > D   46 off= 352 ln=87    POP_TOP 
+       D   47 off= 356 ln=89    LOAD_GLOBAL NULL + os
+
+  delete   orig[  73:  84](n=11) decomp[  80:  80](n=0)
+      orig  src-lines [134]   decomp src-lines []
+       O   72 off= 530 ln=133   RAISE_VARARGS 
+     > O   73 off= 532 ln=134   LOAD_GLOBAL NULL + time
+     > O   74 off= 544 ln=134   LOAD_ATTR sleep
+     > O   75 off= 554 ln=134   LOAD_FAST self
+     > O   76 off= 556 ln=134   LOAD_ATTR delay
+     > O   77 off= 570 ln=134   CALL 
+     > O   78 off= 580 ln=134   POP_TOP 
+     > O   79 off= 582 ln=134   POP_EXCEPT 
+     > O   80 off= 584 ln=134   LOAD_CONST None
+     > O   81 off= 586 ln=134   STORE_FAST e
+     > O   82 off= 588 ln=134   DELETE_FAST e
+     > O   83 off= 590 ln=134   JUMP_FORWARD to 608
+       O   84 off= 592 ln=None  LOAD_CONST None
+      ----
+       D   79 off= 582 ln=92    RAISE_VARARGS 
+       D   80 off= 584 ln=None  LOAD_CONST None
+
+  delete   orig[  92:  93](n=1) decomp[  88:  88](n=0)
+      orig  src-lines [117]   decomp src-lines []
+       O   91 off= 606 ln=None  RERAISE 
+     > O   92 off= 610 ln=117   JUMP_BACKWARD to 42
+       O   93 off= 612 ln=135   LOAD_CONST True
+      ----
+       D   87 off= 598 ln=None  RERAISE 
+       D   88 off= 600 ln=93    LOAD_CONST True
+

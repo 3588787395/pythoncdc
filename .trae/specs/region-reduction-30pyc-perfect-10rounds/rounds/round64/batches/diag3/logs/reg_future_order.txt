@@ -1,0 +1,24 @@
+CFG future_order: 19 blocks, 18 regions
+TOP REGIONS (2):
+  IfRegion@0 blocks=[0, 44, 102] then_blocks=[44] else_blocks=[102] children=['Region@0', 'Region@44', 'Region@102']
+  IfRegion@130 blocks=[130, 192, 210, 266, 284] then_blocks=[192, 210, 266, 284] children=['Region@130', 'IfRegion@192', 'Region@192', 'Region@210', 'Region@266', 'Region@284']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 44, 102] then_blocks=[44] else_blocks=[102] children=['Region@0', 'Region@44', 'Region@102']
+  Region@0 blocks=[0] children=[]
+  Region@44 blocks=[44] children=[]
+  Region@102 blocks=[102] children=[]
+  IfRegion@130 blocks=[130, 192, 210, 266, 284] then_blocks=[192, 210, 266, 284] children=['Region@130', 'IfRegion@192', 'Region@192', 'Region@210', 'Region@266', 'Region@284']
+  Region@130 blocks=[130] children=[]
+  IfRegion@192 blocks=[192, 210, 266, 284, 340, 382, 386, 414, 552, 556, 558, 626, 630, 632, 676] then_blocks=[210] else_blocks=[266, 284] elif_conditions=[266] children=['IfRegion@340', 'TernaryRegion@414', 'TernaryRegion@558', 'Region@676']
+  Region@192 blocks=[192] children=[]
+  Region@210 blocks=[210] children=[]
+  Region@266 blocks=[266] children=[]
+  Region@284 blocks=[284] children=[]
+  IfRegion@340 blocks=[340, 382, 386, 552, 556] then_blocks=[382] else_blocks=[386, 552, 556] elif_conditions=[386] inline_boolop_chains={2579625943952: {'blocks': [BasicBlock(11, offset=386-412, instrs=4), BasicBlock(12, offset=414-550, instrs=17)], 'op': 'or'}} children=['Region@340', 'Region@382', 'Region@386']
+  Region@340 blocks=[340] children=[]
+  Region@382 blocks=[382] children=[]
+  Region@386 blocks=[386] children=[]
+  TernaryRegion@414 blocks=[414, 552, 556, 558] children=[]
+  TernaryRegion@558 blocks=[558, 626, 630, 632] children=[]
+  Region@676 blocks=[676] children=[]

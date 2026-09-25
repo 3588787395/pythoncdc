@@ -1,0 +1,8 @@
+IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc  official 104/119  rate 0.8739  round 63
+        F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc
+fly/data/quote.pyc  official 70/81  rate 0.8642  round 63
+        F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc
+fly/data/quote_handler.pyc  official 55/57  rate 0.9649  round 63
+        F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc
+IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc  official 11/12  rate 0.9167  round 63
+        F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc

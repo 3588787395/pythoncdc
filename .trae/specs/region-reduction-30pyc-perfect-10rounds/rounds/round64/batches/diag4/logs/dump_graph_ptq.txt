@@ -1,0 +1,758 @@
+=== ORIG <module>.ModelGraph._process_task_queue (378)
+     0 off=   0 ln=491   RESUME 
+     1 off=   2 ln=504   LOAD_FAST level
+     2 off=   4 ln=504   LOAD_CONST 0
+     3 off=   6 ln=504   COMPARE_OP ==
+     4 off=  14 ln=504   POP_JUMP_FORWARD_IF_FALSE to 844
+     5 off=  18 ln=506   LOAD_FAST queue
+     6 off=  20 ln=506   LOAD_FAST task_id
+     7 off=  22 ln=506   BINARY_SUBSCR 
+     8 off=  32 ln=506   STORE_FAST tmp_node_dict
+     9 off=  36 ln=510   LOAD_FAST tmp_node_dict
+    10 off=  38 ln=510   LOAD_CONST 'head'
+    11 off=  40 ln=510   BINARY_SUBSCR 
+    12 off=  50 ln=510   STORE_FAST value_list
+    13 off=  52 ln=511   LOAD_FAST value_list
+    14 off=  54 ln=511   LOAD_METHOD append
+    15 off=  76 ln=511   LOAD_FAST node
+    16 off=  82 ln=511   CALL 
+    17 off=  92 ln=511   POP_TOP 
+    18 off=  94 ln=512   LOAD_FAST value_list
+    19 off=  96 ln=512   LOAD_FAST tmp_node_dict
+    20 off=  98 ln=512   LOAD_CONST 'head'
+    21 off= 100 ln=512   STORE_SUBSCR 
+    22 off= 104 ln=513   LOAD_FAST tmp_node_dict
+    23 off= 106 ln=513   LOAD_FAST queue
+    24 off= 108 ln=513   LOAD_FAST task_id
+    25 off= 110 ln=513   STORE_SUBSCR 
+    26 off= 114 ln=513   JUMP_FORWARD to 240
+    27 off= 116 ln=None  PUSH_EXC_INFO 
+    28 off= 118 ln=514   LOAD_GLOBAL KeyError
+    29 off= 130 ln=514   CHECK_EXC_MATCH 
+    30 off= 132 ln=514   POP_JUMP_FORWARD_IF_FALSE to 232
+    31 off= 134 ln=514   POP_TOP 
+    32 off= 136 ln=515   LOAD_GLOBAL NULL + system_log
+    33 off= 148 ln=515   LOAD_ATTR error
+    34 off= 158 ln=515   LOAD_CONST '异常信息: %s'
+    35 off= 160 ln=515   LOAD_GLOBAL NULL + get_traceback_message
+    36 off= 176 ln=515   CALL 
+    37 off= 186 ln=515   BINARY_OP %
+    38 off= 194 ln=515   CALL 
+    39 off= 204 ln=515   POP_TOP 
+    40 off= 206 ln=516   LOAD_FAST node
+    41 off= 208 ln=516   BUILD_LIST 
+    42 off= 210 ln=516   LOAD_FAST tmp_node_dict
+    43 off= 212 ln=516   LOAD_CONST 'head'
+    44 off= 214 ln=516   STORE_SUBSCR 
+    45 off= 218 ln=517   LOAD_FAST tmp_node_dict
+    46 off= 220 ln=517   LOAD_FAST queue
+    47 off= 222 ln=517   LOAD_FAST task_id
+    48 off= 224 ln=517   STORE_SUBSCR 
+    49 off= 228 ln=517   POP_EXCEPT 
+    50 off= 230 ln=517   JUMP_FORWARD to 240
+    51 off= 232 ln=514   RERAISE 
+    52 off= 234 ln=None  COPY 
+    53 off= 236 ln=None  POP_EXCEPT 
+    54 off= 238 ln=None  RERAISE 
+    55 off= 242 ln=521   LOAD_FAST tmp_node_dict
+    56 off= 244 ln=521   LOAD_FAST node
+    57 off= 246 ln=521   BINARY_SUBSCR 
+    58 off= 256 ln=521   STORE_FAST value_list
+    59 off= 258 ln=523   LOAD_CONST <code object <listcomp> at 0x0000027AD...
+    60 off= 260 ln=523   MAKE_FUNCTION 
+    61 off= 262 ln=523   LOAD_GLOBAL NULL + nx
+    62 off= 274 ln=523   LOAD_ATTR edges
+    63 off= 284 ln=523   LOAD_FAST graph
+    64 off= 286 ln=523   LOAD_FAST node
+    65 off= 292 ln=523   CALL 
+    66 off= 302 ln=523   GET_ITER 
+    67 off= 308 ln=523   CALL 
+    68 off= 318 ln=523   STORE_FAST nodes
+    69 off= 320 ln=524   LOAD_FAST value_list
+    70 off= 322 ln=524   LOAD_METHOD append
+    71 off= 344 ln=524   LOAD_FAST nodes
+    72 off= 350 ln=524   CALL 
+    73 off= 360 ln=524   POP_TOP 
+    74 off= 362 ln=525   LOAD_FAST value_list
+    75 off= 364 ln=525   LOAD_FAST tmp_node_dict
+    76 off= 366 ln=525   LOAD_FAST node
+    77 off= 368 ln=525   STORE_SUBSCR 
+    78 off= 372 ln=526   LOAD_FAST tmp_node_dict
+    79 off= 374 ln=526   LOAD_FAST queue
+    80 off= 376 ln=526   LOAD_FAST task_id
+    81 off= 378 ln=526   STORE_SUBSCR 
+    82 off= 382 ln=526   LOAD_CONST None
+    83 off= 384 ln=526   RETURN_VALUE 
+    84 off= 386 ln=None  PUSH_EXC_INFO 
+    85 off= 388 ln=527   LOAD_GLOBAL KeyError
+    86 off= 400 ln=527   CHECK_EXC_MATCH 
+    87 off= 402 ln=527   POP_JUMP_FORWARD_IF_FALSE to 558
+    88 off= 404 ln=527   POP_TOP 
+    89 off= 406 ln=528   LOAD_GLOBAL NULL + system_log
+    90 off= 418 ln=528   LOAD_ATTR error
+    91 off= 428 ln=528   LOAD_CONST '异常信息: %s'
+    92 off= 430 ln=528   LOAD_GLOBAL NULL + get_traceback_message
+    93 off= 446 ln=528   CALL 
+    94 off= 456 ln=528   BINARY_OP %
+    95 off= 464 ln=528   CALL 
+    96 off= 474 ln=528   POP_TOP 
+    97 off= 476 ln=529   LOAD_CONST <code object <listcomp> at 0x0000027AD...
+    98 off= 478 ln=529   MAKE_FUNCTION 
+    99 off= 480 ln=529   LOAD_GLOBAL NULL + nx
+   100 off= 492 ln=529   LOAD_ATTR edges
+   101 off= 502 ln=529   LOAD_FAST graph
+   102 off= 504 ln=529   LOAD_FAST node
+   103 off= 510 ln=529   CALL 
+   104 off= 520 ln=529   GET_ITER 
+   105 off= 526 ln=529   CALL 
+   106 off= 536 ln=529   LOAD_FAST tmp_node_dict
+   107 off= 538 ln=529   LOAD_FAST node
+   108 off= 540 ln=529   STORE_SUBSCR 
+   109 off= 544 ln=530   LOAD_FAST tmp_node_dict
+   110 off= 546 ln=530   LOAD_FAST queue
+   111 off= 548 ln=530   LOAD_FAST task_id
+   112 off= 550 ln=530   STORE_SUBSCR 
+   113 off= 554 ln=530   POP_EXCEPT 
+   114 off= 556 ln=530   JUMP_FORWARD to 566
+   115 off= 558 ln=527   RERAISE 
+   116 off= 560 ln=None  COPY 
+   117 off= 562 ln=None  POP_EXCEPT 
+   118 off= 564 ln=None  RERAISE 
+   119 off= 566 ln=530   LOAD_CONST None
+   120 off= 568 ln=530   RETURN_VALUE 
+   121 off= 570 ln=None  PUSH_EXC_INFO 
+   122 off= 572 ln=531   LOAD_GLOBAL KeyError
+   123 off= 584 ln=531   CHECK_EXC_MATCH 
+   124 off= 586 ln=531   POP_JUMP_FORWARD_IF_FALSE to 836
+   125 off= 588 ln=531   POP_TOP 
+   126 off= 590 ln=533   LOAD_GLOBAL NULL + system_log
+   127 off= 602 ln=533   LOAD_ATTR error
+   128 off= 612 ln=533   LOAD_CONST '异常信息: %s'
+   129 off= 614 ln=533   LOAD_GLOBAL NULL + get_traceback_message
+   130 off= 630 ln=533   CALL 
+   131 off= 640 ln=533   BINARY_OP %
+   132 off= 648 ln=533   CALL 
+   133 off= 658 ln=533   POP_TOP 
+   134 off= 660 ln=534   LOAD_GLOBAL NULL + OrderedDict
+   135 off= 676 ln=534   CALL 
+   136 off= 686 ln=534   STORE_FAST node_dict
+   137 off= 688 ln=535   LOAD_FAST node
+   138 off= 690 ln=535   BUILD_LIST 
+   139 off= 692 ln=535   LOAD_FAST node_dict
+   140 off= 694 ln=535   LOAD_CONST 'head'
+   141 off= 696 ln=535   STORE_SUBSCR 
+   142 off= 700 ln=538   LOAD_GLOBAL NULL + len
+   143 off= 712 ln=538   LOAD_FAST result
+   144 off= 718 ln=538   CALL 
+   145 off= 728 ln=538   LOAD_CONST 1
+   146 off= 730 ln=538   COMPARE_OP ==
+   147 off= 736 ln=538   POP_JUMP_FORWARD_IF_FALSE to 752
+   148 off= 738 ln=539   LOAD_CONST 'end'
+   149 off= 740 ln=539   BUILD_LIST 
+   150 off= 742 ln=539   LOAD_FAST node_dict
+   151 off= 744 ln=539   LOAD_FAST node
+   152 off= 746 ln=539   STORE_SUBSCR 
+   153 off= 750 ln=539   JUMP_FORWARD to 820
+   154 off= 752 ln=541   LOAD_CONST <code object <listcomp> at 0x0000027AD...
+   155 off= 754 ln=541   MAKE_FUNCTION 
+   156 off= 756 ln=541   LOAD_GLOBAL NULL + nx
+   157 off= 768 ln=541   LOAD_ATTR edges
+   158 off= 778 ln=541   LOAD_FAST graph
+   159 off= 780 ln=541   LOAD_FAST node
+   160 off= 786 ln=541   CALL 
+   161 off= 796 ln=541   GET_ITER 
+   162 off= 802 ln=541   CALL 
+   163 off= 812 ln=541   LOAD_FAST node_dict
+   164 off= 814 ln=541   LOAD_FAST node
+   165 off= 816 ln=541   STORE_SUBSCR 
+   166 off= 820 ln=542   LOAD_FAST node_dict
+   167 off= 822 ln=542   LOAD_FAST queue
+   168 off= 824 ln=542   LOAD_FAST task_id
+   169 off= 826 ln=542   STORE_SUBSCR 
+   170 off= 830 ln=542   POP_EXCEPT 
+   171 off= 832 ln=542   LOAD_CONST None
+   172 off= 834 ln=542   RETURN_VALUE 
+   173 off= 836 ln=531   RERAISE 
+   174 off= 838 ln=None  COPY 
+   175 off= 840 ln=None  POP_EXCEPT 
+   176 off= 842 ln=None  RERAISE 
+   177 off= 844 ln=544   LOAD_FAST level
+   178 off= 846 ln=544   LOAD_GLOBAL NULL + len
+   179 off= 858 ln=544   LOAD_FAST result
+   180 off= 864 ln=544   CALL 
+   181 off= 874 ln=544   LOAD_CONST 1
+   182 off= 876 ln=544   BINARY_OP -
+   183 off= 880 ln=544   COMPARE_OP ==
+   184 off= 886 ln=544   POP_JUMP_FORWARD_IF_FALSE to 1272
+   185 off= 890 ln=546   LOAD_FAST queue
+   186 off= 892 ln=546   LOAD_FAST task_id
+   187 off= 894 ln=546   BINARY_SUBSCR 
+   188 off= 904 ln=546   STORE_FAST tmp_node_dict
+   189 off= 908 ln=548   LOAD_FAST tmp_node_dict
+   190 off= 910 ln=548   LOAD_FAST node
+   191 off= 912 ln=548   BINARY_SUBSCR 
+   192 off= 922 ln=548   STORE_FAST value_list
+   193 off= 924 ln=549   LOAD_FAST value_list
+   194 off= 926 ln=549   LOAD_METHOD append
+   195 off= 948 ln=549   LOAD_CONST 'end'
+   196 off= 954 ln=549   CALL 
+   197 off= 964 ln=549   POP_TOP 
+   198 off= 966 ln=550   LOAD_FAST value_list
+   199 off= 968 ln=550   LOAD_FAST tmp_node_dict
+   200 off= 970 ln=550   LOAD_FAST node
+   201 off= 972 ln=550   STORE_SUBSCR 
+   202 off= 976 ln=551   LOAD_FAST tmp_node_dict
+   203 off= 978 ln=551   LOAD_FAST queue
+   204 off= 980 ln=551   LOAD_FAST task_id
+   205 off= 982 ln=551   STORE_SUBSCR 
+   206 off= 986 ln=551   LOAD_CONST None
+   207 off= 988 ln=551   RETURN_VALUE 
+   208 off= 990 ln=None  PUSH_EXC_INFO 
+   209 off= 992 ln=552   LOAD_GLOBAL KeyError
+   210 off=1004 ln=552   CHECK_EXC_MATCH 
+   211 off=1006 ln=552   POP_JUMP_FORWARD_IF_FALSE to 1106
+   212 off=1008 ln=552   POP_TOP 
+   213 off=1010 ln=553   LOAD_GLOBAL NULL + system_log
+   214 off=1022 ln=553   LOAD_ATTR error
+   215 off=1032 ln=553   LOAD_CONST '异常信息: %s'
+   216 off=1034 ln=553   LOAD_GLOBAL NULL + get_traceback_message
+   217 off=1050 ln=553   CALL 
+   218 off=1060 ln=553   BINARY_OP %
+   219 off=1068 ln=553   CALL 
+   220 off=1078 ln=553   POP_TOP 
+   221 off=1080 ln=554   LOAD_CONST 'end'
+   222 off=1082 ln=554   BUILD_LIST 
+   223 off=1084 ln=554   LOAD_FAST tmp_node_dict
+   224 off=1086 ln=554   LOAD_FAST node
+   225 off=1088 ln=554   STORE_SUBSCR 
+   226 off=1092 ln=555   LOAD_FAST tmp_node_dict
+   227 off=1094 ln=555   LOAD_FAST queue
+   228 off=1096 ln=555   LOAD_FAST task_id
+   229 off=1098 ln=555   STORE_SUBSCR 
+   230 off=1102 ln=555   POP_EXCEPT 
+   231 off=1104 ln=555   JUMP_FORWARD to 1114
+   232 off=1106 ln=552   RERAISE 
+   233 off=1108 ln=None  COPY 
+   234 off=1110 ln=None  POP_EXCEPT 
+   235 off=1112 ln=None  RERAISE 
+   236 off=1114 ln=555   LOAD_CONST None
+   237 off=1116 ln=555   RETURN_VALUE 
+   238 off=1118 ln=None  PUSH_EXC_INFO 
+   239 off=1120 ln=556   LOAD_GLOBAL KeyError
+   240 off=1132 ln=556   CHECK_EXC_MATCH 
+   241 off=1134 ln=556   POP_JUMP_FORWARD_IF_FALSE to 1264
+   242 off=1136 ln=556   POP_TOP 
+   243 off=1138 ln=557   LOAD_GLOBAL NULL + system_log
+   244 off=1150 ln=557   LOAD_ATTR error
+   245 off=1160 ln=557   LOAD_CONST '异常信息: %s'
+   246 off=1162 ln=557   LOAD_GLOBAL NULL + get_traceback_message
+   247 off=1178 ln=557   CALL 
+   248 off=1188 ln=557   BINARY_OP %
+   249 off=1196 ln=557   CALL 
+   250 off=1206 ln=557   POP_TOP 
+   251 off=1208 ln=558   LOAD_GLOBAL NULL + OrderedDict
+   252 off=1224 ln=558   CALL 
+   253 off=1234 ln=558   STORE_FAST node_dict
+   254 off=1236 ln=559   LOAD_CONST 'end'
+   255 off=1238 ln=559   BUILD_LIST 
+   256 off=1240 ln=559   LOAD_FAST node_dict
+   257 off=1242 ln=559   LOAD_FAST node
+   258 off=1244 ln=559   STORE_SUBSCR 
+   259 off=1248 ln=560   LOAD_FAST node_dict
+   260 off=1250 ln=560   LOAD_FAST queue
+   261 off=1252 ln=560   LOAD_FAST task_id
+   262 off=1254 ln=560   STORE_SUBSCR 
+   263 off=1258 ln=560   POP_EXCEPT 
+   264 off=1260 ln=560   LOAD_CONST None
+   265 off=1262 ln=560   RETURN_VALUE 
+   266 off=1264 ln=556   RERAISE 
+   267 off=1266 ln=None  COPY 
+   268 off=1268 ln=None  POP_EXCEPT 
+   269 off=1270 ln=None  RERAISE 
+   270 off=1274 ln=563   LOAD_FAST queue
+   271 off=1276 ln=563   LOAD_FAST task_id
+   272 off=1278 ln=563   BINARY_SUBSCR 
+   273 off=1288 ln=563   STORE_FAST tmp_node_dict
+   274 off=1292 ln=565   LOAD_FAST tmp_node_dict
+   275 off=1294 ln=565   LOAD_FAST node
+   276 off=1296 ln=565   BINARY_SUBSCR 
+   277 off=1306 ln=565   STORE_FAST value_list
+   278 off=1308 ln=567   LOAD_CONST <code object <listcomp> at 0x0000027AD...
+   279 off=1310 ln=567   MAKE_FUNCTION 
+   280 off=1312 ln=567   LOAD_GLOBAL NULL + nx
+   281 off=1324 ln=567   LOAD_ATTR edges
+   282 off=1334 ln=567   LOAD_FAST graph
+   283 off=1336 ln=567   LOAD_FAST node
+   284 off=1342 ln=567   CALL 
+   285 off=1352 ln=567   GET_ITER 
+   286 off=1358 ln=567   CALL 
+   287 off=1368 ln=567   STORE_FAST node_ids
+   288 off=1370 ln=568   LOAD_FAST value_list
+   289 off=1372 ln=568   LOAD_METHOD append
+   290 off=1394 ln=568   LOAD_FAST node_ids
+   291 off=1400 ln=568   CALL 
+   292 off=1410 ln=568   POP_TOP 
+   293 off=1412 ln=569   LOAD_FAST value_list
+   294 off=1414 ln=569   LOAD_FAST tmp_node_dict
+   295 off=1416 ln=569   LOAD_FAST node
+   296 off=1418 ln=569   STORE_SUBSCR 
+   297 off=1422 ln=570   LOAD_FAST tmp_node_dict
+   298 off=1424 ln=570   LOAD_FAST queue
+   299 off=1426 ln=570   LOAD_FAST task_id
+   300 off=1428 ln=570   STORE_SUBSCR 
+   301 off=1432 ln=570   LOAD_CONST None
+   302 off=1434 ln=570   RETURN_VALUE 
+   303 off=1436 ln=None  PUSH_EXC_INFO 
+   304 off=1438 ln=571   LOAD_GLOBAL KeyError
+   305 off=1450 ln=571   CHECK_EXC_MATCH 
+   306 off=1452 ln=571   POP_JUMP_FORWARD_IF_FALSE to 1610
+   307 off=1454 ln=571   POP_TOP 
+   308 off=1456 ln=572   LOAD_GLOBAL NULL + system_log
+   309 off=1468 ln=572   LOAD_ATTR error
+   310 off=1478 ln=572   LOAD_CONST '异常信息: %s'
+   311 off=1480 ln=572   LOAD_GLOBAL NULL + get_traceback_message
+   312 off=1496 ln=572   CALL 
+   313 off=1506 ln=572   BINARY_OP %
+   314 off=1514 ln=572   CALL 
+   315 off=1524 ln=572   POP_TOP 
+   316 off=1526 ln=573   LOAD_CONST <code object <listcomp> at 0x0000027AD...
+   317 off=1528 ln=573   MAKE_FUNCTION 
+   318 off=1530 ln=573   LOAD_GLOBAL NULL + nx
+   319 off=1542 ln=573   LOAD_ATTR edges
+   320 off=1552 ln=573   LOAD_FAST graph
+   321 off=1554 ln=573   LOAD_FAST node
+   322 off=1560 ln=573   CALL 
+   323 off=1570 ln=573   GET_ITER 
+   324 off=1576 ln=573   CALL 
+   325 off=1586 ln=573   LOAD_FAST tmp_node_dict
+   326 off=1588 ln=573   LOAD_FAST node
+   327 off=1590 ln=573   STORE_SUBSCR 
+   328 off=1594 ln=574   LOAD_FAST tmp_node_dict
+   329 off=1596 ln=574   LOAD_FAST queue
+   330 off=1598 ln=574   LOAD_FAST task_id
+   331 off=1600 ln=574   STORE_SUBSCR 
+   332 off=1604 ln=574   POP_EXCEPT 
+   333 off=1606 ln=574   LOAD_CONST None
+   334 off=1608 ln=574   RETURN_VALUE 
+   335 off=1610 ln=571   RERAISE 
+   336 off=1612 ln=None  COPY 
+   337 off=1614 ln=None  POP_EXCEPT 
+   338 off=1616 ln=None  RERAISE 
+   339 off=1618 ln=None  PUSH_EXC_INFO 
+   340 off=1620 ln=575   LOAD_GLOBAL KeyError
+   341 off=1632 ln=575   CHECK_EXC_MATCH 
+   342 off=1634 ln=575   POP_JUMP_FORWARD_IF_FALSE to 1820
+   343 off=1636 ln=575   POP_TOP 
+   344 off=1638 ln=576   LOAD_GLOBAL NULL + system_log
+   345 off=1650 ln=576   LOAD_ATTR error
+   346 off=1660 ln=576   LOAD_CONST '异常信息: %s'
+   347 off=1662 ln=576   LOAD_GLOBAL NULL + get_traceback_message
+   348 off=1678 ln=576   CALL 
+   349 off=1688 ln=576   BINARY_OP %
+   350 off=1696 ln=576   CALL 
+   351 off=1706 ln=576   POP_TOP 
+   352 off=1708 ln=577   LOAD_GLOBAL NULL + OrderedDict
+   353 off=1724 ln=577   CALL 
+   354 off=1734 ln=577   STORE_FAST node_dict
+   355 off=1736 ln=578   LOAD_CONST <code object <listcomp> at 0x0000027AD...
+   356 off=1738 ln=578   MAKE_FUNCTION 
+   357 off=1740 ln=578   LOAD_GLOBAL NULL + nx
+   358 off=1752 ln=578   LOAD_ATTR edges
+   359 off=1762 ln=578   LOAD_FAST graph
+   360 off=1764 ln=578   LOAD_FAST node
+   361 off=1770 ln=578   CALL 
+   362 off=1780 ln=578   GET_ITER 
+   363 off=1786 ln=578   CALL 
+   364 off=1796 ln=578   LOAD_FAST node_dict
+   365 off=1798 ln=578   LOAD_FAST node
+   366 off=1800 ln=578   STORE_SUBSCR 
+   367 off=1804 ln=579   LOAD_FAST node_dict
+   368 off=1806 ln=579   LOAD_FAST queue
+   369 off=1808 ln=579   LOAD_FAST task_id
+   370 off=1810 ln=579   STORE_SUBSCR 
+   371 off=1814 ln=579   POP_EXCEPT 
+   372 off=1816 ln=579   LOAD_CONST None
+   373 off=1818 ln=579   RETURN_VALUE 
+   374 off=1820 ln=575   RERAISE 
+   375 off=1822 ln=None  COPY 
+   376 off=1824 ln=None  POP_EXCEPT 
+   377 off=1826 ln=None  RERAISE 
+=== DECOMP <module>.ModelGraph._process_task_queue (378)
+     0 off=   0 ln=353   RESUME 
+     1 off=   2 ln=364   LOAD_FAST level
+     2 off=   4 ln=364   LOAD_CONST 0
+     3 off=   6 ln=364   COMPARE_OP ==
+     4 off=  14 ln=364   POP_JUMP_FORWARD_IF_FALSE to 846
+     5 off=  18 ln=366   LOAD_FAST queue
+     6 off=  20 ln=366   LOAD_FAST task_id
+     7 off=  22 ln=366   BINARY_SUBSCR 
+     8 off=  32 ln=366   STORE_FAST tmp_node_dict
+     9 off=  36 ln=368   LOAD_FAST tmp_node_dict
+    10 off=  38 ln=368   LOAD_CONST 'head'
+    11 off=  40 ln=368   BINARY_SUBSCR 
+    12 off=  50 ln=368   STORE_FAST value_list
+    13 off=  52 ln=369   LOAD_FAST value_list
+    14 off=  54 ln=369   LOAD_METHOD append
+    15 off=  76 ln=369   LOAD_FAST node
+    16 off=  82 ln=369   CALL 
+    17 off=  92 ln=369   POP_TOP 
+    18 off=  94 ln=370   LOAD_FAST value_list
+    19 off=  96 ln=370   LOAD_FAST tmp_node_dict
+    20 off=  98 ln=370   LOAD_CONST 'head'
+    21 off= 100 ln=370   STORE_SUBSCR 
+    22 off= 104 ln=371   LOAD_FAST tmp_node_dict
+    23 off= 106 ln=371   LOAD_FAST queue
+    24 off= 108 ln=371   LOAD_FAST task_id
+    25 off= 110 ln=371   STORE_SUBSCR 
+    26 off= 114 ln=371   JUMP_FORWARD to 240
+    27 off= 116 ln=None  PUSH_EXC_INFO 
+    28 off= 118 ln=372   LOAD_GLOBAL KeyError
+    29 off= 130 ln=372   CHECK_EXC_MATCH 
+    30 off= 132 ln=372   POP_JUMP_FORWARD_IF_FALSE to 232
+    31 off= 134 ln=372   POP_TOP 
+    32 off= 136 ln=373   LOAD_GLOBAL NULL + system_log
+    33 off= 148 ln=373   LOAD_ATTR error
+    34 off= 158 ln=373   LOAD_CONST '异常信息: %s'
+    35 off= 160 ln=373   LOAD_GLOBAL NULL + get_traceback_message
+    36 off= 176 ln=373   CALL 
+    37 off= 186 ln=373   BINARY_OP %
+    38 off= 194 ln=373   CALL 
+    39 off= 204 ln=373   POP_TOP 
+    40 off= 206 ln=374   LOAD_FAST node
+    41 off= 208 ln=374   BUILD_LIST 
+    42 off= 210 ln=374   LOAD_FAST tmp_node_dict
+    43 off= 212 ln=374   LOAD_CONST 'head'
+    44 off= 214 ln=374   STORE_SUBSCR 
+    45 off= 218 ln=375   LOAD_FAST tmp_node_dict
+    46 off= 220 ln=375   LOAD_FAST queue
+    47 off= 222 ln=375   LOAD_FAST task_id
+    48 off= 224 ln=375   STORE_SUBSCR 
+    49 off= 228 ln=375   POP_EXCEPT 
+    50 off= 230 ln=375   JUMP_FORWARD to 240
+    51 off= 232 ln=372   RERAISE 
+    52 off= 234 ln=None  COPY 
+    53 off= 236 ln=None  POP_EXCEPT 
+    54 off= 238 ln=None  RERAISE 
+    55 off= 242 ln=377   LOAD_FAST tmp_node_dict
+    56 off= 244 ln=377   LOAD_FAST node
+    57 off= 246 ln=377   BINARY_SUBSCR 
+    58 off= 256 ln=377   STORE_FAST value_list
+    59 off= 258 ln=378   LOAD_CONST <code object <listcomp> at 0x0000027AD...
+    60 off= 260 ln=378   MAKE_FUNCTION 
+    61 off= 262 ln=378   LOAD_GLOBAL NULL + nx
+    62 off= 274 ln=378   LOAD_ATTR edges
+    63 off= 284 ln=378   LOAD_FAST graph
+    64 off= 286 ln=378   LOAD_FAST node
+    65 off= 292 ln=378   CALL 
+    66 off= 302 ln=378   GET_ITER 
+    67 off= 308 ln=378   CALL 
+    68 off= 318 ln=378   STORE_FAST nodes
+    69 off= 320 ln=379   LOAD_FAST value_list
+    70 off= 322 ln=379   LOAD_METHOD append
+    71 off= 344 ln=379   LOAD_FAST nodes
+    72 off= 350 ln=379   CALL 
+    73 off= 360 ln=379   POP_TOP 
+    74 off= 362 ln=380   LOAD_FAST value_list
+    75 off= 364 ln=380   LOAD_FAST tmp_node_dict
+    76 off= 366 ln=380   LOAD_FAST node
+    77 off= 368 ln=380   STORE_SUBSCR 
+    78 off= 372 ln=381   LOAD_FAST tmp_node_dict
+    79 off= 374 ln=381   LOAD_FAST queue
+    80 off= 376 ln=381   LOAD_FAST task_id
+    81 off= 378 ln=381   STORE_SUBSCR 
+    82 off= 382 ln=382   LOAD_CONST None
+    83 off= 384 ln=382   RETURN_VALUE 
+    84 off= 386 ln=None  PUSH_EXC_INFO 
+    85 off= 388 ln=383   LOAD_GLOBAL KeyError
+    86 off= 400 ln=383   CHECK_EXC_MATCH 
+    87 off= 402 ln=383   POP_JUMP_FORWARD_IF_FALSE to 558
+    88 off= 404 ln=383   POP_TOP 
+    89 off= 406 ln=384   LOAD_GLOBAL NULL + system_log
+    90 off= 418 ln=384   LOAD_ATTR error
+    91 off= 428 ln=384   LOAD_CONST '异常信息: %s'
+    92 off= 430 ln=384   LOAD_GLOBAL NULL + get_traceback_message
+    93 off= 446 ln=384   CALL 
+    94 off= 456 ln=384   BINARY_OP %
+    95 off= 464 ln=384   CALL 
+    96 off= 474 ln=384   POP_TOP 
+    97 off= 476 ln=385   LOAD_CONST <code object <listcomp> at 0x0000027AD...
+    98 off= 478 ln=385   MAKE_FUNCTION 
+    99 off= 480 ln=385   LOAD_GLOBAL NULL + nx
+   100 off= 492 ln=385   LOAD_ATTR edges
+   101 off= 502 ln=385   LOAD_FAST graph
+   102 off= 504 ln=385   LOAD_FAST node
+   103 off= 510 ln=385   CALL 
+   104 off= 520 ln=385   GET_ITER 
+   105 off= 526 ln=385   CALL 
+   106 off= 536 ln=385   LOAD_FAST tmp_node_dict
+   107 off= 538 ln=385   LOAD_FAST node
+   108 off= 540 ln=385   STORE_SUBSCR 
+   109 off= 544 ln=386   LOAD_FAST tmp_node_dict
+   110 off= 546 ln=386   LOAD_FAST queue
+   111 off= 548 ln=386   LOAD_FAST task_id
+   112 off= 550 ln=386   STORE_SUBSCR 
+   113 off= 554 ln=386   POP_EXCEPT 
+   114 off= 556 ln=386   JUMP_FORWARD to 566
+   115 off= 558 ln=383   RERAISE 
+   116 off= 560 ln=None  COPY 
+   117 off= 562 ln=None  POP_EXCEPT 
+   118 off= 564 ln=None  RERAISE 
+   119 off= 566 ln=386   JUMP_FORWARD to 842
+   120 off= 568 ln=None  PUSH_EXC_INFO 
+   121 off= 570 ln=387   LOAD_GLOBAL KeyError
+   122 off= 582 ln=387   CHECK_EXC_MATCH 
+   123 off= 584 ln=387   POP_JUMP_FORWARD_IF_FALSE to 834
+   124 off= 586 ln=387   POP_TOP 
+   125 off= 588 ln=388   LOAD_GLOBAL NULL + system_log
+   126 off= 600 ln=388   LOAD_ATTR error
+   127 off= 610 ln=388   LOAD_CONST '异常信息: %s'
+   128 off= 612 ln=388   LOAD_GLOBAL NULL + get_traceback_message
+   129 off= 628 ln=388   CALL 
+   130 off= 638 ln=388   BINARY_OP %
+   131 off= 646 ln=388   CALL 
+   132 off= 656 ln=388   POP_TOP 
+   133 off= 658 ln=389   LOAD_GLOBAL NULL + OrderedDict
+   134 off= 674 ln=389   CALL 
+   135 off= 684 ln=389   STORE_FAST node_dict
+   136 off= 686 ln=390   LOAD_FAST node
+   137 off= 688 ln=390   BUILD_LIST 
+   138 off= 690 ln=390   LOAD_FAST node_dict
+   139 off= 692 ln=390   LOAD_CONST 'head'
+   140 off= 694 ln=390   STORE_SUBSCR 
+   141 off= 698 ln=391   LOAD_GLOBAL NULL + len
+   142 off= 710 ln=391   LOAD_FAST result
+   143 off= 716 ln=391   CALL 
+   144 off= 726 ln=391   LOAD_CONST 1
+   145 off= 728 ln=391   COMPARE_OP ==
+   146 off= 734 ln=391   POP_JUMP_FORWARD_IF_FALSE to 750
+   147 off= 736 ln=392   LOAD_CONST 'end'
+   148 off= 738 ln=392   BUILD_LIST 
+   149 off= 740 ln=392   LOAD_FAST node_dict
+   150 off= 742 ln=392   LOAD_FAST node
+   151 off= 744 ln=392   STORE_SUBSCR 
+   152 off= 748 ln=392   JUMP_FORWARD to 818
+   153 off= 750 ln=394   LOAD_CONST <code object <listcomp> at 0x0000027AD...
+   154 off= 752 ln=394   MAKE_FUNCTION 
+   155 off= 754 ln=394   LOAD_GLOBAL NULL + nx
+   156 off= 766 ln=394   LOAD_ATTR edges
+   157 off= 776 ln=394   LOAD_FAST graph
+   158 off= 778 ln=394   LOAD_FAST node
+   159 off= 784 ln=394   CALL 
+   160 off= 794 ln=394   GET_ITER 
+   161 off= 800 ln=394   CALL 
+   162 off= 810 ln=394   LOAD_FAST node_dict
+   163 off= 812 ln=394   LOAD_FAST node
+   164 off= 814 ln=394   STORE_SUBSCR 
+   165 off= 818 ln=395   LOAD_FAST node_dict
+   166 off= 820 ln=395   LOAD_FAST queue
+   167 off= 822 ln=395   LOAD_FAST task_id
+   168 off= 824 ln=395   STORE_SUBSCR 
+   169 off= 828 ln=396   POP_EXCEPT 
+   170 off= 830 ln=396   LOAD_CONST None
+   171 off= 832 ln=396   RETURN_VALUE 
+   172 off= 834 ln=387   RERAISE 
+   173 off= 836 ln=None  COPY 
+   174 off= 838 ln=None  POP_EXCEPT 
+   175 off= 840 ln=None  RERAISE 
+   176 off= 842 ln=397   LOAD_CONST None
+   177 off= 844 ln=397   RETURN_VALUE 
+   178 off= 846 ln=399   LOAD_FAST level
+   179 off= 848 ln=399   LOAD_GLOBAL NULL + len
+   180 off= 860 ln=399   LOAD_FAST result
+   181 off= 866 ln=399   CALL 
+   182 off= 876 ln=399   LOAD_CONST 1
+   183 off= 878 ln=399   BINARY_OP -
+   184 off= 882 ln=399   COMPARE_OP ==
+   185 off= 888 ln=399   POP_JUMP_FORWARD_IF_FALSE to 1272
+   186 off= 892 ln=401   LOAD_FAST queue
+   187 off= 894 ln=401   LOAD_FAST task_id
+   188 off= 896 ln=401   BINARY_SUBSCR 
+   189 off= 906 ln=401   STORE_FAST tmp_node_dict
+   190 off= 910 ln=403   LOAD_FAST tmp_node_dict
+   191 off= 912 ln=403   LOAD_FAST node
+   192 off= 914 ln=403   BINARY_SUBSCR 
+   193 off= 924 ln=403   STORE_FAST value_list
+   194 off= 926 ln=404   LOAD_FAST value_list
+   195 off= 928 ln=404   LOAD_METHOD append
+   196 off= 950 ln=404   LOAD_CONST 'end'
+   197 off= 956 ln=404   CALL 
+   198 off= 966 ln=404   POP_TOP 
+   199 off= 968 ln=405   LOAD_FAST value_list
+   200 off= 970 ln=405   LOAD_FAST tmp_node_dict
+   201 off= 972 ln=405   LOAD_FAST node
+   202 off= 974 ln=405   STORE_SUBSCR 
+   203 off= 978 ln=406   LOAD_FAST tmp_node_dict
+   204 off= 980 ln=406   LOAD_FAST queue
+   205 off= 982 ln=406   LOAD_FAST task_id
+   206 off= 984 ln=406   STORE_SUBSCR 
+   207 off= 988 ln=407   LOAD_CONST None
+   208 off= 990 ln=407   RETURN_VALUE 
+   209 off= 992 ln=None  PUSH_EXC_INFO 
+   210 off= 994 ln=408   LOAD_GLOBAL KeyError
+   211 off=1006 ln=408   CHECK_EXC_MATCH 
+   212 off=1008 ln=408   POP_JUMP_FORWARD_IF_FALSE to 1108
+   213 off=1010 ln=408   POP_TOP 
+   214 off=1012 ln=409   LOAD_GLOBAL NULL + system_log
+   215 off=1024 ln=409   LOAD_ATTR error
+   216 off=1034 ln=409   LOAD_CONST '异常信息: %s'
+   217 off=1036 ln=409   LOAD_GLOBAL NULL + get_traceback_message
+   218 off=1052 ln=409   CALL 
+   219 off=1062 ln=409   BINARY_OP %
+   220 off=1070 ln=409   CALL 
+   221 off=1080 ln=409   POP_TOP 
+   222 off=1082 ln=410   LOAD_CONST 'end'
+   223 off=1084 ln=410   BUILD_LIST 
+   224 off=1086 ln=410   LOAD_FAST tmp_node_dict
+   225 off=1088 ln=410   LOAD_FAST node
+   226 off=1090 ln=410   STORE_SUBSCR 
+   227 off=1094 ln=411   LOAD_FAST tmp_node_dict
+   228 off=1096 ln=411   LOAD_FAST queue
+   229 off=1098 ln=411   LOAD_FAST task_id
+   230 off=1100 ln=411   STORE_SUBSCR 
+   231 off=1104 ln=411   POP_EXCEPT 
+   232 off=1106 ln=411   JUMP_FORWARD to 1116
+   233 off=1108 ln=408   RERAISE 
+   234 off=1110 ln=None  COPY 
+   235 off=1112 ln=None  POP_EXCEPT 
+   236 off=1114 ln=None  RERAISE 
+   237 off=1116 ln=411   JUMP_FORWARD to 1272
+   238 off=1118 ln=None  PUSH_EXC_INFO 
+   239 off=1120 ln=412   LOAD_GLOBAL KeyError
+   240 off=1132 ln=412   CHECK_EXC_MATCH 
+   241 off=1134 ln=412   POP_JUMP_FORWARD_IF_FALSE to 1264
+   242 off=1136 ln=412   POP_TOP 
+   243 off=1138 ln=413   LOAD_GLOBAL NULL + system_log
+   244 off=1150 ln=413   LOAD_ATTR error
+   245 off=1160 ln=413   LOAD_CONST '异常信息: %s'
+   246 off=1162 ln=413   LOAD_GLOBAL NULL + get_traceback_message
+   247 off=1178 ln=413   CALL 
+   248 off=1188 ln=413   BINARY_OP %
+   249 off=1196 ln=413   CALL 
+   250 off=1206 ln=413   POP_TOP 
+   251 off=1208 ln=414   LOAD_GLOBAL NULL + OrderedDict
+   252 off=1224 ln=414   CALL 
+   253 off=1234 ln=414   STORE_FAST node_dict
+   254 off=1236 ln=415   LOAD_CONST 'end'
+   255 off=1238 ln=415   BUILD_LIST 
+   256 off=1240 ln=415   LOAD_FAST node_dict
+   257 off=1242 ln=415   LOAD_FAST node
+   258 off=1244 ln=415   STORE_SUBSCR 
+   259 off=1248 ln=416   LOAD_FAST node_dict
+   260 off=1250 ln=416   LOAD_FAST queue
+   261 off=1252 ln=416   LOAD_FAST task_id
+   262 off=1254 ln=416   STORE_SUBSCR 
+   263 off=1258 ln=417   POP_EXCEPT 
+   264 off=1260 ln=417   LOAD_CONST None
+   265 off=1262 ln=417   RETURN_VALUE 
+   266 off=1264 ln=412   RERAISE 
+   267 off=1266 ln=None  COPY 
+   268 off=1268 ln=None  POP_EXCEPT 
+   269 off=1270 ln=None  RERAISE 
+   270 off=1274 ln=419   LOAD_FAST queue
+   271 off=1276 ln=419   LOAD_FAST task_id
+   272 off=1278 ln=419   BINARY_SUBSCR 
+   273 off=1288 ln=419   STORE_FAST tmp_node_dict
+   274 off=1292 ln=421   LOAD_FAST tmp_node_dict
+   275 off=1294 ln=421   LOAD_FAST node
+   276 off=1296 ln=421   BINARY_SUBSCR 
+   277 off=1306 ln=421   STORE_FAST value_list
+   278 off=1308 ln=422   LOAD_CONST <code object <listcomp> at 0x0000027AD...
+   279 off=1310 ln=422   MAKE_FUNCTION 
+   280 off=1312 ln=422   LOAD_GLOBAL NULL + nx
+   281 off=1324 ln=422   LOAD_ATTR edges
+   282 off=1334 ln=422   LOAD_FAST graph
+   283 off=1336 ln=422   LOAD_FAST node
+   284 off=1342 ln=422   CALL 
+   285 off=1352 ln=422   GET_ITER 
+   286 off=1358 ln=422   CALL 
+   287 off=1368 ln=422   STORE_FAST node_ids
+   288 off=1370 ln=423   LOAD_FAST value_list
+   289 off=1372 ln=423   LOAD_METHOD append
+   290 off=1394 ln=423   LOAD_FAST node_ids
+   291 off=1400 ln=423   CALL 
+   292 off=1410 ln=423   POP_TOP 
+   293 off=1412 ln=424   LOAD_FAST value_list
+   294 off=1414 ln=424   LOAD_FAST tmp_node_dict
+   295 off=1416 ln=424   LOAD_FAST node
+   296 off=1418 ln=424   STORE_SUBSCR 
+   297 off=1422 ln=425   LOAD_FAST tmp_node_dict
+   298 off=1424 ln=425   LOAD_FAST queue
+   299 off=1426 ln=425   LOAD_FAST task_id
+   300 off=1428 ln=425   STORE_SUBSCR 
+   301 off=1432 ln=426   LOAD_CONST None
+   302 off=1434 ln=426   RETURN_VALUE 
+   303 off=1436 ln=None  PUSH_EXC_INFO 
+   304 off=1438 ln=427   LOAD_GLOBAL KeyError
+   305 off=1450 ln=427   CHECK_EXC_MATCH 
+   306 off=1452 ln=427   POP_JUMP_FORWARD_IF_FALSE to 1610
+   307 off=1454 ln=427   POP_TOP 
+   308 off=1456 ln=428   LOAD_GLOBAL NULL + system_log
+   309 off=1468 ln=428   LOAD_ATTR error
+   310 off=1478 ln=428   LOAD_CONST '异常信息: %s'
+   311 off=1480 ln=428   LOAD_GLOBAL NULL + get_traceback_message
+   312 off=1496 ln=428   CALL 
+   313 off=1506 ln=428   BINARY_OP %
+   314 off=1514 ln=428   CALL 
+   315 off=1524 ln=428   POP_TOP 
+   316 off=1526 ln=429   LOAD_CONST <code object <listcomp> at 0x0000027AD...
+   317 off=1528 ln=429   MAKE_FUNCTION 
+   318 off=1530 ln=429   LOAD_GLOBAL NULL + nx
+   319 off=1542 ln=429   LOAD_ATTR edges
+   320 off=1552 ln=429   LOAD_FAST graph
+   321 off=1554 ln=429   LOAD_FAST node
+   322 off=1560 ln=429   CALL 
+   323 off=1570 ln=429   GET_ITER 
+   324 off=1576 ln=429   CALL 
+   325 off=1586 ln=429   LOAD_FAST tmp_node_dict
+   326 off=1588 ln=429   LOAD_FAST node
+   327 off=1590 ln=429   STORE_SUBSCR 
+   328 off=1594 ln=430   LOAD_FAST tmp_node_dict
+   329 off=1596 ln=430   LOAD_FAST queue
+   330 off=1598 ln=430   LOAD_FAST task_id
+   331 off=1600 ln=430   STORE_SUBSCR 
+   332 off=1604 ln=431   POP_EXCEPT 
+   333 off=1606 ln=431   LOAD_CONST None
+   334 off=1608 ln=431   RETURN_VALUE 
+   335 off=1610 ln=427   RERAISE 
+   336 off=1612 ln=None  COPY 
+   337 off=1614 ln=None  POP_EXCEPT 
+   338 off=1616 ln=None  RERAISE 
+   339 off=1618 ln=None  PUSH_EXC_INFO 
+   340 off=1620 ln=432   LOAD_GLOBAL KeyError
+   341 off=1632 ln=432   CHECK_EXC_MATCH 
+   342 off=1634 ln=432   POP_JUMP_FORWARD_IF_FALSE to 1820
+   343 off=1636 ln=432   POP_TOP 
+   344 off=1638 ln=433   LOAD_GLOBAL NULL + system_log
+   345 off=1650 ln=433   LOAD_ATTR error
+   346 off=1660 ln=433   LOAD_CONST '异常信息: %s'
+   347 off=1662 ln=433   LOAD_GLOBAL NULL + get_traceback_message
+   348 off=1678 ln=433   CALL 
+   349 off=1688 ln=433   BINARY_OP %
+   350 off=1696 ln=433   CALL 
+   351 off=1706 ln=433   POP_TOP 
+   352 off=1708 ln=434   LOAD_GLOBAL NULL + OrderedDict
+   353 off=1724 ln=434   CALL 
+   354 off=1734 ln=434   STORE_FAST node_dict
+   355 off=1736 ln=435   LOAD_CONST <code object <listcomp> at 0x0000027AD...
+   356 off=1738 ln=435   MAKE_FUNCTION 
+   357 off=1740 ln=435   LOAD_GLOBAL NULL + nx
+   358 off=1752 ln=435   LOAD_ATTR edges
+   359 off=1762 ln=435   LOAD_FAST graph
+   360 off=1764 ln=435   LOAD_FAST node
+   361 off=1770 ln=435   CALL 
+   362 off=1780 ln=435   GET_ITER 
+   363 off=1786 ln=435   CALL 
+   364 off=1796 ln=435   LOAD_FAST node_dict
+   365 off=1798 ln=435   LOAD_FAST node
+   366 off=1800 ln=435   STORE_SUBSCR 
+   367 off=1804 ln=436   LOAD_FAST node_dict
+   368 off=1806 ln=436   LOAD_FAST queue
+   369 off=1808 ln=436   LOAD_FAST task_id
+   370 off=1810 ln=436   STORE_SUBSCR 
+   371 off=1814 ln=437   POP_EXCEPT 
+   372 off=1816 ln=437   LOAD_CONST None
+   373 off=1818 ln=437   RETURN_VALUE 
+   374 off=1820 ln=432   RERAISE 
+   375 off=1822 ln=None  COPY 
+   376 off=1824 ln=None  POP_EXCEPT 
+   377 off=1826 ln=None  RERAISE 

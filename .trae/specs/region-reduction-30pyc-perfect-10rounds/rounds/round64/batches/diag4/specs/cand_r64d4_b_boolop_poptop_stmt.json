@@ -1,0 +1,17 @@
+{
+  "file": "core/cfg/region_ast_generator.py",
+  "edits": [
+    {
+      "anchor": "                    _full_rhs = boolop_expr\n                    if region.merge_block and not _chained_targets_r61:",
+      "repl": "                    _full_rhs = boolop_expr\n                    _r64d4_solo = None\n                    if region.merge_block and not _chained_targets_r61:"
+    },
+    {
+      "anchor": "                        if _si is not None and _si >= 1:\n                            _pre_store = _mnn[:_si]\n                            import os as _os_dbg_13",
+      "repl": "                        # [R64-D4-B] 识别条件：汇合块首条有效指令是 POP_TOP。此时\n                        # 短路链的值在语句边界被**丢弃**，即 BoolOp 本身是一条表达式\n                        # 语句（`a or b`）；紧随其后的第一个 STORE_* 是**下一条**独立\n                        # 语句的目标，不是本区域的 value_target。原实现在此把 STORE 前\n                        # 的指令与 boolop_expr 拼成一条右值（reconstruct(_pre_store,\n                        # initial_stack=[boolop_expr])，POP_TOP 恰好把 boolop 弹掉），\n                        # 然后以 Assign(value_target=<下一条语句的右值>) 发射——\n                        # Expr(BoolOp) 整条消失（实测 fly/logger::Backtest\n                        # .logging_process 第 84 行 `thread_event.is_set() or\n                        # thread_event.set()` 丢失，严格尺 seq_diff #35、官方 8 指令缺口）。\n                        # 归约方式：原则 1（按语句边界一次正确归约）——先发射\n                        # Expr(BoolOp)，再把 POP_TOP 之后到该 STORE（含）的指令交\n                        # _generate_stmts_from_instrs 独立重建为下一条语句；下方\n                        # Assign(value_target=_full_rhs) 分支让位。重建为空则完全退回\n                        # 原行为（零退化）。\n                        # 反证：`x = a or b` 汇合块首条即 STORE（_si==0 不入本分支）；\n                        # `x = (a or b) + 1` 汇合块前缀是 BINARY_OP 而非 POP_TOP，\n                        # 其栈上确有 boolop 待消费，两种形态都不会命中本判据。\n                        if (_si is not None and _si >= 1 and _mnn\n                                and _mnn[0].opname == 'POP_TOP'):\n                            _r64d4_solo = self._generate_stmts_from_instrs(\n                                _mnn[1:_si + 1], region.merge_block)\n                            if not _r64d4_solo:\n                                _r64d4_solo = None\n                        if _si is not None and _si >= 1:\n                            _pre_store = _mnn[:_si]\n                            import os as _os_dbg_13"
+    },
+    {
+      "anchor": "                    else:\n                        results.append({\n                            'type': 'Assign',\n                            'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],\n                            'value': _full_rhs,\n                        })",
+      "repl": "                    elif _r64d4_solo is not None:\n                        results.append({'type': 'Expr', 'value': boolop_expr})\n                        for _r64d4_s in _r64d4_solo:\n                            results.append(_r64d4_s)\n                    else:\n                        results.append({\n                            'type': 'Assign',\n                            'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],\n                            'value': _full_rhs,\n                        })"
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+=== future_order firstlineno=439 args=('asset', 'amount', 'entrust_direction', 'futures_direction', 'limit_price', 'engine', 'style', 'order_') ===
+      -- line 439: 
+      -- line 441: 
+      -- line 442: 
+      -- line 443: 
+      -- line 445: 
+      -- line 446: 
+      -- line 447: 
+      -- line 448: 
+      -- line 449: 
+      -- line 448: 
+      -- line 450: 
+      -- line 451: 
+      -- line 452: 
+      -- line 451: 
+    338 RAISE_VARARGS                  
+      -- line 454: 
+    340 LOAD_GLOBAL                    NULL + iq_order
+    352 LOAD_FAST                      asset
+    354 LOAD_FAST                      amount
+    356 LOAD_FAST                      entrust_direction
+    358 LOAD_FAST                      style
+    360 LOAD_FAST                      futures_direction
+    362 PRECALL                        
+    366 CALL                           
+    376 STORE_FAST                     order_
+      -- line 455: 
+    378 LOAD_FAST                      order_
+    380 POP_JUMP_FORWARD_IF_NOT_NONE   to 386
+      -- line 456: 
+    382 LOAD_CONST                     None
+    384 RETURN_VALUE                   
+      -- line 457: 
+    386 LOAD_GLOBAL                    NULL + is_trade
+    398 PRECALL                        
+    402 CALL                           
+    412 POP_JUMP_FORWARD_IF_TRUE       to 676
+      -- line 458: 
+    414 LOAD_GLOBAL                    NULL + strategy_log
+    426 LOAD_ATTR                      info
+      -- line 459: 
+    436 LOAD_CONST                     '生成订单，订单号：{order_id}，合约代码：{symbol}，方向：{side}{oper}，数量：{share}手'
+    438 LOAD_METHOD                    format
+      -- line 460: 
+    460 LOAD_FAST                      order_
+    462 LOAD_ATTR                      order_id
+      -- line 461: 
+    472 LOAD_FAST                      order_
+    474 LOAD_ATTR                      symbol
+      -- line 462: 
+    484 LOAD_FAST                      order_
+    486 LOAD_ATTR                      entrust_direction
+    496 LOAD_ATTR                      value
+    506 LOAD_METHOD                    upper
+    528 PRECALL                        
+    532 CALL                           
+    542 LOAD_CONST                     'BUY'
+    544 COMPARE_OP                     ==
+    550 POP_JUMP_FORWARD_IF_FALSE      to 556
+    552 LOAD_CONST                     '买入'
+    554 JUMP_FORWARD                   to 558
+    556 LOAD_CONST                     '卖出'
+      -- line 463: 
+    558 LOAD_FAST                      order_
+    560 LOAD_ATTR                      futures_direction
+    570 LOAD_ATTR                      value
+    580 LOAD_METHOD                    upper
+    602 PRECALL                        
+    606 CALL                           
+    616 LOAD_CONST                     'OPEN'
+    618 COMPARE_OP                     ==
+    624 POP_JUMP_FORWARD_IF_FALSE      to 630
+    626 LOAD_CONST                     '开仓'
+    628 JUMP_FORWARD                   to 632
+    630 LOAD_CONST                     '平仓'
+      -- line 464: 
+    632 LOAD_FAST                      order_
+    634 LOAD_ATTR                      amount
+      -- line 459: 
+    644 KW_NAMES                       
+    646 PRECALL                        
+    650 CALL                           
+      -- line 458: 
+    660 PRECALL                        
+    664 CALL                           
+    674 POP_TOP                        
+      -- line 467: 
+    676 LOAD_FAST                      order_
+    678 LOAD_ATTR                      order_id

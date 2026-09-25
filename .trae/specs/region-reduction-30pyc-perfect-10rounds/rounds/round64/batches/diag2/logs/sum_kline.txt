@@ -1,0 +1,11 @@
+=== get_all_real_daily_kline [landed/klinedata] orig=211 decomp=210 hunks=2 lost=2 gained=1
+   replace  n=1    REPLACE orig[110:111]@580 L1580  <->  decomp[110:111]@580 L1168
+   delete   n=1    MISSING orig[182:183] @900..900 src=L1596  (decomp resumes @898 L1180)
+=== get_multiminute_his_data [landed/klinedata] orig=529 decomp=530 hunks=2 lost=2 gained=3
+   replace  n=2    REPLACE orig[512:513]@2708 L1052  <->  decomp[512:514]@2708 L790
+   replace  n=1    REPLACE orig[527:528]@2758 L1095  <->  decomp[528:529]@2760 L791
+=== kline_datetime_list [landed/klinedata] orig=410 decomp=410 hunks=4 lost=10 gained=10
+   replace  n=5    REPLACE orig[158:163]@654 L1238  <->  decomp[158:159]@662 L895
+   replace  n=5    REPLACE orig[327:332]@1362 L1274  <->  decomp[323:324]@1360 L921
+   insert   n=4    EXTRA   decomp[331:335] @1380..1386 src=L922  (orig resumes @1390 L1276)
+   insert   n=4    EXTRA   decomp[404:408] @1702..1710 src=L933  (orig resumes @1702 L1285)

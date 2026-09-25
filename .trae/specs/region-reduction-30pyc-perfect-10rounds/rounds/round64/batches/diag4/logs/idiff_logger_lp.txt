@@ -1,0 +1,18 @@
+=== <module>.Backtest.logging_process : token len orig=103 decomp=95  identical=False
+    non-equal blocks=1  ratio=0.9596
+  delete   orig[  35:  43](n=8) decomp[  35:  35](n=0)
+      orig  src-lines [83, 84]   decomp src-lines []
+       O   34 off= 256 ln=83    CALL 
+     > O   35 off= 266 ln=83    POP_TOP 
+     > O   36 off= 268 ln=84    LOAD_FAST thread_event
+     > O   37 off= 270 ln=84    LOAD_METHOD is_set
+     > O   38 off= 296 ln=84    CALL 
+     > O   39 off= 306 ln=84    JUMP_IF_TRUE_OR_POP to 346
+     > O   40 off= 308 ln=84    LOAD_FAST thread_event
+     > O   41 off= 310 ln=84    LOAD_METHOD set
+     > O   42 off= 336 ln=84    CALL 
+       O   43 off= 346 ln=None  POP_TOP 
+      ----
+       D   34 off= 256 ln=59    CALL 
+       D   35 off= 266 ln=59    POP_TOP 
+

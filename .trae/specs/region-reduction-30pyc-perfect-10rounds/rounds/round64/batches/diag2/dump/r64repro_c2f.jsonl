@@ -1,0 +1,2 @@
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round64_diag2/r64d2_chain_yield_sibling_entry.pyc", "arm": "c2f", "sha": "88c02191a247375d", "total_functions": 2, "matched_functions": 1, "mism": [["r64d2_chain_yield", 51, 27, 2, 32]]}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round64_diag2/r64d2_valuectx_consumer.pyc", "arm": "c2f", "sha": "5826f38b7737497c", "total_functions": 2, "matched_functions": 2, "mism": []}

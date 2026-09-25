@@ -1,0 +1,228 @@
+=== ORIG <module>.Backtest.write_logging_thread (113)
+     0 off=   0 ln=96    RESUME 
+     1 off=   4 ln=98    LOAD_FAST write_queue
+     2 off=   6 ln=98    LOAD_METHOD qsize
+     3 off=  32 ln=98    CALL 
+     4 off=  42 ln=98    STORE_FAST q
+     5 off=  44 ln=99    LOAD_FAST q
+     6 off=  46 ln=99    POP_JUMP_FORWARD_IF_FALSE to 426
+     7 off=  48 ln=100   LOAD_CONST ''
+     8 off=  50 ln=100   STORE_FAST msgs
+     9 off=  52 ln=101   LOAD_FAST q
+    10 off=  54 ln=101   LOAD_CONST 0
+    11 off=  56 ln=101   COMPARE_OP >
+    12 off=  62 ln=101   POP_JUMP_FORWARD_IF_FALSE to 368
+    13 off=  64 ln=102   LOAD_FAST q
+    14 off=  66 ln=102   LOAD_CONST 1
+    15 off=  68 ln=102   BINARY_OP -=
+    16 off=  72 ln=102   STORE_FAST q
+    17 off=  74 ln=103   LOAD_FAST write_queue
+    18 off=  76 ln=103   LOAD_METHOD get
+    19 off= 102 ln=103   CALL 
+    20 off= 112 ln=103   UNPACK_SEQUENCE 
+    21 off= 116 ln=103   STORE_FAST level
+    22 off= 118 ln=103   STORE_FAST _time
+    23 off= 120 ln=103   STORE_FAST message
+    24 off= 122 ln=104   LOAD_FAST _time
+    25 off= 124 ln=104   LOAD_METHOD strftime
+    26 off= 146 ln=105   LOAD_CONST '%Y-%m-%d %H:%M:%S'
+    27 off= 152 ln=104   CALL 
+    28 off= 162 ln=104   FORMAT_VALUE str
+    29 off= 164 ln=104   LOAD_CONST ' - '
+    30 off= 166 ln=105   LOAD_FAST level
+    31 off= 168 ln=105   LOAD_METHOD upper
+    32 off= 194 ln=105   CALL 
+    33 off= 204 ln=105   FORMAT_VALUE str
+    34 off= 206 ln=105   LOAD_CONST ' - '
+    35 off= 208 ln=105   LOAD_FAST message
+    36 off= 210 ln=105   FORMAT_VALUE str
+    37 off= 212 ln=104   BUILD_STRING 
+    38 off= 214 ln=104   STORE_FAST message
+    39 off= 216 ln=106   LOAD_FAST level
+    40 off= 218 ln=106   LOAD_CONST 'debug'
+    41 off= 220 ln=106   COMPARE_OP ==
+    42 off= 226 ln=106   POP_JUMP_FORWARD_IF_FALSE to 342
+    43 off= 228 ln=107   LOAD_FAST msgs
+    44 off= 230 ln=107   POP_JUMP_FORWARD_IF_FALSE to 288
+    45 off= 232 ln=108   LOAD_FAST self
+    46 off= 234 ln=108   LOAD_ATTR logger_bt
+    47 off= 244 ln=108   LOAD_METHOD info
+    48 off= 266 ln=108   LOAD_FAST msgs
+    49 off= 272 ln=108   CALL 
+    50 off= 282 ln=108   POP_TOP 
+    51 off= 284 ln=109   LOAD_CONST ''
+    52 off= 286 ln=109   STORE_FAST msgs
+    53 off= 288 ln=110   LOAD_FAST self
+    54 off= 290 ln=110   LOAD_ATTR logger_bt
+    55 off= 300 ln=110   LOAD_METHOD debug
+    56 off= 322 ln=110   LOAD_FAST message
+    57 off= 328 ln=110   CALL 
+    58 off= 338 ln=110   POP_TOP 
+    59 off= 340 ln=110   JUMP_FORWARD to 356
+    60 off= 342 ln=112   LOAD_FAST msgs
+    61 off= 344 ln=112   FORMAT_VALUE str
+    62 off= 346 ln=112   LOAD_CONST '\n'
+    63 off= 348 ln=112   LOAD_FAST message
+    64 off= 350 ln=112   FORMAT_VALUE str
+    65 off= 352 ln=112   BUILD_STRING 
+    66 off= 354 ln=112   STORE_FAST msgs
+    67 off= 356 ln=101   LOAD_FAST q
+    68 off= 358 ln=101   LOAD_CONST 0
+    69 off= 360 ln=101   COMPARE_OP >
+    70 off= 366 ln=101   POP_JUMP_BACKWARD_IF_TRUE to 64
+    71 off= 368 ln=113   LOAD_FAST msgs
+    72 off= 370 ln=113   POP_JUMP_FORWARD_IF_FALSE to 424
+    73 off= 372 ln=114   LOAD_FAST self
+    74 off= 374 ln=114   LOAD_ATTR logger_bt
+    75 off= 384 ln=114   LOAD_METHOD info
+    76 off= 406 ln=114   LOAD_FAST msgs
+    77 off= 412 ln=114   CALL 
+    78 off= 422 ln=114   POP_TOP 
+    79 off= 424 ln=None  JUMP_FORWARD to 666
+    80 off= 426 ln=116   LOAD_FAST self
+    81 off= 428 ln=116   LOAD_ATTR status
+    82 off= 438 ln=116   POP_JUMP_FORWARD_IF_FALSE to 662
+    83 off= 440 ln=117   LOAD_FAST thread_event
+    84 off= 442 ln=117   LOAD_METHOD wait
+    85 off= 464 ln=117   LOAD_CONST 5
+    86 off= 470 ln=117   CALL 
+    87 off= 480 ln=117   POP_TOP 
+    88 off= 482 ln=118   LOAD_FAST thread_event
+    89 off= 484 ln=118   LOAD_METHOD is_set
+    90 off= 510 ln=118   CALL 
+    91 off= 520 ln=118   POP_JUMP_FORWARD_IF_FALSE to 564
+    92 off= 522 ln=119   LOAD_FAST thread_event
+    93 off= 524 ln=119   LOAD_METHOD clear
+    94 off= 550 ln=119   CALL 
+    95 off= 560 ln=119   POP_TOP 
+    96 off= 562 ln=119   JUMP_FORWARD to 666
+    97 off= 564 ln=121   LOAD_GLOBAL NULL + os
+    98 off= 576 ln=121   LOAD_ATTR getppid
+    99 off= 590 ln=121   CALL 
+   100 off= 600 ln=121   LOAD_FAST self
+   101 off= 602 ln=121   LOAD_ATTR pid
+   102 off= 612 ln=121   COMPARE_OP !=
+   103 off= 618 ln=121   POP_JUMP_FORWARD_IF_FALSE to 660
+   104 off= 620 ln=122   LOAD_GLOBAL NULL + os
+   105 off= 632 ln=122   LOAD_ATTR _exit
+   106 off= 642 ln=122   LOAD_CONST 0
+   107 off= 648 ln=122   CALL 
+   108 off= 658 ln=122   POP_TOP 
+   109 off= 660 ln=None  JUMP_FORWARD to 666
+   110 off= 662 ln=124   LOAD_CONST None
+   111 off= 664 ln=124   RETURN_VALUE 
+   112 off= 668 ln=97    JUMP_BACKWARD to 4
+=== DECOMP <module>.Backtest.write_logging_thread (113)
+     0 off=   0 ln=73    RESUME 
+     1 off=   4 ln=75    LOAD_FAST write_queue
+     2 off=   6 ln=75    LOAD_METHOD qsize
+     3 off=  32 ln=75    CALL 
+     4 off=  42 ln=75    STORE_FAST q
+     5 off=  44 ln=76    LOAD_FAST q
+     6 off=  46 ln=76    POP_JUMP_FORWARD_IF_FALSE to 370
+     7 off=  48 ln=77    LOAD_CONST ''
+     8 off=  50 ln=77    STORE_FAST msgs
+     9 off=  52 ln=78    LOAD_FAST q
+    10 off=  54 ln=78    LOAD_CONST 0
+    11 off=  56 ln=78    COMPARE_OP >
+    12 off=  62 ln=78    POP_JUMP_FORWARD_IF_FALSE to 368
+    13 off=  64 ln=79    LOAD_FAST q
+    14 off=  66 ln=79    LOAD_CONST 1
+    15 off=  68 ln=79    BINARY_OP -=
+    16 off=  72 ln=79    STORE_FAST q
+    17 off=  74 ln=80    LOAD_FAST write_queue
+    18 off=  76 ln=80    LOAD_METHOD get
+    19 off= 102 ln=80    CALL 
+    20 off= 112 ln=80    UNPACK_SEQUENCE 
+    21 off= 116 ln=80    STORE_FAST level
+    22 off= 118 ln=80    STORE_FAST _time
+    23 off= 120 ln=80    STORE_FAST message
+    24 off= 122 ln=81    LOAD_FAST _time
+    25 off= 124 ln=81    LOAD_METHOD strftime
+    26 off= 146 ln=81    LOAD_CONST '%Y-%m-%d %H:%M:%S'
+    27 off= 152 ln=81    CALL 
+    28 off= 162 ln=81    FORMAT_VALUE str
+    29 off= 164 ln=81    LOAD_CONST ' - '
+    30 off= 166 ln=81    LOAD_FAST level
+    31 off= 168 ln=81    LOAD_METHOD upper
+    32 off= 194 ln=81    CALL 
+    33 off= 204 ln=81    FORMAT_VALUE str
+    34 off= 206 ln=81    LOAD_CONST ' - '
+    35 off= 208 ln=81    LOAD_FAST message
+    36 off= 210 ln=81    FORMAT_VALUE str
+    37 off= 212 ln=81    BUILD_STRING 
+    38 off= 214 ln=81    STORE_FAST message
+    39 off= 216 ln=82    LOAD_FAST level
+    40 off= 218 ln=82    LOAD_CONST 'debug'
+    41 off= 220 ln=82    COMPARE_OP ==
+    42 off= 226 ln=82    POP_JUMP_FORWARD_IF_FALSE to 342
+    43 off= 228 ln=83    LOAD_FAST msgs
+    44 off= 230 ln=83    POP_JUMP_FORWARD_IF_FALSE to 288
+    45 off= 232 ln=84    LOAD_FAST self
+    46 off= 234 ln=84    LOAD_ATTR logger_bt
+    47 off= 244 ln=84    LOAD_METHOD info
+    48 off= 266 ln=84    LOAD_FAST msgs
+    49 off= 272 ln=84    CALL 
+    50 off= 282 ln=84    POP_TOP 
+    51 off= 284 ln=85    LOAD_CONST ''
+    52 off= 286 ln=85    STORE_FAST msgs
+    53 off= 288 ln=86    LOAD_FAST self
+    54 off= 290 ln=86    LOAD_ATTR logger_bt
+    55 off= 300 ln=86    LOAD_METHOD debug
+    56 off= 322 ln=86    LOAD_FAST message
+    57 off= 328 ln=86    CALL 
+    58 off= 338 ln=86    POP_TOP 
+    59 off= 340 ln=86    JUMP_FORWARD to 356
+    60 off= 342 ln=88    LOAD_FAST msgs
+    61 off= 344 ln=88    FORMAT_VALUE str
+    62 off= 346 ln=88    LOAD_CONST '\n'
+    63 off= 348 ln=88    LOAD_FAST message
+    64 off= 350 ln=88    FORMAT_VALUE str
+    65 off= 352 ln=88    BUILD_STRING 
+    66 off= 354 ln=88    STORE_FAST msgs
+    67 off= 356 ln=78    LOAD_FAST q
+    68 off= 358 ln=78    LOAD_CONST 0
+    69 off= 360 ln=78    COMPARE_OP >
+    70 off= 366 ln=78    POP_JUMP_BACKWARD_IF_TRUE to 64
+    71 off= 368 ln=None  JUMP_FORWARD to 612
+    72 off= 370 ln=90    LOAD_FAST self
+    73 off= 372 ln=90    LOAD_ATTR status
+    74 off= 382 ln=90    POP_JUMP_FORWARD_IF_FALSE to 608
+    75 off= 384 ln=91    LOAD_FAST thread_event
+    76 off= 386 ln=91    LOAD_METHOD wait
+    77 off= 408 ln=91    LOAD_CONST 5
+    78 off= 414 ln=91    CALL 
+    79 off= 424 ln=91    POP_TOP 
+    80 off= 426 ln=92    LOAD_FAST thread_event
+    81 off= 428 ln=92    LOAD_METHOD is_set
+    82 off= 454 ln=92    CALL 
+    83 off= 464 ln=92    POP_JUMP_FORWARD_IF_FALSE to 508
+    84 off= 466 ln=93    LOAD_FAST thread_event
+    85 off= 468 ln=93    LOAD_METHOD clear
+    86 off= 494 ln=93    CALL 
+    87 off= 504 ln=93    POP_TOP 
+    88 off= 506 ln=93    JUMP_FORWARD to 604
+    89 off= 508 ln=94    LOAD_GLOBAL NULL + os
+    90 off= 520 ln=94    LOAD_ATTR getppid
+    91 off= 534 ln=94    CALL 
+    92 off= 544 ln=94    LOAD_FAST self
+    93 off= 546 ln=94    LOAD_ATTR pid
+    94 off= 556 ln=94    COMPARE_OP !=
+    95 off= 562 ln=94    POP_JUMP_FORWARD_IF_FALSE to 604
+    96 off= 564 ln=95    LOAD_GLOBAL NULL + os
+    97 off= 576 ln=95    LOAD_ATTR _exit
+    98 off= 586 ln=95    LOAD_CONST 0
+    99 off= 592 ln=95    CALL 
+   100 off= 602 ln=95    POP_TOP 
+   101 off= 606 ln=96    JUMP_BACKWARD to 2
+   102 off= 608 ln=98    LOAD_CONST None
+   103 off= 610 ln=98    RETURN_VALUE 
+   104 off= 612 ln=99    LOAD_FAST msgs
+   105 off= 614 ln=99    POP_JUMP_FORWARD_IF_FALSE to 668
+   106 off= 616 ln=100   LOAD_FAST self
+   107 off= 618 ln=100   LOAD_ATTR logger_bt
+   108 off= 628 ln=100   LOAD_METHOD info
+   109 off= 650 ln=100   LOAD_FAST msgs
+   110 off= 656 ln=100   CALL 
+   111 off= 666 ln=100   POP_TOP 
+   112 off= 670 ln=74    JUMP_BACKWARD to 4

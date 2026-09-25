@@ -1,0 +1,15 @@
+=== get_future_history_df [landed/api_base] orig=1055 decomp=1038 hunks=3 lost=19 gained=2
+   replace  n=1    REPLACE orig[456:457]@2494 L236  <->  decomp[456:457]@2494 L165
+   delete   n=17   MISSING orig[800:817] @4274..4360 src=L298  (decomp resumes @4274 L211)
+   replace  n=1    REPLACE orig[837:838]@4470 L304  <->  decomp[820:821]@4382 L212
+=== get_history_df [landed/api_base] orig=1881 decomp=1856 hunks=10 lost=39 gained=14
+   replace  n=5    REPLACE orig[449:454]@2242 L417  <->  decomp[449:450]@2242 L295
+   replace  n=5    REPLACE orig[514:519]@2506 L431  <->  decomp[510:511]@2496 L303
+   insert   n=4    EXTRA   decomp[518:522] @2516..2522 src=L304  (orig resumes @2534 L434)
+   insert   n=4    EXTRA   decomp[540:544] @2570..2578 src=L311  (orig resumes @2578 L440)
+   delete   n=2    MISSING orig[576:578] @2690..2692 src=L451  (decomp resumes @2690 L318)
+   replace  n=1    REPLACE orig[764:765]@3726 L480  <->  decomp[762:763]@3722 L339
+   delete   n=23   MISSING orig[1025:1048] @4986..5100 src=L522  (decomp resumes @4978 L377)
+   replace  n=1    REPLACE orig[1056:1057]@5126 L526  <->  decomp[1031:1032]@5002 L378
+   replace  n=1    REPLACE orig[1060:1061]@5142 L528  <->  decomp[1035:1036]@5028 L379
+   replace  n=1    REPLACE orig[1238:1239]@6142 L560  <->  decomp[1213:1214]@6028 L402

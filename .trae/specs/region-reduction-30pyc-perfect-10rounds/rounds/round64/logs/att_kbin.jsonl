@@ -1,0 +1,3 @@
+{"path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/crypto_utils.pyc", "arm": "att_kbin", "sha": "18b4aa795045a443", "total_functions": 9, "matched_functions": 9, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc", "arm": "att_kbin", "sha": "3cf5d75eb4b15d57", "total_functions": 45, "matched_functions": 42, "mism": [["get_all_real_daily_kline", 188, 187, 3, 26], ["get_multiminute_his_data", 479, 478, 5, 16], ["kline_datetime_list", 389, 389, 9, 228]]}
+{"path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc", "arm": "att_kbin", "sha": "1e7a41097c4ccc17", "total_functions": 57, "matched_functions": 56, "mism": [["get_kline_local", 760, 682, 12, 547]]}

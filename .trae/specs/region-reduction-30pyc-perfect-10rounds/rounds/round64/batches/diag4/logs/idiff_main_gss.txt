@@ -1,0 +1,48 @@
+=== <module>.get_same_shard_server_ip_info : token len orig=192 decomp=172  identical=False
+    non-equal blocks=5  ratio=0.9286
+  delete   orig[   0:   1](n=1) decomp[   0:   0](n=0)
+      orig  src-lines []   decomp src-lines []
+     > O    0 off=   0 ln=None  MAKE_CELL local_server_shard
+      ----
+
+  replace  orig[  81:  82](n=1) decomp[  80:  81](n=1)
+      orig  src-lines [663]   decomp src-lines [444]
+     > O   81 off= 420 ln=663   STORE_DEREF local_server_shard
+      ----
+     > D   80 off= 416 ln=444   STORE_FAST local_server_shard
+
+  replace  orig[ 127: 128](n=1) decomp[ 126: 127](n=1)
+      orig  src-lines [675]   decomp src-lines [452]
+     > O  127 off= 642 ln=675   STORE_DEREF local_server_shard
+      ----
+     > D  126 off= 638 ln=452   STORE_FAST local_server_shard
+
+  delete   orig[ 133: 152](n=19) decomp[ 132: 132](n=0)
+      orig  src-lines [678, 680, 681]   decomp src-lines []
+     > O  133 off= 662 ln=678   LOAD_CLOSURE local_server_shard
+     > O  134 off= 664 ln=678   BUILD_TUPLE 
+     > O  135 off= 666 ln=678   LOAD_CONST <code object <dictcomp> at 0x000002251...
+     > O  136 off= 668 ln=678   MAKE_FUNCTION closure
+     > O  137 off= 670 ln=678   LOAD_FAST shard_info
+     > O  138 off= 672 ln=678   LOAD_METHOD items
+     > O  139 off= 698 ln=678   CALL 
+     > O  140 off= 708 ln=678   GET_ITER 
+     > O  141 off= 714 ln=678   CALL 
+     > O  142 off= 724 ln=678   STORE_FAST same_shard_server_info
+     > O  143 off= 726 ln=680   LOAD_CONST '从nginx服务器:%s获取量化服务器索引信息成功'
+     > O  144 off= 728 ln=680   LOAD_FAST nginx_ip
+     > O  145 off= 730 ln=680   BINARY_OP %
+     > O  146 off= 734 ln=680   STORE_FAST msg
+     > O  147 off= 736 ln=681   LOAD_GLOBAL NULL + user_log
+     > O  148 off= 748 ln=681   LOAD_ATTR info
+     > O  149 off= 758 ln=681   LOAD_FAST msg
+     > O  150 off= 764 ln=681   CALL 
+     > O  151 off= 774 ln=681   POP_TOP 
+      ----
+
+  replace  orig[ 155: 156](n=1) decomp[ 135: 136](n=1)
+      orig  src-lines [683]   decomp src-lines [454]
+     > O  155 off= 782 ln=683   LOAD_FAST same_shard_server_info
+      ----
+     > D  135 off= 664 ln=454   LOAD_GLOBAL same_shard_server_info
+

@@ -1,0 +1,101 @@
+=== _save_testds_to_csv firstlineno=853 args=('self', 'engine', 'csv_writer', 'is_end', 'daily_result', 'THREAD_STATUS') ===
+      -- line 853: 
+      0 RESUME                         
+      -- line 854: 
+      2 LOAD_FAST                      engine
+      4 LOAD_METHOD                    set_engine
+     26 LOAD_FAST                      engine
+     28 PRECALL                        
+     32 CALL                           
+     42 POP_TOP                        
+      -- line 856: 
+     44 LOAD_GLOBAL                    NULL + get_testds_to_csv_writer
+     56 LOAD_GLOBAL                    BACKTEST_DIR_PATH
+     68 LOAD_FAST                      self
+     70 LOAD_ATTR                      backtest_id
+     80 LOAD_FAST                      self
+     82 LOAD_ATTR                      user_id
+     92 PRECALL                        
+     96 CALL                           
+    106 STORE_FAST                     csv_writer
+      -- line 858: 
+    108 LOAD_FAST                      self
+    110 LOAD_ATTR                      _stop_save_csv_thread
+    120 POP_JUMP_FORWARD_IF_TRUE       to 262
+      -- line 860: 
+    122 NOP                            
+      -- line 861: 
+    124 LOAD_FAST                      self
+    126 LOAD_ATTR                      daily_result_list
+    136 LOAD_METHOD                    get
+    158 LOAD_CONST                     1
+    160 KW_NAMES                       
+    162 PRECALL                        
+    166 CALL                           
+    176 UNPACK_SEQUENCE                
+    180 STORE_FAST                     is_end
+    182 STORE_FAST                     daily_result
+    184 JUMP_FORWARD                   to 218
+    186 PUSH_EXC_INFO                  
+      -- line 862: 
+    188 LOAD_GLOBAL                    Empty
+    200 CHECK_EXC_MATCH                
+    202 POP_JUMP_FORWARD_IF_FALSE      to 210
+    204 POP_TOP                        
+      -- line 863: 
+    206 POP_EXCEPT                     
+    208 JUMP_BACKWARD                  to 108
+      -- line 862: 
+    210 RERAISE                        
+    212 COPY                           
+    214 POP_EXCEPT                     
+    216 RERAISE                        
+      -- line 865: 
+    218 PUSH_NULL                      
+    220 LOAD_FAST                      csv_writer
+    222 LOAD_FAST                      daily_result
+    224 LOAD_FAST                      is_end
+    226 PRECALL                        
+    230 CALL                           
+    240 POP_TOP                        
+      -- line 866: 
+    242 LOAD_FAST                      is_end
+    244 POP_JUMP_FORWARD_IF_FALSE      to 248
+      -- line 867: 
+    246 JUMP_FORWARD                   to 262
+      -- line 858: 
+    248 LOAD_FAST                      self
+    250 LOAD_ATTR                      _stop_save_csv_thread
+    260 POP_JUMP_BACKWARD_IF_FALSE     to 122
+      -- line 869: 
+    262 LOAD_FAST                      self
+    264 LOAD_ATTR                      _stop_save_csv_thread
+    274 POP_JUMP_FORWARD_IF_TRUE       to 354
+      -- line 870: 
+    276 LOAD_CONST                     0
+    278 LOAD_CONST                     ('THREAD_STATUS',)
+    280 IMPORT_NAME                    IQEngine.plugins.plugin_system_risk_calculation.function
+    282 IMPORT_FROM                    THREAD_STATUS
+    284 STORE_FAST                     THREAD_STATUS
+    286 POP_TOP                        
+      -- line 871: 
+    288 LOAD_FAST                      THREAD_STATUS
+    290 POP_JUMP_FORWARD_IF_FALSE      to 296
+      -- line 872: 
+    292 LOAD_CONST                     None
+    294 RETURN_VALUE                   
+      -- line 874: 
+    296 LOAD_GLOBAL                    NULL + time
+    308 LOAD_ATTR                      sleep
+    318 LOAD_CONST                     0.01
+    320 PRECALL                        
+    324 CALL                           
+    334 POP_TOP                        
+      -- line 869: 
+    336 LOAD_FAST                      self
+    338 LOAD_ATTR                      _stop_save_csv_thread
+    348 POP_JUMP_BACKWARD_IF_FALSE     to 276
+    350 LOAD_CONST                     None
+    352 RETURN_VALUE                   
+    354 LOAD_CONST                     None
+    356 RETURN_VALUE                   

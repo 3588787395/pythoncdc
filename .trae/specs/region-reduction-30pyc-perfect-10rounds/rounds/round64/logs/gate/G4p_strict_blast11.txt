@@ -1,0 +1,51 @@
+  DEFECT 54/63  IQCommon/api/klinedata.pyc
+           - <module>.get_all_real_daily_kline: [seq_len] orig=188 decomp=187
+           - <module>.get_all_real_minute_kline: [target_diff] #54 POP_JUMP_IF_FALSE 终点 orig=("'system_log'", 'LOAD_GLOBAL') decomp=("'fq'", 'LOAD_FAST')
+           - <module>.get_history_common: [target_diff] #41 POP_JUMP_IF_NONE 终点 orig=("'is_dict'", 'LOAD_FAST') decomp=("'fields'", 'LOAD_FAST')
+           - <module>.get_kline_by_count_new: [target_diff] #161 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=("'symbols'", 'LOAD_FAST')
+           - <module>.get_kline_by_date_new: [target_diff] #36 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=("'symbols'", 'LOAD_FAST')
+           - <module>.get_multiminute_his_data: [seq_len] orig=481 decomp=482
+           - <module>.get_multiminute_his_data_by_date: [target_diff] #272 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=("'symbols'", 'LOAD_FAST')
+           - <module>.get_price_common: [target_diff] #114 POP_JUMP_IF_NONE 终点 orig=("'frequency'", 'LOAD_FAST') decomp=("'is_dict'", 'LOAD_FAST')
+           - <module>.kline_datetime_list: [seq_diff] #151 orig=('<JUMP>', 'POP_JUMP_IF_TRUE') decomp=('<JUMP>', 'POP_JUMP_IF_FALSE')
+  OK     34/34  IQCommon/common/main.pyc
+  DEFECT 33/34  IQCommon/graph.pyc
+           - <module>.ModelGraph._process_task_queue: [seq_diff] #119 orig=('None', 'LOAD_CONST') decomp=('<JUMP>', 'JUMP')
+  DEFECT 20/22  IQCommon/util/common_func.pyc
+           - <module>.get_kline_time_by_frequency_array: [seq_len] orig=232 decomp=229
+           - <module>.get_kline_time_by_section: [seq_len] orig=211 decomp=191
+  OK      9/9  IQCommon/util/crypto_utils.pyc
+  DEFECT 26/27  IQData/api/api_base.pyc
+           - <module>.get_history_df: [seq_len] orig=1742 decomp=1719
+  DEFECT 33/37  IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc
+           - <module>.PluginRiskCalculation._on_publish_after_trading_end: [seq_len] orig=488 decomp=481
+           - <module>.PluginRiskCalculation._on_set_positions: [seq_len] orig=297 decomp=298
+           - <module>.PluginRiskCalculation._save_testds_to_csv: [seq_len] orig=75 decomp=68
+           - <module>.PluginRiskCalculation.get_TradeMode_trades: [seq_len] orig=1843 decomp=1801
+  DEFECT 103/123  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc
+           - <module>.TradeLiveBroker._process_cancel_order: [seq_len] orig=295 decomp=296
+           - <module>.TradeLiveBroker._process_order: [seq_len] orig=454 decomp=399
+           - <module>.TradeLiveBroker._process_tick_order: [target_diff] #27 JUMP 终点 orig=("'len'", 'LOAD_GLOBAL') decomp=("'self'", 'LOAD_FAST')
+           - <module>.TradeLiveBroker._sync_worker: [seq_len] orig=350 decomp=347
+           - <module>.TradeLiveBroker._trade_status_handle: [seq_len] orig=114 decomp=112
+           - <module>.TradeLiveBroker.after_trading_cancel_order: [seq_len] orig=156 decomp=159
+           - <module>.TradeLiveBroker.etf_basket_order: [seq_diff] #254 orig=("'strategy_log'", 'LOAD_GLOBAL') decomp=("'entrust_price'", 'LOAD_FAST')
+           - <module>.TradeLiveBroker.etf_purchase_redemption: [seq_len] orig=379 decomp=355
+           - <module>.TradeLiveBroker.get_all_orders: [seq_len] orig=80 decomp=83
+           - <module>.TradeLiveBroker.get_etf_stock_info: [seq_len] orig=144 decomp=117
+           - <module>.TradeLiveBroker.get_ipo_stocks: [target_diff] #189 POP_JUMP_IF_TRUE 终点 orig=("'str'", 'LOAD_GLOBAL') decomp=(None, 'FOR_ITER')
+           - <module>.TradeLiveBroker.get_max_amount: [seq_len] orig=201 decomp=213
+  DEFECT 49/52  IQEngine/utils/scheduler.pyc
+           - <module>.Scheduler.get_checked_time: [seq_diff] #18 orig=("'divmod'", 'LOAD_GLOBAL') decomp=('<JUMP>', 'JUMP')
+           - <module>.Scheduler.run_daily: [seq_len] orig=84 decomp=75
+           - <module>.Scheduler.run_daily.func_wrapper: [seq_len] orig=219 decomp=215
+  DEFECT 69/72  fly/data/quote_handler.pyc
+           - <module>.get_index_stocks_local: [seq_len] orig=151 decomp=150
+           - <module>.get_industry_stocks_local: [seq_len] orig=89 decomp=88
+           - <module>.get_kline_local: [seq_len] orig=760 decomp=762
+  DEFECT 62/64  fly/logger.pyc
+           - <module>.Backtest.write_logging_thread: [seq_diff] #71 orig=("'msgs'", 'LOAD_FAST') decomp=('<JUMP>', 'JUMP')
+           - <module>.SafeFileHandler.check_baseFilename: [target_diff] #14 POP_JUMP_IF_TRUE 终点 orig=('1', 'LOAD_CONST') decomp=('0', 'LOAD_CONST')
+
+文件级：全部一致 2 / 11，有真缺陷 9
+函数级：严格一致 492 / 537

@@ -1,0 +1,22 @@
+real_quote.pyc  STRICT 40/45
+     - <module>.RealQuoteData.get_cache_l2_data       [seq_len] orig=337 decomp=336
+     - <module>.RealQuoteData.get_cache_l2_data_by_one [seq_diff] #18 orig=('<JUMP>', 'JUMP') decomp=('None', 'POP_TOP')
+     - <module>.RealQuoteData.get_real_minute_kline   [seq_len] orig=253 decomp=256
+     - <module>.RealQuoteData.get_tick_direction      [seq_len] orig=259 decomp=258
+     - <module>.RealQuoteData.one_prod_to_ndarray     [seq_len] orig=606 decomp=607
+trade_info_utils.pyc  STRICT 36/41
+     - <module>.get_trade_list                        [seq_len] orig=345 decomp=329
+     - <module>.get_trade_status                      [target_diff] #70 FOR_ITER 终点 orig=("'return_trade_info'", 'LOAD_FAST') decomp=("'count'", 'LOAD_FAST')
+     - <module>.get_trade_unit_info                   [seq_len] orig=240 decomp=241
+     - <module>.set_trade_status                      [target_diff] #113 JUMP 终点 orig=("'count'", 'LOAD_FAST') decomp=("'exchange_flag'", 'LOAD_FAST')
+     - <module>.trade_operation                       [seq_len] orig=304 decomp=302
+order_api.pyc  STRICT 33/36
+     - <module>.base_order                            [target_diff] #136 POP_JUMP_IF_TRUE 终点 orig=("'order_obj'", 'LOAD_FAST') decomp=("'生成订单，订单号:{order_id}，可转债代码：{symbol}，数量：{side}{share}'", 'LOAD_CONST')
+     - <module>.future_order                          [seq_len] orig=101 decomp=93
+     - <module>.option_order                          [seq_len] orig=83 decomp=74
+__init__.pyc  STRICT 33/37
+     - <module>.PluginRiskCalculation._on_publish_after_trading_end [seq_len] orig=488 decomp=481
+     - <module>.PluginRiskCalculation._on_set_positions [seq_len] orig=297 decomp=298
+     - <module>.PluginRiskCalculation._save_testds_to_csv [seq_len] orig=75 decomp=68
+     - <module>.PluginRiskCalculation.get_TradeMode_trades [seq_len] orig=1843 decomp=1753
+TOTAL STRICT OK=142 / 159

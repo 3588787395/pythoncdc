@@ -1,0 +1,50 @@
+##############################################################################
+CODE get_same_shard_server_ip_info  firstlineno=643  blocks=26 regions=12
+--- CFG BLOCKS ---
+  B0   off=0     n=4   lines=                 preds=[]             succs=[1, 2]         tail=[RESUME LOAD_GLOBAL PJ_FORWARD_IF_NONE@32]
+  B1   off=18    n=2   lines=                 preds=[0]            succs=[2, 3]         tail=[LOAD_GLOBAL PJ_FORWARD_IF_NOT_NONE@86]
+  B2   off=32    n=13  lines=                 preds=[0, 1]         succs=[]             tail=[LOAD_CONST BUILD_CONST_KEY_MAP RETURN_VALUE]
+  B3   off=86    n=7   lines=                 preds=[1]            succs=[4, 5]         tail=[LOAD_CONST COMPARE_OP PJ_FORWARD_IF_FALSE@188]
+  B4   off=134   n=13  lines=                 preds=[3]            succs=[]             tail=[LOAD_CONST BUILD_CONST_KEY_MAP RETURN_VALUE]
+  B5   off=188   n=1   lines=                 preds=[3]            succs=[22]           tail=[NOP]
+  B6   off=204   n=2   lines=                 preds=[8, 22]        succs=[7, 17, 18]    tail=[EXTENDED_ARG FOR_ITER]
+  B7   off=208   n=24  lines=                 preds=[6]            succs=[8, 9, 18]     tail=[LOAD_CONST COMPARE_OP PJ_FORWARD_IF_FALSE@398]
+  B8   off=340   n=15  lines=                 preds=[7]            succs=[18, 6]        tail=[CALL POP_TOP JUMP_BACKWARD@204]
+  B9   off=398   n=12  lines=                 preds=[7]            succs=[18, 10]       tail=[STORE_FAST LOAD_FAST GET_ITER]
+  B10  off=430   n=1   lines=                 preds=[15, 9, 12]    succs=[16, 18, 11]   tail=[FOR_ITER]
+  B11  off=432   n=7   lines=                 preds=[10]           succs=[18, 12, 13]   tail=[LOAD_CONST COMPARE_OP PJ_FORWARD_IF_FALSE@460]
+  B12  off=458   n=1   lines=                 preds=[11]           succs=[18, 10]       tail=[JUMP_BACKWARD@430]
+  B13  off=460   n=33  lines=                 preds=[11]           succs=[15, 18, 14]   tail=[LOAD_FAST COMPARE_OP PJ_FORWARD_IF_FALSE@660]
+  B14  off=640   n=6   lines=                 preds=[13]           succs=[15, 18]       tail=[LOAD_CONST BINARY_SUBSCR STORE_FAST]
+  B15  off=660   n=1   lines=                 preds=[13, 14]       succs=[18, 10]       tail=[JUMP_BACKWARD@430]
+  B16  off=662   n=30  lines=                 preds=[10]           succs=[23, 18]       tail=[BUILD_CONST_KEY_MAP SWAP POP_TOP]
+  B17  off=794   n=4   lines=                 preds=[6]            succs=[24, 18]       tail=[LOAD_CONST LOAD_CONST BUILD_CONST_KEY_MAP]
+  B18  off=804   n=4   lines=                 preds=[6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 22] succs=[19, 20, 21]   tail=[LOAD_GLOBAL CHECK_EXC_MATCH PJ_FORWARD_IF_FALSE@912]
+  B19  off=822   n=18  lines=                 preds=[18]           succs=[25, 21]       tail=[LOAD_CONST BUILD_CONST_KEY_MAP SWAP]
+  B20  off=912   n=1   lines=                 preds=[18]           succs=[21]           tail=[RERAISE]
+  B21  off=914   n=3   lines=                 preds=[18, 19, 20]   succs=[]             tail=[COPY POP_EXCEPT RERAISE]
+  B22  off=190   n=2   lines=                 preds=[5]            succs=[18, 6]        tail=[LOAD_GLOBAL GET_ITER]
+  B23  off=792   n=1   lines=                 preds=[16]           succs=[]             tail=[RETURN_VALUE]
+  B24  off=802   n=1   lines=                 preds=[17]           succs=[]             tail=[RETURN_VALUE]
+  B25  off=908   n=2   lines=                 preds=[19]           succs=[]             tail=[POP_EXCEPT RETURN_VALUE]
+--- REGION TREE ---
+  TryExceptRegion  entry=190    exit=None   blocks=[188, 190, 204, 208, 340, 398, 430, 432, 458, 460, 640, 660, 662, 792, 794, 802, 804, 822, 908, 912, 914]
+    LoopRegion       entry=204    exit=None   blocks=[190, 204, 208, 340, 398, 430, 432, 458, 460, 640, 660, 662, 792, 794]
+       LOOP hdr=204 cond=None back=340 body=[204, 208, 340, 398, 430, 432, 458, 460, 640, 660, 662, 792] else=[794] break=[] wt=False
+      IfRegion         entry=208    exit=None   blocks=[208, 340, 398, 430, 432, 458, 460, 640, 660, 662, 792]
+         IF cond=208 then=[340] else=[398, 430, 432, 458, 460, 640, 660, 662, 792] merge=None
+        LoopRegion       entry=430    exit=None   blocks=[398, 430, 432, 458, 460, 640, 660]
+           LOOP hdr=430 cond=None back=660 body=[430, 432, 458, 460, 640, 660] else=[] break=[] wt=False
+          IfRegion         entry=432    exit=430    blocks=[432, 458, 460, 640]
+             IF cond=432 then=[458] else=[460, 640] merge=430
+          IfRegion         entry=460    exit=660    blocks=[460, 640]
+             IF cond=460 then=[640] else=[660] merge=None
+  IfRegion         entry=0      exit=190    blocks=[0, 32, 86, 134, 188]
+     IF cond=18 then=[32] else=[86, 134, 188] merge=190
+    BoolOpRegion     entry=0      exit=None   blocks=[0, 18]
+    Region           entry=32     exit=None   blocks=[32]
+    Region           entry=86     exit=None   blocks=[86]
+    Region           entry=134    exit=None   blocks=[134]
+    Region           entry=188    exit=None   blocks=[188]
+
+[captured 31 generator runs]

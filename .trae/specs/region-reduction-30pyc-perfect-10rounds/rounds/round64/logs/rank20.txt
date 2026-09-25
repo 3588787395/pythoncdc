@@ -1,0 +1,90 @@
+dump: D:/Temp/opencode/r63gate/dump/p402_final.jsonl
+partials listed in D:/Temp/opencode/r64gate/partial20.txt : 20   found in dump: 20
+
+IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc    11/12  defectfuncs=1
+      clock_worker                             orig=1275  dec=1286  jd=10   td=481
+IQEngine/plugins/plugin_system_matcher/matcher.pyc                       16/17  defectfuncs=1
+      match                                    orig=715   dec=715   jd=10   td=517
+IQCommon/util/fileio_utils.pyc                                           12/14  defectfuncs=2
+      acquire                                  orig=96    dec=93    jd=3    td=52
+      write                                    orig=637   dec=637   jd=4    td=519
+fly/simtradding/flyAccount.pyc                                           21/23  defectfuncs=2
+      _do_request                              orig=436   dec=443   jd=2    td=384
+      init_connection                          orig=42    dec=41    jd=0    td=25
+IQData/utils/common_func.pyc                                             22/24  defectfuncs=2
+      get_kline_time_by_section                orig=210   dec=190   jd=0    td=84
+      handle_exrights                          orig=276   dec=268   jd=1    td=263
+IQData/api/api_base.pyc                                                  23/25  defectfuncs=2
+      get_future_history_df                    orig=973   dec=957   jd=3    td=229
+      get_history_df                           orig=1742  dec=1719  jd=14   td=1277
+fly/logger.pyc                                                           28/30  defectfuncs=2
+      logging_process                          orig=99    dec=95    jd=2    td=62
+      write_logging_thread                     orig=113   dec=113   jd=1    td=40
+IQCommon/graph.pyc                                                       29/31  defectfuncs=2
+      _get_influence_task                      orig=207   dec=195   jd=2    td=124
+      _process_task_queue                      orig=378   dec=378   jd=1    td=118
+IQCommon/common/main.pyc                                                 29/33  defectfuncs=2
+      get_same_shard_server_ip_info            orig=192   dec=173   jd=11   td=62
+      get_server_ip_info                       orig=194   dec=166   jd=9    td=71
+IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc                   32/34  defectfuncs=2
+      future_order                             orig=101   dec=92    jd=2    td=36
+      option_order                             orig=83    dec=73    jd=3    td=39
+IQCommon/util/trade_info_utils.pyc                                       38/40  defectfuncs=2
+      get_trade_list                           orig=339   dec=323   jd=14   td=148
+      trade_operation                          orig=304   dec=302   jd=2    td=40
+IQCommon/strategy/wizard_quant_api.pyc                                   51/53  defectfuncs=2
+      calculate_di                             orig=75    dec=73    jd=0    td=45
+      params_analysis                          orig=133   dec=126   jd=1    td=117
+fly/data/quote_handler.pyc                                               55/57  defectfuncs=2
+      get_kline_binary                         orig=129   dec=128   jd=3    td=58
+      get_kline_local                          orig=760   dec=682   jd=12   td=547
+IQCommon/util/common_func.pyc                                            18/21  defectfuncs=3
+      get_crontab_execute_time                 orig=93    dec=81    jd=2    td=48
+      get_kline_time_by_frequency_array        orig=231   dec=228   jd=0    td=45
+      get_kline_time_by_section                orig=210   dec=190   jd=0    td=84
+IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc             32/35  defectfuncs=3
+      _on_publish_after_trading_end            orig=486   dec=481   jd=3    td=33
+      _save_testds_to_csv                      orig=71    dec=68    jd=7    td=19
+      get_TradeMode_trades                     orig=1839  dec=1753  jd=4    td=1620
+IQCommon/api/klinedata.pyc                                               42/45  defectfuncs=3
+      get_all_real_daily_kline                 orig=188   dec=187   jd=3    td=26
+      get_multiminute_his_data                 orig=479   dec=478   jd=3    td=16
+      kline_datetime_list                      orig=389   dec=389   jd=9    td=228
+IQEngine/utils/scheduler.pyc                                             42/45  defectfuncs=3
+      get_checked_time                         orig=106   dec=106   jd=0    td=43
+      is_run_interval_time_now                 orig=225   dec=201   jd=2    td=173
+      run_daily                                orig=77    dec=71    jd=0    td=56
+IQData/plugins/plugin_system_realquote/real_quote.pyc                    39/44  defectfuncs=5
+      get_cache_l2_data                        orig=337   dec=335   jd=2    td=313
+      get_cache_l2_data_by_one                 orig=321   dec=320   jd=2    td=300
+      get_real_minute_kline                    orig=253   dec=254   jd=3    td=197
+      get_tick_direction                       orig=259   dec=258   jd=3    td=102
+      one_prod_to_ndarray                      orig=605   dec=607   jd=5    td=424
+fly/data/quote.pyc                                                       70/81  defectfuncs=11
+      build_current_period_df                  orig=115   dec=108   jd=5    td=12
+      check_frequency                          orig=121   dec=120   jd=1    td=21
+      check_limit                              orig=330   dec=311   jd=2    td=248
+      get_individual_data                      orig=312   dec=311   jd=1    td=156
+      get_price                                orig=230   dec=188   jd=0    td=227
+      get_real_from_zeromq                     orig=703   dec=678   jd=0    td=660
+      initImagedata                            orig=243   dec=225   jd=0    td=190
+      load_bars_from_hundsun                   orig=477   dec=470   jd=0    td=464
+      load_get_price                           orig=171   dec=136   jd=1    td=167
+      run_individual_transform                 orig=362   dec=321   jd=2    td=263
+      run_tick_socket                          orig=306   dec=307   jd=2    td=228
+IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc               104/119  defectfuncs=15
+      _process_cancel_order                    orig=293   dec=292   jd=16   td=43
+      _process_order                           orig=454   dec=396   jd=9    td=349
+      _sync_worker                             orig=349   dec=347   jd=0    td=296
+      _trade_status_handle                     orig=114   dec=112   jd=0    td=107
+      after_trading_cancel_order               orig=155   dec=155   jd=3    td=122
+      etf_basket_order                         orig=693   dec=693   jd=11   td=216
+      etf_purchase_redemption                  orig=377   dec=355   jd=2    td=100
+      fund_transfer                            orig=123   dec=123   jd=0    td=6
+      get_all_orders                           orig=79    dec=78    jd=2    td=24
+      get_etf_stock_info                       orig=144   dec=117   jd=1    td=139
+      get_max_amount                           orig=201   dec=213   jd=2    td=18
+      ipo_stocks_order                         orig=1075  dec=1076  jd=10   td=437
+      market_fund_transfer                     orig=94    dec=77    jd=1    td=41
+      on_order_response                        orig=445   dec=444   jd=6    td=57
+      on_trade_response                        orig=392   dec=391   jd=6    td=57

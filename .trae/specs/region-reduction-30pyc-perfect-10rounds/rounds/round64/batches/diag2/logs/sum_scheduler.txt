@@ -1,0 +1,8 @@
+=== Scheduler.run_interval_trade.is_run_interval_time_now [landed/scheduler] orig=257 decomp=235 hunks=3 lost=26 gained=4
+   replace  n=2    REPLACE orig[42:43]@270 L389  <->  decomp[42:44]@270 L278
+   replace  n=2    REPLACE orig[63:64]@400 L392  <->  decomp[64:66]@402 L281
+   delete   n=24   MISSING orig[68:92] @410..512 src=L394  (decomp resumes @414 L283)
+=== run_daily [landed/scheduler] orig=12 decomp=12 hunks=0 lost=0 gained=0
+=== Scheduler.get_checked_time [landed/scheduler] orig=122 decomp=122 hunks=2 lost=8 gained=8
+   delete   n=8    MISSING orig[23:31] @130..166 src=L241  (decomp resumes @130 L149)
+   insert   n=8    EXTRA   decomp[63:71] @352..388 src=L156  (orig resumes @388 L234)

@@ -1,0 +1,25 @@
+##### trace params_analysis (landed)
+--- region reduce log (12 entries) ---
+  _process_if_blocks   blocks=[10] branch=then region=IfRegion@0 blocks=[0, 10, 86, 98, 100, 116, 136, 268, 276, 314, 326, 458, 466, 502] parent=- -> list[0]=[]
+  _generate_region     TryExceptRegion@12 blocks=[10, 12, 28, 30, 38, 42] parent=IfRegion@0   {Try}
+  _generate_region     TryExceptRegion@100 blocks=[98, 100, 116, 118, 126, 130] parent=IfRegion@86 {Try}
+  _process_if_blocks   blocks=[98, 100, 116, 136] branch=elif region=IfRegion@0 blocks=[0, 10, 86, 98, 100, 116, 136, 268, 276, 314, 326, 458, 466, 502] parent=- -> list[3]=['{Try}', "{Assign ['{Name}']}", '{Return {Dict}}']
+  _process_if_blocks   blocks=[276] branch=then region=IfRegion@268 blocks=[268, 276, 314, 326, 458, 466, 502, 510, 546] parent=- -> list[1]=['{Return {Dict}}']
+  _process_if_blocks   blocks=[326] branch=elif region=IfRegion@268 blocks=[268, 276, 314, 326, 458, 466, 502, 510, 546] parent=- -> list[2]=["{Assign ['{Name}']}", '{Return {Dict}}']
+  _process_if_blocks   blocks=[466] branch=then region=IfRegion@458 blocks=[458, 466, 502, 510, 546] parent=- -> list[1]=['{Return {Dict}}']
+  _process_if_blocks   blocks=[510] branch=elif region=IfRegion@458 blocks=[458, 466, 502, 510, 546] parent=- -> list[1]=['{Return {Dict}}']
+  _process_if_blocks   blocks=[546] branch=else region=IfRegion@458 blocks=[458, 466, 502, 510, 546] parent=- -> list[1]=['{Return {Dict}}']
+  _generate_region     IfRegion@458 blocks=[458, 466, 502, 510, 546] parent=-                 {If then=1 else=1}
+  _generate_region     IfRegion@268 blocks=[268, 276, 314, 326, 458, 466, 502, 510, 546] parent=- {If then=1 else=1}
+  _generate_region     IfRegion@0 blocks=[0, 10, 86, 98, 100, 116, 136, 268, 276, 314, 326, 458, 466, 502] parent=- {If then=1 else=1}
+--- generated source ---
+def params_analysis(filter_type, value, value_params):
+    """
+    对向导式筛选条件对应入参目标值信息流进行解析，并返回包含筛选条件、指标数据、解析后的入参目标值
+    """
+    if filter_type in ('up_v', 'down_v'):
+        try:
+            value = value[-1]
+        except:
+            value = value
+    elif filter_type == 'region_v':

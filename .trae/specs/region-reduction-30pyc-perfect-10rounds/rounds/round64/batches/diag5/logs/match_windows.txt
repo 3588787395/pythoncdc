@@ -1,0 +1,82 @@
+OPCODES:
+  equal   orig[  0:182] n=182  decomp[  0:182] n=182
+  insert  orig[182:182] n=  0  decomp[182:431] n=249
+  equal   orig[182:463] n=281  decomp[431:712] n=281
+  delete  orig[463:712] n=249  decomp[712:712] n=  0
+  equal   orig[712:715] n=  3  decomp[712:715] n=  3
+
+--- ORIG window 182..430 run-length by line ---
+   O183  off=1324  L219
+   O197  off=1384  L220
+   O211  off=1444  L221
+   O217  off=1486  L222
+   O227  off=1568  L223
+   O228  off=1570  L224
+   O234  off=1612  L225
+   O244  off=1694  L226
+   O245  off=1696  L227
+   O249  off=1720  L228
+   O257  off=1784  L229
+   O271  off=1836  L231
+   O285  off=1896  L232
+   O289  off=1908  L233
+   O290  off=1910  L232
+   O291  off=1912  L234
+   O297  off=1954  L235
+   O307  off=2036  L236
+   O308  off=2038  L237
+   O314  off=2080  L238
+   O324  off=2162  L239
+   O325  off=2164  L241
+   O337  off=2212  L242
+   O343  off=2254  L243
+   O353  off=2336  L244
+   O354  off=2338  L245
+   O360  off=2380  L246
+   O370  off=2462  L247
+   O371  off=2466  L249
+   O372  off=2468  L257
+   O375  off=2484  L258
+   O381  off=2526  L259
+   O391  off=2606  L260
+   O392  off=2618  L261
+   O393  off=2624  L260
+   O394  off=2634  L262
+   O399  off=2684  L260
+   O400  off=2686  L263
+   O405  off=2728  L264
+   O418  off=2844  L265
+   O419  off=2846  L267
+   O425  off=2888  L268
+
+--- DECOMP window 182..430 run-length by line ---
+   D182  off=1322  L161
+   D185  off=1338  L162
+   D192  off=1384  L163
+   D197  off=1406  L164
+   D208  off=1498  L165
+   D213  off=1542  L166
+   D214  off=1544  L167
+   D228  off=1638  L168
+   D236  off=1674  L169
+   D240  off=1686  L170
+   D247  off=1738  L171
+   D258  off=1830  L172
+   D263  off=1874  L173
+   D264  off=1876  L174
+   D270  off=1918  L175
+   D275  off=1940  L176
+   D294  off=2064  L177
+   D301  off=2126  L178
+   D325  off=2284  L179
+   D333  off=2356  L180
+   D341  off=2428  L181
+   D346  off=2470  L182
+   D358  off=2522  L183
+   D372  off=2638  L184
+   D385  off=2752  L185
+   D390  off=2774  L186
+   D407  off=2896  L187
+   D414  off=2942  L188
+   D427  off=3058  LNone
+   D428  off=3060  L190

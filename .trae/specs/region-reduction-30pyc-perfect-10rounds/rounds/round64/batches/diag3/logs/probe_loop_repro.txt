@@ -1,0 +1,12 @@
+LoopRegion entry=14
+   condition_block  = None
+   header_block     = 14
+   back_edge_block  = 254
+Traceback (most recent call last):
+  File "D:\Temp\opencode\r64gate\diag3\probe_loop.py", line 57, in <module>
+    print('   %-16s = %s' % (f, off(getattr(lr, f, 'MISSING'))))
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Temp\opencode\r64gate\diag3\probe_loop.py", line 51, in off
+    return b.start_offset if b is not None else None
+           ^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'start_offset'

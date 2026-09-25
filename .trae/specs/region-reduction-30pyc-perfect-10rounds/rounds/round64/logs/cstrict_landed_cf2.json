@@ -1,0 +1,386 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+  "product": "D:/Temp/opencode/r64gate/build_landed/IQCommon__api__klinedataOK.py",
+  "functions": 63,
+  "ok": 56,
+  "bad": [
+   [
+    "<module>.get_all_real_daily_kline",
+    "seq_len",
+    "orig=188 decomp=187"
+   ],
+   [
+    "<module>.get_all_real_minute_kline",
+    "target_diff",
+    "#54 POP_JUMP_IF_FALSE 终点 orig=(\"'system_log'\", 'LOAD_GLOBAL') decomp=(\"'fq'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_history_common",
+    "target_diff",
+    "#41 POP_JUMP_IF_NONE 终点 orig=(\"'is_dict'\", 'LOAD_FAST') decomp=(\"'fields'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_kline_by_count_new",
+    "target_diff",
+    "#161 POP_JUMP_IF_NONE 终点 orig=('0', 'LOAD_CONST') decomp=(\"'symbols'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.get_multiminute_his_data",
+    "seq_len",
+    "orig=481 decomp=482"
+   ],
+   [
+    "<module>.get_price_common",
+    "target_diff",
+    "#114 POP_JUMP_IF_NONE 终点 orig=(\"'frequency'\", 'LOAD_FAST') decomp=(\"'is_dict'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.kline_datetime_list",
+    "seq_diff",
+    "#151 orig=('<JUMP>', 'POP_JUMP_IF_TRUE') decomp=('<JUMP>', 'POP_JUMP_IF_FALSE')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/main.pyc",
+  "product": "D:/Temp/opencode/r64gate/build_landed/IQCommon__common__mainOK.py",
+  "functions": 31,
+  "ok": 29,
+  "bad": [
+   [
+    "<module>.get_same_shard_server_ip_info",
+    "seq_len",
+    "orig=192 decomp=172"
+   ],
+   [
+    "<module>.get_server_ip_info",
+    "seq_len",
+    "orig=195 decomp=165"
+   ]
+  ],
+  "missing": [
+   "<module>.get_same_shard_server_ip_info.<dictcomp>",
+   "<module>.get_server_ip_info.<dictcomp>",
+   "<module>.get_server_ip_info.<lambda>"
+  ],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/graph.pyc",
+  "product": "D:/Temp/opencode/r64gate/build_landed/IQCommon__graphOK.py",
+  "functions": 34,
+  "ok": 32,
+  "bad": [
+   [
+    "<module>.ModelGraph._get_influence_task",
+    "seq_len",
+    "orig=205 decomp=193"
+   ],
+   [
+    "<module>.ModelGraph._process_task_queue",
+    "seq_diff",
+    "#119 orig=('None', 'LOAD_CONST') decomp=('<JUMP>', 'JUMP')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc",
+  "product": "D:/Temp/opencode/r64gate/build_landed/IQCommon__util__common_funcOK.py",
+  "functions": 22,
+  "ok": 19,
+  "bad": [
+   [
+    "<module>.get_crontab_execute_time",
+    "seq_len",
+    "orig=92 decomp=80"
+   ],
+   [
+    "<module>.get_kline_time_by_frequency_array",
+    "seq_len",
+    "orig=232 decomp=229"
+   ],
+   [
+    "<module>.get_kline_time_by_section",
+    "seq_len",
+    "orig=211 decomp=191"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/crypto_utils.pyc",
+  "product": "D:/Temp/opencode/r64gate/build_landed/IQCommon__util__crypto_utilsOK.py",
+  "functions": 9,
+  "ok": 7,
+  "bad": [
+   [
+    "<module>.aes_decrypt",
+    "target_diff",
+    "#9 POP_JUMP_IF_FALSE 终点 orig=(\"'isinstance'\", 'LOAD_GLOBAL') decomp=(\"'AES'\", 'LOAD_GLOBAL')"
+   ],
+   [
+    "<module>.aes_encrypt",
+    "target_diff",
+    "#9 POP_JUMP_IF_FALSE 终点 orig=(\"'isinstance'\", 'LOAD_GLOBAL') decomp=(\"'AES'\", 'LOAD_GLOBAL')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc",
+  "product": "D:/Temp/opencode/r64gate/build_landed/IQData__api__api_baseOK.py",
+  "functions": 27,
+  "ok": 25,
+  "bad": [
+   [
+    "<module>.get_future_history_df",
+    "seq_len",
+    "orig=973 decomp=957"
+   ],
+   [
+    "<module>.get_history_df",
+    "seq_len",
+    "orig=1742 decomp=1719"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+  "product": "D:/Temp/opencode/r64gate/build_landed/IQEngine__plugins__plugin_system_risk_calculation____init__OK.py",
+  "functions": 37,
+  "ok": 33,
+  "bad": [
+   [
+    "<module>.PluginRiskCalculation._on_publish_after_trading_end",
+    "seq_len",
+    "orig=488 decomp=481"
+   ],
+   [
+    "<module>.PluginRiskCalculation._on_set_positions",
+    "seq_len",
+    "orig=297 decomp=298"
+   ],
+   [
+    "<module>.PluginRiskCalculation._save_testds_to_csv",
+    "seq_len",
+    "orig=75 decomp=68"
+   ],
+   [
+    "<module>.PluginRiskCalculation.get_TradeMode_trades",
+    "seq_len",
+    "orig=1843 decomp=1753"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "product": "D:/Temp/opencode/r64gate/build_landed/IQEngine__plugins__plugin_system_trade__trade_live_brokerOK.py",
+  "functions": 123,
+  "ok": 102,
+  "bad": [
+   [
+    "<module>.TradeLiveBroker._process_cancel_order",
+    "seq_len",
+    "orig=295 decomp=296"
+   ],
+   [
+    "<module>.TradeLiveBroker._process_order",
+    "seq_len",
+    "orig=454 decomp=399"
+   ],
+   [
+    "<module>.TradeLiveBroker._process_tick_order",
+    "target_diff",
+    "#27 JUMP 终点 orig=(\"'len'\", 'LOAD_GLOBAL') decomp=(\"'self'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.TradeLiveBroker._sync_worker",
+    "seq_len",
+    "orig=350 decomp=347"
+   ],
+   [
+    "<module>.TradeLiveBroker._trade_status_handle",
+    "seq_len",
+    "orig=114 decomp=112"
+   ],
+   [
+    "<module>.TradeLiveBroker.after_trading_cancel_order",
+    "seq_len",
+    "orig=156 decomp=159"
+   ],
+   [
+    "<module>.TradeLiveBroker.etf_basket_order",
+    "seq_diff",
+    "#254 orig=(\"'strategy_log'\", 'LOAD_GLOBAL') decomp=(\"'entrust_price'\", 'LOAD_FAST')"
+   ],
+   [
+    "<module>.TradeLiveBroker.etf_purchase_redemption",
+    "seq_len",
+    "orig=379 decomp=355"
+   ],
+   [
+    "<module>.TradeLiveBroker.fund_transfer",
+    "seq_diff",
+    "#75 orig=(\"(<class 'str'>, False)\", 'FORMAT_VALUE') decomp=('(None, False)', 'FORMAT_VALUE')"
+   ],
+   [
+    "<module>.TradeLiveBroker.get_all_orders",
+    "seq_len",
+    "orig=80 decomp=83"
+   ],
+   [
+    "<module>.TradeLiveBroker.get_etf_stock_info",
+    "seq_len",
+    "orig=144 decomp=117"
+   ],
+   [
+    "<module>.TradeLiveBroker.get_ipo_stocks",
+    "target_diff",
+    "#189 POP_JUMP_IF_TRUE 终点 orig=(\"'str'\", 'LOAD_GLOBAL') decomp=(None, 'FOR_ITER')"
+   ],
+   [
+    "<module>.TradeLiveBroker.get_max_amount",
+    "seq_len",
+    "orig=201 decomp=213"
+   ],
+   [
+    "<module>.TradeLiveBroker.ipo_stocks_order",
+    "seq_len",
+    "orig=1075 decomp=1076"
+   ],
+   [
+    "<module>.TradeLiveBroker.market_fund_transfer",
+    "seq_len",
+    "orig=94 decomp=77"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_order_response",
+    "seq_len",
+    "orig=449 decomp=448"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_order_response_list_handle",
+    "target_diff",
+    "#23 POP_JUMP_IF_NONE 终点 orig=(\"'entrust_no'\", 'LOAD_FAST') decomp=(None, 'FOR_ITER')"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_pre_before_trading_start",
+    "target_diff",
+    "#4 POP_JUMP_IF_FALSE 终点 orig=(\"'self'\", 'LOAD_FAST') decomp=(\"'datetime'\", 'LOAD_GLOBAL')"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_trade_response",
+    "seq_len",
+    "orig=396 decomp=395"
+   ],
+   [
+    "<module>.TradeLiveBroker.on_trade_response_list_handle",
+    "target_diff",
+    "#23 POP_JUMP_IF_NONE 终点 orig=(\"'entrust_no'\", 'LOAD_FAST') decomp=(None, 'FOR_ITER')"
+   ],
+   [
+    "<module>.TradeLiveBroker.rzrq_credit_order",
+    "target_diff",
+    "#406 JUMP 终点 orig=(\"'Order'\", 'LOAD_GLOBAL') decomp=(\"'EntrustDirection'\", 'LOAD_GLOBAL')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+  "product": "D:/Temp/opencode/r64gate/build_landed/IQEngine__utils__schedulerOK.py",
+  "functions": 52,
+  "ok": 48,
+  "bad": [
+   [
+    "<module>.Scheduler.get_checked_time",
+    "seq_diff",
+    "#18 orig=(\"'divmod'\", 'LOAD_GLOBAL') decomp=('<JUMP>', 'JUMP')"
+   ],
+   [
+    "<module>.Scheduler.run_daily",
+    "seq_len",
+    "orig=84 decomp=75"
+   ],
+   [
+    "<module>.Scheduler.run_daily.func_wrapper",
+    "seq_len",
+    "orig=219 decomp=215"
+   ],
+   [
+    "<module>.Scheduler.run_interval_trade.is_run_interval_time_now",
+    "seq_len",
+    "orig=225 decomp=203"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+  "product": "D:/Temp/opencode/r64gate/build_landed/fly__data__quote_handlerOK.py",
+  "functions": 72,
+  "ok": 68,
+  "bad": [
+   [
+    "<module>.get_index_stocks_local",
+    "seq_len",
+    "orig=151 decomp=150"
+   ],
+   [
+    "<module>.get_industry_stocks_local",
+    "seq_len",
+    "orig=89 decomp=88"
+   ],
+   [
+    "<module>.get_kline_binary",
+    "seq_len",
+    "orig=129 decomp=128"
+   ],
+   [
+    "<module>.get_kline_local",
+    "seq_len",
+    "orig=760 decomp=682"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc",
+  "product": "D:/Temp/opencode/r64gate/build_landed/fly__loggerOK.py",
+  "functions": 64,
+  "ok": 61,
+  "bad": [
+   [
+    "<module>.Backtest.logging_process",
+    "seq_len",
+    "orig=103 decomp=95"
+   ],
+   [
+    "<module>.Backtest.write_logging_thread",
+    "seq_diff",
+    "#71 orig=(\"'msgs'\", 'LOAD_FAST') decomp=('<JUMP>', 'JUMP')"
+   ],
+   [
+    "<module>.SafeFileHandler.check_baseFilename",
+    "target_diff",
+    "#14 POP_JUMP_IF_TRUE 终点 orig=('1', 'LOAD_CONST') decomp=('0', 'LOAD_CONST')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ }
+]

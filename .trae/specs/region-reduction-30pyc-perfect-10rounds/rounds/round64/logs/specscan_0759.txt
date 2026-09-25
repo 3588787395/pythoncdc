@@ -1,0 +1,13 @@
+diag1/specs/cand_r64b1_both.json                                         file=region_ast_generator.py edits=6 +79 lines  3elem=astmapcondreduce  flags=tag R64
+diag1/specs/cand_r64b1_fvconv.json                                       file=region_ast_generator.py edits=5 +48 lines  3elem=astmapcondreduce  flags=tag R64
+diag1/specs/cand_r64b1_sibdispatch.json                                  file=region_ast_generator.py edits=1 +31 lines  3elem=astmapcondreduce  flags=tag R64
+diag2/specs/cand_r64b2_chaincompare_yield.json                           file=region_ast_generator.py edits=1 +33 lines  3elem=astmapcondreduce  flags=tag R64
+diag2/specs/cand_r64b2_condcomp_consumer.json                            file=region_ast_generator.py edits=1 +42 lines  3elem=astmapcondreduce  flags=tag R64
+diag3/specs/cand_r64d3_j1.json                                           file=region_analyzer.py edits=1 +56 lines  3elem=NONE  flags=tag R64
+diag3/specs/cand_r64d3_j2.json                                           file=region_analyzer.py edits=1 +55 lines  3elem=NONE  flags=tag R64
+diag4/specs/cand_r64d4_a_deferred_prefix.json                            file=region_ast_generator.py edits=1 +25 lines  3elem=astmapcondreduce  flags=tag R64
+diag4/specs/cand_r64d4_b_boolop_poptop_stmt.json                         file=region_ast_generator.py edits=3 +29 lines  3elem=condreduce  flags=tag R64
+diag5/specs/cand_r64d5_contbare.json                                     file=region_analyzer.py edits=1 +13 lines  3elem=NONE  flags=tag R64
+diag5/specs/cand_r64d5_contbare2.json                                    file=region_analyzer.py edits=1 +13 lines  3elem=NONE  flags=tag R64
+diag5/specs/diag_r64d5_contsink.json                                     file=region_analyzer.py edits=1 +32 lines  3elem=NONE  flags=func/file name key
+diag5/specs/diag_r64d5_flip2.json                                        file=region_analyzer.py edits=1 +36 lines  3elem=NONE  flags=func/file name key

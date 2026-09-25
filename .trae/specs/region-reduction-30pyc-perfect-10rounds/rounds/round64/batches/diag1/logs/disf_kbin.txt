@@ -1,0 +1,163 @@
+=== get_kline_binary firstlineno=408 args=('stock', 'typet', 'start', 'end', 'columns', 'stocks', 'kline_loader', 'data', 'default_dataframe', 'e') ===
+      -- line 408: df.index = pandas.DatetimeIndex(df.index)
+      0 RESUME                         
+      -- line 409: return df
+      2 LOAD_FAST                      typet
+      4 LOAD_CONST                     6
+      6 COMPARE_OP                     ==
+     12 POP_JUMP_FORWARD_IF_FALSE      to 24
+      -- line 410: else:
+     14 BUILD_LIST                     
+     16 LOAD_CONST                     ('open', 'close', 'high', 'low', 'volume', 'money', 'is_open', 'preclose', 'high_limit', 'low_limit', 'unlimited')
+     18 LIST_EXTEND                    
+     20 STORE_FAST                     columns
+     22 JUMP_FORWARD                   to 32
+      -- line 412: def filter_duplicated_date(klines):
+     24 BUILD_LIST                     
+     26 LOAD_CONST                     ('open', 'close', 'high', 'low', 'volume', 'money', 'is_open')
+     28 LIST_EXTEND                    
+     30 STORE_FAST                     columns
+      -- line 416: klines['date'] = klines.index
+     32 LOAD_FAST                      stock
+     34 LOAD_METHOD                    split
+     56 LOAD_CONST                     '.'
+     58 PRECALL                        
+     62 CALL                           
+     72 STORE_FAST                     stocks
+      -- line 417: isdup = list(klines.duplicated(['date']))
+     74 LOAD_FAST                      stocks
+     76 LOAD_CONST                     1
+     78 BINARY_SUBSCR                  
+     88 LOAD_CONST                     'SS'
+     90 COMPARE_OP                     ==
+     96 POP_JUMP_FORWARD_IF_FALSE      to 122
+      -- line 418: if True in isdup:
+     98 LOAD_FAST                      stocks
+    100 LOAD_CONST                     0
+    102 BINARY_SUBSCR                  
+    112 LOAD_CONST                     '.XSHG'
+    114 BINARY_OP                      +
+    118 STORE_FAST                     stock
+    120 JUMP_FORWARD                   to 168
+      -- line 419: klines = klines.drop_duplicates(['date'])
+    122 LOAD_FAST                      stocks
+    124 LOAD_CONST                     1
+    126 BINARY_SUBSCR                  
+    136 LOAD_CONST                     'SZ'
+    138 COMPARE_OP                     ==
+    144 POP_JUMP_FORWARD_IF_FALSE      to 168
+      -- line 420: del klines['date']
+    146 LOAD_FAST                      stocks
+    148 LOAD_CONST                     0
+    150 BINARY_SUBSCR                  
+    160 LOAD_CONST                     '.XSHE'
+    162 BINARY_OP                      +
+    166 STORE_FAST                     stock
+      -- line 421: return klines
+    168 NOP                            
+      -- line 422: def get_holiday_local(year=None):
+    170 LOAD_GLOBAL                    NULL + PyKLine
+    182 PRECALL                        
+    186 CALL                           
+    196 STORE_FAST                     kline_loader
+      -- line 423: holiday = []
+    198 LOAD_FAST                      kline_loader
+    200 LOAD_METHOD                    query
+    222 LOAD_FAST                      stock
+    224 LOAD_FAST                      start
+    226 LOAD_FAST                      end
+    228 LOAD_FAST                      typet
+    230 LOAD_GLOBAL                    BinaryDIR
+    242 PRECALL                        
+    246 CALL                           
+    256 STORE_FAST                     data
+      -- line 424: if os.path.exists(HolidayPath):
+    258 LOAD_FAST                      data
+    260 POP_JUMP_FORWARD_IF_NONE       to 346
+    262 LOAD_FAST                      data
+    264 LOAD_ATTR                      empty
+    274 POP_JUMP_FORWARD_IF_TRUE       to 346
+      -- line 425: try:
+    276 LOAD_FAST                      typet
+    278 LOAD_CONST                     6
+    280 COMPARE_OP                     ==
+    286 POP_JUMP_FORWARD_IF_FALSE      to 310
+      -- line 426: flg = True
+    288 LOAD_FAST                      data
+    290 BUILD_LIST                     
+    292 LOAD_CONST                     ('m_lOpen', 'm_lClose', 'm_lHigh', 'm_lLow', 'm_lVolume', 'm_lMoney', 'm_lPaused', 'm_lPreClose', 'm_lUp', 'm_lDown', 'm_lunlimited')
+    294 LIST_EXTEND                    
+    296 BINARY_SUBSCR                  
+    306 STORE_FAST                     default_dataframe
+    308 JUMP_FORWARD                   to 330
+      -- line 428: csvr = csv.reader(readfl)
+    310 LOAD_FAST                      data
+    312 BUILD_LIST                     
+    314 LOAD_CONST                     ('m_lOpen', 'm_lClose', 'm_lHigh', 'm_lLow', 'm_lVolume', 'm_lMoney', 'm_lPaused')
+    316 LIST_EXTEND                    
+    318 BINARY_SUBSCR                  
+    328 STORE_FAST                     default_dataframe
+      -- line 430: if flg:
+    330 LOAD_FAST                      columns
+    332 LOAD_FAST                      default_dataframe
+    334 STORE_ATTR                     columns
+    344 JUMP_FORWARD                   to 426
+      -- line 433: if year:
+    346 LOAD_GLOBAL                    NULL + pandas
+    358 LOAD_ATTR                      DataFrame
+    368 LOAD_FAST                      columns
+    370 LOAD_GLOBAL                    NULL + pandas
+    382 LOAD_ATTR                      DatetimeIndex
+    392 BUILD_LIST                     
+    394 PRECALL                        
+    398 CALL                           
+    408 KW_NAMES                       
+    410 PRECALL                        
+    414 CALL                           
+    424 STORE_FAST                     default_dataframe
+    426 JUMP_FORWARD                   to 618
+    428 PUSH_EXC_INFO                  
+      -- line 434: if item[0][:4] == year:
+    430 LOAD_GLOBAL                    BaseException
+    442 CHECK_EXC_MATCH                
+    444 POP_JUMP_FORWARD_IF_FALSE      to 610
+    446 STORE_FAST                     e
+      -- line 435: holiday.append(item[0])
+    448 LOAD_GLOBAL                    NULL + system_log
+    460 LOAD_ATTR                      error
+    470 LOAD_GLOBAL                    NULL + get_traceback_message
+    482 PRECALL                        
+    486 CALL                           
+    496 PRECALL                        
+    500 CALL                           
+    510 POP_TOP                        
+      -- line 437: holiday.append(item[0])
+    512 LOAD_GLOBAL                    NULL + pandas
+    524 LOAD_ATTR                      DataFrame
+    534 LOAD_FAST                      columns
+    536 LOAD_GLOBAL                    NULL + pandas
+    548 LOAD_ATTR                      DatetimeIndex
+    558 BUILD_LIST                     
+    560 PRECALL                        
+    564 CALL                           
+    574 KW_NAMES                       
+    576 PRECALL                        
+    580 CALL                           
+    590 STORE_FAST                     default_dataframe
+    592 POP_EXCEPT                     
+    594 LOAD_CONST                     None
+    596 STORE_FAST                     e
+    598 DELETE_FAST                    e
+    600 JUMP_FORWARD                   to 618
+    602 LOAD_CONST                     None
+    604 STORE_FAST                     e
+    606 DELETE_FAST                    e
+    608 RERAISE                        
+      -- line 434: if item[0][:4] == year:
+    610 RERAISE                        
+    612 COPY                           
+    614 POP_EXCEPT                     
+    616 RERAISE                        
+      -- line 438: continue
+    618 LOAD_FAST                      default_dataframe
+    620 RETURN_VALUE                   

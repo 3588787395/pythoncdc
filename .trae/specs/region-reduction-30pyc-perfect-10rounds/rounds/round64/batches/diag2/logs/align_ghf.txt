@@ -1,0 +1,74 @@
+#### get_future_history_df  orig=1055 decomp=1038 deficit=-17
+#### 3 diff blocks
+--- replace orig[456:457] n=1 (@2494) decomp[456:457] n=1 (@2494)  srcO=L236 srcD=L165
+  O  452 @2456  L235  LOAD_METHOD:'tolist'
+  O  453 @2478  L235  PRECALL:0
+  O  454 @2482  L235  CALL:0
+  O  455 @2492  L235  STORE_FAST:'_np_real_array'
+  O  456 @2494  L236  LOAD_CONST:<code object <listcomp> at 0x000002012F8C2010, file "./fly_d
+  O  457 @2496  L236  MAKE_FUNCTION:0
+  O  458 @2498  L236  LOAD_FAST:'_np_real_array'
+  O  459 @2500  L236  GET_ITER:None
+  O  460 @2502  L236  PRECALL:0
+  D  452 @2456  L164  LOAD_METHOD:'tolist'
+  D  453 @2478  L164  PRECALL:0
+  D  454 @2482  L164  CALL:0
+  D  455 @2492  L164  STORE_FAST:'_np_real_array'
+  D  456 @2494  L165  LOAD_CONST:<code object <listcomp> at 0x000002012F8C25B0, file "build_l
+  D  457 @2496  L165  MAKE_FUNCTION:0
+  D  458 @2498  L165  LOAD_FAST:'_np_real_array'
+  D  459 @2500  L165  GET_ITER:None
+  D  460 @2502  L165  PRECALL:0
+--- delete orig[800:817] n=17 (@4274) decomp[800:800] n=0 (@4274)  srcO=L298 srcD=L211
+  O  796 @4248  L296  PRECALL:1
+  O  797 @4252  L296  CALL:1
+  O  798 @4262  L296  BINARY_SUBSCR:None
+  O  799 @4272  L296  STORE_FAST:'right'
+  O  800 @4274  L298  LOAD_GLOBAL:'len'
+  O  801 @4286  L298  LOAD_FAST:'_1m_df_nan_data'
+  O  802 @4288  L298  LOAD_FAST:'_query_date'
+  O  803 @4290  L298  LOAD_FAST:'_1m_df_nan_data'
+  O  804 @4292  L298  LOAD_CONST:'datetime'
+  O  805 @4294  L298  BINARY_SUBSCR:None
+  O  806 @4304  L298  COMPARE_OP:'>='
+  O  807 @4310  L299  LOAD_FAST:'_1m_df_nan_data'
+  O  808 @4312  L299  LOAD_CONST:'datetime'
+  O  809 @4314  L299  BINARY_SUBSCR:None
+  O  810 @4324  L299  LOAD_FAST:'left'
+  O  811 @4326  L299  COMPARE_OP:'>'
+  O  812 @4332  L298  BINARY_OP:1
+  O  813 @4336  L298  BINARY_SUBSCR:None
+  O  814 @4346  L298  PRECALL:1
+  O  815 @4350  L298  CALL:1
+  O  816 @4360  L298  STORE_FAST:'count_c'
+  O  817 @4362  L301  LOAD_FAST:'engine_obj'
+  O  818 @4364  L301  LOAD_ATTR:'history_quote_handler'
+  O  819 @4374  L301  LOAD_METHOD:'get_kline_by_count'
+  O  820 @4396  L301  LOAD_FAST:'symbol'
+  D  796 @4248  L210  PRECALL:1
+  D  797 @4252  L210  CALL:1
+  D  798 @4262  L210  BINARY_SUBSCR:None
+  D  799 @4272  L210  STORE_FAST:'right'
+  D  800 @4274  L211  LOAD_FAST:'engine_obj'
+  D  801 @4276  L211  LOAD_ATTR:'history_quote_handler'
+  D  802 @4286  L211  LOAD_METHOD:'get_kline_by_count'
+  D  803 @4308  L211  LOAD_FAST:'symbol'
+--- replace orig[837:838] n=1 (@4470) decomp[820:821] n=1 (@4382)  srcO=L304 srcD=L212
+  O  833 @4434  L304  LOAD_FAST:'engine_obj'
+  O  834 @4436  L304  LOAD_ATTR:'history_quote_handler'
+  O  835 @4446  L304  LOAD_METHOD:'get_kline_by_count'
+  O  836 @4468  L304  LOAD_FAST:'symbol'
+  O  837 @4470  L304  LOAD_FAST:'count_c'
+  O  838 @4472  L304  LOAD_FAST:'query_date'
+  O  839 @4474  L304  LOAD_CONST:'1m'
+  O  840 @4476  L304  LOAD_CONST:None
+  O  841 @4478  L304  LOAD_FAST:'fq'
+  D  816 @4346  L212  LOAD_FAST:'engine_obj'
+  D  817 @4348  L212  LOAD_ATTR:'history_quote_handler'
+  D  818 @4358  L212  LOAD_METHOD:'get_kline_by_count'
+  D  819 @4380  L212  LOAD_FAST:'symbol'
+  D  820 @4382  L212  LOAD_GLOBAL:'count_c'
+  D  821 @4394  L212  LOAD_FAST:'query_date'
+  D  822 @4396  L212  LOAD_CONST:'1m'
+  D  823 @4398  L212  LOAD_CONST:None
+  D  824 @4400  L212  LOAD_FAST:'fq'

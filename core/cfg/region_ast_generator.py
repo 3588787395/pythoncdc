@@ -14357,9 +14357,51 @@ AST 映射规则:
                                       'STORE_GLOBAL', 'STORE_DEREF'):
                         _next_is_assign_store = True
                     break
+                # [R64-b2] 值栈消费者判据（区域归约原则 2 每块唯一归属 + 原则 3
+                # 嵌套即抽象节点 + 原则 4 父引用子入口）：
+                # 识别条件：把本 COMPARE_OP 压栈的结果当作深度 1，沿块内后续指令按
+                #   CPython 值栈净效应（dis.stack_effect，经 _instruction_stack_effect）
+                #   正向模拟，首个使栈深归零的指令即「本比较结果的消费者」。消费者
+                #   属分支族（条件跳转 / 短路跳转 / POP_TOP）⇒ 本比较服务于本块的
+                #   控制流边，是 if 条件起点；消费者属取值族（BINARY_OP /
+                #   BINARY_SUBSCR / STORE_* / CALL / BUILD_* ...）⇒ 本比较是某条尚未
+                #   终结的赋值/表达式语句的右值子表达式。既有 _next_consumes_as_subexpr
+                #   只看「紧邻的下一条」，故 `count_c = len(df[(df['datetime'] >= q)
+                #   & (df['datetime'] > left)])`（api_base.pyc get_future_history_df
+                #   B@4020 @4304，下一条是 LOAD_FAST，真正的消费者在 4 条之后）仍被
+                #   误判为条件起点，清空 pre_instrs 吞掉 len(...) 前段，整条赋值静默
+                #   丢失。本判据把「紧邻」推广为「栈上首个弹出者」，不含任何函数名/
+                #   偏移/区域归属成员测试，对所有块内混合语句+条件的场景一致生效。
+                # 归约方式：取值上下文时保留 pre_instrs 继续累积（比较归属其后
+                #   STORE_* 终结的那条语句），分支上下文/栈效应未知/栈下溢时维持原
+                #   清空行为（保守退化，与既有行为逐位一致）。
+                # AST 映射：取值上下文 ⇒ 本比较成为后续 pre_stmt 的 Compare 子节点，
+                #   父 Assign/Expr 通过 Compare→BinOp/Subscript 链向下引用（原则 4：
+                #   引用子表达式而非整块）；分支上下文 ⇒ 本比较进入 IfRegion.test。
+                _cond_consumer_is_branch = None
+                _cc_depth = 1
+                for _cc_i in range(_instr_idx + 1, len(_iter_instrs)):
+                    _cc_ins = _iter_instrs[_cc_i]
+                    if _cc_ins.opname in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'):
+                        continue
+                    _cc_eff = self._instruction_stack_effect(_cc_ins)
+                    if _cc_eff is None:
+                        break
+                    _cc_depth += _cc_eff
+                    if _cc_depth < 0:
+                        break
+                    if _cc_depth == 0:
+                        _cond_consumer_is_branch = (
+                            _cc_ins.opname in CONDITIONAL_JUMP_OPS
+                            or _cc_ins.opname in SHORT_CIRCUIT_JUMP_OPS
+                            or _cc_ins.opname in NONE_CHECK_OPS
+                            or _cc_ins.opname == 'POP_TOP'
+                        )
+                        break
                 if (not _has_format_value and not _next_is_format_value
                         and not _next_consumes_as_subexpr
-                        and not _next_is_assign_store):
+                        and not _next_is_assign_store
+                        and _cond_consumer_is_branch is not False):
                     pre_instrs = []
                     continue
             pre_instrs.append(instr)
@@ -21144,7 +21186,40 @@ AST 映射规则:
                         stmts.extend(_nr_ast)
                     else:
                         stmts.append(_nr_ast)
+                # [R64-B2] 让位契约的兑现侧修正：放弃发射的嵌套区域不得认领
+                # 本层另一个子区域的**入口块**。
+                # 识别条件（三条同时成立，全部是本层可见的结构事实）：
+                #   (1) `_nr_ast` 为空 —— 刚归约的嵌套 IfRegion 一个语句也没发射，
+                #       即它按 R36「值上下文链式比较」契约让位：`_generate_if`
+                #       把重建的链式比较写入 `_chain_compare_expr_cache[
+                #       id(merge_block)]` 后 `return []`，其自身注释即
+                #       "Don't mark blocks as generated — the BoolOpRegion will
+                #       handle them"；
+                #   (2) `_nb in child_entries` —— 该块是本方法按原则 4 从
+                #       `region.children` 收集的**某个子区域的 entry**（父层只引用
+                #       子区域入口），不是 `_nr` 自己的内部块；
+                #   (3) `_nb is not _nr.entry` —— `_nr` 的入口块仍归 `_nr`，避免把
+                #       让位区域自身重新变成本层普通块。
+                # 归约方式：让位区域的**内部块**照旧认领（否则块序会把
+                #   LOAD_GLOBAL/COMPARE_OP 等链节内部块当普通块重发成裸表达式），
+                #   唯独跳过满足 (2) 的入口块，使块序走到该入口时由
+                #   `child_expr_regions` 分派真正的消费者（BoolOpRegion），
+                #   从而兑现让位契约；不让位时行为与原实现逐字节相同。
+                #   原判据把 `_nr.blocks` 全集无条件认领，等于让一个子区域吞掉
+                #   兄弟子区域的入口，违反原则 2（每块唯一归属）与原则 4
+                #   （父层只引用子区域入口），实测把整条语句连根吞掉。
+                # AST 映射：IQEngine/utils/scheduler.pyc::
+                #   Scheduler.run_interval_trade.is_run_interval_time_now 的 elif 臂
+                #   blocks=[202,204,270,410,436,456,460,462,488,508,512]：
+                #   If@410(merge=460) 与 If@462(merge=512) 各自让位并缓存链式比较，
+                #   BoolOp@460 是 IfRegion@0 的直接子区域（child_entries 含 460）。
+                #   跳过 460 的认领后 BoolOp@460 被分派、消费两处缓存，臂尾复原
+                #   `return (RI_STOCK_AM_OPEN < current_time < RI_STOCK_AM_CLOSE
+                #    or RI_STOCK_PM_OPEN < current_time < RI_STOCK_PM_CLOSE)`
+                #   —— 原 L394 的 24 条指令。
                 for _nb in _nr.blocks:
+                    if (not _nr_ast and _nb is not _nr.entry and _nb in child_entries):
+                        continue
                     self.generated_blocks.add(_nb)
                     self.generated_offsets.add(_nb.start_offset)
                 self._generated_regions.add(_nr_id)
@@ -32900,6 +32975,7 @@ AST 映射规则:
                                 else:
                                     break
                     _full_rhs = boolop_expr
+                    _r64d4_solo = None
                     if region.merge_block and not _chained_targets_r61:
                         _mnn = [i for i in region.merge_block.instructions
                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -32911,6 +32987,34 @@ AST 映射规则:
                                 break
                         # Expression continuation = instructions before STORE
                         # (not just SWAP for augassign — that's handled above).
+                        # [R64-D4-B] 识别条件：汇合块首条有效指令是 POP_TOP。此时
+                        # 短路链的值在语句边界被**丢弃**，即 BoolOp 本身是一条表达式
+                        # 语句（`a or b`）；紧随其后的第一个 STORE_* 是**下一条**独立
+                        # 语句的目标，不是本区域的 value_target。原实现在此把 STORE 前
+                        # 的指令与 boolop_expr 拼成一条右值（reconstruct(_pre_store,
+                        # initial_stack=[boolop_expr])，POP_TOP 恰好把 boolop 弹掉），
+                        # 然后以 Assign(value_target=<下一条语句的右值>) 发射——
+                        # Expr(BoolOp) 整条消失（实测 fly/logger::Backtest
+                        # .logging_process 第 84 行 `thread_event.is_set() or
+                        # thread_event.set()` 丢失，严格尺 seq_diff #35、官方 8 指令缺口）。
+                        # 归约方式：原则 1（按语句边界一次正确归约）——先发射
+                        # Expr(BoolOp)，再把 POP_TOP 之后到该 STORE（含）的指令交
+                        # _generate_stmts_from_instrs 独立重建为下一条语句；下方
+                        # Assign(value_target=_full_rhs) 分支让位。重建为空则完全退回
+                        # 原行为（零退化）。
+                        # AST 映射：BoolOpRegion 不再映射成单条 Assign。汇合块被 POP_TOP 分成两条平级
+                        # 语句发射：`ast.Expr(BoolOp(values=[a, b]))`（短路链本体，其值在语句边界被丢弃）
+                        # 与紧随其后的 `ast.Assign(targets=[<STORE 的目标>], value=<POP_TOP..STORE 之间
+                        # 指令重建>)`；两者都仍是本区域一次归约的产物，父 IfRegion 的 merge_block 归属不变。
+                        # 反证：`x = a or b` 汇合块首条即 STORE（_si==0 不入本分支）；
+                        # `x = (a or b) + 1` 汇合块前缀是 BINARY_OP 而非 POP_TOP，
+                        # 其栈上确有 boolop 待消费，两种形态都不会命中本判据。
+                        if (_si is not None and _si >= 1 and _mnn
+                                and _mnn[0].opname == 'POP_TOP'):
+                            _r64d4_solo = self._generate_stmts_from_instrs(
+                                _mnn[1:_si + 1], region.merge_block)
+                            if not _r64d4_solo:
+                                _r64d4_solo = None
                         if _si is not None and _si >= 1:
                             _pre_store = _mnn[:_si]
                             import os as _os_dbg_13
@@ -32971,6 +33075,10 @@ AST 映射规则:
                             'value': boolop_expr,
                             'is_chain_assign': True,
                         })
+                    elif _r64d4_solo is not None:
+                        results.append({'type': 'Expr', 'value': boolop_expr})
+                        for _r64d4_s in _r64d4_solo:
+                            results.append(_r64d4_s)
                     else:
                         results.append({
                             'type': 'Assign',
@@ -33063,8 +33171,39 @@ AST 映射规则:
                             # 发射」判据使用——不能靠块级标记集合推断（见 31216 R13 留档）。
                             region.prefix_stmts_pending = True
                             return None
+                        # [R64-B1 sibling merge-entry dispatch]
+                        # 识别条件（纯结构，无偏移/函数名/阈值特例）：
+                        #   (1) 上游 BoolOpRegion U 的 merge_block M 同时是下游区域 D
+                        #       的 entry —— _downstream_region_entry 已按「entry is M +
+                        #       向 M 之外延伸 + 非 block_to_region[M] 归属者 + 未生成」
+                        #       四条结构条件找到 D；
+                        #   (2) U 与 D **同层同父**：D.parent is U.parent（或本就同顶层）。
+                        #       即二者是同一父区域的直接子表达式区域，M 是它们的指令级
+                        #       分界块：U 的归约到 M 内 value_target 那条 STORE_* 为止，
+                        #       D 的归约自该 STORE_* 之后开始。基本块是极大直线序列，
+                        #       两条同形短路赋值必然共用 M，这是原则 2（每块唯一归属）在
+                        #       同一层唯一合法的重叠形态（R78/R35 已承认的「块的指令级
+                        #       分区」）。
+                        # 归约方式：依原则 4（父引用子入口）由 U 在同一次调用内让位派发
+                        #   D —— U 先产出自身 Assign，再把 D 的归约结果按源码顺序接在
+                        #   后面，并登记 D 的成员块与 D 本身为已完成。原判据只在
+                        #   「D 无父区域」时让位派发，其理由是「D 有父区域时由父区域的
+                        #   boolop_children 机制正常派发」。实测该理由不成立：父区域的
+                        #   块驱动扫描（_process_if_blocks）在 `block in generated_blocks`
+                        #   处就跳过了 M（M 已被 U 标记为已生成），于是 D 永远等不到
+                        #   派发，其整条语句被压成裸常量表达式——quote_handler.pyc ::
+                        #   get_kline_local 五条 elif 分支各自的
+                        #   `end_time = int(end[0:8] + (end[8:12] or '1530'))` 整体丢失、
+                        #   只剩一个字符串常量语句（5 x 17 条指令）。让位判据改由两个
+                        #   区域在同一层的结构身份决定后，不再依赖父区域恰好走哪一条
+                        #   派发通道（then 分支的 anchor 通道 / elif 分支的 R61 通道）。
+                        # AST 映射：U -> ast.Assign(targets=[Name(U.value_target)],
+                        #   value=<BoolOp>)，随后按源码顺序接上 D 的归约产物
+                        #   （本例为 ast.Assign(targets=[Name(end_time)],
+                        #   value=Call(int, ...))）。
                         elif (_downstream_r35 is not None
-                                and getattr(_downstream_r35, 'parent', None) is None):
+                              and (_downstream_r35.parent is None
+                                   or _downstream_r35.parent is region.parent)):
                             _ds_ast_r35 = self._generate_region(_downstream_r35)
                             if _ds_ast_r35:
                                 if isinstance(_ds_ast_r35, list):
@@ -40863,7 +41002,36 @@ AST 映射规则:
             return 1, (instr.arg or 0) + 1
         return 0, 0
 
-    def _fstring_parts_from_segment(self, seg):
+    def _r64b1_fv_conversion(self, fv_instr) -> int:
+        """FORMAT_VALUE 指令的操作数 -> FormattedValue.conversion（f-string 转换标记）。
+
+        识别条件（纯指令语义，无偏移/函数名/阈值特例）：
+          (1) fv_instr 非空且 opname == "FORMAT_VALUE"；
+          (2) 操作数 flags 的 bit2（FVC_HAVE_FMT）为 0 —— 该插值没有 format_spec
+              子段（带 spec 的插值本方法的调用方尚未重建 spec，沿用既有行为，
+              此处返回 0 不改变任何既有产物）；
+          (3) flags 低 2 位即 conversion（0=无 / 1=!s / 2=!r / 3=!a）。
+        归约方式：f-string 的每个 FormattedValue 由**它后面那条 FORMAT_VALUE 的
+          操作数**决定转换标记——与既有表达式重建器对 FORMAT_VALUE 的解码
+          （本文件 "if op == 'FORMAT_VALUE'" 分支的 flags & 3 / flags & 4，以及
+          ast_generator_v2 的 Round6-12/13/14 解码）同一份语义表、同一判据，
+          本方法只是把它接到「三元链 + 链尾自包含子表达式」这条 f-string 组装
+          路径上。不引入任何新形状假设：读的是消费该值的那条指令自带的操作数。
+        AST 映射：ast.FormattedValue(value=..., conversion=<本方法返回值>,
+          format_spec=None)，由 code_generator 的 conv_map 输出为
+          `{x!s}` / `{x!r}` / `{x!a}`；返回 0 时输出 `{x}`，与改动前逐字节相同。
+        """
+        if fv_instr is None:
+            return 0
+        if getattr(fv_instr, 'opname', None) != 'FORMAT_VALUE':
+            return 0
+        _flags = fv_instr.arg if fv_instr.arg is not None else 0
+        if _flags & 4:
+            # FVC_HAVE_FMT：既有路径未重建 format_spec，保守保持改动前行为。
+            return 0
+        return _flags & 3
+
+    def _fstring_parts_from_segment(self, seg, fv_instr=None):
         """f-string 相邻两个 FORMAT_VALUE 之间的指令段归约为片段列表。
 
         [R63 Fix1] 识别条件: 段内逐条正向单趟模拟（表达式重建器的单条指令语义
@@ -40908,7 +41076,7 @@ AST 映射规则:
         _parts.append({
             'type': 'FormattedValue',
             'value': _operand,
-            'conversion': 0,
+            'conversion': self._r64b1_fv_conversion(fv_instr),
             'format_spec': None,
         })
         return _parts
@@ -41399,6 +41567,10 @@ AST 映射规则:
         # FORMAT_VALUE/LOAD_CONST 引用 chained ternary 子节点。
         if merge_ctx == 'fstring':
             _fstring_parts = []
+            # [R64-B2] 槽位表：链上第 _idx 个三元结果的 FormattedValue dict 本体。
+            # 它的 FORMAT_VALUE 消费点不在本循环里（在中间 merge_block / 链尾
+            # merge_block 的指令流里），故先留槽，扫到消费指令时回填 conversion。
+            _fv_slot = {}
             for _idx, _tr in enumerate(ternary_chain):
                 # Each ternary's result is wrapped in FormattedValue.
                 _fv = {
@@ -41407,6 +41579,7 @@ AST 映射规则:
                     'conversion': 0,
                     'format_spec': None,
                 }
+                _fv_slot[_idx] = _fv
                 _fstring_parts.append(_fv)
                 # Between this ternary and the next (or BUILD_STRING for last),
                 # there may be literal parts (LOAD_CONST) in the intermediate
@@ -41448,6 +41621,13 @@ AST 映射规则:
                                 # FORMAT_VALUE consumed this ternary's result
                                 # (already added as FormattedValue above).
                                 # Skip — don't add to parts.
+                                # [R64-B2] 该 FORMAT_VALUE 就是本三元结果的消费
+                                # 指令：回填其操作数低 2 位（!s/!r/!a 转换标记），
+                                # 判据见 _r64b1_fv_conversion。
+                                if _idx in _fv_slot:
+                                    _fv_slot[_idx]['conversion'] = \
+                                        self._r64b1_fv_conversion(_pi)
+                                    del _fv_slot[_idx]
                                 continue
                             if _pi.opname == 'LOAD_CONST':
                                 _fstring_parts.append({
@@ -41486,8 +41666,15 @@ AST 映射规则:
                             if _tail_seg:
                                 _tail_ok = False
                                 break
+                            # [R64-B2] 链上最后一个三元的 FORMAT_VALUE 消费点
+                            if _fv_slot:
+                                _li_last = max(_fv_slot)
+                                _fv_slot[_li_last]['conversion'] = \
+                                    self._r64b1_fv_conversion(_li)
+                                del _fv_slot[_li_last]
                         else:
-                            _parsed = self._fstring_parts_from_segment(_tail_seg)
+                            _parsed = self._fstring_parts_from_segment(
+                                _tail_seg, _li)
                             if _parsed is None:
                                 _tail_ok = False
                                 break
@@ -49799,6 +49986,31 @@ AST 映射规则:
             self.generated_blocks.add(_b)
             for _i in _b.instructions:
                 self.generated_offsets.add(_i.offset)
+        # [R64-D4-A] 识别条件：本方法已把逆向栈扫描的表达式起点 _val_start
+        # 之前的一切当作「块内前导噪声」丢弃，只发射单个 Return(expr)。但
+        # _val_start 是**语句边界**（栈深归零点 / STORE_* 之后），它之前的指令是
+        # 块内**真实的前置语句**（赋值 / 调用语句）——原实现只标记 generated
+        # 不发射，整段语句静默消失（实测 IQCommon/common/main::
+        # get_same_shard_server_ip_info 丢 678/680/681 三句、get_server_ip_info 丢
+        # 同形 33 条、graph::ModelGraph._get_influence_task 丢 412/413 两句）。
+        # 归约方式：原则 1（自底向上、一次正确）+ 原则 2（每块唯一归属、归属者
+        # 必发射）——本块既已认领这些指令，就必须按语句边界逐条归约它们；委托
+        # 既有 _generate_stmts_from_instrs（回边块多语句同款切分器），不新写模式
+        # 匹配。任何重构失败/产出空/产出非语句一律退回原 [Return] 行为（零退化）。
+        # AST 映射：stmts(前缀语句...) + [Return(<val>)]，次序与字节码一致。
+        _r64d4_pre = [i for i in instrs[:_val_start]
+                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                          'EXTENDED_ARG')]
+        if len(_r64d4_pre) >= 2:
+            try:
+                _r64d4_st = self._generate_stmts_from_instrs(_r64d4_pre, block)
+            except Exception:
+                _r64d4_st = None
+            if (_r64d4_st
+                    and all(isinstance(_s, dict) and _s.get('type')
+                            in ('Assign', 'AugAssign', 'Expr', 'Return',
+                                 'Delete') for _s in _r64d4_st)):
+                return list(_r64d4_st) + [_ret]
         return [_ret]
 
     def _generate_return_ast(self, block: BasicBlock, return_instr: Instruction = None) -> Dict[str, Any]:

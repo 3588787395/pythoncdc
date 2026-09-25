@@ -1,0 +1,1 @@
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round64_diag1/r64d1b_closed_exit_prefix.pyc", "arm": "c3", "sha": "494220c00b0d3bcc", "total_functions": 2, "matched_functions": 1, "mism": [["kbin_repro", 34, 29, 3, 15]]}

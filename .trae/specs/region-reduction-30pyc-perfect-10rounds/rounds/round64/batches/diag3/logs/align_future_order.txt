@@ -1,0 +1,55 @@
+orig candidates=[[439]] decomp candidates=[[205]]
+orig=115 decomp=107  ratio=0.8468  opcodes=[('replace', 28, 29, 28, 29), ('replace', 71, 80, 71, 72), ('replace', 88, 92, 80, 87), ('replace', 100, 101, 95, 96), ('replace', 102, 103, 97, 98), ('delete', 104, 109, 99, 99), ('insert', 115, 115, 105, 107)]
+HUNK replace  orig[28:29]@190 decomp[28:29]@190
+  ### ORIG only:
+      190 POP_JUMP_FORWARD_IF_FALSE  to 340
+  ### DECOMP only:
+      190 POP_JUMP_FORWARD_IF_FALSE  to 634
+HUNK replace  orig[71:80]@412 decomp[71:72]@412
+  ### ORIG only:
+      412 POP_JUMP_FORWARD_IF_TRUE   to 676
+      414 LOAD_GLOBAL                NULL + strategy_log
+      426 LOAD_ATTR                  info
+      436 LOAD_CONST                 '生成订单，订单号：{order_id}，合约代码：{symbol}，方向：{side}{oper}，数量：{share}手'
+      438 LOAD_METHOD                format
+      460 LOAD_FAST                  order_
+      462 LOAD_ATTR                  order_id
+      472 LOAD_FAST                  order_
+      474 LOAD_ATTR                  symbol
+  ### DECOMP only:
+      412 POP_JUMP_FORWARD_IF_TRUE   to 482
+HUNK replace  orig[88:92]@550 decomp[80:87]@480
+  ### ORIG only:
+      550 POP_JUMP_FORWARD_IF_FALSE  to 556
+      552 LOAD_CONST                 '买入'
+      554 JUMP_FORWARD               to 558
+      556 LOAD_CONST                 '卖出'
+  ### DECOMP only:
+      480 POP_JUMP_FORWARD_IF_FALSE  to 484
+      482 JUMP_FORWARD               to 486
+      484 NOP                        
+      486 LOAD_FAST                  order_
+      488 LOAD_ATTR                  futures_direction
+      498 LOAD_ATTR                  value
+      508 LOAD_METHOD                upper
+HUNK replace  orig[100:101]@624 decomp[95:96]@596
+  ### ORIG only:
+      624 POP_JUMP_FORWARD_IF_FALSE  to 630
+  ### DECOMP only:
+      596 POP_JUMP_FORWARD_IF_FALSE  to 602
+HUNK replace  orig[102:103]@628 decomp[97:98]@600
+  ### ORIG only:
+      628 JUMP_FORWARD               to 632
+  ### DECOMP only:
+      600 JUMP_FORWARD               to 604
+HUNK delete   orig[104:109]@632 decomp[99:99]@-
+  ### ORIG only:
+      632 LOAD_FAST                  order_
+      634 LOAD_ATTR                  amount
+      644 KW_NAMES                   
+      646 PRECALL                    
+      650 CALL                       
+HUNK insert   orig[115:115]@- decomp[105:107]@634
+  ### DECOMP only:
+      634 LOAD_CONST                 None
+      636 RETURN_VALUE               

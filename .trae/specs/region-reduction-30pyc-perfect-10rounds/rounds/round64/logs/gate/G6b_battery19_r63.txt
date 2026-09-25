@@ -1,0 +1,22 @@
+repro pycs discovered: 19  (round63 batches + 11 pinned R62 witnesses)
+repro                                                          r63                   
+round63_b1/r63_ft.pyc                                          1/2 bad=1 d=+0        
+round63_b1/r63_ft2.pyc                                         1/2 bad=1 d=+0        
+round63_b1/r63_ft4.pyc                                         1/2 bad=1 d=-9        
+round63_b2/probe_r63b2_cases.pyc                               6/9 bad=3 d=-18       
+round63_b2/probe_r63b2_cases2.pyc                              3/9 bad=6 d=-94       
+round63_b2/repro_r63b2_tail_cmp_return.pyc                     1/2 bad=1 d=-24       
+round63_b3/r63b3_chained_value_ctx_prefix.pyc                  2/2 bad=0 d=+0        
+round63_b4/r63b4_tern_in_elif_chain.pyc                        3/3 bad=0 d=+0        
+round63_b5/r63b5_w1.pyc                                        1/2 bad=1 d=-1        
+round63_fix1/r63b3_chainstore_prefix.pyc                       2/2 bad=0 d=+0        
+round63_fix2/r63b4_cond_boolop_stmt_steal.pyc                  13/13 bad=0 d=+0      
+round64_diag1/r64d1b_closed_exit_prefix.pyc                    1/2 bad=1 d=-5        
+round64_diag1/r64d1b_sibdispatch_attempt.pyc                   4/4 bad=0 d=+0        
+round64_diag2/r64d2_chain_yield_sibling_entry.pyc              1/2 bad=1 d=-24       
+round64_diag2/r64d2_valuectx_consumer.pyc                      1/2 bad=1 d=-16       
+round64_diag3/r64d3_postif_join.pyc                            2/2 bad=0 d=+0        
+round64_diag4/r64d4_boolop_poptop_merge.pyc                    2/3 bad=1 d=-4        
+round64_diag4/r64d4_deferred_prefix.pyc                        3/3 bad=0 d=+0        
+round64_diag5/r64d5_contsink.pyc                               1/2 bad=1 d=+0        
+candidate columns worse-than-landed on 0 repro(s)

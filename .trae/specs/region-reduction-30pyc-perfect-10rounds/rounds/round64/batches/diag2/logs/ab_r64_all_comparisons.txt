@@ -1,0 +1,29 @@
+### landed2(15) vs c12(15)
+IMPROVED F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc  23/25 -> 24/25
+IMPROVED F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc  42/45 -> 43/45
+IMPROVED F:/Downloads/pythoncdc-main/test_repros/round63_b2/probe_r63b2_cases.pyc  6/9 -> 7/9
+IMPROVED F:/Downloads/pythoncdc-main/test_repros/round63_b2/probe_r63b2_cases2.pyc  3/9 -> 7/9
+IMPROVED F:/Downloads/pythoncdc-main/test_repros/round63_b2/repro_r63b2_tail_cmp_return.pyc  1/2 -> 2/2
+TALLY SAME=10 IMPROVED=5 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=4 b=5
+
+### landed_shapes(11) vs c12_shapes
+IMPROVED F:/Downloads/pythoncdc-main/test_repros/round63_b2/probe_r63b2_cases.pyc  6/9 -> 7/9
+IMPROVED F:/Downloads/pythoncdc-main/test_repros/round63_b2/probe_r63b2_cases2.pyc  3/9 -> 7/9
+IMPROVED F:/Downloads/pythoncdc-main/test_repros/round63_b2/repro_r63b2_tail_cmp_return.pyc  1/2 -> 2/2
+TALLY SAME=8 IMPROVED=3 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=4)
+files fully matched: a=4 b=5
+
+### c1_targets vs c12_targets
+IMPROVED F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc  23/25 -> 24/25
+TALLY SAME=3 IMPROVED=1 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=0 b=0
+
+### c2_targets vs c12_targets
+IMPROVED F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc  42/45 -> 43/45
+TALLY SAME=3 IMPROVED=1 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=0 b=0
+
+### c1_shapes vs c12_shapes
+TALLY SAME=11 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=4)
+files fully matched: a=5 b=5

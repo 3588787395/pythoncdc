@@ -1,0 +1,48 @@
+CFG blocks:
+  0 succ=[4] exc=[] preds=[]
+  4 succ=[8, 378] exc=[378] preds=[0]
+  8 succ=[14, 352] exc=[352] preds=[4]
+  14 succ=[16, 298, 352] exc=[352] preds=[8, 50, 254]
+  16 succ=[38, 254, 352] exc=[352] preds=[14]
+  38 succ=[50, 94, 352] exc=[352] preds=[16]
+  50 succ=[14, 352] exc=[352] preds=[38]
+  94 succ=[106, 148, 352] exc=[352] preds=[38]
+  106 succ=[148, 352] exc=[352] preds=[94]
+  148 succ=[160, 202, 352] exc=[352] preds=[94, 106]
+  160 succ=[202, 352] exc=[352] preds=[148]
+  202 succ=[254, 352] exc=[352] preds=[148, 160]
+  254 succ=[14, 352] exc=[352] preds=[16, 202]
+  298 succ=[326, 352] exc=[352] preds=[14]
+  326 succ=[350, 378] exc=[378] preds=[298]
+  350 succ=[] exc=[] preds=[326]
+  352 succ=[358, 360, 366] exc=[360] preds=[8, 14, 16, 38, 50, 94, 106, 148, 160, 202, 254, 298]
+  358 succ=[360] exc=[360] preds=[352]
+  360 succ=[378] exc=[378] preds=[352, 358, 366]
+  366 succ=[360, 368] exc=[360] preds=[352]
+  368 succ=[374, 378] exc=[378] preds=[366]
+  374 succ=[] exc=[] preds=[368]
+  378 succ=[396, 404, 406] exc=[406] preds=[4, 326, 360, 368]
+  396 succ=[398, 406] exc=[406] preds=[378]
+  398 succ=[] exc=[] preds=[396]
+  404 succ=[406] exc=[406] preds=[378]
+  406 succ=[] exc=[] preds=[378, 396, 404]
+
+CALLS (8):
+  entry=160 merge=202 stop=[14, 202, 298, 326, 352, 374, 378] -> [160]
+  entry=202 merge=202 stop=[14, 160, 298, 326, 352, 374, 378] -> []
+  entry=106 merge=148 stop=[14, 148, 298, 326, 352, 374, 378] -> [106]
+  entry=148 merge=148 stop=[14, 106, 298, 326, 352, 374, 378] -> []
+  entry=50 merge=14 stop=[14, 94, 298, 326, 352, 374, 378] -> [50]
+  entry=94 merge=14 stop=[14, 50, 298, 326, 352, 374, 378] -> [94, 106, 148, 160, 202, 254]
+  entry=38 merge=254 stop=[14, 254, 298, 326, 352, 374, 378] -> [38, 50, 94, 106, 148, 160, 202]
+  entry=254 merge=254 stop=[14, 38, 298, 326, 352, 374, 378] -> []
+
+FINAL REGIONS (8):
+  LoopRegion@14 blocks=[8, 14, 16, 38, 50, 94, 106, 148, 160, 202, 254, 298] exit=None
+  TryExceptRegion@4 blocks=[0, 4, 8, 14, 16, 38, 50, 94, 106, 148, 160, 202, 254, 298, 326, 350, 358, 360, 366, 368, 374, 378, 396, 398, 404, 406] exit=None
+  WithRegion@4 blocks=[4, 8, 14, 16, 38, 50, 94, 106, 148, 160, 202, 254, 298, 326, 350, 352, 360, 374] exit=None
+  IfRegion@148 cond=148 then_blocks=[160] else_blocks=[] merge=202 exit=202
+  IfRegion@94 cond=94 then_blocks=[106] else_blocks=[] merge=148 exit=148
+  IfRegion@38 cond=38 then_blocks=[50] else_blocks=[94, 106, 148, 160, 202] merge=14 exit=14
+  IfRegion@16 cond=16 then_blocks=[38, 50, 94, 106, 148, 160, 202] else_blocks=[] merge=254 exit=254
+  Region@0 blocks=[0] exit=None

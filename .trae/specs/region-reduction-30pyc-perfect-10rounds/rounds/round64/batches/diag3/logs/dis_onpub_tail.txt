@@ -1,0 +1,132 @@
+=== _on_publish_after_trading_end firstlineno=291 args=('self', 'today', 'date', 'account', 'positions', 'position', 'long_clean_time', 'code', 'init_long_create_time', 'day', 'short_clean_time', 'init_short_create_time', 'daily_result', 'starting_cash', 'h', 'df_trans', 'df', '_month_return_value_info', '_backtest_trade_statistic_info', 'k', 'v', 'key', 'last_date', 'value', 'is_end', 'THREAD_STATUS', 'event_bus') ===
+      -- line 291: 
+      -- line 293: 
+      -- line 294: 
+      -- line 295: 
+      -- line 296: 
+      -- line 297: 
+      -- line 301: 
+      -- line 302: 
+      -- line 304: 
+      -- line 305: 
+      -- line 306: 
+      -- line 307: 
+      -- line 308: 
+      -- line 309: 
+      -- line 310: 
+      -- line 311: 
+      -- line 312: 
+      -- line 313: 
+      -- line 314: 
+      -- line 315: 
+      -- line 316: 
+      -- line 317: 
+      -- line 318: 
+      -- line 319: 
+      -- line 320: 
+      -- line 321: 
+      -- line 322: 
+      -- line 306: 
+      -- line 324: 
+      -- line 325: 
+      -- line 328: 
+      -- line 330: 
+      -- line 331: 
+      -- line 334: 
+      -- line 335: 
+      -- line 336: 
+      -- line 337: 
+      -- line 338: 
+      -- line 339: 
+      -- line 340: 
+      -- line 341: 
+      -- line 342: 
+      -- line 343: 
+      -- line 344: 
+      -- line 345: 
+      -- line 346: 
+      -- line 347: 
+      -- line 348: 
+      -- line 349: 
+      -- line 350: 
+      -- line 351: 
+      -- line 352: 
+      -- line 353: 
+      -- line 354: 
+      -- line 355: 
+      -- line 354: 
+      -- line 357: 
+      -- line 359: 
+      -- line 361: 
+      -- line 363: 
+      -- line 364: 
+      -- line 365: 
+      -- line 366: 
+      -- line 367: 
+      -- line 368: 
+      -- line 370: 
+      -- line 371: 
+      -- line 372: 
+      -- line 373: 
+   2604 LOAD_ATTR                      strategy
+   2614 LOAD_ATTR                      run_type
+   2624 LOAD_GLOBAL                    RunType
+   2636 LOAD_ATTR                      BACKTEST
+   2646 COMPARE_OP                     ==
+   2652 POP_JUMP_FORWARD_IF_FALSE      to 2808
+      -- line 375: 
+   2654 LOAD_FAST                      date
+   2656 LOAD_FAST                      self
+   2658 LOAD_ATTR                      end_date
+   2668 COMPARE_OP                     ==
+   2674 POP_JUMP_FORWARD_IF_FALSE      to 2682
+      -- line 376: 
+   2676 LOAD_CONST                     True
+   2678 STORE_FAST                     is_end
+   2680 JUMP_FORWARD                   to 2686
+      -- line 378: 
+   2682 LOAD_CONST                     False
+   2684 STORE_FAST                     is_end
+      -- line 379: 
+   2686 LOAD_FAST                      self
+   2688 LOAD_ATTR                      daily_result_list
+   2698 LOAD_METHOD                    put
+   2720 LOAD_FAST                      is_end
+   2722 LOAD_FAST                      daily_result
+   2724 BUILD_TUPLE                    
+   2726 PRECALL                        
+   2730 CALL                           
+   2740 POP_TOP                        
+      -- line 380: 
+   2742 LOAD_FAST                      is_end
+   2744 POP_JUMP_FORWARD_IF_FALSE      to 2808
+      -- line 381: 
+   2746 NOP                            
+      -- line 382: 
+   2748 LOAD_CONST                     0
+   2750 LOAD_CONST                     ('THREAD_STATUS',)
+   2752 IMPORT_NAME                    IQEngine.plugins.plugin_system_risk_calculation.function
+   2754 IMPORT_FROM                    THREAD_STATUS
+   2756 STORE_FAST                     THREAD_STATUS
+   2758 POP_TOP                        
+      -- line 383: 
+   2760 LOAD_FAST                      THREAD_STATUS
+   2762 POP_JUMP_FORWARD_IF_FALSE      to 2766
+      -- line 384: 
+   2764 JUMP_FORWARD                   to 2808
+      -- line 386: 
+   2766 LOAD_GLOBAL                    NULL + time
+   2778 LOAD_ATTR                      sleep
+   2788 LOAD_CONST                     0.01
+   2790 PRECALL                        
+   2794 CALL                           
+   2804 POP_TOP                        
+      -- line 381: 
+   2806 JUMP_BACKWARD                  to 2748
+      -- line 387: 
+   2808 LOAD_FAST                      self
+   2810 LOAD_ATTR                      _engine
+   2820 LOAD_ATTR                      event_bus
+   2830 STORE_FAST                     event_bus
+      -- line 388: 
+      -- line 389: 

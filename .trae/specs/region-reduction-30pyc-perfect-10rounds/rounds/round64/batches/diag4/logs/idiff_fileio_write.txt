@@ -1,0 +1,70 @@
+=== <module>.FileIO.write : token len orig=637 decomp=637  identical=False
+    non-equal blocks=4  ratio=0.9843
+  replace  orig[  42:  49](n=7) decomp[  42:  43](n=1)
+      orig  src-lines [330]   decomp src-lines [283]
+       O   40 off= 202 ln=334   CALL_FUNCTION_EX 
+       O   41 off= 204 ln=334   POP_TOP 
+     > O   42 off= 208 ln=330   LOAD_CONST None
+     > O   43 off= 210 ln=330   LOAD_CONST None
+     > O   44 off= 212 ln=330   LOAD_CONST None
+     > O   45 off= 218 ln=330   CALL 
+     > O   46 off= 228 ln=330   POP_TOP 
+     > O   47 off= 230 ln=330   LOAD_CONST True
+     > O   48 off= 232 ln=330   RETURN_VALUE 
+       O   49 off= 234 ln=336   LOAD_FAST data_type
+       O   50 off= 236 ln=336   LOAD_CONST 'dict'
+      ----
+       D   40 off= 202 ln=283   CALL_FUNCTION_EX 
+       D   41 off= 204 ln=283   POP_TOP 
+     > D   42 off= 208 ln=283   JUMP_FORWARD to 778
+       D   43 off= 210 ln=284   LOAD_FAST data_type
+       D   44 off= 212 ln=284   LOAD_CONST 'dict'
+
+  insert   orig[ 153: 153](n=0) decomp[ 147: 154](n=7)
+      orig  src-lines []   decomp src-lines [279]
+       O  151 off= 796 ln=330   POP_TOP 
+       O  152 off= 798 ln=330   LOAD_CONST False
+       O  153 off= 800 ln=330   RETURN_VALUE 
+       O  154 off= 802 ln=356   LOAD_FAST self
+      ----
+       D  145 off= 772 ln=279   POP_TOP 
+       D  146 off= 774 ln=279   LOAD_CONST False
+     > D  147 off= 776 ln=279   RETURN_VALUE 
+     > D  148 off= 780 ln=279   LOAD_CONST None
+     > D  149 off= 782 ln=279   LOAD_CONST None
+     > D  150 off= 784 ln=279   LOAD_CONST None
+     > D  151 off= 790 ln=279   CALL 
+     > D  152 off= 800 ln=279   POP_TOP 
+     > D  153 off= 802 ln=279   LOAD_CONST True
+       D  154 off= 804 ln=279   RETURN_VALUE 
+       D  155 off= 806 ln=304   LOAD_FAST self
+
+  replace  orig[ 598: 600](n=2) decomp[ 599: 600](n=1)
+      orig  src-lines [330]   decomp src-lines [279]
+       O  596 off=2896 ln=330   CALL 
+       O  597 off=2906 ln=330   POP_TOP 
+     > O  598 off=2908 ln=330   LOAD_CONST False
+     > O  599 off=2910 ln=330   RETURN_VALUE 
+       O  600 off=2912 ln=330   PUSH_EXC_INFO 
+       O  601 off=2914 ln=330   WITH_EXCEPT_START 
+      ----
+       D  597 off=2900 ln=279   CALL 
+       D  598 off=2910 ln=279   POP_TOP 
+     > D  599 off=2912 ln=279   JUMP_FORWARD to 2936
+       D  600 off=2914 ln=279   PUSH_EXC_INFO 
+       D  601 off=2916 ln=279   WITH_EXCEPT_START 
+
+  replace  orig[ 611: 612](n=1) decomp[ 611: 612](n=1)
+      orig  src-lines [330]   decomp src-lines [366]
+       O  609 off=2930 ln=330   POP_TOP 
+       O  610 off=2932 ln=330   POP_TOP 
+     > O  611 off=2934 ln=330   LOAD_CONST None
+       O  612 off=2936 ln=330   RETURN_VALUE 
+       O  613 off=2938 ln=None  PUSH_EXC_INFO 
+      ----
+       D  609 off=2932 ln=279   POP_TOP 
+       D  610 off=2934 ln=279   POP_TOP 
+     > D  611 off=2936 ln=366   LOAD_CONST False
+       D  612 off=2938 ln=366   RETURN_VALUE 
+       D  613 off=2940 ln=None  PUSH_EXC_INFO 
+

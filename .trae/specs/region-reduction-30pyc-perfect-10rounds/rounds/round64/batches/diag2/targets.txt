@@ -1,0 +1,8 @@
+IQCommon/strategy/wizard_quant_api.pyc  official 51/53  rate 0.9623  round 63
+        F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc
+IQCommon/api/klinedata.pyc  official 42/45  rate 0.9333  round 63
+        F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc
+IQEngine/utils/scheduler.pyc  official 42/45  rate 0.9333  round 63
+        F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc
+IQData/api/api_base.pyc  official 23/25  rate 0.9200  round 63
+        F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc

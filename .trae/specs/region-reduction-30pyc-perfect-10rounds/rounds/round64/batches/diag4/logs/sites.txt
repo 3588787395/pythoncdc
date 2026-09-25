@@ -1,0 +1,11 @@
+=== _try_deferred_return_in_loop SUCCESSES (3) ===
+  cfg=get_server_ip_info               block=638    dropped_prefix=33  returns=1 lines=[]
+      ops: LOAD_CLOSURE BUILD_TUPLE LOAD_CONST MAKE_FUNCTION LOAD_FAST LOAD_METHOD PRECALL CALL GET_ITER PRECALL CALL STORE_DEREF LOAD_GLOBAL LOAD_DEREF PRECALL CALL STORE_FAST LOAD_GLOBAL LOAD_DEREF LOAD_CLOSURE BUILD_TUPLE LOAD_CONST MAKE_FUNCTION KW_NAMES PRECALL CALL STORE_FAST LOAD_FAST LOAD_METHOD LOAD_FAST PRECALL CALL STORE_FAST
+  cfg=get_same_shard_server_ip_info    block=662    dropped_prefix=22  returns=1 lines=[]
+      ops: LOAD_CLOSURE BUILD_TUPLE LOAD_CONST MAKE_FUNCTION LOAD_FAST LOAD_METHOD PRECALL CALL GET_ITER PRECALL CALL STORE_FAST LOAD_CONST LOAD_FAST BINARY_OP STORE_FAST LOAD_GLOBAL LOAD_ATTR LOAD_FAST PRECALL CALL POP_TOP
+  cfg=_get_influence_task              block=478    dropped_prefix=12  returns=1 lines=[]
+      ops: LOAD_FAST LOAD_CONST BINARY_SUBSCR LOAD_FAST LOAD_CONST STORE_SUBSCR LOAD_FAST LOAD_CONST BINARY_SUBSCR LOAD_FAST LOAD_CONST STORE_SUBSCR
+=== boolop merge splice, LEADING POP_TOP (1) ===
+  {'cfg': 'logging_process', 'merge': 346, 'si': 6, 'lead': 'POP_TOP', 'out': ['Expr', 'Assign'], 'boolop_survived': False, 'value_target': 'info'}
+=== boolop merge splice, other prefix (0) ===
+=== boolop emitted as Expr statement (0) ===

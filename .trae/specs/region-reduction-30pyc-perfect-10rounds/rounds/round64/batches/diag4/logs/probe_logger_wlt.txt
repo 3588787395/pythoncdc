@@ -1,0 +1,42 @@
+##############################################################################
+CODE write_logging_thread  firstlineno=96  blocks=20 regions=8
+--- CFG BLOCKS ---
+  B0   off=0     n=2   lines=                 preds=[]             succs=[1]            tail=[RESUME NOP]
+  B1   off=4     n=7   lines=                 preds=[0, 19]        succs=[2, 12]        tail=[STORE_FAST LOAD_FAST PJ_FORWARD_IF_FALSE@426]
+  B2   off=48    n=6   lines=                 preds=[1]            succs=[9, 3]         tail=[LOAD_CONST COMPARE_OP PJ_FORWARD_IF_FALSE@368]
+  B3   off=64    n=33  lines=                 preds=[8, 2]         succs=[7, 4]         tail=[LOAD_CONST COMPARE_OP PJ_FORWARD_IF_FALSE@342]
+  B4   off=228   n=2   lines=                 preds=[3]            succs=[5, 6]         tail=[LOAD_FAST PJ_FORWARD_IF_FALSE@288]
+  B5   off=232   n=9   lines=                 preds=[4]            succs=[6]            tail=[POP_TOP LOAD_CONST STORE_FAST]
+  B6   off=288   n=8   lines=                 preds=[4, 5]         succs=[8]            tail=[CALL POP_TOP JUMP_FORWARD@356]
+  B7   off=342   n=7   lines=                 preds=[3]            succs=[8]            tail=[FORMAT_VALUE BUILD_STRING STORE_FAST]
+  B8   off=356   n=4   lines=                 preds=[7, 6]         succs=[9, 3]         tail=[LOAD_CONST COMPARE_OP PJ_BACKWARD_IF_TRUE@64]
+  B9   off=368   n=2   lines=                 preds=[8, 2]         succs=[10, 11]       tail=[LOAD_FAST PJ_FORWARD_IF_FALSE@424]
+  B10  off=372   n=7   lines=                 preds=[9]            succs=[11]           tail=[PRECALL CALL POP_TOP]
+  B11  off=424   n=1   lines=                 preds=[9, 10]        succs=[19]           tail=[JUMP_FORWARD@666]
+  B12  off=426   n=3   lines=                 preds=[1]            succs=[18, 13]       tail=[LOAD_FAST LOAD_ATTR PJ_FORWARD_IF_FALSE@662]
+  B13  off=440   n=11  lines=                 preds=[12]           succs=[15, 14]       tail=[PRECALL CALL PJ_FORWARD_IF_FALSE@564]
+  B14  off=522   n=6   lines=                 preds=[13]           succs=[19]           tail=[CALL POP_TOP JUMP_FORWARD@666]
+  B15  off=564   n=8   lines=                 preds=[13]           succs=[16, 17]       tail=[LOAD_ATTR COMPARE_OP PJ_FORWARD_IF_FALSE@660]
+  B16  off=620   n=6   lines=                 preds=[15]           succs=[17]           tail=[PRECALL CALL POP_TOP]
+  B17  off=660   n=1   lines=                 preds=[15, 16]       succs=[19]           tail=[JUMP_FORWARD@666]
+  B18  off=662   n=2   lines=                 preds=[12]           succs=[]             tail=[LOAD_CONST RETURN_VALUE]
+  B19  off=666   n=2   lines=                 preds=[17, 11, 14]   succs=[1]            tail=[EXTENDED_ARG JUMP_BACKWARD@4]
+--- REGION TREE ---
+  LoopRegion       entry=4      exit=None   blocks=[4, 48, 64, 228, 232, 288, 342, 356, 368, 372, 424, 426, 440, 522, 564, 620, 660, 662, 666]
+     LOOP hdr=4 cond=None back=666 body=[4, 48, 64, 228, 232, 288, 342, 356, 368, 372, 424, 426, 440, 522, 564, 620, 660, 662, 666] else=[] break=[662] wt=True
+    LoopRegion       entry=48     exit=None   blocks=[48, 64, 228, 232, 288, 342, 356]
+       LOOP hdr=64 cond=48 back=356 body=[64, 228, 232, 288, 342, 356] else=[] break=[] wt=False
+      IfRegion         entry=64     exit=356    blocks=[64, 228, 232, 288, 342]
+         IF cond=64 then=[228, 232, 288] else=[342] merge=356
+      IfRegion         entry=228    exit=288    blocks=[228, 232]
+         IF cond=228 then=[232] else=[] merge=288
+    IfRegion         entry=368    exit=424    blocks=[368, 372]
+       IF cond=368 then=[372] else=[] merge=424
+    IfRegion         entry=426    exit=None   blocks=[426, 440, 522, 564, 620, 660, 662, 666]
+       IF cond=426 then=[440, 522, 564, 620, 660, 666] else=[662] merge=None
+    IfRegion         entry=440    exit=666    blocks=[440, 522, 564, 620, 660]
+       IF cond=440 then=[522] else=[564, 620, 660] merge=666
+    IfRegion         entry=564    exit=660    blocks=[564, 620]
+       IF cond=564 then=[620] else=[] merge=660
+
+[captured 64 generator runs]

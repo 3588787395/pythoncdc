@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_ast_generator.py",
+ "edits": [
+  {
+   "anchor": "                        # 反证：`x = a or b` 汇合块首条即 STORE（_si==0 不入本分支）；",
+   "repl": "                        # AST 映射：BoolOpRegion 不再映射成单条 Assign。汇合块被 POP_TOP 分成两条平级\n                        # 语句发射：`ast.Expr(BoolOp(values=[a, b]))`（短路链本体，其值在语句边界被丢弃）\n                        # 与紧随其后的 `ast.Assign(targets=[<STORE 的目标>], value=<POP_TOP..STORE 之间\n                        # 指令重建>)`；两者都仍是本区域一次归约的产物，父 IfRegion 的 merge_block 归属不变。\n                        # 反证：`x = a or b` 汇合块首条即 STORE（_si==0 不入本分支）；"
+  }
+ ]
+}

@@ -1,0 +1,3 @@
+CALL entry=874 merge=654 stop=[654, 738, 1044, 1310, 1442, 1526] -> collected=[874, 886, 896, 908, 918, 1000]
+   block 1000 ext_preds=[656] exc_preds=[] child_structural_exempt=[656]
+TOTAL HITS=1

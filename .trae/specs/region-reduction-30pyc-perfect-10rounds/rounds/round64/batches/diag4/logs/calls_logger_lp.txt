@@ -1,0 +1,50 @@
+    --> _generate_block_statements B@0
+    <-- _generate_block_statements = [Assign,Assign,Assign,Assign,Expr]
+    --> _generate_region Region@0
+    <-- _generate_region = []
+    --> _generate_region TryExceptRegion@172
+      --> _generate_region LoopRegion@172
+        --> _generate_loop LoopRegion@172
+          --> _loop_generate_while LoopRegion@172
+            --> _loop_generate_body LoopRegion@172 -
+              --> _loop_generate_pre_stmts LoopRegion@172 [|0]
+              <-- _loop_generate_pre_stmts = []
+              --> _loop_dispatch_block B@226 LoopRegion@172 {None} - [|0] [|0] [|0] B@346 [|0]
+                --> _loop_handle_header B@226 LoopRegion@172 - [|0]
+                  --> _generate_boolop BoolOpRegion@226
+                  <-- _generate_boolop = [Expr,Assign]
+                <-- _loop_handle_header = NoneType
+              <-- _loop_dispatch_block = True
+              --> _loop_postprocess LoopRegion@172 [|2] [|0] [|0] {None} [|0]
+                --> _if_generate_branch_stmts [|0]
+                <-- _if_generate_branch_stmts = []
+              <-- _loop_postprocess = NoneType
+            <-- _loop_generate_body = [Expr,Assign]
+            --> _generate_block_statements B@402
+            <-- _generate_block_statements = []
+            --> _if_generate_branch_stmts [402|1]
+            <-- _if_generate_branch_stmts = []
+          <-- _loop_generate_while = [Assign,While]
+        <-- _generate_loop = [Assign,While]
+      <-- _generate_region = [Assign,While]
+      --> _generate_region IfRegion@424
+        --> _if_extract_cond_instructions B@424 IfRegion@424
+        <-- _if_extract_cond_instructions = tuple
+        --> _generate_block_statements B@478
+        <-- _generate_block_statements = [Expr]
+      <-- _generate_region = [Assign,If]
+      --> _generate_region IfRegion@518
+        --> _if_extract_cond_instructions B@518 IfRegion@518
+        <-- _if_extract_cond_instructions = tuple
+        --> _generate_block_statements B@560
+        <-- _generate_block_statements = [Raise]
+      <-- _generate_region = {If}
+    <-- _generate_region = {Try}
+    --> _generate_region IfRegion@590
+      --> _if_extract_cond_instructions B@590 IfRegion@590
+      <-- _if_extract_cond_instructions = tuple
+      --> _generate_block_statements B@644
+      <-- _generate_block_statements = [Expr,Return]
+      --> _generate_block_statements B@688
+      <-- _generate_block_statements = [Return]
+    <-- _generate_region = [Assign,If]

@@ -1,0 +1,9 @@
+{
+  "file": "core/cfg/region_ast_generator.py",
+  "edits": [
+    {
+      "anchor": "        for _b in chain:\n            self.generated_blocks.add(_b)\n            for _i in _b.instructions:\n                self.generated_offsets.add(_i.offset)\n        return [_ret]",
+      "repl": "        for _b in chain:\n            self.generated_blocks.add(_b)\n            for _i in _b.instructions:\n                self.generated_offsets.add(_i.offset)\n        # [R64-D4-A] 识别条件：本方法已把逆向栈扫描的表达式起点 _val_start\n        # 之前的一切当作「块内前导噪声」丢弃，只发射单个 Return(expr)。但\n        # _val_start 是**语句边界**（栈深归零点 / STORE_* 之后），它之前的指令是\n        # 块内**真实的前置语句**（赋值 / 调用语句）——原实现只标记 generated\n        # 不发射，整段语句静默消失（实测 IQCommon/common/main::\n        # get_same_shard_server_ip_info 丢 678/680/681 三句、get_server_ip_info 丢\n        # 同形 33 条、graph::ModelGraph._get_influence_task 丢 412/413 两句）。\n        # 归约方式：原则 1（自底向上、一次正确）+ 原则 2（每块唯一归属、归属者\n        # 必发射）——本块既已认领这些指令，就必须按语句边界逐条归约它们；委托\n        # 既有 _generate_stmts_from_instrs（回边块多语句同款切分器），不新写模式\n        # 匹配。任何重构失败/产出空/产出非语句一律退回原 [Return] 行为（零退化）。\n        # AST 映射：stmts(前缀语句...) + [Return(<val>)]，次序与字节码一致。\n        _r64d4_pre = [i for i in instrs[:_val_start]\n                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',\n                                          'EXTENDED_ARG')]\n        if len(_r64d4_pre) >= 2:\n            try:\n                _r64d4_st = self._generate_stmts_from_instrs(_r64d4_pre, block)\n            except Exception:\n                _r64d4_st = None\n            if (_r64d4_st\n                    and all(isinstance(_s, dict) and _s.get('type')\n                            in ('Assign', 'AugAssign', 'Expr', 'Return',\n                                 'Delete') for _s in _r64d4_st)):\n                return list(_r64d4_st) + [_ret]\n        return [_ret]"
+    }
+  ]
+}

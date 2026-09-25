@@ -1,0 +1,60 @@
+##### params_analysis  (landed)  first_line=141 ninstr=0
+=== 25 blocks ===
+  B@0     line=None  succs=[10, 86]               claimed=True  exc=[]             RESUME LOAD_FAST LOAD_CONST CONTAINS_OP POP_JUMP_FORWARD_IF_FALSE
+  B@10    line=None  succs=[12]                   claimed=True  exc=[]             NOP
+  B@12    line=None  succs=[30, 28]               claimed=True  exc=[30]           LOAD_FAST LOAD_CONST BINARY_SUBSCR STORE_FAST
+  B@28    line=None  succs=[48]                   claimed=True  exc=[]             JUMP_FORWARD
+  B@30    line=None  succs=[42, 38]               claimed=True  exc=[42]           PUSH_EXC_INFO POP_TOP LOAD_FAST STORE_FAST
+  B@38    line=None  succs=[48]                   claimed=True  exc=[]             POP_EXCEPT JUMP_FORWARD
+  B@42    line=None  succs=[]                     claimed=True  exc=[]             COPY POP_EXCEPT RERAISE
+  B@48    line=None  succs=[]                     claimed=True  exc=[]             LOAD_FAST LOAD_FAST LOAD_GLOBAL LOAD_FAST PRECALL CALL LOAD_CONST BUILD_CONST_KEY_MAP RETURN_VALUE
+  B@86    line=None  succs=[268, 98]              claimed=True  exc=[]             LOAD_FAST LOAD_CONST COMPARE_OP POP_JUMP_FORWARD_IF_FALSE
+  B@98    line=None  succs=[100]                  claimed=True  exc=[]             NOP
+  B@100   line=None  succs=[116, 118]             claimed=True  exc=[118]          LOAD_FAST LOAD_CONST BINARY_SUBSCR STORE_FAST
+  B@116   line=None  succs=[136]                  claimed=True  exc=[]             JUMP_FORWARD
+  B@118   line=None  succs=[126, 130]             claimed=True  exc=[130]          PUSH_EXC_INFO POP_TOP LOAD_FAST STORE_FAST
+  B@126   line=None  succs=[136]                  claimed=True  exc=[]             POP_EXCEPT JUMP_FORWARD
+  B@130   line=None  succs=[]                     claimed=True  exc=[]             COPY POP_EXCEPT RERAISE
+  B@136   line=None  succs=[]                     claimed=True  exc=[]             LOAD_FAST LOAD_METHOD LOAD_CONST PRECALL CALL STORE_FAST LOAD_FAST LOAD_FAST LOAD_GLOBAL LOAD_FAST LOAD_CONST BINARY_S
+  B@268   line=None  succs=[276, 314]             claimed=True  exc=[]             LOAD_FAST LOAD_CONST CONTAINS_OP POP_JUMP_FORWARD_IF_FALSE
+  B@276   line=None  succs=[]                     claimed=True  exc=[]             LOAD_FAST LOAD_FAST LOAD_GLOBAL LOAD_FAST PRECALL CALL LOAD_CONST BUILD_CONST_KEY_MAP RETURN_VALUE
+  B@314   line=None  succs=[326, 458]             claimed=True  exc=[]             LOAD_FAST LOAD_CONST COMPARE_OP POP_JUMP_FORWARD_IF_FALSE
+  B@326   line=None  succs=[]                     claimed=True  exc=[]             LOAD_FAST LOAD_METHOD LOAD_CONST PRECALL CALL STORE_FAST LOAD_FAST LOAD_FAST LOAD_GLOBAL LOAD_FAST LOAD_CONST BINARY_S
+  B@458   line=None  succs=[466, 502]             claimed=True  exc=[]             LOAD_FAST LOAD_CONST CONTAINS_OP POP_JUMP_FORWARD_IF_FALSE
+  B@466   line=None  succs=[]                     claimed=True  exc=[]             LOAD_FAST LOAD_FAST LOAD_CONST BINARY_SUBSCR LOAD_FAST LOAD_CONST BINARY_SUBSCR LOAD_CONST BUILD_CONST_KEY_MAP RETURN_
+  B@502   line=None  succs=[510, 546]             claimed=True  exc=[]             LOAD_FAST LOAD_CONST CONTAINS_OP POP_JUMP_FORWARD_IF_FALSE
+  B@510   line=None  succs=[]                     claimed=True  exc=[]             LOAD_FAST LOAD_FAST LOAD_CONST BINARY_SUBSCR LOAD_FAST LOAD_CONST BINARY_SUBSCR LOAD_CONST BUILD_CONST_KEY_MAP RETURN_
+  B@546   line=None  succs=[]                     claimed=True  exc=[]             LOAD_FAST LOAD_FAST LOAD_CONST BUILD_CONST_KEY_MAP RETURN_VALUE
+=== region tree (22 roots) ===
+IfRegion                 entry=0     merge_block=12 condition_block=0
+   blocks=[0, 10, 86, 98, 100, 116, 136, 268, 276, 314, 326, 458, 466, 502, 510, 546]
+   then_blocks            [10]
+   else_blocks            [86, 98, 100, 116, 136, 268, 276, 314, 326, 458, 466, 502, 510, 546]
+   else_blocks            [86, 98, 100, 116, 136, 268, 276, 314, 326, 458, 466, 502, 510, 546]
+   elif_bodies=[[98, 100, 116, 136], [276], [326], [466], [510]]
+   elif_conditions        [86, 268, 314, 458, 502]
+   elif_final_else        [546]
+  Region                   entry=0    
+     blocks=[0]
+  Region                   entry=10   
+     blocks=[10]
+  TryExceptRegion          entry=12   
+     blocks=[10, 12, 28, 30, 38, 42]
+     else_blocks            [28]
+     try_blocks             [12]
+     else_blocks            [28]
+     cleanup_blocks         [42]
+     handler_entry_blocks   [30]
+     except_handlers=[(None, None, [30, 38])]
+  Region                   entry=48   
+     blocks=[48]
+  IfRegion                 entry=86    merge_block=100 condition_block=86
+     blocks=[86, 98, 268, 276, 314, 326, 458, 466, 502, 510, 546]
+     then_blocks            [98]
+     else_blocks            [268, 276, 314, 326, 458, 466, 502, 510, 546]
+     else_blocks            [268, 276, 314, 326, 458, 466, 502, 510, 546]
+     elif_bodies=[[276], [326], [466], [510]]
+     elif_conditions        [268, 314, 458, 502]
+     elif_final_else        [546]
+    Region                   entry=86   
+       blocks=[86]

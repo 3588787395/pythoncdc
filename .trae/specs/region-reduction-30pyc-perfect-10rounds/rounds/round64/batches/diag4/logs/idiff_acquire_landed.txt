@@ -1,0 +1,193 @@
+=== ORIG <module>.FileLock.acquire (98)
+     0 off=   0 ln=109   RESUME 
+     1 off=   2 ln=116   LOAD_GLOBAL NULL + time
+     2 off=  14 ln=116   LOAD_ATTR time
+     3 off=  28 ln=116   CALL 
+     4 off=  38 ln=116   STORE_FAST start_time
+     5 off=  44 ln=119   LOAD_FAST self
+     6 off=  46 ln=119   LOAD_METHOD _acquire
+     7 off=  72 ln=119   CALL 
+     8 off=  82 ln=119   POP_TOP 
+     9 off=  86 ln=120   JUMP_FORWARD to 612
+    10 off=  88 ln=None  PUSH_EXC_INFO 
+    11 off=  90 ln=121   LOAD_GLOBAL OSError
+    12 off= 102 ln=121   CHECK_EXC_MATCH 
+    13 off= 104 ln=121   POP_JUMP_FORWARD_IF_FALSE to 600
+    14 off= 106 ln=121   STORE_FAST e
+    15 off= 108 ln=123   LOAD_FAST e
+    16 off= 110 ln=123   LOAD_ATTR errno
+    17 off= 120 ln=123   LOAD_GLOBAL errno
+    18 off= 132 ln=123   LOAD_ATTR EEXIST
+    19 off= 142 ln=123   COMPARE_OP !=
+    20 off= 148 ln=123   POP_JUMP_FORWARD_IF_FALSE to 152
+    21 off= 150 ln=124   RAISE_VARARGS 
+    22 off= 152 ln=125   LOAD_GLOBAL NULL + time
+    23 off= 164 ln=125   LOAD_ATTR time
+    24 off= 178 ln=125   CALL 
+    25 off= 188 ln=125   LOAD_FAST start_time
+    26 off= 190 ln=125   BINARY_OP -
+    27 off= 194 ln=125   LOAD_FAST self
+    28 off= 196 ln=125   LOAD_ATTR timeout
+    29 off= 206 ln=125   COMPARE_OP >=
+    30 off= 212 ln=125   POP_JUMP_FORWARD_IF_FALSE to 532
+    31 off= 214 ln=127   LOAD_GLOBAL NULL + system_log
+    32 off= 226 ln=127   LOAD_ATTR warning
+    33 off= 236 ln=127   LOAD_CONST '获取文件{}锁超时，执行删除锁操作'
+    34 off= 238 ln=127   LOAD_METHOD format
+    35 off= 260 ln=127   LOAD_FAST self
+    36 off= 262 ln=127   LOAD_ATTR lockfile
+    37 off= 276 ln=127   CALL 
+    38 off= 290 ln=127   CALL 
+    39 off= 300 ln=127   POP_TOP 
+    40 off= 304 ln=129   LOAD_GLOBAL NULL + os
+    41 off= 316 ln=129   LOAD_ATTR unlink
+    42 off= 326 ln=129   LOAD_FAST self
+    43 off= 328 ln=129   LOAD_ATTR lockfile
+    44 off= 342 ln=129   CALL 
+    45 off= 352 ln=129   POP_TOP 
+    46 off= 354 ln=129   JUMP_FORWARD to 502
+    47 off= 356 ln=None  PUSH_EXC_INFO 
+    48 off= 358 ln=130   LOAD_GLOBAL BaseException
+    49 off= 370 ln=130   CHECK_EXC_MATCH 
+    50 off= 372 ln=130   POP_JUMP_FORWARD_IF_FALSE to 494
+    51 off= 374 ln=130   POP_TOP 
+    52 off= 376 ln=131   LOAD_GLOBAL NULL + system_log
+    53 off= 388 ln=131   LOAD_ATTR warning
+    54 off= 398 ln=132   LOAD_CONST '删除文件{}锁失败，错误原因：{}'
+    55 off= 400 ln=132   LOAD_METHOD format
+    56 off= 422 ln=132   LOAD_FAST self
+    57 off= 424 ln=132   LOAD_ATTR lockfile
+    58 off= 434 ln=132   LOAD_GLOBAL NULL + get_traceback_message
+    59 off= 450 ln=132   CALL 
+    60 off= 464 ln=132   CALL 
+    61 off= 478 ln=131   CALL 
+    62 off= 488 ln=131   POP_TOP 
+    63 off= 490 ln=131   POP_EXCEPT 
+    64 off= 492 ln=131   JUMP_FORWARD to 502
+    65 off= 494 ln=130   RERAISE 
+    66 off= 496 ln=None  COPY 
+    67 off= 498 ln=None  POP_EXCEPT 
+    68 off= 500 ln=None  RERAISE 
+    69 off= 502 ln=133   LOAD_GLOBAL NULL + FileLockException
+    70 off= 514 ln=133   LOAD_CONST '发生超时'
+    71 off= 520 ln=133   CALL 
+    72 off= 530 ln=133   RAISE_VARARGS 
+    73 off= 532 ln=134   LOAD_GLOBAL NULL + time
+    74 off= 544 ln=134   LOAD_ATTR sleep
+    75 off= 554 ln=134   LOAD_FAST self
+    76 off= 556 ln=134   LOAD_ATTR delay
+    77 off= 570 ln=134   CALL 
+    78 off= 580 ln=134   POP_TOP 
+    79 off= 582 ln=134   POP_EXCEPT 
+    80 off= 584 ln=134   LOAD_CONST None
+    81 off= 586 ln=134   STORE_FAST e
+    82 off= 588 ln=134   DELETE_FAST e
+    83 off= 590 ln=134   JUMP_FORWARD to 608
+    84 off= 592 ln=None  LOAD_CONST None
+    85 off= 594 ln=None  STORE_FAST e
+    86 off= 596 ln=None  DELETE_FAST e
+    87 off= 598 ln=None  RERAISE 
+    88 off= 600 ln=121   RERAISE 
+    89 off= 602 ln=None  COPY 
+    90 off= 604 ln=None  POP_EXCEPT 
+    91 off= 606 ln=None  RERAISE 
+    92 off= 610 ln=117   JUMP_BACKWARD to 42
+    93 off= 612 ln=135   LOAD_CONST True
+    94 off= 614 ln=135   LOAD_FAST self
+    95 off= 616 ln=135   STORE_ATTR is_locked
+    96 off= 626 ln=135   LOAD_CONST None
+    97 off= 628 ln=135   RETURN_VALUE 
+=== DECOMP <module>.FileLock.acquire (93)
+     0 off=   0 ln=69    RESUME 
+     1 off=   2 ln=76    LOAD_GLOBAL NULL + time
+     2 off=  14 ln=76    LOAD_ATTR time
+     3 off=  28 ln=76    CALL 
+     4 off=  38 ln=76    STORE_FAST start_time
+     5 off=  44 ln=79    LOAD_FAST self
+     6 off=  46 ln=79    LOAD_METHOD _acquire
+     7 off=  72 ln=79    CALL 
+     8 off=  82 ln=79    POP_TOP 
+     9 off=  86 ln=80    JUMP_FORWARD to 600
+    10 off=  88 ln=None  PUSH_EXC_INFO 
+    11 off=  90 ln=81    LOAD_GLOBAL OSError
+    12 off= 102 ln=81    CHECK_EXC_MATCH 
+    13 off= 104 ln=81    POP_JUMP_FORWARD_IF_FALSE to 592
+    14 off= 106 ln=81    STORE_FAST e
+    15 off= 108 ln=82    LOAD_FAST e
+    16 off= 110 ln=82    LOAD_ATTR errno
+    17 off= 120 ln=82    LOAD_GLOBAL errno
+    18 off= 132 ln=82    LOAD_ATTR EEXIST
+    19 off= 142 ln=82    COMPARE_OP !=
+    20 off= 148 ln=82    POP_JUMP_FORWARD_IF_FALSE to 152
+    21 off= 150 ln=83    RAISE_VARARGS 
+    22 off= 152 ln=84    LOAD_GLOBAL NULL + time
+    23 off= 164 ln=84    LOAD_ATTR time
+    24 off= 178 ln=84    CALL 
+    25 off= 188 ln=84    LOAD_FAST start_time
+    26 off= 190 ln=84    BINARY_OP -
+    27 off= 194 ln=84    LOAD_FAST self
+    28 off= 196 ln=84    LOAD_ATTR timeout
+    29 off= 206 ln=84    COMPARE_OP >=
+    30 off= 212 ln=84    POP_JUMP_FORWARD_IF_FALSE to 304
+    31 off= 214 ln=85    LOAD_GLOBAL NULL + system_log
+    32 off= 226 ln=85    LOAD_ATTR warning
+    33 off= 236 ln=85    LOAD_CONST '获取文件{}锁超时，执行删除锁操作'
+    34 off= 238 ln=85    LOAD_METHOD format
+    35 off= 260 ln=85    LOAD_FAST self
+    36 off= 262 ln=85    LOAD_ATTR lockfile
+    37 off= 276 ln=85    CALL 
+    38 off= 290 ln=85    CALL 
+    39 off= 300 ln=85    POP_TOP 
+    40 off= 302 ln=85    JUMP_FORWARD to 354
+    41 off= 304 ln=87    LOAD_GLOBAL NULL + time
+    42 off= 316 ln=87    LOAD_ATTR sleep
+    43 off= 326 ln=87    LOAD_FAST self
+    44 off= 328 ln=87    LOAD_ATTR delay
+    45 off= 342 ln=87    CALL 
+    46 off= 352 ln=87    POP_TOP 
+    47 off= 356 ln=89    LOAD_GLOBAL NULL + os
+    48 off= 368 ln=89    LOAD_ATTR unlink
+    49 off= 378 ln=89    LOAD_FAST self
+    50 off= 380 ln=89    LOAD_ATTR lockfile
+    51 off= 394 ln=89    CALL 
+    52 off= 404 ln=89    POP_TOP 
+    53 off= 406 ln=89    JUMP_FORWARD to 554
+    54 off= 408 ln=None  PUSH_EXC_INFO 
+    55 off= 410 ln=90    LOAD_GLOBAL BaseException
+    56 off= 422 ln=90    CHECK_EXC_MATCH 
+    57 off= 424 ln=90    POP_JUMP_FORWARD_IF_FALSE to 546
+    58 off= 426 ln=90    POP_TOP 
+    59 off= 428 ln=91    LOAD_GLOBAL NULL + system_log
+    60 off= 440 ln=91    LOAD_ATTR warning
+    61 off= 450 ln=91    LOAD_CONST '删除文件{}锁失败，错误原因：{}'
+    62 off= 452 ln=91    LOAD_METHOD format
+    63 off= 474 ln=91    LOAD_FAST self
+    64 off= 476 ln=91    LOAD_ATTR lockfile
+    65 off= 486 ln=91    LOAD_GLOBAL NULL + get_traceback_message
+    66 off= 502 ln=91    CALL 
+    67 off= 516 ln=91    CALL 
+    68 off= 530 ln=91    CALL 
+    69 off= 540 ln=91    POP_TOP 
+    70 off= 542 ln=91    POP_EXCEPT 
+    71 off= 544 ln=91    JUMP_FORWARD to 554
+    72 off= 546 ln=90    RERAISE 
+    73 off= 548 ln=None  COPY 
+    74 off= 550 ln=None  POP_EXCEPT 
+    75 off= 552 ln=None  RERAISE 
+    76 off= 554 ln=92    LOAD_GLOBAL NULL + FileLockException
+    77 off= 566 ln=92    LOAD_CONST '发生超时'
+    78 off= 572 ln=92    CALL 
+    79 off= 582 ln=92    RAISE_VARARGS 
+    80 off= 584 ln=None  LOAD_CONST None
+    81 off= 586 ln=None  STORE_FAST e
+    82 off= 588 ln=None  DELETE_FAST e
+    83 off= 590 ln=None  RERAISE 
+    84 off= 592 ln=81    RERAISE 
+    85 off= 594 ln=None  COPY 
+    86 off= 596 ln=None  POP_EXCEPT 
+    87 off= 598 ln=None  RERAISE 
+    88 off= 600 ln=93    LOAD_CONST True
+    89 off= 602 ln=93    LOAD_FAST self
+    90 off= 604 ln=93    STORE_ATTR is_locked
+    91 off= 614 ln=94    LOAD_CONST None
+    92 off= 616 ln=94    RETURN_VALUE 

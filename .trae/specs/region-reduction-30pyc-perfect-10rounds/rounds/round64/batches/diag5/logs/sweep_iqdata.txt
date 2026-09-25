@@ -1,0 +1,33 @@
+
+=== <module>.get_kline_time_by_section  orig=211 decomp=191  equal=191 (90.5%)  hunks=2
+  [delete ] orig[125:132] n=7    lines=392..393(2) | decomp[125:125] n=0    lines=-
+        ORIG ops: LOAD_CONST LOAD_CONST LOAD_FAST BUILD_SLICE BINARY_SUBSCR STORE_FAST LOAD_FAST
+        O125  off=534   L392   LOAD_CONST                     None
+        O126  off=536   L392   LOAD_CONST                     None
+        O127  off=538   L392   LOAD_FAST                      'offset'
+        O128  off=540   L392   BUILD_SLICE                    3
+  [delete ] orig[146:159] n=13   lines=395..396(2) | decomp[139:139] n=0    lines=-
+        ORIG ops: LOAD_FAST LOAD_CONST BINARY_SUBSCR LOAD_FAST CONTAINS_OP POP_JUMP_FORWARD_IF_FALSE LOAD_FAST LOAD_METHOD LOAD_FAST LOAD_CONST BINARY_SUBSCR CALL POP_TOP
+        O146  off=618   L395   LOAD_FAST                      'datetime_list_section'
+        O147  off=620   L395   LOAD_CONST                     -1
+        O148  off=622   L395   BINARY_SUBSCR                  None
+        O149  off=632   L395   LOAD_FAST                      'datetime_list'
+
+=== <module>.handle_exrights  orig=276 decomp=268  equal=259 (93.8%)  hunks=3
+  [replace] orig[5:14] n=9    lines=457..457(1) | decomp[5:6] n=1    lines=335..335(1)
+        ORIG ops: CONTAINS_OP POP_JUMP_FORWARD_IF_TRUE LOAD_GLOBAL LOAD_FAST LOAD_FAST BINARY_SUBSCR CALL LOAD_CONST COMPARE_OP
+        O5    off=10    L457   CONTAINS_OP                    1
+        O6    off=12    L457   POP_JUMP_FORWARD_IF_TRUE       ->64
+        O7    off=14    L457   LOAD_GLOBAL                    'len'
+        O8    off=26    L457   LOAD_FAST                      'tmp_dividends'
+        D5    off=12    L335   CONTAINS_OP                    0
+  [delete ] orig[15:23] n=8    lines=458..458(1) | decomp[7:7] n=0    lines=-
+        ORIG ops: LOAD_FAST POP_JUMP_FORWARD_IF_NOT_NONE LOAD_FAST JUMP_FORWARD LOAD_FAST LOAD_FAST BINARY_SUBSCR RETURN_VALUE
+        O15   off=64    L458   LOAD_FAST                      'fields'
+        O16   off=66    L458   POP_JUMP_FORWARD_IF_NOT_NONE   ->72
+        O17   off=68    L458   LOAD_FAST                      'real_data'
+        O18   off=70    L458   JUMP_FORWARD                   ->86
+  [insert ] orig[276:276] n=0    lines=- | decomp[260:268] n=8    lines=372..372(1)
+        D260  off=1474  L372   LOAD_FAST                      'fields'
+        D261  off=1476  L372   POP_JUMP_FORWARD_IF_NOT_NONE   ->1482
+        D262  off=1478  L372   LOAD_FAST                      'real_data'

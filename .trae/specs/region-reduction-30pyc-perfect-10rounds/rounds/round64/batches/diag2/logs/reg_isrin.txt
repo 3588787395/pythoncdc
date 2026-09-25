@@ -1,0 +1,219 @@
+##### Scheduler.run_interval_trade.is_run_interval_time_now  (landed)  first_line=362 ninstr=0
+=== 51 blocks ===
+  B@0     line=None  succs=[88, 198]              claimed=True  exc=[]             RESUME LOAD_FAST LOAD_METHOD LOAD_CONST LOAD_CONST PRECALL CALL STORE_FAST LOAD_GLOBAL LOAD_FAST LOAD_GLOBAL PRECALL C
+  B@88    line=None  succs=[]                     claimed=True  exc=[]             LOAD_GLOBAL LOAD_ATTR LOAD_CONST LOAD_METHOD LOAD_FAST LOAD_GLOBAL LOAD_FAST PRECALL CALL PRECALL CALL PRECALL CALL PO
+  B@198   line=None  succs=[514, 202]             claimed=True  exc=[]             LOAD_FAST POP_JUMP_FORWARD_IF_TRUE
+  B@202   line=None  succs=[204]                  claimed=True  exc=[]             NOP
+  B@204   line=None  succs=[270, 272]             claimed=True  exc=[272]          LOAD_GLOBAL LOAD_GLOBAL LOAD_ATTR LOAD_CONST PRECALL CALL PRECALL CALL STORE_FAST
+  B@270   line=None  succs=[410]                  claimed=True  exc=[]             JUMP_FORWARD
+  B@272   line=None  succs=[404, 290, 402]        claimed=True  exc=[404]          PUSH_EXC_INFO LOAD_GLOBAL CHECK_EXC_MATCH POP_JUMP_FORWARD_IF_FALSE
+  B@290   line=None  succs=[404, 398]             claimed=True  exc=[404]          POP_TOP LOAD_CONST STORE_FAST LOAD_GLOBAL LOAD_ATTR LOAD_CONST LOAD_METHOD LOAD_GLOBAL PRECALL CALL PRECALL CALL PRECA
+  B@398   line=None  succs=[410]                  claimed=True  exc=[]             POP_EXCEPT JUMP_FORWARD
+  B@402   line=None  succs=[404]                  claimed=True  exc=[404]          RERAISE
+  B@404   line=None  succs=[]                     claimed=True  exc=[]             COPY POP_EXCEPT RERAISE
+  B@410   line=None  succs=[436, 456]             claimed=True  exc=[]             LOAD_GLOBAL LOAD_FAST SWAP COPY COMPARE_OP JUMP_IF_FALSE_OR_POP
+  B@436   line=None  succs=[460]                  claimed=True  exc=[]             LOAD_GLOBAL COMPARE_OP JUMP_FORWARD
+  B@456   line=None  succs=[460]                  claimed=True  exc=[]             SWAP POP_TOP
+  B@460   line=None  succs=[512, 462]             claimed=True  exc=[]             JUMP_IF_TRUE_OR_POP
+  B@462   line=None  succs=[488, 508]             claimed=True  exc=[]             LOAD_GLOBAL LOAD_FAST SWAP COPY COMPARE_OP JUMP_IF_FALSE_OR_POP
+  B@488   line=None  succs=[512]                  claimed=True  exc=[]             LOAD_GLOBAL COMPARE_OP JUMP_FORWARD
+  B@508   line=None  succs=[512]                  claimed=True  exc=[]             SWAP POP_TOP
+  B@512   line=None  succs=[]                     claimed=True  exc=[]             RETURN_VALUE
+  B@514   line=None  succs=[564]                  claimed=True  exc=[]             LOAD_FAST LOAD_METHOD LOAD_CONST PRECALL CALL STORE_FAST BUILD_LIST STORE_FAST LOAD_FAST GET_ITER
+  B@564   line=None  succs=[1008, 566]            claimed=True  exc=[]             FOR_ITER
+  B@566   line=None  succs=[570]                  claimed=True  exc=[]             STORE_FAST NOP
+  B@570   line=None  succs=[770, 850, 898]        claimed=True  exc=[898]          LOAD_FAST LOAD_METHOD LOAD_CONST PRECALL CALL UNPACK_SEQUENCE STORE_FAST STORE_FAST LOAD_GLOBAL LOAD_FAST LOAD_METHOD 
+  B@770   line=None  succs=[848, 898]             claimed=True  exc=[898]          LOAD_GLOBAL LOAD_ATTR LOAD_CONST LOAD_METHOD LOAD_FAST PRECALL CALL PRECALL CALL POP_TOP
+  B@848   line=None  succs=[564]                  claimed=True  exc=[]             JUMP_BACKWARD
+  B@850   line=None  succs=[898, 896]             claimed=True  exc=[898]          LOAD_FAST LOAD_METHOD LOAD_FAST LOAD_FAST BUILD_TUPLE PRECALL CALL POP_TOP
+  B@896   line=None  succs=[564]                  claimed=True  exc=[]             JUMP_BACKWARD
+  B@898   line=None  succs=[1000, 1002, 916]      claimed=True  exc=[1002]         PUSH_EXC_INFO LOAD_GLOBAL CHECK_EXC_MATCH POP_JUMP_FORWARD_IF_FALSE
+  B@916   line=None  succs=[996, 1002]            claimed=True  exc=[1002]         POP_TOP LOAD_GLOBAL LOAD_ATTR LOAD_CONST LOAD_METHOD LOAD_FAST PRECALL CALL PRECALL CALL POP_TOP
+  B@996   line=None  succs=[564]                  claimed=True  exc=[]             POP_EXCEPT JUMP_BACKWARD
+  B@1000  line=None  succs=[1002]                 claimed=True  exc=[1002]         RERAISE
+  B@1002  line=None  succs=[]                     claimed=True  exc=[]             COPY POP_EXCEPT RERAISE
+  B@1008  line=None  succs=[1046, 1128]           claimed=True  exc=[]             LOAD_GLOBAL LOAD_FAST PRECALL CALL LOAD_CONST COMPARE_OP POP_JUMP_FORWARD_IF_FALSE
+  B@1046  line=None  succs=[]                     claimed=True  exc=[]             LOAD_GLOBAL LOAD_ATTR LOAD_CONST LOAD_METHOD LOAD_FAST PRECALL CALL PRECALL CALL POP_TOP LOAD_CONST RETURN_VALUE
+  B@1128  line=None  succs=[1130]                 claimed=True  exc=[]             NOP
+  B@1130  line=None  succs=[1196, 1198]           claimed=True  exc=[1198]         LOAD_GLOBAL LOAD_GLOBAL LOAD_ATTR LOAD_CONST PRECALL CALL PRECALL CALL STORE_FAST
+  B@1196  line=None  succs=[1336]                 claimed=True  exc=[]             JUMP_FORWARD
+  B@1198  line=None  succs=[1330, 1216, 1328]     claimed=True  exc=[1330]         PUSH_EXC_INFO LOAD_GLOBAL CHECK_EXC_MATCH POP_JUMP_FORWARD_IF_FALSE
+  B@1216  line=None  succs=[1330, 1324]           claimed=True  exc=[1330]         POP_TOP LOAD_CONST STORE_FAST LOAD_GLOBAL LOAD_ATTR LOAD_CONST LOAD_METHOD LOAD_GLOBAL PRECALL CALL PRECALL CALL PRECA
+  B@1324  line=None  succs=[1336]                 claimed=True  exc=[]             POP_EXCEPT JUMP_FORWARD
+  B@1328  line=None  succs=[1330]                 claimed=True  exc=[1330]         RERAISE
+  B@1330  line=None  succs=[]                     claimed=True  exc=[]             COPY POP_EXCEPT RERAISE
+  B@1336  line=None  succs=[1340]                 claimed=True  exc=[]             LOAD_FAST GET_ITER
+  B@1340  line=None  succs=[1390, 1342]           claimed=True  exc=[]             FOR_ITER
+  B@1342  line=None  succs=[1366, 1378]           claimed=True  exc=[]             UNPACK_SEQUENCE STORE_FAST STORE_FAST LOAD_FAST LOAD_FAST SWAP COPY COMPARE_OP POP_JUMP_FORWARD_IF_FALSE
+  B@1366  line=None  succs=[1388, 1376]           claimed=True  exc=[]             LOAD_FAST COMPARE_OP POP_JUMP_FORWARD_IF_FALSE
+  B@1376  line=None  succs=[1382]                 claimed=True  exc=[]             JUMP_FORWARD
+  B@1378  line=None  succs=[1340]                 claimed=True  exc=[]             POP_TOP JUMP_BACKWARD
+  B@1382  line=None  succs=[]                     claimed=True  exc=[]             POP_TOP LOAD_CONST RETURN_VALUE
+  B@1388  line=None  succs=[1340]                 claimed=True  exc=[]             JUMP_BACKWARD
+  B@1390  line=None  succs=[]                     claimed=True  exc=[]             LOAD_CONST RETURN_VALUE
+=== region tree (19 roots) ===
+IfRegion                 entry=0     merge_block=512 condition_block=0
+   blocks=[0, 88, 198, 202, 204, 270, 410, 436, 456, 460, 462, 488, 508, 512, 514, 564, 566, 570, 770, 848, 850, 896, 1008, 1046, 1128, 1130, 1196, 1336, 1340, 1342, 1366, 1376, 1378, 1382, 1388, 1390]
+   then_blocks            [88]
+   else_blocks            [198, 202, 204, 270, 410, 436, 456, 460, 462, 488, 508, 512, 514, 564, 566, 570, 770, 848, 850, 896, 1008, 1046, 1128, 1130, 1196, 1336, 1340, 1342, 1366, 1376, 1378, 1382, 1388, 1390]
+   else_blocks            [198, 202, 204, 270, 410, 436, 456, 460, 462, 488, 508, 512, 514, 564, 566, 570, 770, 848, 850, 896, 1008, 1046, 1128, 1130, 1196, 1336, 1340, 1342, 1366, 1376, 1378, 1382, 1388, 1390]
+   elif_bodies=[[202, 204, 270, 410, 436, 456, 460, 462, 488, 508, 512]]
+   elif_conditions        [198]
+   elif_final_else        [514, 564, 566, 570, 770, 848, 850, 896, 1008, 1046, 1128, 1130, 1196, 1336, 1340, 1342, 1366, 1376, 1378, 1382, 1388, 1390]
+  Region                   entry=0    
+     blocks=[0]
+  Region                   entry=88   
+     blocks=[88]
+  Region                   entry=198  
+     blocks=[198]
+  Region                   entry=202  
+     blocks=[202]
+  TryExceptRegion          entry=204  
+     blocks=[202, 204, 270, 272, 290, 398, 402, 404]
+     else_blocks            [270]
+     try_blocks             [204]
+     else_blocks            [270]
+     cleanup_blocks         [402, 404]
+     handler_entry_blocks   [272]
+     except_handlers=[('BaseException', None, [290, 398])]
+  IfRegion                 entry=410   merge_block=460 condition_block=410
+     blocks=[410, 436, 456, 460]
+     else_blocks            [456]
+     else_blocks            [456]
+  BoolOpRegion             entry=460   merge_block=512
+     blocks=[460, 462, 488, 508, 512]
+  LoopRegion               entry=564   header_block=564
+     blocks=[514, 564, 566, 570, 770, 848, 850, 896, 898, 916, 996]
+     body_blocks            [564, 566, 570, 770, 848, 850, 896, 898, 916, 996]
+    TryExceptRegion          entry=570  
+       blocks=[570, 770, 848, 850, 898, 916, 996, 1000, 1002]
+       try_blocks             [570, 770, 848, 850]
+       cleanup_blocks         [1000, 1002]
+       handler_entry_blocks   [898]
+       except_handlers=[('BaseException', None, [916, 996])]
+      IfRegion                 entry=570   merge_block=564 condition_block=570
+         blocks=[570, 770, 848, 850]
+         then_blocks            [770, 848]
+         else_blocks            [850]
+         else_blocks            [850]
+  IfRegion                 entry=1008  merge_block=1128 condition_block=1008
+     blocks=[1008, 1046]
+     then_blocks            [1046]
+    Region                   entry=1008 
+       blocks=[1008]
+    Region                   entry=1046 
+       blocks=[1046]
+  Region                   entry=1128 
+     blocks=[1128]
+  TryExceptRegion          entry=1130 
+     blocks=[1128, 1130, 1196, 1198, 1216, 1324, 1328, 1330]
+     else_blocks            [1196]
+     try_blocks             [1130]
+     else_blocks            [1196]
+     cleanup_blocks         [1328, 1330]
+     handler_entry_blocks   [1198]
+     except_handlers=[('BaseException', None, [1216, 1324])]
+  LoopRegion               entry=1340  header_block=1340
+     blocks=[1336, 1340, 1342, 1366, 1376, 1378, 1382, 1388, 1390]
+     else_blocks            [1390]
+     body_blocks            [1340, 1342, 1366, 1376, 1378, 1382, 1388]
+     else_blocks            [1390]
+    IfRegion                 entry=1342  merge_block=1382 condition_block=1342
+       blocks=[1342, 1366, 1376, 1378]
+       then_blocks            [1376]
+       else_blocks            [1378]
+       else_blocks            [1378]
+Region                   entry=0    
+   blocks=[0]
+Region                   entry=88   
+   blocks=[88]
+Region                   entry=198  
+   blocks=[198]
+Region                   entry=202  
+   blocks=[202]
+TryExceptRegion          entry=204  
+   blocks=[202, 204, 270, 272, 290, 398, 402, 404]
+   else_blocks            [270]
+   try_blocks             [204]
+   else_blocks            [270]
+   cleanup_blocks         [402, 404]
+   handler_entry_blocks   [272]
+   except_handlers=[('BaseException', None, [290, 398])]
+IfRegion                 entry=410   merge_block=460 condition_block=410
+   blocks=[410, 436, 456, 460]
+   else_blocks            [456]
+   else_blocks            [456]
+BoolOpRegion             entry=460   merge_block=512
+   blocks=[460, 462, 488, 508, 512]
+IfRegion                 entry=462   merge_block=512 condition_block=462
+   blocks=[462, 488, 508, 512]
+   else_blocks            [508]
+   else_blocks            [508]
+LoopRegion               entry=564   header_block=564
+   blocks=[514, 564, 566, 570, 770, 848, 850, 896, 898, 916, 996]
+   body_blocks            [564, 566, 570, 770, 848, 850, 896, 898, 916, 996]
+  TryExceptRegion          entry=570  
+     blocks=[570, 770, 848, 850, 898, 916, 996, 1000, 1002]
+     try_blocks             [570, 770, 848, 850]
+     cleanup_blocks         [1000, 1002]
+     handler_entry_blocks   [898]
+     except_handlers=[('BaseException', None, [916, 996])]
+    IfRegion                 entry=570   merge_block=564 condition_block=570
+       blocks=[570, 770, 848, 850]
+       then_blocks            [770, 848]
+       else_blocks            [850]
+       else_blocks            [850]
+TryExceptRegion          entry=570  
+   blocks=[570, 770, 848, 850, 898, 916, 996, 1000, 1002]
+   try_blocks             [570, 770, 848, 850]
+   cleanup_blocks         [1000, 1002]
+   handler_entry_blocks   [898]
+   except_handlers=[('BaseException', None, [916, 996])]
+  IfRegion                 entry=570   merge_block=564 condition_block=570
+     blocks=[570, 770, 848, 850]
+     then_blocks            [770, 848]
+     else_blocks            [850]
+     else_blocks            [850]
+IfRegion                 entry=570   merge_block=564 condition_block=570
+   blocks=[570, 770, 848, 850]
+   then_blocks            [770, 848]
+   else_blocks            [850]
+   else_blocks            [850]
+IfRegion                 entry=1008  merge_block=1128 condition_block=1008
+   blocks=[1008, 1046]
+   then_blocks            [1046]
+  Region                   entry=1008 
+     blocks=[1008]
+  Region                   entry=1046 
+     blocks=[1046]
+Region                   entry=1008 
+   blocks=[1008]
+Region                   entry=1046 
+   blocks=[1046]
+Region                   entry=1128 
+   blocks=[1128]
+TryExceptRegion          entry=1130 
+   blocks=[1128, 1130, 1196, 1198, 1216, 1324, 1328, 1330]
+   else_blocks            [1196]
+   try_blocks             [1130]
+   else_blocks            [1196]
+   cleanup_blocks         [1328, 1330]
+   handler_entry_blocks   [1198]
+   except_handlers=[('BaseException', None, [1216, 1324])]
+LoopRegion               entry=1340  header_block=1340
+   blocks=[1336, 1340, 1342, 1366, 1376, 1378, 1382, 1388, 1390]
+   else_blocks            [1390]
+   body_blocks            [1340, 1342, 1366, 1376, 1378, 1382, 1388]
+   else_blocks            [1390]
+  IfRegion                 entry=1342  merge_block=1382 condition_block=1342
+     blocks=[1342, 1366, 1376, 1378]
+     then_blocks            [1376]
+     else_blocks            [1378]
+     else_blocks            [1378]
+IfRegion                 entry=1342  merge_block=1382 condition_block=1342
+   blocks=[1342, 1366, 1376, 1378]
+   then_blocks            [1376]
+   else_blocks            [1378]
+   else_blocks            [1378]
+=== unclaimed blocks ===
+   []

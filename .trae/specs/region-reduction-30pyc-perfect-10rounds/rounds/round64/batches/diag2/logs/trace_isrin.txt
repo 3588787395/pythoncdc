@@ -1,0 +1,39 @@
+##### trace Scheduler.run_interval_trade.is_run_interval_time_now (landed)
+--- region reduce log (7 entries) ---
+  _process_if_blocks   blocks=[88] branch=then region=IfRegion@0 blocks=[0, 88, 198, 202, 204, 270, 410, 436, 456, 460, 462, 488, 508, 512] parent=- -> list[2]=['{Expr {Call {Attribute}}}', '{Return {Constant False}}']
+  _generate_region     TryExceptRegion@204 blocks=[202, 204, 270, 272, 290, 398, 402, 404] parent=IfRegion@0 {Try}
+  _generate_region     IfRegion@410 blocks=[410, 436, 456, 460] parent=IfRegion@0             list[0]=[]
+  _generate_region     IfRegion@462 blocks=[462, 488, 508, 512] parent=-                      list[0]=[]
+  _process_if_blocks   blocks=[202, 204, 270, 410, 436, 456, 460, 462, 488, 508, 512] branch=elif region=IfRegion@0 blocks=[0, 88, 198, 202, 204, 270, 410, 436, 456, 460, 462, 488, 508, 512] parent=- -> list[1]=['{Try}']
+  _process_if_blocks   blocks=[1376] branch=then region=IfRegion@1342 blocks=[1342, 1366, 1376, 1378] parent=LoopRegion@1340 -> list[0]=[]
+  _generate_region     IfRegion@1342 blocks=[1342, 1366, 1376, 1378] parent=LoopRegion@1340   {If then=1 else=0}
+--- generated source ---
+def is_run_interval_time_now(**f_kwargs):
+    """
+            检查当前时间是否在指定的 interval_timer_ranges 参数配置的时间段内。
+
+            :param f_kwargs: 关键字参数列表，其中包括 interval_timer_ranges。
+                interval_timer_ranges 是字符串形式的时间范围，格式如 "HH:MM-HH:MM,HH:MM-HH:MM"。
+                如果 f_kwargs 未提供此参数，将使用全局默认的运行时间。
+
+            :return: 如果当前时间在 interval_timer_ranges 内，则返回 True。
+                否则返回 False。如果获取当前时间失败，默认返回 False。
+            :rtype: bool
+
+            用法说明：
+            1. interval_timer_ranges 参数可以为多个时间段，用逗号分隔。
+            2. 每个时间段用 HHMM-HHMM 的形式表示，必须遵循 24 小时时间格式。
+            3. 如果未配置该参数，函数使用默认的时间范围: [RI_STOCK_AM_OPEN, RI_STOCK_AM_CLOSE) 或 [RI_STOCK_PM_OPEN, RI_STOCK_PM_CLOSE）。
+            """
+    start_time, end_time = time_range.split('-')
+    start_time = int(start_time.replace(':', ''))
+    end_time = int(end_time.replace(':', ''))
+    start_time > end_time
+    strategy_log.error('interval_timer_ranges 参数 {} 配置错误，开始时间不能大于结束时间，无法正常触发 run_interval 函数。'.format(time_range))
+    valid_time_ranges.append((start_time, end_time))
+    if len(valid_time_ranges) == 0:
+        strategy_log.error('interval_timer_ranges 配置 {} 错误，请检查参数，无法正常触发 run_interval 函数。'.format(interval_timer_ranges))
+        return False
+    current_time = int(time.strftime('%H%M'))
+    return False
+

@@ -1,0 +1,10 @@
+> _generate_region TryExceptRegion@170 blocks=[168, 170, 262, 276, 288, 310, 330, 346, 426, 428, 446, 448, 592, 602, 610, 612] merge=None entry=170 parent=None skip_store_targets=()
+  > _generate_region IfRegion@170 blocks=[170, 288, 330, 346] merge=426 entry=170 parent=None skip_store_targets=()
+    . _build_boolop_expression(BoolOpRegion@170 blocks=[170, 262, 276] merge=310 entry=170 parent=IfRegion@170) -> {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'data', 'ctx': 'Load', '
+  < _generate_region -> ['Assign(kline_loader)', 'Assign(data)', 'If(n=2,e=1)']
+< _generate_region -> Try
+
+==== GENERATED BLOCKS around watch ====
+
+==== AST DUMP ====
+{"type": "FunctionDef", "name": "get_kline_binary", "args": {"type": "arguments", "posonlyargs": [], "args": [{"type": "arg", "arg": "stock"}, {"type": "arg", "arg": "typet"}, {"type": "arg", "arg": "

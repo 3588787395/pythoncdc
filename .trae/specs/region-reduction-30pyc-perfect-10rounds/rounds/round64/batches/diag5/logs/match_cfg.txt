@@ -1,0 +1,99 @@
+=== ORIG instrs 170..200 ===
+  O170  off=1234  L215   POP_JUMP_FORWARD_IF_FALSE          ->1320                 -> filt_idx=None
+  O171  off=1236  L216   LOAD_FAST                          'deal_price'           -> filt_idx=None
+  O172  off=1238  L216   LOAD_FAST                          'self'                 -> filt_idx=None
+  O173  off=1240  L216   LOAD_ATTR                          '_engine'              -> filt_idx=None
+  O174  off=1250  L216   LOAD_ATTR                          'data_cache'           -> filt_idx=None
+  O175  off=1260  L216   LOAD_METHOD                        'get_limit_down'       -> filt_idx=None
+  O176  off=1282  L216   LOAD_FAST                          'asset'                -> filt_idx=None
+  O177  off=1284  L216   LOAD_ATTR                          'symbol'               -> filt_idx=None
+  O178  off=1298  L216   CALL                               1                      -> filt_idx=None
+  O179  off=1308  L216   COMPARE_OP                         '<='                   -> filt_idx=None
+  O180  off=1314  L216   POP_JUMP_FORWARD_IF_FALSE          ->1320                 -> filt_idx=None
+  O181  off=1318  L217   JUMP_BACKWARD                      ->6                    -> filt_idx=None
+  O182  off=1322  LNone  JUMP_FORWARD                       ->2464                 -> filt_idx=None
+  O183  off=1324  L219   LOAD_FAST                          'order'                -> filt_idx=None
+  O184  off=1326  L219   LOAD_ATTR                          'asset'                -> filt_idx=None
+  O185  off=1336  L219   LOAD_ATTR                          'symbol'               -> filt_idx=None
+  O186  off=1346  L219   LOAD_CONST                         None                   -> filt_idx=None
+  O187  off=1348  L219   LOAD_CONST                         3                      -> filt_idx=None
+  O188  off=1350  L219   BUILD_SLICE                        2                      -> filt_idx=None
+  O189  off=1352  L219   BINARY_SUBSCR                      None                   -> filt_idx=None
+  O190  off=1362  L219   LOAD_CONST                         '300'                  -> filt_idx=None
+  O191  off=1364  L219   COMPARE_OP                         '=='                   -> filt_idx=None
+  O192  off=1370  L219   POP_JUMP_FORWARD_IF_FALSE          ->1384                 -> filt_idx=197
+  O193  off=1372  L219   LOAD_FAST                          'trading_date'         -> filt_idx=None
+  O194  off=1374  L219   LOAD_FAST                          'gem_change_date'      -> filt_idx=None
+  O195  off=1376  L219   COMPARE_OP                         '<'                    -> filt_idx=None
+  O196  off=1382  L219   POP_JUMP_FORWARD_IF_TRUE           ->1444                 -> filt_idx=211
+  O197  off=1384  L220   LOAD_FAST                          'order'                -> filt_idx=None
+  O198  off=1386  L220   LOAD_ATTR                          'asset'                -> filt_idx=None
+  O199  off=1396  L220   LOAD_ATTR                          'symbol'               -> filt_idx=None
+=== ORIG instrs 455..480 ===
+  O455  off=3158  L273   LOAD_ATTR                          'ON_TRADE_RSP'         -> filt_idx=None
+  O456  off=3168  L273   LOAD_FAST                          'order'                -> filt_idx=None
+  O457  off=3170  L273   LOAD_FAST                          'order'                -> filt_idx=None
+  O458  off=3172  L273   KW_NAMES                           <unknown>              -> filt_idx=None
+  O459  off=3178  L273   CALL                               3                      -> filt_idx=None
+  O460  off=3192  L273   CALL                               1                      -> filt_idx=None
+  O461  off=3202  L273   POP_TOP                            None                   -> filt_idx=None
+  O462  off=3206  L274   JUMP_BACKWARD                      ->6                    -> filt_idx=None
+  O463  off=3210  L292   LOAD_FAST                          'self'                 -> filt_idx=None
+  O464  off=3212  L292   LOAD_ATTR                          '_volume_limit'        -> filt_idx=None
+  O465  off=3224  L292   POP_JUMP_FORWARD_IF_FALSE          ->3954                 -> filt_idx=576
+  O466  off=3226  L293   LOAD_FAST                          'self'                 -> filt_idx=None
+  O467  off=3228  L293   LOAD_ATTR                          '_engine'              -> filt_idx=None
+  O468  off=3238  L293   LOAD_ATTR                          'bar_dict'             -> filt_idx=None
+  O469  off=3248  L293   LOAD_FAST                          'asset'                -> filt_idx=None
+  O470  off=3250  L293   LOAD_ATTR                          'symbol'               -> filt_idx=None
+  O471  off=3260  L293   BINARY_SUBSCR                      None                   -> filt_idx=None
+  O472  off=3270  L293   STORE_FAST                         'bar'                  -> filt_idx=None
+  O473  off=3272  L294   LOAD_FAST                          'bar'                  -> filt_idx=None
+  O474  off=3274  L294   LOAD_ATTR                          'volume'               -> filt_idx=None
+  O475  off=3284  L294   LOAD_CONST                         0                      -> filt_idx=None
+  O476  off=3286  L294   COMPARE_OP                         '=='                   -> filt_idx=None
+  O477  off=3292  L294   POP_JUMP_FORWARD_IF_FALSE          ->3432                 -> filt_idx=495
+  O478  off=3294  L295   LOAD_GLOBAL                        '_'                    -> filt_idx=None
+  O479  off=3306  L295   LOAD_CONST                         '订单撤销:  当前bar交易量不足  {symbol}  bar.volume {bar_volume}' -> filt_idx=None
+=== ORIG instrs 700..714 ===
+  O700  off=4848  L354   LOAD_ATTR                          '_engine'              -> filt_idx=None
+  O701  off=4858  L354   LOAD_ATTR                          'event_bus'            -> filt_idx=None
+  O702  off=4868  L354   LOAD_METHOD                        'publish_event'        -> filt_idx=None
+  O703  off=4890  L354   LOAD_GLOBAL                        'Event'                -> filt_idx=None
+  O704  off=4902  L354   LOAD_GLOBAL                        'EventEnum'            -> filt_idx=None
+  O705  off=4914  L354   LOAD_ATTR                          'ON_TRADE_RSP'         -> filt_idx=None
+  O706  off=4924  L354   LOAD_FAST                          'order'                -> filt_idx=None
+  O707  off=4926  L354   LOAD_FAST                          'order'                -> filt_idx=None
+  O708  off=4928  L354   KW_NAMES                           <unknown>              -> filt_idx=None
+  O709  off=4934  L354   CALL                               3                      -> filt_idx=None
+  O710  off=4948  L354   CALL                               1                      -> filt_idx=None
+  O711  off=4958  L354   POP_TOP                            None                   -> filt_idx=None
+  O712  off=4962  LNone  JUMP_BACKWARD                      ->6                    -> filt_idx=None
+  O713  off=4964  L177   LOAD_CONST                         None                   -> filt_idx=None
+  O714  off=4966  L177   RETURN_VALUE                       None                   -> filt_idx=None
+=== all jumps whose TARGET lands in 180..465 ===
+  from O85   off=662   L198   POP_JUMP_FORWARD_IF_FALSE        -> 372 (off 2468)
+  from O147  off=1066  L211   POP_JUMP_FORWARD_IF_FALSE        -> 183 (off 1324)
+  from O192  off=1370  L219   POP_JUMP_FORWARD_IF_FALSE        -> 197 (off 1384)
+  from O196  off=1382  L219   POP_JUMP_FORWARD_IF_TRUE         -> 211 (off 1444)
+  from O206  off=1430  L220   POP_JUMP_FORWARD_IF_FALSE        -> 245 (off 1696)
+  from O210  off=1442  L220   POP_JUMP_FORWARD_IF_FALSE        -> 245 (off 1696)
+  from O216  off=1484  L221   POP_JUMP_FORWARD_IF_FALSE        -> 228 (off 1570)
+  from O226  off=1564  L222   POP_JUMP_FORWARD_IF_FALSE        -> 228 (off 1570)
+  from O233  off=1610  L224   POP_JUMP_FORWARD_IF_FALSE        -> 245 (off 1696)
+  from O243  off=1690  L225   POP_JUMP_FORWARD_IF_FALSE        -> 245 (off 1696)
+  from O264  off=1818  L229   JUMP_IF_FALSE_OR_POP             -> 268 (off 1830)
+  from O267  off=1828  L229   JUMP_FORWARD                     -> 270 (off 1834)
+  from O280  off=1882  L231   POP_JUMP_FORWARD_IF_FALSE        -> 325 (off 2164)
+  from O284  off=1894  L231   POP_JUMP_FORWARD_IF_FALSE        -> 325 (off 2164)
+  from O288  off=1906  L232   POP_JUMP_FORWARD_IF_FALSE        -> 325 (off 2164)
+  from O290  off=1910  L232   POP_JUMP_FORWARD_IF_TRUE         -> 325 (off 2164)
+  from O296  off=1952  L234   POP_JUMP_FORWARD_IF_FALSE        -> 308 (off 2038)
+  from O306  off=2032  L235   POP_JUMP_FORWARD_IF_FALSE        -> 308 (off 2038)
+  from O313  off=2078  L237   POP_JUMP_FORWARD_IF_FALSE        -> 325 (off 2164)
+  from O323  off=2158  L238   POP_JUMP_FORWARD_IF_FALSE        -> 325 (off 2164)
+  from O342  off=2252  L242   POP_JUMP_FORWARD_IF_FALSE        -> 354 (off 2338)
+  from O352  off=2332  L243   POP_JUMP_FORWARD_IF_FALSE        -> 354 (off 2338)
+  from O371  off=2466  L249   JUMP_FORWARD                     -> 463 (off 3210)
+  from O380  off=2524  L258   POP_JUMP_FORWARD_IF_FALSE        -> 419 (off 2846)
+  from O390  off=2604  L259   POP_JUMP_FORWARD_IF_FALSE        -> 419 (off 2846)

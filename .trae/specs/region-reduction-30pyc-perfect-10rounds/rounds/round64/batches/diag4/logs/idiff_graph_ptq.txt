@@ -1,0 +1,58 @@
+=== <module>.ModelGraph._process_task_queue : token len orig=378 decomp=378  identical=False
+    non-equal blocks=3  ratio=0.9894
+  replace  orig[ 119: 121](n=2) decomp[ 119: 120](n=1)
+      orig  src-lines [530]   decomp src-lines [386]
+       O  116 off= 560 ln=None  COPY 
+       O  117 off= 562 ln=None  POP_EXCEPT 
+       O  118 off= 564 ln=None  RERAISE 
+     > O  119 off= 566 ln=530   LOAD_CONST None
+     > O  120 off= 568 ln=530   RETURN_VALUE 
+       O  121 off= 570 ln=None  PUSH_EXC_INFO 
+       O  122 off= 572 ln=531   LOAD_GLOBAL KeyError
+       O  123 off= 584 ln=531   CHECK_EXC_MATCH 
+      ----
+       D  116 off= 560 ln=None  COPY 
+       D  117 off= 562 ln=None  POP_EXCEPT 
+       D  118 off= 564 ln=None  RERAISE 
+     > D  119 off= 566 ln=386   JUMP_FORWARD to 842
+       D  120 off= 568 ln=None  PUSH_EXC_INFO 
+       D  121 off= 570 ln=387   LOAD_GLOBAL KeyError
+       D  122 off= 582 ln=387   CHECK_EXC_MATCH 
+
+  insert   orig[ 177: 177](n=0) decomp[ 176: 178](n=2)
+      orig  src-lines []   decomp src-lines [397]
+       O  174 off= 838 ln=None  COPY 
+       O  175 off= 840 ln=None  POP_EXCEPT 
+       O  176 off= 842 ln=None  RERAISE 
+       O  177 off= 844 ln=544   LOAD_FAST level
+       O  178 off= 846 ln=544   LOAD_GLOBAL NULL + len
+       O  179 off= 858 ln=544   LOAD_FAST result
+      ----
+       D  173 off= 836 ln=None  COPY 
+       D  174 off= 838 ln=None  POP_EXCEPT 
+       D  175 off= 840 ln=None  RERAISE 
+     > D  176 off= 842 ln=397   LOAD_CONST None
+     > D  177 off= 844 ln=397   RETURN_VALUE 
+       D  178 off= 846 ln=399   LOAD_FAST level
+       D  179 off= 848 ln=399   LOAD_GLOBAL NULL + len
+       D  180 off= 860 ln=399   LOAD_FAST result
+
+  replace  orig[ 236: 238](n=2) decomp[ 237: 238](n=1)
+      orig  src-lines [555]   decomp src-lines [411]
+       O  233 off=1108 ln=None  COPY 
+       O  234 off=1110 ln=None  POP_EXCEPT 
+       O  235 off=1112 ln=None  RERAISE 
+     > O  236 off=1114 ln=555   LOAD_CONST None
+     > O  237 off=1116 ln=555   RETURN_VALUE 
+       O  238 off=1118 ln=None  PUSH_EXC_INFO 
+       O  239 off=1120 ln=556   LOAD_GLOBAL KeyError
+       O  240 off=1132 ln=556   CHECK_EXC_MATCH 
+      ----
+       D  234 off=1110 ln=None  COPY 
+       D  235 off=1112 ln=None  POP_EXCEPT 
+       D  236 off=1114 ln=None  RERAISE 
+     > D  237 off=1116 ln=411   JUMP_FORWARD to 1272
+       D  238 off=1118 ln=None  PUSH_EXC_INFO 
+       D  239 off=1120 ln=412   LOAD_GLOBAL KeyError
+       D  240 off=1132 ln=412   CHECK_EXC_MATCH 
+

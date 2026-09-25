@@ -1,0 +1,8 @@
+IQData/plugins/plugin_system_realquote/real_quote.pyc  official 39/44  rate 0.8864  round 63
+        F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc
+IQCommon/util/trade_info_utils.pyc  official 38/40  rate 0.9500  round 63
+        F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc
+IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc  official 32/34  rate 0.9412  round 63
+        F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc
+IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc  official 32/35  rate 0.9143  round 63
+        F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc

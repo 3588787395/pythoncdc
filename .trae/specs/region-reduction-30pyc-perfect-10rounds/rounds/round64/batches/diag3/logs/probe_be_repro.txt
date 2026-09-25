@@ -1,0 +1,8 @@
+NOISE_OPS = frozenset({'PUSH_NULL', 'CACHE', 'NOP', 'RESUME'})
+back-edge: block 50 -> header 14
+back-edge: block 254 -> header 14
+back-edge: block 366 -> header 360
+
+candidate keys:
+  block 50     -> header 14     key=(1, 6, 50)  ops=['LOAD_FAST', 'LOAD_METHOD', 'LOAD_FAST', 'PRECALL', 'CALL', 'POP_TOP', 'JUMP_BACKWARD']
+  block 254    -> header 14     key=(1, 6, 254)  ops=['LOAD_FAST', 'LOAD_METHOD', 'LOAD_FAST', 'PRECALL', 'CALL', 'POP_TOP', 'JUMP_BACKWARD']

@@ -1,0 +1,155 @@
+=== trade_operation firstlineno=281 args=('user_id', 'trade_id', 'operation', 'trade_list_file', 'delete_trade_list_file', 'trade_id_list', 'file_io', 'csv_reader', 'write_info', 'delete_write_info', 'new_file_flag', 'items', 'mode') ===
+      -- line 281: 
+      -- line 285: 
+      -- line 286: 
+      -- line 288: 
+      -- line 289: 
+      -- line 290: 
+      -- line 291: 
+      -- line 293: 
+      -- line 294: 
+      -- line 295: 
+      -- line 296: 
+      -- line 297: 
+      -- line 298: 
+      -- line 299: 
+      -- line 300: 
+      -- line 301: 
+      -- line 302: 
+      -- line 303: 
+      -- line 304: 
+      -- line 305: 
+    648 POP_TOP                        
+      -- line 306: 
+    650 LOAD_FAST                      csv_reader
+    652 GET_ITER                       
+    654 FOR_ITER                       to 1044
+    656 STORE_FAST                     items
+      -- line 307: 
+    658 LOAD_FAST                      items
+    660 LOAD_CONST                     0
+    662 BINARY_SUBSCR                  
+    672 LOAD_FAST                      trade_id_list
+    674 CONTAINS_OP                    
+    676 POP_JUMP_FORWARD_IF_FALSE      to 1000
+      -- line 309: 
+    678 LOAD_FAST                      operation
+    680 LOAD_CONST                     'start'
+    682 COMPARE_OP                     ==
+    688 POP_JUMP_FORWARD_IF_FALSE      to 704
+      -- line 310: 
+    690 LOAD_CONST                     '0'
+    692 LOAD_FAST                      items
+    694 LOAD_CONST                     2
+    696 STORE_SUBSCR                   
+      -- line 311: 
+    700 LOAD_CONST                     'restart'
+    702 STORE_FAST                     operation
+      -- line 312: 
+    704 LOAD_FAST                      operation
+    706 LOAD_CONST                     'stop'
+    708 COMPARE_OP                     ==
+    714 POP_JUMP_FORWARD_IF_FALSE      to 726
+      -- line 313: 
+    716 LOAD_CONST                     '1'
+    718 LOAD_FAST                      items
+    720 LOAD_CONST                     2
+    722 STORE_SUBSCR                   
+      -- line 314: 
+    726 LOAD_FAST                      operation
+    728 LOAD_CONST                     'delete'
+    730 COMPARE_OP                     ==
+    736 POP_JUMP_FORWARD_IF_FALSE      to 874
+      -- line 315: 
+    738 LOAD_CONST                     '2'
+    740 LOAD_FAST                      items
+    742 LOAD_CONST                     2
+    744 STORE_SUBSCR                   
+      -- line 316: 
+    748 LOAD_FAST                      delete_write_info
+    750 LOAD_METHOD                    append
+    772 LOAD_FAST                      items
+    774 PRECALL                        
+    778 CALL                           
+    788 POP_TOP                        
+      -- line 317: 
+    790 LOAD_GLOBAL                    NULL + TradeOperationLogger
+    802 LOAD_FAST                      user_id
+    804 LOAD_FAST                      items
+    806 LOAD_CONST                     0
+    808 BINARY_SUBSCR                  
+    818 PRECALL                        
+    822 CALL                           
+    832 LOAD_METHOD                    write
+    854 LOAD_FAST                      operation
+    856 PRECALL                        
+    860 CALL                           
+    870 POP_TOP                        
+      -- line 318: 
+    872 JUMP_BACKWARD                  to 654
+      -- line 319: 
+    874 LOAD_FAST                      operation
+    876 LOAD_CONST                     'pause'
+    878 COMPARE_OP                     ==
+    884 POP_JUMP_FORWARD_IF_FALSE      to 896
+      -- line 320: 
+    886 LOAD_CONST                     '3'
+    888 LOAD_FAST                      items
+    890 LOAD_CONST                     2
+    892 STORE_SUBSCR                   
+      -- line 321: 
+    896 LOAD_FAST                      operation
+    898 LOAD_CONST                     'reload'
+    900 COMPARE_OP                     ==
+    906 POP_JUMP_FORWARD_IF_FALSE      to 918
+      -- line 322: 
+    908 LOAD_CONST                     '4'
+    910 LOAD_FAST                      items
+    912 LOAD_CONST                     2
+    914 STORE_SUBSCR                   
+      -- line 323: 
+    918 LOAD_GLOBAL                    NULL + TradeOperationLogger
+    930 LOAD_FAST                      user_id
+    932 LOAD_FAST                      items
+    934 LOAD_CONST                     0
+    936 BINARY_SUBSCR                  
+    946 PRECALL                        
+    950 CALL                           
+    960 LOAD_METHOD                    write
+    982 LOAD_FAST                      operation
+    984 PRECALL                        
+    988 CALL                           
+    998 POP_TOP                        
+      -- line 324: 
+   1000 LOAD_FAST                      write_info
+   1002 LOAD_METHOD                    append
+   1024 LOAD_FAST                      items
+   1026 PRECALL                        
+   1030 CALL                           
+   1040 POP_TOP                        
+   1042 JUMP_BACKWARD                  to 654
+      -- line 325: 
+   1044 LOAD_GLOBAL                    NULL + len
+   1056 LOAD_FAST                      write_info
+   1058 PRECALL                        
+   1062 CALL                           
+   1072 LOAD_CONST                     0
+   1074 COMPARE_OP                     >
+   1080 POP_JUMP_FORWARD_IF_FALSE      to 1360
+      -- line 326: 
+      -- line 327: 
+      -- line 328: 
+      -- line 329: 
+      -- line 330: 
+      -- line 329: 
+      -- line 331: 
+      -- line 297: 
+      -- line 333: 
+      -- line 334: 
+      -- line 297: 
+      -- line 336: 
+      -- line 337: 
+      -- line 338: 
+      -- line 339: 
+      -- line 340: 
+      -- line 338: 

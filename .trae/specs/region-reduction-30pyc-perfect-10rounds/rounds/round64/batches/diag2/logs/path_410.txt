@@ -1,0 +1,266 @@
+##### path trace Scheduler.run_interval_trade.is_run_interval_time_now entry=410 (landed)
+=== ENTER _generate_region IfRegion@410 blocks=[410, 436, 456, 460]
+=== EXIT '[]'
+  _generate_region                       L3158   if isinstance(region, RegionASTGenerator._ALL_REGION_TYPES):
+  _generate_region                       L3159   with_cleanup_roles = (BlockRole.WITH_EXIT_CLEANUP, BlockRole.WITH_STACK_CLEANUP, BlockRole.WITH_HAND
+  _generate_region                       L3160   if all(self.region_analyzer.get_block_role(b) in with_cleanup_roles for b in region.blocks):
+  <genexpr>                              L3160   if all(self.region_analyzer.get_block_role(b) in with_cleanup_roles for b in region.blocks):
+  _generate_region                       L3165   if isinstance(region, TryExceptRegion):
+  _generate_region                       L3174   if isinstance(region, LoopRegion):
+  _generate_region                       L3183   elif isinstance(region, IfRegion):
+  _generate_region                       L3184   return self._generate_if(region)
+  _generate_if                           L11445  if region.region_type.name == 'IF_ELIF_CHAIN':
+  _generate_if                           L11454  if region.entry is not None:
+  _generate_if                           L11455  _entry_owner = self.region_analyzer.block_to_region.get(region.entry)
+  _generate_if                           L11456  if isinstance(_entry_owner, BoolOpRegion) and _entry_owner is not region:
+  _generate_if                           L11490  _vc_assign = self._generate_value_context_chain_compare_assign(region)
+  _generate_value_context_chain_compare_assign L11824  if not getattr(region, 'chained_compare_ops', None) or len(region.chained_compare_ops) < 2:
+  _generate_value_context_chain_compare_assign L11826  if not getattr(region, 'chained_compare_blocks', None):
+  _generate_value_context_chain_compare_assign L11828  cond_block = region.condition_block
+  _generate_value_context_chain_compare_assign L11829  if cond_block is None:
+  _generate_value_context_chain_compare_assign L11831  last = cond_block.get_last_instruction()
+  _generate_value_context_chain_compare_assign L11832  if not last or last.opname not in SHORT_CIRCUIT_JUMP_OPS:
+  _generate_value_context_chain_compare_assign L11834  merge_block = getattr(region, 'merge_block', None)
+  _generate_value_context_chain_compare_assign L11835  if merge_block is None:
+  _generate_value_context_chain_compare_assign L11838  store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+  _generate_value_context_chain_compare_assign L11839  store_instr = None
+  _generate_value_context_chain_compare_assign L11840  for instr in merge_block.instructions:
+  _generate_value_context_chain_compare_assign L11841  if instr.opname in store_ops:
+  _generate_value_context_chain_compare_assign L11840  for instr in merge_block.instructions:
+  _generate_value_context_chain_compare_assign L11844  if store_instr is None:
+  _generate_value_context_chain_compare_assign L11849  _mb_instrs_r82 = [i for i in merge_block.instructions
+  <listcomp>                             L11849  _mb_instrs_r82 = [i for i in merge_block.instructions
+  <listcomp>                             L11850  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+  <listcomp>                             L11849  _mb_instrs_r82 = [i for i in merge_block.instructions
+  <listcomp>                             L11850  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+  <listcomp>                             L11849  _mb_instrs_r82 = [i for i in merge_block.instructions
+  <listcomp>                             L11850  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+  _generate_value_context_chain_compare_assign L11851  _has_return_r82 = any(i.opname == 'RETURN_VALUE' for i in _mb_instrs_r82)
+  <genexpr>                              L11851  _has_return_r82 = any(i.opname == 'RETURN_VALUE' for i in _mb_instrs_r82)
+    (x1 same)
+  _generate_value_context_chain_compare_assign L11852  if _has_return_r82:
+  _generate_value_context_chain_compare_assign L11863  return None
+  _generate_if                           L11491  if _vc_assign is not None:
+  _generate_if                           L11502  if (getattr(region, 'chained_compare_ops', None)
+  _generate_if                           L11503  and len(region.chained_compare_ops) >= 2
+  _generate_if                           L11504  and getattr(region, 'chained_compare_blocks', None)):
+  _generate_if                           L11503  and len(region.chained_compare_ops) >= 2
+  _generate_if                           L11505  _cond_block = region.condition_block
+  _generate_if                           L11506  if _cond_block is not None:
+  _generate_if                           L11507  _cb_last = _cond_block.get_last_instruction()
+  _generate_if                           L11508  if _cb_last and _cb_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+  _generate_if                           L11509  _merge = getattr(region, 'merge_block', None)
+  _generate_if                           L11510  if _merge is not None:
+  _generate_if                           L11511  _merge_last = _merge.get_last_instruction()
+  _generate_if                           L11517  if (_merge_last and _merge_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+  _generate_if                           L11519  _cc_expr = self._build_chained_compare_from_region_data(region)
+  _build_chained_compare_from_region_data L12985  if not region.chained_compare_ops:
+  _build_chained_compare_from_region_data L12992  _walrus_compare = self._try_build_walrus_chained_compare(region)
+  _try_build_walrus_chained_compare      L13063  import dis as _dis
+  _try_build_walrus_chained_compare      L13064  cond_block = region.condition_block
+  _try_build_walrus_chained_compare      L13065  if cond_block is None:
+  _try_build_walrus_chained_compare      L13067  ops = region.chained_compare_ops
+  _try_build_walrus_chained_compare      L13068  if len(ops) < 2:
+  _try_build_walrus_chained_compare      L13070  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13070  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13071  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13070  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13071  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13070  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13071  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13070  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13071  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13070  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13071  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13070  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13071  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13070  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13071  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13070  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13071  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13070  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13071  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13070  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13071  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13070  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13071  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13070  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13071  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13070  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13071  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  _try_build_walrus_chained_compare      L13072  if not instrs:
+  _try_build_walrus_chained_compare      L13075  copy_idx = None
+  _try_build_walrus_chained_compare      L13076  store_idx = None
+  _try_build_walrus_chained_compare      L13077  for idx in range(len(instrs) - 1):
+  _try_build_walrus_chained_compare      L13078  if (instrs[idx].opname == 'COPY' and instrs[idx].argval == 1
+  _try_build_walrus_chained_compare      L13077  for idx in range(len(instrs) - 1):
+  _try_build_walrus_chained_compare      L13078  if (instrs[idx].opname == 'COPY' and instrs[idx].argval == 1
+  _try_build_walrus_chained_compare      L13077  for idx in range(len(instrs) - 1):
+  _try_build_walrus_chained_compare      L13078  if (instrs[idx].opname == 'COPY' and instrs[idx].argval == 1
+  _try_build_walrus_chained_compare      L13077  for idx in range(len(instrs) - 1):
+  _try_build_walrus_chained_compare      L13078  if (instrs[idx].opname == 'COPY' and instrs[idx].argval == 1
+  _try_build_walrus_chained_compare      L13077  for idx in range(len(instrs) - 1):
+  _try_build_walrus_chained_compare      L13078  if (instrs[idx].opname == 'COPY' and instrs[idx].argval == 1
+  _try_build_walrus_chained_compare      L13077  for idx in range(len(instrs) - 1):
+  _try_build_walrus_chained_compare      L13084  if copy_idx is None:
+  _try_build_walrus_chained_compare      L13085  return None  # not a walrus chained compare
+  _build_chained_compare_from_region_data L12993  if _walrus_compare is not None:
+  _build_chained_compare_from_region_data L13001  _literal_compare = self._try_build_literal_middle_chained_compare(region)
+  _try_build_literal_middle_chained_compare L13231  return self._try_build_literal_middle_from_blocks(
+  _try_build_literal_middle_chained_compare L13232  region.condition_block,
+  _try_build_literal_middle_chained_compare L13233  list(region.chained_compare_blocks),
+  _try_build_literal_middle_chained_compare L13234  list(region.chained_compare_ops),
+  _try_build_literal_middle_chained_compare L13231  return self._try_build_literal_middle_from_blocks(
+  _try_build_literal_middle_from_blocks  L13382  import dis as _dis
+  _try_build_literal_middle_from_blocks  L13383  if cond_block is None:
+  _try_build_literal_middle_from_blocks  L13385  if not ops or len(ops) < 2:
+  _try_build_literal_middle_from_blocks  L13387  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13387  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13388  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13387  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13388  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13387  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13388  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13387  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13388  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13387  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13388  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13387  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13388  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13387  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13388  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13387  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13388  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13387  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13388  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13387  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13388  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13387  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13388  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13387  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13388  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13387  instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13388  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  _try_build_literal_middle_from_blocks  L13389  if not instrs:
+  _try_build_literal_middle_from_blocks  L13392  build_idx = None
+  _try_build_literal_middle_from_blocks  L13393  for idx, instr in enumerate(instrs):
+  _try_build_literal_middle_from_blocks  L13394  if instr.opname in ('BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET'):
+  _try_build_literal_middle_from_blocks  L13393  for idx, instr in enumerate(instrs):
+  _try_build_literal_middle_from_blocks  L13394  if instr.opname in ('BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET'):
+  _try_build_literal_middle_from_blocks  L13393  for idx, instr in enumerate(instrs):
+  _try_build_literal_middle_from_blocks  L13394  if instr.opname in ('BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET'):
+  _try_build_literal_middle_from_blocks  L13393  for idx, instr in enumerate(instrs):
+  _try_build_literal_middle_from_blocks  L13394  if instr.opname in ('BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET'):
+  _try_build_literal_middle_from_blocks  L13393  for idx, instr in enumerate(instrs):
+  _try_build_literal_middle_from_blocks  L13394  if instr.opname in ('BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET'):
+  _try_build_literal_middle_from_blocks  L13393  for idx, instr in enumerate(instrs):
+  _try_build_literal_middle_from_blocks  L13394  if instr.opname in ('BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET'):
+  _try_build_literal_middle_from_blocks  L13393  for idx, instr in enumerate(instrs):
+  _try_build_literal_middle_from_blocks  L13397  if build_idx is None:
+  _try_build_literal_middle_from_blocks  L13398  return None  # not a literal-middle chained compare
+  _build_chained_compare_from_region_data L13002  if _literal_compare is not None:
+  _build_chained_compare_from_region_data L13011  _method_compare = self._try_build_method_call_chained_compare(region)
+  _try_build_method_call_chained_compare L13250  import dis as _dis
+  _try_build_method_call_chained_compare L13251  cond_block = region.condition_block
+  _try_build_method_call_chained_compare L13252  if cond_block is None:
+  _try_build_method_call_chained_compare L13254  ops = region.chained_compare_ops
+  _try_build_method_call_chained_compare L13255  if len(ops) < 2:
+  _try_build_method_call_chained_compare L13257  all_scan_blocks = [cond_block] + list(region.chained_compare_blocks)
+  _try_build_method_call_chained_compare L13259  has_method_call = False
+  _try_build_method_call_chained_compare L13260  for blk in all_scan_blocks:
+  _try_build_method_call_chained_compare L13261  if blk is None:
+  _try_build_method_call_chained_compare L13263  for instr in blk.instructions:
+  _try_build_method_call_chained_compare L13264  if instr.opname == 'LOAD_METHOD':
+  _try_build_method_call_chained_compare L13263  for instr in blk.instructions:
+  _try_build_method_call_chained_compare L13264  if instr.opname == 'LOAD_METHOD':
+  _try_build_method_call_chained_compare L13263  for instr in blk.instructions:
+  _try_build_method_call_chained_compare L13264  if instr.opname == 'LOAD_METHOD':
+  _try_build_method_call_chained_compare L13263  for instr in blk.instructions:
+  _try_build_method_call_chained_compare L13264  if instr.opname == 'LOAD_METHOD':
+  _try_build_method_call_chained_compare L13263  for instr in blk.instructions:
+  _try_build_method_call_chained_compare L13264  if instr.opname == 'LOAD_METHOD':
+  _try_build_method_call_chained_compare L13263  for instr in blk.instructions:
+  _try_build_method_call_chained_compare L13264  if instr.opname == 'LOAD_METHOD':
+  _try_build_method_call_chained_compare L13263  for instr in blk.instructions:
+  _try_build_method_call_chained_compare L13267  if has_method_call:
+  _try_build_method_call_chained_compare L13260  for blk in all_scan_blocks:
+  _try_build_method_call_chained_compare L13261  if blk is None:
+  _try_build_method_call_chained_compare L13263  for instr in blk.instructions:
+  _try_build_method_call_chained_compare L13264  if instr.opname == 'LOAD_METHOD':
+  _try_build_method_call_chained_compare L13263  for instr in blk.instructions:
+  _try_build_method_call_chained_compare L13264  if instr.opname == 'LOAD_METHOD':
+  _try_build_method_call_chained_compare L13263  for instr in blk.instructions:
+  _try_build_method_call_chained_compare L13264  if instr.opname == 'LOAD_METHOD':
+  _try_build_method_call_chained_compare L13263  for instr in blk.instructions:
+  _try_build_method_call_chained_compare L13267  if has_method_call:
+  _try_build_method_call_chained_compare L13260  for blk in all_scan_blocks:
+  _try_build_method_call_chained_compare L13269  if not has_method_call:
+  _try_build_method_call_chained_compare L13270  return None
+  _build_chained_compare_from_region_data L13012  if _method_compare is not None:
+  _build_chained_compare_from_region_data L13018  _call_compare = self._try_build_call_middle_chained_compare(region)
+  _try_build_call_middle_chained_compare L13588  return self._try_build_call_middle_from_blocks(
+  _try_build_call_middle_chained_compare L13589  region.condition_block,
+  _try_build_call_middle_chained_compare L13590  list(region.chained_compare_blocks),
+  _try_build_call_middle_chained_compare L13591  list(region.chained_compare_ops),
+  _try_build_call_middle_chained_compare L13588  return self._try_build_call_middle_from_blocks(
+  _try_build_call_middle_from_blocks     L13493  import dis as _dis
+  _try_build_call_middle_from_blocks     L13494  if cond_block is None:
+  _try_build_call_middle_from_blocks     L13496  if not ops or len(ops) < 2:
+  _try_build_call_middle_from_blocks     L13498  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13498  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13499  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13498  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13499  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13498  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13499  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13498  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13499  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13498  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13499  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13498  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13499  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13498  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13499  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13498  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13499  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13498  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13499  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13498  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13499  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13498  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13499  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13498  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13499  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13498  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13499  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  _try_build_call_middle_from_blocks     L13500  if not cond_instrs:
+  _try_build_call_middle_from_blocks     L13503  has_call = any(i.opname == 'CALL' for i in cond_instrs)
+  <genexpr>                              L13503  has_call = any(i.opname == 'CALL' for i in cond_instrs)
+    (x6 same)
+  _try_build_call_middle_from_blocks     L13504  has_load_method = any(i.opname == 'LOAD_METHOD' for i in cond_instrs)
+  <genexpr>                              L13504  has_load_method = any(i.opname == 'LOAD_METHOD' for i in cond_instrs)
+    (x6 same)
+  _try_build_call_middle_from_blocks     L13505  if not has_call or has_load_method:
+  _try_build_call_middle_from_blocks     L13506  return None
+  _build_chained_compare_from_region_data L13019  if _call_compare is not None:
+  _build_chained_compare_from_region_data L13029  _attr_compare = self._try_build_attr_middle_chained_compare(region)
+  _try_build_attr_middle_chained_compare L13625  return self._try_build_attr_middle_from_blocks(
+  _try_build_attr_middle_chained_compare L13626  region.condition_block,
+  _try_build_attr_middle_chained_compare L13627  list(region.chained_compare_blocks),
+  _try_build_attr_middle_chained_compare L13628  list(region.chained_compare_ops),
+  _try_build_attr_middle_chained_compare L13625  return self._try_build_attr_middle_from_blocks(
+  _try_build_attr_middle_from_blocks     L13638  import dis as _dis
+  _try_build_attr_middle_from_blocks     L13639  if cond_block is None:
+  _try_build_attr_middle_from_blocks     L13641  if not ops or len(ops) < 2:
+  _try_build_attr_middle_from_blocks     L13643  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13643  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13644  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13643  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13644  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13643  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13644  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13643  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13644  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13643  cond_instrs = [i for i in cond_block.instructions
+  <listcomp>                             L13644  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+  <listcomp>                             L13643  cond_instrs = [i for i in cond_block.instructions

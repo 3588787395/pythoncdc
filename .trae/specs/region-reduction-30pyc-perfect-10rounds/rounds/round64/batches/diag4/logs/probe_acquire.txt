@@ -1,0 +1,8 @@
+Error: Region-based decompilation exception: cannot access local variable 'region' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\Temp\opencode\r64gate\diag4\probe_regions.py", line 119, in <module>
+    text = pycdc.decompile_pyc(pyc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Downloads\pythoncdc-main\pycdc.py", line 719, in decompile_pyc
+    raise RuntimeError(f"Failed to decompile {pyc_file}")
+RuntimeError: Failed to decompile site-packages/IQCommon/util/fileio_utils.pyc

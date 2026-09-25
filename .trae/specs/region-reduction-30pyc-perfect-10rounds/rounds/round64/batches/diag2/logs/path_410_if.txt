@@ -1,0 +1,28 @@
+##### path trace Scheduler.run_interval_trade.is_run_interval_time_now entry=410 (landed)
+=== ENTER _generate_region IfRegion@410 blocks=[410, 436, 456, 460]
+=== EXIT '[]'
+  _generate_if                           L11445  if region.region_type.name == 'IF_ELIF_CHAIN':
+  _generate_if                           L11454  if region.entry is not None:
+  _generate_if                           L11455  _entry_owner = self.region_analyzer.block_to_region.get(region.entry)
+  _generate_if                           L11456  if isinstance(_entry_owner, BoolOpRegion) and _entry_owner is not region:
+  _generate_if                           L11490  _vc_assign = self._generate_value_context_chain_compare_assign(region)
+  _generate_if                           L11491  if _vc_assign is not None:
+  _generate_if                           L11502  if (getattr(region, 'chained_compare_ops', None)
+  _generate_if                           L11503  and len(region.chained_compare_ops) >= 2
+  _generate_if                           L11504  and getattr(region, 'chained_compare_blocks', None)):
+  _generate_if                           L11503  and len(region.chained_compare_ops) >= 2
+  _generate_if                           L11505  _cond_block = region.condition_block
+  _generate_if                           L11506  if _cond_block is not None:
+  _generate_if                           L11507  _cb_last = _cond_block.get_last_instruction()
+  _generate_if                           L11508  if _cb_last and _cb_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+  _generate_if                           L11509  _merge = getattr(region, 'merge_block', None)
+  _generate_if                           L11510  if _merge is not None:
+  _generate_if                           L11511  _merge_last = _merge.get_last_instruction()
+  _generate_if                           L11517  if (_merge_last and _merge_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+  _generate_if                           L11519  _cc_expr = self._build_chained_compare_from_region_data(region)
+  _generate_if                           L11520  if _cc_expr is not None:
+  _generate_if                           L11521  if not hasattr(self, '_chain_compare_expr_cache'):
+  _generate_if                           L11522  self._chain_compare_expr_cache = {}
+  _generate_if                           L11523  self._chain_compare_expr_cache[id(_merge)] = _cc_expr
+  _generate_if                           L11526  self._generated_regions.add(id(region))
+  _generate_if                           L11527  return []

@@ -1,0 +1,200 @@
+=== ORIG <module>.Backtest.logging_process (103)
+     0 off=   0 ln=73    RESUME 
+     1 off=   2 ln=74    LOAD_GLOBAL NULL + queue
+     2 off=  14 ln=74    LOAD_ATTR Queue
+     3 off=  28 ln=74    CALL 
+     4 off=  38 ln=74    STORE_FAST write_queue
+     5 off=  40 ln=75    LOAD_GLOBAL NULL + ThreadEvent
+     6 off=  56 ln=75    CALL 
+     7 off=  66 ln=75    STORE_FAST thread_event
+     8 off=  68 ln=76    LOAD_CONST True
+     9 off=  70 ln=76    LOAD_FAST self
+    10 off=  72 ln=76    STORE_ATTR status
+    11 off=  82 ln=77    LOAD_GLOBAL NULL + Thread
+    12 off=  94 ln=77    LOAD_FAST self
+    13 off=  96 ln=77    LOAD_ATTR write_logging_thread
+    14 off= 106 ln=78    LOAD_FAST write_queue
+    15 off= 108 ln=78    LOAD_FAST thread_event
+    16 off= 110 ln=78    BUILD_LIST 
+    17 off= 112 ln=77    KW_NAMES 
+    18 off= 118 ln=77    CALL 
+    19 off= 128 ln=77    STORE_FAST t
+    20 off= 130 ln=79    LOAD_FAST t
+    21 off= 132 ln=79    LOAD_METHOD start
+    22 off= 158 ln=79    CALL 
+    23 off= 168 ln=79    POP_TOP 
+    24 off= 172 ln=81    LOAD_FAST self
+    25 off= 174 ln=81    LOAD_ATTR receiver
+    26 off= 184 ln=81    LOAD_METHOD recv
+    27 off= 210 ln=81    CALL 
+    28 off= 220 ln=81    STORE_FAST info
+    29 off= 222 ln=82    LOAD_FAST info
+    30 off= 224 ln=82    POP_JUMP_FORWARD_IF_FALSE to 402
+    31 off= 226 ln=83    LOAD_FAST write_queue
+    32 off= 228 ln=83    LOAD_METHOD put
+    33 off= 250 ln=83    LOAD_FAST info
+    34 off= 256 ln=83    CALL 
+    35 off= 266 ln=83    POP_TOP 
+    36 off= 268 ln=84    LOAD_FAST thread_event
+    37 off= 270 ln=84    LOAD_METHOD is_set
+    38 off= 296 ln=84    CALL 
+    39 off= 306 ln=84    JUMP_IF_TRUE_OR_POP to 346
+    40 off= 308 ln=84    LOAD_FAST thread_event
+    41 off= 310 ln=84    LOAD_METHOD set
+    42 off= 336 ln=84    CALL 
+    43 off= 346 ln=None  POP_TOP 
+    44 off= 348 ln=85    LOAD_FAST self
+    45 off= 350 ln=85    LOAD_ATTR receiver
+    46 off= 360 ln=85    LOAD_METHOD recv
+    47 off= 386 ln=85    CALL 
+    48 off= 396 ln=85    STORE_FAST info
+    49 off= 398 ln=82    LOAD_FAST info
+    50 off= 400 ln=82    POP_JUMP_BACKWARD_IF_TRUE to 226
+    51 off= 402 ln=None  JUMP_FORWARD to 590
+    52 off= 404 ln=None  PUSH_EXC_INFO 
+    53 off= 406 ln=86    LOAD_GLOBAL BaseException
+    54 off= 418 ln=86    CHECK_EXC_MATCH 
+    55 off= 420 ln=86    POP_JUMP_FORWARD_IF_FALSE to 582
+    56 off= 422 ln=86    STORE_FAST e
+    57 off= 424 ln=87    LOAD_CONST False
+    58 off= 426 ln=87    LOAD_FAST self
+    59 off= 428 ln=87    STORE_ATTR status
+    60 off= 438 ln=88    LOAD_FAST write_queue
+    61 off= 440 ln=88    LOAD_METHOD qsize
+    62 off= 466 ln=88    CALL 
+    63 off= 476 ln=88    POP_JUMP_FORWARD_IF_FALSE to 518
+    64 off= 478 ln=89    LOAD_FAST t
+    65 off= 480 ln=89    LOAD_METHOD join
+    66 off= 506 ln=89    CALL 
+    67 off= 516 ln=89    POP_TOP 
+    68 off= 518 ln=90    LOAD_GLOBAL NULL + isinstance
+    69 off= 530 ln=90    LOAD_FAST e
+    70 off= 532 ln=90    LOAD_GLOBAL EOFError
+    71 off= 548 ln=90    CALL 
+    72 off= 558 ln=90    POP_JUMP_FORWARD_IF_TRUE to 564
+    73 off= 560 ln=91    LOAD_FAST e
+    74 off= 562 ln=91    RAISE_VARARGS 
+    75 off= 564 ln=90    POP_EXCEPT 
+    76 off= 566 ln=90    LOAD_CONST None
+    77 off= 568 ln=90    STORE_FAST e
+    78 off= 570 ln=90    DELETE_FAST e
+    79 off= 572 ln=90    JUMP_FORWARD to 590
+    80 off= 574 ln=None  LOAD_CONST None
+    81 off= 576 ln=None  STORE_FAST e
+    82 off= 578 ln=None  DELETE_FAST e
+    83 off= 580 ln=None  RERAISE 
+    84 off= 582 ln=86    RERAISE 
+    85 off= 584 ln=None  COPY 
+    86 off= 586 ln=None  POP_EXCEPT 
+    87 off= 588 ln=None  RERAISE 
+    88 off= 590 ln=92    LOAD_CONST False
+    89 off= 592 ln=92    LOAD_FAST self
+    90 off= 594 ln=92    STORE_ATTR status
+    91 off= 604 ln=93    LOAD_FAST write_queue
+    92 off= 606 ln=93    LOAD_METHOD qsize
+    93 off= 632 ln=93    CALL 
+    94 off= 642 ln=93    POP_JUMP_FORWARD_IF_FALSE to 688
+    95 off= 644 ln=94    LOAD_FAST t
+    96 off= 646 ln=94    LOAD_METHOD join
+    97 off= 672 ln=94    CALL 
+    98 off= 682 ln=94    POP_TOP 
+    99 off= 684 ln=94    LOAD_CONST None
+   100 off= 686 ln=94    RETURN_VALUE 
+   101 off= 688 ln=93    LOAD_CONST None
+   102 off= 690 ln=93    RETURN_VALUE 
+=== DECOMP <module>.Backtest.logging_process (95)
+     0 off=   0 ln=50    RESUME 
+     1 off=   2 ln=51    LOAD_GLOBAL NULL + queue
+     2 off=  14 ln=51    LOAD_ATTR Queue
+     3 off=  28 ln=51    CALL 
+     4 off=  38 ln=51    STORE_FAST write_queue
+     5 off=  40 ln=52    LOAD_GLOBAL NULL + ThreadEvent
+     6 off=  56 ln=52    CALL 
+     7 off=  66 ln=52    STORE_FAST thread_event
+     8 off=  68 ln=53    LOAD_CONST True
+     9 off=  70 ln=53    LOAD_FAST self
+    10 off=  72 ln=53    STORE_ATTR status
+    11 off=  82 ln=54    LOAD_GLOBAL NULL + Thread
+    12 off=  94 ln=54    LOAD_FAST self
+    13 off=  96 ln=54    LOAD_ATTR write_logging_thread
+    14 off= 106 ln=54    LOAD_FAST write_queue
+    15 off= 108 ln=54    LOAD_FAST thread_event
+    16 off= 110 ln=54    BUILD_LIST 
+    17 off= 112 ln=54    KW_NAMES 
+    18 off= 118 ln=54    CALL 
+    19 off= 128 ln=54    STORE_FAST t
+    20 off= 130 ln=55    LOAD_FAST t
+    21 off= 132 ln=55    LOAD_METHOD start
+    22 off= 158 ln=55    CALL 
+    23 off= 168 ln=55    POP_TOP 
+    24 off= 172 ln=57    LOAD_FAST self
+    25 off= 174 ln=57    LOAD_ATTR receiver
+    26 off= 184 ln=57    LOAD_METHOD recv
+    27 off= 210 ln=57    CALL 
+    28 off= 220 ln=57    STORE_FAST info
+    29 off= 222 ln=58    LOAD_FAST info
+    30 off= 224 ln=58    POP_JUMP_FORWARD_IF_FALSE to 322
+    31 off= 226 ln=59    LOAD_FAST write_queue
+    32 off= 228 ln=59    LOAD_METHOD put
+    33 off= 250 ln=59    LOAD_FAST info
+    34 off= 256 ln=59    CALL 
+    35 off= 266 ln=59    POP_TOP 
+    36 off= 268 ln=60    LOAD_FAST self
+    37 off= 270 ln=60    LOAD_ATTR receiver
+    38 off= 280 ln=60    LOAD_METHOD recv
+    39 off= 306 ln=60    CALL 
+    40 off= 316 ln=60    STORE_FAST info
+    41 off= 318 ln=58    LOAD_FAST info
+    42 off= 320 ln=58    POP_JUMP_BACKWARD_IF_TRUE to 226
+    43 off= 322 ln=None  JUMP_FORWARD to 510
+    44 off= 324 ln=None  PUSH_EXC_INFO 
+    45 off= 326 ln=61    LOAD_GLOBAL BaseException
+    46 off= 338 ln=61    CHECK_EXC_MATCH 
+    47 off= 340 ln=61    POP_JUMP_FORWARD_IF_FALSE to 502
+    48 off= 342 ln=61    STORE_FAST e
+    49 off= 344 ln=62    LOAD_CONST False
+    50 off= 346 ln=62    LOAD_FAST self
+    51 off= 348 ln=62    STORE_ATTR status
+    52 off= 358 ln=63    LOAD_FAST write_queue
+    53 off= 360 ln=63    LOAD_METHOD qsize
+    54 off= 386 ln=63    CALL 
+    55 off= 396 ln=63    POP_JUMP_FORWARD_IF_FALSE to 438
+    56 off= 398 ln=64    LOAD_FAST t
+    57 off= 400 ln=64    LOAD_METHOD join
+    58 off= 426 ln=64    CALL 
+    59 off= 436 ln=64    POP_TOP 
+    60 off= 438 ln=65    LOAD_GLOBAL NULL + isinstance
+    61 off= 450 ln=65    LOAD_FAST e
+    62 off= 452 ln=65    LOAD_GLOBAL EOFError
+    63 off= 468 ln=65    CALL 
+    64 off= 478 ln=65    POP_JUMP_FORWARD_IF_TRUE to 484
+    65 off= 480 ln=66    LOAD_FAST e
+    66 off= 482 ln=66    RAISE_VARARGS 
+    67 off= 484 ln=65    POP_EXCEPT 
+    68 off= 486 ln=65    LOAD_CONST None
+    69 off= 488 ln=65    STORE_FAST e
+    70 off= 490 ln=65    DELETE_FAST e
+    71 off= 492 ln=65    JUMP_FORWARD to 510
+    72 off= 494 ln=None  LOAD_CONST None
+    73 off= 496 ln=None  STORE_FAST e
+    74 off= 498 ln=None  DELETE_FAST e
+    75 off= 500 ln=None  RERAISE 
+    76 off= 502 ln=61    RERAISE 
+    77 off= 504 ln=None  COPY 
+    78 off= 506 ln=None  POP_EXCEPT 
+    79 off= 508 ln=None  RERAISE 
+    80 off= 510 ln=67    LOAD_CONST False
+    81 off= 512 ln=67    LOAD_FAST self
+    82 off= 514 ln=67    STORE_ATTR status
+    83 off= 524 ln=68    LOAD_FAST write_queue
+    84 off= 526 ln=68    LOAD_METHOD qsize
+    85 off= 552 ln=68    CALL 
+    86 off= 562 ln=68    POP_JUMP_FORWARD_IF_FALSE to 608
+    87 off= 564 ln=69    LOAD_FAST t
+    88 off= 566 ln=69    LOAD_METHOD join
+    89 off= 592 ln=69    CALL 
+    90 off= 602 ln=69    POP_TOP 
+    91 off= 604 ln=70    LOAD_CONST None
+    92 off= 606 ln=70    RETURN_VALUE 
+    93 off= 608 ln=72    LOAD_CONST None
+    94 off= 610 ln=72    RETURN_VALUE 

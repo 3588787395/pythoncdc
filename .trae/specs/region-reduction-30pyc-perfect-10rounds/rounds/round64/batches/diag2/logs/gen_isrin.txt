@@ -1,0 +1,183 @@
+##### generator view of Scheduler.run_interval_trade.is_run_interval_time_now (landed)
+=== self.regions (19 roots) ===
+IfRegion               entry=0     merge_block=512 condition_block=0 region_type=RegionType.IF_ELIF_CHAIN
+   blocks=[0, 88, 198, 202, 204, 270, 410, 436, 456, 460, 462, 488, 508, 512, 514, 564, 566, 570, 770, 848, 850, 896, 1008, 1046, 1128, 1130, 1196, 1336, 1340, 1342, 1366, 1376, 1378, 1382, 1388, 1390]
+   then_blocks          [88]
+   else_blocks          [198, 202, 204, 270, 410, 436, 456, 460, 462, 488, 508, 512, 514, 564, 566, 570, 770, 848, 850, 896, 1008, 1046, 1128, 1130, 1196, 1336, 1340, 1342, 1366, 1376, 1378, 1382, 1388, 1390]
+   elif_conditions      [198]
+   elif_final_else      [514, 564, 566, 570, 770, 848, 850, 896, 1008, 1046, 1128, 1130, 1196, 1336, 1340, 1342, 1366, 1376, 1378, 1382, 1388, 1390]
+   elif_bodies          [[202, 204, 270, 410, 436, 456, 460, 462, 488, 508, 512]]
+  Region                 entry=0     region_type=RegionType.BASIC
+     blocks=[0]
+  Region                 entry=88    region_type=RegionType.BASIC
+     blocks=[88]
+  Region                 entry=198   region_type=RegionType.BASIC
+     blocks=[198]
+  Region                 entry=202   region_type=RegionType.BASIC
+     blocks=[202]
+  TryExceptRegion        entry=204   region_type=RegionType.TRY_EXCEPT
+     blocks=[202, 204, 270, 272, 290, 398, 402, 404]
+     else_blocks          [270]
+     try_blocks           [204]
+  IfRegion               entry=410   merge_block=460 condition_block=410 region_type=RegionType.IF
+     blocks=[410, 436, 456, 460]
+     else_blocks          [456]
+  BoolOpRegion           entry=460   merge_block=512 region_type=RegionType.BOOL_OP
+     blocks=[460, 462, 488, 508, 512]
+  LoopRegion             entry=564   header_block=564 region_type=RegionType.FOR_LOOP
+     blocks=[514, 564, 566, 570, 770, 848, 850, 896, 898, 916, 996]
+     body_blocks          [564, 566, 570, 770, 848, 850, 896, 898, 916, 996]
+    TryExceptRegion        entry=570   region_type=RegionType.TRY_EXCEPT
+       blocks=[570, 770, 848, 850, 898, 916, 996, 1000, 1002]
+       try_blocks           [570, 770, 848, 850]
+      IfRegion               entry=570   merge_block=564 condition_block=570 region_type=RegionType.IF_THEN_ELSE
+         blocks=[570, 770, 848, 850]
+         then_blocks          [770, 848]
+         else_blocks          [850]
+  IfRegion               entry=1008  merge_block=1128 condition_block=1008 region_type=RegionType.IF_THEN
+     blocks=[1008, 1046]
+     then_blocks          [1046]
+    Region                 entry=1008  region_type=RegionType.BASIC
+       blocks=[1008]
+    Region                 entry=1046  region_type=RegionType.BASIC
+       blocks=[1046]
+  Region                 entry=1128  region_type=RegionType.BASIC
+     blocks=[1128]
+  TryExceptRegion        entry=1130  region_type=RegionType.TRY_EXCEPT
+     blocks=[1128, 1130, 1196, 1198, 1216, 1324, 1328, 1330]
+     else_blocks          [1196]
+     try_blocks           [1130]
+  LoopRegion             entry=1340  header_block=1340 region_type=RegionType.FOR_LOOP
+     blocks=[1336, 1340, 1342, 1366, 1376, 1378, 1382, 1388, 1390]
+     else_blocks          [1390]
+     body_blocks          [1340, 1342, 1366, 1376, 1378, 1382, 1388]
+    IfRegion               entry=1342  merge_block=1382 condition_block=1342 region_type=RegionType.IF_THEN_ELSE
+       blocks=[1342, 1366, 1376, 1378]
+       then_blocks          [1376]
+       else_blocks          [1378]
+Region                 entry=0     region_type=RegionType.BASIC
+   blocks=[0]
+Region                 entry=88    region_type=RegionType.BASIC
+   blocks=[88]
+Region                 entry=198   region_type=RegionType.BASIC
+   blocks=[198]
+Region                 entry=202   region_type=RegionType.BASIC
+   blocks=[202]
+TryExceptRegion        entry=204   region_type=RegionType.TRY_EXCEPT
+   blocks=[202, 204, 270, 272, 290, 398, 402, 404]
+   else_blocks          [270]
+   try_blocks           [204]
+IfRegion               entry=410   merge_block=460 condition_block=410 region_type=RegionType.IF
+   blocks=[410, 436, 456, 460]
+   else_blocks          [456]
+BoolOpRegion           entry=460   merge_block=512 region_type=RegionType.BOOL_OP
+   blocks=[460, 462, 488, 508, 512]
+IfRegion               entry=462   merge_block=512 condition_block=462 region_type=RegionType.IF
+   blocks=[462, 488, 508, 512]
+   else_blocks          [508]
+LoopRegion             entry=564   header_block=564 region_type=RegionType.FOR_LOOP
+   blocks=[514, 564, 566, 570, 770, 848, 850, 896, 898, 916, 996]
+   body_blocks          [564, 566, 570, 770, 848, 850, 896, 898, 916, 996]
+  TryExceptRegion        entry=570   region_type=RegionType.TRY_EXCEPT
+     blocks=[570, 770, 848, 850, 898, 916, 996, 1000, 1002]
+     try_blocks           [570, 770, 848, 850]
+    IfRegion               entry=570   merge_block=564 condition_block=570 region_type=RegionType.IF_THEN_ELSE
+       blocks=[570, 770, 848, 850]
+       then_blocks          [770, 848]
+       else_blocks          [850]
+TryExceptRegion        entry=570   region_type=RegionType.TRY_EXCEPT
+   blocks=[570, 770, 848, 850, 898, 916, 996, 1000, 1002]
+   try_blocks           [570, 770, 848, 850]
+  IfRegion               entry=570   merge_block=564 condition_block=570 region_type=RegionType.IF_THEN_ELSE
+     blocks=[570, 770, 848, 850]
+     then_blocks          [770, 848]
+     else_blocks          [850]
+IfRegion               entry=570   merge_block=564 condition_block=570 region_type=RegionType.IF_THEN_ELSE
+   blocks=[570, 770, 848, 850]
+   then_blocks          [770, 848]
+   else_blocks          [850]
+IfRegion               entry=1008  merge_block=1128 condition_block=1008 region_type=RegionType.IF_THEN
+   blocks=[1008, 1046]
+   then_blocks          [1046]
+  Region                 entry=1008  region_type=RegionType.BASIC
+     blocks=[1008]
+  Region                 entry=1046  region_type=RegionType.BASIC
+     blocks=[1046]
+Region                 entry=1008  region_type=RegionType.BASIC
+   blocks=[1008]
+Region                 entry=1046  region_type=RegionType.BASIC
+   blocks=[1046]
+Region                 entry=1128  region_type=RegionType.BASIC
+   blocks=[1128]
+TryExceptRegion        entry=1130  region_type=RegionType.TRY_EXCEPT
+   blocks=[1128, 1130, 1196, 1198, 1216, 1324, 1328, 1330]
+   else_blocks          [1196]
+   try_blocks           [1130]
+LoopRegion             entry=1340  header_block=1340 region_type=RegionType.FOR_LOOP
+   blocks=[1336, 1340, 1342, 1366, 1376, 1378, 1382, 1388, 1390]
+   else_blocks          [1390]
+   body_blocks          [1340, 1342, 1366, 1376, 1378, 1382, 1388]
+  IfRegion               entry=1342  merge_block=1382 condition_block=1342 region_type=RegionType.IF_THEN_ELSE
+     blocks=[1342, 1366, 1376, 1378]
+     then_blocks          [1376]
+     else_blocks          [1378]
+IfRegion               entry=1342  merge_block=1382 condition_block=1342 region_type=RegionType.IF_THEN_ELSE
+   blocks=[1342, 1366, 1376, 1378]
+   then_blocks          [1376]
+   else_blocks          [1378]
+=== block_to_region ===
+  B@0     -> IfRegion@0
+  B@88    -> IfRegion@0
+  B@198   -> IfRegion@0
+  B@202   -> TryExceptRegion@204
+  B@204   -> TryExceptRegion@204
+  B@270   -> TryExceptRegion@204
+  B@272   -> TryExceptRegion@204
+  B@290   -> TryExceptRegion@204
+  B@398   -> TryExceptRegion@204
+  B@402   -> TryExceptRegion@204
+  B@404   -> TryExceptRegion@204
+  B@410   -> IfRegion@0
+  B@436   -> IfRegion@0
+  B@456   -> IfRegion@0
+  B@460   -> IfRegion@0
+  B@462   -> BoolOpRegion@460
+  B@488   -> IfRegion@0
+  B@508   -> IfRegion@0
+  B@512   -> IfRegion@0
+  B@514   -> LoopRegion@564
+  B@564   -> LoopRegion@564
+  B@566   -> LoopRegion@564
+  B@570   -> TryExceptRegion@570
+  B@770   -> TryExceptRegion@570
+  B@848   -> TryExceptRegion@570
+  B@850   -> TryExceptRegion@570
+  B@896   -> LoopRegion@564
+  B@898   -> TryExceptRegion@570
+  B@916   -> TryExceptRegion@570
+  B@996   -> TryExceptRegion@570
+  B@1000  -> TryExceptRegion@570
+  B@1002  -> TryExceptRegion@570
+  B@1008  -> IfRegion@0
+  B@1046  -> IfRegion@0
+  B@1128  -> TryExceptRegion@1130
+  B@1130  -> TryExceptRegion@1130
+  B@1196  -> TryExceptRegion@1130
+  B@1198  -> TryExceptRegion@1130
+  B@1216  -> TryExceptRegion@1130
+  B@1324  -> TryExceptRegion@1130
+  B@1328  -> TryExceptRegion@1130
+  B@1330  -> TryExceptRegion@1130
+  B@1336  -> LoopRegion@1340
+  B@1340  -> LoopRegion@1340
+  B@1342  -> LoopRegion@1340
+  B@1366  -> LoopRegion@1340
+  B@1376  -> LoopRegion@1340
+  B@1378  -> LoopRegion@1340
+  B@1382  -> LoopRegion@1340
+  B@1388  -> LoopRegion@1340
+  B@1390  -> LoopRegion@1340
+=== generated_blocks (51) ===
+   [0, 88, 198, 202, 204, 270, 272, 290, 398, 402, 404, 410, 436, 456, 460, 462, 488, 508, 512, 514, 564, 566, 570, 770, 848, 850, 896, 898, 916, 996, 1000, 1002, 1008, 1046, 1128, 1130, 1196, 1198, 1216, 1324, 1328, 1330, 1336, 1340, 1342, 1366, 1376, 1378, 1382, 1388, 1390]
+=== leftover blocks not in generated_blocks ===
+   []

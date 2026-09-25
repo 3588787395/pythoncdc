@@ -1,0 +1,9 @@
+NOISE_OPS = frozenset({'PUSH_NULL', 'NOP', 'RESUME', 'CACHE'})
+back-edge: block 738 -> header 654
+back-edge: block 1000 -> header 654
+back-edge: block 1324 -> header 1318
+back-edge: block 1456 -> header 1450
+
+candidate keys:
+  block 738    -> header 654    key=(1, 22, 738)  ops=['LOAD_CONST', 'LOAD_FAST', 'LOAD_CONST', 'STORE_SUBSCR', 'LOAD_FAST', 'LOAD_METHOD', 'LOAD_FAST', 'PRECALL', 'CALL', 'POP_TOP', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_FAST', 'LOAD_CONST', 'BINARY_SUBSCR', 'PRECALL', 'CALL', 'LOAD_METHOD', 'LOAD_FAST', 'PRECALL', 'CALL', 'POP_TOP', 'JUMP_BACKWARD']
+  block 1000   -> header 654    key=(1, 6, 1000)  ops=['LOAD_FAST', 'LOAD_METHOD', 'LOAD_FAST', 'PRECALL', 'CALL', 'POP_TOP', 'JUMP_BACKWARD']

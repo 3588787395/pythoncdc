@@ -1,0 +1,24 @@
+CFG get_kline_binary: 24 blocks, 14 regions
+TOP REGIONS (6):
+  IfRegion@0 blocks=[0, 14, 24] then_blocks=[14] else_blocks=[24] children=['Region@0', 'Region@14', 'Region@24']
+  IfRegion@32 blocks=[32, 98, 122, 146] then_blocks=[98] else_blocks=[122, 146] elif_conditions=[122] children=['Region@32', 'Region@98', 'Region@122', 'Region@146']
+  Region@168 blocks=[168] children=[]
+  TryExceptRegion@170 blocks=[168, 170, 262, 276, 288, 310, 330, 346, 426, 428, 446, 448, 592, 602, 610, 612] else_blocks=[426] try_blocks=[170, 262, 276, 288, 310, 330, 346] children=[]
+  IfRegion@170 blocks=[170, 288, 330, 346] then_blocks=[288, 330] else_blocks=[346] children=['BoolOpRegion@170']
+  Region@618 blocks=[618] children=[]
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 14, 24] then_blocks=[14] else_blocks=[24] children=['Region@0', 'Region@14', 'Region@24']
+  Region@0 blocks=[0] children=[]
+  Region@14 blocks=[14] children=[]
+  Region@24 blocks=[24] children=[]
+  IfRegion@32 blocks=[32, 98, 122, 146] then_blocks=[98] else_blocks=[122, 146] elif_conditions=[122] children=['Region@32', 'Region@98', 'Region@122', 'Region@146']
+  Region@32 blocks=[32] children=[]
+  Region@98 blocks=[98] children=[]
+  Region@122 blocks=[122] children=[]
+  Region@146 blocks=[146] children=[]
+  Region@168 blocks=[168] children=[]
+  TryExceptRegion@170 blocks=[168, 170, 262, 276, 288, 310, 330, 346, 426, 428, 446, 448, 592, 602, 610, 612] else_blocks=[426] try_blocks=[170, 262, 276, 288, 310, 330, 346] children=[]
+  BoolOpRegion@170 blocks=[170, 262, 276] children=[]
+  IfRegion@170 blocks=[170, 288, 330, 346] then_blocks=[288, 330] else_blocks=[346] children=['BoolOpRegion@170']
+  Region@618 blocks=[618] children=[]

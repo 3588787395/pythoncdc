@@ -1,0 +1,849 @@
+=== <module>.DefaultMatcher.match  orig=715 decomp=715 (noise-filtered) ===
+--- non-equal hunks (difflib opcode-level, junk ignored) ---
+
+[delete] orig[371:463] vs decomp[371:371]
+   O371  off=2466  L249   JUMP_FORWARD                     ->3210
+   O372  off=2468  L257   LOAD_FAST                        'self'
+   O373  off=2470  L257   LOAD_ATTR                        '_price_limit'
+   O374  off=2482  L257   POP_JUMP_FORWARD_IF_FALSE        ->3208
+   O375  off=2484  L258   LOAD_FAST                        'order'
+   O376  off=2486  L258   LOAD_ATTR                        'entrust_direction'
+   O377  off=2496  L258   LOAD_GLOBAL                      'EntrustDirection'
+   O378  off=2508  L258   LOAD_ATTR                        'BUY'
+   O379  off=2518  L258   COMPARE_OP                       '=='
+   O380  off=2524  L258   POP_JUMP_FORWARD_IF_FALSE        ->2846
+   O381  off=2526  L259   LOAD_FAST                        'deal_price'
+   O382  off=2528  L259   LOAD_FAST                        'self'
+   O383  off=2530  L259   LOAD_ATTR                        '_engine'
+   O384  off=2540  L259   LOAD_ATTR                        'data_cache'
+   O385  off=2550  L259   LOAD_METHOD                      'get_limit_up'
+   O386  off=2572  L259   LOAD_FAST                        'asset'
+   O387  off=2574  L259   LOAD_ATTR                        'symbol'
+   O388  off=2588  L259   CALL                             1
+   O389  off=2598  L259   COMPARE_OP                       '>='
+   O390  off=2604  L259   POP_JUMP_FORWARD_IF_FALSE        ->2846
+   O391  off=2606  L260   LOAD_GLOBAL                      '_'
+   O392  off=2618  L261   LOAD_CONST                       '订单撤销: [{symbol}]撮合价格超涨停价'
+   O393  off=2624  L260   CALL                             1
+   O394  off=2634  L262   LOAD_METHOD                      'format'
+   O395  off=2656  L262   LOAD_FAST                        'asset'
+   O396  off=2658  L262   LOAD_ATTR                        'symbol'
+   O397  off=2668  L262   KW_NAMES                         <unknown>
+   O398  off=2674  L262   CALL                             1
+   O399  off=2684  L260   STORE_FAST                       'reason'
+   O400  off=2686  L263   LOAD_FAST                        'order'
+   O401  off=2688  L263   LOAD_METHOD                      'mark_rejected'
+   O402  off=2710  L263   LOAD_FAST                        'reason'
+   O403  off=2716  L263   CALL                             1
+   O404  off=2726  L263   POP_TOP                          None
+   O405  off=2728  L264   LOAD_FAST                        'self'
+   O406  off=2730  L264   LOAD_ATTR                        '_engine'
+   O407  off=2740  L264   LOAD_ATTR                        'event_bus'
+   O408  off=2750  L264   LOAD_METHOD                      'publish_event'
+   O409  off=2772  L264   LOAD_GLOBAL                      'Event'
+   O410  off=2784  L264   LOAD_GLOBAL                      'EventEnum'
+   O411  off=2796  L264   LOAD_ATTR                        'ON_TRADE_RSP'
+   O412  off=2806  L264   LOAD_FAST                        'order'
+   O413  off=2808  L264   LOAD_FAST                        'order'
+   O414  off=2810  L264   KW_NAMES                         <unknown>
+   O415  off=2816  L264   CALL                             3
+   O416  off=2830  L264   CALL                             1
+   O417  off=2840  L264   POP_TOP                          None
+   O418  off=2844  L265   JUMP_BACKWARD                    ->6
+   O419  off=2846  L267   LOAD_FAST                        'order'
+   O420  off=2848  L267   LOAD_ATTR                        'entrust_direction'
+   O421  off=2858  L267   LOAD_GLOBAL                      'EntrustDirection'
+   O422  off=2870  L267   LOAD_ATTR                        'SELL'
+   O423  off=2880  L267   COMPARE_OP                       '=='
+   O424  off=2886  L267   POP_JUMP_FORWARD_IF_FALSE        ->3208
+   O425  off=2888  L268   LOAD_FAST                        'deal_price'
+   O426  off=2890  L268   LOAD_FAST                        'self'
+   O427  off=2892  L268   LOAD_ATTR                        '_engine'
+   O428  off=2902  L268   LOAD_ATTR                        'data_cache'
+   O429  off=2912  L268   LOAD_METHOD                      'get_limit_down'
+   O430  off=2934  L268   LOAD_FAST                        'asset'
+   O431  off=2936  L268   LOAD_ATTR                        'symbol'
+   O432  off=2950  L268   CALL                             1
+   O433  off=2960  L268   COMPARE_OP                       '<='
+   O434  off=2966  L268   POP_JUMP_FORWARD_IF_FALSE        ->3208
+   O435  off=2968  L269   LOAD_GLOBAL                      '_'
+   O436  off=2980  L270   LOAD_CONST                       '订单撤销: [{symbol}]撮合价格超跌停价'
+   O437  off=2986  L269   CALL                             1
+   O438  off=2996  L271   LOAD_METHOD                      'format'
+   O439  off=3018  L271   LOAD_FAST                        'asset'
+   O440  off=3020  L271   LOAD_ATTR                        'symbol'
+   O441  off=3030  L271   KW_NAMES                         <unknown>
+   O442  off=3036  L271   CALL                             1
+   O443  off=3046  L269   STORE_FAST                       'reason'
+   O444  off=3048  L272   LOAD_FAST                        'order'
+   O445  off=3050  L272   LOAD_METHOD                      'mark_rejected'
+   O446  off=3072  L272   LOAD_FAST                        'reason'
+   O447  off=3078  L272   CALL                             1
+   O448  off=3088  L272   POP_TOP                          None
+   O449  off=3090  L273   LOAD_FAST                        'self'
+   O450  off=3092  L273   LOAD_ATTR                        '_engine'
+   O451  off=3102  L273   LOAD_ATTR                        'event_bus'
+   O452  off=3112  L273   LOAD_METHOD                      'publish_event'
+   O453  off=3134  L273   LOAD_GLOBAL                      'Event'
+   O454  off=3146  L273   LOAD_GLOBAL                      'EventEnum'
+   O455  off=3158  L273   LOAD_ATTR                        'ON_TRADE_RSP'
+   O456  off=3168  L273   LOAD_FAST                        'order'
+   O457  off=3170  L273   LOAD_FAST                        'order'
+   O458  off=3172  L273   KW_NAMES                         <unknown>
+   O459  off=3178  L273   CALL                             3
+   O460  off=3192  L273   CALL                             1
+   O461  off=3202  L273   POP_TOP                          None
+   O462  off=3206  L274   JUMP_BACKWARD                    ->6
+
+[delete] orig[575:579] vs decomp[483:483]
+   O575  off=3952  LNone  JUMP_FORWARD                     ->3968
+   O576  off=3954  L319   LOAD_FAST                        'order'
+   O577  off=3956  L319   LOAD_ATTR                        'unfilled_amount'
+   O578  off=3966  L319   STORE_FAST                       'fill'
+
+[insert] orig[713:713] vs decomp[617:713]
+   D617  off=4206  L209   LOAD_FAST                        'order'
+   D618  off=4208  L209   LOAD_ATTR                        'unfilled_amount'
+   D619  off=4218  L209   STORE_FAST                       'fill'
+   D620  off=4222  LNone  JUMP_BACKWARD                    ->6
+   D621  off=4224  L211   LOAD_FAST                        'self'
+   D622  off=4226  L211   LOAD_ATTR                        '_price_limit'
+   D623  off=4238  L211   POP_JUMP_FORWARD_IF_FALSE        ->4966
+   D624  off=4240  L212   LOAD_FAST                        'order'
+   D625  off=4242  L212   LOAD_ATTR                        'entrust_direction'
+   D626  off=4252  L212   LOAD_GLOBAL                      'EntrustDirection'
+   D627  off=4264  L212   LOAD_ATTR                        'BUY'
+   D628  off=4274  L212   COMPARE_OP                       '=='
+   D629  off=4280  L212   POP_JUMP_FORWARD_IF_FALSE        ->4602
+   D630  off=4282  L212   LOAD_FAST                        'deal_price'
+   D631  off=4284  L212   LOAD_FAST                        'self'
+   D632  off=4286  L212   LOAD_ATTR                        '_engine'
+   D633  off=4296  L212   LOAD_ATTR                        'data_cache'
+   D634  off=4306  L212   LOAD_METHOD                      'get_limit_up'
+   D635  off=4328  L212   LOAD_FAST                        'asset'
+   D636  off=4330  L212   LOAD_ATTR                        'symbol'
+   D637  off=4344  L212   CALL                             1
+   D638  off=4354  L212   COMPARE_OP                       '>='
+   D639  off=4360  L212   POP_JUMP_FORWARD_IF_FALSE        ->4602
+   D640  off=4362  L213   LOAD_GLOBAL                      '_'
+   D641  off=4374  L213   LOAD_CONST                       '订单撤销: [{symbol}]撮合价格超涨停价'
+   D642  off=4380  L213   CALL                             1
+   D643  off=4390  L213   LOAD_METHOD                      'format'
+   D644  off=4412  L213   LOAD_FAST                        'asset'
+   D645  off=4414  L213   LOAD_ATTR                        'symbol'
+   D646  off=4424  L213   KW_NAMES                         <unknown>
+   D647  off=4430  L213   CALL                             1
+   D648  off=4440  L213   STORE_FAST                       'reason'
+   D649  off=4442  L214   LOAD_FAST                        'order'
+   D650  off=4444  L214   LOAD_METHOD                      'mark_rejected'
+   D651  off=4466  L214   LOAD_FAST                        'reason'
+   D652  off=4472  L214   CALL                             1
+   D653  off=4482  L214   POP_TOP                          None
+   D654  off=4484  L215   LOAD_FAST                        'self'
+   D655  off=4486  L215   LOAD_ATTR                        '_engine'
+   D656  off=4496  L215   LOAD_ATTR                        'event_bus'
+   D657  off=4506  L215   LOAD_METHOD                      'publish_event'
+   D658  off=4528  L215   LOAD_GLOBAL                      'Event'
+   D659  off=4540  L215   LOAD_GLOBAL                      'EventEnum'
+   D660  off=4552  L215   LOAD_ATTR                        'ON_TRADE_RSP'
+   D661  off=4562  L215   LOAD_FAST                        'order'
+   D662  off=4564  L215   LOAD_FAST                        'order'
+   D663  off=4566  L215   KW_NAMES                         <unknown>
+   D664  off=4572  L215   CALL                             3
+   D665  off=4586  L215   CALL                             1
+   D666  off=4596  L215   POP_TOP                          None
+   D667  off=4600  L216   JUMP_BACKWARD                    ->6
+   D668  off=4602  L217   LOAD_FAST                        'order'
+   D669  off=4604  L217   LOAD_ATTR                        'entrust_direction'
+   D670  off=4614  L217   LOAD_GLOBAL                      'EntrustDirection'
+   D671  off=4626  L217   LOAD_ATTR                        'SELL'
+   D672  off=4636  L217   COMPARE_OP                       '=='
+   D673  off=4642  L217   POP_JUMP_FORWARD_IF_FALSE        ->4964
+   D674  off=4644  L217   LOAD_FAST                        'deal_price'
+   D675  off=4646  L217   LOAD_FAST                        'self'
+   D676  off=4648  L217   LOAD_ATTR                        '_engine'
+   D677  off=4658  L217   LOAD_ATTR                        'data_cache'
+   D678  off=4668  L217   LOAD_METHOD                      'get_limit_down'
+   D679  off=4690  L217   LOAD_FAST                        'asset'
+   D680  off=4692  L217   LOAD_ATTR                        'symbol'
+   D681  off=4706  L217   CALL                             1
+   D682  off=4716  L217   COMPARE_OP                       '<='
+   D683  off=4722  L217   POP_JUMP_FORWARD_IF_FALSE        ->4964
+   D684  off=4724  L218   LOAD_GLOBAL                      '_'
+   D685  off=4736  L218   LOAD_CONST                       '订单撤销: [{symbol}]撮合价格超跌停价'
+   D686  off=4742  L218   CALL                             1
+   D687  off=4752  L218   LOAD_METHOD                      'format'
+   D688  off=4774  L218   LOAD_FAST                        'asset'
+   D689  off=4776  L218   LOAD_ATTR                        'symbol'
+   D690  off=4786  L218   KW_NAMES                         <unknown>
+   D691  off=4792  L218   CALL                             1
+   D692  off=4802  L218   STORE_FAST                       'reason'
+   D693  off=4804  L219   LOAD_FAST                        'order'
+   D694  off=4806  L219   LOAD_METHOD                      'mark_rejected'
+   D695  off=4828  L219   LOAD_FAST                        'reason'
+   D696  off=4834  L219   CALL                             1
+   D697  off=4844  L219   POP_TOP                          None
+   D698  off=4846  L220   LOAD_FAST                        'self'
+   D699  off=4848  L220   LOAD_ATTR                        '_engine'
+   D700  off=4858  L220   LOAD_ATTR                        'event_bus'
+   D701  off=4868  L220   LOAD_METHOD                      'publish_event'
+   D702  off=4890  L220   LOAD_GLOBAL                      'Event'
+   D703  off=4902  L220   LOAD_GLOBAL                      'EventEnum'
+   D704  off=4914  L220   LOAD_ATTR                        'ON_TRADE_RSP'
+   D705  off=4924  L220   LOAD_FAST                        'order'
+   D706  off=4926  L220   LOAD_FAST                        'order'
+   D707  off=4928  L220   KW_NAMES                         <unknown>
+   D708  off=4934  L220   CALL                             3
+   D709  off=4948  L220   CALL                             1
+   D710  off=4958  L220   POP_TOP                          None
+   D711  off=4962  L221   JUMP_BACKWARD                    ->6
+   D712  off=4968  LNone  JUMP_BACKWARD                    ->6
+
+--- line projection (orig line -> orig idx / decomp idx after alignment) ---
+
+--- statement runs (consecutive orig instrs with same lineno) ---
+  L176   orig[  0..  0] ( 1) -> decomp[0..0]
+  L177   orig[  1..  1] ( 1) -> decomp[1..1]
+  L177   orig[  2..  2] ( 1) -> decomp[2..2]
+  L177   orig[  3..  3] ( 1) -> decomp[3..3]
+  L177   orig[  4..  4] ( 1) -> decomp[4..4]
+  L177   orig[  5..  5] ( 1) -> decomp[5..5]
+  L177   orig[  6..  6] ( 1) -> decomp[6..6]
+  L178   orig[  7..  7] ( 1) -> decomp[7..7]
+  L178   orig[  8..  8] ( 1) -> decomp[8..8]
+  L178   orig[  9..  9] ( 1) -> decomp[9..9]
+  L181   orig[ 10.. 10] ( 1) -> decomp[10..10]
+  L181   orig[ 11.. 11] ( 1) -> decomp[11..11]
+  L181   orig[ 12.. 12] ( 1) -> decomp[12..12]
+  L181   orig[ 13.. 13] ( 1) -> decomp[13..13]
+  L181   orig[ 14.. 14] ( 1) -> decomp[14..14]
+  L181   orig[ 15.. 15] ( 1) -> decomp[15..15]
+  L182   orig[ 16.. 16] ( 1) -> decomp[16..16]
+  L182   orig[ 17.. 17] ( 1) -> decomp[17..17]
+  L182   orig[ 18.. 18] ( 1) -> decomp[18..18]
+  L182   orig[ 19.. 19] ( 1) -> decomp[19..19]
+  L183   orig[ 20.. 20] ( 1) -> decomp[20..20]
+  L183   orig[ 21.. 21] ( 1) -> decomp[21..21]
+  L183   orig[ 22.. 22] ( 1) -> decomp[22..22]
+  L183   orig[ 23.. 23] ( 1) -> decomp[23..23]
+  L183   orig[ 24.. 24] ( 1) -> decomp[24..24]
+  L184   orig[ 25.. 25] ( 1) -> decomp[25..25]
+  L184   orig[ 26.. 26] ( 1) -> decomp[26..26]
+  L184   orig[ 27.. 27] ( 1) -> decomp[27..27]
+  L184   orig[ 28.. 28] ( 1) -> decomp[28..28]
+  L184   orig[ 29.. 29] ( 1) -> decomp[29..29]
+  L184   orig[ 30.. 30] ( 1) -> decomp[30..30]
+  L184   orig[ 31.. 31] ( 1) -> decomp[31..31]
+  L185   orig[ 32.. 32] ( 1) -> decomp[32..32]
+  L186   orig[ 33.. 33] ( 1) -> decomp[33..33]
+  L185   orig[ 34.. 34] ( 1) -> decomp[34..34]
+  L187   orig[ 35.. 35] ( 1) -> decomp[35..35]
+  L188   orig[ 36.. 36] ( 1) -> decomp[36..36]
+  L188   orig[ 37.. 37] ( 1) -> decomp[37..37]
+  L189   orig[ 38.. 38] ( 1) -> decomp[38..38]
+  L187   orig[ 39.. 39] ( 1) -> decomp[39..39]
+  L187   orig[ 40.. 40] ( 1) -> decomp[40..40]
+  L185   orig[ 41.. 41] ( 1) -> decomp[41..41]
+  L185   orig[ 42.. 42] ( 1) -> decomp[42..42]
+  L192   orig[ 43.. 43] ( 1) -> decomp[43..43]
+  L192   orig[ 44.. 44] ( 1) -> decomp[44..44]
+  L192   orig[ 45.. 45] ( 1) -> decomp[45..45]
+  L192   orig[ 46.. 46] ( 1) -> decomp[46..46]
+  L193   orig[ 47.. 47] ( 1) -> decomp[47..47]
+  L193   orig[ 48.. 48] ( 1) -> decomp[48..48]
+  L192   orig[ 49.. 49] ( 1) -> decomp[49..49]
+  L192   orig[ 50.. 50] ( 1) -> decomp[50..50]
+  L192   orig[ 51.. 51] ( 1) -> decomp[51..51]
+  L194   orig[ 52.. 52] ( 1) -> decomp[52..52]
+  L194   orig[ 53.. 53] ( 1) -> decomp[53..53]
+  L194   orig[ 54.. 54] ( 1) -> decomp[54..54]
+  L194   orig[ 55.. 55] ( 1) -> decomp[55..55]
+  L194   orig[ 56.. 56] ( 1) -> decomp[56..56]
+  L195   orig[ 57.. 57] ( 1) -> decomp[57..57]
+  L195   orig[ 58.. 58] ( 1) -> decomp[58..58]
+  L195   orig[ 59.. 59] ( 1) -> decomp[59..59]
+  L195   orig[ 60.. 60] ( 1) -> decomp[60..60]
+  L195   orig[ 61.. 61] ( 1) -> decomp[61..61]
+  L195   orig[ 62.. 62] ( 1) -> decomp[62..62]
+  L195   orig[ 63.. 63] ( 1) -> decomp[63..63]
+  L195   orig[ 64.. 64] ( 1) -> decomp[64..64]
+  L195   orig[ 65.. 65] ( 1) -> decomp[65..65]
+  L195   orig[ 66.. 66] ( 1) -> decomp[66..66]
+  L195   orig[ 67.. 67] ( 1) -> decomp[67..67]
+  L195   orig[ 68.. 68] ( 1) -> decomp[68..68]
+  L195   orig[ 69.. 69] ( 1) -> decomp[69..69]
+  L196   orig[ 70.. 70] ( 1) -> decomp[70..70]
+  L197   orig[ 71.. 71] ( 1) -> decomp[71..71]
+  L197   orig[ 72.. 72] ( 1) -> decomp[72..72]
+  L197   orig[ 73.. 73] ( 1) -> decomp[73..73]
+  L197   orig[ 74.. 74] ( 1) -> decomp[74..74]
+  L197   orig[ 75.. 75] ( 1) -> decomp[75..75]
+  L197   orig[ 76.. 76] ( 1) -> decomp[76..76]
+  L197   orig[ 77.. 77] ( 1) -> decomp[77..77]
+  L197   orig[ 78.. 78] ( 1) -> decomp[78..78]
+  L198   orig[ 79.. 79] ( 1) -> decomp[79..79]
+  L198   orig[ 80.. 80] ( 1) -> decomp[80..80]
+  L198   orig[ 81.. 81] ( 1) -> decomp[81..81]
+  L198   orig[ 82.. 82] ( 1) -> decomp[82..82]
+  L198   orig[ 83.. 83] ( 1) -> decomp[83..83]
+  L198   orig[ 84.. 84] ( 1) -> decomp[84..84]
+  L198   orig[ 85.. 85] ( 1) -> decomp[85..85]
+  L200   orig[ 86.. 86] ( 1) -> decomp[86..86]
+  L200   orig[ 87.. 87] ( 1) -> decomp[87..87]
+  L200   orig[ 88.. 88] ( 1) -> decomp[88..88]
+  L200   orig[ 89.. 89] ( 1) -> decomp[89..89]
+  L200   orig[ 90.. 90] ( 1) -> decomp[90..90]
+  L200   orig[ 91.. 91] ( 1) -> decomp[91..91]
+  L200   orig[ 92.. 92] ( 1) -> decomp[92..92]
+  L200   orig[ 93.. 93] ( 1) -> decomp[93..93]
+  L200   orig[ 94.. 94] ( 1) -> decomp[94..94]
+  L200   orig[ 95.. 95] ( 1) -> decomp[95..95]
+  L200   orig[ 96.. 96] ( 1) -> decomp[96..96]
+  L201   orig[ 97.. 97] ( 1) -> decomp[97..97]
+  L202   orig[ 98.. 98] ( 1) -> decomp[98..98]
+  L202   orig[ 99.. 99] ( 1) -> decomp[99..99]
+  L202   orig[100..100] ( 1) -> decomp[100..100]
+  L202   orig[101..101] ( 1) -> decomp[101..101]
+  L202   orig[102..102] ( 1) -> decomp[102..102]
+  L202   orig[103..103] ( 1) -> decomp[103..103]
+  L202   orig[104..104] ( 1) -> decomp[104..104]
+  L202   orig[105..105] ( 1) -> decomp[105..105]
+  L202   orig[106..106] ( 1) -> decomp[106..106]
+  L202   orig[107..107] ( 1) -> decomp[107..107]
+  L202   orig[108..108] ( 1) -> decomp[108..108]
+  L203   orig[109..109] ( 1) -> decomp[109..109]
+  L205   orig[110..110] ( 1) -> decomp[110..110]
+  L205   orig[111..111] ( 1) -> decomp[111..111]
+  L205   orig[112..112] ( 1) -> decomp[112..112]
+  L207   orig[113..113] ( 1) -> decomp[113..113]
+  L207   orig[114..114] ( 1) -> decomp[114..114]
+  L207   orig[115..115] ( 1) -> decomp[115..115]
+  L207   orig[116..116] ( 1) -> decomp[116..116]
+  L207   orig[117..117] ( 1) -> decomp[117..117]
+  L207   orig[118..118] ( 1) -> decomp[118..118]
+  L207   orig[119..119] ( 1) -> decomp[119..119]
+  L208   orig[120..120] ( 1) -> decomp[120..120]
+  L208   orig[121..121] ( 1) -> decomp[121..121]
+  L208   orig[122..122] ( 1) -> decomp[122..122]
+  L208   orig[123..123] ( 1) -> decomp[123..123]
+  L208   orig[124..124] ( 1) -> decomp[124..124]
+  L208   orig[125..125] ( 1) -> decomp[125..125]
+  L208   orig[126..126] ( 1) -> decomp[126..126]
+  L208   orig[127..127] ( 1) -> decomp[127..127]
+  L208   orig[128..128] ( 1) -> decomp[128..128]
+  L209   orig[129..129] ( 1) -> decomp[129..129]
+  L209   orig[130..130] ( 1) -> decomp[130..130]
+  L209   orig[131..131] ( 1) -> decomp[131..131]
+  L209   orig[132..132] ( 1) -> decomp[132..132]
+  L210   orig[133..133] ( 1) -> decomp[133..133]
+  L210   orig[134..134] ( 1) -> decomp[134..134]
+  L210   orig[135..135] ( 1) -> decomp[135..135]
+  L210   orig[136..136] ( 1) -> decomp[136..136]
+  L210   orig[137..137] ( 1) -> decomp[137..137]
+  L211   orig[138..138] ( 1) -> decomp[138..138]
+  L211   orig[139..139] ( 1) -> decomp[139..139]
+  L211   orig[140..140] ( 1) -> decomp[140..140]
+  L211   orig[141..141] ( 1) -> decomp[141..141]
+  L211   orig[142..142] ( 1) -> decomp[142..142]
+  L211   orig[143..143] ( 1) -> decomp[143..143]
+  L211   orig[144..144] ( 1) -> decomp[144..144]
+  L211   orig[145..145] ( 1) -> decomp[145..145]
+  L211   orig[146..146] ( 1) -> decomp[146..146]
+  L211   orig[147..147] ( 1) -> decomp[147..147]
+  L212   orig[148..148] ( 1) -> decomp[148..148]
+  L212   orig[149..149] ( 1) -> decomp[149..149]
+  L212   orig[150..150] ( 1) -> decomp[150..150]
+  L212   orig[151..151] ( 1) -> decomp[151..151]
+  L212   orig[152..152] ( 1) -> decomp[152..152]
+  L212   orig[153..153] ( 1) -> decomp[153..153]
+  L213   orig[154..154] ( 1) -> decomp[154..154]
+  L213   orig[155..155] ( 1) -> decomp[155..155]
+  L213   orig[156..156] ( 1) -> decomp[156..156]
+  L213   orig[157..157] ( 1) -> decomp[157..157]
+  L213   orig[158..158] ( 1) -> decomp[158..158]
+  L213   orig[159..159] ( 1) -> decomp[159..159]
+  L213   orig[160..160] ( 1) -> decomp[160..160]
+  L213   orig[161..161] ( 1) -> decomp[161..161]
+  L213   orig[162..162] ( 1) -> decomp[162..162]
+  L213   orig[163..163] ( 1) -> decomp[163..163]
+  L214   orig[164..164] ( 1) -> decomp[164..164]
+  L215   orig[165..165] ( 1) -> decomp[165..165]
+  L215   orig[166..166] ( 1) -> decomp[166..166]
+  L215   orig[167..167] ( 1) -> decomp[167..167]
+  L215   orig[168..168] ( 1) -> decomp[168..168]
+  L215   orig[169..169] ( 1) -> decomp[169..169]
+  L215   orig[170..170] ( 1) -> decomp[170..170]
+  L216   orig[171..171] ( 1) -> decomp[171..171]
+  L216   orig[172..172] ( 1) -> decomp[172..172]
+  L216   orig[173..173] ( 1) -> decomp[173..173]
+  L216   orig[174..174] ( 1) -> decomp[174..174]
+  L216   orig[175..175] ( 1) -> decomp[175..175]
+  L216   orig[176..176] ( 1) -> decomp[176..176]
+  L216   orig[177..177] ( 1) -> decomp[177..177]
+  L216   orig[178..178] ( 1) -> decomp[178..178]
+  L216   orig[179..179] ( 1) -> decomp[179..179]
+  L216   orig[180..180] ( 1) -> decomp[180..180]
+  L217   orig[181..181] ( 1) -> decomp[181..181]
+  LNone  orig[182..182] ( 1) -> decomp[182..182]
+  L219   orig[183..183] ( 1) -> decomp[183..183]
+  L219   orig[184..184] ( 1) -> decomp[184..184]
+  L219   orig[185..185] ( 1) -> decomp[185..185]
+  L219   orig[186..186] ( 1) -> decomp[186..186]
+  L219   orig[187..187] ( 1) -> decomp[187..187]
+  L219   orig[188..188] ( 1) -> decomp[188..188]
+  L219   orig[189..189] ( 1) -> decomp[189..189]
+  L219   orig[190..190] ( 1) -> decomp[190..190]
+  L219   orig[191..191] ( 1) -> decomp[191..191]
+  L219   orig[192..192] ( 1) -> decomp[192..192]
+  L219   orig[193..193] ( 1) -> decomp[193..193]
+  L219   orig[194..194] ( 1) -> decomp[194..194]
+  L219   orig[195..195] ( 1) -> decomp[195..195]
+  L219   orig[196..196] ( 1) -> decomp[196..196]
+  L220   orig[197..197] ( 1) -> decomp[197..197]
+  L220   orig[198..198] ( 1) -> decomp[198..198]
+  L220   orig[199..199] ( 1) -> decomp[199..199]
+  L220   orig[200..200] ( 1) -> decomp[200..200]
+  L220   orig[201..201] ( 1) -> decomp[201..201]
+  L220   orig[202..202] ( 1) -> decomp[202..202]
+  L220   orig[203..203] ( 1) -> decomp[203..203]
+  L220   orig[204..204] ( 1) -> decomp[204..204]
+  L220   orig[205..205] ( 1) -> decomp[205..205]
+  L220   orig[206..206] ( 1) -> decomp[206..206]
+  L220   orig[207..207] ( 1) -> decomp[207..207]
+  L220   orig[208..208] ( 1) -> decomp[208..208]
+  L220   orig[209..209] ( 1) -> decomp[209..209]
+  L220   orig[210..210] ( 1) -> decomp[210..210]
+  L221   orig[211..211] ( 1) -> decomp[211..211]
+  L221   orig[212..212] ( 1) -> decomp[212..212]
+  L221   orig[213..213] ( 1) -> decomp[213..213]
+  L221   orig[214..214] ( 1) -> decomp[214..214]
+  L221   orig[215..215] ( 1) -> decomp[215..215]
+  L221   orig[216..216] ( 1) -> decomp[216..216]
+  L222   orig[217..217] ( 1) -> decomp[217..217]
+  L222   orig[218..218] ( 1) -> decomp[218..218]
+  L222   orig[219..219] ( 1) -> decomp[219..219]
+  L222   orig[220..220] ( 1) -> decomp[220..220]
+  L222   orig[221..221] ( 1) -> decomp[221..221]
+  L222   orig[222..222] ( 1) -> decomp[222..222]
+  L222   orig[223..223] ( 1) -> decomp[223..223]
+  L222   orig[224..224] ( 1) -> decomp[224..224]
+  L222   orig[225..225] ( 1) -> decomp[225..225]
+  L222   orig[226..226] ( 1) -> decomp[226..226]
+  L223   orig[227..227] ( 1) -> decomp[227..227]
+  L224   orig[228..228] ( 1) -> decomp[228..228]
+  L224   orig[229..229] ( 1) -> decomp[229..229]
+  L224   orig[230..230] ( 1) -> decomp[230..230]
+  L224   orig[231..231] ( 1) -> decomp[231..231]
+  L224   orig[232..232] ( 1) -> decomp[232..232]
+  L224   orig[233..233] ( 1) -> decomp[233..233]
+  L225   orig[234..234] ( 1) -> decomp[234..234]
+  L225   orig[235..235] ( 1) -> decomp[235..235]
+  L225   orig[236..236] ( 1) -> decomp[236..236]
+  L225   orig[237..237] ( 1) -> decomp[237..237]
+  L225   orig[238..238] ( 1) -> decomp[238..238]
+  L225   orig[239..239] ( 1) -> decomp[239..239]
+  L225   orig[240..240] ( 1) -> decomp[240..240]
+  L225   orig[241..241] ( 1) -> decomp[241..241]
+  L225   orig[242..242] ( 1) -> decomp[242..242]
+  L225   orig[243..243] ( 1) -> decomp[243..243]
+  L226   orig[244..244] ( 1) -> decomp[244..244]
+  L227   orig[245..245] ( 1) -> decomp[245..245]
+  L227   orig[246..246] ( 1) -> decomp[246..246]
+  L227   orig[247..247] ( 1) -> decomp[247..247]
+  L227   orig[248..248] ( 1) -> decomp[248..248]
+  L228   orig[249..249] ( 1) -> decomp[249..249]
+  L228   orig[250..250] ( 1) -> decomp[250..250]
+  L228   orig[251..251] ( 1) -> decomp[251..251]
+  L228   orig[252..252] ( 1) -> decomp[252..252]
+  L228   orig[253..253] ( 1) -> decomp[253..253]
+  L228   orig[254..254] ( 1) -> decomp[254..254]
+  L228   orig[255..255] ( 1) -> decomp[255..255]
+  L228   orig[256..256] ( 1) -> decomp[256..256]
+  L229   orig[257..257] ( 1) -> decomp[257..257]
+  L229   orig[258..258] ( 1) -> decomp[258..258]
+  L229   orig[259..259] ( 1) -> decomp[259..259]
+  L229   orig[260..260] ( 1) -> decomp[260..260]
+  L229   orig[261..261] ( 1) -> decomp[261..261]
+  L229   orig[262..262] ( 1) -> decomp[262..262]
+  L229   orig[263..263] ( 1) -> decomp[263..263]
+  L229   orig[264..264] ( 1) -> decomp[264..264]
+  L229   orig[265..265] ( 1) -> decomp[265..265]
+  L229   orig[266..266] ( 1) -> decomp[266..266]
+  L229   orig[267..267] ( 1) -> decomp[267..267]
+  L229   orig[268..268] ( 1) -> decomp[268..268]
+  L229   orig[269..269] ( 1) -> decomp[269..269]
+  L229   orig[270..270] ( 1) -> decomp[270..270]
+  L231   orig[271..271] ( 1) -> decomp[271..271]
+  L231   orig[272..272] ( 1) -> decomp[272..272]
+  L231   orig[273..273] ( 1) -> decomp[273..273]
+  L231   orig[274..274] ( 1) -> decomp[274..274]
+  L231   orig[275..275] ( 1) -> decomp[275..275]
+  L231   orig[276..276] ( 1) -> decomp[276..276]
+  L231   orig[277..277] ( 1) -> decomp[277..277]
+  L231   orig[278..278] ( 1) -> decomp[278..278]
+  L231   orig[279..279] ( 1) -> decomp[279..279]
+  L231   orig[280..280] ( 1) -> decomp[280..280]
+  L231   orig[281..281] ( 1) -> decomp[281..281]
+  L231   orig[282..282] ( 1) -> decomp[282..282]
+  L231   orig[283..283] ( 1) -> decomp[283..283]
+  L231   orig[284..284] ( 1) -> decomp[284..284]
+  L232   orig[285..285] ( 1) -> decomp[285..285]
+  L232   orig[286..286] ( 1) -> decomp[286..286]
+  L232   orig[287..287] ( 1) -> decomp[287..287]
+  L232   orig[288..288] ( 1) -> decomp[288..288]
+  L233   orig[289..289] ( 1) -> decomp[289..289]
+  L232   orig[290..290] ( 1) -> decomp[290..290]
+  L234   orig[291..291] ( 1) -> decomp[291..291]
+  L234   orig[292..292] ( 1) -> decomp[292..292]
+  L234   orig[293..293] ( 1) -> decomp[293..293]
+  L234   orig[294..294] ( 1) -> decomp[294..294]
+  L234   orig[295..295] ( 1) -> decomp[295..295]
+  L234   orig[296..296] ( 1) -> decomp[296..296]
+  L235   orig[297..297] ( 1) -> decomp[297..297]
+  L235   orig[298..298] ( 1) -> decomp[298..298]
+  L235   orig[299..299] ( 1) -> decomp[299..299]
+  L235   orig[300..300] ( 1) -> decomp[300..300]
+  L235   orig[301..301] ( 1) -> decomp[301..301]
+  L235   orig[302..302] ( 1) -> decomp[302..302]
+  L235   orig[303..303] ( 1) -> decomp[303..303]
+  L235   orig[304..304] ( 1) -> decomp[304..304]
+  L235   orig[305..305] ( 1) -> decomp[305..305]
+  L235   orig[306..306] ( 1) -> decomp[306..306]
+  L236   orig[307..307] ( 1) -> decomp[307..307]
+  L237   orig[308..308] ( 1) -> decomp[308..308]
+  L237   orig[309..309] ( 1) -> decomp[309..309]
+  L237   orig[310..310] ( 1) -> decomp[310..310]
+  L237   orig[311..311] ( 1) -> decomp[311..311]
+  L237   orig[312..312] ( 1) -> decomp[312..312]
+  L237   orig[313..313] ( 1) -> decomp[313..313]
+  L238   orig[314..314] ( 1) -> decomp[314..314]
+  L238   orig[315..315] ( 1) -> decomp[315..315]
+  L238   orig[316..316] ( 1) -> decomp[316..316]
+  L238   orig[317..317] ( 1) -> decomp[317..317]
+  L238   orig[318..318] ( 1) -> decomp[318..318]
+  L238   orig[319..319] ( 1) -> decomp[319..319]
+  L238   orig[320..320] ( 1) -> decomp[320..320]
+  L238   orig[321..321] ( 1) -> decomp[321..321]
+  L238   orig[322..322] ( 1) -> decomp[322..322]
+  L238   orig[323..323] ( 1) -> decomp[323..323]
+  L239   orig[324..324] ( 1) -> decomp[324..324]
+  L241   orig[325..325] ( 1) -> decomp[325..325]
+  L241   orig[326..326] ( 1) -> decomp[326..326]
+  L241   orig[327..327] ( 1) -> decomp[327..327]
+  L241   orig[328..328] ( 1) -> decomp[328..328]
+  L241   orig[329..329] ( 1) -> decomp[329..329]
+  L241   orig[330..330] ( 1) -> decomp[330..330]
+  L241   orig[331..331] ( 1) -> decomp[331..331]
+  L241   orig[332..332] ( 1) -> decomp[332..332]
+  L241   orig[333..333] ( 1) -> decomp[333..333]
+  L241   orig[334..334] ( 1) -> decomp[334..334]
+  L241   orig[335..335] ( 1) -> decomp[335..335]
+  L241   orig[336..336] ( 1) -> decomp[336..336]
+  L242   orig[337..337] ( 1) -> decomp[337..337]
+  L242   orig[338..338] ( 1) -> decomp[338..338]
+  L242   orig[339..339] ( 1) -> decomp[339..339]
+  L242   orig[340..340] ( 1) -> decomp[340..340]
+  L242   orig[341..341] ( 1) -> decomp[341..341]
+  L242   orig[342..342] ( 1) -> decomp[342..342]
+  L243   orig[343..343] ( 1) -> decomp[343..343]
+  L243   orig[344..344] ( 1) -> decomp[344..344]
+  L243   orig[345..345] ( 1) -> decomp[345..345]
+  L243   orig[346..346] ( 1) -> decomp[346..346]
+  L243   orig[347..347] ( 1) -> decomp[347..347]
+  L243   orig[348..348] ( 1) -> decomp[348..348]
+  L243   orig[349..349] ( 1) -> decomp[349..349]
+  L243   orig[350..350] ( 1) -> decomp[350..350]
+  L243   orig[351..351] ( 1) -> decomp[351..351]
+  L243   orig[352..352] ( 1) -> decomp[352..352]
+  L244   orig[353..353] ( 1) -> decomp[353..353]
+  L245   orig[354..354] ( 1) -> decomp[354..354]
+  L245   orig[355..355] ( 1) -> decomp[355..355]
+  L245   orig[356..356] ( 1) -> decomp[356..356]
+  L245   orig[357..357] ( 1) -> decomp[357..357]
+  L245   orig[358..358] ( 1) -> decomp[358..358]
+  L245   orig[359..359] ( 1) -> decomp[359..359]
+  L246   orig[360..360] ( 1) -> decomp[360..360]
+  L246   orig[361..361] ( 1) -> decomp[361..361]
+  L246   orig[362..362] ( 1) -> decomp[362..362]
+  L246   orig[363..363] ( 1) -> decomp[363..363]
+  L246   orig[364..364] ( 1) -> decomp[364..364]
+  L246   orig[365..365] ( 1) -> decomp[365..365]
+  L246   orig[366..366] ( 1) -> decomp[366..366]
+  L246   orig[367..367] ( 1) -> decomp[367..367]
+  L246   orig[368..368] ( 1) -> decomp[368..368]
+  L246   orig[369..369] ( 1) -> decomp[369..369]
+  L247   orig[370..370] ( 1) -> decomp[370..370]
+  L249   orig[371..371] ( 1)  ***NOT EMITTED***
+  L257   orig[372..374] ( 3)  ***NOT EMITTED***
+  L258   orig[375..380] ( 6)  ***NOT EMITTED***
+  L259   orig[381..390] (10)  ***NOT EMITTED***
+  L260   orig[391..391] ( 1)  ***NOT EMITTED***
+  L261   orig[392..392] ( 1)  ***NOT EMITTED***
+  L260   orig[393..393] ( 1)  ***NOT EMITTED***
+  L262   orig[394..398] ( 5)  ***NOT EMITTED***
+  L260   orig[399..399] ( 1)  ***NOT EMITTED***
+  L263   orig[400..404] ( 5)  ***NOT EMITTED***
+  L264   orig[405..417] (13)  ***NOT EMITTED***
+  L265   orig[418..418] ( 1)  ***NOT EMITTED***
+  L267   orig[419..424] ( 6)  ***NOT EMITTED***
+  L268   orig[425..434] (10)  ***NOT EMITTED***
+  L269   orig[435..435] ( 1)  ***NOT EMITTED***
+  L270   orig[436..436] ( 1)  ***NOT EMITTED***
+  L269   orig[437..437] ( 1)  ***NOT EMITTED***
+  L271   orig[438..442] ( 5)  ***NOT EMITTED***
+  L269   orig[443..443] ( 1)  ***NOT EMITTED***
+  L272   orig[444..448] ( 5)  ***NOT EMITTED***
+  L273   orig[449..461] (13)  ***NOT EMITTED***
+  L274   orig[462..462] ( 1)  ***NOT EMITTED***
+  L292   orig[463..463] ( 1) -> decomp[371..371]
+  L292   orig[464..464] ( 1) -> decomp[372..372]
+  L292   orig[465..465] ( 1) -> decomp[373..373]
+  L293   orig[466..466] ( 1) -> decomp[374..374]
+  L293   orig[467..467] ( 1) -> decomp[375..375]
+  L293   orig[468..468] ( 1) -> decomp[376..376]
+  L293   orig[469..469] ( 1) -> decomp[377..377]
+  L293   orig[470..470] ( 1) -> decomp[378..378]
+  L293   orig[471..471] ( 1) -> decomp[379..379]
+  L293   orig[472..472] ( 1) -> decomp[380..380]
+  L294   orig[473..473] ( 1) -> decomp[381..381]
+  L294   orig[474..474] ( 1) -> decomp[382..382]
+  L294   orig[475..475] ( 1) -> decomp[383..383]
+  L294   orig[476..476] ( 1) -> decomp[384..384]
+  L294   orig[477..477] ( 1) -> decomp[385..385]
+  L295   orig[478..478] ( 1) -> decomp[386..386]
+  L295   orig[479..479] ( 1) -> decomp[387..387]
+  L295   orig[480..480] ( 1) -> decomp[388..388]
+  L295   orig[481..481] ( 1) -> decomp[389..389]
+  L296   orig[482..482] ( 1) -> decomp[390..390]
+  L296   orig[483..483] ( 1) -> decomp[391..391]
+  L297   orig[484..484] ( 1) -> decomp[392..392]
+  L297   orig[485..485] ( 1) -> decomp[393..393]
+  L295   orig[486..486] ( 1) -> decomp[394..394]
+  L295   orig[487..487] ( 1) -> decomp[395..395]
+  L295   orig[488..488] ( 1) -> decomp[396..396]
+  L299   orig[489..489] ( 1) -> decomp[397..397]
+  L299   orig[490..490] ( 1) -> decomp[398..398]
+  L299   orig[491..491] ( 1) -> decomp[399..399]
+  L299   orig[492..492] ( 1) -> decomp[400..400]
+  L299   orig[493..493] ( 1) -> decomp[401..401]
+  L300   orig[494..494] ( 1) -> decomp[402..402]
+  L301   orig[495..495] ( 1) -> decomp[403..403]
+  L301   orig[496..496] ( 1) -> decomp[404..404]
+  L301   orig[497..497] ( 1) -> decomp[405..405]
+  L301   orig[498..498] ( 1) -> decomp[406..406]
+  L301   orig[499..499] ( 1) -> decomp[407..407]
+  L301   orig[500..500] ( 1) -> decomp[408..408]
+  L301   orig[501..501] ( 1) -> decomp[409..409]
+  L301   orig[502..502] ( 1) -> decomp[410..410]
+  L301   orig[503..503] ( 1) -> decomp[411..411]
+  L301   orig[504..504] ( 1) -> decomp[412..412]
+  L301   orig[505..505] ( 1) -> decomp[413..413]
+  L301   orig[506..506] ( 1) -> decomp[414..414]
+  L301   orig[507..507] ( 1) -> decomp[415..415]
+  L301   orig[508..508] ( 1) -> decomp[416..416]
+  L302   orig[509..509] ( 1) -> decomp[417..417]
+  L302   orig[510..510] ( 1) -> decomp[418..418]
+  L302   orig[511..511] ( 1) -> decomp[419..419]
+  L302   orig[512..512] ( 1) -> decomp[420..420]
+  L302   orig[513..513] ( 1) -> decomp[421..421]
+  L302   orig[514..514] ( 1) -> decomp[422..422]
+  L302   orig[515..515] ( 1) -> decomp[423..423]
+  L302   orig[516..516] ( 1) -> decomp[424..424]
+  L303   orig[517..517] ( 1) -> decomp[425..425]
+  L303   orig[518..518] ( 1) -> decomp[426..426]
+  L303   orig[519..519] ( 1) -> decomp[427..427]
+  L303   orig[520..520] ( 1) -> decomp[428..428]
+  L304   orig[521..521] ( 1) -> decomp[429..429]
+  L304   orig[522..522] ( 1) -> decomp[430..430]
+  L304   orig[523..523] ( 1) -> decomp[431..431]
+  L304   orig[524..524] ( 1) -> decomp[432..432]
+  L304   orig[525..525] ( 1) -> decomp[433..433]
+  L304   orig[526..526] ( 1) -> decomp[434..434]
+  L304   orig[527..527] ( 1) -> decomp[435..435]
+  L305   orig[528..528] ( 1) -> decomp[436..436]
+  L305   orig[529..529] ( 1) -> decomp[437..437]
+  L305   orig[530..530] ( 1) -> decomp[438..438]
+  L305   orig[531..531] ( 1) -> decomp[439..439]
+  L306   orig[532..532] ( 1) -> decomp[440..440]
+  L306   orig[533..533] ( 1) -> decomp[441..441]
+  L307   orig[534..534] ( 1) -> decomp[442..442]
+  L307   orig[535..535] ( 1) -> decomp[443..443]
+  L305   orig[536..536] ( 1) -> decomp[444..444]
+  L305   orig[537..537] ( 1) -> decomp[445..445]
+  L305   orig[538..538] ( 1) -> decomp[446..446]
+  L309   orig[539..539] ( 1) -> decomp[447..447]
+  L309   orig[540..540] ( 1) -> decomp[448..448]
+  L309   orig[541..541] ( 1) -> decomp[449..449]
+  L309   orig[542..542] ( 1) -> decomp[450..450]
+  L309   orig[543..543] ( 1) -> decomp[451..451]
+  L310   orig[544..544] ( 1) -> decomp[452..452]
+  L312   orig[545..545] ( 1) -> decomp[453..453]
+  L312   orig[546..546] ( 1) -> decomp[454..454]
+  L312   orig[547..547] ( 1) -> decomp[455..455]
+  L312   orig[548..548] ( 1) -> decomp[456..456]
+  L312   orig[549..549] ( 1) -> decomp[457..457]
+  L312   orig[550..550] ( 1) -> decomp[458..458]
+  L313   orig[551..551] ( 1) -> decomp[459..459]
+  L313   orig[552..552] ( 1) -> decomp[460..460]
+  L313   orig[553..553] ( 1) -> decomp[461..461]
+  L313   orig[554..554] ( 1) -> decomp[462..462]
+  L313   orig[555..555] ( 1) -> decomp[463..463]
+  L314   orig[556..556] ( 1) -> decomp[464..464]
+  L314   orig[557..557] ( 1) -> decomp[465..465]
+  L314   orig[558..558] ( 1) -> decomp[466..466]
+  L316   orig[559..559] ( 1) -> decomp[467..467]
+  L316   orig[560..560] ( 1) -> decomp[468..468]
+  L316   orig[561..561] ( 1) -> decomp[469..469]
+  L316   orig[562..562] ( 1) -> decomp[470..470]
+  L316   orig[563..563] ( 1) -> decomp[471..471]
+  L316   orig[564..564] ( 1) -> decomp[472..472]
+  L316   orig[565..565] ( 1) -> decomp[473..473]
+  L316   orig[566..566] ( 1) -> decomp[474..474]
+  L316   orig[567..567] ( 1) -> decomp[475..475]
+  L316   orig[568..568] ( 1) -> decomp[476..476]
+  L316   orig[569..569] ( 1) -> decomp[477..477]
+  L316   orig[570..570] ( 1) -> decomp[478..478]
+  L316   orig[571..571] ( 1) -> decomp[479..479]
+  L315   orig[572..572] ( 1) -> decomp[480..480]
+  L314   orig[573..573] ( 1) -> decomp[481..481]
+  L314   orig[574..574] ( 1) -> decomp[482..482]
+  LNone  orig[575..575] ( 1)  ***NOT EMITTED***
+  L319   orig[576..578] ( 3)  ***NOT EMITTED***
+  L320   orig[579..579] ( 1) -> decomp[483..483]
+  L320   orig[580..580] ( 1) -> decomp[484..484]
+  L320   orig[581..581] ( 1) -> decomp[485..485]
+  L320   orig[582..582] ( 1) -> decomp[486..486]
+  L320   orig[583..583] ( 1) -> decomp[487..487]
+  L320   orig[584..584] ( 1) -> decomp[488..488]
+  L320   orig[585..585] ( 1) -> decomp[489..489]
+  L321   orig[586..586] ( 1) -> decomp[490..490]
+  L321   orig[587..587] ( 1) -> decomp[491..491]
+  L322   orig[588..588] ( 1) -> decomp[492..492]
+  L322   orig[589..589] ( 1) -> decomp[493..493]
+  L323   orig[590..590] ( 1) -> decomp[494..494]
+  L324   orig[591..591] ( 1) -> decomp[495..495]
+  L325   orig[592..592] ( 1) -> decomp[496..496]
+  L325   orig[593..593] ( 1) -> decomp[497..497]
+  L326   orig[594..594] ( 1) -> decomp[498..498]
+  L326   orig[595..595] ( 1) -> decomp[499..499]
+  L327   orig[596..596] ( 1) -> decomp[500..500]
+  L327   orig[597..597] ( 1) -> decomp[501..501]
+  L328   orig[598..598] ( 1) -> decomp[502..502]
+  L329   orig[599..599] ( 1) -> decomp[503..503]
+  L329   orig[600..600] ( 1) -> decomp[504..504]
+  L330   orig[601..601] ( 1) -> decomp[505..505]
+  L330   orig[602..602] ( 1) -> decomp[506..506]
+  L330   orig[603..603] ( 1) -> decomp[507..507]
+  L330   orig[604..604] ( 1) -> decomp[508..508]
+  L330   orig[605..605] ( 1) -> decomp[509..509]
+  L330   orig[606..606] ( 1) -> decomp[510..510]
+  L321   orig[607..607] ( 1) -> decomp[511..511]
+  L321   orig[608..608] ( 1) -> decomp[512..512]
+  L321   orig[609..609] ( 1) -> decomp[513..513]
+  L332   orig[610..610] ( 1) -> decomp[514..514]
+  L332   orig[611..611] ( 1) -> decomp[515..515]
+  L332   orig[612..612] ( 1) -> decomp[516..516]
+  L332   orig[613..613] ( 1) -> decomp[517..517]
+  L332   orig[614..614] ( 1) -> decomp[518..518]
+  L332   orig[615..615] ( 1) -> decomp[519..519]
+  L332   orig[616..616] ( 1) -> decomp[520..520]
+  L332   orig[617..617] ( 1) -> decomp[521..521]
+  L333   orig[618..618] ( 1) -> decomp[522..522]
+  L333   orig[619..619] ( 1) -> decomp[523..523]
+  L333   orig[620..620] ( 1) -> decomp[524..524]
+  L333   orig[621..621] ( 1) -> decomp[525..525]
+  L333   orig[622..622] ( 1) -> decomp[526..526]
+  L333   orig[623..623] ( 1) -> decomp[527..527]
+  L333   orig[624..624] ( 1) -> decomp[528..528]
+  L333   orig[625..625] ( 1) -> decomp[529..529]
+  L334   orig[626..626] ( 1) -> decomp[530..530]
+  L334   orig[627..627] ( 1) -> decomp[531..531]
+  L334   orig[628..628] ( 1) -> decomp[532..532]
+  L334   orig[629..629] ( 1) -> decomp[533..533]
+  L334   orig[630..630] ( 1) -> decomp[534..534]
+  L335   orig[631..631] ( 1) -> decomp[535..535]
+  L335   orig[632..632] ( 1) -> decomp[536..536]
+  L335   orig[633..633] ( 1) -> decomp[537..537]
+  L335   orig[634..634] ( 1) -> decomp[538..538]
+  L335   orig[635..635] ( 1) -> decomp[539..539]
+  L335   orig[636..636] ( 1) -> decomp[540..540]
+  L335   orig[637..637] ( 1) -> decomp[541..541]
+  L335   orig[638..638] ( 1) -> decomp[542..542]
+  L335   orig[639..639] ( 1) -> decomp[543..543]
+  L335   orig[640..640] ( 1) -> decomp[544..544]
+  L335   orig[641..641] ( 1) -> decomp[545..545]
+  L335   orig[642..642] ( 1) -> decomp[546..546]
+  L337   orig[643..643] ( 1) -> decomp[547..547]
+  L337   orig[644..644] ( 1) -> decomp[548..548]
+  L337   orig[645..645] ( 1) -> decomp[549..549]
+  L337   orig[646..646] ( 1) -> decomp[550..550]
+  L337   orig[647..647] ( 1) -> decomp[551..551]
+  L337   orig[648..648] ( 1) -> decomp[552..552]
+  L337   orig[649..649] ( 1) -> decomp[553..553]
+  L338   orig[650..650] ( 1) -> decomp[554..554]
+  L338   orig[651..651] ( 1) -> decomp[555..555]
+  L338   orig[652..652] ( 1) -> decomp[556..556]
+  L337   orig[653..653] ( 1) -> decomp[557..557]
+  L337   orig[654..654] ( 1) -> decomp[558..558]
+  L337   orig[655..655] ( 1) -> decomp[559..559]
+  L337   orig[656..656] ( 1) -> decomp[560..560]
+  L340   orig[657..657] ( 1) -> decomp[561..561]
+  L340   orig[658..658] ( 1) -> decomp[562..562]
+  L340   orig[659..659] ( 1) -> decomp[563..563]
+  L340   orig[660..660] ( 1) -> decomp[564..564]
+  L340   orig[661..661] ( 1) -> decomp[565..565]
+  L340   orig[662..662] ( 1) -> decomp[566..566]
+  L340   orig[663..663] ( 1) -> decomp[567..567]
+  L340   orig[664..664] ( 1) -> decomp[568..568]
+  L340   orig[665..665] ( 1) -> decomp[569..569]
+  L340   orig[666..666] ( 1) -> decomp[570..570]
+  L340   orig[667..667] ( 1) -> decomp[571..571]
+  L340   orig[668..668] ( 1) -> decomp[572..572]
+  L340   orig[669..669] ( 1) -> decomp[573..573]
+  L341   orig[670..670] ( 1) -> decomp[574..574]
+  L341   orig[671..671] ( 1) -> decomp[575..575]
+  L341   orig[672..672] ( 1) -> decomp[576..576]
+  L341   orig[673..673] ( 1) -> decomp[577..577]
+  L341   orig[674..674] ( 1) -> decomp[578..578]
+  L342   orig[675..675] ( 1) -> decomp[579..579]
+  L343   orig[676..676] ( 1) -> decomp[580..580]
+  L342   orig[677..677] ( 1) -> decomp[581..581]
+  L345   orig[678..678] ( 1) -> decomp[582..582]
+  L346   orig[679..679] ( 1) -> decomp[583..583]
+  L346   orig[680..680] ( 1) -> decomp[584..584]
+  L347   orig[681..681] ( 1) -> decomp[585..585]
+  L347   orig[682..682] ( 1) -> decomp[586..586]
+  L348   orig[683..683] ( 1) -> decomp[587..587]
+  L348   orig[684..684] ( 1) -> decomp[588..588]
+  L349   orig[685..685] ( 1) -> decomp[589..589]
+  L349   orig[686..686] ( 1) -> decomp[590..590]
+  L349   orig[687..687] ( 1) -> decomp[591..591]
+  L349   orig[688..688] ( 1) -> decomp[592..592]
+  L345   orig[689..689] ( 1) -> decomp[593..593]
+  L345   orig[690..690] ( 1) -> decomp[594..594]
+  L342   orig[691..691] ( 1) -> decomp[595..595]
+  L353   orig[692..692] ( 1) -> decomp[596..596]
+  L353   orig[693..693] ( 1) -> decomp[597..597]
+  L353   orig[694..694] ( 1) -> decomp[598..598]
+  L353   orig[695..695] ( 1) -> decomp[599..599]
+  L353   orig[696..696] ( 1) -> decomp[600..600]
+  L353   orig[697..697] ( 1) -> decomp[601..601]
+  L353   orig[698..698] ( 1) -> decomp[602..602]
+  L354   orig[699..699] ( 1) -> decomp[603..603]
+  L354   orig[700..700] ( 1) -> decomp[604..604]
+  L354   orig[701..701] ( 1) -> decomp[605..605]
+  L354   orig[702..702] ( 1) -> decomp[606..606]
+  L354   orig[703..703] ( 1) -> decomp[607..607]
+  L354   orig[704..704] ( 1) -> decomp[608..608]
+  L354   orig[705..705] ( 1) -> decomp[609..609]
+  L354   orig[706..706] ( 1) -> decomp[610..610]
+  L354   orig[707..707] ( 1) -> decomp[611..611]
+  L354   orig[708..708] ( 1) -> decomp[612..612]
+  L354   orig[709..709] ( 1) -> decomp[613..613]
+  L354   orig[710..710] ( 1) -> decomp[614..614]
+  L354   orig[711..711] ( 1) -> decomp[615..615]
+  LNone  orig[712..712] ( 1) -> decomp[616..616]
+  L177   orig[713..713] ( 1) -> decomp[713..713]
+  L177   orig[714..714] ( 1) -> decomp[714..714]
+
+*** out-of-order runs: 0 ***

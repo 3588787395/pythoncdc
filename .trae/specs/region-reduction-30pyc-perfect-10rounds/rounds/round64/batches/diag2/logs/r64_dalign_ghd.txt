@@ -1,0 +1,185 @@
+#### get_history_df  orig=1881 decomp=1856 deficit=-25
+#### 10 diff blocks
+--- replace orig[449:454] n=5 (@2242) decomp[449:450] n=1 (@2242)  srcO=L417 srcD=L295
+  O  446 @2232  L417  LOAD_FAST:'cur_datetime'
+  O  447 @2234  L418  LOAD_FAST:'pm_close_market_datetime'
+  O  448 @2236  L417  COMPARE_OP:'>'
+  O  449 @2242  L417  POP_JUMP_FORWARD_IF_TRUE·J
+  O  450 @2244  L419  LOAD_FAST:'time_count'
+  O  451 @2246  L419  LOAD_CONST:1
+  O  452 @2248  L419  BINARY_OP:23
+  O  453 @2252  L419  STORE_FAST:'time_count'
+  O  454 @2254  L422  LOAD_FAST:'frequency'
+  O  455 @2256  L422  LOAD_GLOBAL:'Frequency'
+  O  456 @2268  L422  LOAD_ATTR:'MINUTE'
+  D  446 @2232  L295  LOAD_FAST:'cur_datetime'
+  D  447 @2234  L295  LOAD_FAST:'pm_close_market_datetime'
+  D  448 @2236  L295  COMPARE_OP:'>'
+  D  449 @2242  L295  POP_JUMP_FORWARD_IF_FALSE·J
+  D  450 @2244  L296  LOAD_FAST:'frequency'
+  D  451 @2246  L296  LOAD_GLOBAL:'Frequency'
+  D  452 @2258  L296  LOAD_ATTR:'MINUTE'
+--- replace orig[514:519] n=5 (@2506) decomp[510:511] n=1 (@2496)  srcO=L431 srcD=L303
+  O  511 @2496  L431  LOAD_FAST:'_query_date'
+  O  512 @2498  L432  LOAD_FAST:'pm_close_market_datetime'
+  O  513 @2500  L431  COMPARE_OP:'>'
+  O  514 @2506  L431  POP_JUMP_FORWARD_IF_TRUE·J
+  O  515 @2508  L433  LOAD_FAST:'max_len_real_data'
+  O  516 @2510  L433  LOAD_CONST:1
+  O  517 @2512  L433  BINARY_OP:23
+  O  518 @2516  L433  STORE_FAST:'max_len_real_data'
+  O  519 @2518  L434  LOAD_FAST:'max_len_real_data'
+  O  520 @2520  L434  LOAD_FAST:'count'
+  O  521 @2522  L434  COMPARE_OP:'>'
+  D  507 @2486  L303  LOAD_FAST:'_query_date'
+  D  508 @2488  L303  LOAD_FAST:'pm_close_market_datetime'
+  D  509 @2490  L303  COMPARE_OP:'>'
+  D  510 @2496  L303  POP_JUMP_FORWARD_IF_FALSE·J
+  D  511 @2498  L304  LOAD_FAST:'max_len_real_data'
+  D  512 @2500  L304  LOAD_FAST:'count'
+  D  513 @2502  L304  COMPARE_OP:'>'
+--- insert orig[526:526] n=0 (@2536) decomp[518:522] n=4 (@2516)  srcO=L434 srcD=L304
+  O  523 @2530  L434  LOAD_FAST:'count'
+  O  524 @2532  L434  JUMP_FORWARD·J
+  O  525 @2534  L434  LOAD_FAST:'max_len_real_data'
+  O  526 @2536  L434  STORE_FAST:'max_len_real_data'
+  O  527 @2538  L435  LOAD_FAST:'max_len_real_data'
+  O  528 @2540  L435  LOAD_CONST:0
+  D  515 @2510  L304  LOAD_FAST:'count'
+  D  516 @2512  L304  JUMP_FORWARD·J
+  D  517 @2514  L304  LOAD_FAST:'max_len_real_data'
+  D  518 @2516  L304  STORE_FAST:'max_len_real_data'
+  D  519 @2518  L305  LOAD_FAST:'max_len_real_data'
+  D  520 @2520  L305  LOAD_CONST:1
+  D  521 @2522  L305  BINARY_OP:23
+  D  522 @2526  L305  STORE_FAST:'max_len_real_data'
+  D  523 @2528  L306  LOAD_FAST:'max_len_real_data'
+  D  524 @2530  L306  LOAD_CONST:0
+--- insert orig[544:544] n=0 (@2580) decomp[540:544] n=4 (@2570)  srcO=L443 srcD=L311
+  O  541 @2574  L439  POP_JUMP_FORWARD_IF_FALSE·J
+  O  542 @2576  L440  LOAD_FAST:'count'
+  O  543 @2578  L440  STORE_FAST:'min_count'
+  O  544 @2580  L443  LOAD_FAST:'frequency'
+  O  545 @2582  L443  LOAD_GLOBAL:'Frequency'
+  O  546 @2594  L443  LOAD_ATTR:'MINUTE'
+  D  537 @2564  L309  POP_JUMP_FORWARD_IF_FALSE·J
+  D  538 @2566  L310  LOAD_FAST:'count'
+  D  539 @2568  L310  STORE_FAST:'min_count'
+  D  540 @2570  L311  LOAD_FAST:'time_count'
+  D  541 @2572  L311  LOAD_CONST:1
+  D  542 @2574  L311  BINARY_OP:23
+  D  543 @2578  L311  STORE_FAST:'time_count'
+  D  544 @2580  L312  LOAD_FAST:'frequency'
+  D  545 @2582  L312  LOAD_GLOBAL:'Frequency'
+  D  546 @2594  L312  LOAD_ATTR:'MINUTE'
+--- delete orig[576:578] n=2 (@2690) decomp[576:576] n=0 (@2690)  srcO=L451 srcD=L318
+  O  573 @2684  L449  JUMP_FORWARD·J
+  O  574 @2686  L450  LOAD_FAST:'am_close_market_datetime'
+  O  575 @2688  L450  STORE_FAST:'tmp_end_datetime'
+  O  576 @2690  L451  LOAD_FAST:'include'
+  O  577 @2692  L451  POP_JUMP_FORWARD_IF_TRUE·J
+  O  578 @2694  L452  LOAD_FAST:'min_count'
+  O  579 @2696  L452  LOAD_CONST:1
+  O  580 @2698  L452  BINARY_OP:23
+  D  573 @2684  L316  JUMP_FORWARD·J
+  D  574 @2686  L317  LOAD_FAST:'am_close_market_datetime'
+  D  575 @2688  L317  STORE_FAST:'tmp_end_datetime'
+  D  576 @2690  L318  LOAD_FAST:'min_count'
+  D  577 @2692  L318  LOAD_CONST:1
+  D  578 @2694  L318  BINARY_OP:23
+--- replace orig[764:765] n=1 (@3726) decomp[762:763] n=1 (@3722)  srcO=L480 srcD=L339
+  O  761 @3710  L479  PRECALL:0
+  O  762 @3714  L479  CALL:0
+  O  763 @3724  L479  STORE_FAST:'_np_real_array'
+  O  764 @3726  L480  LOAD_CONST:<code object <listcomp> at 0x000001F73C642100, file "./fly_d
+  O  765 @3728  L480  MAKE_FUNCTION:0
+  O  766 @3730  L480  LOAD_FAST:'_np_real_array'
+  O  767 @3732  L480  GET_ITER:None
+  D  759 @3706  L338  PRECALL:0
+  D  760 @3710  L338  CALL:0
+  D  761 @3720  L338  STORE_FAST:'_np_real_array'
+  D  762 @3722  L339  LOAD_CONST:<code object <listcomp> at 0x000001F73C6426A0, file "build_l
+  D  763 @3724  L339  MAKE_FUNCTION:0
+  D  764 @3726  L339  LOAD_FAST:'_np_real_array'
+  D  765 @3728  L339  GET_ITER:None
+--- delete orig[1025:1048] n=23 (@4986) decomp[1023:1023] n=0 (@4978)  srcO=L522 srcD=L377
+  O 1022 @4974  L520  LOAD_CONST:0
+  O 1023 @4976  L520  COMPARE_OP:'>'
+  O 1024 @4984  L520  POP_JUMP_FORWARD_IF_FALSE·J
+  O 1025 @4986  L522  LOAD_FAST:'engine_obj'
+  O 1026 @4988  L522  LOAD_ATTR:'basic_data_handler'
+  O 1027 @4998  L522  LOAD_METHOD:'get_dividend'
+  O 1028 @5020  L522  LOAD_FAST:'symbol'
+  O 1029 @5022  L522  LOAD_CONST:None
+  O 1030 @5024  L522  PRECALL:2
+  O 1031 @5028  L522  CALL:2
+  O 1032 @5038  L522  STORE_FAST:'tmp_dividends'
+  O 1033 @5040  L523  LOAD_FAST:'tmp_dividends'
+  O 1034 @5042  L523  POP_JUMP_FORWARD_IF_FALSE·J
+  O 1035 @5044  L523  LOAD_FAST:'symbol'
+  O 1036 @5046  L523  LOAD_FAST:'tmp_dividends'
+  O 1037 @5048  L523  CONTAINS_OP:1
+  O 1038 @5050  L523  POP_JUMP_FORWARD_IF_TRUE·J
+  O 1039 @5052  L523  LOAD_GLOBAL:'len'
+  O 1040 @5064  L523  LOAD_FAST:'tmp_dividends'
+  O 1041 @5066  L523  LOAD_FAST:'symbol'
+  O 1042 @5068  L523  BINARY_SUBSCR:None
+  O 1043 @5078  L523  PRECALL:1
+  O 1044 @5082  L523  CALL:1
+  O 1045 @5092  L523  LOAD_CONST:0
+  O 1046 @5094  L523  COMPARE_OP:'=='
+  O 1047 @5100  L523  POP_JUMP_FORWARD_IF_FALSE·J
+  O 1048 @5102  L524  LOAD_FAST:'fields'
+  O 1049 @5104  L524  POP_JUMP_FORWARD_IF_NOT_NONE·J
+  O 1050 @5106  L524  LOAD_FAST:'real_data'
+  D 1020 @4968  L376  LOAD_CONST:0
+  D 1021 @4970  L376  COMPARE_OP:'>'
+  D 1022 @4976  L376  POP_JUMP_FORWARD_IF_FALSE·J
+  D 1023 @4978  L377  LOAD_FAST:'fields'
+  D 1024 @4980  L377  POP_JUMP_FORWARD_IF_NOT_NONE·J
+  D 1025 @4982  L377  LOAD_FAST:'real_data'
+--- replace orig[1056:1057] n=1 (@5126) decomp[1031:1032] n=1 (@5002)  srcO=L526 srcD=L378
+  O 1053 @5112  L524  LOAD_FAST:'fields'
+  O 1054 @5114  L524  BINARY_SUBSCR:None
+  O 1055 @5124  L524  RETURN_VALUE:None
+  O 1056 @5126  L526  LOAD_FAST:'tmp_dividends'
+  O 1057 @5128  L526  LOAD_FAST:'symbol'
+  O 1058 @5130  L526  BINARY_SUBSCR:None
+  O 1059 @5140  L526  STORE_FAST:'dividends'
+  D 1028 @4988  L377  LOAD_FAST:'fields'
+  D 1029 @4990  L377  BINARY_SUBSCR:None
+  D 1030 @5000  L377  RETURN_VALUE:None
+  D 1031 @5002  L378  LOAD_GLOBAL:'tmp_dividends'
+  D 1032 @5014  L378  LOAD_FAST:'symbol'
+  D 1033 @5016  L378  BINARY_SUBSCR:None
+  D 1034 @5026  L378  STORE_FAST:'dividends'
+--- replace orig[1060:1061] n=1 (@5142) decomp[1035:1036] n=1 (@5028)  srcO=L528 srcD=L379
+  O 1057 @5128  L526  LOAD_FAST:'symbol'
+  O 1058 @5130  L526  BINARY_SUBSCR:None
+  O 1059 @5140  L526  STORE_FAST:'dividends'
+  O 1060 @5142  L528  LOAD_CONST:<code object <dictcomp> at 0x000001F73CA02030, file "./fly_d
+  O 1061 @5144  L528  MAKE_FUNCTION:0
+  O 1062 @5146  L530  LOAD_FAST:'dividends'
+  O 1063 @5148  L530  LOAD_METHOD:'items'
+  D 1032 @5014  L378  LOAD_FAST:'symbol'
+  D 1033 @5016  L378  BINARY_SUBSCR:None
+  D 1034 @5026  L378  STORE_FAST:'dividends'
+  D 1035 @5028  L379  LOAD_CONST:<code object <dictcomp> at 0x000001F73CA02230, file "build_l
+  D 1036 @5030  L379  MAKE_FUNCTION:0
+  D 1037 @5032  L379  LOAD_FAST:'dividends'
+  D 1038 @5034  L379  LOAD_METHOD:'items'
+--- replace orig[1238:1239] n=1 (@6142) decomp[1213:1214] n=1 (@6028)  srcO=L560 srcD=L402
+  O 1235 @6118  L559  STORE_FAST:'adjust_bars'
+  O 1236 @6120  L560  LOAD_GLOBAL:'np'
+  O 1237 @6132  L560  LOAD_ATTR:'array'
+  O 1238 @6142  L560  LOAD_CONST:<code object <listcomp> at 0x000001F73C6421F0, file "./fly_d
+  O 1239 @6144  L560  MAKE_FUNCTION:0
+  O 1240 @6146  L560  LOAD_FAST:'adjust_bars'
+  O 1241 @6148  L560  GET_ITER:None
+  D 1210 @6004  L401  STORE_FAST:'adjust_bars'
+  D 1211 @6006  L402  LOAD_GLOBAL:'np'
+  D 1212 @6018  L402  LOAD_ATTR:'array'
+  D 1213 @6028  L402  LOAD_CONST:<code object <listcomp> at 0x000001F73C642790, file "build_l
+  D 1214 @6030  L402  MAKE_FUNCTION:0
+  D 1215 @6032  L402  LOAD_FAST:'adjust_bars'
+  D 1216 @6034  L402  GET_ITER:None

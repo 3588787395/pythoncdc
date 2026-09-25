@@ -25555,6 +25555,51 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     if isinstance(_ft_reg, LoopRegion):
                         if ft_succ == _ft_reg.header_block or ft_succ in _ft_reg.body_blocks:
                             break
+            # [R64-diag1 closed-shared-exit-prefix] Region-reduction principle 2
+            # (one owner per block at this level) + principle 3 (a nested if is an
+            # abstract node, never a boolop operand): once every block already in the
+            # chain short-circuits to the SAME block T, that operator run is closed --
+            # its condition is complete.  The next conditional block can only be one
+            # of its operands if it can still reach T on one of its own two edges;
+            # if neither of its successors is T (and it is not T itself, which is the
+            # elif/else-entry shape the chain walk already handles elsewhere) it opens
+            # a NEW statement, i.e. `if A and B: if C: ... else: ...`.  Absorbing it
+            # fuses the nested condition into the test (A and B or C), flips the
+            # polarity of the negative operand and orphans the nested else block.
+            # 识别条件：同一条 BoolOp 短路链 walk 中，len(chain) >= 3，且链上前缀区块（chain[:-1]）
+            # 的条件跳转全部落到同一个块 T（T 即链头短路边），而 current 的两个后继（跳转边 _r64_cj
+            # 与落空边 ft_succ）都不是 T、且 current 自身也不是 T（T is current 是 elif/else 入口
+            # 形状，由链 walk 的其它分支处理）。
+            # 归约方式：该算子 run 已在 T 处闭合，其条件已完整；current 是**下一条语句**的条件块，
+            # 故 chain.pop() 撤销本轮吸收并 break —— current 保持自己 IfRegion 的入口，不被本
+            # BoolOpRegion 认领（原则 2 每块唯一归属），嵌套 if 作为抽象节点被父语句引用（原则 3）。
+            # AST 映射：BoolOpRegion(values=[A, B]) 与独立的 IfRegion(current) 两个抽象节点，
+            # 生成侧映射为 `if A and B:` / `if C: ... else: ...` 的嵌套 If，而不是被融合成
+            # `if A and B or C:`（融合会翻转负极性操作数并把嵌套 else 块变成孤儿）。
+            if len(chain) >= 3:
+                _r64_pref = chain[:-1]
+                _r64_li0 = _r64_pref[0][0].get_last_instruction()
+                _r64_T = (self.cfg.get_block_by_offset(_r64_li0.argval)
+                          if (_r64_li0 is not None
+                              and getattr(_r64_li0, 'argval', None) is not None)
+                          else None)
+                if _r64_T is not None and _r64_T is not current:
+                    _r64_closed = True
+                    for _r64_b, _ in _r64_pref:
+                        _r64_bl = _r64_b.get_last_instruction()
+                        if (_r64_bl is None
+                                or getattr(_r64_bl, 'argval', None) is None
+                                or self.cfg.get_block_by_offset(_r64_bl.argval)
+                                is not _r64_T):
+                            _r64_closed = False
+                            break
+                    _r64_cj = (self.cfg.get_block_by_offset(last.argval)
+                               if getattr(last, 'argval', None) is not None
+                               else None)
+                    if (_r64_closed and _r64_cj is not _r64_T
+                            and ft_succ is not _r64_T):
+                        chain.pop()
+                        break
             if len(chain) >= 2:
                 first_jump_target = self.cfg.get_block_by_offset(chain[0][0].get_last_instruction().argval)
                 cur_jump_target = self.cfg.get_block_by_offset(last.argval)

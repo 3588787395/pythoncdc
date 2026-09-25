@@ -1,0 +1,273 @@
+target _generate_boolop_impl code=_generate_boolop_impl firstline=32192
+### _generate_boolop_impl() trace lines=270
+   32282      op_chain = region.op_chain
+   32283      if not op_chain and not region.prefix_block:
+   32286      _is_outer_condition = False
+   32287      _enclosing = region.find_enclosing_parent((LoopRegion, IfRegion))
+   32288      if _enclosing and hasattr(_enclosing, 'condition_block') and _enclosing.condition_block:
+   32289      if region.prefix_block and region.prefix_block == _enclosing.condition_block:
+   32291      if not _is_outer_condition:
+   32292      for chain_block, _ in region.op_chain:
+   32293      if chain_block == _enclosing.condition_block:
+   32292      for chain_block, _ in region.op_chain:
+   32303      if _is_outer_condition and region.merge_block:
+   32315      if _is_outer_condition:
+   32386      if (not _is_outer_condition
+   32387      and region.merge_block is not None
+   32388      and not getattr(region, 'is_condition_context', False)):
+   32387      and region.merge_block is not None
+   32389      for _lr in self.region_analyzer.regions:
+   32390      if (isinstance(_lr, LoopRegion)
+   32391      and _lr.region_type == RegionType.FOR_LOOP
+   32389      for _lr in self.region_analyzer.regions:
+   32390      if (isinstance(_lr, LoopRegion)
+   32389      for _lr in self.region_analyzer.regions:
+   32390      if (isinstance(_lr, LoopRegion)
+   32389      for _lr in self.region_analyzer.regions:
+   32390      if (isinstance(_lr, LoopRegion)
+   32389      for _lr in self.region_analyzer.regions:
+   32390      if (isinstance(_lr, LoopRegion)
+   32389      for _lr in self.region_analyzer.regions:
+   32390      if (isinstance(_lr, LoopRegion)
+   32389      for _lr in self.region_analyzer.regions:
+   32390      if (isinstance(_lr, LoopRegion)
+   32389      for _lr in self.region_analyzer.regions:
+   32390      if (isinstance(_lr, LoopRegion)
+   32389      for _lr in self.region_analyzer.regions:
+   32390      if (isinstance(_lr, LoopRegion)
+   32389      for _lr in self.region_analyzer.regions:
+   32390      if (isinstance(_lr, LoopRegion)
+   32389      for _lr in self.region_analyzer.regions:
+   32413      if (not _is_outer_condition
+   32414      and getattr(region, 'is_condition_context', False)
+   32413      if (not _is_outer_condition
+   32463      pre_stmts = []
+   32464      if region.prefix_block:
+   32467      elif op_chain:
+   32468      first_chain_block = op_chain[0][0]
+   32497      if (first_chain_block in self.generated_blocks
+   32501      pre_instrs = self.region_analyzer.identify_block_prefix_instructions(first_chain_block)
+   32512      _pemu = self.prefix_emitted_upto.get(first_chain_block, -1)
+   32513      if _pemu >= 0 and pre_instrs:
+   32526      last_stmt_end_idx = -1
+   32527      for idx, instr in enumerate(pre_instrs):
+   32528      if self._is_statement_reduction_entry(instr):
+   32527      for idx, instr in enumerate(pre_instrs):
+   32528      if self._is_statement_reduction_entry(instr):
+   32527      for idx, instr in enumerate(pre_instrs):
+   32528      if self._is_statement_reduction_entry(instr):
+   32527      for idx, instr in enumerate(pre_instrs):
+   32528      if self._is_statement_reduction_entry(instr):
+   32527      for idx, instr in enumerate(pre_instrs):
+   32528      if self._is_statement_reduction_entry(instr):
+   32527      for idx, instr in enumerate(pre_instrs):
+   32528      if self._is_statement_reduction_entry(instr):
+   32529      last_stmt_end_idx = idx
+   32527      for idx, instr in enumerate(pre_instrs):
+   32528      if self._is_statement_reduction_entry(instr):
+   32527      for idx, instr in enumerate(pre_instrs):
+   32528      if self._is_statement_reduction_entry(instr):
+   32527      for idx, instr in enumerate(pre_instrs):
+   32528      if self._is_statement_reduction_entry(instr):
+   32527      for idx, instr in enumerate(pre_instrs):
+   32528      if self._is_statement_reduction_entry(instr):
+   32527      for idx, instr in enumerate(pre_instrs):
+   32530      if last_stmt_end_idx >= 0:
+   32531      filtered_pre_instrs = pre_instrs[:last_stmt_end_idx + 1]
+   32532      pre_stmts = self._build_prefix_stmt_list(filtered_pre_instrs, first_chain_block) if filtered_pre_instrs else []
+   32536      if getattr(region, 'prefix_stmts_pending', False):
+   32539      results = list(pre_stmts)
+   32540      if skip_store_targets:
+   32544      _body_is_if_body = False
+   32545      if region.body_block:
+   32568      boolop_expr = self._build_boolop_expression(region)
+   32569      if boolop_expr:
+   32570      for block in region.blocks:
+   32571      self.generated_blocks.add(block)
+   32570      for block in region.blocks:
+   32571      self.generated_blocks.add(block)
+   32570      for block in region.blocks:
+   32571      self.generated_blocks.add(block)
+   32570      for block in region.blocks:
+   32572      if region.merge_block:
+   32573      self.generated_blocks.add(region.merge_block)
+   32574      if (not region.value_target
+   32818      if (not region.value_target
+   32844      if region.value_target or (getattr(region, 'is_augassign', False)
+   32854      if getattr(region, 'is_augassign', False) and getattr(region, 'augassign_op', None):
+   32886      _chained_targets_r61 = None
+   32887      if region.merge_block:
+   32888      _mnn_r61 = [i for i in region.merge_block.instructions
+   32890      _STORE_TYPES_R61 = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+   32891      if (len(_mnn_r61) >= 3
+   32892      and _mnn_r61[0].opname == 'COPY'
+   32902      _full_rhs = boolop_expr
+   32903      if region.merge_block and not _chained_targets_r61:
+   32904      _mnn = [i for i in region.merge_block.instructions
+   32906      _si = None
+   32907      for _ki, _instr in enumerate(_mnn):
+   32908      if _instr.opname in ('STORE_FAST', 'STORE_NAME',
+   32907      for _ki, _instr in enumerate(_mnn):
+   32908      if _instr.opname in ('STORE_FAST', 'STORE_NAME',
+   32907      for _ki, _instr in enumerate(_mnn):
+   32908      if _instr.opname in ('STORE_FAST', 'STORE_NAME',
+   32907      for _ki, _instr in enumerate(_mnn):
+   32908      if _instr.opname in ('STORE_FAST', 'STORE_NAME',
+   32907      for _ki, _instr in enumerate(_mnn):
+   32908      if _instr.opname in ('STORE_FAST', 'STORE_NAME',
+   32907      for _ki, _instr in enumerate(_mnn):
+   32908      if _instr.opname in ('STORE_FAST', 'STORE_NAME',
+   32907      for _ki, _instr in enumerate(_mnn):
+   32908      if _instr.opname in ('STORE_FAST', 'STORE_NAME',
+   32910      _si = _ki
+   32911      break
+   32914      if _si is not None and _si >= 1:
+   32915      _pre_store = _mnn[:_si]
+   32916      import os as _os_dbg_13
+   32917      if _os_dbg_13.environ.get('R30_13_DEBUG'):
+   32925      _init_stack = [boolop_expr]
+   32926      if op_chain:
+   32927      _fcb = op_chain[0][0]
+   32928      _pinstrs = self.region_analyzer.identify_block_prefix_instructions(_fcb)
+   32929      _STORE_CHK = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+   32931      if _pinstrs:
+   32940      _last_store_idx = -1
+   32941      for _pi, _pinstr in enumerate(_pinstrs):
+   32942      if _pinstr.opname in _STORE_CHK:
+   32941      for _pi, _pinstr in enumerate(_pinstrs):
+   32942      if _pinstr.opname in _STORE_CHK:
+   32941      for _pi, _pinstr in enumerate(_pinstrs):
+   32942      if _pinstr.opname in _STORE_CHK:
+   32941      for _pi, _pinstr in enumerate(_pinstrs):
+   32942      if _pinstr.opname in _STORE_CHK:
+   32941      for _pi, _pinstr in enumerate(_pinstrs):
+   32942      if _pinstr.opname in _STORE_CHK:
+   32941      for _pi, _pinstr in enumerate(_pinstrs):
+   32942      if _pinstr.opname in _STORE_CHK:
+   32941      for _pi, _pinstr in enumerate(_pinstrs):
+   32942      if _pinstr.opname in _STORE_CHK:
+   32941      for _pi, _pinstr in enumerate(_pinstrs):
+   32942      if _pinstr.opname in _STORE_CHK:
+   32941      for _pi, _pinstr in enumerate(_pinstrs):
+   32942      if _pinstr.opname in _STORE_CHK:
+   32941      for _pi, _pinstr in enumerate(_pinstrs):
+   32942      if _pinstr.opname in _STORE_CHK:
+   32941      for _pi, _pinstr in enumerate(_pinstrs):
+   32944      _true_prefix = _pinstrs[_last_store_idx + 1:] if _last_store_idx >= 0 else _pinstrs
+   32945      if _true_prefix:
+   32946      try:
+   32947      self.expr_reconstructor.reconstruct(_true_prefix)
+   32948      _res = [s for s in self.expr_reconstructor.stack
+   32950      if _res:
+   32956      _res[-1] = boolop_expr
+   32957      _init_stack = _res
+   32960      try:
+   32961      _spliced = self.expr_reconstructor.reconstruct(
+   32962      _pre_store, initial_stack=_init_stack)
+   32961      _spliced = self.expr_reconstructor.reconstruct(
+   32963      if _spliced is not None:
+   32964      _full_rhs = _spliced
+   32967      if _chained_targets_r61:
+   32975      results.append({
+   32976      'type': 'Assign',
+   32977      'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
+   32978      'value': _full_rhs,
+   32975      results.append({
+   32980      if region.merge_block and not getattr(self, '_suppress_boolop_merge_tail', False):
+   32986      _merge_instrs = [i for i in region.merge_block.instructions
+   32988      _store_ops_set = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+   33002      _merge_is_other_entry_r10f3 = False
+   33003      _merge_has_structured_entry_r35 = False
+   33004      for _r10f3_r in self.regions:
+   33005      if (_r10f3_r is not region
+   33006      and getattr(_r10f3_r, 'entry', None) is region.merge_block):
+   33004      for _r10f3_r in self.regions:
+   33005      if (_r10f3_r is not region
+   33006      and getattr(_r10f3_r, 'entry', None) is region.merge_block):
+   33004      for _r10f3_r in self.regions:
+   33005      if (_r10f3_r is not region
+   33004      for _r10f3_r in self.regions:
+   33005      if (_r10f3_r is not region
+   33006      and getattr(_r10f3_r, 'entry', None) is region.merge_block):
+   33004      for _r10f3_r in self.regions:
+   33005      if (_r10f3_r is not region
+   33006      and getattr(_r10f3_r, 'entry', None) is region.merge_block):
+   33004      for _r10f3_r in self.regions:
+   33005      if (_r10f3_r is not region
+   33006      and getattr(_r10f3_r, 'entry', None) is region.merge_block):
+   33004      for _r10f3_r in self.regions:
+   33005      if (_r10f3_r is not region
+   33006      and getattr(_r10f3_r, 'entry', None) is region.merge_block):
+   33004      for _r10f3_r in self.regions:
+   33005      if (_r10f3_r is not region
+   33006      and getattr(_r10f3_r, 'entry', None) is region.merge_block):
+   33004      for _r10f3_r in self.regions:
+   33005      if (_r10f3_r is not region
+   33006      and getattr(_r10f3_r, 'entry', None) is region.merge_block):
+   33004      for _r10f3_r in self.regions:
+   33005      if (_r10f3_r is not region
+   33006      and getattr(_r10f3_r, 'entry', None) is region.merge_block):
+   33004      for _r10f3_r in self.regions:
+   33016      _downstream_r35 = None
+   33017      if _merge_is_other_entry_r10f3 and _merge_has_structured_entry_r35:
+   33086      if not _merge_is_other_entry_r10f3 or not _merge_has_structured_entry_r35 or _guard_clause_skip:
+   33102      if _chained_targets_r61:
+   33112      _first_store_idx = -1
+   33113      for _psi, i in enumerate(_merge_instrs):
+   33114      if i.opname in _store_ops_set:
+   33113      for _psi, i in enumerate(_merge_instrs):
+   33114      if i.opname in _store_ops_set:
+   33113      for _psi, i in enumerate(_merge_instrs):
+   33114      if i.opname in _store_ops_set:
+   33113      for _psi, i in enumerate(_merge_instrs):
+   33114      if i.opname in _store_ops_set:
+   33113      for _psi, i in enumerate(_merge_instrs):
+   33114      if i.opname in _store_ops_set:
+   33113      for _psi, i in enumerate(_merge_instrs):
+   33114      if i.opname in _store_ops_set:
+   33113      for _psi, i in enumerate(_merge_instrs):
+   33114      if i.opname in _store_ops_set:
+   33115      _first_store_idx = _psi
+   33116      break
+   33117      if _first_store_idx >= 0:
+   33118      _post_store_clean = []
+   33119      _cond_jump_r89 = None
+   33120      _before_with_idx = None
+   33121      for _pi in _merge_instrs[_first_store_idx + 1:]:
+   33122      if _pi.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
+   33125      if _pi.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD',
+   33128      if _pi.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+   33131      _post_store_clean.append(_pi)
+   33121      for _pi in _merge_instrs[_first_store_idx + 1:]:
+   33122      if _pi.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
+   33125      if _pi.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD',
+   33128      if _pi.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+   33131      _post_store_clean.append(_pi)
+   33121      for _pi in _merge_instrs[_first_store_idx + 1:]:
+   33132      if _before_with_idx is not None:
+   33140      if _cond_jump_r89:
+   33300      elif _post_store_clean:
+   33301      _stmts = self._generate_stmts_from_instrs(
+   33302      _post_store_clean, region.merge_block)
+   33301      _stmts = self._generate_stmts_from_instrs(
+   33303      for s in _stmts:
+   33482      for block in region.blocks:
+   33483      self.generated_blocks.add(block)
+   33482      for block in region.blocks:
+   33483      self.generated_blocks.add(block)
+   33482      for block in region.blocks:
+   33483      self.generated_blocks.add(block)
+   33482      for block in region.blocks:
+   33484      if region.merge_block:
+   33485      self.generated_blocks.add(region.merge_block)
+   33486      if op_chain:
+   33487      last_chain_block = op_chain[-1][0]
+   33488      last_instr = last_chain_block.get_last_instruction()
+   33489      if last_instr and last_instr.argval is not None:
+   33490      for s in last_chain_block.conditional_successors:
+   33491      if s.start_offset != last_instr.argval:
+   33492      self.generated_blocks.add(s)
+   33493      break
+   33495 RET  return results if results is not None and len(results) > 0 else None
+   33495 RET  return results if results is not None and len(results) > 0 else None
+  RESULT: [{"type": "Expr", "value": {"type": "Call", "func": {"type": "Attribute", "value": {"type": "Name", "id": "write_queue", "ctx": "Load", "lineno": 83}, "attr": "put", "ctx": "Load", "lineno": null}, "args": [{"type": "Name", "id": "info", "ctx": "Load", "lineno": null}], "kwargs": [], "lineno": null}

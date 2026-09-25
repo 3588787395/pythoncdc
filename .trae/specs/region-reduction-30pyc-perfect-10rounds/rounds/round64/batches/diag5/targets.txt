@@ -1,0 +1,8 @@
+IQData/utils/common_func.pyc  official 22/24  rate 0.9167  round 63
+        F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc
+fly/simtradding/flyAccount.pyc  official 21/23  rate 0.9130  round 63
+        F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc
+IQCommon/util/common_func.pyc  official 18/21  rate 0.8571  round 63
+        F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc
+IQEngine/plugins/plugin_system_matcher/matcher.pyc  official 16/17  rate 0.9412  round 63
+        F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc

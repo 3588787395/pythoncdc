@@ -1,0 +1,5 @@
+##### path trace get_future_history_df entry=4020 (landed)
+=== ENTER _generate_region IfRegion@4020 blocks=[4020, 4538, 4596, 4634, 4638, 4642, 4656, 4658, 5708, 5712, 5726]
+=== EXIT "[{'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'index', 'ctx': 'Store'}], 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': '_df_nan_data', 'ctx': 'Load', 'lineno': 294}, 'slice':"
+  _generate_if                           L11445  if region.region_type.name == 'IF_ELIF_CHAIN':
+  _generate_if                           L11446  return self._if_generate_full_elif_chain(region)

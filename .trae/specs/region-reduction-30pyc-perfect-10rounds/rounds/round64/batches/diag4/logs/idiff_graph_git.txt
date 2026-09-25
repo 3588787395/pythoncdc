@@ -1,0 +1,22 @@
+=== <module>.ModelGraph._get_influence_task : token len orig=205 decomp=193  identical=False
+    non-equal blocks=1  ratio=0.9698
+  delete   orig[  80:  92](n=12) decomp[  80:  80](n=0)
+      orig  src-lines [412, 413]   decomp src-lines []
+       O   79 off= 476 ln=411   POP_JUMP_FORWARD_IF_NOT_NONE to 538
+     > O   80 off= 478 ln=412   LOAD_FAST error_return
+     > O   81 off= 480 ln=412   LOAD_CONST 'error_no'
+     > O   82 off= 482 ln=412   BINARY_SUBSCR 
+     > O   83 off= 492 ln=412   LOAD_FAST error_dict
+     > O   84 off= 494 ln=412   LOAD_CONST 'error_no'
+     > O   85 off= 496 ln=412   STORE_SUBSCR 
+     > O   86 off= 500 ln=413   LOAD_FAST error_return
+     > O   87 off= 502 ln=413   LOAD_CONST 'error_info'
+     > O   88 off= 504 ln=413   BINARY_SUBSCR 
+     > O   89 off= 514 ln=413   LOAD_FAST error_dict
+     > O   90 off= 516 ln=413   LOAD_CONST 'error_info'
+     > O   91 off= 518 ln=413   STORE_SUBSCR 
+       O   92 off= 522 ln=414   LOAD_FAST error_dict
+      ----
+       D   79 off= 476 ln=302   POP_JUMP_FORWARD_IF_NOT_NONE to 494
+       D   80 off= 478 ln=303   LOAD_FAST error_dict
+

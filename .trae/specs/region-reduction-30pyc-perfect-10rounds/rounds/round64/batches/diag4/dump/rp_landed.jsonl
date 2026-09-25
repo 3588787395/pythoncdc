@@ -1,0 +1,2 @@
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round64_diag4/__pycache__/r64d4_deferred_prefix.cpython-311.pyc", "arm": "landed", "sha": "b162cd69967cf711", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round64_diag4/__pycache__/r64d4_boolop_poptop_merge.cpython-311.pyc", "arm": "landed", "sha": "1c39d66407839b50", "total_functions": 3, "matched_functions": 2, "mism": [["logging_process", 54, 50, 1, 35]]}

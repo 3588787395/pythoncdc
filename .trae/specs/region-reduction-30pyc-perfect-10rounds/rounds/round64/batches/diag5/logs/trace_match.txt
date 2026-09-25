@@ -1,0 +1,7 @@
+### tracing LoopRegion body_blocks offsets=[6, 10, 114, 222, 306, 386, 546, 664, 706, 728, 732, 774, 796, 800, 816, 1068, 1110, 1190, 1194, 1236, 1316, 1320, 1324, 1372, 1384, 1432, 1444, 1486, 1566, 1570, 1612, 1692, 1696, 1820, 1830, 1834, 1884, 1896, 1908, 1912, 1954, 2034, 2038, 2080, 2160, 2164, 2208, 2212, 2254, 2334, 2338, 2380, 2460, 2464, 2468, 2484, 2526, 2606, 2846, 2888, 2968, 3208, 3210, 3226, 3294, 3432, 3574, 3626, 3760, 3764, 3828, 3952, 3954, 3968, 4678, 4960]
+  dispatch off=6      handled=True  pend_before=0 pend_after=0 nstmts=0
+  dispatch off=10     handled=True  pend_before=0 pend_after=0 nstmts=3
+  >> _loop_postprocess ENTER pending=[]
+     body_stmts types before = ['Assign', 'Assign', 'If']
+  << _loop_postprocess EXIT  n_body_stmts=3
+### generate ok, top nodes=1

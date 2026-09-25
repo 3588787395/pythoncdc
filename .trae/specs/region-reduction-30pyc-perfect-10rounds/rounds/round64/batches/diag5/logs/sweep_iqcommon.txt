@@ -1,0 +1,31 @@
+
+=== <module>.get_crontab_execute_time  orig=92 decomp=80  equal=78 (84.8%)  hunks=1
+  [replace] orig[45:59] n=14   lines=460..463(4) | decomp[45:47] n=2    lines=348..348(1)
+        ORIG ops: LOAD_FAST LOAD_METHOD CALL STORE_FAST LOAD_FAST LOAD_CONST BINARY_SUBSCR STORE_FAST LOAD_FAST LOAD_CONST BINARY_SUBSCR STORE_FAST LOAD_FAST LOAD_FAST
+        O45   off=244   L460   LOAD_FAST                      'script_time_info'
+        O46   off=246   L460   LOAD_METHOD                    'split'
+        O47   off=272   L460   CALL                           0
+        O48   off=282   L460   STORE_FAST                     'split_info'
+        D45   off=244   L348   LOAD_GLOBAL                    'hour_info'
+        D46   off=256   L348   LOAD_GLOBAL                    'minute_info'
+
+=== <module>.get_kline_time_by_frequency_array  orig=232 decomp=229  equal=229 (98.7%)  hunks=1
+  [delete ] orig[186:189] n=3    lines=86..86(1) | decomp[186:186] n=0    lines=-
+        ORIG ops: LOAD_FAST LOAD_CONST DELETE_SUBSCR
+        O186  off=1070  L86    LOAD_FAST                      'freq_k_minute'
+        O187  off=1072  L86    LOAD_CONST                     0
+        O188  off=1074  L86    DELETE_SUBSCR                  None
+
+=== <module>.get_kline_time_by_section  orig=211 decomp=191  equal=191 (90.5%)  hunks=2
+  [delete ] orig[125:132] n=7    lines=320..321(2) | decomp[125:125] n=0    lines=-
+        ORIG ops: LOAD_CONST LOAD_CONST LOAD_FAST BUILD_SLICE BINARY_SUBSCR STORE_FAST LOAD_FAST
+        O125  off=534   L320   LOAD_CONST                     None
+        O126  off=536   L320   LOAD_CONST                     None
+        O127  off=538   L320   LOAD_FAST                      'offset'
+        O128  off=540   L320   BUILD_SLICE                    3
+  [delete ] orig[146:159] n=13   lines=323..324(2) | decomp[139:139] n=0    lines=-
+        ORIG ops: LOAD_FAST LOAD_CONST BINARY_SUBSCR LOAD_FAST CONTAINS_OP POP_JUMP_FORWARD_IF_FALSE LOAD_FAST LOAD_METHOD LOAD_FAST LOAD_CONST BINARY_SUBSCR CALL POP_TOP
+        O146  off=618   L323   LOAD_FAST                      'datetime_list_section'
+        O147  off=620   L323   LOAD_CONST                     -1
+        O148  off=622   L323   BINARY_SUBSCR                  None
+        O149  off=632   L323   LOAD_FAST                      'datetime_list'

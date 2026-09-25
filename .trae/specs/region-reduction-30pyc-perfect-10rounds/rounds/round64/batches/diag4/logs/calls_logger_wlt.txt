@@ -1,0 +1,133 @@
+no such method _generate_block
+    --> _generate_block_statements B@0
+    <-- _generate_block_statements = []
+    --> _generate_region Region@0
+    <-- _generate_region = []
+    --> _generate_region LoopRegion@4
+      --> _generate_loop LoopRegion@4
+        --> _loop_generate_while LoopRegion@4
+          --> _loop_generate_body LoopRegion@4
+            --> _loop_generate_pre_stmts LoopRegion@4 [|0]
+            <-- _loop_generate_pre_stmts = []
+            --> _loop_dispatch_block B@4 LoopRegion@4 {None} - [|0] [|0] [|0] B@666 [|0]
+              --> _loop_handle_header B@4 LoopRegion@4 - [|0]
+                --> _loop_handle_no_exit_successors B@4 Instruction(46: PO B@426 B@48 [|1]
+                  --> _block_is_continue_target B@48
+                  <-- _block_is_continue_target = False
+                  --> _block_is_continue_target B@426
+                  <-- _block_is_continue_target = False
+                  --> _block_is_pure_continue B@48
+                  <-- _block_is_pure_continue = False
+                  --> _block_is_pure_continue B@426
+                  <-- _block_is_pure_continue = False
+                  --> _generate_region LoopRegion@48
+                    --> _generate_loop LoopRegion@48
+                      --> _loop_generate_while LoopRegion@48
+                        --> _loop_generate_body LoopRegion@48 -
+                          --> _loop_generate_pre_stmts LoopRegion@48 [|0]
+                          <-- _loop_generate_pre_stmts = []
+                          --> _loop_dispatch_block B@64 LoopRegion@48 {None} - [|0] [|0] [|0] B@356 [|0]
+                            --> _loop_handle_header B@64 LoopRegion@48 - [|0]
+                              --> _generate_if IfRegion@64
+                                --> _if_generate_normal IfRegion@64
+                                  --> _if_generate_then_branch IfRegion@64
+                                    --> _generate_region IfRegion@228
+                                      --> _generate_if IfRegion@228
+                                        --> _if_generate_normal IfRegion@228
+                                          --> _if_generate_then_branch IfRegion@228
+                                            --> _generate_block_statements B@232
+                                            <-- _generate_block_statements = [Expr,Assign]
+                                          <-- _if_generate_then_branch = [Expr,Assign]
+                                          --> _if_generate_else_branch IfRegion@228
+                                          <-- _if_generate_else_branch = NoneType
+                                        <-- _if_generate_normal = {If}
+                                      <-- _generate_if = {If}
+                                    <-- _generate_region = {If}
+                                    --> _generate_block_statements B@288
+                                    <-- _generate_block_statements = [Expr]
+                                  <-- _if_generate_then_branch = [If,Expr]
+                                  --> _if_generate_else_branch IfRegion@64
+                                    --> _generate_block_statements B@342
+                                    <-- _generate_block_statements = [Assign]
+                                  <-- _if_generate_else_branch = [Assign]
+                                <-- _if_generate_normal = [AugAssign,Assign,Assign,If]
+                              <-- _generate_if = [AugAssign,Assign,Assign,If]
+                            <-- _loop_handle_header = NoneType
+                          <-- _loop_dispatch_block = True
+                          --> _loop_dispatch_block B@356 LoopRegion@48 {None} - [|4] [|0] [|0] B@356 [|0]
+                          <-- _loop_dispatch_block = True
+                          --> _loop_postprocess LoopRegion@48 [|4] [|0] [|0] {None} [|0]
+                            --> _if_generate_branch_stmts [|0]
+                            <-- _if_generate_branch_stmts = []
+                          <-- _loop_postprocess = NoneType
+                        <-- _loop_generate_body = [AugAssign,Assign,Assign,If]
+                      <-- _loop_generate_while = [Assign,While]
+                    <-- _generate_loop = [Assign,While]
+                  <-- _generate_region = [Assign,While]
+                  --> _generate_region IfRegion@426
+                    --> _generate_if IfRegion@426
+                      --> _if_generate_normal IfRegion@426
+                        --> _if_generate_then_branch IfRegion@426
+                          --> _generate_region IfRegion@440
+                            --> _generate_if IfRegion@440
+                              --> _if_generate_normal IfRegion@440
+                                --> _if_generate_then_branch IfRegion@440
+                                  --> _generate_block_statements B@522
+                                  <-- _generate_block_statements = [Expr]
+                                <-- _if_generate_then_branch = [Expr]
+                                --> _if_generate_else_branch IfRegion@440
+                                  --> _generate_region IfRegion@564
+                                    --> _generate_if IfRegion@564
+                                      --> _if_generate_normal IfRegion@564
+                                        --> _if_generate_then_branch IfRegion@564
+                                          --> _generate_block_statements B@620
+                                          <-- _generate_block_statements = [Expr]
+                                        <-- _if_generate_then_branch = [Expr]
+                                        --> _if_generate_else_branch IfRegion@564
+                                        <-- _if_generate_else_branch = NoneType
+                                      <-- _if_generate_normal = {If}
+                                    <-- _generate_if = {If}
+                                  <-- _generate_region = {If}
+                                  --> _generate_block_statements B@660
+                                  <-- _generate_block_statements = []
+                                <-- _if_generate_else_branch = [If]
+                              <-- _if_generate_normal = [Expr,If]
+                            <-- _generate_if = [Expr,If]
+                          <-- _generate_region = [Expr,If]
+                        <-- _if_generate_then_branch = [Expr,If,Continue]
+                        --> _if_generate_else_branch IfRegion@426
+                        <-- _if_generate_else_branch = [Break]
+                      <-- _if_generate_normal = {If}
+                    <-- _generate_if = {If}
+                  <-- _generate_region = {If}
+                <-- _loop_handle_no_exit_successors = NoneType
+              <-- _loop_handle_header = NoneType
+            <-- _loop_dispatch_block = True
+            --> _loop_dispatch_block B@368 LoopRegion@4 {None} - [|2] [|0] [|0] B@666 [|0]
+              --> _generate_region IfRegion@368
+                --> _generate_if IfRegion@368
+                  --> _if_generate_normal IfRegion@368
+                    --> _if_generate_then_branch IfRegion@368
+                      --> _generate_block_statements B@372
+                      <-- _generate_block_statements = [Expr]
+                    <-- _if_generate_then_branch = [Expr]
+                    --> _if_generate_else_branch IfRegion@368
+                    <-- _if_generate_else_branch = NoneType
+                  <-- _if_generate_normal = {If}
+                <-- _generate_if = {If}
+              <-- _generate_region = {If}
+            <-- _loop_dispatch_block = True
+            --> _loop_dispatch_block B@424 LoopRegion@4 {None} - [|3] [|0] [|0] B@666 [|0]
+            <-- _loop_dispatch_block = False
+            --> _loop_postprocess LoopRegion@4 [|3] [424|1] [|0] {None} [|0]
+              --> _if_generate_branch_stmts [424|1]
+                --> _generate_block_statements B@424
+                <-- _generate_block_statements = []
+              <-- _if_generate_branch_stmts = []
+            <-- _loop_postprocess = NoneType
+          <-- _loop_generate_body = [Assign,If,If]
+          --> _r58_collect_break_target_stmts LoopRegion@4 {BasicBlock(2, off
+          <-- _r58_collect_break_target_stmts = []
+        <-- _loop_generate_while = [While]
+      <-- _generate_loop = [While]
+    <-- _generate_region = [While]
