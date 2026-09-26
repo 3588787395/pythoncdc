@@ -1,0 +1,916 @@
+[
+ {
+  "file": "IQCommon/api/klinedata.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+  "official_status": "partial",
+  "official": "43/None",
+  "pylingual": "59/64",
+  "cats": {
+   "Different control flow": 5
+  },
+  "top": "Different control flow:5",
+  "cf": 5,
+  "failures": [
+   "***<module>.get_kline_by_count_new: Failure: Different control flow",
+   "***<module>.get_multiminute_his_data: Failure: Different control flow",
+   "***<module>.kline_datetime_list: Failure: Different control flow",
+   "***<module>.get_history_common: Failure: Different control flow",
+   "***<module>.get_price_common: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQCommon/data/finance.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+  "official_status": "ok",
+  "official": "24/None",
+  "pylingual": "29/32",
+  "cats": {
+   "Different control flow": 3
+  },
+  "top": "Different control flow:3",
+  "cf": 3,
+  "failures": [
+   "***<module>.get_financial_and_growth_factors: Failure: Different control flow",
+   "***<module>.get_financial_statements_pit_mode: Failure: Different control flow",
+   "***<module>.get_fields: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQCommon/data/local_finance.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/local_finance.pyc",
+  "official_status": "ok",
+  "official": "19/None",
+  "pylingual": "20/21",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.get_local_financial_factors: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQCommon/exception.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/exception.pyc",
+  "official_status": "ok",
+  "official": "32/None",
+  "pylingual": "33/34",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.ModifyExceptionFromType.__exit__: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQCommon/logger/handlers.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc",
+  "official_status": "ok",
+  "official": "18/None",
+  "pylingual": "29/30",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.TWHThreadController._target: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQCommon/strategy/jq_trans_module.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/jq_trans_module.pyc",
+  "official_status": "ok",
+  "official": "35/None",
+  "pylingual": "63/65",
+  "cats": {
+   "Different control flow": 2
+  },
+  "top": "Different control flow:2",
+  "cf": 2,
+  "failures": [
+   "***<module>.func_attribute_history_convert_code.replace_args: Failure: Different control flow",
+   "***<module>.func_get_bars_convert_code.replace_args: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQCommon/strategy/wizard_quant_api.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc",
+  "official_status": "ok",
+  "official": "53/None",
+  "pylingual": "54/58",
+  "cats": {
+   "Different control flow": 4
+  },
+  "top": "Different control flow:4",
+  "cf": 4,
+  "failures": [
+   "***<module>.filter_desicion: Failure: Different control flow",
+   "***<module>.get_DMI.calculate_di.<genexpr>: Failure: Different control flow",
+   "***<module>.get_DMI.calculate_di.<genexpr>: Failure: Different control flow",
+   "***<module>.init_stock_pool_filter: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQCommon/util/cgroup_utils.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
+  "official_status": "ok",
+  "official": "8/None",
+  "pylingual": "7/8",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.set_cgroup_config: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQCommon/util/email_utils.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utils.pyc",
+  "official_status": "ok",
+  "official": "4/None",
+  "pylingual": "3/4",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.send_email: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQCommon/util/trade_info_utils.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+  "official_status": "ok",
+  "official": "40/None",
+  "pylingual": "36/41",
+  "cats": {
+   "Different control flow": 5
+  },
+  "top": "Different control flow:5",
+  "cf": 5,
+  "failures": [
+   "***<module>.trade_operation: Failure: Different control flow",
+   "***<module>.kill_trade_process: Failure: Different control flow",
+   "***<module>.get_trade_status: Failure: Different control flow",
+   "***<module>.query_trade_strategy_info: Failure: Different control flow",
+   "***<module>.query_strategy_id: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQData/api/api_base.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc",
+  "official_status": "partial",
+  "official": "24/None",
+  "pylingual": "27/28",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.get_history_df: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQData/entry.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/entry.pyc",
+  "official_status": "ok",
+  "official": "5/None",
+  "pylingual": "4/5",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.IQDataEntry.get_instance: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc",
+  "official_status": "ok",
+  "official": "8/None",
+  "pylingual": "7/8",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.change_his_to_forward: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQData/plugins/plugin_system_realquote/real_quote.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+  "official_status": "partial",
+  "official": "40/None",
+  "pylingual": "41/45",
+  "cats": {
+   "Different control flow": 4
+  },
+  "top": "Different control flow:4",
+  "cf": 4,
+  "failures": [
+   "***<module>.RealQuoteData.one_prod_to_ndarray: Failure: Different control flow",
+   "***<module>.RealQuoteData.get_real_minute_kline: Failure: Different control flow",
+   "***<module>.RealQuoteData.get_cache_l2_data_by_one: Failure: Different control flow",
+   "***<module>.RealQuoteData.get_tick_direction: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQData/utils/calexrights_func.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/calexrights_func.pyc",
+  "official_status": "ok",
+  "official": "8/None",
+  "pylingual": "7/8",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.change_his_to_forward: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQData/utils/exception.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/exception.pyc",
+  "official_status": "ok",
+  "official": "29/None",
+  "pylingual": "30/31",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.ExceptionIdentify.__exit__: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/account/order.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/order.pyc",
+  "official_status": "ok",
+  "official": "52/None",
+  "pylingual": "67/68",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.Order.mark_cancelled: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/api/api_base.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/api_base.pyc",
+  "official_status": "ok",
+  "official": "48/None",
+  "pylingual": "48/49",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.get_history: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/core/bar.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/bar.pyc",
+  "official_status": "ok",
+  "official": "58/None",
+  "pylingual": "82/85",
+  "cats": {
+   "Different control flow": 3
+  },
+  "top": "Different control flow:3",
+  "cf": 3,
+  "failures": [
+   "***<module>.BarData.limit_up: Failure: Different control flow",
+   "***<module>.BarData.limit_down: Failure: Different control flow",
+   "***<module>.BarData._history_bars: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/core/commission.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/commission.pyc",
+  "official_status": "ok",
+  "official": "10/None",
+  "pylingual": "9/10",
+  "cats": {
+   "Different bytecode": 1
+  },
+  "top": "Different bytecode:1",
+  "cf": 0,
+  "failures": [
+   "***<module>.CommissionHelp.set_commission: Failure: Different bytecode"
+  ]
+ },
+ {
+  "file": "IQEngine/core/executor.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc",
+  "official_status": "ok",
+  "official": "10/None",
+  "pylingual": "9/10",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.Executor.check_before_trading: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/core/slippage.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/slippage.pyc",
+  "official_status": "ok",
+  "official": "7/None",
+  "pylingual": "6/7",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.SlippageHelp.set_slippage: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/core/strategy/strategy_universe.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc",
+  "official_status": "ok",
+  "official": "11/None",
+  "pylingual": "10/11",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.StrategyUniverse._on_clear_de_listed: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/data/asset_mixin.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/asset_mixin.pyc",
+  "official_status": "ok",
+  "official": "16/None",
+  "pylingual": "20/21",
+  "cats": {
+   "Different bytecode": 1
+  },
+  "top": "Different bytecode:1",
+  "cf": 0,
+  "failures": [
+   "***<module>.AssetMixin.get_assets.<listcomp>: Failure detected at line number 91 and instruction offset 10: Different bytecode"
+  ]
+ },
+ {
+  "file": "IQEngine/data/trading_dates_mixin.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
+  "official_status": "ok",
+  "official": "14/None",
+  "pylingual": "13/14",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.TradingDatesMixin.trading_dates_reload: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_fly_data/fly_api/base.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc",
+  "official_status": "ok",
+  "official": "41/None",
+  "pylingual": "61/63",
+  "cats": {
+   "Different control flow": 2
+  },
+  "top": "Different control flow:2",
+  "cf": 2,
+  "failures": [
+   "***<module>.OverNightOrder.__init__: Failure: Different control flow",
+   "***<module>.SplitOrder.parse_time_info: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
+  "official_status": "ok",
+  "official": "18/None",
+  "pylingual": "18/19",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.get_price: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
+  "official_status": "partial",
+  "official": "32/None",
+  "pylingual": "34/37",
+  "cats": {
+   "Different control flow": 3
+  },
+  "top": "Different control flow:3",
+  "cf": 3,
+  "failures": [
+   "***<module>.base_order: Failure: Different control flow",
+   "***<module>.future_order: Failure: Different control flow",
+   "***<module>.option_order: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+  "official_status": "ok",
+  "official": "24/None",
+  "pylingual": "25/27",
+  "cats": {
+   "Different control flow": 2
+  },
+  "top": "Different control flow:2",
+  "cf": 2,
+  "failures": [
+   "***<module>.Strategy.__init__: Failure: Different control flow",
+   "***<module>.Strategy.tick_worker_thread: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_accounts/__init__.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/__init__.pyc",
+  "official_status": "ok",
+  "official": "6/None",
+  "pylingual": "5/6",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.AccountPlugin.setup: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc",
+  "official_status": "ok",
+  "official": "20/None",
+  "pylingual": "19/20",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.BenchmarkAccount._process_mergered: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc",
+  "official_status": "ok",
+  "official": "25/None",
+  "pylingual": "24/25",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.StockAccount._process_mergered: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc",
+  "official_status": "ok",
+  "official": "72/None",
+  "pylingual": "79/83",
+  "cats": {
+   "Different bytecode": 4
+  },
+  "top": "Different bytecode:4",
+  "cf": 0,
+  "failures": [
+   "***<module>.FuturePosition.buy_open_order_amount.<genexpr>: Failure detected at line number 215 and instruction offset 20: Different bytecode",
+   "***<module>.FuturePosition.sell_open_order_amount.<genexpr>: Failure detected at line number 221 and instruction offset 20: Different bytecode",
+   "***<module>.FuturePosition._buy_close_today_order_amount.<genexpr>: Failure detected at line number 236 and instruction offset 20: Different bytecode",
+   "***<module>.FuturePosition._sell_close_today_order_amount.<genexpr>: Failure detected at line number 239 and instruction offset 20: Different bytecode"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc",
+  "official_status": "ok",
+  "official": "64/None",
+  "pylingual": "71/75",
+  "cats": {
+   "Different bytecode": 4
+  },
+  "top": "Different bytecode:4",
+  "cf": 0,
+  "failures": [
+   "***<module>.LiveFuturePosition.buy_open_order_amount.<genexpr>: Failure detected at line number 228 and instruction offset 20: Different bytecode",
+   "***<module>.LiveFuturePosition.sell_open_order_amount.<genexpr>: Failure detected at line number 234 and instruction offset 20: Different bytecode",
+   "***<module>.LiveFuturePosition._buy_close_today_order_amount.<genexpr>: Failure detected at line number 249 and instruction offset 20: Different bytecode",
+   "***<module>.LiveFuturePosition._sell_close_today_order_amount.<genexpr>: Failure detected at line number 252 and instruction offset 20: Different bytecode"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc",
+  "official_status": "ok",
+  "official": "60/None",
+  "pylingual": "65/67",
+  "cats": {
+   "Different bytecode": 2
+  },
+  "top": "Different bytecode:2",
+  "cf": 0,
+  "failures": [
+   "***<module>.OptionPosition.buy_open_order_amount.<genexpr>: Failure detected at line number 203 and instruction offset 20: Different bytecode",
+   "***<module>.OptionPosition.sell_open_order_amount.<genexpr>: Failure detected at line number 209 and instruction offset 20: Different bytecode"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc",
+  "official_status": "ok",
+  "official": "37/None",
+  "pylingual": "36/37",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.StockPosition.make_trade: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+  "official_status": "partial",
+  "official": "11/None",
+  "pylingual": "12/13",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.RealtimeEventSource.clock_worker: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_matcher/matcher.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc",
+  "official_status": "ok",
+  "official": "17/None",
+  "pylingual": "16/17",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.DefaultMatcher.match: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+  "official_status": "partial",
+  "official": "33/None",
+  "pylingual": "41/43",
+  "cats": {
+   "Different control flow": 2
+  },
+  "top": "Different control flow:2",
+  "cf": 2,
+  "failures": [
+   "***<module>.PluginRiskCalculation._on_publish_after_trading_end: Failure: Different control flow",
+   "***<module>.PluginRiskCalculation._save_testds_to_csv: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_risk_calculation/function.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc",
+  "official_status": "ok",
+  "official": "15/None",
+  "pylingual": "14/15",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.save_testds_to_json: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_simulation/broker.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/broker.pyc",
+  "official_status": "ok",
+  "official": "24/None",
+  "pylingual": "35/42",
+  "cats": {
+   "Different bytecode": 2,
+   "Extra bytecode": 4,
+   "Different control flow": 1
+  },
+  "top": "Extra bytecode:4,Different bytecode:2,Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.SimulationBroker.get_orders.<listcomp>: Failure: Different bytecode",
+   "***None: Failure: Extra bytecode",
+   "***None: Failure: Extra bytecode",
+   "***None: Failure: Extra bytecode",
+   "***None: Failure: Extra bytecode",
+   "***<module>.SimulationBroker.get_open_orders.<listcomp>: Failure: Different control flow",
+   "***<module>.SimulationBroker.get_open_orders.<listcomp>: Failure: Different bytecode"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_simulation/live.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/live.pyc",
+  "official_status": "ok",
+  "official": "26/None",
+  "pylingual": "32/33",
+  "cats": {
+   "Extra bytecode": 1
+  },
+  "top": "Extra bytecode:1",
+  "cf": 0,
+  "failures": [
+   "***None: Failure: Extra bytecode"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/function.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
+  "official_status": "ok",
+  "official": "71/None",
+  "pylingual": "70/71",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.reconnect: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "official_status": "partial",
+  "official": "111/None",
+  "pylingual": "114/129",
+  "cats": {
+   "Extra bytecode": 1,
+   "Different control flow": 13,
+   "Different bytecode": 1
+  },
+  "top": "Different control flow:13,Extra bytecode:1,Different bytecode:1",
+  "cf": 13,
+  "failures": [
+   "***None: Failure: Extra bytecode",
+   "***<module>.TradeLiveBroker.on_pre_before_trading_start: Failure: Different control flow",
+   "***<module>.TradeLiveBroker._process_order: Failure: Different control flow",
+   "***<module>.TradeLiveBroker._process_tick_order: Failure: Different control flow",
+   "***<module>.TradeLiveBroker._process_cancel_order: Failure: Different control flow",
+   "***<module>.TradeLiveBroker._sync_worker: Failure: Different control flow",
+   "***<module>.TradeLiveBroker._trade_status_handle: Failure: Different control flow",
+   "***<module>.TradeLiveBroker.etf_basket_order: Failure: Different control flow",
+   "***<module>.TradeLiveBroker.etf_purchase_redemption: Failure: Different bytecode",
+   "***<module>.TradeLiveBroker.get_max_amount: Failure: Different control flow",
+   "***<module>.TradeLiveBroker.rzrq_credit_order: Failure: Different control flow",
+   "***<module>.TradeLiveBroker.ipo_stocks_order: Failure: Different control flow",
+   "***<module>.TradeLiveBroker.get_ipo_stocks: Failure: Different control flow",
+   "***<module>.TradeLiveBroker.on_order_response_list_handle: Failure: Different control flow",
+   "***<module>.TradeLiveBroker.on_trade_response_list_handle: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/utils/exception.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/exception.pyc",
+  "official_status": "ok",
+  "official": "29/None",
+  "pylingual": "30/31",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.ModifyExceptionFromType.__exit__: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "IQEngine/utils/profiler_func.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc",
+  "official_status": "ok",
+  "official": "15/None",
+  "pylingual": "17/18",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.ProfilerTool.show_func: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "fly/common/flytools.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
+  "official_status": "ok",
+  "official": "65/None",
+  "pylingual": "64/66",
+  "cats": {
+   "Different control flow": 2
+  },
+  "top": "Different control flow:2",
+  "cf": 2,
+  "failures": [
+   "***<module>.set_userid_containerid_dict: Failure: Different control flow",
+   "***<module>.ProcessWrite.modify_batcktes_info: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "fly/common/future_contract_info.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
+  "official_status": "ok",
+  "official": "29/None",
+  "pylingual": "27/29",
+  "cats": {
+   "Different control flow": 2
+  },
+  "top": "Different control flow:2",
+  "cf": 2,
+  "failures": [
+   "***<module>.FutureInfoCache.check_user: Failure: Different control flow",
+   "***<module>.FutureInfoCache.info_conbine: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "fly/data/quotation.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+  "official_status": "ok",
+  "official": "143/None",
+  "pylingual": "151/153",
+  "cats": {
+   "Different control flow": 2
+  },
+  "top": "Different control flow:2",
+  "cf": 2,
+  "failures": [
+   "***<module>.change_his_to_forward: Failure: Different control flow",
+   "***<module>.get_trend: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "fly/data/quote.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc",
+  "official_status": "partial",
+  "official": "72/None",
+  "pylingual": "79/92",
+  "cats": {
+   "Different bytecode": 2,
+   "Different control flow": 11
+  },
+  "top": "Different control flow:11,Different bytecode:2",
+  "cf": 11,
+  "failures": [
+   "***<module>.Quote.build_current_period_df: Failure: Different bytecode",
+   "***<module>.Quote.load_bars_from_hundsun: Failure: Different bytecode",
+   "***<module>.Quote.load_get_price: Failure: Different control flow",
+   "***<module>.Quote.change_his_to_forward: Failure: Different control flow",
+   "***<module>.Quote.change_his_to_backward: Failure: Different control flow",
+   "***<module>.Quote.get_price: Failure: Different control flow",
+   "***<module>.Quote.check_industry_code: Failure: Different control flow",
+   "***<module>.Quote.check_frequency: Failure: Different control flow",
+   "***<module>.Quote.get_real_from_zeromq: Failure: Different control flow",
+   "***<module>.Quote.run_individual_transform: Failure: Different control flow",
+   "***<module>.Quote.run_tick_transform: Failure: Different control flow",
+   "***<module>.Quote.run_tick_socket: Failure: Different control flow",
+   "***<module>.Quote.get_individual_data: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "fly/data/quote_handler.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+  "official_status": "ok",
+  "official": "57/None",
+  "pylingual": "78/79",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.get_kline_local: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "fly/dumpload/load_daily.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc",
+  "official_status": "ok",
+  "official": "23/None",
+  "pylingual": "25/27",
+  "cats": {
+   "Different control flow": 2
+  },
+  "top": "Different control flow:2",
+  "cf": 2,
+  "failures": [
+   "***<module>: Failure: Different control flow",
+   "***<module>.filter_abnormal_data: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "fly/logger.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc",
+  "official_status": "ok",
+  "official": "30/None",
+  "pylingual": "63/64",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.SafeFileHandler.check_baseFilename: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "fly/oauthenticator/oauth2.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/oauth2.pyc",
+  "official_status": "ok",
+  "official": "11/None",
+  "pylingual": "10/12",
+  "cats": {
+   "Different control flow": 2
+  },
+  "top": "Different control flow:2",
+  "cf": 2,
+  "failures": [
+   "***<module>.HSIDOAuthCallbackHandler.post: Failure: Different control flow",
+   "***<module>.OAuthCallbackHandler.post: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "fly/simtradding/flyAccount.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc",
+  "official_status": "ok",
+  "official": "23/None",
+  "pylingual": "23/24",
+  "cats": {
+   "Different control flow": 1
+  },
+  "top": "Different control flow:1",
+  "cf": 1,
+  "failures": [
+   "***<module>.TradeAccount.register_async_callback: Failure: Different control flow"
+  ]
+ },
+ {
+  "file": "fly/simtradding/ptradeAccount.pyc",
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc",
+  "official_status": "ok",
+  "official": "137/None",
+  "pylingual": "135/137",
+  "cats": {
+   "Different control flow": 2
+  },
+  "top": "Different control flow:2",
+  "cf": 2,
+  "failures": [
+   "***<module>.PtradeAccount.order_response_order_update: Failure: Different control flow",
+   "***<module>.PtradeAccount.trade_response_order_update: Failure: Different control flow"
+  ]
+ }
+]
