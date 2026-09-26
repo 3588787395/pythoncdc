@@ -1,0 +1,2840 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/bar.pyc",
+  "units": [
+   {
+    "name": "<module>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.<dictcomp>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.__init__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.symbol",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.name",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.open",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.close",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.price",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.low",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.high",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.volume",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.money",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.is_open",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.preclose",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.high_limit",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.low_limit",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.unlimited",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.limit_up",
+    "msg": "Different control flow",
+    "div": 0,
+    "nA": 11,
+    "nB": 12,
+    "nodes": [
+     {
+      "i": 0,
+      "a_first": 26,
+      "b_first": 18,
+      "a_out": [
+       52
+      ],
+      "b_out": [
+       20,
+       28
+      ],
+      "a_insts": "RETURN_VALUE",
+      "b_insts": "LOAD_FAST v",
+      "same": false
+     },
+     {
+      "i": 1,
+      "a_first": 52,
+      "b_first": 20,
+      "a_out": [
+       48
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "RERAISE",
+      "b_insts": "RETURN_VALUE",
+      "same": false
+     },
+     {
+      "i": 2,
+      "a_first": -1,
+      "b_first": 26,
+      "a_out": [
+       -1
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "",
+      "b_insts": "RETURN_VALUE",
+      "same": true
+     },
+     {
+      "i": 3,
+      "a_first": -1,
+      "b_first": 52,
+      "a_out": [],
+      "b_out": [
+       54
+      ],
+      "a_insts": "",
+      "b_insts": "RERAISE",
+      "same": false
+     },
+     {
+      "i": 4,
+      "a_first": 0,
+      "b_first": -1,
+      "a_out": [
+       -1,
+       0,
+       22
+      ],
+      "b_out": [
+       0
+      ],
+      "a_insts": "LOAD_FAST self | LOAD_ATTR _data | LOAD_CONST \"limit_up\" | BINARY_SUBSCR | STORE_FAST v | LOAD_FAST v | LOAD_CONST 0 | COMPARE_OP != | POP_JUMP_FORWARD_IF_FALSE to 22",
+      "b_insts": "",
+      "same": false
+     },
+     {
+      "i": 5,
+      "a_first": 18,
+      "b_first": -1,
+      "a_out": [
+       18,
+       22
+      ],
+      "b_out": [],
+      "a_insts": "LOAD_FAST v | JUMP_FORWARD to 26",
+      "b_insts": "",
+      "same": false
+     },
+     {
+      "i": 6,
+      "a_first": 22,
+      "b_first": 0,
+      "a_out": [
+       18,
+       22
+      ],
+      "b_out": [
+       18,
+       22,
+       28
+      ],
+      "a_insts": "LOAD_GLOBAL np | LOAD_ATTR nan",
+      "b_insts": "LOAD_FAST self | LOAD_ATTR _data | LOAD_CONST \"limit_up\" | BINARY_SUBSCR | STORE_FAST v | LOAD_FAST v | LOAD_CONST 0 | COMPARE_OP != | POP_JUMP_FORWARD_IF_FALSE to 22",
+      "same": false
+     },
+     {
+      "i": 7,
+      "a_first": 28,
+      "b_first": 22,
+      "a_out": [
+       20,
+       28,
+       48
+      ],
+      "b_out": [
+       26,
+       28
+      ],
+      "a_insts": "PUSH_EXC_INFO | LOAD_GLOBAL KeyError | LOAD_GLOBAL ValueError | BUILD_TUPLE | CHECK_EXC_MATCH | POP_JUMP_FORWARD_IF_FALSE to 52",
+      "b_insts": "LOAD_GLOBAL np | LOAD_ATTR nan",
+      "same": false
+     },
+     {
+      "i": 8,
+      "a_first": 40,
+      "b_first": 28,
+      "a_out": [
+       40,
+       48
+      ],
+      "b_out": [
+       40,
+       52,
+       54
+      ],
+      "a_insts": "POP_TOP | LOAD_GLOBAL np | LOAD_ATTR nan | SWAP TOS <-> TOS1",
+      "b_insts": "PUSH_EXC_INFO | LOAD_GLOBAL KeyError | LOAD_GLOBAL ValueError | BUILD_TUPLE | CHECK_EXC_MATCH | POP_JUMP_FORWARD_IF_FALSE to 52",
+      "same": false
+     },
+     {
+      "i": 9,
+      "a_first": 48,
+      "b_first": 40,
+      "a_out": [
+       52
+      ],
+      "b_out": [
+       48,
+       54
+      ],
+      "a_insts": "POP_EXCEPT | RETURN_VALUE",
+      "b_insts": "POP_TOP | LOAD_GLOBAL np | LOAD_ATTR nan | SWAP TOS <-> TOS1",
+      "same": false
+     },
+     {
+      "i": 10,
+      "a_first": 54,
+      "b_first": 48,
+      "a_out": [
+       52
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "COPY | POP_EXCEPT | RERAISE",
+      "b_insts": "POP_EXCEPT | RETURN_VALUE",
+      "same": false
+     }
+    ]
+   },
+   {
+    "name": "<module>.BarData.limit_down",
+    "msg": "Different control flow",
+    "div": 0,
+    "nA": 11,
+    "nB": 12,
+    "nodes": [
+     {
+      "i": 0,
+      "a_first": 26,
+      "b_first": 18,
+      "a_out": [
+       52
+      ],
+      "b_out": [
+       20,
+       28
+      ],
+      "a_insts": "RETURN_VALUE",
+      "b_insts": "LOAD_FAST v",
+      "same": false
+     },
+     {
+      "i": 1,
+      "a_first": 52,
+      "b_first": 20,
+      "a_out": [
+       48
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "RERAISE",
+      "b_insts": "RETURN_VALUE",
+      "same": false
+     },
+     {
+      "i": 2,
+      "a_first": -1,
+      "b_first": 26,
+      "a_out": [
+       -1
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "",
+      "b_insts": "RETURN_VALUE",
+      "same": true
+     },
+     {
+      "i": 3,
+      "a_first": -1,
+      "b_first": 52,
+      "a_out": [],
+      "b_out": [
+       54
+      ],
+      "a_insts": "",
+      "b_insts": "RERAISE",
+      "same": false
+     },
+     {
+      "i": 4,
+      "a_first": 0,
+      "b_first": -1,
+      "a_out": [
+       -1,
+       0,
+       22
+      ],
+      "b_out": [
+       0
+      ],
+      "a_insts": "LOAD_FAST self | LOAD_ATTR _data | LOAD_CONST \"limit_down\" | BINARY_SUBSCR | STORE_FAST v | LOAD_FAST v | LOAD_CONST 0 | COMPARE_OP != | POP_JUMP_FORWARD_IF_FALSE to 22",
+      "b_insts": "",
+      "same": false
+     },
+     {
+      "i": 5,
+      "a_first": 18,
+      "b_first": -1,
+      "a_out": [
+       18,
+       22
+      ],
+      "b_out": [],
+      "a_insts": "LOAD_FAST v | JUMP_FORWARD to 26",
+      "b_insts": "",
+      "same": false
+     },
+     {
+      "i": 6,
+      "a_first": 22,
+      "b_first": 0,
+      "a_out": [
+       18,
+       22
+      ],
+      "b_out": [
+       18,
+       22,
+       28
+      ],
+      "a_insts": "LOAD_GLOBAL np | LOAD_ATTR nan",
+      "b_insts": "LOAD_FAST self | LOAD_ATTR _data | LOAD_CONST \"limit_down\" | BINARY_SUBSCR | STORE_FAST v | LOAD_FAST v | LOAD_CONST 0 | COMPARE_OP != | POP_JUMP_FORWARD_IF_FALSE to 22",
+      "same": false
+     },
+     {
+      "i": 7,
+      "a_first": 28,
+      "b_first": 22,
+      "a_out": [
+       20,
+       28,
+       48
+      ],
+      "b_out": [
+       26,
+       28
+      ],
+      "a_insts": "PUSH_EXC_INFO | LOAD_GLOBAL KeyError | LOAD_GLOBAL ValueError | BUILD_TUPLE | CHECK_EXC_MATCH | POP_JUMP_FORWARD_IF_FALSE to 52",
+      "b_insts": "LOAD_GLOBAL np | LOAD_ATTR nan",
+      "same": false
+     },
+     {
+      "i": 8,
+      "a_first": 40,
+      "b_first": 28,
+      "a_out": [
+       40,
+       48
+      ],
+      "b_out": [
+       40,
+       52,
+       54
+      ],
+      "a_insts": "POP_TOP | LOAD_GLOBAL np | LOAD_ATTR nan | SWAP TOS <-> TOS1",
+      "b_insts": "PUSH_EXC_INFO | LOAD_GLOBAL KeyError | LOAD_GLOBAL ValueError | BUILD_TUPLE | CHECK_EXC_MATCH | POP_JUMP_FORWARD_IF_FALSE to 52",
+      "same": false
+     },
+     {
+      "i": 9,
+      "a_first": 48,
+      "b_first": 40,
+      "a_out": [
+       52
+      ],
+      "b_out": [
+       48,
+       54
+      ],
+      "a_insts": "POP_EXCEPT | RETURN_VALUE",
+      "b_insts": "POP_TOP | LOAD_GLOBAL np | LOAD_ATTR nan | SWAP TOS <-> TOS1",
+      "same": false
+     },
+     {
+      "i": 10,
+      "a_first": 54,
+      "b_first": 48,
+      "a_out": [
+       52
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "COPY | POP_EXCEPT | RERAISE",
+      "b_insts": "POP_EXCEPT | RETURN_VALUE",
+      "same": false
+     }
+    ]
+   },
+   {
+    "name": "<module>.BarData.prev_close",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.last",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.total_turnover",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.discount_rate",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.acc_net_value",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.unit_net_value",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.settlement",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.prev_settlement",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.open_interest",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.prod_code",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.bid_grp",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.offer_grp",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.amount_postion",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.datetime",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.asset",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.is_trading",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.isnan",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.suspended",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData._history_bars",
+    "msg": "Different control flow",
+    "div": 6,
+    "nA": 11,
+    "nB": 11,
+    "nodes": [
+     {
+      "i": 0,
+      "a_first": -1,
+      "b_first": -1,
+      "a_out": [
+       0
+      ],
+      "b_out": [
+       0
+      ],
+      "a_insts": "",
+      "b_insts": "",
+      "same": true
+     },
+     {
+      "i": 1,
+      "a_first": -1,
+      "b_first": -1,
+      "a_out": [],
+      "b_out": [],
+      "a_insts": "",
+      "b_insts": "",
+      "same": true
+     },
+     {
+      "i": 2,
+      "a_first": 0,
+      "b_first": 0,
+      "a_out": [
+       8,
+       12
+      ],
+      "b_out": [
+       8,
+       12
+      ],
+      "a_insts": "LOAD_FAST frequency | LOAD_CONST \"daily\" | COMPARE_OP == | POP_JUMP_FORWARD_IF_FALSE to 12",
+      "b_insts": "LOAD_FAST frequency | LOAD_CONST \"daily\" | COMPARE_OP == | POP_JUMP_FORWARD_IF_FALSE to 12",
+      "same": true
+     },
+     {
+      "i": 3,
+      "a_first": 8,
+      "b_first": 8,
+      "a_out": [
+       12
+      ],
+      "b_out": [
+       12
+      ],
+      "a_insts": "LOAD_CONST \"1d\" | STORE_FAST frequency",
+      "b_insts": "LOAD_CONST \"1d\" | STORE_FAST frequency",
+      "same": true
+     },
+     {
+      "i": 4,
+      "a_first": 12,
+      "b_first": 12,
+      "a_out": [
+       20,
+       24
+      ],
+      "b_out": [
+       20,
+       24
+      ],
+      "a_insts": "LOAD_FAST frequency | LOAD_CONST \"minute\" | COMPARE_OP == | POP_JUMP_FORWARD_IF_FALSE to 24",
+      "b_insts": "LOAD_FAST frequency | LOAD_CONST \"minute\" | COMPARE_OP == | POP_JUMP_FORWARD_IF_FALSE to 24",
+      "same": true
+     },
+     {
+      "i": 5,
+      "a_first": 20,
+      "b_first": 20,
+      "a_out": [
+       24
+      ],
+      "b_out": [
+       24
+      ],
+      "a_insts": "LOAD_CONST \"1m\" | STORE_FAST frequency",
+      "b_insts": "LOAD_CONST \"1m\" | STORE_FAST frequency",
+      "same": true
+     },
+     {
+      "i": 6,
+      "a_first": 24,
+      "b_first": 24,
+      "a_out": [
+       52,
+       60
+      ],
+      "b_out": [
+       52,
+       92
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + Engine | LOAD_ATTR instance | CALL | STORE_FAST engine | LOAD_FAST engine | LOAD_ATTR calendar_dt | STORE_FAST dt | LOAD_FAST engine | LOAD_ATTR config | LOAD_ATTR strategy | LOAD_ATTR frequency | LOAD_CONST \"1m\" | COMPARE_OP == | POP_JUMP_FORWARD_IF_FALSE to 60",
+      "b_insts": "LOAD_GLOBAL NULL + Engine | LOAD_ATTR instance | CALL | STORE_FAST engine | LOAD_FAST engine | LOAD_ATTR calendar_dt | STORE_FAST dt | LOAD_FAST engine | LOAD_ATTR config | LOAD_ATTR strategy | LOAD_ATTR frequency | LOAD_CONST \"1m\" | COMPARE_OP == | POP_JUMP_FORWARD_IF_FALSE to 92",
+      "same": false
+     },
+     {
+      "i": 7,
+      "a_first": 52,
+      "b_first": 52,
+      "a_out": [
+       60,
+       74
+      ],
+      "b_out": [
+       60,
+       74
+      ],
+      "a_insts": "LOAD_FAST frequency | LOAD_CONST \"1d\" | COMPARE_OP == | POP_JUMP_FORWARD_IF_TRUE to 74",
+      "b_insts": "LOAD_FAST frequency | LOAD_CONST \"1d\" | COMPARE_OP == | POP_JUMP_FORWARD_IF_TRUE to 74",
+      "same": true
+     },
+     {
+      "i": 8,
+      "a_first": 60,
+      "b_first": 60,
+      "a_out": [
+       74,
+       92
+      ],
+      "b_out": [
+       74,
+       92
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + ExecutionContext | LOAD_ATTR phase | CALL | LOAD_GLOBAL ExecutionPhase | LOAD_ATTR BEFORE_TRADING_START | COMPARE_OP == | POP_JUMP_FORWARD_IF_FALSE to 92",
+      "b_insts": "LOAD_GLOBAL NULL + ExecutionContext | LOAD_ATTR phase | CALL | LOAD_GLOBAL ExecutionPhase | LOAD_ATTR BEFORE_TRADING_START | COMPARE_OP == | POP_JUMP_FORWARD_IF_FALSE to 92",
+      "same": true
+     },
+     {
+      "i": 9,
+      "a_first": 74,
+      "b_first": 74,
+      "a_out": [
+       92
+      ],
+      "b_out": [
+       92
+      ],
+      "a_insts": "LOAD_FAST engine | LOAD_ATTR data_proxy | LOAD_METHOD get_previous_trading_date | LOAD_FAST engine | LOAD_ATTR calendar_dt | LOAD_METHOD date | CALL | CALL | STORE_FAST dt",
+      "b_insts": "LOAD_FAST engine | LOAD_ATTR data_proxy | LOAD_METHOD get_previous_trading_date | LOAD_FAST engine | LOAD_ATTR calendar_dt | LOAD_METHOD date | CALL | CALL | STORE_FAST dt",
+      "same": true
+     },
+     {
+      "i": 10,
+      "a_first": 92,
+      "b_first": 92,
+      "a_out": [
+       -1
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "LOAD_FAST engine | LOAD_ATTR data_proxy | LOAD_METHOD get_history | LOAD_FAST self | LOAD_ATTR asset | LOAD_FAST intervals | LOAD_GLOBAL NULL + convert_dt_to_int | LOAD_FAST dt | CALL | LOAD_FAST frequency | LOAD_FAST field | CALL | RETURN_VALUE",
+      "b_insts": "LOAD_FAST engine | LOAD_ATTR data_proxy | LOAD_METHOD get_history | LOAD_FAST self | LOAD_ATTR asset | LOAD_FAST intervals | LOAD_GLOBAL NULL + convert_dt_to_int | LOAD_FAST dt | CALL | LOAD_FAST frequency | LOAD_FAST field | CALL | RETURN_VALUE",
+      "same": true
+     }
+    ]
+   },
+   {
+    "name": "<module>.BarData.mavg",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.vwap",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.stddev",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.__repr__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.__repr__.<genexpr>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarData.__getitem__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.__init__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.asset",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.symbol",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.name",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.datetime",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.open",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.last",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.close",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.high",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.low",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.prev_close",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.volume",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.total_turnover",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.open_interest",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.prev_settlement",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.asks",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.ask_vols",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.bids",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.bid_vols",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.limit_up",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.limit_down",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.isnan",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.__repr__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.__repr__.<genexpr>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TickBar.__getitem__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarDict",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarDict.__init__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarDict.update_dt",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarDict.items",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarDict.items.<genexpr>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarDict.keys",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarDict.keys.<genexpr>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarDict.values",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarDict.values.<genexpr>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarDict.__contains__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarDict.__len__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarDict.__getitem__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarDict.dt",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BarDict.__repr__",
+    "msg": "Equal"
+   }
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc",
+  "units": [
+   {
+    "name": "<module>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.get_system",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.check_file_path_valid",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureCloseStyle",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrder",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrder.symbol",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrder.__init__",
+    "msg": "Different control flow",
+    "div": 0,
+    "nA": 36,
+    "nB": 29,
+    "nodes": [
+     {
+      "i": 0,
+      "a_first": 138,
+      "b_first": 138,
+      "a_out": [
+       156,
+       286
+      ],
+      "b_out": [
+       140,
+       238
+      ],
+      "a_insts": "LOAD_CONST 0",
+      "b_insts": "LOAD_CONST 0",
+      "same": false
+     },
+     {
+      "i": 1,
+      "a_first": 154,
+      "b_first": 154,
+      "a_out": [
+       194,
+       286
+      ],
+      "b_out": [
+       156,
+       238
+      ],
+      "a_insts": "LOAD_CONST 0",
+      "b_insts": "LOAD_CONST 0",
+      "same": false
+     },
+     {
+      "i": 2,
+      "a_first": 230,
+      "b_first": 230,
+      "a_out": [
+       252,
+       286
+      ],
+      "b_out": [
+       234,
+       238
+      ],
+      "a_insts": "JUMP_FORWARD to 234",
+      "b_insts": "JUMP_FORWARD to 234",
+      "same": false
+     },
+     {
+      "i": 3,
+      "a_first": 232,
+      "b_first": 232,
+      "a_out": [
+       252,
+       286
+      ],
+      "b_out": [
+       234,
+       238
+      ],
+      "a_insts": "POP_TOP",
+      "b_insts": "POP_TOP",
+      "same": false
+     },
+     {
+      "i": 4,
+      "a_first": 256,
+      "b_first": 286,
+      "a_out": [
+       260,
+       286
+      ],
+      "b_out": [
+       288
+      ],
+      "a_insts": "JUMP_FORWARD to 260",
+      "b_insts": "RERAISE",
+      "same": false
+     },
+     {
+      "i": 5,
+      "a_first": 258,
+      "b_first": -1,
+      "a_out": [
+       260,
+       286
+      ],
+      "b_out": [
+       0
+      ],
+      "a_insts": "POP_TOP",
+      "b_insts": "",
+      "same": false
+     },
+     {
+      "i": 6,
+      "a_first": 334,
+      "b_first": -1,
+      "a_out": [
+       336
+      ],
+      "b_out": [],
+      "a_insts": "RERAISE",
+      "b_insts": "",
+      "same": false
+     },
+     {
+      "i": 7,
+      "a_first": -1,
+      "b_first": 0,
+      "a_out": [
+       30
+      ],
+      "b_out": [
+       14,
+       30
+      ],
+      "a_insts": "",
+      "b_insts": "LOAD_FAST asset | LOAD_FAST self | STORE_ATTR asset | LOAD_FAST amount | LOAD_CONST 0 | COMPARE_OP > | POP_JUMP_FORWARD_IF_FALSE to 30",
+      "same": false
+     },
+     {
+      "i": 8,
+      "a_first": -1,
+      "b_first": 14,
+      "a_out": [],
+      "b_out": [
+       54
+      ],
+      "a_insts": "",
+      "b_insts": "LOAD_GLOBAL EntrustDirection | LOAD_ATTR BUY | LOAD_FAST self | STORE_ATTR entrust_direction | LOAD_FAST amount | LOAD_FAST self | STORE_ATTR amount | JUMP_FORWARD to 54",
+      "same": false
+     },
+     {
+      "i": 9,
+      "a_first": 0,
+      "b_first": 30,
+      "a_out": [
+       38,
+       54
+      ],
+      "b_out": [
+       38,
+       54
+      ],
+      "a_insts": "LOAD_FAST asset | LOAD_FAST self | STORE_ATTR asset | LOAD_FAST amount | LOAD_CONST 0 | COMPARE_OP > | POP_JUMP_FORWARD_IF_FALSE to 30",
+      "b_insts": "LOAD_FAST amount | LOAD_CONST 0 | COMPARE_OP < | POP_JUMP_FORWARD_IF_FALSE to 54",
+      "same": true
+     },
+     {
+      "i": 10,
+      "a_first": 14,
+      "b_first": 38,
+      "a_out": [
+       78
+      ],
+      "b_out": [
+       54
+      ],
+      "a_insts": "LOAD_GLOBAL EntrustDirection | LOAD_ATTR BUY | LOAD_FAST self | STORE_ATTR entrust_direction | LOAD_FAST amount | LOAD_FAST self | STORE_ATTR amount | JUMP_FORWARD to 54",
+      "b_insts": "LOAD_GLOBAL EntrustDirection | LOAD_ATTR SELL | LOAD_FAST self | STORE_ATTR entrust_direction | LOAD_FAST amount | UNARY_NEGATIVE | LOAD_FAST self | STORE_ATTR amount",
+      "same": false
+     },
+     {
+      "i": 11,
+      "a_first": 30,
+      "b_first": 54,
+      "a_out": [
+       66,
+       78
+      ],
+      "b_out": [
+       66,
+       78
+      ],
+      "a_insts": "LOAD_FAST amount | LOAD_CONST 0 | COMPARE_OP < | POP_JUMP_FORWARD_IF_FALSE to 54",
+      "b_insts": "LOAD_GLOBAL FuturesDirection | LOAD_ATTR OPEN | LOAD_FAST self | STORE_ATTR futures_direction | LOAD_FAST limit_price | POP_JUMP_FORWARD_IF_FALSE to 78",
+      "same": true
+     },
+     {
+      "i": 12,
+      "a_first": 38,
+      "b_first": 66,
+      "a_out": [
+       78
+      ],
+      "b_out": [
+       86
+      ],
+      "a_insts": "LOAD_GLOBAL EntrustDirection | LOAD_ATTR SELL | LOAD_FAST self | STORE_ATTR entrust_direction | LOAD_FAST amount | UNARY_NEGATIVE | LOAD_FAST self | STORE_ATTR amount",
+      "b_insts": "LOAD_GLOBAL NULL + LimitOrder | LOAD_FAST limit_price | CALL | LOAD_FAST self | STORE_ATTR style | JUMP_FORWARD to 86",
+      "same": false
+     },
+     {
+      "i": 13,
+      "a_first": 54,
+      "b_first": 78,
+      "a_out": [
+       86,
+       96
+      ],
+      "b_out": [
+       86
+      ],
+      "a_insts": "LOAD_GLOBAL FuturesDirection | LOAD_ATTR OPEN | LOAD_FAST self | STORE_ATTR futures_direction | LOAD_FAST limit_price | POP_JUMP_FORWARD_IF_FALSE to 78",
+      "b_insts": "LOAD_GLOBAL NULL + MarketOrder | CALL | LOAD_FAST self | STORE_ATTR style",
+      "same": false
+     },
+     {
+      "i": 14,
+      "a_first": 66,
+      "b_first": 86,
+      "a_out": [
+       104
+      ],
+      "b_out": [
+       96,
+       194,
+       238
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + LimitOrder | LOAD_FAST limit_price | CALL | LOAD_FAST self | STORE_ATTR style | JUMP_FORWARD to 86",
+      "b_insts": "LOAD_GLOBAL NULL + isinstance | LOAD_FAST time | LOAD_GLOBAL str | CALL | POP_JUMP_FORWARD_IF_FALSE to 194",
+      "same": false
+     },
+     {
+      "i": 15,
+      "a_first": 78,
+      "b_first": 96,
+      "a_out": [
+       104
+      ],
+      "b_out": [
+       104,
+       160,
+       238
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + MarketOrder | CALL | LOAD_FAST self | STORE_ATTR style",
+      "b_insts": "LOAD_CONST \":\" | LOAD_FAST time | CONTAINS_OP in | POP_JUMP_FORWARD_IF_FALSE to 160",
+      "same": false
+     },
+     {
+      "i": 16,
+      "a_first": 86,
+      "b_first": 104,
+      "a_out": [
+       130,
+       224,
+       286
+      ],
+      "b_out": [
+       130,
+       138,
+       238
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + isinstance | LOAD_FAST time | LOAD_GLOBAL str | CALL | POP_JUMP_FORWARD_IF_FALSE to 194",
+      "b_insts": "LOAD_FAST time | LOAD_METHOD split | LOAD_CONST \":\" | CALL | LOAD_CONST None | LOAD_CONST 2 | BUILD_SLICE | BINARY_SUBSCR | UNPACK_SEQUENCE | STORE_FAST h | STORE_FAST m | LOAD_FAST h | POP_JUMP_FORWARD_IF_FALSE to 138",
+      "same": false
+     },
+     {
+      "i": 17,
+      "a_first": 96,
+      "b_first": 130,
+      "a_out": [
+       140,
+       212,
+       286
+      ],
+      "b_out": [
+       140,
+       238
+      ],
+      "a_insts": "LOAD_CONST \":\" | LOAD_FAST time | CONTAINS_OP in | POP_JUMP_FORWARD_IF_FALSE to 160",
+      "b_insts": "LOAD_GLOBAL NULL + int | LOAD_FAST h | CALL | JUMP_FORWARD to 140",
+      "same": false
+     },
+     {
+      "i": 18,
+      "a_first": 104,
+      "b_first": 140,
+      "a_out": [
+       138,
+       146,
+       286
+      ],
+      "b_out": [
+       146,
+       154,
+       238
+      ],
+      "a_insts": "LOAD_FAST time | LOAD_METHOD split | LOAD_CONST \":\" | CALL | LOAD_CONST None | LOAD_CONST 2 | BUILD_SLICE | BINARY_SUBSCR | UNPACK_SEQUENCE | STORE_FAST h | STORE_FAST m | LOAD_FAST h | POP_JUMP_FORWARD_IF_FALSE to 138",
+      "b_insts": "STORE_FAST h | LOAD_FAST m | POP_JUMP_FORWARD_IF_FALSE to 154",
+      "same": false
+     },
+     {
+      "i": 19,
+      "a_first": 130,
+      "b_first": 146,
+      "a_out": [
+       156,
+       286
+      ],
+      "b_out": [
+       156,
+       238
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + int | LOAD_FAST h | CALL | JUMP_FORWARD to 140",
+      "b_insts": "LOAD_GLOBAL NULL + int | LOAD_FAST m | CALL | JUMP_FORWARD to 156",
+      "same": false
+     },
+     {
+      "i": 20,
+      "a_first": 140,
+      "b_first": 156,
+      "a_out": [
+       154,
+       160,
+       286
+      ],
+      "b_out": [
+       212,
+       238
+      ],
+      "a_insts": "STORE_FAST h | LOAD_FAST m | POP_JUMP_FORWARD_IF_FALSE to 154",
+      "b_insts": "STORE_FAST m | JUMP_FORWARD to 212",
+      "same": false
+     },
+     {
+      "i": 21,
+      "a_first": 146,
+      "b_first": 160,
+      "a_out": [
+       194,
+       286
+      ],
+      "b_out": [
+       212,
+       238
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + int | LOAD_FAST m | CALL | JUMP_FORWARD to 156",
+      "b_insts": "LOAD_GLOBAL NULL + int | LOAD_FAST time | LOAD_CONST -2 | LOAD_CONST None | BUILD_SLICE | BINARY_SUBSCR | CALL | STORE_FAST m | LOAD_GLOBAL NULL + int | LOAD_FAST time | LOAD_CONST None | LOAD_CONST -2 | BUILD_SLICE | BINARY_SUBSCR",
+      "same": false
+     },
+     {
+      "i": 22,
+      "a_first": 156,
+      "b_first": 194,
+      "a_out": [
+       234,
+       286
+      ],
+      "b_out": [
+       212,
+       238
+      ],
+      "a_insts": "STORE_FAST m | JUMP_FORWARD to 212",
+      "b_insts": "LOAD_GLOBAL NULL + divmod | LOAD_GLOBAL NULL + int | LOAD_FAST time | CALL | LOAD_CONST 100 | CALL | UNPACK_SEQUENCE | STORE_FAST h | STORE_FAST m",
+      "same": false
+     },
+     {
+      "i": 23,
+      "a_first": 160,
+      "b_first": 212,
+      "a_out": [
+       234,
+       286
+      ],
+      "b_out": [
+       224,
+       232,
+       238
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + int | LOAD_FAST time | LOAD_CONST -2 | LOAD_CONST None | BUILD_SLICE | BINARY_SUBSCR | CALL | STORE_FAST m | LOAD_GLOBAL NULL + int | LOAD_FAST time | LOAD_CONST None | LOAD_CONST -2 | BUILD_SLICE | BINARY_SUBSCR",
+      "b_insts": "LOAD_CONST 0 | LOAD_FAST h | SWAP TOS <-> TOS1 | COPY | COMPARE_OP <= | POP_JUMP_FORWARD_IF_FALSE to 232",
+      "same": false
+     },
+     {
+      "i": 24,
+      "a_first": 194,
+      "b_first": 224,
+      "a_out": [
+       234,
+       286
+      ],
+      "b_out": [
+       230,
+       234,
+       238
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + divmod | LOAD_GLOBAL NULL + int | LOAD_FAST time | CALL | LOAD_CONST 100 | CALL | UNPACK_SEQUENCE | STORE_FAST h | STORE_FAST m",
+      "b_insts": "LOAD_CONST 24 | COMPARE_OP < | POP_JUMP_FORWARD_IF_TRUE to 234",
+      "same": false
+     },
+     {
+      "i": 25,
+      "a_first": 212,
+      "b_first": 234,
+      "a_out": [
+       232,
+       238,
+       286
+      ],
+      "b_out": [
+       238
+      ],
+      "a_insts": "LOAD_CONST 0 | LOAD_FAST h | SWAP TOS <-> TOS1 | COPY | COMPARE_OP <= | POP_JUMP_FORWARD_IF_FALSE to 232",
+      "b_insts": "LOAD_GLOBAL AssertionError | RAISE_VARARGS exception instance",
+      "same": false
+     },
+     {
+      "i": 26,
+      "a_first": 224,
+      "b_first": 238,
+      "a_out": [
+       230,
+       286,
+       288
+      ],
+      "b_out": [
+       252,
+       286,
+       288
+      ],
+      "a_insts": "LOAD_CONST 24 | COMPARE_OP < | POP_JUMP_FORWARD_IF_TRUE to 238",
+      "b_insts": "PUSH_EXC_INFO | LOAD_GLOBAL AttributeError | LOAD_GLOBAL ValueError | LOAD_GLOBAL AssertionError | BUILD_TUPLE | CHECK_EXC_MATCH | POP_JUMP_FORWARD_IF_FALSE to 286",
+      "same": false
+     },
+     {
+      "i": 27,
+      "a_first": 234,
+      "b_first": 252,
+      "a_out": [
+       286
+      ],
+      "b_out": [
+       288
+      ],
+      "a_insts": "LOAD_ASSERTION_ERROR | RAISE_VARARGS exception instance",
+      "b_insts": "POP_TOP | LOAD_GLOBAL NULL + system_log | LOAD_ATTR error | LOAD_GLOBAL NULL + get_traceback_message | CALL | CALL | POP_TOP | LOAD_GLOBAL NULL + IQInvalidArgument | LOAD_GLOBAL NULL + _ | LOAD_CONST 'time参数设置错误，期望的time参数格式包括：930, \"930\", \"9:30\", \"0930\", \"09:30\"传入为{time}' | CALL | LOAD_METHOD format | LOAD_FAST time | KW_NAMES ('time',)",
+      "same": false
+     },
+     {
+      "i": 28,
+      "a_first": 238,
+      "b_first": 288,
+      "a_out": [
+       -1,
+       250,
+       286
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "LOAD_CONST 0 | LOAD_FAST m | SWAP TOS <-> TOS1 | COPY | COMPARE_OP <= | POP_JUMP_FORWARD_IF_FALSE to 258",
+      "b_insts": "COPY | POP_EXCEPT | RERAISE",
+      "same": false
+     }
+    ]
+   },
+   {
+    "name": "<module>.OverNightOrder.commit",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrder.save",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrder.load",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.SplitOrder",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.SplitOrder.__init__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.SplitOrder.filled_amount",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.SplitOrder.filled_amount.<listcomp>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.SplitOrder.symbol",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.SplitOrder.commit",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.SplitOrder.split_order_thread",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.SplitOrder.commit_child_order",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.SplitOrder.parse_time_info",
+    "msg": "Different control flow",
+    "div": 0,
+    "nA": 35,
+    "nB": 35,
+    "nodes": [
+     {
+      "i": 0,
+      "a_first": 56,
+      "b_first": 56,
+      "a_out": [
+       20
+      ],
+      "b_out": [
+       58,
+       62
+      ],
+      "a_insts": "LOAD_CONST 0",
+      "b_insts": "LOAD_CONST 0",
+      "same": false
+     },
+     {
+      "i": 1,
+      "a_first": 96,
+      "b_first": 58,
+      "a_out": [
+       70
+      ],
+      "b_out": [
+       60,
+       62
+      ],
+      "a_insts": "RERAISE",
+      "b_insts": "STORE_FAST h",
+      "same": false
+     },
+     {
+      "i": 2,
+      "a_first": 134,
+      "b_first": 60,
+      "a_out": [
+       126
+      ],
+      "b_out": [
+       104
+      ],
+      "a_insts": "LOAD_CONST 0",
+      "b_insts": "JUMP_FORWARD to 104",
+      "same": false
+     },
+     {
+      "i": 3,
+      "a_first": 174,
+      "b_first": 96,
+      "a_out": [
+       176
+      ],
+      "b_out": [
+       98
+      ],
+      "a_insts": "RERAISE",
+      "b_insts": "RERAISE",
+      "same": false
+     },
+     {
+      "i": 4,
+      "a_first": 216,
+      "b_first": 134,
+      "a_out": [
+       218
+      ],
+      "b_out": [
+       136,
+       140
+      ],
+      "a_insts": "LOAD_CONST 0",
+      "b_insts": "LOAD_CONST 0",
+      "same": false
+     },
+     {
+      "i": 5,
+      "a_first": -1,
+      "b_first": 136,
+      "a_out": [
+       174
+      ],
+      "b_out": [
+       138,
+       140
+      ],
+      "a_insts": "",
+      "b_insts": "STORE_FAST m",
+      "same": false
+     },
+     {
+      "i": 6,
+      "a_first": -1,
+      "b_first": 138,
+      "a_out": [],
+      "b_out": [
+       182
+      ],
+      "a_insts": "",
+      "b_insts": "JUMP_FORWARD to 182",
+      "same": false
+     },
+     {
+      "i": 7,
+      "a_first": 0,
+      "b_first": 174,
+      "a_out": [
+       -1,
+       216
+      ],
+      "b_out": [
+       176
+      ],
+      "a_insts": "LOAD_FAST time_info | POP_JUMP_FORWARD_IF_TRUE to 10",
+      "b_insts": "RERAISE",
+      "same": false
+     },
+     {
+      "i": 8,
+      "a_first": 4,
+      "b_first": 216,
+      "a_out": [
+       240
+      ],
+      "b_out": [
+       218
+      ],
+      "a_insts": "LOAD_CONST 0 | STORE_FAST s | JUMP_FORWARD to 240",
+      "b_insts": "LOAD_CONST 0",
+      "same": false
+     },
+     {
+      "i": 9,
+      "a_first": 10,
+      "b_first": -1,
+      "a_out": [
+       -1,
+       0
+      ],
+      "b_out": [
+       0
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + isinstance | LOAD_FAST time_info | LOAD_GLOBAL int | CALL | POP_JUMP_FORWARD_IF_FALSE to 26",
+      "b_insts": "",
+      "same": false
+     },
+     {
+      "i": 10,
+      "a_first": 20,
+      "b_first": -1,
+      "a_out": [
+       240
+      ],
+      "b_out": [],
+      "a_insts": "LOAD_FAST time_info | STORE_FAST s | JUMP_FORWARD to 240",
+      "b_insts": "",
+      "same": false
+     },
+     {
+      "i": 11,
+      "a_first": 26,
+      "b_first": 0,
+      "a_out": [
+       4,
+       26
+      ],
+      "b_out": [
+       4,
+       10
+      ],
+      "a_insts": "LOAD_FAST time_info | LOAD_METHOD split | LOAD_CONST \"h\" | LOAD_CONST 1 | KW_NAMES ('maxsplit',) | CALL | UNPACK_SEQUENCE | STORE_FAST h | STORE_FAST ms",
+      "b_insts": "LOAD_FAST time_info | POP_JUMP_FORWARD_IF_TRUE to 10",
+      "same": false
+     },
+     {
+      "i": 12,
+      "a_first": 44,
+      "b_first": 4,
+      "a_out": [
+       10,
+       56
+      ],
+      "b_out": [
+       240
+      ],
+      "a_insts": "LOAD_FAST h | POP_JUMP_FORWARD_IF_FALSE to 56",
+      "b_insts": "LOAD_CONST 0 | STORE_FAST s | JUMP_FORWARD to 240",
+      "same": false
+     },
+     {
+      "i": 13,
+      "a_first": 48,
+      "b_first": 10,
+      "a_out": [
+       20
+      ],
+      "b_out": [
+       20,
+       26
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + int | LOAD_FAST h | CALL | JUMP_FORWARD to 58",
+      "b_insts": "LOAD_GLOBAL NULL + isinstance | LOAD_FAST time_info | LOAD_GLOBAL int | CALL | POP_JUMP_FORWARD_IF_FALSE to 26",
+      "same": false
+     },
+     {
+      "i": 14,
+      "a_first": 58,
+      "b_first": 20,
+      "a_out": [
+       92
+      ],
+      "b_out": [
+       240
+      ],
+      "a_insts": "STORE_FAST h | JUMP_FORWARD to 104",
+      "b_insts": "LOAD_FAST time_info | STORE_FAST s | JUMP_FORWARD to 240",
+      "same": false
+     },
+     {
+      "i": 15,
+      "a_first": 62,
+      "b_first": 26,
+      "a_out": [
+       48,
+       58,
+       70
+      ],
+      "b_out": [
+       48,
+       56,
+       62
+      ],
+      "a_insts": "PUSH_EXC_INFO | LOAD_GLOBAL ValueError | CHECK_EXC_MATCH | POP_JUMP_FORWARD_IF_FALSE to 96",
+      "b_insts": "LOAD_FAST time_info | LOAD_METHOD split | LOAD_CONST \"h\" | LOAD_CONST 1 | KW_NAMES ('maxsplit',) | CALL | UNPACK_SEQUENCE | STORE_FAST h | STORE_FAST ms | LOAD_FAST h | POP_JUMP_FORWARD_IF_FALSE to 56",
+      "same": false
+     },
+     {
+      "i": 16,
+      "a_first": 70,
+      "b_first": 48,
+      "a_out": [
+       62,
+       70
+      ],
+      "b_out": [
+       58,
+       62
+      ],
+      "a_insts": "POP_TOP | LOAD_GLOBAL NULL + system_log | LOAD_ATTR error | LOAD_GLOBAL NULL + get_traceback_message | CALL | CALL | POP_TOP | LOAD_CONST 0 | STORE_FAST h | LOAD_FAST time_info | STORE_FAST ms",
+      "b_insts": "LOAD_GLOBAL NULL + int | LOAD_FAST h | CALL | JUMP_FORWARD to 58",
+      "same": false
+     },
+     {
+      "i": 17,
+      "a_first": 92,
+      "b_first": 62,
+      "a_out": [
+       92
+      ],
+      "b_out": [
+       70,
+       96,
+       98
+      ],
+      "a_insts": "POP_EXCEPT | JUMP_FORWARD to 104",
+      "b_insts": "PUSH_EXC_INFO | LOAD_GLOBAL ValueError | CHECK_EXC_MATCH | POP_JUMP_FORWARD_IF_FALSE to 96",
+      "same": false
+     },
+     {
+      "i": 18,
+      "a_first": 98,
+      "b_first": 70,
+      "a_out": [
+       138
+      ],
+      "b_out": [
+       92,
+       98
+      ],
+      "a_insts": "COPY | POP_EXCEPT | RERAISE",
+      "b_insts": "POP_TOP | LOAD_GLOBAL NULL + system_log | LOAD_ATTR error | LOAD_GLOBAL NULL + get_traceback_message | CALL | CALL | POP_TOP | LOAD_CONST 0 | STORE_FAST h | LOAD_FAST time_info | STORE_FAST ms",
+      "same": false
+     },
+     {
+      "i": 19,
+      "a_first": 104,
+      "b_first": 92,
+      "a_out": [
+       98,
+       140
+      ],
+      "b_out": [
+       104
+      ],
+      "a_insts": "LOAD_FAST ms | LOAD_METHOD split | LOAD_CONST \"m\" | LOAD_CONST 1 | KW_NAMES ('maxsplit',) | CALL | UNPACK_SEQUENCE | STORE_FAST m | STORE_FAST s",
+      "b_insts": "POP_EXCEPT | JUMP_FORWARD to 104",
+      "same": false
+     },
+     {
+      "i": 20,
+      "a_first": 122,
+      "b_first": 98,
+      "a_out": [
+       60,
+       104
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "LOAD_FAST m | POP_JUMP_FORWARD_IF_FALSE to 134",
+      "b_insts": "COPY | POP_EXCEPT | RERAISE",
+      "same": false
+     },
+     {
+      "i": 21,
+      "a_first": 126,
+      "b_first": 104,
+      "a_out": [
+       126
+      ],
+      "b_out": [
+       126,
+       134,
+       140
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + int | LOAD_FAST m | CALL | JUMP_FORWARD to 136",
+      "b_insts": "LOAD_FAST ms | LOAD_METHOD split | LOAD_CONST \"m\" | LOAD_CONST 1 | KW_NAMES ('maxsplit',) | CALL | UNPACK_SEQUENCE | STORE_FAST m | STORE_FAST s | LOAD_FAST m | POP_JUMP_FORWARD_IF_FALSE to 134",
+      "same": false
+     },
+     {
+      "i": 22,
+      "a_first": 136,
+      "b_first": 126,
+      "a_out": [
+       182
+      ],
+      "b_out": [
+       136,
+       140
+      ],
+      "a_insts": "STORE_FAST m | JUMP_FORWARD to 182",
+      "b_insts": "LOAD_GLOBAL NULL + int | LOAD_FAST m | CALL | JUMP_FORWARD to 136",
+      "same": false
+     },
+     {
+      "i": 23,
+      "a_first": 140,
+      "b_first": 140,
+      "a_out": [
+       96,
+       148,
+       176
+      ],
+      "b_out": [
+       148,
+       174,
+       176
+      ],
+      "a_insts": "PUSH_EXC_INFO | LOAD_GLOBAL ValueError | CHECK_EXC_MATCH | POP_JUMP_FORWARD_IF_FALSE to 174",
+      "b_insts": "PUSH_EXC_INFO | LOAD_GLOBAL ValueError | CHECK_EXC_MATCH | POP_JUMP_FORWARD_IF_FALSE to 174",
+      "same": false
+     },
+     {
+      "i": 24,
+      "a_first": 148,
+      "b_first": 148,
+      "a_out": [
+       170,
+       176
+      ],
+      "b_out": [
+       170,
+       176
+      ],
+      "a_insts": "POP_TOP | LOAD_GLOBAL NULL + system_log | LOAD_ATTR error | LOAD_GLOBAL NULL + get_traceback_message | CALL | CALL | POP_TOP | LOAD_CONST 0 | STORE_FAST m | LOAD_FAST ms | STORE_FAST s",
+      "b_insts": "POP_TOP | LOAD_GLOBAL NULL + system_log | LOAD_ATTR error | LOAD_GLOBAL NULL + get_traceback_message | CALL | CALL | POP_TOP | LOAD_CONST 0 | STORE_FAST m | LOAD_FAST ms | STORE_FAST s",
+      "same": true
+     },
+     {
+      "i": 25,
+      "a_first": 170,
+      "b_first": 170,
+      "a_out": [
+       182
+      ],
+      "b_out": [
+       182
+      ],
+      "a_insts": "POP_EXCEPT | JUMP_FORWARD to 182",
+      "b_insts": "POP_EXCEPT | JUMP_FORWARD to 182",
+      "same": true
+     },
+     {
+      "i": 26,
+      "a_first": 176,
+      "b_first": 176,
+      "a_out": [
+       138
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "COPY | POP_EXCEPT | RERAISE",
+      "b_insts": "COPY | POP_EXCEPT | RERAISE",
+      "same": false
+     },
+     {
+      "i": 27,
+      "a_first": 182,
+      "b_first": 182,
+      "a_out": [
+       192,
+       204
+      ],
+      "b_out": [
+       192,
+       204
+      ],
+      "a_insts": "LOAD_FAST s | LOAD_METHOD endswith | LOAD_CONST \"s\" | CALL | POP_JUMP_FORWARD_IF_FALSE to 204",
+      "b_insts": "LOAD_FAST s | LOAD_METHOD endswith | LOAD_CONST \"s\" | CALL | POP_JUMP_FORWARD_IF_FALSE to 204",
+      "same": true
+     },
+     {
+      "i": 28,
+      "a_first": 192,
+      "b_first": 192,
+      "a_out": [
+       204
+      ],
+      "b_out": [
+       204
+      ],
+      "a_insts": "LOAD_FAST s | LOAD_CONST None | LOAD_CONST -1 | BUILD_SLICE | BINARY_SUBSCR | STORE_FAST s",
+      "b_insts": "LOAD_FAST s | LOAD_CONST None | LOAD_CONST -1 | BUILD_SLICE | BINARY_SUBSCR | STORE_FAST s",
+      "same": true
+     },
+     {
+      "i": 29,
+      "a_first": 204,
+      "b_first": 204,
+      "a_out": [
+       134,
+       208
+      ],
+      "b_out": [
+       208,
+       216
+      ],
+      "a_insts": "LOAD_FAST s | POP_JUMP_FORWARD_IF_FALSE to 216",
+      "b_insts": "LOAD_FAST s | POP_JUMP_FORWARD_IF_FALSE to 216",
+      "same": false
+     },
+     {
+      "i": 30,
+      "a_first": 208,
+      "b_first": 208,
+      "a_out": [
+       218
+      ],
+      "b_out": [
+       218
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + int | LOAD_FAST s | CALL | JUMP_FORWARD to 218",
+      "b_insts": "LOAD_GLOBAL NULL + int | LOAD_FAST s | CALL | JUMP_FORWARD to 218",
+      "same": true
+     },
+     {
+      "i": 31,
+      "a_first": 218,
+      "b_first": 218,
+      "a_out": [
+       240
+      ],
+      "b_out": [
+       240
+      ],
+      "a_insts": "STORE_FAST s | LOAD_FAST h | LOAD_CONST 60 | BINARY_OP * | LOAD_FAST m | BINARY_OP + | LOAD_CONST 60 | BINARY_OP * | LOAD_FAST s | BINARY_OP + | STORE_FAST s",
+      "b_insts": "STORE_FAST s | LOAD_FAST h | LOAD_CONST 60 | BINARY_OP * | LOAD_FAST m | BINARY_OP + | LOAD_CONST 60 | BINARY_OP * | LOAD_FAST s | BINARY_OP + | STORE_FAST s",
+      "same": true
+     },
+     {
+      "i": 32,
+      "a_first": 240,
+      "b_first": 240,
+      "a_out": [
+       248,
+       252
+      ],
+      "b_out": [
+       248,
+       252
+      ],
+      "a_insts": "LOAD_FAST s | LOAD_CONST 3 | COMPARE_OP <= | POP_JUMP_FORWARD_IF_FALSE to 252",
+      "b_insts": "LOAD_FAST s | LOAD_CONST 3 | COMPARE_OP <= | POP_JUMP_FORWARD_IF_FALSE to 252",
+      "same": true
+     },
+     {
+      "i": 33,
+      "a_first": 248,
+      "b_first": 248,
+      "a_out": [
+       138
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "LOAD_CONST 3 | RETURN_VALUE",
+      "b_insts": "LOAD_CONST 3 | RETURN_VALUE",
+      "same": false
+     },
+     {
+      "i": 34,
+      "a_first": 252,
+      "b_first": 252,
+      "a_out": [
+       138
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "LOAD_FAST s | RETURN_VALUE",
+      "b_insts": "LOAD_FAST s | RETURN_VALUE",
+      "same": false
+     }
+    ]
+   },
+   {
+    "name": "<module>.BaseStore",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BaseStore.__new__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.BaseStore.store",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrderStore",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrderStore.__init__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrderStore.__getattr__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrderStore.__bool__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrderStore.__iter__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrderStore.create_order",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrderStore.cancel_order",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrderStore.store",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrderStore.save",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrderStore.save.<listcomp>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrderStore.load",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OverNightOrderStore.load.<listcomp>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OrderSplitStore",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OrderSplitStore.__init__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.OrderSplitStore.create_order",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureSettingStore",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureSettingStore.__init__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureSettingStore.set_close_position_type",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureSettingStore.get_close_position_type",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureSettingStore.has_close_position_type",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureSettingStore.save",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureSettingStore.save.<dictcomp>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureSettingStore.load",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TradingStore",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TradingStore.__init__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TradingStore.clear",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TradingStore.on_order_trade",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TradingStore.get_trades",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TradingStore.get_trades_file",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TradingStore.get_trades_file.<listcomp>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TradingStore._yield_business_record",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TradingStore.write_csv",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TradingStore.save",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.TradingStore.load",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.StoreCollection",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.StoreCollection.__init__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.StoreCollection.get_instance",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.StoreCollection.clear_instance",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.StoreCollection.save",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.StoreCollection.save.<dictcomp>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.StoreCollection.load",
+    "msg": "Equal"
+   }
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
+  "units": [
+   {
+    "name": "<module>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.decrypt",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.get_user_info_from_json",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.dealing_future_info_query",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.dealing_future_fares_query",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.dealing_future_margin_query",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.futu_info_mission",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.user_info_mission",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.write_data",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.get_account",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.__init__",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.refresh",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.check_user",
+    "msg": "Different control flow",
+    "div": 0,
+    "nA": 31,
+    "nB": 31,
+    "nodes": [
+     {
+      "i": 0,
+      "a_first": 80,
+      "b_first": 80,
+      "a_out": [
+       112,
+       122
+      ],
+      "b_out": [
+       82,
+       112
+      ],
+      "a_insts": "FOR_ITER to 112",
+      "b_insts": "FOR_ITER to 112",
+      "same": false
+     },
+     {
+      "i": 1,
+      "a_first": 160,
+      "b_first": 160,
+      "a_out": [
+       168,
+       238,
+       246
+      ],
+      "b_out": [
+       162,
+       224,
+       238
+      ],
+      "a_insts": "FOR_ITER to 224",
+      "b_insts": "FOR_ITER to 224",
+      "same": false
+     },
+     {
+      "i": 2,
+      "a_first": 184,
+      "b_first": 184,
+      "a_out": [
+       200,
+       246
+      ],
+      "b_out": [
+       186,
+       238
+      ],
+      "a_insts": "POP_TOP",
+      "b_insts": "POP_TOP",
+      "same": false
+     },
+     {
+      "i": 3,
+      "a_first": 246,
+      "b_first": 258,
+      "a_out": [
+       274,
+       276
+      ],
+      "b_out": [
+       260,
+       282
+      ],
+      "a_insts": "POP_TOP",
+      "b_insts": "POP_EXCEPT",
+      "same": false
+     },
+     {
+      "i": 4,
+      "a_first": 248,
+      "b_first": 274,
+      "a_out": [
+       260,
+       282
+      ],
+      "b_out": [
+       276
+      ],
+      "a_insts": "POP_EXCEPT",
+      "b_insts": "RERAISE",
+      "same": false
+     },
+     {
+      "i": 5,
+      "a_first": 264,
+      "b_first": -1,
+      "a_out": [
+       276
+      ],
+      "b_out": [
+       0
+      ],
+      "a_insts": "RERAISE",
+      "b_insts": "",
+      "same": false
+     },
+     {
+      "i": 6,
+      "a_first": -1,
+      "b_first": -1,
+      "a_out": [
+       10
+      ],
+      "b_out": [],
+      "a_insts": "",
+      "b_insts": "",
+      "same": false
+     },
+     {
+      "i": 7,
+      "a_first": -1,
+      "b_first": 0,
+      "a_out": [],
+      "b_out": [
+       10,
+       122
+      ],
+      "a_insts": "",
+      "b_insts": "LOAD_CONST None | STORE_FAST account | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__future_info | POP_JUMP_FORWARD_IF_NOT_NONE to 122",
+      "same": false
+     },
+     {
+      "i": 8,
+      "a_first": 0,
+      "b_first": 10,
+      "a_out": [
+       52,
+       136
+      ],
+      "b_out": [
+       52,
+       56
+      ],
+      "a_insts": "LOAD_CONST None | STORE_FAST account | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__future_info | POP_JUMP_FORWARD_IF_NOT_NONE to 122",
+      "b_insts": "LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD acquire | CALL | POP_TOP | LOAD_GLOBAL NULL + defaultdict | LOAD_GLOBAL dict | CALL | LOAD_FAST self | STORE_ATTR _futu_code_map | LOAD_GLOBAL NULL + defaultdict | LOAD_GLOBAL dict | CALL | LOAD_FAST self",
+      "same": false
+     },
+     {
+      "i": 9,
+      "a_first": 10,
+      "b_first": 52,
+      "a_out": [
+       56,
+       82
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD acquire | CALL | POP_TOP | LOAD_GLOBAL NULL + defaultdict | LOAD_GLOBAL dict | CALL | LOAD_FAST self | STORE_ATTR _futu_code_map | LOAD_GLOBAL NULL + defaultdict | LOAD_GLOBAL dict | CALL | LOAD_FAST self",
+      "b_insts": "LOAD_CONST 2 | RETURN_VALUE",
+      "same": false
+     },
+     {
+      "i": 10,
+      "a_first": 52,
+      "b_first": 56,
+      "a_out": [
+       0
+      ],
+      "b_out": [
+       80
+      ],
+      "a_insts": "LOAD_CONST 2 | RETURN_VALUE",
+      "b_insts": "LOAD_GLOBAL NULL + futu_info_mission | LOAD_FAST account | LOAD_FAST self | LOAD_ATTR futu_code_map | CALL | POP_TOP | BUILD_MAP | LOAD_FAST self | STORE_ATTR _FutureInfoCache__future_info | LOAD_FAST self | LOAD_ATTR futu_code_map | GET_ITER",
+      "same": false
+     },
+     {
+      "i": 11,
+      "a_first": 56,
+      "b_first": 82,
+      "a_out": [
+       80
+      ],
+      "b_out": [
+       80
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + futu_info_mission | LOAD_FAST account | LOAD_FAST self | LOAD_ATTR futu_code_map | CALL | POP_TOP | BUILD_MAP | LOAD_FAST self | STORE_ATTR _FutureInfoCache__future_info | LOAD_FAST self | LOAD_ATTR futu_code_map | GET_ITER",
+      "b_insts": "STORE_FAST k | LOAD_FAST self | LOAD_ATTR futu_code_map | LOAD_FAST k | BINARY_SUBSCR | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__future_info | LOAD_FAST self | LOAD_ATTR futu_code_map | LOAD_FAST k | BINARY_SUBSCR | LOAD_CONST \"contract_code\" | BINARY_SUBSCR | STORE_SUBSCR",
+      "same": true
+     },
+     {
+      "i": 12,
+      "a_first": 82,
+      "b_first": 112,
+      "a_out": [
+       80
+      ],
+      "b_out": [
+       122
+      ],
+      "a_insts": "STORE_FAST k | LOAD_FAST self | LOAD_ATTR futu_code_map | LOAD_FAST k | BINARY_SUBSCR | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__future_info | LOAD_FAST self | LOAD_ATTR futu_code_map | LOAD_FAST k | BINARY_SUBSCR | LOAD_CONST \"contract_code\" | BINARY_SUBSCR | STORE_SUBSCR",
+      "b_insts": "LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD release | CALL | POP_TOP",
+      "same": false
+     },
+     {
+      "i": 13,
+      "a_first": 112,
+      "b_first": 122,
+      "a_out": [
+       136
+      ],
+      "b_out": [
+       136,
+       302
+      ],
+      "a_insts": "LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD release | CALL | POP_TOP",
+      "b_insts": "LOAD_FAST username | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__user_info | LOAD_METHOD keys | CALL | CONTAINS_OP not in | POP_JUMP_FORWARD_IF_TRUE to 302",
+      "same": false
+     },
+     {
+      "i": 14,
+      "a_first": 122,
+      "b_first": 136,
+      "a_out": [
+       146,
+       156
+      ],
+      "b_out": [
+       146,
+       302
+      ],
+      "a_insts": "LOAD_FAST username | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__user_info | LOAD_METHOD keys | CALL | CONTAINS_OP not in | POP_JUMP_FORWARD_IF_TRUE to 146",
+      "b_insts": "LOAD_FAST self | LOAD_ATTR _FutureInfoCache__user_info | LOAD_FAST username | BINARY_SUBSCR | POP_JUMP_FORWARD_IF_TRUE to 302",
+      "same": false
+     },
+     {
+      "i": 15,
+      "a_first": 136,
+      "b_first": 146,
+      "a_out": [
+       156,
+       302
+      ],
+      "b_out": [
+       156
+      ],
+      "a_insts": "LOAD_FAST self | LOAD_ATTR _FutureInfoCache__user_info | LOAD_FAST username | BINARY_SUBSCR | POP_JUMP_FORWARD_IF_TRUE to 292",
+      "b_insts": "LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD acquire | CALL | POP_TOP",
+      "same": false
+     },
+     {
+      "i": 16,
+      "a_first": 146,
+      "b_first": 156,
+      "a_out": [
+       162
+      ],
+      "b_out": [
+       160,
+       238
+      ],
+      "a_insts": "LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD acquire | CALL | POP_TOP",
+      "b_insts": "LOAD_GLOBAL mission_query | GET_ITER",
+      "same": false
+     },
+     {
+      "i": 17,
+      "a_first": 156,
+      "b_first": 162,
+      "a_out": [
+       160,
+       246
+      ],
+      "b_out": [
+       168,
+       172,
+       238
+      ],
+      "a_insts": "LOAD_GLOBAL mission_query | GET_ITER",
+      "b_insts": "STORE_FAST mission | LOAD_FAST account | POP_JUMP_FORWARD_IF_FALSE to 172",
+      "same": false
+     },
+     {
+      "i": 18,
+      "a_first": 162,
+      "b_first": 168,
+      "a_out": [
+       172,
+       178,
+       246
+      ],
+      "b_out": [
+       178,
+       238
+      ],
+      "a_insts": "STORE_FAST mission | LOAD_FAST account | POP_JUMP_FORWARD_IF_FALSE to 172",
+      "b_insts": "LOAD_FAST account | JUMP_FORWARD to 178",
+      "same": false
+     },
+     {
+      "i": 19,
+      "a_first": 168,
+      "b_first": 172,
+      "a_out": [
+       186,
+       246
+      ],
+      "b_out": [
+       178,
+       238
+      ],
+      "a_insts": "LOAD_FAST account | JUMP_FORWARD to 178",
+      "b_insts": "LOAD_GLOBAL NULL + get_account | LOAD_FAST username | CALL",
+      "same": false
+     },
+     {
+      "i": 20,
+      "a_first": 172,
+      "b_first": 178,
+      "a_out": [
+       186,
+       246
+      ],
+      "b_out": [
+       184,
+       200,
+       238
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + get_account | LOAD_FAST username | CALL",
+      "b_insts": "STORE_FAST account | LOAD_FAST account | POP_JUMP_FORWARD_IF_NOT_NONE to 200",
+      "same": false
+     },
+     {
+      "i": 21,
+      "a_first": 178,
+      "b_first": 186,
+      "a_out": [
+       184,
+       224,
+       246
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "STORE_FAST account | LOAD_FAST account | POP_JUMP_FORWARD_IF_NOT_NONE to 200",
+      "b_insts": "LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD release | CALL | POP_TOP | LOAD_CONST 2 | RETURN_VALUE",
+      "same": false
+     },
+     {
+      "i": 22,
+      "a_first": 186,
+      "b_first": 200,
+      "a_out": [
+       0
+      ],
+      "b_out": [
+       160,
+       238
+      ],
+      "a_insts": "LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD release | CALL | POP_TOP | LOAD_CONST 2 | RETURN_VALUE",
+      "b_insts": "LOAD_GLOBAL NULL + user_info_mission | LOAD_GLOBAL NULL + get_account | LOAD_FAST username | CALL | LOAD_FAST self | LOAD_ATTR futu_code_map | LOAD_FAST mission | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__user_info | CALL | POP_TOP | JUMP_BACKWARD to 160",
+      "same": false
+     },
+     {
+      "i": 23,
+      "a_first": 200,
+      "b_first": 224,
+      "a_out": [
+       160,
+       246
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + user_info_mission | LOAD_GLOBAL NULL + get_account | LOAD_FAST username | CALL | LOAD_FAST self | LOAD_ATTR futu_code_map | LOAD_FAST mission | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__user_info | CALL | POP_TOP | JUMP_BACKWARD to 160",
+      "b_insts": "LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD release | CALL | POP_TOP | LOAD_CONST 1 | RETURN_VALUE",
+      "same": false
+     },
+     {
+      "i": 24,
+      "a_first": 224,
+      "b_first": 238,
+      "a_out": [
+       0
+      ],
+      "b_out": [
+       246,
+       274,
+       276
+      ],
+      "a_insts": "LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD release | CALL | POP_TOP | LOAD_CONST 1 | RETURN_VALUE",
+      "b_insts": "PUSH_EXC_INFO | LOAD_GLOBAL BaseException | CHECK_EXC_MATCH | POP_JUMP_FORWARD_IF_FALSE to 274",
+      "same": false
+     },
+     {
+      "i": 25,
+      "a_first": 238,
+      "b_first": 246,
+      "a_out": [
+       -1,
+       258,
+       276
+      ],
+      "b_out": [
+       258,
+       276
+      ],
+      "a_insts": "PUSH_EXC_INFO | LOAD_GLOBAL BaseException | CHECK_EXC_MATCH | POP_JUMP_FORWARD_IF_FALSE to 264",
+      "b_insts": "POP_TOP | LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD release | CALL | POP_TOP",
+      "same": false
+     },
+     {
+      "i": 26,
+      "a_first": 250,
+      "b_first": 260,
+      "a_out": [
+       0
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD release | CALL | POP_TOP | LOAD_CONST 2 | RETURN_VALUE",
+      "b_insts": "LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD release | CALL | POP_TOP | LOAD_CONST 2 | RETURN_VALUE",
+      "same": false
+     },
+     {
+      "i": 27,
+      "a_first": 266,
+      "b_first": 276,
+      "a_out": [
+       282
+      ],
+      "b_out": [
+       282
+      ],
+      "a_insts": "COPY | POP_EXCEPT | RERAISE",
+      "b_insts": "COPY | POP_EXCEPT | RERAISE",
+      "same": true
+     },
+     {
+      "i": 28,
+      "a_first": 272,
+      "b_first": 282,
+      "a_out": [
+       296
+      ],
+      "b_out": [
+       296
+      ],
+      "a_insts": "PUSH_EXC_INFO | LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD release | CALL | POP_TOP | RERAISE",
+      "b_insts": "PUSH_EXC_INFO | LOAD_FAST self | LOAD_ATTR lock | LOAD_METHOD release | CALL | POP_TOP | RERAISE",
+      "same": true
+     },
+     {
+      "i": 29,
+      "a_first": 286,
+      "b_first": 296,
+      "a_out": [
+       0
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "COPY | POP_EXCEPT | RERAISE",
+      "b_insts": "COPY | POP_EXCEPT | RERAISE",
+      "same": false
+     },
+     {
+      "i": 30,
+      "a_first": 292,
+      "b_first": 302,
+      "a_out": [
+       0
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "LOAD_CONST 0 | RETURN_VALUE",
+      "b_insts": "LOAD_CONST 0 | RETURN_VALUE",
+      "same": false
+     }
+    ]
+   },
+   {
+    "name": "<module>.FutureInfoCache.__refresh",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.__refresh_future_calendar",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.__refresh_dominant_contract",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.__refresh_exchange_future_dict",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.__refresh_future_info",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.check_need_fresh",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.get_futurn_exchange_code",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.future_info",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.get_contracts",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.get_contracts.<listcomp>",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.get_dominant_contract",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.get_continuous_contract",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.info_conbine",
+    "msg": "Different control flow",
+    "div": 4,
+    "nA": 10,
+    "nB": 10,
+    "nodes": [
+     {
+      "i": 0,
+      "a_first": -1,
+      "b_first": -1,
+      "a_out": [
+       0
+      ],
+      "b_out": [
+       0
+      ],
+      "a_insts": "",
+      "b_insts": "",
+      "same": true
+     },
+     {
+      "i": 1,
+      "a_first": -1,
+      "b_first": -1,
+      "a_out": [],
+      "b_out": [],
+      "a_insts": "",
+      "b_insts": "",
+      "same": true
+     },
+     {
+      "i": 2,
+      "a_first": 0,
+      "b_first": 0,
+      "a_out": [
+       10,
+       18
+      ],
+      "b_out": [
+       10,
+       18
+      ],
+      "a_insts": "LOAD_FAST future_code | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__future_info | CONTAINS_OP not in | POP_JUMP_FORWARD_IF_FALSE to 18",
+      "b_insts": "LOAD_FAST future_code | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__future_info | CONTAINS_OP not in | POP_JUMP_FORWARD_IF_FALSE to 18",
+      "same": true
+     },
+     {
+      "i": 3,
+      "a_first": 10,
+      "b_first": 10,
+      "a_out": [
+       -1
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + Exception | LOAD_CONST \"No such future_code\" | CALL | RAISE_VARARGS exception instance",
+      "b_insts": "LOAD_GLOBAL NULL + Exception | LOAD_CONST \"No such future_code\" | CALL | RAISE_VARARGS exception instance",
+      "same": true
+     },
+     {
+      "i": 4,
+      "a_first": 18,
+      "b_first": 18,
+      "a_out": [
+       28,
+       38
+      ],
+      "b_out": [
+       28,
+       46
+      ],
+      "a_insts": "LOAD_FAST username | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__user_info | CONTAINS_OP not in | POP_JUMP_FORWARD_IF_TRUE to 38",
+      "b_insts": "LOAD_FAST username | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__user_info | CONTAINS_OP not in | POP_JUMP_FORWARD_IF_TRUE to 46",
+      "same": false
+     },
+     {
+      "i": 5,
+      "a_first": 28,
+      "b_first": 28,
+      "a_out": [
+       38,
+       46
+      ],
+      "b_out": [
+       38,
+       46
+      ],
+      "a_insts": "LOAD_FAST self | LOAD_ATTR _FutureInfoCache__user_info | LOAD_FAST username | BINARY_SUBSCR | POP_JUMP_FORWARD_IF_TRUE to 46",
+      "b_insts": "LOAD_FAST self | LOAD_ATTR _FutureInfoCache__user_info | LOAD_FAST username | BINARY_SUBSCR | POP_JUMP_FORWARD_IF_TRUE to 46",
+      "same": true
+     },
+     {
+      "i": 6,
+      "a_first": 38,
+      "b_first": 38,
+      "a_out": [
+       -1
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + Exception | LOAD_CONST \"Current user is not available\" | CALL | RAISE_VARARGS exception instance",
+      "b_insts": "LOAD_GLOBAL NULL + Exception | LOAD_CONST \"Current user is not available\" | CALL | RAISE_VARARGS exception instance",
+      "same": true
+     },
+     {
+      "i": 7,
+      "a_first": 46,
+      "b_first": 46,
+      "a_out": [
+       60,
+       68
+      ],
+      "b_out": [
+       60,
+       68
+      ],
+      "a_insts": "LOAD_FAST future_code | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__user_info | LOAD_FAST username | BINARY_SUBSCR | CONTAINS_OP not in | POP_JUMP_FORWARD_IF_FALSE to 68",
+      "b_insts": "LOAD_FAST future_code | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__user_info | LOAD_FAST username | BINARY_SUBSCR | CONTAINS_OP not in | POP_JUMP_FORWARD_IF_FALSE to 68",
+      "same": true
+     },
+     {
+      "i": 8,
+      "a_first": 60,
+      "b_first": 60,
+      "a_out": [
+       -1
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "LOAD_GLOBAL NULL + Exception | LOAD_CONST \"This future_code is not available for current user\" | CALL | RAISE_VARARGS exception instance",
+      "b_insts": "LOAD_GLOBAL NULL + Exception | LOAD_CONST \"This future_code is not available for current user\" | CALL | RAISE_VARARGS exception instance",
+      "same": true
+     },
+     {
+      "i": 9,
+      "a_first": 68,
+      "b_first": 68,
+      "a_out": [
+       -1
+      ],
+      "b_out": [
+       -1
+      ],
+      "a_insts": "LOAD_FAST self | LOAD_ATTR _FutureInfoCache__future_info | LOAD_FAST future_code | BINARY_SUBSCR | LOAD_METHOD copy | CALL | STORE_FAST future_info | LOAD_FAST future_info | LOAD_METHOD update | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__user_info | LOAD_FAST username | BINARY_SUBSCR | LOAD_FAST future_code",
+      "b_insts": "LOAD_FAST self | LOAD_ATTR _FutureInfoCache__future_info | LOAD_FAST future_code | BINARY_SUBSCR | LOAD_METHOD copy | CALL | STORE_FAST future_info | LOAD_FAST future_info | LOAD_METHOD update | LOAD_FAST self | LOAD_ATTR _FutureInfoCache__user_info | LOAD_FAST username | BINARY_SUBSCR | LOAD_FAST future_code",
+      "same": true
+     }
+    ]
+   },
+   {
+    "name": "<module>.FutureInfoCache.futu_code_map",
+    "msg": "Equal"
+   },
+   {
+    "name": "<module>.FutureInfoCache.get_date",
+    "msg": "Equal"
+   }
+  ]
+ }
+]
