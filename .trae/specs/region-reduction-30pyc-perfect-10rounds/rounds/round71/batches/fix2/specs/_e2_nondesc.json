@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_ast_generator.py",
+ "edits": [
+  {
+   "anchor": "                    if (region is None and self._current_loop is not None\n                            and getattr(_region, 'parent', None) is None\n                            and block is _region.entry\n                            and getattr(_region, 'merge_block', None) is None\n                            and getattr(_region, 'exit', None) is None):\n                        continue\n                    self._generating_regions.add(_rid)\n",
+   "repl": "                    if (region is None and self._current_loop is not None\n                            and getattr(_region, 'parent', None) is None\n                            and block is _region.entry\n                            and getattr(_region, 'merge_block', None) is None\n                            and getattr(_region, 'exit', None) is None):\n                        continue\n                    if region is not None:\n                        _r71p = getattr(_region, 'parent', None)\n                        _r71desc = False\n                        while _r71p is not None:\n                            if _r71p is region:\n                                _r71desc = True\n                                break\n                            _r71p = getattr(_r71p, 'parent', None)\n                        if not _r71desc:\n                            continue\n                    self._generating_regions.add(_rid)\n"
+  }
+ ]
+}

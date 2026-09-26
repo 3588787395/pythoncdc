@@ -1,0 +1,11 @@
+{
+ "name": "R71-exctable-analyzer_e0",
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "        try_blocks = getattr(try_region, 'try_blocks', [])\n        if not try_blocks:\n            return False\n        _exception_framework_ops = frozenset({\n",
+   "repl": "        try_blocks = getattr(try_region, 'try_blocks', [])\n        if not try_blocks:\n            return False\n        # [R71-exctable] 识别条件（同层次结构身份）：只统计「异常边指向本\n        #   TryExceptRegion 自己 handler_entry_blocks」的块——这些才是被本区域\n        #   except 句保护的 try 体成员。else 子句（含其 return）在 CPython\n        #   异常表里不经本区域 handler 入口保护，故不属于 try 体。\n        # 归约方式：把扫描集合收窄到该子集；收窄后为空即视为不异常终止。\n        #   下方 RETURN/JUMP_BACKWARD/JUMP_FORWARD 判据逐条不变，\n        #   不读异常表 offset 区间数值、不读块 offset 常量、无阈值、无名字\n        #   白名单、无新增 self 状态、无跨层 region 比较。\n        # AST 映射：决定 _find_try_else_blocks 是否继续识别 ast.Try.orelse。\n        _he = set(getattr(try_region, 'handler_entry_blocks', []) or [])\n        if _he:\n            try_blocks = [b for b in try_blocks\n                          if set(b.exception_successors) & _he]\n            if not try_blocks:\n                return False\n        _exception_framework_ops = frozenset({\n"
+  }
+ ],
+ "note": "try/except/else: else-clause detection (abnormal-termination guard + trailing RETURN closure)"
+}

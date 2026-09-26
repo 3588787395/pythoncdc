@@ -1,0 +1,137 @@
+### IQCommon/api/klinedata.pyc  [build_m71]
+  ***<module>.get_kline_by_count_new: Failure: Different control flow
+  ***<module>.get_multiminute_his_data: Failure: Different control flow
+  ***<module>.kline_datetime_list: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQCommon__api__klinedataOK.py
+[single] status=failure units=61/64 success_rate=95.31%
+
+### IQCommon/exception.pyc  [build_m71]
+[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/exception.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQCommon__exceptionOK.py
+[single] status=success units=34/34 success_rate=100.00%
+
+### IQCommon/strategy/wizard_quant_api.pyc  [build_m71]
+  ***<module>.filter_desicion: Failure: Different control flow
+  ***<module>.get_DMI.calculate_di.<genexpr>: Failure: Different control flow
+  ***<module>.get_DMI.calculate_di.<genexpr>: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQCommon__strategy__wizard_quant_apiOK.py
+[single] status=failure units=55/58 success_rate=94.83%
+
+### IQCommon/util/trade_info_utils.pyc  [build_m71]
+  ***<module>.trade_operation: Failure: Different control flow
+  ***<module>.kill_trade_process: Failure: Different control flow
+  ***<module>.get_trade_status: Failure: Different control flow
+  ***<module>.query_trade_strategy_info: Failure: Different control flow
+  ***<module>.query_strategy_id: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQCommon__util__trade_info_utilsOK.py
+[single] status=failure units=36/41 success_rate=87.80%
+
+### IQData/entry.pyc  [build_m71]
+[single] F:/Downloads/pythoncdc-main/site-packages/IQData/entry.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQData__entryOK.py
+[single] status=success units=5/5 success_rate=100.00%
+
+### IQData/utils/exception.pyc  [build_m71]
+[single] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/exception.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQData__utils__exceptionOK.py
+[single] status=success units=31/31 success_rate=100.00%
+
+### IQEngine/plugins/plugin_fly_data/fly_api/base.pyc  [build_m71]
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQEngine__plugins__plugin_fly_data__fly_api__baseOK.py
+[single] status=success units=63/63 success_rate=100.00%
+
+### IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc  [build_m71]
+  ***<module>.Strategy.tick_worker_thread: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQEngine__plugins__plugin_fly_data__strategy__strategyOK.py
+[single] status=failure units=26/27 success_rate=96.30%
+
+### IQEngine/plugins/plugin_system_accounts/__init__.pyc  [build_m71]
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/__init__.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQEngine__plugins__plugin_system_accounts____init__OK.py
+[single] status=success units=6/6 success_rate=100.00%
+
+### IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc  [build_m71]
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQEngine__plugins__plugin_system_accounts__account_model__benchmark_accountOK.py
+[single] status=success units=20/20 success_rate=100.00%
+
+### IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc  [build_m71]
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQEngine__plugins__plugin_system_accounts__account_model__stock_accountOK.py
+[single] status=success units=25/25 success_rate=100.00%
+
+### IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc  [build_m71]
+  ***<module>.RealtimeEventSource.clock_worker: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQEngine__plugins__plugin_system_event_source__realtime_event_sourceOK.py
+[single] status=failure units=12/13 success_rate=92.31%
+
+### IQEngine/plugins/plugin_system_matcher/matcher.pyc  [build_m71]
+  ***<module>.DefaultMatcher.match: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQEngine__plugins__plugin_system_matcher__matcherOK.py
+[single] status=failure units=16/17 success_rate=94.12%
+
+### IQEngine/plugins/plugin_system_risk_calculation/function.pyc  [build_m71]
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQEngine__plugins__plugin_system_risk_calculation__functionOK.py
+[single] status=success units=15/15 success_rate=100.00%
+
+### IQEngine/utils/exception.pyc  [build_m71]
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/exception.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/IQEngine__utils__exceptionOK.py
+[single] status=success units=31/31 success_rate=100.00%
+
+### fly/data/quotation.pyc  [build_m71]
+  ***<module>.change_his_to_forward: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/fly__data__quotationOK.py
+[single] status=failure units=152/153 success_rate=99.35%
+
+### fly/data/quote.pyc  [build_m71]
+  ***<module>.Quote.build_current_period_df: Failure: Different bytecode
+  ***<module>.Quote.load_bars_from_hundsun: Failure: Different bytecode
+  ***<module>.Quote.load_get_price: Failure: Different control flow
+  ***<module>.Quote.change_his_to_forward: Failure: Different control flow
+  ***<module>.Quote.change_his_to_backward: Failure: Different control flow
+  ***<module>.Quote.get_price: Failure: Different control flow
+  ***<module>.Quote.check_industry_code: Failure: Different control flow
+  ***<module>.Quote.check_frequency: Failure: Different control flow
+  ***<module>.Quote.get_real_from_zeromq: Failure: Different control flow
+  ***<module>.Quote.run_individual_transform: Failure: Different control flow
+  ***<module>.Quote.run_tick_socket: Failure: Different control flow
+  ***<module>.Quote.get_individual_data: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/fly__data__quoteOK.py
+[single] status=failure units=80/92 success_rate=86.96%
+
+### fly/dumpload/load_daily.pyc  [build_m71]
+  ***<module>: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_m71/fly__dumpload__load_dailyOK.py
+[single] status=failure units=26/27 success_rate=96.30%
+D:\Temp\opencode\r71gate\center\build_m71\fly__dumpload__load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\Temp\opencode\r71gate\center\build_m71\fly__dumpload__load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\Temp\opencode\r71gate\center\build_m71\fly__dumpload__load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\Temp\opencode\r71gate\center\build_m71\fly__dumpload__load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\Temp\opencode\r71gate\center\build_m71\fly__dumpload__load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\Temp\opencode\r71gate\center\build_m71\fly__dumpload__load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\Temp\opencode\r71gate\center\build_m71\fly__dumpload__load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\Temp\opencode\r71gate\center\build_m71\fly__dumpload__load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\Temp\opencode\r71gate\center\build_m71\fly__dumpload__load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\Temp\opencode\r71gate\center\build_m71\fly__dumpload__load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:

@@ -1,0 +1,181 @@
+### IQCommon/data/finance.pyc  [build_landed]
+  ***<module>.get_financial_and_growth_factors: Failure: Different control flow
+  ***<module>.get_financial_statements_pit_mode: Failure: Different control flow
+  ***<module>.get_fields: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQCommon__data__financeOK.py
+[single] status=failure units=29/32 success_rate=90.62%
+
+### IQCommon/data/local_finance.pyc  [build_landed]
+  ***<module>.get_local_financial_factors: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/local_finance.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQCommon__data__local_financeOK.py
+[single] status=failure units=20/21 success_rate=95.24%
+
+### IQCommon/exception.pyc  [build_landed]
+  ***<module>.ModifyExceptionFromType.__exit__: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/exception.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQCommon__exceptionOK.py
+[single] status=failure units=33/34 success_rate=97.06%
+
+### IQCommon/logger/handlers.pyc  [build_landed]
+  ***<module>.TWHThreadController._target: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQCommon__logger__handlersOK.py
+[single] status=failure units=29/30 success_rate=96.67%
+
+### IQCommon/strategy/jq_trans_module.pyc  [build_landed]
+  ***<module>.func_attribute_history_convert_code.replace_args: Failure: Different control flow
+  ***<module>.func_get_bars_convert_code.replace_args: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/jq_trans_module.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQCommon__strategy__jq_trans_moduleOK.py
+[single] status=failure units=63/65 success_rate=96.92%
+
+### IQCommon/strategy/wizard_quant_api.pyc  [build_landed]
+  ***<module>.filter_desicion: Failure: Different control flow
+  ***<module>.get_DMI.calculate_di.<genexpr>: Failure: Different control flow
+  ***<module>.get_DMI.calculate_di.<genexpr>: Failure: Different control flow
+  ***<module>.init_stock_pool_filter: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQCommon__strategy__wizard_quant_apiOK.py
+[single] status=failure units=54/58 success_rate=93.10%
+
+### IQCommon/util/cgroup_utils.pyc  [build_landed]
+  ***<module>.set_cgroup_config: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQCommon__util__cgroup_utilsOK.py
+[single] status=failure units=7/8 success_rate=87.50%
+
+### IQCommon/util/email_utils.pyc  [build_landed]
+  ***<module>.send_email: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utils.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQCommon__util__email_utilsOK.py
+[single] status=failure units=3/4 success_rate=75.00%
+
+### IQCommon/util/trade_info_utils.pyc  [build_landed]
+  ***<module>.trade_operation: Failure: Different control flow
+  ***<module>.kill_trade_process: Failure: Different control flow
+  ***<module>.get_trade_status: Failure: Different control flow
+  ***<module>.query_trade_strategy_info: Failure: Different control flow
+  ***<module>.query_strategy_id: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQCommon__util__trade_info_utilsOK.py
+[single] status=failure units=36/41 success_rate=87.80%
+
+### IQData/entry.pyc  [build_landed]
+  ***<module>.IQDataEntry.get_instance: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQData/entry.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQData__entryOK.py
+[single] status=failure units=4/5 success_rate=80.00%
+
+### IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc  [build_landed]
+  ***<module>.change_his_to_forward: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQData__plugins__plugin_system_fly_basicdata__calexrights_funcOK.py
+[single] status=failure units=7/8 success_rate=87.50%
+
+### IQData/utils/calexrights_func.pyc  [build_landed]
+  ***<module>.change_his_to_forward: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/calexrights_func.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQData__utils__calexrights_funcOK.py
+[single] status=failure units=7/8 success_rate=87.50%
+
+### IQData/utils/exception.pyc  [build_landed]
+  ***<module>.ExceptionIdentify.__exit__: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/exception.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQData__utils__exceptionOK.py
+[single] status=failure units=30/31 success_rate=96.77%
+
+### IQEngine/account/order.pyc  [build_landed]
+  ***<module>.Order.mark_cancelled: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/order.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__account__orderOK.py
+[single] status=failure units=67/68 success_rate=98.53%
+
+### IQEngine/api/api_base.pyc  [build_landed]
+  ***<module>.get_history: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/api_base.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__api__api_baseOK.py
+[single] status=failure units=48/49 success_rate=97.96%
+
+### IQEngine/core/bar.pyc  [build_landed]
+  ***<module>.BarData.limit_up: Failure: Different control flow
+  ***<module>.BarData.limit_down: Failure: Different control flow
+  ***<module>.BarData._history_bars: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/bar.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__core__barOK.py
+[single] status=failure units=82/85 success_rate=96.47%
+
+### IQEngine/core/commission.pyc  [build_landed]
+  ***<module>.CommissionHelp.set_commission: Failure: Different bytecode
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/commission.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__core__commissionOK.py
+[single] status=failure units=9/10 success_rate=90.00%
+
+### IQEngine/core/executor.pyc  [build_landed]
+  ***<module>.Executor.check_before_trading: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__core__executorOK.py
+[single] status=failure units=9/10 success_rate=90.00%
+
+### IQEngine/core/slippage.pyc  [build_landed]
+  ***<module>.SlippageHelp.set_slippage: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/slippage.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__core__slippageOK.py
+[single] status=failure units=6/7 success_rate=85.71%
+
+### IQEngine/core/strategy/strategy_universe.pyc  [build_landed]
+  ***<module>.StrategyUniverse._on_clear_de_listed: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__core__strategy__strategy_universeOK.py
+[single] status=failure units=10/11 success_rate=90.91%
+
+### IQEngine/data/asset_mixin.pyc  [build_landed]
+  ***<module>.AssetMixin.get_assets.<listcomp>: Failure detected at line number 91 and instruction offset 10: Different bytecode
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/asset_mixin.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__data__asset_mixinOK.py
+[single] status=failure units=20/21 success_rate=95.24%
+
+### IQEngine/data/trading_dates_mixin.pyc  [build_landed]
+  ***<module>.TradingDatesMixin.trading_dates_reload: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__data__trading_dates_mixinOK.py
+[single] status=failure units=13/14 success_rate=92.86%
+
+### IQEngine/plugins/plugin_fly_data/fly_api/base.pyc  [build_landed]
+  ***<module>.OverNightOrder.__init__: Failure: Different control flow
+  ***<module>.SplitOrder.parse_time_info: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__plugins__plugin_fly_data__fly_api__baseOK.py
+[single] status=failure units=61/63 success_rate=96.83%
+
+### IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc  [build_landed]
+  ***<module>.get_price: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__plugins__plugin_fly_data__fly_api__history_apiOK.py
+[single] status=failure units=18/19 success_rate=94.74%
+
+### IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc  [build_landed]
+  ***<module>.Strategy.__init__: Failure: Different control flow
+  ***<module>.Strategy.tick_worker_thread: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__plugins__plugin_fly_data__strategy__strategyOK.py
+[single] status=failure units=25/27 success_rate=92.59%
+
+### IQEngine/plugins/plugin_system_accounts/__init__.pyc  [build_landed]
+  ***<module>.AccountPlugin.setup: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/__init__.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__plugins__plugin_system_accounts____init__OK.py
+[single] status=failure units=5/6 success_rate=83.33%
+
+### IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc  [build_landed]
+  ***<module>.BenchmarkAccount._process_mergered: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__plugins__plugin_system_accounts__account_model__benchmark_accountOK.py
+[single] status=failure units=19/20 success_rate=95.00%
+
+### IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc  [build_landed]
+  ***<module>.StockAccount._process_mergered: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc
+[single] 产物 D:/Temp/opencode/r71gate/center/build_landed/IQEngine__plugins__plugin_system_accounts__account_model__stock_accountOK.py
+[single] status=failure units=24/25 success_rate=96.00%

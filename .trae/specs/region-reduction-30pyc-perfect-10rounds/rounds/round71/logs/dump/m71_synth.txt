@@ -1,0 +1,41 @@
+synth bite test: 10/10 cases PASS  (arm=m71, mirror D:/Temp/opencode/r71gate/center/mirr_m71)
+
+### t01_if_absorb_following_if  expect=success
+  landed  status=failure  units=1/2      sha=5d21e13ab91338f9 fails=['<module>.get_trend']
+  m71     status=success  units=2/2      sha=97735575b7d8e2fe fails=[]
+
+### t02_if_absorb_trailing_stmts  expect=success
+  landed  status=failure  units=1/2      sha=2c01122ce9907f2e fails=['<module>.filter_abnormal']
+  m71     status=success  units=2/2      sha=c66c848dd0a0afbf fails=[]
+
+### t22_cross_loop_tail_stmt  expect=success
+  landed  status=failure  units=1/2      sha=0446822fd6995f3c fails=['<module>.trade_operation']
+  m71     status=success  units=2/2      sha=bfd9aeeb1d85dfe0 fails=[]
+
+### t24_assert_in_try  expect=success
+  landed  status=failure  units=1/2      sha=9fe0840e637de90a fails=['<module>.init_time']
+  m71     status=success  units=2/2      sha=ac91bb075c323dd1 fails=[]
+
+### t27_try_except_else_range  expect=success
+  landed  status=failure  units=1/2      sha=08e17d6becadab27 fails=['<module>.parse_time_info']
+  m71     status=success  units=2/2      sha=1aa8e7816053fe80 fails=[]
+
+### t03_andchain_else  expect=same-as-landed
+  landed  status=failure  units=1/2      sha=e0b0655302903cdf fails=['<module>.f']
+  m71     status=failure  units=1/2      sha=e0b0655302903cdf fails=['<module>.f']
+
+### t04_orchain_else  expect=same-as-landed
+  landed  status=success  units=2/2      sha=aeed3a163c585a22 fails=[]
+  m71     status=success  units=2/2      sha=aeed3a163c585a22 fails=[]
+
+### t15_assert_then_unreachable  expect=same-as-landed
+  landed  status=success  units=3/3      sha=0f6ecc7900740278 fails=[]
+  m71     status=success  units=3/3      sha=0f6ecc7900740278 fails=[]
+
+### t20_two_try_except_seq  expect=same-as-landed
+  landed  status=success  units=2/2      sha=073d8bd64caca41e fails=[]
+  m71     status=success  units=2/2      sha=073d8bd64caca41e fails=[]
+
+### exc_A  expect=success
+  landed  status=failure  units=4/5      sha=20f4ca814b1d46bb fails=['<module>.ModifyExceptionFromType.__exit__']
+  m71     status=success  units=5/5      sha=6a340855ad48a5d0 fails=[]

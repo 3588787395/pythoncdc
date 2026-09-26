@@ -1,0 +1,10 @@
+green=9 red=0
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQCommon/exception.pyc failure->success
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQData/entry.pyc failure->success
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQData/utils/exception.pyc failure->success
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc failure->success
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/__init__.pyc failure->success
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc failure->success
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc failure->success
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc failure->success
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/exception.pyc failure->success

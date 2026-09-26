@@ -2716,3 +2716,45 @@
         specs 合并件与 5 份候选件 + batches diag1..diag5 FACTS/BRIEF + b0_diag2_rejected 拆臂证据 +
         scripts 15 份，114+ 文件）与 test_repros/round70_diag{1,2,3,4}/ 见证（每目录 README 记
         landed→m70 读数，diag2 为回退件诚实见证）；提交并 push
+
+
+- [x] Task 71: Round 71 — 新验证脚本(scripts/pyc_verify.py, pylingual compare_pyc)暴露的 56 支 failure
+      集中攻坚：中心采纳 3 件候选并合并落地 **m71**（generator 5 edits/+137、analyzer 5 edits/+80），
+      **9 支 pyc mandated ruler 修到全绿（mandate 达成）**，mandated 6498/6623 = 98.11% → **6515/6623 = 98.37%**、
+      官方尺维持 **5717/5746 = 99.50%**（ok 394、partial 8、failed 0）
+  - [x] SubTask 71.1: 只读诊断与三件候选 — diag1 FACTS 102 个 cf 单元全族聚类
+        （F-ABSORB 68/F-PAD 17/F-META 5/F-OTHER 4/F-POLARITY 3/F-EXCTABLE 2/F-TERNARY 2/F-ASSERT 1）+
+        到行根因（ra-gen :22445-22450 F-THENOVER、:24173/:26152/:26587/:26615/:27010 F-EXCTABLE、
+        ra :15259-15261/:15303/:15310 F-ASSERT），并实测否定「多数是嵌套 try-except」线索
+        （主族 F-THENOVER 与 try 无关）；fix1 R71-exception_exit（隐式收尾被当 else 臂）、
+        fix2 r71f2_full（F-THENOVER 影子认领+放宽）、fix3 exctable+assert（异常表/AssertRegion 收口）
+  - [x] SubTask 71.2: 中心 ADR-1 逐件复测 → **三件全采纳**：c1 mandated 失败 26→19 + synth exc_A 5/5；
+        r71f2_full mandated +6、strict ok 2164→2170、synth t01/t02/t22 3/3；f3ab fly_api/base
+        mandated+strict 63/63、entry 5/5、22 靶 REG=0、金丝雀同；known-unfixed 2 条如实留档
+  - [x] SubTask 71.3: 合并与落地 — 前置自检 analyzer-merged ≡ exctable-analyzer + assert 顺序套用；
+        mkfinal71 m71（链式锚点各恰 1 次）→ mbuild71 → mirr_m71 → 七连复测 GO
+        （56 靶 SAME=38/MOVED=18/REG=0、金丝雀 3 SAME + quotation 重钉 3eb76e512df9ab1e、
+        battery worse=0、strict 1776→1780 缺陷 43→39 NEW=0、mandated 失败 45→28 net −17 NEW=0、
+        synth 10/10、叠加并集 17 单元 LOST=0）→ land71 --apply ×2（replay==worktree True×2）
+        → landproof 33/33；G0 跨层模式 2/1/0 → 2/1/0 **0 新增**（[R71-assert] 注释字面串改写后四处同步）
+  - [x] SubTask 71.4: 修到完全 OK 的 pyc（mandate 达成，9 支）— IQCommon/exception、IQData/entry、
+        IQData/utils/exception、fly_api/base（mandated+strict 63/63 旗舰）、accounts/__init__、
+        benchmark_account、stock_account、risk_calculation/function、IQEngine/utils/exception
+        全部 failure → success，转红 0；另有 9 支单位只减不增（quotation 151→152/153 等）
+  - [x] SubTask 71.5: 门禁（严格串行，全过）— G0 三支 ast+py_compile OK + 跨层 0 新增；G1 56 靶
+        SAME=38 MOVED=18 REG=0 ERR=0（全路径键重算）；G2 金丝雀 4/4 pin 全中 + quotation
+        官方 143/143、mandated 152/153；G3 batch --round 71 **402 verified/0 failed**；
+        **G3v mandated 首轮复算 6515/6623 = 98.37%**（355 success +9、47 failure −9、转红 0）；
+        G4 stats 5717/5746 = 99.50%；G4′ 严格 **1776→1780/1819 缺陷 43→39、NEW=0 FIXED=4**
+        （全路径键重算，首版撞键丢 1 行读作 1745→1749）；G5 索引 round-stamp-only 402、substantive=0；
+        G5′ blast changed=18 identical=384 unresolved=0 **REGRESSED=0**；G6 真基线臂 prev（HEAD blob
+        还原 R70 字节的 mirr_prev，size/sha 断言）vs m71 82 项 **worse=0**；G7 逐项 SAME=82
+        REGRESSED=0；G8 402 OK.py 在位 + py_compile bad=0 + Traceback 0
+  - [x] SubTask 71.6: 副作用与更正（如实入档）— G1/G4′ 首版用 basename@parent 键，
+        exception.pyc@utils 与 api_base.pyc@api 撞键丢行，gates71a_fix.py 以全路径键重算更正；
+        G6 landing 后 arm=landed 已是 R71 字节，改用 mirr_prev 真基线；金丝雀 quotation 重钉
+        4d41187e356544e0 → 3eb76e512df9ab1e（官方 143/143 不变、mandated 净改善）；
+        未手改任何 *OK.py（18 支变更全由工具链重写）
+  - [x] SubTask 71.7: 归档与提交 — rounds/round71/（OUTCOME.md 7 节 + logs/EVIDENCE.md A–H +
+        logs/gate 19 份 + logs/dump 38 份含 8 分片 mandated 报告 + specs 13 份 + batches 5 批 +
+        scripts 19 份，173 文件）；提交并 push

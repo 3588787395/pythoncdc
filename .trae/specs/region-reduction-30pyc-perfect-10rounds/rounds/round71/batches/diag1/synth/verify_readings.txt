@@ -1,0 +1,14 @@
+t01_if_absorb_following_if ::   ***<module>.get_trend: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+t02_if_absorb_trailing_stmts ::   ***<module>.filter_abnormal: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+t03_andchain_else ::   ***<module>.f: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+t05_bareexcept_boolop_orchain ::   ***<module>.rep: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+t06_try_finally_tail_return ::   ***<module>.upd: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+t07_try_finally_tail_pass ::   ***<module>.upd2: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+t08_ternary_return_in_try ::   ***<module>.BarData.limit_up: Failure: Different control flow | [single] status=failure units=2/3 success_rate=66.67%
+t12_elif_not_orchain_raise ::   ***<module>.Cache.info_conbine: Failure: Different control flow | [single] status=failure units=3/4 success_rate=75.00%
+t16_mixed_and_or_chain ::   ***<module>.BarData._history_bars: Failure: Different control flow | [single] status=failure units=2/3 success_rate=66.67%
+t22_cross_loop_tail_stmt ::   ***<module>.trade_operation: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+t24_assert_in_try ::   ***<module>.init_time: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+t25_sibling_return_none_merge ::   ***<module>.post: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+t27_try_except_else_range ::   ***<module>.parse_time_info: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+t29_try_wrapped_shared_tail ::   ***<module>.get_fields: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%

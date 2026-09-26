@@ -15547,6 +15547,68 @@ AST 映射规则:
                         return [{'type': 'Pass'}]
                 return None
         if region.else_blocks:
+            # [R71-exception_exit] 隐式收尾（implicit epilogue）被误判为 else 臂。
+            # 实测受影响站点：IQCommon/IQData/IQEngine 的 exception.pyc
+            # （ModifyExceptionFromType.__exit__ / ExceptionIdentify.__exit__）与
+            # plugin_system_accounts 的 setup / _process_mergered；站点名不参与判据。
+            # 判据（全部为区域结构身份，不看函数名/文件名/偏移常量/阈值）：
+            #   ① 本区域 else 臂的每个块都是纯 `LOAD_CONST None; RETURN` 终结臂，
+            #      且区域无 merge_block（两臂都终止，不存在汇合块）；
+            #   ② else 臂首块在源码地址序上落在 region.then_blocks 中某个块之前
+            #      （真 `if c: <body> else: return None` 的 else 臂恒在全部 then
+            #      块之后发射，误判的隐式收尾则夹在 then 块之间）；
+            #   ③ then 臂在区域内自洽：从本区域条件块出发、只沿 region.blocks 内
+            #      的后继边可达全部 then 块。
+            # 结构依据：CPython 对「无 else 的 if c: <body>」发块序为
+            #   [条件块][then 臂][if 锚块][嵌套 if 锚块]，条件跳转目标（= 被误认
+            #   成 else 的块）必然先于 then 块内嵌套 if 的锚块；此时该 else 臂
+            #   不是源码 else，而是函数隐式收尾的重复发射体，重编译时由代码对象
+            #   自行补出，若发射成 orelse 会把两个相邻终结块的发射次序对调，
+            #   pylingual is_control_flow_equivalent 的按址节点映射出边集合随之不等。
+            #   ③ 用来排除「then 臂不是单一源码子树」的反例：若 then 臂里存在只能
+            #   经区域外基本块（循环体/try 体回边）到达的终止块，说明该区域的
+            #   then 臂由多个控制流片段拼合而成，else 臂可能承载真实分支/真实返回，
+            #   抑制会让该臂指令在重编译时无法再生（实测 handlers.pyc
+            #   TWHThreadController._target 会因此净丢一条 `return None`）。
+            # AST 映射：ast.If.orelse 置空（等价于源码无 else 的 ast.If）。
+            # 字节码一致性约束：整臂不发射但登记为已生成（generated_blocks /
+            # generated_offsets），父序列按每块唯一归属原则不再重复发射，
+            # 隐式收尾由重编译自然再生，指令数与块数不变。
+            _r71_ee_else = list(region.else_blocks)
+            _r71_ee_pure = all(
+                b.instructions
+                and b.get_last_instruction() is not None
+                and b.get_last_instruction().opname in ('RETURN_VALUE', 'RETURN_CONST')
+                and all(i.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                     'LOAD_CONST', 'RETURN_VALUE', 'RETURN_CONST')
+                        for i in b.instructions)
+                for b in _r71_ee_else)
+            _r71_ee_then = list(getattr(region, 'then_blocks', None) or [])
+            _r71_ee_owned = False
+            _r71_ee_root = (getattr(region, 'condition_block', None)
+                            or getattr(region, 'entry', None))
+            if _r71_ee_then and _r71_ee_root is not None:
+                _r71_ee_in = set(getattr(region, 'blocks', None) or [])
+                _r71_ee_seen = {_r71_ee_root}
+                _r71_ee_stack = [_r71_ee_root]
+                while _r71_ee_stack:
+                    _r71_ee_cur = _r71_ee_stack.pop()
+                    for _r71_ee_s in (getattr(_r71_ee_cur, 'successors', None) or []):
+                        if _r71_ee_s in _r71_ee_in and _r71_ee_s not in _r71_ee_seen:
+                            _r71_ee_seen.add(_r71_ee_s)
+                            _r71_ee_stack.append(_r71_ee_s)
+                _r71_ee_owned = all(b in _r71_ee_seen for b in _r71_ee_then)
+            if (_r71_ee_pure
+                    and _r71_ee_then
+                    and getattr(region, 'merge_block', None) is None
+                    and min(b.start_offset for b in _r71_ee_else)
+                    < max(b.start_offset for b in _r71_ee_then)
+                    and _r71_ee_owned):
+                for _r71_ee_b in _r71_ee_else:
+                    self.generated_blocks.add(_r71_ee_b)
+                    for _r71_ee_i in _r71_ee_b.instructions:
+                        self.generated_offsets.add(_r71_ee_i.offset)
+                return None
             # [R115 fix] else 分支仅含 NOP-only 块（CPython 的 else: pass 模式）：
             # CPython 为 `else: pass` 生成 JUMP_FORWARD(to merge) + NOP（条件跳转
             # 目标）模式。若所有 else_blocks 仅有 NOISE_OPS 指令，则生成
@@ -22442,24 +22504,65 @@ AST 映射规则:
                     #   **平级**的兄弟 ast.If，位于函数体语句序列；现状把它塞进 ast.For 之后 ⇒
                     #   then 臂多吞一整段，且 elif 分支内 listcomp 的 ast.Return 被重复发射一次
                     #   （get_all_orders 指纹 orig=79 decomp=78 jumpdiff=2 truediff=24）。
+                    # [R71-thenover] 识别条件: 在 loop 帧(_current_loop 非 None)内处理一个无 parent 的顶层区域, 且当前块就是该区域的 entry 块(原判据还额外要求该区域 merge_block/exit 均为 None, 本次按同层结构身份去掉这两条); 归约方式: 对该块直接 continue, 不再走常规的块生成/认领路径, 让兄弟区域的生成结果覆盖它; AST 映射: header 块不单独落语句, 其后的共享语句留在外层帧, 使外层 if 的跳转落点保持近端 merge 而不被吸进 then 分支(F-THENOVER)。
                     if (region is None and self._current_loop is not None
                             and getattr(_region, 'parent', None) is None
-                            and block is _region.entry
-                            and getattr(_region, 'merge_block', None) is None
-                            and getattr(_region, 'exit', None) is None):
+                            and block is _region.entry):
                         continue
+                    # [R71-thenover] 识别条件: 本帧 region 的 merge_block 同时满足 (a) 不是本帧区域的后代(_region 父链上没有 entry 相等的节点)、(b) 不是任何已分析区域的 entry(非 header)、(c) 不大于候选区域 blocks 的最大偏移(isLast)、(d) 属于候选区域的 else_blocks、(e) 位于候选区域 blocks 内、(f) 不是候选区域自己的 entry; 归约方式: 生成前把该 merge_block 预标记为 generated(影子认领), 生成结束后若非原先已标记则撤销标记, 并在随后的 blocks 标记循环里跳过它; AST 映射: 共享尾语句留在兄弟区域不被当前帧吸收, 使该帧的跳转落点从远端 end 收回近端 merge(F-THENOVER/F-ABSORB)。
+                    _r71mb = getattr(region, 'merge_block', None) if region is not None else None
+                    _r71hdr = False
+                    if _r71mb is not None:
+                        for _r71r in self.region_analyzer.regions:
+                            if getattr(_r71r, 'entry', None) is _r71mb:
+                                _r71hdr = True
+                                break
+                    _r71ent = getattr(region, 'entry', None) if region is not None else None
+                    _r71anc = _region
+                    _r71isdec = False
+                    while _r71anc is not None:
+                        if _r71anc is region or getattr(_r71anc, 'entry', None) is _r71ent:
+                            _r71isdec = True
+                            break
+                        _r71anc = getattr(_r71anc, 'parent', None)
+                    _r71last = False
+                    if _r71mb is not None:
+                        _r71o = getattr(_r71mb, 'start_offset', None)
+                        _r71last = _r71o is not None and all(
+                            getattr(_b, 'start_offset', None) is not None
+                            and getattr(_b, 'start_offset', None) <= _r71o
+                            for _b in (_region.blocks or []))
+                    _r71inelse = _r71mb is not None and _r71mb in (getattr(_region, 'else_blocks', None) or [])
+                    _r71sh = None
+                    _r71sh_pre = False
+                    if (not _r71isdec
+                            and not _r71hdr
+                            and _r71last
+                            and _r71inelse
+                            and _r71mb is not None
+                            and _r71mb in _region.blocks
+                            and _r71mb is not _region.entry):
+                        _r71sh = _r71mb
+                        _r71sh_pre = _r71sh in self.generated_blocks
+                        self.generated_blocks.add(_r71sh)
+                        self.generated_offsets.add(_r71sh.start_offset)
                     self._generating_regions.add(_rid)
                     self._generating_regions.add(_rid)
                     try:
                         _ast = self._generate_region(_region)
                     finally:
                         self._generating_regions.discard(_rid)
+                    if _r71sh is not None and not _r71sh_pre:
+                        self.generated_blocks.discard(_r71sh)
+                        self.generated_offsets.discard(_r71sh.start_offset)
                     if _ast:
                         if isinstance(_ast, list):
                             stmts.extend(_ast)
                         else:
                             stmts.append(_ast)
                     for _b in _region.blocks:
+                        if _b is _r71sh:
+                            continue
                         self.generated_blocks.add(_b)
                         self.generated_offsets.add(_b.start_offset)
                     self._generated_regions.add(_rid)
@@ -25138,6 +25241,15 @@ AST 映射规则:
             for _06_eh in region.except_handlers:
                 for _06_b in (_06_eh[2] if len(_06_eh) >= 3 else ()):
                     _06_handler_block_set.add(_06_b)
+            # [R71-exctable] 本区域 else 子句的块集（与上方 handler 块集同型：
+            # 父区域用**自己的**臂块集判定**自己的直接子区域**的归属，不跨层、
+            # 不读函数名/文件名/偏移常量/阈值/名字白名单，不新增 self 状态）。
+            # 识别条件见下方 children 循环的跳过分支（三要素注释）。
+            _06_else_block_set = (
+                set(region.else_blocks)
+                if (getattr(region, 'has_else', False)
+                    and getattr(region, 'else_blocks', None))
+                else set())
             # 识别 finally body 的 normal path 副本 ternary。
             # CPython 3.11+ 把 finally body 复制两份：normal path（在 try_blocks
             # 或 normal completion 路径，无 PUSH_EXC_INFO）+ exception path
@@ -25183,6 +25295,31 @@ AST 映射规则:
                         if (isinstance(region, TryExceptRegion)
                                 and child.entry is not None
                                 and child.entry in _06_handler_block_set):
+                            continue
+                        # [R71-exctable] try 的 else 子句不得被 try 体消费。
+                        # 识别条件（同层次结构身份）：本 TryExceptRegion 自身
+                        #   `has_else` 为真且持有 `else_blocks`，而本表达式子区域
+                        #   （Ternary/BoolOp 等 `_EXPR_REGION_TYPES`）的 entry 落在
+                        #   **本区域自己的 else 块集**内 ⇒ 该子区域是 else 臂的内容，
+                        #   不是 try 体的内容。判据只比较父区域自身的臂块集与其直接
+                        #   子区域的 entry，与既有 `_06_handler_block_set` 的 handler
+                        #   归属分支同一模式；不读异常表 offset 区间数值、不读
+                        #   `eb.start_offset` 具体值、不读 try/except 名称、无阈值、
+                        #   无名字白名单、无新增 self 状态、无跨层 region 比较。
+                        # 归约方式：命中时 `continue`——既不发射也不登记
+                        #   `self.generated_blocks` / `self._generated_regions`，子区域
+                        #   连同其块原样交回 `_generate_try` 的 orelse 门
+                        #   （`if region.else_blocks and region.has_else and not
+                        #   _try_body_terminates_abnormally` 及其 else 循环），由该门
+                        #   按既有次序发射恰好一次（每块唯一归属不变）。try 体因此
+                        #   不再吞掉 else 指令，orelse 循环的「块已生成则 continue」
+                        #   前置条件不再成立。
+                        # AST 映射：else 臂语句 → `try_ast['orelse']`
+                        #   （ast.Try.orelse）；重编译后 try 的异常表 end 回到
+                        #   else 之前，指令流与 orig 逐条一致。
+                        if (_06_else_block_set
+                                and child.entry is not None
+                                and child.entry in _06_else_block_set):
                             continue
                         # 跳过 finally body 的 normal path
                         # 副本 ternary — 由 finally body 遍历通过 exception

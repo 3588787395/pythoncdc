@@ -1,0 +1,20 @@
+{
+ "site-packages/IQCommon/api/klinedataOK.py": "official 43/45 -> 43/45 mism 2->2 | mandated failure->failure units 59/64 -> 61/64 | units_changed ['***<module>.get_history_common: Failure: Different control flow', '***<module>.get_price_common: Failure: Different control flow']",
+ "site-packages/IQCommon/exceptionOK.py": "official 32/32 -> 32/32 mism 0->0 | mandated failure->success units 33/34 -> 34/34 | units_changed ['***<module>.ModifyExceptionFromType.__exit__: Failure: Different control flow']",
+ "site-packages/IQCommon/strategy/wizard_quant_apiOK.py": "official 53/53 -> 53/53 mism 0->0 | mandated failure->failure units 54/58 -> 55/58 | units_changed ['***<module>.init_stock_pool_filter: Failure: Different control flow']",
+ "site-packages/IQCommon/util/trade_info_utilsOK.py": "official 40/40 -> 40/40 mism 0->0 | mandated failure->failure units 36/41 -> 36/41",
+ "site-packages/IQData/entryOK.py": "official 5/5 -> 5/5 mism 0->0 | mandated failure->success units 4/5 -> 5/5 | units_changed ['***<module>.IQDataEntry.get_instance: Failure: Different control flow']",
+ "site-packages/IQData/utils/exceptionOK.py": "official 29/29 -> 29/29 mism 0->0 | mandated failure->success units 30/31 -> 31/31 | units_changed ['***<module>.ExceptionIdentify.__exit__: Failure: Different control flow']",
+ "site-packages/IQEngine/plugins/plugin_fly_data/fly_api/baseOK.py": "official 41/41 -> 41/41 mism 0->0 | mandated failure->success units 61/63 -> 63/63 | units_changed ['***<module>.OverNightOrder.__init__: Failure: Different control flow', '***<module>.SplitOrder.parse_time_info: Failure: Different control flow']",
+ "site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategyOK.py": "official 24/24 -> 24/24 mism 0->0 | mandated failure->failure units 25/27 -> 26/27 | units_changed ['***<module>.Strategy.__init__: Failure: Different control flow']",
+ "site-packages/IQEngine/plugins/plugin_system_accounts/__init__OK.py": "official 6/6 -> 6/6 mism 0->0 | mandated failure->success units 5/6 -> 6/6 | units_changed ['***<module>.AccountPlugin.setup: Failure: Different control flow']",
+ "site-packages/IQEngine/plugins/plugin_system_accounts/account_model/benchmark_accountOK.py": "official 20/20 -> 20/20 mism 0->0 | mandated failure->success units 19/20 -> 20/20 | units_changed ['***<module>.BenchmarkAccount._process_mergered: Failure: Different control flow']",
+ "site-packages/IQEngine/plugins/plugin_system_accounts/account_model/stock_accountOK.py": "official 25/25 -> 25/25 mism 0->0 | mandated failure->success units 24/25 -> 25/25 | units_changed ['***<module>.StockAccount._process_mergered: Failure: Different control flow']",
+ "site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py": "official 11/12 -> 11/12 mism 1->1 | mandated failure->failure units 12/13 -> 12/13",
+ "site-packages/IQEngine/plugins/plugin_system_matcher/matcherOK.py": "official 17/17 -> 17/17 mism 0->0 | mandated failure->failure units 16/17 -> 16/17",
+ "site-packages/IQEngine/plugins/plugin_system_risk_calculation/functionOK.py": "official 15/15 -> 15/15 mism 0->0 | mandated failure->success units 14/15 -> 15/15 | units_changed ['***<module>.save_testds_to_json: Failure: Different control flow']",
+ "site-packages/IQEngine/utils/exceptionOK.py": "official 29/29 -> 29/29 mism 0->0 | mandated failure->success units 30/31 -> 31/31 | units_changed ['***<module>.ModifyExceptionFromType.__exit__: Failure: Different control flow']",
+ "site-packages/fly/data/quotationOK.py": "official 143/143 -> 143/143 mism 0->0 | mandated failure->failure units 151/153 -> 152/153 | units_changed ['***<module>.get_trend: Failure: Different control flow']",
+ "site-packages/fly/data/quoteOK.py": "official 72/81 -> 72/81 mism 9->9 | mandated failure->failure units 79/92 -> 80/92 | units_changed ['***<module>.Quote.run_tick_transform: Failure: Different control flow']",
+ "site-packages/fly/dumpload/load_dailyOK.py": "official 23/23 -> 23/23 mism 0->0 | mandated failure->failure units 25/27 -> 26/27 | units_changed ['***<module>.filter_abnormal_data: Failure: Different control flow']"
+}

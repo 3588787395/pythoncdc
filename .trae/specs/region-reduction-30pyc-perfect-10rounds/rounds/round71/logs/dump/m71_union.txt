@@ -1,0 +1,88 @@
+R71 centre step 4g -- superposition consistency of the merged arm m71
+unit = (pyc, function); "green" = that unit has no defect on that arm
+candidate arms verified against their ADOPTED specs by armspec71.py:
+  c1 = R71-exception_exit | r71f2f = r71f2_full | f3ab = R71-exctable + R71-analyzer-merged | m71 = all four merged
+
+== a) 56-target (h62)
+   baseline failing units=29 (files=56)   m71 failing units=29 (files=56)
+   m71 NEW failing units: 0
+   fix1/c1      files=56 fixed=0   still-green-on-m71=0   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+   fix2/r71f2f  files=56 fixed=0   still-green-on-m71=0   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+   fix3/f3ab    files=56 fixed=0   still-green-on-m71=0   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+
+== a2) f3 22-target (h62)
+   baseline failing units=29 (files=22)   m71 failing units=29 (files=22)
+   m71 NEW failing units: 0
+   fix3/f3ab    files=22 fixed=0   still-green-on-m71=0   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+
+== b) canary (h62)
+   baseline failing units=0 (files=4)   m71 failing units=0 (files=4)
+   m71 NEW failing units: 0
+   fix1/c1      files=4  fixed=0   still-green-on-m71=0   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+   fix2/r71f2f  files=4  fixed=0   still-green-on-m71=0   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+   fix3/f3ab    files=4  fixed=0   still-green-on-m71=0   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+
+== c) battery 82 repros (h62)
+   baseline failing units=37 (files=82)   m71 failing units=37 (files=82)
+   m71 NEW failing units: 0
+   fix1/c1      files=82 fixed=0   still-green-on-m71=0   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+   fix2/r71f2f  files=82 fixed=0   still-green-on-m71=0   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+   fix3/f3ab    files=82 fixed=0   still-green-on-m71=0   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+
+== d1) strict div48
+   baseline failing units=43 (files=48)   m71 failing units=39 (files=48)
+   m71 NEW failing units: 0
+   fix1/c1      files=48 fixed=0   still-green-on-m71=0   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+
+== d2) strict all56
+   baseline failing units=87 (files=56)   m71 failing units=80 (files=56)
+   m71 NEW failing units: 0
+   fix1/c1      files=56 fixed=0   still-green-on-m71=0   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+   fix2/r71f2f  files=56 fixed=6   still-green-on-m71=6   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+     OK   fix2/r71f2f  IQCommon/api/klinedata.pyc :: <module>.get_history_common
+     OK   fix2/r71f2f  IQCommon/api/klinedata.pyc :: <module>.get_price_common
+     OK   fix2/r71f2f  IQCommon/strategy/wizard_quant_api.pyc :: <module>.init_stock_pool_filter
+     OK   fix2/r71f2f  fly/data/quotation.pyc :: <module>.get_trend
+     OK   fix2/r71f2f  fly/data/quote.pyc :: <module>.Quote.run_tick_transform
+     OK   fix2/r71f2f  fly/dumpload/load_daily.pyc :: <module>.filter_abnormal_data
+   fix3/f3ab    files=56 fixed=1   still-green-on-m71=1   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+     OK   fix3/f3ab    IQEngine/plugins/plugin_fly_data/fly_api/base.pyc :: <module>.OverNightOrder.__init__
+
+== d3) strict f3 22-target
+   baseline failing units=54 (files=22)   m71 failing units=48 (files=22)
+   m71 NEW failing units: 0
+   fix3/f3ab    files=22 fixed=1   still-green-on-m71=1   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+     OK   fix3/f3ab    IQEngine/plugins/plugin_fly_data/fly_api/base.pyc :: <module>.OverNightOrder.__init__
+
+== d4) strict cf1 (fix1 targets)
+   baseline failing units=20 (files=31)   m71 failing units=20 (files=31)
+   m71 NEW failing units: 0
+   fix1/c1      files=31 fixed=0   still-green-on-m71=0   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+
+== e) mandated ruler all56 (pyc_verify)
+   baseline failing units=109 (files=56)   m71 failing units=92 (files=56)
+   m71 NEW failing units: 0
+   fix1/c1      files=56 fixed=7   still-green-on-m71=7   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+     OK   fix1/c1      IQCommon/exception.pyc :: <module>.ModifyExceptionFromType.__exit__
+     OK   fix1/c1      IQData/utils/exception.pyc :: <module>.ExceptionIdentify.__exit__
+     OK   fix1/c1      IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc :: <module>.Strategy.__init__
+     OK   fix1/c1      IQEngine/plugins/plugin_system_accounts/__init__.pyc :: <module>.AccountPlugin.setup
+     OK   fix1/c1      IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc :: <module>.BenchmarkAccount._process_mergered
+     OK   fix1/c1      IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc :: <module>.StockAccount._process_mergered
+     OK   fix1/c1      IQEngine/utils/exception.pyc :: <module>.ModifyExceptionFromType.__exit__
+   fix2/r71f2f  files=56 fixed=7   still-green-on-m71=7   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+     OK   fix2/r71f2f  IQCommon/api/klinedata.pyc :: <module>.get_history_common
+     OK   fix2/r71f2f  IQCommon/api/klinedata.pyc :: <module>.get_price_common
+     OK   fix2/r71f2f  IQCommon/strategy/wizard_quant_api.pyc :: <module>.init_stock_pool_filter
+     OK   fix2/r71f2f  IQEngine/plugins/plugin_system_risk_calculation/function.pyc :: <module>.save_testds_to_json
+     OK   fix2/r71f2f  fly/data/quotation.pyc :: <module>.get_trend
+     OK   fix2/r71f2f  fly/data/quote.pyc :: <module>.Quote.run_tick_transform
+     OK   fix2/r71f2f  fly/dumpload/load_daily.pyc :: <module>.filter_abnormal_data
+   fix3/f3ab    files=56 fixed=3   still-green-on-m71=3   LOST-on-m71=0 uncovered-by-m71=0 arm-NEW=0
+     OK   fix3/f3ab    IQData/entry.pyc :: <module>.IQDataEntry.get_instance
+     OK   fix3/f3ab    IQEngine/plugins/plugin_fly_data/fly_api/base.pyc :: <module>.OverNightOrder.__init__
+     OK   fix3/f3ab    IQEngine/plugins/plugin_fly_data/fly_api/base.pyc :: <module>.SplitOrder.parse_time_info
+
+union of all candidate-green units across all rulers: 17
+  -> still green on m71: 17 | LOST on m71: 0 | not measured by m71: 0
+OVERALL: PASS - union preserved, no interference

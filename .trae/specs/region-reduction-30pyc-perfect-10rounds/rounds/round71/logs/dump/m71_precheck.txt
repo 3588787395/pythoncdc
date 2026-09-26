@@ -1,0 +1,4 @@
+files: a=core/cfg/region_analyzer.py b=core/cfg/region_analyzer.py merged=core/cfg/region_analyzer.py
+base lines=28140  seq lines=28220  merged lines=28220  bom=False
+anchor sets equal: True
+PRECHECK PASS: sequential A+B text == merged text (len=1512965)

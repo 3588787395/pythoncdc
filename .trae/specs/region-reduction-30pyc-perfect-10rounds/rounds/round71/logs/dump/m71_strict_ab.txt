@@ -1,0 +1,13 @@
+landed : files=48 functions=1819 ok=1776 defects=43 target_diff=20
+cand   : files=48 functions=1819 ok=1780 defects=39 target_diff=17
+NEW defect functions=0  NEW target_diff=0  FIXED defect functions=4
+VERDICT: PASS
+
+IQCommon/strategy/wizard_quant_api.pyc  ok 54/56 -> 55/56  target_diff 1 -> 0
+    -fixed <module>.init_stock_pool_filter [target_diff]
+IQEngine/plugins/plugin_fly_data/fly_api/base.pyc  ok 62/63 -> 63/63  target_diff 0 -> 0
+    -fixed <module>.OverNightOrder.__init__ [seq_len]
+fly/data/quotation.pyc  ok 148/150 -> 149/150  target_diff 2 -> 1
+    -fixed <module>.get_trend [target_diff]
+fly/dumpload/load_daily.pyc  ok 23/25 -> 24/25  target_diff 2 -> 1
+    -fixed <module>.filter_abnormal_data [target_diff]

@@ -1,0 +1,56 @@
+G4p strict ruler on the 48 divergence targets (landed -> m71)
+======================================================================
+(full repo-relative keys: one 31-function row was lost to a basename@parent
+ collision in the first render, which read ok 1745 -> 1749)
+IQCommon/data/finance.pyc                                        ok  24/28  d=4   -> ok  24/28  d=4    SAME
+IQCommon/data/local_finance.pyc                                  ok  20/21  d=1   -> ok  20/21  d=1    SAME
+IQCommon/exception.pyc                                           ok  34/34  d=0   -> ok  34/34  d=0    SAME
+IQCommon/logger/handlers.pyc                                     ok  29/30  d=1   -> ok  29/30  d=1    SAME
+IQCommon/strategy/jq_trans_module.pyc                            ok  61/63  d=2   -> ok  61/63  d=2    SAME
+IQCommon/strategy/wizard_quant_api.pyc                           ok  54/56  d=2   -> ok  55/56  d=1    IMPROVED
+IQCommon/util/cgroup_utils.pyc                                   ok   7/8   d=1   -> ok   7/8   d=1    SAME
+IQCommon/util/email_utils.pyc                                    ok   3/4   d=1   -> ok   3/4   d=1    SAME
+IQCommon/util/trade_info_utils.pyc                               ok  38/41  d=3   -> ok  38/41  d=3    SAME
+IQData/entry.pyc                                                 ok   5/5   d=0   -> ok   5/5   d=0    SAME
+IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc  ok   7/8   d=1   -> ok   7/8   d=1    SAME
+IQData/utils/calexrights_func.pyc                                ok   7/8   d=1   -> ok   7/8   d=1    SAME
+IQData/utils/exception.pyc                                       ok  31/31  d=0   -> ok  31/31  d=0    SAME
+IQEngine/account/order.pyc                                       ok  68/68  d=0   -> ok  68/68  d=0    SAME
+IQEngine/api/api_base.pyc                                        ok  48/49  d=1   -> ok  48/49  d=1    SAME
+IQEngine/core/bar.pyc                                            ok  82/85  d=3   -> ok  82/85  d=3    SAME
+IQEngine/core/commission.pyc                                     ok  10/10  d=0   -> ok  10/10  d=0    SAME
+IQEngine/core/executor.pyc                                       ok   9/10  d=1   -> ok   9/10  d=1    SAME
+IQEngine/core/slippage.pyc                                       ok   7/7   d=0   -> ok   7/7   d=0    SAME
+IQEngine/core/strategy/strategy_universe.pyc                     ok  10/11  d=1   -> ok  10/11  d=1    SAME
+IQEngine/data/asset_mixin.pyc                                    ok  19/20  d=1   -> ok  19/20  d=1    SAME
+IQEngine/data/trading_dates_mixin.pyc                            ok  13/14  d=1   -> ok  13/14  d=1    SAME
+IQEngine/plugins/plugin_fly_data/fly_api/base.pyc                ok  62/63  d=1   -> ok  63/63  d=0    IMPROVED
+IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc         ok  17/18  d=1   -> ok  17/18  d=1    SAME
+IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc           ok  26/27  d=1   -> ok  26/27  d=1    SAME
+IQEngine/plugins/plugin_system_accounts/__init__.pyc             ok   6/6   d=0   -> ok   6/6   d=0    SAME
+IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc ok  20/20  d=0   -> ok  20/20  d=0    SAME
+IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc ok  25/25  d=0   -> ok  25/25  d=0    SAME
+IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc ok  83/83  d=0   -> ok  83/83  d=0    SAME
+IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc ok  75/75  d=0   -> ok  75/75  d=0    SAME
+IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc ok  67/67  d=0   -> ok  67/67  d=0    SAME
+IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc ok  36/37  d=1   -> ok  36/37  d=1    SAME
+IQEngine/plugins/plugin_system_matcher/matcher.pyc               ok  16/17  d=1   -> ok  16/17  d=1    SAME
+IQEngine/plugins/plugin_system_risk_calculation/function.pyc     ok  15/15  d=0   -> ok  15/15  d=0    SAME
+IQEngine/plugins/plugin_system_simulation/broker.pyc             ok  29/29  d=0   -> ok  29/29  d=0    SAME
+IQEngine/plugins/plugin_system_simulation/live.pyc               ok  29/29  d=0   -> ok  29/29  d=0    SAME
+IQEngine/plugins/plugin_system_trade/function.pyc                ok  71/71  d=0   -> ok  71/71  d=0    SAME
+IQEngine/utils/exception.pyc                                     ok  31/31  d=0   -> ok  31/31  d=0    SAME
+IQEngine/utils/profiler_func.pyc                                 ok  16/17  d=1   -> ok  16/17  d=1    SAME
+fly/common/flytools.pyc                                          ok  66/66  d=0   -> ok  66/66  d=0    SAME
+fly/common/future_contract_info.pyc                              ok  27/29  d=2   -> ok  27/29  d=2    SAME
+fly/data/quotation.pyc                                           ok 148/150 d=2   -> ok 149/150 d=1    IMPROVED
+fly/data/quote_handler.pyc                                       ok  69/72  d=3   -> ok  69/72  d=3    SAME
+fly/dumpload/load_daily.pyc                                      ok  23/25  d=2   -> ok  24/25  d=1    IMPROVED
+fly/logger.pyc                                                   ok  63/64  d=1   -> ok  63/64  d=1    SAME
+fly/oauthenticator/oauth2.pyc                                    ok  12/12  d=0   -> ok  12/12  d=0    SAME
+fly/simtradding/flyAccount.pyc                                   ok  23/23  d=0   -> ok  23/23  d=0    SAME
+fly/simtradding/ptradeAccount.pyc                                ok 135/137 d=2   -> ok 135/137 d=2    SAME
+
+TALLY IMPROVED=4 REGRESSION=0 SAME=44
+NEW defect functions=0  FIXED defect functions=4  NEW=[] FIXED=['IQCommon/strategy/wizard_quant_api.pyc', 'IQEngine/plugins/plugin_fly_data/fly_api/base.pyc', 'fly/data/quotation.pyc', 'fly/dumpload/load_daily.pyc']
+STRICT TOTAL ok 1776 -> ok 1780 (of 1819/1819) ; defects 43 -> 39

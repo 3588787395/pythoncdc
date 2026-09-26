@@ -1,0 +1,7 @@
+G8 artifacts audit (round 71)
+======================================================================
+index entries      : 402
+OK.py present      : 402 (missing 0)
+py_compile bad     : 0
+batch G3 Traceback : 0   FAIL-line hits: 0
+G8 verdict: PASS

@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_ast_generator.py",
+ "edits": [
+  {
+   "anchor": "                    if (region is None and self._current_loop is not None\n                            and getattr(_region, 'parent', None) is None\n                            and block is _region.entry\n                            and getattr(_region, 'merge_block', None) is None\n                            and getattr(_region, 'exit', None) is None):\n                        continue\n",
+   "repl": "                    # [R71-thenover] 识别条件: 在 loop 帧(_current_loop 非 None)内处理一个无 parent 的顶层区域, 且当前块就是该区域的 entry 块(原判据还额外要求该区域 merge_block/exit 均为 None, 本次按同层结构身份去掉这两条); 归约方式: 对该块直接 continue, 不再走常规的块生成/认领路径, 让兄弟区域的生成结果覆盖它; AST 映射: header 块不单独落语句, 其后的共享语句留在外层帧, 使外层 if 的跳转落点保持近端 merge 而不被吸进 then 分支(F-THENOVER)。\n                    if (region is None and self._current_loop is not None\n                            and getattr(_region, 'parent', None) is None\n                            and block is _region.entry):\n                        continue\n"
+  }
+ ]
+}

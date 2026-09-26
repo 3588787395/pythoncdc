@@ -1,0 +1,28 @@
+{
+ "name": "R71-assert",
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "            for instr in cur.instructions:\n                if instr.opname == 'LOAD_ASSERTION_ERROR':\n                    return True\n            if len(cur.conditional_successors) > 1:\n                return False\n            last = cur.get_last_instruction()\n            if last and last.opname in ('RAISE_VARARGS', 'RETURN_VALUE',\n                                        'RETURN_CONST', 'RERAISE'):\n                return False\n            succs = list(cur.successors)\n            if len(succs) != 1:\n                return False\n",
+   "repl": "            for instr in cur.instructions:\n                if instr.opname == 'LOAD_ASSERTION_ERROR':\n                    return True\n            if len(cur.conditional_successors) > 1:\n                return False\n            last = cur.get_last_instruction()\n            if last and last.opname in ('RAISE_VARARGS', 'RETURN_VALUE',\n                                        'RETURN_CONST', 'RERAISE'):\n                return False\n            # [R71-assert] fall-through 追踪只数正常控制流后继。\n            # 识别条件（同层次结构身份）：`cur.exception_successors` 是 CFG 依据\n            #   异常表把「本块 → try 的 handler 入口」登记的异常边集合；它不是\n            #   fall-through 边。判据只用本块自己的这两组后继集合做差，不读异常表\n            #   start/end/target 数值、不读 block offset 数值、不读函数/文件名、\n            #   无 depth<8 之外的阈值、无名字白名单、无新增 self 状态、无跨层\n            #   「区域入口属于它层块集」型跨层包含模式。\n            # 归约方式：把异常边从「唯一后继」判定中剔除后恰为 1 才继续沿\n            #   fall-through 链追踪；剔除后为 0 或 >1 仍按原样返回失败，只放宽\n            #   「被异常边撑成 2 后继」这一种情形，普通双后继条件块不受影响。\n            # AST 映射：条件块失败出口可达 LOAD_ASSERTION_ERROR ⇒ 上游\n            #   `_identify_assert_regions` 产出 AssertRegion ⇒ ast.Assert\n            #   （而非 IfRegion + 独立 raise）。\n            succs = list(cur.conditional_successors)\n            if len(succs) != 1:\n                return False\n",
+   "drop": [
+    "            succs = list(cur.successors)\n"
+   ]
+  },
+  {
+   "anchor": "            if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST',\n                                        'RERAISE'):\n                return None\n            succs = list(cur.successors)\n            if len(succs) != 1:\n                return None\n",
+   "repl": "            if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST',\n                                        'RERAISE'):\n                return None\n            # [R71-assert] 同型守卫：定位 LOAD_ASSERTION_ERROR 块时同样只沿\n            #   正常控制流后继（`conditional_successors` = successors −\n            #   exception_successors）追踪，指向 handler 入口的异常边不计入\n            #   「唯一后继」；识别条件/归约方式/AST 映射同上一处（本文件\n            #   `_reach_assertion_error_block` 的 [R71-assert] 注释）。\n            succs = list(cur.conditional_successors)\n            if len(succs) != 1:\n                return None\n",
+   "drop": [
+    "            succs = list(cur.successors)\n"
+   ]
+  },
+  {
+   "anchor": "            if cur is target:\n                return True\n            if len(cur.conditional_successors) > 1:\n                return False\n            last = cur.get_last_instruction()\n            if last and last.opname in ('RAISE_VARARGS', 'RETURN_VALUE',\n                                        'RETURN_CONST', 'RERAISE'):\n                return False\n            succs = list(cur.successors)\n            if len(succs) != 1:\n                return False\n",
+   "repl": "            if cur is target:\n                return True\n            if len(cur.conditional_successors) > 1:\n                return False\n            last = cur.get_last_instruction()\n            if last and last.opname in ('RAISE_VARARGS', 'RETURN_VALUE',\n                                        'RETURN_CONST', 'RERAISE'):\n                return False\n            # [R71-assert] 同型守卫：BoolOp assert 链的 fall-through 追踪同样\n            #   剔除指向 handler 入口的异常边；识别条件/归约方式/AST 映射见\n            #   `_reach_assertion_error_block` 的 [R71-assert] 注释。\n            succs = list(cur.conditional_successors)\n            if len(succs) != 1:\n                return False\n",
+   "drop": [
+    "            succs = list(cur.successors)\n"
+   ]
+  }
+ ],
+ "note": "fall-through assert probing must ignore exception-table edges"
+}
