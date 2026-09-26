@@ -1,0 +1,9 @@
+{
+  "file": "core/cfg/comprehension_generator.py",
+  "edits": [
+    {
+      "anchor": "                elif last_instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):\n                    all_stmts.append({'type': 'Return', 'value': comp_value})\n                elif (region_ast_gen is not None and block.successors):",
+      "repl": "                elif last_instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):\n                    # [识别条件] 本块自身的指令结构事实：store_instr 为空（推导式之后\n                    #   无 STORE_* 目标）、last_instr 是本块最后一条 RETURN_VALUE/\n                    #   RETURN_CONST、且本块 comp_indices 清单里当前项已是**尾项**\n                    #   （其后不再有同块的 MAKE_FUNCTION <listcomp>/<genexpr> 项）——\n                    #   此时 comp_value 就是本块 return 的完整值表达式，与同 else 族\n                    #   L242-246（_chained_pairs 尾项记账）、L565/L568/L571（_ret_succ\n                    #   与兜底分支）的记账完全同型。\n                    # [归约方式] 尾项才把记账推进到块末 prev_end = len(instrs)，使\n                    #   remaining 段为空、不再落入 _generate_remaining_stmts 对同一块\n                    #   的第二次重建；旧实现漏推进记账，前缀为空时 all_stmts 变成\n                    #   [Return(comp_value)] + 整块重建的第二条 Return，逐字重复发射\n                    #   （broker get_orders/get_trades/get_open_orders 的 <listcomp>\n                    #   单元被判 Extra/Different bytecode）。非尾项（嵌套外层在后）\n                    #   则保持记账不动，交由下一轮 pre_comp 终止符守卫把整块判回通用\n                    #   重建路径，避免把嵌套推导式拆成两条 Return。\n                    # [AST 映射] 尾项 ⇒ 单发 ast.Return(ListComp/Call(comp_value))；\n                    #   非尾项 ⇒ 本块整体 return None，由 expr_reconstructor 发射\n                    #   ast.Return(ListComp(iter=ListComp)) 的嵌套形态。\n                    all_stmts.append({'type': 'Return', 'value': comp_value})\n                    if _comp_loop_idx == len(comp_indices) - 1:\n                        prev_end = len(instrs)\n                elif (region_ast_gen is not None and block.successors):"
+    }
+  ]
+}

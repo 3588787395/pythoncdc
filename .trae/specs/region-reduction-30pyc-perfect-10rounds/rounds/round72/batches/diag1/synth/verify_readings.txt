@@ -1,0 +1,24 @@
+a01_ternary_return_in_try :: ***<module>.BarData.limit_up: Failure: Different control flow | [single] status=failure units=2/3 success_rate=66.67%
+a02_andchain_shared_else :: ***<module>.f: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+a03_try_wrapped_shared_tail :: ***<module>.get_fields: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+a04_sibling_return_none :: ***<module>.post: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+a05_mixed_and_or_chain :: ***<module>.BarData._history_bars: Failure: Different control flow | [single] status=failure units=2/3 success_rate=66.67%
+a06_try_except_else_range :: (no failure lines) | [single] status=success units=2/2 success_rate=100.00%
+a07_if_absorb_following_if :: (no failure lines) | [single] status=success units=2/2 success_rate=100.00%
+a08_if_absorb_trailing_stmts :: (no failure lines) | [single] status=success units=2/2 success_rate=100.00%
+a09_try_finally_tail_return :: ***<module>.upd: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+a10_cross_loop_tail_stmt :: (no failure lines) | [single] status=success units=2/2 success_rate=100.00%
+b01_dupe_elif_return_listcomp :: ***None: Failure: Extra bytecode || ***None: Failure: Extra bytecode || ***<module>.B.get_orders.<listcomp>: Failure: Different bytecode || ***<module>.B.get_open_orders.<listcomp>: Failure: Different control flow || ***<module>.B.get_open_orders.<listcomp>: Failure: Different bytecode || ***<module>.B.get_open_orders.<listcomp>: Failure: Different bytecode || ***None: Failure: Extra bytecode || ***None: Failure: Extra bytecode || ***None: Failure: Extra bytecode | [single] status=failure units=7/16 success_rate=43.75%
+b02_genexpr_pred_jump :: (no failure lines) | [single] status=success units=8/8 success_rate=100.00%
+b03_polarity_guard_flip :: (no failure lines) | [single] status=success units=3/3 success_rate=100.00%
+b04_elif_not_orchain_raise :: ***<module>.Cache.info_conbine: Failure: Different control flow | [single] status=failure units=3/4 success_rate=75.00%
+b05_bareexcept_boolop_orchain :: ***<module>.rep: Failure: Different control flow | [single] status=failure units=1/2 success_rate=50.00%
+b06_loop_tail_stmt_absorbed :: (no failure lines) | [single] status=success units=2/2 success_rate=100.00%
+b07_outer_if_hoisted_dangling_cond :: (no failure lines) | [single] status=success units=2/2 success_rate=100.00%
+b08_not_in_membership_guard :: (no failure lines) | [single] status=success units=2/2 success_rate=100.00%
+c01_try_in_elif_arm :: (no failure lines) | [single] status=success units=3/3 success_rate=100.00%
+c02_genexpr_and_predicate :: ***<module>.P.buy_open_order_amount.<genexpr>: Failure detected at line number 6 and instruction offset 20: Different bytecode || ***<module>.P.sell_open_order_amount.<genexpr>: Failure detected at line number 8 and instruction offset 20: Different bytecode | [single] status=failure units=4/6 success_rate=66.67%
+c03_guard_polarity_inverted :: ***<module>: Failure: Different bytecode | [single] status=failure units=2/3 success_rate=66.67%
+c04_while_not_empty_guard :: (no failure lines) | [single] status=success units=2/2 success_rate=100.00%
+neg01_bare_ternary_return :: (no failure lines) | [single] status=success units=4/4 success_rate=100.00%
+neg02_assert_outside_try :: (no failure lines) | [single] status=success units=3/3 success_rate=100.00%

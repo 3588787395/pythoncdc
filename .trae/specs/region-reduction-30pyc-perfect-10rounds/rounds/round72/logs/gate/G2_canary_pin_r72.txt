@@ -1,0 +1,8 @@
+G2 canary product sha (prev -> landed) + pin check
+======================================================================
+datetime_func.pyc        e711b8ea86d49a15 -> e711b8ea86d49a15  same=True  pin=e711b8ea86d49a15 / 9d09af09249da177 OK
+datetime_func.pyc        9d09af09249da177 -> 9d09af09249da177  same=True  pin=e711b8ea86d49a15 / 9d09af09249da177 OK
+market_time.pyc          af77224b34b203c4 -> af77224b34b203c4  same=True  pin=af77224b34b203c4     OK
+quotation.pyc            3eb76e512df9ab1e -> 3eb76e512df9ab1e  same=True  pin=3eb76e512df9ab1e     OK
+
+G2 verdict: PASS (pin misses=0, sha SAME=4/4)

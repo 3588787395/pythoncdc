@@ -1,0 +1,5 @@
+G5 index audit (pyc_index.json HEAD -> worktree)
+======================================================================
+entries 402 -> 402 ; added=0 removed=0
+round-stamp-only=402 substantive=0
+G5 verdict: PASS

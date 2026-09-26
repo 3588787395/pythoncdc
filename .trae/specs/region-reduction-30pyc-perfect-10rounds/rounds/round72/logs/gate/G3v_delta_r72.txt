@@ -1,0 +1,7 @@
+green=6 red=0
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/asset_mixin.pyc failure->success
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc failure->success
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc failure->success
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc failure->success
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/broker.pyc failure->success
+GREEN F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/live.pyc failure->success

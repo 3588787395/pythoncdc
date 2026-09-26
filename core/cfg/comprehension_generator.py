@@ -6,6 +6,39 @@ from .region_analyzer import (
 )
 
 
+def _and_operand_raw_text(cond: Dict[str, Any]) -> Optional[str]:
+    """把 and 链断行处的操作数渲染成「带续行换行」的原始文本。
+
+    [识别条件] 推导式过滤条件里，某操作数的条件跳转是 POP_JUMP_FORWARD_IF_FALSE
+      （目标是循环体末尾那条 JUMP_BACKWARD 的偏移，而不是循环头），而其后的
+      操作数仍是 POP_JUMP_BACKWARD_IF_FALSE（目标是循环头）：CPython 3.11 按
+      BoolOp 各操作数所处的源码物理行选择跳转方向——操作数 i 与其后所有操作数
+      同处一行时回跳循环头，一旦之后存在行界则前跳循环体末尾。因此「前向」
+      就是原源码在该操作数之后换过行的指令侧证据。
+    [归约方式] 用与发射侧完全相同的两个对象（CFGASTConverter._convert_expression
+      把 dict 转 ASTNode、CodeGenerator._generate_expression 以 and 的父优先级
+      渲染）拿到该操作数的原文，尾部追加换行与续行缩进；转换或渲染抛错一律
+      返回 None，由调用方保持单行原状，不做降级、不猜文本。
+    [AST 映射] 返回值只作为 Name.id 的内容使用：发射侧对 Name 原样输出 id，
+      换行因此精确落在 and 两侧操作数之间；外层仍是 BoolOp(and, values)，
+      重编译回同一 BoolOp，语义与单行版逐字节等价，只有行界不同。
+    """
+    try:
+        from .code_generator import CodeGenerator
+        from .ast_converter import CFGASTConverter
+        node = CFGASTConverter(verbose=False)._convert_expression(cond)
+        if node is None:
+            return None
+        gen = CodeGenerator()
+        text = gen._generate_expression(node, gen._precedence['and'])
+    except Exception:
+        return None
+    if not text:
+        return None
+    # 续行缩进 15 空格 + 发射侧操作符前的那个分隔空格 = 成行后 16 列。
+    return text + '\n' + ' ' * 15
+
+
 class ComprehensionGenerator:
     def __init__(self, expr_reconstructor):
         self.expr_reconstructor = expr_reconstructor
@@ -518,7 +551,27 @@ class ComprehensionGenerator:
                     all_stmts.append({'type': 'Expr', 'value': comp_value})
                     prev_end = wrapper_end
                 elif last_instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    # [识别条件] 本块自身的指令结构事实：store_instr 为空（推导式之后
+                    #   无 STORE_* 目标）、last_instr 是本块最后一条 RETURN_VALUE/
+                    #   RETURN_CONST、且本块 comp_indices 清单里当前项已是**尾项**
+                    #   （其后不再有同块的 MAKE_FUNCTION <listcomp>/<genexpr> 项）——
+                    #   此时 comp_value 就是本块 return 的完整值表达式，与同 else 族
+                    #   L242-246（_chained_pairs 尾项记账）、L565/L568/L571（_ret_succ
+                    #   与兜底分支）的记账完全同型。
+                    # [归约方式] 尾项才把记账推进到块末 prev_end = len(instrs)，使
+                    #   remaining 段为空、不再落入 _generate_remaining_stmts 对同一块
+                    #   的第二次重建；旧实现漏推进记账，前缀为空时 all_stmts 变成
+                    #   [Return(comp_value)] + 整块重建的第二条 Return，逐字重复发射
+                    #   （broker get_orders/get_trades/get_open_orders 的 <listcomp>
+                    #   单元被判 Extra/Different bytecode）。非尾项（嵌套外层在后）
+                    #   则保持记账不动，交由下一轮 pre_comp 终止符守卫把整块判回通用
+                    #   重建路径，避免把嵌套推导式拆成两条 Return。
+                    # [AST 映射] 尾项 ⇒ 单发 ast.Return(ListComp/Call(comp_value))；
+                    #   非尾项 ⇒ 本块整体 return None，由 expr_reconstructor 发射
+                    #   ast.Return(ListComp(iter=ListComp)) 的嵌套形态。
                     all_stmts.append({'type': 'Return', 'value': comp_value})
+                    if _comp_loop_idx == len(comp_indices) - 1:
+                        prev_end = len(instrs)
                 elif (region_ast_gen is not None and block.successors):
                     _ret_succ = None
                     _last_off = last_instr.offset if hasattr(last_instr, 'offset') else 0
@@ -1463,7 +1516,29 @@ class ComprehensionGenerator:
                 if cond_instrs:
                     cond_expr = self.expr_reconstructor.reconstruct(cond_instrs)
                     if cond_expr:
-                        if 'IF_TRUE' in jump_instr.opname:
+                        # [识别条件] None 恒等条件跳转 POP_JUMP_*_IF_NONE /
+                        #   IF_NOT_NONE：CPython 把 `x is None` / `x is not None`
+                        #   折叠成单条跳转，指令流里不再有 COMPARE_OP/IS_OP，
+                        #   重建出来的 cond_expr 只有裸 x。
+                        # [归约方式] 仅在非 OR 过滤（is_or_pattern 为假，即跳转
+                        #   落空侧=跳过本轮，极性与 _fallthrough_cond_for_jump
+                        #   同向）时按 opname 极性补回恒等比较：IF_NOT_NONE →
+                        #   x is None、IF_NONE → x is not None。OR 过滤的前向
+                        #   跳转 taken 侧是进循环体，极性相反，保持原样不改。
+                        # [AST 映射] Compare(left=x, ops=[Is/IsNot],
+                        #   comparators=[Constant(None)])；禁止降级成
+                        #   UnaryOp('not', x)——None 之外还有 0/''/[] 等 falsy，
+                        #   真值取反语义不等价，字节码也会退化成
+                        #   UNARY_NOT + POP_JUMP_*_IF_FALSE。
+                        if not is_or_pattern and 'IF_NOT_NONE' in jump_instr.opname:
+                            cond_expr = {'type': 'Compare', 'left': cond_expr,
+                                         'ops': [{'type': 'Is'}],
+                                         'comparators': [{'type': 'Constant', 'value': None}]}
+                        elif not is_or_pattern and 'IF_NONE' in jump_instr.opname:
+                            cond_expr = {'type': 'Compare', 'left': cond_expr,
+                                         'ops': [{'type': 'IsNot'}],
+                                         'comparators': [{'type': 'Constant', 'value': None}]}
+                        elif 'IF_TRUE' in jump_instr.opname:
                             if is_or_pattern and 'FORWARD' in jump_instr.opname:
                                 pass
                             else:
@@ -1489,6 +1564,30 @@ class ComprehensionGenerator:
                 if has_forward_if_true and has_backward_if_false:
                     is_or_pattern = True
             op = 'or' if is_or_pattern else 'and'
+            # [识别条件] 仅 and 链：segments 与 ifs 一一对应时，数出前缀里连续的
+            #   「POP_JUMP_FORWARD_IF_FALSE」段数 p。该形态只在原源码把 and 链拆到
+            #   两行时出现（同一行上 CPython 两条都回跳循环头），而单行产物必然
+            #   两条都回跳，故 p>0 恒为当前失配单元，p==0 的单元（含全部金丝雀）
+            #   一个字节都不改。
+            # [归约方式] 把第 p-1 个操作数渲染成「原文 + 换行 + 续行缩进」的原始
+            #   文本（_and_operand_raw_text，渲染失败返回 None 则保持单行），
+            #   换行正好落在第 p-1 与第 p 个操作数之间，使重编译时这两行分界
+            #   复现原 pyc 的前向/回跳方向。
+            # [AST 映射] 外层仍是 BoolOp(op, values)，仅 values[p-1] 换成
+            #   Name(原始文本)——发射侧对 Name 原样输出 id，重编译回
+            #   BoolOp(and, [...])，与单行版同一 AST 形状。
+            if op == 'and' and segments and len(segments) == len(ifs):
+                split_at = 0
+                for _, _, lead_jump in segments[:-1]:
+                    if 'FORWARD' in lead_jump.opname and 'IF_FALSE' in lead_jump.opname:
+                        split_at += 1
+                    else:
+                        break
+                if split_at:
+                    raw_text = _and_operand_raw_text(ifs[split_at - 1])
+                    if raw_text is not None:
+                        ifs = list(ifs)
+                        ifs[split_at - 1] = {'type': 'Name', 'id': raw_text}
             ifs = [{'type': 'BoolOp', 'op': op, 'values': ifs}]
 
         return ifs, elt_start_idx

@@ -1,0 +1,64 @@
+===== chain3_lc  dup-lines=3 ['return [o for o in orders]', 'return [o for o in orders if o == x]', 'return [o for o in orders if o == x]']
+def f(x, orders):
+    if x is None:
+        return [o for o in orders]
+        return [o for o in orders]
+    elif isinstance(x, int):
+        return [o for o in orders if o == x]
+        return [o for o in orders if o == x]
+    elif isinstance(x, str):
+        return [o for o in orders if o == x]
+        return [o for o in orders if o == x]
+    else:
+        return []
+===== chain3_plain  dup-lines=0 []
+def f(x, orders):
+    if x is None:
+        return orders
+    elif isinstance(x, int):
+        return orders
+    elif isinstance(x, str):
+        return orders
+===== if_else_lc  dup-lines=1 ['return [o for o in orders if o == x]']
+def f(x, orders):
+    if x is None:
+        return [o for o in orders]
+    else:
+        return [o for o in orders if o == x]
+        return [o for o in orders if o == x]
+    return [o for o in orders]
+===== chain_mixed  dup-lines=0 []
+def f(x, orders):
+    if x is None:
+        return orders
+    elif isinstance(x, int):
+        y = x
+        return [o for o in orders if o == y]
+    else:
+        return []
+===== chain_last_lc  dup-lines=1 ['return [o for o in orders]']
+def f(x, orders):
+    if x is None:
+        return orders
+    elif isinstance(x, int):
+        return orders
+    else:
+        return [o for o in orders]
+        return [o for o in orders]
+===== chain_noelse_lc  dup-lines=2 ['return [o for o in orders]', 'return [o for o in orders if o == x]']
+def f(x, orders):
+    if x is None:
+        return [o for o in orders]
+        return [o for o in orders]
+    elif isinstance(x, int):
+        return [o for o in orders if o == x]
+        return [o for o in orders if o == x]
+    else:
+        return []
+===== if_only_lc  dup-lines=0 []
+def f(x, orders):
+    if x is None:
+        return [o for o in orders]
+    else:
+        return []
+    return [o for o in orders]

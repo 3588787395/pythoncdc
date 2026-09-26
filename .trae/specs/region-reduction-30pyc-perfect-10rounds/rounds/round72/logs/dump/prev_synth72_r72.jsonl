@@ -1,0 +1,32 @@
+{"path": "D:/Temp/opencode/r72gate/fix2/synth/chain3_lc.pyc", "arm": "prev", "sha": "3cfa5ff81b0e8748", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/fix2/synth/chain3_plain.pyc", "arm": "prev", "sha": "21abd83083386174", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/fix2/synth/chain_last_lc.pyc", "arm": "prev", "sha": "2f1dc23cb6cee0b2", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/fix2/synth/chain_mixed.pyc", "arm": "prev", "sha": "657998f3f3bedea2", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/fix2/synth/chain_noelse_lc.pyc", "arm": "prev", "sha": "660781070a56a008", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/fix2/synth/if_else_lc.pyc", "arm": "prev", "sha": "fd8e3f810454ff7a", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/fix2/synth/if_only_lc.pyc", "arm": "prev", "sha": "d14445e337b80022", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/fix1/synth/linebreak_and_jump.pyc", "arm": "prev", "sha": "8b25a3d42f300804", "total_functions": 3, "matched_functions": 1, "mism": [["<module>", 137, 121, 0, 73], ["genexpr_ops", 53, 48, 5, 12]]}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/a01_ternary_return_in_try.pyc", "arm": "prev", "sha": "491d5b7c0eee19d9", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/a02_andchain_shared_else.pyc", "arm": "prev", "sha": "de6315f164d06c97", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/a03_try_wrapped_shared_tail.pyc", "arm": "prev", "sha": "dff927beb6f6de36", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/a04_sibling_return_none.pyc", "arm": "prev", "sha": "b1f3d3c5434f7f82", "total_functions": 2, "matched_functions": 1, "mism": [["post", 51, 50, 1, 14]]}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/a05_mixed_and_or_chain.pyc", "arm": "prev", "sha": "fad561c2908bff5f", "total_functions": 3, "matched_functions": 2, "mism": [["_history_bars", 20, 16, 1, 9]]}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/a06_try_except_else_range.pyc", "arm": "prev", "sha": "e304d3f9530a4479", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/a07_if_absorb_following_if.pyc", "arm": "prev", "sha": "4776f243a8c14f27", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/a08_if_absorb_trailing_stmts.pyc", "arm": "prev", "sha": "6732ce6a1ccac66c", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/a09_try_finally_tail_return.pyc", "arm": "prev", "sha": "a73bc4eb0940bdc1", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/a10_cross_loop_tail_stmt.pyc", "arm": "prev", "sha": "eba12b2a1cebbbd6", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/b01_dupe_elif_return_listcomp.pyc", "arm": "prev", "sha": "217a62e9695c6f37", "total_functions": 5, "matched_functions": 5, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/b02_genexpr_pred_jump.pyc", "arm": "prev", "sha": "7f0602e0c32535f6", "total_functions": 6, "matched_functions": 6, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/b03_polarity_guard_flip.pyc", "arm": "prev", "sha": "59aad7cc4380a914", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/b04_elif_not_orchain_raise.pyc", "arm": "prev", "sha": "8206135a8a70dfbc", "total_functions": 4, "matched_functions": 4, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/b05_bareexcept_boolop_orchain.pyc", "arm": "prev", "sha": "1b02df0fde449b54", "total_functions": 2, "matched_functions": 1, "mism": [["rep", 85, 81, 2, 40]]}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/b06_loop_tail_stmt_absorbed.pyc", "arm": "prev", "sha": "5a478d9750ba4270", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/b07_outer_if_hoisted_dangling_cond.pyc", "arm": "prev", "sha": "b4cb7df05c8fdd66", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/b08_not_in_membership_guard.pyc", "arm": "prev", "sha": "8cca3eb6a5ce90cd", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/c01_try_in_elif_arm.pyc", "arm": "prev", "sha": "cfb05b9375650f1a", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/c02_genexpr_and_predicate.pyc", "arm": "prev", "sha": "7de70371a30a0409", "total_functions": 5, "matched_functions": 4, "mism": [["<genexpr>", 26, 26, 0, 1]]}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/c03_guard_polarity_inverted.pyc", "arm": "prev", "sha": "22eef8349116c2b3", "total_functions": 3, "matched_functions": 2, "mism": [["<module>", 7, 7, 0, 6]]}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/c04_while_not_empty_guard.pyc", "arm": "prev", "sha": "cd707e35846f1e01", "total_functions": 2, "matched_functions": 2, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/neg01_bare_ternary_return.pyc", "arm": "prev", "sha": "3bd0b9c9380bb0c5", "total_functions": 4, "matched_functions": 4, "mism": []}
+{"path": "D:/Temp/opencode/r72gate/diag1/synth/out/neg02_assert_outside_try.pyc", "arm": "prev", "sha": "235f848ead0394f6", "total_functions": 3, "matched_functions": 3, "mism": []}

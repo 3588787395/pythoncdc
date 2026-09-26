@@ -1,0 +1,6 @@
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/asset_mixin.pyc  gained=[] lost=[]
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc  gained=[] lost=[]
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc  gained=[] lost=[]
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc  gained=[] lost=[]
+TALLY SAME=0 IMPROVED=0 REGRESSION=0 MOVED=4 ERR=0  (unpaired lists=0)
+files fully matched: a=4 b=4

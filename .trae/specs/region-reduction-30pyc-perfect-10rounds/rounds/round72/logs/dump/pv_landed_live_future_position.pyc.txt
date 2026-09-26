@@ -1,0 +1,7 @@
+  ***<module>.LiveFuturePosition.buy_open_order_amount.<genexpr>: Failure detected at line number 228 and instruction offset 20: Different bytecode
+  ***<module>.LiveFuturePosition.sell_open_order_amount.<genexpr>: Failure detected at line number 234 and instruction offset 20: Different bytecode
+  ***<module>.LiveFuturePosition._buy_close_today_order_amount.<genexpr>: Failure detected at line number 249 and instruction offset 20: Different bytecode
+  ***<module>.LiveFuturePosition._sell_close_today_order_amount.<genexpr>: Failure detected at line number 252 and instruction offset 20: Different bytecode
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc
+[single] 产物 D:/Temp/opencode/r72gate/center/build_landed/IQEngine__plugins__plugin_system_accounts__position_model__live_future_positionOK.py
+[single] status=failure units=71/75 success_rate=94.67%

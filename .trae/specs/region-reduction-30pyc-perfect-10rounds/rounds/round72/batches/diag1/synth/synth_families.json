@@ -1,0 +1,202 @@
+[
+ {
+  "src": "a01_ternary_return_in_try.pyc",
+  "name": "<module>.BarData.limit_up",
+  "verdict": "Different control flow",
+  "family": "F-TERNARY",
+  "reason": "idx 10 JUMP_FORWARD -> RETURN_VALUE",
+  "lenA": 30,
+  "lenB": 30,
+  "firstA": "20 JUMP_FORWARD to 26",
+  "firstB": "20 RETURN_VALUE "
+ },
+ {
+  "src": "a02_andchain_shared_else.pyc",
+  "name": "<module>.f",
+  "verdict": "Different control flow",
+  "family": "F-ABSORB",
+  "reason": "idx 3 POP_JUMP_FORWARD_IF_NOT_NONE target 42 -> 46 lands on DIFFERENT instr (LOAD_CONST vs LOAD_GLOBAL)",
+  "lenA": 33,
+  "lenB": 33,
+  "firstA": "6 POP_JUMP_FORWARD_IF_NOT_NONE to 42",
+  "firstB": "6 POP_JUMP_FORWARD_IF_NOT_NONE to 46"
+ },
+ {
+  "src": "a03_try_wrapped_shared_tail.pyc",
+  "name": "<module>.get_fields",
+  "verdict": "Different control flow",
+  "family": "F-ABSORB",
+  "reason": "idx 14 JUMP_FORWARD target 66 -> 126 lands on DIFFERENT instr (LOAD_FAST vs LOAD_FAST)",
+  "lenA": 90,
+  "lenB": 90,
+  "firstA": "28 JUMP_FORWARD to 66",
+  "firstB": "28 JUMP_FORWARD to 126"
+ },
+ {
+  "src": "a04_sibling_return_none.pyc",
+  "name": "<module>.post",
+  "verdict": "Different control flow",
+  "family": "F-PAD",
+  "reason": "idx 6 POP_JUMP_FORWARD_IF_FALSE target 72 -> 76 lands on SAME instr, len equal",
+  "lenA": 55,
+  "lenB": 55,
+  "firstA": "12 POP_JUMP_FORWARD_IF_FALSE to 72",
+  "firstB": "12 POP_JUMP_FORWARD_IF_FALSE to 76"
+ },
+ {
+  "src": "a05_mixed_and_or_chain.pyc",
+  "name": "<module>.BarData._history_bars",
+  "verdict": "Different control flow",
+  "family": "F-ABSORB",
+  "reason": "idx 9 POP_JUMP_FORWARD_IF_TRUE target 28 -> 24 lands on DIFFERENT instr (LOAD_CONST vs LOAD_FAST)",
+  "lenA": 19,
+  "lenB": 15,
+  "firstA": "18 POP_JUMP_FORWARD_IF_TRUE to 28",
+  "firstB": "18 POP_JUMP_FORWARD_IF_TRUE to 24"
+ },
+ {
+  "src": "a09_try_finally_tail_return.pyc",
+  "name": "<module>.upd",
+  "verdict": "Different control flow",
+  "family": "F-ABSORB",
+  "reason": "opname JUMP_FORWARD -> LOAD_CONST at idx 60, len 73/72",
+  "lenA": 73,
+  "lenB": 72,
+  "firstA": "120 JUMP_FORWARD to 142",
+  "firstB": "120 LOAD_CONST None"
+ },
+ {
+  "src": "b01_dupe_elif_return_listcomp.pyc",
+  "name": "<module>.B.get_orders.<listcomp>",
+  "verdict": "Extra",
+  "family": "F-EXTRA",
+  "reason": "product-only code object"
+ },
+ {
+  "src": "b01_dupe_elif_return_listcomp.pyc",
+  "name": "<module>.B.get_orders.<listcomp>",
+  "verdict": "Extra",
+  "family": "F-EXTRA",
+  "reason": "product-only code object"
+ },
+ {
+  "src": "b01_dupe_elif_return_listcomp.pyc",
+  "name": "<module>.B.get_orders.<listcomp>",
+  "verdict": "Different bytecode",
+  "family": "F-ABSORB",
+  "reason": "target instr same but len 14/15",
+  "lenA": 14,
+  "lenB": 15,
+  "firstA": "6 FOR_ITER to 26",
+  "firstB": "6 FOR_ITER to 28"
+ },
+ {
+  "src": "b01_dupe_elif_return_listcomp.pyc",
+  "name": "<module>.B.get_open_orders.<listcomp>",
+  "verdict": "Different control flow",
+  "family": "F-ABSORB",
+  "reason": "opname COPY_FREE_VARS -> BUILD_LIST at idx 0, len 16/10",
+  "lenA": 16,
+  "lenB": 10,
+  "firstA": "0 COPY_FREE_VARS ",
+  "firstB": "0 BUILD_LIST "
+ },
+ {
+  "src": "b01_dupe_elif_return_listcomp.pyc",
+  "name": "<module>.B.get_open_orders.<listcomp>",
+  "verdict": "Different bytecode",
+  "family": "F-ABSORB",
+  "reason": "target instr same but len 17/16",
+  "lenA": 17,
+  "lenB": 16,
+  "firstA": "6 FOR_ITER to 32",
+  "firstB": "6 FOR_ITER to 30"
+ },
+ {
+  "src": "b01_dupe_elif_return_listcomp.pyc",
+  "name": "<module>.B.get_open_orders.<listcomp>",
+  "verdict": "Different bytecode",
+  "family": "F-ABSORB",
+  "reason": "target instr same but len 15/16",
+  "lenA": 15,
+  "lenB": 16,
+  "firstA": "6 FOR_ITER to 28",
+  "firstB": "6 FOR_ITER to 30"
+ },
+ {
+  "src": "b01_dupe_elif_return_listcomp.pyc",
+  "name": "<module>.B.get_open_orders.<listcomp>",
+  "verdict": "Extra",
+  "family": "F-EXTRA",
+  "reason": "product-only code object"
+ },
+ {
+  "src": "b01_dupe_elif_return_listcomp.pyc",
+  "name": "<module>.B.get_open_orders.<listcomp>",
+  "verdict": "Extra",
+  "family": "F-EXTRA",
+  "reason": "product-only code object"
+ },
+ {
+  "src": "b01_dupe_elif_return_listcomp.pyc",
+  "name": "<module>.B.get_open_orders.<listcomp>",
+  "verdict": "Extra",
+  "family": "F-EXTRA",
+  "reason": "product-only code object"
+ },
+ {
+  "src": "b04_elif_not_orchain_raise.pyc",
+  "name": "<module>.Cache.info_conbine",
+  "verdict": "Different control flow",
+  "family": "F-ABSORB",
+  "reason": "idx 13 POP_JUMP_FORWARD_IF_TRUE target 38 -> 46 lands on DIFFERENT instr (LOAD_GLOBAL vs LOAD_FAST)",
+  "lenA": 53,
+  "lenB": 53,
+  "firstA": "26 POP_JUMP_FORWARD_IF_TRUE to 38",
+  "firstB": "26 POP_JUMP_FORWARD_IF_TRUE to 46"
+ },
+ {
+  "src": "b05_bareexcept_boolop_orchain.pyc",
+  "name": "<module>.rep",
+  "verdict": "Different control flow",
+  "family": "F-ABSORB",
+  "reason": "target instr same but len 84/80",
+  "lenA": 84,
+  "lenB": 80,
+  "firstA": "44 JUMP_FORWARD to 160",
+  "firstB": "44 JUMP_FORWARD to 152"
+ },
+ {
+  "src": "c02_genexpr_and_predicate.pyc",
+  "name": "<module>.P.buy_open_order_amount.<genexpr>",
+  "verdict": "Different bytecode",
+  "family": "F-OTHER",
+  "reason": "opname POP_JUMP_FORWARD_IF_FALSE -> POP_JUMP_BACKWARD_IF_FALSE at idx 10, len equal 24",
+  "lenA": 24,
+  "lenB": 24,
+  "firstA": "20 POP_JUMP_FORWARD_IF_FALSE to 42",
+  "firstB": "20 POP_JUMP_BACKWARD_IF_FALSE to 6"
+ },
+ {
+  "src": "c02_genexpr_and_predicate.pyc",
+  "name": "<module>.P.sell_open_order_amount.<genexpr>",
+  "verdict": "Different bytecode",
+  "family": "F-OTHER",
+  "reason": "opname POP_JUMP_FORWARD_IF_FALSE -> POP_JUMP_BACKWARD_IF_FALSE at idx 10, len equal 24",
+  "lenA": 24,
+  "lenB": 24,
+  "firstA": "20 POP_JUMP_FORWARD_IF_FALSE to 42",
+  "firstB": "20 POP_JUMP_BACKWARD_IF_FALSE to 6"
+ },
+ {
+  "src": "c03_guard_polarity_inverted.pyc",
+  "name": "<module>",
+  "verdict": "Different bytecode",
+  "family": "F-ABSORB",
+  "reason": "idx 0 LOAD_CONST arg ('1d', False, False) -> '1d', len 6/8",
+  "lenA": 6,
+  "lenB": 8,
+  "firstA": "0 LOAD_CONST ('1d', False, False)",
+  "firstB": "0 LOAD_CONST \"1d\""
+ }
+]

@@ -1,0 +1,55 @@
+LINE 46632  var=comp_stmt idx=0
+  code:         if comp_stmt is not None:
+  stack:
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 3184, in _generate_region
+    return self._generate_if(region)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 11743, in _generate_if
+    return self._if_generate_full_elif_chain(region)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 12914, in _if_generate_full_elif_chain
+    then_stmts = self._if_generate_then_branch(region)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 15272, in _if_generate_then_branch
+    then_stmts = self._process_if_blocks(region.then_blocks, region, branch='then',
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 22960, in _process_if_blocks
+    bs = self._generate_block_statements(block)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 44665, in _generate_block_statements
+    stmts = self._generate_block_statements_body(block, _cjb_parent)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 46632, in _generate_block_statements_body
+    if comp_stmt is not None:
+
+
+LINE 46632  var=comp_stmt idx=0
+  code:         if comp_stmt is not None:
+  stack:
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 3184, in _generate_region
+    return self._generate_if(region)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 11743, in _generate_if
+    return self._if_generate_full_elif_chain(region)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 12952, in _if_generate_full_elif_chain
+    elif_part = self._if_generate_elif_chain(region)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 16508, in _if_generate_elif_chain
+    elif_body_stmts = self._process_if_blocks(region.elif_bodies[0], region, branch='elif')
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 22960, in _process_if_blocks
+    bs = self._generate_block_statements(block)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 44665, in _generate_block_statements
+    stmts = self._generate_block_statements_body(block, _cjb_parent)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 46632, in _generate_block_statements_body
+    if comp_stmt is not None:
+
+
+LINE 46632  var=comp_stmt idx=0
+  code:         if comp_stmt is not None:
+  stack:
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 3184, in _generate_region
+    return self._generate_if(region)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 11743, in _generate_if
+    return self._if_generate_full_elif_chain(region)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 12952, in _if_generate_full_elif_chain
+    elif_part = self._if_generate_elif_chain(region)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 16714, in _if_generate_elif_chain
+    last_elif_body_stmts = self._process_if_blocks(region.elif_bodies[1], region, branch='elif')
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 22960, in _process_if_blocks
+    bs = self._generate_block_statements(block)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 44665, in _generate_block_statements
+    stmts = self._generate_block_statements_body(block, _cjb_parent)
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 46632, in _generate_block_statements_body
+    if comp_stmt is not None:

@@ -1,0 +1,53 @@
+G1 official ruler on the 47 pylingual-failure targets (prev -> landed)
+======================================================================
+IQCommon/api/klinedata.pyc                            43/45  d=2   |d|=1    ->  43/45  d=2   |d|=1     SAME
+IQCommon/data/finance.pyc                             24/24  d=0   |d|=0    ->  24/24  d=0   |d|=0     SAME
+IQCommon/data/local_finance.pyc                       19/19  d=0   |d|=0    ->  19/19  d=0   |d|=0     SAME
+IQCommon/logger/handlers.pyc                          18/18  d=0   |d|=0    ->  18/18  d=0   |d|=0     SAME
+IQCommon/strategy/jq_trans_module.pyc                 35/35  d=0   |d|=0    ->  35/35  d=0   |d|=0     SAME
+IQCommon/strategy/wizard_quant_api.pyc                53/53  d=0   |d|=0    ->  53/53  d=0   |d|=0     SAME
+IQCommon/util/cgroup_utils.pyc                         8/8   d=0   |d|=0    ->   8/8   d=0   |d|=0     SAME
+IQCommon/util/email_utils.pyc                          4/4   d=0   |d|=0    ->   4/4   d=0   |d|=0     SAME
+IQCommon/util/trade_info_utils.pyc                    40/40  d=0   |d|=0    ->  40/40  d=0   |d|=0     SAME
+IQData/api/api_base.pyc                               24/25  d=1   |d|=0    ->  24/25  d=1   |d|=0     SAME
+IQData/plugins/plugin_system_fly_basicdata/calexrigh   8/8   d=0   |d|=0    ->   8/8   d=0   |d|=0     SAME
+IQData/plugins/plugin_system_realquote/real_quote.py  40/44  d=4   |d|=5    ->  40/44  d=4   |d|=5     SAME
+IQData/utils/calexrights_func.pyc                      8/8   d=0   |d|=0    ->   8/8   d=0   |d|=0     SAME
+IQEngine/account/order.pyc                            52/52  d=0   |d|=0    ->  52/52  d=0   |d|=0     SAME
+IQEngine/api/api_base.pyc                             48/48  d=0   |d|=0    ->  48/48  d=0   |d|=0     MOVED
+IQEngine/core/bar.pyc                                 58/58  d=0   |d|=0    ->  58/58  d=0   |d|=0     SAME
+IQEngine/core/commission.pyc                          10/10  d=0   |d|=0    ->  10/10  d=0   |d|=0     SAME
+IQEngine/core/executor.pyc                            10/10  d=0   |d|=0    ->  10/10  d=0   |d|=0     SAME
+IQEngine/core/slippage.pyc                             7/7   d=0   |d|=0    ->   7/7   d=0   |d|=0     SAME
+IQEngine/core/strategy/strategy_universe.pyc          11/11  d=0   |d|=0    ->  11/11  d=0   |d|=0     SAME
+IQEngine/data/asset_mixin.pyc                         16/16  d=0   |d|=0    ->  16/16  d=0   |d|=0     MOVED
+IQEngine/data/trading_dates_mixin.pyc                 14/14  d=0   |d|=0    ->  14/14  d=0   |d|=0     SAME
+IQEngine/plugins/plugin_fly_data/fly_api/history_api  18/18  d=0   |d|=0    ->  18/18  d=0   |d|=0     SAME
+IQEngine/plugins/plugin_fly_data/fly_api/order_api.p  32/34  d=2   |d|=19   ->  32/34  d=2   |d|=19    SAME
+IQEngine/plugins/plugin_fly_data/strategy/strategy.p  24/24  d=0   |d|=0    ->  24/24  d=0   |d|=0     SAME
+IQEngine/plugins/plugin_system_accounts/position_mod  72/72  d=0   |d|=0    ->  72/72  d=0   |d|=0     MOVED
+IQEngine/plugins/plugin_system_accounts/position_mod  64/64  d=0   |d|=0    ->  64/64  d=0   |d|=0     MOVED
+IQEngine/plugins/plugin_system_accounts/position_mod  60/60  d=0   |d|=0    ->  60/60  d=0   |d|=0     MOVED
+IQEngine/plugins/plugin_system_accounts/position_mod  37/37  d=0   |d|=0    ->  37/37  d=0   |d|=0     SAME
+IQEngine/plugins/plugin_system_event_source/realtime  11/12  d=1   |d|=10   ->  11/12  d=1   |d|=10    SAME
+IQEngine/plugins/plugin_system_matcher/matcher.pyc    17/17  d=0   |d|=0    ->  17/17  d=0   |d|=0     SAME
+IQEngine/plugins/plugin_system_risk_calculation/__in  33/35  d=2   |d|=6    ->  33/35  d=2   |d|=6     SAME
+IQEngine/plugins/plugin_system_simulation/broker.pyc  24/24  d=0   |d|=0    ->  24/24  d=0   |d|=0     MOVED
+IQEngine/plugins/plugin_system_simulation/live.pyc    26/26  d=0   |d|=0    ->  26/26  d=0   |d|=0     MOVED
+IQEngine/plugins/plugin_system_trade/function.pyc     71/71  d=0   |d|=0    ->  71/71  d=0   |d|=0     SAME
+IQEngine/plugins/plugin_system_trade/trade_live_brok 111/119 d=8   |d|=83   -> 111/119 d=8   |d|=83    MOVED
+IQEngine/utils/profiler_func.pyc                      15/15  d=0   |d|=0    ->  15/15  d=0   |d|=0     SAME
+fly/common/flytools.pyc                               65/65  d=0   |d|=0    ->  65/65  d=0   |d|=0     SAME
+fly/common/future_contract_info.pyc                   29/29  d=0   |d|=0    ->  29/29  d=0   |d|=0     SAME
+fly/data/quotation.pyc                               143/143 d=0   |d|=0    -> 143/143 d=0   |d|=0     SAME
+fly/data/quote.pyc                                    72/81  d=9   |d|=62   ->  72/81  d=9   |d|=62    SAME
+fly/data/quote_handler.pyc                            57/57  d=0   |d|=0    ->  57/57  d=0   |d|=0     SAME
+fly/dumpload/load_daily.pyc                           23/23  d=0   |d|=0    ->  23/23  d=0   |d|=0     SAME
+fly/logger.pyc                                        30/30  d=0   |d|=0    ->  30/30  d=0   |d|=0     SAME
+fly/oauthenticator/oauth2.pyc                         11/11  d=0   |d|=0    ->  11/11  d=0   |d|=0     SAME
+fly/simtradding/flyAccount.pyc                        23/23  d=0   |d|=0    ->  23/23  d=0   |d|=0     SAME
+fly/simtradding/ptradeAccount.pyc                    137/137 d=0   |d|=0    -> 137/137 d=0   |d|=0     SAME
+
+TALLY ERR=0 IMPROVED=0 MOVED=8 REGRESSION=0 SAME=39
+files fully matched: prev=39 landed=39
+G1 verdict: PASS

@@ -1,0 +1,16 @@
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc
+[single] 产物 D:/Temp/opencode/r72gate/center/build_fix1a/IQEngine__plugins__plugin_system_accounts__position_model__future_positionOK.py
+[single] status=success units=83/83 success_rate=100.00%
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc
+[single] 产物 D:/Temp/opencode/r72gate/center/build_fix1a/IQEngine__plugins__plugin_system_accounts__position_model__live_future_positionOK.py
+[single] status=success units=75/75 success_rate=100.00%
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc
+[single] 产物 D:/Temp/opencode/r72gate/center/build_fix1a/IQEngine__plugins__plugin_system_accounts__position_model__option_positionOK.py
+[single] status=success units=67/67 success_rate=100.00%
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/asset_mixin.pyc
+[single] 产物 D:/Temp/opencode/r72gate/center/build_fix1a/IQEngine__data__asset_mixinOK.py
+[single] status=success units=21/21 success_rate=100.00%
+  ***<module>.change_his_to_forward: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc
+[single] 产物 D:/Temp/opencode/r72gate/center/build_fix1a/fly__data__quotationOK.py
+[single] status=failure units=152/153 success_rate=99.35%

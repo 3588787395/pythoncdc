@@ -1,0 +1,10 @@
+  ***<module>.SimulationBroker.get_orders.<listcomp>: Failure: Different bytecode
+  ***None: Failure: Extra bytecode
+  ***None: Failure: Extra bytecode
+  ***None: Failure: Extra bytecode
+  ***None: Failure: Extra bytecode
+  ***<module>.SimulationBroker.get_open_orders.<listcomp>: Failure: Different control flow
+  ***<module>.SimulationBroker.get_open_orders.<listcomp>: Failure: Different bytecode
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/broker.pyc
+[single] 产物 D:/Temp/opencode/r72gate/center/build_landed/IQEngine__plugins__plugin_system_simulation__brokerOK.py
+[single] status=failure units=35/42 success_rate=83.33%

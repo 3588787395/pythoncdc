@@ -1,0 +1,13 @@
+G4 stats (pyc_batch_verify batch --index pyc_index.json --all --round 72)
+======================================================================
+累计统计:
+  total_pyc:             402
+  verified_pyc:          402
+  ok_pyc:                394
+  partial_pyc:           8
+  failed_pyc:            0
+  total_functions:       5746
+  matched_functions:     5717
+  cumulative_match_rate: 99.50%
+======================================================================
+Traceback=0 FAIL-line=0

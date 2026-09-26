@@ -1,0 +1,17 @@
+  ***<module>.TradeLiveBroker.on_pre_before_trading_start: Failure: Different control flow
+  ***<module>.TradeLiveBroker._process_order: Failure: Different control flow
+  ***<module>.TradeLiveBroker._process_tick_order: Failure: Different control flow
+  ***<module>.TradeLiveBroker._process_cancel_order: Failure: Different control flow
+  ***<module>.TradeLiveBroker._sync_worker: Failure: Different control flow
+  ***<module>.TradeLiveBroker._trade_status_handle: Failure: Different control flow
+  ***<module>.TradeLiveBroker.etf_basket_order: Failure: Different control flow
+  ***<module>.TradeLiveBroker.etf_purchase_redemption: Failure: Different bytecode
+  ***<module>.TradeLiveBroker.get_max_amount: Failure: Different control flow
+  ***<module>.TradeLiveBroker.rzrq_credit_order: Failure: Different control flow
+  ***<module>.TradeLiveBroker.ipo_stocks_order: Failure: Different control flow
+  ***<module>.TradeLiveBroker.get_ipo_stocks: Failure: Different control flow
+  ***<module>.TradeLiveBroker.on_order_response_list_handle: Failure: Different control flow
+  ***<module>.TradeLiveBroker.on_trade_response_list_handle: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc
+[single] 产物 D:/Temp/opencode/r72gate/center/build_f2/IQEngine__plugins__plugin_system_trade__trade_live_brokerOK.py
+[single] status=failure units=114/128 success_rate=89.06%

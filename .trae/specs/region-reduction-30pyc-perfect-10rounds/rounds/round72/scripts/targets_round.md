@@ -1,0 +1,150 @@
+# Round 72 目标与分批（数据源：round71 G3v mandated ruler，47 支 failure / 85 cf + 12 bytecode）
+
+头部（units_failed 降序）：
+- IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc               15 fail  pylingual 114/129  official 111/119  {'Extra bytecode': 1, 'Different control flow': 13, 'Different bytecode': 1}
+- fly/data/quote.pyc                                                       12 fail  pylingual 80/92  official 72/81  {'Different bytecode': 2, 'Different control flow': 10}
+- IQEngine/plugins/plugin_system_simulation/broker.pyc                      7 fail  pylingual 35/42  official 24/24  {'Different bytecode': 2, 'Extra bytecode': 4, 'Different control flow': 1}
+- IQCommon/util/trade_info_utils.pyc                                        5 fail  pylingual 36/41  official 40/40  {'Different control flow': 5}
+- IQData/plugins/plugin_system_realquote/real_quote.pyc                     4 fail  pylingual 41/45  official 40/44  {'Different control flow': 4}
+- IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc  4 fail  pylingual 79/83  official 72/72  {'Different bytecode': 4}
+- IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc  4 fail  pylingual 71/75  official 64/64  {'Different bytecode': 4}
+- IQCommon/api/klinedata.pyc                                                3 fail  pylingual 61/64  official 43/45  {'Different control flow': 3}
+- IQCommon/data/finance.pyc                                                 3 fail  pylingual 29/32  official 24/24  {'Different control flow': 3}
+- IQCommon/strategy/wizard_quant_api.pyc                                    3 fail  pylingual 55/58  official 53/53  {'Different control flow': 3}
+- IQEngine/core/bar.pyc                                                     3 fail  pylingual 82/85  official 58/58  {'Different control flow': 3}
+- IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc                    3 fail  pylingual 34/37  official 32/34  {'Different control flow': 3}
+- IQCommon/strategy/jq_trans_module.pyc                                     2 fail  pylingual 63/65  official 35/35  {'Different control flow': 2}
+- IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc  2 fail  pylingual 65/67  official 60/60  {'Different bytecode': 2}
+- IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc              2 fail  pylingual 41/43  official 33/35  {'Different control flow': 2}
+- fly/common/flytools.pyc                                                   2 fail  pylingual 64/66  official 65/65  {'Different control flow': 2}
+
+单单元长尾 28 支（cf=1 为主），本轮不逐支攻坚，仅在候选复测中被动覆盖。
+
+## diag1 — 只读诊断：头部 cf 聚类 + 最小复现 + 三要素提案
+- IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc               15 fail  {'Extra bytecode': 1, 'Different control flow': 13, 'Different bytecode': 1}
+    - ***None: Failure: Extra bytecode
+    - ***<module>.TradeLiveBroker.on_pre_before_trading_start: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._process_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._process_tick_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._process_cancel_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._sync_worker: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._trade_status_handle: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.etf_basket_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.etf_purchase_redemption: Failure: Different bytecode
+    - ***<module>.TradeLiveBroker.get_max_amount: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.rzrq_credit_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.ipo_stocks_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.get_ipo_stocks: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.on_order_response_list_handle: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.on_trade_response_list_handle: Failure: Different control flow
+- fly/data/quote.pyc                                                       12 fail  {'Different bytecode': 2, 'Different control flow': 10}
+    - ***<module>.Quote.build_current_period_df: Failure: Different bytecode
+    - ***<module>.Quote.load_bars_from_hundsun: Failure: Different bytecode
+    - ***<module>.Quote.load_get_price: Failure: Different control flow
+    - ***<module>.Quote.change_his_to_forward: Failure: Different control flow
+    - ***<module>.Quote.change_his_to_backward: Failure: Different control flow
+    - ***<module>.Quote.get_price: Failure: Different control flow
+    - ***<module>.Quote.check_industry_code: Failure: Different control flow
+    - ***<module>.Quote.check_frequency: Failure: Different control flow
+    - ***<module>.Quote.get_real_from_zeromq: Failure: Different control flow
+    - ***<module>.Quote.run_individual_transform: Failure: Different control flow
+    - ***<module>.Quote.run_tick_socket: Failure: Different control flow
+    - ***<module>.Quote.get_individual_data: Failure: Different control flow
+- IQEngine/plugins/plugin_system_simulation/broker.pyc                      7 fail  {'Different bytecode': 2, 'Extra bytecode': 4, 'Different control flow': 1}
+    - ***<module>.SimulationBroker.get_orders.<listcomp>: Failure: Different bytecode
+    - ***None: Failure: Extra bytecode
+    - ***None: Failure: Extra bytecode
+    - ***None: Failure: Extra bytecode
+    - ***None: Failure: Extra bytecode
+    - ***<module>.SimulationBroker.get_open_orders.<listcomp>: Failure: Different control flow
+    - ***<module>.SimulationBroker.get_open_orders.<listcomp>: Failure: Different bytecode
+- IQCommon/util/trade_info_utils.pyc                                        5 fail  {'Different control flow': 5}
+    - ***<module>.trade_operation: Failure: Different control flow
+    - ***<module>.kill_trade_process: Failure: Different control flow
+    - ***<module>.get_trade_status: Failure: Different control flow
+    - ***<module>.query_trade_strategy_info: Failure: Different control flow
+    - ***<module>.query_strategy_id: Failure: Different control flow
+- IQData/plugins/plugin_system_realquote/real_quote.pyc                     4 fail  {'Different control flow': 4}
+    - ***<module>.RealQuoteData.one_prod_to_ndarray: Failure: Different control flow
+    - ***<module>.RealQuoteData.get_real_minute_kline: Failure: Different control flow
+    - ***<module>.RealQuoteData.get_cache_l2_data_by_one: Failure: Different control flow
+    - ***<module>.RealQuoteData.get_tick_direction: Failure: Different control flow
+- IQCommon/api/klinedata.pyc                                                3 fail  {'Different control flow': 3}
+    - ***<module>.get_kline_by_count_new: Failure: Different control flow
+    - ***<module>.get_multiminute_his_data: Failure: Different control flow
+    - ***<module>.kline_datetime_list: Failure: Different control flow
+- IQEngine/core/bar.pyc                                                     3 fail  {'Different control flow': 3}
+    - ***<module>.BarData.limit_up: Failure: Different control flow
+    - ***<module>.BarData.limit_down: Failure: Different control flow
+    - ***<module>.BarData._history_bars: Failure: Different control flow
+- IQCommon/strategy/wizard_quant_api.pyc                                    3 fail  {'Different control flow': 3}
+    - ***<module>.filter_desicion: Failure: Different control flow
+    - ***<module>.get_DMI.calculate_di.<genexpr>: Failure: Different control flow
+    - ***<module>.get_DMI.calculate_di.<genexpr>: Failure: Different control flow
+- IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc                    3 fail  {'Different control flow': 3}
+    - ***<module>.base_order: Failure: Different control flow
+    - ***<module>.future_order: Failure: Different control flow
+    - ***<module>.option_order: Failure: Different control flow
+- IQCommon/data/finance.pyc                                                 3 fail  {'Different control flow': 3}
+    - ***<module>.get_financial_and_growth_factors: Failure: Different control flow
+    - ***<module>.get_financial_statements_pit_mode: Failure: Different control flow
+    - ***<module>.get_fields: Failure: Different control flow
+
+## fix1 — 候选 spec：genexpr/listcomp Different bytecode 族（comprehension_generator）
+- IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc  4 fail  {'Different bytecode': 4}
+    - ***<module>.FuturePosition.buy_open_order_amount.<genexpr>: Failure detected at line number 215 and instruction offset 20: Different bytecode
+    - ***<module>.FuturePosition.sell_open_order_amount.<genexpr>: Failure detected at line number 221 and instruction offset 20: Different bytecode
+    - ***<module>.FuturePosition._buy_close_today_order_amount.<genexpr>: Failure detected at line number 236 and instruction offset 20: Different bytecode
+    - ***<module>.FuturePosition._sell_close_today_order_amount.<genexpr>: Failure detected at line number 239 and instruction offset 20: Different bytecode
+- IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc  4 fail  {'Different bytecode': 4}
+    - ***<module>.LiveFuturePosition.buy_open_order_amount.<genexpr>: Failure detected at line number 228 and instruction offset 20: Different bytecode
+    - ***<module>.LiveFuturePosition.sell_open_order_amount.<genexpr>: Failure detected at line number 234 and instruction offset 20: Different bytecode
+    - ***<module>.LiveFuturePosition._buy_close_today_order_amount.<genexpr>: Failure detected at line number 249 and instruction offset 20: Different bytecode
+    - ***<module>.LiveFuturePosition._sell_close_today_order_amount.<genexpr>: Failure detected at line number 252 and instruction offset 20: Different bytecode
+- IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc  2 fail  {'Different bytecode': 2}
+    - ***<module>.OptionPosition.buy_open_order_amount.<genexpr>: Failure detected at line number 203 and instruction offset 20: Different bytecode
+    - ***<module>.OptionPosition.sell_open_order_amount.<genexpr>: Failure detected at line number 209 and instruction offset 20: Different bytecode
+- IQEngine/data/asset_mixin.pyc                                             1 fail  {'Different bytecode': 1}
+    - ***<module>.AssetMixin.get_assets.<listcomp>: Failure detected at line number 91 and instruction offset 10: Different bytecode
+
+## fix2 — 候选 spec：头部 control-flow 族（broker 7 + 单元长尾同构）
+- IQEngine/plugins/plugin_system_simulation/broker.pyc                      7 fail  {'Different bytecode': 2, 'Extra bytecode': 4, 'Different control flow': 1}
+    - ***<module>.SimulationBroker.get_orders.<listcomp>: Failure: Different bytecode
+    - ***None: Failure: Extra bytecode
+    - ***None: Failure: Extra bytecode
+    - ***None: Failure: Extra bytecode
+    - ***None: Failure: Extra bytecode
+    - ***<module>.SimulationBroker.get_open_orders.<listcomp>: Failure: Different control flow
+    - ***<module>.SimulationBroker.get_open_orders.<listcomp>: Failure: Different bytecode
+- fly/data/quote.pyc                                                       12 fail  {'Different bytecode': 2, 'Different control flow': 10}
+    - ***<module>.Quote.build_current_period_df: Failure: Different bytecode
+    - ***<module>.Quote.load_bars_from_hundsun: Failure: Different bytecode
+    - ***<module>.Quote.load_get_price: Failure: Different control flow
+    - ***<module>.Quote.change_his_to_forward: Failure: Different control flow
+    - ***<module>.Quote.change_his_to_backward: Failure: Different control flow
+    - ***<module>.Quote.get_price: Failure: Different control flow
+    - ***<module>.Quote.check_industry_code: Failure: Different control flow
+    - ***<module>.Quote.check_frequency: Failure: Different control flow
+    - ***<module>.Quote.get_real_from_zeromq: Failure: Different control flow
+    - ***<module>.Quote.run_individual_transform: Failure: Different control flow
+    - ***<module>.Quote.run_tick_socket: Failure: Different control flow
+    - ***<module>.Quote.get_individual_data: Failure: Different control flow
+- IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc               15 fail  {'Extra bytecode': 1, 'Different control flow': 13, 'Different bytecode': 1}
+    - ***None: Failure: Extra bytecode
+    - ***<module>.TradeLiveBroker.on_pre_before_trading_start: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._process_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._process_tick_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._process_cancel_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._sync_worker: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._trade_status_handle: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.etf_basket_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.etf_purchase_redemption: Failure: Different bytecode
+    - ***<module>.TradeLiveBroker.get_max_amount: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.rzrq_credit_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.ipo_stocks_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.get_ipo_stocks: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.on_order_response_list_handle: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.on_trade_response_list_handle: Failure: Different control flow
+- fly/data/quotation.pyc                                                    1 fail  {'Different control flow': 1}
+    - ***<module>.change_his_to_forward: Failure: Different control flow
+

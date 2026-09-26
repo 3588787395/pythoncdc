@@ -1,0 +1,80 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc",
+  "product": "D:/Temp/opencode/r72gate/center/build_fix1a/IQEngine__plugins__plugin_system_accounts__position_model__future_positionOK.py",
+  "functions": 83,
+  "ok": 83,
+  "bad": [],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc",
+  "product": "D:/Temp/opencode/r72gate/center/build_fix1a/IQEngine__plugins__plugin_system_accounts__position_model__live_future_positionOK.py",
+  "functions": 75,
+  "ok": 75,
+  "bad": [],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc",
+  "product": "D:/Temp/opencode/r72gate/center/build_fix1a/IQEngine__plugins__plugin_system_accounts__position_model__option_positionOK.py",
+  "functions": 67,
+  "ok": 67,
+  "bad": [],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/asset_mixin.pyc",
+  "product": "D:/Temp/opencode/r72gate/center/build_fix1a/IQEngine__data__asset_mixinOK.py",
+  "functions": 20,
+  "ok": 20,
+  "bad": [],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+  "product": "D:/Temp/opencode/r72gate/center/build_fix1a/fly__data__quotationOK.py",
+  "functions": 150,
+  "ok": 149,
+  "bad": [
+   [
+    "<module>.change_his_to_forward",
+    "target_diff",
+    "#250 POP_JUMP_IF_FALSE 终点 orig=(\"'preindex'\", 'LOAD_FAST') decomp=(None, 'FOR_ITER')"
+   ]
+  ],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/market_time.pyc",
+  "product": "D:/Temp/opencode/r72gate/center/build_fix1a/fly__common__market_timeOK.py",
+  "functions": 10,
+  "ok": 10,
+  "bad": [],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/datetime_func.pyc",
+  "product": "D:/Temp/opencode/r72gate/center/build_fix1a/IQCommon__util__datetime_funcOK.py",
+  "functions": 26,
+  "ok": 26,
+  "bad": [],
+  "missing": [],
+  "extra": []
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/datetime_func.pyc",
+  "product": "D:/Temp/opencode/r72gate/center/build_fix1a/IQData__utils__datetime_funcOK.py",
+  "functions": 25,
+  "ok": 25,
+  "bad": [],
+  "missing": [],
+  "extra": []
+ }
+]

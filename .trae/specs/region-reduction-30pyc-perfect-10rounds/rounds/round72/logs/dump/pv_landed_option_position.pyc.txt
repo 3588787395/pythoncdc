@@ -1,0 +1,5 @@
+  ***<module>.OptionPosition.buy_open_order_amount.<genexpr>: Failure detected at line number 203 and instruction offset 20: Different bytecode
+  ***<module>.OptionPosition.sell_open_order_amount.<genexpr>: Failure detected at line number 209 and instruction offset 20: Different bytecode
+[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc
+[single] 产物 D:/Temp/opencode/r72gate/center/build_landed/IQEngine__plugins__plugin_system_accounts__position_model__option_positionOK.py
+[single] status=failure units=65/67 success_rate=97.01%

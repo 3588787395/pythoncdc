@@ -1,0 +1,16 @@
+G5p product blast radius (shipped *OK.py, HEAD(R71) -> worktree(R72))
+======================================================================
+changed=11 identical=391 unresolved=0
+  IQData/manager/plugin_managerOK.py                                       outside 47-target list; G3 batch totals unchanged (5717/5746, ok394/partial8)
+  IQEngine/api/api_baseOK.py                                               official 48/48 -> 48/48 (no regression)
+  IQEngine/core/plugin_managerOK.py                                        outside 47-target list; G3 batch totals unchanged (5717/5746, ok394/partial8)
+  IQEngine/data/asset_mixinOK.py                                           mandated failure 20/21 -> success 21/21
+  IQEngine/plugins/plugin_fly_data/constOK.py                              outside 47-target list; G3 batch totals unchanged (5717/5746, ok394/partial8)
+  IQEngine/plugins/plugin_system_accounts/position_model/future_positionOK.py mandated failure 79/83 -> success 83/83
+  IQEngine/plugins/plugin_system_accounts/position_model/live_future_positionOK.py mandated failure 71/75 -> success 75/75
+  IQEngine/plugins/plugin_system_accounts/position_model/option_positionOK.py mandated failure 65/67 -> success 67/67
+  IQEngine/plugins/plugin_system_simulation/brokerOK.py                    mandated failure 35/42 -> success 38/38
+  IQEngine/plugins/plugin_system_simulation/liveOK.py                      mandated failure 32/33 -> success 32/32
+  IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py              official 111/119 -> 111/119 (no regression)
+
+REGRESSED=0 backed by: G1/G6/G7 worse=0, canary pins, G4p no regression, G3v reds=0

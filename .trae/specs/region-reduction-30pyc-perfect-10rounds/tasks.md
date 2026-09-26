@@ -2758,3 +2758,46 @@
   - [x] SubTask 71.7: 归档与提交 — rounds/round71/（OUTCOME.md 7 节 + logs/EVIDENCE.md A–H +
         logs/gate 19 份 + logs/dump 38 份含 8 分片 mandated 报告 + specs 13 份 + batches 5 批 +
         scripts 19 份，173 文件）；提交并 push
+- [x] Task 72: Round 72 — 47 支 failure（85 cf + 12 bytecode 单元）三批并行攻坚，中心采纳 2 件
+      候选并合并落地 **m72**（comprehension_generator 4 edits/+99，108192 → 115583 B，sha
+      be5490c1118c7199 → b432a35580989852），**6 支 pyc mandated ruler 修到全绿（mandate 达成）**，
+      mandated 6515/6623 = 98.37% → **6529/6617 = 98.67%**（失败单元 108 → 88、转红 0），
+      官方尺维持 **5717/5746 = 99.50%**（ok 394、partial 8、failed 0）
+  - [x] SubTask 72.1: 只读诊断与两件候选 — diag1 FACTS 108 单元族聚类（F-ABSORB 70/F-PAD 14/
+        F-OTHER 12/F-EXTRA 6/F-POLARITY 3/F-TERNARY 2/F-EXCTABLE 1）+ A 组 58 单元 42/6/5/2/2/1 +
+        到行根因（ra :20432/:23303/:26646/:15929、ra-gen :3199-3223/:22512/:17753/:15503/:185/
+        :26482/:14865/:88-100/:46、comprehension :520-521/:573），synth 24 支 11 复现+负对照 2 绿；
+        fix1 fix1_comp_split（genexpr 按原 pyc 跳转方向选渲染，3 edits/+79）、
+        fix2 broker_comp_return（RETURN 分支漏推进 prev_end 致重复 Return，1 edit/+20，与 diag1
+        独立定位同源），fix2 ADR-1 事故（首版无条件 prev_end 致 asset_mixin 官方 16/16→15/16）
+        拒收后收紧为「本块 comp_indices 尾项」恢复
+  - [x] SubTask 72.2: 中心 ADR-1 逐件复测 → **两件全采纳**：f1 四支靶 mandated 11 失败→0
+        （future_position 79/83→83/83）官方逐项不变；f2 broker 35/42→38/38 success、
+        trade_live_broker 114/129→114/128、25 靶 REG=0；合并臂 m 官方 SAME=23 MOVED=6 REG=0、
+        mandated −18 单元 new-failing=0、金丝雀 4 pin、电池 worse=0、严格 NEW=0
+  - [x] SubTask 72.3: 合并与落地 — mkfinal72（4 edits/+99 链式锚点各恰 1 次）→ mbuild72 →
+        mirr_m → 候选七项复测 GO → land72 dry-run replay==mirror + apply equals measured
+        mirror=True → landproof 33/33；replay72check 独立复核 HEAD+spec ≡ mirr_m ≡ worktree
+        双 True；region_analyzer/region_ast_generator 未改，跨层模式 8/3/0 → 8/3/0 **0 新增**
+  - [x] SubTask 72.4: 修到完全 OK 的 pyc（mandate 达成，6 支）— asset_mixin（20/21→21/21）、
+        future_position（79/83→83/83）、live_future_position（71/75→75/75）、
+        option_position（65/67→67/67）、simulation/broker（35/42→38/38，Extra 全清）、
+        simulation/live（32/33→32/32）全部 failure → success，转红 0；
+        分母 −6 为幻影单元消失（broker −4、live −1、trade_live_broker −1）
+  - [x] SubTask 72.5: 门禁（严格串行，全过）— G0 三支 ast+py_compile OK + 跨层 new=0；G1 47 靶
+        SAME=39 MOVED=8 REG=0 ERR=0（全路径键）；G2 金丝雀 4/4 pin 全中 + quotation 官方 143/143、
+        mandated 152/153（唯一 failure change_his_to_forward，无新增）；G3 batch --round 72
+        **402 verified/0 failed**；**G3v mandated 6529/6617 = 98.67%**（361 success +6、41
+        failure −6、转红 0）；G4 stats 5717/5746 = 99.50%；G4′ 严格 **1780→1781/1819 缺陷 39→38、
+        REGRESSION=0**；G5 索引 round-stamp-only 402、substantive=0；G5′ blast changed=11
+        identical=391 unresolved=0 **REGRESSED=0**；G6 真基线臂 prev（HEAD blob 还原 R71 字节）
+        vs landed 82 项 **worse=0**；G7 SAME=82 REGRESSED=0；G8 402 OK.py 在位 + py_compile
+        bad=0 + Traceback 0；G9 合成 29 SAME / 4 IMPROVED / 0 REGRESSED
+  - [x] SubTask 72.6: 副作用与交接（如实入档）— 未手改任何 *OK.py（11 支变更全由工具链重写）；
+        固定 16 列续行缩进取舍、G5′ 3 支 47 靶外产物以 G3 批量总数不变佐证；交接下轮 41 支
+        failure / 88 失败单元：F-ABSORB 主体、F-PAD 14、F-OTHER quote 2、F-POLARITY 3、
+        F-TERNARY 2、F-EXCTABLE 1（commission）、R70 交接 trade_info_utils.trade_operation
+        target_diff #94（本轮读数仍 orig=('write_info',…) vs decomp=(None,'FOR_ITER')）
+  - [x] SubTask 72.7: 归档与提交 — rounds/round72/（OUTCOME.md 6 节 + logs/EVIDENCE.md A–H +
+        logs/gate 19 份 + logs/dump 含 8 分片与 index 快照 + specs 3 份 + batches diag1/fix1/fix2
+        + scripts 10 份）；提交并 push
