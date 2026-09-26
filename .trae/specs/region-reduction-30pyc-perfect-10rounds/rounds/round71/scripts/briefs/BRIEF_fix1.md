@@ -11,6 +11,19 @@ Extra bytecode 6；48 支官方 ok 的「分歧集」）。diag1（测试工程�
 你的工作区：`D:/Temp/opencode/r71gate/fix1`（仪器已按本目录 ROOT 重定向）。
 基线：HEAD = R70 落地 `b21c5c61`；h62 `--arm=landed` = repo（R70 字节）。
 
+
+## 0.5 用户实测线索（最高优先假设）
+
+**用户明确提示：多数是嵌套 try-except 问题。** 请把「嵌套 try/except 的区域归约与发射」
+作为第一假设：
+- region_analyzer 的 TryRegion 识别（嵌套 try 时的块归属、handler 区间、异常表隐式边）；
+- region_ast_generator 的 try/except/finally 发射（嵌套时 except 臂与外层 try 的边界、
+  SETUP_FINALLY/POP_EXCEPT 配对、`except ... as e` 的 e 作用域块）；
+- pylingual 失败类别里 Missing/Extra bytecode 与 Different control flow 在嵌套 try 场景的
+  典型表现：POP_EXCEPT 位置、异常臂尾 JUMP_FORWARD 落点、finally 的重复发射。
+线索需**实测验证**：先确认靶支失败单元确实位于嵌套 try 结构内（dis + 反汇编对照），
+再回溯判据行；不要先入为主硬套。
+
 ## 1. 输入数据
 
 - `filecat.json`：56 支 failure 的逐支数据（失败类别计数 + 每支前 40 条 failure 明细串，
