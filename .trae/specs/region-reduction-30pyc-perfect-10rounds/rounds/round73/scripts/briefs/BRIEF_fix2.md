@@ -1,12 +1,21 @@
-# R73 · fix2（修复工程师）BRIEF —— F-ABSORB 族主体（70 单元最大族）
+# R73 · fix2（修复工程师）BRIEF —— 嵌套 try-except（F-ABSORB 主体，70 单元最大族）
+
+## -1. 用户裁定（最高优先级，覆盖 R71/R72 的否定结论）
+
+**用户明确指认：头部 control-flow 失败的根因就是「嵌套 try-except 问题」。**
+R71 diag1 曾实测「否定多数是嵌套 try-except」的线索——该结论按用户裁定**作废/需重审**：
+重新假设头部 cf 分歧来自 **try/except（含 try 套 try、try 包共享尾、try 在 elif 臂内、
+try-else 异常表拼接）的归约路径**，探针与根因分析优先打 try/except 相关判据行
+（exception table、`_process_try`/try 区域识别与发射、try 内共享尾吸收），再回看
+boolop/链尾判据是否只是 try 归约错误的**下游表象**。
 
 ## 0. 使命
 
 mandated ruler 剩余 88 个失败单元里 **F-ABSORB ≈ 70 个**（R72 diag1 实测族聚类，
 `族×判据 = cf 65 + bc 5`），是本轮最大族，也是 41 支 failure 的主体。
-你的使命：**端到端打 F-ABSORB 的可钉死子族，产出候选 patch spec 并在镜像上验证**
-（不碰 repo、不落地），**按子机制拆臂自证**（ADR-1），目标之一是让某支 pyc 从
-failure 变 **success（完全 OK）**。
+你的使命：**从「嵌套 try-except 归约」这一根因假设出发端到端打 F-ABSORB 可钉死子族，
+产出候选 patch spec 并在镜像上验证**（不碰 repo、不落地），**按子机制拆臂自证**
+（ADR-1），目标之一是让某支 pyc 从 failure 变 **success（完全 OK）**。
 
 工作区：`D:/Temp/opencode/r73gate/fix2`；基线 HEAD = **R72 提交 `8d136040`**，
 h62 `--arm=landed` = repo（R72 字节）。**镜像臂名一律 `abs*`**（`mbuild73.py abs1 …`）。
