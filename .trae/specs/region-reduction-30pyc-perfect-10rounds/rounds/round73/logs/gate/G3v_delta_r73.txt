@@ -1,0 +1,22 @@
+G3v mandated delta round72 -> round73
+======================================================================
+prev  6529/6617 = 98.67%  success=361 failure=41
+now   6540/6617 = 98.84%  success=367 failure=35
+net units +11 ; files success +6
+
+turn green (6):
+  GREEN IQEngine/account/order.pyc                                 failure 67/68 -> success 68/68
+  GREEN IQEngine/api/api_base.pyc                                  failure 48/49 -> success 49/49
+  GREEN IQEngine/core/commission.pyc                               failure 9/10 -> success 10/10
+  GREEN IQEngine/core/slippage.pyc                                 failure 6/7 -> success 7/7
+  GREEN fly/oauthenticator/oauth2.pyc                              failure 10/12 -> success 12/12
+  GREEN fly/simtradding/flyAccount.pyc                             failure 23/24 -> success 24/24
+
+turn red (0):
+
+same-status unit movement (3):
+  MOVE  IQEngine/core/bar.pyc                                      failure 82/85 -> 84/85 (+2)
+  MOVE  fly/common/flytools.pyc                                    failure 64/66 -> 65/66 (+1)
+  MOVE  fly/data/quote.pyc                                         failure 80/92 -> 81/92 (+1)
+
+G3v verdict: PASS

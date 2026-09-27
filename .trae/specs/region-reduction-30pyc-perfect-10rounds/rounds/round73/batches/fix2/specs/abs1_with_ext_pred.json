@@ -1,0 +1,9 @@
+{
+  "file": "core/cfg/region_analyzer.py",
+  "edits": [
+    {
+      "anchor": "            cleanup.append(block)\n            cleanup_visited.add(block)",
+      "repl": "            # [R73 fix2 abs-with-else] 识别条件：候选清理块的全部前驱都不在\n            # cleanup_visited（= with_entry + with_body + exception_blocks +\n            # 已收集 cleanup）内，即存在来自 WithRegion 之外的入口。WithRegion\n            # 是单入口单出口区域，清理路径只能由区域内部块到达；外部前驱说明\n            # 该块是外层语句的控制流目标（典型为外层 if 的 else 臂\n            # `LOAD_CONST None; RETURN_VALUE`）。归约方式：不收为 cleanup，块\n            # 回归父序列，外层 IfRegion 的 else_blocks 得以保留。AST 映射：\n            # else 臂改由 _if_generate_else_branch 生成，WithRegion 不再吞掉\n            # 外层 else 目标块，重编译后 IF_FALSE 目标与 orig 一致（F-ABSORB：\n            # 两个同构 return None 块的跳转目标互换）。\n            if any(pred not in cleanup_visited and pred.start_offset not in body_offsets\n                   for pred in block.predecessors):\n                continue\n            cleanup.append(block)\n            cleanup_visited.add(block)"
+    }
+  ]
+}

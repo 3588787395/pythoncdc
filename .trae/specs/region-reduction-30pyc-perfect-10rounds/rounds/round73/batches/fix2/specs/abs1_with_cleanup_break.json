@@ -1,0 +1,9 @@
+{
+  "file": "core/cfg/region_analyzer.py",
+  "edits": [
+    {
+      "anchor": "            if not in_range:\n                continue",
+      "repl": "            if not in_range:\n                continue\n            # [R73 fix2 abs-with-else] 识别条件：with 体正常出口清理扫描（自\n            # body_end 起按地址序推进）遇到以 POP_JUMP_* 条件跳转结尾的块。该块\n            # 是 with 之后的兄弟语句条件（如外层 `if os.path.exists(...)` 的条件\n            # 块、`if agent_id is not None:` 守卫），不属于 with 的线性 __exit__\n            # 清理路径——WithRegion 正常清理恒以 POP_EXCEPT / RERAISE / POP_TOP /\n            # JUMP_FORWARD / RETURN 收尾，从不含条件分支。原先 has_user_code 判定\n            # 先于断扫描：带用户代码（COMPARE_OP 等）的条件块被 continue 跳过，\n            # 断扫描永不触发，扫描越过兄弟 if/try/except 一路推进到函数尾部，\n            # 把外层 if 的 else 臂 `LOAD_CONST None; RETURN_VALUE` 与尾部隐式\n            # return 一并误收进 cleanup_blocks，导致 else 臂被 WithRegion 吞掉。\n            # 归约方式：以 POP_JUMP_* 结尾即 break 终止清理扫描，该块及其后所有\n            # 块不再归属 WithRegion，回归父序列 / 兄弟 IfRegion 的唯一归属。\n            # AST 映射：外层 IfRegion 的 else_blocks 得以保留，由\n            # _if_generate_else_branch 生成 `else:` 臂；if 之后的尾部 return 由\n            # 父序列在 if 之后单独生成，重编译后 POP_JUMP_FORWARD_IF_FALSE 与\n            # JUMP_FORWARD 的目标块与 orig 一致（F-ABSORB：两个同构\n            # `LOAD_CONST None; RETURN_VALUE` 块的接线互换）。\n            last = block.get_last_instruction()\n            if last and last.opname.startswith('POP_JUMP_'):\n                break"
+    }
+  ]
+}

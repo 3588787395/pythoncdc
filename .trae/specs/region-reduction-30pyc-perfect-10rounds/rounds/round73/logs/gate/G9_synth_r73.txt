@@ -1,0 +1,49 @@
+G9 synth gate: mandated status prev(R72 bytes) -> landed(R73 bytes)
+======================================================================
+a01_ternary_return_in_try.pyc                  status=failure  units=2/3 success_rate=66.67% -> status=success  units=3/3 success_rate=100.00% IMPROVED
+a02_andchain_shared_else.pyc                   status=failure  units=1/2 success_rate=50.00% -> status=failure  units=1/2 success_rate=50.00% SAME
+a03_try_wrapped_shared_tail.pyc                status=failure  units=1/2 success_rate=50.00% -> status=failure  units=1/2 success_rate=50.00% SAME
+a04_sibling_return_none.pyc                    status=failure  units=1/2 success_rate=50.00% -> status=failure  units=1/2 success_rate=50.00% SAME
+a05_mixed_and_or_chain.pyc                     status=failure  units=2/3 success_rate=66.67% -> status=failure  units=2/3 success_rate=66.67% SAME
+a06_try_except_else_range.pyc                  status=success  units=2/2 success_rate=100.00% -> status=success  units=2/2 success_rate=100.00% SAME
+a07_if_absorb_following_if.pyc                 status=success  units=2/2 success_rate=100.00% -> status=success  units=2/2 success_rate=100.00% SAME
+a08_if_absorb_trailing_stmts.pyc               status=success  units=2/2 success_rate=100.00% -> status=success  units=2/2 success_rate=100.00% SAME
+a09_try_finally_tail_return.pyc                status=failure  units=1/2 success_rate=50.00% -> status=failure  units=1/2 success_rate=50.00% SAME
+a10_cross_loop_tail_stmt.pyc                   status=success  units=2/2 success_rate=100.00% -> status=success  units=2/2 success_rate=100.00% SAME
+b01_dupe_elif_return_listcomp.pyc              status=success  units=11/11 success_rate=100.00% -> status=success  units=11/11 success_rate=100.00% SAME
+b02_genexpr_pred_jump.pyc                      status=success  units=8/8 success_rate=100.00% -> status=success  units=8/8 success_rate=100.00% SAME
+b03_polarity_guard_flip.pyc                    status=success  units=3/3 success_rate=100.00% -> status=success  units=3/3 success_rate=100.00% SAME
+b04_elif_not_orchain_raise.pyc                 status=failure  units=3/4 success_rate=75.00% -> status=failure  units=3/4 success_rate=75.00% SAME
+b05_bareexcept_boolop_orchain.pyc              status=failure  units=1/2 success_rate=50.00% -> status=failure  units=1/2 success_rate=50.00% SAME
+b06_loop_tail_stmt_absorbed.pyc                status=success  units=2/2 success_rate=100.00% -> status=success  units=2/2 success_rate=100.00% SAME
+b07_outer_if_hoisted_dangling_cond.pyc         status=success  units=2/2 success_rate=100.00% -> status=success  units=2/2 success_rate=100.00% SAME
+b08_not_in_membership_guard.pyc                status=success  units=2/2 success_rate=100.00% -> status=success  units=2/2 success_rate=100.00% SAME
+c01_try_in_elif_arm.pyc                        status=success  units=3/3 success_rate=100.00% -> status=success  units=3/3 success_rate=100.00% SAME
+c02_genexpr_and_predicate.pyc                  status=success  units=6/6 success_rate=100.00% -> status=success  units=6/6 success_rate=100.00% SAME
+c03_guard_polarity_inverted.pyc                status=failure  units=2/3 success_rate=66.67% -> status=failure  units=2/3 success_rate=66.67% SAME
+c04_while_not_empty_guard.pyc                  status=success  units=2/2 success_rate=100.00% -> status=success  units=2/2 success_rate=100.00% SAME
+neg01_bare_ternary_return.pyc                  status=success  units=4/4 success_rate=100.00% -> status=success  units=4/4 success_rate=100.00% SAME
+neg02_assert_outside_try.pyc                   status=success  units=3/3 success_rate=100.00% -> status=success  units=3/3 success_rate=100.00% SAME
+pad73_shapes.pyc                               status=success  units=5/5 success_rate=100.00% -> status=success  units=5/5 success_rate=100.00% SAME
+q01_lgp_fstring_ternary_ifchain.pyc            status=failure  units=2/3 success_rate=66.67% -> status=failure  units=2/3 success_rate=66.67% SAME
+q02_lgp_fstring_ternary_simpleif.pyc           status=failure  units=2/3 success_rate=66.67% -> status=failure  units=2/3 success_rate=66.67% SAME
+q03_lgp_fstring_ternary_directif.pyc           status=failure  units=1/2 success_rate=50.00% -> status=failure  units=1/2 success_rate=50.00% SAME
+q04_lgp_callarg_ternary_ifchain.pyc            status=success  units=3/3 success_rate=100.00% -> status=success  units=3/3 success_rate=100.00% SAME
+q05_lgp_assigned_ternary_ifchain.pyc           status=success  units=3/3 success_rate=100.00% -> status=success  units=3/3 success_rate=100.00% SAME
+q06_lgp_fstring_ternary_nestedif.pyc           status=failure  units=2/3 success_rate=66.67% -> status=failure  units=2/3 success_rate=66.67% SAME
+t01_tradeop_shared_tail_loop.pyc               status=success  units=3/3 success_rate=100.00% -> status=success  units=3/3 success_rate=100.00% SAME
+t02_tradeop_shared_tail_in_try.pyc             status=success  units=3/3 success_rate=100.00% -> status=success  units=3/3 success_rate=100.00% SAME
+t03_shared_tail_after_if.pyc                   status=success  units=3/3 success_rate=100.00% -> status=success  units=3/3 success_rate=100.00% SAME
+t04_tradeop_continue_inside_then.pyc           status=success  units=3/3 success_rate=100.00% -> status=success  units=3/3 success_rate=100.00% SAME
+t05_continue_then_shared_tail.pyc              status=success  units=3/3 success_rate=100.00% -> status=success  units=3/3 success_rate=100.00% SAME
+t06_try_continue_shared_tail.pyc               status=success  units=3/3 success_rate=100.00% -> status=success  units=3/3 success_rate=100.00% SAME
+t07_full_carrier_stack.pyc                     status=failure  units=7/8 success_rate=87.50% -> status=failure  units=7/8 success_rate=87.50% SAME
+t08_try_with_loop.pyc                          status=failure  units=7/8 success_rate=87.50% -> status=failure  units=7/8 success_rate=87.50% SAME
+t09_if_with_loop.pyc                           status=failure  units=7/8 success_rate=87.50% -> status=failure  units=7/8 success_rate=87.50% SAME
+abs_a01_shared_and_else.pyc                    status=failure  units=3/4 success_rate=75.00% -> status=failure  units=3/4 success_rate=75.00% SAME
+abs_a02_true_nested.pyc                        status=success  units=2/2 success_rate=100.00% -> status=success  units=2/2 success_rate=100.00% SAME
+assert_or_tail.pyc                             status=failure  units=14/20 success_rate=70.00% -> status=failure  units=16/20 success_rate=80.00% IMPROVED
+polarity_andor.pyc                             status=failure  units=4/7 success_rate=57.14% -> status=failure  units=6/7 success_rate=85.71% IMPROVED
+
+IMPROVED=3 REGRESSED=0 SAME=41
+G9 verdict: PASS

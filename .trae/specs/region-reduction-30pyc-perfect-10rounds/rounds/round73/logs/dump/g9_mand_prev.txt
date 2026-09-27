@@ -1,0 +1,22 @@
+... 25/44  1s  units=5/5
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 44,
+ "units_total": 174,
+ "units_success": 148,
+ "success_rate": 0.8505747126436781,
+ "files_by_status": {
+  "success": 25,
+  "failure": 19,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 2.5
+}
+-> D:/Temp/opencode/r73gate/center\dump\mand_synth_prev_r73.json
+

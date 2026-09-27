@@ -1,0 +1,14 @@
+G0 syntax / form gate (round 73, repository bytes after landing)
+======================================================================
+core/cfg/region_ast_generator.py     bytes=3214913  sha256=33e22ee451148af835456b490cb407607588b6c5a693f2c8e6145fe594d387eb BOM=True  CRLF=51566  bareLF=0 ast OK / py_compile OK cross-layer-pattern=9 (code-only 7)
+core/cfg/region_analyzer.py          bytes=1778913  sha256=b9dcc727ea5918ea90131321b950580ef6e08e7a07910fc4a3aabf1660f031c1 BOM=False CRLF=28337  bareLF=0 ast OK / py_compile OK cross-layer-pattern=3 (code-only 3)
+core/cfg/comprehension_generator.py  bytes=115583   sha256=b432a3558098985252240c72e1d26960f9c92650f65b4fe2514513694ae93fab BOM=False CRLF=2115   bareLF=0 ast OK / py_compile OK cross-layer-pattern=0 (code-only 0)
+
+cross-layer pattern, code-only (HEAD=7/3/0, worktree=7/3/0, new=0): zero-new OK
+cross-layer pattern, raw incl. comments (HEAD=8/3/0, worktree=9/3/0, new=1)
+verdict basis = code-only (R72 instrument counted raw incl. comments; the +1 raw here is a comment line added by R73 fix1 that merely *mentions* the pattern, diff evidence below).
+--- added lines matching the pattern (all are comments) ---
+  +            # 名字白名单/新增 self 状态/跨层 region.entry in r.blocks）：
+    is-code=no
+
+G0 verdict: PASS

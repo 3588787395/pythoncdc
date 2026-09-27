@@ -2801,3 +2801,54 @@
   - [x] SubTask 72.7: 归档与提交 — rounds/round72/（OUTCOME.md 6 节 + logs/EVIDENCE.md A–H +
         logs/gate 19 份 + logs/dump 含 8 分片与 index 快照 + specs 3 份 + batches diag1/fix1/fix2
         + scripts 10 份）；提交并 push
+
+- [x] Task 73: Round 73 — 用户裁定「就是嵌套 try-except 问题」写入 brief 第 −1 节（commit
+      b355043e）；四批并行攻坚，中心采纳 2 件并合并落地 **m73**（region_ast_generator 4 edits/+61、
+      3210453 → 3214913 B sha 6203253987adedcf → 33e22ee451148af8；region_analyzer 4 edits/+117、
+      1769617 → 1778913 B sha 8ca47f7d6b9244cf → b9dcc727ea5918ea；comprehension 未改），**6 支 pyc
+      mandated ruler 修到全绿（mandate 达成）**，mandated 6529/6617 = 98.67% → **6540/6617 = 98.84%**
+      （失败单元 88 → 77、转红 0），官方尺维持 **5717/5746 = 99.50%**（ok 394、partial 8、failed 0）
+  - [x] SubTask 73.1: 只读诊断与三件候选 — diag1 按用户指令做 try/except 定向探针
+        （tryverdict73/exctable73/firstdiv73）；fix1 F-PAD 主候选 pad_e2fix（1 edit/+29，抑制 then
+        臂物化 return None 后的隐式 else 尾块，块序取值移入既有 pure/then/无 merge/owned 前置，
+        pad2/pad3 因把 max() 放在短路保护之前、空 then 区抛 ValueError 中断发射被否决，硬证据
+        battery_pad2/pad3）；fix2 F-ABSORB absm_abs1_abs2；fix3 F-POLARITY/F-EXCTABLE 手术
+        merged_analyzer（4 edits/+117）+ polarity_gen（3 edits/+32）
+  - [x] SubTask 73.2: 中心 ADR-1 逐件复测（adr73.py 串行单跑）— **pad6 采纳**（9 靶 470/509 →
+        476/509、4 支转 success、WORSE=0 IMPROVED=6）；**surgm 采纳**（6 靶 360/392 → 365/392、
+        2 支转 success、WORSE=0 IMPROVED=4）；**absm 拒收**（WORSE=1：klinedata
+        get_multiminute_his_data sdelta 60→64，且 ORIG/landed 各 2 次 get_kline_by_count_new load、
+        absm 仅 1 次丢尾语句 instr 535/536→524，按 ADR-1 不得以少发射换；备选=brief fix2 §5 abs2）
+  - [x] SubTask 73.3: 合并与落地 — mkfinal73 m73（generator 4 edits/+61 + analyzer 4 edits/+117，
+        链式锚点各恰 1 次）→ mbuild73 → mirr_m73 → land73 dry-run replay==mirror OK → --apply
+        两文件 equals measured mirror=True；独立复核 g4g8replay73 从 HEAD 字节重放 spec 与
+        worktree 逐字节相等（两文件 True）；landproof mirr_m73 33 core 文件 same=33 diff=0
+  - [x] SubTask 73.4: 修到完全 OK 的 pyc（mandate 达成，6 支）— IQEngine/account/order 67/68→68/68、
+        IQEngine/api/api_base 48/49→49/49、IQEngine/core/commission 9/10→10/10、
+        IQEngine/core/slippage 6/7→7/7、fly/oauthenticator/oauth2 10/12→12/12、
+        fly/simtradding/flyAccount 23/24→24/24，全部 failure→success，转红 0
+  - [x] SubTask 73.5: 门禁（严格串行，全过）— G0 三支 ast+py_compile OK + 跨层模式 code-only
+        new=0（首版 raw 口径 +1，diff 证据显示唯一新增行为 fix1 注释行，两组数字随 artifact 存档）；
+        G1 41 靶 SAME=30/MOVED=14/REG=0/ERR=0、fully matched 36→36；G2 金丝雀 4/4 pin 全中 +
+        quotation mandated 152/153；G3 batch --round 73 **402 verified/0 failed**；G3v 8 分片合并
+        **6540/6617 = 98.84%**（367 success +6、35 failure −6、转绿 6 支、转红 0 支）；G4 stats
+        5717/5746 = 99.50%；G4′ 严格 ok 1700→1704 缺陷 79→75 **NEW defect functions=0**、
+        REGRESSION=0；G5 索引 round-stamp-only=402、substantive=0；G5′ blast changed=22
+        identical=380 unresolved=0 **REGRESSED=0**；G6 真基线臂 prev（HEAD blob 还原 R72 字节）vs
+        landed 82 项 **worse=0**；G7 SAME=82 REGRESSED=0；G8 402 OK.py 在位 + py_compile bad=0 +
+        Traceback 0；G9 合成 44 支 **IMPROVED=3 REGRESSED=0 SAME=41**（a01_ternary 2/3→3/3、
+        assert_or_tail 14/20→16/20、polarity_andor 4/7→6/7，新增 pad73_shapes 两臂 5/5 记 SAME）
+  - [x] SubTask 73.6: 对用户裁定的定量判决（TRYVERDICT_r73，如实入档不捏造）— 87 失败单元中原
+        pyc 无异常表 44 / 有异常表 43，et_same 57 / et_diff 30，prod_deeper=0、嵌套深度差 0；
+        **首分歧在异常区内 14/87、区外 73/87**（控制流 83 / 字节码 4）⇒ 该裁定对 14 单元子族成立、
+        对其余 73 单元定量上不成立，两读数并列存档保留分歧；逐支残留 _process_order（原 et=10）、
+        send_email（首分歧在 handler 内 et=5）、quote 81/92、flytools 65/66；bar.limit_up/limit_down
+        首分歧 F-TERNARY 已本轮修绿 82/85→84/85
+  - [x] SubTask 73.7: 副作用与交接（如实入档）— 未手改任何 *OK.py（22 支变更全由 G3 批量工具链
+        重写）；交接 R74：F-ABSORB abs2（orphan child 发射补全，ADR-1 须 WORSE=0）、try-except
+        14 单元子族、quote/flytools/trade_info_utils 长尾、R70 起交接
+        trade_info_utils.trade_operation target_diff #94
+  - [x] SubTask 73.8: 归档与提交 — rounds/round73/（OUTCOME.md 8 节 + logs/EVIDENCE.md A–H +
+        logs/gate 20 份含 G3v/G3v_delta/blast73_expected/Land73_replay/TRYVERDICT +
+        logs/dump 69 份含 8 分片 mandated 报告与 index 快照 + specs 16 份 + batches
+        diag1/fix1/fix2/fix3 85 份 + scripts 20 份，212 文件）；提交并 push

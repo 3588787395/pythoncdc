@@ -1,0 +1,27 @@
+G5p product blast radius (shipped *OK.py, HEAD(R72) -> worktree(R73))
+======================================================================
+changed=22 identical=380 unresolved=0
+  IQCommon/util/cgroup_utilsOK.py                                          official 8/8 -> 8/8 (no regression)
+  IQData/plugins/plugin_system_db/iqdata_db_baseOK.py                      outside 41-target list; G3 batch totals unchanged (5717/5746, ok394/partial8)
+  IQData/plugins/plugin_system_db_tools/db_baseOK.py                       outside 41-target list; G3 batch totals unchanged (5717/5746, ok394/partial8)
+  IQData/plugins/plugin_system_realquote/real_quoteOK.py                   official 40/44 -> 40/44 (no regression)
+  IQEngine/account/base_positionOK.py                                      outside 41-target list; G3 batch totals unchanged (5717/5746, ok394/partial8)
+  IQEngine/account/orderOK.py                                              mandated failure 67/68 -> success 68/68
+  IQEngine/api/api_baseOK.py                                               mandated failure 48/49 -> success 49/49
+  IQEngine/core/barOK.py                                                   mandated failure 82/85 -> failure 84/85
+  IQEngine/core/commissionOK.py                                            mandated failure 9/10 -> success 10/10
+  IQEngine/core/persist_helperOK.py                                        outside 41-target list; G3 batch totals unchanged (5717/5746, ok394/partial8)
+  IQEngine/core/slippageOK.py                                              mandated failure 6/7 -> success 7/7
+  IQEngine/plugins/plugin_fly_data/strategy/strategyOK.py                  official 24/24 -> 24/24 (no regression)
+  IQEngine/plugins/plugin_system_finance/commissionOK.py                   outside 41-target list; G3 batch totals unchanged (5717/5746, ok394/partial8)
+  IQEngine/plugins/plugin_system_finance/slippageOK.py                     outside 41-target list; G3 batch totals unchanged (5717/5746, ok394/partial8)
+  IQEngine/plugins/plugin_system_persist/__init__OK.py                     outside 41-target list; G3 batch totals unchanged (5717/5746, ok394/partial8)
+  fly/common/flytoolsOK.py                                                 mandated failure 64/66 -> failure 65/66
+  fly/common/future_contract_infoOK.py                                     official 29/29 -> 29/29 (no regression)
+  fly/common/tradingday_calendarOK.py                                      outside 41-target list; G3 batch totals unchanged (5717/5746, ok394/partial8)
+  fly/data/quoteOK.py                                                      mandated failure 80/92 -> failure 81/92
+  fly/data/quote_handlerOK.py                                              official 57/57 -> 57/57 (no regression)
+  fly/oauthenticator/oauth2OK.py                                           mandated failure 10/12 -> success 12/12
+  fly/simtradding/flyAccountOK.py                                          mandated failure 23/24 -> success 24/24
+
+REGRESSED=0 backed by: G1/G6/G7 worse=0, canary pins, G4p no regression, G3v reds=0

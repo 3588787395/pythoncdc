@@ -1,0 +1,333 @@
+{
+ "IQData/plugins/plugin_system_realquote/real_quote.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    41,
+    45
+   ],
+   "rate": 91.11,
+   "fails": [
+    [
+     "<module>.RealQuoteData.one_prod_to_ndarray",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.RealQuoteData.get_real_minute_kline",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.RealQuoteData.get_cache_l2_data_by_one",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.RealQuoteData.get_tick_direction",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    41,
+    45
+   ],
+   "rate": 91.11,
+   "fails": [
+    [
+     "<module>.RealQuoteData.one_prod_to_ndarray",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.RealQuoteData.get_real_minute_kline",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.RealQuoteData.get_cache_l2_data_by_one",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.RealQuoteData.get_tick_direction",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/core/bar.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    82,
+    85
+   ],
+   "rate": 96.47,
+   "fails": [
+    [
+     "<module>.BarData.limit_up",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.BarData.limit_down",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.BarData._history_bars",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    84,
+    85
+   ],
+   "rate": 98.82,
+   "fails": [
+    [
+     "<module>.BarData._history_bars",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/common/flytools.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    64,
+    66
+   ],
+   "rate": 96.97,
+   "fails": [
+    [
+     "<module>.set_userid_containerid_dict",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.ProcessWrite.modify_batcktes_info",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    65,
+    66
+   ],
+   "rate": 98.48,
+   "fails": [
+    [
+     "<module>.ProcessWrite.modify_batcktes_info",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/data/local_finance.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    20,
+    21
+   ],
+   "rate": 95.24,
+   "fails": [
+    [
+     "<module>.get_local_financial_factors",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    20,
+    21
+   ],
+   "rate": 95.24,
+   "fails": [
+    [
+     "<module>.get_local_financial_factors",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQData/api/api_base.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    27,
+    28
+   ],
+   "rate": 96.43,
+   "fails": [
+    [
+     "<module>.get_history_df",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    27,
+    28
+   ],
+   "rate": 96.43,
+   "fails": [
+    [
+     "<module>.get_history_df",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/api/api_base.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    48,
+    49
+   ],
+   "rate": 97.96,
+   "fails": [
+    [
+     "<module>.get_history",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "success",
+   "units": [
+    49,
+    49
+   ],
+   "rate": 100.0,
+   "fails": []
+  }
+ },
+ "IQEngine/core/strategy/strategy_universe.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    10,
+    11
+   ],
+   "rate": 90.91,
+   "fails": [
+    [
+     "<module>.StrategyUniverse._on_clear_de_listed",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    10,
+    11
+   ],
+   "rate": 90.91,
+   "fails": [
+    [
+     "<module>.StrategyUniverse._on_clear_de_listed",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    36,
+    37
+   ],
+   "rate": 97.3,
+   "fails": [
+    [
+     "<module>.StockPosition.make_trade",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    36,
+    37
+   ],
+   "rate": 97.3,
+   "fails": [
+    [
+     "<module>.StockPosition.make_trade",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/utils/profiler_func.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    17,
+    18
+   ],
+   "rate": 94.44,
+   "fails": [
+    [
+     "<module>.ProfilerTool.show_func",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    17,
+    18
+   ],
+   "rate": 94.44,
+   "fails": [
+    [
+     "<module>.ProfilerTool.show_func",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/logger.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    63,
+    64
+   ],
+   "rate": 98.44,
+   "fails": [
+    [
+     "<module>.SafeFileHandler.check_baseFilename",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    63,
+    64
+   ],
+   "rate": 98.44,
+   "fails": [
+    [
+     "<module>.SafeFileHandler.check_baseFilename",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ }
+}

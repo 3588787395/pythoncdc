@@ -1,0 +1,5090 @@
+[
+ {
+  "file": "IQCommon/api/klinedata.pyc",
+  "unit": "<module>.get_kline_by_count_new",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 3,
+   "hunks_norm": 0,
+   "first_diff": 160,
+   "sdelta": 44,
+   "deltas": [
+    [
+     160,
+     "POP_JUMP_FORWARD_IF_NONE",
+     "to 380",
+     "to 402",
+     22
+    ],
+    [
+     162,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 380",
+     "to 402",
+     22
+    ]
+   ],
+   "len": [
+    586,
+    586
+   ]
+  },
+  "pad6": {
+   "hunks": 3,
+   "hunks_norm": 0,
+   "first_diff": 160,
+   "sdelta": 44,
+   "deltas": [
+    [
+     160,
+     "POP_JUMP_FORWARD_IF_NONE",
+     "to 380",
+     "to 402",
+     22
+    ],
+    [
+     162,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 380",
+     "to 402",
+     22
+    ]
+   ],
+   "len": [
+    586,
+    586
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/api/klinedata.pyc",
+  "unit": "<module>.get_multiminute_his_data",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 6,
+   "hunks_norm": 2,
+   "first_diff": 16,
+   "sdelta": 60,
+   "deltas": [
+    [
+     16,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 926",
+     "to 930",
+     4
+    ],
+    [
+     20,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 926",
+     "to 930",
+     4
+    ],
+    [
+     140,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 952",
+     "to 926",
+     -26
+    ],
+    [
+     241,
+     "FOR_ITER",
+     "to 952",
+     "to 926",
+     -26
+    ]
+   ],
+   "len": [
+    478,
+    480
+   ]
+  },
+  "pad6": {
+   "hunks": 6,
+   "hunks_norm": 2,
+   "first_diff": 16,
+   "sdelta": 60,
+   "deltas": [
+    [
+     16,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 926",
+     "to 930",
+     4
+    ],
+    [
+     20,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 926",
+     "to 930",
+     4
+    ],
+    [
+     140,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 952",
+     "to 926",
+     -26
+    ],
+    [
+     241,
+     "FOR_ITER",
+     "to 952",
+     "to 926",
+     -26
+    ]
+   ],
+   "len": [
+    478,
+    480
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/api/klinedata.pyc",
+  "unit": "<module>.kline_datetime_list",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 31,
+   "hunks_norm": 4,
+   "first_diff": 123,
+   "sdelta": 1408,
+   "deltas": [
+    [
+     123,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 310",
+     "to 774",
+     464
+    ],
+    [
+     129,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 310",
+     "to 774",
+     464
+    ],
+    [
+     135,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 310",
+     "to 774",
+     464
+    ],
+    [
+     144,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 310",
+     "to 302",
+     -8
+    ],
+    [
+     217,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 470",
+     "to 462",
+     -8
+    ]
+   ],
+   "len": [
+    389,
+    389
+   ]
+  },
+  "pad6": {
+   "hunks": 31,
+   "hunks_norm": 4,
+   "first_diff": 123,
+   "sdelta": 1408,
+   "deltas": [
+    [
+     123,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 310",
+     "to 774",
+     464
+    ],
+    [
+     129,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 310",
+     "to 774",
+     464
+    ],
+    [
+     135,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 310",
+     "to 774",
+     464
+    ],
+    [
+     144,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 310",
+     "to 302",
+     -8
+    ],
+    [
+     217,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 470",
+     "to 462",
+     -8
+    ]
+   ],
+   "len": [
+    389,
+    389
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/data/finance.pyc",
+  "unit": "<module>.get_financial_and_growth_factors",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 3,
+   "sdelta": 4,
+   "deltas": [
+    [
+     3,
+     "POP_JUMP_FORWARD_IF_NOT_NONE",
+     "to 46",
+     "to 50",
+     4
+    ]
+   ],
+   "len": [
+    151,
+    151
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 3,
+   "sdelta": 4,
+   "deltas": [
+    [
+     3,
+     "POP_JUMP_FORWARD_IF_NOT_NONE",
+     "to 46",
+     "to 50",
+     4
+    ]
+   ],
+   "len": [
+    151,
+    151
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/data/finance.pyc",
+  "unit": "<module>.get_financial_statements_pit_mode",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 3,
+   "sdelta": 4,
+   "deltas": [
+    [
+     3,
+     "POP_JUMP_FORWARD_IF_NOT_NONE",
+     "to 46",
+     "to 50",
+     4
+    ]
+   ],
+   "len": [
+    119,
+    119
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 3,
+   "sdelta": 4,
+   "deltas": [
+    [
+     3,
+     "POP_JUMP_FORWARD_IF_NOT_NONE",
+     "to 46",
+     "to 50",
+     4
+    ]
+   ],
+   "len": [
+    119,
+    119
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/data/finance.pyc",
+  "unit": "<module>.get_fields",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 18,
+   "sdelta": 164,
+   "deltas": [
+    [
+     18,
+     "JUMP_FORWARD",
+     "to 90",
+     "to 254",
+     164
+    ]
+   ],
+   "len": [
+    157,
+    157
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 18,
+   "sdelta": 164,
+   "deltas": [
+    [
+     18,
+     "JUMP_FORWARD",
+     "to 90",
+     "to 254",
+     164
+    ]
+   ],
+   "len": [
+    157,
+    157
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/data/local_finance.pyc",
+  "unit": "<module>.get_local_financial_factors",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 3,
+   "sdelta": 4,
+   "deltas": [
+    [
+     3,
+     "POP_JUMP_FORWARD_IF_NOT_NONE",
+     "to 38",
+     "to 42",
+     4
+    ]
+   ],
+   "len": [
+    104,
+    104
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 3,
+   "sdelta": 4,
+   "deltas": [
+    [
+     3,
+     "POP_JUMP_FORWARD_IF_NOT_NONE",
+     "to 38",
+     "to 42",
+     4
+    ]
+   ],
+   "len": [
+    104,
+    104
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/logger/handlers.pyc",
+  "unit": "<module>.TWHThreadController._target",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 17,
+   "hunks_norm": 1,
+   "first_diff": 6,
+   "sdelta": 12,
+   "deltas": [
+    [
+     6,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 146",
+     "to 142",
+     -4
+    ],
+    [
+     13,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 146",
+     "to 142",
+     -4
+    ],
+    [
+     16,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 142",
+     "to 138",
+     -4
+    ]
+   ],
+   "len": [
+    191,
+    189
+   ]
+  },
+  "pad6": {
+   "hunks": 17,
+   "hunks_norm": 1,
+   "first_diff": 6,
+   "sdelta": 12,
+   "deltas": [
+    [
+     6,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 146",
+     "to 142",
+     -4
+    ],
+    [
+     13,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 146",
+     "to 142",
+     -4
+    ],
+    [
+     16,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 142",
+     "to 138",
+     -4
+    ]
+   ],
+   "len": [
+    191,
+    189
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/strategy/jq_trans_module.pyc",
+  "unit": "<module>.func_attribute_history_convert_code.replace_args",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 26,
+   "hunks_norm": 1,
+   "first_diff": 67,
+   "sdelta": 24,
+   "deltas": [
+    [
+     67,
+     "JUMP_FORWARD",
+     "to 258",
+     "to 250",
+     -8
+    ],
+    [
+     95,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 240",
+     "to 232",
+     -8
+    ],
+    [
+     168,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 354",
+     "to 346",
+     -8
+    ]
+   ],
+   "len": [
+    352,
+    348
+   ]
+  },
+  "pad6": {
+   "hunks": 26,
+   "hunks_norm": 1,
+   "first_diff": 67,
+   "sdelta": 24,
+   "deltas": [
+    [
+     67,
+     "JUMP_FORWARD",
+     "to 258",
+     "to 250",
+     -8
+    ],
+    [
+     95,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 240",
+     "to 232",
+     -8
+    ],
+    [
+     168,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 354",
+     "to 346",
+     -8
+    ]
+   ],
+   "len": [
+    352,
+    348
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/strategy/jq_trans_module.pyc",
+  "unit": "<module>.func_get_bars_convert_code.replace_args",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 50,
+   "hunks_norm": 1,
+   "first_diff": 67,
+   "sdelta": 66,
+   "deltas": [
+    [
+     67,
+     "JUMP_FORWARD",
+     "to 258",
+     "to 250",
+     -8
+    ],
+    [
+     95,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 240",
+     "to 232",
+     -8
+    ],
+    [
+     162,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 298",
+     "to 332",
+     34
+    ],
+    [
+     241,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 500",
+     "to 492",
+     -8
+    ],
+    [
+     472,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 962",
+     "to 954",
+     -8
+    ]
+   ],
+   "len": [
+    648,
+    644
+   ]
+  },
+  "pad6": {
+   "hunks": 50,
+   "hunks_norm": 1,
+   "first_diff": 67,
+   "sdelta": 66,
+   "deltas": [
+    [
+     67,
+     "JUMP_FORWARD",
+     "to 258",
+     "to 250",
+     -8
+    ],
+    [
+     95,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 240",
+     "to 232",
+     -8
+    ],
+    [
+     162,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 298",
+     "to 332",
+     34
+    ],
+    [
+     241,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 500",
+     "to 492",
+     -8
+    ],
+    [
+     472,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 962",
+     "to 954",
+     -8
+    ]
+   ],
+   "len": [
+    648,
+    644
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/strategy/wizard_quant_api.pyc",
+  "unit": "<module>.filter_desicion",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 1,
+   "first_diff": 162,
+   "sdelta": 26,
+   "deltas": [
+    [
+     162,
+     "POP_JUMP_FORWARD_IF_NONE",
+     "to 330",
+     "to 356",
+     26
+    ]
+   ],
+   "len": [
+    178,
+    180
+   ]
+  },
+  "pad6": {
+   "hunks": 2,
+   "hunks_norm": 1,
+   "first_diff": 162,
+   "sdelta": 26,
+   "deltas": [
+    [
+     162,
+     "POP_JUMP_FORWARD_IF_NONE",
+     "to 330",
+     "to 356",
+     26
+    ]
+   ],
+   "len": [
+    178,
+    180
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/strategy/wizard_quant_api.pyc",
+  "unit": "<module>.get_DMI.calculate_di.<genexpr>",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 4,
+   "hunks_norm": 1,
+   "first_diff": 4,
+   "sdelta": 28,
+   "deltas": [
+    [
+     4,
+     "FOR_ITER",
+     "to 120",
+     "to 92",
+     -28
+    ]
+   ],
+   "len": [
+    62,
+    48
+   ]
+  },
+  "pad6": {
+   "hunks": 4,
+   "hunks_norm": 1,
+   "first_diff": 4,
+   "sdelta": 28,
+   "deltas": [
+    [
+     4,
+     "FOR_ITER",
+     "to 120",
+     "to 92",
+     -28
+    ]
+   ],
+   "len": [
+    62,
+    48
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/strategy/wizard_quant_api.pyc",
+  "unit": "<module>.get_DMI.calculate_di.<genexpr>",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 4,
+   "hunks_norm": 1,
+   "first_diff": 4,
+   "sdelta": 28,
+   "deltas": [
+    [
+     4,
+     "FOR_ITER",
+     "to 120",
+     "to 92",
+     -28
+    ]
+   ],
+   "len": [
+    62,
+    48
+   ]
+  },
+  "pad6": {
+   "hunks": 4,
+   "hunks_norm": 1,
+   "first_diff": 4,
+   "sdelta": 28,
+   "deltas": [
+    [
+     4,
+     "FOR_ITER",
+     "to 120",
+     "to 92",
+     -28
+    ]
+   ],
+   "len": [
+    62,
+    48
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/util/cgroup_utils.pyc",
+  "unit": "<module>.set_cgroup_config",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 3,
+   "hunks_norm": 1,
+   "first_diff": 417,
+   "sdelta": 2,
+   "deltas": [
+    [
+     417,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1024",
+     "to 1026",
+     2
+    ]
+   ],
+   "len": [
+    540,
+    541
+   ]
+  },
+  "pad6": {
+   "hunks": 3,
+   "hunks_norm": 1,
+   "first_diff": 417,
+   "sdelta": 2,
+   "deltas": [
+    [
+     417,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1024",
+     "to 1026",
+     2
+    ]
+   ],
+   "len": [
+    540,
+    541
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/util/email_utils.pyc",
+  "unit": "<module>.send_email",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 3,
+   "hunks_norm": 1,
+   "first_diff": 22,
+   "sdelta": 126,
+   "deltas": [
+    [
+     22,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 206",
+     "to 332",
+     126
+    ]
+   ],
+   "len": [
+    193,
+    195
+   ]
+  },
+  "pad6": {
+   "hunks": 3,
+   "hunks_norm": 1,
+   "first_diff": 22,
+   "sdelta": 126,
+   "deltas": [
+    [
+     22,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 206",
+     "to 332",
+     126
+    ]
+   ],
+   "len": [
+    193,
+    195
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/util/trade_info_utils.pyc",
+  "unit": "<module>.trade_operation",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 93,
+   "sdelta": 152,
+   "deltas": [
+    [
+     93,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 324",
+     "to 334",
+     -152
+    ]
+   ],
+   "len": [
+    303,
+    303
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 93,
+   "sdelta": 152,
+   "deltas": [
+    [
+     93,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 324",
+     "to 334",
+     -152
+    ]
+   ],
+   "len": [
+    303,
+    303
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/util/trade_info_utils.pyc",
+  "unit": "<module>.kill_trade_process",
+  "family": "F-PAD",
+  "landed": {
+   "hunks": 3,
+   "hunks_norm": 0,
+   "first_diff": 39,
+   "sdelta": 8,
+   "deltas": [
+    [
+     471,
+     "POP_JUMP_FORWARD_IF_NONE",
+     "to 1120",
+     "to 1124",
+     4
+    ],
+    [
+     523,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1124",
+     "to 1120",
+     -4
+    ]
+   ],
+   "len": [
+    576,
+    576
+   ]
+  },
+  "pad6": {
+   "hunks": 3,
+   "hunks_norm": 0,
+   "first_diff": 39,
+   "sdelta": 8,
+   "deltas": [
+    [
+     471,
+     "POP_JUMP_FORWARD_IF_NONE",
+     "to 1120",
+     "to 1124",
+     4
+    ],
+    [
+     523,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1124",
+     "to 1120",
+     -4
+    ]
+   ],
+   "len": [
+    576,
+    576
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/util/trade_info_utils.pyc",
+  "unit": "<module>.get_trade_status",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 69,
+   "sdelta": 26,
+   "deltas": [
+    [
+     69,
+     "FOR_ITER",
+     "to 288",
+     "to 262",
+     -26
+    ]
+   ],
+   "len": [
+    153,
+    153
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 69,
+   "sdelta": 26,
+   "deltas": [
+    [
+     69,
+     "FOR_ITER",
+     "to 288",
+     "to 262",
+     -26
+    ]
+   ],
+   "len": [
+    153,
+    153
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/util/trade_info_utils.pyc",
+  "unit": "<module>.query_trade_strategy_info",
+  "family": "F-PAD",
+  "landed": {
+   "hunks": 3,
+   "hunks_norm": 0,
+   "first_diff": 19,
+   "sdelta": 12,
+   "deltas": [
+    [
+     19,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 210",
+     "to 214",
+     4
+    ],
+    [
+     56,
+     "FOR_ITER",
+     "to 214",
+     "to 210",
+     -4
+    ],
+    [
+     100,
+     "JUMP_FORWARD",
+     "to 214",
+     "to 210",
+     -4
+    ]
+   ],
+   "len": [
+    109,
+    109
+   ]
+  },
+  "pad6": {
+   "hunks": 3,
+   "hunks_norm": 0,
+   "first_diff": 19,
+   "sdelta": 12,
+   "deltas": [
+    [
+     19,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 210",
+     "to 214",
+     4
+    ],
+    [
+     56,
+     "FOR_ITER",
+     "to 214",
+     "to 210",
+     -4
+    ],
+    [
+     100,
+     "JUMP_FORWARD",
+     "to 214",
+     "to 210",
+     -4
+    ]
+   ],
+   "len": [
+    109,
+    109
+   ]
+  }
+ },
+ {
+  "file": "IQCommon/util/trade_info_utils.pyc",
+  "unit": "<module>.query_strategy_id",
+  "family": "F-PAD",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 0,
+   "first_diff": 19,
+   "sdelta": 8,
+   "deltas": [
+    [
+     19,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 202",
+     "to 206",
+     4
+    ],
+    [
+     96,
+     "JUMP_FORWARD",
+     "to 206",
+     "to 202",
+     -4
+    ]
+   ],
+   "len": [
+    105,
+    105
+   ]
+  },
+  "pad6": {
+   "hunks": 2,
+   "hunks_norm": 0,
+   "first_diff": 19,
+   "sdelta": 8,
+   "deltas": [
+    [
+     19,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 202",
+     "to 206",
+     4
+    ],
+    [
+     96,
+     "JUMP_FORWARD",
+     "to 206",
+     "to 202",
+     -4
+    ]
+   ],
+   "len": [
+    105,
+    105
+   ]
+  }
+ },
+ {
+  "file": "IQData/api/api_base.pyc",
+  "unit": "<module>.get_history_df",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 28,
+   "hunks_norm": 4,
+   "first_diff": 174,
+   "sdelta": 1230,
+   "deltas": [
+    [
+     174,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 398",
+     "to 630",
+     232
+    ],
+    [
+     178,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 382",
+     "to 630",
+     248
+    ],
+    [
+     391,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 846",
+     "to 1020",
+     174
+    ],
+    [
+     397,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 846",
+     "to 1020",
+     174
+    ],
+    [
+     403,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 846",
+     "to 1020",
+     174
+    ],
+    [
+     412,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 846",
+     "to 838",
+     -8
+    ],
+    [
+     749,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 1538",
+     "to 1628",
+     90
+    ],
+    [
+     785,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 1598",
+     "to 1614",
+     16
+    ],
+    [
+     866,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 1772",
+     "to 1862",
+     90
+    ],
+    [
+     902,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 1832",
+     "to 1848",
+     16
+    ],
+    [
+     1334,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 2676",
+     "to 2684",
+     8
+    ]
+   ],
+   "len": [
+    1739,
+    1739
+   ]
+  },
+  "pad6": {
+   "hunks": 28,
+   "hunks_norm": 4,
+   "first_diff": 174,
+   "sdelta": 1230,
+   "deltas": [
+    [
+     174,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 398",
+     "to 630",
+     232
+    ],
+    [
+     178,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 382",
+     "to 630",
+     248
+    ],
+    [
+     391,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 846",
+     "to 1020",
+     174
+    ],
+    [
+     397,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 846",
+     "to 1020",
+     174
+    ],
+    [
+     403,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 846",
+     "to 1020",
+     174
+    ],
+    [
+     412,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 846",
+     "to 838",
+     -8
+    ],
+    [
+     749,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 1538",
+     "to 1628",
+     90
+    ],
+    [
+     785,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 1598",
+     "to 1614",
+     16
+    ],
+    [
+     866,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 1772",
+     "to 1862",
+     90
+    ],
+    [
+     902,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 1832",
+     "to 1848",
+     16
+    ],
+    [
+     1334,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 2676",
+     "to 2684",
+     8
+    ]
+   ],
+   "len": [
+    1739,
+    1739
+   ]
+  }
+ },
+ {
+  "file": "IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc",
+  "unit": "<module>.change_his_to_forward",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 12,
+   "hunks_norm": 1,
+   "first_diff": 163,
+   "sdelta": 120,
+   "deltas": [
+    [
+     163,
+     "FOR_ITER",
+     "to 738",
+     "to 740",
+     2
+    ],
+    [
+     183,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 444",
+     "to 738",
+     -118
+    ]
+   ],
+   "len": [
+    386,
+    387
+   ]
+  },
+  "pad6": {
+   "hunks": 12,
+   "hunks_norm": 1,
+   "first_diff": 163,
+   "sdelta": 120,
+   "deltas": [
+    [
+     163,
+     "FOR_ITER",
+     "to 738",
+     "to 740",
+     2
+    ],
+    [
+     183,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 444",
+     "to 738",
+     -118
+    ]
+   ],
+   "len": [
+    386,
+    387
+   ]
+  }
+ },
+ {
+  "file": "IQData/plugins/plugin_system_realquote/real_quote.pyc",
+  "unit": "<module>.RealQuoteData.one_prod_to_ndarray",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 29,
+   "hunks_norm": 7,
+   "first_diff": 78,
+   "sdelta": 26,
+   "deltas": [
+    [
+     78,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 876",
+     "to 880",
+     4
+    ],
+    [
+     81,
+     "FOR_ITER",
+     "to 876",
+     "to 880",
+     4
+    ],
+    [
+     94,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 790",
+     "to 794",
+     4
+    ],
+    [
+     104,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 274",
+     "to 288",
+     14
+    ]
+   ],
+   "len": [
+    601,
+    603
+   ]
+  },
+  "pad6": {
+   "hunks": 29,
+   "hunks_norm": 7,
+   "first_diff": 78,
+   "sdelta": 26,
+   "deltas": [
+    [
+     78,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 876",
+     "to 880",
+     4
+    ],
+    [
+     81,
+     "FOR_ITER",
+     "to 876",
+     "to 880",
+     4
+    ],
+    [
+     94,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 790",
+     "to 794",
+     4
+    ],
+    [
+     104,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 274",
+     "to 288",
+     14
+    ]
+   ],
+   "len": [
+    601,
+    603
+   ]
+  }
+ },
+ {
+  "file": "IQData/plugins/plugin_system_realquote/real_quote.pyc",
+  "unit": "<module>.RealQuoteData.get_real_minute_kline",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 16,
+   "hunks_norm": 2,
+   "first_diff": 14,
+   "sdelta": 822,
+   "deltas": [
+    [
+     14,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 116",
+     "to 390",
+     274
+    ],
+    [
+     38,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 112",
+     "to 386",
+     274
+    ],
+    [
+     42,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 112",
+     "to 386",
+     274
+    ]
+   ],
+   "len": [
+    250,
+    253
+   ]
+  },
+  "pad6": {
+   "hunks": 16,
+   "hunks_norm": 2,
+   "first_diff": 14,
+   "sdelta": 822,
+   "deltas": [
+    [
+     14,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 116",
+     "to 390",
+     274
+    ],
+    [
+     38,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 112",
+     "to 386",
+     274
+    ],
+    [
+     42,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 112",
+     "to 386",
+     274
+    ]
+   ],
+   "len": [
+    250,
+    253
+   ]
+  }
+ },
+ {
+  "file": "IQData/plugins/plugin_system_realquote/real_quote.pyc",
+  "unit": "<module>.RealQuoteData.get_cache_l2_data_by_one",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 95,
+   "sdelta": 88,
+   "deltas": [
+    [
+     95,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 226",
+     "to 138",
+     -88
+    ]
+   ],
+   "len": [
+    318,
+    318
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 95,
+   "sdelta": 88,
+   "deltas": [
+    [
+     95,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 226",
+     "to 138",
+     -88
+    ]
+   ],
+   "len": [
+    318,
+    318
+   ]
+  }
+ },
+ {
+  "file": "IQData/plugins/plugin_system_realquote/real_quote.pyc",
+  "unit": "<module>.RealQuoteData.get_tick_direction",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 12,
+   "hunks_norm": 2,
+   "first_diff": 4,
+   "sdelta": 184,
+   "deltas": [
+    [
+     4,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 512",
+     "to 514",
+     2
+    ],
+    [
+     139,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 298",
+     "to 464",
+     166
+    ],
+    [
+     235,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 504",
+     "to 488",
+     -16
+    ]
+   ],
+   "len": [
+    258,
+    259
+   ]
+  },
+  "pad6": {
+   "hunks": 12,
+   "hunks_norm": 2,
+   "first_diff": 4,
+   "sdelta": 184,
+   "deltas": [
+    [
+     4,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 512",
+     "to 514",
+     2
+    ],
+    [
+     139,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 298",
+     "to 464",
+     166
+    ],
+    [
+     235,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 504",
+     "to 488",
+     -16
+    ]
+   ],
+   "len": [
+    258,
+    259
+   ]
+  }
+ },
+ {
+  "file": "IQData/utils/calexrights_func.pyc",
+  "unit": "<module>.change_his_to_forward",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 12,
+   "hunks_norm": 1,
+   "first_diff": 163,
+   "sdelta": 120,
+   "deltas": [
+    [
+     163,
+     "FOR_ITER",
+     "to 738",
+     "to 740",
+     2
+    ],
+    [
+     183,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 444",
+     "to 738",
+     -118
+    ]
+   ],
+   "len": [
+    386,
+    387
+   ]
+  },
+  "pad6": {
+   "hunks": 12,
+   "hunks_norm": 1,
+   "first_diff": 163,
+   "sdelta": 120,
+   "deltas": [
+    [
+     163,
+     "FOR_ITER",
+     "to 738",
+     "to 740",
+     2
+    ],
+    [
+     183,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 444",
+     "to 738",
+     -118
+    ]
+   ],
+   "len": [
+    386,
+    387
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/account/order.pyc",
+  "unit": "<module>.Order.mark_cancelled",
+  "family": "F-PAD",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 0,
+   "first_diff": 3,
+   "sdelta": 8,
+   "deltas": [
+    [
+     3,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 40",
+     "to 44",
+     4
+    ],
+    [
+     12,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 44",
+     "to 40",
+     -4
+    ]
+   ],
+   "len": [
+    24,
+    24
+   ]
+  },
+  "pad6": {
+   "hunks": 0,
+   "hunks_norm": 0,
+   "first_diff": null,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    24,
+    24
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/api/api_base.pyc",
+  "unit": "<module>.get_history",
+  "family": "F-POLARITY",
+  "landed": {
+   "hunks": 3,
+   "hunks_norm": 1,
+   "first_diff": 30,
+   "sdelta": 42,
+   "deltas": [
+    [
+     32,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 82",
+     "to 114",
+     42
+    ]
+   ],
+   "len": [
+    110,
+    110
+   ]
+  },
+  "pad6": {
+   "hunks": 3,
+   "hunks_norm": 1,
+   "first_diff": 30,
+   "sdelta": 42,
+   "deltas": [
+    [
+     32,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 82",
+     "to 114",
+     42
+    ]
+   ],
+   "len": [
+    110,
+    110
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/core/bar.pyc",
+  "unit": "<module>.BarData.limit_up",
+  "family": "F-TERNARY",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 1,
+   "first_diff": 10,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    30,
+    30
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 1,
+   "first_diff": 10,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    30,
+    30
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/core/bar.pyc",
+  "unit": "<module>.BarData.limit_down",
+  "family": "F-TERNARY",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 1,
+   "first_diff": 10,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    30,
+    30
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 1,
+   "first_diff": 10,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    30,
+    30
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/core/bar.pyc",
+  "unit": "<module>.BarData._history_bars",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 25,
+   "sdelta": 32,
+   "deltas": [
+    [
+     25,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 60",
+     "to 92",
+     32
+    ]
+   ],
+   "len": [
+    59,
+    59
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 25,
+   "sdelta": 32,
+   "deltas": [
+    [
+     25,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 60",
+     "to 92",
+     32
+    ]
+   ],
+   "len": [
+    59,
+    59
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/core/commission.pyc",
+  "unit": "<module>.CommissionHelp.set_commission",
+  "family": "F-EXCTABLE",
+  "landed": {
+   "hunks": 0,
+   "hunks_norm": 0,
+   "first_diff": null,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    48,
+    48
+   ]
+  },
+  "pad6": {
+   "hunks": 0,
+   "hunks_norm": 0,
+   "first_diff": null,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    48,
+    48
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/core/executor.pyc",
+  "unit": "<module>.Executor.check_before_trading",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 16,
+   "sdelta": 30,
+   "deltas": [
+    [
+     16,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 70",
+     "to 100",
+     30
+    ]
+   ],
+   "len": [
+    242,
+    242
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 16,
+   "sdelta": 30,
+   "deltas": [
+    [
+     16,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 70",
+     "to 100",
+     30
+    ]
+   ],
+   "len": [
+    242,
+    242
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/core/slippage.pyc",
+  "unit": "<module>.SlippageHelp.set_slippage",
+  "family": "F-PAD",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 0,
+   "first_diff": 12,
+   "sdelta": 8,
+   "deltas": [
+    [
+     12,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 86",
+     "to 90",
+     4
+    ],
+    [
+     35,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 90",
+     "to 86",
+     -4
+    ]
+   ],
+   "len": [
+    47,
+    47
+   ]
+  },
+  "pad6": {
+   "hunks": 0,
+   "hunks_norm": 0,
+   "first_diff": null,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    47,
+    47
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/core/strategy/strategy_universe.pyc",
+  "unit": "<module>.StrategyUniverse._on_clear_de_listed",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 16,
+   "sdelta": 36,
+   "deltas": [
+    [
+     16,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 48",
+     "to 58",
+     -36
+    ]
+   ],
+   "len": [
+    63,
+    63
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 16,
+   "sdelta": 36,
+   "deltas": [
+    [
+     16,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 48",
+     "to 58",
+     -36
+    ]
+   ],
+   "len": [
+    63,
+    63
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/data/trading_dates_mixin.pyc",
+  "unit": "<module>.TradingDatesMixin.trading_dates_reload",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 3,
+   "hunks_norm": 1,
+   "first_diff": 2,
+   "sdelta": 28,
+   "deltas": [
+    [
+     2,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 36",
+     "to 12",
+     -24
+    ],
+    [
+     5,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 40",
+     "to 36",
+     -4
+    ]
+   ],
+   "len": [
+    22,
+    20
+   ]
+  },
+  "pad6": {
+   "hunks": 3,
+   "hunks_norm": 1,
+   "first_diff": 2,
+   "sdelta": 28,
+   "deltas": [
+    [
+     2,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 36",
+     "to 12",
+     -24
+    ],
+    [
+     5,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 40",
+     "to 36",
+     -4
+    ]
+   ],
+   "len": [
+    22,
+    20
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
+  "unit": "<module>.get_price",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 1,
+   "first_diff": 87,
+   "sdelta": 114,
+   "deltas": [
+    [
+     87,
+     "POP_JUMP_FORWARD_IF_NONE",
+     "to 264",
+     "to 378",
+     114
+    ]
+   ],
+   "len": [
+    189,
+    191
+   ]
+  },
+  "pad6": {
+   "hunks": 2,
+   "hunks_norm": 1,
+   "first_diff": 87,
+   "sdelta": 114,
+   "deltas": [
+    [
+     87,
+     "POP_JUMP_FORWARD_IF_NONE",
+     "to 264",
+     "to 378",
+     114
+    ]
+   ],
+   "len": [
+    189,
+    191
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
+  "unit": "<module>.base_order",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 135,
+   "sdelta": 60,
+   "deltas": [
+    [
+     135,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 350",
+     "to 290",
+     -60
+    ]
+   ],
+   "len": [
+    178,
+    178
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 135,
+   "sdelta": 60,
+   "deltas": [
+    [
+     135,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 350",
+     "to 290",
+     -60
+    ]
+   ],
+   "len": [
+    178,
+    178
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
+  "unit": "<module>.future_order",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 7,
+   "hunks_norm": 4,
+   "first_diff": 23,
+   "sdelta": 142,
+   "deltas": [
+    [
+     23,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 92",
+     "to 178",
+     86
+    ],
+    [
+     60,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 194",
+     "to 138",
+     -56
+    ]
+   ],
+   "len": [
+    100,
+    91
+   ]
+  },
+  "pad6": {
+   "hunks": 7,
+   "hunks_norm": 4,
+   "first_diff": 23,
+   "sdelta": 142,
+   "deltas": [
+    [
+     23,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 92",
+     "to 178",
+     86
+    ],
+    [
+     60,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 194",
+     "to 138",
+     -56
+    ]
+   ],
+   "len": [
+    100,
+    91
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
+  "unit": "<module>.option_order",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 8,
+   "hunks_norm": 6,
+   "first_diff": 31,
+   "sdelta": 78,
+   "deltas": [
+    [
+     31,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 158",
+     "to 80",
+     -78
+    ]
+   ],
+   "len": [
+    82,
+    72
+   ]
+  },
+  "pad6": {
+   "hunks": 8,
+   "hunks_norm": 6,
+   "first_diff": 31,
+   "sdelta": 78,
+   "deltas": [
+    [
+     31,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 158",
+     "to 80",
+     -78
+    ]
+   ],
+   "len": [
+    82,
+    72
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+  "unit": "<module>.Strategy.tick_worker_thread",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 4,
+   "hunks_norm": 0,
+   "first_diff": 61,
+   "sdelta": 992,
+   "deltas": [
+    [
+     61,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 156",
+     "to 282",
+     -144
+    ],
+    [
+     65,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 156",
+     "to 282",
+     -144
+    ],
+    [
+     165,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 364",
+     "to 490",
+     -352
+    ],
+    [
+     169,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 364",
+     "to 490",
+     -352
+    ]
+   ],
+   "len": [
+    267,
+    267
+   ]
+  },
+  "pad6": {
+   "hunks": 4,
+   "hunks_norm": 0,
+   "first_diff": 61,
+   "sdelta": 992,
+   "deltas": [
+    [
+     61,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 156",
+     "to 282",
+     -144
+    ],
+    [
+     65,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 156",
+     "to 282",
+     -144
+    ],
+    [
+     165,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 364",
+     "to 490",
+     -352
+    ],
+    [
+     169,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 364",
+     "to 490",
+     -352
+    ]
+   ],
+   "len": [
+    267,
+    267
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc",
+  "unit": "<module>.StockPosition.make_trade",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 6,
+   "hunks_norm": 1,
+   "first_diff": 16,
+   "sdelta": 20,
+   "deltas": [
+    [
+     16,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 220",
+     "to 212",
+     -8
+    ],
+    [
+     88,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 212",
+     "to 208",
+     -4
+    ],
+    [
+     93,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 216",
+     "to 208",
+     -8
+    ]
+   ],
+   "len": [
+    165,
+    161
+   ]
+  },
+  "pad6": {
+   "hunks": 6,
+   "hunks_norm": 1,
+   "first_diff": 16,
+   "sdelta": 20,
+   "deltas": [
+    [
+     16,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 220",
+     "to 212",
+     -8
+    ],
+    [
+     88,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 212",
+     "to 208",
+     -4
+    ],
+    [
+     93,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 216",
+     "to 208",
+     -8
+    ]
+   ],
+   "len": [
+    165,
+    161
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+  "unit": "<module>.RealtimeEventSource.clock_worker",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 52,
+   "hunks_norm": 8,
+   "first_diff": 617,
+   "sdelta": 760,
+   "deltas": [
+    [
+     664,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 2494",
+     "to 2476",
+     -18
+    ],
+    [
+     758,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1718",
+     "to 1688",
+     -30
+    ],
+    [
+     763,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1550",
+     "to 1676",
+     126
+    ],
+    [
+     780,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1586",
+     "to 1588",
+     2
+    ],
+    [
+     931,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1926",
+     "to 2470",
+     544
+    ],
+    [
+     1210,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 2430",
+     "to 2470",
+     40
+    ]
+   ],
+   "len": [
+    1274,
+    1281
+   ]
+  },
+  "pad6": {
+   "hunks": 52,
+   "hunks_norm": 8,
+   "first_diff": 617,
+   "sdelta": 760,
+   "deltas": [
+    [
+     664,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 2494",
+     "to 2476",
+     -18
+    ],
+    [
+     758,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1718",
+     "to 1688",
+     -30
+    ],
+    [
+     763,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1550",
+     "to 1676",
+     126
+    ],
+    [
+     780,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1586",
+     "to 1588",
+     2
+    ],
+    [
+     931,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1926",
+     "to 2470",
+     544
+    ],
+    [
+     1210,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 2430",
+     "to 2470",
+     40
+    ]
+   ],
+   "len": [
+    1274,
+    1281
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_matcher/matcher.pyc",
+  "unit": "<module>.DefaultMatcher.match",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 9,
+   "hunks_norm": 0,
+   "first_diff": 190,
+   "sdelta": 4280,
+   "deltas": [
+    [
+     190,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 390",
+     "to 920",
+     530
+    ],
+    [
+     194,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 418",
+     "to 920",
+     502
+    ],
+    [
+     204,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 486",
+     "to 920",
+     434
+    ],
+    [
+     208,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 486",
+     "to 920",
+     434
+    ],
+    [
+     278,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 646",
+     "to 920",
+     274
+    ],
+    [
+     282,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 646",
+     "to 920",
+     274
+    ],
+    [
+     286,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 646",
+     "to 920",
+     274
+    ],
+    [
+     288,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 646",
+     "to 4",
+     -642
+    ],
+    [
+     334,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 920",
+     "to 4",
+     -916
+    ]
+   ],
+   "len": [
+    712,
+    712
+   ]
+  },
+  "pad6": {
+   "hunks": 9,
+   "hunks_norm": 0,
+   "first_diff": 190,
+   "sdelta": 4280,
+   "deltas": [
+    [
+     190,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 390",
+     "to 920",
+     530
+    ],
+    [
+     194,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 418",
+     "to 920",
+     502
+    ],
+    [
+     204,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 486",
+     "to 920",
+     434
+    ],
+    [
+     208,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 486",
+     "to 920",
+     434
+    ],
+    [
+     278,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 646",
+     "to 920",
+     274
+    ],
+    [
+     282,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 646",
+     "to 920",
+     274
+    ],
+    [
+     286,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 646",
+     "to 920",
+     274
+    ],
+    [
+     288,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 646",
+     "to 4",
+     -642
+    ],
+    [
+     334,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 920",
+     "to 4",
+     -916
+    ]
+   ],
+   "len": [
+    712,
+    712
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+  "unit": "<module>.PluginRiskCalculation._on_publish_after_trading_end",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 4,
+   "hunks_norm": 1,
+   "first_diff": 210,
+   "sdelta": 32,
+   "deltas": [
+    [
+     422,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 916",
+     "to 900",
+     -16
+    ],
+    [
+     442,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 916",
+     "to 900",
+     -16
+    ]
+   ],
+   "len": [
+    486,
+    478
+   ]
+  },
+  "pad6": {
+   "hunks": 4,
+   "hunks_norm": 1,
+   "first_diff": 210,
+   "sdelta": 32,
+   "deltas": [
+    [
+     422,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 916",
+     "to 900",
+     -16
+    ],
+    [
+     442,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 916",
+     "to 900",
+     -16
+    ]
+   ],
+   "len": [
+    486,
+    478
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+  "unit": "<module>.PluginRiskCalculation._save_testds_to_csv",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 4,
+   "hunks_norm": 3,
+   "first_diff": 32,
+   "sdelta": 8,
+   "deltas": [
+    [
+     51,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 144",
+     "to 138",
+     -6
+    ],
+    [
+     59,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 124",
+     "to 122",
+     -2
+    ]
+   ],
+   "len": [
+    74,
+    71
+   ]
+  },
+  "pad6": {
+   "hunks": 4,
+   "hunks_norm": 3,
+   "first_diff": 32,
+   "sdelta": 8,
+   "deltas": [
+    [
+     51,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 144",
+     "to 138",
+     -6
+    ],
+    [
+     59,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 124",
+     "to 122",
+     -2
+    ]
+   ],
+   "len": [
+    74,
+    71
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/function.pyc",
+  "unit": "<module>.reconnect",
+  "family": "F-PAD",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 0,
+   "first_diff": 41,
+   "sdelta": 52,
+   "deltas": [
+    [
+     41,
+     "JUMP_FORWARD",
+     "to 148",
+     "to 174",
+     26
+    ],
+    [
+     49,
+     "JUMP_FORWARD",
+     "to 148",
+     "to 174",
+     26
+    ]
+   ],
+   "len": [
+    89,
+    89
+   ]
+  },
+  "pad6": {
+   "hunks": 2,
+   "hunks_norm": 0,
+   "first_diff": 41,
+   "sdelta": 52,
+   "deltas": [
+    [
+     41,
+     "JUMP_FORWARD",
+     "to 148",
+     "to 174",
+     26
+    ],
+    [
+     49,
+     "JUMP_FORWARD",
+     "to 148",
+     "to 174",
+     26
+    ]
+   ],
+   "len": [
+    89,
+    89
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "unit": "<module>.TradeLiveBroker.on_pre_before_trading_start",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 3,
+   "sdelta": 8,
+   "deltas": [
+    [
+     3,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 34",
+     "to 42",
+     8
+    ]
+   ],
+   "len": [
+    115,
+    115
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 3,
+   "sdelta": 8,
+   "deltas": [
+    [
+     3,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 34",
+     "to 42",
+     8
+    ]
+   ],
+   "len": [
+    115,
+    115
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "unit": "<module>.TradeLiveBroker._process_order",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 29,
+   "hunks_norm": 16,
+   "first_diff": 11,
+   "sdelta": 1746,
+   "deltas": [
+    [
+     11,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 892",
+     "to 770",
+     -122
+    ],
+    [
+     64,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 208",
+     "to 756",
+     548
+    ],
+    [
+     73,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 208",
+     "to 756",
+     548
+    ],
+    [
+     79,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 190",
+     "to 700",
+     510
+    ],
+    [
+     84,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 208",
+     "to 190",
+     -18
+    ]
+   ],
+   "len": [
+    452,
+    392
+   ]
+  },
+  "pad6": {
+   "hunks": 29,
+   "hunks_norm": 16,
+   "first_diff": 11,
+   "sdelta": 1746,
+   "deltas": [
+    [
+     11,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 892",
+     "to 770",
+     -122
+    ],
+    [
+     64,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 208",
+     "to 756",
+     548
+    ],
+    [
+     73,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 208",
+     "to 756",
+     548
+    ],
+    [
+     79,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 190",
+     "to 700",
+     510
+    ],
+    [
+     84,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 208",
+     "to 190",
+     -18
+    ]
+   ],
+   "len": [
+    452,
+    392
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "unit": "<module>.TradeLiveBroker._process_tick_order",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 26,
+   "sdelta": 6,
+   "deltas": [
+    [
+     26,
+     "JUMP_BACKWARD",
+     "to 38",
+     "to 32",
+     -6
+    ]
+   ],
+   "len": [
+    161,
+    161
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 26,
+   "sdelta": 6,
+   "deltas": [
+    [
+     26,
+     "JUMP_BACKWARD",
+     "to 38",
+     "to 32",
+     -6
+    ]
+   ],
+   "len": [
+    161,
+    161
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "unit": "<module>.TradeLiveBroker._process_cancel_order",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 11,
+   "hunks_norm": 3,
+   "first_diff": 11,
+   "sdelta": 570,
+   "deltas": [
+    [
+     11,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 574",
+     "to 576",
+     2
+    ],
+    [
+     43,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 558",
+     "to 560",
+     2
+    ],
+    [
+     146,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 574",
+     "to 10",
+     -564
+    ],
+    [
+     153,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 464",
+     "to 466",
+     2
+    ]
+   ],
+   "len": [
+    293,
+    295
+   ]
+  },
+  "pad6": {
+   "hunks": 11,
+   "hunks_norm": 3,
+   "first_diff": 11,
+   "sdelta": 570,
+   "deltas": [
+    [
+     11,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 574",
+     "to 576",
+     2
+    ],
+    [
+     43,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 558",
+     "to 560",
+     2
+    ],
+    [
+     146,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 574",
+     "to 10",
+     -564
+    ],
+    [
+     153,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 464",
+     "to 466",
+     2
+    ]
+   ],
+   "len": [
+    293,
+    295
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "unit": "<module>.TradeLiveBroker._sync_worker",
+  "family": "F-POLARITY",
+  "landed": {
+   "hunks": 18,
+   "hunks_norm": 8,
+   "first_diff": 47,
+   "sdelta": 52,
+   "deltas": [
+    [
+     191,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 388",
+     "to 390",
+     2
+    ],
+    [
+     308,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 628",
+     "to 678",
+     50
+    ]
+   ],
+   "len": [
+    346,
+    345
+   ]
+  },
+  "pad6": {
+   "hunks": 18,
+   "hunks_norm": 8,
+   "first_diff": 47,
+   "sdelta": 52,
+   "deltas": [
+    [
+     191,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 388",
+     "to 390",
+     2
+    ],
+    [
+     308,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 628",
+     "to 678",
+     50
+    ]
+   ],
+   "len": [
+    346,
+    345
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "unit": "<module>.TradeLiveBroker._trade_status_handle",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 11,
+   "hunks_norm": 3,
+   "first_diff": 5,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    113,
+    111
+   ]
+  },
+  "pad6": {
+   "hunks": 11,
+   "hunks_norm": 3,
+   "first_diff": 5,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    113,
+    111
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "unit": "<module>.TradeLiveBroker.etf_basket_order",
+  "family": "F-PAD",
+  "landed": {
+   "hunks": 35,
+   "hunks_norm": 2,
+   "first_diff": 124,
+   "sdelta": 614,
+   "deltas": [
+    [
+     124,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 506",
+     "to 934",
+     428
+    ],
+    [
+     147,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     184,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     189,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     194,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     227,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     232,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     237,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     242,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     372,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 754",
+     "to 772",
+     18
+    ],
+    [
+     399,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 812",
+     "to 820",
+     8
+    ]
+   ],
+   "len": [
+    691,
+    691
+   ]
+  },
+  "pad6": {
+   "hunks": 35,
+   "hunks_norm": 2,
+   "first_diff": 124,
+   "sdelta": 614,
+   "deltas": [
+    [
+     124,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 506",
+     "to 934",
+     428
+    ],
+    [
+     147,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     184,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     189,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     194,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     227,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     232,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     237,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     242,
+     "JUMP_FORWARD",
+     "to 526",
+     "to 506",
+     -20
+    ],
+    [
+     372,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 754",
+     "to 772",
+     18
+    ],
+    [
+     399,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 812",
+     "to 820",
+     8
+    ]
+   ],
+   "len": [
+    691,
+    691
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "unit": "<module>.TradeLiveBroker.etf_purchase_redemption",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 8,
+   "hunks_norm": 5,
+   "first_diff": 59,
+   "sdelta": 20,
+   "deltas": [
+    [
+     59,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 742",
+     "to 722",
+     -20
+    ]
+   ],
+   "len": [
+    378,
+    368
+   ]
+  },
+  "pad6": {
+   "hunks": 8,
+   "hunks_norm": 5,
+   "first_diff": 59,
+   "sdelta": 20,
+   "deltas": [
+    [
+     59,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 742",
+     "to 722",
+     -20
+    ]
+   ],
+   "len": [
+    378,
+    368
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "unit": "<module>.TradeLiveBroker.get_max_amount",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 3,
+   "hunks_norm": 1,
+   "first_diff": 162,
+   "sdelta": 72,
+   "deltas": [
+    [
+     162,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 342",
+     "to 390",
+     48
+    ],
+    [
+     182,
+     "JUMP_FORWARD",
+     "to 388",
+     "to 412",
+     24
+    ]
+   ],
+   "len": [
+    200,
+    212
+   ]
+  },
+  "pad6": {
+   "hunks": 3,
+   "hunks_norm": 1,
+   "first_diff": 162,
+   "sdelta": 72,
+   "deltas": [
+    [
+     162,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 342",
+     "to 390",
+     48
+    ],
+    [
+     182,
+     "JUMP_FORWARD",
+     "to 388",
+     "to 412",
+     24
+    ]
+   ],
+   "len": [
+    200,
+    212
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "unit": "<module>.TradeLiveBroker.rzrq_credit_order",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 401,
+   "sdelta": 10,
+   "deltas": [
+    [
+     401,
+     "JUMP_FORWARD",
+     "to 870",
+     "to 860",
+     -10
+    ]
+   ],
+   "len": [
+    697,
+    697
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 401,
+   "sdelta": 10,
+   "deltas": [
+    [
+     401,
+     "JUMP_FORWARD",
+     "to 870",
+     "to 860",
+     -10
+    ]
+   ],
+   "len": [
+    697,
+    697
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "unit": "<module>.TradeLiveBroker.ipo_stocks_order",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 24,
+   "hunks_norm": 1,
+   "first_diff": 407,
+   "sdelta": 2196,
+   "deltas": [
+    [
+     407,
+     "FOR_ITER",
+     "to 2136",
+     "to 2134",
+     -2
+    ],
+    [
+     420,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 878",
+     "to 814",
+     -64
+    ],
+    [
+     473,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 1240",
+     "to 814",
+     -426
+    ],
+    [
+     493,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1024",
+     "to 814",
+     -210
+    ],
+    [
+     565,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1240",
+     "to 814",
+     -426
+    ],
+    [
+     594,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1240",
+     "to 814",
+     -426
+    ],
+    [
+     718,
+     "JUMP_FORWARD",
+     "to 1860",
+     "to 1858",
+     -2
+    ],
+    [
+     725,
+     "JUMP_FORWARD",
+     "to 1860",
+     "to 1858",
+     -2
+    ],
+    [
+     729,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 1482",
+     "to 1858",
+     376
+    ],
+    [
+     746,
+     "JUMP_FORWARD",
+     "to 1860",
+     "to 1808",
+     -52
+    ],
+    [
+     755,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1810",
+     "to 1808",
+     -2
+    ],
+    [
+     802,
+     "JUMP_FORWARD",
+     "to 1860",
+     "to 1808",
+     -52
+    ],
+    [
+     825,
+     "JUMP_FORWARD",
+     "to 1860",
+     "to 1808",
+     -52
+    ],
+    [
+     860,
+     "JUMP_FORWARD",
+     "to 1860",
+     "to 1808",
+     -52
+    ],
+    [
+     883,
+     "JUMP_FORWARD",
+     "to 1860",
+     "to 1808",
+     -52
+    ]
+   ],
+   "len": [
+    1070,
+    1069
+   ]
+  },
+  "pad6": {
+   "hunks": 24,
+   "hunks_norm": 1,
+   "first_diff": 407,
+   "sdelta": 2196,
+   "deltas": [
+    [
+     407,
+     "FOR_ITER",
+     "to 2136",
+     "to 2134",
+     -2
+    ],
+    [
+     420,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 878",
+     "to 814",
+     -64
+    ],
+    [
+     473,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 1240",
+     "to 814",
+     -426
+    ],
+    [
+     493,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1024",
+     "to 814",
+     -210
+    ],
+    [
+     565,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1240",
+     "to 814",
+     -426
+    ],
+    [
+     594,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1240",
+     "to 814",
+     -426
+    ],
+    [
+     718,
+     "JUMP_FORWARD",
+     "to 1860",
+     "to 1858",
+     -2
+    ],
+    [
+     725,
+     "JUMP_FORWARD",
+     "to 1860",
+     "to 1858",
+     -2
+    ],
+    [
+     729,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 1482",
+     "to 1858",
+     376
+    ],
+    [
+     746,
+     "JUMP_FORWARD",
+     "to 1860",
+     "to 1808",
+     -52
+    ],
+    [
+     755,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 1810",
+     "to 1808",
+     -2
+    ],
+    [
+     802,
+     "JUMP_FORWARD",
+     "to 1860",
+     "to 1808",
+     -52
+    ],
+    [
+     825,
+     "JUMP_FORWARD",
+     "to 1860",
+     "to 1808",
+     -52
+    ],
+    [
+     860,
+     "JUMP_FORWARD",
+     "to 1860",
+     "to 1808",
+     -52
+    ],
+    [
+     883,
+     "JUMP_FORWARD",
+     "to 1860",
+     "to 1808",
+     -52
+    ]
+   ],
+   "len": [
+    1070,
+    1069
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "unit": "<module>.TradeLiveBroker.get_ipo_stocks",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 0,
+   "first_diff": 186,
+   "sdelta": 280,
+   "deltas": [
+    [
+     186,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 410",
+     "to 346",
+     -64
+    ],
+    [
+     245,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 528",
+     "to 744",
+     216
+    ]
+   ],
+   "len": [
+    449,
+    449
+   ]
+  },
+  "pad6": {
+   "hunks": 2,
+   "hunks_norm": 0,
+   "first_diff": 186,
+   "sdelta": 280,
+   "deltas": [
+    [
+     186,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 410",
+     "to 346",
+     -64
+    ],
+    [
+     245,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 528",
+     "to 744",
+     216
+    ]
+   ],
+   "len": [
+    449,
+    449
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "unit": "<module>.TradeLiveBroker.on_order_response_list_handle",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 22,
+   "sdelta": 60,
+   "deltas": [
+    [
+     22,
+     "POP_JUMP_FORWARD_IF_NONE",
+     "to 84",
+     "to 206",
+     -60
+    ]
+   ],
+   "len": [
+    106,
+    106
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 22,
+   "sdelta": 60,
+   "deltas": [
+    [
+     22,
+     "POP_JUMP_FORWARD_IF_NONE",
+     "to 84",
+     "to 206",
+     -60
+    ]
+   ],
+   "len": [
+    106,
+    106
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "unit": "<module>.TradeLiveBroker.on_trade_response_list_handle",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 22,
+   "sdelta": 60,
+   "deltas": [
+    [
+     22,
+     "POP_JUMP_FORWARD_IF_NONE",
+     "to 84",
+     "to 206",
+     -60
+    ]
+   ],
+   "len": [
+    106,
+    106
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 22,
+   "sdelta": 60,
+   "deltas": [
+    [
+     22,
+     "POP_JUMP_FORWARD_IF_NONE",
+     "to 84",
+     "to 206",
+     -60
+    ]
+   ],
+   "len": [
+    106,
+    106
+   ]
+  }
+ },
+ {
+  "file": "IQEngine/utils/profiler_func.pyc",
+  "unit": "<module>.ProfilerTool.show_func",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 7,
+   "hunks_norm": 6,
+   "first_diff": 89,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    299,
+    241
+   ]
+  },
+  "pad6": {
+   "hunks": 7,
+   "hunks_norm": 6,
+   "first_diff": 89,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    299,
+    241
+   ]
+  }
+ },
+ {
+  "file": "fly/common/flytools.pyc",
+  "unit": "<module>.set_userid_containerid_dict",
+  "family": "F-PAD",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 0,
+   "first_diff": 14,
+   "sdelta": 8,
+   "deltas": [
+    [
+     14,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 88",
+     "to 92",
+     4
+    ],
+    [
+     24,
+     "FOR_ITER",
+     "to 92",
+     "to 88",
+     -4
+    ]
+   ],
+   "len": [
+    73,
+    73
+   ]
+  },
+  "pad6": {
+   "hunks": 0,
+   "hunks_norm": 0,
+   "first_diff": null,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    73,
+    73
+   ]
+  }
+ },
+ {
+  "file": "fly/common/flytools.pyc",
+  "unit": "<module>.ProcessWrite.modify_batcktes_info",
+  "family": "F-PAD",
+  "landed": {
+   "hunks": 3,
+   "hunks_norm": 0,
+   "first_diff": 162,
+   "sdelta": 48,
+   "deltas": [
+    [
+     162,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 380",
+     "to 404",
+     24
+    ],
+    [
+     173,
+     "JUMP_FORWARD",
+     "to 404",
+     "to 392",
+     -12
+    ],
+    [
+     177,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 392",
+     "to 380",
+     -12
+    ]
+   ],
+   "len": [
+    216,
+    216
+   ]
+  },
+  "pad6": {
+   "hunks": 3,
+   "hunks_norm": 0,
+   "first_diff": 162,
+   "sdelta": 48,
+   "deltas": [
+    [
+     162,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 380",
+     "to 404",
+     24
+    ],
+    [
+     173,
+     "JUMP_FORWARD",
+     "to 404",
+     "to 392",
+     -12
+    ],
+    [
+     177,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 392",
+     "to 380",
+     -12
+    ]
+   ],
+   "len": [
+    216,
+    216
+   ]
+  }
+ },
+ {
+  "file": "fly/common/future_contract_info.pyc",
+  "unit": "<module>.FutureInfoCache.check_user",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 3,
+   "hunks_norm": 1,
+   "first_diff": 67,
+   "sdelta": 176,
+   "deltas": [
+    [
+     67,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 146",
+     "to 302",
+     156
+    ],
+    [
+     72,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 292",
+     "to 302",
+     10
+    ],
+    [
+     122,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 264",
+     "to 274",
+     10
+    ]
+   ],
+   "len": [
+    148,
+    153
+   ]
+  },
+  "pad6": {
+   "hunks": 3,
+   "hunks_norm": 1,
+   "first_diff": 67,
+   "sdelta": 176,
+   "deltas": [
+    [
+     67,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 146",
+     "to 302",
+     156
+    ],
+    [
+     72,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 292",
+     "to 302",
+     10
+    ],
+    [
+     122,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 264",
+     "to 274",
+     10
+    ]
+   ],
+   "len": [
+    148,
+    153
+   ]
+  }
+ },
+ {
+  "file": "fly/common/future_contract_info.pyc",
+  "unit": "<module>.FutureInfoCache.info_conbine",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 13,
+   "sdelta": 8,
+   "deltas": [
+    [
+     13,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 38",
+     "to 46",
+     8
+    ]
+   ],
+   "len": [
+    53,
+    53
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 13,
+   "sdelta": 8,
+   "deltas": [
+    [
+     13,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 38",
+     "to 46",
+     8
+    ]
+   ],
+   "len": [
+    53,
+    53
+   ]
+  }
+ },
+ {
+  "file": "fly/data/quotation.pyc",
+  "unit": "<module>.change_his_to_forward",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 12,
+   "hunks_norm": 1,
+   "first_diff": 229,
+   "sdelta": 136,
+   "deltas": [
+    [
+     229,
+     "FOR_ITER",
+     "to 1058",
+     "to 1060",
+     2
+    ],
+    [
+     249,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 592",
+     "to 1058",
+     -134
+    ]
+   ],
+   "len": [
+    546,
+    547
+   ]
+  },
+  "pad6": {
+   "hunks": 12,
+   "hunks_norm": 1,
+   "first_diff": 229,
+   "sdelta": 136,
+   "deltas": [
+    [
+     229,
+     "FOR_ITER",
+     "to 1058",
+     "to 1060",
+     2
+    ],
+    [
+     249,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 592",
+     "to 1058",
+     -134
+    ]
+   ],
+   "len": [
+    546,
+    547
+   ]
+  }
+ },
+ {
+  "file": "fly/data/quote.pyc",
+  "unit": "<module>.Quote.build_current_period_df",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 3,
+   "hunks_norm": 1,
+   "first_diff": 2,
+   "sdelta": 18,
+   "deltas": [
+    [
+     2,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 230",
+     "to 212",
+     -18
+    ]
+   ],
+   "len": [
+    117,
+    108
+   ]
+  },
+  "pad6": {
+   "hunks": 3,
+   "hunks_norm": 1,
+   "first_diff": 2,
+   "sdelta": 18,
+   "deltas": [
+    [
+     2,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 230",
+     "to 212",
+     -18
+    ]
+   ],
+   "len": [
+    117,
+    108
+   ]
+  }
+ },
+ {
+  "file": "fly/data/quote.pyc",
+  "unit": "<module>.Quote.load_bars_from_hundsun",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 33,
+   "hunks_norm": 1,
+   "first_diff": 48,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    476,
+    482
+   ]
+  },
+  "pad6": {
+   "hunks": 33,
+   "hunks_norm": 1,
+   "first_diff": 48,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    476,
+    482
+   ]
+  }
+ },
+ {
+  "file": "fly/data/quote.pyc",
+  "unit": "<module>.Quote.load_get_price",
+  "family": "F-OTHER",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 1,
+   "first_diff": 52,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    168,
+    168
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 1,
+   "first_diff": 52,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    168,
+    168
+   ]
+  }
+ },
+ {
+  "file": "fly/data/quote.pyc",
+  "unit": "<module>.Quote.change_his_to_forward",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 12,
+   "hunks_norm": 1,
+   "first_diff": 220,
+   "sdelta": 140,
+   "deltas": [
+    [
+     220,
+     "FOR_ITER",
+     "to 1020",
+     "to 1022",
+     2
+    ],
+    [
+     240,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 578",
+     "to 1020",
+     -138
+    ]
+   ],
+   "len": [
+    527,
+    528
+   ]
+  },
+  "pad6": {
+   "hunks": 12,
+   "hunks_norm": 1,
+   "first_diff": 220,
+   "sdelta": 140,
+   "deltas": [
+    [
+     220,
+     "FOR_ITER",
+     "to 1020",
+     "to 1022",
+     2
+    ],
+    [
+     240,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 578",
+     "to 1020",
+     -138
+    ]
+   ],
+   "len": [
+    527,
+    528
+   ]
+  }
+ },
+ {
+  "file": "fly/data/quote.pyc",
+  "unit": "<module>.Quote.change_his_to_backward",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 212,
+   "sdelta": 4,
+   "deltas": [
+    [
+     212,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 478",
+     "to 474",
+     -4
+    ]
+   ],
+   "len": [
+    357,
+    357
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 212,
+   "sdelta": 4,
+   "deltas": [
+    [
+     212,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 478",
+     "to 474",
+     -4
+    ]
+   ],
+   "len": [
+    357,
+    357
+   ]
+  }
+ },
+ {
+  "file": "fly/data/quote.pyc",
+  "unit": "<module>.Quote.get_price",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 23,
+   "hunks_norm": 1,
+   "first_diff": 59,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    228,
+    230
+   ]
+  },
+  "pad6": {
+   "hunks": 23,
+   "hunks_norm": 1,
+   "first_diff": 59,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    228,
+    230
+   ]
+  }
+ },
+ {
+  "file": "fly/data/quote.pyc",
+  "unit": "<module>.Quote.check_industry_code",
+  "family": "F-OTHER",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 1,
+   "first_diff": 158,
+   "sdelta": 4,
+   "deltas": [
+    [
+     169,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 352",
+     "to 348",
+     -4
+    ]
+   ],
+   "len": [
+    178,
+    178
+   ]
+  },
+  "pad6": {
+   "hunks": 2,
+   "hunks_norm": 1,
+   "first_diff": 158,
+   "sdelta": 4,
+   "deltas": [
+    [
+     169,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 352",
+     "to 348",
+     -4
+    ]
+   ],
+   "len": [
+    178,
+    178
+   ]
+  }
+ },
+ {
+  "file": "fly/data/quote.pyc",
+  "unit": "<module>.Quote.check_frequency",
+  "family": "F-PAD",
+  "landed": {
+   "hunks": 4,
+   "hunks_norm": 2,
+   "first_diff": 94,
+   "sdelta": 38,
+   "deltas": [
+    [
+     94,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 198",
+     "to 236",
+     38
+    ]
+   ],
+   "len": [
+    122,
+    122
+   ]
+  },
+  "pad6": {
+   "hunks": 4,
+   "hunks_norm": 2,
+   "first_diff": 94,
+   "sdelta": 38,
+   "deltas": [
+    [
+     94,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 198",
+     "to 236",
+     38
+    ]
+   ],
+   "len": [
+    122,
+    122
+   ]
+  }
+ },
+ {
+  "file": "fly/data/quote.pyc",
+  "unit": "<module>.Quote.get_real_from_zeromq",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 38,
+   "hunks_norm": 6,
+   "first_diff": 134,
+   "sdelta": 1054,
+   "deltas": [
+    [
+     134,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 288",
+     "to 1342",
+     1054
+    ]
+   ],
+   "len": [
+    702,
+    699
+   ]
+  },
+  "pad6": {
+   "hunks": 38,
+   "hunks_norm": 6,
+   "first_diff": 134,
+   "sdelta": 1054,
+   "deltas": [
+    [
+     134,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 288",
+     "to 1342",
+     1054
+    ]
+   ],
+   "len": [
+    702,
+    699
+   ]
+  }
+ },
+ {
+  "file": "fly/data/quote.pyc",
+  "unit": "<module>.Quote.run_individual_transform",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 18,
+   "hunks_norm": 7,
+   "first_diff": 91,
+   "sdelta": 150,
+   "deltas": [
+    [
+     91,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 676",
+     "to 540",
+     -136
+    ],
+    [
+     97,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 304",
+     "to 318",
+     14
+    ]
+   ],
+   "len": [
+    363,
+    272
+   ]
+  },
+  "pad6": {
+   "hunks": 18,
+   "hunks_norm": 7,
+   "first_diff": 91,
+   "sdelta": 150,
+   "deltas": [
+    [
+     91,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 676",
+     "to 540",
+     -136
+    ],
+    [
+     97,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 304",
+     "to 318",
+     14
+    ]
+   ],
+   "len": [
+    363,
+    272
+   ]
+  }
+ },
+ {
+  "file": "fly/data/quote.pyc",
+  "unit": "<module>.Quote.run_tick_socket",
+  "family": "F-PAD",
+  "landed": {
+   "hunks": 11,
+   "hunks_norm": 2,
+   "first_diff": 11,
+   "sdelta": 248,
+   "deltas": [
+    [
+     11,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 158",
+     "to 364",
+     206
+    ],
+    [
+     18,
+     "JUMP_FORWARD",
+     "to 200",
+     "to 158",
+     -42
+    ]
+   ],
+   "len": [
+    308,
+    308
+   ]
+  },
+  "pad6": {
+   "hunks": 11,
+   "hunks_norm": 2,
+   "first_diff": 11,
+   "sdelta": 248,
+   "deltas": [
+    [
+     11,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 158",
+     "to 364",
+     206
+    ],
+    [
+     18,
+     "JUMP_FORWARD",
+     "to 200",
+     "to 158",
+     -42
+    ]
+   ],
+   "len": [
+    308,
+    308
+   ]
+  }
+ },
+ {
+  "file": "fly/data/quote.pyc",
+  "unit": "<module>.Quote.get_individual_data",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 14,
+   "hunks_norm": 3,
+   "first_diff": 1,
+   "sdelta": 262,
+   "deltas": [
+    [
+     1,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 622",
+     "to 620",
+     -2
+    ],
+    [
+     145,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 310",
+     "to 570",
+     260
+    ]
+   ],
+   "len": [
+    313,
+    312
+   ]
+  },
+  "pad6": {
+   "hunks": 14,
+   "hunks_norm": 3,
+   "first_diff": 1,
+   "sdelta": 262,
+   "deltas": [
+    [
+     1,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 622",
+     "to 620",
+     -2
+    ],
+    [
+     145,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 310",
+     "to 570",
+     260
+    ]
+   ],
+   "len": [
+    313,
+    312
+   ]
+  }
+ },
+ {
+  "file": "fly/data/quote_handler.pyc",
+  "unit": "<module>.get_kline_local",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 1,
+   "first_diff": 78,
+   "sdelta": 1346,
+   "deltas": [
+    [
+     78,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 170",
+     "to 1516",
+     1346
+    ]
+   ],
+   "len": [
+    758,
+    760
+   ]
+  },
+  "pad6": {
+   "hunks": 2,
+   "hunks_norm": 1,
+   "first_diff": 78,
+   "sdelta": 1346,
+   "deltas": [
+    [
+     78,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 170",
+     "to 1516",
+     1346
+    ]
+   ],
+   "len": [
+    758,
+    760
+   ]
+  }
+ },
+ {
+  "file": "fly/dumpload/load_daily.pyc",
+  "unit": "<module>",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 20,
+   "hunks_norm": 0,
+   "first_diff": 108,
+   "sdelta": 82,
+   "deltas": [
+    [
+     595,
+     "JUMP_FORWARD",
+     "to 1202",
+     "to 1232",
+     82
+    ]
+   ],
+   "len": [
+    912,
+    912
+   ]
+  },
+  "pad6": {
+   "hunks": 20,
+   "hunks_norm": 0,
+   "first_diff": 108,
+   "sdelta": 82,
+   "deltas": [
+    [
+     595,
+     "JUMP_FORWARD",
+     "to 1202",
+     "to 1232",
+     82
+    ]
+   ],
+   "len": [
+    912,
+    912
+   ]
+  }
+ },
+ {
+  "file": "fly/logger.pyc",
+  "unit": "<module>.SafeFileHandler.check_baseFilename",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 13,
+   "sdelta": 4,
+   "deltas": [
+    [
+     13,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 52",
+     "to 56",
+     4
+    ]
+   ],
+   "len": [
+    30,
+    30
+   ]
+  },
+  "pad6": {
+   "hunks": 1,
+   "hunks_norm": 0,
+   "first_diff": 13,
+   "sdelta": 4,
+   "deltas": [
+    [
+     13,
+     "POP_JUMP_FORWARD_IF_TRUE",
+     "to 52",
+     "to 56",
+     4
+    ]
+   ],
+   "len": [
+    30,
+    30
+   ]
+  }
+ },
+ {
+  "file": "fly/oauthenticator/oauth2.pyc",
+  "unit": "<module>.HSIDOAuthCallbackHandler.post",
+  "family": "F-PAD",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 0,
+   "first_diff": 74,
+   "sdelta": 8,
+   "deltas": [
+    [
+     74,
+     "POP_JUMP_FORWARD_IF_NONE",
+     "to 182",
+     "to 186",
+     4
+    ],
+    [
+     84,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 186",
+     "to 182",
+     -4
+    ]
+   ],
+   "len": [
+    170,
+    170
+   ]
+  },
+  "pad6": {
+   "hunks": 0,
+   "hunks_norm": 0,
+   "first_diff": null,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    170,
+    170
+   ]
+  }
+ },
+ {
+  "file": "fly/oauthenticator/oauth2.pyc",
+  "unit": "<module>.OAuthCallbackHandler.post",
+  "family": "F-PAD",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 0,
+   "first_diff": 93,
+   "sdelta": 8,
+   "deltas": [
+    [
+     93,
+     "POP_JUMP_FORWARD_IF_NONE",
+     "to 220",
+     "to 224",
+     4
+    ],
+    [
+     103,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 224",
+     "to 220",
+     -4
+    ]
+   ],
+   "len": [
+    185,
+    185
+   ]
+  },
+  "pad6": {
+   "hunks": 0,
+   "hunks_norm": 0,
+   "first_diff": null,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    185,
+    185
+   ]
+  }
+ },
+ {
+  "file": "fly/simtradding/flyAccount.pyc",
+  "unit": "<module>.TradeAccount.register_async_callback",
+  "family": "F-PAD",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 0,
+   "first_diff": 17,
+   "sdelta": 8,
+   "deltas": [
+    [
+     17,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 158",
+     "to 162",
+     4
+    ],
+    [
+     66,
+     "POP_JUMP_FORWARD_IF_FALSE",
+     "to 162",
+     "to 158",
+     -4
+    ]
+   ],
+   "len": [
+    83,
+    83
+   ]
+  },
+  "pad6": {
+   "hunks": 0,
+   "hunks_norm": 0,
+   "first_diff": null,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    83,
+    83
+   ]
+  }
+ },
+ {
+  "file": "fly/simtradding/ptradeAccount.pyc",
+  "unit": "<module>.PtradeAccount.order_response_order_update",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 2,
+   "first_diff": 84,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    98,
+    97
+   ]
+  },
+  "pad6": {
+   "hunks": 2,
+   "hunks_norm": 2,
+   "first_diff": 84,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    98,
+    97
+   ]
+  }
+ },
+ {
+  "file": "fly/simtradding/ptradeAccount.pyc",
+  "unit": "<module>.PtradeAccount.trade_response_order_update",
+  "family": "F-ABSORB",
+  "landed": {
+   "hunks": 2,
+   "hunks_norm": 2,
+   "first_diff": 103,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    117,
+    116
+   ]
+  },
+  "pad6": {
+   "hunks": 2,
+   "hunks_norm": 2,
+   "first_diff": 103,
+   "sdelta": 0,
+   "deltas": [],
+   "len": [
+    117,
+    116
+   ]
+  }
+ }
+]

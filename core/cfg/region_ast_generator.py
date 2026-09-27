@@ -15598,11 +15598,40 @@ AST 映射规则:
                             _r71_ee_seen.add(_r71_ee_s)
                             _r71_ee_stack.append(_r71_ee_s)
                 _r71_ee_owned = all(b in _r71_ee_seen for b in _r71_ee_then)
+            # [R73-fix1 · F-PAD] 判据 ② 的对偶半边（同层次结构身份，只读本
+            # 区域 then/else 臂与本区域 CFG 的块序，不含函数名/文件名/偏移阈值/
+            # 名字白名单/新增 self 状态/跨层 region.entry in r.blocks）：
+            #   (i)  真 `else:` 臂恒紧接 then 臂末块之后发射——两者之间不会夹
+            #        着属于本区域之外的基本块；
+            #   (ii) 反之，若 then 臂最大块序与 else 臂最小块序之间夹着一个外部
+            #        块，该 else 臂就不是本区域的源码 else，而是被地址序挤到外层
+            #        臂之后的隐式收尾（implicit epilogue）重复发射体；抑制它才是
+            #        与原码一致的 AST（实测嵌套双 if 全 `return None` 形态：外层
+            #        收尾已由既有 ② 抑制，内层收尾排在外层收尾之后，只有本条
+            #        能一并抑制，两个 POP_JUMP 落点才与原码逐条相等）。
+            # 安全前置：块序取值只在既有 ①③④ 前置（pure/then/无 merge/owned）
+            #        全部成立后才求值——then/else 任一臂为空时 max()/min() 会抛
+            #        ValueError 中断本函数发射（r67d6_whiletrue_headif 实测），
+            #        故 gap 先置 False、仅在前置成立的分支内计算。
+            # 归约方式：与既有 ①③ 同一路径——整臂登记 generated_blocks /
+            # generated_offsets、orelse 置空，父序列按每块唯一归属不再重复发射，
+            # 隐式收尾由重编译自然再生，指令数与块数不变。
+            # AST 映射：ast.If.orelse 置空（等价于源码无 else 的 ast.If）。
+            _r71_ee_gap = False
             if (_r71_ee_pure
                     and _r71_ee_then
                     and getattr(region, 'merge_block', None) is None
-                    and min(b.start_offset for b in _r71_ee_else)
-                    < max(b.start_offset for b in _r71_ee_then)
+                    and _r71_ee_owned):
+                _r71_ee_m = max(b.start_offset for b in _r71_ee_then)
+                _r71_ee_e = min(b.start_offset for b in _r71_ee_else)
+                _r71_ee_gap = any(_r71_ee_m < b.start_offset < _r71_ee_e
+                                  for b in self.cfg.blocks.values())
+            if (_r71_ee_pure
+                    and _r71_ee_then
+                    and getattr(region, 'merge_block', None) is None
+                    and (min(b.start_offset for b in _r71_ee_else)
+                         < max(b.start_offset for b in _r71_ee_then)
+                         or _r71_ee_gap)
                     and _r71_ee_owned):
                 for _r71_ee_b in _r71_ee_else:
                     self.generated_blocks.add(_r71_ee_b)
@@ -17920,6 +17949,7 @@ AST 映射规则:
             _chain_blocks = _main_ibc['blocks']
             _chain_op = _main_ibc['op']
             _main_parts = []
+            _main_part_blocks = []
             for _cb_idx, _cb in enumerate(_chain_blocks):
                 # [R01 fix] NONE_CHECK_OPS 不能过滤：它们表达 `x is (not) None`
                 # [R75 fix] or 链 NONE_CHECK 块跳转到 then，需翻转 expr_reconstructor
@@ -17960,6 +17990,7 @@ AST 映射规则:
                         elif _chain_op == 'and' and _cb_last and 'TRUE' in _cb_last.opname:
                             _part = _flip_contains_compare(_part) if (_part.get('type') == 'Compare' and any((o.get('type') if isinstance(o, dict) else o) in ('In', 'NotIn', 'in', 'not in') for o in (_part.get('ops') or []))) else _negate_expr(_part)
                         _main_parts.append(_part)
+                        _main_part_blocks.append(_cb)
             if len(_main_parts) >= 2:
                 # [R68-D4-ORCHAIN-TAIL] or 链折叠条件必须保留链尾已折入的 and 尾巴。
                 # 缺陷（trade_info_utils.get_trade_list L204-206 / L209-211）：源码
@@ -17983,7 +18014,36 @@ AST 映射规则:
                 #     把 `if (b1 or ... or bn) and t:` 编译为 b1..bn 的短路链（bn 真时 fallthrough
                 #     进 t 求值）+ t 的 POP_JUMP_IF_FALSE 到同一 merge，与原始字节码逐条一致。
                 _r68d4_extracted = condition
-                condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _main_parts}
+                # [R73-F-POLARITY] 链内存在「成员假出口跳到更靠后链成员」时，链不是平铺
+                # or 而是 or(and(...), ...) 混链：`if (A and not B) or C:` 里 A 的假出口
+                # 跳过 B 直达 C，A+B 合成一个合取支、组间仍为 or。判据只读链成员末跳
+                # 目标是否落在更靠后的链成员上（同层结构身份判据，无函数名/文件名/偏移
+                # 启发）。无此类成员时切出唯一组，走原平铺 BoolOp(or, _main_parts)，
+                # 既有用例逐字节不变。组内逐支沿用原有极性规则（假出口 → then 的支取反）。
+                _main_groups = []
+                _g_start = 0
+                for _gi, _gb in enumerate(_main_part_blocks):
+                    _gl = _gb.get_last_instruction()
+                    _gt = _gl.argval if _gl is not None else None
+                    if _gt is None:
+                        continue
+                    for _gj in range(_gi + 1, len(_main_part_blocks)):
+                        if _main_part_blocks[_gj].start_offset == _gt:
+                            _main_groups.append((_g_start, _gj))
+                            _g_start = _gj
+                            break
+                _main_groups.append((_g_start, len(_main_part_blocks)))
+                _main_flat = {'type': 'BoolOp', 'op': _chain_op, 'values': _main_parts}
+                if _chain_op == 'or' and len(_main_groups) > 1:
+                    _main_vals = []
+                    for _gs, _ge in _main_groups:
+                        _gp = _main_parts[_gs:_ge]
+                        _main_vals.append(_gp[0] if len(_gp) == 1
+                                          else {'type': 'BoolOp', 'op': 'and',
+                                                'values': _gp})
+                    condition = {'type': 'BoolOp', 'op': 'or', 'values': _main_vals}
+                else:
+                    condition = _main_flat
                 if (_chain_op == 'or' and isinstance(_r68d4_extracted, dict)
                         and _r68d4_extracted.get('type') == 'BoolOp'
                         and _r68d4_extracted.get('op') == 'and'
@@ -17991,8 +18051,9 @@ AST 映射规则:
                         and len(_r68d4_extracted['values']) >= 2
                         and _r68d4_extracted['values'][0] == _main_parts[-1]):
                     condition = {'type': 'BoolOp', 'op': 'and',
-                                 'values': [{'type': 'BoolOp', 'op': _chain_op,
-                                             'values': list(_main_parts)}]
+                                 'values': [{'type': 'BoolOp',
+                                             'op': condition.get('op'),
+                                             'values': list(condition.get('values'))}]
                                         + list(_r68d4_extracted['values'][1:])}
                 if _main_ibc.get('negate'):
                     condition = {'type': 'UnaryOp', 'op': 'not', 'operand': condition}

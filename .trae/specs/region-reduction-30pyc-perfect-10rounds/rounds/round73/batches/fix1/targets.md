@@ -1,0 +1,186 @@
+# Round 73 目标与分批（数据源：round72 G3v mandated ruler，41 支 failure / 84 cf + 4 bytecode = 88 单元）
+
+头部（units_failed 降序）：
+- IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc               14 fail  pylingual 114/128  official 111/119  {'Different control flow': 13, 'Different bytecode': 1}
+- fly/data/quote.pyc                                                       12 fail  pylingual 80/92  official 72/81  {'Different bytecode': 2, 'Different control flow': 10}
+- IQCommon/util/trade_info_utils.pyc                                        5 fail  pylingual 36/41  official 40/40  {'Different control flow': 5}
+- IQData/plugins/plugin_system_realquote/real_quote.pyc                     4 fail  pylingual 41/45  official 40/44  {'Different control flow': 4}
+- IQCommon/api/klinedata.pyc                                                3 fail  pylingual 61/64  official 43/45  {'Different control flow': 3}
+- IQCommon/data/finance.pyc                                                 3 fail  pylingual 29/32  official 24/24  {'Different control flow': 3}
+- IQCommon/strategy/wizard_quant_api.pyc                                    3 fail  pylingual 55/58  official 53/53  {'Different control flow': 3}
+- IQEngine/core/bar.pyc                                                     3 fail  pylingual 82/85  official 58/58  {'Different control flow': 3}
+- IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc                    3 fail  pylingual 34/37  official 32/34  {'Different control flow': 3}
+- IQCommon/strategy/jq_trans_module.pyc                                     2 fail  pylingual 63/65  official 35/35  {'Different control flow': 2}
+- IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc              2 fail  pylingual 41/43  official 33/35  {'Different control flow': 2}
+- fly/common/flytools.pyc                                                   2 fail  pylingual 64/66  official 65/65  {'Different control flow': 2}
+- fly/common/future_contract_info.pyc                                       2 fail  pylingual 27/29  official 29/29  {'Different control flow': 2}
+- fly/oauthenticator/oauth2.pyc                                             2 fail  pylingual 10/12  official 11/11  {'Different control flow': 2}
+- fly/simtradding/ptradeAccount.pyc                                         2 fail  pylingual 135/137  official 137/137  {'Different control flow': 2}
+- IQCommon/data/local_finance.pyc                                           1 fail  pylingual 20/21  official 19/19  {'Different control flow': 1}
+- IQCommon/logger/handlers.pyc                                              1 fail  pylingual 29/30  official 18/18  {'Different control flow': 1}
+- IQCommon/util/cgroup_utils.pyc                                            1 fail  pylingual 7/8  official 8/8  {'Different control flow': 1}
+- IQCommon/util/email_utils.pyc                                             1 fail  pylingual 3/4  official 4/4  {'Different control flow': 1}
+- IQData/api/api_base.pyc                                                   1 fail  pylingual 27/28  official 24/25  {'Different control flow': 1}
+- IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc           1 fail  pylingual 7/8  official 8/8  {'Different control flow': 1}
+- IQData/utils/calexrights_func.pyc                                         1 fail  pylingual 7/8  official 8/8  {'Different control flow': 1}
+- IQEngine/account/order.pyc                                                1 fail  pylingual 67/68  official 52/52  {'Different control flow': 1}
+- IQEngine/api/api_base.pyc                                                 1 fail  pylingual 48/49  official 48/48  {'Different control flow': 1}
+- IQEngine/core/commission.pyc                                              1 fail  pylingual 9/10  official 10/10  {'Different bytecode': 1}
+- IQEngine/core/executor.pyc                                                1 fail  pylingual 9/10  official 10/10  {'Different control flow': 1}
+- IQEngine/core/slippage.pyc                                                1 fail  pylingual 6/7  official 7/7  {'Different control flow': 1}
+- IQEngine/core/strategy/strategy_universe.pyc                              1 fail  pylingual 10/11  official 11/11  {'Different control flow': 1}
+- IQEngine/data/trading_dates_mixin.pyc                                     1 fail  pylingual 13/14  official 14/14  {'Different control flow': 1}
+- IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc                  1 fail  pylingual 18/19  official 18/18  {'Different control flow': 1}
+- IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc                    1 fail  pylingual 26/27  official 24/24  {'Different control flow': 1}
+- IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc  1 fail  pylingual 36/37  official 37/37  {'Different control flow': 1}
+- IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc     1 fail  pylingual 12/13  official 11/12  {'Different control flow': 1}
+- IQEngine/plugins/plugin_system_matcher/matcher.pyc                        1 fail  pylingual 16/17  official 17/17  {'Different control flow': 1}
+- IQEngine/plugins/plugin_system_trade/function.pyc                         1 fail  pylingual 70/71  official 71/71  {'Different control flow': 1}
+- IQEngine/utils/profiler_func.pyc                                          1 fail  pylingual 17/18  official 15/15  {'Different control flow': 1}
+- fly/data/quotation.pyc                                                    1 fail  pylingual 152/153  official 143/143  {'Different control flow': 1}
+- fly/data/quote_handler.pyc                                                1 fail  pylingual 78/79  official 57/57  {'Different control flow': 1}
+- fly/dumpload/load_daily.pyc                                               1 fail  pylingual 26/27  official 23/23  {'Different control flow': 1}
+- fly/logger.pyc                                                            1 fail  pylingual 63/64  official 30/30  {'Different control flow': 1}
+- fly/simtradding/flyAccount.pyc                                            1 fail  pylingual 23/24  official 23/23  {'Different control flow': 1}
+
+单单元 26 支（cf=1 为主），是 mandate 最短路径；四批按族认领，不逐支攻坚。
+
+## diag1 — 只读诊断：头部聚类 + R72 缺口复现（F-OTHER quote 2 支、#94）
+- IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc               14 fail  {'Different control flow': 13, 'Different bytecode': 1}
+    - ***<module>.TradeLiveBroker.on_pre_before_trading_start: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._process_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._process_tick_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._process_cancel_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._sync_worker: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._trade_status_handle: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.etf_basket_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.etf_purchase_redemption: Failure: Different bytecode
+    - ***<module>.TradeLiveBroker.get_max_amount: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.rzrq_credit_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.ipo_stocks_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.get_ipo_stocks: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.on_order_response_list_handle: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.on_trade_response_list_handle: Failure: Different control flow
+- fly/data/quote.pyc                                                       12 fail  {'Different bytecode': 2, 'Different control flow': 10}
+    - ***<module>.Quote.build_current_period_df: Failure: Different bytecode
+    - ***<module>.Quote.load_bars_from_hundsun: Failure: Different bytecode
+    - ***<module>.Quote.load_get_price: Failure: Different control flow
+    - ***<module>.Quote.change_his_to_forward: Failure: Different control flow
+    - ***<module>.Quote.change_his_to_backward: Failure: Different control flow
+    - ***<module>.Quote.get_price: Failure: Different control flow
+    - ***<module>.Quote.check_industry_code: Failure: Different control flow
+    - ***<module>.Quote.check_frequency: Failure: Different control flow
+    - ***<module>.Quote.get_real_from_zeromq: Failure: Different control flow
+    - ***<module>.Quote.run_individual_transform: Failure: Different control flow
+    - ***<module>.Quote.run_tick_socket: Failure: Different control flow
+    - ***<module>.Quote.get_individual_data: Failure: Different control flow
+- IQCommon/util/trade_info_utils.pyc                                        5 fail  {'Different control flow': 5}
+    - ***<module>.trade_operation: Failure: Different control flow
+    - ***<module>.kill_trade_process: Failure: Different control flow
+    - ***<module>.get_trade_status: Failure: Different control flow
+    - ***<module>.query_trade_strategy_info: Failure: Different control flow
+    - ***<module>.query_strategy_id: Failure: Different control flow
+- IQData/plugins/plugin_system_realquote/real_quote.pyc                     4 fail  {'Different control flow': 4}
+    - ***<module>.RealQuoteData.one_prod_to_ndarray: Failure: Different control flow
+    - ***<module>.RealQuoteData.get_real_minute_kline: Failure: Different control flow
+    - ***<module>.RealQuoteData.get_cache_l2_data_by_one: Failure: Different control flow
+    - ***<module>.RealQuoteData.get_tick_direction: Failure: Different control flow
+- IQCommon/api/klinedata.pyc                                                3 fail  {'Different control flow': 3}
+    - ***<module>.get_kline_by_count_new: Failure: Different control flow
+    - ***<module>.get_multiminute_his_data: Failure: Different control flow
+    - ***<module>.kline_datetime_list: Failure: Different control flow
+- IQCommon/data/finance.pyc                                                 3 fail  {'Different control flow': 3}
+    - ***<module>.get_financial_and_growth_factors: Failure: Different control flow
+    - ***<module>.get_financial_statements_pit_mode: Failure: Different control flow
+    - ***<module>.get_fields: Failure: Different control flow
+- IQCommon/strategy/wizard_quant_api.pyc                                    3 fail  {'Different control flow': 3}
+    - ***<module>.filter_desicion: Failure: Different control flow
+    - ***<module>.get_DMI.calculate_di.<genexpr>: Failure: Different control flow
+    - ***<module>.get_DMI.calculate_di.<genexpr>: Failure: Different control flow
+- IQEngine/core/bar.pyc                                                     3 fail  {'Different control flow': 3}
+    - ***<module>.BarData.limit_up: Failure: Different control flow
+    - ***<module>.BarData.limit_down: Failure: Different control flow
+    - ***<module>.BarData._history_bars: Failure: Different control flow
+- IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc                    3 fail  {'Different control flow': 3}
+    - ***<module>.base_order: Failure: Different control flow
+    - ***<module>.future_order: Failure: Different control flow
+    - ***<module>.option_order: Failure: Different control flow
+
+## fix1 — 候选 spec：F-PAD 族（落点一律 +4，按签名全量自扫）
+- <按 +4 签名自扫 filecat.json 全部 41 支>
+- 参考已知签名来源（R72 FACTS）：指令流全同、落点 +4：614→618、644→648、310→314、638→642、726→730、138→142、332→336、434→438；大位移变体 198→236、158→364、380→404、148→174、506→934  (不在 failure 集，仅作对照)
+
+## fix2 — 候选 spec：F-ABSORB 族主体（and 链共享 else / 链尾吸收，cf 65+bc 5）
+- IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc               14 fail  {'Different control flow': 13, 'Different bytecode': 1}
+    - ***<module>.TradeLiveBroker.on_pre_before_trading_start: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._process_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._process_tick_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._process_cancel_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._sync_worker: Failure: Different control flow
+    - ***<module>.TradeLiveBroker._trade_status_handle: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.etf_basket_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.etf_purchase_redemption: Failure: Different bytecode
+    - ***<module>.TradeLiveBroker.get_max_amount: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.rzrq_credit_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.ipo_stocks_order: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.get_ipo_stocks: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.on_order_response_list_handle: Failure: Different control flow
+    - ***<module>.TradeLiveBroker.on_trade_response_list_handle: Failure: Different control flow
+- fly/data/quote.pyc                                                       12 fail  {'Different bytecode': 2, 'Different control flow': 10}
+    - ***<module>.Quote.build_current_period_df: Failure: Different bytecode
+    - ***<module>.Quote.load_bars_from_hundsun: Failure: Different bytecode
+    - ***<module>.Quote.load_get_price: Failure: Different control flow
+    - ***<module>.Quote.change_his_to_forward: Failure: Different control flow
+    - ***<module>.Quote.change_his_to_backward: Failure: Different control flow
+    - ***<module>.Quote.get_price: Failure: Different control flow
+    - ***<module>.Quote.check_industry_code: Failure: Different control flow
+    - ***<module>.Quote.check_frequency: Failure: Different control flow
+    - ***<module>.Quote.get_real_from_zeromq: Failure: Different control flow
+    - ***<module>.Quote.run_individual_transform: Failure: Different control flow
+    - ***<module>.Quote.run_tick_socket: Failure: Different control flow
+    - ***<module>.Quote.get_individual_data: Failure: Different control flow
+- IQCommon/util/trade_info_utils.pyc                                        5 fail  {'Different control flow': 5}
+    - ***<module>.trade_operation: Failure: Different control flow
+    - ***<module>.kill_trade_process: Failure: Different control flow
+    - ***<module>.get_trade_status: Failure: Different control flow
+    - ***<module>.query_trade_strategy_info: Failure: Different control flow
+    - ***<module>.query_strategy_id: Failure: Different control flow
+- IQData/plugins/plugin_system_realquote/real_quote.pyc                     4 fail  {'Different control flow': 4}
+    - ***<module>.RealQuoteData.one_prod_to_ndarray: Failure: Different control flow
+    - ***<module>.RealQuoteData.get_real_minute_kline: Failure: Different control flow
+    - ***<module>.RealQuoteData.get_cache_l2_data_by_one: Failure: Different control flow
+    - ***<module>.RealQuoteData.get_tick_direction: Failure: Different control flow
+- IQCommon/api/klinedata.pyc                                                3 fail  {'Different control flow': 3}
+    - ***<module>.get_kline_by_count_new: Failure: Different control flow
+    - ***<module>.get_multiminute_his_data: Failure: Different control flow
+    - ***<module>.kline_datetime_list: Failure: Different control flow
+- IQCommon/data/finance.pyc                                                 3 fail  {'Different control flow': 3}
+    - ***<module>.get_financial_and_growth_factors: Failure: Different control flow
+    - ***<module>.get_financial_statements_pit_mode: Failure: Different control flow
+    - ***<module>.get_fields: Failure: Different control flow
+- IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc                    3 fail  {'Different control flow': 3}
+    - ***<module>.base_order: Failure: Different control flow
+    - ***<module>.future_order: Failure: Different control flow
+    - ***<module>.option_order: Failure: Different control flow
+
+## fix3 — 候选 spec：手术族 F-TERNARY + F-EXCTABLE + F-POLARITY + F-OTHER quote
+- IQEngine/core/bar.pyc                                                     3 fail  {'Different control flow': 3}
+    - ***<module>.BarData.limit_up: Failure: Different control flow
+    - ***<module>.BarData.limit_down: Failure: Different control flow
+    - ***<module>.BarData._history_bars: Failure: Different control flow
+- IQEngine/plugins/plugin_fly_data/fly_api/commission.pyc  (不在 failure 集，仅作对照)
+- <api_base 两支（api/api_base.pyc 与 IQData 路径）按 filecat 实测>
+- fly/data/quote.pyc                                                       12 fail  {'Different bytecode': 2, 'Different control flow': 10}
+    - ***<module>.Quote.build_current_period_df: Failure: Different bytecode
+    - ***<module>.Quote.load_bars_from_hundsun: Failure: Different bytecode
+    - ***<module>.Quote.load_get_price: Failure: Different control flow
+    - ***<module>.Quote.change_his_to_forward: Failure: Different control flow
+    - ***<module>.Quote.change_his_to_backward: Failure: Different control flow
+    - ***<module>.Quote.get_price: Failure: Different control flow
+    - ***<module>.Quote.check_industry_code: Failure: Different control flow
+    - ***<module>.Quote.check_frequency: Failure: Different control flow
+    - ***<module>.Quote.get_real_from_zeromq: Failure: Different control flow
+    - ***<module>.Quote.run_individual_transform: Failure: Different control flow
+    - ***<module>.Quote.run_tick_socket: Failure: Different control flow
+    - ***<module>.Quote.get_individual_data: Failure: Different control flow
+

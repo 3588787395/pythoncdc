@@ -8483,9 +8483,41 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         #      （即只从 try 体进入，不来自 else 区）时收归
                         #      try_blocks；否则维持排除（可能属于多块 else
                         #      的尾块，由 else 生成路径处理）。
+                        # [R73-fix3 F-EXCTABLE 同层次结构身份判据]
+                        # 识别条件：本候选块已满足 R21N1 的全部前置条件（起始于
+                        #   try_offset_end 及之后、以 RETURN_VALUE/RETURN_CONST
+                        #   终结、全部普通前驱完整落在 [try_start_min,
+                        #   try_end_for_blocks] 保护跨度内），在此之上再加一条：
+                        #   块内**不含**容器/属性写指令（STORE_SUBSCR /
+                        #   STORE_ATTR / DELETE_SUBSCR / DELETE_ATTR）。
+                        #   R21N1 要收编的对象是「CPython 因 RETURN_VALUE 不可
+                        #   抛出而把它裁剪出异常表的 try 体 return 尾巴」，其形态
+                        #   只能是 `求值 + RETURN_VALUE`，绝不可能含写指令；含写
+                        #   指令的块在源层是一条独立的赋值/删除语句。
+                        #   CPython 3.11 只给 try 体内可抛出的指令登记异常表条目，
+                        #   对这类写必然把本 try 的条目向后延伸（实测
+                        #   `try: d[k] = v` 的条目覆盖 STORE_SUBSCR、
+                        #   `try: o.a = v` 的条目覆盖 STORE_ATTR）；而本块整体落在
+                        #   [try_offset_end, first_handler_entry) 且不含任何被条目
+                        #   覆盖的指令 ⇒ 这条写语句位于 try 语句**之后**，不属于
+                        #   try 体。
+                        # 归约方式：不收归 try_blocks、不进 all_blocks，交由
+                        #   _find_try_else_blocks 的 [try_offset_end,
+                        #   first_handler_entry) 窗口认领（该块非 pass/return-None
+                        #   形态，不会被其过滤器排除），随后 region.has_else /
+                        #   region.else_blocks 生效，块唯一归属不变。
+                        # AST 映射：ast.Try.orelse ⇒ try/except/else；重编译后
+                        #   异常表首条恢复为「只保护 try 体」，指令流与落点逐位
+                        #   与 orig 一致。
+                        #   不含写指令的候选块走原 R21N1 路径（return 尾巴照旧
+                        #   归 try 体），行为与落地逐字节一致，零回归。
                         if succ.start_offset >= try_end_for_blocks:
                             _eb_instrs = [i for i in succ.instructions
                                           if i.opname not in NOISE_OPS]
+                        if any(i.opname in ('STORE_SUBSCR', 'STORE_ATTR',
+                                            'DELETE_SUBSCR', 'DELETE_ATTR')
+                               for i in succ.instructions):
+                            continue
                             _ret_val_is_none = False
                             if len(_eb_instrs) == 1:
                                 if (_eb_instrs[0].opname == 'RETURN_CONST'
@@ -15256,7 +15288,27 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 continue
                             p_target = self.cfg.get_block_by_offset(p_last.argval)
                             if p_target is not end_target:
-                                continue
+                                # [R73-F-OTHER] `assert <or-chain>, msg` as the LAST statement
+                                # of the function: CPython emits one distinct
+                                # `LOAD_CONST None; RETURN_VALUE` exit block per chain operand
+                                # instead of a single shared continuation, so the operands'
+                                # IF_TRUE targets land on different blocks and this identity
+                                # check used to stop the walk (the assert then degraded to
+                                # `if not A: assert B, msg`). Accept a predecessor whose
+                                # target is a structurally identical terminal exit block:
+                                # same CFG exit set, no successors, byte-identical instruction
+                                # stream - the or-chain end is still the same continuation.
+                                if not (p_target is not None
+                                        and end_target is not None
+                                        and p_target in self.cfg.exit_blocks
+                                        and end_target in self.cfg.exit_blocks
+                                        and not p_target.successors
+                                        and not end_target.successors
+                                        and [(i.opname, i.argval)
+                                             for i in p_target.instructions]
+                                        == [(i.opname, i.argval)
+                                            for i in end_target.instructions]):
+                                    continue
                             # p's fall-through must be cur (chain link)
                             p_ft = [s for s in p.conditional_successors
                                     if s.start_offset != p_last.argval]
@@ -16930,6 +16982,37 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 break
                         if _or_ft_fallthrough is None or _or_ft_fallthrough.start_offset != _then_entry_offset:
                             break
+                        # [R73-F-POLARITY] 链首为 `if (A and not B) or C:` 时，A 的假出口
+                        # 指向的是**下一个条件段 C** 而非 then 体：C 与 B 的真出口在同一
+                        # 块汇合，B 的跳转目标才是真 then。旧行为在此把 B 当末段收链、
+                        # 把 C 当 then 入口，region 的 then/else 随后取错（C 被当 then，
+                        # 条件被折成 `A or B`）。同层结构身份判据：候选 then 入口块自身是
+                        # 条件跳尾块、且其 fall-through 正是当前末段的跳转目标（两者真
+                        # 出口汇合），则候选 then 入口仍是条件段，链继续延伸，并把 then
+                        # 入口前移到当前末段的真出口后重新行走。判据只读本链相邻三块的
+                        # 后继关系，与函数名/文件名/偏移无关；对 `if A or B:`（候选 then
+                        # 入口非条件块）与 `if A or B: if C:`（C 的 fall-through 是其自身
+                        # then 体、不等于链末跳转目标）零行为变化。
+                        _then_cand = self.cfg.get_block_by_offset(_then_entry_offset)
+                        _then_cand_last = _then_cand.get_last_instruction() if _then_cand is not None else None
+                        if (_then_cand_last is not None
+                                and _then_cand_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                                and _then_cand_last.argval is not None):
+                            _then_cand_exc = getattr(_then_cand, 'exception_successors', set()) or set()
+                            _then_cand_ft = None
+                            for _s in _then_cand.successors:
+                                if _s in _then_cand_exc:
+                                    continue
+                                if _s.start_offset != _then_cand_last.argval:
+                                    _then_cand_ft = _s
+                                    break
+                            if (_then_cand_ft is not None
+                                    and _then_cand_ft.start_offset == _or_ft_target):
+                                _or_visited.add(_or_ft.start_offset)
+                                _or_chain.append(_or_ft)
+                                _then_entry_offset = _or_ft_target
+                                _or_current = _or_ft
+                                continue
                         _or_visited.add(_or_ft.start_offset)
                         _or_chain.append(_or_ft)
                         _or_has_false_tail = True
@@ -21853,9 +21936,43 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # - 模块级三元 (tn01): has_jump_forward_skip=False, 但分支有 POP_TOP
             #   （LOAD value, POP_TOP, LOAD_CONST None, RETURN_VALUE）,
             #   _block_is_return_body 返回 False, 不拒绝 ✓
+            # [R73-fix3 F-TERNARY 同层次结构身份判据]
+            # 识别条件：两条值路径的唯一非异常出口汇聚到**同一个**块，且该汇合块
+            #   以 RETURN_VALUE/RETURN_CONST 终结、并以 true_block / false_block
+            #   为直接入边前驱——即 return X if C else Y 的菱形（CPython 求值完
+            #   IfExp 后只发一次 RETURN，两条值边共用同一个 RETURN 块）。
+            #   语句级 if/elif-return 的两个 RETURN 块彼此独立（各自的 LOAD 独立
+            #   收尾），出口不共享，仍走下方原拒绝路径（klinedata try 内 if-return
+            #   Pattern A2 不回退）。
+            # 归约方式：命中共享返回汇合点 ⇒ 放行，由本函数后续步骤建 TernaryRegion
+            #   （merge_block=该共享 RETURN 块、merge_context=return）；不命中 ⇒
+            #   维持原 return-body 拒绝，行为与落地逐字节一致。
+            # AST 映射：共享汇合 RETURN ⇒ ast.Return(value=ast.IfExp(test, body,
+            #   orelse))，字节码回到 单 RETURN_VALUE；出口不共享 ⇒ ast.If + 两条
+            #   内联 ast.Return（语句级原样）。
+            def _ternary_value_exit(blk):
+                _eff = [i for i in blk.instructions if i.opname not in NOISE_OPS]
+                if _eff and _eff[-1].opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    return blk
+                _exc = getattr(blk, 'exception_successors', None) or set()
+                _norm = [s for s in blk.successors if s not in _exc]
+                return _norm[0] if len(_norm) == 1 else None
+
+            def _is_shared_return_merge():
+                _te = _ternary_value_exit(true_block)
+                _fe = _ternary_value_exit(false_block)
+                if _te is None or _fe is None or _te is not _fe:
+                    return False
+                _eff = [i for i in _te.instructions if i.opname not in NOISE_OPS]
+                if not _eff or _eff[-1].opname not in ('RETURN_VALUE', 'RETURN_CONST'):
+                    return False
+                _preds = list(getattr(_te, 'predecessors', None) or [])
+                return true_block in _preds and false_block in _preds
+
             if not has_jump_forward_skip:
                 if _block_is_return_body(true_block) or _block_is_return_body(false_block):
-                    return None
+                    if not _is_shared_return_merge():
+                        return None
 
             if (len(true_block.conditional_successors) >= 2 and
                     all(_block_ends_with_return(s) for s in true_block.conditional_successors) and

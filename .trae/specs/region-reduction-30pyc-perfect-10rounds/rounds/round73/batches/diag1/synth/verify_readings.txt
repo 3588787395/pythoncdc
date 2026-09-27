@@ -1,0 +1,3 @@
+t07_full_carrier_stack :: ***<module>.t07: Failure: Different control flow | [single] status=failure units=7/8 success_rate=87.50%
+t08_try_with_loop :: ***<module>.t08: Failure: Different control flow | [single] status=failure units=7/8 success_rate=87.50%
+t09_if_with_loop :: ***<module>.t09: Failure: Different control flow | [single] status=failure units=7/8 success_rate=87.50%

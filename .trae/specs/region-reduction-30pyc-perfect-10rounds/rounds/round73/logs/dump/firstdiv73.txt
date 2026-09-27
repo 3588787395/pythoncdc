@@ -1,0 +1,93 @@
+inside_try: 14
+kind_Different bytecode: 4
+kind_Different control flow: 83
+outside_try: 73
+units: 87
+
+klinedata.pyc | <module>.get_kline_by_count_new | Different control flow | idx180 ('POP_JUMP_FORWARD_IF_NONE', 1200) != ('POP_JUMP_FORWARD_IF_NONE', 1264) | firstdiv=Y off=974 origTryDepth=0 prodTryDepth=0
+klinedata.pyc | <module>.get_multiminute_his_data | Different control flow | idx19 ('POP_JUMP_FORWARD_IF_FALSE', 2710) != ('POP_JUMP_FORWARD_IF_FALSE', 2712) | firstdiv=Y off=66 origTryDepth=0 prodTryDepth=0
+klinedata.pyc | <module>.kline_datetime_list | Different control flow | idx72 ('JUMP_FORWARD', 1704) != ('JUMP_FORWARD', 1712) | firstdiv=Y off=300 origTryDepth=0 prodTryDepth=0
+finance.pyc | <module>.get_fields | Different control flow | idx4 ('POP_JUMP_FORWARD_IF_NOT_NONE', 740) != ('POP_JUMP_FORWARD_IF_NOT_NONE', 742) | firstdiv=Y off=8 origTryDepth=1 prodTryDepth=1
+finance.pyc | <module>.get_financial_and_growth_factors | Different control flow | idx4 ('POP_JUMP_FORWARD_IF_NOT_NONE', 114) != ('POP_JUMP_FORWARD_IF_NOT_NONE', 118) | firstdiv=Y off=8 origTryDepth=0 prodTryDepth=0
+finance.pyc | <module>.get_financial_statements_pit_mode | Different control flow | idx4 ('POP_JUMP_FORWARD_IF_NOT_NONE', 114) != ('POP_JUMP_FORWARD_IF_NOT_NONE', 118) | firstdiv=Y off=8 origTryDepth=0 prodTryDepth=0
+local_finance.pyc | <module>.get_local_financial_factors | Different control flow | idx4 ('POP_JUMP_FORWARD_IF_NOT_NONE', 84) != ('POP_JUMP_FORWARD_IF_NOT_NONE', 88) | firstdiv=Y off=8 origTryDepth=0 prodTryDepth=0
+handlers.pyc | <module>.TWHThreadController._target | Different control flow | idx7 ('POP_JUMP_FORWARD_IF_FALSE', 412) != ('POP_JUMP_FORWARD_IF_FALSE', 408) | firstdiv=Y off=44 origTryDepth=0 prodTryDepth=0
+jq_trans_module.pyc | <module>.func_attribute_history_convert_code.replace_args | Different control flow | idx80 ('JUMP_FORWARD', 734) != ('JUMP_FORWARD', 726) | firstdiv=Y off=450 origTryDepth=0 prodTryDepth=0
+jq_trans_module.pyc | <module>.func_get_bars_convert_code.replace_args | Different control flow | idx80 ('JUMP_FORWARD', 734) != ('JUMP_FORWARD', 726) | firstdiv=Y off=450 origTryDepth=0 prodTryDepth=0
+wizard_quant_api.pyc | <module>.get_DMI.calculate_di.<genexpr> | Different control flow | PREFIX-EQUAL(len 46 vs 46) | firstdiv=N off=-1 origTryDepth=0 prodTryDepth=0
+wizard_quant_api.pyc | <module>.filter_desicion | Different control flow | idx178 ('POP_JUMP_FORWARD_IF_NONE', 710) != ('POP_JUMP_FORWARD_IF_NONE', 774) | firstdiv=Y off=704 origTryDepth=0 prodTryDepth=0
+cgroup_utils.pyc | <module>.set_cgroup_config | Different control flow | idx508 ('POP_JUMP_FORWARD_IF_FALSE', 4414) != ('POP_JUMP_FORWARD_IF_FALSE', 4416) | firstdiv=Y off=3618 origTryDepth=1 prodTryDepth=1
+email_utils.pyc | <module>.send_email | Different control flow | idx28 ('POP_JUMP_FORWARD_IF_FALSE', 674) != ('POP_JUMP_FORWARD_IF_FALSE', 1120) | firstdiv=Y off=130 origTryDepth=1 prodTryDepth=1
+trade_info_utils.pyc | <module>.query_trade_strategy_info | Different control flow | idx22 ('POP_JUMP_FORWARD_IF_FALSE', 614) != ('POP_JUMP_FORWARD_IF_FALSE', 618) | firstdiv=Y off=196 origTryDepth=0 prodTryDepth=0
+trade_info_utils.pyc | <module>.trade_operation | Different control flow | idx108 ('POP_JUMP_FORWARD_IF_FALSE', 1000) != ('POP_JUMP_FORWARD_IF_FALSE', 1042) | firstdiv=Y off=676 origTryDepth=1 prodTryDepth=1
+trade_info_utils.pyc | <module>.get_trade_status | Different control flow | idx115 ('JUMP_FORWARD', 810) != ('JUMP_FORWARD', 786) | firstdiv=Y off=598 origTryDepth=0 prodTryDepth=0
+trade_info_utils.pyc | <module>.query_strategy_id | Different control flow | idx22 ('POP_JUMP_FORWARD_IF_FALSE', 644) != ('POP_JUMP_FORWARD_IF_FALSE', 648) | firstdiv=Y off=196 origTryDepth=0 prodTryDepth=0
+trade_info_utils.pyc | <module>.kill_trade_process | Different control flow | idx48 ('LOAD_CONST', <code object <listcomp> at 0x0000024403EEF330, file "./fly_docker_py311/IQCommon/util/trade_info_utils.py", line 392>) != ('LOAD_CONST', <code object <listcomp> at 0x0000024403EEFE30, file "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utilsOK.py", line 227>) | firstdiv=Y off=292 origTryDepth=0 prodTryDepth=0
+api_base.pyc | <module>.get_history_df | Different control flow | idx196 ('POP_JUMP_FORWARD_IF_TRUE', 1098) != ('POP_JUMP_FORWARD_IF_TRUE', 1254) | firstdiv=Y off=994 origTryDepth=0 prodTryDepth=0
+calexrights_func.pyc | <module>.change_his_to_forward | Different control flow | idx178 ('FOR_ITER', 2150) != ('FOR_ITER', 2152) | firstdiv=Y off=924 origTryDepth=0 prodTryDepth=0
+real_quote.pyc | <module>.RealQuoteData.get_tick_direction | Different control flow | idx6 ('EXTENDED_ARG', 2) != ('EXTENDED_ARG', 3) | firstdiv=Y off=32 origTryDepth=0 prodTryDepth=0
+real_quote.pyc | <module>.RealQuoteData.get_cache_l2_data_by_one | Different control flow | idx77 ('FOR_ITER', 590) != ('FOR_ITER', 592) | firstdiv=Y off=336 origTryDepth=1 prodTryDepth=1
+real_quote.pyc | <module>.RealQuoteData.get_real_minute_kline | Different control flow | idx18 ('POP_JUMP_FORWARD_IF_FALSE', 372) != ('EXTENDED_ARG', 1) | firstdiv=Y off=108 origTryDepth=1 prodTryDepth=1
+real_quote.pyc | <module>.RealQuoteData.one_prod_to_ndarray | Different control flow | idx89 ('POP_JUMP_FORWARD_IF_FALSE', 1724) != ('POP_JUMP_FORWARD_IF_FALSE', 1736) | firstdiv=Y off=412 origTryDepth=1 prodTryDepth=1
+calexrights_func.pyc | <module>.change_his_to_forward | Different control flow | idx178 ('FOR_ITER', 2150) != ('FOR_ITER', 2152) | firstdiv=Y off=924 origTryDepth=0 prodTryDepth=0
+order.pyc | <module>.Order.mark_cancelled | Different control flow | idx5 ('POP_JUMP_FORWARD_IF_TRUE', 138) != ('POP_JUMP_FORWARD_IF_TRUE', 142) | firstdiv=Y off=40 origTryDepth=0 prodTryDepth=0
+api_base.pyc | <module>.get_history | Different control flow | idx42 ('POP_JUMP_FORWARD_IF_FALSE', 198) != ('POP_JUMP_FORWARD_IF_TRUE', 198) | firstdiv=Y off=192 origTryDepth=0 prodTryDepth=0
+bar.pyc | <module>.BarData._history_bars | Different control flow | idx27 ('POP_JUMP_FORWARD_IF_FALSE', 140) != ('POP_JUMP_FORWARD_IF_FALSE', 304) | firstdiv=Y off=126 origTryDepth=0 prodTryDepth=0
+bar.pyc | <module>.BarData.limit_down | Different control flow | idx12 ('JUMP_FORWARD', 68) != ('RETURN_VALUE', None) | firstdiv=Y off=44 origTryDepth=1 prodTryDepth=0
+bar.pyc | <module>.BarData.limit_up | Different control flow | idx12 ('JUMP_FORWARD', 68) != ('RETURN_VALUE', None) | firstdiv=Y off=44 origTryDepth=1 prodTryDepth=0
+commission.pyc | <module>.CommissionHelp.set_commission | Different bytecode | PREFIX-EQUAL(len 56 vs 56) | firstdiv=N off=-1 origTryDepth=0 prodTryDepth=0
+executor.pyc | <module>.Executor.check_before_trading | Different control flow | idx19 ('POP_JUMP_FORWARD_IF_FALSE', 228) != ('POP_JUMP_FORWARD_IF_FALSE', 330) | firstdiv=Y off=134 origTryDepth=0 prodTryDepth=0
+slippage.pyc | <module>.SlippageHelp.set_slippage | Different control flow | idx15 ('POP_JUMP_FORWARD_IF_FALSE', 332) != ('POP_JUMP_FORWARD_IF_FALSE', 336) | firstdiv=Y off=98 origTryDepth=0 prodTryDepth=0
+strategy_universe.pyc | <module>.StrategyUniverse._on_clear_de_listed | Different control flow | idx19 ('POP_JUMP_FORWARD_IF_FALSE', 156) != ('POP_JUMP_FORWARD_IF_FALSE', 198) | firstdiv=Y off=112 origTryDepth=0 prodTryDepth=0
+trading_dates_mixin.pyc | <module>.TradingDatesMixin.trading_dates_reload | Different control flow | idx3 ('POP_JUMP_FORWARD_IF_FALSE', 118) != ('POP_JUMP_FORWARD_IF_FALSE', 30) | firstdiv=Y off=14 origTryDepth=0 prodTryDepth=0
+history_api.pyc | <module>.get_price | Different control flow | idx101 ('POP_JUMP_FORWARD_IF_NONE', 748) != ('EXTENDED_ARG', 1) | firstdiv=Y off=522 origTryDepth=0 prodTryDepth=0
+order_api.pyc | <module>.future_order | Different control flow | PREFIX-EQUAL(len 8 vs 8) | firstdiv=N off=-1 origTryDepth=0 prodTryDepth=0
+order_api.pyc | <module>.base_order | Different control flow | idx154 ('POP_JUMP_FORWARD_IF_TRUE', 1124) != ('POP_JUMP_FORWARD_IF_TRUE', 926) | firstdiv=Y off=890 origTryDepth=0 prodTryDepth=0
+order_api.pyc | <module>.option_order | Different control flow | PREFIX-EQUAL(len 8 vs 8) | firstdiv=N off=-1 origTryDepth=0 prodTryDepth=0
+strategy.pyc | <module>.Strategy.tick_worker_thread | Different control flow | idx73 ('POP_JUMP_FORWARD_IF_TRUE', 568) != ('POP_JUMP_FORWARD_IF_TRUE', 820) | firstdiv=Y off=522 origTryDepth=1 prodTryDepth=1
+stock_position.pyc | <module>.StockPosition.make_trade | Different control flow | idx17 ('POP_JUMP_FORWARD_IF_FALSE', 534) != ('POP_JUMP_FORWARD_IF_FALSE', 526) | firstdiv=Y off=98 origTryDepth=0 prodTryDepth=0
+realtime_event_source.pyc | <module>.RealtimeEventSource.clock_worker | Different control flow | idx717 ('LOAD_CONST', <code object check_handle_date at 0x0000024403F6D2F0, file "./fly_docker_py311/IQEngine/plugins/plugin_system_event_source/realtime_event_source.py", line 380>) != ('LOAD_CONST', <code object check_handle_date at 0x0000024403F6E730, file "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py", line 204>) | firstdiv=Y off=5270 origTryDepth=1 prodTryDepth=1
+matcher.pyc | <module>.DefaultMatcher.match | Different control flow | idx4 ('FOR_ITER', 4964) != ('FOR_ITER', 4978) | firstdiv=Y off=8 origTryDepth=0 prodTryDepth=0
+__init__.pyc | <module>.PluginRiskCalculation._on_publish_after_trading_end | Different control flow | idx230 ('LOAD_CONST', <code object <lambda> at 0x0000024403EEE330, file "./fly_docker_py311/IQEngine/plugins/plugin_system_risk_calculation/__init__.py", line 343>) != ('LOAD_CONST', <code object <lambda> at 0x0000024403EED230, file "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__OK.py", line 220>) | firstdiv=Y off=1352 origTryDepth=0 prodTryDepth=0
+__init__.pyc | <module>.PluginRiskCalculation._save_testds_to_csv | Different control flow | idx16 ('LOAD_FAST', 'self') != ('NOP', None) | firstdiv=Y off=108 origTryDepth=0 prodTryDepth=0
+function.pyc | <module>.reconnect | Different control flow | idx11 ('LOAD_GLOBAL', 'datetime') != ('NOP', None) | firstdiv=Y off=70 origTryDepth=0 prodTryDepth=0
+trade_live_broker.pyc | <module>.TradeLiveBroker._process_tick_order | Different control flow | idx32 ('JUMP_BACKWARD', 130) != ('JUMP_BACKWARD', 114) | firstdiv=Y off=178 origTryDepth=0 prodTryDepth=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.get_ipo_stocks | Different control flow | idx211 ('POP_JUMP_FORWARD_IF_TRUE', 1154) != ('POP_JUMP_FORWARD_IF_TRUE', 1130) | firstdiv=Y off=1108 origTryDepth=0 prodTryDepth=0
+trade_live_broker.pyc | <module>.TradeLiveBroker._process_cancel_order | Different control flow | idx7 ('NOP', None) != ('LOAD_GLOBAL', 'len') | firstdiv=Y off=44 origTryDepth=0 prodTryDepth=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.on_trade_response_list_handle | Different control flow | idx16 ('FOR_ITER', 784) != ('FOR_ITER', 786) | firstdiv=Y off=116 origTryDepth=0 prodTryDepth=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.rzrq_credit_order | Different control flow | idx459 ('JUMP_FORWARD', 2534) != ('JUMP_FORWARD', 2506) | firstdiv=Y off=2368 origTryDepth=0 prodTryDepth=0
+trade_live_broker.pyc | <module>.TradeLiveBroker._process_order | Different control flow | idx7 ('NOP', None) != ('LOAD_GLOBAL', 'len') | firstdiv=Y off=44 origTryDepth=0 prodTryDepth=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.on_order_response_list_handle | Different control flow | idx16 ('FOR_ITER', 784) != ('FOR_ITER', 786) | firstdiv=Y off=116 origTryDepth=0 prodTryDepth=0
+trade_live_broker.pyc | <module>.TradeLiveBroker._sync_worker | Different control flow | idx53 ('POP_JUMP_FORWARD_IF_TRUE', 704) != ('POP_JUMP_FORWARD_IF_FALSE', 562) | firstdiv=Y off=362 origTryDepth=0 prodTryDepth=0
+trade_live_broker.pyc | <module>.TradeLiveBroker._trade_status_handle | Different control flow | idx7 ('NOP', None) != ('LOAD_FAST', 'self') | firstdiv=Y off=44 origTryDepth=0 prodTryDepth=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.get_max_amount | Different control flow | idx174 ('POP_JUMP_FORWARD_IF_TRUE', 802) != ('POP_JUMP_FORWARD_IF_TRUE', 1018) | firstdiv=Y off=776 origTryDepth=0 prodTryDepth=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.etf_purchase_redemption | Different bytecode | idx68 ('EXTENDED_ARG', 4) != ('EXTENDED_ARG', 3) | firstdiv=Y off=410 origTryDepth=0 prodTryDepth=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.ipo_stocks_order | Different control flow | idx454 ('FOR_ITER', 6254) != ('FOR_ITER', 6258) | firstdiv=Y off=2382 origTryDepth=0 prodTryDepth=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.etf_basket_order | Different control flow | idx136 ('EXTENDED_ARG', 1) != ('EXTENDED_ARG', 3) | firstdiv=Y off=670 origTryDepth=0 prodTryDepth=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.on_pre_before_trading_start | Different control flow | idx4 ('POP_JUMP_FORWARD_IF_FALSE', 180) != ('POP_JUMP_FORWARD_IF_FALSE', 220) | firstdiv=Y off=22 origTryDepth=0 prodTryDepth=0
+profiler_func.pyc | <module>.ProfilerTool.show_func | Different control flow | idx95 ('LOAD_CONST', <code object <listcomp> at 0x0000024403F5F6A0, file "./fly_docker_py311/IQEngine/utils/profiler_func.py", line 174>) != ('LOAD_CONST', <code object <listcomp> at 0x0000024403F753B0, file "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_funcOK.py", line 141>) | firstdiv=Y off=420 origTryDepth=0 prodTryDepth=0
+flytools.pyc | <module>.set_userid_containerid_dict | Different control flow | idx19 ('POP_JUMP_FORWARD_IF_FALSE', 310) != ('POP_JUMP_FORWARD_IF_FALSE', 314) | firstdiv=Y off=120 origTryDepth=1 prodTryDepth=1
+flytools.pyc | <module>.ProcessWrite.modify_batcktes_info | Different control flow | idx151 ('LOAD_CONST', None) != ('NOP', None) | firstdiv=Y off=700 origTryDepth=1 prodTryDepth=1
+future_contract_info.pyc | <module>.FutureInfoCache.check_user | Different control flow | idx75 ('POP_JUMP_FORWARD_IF_TRUE', 490) != ('EXTENDED_ARG', 1) | firstdiv=Y off=462 origTryDepth=0 prodTryDepth=0
+future_contract_info.pyc | <module>.FutureInfoCache.info_conbine | Different control flow | idx15 ('POP_JUMP_FORWARD_IF_TRUE', 94) != ('POP_JUMP_FORWARD_IF_TRUE', 124) | firstdiv=Y off=66 origTryDepth=0 prodTryDepth=0
+quotation.pyc | <module>.change_his_to_forward | Different control flow | idx251 ('FOR_ITER', 2914) != ('FOR_ITER', 2916) | firstdiv=Y off=1268 origTryDepth=0 prodTryDepth=0
+quote.pyc | <module>.Quote.run_tick_socket | Different control flow | idx14 ('POP_JUMP_FORWARD_IF_FALSE', 528) != ('EXTENDED_ARG', 2) | firstdiv=Y off=66 origTryDepth=1 prodTryDepth=1
+quote.pyc | <module>.Quote.load_bars_from_hundsun | Different bytecode | idx55 ('EXTENDED_ARG', 2) != ('POP_TOP', None) | firstdiv=Y off=328 origTryDepth=0 prodTryDepth=0
+quote.pyc | <module>.Quote.build_current_period_df | Different bytecode | idx3 ('EXTENDED_ARG', 1) != ('POP_JUMP_FORWARD_IF_TRUE', 520) | firstdiv=Y off=14 origTryDepth=0 prodTryDepth=0
+quote.pyc | <module>.Quote.load_get_price | Different control flow | idx58 ('POP_JUMP_FORWARD_IF_FALSE', 486) != ('POP_TOP', None) | firstdiv=Y off=282 origTryDepth=0 prodTryDepth=0
+quote.pyc | <module>.Quote.change_his_to_forward | Different control flow | idx241 ('FOR_ITER', 2840) != ('FOR_ITER', 2842) | firstdiv=Y off=1264 origTryDepth=0 prodTryDepth=0
+quote.pyc | <module>.Quote.check_frequency | Different control flow | idx76 ('POP_JUMP_FORWARD_IF_FALSE', 560) != ('POP_JUMP_FORWARD_IF_FALSE', 562) | firstdiv=Y off=310 origTryDepth=0 prodTryDepth=0
+quote.pyc | <module>.Quote.run_individual_transform | Different control flow | idx102 ('EXTENDED_ARG', 3) != ('EXTENDED_ARG', 2) | firstdiv=Y off=634 origTryDepth=0 prodTryDepth=0
+quote.pyc | <module>.Quote.get_individual_data | Different control flow | idx167 ('POP_JUMP_FORWARD_IF_FALSE', 970) != ('EXTENDED_ARG', 1) | firstdiv=Y off=886 origTryDepth=0 prodTryDepth=0
+quote.pyc | <module>.Quote.get_real_from_zeromq | Different control flow | idx150 ('POP_JUMP_FORWARD_IF_FALSE', 874) != ('EXTENDED_ARG', 6) | firstdiv=Y off=790 origTryDepth=0 prodTryDepth=0
+quote.pyc | <module>.Quote.get_price | Different control flow | idx66 ('POP_JUMP_FORWARD_IF_NONE', 726) != ('LOAD_CONST', None) | firstdiv=Y off=326 origTryDepth=0 prodTryDepth=0
+quote.pyc | <module>.Quote.check_industry_code | Different control flow | idx175 ('CONTAINS_OP', 0) != ('CONTAINS_OP', 1) | firstdiv=Y off=904 origTryDepth=0 prodTryDepth=0
+quote.pyc | <module>.Quote.change_his_to_backward | Different control flow | idx232 ('POP_JUMP_FORWARD_IF_TRUE', 1406) != ('POP_JUMP_FORWARD_IF_TRUE', 1402) | firstdiv=Y off=1190 origTryDepth=0 prodTryDepth=0
+quote_handler.pyc | <module>.get_kline_local | Different control flow | idx85 ('POP_JUMP_FORWARD_IF_FALSE', 420) != ('EXTENDED_ARG', 6) | firstdiv=Y off=380 origTryDepth=0 prodTryDepth=0
+load_daily.pyc | <module> | Different control flow | idx110 ('LOAD_CONST', <code object _get_config_address at 0x0000024403B26FB0, file "./fly_docker_py311/fly/dumpload/load_daily.py", line 44>) != ('LOAD_CONST', <code object _get_config_address at 0x0000024403B250D0, file "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_dailyOK.py", line 29>) | firstdiv=Y off=222 origTryDepth=0 prodTryDepth=0
+logger.pyc | <module>.SafeFileHandler.check_baseFilename | Different control flow | idx16 ('POP_JUMP_FORWARD_IF_TRUE', 204) != ('POP_JUMP_FORWARD_IF_TRUE', 208) | firstdiv=Y off=108 origTryDepth=0 prodTryDepth=0
+oauth2.pyc | <module>.OAuthCallbackHandler.post | Different control flow | idx89 ('POP_JUMP_FORWARD_IF_NONE', 638) != ('POP_JUMP_FORWARD_IF_NONE', 642) | firstdiv=Y off=534 origTryDepth=0 prodTryDepth=0
+oauth2.pyc | <module>.HSIDOAuthCallbackHandler.post | Different control flow | idx89 ('POP_JUMP_FORWARD_IF_NONE', 638) != ('POP_JUMP_FORWARD_IF_NONE', 642) | firstdiv=Y off=534 origTryDepth=0 prodTryDepth=0
+flyAccount.pyc | <module>.TradeAccount.register_async_callback | Different control flow | idx19 ('POP_JUMP_FORWARD_IF_FALSE', 434) != ('POP_JUMP_FORWARD_IF_FALSE', 438) | firstdiv=Y off=104 origTryDepth=0 prodTryDepth=0
+ptradeAccount.pyc | <module>.PtradeAccount.trade_response_order_update | Different control flow | idx112 ('JUMP_FORWARD', 658) != ('LOAD_CONST', None) | firstdiv=Y off=586 origTryDepth=0 prodTryDepth=0
+ptradeAccount.pyc | <module>.PtradeAccount.order_response_order_update | Different control flow | idx96 ('JUMP_FORWARD', 620) != ('LOAD_CONST', None) | firstdiv=Y off=548 origTryDepth=0 prodTryDepth=0

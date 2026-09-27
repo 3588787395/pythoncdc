@@ -1,0 +1,647 @@
+{
+ "elapsed_sec": 2.5,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 19,
+  "success": 25
+ },
+ "files_total": 44,
+ "generated_at": "2026-09-27T17:06:03",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "D:/Temp/opencode/r72gate/diag1/synth/out/a01_ternary_return_in_try.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/a02_andchain_shared_else.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/a03_try_wrapped_shared_tail.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/a04_sibling_return_none.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/a05_mixed_and_or_chain.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/a09_try_finally_tail_return.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/b04_elif_not_orchain_raise.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/b05_bareexcept_boolop_orchain.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/c03_guard_polarity_inverted.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/q01_lgp_fstring_ternary_ifchain.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/q02_lgp_fstring_ternary_simpleif.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/q03_lgp_fstring_ternary_directif.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/q06_lgp_fstring_ternary_nestedif.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/t07_full_carrier_stack.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/t08_try_with_loop.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/t09_if_with_loop.pyc",
+   "D:/Temp/opencode/r73gate/fix2/synth/abs_a01_shared_and_else.pyc",
+   "D:/Temp/opencode/r73gate/fix3/synth/assert_or_tail.pyc",
+   "D:/Temp/opencode/r73gate/fix3/synth/polarity_andor.pyc"
+  ],
+  "success": [
+   "D:/Temp/opencode/r72gate/diag1/synth/out/a06_try_except_else_range.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/a07_if_absorb_following_if.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/a08_if_absorb_trailing_stmts.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/a10_cross_loop_tail_stmt.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/b01_dupe_elif_return_listcomp.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/b02_genexpr_pred_jump.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/b03_polarity_guard_flip.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/b06_loop_tail_stmt_absorbed.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/b07_outer_if_hoisted_dangling_cond.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/b08_not_in_membership_guard.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/c01_try_in_elif_arm.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/c02_genexpr_and_predicate.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/c04_while_not_empty_guard.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/neg01_bare_ternary_return.pyc",
+   "D:/Temp/opencode/r72gate/diag1/synth/out/neg02_assert_outside_try.pyc",
+   "D:/Temp/opencode/r73gate/center/synth/pad73_shapes.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/q04_lgp_callarg_ternary_ifchain.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/q05_lgp_assigned_ternary_ifchain.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/t01_tradeop_shared_tail_loop.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/t02_tradeop_shared_tail_in_try.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/t03_shared_tail_after_if.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/t04_tradeop_continue_inside_then.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/t05_continue_then_shared_tail.pyc",
+   "D:/Temp/opencode/r73gate/diag1/synth/out/t06_try_continue_shared_tail.pyc",
+   "D:/Temp/opencode/r73gate/fix2/synth/abs_a02_true_nested.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.BarData.limit_up: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/a01_ternary_return_in_try.pyc",
+   "pyc_sha": "f761eb9695a9",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__a01_ternary_return_in_tryOK.py",
+   "source_sha": "863fedda3af8",
+   "status": "failure",
+   "success_rate": 0.6666666666666666,
+   "units_success": 2,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/a02_andchain_shared_else.pyc",
+   "pyc_sha": "b614e327ed68",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__a02_andchain_shared_elseOK.py",
+   "source_sha": "5330c0320ac2",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.get_fields: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/a03_try_wrapped_shared_tail.pyc",
+   "pyc_sha": "3e5b5aa44c86",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__a03_try_wrapped_shared_tailOK.py",
+   "source_sha": "5bfebf5e5e01",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.post: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/a04_sibling_return_none.pyc",
+   "pyc_sha": "6b4e7e1a2d3f",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__a04_sibling_return_noneOK.py",
+   "source_sha": "1245da7a1d50",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.BarData._history_bars: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/a05_mixed_and_or_chain.pyc",
+   "pyc_sha": "a5656e63a201",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__a05_mixed_and_or_chainOK.py",
+   "source_sha": "b7c755e13059",
+   "status": "failure",
+   "success_rate": 0.6666666666666666,
+   "units_success": 2,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/a06_try_except_else_range.pyc",
+   "pyc_sha": "983ce3149e06",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__a06_try_except_else_rangeOK.py",
+   "source_sha": "ad4683a66902",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/a07_if_absorb_following_if.pyc",
+   "pyc_sha": "f44bc66e58fc",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__a07_if_absorb_following_ifOK.py",
+   "source_sha": "d80e29095bca",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/a08_if_absorb_trailing_stmts.pyc",
+   "pyc_sha": "270ee5ca91d1",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__a08_if_absorb_trailing_stmtsOK.py",
+   "source_sha": "70060e1c88d5",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.upd: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/a09_try_finally_tail_return.pyc",
+   "pyc_sha": "d1eef4d17542",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__a09_try_finally_tail_returnOK.py",
+   "source_sha": "b8d2e97b9815",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/a10_cross_loop_tail_stmt.pyc",
+   "pyc_sha": "dea20bb9407a",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__a10_cross_loop_tail_stmtOK.py",
+   "source_sha": "141cf748bd19",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/b01_dupe_elif_return_listcomp.pyc",
+   "pyc_sha": "8b9e0510b6e0",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__b01_dupe_elif_return_listcompOK.py",
+   "source_sha": "49877b7a483d",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 11,
+   "units_total": 11
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/b02_genexpr_pred_jump.pyc",
+   "pyc_sha": "851c63f2a7e4",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__b02_genexpr_pred_jumpOK.py",
+   "source_sha": "ce24ac29535b",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 8,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/b03_polarity_guard_flip.pyc",
+   "pyc_sha": "407d39189e1b",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__b03_polarity_guard_flipOK.py",
+   "source_sha": "529345562b5c",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.Cache.info_conbine: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/b04_elif_not_orchain_raise.pyc",
+   "pyc_sha": "e350505121e4",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__b04_elif_not_orchain_raiseOK.py",
+   "source_sha": "ec5b7b2dda7a",
+   "status": "failure",
+   "success_rate": 0.75,
+   "units_success": 3,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.rep: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/b05_bareexcept_boolop_orchain.pyc",
+   "pyc_sha": "209f82809adb",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__b05_bareexcept_boolop_orchainOK.py",
+   "source_sha": "b8cc9a525b07",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/b06_loop_tail_stmt_absorbed.pyc",
+   "pyc_sha": "7678fb7ffc4d",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__b06_loop_tail_stmt_absorbedOK.py",
+   "source_sha": "526df804f0db",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/b07_outer_if_hoisted_dangling_cond.pyc",
+   "pyc_sha": "fc1198eeae1e",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__b07_outer_if_hoisted_dangling_condOK.py",
+   "source_sha": "e0abc6abb92f",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/b08_not_in_membership_guard.pyc",
+   "pyc_sha": "4b2bed794c18",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__b08_not_in_membership_guardOK.py",
+   "source_sha": "8c2cf62657ac",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/c01_try_in_elif_arm.pyc",
+   "pyc_sha": "1a5db9bf5879",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__c01_try_in_elif_armOK.py",
+   "source_sha": "329c5a16a184",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/c02_genexpr_and_predicate.pyc",
+   "pyc_sha": "7b4926e8b2fb",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__c02_genexpr_and_predicateOK.py",
+   "source_sha": "ffdacfc3ed63",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>: Failure: Different bytecode"
+   ],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/c03_guard_polarity_inverted.pyc",
+   "pyc_sha": "2b6bc934f66d",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__c03_guard_polarity_invertedOK.py",
+   "source_sha": "ebece7cf3b43",
+   "status": "failure",
+   "success_rate": 0.6666666666666666,
+   "units_success": 2,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/c04_while_not_empty_guard.pyc",
+   "pyc_sha": "5d9804a10348",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__c04_while_not_empty_guardOK.py",
+   "source_sha": "09d9e2210533",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/neg01_bare_ternary_return.pyc",
+   "pyc_sha": "04a17fd78386",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__neg01_bare_ternary_returnOK.py",
+   "source_sha": "d264a0da024b",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r72gate/diag1/synth/out/neg02_assert_outside_try.pyc",
+   "pyc_sha": "17ed5892b1a0",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r72gate__diag1__synth__out__neg02_assert_outside_tryOK.py",
+   "source_sha": "4ff88cc8c864",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r73gate/center/synth/pad73_shapes.pyc",
+   "pyc_sha": "90bcbdb2ca10",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__center__synth__pad73_shapesOK.py",
+   "source_sha": "a4087f87a859",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.load_get_price: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/q01_lgp_fstring_ternary_ifchain.pyc",
+   "pyc_sha": "5bcd8ae55d63",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__q01_lgp_fstring_ternary_ifchainOK.py",
+   "source_sha": "bec96a9f74ff",
+   "status": "failure",
+   "success_rate": 0.6666666666666666,
+   "units_success": 2,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.q02: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/q02_lgp_fstring_ternary_simpleif.pyc",
+   "pyc_sha": "0861a6dda720",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__q02_lgp_fstring_ternary_simpleifOK.py",
+   "source_sha": "282bd9384352",
+   "status": "failure",
+   "success_rate": 0.6666666666666666,
+   "units_success": 2,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.q03: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/q03_lgp_fstring_ternary_directif.pyc",
+   "pyc_sha": "f762a43c52de",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__q03_lgp_fstring_ternary_directifOK.py",
+   "source_sha": "c995d9d2058a",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/q04_lgp_callarg_ternary_ifchain.pyc",
+   "pyc_sha": "01f422e6c2e5",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__q04_lgp_callarg_ternary_ifchainOK.py",
+   "source_sha": "0a6b6ce32599",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/q05_lgp_assigned_ternary_ifchain.pyc",
+   "pyc_sha": "c05b9dca32d4",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__q05_lgp_assigned_ternary_ifchainOK.py",
+   "source_sha": "2304a419ae26",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.q06: Failure: Different bytecode"
+   ],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/q06_lgp_fstring_ternary_nestedif.pyc",
+   "pyc_sha": "2372aa527621",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__q06_lgp_fstring_ternary_nestedifOK.py",
+   "source_sha": "82ad3a63742d",
+   "status": "failure",
+   "success_rate": 0.6666666666666666,
+   "units_success": 2,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/t01_tradeop_shared_tail_loop.pyc",
+   "pyc_sha": "9273aacf9cfd",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__t01_tradeop_shared_tail_loopOK.py",
+   "source_sha": "a03ca873b087",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/t02_tradeop_shared_tail_in_try.pyc",
+   "pyc_sha": "9a588fdcb048",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__t02_tradeop_shared_tail_in_tryOK.py",
+   "source_sha": "b002c2719fb5",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/t03_shared_tail_after_if.pyc",
+   "pyc_sha": "8ee3afaa6fda",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__t03_shared_tail_after_ifOK.py",
+   "source_sha": "b2286b754d2b",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/t04_tradeop_continue_inside_then.pyc",
+   "pyc_sha": "2d6e8596d07b",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__t04_tradeop_continue_inside_thenOK.py",
+   "source_sha": "42f8f9fc7772",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/t05_continue_then_shared_tail.pyc",
+   "pyc_sha": "62b570307ae6",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__t05_continue_then_shared_tailOK.py",
+   "source_sha": "edeeea47a636",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/t06_try_continue_shared_tail.pyc",
+   "pyc_sha": "1e1871083b2e",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__t06_try_continue_shared_tailOK.py",
+   "source_sha": "0e5f92ef05f0",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t07: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/t07_full_carrier_stack.pyc",
+   "pyc_sha": "c1dc71458c70",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__t07_full_carrier_stackOK.py",
+   "source_sha": "90131d63d9d1",
+   "status": "failure",
+   "success_rate": 0.875,
+   "units_success": 7,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t08: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/t08_try_with_loop.pyc",
+   "pyc_sha": "eb123652efae",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__t08_try_with_loopOK.py",
+   "source_sha": "9681ef5c6c0a",
+   "status": "failure",
+   "success_rate": 0.875,
+   "units_success": 7,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t09: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r73gate/diag1/synth/out/t09_if_with_loop.pyc",
+   "pyc_sha": "f7f434196b80",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__diag1__synth__out__t09_if_with_loopOK.py",
+   "source_sha": "3dfc986fff03",
+   "status": "failure",
+   "success_rate": 0.875,
+   "units_success": 7,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.synth_a01_shared_and_else: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r73gate/fix2/synth/abs_a01_shared_and_else.pyc",
+   "pyc_sha": "d082d831fcd9",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__fix2__synth__abs_a01_shared_and_elseOK.py",
+   "source_sha": "3e3ad08868fc",
+   "status": "failure",
+   "success_rate": 0.75,
+   "units_success": 3,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/Temp/opencode/r73gate/fix2/synth/abs_a02_true_nested.pyc",
+   "pyc_sha": "77a453dfe0eb",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__fix2__synth__abs_a02_true_nestedOK.py",
+   "source_sha": "40360bbcce1d",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.assert_or_tail: Failure: Different control flow",
+    "***<module>.assert_or_triple_tail: Failure: Different control flow",
+    "***<module>.assert_in_or_tail: Failure: Different control flow",
+    "***<module>.check: Failure: Different control flow",
+    "***<module>.check.<genexpr>: Failure: Different control flow",
+    "***<module>.check.<genexpr>: Failure: Missing bytecode"
+   ],
+   "pyc": "D:/Temp/opencode/r73gate/fix3/synth/assert_or_tail.pyc",
+   "pyc_sha": "7ca292488d49",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__fix3__synth__assert_or_tailOK.py",
+   "source_sha": "d787c9a638c9",
+   "status": "failure",
+   "success_rate": 0.7,
+   "units_success": 14,
+   "units_total": 20
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.trig_mixed_or: Failure: Different control flow",
+    "***<module>.trig_mixed_or_body: Failure: Different control flow",
+    "***<module>.ctrl_and_group: Failure: Different control flow"
+   ],
+   "pyc": "D:/Temp/opencode/r73gate/fix3/synth/polarity_andor.pyc",
+   "pyc_sha": "92d812c03c58",
+   "source": "D:/Temp/opencode/r73gate/center/build_prev/D___Temp__opencode__r73gate__fix3__synth__polarity_andorOK.py",
+   "source_sha": "918f5476c38c",
+   "status": "failure",
+   "success_rate": 0.5714285714285714,
+   "units_success": 4,
+   "units_total": 7
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.8505747126436781,
+ "units_success": 148,
+ "units_total": 174
+}

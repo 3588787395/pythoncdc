@@ -1,0 +1,9 @@
+units compared: 88   changed: 6   WORSE: 0
+--- improved (candidate strictly better on ≥1 metric, none worse) ---
+  IMPROVED order.pyc                                mark_cancelled                               hunks 2->0 norm 0->0 first 3->None sd 8->0
+  IMPROVED slippage.pyc                             set_slippage                                 hunks 2->0 norm 0->0 first 12->None sd 8->0
+  IMPROVED flytools.pyc                             set_userid_containerid_dict                  hunks 2->0 norm 0->0 first 14->None sd 8->0
+  IMPROVED oauth2.pyc                               post                                         hunks 2->0 norm 0->0 first 74->None sd 8->0
+  IMPROVED oauth2.pyc                               post                                         hunks 2->0 norm 0->0 first 93->None sd 8->0
+  IMPROVED flyAccount.pyc                           register_async_callback                      hunks 2->0 norm 0->0 first 17->None sd 8->0
+-> dump/adr73_pad6.json

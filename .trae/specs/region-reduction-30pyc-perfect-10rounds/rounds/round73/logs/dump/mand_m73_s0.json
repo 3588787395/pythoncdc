@@ -1,0 +1,466 @@
+{
+ "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    114,
+    128
+   ],
+   "rate": 89.06,
+   "fails": [
+    [
+     "<module>.TradeLiveBroker.on_pre_before_trading_start",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._process_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._process_tick_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._process_cancel_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._sync_worker",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._trade_status_handle",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.etf_basket_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.etf_purchase_redemption",
+     "Failure: Different bytecode\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.get_max_amount",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.rzrq_credit_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.ipo_stocks_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.get_ipo_stocks",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.on_order_response_list_handle",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.on_trade_response_list_handle",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    114,
+    128
+   ],
+   "rate": 89.06,
+   "fails": [
+    [
+     "<module>.TradeLiveBroker.on_pre_before_trading_start",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._process_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._process_tick_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._process_cancel_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._sync_worker",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._trade_status_handle",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.etf_basket_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.etf_purchase_redemption",
+     "Failure: Different bytecode\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.get_max_amount",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.rzrq_credit_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.ipo_stocks_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.get_ipo_stocks",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.on_order_response_list_handle",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.on_trade_response_list_handle",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/api/klinedata.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    61,
+    64
+   ],
+   "rate": 95.31,
+   "fails": [
+    [
+     "<module>.get_kline_by_count_new",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_multiminute_his_data",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.kline_datetime_list",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    61,
+    64
+   ],
+   "rate": 95.31,
+   "fails": [
+    [
+     "<module>.get_kline_by_count_new",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_multiminute_his_data",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.kline_datetime_list",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    34,
+    37
+   ],
+   "rate": 91.89,
+   "fails": [
+    [
+     "<module>.base_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.future_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.option_order",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    34,
+    37
+   ],
+   "rate": 91.89,
+   "fails": [
+    [
+     "<module>.base_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.future_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.option_order",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/common/future_contract_info.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    27,
+    29
+   ],
+   "rate": 93.1,
+   "fails": [
+    [
+     "<module>.FutureInfoCache.check_user",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.FutureInfoCache.info_conbine",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    27,
+    29
+   ],
+   "rate": 93.1,
+   "fails": [
+    [
+     "<module>.FutureInfoCache.check_user",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.FutureInfoCache.info_conbine",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/logger/handlers.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    29,
+    30
+   ],
+   "rate": 96.67,
+   "fails": [
+    [
+     "<module>.TWHThreadController._target",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    29,
+    30
+   ],
+   "rate": 96.67,
+   "fails": [
+    [
+     "<module>.TWHThreadController._target",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    7,
+    8
+   ],
+   "rate": 87.5,
+   "fails": [
+    [
+     "<module>.change_his_to_forward",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    7,
+    8
+   ],
+   "rate": 87.5,
+   "fails": [
+    [
+     "<module>.change_his_to_forward",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/core/commission.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    9,
+    10
+   ],
+   "rate": 90.0,
+   "fails": [
+    [
+     "<module>.CommissionHelp.set_commission",
+     "Failure: Different bytecode\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "rate": 100.0,
+   "fails": []
+  }
+ },
+ "IQEngine/data/trading_dates_mixin.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    13,
+    14
+   ],
+   "rate": 92.86,
+   "fails": [
+    [
+     "<module>.TradingDatesMixin.trading_dates_reload",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    13,
+    14
+   ],
+   "rate": 92.86,
+   "fails": [
+    [
+     "<module>.TradingDatesMixin.trading_dates_reload",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    12,
+    13
+   ],
+   "rate": 92.31,
+   "fails": [
+    [
+     "<module>.RealtimeEventSource.clock_worker",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    12,
+    13
+   ],
+   "rate": 92.31,
+   "fails": [
+    [
+     "<module>.RealtimeEventSource.clock_worker",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/data/quotation.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    152,
+    153
+   ],
+   "rate": 99.35,
+   "fails": [
+    [
+     "<module>.change_his_to_forward",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "failure",
+   "units": [
+    152,
+    153
+   ],
+   "rate": 99.35,
+   "fails": [
+    [
+     "<module>.change_his_to_forward",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/simtradding/flyAccount.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    23,
+    24
+   ],
+   "rate": 95.83,
+   "fails": [
+    [
+     "<module>.TradeAccount.register_async_callback",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "m73": {
+   "status": "success",
+   "units": [
+    24,
+    24
+   ],
+   "rate": 100.0,
+   "fails": []
+  }
+ }
+}

@@ -1,0 +1,2 @@
+D:/Temp/opencode/r73gate/fix2/synth/abs_a01_shared_and_else.pyc
+D:/Temp/opencode/r73gate/fix2/synth/abs_a02_true_nested.pyc

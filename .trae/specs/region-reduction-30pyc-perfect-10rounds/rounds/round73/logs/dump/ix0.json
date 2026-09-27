@@ -1,0 +1,155 @@
+[
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/__init__.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/backtest/backtest.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/base_storage.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/trading_dates_storage.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/__init__.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/jq_trans_module.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/pycompatibility.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/tradingday_info_utils.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_extra.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/core/base.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_basic_data.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/trading_dates_storage.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/data_info_manager.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/__init__.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/base_db_table.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/iqdata_db_helper.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_bar_storage.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source_api.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/__init__.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/i18n.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/version.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/trade.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/const.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/engine/engine.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/plugin_manager.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/__init__.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_storage.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/__init__.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_backtest.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/__init__.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/__init__.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_future_account.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/api_stock.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/api.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/__init__.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/live.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_hks_broker.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/arg_checker.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/global_variable.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/report.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/const.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/multiprocess_syn.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_engine.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/itn.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeOptionAccount.pyc"
+ }
+]

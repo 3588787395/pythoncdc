@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_ast_generator.py",
+ "edits": [
+  {
+   "anchor": "                    if not _preds_in_else2:\n                        _merge_stmts2 = self._generate_block_statements(_cand2)\n",
+   "repl": "                    # [R73-fix1 · F-PAD] 识别条件（同层次结构身份，只读本区域\n                    # 自身字段与候选块自身的 CFG 后继边，不含函数名/文件名/偏移\n                    # 阈值/名字白名单/新增 self 状态/跨层 region.entry in r.blocks）：\n                    #   (a) 候选块必须从本区域 region.entry 沿 successors 可达；\n                    #   (b) 不可达 ⇒ 该块不在本区域的子图内（它是外层 IfRegion\n                    #       的臂块，只是在地址上夹在本区域 then 尾与 else 首块之间），\n                    #       本区域无权把它收进 then 尾。\n                    # 归约方式：不可达时整段跳过（不 _generate_block_statements、\n                    # 不登记 generated_blocks/generated_offsets），该块留给归属它的\n                    # 区域按原则 4 发射。\n                    # AST 映射：then 尾不再多插一条 return None，外层 if 的 else\n                    # 臂保持未被抢占（重编译后 POP_JUMP 落点与原码逐条一致）。\n                    _r73q2 = [region.entry] if region.entry is not None else []\n                    _r73r2 = set()\n                    while _r73q2:\n                        _r73b2 = _r73q2.pop()\n                        if id(_r73b2) in _r73r2:\n                            continue\n                        _r73r2.add(id(_r73b2))\n                        for _r73s2 in (_r73b2.successors or ()):\n                            if id(_r73s2) not in _r73r2:\n                                _r73q2.append(_r73s2)\n                    if not _preds_in_else2 and id(_cand2) in _r73r2:\n                        _merge_stmts2 = self._generate_block_statements(_cand2)\n"
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+Land73 replay check: HEAD(R72) bytes + m73 spec  ==  worktree(R73) bytes
+======================================================================
+core/cfg/region_ast_generator.py   edits=4 anchor-hits=[1, 1, 1, 1]
+   HEAD 3158948 B -> worktree 3214913 B ; BOM True -> True ; nl=CRLF ; replay==worktree: True
+   net inserted lines (spec, LF) +61
+core/cfg/region_analyzer.py        edits=4 anchor-hits=[1, 1, 1, 1]
+   HEAD 1741397 B -> worktree 1778913 B ; BOM False -> False ; nl=CRLF ; replay==worktree: True
+   net inserted lines (spec, LF) +117
+
+Land73 replay verdict: PASS
