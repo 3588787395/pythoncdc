@@ -26688,6 +26688,40 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         return chain
 
     def _is_nested_if_else_pattern(self, chain: List[Tuple[BasicBlock, str]]) -> bool:
+        # [R73 fix2 abs1] 识别条件：链上每个成员的条件跳转都解析到**同一个块**
+        #   （逐块取 last_instruction.argval -> cfg.get_block_by_offset，块对象用 is
+        #   比较；只读本链自身的出边结构，无函数名/文件名/偏移阈值/名字白名单/新
+        #   self 状态/跨层 region 归属）。同层归约原则：if/elif 嵌套的内外两层
+        #   条件各有各的失败出口（外层跳外层 else/merge、内层跳内层 else），目标
+        #   必然不同；只有「所有失败路径汇聚到同一出口」才是同一条布尔复合条件
+        #   的操作数（CPython 对 \if A and B: X else: Y\ 与 \if A: if B: X else:
+        #   Y\ 中失败路径共享的那类降级）。
+        # 归约方式：命中即返回 False（非嵌套 if-else），链回到
+        #   _detect_boolop_conditional_chain 既有出口继续按 BoolOpRegion 归约并
+        #   发射扁平条件；不命中则逐字节保持原判定（目标不同 = 真嵌套，照旧让位
+        #   给 IfRegion 层级）。本判据只放宽「同出口」这一支，不改任何其他分支。
+        # AST 映射：BoolOpRegion -> ast.BoolOp(and) 作为**唯一** if 条件，then 臂 =
+        #   链尾 fall-through 体、else 臂 = 共享出口块；重编译后各条件跳转仍指向
+        #   同一目标块，指令流与异常表逐位不变（修 F-ABSORB：原先退化成两层嵌套
+        #   if，内层 else 吞掉共享 else 臂，首操作数假边改指向体后继，落点 +4/落错
+        #   指令）。
+        _r73_exit_blk = None
+        _r73_same_exit = True
+        for _r73_cb, _ in chain:
+            _r73_cl = _r73_cb.get_last_instruction()
+            _r73_tb = (self.cfg.get_block_by_offset(_r73_cl.argval)
+                       if _r73_cl is not None and _r73_cl.argval is not None
+                       else None)
+            if _r73_tb is None:
+                _r73_same_exit = False
+                break
+            if _r73_exit_blk is None:
+                _r73_exit_blk = _r73_tb
+            elif _r73_tb is not _r73_exit_blk:
+                _r73_same_exit = False
+                break
+        if _r73_same_exit and _r73_exit_blk is not None:
+            return False
         last_block, _ = chain[-1]
         last_instr = last_block.get_last_instruction()
         if not last_instr or last_instr.argval is None:

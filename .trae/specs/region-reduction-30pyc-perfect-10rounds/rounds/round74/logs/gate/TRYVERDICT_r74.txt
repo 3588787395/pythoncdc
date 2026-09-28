@@ -1,0 +1,38 @@
+R74 centre verdict on the directive: "the root cause IS the nested try-except problem"
+==============================================================================
+scope: the 77 failing units of the 35 pylingual-failure pyc (prev arm = R73 landed bytes)
+sources: dump/firstdiv73.txt (first-divergence probe), dump/exctable_diff73.txt
+         (exception-table probe), dump/tryverdict73.txt (per-unit et/nest table)
+
+1. exception table of the ORIGINAL pyc code object (et_same / et_diff:)
+   units=76  et_same=49  et_diff=27  prod_deeper=0  orig_none_prod_try=0  orig_try_prod_none=0
+   original has exception table at all: with-entry=39  no-entry=37  -> 39/76
+   original max nesting >0: 39 ; nesting-depth orig vs product differing: 0
+
+2. FIRST divergence position (dump/firstdiv73.txt)
+   units=76  kind_Different control flow=73  kind_Different bytecode=3
+   first divergence inside an exception region: 11 / 76
+   first divergence outside: 65 / 76
+   first-divergence lines carrying origTryDepth>0: 11
+
+3. what the numbers say (reported as measured, not as advocacy)
+   - 37 of 77 failing units live in code objects with NO exception table at all,
+     and 65 of 77 first diverge OUTSIDE any exception region: a nested try-except
+     mechanism cannot be the single root cause for those units.
+   - 27 / 76 probeable units do have an exception-table difference, and 11 / 76 first diverge
+     inside an exception region; those are the genuine try-except sub-family. Round 74 took
+     2 of them on: real_quote one_prod_to_ndarray / get_cache_l2_data_by_one cleared 41/45 -> 43/45.
+   - product nesting depth never exceeded the original (prod_deeper=0), so the defect
+     is not "the product nests too deep" either.
+
+4. strongest separately-actionable sub-families (measured)
+   - trade_live_broker.TradeLiveBroker._process_order  orig et=10 (handler body); file 114/128 -> 115/128
+     this round (get_max_amount cleared, process_order still open)
+   - bar.BarData.limit_up / limit_down  F-TERNARY family, fixed in round 73 (82/85 -> 84/85)
+   - IQCommon.util.email_utils.send_email  first divergence inside a handler (et=5), still 3/4
+   - fly/data/quote.*  81/92 and flytools 65/66, trade_info_utils 36/41 remain the largest
+     single-file residues (G3v same-status movement: finance +2, real_quote +2, trade_live_broker +1)
+
+VERDICT: the directive is confirmed for an 11-unit sub-family (inside-try first
+divergence) and quantitatively NOT the root cause for the other 65; both readings
+are filed here so the disagreement stays visible.

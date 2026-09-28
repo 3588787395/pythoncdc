@@ -1,0 +1,22 @@
+{
+  "file": "core/cfg/region_analyzer.py",
+  "arm": "pad7_1",
+  "unit": "IQCommon/util/trade_info_utils.pyc :: query_strategy_id",
+  "first_div": "196 POP_JUMP_FORWARD_IF_FALSE orig=644 (else-of-outer-if return block) prod=648 (with normal-exit return block)",
+  "root_cause": "_collect_normal_exit_cleanup scans forward from body_end with only a 'no user code' guard, so it walks past the WITH exit block and absorbs the enclosing if's else block (a bare LOAD_CONST None; RETURN_VALUE) into WithRegion.cleanup_blocks. The else branch then has no block left to own it and the outer if is emitted without its else, which re-lays the two return-None blocks and flips the conditional jump target.",
+  "three_elements": [
+    "P1 anchor: only reachable-after-WITH blocks are candidates for normal-exit cleanup.",
+    "P2 identity: the WITH's own exit block (the unique post-WITH jump/fall-through successor found by _find_with_exit_block) is the structural upper bound of that cleanup range.",
+    "P3 bound: cleanup scanning terminates at the first block strictly beyond that exit block; the exit block itself keeps the pre-existing Round02-F5 ownership logic untouched."
+  ],
+  "edits": [
+    {
+      "anchor": "        if body_end is not None and body_end > 0:\n            self._collect_normal_exit_cleanup(with_body, normal_cleanup, cleanup_visited,\n                                              with_entry_blocks, body_end)",
+      "repl": "        if body_end is not None and body_end > 0:\n            _wexit_blk, _wexit_via_jump = self._find_with_exit_block(\n                with_entry_blocks, with_body, body_start, body_end)\n            self._collect_normal_exit_cleanup(with_body, normal_cleanup, cleanup_visited,\n                                              with_entry_blocks, body_end, _wexit_blk)"
+    },
+    {
+      "anchor": "    def _collect_normal_exit_cleanup(self, with_body, cleanup, cleanup_visited,\n                                    entry_blocks, body_end):\n        body_offsets = {b.start_offset for b in with_body}\n        body_offsets.update(b.start_offset for b in entry_blocks)\n        for block in self.cfg.get_blocks_in_order():\n            if block in cleanup_visited:\n                continue\n            if block.start_offset in body_offsets:\n                continue\n            if block.start_offset < body_end:\n                continue\n",
+      "repl": "    def _collect_normal_exit_cleanup(self, with_body, cleanup, cleanup_visited,\n                                    entry_blocks, body_end, stop_block=None):\n        body_offsets = {b.start_offset for b in with_body}\n        body_offsets.update(b.start_offset for b in entry_blocks)\n        for block in self.cfg.get_blocks_in_order():\n            if block in cleanup_visited:\n                continue\n            if block.start_offset in body_offsets:\n                continue\n            if block.start_offset < body_end:\n                continue\n            if stop_block is not None and block.start_offset > stop_block.start_offset:\n                break\n"
+    }
+  ]
+}

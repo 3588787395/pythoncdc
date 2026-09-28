@@ -1,0 +1,17 @@
+G3v mandated delta round73 -> round74
+======================================================================
+prev  6540/6617 = 98.84%  success=367 failure=35
+now   6546/6617 = 98.93%  success=368 failure=34
+net units +6 ; files success +1
+
+turn green (1):
+  GREEN IQCommon/data/local_finance.pyc                            failure 20/21 -> success 21/21
+
+turn red (0):
+
+same-status unit movement (3):
+  MOVE  IQCommon/data/finance.pyc                                  failure 29/32 -> 31/32 (+2)
+  MOVE  IQData/plugins/plugin_system_realquote/real_quote.pyc      failure 41/45 -> 43/45 (+2)
+  MOVE  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc failure 114/128 -> 115/128 (+1)
+
+G3v verdict: PASS

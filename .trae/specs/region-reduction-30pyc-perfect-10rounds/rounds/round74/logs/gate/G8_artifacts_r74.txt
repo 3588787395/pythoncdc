@@ -1,0 +1,5 @@
+G8 artifacts (402 shipped *OK.py)
+======================================================================
+products=402 missing=0 py_compile bad=0
+G3 batch log: Traceback=0 FAIL-line=0
+G8 verdict: PASS

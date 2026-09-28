@@ -1,0 +1,86 @@
+=== exception-table verdict ===
+units: 76
+et_same: 49
+et_diff: 27
+prod_deeper: 0
+orig_none_prod_try: 0
+orig_try_prod_none: 0
+nomatch: 0
+loadfail: 0
+
+jq_trans_module.pyc | <module>.func_attribute_history_convert_code.replace_args | DIFF | origNest=1 prodNest=1 origEnts=2 prodEnts=2
+jq_trans_module.pyc | <module>.func_get_bars_convert_code.replace_args | DIFF | origNest=1 prodNest=1 origEnts=2 prodEnts=2
+stock_position.pyc | <module>.StockPosition.make_trade | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+flytools.pyc | <module>.ProcessWrite.modify_batcktes_info | DIFF | origNest=1 prodNest=1 origEnts=22 prodEnts=22
+quote_handler.pyc | <module>.get_kline_local | DIFF | origNest=1 prodNest=1 origEnts=4 prodEnts=4
+calexrights_func.pyc | <module>.change_his_to_forward | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+wizard_quant_api.pyc | <module>.filter_desicion | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+wizard_quant_api.pyc | <module>.get_DMI.calculate_di.<genexpr> | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+future_contract_info.pyc | <module>.FutureInfoCache.info_conbine | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+future_contract_info.pyc | <module>.FutureInfoCache.check_user | DIFF | origNest=1 prodNest=1 origEnts=7 prodEnts=7
+calexrights_func.pyc | <module>.change_his_to_forward | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+bar.pyc | <module>.BarData._history_bars | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.ipo_stocks_order | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.get_ipo_stocks | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.on_trade_response_list_handle | DIFF | origNest=1 prodNest=1 origEnts=3 prodEnts=3
+trade_live_broker.pyc | <module>.TradeLiveBroker.get_max_amount | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+trade_live_broker.pyc | <module>.TradeLiveBroker._sync_worker | DIFF | origNest=1 prodNest=1 origEnts=3 prodEnts=3
+trade_live_broker.pyc | <module>.TradeLiveBroker._process_tick_order | SAME | origNest=1 prodNest=1 origEnts=2 prodEnts=2
+trade_live_broker.pyc | <module>.TradeLiveBroker._trade_status_handle | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.etf_purchase_redemption | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.rzrq_credit_order | SAME | origNest=1 prodNest=1 origEnts=9 prodEnts=9
+trade_live_broker.pyc | <module>.TradeLiveBroker._process_cancel_order | DIFF | origNest=1 prodNest=1 origEnts=6 prodEnts=7
+trade_live_broker.pyc | <module>.TradeLiveBroker.on_order_response_list_handle | DIFF | origNest=1 prodNest=1 origEnts=3 prodEnts=3
+trade_live_broker.pyc | <module>.TradeLiveBroker.on_pre_before_trading_start | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+trade_live_broker.pyc | <module>.TradeLiveBroker.etf_basket_order | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+trade_live_broker.pyc | <module>.TradeLiveBroker._process_order | DIFF | origNest=1 prodNest=1 origEnts=10 prodEnts=5
+finance.pyc | <module>.get_fields | DIFF | origNest=1 prodNest=1 origEnts=8 prodEnts=8
+finance.pyc | <module>.get_financial_statements_pit_mode | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+finance.pyc | <module>.get_financial_and_growth_factors | SAME | origNest=1 prodNest=1 origEnts=5 prodEnts=5
+email_utils.pyc | <module>.send_email | DIFF | origNest=1 prodNest=1 origEnts=5 prodEnts=5
+history_api.pyc | <module>.get_price | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+klinedata.pyc | <module>.get_multiminute_his_data | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+klinedata.pyc | <module>.get_kline_by_count_new | SAME | origNest=1 prodNest=1 origEnts=8 prodEnts=8
+klinedata.pyc | <module>.kline_datetime_list | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+executor.pyc | <module>.Executor.check_before_trading | SAME | origNest=1 prodNest=1 origEnts=3 prodEnts=3
+__init__.pyc | <module>.PluginRiskCalculation._save_testds_to_csv | DIFF | origNest=1 prodNest=1 origEnts=3 prodEnts=3
+__init__.pyc | <module>.PluginRiskCalculation._on_publish_after_trading_end | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+function.pyc | <module>.reconnect | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+profiler_func.pyc | <module>.ProfilerTool.show_func | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+load_daily.pyc | <module> | SAME | origNest=1 prodNest=1 origEnts=19 prodEnts=19
+logger.pyc | <module>.SafeFileHandler.check_baseFilename | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+local_finance.pyc | <module>.get_local_financial_factors | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+strategy_universe.pyc | <module>.StrategyUniverse._on_clear_de_listed | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+realtime_event_source.pyc | <module>.RealtimeEventSource.clock_worker | DIFF | origNest=1 prodNest=1 origEnts=24 prodEnts=24
+quotation.pyc | <module>.change_his_to_forward | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+ptradeAccount.pyc | <module>.PtradeAccount.trade_response_order_update | DIFF | origNest=1 prodNest=1 origEnts=2 prodEnts=2
+ptradeAccount.pyc | <module>.PtradeAccount.order_response_order_update | DIFF | origNest=1 prodNest=1 origEnts=8 prodEnts=8
+handlers.pyc | <module>.TWHThreadController._target | DIFF | origNest=1 prodNest=1 origEnts=6 prodEnts=6
+cgroup_utils.pyc | <module>.set_cgroup_config | DIFF | origNest=1 prodNest=1 origEnts=4 prodEnts=5
+trade_info_utils.pyc | <module>.kill_trade_process | SAME | origNest=1 prodNest=1 origEnts=24 prodEnts=24
+trade_info_utils.pyc | <module>.query_strategy_id | SAME | origNest=1 prodNest=1 origEnts=9 prodEnts=9
+trade_info_utils.pyc | <module>.query_trade_strategy_info | SAME | origNest=1 prodNest=1 origEnts=10 prodEnts=10
+trade_info_utils.pyc | <module>.get_trade_status | SAME | origNest=1 prodNest=1 origEnts=11 prodEnts=11
+trade_info_utils.pyc | <module>.trade_operation | SAME | origNest=1 prodNest=1 origEnts=18 prodEnts=18
+api_base.pyc | <module>.get_history_df | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+real_quote.pyc | <module>.RealQuoteData.get_cache_l2_data_by_one | DIFF | origNest=1 prodNest=1 origEnts=5 prodEnts=5
+real_quote.pyc | <module>.RealQuoteData.get_real_minute_kline | DIFF | origNest=1 prodNest=1 origEnts=7 prodEnts=8
+real_quote.pyc | <module>.RealQuoteData.one_prod_to_ndarray | DIFF | origNest=1 prodNest=1 origEnts=10 prodEnts=10
+real_quote.pyc | <module>.RealQuoteData.get_tick_direction | DIFF | origNest=1 prodNest=1 origEnts=6 prodEnts=6
+trading_dates_mixin.pyc | <module>.TradingDatesMixin.trading_dates_reload | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+order_api.pyc | <module>.base_order | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+order_api.pyc | <module>.option_order | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+order_api.pyc | <module>.future_order | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+strategy.pyc | <module>.Strategy.tick_worker_thread | SAME | origNest=1 prodNest=1 origEnts=3 prodEnts=3
+matcher.pyc | <module>.DefaultMatcher.match | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+quote.pyc | <module>.Quote.load_bars_from_hundsun | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+quote.pyc | <module>.Quote.get_price | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+quote.pyc | <module>.Quote.change_his_to_backward | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+quote.pyc | <module>.Quote.load_get_price | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+quote.pyc | <module>.Quote.get_individual_data | DIFF | origNest=1 prodNest=1 origEnts=5 prodEnts=5
+quote.pyc | <module>.Quote.get_real_from_zeromq | DIFF | origNest=1 prodNest=1 origEnts=5 prodEnts=5
+quote.pyc | <module>.Quote.run_tick_socket | DIFF | origNest=1 prodNest=1 origEnts=13 prodEnts=12
+quote.pyc | <module>.Quote.build_current_period_df | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+quote.pyc | <module>.Quote.change_his_to_forward | SAME | origNest=0 prodNest=0 origEnts=0 prodEnts=0
+quote.pyc | <module>.Quote.run_individual_transform | DIFF | origNest=1 prodNest=1 origEnts=13 prodEnts=10
+quote.pyc | <module>.Quote.check_frequency | DIFF | origNest=1 prodNest=1 origEnts=2 prodEnts=2

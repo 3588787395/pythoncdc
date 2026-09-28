@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "            else_blocks = self._collect_branch_blocks(else_succ, merge, else_stop)",
+   "repl": "            else_blocks = self._collect_branch_blocks(else_succ, merge, else_stop)\n            # r74 noop baseline marker"
+  }
+ ]
+}

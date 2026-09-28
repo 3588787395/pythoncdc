@@ -1620,10 +1620,41 @@ class RegionASTGenerator:
                             _has_top_level_ancestor = True
                             break
                         _ancestor = getattr(_ancestor, 'parent', None)
-                    if _has_top_level_ancestor:
+                    # [R74 fix1 abs2] 识别条件：本块所属子区域带着一个顶级祖先
+                    #   （原豁免条件），**并且**该子区域自身的块集与它父区域的
+                    #   发射集合（blocks / then_blocks / else_blocks / body_blocks /
+                    #   elif_conditions / cond_blocks / orelse_blocks /
+                    #   finalbody_blocks / handler_blocks / try_blocks）有交集——
+                    #   只读「这一对父子」各自的块集，是同一层的结构身份判据：
+                    #   不读函数名、不读文件名、无偏移阈值、无名字白名单、
+                    #   不新增 self 状态、不做跨层的 entry-in-blocks 反查。
+                    # 归约方式：有交集 = 父区域沿既有子区域发射路径必然走到它，
+                    #   逐字节保持原豁免（原行为不变）；无交集 = 父区域的 blocks /
+                    #   then_blocks 遍历永远走不到它（共享尾 region 合并后 child
+                    #   落到覆盖之外），改走下面既有的孤儿块路径：释放出
+                    #   block_to_region，再按块偏移升序补发射。只放宽「无交集」
+                    #   这一支，不改任何其他分支。
+                    # AST 映射：被释放的块生成一个 BASIC 区域，追加到顶级区域
+                    #   列表末尾，按 entry 偏移序发射为它原本的语句序列（ast 语句
+                    #   列表），与合并前该子区域的发射结果逐条一致 —— 语句只增
+                    #   不减（修 F-ABSORB 的丢语句：合并后尾语句整条丢失）。
+                    _covered_by_parent = False
+                    _parent = getattr(_region, 'parent', None)
+                    if _parent is not None:
+                        for _cover_field in ('blocks', 'then_blocks', 'else_blocks',
+                                             'body_blocks', 'elif_conditions',
+                                             'cond_blocks', 'orelse_blocks',
+                                             'finalbody_blocks', 'handler_blocks',
+                                             'try_blocks'):
+                            _cover_set = getattr(_parent, _cover_field, None)
+                            if _cover_set:
+                                if any(_cb in _cover_set for _cb in _region.blocks):
+                                    _covered_by_parent = True
+                                    break
+                    if _has_top_level_ancestor and _covered_by_parent:
                         # 合法嵌套子区域块：由父区域生成子区域时处理，不释放
                         continue
-                    # 无顶级祖先 → 真正的孤儿块，释放
+                    # 无顶级祖先，或父区域的发射集合盖不住该子区域 → 真正的孤儿块
                     del self.region_analyzer.block_to_region[_block]
                     _orphaned_blocks.append(_block)
         # 为孤儿块创建BASIC区域并添加到顶级区域列表
@@ -12911,6 +12942,59 @@ AST 映射规则:
         else:
             _r57_shared_mb = None
             _r57_saved_then = None
+        # [fix3-T1/T2] try内共享尾吸收。
+        # T1：then 臂与某条 elif 臂共有的块违反「原则 2 每块唯一归属」，
+        #   它是整条链的链后共享尾，必须移到 if/elif/else 之后发射。
+        # T2：全部 elif 臂互有的块是 elif 组的链后共享尾，必须移到
+        #   elif 链之后、且因 then 臂不可达而必须套在外层 else 内（嵌套渲染）。
+        # 判据只读结构事实，且只在像素位于 TryExceptRegion 时生效。
+        _ft3_shared_tail = []
+        _ft3_shared_stmts = []
+        _ft3_elif_shared = []
+        _ft3_elif_shared_stmts = []
+        _ft3_try_blocks = set()
+        for _nr in self.region_analyzer.regions:
+            if isinstance(_nr, TryExceptRegion):
+                _ft3_try_blocks.update(_nr.blocks)
+        if getattr(region, 'elif_bodies', None):
+            _ft3_other_arm = set()
+            for _ft3_eb in region.elif_bodies:
+                _ft3_other_arm.update(_ft3_eb)
+            _ft3_cand = [b for b in (region.then_blocks or []) if b in _ft3_other_arm]
+            if _ft3_cand:
+                _ft3_shared_tail = [b for b in _ft3_cand if b in _ft3_try_blocks]
+                if _ft3_shared_tail:
+                    _ft3_shared_set = set(_ft3_shared_tail)
+                    region.then_blocks = [b for b in region.then_blocks
+                                          if b not in _ft3_shared_set]
+                    region.elif_bodies = [[b for b in _eb if b not in _ft3_shared_set]
+                                          for _eb in region.elif_bodies]
+                    _ft3_shared_stmts = self._process_if_blocks(
+                        _ft3_shared_tail, region, branch='then')
+                    for _ft3_b in _ft3_shared_tail:
+                        self.generated_blocks.add(_ft3_b)
+                        self.generated_offsets.add(_ft3_b.start_offset)
+            if len(region.elif_bodies) >= 2:
+                _ft3_comm = set.intersection(*[set(_eb) for _eb in region.elif_bodies])
+                _ft3_comm = set(b for b in _ft3_comm
+                                if b in _ft3_try_blocks
+                                and b not in set(region.then_blocks or []))
+                if _ft3_comm:
+                    _ft3_allowed = set(region.blocks or []) | _ft3_comm
+                    _ft3_seen = set(region.then_blocks or [])
+                    _ft3_wl = list(_ft3_seen)
+                    while _ft3_wl:
+                        _ft3_b2 = _ft3_wl.pop()
+                        for _ft3_s in (getattr(_ft3_b2, 'successors', None) or []):
+                            if _ft3_s in _ft3_allowed and _ft3_s not in _ft3_seen:
+                                _ft3_seen.add(_ft3_s)
+                                _ft3_wl.append(_ft3_s)
+                    _ft3_comm = set(b for b in _ft3_comm if b not in _ft3_seen)
+                if _ft3_comm:
+                    _ft3_comm_set = set(_ft3_comm)
+                    region.elif_bodies = [[b for b in _eb if b not in _ft3_comm_set]
+                                          for _eb in region.elif_bodies]
+                    _ft3_elif_shared = sorted(_ft3_comm, key=lambda b: b.start_offset)
         then_stmts = self._if_generate_then_branch(region)
         # R91: When the region analyzer incorrectly includes the merge_block
         # (first block AFTER the if-elif-else) and its reachable successors
@@ -12953,6 +13037,75 @@ AST 映射规则:
         # R91: Restore original elif_bodies[0] if modified
         if _r91_saved_elif_bodies_0 is not None:
             region.elif_bodies[0] = _r91_saved_elif_bodies_0
+        if _ft3_elif_shared:
+            _ft3_elif_shared_stmts = self._process_if_blocks(
+                _ft3_elif_shared, region, branch='else')
+            for _ft3_b3 in _ft3_elif_shared:
+                self.generated_blocks.add(_ft3_b3)
+                self.generated_offsets.add(_ft3_b3.start_offset)
+            # [固3-T3] 共享尾已被 T1 提前发射并登记，因此该链尾 if
+            # 的最后一条 else 必然指向共享尾；发射器对“else 目标已
+            # 登记”会回填 Break，重编译时会把本应落到共享尾的
+            # fall-through 变成 break。擅去该回填。
+            if _ft3_shared_tail and _ft3_elif_shared_stmts:
+              for _ft3_i in range(len(_ft3_elif_shared_stmts) - 1, -1, -1):
+                  _ft3_cur = _ft3_elif_shared_stmts[_ft3_i]
+                  _ft3_depth = 0
+                  _ft3_hit = False
+                  while isinstance(_ft3_cur, dict) and _ft3_cur.get('type') == 'If':
+                      _ft3_o = _ft3_cur.get('orelse')
+                      if (isinstance(_ft3_o, list) and len(_ft3_o) == 1
+                              and isinstance(_ft3_o[0], dict)
+                              and _ft3_o[0].get('type') == 'Break'):
+                          _ft3_cur['orelse'] = []
+                          _ft3_hit = True
+                          break
+                      _ft3_depth += 1
+                      if _ft3_depth > 8:
+                          break
+                      _ft3_cur = (_ft3_o[0] if isinstance(_ft3_o, list) and len(_ft3_o) == 1
+                                  and isinstance(_ft3_o[0], dict) else None)
+                  if _ft3_hit:
+                      break
+            # [fix3-T4] 原字节码链首块用 POP_JUMP_FORWARD_IF_TRUE 直跳
+            # 共享体、链尾块用 IF_FALSE 跳 else，这是
+            # \if c1 or c2: <body>\ 的编译形态；elif 链会用
+            # IF_FALSE 跳到下一段测试。两者 CFG 相同但
+            # 指令流不同，必须按原判据重建 BoolOp。
+            if _ft3_shared_tail and len(_ft3_elif_shared) >= 2:
+                _ft3_h0 = _ft3_elif_shared[0].get_last_instruction()
+                _ft3_offs = [b.start_offset for b in _ft3_elif_shared]
+                if (_ft3_h0 is not None
+                        and _ft3_h0.opname == 'POP_JUMP_FORWARD_IF_TRUE'
+                        and isinstance(getattr(_ft3_h0, 'argval', None), int)
+                        and _ft3_h0.argval in _ft3_offs
+                        and _ft3_offs.index(_ft3_h0.argval) >= 2
+                        and len(_ft3_elif_shared_stmts) == 1
+                        and isinstance(_ft3_elif_shared_stmts[0], dict)
+                        and _ft3_elif_shared_stmts[0].get('type') == 'If'):
+                    _ft3_o0 = _ft3_elif_shared_stmts[0]
+                    _ft3_vals = [_ft3_o0.get('test')]
+                    _ft3_body = _ft3_o0.get('body')
+                    _ft3_ore = _ft3_o0.get('orelse')
+                    if not isinstance(_ft3_ore, list):
+                        _ft3_ore = []
+                    while (len(_ft3_ore) == 1
+                            and isinstance(_ft3_ore[0], dict)
+                            and _ft3_ore[0].get('type') == 'If'
+                            and _ft3_ore[0].get('body') == _ft3_body):
+                        _ft3_in = _ft3_ore[0]
+                        _ft3_vals.append(_ft3_in.get('test'))
+                        _ft3_ore = _ft3_in.get('orelse')
+                        if not isinstance(_ft3_ore, list):
+                            _ft3_ore = []
+                    if len(_ft3_vals) >= 2:
+                        _ft3_elif_shared_stmts = [{
+                            'type': 'If',
+                            'test': {'type': 'BoolOp', 'op': 'or',
+                                     'values': _ft3_vals},
+                            'body': _ft3_body,
+                            'orelse': _ft3_ore}]
+
         # 部分合并模式：将子合并块语句追加到 elif/else 链末尾
         # 区域归约算法原则 4（父引用子入口）+ 字节码等价：
         # 原实现仅移除 _is_elif 标记，但 code_generator 在 _is_nested_if 未设置
@@ -13135,7 +13288,16 @@ AST 映射规则:
                 _elif_part_trailing = _ep_non_if
                 elif_part = [_ep for _ep in elif_part if isinstance(_ep, dict) and _ep.get('type') == 'If']
 
-        result = {'type': 'If', 'test': condition, 'body': then_stmts if then_stmts else [{'type': 'Pass'}], 'orelse': elif_part if isinstance(elif_part, list) else ([elif_part] if elif_part else [])}
+        _ft3_orelse = elif_part if isinstance(elif_part, list) else ([elif_part] if elif_part else [])
+        if _ft3_elif_shared and isinstance(_ft3_orelse, list) and _ft3_orelse:
+            _ft3_orelse = list(_ft3_orelse) + list(_ft3_elif_shared_stmts)
+            _ft3_root = _ft3_orelse[0]
+            if isinstance(_ft3_root, dict) and _ft3_root.get('type') == 'If':
+                _ft3_root = dict(_ft3_root)
+                _ft3_root.pop('_is_elif', None)
+                _ft3_root['_is_nested_if'] = True
+                _ft3_orelse = [_ft3_root] + list(_ft3_orelse[1:])
+        result = {'type': 'If', 'test': condition, 'body': then_stmts if then_stmts else [{'type': 'Pass'}], 'orelse': _ft3_orelse}
         if pre_stmts:
             result = pre_stmts + [result]
         if trailing_return is not None and not _is_implicit_return_none(trailing_return):
@@ -13314,6 +13476,11 @@ AST 映射规则:
                     result = result + _r91_post_stmts
                 else:
                     result = [result] + _r91_post_stmts
+        if _ft3_shared_stmts:
+            if isinstance(result, list):
+                result = result + _ft3_shared_stmts
+            else:
+                result = [result] + _ft3_shared_stmts
         return result
 
     def _build_chained_compare_from_region_data(self, region: IfRegion) -> Optional[Dict[str, Any]]:
@@ -18423,7 +18590,25 @@ AST 映射规则:
                                     _mb_all_escape = False
                                     break
                             _mb_then_escapes = _mb_all_escape and not _mb_reaches
-                        if not _mb_meaningful or _mb_then_escapes:
+                        # [fix3-T6] try 内共享尾吸收：当某个更外层 IfRegion 的
+                        # merge_block 与本区域是同一块时，该块是跨层共享尾，
+                        # 本层不得把它改认成本层假臂体（否则共享尾被吞进内层
+                        # if 的 orelse，外层 post-if 落空）。仅在 try 区内生效。
+                        _ft3_shared_merge = False
+                        if region.merge_block is not None and region.entry is not None:
+                            for _ft3_tr in self.region_analyzer.regions:
+                                if (_ft3_tr is region or not isinstance(_ft3_tr, IfRegion)):
+                                    continue
+                                if (_ft3_tr.merge_block is not region.merge_block
+                                        or _ft3_tr.entry is None):
+                                    continue
+                                if _ft3_tr.entry.start_offset < region.entry.start_offset:
+                                    _ft3_shared_merge = any(
+                                        isinstance(_ft3_rr, TryExceptRegion)
+                                        and region.entry in _ft3_rr.blocks
+                                        for _ft3_rr in self.region_analyzer.regions)
+                                    break
+                        if not _ft3_shared_merge and (not _mb_meaningful or _mb_then_escapes):
                             region.else_blocks = [region.merge_block]
                             region.merge_block = None
             else_stmts = self._if_generate_else_branch(region)

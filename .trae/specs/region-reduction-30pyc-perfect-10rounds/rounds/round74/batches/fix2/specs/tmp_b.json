@@ -1,0 +1,17 @@
+{
+ "file": "core/cfg/region_ast_generator.py",
+ "edits": [
+  {
+   "anchor": "                    if (self._is_implicit_return_block(_cl_b_instrs)\n                            and len(getattr(_cl_b, 'predecessors', None) or []) >= 2):\n                        _r57b_explicit_ret = True\n                        break",
+   "repl": "                    # [R74-fix2 · F-PAD] 判据/归约/AST 映射见\n                    # _r74_tail_is_jumped_over：单前驱、但由「越过另一条裸\n                    # return」的无条件跳转直达的裸 `return None` 块是源码显式的\n                    # 函数收尾，不是编译器内联的隐式尾声——R57-B 不得按异常清理\n                    # 吞掉，否则该块语句整块消失、重编译净少 1 条指令。\n                    # AST 映射：块照常进入顶级区域循环，发射\n                    # Return(Constant(None))。\n                    if (self._is_implicit_return_block(_cl_b_instrs)\n                            and (len(getattr(_cl_b, 'predecessors', None) or []) >= 2\n                                 or self._r74_tail_is_jumped_over(_cl_b))):\n                        _r57b_explicit_ret = True\n                        break"
+  },
+  {
+   "anchor": "    def _mark_shared_return_explicit(self, block: BasicBlock,",
+   "repl": "    def _r74_tail_is_jumped_over(self, block) -> bool:\n        \"\"\"[R74-fix2 · F-PAD] 单前驱裸 `return None` 块是否被「越过另一条裸\n        return」的无条件跳转直达（同层结构身份）。\n\n        **算法依据** except handler 结束处的 POP_EXCEPT 之后若还有源码，CPython\n        必须以 JUMP_FORWARD 越过它才能落到函数收尾；因此「无条件跳转落点 + 跳转\n        源与它之间还夹着另一条裸 `return None` 块」⇔ 本块是源码显式的函数收尾，\n        编译器不会按内联隐式尾声再生。判据只读本函数 CFG 的块序、块内容类别与\n        无条件跳转前驱的落点：不含函数名/文件名/偏移阈值/名字白名单/新增 self\n        状态/跨层 region.entry in r.blocks。\n\n        **归约方式** 与 R57-B/R57-C 同一路径：R57-B 让该块不被按异常清理吞掉\n        （进入正常生成），R57-C 给生成出的 Return 打 _explicit_return 指令背书\n        （发射端 _filter_trailing_return_none 据此不过滤）；两者缺一该 `return\n        None` 即丢失（实测 trade_info_utils.query_strategy_id 指令数 -1）。\n\n        **AST 映射** ast.Return(value=Constant(None))。\n        \"\"\"\n        for _p in (getattr(block, 'predecessors', None) or []):\n            _li = _p.get_last_instruction()\n            if (_li is None\n                    or _li.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')\n                    or _li.argval != block.start_offset):\n                continue\n            for _q in self.cfg.get_blocks_in_order():\n                if _q is block:\n                    continue\n                if not (_p.start_offset < _q.start_offset < block.start_offset):\n                    continue\n                _qi = [i for i in _q.instructions\n                       if i.opname not in ('RESUME', 'NOP', 'CACHE')]\n                if self._is_implicit_return_block(_qi):\n                    return True\n        return False\n\n    def _mark_shared_return_explicit(self, block: BasicBlock,"
+  },
+  {
+   "anchor": "        if len(getattr(block, 'predecessors', None) or []) < 2:\n            return\n        last = stmts[-1]",
+   "repl": "        # [R74-fix2 · F-PAD] 同层结构身份：单前驱、但由「越过另一条裸 return」\n        # 的无条件跳转直达的裸 `return None` 块同样是源码显式的函数收尾，须与\n        # R57-B 成对背书（两者缺一即被发射端 _filter_trailing_return_none 过滤）。\n        # AST 映射：给该 Return 节点打 _explicit_return 指令背书。\n        if (len(getattr(block, 'predecessors', None) or []) < 2\n                and not self._r74_tail_is_jumped_over(block)):\n            return\n        last = stmts[-1]"
+  }
+ ]
+}

@@ -1,0 +1,6 @@
+G4 official ruler stats (scripts/pyc_batch_verify.py, round 74)
+======================================================================
+total  402 / verified 402 / ok 394 / partial 8 / failed 0
+5720/5746 = 99.55%  (round73 5717/5746 = 99.50%)
+Traceback=0 FAIL-line=0
+G4 verdict: PASS

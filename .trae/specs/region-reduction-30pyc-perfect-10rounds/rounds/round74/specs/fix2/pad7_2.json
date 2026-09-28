@@ -1,0 +1,18 @@
+{
+  "file": "core/cfg/region_analyzer.py",
+  "arm": "pad7_2",
+  "unit": "IQCommon/util/trade_info_utils.pyc :: query_strategy_id",
+  "first_div": "196 POP_JUMP_FORWARD_IF_FALSE orig=644 prod=648 (two adjacent LOAD_CONST None; RETURN_VALUE blocks swap roles)",
+  "root_cause": "_collect_normal_exit_cleanup walks forward from body_end using only a 'no user code' guard, so it reaches the else block of an enclosing if (block 644: LOAD_CONST None; RETURN_VALUE, sole predecessor = the `if os.path.exists(...)` condition block, reached by POP_JUMP_FORWARD_IF_FALSE) and absorbs it into WithRegion.cleanup_blocks. With 644 owned by the WithRegion the enclosing if loses its else, and the recompiled conditional jump lands on the with normal-exit return block (648) instead of 644.",
+  "three_elements": [
+    "P1 anchor: only blocks whose predecessors are all inside the WithRegion (body/entry/exception/already-collected cleanup) may be normal-exit cleanup.",
+    "P2 identity: a block reached from outside by a conditional jump (POP_JUMP_* whose argval is this block) is a sibling IfRegion branch block, never with cleanup -- the same-layer rule already used for the scan's own POP_JUMP_* termination.",
+    "P3 bound: reject-and-continue (not break), so later genuinely-internal cleanup blocks (e.g. the JUMP_FORWARD-fed return after the except handler) are still collected."
+  ],
+  "edits": [
+    {
+      "anchor": "        for block in self.cfg.get_blocks_in_order():\n            if block in cleanup_visited:\n                continue\n            if block.start_offset in body_offsets:\n                continue\n            if block.start_offset < body_end:\n                continue\n",
+      "repl": "        for block in self.cfg.get_blocks_in_order():\n            if block in cleanup_visited:\n                continue\n            if block.start_offset in body_offsets:\n                continue\n            if block.start_offset < body_end:\n                continue\n            # [R74-fix2 - F-PAD] 正常退出清理的入口必须由 with 自身驱动。若该块\n            # 是 WithRegion 之外某个条件跳转（POP_JUMP_*，argval 指向本块）的直接\n            # 目标，则它是外层 if/elif 的分支块（例如\n            # `if os.path.exists(path): ... else: return None`）。误收会把该\n            # return 让渡给 with，外层 if 因此失去 else，重编译后条件跳转改指向\n            # 相邻的 return-None 块，产生 control-flow first-diff。\n            _ext_cond_target = False\n            for _p in block.predecessors:\n                if _p in cleanup_visited:\n                    continue\n                _pl = _p.get_last_instruction()\n                if (_pl is not None and _pl.opname.startswith('POP_JUMP_')\n                        and _pl.argval == block.start_offset):\n                    _ext_cond_target = True\n                    break\n            if _ext_cond_target:\n                continue\n"
+    }
+  ]
+}

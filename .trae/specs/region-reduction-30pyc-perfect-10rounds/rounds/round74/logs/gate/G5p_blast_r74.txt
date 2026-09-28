@@ -1,0 +1,12 @@
+G5p product blast radius (shipped *OK.py, HEAD(R72) -> worktree(R73))
+======================================================================
+changed=7 identical=395 unresolved=0
+  IQCommon/api/klinedataOK.py                                              official 43/45 -> 43/45 (no regression)
+  IQCommon/data/financeOK.py                                               mandated failure 29/32 -> failure 31/32
+  IQCommon/data/local_financeOK.py                                         mandated failure 20/21 -> success 21/21
+  IQData/api/api_baseOK.py                                                 official 24/25 -> 24/25 (no regression)
+  IQData/plugins/plugin_system_realquote/real_quoteOK.py                   mandated failure 41/45 -> failure 43/45
+  IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py              mandated failure 114/128 -> failure 115/128
+  fly/data/quoteOK.py                                                      official 72/81 -> 72/81 (no regression)
+
+REGRESSED=0 backed by: G1/G6/G7 worse=0, canary pins, G4p no regression, G3v reds=0

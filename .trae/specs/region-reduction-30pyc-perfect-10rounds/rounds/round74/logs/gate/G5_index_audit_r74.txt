@@ -1,0 +1,9 @@
+G5 index audit (pyc_index.json before73 -> worktree)
+======================================================================
+entries 402 -> 402 ; added=0 removed=0
+round-stamp-only=400 substantive=2 (improved=2 worsened=0 other=0)
+substantive changes are allowed only when every changed field moved in the improving
+direction (matched/rate up, mismatch/fail/diff down); anything else stays a CHECK:
+  IQData/plugins/plugin_system_realquote/real_quote.pyc {'bytecode_match_rate': (0.9090909090909091, 0.9545454545454546), 'matched_functions': (40, 42), 'last_tested_round': (73, 74)}
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc {'bytecode_match_rate': (0.9327731092436975, 0.9411764705882353), 'matched_functions': (111, 112), 'last_tested_round': (73, 74)}
+G5 verdict: PASS

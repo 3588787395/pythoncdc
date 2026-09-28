@@ -1,0 +1,18 @@
+{
+  "file": "core/cfg/region_ast_generator.py",
+  "arm": "pad7_5",
+  "unit": "fly/common/flytools.pyc :: ProcessWrite.modify_batcktes_info",
+  "first_div": "index 151: orig 700 LOAD_CONST None L1131 vs prod 700 NOP L806; orig 234 instrs vs prod 235 (+1 NOP)",
+  "root_cause": "The with-body loop of _generate_with feeds the trailing bare return-None block (already pulled into with_blocks by _extend_with_body_end) to _generate_block_statements, which emits it as a source `return None`. The source has no such return, so recompiling inserts a NOP line-marker immediately before the inline __exit__ call: 235 instructions against the original 234, first divergence at offset 700.",
+  "three_elements": [
+    "P1 anchor: the skip happens only inside the with-body emission loop, immediately after the BEFORE_WITH self-skip and before _detect_with_body_return, and only for a block that region_analyzer proves is the fall-through bare return of this same WithRegion's normal-exit __exit__ call block.",
+    "P2 identity: the decision is delegated to instruction-level evidence (bare return shape + sole fall-through predecessor carrying the __exit__ window + absence of a NOP line-marker directly before it); no function name, file name, offset threshold, whitelist or new self state is involved.",
+    "P3 bound: the block is only marked generated and the loop continues; no other body block, no cleanup/exception block and no other region is touched, so every case where the predicate is False follows the pre-existing code path byte for byte."
+  ],
+  "edits": [
+    {
+      "anchor": "                if any(instr.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH') for instr in block.instructions):\n                    self.generated_blocks.add(block)\n                    continue\n\n                return_info = self.region_analyzer._detect_with_body_return(block, region, self.expr_reconstructor)",
+      "repl": "                if any(instr.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH') for instr in block.instructions):\n                    self.generated_blocks.add(block)\n                    continue\n\n                # [R74-fix2 F-PAD] do not emit the with-body tail that is really\n                # the compiler's implicit function return.\n                # Same-layer structural predicate (see\n                # RegionAnalyzer._is_implicit_with_tail_return): bare return-None\n                # + sole predecessor is this with's normal-exit __exit__ call block\n                # reached by fall-through + no NOP line-marker directly before that\n                # __exit__ block => the compiler generated it for \"every path\n                # leaves the function\"; emitting it adds one NOP before __exit__\n                # (235 vs 234 instructions).\n                if self.region_analyzer._is_implicit_with_tail_return(region, block):\n                    self.generated_blocks.add(block)\n                    continue\n\n                return_info = self.region_analyzer._detect_with_body_return(block, region, self.expr_reconstructor)"
+    }
+  ]
+}

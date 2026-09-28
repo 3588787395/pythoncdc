@@ -1,0 +1,7 @@
+G2b quotation mandated reading (round 74)
+======================================================================
+status=failure units=152/153
+failures:
+  ***<module>.change_his_to_forward: Failure: Different control flow
+
+G2b verdict: PASS

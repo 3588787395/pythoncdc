@@ -1,0 +1,408 @@
+{
+ "fly/data/quote.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    81,
+    92
+   ],
+   "rate": 88.04,
+   "fails": [
+    [
+     "<module>.Quote.build_current_period_df",
+     "Failure: Different bytecode\r"
+    ],
+    [
+     "<module>.Quote.load_bars_from_hundsun",
+     "Failure: Different bytecode\r"
+    ],
+    [
+     "<module>.Quote.load_get_price",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.change_his_to_forward",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.change_his_to_backward",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.get_price",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.check_frequency",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.get_real_from_zeromq",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.run_individual_transform",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.run_tick_socket",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.get_individual_data",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj3": {
+   "status": "failure",
+   "units": [
+    81,
+    92
+   ],
+   "rate": 88.04,
+   "fails": [
+    [
+     "<module>.Quote.build_current_period_df",
+     "Failure: Different bytecode\r"
+    ],
+    [
+     "<module>.Quote.load_bars_from_hundsun",
+     "Failure: Different bytecode\r"
+    ],
+    [
+     "<module>.Quote.load_get_price",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.change_his_to_forward",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.change_his_to_backward",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.get_price",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.check_frequency",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.get_real_from_zeromq",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.run_individual_transform",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.run_tick_socket",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.get_individual_data",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/util/trade_info_utils.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    36,
+    41
+   ],
+   "rate": 87.8,
+   "fails": [
+    [
+     "<module>.trade_operation",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.kill_trade_process",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_trade_status",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.query_trade_strategy_info",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.query_strategy_id",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj3": {
+   "status": "failure",
+   "units": [
+    36,
+    41
+   ],
+   "rate": 87.8,
+   "fails": [
+    [
+     "<module>.trade_operation",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.kill_trade_process",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_trade_status",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.query_trade_strategy_info",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.query_strategy_id",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQData/plugins/plugin_system_realquote/real_quote.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    41,
+    45
+   ],
+   "rate": 91.11,
+   "fails": [
+    [
+     "<module>.RealQuoteData.one_prod_to_ndarray",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.RealQuoteData.get_real_minute_kline",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.RealQuoteData.get_cache_l2_data_by_one",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.RealQuoteData.get_tick_direction",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj3": {
+   "status": "failure",
+   "units": [
+    43,
+    45
+   ],
+   "rate": 95.56,
+   "fails": [
+    [
+     "<module>.RealQuoteData.get_real_minute_kline",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.RealQuoteData.get_tick_direction",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/data/finance.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    29,
+    32
+   ],
+   "rate": 90.62,
+   "fails": [
+    [
+     "<module>.get_financial_and_growth_factors",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_financial_statements_pit_mode",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_fields",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj3": {
+   "status": "failure",
+   "units": [
+    31,
+    32
+   ],
+   "rate": 96.88,
+   "fails": [
+    [
+     "<module>.get_fields",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/common/flytools.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    65,
+    66
+   ],
+   "rate": 98.48,
+   "fails": [
+    [
+     "<module>.ProcessWrite.modify_batcktes_info",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj3": {
+   "status": "failure",
+   "units": [
+    65,
+    66
+   ],
+   "rate": 98.48,
+   "fails": [
+    [
+     "<module>.ProcessWrite.modify_batcktes_info",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/util/email_utils.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    3,
+    4
+   ],
+   "rate": 75.0,
+   "fails": [
+    [
+     "<module>.send_email",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj3": {
+   "status": "failure",
+   "units": [
+    3,
+    4
+   ],
+   "rate": 75.0,
+   "fails": [
+    [
+     "<module>.send_email",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    12,
+    13
+   ],
+   "rate": 92.31,
+   "fails": [
+    [
+     "<module>.RealtimeEventSource.clock_worker",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj3": {
+   "status": "failure",
+   "units": [
+    12,
+    13
+   ],
+   "rate": 92.31,
+   "fails": [
+    [
+     "<module>.RealtimeEventSource.clock_worker",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/util/cgroup_utils.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    7,
+    8
+   ],
+   "rate": 87.5,
+   "fails": [
+    [
+     "<module>.set_cgroup_config",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj3": {
+   "status": "failure",
+   "units": [
+    7,
+    8
+   ],
+   "rate": 87.5,
+   "fails": [
+    [
+     "<module>.set_cgroup_config",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    26,
+    27
+   ],
+   "rate": 96.3,
+   "fails": [
+    [
+     "<module>.Strategy.tick_worker_thread",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj3": {
+   "status": "failure",
+   "units": [
+    26,
+    27
+   ],
+   "rate": 96.3,
+   "fails": [
+    [
+     "<module>.Strategy.tick_worker_thread",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ }
+}

@@ -1,0 +1,16 @@
+G0 syntax / form gate (round 74, repository bytes after landing)
+======================================================================
+core/cfg/region_ast_generator.py     bytes=3226993  sha256=e54dd931e91e9f6aafea06239c7aba1483889c97e03a3285afa8560990c51d42 BOM=True  CRLF=51751  bareLF=0 ast OK / py_compile OK cross-layer-pattern=10 (code-only 8)
+core/cfg/region_analyzer.py          bytes=1781244  sha256=d6b11bcabf1a4256aa37a7ea013be5d4a93ac7cc19db1453498db614d3f55a48 BOM=False CRLF=28371  bareLF=0 ast OK / py_compile OK cross-layer-pattern=3 (code-only 3)
+core/cfg/comprehension_generator.py  bytes=115583   sha256=b432a3558098985252240c72e1d26960f9c92650f65b4fe2514513694ae93fab BOM=False CRLF=2115   bareLF=0 ast OK / py_compile OK cross-layer-pattern=0 (code-only 0)
+
+cross-layer pattern, code-only (HEAD=7/3/0, worktree=8/3/0, new=1): NEW PATTERN
+cross-layer pattern, raw incl. comments (HEAD=9/3/0, worktree=10/3/0, new=1)
+verdict basis = code-only (R72 instrument counted raw incl. comments; the +1 raw here is a comment line added by R73 fix1 that merely *mentions* the pattern, diff evidence below).
+
+code-only new pattern split: sanctioned-try-guard=1 other=0
+  sanctioned = added code line(s) whose context is a TryExceptRegion
+  containment guard (user standing ruling: nested try-except), diff evidence:
+    +                                        and region.entry in _ft3_rr.blocks
+
+G0 verdict: PASS

@@ -1,0 +1,198 @@
+{
+ "fly/common/flytools.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    65,
+    66
+   ],
+   "rate": 98.48,
+   "fails": [
+    [
+     "<module>.ProcessWrite.modify_batcktes_info",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj": {
+   "status": "failure",
+   "units": [
+    65,
+    66
+   ],
+   "rate": 98.48,
+   "fails": [
+    [
+     "<module>.ProcessWrite.modify_batcktes_info",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/strategy/wizard_quant_api.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    55,
+    58
+   ],
+   "rate": 94.83,
+   "fails": [
+    [
+     "<module>.filter_desicion",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_DMI.calculate_di.<genexpr>",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_DMI.calculate_di.<genexpr>",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj": {
+   "status": "failure",
+   "units": [
+    55,
+    58
+   ],
+   "rate": 94.83,
+   "fails": [
+    [
+     "<module>.filter_desicion",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_DMI.calculate_di.<genexpr>",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_DMI.calculate_di.<genexpr>",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/core/bar.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    84,
+    85
+   ],
+   "rate": 98.82,
+   "fails": [
+    [
+     "<module>.BarData._history_bars",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj": {
+   "status": "failure",
+   "units": [
+    84,
+    85
+   ],
+   "rate": 98.82,
+   "fails": [
+    [
+     "<module>.BarData._history_bars",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/util/email_utils.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    3,
+    4
+   ],
+   "rate": 75.0,
+   "fails": [
+    [
+     "<module>.send_email",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj": {
+   "status": "failure",
+   "units": [
+    3,
+    4
+   ],
+   "rate": 75.0,
+   "fails": [
+    [
+     "<module>.send_email",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/core/executor.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    9,
+    10
+   ],
+   "rate": 90.0,
+   "fails": [
+    [
+     "<module>.Executor.check_before_trading",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj": {
+   "status": "failure",
+   "units": [
+    9,
+    10
+   ],
+   "rate": 90.0,
+   "fails": [
+    [
+     "<module>.Executor.check_before_trading",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/utils/profiler_func.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    17,
+    18
+   ],
+   "rate": 94.44,
+   "fails": [
+    [
+     "<module>.ProfilerTool.show_func",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "absj": {
+   "status": "failure",
+   "units": [
+    17,
+    18
+   ],
+   "rate": 94.44,
+   "fails": [
+    [
+     "<module>.ProfilerTool.show_func",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ }
+}

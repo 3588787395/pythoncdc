@@ -2852,3 +2852,60 @@
         logs/gate 20 份含 G3v/G3v_delta/blast73_expected/Land73_replay/TRYVERDICT +
         logs/dump 69 份含 8 分片 mandated 报告与 index 快照 + specs 16 份 + batches
         diag1/fix1/fix2/fix3 85 份 + scripts 20 份，212 文件）；提交并 push
+
+- [x] Task 74: Round 74：中心四批复测后采纳 fix1 `abs1`（analyzer 1 edit/+34）+ fix1
+      `abs2_orphan_child_emit` 与 fix3 `try7_3` 合并的生成器臂 `abs2t3`（6 edits/+185）落地
+      **m74**（region_ast_generator 3 214 913 → **3 226 993 B** sha256 `e54dd931e91e9f6a`、
+      BOM+CRLF 保留、裸 LF 0；region_analyzer 1 778 913 → **1 781 244 B** sha256
+      `d6b11bcabf1a4256`；comprehension_generator 未改）；mandated 尺
+      **6540/6617 = 98.84% → 6546/6617 = 98.93%**（+6 单元、success 367→368、failure 35→34、
+      **转绿 1 支 `IQCommon/data/local_finance.pyc` 20/21→21/21 ⇒ mandate 达成**、转红 0），
+      官方尺 **5717/5746 = 99.50% → 5720/5746 = 99.55%**（402 verified / 0 failed、ok 394、
+      partial 8、Traceback 0），严格尺（45 靶去重）ok **1704→1710**、缺陷 **75→69**、
+      NEW defect functions=0，电池 worse=0，金丝雀 4/4 pin 全中
+  - [x] SubTask 74.1: 基线与四批（`cd1cd670` 起始）：provision 5 工作区 + `fam74_r74.json`
+        （77 单元：F-ABSORB 67 OUT58/IN9、F-PAD 8、F-POLARITY 1、F-OTHER 1）+ `crosstab74` +
+        try 判决探针（76 可探：et_same 49/et_diff 27、原表 39/37、首分歧 inside 11 / outside 65、
+        prod_deeper 0）；diag1 产出 `FACTS.md`(30211) + 10 支探针，fix1 产出 abs1/abs2/absj 三件
+        spec + synth，fix2 产出 `pad7_*.json` 8 件 + `FACTS.md`，fix3 产出 `try7_1..11.json` 12 件
+  - [x] SubTask 74.2: 中心 ADR-1 独立复测（`adr73.py` 串行单跑，不采信子代理）：
+        **absj 采纳**（changed 5 WORSE=0 IMPROVED=5）；**absjt 拒收**（absj+`try7_10d`：
+        changed 10 **WORSE=1** `real_quote.get_tick_direction hunks_norm 2→3`）；
+        **absj9 拒收**（absj+`try7_9`：同样 WORSE=1 同一单元）；**absj3 采纳 = m74**
+        （absj+`try7_3` 5 edits：changed 7 WORSE=0 IMPROVED=7）；fix2 `pad7_89` 因官方
+        REGRESSION=1（trade_info_utils 40/40→39/40）+ strict NEW=1（`kill_trade_process`
+        seq_len 577→578）拒收；absj3 官方 41 靶 SAME=34 IMPROVED=2（real_quote 40→42、
+        trade_live_broker 111→112）MOVED=5 **REGRESSION=0**、fully matched 36→36、
+        battery worse=0、mandated focus9 no NEW failure（real_quote 41→43 清 2 单元、
+        finance 29→31 清 2 单元）
+  - [x] SubTask 74.3: 落地（`mkfinal74 m74` 链式锚点各 1 次 → `mbuild74 m74` → `mirr_m74` →
+        `land74` dry-run + `--apply`，两文件 replay == measured mirror=True；未手改任何
+        *OK.py，7 支变更产物全由 `pyc_batch_verify.py batch --round 74 --all` 批量重写，
+        G5p changed=7 unresolved=0 **REGRESSED=0**）
+  - [x] SubTask 74.4: 门禁（gates74 全过）：G0 三支 ast+py_compile OK、跨层
+        `x.entry in y.blocks` raw 9→10 / code-only 7→8 拆成 **sanctioned-try-guard=1 other=0**
+        （唯一新增为用户裁定对应的 TryExceptRegion 守卫 `and region.entry in _ft3_rr.blocks`，
+        diff 证据入档）⇒ PASS；G1 TALLY ERR=0 IMPROVED=2 MOVED=5 REGRESSION=0 SAME=37、
+        fully matched 36→36；G2 金丝雀 4/4 pin + sha SAME=4/4；G2b quotation 152/153；
+        G3 batch 402/0 failed；G3v 8 分片合并 **6546/6617 = 98.93%**、转绿 1、转红 0；
+        G4 5720/5746 = 99.55%；G4′ ok 1704→1710 缺陷 75→69 IMPROVED=4 REGRESSION=0；
+        G5 索引 402→402、round-stamp-only=400、substantive=2（improved=2 worsened=0）；
+        G5′ blast changed=7 unresolved=0 REGRESSED=0；G6 prev(R73 HEAD blob) vs landed
+        worse=0；G7 IMPROVED=1 SAME=81 REGRESSED=0；landproof mirr_m74 33 文件 diff=0；
+        G8 402 *OK.py 在位 py_compile bad=0 Traceback 0；G9 合成 25 臂
+        IMPROVED=1 REGRESSED=0 SAME=24；Land74 replay 两文件 PASS
+  - [x] SubTask 74.5: 对用户裁定的定量判决（`logs/TRYVERDICT_r74.txt`，77 单元/76 可探）：
+        无异常表 37 / 有异常表 39、et_same 49 / et_diff 27、prod_deeper=0，
+        **首分歧 inside 11/76、outside 65/76** ⇒ 裁定对 11 单元子族成立、对其余 65 个单元
+        定量上不是单一根因，两读数并列存档；本轮实修其中 2 个单元
+        （real_quote.one_prod_to_ndarray / get_cache_l2_data_by_one，41/45→43/45）
+  - [x] SubTask 74.6: 副作用与交接（如实入档）：门禁仪器两处判据按实测校准入档
+        （G0 sanctioned/other 拆分、G5 substantive 按方向拆 improved/worsened/other 并跳过
+        `last_tested_round` 噪声）；交 R75：try7_10d/try7_9 的唯一回退
+        `real_quote.get_tick_direction hunks_norm 2→3`、pad7_89 官方 REGRESSION + strict NEW、
+        fix2 6 个未攻单元、fix3 缺 FACTS/trym、`trade_operation` target_diff #94、
+        最大残留 trade_live_broker 13 / quote 11 / trade_info_utils 5
+  - [x] SubTask 74.7: 归档与提交：`rounds/round74/`（OUTCOME.md 8 节 + logs/EVIDENCE.md A–H +
+        logs/gate 19 份含 G3v/G3v_delta/blast/Land74_replay/TRYVERDICT + logs/dump 46 份
+        含 8 分片 mandated 报告与 index 快照 + specs 7 份 + batches diag1/fix1/fix2/fix3 50 份
+        + scripts 20 份，172 文件）；tasks.md 记 Task 74 七个 SubTask；提交并 push
