@@ -1,0 +1,6 @@
+fam74 units = 71
+firstdiv73 rows = 69 ; exctable rows = 69 ; tryverdict rows = 69
+fam74 NOT in firstdiv73: []
+firstdiv73 NOT in fam74: []
+duplicate (pyc,name) in fam74: [('calexrights_func.pyc', '<module>.change_his_to_forward'), ('wizard_quant_api.pyc', '<module>.get_DMI.calculate_di.<genexpr>')]
+join gaps (missing centre rows): []

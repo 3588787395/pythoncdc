@@ -1,0 +1,17 @@
+{
+ "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+ "source": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quoteOK.py",
+ "pyc_sha": "461e3bc834bd",
+ "source_sha": "5635e538e54b",
+ "status": "failure",
+ "units_total": 45,
+ "units_success": 43,
+ "success_rate": 0.9555555555555556,
+ "failures": [
+  "***<module>.RealQuoteData.get_real_minute_kline: Failure: Different control flow",
+  "***<module>.RealQuoteData.get_tick_direction: Failure: Different control flow"
+ ],
+ "detail": null,
+ "elapsed_s": 3.7,
+ "ts": "2026-09-29 04:01:42"
+}

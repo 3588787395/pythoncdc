@@ -1,0 +1,661 @@
+=== d74_trisect: F-ABSORB A/B/C + landing + PAD shape relation + overlap ===
+判据 A = chain.same_target & nested_ret；B = chain orphans covered=False；in-try = firstdiv73 origTryDepth>=1
+
+[0] family x in-try ===
+  F-ABSORB    IN=7  OUT=54  total=61
+  F-OTHER     IN=0  OUT=1  total=1
+  F-PAD       IN=2  OUT=6  total=8
+  F-POLARITY  IN=0  OUT=1  total=1
+  TOTAL IN=9 OUT=62
+  cross-check crosstab75.txt: F-ABSORB OUT58/IN9  F-PAD OUT6/IN2  F-POLARITY OUT1  F-OTHER OUT1
+  in-try units (9):
+     [OK] fly/data/quote.pyc                                       <module>.Quote.run_tick_socket                           fam=F-PAD
+     [OK] IQCommon/util/trade_info_utils.pyc                       <module>.trade_operation                                 fam=F-ABSORB
+     [OK] IQData/plugins/plugin_system_realquote/real_quote.pyc    <module>.RealQuoteData.get_real_minute_kline             fam=F-ABSORB
+     [OK] IQCommon/data/finance.pyc                                <module>.get_fields                                      fam=F-ABSORB
+     [OK] fly/common/flytools.pyc                                  <module>.ProcessWrite.modify_batcktes_info               fam=F-PAD
+     [OK] IQCommon/util/email_utils.pyc                            <module>.send_email                                      fam=F-ABSORB
+     [OK] IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc <module>.RealtimeEventSource.clock_worker                fam=F-ABSORB
+     [OK] IQCommon/util/cgroup_utils.pyc                           <module>.set_cgroup_config                               fam=F-ABSORB
+     [OK] IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc   <module>.Strategy.tick_worker_thread                     fam=F-ABSORB
+  BRIEF list size=11, matched=9
+
+[1] F-ABSORB trisection ===
+  counts: {'C': 52, 'B': 9}  |A|=0 |B|=9 |A+B|=0 |C|=52  union=9
+  --- A (0) ---
+  --- B (9) ---
+     fly/data/quote.pyc                                       <module>.Quote.get_real_from_zeromq                nreg 36->36 unc=2 chains=0 land=L3 same-target/len-chg
+     fly/data/quote.pyc                                       <module>.Quote.get_individual_data                 nreg 32->32 unc=2 chains=0 land=L3 same-target/len-chg
+     IQCommon/util/trade_info_utils.pyc                       <module>.trade_operation                           nreg 22->22 unc=1 chains=0 land=L1 diff-instr
+     IQCommon/api/klinedata.pyc                               <module>.get_multiminute_his_data                  nreg 33->33 unc=1 chains=1 land=L3 same-target/len-chg
+     IQCommon/api/klinedata.pyc                               <module>.kline_datetime_list                       nreg 54->54 unc=2 chains=4 land=L1 diff-instr
+     IQData/plugins/plugin_system_realquote/real_quote.pyc    <module>.RealQuoteData.get_tick_direction          nreg 31->31 unc=2 chains=0 land=L1 diff-instr
+     IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc <module>.PluginRiskCalculation._save_testds_to_csv nreg 6->6 unc=1 chains=0 land=L5 opname+other-chg
+     IQCommon/logger/handlers.pyc                             <module>.TWHThreadController._target               nreg 20->20 unc=2 chains=2 land=L3 same-target/len-chg
+     IQData/api/api_base.pyc                                  <module>.get_history_df                            nreg 217->217 unc=2 chains=16 land=L1 diff-instr
+  --- A+B (0) ---
+  --- C (52) ---
+     IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.on_pre_before_trading_start nreg 14->14 unc=0 chains=0 land=L1 diff-instr
+     IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker._process_order            nreg 19->19 unc=0 chains=1 land=L3 same-target/len-chg
+     IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker._process_tick_order       nreg 8->8 unc=0 chains=0 land=L1 diff-instr
+     IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker._process_cancel_order     nreg 16->16 unc=0 chains=0 land=L3 same-target/len-chg
+     IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker._trade_status_handle      nreg 6->6 unc=0 chains=0 land=L5 opname+other-chg
+     IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.etf_purchase_redemption   nreg 31->31 unc=0 chains=0 land=L3 same-target/len-chg
+     IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.rzrq_credit_order         nreg 99->99 unc=0 chains=0 land=L1 diff-instr
+     IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.ipo_stocks_order          nreg 93->93 unc=0 chains=1 land=L3 same-target/len-chg
+     IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.get_ipo_stocks            nreg 40->40 unc=0 chains=0 land=L1 diff-instr
+     IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.on_order_response_list_handle nreg 6->6 unc=0 chains=0 land=L1 diff-instr
+     IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.on_trade_response_list_handle nreg 6->6 unc=0 chains=0 land=L1 diff-instr
+     fly/data/quote.pyc                                       <module>.Quote.build_current_period_df             nreg 8->8 unc=0 chains=0 land=L3 same-target/len-chg
+     fly/data/quote.pyc                                       <module>.Quote.load_bars_from_hundsun              nreg 52->52 unc=0 chains=2 land=L5 opname+other-chg
+     fly/data/quote.pyc                                       <module>.Quote.change_his_to_forward               nreg 50->50 unc=0 chains=0 land=L3 same-target/len-chg
+     fly/data/quote.pyc                                       <module>.Quote.change_his_to_backward              nreg 39->39 unc=0 chains=0 land=L1 diff-instr
+     fly/data/quote.pyc                                       <module>.Quote.get_price                           nreg 38->38 unc=0 chains=0 land=L5 opname+other-chg
+     fly/data/quote.pyc                                       <module>.Quote.run_individual_transform            nreg 10->10 unc=0 chains=0 land=L1 diff-instr
+     IQCommon/util/trade_info_utils.pyc                       <module>.get_trade_status                          nreg 19->19 unc=0 chains=0 land=L1 diff-instr
+     IQCommon/api/klinedata.pyc                               <module>.get_kline_by_count_new                    nreg 49->49 unc=0 chains=5 land=L1 diff-instr
+     IQCommon/strategy/wizard_quant_api.pyc                   <module>.filter_desicion                           nreg 80->80 unc=0 chains=3 land=L3 same-target/len-chg
+     IQCommon/strategy/wizard_quant_api.pyc                   <module>.get_DMI.calculate_di.<genexpr>            nreg 3->3 unc=0 chains=0 land=L3 same-target/len-chg
+     IQCommon/strategy/wizard_quant_api.pyc                   <module>.get_DMI.calculate_di.<genexpr>            nreg 3->3 unc=0 chains=0 land=L3 same-target/len-chg
+     IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc   <module>.base_order                                nreg 31->31 unc=0 chains=2 land=L1 diff-instr
+     IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc   <module>.future_order                              nreg 1->1 unc=0 chains=0 land=L1 diff-instr
+     IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc   <module>.option_order                              nreg 1->1 unc=0 chains=0 land=L3 same-target/len-chg
+     IQCommon/strategy/jq_trans_module.pyc                    <module>.func_attribute_history_convert_code.replace_args nreg 21->21 unc=0 chains=0 land=L3 same-target/len-chg
+     IQCommon/strategy/jq_trans_module.pyc                    <module>.func_get_bars_convert_code.replace_args   nreg 39->39 unc=0 chains=0 land=L3 same-target/len-chg
+     IQData/plugins/plugin_system_realquote/real_quote.pyc    <module>.RealQuoteData.get_real_minute_kline       nreg 13->13 unc=0 chains=0 land=L3 same-target/len-chg
+     IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc <module>.PluginRiskCalculation._on_publish_after_trading_end nreg 38->38 unc=0 chains=0 land=L3 same-target/len-chg
+     fly/common/future_contract_info.pyc                      <module>.FutureInfoCache.check_user                nreg 14->14 unc=0 chains=1 land=L1 diff-instr
+     fly/common/future_contract_info.pyc                      <module>.FutureInfoCache.info_conbine              nreg 9->9 unc=0 chains=1 land=L1 diff-instr
+     fly/simtradding/ptradeAccount.pyc                        <module>.PtradeAccount.order_response_order_update nreg 6->6 unc=0 chains=0 land=L5 opname+other-chg
+     fly/simtradding/ptradeAccount.pyc                        <module>.PtradeAccount.trade_response_order_update nreg 7->7 unc=0 chains=0 land=L5 opname+other-chg
+     IQCommon/data/finance.pyc                                <module>.get_fields                                nreg 11->11 unc=0 chains=1 land=L1 diff-instr
+     IQCommon/util/cgroup_utils.pyc                           <module>.set_cgroup_config                         nreg 18->18 unc=0 chains=0 land=L3 same-target/len-chg
+     IQCommon/util/email_utils.pyc                            <module>.send_email                                nreg 5->5 unc=0 chains=0 land=L1 diff-instr
+     IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc <module>.change_his_to_forward                     nreg 38->38 unc=0 chains=0 land=L3 same-target/len-chg
+     IQData/utils/calexrights_func.pyc                        <module>.change_his_to_forward                     nreg 38->38 unc=0 chains=0 land=L3 same-target/len-chg
+     IQEngine/core/bar.pyc                                    <module>.BarData._history_bars                     nreg 12->12 unc=0 chains=1 land=L1 diff-instr
+     IQEngine/core/executor.pyc                               <module>.Executor.check_before_trading             nreg 48->48 unc=0 chains=0 land=L1 diff-instr
+     IQEngine/core/strategy/strategy_universe.pyc             <module>.StrategyUniverse._on_clear_de_listed      nreg 7->7 unc=0 chains=0 land=L1 diff-instr
+     IQEngine/data/trading_dates_mixin.pyc                    <module>.TradingDatesMixin.trading_dates_reload    nreg 5->5 unc=0 chains=1 land=L1 diff-instr
+     IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc <module>.get_price                                 nreg 37->37 unc=0 chains=0 land=L1 diff-instr
+     IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc   <module>.Strategy.tick_worker_thread               nreg 20->20 unc=0 chains=2 land=L1 diff-instr
+     IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc <module>.StockPosition.make_trade                  nreg 23->23 unc=0 chains=1 land=L3 same-target/len-chg
+     IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc <module>.RealtimeEventSource.clock_worker          nreg 68->68 unc=0 chains=3 land=L1 diff-instr
+     IQEngine/plugins/plugin_system_matcher/matcher.pyc       <module>.DefaultMatcher.match                      nreg 49->49 unc=0 chains=0 land=L1 diff-instr
+     IQEngine/utils/profiler_func.pyc                         <module>.ProfilerTool.show_func                    nreg 23->23 unc=0 chains=2 land=L5 opname+other-chg
+     fly/data/quotation.pyc                                   <module>.change_his_to_forward                     nreg 53->53 unc=0 chains=0 land=L3 same-target/len-chg
+     fly/data/quote_handler.pyc                               <module>.get_kline_local                           nreg 67->67 unc=0 chains=1 land=L1 diff-instr
+     fly/dumpload/load_daily.pyc                              <module>                                           nreg 31->31 unc=0 chains=0 land=L1 diff-instr
+     fly/logger.pyc                                           <module>.SafeFileHandler.check_baseFilename        nreg 4->4 unc=0 chains=1 land=L1 diff-instr
+
+[1a] A-criterion cross-check: chain(A) vs abs1-nreg(A_eff) vs B-class-set ===
+  |chain A|=0  |abs1 nreg-change|=0  symdiff=0
+  |chain B(covered=False)|=11  |abs1 B(parent_covered=False)|=11  symdiff=0
+  |same_target(any)|=18
+  orphan entries: chain covered=False total=24, abs1 parent_covered=False total=24
+
+[1b] A-class chains: member argval -> block/landing (BRIEF 逐链打印) ===
+
+[1c] B-class region trees: parent -> child coverage (BRIEF blocks/then_blocks 覆盖差) ===
+  fly/data/quote.pyc <module>.Quote.get_real_from_zeromq   (orphans=33, uncovered=2)
+    covered   parent=LoopRegion@2776  child=IfRegion@2778    centry=2778   in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@2776  child=IfRegion@2798    centry=2798   in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@1492  child=IfRegion@1494    centry=1494   in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@2374  child=IfRegion@2378    centry=2378   in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@2374  child=IfRegion@2644    centry=2644   in_blocks=True  in_then=False in_else=False
+    UNCOVERED parent=LoopRegion@398   child=BoolOpRegion@192 centry=192    in_blocks=False in_then=False in_else=False
+    covered   parent=LoopRegion@398   child=IfRegion@410     centry=410    in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@398   child=IfRegion@570     centry=570    in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@1034 child=IfRegion@1034    centry=1034   in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@1034 child=IfRegion@1040    centry=1040   in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@1034 child=IfRegion@1096    centry=1096   in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@1034 child=IfRegion@1360    centry=1360   in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@1034 child=IfRegion@1942    centry=1942   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@2644    child=LoopRegion@2776  centry=2776   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2644    child=IfRegion@3226    centry=3226   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1494    child=IfRegion@1514    centry=1514   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1360    child=LoopRegion@1492  centry=1492   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1040    child=LoopRegion@2374  centry=2374   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@874     child=Region@874       centry=874    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@874     child=Region@886       centry=886    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@874     child=Region@950       centry=950    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@874     child=Region@962       centry=962    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@788     child=Region@788       centry=788    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@788     child=Region@792       centry=792    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@788     child=IfRegion@874     centry=874    in_blocks=True  in_then=False in_else=True 
+    UNCOVERED parent=IfRegion@788     child=Region@1024      centry=1024   in_blocks=False in_then=False in_else=False
+    covered   parent=IfRegion@788     child=Region@1032      centry=1032   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@788     child=TryExceptRegion@1034 centry=1034   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@98      child=Region@98        centry=98     in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@98      child=LoopRegion@144   centry=144    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@0       child=Region@0         centry=0      in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@0       child=Region@54        centry=54     in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@0       child=IfRegion@98      centry=98     in_blocks=True  in_then=False in_else=True 
+  fly/data/quote.pyc <module>.Quote.get_individual_data   (orphans=31, uncovered=2)
+    covered   parent=LoopRegion@1454  child=IfRegion@1456    centry=1456   in_blocks=True  in_then=False in_else=False
+    UNCOVERED parent=LoopRegion@494   child=BoolOpRegion@412 centry=412    in_blocks=False in_then=False in_else=False
+    covered   parent=LoopRegion@494   child=IfRegion@506     centry=506    in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@494   child=IfRegion@666     centry=666    in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@1126 child=IfRegion@1126    centry=1126   in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@1126 child=IfRegion@1132    centry=1132   in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@1126 child=IfRegion@1220    centry=1220   in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@1126 child=Region@1738      centry=1738   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@8       child=TernaryRegion@8  centry=8      in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1132    child=LoopRegion@1454  centry=1454   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@970     child=Region@970       centry=970    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@970     child=Region@982       centry=982    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@970     child=Region@1046      centry=1046   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@970     child=Region@1058      centry=1058   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@884     child=Region@884       centry=884    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@884     child=Region@888       centry=888    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@884     child=IfRegion@970     centry=970    in_blocks=True  in_then=False in_else=True 
+    UNCOVERED parent=IfRegion@884     child=Region@1120      centry=1120   in_blocks=False in_then=False in_else=False
+    covered   parent=IfRegion@884     child=Region@1124      centry=1124   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@884     child=TryExceptRegion@1126 centry=1126   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@238     child=Region@238       centry=238    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@238     child=Region@294       centry=294    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@98      child=Region@98        centry=98     in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@98      child=Region@142       centry=142    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@98      child=IfRegion@238     centry=238    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@0       child=Region@0         centry=0      in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@0       child=IfRegion@8       centry=8      in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@0       child=IfRegion@98      centry=98     in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@0       child=LoopRegion@494   centry=494    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@0       child=IfRegion@884     centry=884    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@0       child=Region@1884      centry=1884   in_blocks=True  in_then=False in_else=True 
+  IQCommon/util/trade_info_utils.pyc <module>.trade_operation   (orphans=16, uncovered=1)
+    covered   parent=LoopRegion@654   child=IfRegion@656     centry=656    in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@350 child=WithRegion@414   centry=414    in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@350 child=IfRegion@1082    centry=1082   in_blocks=True  in_then=False in_else=False
+    UNCOVERED parent=WithRegion@414   child=WithRegion@1178  centry=1178   in_blocks=False in_then=False in_else=False
+    covered   parent=WithRegion@414   child=LoopRegion@654   centry=654    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1082    child=TernaryRegion@1168 centry=1168   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@656     child=IfRegion@678     centry=678    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@656     child=IfRegion@704     centry=704    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@656     child=IfRegion@726     centry=726    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@656     child=IfRegion@874     centry=874    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@656     child=IfRegion@896     centry=896    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@0       child=Region@0         centry=0      in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@0       child=Region@216       centry=216    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@0       child=Region@224       centry=224    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@0       child=Region@266       centry=266    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@0       child=Region@272       centry=272    in_blocks=True  in_then=False in_else=True 
+  IQCommon/api/klinedata.pyc <module>.get_multiminute_his_data   (orphans=32, uncovered=1)
+    covered   parent=LoopRegion@1468  child=IfRegion@1472    centry=1472   in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@1468  child=IfRegion@1594    centry=1594   in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@1468  child=IfRegion@1632    centry=1632   in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@1468  child=IfRegion@1748    centry=1748   in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@1468  child=IfRegion@1786    centry=1786   in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@1468  child=IfRegion@1948    centry=1948   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1432    child=Region@1432      centry=1432   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1432    child=Region@1436      centry=1436   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1432    child=LoopRegion@1468  centry=1468   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1432    child=Region@2708      centry=2708   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1382    child=Region@1382      centry=1382   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1382    child=IfRegion@1432    centry=1432   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@824     child=BoolOpRegion@824 centry=824    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@824     child=Region@1314      centry=1314   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@824     child=Region@1320      centry=1320   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@824     child=Region@1338      centry=1338   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@730     child=Region@730       centry=730    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@730     child=Region@816       centry=816    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@730     child=Region@820       centry=820    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@718     child=Region@718       centry=718    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@718     child=IfRegion@730     centry=730    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@718     child=IfRegion@824     centry=824    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@718     child=IfRegion@1382    centry=1382   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@82      child=Region@82        centry=82     in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@82      child=Region@170       centry=170    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@82      child=Region@418       centry=418    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@82      child=Region@472       centry=472    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@0       child=BoolOpRegion@0   centry=0      in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@0       child=IfRegion@82      centry=82     in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@0       child=IfRegion@718     centry=718    in_blocks=True  in_then=True  in_else=False
+    UNCOVERED parent=IfRegion@0       child=Region@2710      centry=2710   in_blocks=False in_then=False in_else=False
+    covered   parent=IfRegion@0       child=Region@2758      centry=2758   in_blocks=True  in_then=True  in_else=False
+  IQCommon/api/klinedata.pyc <module>.kline_datetime_list   (orphans=51, uncovered=2)
+    UNCOVERED parent=IfRegion@370     child=Region@396       centry=396    in_blocks=False in_then=False in_else=False
+    covered   parent=IfRegion@370     child=IfRegion@408     centry=408    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@614     child=IfRegion@644     centry=644    in_blocks=True  in_then=True  in_else=False
+    UNCOVERED parent=IfRegion@756     child=Region@782       centry=782    in_blocks=False in_then=False in_else=False
+    covered   parent=IfRegion@756     child=IfRegion@788     centry=788    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1322    child=IfRegion@1352    centry=1352   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1412    child=BoolOpRegion@1412 centry=1412   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1412    child=Region@1608      centry=1608   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1412    child=Region@1646      centry=1646   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1352    child=Region@1364      centry=1364   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1248    child=BoolOpRegion@1248 centry=1248   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1248    child=IfRegion@1322    centry=1322   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1034    child=BoolOpRegion@1034 centry=1034   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1034    child=Region@1084      centry=1084   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1034    child=Region@1150      centry=1150   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@920     child=Region@920       centry=920    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@920     child=Region@932       centry=932    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@806     child=Region@806       centry=806    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@806     child=IfRegion@920     centry=920    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@788     child=Region@796       centry=796    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@732     child=Region@732       centry=732    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@732     child=Region@752       centry=752    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@712     child=Region@712       centry=712    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@712     child=IfRegion@732     centry=732    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@712     child=IfRegion@756     centry=756    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@712     child=IfRegion@806     centry=806    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@666     child=Region@666       centry=666    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@666     child=IfRegion@712     centry=712    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@666     child=IfRegion@1034    centry=1034   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@666     child=Region@1214      centry=1214   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@666     child=IfRegion@1248    centry=1248   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@666     child=TernaryRegion@1374 centry=1374   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@666     child=TernaryRegion@1392 centry=1392   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@666     child=IfRegion@1412    centry=1412   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@666     child=Region@1682      centry=1682   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@644     child=Region@656       centry=656    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@556     child=BoolOpRegion@556 centry=556    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@556     child=IfRegion@614     centry=614    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@430     child=Region@430       centry=430    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@430     child=Region@546       centry=546    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@408     child=Region@420       centry=420    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@408     child=Region@426       centry=426    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@176     child=Region@176       centry=176    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@176     child=Region@264       centry=264    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@176     child=Region@302       centry=302    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@176     child=IfRegion@370     centry=370    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@176     child=IfRegion@430     centry=430    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@176     child=IfRegion@556     centry=556    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@176     child=IfRegion@666     centry=666    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@0       child=Region@0         centry=0      in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@0       child=Region@144       centry=144    in_blocks=True  in_then=True  in_else=False
+  IQData/plugins/plugin_system_realquote/real_quote.pyc <module>.RealQuoteData.get_tick_direction   (orphans=30, uncovered=2)
+    covered   parent=LoopRegion@1174  child=IfRegion@1176    centry=1176   in_blocks=True  in_then=False in_else=False
+    UNCOVERED parent=LoopRegion@408   child=BoolOpRegion@308 centry=308    in_blocks=False in_then=False in_else=False
+    covered   parent=LoopRegion@408   child=IfRegion@420     centry=420    in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@408   child=IfRegion@610     centry=610    in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@50    child=IfRegion@52      centry=52     in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@1108 child=IfRegion@1108    centry=1108   in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@1108 child=IfRegion@1112    centry=1112   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1112    child=LoopRegion@1174  centry=1174   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@944     child=Region@944       centry=944    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@944     child=Region@956       centry=956    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@944     child=Region@1024      centry=1024   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@944     child=Region@1036      centry=1036   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@858     child=Region@858       centry=858    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@858     child=Region@862       centry=862    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@858     child=IfRegion@944     centry=944    in_blocks=True  in_then=False in_else=True 
+    UNCOVERED parent=IfRegion@858     child=Region@1102      centry=1102   in_blocks=False in_then=False in_else=False
+    covered   parent=IfRegion@858     child=Region@1106      centry=1106   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@858     child=TryExceptRegion@1108 centry=1108   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@858     child=Region@1458      centry=1458   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@858     child=Region@1570      centry=1570   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@138     child=Region@138       centry=138    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@138     child=Region@180       centry=180    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@138     child=Region@188       centry=188    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@138     child=Region@244       centry=244    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@138     child=Region@276       centry=276    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@0       child=Region@0         centry=0      in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@0       child=LoopRegion@50    centry=50     in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@0       child=IfRegion@138     centry=138    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@0       child=LoopRegion@408   centry=408    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@0       child=IfRegion@858     centry=858    in_blocks=True  in_then=True  in_else=False
+  IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc <module>.PluginRiskCalculation._save_testds_to_csv   (orphans=4, uncovered=1)
+    covered   parent=LoopRegion@108   child=TryExceptRegion@124 centry=124    in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@108   child=IfRegion@218     centry=218    in_blocks=True  in_then=False in_else=False
+    UNCOVERED parent=LoopRegion@108   child=LoopRegion@262   centry=262    in_blocks=False in_then=False in_else=False
+    covered   parent=LoopRegion@108   child=LoopRegion@108   centry=108    in_blocks=True  in_then=False in_else=False
+  IQCommon/logger/handlers.pyc <module>.TWHThreadController._target   (orphans=17, uncovered=2)
+    covered   parent=LoopRegion@504   child=TryExceptRegion@520 centry=520    in_blocks=True  in_then=False in_else=False
+    UNCOVERED parent=LoopRegion@504   child=Region@1012      centry=1012   in_blocks=False in_then=False in_else=False
+    UNCOVERED parent=LoopRegion@504   child=Region@1016      centry=1016   in_blocks=False in_then=False in_else=False
+    covered   parent=LoopRegion@90    child=TryExceptRegion@106 centry=106    in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@106 child=IfRegion@180     centry=180    in_blocks=True  in_then=False in_else=True 
+    covered   parent=TryExceptRegion@106 child=IfRegion@294     centry=294    in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@106 child=IfRegion@324     centry=324    in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@520 child=IfRegion@630     centry=630    in_blocks=True  in_then=False in_else=True 
+    covered   parent=TryExceptRegion@520 child=IfRegion@898     centry=898    in_blocks=True  in_then=False in_else=False
+    covered   parent=TryExceptRegion@520 child=IfRegion@928     centry=928    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@458     child=Region@458       centry=458    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@458     child=LoopRegion@504   centry=504    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@412     child=Region@412       centry=412    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@412     child=IfRegion@458     centry=458    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@46      child=Region@46        centry=46     in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@46      child=LoopRegion@90    centry=90     in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@0       child=Region@0         centry=0      in_blocks=True  in_then=False in_else=False
+  IQData/api/api_base.pyc <module>.get_history_df   (orphans=208, uncovered=2)
+    covered   parent=LoopRegion@6686  child=IfRegion@6688    centry=6688   in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@6332  child=LoopRegion@6374  centry=6374   in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@6332  child=LoopRegion@6430  centry=6430   in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@6332  child=IfRegion@6482    centry=6482   in_blocks=True  in_then=False in_else=False
+    covered   parent=LoopRegion@5924  child=LoopRegion@5978  centry=5978   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1008    child=IfRegion@1098    centry=1098   in_blocks=True  in_then=False in_else=True 
+    UNCOVERED parent=IfRegion@1954    child=Region@1984      centry=1984   in_blocks=False in_then=False in_else=False
+    covered   parent=IfRegion@1954    child=IfRegion@1996    centry=1996   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@2202    child=IfRegion@2232    centry=2232   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2466    child=IfRegion@2496    centry=2496   in_blocks=True  in_then=True  in_else=False
+    UNCOVERED parent=IfRegion@2654    child=Region@2680      centry=2680   in_blocks=False in_then=False in_else=False
+    covered   parent=IfRegion@2654    child=IfRegion@2686    centry=2686   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@8636    child=Region@8636      centry=8636   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@8636    child=Region@8674      centry=8674   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@8636    child=Region@8690      centry=8690   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@8446    child=Region@8446      centry=8446   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@8446    child=Region@8482      centry=8482   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@8446    child=Region@8498      centry=8498   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@8048    child=Region@8048      centry=8048   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@8048    child=Region@8392      centry=8392   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@8048    child=Region@8408      centry=8408   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@8048    child=IfRegion@8446    centry=8446   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@8048    child=Region@8568      centry=8568   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@7970    child=Region@7970      centry=7970   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@7970    child=Region@7982      centry=7982   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@7970    child=IfRegion@8048    centry=8048   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@7970    child=IfRegion@8636    centry=8636   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@7334    child=Region@7334      centry=7334   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@7334    child=Region@7422      centry=7422   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@7334    child=Region@7670      centry=7670   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@7334    child=Region@7724      centry=7724   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@7298    child=BoolOpRegion@7298 centry=7298   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@7298    child=IfRegion@7334    centry=7334   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@7298    child=IfRegion@7970    centry=7970   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@7288    child=Region@7288      centry=7288   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@7288    child=IfRegion@7298    centry=7298   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@7288    child=Region@9376      centry=9376   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@7288    child=Region@9442      centry=9442   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@7204    child=Region@7204      centry=7204   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@7204    child=Region@7216      centry=7216   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@7204    child=Region@7284      centry=7284   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@7054    child=BoolOpRegion@7054 centry=7054   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@7054    child=Region@7070      centry=7070   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@7054    child=Region@7076      centry=7076   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@6940    child=Region@6940      centry=6940   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@6940    child=Region@7020      centry=7020   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@6940    child=Region@7038      centry=7038   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@6916    child=BoolOpRegion@6916 centry=6916   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@6916    child=IfRegion@6940    centry=6940   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@6916    child=IfRegion@7054    centry=7054   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@6916    child=Region@7086      centry=7086   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@6896    child=Region@6896      centry=6896   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@6896    child=Region@6900      centry=6900   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@6578    child=BoolOpRegion@6578 centry=6578   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@6578    child=LoopRegion@6686  centry=6686   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@6482    child=LoopRegion@6524  centry=6524   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@6038    child=Region@6038      centry=6038   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@6038    child=Region@6062      centry=6062   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@5526    child=Region@5526      centry=5526   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@5526    child=Region@5534      centry=5534   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@5126    child=Region@5126      centry=5126   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@5126    child=Region@5442      centry=5442   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4986    child=BoolOpRegion@4986 centry=4986   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@4986    child=Region@5052      centry=5052   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@4986    child=TernaryRegion@5102 centry=5102   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4972    child=Region@4972      centry=4972   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@4972    child=IfRegion@4986    centry=4986   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4972    child=IfRegion@5126    centry=5126   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4972    child=IfRegion@5526    centry=5526   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4972    child=LoopRegion@5924  centry=5924   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4972    child=IfRegion@6038    centry=6038   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4972    child=LoopRegion@6332  centry=6332   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4972    child=IfRegion@6578    centry=6578   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4906    child=Region@4906      centry=4906   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@4692    child=BoolOpRegion@4692 centry=4692   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@4692    child=Region@4708      centry=4708   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4692    child=Region@4746      centry=4746   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@4548    child=BoolOpRegion@4548 centry=4548   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@4548    child=Region@4564      centry=4564   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4548    child=Region@4628      centry=4628   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@4356    child=Region@4356      centry=4356   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@4356    child=IfRegion@4548    centry=4548   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4356    child=IfRegion@4692    centry=4692   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@4356    child=Region@4782      centry=4782   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@4314    child=Region@4314      centry=4314   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@4314    child=IfRegion@4356    centry=4356   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4314    child=Region@4804      centry=4804   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4228    child=Region@4228      centry=4228   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@4228    child=TernaryRegion@4296 centry=4296   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4228    child=IfRegion@4314    centry=4314   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4116    child=BoolOpRegion@4116 centry=4116   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@4116    child=Region@4132      centry=4132   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@4116    child=Region@4170      centry=4170   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@3972    child=BoolOpRegion@3972 centry=3972   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@3972    child=Region@3988      centry=3988   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@3972    child=Region@4052      centry=4052   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@3930    child=Region@3930      centry=3930   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@3930    child=IfRegion@3972    centry=3972   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@3930    child=IfRegion@4116    centry=4116   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@3930    child=Region@4206      centry=4206   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@3862    child=Region@3862      centry=3862   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@3862    child=Region@3900      centry=3900   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@3416    child=Region@3416      centry=3416   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@3416    child=IfRegion@3862    centry=3862   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@3348    child=Region@3348      centry=3348   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@3348    child=IfRegion@3416    centry=3416   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@3348    child=IfRegion@3930    centry=3930   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@3348    child=IfRegion@4228    centry=4228   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@3252    child=Region@3252      centry=3252   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@3252    child=Region@3256      centry=3256   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@3252    child=Region@3302      centry=3302   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@3172    child=Region@3172      centry=3172   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@3172    child=IfRegion@3252    centry=3252   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@3172    child=IfRegion@3348    centry=3348   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@3132    child=Region@3132      centry=3132   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@3132    child=IfRegion@3172    centry=3172   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2818    child=Region@2818      centry=2818   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@2818    child=Region@2830      centry=2830   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2704    child=Region@2704      centry=2704   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@2704    child=IfRegion@2818    centry=2818   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@2686    child=Region@2694      centry=2694   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2634    child=Region@2634      centry=2634   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@2634    child=Region@2650      centry=2650   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2580    child=BoolOpRegion@2580 centry=2580   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@2580    child=IfRegion@2634    centry=2634   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2580    child=IfRegion@2654    centry=2654   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2580    child=IfRegion@2704    centry=2704   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2580    child=Region@2932      centry=2932   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2580    child=Region@2934      centry=2934   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@2580    child=Region@2988      centry=2988   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@2560    child=Region@2560      centry=2560   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@2560    child=Region@2576      centry=2576   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2496    child=Region@2508      centry=2508   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2372    child=BoolOpRegion@2372 centry=2372   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@2372    child=IfRegion@2466    centry=2466   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2296    child=Region@2296      centry=2296   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@2296    child=Region@2312      centry=2312   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2254    child=Region@2254      centry=2254   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@2254    child=IfRegion@2296    centry=2296   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2254    child=Region@2316      centry=2316   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2254    child=Region@2318      centry=2318   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@2254    child=IfRegion@2372    centry=2372   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@2254    child=TernaryRegion@2518 centry=2518   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@2254    child=TernaryRegion@2536 centry=2536   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@2254    child=IfRegion@2560    centry=2560   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@2232    child=Region@2244      centry=2244   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2144    child=BoolOpRegion@2144 centry=2144   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@2144    child=IfRegion@2202    centry=2202   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@2018    child=Region@2018      centry=2018   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@2018    child=Region@2134      centry=2134   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1996    child=Region@2008      centry=2008   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1996    child=Region@2014      centry=2014   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1866    child=Region@1866      centry=1866   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1866    child=Region@1878      centry=1878   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1782    child=Region@1782      centry=1782   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1782    child=IfRegion@1866    centry=1866   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1782    child=Region@1882      centry=1882   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1782    child=Region@1886      centry=1886   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1782    child=IfRegion@1954    centry=1954   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1782    child=IfRegion@2018    centry=2018   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1782    child=IfRegion@2144    centry=2144   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1782    child=IfRegion@2254    centry=2254   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1782    child=IfRegion@2580    centry=2580   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1564    child=Region@1564      centry=1564   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1564    child=Region@1606      centry=1606   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1564    child=Region@1666      centry=1666   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1564    child=Region@1708      centry=1708   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1564    child=Region@1768      centry=1768   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1462    child=Region@1462      centry=1462   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1462    child=Region@1504      centry=1504   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1462    child=IfRegion@1564    centry=1564   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1360    child=Region@1360      centry=1360   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1360    child=Region@1402      centry=1402   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1360    child=IfRegion@1462    centry=1462   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1258    child=Region@1258      centry=1258   in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@1258    child=Region@1300      centry=1300   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1258    child=IfRegion@1360    centry=1360   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@1098    child=Region@1142      centry=1142   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@1098    child=Region@1200      centry=1200   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@992     child=Region@992       centry=992    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@992     child=IfRegion@996     centry=996    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@992     child=Region@996       centry=996    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@992     child=IfRegion@1008    centry=1008   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@992     child=Region@1034      centry=1034   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@950     child=Region@950       centry=950    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@950     child=IfRegion@992     centry=992    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@950     child=IfRegion@1258    centry=1258   in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@848     child=BoolOpRegion@848 centry=848    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@848     child=Region@894       centry=894    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@848     child=IfRegion@950     centry=950    in_blocks=True  in_then=False in_else=True 
+    covered   parent=IfRegion@834     child=Region@834       centry=834    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@834     child=IfRegion@848     centry=848    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@834     child=IfRegion@1782    centry=1782   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@834     child=IfRegion@3132    centry=3132   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@834     child=IfRegion@4906    centry=4906   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@834     child=IfRegion@6896    centry=6896   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@834     child=IfRegion@6916    centry=6916   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@834     child=IfRegion@7204    centry=7204   in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@634     child=Region@634       centry=634    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@520     child=BoolOpRegion@520 centry=520    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@520     child=Region@566       centry=566    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@354     child=BoolOpRegion@354 centry=354    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@354     child=Region@474       centry=474    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@282     child=Region@282       centry=282    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@282     child=Region@324       centry=324    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@154     child=Region@154       centry=154    in_blocks=True  in_then=False in_else=False
+    covered   parent=IfRegion@154     child=Region@166       centry=166    in_blocks=True  in_then=True  in_else=False
+    covered   parent=IfRegion@0       child=Region@0         centry=0      in_blocks=True  in_then=False in_else=False
+
+[2] landing breakdown by family ===
+  F-ABSORB  total=61
+     L1 diff-instr            31
+     L3 same-target/len-chg   23
+     L5 opname+other-chg      7
+  F-OTHER  total=1
+     L5 opname+other-chg      1
+  F-PAD  total=8
+     L2 same-instr/len-eq     8
+  F-POLARITY  total=1
+     L? idx 47 POP_JUMP_FORWARD_IF_TRUE -> POP_JUMP_FORWARD_IF_FALSE 1
+
+[3] F-ABSORB landing x in-try (A/B/C 落点形态表) ===
+  L1 diff-instr              IN=5 OUT=26 total=31   | A=0  B=4  A+B=0  C=27
+  L3 same-target/len-chg     IN=2 OUT=21 total=23   | A=0  B=4  A+B=0  C=19
+  L5 opname+other-chg        IN=0 OUT=7 total=7   | A=0  B=1  A+B=0  C=6
+
+[4] F-PAD 8 units + R73 padshape_landed 归因 ===
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.etf_basket_order inTry=False off=670 depth=0
+      R73 landed shape: dup=[] else_ret=[] nret=6 ln=1374
+      vs pad_e2fix: NEW-shape-try-except-cleanup | try/except 清理尾声族，与 5 个已修单元不同站点
+  fly/data/quote.pyc                                         <module>.Quote.check_frequency     inTry=False off=310 depth=0
+      R73 landed shape: dup=[] else_ret=[1012] nret=2 ln=994
+      vs pad_e2fix: PAD6-landed-but-other-submech | pad6 已把 else_ret [1012]→[] 仍 80/92；位移 +38 非 ±4 尾块对调（R73-fix1 FACTS §5）
+  fly/data/quote.pyc                                         <module>.Quote.run_tick_socket     inTry=True  off=66 depth=1
+      R73 landed shape: dup=[] else_ret=[] nret=2 ln=1431
+      vs pad_e2fix: NEW-shape-no-dup-no-else | 无 DUP/ELSE，不同子机制（pad6 下仅行号平移）
+  IQCommon/util/trade_info_utils.pyc                         <module>.kill_trade_process        inTry=False off=292 depth=0
+      R73 landed shape: dup=[] else_ret=[312, 316] nret=7 ln=218
+      vs pad_e2fix: ELSE-shape-not-covered | else_ret=[312,316]，但 else 臂非"纯 return 收尾"/不满足 gap 反序判据（R73-fix1 FACTS §5）
+  IQCommon/util/trade_info_utils.pyc                         <module>.query_trade_strategy_info inTry=False off=196 depth=0
+      R73 landed shape: dup=[] else_ret=[] nret=2 ln=1054
+      vs pad_e2fix: NEW-shape-no-dup-no-else | 无 DUP/ELSE，位移来自另一站点（嵌套 return 尾次序）
+  IQCommon/util/trade_info_utils.pyc                         <module>.query_strategy_id         inTry=False off=196 depth=0
+      R73 landed shape: dup=[] else_ret=[1080] nret=3 ln=1068
+      vs pad_e2fix: ELSE-shape-not-covered | else_ret=[1080]，区域结构不满足判据（R73-fix1 FACTS §5）
+  IQEngine/plugins/plugin_system_trade/function.pyc          <module>.reconnect                 inTry=False off=70 depth=0
+      R73 landed shape: dup=[] else_ret=[] nret=1 ln=1210
+      vs pad_e2fix: NEW-shape-no-dup-no-else | 无 DUP/ELSE（nret=1），不同子机制
+  fly/common/flytools.pyc                                    <module>.ProcessWrite.modify_batcktes_info inTry=True  off=700 depth=1
+      R73 landed shape: dup=[] else_ret=[817, 820] nret=5 ln=793
+      vs pad_e2fix: ELSE-shape-not-covered | 同 else 臂 else_ret=[817,820]，但不满足反序/gap 判据（R73-fix1 FACTS §5）
+
+[5] OVERLAP: in-try AND F-PAD (= fix1/fix2/fix3 交面) ===
+  fly/data/quote.pyc                                       <module>.Quote.run_tick_socket                     land=L2 same-instr/len-eq chains=1 cls=C
+  fly/common/flytools.pyc                                  <module>.ProcessWrite.modify_batcktes_info         land=L2 same-instr/len-eq chains=0 cls=C
+  count=2 (BRIEF (d) 期望 2: run_tick_socket + modify_batcktes_info)
+
+[6] OVERLAP: in-try AND (A or B)  -> fix2 靶区被 fix3 同单元命中 ===
+  IQCommon/util/trade_info_utils.pyc                       <module>.trade_operation                           fam=F-ABSORB    cls=B    chains=0
+  count=1
+
+[7] in-try units with boolop chains (fix3 (c) 候选) ===
+  fly/data/quote.pyc                                       <module>.Quote.run_tick_socket                     fam=F-PAD       chains=1 cls=C    land=L2 same-instr/len-eq
+  IQCommon/data/finance.pyc                                <module>.get_fields                                fam=F-ABSORB    chains=1 cls=C    land=L1 diff-instr
+  IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc   <module>.Strategy.tick_worker_thread               fam=F-ABSORB    chains=2 cls=C    land=L1 diff-instr
+  IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc <module>.RealtimeEventSource.clock_worker          fam=F-ABSORB    chains=3 cls=C    land=L1 diff-instr
+
+[8] all 77 rows: file | name | fam | inTry | cls | landing ===
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.on_pre_before_trading_start F-ABSORB    False C    L1 diff-instr
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker._process_order            F-ABSORB    False C    L3 same-target/len-chg
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker._process_tick_order       F-ABSORB    False C    L1 diff-instr
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker._process_cancel_order     F-ABSORB    False C    L3 same-target/len-chg
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker._sync_worker              F-POLARITY  False B    L? idx 47 POP_JUMP_FORWARD_IF_TRUE -> POP_JUMP_FORWARD_IF_FALSE
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker._trade_status_handle      F-ABSORB    False C    L5 opname+other-chg
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.etf_basket_order          F-PAD       False C    L2 same-instr/len-eq
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.etf_purchase_redemption   F-ABSORB    False C    L3 same-target/len-chg
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.rzrq_credit_order         F-ABSORB    False C    L1 diff-instr
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.ipo_stocks_order          F-ABSORB    False C    L3 same-target/len-chg
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.get_ipo_stocks            F-ABSORB    False C    L1 diff-instr
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.on_order_response_list_handle F-ABSORB    False C    L1 diff-instr
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker.on_trade_response_list_handle F-ABSORB    False C    L1 diff-instr
+  fly/data/quote.pyc                                       <module>.Quote.build_current_period_df             F-ABSORB    False C    L3 same-target/len-chg
+  fly/data/quote.pyc                                       <module>.Quote.load_bars_from_hundsun              F-ABSORB    False C    L5 opname+other-chg
+  fly/data/quote.pyc                                       <module>.Quote.load_get_price                      F-OTHER     False C    L5 opname+other-chg
+  fly/data/quote.pyc                                       <module>.Quote.change_his_to_forward               F-ABSORB    False C    L3 same-target/len-chg
+  fly/data/quote.pyc                                       <module>.Quote.change_his_to_backward              F-ABSORB    False C    L1 diff-instr
+  fly/data/quote.pyc                                       <module>.Quote.get_price                           F-ABSORB    False C    L5 opname+other-chg
+  fly/data/quote.pyc                                       <module>.Quote.check_frequency                     F-PAD       False C    L2 same-instr/len-eq
+  fly/data/quote.pyc                                       <module>.Quote.get_real_from_zeromq                F-ABSORB    False B    L3 same-target/len-chg
+  fly/data/quote.pyc                                       <module>.Quote.run_individual_transform            F-ABSORB    False C    L1 diff-instr
+  fly/data/quote.pyc                                       <module>.Quote.run_tick_socket                     F-PAD       True  C    L2 same-instr/len-eq
+  fly/data/quote.pyc                                       <module>.Quote.get_individual_data                 F-ABSORB    False B    L3 same-target/len-chg
+  IQCommon/util/trade_info_utils.pyc                       <module>.trade_operation                           F-ABSORB    True  B    L1 diff-instr
+  IQCommon/util/trade_info_utils.pyc                       <module>.kill_trade_process                        F-PAD       False B    L2 same-instr/len-eq
+  IQCommon/util/trade_info_utils.pyc                       <module>.get_trade_status                          F-ABSORB    False C    L1 diff-instr
+  IQCommon/util/trade_info_utils.pyc                       <module>.query_trade_strategy_info                 F-PAD       False C    L2 same-instr/len-eq
+  IQCommon/util/trade_info_utils.pyc                       <module>.query_strategy_id                         F-PAD       False C    L2 same-instr/len-eq
+  IQCommon/api/klinedata.pyc                               <module>.get_kline_by_count_new                    F-ABSORB    False C    L1 diff-instr
+  IQCommon/api/klinedata.pyc                               <module>.get_multiminute_his_data                  F-ABSORB    False B    L3 same-target/len-chg
+  IQCommon/api/klinedata.pyc                               <module>.kline_datetime_list                       F-ABSORB    False B    L1 diff-instr
+  IQCommon/strategy/wizard_quant_api.pyc                   <module>.filter_desicion                           F-ABSORB    False C    L3 same-target/len-chg
+  IQCommon/strategy/wizard_quant_api.pyc                   <module>.get_DMI.calculate_di.<genexpr>            F-ABSORB    False C    L3 same-target/len-chg
+  IQCommon/strategy/wizard_quant_api.pyc                   <module>.get_DMI.calculate_di.<genexpr>            F-ABSORB    False C    L3 same-target/len-chg
+  IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc   <module>.base_order                                F-ABSORB    False C    L1 diff-instr
+  IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc   <module>.future_order                              F-ABSORB    False C    L1 diff-instr
+  IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc   <module>.option_order                              F-ABSORB    False C    L3 same-target/len-chg
+  IQCommon/strategy/jq_trans_module.pyc                    <module>.func_attribute_history_convert_code.replace_args F-ABSORB    False C    L3 same-target/len-chg
+  IQCommon/strategy/jq_trans_module.pyc                    <module>.func_get_bars_convert_code.replace_args   F-ABSORB    False C    L3 same-target/len-chg
+  IQData/plugins/plugin_system_realquote/real_quote.pyc    <module>.RealQuoteData.get_real_minute_kline       F-ABSORB    True  C    L3 same-target/len-chg
+  IQData/plugins/plugin_system_realquote/real_quote.pyc    <module>.RealQuoteData.get_tick_direction          F-ABSORB    False B    L1 diff-instr
+  IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc <module>.PluginRiskCalculation._on_publish_after_trading_end F-ABSORB    False C    L3 same-target/len-chg
+  IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc <module>.PluginRiskCalculation._save_testds_to_csv F-ABSORB    False B    L5 opname+other-chg
+  fly/common/future_contract_info.pyc                      <module>.FutureInfoCache.check_user                F-ABSORB    False C    L1 diff-instr
+  fly/common/future_contract_info.pyc                      <module>.FutureInfoCache.info_conbine              F-ABSORB    False C    L1 diff-instr
+  fly/simtradding/ptradeAccount.pyc                        <module>.PtradeAccount.order_response_order_update F-ABSORB    False C    L5 opname+other-chg
+  fly/simtradding/ptradeAccount.pyc                        <module>.PtradeAccount.trade_response_order_update F-ABSORB    False C    L5 opname+other-chg
+  IQCommon/data/finance.pyc                                <module>.get_fields                                F-ABSORB    True  C    L1 diff-instr
+  IQCommon/logger/handlers.pyc                             <module>.TWHThreadController._target               F-ABSORB    False B    L3 same-target/len-chg
+  IQCommon/util/cgroup_utils.pyc                           <module>.set_cgroup_config                         F-ABSORB    True  C    L3 same-target/len-chg
+  IQCommon/util/email_utils.pyc                            <module>.send_email                                F-ABSORB    True  C    L1 diff-instr
+  IQData/api/api_base.pyc                                  <module>.get_history_df                            F-ABSORB    False B    L1 diff-instr
+  IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc <module>.change_his_to_forward                     F-ABSORB    False C    L3 same-target/len-chg
+  IQData/utils/calexrights_func.pyc                        <module>.change_his_to_forward                     F-ABSORB    False C    L3 same-target/len-chg
+  IQEngine/core/bar.pyc                                    <module>.BarData._history_bars                     F-ABSORB    False C    L1 diff-instr
+  IQEngine/core/executor.pyc                               <module>.Executor.check_before_trading             F-ABSORB    False C    L1 diff-instr
+  IQEngine/core/strategy/strategy_universe.pyc             <module>.StrategyUniverse._on_clear_de_listed      F-ABSORB    False C    L1 diff-instr
+  IQEngine/data/trading_dates_mixin.pyc                    <module>.TradingDatesMixin.trading_dates_reload    F-ABSORB    False C    L1 diff-instr
+  IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc <module>.get_price                                 F-ABSORB    False C    L1 diff-instr
+  IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc   <module>.Strategy.tick_worker_thread               F-ABSORB    True  C    L1 diff-instr
+  IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc <module>.StockPosition.make_trade                  F-ABSORB    False C    L3 same-target/len-chg
+  IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc <module>.RealtimeEventSource.clock_worker          F-ABSORB    True  C    L1 diff-instr
+  IQEngine/plugins/plugin_system_matcher/matcher.pyc       <module>.DefaultMatcher.match                      F-ABSORB    False C    L1 diff-instr
+  IQEngine/plugins/plugin_system_trade/function.pyc        <module>.reconnect                                 F-PAD       False C    L2 same-instr/len-eq
+  IQEngine/utils/profiler_func.pyc                         <module>.ProfilerTool.show_func                    F-ABSORB    False C    L5 opname+other-chg
+  fly/common/flytools.pyc                                  <module>.ProcessWrite.modify_batcktes_info         F-PAD       True  C    L2 same-instr/len-eq
+  fly/data/quotation.pyc                                   <module>.change_his_to_forward                     F-ABSORB    False C    L3 same-target/len-chg
+  fly/data/quote_handler.pyc                               <module>.get_kline_local                           F-ABSORB    False C    L1 diff-instr
+  fly/dumpload/load_daily.pyc                              <module>                                           F-ABSORB    False C    L1 diff-instr
+  fly/logger.pyc                                           <module>.SafeFileHandler.check_baseFilename        F-ABSORB    False C    L1 diff-instr

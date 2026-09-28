@@ -1,0 +1,545 @@
+=== d74_try3: et entry diff + landing windows + chain membership, 11 units ===
+
+====================================================================================================
+UNIT fly/data/quote.pyc :: <module>.Quote.run_tick_socket   family=F-PAD
+  reason: idx 11 POP_JUMP_FORWARD_IF_FALSE target 158 -> 364 lands on SAME instr, len equal
+  firstdiv73 div=idx14 ('POP_JUMP_FORWARD_IF_FALSE', 528) != ('EXTENDED_ARG', 2) off=66 origTryDepth=1   fam74 firstidx=11 lineA=2156 lineB=1431
+  lenA/lenB (instr count) = 308/308
+  --- et ORIG (13) ---
+     (24, 68, 1280, 0)
+     (70, 136, 140, 0)
+     (136, 140, 1280, 0)
+     (140, 160, 522, 1)
+     (160, 500, 512, 1)
+     (500, 508, 1280, 0)
+     (512, 522, 522, 1)
+     (522, 680, 1280, 0)
+     (684, 1276, 1280, 0)
+     (1280, 1512, 1858, 1)
+     (1516, 1534, 1858, 1)
+     (1534, 1838, 1848, 1)
+     (1848, 1858, 1858, 1)
+  --- et PROD (12) ---
+     (24, 70, 1282, 0)
+     (72, 138, 140, 0)
+     (138, 140, 1282, 0)
+     (140, 160, 522, 1)
+     (160, 500, 512, 1)
+     (500, 508, 1282, 0)
+     (512, 522, 522, 1)
+     (522, 1274, 1282, 0)
+     (1282, 1514, 1860, 1)
+     (1518, 1536, 1860, 1)
+     (1536, 1840, 1850, 1)
+     (1850, 1860, 1860, 1)
+  --- et entry-level diff (by index) ---
+     #0  CHANGED  ORIG=(24, 68, 1280, 0)  PROD=(24, 70, 1282, 0)
+     #1  CHANGED  ORIG=(70, 136, 140, 0)  PROD=(72, 138, 140, 0)
+     #2  CHANGED  ORIG=(136, 140, 1280, 0)  PROD=(138, 140, 1282, 0)
+     #3  same     ORIG=(140, 160, 522, 1)  PROD=(140, 160, 522, 1)
+     #4  same     ORIG=(160, 500, 512, 1)  PROD=(160, 500, 512, 1)
+     #5  CHANGED  ORIG=(500, 508, 1280, 0)  PROD=(500, 508, 1282, 0)
+     #6  same     ORIG=(512, 522, 522, 1)  PROD=(512, 522, 522, 1)
+     #7  CHANGED  ORIG=(522, 680, 1280, 0)  PROD=(522, 1274, 1282, 0)
+     #8  CHANGED  ORIG=(684, 1276, 1280, 0)  PROD=(1282, 1514, 1860, 1)
+     #9  CHANGED  ORIG=(1280, 1512, 1858, 1)  PROD=(1518, 1536, 1860, 1)
+     #10 CHANGED  ORIG=(1516, 1534, 1858, 1)  PROD=(1536, 1840, 1850, 1)
+     #11 CHANGED  ORIG=(1534, 1838, 1848, 1)  PROD=(1850, 1860, 1860, 1)
+     #12 GONE     ORIG=(1848, 1858, 1858, 1)  PROD=None
+  --- divergence (firstdiv73 rule) ---
+      ORIG o66    POP_JUMP_FORWARD_IF_FALSE      to 528         et=[(24, 68, 1280, 0)] role=PROTECTED(d0)
+      PROD o66    EXTENDED_ARG                                  et=[(24, 70, 1282, 0)] role=PROTECTED(d0)
+      chain-membership of div offset 66: NONE
+      chains(all=1): [{"n": 3, "op": "and", "same_target": true, "nested_ret": false, "site": "region_analyzer.py:26653"}]
+      orphans: total=4 UNCOVERED(parent/child gap)=0
+      [ORIG landing] target=528 role=PROTECTED(d0)
+   >> o528   LOAD_FAST                        self
+      o530   LOAD_ATTR                        log
+      o540   LOAD_ATTR                        quote
+      o550   LOAD_METHOD                      warning
+      o572   LOAD_CONST                       'tick数据返回为空'
+      o574   PRECALL                          
+      [PROD landing] target=2 role=OUTSIDE
+   >> o2     LOAD_FAST                        dataDict
+      o4     LOAD_CONST                       'imagedata'
+      o6     BINARY_SUBSCR                    
+      o16    STORE_FAST                       imagedata
+      o18    LOAD_CONST                       None
+      o20    STORE_FAST                       panelt
+
+====================================================================================================
+UNIT IQCommon/util/trade_info_utils.pyc :: <module>.trade_operation   family=F-ABSORB
+  reason: idx 93 POP_JUMP_FORWARD_IF_FALSE target 324 -> 172 lands on DIFFERENT instr (LOAD_FAST vs FOR_ITER)
+  firstdiv73 div=idx108 ('POP_JUMP_FORWARD_IF_FALSE', 1000) != ('POP_JUMP_FORWARD_IF_FALSE', 1042) off=676 origTryDepth=1   fam74 firstidx=93 lineA=288 lineB=133
+  lenA/lenB (instr count) = 303/303
+  --- et ORIG (18) ---
+     (350, 444, 1526, 0)
+     (444, 1210, 1442, 1)
+     (1210, 1286, 1310, 2)
+     (1286, 1310, 1442, 1)
+     (1310, 1318, 1318, 4)
+     (1318, 1324, 1442, 1)
+     (1324, 1326, 1318, 4)
+     (1326, 1334, 1442, 1)
+     (1334, 1356, 1526, 0)
+     (1360, 1416, 1442, 1)
+     (1416, 1438, 1526, 0)
+     (1442, 1450, 1450, 3)
+     (1450, 1456, 1526, 0)
+     (1456, 1458, 1450, 3)
+     (1458, 1464, 1526, 0)
+     (1468, 1522, 1526, 0)
+     (1526, 1622, 1630, 1)
+     (1628, 1630, 1630, 1)
+  --- et PROD (18) ---
+     (350, 444, 1526, 0)
+     (444, 1210, 1442, 1)
+     (1210, 1286, 1310, 2)
+     (1286, 1310, 1442, 1)
+     (1310, 1318, 1318, 4)
+     (1318, 1324, 1442, 1)
+     (1324, 1326, 1318, 4)
+     (1326, 1334, 1442, 1)
+     (1334, 1356, 1526, 0)
+     (1360, 1416, 1442, 1)
+     (1416, 1438, 1526, 0)
+     (1442, 1450, 1450, 3)
+     (1450, 1456, 1526, 0)
+     (1456, 1458, 1450, 3)
+     (1458, 1464, 1526, 0)
+     (1468, 1522, 1526, 0)
+     (1526, 1622, 1630, 1)
+     (1628, 1630, 1630, 1)
+  --- et entry-level diff (by index) ---
+     #0  same     ORIG=(350, 444, 1526, 0)  PROD=(350, 444, 1526, 0)
+     #1  same     ORIG=(444, 1210, 1442, 1)  PROD=(444, 1210, 1442, 1)
+     #2  same     ORIG=(1210, 1286, 1310, 2)  PROD=(1210, 1286, 1310, 2)
+     #3  same     ORIG=(1286, 1310, 1442, 1)  PROD=(1286, 1310, 1442, 1)
+     #4  same     ORIG=(1310, 1318, 1318, 4)  PROD=(1310, 1318, 1318, 4)
+     #5  same     ORIG=(1318, 1324, 1442, 1)  PROD=(1318, 1324, 1442, 1)
+     #6  same     ORIG=(1324, 1326, 1318, 4)  PROD=(1324, 1326, 1318, 4)
+     #7  same     ORIG=(1326, 1334, 1442, 1)  PROD=(1326, 1334, 1442, 1)
+     #8  same     ORIG=(1334, 1356, 1526, 0)  PROD=(1334, 1356, 1526, 0)
+     #9  same     ORIG=(1360, 1416, 1442, 1)  PROD=(1360, 1416, 1442, 1)
+     #10 same     ORIG=(1416, 1438, 1526, 0)  PROD=(1416, 1438, 1526, 0)
+     #11 same     ORIG=(1442, 1450, 1450, 3)  PROD=(1442, 1450, 1450, 3)
+     #12 same     ORIG=(1450, 1456, 1526, 0)  PROD=(1450, 1456, 1526, 0)
+     #13 same     ORIG=(1456, 1458, 1450, 3)  PROD=(1456, 1458, 1450, 3)
+     #14 same     ORIG=(1458, 1464, 1526, 0)  PROD=(1458, 1464, 1526, 0)
+     #15 same     ORIG=(1468, 1522, 1526, 0)  PROD=(1468, 1522, 1526, 0)
+     #16 same     ORIG=(1526, 1622, 1630, 1)  PROD=(1526, 1622, 1630, 1)
+     #17 same     ORIG=(1628, 1630, 1630, 1)  PROD=(1628, 1630, 1630, 1)
+  --- divergence (firstdiv73 rule) ---
+      ORIG o676   POP_JUMP_FORWARD_IF_FALSE      to 1000        et=[(444, 1210, 1442, 1)] role=PROTECTED(d1)
+      PROD o676   POP_JUMP_FORWARD_IF_FALSE      to 1042        et=[(444, 1210, 1442, 1)] role=PROTECTED(d1)
+      chain-membership of div offset 676: NONE
+      chains(all=0): []
+      orphans: total=16 UNCOVERED(parent/child gap)=1
+        {"parent": "WithRegion@414", "child": "WithRegion@1178", "centry": 1178, "in_blocks": false, "in_then": false, "in_else": false, "covered": false}
+      [ORIG landing] target=1000 role=PROTECTED(d1)
+   >> o1000  LOAD_FAST                        write_info
+      o1002  LOAD_METHOD                      append
+      o1024  LOAD_FAST                        items
+      o1026  PRECALL                          
+      o1030  CALL                             
+      o1040  POP_TOP                          
+      [PROD landing] target=1042 role=PROTECTED(d1)
+   >> o1042  JUMP_BACKWARD                    to 654
+      o1044  LOAD_GLOBAL                      NULL + len
+      o1056  LOAD_FAST                        write_info
+      o1058  PRECALL                          
+      o1062  CALL                             
+      o1072  LOAD_CONST                       0
+
+====================================================================================================
+UNIT IQData/plugins/plugin_system_realquote/real_quote.pyc :: <module>.RealQuoteData.get_real_minute_kline   family=F-ABSORB
+  reason: target instr same but len 250/253
+  firstdiv73 div=idx18 ('POP_JUMP_FORWARD_IF_FALSE', 372) != ('EXTENDED_ARG', 1) off=108 origTryDepth=1   fam74 firstidx=14 lineA=584 lineB=370
+  lenA/lenB (instr count) = 250/253
+  --- et ORIG (7) ---
+     (88, 370, 1310, 0)
+     (372, 580, 1310, 0)
+     (582, 1308, 1310, 0)
+     (1310, 1330, 1428, 1)
+     (1330, 1406, 1418, 1)
+     (1406, 1408, 1428, 1)
+     (1418, 1428, 1428, 1)
+  --- et PROD (8) ---
+     (88, 374, 1324, 0)
+     (376, 1102, 1324, 0)
+     (1104, 1116, 1324, 0)
+     (1118, 1316, 1324, 0)
+     (1324, 1344, 1442, 1)
+     (1344, 1420, 1432, 1)
+     (1420, 1422, 1442, 1)
+     (1432, 1442, 1442, 1)
+  --- et entry-level diff (by index) ---
+     #0  CHANGED  ORIG=(88, 370, 1310, 0)  PROD=(88, 374, 1324, 0)
+     #1  CHANGED  ORIG=(372, 580, 1310, 0)  PROD=(376, 1102, 1324, 0)
+     #2  CHANGED  ORIG=(582, 1308, 1310, 0)  PROD=(1104, 1116, 1324, 0)
+     #3  CHANGED  ORIG=(1310, 1330, 1428, 1)  PROD=(1118, 1316, 1324, 0)
+     #4  CHANGED  ORIG=(1330, 1406, 1418, 1)  PROD=(1324, 1344, 1442, 1)
+     #5  CHANGED  ORIG=(1406, 1408, 1428, 1)  PROD=(1344, 1420, 1432, 1)
+     #6  CHANGED  ORIG=(1418, 1428, 1428, 1)  PROD=(1420, 1422, 1442, 1)
+     #7  NEW      ORIG=None  PROD=(1432, 1442, 1442, 1)
+  --- divergence (firstdiv73 rule) ---
+      ORIG o108   POP_JUMP_FORWARD_IF_FALSE      to 372         et=[(88, 370, 1310, 0)] role=PROTECTED(d0)
+      PROD o108   EXTENDED_ARG                                  et=[(88, 374, 1324, 0)] role=PROTECTED(d0)
+      chain-membership of div offset 108: NONE
+      chains(all=0): []
+      orphans: total=10 UNCOVERED(parent/child gap)=0
+      [ORIG landing] target=372 role=PROTECTED(d0)
+   >> o372   LOAD_GLOBAL                      datetime
+      o384   LOAD_ATTR                        datetime
+      o394   LOAD_METHOD                      now
+      o416   PRECALL                          
+      o420   CALL                             
+      o430   LOAD_METHOD                      strftime
+      [PROD landing] target=1 role=OUTSIDE
+   (no instruction at 1)
+
+====================================================================================================
+UNIT IQCommon/data/finance.pyc :: <module>.get_fields   family=F-ABSORB
+  reason: idx 18 JUMP_FORWARD target 90 -> 254 lands on DIFFERENT instr (LOAD_FAST vs LOAD_FAST)
+  firstdiv73 div=idx4 ('POP_JUMP_FORWARD_IF_NOT_NONE', 740) != ('POP_JUMP_FORWARD_IF_NOT_NONE', 742) off=8 origTryDepth=1   fam74 firstidx=18 lineA=655 lineB=432
+  lenA/lenB (instr count) = 157/157
+  --- et ORIG (8) ---
+     (4, 160, 744, 0)
+     (162, 670, 744, 0)
+     (672, 738, 744, 0)
+     (740, 742, 744, 0)
+     (744, 764, 858, 1)
+     (764, 836, 848, 1)
+     (836, 838, 858, 1)
+     (848, 858, 858, 1)
+  --- et PROD (8) ---
+     (4, 162, 746, 0)
+     (164, 672, 746, 0)
+     (674, 740, 746, 0)
+     (742, 744, 746, 0)
+     (746, 766, 860, 1)
+     (766, 838, 850, 1)
+     (838, 840, 860, 1)
+     (850, 860, 860, 1)
+  --- et entry-level diff (by index) ---
+     #0  CHANGED  ORIG=(4, 160, 744, 0)  PROD=(4, 162, 746, 0)
+     #1  shifted  ORIG=(162, 670, 744, 0)  PROD=(164, 672, 746, 0)
+     #2  shifted  ORIG=(672, 738, 744, 0)  PROD=(674, 740, 746, 0)
+     #3  shifted  ORIG=(740, 742, 744, 0)  PROD=(742, 744, 746, 0)
+     #4  shifted  ORIG=(744, 764, 858, 1)  PROD=(746, 766, 860, 1)
+     #5  shifted  ORIG=(764, 836, 848, 1)  PROD=(766, 838, 850, 1)
+     #6  shifted  ORIG=(836, 838, 858, 1)  PROD=(838, 840, 860, 1)
+     #7  shifted  ORIG=(848, 858, 858, 1)  PROD=(850, 860, 860, 1)
+  --- divergence (firstdiv73 rule) ---
+      ORIG o8     POP_JUMP_FORWARD_IF_NOT_NONE   to 740         et=[(4, 160, 744, 0)] role=PROTECTED(d0)
+      PROD o8     POP_JUMP_FORWARD_IF_NOT_NONE   to 742         et=[(4, 162, 746, 0)] role=PROTECTED(d0)
+      chain-membership of div offset 8: NONE
+      chains(all=1): [{"n": 2, "op": "and", "same_target": true, "nested_ret": false, "site": "region_analyzer.py:26653"}]
+      orphans: total=8 UNCOVERED(parent/child gap)=0
+      [ORIG landing] target=740 role=PROTECTED(d0)
+   >> o740   LOAD_FAST                        fields
+      o742   RETURN_VALUE                     
+      o744   PUSH_EXC_INFO                    
+      o746   LOAD_GLOBAL                      BaseException
+      o758   CHECK_EXC_MATCH                  
+      o760   POP_JUMP_FORWARD_IF_FALSE        to 856
+      [PROD landing] target=742 role=PROTECTED(d0)
+   >> o742   LOAD_FAST                        fields
+      o744   RETURN_VALUE                     
+      o746   PUSH_EXC_INFO                    
+      o748   LOAD_GLOBAL                      BaseException
+      o760   CHECK_EXC_MATCH                  
+      o762   POP_JUMP_FORWARD_IF_FALSE        to 858
+
+====================================================================================================
+UNIT IQCommon/util/cgroup_utils.pyc :: <module>.set_cgroup_config   family=F-ABSORB
+  reason: target instr same but len 540/541
+  firstdiv73 div=idx508 ('POP_JUMP_FORWARD_IF_FALSE', 4414) != ('POP_JUMP_FORWARD_IF_FALSE', 4416) off=3618 origTryDepth=1   fam74 firstidx=417 lineA=75 lineB=34
+  lenA/lenB (instr count) = 540/541
+  --- et ORIG (4) ---
+     (4, 116, 4450, 0)
+     (120, 4446, 4450, 0)
+     (4450, 4572, 4580, 1)
+     (4578, 4580, 4580, 1)
+  --- et PROD (5) ---
+     (4, 116, 4452, 0)
+     (120, 4412, 4452, 0)
+     (4416, 4448, 4452, 0)
+     (4452, 4574, 4582, 1)
+     (4580, 4582, 4582, 1)
+  --- et entry-level diff (by index) ---
+     #0  CHANGED  ORIG=(4, 116, 4450, 0)  PROD=(4, 116, 4452, 0)
+     #1  CHANGED  ORIG=(120, 4446, 4450, 0)  PROD=(120, 4412, 4452, 0)
+     #2  CHANGED  ORIG=(4450, 4572, 4580, 1)  PROD=(4416, 4448, 4452, 0)
+     #3  CHANGED  ORIG=(4578, 4580, 4580, 1)  PROD=(4452, 4574, 4582, 1)
+     #4  NEW      ORIG=None  PROD=(4580, 4582, 4582, 1)
+  --- divergence (firstdiv73 rule) ---
+      ORIG o3618  POP_JUMP_FORWARD_IF_FALSE      to 4414        et=[(120, 4446, 4450, 0)] role=PROTECTED(d0)
+      PROD o3618  POP_JUMP_FORWARD_IF_FALSE      to 4416        et=[(120, 4412, 4452, 0)] role=PROTECTED(d0)
+      chain-membership of div offset 3618: NONE
+      chains(all=0): []
+      orphans: total=10 UNCOVERED(parent/child gap)=0
+      [ORIG landing] target=4414 role=PROTECTED(d0)
+   >> o4414  LOAD_GLOBAL                      NULL + delete_cgroup_config
+      o4426  LOAD_FAST                        user_id
+      o4428  LOAD_CONST                       'notebook_memory'
+      o4430  PRECALL                          
+      o4434  CALL                             
+      o4444  POP_TOP                          
+      [PROD landing] target=4416 role=PROTECTED(d0)
+   >> o4416  LOAD_GLOBAL                      NULL + delete_cgroup_config
+      o4428  LOAD_FAST                        user_id
+      o4430  LOAD_CONST                       'notebook_memory'
+      o4432  PRECALL                          
+      o4436  CALL                             
+      o4446  POP_TOP                          
+
+====================================================================================================
+UNIT IQCommon/util/email_utils.pyc :: <module>.send_email   family=F-ABSORB
+  reason: idx 22 POP_JUMP_FORWARD_IF_FALSE target 206 -> 332 lands on DIFFERENT instr (LOAD_GLOBAL vs LOAD_CONST)
+  firstdiv73 div=idx28 ('POP_JUMP_FORWARD_IF_FALSE', 674) != ('POP_JUMP_FORWARD_IF_FALSE', 1120) off=130 origTryDepth=1   fam74 firstidx=22 lineA=57 lineB=38
+  lenA/lenB (instr count) = 193/195
+  --- et ORIG (5) ---
+     (14, 166, 1120, 0)
+     (168, 354, 1120, 0)
+     (356, 1118, 1120, 0)
+     (1120, 1228, 1234, 1)
+     (1232, 1234, 1234, 1)
+  --- et PROD (5) ---
+     (14, 166, 1124, 0)
+     (168, 354, 1124, 0)
+     (356, 1118, 1124, 0)
+     (1124, 1232, 1238, 1)
+     (1236, 1238, 1238, 1)
+  --- et entry-level diff (by index) ---
+     #0  CHANGED  ORIG=(14, 166, 1120, 0)  PROD=(14, 166, 1124, 0)
+     #1  CHANGED  ORIG=(168, 354, 1120, 0)  PROD=(168, 354, 1124, 0)
+     #2  CHANGED  ORIG=(356, 1118, 1120, 0)  PROD=(356, 1118, 1124, 0)
+     #3  shifted  ORIG=(1120, 1228, 1234, 1)  PROD=(1124, 1232, 1238, 1)
+     #4  shifted  ORIG=(1232, 1234, 1234, 1)  PROD=(1236, 1238, 1238, 1)
+  --- divergence (firstdiv73 rule) ---
+      ORIG o130   POP_JUMP_FORWARD_IF_FALSE      to 674         et=[(14, 166, 1120, 0)] role=PROTECTED(d0)
+      PROD o130   POP_JUMP_FORWARD_IF_FALSE      to 1120        et=[(14, 166, 1124, 0)] role=PROTECTED(d0)
+      chain-membership of div offset 130: NONE
+      chains(all=0): []
+      orphans: total=2 UNCOVERED(parent/child gap)=0
+      [ORIG landing] target=674 role=PROTECTED(d0)
+   >> o674   LOAD_GLOBAL                      NULL + format_addr
+      o686   LOAD_CONST                       '<%s>'
+      o688   LOAD_FAST                        send_email_address
+      o690   BINARY_OP                        %
+      o694   PRECALL                          
+      o698   CALL                             
+      [PROD landing] target=1120 role=OUTSIDE
+   >> o1120  LOAD_CONST                       None
+      o1122  RETURN_VALUE                     
+      o1124  PUSH_EXC_INFO                    
+      o1126  LOAD_GLOBAL                      BaseException
+      o1138  CHECK_EXC_MATCH                  
+      o1140  POP_JUMP_FORWARD_IF_FALSE        to 1236
+
+====================================================================================================
+UNIT IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc :: <module>.Strategy.tick_worker_thread   family=F-ABSORB
+  reason: idx 61 POP_JUMP_FORWARD_IF_TRUE target 156 -> 12 lands on DIFFERENT instr (LOAD_GLOBAL vs LOAD_FAST)
+  firstdiv73 div=idx73 ('POP_JUMP_FORWARD_IF_TRUE', 568) != ('POP_JUMP_FORWARD_IF_TRUE', 820) off=522 origTryDepth=1   fam74 firstidx=61 lineA=311 lineB=223
+  lenA/lenB (instr count) = 267/267
+  --- et ORIG (3) ---
+     (48, 1290, 1290, 0)
+     (1290, 1412, 1420, 1)
+     (1418, 1420, 1420, 1)
+  --- et PROD (3) ---
+     (48, 1290, 1290, 0)
+     (1290, 1412, 1420, 1)
+     (1418, 1420, 1420, 1)
+  --- et entry-level diff (by index) ---
+     #0  same     ORIG=(48, 1290, 1290, 0)  PROD=(48, 1290, 1290, 0)
+     #1  same     ORIG=(1290, 1412, 1420, 1)  PROD=(1290, 1412, 1420, 1)
+     #2  same     ORIG=(1418, 1420, 1420, 1)  PROD=(1418, 1420, 1420, 1)
+  --- divergence (firstdiv73 rule) ---
+      ORIG o522   POP_JUMP_FORWARD_IF_TRUE       to 568         et=[(48, 1290, 1290, 0)] role=PROTECTED(d0)
+      PROD o522   POP_JUMP_FORWARD_IF_TRUE       to 820         et=[(48, 1290, 1290, 0)] role=PROTECTED(d0)
+      chain-membership of div offset 522: [[0, "or", true, false, "region_analyzer.py:26653", 512]]
+      chains(all=2): [{"n": 2, "op": "or", "same_target": true, "nested_ret": false, "site": "region_analyzer.py:26653"}, {"n": 2, "op": "or", "same_target": true, "nested_ret": false, "site": "region_analyzer.py:26653"}]
+      orphans: total=17 UNCOVERED(parent/child gap)=0
+      [ORIG landing] target=568 role=PROTECTED(d0)
+   >> o568   LOAD_GLOBAL                      NULL + time
+      o580   LOAD_ATTR                        sleep
+      o590   LOAD_CONST                       60
+      o592   PRECALL                          
+      o596   CALL                             
+      o606   POP_TOP                          
+      [PROD landing] target=820 role=PROTECTED(d0)
+   >> o820   JUMP_FORWARD                     to 1286
+      o822   LOAD_FAST                        self
+      o824   LOAD_METHOD                      is_stock_tradetime_now
+      o846   LOAD_FAST                        dt_strf
+      o848   PRECALL                          
+      o852   CALL                             
+
+====================================================================================================
+UNIT IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc :: <module>.RealtimeEventSource.clock_worker   family=F-ABSORB
+  reason: idx 664 POP_JUMP_FORWARD_IF_FALSE target 2494 -> 2476 lands on DIFFERENT instr (LOAD_CONST vs LOAD_FAST)
+  firstdiv73 div=idx717 ('LOAD_CONST', <code object check_handle_date at 0x000002870D927570, file "./fly_docker_py311/IQEngine/plugins/plugin_system_event_source/realtime_event_source.py", line 380>) != ('LOAD_CONST', <code object check_handle_date at 0x000002870D926BB0, file "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py", line 204>) off=5270 origTryDepth=1   fam74 firstidx=664 lineA=189 lineB=100
+  lenA/lenB (instr count) = 1274/1281
+  --- et ORIG (24) ---
+     (6, 6580, 9218, 0)
+     (6582, 6652, 6654, 0)
+     (6652, 6654, 9218, 0)
+     (6654, 6678, 6684, 1)
+     (6678, 6682, 9218, 0)
+     (6682, 6684, 6684, 1)
+     (6684, 7488, 9218, 0)
+     (7492, 7710, 9218, 0)
+     (7712, 7814, 7818, 1)
+     (7814, 7818, 9218, 0)
+     (7818, 7960, 7966, 2)
+     (7960, 7964, 9218, 0)
+     (7964, 7966, 7966, 2)
+     (7966, 8166, 9218, 0)
+     (8170, 8184, 9218, 0)
+     (8186, 8256, 8258, 0)
+     (8256, 8258, 9218, 0)
+     (8258, 8282, 8288, 1)
+     (8282, 8286, 9218, 0)
+     (8286, 8288, 8288, 1)
+     (8288, 9210, 9218, 0)
+     (9218, 9238, 9324, 1)
+     (9238, 9302, 9314, 1)
+     (9314, 9324, 9324, 1)
+  --- et PROD (24) ---
+     (6, 6582, 9244, 0)
+     (6584, 6654, 6658, 0)
+     (6654, 6658, 9244, 0)
+     (6658, 6682, 6690, 1)
+     (6682, 6688, 9244, 0)
+     (6688, 6690, 6690, 1)
+     (6690, 7394, 9244, 0)
+     (7398, 7530, 9244, 0)
+     (7532, 7634, 7638, 1)
+     (7634, 7638, 9244, 0)
+     (7638, 7780, 7786, 2)
+     (7780, 7784, 9244, 0)
+     (7784, 7786, 7786, 2)
+     (7786, 8626, 9244, 0)
+     (8630, 8644, 9244, 0)
+     (8646, 8716, 8718, 0)
+     (8716, 8718, 9244, 0)
+     (8718, 8742, 8748, 1)
+     (8742, 8746, 9244, 0)
+     (8746, 8748, 8748, 1)
+     (8748, 9240, 9244, 0)
+     (9244, 9264, 9350, 1)
+     (9264, 9328, 9340, 1)
+     (9340, 9350, 9350, 1)
+  --- et entry-level diff (by index) ---
+     #0  CHANGED  ORIG=(6, 6580, 9218, 0)  PROD=(6, 6582, 9244, 0)
+     #1  CHANGED  ORIG=(6582, 6652, 6654, 0)  PROD=(6584, 6654, 6658, 0)
+     #2  CHANGED  ORIG=(6652, 6654, 9218, 0)  PROD=(6654, 6658, 9244, 0)
+     #3  CHANGED  ORIG=(6654, 6678, 6684, 1)  PROD=(6658, 6682, 6690, 1)
+     #4  CHANGED  ORIG=(6678, 6682, 9218, 0)  PROD=(6682, 6688, 9244, 0)
+     #5  shifted  ORIG=(6682, 6684, 6684, 1)  PROD=(6688, 6690, 6690, 1)
+     #6  CHANGED  ORIG=(6684, 7488, 9218, 0)  PROD=(6690, 7394, 9244, 0)
+     #7  CHANGED  ORIG=(7492, 7710, 9218, 0)  PROD=(7398, 7530, 9244, 0)
+     #8  shifted  ORIG=(7712, 7814, 7818, 1)  PROD=(7532, 7634, 7638, 1)
+     #9  CHANGED  ORIG=(7814, 7818, 9218, 0)  PROD=(7634, 7638, 9244, 0)
+     #10 shifted  ORIG=(7818, 7960, 7966, 2)  PROD=(7638, 7780, 7786, 2)
+     #11 CHANGED  ORIG=(7960, 7964, 9218, 0)  PROD=(7780, 7784, 9244, 0)
+     #12 shifted  ORIG=(7964, 7966, 7966, 2)  PROD=(7784, 7786, 7786, 2)
+     #13 CHANGED  ORIG=(7966, 8166, 9218, 0)  PROD=(7786, 8626, 9244, 0)
+     #14 CHANGED  ORIG=(8170, 8184, 9218, 0)  PROD=(8630, 8644, 9244, 0)
+     #15 shifted  ORIG=(8186, 8256, 8258, 0)  PROD=(8646, 8716, 8718, 0)
+     #16 CHANGED  ORIG=(8256, 8258, 9218, 0)  PROD=(8716, 8718, 9244, 0)
+     #17 shifted  ORIG=(8258, 8282, 8288, 1)  PROD=(8718, 8742, 8748, 1)
+     #18 CHANGED  ORIG=(8282, 8286, 9218, 0)  PROD=(8742, 8746, 9244, 0)
+     #19 shifted  ORIG=(8286, 8288, 8288, 1)  PROD=(8746, 8748, 8748, 1)
+     #20 CHANGED  ORIG=(8288, 9210, 9218, 0)  PROD=(8748, 9240, 9244, 0)
+     #21 shifted  ORIG=(9218, 9238, 9324, 1)  PROD=(9244, 9264, 9350, 1)
+     #22 shifted  ORIG=(9238, 9302, 9314, 1)  PROD=(9264, 9328, 9340, 1)
+     #23 shifted  ORIG=(9314, 9324, 9324, 1)  PROD=(9340, 9350, 9350, 1)
+  --- divergence (firstdiv73 rule) ---
+      ORIG o5270  LOAD_CONST                     <code object check_handle_date at 0x0000017BBD239170, file "./fly_docker_py311/IQEngine/plugins/plugin_system_event_source/realtime_event_source.py", line 380> et=[(6, 6580, 9218, 0)] role=PROTECTED(d0)
+      PROD o5270  LOAD_CONST                     <code object check_handle_date at 0x0000017BBD2384B0, file "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py", line 204> et=[(6, 6582, 9244, 0)] role=PROTECTED(d0)
+      chain-membership of div offset 5270: NONE
+      chains(all=3): [{"n": 2, "op": "and", "same_target": true, "nested_ret": false, "site": "region_analyzer.py:26653"}, {"n": 2, "op": "and", "same_target": true, "nested_ret": false, "site": "region_analyzer.py:26653"}, {"n": 2, "op": "and", "same_target": true, "nested_ret": false, "site": "region_analyzer.py:26653"}]
+      orphans: total=58 UNCOVERED(parent/child gap)=0
+
+====================================================================================================
+UNIT fly/common/flytools.pyc :: <module>.ProcessWrite.modify_batcktes_info   family=F-PAD
+  reason: idx 162 POP_JUMP_FORWARD_IF_FALSE target 380 -> 404 lands on SAME instr, len equal
+  firstdiv73 div=idx151 ('LOAD_CONST', None) != ('NOP', None) off=700 origTryDepth=1   fam74 firstidx=162 lineA=1133 lineB=796
+  lenA/lenB (instr count) = 216/216
+  --- et ORIG (22) ---
+     (4, 120, 752, 0)
+     (120, 292, 726, 1)
+     (292, 330, 626, 2)
+     (330, 554, 580, 3)
+     (556, 580, 626, 2)
+     (580, 588, 588, 5)
+     (588, 594, 626, 2)
+     (594, 596, 588, 5)
+     (596, 602, 626, 2)
+     (602, 626, 726, 1)
+     (626, 634, 634, 4)
+     (634, 640, 726, 1)
+     (640, 642, 634, 4)
+     (642, 700, 726, 1)
+     (700, 722, 752, 0)
+     (726, 734, 734, 3)
+     (734, 740, 752, 0)
+     (740, 742, 734, 3)
+     (742, 748, 752, 0)
+     (752, 772, 964, 1)
+     (772, 906, 954, 1)
+     (954, 964, 964, 1)
+  --- et PROD (22) ---
+     (4, 120, 754, 0)
+     (120, 292, 728, 1)
+     (292, 330, 626, 2)
+     (330, 554, 580, 3)
+     (556, 580, 626, 2)
+     (580, 588, 588, 5)
+     (588, 594, 626, 2)
+     (594, 596, 588, 5)
+     (596, 602, 626, 2)
+     (602, 626, 728, 1)
+     (626, 634, 634, 4)
+     (634, 640, 728, 1)
+     (640, 642, 634, 4)
+     (642, 702, 728, 1)
+     (702, 724, 754, 0)
+     (728, 736, 736, 3)
+     (736, 742, 754, 0)
+     (742, 744, 736, 3)
+     (744, 750, 754, 0)
+     (754, 774, 966, 1)
+     (774, 908, 956, 1)
+     (956, 966, 966, 1)
+  --- et entry-level diff (by index) ---
+     #0  CHANGED  ORIG=(4, 120, 752, 0)  PROD=(4, 120, 754, 0)
+     #1  CHANGED  ORIG=(120, 292, 726, 1)  PROD=(120, 292, 728, 1)
+     #2  same     ORIG=(292, 330, 626, 2)  PROD=(292, 330, 626, 2)
+     #3  same     ORIG=(330, 554, 580, 3)  PROD=(330, 554, 580, 3)
+     #4  same     ORIG=(556, 580, 626, 2)  PROD=(556, 580, 626, 2)
+     #5  same     ORIG=(580, 588, 588, 5)  PROD=(580, 588, 588, 5)
+     #6  same     ORIG=(588, 594, 626, 2)  PROD=(588, 594, 626, 2)
+     #7  same     ORIG=(594, 596, 588, 5)  PROD=(594, 596, 588, 5)
+     #8  same     ORIG=(596, 602, 626, 2)  PROD=(596, 602, 626, 2)
+     #9  CHANGED  ORIG=(602, 626, 726, 1)  PROD=(602, 626, 728, 1)
+     #10 same     ORIG=(626, 634, 634, 4)  PROD=(626, 634, 634, 4)
+     #11 CHANGED  ORIG=(634, 640, 726, 1)  PROD=(634, 640, 728, 1)
+     #12 same     ORIG=(640, 642, 634, 4)  PROD=(640, 642, 634, 4)
+     #13 CHANGED  ORIG=(642, 700, 726, 1)  PROD=(642, 702, 728, 1)
+     #14 shifted  ORIG=(700, 722, 752, 0)  PROD=(702, 724, 754, 0)
+     #15 shifted  ORIG=(726, 734, 734, 3)  PROD=(728, 736, 736, 3)
+     #16 shifted  ORIG=(734, 740, 752, 0)  PROD=(736, 742, 754, 0)
+     #17 shifted  ORIG=(740, 742, 734, 3)  PROD=(742, 744, 736, 3)
+     #18 shifted  ORIG=(742, 748, 752, 0)  PROD=(744, 750, 754, 0)
+     #19 shifted  ORIG=(752, 772, 964, 1)  PROD=(754, 774, 966, 1)
+     #20 shifted  ORIG=(772, 906, 954, 1)  PROD=(774, 908, 956, 1)
+     #21 shifted  ORIG=(954, 964, 964, 1)  PROD=(956, 966, 966, 1)
+  --- divergence (firstdiv73 rule) ---
+      ORIG o700   LOAD_CONST                     None           et=[(700, 722, 752, 0)] role=PROTECTED(d0)
+      PROD o700   NOP                                           et=[(642, 702, 728, 1)] role=PROTECTED(d1)
+      chain-membership of div offset 700: NONE
+      chains(all=0): []
+      orphans: total=6 UNCOVERED(parent/child gap)=0

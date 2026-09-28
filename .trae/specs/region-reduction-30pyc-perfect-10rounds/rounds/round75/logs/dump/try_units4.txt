@@ -1,0 +1,996 @@
+=== d74_try4: et union gaps + corrected landing + normalized instr diff ===
+
+====================================================================================================
+UNIT fly/data/quote.pyc :: <module>.Quote.run_tick_socket   family=F-PAD
+  fam74 reason: idx 11 POP_JUMP_FORWARD_IF_FALSE target 158 -> 364 lands on SAME instr, len equal
+  firstdiv73 div=idx14 ('POP_JUMP_FORWARD_IF_FALSE', 528) != ('EXTENDED_ARG', 2) off=66 origTryDepth=1 | fam74 firstidx=11 lineA=2156 lineB=1431
+  instr count ORIG/PROD = 347/348
+  --- divergence (normalized key list, idx=14) ---
+      ORIG o66    POP_JUMP_FORWARD_IF_FALSE    to 528         et=[(24, 68, 1280, 0)]
+        landing@528 role=PROTECTED(d0)
+   >> o528   LOAD_FAST                      self
+      o530   LOAD_ATTR                      log
+      o540   LOAD_ATTR                      quote
+      o550   LOAD_METHOD                    warning
+      o572   LOAD_CONST                     'tick数据返回为空'
+      PROD o68    POP_JUMP_FORWARD_IF_FALSE    to 1122        et=[(24, 70, 1282, 0)]
+        landing@1122 role=PROTECTED(d0)
+   >> o1122  LOAD_FAST                      self
+      o1124  LOAD_ATTR                      log
+      o1134  LOAD_ATTR                      quote
+      o1144  LOAD_METHOD                    warning
+      o1166  LOAD_CONST                     'tick数据返回为空'
+  --- ORIG et-union gaps (7) ---
+     [0,24) [(0, 'RESUME', ''), (2, 'LOAD_FAST', 'dataDict'), (4, 'LOAD_CONST', "'imagedata'"), (6, 'BINARY_SUBSCR', ''), (16, 'STORE_FAST', 'imagedata'), (18, 'LOAD_CONST', 'None'), (20, 'STORE_FAST', 'panelt'), (22, 'NOP', '')]
+     [68,70) [(68, 'NOP', '')]
+     [508,512) [(508, 'LOAD_CONST', 'None'), (510, 'RETURN_VALUE', '')]
+     [680,684) [(680, 'LOAD_CONST', 'None'), (682, 'RETURN_VALUE', '')]
+     [1276,1280) [(1276, 'EXTENDED_ARG', ''), (1278, 'JUMP_FORWARD', 'to 1864')]
+     [1512,1516) [(1512, 'POP_EXCEPT', ''), (1514, 'JUMP_FORWARD', 'to 1864')]
+     [1838,1848) [(1838, 'POP_EXCEPT', ''), (1840, 'LOAD_CONST', 'None'), (1842, 'STORE_FAST', 'ex'), (1844, 'DELETE_FAST', 'ex'), (1846, 'JUMP_FORWARD', 'to 1864')]
+  --- PROD et-union gaps (6) ---
+     [0,24) [(0, 'RESUME', ''), (2, 'LOAD_FAST', 'dataDict'), (4, 'LOAD_CONST', "'imagedata'"), (6, 'BINARY_SUBSCR', ''), (16, 'STORE_FAST', 'imagedata'), (18, 'LOAD_CONST', 'None'), (20, 'STORE_FAST', 'panelt'), (22, 'NOP', '')]
+     [70,72) [(70, 'NOP', '')]
+     [508,512) [(508, 'LOAD_CONST', 'None'), (510, 'RETURN_VALUE', '')]
+     [1274,1282) [(1274, 'LOAD_CONST', 'None'), (1276, 'RETURN_VALUE', ''), (1278, 'EXTENDED_ARG', ''), (1280, 'JUMP_FORWARD', 'to 1866')]
+     [1514,1518) [(1514, 'POP_EXCEPT', ''), (1516, 'JUMP_FORWARD', 'to 1866')]
+     [1840,1850) [(1840, 'POP_EXCEPT', ''), (1842, 'LOAD_CONST', 'None'), (1844, 'STORE_FAST', 'ex'), (1846, 'DELETE_FAST', 'ex'), (1848, 'JUMP_FORWARD', 'to 1866')]
+  --- normalized instruction diff (ORIG -> PROD) ---
+     replace ORIG[14:15](1) [(66, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[14:16](2) [(66, 'EXTENDED_ARG'), (68, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(24, 68, 1280, 0)]  PROD et@[(24, 70, 1282, 0)]
+          - o66    POP_JUMP_FORWARD_IF_FALSE  to 528
+          + o66    EXTENDED_ARG               
+          + o68    POP_JUMP_FORWARD_IF_FALSE  to 1122
+     replace ORIG[24:26](2) [(136, 'EXTENDED_ARG'), (138, 'JUMP_FORWARD')]   PROD[25:26](1) [(138, 'JUMP_FORWARD')]
+        ORIG et@[(136, 140, 1280, 0)]  PROD et@[(138, 140, 1282, 0)]
+          - o136   EXTENDED_ARG               
+          - o138   JUMP_FORWARD               to 684
+          + o138   JUMP_FORWARD               to 528
+     delete  ORIG[93:117](24) [(528, 'LOAD_FAST'), (530, 'LOAD_ATTR'), (540, 'LOAD_ATTR'), (550, 'LOAD_METHOD')]   PROD[93:93](0) []
+        ORIG et@[(522, 680, 1280, 0)]  PROD et@NONE
+     replace ORIG[134:135](1) [(806, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[110:111](1) [(650, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(684, 1276, 1280, 0)]  PROD et@[(522, 1274, 1282, 0)]
+          - o806   POP_JUMP_FORWARD_IF_FALSE  to 1276
+          + o650   POP_JUMP_FORWARD_IF_FALSE  to 1120
+     replace ORIG[142:143](1) [(842, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[118:119](1) [(686, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(684, 1276, 1280, 0)]  PROD et@[(522, 1274, 1282, 0)]
+          - o842   POP_JUMP_FORWARD_IF_FALSE  to 1190
+          + o686   POP_JUMP_FORWARD_IF_FALSE  to 1034
+     replace ORIG[203:204](1) [(1144, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[179:180](1) [(988, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(684, 1276, 1280, 0)]  PROD et@[(522, 1274, 1282, 0)]
+          - o1144  POP_JUMP_FORWARD_IF_FALSE  to 1188
+          + o988   POP_JUMP_FORWARD_IF_FALSE  to 1032
+     replace ORIG[210:211](1) [(1188, 'JUMP_FORWARD')]   PROD[186:187](1) [(1032, 'JUMP_FORWARD')]
+        ORIG et@[(684, 1276, 1280, 0)]  PROD et@[(522, 1274, 1282, 0)]
+          - o1188  JUMP_FORWARD               to 1276
+          + o1032  JUMP_FORWARD               to 1278
+     replace ORIG[218:219](1) [(1224, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[194:195](1) [(1068, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(684, 1276, 1280, 0)]  PROD et@[(522, 1274, 1282, 0)]
+          - o1224  POP_JUMP_FORWARD_IF_FALSE  to 1276
+          + o1068  POP_JUMP_FORWARD_IF_FALSE  to 1120
+     replace ORIG[220:221](1) [(1228, 'POP_JUMP_FORWARD_IF_NONE')]   PROD[196:197](1) [(1072, 'POP_JUMP_FORWARD_IF_NONE')]
+        ORIG et@[(684, 1276, 1280, 0)]  PROD et@[(522, 1274, 1282, 0)]
+          - o1228  POP_JUMP_FORWARD_IF_NONE   to 1276
+          + o1072  POP_JUMP_FORWARD_IF_NONE   to 1120
+     replace ORIG[222:223](1) [(1232, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[198:199](1) [(1076, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(684, 1276, 1280, 0)]  PROD et@[(522, 1274, 1282, 0)]
+          - o1232  POP_JUMP_FORWARD_IF_FALSE  to 1276
+          + o1076  POP_JUMP_FORWARD_IF_FALSE  to 1120
+     insert  ORIG[229:229](0) []   PROD[205:230](25) [(1120, 'JUMP_FORWARD'), (1122, 'LOAD_FAST'), (1124, 'LOAD_ATTR'), (1134, 'LOAD_ATTR')]
+        ORIG et@NONE  PROD et@[(522, 1274, 1282, 0)]
+          + o1120  JUMP_FORWARD               to 1278
+          + o1122  LOAD_FAST                  self
+          + o1124  LOAD_ATTR                  log
+          + o1134  LOAD_ATTR                  quote
+          + o1144  LOAD_METHOD                warning
+          + o1166  LOAD_CONST                 'tick数据返回为空'
+          + o1168  PRECALL                    
+          + o1172  CALL                       
+          + o1182  POP_TOP                    
+          + o1184  LOAD_FAST                  userLock
+          + o1186  LOAD_METHOD                acquire
+          + o1208  PRECALL                    
+          + o1212  CALL                       
+          + o1222  POP_TOP                    
+          + o1224  LOAD_CONST                 -1
+          + o1226  LOAD_FAST                  dataDict
+          + o1228  LOAD_CONST                 'updateflag'
+          + o1230  STORE_SUBSCR               
+          + o1234  LOAD_FAST                  userLock
+          + o1236  LOAD_METHOD                release
+          + o1258  PRECALL                    
+          + o1262  CALL                       
+          + o1272  POP_TOP                    
+          + o1274  LOAD_CONST                 None
+          + o1276  RETURN_VALUE               
+     replace ORIG[230:231](1) [(1278, 'JUMP_FORWARD')]   PROD[231:232](1) [(1280, 'JUMP_FORWARD')]
+        ORIG et@NONE  PROD et@NONE
+          - o1278  JUMP_FORWARD               to 1864
+          + o1280  JUMP_FORWARD               to 1866
+     replace ORIG[236:237](1) [(1316, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[237:238](1) [(1318, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(1280, 1512, 1858, 1)]  PROD et@[(1282, 1514, 1860, 1)]
+          - o1316  POP_JUMP_FORWARD_IF_FALSE  to 1516
+          + o1318  POP_JUMP_FORWARD_IF_FALSE  to 1518
+     replace ORIG[253:254](1) [(1432, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[254:255](1) [(1434, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(1280, 1512, 1858, 1)]  PROD et@[(1282, 1514, 1860, 1)]
+          - o1432  POP_JUMP_FORWARD_IF_FALSE  to 1446
+          + o1434  POP_JUMP_FORWARD_IF_FALSE  to 1448
+     replace ORIG[256:258](2) [(1442, 'POP_JUMP_FORWARD_IF_FALSE'), (1444, 'JUMP_FORWARD')]   PROD[257:259](2) [(1444, 'POP_JUMP_FORWARD_IF_FALSE'), (1446, 'JUMP_FORWARD')]
+        ORIG et@[(1280, 1512, 1858, 1)]  PROD et@[(1282, 1514, 1860, 1)]
+          - o1442  POP_JUMP_FORWARD_IF_FALSE  to 1512
+          - o1444  JUMP_FORWARD               to 1450
+          + o1444  POP_JUMP_FORWARD_IF_FALSE  to 1514
+          + o1446  JUMP_FORWARD               to 1452
+     replace ORIG[259:260](1) [(1448, 'JUMP_FORWARD')]   PROD[260:261](1) [(1450, 'JUMP_FORWARD')]
+        ORIG et@[(1280, 1512, 1858, 1)]  PROD et@[(1282, 1514, 1860, 1)]
+          - o1448  JUMP_FORWARD               to 1512
+          + o1450  JUMP_FORWARD               to 1514
+     replace ORIG[269:270](1) [(1514, 'JUMP_FORWARD')]   PROD[270:271](1) [(1516, 'JUMP_FORWARD')]
+        ORIG et@NONE  PROD et@NONE
+          - o1514  JUMP_FORWARD               to 1864
+          + o1516  JUMP_FORWARD               to 1866
+     replace ORIG[272:273](1) [(1530, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[273:274](1) [(1532, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(1516, 1534, 1858, 1)]  PROD et@[(1518, 1536, 1860, 1)]
+          - o1530  POP_JUMP_FORWARD_IF_FALSE  to 1856
+          + o1532  POP_JUMP_FORWARD_IF_FALSE  to 1858
+     replace ORIG[330:331](1) [(1846, 'JUMP_FORWARD')]   PROD[331:332](1) [(1848, 'JUMP_FORWARD')]
+        ORIG et@NONE  PROD et@NONE
+          - o1846  JUMP_FORWARD               to 1864
+          + o1848  JUMP_FORWARD               to 1866
+
+====================================================================================================
+UNIT IQCommon/util/trade_info_utils.pyc :: <module>.trade_operation   family=F-ABSORB
+  fam74 reason: idx 93 POP_JUMP_FORWARD_IF_FALSE target 324 -> 172 lands on DIFFERENT instr (LOAD_FAST vs FOR_ITER)
+  firstdiv73 div=idx108 ('POP_JUMP_FORWARD_IF_FALSE', 1000) != ('POP_JUMP_FORWARD_IF_FALSE', 1042) off=676 origTryDepth=1 | fam74 firstidx=93 lineA=288 lineB=133
+  instr count ORIG/PROD = 339/339
+  --- divergence (normalized key list, idx=108) ---
+      ORIG o676   POP_JUMP_FORWARD_IF_FALSE    to 1000        et=[(444, 1210, 1442, 1)]
+        landing@1000 role=PROTECTED(d1)
+   >> o1000  LOAD_FAST                      write_info
+      o1002  LOAD_METHOD                    append
+      o1024  LOAD_FAST                      items
+      o1026  PRECALL                        
+      o1030  CALL                           
+      PROD o676   POP_JUMP_FORWARD_IF_FALSE    to 1042        et=[(444, 1210, 1442, 1)]
+        landing@1042 role=PROTECTED(d1)
+   >> o1042  JUMP_BACKWARD                  to 654
+      o1044  LOAD_GLOBAL                    NULL + len
+      o1056  LOAD_FAST                      write_info
+      o1058  PRECALL                        
+      o1062  CALL                           
+  --- ORIG et-union gaps (6) ---
+     [0,350) [(0, 'RESUME', ''), (2, 'LOAD_GLOBAL', 'os'), (14, 'LOAD_ATTR', 'path'), (24, 'LOAD_METHOD', 'join'), (46, 'LOAD_GLOBAL', 'TRADE_DIR_PATH'), (58, 'LOAD_FAST', 'user_id'), (60, 'LOAD_GLOBAL', 'SIM_TRADING_LIST_FILE'), (72, 'PRECALL', '')]
+     [1356,1360) [(1356, 'LOAD_CONST', 'True'), (1358, 'RETURN_VALUE', '')]
+     [1438,1442) [(1438, 'LOAD_CONST', 'False'), (1440, 'RETURN_VALUE', '')]
+     [1464,1468) [(1464, 'LOAD_CONST', 'None'), (1466, 'RETURN_VALUE', '')]
+     [1522,1526) [(1522, 'LOAD_CONST', 'False'), (1524, 'RETURN_VALUE', '')]
+     [1622,1628) [(1622, 'POP_EXCEPT', ''), (1624, 'LOAD_CONST', 'False'), (1626, 'RETURN_VALUE', '')]
+  --- PROD et-union gaps (6) ---
+     [0,350) [(0, 'RESUME', ''), (2, 'LOAD_GLOBAL', 'os'), (14, 'LOAD_ATTR', 'path'), (24, 'LOAD_METHOD', 'join'), (46, 'LOAD_GLOBAL', 'TRADE_DIR_PATH'), (58, 'LOAD_FAST', 'user_id'), (60, 'LOAD_GLOBAL', 'SIM_TRADING_LIST_FILE'), (72, 'PRECALL', '')]
+     [1356,1360) [(1356, 'LOAD_CONST', 'True'), (1358, 'RETURN_VALUE', '')]
+     [1438,1442) [(1438, 'LOAD_CONST', 'False'), (1440, 'RETURN_VALUE', '')]
+     [1464,1468) [(1464, 'LOAD_CONST', 'None'), (1466, 'RETURN_VALUE', '')]
+     [1522,1526) [(1522, 'LOAD_CONST', 'False'), (1524, 'RETURN_VALUE', '')]
+     [1622,1628) [(1622, 'POP_EXCEPT', ''), (1624, 'LOAD_CONST', 'False'), (1626, 'RETURN_VALUE', '')]
+  --- normalized instruction diff (ORIG -> PROD) ---
+     replace ORIG[108:109](1) [(676, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[108:109](1) [(676, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(444, 1210, 1442, 1)]  PROD et@[(444, 1210, 1442, 1)]
+          - o676   POP_JUMP_FORWARD_IF_FALSE  to 1000
+          + o676   POP_JUMP_FORWARD_IF_FALSE  to 1042
+
+====================================================================================================
+UNIT IQData/plugins/plugin_system_realquote/real_quote.pyc :: <module>.RealQuoteData.get_real_minute_kline   family=F-ABSORB
+  fam74 reason: target instr same but len 250/253
+  firstdiv73 div=idx18 ('POP_JUMP_FORWARD_IF_FALSE', 372) != ('EXTENDED_ARG', 1) off=108 origTryDepth=1 | fam74 firstidx=14 lineA=584 lineB=370
+  instr count ORIG/PROD = 280/287
+  --- divergence (normalized key list, idx=18) ---
+      ORIG o108   POP_JUMP_FORWARD_IF_FALSE    to 372         et=[(88, 370, 1310, 0)]
+        landing@372 role=PROTECTED(d0)
+   >> o372   LOAD_GLOBAL                    datetime
+      o384   LOAD_ATTR                      datetime
+      o394   LOAD_METHOD                    now
+      o416   PRECALL                        
+      o420   CALL                           
+      PROD o110   POP_JUMP_FORWARD_IF_FALSE    to 1118        et=[(88, 374, 1324, 0)]
+        landing@1118 role=PROTECTED(d0)
+   >> o1118  LOAD_GLOBAL                    datetime
+      o1130  LOAD_ATTR                      datetime
+      o1140  LOAD_METHOD                    now
+      o1162  PRECALL                        
+      o1166  CALL                           
+  --- ORIG et-union gaps (5) ---
+     [0,88) [(0, 'RESUME', ''), (2, 'LOAD_FAST', 'symbol'), (4, 'LOAD_METHOD', 'replace'), (26, 'LOAD_CONST', "'.XSHE'"), (28, 'LOAD_CONST', "'.SZ'"), (30, 'PRECALL', ''), (34, 'CALL', ''), (44, 'LOAD_METHOD', 'replace')]
+     [370,372) [(370, 'RETURN_VALUE', '')]
+     [580,582) [(580, 'RETURN_VALUE', '')]
+     [1308,1310) [(1308, 'RETURN_VALUE', '')]
+     [1408,1418) [(1408, 'POP_EXCEPT', ''), (1410, 'LOAD_CONST', 'None'), (1412, 'STORE_FAST', 'e'), (1414, 'DELETE_FAST', 'e'), (1416, 'RETURN_VALUE', '')]
+  --- PROD et-union gaps (6) ---
+     [0,88) [(0, 'RESUME', ''), (2, 'LOAD_FAST', 'symbol'), (4, 'LOAD_METHOD', 'replace'), (26, 'LOAD_CONST', "'.XSHE'"), (28, 'LOAD_CONST', "'.SZ'"), (30, 'PRECALL', ''), (34, 'CALL', ''), (44, 'LOAD_METHOD', 'replace')]
+     [374,376) [(374, 'RETURN_VALUE', '')]
+     [1102,1104) [(1102, 'RETURN_VALUE', '')]
+     [1116,1118) [(1116, 'RETURN_VALUE', '')]
+     [1316,1324) [(1316, 'LOAD_CONST', 'None'), (1318, 'RETURN_VALUE', ''), (1320, 'LOAD_CONST', 'None'), (1322, 'RETURN_VALUE', '')]
+     [1422,1432) [(1422, 'POP_EXCEPT', ''), (1424, 'LOAD_CONST', 'None'), (1426, 'STORE_FAST', 'e'), (1428, 'DELETE_FAST', 'e'), (1430, 'RETURN_VALUE', '')]
+  --- normalized instruction diff (ORIG -> PROD) ---
+     replace ORIG[18:19](1) [(108, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[18:20](2) [(108, 'EXTENDED_ARG'), (110, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(88, 370, 1310, 0)]  PROD et@[(88, 374, 1324, 0)]
+          - o108   POP_JUMP_FORWARD_IF_FALSE  to 372
+          + o108   EXTENDED_ARG               
+          + o110   POP_JUMP_FORWARD_IF_FALSE  to 1118
+     replace ORIG[46:47](1) [(268, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[47:49](2) [(270, 'EXTENDED_ARG'), (272, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(88, 370, 1310, 0)]  PROD et@[(88, 374, 1324, 0)]
+          - o268   POP_JUMP_FORWARD_IF_FALSE  to 358
+          + o270   EXTENDED_ARG               
+          + o272   POP_JUMP_FORWARD_IF_FALSE  to 1104
+     replace ORIG[50:51](1) [(280, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[52:54](2) [(284, 'EXTENDED_ARG'), (286, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(88, 370, 1310, 0)]  PROD et@[(88, 374, 1324, 0)]
+          - o280   POP_JUMP_FORWARD_IF_FALSE  to 358
+          + o284   EXTENDED_ARG               
+          + o286   POP_JUMP_FORWARD_IF_FALSE  to 1104
+     delete  ORIG[65:100](35) [(356, 'JUMP_FORWARD'), (358, 'LOAD_GLOBAL'), (370, 'RETURN_VALUE'), (372, 'LOAD_GLOBAL')]   PROD[68:68](0) []
+        ORIG et@[(88, 370, 1310, 0)]  PROD et@NONE
+     replace ORIG[101:102](1) [(572, 'POP_JUMP_FORWARD_IF_NONE')]   PROD[69:71](2) [(364, 'EXTENDED_ARG'), (366, 'POP_JUMP_FORWARD_IF_NONE')]
+        ORIG et@[(372, 580, 1310, 0)]  PROD et@[(88, 374, 1324, 0)]
+          - o572   POP_JUMP_FORWARD_IF_NONE   to 578
+          + o364   EXTENDED_ARG               
+          + o366   POP_JUMP_FORWARD_IF_NONE   to 1104
+     replace ORIG[103:104](1) [(576, 'POP_JUMP_FORWARD_IF_NOT_NONE')]   PROD[72:73](1) [(370, 'POP_JUMP_FORWARD_IF_NOT_NONE')]
+        ORIG et@[(372, 580, 1310, 0)]  PROD et@[(88, 374, 1324, 0)]
+          - o576   POP_JUMP_FORWARD_IF_NOT_NONE to 582
+          + o370   POP_JUMP_FORWARD_IF_NOT_NONE to 376
+     replace ORIG[153:154](1) [(872, 'FOR_ITER')]   PROD[122:123](1) [(666, 'FOR_ITER')]
+        ORIG et@[(582, 1308, 1310, 0)]  PROD et@[(376, 1102, 1324, 0)]
+          - o872   FOR_ITER                   to 966
+          + o666   FOR_ITER                   to 760
+     replace ORIG[160:161](1) [(906, 'FOR_ITER')]   PROD[129:130](1) [(700, 'FOR_ITER')]
+        ORIG et@[(582, 1308, 1310, 0)]  PROD et@[(376, 1102, 1324, 0)]
+          - o906   FOR_ITER                   to 964
+          + o700   FOR_ITER                   to 758
+     replace ORIG[174:176](2) [(962, 'JUMP_BACKWARD'), (964, 'JUMP_BACKWARD')]   PROD[143:145](2) [(756, 'JUMP_BACKWARD'), (758, 'JUMP_BACKWARD')]
+        ORIG et@[(582, 1308, 1310, 0)]  PROD et@[(376, 1102, 1324, 0)]
+          - o962   JUMP_BACKWARD              to 906
+          - o964   JUMP_BACKWARD              to 872
+          + o756   JUMP_BACKWARD              to 700
+          + o758   JUMP_BACKWARD              to 666
+     replace ORIG[183:184](1) [(988, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[152:153](1) [(782, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(582, 1308, 1310, 0)]  PROD et@[(376, 1102, 1324, 0)]
+          - o988   POP_JUMP_FORWARD_IF_FALSE  to 994
+          + o782   POP_JUMP_FORWARD_IF_FALSE  to 788
+     replace ORIG[224:225](1) [(1210, 'FOR_ITER')]   PROD[193:194](1) [(1004, 'FOR_ITER')]
+        ORIG et@[(582, 1308, 1310, 0)]  PROD et@[(376, 1102, 1324, 0)]
+          - o1210  FOR_ITER                   to 1306
+          + o1004  FOR_ITER                   to 1100
+     replace ORIG[236:237](1) [(1252, 'FOR_ITER')]   PROD[205:206](1) [(1046, 'FOR_ITER')]
+        ORIG et@[(582, 1308, 1310, 0)]  PROD et@[(376, 1102, 1324, 0)]
+          - o1252  FOR_ITER                   to 1304
+          + o1046  FOR_ITER                   to 1098
+     replace ORIG[248:250](2) [(1302, 'JUMP_BACKWARD'), (1304, 'JUMP_BACKWARD')]   PROD[217:219](2) [(1096, 'JUMP_BACKWARD'), (1098, 'JUMP_BACKWARD')]
+        ORIG et@[(582, 1308, 1310, 0)]  PROD et@[(376, 1102, 1324, 0)]
+          - o1302  JUMP_BACKWARD              to 1252
+          - o1304  JUMP_BACKWARD              to 1210
+          + o1096  JUMP_BACKWARD              to 1046
+          + o1098  JUMP_BACKWARD              to 1004
+     insert  ORIG[251:251](0) []   PROD[220:258](38) [(1102, 'RETURN_VALUE'), (1104, 'LOAD_GLOBAL'), (1116, 'RETURN_VALUE'), (1118, 'LOAD_GLOBAL')]
+        ORIG et@NONE  PROD et@NONE
+          + o1102  RETURN_VALUE               
+          + o1104  LOAD_GLOBAL                EMPTY_DAY_BAR_NP_ARRAY
+          + o1116  RETURN_VALUE               
+          + o1118  LOAD_GLOBAL                datetime
+          + o1130  LOAD_ATTR                  datetime
+          + o1140  LOAD_METHOD                now
+          + o1162  PRECALL                    
+          + o1166  CALL                       
+          + o1176  LOAD_METHOD                strftime
+          + o1198  LOAD_CONST                 '%Y%m%d'
+          + o1200  PRECALL                    
+          + o1204  CALL                       
+          + o1214  STORE_FAST                 start_date
+          + o1216  LOAD_FAST                  start_date
+          + o1218  STORE_FAST                 end_date
+          + o1220  LOAD_FAST                  self
+          + o1222  LOAD_METHOD                get_kline_by_date_ndarray
+          + o1244  LOAD_FAST                  symbol
+          + o1246  LOAD_FAST                  start_date
+          + o1248  LOAD_FAST                  end_date
+          + o1250  LOAD_FAST                  frequency_int
+          + o1252  PRECALL                    
+          + o1256  CALL                       
+          + o1266  STORE_FAST                 kline
+          + o1268  LOAD_GLOBAL                NULL + len
+          + o1280  LOAD_FAST                  kline
+          + o1282  PRECALL                    
+          + o1286  CALL                       
+          + o1296  LOAD_CONST                 0
+          + o1298  COMPARE_OP                 >
+          + o1304  POP_JUMP_FORWARD_IF_FALSE  to 1320
+          + o1306  LOAD_CONST                 0
+          + o1308  LOAD_FAST                  kline
+          + o1310  LOAD_CONST                 'unlimited'
+          + o1312  STORE_SUBSCR               
+          + o1316  LOAD_CONST                 None
+          + o1318  RETURN_VALUE               
+          + o1320  LOAD_CONST                 None
+     replace ORIG[255:256](1) [(1326, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[262:263](1) [(1340, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(1310, 1330, 1428, 1)]  PROD et@[(1324, 1344, 1442, 1)]
+          - o1326  POP_JUMP_FORWARD_IF_FALSE  to 1426
+          + o1340  POP_JUMP_FORWARD_IF_FALSE  to 1440
+
+====================================================================================================
+UNIT IQCommon/data/finance.pyc :: <module>.get_fields   family=F-ABSORB
+  fam74 reason: idx 18 JUMP_FORWARD target 90 -> 254 lands on DIFFERENT instr (LOAD_FAST vs LOAD_FAST)
+  firstdiv73 div=idx4 ('POP_JUMP_FORWARD_IF_NOT_NONE', 740) != ('POP_JUMP_FORWARD_IF_NOT_NONE', 742) off=8 origTryDepth=1 | fam74 firstidx=18 lineA=655 lineB=432
+  instr count ORIG/PROD = 177/178
+  --- divergence (normalized key list, idx=4) ---
+      ORIG o8     POP_JUMP_FORWARD_IF_NOT_NONE to 740         et=[(4, 160, 744, 0)]
+        landing@740 role=PROTECTED(d0)
+   >> o740   LOAD_FAST                      fields
+      o742   RETURN_VALUE                   
+      o744   PUSH_EXC_INFO                  
+      o746   LOAD_GLOBAL                    BaseException
+      o758   CHECK_EXC_MATCH                
+      PROD o8     POP_JUMP_FORWARD_IF_NOT_NONE to 742         et=[(4, 162, 746, 0)]
+        landing@742 role=PROTECTED(d0)
+   >> o742   LOAD_FAST                      fields
+      o744   RETURN_VALUE                   
+      o746   PUSH_EXC_INFO                  
+      o748   LOAD_GLOBAL                    BaseException
+      o760   CHECK_EXC_MATCH                
+  --- ORIG et-union gaps (6) ---
+     [0,4) [(0, 'RESUME', ''), (2, 'NOP', '')]
+     [160,162) [(160, 'RETURN_VALUE', '')]
+     [670,672) [(670, 'RETURN_VALUE', '')]
+     [738,740) [(738, 'RETURN_VALUE', '')]
+     [742,744) [(742, 'RETURN_VALUE', '')]
+     [838,848) [(838, 'POP_EXCEPT', ''), (840, 'LOAD_CONST', 'None'), (842, 'STORE_FAST', 'e'), (844, 'DELETE_FAST', 'e'), (846, 'RETURN_VALUE', '')]
+  --- PROD et-union gaps (6) ---
+     [0,4) [(0, 'RESUME', ''), (2, 'NOP', '')]
+     [162,164) [(162, 'RETURN_VALUE', '')]
+     [672,674) [(672, 'RETURN_VALUE', '')]
+     [740,742) [(740, 'RETURN_VALUE', '')]
+     [744,746) [(744, 'RETURN_VALUE', '')]
+     [840,850) [(840, 'POP_EXCEPT', ''), (842, 'LOAD_CONST', 'None'), (844, 'STORE_FAST', 'e'), (846, 'DELETE_FAST', 'e'), (848, 'RETURN_VALUE', '')]
+  --- normalized instruction diff (ORIG -> PROD) ---
+     replace ORIG[4:5](1) [(8, 'POP_JUMP_FORWARD_IF_NOT_NONE')]   PROD[4:5](1) [(8, 'POP_JUMP_FORWARD_IF_NOT_NONE')]
+        ORIG et@[(4, 160, 744, 0)]  PROD et@[(4, 162, 746, 0)]
+          - o8     POP_JUMP_FORWARD_IF_NOT_NONE to 740
+          + o8     POP_JUMP_FORWARD_IF_NOT_NONE to 742
+     replace ORIG[8:9](1) [(20, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[8:9](1) [(20, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(4, 160, 744, 0)]  PROD et@[(4, 162, 746, 0)]
+          - o20    POP_JUMP_FORWARD_IF_FALSE  to 94
+          + o20    POP_JUMP_FORWARD_IF_FALSE  to 96
+     replace ORIG[23:24](1) [(92, 'JUMP_FORWARD')]   PROD[23:25](2) [(92, 'EXTENDED_ARG'), (94, 'JUMP_FORWARD')]
+        ORIG et@[(4, 160, 744, 0)]  PROD et@[(4, 162, 746, 0)]
+          - o92    JUMP_FORWARD               to 236
+          + o92    EXTENDED_ARG               
+          + o94    JUMP_FORWARD               to 742
+     replace ORIG[28:29](1) [(120, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[29:30](1) [(122, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(4, 160, 744, 0)]  PROD et@[(4, 162, 746, 0)]
+          - o120   POP_JUMP_FORWARD_IF_FALSE  to 162
+          + o122   POP_JUMP_FORWARD_IF_FALSE  to 164
+     replace ORIG[57:58](1) [(258, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[58:59](1) [(260, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(162, 670, 744, 0)]  PROD et@[(164, 672, 746, 0)]
+          - o258   POP_JUMP_FORWARD_IF_FALSE  to 672
+          + o260   POP_JUMP_FORWARD_IF_FALSE  to 674
+     replace ORIG[59:60](1) [(262, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[60:61](1) [(264, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(162, 670, 744, 0)]  PROD et@[(164, 672, 746, 0)]
+          - o262   POP_JUMP_FORWARD_IF_FALSE  to 672
+          + o264   POP_JUMP_FORWARD_IF_FALSE  to 674
+     replace ORIG[66:67](1) [(294, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[67:68](1) [(296, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(162, 670, 744, 0)]  PROD et@[(164, 672, 746, 0)]
+          - o294   POP_JUMP_FORWARD_IF_FALSE  to 538
+          + o296   POP_JUMP_FORWARD_IF_FALSE  to 540
+     replace ORIG[69:70](1) [(300, 'FOR_ITER')]   PROD[70:71](1) [(302, 'FOR_ITER')]
+        ORIG et@[(162, 670, 744, 0)]  PROD et@[(164, 672, 746, 0)]
+          - o300   FOR_ITER                   to 536
+          + o302   FOR_ITER                   to 538
+     replace ORIG[78:79](1) [(348, 'FOR_ITER')]   PROD[79:80](1) [(350, 'FOR_ITER')]
+        ORIG et@[(162, 670, 744, 0)]  PROD et@[(164, 672, 746, 0)]
+          - o348   FOR_ITER                   to 456
+          + o350   FOR_ITER                   to 458
+     replace ORIG[87:88](1) [(398, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[88:89](1) [(400, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(162, 670, 744, 0)]  PROD et@[(164, 672, 746, 0)]
+          - o398   POP_JUMP_FORWARD_IF_FALSE  to 444
+          + o400   POP_JUMP_FORWARD_IF_FALSE  to 446
+     replace ORIG[94:95](1) [(442, 'JUMP_BACKWARD')]   PROD[95:96](1) [(444, 'JUMP_BACKWARD')]
+        ORIG et@[(162, 670, 744, 0)]  PROD et@[(164, 672, 746, 0)]
+          - o442   JUMP_BACKWARD              to 348
+          + o444   JUMP_BACKWARD              to 350
+     replace ORIG[99:100](1) [(454, 'JUMP_BACKWARD')]   PROD[100:101](1) [(456, 'JUMP_BACKWARD')]
+        ORIG et@[(162, 670, 744, 0)]  PROD et@[(164, 672, 746, 0)]
+          - o454   JUMP_BACKWARD              to 348
+          + o456   JUMP_BACKWARD              to 350
+     replace ORIG[110:112](2) [(534, 'JUMP_BACKWARD'), (536, 'JUMP_FORWARD')]   PROD[111:113](2) [(536, 'JUMP_BACKWARD'), (538, 'JUMP_FORWARD')]
+        ORIG et@[(162, 670, 744, 0)]  PROD et@[(164, 672, 746, 0)]
+          - o534   JUMP_BACKWARD              to 300
+          - o536   JUMP_FORWARD               to 590
+          + o536   JUMP_BACKWARD              to 302
+          + o538   JUMP_FORWARD               to 592
+     replace ORIG[114:115](1) [(542, 'FOR_ITER')]   PROD[115:116](1) [(544, 'FOR_ITER')]
+        ORIG et@[(162, 670, 744, 0)]  PROD et@[(164, 672, 746, 0)]
+          - o542   FOR_ITER                   to 590
+          + o544   FOR_ITER                   to 592
+     replace ORIG[122:123](1) [(588, 'JUMP_BACKWARD')]   PROD[123:124](1) [(590, 'JUMP_BACKWARD')]
+        ORIG et@[(162, 670, 744, 0)]  PROD et@[(164, 672, 746, 0)]
+          - o588   JUMP_BACKWARD              to 542
+          + o590   JUMP_BACKWARD              to 544
+     replace ORIG[150:151](1) [(760, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[151:152](1) [(762, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(744, 764, 858, 1)]  PROD et@[(746, 766, 860, 1)]
+          - o760   POP_JUMP_FORWARD_IF_FALSE  to 856
+          + o762   POP_JUMP_FORWARD_IF_FALSE  to 858
+
+====================================================================================================
+UNIT IQCommon/util/cgroup_utils.pyc :: <module>.set_cgroup_config   family=F-ABSORB
+  fam74 reason: target instr same but len 540/541
+  firstdiv73 div=idx508 ('POP_JUMP_FORWARD_IF_FALSE', 4414) != ('POP_JUMP_FORWARD_IF_FALSE', 4416) off=3618 origTryDepth=1 | fam74 firstidx=417 lineA=75 lineB=34
+  instr count ORIG/PROD = 653/654
+  --- divergence (normalized key list, idx=508) ---
+      ORIG o3618  POP_JUMP_FORWARD_IF_FALSE    to 4414        et=[(120, 4446, 4450, 0)]
+        landing@4414 role=PROTECTED(d0)
+   >> o4414  LOAD_GLOBAL                    NULL + delete_cgroup_config
+      o4426  LOAD_FAST                      user_id
+      o4428  LOAD_CONST                     'notebook_memory'
+      o4430  PRECALL                        
+      o4434  CALL                           
+      PROD o3618  POP_JUMP_FORWARD_IF_FALSE    to 4416        et=[(120, 4412, 4452, 0)]
+        landing@4416 role=PROTECTED(d0)
+   >> o4416  LOAD_GLOBAL                    NULL + delete_cgroup_config
+      o4428  LOAD_FAST                      user_id
+      o4430  LOAD_CONST                     'notebook_memory'
+      o4432  PRECALL                        
+      o4436  CALL                           
+  --- ORIG et-union gaps (4) ---
+     [0,4) [(0, 'RESUME', ''), (2, 'NOP', '')]
+     [116,120) [(116, 'LOAD_CONST', 'None'), (118, 'RETURN_VALUE', '')]
+     [4446,4450) [(4446, 'LOAD_CONST', 'None'), (4448, 'RETURN_VALUE', '')]
+     [4572,4578) [(4572, 'POP_EXCEPT', ''), (4574, 'LOAD_CONST', 'None'), (4576, 'RETURN_VALUE', '')]
+  --- PROD et-union gaps (5) ---
+     [0,4) [(0, 'RESUME', ''), (2, 'NOP', '')]
+     [116,120) [(116, 'LOAD_CONST', 'None'), (118, 'RETURN_VALUE', '')]
+     [4412,4416) [(4412, 'LOAD_CONST', 'None'), (4414, 'RETURN_VALUE', '')]
+     [4448,4452) [(4448, 'LOAD_CONST', 'None'), (4450, 'RETURN_VALUE', '')]
+     [4574,4580) [(4574, 'POP_EXCEPT', ''), (4576, 'LOAD_CONST', 'None'), (4578, 'RETURN_VALUE', '')]
+  --- normalized instruction diff (ORIG -> PROD) ---
+     replace ORIG[508:509](1) [(3618, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[508:509](1) [(3618, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(120, 4446, 4450, 0)]  PROD et@[(120, 4412, 4452, 0)]
+          - o3618  POP_JUMP_FORWARD_IF_FALSE  to 4414
+          + o3618  POP_JUMP_FORWARD_IF_FALSE  to 4416
+     replace ORIG[620:621](1) [(4412, 'JUMP_FORWARD')]   PROD[620:622](2) [(4412, 'LOAD_CONST'), (4414, 'RETURN_VALUE')]
+        ORIG et@[(120, 4446, 4450, 0)]  PROD et@NONE
+          - o4412  JUMP_FORWARD               to 4446
+          + o4412  LOAD_CONST                 None
+          + o4414  RETURN_VALUE               
+     replace ORIG[632:633](1) [(4466, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[633:634](1) [(4468, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(4450, 4572, 4580, 1)]  PROD et@[(4452, 4574, 4582, 1)]
+          - o4466  POP_JUMP_FORWARD_IF_FALSE  to 4578
+          + o4468  POP_JUMP_FORWARD_IF_FALSE  to 4580
+
+====================================================================================================
+UNIT IQCommon/util/email_utils.pyc :: <module>.send_email   family=F-ABSORB
+  fam74 reason: idx 22 POP_JUMP_FORWARD_IF_FALSE target 206 -> 332 lands on DIFFERENT instr (LOAD_GLOBAL vs LOAD_CONST)
+  firstdiv73 div=idx28 ('POP_JUMP_FORWARD_IF_FALSE', 674) != ('POP_JUMP_FORWARD_IF_FALSE', 1120) off=130 origTryDepth=1 | fam74 firstidx=22 lineA=57 lineB=38
+  instr count ORIG/PROD = 222/224
+  --- divergence (normalized key list, idx=28) ---
+      ORIG o130   POP_JUMP_FORWARD_IF_FALSE    to 674         et=[(14, 166, 1120, 0)]
+        landing@674 role=PROTECTED(d0)
+   >> o674   LOAD_GLOBAL                    NULL + format_addr
+      o686   LOAD_CONST                     '<%s>'
+      o688   LOAD_FAST                      send_email_address
+      o690   BINARY_OP                      %
+      o694   PRECALL                        
+      PROD o130   POP_JUMP_FORWARD_IF_FALSE    to 1120        et=[(14, 166, 1124, 0)]
+        landing@1120 role=OUTSIDE
+   >> o1120  LOAD_CONST                     None
+      o1122  RETURN_VALUE                   
+      o1124  PUSH_EXC_INFO                  
+      o1126  LOAD_GLOBAL                    BaseException
+      o1138  CHECK_EXC_MATCH                
+  --- ORIG et-union gaps (5) ---
+     [0,14) [(0, 'RESUME', ''), (2, 'LOAD_CONST', '-1'), (4, 'LOAD_CONST', "''"), (6, 'LOAD_CONST', "('error_no', 'error_info')"), (8, 'BUILD_CONST_KEY_MAP', ''), (10, 'STORE_FAST', 'return_info'), (12, 'NOP', '')]
+     [166,168) [(166, 'RETURN_VALUE', '')]
+     [354,356) [(354, 'RETURN_VALUE', '')]
+     [1118,1120) [(1118, 'RETURN_VALUE', '')]
+     [1228,1232) [(1228, 'POP_EXCEPT', ''), (1230, 'RETURN_VALUE', '')]
+  --- PROD et-union gaps (5) ---
+     [0,14) [(0, 'RESUME', ''), (2, 'LOAD_CONST', '-1'), (4, 'LOAD_CONST', "''"), (6, 'LOAD_CONST', "('error_no', 'error_info')"), (8, 'BUILD_CONST_KEY_MAP', ''), (10, 'STORE_FAST', 'return_info'), (12, 'NOP', '')]
+     [166,168) [(166, 'RETURN_VALUE', '')]
+     [354,356) [(354, 'RETURN_VALUE', '')]
+     [1118,1124) [(1118, 'RETURN_VALUE', ''), (1120, 'LOAD_CONST', 'None'), (1122, 'RETURN_VALUE', '')]
+     [1232,1236) [(1232, 'POP_EXCEPT', ''), (1234, 'RETURN_VALUE', '')]
+  --- normalized instruction diff (ORIG -> PROD) ---
+     replace ORIG[28:29](1) [(130, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[28:29](1) [(130, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(14, 166, 1120, 0)]  PROD et@[(14, 166, 1124, 0)]
+          - o130   POP_JUMP_FORWARD_IF_FALSE  to 674
+          + o130   POP_JUMP_FORWARD_IF_FALSE  to 1120
+     insert  ORIG[193:193](0) []   PROD[193:195](2) [(1120, 'LOAD_CONST'), (1122, 'RETURN_VALUE')]
+        ORIG et@NONE  PROD et@NONE
+          + o1120  LOAD_CONST                 None
+          + o1122  RETURN_VALUE               
+     replace ORIG[196:197](1) [(1136, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[198:199](1) [(1140, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(1120, 1228, 1234, 1)]  PROD et@[(1124, 1232, 1238, 1)]
+          - o1136  POP_JUMP_FORWARD_IF_FALSE  to 1232
+          + o1140  POP_JUMP_FORWARD_IF_FALSE  to 1236
+
+====================================================================================================
+UNIT IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc :: <module>.Strategy.tick_worker_thread   family=F-ABSORB
+  fam74 reason: idx 61 POP_JUMP_FORWARD_IF_TRUE target 156 -> 12 lands on DIFFERENT instr (LOAD_GLOBAL vs LOAD_FAST)
+  firstdiv73 div=idx73 ('POP_JUMP_FORWARD_IF_TRUE', 568) != ('POP_JUMP_FORWARD_IF_TRUE', 820) off=522 origTryDepth=1 | fam74 firstidx=61 lineA=311 lineB=223
+  instr count ORIG/PROD = 294/294
+  --- divergence (normalized key list, idx=73) ---
+      ORIG o522   POP_JUMP_FORWARD_IF_TRUE     to 568         et=[(48, 1290, 1290, 0)]
+        landing@568 role=PROTECTED(d0)
+   >> o568   LOAD_GLOBAL                    NULL + time
+      o580   LOAD_ATTR                      sleep
+      o590   LOAD_CONST                     60
+      o592   PRECALL                        
+      o596   CALL                           
+      PROD o522   POP_JUMP_FORWARD_IF_TRUE     to 820         et=[(48, 1290, 1290, 0)]
+        landing@820 role=PROTECTED(d0)
+   >> o820   JUMP_FORWARD                   to 1286
+      o822   LOAD_FAST                      self
+      o824   LOAD_METHOD                    is_stock_tradetime_now
+      o846   LOAD_FAST                      dt_strf
+      o848   PRECALL                        
+  --- ORIG et-union gaps (2) ---
+     [0,48) [(0, 'RESUME', ''), (2, 'LOAD_FAST', 'self'), (4, 'LOAD_ATTR', '_engine'), (14, 'LOAD_ATTR', 'config'), (24, 'LOAD_ATTR', 'strategy'), (34, 'LOAD_ATTR', 'accounts'), (44, 'STORE_FAST', 'accounts'), (46, 'NOP', '')]
+     [1412,1418) [(1412, 'POP_EXCEPT', ''), (1414, 'LOAD_CONST', 'None'), (1416, 'RETURN_VALUE', '')]
+  --- PROD et-union gaps (2) ---
+     [0,48) [(0, 'RESUME', ''), (2, 'LOAD_FAST', 'self'), (4, 'LOAD_ATTR', '_engine'), (14, 'LOAD_ATTR', 'config'), (24, 'LOAD_ATTR', 'strategy'), (34, 'LOAD_ATTR', 'accounts'), (44, 'STORE_FAST', 'accounts'), (46, 'NOP', '')]
+     [1412,1418) [(1412, 'POP_EXCEPT', ''), (1414, 'LOAD_CONST', 'None'), (1416, 'RETURN_VALUE', '')]
+  --- normalized instruction diff (ORIG -> PROD) ---
+     replace ORIG[73:74](1) [(522, 'POP_JUMP_FORWARD_IF_TRUE')]   PROD[73:74](1) [(522, 'POP_JUMP_FORWARD_IF_TRUE')]
+        ORIG et@[(48, 1290, 1290, 0)]  PROD et@[(48, 1290, 1290, 0)]
+          - o522   POP_JUMP_FORWARD_IF_TRUE   to 568
+          + o522   POP_JUMP_FORWARD_IF_TRUE   to 820
+     replace ORIG[77:78](1) [(534, 'POP_JUMP_FORWARD_IF_TRUE')]   PROD[77:78](1) [(534, 'POP_JUMP_FORWARD_IF_TRUE')]
+        ORIG et@[(48, 1290, 1290, 0)]  PROD et@[(48, 1290, 1290, 0)]
+          - o534   POP_JUMP_FORWARD_IF_TRUE   to 568
+          + o534   POP_JUMP_FORWARD_IF_TRUE   to 820
+     replace ORIG[185:186](1) [(992, 'POP_JUMP_FORWARD_IF_TRUE')]   PROD[185:186](1) [(992, 'POP_JUMP_FORWARD_IF_TRUE')]
+        ORIG et@[(48, 1290, 1290, 0)]  PROD et@[(48, 1290, 1290, 0)]
+          - o992   POP_JUMP_FORWARD_IF_TRUE   to 1038
+          + o992   POP_JUMP_FORWARD_IF_TRUE   to 1286
+     replace ORIG[189:190](1) [(1004, 'POP_JUMP_FORWARD_IF_TRUE')]   PROD[189:190](1) [(1004, 'POP_JUMP_FORWARD_IF_TRUE')]
+        ORIG et@[(48, 1290, 1290, 0)]  PROD et@[(48, 1290, 1290, 0)]
+          - o1004  POP_JUMP_FORWARD_IF_TRUE   to 1038
+          + o1004  POP_JUMP_FORWARD_IF_TRUE   to 1286
+
+====================================================================================================
+UNIT IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc :: <module>.RealtimeEventSource.clock_worker   family=F-ABSORB
+  fam74 reason: idx 664 POP_JUMP_FORWARD_IF_FALSE target 2494 -> 2476 lands on DIFFERENT instr (LOAD_CONST vs LOAD_FAST)
+  firstdiv73 div=idx717 ('LOAD_CONST', <code object check_handle_date at 0x000002870D927570, file "./fly_docker_py311/IQEngine/plugins/plugin_system_event_source/realtime_event_source.py", line 380>) != ('LOAD_CONST', <code object check_handle_date at 0x000002870D926BB0, file "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py", line 204>) off=5270 origTryDepth=1 | fam74 firstidx=664 lineA=189 lineB=100
+  instr count ORIG/PROD = 1442/1456
+  --- divergence (normalized key list, idx=768) ---
+      ORIG o5598  LOAD_DEREF                   self           et=[(6, 6580, 9218, 0)]
+      PROD o5598  NOP                                         et=[(6, 6582, 9244, 0)]
+  --- ORIG et-union gaps (8) ---
+     [0,6) [(0, 'MAKE_CELL', 'self'), (2, 'RESUME', ''), (4, 'NOP', '')]
+     [6580,6582) [(6580, 'NOP', '')]
+     [7488,7492) [(7488, 'LOAD_CONST', 'None'), (7490, 'RETURN_VALUE', '')]
+     [7710,7712) [(7710, 'NOP', '')]
+     [8166,8170) [(8166, 'LOAD_CONST', 'None'), (8168, 'RETURN_VALUE', '')]
+     [8184,8186) [(8184, 'NOP', '')]
+     [9210,9218) [(9210, 'LOAD_CONST', 'None'), (9212, 'RETURN_VALUE', ''), (9214, 'LOAD_CONST', 'None'), (9216, 'RETURN_VALUE', '')]
+     [9302,9314) [(9302, 'POP_EXCEPT', ''), (9304, 'LOAD_CONST', 'None'), (9306, 'STORE_FAST', 'ex'), (9308, 'DELETE_FAST', 'ex'), (9310, 'LOAD_CONST', 'None'), (9312, 'RETURN_VALUE', '')]
+  --- PROD et-union gaps (8) ---
+     [0,6) [(0, 'MAKE_CELL', 'self'), (2, 'RESUME', ''), (4, 'NOP', '')]
+     [6582,6584) [(6582, 'NOP', '')]
+     [7394,7398) [(7394, 'LOAD_CONST', 'None'), (7396, 'RETURN_VALUE', '')]
+     [7530,7532) [(7530, 'NOP', '')]
+     [8626,8630) [(8626, 'LOAD_CONST', 'None'), (8628, 'RETURN_VALUE', '')]
+     [8644,8646) [(8644, 'NOP', '')]
+     [9240,9244) [(9240, 'LOAD_CONST', 'None'), (9242, 'RETURN_VALUE', '')]
+     [9328,9340) [(9328, 'POP_EXCEPT', ''), (9330, 'LOAD_CONST', 'None'), (9332, 'STORE_FAST', 'ex'), (9334, 'DELETE_FAST', 'ex'), (9336, 'LOAD_CONST', 'None'), (9338, 'RETURN_VALUE', '')]
+  --- normalized instruction diff (ORIG -> PROD) ---
+     insert  ORIG[768:768](0) []   PROD[768:769](1) [(5598, 'NOP')]
+        ORIG et@NONE  PROD et@[(6, 6582, 9244, 0)]
+          + o5598  NOP                        
+     replace ORIG[770:772](2) [(5610, 'EXTENDED_ARG'), (5612, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[771:773](2) [(5612, 'EXTENDED_ARG'), (5614, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6, 6580, 9218, 0)]  PROD et@[(6, 6582, 9244, 0)]
+          - o5610  EXTENDED_ARG               
+          - o5612  POP_JUMP_FORWARD_IF_FALSE  to 9214
+          + o5612  EXTENDED_ARG               
+          + o5614  POP_JUMP_FORWARD_IF_FALSE  to 9138
+     replace ORIG[788:789](1) [(5736, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[789:790](1) [(5738, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6, 6580, 9218, 0)]  PROD et@[(6, 6582, 9244, 0)]
+          - o5736  POP_JUMP_FORWARD_IF_FALSE  to 5902
+          + o5738  POP_JUMP_FORWARD_IF_FALSE  to 5904
+     replace ORIG[811:812](1) [(5900, 'POP_JUMP_BACKWARD_IF_TRUE')]   PROD[812:813](1) [(5902, 'POP_JUMP_BACKWARD_IF_TRUE')]
+        ORIG et@[(6, 6580, 9218, 0)]  PROD et@[(6, 6582, 9244, 0)]
+          - o5900  POP_JUMP_BACKWARD_IF_TRUE  to 5738
+          + o5902  POP_JUMP_BACKWARD_IF_TRUE  to 5740
+     replace ORIG[837:838](1) [(6056, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[838:839](1) [(6058, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6, 6580, 9218, 0)]  PROD et@[(6, 6582, 9244, 0)]
+          - o6056  POP_JUMP_FORWARD_IF_FALSE  to 6280
+          + o6058  POP_JUMP_FORWARD_IF_FALSE  to 6282
+     replace ORIG[843:844](1) [(6088, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[844:845](1) [(6090, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6, 6580, 9218, 0)]  PROD et@[(6, 6582, 9244, 0)]
+          - o6088  POP_JUMP_FORWARD_IF_FALSE  to 6280
+          + o6090  POP_JUMP_FORWARD_IF_FALSE  to 6282
+     replace ORIG[848:849](1) [(6110, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[849:850](1) [(6112, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6, 6580, 9218, 0)]  PROD et@[(6, 6582, 9244, 0)]
+          - o6110  POP_JUMP_FORWARD_IF_FALSE  to 6280
+          + o6112  POP_JUMP_FORWARD_IF_FALSE  to 6282
+     replace ORIG[876:878](2) [(6318, 'EXTENDED_ARG'), (6320, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[877:878](1) [(6320, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6, 6580, 9218, 0)]  PROD et@[(6, 6582, 9244, 0)]
+          - o6318  EXTENDED_ARG               
+          - o6320  POP_JUMP_FORWARD_IF_FALSE  to 6846
+          + o6320  POP_JUMP_FORWARD_IF_FALSE  to 6750
+     replace ORIG[882:883](1) [(6342, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[882:883](1) [(6342, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6, 6580, 9218, 0)]  PROD et@[(6, 6582, 9244, 0)]
+          - o6342  POP_JUMP_FORWARD_IF_FALSE  to 6374
+          + o6342  POP_JUMP_FORWARD_IF_FALSE  to 6696
+     replace ORIG[899:900](1) [(6404, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[899:900](1) [(6404, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6, 6580, 9218, 0)]  PROD et@[(6, 6582, 9244, 0)]
+          - o6404  POP_JUMP_FORWARD_IF_FALSE  to 6496
+          + o6404  POP_JUMP_FORWARD_IF_FALSE  to 6498
+     insert  ORIG[913:913](0) []   PROD[913:914](1) [(6496, 'JUMP_FORWARD')]
+        ORIG et@NONE  PROD et@[(6, 6582, 9244, 0)]
+          + o6496  JUMP_FORWARD               to 6696
+     replace ORIG[917:918](1) [(6516, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[918:919](1) [(6518, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6, 6580, 9218, 0)]  PROD et@[(6, 6582, 9244, 0)]
+          - o6516  POP_JUMP_FORWARD_IF_FALSE  to 6548
+          + o6518  POP_JUMP_FORWARD_IF_FALSE  to 6696
+     replace ORIG[923:924](1) [(6532, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[924:925](1) [(6534, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6, 6580, 9218, 0)]  PROD et@[(6, 6582, 9244, 0)]
+          - o6532  POP_JUMP_FORWARD_IF_FALSE  to 6546
+          + o6534  POP_JUMP_FORWARD_IF_FALSE  to 6548
+     replace ORIG[926:928](2) [(6542, 'POP_JUMP_FORWARD_IF_TRUE'), (6544, 'JUMP_FORWARD')]   PROD[927:929](2) [(6544, 'POP_JUMP_FORWARD_IF_TRUE'), (6546, 'JUMP_FORWARD')]
+        ORIG et@[(6, 6580, 9218, 0)]  PROD et@[(6, 6582, 9244, 0)]
+          - o6542  POP_JUMP_FORWARD_IF_TRUE   to 6580
+          - o6544  JUMP_FORWARD               to 6548
+          + o6544  POP_JUMP_FORWARD_IF_TRUE   to 6696
+          + o6546  JUMP_FORWARD               to 6550
+     replace ORIG[934:935](1) [(6578, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[935:936](1) [(6580, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6, 6580, 9218, 0)]  PROD et@[(6, 6582, 9244, 0)]
+          - o6578  POP_JUMP_FORWARD_IF_FALSE  to 6792
+          + o6580  POP_JUMP_FORWARD_IF_FALSE  to 6696
+     replace ORIG[945:946](1) [(6652, 'JUMP_FORWARD')]   PROD[946:948](2) [(6654, 'EXTENDED_ARG'), (6656, 'JUMP_FORWARD')]
+        ORIG et@[(6652, 6654, 9218, 0)]  PROD et@[(6654, 6658, 9244, 0)]
+          - o6652  JUMP_FORWARD               to 6690
+          + o6654  EXTENDED_ARG               
+          + o6656  JUMP_FORWARD               to 9138
+     replace ORIG[949:950](1) [(6670, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[951:952](1) [(6674, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6654, 6678, 6684, 1)]  PROD et@[(6658, 6682, 6690, 1)]
+          - o6670  POP_JUMP_FORWARD_IF_FALSE  to 6682
+          + o6674  POP_JUMP_FORWARD_IF_FALSE  to 6688
+     replace ORIG[954:955](1) [(6680, 'JUMP_FORWARD')]   PROD[956:958](2) [(6684, 'EXTENDED_ARG'), (6686, 'JUMP_FORWARD')]
+        ORIG et@[(6678, 6682, 9218, 0)]  PROD et@[(6682, 6688, 9244, 0)]
+          - o6680  JUMP_FORWARD               to 6690
+          + o6684  EXTENDED_ARG               
+          + o6686  JUMP_FORWARD               to 9138
+     delete  ORIG[959:976](17) [(6690, 'LOAD_FAST'), (6692, 'LOAD_CONST'), (6694, 'COMPARE_OP'), (6700, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[962:962](0) []
+        ORIG et@[(6684, 7488, 9218, 0)]  PROD et@NONE
+     replace ORIG[983:984](1) [(6844, 'JUMP_BACKWARD')]   PROD[969:970](1) [(6748, 'JUMP_BACKWARD')]
+        ORIG et@[(6684, 7488, 9218, 0)]  PROD et@[(6690, 7394, 9244, 0)]
+          - o6844  JUMP_BACKWARD              to 5598
+          + o6748  JUMP_BACKWARD              to 5600
+     replace ORIG[988:989](1) [(6866, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[974:975](1) [(6770, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6684, 7488, 9218, 0)]  PROD et@[(6690, 7394, 9244, 0)]
+          - o6866  POP_JUMP_FORWARD_IF_FALSE  to 7164
+          + o6770  POP_JUMP_FORWARD_IF_FALSE  to 7068
+     replace ORIG[993:994](1) [(6888, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[979:980](1) [(6792, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6684, 7488, 9218, 0)]  PROD et@[(6690, 7394, 9244, 0)]
+          - o6888  POP_JUMP_FORWARD_IF_FALSE  to 7164
+          + o6792  POP_JUMP_FORWARD_IF_FALSE  to 7068
+     replace ORIG[1018:1019](1) [(7046, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1004:1005](1) [(6950, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6684, 7488, 9218, 0)]  PROD et@[(6690, 7394, 9244, 0)]
+          - o7046  POP_JUMP_FORWARD_IF_FALSE  to 7164
+          + o6950  POP_JUMP_FORWARD_IF_FALSE  to 7068
+     replace ORIG[1039:1040](1) [(7184, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1025:1027](2) [(7088, 'EXTENDED_ARG'), (7090, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6684, 7488, 9218, 0)]  PROD et@[(6690, 7394, 9244, 0)]
+          - o7184  POP_JUMP_FORWARD_IF_FALSE  to 7216
+          + o7088  EXTENDED_ARG               
+          + o7090  POP_JUMP_FORWARD_IF_FALSE  to 9122
+     replace ORIG[1045:1046](1) [(7200, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1032:1033](1) [(7106, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6684, 7488, 9218, 0)]  PROD et@[(6690, 7394, 9244, 0)]
+          - o7200  POP_JUMP_FORWARD_IF_FALSE  to 7214
+          + o7106  POP_JUMP_FORWARD_IF_FALSE  to 7120
+     replace ORIG[1048:1050](2) [(7210, 'POP_JUMP_FORWARD_IF_TRUE'), (7212, 'JUMP_FORWARD')]   PROD[1035:1037](2) [(7116, 'POP_JUMP_FORWARD_IF_TRUE'), (7118, 'JUMP_FORWARD')]
+        ORIG et@[(6684, 7488, 9218, 0)]  PROD et@[(6690, 7394, 9244, 0)]
+          - o7210  POP_JUMP_FORWARD_IF_TRUE   to 7248
+          - o7212  JUMP_FORWARD               to 7216
+          + o7116  POP_JUMP_FORWARD_IF_TRUE   to 7154
+          + o7118  JUMP_FORWARD               to 7122
+     replace ORIG[1056:1057](1) [(7246, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1043:1044](1) [(7152, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6684, 7488, 9218, 0)]  PROD et@[(6690, 7394, 9244, 0)]
+          - o7246  POP_JUMP_FORWARD_IF_FALSE  to 7582
+          + o7152  POP_JUMP_FORWARD_IF_FALSE  to 7402
+     replace ORIG[1061:1062](1) [(7268, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1048:1049](1) [(7174, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6684, 7488, 9218, 0)]  PROD et@[(6690, 7394, 9244, 0)]
+          - o7268  POP_JUMP_FORWARD_IF_FALSE  to 7492
+          + o7174  POP_JUMP_FORWARD_IF_FALSE  to 7398
+     replace ORIG[1078:1079](1) [(7370, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1065:1066](1) [(7276, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(6684, 7488, 9218, 0)]  PROD et@[(6690, 7394, 9244, 0)]
+          - o7370  POP_JUMP_FORWARD_IF_FALSE  to 7492
+          + o7276  POP_JUMP_FORWARD_IF_FALSE  to 7398
+     replace ORIG[1097:1110](13) [(7492, 'LOAD_DEREF'), (7494, 'LOAD_ATTR'), (7504, 'LOAD_METHOD'), (7526, 'LOAD_FAST')]   PROD[1084:1086](2) [(7398, 'EXTENDED_ARG'), (7400, 'JUMP_FORWARD')]
+        ORIG et@[(7492, 7710, 9218, 0)]  PROD et@[(7398, 7530, 9244, 0)]
+     replace ORIG[1114:1115](1) [(7602, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1090:1092](2) [(7422, 'EXTENDED_ARG'), (7424, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(7492, 7710, 9218, 0)]  PROD et@[(7398, 7530, 9244, 0)]
+          - o7602  POP_JUMP_FORWARD_IF_FALSE  to 7634
+          + o7422  EXTENDED_ARG               
+          + o7424  POP_JUMP_FORWARD_IF_FALSE  to 9122
+     replace ORIG[1120:1121](1) [(7618, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1097:1098](1) [(7440, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(7492, 7710, 9218, 0)]  PROD et@[(7398, 7530, 9244, 0)]
+          - o7618  POP_JUMP_FORWARD_IF_FALSE  to 7632
+          + o7440  POP_JUMP_FORWARD_IF_FALSE  to 7454
+     replace ORIG[1123:1125](2) [(7628, 'POP_JUMP_FORWARD_IF_TRUE'), (7630, 'JUMP_FORWARD')]   PROD[1100:1102](2) [(7450, 'POP_JUMP_FORWARD_IF_TRUE'), (7452, 'JUMP_FORWARD')]
+        ORIG et@[(7492, 7710, 9218, 0)]  PROD et@[(7398, 7530, 9244, 0)]
+          - o7628  POP_JUMP_FORWARD_IF_TRUE   to 7668
+          - o7630  JUMP_FORWARD               to 7634
+          + o7450  POP_JUMP_FORWARD_IF_TRUE   to 7488
+          + o7452  JUMP_FORWARD               to 7456
+     replace ORIG[1131:1133](2) [(7664, 'EXTENDED_ARG'), (7666, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1108:1109](1) [(7486, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(7492, 7710, 9218, 0)]  PROD et@[(7398, 7530, 9244, 0)]
+          - o7664  EXTENDED_ARG               
+          - o7666  POP_JUMP_FORWARD_IF_FALSE  to 8592
+          + o7486  POP_JUMP_FORWARD_IF_FALSE  to 7796
+     replace ORIG[1142:1143](1) [(7706, 'FOR_ITER')]   PROD[1118:1119](1) [(7526, 'FOR_ITER')]
+        ORIG et@[(7492, 7710, 9218, 0)]  PROD et@[(7398, 7530, 9244, 0)]
+          - o7706  FOR_ITER                   to 7972
+          + o7526  FOR_ITER                   to 7792
+     replace ORIG[1160:1161](1) [(7816, 'JUMP_FORWARD')]   PROD[1136:1137](1) [(7636, 'JUMP_FORWARD')]
+        ORIG et@[(7814, 7818, 9218, 0)]  PROD et@[(7634, 7638, 9244, 0)]
+          - o7816  JUMP_FORWARD               to 7972
+          + o7636  JUMP_FORWARD               to 7792
+     replace ORIG[1164:1165](1) [(7834, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1140:1141](1) [(7654, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(7818, 7960, 7966, 2)]  PROD et@[(7638, 7780, 7786, 2)]
+          - o7834  POP_JUMP_FORWARD_IF_FALSE  to 7964
+          + o7654  POP_JUMP_FORWARD_IF_FALSE  to 7784
+     replace ORIG[1175:1176](1) [(7888, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1151:1152](1) [(7708, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(7818, 7960, 7966, 2)]  PROD et@[(7638, 7780, 7786, 2)]
+          - o7888  POP_JUMP_FORWARD_IF_FALSE  to 7960
+          + o7708  POP_JUMP_FORWARD_IF_FALSE  to 7780
+     replace ORIG[1187:1188](1) [(7962, 'JUMP_BACKWARD')]   PROD[1163:1164](1) [(7782, 'JUMP_BACKWARD')]
+        ORIG et@[(7960, 7964, 9218, 0)]  PROD et@[(7780, 7784, 9244, 0)]
+          - o7962  JUMP_BACKWARD              to 7706
+          + o7782  JUMP_BACKWARD              to 7526
+     insert  ORIG[1192:1192](0) []   PROD[1168:1278](110) [(7792, 'EXTENDED_ARG'), (7794, 'JUMP_FORWARD'), (7796, 'PUSH_NULL'), (7798, 'LOAD_FAST')]
+        ORIG et@NONE  PROD et@[(7786, 8626, 9244, 0)]
+          + o7792  EXTENDED_ARG               
+          + o7794  JUMP_FORWARD               to 8398
+          + o7796  PUSH_NULL                  
+          + o7798  LOAD_FAST                  check_trading_time
+          + o7800  LOAD_FAST                  am_open
+          + o7802  LOAD_FAST                  am_close
+          + o7804  LOAD_FAST                  pm_open
+          + o7806  LOAD_FAST                  pm_close
+          + o7808  LOAD_FAST                  pm_over
+          + o7810  LOAD_DEREF                 self
+          + o7812  LOAD_ATTR                  _engine
+          + o7822  LOAD_ATTR                  config
+          + o7832  LOAD_ATTR                  strategy
+          + o7842  LOAD_ATTR                  frequency
+          + o7852  LOAD_FAST                  now_time
+          + o7854  PRECALL                    
+          + o7858  CALL                       
+          + o7868  POP_JUMP_FORWARD_IF_FALSE  to 8108
+          + o7870  PUSH_NULL                  
+          + o7872  LOAD_FAST                  check_handle_date
+          + o7874  LOAD_FAST                  now_date
+          + o7876  PRECALL                    
+          + o7880  CALL                       
+          + o7890  POP_JUMP_FORWARD_IF_FALSE  to 8056
+          + o7892  LOAD_DEREF                 self
+          + o7894  LOAD_ATTR                  _engine
+          + o7904  LOAD_METHOD                set_current_stage
+          + o7926  LOAD_GLOBAL                EventEnum
+          + o7938  LOAD_ATTR                  HANDLE_DATA
+          + o7948  PRECALL                    
+          + o7952  CALL                       
+          + o7962  POP_TOP                    
+          + o7964  LOAD_DEREF                 self
+          + o7966  LOAD_ATTR                  event_queue
+          + o7976  LOAD_METHOD                put
+          + o7998  LOAD_FAST                  dt
+          + o8000  LOAD_GLOBAL                EventEnum
+          + o8012  LOAD_ATTR                  HANDLE_DATA
+          + o8022  BUILD_TUPLE                
+          + o8024  PRECALL                    
+          + o8028  CALL                       
+          + o8038  POP_TOP                    
+          + o8040  LOAD_FAST                  now_date
+          + o8042  LOAD_DEREF                 self
+          + o8044  STORE_ATTR                 handle_data_date
+          + o8054  JUMP_FORWARD               to 8398
+          + o8056  LOAD_GLOBAL                NULL + time
+          + o8068  LOAD_ATTR                  sleep
+          + o8078  LOAD_GLOBAL                TIME_SLEEP_1M
+          + o8090  PRECALL                    
+          + o8094  CALL                       
+          + o8104  POP_TOP                    
+          + o8106  JUMP_FORWARD               to 8398
+          + o8108  LOAD_FAST                  now_date
+          + o8110  LOAD_DEREF                 self
+          + o8112  LOAD_ATTR                  before_trading_date
+          + o8122  COMPARE_OP                 ==
+          + o8128  POP_JUMP_FORWARD_IF_FALSE  to 8348
+          + o8130  LOAD_FAST                  now_date
+          + o8132  LOAD_DEREF                 self
+          + o8134  LOAD_ATTR                  after_trading_date
+          + o8144  COMPARE_OP                 >
+          + o8150  POP_JUMP_FORWARD_IF_FALSE  to 8348
+          + o8152  LOAD_FAST                  delay_after_trading
+          + o8154  LOAD_FAST                  now_time
+          + o8156  SWAP                       
+          + o8158  COPY                       
+          + o8160  COMPARE_OP                 >=
+          + o8166  POP_JUMP_FORWARD_IF_FALSE  to 8180
+          + o8168  LOAD_FAST                  after_trading
+          + o8170  COMPARE_OP                 >=
+          + o8176  POP_JUMP_FORWARD_IF_FALSE  to 8346
+          + o8178  JUMP_FORWARD               to 8184
+          + o8180  POP_TOP                    
+          + o8182  JUMP_FORWARD               to 8398
+          + o8184  LOAD_DEREF                 self
+          + o8186  LOAD_ATTR                  _engine
+          + o8196  LOAD_METHOD                set_current_stage
+          + o8218  LOAD_GLOBAL                EventEnum
+          + o8230  LOAD_ATTR                  AFTER_TRADING_END
+          + o8240  PRECALL                    
+          + o8244  CALL                       
+          + o8254  POP_TOP                    
+          + o8256  LOAD_DEREF                 self
+          + o8258  LOAD_ATTR                  event_queue
+          + o8268  LOAD_METHOD                put
+          + o8290  LOAD_FAST                  dt
+          + o8292  LOAD_GLOBAL                EventEnum
+          + o8304  LOAD_ATTR                  AFTER_TRADING_END
+          + o8314  BUILD_TUPLE                
+          + o8316  PRECALL                    
+          + o8320  CALL                       
+          + o8330  POP_TOP                    
+          + o8332  LOAD_FAST                  now_date
+          + o8334  LOAD_DEREF                 self
+          + o8336  STORE_ATTR                 after_trading_date
+          + o8346  JUMP_FORWARD               to 8398
+          + o8348  LOAD_GLOBAL                NULL + time
+          + o8360  LOAD_ATTR                  sleep
+          + o8370  LOAD_GLOBAL                FPS
+          + o8382  PRECALL                    
+          + o8386  CALL                       
+          + o8396  POP_TOP                    
+          + o8398  LOAD_DEREF                 self
+          + o8400  LOAD_ATTR                  before_trading_date
+          + o8410  LOAD_DEREF                 self
+          + o8412  LOAD_ATTR                  initial_trading_date
+          + o8422  COMPARE_OP                 ==
+          + o8428  EXTENDED_ARG               
+          + o8430  POP_JUMP_FORWARD_IF_FALSE  to 9046
+     replace ORIG[1195:1196](1) [(7978, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1281:1282](1) [(8438, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(7966, 8166, 9218, 0)]  PROD et@[(7786, 8626, 9244, 0)]
+          - o7978  POP_JUMP_FORWARD_IF_FALSE  to 8170
+          + o8438  POP_JUMP_FORWARD_IF_FALSE  to 8630
+     replace ORIG[1236:1237](1) [(8256, 'JUMP_FORWARD')]   PROD[1322:1323](1) [(8716, 'JUMP_FORWARD')]
+        ORIG et@[(8256, 8258, 9218, 0)]  PROD et@[(8716, 8718, 9244, 0)]
+          - o8256  JUMP_FORWARD               to 8294
+          + o8716  JUMP_FORWARD               to 8754
+     replace ORIG[1240:1241](1) [(8274, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1326:1327](1) [(8734, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(8258, 8282, 8288, 1)]  PROD et@[(8718, 8742, 8748, 1)]
+          - o8274  POP_JUMP_FORWARD_IF_FALSE  to 8286
+          + o8734  POP_JUMP_FORWARD_IF_FALSE  to 8746
+     replace ORIG[1245:1246](1) [(8284, 'JUMP_FORWARD')]   PROD[1331:1332](1) [(8744, 'JUMP_FORWARD')]
+        ORIG et@[(8282, 8286, 9218, 0)]  PROD et@[(8742, 8746, 9244, 0)]
+          - o8284  JUMP_FORWARD               to 8294
+          + o8744  JUMP_FORWARD               to 8754
+     replace ORIG[1253:1254](1) [(8304, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1339:1340](1) [(8764, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(8288, 9210, 9218, 0)]  PROD et@[(8748, 9240, 9244, 0)]
+          - o8304  POP_JUMP_FORWARD_IF_FALSE  to 8350
+          + o8764  POP_JUMP_FORWARD_IF_FALSE  to 8808
+     replace ORIG[1259:1261](2) [(8346, 'EXTENDED_ARG'), (8348, 'JUMP_FORWARD')]   PROD[1345:1346](1) [(8806, 'JUMP_FORWARD')]
+        ORIG et@[(8288, 9210, 9218, 0)]  PROD et@[(8748, 9240, 9244, 0)]
+          - o8346  EXTENDED_ARG               
+          - o8348  JUMP_FORWARD               to 9194
+          + o8806  JUMP_FORWARD               to 9122
+     replace ORIG[1262:1263](1) [(8352, 'POP_JUMP_FORWARD_IF_NONE')]   PROD[1347:1348](1) [(8810, 'POP_JUMP_FORWARD_IF_NONE')]
+        ORIG et@[(8288, 9210, 9218, 0)]  PROD et@[(8748, 9240, 9244, 0)]
+          - o8352  POP_JUMP_FORWARD_IF_NONE   to 8588
+          + o8810  POP_JUMP_FORWARD_IF_NONE   to 9044
+     replace ORIG[1270:1271](1) [(8398, 'POP_JUMP_FORWARD_IF_NONE')]   PROD[1355:1356](1) [(8856, 'POP_JUMP_FORWARD_IF_NONE')]
+        ORIG et@[(8288, 9210, 9218, 0)]  PROD et@[(8748, 9240, 9244, 0)]
+          - o8398  POP_JUMP_FORWARD_IF_NONE   to 8588
+          + o8856  POP_JUMP_FORWARD_IF_NONE   to 9044
+     replace ORIG[1280:1281](1) [(8448, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1365:1366](1) [(8906, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(8288, 9210, 9218, 0)]  PROD et@[(8748, 9240, 9244, 0)]
+          - o8448  POP_JUMP_FORWARD_IF_FALSE  to 8548
+          + o8906  POP_JUMP_FORWARD_IF_FALSE  to 9004
+     replace ORIG[1291:1292](1) [(8502, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1376:1377](1) [(8960, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(8288, 9210, 9218, 0)]  PROD et@[(8748, 9240, 9244, 0)]
+          - o8502  POP_JUMP_FORWARD_IF_FALSE  to 8544
+          + o8960  POP_JUMP_FORWARD_IF_FALSE  to 9002
+     replace ORIG[1297:1299](2) [(8544, 'EXTENDED_ARG'), (8546, 'JUMP_FORWARD')]   PROD[1382:1383](1) [(9002, 'JUMP_FORWARD')]
+        ORIG et@[(8288, 9210, 9218, 0)]  PROD et@[(8748, 9240, 9244, 0)]
+          - o8544  EXTENDED_ARG               
+          - o8546  JUMP_FORWARD               to 9194
+          + o9002  JUMP_FORWARD               to 9122
+     replace ORIG[1304:1306](2) [(8588, 'EXTENDED_ARG'), (8590, 'JUMP_FORWARD')]   PROD[1388:1389](1) [(9044, 'JUMP_FORWARD')]
+        ORIG et@[(8288, 9210, 9218, 0)]  PROD et@[(8748, 9240, 9244, 0)]
+          - o8588  EXTENDED_ARG               
+          - o8590  JUMP_FORWARD               to 9194
+          + o9044  JUMP_FORWARD               to 9122
+     replace ORIG[1321:1328](7) [(8664, 'POP_JUMP_FORWARD_IF_FALSE'), (8666, 'PUSH_NULL'), (8668, 'LOAD_FAST'), (8670, 'LOAD_FAST')]   PROD[1404:1406](2) [(9118, 'POP_JUMP_FORWARD_IF_FALSE'), (9120, 'NOP')]
+        ORIG et@[(8288, 9210, 9218, 0)]  PROD et@[(8748, 9240, 9244, 0)]
+          - o8664  POP_JUMP_FORWARD_IF_FALSE  to 8904
+          - o8666  PUSH_NULL                  
+          - o8668  LOAD_FAST                  check_handle_date
+          - o8670  LOAD_FAST                  now_date
+          - o8672  PRECALL                    
+          - o8676  CALL                       
+          - o8686  POP_JUMP_FORWARD_IF_FALSE  to 8852
+          + o9118  POP_JUMP_FORWARD_IF_FALSE  to 9122
+          + o9120  NOP                        
+     replace ORIG[1329:1336](7) [(8690, 'LOAD_ATTR'), (8700, 'LOAD_METHOD'), (8722, 'LOAD_GLOBAL'), (8734, 'LOAD_ATTR')]   PROD[1407:1414](7) [(9124, 'LOAD_ATTR'), (9134, 'EXTENDED_ARG'), (9136, 'POP_JUMP_BACKWARD_IF_TRUE'), (9138, 'LOAD_FAST')]
+        ORIG et@[(8288, 9210, 9218, 0)]  PROD et@[(8748, 9240, 9244, 0)]
+          - o8690  LOAD_ATTR                  _engine
+          - o8700  LOAD_METHOD                set_current_stage
+          - o8722  LOAD_GLOBAL                EventEnum
+          - o8734  LOAD_ATTR                  HANDLE_DATA
+          - o8744  PRECALL                    
+          - o8748  CALL                       
+          - o8758  POP_TOP                    
+          + o9124  LOAD_ATTR                  active
+          + o9134  EXTENDED_ARG               
+          + o9136  POP_JUMP_BACKWARD_IF_TRUE  to 5616
+          + o9138  LOAD_FAST                  holiday_not_do_before
+          + o9140  LOAD_CONST                 '0'
+          + o9142  COMPARE_OP                 ==
+          + o9148  POP_JUMP_FORWARD_IF_FALSE  to 9226
+     replace ORIG[1341:1342](1) [(8808, 'LOAD_ATTR')]   PROD[1419:1420](1) [(9198, 'LOAD_ATTR')]
+        ORIG et@[(8288, 9210, 9218, 0)]  PROD et@[(8748, 9240, 9244, 0)]
+          - o8808  LOAD_ATTR                  HANDLE_DATA
+          + o9198  LOAD_ATTR                  BEFORE_TRADING_START
+     replace ORIG[1348:1413](65) [(8840, 'STORE_ATTR'), (8850, 'JUMP_FORWARD'), (8852, 'LOAD_GLOBAL'), (8864, 'LOAD_ATTR')]   PROD[1426:1427](1) [(9230, 'STORE_ATTR')]
+        ORIG et@[(8288, 9210, 9218, 0)]  PROD et@[(8748, 9240, 9244, 0)]
+     replace ORIG[1418:1419](1) [(9234, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[1432:1433](1) [(9260, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(9218, 9238, 9324, 1)]  PROD et@[(9244, 9264, 9350, 1)]
+          - o9234  POP_JUMP_FORWARD_IF_FALSE  to 9322
+          + o9260  POP_JUMP_FORWARD_IF_FALSE  to 9348
+
+====================================================================================================
+UNIT fly/common/flytools.pyc :: <module>.ProcessWrite.modify_batcktes_info   family=F-PAD
+  fam74 reason: idx 162 POP_JUMP_FORWARD_IF_FALSE target 380 -> 404 lands on SAME instr, len equal
+  firstdiv73 div=idx151 ('LOAD_CONST', None) != ('NOP', None) off=700 origTryDepth=1 | fam74 firstidx=162 lineA=1133 lineB=796
+  instr count ORIG/PROD = 234/235
+  --- divergence (normalized key list, idx=151) ---
+      ORIG o700   LOAD_CONST                   None           et=[(700, 722, 752, 0)]
+      PROD o700   NOP                                         et=[(642, 702, 728, 1)]
+  --- ORIG et-union gaps (5) ---
+     [0,4) [(0, 'RESUME', ''), (2, 'NOP', '')]
+     [554,556) [(554, 'NOP', '')]
+     [722,726) [(722, 'LOAD_CONST', 'None'), (724, 'RETURN_VALUE', '')]
+     [748,752) [(748, 'LOAD_CONST', 'None'), (750, 'RETURN_VALUE', '')]
+     [906,954) [(906, 'POP_EXCEPT', ''), (908, 'LOAD_CONST', 'None'), (910, 'STORE_FAST', 'ex'), (912, 'DELETE_FAST', 'ex'), (914, 'LOAD_CONST', 'None'), (916, 'RETURN_VALUE', ''), (918, 'POP_EXCEPT', ''), (920, 'LOAD_CONST', 'None')]
+  --- PROD et-union gaps (5) ---
+     [0,4) [(0, 'RESUME', ''), (2, 'NOP', '')]
+     [554,556) [(554, 'NOP', '')]
+     [724,728) [(724, 'LOAD_CONST', 'None'), (726, 'RETURN_VALUE', '')]
+     [750,754) [(750, 'LOAD_CONST', 'None'), (752, 'RETURN_VALUE', '')]
+     [908,956) [(908, 'POP_EXCEPT', ''), (910, 'LOAD_CONST', 'None'), (912, 'STORE_FAST', 'ex'), (914, 'DELETE_FAST', 'ex'), (916, 'LOAD_CONST', 'None'), (918, 'RETURN_VALUE', ''), (920, 'POP_EXCEPT', ''), (922, 'LOAD_CONST', 'None')]
+  --- normalized instruction diff (ORIG -> PROD) ---
+     insert  ORIG[151:151](0) []   PROD[151:152](1) [(700, 'NOP')]
+        ORIG et@NONE  PROD et@[(642, 702, 728, 1)]
+          + o700   NOP                        
+     replace ORIG[161:162](1) [(730, 'POP_JUMP_FORWARD_IF_TRUE')]   PROD[162:163](1) [(732, 'POP_JUMP_FORWARD_IF_TRUE')]
+        ORIG et@[(726, 734, 734, 3)]  PROD et@[(728, 736, 736, 3)]
+          - o730   POP_JUMP_FORWARD_IF_TRUE   to 740
+          + o732   POP_JUMP_FORWARD_IF_TRUE   to 742
+     replace ORIG[175:176](1) [(768, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[176:177](1) [(770, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(752, 772, 964, 1)]  PROD et@[(754, 774, 966, 1)]
+          - o768   POP_JUMP_FORWARD_IF_FALSE  to 962
+          + o770   POP_JUMP_FORWARD_IF_FALSE  to 964
+     replace ORIG[178:179](1) [(774, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[179:180](1) [(776, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(772, 906, 954, 1)]  PROD et@[(774, 908, 956, 1)]
+          - o774   POP_JUMP_FORWARD_IF_FALSE  to 918
+          + o776   POP_JUMP_FORWARD_IF_FALSE  to 944
+     replace ORIG[182:183](1) [(786, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[183:184](1) [(788, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(772, 906, 954, 1)]  PROD et@[(774, 908, 956, 1)]
+          - o786   POP_JUMP_FORWARD_IF_FALSE  to 842
+          + o788   POP_JUMP_FORWARD_IF_FALSE  to 844
+     replace ORIG[190:191](1) [(840, 'JUMP_FORWARD')]   PROD[191:192](1) [(842, 'JUMP_FORWARD')]
+        ORIG et@[(772, 906, 954, 1)]  PROD et@[(774, 908, 956, 1)]
+          - o840   JUMP_FORWARD               to 942
+          + o842   JUMP_FORWARD               to 932
+     replace ORIG[194:195](1) [(852, 'POP_JUMP_FORWARD_IF_FALSE')]   PROD[195:196](1) [(854, 'POP_JUMP_FORWARD_IF_FALSE')]
+        ORIG et@[(772, 906, 954, 1)]  PROD et@[(774, 908, 956, 1)]
+          - o852   POP_JUMP_FORWARD_IF_FALSE  to 930
+          + o854   POP_JUMP_FORWARD_IF_FALSE  to 920

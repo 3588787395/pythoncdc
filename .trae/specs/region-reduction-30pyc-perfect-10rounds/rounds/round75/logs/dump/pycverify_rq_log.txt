@@ -1,0 +1,6 @@
+start 04:01:38 pylingual root= D:\Desktop\ptrade相关\pylingual
+loaded pyc_verify from F:/Downloads/pythoncdc-main/scripts/pyc_verify.py
+compare_pyc loaded from pylingual.equivalence_check
+evaluate begin
+evaluate end 3.0s status=failure units=43/45
+wrote D:\Temp\opencode\r75gate\diag1\dump\pycverify_rq.json status= failure

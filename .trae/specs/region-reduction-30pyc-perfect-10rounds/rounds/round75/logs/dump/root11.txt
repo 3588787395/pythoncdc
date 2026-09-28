@@ -1,0 +1,203 @@
+=== d74_root: three-way verdict (BRIEF_fix3 §2) for the 11 inside-try units ===
+rule: (b) handler code (et entry `target`..next protected start) differs OR landing role=HANDLER | (c) et identical AND div is a conditional jump matching a chain member (last,tgt) | (a) otherwise
+
+====================================================================================================
+UNIT fly/data/quote.pyc :: <module>.Quote.run_tick_socket   family=F-PAD
+  fam74 reason: idx 11 POP_JUMP_FORWARD_IF_FALSE target 158 -> 364 lands on SAME instr, len equal
+  firstdiv73 div=idx14 ('POP_JUMP_FORWARD_IF_FALSE', 528) != ('EXTENDED_ARG', 2) off=66 origTryDepth=1 | fam74 firstidx=11
+  div instr role ORIG=PROTECTED(d0) PROD=PROTECTED(d0)
+  handler targets ORIG=[1280, 140, 1280, 522, 512, 1280, 522, 1280, 1280, 1858, 1858, 1848, 1858] PROD=[1282, 140, 1282, 522, 512, 1282, 522, 1282, 1860, 1860, 1850, 1860]
+  handler code sigs identical=True  (n=3/3)
+  et entries ORIG/PROD = 13/12  identical=False
+  depth>=1 lens  ORIG={1: [20, 340, 10, 232, 18, 304, 10]}
+                   PROD={1: [20, 340, 10, 232, 18, 304, 10]}  -> SAME
+  depth0 lens     ORIG={0: [44, 66, 4, 8, 158, 592], 1: [20, 340, 10, 232, 18, 304, 10]}
+                   PROD={0: [46, 66, 2, 8, 752], 1: [20, 340, 10, 232, 18, 304, 10]}
+  et gaps ORIG=[(0, 24), (68, 70), (508, 512), (680, 684), (1276, 1280), (1512, 1516), (1838, 1848)] PROD=[(0, 24), (70, 72), (508, 512), (1274, 1282), (1514, 1518), (1840, 1850)]
+  instr count ORIG/PROD = 347/348 ; normalized div idx=14
+    ORIG o66    POP_JUMP_FORWARD_IF_FALSE    to 528         landing@528 role=PROTECTED(d0)
+    PROD o68    POP_JUMP_FORWARD_IF_FALSE    to 1122        landing@1122 role=PROTECTED(d0)
+        +1122  LOAD_FAST                  self
+        +1124  LOAD_ATTR                  log
+        +1134  LOAD_ATTR                  quote
+        +1144  LOAD_METHOD                warning
+  chains=1  chain-match=None
+  VERDICT: (a) et differs (n 13->12); div not a chain member
+
+====================================================================================================
+UNIT IQCommon/util/trade_info_utils.pyc :: <module>.trade_operation   family=F-ABSORB
+  fam74 reason: idx 93 POP_JUMP_FORWARD_IF_FALSE target 324 -> 172 lands on DIFFERENT instr (LOAD_FAST vs FOR_ITER)
+  firstdiv73 div=idx108 ('POP_JUMP_FORWARD_IF_FALSE', 1000) != ('POP_JUMP_FORWARD_IF_FALSE', 1042) off=676 origTryDepth=1 | fam74 firstidx=93
+  div instr role ORIG=PROTECTED(d1) PROD=PROTECTED(d1)
+  handler targets ORIG=[1526, 1442, 1310, 1442, 1318, 1442, 1318, 1442, 1526, 1442, 1526, 1450, 1526, 1450, 1526, 1526, 1630, 1630] PROD=[1526, 1442, 1310, 1442, 1318, 1442, 1318, 1442, 1526, 1442, 1526, 1450, 1526, 1450, 1526, 1526, 1630, 1630]
+  handler code sigs identical=True  (n=4/4)
+  et entries ORIG/PROD = 18/18  identical=True
+  depth>=1 lens  ORIG={1: [766, 24, 6, 8, 56, 96, 2], 2: [76], 3: [8, 2], 4: [8, 2]}
+                   PROD={1: [766, 24, 6, 8, 56, 96, 2], 2: [76], 3: [8, 2], 4: [8, 2]}  -> SAME
+  depth0 lens     ORIG={0: [94, 22, 22, 6, 6, 54], 1: [766, 24, 6, 8, 56, 96, 2], 2: [76], 3: [8, 2], 4: [8, 2]}
+                   PROD={0: [94, 22, 22, 6, 6, 54], 1: [766, 24, 6, 8, 56, 96, 2], 2: [76], 3: [8, 2], 4: [8, 2]}
+  et gaps ORIG=[(0, 350), (1356, 1360), (1438, 1442), (1464, 1468), (1522, 1526), (1622, 1628)] PROD=[(0, 350), (1356, 1360), (1438, 1442), (1464, 1468), (1522, 1526), (1622, 1628)]
+  instr count ORIG/PROD = 339/339 ; normalized div idx=108
+    ORIG o676   POP_JUMP_FORWARD_IF_FALSE    to 1000        landing@1000 role=PROTECTED(d1)
+    PROD o676   POP_JUMP_FORWARD_IF_FALSE    to 1042        landing@1042 role=PROTECTED(d1)
+        +1042  JUMP_BACKWARD              to 654
+        +1044  LOAD_GLOBAL                NULL + len
+        +1056  LOAD_FAST                  write_info
+        +1058  PRECALL                    
+  chains=0  chain-match=None
+  VERDICT: (a) div not a chain member
+
+====================================================================================================
+UNIT IQData/plugins/plugin_system_realquote/real_quote.pyc :: <module>.RealQuoteData.get_real_minute_kline   family=F-ABSORB
+  fam74 reason: target instr same but len 250/253
+  firstdiv73 div=idx18 ('POP_JUMP_FORWARD_IF_FALSE', 372) != ('EXTENDED_ARG', 1) off=108 origTryDepth=1 | fam74 firstidx=14
+  div instr role ORIG=PROTECTED(d0) PROD=PROTECTED(d0)
+  handler targets ORIG=[1310, 1310, 1310, 1428, 1418, 1428, 1428] PROD=[1324, 1324, 1324, 1324, 1442, 1432, 1442, 1442]
+  handler code sigs identical=True  (n=2/2)
+  et entries ORIG/PROD = 7/8  identical=False
+  depth>=1 lens  ORIG={1: [20, 76, 2, 10]}
+                   PROD={1: [20, 76, 2, 10]}  -> SAME
+  depth0 lens     ORIG={0: [282, 208, 726], 1: [20, 76, 2, 10]}
+                   PROD={0: [286, 726, 12, 198], 1: [20, 76, 2, 10]}
+  et gaps ORIG=[(0, 88), (370, 372), (580, 582), (1308, 1310), (1408, 1418)] PROD=[(0, 88), (374, 376), (1102, 1104), (1116, 1118), (1316, 1324), (1422, 1432)]
+  instr count ORIG/PROD = 280/287 ; normalized div idx=18
+    ORIG o108   POP_JUMP_FORWARD_IF_FALSE    to 372         landing@372 role=PROTECTED(d0)
+    PROD o110   POP_JUMP_FORWARD_IF_FALSE    to 1118        landing@1118 role=PROTECTED(d0)
+        +1118  LOAD_GLOBAL                datetime
+        +1130  LOAD_ATTR                  datetime
+        +1140  LOAD_METHOD                now
+        +1162  PRECALL                    
+  chains=0  chain-match=None
+  VERDICT: (a) et differs (n 7->8); div not a chain member
+
+====================================================================================================
+UNIT IQCommon/data/finance.pyc :: <module>.get_fields   family=F-ABSORB
+  fam74 reason: idx 18 JUMP_FORWARD target 90 -> 254 lands on DIFFERENT instr (LOAD_FAST vs LOAD_FAST)
+  firstdiv73 div=idx4 ('POP_JUMP_FORWARD_IF_NOT_NONE', 740) != ('POP_JUMP_FORWARD_IF_NOT_NONE', 742) off=8 origTryDepth=1 | fam74 firstidx=18
+  div instr role ORIG=PROTECTED(d0) PROD=PROTECTED(d0)
+  handler targets ORIG=[744, 744, 744, 744, 858, 848, 858, 858] PROD=[746, 746, 746, 746, 860, 850, 860, 860]
+  handler code sigs identical=True  (n=2/2)
+  et entries ORIG/PROD = 8/8  identical=False
+  depth>=1 lens  ORIG={1: [20, 72, 2, 10]}
+                   PROD={1: [20, 72, 2, 10]}  -> SAME
+  depth0 lens     ORIG={0: [156, 508, 66, 2], 1: [20, 72, 2, 10]}
+                   PROD={0: [158, 508, 66, 2], 1: [20, 72, 2, 10]}
+  et gaps ORIG=[(0, 4), (160, 162), (670, 672), (738, 740), (742, 744), (838, 848)] PROD=[(0, 4), (162, 164), (672, 674), (740, 742), (744, 746), (840, 850)]
+  instr count ORIG/PROD = 177/178 ; normalized div idx=4
+    ORIG o8     POP_JUMP_FORWARD_IF_NOT_NONE to 740         landing@740 role=PROTECTED(d0)
+    PROD o8     POP_JUMP_FORWARD_IF_NOT_NONE to 742         landing@742 role=PROTECTED(d0)
+        +742   LOAD_FAST                  fields
+        +744   RETURN_VALUE               
+        +746   PUSH_EXC_INFO              
+        +748   LOAD_GLOBAL                BaseException
+  chains=1  chain-match=None
+  VERDICT: (a) et differs (n 8->8); div not a chain member
+
+====================================================================================================
+UNIT IQCommon/util/cgroup_utils.pyc :: <module>.set_cgroup_config   family=F-ABSORB
+  fam74 reason: target instr same but len 540/541
+  firstdiv73 div=idx508 ('POP_JUMP_FORWARD_IF_FALSE', 4414) != ('POP_JUMP_FORWARD_IF_FALSE', 4416) off=3618 origTryDepth=1 | fam74 firstidx=417
+  div instr role ORIG=PROTECTED(d0) PROD=PROTECTED(d0)
+  handler targets ORIG=[4450, 4450, 4580, 4580] PROD=[4452, 4452, 4452, 4582, 4582]
+  handler code sigs identical=True  (n=2/2)
+  et entries ORIG/PROD = 4/5  identical=False
+  depth>=1 lens  ORIG={1: [122, 2]}
+                   PROD={1: [122, 2]}  -> SAME
+  depth0 lens     ORIG={0: [112, 4326], 1: [122, 2]}
+                   PROD={0: [112, 4292, 32], 1: [122, 2]}
+  et gaps ORIG=[(0, 4), (116, 120), (4446, 4450), (4572, 4578)] PROD=[(0, 4), (116, 120), (4412, 4416), (4448, 4452), (4574, 4580)]
+  instr count ORIG/PROD = 653/654 ; normalized div idx=508
+    ORIG o3618  POP_JUMP_FORWARD_IF_FALSE    to 4414        landing@4414 role=PROTECTED(d0)
+    PROD o3618  POP_JUMP_FORWARD_IF_FALSE    to 4416        landing@4416 role=PROTECTED(d0)
+        +4416  LOAD_GLOBAL                NULL + delete_cgroup_config
+        +4428  LOAD_FAST                  user_id
+        +4430  LOAD_CONST                 'notebook_memory'
+        +4432  PRECALL                    
+  chains=0  chain-match=None
+  VERDICT: (a) et differs (n 4->5); div not a chain member
+
+====================================================================================================
+UNIT IQCommon/util/email_utils.pyc :: <module>.send_email   family=F-ABSORB
+  fam74 reason: idx 22 POP_JUMP_FORWARD_IF_FALSE target 206 -> 332 lands on DIFFERENT instr (LOAD_GLOBAL vs LOAD_CONST)
+  firstdiv73 div=idx28 ('POP_JUMP_FORWARD_IF_FALSE', 674) != ('POP_JUMP_FORWARD_IF_FALSE', 1120) off=130 origTryDepth=1 | fam74 firstidx=22
+  div instr role ORIG=PROTECTED(d0) PROD=PROTECTED(d0)
+  handler targets ORIG=[1120, 1120, 1120, 1234, 1234] PROD=[1124, 1124, 1124, 1238, 1238]
+  handler code sigs identical=True  (n=2/2)
+  et entries ORIG/PROD = 5/5  identical=False
+  depth>=1 lens  ORIG={1: [108, 2]}
+                   PROD={1: [108, 2]}  -> SAME
+  depth0 lens     ORIG={0: [152, 186, 762], 1: [108, 2]}
+                   PROD={0: [152, 186, 762], 1: [108, 2]}
+  et gaps ORIG=[(0, 14), (166, 168), (354, 356), (1118, 1120), (1228, 1232)] PROD=[(0, 14), (166, 168), (354, 356), (1118, 1124), (1232, 1236)]
+  instr count ORIG/PROD = 222/224 ; normalized div idx=28
+    ORIG o130   POP_JUMP_FORWARD_IF_FALSE    to 674         landing@674 role=PROTECTED(d0)
+    PROD o130   POP_JUMP_FORWARD_IF_FALSE    to 1120        landing@1120 role=OUTSIDE
+        +1120  LOAD_CONST                 None
+        +1122  RETURN_VALUE               
+        +1124  PUSH_EXC_INFO              
+        +1126  LOAD_GLOBAL                BaseException
+  chains=0  chain-match=None
+  VERDICT: (a) et differs (n 5->5); div not a chain member
+
+====================================================================================================
+UNIT IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc :: <module>.Strategy.tick_worker_thread   family=F-ABSORB
+  fam74 reason: idx 61 POP_JUMP_FORWARD_IF_TRUE target 156 -> 12 lands on DIFFERENT instr (LOAD_GLOBAL vs LOAD_FAST)
+  firstdiv73 div=idx73 ('POP_JUMP_FORWARD_IF_TRUE', 568) != ('POP_JUMP_FORWARD_IF_TRUE', 820) off=522 origTryDepth=1 | fam74 firstidx=61
+  div instr role ORIG=PROTECTED(d0) PROD=PROTECTED(d0)
+  handler targets ORIG=[1290, 1420, 1420] PROD=[1290, 1420, 1420]
+  handler code sigs identical=True  (n=2/2)
+  et entries ORIG/PROD = 3/3  identical=True
+  depth>=1 lens  ORIG={1: [122, 2]}
+                   PROD={1: [122, 2]}  -> SAME
+  depth0 lens     ORIG={0: [1242], 1: [122, 2]}
+                   PROD={0: [1242], 1: [122, 2]}
+  et gaps ORIG=[(0, 48), (1412, 1418)] PROD=[(0, 48), (1412, 1418)]
+  instr count ORIG/PROD = 294/294 ; normalized div idx=73
+    ORIG o522   POP_JUMP_FORWARD_IF_TRUE     to 568         landing@568 role=PROTECTED(d0)
+    PROD o522   POP_JUMP_FORWARD_IF_TRUE     to 820         landing@820 role=PROTECTED(d0)
+        +820   JUMP_FORWARD               to 1286
+        +822   LOAD_FAST                  self
+        +824   LOAD_METHOD                is_stock_tradetime_now
+        +846   LOAD_FAST                  dt_strf
+  chains=2  chain-match=(0, {'blk': 512, 'op': 'or', 'last': 'POP_JUMP_FORWARD_IF_TRUE', 'argval': 568, 'tgt': 568, 'tgt_is': 2794420644944})
+  VERDICT: (c) et identical; chain#0 member blk=512 last=POP_JUMP_FORWARD_IF_TRUE tgt=568
+
+====================================================================================================
+UNIT IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc :: <module>.RealtimeEventSource.clock_worker   family=F-ABSORB
+  fam74 reason: idx 664 POP_JUMP_FORWARD_IF_FALSE target 2494 -> 2476 lands on DIFFERENT instr (LOAD_CONST vs LOAD_FAST)
+  firstdiv73 div=idx717 ('LOAD_CONST', <code object check_handle_date at 0x000002870D927570, file "./fly_docker_py311/IQEngine/plugins/plugin_system_event_source/realtime_event_source.py", line 380>) != ('LOAD_CONST', <code object check_handle_date at 0x000002870D926BB0, file "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py", line 204>) off=5270 origTryDepth=1 | fam74 firstidx=664
+  div instr role ORIG=PROTECTED(d0) PROD=PROTECTED(d0)
+  handler targets ORIG=[9218, 6654, 9218, 6684, 9218, 6684, 9218, 9218, 7818, 9218, 7966, 9218, 7966, 9218, 9218, 8258, 9218, 8288, 9218, 8288, 9218, 9324, 9314, 9324] PROD=[9244, 6658, 9244, 6690, 9244, 6690, 9244, 9244, 7638, 9244, 7786, 9244, 7786, 9244, 9244, 8718, 9244, 8748, 9244, 8748, 9244, 9350, 9340, 9350]
+  handler code sigs identical=True  (n=4/4)
+  et entries ORIG/PROD = 24/24  identical=False
+  depth>=1 lens  ORIG={1: [24, 2, 102, 24, 2, 20, 64, 10], 2: [142, 2]}
+                   PROD={1: [24, 2, 102, 24, 2, 20, 64, 10], 2: [142, 2]}  -> SAME
+  depth0 lens     ORIG={0: [6574, 70, 2, 4, 804, 218, 4, 4, 200, 14, 70, 2, 4, 922], 1: [24, 2, 102, 24, 2, 20, 64, 10], 2: [142, 2]}
+                   PROD={0: [6576, 70, 4, 6, 704, 132, 4, 4, 840, 14, 70, 2, 4, 492], 1: [24, 2, 102, 24, 2, 20, 64, 10], 2: [142, 2]}
+  et gaps ORIG=[(0, 6), (6580, 6582), (7488, 7492), (7710, 7712), (8166, 8170), (8184, 8186), (9210, 9218), (9302, 9314)] PROD=[(0, 6), (6582, 6584), (7394, 7398), (7530, 7532), (8626, 8630), (8644, 8646), (9240, 9244), (9328, 9340)]
+  instr count ORIG/PROD = 1442/1456 ; normalized div idx=768
+    ORIG o5598  LOAD_DEREF                   self           landing@- role=?
+    PROD o5598  NOP                                         landing@- role=?
+  chains=3  chain-match=None
+  VERDICT: (a) et differs (n 24->24); div op not conditional (LOAD_DEREF)
+
+====================================================================================================
+UNIT fly/common/flytools.pyc :: <module>.ProcessWrite.modify_batcktes_info   family=F-PAD
+  fam74 reason: idx 162 POP_JUMP_FORWARD_IF_FALSE target 380 -> 404 lands on SAME instr, len equal
+  firstdiv73 div=idx151 ('LOAD_CONST', None) != ('NOP', None) off=700 origTryDepth=1 | fam74 firstidx=162
+  div instr role ORIG=PROTECTED(d0) PROD=PROTECTED(d1)
+  handler targets ORIG=[752, 726, 626, 580, 626, 588, 626, 588, 626, 726, 634, 726, 634, 726, 752, 734, 752, 734, 752, 964, 954, 964] PROD=[754, 728, 626, 580, 626, 588, 626, 588, 626, 728, 634, 728, 634, 728, 754, 736, 754, 736, 754, 966, 956, 966]
+  handler code sigs identical=True  (n=5/5)
+  et entries ORIG/PROD = 22/22  identical=False
+  depth>=1 lens  ORIG={1: [172, 24, 6, 58, 20, 134, 10], 2: [38, 24, 6, 6], 3: [224, 8, 2], 4: [8, 2], 5: [8, 2]}
+                   PROD={1: [172, 24, 6, 60, 20, 134, 10], 2: [38, 24, 6, 6], 3: [224, 8, 2], 4: [8, 2], 5: [8, 2]}  -> CHANGED
+  depth0 lens     ORIG={0: [116, 22, 6, 6], 1: [172, 24, 6, 58, 20, 134, 10], 2: [38, 24, 6, 6], 3: [224, 8, 2], 4: [8, 2], 5: [8, 2]}
+                   PROD={0: [116, 22, 6, 6], 1: [172, 24, 6, 60, 20, 134, 10], 2: [38, 24, 6, 6], 3: [224, 8, 2], 4: [8, 2], 5: [8, 2]}
+  et gaps ORIG=[(0, 4), (554, 556), (722, 726), (748, 752), (906, 954)] PROD=[(0, 4), (554, 556), (724, 728), (750, 754), (908, 956)]
+  instr count ORIG/PROD = 234/235 ; normalized div idx=151
+    ORIG o700   LOAD_CONST                   None           landing@- role=?
+    PROD o700   NOP                                         landing@- role=?
+  chains=0  chain-match=None
+  VERDICT: (a) et differs (n 22->22); div op not conditional (LOAD_CONST)
+
+=== tally: {'a': 8, 'c': 1} ===

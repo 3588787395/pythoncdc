@@ -1,0 +1,396 @@
+=== d74_try2: dual-ruler first divergence + landing for 11 inside-try units ===
+
+====================================================================================================
+UNIT fly/data/quote.pyc :: <module>.Quote.run_tick_socket   family=F-PAD
+  fam74 firstidx=11  firstA='22 POP_JUMP_FORWARD_IF_FALSE to 158'  firstB='22 POP_JUMP_FORWARD_IF_FALSE to 364'  lineA=2156 lineB=1431  lenA/lenB=308/308
+  firstdiv73 div=idx14 ('POP_JUMP_FORWARD_IF_FALSE', 528) != ('EXTENDED_ARG', 2) off=66 origTryDepth=1
+  [ruler a] idx=11
+      ORIG o52    CALL                           
+      PROD o52    CALL                           
+      ORIG et@52 = [(24, 68, 1280, 0)]
+      ORIG landing@0 = RESUME 
+      PROD landing@0 = RESUME 
+  --- ORIG [idx 6..19] ---
+      idx6    o20    STORE_FAST                       panelt
+      idx7    o22    NOP                              
+      idx8    o24    LOAD_FAST                        socket
+      idx9    o26    LOAD_METHOD                      recv
+      idx10   o48    PRECALL                          
+   >> idx11   o52    CALL                             
+      idx12   o62    STORE_FAST                       message
+      idx13   o64    LOAD_FAST                        message
+      idx14   o66    POP_JUMP_FORWARD_IF_FALSE        to 528
+      idx15   o68    NOP                              
+      idx16   o70    LOAD_GLOBAL                      NULL + eval
+      idx17   o82    LOAD_FAST                        message
+      idx18   o84    LOAD_METHOD                      decode
+      idx19   o106   PRECALL                          
+  --- PRODUCT [idx 6..19] ---
+      idx6    o20    STORE_FAST                       panelt
+      idx7    o22    NOP                              
+      idx8    o24    LOAD_FAST                        socket
+      idx9    o26    LOAD_METHOD                      recv
+      idx10   o48    PRECALL                          
+   >> idx11   o52    CALL                             
+      idx12   o62    STORE_FAST                       message
+      idx13   o64    LOAD_FAST                        message
+      idx14   o66    EXTENDED_ARG                     
+      idx15   o68    POP_JUMP_FORWARD_IF_FALSE        to 1122
+      idx16   o70    NOP                              
+      idx17   o72    LOAD_GLOBAL                      NULL + eval
+      idx18   o84    LOAD_FAST                        message
+      idx19   o86    LOAD_METHOD                      decode
+  [ruler b] div=14
+      ORIG key=('POP_JUMP_FORWARD_IF_FALSE', 528)  PROD key=('EXTENDED_ARG', 2)
+      ORIG o66    POP_JUMP_FORWARD_IF_FALSE to 528   et=[(24, 68, 1280, 0)]
+      PROD o66    EXTENDED_ARG    et=[(24, 70, 1282, 0)]
+
+====================================================================================================
+UNIT IQCommon/util/trade_info_utils.pyc :: <module>.trade_operation   family=F-ABSORB
+  fam74 firstidx=93  firstA='186 POP_JUMP_FORWARD_IF_FALSE to 324'  firstB='186 POP_JUMP_FORWARD_IF_FALSE to 334'  lineA=288 lineB=133  lenA/lenB=303/303
+  firstdiv73 div=idx108 ('POP_JUMP_FORWARD_IF_FALSE', 1000) != ('POP_JUMP_FORWARD_IF_FALSE', 1042) off=676 origTryDepth=1
+  [ruler a] idx=93
+      ORIG o598   LOAD_FAST                      delete_write_info
+      PROD o598   LOAD_FAST                      delete_write_info
+      ORIG et@598 = [(444, 1210, 1442, 1)]
+  --- ORIG [idx 88..101] ---
+      idx88   o578   PRECALL                          
+      idx89   o582   CALL                             
+      idx90   o592   POP_JUMP_FORWARD_IF_TRUE         to 650
+      idx91   o594   LOAD_CONST                       True
+      idx92   o596   STORE_FAST                       new_file_flag
+   >> idx93   o598   LOAD_FAST                        delete_write_info
+      idx94   o600   LOAD_METHOD                      append
+      idx95   o622   LOAD_GLOBAL                      SIM_TRADING_COLUMN_NAMES
+      idx96   o634   PRECALL                          
+      idx97   o638   CALL                             
+      idx98   o648   POP_TOP                          
+      idx99   o650   LOAD_FAST                        csv_reader
+      idx100  o652   GET_ITER                         
+      idx101  o654   FOR_ITER                         to 1044
+  --- PRODUCT [idx 88..101] ---
+      idx88   o578   PRECALL                          
+      idx89   o582   CALL                             
+      idx90   o592   POP_JUMP_FORWARD_IF_TRUE         to 650
+      idx91   o594   LOAD_CONST                       True
+      idx92   o596   STORE_FAST                       new_file_flag
+   >> idx93   o598   LOAD_FAST                        delete_write_info
+      idx94   o600   LOAD_METHOD                      append
+      idx95   o622   LOAD_GLOBAL                      SIM_TRADING_COLUMN_NAMES
+      idx96   o634   PRECALL                          
+      idx97   o638   CALL                             
+      idx98   o648   POP_TOP                          
+      idx99   o650   LOAD_FAST                        csv_reader
+      idx100  o652   GET_ITER                         
+      idx101  o654   FOR_ITER                         to 1044
+  [ruler b] div=108
+      ORIG key=('POP_JUMP_FORWARD_IF_FALSE', 1000)  PROD key=('POP_JUMP_FORWARD_IF_FALSE', 1042)
+      ORIG o676   POP_JUMP_FORWARD_IF_FALSE to 1000   et=[(444, 1210, 1442, 1)]
+      PROD o676   POP_JUMP_FORWARD_IF_FALSE to 1042   et=[(444, 1210, 1442, 1)]
+
+====================================================================================================
+UNIT IQData/plugins/plugin_system_realquote/real_quote.pyc :: <module>.RealQuoteData.get_real_minute_kline   family=F-ABSORB
+  fam74 firstidx=14  firstA='28 POP_JUMP_FORWARD_IF_FALSE to 116'  firstB='28 POP_JUMP_FORWARD_IF_FALSE to 390'  lineA=584 lineB=370  lenA/lenB=250/253
+  firstdiv73 div=idx18 ('POP_JUMP_FORWARD_IF_FALSE', 372) != ('EXTENDED_ARG', 1) off=108 origTryDepth=1
+  [ruler a] idx=14
+      ORIG o88    LOAD_FAST                      self
+      PROD o88    LOAD_FAST                      self
+      ORIG et@88 = [(88, 370, 1310, 0)]
+  --- ORIG [idx 9..22] ---
+      idx9    o68    LOAD_CONST                       '.SS'
+      idx10   o70    PRECALL                          
+      idx11   o74    CALL                             
+      idx12   o84    STORE_FAST                       symbol
+      idx13   o86    NOP                              
+   >> idx14   o88    LOAD_FAST                        self
+      idx15   o90    LOAD_ATTR                        cache
+      idx16   o100   LOAD_CONST                       1
+      idx17   o102   COMPARE_OP                       ==
+      idx18   o108   POP_JUMP_FORWARD_IF_FALSE        to 372
+      idx19   o110   LOAD_FAST                        symbol
+      idx20   o112   LOAD_METHOD                      replace
+      idx21   o134   LOAD_CONST                       '.XSHE'
+      idx22   o136   LOAD_CONST                       '.SZ'
+  --- PRODUCT [idx 9..22] ---
+      idx9    o68    LOAD_CONST                       '.SS'
+      idx10   o70    PRECALL                          
+      idx11   o74    CALL                             
+      idx12   o84    STORE_FAST                       symbol
+      idx13   o86    NOP                              
+   >> idx14   o88    LOAD_FAST                        self
+      idx15   o90    LOAD_ATTR                        cache
+      idx16   o100   LOAD_CONST                       1
+      idx17   o102   COMPARE_OP                       ==
+      idx18   o108   EXTENDED_ARG                     
+      idx19   o110   POP_JUMP_FORWARD_IF_FALSE        to 1118
+      idx20   o112   LOAD_FAST                        symbol
+      idx21   o114   LOAD_METHOD                      replace
+      idx22   o136   LOAD_CONST                       '.XSHE'
+  [ruler b] div=18
+      ORIG key=('POP_JUMP_FORWARD_IF_FALSE', 372)  PROD key=('EXTENDED_ARG', 1)
+      ORIG o108   POP_JUMP_FORWARD_IF_FALSE to 372   et=[(88, 370, 1310, 0)]
+      PROD o108   EXTENDED_ARG    et=[(88, 374, 1324, 0)]
+
+====================================================================================================
+UNIT IQCommon/data/finance.pyc :: <module>.get_fields   family=F-ABSORB
+  fam74 firstidx=18  firstA='36 JUMP_FORWARD to 90'  firstB='36 JUMP_FORWARD to 254'  lineA=655 lineB=432  lenA/lenB=157/157
+  firstdiv73 div=idx4 ('POP_JUMP_FORWARD_IF_NOT_NONE', 740) != ('POP_JUMP_FORWARD_IF_NOT_NONE', 742) off=8 origTryDepth=1
+  [ruler a] idx=18
+      ORIG o70    PRECALL                        
+      PROD o70    PRECALL                        
+      ORIG et@70 = [(4, 160, 744, 0)]
+      ORIG landing@3 = MISSING 
+      PROD landing@3 = MISSING 
+  --- ORIG [idx 13..26] ---
+      idx13   o50    PRECALL                          
+      idx14   o54    CALL                             
+      idx15   o64    LOAD_FAST                        table
+      idx16   o66    LOAD_CONST                       '20180511'
+      idx17   o68    KW_NAMES                         
+   >> idx18   o70    PRECALL                          
+      idx19   o74    CALL                             
+      idx20   o84    UNPACK_SEQUENCE                  
+      idx21   o88    STORE_FAST                       error_msg
+      idx22   o90    STORE_FAST                       financial_data_tmp
+      idx23   o92    JUMP_FORWARD                     to 236
+      idx24   o94    LOAD_FAST                        table
+      idx25   o96    LOAD_GLOBAL                      const
+      idx26   o108   LOAD_ATTR                        PIT_FINANCIAL_STATEMENTS_INFO
+  --- PRODUCT [idx 13..26] ---
+      idx13   o50    PRECALL                          
+      idx14   o54    CALL                             
+      idx15   o64    LOAD_FAST                        table
+      idx16   o66    LOAD_CONST                       '20180511'
+      idx17   o68    KW_NAMES                         
+   >> idx18   o70    PRECALL                          
+      idx19   o74    CALL                             
+      idx20   o84    UNPACK_SEQUENCE                  
+      idx21   o88    STORE_FAST                       error_msg
+      idx22   o90    STORE_FAST                       financial_data_tmp
+      idx23   o92    EXTENDED_ARG                     
+      idx24   o94    JUMP_FORWARD                     to 742
+      idx25   o96    LOAD_FAST                        table
+      idx26   o98    LOAD_GLOBAL                      const
+  [ruler b] div=4
+      ORIG key=('POP_JUMP_FORWARD_IF_NOT_NONE', 740)  PROD key=('POP_JUMP_FORWARD_IF_NOT_NONE', 742)
+      ORIG o8     POP_JUMP_FORWARD_IF_NOT_NONE to 740   et=[(4, 160, 744, 0)]
+      PROD o8     POP_JUMP_FORWARD_IF_NOT_NONE to 742   et=[(4, 162, 746, 0)]
+
+====================================================================================================
+UNIT IQCommon/util/cgroup_utils.pyc :: <module>.set_cgroup_config   family=F-ABSORB
+  fam74 firstidx=417  firstA='834 POP_JUMP_FORWARD_IF_FALSE to 1024'  firstB='834 POP_JUMP_FORWARD_IF_FALSE to 1026'  lineA=75 lineB=34  lenA/lenB=540/541
+  firstdiv73 div=idx508 ('POP_JUMP_FORWARD_IF_FALSE', 4414) != ('POP_JUMP_FORWARD_IF_FALSE', 4416) off=3618 origTryDepth=1
+  [ruler a] idx=417
+      ORIG o2968  POP_TOP                        
+      PROD o2968  POP_TOP                        
+      ORIG et@2968 = [(120, 4446, 4450, 0)]
+  --- ORIG [idx 412..425] ---
+      idx412  o2938  LOAD_FAST                        message
+      idx413  o2940  PRECALL                          
+      idx414  o2944  CALL                             
+      idx415  o2954  PRECALL                          
+      idx416  o2958  CALL                             
+   >> idx417  o2968  POP_TOP                          
+      idx418  o2970  JUMP_FORWARD                     to 3004
+      idx419  o2972  LOAD_GLOBAL                      NULL + delete_cgroup_config
+      idx420  o2984  LOAD_FAST                        user_id
+      idx421  o2986  LOAD_CONST                       'trade_memory'
+      idx422  o2988  PRECALL                          
+      idx423  o2992  CALL                             
+      idx424  o3002  POP_TOP                          
+      idx425  o3004  LOAD_GLOBAL                      NOTEBOOK_CPU_SWITCH
+  --- PRODUCT [idx 412..425] ---
+      idx412  o2938  LOAD_FAST                        message
+      idx413  o2940  PRECALL                          
+      idx414  o2944  CALL                             
+      idx415  o2954  PRECALL                          
+      idx416  o2958  CALL                             
+   >> idx417  o2968  POP_TOP                          
+      idx418  o2970  JUMP_FORWARD                     to 3004
+      idx419  o2972  LOAD_GLOBAL                      NULL + delete_cgroup_config
+      idx420  o2984  LOAD_FAST                        user_id
+      idx421  o2986  LOAD_CONST                       'trade_memory'
+      idx422  o2988  PRECALL                          
+      idx423  o2992  CALL                             
+      idx424  o3002  POP_TOP                          
+      idx425  o3004  LOAD_GLOBAL                      NOTEBOOK_CPU_SWITCH
+  [ruler b] div=508
+      ORIG key=('POP_JUMP_FORWARD_IF_FALSE', 4414)  PROD key=('POP_JUMP_FORWARD_IF_FALSE', 4416)
+      ORIG o3618  POP_JUMP_FORWARD_IF_FALSE to 4414   et=[(120, 4446, 4450, 0)]
+      PROD o3618  POP_JUMP_FORWARD_IF_FALSE to 4416   et=[(120, 4412, 4452, 0)]
+
+====================================================================================================
+UNIT IQCommon/util/email_utils.pyc :: <module>.send_email   family=F-ABSORB
+  fam74 firstidx=22  firstA='44 POP_JUMP_FORWARD_IF_FALSE to 206'  firstB='44 POP_JUMP_FORWARD_IF_FALSE to 332'  lineA=57 lineB=38  lenA/lenB=193/195
+  firstdiv73 div=idx28 ('POP_JUMP_FORWARD_IF_FALSE', 674) != ('POP_JUMP_FORWARD_IF_FALSE', 1120) off=130 origTryDepth=1
+  [ruler a] idx=22
+      ORIG o106   CALL                           
+      PROD o106   CALL                           
+      ORIG et@106 = [(14, 166, 1120, 0)]
+      ORIG landing@1 = MISSING 
+      PROD landing@1 = MISSING 
+  --- ORIG [idx 17..30] ---
+      idx17   o74    STORE_FAST                       body
+      idx18   o76    LOAD_FAST                        msg
+      idx19   o78    LOAD_METHOD                      attach
+      idx20   o100   LOAD_FAST                        body
+      idx21   o102   PRECALL                          
+   >> idx22   o106   CALL                             
+      idx23   o116   POP_TOP                          
+      idx24   o118   LOAD_FAST                        attachment_path
+      idx25   o120   LOAD_CONST                       ''
+      idx26   o122   COMPARE_OP                       !=
+      idx27   o128   EXTENDED_ARG                     
+      idx28   o130   POP_JUMP_FORWARD_IF_FALSE        to 674
+      idx29   o132   LOAD_GLOBAL                      SEND_EMAIL_FILE_PERMISSION
+      idx30   o144   LOAD_CONST                       '1'
+  --- PRODUCT [idx 17..30] ---
+      idx17   o74    STORE_FAST                       body
+      idx18   o76    LOAD_FAST                        msg
+      idx19   o78    LOAD_METHOD                      attach
+      idx20   o100   LOAD_FAST                        body
+      idx21   o102   PRECALL                          
+   >> idx22   o106   CALL                             
+      idx23   o116   POP_TOP                          
+      idx24   o118   LOAD_FAST                        attachment_path
+      idx25   o120   LOAD_CONST                       ''
+      idx26   o122   COMPARE_OP                       !=
+      idx27   o128   EXTENDED_ARG                     
+      idx28   o130   POP_JUMP_FORWARD_IF_FALSE        to 1120
+      idx29   o132   LOAD_GLOBAL                      SEND_EMAIL_FILE_PERMISSION
+      idx30   o144   LOAD_CONST                       '1'
+  [ruler b] div=28
+      ORIG key=('POP_JUMP_FORWARD_IF_FALSE', 674)  PROD key=('POP_JUMP_FORWARD_IF_FALSE', 1120)
+      ORIG o130   POP_JUMP_FORWARD_IF_FALSE to 674   et=[(14, 166, 1120, 0)]
+      PROD o130   POP_JUMP_FORWARD_IF_FALSE to 1120   et=[(14, 166, 1124, 0)]
+
+====================================================================================================
+UNIT IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc :: <module>.Strategy.tick_worker_thread   family=F-ABSORB
+  fam74 firstidx=61  firstA='122 POP_JUMP_FORWARD_IF_TRUE to 156'  firstB='122 POP_JUMP_FORWARD_IF_TRUE to 282'  lineA=311 lineB=223  lenA/lenB=267/267
+  firstdiv73 div=idx73 ('POP_JUMP_FORWARD_IF_TRUE', 568) != ('POP_JUMP_FORWARD_IF_TRUE', 820) off=522 origTryDepth=1
+  [ruler a] idx=61
+      ORIG o466   POP_TOP                        
+      PROD o466   POP_TOP                        
+      ORIG et@466 = [(48, 1290, 1290, 0)]
+  --- ORIG [idx 56..69] ---
+      idx56   o428   LOAD_GLOBAL                      EventEnum
+      idx57   o440   LOAD_ATTR                        HANDLE_TICK
+      idx58   o450   BUILD_TUPLE                      
+      idx59   o452   PRECALL                          
+      idx60   o456   CALL                             
+   >> idx61   o466   POP_TOP                          
+      idx62   o468   LOAD_GLOBAL                      NULL + time
+      idx63   o480   LOAD_ATTR                        sleep
+      idx64   o490   LOAD_CONST                       3
+      idx65   o492   PRECALL                          
+      idx66   o496   CALL                             
+      idx67   o506   POP_TOP                          
+      idx68   o508   EXTENDED_ARG                     
+      idx69   o510   JUMP_FORWARD                     to 1286
+  --- PRODUCT [idx 56..69] ---
+      idx56   o428   LOAD_GLOBAL                      EventEnum
+      idx57   o440   LOAD_ATTR                        HANDLE_TICK
+      idx58   o450   BUILD_TUPLE                      
+      idx59   o452   PRECALL                          
+      idx60   o456   CALL                             
+   >> idx61   o466   POP_TOP                          
+      idx62   o468   LOAD_GLOBAL                      NULL + time
+      idx63   o480   LOAD_ATTR                        sleep
+      idx64   o490   LOAD_CONST                       3
+      idx65   o492   PRECALL                          
+      idx66   o496   CALL                             
+      idx67   o506   POP_TOP                          
+      idx68   o508   EXTENDED_ARG                     
+      idx69   o510   JUMP_FORWARD                     to 1286
+  [ruler b] div=73
+      ORIG key=('POP_JUMP_FORWARD_IF_TRUE', 568)  PROD key=('POP_JUMP_FORWARD_IF_TRUE', 820)
+      ORIG o522   POP_JUMP_FORWARD_IF_TRUE to 568   et=[(48, 1290, 1290, 0)]
+      PROD o522   POP_JUMP_FORWARD_IF_TRUE to 820   et=[(48, 1290, 1290, 0)]
+
+====================================================================================================
+UNIT IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc :: <module>.RealtimeEventSource.clock_worker   family=F-ABSORB
+  fam74 firstidx=664  firstA='1328 POP_JUMP_FORWARD_IF_FALSE to 2494'  firstB='1328 POP_JUMP_FORWARD_IF_FALSE to 2476'  lineA=189 lineB=100  lenA/lenB=1274/1281
+  firstdiv73 div=idx717 ('LOAD_CONST', <code object check_handle_date at 0x000002870D927570, file "./fly_docker_py311/IQEngine/plugins/plugin_system_event_source/realtime_event_source.py", line 380>) != ('LOAD_CONST', <code object check_handle_date at 0x000002870D926BB0, file "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py", line 204>) off=5270 origTryDepth=1
+  [ruler a] idx=664
+      ORIG o4848  LOAD_FAST                      stock_pm_over
+      PROD o4848  LOAD_FAST                      stock_pm_over
+      ORIG et@4848 = [(6, 6580, 9218, 0)]
+  --- ORIG [idx 659..672] ---
+      idx659  o4828  STORE_FAST                       pm_close
+      idx660  o4830  JUMP_FORWARD                     to 4836
+      idx661  o4832  LOAD_FAST                        stock_pm_close
+      idx662  o4834  STORE_FAST                       pm_close
+      idx663  o4836  LOAD_GLOBAL                      NULL + isinstance
+   >> idx664  o4848  LOAD_FAST                        stock_pm_over
+      idx665  o4850  LOAD_GLOBAL                      str
+      idx666  o4862  PRECALL                          
+      idx667  o4866  CALL                             
+      idx668  o4876  POP_JUMP_FORWARD_IF_FALSE        to 4980
+      idx669  o4878  LOAD_GLOBAL                      datetime
+      idx670  o4890  LOAD_ATTR                        datetime
+      idx671  o4900  LOAD_METHOD                      strptime
+      idx672  o4922  LOAD_FAST                        stock_pm_over
+  --- PRODUCT [idx 659..672] ---
+      idx659  o4828  STORE_FAST                       pm_close
+      idx660  o4830  JUMP_FORWARD                     to 4836
+      idx661  o4832  LOAD_FAST                        stock_pm_close
+      idx662  o4834  STORE_FAST                       pm_close
+      idx663  o4836  LOAD_GLOBAL                      NULL + isinstance
+   >> idx664  o4848  LOAD_FAST                        stock_pm_over
+      idx665  o4850  LOAD_GLOBAL                      str
+      idx666  o4862  PRECALL                          
+      idx667  o4866  CALL                             
+      idx668  o4876  POP_JUMP_FORWARD_IF_FALSE        to 4980
+      idx669  o4878  LOAD_GLOBAL                      datetime
+      idx670  o4890  LOAD_ATTR                        datetime
+      idx671  o4900  LOAD_METHOD                      strptime
+      idx672  o4922  LOAD_FAST                        stock_pm_over
+  [ruler b] div=717
+      ORIG key=('LOAD_CONST', <code object check_handle_date at 0x000001AC668B55F0, file "./fly_docker_py311/IQEngine/plugins/plugin_system_event_source/realtime_event_source.py", line 380>)  PROD key=('LOAD_CONST', <code object check_handle_date at 0x000001AC668B7030, file "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py", line 204>)
+      ORIG o5270  LOAD_CONST <code object check_handle_date at 0x000001AC668B55F0, file "./fly_docker_py311/IQEngine/plugins/plugin_system_event_source/realtime_event_source.py", line 380>   et=[(6, 6580, 9218, 0)]
+      PROD o5270  LOAD_CONST <code object check_handle_date at 0x000001AC668B7030, file "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py", line 204>   et=[(6, 6582, 9244, 0)]
+
+====================================================================================================
+UNIT fly/common/flytools.pyc :: <module>.ProcessWrite.modify_batcktes_info   family=F-PAD
+  fam74 firstidx=162  firstA='324 POP_JUMP_FORWARD_IF_FALSE to 380'  firstB='324 POP_JUMP_FORWARD_IF_FALSE to 404'  lineA=1133 lineB=796  lenA/lenB=216/216
+  firstdiv73 div=idx151 ('LOAD_CONST', None) != ('NOP', None) off=700 origTryDepth=1
+  [ruler a] idx=162
+      ORIG o732   RERAISE                        
+      PROD o732   POP_JUMP_FORWARD_IF_TRUE       to 742
+      ORIG et@732 = [(726, 734, 734, 3)]
+      ORIG landing@2 = NOP 
+      PROD landing@742 = POP_TOP 
+  --- ORIG [idx 157..170] ---
+      idx157  o722   LOAD_CONST                       None
+      idx158  o724   RETURN_VALUE                     
+      idx159  o726   PUSH_EXC_INFO                    
+      idx160  o728   WITH_EXCEPT_START                
+      idx161  o730   POP_JUMP_FORWARD_IF_TRUE         to 740
+   >> idx162  o732   RERAISE                          
+      idx163  o734   COPY                             
+      idx164  o736   POP_EXCEPT                       
+      idx165  o738   RERAISE                          
+      idx166  o740   POP_TOP                          
+      idx167  o742   POP_EXCEPT                       
+      idx168  o744   POP_TOP                          
+      idx169  o746   POP_TOP                          
+      idx170  o748   LOAD_CONST                       None
+  --- PRODUCT [idx 157..170] ---
+      idx157  o722   POP_TOP                          
+      idx158  o724   LOAD_CONST                       None
+      idx159  o726   RETURN_VALUE                     
+      idx160  o728   PUSH_EXC_INFO                    
+      idx161  o730   WITH_EXCEPT_START                
+   >> idx162  o732   POP_JUMP_FORWARD_IF_TRUE         to 742
+      idx163  o734   RERAISE                          
+      idx164  o736   COPY                             
+      idx165  o738   POP_EXCEPT                       
+      idx166  o740   RERAISE                          
+      idx167  o742   POP_TOP                          
+      idx168  o744   POP_EXCEPT                       
+      idx169  o746   POP_TOP                          
+      idx170  o748   POP_TOP                          
+  [ruler b] div=151
+      ORIG key=('LOAD_CONST', None)  PROD key=('NOP', None)
+      ORIG o700   LOAD_CONST None   et=[(700, 722, 752, 0)]
+      PROD o700   NOP    et=[(642, 702, 728, 1)]

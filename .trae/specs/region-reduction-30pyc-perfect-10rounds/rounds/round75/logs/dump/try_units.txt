@@ -1,0 +1,594 @@
+=== d74_try: 11 inside-try units evidence dump ===
+
+====================================================================================================
+UNIT fly/data/quote.pyc :: <module>.Quote.run_tick_socket
+  family=F-PAD  reason=idx 11 POP_JUMP_FORWARD_IF_FALSE target 158 -> 364 lands on SAME instr, len equal
+  lenA=308 lenB=308  firstidx=11  lineA=2156 lineB=1431
+  [firstdiv73] off=66 origTryDepth=1 prodTryDepth=1 div=idx14 ('POP_JUMP_FORWARD_IF_FALSE', 528) != ('EXTENDED_ARG', 2)
+  [exctable73] DIFF origEnts=13 prodEnts=12 origNest=1 prodNest=1
+  ET orig=13 prod=12  bytes_same=False  shape=COUNT-CHANGED 13->12
+  first-divergence idx=14 orig_off=66 prod_off=66  key_orig=('POP_JUMP_FORWARD_IF_FALSE', 528) key_prod=('EXTENDED_ARG', 2)
+  ORIG containing et entries @66: [(24, 68, 1280, 0)]
+      -> handler target offset 1280 (depth 0)
+  PROD containing et entries @66: [(24, 70, 1282, 0)]
+  --- ORIG disassembly [idx 6..26] ---
+      o20    STORE_FAST                     panelt   (line None)
+      o22    NOP                               (line 2156)
+      o24    LOAD_FAST                      socket   (line 2157)
+      o26    LOAD_METHOD                    recv   (line None)
+      o48    PRECALL                           (line None)
+      o52    CALL                              (line None)
+      o62    STORE_FAST                     message   (line None)
+      o64    LOAD_FAST                      message   (line 2160)
+   >> o66    POP_JUMP_FORWARD_IF_FALSE      to 528   (line None)
+      o68    NOP                               (line 2161)
+      o70    LOAD_GLOBAL                    NULL + eval   (line 2162)
+      o82    LOAD_FAST                      message   (line None)
+      o84    LOAD_METHOD                    decode   (line None)
+      o106   PRECALL                           (line None)
+      o110   CALL                              (line None)
+      o120   PRECALL                           (line None)
+      o124   CALL                              (line None)
+      o134   STORE_FAST                     message   (line None)
+      o136   EXTENDED_ARG                      (line None)
+      o138   JUMP_FORWARD                   to 684   (line None)
+      o140   PUSH_EXC_INFO                     (line None)
+  --- PROD disassembly [idx 6..26] ---
+      o20    STORE_FAST                     panelt   (line None)
+      o22    NOP                               (line 1431)
+      o24    LOAD_FAST                      socket   (line 1432)
+      o26    LOAD_METHOD                    recv   (line None)
+      o48    PRECALL                           (line None)
+      o52    CALL                              (line None)
+      o62    STORE_FAST                     message   (line None)
+      o64    LOAD_FAST                      message   (line 1433)
+   >> o66    EXTENDED_ARG                      (line None)
+      o68    POP_JUMP_FORWARD_IF_FALSE      to 1122   (line None)
+      o70    NOP                               (line 1434)
+      o72    LOAD_GLOBAL                    NULL + eval   (line 1435)
+      o84    LOAD_FAST                      message   (line None)
+      o86    LOAD_METHOD                    decode   (line None)
+      o108   PRECALL                           (line None)
+      o112   CALL                              (line None)
+      o122   PRECALL                           (line None)
+      o126   CALL                              (line None)
+      o136   STORE_FAST                     message   (line None)
+      o138   JUMP_FORWARD                   to 528   (line None)
+      o140   PUSH_EXC_INFO                     (line None)
+  [region] 10 regions; try/with regions: ['TryExceptRegion@70', 'TryExceptRegion@24']
+  [chains] n=1
+    same_target=True  nested_ret=False in_try=[True, True, True] members=[(1190, 'and', 'POP_JUMP_FORWARD_IF_FALSE', 1276, 1276), (1226, 'and', 'POP_JUMP_FORWARD_IF_NONE', 1276, 1276), (1230, 'and', 'POP_JUMP_FORWARD_IF_FALSE', 1276, 1276)]
+  PROD src L1431: try:
+           1428:     def run_tick_socket(self, socket, deques, dataDict, userLock, flag):
+           1429:         imagedata = dataDict['imagedata']
+           1430:         panelt = None
+        >> 1431:         try:
+           1432:             message = socket.recv()
+           1433:             if message:
+           1434:                 try:
+
+====================================================================================================
+UNIT IQCommon/util/trade_info_utils.pyc :: <module>.trade_operation
+  family=F-ABSORB  reason=idx 93 POP_JUMP_FORWARD_IF_FALSE target 324 -> 172 lands on DIFFERENT instr (LOAD_FAST vs FOR_ITER)
+  lenA=303 lenB=303  firstidx=93  lineA=288 lineB=133
+  [firstdiv73] off=676 origTryDepth=1 prodTryDepth=1 div=idx108 ('POP_JUMP_FORWARD_IF_FALSE', 1000) != ('POP_JUMP_FORWARD_IF_FALSE', 1042)
+  [exctable73] SAME origEnts=18 prodEnts=18 origNest=1 prodNest=1
+  ET orig=18 prod=18  bytes_same=True  shape=BYTES-SAME
+  first-divergence idx=108 orig_off=676 prod_off=676  key_orig=('POP_JUMP_FORWARD_IF_FALSE', 1000) key_prod=('POP_JUMP_FORWARD_IF_FALSE', 1042)
+  ORIG containing et entries @676: [(444, 1210, 1442, 1)]
+      -> handler target offset 1442 (depth 1)
+  PROD containing et entries @676: [(444, 1210, 1442, 1)]
+  --- ORIG disassembly [idx 100..120] ---
+      o652   GET_ITER                          (line None)
+      o654   FOR_ITER                       to 1044   (line None)
+      o656   STORE_FAST                     items   (line None)
+      o658   LOAD_FAST                      items   (line 307)
+      o660   LOAD_CONST                     0   (line None)
+      o662   BINARY_SUBSCR                     (line None)
+      o672   LOAD_FAST                      trade_id_list   (line None)
+      o674   CONTAINS_OP                       (line None)
+   >> o676   POP_JUMP_FORWARD_IF_FALSE      to 1000   (line None)
+      o678   LOAD_FAST                      operation   (line 309)
+      o680   LOAD_CONST                     'start'   (line None)
+      o682   COMPARE_OP                     ==   (line None)
+      o688   POP_JUMP_FORWARD_IF_FALSE      to 704   (line None)
+      o690   LOAD_CONST                     '0'   (line 310)
+      o692   LOAD_FAST                      items   (line None)
+      o694   LOAD_CONST                     2   (line None)
+      o696   STORE_SUBSCR                      (line None)
+      o700   LOAD_CONST                     'restart'   (line 311)
+      o702   STORE_FAST                     operation   (line None)
+      o704   LOAD_FAST                      operation   (line 312)
+      o706   LOAD_CONST                     'stop'   (line None)
+  --- PROD disassembly [idx 100..120] ---
+      o652   GET_ITER                          (line None)
+      o654   FOR_ITER                       to 1044   (line None)
+      o656   STORE_FAST                     items   (line None)
+      o658   LOAD_FAST                      items   (line 152)
+      o660   LOAD_CONST                     0   (line None)
+      o662   BINARY_SUBSCR                     (line None)
+      o672   LOAD_FAST                      trade_id_list   (line None)
+      o674   CONTAINS_OP                       (line None)
+   >> o676   POP_JUMP_FORWARD_IF_FALSE      to 1042   (line None)
+      o678   LOAD_FAST                      operation   (line 153)
+      o680   LOAD_CONST                     'start'   (line None)
+      o682   COMPARE_OP                     ==   (line None)
+      o688   POP_JUMP_FORWARD_IF_FALSE      to 704   (line None)
+      o690   LOAD_CONST                     '0'   (line 154)
+      o692   LOAD_FAST                      items   (line None)
+      o694   LOAD_CONST                     2   (line None)
+      o696   STORE_SUBSCR                      (line None)
+      o700   LOAD_CONST                     'restart'   (line 155)
+      o702   STORE_FAST                     operation   (line None)
+      o704   LOAD_FAST                      operation   (line 156)
+      o706   LOAD_CONST                     'stop'   (line None)
+  [region] 22 regions; try/with regions: ['TryExceptRegion@350', 'WithRegion@414', 'WithRegion@1178']
+  [chains] n=0
+  PROD src L133: if isinstance(trade_id, str):
+            130:     """
+            131:     trade_list_file = os.path.join(TRADE_DIR_PATH, user_id, SIM_TRADING_LIST_FILE)
+            132:     delete_trade_list_file = os.path.join(TRADE_DIR_PATH, user_id, DELETE_SIM_TRADING_LIST_FILE)
+        >>  133:     if isinstance(trade_id, str):
+            134:         trade_id_list = [trade_id]
+            135:     elif isinstance(trade_id, list):
+            136:         trade_id_list = trade_id
+
+====================================================================================================
+UNIT IQData/plugins/plugin_system_realquote/real_quote.pyc :: <module>.RealQuoteData.get_real_minute_kline
+  family=F-ABSORB  reason=target instr same but len 250/253
+  lenA=250 lenB=253  firstidx=14  lineA=584 lineB=370
+  [firstdiv73] off=108 origTryDepth=1 prodTryDepth=1 div=idx18 ('POP_JUMP_FORWARD_IF_FALSE', 372) != ('EXTENDED_ARG', 1)
+  [exctable73] DIFF origEnts=7 prodEnts=8 origNest=1 prodNest=1
+  ET orig=7 prod=8  bytes_same=False  shape=COUNT-CHANGED 7->8
+  first-divergence idx=18 orig_off=108 prod_off=108  key_orig=('POP_JUMP_FORWARD_IF_FALSE', 372) key_prod=('EXTENDED_ARG', 1)
+  ORIG containing et entries @108: [(88, 370, 1310, 0)]
+      -> handler target offset 1310 (depth 0)
+  PROD containing et entries @108: [(88, 374, 1324, 0)]
+  --- ORIG disassembly [idx 10..30] ---
+      o70    PRECALL                           (line None)
+      o74    CALL                              (line None)
+      o84    STORE_FAST                     symbol   (line None)
+      o86    NOP                               (line 585)
+      o88    LOAD_FAST                      self   (line 586)
+      o90    LOAD_ATTR                      cache   (line None)
+      o100   LOAD_CONST                     1   (line None)
+      o102   COMPARE_OP                     ==   (line None)
+   >> o108   POP_JUMP_FORWARD_IF_FALSE      to 372   (line None)
+      o110   LOAD_FAST                      symbol   (line 587)
+      o112   LOAD_METHOD                    replace   (line None)
+      o134   LOAD_CONST                     '.XSHE'   (line None)
+      o136   LOAD_CONST                     '.SZ'   (line None)
+      o138   PRECALL                           (line None)
+      o142   CALL                              (line None)
+      o152   LOAD_METHOD                    replace   (line None)
+      o174   LOAD_CONST                     '.XSHG'   (line None)
+      o176   LOAD_CONST                     '.SS'   (line None)
+      o178   PRECALL                           (line None)
+      o182   CALL                              (line None)
+      o192   STORE_FAST                     symbol   (line None)
+  --- PROD disassembly [idx 10..30] ---
+      o70    PRECALL                           (line None)
+      o74    CALL                              (line None)
+      o84    STORE_FAST                     symbol   (line None)
+      o86    NOP                               (line 371)
+      o88    LOAD_FAST                      self   (line 372)
+      o90    LOAD_ATTR                      cache   (line None)
+      o100   LOAD_CONST                     1   (line None)
+      o102   COMPARE_OP                     ==   (line None)
+   >> o108   EXTENDED_ARG                      (line None)
+      o110   POP_JUMP_FORWARD_IF_FALSE      to 1118   (line None)
+      o112   LOAD_FAST                      symbol   (line 373)
+      o114   LOAD_METHOD                    replace   (line None)
+      o136   LOAD_CONST                     '.XSHE'   (line None)
+      o138   LOAD_CONST                     '.SZ'   (line None)
+      o140   PRECALL                           (line None)
+      o144   CALL                              (line None)
+      o154   LOAD_METHOD                    replace   (line None)
+      o176   LOAD_CONST                     '.XSHG'   (line None)
+      o178   LOAD_CONST                     '.SS'   (line None)
+      o180   PRECALL                           (line None)
+      o184   CALL                              (line None)
+  [region] 13 regions; try/with regions: ['TryExceptRegion@88']
+  [chains] n=0
+  PROD src L370: symbol = symbol.replace('.XSHE', '.SZ').replace('.XSHG', '.SS')
+            367:             system_log.debug(get_traceback_message())
+            368:         return EMPTY_DAY_BAR_NP_ARRAY
+            369:     def get_real_minute_kline(self, symbol, include, fq=None, ex_info=None, frequency_int=1):
+        >>  370:         symbol = symbol.replace('.XSHE', '.SZ').replace('.XSHG', '.SS')
+            371:         try:
+            372:             if self.cache == 1:
+            373:                 symbol = symbol.replace('.XSHE', '.SZ').replace('.XSHG', '.SS')
+
+====================================================================================================
+UNIT IQCommon/data/finance.pyc :: <module>.get_fields
+  family=F-ABSORB  reason=idx 18 JUMP_FORWARD target 90 -> 254 lands on DIFFERENT instr (LOAD_FAST vs LOAD_FAST)
+  lenA=157 lenB=157  firstidx=18  lineA=655 lineB=432
+  [firstdiv73] off=8 origTryDepth=1 prodTryDepth=1 div=idx4 ('POP_JUMP_FORWARD_IF_NOT_NONE', 740) != ('POP_JUMP_FORWARD_IF_NOT_NONE', 742)
+  [exctable73] DIFF origEnts=8 prodEnts=8 origNest=1 prodNest=1
+  ET orig=8 prod=8  bytes_same=False  shape=RANGE-LEN-CHANGED lens [156, 508, 66, 2, 20, 72, 2, 10] -> [158, 508, 66, 2, 20, 72, 2, 10]
+  first-divergence idx=4 orig_off=8 prod_off=8  key_orig=('POP_JUMP_FORWARD_IF_NOT_NONE', 740) key_prod=('POP_JUMP_FORWARD_IF_NOT_NONE', 742)
+  ORIG containing et entries @8: [(4, 160, 744, 0)]
+      -> handler target offset 744 (depth 0)
+  PROD containing et entries @8: [(4, 162, 746, 0)]
+  --- ORIG disassembly [idx 0..16] ---
+      o0     RESUME                            (line 647)
+      o2     NOP                               (line 651)
+      o4     LOAD_FAST                      fields   (line 652)
+      o6     EXTENDED_ARG                      (line None)
+   >> o8     POP_JUMP_FORWARD_IF_NOT_NONE   to 740   (line None)
+      o10    LOAD_FAST                      table   (line 653)
+      o12    LOAD_CONST                     'valuation'   (line None)
+      o14    COMPARE_OP                     ==   (line None)
+      o20    POP_JUMP_FORWARD_IF_FALSE      to 94   (line None)
+      o22    LOAD_GLOBAL                    NULL + get_finance_open_api_data   (line 654)
+      o34    LOAD_GLOBAL                    NULL + str   (line 655)
+      o46    LOAD_CONST                     '600570.SS'   (line None)
+      o48    BUILD_LIST                        (line None)
+      o50    PRECALL                           (line None)
+      o54    CALL                              (line None)
+      o64    LOAD_FAST                      table   (line None)
+      o66    LOAD_CONST                     '20180511'   (line 656)
+  --- PROD disassembly [idx 0..16] ---
+      o0     RESUME                            (line 425)
+      o2     NOP                               (line 429)
+      o4     LOAD_FAST                      fields   (line 430)
+      o6     EXTENDED_ARG                      (line None)
+   >> o8     POP_JUMP_FORWARD_IF_NOT_NONE   to 742   (line None)
+      o10    LOAD_FAST                      table   (line 431)
+      o12    LOAD_CONST                     'valuation'   (line None)
+      o14    COMPARE_OP                     ==   (line None)
+      o20    POP_JUMP_FORWARD_IF_FALSE      to 96   (line None)
+      o22    LOAD_GLOBAL                    NULL + get_finance_open_api_data   (line 432)
+      o34    LOAD_GLOBAL                    NULL + str   (line None)
+      o46    LOAD_CONST                     '600570.SS'   (line None)
+      o48    BUILD_LIST                        (line None)
+      o50    PRECALL                           (line None)
+      o54    CALL                              (line None)
+      o64    LOAD_FAST                      table   (line None)
+      o66    LOAD_CONST                     '20180511'   (line None)
+  [region] 11 regions; try/with regions: ['TryExceptRegion@4']
+  [chains] n=1
+    same_target=True  nested_ret=False in_try=[True, True] members=[(236, 'and', 'POP_JUMP_FORWARD_IF_FALSE', 672, 672), (260, 'and', 'POP_JUMP_FORWARD_IF_FALSE', 672, 672)]
+  PROD src L432: error_msg, financial_data_tmp = get_finance_open_api_data(security=str(['600570.SS']), table=table, date='20180511')
+            429:     try:
+            430:         if fields is None:
+            431:             if table == 'valuation':
+        >>  432:                 error_msg, financial_data_tmp = get_finance_open_api_data(security=str(['600570.SS']), table=table, date='20180511')
+            433:             elif table in const.PIT_FINANCIAL_STATEMENTS_INFO:
+            434:                 financial_data_tmp = const.PIT_FINANCIAL_STATEMENTS_INFO[table]
+            435:                 return financial_data_tmp
+
+====================================================================================================
+UNIT IQCommon/util/cgroup_utils.pyc :: <module>.set_cgroup_config
+  family=F-ABSORB  reason=target instr same but len 540/541
+  lenA=540 lenB=541  firstidx=417  lineA=75 lineB=34
+  [firstdiv73] off=3618 origTryDepth=1 prodTryDepth=1 div=idx508 ('POP_JUMP_FORWARD_IF_FALSE', 4414) != ('POP_JUMP_FORWARD_IF_FALSE', 4416)
+  [exctable73] DIFF origEnts=4 prodEnts=5 origNest=1 prodNest=1
+  ET orig=4 prod=5  bytes_same=False  shape=COUNT-CHANGED 4->5
+  first-divergence idx=508 orig_off=3618 prod_off=3618  key_orig=('POP_JUMP_FORWARD_IF_FALSE', 4414) key_prod=('POP_JUMP_FORWARD_IF_FALSE', 4416)
+  ORIG containing et entries @3618: [(120, 4446, 4450, 0)]
+      -> handler target offset 4450 (depth 0)
+  PROD containing et entries @3618: [(120, 4412, 4452, 0)]
+  --- ORIG disassembly [idx 500..520] ---
+      o3578  LOAD_CONST                     'notebook_cpu'   (line None)
+      o3580  PRECALL                           (line None)
+      o3584  CALL                              (line None)
+      o3594  POP_TOP                           (line None)
+      o3596  LOAD_GLOBAL                    NOTEBOOK_MEMORY_SWITCH   (line 152)
+      o3608  LOAD_CONST                     1   (line None)
+      o3610  COMPARE_OP                     ==   (line None)
+      o3616  EXTENDED_ARG                      (line None)
+   >> o3618  POP_JUMP_FORWARD_IF_FALSE      to 4414   (line None)
+      o3620  LOAD_GLOBAL                    os   (line 154)
+      o3632  LOAD_ATTR                      path   (line None)
+      o3642  LOAD_METHOD                    exists   (line None)
+      o3664  LOAD_CONST                     '/sys/fs/cgroup/memory/{}_notebook'   (line None)
+      o3666  LOAD_METHOD                    format   (line None)
+      o3688  LOAD_FAST                      container_id   (line None)
+      o3690  PRECALL                           (line None)
+      o3694  CALL                              (line None)
+      o3704  PRECALL                           (line None)
+      o3708  CALL                              (line None)
+      o3718  POP_JUMP_FORWARD_IF_TRUE       to 3954   (line None)
+      o3720  LOAD_GLOBAL                    NULL + os   (line 155)
+  --- PROD disassembly [idx 500..520] ---
+      o3578  LOAD_CONST                     'notebook_cpu'   (line None)
+      o3580  PRECALL                           (line None)
+      o3584  CALL                              (line None)
+      o3594  POP_TOP                           (line None)
+      o3596  LOAD_GLOBAL                    NOTEBOOK_MEMORY_SWITCH   (line 81)
+      o3608  LOAD_CONST                     1   (line None)
+      o3610  COMPARE_OP                     ==   (line None)
+      o3616  EXTENDED_ARG                      (line None)
+   >> o3618  POP_JUMP_FORWARD_IF_FALSE      to 4416   (line None)
+      o3620  LOAD_GLOBAL                    os   (line 82)
+      o3632  LOAD_ATTR                      path   (line None)
+      o3642  LOAD_METHOD                    exists   (line None)
+      o3664  LOAD_CONST                     '/sys/fs/cgroup/memory/{}_notebook'   (line None)
+      o3666  LOAD_METHOD                    format   (line None)
+      o3688  LOAD_FAST                      container_id   (line None)
+      o3690  PRECALL                           (line None)
+      o3694  CALL                              (line None)
+      o3704  PRECALL                           (line None)
+      o3708  CALL                              (line None)
+      o3718  POP_JUMP_FORWARD_IF_TRUE       to 3954   (line None)
+      o3720  LOAD_GLOBAL                    NULL + os   (line 83)
+  [region] 18 regions; try/with regions: ['TryExceptRegion@4']
+  [chains] n=0
+  PROD src L34: if not os.path.exists('/sys/fs/cgroup/memory/docker/{}/backtest'.format(container_id)):
+             31:         else:
+             32:             delete_cgroup_config(user_id, 'backtest_cpu')
+             33:         if BACKTEST_MEMORY_SWITCH == 1:
+        >>   34:             if not os.path.exists('/sys/fs/cgroup/memory/docker/{}/backtest'.format(container_id)):
+             35:                 os.system('sudo cgcreate -t root:root -a root:root -g memory:/docker/{}/backtest'.format(container_id))
+             36:                 os.system('sudo chown -R fly:fly /sys/fs/cgroup/memory/docker/{}/backtest'.format(container_id))
+             37:                 os.system('sudo chmod -R 777 /sys/fs/cgroup/memory/docker/{}/backtest'.format(container_id))
+
+====================================================================================================
+UNIT IQCommon/util/email_utils.pyc :: <module>.send_email
+  family=F-ABSORB  reason=idx 22 POP_JUMP_FORWARD_IF_FALSE target 206 -> 332 lands on DIFFERENT instr (LOAD_GLOBAL vs LOAD_CONST)
+  lenA=193 lenB=195  firstidx=22  lineA=57 lineB=38
+  [firstdiv73] off=130 origTryDepth=1 prodTryDepth=1 div=idx28 ('POP_JUMP_FORWARD_IF_FALSE', 674) != ('POP_JUMP_FORWARD_IF_FALSE', 1120)
+  [exctable73] DIFF origEnts=5 prodEnts=5 origNest=1 prodNest=1
+  ET orig=5 prod=5  bytes_same=False  shape=SHIFT-ONLY (same lengths [152, 186, 762, 108, 2], offsets translated)
+  first-divergence idx=28 orig_off=130 prod_off=130  key_orig=('POP_JUMP_FORWARD_IF_FALSE', 674) key_prod=('POP_JUMP_FORWARD_IF_FALSE', 1120)
+  ORIG containing et entries @130: [(14, 166, 1120, 0)]
+      -> handler target offset 1120 (depth 0)
+  PROD containing et entries @130: [(14, 166, 1124, 0)]
+  --- ORIG disassembly [idx 20..40] ---
+      o100   LOAD_FAST                      body   (line None)
+      o102   PRECALL                           (line None)
+      o106   CALL                              (line None)
+      o116   POP_TOP                           (line None)
+      o118   LOAD_FAST                      attachment_path   (line 59)
+      o120   LOAD_CONST                     ''   (line None)
+      o122   COMPARE_OP                     !=   (line None)
+      o128   EXTENDED_ARG                      (line None)
+   >> o130   POP_JUMP_FORWARD_IF_FALSE      to 674   (line None)
+      o132   LOAD_GLOBAL                    SEND_EMAIL_FILE_PERMISSION   (line 60)
+      o144   LOAD_CONST                     '1'   (line None)
+      o146   COMPARE_OP                     ==   (line None)
+      o152   POP_JUMP_FORWARD_IF_FALSE      to 168   (line None)
+      o154   LOAD_CONST                     '系统配置不允许发送邮件附件, 本次发送过程附件将不会被发送'   (line 61)
+      o156   LOAD_FAST                      return_info   (line None)
+      o158   LOAD_CONST                     'error_info'   (line None)
+      o160   STORE_SUBSCR                      (line None)
+      o164   LOAD_FAST                      return_info   (line 62)
+      o166   RETURN_VALUE                      (line None)
+      o168   LOAD_GLOBAL                    NULL + float   (line 63)
+      o180   LOAD_GLOBAL                    NULL + round   (line None)
+  --- PROD disassembly [idx 20..40] ---
+      o100   LOAD_FAST                      body   (line None)
+      o102   PRECALL                           (line None)
+      o106   CALL                              (line None)
+      o116   POP_TOP                           (line None)
+      o118   LOAD_FAST                      attachment_path   (line 40)
+      o120   LOAD_CONST                     ''   (line None)
+      o122   COMPARE_OP                     !=   (line None)
+      o128   EXTENDED_ARG                      (line None)
+   >> o130   POP_JUMP_FORWARD_IF_FALSE      to 1120   (line None)
+      o132   LOAD_GLOBAL                    SEND_EMAIL_FILE_PERMISSION   (line 41)
+      o144   LOAD_CONST                     '1'   (line None)
+      o146   COMPARE_OP                     ==   (line None)
+      o152   POP_JUMP_FORWARD_IF_FALSE      to 168   (line None)
+      o154   LOAD_CONST                     '系统配置不允许发送邮件附件, 本次发送过程附件将不会被发送'   (line 42)
+      o156   LOAD_FAST                      return_info   (line None)
+      o158   LOAD_CONST                     'error_info'   (line None)
+      o160   STORE_SUBSCR                      (line None)
+      o164   LOAD_FAST                      return_info   (line 43)
+      o166   RETURN_VALUE                      (line None)
+      o168   LOAD_GLOBAL                    NULL + float   (line 45)
+      o180   LOAD_GLOBAL                    NULL + round   (line None)
+  [region] 5 regions; try/with regions: ['TryExceptRegion@14']
+  [chains] n=0
+  PROD src L38: body = MIMEText(email_info, 'plain', 'utf-8')
+             35:     return_info = {'error_no': -1, 'error_info': ''}
+             36:     try:
+             37:         msg = MIMEMultipart()
+        >>   38:         body = MIMEText(email_info, 'plain', 'utf-8')
+             39:         msg.attach(body)
+             40:         if attachment_path != '':
+             41:             if SEND_EMAIL_FILE_PERMISSION == '1':
+
+====================================================================================================
+UNIT IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc :: <module>.Strategy.tick_worker_thread
+  family=F-ABSORB  reason=idx 61 POP_JUMP_FORWARD_IF_TRUE target 156 -> 12 lands on DIFFERENT instr (LOAD_GLOBAL vs LOAD_FAST)
+  lenA=267 lenB=267  firstidx=61  lineA=311 lineB=223
+  [firstdiv73] off=522 origTryDepth=1 prodTryDepth=1 div=idx73 ('POP_JUMP_FORWARD_IF_TRUE', 568) != ('POP_JUMP_FORWARD_IF_TRUE', 820)
+  [exctable73] SAME origEnts=3 prodEnts=3 origNest=1 prodNest=1
+  ET orig=3 prod=3  bytes_same=True  shape=BYTES-SAME
+  first-divergence idx=73 orig_off=522 prod_off=522  key_orig=('POP_JUMP_FORWARD_IF_TRUE', 568) key_prod=('POP_JUMP_FORWARD_IF_TRUE', 820)
+  ORIG containing et entries @522: [(48, 1290, 1290, 0)]
+      -> handler target offset 1290 (depth 0)
+  PROD containing et entries @522: [(48, 1290, 1290, 0)]
+  --- ORIG disassembly [idx 65..85] ---
+      o492   PRECALL                           (line None)
+      o496   CALL                              (line None)
+      o506   POP_TOP                           (line None)
+      o508   EXTENDED_ARG                      (line None)
+      o510   JUMP_FORWARD                   to 1286   (line None)
+      o512   LOAD_FAST                      dt_strf   (line 324)
+      o514   LOAD_CONST                     '15:15:00'   (line None)
+      o516   COMPARE_OP                     >   (line None)
+   >> o522   POP_JUMP_FORWARD_IF_TRUE       to 568   (line None)
+      o524   LOAD_FAST                      dt_strf   (line None)
+      o526   LOAD_CONST                     '08:30:00'   (line None)
+      o528   COMPARE_OP                     <   (line None)
+      o534   POP_JUMP_FORWARD_IF_TRUE       to 568   (line None)
+      o536   LOAD_CONST                     '11:30:00'   (line None)
+      o538   LOAD_FAST                      dt_strf   (line None)
+      o540   SWAP                              (line None)
+      o542   COPY                              (line None)
+      o544   COMPARE_OP                     <   (line None)
+      o550   POP_JUMP_FORWARD_IF_FALSE      to 564   (line None)
+      o552   LOAD_CONST                     '12:30:00'   (line None)
+      o554   COMPARE_OP                     <   (line None)
+  --- PROD disassembly [idx 65..85] ---
+      o492   PRECALL                           (line None)
+      o496   CALL                              (line None)
+      o506   POP_TOP                           (line None)
+      o508   EXTENDED_ARG                      (line None)
+      o510   JUMP_FORWARD                   to 1286   (line None)
+      o512   LOAD_FAST                      dt_strf   (line 232)
+      o514   LOAD_CONST                     '15:15:00'   (line None)
+      o516   COMPARE_OP                     >   (line None)
+   >> o522   POP_JUMP_FORWARD_IF_TRUE       to 820   (line None)
+      o524   LOAD_FAST                      dt_strf   (line None)
+      o526   LOAD_CONST                     '08:30:00'   (line None)
+      o528   COMPARE_OP                     <   (line None)
+      o534   POP_JUMP_FORWARD_IF_TRUE       to 820   (line None)
+      o536   LOAD_CONST                     '11:30:00'   (line 233)
+      o538   LOAD_FAST                      dt_strf   (line None)
+      o540   SWAP                              (line None)
+      o542   COPY                              (line None)
+      o544   COMPARE_OP                     <   (line None)
+      o550   POP_JUMP_FORWARD_IF_FALSE      to 564   (line None)
+      o552   LOAD_CONST                     '12:30:00'   (line None)
+      o554   COMPARE_OP                     <   (line None)
+  [region] 20 regions; try/with regions: ['TryExceptRegion@48']
+  [chains] n=2
+    same_target=True  nested_ret=False in_try=[True, True] members=[(512, 'or', 'POP_JUMP_FORWARD_IF_TRUE', 568, 568), (524, 'or', 'POP_JUMP_FORWARD_IF_TRUE', 568, 568)]
+    same_target=True  nested_ret=False in_try=[True, True] members=[(982, 'or', 'POP_JUMP_FORWARD_IF_TRUE', 1038, 1038), (994, 'or', 'POP_JUMP_FORWARD_IF_TRUE', 1038, 1038)]
+  PROD src L223: if not self._engine.data_proxy.is_trading_date(datetime.date.today()):
+            220:         accounts = self._engine.config.strategy.accounts
+            221:         try:
+            222:             while True:
+        >>  223:                 if not self._engine.data_proxy.is_trading_date(datetime.date.today()):
+            224:                     time.sleep(60)
+            225:                     continue
+            226:                 now = datetime.datetime.now()
+
+====================================================================================================
+UNIT IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc :: <module>.RealtimeEventSource.clock_worker
+  family=F-ABSORB  reason=idx 664 POP_JUMP_FORWARD_IF_FALSE target 2494 -> 2476 lands on DIFFERENT instr (LOAD_CONST vs LOAD_FAST)
+  lenA=1274 lenB=1281  firstidx=664  lineA=189 lineB=100
+  [firstdiv73] off=5270 origTryDepth=1 prodTryDepth=1 div=idx717 ('LOAD_CONST', <code object check_handle_date at 0x000002870D927570, file "./fly_docker_py311/IQEngine/plugins/plugin_system_event_source/realtime_event_source.py", line 380>) != ('LOAD_CONST', <code object check_handle_date at 0x000002870D926BB0, file "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py", line 204>)
+  [exctable73] DIFF origEnts=24 prodEnts=24 origNest=1 prodNest=1
+  ET orig=24 prod=24  bytes_same=False  shape=RANGE-LEN-CHANGED lens [6574, 70, 2, 24, 4, 2, 804, 218, 102, 4, 142, 4, 2, 200, 14, 70, 2, 24, 4, 2, 922, 20, 64, 10] -> [6576, 70, 4, 24, 6, 2, 704, 132, 102, 4, 142, 4, 2, 840, 14, 70, 2, 24, 4, 2, 492, 20, 64, 10]
+  first-divergence idx=717 orig_off=5270 prod_off=5270  key_orig=('LOAD_CONST', <code object check_handle_date at 0x00000258F1470330, file "./fly_docker_py311/IQEngine/plugins/plugin_system_event_source/realtime_event_source.py", line 380>) key_prod=('LOAD_CONST', <code object check_handle_date at 0x00000258F1470270, file "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py", line 204>)
+  ORIG containing et entries @5270: [(6, 6580, 9218, 0)]
+      -> handler target offset 9218 (depth 0)
+  PROD containing et entries @5270: [(6, 6582, 9244, 0)]
+  --- ORIG disassembly [idx 709..729] ---
+      o5200  LOAD_ATTR                      config   (line None)
+      o5210  LOAD_ATTR                      strategy   (line None)
+      o5220  LOAD_ATTR                      frequency   (line None)
+      o5230  LOAD_GLOBAL                    Frequency   (line None)
+      o5242  LOAD_ATTR                      MINUTE   (line None)
+      o5252  LOAD_ATTR                      value   (line None)
+      o5262  COMPARE_OP                     ==   (line None)
+      o5268  POP_JUMP_FORWARD_IF_FALSE      to 5278   (line None)
+   >> o5270  LOAD_CONST                     <code object check_handle_date at 0x0000   (line 380)
+      o5272  MAKE_FUNCTION                     (line None)
+      o5274  STORE_FAST                     check_handle_date   (line None)
+      o5276  JUMP_FORWARD                   to 5288   (line None)
+      o5278  LOAD_CLOSURE                   self   (line 383)
+      o5280  BUILD_TUPLE                       (line None)
+      o5282  LOAD_CONST                     <code object check_handle_date at 0x0000   (line None)
+      o5284  MAKE_FUNCTION                  closure   (line None)
+      o5286  STORE_FAST                     check_handle_date   (line None)
+      o5288  LOAD_GLOBAL                    NULL + datetime   (line 386)
+      o5300  LOAD_ATTR                      timedelta   (line None)
+      o5310  LOAD_CONST                     5   (line None)
+      o5312  KW_NAMES                          (line None)
+  --- PROD disassembly [idx 709..729] ---
+      o5200  LOAD_ATTR                      config   (line None)
+      o5210  LOAD_ATTR                      strategy   (line None)
+      o5220  LOAD_ATTR                      frequency   (line None)
+      o5230  LOAD_GLOBAL                    Frequency   (line None)
+      o5242  LOAD_ATTR                      MINUTE   (line None)
+      o5252  LOAD_ATTR                      value   (line None)
+      o5262  COMPARE_OP                     ==   (line None)
+      o5268  POP_JUMP_FORWARD_IF_FALSE      to 5278   (line None)
+   >> o5270  LOAD_CONST                     <code object check_handle_date at 0x0000   (line 204)
+      o5272  MAKE_FUNCTION                     (line None)
+      o5274  STORE_FAST                     check_handle_date   (line None)
+      o5276  JUMP_FORWARD                   to 5288   (line None)
+      o5278  LOAD_CLOSURE                   self   (line 207)
+      o5280  BUILD_TUPLE                       (line None)
+      o5282  LOAD_CONST                     <code object check_handle_date at 0x0000   (line None)
+      o5284  MAKE_FUNCTION                  closure   (line None)
+      o5286  STORE_FAST                     check_handle_date   (line None)
+      o5288  LOAD_GLOBAL                    NULL + datetime   (line 209)
+      o5300  LOAD_ATTR                      timedelta   (line None)
+      o5310  LOAD_CONST                     5   (line None)
+      o5312  KW_NAMES                          (line None)
+  [region] 68 regions; try/with regions: ['TryExceptRegion@7712', 'TryExceptRegion@6582', 'TryExceptRegion@8186', 'TryExceptRegion@6']
+  [chains] n=3
+    same_target=True  nested_ret=False in_try=[True, True] members=[(6058, 'and', 'POP_JUMP_FORWARD_IF_FALSE', 6280, 6280), (6090, 'and', 'POP_JUMP_FORWARD_IF_FALSE', 6280, 6280)]
+    same_target=True  nested_ret=False in_try=[True, True] members=[(6846, 'and', 'POP_JUMP_FORWARD_IF_FALSE', 7164, 7164), (6868, 'and', 'POP_JUMP_FORWARD_IF_FALSE', 7164, 7164)]
+    same_target=True  nested_ret=False in_try=[True, True] members=[(8904, 'and', 'POP_JUMP_FORWARD_IF_FALSE', 9144, 9144), (8926, 'and', 'POP_JUMP_FORWARD_IF_FALSE', 9144, 9144)]
+  PROD src L100: hks_pm_open = HKS_PM_OPEN
+             97:                 hks_after_trading = HKS_AFTER_TRADING_TIME
+             98:                 hks_am_open = HKS_AM_OPEN
+             99:                 hks_am_close = HKS_AM_CLOSE
+        >>  100:                 hks_pm_open = HKS_PM_OPEN
+            101:                 hks_pm_close = HKS_PM_CLOSE
+            102:                 hks_pm_over = HKS_PM_OVER
+            103:             else:
+
+====================================================================================================
+UNIT fly/common/flytools.pyc :: <module>.ProcessWrite.modify_batcktes_info
+  family=F-PAD  reason=idx 162 POP_JUMP_FORWARD_IF_FALSE target 380 -> 404 lands on SAME instr, len equal
+  lenA=216 lenB=216  firstidx=162  lineA=1133 lineB=796
+  [firstdiv73] off=700 origTryDepth=1 prodTryDepth=1 div=idx151 ('LOAD_CONST', None) != ('NOP', None)
+  [exctable73] DIFF origEnts=22 prodEnts=22 origNest=1 prodNest=1
+  ET orig=22 prod=22  bytes_same=False  shape=RANGE-LEN-CHANGED lens [116, 172, 38, 224, 24, 8, 6, 2, 6, 24, 8, 6, 2, 58, 22, 8, 6, 2, 6, 20, 134, 10] -> [116, 172, 38, 224, 24, 8, 6, 2, 6, 24, 8, 6, 2, 60, 22, 8, 6, 2, 6, 20, 134, 10]
+  first-divergence idx=151 orig_off=700 prod_off=700  key_orig=('LOAD_CONST', None) key_prod=('NOP', None)
+  ORIG containing et entries @700: [(700, 722, 752, 0)]
+      -> handler target offset 752 (depth 0)
+  PROD containing et entries @700: [(642, 702, 728, 1)]
+  --- ORIG disassembly [idx 143..163] ---
+      o674   FORMAT_VALUE                   str   (line None)
+      o676   LOAD_CONST                     ' '   (line None)
+      o678   LOAD_FAST                      file_path_name   (line None)
+      o680   FORMAT_VALUE                   str   (line None)
+      o682   BUILD_STRING                      (line None)
+      o684   PRECALL                           (line None)
+      o688   CALL                              (line None)
+      o698   POP_TOP                           (line None)
+   >> o700   LOAD_CONST                     None   (line 1131)
+      o702   LOAD_CONST                     None   (line None)
+      o704   LOAD_CONST                     None   (line None)
+      o706   PRECALL                           (line None)
+      o710   CALL                              (line None)
+      o720   POP_TOP                           (line None)
+      o722   LOAD_CONST                     None   (line None)
+      o724   RETURN_VALUE                      (line None)
+      o726   PUSH_EXC_INFO                     (line None)
+      o728   WITH_EXCEPT_START                 (line None)
+      o730   POP_JUMP_FORWARD_IF_TRUE       to 740   (line None)
+      o732   RERAISE                           (line None)
+      o734   COPY                              (line None)
+  --- PROD disassembly [idx 143..163] ---
+      o674   FORMAT_VALUE                   str   (line None)
+      o676   LOAD_CONST                     ' '   (line None)
+      o678   LOAD_FAST                      file_path_name   (line None)
+      o680   FORMAT_VALUE                   str   (line None)
+      o682   BUILD_STRING                      (line None)
+      o684   PRECALL                           (line None)
+      o688   CALL                              (line None)
+      o698   POP_TOP                           (line None)
+   >> o700   NOP                               (line 806)
+      o702   LOAD_CONST                     None   (line 793)
+      o704   LOAD_CONST                     None   (line None)
+      o706   LOAD_CONST                     None   (line None)
+      o708   PRECALL                           (line None)
+      o712   CALL                              (line None)
+      o722   POP_TOP                           (line None)
+      o724   LOAD_CONST                     None   (line None)
+      o726   RETURN_VALUE                      (line None)
+      o728   PUSH_EXC_INFO                     (line None)
+      o730   WITH_EXCEPT_START                 (line None)
+      o732   POP_JUMP_FORWARD_IF_TRUE       to 742   (line None)
+      o734   RERAISE                           (line None)
+  [region] 9 regions; try/with regions: ['TryExceptRegion@4', 'WithRegion@4', 'WithRegion@120', 'WithRegion@292']
+  [chains] n=0
+  PROD src L796: with open(backtest_tmp_path, 'w', newline='') as fq:
+            793:             with FileLock(user_id, filename, os.path.join(BACKTEST_DIR_PATH, f'{user_id!s}.{filename!s}.lock')):
+            794:                 backtest_tmp_path = os.path.join(os.path.split(file_path_name)[0], 'backtest_tmp.csv')
+            795:                 with open(file_path_name, 'r', newline='') as fp:
+        >>  796:                     with open(backtest_tmp_path, 'w', newline='') as fq:
+            797:                         csv_reader = csv.reader(fp)
+            798:                         csv_writer = csv.writer(fq)
+            799:                         for _row in csv_reader:
