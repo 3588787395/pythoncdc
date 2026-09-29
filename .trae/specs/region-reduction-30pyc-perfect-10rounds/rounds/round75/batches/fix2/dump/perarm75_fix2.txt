@@ -1,0 +1,27 @@
+arm | a 官方41 ab | b mandated list41 | c 金丝雀 | e strict
+---|---|---|---|---
+pad8_1f | SAME=39 IMPROVED=0 REGRESSION=0 MOVED=2 ERR=0  (unpaired lists=0) | tiu 36/41->36/41  cleared=0  ptrade 135/137->135/137 | n/a | n/a
+grp_g | SAME=39 IMPROVED=0 REGRESSION=0 MOVED=2 ERR=0  (unpaired lists=0) | tiu 36/41->37/41  cleared=1  ptrade 135/137->137/137 | n/a | n/a
+editc9 | SAME=40 IMPROVED=0 REGRESSION=0 MOVED=1 ERR=0  (unpaired lists=0) | tiu 36/41->37/41  cleared=1  ptrade 135/137->135/137 | SAME=4 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0) | defects 69 -> 68  NEW=0 CLEARED=1
+ec_afgd4e | SAME=38 IMPROVED=0 REGRESSION=0 MOVED=3 ERR=0  (unpaired lists=0) | tiu 36/41->40/41  cleared=4  ptrade 135/137->137/137 | n/a | n/a
+ec_afgd5e | SAME=37 IMPROVED=0 REGRESSION=0 MOVED=4 ERR=0  (unpaired lists=0) | tiu 36/41->41/41  cleared=5  ptrade 135/137->137/137 | SAME=4 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0) | defects 69 -> 63  NEW=0 CLEARED=6
+ec_afgd5b | SAME=38 IMPROVED=0 REGRESSION=0 MOVED=3 ERR=0  (unpaired lists=0) | tiu 36/41->41/41  cleared=5  ptrade 135/137->137/137 | SAME=4 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0) | defects 69 -> 63  NEW=0 CLEARED=6
+
+p402 (402 支官方全量) landed vs arm:
+  editc9         SAME=401 IMPROVED=0 REGRESSION=0 MOVED=1 ERR=0  (unpaired lists=0)  files fully matched: a=394 b=394
+  ecafd5e        SAME=393 IMPROVED=0 REGRESSION=1 MOVED=8 ERR=0  (unpaired lists=0)  files fully matched: a=394 b=393
+  ecafd5b        SAME=395 IMPROVED=0 REGRESSION=0 MOVED=7 ERR=0  (unpaired lists=0)  files fully matched: a=394 b=394
+  ecafd5b_v2     SAME=395 IMPROVED=0 REGRESSION=0 MOVED=7 ERR=0  (unpaired lists=0)  files fully matched: a=394 b=394
+  ecafd5b_v3     SAME=395 IMPROVED=0 REGRESSION=0 MOVED=7 ERR=0  (unpaired lists=0)  files fully matched: a=394 b=394
+
+asset_storage 单支（edit-D2 归因隔离，list1_asset）:
+  landed   matched 8/8 mism=[]
+  c9       matched 8/8 mism=[]
+  gg       matched 8/8 mism=[]
+  t_A      matched 8/8 mism=[]
+  t_D      matched 8/8 mism=[]
+  t_D2     matched 7/8 mism=[['load', 190, 189, 2, 121]]
+  d5       matched 7/8 mism=[['load', 190, 189, 2, 121]]
+  d5e      matched 7/8 mism=[['load', 190, 189, 2, 121]]
+  d4e      matched 8/8 mism=[]
+  d5b      matched 8/8 mism=[]

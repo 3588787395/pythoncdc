@@ -1,0 +1,4 @@
+repro = 真身 IQCommon/util/trade_info_utils.pyc（36/41 failure -> 41/41 success）
+source = site-packages/IQCommon/util/trade_info_utilsOK.py
+切片尝试不触发：synth/probe_repro.py 5 个合成形状两臂均同，
+slice75_trytail 两臂 sha 不同但 mandated 均 success（几何差 4 字节）。

@@ -1,0 +1,13 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "    def _collect_normal_exit_cleanup(self, with_body, cleanup, cleanup_visited,\n                                    entry_blocks, body_end):\n        body_offsets = {b.start_offset for b in with_body}\n        body_offsets.update(b.start_offset for b in entry_blocks)\n        for block in self.cfg.get_blocks_in_order():\n",
+   "repl": "    def _collect_normal_exit_cleanup(self, with_body, cleanup, cleanup_visited,\n                                    entry_blocks, body_end):\n        body_offsets = {b.start_offset for b in with_body}\n        body_offsets.update(b.start_offset for b in entry_blocks)\n        # [R75 fix2 · edit-D] 跨语句标记：清理扫描一旦越过一块含用户代码的块，\n        # 其后的候选就不再与 with 出口连续（本方法上方注释已声明「WITH 清理区是\n        # 连续的」）。\n        _r75d_crossed = False\n        for block in self.cfg.get_blocks_in_order():\n"
+  },
+  {
+   "anchor": "            if has_user_code:\n                continue\n",
+   "repl": "            if has_user_code:\n                # [R75 fix2 · edit-D] 记录「已跨过真实语句」；清理扫描按地址序前进，\n                # 跨过用户语句后仍会继续吃块（continue 不 break），因此后续必须\n                # 对「跨点之后的纯隐式 return None 尾块」让位，否则它会被 WithRegion\n                # 唯一认领并发射在 with 之后、外层 if 之内（位置错位）。\n                # 靶 IQCommon/util/trade_info_utils.pyc :: query_strategy_id（with 在\n                # if-then 内，函数尾 @648 在外层 if/else 之后）与\n                # query_trade_strategy_info（尾 @618）：扫描先跳过\n                # `trade_df = df[...]` 等用户语句，再吃到 @644/@648。\n                # 判据只读「块内是否含用户代码指令类别」+「块是否为无后继的纯\n                # LOAD_CONST None; RETURN_VALUE / RETURN_CONST None 终止块」两条结构\n                # 事实，不看函数名/文件名/偏移阈值/名字白名单。\n                _r75d_crossed = True\n                continue\n            if _r75d_crossed and not block.successors:\n                _r75d_ins = [i for i in block.instructions\n                             if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]\n                _r75d_ops = [i.opname for i in _r75d_ins]\n                _r75d_none = False\n                if _r75d_ops:\n                    if (_r75d_ops[-1] == 'RETURN_CONST'\n                            and _r75d_ins[-1].argval is None):\n                        _r75d_none = True\n                    elif (len(_r75d_ops) >= 2\n                          and _r75d_ops[-1] == 'RETURN_VALUE'\n                          and _r75d_ops[-2] == 'LOAD_CONST'\n                          and _r75d_ins[-2].argval is None):\n                        _r75d_none = True\n                if _r75d_none:\n                    continue\n"
+  }
+ ]
+}

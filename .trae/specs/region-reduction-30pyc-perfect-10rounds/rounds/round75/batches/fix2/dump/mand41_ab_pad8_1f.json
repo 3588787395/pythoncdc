@@ -1,0 +1,1458 @@
+{
+ "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    115,
+    128
+   ],
+   "rate": 89.84,
+   "fails": [
+    [
+     "<module>.TradeLiveBroker.on_pre_before_trading_start",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._process_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._process_tick_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._process_cancel_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._sync_worker",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._trade_status_handle",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.etf_basket_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.etf_purchase_redemption",
+     "Failure: Different bytecode\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.rzrq_credit_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.ipo_stocks_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.get_ipo_stocks",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.on_order_response_list_handle",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.on_trade_response_list_handle",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    115,
+    128
+   ],
+   "rate": 89.84,
+   "fails": [
+    [
+     "<module>.TradeLiveBroker.on_pre_before_trading_start",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._process_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._process_tick_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._process_cancel_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._sync_worker",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker._trade_status_handle",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.etf_basket_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.etf_purchase_redemption",
+     "Failure: Different bytecode\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.rzrq_credit_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.ipo_stocks_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.get_ipo_stocks",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.on_order_response_list_handle",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.TradeLiveBroker.on_trade_response_list_handle",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/data/quote.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    81,
+    92
+   ],
+   "rate": 88.04,
+   "fails": [
+    [
+     "<module>.Quote.build_current_period_df",
+     "Failure: Different bytecode\r"
+    ],
+    [
+     "<module>.Quote.load_bars_from_hundsun",
+     "Failure: Different bytecode\r"
+    ],
+    [
+     "<module>.Quote.load_get_price",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.change_his_to_forward",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.change_his_to_backward",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.get_price",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.check_frequency",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.get_real_from_zeromq",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.run_individual_transform",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.run_tick_socket",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.get_individual_data",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    81,
+    92
+   ],
+   "rate": 88.04,
+   "fails": [
+    [
+     "<module>.Quote.build_current_period_df",
+     "Failure: Different bytecode\r"
+    ],
+    [
+     "<module>.Quote.load_bars_from_hundsun",
+     "Failure: Different bytecode\r"
+    ],
+    [
+     "<module>.Quote.load_get_price",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.change_his_to_forward",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.change_his_to_backward",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.get_price",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.check_frequency",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.get_real_from_zeromq",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.run_individual_transform",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.run_tick_socket",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.Quote.get_individual_data",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/util/trade_info_utils.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    36,
+    41
+   ],
+   "rate": 87.8,
+   "fails": [
+    [
+     "<module>.trade_operation",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.kill_trade_process",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_trade_status",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.query_trade_strategy_info",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.query_strategy_id",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    36,
+    41
+   ],
+   "rate": 87.8,
+   "fails": [
+    [
+     "<module>.trade_operation",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.kill_trade_process",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_trade_status",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.query_trade_strategy_info",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.query_strategy_id",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQData/plugins/plugin_system_realquote/real_quote.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    43,
+    45
+   ],
+   "rate": 95.56,
+   "fails": [
+    [
+     "<module>.RealQuoteData.get_real_minute_kline",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.RealQuoteData.get_tick_direction",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    43,
+    45
+   ],
+   "rate": 95.56,
+   "fails": [
+    [
+     "<module>.RealQuoteData.get_real_minute_kline",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.RealQuoteData.get_tick_direction",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/api/klinedata.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    61,
+    64
+   ],
+   "rate": 95.31,
+   "fails": [
+    [
+     "<module>.get_kline_by_count_new",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_multiminute_his_data",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.kline_datetime_list",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    61,
+    64
+   ],
+   "rate": 95.31,
+   "fails": [
+    [
+     "<module>.get_kline_by_count_new",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_multiminute_his_data",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.kline_datetime_list",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/data/finance.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    31,
+    32
+   ],
+   "rate": 96.88,
+   "fails": [
+    [
+     "<module>.get_fields",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    31,
+    32
+   ],
+   "rate": 96.88,
+   "fails": [
+    [
+     "<module>.get_fields",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/strategy/wizard_quant_api.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    55,
+    58
+   ],
+   "rate": 94.83,
+   "fails": [
+    [
+     "<module>.filter_desicion",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_DMI.calculate_di.<genexpr>",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_DMI.calculate_di.<genexpr>",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    55,
+    58
+   ],
+   "rate": 94.83,
+   "fails": [
+    [
+     "<module>.filter_desicion",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_DMI.calculate_di.<genexpr>",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.get_DMI.calculate_di.<genexpr>",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/core/bar.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    84,
+    85
+   ],
+   "rate": 98.82,
+   "fails": [
+    [
+     "<module>.BarData._history_bars",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    84,
+    85
+   ],
+   "rate": 98.82,
+   "fails": [
+    [
+     "<module>.BarData._history_bars",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    34,
+    37
+   ],
+   "rate": 91.89,
+   "fails": [
+    [
+     "<module>.base_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.future_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.option_order",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    34,
+    37
+   ],
+   "rate": 91.89,
+   "fails": [
+    [
+     "<module>.base_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.future_order",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.option_order",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/strategy/jq_trans_module.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    63,
+    65
+   ],
+   "rate": 96.92,
+   "fails": [
+    [
+     "<module>.func_attribute_history_convert_code.replace_args",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.func_get_bars_convert_code.replace_args",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    63,
+    65
+   ],
+   "rate": 96.92,
+   "fails": [
+    [
+     "<module>.func_attribute_history_convert_code.replace_args",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.func_get_bars_convert_code.replace_args",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    41,
+    43
+   ],
+   "rate": 95.35,
+   "fails": [
+    [
+     "<module>.PluginRiskCalculation._on_publish_after_trading_end",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.PluginRiskCalculation._save_testds_to_csv",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    41,
+    43
+   ],
+   "rate": 95.35,
+   "fails": [
+    [
+     "<module>.PluginRiskCalculation._on_publish_after_trading_end",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.PluginRiskCalculation._save_testds_to_csv",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/common/flytools.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    65,
+    66
+   ],
+   "rate": 98.48,
+   "fails": [
+    [
+     "<module>.ProcessWrite.modify_batcktes_info",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    65,
+    66
+   ],
+   "rate": 98.48,
+   "fails": [
+    [
+     "<module>.ProcessWrite.modify_batcktes_info",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/common/future_contract_info.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    27,
+    29
+   ],
+   "rate": 93.1,
+   "fails": [
+    [
+     "<module>.FutureInfoCache.check_user",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.FutureInfoCache.info_conbine",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    27,
+    29
+   ],
+   "rate": 93.1,
+   "fails": [
+    [
+     "<module>.FutureInfoCache.check_user",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.FutureInfoCache.info_conbine",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/oauthenticator/oauth2.pyc": {
+  "landed": {
+   "status": "success",
+   "units": [
+    12,
+    12
+   ],
+   "rate": 100.0,
+   "fails": []
+  },
+  "pad8_1f": {
+   "status": "success",
+   "units": [
+    12,
+    12
+   ],
+   "rate": 100.0,
+   "fails": []
+  }
+ },
+ "fly/simtradding/ptradeAccount.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    135,
+    137
+   ],
+   "rate": 98.54,
+   "fails": [
+    [
+     "<module>.PtradeAccount.order_response_order_update",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.PtradeAccount.trade_response_order_update",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    135,
+    137
+   ],
+   "rate": 98.54,
+   "fails": [
+    [
+     "<module>.PtradeAccount.order_response_order_update",
+     "Failure: Different control flow\r"
+    ],
+    [
+     "<module>.PtradeAccount.trade_response_order_update",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/data/local_finance.pyc": {
+  "landed": {
+   "status": "success",
+   "units": [
+    21,
+    21
+   ],
+   "rate": 100.0,
+   "fails": []
+  },
+  "pad8_1f": {
+   "status": "success",
+   "units": [
+    21,
+    21
+   ],
+   "rate": 100.0,
+   "fails": []
+  }
+ },
+ "IQCommon/logger/handlers.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    29,
+    30
+   ],
+   "rate": 96.67,
+   "fails": [
+    [
+     "<module>.TWHThreadController._target",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    29,
+    30
+   ],
+   "rate": 96.67,
+   "fails": [
+    [
+     "<module>.TWHThreadController._target",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/util/cgroup_utils.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    7,
+    8
+   ],
+   "rate": 87.5,
+   "fails": [
+    [
+     "<module>.set_cgroup_config",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    7,
+    8
+   ],
+   "rate": 87.5,
+   "fails": [
+    [
+     "<module>.set_cgroup_config",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQCommon/util/email_utils.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    3,
+    4
+   ],
+   "rate": 75.0,
+   "fails": [
+    [
+     "<module>.send_email",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    3,
+    4
+   ],
+   "rate": 75.0,
+   "fails": [
+    [
+     "<module>.send_email",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQData/api/api_base.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    27,
+    28
+   ],
+   "rate": 96.43,
+   "fails": [
+    [
+     "<module>.get_history_df",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    27,
+    28
+   ],
+   "rate": 96.43,
+   "fails": [
+    [
+     "<module>.get_history_df",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    7,
+    8
+   ],
+   "rate": 87.5,
+   "fails": [
+    [
+     "<module>.change_his_to_forward",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    7,
+    8
+   ],
+   "rate": 87.5,
+   "fails": [
+    [
+     "<module>.change_his_to_forward",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQData/utils/calexrights_func.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    7,
+    8
+   ],
+   "rate": 87.5,
+   "fails": [
+    [
+     "<module>.change_his_to_forward",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    7,
+    8
+   ],
+   "rate": 87.5,
+   "fails": [
+    [
+     "<module>.change_his_to_forward",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/account/order.pyc": {
+  "landed": {
+   "status": "success",
+   "units": [
+    68,
+    68
+   ],
+   "rate": 100.0,
+   "fails": []
+  },
+  "pad8_1f": {
+   "status": "success",
+   "units": [
+    68,
+    68
+   ],
+   "rate": 100.0,
+   "fails": []
+  }
+ },
+ "IQEngine/api/api_base.pyc": {
+  "landed": {
+   "status": "success",
+   "units": [
+    49,
+    49
+   ],
+   "rate": 100.0,
+   "fails": []
+  },
+  "pad8_1f": {
+   "status": "success",
+   "units": [
+    49,
+    49
+   ],
+   "rate": 100.0,
+   "fails": []
+  }
+ },
+ "IQEngine/core/commission.pyc": {
+  "landed": {
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "rate": 100.0,
+   "fails": []
+  },
+  "pad8_1f": {
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "rate": 100.0,
+   "fails": []
+  }
+ },
+ "IQEngine/core/executor.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    9,
+    10
+   ],
+   "rate": 90.0,
+   "fails": [
+    [
+     "<module>.Executor.check_before_trading",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    9,
+    10
+   ],
+   "rate": 90.0,
+   "fails": [
+    [
+     "<module>.Executor.check_before_trading",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/core/slippage.pyc": {
+  "landed": {
+   "status": "success",
+   "units": [
+    7,
+    7
+   ],
+   "rate": 100.0,
+   "fails": []
+  },
+  "pad8_1f": {
+   "status": "success",
+   "units": [
+    7,
+    7
+   ],
+   "rate": 100.0,
+   "fails": []
+  }
+ },
+ "IQEngine/core/strategy/strategy_universe.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    10,
+    11
+   ],
+   "rate": 90.91,
+   "fails": [
+    [
+     "<module>.StrategyUniverse._on_clear_de_listed",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    10,
+    11
+   ],
+   "rate": 90.91,
+   "fails": [
+    [
+     "<module>.StrategyUniverse._on_clear_de_listed",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/data/trading_dates_mixin.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    13,
+    14
+   ],
+   "rate": 92.86,
+   "fails": [
+    [
+     "<module>.TradingDatesMixin.trading_dates_reload",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    13,
+    14
+   ],
+   "rate": 92.86,
+   "fails": [
+    [
+     "<module>.TradingDatesMixin.trading_dates_reload",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    18,
+    19
+   ],
+   "rate": 94.74,
+   "fails": [
+    [
+     "<module>.get_price",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    18,
+    19
+   ],
+   "rate": 94.74,
+   "fails": [
+    [
+     "<module>.get_price",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    26,
+    27
+   ],
+   "rate": 96.3,
+   "fails": [
+    [
+     "<module>.Strategy.tick_worker_thread",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    26,
+    27
+   ],
+   "rate": 96.3,
+   "fails": [
+    [
+     "<module>.Strategy.tick_worker_thread",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    36,
+    37
+   ],
+   "rate": 97.3,
+   "fails": [
+    [
+     "<module>.StockPosition.make_trade",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    36,
+    37
+   ],
+   "rate": 97.3,
+   "fails": [
+    [
+     "<module>.StockPosition.make_trade",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    12,
+    13
+   ],
+   "rate": 92.31,
+   "fails": [
+    [
+     "<module>.RealtimeEventSource.clock_worker",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    12,
+    13
+   ],
+   "rate": 92.31,
+   "fails": [
+    [
+     "<module>.RealtimeEventSource.clock_worker",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/plugins/plugin_system_matcher/matcher.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    16,
+    17
+   ],
+   "rate": 94.12,
+   "fails": [
+    [
+     "<module>.DefaultMatcher.match",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    16,
+    17
+   ],
+   "rate": 94.12,
+   "fails": [
+    [
+     "<module>.DefaultMatcher.match",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/plugins/plugin_system_trade/function.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    70,
+    71
+   ],
+   "rate": 98.59,
+   "fails": [
+    [
+     "<module>.reconnect",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    70,
+    71
+   ],
+   "rate": 98.59,
+   "fails": [
+    [
+     "<module>.reconnect",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "IQEngine/utils/profiler_func.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    17,
+    18
+   ],
+   "rate": 94.44,
+   "fails": [
+    [
+     "<module>.ProfilerTool.show_func",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    17,
+    18
+   ],
+   "rate": 94.44,
+   "fails": [
+    [
+     "<module>.ProfilerTool.show_func",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/data/quotation.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    152,
+    153
+   ],
+   "rate": 99.35,
+   "fails": [
+    [
+     "<module>.change_his_to_forward",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    152,
+    153
+   ],
+   "rate": 99.35,
+   "fails": [
+    [
+     "<module>.change_his_to_forward",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/data/quote_handler.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    78,
+    79
+   ],
+   "rate": 98.73,
+   "fails": [
+    [
+     "<module>.get_kline_local",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    78,
+    79
+   ],
+   "rate": 98.73,
+   "fails": [
+    [
+     "<module>.get_kline_local",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/dumpload/load_daily.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    26,
+    27
+   ],
+   "rate": 96.3,
+   "fails": [
+    [
+     "<module>",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    26,
+    27
+   ],
+   "rate": 96.3,
+   "fails": [
+    [
+     "<module>",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/logger.pyc": {
+  "landed": {
+   "status": "failure",
+   "units": [
+    63,
+    64
+   ],
+   "rate": 98.44,
+   "fails": [
+    [
+     "<module>.SafeFileHandler.check_baseFilename",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  },
+  "pad8_1f": {
+   "status": "failure",
+   "units": [
+    63,
+    64
+   ],
+   "rate": 98.44,
+   "fails": [
+    [
+     "<module>.SafeFileHandler.check_baseFilename",
+     "Failure: Different control flow\r"
+    ]
+   ]
+  }
+ },
+ "fly/simtradding/flyAccount.pyc": {
+  "landed": {
+   "status": "success",
+   "units": [
+    24,
+    24
+   ],
+   "rate": 100.0,
+   "fails": []
+  },
+  "pad8_1f": {
+   "status": "success",
+   "units": [
+    24,
+    24
+   ],
+   "rate": 100.0,
+   "fails": []
+  }
+ }
+}

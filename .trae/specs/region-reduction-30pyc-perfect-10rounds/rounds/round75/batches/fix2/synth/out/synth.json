@@ -1,0 +1,34 @@
+{
+ "verdict": {
+  "repro_shas_differ": true,
+  "repro_head_failure": true,
+  "repro_cand_success": true,
+  "neg_sha_identical": true
+ },
+ "rows": {
+  "repro75_tiu": {
+   "landed": {
+    "sha": "548283e7b34b9717",
+    "out": "D:\\Temp\\opencode\\r75gate\\fix2\\synth\\out\\landed_repro75_tiu.py",
+    "verify": "[single] status=failure units=36/41 success_rate=87.80%"
+   },
+   "ec_afgd5b": {
+    "sha": "e1784c3c6a7fc0d5",
+    "out": "D:\\Temp\\opencode\\r75gate\\fix2\\synth\\out\\ec_afgd5b_repro75_tiu.py",
+    "verify": "[single] status=success units=41/41 success_rate=100.00%"
+   }
+  },
+  "neg75_trytail": {
+   "landed": {
+    "sha": "11e2e722c8d4d37e",
+    "out": "D:\\Temp\\opencode\\r75gate\\fix2\\synth\\out\\landed_neg75_trytail.py",
+    "verify": "[single] status=success units=3/3 success_rate=100.00%"
+   },
+   "ec_afgd5b": {
+    "sha": "11e2e722c8d4d37e",
+    "out": "D:\\Temp\\opencode\\r75gate\\fix2\\synth\\out\\ec_afgd5b_neg75_trytail.py",
+    "verify": "[single] status=success units=3/3 success_rate=100.00%"
+   }
+  }
+ }
+}

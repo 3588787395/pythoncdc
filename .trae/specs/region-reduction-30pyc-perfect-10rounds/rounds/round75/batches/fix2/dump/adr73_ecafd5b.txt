@@ -1,0 +1,10 @@
+units compared: 71   changed: 7   WORSE: 0
+--- improved (candidate strictly better on ≥1 metric, none worse) ---
+  IMPROVED trade_info_utils.pyc                     trade_operation                              hunks 1->0 norm 0->0 first 93->None sd 152->0
+  IMPROVED trade_info_utils.pyc                     kill_trade_process                           hunks 3->1 norm 0->0 first 39->39 sd 8->0
+  IMPROVED trade_info_utils.pyc                     get_trade_status                             hunks 1->0 norm 0->0 first 69->None sd 26->0
+  IMPROVED trade_info_utils.pyc                     query_trade_strategy_info                    hunks 3->0 norm 0->0 first 19->None sd 12->0
+  IMPROVED trade_info_utils.pyc                     query_strategy_id                            hunks 2->0 norm 0->0 first 19->None sd 8->0
+  IMPROVED ptradeAccount.pyc                        order_response_order_update                  hunks 2->0 norm 2->0 first 84->None sd 0->0
+  IMPROVED ptradeAccount.pyc                        trade_response_order_update                  hunks 2->0 norm 2->0 first 103->None sd 0->0
+-> dump/adr74_ec_afgd5b.json

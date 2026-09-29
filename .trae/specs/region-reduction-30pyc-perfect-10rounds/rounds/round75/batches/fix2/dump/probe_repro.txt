@@ -1,0 +1,5 @@
+a_try_for_break_tail     diff=False landed=[single] status=success units=2/2 success_rate=100.00% | cand=[single] status=success units=2/2 success_rate=100.00%
+b_try_for_break_last     diff=False landed=[single] status=failure units=1/2 success_rate=50.00% | cand=[single] status=failure units=1/2 success_rate=50.00%
+c_if_tail_pure           diff=False landed=[single] status=success units=2/2 success_rate=100.00% | cand=[single] status=success units=2/2 success_rate=100.00%
+d_if_else_tail_stmt      diff=False landed=[single] status=success units=2/2 success_rate=100.00% | cand=[single] status=success units=2/2 success_rate=100.00%
+e_while_tail             diff=False landed=[single] status=success units=2/2 success_rate=100.00% | cand=[single] status=success units=2/2 success_rate=100.00%
