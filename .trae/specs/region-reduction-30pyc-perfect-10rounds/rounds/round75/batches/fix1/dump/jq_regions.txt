@@ -1,0 +1,339 @@
+CFG replace_args: 1 blocks, 1 regions
+TOP REGIONS (1):
+  Region@0 blocks=[0] children=[]
+
+FULL TREE BY ENTRY:
+  Region@0 blocks=[0] children=[]
+CFG replace_args: 32 blocks, 16 regions
+TOP REGIONS (2):
+  IfRegion@0 blocks=[0, 218] then_blocks=[218] children=['Region@0', 'Region@218']
+  LoopRegion@368 blocks=[268, 368, 372, 414, 446, 454, 462, 492, 500, 568, 580, 582, 640, 674, 676, 686, 706, 790, 792, 794, 804, 824, 898, 906, 926, 984, 992, 1012, 1040, 1138] else_blocks=[1138] body_blocks=[368, 372, 414, 446, 454, 462, 492, 500, 568, 580, 582, 640, 674, 676, 686, 706, 790, 792, 794, 804, 824, 898, 906, 926, 984, 992, 1012, 1040] children=['IfRegion@372', 'IfRegion@454', 'IfRegion@492', 'IfRegion@582', 'IfRegion@804', 'IfRegion@898', 'IfRegion@906', 'IfRegion@984', 'IfRegion@992']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 218] then_blocks=[218] children=['Region@0', 'Region@218']
+  Region@0 blocks=[0] children=[]
+  Region@218 blocks=[218] children=[]
+  LoopRegion@368 blocks=[268, 368, 372, 414, 446, 454, 462, 492, 500, 568, 580, 582, 640, 674, 676, 686, 706, 790, 792, 794, 804, 824, 898, 906, 926, 984, 992, 1012, 1040, 1138] else_blocks=[1138] body_blocks=[368, 372, 414, 446, 454, 462, 492, 500, 568, 580, 582, 640, 674, 676, 686, 706, 790, 792, 794, 804, 824, 898, 906, 926, 984, 992, 1012, 1040] children=['IfRegion@372', 'IfRegion@454', 'IfRegion@492', 'IfRegion@582', 'IfRegion@804', 'IfRegion@898', 'IfRegion@906', 'IfRegion@984', 'IfRegion@992']
+  IfRegion@372 blocks=[372, 414, 446, 462] then_blocks=[414] else_blocks=[446, 462] elif_conditions=[446] inline_boolop_chains={3053259493968: {'blocks': [BasicBlock(7, offset=446-452, instrs=4), BasicBlock(8, offset=454-460, instrs=4)], 'op': 'and'}} children=[]
+  IfRegion@454 blocks=[454, 462] then_blocks=[462] children=[]
+  IfRegion@492 blocks=[492, 500, 568, 580, 582, 640, 674, 676, 686, 706, 790, 792, 794, 804, 824, 898, 906, 926, 984, 992, 1012, 1040] then_blocks=[500] else_blocks=[568, 580, 582, 640, 674, 676, 686, 706, 790, 792, 794, 804, 824, 898, 906, 926, 984, 992, 1012] elif_conditions=[568] children=[]
+  IfRegion@582 blocks=[582, 640, 674, 676, 686, 706, 790, 792, 794, 824] then_blocks=[640, 674, 676, 686, 706, 790, 792] else_blocks=[794, 824] elif_conditions=[794] inline_boolop_chains={3053259496080: {'blocks': [BasicBlock(22, offset=794-802, instrs=5), BasicBlock(23, offset=804-822, instrs=6)], 'op': 'and'}} children=['LoopRegion@674']
+  LoopRegion@674 blocks=[640, 674, 676, 686, 706, 790] body_blocks=[674, 676, 686, 706, 790] children=['IfRegion@676', 'IfRegion@686']
+  IfRegion@676 blocks=[676, 686, 706] then_blocks=[706] inline_boolop_chains={3053259495376: {'blocks': [BasicBlock(17, offset=676-684, instrs=5), BasicBlock(18, offset=686-704, instrs=6)], 'op': 'and'}} children=[]
+  IfRegion@686 blocks=[686, 706] then_blocks=[706] children=[]
+  IfRegion@804 blocks=[804, 824] then_blocks=[824] children=[]
+  IfRegion@898 blocks=[898, 906, 926] then_blocks=[926] inline_boolop_chains={3053259496976: {'blocks': [BasicBlock(25, offset=898-904, instrs=4), BasicBlock(26, offset=906-924, instrs=6)], 'op': 'and'}} children=[]
+  IfRegion@906 blocks=[906, 926] then_blocks=[926] children=[]
+  IfRegion@984 blocks=[984, 992, 1012] then_blocks=[1012] inline_boolop_chains={3053259497616: {'blocks': [BasicBlock(28, offset=984-990, instrs=4), BasicBlock(29, offset=992-1010, instrs=6)], 'op': 'and'}} children=[]
+  IfRegion@992 blocks=[992, 1012] then_blocks=[1012] children=[]
+CFG replace_args: 29 blocks, 14 regions
+TOP REGIONS (2):
+  IfRegion@0 blocks=[0, 218] then_blocks=[218] children=['Region@0', 'Region@218']
+  LoopRegion@368 blocks=[268, 368, 372, 414, 446, 454, 462, 492, 500, 568, 580, 582, 640, 674, 676, 686, 706, 790, 792, 794, 804, 824, 904, 912, 932, 990, 1088] else_blocks=[1088] body_blocks=[368, 372, 414, 446, 454, 462, 492, 500, 568, 580, 582, 640, 674, 676, 686, 706, 790, 792, 794, 804, 824, 904, 912, 932, 990] children=['IfRegion@372', 'IfRegion@454', 'IfRegion@492', 'IfRegion@582', 'IfRegion@804', 'IfRegion@904', 'IfRegion@912']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 218] then_blocks=[218] children=['Region@0', 'Region@218']
+  Region@0 blocks=[0] children=[]
+  Region@218 blocks=[218] children=[]
+  LoopRegion@368 blocks=[268, 368, 372, 414, 446, 454, 462, 492, 500, 568, 580, 582, 640, 674, 676, 686, 706, 790, 792, 794, 804, 824, 904, 912, 932, 990, 1088] else_blocks=[1088] body_blocks=[368, 372, 414, 446, 454, 462, 492, 500, 568, 580, 582, 640, 674, 676, 686, 706, 790, 792, 794, 804, 824, 904, 912, 932, 990] children=['IfRegion@372', 'IfRegion@454', 'IfRegion@492', 'IfRegion@582', 'IfRegion@804', 'IfRegion@904', 'IfRegion@912']
+  IfRegion@372 blocks=[372, 414, 446, 462] then_blocks=[414] else_blocks=[446, 462] elif_conditions=[446] inline_boolop_chains={3053259770064: {'blocks': [BasicBlock(7, offset=446-452, instrs=4), BasicBlock(8, offset=454-460, instrs=4)], 'op': 'and'}} children=[]
+  IfRegion@454 blocks=[454, 462] then_blocks=[462] children=[]
+  IfRegion@492 blocks=[492, 500, 568, 580, 582, 640, 674, 676, 686, 706, 790, 792, 794, 804, 824, 904, 912, 932, 990] then_blocks=[500] else_blocks=[568, 580, 582, 640, 674, 676, 686, 706, 790, 792, 794, 804, 824, 904, 912, 932] elif_conditions=[568] children=[]
+  IfRegion@582 blocks=[582, 640, 674, 676, 686, 706, 790, 792, 794, 824] then_blocks=[640, 674, 676, 686, 706, 790, 792] else_blocks=[794, 824] elif_conditions=[794] inline_boolop_chains={3053259771920: {'blocks': [BasicBlock(22, offset=794-802, instrs=5), BasicBlock(23, offset=804-822, instrs=6)], 'op': 'and'}} children=['LoopRegion@674']
+  LoopRegion@674 blocks=[640, 674, 676, 686, 706, 790] body_blocks=[674, 676, 686, 706, 790] children=['IfRegion@676', 'IfRegion@686']
+  IfRegion@676 blocks=[676, 686, 706] then_blocks=[706] inline_boolop_chains={3053259771344: {'blocks': [BasicBlock(17, offset=676-684, instrs=5), BasicBlock(18, offset=686-704, instrs=6)], 'op': 'and'}} children=[]
+  IfRegion@686 blocks=[686, 706] then_blocks=[706] children=[]
+  IfRegion@804 blocks=[804, 824] then_blocks=[824] children=[]
+  IfRegion@904 blocks=[904, 912, 932] then_blocks=[932] inline_boolop_chains={3053259772560: {'blocks': [BasicBlock(25, offset=904-910, instrs=4), BasicBlock(26, offset=912-930, instrs=6)], 'op': 'and'}} children=[]
+  IfRegion@912 blocks=[912, 932] then_blocks=[932] children=[]
+CFG replace_args: 45 blocks, 21 regions
+TOP REGIONS (6):
+  IfRegion@0 blocks=[0, 218] then_blocks=[218] children=['Region@0', 'Region@218']
+  Region@268 blocks=[268] children=[]
+  TryExceptRegion@324 blocks=[324, 378, 408, 450, 452, 572, 580, 588, 596, 716, 724, 728] else_blocks=[450] try_blocks=[324, 378, 408] children=[]
+  IfRegion@324 blocks=[324, 378] then_blocks=[378] children=[]
+  IfRegion@572 blocks=[572, 596, 716] then_blocks=[596] else_blocks=[716] children=['BoolOpRegion@572']
+  LoopRegion@864 blocks=[734, 864, 868, 910, 942, 950, 958, 988, 996, 1064, 1076, 1078, 1136, 1170, 1172, 1182, 1202, 1286, 1288, 1290, 1300, 1320, 1394, 1402, 1422, 1480, 1488, 1508, 1536, 1634] else_blocks=[1634] body_blocks=[864, 868, 910, 942, 950, 958, 988, 996, 1064, 1076, 1078, 1136, 1170, 1172, 1182, 1202, 1286, 1288, 1290, 1300, 1320, 1394, 1402, 1422, 1480, 1488, 1508, 1536] children=['IfRegion@868', 'IfRegion@950', 'IfRegion@988', 'IfRegion@1078', 'IfRegion@1300', 'IfRegion@1394', 'IfRegion@1402', 'IfRegion@1480', 'IfRegion@1488']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 218] then_blocks=[218] children=['Region@0', 'Region@218']
+  Region@0 blocks=[0] children=[]
+  Region@218 blocks=[218] children=[]
+  Region@268 blocks=[268] children=[]
+  TryExceptRegion@324 blocks=[324, 378, 408, 450, 452, 572, 580, 588, 596, 716, 724, 728] else_blocks=[450] try_blocks=[324, 378, 408] children=[]
+  IfRegion@324 blocks=[324, 378] then_blocks=[378] children=[]
+  BoolOpRegion@572 blocks=[572, 580, 588] children=[]
+  IfRegion@572 blocks=[572, 596, 716] then_blocks=[596] else_blocks=[716] children=['BoolOpRegion@572']
+  LoopRegion@864 blocks=[734, 864, 868, 910, 942, 950, 958, 988, 996, 1064, 1076, 1078, 1136, 1170, 1172, 1182, 1202, 1286, 1288, 1290, 1300, 1320, 1394, 1402, 1422, 1480, 1488, 1508, 1536, 1634] else_blocks=[1634] body_blocks=[864, 868, 910, 942, 950, 958, 988, 996, 1064, 1076, 1078, 1136, 1170, 1172, 1182, 1202, 1286, 1288, 1290, 1300, 1320, 1394, 1402, 1422, 1480, 1488, 1508, 1536] children=['IfRegion@868', 'IfRegion@950', 'IfRegion@988', 'IfRegion@1078', 'IfRegion@1300', 'IfRegion@1394', 'IfRegion@1402', 'IfRegion@1480', 'IfRegion@1488']
+  IfRegion@868 blocks=[868, 910, 942, 958] then_blocks=[910] else_blocks=[942, 958] elif_conditions=[942] inline_boolop_chains={3053259987024: {'blocks': [BasicBlock(18, offset=942-948, instrs=4), BasicBlock(19, offset=950-956, instrs=4)], 'op': 'and'}} children=[]
+  IfRegion@950 blocks=[950, 958] then_blocks=[958] children=[]
+  IfRegion@988 blocks=[988, 996, 1064, 1076, 1078, 1136, 1170, 1172, 1182, 1202, 1286, 1288, 1290, 1300, 1320, 1394, 1402, 1422, 1480, 1488, 1508, 1536] then_blocks=[996] else_blocks=[1064, 1076, 1078, 1136, 1170, 1172, 1182, 1202, 1286, 1288, 1290, 1300, 1320, 1394, 1402, 1422, 1480, 1488, 1508] elif_conditions=[1064] children=[]
+  IfRegion@1078 blocks=[1078, 1136, 1170, 1172, 1182, 1202, 1286, 1288, 1290, 1320] then_blocks=[1136, 1170, 1172, 1182, 1202, 1286, 1288] else_blocks=[1290, 1320] elif_conditions=[1290] inline_boolop_chains={3053259989008: {'blocks': [BasicBlock(33, offset=1290-1298, instrs=5), BasicBlock(34, offset=1300-1318, instrs=6)], 'op': 'and'}} children=['LoopRegion@1170']
+  LoopRegion@1170 blocks=[1136, 1170, 1172, 1182, 1202, 1286] body_blocks=[1170, 1172, 1182, 1202, 1286] children=['IfRegion@1172', 'IfRegion@1182']
+  IfRegion@1172 blocks=[1172, 1182, 1202] then_blocks=[1202] inline_boolop_chains={3053259988496: {'blocks': [BasicBlock(28, offset=1172-1180, instrs=5), BasicBlock(29, offset=1182-1200, instrs=6)], 'op': 'and'}} children=[]
+  IfRegion@1182 blocks=[1182, 1202] then_blocks=[1202] children=[]
+  IfRegion@1300 blocks=[1300, 1320] then_blocks=[1320] children=[]
+  IfRegion@1394 blocks=[1394, 1402, 1422] then_blocks=[1422] inline_boolop_chains={3053259989648: {'blocks': [BasicBlock(36, offset=1394-1400, instrs=4), BasicBlock(37, offset=1402-1420, instrs=6)], 'op': 'and'}} children=[]
+  IfRegion@1402 blocks=[1402, 1422] then_blocks=[1422] children=[]
+  IfRegion@1480 blocks=[1480, 1488, 1508] then_blocks=[1508] inline_boolop_chains={3053259990096: {'blocks': [BasicBlock(39, offset=1480-1486, instrs=4), BasicBlock(40, offset=1488-1506, instrs=6)], 'op': 'and'}} children=[]
+  IfRegion@1488 blocks=[1488, 1508] then_blocks=[1508] children=[]
+CFG replace_args: 81 blocks, 39 regions
+TOP REGIONS (7):
+  IfRegion@0 blocks=[0, 218] then_blocks=[218] children=['Region@0', 'Region@218']
+  Region@268 blocks=[268] children=[]
+  TryExceptRegion@324 blocks=[324, 378, 408, 450, 452, 572, 580, 588, 596, 716, 724, 728] else_blocks=[450] try_blocks=[324, 378, 408] children=[]
+  IfRegion@324 blocks=[324, 378] then_blocks=[378] children=[]
+  IfRegion@572 blocks=[572, 596, 716] then_blocks=[596] else_blocks=[716] children=['BoolOpRegion@572']
+  LoopRegion@838 blocks=[734, 838, 840, 886, 898, 904, 908] body_blocks=[838, 840, 886, 898, 904, 908] children=['IfRegion@840', 'IfRegion@886']
+  IfRegion@910 blocks=[910, 924, 1062, 1066, 1112, 1114, 1122, 1154, 1162, 1170, 1200, 1208, 1276, 1334, 1368, 1370, 1380, 1400, 1484, 1486, 1488, 1498, 1518, 1598, 1606, 1626, 1660, 1690, 1788, 1888, 1902, 2038, 2042, 2084, 2116, 2124, 2132, 2162, 2170, 2238, 2296, 2330, 2332, 2342, 2362, 2446, 2448, 2450, 2460, 2480, 2560, 2568, 2588, 2622, 2652, 2664, 2668, 2766, 2866] then_blocks=[924, 1062, 1066, 1112, 1114, 1122, 1154, 1162, 1170, 1200, 1208, 1276, 1334, 1368, 1370, 1380, 1400, 1484, 1486, 1488, 1498, 1518, 1598, 1606, 1626, 1660, 1690, 1788] else_blocks=[1888, 1902, 2038, 2042, 2084, 2116, 2124, 2132, 2162, 2170, 2238, 2296, 2330, 2332, 2342, 2362, 2446, 2448, 2450, 2460, 2480, 2560, 2568, 2588, 2622, 2652, 2664, 2668, 2766, 2866] elif_conditions=[1888] children=['Region@910', 'LoopRegion@1062', 'Region@1888', 'LoopRegion@2038', 'Region@2866']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 218] then_blocks=[218] children=['Region@0', 'Region@218']
+  Region@0 blocks=[0] children=[]
+  Region@218 blocks=[218] children=[]
+  Region@268 blocks=[268] children=[]
+  TryExceptRegion@324 blocks=[324, 378, 408, 450, 452, 572, 580, 588, 596, 716, 724, 728] else_blocks=[450] try_blocks=[324, 378, 408] children=[]
+  IfRegion@324 blocks=[324, 378] then_blocks=[378] children=[]
+  BoolOpRegion@572 blocks=[572, 580, 588] children=[]
+  IfRegion@572 blocks=[572, 596, 716] then_blocks=[596] else_blocks=[716] children=['BoolOpRegion@572']
+  LoopRegion@838 blocks=[734, 838, 840, 886, 898, 904, 908] body_blocks=[838, 840, 886, 898, 904, 908] children=['IfRegion@840', 'IfRegion@886']
+  IfRegion@840 blocks=[840, 886, 898, 904] then_blocks=[886, 898, 904] children=[]
+  IfRegion@886 blocks=[886, 898] then_blocks=[898] children=[]
+  IfRegion@910 blocks=[910, 924, 1062, 1066, 1112, 1114, 1122, 1154, 1162, 1170, 1200, 1208, 1276, 1334, 1368, 1370, 1380, 1400, 1484, 1486, 1488, 1498, 1518, 1598, 1606, 1626, 1660, 1690, 1788, 1888, 1902, 2038, 2042, 2084, 2116, 2124, 2132, 2162, 2170, 2238, 2296, 2330, 2332, 2342, 2362, 2446, 2448, 2450, 2460, 2480, 2560, 2568, 2588, 2622, 2652, 2664, 2668, 2766, 2866] then_blocks=[924, 1062, 1066, 1112, 1114, 1122, 1154, 1162, 1170, 1200, 1208, 1276, 1334, 1368, 1370, 1380, 1400, 1484, 1486, 1488, 1498, 1518, 1598, 1606, 1626, 1660, 1690, 1788] else_blocks=[1888, 1902, 2038, 2042, 2084, 2116, 2124, 2132, 2162, 2170, 2238, 2296, 2330, 2332, 2342, 2362, 2446, 2448, 2450, 2460, 2480, 2560, 2568, 2588, 2622, 2652, 2664, 2668, 2766, 2866] elif_conditions=[1888] children=['Region@910', 'LoopRegion@1062', 'Region@1888', 'LoopRegion@2038', 'Region@2866']
+  Region@910 blocks=[910] children=[]
+  LoopRegion@1062 blocks=[924, 1062, 1066, 1112, 1114, 1122, 1154, 1162, 1170, 1200, 1208, 1276, 1334, 1368, 1370, 1380, 1400, 1484, 1486, 1488, 1498, 1518, 1598, 1606, 1626, 1660, 1690, 1788] else_blocks=[1788] body_blocks=[1062, 1066, 1112, 1114, 1122, 1154, 1162, 1170, 1200, 1208, 1276, 1334, 1368, 1370, 1380, 1400, 1484, 1486, 1488, 1498, 1518, 1598, 1606, 1626, 1660, 1690] children=['IfRegion@1066', 'IfRegion@1114', 'IfRegion@1162', 'IfRegion@1200', 'IfRegion@1276', 'IfRegion@1498', 'IfRegion@1598', 'IfRegion@1606']
+  IfRegion@1066 blocks=[1066, 1112, 1114, 1122, 1154, 1170] then_blocks=[1112] else_blocks=[1114, 1122, 1154, 1170] elif_conditions=[1114, 1154] inline_boolop_chains={3053259853136: {'blocks': [BasicBlock(28, offset=1154-1160, instrs=4), BasicBlock(29, offset=1162-1168, instrs=4)], 'op': 'and'}} children=[]
+  IfRegion@1114 blocks=[1114, 1122, 1154, 1170] then_blocks=[1122] else_blocks=[1154, 1170] elif_conditions=[1154] inline_boolop_chains={3053259853136: {'blocks': [BasicBlock(28, offset=1154-1160, instrs=4), BasicBlock(29, offset=1162-1168, instrs=4)], 'op': 'and'}} children=[]
+  IfRegion@1162 blocks=[1162, 1170] then_blocks=[1170] children=[]
+  IfRegion@1200 blocks=[1200, 1208, 1276, 1334, 1368, 1370, 1380, 1400, 1484, 1486, 1488, 1498, 1518, 1598, 1606, 1626, 1660] then_blocks=[1208] else_blocks=[1276, 1334, 1368, 1370, 1380, 1400, 1484, 1486, 1488, 1498, 1518, 1598, 1606, 1626, 1660] children=[]
+  IfRegion@1276 blocks=[1276, 1334, 1368, 1370, 1380, 1400, 1484, 1486, 1488, 1518] then_blocks=[1334, 1368, 1370, 1380, 1400, 1484, 1486] else_blocks=[1488, 1518] elif_conditions=[1488] inline_boolop_chains={3053259852240: {'blocks': [BasicBlock(41, offset=1488-1496, instrs=5), BasicBlock(42, offset=1498-1516, instrs=6)], 'op': 'and'}} children=['LoopRegion@1368']
+  LoopRegion@1368 blocks=[1334, 1368, 1370, 1380, 1400, 1484] body_blocks=[1368, 1370, 1380, 1400, 1484] children=['IfRegion@1370', 'IfRegion@1380']
+  IfRegion@1370 blocks=[1370, 1380, 1400] then_blocks=[1400] inline_boolop_chains={3053259852688: {'blocks': [BasicBlock(36, offset=1370-1378, instrs=5), BasicBlock(37, offset=1380-1398, instrs=6)], 'op': 'and'}} children=[]
+  IfRegion@1380 blocks=[1380, 1400] then_blocks=[1400] children=[]
+  IfRegion@1498 blocks=[1498, 1518] then_blocks=[1518] children=[]
+  IfRegion@1598 blocks=[1598, 1606, 1626, 1660] then_blocks=[1606, 1626, 1660] children=[]
+  IfRegion@1606 blocks=[1606, 1626, 1660] then_blocks=[1626] else_blocks=[1660] children=[]
+  Region@1888 blocks=[1888] children=[]
+  LoopRegion@2038 blocks=[1902, 2038, 2042, 2084, 2116, 2124, 2132, 2162, 2170, 2238, 2296, 2330, 2332, 2342, 2362, 2446, 2448, 2450, 2460, 2480, 2560, 2568, 2588, 2622, 2652, 2664, 2668, 2766] else_blocks=[2766] body_blocks=[2038, 2042, 2084, 2116, 2124, 2132, 2162, 2170, 2238, 2296, 2330, 2332, 2342, 2362, 2446, 2448, 2450, 2460, 2480, 2560, 2568, 2588, 2622, 2652, 2664, 2668] children=['IfRegion@2042', 'IfRegion@2124', 'IfRegion@2162', 'IfRegion@2238', 'IfRegion@2460', 'IfRegion@2560', 'IfRegion@2568', 'IfRegion@2652']
+  IfRegion@2042 blocks=[2042, 2084, 2116, 2132] then_blocks=[2084] else_blocks=[2116, 2132] elif_conditions=[2116] inline_boolop_chains={3053259854352: {'blocks': [BasicBlock(55, offset=2116-2122, instrs=4), BasicBlock(56, offset=2124-2130, instrs=4)], 'op': 'and'}} children=[]
+  IfRegion@2124 blocks=[2124, 2132] then_blocks=[2132] children=[]
+  IfRegion@2162 blocks=[2162, 2170, 2238, 2296, 2330, 2332, 2342, 2362, 2446, 2448, 2450, 2460, 2480, 2560, 2568, 2588, 2622, 2652, 2664] then_blocks=[2170] else_blocks=[2238, 2296, 2330, 2332, 2342, 2362, 2446, 2448, 2450, 2460, 2480, 2560, 2568, 2588, 2622, 2652, 2664] children=[]
+  IfRegion@2238 blocks=[2238, 2296, 2330, 2332, 2342, 2362, 2446, 2448, 2450, 2480] then_blocks=[2296, 2330, 2332, 2342, 2362, 2446, 2448] else_blocks=[2450, 2480] elif_conditions=[2450] inline_boolop_chains={3053259851856: {'blocks': [BasicBlock(68, offset=2450-2458, instrs=5), BasicBlock(69, offset=2460-2478, instrs=6)], 'op': 'and'}} children=['LoopRegion@2330']
+  LoopRegion@2330 blocks=[2296, 2330, 2332, 2342, 2362, 2446] body_blocks=[2330, 2332, 2342, 2362, 2446] children=['IfRegion@2332', 'IfRegion@2342']
+  IfRegion@2332 blocks=[2332, 2342, 2362] then_blocks=[2362] inline_boolop_chains={3053259852048: {'blocks': [BasicBlock(63, offset=2332-2340, instrs=5), BasicBlock(64, offset=2342-2360, instrs=6)], 'op': 'and'}} children=[]
+  IfRegion@2342 blocks=[2342, 2362] then_blocks=[2362] children=[]
+  IfRegion@2460 blocks=[2460, 2480] then_blocks=[2480] children=[]
+  IfRegion@2560 blocks=[2560, 2568, 2588, 2622] then_blocks=[2568, 2588, 2622] children=[]
+  IfRegion@2568 blocks=[2568, 2588, 2622] then_blocks=[2588] else_blocks=[2622] children=[]
+  IfRegion@2652 blocks=[2652, 2664] then_blocks=[2664] children=[]
+  Region@2866 blocks=[2866] children=[]
+CFG replace_args: 12 blocks, 8 regions
+TOP REGIONS (1):
+  IfRegion@0 blocks=[0, 154, 242, 292, 580] then_blocks=[154] else_blocks=[242, 292, 580] children=['Region@0', 'Region@154', 'LoopRegion@292']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 154, 242, 292, 580] then_blocks=[154] else_blocks=[242, 292, 580] children=['Region@0', 'Region@154', 'LoopRegion@292']
+  Region@0 blocks=[0] children=[]
+  Region@154 blocks=[154] children=[]
+  LoopRegion@292 blocks=[242, 292, 294, 304, 312, 428, 528, 536, 578, 580] else_blocks=[580] body_blocks=[292, 294, 304, 312, 428, 528, 536, 578] children=['IfRegion@294', 'IfRegion@304', 'IfRegion@312', 'IfRegion@528']
+  IfRegion@294 blocks=[294, 304, 312, 428] then_blocks=[312, 428] inline_boolop_chains={3053259497168: {'blocks': [BasicBlock(5, offset=294-302, instrs=5), BasicBlock(6, offset=304-310, instrs=4)], 'op': 'and'}} children=[]
+  IfRegion@304 blocks=[304, 312, 428] then_blocks=[312, 428] children=[]
+  IfRegion@312 blocks=[312, 428] then_blocks=[428] children=[]
+  IfRegion@528 blocks=[528, 536] then_blocks=[536] children=[]
+CFG replace_args: 12 blocks, 8 regions
+TOP REGIONS (1):
+  IfRegion@0 blocks=[0, 154, 242, 292, 580] then_blocks=[154] else_blocks=[242, 292, 580] children=['Region@0', 'Region@154', 'LoopRegion@292']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 154, 242, 292, 580] then_blocks=[154] else_blocks=[242, 292, 580] children=['Region@0', 'Region@154', 'LoopRegion@292']
+  Region@0 blocks=[0] children=[]
+  Region@154 blocks=[154] children=[]
+  LoopRegion@292 blocks=[242, 292, 294, 304, 312, 428, 528, 536, 578, 580] else_blocks=[580] body_blocks=[292, 294, 304, 312, 428, 528, 536, 578] children=['IfRegion@294', 'IfRegion@304', 'IfRegion@312', 'IfRegion@528']
+  IfRegion@294 blocks=[294, 304, 312, 428] then_blocks=[312, 428] inline_boolop_chains={3053269731088: {'blocks': [BasicBlock(5, offset=294-302, instrs=5), BasicBlock(6, offset=304-310, instrs=4)], 'op': 'and'}} children=[]
+  IfRegion@304 blocks=[304, 312, 428] then_blocks=[312, 428] children=[]
+  IfRegion@312 blocks=[312, 428] then_blocks=[428] children=[]
+  IfRegion@528 blocks=[528, 536] then_blocks=[536] children=[]
+CFG replace_args: 12 blocks, 8 regions
+TOP REGIONS (1):
+  IfRegion@0 blocks=[0, 154, 242, 292, 580] then_blocks=[154] else_blocks=[242, 292, 580] children=['Region@0', 'Region@154', 'LoopRegion@292']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 154, 242, 292, 580] then_blocks=[154] else_blocks=[242, 292, 580] children=['Region@0', 'Region@154', 'LoopRegion@292']
+  Region@0 blocks=[0] children=[]
+  Region@154 blocks=[154] children=[]
+  LoopRegion@292 blocks=[242, 292, 294, 304, 312, 428, 528, 536, 578, 580] else_blocks=[580] body_blocks=[292, 294, 304, 312, 428, 528, 536, 578] children=['IfRegion@294', 'IfRegion@304', 'IfRegion@312', 'IfRegion@528']
+  IfRegion@294 blocks=[294, 304, 312, 428] then_blocks=[312, 428] inline_boolop_chains={3053269926352: {'blocks': [BasicBlock(5, offset=294-302, instrs=5), BasicBlock(6, offset=304-310, instrs=4)], 'op': 'and'}} children=[]
+  IfRegion@304 blocks=[304, 312, 428] then_blocks=[312, 428] children=[]
+  IfRegion@312 blocks=[312, 428] then_blocks=[428] children=[]
+  IfRegion@528 blocks=[528, 536] then_blocks=[536] children=[]
+CFG replace_args: 6 blocks, 4 regions
+TOP REGIONS (1):
+  IfRegion@0 blocks=[0, 152, 240, 290, 338] then_blocks=[152] else_blocks=[240, 290, 338] children=['Region@0', 'Region@152', 'LoopRegion@290']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 152, 240, 290, 338] then_blocks=[152] else_blocks=[240, 290, 338] children=['Region@0', 'Region@152', 'LoopRegion@290']
+  Region@0 blocks=[0] children=[]
+  Region@152 blocks=[152] children=[]
+  LoopRegion@290 blocks=[240, 290, 292, 338] else_blocks=[338] body_blocks=[290, 292] children=[]
+CFG replace_args: 6 blocks, 4 regions
+TOP REGIONS (1):
+  IfRegion@0 blocks=[0, 152, 240, 290, 338] then_blocks=[152] else_blocks=[240, 290, 338] children=['Region@0', 'Region@152', 'LoopRegion@290']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 152, 240, 290, 338] then_blocks=[152] else_blocks=[240, 290, 338] children=['Region@0', 'Region@152', 'LoopRegion@290']
+  Region@0 blocks=[0] children=[]
+  Region@152 blocks=[152] children=[]
+  LoopRegion@290 blocks=[240, 290, 292, 338] else_blocks=[338] body_blocks=[290, 292] children=[]
+CFG replace_args: 7 blocks, 9 regions
+TOP REGIONS (1):
+  IfRegion@0 blocks=[0, 154, 242, 270, 334, 342, 406] then_blocks=[154] else_blocks=[242, 270, 334, 342, 406] children=['Region@0', 'Region@154', 'IfRegion@242']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 154, 242, 270, 334, 342, 406] then_blocks=[154] else_blocks=[242, 270, 334, 342, 406] children=['Region@0', 'Region@154', 'IfRegion@242']
+  Region@0 blocks=[0] children=[]
+  Region@154 blocks=[154] children=[]
+  IfRegion@242 blocks=[242, 270, 334, 342, 406] then_blocks=[270] else_blocks=[334, 342, 406] elif_conditions=[334] children=['Region@242', 'Region@270', 'Region@334', 'Region@342', 'Region@406']
+  Region@242 blocks=[242] children=[]
+  Region@270 blocks=[270] children=[]
+  Region@334 blocks=[334] children=[]
+  Region@342 blocks=[342] children=[]
+  Region@406 blocks=[406] children=[]
+CFG replace_args: 5 blocks, 7 regions
+TOP REGIONS (1):
+  IfRegion@0 blocks=[0, 152, 240, 294, 486] then_blocks=[152] else_blocks=[240, 294, 486] children=['Region@0', 'Region@152', 'IfRegion@240']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 152, 240, 294, 486] then_blocks=[152] else_blocks=[240, 294, 486] children=['Region@0', 'Region@152', 'IfRegion@240']
+  Region@0 blocks=[0] children=[]
+  Region@152 blocks=[152] children=[]
+  IfRegion@240 blocks=[240, 294, 486] then_blocks=[294] else_blocks=[486] children=['Region@240', 'Region@294', 'Region@486']
+  Region@240 blocks=[240] children=[]
+  Region@294 blocks=[294] children=[]
+  Region@486 blocks=[486] children=[]
+CFG replace_args: 3 blocks, 4 regions
+TOP REGIONS (1):
+  IfRegion@0 blocks=[0, 152, 240] then_blocks=[152] else_blocks=[240] children=['Region@0', 'Region@152', 'Region@240']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 152, 240] then_blocks=[152] else_blocks=[240] children=['Region@0', 'Region@152', 'Region@240']
+  Region@0 blocks=[0] children=[]
+  Region@152 blocks=[152] children=[]
+  Region@240 blocks=[240] children=[]
+CFG replace_args: 3 blocks, 4 regions
+TOP REGIONS (1):
+  IfRegion@0 blocks=[0, 152, 240] then_blocks=[152] else_blocks=[240] children=['Region@0', 'Region@152', 'Region@240']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 152, 240] then_blocks=[152] else_blocks=[240] children=['Region@0', 'Region@152', 'Region@240']
+  Region@0 blocks=[0] children=[]
+  Region@152 blocks=[152] children=[]
+  Region@240 blocks=[240] children=[]
+CFG replace_args: 4 blocks, 5 regions
+TOP REGIONS (2):
+  IfRegion@0 blocks=[0, 134, 182] then_blocks=[134] else_blocks=[182] children=['Region@0', 'Region@134', 'Region@182']
+  Region@228 blocks=[228] children=[]
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 134, 182] then_blocks=[134] else_blocks=[182] children=['Region@0', 'Region@134', 'Region@182']
+  Region@0 blocks=[0] children=[]
+  Region@134 blocks=[134] children=[]
+  Region@182 blocks=[182] children=[]
+  Region@228 blocks=[228] children=[]
+CFG replace_args: 1 blocks, 1 regions
+TOP REGIONS (1):
+  Region@0 blocks=[0] children=[]
+
+FULL TREE BY ENTRY:
+  Region@0 blocks=[0] children=[]
+CFG replace_args: 22 blocks, 14 regions
+TOP REGIONS (1):
+  IfRegion@0 blocks=[0, 150, 238, 250, 476, 488, 492, 658, 758, 770, 820] then_blocks=[150] else_blocks=[238, 250, 476, 488, 492, 658, 758, 770, 820] children=['Region@0', 'Region@150', 'LoopRegion@250', 'IfRegion@476']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 150, 238, 250, 476, 488, 492, 658, 758, 770, 820] then_blocks=[150] else_blocks=[238, 250, 476, 488, 492, 658, 758, 770, 820] children=['Region@0', 'Region@150', 'LoopRegion@250', 'IfRegion@476']
+  Region@0 blocks=[0] children=[]
+  Region@150 blocks=[150] children=[]
+  LoopRegion@250 blocks=[238, 250, 252, 298, 366, 458, 474] body_blocks=[250, 252, 298, 366, 458, 474] children=['IfRegion@252', 'IfRegion@298']
+  IfRegion@252 blocks=[252, 298, 366, 458] then_blocks=[298, 366, 458] children=[]
+  IfRegion@298 blocks=[298, 366] then_blocks=[366] children=[]
+  IfRegion@476 blocks=[476, 488, 492, 494, 556, 558, 562, 574, 656, 658, 758, 770, 820] then_blocks=[488, 492, 494, 556, 558, 562, 574, 656, 658] else_blocks=[758, 770, 820] elif_conditions=[758] children=['Region@476', 'LoopRegion@492', 'Region@758', 'Region@770', 'Region@820']
+  Region@476 blocks=[476] children=[]
+  LoopRegion@492 blocks=[488, 492, 494, 556, 558, 562, 574, 656, 658] else_blocks=[658] body_blocks=[492, 494, 556, 558, 562, 574, 656] children=['IfRegion@494', 'IfRegion@562']
+  IfRegion@494 blocks=[494, 556, 558] then_blocks=[556] else_blocks=[558] children=[]
+  IfRegion@562 blocks=[562, 574] then_blocks=[574] children=[]
+  Region@758 blocks=[758] children=[]
+  Region@770 blocks=[770] children=[]
+  Region@820 blocks=[820] children=[]
+CFG replace_args: 6 blocks, 7 regions
+TOP REGIONS (2):
+  IfRegion@0 blocks=[0, 12, 60, 68, 116] then_blocks=[12] else_blocks=[60, 68, 116] elif_conditions=[60] children=['Region@0', 'Region@12', 'Region@60', 'Region@68', 'Region@116']
+  Region@162 blocks=[162] children=[]
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 12, 60, 68, 116] then_blocks=[12] else_blocks=[60, 68, 116] elif_conditions=[60] children=['Region@0', 'Region@12', 'Region@60', 'Region@68', 'Region@116']
+  Region@0 blocks=[0] children=[]
+  Region@12 blocks=[12] children=[]
+  Region@60 blocks=[60] children=[]
+  Region@68 blocks=[68] children=[]
+  Region@116 blocks=[116] children=[]
+  Region@162 blocks=[162] children=[]
+CFG replace_args: 5 blocks, 6 regions
+TOP REGIONS (2):
+  IfRegion@0 blocks=[0, 12, 60, 68] then_blocks=[12] else_blocks=[60, 68] elif_conditions=[60] children=['Region@0', 'Region@12', 'Region@60', 'Region@68']
+  Region@114 blocks=[114] children=[]
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 12, 60, 68] then_blocks=[12] else_blocks=[60, 68] elif_conditions=[60] children=['Region@0', 'Region@12', 'Region@60', 'Region@68']
+  Region@0 blocks=[0] children=[]
+  Region@12 blocks=[12] children=[]
+  Region@60 blocks=[60] children=[]
+  Region@68 blocks=[68] children=[]
+  Region@114 blocks=[114] children=[]
+CFG replace_args: 9 blocks, 12 regions
+TOP REGIONS (2):
+  IfRegion@0 blocks=[0, 12, 60, 68, 116, 124, 172, 180] then_blocks=[12] else_blocks=[60, 68, 116, 124, 172, 180] elif_conditions=[60, 116, 172] children=['Region@0', 'Region@12', 'IfRegion@60']
+  Region@226 blocks=[226] children=[]
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 12, 60, 68, 116, 124, 172, 180] then_blocks=[12] else_blocks=[60, 68, 116, 124, 172, 180] elif_conditions=[60, 116, 172] children=['Region@0', 'Region@12', 'IfRegion@60']
+  Region@0 blocks=[0] children=[]
+  Region@12 blocks=[12] children=[]
+  IfRegion@60 blocks=[60, 68, 116, 124, 172, 180] then_blocks=[68] else_blocks=[116, 124, 172, 180] elif_conditions=[116, 172] children=['Region@60', 'Region@68', 'IfRegion@116']
+  Region@60 blocks=[60] children=[]
+  Region@68 blocks=[68] children=[]
+  IfRegion@116 blocks=[116, 124, 172, 180] then_blocks=[124] else_blocks=[172, 180] elif_conditions=[172] children=['Region@116', 'Region@124', 'Region@172', 'Region@180']
+  Region@116 blocks=[116] children=[]
+  Region@124 blocks=[124] children=[]
+  Region@172 blocks=[172] children=[]
+  Region@180 blocks=[180] children=[]
+  Region@226 blocks=[226] children=[]
+CFG replace_args: 3 blocks, 4 regions
+TOP REGIONS (1):
+  IfRegion@0 blocks=[0, 152, 240] then_blocks=[152] else_blocks=[240] children=['Region@0', 'Region@152', 'Region@240']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 152, 240] then_blocks=[152] else_blocks=[240] children=['Region@0', 'Region@152', 'Region@240']
+  Region@0 blocks=[0] children=[]
+  Region@152 blocks=[152] children=[]
+  Region@240 blocks=[240] children=[]
+CFG replace_args: 1 blocks, 1 regions
+TOP REGIONS (1):
+  Region@0 blocks=[0] children=[]
+
+FULL TREE BY ENTRY:
+  Region@0 blocks=[0] children=[]
+CFG replace_args: 8 blocks, 10 regions
+TOP REGIONS (1):
+  IfRegion@0 blocks=[0, 154, 242, 428, 478, 532, 538, 626] then_blocks=[154] else_blocks=[242, 428, 478, 532, 538, 626] children=['Region@0', 'Region@154', 'IfRegion@242', 'Region@626']
+
+FULL TREE BY ENTRY:
+  IfRegion@0 blocks=[0, 154, 242, 428, 478, 532, 538, 626] then_blocks=[154] else_blocks=[242, 428, 478, 532, 538, 626] children=['Region@0', 'Region@154', 'IfRegion@242', 'Region@626']
+  Region@0 blocks=[0] children=[]
+  Region@154 blocks=[154] children=[]
+  IfRegion@242 blocks=[242, 428, 478, 532, 538] then_blocks=[428] else_blocks=[478, 532, 538] elif_conditions=[478] children=['Region@242', 'Region@428', 'Region@478', 'Region@532', 'Region@538']
+  Region@242 blocks=[242] children=[]
+  Region@428 blocks=[428] children=[]
+  Region@478 blocks=[478] children=[]
+  Region@532 blocks=[532] children=[]
+  Region@538 blocks=[538] children=[]
+  Region@626 blocks=[626] children=[]

@@ -1,0 +1,13 @@
+edit3 docstring 三要素(根因/同层身份判据/去向与守卫)	PASS	['根因', '同层身份判据', '去向与守卫']
+新增代码无 self 状态赋值 (self.x = ...)	PASS	none
+新增代码无 getattr/setattr(self, ...)	PASS	none
+新增代码无 self.xxx 属性存储（仅允许方法调用）	PASS	none
+新增代码无跨层 pattern X.entry in Y.blocks	PASS	none
+新增代码无文件名字面量 (.py / 路径)	PASS	none
+新增代码无 jq/replace_args 等名字白名单	PASS	none
+新增代码无 start_offset 偏移阈值	PASS	none
+反打文件 ast.parse	PASS	ast.parse OK
+反打文件 py_compile	PASS	py_compile OK
+BOM 保持	PASS	efbbbf
+repo core/scripts/site-packages 已跟踪文件零改动（不改 repo、不手改 *OK.py）	PASS	clean (untracked=1)
+G0-audit	PASS	12/12

@@ -1,0 +1,34 @@
+{
+ "verdict": {
+  "repro_shas_differ": true,
+  "repro_head_failure": true,
+  "repro_cand_success": true,
+  "neg_sha_identical": true
+ },
+ "rows": {
+  "repro75_jqcond": {
+   "head": {
+    "sha": "98137319f28753db",
+    "out": "D:\\Temp\\opencode\\r75gate\\fix1\\synth\\out\\head_repro75_jqcond.py",
+    "verify": "[single] status=failure units=4/5 success_rate=80.00%"
+   },
+   "jqop1": {
+    "sha": "ac8ce571b15e1617",
+    "out": "D:\\Temp\\opencode\\r75gate\\fix1\\synth\\out\\jqop1_repro75_jqcond.py",
+    "verify": "[single] status=success units=5/5 success_rate=100.00%"
+   }
+  },
+  "neg75_jqcond": {
+   "head": {
+    "sha": "93a467678d39ec2c",
+    "out": "D:\\Temp\\opencode\\r75gate\\fix1\\synth\\out\\head_neg75_jqcond.py",
+    "verify": "[single] status=success units=3/3 success_rate=100.00%"
+   },
+   "jqop1": {
+    "sha": "93a467678d39ec2c",
+    "out": "D:\\Temp\\opencode\\r75gate\\fix1\\synth\\out\\jqop1_neg75_jqcond.py",
+    "verify": "[single] status=success units=3/3 success_rate=100.00%"
+   }
+  }
+ }
+}

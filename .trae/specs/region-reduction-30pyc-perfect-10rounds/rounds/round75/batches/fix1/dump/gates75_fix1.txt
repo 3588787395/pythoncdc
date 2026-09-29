@@ -1,0 +1,73 @@
+R75 fix1 · 证据闸读数（臂 jqop1 = specs/jqop1.json，3 edits / +81 行 / BOM 保留）
+基线 HEAD 3667987a（代码同 982cd398 R74 落地 m74）· 工作区 D:/Temp/opencode/r75gate/fix1
+==========================================================================================
+
+[mirror]  h62.py build --spec=specs/jqop1.json --dst=jqop1
+          mirrors built: head pristine == worktree bytes, cand patched
+          (3 edits, core/cfg/region_ast_generator.py, BOM=True, nl=CRLF)
+          mbuild74.py jqop1 亦读: patched lines=+81 bytes 3226993 -> 3231801 BOM=True
+
+[b · 官方 41 靶 h62 ab]  logs/ab75_head.jsonl vs logs/ab75_jqop1.jsonl
+          TALLY SAME=40 IMPROVED=0 REGRESSION=0 MOVED=1 ERR=0 (unpaired lists=0)
+          files fully matched: a=33 b=33
+          MOVED = IQCommon/strategy/jq_trans_module.pyc (gained=[] lost=[] 仅 sha 变)
+          => 逐项不回退 PASS
+
+[c · mandated focus]  pyc_verify single <pyc> --source build_jqop1/<...>OK.py
+          jq_trans_module.pyc     63/65 failure -> 65/65 success   *** mandate 达成 ***
+          klinedata.pyc           61/64 failure -> 61/64 (fail: get_kline_by_count_new,
+                                       get_multiminute_his_data, kline_datetime_list) 0 新增
+          wizard_quant_api.pyc    55/58 failure -> 55/58 (filter_desicion + 2 genexpr) 0 新增
+          order_api.pyc           34/37 failure -> 34/37 (base_order/future_order/option_order) 0 新增
+          real_quote.pyc          43/45 failure -> 43/45 (get_real_minute_kline/get_tick_direction) 0 新增
+          => 至少 1 支 failure->success PASS，其余只减不增、零新生失败 PASS
+
+[d1 · 金丝雀]  logs/canary_{head,jqop1}.jsonl (dump/list_canary.txt 4 支)
+          quotation.pyc     3eb76e512df9ab1e == 3eb76e512df9ab1e  OK
+          market_time.pyc   af77224b34b203c4 == af77224b34b203c4  OK
+          datetime_func.pyc e711b8ea86d49a15  in (e711b8ea86d49a15, 9d09af09249da177) OK
+          datetime_func.pyc 9d09af09249da177  in (e711b8ea86d49a15, 9d09af09249da177) OK
+          => canary 4/4 PASS（head 亦 4/4）
+
+[d2 · battery]  closeout69 battery landed jqop1（本区 batt69.py 分片重放，同一 run_arm/判据）
+          repro pycs = 82（round63-69 batch + 11 个 pinned R62 witness）
+          dump/repro65_landed.jsonl 82 记录 vs dump/repro65_jqop1.jsonl 82 记录
+          => candidate columns worse-than-landed on 0 repro(s)   PASS
+
+[e · sstrict]  sstrict67.py build_<arm> dump/list_fail75.txt（34 pyc / 1528 函数）
+          head : STRICT TOTAL ok=1459 / functions=1528 / defects=69
+          jqop1: STRICT TOTAL ok=1461 / functions=1528 / defects=67
+          NEW defects = 0
+          RESOLVED  = 2  (jq_trans_module.func_attribute_history_convert_code.replace_args,
+                          jq_trans_module.func_get_bars_convert_code.replace_args,
+                          旧 seq_len orig=355 decomp=351 / orig=653 decomp=649)
+          CHANGED   = 0      errors = 0
+          => 新增缺陷 0 PASS
+
+[hunks_norm · get_tick_direction (BRIEF §2.2 R74 拒收点)]  center/nhunks.py
+          landed  *OK.py          orig=297 decomp=299  substantive-hunks=3
+          jqop1   *OK.py          orig=297 decomp=299  substantive-hunks=3
+          get_real_minute_kline   landed 6 / jqop1 6
+          => hunks_norm 不升 PASS（且该文件 sha 与落地逐字节相同）
+
+[blast radius · 161 份产物 sha16 对比]
+          ab75(41) + fail75(34) + repro65(82) + canary(4) = 161 份产物
+          head vs jqop1 只有 1 份不同：IQCommon/strategy/jq_trans_module.pyc（sha + mism 双变）
+          其余 160 份 sha16 逐字节相同、mism 列表相同
+          => 影响面 = 1 文件
+
+[G0 · 硬规则自检]  fix1/g0audit.py -> dump/g0audit.txt   12/12 PASS
+          三要素 docstring（根因 / 同层身份判据 / 去向与守卫）PASS
+          新增代码无 self 状态赋值 / getattr(self,..) / 属性存储 PASS
+          新增代码无跨层 X.entry in Y.blocks PASS
+          新增代码无 .py 文件名、无 jq/replace_args 名字白名单 PASS
+          新增代码无 start_offset 偏移阈值 PASS
+          反打文件 ast.parse + py_compile PASS，BOM=efbbbf 保持 PASS
+          git status -- core scripts site-packages 已跟踪文件零改动 PASS
+
+[synth]  fix1/synth/out/synth.json
+          repro75_jqcond（真实失败单元单函数切片）: head 4/5 failure -> jqop1 5/5 success
+          neg75_jqcond（同族布尔条件负例）: head sha=93a467678d39ec2c
+                                          jqop1 sha=93a467678d39ec2c（逐字节相同）
+                                          两侧 mandated 均 3/3 success
+          => SYNTH PASS
