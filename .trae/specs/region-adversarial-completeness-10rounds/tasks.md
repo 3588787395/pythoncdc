@@ -4,10 +4,10 @@
 每轮（round76–round85）= 主代理本地提交 → 测试工程师（取 1 个 pyc → ≥10 最小复现 + 根因）→ 修复工程师（区域归约算法修复 + 注释三要素）→ 评审工程师（独立对抗审查，优先台账已判完备形态）→ 主代理验证（靶 pyc success → quotation.pyc → 批量回归 REGRESSIONS=0）→ 归档 → 提交并 push。
 纪律：每轮至少解决 1 个 pyc，未解决禁止下一轮；所有命令 ≤300s；禁止手改 `*OK.py`；逐步进行禁止投机取巧。
 
-- [ ] Task 0: 基线与规范就位（主代理，round76 启动前置）
-  - [ ] SubTask 0.1: 创建 `.trae/specs/region-adversarial-completeness-10rounds/rounds/` 与 `baseline/` 目录；本地提交（调用子代理前必须提交）
-  - [ ] SubTask 0.2: 用 `scripts/pyc_verify.py batch` 分片跑 402 基线（8 片 × ~50 文件，每片 ≤300s），产出基线报告与失败文件清单（= 小测试集索引 `baseline/failing_index.json`）
-  - [ ] SubTask 0.3: 盘点 12 个 `_identify_*` 识别方法注释三要素（识别条件/归约方式/AST 映射）现状缺口表，存 `baseline/comment_gaps.md`
+- [x] Task 0: 基线与规范就位（主代理，round76 启动前置）
+  - [x] SubTask 0.1: 创建 `.trae/specs/region-adversarial-completeness-10rounds/rounds/` 与 `baseline/` 目录；本地提交（调用子代理前必须提交）
+  - [x] SubTask 0.2: 用 `scripts/pyc_verify.py batch` 分片跑 402 基线（8 片 × ~50 文件，每片 ≤300s），产出基线报告与失败文件清单（= 小测试集索引 `baseline/failing_index.json`）
+  - [x] SubTask 0.3: 盘点 12 个 `_identify_*` 识别方法注释三要素（识别条件/归约方式/AST 映射）现状缺口表，存 `baseline/comment_gaps.md`
 
 - [ ] Task 1: Round 76 — B1a 落地 + 靶 quote.pyc（当前最差 88.89%）
   - [ ] SubTask 1.1: 测试工程师：`pyc_verify.py single fly/data/quote.pyc` → 失败单元 dis 对照 → ≥10 最小复现 + ≥2 负对照（test_repros/round76/）→ ANALYSIS.md（根因 × C 条款归类）
