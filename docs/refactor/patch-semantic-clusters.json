@@ -1,0 +1,774 @@
+{
+  "generated": "2026-09-29",
+  "total_markers": 9098,
+  "primary": {
+    "other": 3645,
+    "if-elif-else": 1710,
+    "try-except": 1232,
+    "loop-boundary": 1100,
+    "with-context": 571,
+    "version-compat": 219,
+    "comprehension": 172,
+    "boolop-chain": 126,
+    "ordering": 96,
+    "match-case": 74,
+    "dedup-orphan": 54,
+    "ternary": 39,
+    "perf-cache": 33,
+    "hardcode-magic": 12,
+    "fallback": 10,
+    "prefix-method": 5
+  },
+  "multi_label": {
+    "other": 3647,
+    "if-elif-else": 1968,
+    "try-except": 1482,
+    "loop-boundary": 1240,
+    "with-context": 612,
+    "version-compat": 256,
+    "comprehension": 178,
+    "boolop-chain": 163,
+    "ordering": 140,
+    "match-case": 109,
+    "dedup-orphan": 74,
+    "ternary": 57,
+    "perf-cache": 55,
+    "hardcode-magic": 20,
+    "fallback": 17
+  },
+  "prefix_methods": {
+    "_merge_": 3,
+    "_fallback_": 2
+  },
+  "per_file_top": {
+    "parsers/ast_builder.py": {
+      "other": 845,
+      "if-elif-else": 501,
+      "try-except": 343,
+      "loop-boundary": 263,
+      "with-context": 173
+    },
+    "parsers/ast_builder_cleaned.py": {
+      "other": 815,
+      "if-elif-else": 497,
+      "try-except": 342,
+      "loop-boundary": 262,
+      "with-context": 164
+    },
+    "core/cfg/ast_generator_v2.py": {
+      "other": 846,
+      "loop-boundary": 265,
+      "if-elif-else": 212,
+      "try-except": 197,
+      "with-context": 121
+    },
+    "core/cfg/structured_analyzer.py": {
+      "if-elif-else": 384,
+      "other": 364,
+      "loop-boundary": 235,
+      "try-except": 209,
+      "with-context": 80
+    },
+    "core/ast_nodes.py": {
+      "other": 200,
+      "if-elif-else": 19,
+      "try-except": 11,
+      "dedup-orphan": 8,
+      "ordering": 7
+    },
+    "parsers/code_generator.py": {
+      "other": 188,
+      "comprehension": 15,
+      "if-elif-else": 13,
+      "perf-cache": 8,
+      "loop-boundary": 8
+    },
+    "core/cfg/region_ast_generator.py": {
+      "other": 92,
+      "if-elif-else": 35,
+      "loop-boundary": 33,
+      "try-except": 20,
+      "ternary": 15
+    },
+    "core/cfg/code_generator.py": {
+      "other": 150,
+      "if-elif-else": 25,
+      "comprehension": 12,
+      "try-except": 11,
+      "loop-boundary": 11
+    },
+    "core/cfg/region_analyzer.py": {
+      "other": 42,
+      "if-elif-else": 19,
+      "loop-boundary": 16,
+      "try-except": 16,
+      "boolop-chain": 12
+    },
+    "core/cfg/exception_handler.py": {
+      "try-except": 70,
+      "other": 27,
+      "match-case": 7,
+      "with-context": 6,
+      "loop-boundary": 4
+    },
+    "core/cfg/ast_converter.py": {
+      "other": 43,
+      "match-case": 6,
+      "if-elif-else": 5,
+      "try-except": 5,
+      "version-compat": 4
+    },
+    "pycdc.py": {
+      "other": 15
+    },
+    "parsers/unified_generator.py": {
+      "other": 6,
+      "comprehension": 3,
+      "version-compat": 2,
+      "with-context": 1
+    },
+    "core/pyc_loader_v2.py": {
+      "other": 3,
+      "hardcode-magic": 1,
+      "version-compat": 1,
+      "try-except": 1
+    },
+    "core/cfg/cfg_builder.py": {
+      "boolop-chain": 2,
+      "other": 2,
+      "try-except": 1
+    }
+  },
+  "samples": {
+    "other": [
+      {
+        "file": "core/ast_nodes.py",
+        "line": 18,
+        "text": "# [关键修复] 将调试输出写入文件，避免编码问题"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 344,
+        "text": "# [关键修复] 添加循环引用检测"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 362,
+        "text": "has_returned = False  # [关键修复] 标记是否已经遇到return语句"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 376,
+        "text": "# 🔧 关键修复：处理不应该作为独立语句的节点类型"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 391,
+        "text": "# [关键修复] 特殊处理删除语句 - 跳过无意义的 del None 模式"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 431,
+        "text": "# [关键修复] 特殊处理global语句"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 460,
+        "text": "# [关键修复] 特殊处理nonlocal语句"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 503,
+        "text": "# [关键修复] 子节点已经处理了缩进，这里直接收集代码"
+      }
+    ],
+    "version-compat": [
+      {
+        "file": "core/ast_nodes.py",
+        "line": 26,
+        "text": "# 别名，用于兼容其他代码"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 832,
+        "text": "# 🔧 修复：在类定义之间添加空行（PEP 8要求类之间有两个空行）"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 1073,
+        "text": "# 添加value属性别名，保持向后兼容"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 338,
+        "text": "# [关键修复] 处理类型参数（Python 3.12+ 泛型语法）"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 1037,
+        "text": "# [关键修复] 处理PUSH_NULL - Python 3.11+的null值标记，用于函数调用"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 1371,
+        "text": "# [关键修复] 处理conversion，可能是字符串('s', 'r', 'a')或整数(0, 1, 2, 3)"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 1768,
+        "text": "# 旧格式兼容：left/right 结构"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 34,
+        "text": "self.verbose = verbose  # 接受verbose参数（用于兼容性，但不使用）"
+      }
+    ],
+    "ordering": [
+      {
+        "file": "core/ast_nodes.py",
+        "line": 306,
+        "text": "# [关键修复] 按偏移量排序插入，确保代码顺序正确"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 3093,
+        "text": "# [关键修复] 添加 offset 用于代码排序"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 3334,
+        "text": "# [关键修复] 检查节点的偏移量是否在else范围内"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 3345,
+        "text": "# [关键修复] 如果节点的偏移量超出了else范围，跳过该节点"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 3928,
+        "text": "# [关键修复] 添加 offset 用于代码排序"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 4028,
+        "text": "# [关键修复] 添加 offset 用于代码排序"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 4142,
+        "text": "# [关键修复] 添加 offset 用于代码排序"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 1987,
+        "text": "# [关键修复] 处理默认值和注解 - 注意弹出顺序与压入顺序相反"
+      }
+    ],
+    "dedup-orphan": [
+      {
+        "file": "core/ast_nodes.py",
+        "line": 363,
+        "text": "seen_lines = set()  # [关键修复] 用于去重"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 408,
+        "text": "# [关键修复] 去重检查 - 跳过无意义的 del None 和 del BaseException"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 512,
+        "text": "# [关键修复] 去重检查 - 但不对Try、If、For、While等控制流结构进行去重"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 677,
+        "text": "seen_lines = set()  # [关键修复] 用于去重"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 678,
+        "text": "seen_patterns = set()  # [关键修复] 用于模式去重"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 745,
+        "text": "# [关键修复] 去重检查 - 跳过无意义的 del None 和 del BaseException"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 883,
+        "text": "# [关键修复] 去重检查 - 只检查非空行"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 3527,
+        "text": "# [关键修复] 检查是否已经生成过else:，避免重复生成"
+      }
+    ],
+    "with-context": [
+      {
+        "file": "core/ast_nodes.py",
+        "line": 370,
+        "text": "# [关键修复] 如果已经遇到return语句，跳过后续代码（除非是函数定义、类定义或with语句）"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 2613,
+        "text": "# [关键修复] ASTCall类型的装饰器（如@decorator_with_args('hello', 'world')）"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 3255,
+        "text": "# [关键修复] 如果if body有return语句，且orelse只有with语句或为空，则不生成else:"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 4133,
+        "text": "# [关键修复] 支持 async with"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 601,
+        "text": "# [关键修复] 检查是否是异步with"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 620,
+        "text": "# [关键修复] 创建异步with节点 - 使用关键字参数"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 1437,
+        "text": "# [关键修复] ASTWithItem需要在构造函数中传入参数"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 2701,
+        "text": "self._with_ast_cache: Dict[int, Dict[str, Any]] = {}  # [关键修复] 缓存已生成的with结构AST"
+      }
+    ],
+    "loop-boundary": [
+      {
+        "file": "core/ast_nodes.py",
+        "line": 639,
+        "text": "# [关键修复] 如果这是BLK_ELSE块且没有父节点或父节点不是ASTIf/ASTWhile，跳过生成"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 641,
+        "text": "# [修复] 添加对ASTWhile的支持，因为while-else结构也需要BLK_ELSE块"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 168,
+        "text": "# [关键修复] 处理列表类型的节点（如 init_statements + [while_loop]）"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 2453,
+        "text": "# [N14修复v4] FOR_ITER之后的STORE_FAST才是迭代变量"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 2700,
+        "text": "self._for_loop_ast_cache: Dict[int, Dict[str, Any]] = {}  # [关键修复] 缓存已生成的for循环AST"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 2703,
+        "text": "self._loop_depth: int = 0  # [关键修复] 跟踪当前循环深度，用于break语句检测"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 2749,
+        "text": "# [关键修复] 当LoopStructure和TryExceptStructure共享同一个entry_block时，"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 2759,
+        "text": "# [关键修复] LoopStructure再次"
+      }
+    ],
+    "comprehension": [
+      {
+        "file": "core/ast_nodes.py",
+        "line": 682,
+        "text": "# [关键修复] 收集所有作为ASTStore值的推导式，用于跳过独立的重复推导式"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 688,
+        "text": "# [关键修复] 添加 ASTGenExpr 到推导式类型列表"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 708,
+        "text": "# [关键修复] 跳过作为ASTStore子节点的独立推导式（避免重复生成）"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 709,
+        "text": "# [关键修复] 添加 ASTGenExpr 到推导式类型列表"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 1812,
+        "text": "# [DEBUG] 关键修复：处理推导式函数调用"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 919,
+        "text": "# [关键修复] 添加推导式表达式处理"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 940,
+        "text": "# [关键修复] 添加 Iter 类型处理（推导式的迭代对象包装）"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 1591,
+        "text": "# [关键修复] 生成器表达式应该用ASTGenExpr，不是ASTListComp"
+      }
+    ],
+    "try-except": [
+      {
+        "file": "core/ast_nodes.py",
+        "line": 1762,
+        "text": "# [关键修复] 强制转换中文字符串为Exception"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 1873,
+        "text": "# [关键修复] 检查函数名是否是有效的Python标识符但不是有效的异常类型"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 4143,
+        "text": "# [关键修复] 添加 _finally_start 和 _finally_end 用于保存finally块范围"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 4155,
+        "text": "self._finally_start = -1  # [关键修复] finally块开始偏移"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 4156,
+        "text": "self._finally_end = -1  # [关键修复] finally块结束偏移"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 4236,
+        "text": "# [关键修复] 只有在有except handlers时才能生成else块"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 4260,
+        "text": "# [关键修复] finally块的内容需要比finally:多一级缩进"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 4272,
+        "text": "# [关键修复] 如果既没有except子句也没有finally子句，添加一个空的except子句"
+      }
+    ],
+    "match-case": [
+      {
+        "file": "core/ast_nodes.py",
+        "line": 2007,
+        "text": "# [关键修复] 处理星号解包（用于match/case中的*rest）"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 938,
+        "text": "# [关键修复] 添加 Starred 表达式处理（用于 match/case 中的 *rest）"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 1030,
+        "text": "# [repro_01 修复 (b)] 添加 MatchSingleton：否则 MatchSingleton dict 会被当作"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 1687,
+        "text": "# [关键修复-2026] 转换子模式但保留MatchSequence结构"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 1740,
+        "text": "# [repro_01 修复] 保留 MatchSingleton dict 结构，由 code_generator"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 1748,
+        "text": "# [关键修复-2026] 支持多值OR模式 (case 0 | 1 | 2:)"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 1750,
+        "text": "# 旧格式: {'type': 'MatchOr', 'left': ..., 'right': ...}  (两个值，兼容)"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 2805,
+        "text": "is_match_structure = isinstance(struct, MatchStructure)  # [关键修复] 添加match结构检查"
+      }
+    ],
+    "if-elif-else": [
+      {
+        "file": "core/ast_nodes.py",
+        "line": 2512,
+        "text": "self._if_chain_root = None  # [关键修复] 保存if链的根节点，用于else分支的生成"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 2725,
+        "text": "# [关键修复] 在生成函数体代码之前，设置全局变量来保存_if_chain_root"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 3091,
+        "text": "# [关键修复] 添加 _else_processed 用于标记else分支是否已经被处理过"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 3092,
+        "text": "# [关键修复] 添加 _else_end 用于保存else分支的结束位置"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 3094,
+        "text": "# [关键修复] 添加 _no_else_branch 用于标记不应该有else分支的if"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 3095,
+        "text": "# [关键修复] 添加 _is_nested_if 用于标记嵌套的if（不是elif）"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 3214,
+        "text": "# [关键修复] 检查body中是否有嵌套的if语句，确保它们的else分支被正确处理"
+      },
+      {
+        "file": "core/ast_nodes.py",
+        "line": 3238,
+        "text": "# [关键修复] 只有当if_code不为空时，才处理else/elif分支"
+      }
+    ],
+    "ternary": [
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 98,
+        "text": "'IfExp': self._convert_ifexp_full,  # [关键修复] 添加条件表达式处理"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 1333,
+        "text": "# [关键修复] 创建ASTIfExp节点"
+      },
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 1338,
+        "text": "# [关键修复] 创建ASTIfExp节点"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 1676,
+        "text": "# [通用修复] 任意单个可迭代表达式（Name/Call/IfExp/"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 13116,
+        "text": "# [关键修复] 检查是否是IfExp节点，如果是，检查是否需要处理字典构建"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 13135,
+        "text": "# [关键修复] 从Assign节点中提取IfExp"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 13862,
+        "text": "# [字节码一致性修复] 对于嵌套的三元表达式，else分支可能是内层条件表达式的入口块"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 14116,
+        "text": "# [字节码一致性修复] 对于嵌套的三元表达式，else分支是内层条件表达式"
+      }
+    ],
+    "boolop-chain": [
+      {
+        "file": "core/cfg/ast_converter.py",
+        "line": 1011,
+        "text": "# [关键修复] 处理BoolOpPending（逻辑表达式中间状态）"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 1130,
+        "text": "# [关键修复] 如果栈中仍有 BoolOpPending，说明这是逻辑运算返回值"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 2799,
+        "text": "# [关键修复] 对于复合条件结构，即使entry_block已生成，也需要处理"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 2967,
+        "text": "# [关键修复] 后处理：合并复合条件"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 3055,
+        "text": "# [关键修复] 修复复合条件赋值问题（如if True:嵌套）"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 5710,
+        "text": "# [关键修复] 如果是复合条件，整个块都是条件的一部分，不应该提取pre_condition_instrs"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 5731,
+        "text": "# [关键修复] 即使是复合条件，也可能有条件之前的独立语句（如赋值）"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 5913,
+        "text": "# [关键修复] 检查是否是逻辑表达式 (and/or) 或链式比较"
+      }
+    ],
+    "fallback": [
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 1665,
+        "text": "# [聚类7 修复] LIST_TO_TUPLE 未处理的回退路径"
+      },
+      {
+        "file": "core/cfg/region_analyzer.py",
+        "line": 15792,
+        "text": "# [W43 修复] 结构归属回退（原则 2：每块唯一归属）：块"
+      },
+      {
+        "file": "core/cfg/region_analyzer.py",
+        "line": 15823,
+        "text": "# [W43 修复] 使用 _lr_eff（结构回退后的 LoopRegion）"
+      },
+      {
+        "file": "core/cfg/region_analyzer.py",
+        "line": 18021,
+        "text": "# [W43 修复] 结构归属回退（原则 2：每块唯一归属）：当函数位于"
+      },
+      {
+        "file": "core/cfg/region_analyzer.py",
+        "line": 24366,
+        "text": "# [Round 08 修复] 原实现此处之后另有「fallthrough 一致性」回退分支，"
+      },
+      {
+        "file": "core/cfg/region_ast_generator.py",
+        "line": 32817,
+        "text": "# [Round 2 修复] fallback：pure_instrs 重建失败时（如 await"
+      },
+      {
+        "file": "parsers/ast_builder.py",
+        "line": 12488,
+        "text": "# 回退到 consts（兼容性）"
+      },
+      {
+        "file": "parsers/ast_builder.py",
+        "line": 25491,
+        "text": "# 回退到检查_loop_structures中的while循环（兼容性）"
+      }
+    ],
+    "hardcode-magic": [
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 9031,
+        "text": "# [临时调试] 硬编码跳过 offset 62（验证思路）"
+      },
+      {
+        "file": "core/cfg/code_generator.py",
+        "line": 698,
+        "text": "# 选择正确的关键字。dict 路径此前直接硬编码 'except'，"
+      },
+      {
+        "file": "core/cfg/comprehension_generator.py",
+        "line": 1977,
+        "text": "# 不硬编码跳转目标类型。"
+      },
+      {
+        "file": "core/cfg/dominator_analyzer.py",
+        "line": 156,
+        "text": "# 算法 4 原则：无硬编码、无后处理补丁、无跨区域特例。"
+      },
+      {
+        "file": "core/cfg/patch_detector.py",
+        "line": 664,
+        "text": "# P5: 硬编码偏移检测器"
+      },
+      {
+        "file": "core/cfg/region_analyzer.py",
+        "line": 7303,
+        "text": "# 不使用硬编码深度上限。depth 参数仅用于 depth==0 的遍历范围控制。"
+      },
+      {
+        "file": "core/cfg/region_analyzer.py",
+        "line": 7440,
+        "text": "# 不使用硬编码深度上限。depth 参数仅用于 depth==0 的遍历范围控制。"
+      },
+      {
+        "file": "core/cfg/region_analyzer.py",
+        "line": 27920,
+        "text": "# 不使用硬编码深度上限。"
+      }
+    ],
+    "perf-cache": [
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 9421,
+        "text": "# [关键修复] 返回缓存的AST，而不是None"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 9443,
+        "text": "# [关键修复] 处理NOP生成的if结构（对应优化后的if True:语句）"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 13324,
+        "text": "# [关键修复] 缓存if节点的AST"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 15182,
+        "text": "# [关键修复] 如果if结构已经被处理，跳过它（不要从缓存中获取）"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 15412,
+        "text": "# [关键修复] 缓存for循环的AST"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 16960,
+        "text": "# [关键修复] 缓存if节点的AST"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 20258,
+        "text": "# [关键修复] 缓存with结构的AST"
+      },
+      {
+        "file": "core/cfg/ast_generator_v2.py",
+        "line": 22028,
+        "text": "# [关键修复] 检查是否是编译器优化后的残留NOP"
+      }
+    ]
+  }
+}

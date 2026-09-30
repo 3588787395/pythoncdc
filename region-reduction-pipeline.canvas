@@ -1,0 +1,40 @@
+{
+	"nodes": [
+		{"id": "stages", "type": "file", "file": "wiki/concepts/region-reduction-stages.md", "x": 340, "y": -300, "width": 360, "height": 200, "color": "6"},
+		{"id": "pycdc", "type": "file", "file": "wiki/modules/pycdc.md", "x": -380, "y": 40, "width": 320, "height": 200, "color": "5"},
+		{"id": "ra", "type": "file", "file": "wiki/classes/core-cfg-region-analyzer--region-analyzer.md", "x": -380, "y": 340, "width": 320, "height": 200, "color": "4"},
+		{"id": "rag", "type": "file", "file": "wiki/classes/core-cfg-region-ast-generator--region-ast-generator.md", "x": -380, "y": 700, "width": 320, "height": 200, "color": "4"},
+		{"id": "s1", "type": "text", "text": "## S1 CFG 构建\n`BasicBlock` 图 → 边集 + 基本块\n87 方法 / 5,349 行（6.7%）", "x": 340, "y": 0, "width": 360, "height": 120, "color": "6"},
+		{"id": "s2", "type": "text", "text": "## S2 块语义标注\n`BlockSemantics` + 42 角色 `BlockRole`\n15 方法 / 833 行（1.0%）", "x": 340, "y": 170, "width": 360, "height": 120, "color": "6"},
+		{"id": "s3", "type": "text", "text": "## S3 区域识别\n9 类 `Region`（If/Loop/Try/With/Match/Assert/BoolOp/Ternary）\n88 方法 / 19,983 行（25.0%）", "x": 340, "y": 340, "width": 360, "height": 120, "color": "6"},
+		{"id": "s4", "type": "text", "text": "## S4 区域层级装配\n`parent`/`children` 区域树\n8 方法 / 525 行（0.7%）", "x": 340, "y": 510, "width": 360, "height": 120, "color": "6"},
+		{"id": "s5", "type": "text", "text": "## S5 结构化语句生成\n区域树 → 语句 AST\n89 方法 / 33,179 行（41.6%）", "x": 340, "y": 680, "width": 360, "height": 120, "color": "6"},
+		{"id": "s6", "type": "text", "text": "## S6 表达式重建\n`ExpressionReconstructor`\n82 方法 / 13,843 行（17.3%）", "x": 340, "y": 850, "width": 360, "height": 120, "color": "6"},
+		{"id": "s7", "type": "text", "text": "## S7 后处理\n完整 AST → 可输出 AST\n28 方法 / 1,784 行（2.2%）", "x": 340, "y": 1020, "width": 360, "height": 120, "color": "6"},
+		{"id": "conv", "type": "file", "file": "wiki/classes/core-cfg-ast-converter--cfgast-converter.md", "x": 340, "y": 1200, "width": 360, "height": 160, "color": "5"},
+		{"id": "codegen", "type": "file", "file": "wiki/classes/core-cfg-code-generator--code-generator.md", "x": 340, "y": 1430, "width": 360, "height": 160, "color": "5"},
+		{"id": "p1", "type": "file", "file": "wiki/patterns/if-continue-sibling-loss.md", "x": 880, "y": 920, "width": 340, "height": 160, "color": "2"},
+		{"id": "p2", "type": "file", "file": "wiki/patterns/if-absorbs-loop-sibling.md", "x": 880, "y": 280, "width": 340, "height": 160, "color": "2"},
+		{"id": "p3", "type": "file", "file": "wiki/patterns/loop-absorbs-outer-condition.md", "x": 880, "y": 450, "width": 340, "height": 160, "color": "2"},
+		{"id": "p4", "type": "file", "file": "wiki/patterns/elif-chain-tail-lifted.md", "x": 880, "y": 620, "width": 340, "height": 160, "color": "2"},
+		{"id": "p5", "type": "file", "file": "wiki/patterns/and-chain-partial-split.md", "x": 880, "y": 790, "width": 340, "height": 160, "color": "2"}
+	],
+	"edges": [
+		{"id": "e1", "fromNode": "pycdc", "fromSide": "right", "toNode": "s1", "toSide": "left", "color": "5"},
+		{"id": "e2", "fromNode": "s1", "fromSide": "bottom", "toNode": "s2", "toSide": "top", "color": "6"},
+		{"id": "e3", "fromNode": "s2", "fromSide": "bottom", "toNode": "s3", "toSide": "top", "color": "6"},
+		{"id": "e4", "fromNode": "s3", "fromSide": "bottom", "toNode": "s4", "toSide": "top", "color": "6"},
+		{"id": "e5", "fromNode": "s4", "fromSide": "bottom", "toNode": "s5", "toSide": "top", "color": "6"},
+		{"id": "e6", "fromNode": "s5", "fromSide": "bottom", "toNode": "s6", "toSide": "top", "color": "6"},
+		{"id": "e7", "fromNode": "s6", "fromSide": "bottom", "toNode": "s7", "toSide": "top", "color": "6"},
+		{"id": "e8", "fromNode": "s7", "fromSide": "bottom", "toNode": "conv", "toSide": "top", "color": "5"},
+		{"id": "e9", "fromNode": "conv", "fromSide": "bottom", "toNode": "codegen", "toSide": "top", "color": "5"},
+		{"id": "e10", "fromNode": "ra", "fromSide": "right", "toNode": "s3", "toSide": "left", "color": "4", "label": "S1–S4 识别侧"},
+		{"id": "e11", "fromNode": "rag", "fromSide": "right", "toNode": "s5", "toSide": "left", "color": "4", "label": "S5–S7 生成侧"},
+		{"id": "e12", "fromNode": "p1", "fromSide": "left", "toNode": "s5", "toSide": "right", "color": "2"},
+		{"id": "e13", "fromNode": "p2", "fromSide": "left", "toNode": "s3", "toSide": "right", "color": "2"},
+		{"id": "e14", "fromNode": "p3", "fromSide": "left", "toNode": "s3", "toSide": "right", "color": "2"},
+		{"id": "e15", "fromNode": "p4", "fromSide": "left", "toNode": "s3", "toSide": "right", "color": "2"},
+		{"id": "e16", "fromNode": "p5", "fromSide": "left", "toNode": "s5", "toSide": "right", "color": "2"}
+	]
+}

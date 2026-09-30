@@ -1,0 +1,616 @@
+ _generate_block_statements block@0 try_depth=0 last3ops=['STORE_NAME', 'LOAD_CONST', 'RETURN_VALUE'] succs=[]
+ block@0 reached main stmts processing (block_role=BlockRole.RETURN, try_depth=0)
+ _generate_block_statements block@88 try_depth=0 last3ops=['CALL', 'BUILD_TUPLE', 'RETURN_VALUE'] succs=[]
+ block@88 reached main stmts processing (block_role=BlockRole.IF_THEN, try_depth=0)
+ block@88 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@88 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _generate_block_statements block@142 try_depth=0 last3ops=['LOAD_CONST', 'BUILD_TUPLE', 'RETURN_VALUE'] succs=[]
+ block@142 reached main stmts processing (block_role=BlockRole.IF_ELSE, try_depth=0)
+ block@142 reached post-stmt_instrs stmts_count=2 types=['ClassDef', 'Return'] try_depth=0
+ pre-fix block@142 try_depth=0 stmts_count=2 stmt_types=['ClassDef', 'Return']
+ block@184 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'returndata', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'response', 'ctx': 'Load', 'lineno': 344}, 'attr': 'json', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}}
+ block@368 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'returndata', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'api_get', 'ctx': 'Load', 'lineno': 349}, 'args': [{'type': 'Name', 'id': 'url', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'params', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'request_times', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@554 try_depth=1 last_stmt is not Expr: {'type': 'Return', '_explicit_return': True, 'value': {'type': 'Constant', 'value': None}}
+ block@566 try_depth=1 last_stmt is not Expr: {'type': 'Return', '_explicit_return': True, 'value': {'type': 'Constant', 'value': None}}
+ block@124 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'return_data', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'response', 'ctx': 'Load', 'lineno': 372}, 'attr': 'json', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=444 IfRegion@444
+ _generate_block_statements block@456 try_depth=1 last3ops=['LOAD_FAST', 'LOAD_FAST', 'BUILD_TUPLE'] succs=[552, 1130]
+ block@456 reached main stmts processing (block_role=BlockRole.EXCEPT_STORE, try_depth=1)
+ _generate_block_statements block@564 try_depth=1 last3ops=['BUILD_CONST_KEY_MAP', 'BUILD_MAP', 'BUILD_TUPLE'] succs=[604, 1130]
+ block@564 reached main stmts processing (block_role=BlockRole.EXCEPT_STORE, try_depth=1)
+ block@564 reached leftover stmt_instrs (count=6, last_op=BUILD_TUPLE)
+ block@564 reached post-stmt_instrs stmts_count=4 types=['Assign', 'Assign', 'Assign', 'Expr'] try_depth=1
+ pre-fix block@564 try_depth=1 stmts_count=4 stmt_types=['Assign', 'Assign', 'Assign', 'Expr']
+ block@564 try_depth=1 chain=[604, 606]
+ _generate_block_statements block@638 try_depth=1 last3ops=['LOAD_FAST', 'LOAD_FAST', 'BUILD_TUPLE'] succs=[1130, 682]
+ block@638 reached main stmts processing (block_role=BlockRole.EXCEPT_STORE, try_depth=1)
+ _nested_if_entry_generate[boolop_child] block=736 IfRegion@736
+ block@764 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'error_info', 'ctx': 'Store'}], 'value': {'type': 'Constant', 'value': None, 'lineno': 400}}
+ block@770 try_depth=2 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'error_info', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'json', 'ctx': 'Load', 'lineno': 402}, 'attr': 'loads', 'ctx': 'Load', 'lineno': None, 'is_method_form': False}, 'args': [{'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'e2', 'ctx': 'Load', 'lineno': None}, 'attr': 'response', 'ctx': 'Load', 'lineno': None, 'is_method_form': True}, 'attr': 'body', 'ctx': 'Load', 'lineno': None, 'is_method_form': True}, 'attr': 'decode', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'utf8', 'lineno': None}, {'type': 'Constant', 'value': 'replace', 'lineno': None}], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _generate_block_statements block@1058 try_depth=1 last3ops=['BUILD_CONST_KEY_MAP', 'BUILD_MAP', 'BUILD_TUPLE'] succs=[1070, 1130]
+ block@1058 reached main stmts processing (block_role=BlockRole.EXCEPT_STORE, try_depth=1)
+ block@1058 reached leftover stmt_instrs (count=6, last_op=BUILD_TUPLE)
+ block@1058 reached post-stmt_instrs stmts_count=1 types=['Expr'] try_depth=1
+ pre-fix block@1058 try_depth=1 stmts_count=1 stmt_types=['Expr']
+ block@1058 try_depth=1 chain=[1070, 1072]
+ _generate_block_statements block@1268 try_depth=0 last3ops=['LOAD_FAST', 'BUILD_TUPLE', 'RETURN_VALUE'] succs=[]
+ block@1268 reached main stmts processing (block_role=BlockRole.RETURN, try_depth=0)
+ block@1268 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@1268 try_depth=0 stmts_count=1 stmt_types=['Return']
+ block@430 try_depth=1 last_stmt is not Expr: {'type': 'Raise', 'exc': {'type': 'Call', 'func': {'type': 'Name', 'id': 'ValueError', 'ctx': 'Load', 'lineno': 473}, 'args': [{'type': 'Constant', 'value': '获取节假日期失败！', 'lineno': None}], 'kwargs': [], 'lineno': None}, 'lineno': None}
+ block@58 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'time_index', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'fields', 'ctx': 'Load', 'lineno': 488}, 'attr': 'index', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'business_time', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@200 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'time_index', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'fields', 'ctx': 'Load', 'lineno': 494}, 'attr': 'index', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'min_time', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@490 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ _nested_if_entry_generate[boolop_child] block=1422 IfRegion@1422
+ block@672 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ block@850 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ block@1044 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ block@1252 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ block@1460 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ block@1682 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ _nested_if_entry_generate[boolop_child] block=40 IfRegion@40
+ _nested_if_entry_generate[boolop_child] block=176 IfRegion@176
+ _nested_if_entry_generate[boolop_child] block=684 IfRegion@684
+ value_target=source_start merge=400 _si=4 _pre_store=[('BINARY_OP', 0), ('LOAD_CONST', '%Y%m%d%H%M'), ('PRECALL', 2), ('CALL', 2)] first_chain=262
+ value_target=source_end merge=560 _si=4 _pre_store=[('BINARY_OP', 0), ('LOAD_CONST', '%Y%m%d%H%M'), ('PRECALL', 2), ('CALL', 2)] first_chain=400
+ _nested_if_entry_generate[boolop_child] block=24 IfRegion@24
+ _nested_if_entry_generate[boolop_child] block=88 IfRegion@88
+ _nested_if_entry_generate[boolop_child] block=790 IfRegion@790
+ _nested_if_entry_generate[boolop_child] block=18 IfRegion@18
+ block@202 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ _nested_if_entry_generate[boolop_child] block=1142 IfRegion@1142
+ _nested_if_entry_generate[boolop_child] block=1750 IfRegion@1750
+ _nested_if_entry_generate[boolop_child] block=2402 IfRegion@2402
+ _nested_if_entry_generate[boolop_child] block=1142 IfRegion@1142
+ _nested_if_entry_generate[boolop_child] block=1750 IfRegion@1750
+ _nested_if_entry_generate[boolop_child] block=2402 IfRegion@2402
+ _nested_if_entry_generate[boolop_child] block=128 IfRegion@128
+ _nested_if_entry_generate[boolop_child] block=244 IfRegion@244
+ _nested_if_entry_generate[boolop_child] block=282 IfRegion@282
+ _nested_if_entry_generate[boolop_child] block=362 IfRegion@362
+ _nested_if_entry_generate[boolop_child] block=128 IfRegion@128
+ _nested_if_entry_generate[boolop_child] block=244 IfRegion@244
+ _nested_if_entry_generate[boolop_child] block=282 IfRegion@282
+ _nested_if_entry_generate[boolop_child] block=362 IfRegion@362
+ _generate_block_statements block@436 try_depth=0 last3ops=['LOAD_FAST', 'BUILD_TUPLE', 'RETURN_VALUE'] succs=[]
+ block@436 reached main stmts processing (block_role=BlockRole.RETURN, try_depth=0)
+ block@436 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@436 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _nested_if_entry_generate[boolop_child] block=16 IfRegion@16
+ _nested_if_entry_generate[boolop_child] block=166 IfRegion@166
+ _nested_if_entry_generate[boolop_child] block=214 IfRegion@214
+ _nested_if_entry_generate[boolop_child] block=824 IfRegion@824
+ value_target=source_start merge=424 _si=4 _pre_store=[('BINARY_OP', 0), ('LOAD_CONST', '%Y%m%d%H%M'), ('PRECALL', 2), ('CALL', 2)] first_chain=286
+ value_target=source_end merge=584 _si=4 _pre_store=[('BINARY_OP', 0), ('LOAD_CONST', '%Y%m%d%H%M'), ('PRECALL', 2), ('CALL', 2)] first_chain=424
+ _generate_block_statements block@748 try_depth=0 last3ops=['STORE_FAST', 'LOAD_FAST', 'RETURN_VALUE'] succs=[]
+ block@748 reached main stmts processing (block_role=BlockRole.IF_THEN, try_depth=0)
+ block@748 reached post-stmt_instrs stmts_count=3 types=['Assign', 'Assign', 'Return'] try_depth=0
+ pre-fix block@748 try_depth=0 stmts_count=3 stmt_types=['Assign', 'Assign', 'Return']
+ _nested_if_entry_generate[boolop_child] block=824 IfRegion@824
+ _generate_block_statements block@888 try_depth=0 last3ops=['PRECALL', 'CALL', 'STORE_FAST'] succs=[1120]
+ block@888 reached main stmts processing (block_role=BlockRole.IF_THEN, try_depth=0)
+ block@888 reached post-stmt_instrs stmts_count=4 types=['Assign', 'Assign', 'Assign', 'Assign'] try_depth=0
+ pre-fix block@888 try_depth=0 stmts_count=4 stmt_types=['Assign', 'Assign', 'Assign', 'Assign']
+ block@1338 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ _nested_if_entry_generate[boolop_child] block=1456 IfRegion@1456
+ _nested_if_entry_generate[boolop_child] block=1498 IfRegion@1498
+ _nested_if_entry_generate[boolop_child] block=1498 IfRegion@1498
+ block@1506 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ value_target=source_start merge=1862 _si=4 _pre_store=[('BINARY_OP', 0), ('LOAD_CONST', '%Y%m%d%H%M'), ('PRECALL', 2), ('CALL', 2)] first_chain=1724
+ value_target=source_end merge=2022 _si=4 _pre_store=[('BINARY_OP', 0), ('LOAD_CONST', '%Y%m%d%H%M'), ('PRECALL', 2), ('CALL', 2)] first_chain=1862
+ _nested_if check block=192 IfRegion@192 has_boolop_child=True children=['BoolOpRegion@192', 'Region@264'] _nr.blocks=[264, 192] _block_set=[170, 192, 264, 326, 328, 400]
+ _nested_if check block=192 IfRegion@192 has_boolop_child=True children=['BoolOpRegion@192', 'Region@264'] _nr.blocks=[264, 192] _block_set=[192, 204, 216, 228, 240, 252, 264, 326]
+ block@444 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ _nested_if_entry_generate[boolop_child] block=788 IfRegion@788
+ _nested_if_entry_generate[boolop_child] block=270 IfRegion@270
+ _nested_if_entry_generate[boolop_child] block=608 IfRegion@608
+ _nested_if_entry_generate[boolop_child] block=688 IfRegion@688
+ _nested_if_entry_generate[boolop_child] block=688 IfRegion@688
+ _generate_block_statements block@826 try_depth=0 last3ops=['PRECALL', 'CALL', 'RETURN_VALUE'] succs=[]
+ block@826 reached main stmts processing (block_role=BlockRole.IF_THEN, try_depth=0)
+ block@826 reached post-stmt_instrs stmts_count=2 types=['Assign', 'Return'] try_depth=0
+ pre-fix block@826 try_depth=0 stmts_count=2 stmt_types=['Assign', 'Return']
+ _nested_if_entry_generate[boolop_child] block=1368 IfRegion@1368
+ _nested_if_entry_generate[boolop_child] block=1558 IfRegion@1558
+ _nested_if_entry_generate[boolop_child] block=1748 IfRegion@1748
+ _nested_if_entry_generate[boolop_child] block=1754 IfRegion@1754
+ _nested_if_entry_generate[boolop_child] block=2306 IfRegion@2306
+ _nested_if_entry_generate[boolop_child] block=2894 IfRegion@2894
+ _nested_if_entry_generate[boolop_child] block=1304 IfRegion@1304
+ _nested_if_entry_generate[boolop_child] block=1558 IfRegion@1558
+ _nested_if_entry_generate[boolop_child] block=1558 IfRegion@1558
+ _nested_if_entry_generate[boolop_child] block=1748 IfRegion@1748
+ _nested_if_entry_generate[boolop_child] block=1754 IfRegion@1754
+ _nested_if_entry_generate[boolop_child] block=2306 IfRegion@2306
+ _nested_if_entry_generate[boolop_child] block=2894 IfRegion@2894
+ _nested_if_entry_generate[boolop_child] block=1754 IfRegion@1754
+ _generate_block_statements block@1804 try_depth=0 last3ops=['STORE_FAST', 'EXTENDED_ARG', 'JUMP_FORWARD'] succs=[2894]
+ block@1804 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@1804 reached leftover stmt_instrs (count=2, last_op=JUMP_FORWARD)
+ block@1804 reached post-stmt_instrs stmts_count=2 types=['Assign', 'Assign'] try_depth=0
+ pre-fix block@1804 try_depth=0 stmts_count=2 stmt_types=['Assign', 'Assign']
+ _generate_block_statements block@2012 try_depth=0 last3ops=['STORE_FAST', 'EXTENDED_ARG', 'JUMP_FORWARD'] succs=[2894]
+ block@2012 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@2012 reached leftover stmt_instrs (count=2, last_op=JUMP_FORWARD)
+ block@2012 reached post-stmt_instrs stmts_count=2 types=['Assign', 'Assign'] try_depth=0
+ pre-fix block@2012 try_depth=0 stmts_count=2 stmt_types=['Assign', 'Assign']
+ _nested_if_entry_generate[boolop_child] block=2306 IfRegion@2306
+ _generate_block_statements block@2356 try_depth=0 last3ops=['LOAD_FAST', 'STORE_FAST', 'JUMP_FORWARD'] succs=[2852]
+ block@2356 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@2356 reached leftover stmt_instrs (count=1, last_op=JUMP_FORWARD)
+ block@2356 reached post-stmt_instrs stmts_count=2 types=['Assign', 'Assign'] try_depth=0
+ pre-fix block@2356 try_depth=0 stmts_count=2 stmt_types=['Assign', 'Assign']
+ _generate_block_statements block@2562 try_depth=0 last3ops=['BUILD_SLICE', 'BINARY_SUBSCR', 'STORE_FAST'] succs=[2852]
+ block@2562 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@2562 reached post-stmt_instrs stmts_count=2 types=['Assign', 'Assign'] try_depth=0
+ pre-fix block@2562 try_depth=0 stmts_count=2 stmt_types=['Assign', 'Assign']
+ _generate_block_statements block@608 try_depth=0 last3ops=['PRECALL', 'CALL', 'RETURN_VALUE'] succs=[]
+ block@608 reached main stmts processing (block_role=BlockRole.IF_THEN, try_depth=0)
+ block@608 reached post-stmt_instrs stmts_count=3 types=['Assign', 'Assign', 'Return'] try_depth=0
+ pre-fix block@608 try_depth=0 stmts_count=3 stmt_types=['Assign', 'Assign', 'Return']
+ _nested_if_entry_generate[boolop_child] block=910 IfRegion@910
+ _nested_if_entry_generate[boolop_child] block=928 IfRegion@928
+ _nested_if_entry_generate[boolop_child] block=928 IfRegion@928
+ _nested_if_entry_generate[boolop_child] block=1782 IfRegion@1782
+ _generate_block_statements block@1964 try_depth=0 last3ops=['CALL', 'STORE_FAST', 'JUMP_FORWARD'] succs=[2558]
+ block@1964 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@1964 reached leftover stmt_instrs (count=1, last_op=JUMP_FORWARD)
+ block@1964 reached post-stmt_instrs stmts_count=2 types=['Assign', 'Assign'] try_depth=0
+ pre-fix block@1964 try_depth=0 stmts_count=2 stmt_types=['Assign', 'Assign']
+ _generate_block_statements block@2262 try_depth=0 last3ops=['PRECALL', 'CALL', 'STORE_FAST'] succs=[2558]
+ block@2262 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@2262 reached post-stmt_instrs stmts_count=2 types=['Assign', 'Assign'] try_depth=0
+ pre-fix block@2262 try_depth=0 stmts_count=2 stmt_types=['Assign', 'Assign']
+ _generate_block_statements block@2652 try_depth=0 last3ops=['PRECALL', 'CALL', 'STORE_FAST'] succs=[2948]
+ block@2652 reached main stmts processing (block_role=BlockRole.IF_THEN, try_depth=0)
+ block@2652 reached post-stmt_instrs stmts_count=2 types=['Assign', 'Assign'] try_depth=0
+ pre-fix block@2652 try_depth=0 stmts_count=2 stmt_types=['Assign', 'Assign']
+ _nested_if_entry_generate[boolop_child] block=322 IfRegion@322
+ _nested_if_entry_generate[boolop_child] block=340 IfRegion@340
+ _nested_if_entry_generate[boolop_child] block=340 IfRegion@340
+ _nested_if_entry_generate[boolop_child] block=218 IfRegion@218
+ _nested_if_entry_generate[boolop_child] block=266 IfRegion@266
+ block@280 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ block@276 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=360 IfRegion@360
+ _nested_if_entry_generate[boolop_child] block=974 IfRegion@974
+ _nested_if_entry_generate[boolop_child] block=1044 IfRegion@1044
+ _nested_if_entry_generate[boolop_child] block=1244 IfRegion@1244
+ _nested_if_entry_generate[boolop_child] block=1314 IfRegion@1314
+ _nested_if_entry_generate[boolop_child] block=974 IfRegion@974
+ _nested_if_entry_generate[boolop_child] block=1044 IfRegion@1044
+ _nested_if_entry_generate[boolop_child] block=1244 IfRegion@1244
+ _nested_if_entry_generate[boolop_child] block=1314 IfRegion@1314
+ _nested_if_entry_generate[boolop_child] block=2478 IfRegion@2478
+ _nested_if_entry_generate[boolop_child] block=2566 IfRegion@2566
+ _nested_if_entry_generate[boolop_child] block=2806 IfRegion@2806
+ _nested_if_entry_generate[boolop_child] block=2894 IfRegion@2894
+ _nested_if_entry_generate[boolop_child] block=2478 IfRegion@2478
+ _nested_if_entry_generate[boolop_child] block=2566 IfRegion@2566
+ _nested_if_entry_generate[boolop_child] block=2806 IfRegion@2806
+ _nested_if_entry_generate[boolop_child] block=2894 IfRegion@2894
+ _generate_block_statements block@3046 try_depth=0 last3ops=['LOAD_FAST', 'BUILD_TUPLE', 'RETURN_VALUE'] succs=[]
+ block@3046 reached main stmts processing (block_role=BlockRole.RETURN, try_depth=0)
+ block@3046 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@3046 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _generate_block_statements block@690 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@690 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@690 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@690 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _generate_block_statements block@1010 try_depth=1 last3ops=['BUILD_CONST_KEY_MAP', 'LOAD_FAST', 'BUILD_TUPLE'] succs=[1302, 1352]
+ block@1010 reached main stmts processing (block_role=BlockRole.LOOP_ELSE, try_depth=1)
+ block@1010 reached leftover stmt_instrs (count=6, last_op=BUILD_TUPLE)
+ _generate_block_statements block@1304 try_depth=1 last3ops=['PRECALL', 'CALL', 'BUILD_TUPLE'] succs=[1350, 1352]
+ block@1304 reached main stmts processing (block_role=BlockRole.TRY_BODY, try_depth=1)
+ block@1304 reached leftover stmt_instrs (count=9, last_op=BUILD_TUPLE)
+ block@1302 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _generate_block_statements block@724 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@724 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@724 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@724 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _generate_block_statements block@1020 try_depth=1 last3ops=['BUILD_CONST_KEY_MAP', 'LOAD_FAST', 'BUILD_TUPLE'] succs=[1122, 1072]
+ block@1020 reached main stmts processing (block_role=BlockRole.LOOP_ELSE, try_depth=1)
+ block@1020 reached leftover stmt_instrs (count=6, last_op=BUILD_TUPLE)
+ _generate_block_statements block@1074 try_depth=1 last3ops=['PRECALL', 'CALL', 'BUILD_TUPLE'] succs=[1122, 1120]
+ block@1074 reached main stmts processing (block_role=BlockRole.TRY_BODY, try_depth=1)
+ block@1074 reached leftover stmt_instrs (count=9, last_op=BUILD_TUPLE)
+ block@1072 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _generate_block_statements block@912 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@912 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@912 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@912 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _nested_if_entry_generate[boolop_child] block=966 IfRegion@966
+ _generate_block_statements block@1022 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@1022 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@1022 reached post-stmt_instrs stmts_count=2 types=['Expr', 'Return'] try_depth=0
+ pre-fix block@1022 try_depth=0 stmts_count=2 stmt_types=['Expr', 'Return']
+ _nested_if_entry_generate[boolop_child] block=1296 IfRegion@1296
+ _generate_block_statements block@1482 try_depth=1 last3ops=['BUILD_CONST_KEY_MAP', 'LOAD_FAST', 'BUILD_TUPLE'] succs=[1534, 1584]
+ block@1482 reached main stmts processing (block_role=BlockRole.LOOP_ELSE, try_depth=1)
+ block@1482 reached leftover stmt_instrs (count=6, last_op=BUILD_TUPLE)
+ _generate_block_statements block@1536 try_depth=1 last3ops=['PRECALL', 'CALL', 'BUILD_TUPLE'] succs=[1582, 1584]
+ block@1536 reached main stmts processing (block_role=BlockRole.TRY_BODY, try_depth=1)
+ block@1536 reached leftover stmt_instrs (count=9, last_op=BUILD_TUPLE)
+ block@1534 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _nested_if_entry_generate[boolop_child] block=144 IfRegion@144
+ _generate_block_statements block@900 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@900 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@900 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@900 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _nested_if_entry_generate[boolop_child] block=954 IfRegion@954
+ _generate_block_statements block@1010 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@1010 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@1010 reached post-stmt_instrs stmts_count=2 types=['Expr', 'Return'] try_depth=0
+ pre-fix block@1010 try_depth=0 stmts_count=2 stmt_types=['Expr', 'Return']
+ _nested_if_entry_generate[boolop_child] block=1284 IfRegion@1284
+ _generate_block_statements block@1470 try_depth=1 last3ops=['BUILD_CONST_KEY_MAP', 'LOAD_FAST', 'BUILD_TUPLE'] succs=[1522, 1572]
+ block@1470 reached main stmts processing (block_role=BlockRole.LOOP_ELSE, try_depth=1)
+ block@1470 reached leftover stmt_instrs (count=6, last_op=BUILD_TUPLE)
+ _generate_block_statements block@1524 try_depth=1 last3ops=['PRECALL', 'CALL', 'BUILD_TUPLE'] succs=[1570, 1572]
+ block@1524 reached main stmts processing (block_role=BlockRole.TRY_BODY, try_depth=1)
+ block@1524 reached leftover stmt_instrs (count=9, last_op=BUILD_TUPLE)
+ block@1522 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _nested_if_entry_generate[boolop_child] block=144 IfRegion@144
+ _generate_block_statements block@900 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@900 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@900 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@900 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _nested_if_entry_generate[boolop_child] block=954 IfRegion@954
+ _generate_block_statements block@1010 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@1010 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@1010 reached post-stmt_instrs stmts_count=2 types=['Expr', 'Return'] try_depth=0
+ pre-fix block@1010 try_depth=0 stmts_count=2 stmt_types=['Expr', 'Return']
+ _nested_if_entry_generate[boolop_child] block=1284 IfRegion@1284
+ _generate_block_statements block@1470 try_depth=1 last3ops=['BUILD_CONST_KEY_MAP', 'LOAD_FAST', 'BUILD_TUPLE'] succs=[1522, 1572]
+ block@1470 reached main stmts processing (block_role=BlockRole.LOOP_ELSE, try_depth=1)
+ block@1470 reached leftover stmt_instrs (count=6, last_op=BUILD_TUPLE)
+ _generate_block_statements block@1524 try_depth=1 last3ops=['PRECALL', 'CALL', 'BUILD_TUPLE'] succs=[1570, 1572]
+ block@1524 reached main stmts processing (block_role=BlockRole.TRY_BODY, try_depth=1)
+ block@1524 reached leftover stmt_instrs (count=9, last_op=BUILD_TUPLE)
+ block@1522 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _nested_if_entry_generate[boolop_child] block=144 IfRegion@144
+ _generate_block_statements block@874 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@874 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@874 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@874 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _nested_if_entry_generate[boolop_child] block=928 IfRegion@928
+ _generate_block_statements block@984 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@984 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@984 reached post-stmt_instrs stmts_count=2 types=['Expr', 'Return'] try_depth=0
+ pre-fix block@984 try_depth=0 stmts_count=2 stmt_types=['Expr', 'Return']
+ _generate_block_statements block@1256 try_depth=1 last3ops=['BUILD_CONST_KEY_MAP', 'LOAD_FAST', 'BUILD_TUPLE'] succs=[1308, 1358]
+ block@1256 reached main stmts processing (block_role=BlockRole.LOOP_ELSE, try_depth=1)
+ block@1256 reached leftover stmt_instrs (count=6, last_op=BUILD_TUPLE)
+ _generate_block_statements block@1310 try_depth=1 last3ops=['PRECALL', 'CALL', 'BUILD_TUPLE'] succs=[1356, 1358]
+ block@1310 reached main stmts processing (block_role=BlockRole.TRY_BODY, try_depth=1)
+ block@1310 reached leftover stmt_instrs (count=9, last_op=BUILD_TUPLE)
+ block@1308 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _nested_if_entry_generate[boolop_child] block=144 IfRegion@144
+ _generate_block_statements block@874 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@874 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@874 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@874 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _nested_if_entry_generate[boolop_child] block=928 IfRegion@928
+ _generate_block_statements block@984 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@984 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@984 reached post-stmt_instrs stmts_count=2 types=['Expr', 'Return'] try_depth=0
+ pre-fix block@984 try_depth=0 stmts_count=2 stmt_types=['Expr', 'Return']
+ _generate_block_statements block@1256 try_depth=1 last3ops=['BUILD_CONST_KEY_MAP', 'LOAD_FAST', 'BUILD_TUPLE'] succs=[1308, 1358]
+ block@1256 reached main stmts processing (block_role=BlockRole.LOOP_ELSE, try_depth=1)
+ block@1256 reached leftover stmt_instrs (count=6, last_op=BUILD_TUPLE)
+ _generate_block_statements block@1310 try_depth=1 last3ops=['PRECALL', 'CALL', 'BUILD_TUPLE'] succs=[1356, 1358]
+ block@1310 reached main stmts processing (block_role=BlockRole.TRY_BODY, try_depth=1)
+ block@1310 reached leftover stmt_instrs (count=9, last_op=BUILD_TUPLE)
+ block@1308 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _nested_if_entry_generate[boolop_child] block=144 IfRegion@144
+ _generate_block_statements block@874 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@874 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@874 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@874 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _nested_if_entry_generate[boolop_child] block=928 IfRegion@928
+ _generate_block_statements block@984 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@984 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@984 reached post-stmt_instrs stmts_count=2 types=['Expr', 'Return'] try_depth=0
+ pre-fix block@984 try_depth=0 stmts_count=2 stmt_types=['Expr', 'Return']
+ _generate_block_statements block@1256 try_depth=1 last3ops=['BUILD_CONST_KEY_MAP', 'LOAD_FAST', 'BUILD_TUPLE'] succs=[1308, 1358]
+ block@1256 reached main stmts processing (block_role=BlockRole.LOOP_ELSE, try_depth=1)
+ block@1256 reached leftover stmt_instrs (count=6, last_op=BUILD_TUPLE)
+ _generate_block_statements block@1310 try_depth=1 last3ops=['PRECALL', 'CALL', 'BUILD_TUPLE'] succs=[1356, 1358]
+ block@1310 reached main stmts processing (block_role=BlockRole.TRY_BODY, try_depth=1)
+ block@1310 reached leftover stmt_instrs (count=9, last_op=BUILD_TUPLE)
+ block@1308 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _nested_if_entry_generate[boolop_child] block=144 IfRegion@144
+ _generate_block_statements block@874 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@874 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@874 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@874 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _nested_if_entry_generate[boolop_child] block=928 IfRegion@928
+ _generate_block_statements block@984 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@984 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@984 reached post-stmt_instrs stmts_count=2 types=['Expr', 'Return'] try_depth=0
+ pre-fix block@984 try_depth=0 stmts_count=2 stmt_types=['Expr', 'Return']
+ _generate_block_statements block@1256 try_depth=1 last3ops=['BUILD_CONST_KEY_MAP', 'LOAD_FAST', 'BUILD_TUPLE'] succs=[1308, 1358]
+ block@1256 reached main stmts processing (block_role=BlockRole.LOOP_ELSE, try_depth=1)
+ block@1256 reached leftover stmt_instrs (count=6, last_op=BUILD_TUPLE)
+ _generate_block_statements block@1310 try_depth=1 last3ops=['PRECALL', 'CALL', 'BUILD_TUPLE'] succs=[1356, 1358]
+ block@1310 reached main stmts processing (block_role=BlockRole.TRY_BODY, try_depth=1)
+ block@1310 reached leftover stmt_instrs (count=9, last_op=BUILD_TUPLE)
+ block@1308 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _nested_if_entry_generate[boolop_child] block=144 IfRegion@144
+ _generate_block_statements block@874 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@874 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@874 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@874 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _nested_if_entry_generate[boolop_child] block=928 IfRegion@928
+ _generate_block_statements block@984 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@984 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@984 reached post-stmt_instrs stmts_count=2 types=['Expr', 'Return'] try_depth=0
+ pre-fix block@984 try_depth=0 stmts_count=2 stmt_types=['Expr', 'Return']
+ _generate_block_statements block@1256 try_depth=1 last3ops=['BUILD_CONST_KEY_MAP', 'LOAD_FAST', 'BUILD_TUPLE'] succs=[1308, 1358]
+ block@1256 reached main stmts processing (block_role=BlockRole.LOOP_ELSE, try_depth=1)
+ block@1256 reached leftover stmt_instrs (count=6, last_op=BUILD_TUPLE)
+ _generate_block_statements block@1310 try_depth=1 last3ops=['PRECALL', 'CALL', 'BUILD_TUPLE'] succs=[1356, 1358]
+ block@1310 reached main stmts processing (block_role=BlockRole.TRY_BODY, try_depth=1)
+ block@1310 reached leftover stmt_instrs (count=9, last_op=BUILD_TUPLE)
+ block@1308 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _nested_if_entry_generate[boolop_child] block=144 IfRegion@144
+ _generate_block_statements block@874 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@874 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@874 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@874 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _nested_if_entry_generate[boolop_child] block=928 IfRegion@928
+ _generate_block_statements block@984 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@984 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@984 reached post-stmt_instrs stmts_count=2 types=['Expr', 'Return'] try_depth=0
+ pre-fix block@984 try_depth=0 stmts_count=2 stmt_types=['Expr', 'Return']
+ _generate_block_statements block@1256 try_depth=1 last3ops=['BUILD_CONST_KEY_MAP', 'LOAD_FAST', 'BUILD_TUPLE'] succs=[1308, 1358]
+ block@1256 reached main stmts processing (block_role=BlockRole.LOOP_ELSE, try_depth=1)
+ block@1256 reached leftover stmt_instrs (count=6, last_op=BUILD_TUPLE)
+ _generate_block_statements block@1310 try_depth=1 last3ops=['PRECALL', 'CALL', 'BUILD_TUPLE'] succs=[1356, 1358]
+ block@1310 reached main stmts processing (block_role=BlockRole.TRY_BODY, try_depth=1)
+ block@1310 reached leftover stmt_instrs (count=9, last_op=BUILD_TUPLE)
+ block@1308 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _generate_block_statements block@578 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@578 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@578 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@578 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _nested_if_entry_generate[boolop_child] block=632 IfRegion@632
+ _generate_block_statements block@688 try_depth=0 last3ops=['SWAP', 'POP_TOP', 'RETURN_VALUE'] succs=[]
+ block@688 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=0)
+ block@688 reached post-stmt_instrs stmts_count=2 types=['Expr', 'Return'] try_depth=0
+ pre-fix block@688 try_depth=0 stmts_count=2 stmt_types=['Expr', 'Return']
+ _generate_block_statements block@960 try_depth=1 last3ops=['BUILD_CONST_KEY_MAP', 'LOAD_FAST', 'BUILD_TUPLE'] succs=[1012, 1062]
+ block@960 reached main stmts processing (block_role=BlockRole.LOOP_ELSE, try_depth=1)
+ block@960 reached leftover stmt_instrs (count=6, last_op=BUILD_TUPLE)
+ _generate_block_statements block@1014 try_depth=1 last3ops=['PRECALL', 'CALL', 'BUILD_TUPLE'] succs=[1060, 1062]
+ block@1014 reached main stmts processing (block_role=BlockRole.TRY_BODY, try_depth=1)
+ block@1014 reached leftover stmt_instrs (count=9, last_op=BUILD_TUPLE)
+ block@1012 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _nested_if_entry_generate[boolop_child] block=308 IfRegion@308
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=404 IfRegion@404
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=842 IfRegion@842
+ _nested_if_entry_generate[boolop_child] block=1432 IfRegion@1432
+ _nested_if_entry_generate[boolop_child] block=842 IfRegion@842
+ block@854 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@870 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@894 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@910 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}], 'value': {'type': 'Name', 'id': 'report_types', 'ctx': 'Load', 'lineno': 2943}}
+ block@1188 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'data_return', 'ctx': 'Store'}], 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': 2959}, 'slice': {'type': 'Compare', 'left': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': None}, 'attr': 'publ_date', 'ctx': 'Load', 'lineno': None, 'is_method_form': False}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'date', 'ctx': 'Load', 'lineno': None}], 'lineno': None}, 'ctx': 'Load', 'lineno': None}}
+ block@1442 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': 2966}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=2038 IfRegion@2038
+ _nested_if_entry_generate[boolop_child] block=2038 IfRegion@2038
+ block@2048 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': 2992}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=308 IfRegion@308
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=404 IfRegion@404
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=842 IfRegion@842
+ _nested_if_entry_generate[boolop_child] block=1432 IfRegion@1432
+ _nested_if_entry_generate[boolop_child] block=842 IfRegion@842
+ block@854 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@870 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@894 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@910 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}], 'value': {'type': 'Name', 'id': 'report_types', 'ctx': 'Load', 'lineno': 3063}}
+ block@1188 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'data_return', 'ctx': 'Store'}], 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': 3079}, 'slice': {'type': 'Compare', 'left': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': None}, 'attr': 'publ_date', 'ctx': 'Load', 'lineno': None, 'is_method_form': False}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'date', 'ctx': 'Load', 'lineno': None}], 'lineno': None}, 'ctx': 'Load', 'lineno': None}}
+ block@1442 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': 3086}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=1976 IfRegion@1976
+ _nested_if_entry_generate[boolop_child] block=1976 IfRegion@1976
+ block@1986 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': 3111}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=308 IfRegion@308
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=404 IfRegion@404
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=842 IfRegion@842
+ _nested_if_entry_generate[boolop_child] block=1432 IfRegion@1432
+ _nested_if_entry_generate[boolop_child] block=842 IfRegion@842
+ block@854 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@870 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@894 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@910 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}], 'value': {'type': 'Name', 'id': 'report_types', 'ctx': 'Load', 'lineno': 3182}}
+ block@1188 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'data_return', 'ctx': 'Store'}], 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': 3198}, 'slice': {'type': 'Compare', 'left': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': None}, 'attr': 'publ_date', 'ctx': 'Load', 'lineno': None, 'is_method_form': False}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'date', 'ctx': 'Load', 'lineno': None}], 'lineno': None}, 'ctx': 'Load', 'lineno': None}}
+ block@1442 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': 3205}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=1976 IfRegion@1976
+ _nested_if_entry_generate[boolop_child] block=1976 IfRegion@1976
+ block@1986 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': 3230}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=308 IfRegion@308
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=404 IfRegion@404
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=840 IfRegion@840
+ _nested_if_entry_generate[boolop_child] block=1428 IfRegion@1428
+ _nested_if_entry_generate[boolop_child] block=840 IfRegion@840
+ block@852 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@868 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@892 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@908 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}], 'value': {'type': 'Name', 'id': 'report_types', 'ctx': 'Load', 'lineno': 3301}}
+ block@1184 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'data_return', 'ctx': 'Store'}], 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': 3317}, 'slice': {'type': 'Compare', 'left': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': None}, 'attr': 'publ_date', 'ctx': 'Load', 'lineno': None, 'is_method_form': False}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'date', 'ctx': 'Load', 'lineno': None}], 'lineno': None}, 'ctx': 'Load', 'lineno': None}}
+ block@1438 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': 3324}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=1970 IfRegion@1970
+ _nested_if_entry_generate[boolop_child] block=1970 IfRegion@1970
+ block@1980 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': 3348}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=308 IfRegion@308
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=404 IfRegion@404
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=840 IfRegion@840
+ _nested_if_entry_generate[boolop_child] block=1428 IfRegion@1428
+ _nested_if_entry_generate[boolop_child] block=840 IfRegion@840
+ block@852 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@868 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@892 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@908 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}], 'value': {'type': 'Name', 'id': 'report_types', 'ctx': 'Load', 'lineno': 3419}}
+ block@1184 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'data_return', 'ctx': 'Store'}], 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': 3435}, 'slice': {'type': 'Compare', 'left': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': None}, 'attr': 'publ_date', 'ctx': 'Load', 'lineno': None, 'is_method_form': False}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'date', 'ctx': 'Load', 'lineno': None}], 'lineno': None}, 'ctx': 'Load', 'lineno': None}}
+ block@1438 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': 3442}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=1970 IfRegion@1970
+ _nested_if_entry_generate[boolop_child] block=1970 IfRegion@1970
+ block@1980 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': 3466}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=308 IfRegion@308
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=404 IfRegion@404
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=840 IfRegion@840
+ _nested_if_entry_generate[boolop_child] block=1428 IfRegion@1428
+ _nested_if_entry_generate[boolop_child] block=840 IfRegion@840
+ block@852 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@868 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@892 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@908 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}], 'value': {'type': 'Name', 'id': 'report_types', 'ctx': 'Load', 'lineno': 3536}}
+ block@1184 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'data_return', 'ctx': 'Store'}], 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': 3552}, 'slice': {'type': 'Compare', 'left': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': None}, 'attr': 'publ_date', 'ctx': 'Load', 'lineno': None, 'is_method_form': False}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'date', 'ctx': 'Load', 'lineno': None}], 'lineno': None}, 'ctx': 'Load', 'lineno': None}}
+ block@1438 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': 3559}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=1970 IfRegion@1970
+ _nested_if_entry_generate[boolop_child] block=1970 IfRegion@1970
+ block@1980 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': 3583}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=308 IfRegion@308
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=404 IfRegion@404
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=840 IfRegion@840
+ _nested_if_entry_generate[boolop_child] block=1428 IfRegion@1428
+ _nested_if_entry_generate[boolop_child] block=840 IfRegion@840
+ block@852 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@868 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@892 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@908 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}], 'value': {'type': 'Name', 'id': 'report_types', 'ctx': 'Load', 'lineno': 3653}}
+ block@1184 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'data_return', 'ctx': 'Store'}], 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': 3670}, 'slice': {'type': 'Compare', 'left': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': None}, 'attr': 'publ_date', 'ctx': 'Load', 'lineno': None, 'is_method_form': False}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'date', 'ctx': 'Load', 'lineno': None}], 'lineno': None}, 'ctx': 'Load', 'lineno': None}}
+ block@1438 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': 3677}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=1970 IfRegion@1970
+ _nested_if_entry_generate[boolop_child] block=1970 IfRegion@1970
+ block@1980 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': 3701}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=308 IfRegion@308
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=404 IfRegion@404
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=840 IfRegion@840
+ _nested_if_entry_generate[boolop_child] block=1428 IfRegion@1428
+ _nested_if_entry_generate[boolop_child] block=840 IfRegion@840
+ block@852 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@868 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@892 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@908 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}], 'value': {'type': 'Name', 'id': 'report_types', 'ctx': 'Load', 'lineno': 3772}}
+ block@1184 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'data_return', 'ctx': 'Store'}], 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': 3789}, 'slice': {'type': 'Compare', 'left': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': None}, 'attr': 'publ_date', 'ctx': 'Load', 'lineno': None, 'is_method_form': False}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'date', 'ctx': 'Load', 'lineno': None}], 'lineno': None}, 'ctx': 'Load', 'lineno': None}}
+ block@1438 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': 3796}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=1970 IfRegion@1970
+ _nested_if_entry_generate[boolop_child] block=1970 IfRegion@1970
+ block@1980 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': 3820}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=308 IfRegion@308
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=404 IfRegion@404
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=408 IfRegion@408
+ _nested_if_entry_generate[boolop_child] block=840 IfRegion@840
+ _nested_if_entry_generate[boolop_child] block=1428 IfRegion@1428
+ _nested_if_entry_generate[boolop_child] block=840 IfRegion@840
+ block@852 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@868 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@892 try_depth=1 last_stmt is not Expr: {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'year_temp', 'ctx': 'Store'}, 'op': '-', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}
+ block@908 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'quarter_temp', 'ctx': 'Store'}], 'value': {'type': 'Name', 'id': 'report_types', 'ctx': 'Load', 'lineno': 3891}}
+ block@1184 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'data_return', 'ctx': 'Store'}], 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': 3908}, 'slice': {'type': 'Compare', 'left': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'data_return', 'ctx': 'Load', 'lineno': None}, 'attr': 'publ_date', 'ctx': 'Load', 'lineno': None, 'is_method_form': False}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'date', 'ctx': 'Load', 'lineno': None}], 'lineno': None}, 'ctx': 'Load', 'lineno': None}}
+ block@1438 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': 3915}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=1970 IfRegion@1970
+ _nested_if_entry_generate[boolop_child] block=1970 IfRegion@1970
+ block@1980 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'data_df', 'ctx': 'Load', 'lineno': 3939}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=934 IfRegion@934
+ _nested_if_entry_generate[boolop_child] block=1282 IfRegion@1282
+ block@1292 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': 4008}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=968 IfRegion@968
+ block@978 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': 4066}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=1284 IfRegion@1284
+ block@1294 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 're_data', 'ctx': 'Load', 'lineno': 4140}, 'slice': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'attr': 'astype', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Constant', 'value': 'float64', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': True, 'lineno': 4155}}
+ _nested_if_entry_generate[boolop_child] block=402 IfRegion@402
+ block@74 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ _nested_if_entry_generate[boolop_child] block=376 IfRegion@376
+ block@206 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'tmp', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 4375}, 'args': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 'frequency', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Slice', 'lower': {'type': 'Constant', 'value': None, 'lineno': None}, 'upper': {'type': 'Constant', 'value': -1, 'lineno': None}, 'step': None, 'lineno': None}, 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@276 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'loaded_dict', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'pickle', 'ctx': 'Load', 'lineno': 4497}, 'attr': 'load', 'ctx': 'Load', 'lineno': None, 'is_method_form': False}, 'args': [{'type': 'Name', 'id': 'f', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@202 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _generate_block_statements block@26 try_depth=0 last3ops=['BUILD_LIST', 'BUILD_TUPLE', 'RETURN_VALUE'] succs=[]
+ block@26 reached main stmts processing (block_role=BlockRole.IF_THEN, try_depth=0)
+ block@26 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@26 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _generate_block_statements block@128 try_depth=0 last3ops=['BUILD_LIST', 'BUILD_TUPLE', 'RETURN_VALUE'] succs=[]
+ block@128 reached main stmts processing (block_role=BlockRole.IF_ELSE, try_depth=0)
+ block@128 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@128 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _generate_block_statements block@184 try_depth=0 last3ops=['LOAD_FAST', 'BUILD_TUPLE', 'RETURN_VALUE'] succs=[]
+ block@184 reached main stmts processing (block_role=BlockRole.IF_ELSE, try_depth=0)
+ block@184 reached post-stmt_instrs stmts_count=2 types=['Assign', 'Return'] try_depth=0
+ pre-fix block@184 try_depth=0 stmts_count=2 stmt_types=['Assign', 'Return']
+ _generate_block_statements block@276 try_depth=0 last3ops=['LOAD_FAST', 'BUILD_TUPLE', 'RETURN_VALUE'] succs=[]
+ block@276 reached main stmts processing (block_role=BlockRole.IF_ELSE, try_depth=0)
+ block@276 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@276 try_depth=0 stmts_count=1 stmt_types=['Return']
+ _nested_if_entry_generate[boolop_child] block=338 IfRegion@338
+ block@444 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ _nested_if_entry_generate[boolop_child] block=162 IfRegion@162
+ block@6 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ block@40 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ _nested_if_entry_generate[boolop_child] block=384 IfRegion@384
+ _nested_if_entry_generate[boolop_child] block=562 IfRegion@562
+ block@416 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ block@450 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ block@450 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _nested_if_entry_generate[boolop_child] block=306 IfRegion@306
+ _nested_if_entry_generate[boolop_child] block=636 IfRegion@636
+ _nested_if_entry_generate[boolop_child] block=866 IfRegion@866
+ _nested_if_entry_generate[boolop_child] block=1200 IfRegion@1200
+ _nested_if_entry_generate[boolop_child] block=340 IfRegion@340
+ _nested_if_entry_generate[boolop_child] block=672 IfRegion@672
+ _nested_if_entry_generate[boolop_child] block=1016 IfRegion@1016
+ block@0 reached post-stmt_instrs stmts_count=195 types=['Import', 'Import', 'Import', 'Import', 'Import', 'Import', 'Import', 'Import', 'Import', 'ImportFrom', 'ImportFrom', 'Import', 'ImportFrom', 'ImportFrom', 'Import', 'Import', 'Import', 'Import', 'Import', 'Import', 'Import', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'Assign', 'Expr', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef'] try_depth=0
+ pre-fix block@0 try_depth=0 stmts_count=195 stmt_types=['Import', 'Import', 'Import', 'Import', 'Import', 'Import', 'Import', 'Import', 'Import', 'ImportFrom', 'ImportFrom', 'Import', 'ImportFrom', 'ImportFrom', 'Import', 'Import', 'Import', 'Import', 'Import', 'Import', 'Import', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'ImportFrom', 'Assign', 'Expr', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'Assign', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef', 'FunctionDef']
+ block@84 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Attribute', 'value': {'type': 'Name', 'id': 'cls', 'ctx': 'Load', 'lineno': None}, 'attr': '_instance', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'super', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Name', 'id': 'MarketTime', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'cls', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}, 'attr': '__new__', 'ctx': 'Load', 'lineno': None, 'is_method_form': True}, 'args': [{'type': 'Name', 'id': 'cls', 'ctx': 'Load', 'lineno': None}, {'type': 'Starred', 'value': {'type': 'Name', 'id': 'args', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}], 'kwargs': [{'type': 'KeywordStarred', 'value': {'type': 'Name', 'id': 'kwargs', 'ctx': 'Load', 'lineno': None}}], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=258 IfRegion@258
+ block@0 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ block@116 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ value_target=source_start merge=140 _si=4 _pre_store=[('BINARY_OP', 0), ('LOAD_CONST', '%Y%m%d%H%M'), ('PRECALL', 2), ('CALL', 2)] first_chain=0
+ value_target=source_end merge=300 _si=4 _pre_store=[('BINARY_OP', 0), ('LOAD_CONST', '%Y%m%d%H%M'), ('PRECALL', 2), ('CALL', 2)] first_chain=140
+ _generate_block_statements block@0 try_depth=0 last3ops=['LOAD_FAST', 'BUILD_TUPLE', 'RETURN_VALUE'] succs=[]
+ block@0 reached main stmts processing (block_role=BlockRole.RETURN, try_depth=0)
+ block@0 reached post-stmt_instrs stmts_count=3 types=['Assign', 'Assign', 'Return'] try_depth=0
+ pre-fix block@0 try_depth=0 stmts_count=3 stmt_types=['Assign', 'Assign', 'Return']
+ _generate_block_statements block@42 try_depth=0 last3ops=['LOAD_FAST', 'BUILD_TUPLE', 'RETURN_VALUE'] succs=[]
+ block@42 reached main stmts processing (block_role=BlockRole.RETURN, try_depth=0)
+ block@42 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@42 try_depth=0 stmts_count=1 stmt_types=['Return']
+ block@106 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ value_target=source_start merge=140 _si=4 _pre_store=[('BINARY_OP', 0), ('LOAD_CONST', '%Y%m%d%H%M'), ('PRECALL', 2), ('CALL', 2)] first_chain=0
+ value_target=source_end merge=300 _si=4 _pre_store=[('BINARY_OP', 0), ('LOAD_CONST', '%Y%m%d%H%M'), ('PRECALL', 2), ('CALL', 2)] first_chain=140
+ _generate_block_statements block@0 try_depth=0 last3ops=['LOAD_FAST', 'BUILD_TUPLE', 'RETURN_VALUE'] succs=[]
+ block@0 reached main stmts processing (block_role=BlockRole.RETURN, try_depth=0)
+ block@0 reached post-stmt_instrs stmts_count=3 types=['Assign', 'Assign', 'Return'] try_depth=0
+ pre-fix block@0 try_depth=0 stmts_count=3 stmt_types=['Assign', 'Assign', 'Return']
+ _generate_block_statements block@42 try_depth=0 last3ops=['LOAD_FAST', 'BUILD_TUPLE', 'RETURN_VALUE'] succs=[]
+ block@42 reached main stmts processing (block_role=BlockRole.RETURN, try_depth=0)
+ block@42 reached post-stmt_instrs stmts_count=1 types=['Return'] try_depth=0
+ pre-fix block@42 try_depth=0 stmts_count=1 stmt_types=['Return']

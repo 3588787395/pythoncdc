@@ -1,0 +1,175 @@
+ _nested_if_entry_generate[boolop_child] block=150 IfRegion@150
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 11}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 23}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 35}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 47}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 60}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 72}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 85}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 11}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@166 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 32}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@48 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 41}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 53}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 65}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 77}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 90}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ block@188 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 22}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=896 IfRegion@896
+ _generate_block_statements block@726 try_depth=1 last3ops=['PRECALL', 'CALL', 'POP_TOP'] succs=[774, 772]
+ block@726 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=1)
+ block@726 reached post-stmt_instrs stmts_count=1 types=['Expr'] try_depth=1
+ pre-fix block@726 try_depth=1 stmts_count=1 stmt_types=['Expr']
+ block@1030 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'cur', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 45}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'src2', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=44 IfRegion@44
+ block@112 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ _nested_if_entry_generate[boolop_child] block=38 IfRegion@38
+ _nested_if_entry_generate[boolop_child] block=66 IfRegion@66
+ _nested_if_entry_generate[boolop_child] block=78 IfRegion@78
+ _nested_if_entry_generate[boolop_child] block=106 IfRegion@106
+ _nested_if_entry_generate[boolop_child] block=128 IfRegion@128
+ _nested_if_entry_generate[boolop_child] block=140 IfRegion@140
+ _nested_if_entry_generate[boolop_child] block=154 IfRegion@154
+ _nested_if_entry_generate[boolop_child] block=166 IfRegion@166
+ _nested_if_entry_generate[boolop_child] block=258 IfRegion@258
+ _nested_if_entry_generate[boolop_child] block=288 IfRegion@288
+ _nested_if_entry_generate[boolop_child] block=310 IfRegion@310
+ _nested_if_entry_generate[boolop_child] block=332 IfRegion@332
+ _nested_if_entry_generate[boolop_child] block=336 IfRegion@336
+ _nested_if_entry_generate[boolop_child] block=348 IfRegion@348
+ _nested_if_entry_generate[boolop_child] block=362 IfRegion@362
+ _nested_if_entry_generate[boolop_child] block=374 IfRegion@374
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=412 IfRegion@412
+ _nested_if_entry_generate[boolop_child] block=416 IfRegion@416
+ _nested_if_entry_generate[boolop_child] block=428 IfRegion@428
+ _nested_if_entry_generate[boolop_child] block=442 IfRegion@442
+ _nested_if_entry_generate[boolop_child] block=454 IfRegion@454
+ _nested_if_entry_generate[boolop_child] block=66 IfRegion@66
+ _nested_if_entry_generate[boolop_child] block=78 IfRegion@78
+ _nested_if_entry_generate[boolop_child] block=106 IfRegion@106
+ _nested_if_entry_generate[boolop_child] block=258 IfRegion@258
+ _nested_if_entry_generate[boolop_child] block=288 IfRegion@288
+ _nested_if_entry_generate[boolop_child] block=310 IfRegion@310
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=442 IfRegion@442
+ _nested_if_entry_generate[boolop_child] block=454 IfRegion@454
+ _nested_if_entry_generate[boolop_child] block=78 IfRegion@78
+ _nested_if_entry_generate[boolop_child] block=106 IfRegion@106
+ _nested_if_entry_generate[boolop_child] block=258 IfRegion@258
+ _nested_if_entry_generate[boolop_child] block=288 IfRegion@288
+ _nested_if_entry_generate[boolop_child] block=310 IfRegion@310
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=442 IfRegion@442
+ _nested_if_entry_generate[boolop_child] block=454 IfRegion@454
+ _nested_if_entry_generate[boolop_child] block=258 IfRegion@258
+ _nested_if_entry_generate[boolop_child] block=288 IfRegion@288
+ _nested_if_entry_generate[boolop_child] block=310 IfRegion@310
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=442 IfRegion@442
+ _nested_if_entry_generate[boolop_child] block=454 IfRegion@454
+ _nested_if_entry_generate[boolop_child] block=154 IfRegion@154
+ _nested_if_entry_generate[boolop_child] block=166 IfRegion@166
+ _nested_if_entry_generate[boolop_child] block=258 IfRegion@258
+ _nested_if_entry_generate[boolop_child] block=288 IfRegion@288
+ _nested_if_entry_generate[boolop_child] block=310 IfRegion@310
+ _nested_if_entry_generate[boolop_child] block=332 IfRegion@332
+ _nested_if_entry_generate[boolop_child] block=336 IfRegion@336
+ _nested_if_entry_generate[boolop_child] block=348 IfRegion@348
+ _nested_if_entry_generate[boolop_child] block=362 IfRegion@362
+ _nested_if_entry_generate[boolop_child] block=374 IfRegion@374
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=412 IfRegion@412
+ _nested_if_entry_generate[boolop_child] block=416 IfRegion@416
+ _nested_if_entry_generate[boolop_child] block=428 IfRegion@428
+ _nested_if_entry_generate[boolop_child] block=442 IfRegion@442
+ _nested_if_entry_generate[boolop_child] block=454 IfRegion@454
+ _nested_if_entry_generate[boolop_child] block=258 IfRegion@258
+ _nested_if_entry_generate[boolop_child] block=288 IfRegion@288
+ _nested_if_entry_generate[boolop_child] block=310 IfRegion@310
+ _nested_if_entry_generate[boolop_child] block=332 IfRegion@332
+ _nested_if_entry_generate[boolop_child] block=336 IfRegion@336
+ _nested_if_entry_generate[boolop_child] block=348 IfRegion@348
+ _nested_if_entry_generate[boolop_child] block=362 IfRegion@362
+ _nested_if_entry_generate[boolop_child] block=374 IfRegion@374
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=412 IfRegion@412
+ _nested_if_entry_generate[boolop_child] block=416 IfRegion@416
+ _nested_if_entry_generate[boolop_child] block=428 IfRegion@428
+ _nested_if_entry_generate[boolop_child] block=442 IfRegion@442
+ _nested_if_entry_generate[boolop_child] block=454 IfRegion@454
+ _nested_if_entry_generate[boolop_child] block=442 IfRegion@442
+ _nested_if_entry_generate[boolop_child] block=454 IfRegion@454
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=442 IfRegion@442
+ _nested_if_entry_generate[boolop_child] block=454 IfRegion@454
+ _nested_if_entry_generate[boolop_child] block=362 IfRegion@362
+ _nested_if_entry_generate[boolop_child] block=374 IfRegion@374
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=412 IfRegion@412
+ _nested_if_entry_generate[boolop_child] block=416 IfRegion@416
+ _nested_if_entry_generate[boolop_child] block=428 IfRegion@428
+ _nested_if_entry_generate[boolop_child] block=442 IfRegion@442
+ _nested_if_entry_generate[boolop_child] block=454 IfRegion@454
+ _nested_if_entry_generate[boolop_child] block=362 IfRegion@362
+ _nested_if_entry_generate[boolop_child] block=374 IfRegion@374
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=412 IfRegion@412
+ _nested_if_entry_generate[boolop_child] block=416 IfRegion@416
+ _nested_if_entry_generate[boolop_child] block=428 IfRegion@428
+ _nested_if_entry_generate[boolop_child] block=442 IfRegion@442
+ _nested_if_entry_generate[boolop_child] block=454 IfRegion@454
+ _nested_if_entry_generate[boolop_child] block=388 IfRegion@388
+ _nested_if_entry_generate[boolop_child] block=412 IfRegion@412
+ _nested_if_entry_generate[boolop_child] block=416 IfRegion@416
+ _nested_if_entry_generate[boolop_child] block=428 IfRegion@428
+ _nested_if_entry_generate[boolop_child] block=442 IfRegion@442
+ _nested_if_entry_generate[boolop_child] block=454 IfRegion@454
+ _nested_if_entry_generate[boolop_child] block=442 IfRegion@442
+ _nested_if_entry_generate[boolop_child] block=454 IfRegion@454
+ _nested_if_entry_generate[boolop_child] block=442 IfRegion@442
+ _nested_if_entry_generate[boolop_child] block=454 IfRegion@454
+ _nested_if_entry_generate[boolop_child] block=62 IfRegion@62
+ value_target=z merge=28 _si=2 _pre_store=[('PRECALL', 1), ('CALL', 1)] first_chain=8
+ block@16 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 't', 'ctx': 'Store'}], 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 11}, 'args': [{'type': 'Name', 'id': 't', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}}
+ _nested_if_entry_generate[boolop_child] block=38 IfRegion@38
+ _nested_if_entry_generate[boolop_child] block=74 IfRegion@74
+ _nested_if_entry_generate[boolop_child] block=280 IfRegion@280
+ _nested_if_entry_generate[boolop_child] block=334 IfRegion@334
+ _generate_block_statements block@54 try_depth=1 last3ops=['LOAD_CONST', 'BUILD_TUPLE', 'STORE_FAST'] succs=[486, 74]
+ block@54 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=1)
+ block@54 reached post-stmt_instrs stmts_count=1 types=['Assign'] try_depth=1
+ pre-fix block@54 try_depth=1 stmts_count=1 stmt_types=['Assign']
+ block@54 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'r', 'ctx': 'Store'}], 'value': {'type': 'Tuple', 'elts': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': 42}, 'slice': {'type': 'Constant', 'value': 0, 'lineno': None}, 'ctx': 'Load', 'lineno': None}, {'type': 'Constant', 'value': '', 'lineno': None}], 'ctx': 'Load', 'lineno': None}}
+ _generate_block_statements block@98 try_depth=1 last3ops=['LOAD_CONST', 'BUILD_TUPLE', 'STORE_FAST'] succs=[118, 486]
+ block@98 reached main stmts processing (block_role=BlockRole.LOOP_BODY, try_depth=1)
+ block@98 reached post-stmt_instrs stmts_count=1 types=['Assign'] try_depth=1
+ pre-fix block@98 try_depth=1 stmts_count=1 stmt_types=['Assign']
+ block@98 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'r', 'ctx': 'Store'}], 'value': {'type': 'Tuple', 'elts': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': 44}, 'slice': {'type': 'Constant', 'value': 0, 'lineno': None}, 'ctx': 'Load', 'lineno': None}, {'type': 'Constant', 'value': '-', 'lineno': None}], 'ctx': 'Load', 'lineno': None}}
+ block@432 try_depth=1 chain=[460, 484]
+ value_target=info merge=224 _si=5 _pre_store=[('POP_TOP', None), ('LOAD_FAST', 'receiver'), ('LOAD_METHOD', 'recv'), ('PRECALL', 0), ('CALL', 0)] first_chain=104
+ block@40 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 'info', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': None}, 'slice': {'type': 'Constant', 'value': 'name', 'lineno': None}, 'ctx': 'Load', 'lineno': None}, 'ctx': 'Store'}], 'value': {'type': 'Subscript', 'value': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': 21}, 'slice': {'type': 'Constant', 'value': 'index', 'lineno': None}, 'ctx': 'Load', 'lineno': None}}
+ block@206 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ _nested_if_entry_generate[boolop_child] block=18 IfRegion@18
+ _nested_if_entry_generate[boolop_child] block=36 IfRegion@36
+ _nested_if_entry_generate[boolop_child] block=58 IfRegion@58
+ _nested_if_entry_generate[boolop_child] block=82 IfRegion@82
+ _nested_if_entry_generate[boolop_child] block=104 IfRegion@104
+ _nested_if_entry_generate[boolop_child] block=128 IfRegion@128
+ _nested_if_entry_generate[boolop_child] block=132 IfRegion@132
+ _nested_if_entry_generate[boolop_child] block=218 IfRegion@218
+ _nested_if_entry_generate[boolop_child] block=434 IfRegion@434
+ _nested_if_entry_generate[boolop_child] block=36 IfRegion@36
+ _nested_if_entry_generate[boolop_child] block=58 IfRegion@58
+ _nested_if_entry_generate[boolop_child] block=82 IfRegion@82
+ _nested_if_entry_generate[boolop_child] block=104 IfRegion@104
+ _nested_if_entry_generate[boolop_child] block=128 IfRegion@128
+ _nested_if_entry_generate[boolop_child] block=132 IfRegion@132
+ _nested_if_entry_generate[boolop_child] block=218 IfRegion@218
+ _nested_if_entry_generate[boolop_child] block=82 IfRegion@82
+ _nested_if_entry_generate[boolop_child] block=104 IfRegion@104
+ _nested_if_entry_generate[boolop_child] block=132 IfRegion@132
+ _nested_if_entry_generate[boolop_child] block=132 IfRegion@132
+ _nested_if_entry_generate[boolop_child] block=218 IfRegion@218
+ block@326 try_depth=0 SKIPPED (try_depth=0) but last is Expr
+ _nested_if_entry_generate[boolop_child] block=434 IfRegion@434
