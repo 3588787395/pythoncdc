@@ -5,7 +5,6 @@ def load_bars_from_hundsun(self, stocks, typet, start, end):
     self.log.quote.debug(f'调用函数load_bars_from_hundsun，参数为：stocks={stocks[:10]!s}等{len(stocks) if isinstance(stocks, list) else 1!s}只代码,typet={typet!s},start={start!s},end={end!s}')
     data = collections.OrderedDict()
     retpanel = pandas.Panel()
-    os.path.exists(DumploadDailyFile)
     if os.path.exists(DumploadDailyFile) and typet == 6:
         if isinstance(stocks, str):
             stocks = [stocks]

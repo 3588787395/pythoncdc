@@ -1741,7 +1741,31 @@ class RegionASTGenerator:
                     self.generated_blocks.add(_cl_b)
                     self.generated_offsets.add(_cl_b.start_offset)
 
+        # [R76-A1/A2 前导守卫消费（栈式 wrap）] 守卫记录 _leading_guard 由发射端
+        # （三元 merge 余量段 / CJB skip 分支）在前导守卫命中时登记在
+        # fall-through 入口块上；本循环是唯一消费端：按 region.entry 同层身份
+        # 配对，把守卫范围内的顶层语句单元整体包裹成 `if <守卫条件>:`。
+        # 栈式局部状态（不新增 self 跨方法状态），extent 嵌套时内层先收口；
+        # [C1] 消费只读记录三元组；[C2] wrap 不进 extent 内子区域——它们仍
+        # 经各自 entry 由父单元发射；守卫 if 的 merge（跳转目标块）在守卫外。
+        _r76g_stack = []
+
+        def _r76g_emit(stmt_node):
+            if _r76g_stack:
+                _r76g_stack[-1]['body'].append(stmt_node)
+            else:
+                ast_nodes.append(stmt_node)
+
+        def _r76g_close():
+            _w = _r76g_stack.pop()
+            if _w['body']:
+                _r76g_emit({'type': 'If', 'test': _w['test'],
+                            'body': _w['body'], 'orelse': []})
+
         for region in top_level_regions:
+            while _r76g_stack and (region.entry is None
+                                   or region.entry not in _r76g_stack[-1]['extent']):
+                _r76g_close()
             if region.region_type != RegionType.BASIC and region.blocks:
                 if all(b in self.generated_blocks for b in region.blocks):
                     if isinstance(region, (TernaryRegion, MatchRegion)):
@@ -1749,6 +1773,14 @@ class RegionASTGenerator:
                             continue
                     else:
                         continue
+            # [R76-A1/A2] 入口块携带守卫记录 → 捕获并即消费（delattr 保证
+            # 幂等）；extent 由记录携带。是否开 wrap 的裁决必须在目标区域
+            # 生成之后进行（test 是否已结构含守卫操作数，见下方发射段），
+            # 故此处只捕获不开包。
+            _r76g_rec = getattr(getattr(region, 'entry', None), '_leading_guard', None)
+            if _r76g_rec is not None:
+                _r76g_cond, _r76g_tgt, _r76g_extent = _r76g_rec
+                delattr(region.entry, '_leading_guard')
             if isinstance(region, TernaryRegion):
                 _mc = getattr(region, 'merge_context', None)
                 if _mc in ('iter', 'compare', 'return', 'while_cond'):
@@ -1791,10 +1823,39 @@ class RegionASTGenerator:
                 region_ast = self._generate_degraded_statements(
                     prefer_blocks=[b for b in getattr(region, 'blocks', [])])
             if region_ast:
+                # [R76-A1/A2] 守卫记录裁决（须在目标区域生成之后）：
+                # ① 目标区域的 if 条件已**结构含**守卫操作数（A2 形态——区域
+                #   条件的 boolop 链跨块重建已把前导块尾操作数并入 test，如
+                #   `if os.path.exists(...) and typet == 6:`）⇒ 操作数已被该
+                #   条件消费，不再包裹（否则 wrap 与 test 双重求值，重编译
+                #   多 7 条指令，实测 load_bars_from_hundsun）。
+                # ② test 不含操作数（A1 形态）⇒ 开 wrap：守卫条件由 wrap 的
+                #   test 承载，extent 单元在 wrap 打开期间发射进 wrap 体
+                #   （与 orig CFG 的 fall-through 语义一致）。
+                # 判据是发射后的结构事实（_r76_test_consumes_guard 归一化
+                # deep-equal，剥去 lineno/ctx 等位置元数据），不预测分析器
+                # 行为；[C1] 只读本区域 test 与记录的操作数。
+                if _r76g_rec is not None:
+                    if not self._r76_test_consumes_guard(region_ast, _r76g_cond):
+                        _r76g_stack.append({'test': _r76g_cond, 'body': [],
+                                            'extent': _r76g_extent})
+                # 守卫 wrap 打开期间，顶层单元的发射目标改为 wrap 体；wrap
+                # 未打开时行为不变。
                 if isinstance(region_ast, list):
-                    ast_nodes.extend(region_ast)
+                    if _r76g_stack:
+                        _r76g_stack[-1]['body'].extend(region_ast)
+                    else:
+                        ast_nodes.extend(region_ast)
                 else:
-                    ast_nodes.append(region_ast)
+                    if _r76g_stack:
+                        _r76g_stack[-1]['body'].append(region_ast)
+                    else:
+                        ast_nodes.append(region_ast)
+
+        # [R76-A1/A2] 循环结束仍未收口的守卫 wrap（守卫范围延伸到函数尾的
+        # 形态：target 块由后续非区域路径发射）在此统一收口，内层先出。
+        while _r76g_stack:
+            _r76g_close()
 
         # 语句容器不变量兜底：任何区域生成路径产出的 None 容器统一转 []
         ast_nodes = self._normalize_stmt_lists(ast_nodes)
@@ -32659,7 +32720,309 @@ AST 映射规则:
             result = {'type': 'UnaryOp', 'op': 'not', 'operand': result}
         return result
 
+    def _contains_identity(self, node, target):
+        """[R75 fix1] AST 子树里是否已含 target 节点（按对象身份判定）——
+        同一条件表达式可能被多条路径消费，用身份判定保证嫁接幂等。"""
+        if node is target:
+            return True
+        if isinstance(node, dict):
+            return any(self._contains_identity(v, target) for v in node.values())
+        if isinstance(node, list):
+            return any(self._contains_identity(v, target) for v in node)
+        return False
+
+    def _graft_pending_operand(self, region, expr):
+        """[R75 fix1] 把 _cjb_skip_inline_if 丢掉的前置条件操作数接回后继区域的条件。
+
+        ① 根因（丢弃点）：_generate_block_statements_body 在「块尾条件跳转的
+           fall-through 恰是某区域 entry」时只发射前导语句就 return，该块重建成的
+           纯条件操作数（_cjb_cond_expr）没有进入后继区域的操作数链，于是
+           `'(' in s and ')' not in s or '[' in s and ']' not in s` 退化成
+           `')' not in s or '[' in s and ']' not in s`（jq_trans_module 的两个
+           replace_args 单元被判 Different control flow，63/65）。
+        ② 同层身份判据：记录挂在 fall-through 入口块上（_leading_operand），消费端
+           按 region.entry 取同一个块对象配对；不跨层（不用 region.entry in r.blocks），
+           不用函数名/文件名/偏移阈值/名字白名单，也不新增 self 状态。
+        ③ 去向与守卫：由 op_chain 的链内位置决定——跳转目标是链出口或 merge_block
+           时整体相接，是链首后续成员（ck==1 且链首自成一组）时接进首组，其余原样
+           返回；_contains_identity 保证同一表达式被多条路径消费时只嫁接一次。
+        """
+        rec = getattr(getattr(region, 'entry', None), '_leading_operand', None)
+        if not rec or not isinstance(expr, dict):
+            return expr
+        operand, link_op, jump_target = rec
+        if jump_target is None or self._contains_identity(expr, operand):
+            return expr
+        _merge = getattr(region, 'merge_block', None)
+        _merge_off = getattr(_merge, 'start_offset', None)
+        _chain = list(getattr(region, 'op_chain', None) or ())
+        _starts = set()
+        _exits = set()
+        for _cb, _co in _chain:
+            _starts.add(getattr(_cb, 'start_offset', None))
+            _li = _cb.get_last_instruction()
+            if _li is not None and getattr(_li, 'argval', None) is not None:
+                if _li.argval not in _starts:
+                    _exits.add(_li.argval)
+        if _merge_off is not None:
+            _exits.add(_merge_off)
+        ck = None
+        for _i, (_cb, _co) in enumerate(_chain):
+            if getattr(_cb, 'start_offset', None) == jump_target:
+                ck = _i
+                break
+        if ck is None:
+            if jump_target in _exits:
+                return {'type': 'BoolOp', 'op': link_op, 'values': [operand, expr]}
+            return expr
+        if ck == 1 and len(_chain) >= 2 and _chain[0][1] != _chain[1][1]:
+            if expr.get('type') != 'BoolOp' or expr.get('op') != _chain[0][1]:
+                return expr
+            values = list(expr.get('values') or [])
+            if not values or link_op == expr.get('op'):
+                return expr
+            return dict(expr, values=[{'type': 'BoolOp', 'op': link_op,
+                                       'values': [operand, values[0]]}] + values[1:])
+        return expr
+
     def _build_boolop_expression(self, region: 'BoolOpRegion', skip_elif_blocks: bool = True) -> Optional[Dict[str, Any]]:
+        """[R75 fix1] 对外入口：先按原算法重建布尔表达式，再嫁接被丢掉的前置操作数。
+
+        识别条件（L(A) 内事实）：BoolOpRegion 的 entry 块上挂有发射端
+        （_cjb_skip_inline_if 分支）登记的 _leading_operand 记录——块尾条件
+        跳转的 fall-through 正是本区域 entry 时，该块的纯条件操作数没有进入
+        op_chain（发射端只出前导语句就返回，操作数被丢）。
+        归约方式：_build_boolop_expression_inner 按 op_chain 原样重建后，
+        _graft_pending_operand 按「跳转目标==链出口/链首续接」两条结构判据
+        把操作数接回；同层身份配对（记录挂在 region.entry 块上），不跨层、
+        无函数名/文件名白名单、无偏移阈值、不新增 self 跨方法状态。
+        AST 映射：BoolOp(op=link_op, values=[operand, ...])——jq_trans_module
+        两个 replace_args 单元 63/65→65/65 的 B1a 修复点。
+        """
+        return self._graft_pending_operand(
+            region, self._build_boolop_expression_inner(region, skip_elif_blocks))
+
+    def _leading_guard_extent(self, then_entry, target_off):
+        """[R76-A1/A2] 计算前导守卫真值分支的块范围并做闭合性校验。
+
+        识别条件（只读 L(A) 内结构事实，[C1]）：从守卫 fall-through 入口块
+        then_entry 沿**正常**后继边（剔除异常表隐式边）遍历，遇到条件跳转的
+        目标块 target_off 即截断、不进入——守卫为假时控制流直接离开该分支。
+        遍历得到的块集即守卫为真时才执行的代码范围。
+        归约方式（[C2]）：范围只由「入口 + 截断块 + 正常边」划定；extent 内的
+        嵌套子区域（循环/try/内层 if 等）不展开，父级发射时仍经各自 entry
+        消费，本判据对其内部结构无感——任意嵌套深度下 extent 的定义唯一
+        （嵌套无感归纳）。
+        AST 映射：extent 上的顶层语句单元整体成为外层 `if <守卫条件>:` 的
+        体；target 块是守卫 if 的汇合点，留在守卫之外作为后继语句。
+        [C3 守卫·边收敛校验] extent 内任何块的正常后继必须在 extent ∪
+        {target} 之内（return 块无后继自然满足）。出现越界边说明真值分支未
+        在 target 闭合（冷布局/break 跳出外层循环等形态），返回 None，调用方
+        不建立守卫记录，输出与未命中前逐字节一致。
+        """
+        target = self.cfg.get_block_by_offset(target_off) if target_off is not None else None
+        if target is None or then_entry is None:
+            return None
+        extent = set()
+        stack = [then_entry]
+        while stack:
+            b = stack.pop()
+            if b is target or b in extent:
+                continue
+            extent.add(b)
+            _exc = set(getattr(b, 'exception_successors', None) or ())
+            for s in b.successors:
+                if s in _exc:
+                    continue
+                stack.append(s)
+        for b in extent:
+            _exc_b = set(getattr(b, 'exception_successors', None) or ())
+            for s in b.successors:
+                if s in _exc_b:
+                    continue
+                if s is target or s in extent:
+                    continue
+                return None
+        return extent
+
+    def _leading_guard_candidate(self, then_entry, cond_expr, target_off):
+        """[R76-A1/A2] 守卫消费配对三重校验；通过则在入口块上登记 _leading_guard。
+
+        记录约定（复用 R75 fix1 的「挂块」模式，属性独立互不干扰）：B1a 的
+        _leading_operand 服务 BoolOpRegion 的表达式嫁接；本记录
+        _leading_guard=(cond_expr, target_off, extent) 服务 IfRegion 的外层
+        if 包裹，消费端只在 generate() 顶层区域循环按 region.entry 身份配对。
+        同层判据：不读函数名/文件名/偏移阈值，不做跨层 entry-in-blocks 反查，
+        不新增 self 跨方法状态。
+        [C3 守卫①] fall-through 入口必须是**顶层** IfRegion 的 entry
+        （get_entry_region_for_block 同一对象 + parent 为 None）：只有顶层
+        区域会出现在顶层循环里被消费；嵌套区域的守卫属其父区域的归约责任，
+        不命中则放弃记录（保守，行为不变）。
+        [C3 守卫②] 目标区域尚未生成（entry 不在 generated_blocks、id 不在
+        _generated/_generating 集合）：避免对已发射区域重复包裹。
+        [C3 守卫③] 目标区域自身块集必须全部落在 extent ∪ {target} 内，且
+        extent 内每块的**语句级** owner 区域（block_to_region，If/Loop/Try/
+        With/Match/Assert；BoolOp/Ternary 是表达式子单元、链式共享值块是其
+        常态，豁免）入口也都在 extent 内——每块唯一归属：守卫范围内的块只
+        能属于守卫范围内的区域，否则放弃记录（行为不变）。
+        """
+        _R = self.region_analyzer.get_entry_region_for_block(then_entry)
+        if not isinstance(_R, IfRegion) or _R.entry is not then_entry:
+            return False
+        if getattr(_R, 'parent', None) is not None:
+            return False
+        if then_entry in self.generated_blocks:
+            return False
+        if id(_R) in self._generated_regions or id(_R) in self._generating_regions:
+            return False
+        extent = self._leading_guard_extent(then_entry, target_off)
+        if extent is None:
+            return False
+        target = self.cfg.get_block_by_offset(target_off)
+        for _b in getattr(_R, 'blocks', None) or ():
+            if _b is not target and _b not in extent:
+                return False
+        for _b in extent:
+            _o = self.region_analyzer.block_to_region.get(_b)
+            if _o is None or _o is _R or isinstance(_o, (BoolOpRegion, TernaryRegion)):
+                continue
+            _oe = getattr(_o, 'entry', None)
+            if _oe is None or _oe not in extent:
+                return False
+        setattr(then_entry, '_leading_guard', (cond_expr, target_off, extent))
+        return True
+
+    def _detect_leading_guard(self, block):
+        """[R76-A1/A2] 识别块尾「前导守卫」条件跳转并登记守卫记录。
+
+        识别条件（L(A) 内结构事实，[C1]）：块的**最后一条有语义指令**是条件
+        跳转（守卫测试位于语句序列末尾）；conditional_successors ≥ 2；
+        fall-through 后继（非跳转目标一侧）是某 IfRegion 的 entry。条件指令段
+        = 块内最后一个「语句归约入口」之后的指令（镜像 _generate_block_
+        statements_body 的 CJB 切分；None-check 跳转保留给重建器承载
+        is/is not 极性）。
+        归约方式（[C2]）：守卫条件是**外层 if 的测试**，不属于本块的语句序
+        列——本方法把条件段剥离出来（调用方按返回的 offset 集合从自己的指令
+        流中剔除），经 _leading_guard_candidate 三重校验后登记在 fall-through
+        入口块上，由 generate() 顶层区域循环按 region.entry 配对消费。
+        AST 映射：块尾条件段 → ast.If.test；extent → ast.If.body；跳转目标
+        块 → 守卫 if 的 merge（留在守卫外）。极性：fall-through 一侧的条件即
+        测试条件（then==target 退化形态按 CJB 同款规则取反）。
+        返回 (cond_expr, then_entry, target_off, cond_offsets) 或 None；未命中
+        时调用方不剥离任何指令，行为逐字节不变。
+        """
+        _jump = None
+        for _i in block.instructions:
+            if (_i.opname in CONDITIONAL_JUMP_OPS
+                    or _i.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                    or _i.opname in BACKWARD_CONDITIONAL_JUMP_OPS):
+                _jump = _i
+        _last = block.get_last_instruction()
+        if _jump is None or _jump is not _last:
+            return None
+        if len(block.conditional_successors) < 2:
+            return None
+        _tgt = _jump.argval
+        if _tgt is None:
+            return None
+        _then = None
+        for _cs in block.conditional_successors:
+            if _cs.start_offset != _tgt:
+                _then = _cs
+        if _then is None or _then.start_offset == _tgt:
+            return None
+        _cond_instrs = []
+        for _ci in block.instructions:
+            if _ci.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            if _ci is _jump and _ci.opname in NONE_CHECK_OPS:
+                _cond_instrs.append(_ci)
+                continue
+            if (_ci.opname in CONDITIONAL_JUMP_OPS
+                    or _ci.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                    or _ci.opname in BACKWARD_CONDITIONAL_JUMP_OPS):
+                continue
+            if _ci.opname in FORWARD_JUMP_OPS or _ci.opname in BACKWARD_JUMP_OPS:
+                continue
+            if _ci.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                continue
+            _cond_instrs.append(_ci)
+        _last_stmt = -1
+        for _pi, _pci in enumerate(_cond_instrs):
+            if self._is_statement_reduction_entry(_pci):
+                _last_stmt = _pi
+        _pure = _cond_instrs[_last_stmt + 1:]
+        if not _pure:
+            return None
+        _expr = self.expr_reconstructor.reconstruct(list(_pure))
+        if _expr is None:
+            _expr = {'type': 'Constant', 'value': True}
+        if _then.start_offset == _tgt:
+            if _jump.opname in NONE_CHECK_OPS:
+                _expr = _flip_is_none_compare(_expr)
+            else:
+                _expr = _negate_expr(_expr)
+        if (isinstance(_expr, dict) and _expr.get('type') == 'Constant'
+                and _expr.get('value') is True):
+            return None
+        if not self._leading_guard_candidate(_then, _expr, _tgt):
+            return None
+        return (_expr, _then, _tgt, {i.offset for i in _pure})
+
+    _R76_IGNORE_KEYS = frozenset(('lineno', 'end_lineno', 'col_offset',
+                                  'end_col_offset', 'ctx', 'is_method_form'))
+
+    def _r76_expr_equal(self, a, b):
+        """[R76-A1/A2] 表达式字典的**结构**相等（剥位置元数据后 deep-equal）。
+
+        守卫操作数在记录端（_detect_leading_guard 的 reconstruct）与目标区域
+        test 端（区域条件重建的另一次 reconstruct）是**两个独立对象**，对象
+        身份判定（_contains_identity）恒为假；此处按结构比较——剥去
+        lineno/col_offset/ctx/is_method_form 等位置性元数据（两次重建对同一
+        指令段产物仅位置字段可能不同），其余字段递归相等即判等。
+        [C1] 只读两个待比较表达式自身的字段；不读名字表/全局状态。
+        """
+        if isinstance(a, dict) and isinstance(b, dict):
+            ak = {k: v for k, v in a.items() if k not in self._R76_IGNORE_KEYS}
+            bk = {k: v for k, v in b.items() if k not in self._R76_IGNORE_KEYS}
+            if set(ak) != set(bk):
+                return False
+            return all(self._r76_expr_equal(ak[k], bk[k]) for k in ak)
+        if isinstance(a, list) and isinstance(b, list):
+            return (len(a) == len(b)
+                    and all(self._r76_expr_equal(x, y) for x, y in zip(a, b)))
+        return a == b
+
+    def _r76_test_consumes_guard(self, region_ast, cond_expr):
+        """[R76-A1/A2] 目标区域产物的 if 条件是否已结构含守卫操作数。
+
+        识别条件：region_ast（或其列表）中的 If 节点，其 test 子树任一
+        表达式与守卫操作数结构相等（_r76_expr_equal）。
+        归约方式（消费裁决，[C2]）：test 已含操作数 ⇒ 前导块尾操作数已被
+        区域自身的 boolop 链条件消费（A2 形态，`if X and Y:` 的 X 跨块并入
+        test），发射端剥离的裸 Expr 由该条件承载，不再另开 wrap（否则 wrap
+        与 test 双重求值）；test 不含 ⇒ 开 wrap 承载守卫条件（A1 形态）。
+        AST 映射：A2 → 单条 `if X and Y:`；A1 → `if X:` 包裹 extent 单元。
+        """
+        nodes = region_ast if isinstance(region_ast, list) else [region_ast]
+        for _n in nodes:
+            if not (isinstance(_n, dict) and _n.get('type') == 'If'):
+                continue
+            _test = _n.get('test')
+            _stack = [_test]
+            while _stack:
+                _nd = _stack.pop()
+                if _nd is None:
+                    continue
+                if self._r76_expr_equal(_nd, cond_expr):
+                    return True
+                if isinstance(_nd, dict):
+                    _stack.extend(_nd.values())
+                elif isinstance(_nd, list):
+                    _stack.extend(_nd)
+        return False
+
+    def _build_boolop_expression_inner(self, region: 'BoolOpRegion', skip_elif_blocks: bool = True) -> Optional[Dict[str, Any]]:
         """从BoolOpRegion的op_chain重建布尔表达式AST
 
         算法角色：表达式重建器（Expression Reconstructor）
@@ -42067,6 +42430,22 @@ AST 映射规则:
                         and _rest_clean[-1].argval is None):
                     _rest_clean = _rest_clean[:-1]
             if _rest_clean:
+                # [R76-A1/A2] 前导守卫剥离：merge 块尾若以前导守卫条件跳转收尾
+                # （fall-through 是顶层 IfRegion 的 entry、跳转目标是守卫 if 的
+                # merge），条件指令段是外层 if 的测试而非本块语句——剥离后由
+                # _detect_leading_guard 登记在 fall-through 入口块上，generate()
+                # 顶层区域循环消费成 `if <守卫>: <extent 单元>`。此前该段被
+                # _build_statements_from_instructions 物化成裸 Expr（POP_TOP），
+                # 守卫条件丢失/被语句流与区域条件双重消费（quote.pyc 的
+                # load_get_price/get_price/load_bars_from_hundsun 三单元）。
+                # [C1] 判据只读块尾跳转与区域表；[C2] extent 内子区域仍经 entry
+                # 被父单元消费；[C3] 三重校验在 _leading_guard_candidate 内。
+                # 未命中时不剥离，行为逐字节不变。
+                _grd = self._detect_leading_guard(region.merge_block)
+                if _grd is not None:
+                    _grd_expr, _grd_then, _grd_tgt, _grd_offs = _grd
+                    _rest_clean = [i for i in _rest_clean
+                                   if i.offset not in _grd_offs]
                 _rest_stmts = self._build_statements_from_instructions(
                     list(_rest_clean))
                 while _rest_stmts and isinstance(_rest_stmts[-1], dict):
@@ -42795,6 +43174,21 @@ AST 映射规则:
                and _rest[-1].argval is None):
             _rest = _rest[:-1]
         if _rest:
+            # [R76-A1/A2] 前导守卫剥离（f-string 跨块调用实参路径）：merge 块尾
+            # 若以前导守卫条件跳转收尾（fall-through 是顶层 IfRegion 的 entry、
+            # 跳转目标是守卫 if 的 merge），条件指令段是外层 if 的测试而非本块
+            # 语句——剥离后由 _detect_leading_guard 登记在 fall-through 入口块
+            # 上（_leading_guard），generate() 顶层区域循环消费成
+            # `if <守卫>: <extent 单元>`。此前该段被物化成裸 Expr（POP_TOP），
+            # 守卫条件丢失/被双重消费（quote.pyc 的 load_get_price / get_price /
+            # load_bars_from_hundsun 三单元）。[C1] 判据只读块尾跳转与区域表；
+            # [C2] extent 内子区域仍经 entry 被父单元消费；[C3] 同层身份三重
+            # 校验在 _leading_guard_candidate 内。未命中时不剥离，行为逐字节不变。
+            _grd = self._detect_leading_guard(innermost_merge)
+            if _grd is not None:
+                _grd_expr, _grd_then, _grd_tgt, _grd_offs = _grd
+                _rest = [i for i in _rest
+                         if i.offset not in _grd_offs]
             try:
                 _extra = self._build_statements_from_instructions(list(_rest))
             except Exception:
@@ -47627,10 +48021,12 @@ AST 映射规则:
                 _cjb_else_blocks = [_cjb_else_entry] if _cjb_else_entry else []
 
                 _cjb_skip_inline_if = False
+                _cjb_pend_key = None
                 if _cjb_then_entry and _cjb_then_entry not in self.generated_blocks:
                     _er = self.region_analyzer.get_entry_region_for_block(_cjb_then_entry)
                     if _er and _er.entry == _cjb_then_entry and isinstance(_er, RegionASTGenerator._ALL_REGION_TYPES):
                         _cjb_skip_inline_if = True
+                        _cjb_pend_key = _cjb_then_entry
                 if _cjb_else_entry and _cjb_else_entry not in self.generated_blocks:
                     _er = self.region_analyzer.get_entry_region_for_block(_cjb_else_entry)
                     if _er and _er.entry == _cjb_else_entry and isinstance(_er, RegionASTGenerator._ALL_REGION_TYPES):
@@ -47639,6 +48035,27 @@ AST 映射规则:
                 if _cjb_skip_inline_if:
                     if _cjb_pre_stmts:
                         stmts.extend(_cjb_pre_stmts)
+                    if _cjb_pend_key is not None and _cjb_pure_cond:
+                        _pend_expr = _cjb_cond_expr
+                        if (isinstance(_pend_expr, dict)
+                                and not (_pend_expr.get('type') == 'Constant'
+                                         and _pend_expr.get('value') is True)):
+                            _pend_op = ('and' if ('FALSE' in _cond_jump_bs.opname)
+                                        != bool(_cjb_negate) else 'or')
+                            setattr(_cjb_pend_key, '_leading_operand',
+                                    (_pend_expr, _pend_op, _cjb_jump_target))
+                            # [R76-A1 CJB 入口形态] fall-through 区域是顶层
+                            # IfRegion 时，同一条件段再登记守卫记录
+                            # _leading_guard（与 B1a 的 _leading_operand 属性
+                            # 独立、互不干扰）：消费端在 generate() 顶层区域
+                            # 循环按 region.entry 身份配对，包裹成
+                            # `if <守卫>: <extent 单元>`，替代此处对条件的
+                            # 静默丢弃。极性沿用本分支已重建的 _cjb_cond_expr
+                            # 与 _cjb_jump_target；[C3] 同层身份三重校验在
+                            # _leading_guard_candidate 内；BoolOpRegion 等其它
+                            # 区域类型不命中（行为不变）。
+                            self._leading_guard_candidate(
+                                _cjb_pend_key, _pend_expr, _cjb_jump_target)
                     self.generated_blocks.add(block)
                     return stmts
 

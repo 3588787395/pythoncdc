@@ -24,7 +24,7 @@ def func_get_bars_convert_code(code):
         except:
             stock_tmp = position_params_info.split(',')[0]
             count_tmp = position_params_info.split(',')[1]
-            if ')' not in stock_tmp or '[' in stock_tmp and ']' not in stock_tmp:
+            if '(' in stock_tmp and ')' not in stock_tmp or '[' in stock_tmp and ']' not in stock_tmp:
                 count = position_params_info.split(',')[-1]
                 stock = position_params_info.replace(count, '')
                 stock = stock[:-1]

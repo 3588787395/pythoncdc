@@ -7,16 +7,16 @@ def get_price(self, security, start_date, end_date, frequency, fields, fq):
     self.check_datetime(start_date)
     self.check_datetime(end_date)
     self.check_frequency(frequency)
-    fields is not None
-    if not isinstance(fields, list):
-        self.log.quote.error('get_price函数输入的行情数据字段有误, 请使用字符串列表形式输入, 或者None')
-        self.trade_log.error('get_price函数输入的行情数据字段有误, 请使用字符串列表形式输入, 或者None')
-    assert isinstance(fields, list), '您输入的行情数据字段有误, 请使用字符串列表形式输入, 或者None'
-    for field in fields:
-        if field not in DEFAULT_FIELDS:
-            self.log.quote.error("get_price函数要获取的行情数据字段不存在, 目前仅支持'price',                                                 'open', 'close', 'high', 'low', 'volume', 'money','is_open'")
-            self.trade_log.error("get_price函数要获取的行情数据字段不存在, 目前仅支持'price',                                                 'open', 'close', 'high', 'low', 'volume', 'money','is_open'")
-        assert field in DEFAULT_FIELDS, "您要获取的行情数据字段不存在, 目前仅支持'price',                                                 'open', 'close', 'high', 'low', 'volume', 'money','is_open'"
+    if fields is not None:
+        if not isinstance(fields, list):
+            self.log.quote.error('get_price函数输入的行情数据字段有误, 请使用字符串列表形式输入, 或者None')
+            self.trade_log.error('get_price函数输入的行情数据字段有误, 请使用字符串列表形式输入, 或者None')
+        assert isinstance(fields, list), '您输入的行情数据字段有误, 请使用字符串列表形式输入, 或者None'
+        for field in fields:
+            if field not in DEFAULT_FIELDS:
+                self.log.quote.error("get_price函数要获取的行情数据字段不存在, 目前仅支持'price',                                                 'open', 'close', 'high', 'low', 'volume', 'money','is_open'")
+                self.trade_log.error("get_price函数要获取的行情数据字段不存在, 目前仅支持'price',                                                 'open', 'close', 'high', 'low', 'volume', 'money','is_open'")
+            assert field in DEFAULT_FIELDS, "您要获取的行情数据字段不存在, 目前仅支持'price',                                                 'open', 'close', 'high', 'low', 'volume', 'money','is_open'"
     if frequency.find('w') > -1:
         candle_period = 7
     elif frequency.find('mo') > -1:
