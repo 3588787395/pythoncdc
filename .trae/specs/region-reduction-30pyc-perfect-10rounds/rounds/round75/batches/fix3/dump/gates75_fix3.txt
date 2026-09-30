@@ -1,0 +1,16 @@
+﻿# R75 fix3 门禁读数汇总（全部对最终臂 abdef fresh 复跑；基线=落地核 982cd398）
+# a  官方41  h62 ab landed vs abdef : REGRESSION=0 IMPROVED=2(43/45->44/44 real_quote, 72/81->73/81 quote)
+#    SHA-ONLY: klinedata 43/45, finance 24/24, trade_live_broker 112/119 ; realtime 11/12 持平(clock_worker MOVED)
+# a' 官方402 h62 ab p402_landed vs p402_abdef_f : REGRESSION=0
+#    SHA-ONLY + tools 6/6, history_data_source 18/18, order_api_trade 24/24, scheduler 45/45, pboxAccount_jupyterhub 4/4
+# b  mand_ab list41: CLEARED=0 NEW=4 (run_tick_socket, get_real_minute_kline, get_tick_direction, get_fields)
+# b' pyc_verify single: real_quote 45/45 SUCCESS(mandate, landed 43/45) | finance 32/32(landed 31/32)
+#    quote 82/92(landed 81/92) | wizard 55/58 = landed | load_daily 26/27 = landed
+#    risk_calculation 41/43 = landed(next_day 恢复) | time_validator 5/5 = landed | trade_info_utils 36/41 = landed
+# c  canary 4/4 sha16 == pin: 3eb76e512df9ab1e / af77224b34b203c4 / e711b8ea86d49a15 / 9d09af09249da177  PASS
+# d  closeout69 battery: candidate columns worse-than-landed on 0 repro(s)   PASS  (dump/battery_landed_vs_abdef.txt)
+# d' adr73 fam75: units 71 changed 5 WORSE=0 IMPROVED=5 (finance.get_fields, real_quote x2, clock_worker, quote.run_tick_socket)
+# e  sstrict67 list41: landed ok=1649/1718 defects=69 ; abdef ok=1653/1718 defects=65
+#    new defective functions = 0 ; 新增行仅 clock_worker seq_len 数值位移(同函数,ADR判IMPROVED) ; CLEARED=5行
+# G0 g0audit: PASS 11/11
+# synth: PASS 5/5 verdict (repro t2 try内共享尾 head failure 1/2 -> cand success 2/2 ; neg 真嵌套 sha 8dd91599288d1304 两臂相同)

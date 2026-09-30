@@ -1,0 +1,9 @@
+{
+ "file": "core/cfg/region_analyzer.py",
+ "edits": [
+  {
+   "anchor": "                if (_main_cond_last is not None\n                        and _main_cond_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)\n                        and ('IF_TRUE' in _main_cond_last.opname\n                             or 'IF_FALSE' in _main_cond_last.opname)\n                        and _main_cond_last.argval is not None):",
+   "repl": "                # [R75-FIX3-A] or 短路链首段极性补齐（`is None` 型）。\n                # 根因：`if A is None or B is None:` 首段以 POP_JUMP_FORWARD_IF_NONE 短路跳\n                #   then、末段以 POP_JUMP_FORWARD_IF_NOT_NONE 跳出到 else，两者的 opcode 名\n                #   不含 IF_TRUE/IF_FALSE，原守卫在入口即拒绝，链退化为「`if not A:` 反转 +\n                #   嵌套 if」（real_quote.get_real_minute_kline 的 `fq is None or ex_info is\n                #   None` 即此形态，产物多一层嵌套且条件翻转）。\n                # 同层身份判据：只读首段末条指令的 opcode 名（放行面收窄到 IF_NONE，不放\n                #   IF_NOT_NONE——`if x is not None:` 单条件形态不构成 or 链）与其跳转目标；\n                #   链体拓扑判据原样保留（成员跳同一 then 入口、成员块无 STORE/POP_TOP、\n                #   末段条件跳的目标不是 then 入口且 fall-through 正是 then 入口），嵌套\n                #   `if A: if B:` 仍由链尾判据断开；不读名字/常量/偏移阈值/函数名。\n                # 去向与守卫：守卫通过才进入原链体行走，任一段不满足拓扑即 break 收链\n                #   （len(_or_chain) < 2 不做任何改写）；满足才重定向 condition_block 到\n                #   链末并置 _main_inline_boolop_chain，否则维持原判定路径。\n                if (_main_cond_last is not None\n                        and _main_cond_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)\n                        and ('IF_TRUE' in _main_cond_last.opname\n                             or 'IF_FALSE' in _main_cond_last.opname\n                             or 'IF_NONE' in _main_cond_last.opname)\n                        and _main_cond_last.argval is not None):"
+  }
+ ]
+}

@@ -1,0 +1,12 @@
+spec 三要素注释(根因/同层身份判据/去向与守卫)	PASS	[]
+[region_analyzer.py] 新增代码无 self 状态赋值	PASS	none
+[region_analyzer.py] 新增代码无 getattr/setattr(self,...)	PASS	none
+[region_analyzer.py] 新增代码无跨层 X.entry in Y.blocks	PASS	none
+[region_analyzer.py] 新增代码无文件名字面量 (.py/路径)	PASS	none
+[region_analyzer.py] 新增代码无靶单元函数名/文件名白名单	PASS	none
+[region_analyzer.py] 新增代码无 start_offset 偏移阈值	PASS	none
+[region_analyzer.py] 反打文件 ast.parse	PASS	ast.parse OK
+[region_analyzer.py] 反打文件 py_compile	PASS	py_compile OK
+[region_analyzer.py] BOM 与原件一致	PASS	orig=False new=False
+repo core/scripts/site-packages 已跟踪文件零改动（不改 repo、不手改 *OK.py）	PASS	clean (untracked=0)
+G0-audit: PASS (11/11)

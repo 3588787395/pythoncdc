@@ -1,0 +1,163 @@
+# F:\Downloads\pythoncdc-main\site-packages\IQData\plugins\plugin_system_realquote\real_quote.pyc :: RealQuoteData.get_real_minute_kline
+# product D:\Temp\opencode\r75gate\center\build_landed\IQData__plugins__plugin_system_realquote__real_quoteOK.py
+=== ents ORIG (n=7) ===
+  start=88    end=370   tgt=1310  depth=0 lasti=False | LOAD_FAST self               | tgt: PUSH_EXC_INFO 
+  start=372   end=580   tgt=1310  depth=0 lasti=False | LOAD_GLOBAL datetime         | tgt: PUSH_EXC_INFO 
+  start=582   end=1308  tgt=1310  depth=0 lasti=False | LOAD_GLOBAL NULL + list      | tgt: PUSH_EXC_INFO 
+  start=1310  end=1330  tgt=1428  depth=1 lasti=True | PUSH_EXC_INFO                | tgt: COPY 
+  start=1330  end=1406  tgt=1418  depth=1 lasti=True | LOAD_GLOBAL NULL + system_log | tgt: LOAD_CONST None
+  start=1406  end=1408  tgt=1428  depth=1 lasti=True | SWAP                         | tgt: COPY 
+  start=1418  end=1428  tgt=1428  depth=1 lasti=True | LOAD_CONST None              | tgt: COPY 
+=== ents PROD (n=8) ===
+  start=88    end=374   tgt=1324  depth=0 lasti=False | LOAD_FAST self               | tgt: PUSH_EXC_INFO 
+  start=376   end=1102  tgt=1324  depth=0 lasti=False | LOAD_GLOBAL NULL + list      | tgt: PUSH_EXC_INFO 
+  start=1104  end=1116  tgt=1324  depth=0 lasti=False | LOAD_GLOBAL EMPTY_DAY_BAR_NP_ARRAY | tgt: PUSH_EXC_INFO 
+  start=1118  end=1316  tgt=1324  depth=0 lasti=False | LOAD_GLOBAL datetime         | tgt: PUSH_EXC_INFO 
+  start=1324  end=1344  tgt=1442  depth=1 lasti=True | PUSH_EXC_INFO                | tgt: COPY 
+  start=1344  end=1420  tgt=1432  depth=1 lasti=True | LOAD_GLOBAL NULL + system_log | tgt: LOAD_CONST None
+  start=1420  end=1422  tgt=1442  depth=1 lasti=True | SWAP                         | tgt: COPY 
+  start=1432  end=1442  tgt=1442  depth=1 lasti=True | LOAD_CONST None              | tgt: COPY 
+=== entry-set delta ===
+  ONLY-ORIG (88, 370, 1310, 0, False)
+  ONLY-ORIG (372, 580, 1310, 0, False)
+  ONLY-ORIG (582, 1308, 1310, 0, False)
+  ONLY-ORIG (1310, 1330, 1428, 1, True)
+  ONLY-ORIG (1330, 1406, 1418, 1, True)
+  ONLY-ORIG (1406, 1408, 1428, 1, True)
+  ONLY-ORIG (1418, 1428, 1428, 1, True)
+  ONLY-PROD (88, 374, 1324, 0, False)
+  ONLY-PROD (376, 1102, 1324, 0, False)
+  ONLY-PROD (1104, 1116, 1324, 0, False)
+  ONLY-PROD (1118, 1316, 1324, 0, False)
+  ONLY-PROD (1324, 1344, 1442, 1, True)
+  ONLY-PROD (1344, 1420, 1432, 1, True)
+  ONLY-PROD (1420, 1422, 1442, 1, True)
+  ONLY-PROD (1432, 1442, 1442, 1, True)
+  SHIFT    orig (582, 1308, 1310, 0, False) -> prod (376, 1102, 1324, 0, False)  (dstart=-206 dend=-206)
+  SHIFT    orig (1310, 1330, 1428, 1, True) -> prod (1324, 1344, 1442, 1, True)  (dstart=+14 dend=+14)
+  SHIFT    orig (1330, 1406, 1418, 1, True) -> prod (1344, 1420, 1432, 1, True)  (dstart=+14 dend=+14)
+  SHIFT    orig (1406, 1408, 1428, 1, True) -> prod (1420, 1422, 1442, 1, True)  (dstart=+14 dend=+14)
+  SHIFT    orig (1418, 1428, 1428, 1, True) -> prod (1432, 1442, 1442, 1, True)  (dstart=+14 dend=+14)
+=== first divergence (len orig=280 prod=287) ===
+  idx=18
+     O90   LOAD_ATTR                      cache                              | P90   LOAD_ATTR                      cache
+     O100  LOAD_CONST                     1                                  | P100  LOAD_CONST                     1
+     O102  COMPARE_OP                     ==                                 | P102  COMPARE_OP                     ==
+  >> O108  POP_JUMP_FORWARD_IF_FALSE      to 372                             | P108  EXTENDED_ARG                   
+     O110  LOAD_FAST                      symbol                             | P110  POP_JUMP_FORWARD_IF_FALSE      to 1118
+     O112  LOAD_METHOD                    replace                            | P112  LOAD_FAST                      symbol
+     O134  LOAD_CONST                     '.XSHE'                            | P114  LOAD_METHOD                    replace
+=== normalised hunks (J/CODEOBJ noise removed) ===
+  replace orig[18:19] prod[18:20]
+      - POP_JUMP_FORWARD_IF_FALSE to 372
+      + EXTENDED_ARG 
+      + POP_JUMP_FORWARD_IF_FALSE to 1118
+  replace orig[46:47] prod[47:49]
+      - POP_JUMP_FORWARD_IF_FALSE to 358
+      + EXTENDED_ARG 
+      + POP_JUMP_FORWARD_IF_FALSE to 1104
+  replace orig[50:51] prod[52:54]
+      - POP_JUMP_FORWARD_IF_FALSE to 358
+      + EXTENDED_ARG 
+      + POP_JUMP_FORWARD_IF_FALSE to 1104
+  delete  orig[65:100] prod[68:68]
+      - JUMP_FORWARD J
+      - LOAD_GLOBAL EMPTY_DAY_BAR_NP_ARRAY
+      - RETURN_VALUE 
+      - LOAD_GLOBAL datetime
+      - LOAD_ATTR datetime
+      - LOAD_METHOD now
+      - PRECALL 
+      - CALL 
+      - LOAD_METHOD strftime
+      - LOAD_CONST '%Y%m%d'
+      - PRECALL 
+      - CALL 
+      - STORE_FAST start_date
+      - LOAD_FAST start_date
+      - STORE_FAST end_date
+      - LOAD_FAST self
+      - LOAD_METHOD get_kline_by_date_ndarray
+      - LOAD_FAST symbol
+      - LOAD_FAST start_date
+      - LOAD_FAST end_date
+      - LOAD_FAST frequency_int
+      - PRECALL 
+      - CALL 
+      - STORE_FAST kline
+      - LOAD_GLOBAL NULL + len
+      - LOAD_FAST kline
+      - PRECALL 
+      - CALL 
+      - LOAD_CONST 0
+      - COMPARE_OP >
+      - POP_JUMP_FORWARD_IF_FALSE to 570
+      - LOAD_CONST 0
+      - LOAD_FAST kline
+      - LOAD_CONST 'unlimited'
+      - STORE_SUBSCR 
+  replace orig[101:102] prod[69:71]
+      - POP_JUMP_FORWARD_IF_NONE to 578
+      + EXTENDED_ARG 
+      + POP_JUMP_FORWARD_IF_NONE to 1104
+  replace orig[103:104] prod[72:73]
+      - POP_JUMP_FORWARD_IF_NOT_NONE to 582
+      + POP_JUMP_FORWARD_IF_NOT_NONE to 376
+  replace orig[153:154] prod[122:123]
+      - FOR_ITER to 966
+      + FOR_ITER to 760
+  replace orig[160:161] prod[129:130]
+      - FOR_ITER to 964
+      + FOR_ITER to 758
+  replace orig[183:184] prod[152:153]
+      - POP_JUMP_FORWARD_IF_FALSE to 994
+      + POP_JUMP_FORWARD_IF_FALSE to 788
+  replace orig[224:225] prod[193:194]
+      - FOR_ITER to 1306
+      + FOR_ITER to 1100
+  replace orig[236:237] prod[205:206]
+      - FOR_ITER to 1304
+      + FOR_ITER to 1098
+  insert  orig[252:252] prod[221:259]
+      + LOAD_GLOBAL EMPTY_DAY_BAR_NP_ARRAY
+      + RETURN_VALUE 
+      + LOAD_GLOBAL datetime
+      + LOAD_ATTR datetime
+      + LOAD_METHOD now
+      + PRECALL 
+      + CALL 
+      + LOAD_METHOD strftime
+      + LOAD_CONST '%Y%m%d'
+      + PRECALL 
+      + CALL 
+      + STORE_FAST start_date
+      + LOAD_FAST start_date
+      + STORE_FAST end_date
+      + LOAD_FAST self
+      + LOAD_METHOD get_kline_by_date_ndarray
+      + LOAD_FAST symbol
+      + LOAD_FAST start_date
+      + LOAD_FAST end_date
+      + LOAD_FAST frequency_int
+      + PRECALL 
+      + CALL 
+      + STORE_FAST kline
+      + LOAD_GLOBAL NULL + len
+      + LOAD_FAST kline
+      + PRECALL 
+      + CALL 
+      + LOAD_CONST 0
+      + COMPARE_OP >
+      + POP_JUMP_FORWARD_IF_FALSE to 1320
+      + LOAD_CONST 0
+      + LOAD_FAST kline
+      + LOAD_CONST 'unlimited'
+      + STORE_SUBSCR 
+      + LOAD_CONST None
+      + RETURN_VALUE 
+      + LOAD_CONST None
+      + RETURN_VALUE 
+  replace orig[255:256] prod[262:263]
+      - POP_JUMP_FORWARD_IF_FALSE to 1426
+      + POP_JUMP_FORWARD_IF_FALSE to 1440
+  blocks=27 ratio=0.8254

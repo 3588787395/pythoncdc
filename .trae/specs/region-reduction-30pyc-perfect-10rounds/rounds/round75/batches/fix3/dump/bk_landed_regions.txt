@@ -1,0 +1,84 @@
+=== CFG get_real_minute_kline_bk blocks=20 ===
+  blk 0..188 role=?              succ=[190, 200]
+  blk 190..196 role=?              succ=[200]
+  blk 200..202 role=?              succ=[204, 208]
+  blk 204..206 role=?              succ=[208, 212]
+  blk 208..210 role=?              succ=[]
+  blk 212..500 role=?              succ=[502]
+  blk 502..502 role=?              succ=[504, 596]
+  blk 504..534 role=?              succ=[536]
+  blk 536..536 role=?              succ=[538, 594]
+  blk 538..592 role=?              succ=[536]
+  blk 594..594 role=?              succ=[502]
+  blk 596..618 role=?              succ=[620, 624]
+  blk 620..622 role=?              succ=[624]
+  blk 624..838 role=?              succ=[840]
+  blk 840..840 role=?              succ=[842, 936]
+  blk 842..880 role=?              succ=[882]
+  blk 882..882 role=?              succ=[884, 934]
+  blk 884..932 role=?              succ=[882]
+  blk 934..934 role=?              succ=[840]
+  blk 936..938 role=?              succ=[]
+=== regions top=15 ===
+  LoopRegion entry=882..882 blocks=3 type=FOR_LOOP
+    meta={'has_break_in_body': False}
+  LoopRegion entry=840..840 blocks=7 type=FOR_LOOP
+    meta={'has_break_in_body': False}
+    LoopRegion entry=882..882 blocks=3 type=FOR_LOOP
+      meta={'has_break_in_body': False}
+  LoopRegion entry=536..536 blocks=3 type=FOR_LOOP
+    meta={'has_break_in_body': False}
+  LoopRegion entry=502..502 blocks=6 type=FOR_LOOP
+    meta={'has_break_in_body': False}
+    LoopRegion entry=536..536 blocks=3 type=FOR_LOOP
+      meta={'has_break_in_body': False}
+  IfRegion entry=596..618 blocks=2 type=IF_THEN
+    cond=596..618 then=[620..622] else=[] merge=624..838
+    Region entry=596..618 blocks=1 type=BASIC
+    Region entry=620..622 blocks=1 type=BASIC
+  IfRegion entry=204..206 blocks=11 type=IF_THEN_ELSE
+    cond=204..206 then=[208..210] else=[212..500 502..502 596..618 536..536 620..622 624..838 840..840 936..938 882..882] merge=-
+    Region entry=204..206 blocks=1 type=BASIC
+    Region entry=208..210 blocks=1 type=BASIC
+    LoopRegion entry=502..502 blocks=6 type=FOR_LOOP
+      meta={'has_break_in_body': False}
+      LoopRegion entry=536..536 blocks=3 type=FOR_LOOP
+        meta={'has_break_in_body': False}
+    IfRegion entry=596..618 blocks=2 type=IF_THEN
+      cond=596..618 then=[620..622] else=[] merge=624..838
+      Region entry=596..618 blocks=1 type=BASIC
+      Region entry=620..622 blocks=1 type=BASIC
+    LoopRegion entry=840..840 blocks=7 type=FOR_LOOP
+      meta={'has_break_in_body': False}
+      LoopRegion entry=882..882 blocks=3 type=FOR_LOOP
+        meta={'has_break_in_body': False}
+  IfRegion entry=200..202 blocks=11 type=IF_THEN
+    cond=200..202 then=[204..206 212..500 502..502 596..618 536..536 620..622 624..838 840..840 936..938 882..882] else=[] merge=208..210
+    Region entry=200..202 blocks=1 type=BASIC
+    IfRegion entry=204..206 blocks=11 type=IF_THEN_ELSE
+      cond=204..206 then=[208..210] else=[212..500 502..502 596..618 536..536 620..622 624..838 840..840 936..938 882..882] merge=-
+      Region entry=204..206 blocks=1 type=BASIC
+      Region entry=208..210 blocks=1 type=BASIC
+      LoopRegion entry=502..502 blocks=6 type=FOR_LOOP
+        meta={'has_break_in_body': False}
+        LoopRegion entry=536..536 blocks=3 type=FOR_LOOP
+          meta={'has_break_in_body': False}
+      IfRegion entry=596..618 blocks=2 type=IF_THEN
+        cond=596..618 then=[620..622] else=[] merge=624..838
+        Region entry=596..618 blocks=1 type=BASIC
+        Region entry=620..622 blocks=1 type=BASIC
+      LoopRegion entry=840..840 blocks=7 type=FOR_LOOP
+        meta={'has_break_in_body': False}
+        LoopRegion entry=882..882 blocks=3 type=FOR_LOOP
+          meta={'has_break_in_body': False}
+  IfRegion entry=0..188 blocks=2 type=IF_THEN
+    cond=0..188 then=[190..196] else=[] merge=200..202
+    Region entry=0..188 blocks=1 type=BASIC
+    Region entry=190..196 blocks=1 type=BASIC
+  Region entry=0..188 blocks=1 type=BASIC
+  Region entry=190..196 blocks=1 type=BASIC
+  Region entry=200..202 blocks=1 type=BASIC
+  Region entry=204..206 blocks=1 type=BASIC
+  Region entry=208..210 blocks=1 type=BASIC
+  Region entry=596..618 blocks=1 type=BASIC
+  Region entry=620..622 blocks=1 type=BASIC

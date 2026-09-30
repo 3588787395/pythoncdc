@@ -1,0 +1,288 @@
+# D:\Temp\opencode\r75gate\center\build_landed\IQData__plugins__plugin_system_realquote__real_quoteOK.py :: RealQuoteData.get_real_minute_kline  firstlineno=369
+   0     0 RESUME                                                                  L369
+   1     2 LOAD_FAST                      symbol                                   L370
+   2     4 LOAD_METHOD                    replace                                  LNone
+   3    26 LOAD_CONST                     '.XSHE'                                  LNone
+   4    28 LOAD_CONST                     '.SZ'                                    LNone
+   5    30 PRECALL                                                                 LNone
+   6    34 CALL                                                                    LNone
+   7    44 LOAD_METHOD                    replace                                  LNone
+   8    66 LOAD_CONST                     '.XSHG'                                  LNone
+   9    68 LOAD_CONST                     '.SS'                                    LNone
+  10    70 PRECALL                                                                 LNone
+  11    74 CALL                                                                    LNone
+  12    84 STORE_FAST                     symbol                                   LNone
+  13    86 NOP                                                                     L371
+  14    88 LOAD_FAST                      self                                     L372
+  15    90 LOAD_ATTR                      cache                                    LNone
+  16   100 LOAD_CONST                     1                                        LNone
+  17   102 COMPARE_OP                     ==                                       LNone
+  18   108 EXTENDED_ARG                                                            LNone
+  19   110 POP_JUMP_FORWARD_IF_FALSE      to 1118                                  LNone
+  20   112 LOAD_FAST                      symbol                                   L373
+  21   114 LOAD_METHOD                    replace                                  LNone
+  22   136 LOAD_CONST                     '.XSHE'                                  LNone
+  23   138 LOAD_CONST                     '.SZ'                                    LNone
+  24   140 PRECALL                                                                 LNone
+  25   144 CALL                                                                    LNone
+  26   154 LOAD_METHOD                    replace                                  LNone
+  27   176 LOAD_CONST                     '.XSHG'                                  LNone
+  28   178 LOAD_CONST                     '.SS'                                    LNone
+  29   180 PRECALL                                                                 LNone
+  30   184 CALL                                                                    LNone
+  31   194 STORE_FAST                     symbol                                   LNone
+  32   196 BUILD_LIST                                                              L374
+  33   198 STORE_FAST                     redata                                   LNone
+  34   200 LOAD_GLOBAL                    NULL + get_kline_data                    L375
+  35   212 LOAD_FAST                      symbol                                   LNone
+  36   214 LOAD_FAST                      redata                                   LNone
+  37   216 LOAD_FAST                      frequency_int                            LNone
+  38   218 PRECALL                                                                 LNone
+  39   222 CALL                                                                    LNone
+  40   232 STORE_FAST                     flag                                     LNone
+  41   234 LOAD_GLOBAL                    NULL + len                               L376
+  42   246 LOAD_FAST                      redata                                   LNone
+  43   248 PRECALL                                                                 LNone
+  44   252 CALL                                                                    LNone
+  45   262 LOAD_CONST                     0                                        LNone
+  46   264 COMPARE_OP                     >                                        LNone
+  47   270 EXTENDED_ARG                                                            LNone
+  48   272 POP_JUMP_FORWARD_IF_FALSE      to 1104                                  LNone
+  49   274 LOAD_FAST                      flag                                     LNone
+  50   276 LOAD_CONST                     0                                        LNone
+  51   278 COMPARE_OP                     ==                                       LNone
+  52   284 EXTENDED_ARG                                                            LNone
+  53   286 POP_JUMP_FORWARD_IF_FALSE      to 1104                                  LNone
+  54   288 LOAD_GLOBAL                    NULL + np                                L377
+  55   300 LOAD_ATTR                      array                                    LNone
+  56   310 LOAD_CONST                     <code object <listcomp> at 0x000001545D2 LNone
+  57   312 MAKE_FUNCTION                                                           LNone
+  58   314 LOAD_FAST                      redata                                   LNone
+  59   316 GET_ITER                                                                LNone
+  60   318 PRECALL                                                                 LNone
+  61   322 CALL                                                                    LNone
+  62   332 LOAD_FAST                      self                                     LNone
+  63   334 LOAD_ATTR                      list_dtype                               LNone
+  64   344 KW_NAMES                                                                LNone
+  65   346 PRECALL                                                                 LNone
+  66   350 CALL                                                                    LNone
+  67   360 STORE_FAST                     kline                                    LNone
+  68   362 LOAD_FAST                      fq                                       L378
+  69   364 EXTENDED_ARG                                                            LNone
+  70   366 POP_JUMP_FORWARD_IF_NONE       to 1104                                  LNone
+  71   368 LOAD_FAST                      ex_info                                  L379
+  72   370 POP_JUMP_FORWARD_IF_NOT_NONE   to 376                                   LNone
+  73   372 LOAD_FAST                      kline                                    L380
+  74   374 RETURN_VALUE                                                            LNone
+  75   376 LOAD_GLOBAL                    NULL + list                              L382
+  76   388 LOAD_FAST                      kline                                    LNone
+  77   390 LOAD_ATTR                      dtype                                    LNone
+  78   400 LOAD_ATTR                      names                                    LNone
+  79   410 LOAD_CONST                     1                                        LNone
+  80   412 LOAD_CONST                     None                                     LNone
+  81   414 BUILD_SLICE                                                             LNone
+  82   416 BINARY_SUBSCR                                                           LNone
+  83   426 PRECALL                                                                 LNone
+  84   430 CALL                                                                    LNone
+  85   440 STORE_FAST                     names                                    LNone
+  86   442 LOAD_FAST                      kline                                    L383
+  87   444 LOAD_FAST                      names                                    LNone
+  88   446 BINARY_SUBSCR                                                           LNone
+  89   456 STORE_FAST                     bars_tmp                                 LNone
+  90   458 LOAD_FAST                      kline                                    L384
+  91   460 LOAD_CONST                     'datetime'                               LNone
+  92   462 BINARY_SUBSCR                                                           LNone
+  93   472 STORE_FAST                     index                                    LNone
+  94   474 LOAD_GLOBAL                    NULL + np                                L385
+  95   486 LOAD_ATTR                      empty                                    LNone
+  96   496 LOAD_GLOBAL                    NULL + len                               LNone
+  97   508 LOAD_FAST                      index                                    LNone
+  98   510 PRECALL                                                                 LNone
+  99   514 CALL                                                                    LNone
+ 100   524 LOAD_GLOBAL                    NULL + len                               LNone
+ 101   536 LOAD_FAST                      kline                                    LNone
+ 102   538 LOAD_ATTR                      dtype                                    LNone
+ 103   548 PRECALL                                                                 LNone
+ 104   552 CALL                                                                    LNone
+ 105   562 LOAD_CONST                     1                                        LNone
+ 106   564 BINARY_OP                      -                                        LNone
+ 107   568 BUILD_TUPLE                                                             LNone
+ 108   570 LOAD_GLOBAL                    np                                       LNone
+ 109   582 LOAD_ATTR                      float64                                  LNone
+ 110   592 KW_NAMES                                                                LNone
+ 111   594 PRECALL                                                                 LNone
+ 112   598 CALL                                                                    LNone
+ 113   608 STORE_FAST                     base_bars                                LNone
+ 114   610 LOAD_GLOBAL                    NULL + range                             L386
+ 115   622 LOAD_GLOBAL                    NULL + len                               LNone
+ 116   634 LOAD_FAST                      index                                    LNone
+ 117   636 PRECALL                                                                 LNone
+ 118   640 CALL                                                                    LNone
+ 119   650 PRECALL                                                                 LNone
+ 120   654 CALL                                                                    LNone
+ 121   664 GET_ITER                                                                LNone
+ 122   666 FOR_ITER                       to 760                                   LNone
+ 123   668 STORE_FAST                     i                                        LNone
+ 124   670 LOAD_GLOBAL                    NULL + enumerate                         L387
+ 125   682 LOAD_FAST                      names                                    LNone
+ 126   684 PRECALL                                                                 LNone
+ 127   688 CALL                                                                    LNone
+ 128   698 GET_ITER                                                                LNone
+ 129   700 FOR_ITER                       to 758                                   LNone
+ 130   702 UNPACK_SEQUENCE                                                         LNone
+ 131   706 STORE_FAST                     j                                        LNone
+ 132   708 STORE_FAST                     name                                     LNone
+ 133   710 LOAD_FAST                      bars_tmp                                 L388
+ 134   712 LOAD_FAST                      name                                     LNone
+ 135   714 BINARY_SUBSCR                                                           LNone
+ 136   724 LOAD_FAST                      i                                        LNone
+ 137   726 BINARY_SUBSCR                                                           LNone
+ 138   736 LOAD_FAST                      base_bars                                LNone
+ 139   738 LOAD_FAST                      i                                        LNone
+ 140   740 BINARY_SUBSCR                                                           LNone
+ 141   750 LOAD_FAST                      j                                        LNone
+ 142   752 STORE_SUBSCR                                                            LNone
+ 143   756 JUMP_BACKWARD                  to 700                                   LNone
+ 144   758 JUMP_BACKWARD                  to 666                                   L387
+ 145   760 LOAD_CONST                     2                                        L389
+ 146   762 STORE_FAST                     save_digits                              LNone
+ 147   764 LOAD_FAST                      symbol                                   L390
+ 148   766 LOAD_CONST                     0                                        LNone
+ 149   768 BINARY_SUBSCR                                                           LNone
+ 150   778 LOAD_CONST                     ('1', '5')                               LNone
+ 151   780 CONTAINS_OP                                                             LNone
+ 152   782 POP_JUMP_FORWARD_IF_FALSE      to 788                                   LNone
+ 153   784 LOAD_CONST                     3                                        L391
+ 154   786 STORE_FAST                     save_digits                              LNone
+ 155   788 LOAD_GLOBAL                    NULL + CalExrights                       L392
+ 156   800 LOAD_FAST                      base_bars                                LNone
+ 157   802 LOAD_FAST                      index                                    LNone
+ 158   804 LOAD_FAST                      ex_info                                  LNone
+ 159   806 LOAD_FAST                      fq                                       LNone
+ 160   808 LOAD_FAST                      save_digits                              LNone
+ 161   810 PRECALL                                                                 LNone
+ 162   814 CALL                                                                    LNone
+ 163   824 STORE_FAST                     adjust_bars_tuple                        LNone
+ 164   826 LOAD_FAST                      adjust_bars_tuple                        L393
+ 165   828 LOAD_CONST                     0                                        LNone
+ 166   830 BINARY_SUBSCR                                                           LNone
+ 167   840 STORE_FAST                     adjust_bars                              LNone
+ 168   842 LOAD_FAST                      bars_tmp                                 L394
+ 169   844 LOAD_ATTR                      dtype                                    LNone
+ 170   854 LOAD_FAST                      adjust_bars                              LNone
+ 171   856 STORE_ATTR                     dtype                                    LNone
+ 172   866 LOAD_GLOBAL                    NULL + np                                L395
+ 173   878 LOAD_ATTR                      empty                                    LNone
+ 174   888 LOAD_FAST                      kline                                    LNone
+ 175   890 LOAD_ATTR                      dtype                                    LNone
+ 176   900 LOAD_GLOBAL                    NULL + len                               LNone
+ 177   912 LOAD_FAST                      index                                    LNone
+ 178   914 PRECALL                                                                 LNone
+ 179   918 CALL                                                                    LNone
+ 180   928 BUILD_TUPLE                                                             LNone
+ 181   930 KW_NAMES                                                                LNone
+ 182   932 PRECALL                                                                 LNone
+ 183   936 CALL                                                                    LNone
+ 184   946 STORE_FAST                     kline                                    LNone
+ 185   948 LOAD_GLOBAL                    NULL + range                             L396
+ 186   960 LOAD_GLOBAL                    NULL + len                               LNone
+ 187   972 LOAD_FAST                      index                                    LNone
+ 188   974 PRECALL                                                                 LNone
+ 189   978 CALL                                                                    LNone
+ 190   988 PRECALL                                                                 LNone
+ 191   992 CALL                                                                    LNone
+ 192  1002 GET_ITER                                                                LNone
+ 193  1004 FOR_ITER                       to 1100                                  LNone
+ 194  1006 STORE_FAST                     i                                        LNone
+ 195  1008 LOAD_FAST                      index                                    L397
+ 196  1010 LOAD_FAST                      i                                        LNone
+ 197  1012 BINARY_SUBSCR                                                           LNone
+ 198  1022 LOAD_FAST                      kline                                    LNone
+ 199  1024 LOAD_CONST                     'datetime'                               LNone
+ 200  1026 BINARY_SUBSCR                                                           LNone
+ 201  1036 LOAD_FAST                      i                                        LNone
+ 202  1038 STORE_SUBSCR                                                            LNone
+ 203  1042 LOAD_FAST                      names                                    L398
+ 204  1044 GET_ITER                                                                LNone
+ 205  1046 FOR_ITER                       to 1098                                  LNone
+ 206  1048 STORE_FAST                     name                                     LNone
+ 207  1050 LOAD_FAST                      adjust_bars                              L399
+ 208  1052 LOAD_FAST                      name                                     LNone
+ 209  1054 BINARY_SUBSCR                                                           LNone
+ 210  1064 LOAD_FAST                      i                                        LNone
+ 211  1066 BINARY_SUBSCR                                                           LNone
+ 212  1076 LOAD_FAST                      kline                                    LNone
+ 213  1078 LOAD_FAST                      name                                     LNone
+ 214  1080 BINARY_SUBSCR                                                           LNone
+ 215  1090 LOAD_FAST                      i                                        LNone
+ 216  1092 STORE_SUBSCR                                                            LNone
+ 217  1096 JUMP_BACKWARD                  to 1046                                  LNone
+ 218  1098 JUMP_BACKWARD                  to 1004                                  L398
+ 219  1100 LOAD_FAST                      kline                                    L400
+ 220  1102 RETURN_VALUE                                                            LNone
+ 221  1104 LOAD_GLOBAL                    EMPTY_DAY_BAR_NP_ARRAY                   L401
+ 222  1116 RETURN_VALUE                                                            LNone
+ 223  1118 LOAD_GLOBAL                    datetime                                 L403
+ 224  1130 LOAD_ATTR                      datetime                                 LNone
+ 225  1140 LOAD_METHOD                    now                                      LNone
+ 226  1162 PRECALL                                                                 LNone
+ 227  1166 CALL                                                                    LNone
+ 228  1176 LOAD_METHOD                    strftime                                 LNone
+ 229  1198 LOAD_CONST                     '%Y%m%d'                                 LNone
+ 230  1200 PRECALL                                                                 LNone
+ 231  1204 CALL                                                                    LNone
+ 232  1214 STORE_FAST                     start_date                               LNone
+ 233  1216 LOAD_FAST                      start_date                               L404
+ 234  1218 STORE_FAST                     end_date                                 LNone
+ 235  1220 LOAD_FAST                      self                                     L405
+ 236  1222 LOAD_METHOD                    get_kline_by_date_ndarray                LNone
+ 237  1244 LOAD_FAST                      symbol                                   LNone
+ 238  1246 LOAD_FAST                      start_date                               LNone
+ 239  1248 LOAD_FAST                      end_date                                 LNone
+ 240  1250 LOAD_FAST                      frequency_int                            LNone
+ 241  1252 PRECALL                                                                 LNone
+ 242  1256 CALL                                                                    LNone
+ 243  1266 STORE_FAST                     kline                                    LNone
+ 244  1268 LOAD_GLOBAL                    NULL + len                               L406
+ 245  1280 LOAD_FAST                      kline                                    LNone
+ 246  1282 PRECALL                                                                 LNone
+ 247  1286 CALL                                                                    LNone
+ 248  1296 LOAD_CONST                     0                                        LNone
+ 249  1298 COMPARE_OP                     >                                        LNone
+ 250  1304 POP_JUMP_FORWARD_IF_FALSE      to 1320                                  LNone
+ 251  1306 LOAD_CONST                     0                                        L407
+ 252  1308 LOAD_FAST                      kline                                    LNone
+ 253  1310 LOAD_CONST                     'unlimited'                              LNone
+ 254  1312 STORE_SUBSCR                                                            LNone
+ 255  1316 LOAD_CONST                     None                                     LNone
+ 256  1318 RETURN_VALUE                                                            LNone
+ 257  1320 LOAD_CONST                     None                                     L406
+ 258  1322 RETURN_VALUE                                                            LNone
+ 259  1324 PUSH_EXC_INFO                                                           LNone
+ 260  1326 LOAD_GLOBAL                    Exception                                L408
+ 261  1338 CHECK_EXC_MATCH                                                         LNone
+ 262  1340 POP_JUMP_FORWARD_IF_FALSE      to 1440                                  LNone
+ 263  1342 STORE_FAST                     e                                        LNone
+ 264  1344 LOAD_GLOBAL                    NULL + system_log                        L409
+ 265  1356 LOAD_ATTR                      debug                                    LNone
+ 266  1366 LOAD_GLOBAL                    NULL + get_traceback_message             LNone
+ 267  1378 PRECALL                                                                 LNone
+ 268  1382 CALL                                                                    LNone
+ 269  1392 PRECALL                                                                 LNone
+ 270  1396 CALL                                                                    LNone
+ 271  1406 POP_TOP                                                                 LNone
+ 272  1408 LOAD_GLOBAL                    EMPTY_DAY_BAR_NP_ARRAY                   L410
+ 273  1420 SWAP                                                                    LNone
+ 274  1422 POP_EXCEPT                                                              LNone
+ 275  1424 LOAD_CONST                     None                                     LNone
+ 276  1426 STORE_FAST                     e                                        LNone
+ 277  1428 DELETE_FAST                    e                                        LNone
+ 278  1430 RETURN_VALUE                                                            LNone
+ 279  1432 LOAD_CONST                     None                                     LNone
+ 280  1434 STORE_FAST                     e                                        LNone
+ 281  1436 DELETE_FAST                    e                                        LNone
+ 282  1438 RERAISE                                                                 LNone
+ 283  1440 RERAISE                                                                 L408
+ 284  1442 COPY                                                                    LNone
+ 285  1444 POP_EXCEPT                                                              LNone
+ 286  1446 RERAISE                                                                 LNone

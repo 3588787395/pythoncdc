@@ -1,0 +1,71 @@
+# round76 repro results (single judge: pylingual compare_pyc via r76_pipe/r76_real_pipe)
+# synthetic: 源 .py → py_compile → pycdc --region → 重编译 → compare_pyc
+# slice: quoteOK.py 方法逐字切片+导入语句（同上流程）
+# real: quote.pyc 真身码对象移植为顶层 pyc → pycdc --region → 重编译提取函数码再移植 → compare_pyc
+[MATCH   ] [synthetic] r76_01_guard_leak.py                         units 2/2
+[MATCH   ] [synthetic] r76_02_andchain_leading.py                   units 2/2
+[MATCH   ] [synthetic] r76_02b_andchain_elif.py                     units 2/2
+[MATCH   ] [synthetic] r76_03_double_eval.py                        units 2/2
+[MATCH   ] [synthetic] r76_03b_double_eval_min.py                   units 2/2
+[MATCH   ] [synthetic] r76_04_or_armswap.py                         units 2/2
+[MISMATCH] [synthetic] r76_05_empty_if_body.py                      units 1/2
+    *** ***<module>.f: Failure: Different control flow
+[MISMATCH] [synthetic] r76_06_tryexit_absorb.py                     units 1/2
+    *** ***<module>.f: Failure: Different control flow
+[MATCH   ] [synthetic] r76_07_terminal_try_elif.py                  units 2/2
+[MISMATCH] [synthetic] r76_08_exc_unpack.py                         units 1/2
+    *** ***<module>.f: Failure: Different bytecode
+[MISMATCH] [synthetic] r76_09_ternary_subscr.py                     units 1/2
+    *** ***<module>.f: Failure: Different bytecode
+[MISMATCH] [synthetic] r76_10_dead_return_shift.py                  units 1/2
+    *** ***<module>.f: Failure: Different control flow
+[MISMATCH] [synthetic] r76_11_nested_try_scramble.py                units 1/2
+    *** ***<module>.f: Failure: Different control flow
+[MISMATCH] [synthetic] r76_b1a_jqcond.py                            units 4/5
+    *** ***<module>.func_get_bars_convert_code.replace_args: Failure: Different control flow
+[MISMATCH] [synthetic] r76_b1b_orarm.py                             units 2/3
+    *** ***<module>.neg_b: Failure: Different control flow
+[MATCH   ] [synthetic] r76_n01_simple_and.py                        units 2/2
+[MATCH   ] [synthetic] r76_n02_simple_guard.py                      units 2/2
+[MISMATCH] [synthetic] r76_n03_simple_or_break.py                   units 1/2
+    *** ***<module>.f: Failure: Different control flow
+[MATCH   ] [synthetic] r76_n04_simple_try_elif.py                   units 2/2
+[MATCH   ] [slice   ] slice_build_current_period_df.py             units 4/4
+[MATCH   ] [slice   ] slice_change_his_to_backward.py              units 3/3
+[MATCH   ] [slice   ] slice_change_his_to_forward.py               units 3/3
+[MATCH   ] [slice   ] slice_check_frequency.py                     units 3/3
+[MATCH   ] [slice   ] slice_get_individual_data.py                 units 3/3
+[MISMATCH] [slice   ] slice_get_price.py                           units 2/3
+    *** ***<module>.Quote.get_price: Failure: Different control flow
+[MATCH   ] [slice   ] slice_get_real_from_zeromq.py                units 3/3
+[MISMATCH] [slice   ] slice_load_bars_from_hundsun.py              units 2/3
+    *** ***<module>.Quote.load_bars_from_hundsun: Failure: Different bytecode
+[MISMATCH] [slice   ] slice_load_get_price.py                      units 2/3
+    *** ***<module>.Quote.load_get_price: Failure: Different control flow
+[MISMATCH] [slice   ] slice_run_individual_transform.py            units 2/3
+    *** ***<module>.Quote.run_individual_transform: Failure: Different control flow
+[MATCH   ] [slice   ] slice_run_tick_socket.py                     units 3/3
+[MISMATCH] [real    ] real_build_current_period_df.pyc             units 1/2
+    *** ***build_current_period_df: Failure: Different bytecode
+[MISMATCH] [real    ] real_change_his_to_backward.pyc              units 0/1
+    *** ***change_his_to_backward: Failure: Different control flow
+[MISMATCH] [real    ] real_change_his_to_forward.pyc               units 0/1
+    *** ***change_his_to_forward: Failure: Different control flow
+[MISMATCH] [real    ] real_check_frequency.pyc                     units 0/1
+    *** ***check_frequency: Failure: Different control flow
+[MISMATCH] [real    ] real_get_individual_data.pyc                 units 0/1
+    *** ***get_individual_data: Failure: Different control flow
+[MISMATCH] [real    ] real_get_price.pyc                           units 0/1
+    *** ***get_price: Failure: Different control flow
+[MISMATCH] [real    ] real_get_real_from_zeromq.pyc                units 0/1
+    *** ***get_real_from_zeromq: Failure: Different control flow
+[MISMATCH] [real    ] real_load_bars_from_hundsun.pyc              units 0/1
+    *** ***load_bars_from_hundsun: Failure: Different bytecode
+[MISMATCH] [real    ] real_load_get_price.pyc                      units 0/1
+    *** ***load_get_price: Failure: Different control flow
+[MISMATCH] [real    ] real_run_individual_transform.pyc            units 0/1
+    *** ***run_individual_transform: Failure: Different control flow
+[MISMATCH] [real    ] real_run_tick_socket.pyc                     units 0/1
+    *** ***run_tick_socket: Failure: Different control flow
+
+==== SUMMARY: MISMATCH=24 MATCH=17 ERROR=0 (files=41) ====

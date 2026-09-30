@@ -1,0 +1,192 @@
+=== CFG get_tick_direction blocks=48 ===
+  blk 0..34 role=?              succ=[1570, 36]
+  blk 36..48 role=?              succ=[50]
+  blk 50..50 role=?              succ=[52, 138]
+  blk 52..94 role=?              succ=[96, 136]
+  blk 96..134 role=?              succ=[136]
+  blk 136..136 role=?              succ=[50]
+  blk 138..178 role=?              succ=[180, 188]
+  blk 180..186 role=?              succ=[308]
+  blk 188..242 role=?              succ=[244, 276]
+  blk 244..274 role=?              succ=[308]
+  blk 276..306 role=?              succ=[308]
+  blk 308..406 role=?              succ=[858, 408]
+  blk 408..418 role=?              succ=[858, 420]
+  blk 420..470 role=?              succ=[610, 472]
+  blk 472..608 role=?              succ=[758]
+  blk 610..620 role=?              succ=[622, 758]
+  blk 622..756 role=?              succ=[758]
+  blk 758..844 role=?              succ=[846, 858]
+  blk 846..856 role=?              succ=[858, 420]
+  blk 858..860 role=?              succ=[862, 944]
+  blk 862..942 role=?              succ=[1106]
+  blk 944..954 role=?              succ=[1024, 956]
+  blk 956..1022 role=?              succ=[1102]
+  blk 1024..1034 role=?              succ=[1036, 1102]
+  blk 1036..1100 role=?              succ=[1102]
+  blk 1102..1104 role=?              succ=[]
+  blk 1106..1106 role=?              succ=[1108]
+  blk 1108..1110 role=?              succ=[1460, 1392, 1112]
+  blk 1112..1122 role=?              succ=[1460, 1124, 1128]
+  blk 1124..1124 role=?              succ=[1126, 1460]
+  blk 1126..1126 role=?              succ=[]
+  blk 1128..1172 role=?              succ=[1460, 1174]
+  blk 1174..1174 role=?              succ=[1176, 1388, 1460]
+  blk 1176..1222 role=?              succ=[1224, 1332, 1460]
+  blk 1224..1330 role=?              succ=[1332, 1460]
+  blk 1332..1386 role=?              succ=[1460, 1174]
+  blk 1388..1388 role=?              succ=[1460, 1390]
+  blk 1390..1390 role=?              succ=[]
+  blk 1392..1456 role=?              succ=[1460, 1458]
+  blk 1458..1458 role=?              succ=[1570]
+  blk 1460..1476 role=?              succ=[1562, 1564, 1478]
+  blk 1478..1478 role=?              succ=[1564, 1480]
+  blk 1480..1542 role=?              succ=[1544, 1554]
+  blk 1544..1552 role=?              succ=[1570]
+  blk 1554..1560 role=?              succ=[1564]
+  blk 1562..1562 role=?              succ=[1564]
+  blk 1564..1568 role=?              succ=[]
+  blk 1570..1572 role=?              succ=[]
+=== regions top=31 ===
+  LoopRegion entry=1174..1174 blocks=6 type=FOR_LOOP
+    meta={'has_break_in_body': False}
+    IfRegion entry=1176..1222 blocks=2 type=IF_THEN
+      cond=1176..1222 then=[1224..1330] else=[] merge=1332..1386
+  LoopRegion entry=408..418 blocks=7 type=WHILE_LOOP
+    cond=408..418 then=[] else=[] merge=-
+    meta={'has_break_in_body': False}
+    BoolOpRegion entry=308..406 blocks=2 type=BOOL_OP
+    IfRegion entry=420..470 blocks=4 type=IF_THEN_ELSE
+      cond=420..470 then=[472..608] else=[610..620 622..756] merge=758..844
+    IfRegion entry=610..620 blocks=2 type=IF_THEN
+      cond=610..620 then=[622..756] else=[] merge=758..844
+  LoopRegion entry=50..50 blocks=5 type=FOR_LOOP
+    meta={'has_break_in_body': False}
+    IfRegion entry=52..94 blocks=2 type=IF_THEN
+      cond=52..94 then=[96..134] else=[136..136] merge=-
+  TryExceptRegion entry=1108..1110 blocks=20 type=TRY_EXCEPT
+    try_blocks=[1108..1110 1112..1122 1124..1124 1126..1126 1128..1172 1174..1174 1176..1222 1224..1330 1332..1386 1388..1388 1390..1390 1392..1456]
+    IfRegion entry=1108..1110 blocks=12 type=IF_THEN_ELSE
+      cond=1108..1110 then=[1112..1122 1124..1124 1128..1172 1126..1126 1174..1174 1176..1222 1388..1388 1224..1330 1332..1386 1390..1390] else=[1392..1456] merge=1570..1572
+    IfRegion entry=1112..1122 blocks=10 type=IF_THEN_ELSE
+      cond=1112..1122 then=[1124..1124 1126..1126] else=[1128..1172 1174..1174 1176..1222 1388..1388 1224..1330 1332..1386 1390..1390] merge=-
+      LoopRegion entry=1174..1174 blocks=6 type=FOR_LOOP
+        meta={'has_break_in_body': False}
+        IfRegion entry=1176..1222 blocks=2 type=IF_THEN
+          cond=1176..1222 then=[1224..1330] else=[] merge=1332..1386
+  BoolOpRegion entry=308..406 blocks=2 type=BOOL_OP
+  IfRegion entry=1176..1222 blocks=2 type=IF_THEN
+    cond=1176..1222 then=[1224..1330] else=[] merge=1332..1386
+  IfRegion entry=1112..1122 blocks=10 type=IF_THEN_ELSE
+    cond=1112..1122 then=[1124..1124 1126..1126] else=[1128..1172 1174..1174 1176..1222 1388..1388 1224..1330 1332..1386 1390..1390] merge=-
+    LoopRegion entry=1174..1174 blocks=6 type=FOR_LOOP
+      meta={'has_break_in_body': False}
+      IfRegion entry=1176..1222 blocks=2 type=IF_THEN
+        cond=1176..1222 then=[1224..1330] else=[] merge=1332..1386
+  IfRegion entry=1108..1110 blocks=12 type=IF_THEN_ELSE
+    cond=1108..1110 then=[1112..1122 1124..1124 1128..1172 1126..1126 1174..1174 1176..1222 1388..1388 1224..1330 1332..1386 1390..1390] else=[1392..1456] merge=1570..1572
+  IfRegion entry=944..954 blocks=4 type=IF_ELIF_CHAIN
+    cond=944..954 then=[956..1022] else=[1024..1034 1036..1100] merge=1102..1104
+    Region entry=944..954 blocks=1 type=BASIC
+    Region entry=956..1022 blocks=1 type=BASIC
+    Region entry=1024..1034 blocks=1 type=BASIC
+    Region entry=1036..1100 blocks=1 type=BASIC
+  IfRegion entry=858..860 blocks=21 type=IF_ELIF_CHAIN
+    cond=858..860 then=[862..942 1106..1106 1108..1110 1112..1122 1392..1456 1124..1124 1128..1172 1458..1458 1126..1126 1174..1174 1570..1572 1176..1222 1388..1388 1224..1330 1332..1386 1390..1390] else=[944..954 956..1022 1024..1034 1036..1100] merge=1102..1104
+    Region entry=858..860 blocks=1 type=BASIC
+    Region entry=862..942 blocks=1 type=BASIC
+    IfRegion entry=944..954 blocks=4 type=IF_ELIF_CHAIN
+      cond=944..954 then=[956..1022] else=[1024..1034 1036..1100] merge=1102..1104
+      Region entry=944..954 blocks=1 type=BASIC
+      Region entry=956..1022 blocks=1 type=BASIC
+      Region entry=1024..1034 blocks=1 type=BASIC
+      Region entry=1036..1100 blocks=1 type=BASIC
+    Region entry=1102..1104 blocks=1 type=BASIC
+    Region entry=1106..1106 blocks=1 type=BASIC
+    TryExceptRegion entry=1108..1110 blocks=20 type=TRY_EXCEPT
+      try_blocks=[1108..1110 1112..1122 1124..1124 1126..1126 1128..1172 1174..1174 1176..1222 1224..1330 1332..1386 1388..1388 1390..1390 1392..1456]
+      IfRegion entry=1108..1110 blocks=12 type=IF_THEN_ELSE
+        cond=1108..1110 then=[1112..1122 1124..1124 1128..1172 1126..1126 1174..1174 1176..1222 1388..1388 1224..1330 1332..1386 1390..1390] else=[1392..1456] merge=1570..1572
+      IfRegion entry=1112..1122 blocks=10 type=IF_THEN_ELSE
+        cond=1112..1122 then=[1124..1124 1126..1126] else=[1128..1172 1174..1174 1176..1222 1388..1388 1224..1330 1332..1386 1390..1390] merge=-
+        LoopRegion entry=1174..1174 blocks=6 type=FOR_LOOP
+          meta={'has_break_in_body': False}
+          IfRegion entry=1176..1222 blocks=2 type=IF_THEN
+            cond=1176..1222 then=[1224..1330] else=[] merge=1332..1386
+    Region entry=1458..1458 blocks=1 type=BASIC
+    Region entry=1570..1572 blocks=1 type=BASIC
+  IfRegion entry=610..620 blocks=2 type=IF_THEN
+    cond=610..620 then=[622..756] else=[] merge=758..844
+  IfRegion entry=420..470 blocks=4 type=IF_THEN_ELSE
+    cond=420..470 then=[472..608] else=[610..620 622..756] merge=758..844
+  IfRegion entry=138..178 blocks=5 type=IF_ELIF_CHAIN
+    cond=138..178 then=[180..186] else=[188..242 244..274 276..306] merge=308..406
+    Region entry=138..178 blocks=1 type=BASIC
+    Region entry=180..186 blocks=1 type=BASIC
+    Region entry=188..242 blocks=1 type=BASIC
+    Region entry=244..274 blocks=1 type=BASIC
+    Region entry=276..306 blocks=1 type=BASIC
+  IfRegion entry=52..94 blocks=2 type=IF_THEN
+    cond=52..94 then=[96..134] else=[136..136] merge=-
+  IfRegion entry=0..34 blocks=31 type=IF_THEN
+    cond=0..34 then=[36..48 50..50 138..178 180..186 188..242 308..406 244..274 276..306 408..418 858..860 862..942 944..954 1106..1106 956..1022 1024..1034 1108..1110 1102..1104 1036..1100 1112..1122 1392..1456 1124..1124 1128..1172 1458..1458 1126..1126 1174..1174 1176..1222 1388..1388 1224..1330 1332..1386 1390..1390] else=[] merge=1570..1572
+    Region entry=0..34 blocks=1 type=BASIC
+    LoopRegion entry=50..50 blocks=5 type=FOR_LOOP
+      meta={'has_break_in_body': False}
+      IfRegion entry=52..94 blocks=2 type=IF_THEN
+        cond=52..94 then=[96..134] else=[136..136] merge=-
+    IfRegion entry=138..178 blocks=5 type=IF_ELIF_CHAIN
+      cond=138..178 then=[180..186] else=[188..242 244..274 276..306] merge=308..406
+      Region entry=138..178 blocks=1 type=BASIC
+      Region entry=180..186 blocks=1 type=BASIC
+      Region entry=188..242 blocks=1 type=BASIC
+      Region entry=244..274 blocks=1 type=BASIC
+      Region entry=276..306 blocks=1 type=BASIC
+    LoopRegion entry=408..418 blocks=7 type=WHILE_LOOP
+      cond=408..418 then=[] else=[] merge=-
+      meta={'has_break_in_body': False}
+      BoolOpRegion entry=308..406 blocks=2 type=BOOL_OP
+      IfRegion entry=420..470 blocks=4 type=IF_THEN_ELSE
+        cond=420..470 then=[472..608] else=[610..620 622..756] merge=758..844
+      IfRegion entry=610..620 blocks=2 type=IF_THEN
+        cond=610..620 then=[622..756] else=[] merge=758..844
+    IfRegion entry=858..860 blocks=21 type=IF_ELIF_CHAIN
+      cond=858..860 then=[862..942 1106..1106 1108..1110 1112..1122 1392..1456 1124..1124 1128..1172 1458..1458 1126..1126 1174..1174 1570..1572 1176..1222 1388..1388 1224..1330 1332..1386 1390..1390] else=[944..954 956..1022 1024..1034 1036..1100] merge=1102..1104
+      Region entry=858..860 blocks=1 type=BASIC
+      Region entry=862..942 blocks=1 type=BASIC
+      IfRegion entry=944..954 blocks=4 type=IF_ELIF_CHAIN
+        cond=944..954 then=[956..1022] else=[1024..1034 1036..1100] merge=1102..1104
+        Region entry=944..954 blocks=1 type=BASIC
+        Region entry=956..1022 blocks=1 type=BASIC
+        Region entry=1024..1034 blocks=1 type=BASIC
+        Region entry=1036..1100 blocks=1 type=BASIC
+      Region entry=1102..1104 blocks=1 type=BASIC
+      Region entry=1106..1106 blocks=1 type=BASIC
+      TryExceptRegion entry=1108..1110 blocks=20 type=TRY_EXCEPT
+        try_blocks=[1108..1110 1112..1122 1124..1124 1126..1126 1128..1172 1174..1174 1176..1222 1224..1330 1332..1386 1388..1388 1390..1390 1392..1456]
+        IfRegion entry=1108..1110 blocks=12 type=IF_THEN_ELSE
+          cond=1108..1110 then=[1112..1122 1124..1124 1128..1172 1126..1126 1174..1174 1176..1222 1388..1388 1224..1330 1332..1386 1390..1390] else=[1392..1456] merge=1570..1572
+        IfRegion entry=1112..1122 blocks=10 type=IF_THEN_ELSE
+          cond=1112..1122 then=[1124..1124 1126..1126] else=[1128..1172 1174..1174 1176..1222 1388..1388 1224..1330 1332..1386 1390..1390] merge=-
+          LoopRegion entry=1174..1174 blocks=6 type=FOR_LOOP
+            meta={'has_break_in_body': False}
+            IfRegion entry=1176..1222 blocks=2 type=IF_THEN
+              cond=1176..1222 then=[1224..1330] else=[] merge=1332..1386
+      Region entry=1458..1458 blocks=1 type=BASIC
+      Region entry=1570..1572 blocks=1 type=BASIC
+  Region entry=0..34 blocks=1 type=BASIC
+  Region entry=138..178 blocks=1 type=BASIC
+  Region entry=180..186 blocks=1 type=BASIC
+  Region entry=188..242 blocks=1 type=BASIC
+  Region entry=244..274 blocks=1 type=BASIC
+  Region entry=276..306 blocks=1 type=BASIC
+  Region entry=858..860 blocks=1 type=BASIC
+  Region entry=862..942 blocks=1 type=BASIC
+  Region entry=944..954 blocks=1 type=BASIC
+  Region entry=956..1022 blocks=1 type=BASIC
+  Region entry=1024..1034 blocks=1 type=BASIC
+  Region entry=1036..1100 blocks=1 type=BASIC
+  Region entry=1102..1104 blocks=1 type=BASIC
+  Region entry=1106..1106 blocks=1 type=BASIC
+  Region entry=1458..1458 blocks=1 type=BASIC
+  Region entry=1570..1572 blocks=1 type=BASIC

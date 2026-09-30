@@ -1,0 +1,35 @@
+{
+ "verdict": {
+  "repro_shas_differ": true,
+  "repro_head_failure": true,
+  "repro_cand_success": true,
+  "neg_sha_identical": true,
+  "neg_both_success": true
+ },
+ "rows": {
+  "repro75_f3_orchain": {
+   "landed": {
+    "sha": "d6fd4dfc5cf45809",
+    "out": "D:\\Temp\\opencode\\r75gate\\fix3\\synth\\out\\landed_repro75_f3_orchain.py",
+    "verify": "[single] status=failure units=1/2 success_rate=50.00%"
+   },
+   "abdef": {
+    "sha": "d2050df3ca51a1d0",
+    "out": "D:\\Temp\\opencode\\r75gate\\fix3\\synth\\out\\abdef_repro75_f3_orchain.py",
+    "verify": "[single] status=success units=2/2 success_rate=100.00%"
+   }
+  },
+  "neg75_f3_nested": {
+   "landed": {
+    "sha": "8dd91599288d1304",
+    "out": "D:\\Temp\\opencode\\r75gate\\fix3\\synth\\out\\landed_neg75_f3_nested.py",
+    "verify": "[single] status=success units=3/3 success_rate=100.00%"
+   },
+   "abdef": {
+    "sha": "8dd91599288d1304",
+    "out": "D:\\Temp\\opencode\\r75gate\\fix3\\synth\\out\\abdef_neg75_f3_nested.py",
+    "verify": "[single] status=success units=3/3 success_rate=100.00%"
+   }
+  }
+ }
+}
