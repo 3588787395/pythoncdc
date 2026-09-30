@@ -1,0 +1,24 @@
+FIRE file=./fly_docker_py311/fly/data/quote.py func=check_frequency entry=304 else=[560] then=[312, 314, 360, 372, 424, 436, 456] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/IQCommon/util/trade_info_utils.py func=kill_trade_process entry=3270 else=[3864] then=[3276, 3328, 3330, 3452, 3592, 3604, 3606, 3724, 3868] gap=False pure=True owned=True
+FIRE file=./fly_docker_py311/IQData/plugins/plugin_system_realquote/real_quote.py func=get_underlying_code entry=0 else=[1010] then=[8, 56, 100, 156, 160, 208, 210, 278, 360, 758, 770, 812, 824, 864, 866, 896] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/fly/common/flytools.py func=set_userid_containerid_dict entry=8 else=[310] then=[122, 202] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/fly/common/future_contract_info.py func=dealing_future_fares_query entry=26 else=[532] then=[58, 106, 122, 124, 186, 236, 382] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/fly/common/future_contract_info.py func=dealing_future_fares_query entry=0 else=[528] then=[26, 58, 106, 122, 124, 186, 236, 382, 532] gap=False pure=True owned=True
+FIRE file=./fly_docker_py311/fly/common/future_contract_info.py func=dealing_future_margin_query entry=26 else=[192] then=[58, 106, 122, 124] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/fly/common/future_contract_info.py func=dealing_future_margin_query entry=0 else=[188] then=[26, 58, 106, 122, 124, 192] gap=False pure=True owned=True
+FIRE file=./fly_docker_py311/fly/oauthenticator/oauth2.py func=post entry=536 else=[642] then=[604] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/fly/oauthenticator/oauth2.py func=post entry=478 else=[638] then=[536, 604, 642] gap=False pure=True owned=True
+FIRE file=./fly_docker_py311/fly/oauthenticator/oauth2.py func=post entry=624 else=[730] then=[692] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/fly/oauthenticator/oauth2.py func=post entry=566 else=[726] then=[624, 692, 730] gap=False pure=True owned=True
+FIRE file=./fly_docker_py311/IQCommon/util/cgroup_utils.py func=delete_global_cgroup_config entry=4 else=[150] then=[66] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/IQCommon/util/cgroup_utils.py func=add_process_to_global_cgroup entry=4 else=[188] then=[26] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/IQEngine/account/order.py func=mark_cancelled entry=42 else=[142] then=[94] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/IQEngine/account/order.py func=mark_cancelled entry=0 else=[138] then=[42, 94, 142] gap=False pure=True owned=True
+FIRE file=./fly_docker_py311/IQEngine/core/slippage.py func=set_slippage entry=100 else=[336] then=[308] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/IQEngine/plugins/plugin_fly_data/strategy/strategy.py func=__init__ entry=378 else=[832] then=[440] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/IQEngine/plugins/plugin_fly_data/strategy/strategy.py func=__init__ entry=364 else=[828] then=[378, 440, 832] gap=False pure=True owned=True
+FIRE file=./fly_docker_py311/IQEngine/plugins/plugin_fly_data/strategy/strategy.py func=__init__ entry=266 else=[824] then=[364, 378, 440, 828, 832] gap=False pure=True owned=True
+FIRE file=./fly_docker_py311/fly/data/quote_handler.py func=get_contract_info entry=316 else=[1192] then=[332, 334, 386, 950, 952, 956] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/fly/dumpload/load_daily.py func=<module> entry=2768 else=[3986] then=[2782, 3216, 3386, 3466, 3468, 3490, 3614, 3774, 3838, 3862, 3906] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/fly/simtradding/flyAccount.py func=register_async_callback entry=314 else=[438] then=[370] gap=True pure=True owned=True
+FIRE file=./fly_docker_py311/fly/simtradding/flyAccount.py func=register_async_callback entry=0 else=[434] then=[106, 162, 174, 314, 370, 438] gap=False pure=True owned=True

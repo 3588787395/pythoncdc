@@ -107,13 +107,14 @@ sd 760→744 双降判 IMPROVED**。建议按 ADR-1 记改善、下轮基线以�
 ## 9. 交付清单
 
 - `FACTS.md`（本文件）
-- `specs/`：`or1 / sink1 / xp1 / chf1 / e1 / f1`（单臂）+ `trym.json`（= `tmp/abdef.json` 合并臂，5 edits）
+- `specs/`：`or1 / sink1 / xp1 / chf1 / e1 / f1`（单臂）+ `trym.json`（合并臂，5 edits）+ `abdef.json`（= `trym.json`，来源 `tmp/abdef.json` 逐字相同）
 - `scripts/`：`mkspecs.py`（spec 生成器，含三要素注释与四段收窄）、`merge.py`、`ab2.py`（h62 jsonl 差分）、
   `g0audit.py`（G0 11 项）、`preds.py`/`ctx.py`/`sinkprobe.py`/`reach.py`（F 判据探针）、
   `_p8/_p9/_p10/_p11.py`（收窄迭代补丁，逐版可回放）
-- `synth/`：`build_synth.py`、`repro75_f3_orchain.{py,pyc}`、`neg75_f3_nested.{py,pyc}`、
-  `probe_synth.py`/`probe_t.py`（形状探针）、`out/synth.json`
+- `synth/`：`build_synth.py`、`repro75_f3_orchain.py`、`neg75_f3_nested.py`（.pyc 按批惯例不入库，`build_synth.py`
+  可再生成）、`probe_synth.py`/`probe_t.py`（形状探针）、`out/synth.json`
 - `dump/`：门禁原始读数（`list41_{land2,abdef,abde,or1,sink1,chf1,e1,xp1,exp4,exp6,exp7,exp8,exp10}.jsonl`、
   `p402_{abdef_f,abde,exp7,exp8,exp10}.jsonl`、`wiz_*.jsonl`、`canary_abdef.jsonl`、
-  `mand_abdef41_f.json`、`strict_{landed,abdef}41.json`、`g0audit.txt`、`fsink.log`（F 站点 or/and 普查）、
-  `r71_land.log`（R71 归因）、`list_wiz.txt`、区域/站点取证 `bk_*`/`gtd_*`/`rqk_*`/`or1_dbg.txt`）
+  `mand_abdef41_f.json`、`strict_{landed,abdef}41.json`、`g0audit.txt`、`gates75_fix3.txt`（§2 汇总）、
+  `battery_landed_vs_abdef.txt`、`adr74_abdef.json`、`fsink.log`（F 站点 or/and 普查，`git add -f`）、
+  `r71_land.log`（R71 归因，`git add -f`）、`list_wiz.txt`、区域/站点取证 `bk_*`/`gtd_*`/`rqk_*`/`or1_dbg.txt`）
