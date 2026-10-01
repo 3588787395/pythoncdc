@@ -3,7 +3,7 @@
 
 def f(a, b, c):
     total = 0
-    if not (a and b):
+    if a and b or c:
         total += 4
         total += 5
     return total

@@ -16012,6 +16012,17 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
           Step 4: 收集 then_blocks / else_blocks，构建 IfRegion 并注册
                   block_to_region。
           Step 5: elif 链识别——else 块以条件跳转结尾时递归构建 IF_ELIF_CHAIN。
+                  [B1b fix] continue-sink 邻接处的 elif 排除判据要求 else_succ
+                  是「纯条件块」：测试跳转之前不含 body 语句（STORE_*/
+                  BINARY_OP/DELETE_*/CALL+POP_TOP，与
+                  _detect_boolop_conditional_chain 的 _sb_has_body 同一谓词）。
+                  CPython 把 post-if 语句与下一条 if 的条件测试合入同一块，
+                  仅凭块末条件跳转判 elif 会把「下一语句的 if」误认成 elif、
+                  跳过 merge=else_succ 修正，使 merge 退化为循环出口值、
+                  post-if 语句被吸进 else 臂（B1b×B2 交叠面）。判据只读本块
+                  指令 opcode 序列（[C1] 同层块结构事实），AST 映射由既有
+                  If/elif 链消费端承担（真实 elif 条件块为纯测试块，行为
+                  不变）。
           Step 6 ( ): 主条件 'and' 短路链检测——首条件块含前置语句
                   时 _detect_boolop_conditional_chain 的 _sb_has_body 守卫跳过，
                   不创建 BoolOpRegion。此处镜像 _check_elif_chain 的 inline_boolop_
@@ -17420,10 +17431,51 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 and _last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
                                 and _last.argval == _header.start_offset):
                             _last = else_succ.get_last_instruction()
+                            # [B1b fix] elif 排除判据要求 else_succ 是「纯条件
+                            # 块」：测试跳转之前不含 body 语句（STORE_*/BINARY_
+                            # OP/DELETE_*/CALL+POP_TOP，与 _detect_boolop_conditional_
+                            # chain 的 _sb_has_body 同一谓词）。CPython 把 post-if
+                            # 语句与下一条 if 的条件测试合入同一块（如 `if x:
+                            # continue` 之后的 `total += 1` 与下一 if 的 b 测试
+                            # 同块），仅凭块末条件跳转判 elif 会把「下一语句的
+                            # if」误认成 elif、跳过 merge=else_succ 修正，使
+                            # merge 退化为循环出口值、post-if 语句被吸进 else 臂
+                            # （B1b×B2 交叠面，实测 r1_09）。真实 elif 条件块
+                            # （纯测试，如 `elif c:`）无 body 语句，判定不变。
+                            # 判据只用本块指令 opcode 序列（[C1] 同层块结构事实）。
+                            _elif_body = False
+                            if _last is not None:
+                                _elif_pre = [
+                                    i for i in else_succ.instructions
+                                    if i.offset < _last.offset
+                                    and i.opname not in ('NOP', 'CACHE',
+                                                         'EXTENDED_ARG',
+                                                         'RESUME')
+                                ]
+                                for _ei_idx, _ei in enumerate(_elif_pre):
+                                    if _ei.opname in ('STORE_FAST', 'STORE_NAME',
+                                                      'STORE_GLOBAL', 'STORE_DEREF',
+                                                      'STORE_ATTR', 'STORE_SUBSCR',
+                                                      'BINARY_OP', 'DELETE_NAME',
+                                                      'DELETE_FAST', 'DELETE_GLOBAL',
+                                                      'DELETE_ATTR', 'DELETE_SUBSCR'):
+                                        _elif_body = True
+                                        break
+                                    if _ei.opname == 'CALL':
+                                        for _ej in range(_ei_idx + 1, len(_elif_pre)):
+                                            _ejn = _elif_pre[_ej].opname
+                                            if _ejn == 'POP_TOP':
+                                                _elif_body = True
+                                                break
+                                            if _ejn not in ('YIELD_VALUE', 'RESUME'):
+                                                break
+                                    if _elif_body:
+                                        break
                             _elif = (
                                 len(else_succ.conditional_successors) == 2
                                 and _last is not None
                                 and _last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                                and not _elif_body
                             )
                             if not _elif:
                                 merge = else_succ
@@ -25211,6 +25263,25 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
            表达式引用该 entry；归约后父区域只见 entry，不见内部操作数块。
         6. 反编译流程：链 → _try_unify_mixed_boolop_chain 统一为
            [('and'|'or', ...)] → _generate_boolop 发射 ast.BoolOp。
+           [B1b fix] skip_claimed_check=True 时对 LoopRegion body_blocks 守卫
+           增加结构豁免：链首不是该循环 header/condition_block（即本 walk 是
+           循环体内层 if 条件的装配，[C1] 同层身份判定）时，后继候选块经
+           _b1b_loop_body_run_continuation 按 CPython 降级的「边汇聚」判据
+           （and→or 边界 / or-run 续接 / and-run 续接三类，全为块末 opcode 族
+           与后继块身份）放行——循环体内 `if a and b or c:` 的完整链
+           [and,or,or] 得以装配（[C2] 单个 BoolOpRegion 黑箱组合，[C3] 守卫
+           显式认领被循环认领的纯条件块），不再拆裂为 `if a: if b or c:`。
+           链首是 header/condition_block 的循环自身条件装配 walk 维持原
+           break，行为逐字节不变。
+           [B1b fix-r2] IfExp 真值块守卫收窄：候选块的 fall-through 块若为
+           纯控制 JUMP_FORWARD 块且 (a) 含 POP_TOP（for/while break 降级
+           形态）或 (b) 其跳转目标块不以 RETURN_* 收尾（空 then 臂
+           JUMP_FORWARD→merge），则不承载值、不是 IfExp 真值块，不据此
+           触发 IfExp 断链；裸 JF 目标以 RETURN_* 收尾（值上下文链尾签名）
+           及含其他指令的块维持原 break。判据只读该块指令 opcode 集与
+           目标块末指令（[C1] 同层块结构事实），AST 映射由既有 IfExp/
+           BoolOp 消费端承担。另新增「chained compare 内部块不可吸收」
+           守卫（append 前，原则 2 每块唯一归属）。
         """
         # 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
         # 当链的起始块在条件跳转之前包含 body 语句（函数调用语句 CALL+POP_TOP、
@@ -25738,7 +25809,48 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                     _ft_has_stmt = True
                                     break
                         if not _ft_has_stmt:
-                            break
+                            # [B1b fix-r2] IfExp 真值块必为「值块」——块内至少
+                            # 含一条压栈类指令（LOAD_*/常量/构建类），真值压栈后
+                            # 才 JUMP_FORWARD 越过假值块。两类纯控制 JF 块不承载
+                            # 任何表达式值，不可能是 IfExp 真值块，不据此中断链：
+                            #   (a) POP_TOP 收尾的纯控制块（除 POP_TOP 与噪声外
+                            #       无任何指令）——for/while 内 break 的降级形态
+                            #       （POP_TOP 弹掉循环值后 JUMP_FORWARD 出循环，
+                            #       实测 r1_09）；
+                            #   (b) 裸 JUMP_FORWARD 且其目标块不以 RETURN_*
+                            #       收尾——空 then 臂/合并跳（JUMP_FORWARD→merge，
+                            #       实测 trade_live_broker.on_pre_before_trading_
+                            #       start 的空 if 臂）。目标以 RETURN_VALUE/
+                            #       RETURN_CONST 收尾的裸 JF 是「候选块成功出口
+                            #       平凡跳转」的签名（值上下文链尾，实测
+                            #       strategy.is_future_tradetime_now 的
+                            #       `'13:00:00' <= now <= '15:15:00'` 尾块后
+                            #       JUMP_FORWARD→True return），维持原 break 以
+                            #       不抢占该值上下文结构。含其他指令的块维持原
+                            #       break（IfExp 守卫行为不变）。判据只用块内
+                            #       指令 opcode 集与目标块末指令（[C1] 同层块
+                            #       结构事实）。
+                            _ft_ctrl_only = all(
+                                _fi.opname in ('POP_TOP', 'NOP', 'CACHE',
+                                               'EXTENDED_ARG', 'RESUME')
+                                for _fi in _ft_cand_b.instructions
+                                if _fi.offset != _ft_last_b.offset
+                            )
+                            _ft_pops_value = any(
+                                _fi.opname == 'POP_TOP'
+                                for _fi in _ft_cand_b.instructions
+                                if _fi.offset != _ft_last_b.offset
+                            )
+                            _ft_jf_target = (self.cfg.get_block_by_offset(_ft_last_b.argval)
+                                             if getattr(_ft_last_b, 'argval', None) is not None else None)
+                            _ft_jf_target_returns = (
+                                _ft_jf_target is not None
+                                and _ft_jf_target.get_last_instruction() is not None
+                                and _ft_jf_target.get_last_instruction().opname in ('RETURN_VALUE', 'RETURN_CONST'))
+                            if not ((_ft_ctrl_only and _ft_pops_value)
+                                    or (_ft_ctrl_only and not _ft_pops_value
+                                        and not _ft_jf_target_returns)):
+                                break
             # [W14-A 修复·真/假出口目标对判据] 链已确立且首成员为
             # POP_JUMP_FORWARD_IF_FALSE（and 短路，T0 = 共同 false-exit）时，
             # 后续候选块的跳转目标必须与 T0 同块（或等价 trivial exit），
@@ -25882,6 +25994,31 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     op_type = 'and'  # 默认
             else:
                 op_type = 'and' if 'FALSE' in last.opname else 'or'
+            # [B1b fix-r2 守卫·chained compare 内部块不可吸收] 区域归约算法
+            # 原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：chained compare
+            # IfRegion 的内部块（chained_compare_blocks 中非 entry 的续块，如
+            # `a <= b <= c` 的第二个 COMPARE_OP 块）唯一归属链式比较区域，其
+            # 上方既有 hop 机制（chained compare 入口 → 跳过内部块直达下一
+            # 操作数）正以「内部块不进 op_chain」为前提。skip_claimed_check
+            # 的 walk 若绕过 claimed 守卫把内部块吸收为 boolop 操作数，
+            # chained compare 尾段即被截断（实测
+            # strategy.is_future_tradetime_now：`'13:00:00' <= now <=
+            # '15:15:00'` 退化为 `'13:00:00' <= now`）。判据只读同层区域表的
+            # 成员关系（entry/blocks 身份，[C1] 同层结构事实；[C3] 显式守卫
+            # 排除被前置区域认领的块），AST 映射由既有 chained compare 消费
+            # 端承担。
+            _cc_internal_hit = False
+            for _r in self.regions:
+                if (type(_r) is IfRegion
+                        and getattr(_r, 'chained_compare_ops', None)
+                        and len(_r.chained_compare_ops) >= 2
+                        and getattr(_r, 'chained_compare_blocks', None)
+                        and _r.entry is not current
+                        and current in _r.chained_compare_blocks):
+                    _cc_internal_hit = True
+                    break
+            if _cc_internal_hit:
+                break
             chain.append((current, op_type))
             # [CPython peephole P4 + P5 interaction] Chained compare as
             # BoolOp operand hop. When `if a < b < c and d < e < f:` is
@@ -26125,11 +26262,28 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 # they're the loop body. This mirrors the check in
                 # _detect_while_boolop_forward_chain (line ~11940):
                 #   if ft_succ == loop.header_block or ft_succ in loop.body_blocks: break
+                # [B1b fix] 该守卫只应拦截「循环自身条件装配」的 walk（链首 =
+                # header/condition_block）。循环体内层 if 条件的装配 walk 链首
+                # 是体内条件块，其后继操作数块（如 `if a and b or c:` 的 b/c
+                # 测试块）同样登记在 LoopRegion.body_blocks 中，一律 break 会把
+                # and→or 边界后的 or run 整体排除在链外——链被拆裂为
+                # `if a: if b or c:`（or 尾操作数脱离原链、极性反转）。此时改由
+                # _b1b_loop_body_run_continuation 按 CPython 降级的「边汇聚」
+                # 结构判据逐对放行（[C1] 同层块结构事实，[C3] 显式守卫认领）。
                 if ft_succ in self.block_to_region:
                     _ft_reg = self.block_to_region.get(ft_succ)
                     if isinstance(_ft_reg, LoopRegion):
-                        if ft_succ == _ft_reg.header_block or ft_succ in _ft_reg.body_blocks:
-                            break
+                        if (ft_succ == _ft_reg.header_block
+                                or ft_succ in _ft_reg.body_blocks):
+                            _b1b_c0 = chain[0][0] if chain else None
+                            if (_b1b_c0 is None
+                                    or _b1b_c0 is _ft_reg.header_block
+                                    or _ft_reg.condition_block is _b1b_c0):
+                                break
+                            if not self._b1b_loop_body_run_continuation(
+                                    current, last, ft_succ,
+                                    has_or_member=any(op == 'or' for _, op in chain)):
+                                break
             # [R64-diag1 closed-shared-exit-prefix] Region-reduction principle 2
             # (one owner per block at this level) + principle 3 (a nested if is an
             # abstract node, never a boolop operand): once every block already in the
@@ -26764,6 +26918,121 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         return True
         return False
 
+    def _b1b_loop_body_run_continuation(self, cur_block: BasicBlock, cur_last,
+                                        cand_block: BasicBlock,
+                                        has_or_member: bool = False) -> bool:
+        """[B1b fix] 判定循环体内 (current, candidate) 是否构成同一 BoolOp 短路链的
+        CPython 降级续接对——skip_claimed_check 路径与 _try_unify_mixed_boolop_chain
+        认领守卫共用的 body_blocks 结构豁免。
+
+        识别条件（[C1] 只读两块（及候选 run 沿 fall-through 的有限后继）的块末
+        指令 opcode 族与后继块身份，全为同层块结构事实；不看函数名/常量/绝对
+        偏移）：设 Y = current 的块末正向条件跳转的目标块。CPython 对
+        and/or 混合链的降级中，相邻成员的两条边必有一条汇聚到同一块，共三类：
+          (1) and→or 边界（current FALSE 族、candidate TRUE 族）：candidate 的
+              fall-through 恰为 Y——Y 是下一 or run 的头，必须仍以正向条件跳转
+              结尾（排除 `1 if a and b else 2` 的假值块 JUMP_FORWARD 形）；
+          (2) or-run 续接（current TRUE 族、candidate FALSE 族）：沿 candidate
+              的 fall-through 走 F-run（≤8 步、带 visited），run 成员全部以
+              FALSE 族正向跳转落到同一假出口 Z（Z 不得是 Y），run 末成员的
+              fall-through 恰为 Y——run 的成功沿汇聚回 current 的真出口。
+              单成员 run 即 `or` 裸尾（cand.ft==Y）；多成员 run 即
+              `b or c and a` 的 and 段。Y 不得是「JUMP_FORWARD 收尾且其目标在
+              Z 的直接后继集内」的三元真值块形；
+          (3) and-run 续接（current 与 candidate 均 FALSE 族）：两者跳转目标
+              同一块——and 组成员的假边共享「下一 run 头」失败出口，该头必须
+              仍以正向条件跳转结尾（排除普通 and 链共用的语句 merge 块）。
+              [B1b fix-r2] 已越过 and→or 边界的混合链（has_or_member=True，
+              即链内已有 'or' 成员）豁免该「共享出口须为条件块」要求：末
+              or 组的 and-run（``b or c and a`` 的 c/a）成员假边共享的正是
+              链自身的 merge 块（可为 continue/break 收尾的 JUMP_BACKWARD
+              等非条件块），walk 经 current 的真边（fall-through）抵达
+              candidate 本身就是 and-run 续接签名；纯 and 链（尚无 or 成员）
+              维持原拒绝，普通循环体内 ``if a and b:`` 的装配路径行为不变。
+          current 与 candidate 同为 TRUE 族的组合不是任何合法降级续接，拒绝
+          （纯 or 链在循环体内仍走既有 IfRegion or 链路径，行为不变）。
+        归约方式（[C2] 黑箱组合 + [C3] 孤儿显式认领）：命中即允许链 walk 越过
+        body_blocks 守卫把 candidate 吸收为下一链成员；不命中维持原 break。
+        吸收后的完整链交 _create_boolop_region_from_chain 统一归约为单个
+        BoolOpRegion（循环体的子节点），后续 R3-K/W14-A/R64 守卫仍逐块生效
+        （纵深防御，本判定只放宽「块被循环认领」这一条）。
+        AST 映射：完整 op_chain（如 [and,or,or] / [or,and,and] /
+        [and,and,or,or]）由消费端 _build_boolop_expression_inner 的 or_groups
+        分组重建为单个 ast.BoolOp，循环体内层 `if a and b or c:` /
+        `if b or c and a: break` 不再拆裂为嵌套 if、or 尾操作数不再丢失。
+        """
+        if cur_last is None or getattr(cur_last, 'argval', None) is None:
+            return False
+        _cur_tgt = self.cfg.get_block_by_offset(cur_last.argval)
+        if _cur_tgt is None:
+            return False
+        _cand_last = cand_block.get_last_instruction()
+        if (_cand_last is None
+                or _cand_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                or getattr(_cand_last, 'argval', None) is None):
+            return False
+        _cand_tgt = self.cfg.get_block_by_offset(_cand_last.argval)
+        if _cand_tgt is None:
+            return False
+        _cand_ft = next((s for s in cand_block.conditional_successors
+                         if s.start_offset != _cand_last.argval), None)
+        if _cand_ft is None:
+            return False
+        _cur_true = 'TRUE' in cur_last.opname
+        _cand_true = 'TRUE' in _cand_last.opname
+        _tgt_is_cond = _cur_tgt.get_last_instruction() is not None and \
+            _cur_tgt.get_last_instruction().opname in FORWARD_CONDITIONAL_JUMP_OPS
+        if _cur_true and not _cand_true:
+            # (2) or-run 续接：F-run 成功沿汇聚回 current 真出口 Y
+            if _cand_tgt is _cur_tgt:
+                return False
+            _y_last = _cur_tgt.get_last_instruction()
+            if _y_last is not None and _y_last.opname == 'JUMP_FORWARD':
+                _y_exit = self.cfg.get_block_by_offset(_y_last.argval) \
+                    if _y_last.argval is not None else None
+                if (_y_exit is not None
+                        and any(s is _y_exit for s in _cand_tgt.successors)):
+                    return False
+            _walk = cand_block
+            _seen = {cand_block.start_offset}
+            for _ in range(8):
+                _wl = _walk.get_last_instruction()
+                if (_wl is None
+                        or _wl.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                        or getattr(_wl, 'argval', None) is None):
+                    return False
+                if 'IF_FALSE' not in _wl.opname:
+                    return False
+                _w_tgt = self.cfg.get_block_by_offset(_wl.argval)
+                if _w_tgt is None or _w_tgt is _cur_tgt:
+                    return False
+                _w_ft = next((s for s in _walk.conditional_successors
+                              if s.start_offset != _wl.argval), None)
+                if _w_ft is None:
+                    return False
+                if _w_ft is _cur_tgt:
+                    return True
+                if _w_ft.start_offset in _seen:
+                    return False
+                _seen.add(_w_ft.start_offset)
+                _walk = _w_ft
+            return False
+        if not _cur_true and _cand_true:
+            # (1) and→or 边界：candidate 落空边汇聚到 current 假出口 Y（下一 run 头）
+            return _cand_ft is _cur_tgt and _tgt_is_cond
+        if not _cur_true and not _cand_true:
+            # (3) and-run 续接：假边共享同一「下一 run 头」失败出口
+            if _cand_tgt is not _cur_tgt:
+                return False
+            if _tgt_is_cond:
+                return True
+            # [B1b fix-r2] 末 or 组 and-run：混合链（链内已有 'or' 成员）的
+            # and 组假边共享链 merge（非条件块，如 JUMP_BACKWARD 收尾）。
+            # candidate 经 current 真边（fall-through）抵达即 and-run 续接；
+            # 纯 and 链维持原拒绝（排除普通 and 链共用的语句 merge 块）。
+            return bool(has_or_member)
+        return False
+
     def _is_valid_2elem_mixed_chain(self, chain: List[Tuple[BasicBlock, str]]) -> bool:
         """验证2元素混合BoolOp链的结构合法性。
 
@@ -26795,22 +27064,111 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         return True
 
     def _try_unify_mixed_boolop_chain(self, initial_chain, outer_target):
+        """沿链尾 fall-through 把失败路径上未认领的条件块续接进混合 and/or 链。
+
+        识别条件（[C1] 同层块结构事实，只读链尾块与候选块的跳转/后继结构）：
+        混合链（含 and→or 边界）的链尾成员之后沿 fall-through 仍存在以
+        正向条件跳转结尾、且未被任何区域认领（block_to_region 无记录）的
+        块——即链的失败路径尚未走到汇合点。[B1b fix-r2] 唯一例外：候选块
+        被外层 LoopRegion 作为 body 块认领时，经「链首非该循环
+        header/condition_block + _b1b_loop_body_run_continuation 降级续接
+        判据」双重守卫放行（见循环体内豁免注释）——循环体内层 if 条件的
+        or 尾操作数块登记在 LoopRegion.body_blocks 中，无此豁免即被整体
+        排除在链外。多成员续接 run 交
+        _detect_boolop_conditional_chain 整段识别；单成员 or 尾（B1b 形态，
+        如 ``if a and b or c:`` 的 ``c`` 测试块）因 Round 33 「or 链成员不得
+        作链首」守卫（其 fall-through 恰为链 IF_TRUE 真出口）在该检测中
+        返回 None，由下方 [B1b] 三条同层判据认领：
+          (1) 链尾成员链 op 为 'or' 且以正向 IF_TRUE 族跳转结尾——and→or
+              边界，其跳转目标 T_true 是链的成功出口（then 入口）；
+          (2) 候选块以正向 IF_FALSE 族跳转结尾，假目标 T_c 存在、不指向
+              T_true 也不指向链内任何块（失败路径唯一汇聚到链外汇合点）；
+          (3) 候选块的 fall-through 恰为 T_true——or 尾操作数为真时经
+              fall-through 汇入链的同一成功出口。该事实与 Round 33 守卫据
+              以拒绝其作「新链首」的签名同源，此处用作「并回所属链」的
+              认领判据而非另起区域。
+        归约方式（[C2] 黑箱组合 + [C3] 孤儿显式认领）：候选块此刻不属于
+        任何区域（无跨层读取），按多成员 run 同款 op 推导（'FALSE'→'and'）
+        追加进链后交 _create_boolop_region_from_chain 重建完整 BoolOpRegion；
+        循环续接直至链尾 fall-through 不再是未认领条件块（每次追加至少并入
+        一个新块，必然终止）。op_chain[-1] 随之变为 IF_FALSE 尾块，消费端
+        （_build_boolop_expression_inner 的 or_groups 分组与
+        _if_extract_condition_from_instructions 的 _boolop_negate 极性判定）
+        按完整链工作，or 尾操作数接回、极性不再整体反转。
+        AST 映射：BoolOp(op='or', values=[BoolOp(op='and', values=[...and
+        组...]), <or 尾操作数>, ...])，即 ``a and b or c`` /
+        ``a and b or c and d or e`` 的完整重建。
+        """
         result = list(initial_chain)
-        last_block, _ = result[-1]
-        last_instr = last_block.get_last_instruction()
-        if not last_instr or last_instr.argval is None:
-            return result
-        ft_succ = next((s for s in last_block.conditional_successors
-                        if s.start_offset != last_instr.argval), None)
-        if ft_succ is None or ft_succ in self.block_to_region:
-            return result
-        ft_last = ft_succ.get_last_instruction()
         BOOLOP_CHAIN_JUMPS = FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
-        if not ft_last or ft_last.opname not in BOOLOP_CHAIN_JUMPS:
-            return result
-        extended = self._detect_boolop_conditional_chain(ft_succ, set())
-        if extended:
-            result.extend(extended)
+        while True:
+            last_block, _last_op = result[-1]
+            last_instr = last_block.get_last_instruction()
+            if not last_instr or last_instr.argval is None:
+                break
+            ft_succ = next((s for s in last_block.conditional_successors
+                            if s.start_offset != last_instr.argval), None)
+            if ft_succ is None:
+                break
+            if ft_succ in self.block_to_region:
+                # [B1b fix-r2] LoopRegion body 认领豁免（与主 walk 的
+                # skip_claimed_check 路径同一判据）：候选块被外层 Loop 作为
+                # body 块认领（block_to_region 直属 owner=LoopRegion）时，
+                # 若 (a) 本链不是该循环自身条件的装配——链首不是该 Loop 的
+                # header/condition_block（[C1] 同层身份判定），且 (b)
+                # (链尾, 候选) 通过 _b1b_loop_body_run_continuation 的
+                # CPython 降级续接判据（and→or 边界 / or-run 续接 /
+                # and-run 续接，[C3] 显式守卫认领被循环认领的纯条件块），
+                # 则放行到下方多成员识别 / 单成员 or 尾判据；否则维持原
+                # break。豁免缺失会把循环体内 ``if a and b or c:`` 的 or 尾
+                # 操作数整体排除在链外（极性反转、内层 if 被吸入）。
+                _ft_reg = self.block_to_region.get(ft_succ)
+                if not isinstance(_ft_reg, LoopRegion):
+                    break
+                if (ft_succ == _ft_reg.header_block
+                        or ft_succ not in _ft_reg.body_blocks):
+                    break
+                _b1b_c0 = result[0][0] if result else None
+                if (_b1b_c0 is None
+                        or _b1b_c0 is _ft_reg.header_block
+                        or _ft_reg.condition_block is _b1b_c0):
+                    break
+                if not self._b1b_loop_body_run_continuation(
+                        last_block, last_instr, ft_succ,
+                        has_or_member=any(op == 'or' for _, op in result)):
+                    break
+            _chain_blocks = {b for b, _ in result}
+            if ft_succ in _chain_blocks:
+                break
+            ft_last = ft_succ.get_last_instruction()
+            if not ft_last or ft_last.opname not in BOOLOP_CHAIN_JUMPS:
+                break
+            extended = self._detect_boolop_conditional_chain(ft_succ, set())
+            if extended:
+                _new = [(b, o) for b, o in extended if b not in _chain_blocks]
+                if not _new:
+                    break
+                result.extend(_new)
+                continue
+            # [B1b fix] 单成员 or 尾续接（判据 (1)(2)(3)，见方法 docstring）
+            if (_last_op != 'or'
+                    or last_instr.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                    or 'IF_TRUE' not in last_instr.opname
+                    or ft_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                    or 'IF_FALSE' not in ft_last.opname):
+                break
+            _t_true = self.cfg.get_block_by_offset(last_instr.argval)
+            _t_c = (self.cfg.get_block_by_offset(ft_last.argval)
+                    if ft_last.argval is not None else None)
+            if _t_true is None or _t_c is None or _t_c is _t_true:
+                break
+            if _t_c in _chain_blocks:
+                break
+            _f = next((s for s in ft_succ.conditional_successors
+                       if s.start_offset != ft_last.argval), None)
+            if _f is None or _f is not _t_true:
+                break
+            result.append((ft_succ, 'and'))
         return result
 
     def _detect_boolop_short_circuit_chain(self, start_block: BasicBlock, skip_first_claimed_check: bool = False) -> Optional[List[Tuple[BasicBlock, str]]]:

@@ -5,10 +5,6 @@ def f(a, b, c, x):
     total = 0
     if x:
         total += 1
-    else:
-        if not (a and b):
-            total += 4
-        if c:
-            pass
-        else:
-            return total
+    elif a and b or c:
+        total += 4
+    return total

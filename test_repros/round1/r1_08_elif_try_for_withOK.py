@@ -3,12 +3,12 @@
 
 def f(a, b, c, d, x):
     total = 0
-    if not (a and b):
+    if a and b or c:
         try:
             total += 1
         except ValueError:
             total += 2
-    if x:
+    elif x:
         for i in range(3):
             total += i
     else:
