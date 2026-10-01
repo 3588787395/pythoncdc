@@ -8,7 +8,7 @@ def f(mix):
             if mix:
                 raise ExceptionGroup('g', [TypeError('t')])
             raise ValueError('plain')
-        except* Exception as e:
+        except* TypeError as e:
             out.append('star')
     except ValueError:
         out.append('plain')
@@ -20,7 +20,7 @@ def g(mix):
             if mix:
                 raise ExceptionGroup('g', [TypeError('t'), OSError('o')])
             out.append('no-raise')
-        except* Exception as e:
+        except* TypeError as e:
             out.append('star-T')
         except* OSError as e:
             out.append('star-O')

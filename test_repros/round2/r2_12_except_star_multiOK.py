@@ -7,7 +7,7 @@ def f(n):
         if n == 0:
             raise ExceptionGroup('g', [TypeError('t'), ValueError('v'), KeyError('k')])
         out.append(n)
-    except* Exception as e:
+    except* TypeError as e:
         out.append('T')
     except* ValueError:
         out.append('V')

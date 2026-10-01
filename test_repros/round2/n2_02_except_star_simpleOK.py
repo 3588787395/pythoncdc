@@ -4,6 +4,6 @@
 def f(tag):
     try:
         raise ExceptionGroup('g', [ValueError('v')])
-    except* Exception as e:
+    except* ValueError as e:
         tag = tag + 'V'
     return tag

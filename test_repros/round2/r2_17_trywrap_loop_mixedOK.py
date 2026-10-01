@@ -4,25 +4,21 @@
 def f(a, b, c, out):
     for i in range(3):
         try:
-            if not (a and b):
+            if a and b or c:
                 out.append(i)
                 break
-            if a or b and c:
+            elif a or b and c:
                 out.append(i * 2)
                 while False:
                     pass
         except TypeError:
             out.append('e')
-    else:
-        return out
 def g(a, b, c, out):
     while a:
         try:
-            if not (a and b):
+            if a and b or c:
                 out.append(1)
                 break
-            if c:
-                pass
         except TypeError:
             out.append('e')
         a = False

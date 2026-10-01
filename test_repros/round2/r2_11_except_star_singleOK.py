@@ -5,7 +5,7 @@ def f(tag):
     out = [tag]
     try:
         raise ExceptionGroup('g', [TypeError('bad'), ValueError('v')])
-    except* Exception:
+    except* TypeError:
         out.append('type')
     out.append('after')
     return out

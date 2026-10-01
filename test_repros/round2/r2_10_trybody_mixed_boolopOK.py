@@ -3,15 +3,13 @@
 
 def f_while(a, b, c, acc):
     try:
-        if not (a and b):
+        if a and b or c:
             acc.append(1)
             if len(acc) > 3:
                 pass
             else:
                 if a:
                     pass
-        if c:
-            pass
     except TypeError:
         acc.append('te')
     return acc
@@ -25,7 +23,7 @@ def f_assert(a, b, c, acc):
     return acc
 def f_ternary(a, b, c, acc):
     try:
-        if a and b:
+        if a and b or c:
             pass
     except TypeError:
         acc.append('te')

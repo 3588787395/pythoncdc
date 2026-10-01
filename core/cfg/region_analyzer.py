@@ -1208,6 +1208,16 @@ class RegionAnalyzer:
     7. 构建区域层次树
     """
 
+    # [R2-B9 fix] 异常帧指令集合——TryRegion 认领豁免的结构守卫判据：
+    # 含任一帧指令的块是 try 机制自身的一部分（handler 入口帧、except*
+    # 匹配/清理帧、finally 收尾帧、with 异常帧），绝不作为混合链 or 尾
+    # 操作数被吸入；与既有守卫族（_detect_while_condition_boolop_chain
+    # 后向回溯守卫、_identify_conditional_regions 等）使用的帧指令集一致。
+    _EXC_FRAME_GUARD_OPS = frozenset({
+        'PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
+        'PREP_RERAISE_STAR', 'RERAISE', 'WITH_EXCEPT_START',
+    })
+
     def __init__(self, cfg: ControlFlowGraph, parent_code=None, top_level_code=None):
         self.cfg = cfg
         self.parent_code = parent_code
@@ -10113,17 +10123,47 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         'BoolOp', 'IfExp', 'Starred', 'JoinedStr', 'FormattedValue',
     })
 
+    # [R2-B8 fix] except*（CHECK_EG_MATCH）组匹配帧的固定框架前缀签名：
+    # CPython 3.11 对 `except* <类型>:` 的标准降级在 PUSH_EXC_INFO 之后、
+    # 匹配表达式求值之前固定发射 COPY 1 / BUILD_LIST 0 / SWAP 2——构造
+    # 「未匹配子组收集列表」的帧头，不属于匹配表达式。argval 全等匹配，
+    # 位置锚定（必须紧随末个 PUSH_EXC_INFO），非 except* 帧不命中。
+    _EXCEPT_STAR_FRAME_PREFIX: Tuple[Tuple[str, object], ...] = (
+        ('COPY', 1), ('BUILD_LIST', 0), ('SWAP', 2),
+    )
+
     def _collect_pre_check_instrs(self, handler_entry: BasicBlock,
                                   check_ops: Tuple[str, ...]) -> List[Instruction]:
         """收集 PUSH_EXC_INFO 之后、首个 CHECK_* 之前的表达式指令段。
 
-        异常匹配表达式的字节码帧定义：handler 入口块以 PUSH_EXC_INFO 开始，
-        其后到 CHECK_EXC_MATCH/CHECK_EG_MATCH 之间的线性指令段即匹配
-        表达式的求值序列；再次遇到 PUSH_EXC_INFO 时重置收集（取最后一个
-        异常帧之后的段）。无 PUSH_EXC_INFO 的块退化为整段前缀（兼容历史
-        行为）。
+        识别条件：异常匹配表达式的字节码帧定义——handler 入口块以
+        PUSH_EXC_INFO 开始，其后到 CHECK_EXC_MATCH/CHECK_EG_MATCH 之间的
+        线性指令段即匹配表达式的求值序列；再次遇到 PUSH_EXC_INFO 时重置
+        收集（取最后一个异常帧之后的段）。无 PUSH_EXC_INFO 的块退化为整段
+        前缀（兼容历史行为）。[R2-B8 fix] except* 组匹配帧（终止 op 为
+        CHECK_EG_MATCH）在末个 PUSH_EXC_INFO 之后有固定框架前缀
+        ``COPY 1; BUILD_LIST 0; SWAP 2``（构造未匹配子组收集列表的帧头，
+        不是用户匹配表达式的一部分）——前缀三条指令 argval 逐位全等命中时
+        整体剔除，仅用户类型求值指令进入表达式段。
+
+        归约方式：剔除后剩余段原样返回，交
+        `_reconstruct_except_match_expr` 按字节码序归约（纯加载段 → 名字
+        字符串；组合段 → ExpressionReconstructor 单节点重建）。
+
+        AST 映射：返回段经上述归约成为 handler 节点的 exc_type——
+        except* 首 handler 的类型表达式（如 ``except* TypeError:``）不再被
+        框架前缀污染而保守回退 'Exception'。
+
+        [C1] 只读 handler 入口块自身指令序（前缀签名位置锚定于末个
+        PUSH_EXC_INFO 之后，逐位 argval 全等）；[C2] 段→exc_type 单节点
+        黑箱重建，消费端不窥视块内布局；[C3] 显式守卫：前缀签名仅对
+        CHECK_EG_MATCH 帧生效（普通 except 帧无此帧头，不触发剔除）。
         """
         pre: List[Instruction] = []
+        # [R2-B8 fix] 本帧是否为 except* 组匹配（终止 op 为 CHECK_EG_MATCH）；
+        # 顺带记录末个 PUSH_EXC_INFO 之后是否已累积帧前缀供签名比对。
+        has_eg_match = any(i.opname == 'CHECK_EG_MATCH'
+                           for i in handler_entry.instructions)
         for instr in handler_entry.instructions:
             if instr.opname in check_ops:
                 break
@@ -10131,6 +10171,11 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 pre = []
                 continue
             pre.append(instr)
+            if has_eg_match and len(pre) == len(self._EXCEPT_STAR_FRAME_PREFIX):
+                if all(pi.opname == so and pi.argval == sa
+                       for pi, (so, sa) in zip(
+                           pre, self._EXCEPT_STAR_FRAME_PREFIX)):
+                    pre = []
         return pre
 
     def _reconstruct_except_match_expr(self, pre_check_instrs: List[Instruction]):
@@ -25555,7 +25600,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 claimed.add(b)
         return region
 
-    def _detect_boolop_conditional_chain(self, start_block: BasicBlock, claimed: Set[BasicBlock], skip_claimed_check: bool = False) -> Optional[List[Tuple[BasicBlock, str]]]:
+    def _detect_boolop_conditional_chain(self, start_block: BasicBlock, claimed: Set[BasicBlock], skip_claimed_check: bool = False, try_scope_exempt: bool = False) -> Optional[List[Tuple[BasicBlock, str]]]:
         """从 start_block 起检测 BoolOp 短路链（and/or），返回 [(block, op)] 或 None。
 
         6 节模板（Round 1 fix 涉及方法，由 _identify_boolop_regions 调用）：
@@ -26576,8 +26621,24 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             if ft_succ is None:
                 break
             if not skip_claimed_check:
-                if ft_succ in self.block_to_region or ft_succ in claimed:
+                if ft_succ in claimed:
                     break
+                if ft_succ in self.block_to_region:
+                    # [R2-B9 fix] TryRegion 范围认领豁免（try_scope_exempt=
+                    # True 时生效，_try_unify_mixed_boolop_chain 多成员 run
+                    # 子 walk 专用）：候选块被 TryRegion 按 try 范围表整段
+                    # 认领（try 体/handler 体/finally 体）且不含异常帧指令
+                    # （_EXC_FRAME_GUARD_OPS）时，它是范围内层混合链的纯用
+                    # 户条件块而非 try 帧块，放行进链；其余被认领块维持原
+                    # break。[C1] 只读块内 opcode 与同层 block_to_region；
+                    # [C3] 显式守卫（帧指令集逐 opcode 排除 handler 入口帧/
+                    # except* 清理帧/finally 收尾帧）。
+                    _b9_ft_reg = self.block_to_region.get(ft_succ)
+                    if not (try_scope_exempt
+                            and isinstance(_b9_ft_reg, TryExceptRegion)
+                            and not any(i.opname in self._EXC_FRAME_GUARD_OPS
+                                        for i in ft_succ.instructions)):
+                        break
             else:
                 # Even when skip_claimed_check is True (for loop condition
                 # blocks), don't extend the chain into the loop's header or
@@ -27446,19 +27507,52 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 # break。豁免缺失会把循环体内 ``if a and b or c:`` 的 or 尾
                 # 操作数整体排除在链外（极性反转、内层 if 被吸入）。
                 _ft_reg = self.block_to_region.get(ft_succ)
-                if not isinstance(_ft_reg, LoopRegion):
-                    break
-                if (ft_succ == _ft_reg.header_block
-                        or ft_succ not in _ft_reg.body_blocks):
-                    break
-                _b1b_c0 = result[0][0] if result else None
-                if (_b1b_c0 is None
-                        or _b1b_c0 is _ft_reg.header_block
-                        or _ft_reg.condition_block is _b1b_c0):
-                    break
-                if not self._b1b_loop_body_run_continuation(
-                        last_block, last_instr, ft_succ,
-                        has_or_member=any(op == 'or' for _, op in result)):
+                if isinstance(_ft_reg, LoopRegion):
+                    if (ft_succ == _ft_reg.header_block
+                            or ft_succ not in _ft_reg.body_blocks):
+                        break
+                    _b1b_c0 = result[0][0] if result else None
+                    if (_b1b_c0 is None
+                            or _b1b_c0 is _ft_reg.header_block
+                            or _ft_reg.condition_block is _b1b_c0):
+                        break
+                    if not self._b1b_loop_body_run_continuation(
+                            last_block, last_instr, ft_succ,
+                            has_or_member=any(op == 'or' for _, op in result)):
+                        break
+                elif isinstance(_ft_reg, TryExceptRegion):
+                    # [R2-B9 fix] TryRegion 范围认领豁免（[B1b fix-r2] 循环
+                    # 豁免在异常区域维度的镜像）：TryRegion 按 try 范围表把
+                    # try 体/handler 体/finally 体整段登记进 block_to_region
+                    # ——范围内层 if/while/assert 混合链的 or 尾操作数块因此
+                    # 「被父区域按范围认领」，与循环 body_blocks 同构。放行
+                    # 判据（[C1] 同层块结构事实，零名字/偏移特判）：
+                    # (a) 候选块与链内全部成员块均不含异常帧指令（
+                    #     _EXC_FRAME_GUARD_OPS：PUSH_EXC_INFO/CHECK_EXC_MATCH/
+                    #     CHECK_EG_MATCH/PREP_RERAISE_STAR/RERAISE/
+                    #     WITH_EXCEPT_START）——链不是 try 自身的帧装配
+                    #     （handler 入口帧、except* 清理帧、finally 收尾帧
+                    #     一律带帧指令，被此守卫排除），候选块为纯用户条件块
+                    #     而非帧块；
+                    # (b) 放行后落到与未认领候选完全相同的验收路径——多成员
+                    #     run 交 _detect_boolop_conditional_chain（try_scope_
+                    #     exempt=True 子 walk，见下），单成员 or 尾交 [B1b]
+                    #     三判据；不另套 _b1b_loop_body_run_continuation（其
+                    #     (2) 臂的三元真值块守卫对 if-else 形的 or 尾误报，
+                    #     该守卫是循环上下文专用加强，try 上下文的帧风险已由
+                    #     (a) 守卫覆盖）。任一验收不成立维持原 break（帧块/
+                    #     非条件块不被吸入，TryRegion 认领面零扩大——其结构
+                    #     消费走 entry 引用语义，不受影响）。
+                    if any(i.opname in self._EXC_FRAME_GUARD_OPS
+                           for i in ft_succ.instructions):
+                        break
+                    _b9_c0 = result[0][0] if result else None
+                    if (_b9_c0 is None
+                            or any(i.opname in self._EXC_FRAME_GUARD_OPS
+                                   for _b9_blk, _ in result
+                                   for i in _b9_blk.instructions)):
+                        break
+                else:
                     break
             _chain_blocks = {b for b, _ in result}
             if ft_succ in _chain_blocks:
@@ -27466,7 +27560,10 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             ft_last = ft_succ.get_last_instruction()
             if not ft_last or ft_last.opname not in BOOLOP_CHAIN_JUMPS:
                 break
-            extended = self._detect_boolop_conditional_chain(ft_succ, set())
+            # [R2-B9 fix] try_scope_exempt=True：候选 run 成员被 TryRegion
+            # 按范围认领且不含帧指令时放行（与上方豁免同一判据）。
+            extended = self._detect_boolop_conditional_chain(
+                ft_succ, set(), try_scope_exempt=True)
             if extended:
                 _new = [(b, o) for b, o in extended if b not in _chain_blocks]
                 if not _new:

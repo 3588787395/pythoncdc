@@ -5,10 +5,8 @@ def f(a, b, c, log):
     try:
         log.append('body')
     except Exception:
-        if not (a and b):
+        if a and b or c:
             log.append('t1')
-        if c:
-            pass
         else:
             log.append('f1')
     log.append('end')
@@ -16,10 +14,8 @@ def g(a, b, c, log):
     try:
         log.append('body')
     except Exception:
-        if not (a and b):
+        if a and b or c:
             log.append('w')
             while False:
                 pass
-        if c:
-            pass
     return log

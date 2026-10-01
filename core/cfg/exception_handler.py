@@ -47,6 +47,70 @@ def _find_try_entry_block(analyzer, start_offset):
     return best_block
 
 
+def _find_handler_type_load(analyzer, block: BasicBlock, check_index: int) -> Optional[int]:
+    """[R2-O2 fix] 结构判据定位 CHECK_* 的异常类型加载指令（替代名字白名单）。
+
+    识别条件：异常类型求值段是 handler 入口块内以 CHECK_* 收尾的直线
+    指令前缀。同块 backward 扫描失败时，类型加载若存在，只可能位于与
+    CHECK 块经无条件转移线性连通的前驱块中，且必须是该前驱块的首指令
+    （handler 链后续入口是前一个 CHECK 匹配失败跳/异常表的目标 ⇒ 块首）。
+    帧边界（PUSH_EXC_INFO/CHECK_*/RERAISE）与条件跳转块终止回溯。
+
+    归约方式：从 CHECK 块的前驱起，沿「末指令为无条件 JUMP_FORWARD/
+    JUMP_ABSOLUTE 且目标=当前块」或「末指令非跳转且当前块∈其正常
+    successors（fall-through）」的边逐块回溯；每块自首指令向后扫描
+    LOAD_GLOBAL/LOAD_NAME，命中块首加载即返回其 offset；已访块防环。
+
+    AST 映射：返回的 LOAD offset 作为 handler 链后续 handler 入口加入
+    except_handler_targets（与同块扫描命中点同语义）。
+
+    [C1] 只读块内 opcode 序列与 CFG 后继/前驱集合（conditional_successors
+    层面不涉及异常边：无条件转移与 fall-through 均为正常边）；[C2] 不
+    窥视任何区域内部，只做块级线性回溯；[C3] 显式守卫：帧边界指令、
+    条件跳转块、已访块一律终止，绝不按名字/数值距离跨块拾取。替代原
+    「全块扫描 + 异常类型名白名单 + 字节距离阈值」的跨块回退（零容忍
+    违规面，R2-O2）。
+    """
+    _FRAME_BOUNDARY_OPS = ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH',
+                           'CHECK_EG_MATCH', 'RERAISE')
+    _UNCOND_JUMP_TARGET_OPS = ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+
+    current = block
+    visited = {block}
+    while True:
+        preds = [p for p in current.predecessors if p not in visited]
+        nxt = None
+        for pred in preds:
+            instrs = pred.instructions
+            if not instrs:
+                continue
+            last = instrs[-1]
+            if last.opname in _UNCOND_JUMP_TARGET_OPS:
+                # 无条件转移边：目标必须恰为当前块
+                if analyzer.cfg.get_block_by_offset(last.argval) is current:
+                    nxt = pred
+                    break
+            if (last.opname not in _UNCOND_JUMP_TARGET_OPS
+                    and not last.opname.endswith('_JUMP')
+                    and not last.opname.startswith('JUMP')
+                    and last.opname not in ('RETURN_VALUE', 'RETURN_CONST',
+                                            'RERAISE')):
+                # fall-through 边：末指令非跳转/返回且当前块是其正常后继
+                if current in pred.successors and current not in pred.exception_successors:
+                    nxt = pred
+                    break
+        if nxt is None:
+            return None
+        visited.add(nxt)
+        # 帧边界块终止：类型求值段不可能跨越异常帧
+        if any(i.opname in _FRAME_BOUNDARY_OPS for i in nxt.instructions):
+            return None
+        first = nxt.instructions[0]
+        if first.opname in ('LOAD_GLOBAL', 'LOAD_NAME'):
+            return first.offset
+        current = nxt
+
+
 def identify_try_except_simplified(analyzer: StructuredAnalyzer, analyzed_blocks: Set[BasicBlock]) -> None:
     """
     完整的try-except-finally识别算法
@@ -132,32 +196,15 @@ def identify_try_except_simplified(analyzer: StructuredAnalyzer, analyzed_blocks
                         found_load = True
                         break
                 
-                # [关键修复] 如果在当前block中没有找到，检查所有block
-                # 对于except*语法，LOAD_GLOBAL可能在不同的block中
+                # [R2-O2 fix] 同块扫描失败时的跨块回退改为结构判据
+                # （_find_handler_type_load：无条件转移线性回溯 + 块首
+                # LOAD 判定 + 帧边界守卫），替代原「全块扫描 + 异常类型
+                # 名白名单 + 字节距离阈值」——名字白名单是零容忍违规面
+                # （任意类型的 handler 均可定位），数值距离阈值无结构语义。
                 if not found_load:
-                    # 查找在CHECK_EG_MATCH之前，且距离最近的LOAD_GLOBAL
-                    check_eg_match_offset = instr.offset
-                    closest_load_offset = None
-                    closest_load_instr = None
-                    min_distance = float('inf')
-                    
-                    for b in analyzer.cfg.blocks.values():
-                        for b_instr in b.instructions:
-                            if b_instr.opname in ('LOAD_GLOBAL', 'LOAD_NAME'):
-                                # 只考虑异常类型（排除print等其他函数）
-                                if b_instr.argval in ('ValueError', 'TypeError', 'ConnectionError', 'TimeoutError', 'Exception', 'BaseException'):
-                                    if b_instr.offset < check_eg_match_offset:
-                                        distance = check_eg_match_offset - b_instr.offset
-                                        # 只考虑距离在合理范围内的LOAD（比如40个字节内）
-                                        if distance < 40 and distance < min_distance:
-                                            # 检查这个LOAD是否已经被添加到targets中
-                                            if b_instr.offset not in except_handler_targets:
-                                                min_distance = distance
-                                                closest_load_offset = b_instr.offset
-                                                closest_load_instr = b_instr
-                    
-                    if closest_load_instr:
-                        except_handler_targets.add(closest_load_offset)
+                    found_offset = _find_handler_type_load(analyzer, block, i)
+                    if found_offset is not None and found_offset not in except_handler_targets:
+                        except_handler_targets.add(found_offset)
                         found_load = True
     
     # [关键修复] 处理所有CHECK_EXC_MATCH位置（普通except的后续handler）
@@ -165,9 +212,13 @@ def identify_try_except_simplified(analyzer: StructuredAnalyzer, analyzed_blocks
     for check_exc_offset in all_check_exc_match_offsets:
         # 找到这个CHECK_EXC_MATCH前面的LOAD_GLOBAL/LOAD_NAME（异常类型）
         found_load = False
+        check_block = None
+        check_index = -1
         for block in analyzer.cfg.blocks.values():
             for i, instr in enumerate(block.instructions):
                 if instr.offset == check_exc_offset:
+                    check_block = block
+                    check_index = i
                     # 在当前block中查找前面的LOAD_GLOBAL/LOAD_NAME
                     for j in range(i-1, max(0, i-10), -1):
                         prev_opname = block.instructions[j].opname
@@ -181,31 +232,14 @@ def identify_try_except_simplified(analyzer: StructuredAnalyzer, analyzed_blocks
             if found_load:
                 break
         
-        # 如果在当前block中没有找到，检查所有block
+        # [R2-O2 fix] 同块扫描失败时的跨块回退改为结构判据
+        # （_find_handler_type_load），移除异常类型名白名单与字节距离
+        # 阈值（同 CHECK_EG_MATCH 侧，见上）。
         if not found_load:
-            # print(f"[DEBUG CHECK_EXC_MATCH] No LOAD found in current block, checking all blocks")
-            # 查找在CHECK_EXC_MATCH之前，且距离最近的LOAD_GLOBAL
-            closest_load_offset = None
-            closest_load_instr = None
-            min_distance = float('inf')
-            
-            for b in analyzer.cfg.blocks.values():
-                for b_instr in b.instructions:
-                    if b_instr.opname in ('LOAD_GLOBAL', 'LOAD_NAME'):
-                        # 只考虑异常类型
-                        if b_instr.argval in ('ValueError', 'TypeError', 'KeyError', 'IndexError', 'AttributeError', 'RuntimeError', 'ConnectionError', 'TimeoutError', 'Exception', 'BaseException'):
-                            if b_instr.offset < check_exc_offset:
-                                distance = check_exc_offset - b_instr.offset
-                                # 只考虑距离在合理范围内的LOAD（比如30个字节内）
-                                if distance < 30 and distance < min_distance:
-                                    if b_instr.offset not in except_handler_targets:
-                                        min_distance = distance
-                                        closest_load_offset = b_instr.offset
-                                        closest_load_instr = b_instr
-            
-            if closest_load_instr:
-                # print(f"[DEBUG CHECK_EXC_MATCH] Found closest LOAD at offset {closest_load_offset}, distance={min_distance}, argval={closest_load_instr.argval}")
-                except_handler_targets.add(closest_load_offset)
+            if check_block is not None:
+                found_offset = _find_handler_type_load(analyzer, check_block, check_index)
+                if found_offset is not None and found_offset not in except_handler_targets:
+                    except_handler_targets.add(found_offset)
     
     for block in analyzer.cfg.blocks.values():
         for i, instr in enumerate(block.instructions):
