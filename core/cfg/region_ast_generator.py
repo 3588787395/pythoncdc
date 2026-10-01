@@ -3966,7 +3966,18 @@ AST 映射规则:
         # 构建 (block, op) 链：首段 op = chain_ops[0]，后续段 op = chain_ops[i]
         # （与 BoolOpRegion.op_chain 语义一致）
         all_blocks = [cond_block] + list(chain_blocks)
-        all_ops = [chain_ops[0]] + list(chain_ops)
+        # [B6-assert op 契约扩展] 识别条件：len(chain_ops) == len(all_blocks)
+        # 时为新契约——ops 逐块对齐（首项=condition_block 自身的 op，混合
+        # and/or 链经后向 and-run 前链吸收后由分析器逐跳转方向重导，
+        # r1_14 实测）；否则维持旧契约（chain_ops[0] 同时作为 cond_block
+        # 与 chain_blocks[0] 的 op，纯 and/or 链两者恒同，逐位等价）。
+        # 归约方式：按对齐后的 (block, op) 序列走下方 or_groups 分组，
+        # ``A and B or C`` 重建为 BoolOp(or, [BoolOp(and,[A,B]), C])
+        # （AST 映射，[C2] 单 BoolOp 黑箱组合）。
+        if len(chain_ops) == len(all_blocks):
+            all_ops = list(chain_ops)
+        else:
+            all_ops = [chain_ops[0]] + list(chain_ops)
         STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
         # or_groups 算法：连续相同 op 合并为一个 segment，
         # and→or 转换时把当前 and group 作为 or 的左操作数。
@@ -6522,10 +6533,52 @@ AST 映射规则:
             body_stmts.extend(recheck_store_stmts)
 
         if boolop_for_while:
-            body_stmts = [s for s in body_stmts
-                         if not (isinstance(s, dict) and s.get('type') == 'If'
-                                 and isinstance(s.get('body'), list)
-                                 and any(b.get('type') == 'Break' for b in s.get('body', [])))]
+            # [B6-while 循环体 if-break 修复过滤] boolop 复合条件 while 的体内
+            # ``if <test>: break``：其 IfRegion 的 else 侧被旋转 while 的回边
+            # 重检条件块占据（else_blocks ⊆ 回边重检链，块内只有条件求值指令、
+            # 零语句），_generate_if 将其物化为「无语句 elif 链」（test=重检
+            # 操作数、body=[Pass]、末级 orelse 空）。原过滤把整条 if-break
+            # 连同 break 一起丢弃（r1_10/ref_break2/ref_break3 实测 break
+            # 消失，控制流改变）。识别条件（AST 结构签名 + 同层循环结构，
+            # [C1]）：orelse 是【整条无语句】elif 链——每个 elif 的 body 仅
+            # Pass/空、链尾 orelse 为空；归约方式：命中即剥离该 orelse、保留
+            # if-break（重检求值由 while 条件语义承担，本就不得发射）；其余
+            # 情形（orelse 为空或含真实语句）维持原丢弃行为逐字节不变，
+            # 不放宽该过滤的历史语义（[C3]：与条件链共享循环出口 merge 的
+            # else 侧物化仍须抑制）。AST 映射：If(body=[Break], orelse=[])。
+            def _b6_stmtless_elif_chain(node):
+                cur = node
+                while isinstance(cur, dict) and cur.get('type') == 'If' and cur.get('_is_elif'):
+                    for _b in (cur.get('body') or []):
+                        if not (isinstance(_b, dict) and _b.get('type') == 'Pass'):
+                            return False
+                    _nxt = cur.get('orelse')
+                    if not _nxt:
+                        return True
+                    if len(_nxt) != 1:
+                        return False
+                    cur = _nxt[0]
+                return False
+            _b6_fixed_body = []
+            for _b6_s in body_stmts:
+                if (isinstance(_b6_s, dict) and _b6_s.get('type') == 'If'
+                        and isinstance(_b6_s.get('body'), list)
+                        and any(_b.get('type') == 'Break' for _b in _b6_s.get('body', []))):
+                    _b6_orelse = _b6_s.get('orelse')
+                    if _b6_orelse and len(_b6_orelse) == 1 \
+                            and _b6_stmtless_elif_chain(_b6_orelse[0]):
+                        # else 侧=回边重检链的无语句 elif 物化：剥离 orelse
+                        _b6_s = dict(_b6_s)
+                        _b6_s['orelse'] = []
+                    elif _b6_orelse:
+                        # else 侧含真实语句（与条件链共享循环出口 merge 的
+                        # 物化破坏语义）：维持历史丢弃行为
+                        _b6_s = None
+                    # orelse 为空/None 的干净 if-break：保留（r1_10/ref_break3
+                    # 实测形态；break 不得再丢）
+                if _b6_s is not None:
+                    _b6_fixed_body.append(_b6_s)
+            body_stmts = _b6_fixed_body
 
         _filtered_else_blocks = list(region.else_blocks) if region.else_blocks else []
         if _filtered_else_blocks and region.parent is not None and isinstance(region.parent, LoopRegion):
@@ -35235,8 +35288,13 @@ AST 映射规则:
 
         【与 _build_boolop_expression 的区别】
         - 此方法专门处理ternary内部的boolop条件
-        - 假设所有操作符类型相同（纯and链或纯or链）
-        - 不处理混合and/or（那种情况应该在识别阶段被拆分）
+        - [B6-ternary]（Round 1 修复工程师二）混合 and/or 链按 or_groups
+          分组重建：识别条件=condition_chain_blocks 各 (block, op) 的组别
+          标注（[C1] 同层块末跳转方向事实）；归约方式=存在组别边界时连续
+          同 op 段合并为 BoolOp、组间以 'or' 连接（and 绑定比 or 紧，与
+          _build_boolop_expression_inner 同一算法，[C2] 单 BoolOp 黑箱
+          组合）；全部 op 一致时维持原左折叠形态逐位不变。AST 映射：
+          ``A and B or C`` → BoolOp(or, [BoolOp(and,[A,B]), C])。
         """
         # condition_chain_blocks 有两种存储格式：
         #   - BoolOp→Ternary 升级路径: [(block, op), ...] 元组列表
@@ -35265,6 +35323,7 @@ AST 映射规则:
             return None
         values = []
         op_type = None
+        _seg_values = []
         for item in chain:
             if isinstance(item, tuple):
                 cb, cop = item[0], item[1]
@@ -35306,8 +35365,47 @@ AST 映射规则:
                     values.append(sub)
                     if op_type is None:
                         op_type = cop
+                    # [B6-ternary 混合 op 分组] 逐操作数记录其 op，供下方
+                    # or_groups 分组（识别条件：condition_chain_blocks 的
+                    # (block, op) 对，[C1] 同层结构事实）。
+                    _seg_values.append((sub, cop or op_type))
         if len(values) < 2 or op_type is None:
             return None
+        # [B6-ternary 混合 op 分组] 归约方式：全部 op 一致时维持原左折叠
+        # 形态（逐位等价）；存在 and→or / or→and 边界时按 or_groups 分组
+        # （and 绑定比 or 紧，与 _build_boolop_expression_inner 同一算法）：
+        # ``A and B or C`` → BoolOp(or, [BoolOp(and,[A,B]), C])
+        # （AST 映射，[C2] 单 BoolOp 黑箱组合）。
+        if any(op != op_type for _, op in _seg_values):
+            or_groups = []
+            cur_op = None
+            cur_vals = []
+            for val, op in _seg_values:
+                if cur_op is None:
+                    cur_op = op
+                    cur_vals = [val]
+                elif op == cur_op:
+                    cur_vals.append(val)
+                elif cur_op == 'and' and op == 'or':
+                    cur_vals.append(val)
+                    or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals})
+                    cur_op = None
+                    cur_vals = []
+                else:
+                    or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals}
+                                     if len(cur_vals) > 1 else cur_vals[0])
+                    cur_op = op
+                    cur_vals = [val]
+            if cur_vals:
+                or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals}
+                                 if len(cur_vals) > 1 else cur_vals[0])
+            result = None
+            for gnode in reversed(or_groups):
+                if result is None:
+                    result = gnode
+                else:
+                    result = {'type': 'BoolOp', 'op': 'or', 'values': [gnode, result]}
+            return result
         result = values[0]
         for v in values[1:]:
             result = {'type': 'BoolOp', 'op': op_type, 'values': [result, v]}

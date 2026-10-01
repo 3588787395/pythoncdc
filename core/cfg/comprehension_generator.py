@@ -1392,6 +1392,7 @@ class ComprehensionGenerator:
     def _extract_comp_ifs(self, all_instrs: List[Instruction], store_idx: int,
                           append_idx: int) -> Tuple[List[Dict], int]:
         ifs = []
+        seg_ops = []
         elt_start_idx = store_idx + 1
         # 获取LIST_APPEND指令的偏移量，用于区分过滤条件和三元条件
         append_offset = all_instrs[append_idx].offset if append_idx < len(all_instrs) else float('inf')
@@ -1419,6 +1420,28 @@ class ComprehensionGenerator:
                             if inner_instr.opname in CONDITIONAL_JUMP_OPS and 'BACKWARD' in inner_instr.opname:
                                 has_backward_after = True
                                 break
+                        # [B6-comp 混合过滤器甄别扩展] and→or 边界成员的前向假边
+                        # 直达 or 尾成员（目标块仍是条件块），or 尾成员的「假边跳
+                        # 回 FOR_ITER」回跳位于目标偏移之后且与求值指令同块（前驱
+                        # 指令非跳转即同块，[C1] 同层结构事实）。命中即仍按过滤
+                        # 器段收集，不 break 出循环（不命中维持 R10 原判据，
+                        # [C3] 显式守卫）。
+                        if not has_backward_after:
+                            for inner_idx in range(idx + 1, append_idx):
+                                inner_instr = all_instrs[inner_idx]
+                                if inner_instr.offset < instr.argval:
+                                    continue
+                                if inner_instr.offset >= append_offset:
+                                    break
+                                if inner_instr.opname in CONDITIONAL_JUMP_OPS and 'BACKWARD' in inner_instr.opname:
+                                    if inner_idx > 0:
+                                        prev_instr = all_instrs[inner_idx - 1]
+                                        if (prev_instr.opname not in CONDITIONAL_JUMP_OPS
+                                                and prev_instr.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                                                              'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                                              'RETURN_VALUE', 'RETURN_CONST')):
+                                            has_backward_after = True
+                                            break
                         if not has_backward_after:
                             # FORWARD ternary cond 跳转 — break
                             # 出循环让已收集的 filter segments 被处理，而非 return
@@ -1544,6 +1567,13 @@ class ComprehensionGenerator:
                             else:
                                 cond_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': cond_expr}
                         ifs.append(cond_expr)
+                        # [B6-comp 混合 op 标注] 逐段按跳转方向标注组别 op：
+                        # 前向 IF_TRUE=or 成员（真→进循环体）；回向 IF_TRUE=
+                        # 取反 and 成员（not X：真→跳过本轮）；其余（前向/回向
+                        # IF_FALSE、NONE 检查）=and 成员。与 BoolOpRegion
+                        # op_chain 的方向标注同源（[C1] 同层块末 opcode 事实）。
+                        seg_ops.append('or' if ('FORWARD' in jump_instr.opname
+                                                and 'IF_TRUE' in jump_instr.opname) else 'and')
             elt_start_idx = current_start
 
         # Multiple if conditions in comprehension are connected by 'and' (short-circuit).
@@ -1564,31 +1594,69 @@ class ComprehensionGenerator:
                 if has_forward_if_true and has_backward_if_false:
                     is_or_pattern = True
             op = 'or' if is_or_pattern else 'and'
-            # [识别条件] 仅 and 链：segments 与 ifs 一一对应时，数出前缀里连续的
-            #   「POP_JUMP_FORWARD_IF_FALSE」段数 p。该形态只在原源码把 and 链拆到
-            #   两行时出现（同一行上 CPython 两条都回跳循环头），而单行产物必然
-            #   两条都回跳，故 p>0 恒为当前失配单元，p==0 的单元（含全部金丝雀）
-            #   一个字节都不改。
-            # [归约方式] 把第 p-1 个操作数渲染成「原文 + 换行 + 续行缩进」的原始
-            #   文本（_and_operand_raw_text，渲染失败返回 None 则保持单行），
-            #   换行正好落在第 p-1 与第 p 个操作数之间，使重编译时这两行分界
-            #   复现原 pyc 的前向/回跳方向。
-            # [AST 映射] 外层仍是 BoolOp(op, values)，仅 values[p-1] 换成
-            #   Name(原始文本)——发射侧对 Name 原样输出 id，重编译回
-            #   BoolOp(and, [...])，与单行版同一 AST 形状。
-            if op == 'and' and segments and len(segments) == len(ifs):
-                split_at = 0
-                for _, _, lead_jump in segments[:-1]:
-                    if 'FORWARD' in lead_jump.opname and 'IF_FALSE' in lead_jump.opname:
-                        split_at += 1
+            # [B6-comp 混合 op 分组] 识别条件：段跳转方向标注（seg_ops）与
+            # ifs 一一对应且存在 and→or / or→and 组别边界（混合 and/or 过滤
+            # 链，r1_21 实测 `if a and b or c`）。归约方式：or_groups 分组
+            # ——and 绑定比 or 紧，连续同 op 段合并为 BoolOp、组间以 'or'
+            # 连接，与 _build_boolop_expression_inner 的 segment 算法同一
+            # 语义（[C2] 单 BoolOp 黑箱组合）。AST 映射：
+            # ``A and B or C`` → BoolOp(or, [BoolOp(and,[A,B]), C])。
+            # 全部段同 op 时走既有单 op 路径（逐位不变）。
+            _b6_seg_ops = seg_ops if len(seg_ops) == len(ifs) else []
+            _b6_mixed = bool(_b6_seg_ops) and any(o != _b6_seg_ops[0] for o in _b6_seg_ops)
+            if not _b6_mixed:
+                # [识别条件] 仅 and 链：segments 与 ifs 一一对应时，数出前缀里连续的
+                #   「POP_JUMP_FORWARD_IF_FALSE」段数 p。该形态只在原源码把 and 链拆到
+                #   两行时出现（同一行上 CPython 两条都回跳循环头），而单行产物必然
+                #   两条都回跳，故 p>0 恒为当前失配单元，p==0 的单元（含全部金丝雀）
+                #   一个字节都不改。
+                # [归约方式] 把第 p-1 个操作数渲染成「原文 + 换行 + 续行缩进」的原始
+                #   文本（_and_operand_raw_text，渲染失败返回 None 则保持单行），
+                #   换行正好落在第 p-1 与第 p 个操作数之间，使重编译时这两行分界
+                #   复现原 pyc 的前向/回跳方向。
+                # [AST 映射] 外层仍是 BoolOp(op, values)，仅 values[p-1] 换成
+                #   Name(原始文本)——发射侧对 Name 原样输出 id，重编译回
+                #   BoolOp(and, [...])，与单行版同一 AST 形状。
+                if op == 'and' and segments and len(segments) == len(ifs):
+                    split_at = 0
+                    for _, _, lead_jump in segments[:-1]:
+                        if 'FORWARD' in lead_jump.opname and 'IF_FALSE' in lead_jump.opname:
+                            split_at += 1
+                        else:
+                            break
+                    if split_at:
+                        raw_text = _and_operand_raw_text(ifs[split_at - 1])
+                        if raw_text is not None:
+                            ifs = list(ifs)
+                            ifs[split_at - 1] = {'type': 'Name', 'id': raw_text}
+                ifs = [{'type': 'BoolOp', 'op': op, 'values': ifs}]
+            else:
+                or_groups = []
+                cur_op = None
+                cur_vals = []
+                for val, o in zip(ifs, _b6_seg_ops):
+                    if cur_op is None:
+                        cur_op = o
+                        cur_vals = [val]
+                    elif o == cur_op:
+                        cur_vals.append(val)
+                    elif cur_op == 'and' and o == 'or':
+                        cur_vals.append(val)
+                        or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals})
+                        cur_op = None
+                        cur_vals = []
                     else:
-                        break
-                if split_at:
-                    raw_text = _and_operand_raw_text(ifs[split_at - 1])
-                    if raw_text is not None:
-                        ifs = list(ifs)
-                        ifs[split_at - 1] = {'type': 'Name', 'id': raw_text}
-            ifs = [{'type': 'BoolOp', 'op': op, 'values': ifs}]
+                        or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals}
+                                         if len(cur_vals) > 1 else cur_vals[0])
+                        cur_op = o
+                        cur_vals = [val]
+                if cur_vals:
+                    or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals}
+                                     if len(cur_vals) > 1 else cur_vals[0])
+                result = None
+                for gnode in reversed(or_groups):
+                    result = gnode if result is None else {'type': 'BoolOp', 'op': 'or', 'values': [gnode, result]}
+                ifs = [result]
 
         return ifs, elt_start_idx
 
@@ -1707,7 +1775,15 @@ class ComprehensionGenerator:
         字节码模式：condition → POP_JUMP_IF_FALSE false_value → true_value → JUMP_FORWARD merge → false_value → LIST_APPEND 支持 ternary + filter 共存：BACKWARD filter 跳转
         （跳回 FOR_ITER）会被跳过，继续寻找 FORWARD ternary cond 跳转。
         cond_instrs 从最后一个 filter 跳转之后开始，避免包含 filter 指令。
-        """
+
+        [B6-comp]（Round 1 修复工程师二）混合 and/or 过滤链
+        ``[... if A and B or C]`` 的 and→or 边界成员假边直达 or 尾成员
+        （目标块仍是条件块），其「假边跳回 FOR_ITER」的回跳条件跳转位于
+        目标偏移之后且与求值指令同块（前驱非跳转即同块，[C1] 同层结构
+        事实）。识别条件=该「回跳条件 + 融合求值前缀」签名；归约方式=
+        判定为过滤器（返回 None 交回 _extract_comp_ifs 逐段提取 + or_groups
+        分组），不命中维持 R10/R67 原判据逐位不变（[C3] 显式守卫）。
+        AST 映射由 _extract_comp_ifs 的 BoolOp 组合承担。"""
         append_offset = all_instrs[append_idx].offset if append_idx < len(all_instrs) else float('inf')
 
         # 查找STORE和LIST_APPEND之间的条件跳转
@@ -1796,6 +1872,32 @@ class ComprehensionGenerator:
                             if inner_instr.opname in CONDITIONAL_JUMP_OPS and 'BACKWARD' in inner_instr.opname:
                                 has_backward_after = True
                                 break
+                        # [B6-comp 混合过滤器甄别扩展] 混合链 and→or 边界成员的
+                        # 前向假边直达 or 尾成员（目标块自身仍是条件块），其
+                        # 「假边跳回 FOR_ITER」的回跳条件跳转位于目标偏移之后、
+                        # 且与操作数求值指令同块（前一条是非跳转指令——块为
+                        # 极大直线序列，前驱非跳转即同块，[C1] 同层结构事实）。
+                        # 该签名（回跳条件 + 融合求值前缀）是过滤器成员专属：
+                        # 纯三元假值块为直线求值、不含条件跳转；三元作过滤器的
+                        # 「回跳出口块」是裸跳转块（前驱是跳转，不同块）。命中即
+                        # 判过滤器（返回 None 交回 _extract_comp_ifs 逐段提取），
+                        # 不命中维持 R10/R67 原判据逐位不变（[C3] 显式守卫）。
+                        if not has_backward_after:
+                            for inner_idx in range(idx + 1, append_idx):
+                                inner_instr = all_instrs[inner_idx]
+                                if inner_instr.offset < instr.argval:
+                                    continue
+                                if inner_instr.offset >= append_offset:
+                                    break
+                                if inner_instr.opname in CONDITIONAL_JUMP_OPS and 'BACKWARD' in inner_instr.opname:
+                                    if inner_idx > 0:
+                                        prev_instr = all_instrs[inner_idx - 1]
+                                        if (prev_instr.opname not in CONDITIONAL_JUMP_OPS
+                                                and prev_instr.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                                                              'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                                              'RETURN_VALUE', 'RETURN_CONST')):
+                                            has_backward_after = True
+                                            break
                         if has_backward_after:
                             return None
                         # [R67-fix2] 同假出口的布尔链：条件区延伸到链上最后一条跳转，

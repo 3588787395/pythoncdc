@@ -15150,6 +15150,18 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         能到达一个条件块，该条件块的 fall-through 链最终到达 message_block；
         且条件块的另一后继不是 message_block（是 end/skip 块）。
 
+        [B6-assert]（Round 1 修复工程师二）混合 and/or 断言条件的锚点落在链
+        中段（``assert A and B or C`` 的锚点=C 或 B），首操作数 A 以「假边跳
+        过 and 组余量直达 or 尾成员」收尾，任何前向 walk 都拿不到它。修复：
+        前向链与 or-run 回溯结果之上，按 and→or 边界签名（未认领前驱 P 的
+        fall-through=链头且 P 假边目标 ∈ 链块集）沿前驱吸收整条 and-run，
+        condition_block 按「入口引用语义」重映射为 run 首（复用
+        new_condition_block 通道），整链 op 逐块按跳转方向重导并按扩展契约
+        返回 len(chain)+1 个 op（首项=condition_block 自身 op；旧契约
+        len(chain_ops)==len(chain_blocks) 时首 op 同时标注 condition_block
+        与 chain_blocks[0]，纯链两者恒同，逐位等价）。识别/归约/AST 映射与
+        [C1]/[C2]/[C3] 全声明见 _b6_assert_absorb_and_run docstring。
+
         操作符判定：chain 块末尾跳转为 IF_FALSE/IF_NONE → 'and'，IF_TRUE/IF_NOT_NONE → 'or'。
         首段 condition_block 的 op 用于第一段（与 BoolOpRegion op_chain 语义一致）。
         """
@@ -15324,20 +15336,117 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         backward_blocks.reverse()
                         new_condition_block = backward_blocks[0]
                         new_chain_blocks = backward_blocks[1:] + [condition_block]
-                        new_chain_ops = ['or'] * len(new_chain_blocks)
+                        # [B6-assert] or-run 回溯只收 IF_TRUE 前驱；or-run 首
+                        # 之前可能还有 and 组前缀（``assert A and B or C`` 的
+                        # 锚点=C，回溯收得 [B, C]，A 泄漏）。按同层 and→or
+                        # 边界签名再吸收 and-run，并按扩展契约逐块重导 op。
+                        _b6a_pre, _b6a_all, _b6a_ops = self._b6_assert_absorb_and_run(
+                            new_condition_block, new_chain_blocks,
+                            set(backward_blocks) | {condition_block, message_block})
+                        if _b6a_pre:
+                            new_condition_block = _b6a_pre[0]
+                            new_chain_blocks = _b6a_all[1:]
+                        else:
+                            _b6a_ops = ['or'] * (len(new_chain_blocks) + 1)
                         return {
                             'chain_blocks': new_chain_blocks,
-                            'chain_ops': new_chain_ops,
-                            'first_op': 'or',
+                            'chain_ops': _b6a_ops,
+                            'first_op': _b6a_ops[0],
                             'new_condition_block': new_condition_block,
                         }
             return None
+        # [B6-assert 后向 and-run 前链吸收] 混合 and/or 断言条件的识别锚点
+        # 落在链中段（and 组末成员 / or 成员），首操作数 A 的块以「假边跳过
+        # and 组余量直达 or 尾成员」收尾——前向 walk 从锚点出发永远拿不到
+        # 它，A 泄漏为外层 if（实测 r1_14 `if a: assert b or c; return 1`）。
+        # 识别/归约/映射见 _b6_assert_absorb_and_run（[C1]/[C2]/[C3] 全声明）。
+        _b6a_known = set(chain_blocks) | {condition_block, message_block} | set(all_passthrough)
+        for _b6_cb in chained_compare_blocks or []:
+            _b6a_known.add(_b6_cb)
+        _b6a_pre, _b6a_all, _b6a_ops = self._b6_assert_absorb_and_run(
+            condition_block, chain_blocks, _b6a_known,
+            extra_known=all_passthrough)
+        if _b6a_pre:
+            return {
+                'chain_blocks': _b6a_all[1:],
+                # 扩展契约：len(chain_ops) == len(chain_blocks)+1，首项为
+                # condition_block（run 首）自身的 op。
+                'chain_ops': _b6a_ops,
+                'first_op': _b6a_ops[0],
+                'passthrough_blocks': all_passthrough,
+                'new_condition_block': _b6a_pre[0],
+            }
         return {
             'chain_blocks': chain_blocks,
             'chain_ops': chain_ops,
             'first_op': first_op,
             'passthrough_blocks': all_passthrough,
         }
+
+    def _b6_assert_absorb_and_run(self, head_block: BasicBlock,
+                                  tail_blocks: List[BasicBlock],
+                                  known_blocks: Set[BasicBlock],
+                                  extra_known: List[BasicBlock] = None):
+        """[B6-assert] 从链头沿未认领前驱吸收 and-run 前缀（混合 and/or 断言
+        条件的前链补全）。
+
+        识别条件（[C1] 局部消费：只读同层块末 opcode 与后继/前驱块身份）：
+        未认领前驱 P（不在 known_blocks、不在 block_to_region）以正向条件
+        跳转收尾，P 的 fall-through 恰为当前链头，且 P 的跳转目标 ∈ 当前
+        已知链块集——即 and→or 边界签名（A 假边跳过 and 组余量直达 or 尾
+        成员，与 BoolOpRegion op_chain 的 'FALSE'→'and' 标注同源）；沿前驱
+        迭代吸收整条 and-run。
+        归约方式（[C2]）：吸收后按「入口引用语义」把链头重映射为 run 首，
+        整链 op 逐块按跳转方向重导（'TRUE'/'NOT_NONE'→'or'，否则 'and'；
+        对纯 and/or 链与 or_groups 分组算法逐位等价），返回 len(链)+1 个
+        op（首项=run 首的 op，供 _build_assert_boolop_condition 的
+        or_groups 分组重建 ``A and B or C``）。
+        AST 映射（[C3]）：AssertRegion(entry=run 首, boolop_chain_blocks=
+        余下成员) → _generate_assert → _build_assert_boolop_condition →
+        ast.Assert.test=BoolOp；仅吸收 known_blocks/block_to_region 之外的
+        未认领前驱，认领块一律不进链。
+        返回 (pre_blocks[run首在前], 全链块列表, 全链 op 列表)；无吸收时
+        pre_blocks 为空。
+        """
+        pre: List[BasicBlock] = []
+        known = set(known_blocks)
+        for _b6_cb in extra_known or []:
+            known.add(_b6_cb)
+        chain_head = head_block
+        while True:
+            pred = None
+            for p in chain_head.predecessors:
+                if p in known or p in self.block_to_region:
+                    continue
+                p_last = p.get_last_instruction()
+                if (p_last is None or getattr(p_last, 'argval', None) is None
+                        or p_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+                    continue
+                p_jt = self.cfg.get_block_by_offset(p_last.argval)
+                if p_jt is None or p_jt not in known:
+                    continue
+                p_fts = [s for s in p.conditional_successors
+                         if s.start_offset != p_last.argval]
+                if len(p_fts) != 1 or p_fts[0] is not chain_head:
+                    continue
+                pred = p
+                break
+            if pred is None:
+                break
+            pre.append(pred)
+            known.add(pred)
+            chain_head = pred
+        if not pre:
+            return [], [head_block] + list(tail_blocks), []
+        pre.reverse()
+        all_blocks = list(pre) + [head_block] + list(tail_blocks)
+        ops = []
+        for b in all_blocks:
+            last = b.get_last_instruction()
+            ops.append('or' if (last is not None
+                                and ('TRUE' in last.opname or 'NOT_NONE' in last.opname))
+                       else 'and')
+        return pre, all_blocks, ops
 
     def _reach_assertion_error_block(self, block: BasicBlock) -> bool:
         """[Round4-12] 从 block 起沿单后继 fall-through 链查找 LOAD_ASSERTION_ERROR。
@@ -21722,6 +21831,57 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
 
             chain_blocks = _build_ternary_condition_chain(block, true_block, false_block)
 
+            # [B6-ternary BoolOp 驱动链升级] `_build_ternary_condition_chain`
+            # 只认「所有成员共享同一假出口」的均匀链；混合链
+            # ``x if A and B or C else y`` 在 and→or 边界断行（A 的假边直达
+            # or 尾成员 C，C 才与假值块共享出口），链止于 B，C 被当成
+            # true_block → 下方值块守卫拒绝 → TernaryRegion 缺席，
+            # IfRegion 把残局物化成错序三元（r1_11 实测
+            # `(1 if c else 2) if a and b else 1`）。
+            # 识别条件（全部为同层结构事实，[C1]）：block 是既有
+            # BoolOpRegion 的 entry（身份恒等）；该区域 op_chain ≥ 2 且链
+            # walk 止步于其非末成员；末成员以正向条件跳转收尾，其跳转目标
+            # = 该 BoolOpRegion 的 merge_block（or 尾假出口 = 三元假值块，
+            # 接口闭合），fall-through 为候选真值块。
+            # 归约方式（[C2]）：chain_blocks 升级为该 BoolOpRegion 的
+            # op_chain（黑箱消费其 entry/merge 接口），由下方既有
+            # len(chain)>1 路径从链尾重导 true/false 值块并经
+            # skip_ternary/boolop_op_chain 升级守卫建 TernaryRegion。
+            # AST 映射：condition_chain_blocks = BoolOpRegion.op_chain →
+            # _build_ternary_boolop_condition 重建混合 BoolOp 条件（混合
+            # op 分组见该方法的 or_groups 扩展）。
+            _b6t_boolop_region = None
+            for _b6_r in self.regions:
+                if isinstance(_b6_r, BoolOpRegion) and _b6_r.entry is block:
+                    if len(_b6_r.op_chain or []) >= 2:
+                        _b6t_boolop_region = _b6_r
+                    break
+            if (_b6t_boolop_region is not None
+                    and chain_blocks
+                    and chain_blocks[-1] is not _b6t_boolop_region.op_chain[-1][0]):
+                _b6t_tail = _b6t_boolop_region.op_chain[-1][0]
+                _b6t_last = _b6t_tail.get_last_instruction()
+                if (_b6t_last is not None
+                        and getattr(_b6t_last, 'argval', None) is not None
+                        and _b6t_last.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                    _b6t_jt = self.cfg.get_block_by_offset(_b6t_last.argval)
+                    _b6t_ft = None
+                    for _b6_s in _b6t_tail.conditional_successors:
+                        if _b6_s.start_offset != _b6t_last.argval:
+                            _b6t_ft = _b6_s
+                            break
+                    _b6t_is_merge = (_b6t_jt is not None
+                                     and _b6t_boolop_region.merge_block is not None
+                                     and _b6t_jt is _b6t_boolop_region.merge_block)
+                    if (_b6t_is_merge and _b6t_ft is not None
+                            and not any(i.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                                        for i in _b6t_ft.instructions)
+                            and not any(i.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                                        for i in _b6t_jt.instructions)):
+                        # 链 walk 的中间段仍是纯块列表；op 信息由下方既有
+                        # boolop_op_chain 升级通道（entry==block 配对）携带。
+                        chain_blocks = [b for b, _ in _b6t_boolop_region.op_chain]
+
             # 辅助函数：检查块是否以RETURN_VALUE/RETURN_CONST结尾
             def _block_ends_with_return(blk):
                 last = blk.get_last_instruction()
@@ -23514,6 +23674,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                   op_chain 与操作数块）。
           Step 5: 循环条件特殊处理——_detect_while_condition_boolop_chain
                   处理 while 条件，创建的 boolop 区域作为 LoopRegion 的子区域。
+                  [B6-while]（Round 1 修复工程师二）Step 5 另承担「残链超越
+                  替换」：主扫描先行在 condition_block 上装配的 BoolOpRegion
+                  若缺少前驱 and 组前缀（其 entry 是 Step 5 完整链的非首成员
+                  且 op_chain 更短），则撤销残链、按完整链重建（链块所有权
+                  经 block_to_region 归属表显式校验：仅允许未认领/本循环
+                  condition_block 惯例/待超越残链三类，[C3]）。
           Step 6: 后处理优化——尝试扩展 boolop 区域以包含值块（value block）。
 
         **归约顺序**
@@ -23844,11 +24010,49 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         for region in self._filter_regions(existing_regions, LoopRegion):
             if region.condition_block is None:
                 continue
-            if any(region.condition_block in r.blocks
-                   for r in self._filter_regions(boolop_regions, BoolOpRegion)):
-                continue
             loop_cond = region.condition_block
             chain = self._detect_while_condition_boolop_chain(loop_cond, region)
+            if not (chain and len(chain) >= 2):
+                continue
+            # [B6-while 所有权校验与残链超越替换] 循环条件链的每个块要么未被
+            # 任何区域认领、要么由本 LoopRegion（condition_block 惯例）或将被
+            # 超越替换的残链 BoolOpRegion 认领（[C3] 显式守卫：不读跨层信息，
+            # 只查同层 block_to_region 归属表）。残链超越判据（同层结构事实）：
+            # 主扫描在 condition_block 上先行装配的 BoolOpRegion 缺少前驱
+            # and 组前缀（其 entry 是本链的非首成员）且 op_chain 更短——命中
+            # 即撤销残链（块归还、区域注销）后按完整链重建（r1_10 的
+            # `while a and b or c:` 残链 [b or c] 被 [a and b or c] 超越）。
+            _b6_chain_blks = [b for b, _ in chain]
+            _b6_owning_br = None
+            for _b6_r in self._filter_regions(boolop_regions, BoolOpRegion):
+                if loop_cond in _b6_r.blocks:
+                    _b6_owning_br = _b6_r
+                    break
+            _b6_owner_ok = True
+            for _b6_b in _b6_chain_blks:
+                _b6_o = self.block_to_region.get(_b6_b)
+                if _b6_o is None or _b6_o is region:
+                    continue
+                if _b6_owning_br is not None and _b6_o is _b6_owning_br:
+                    continue
+                _b6_owner_ok = False
+                break
+            if not _b6_owner_ok:
+                continue
+            if _b6_owning_br is not None:
+                if _b6_owning_br.entry not in _b6_chain_blks[1:]:
+                    continue
+                if len(_b6_owning_br.op_chain) >= len(chain):
+                    continue
+                for _b6_ob in _b6_owning_br.blocks:
+                    if _b6_ob in self.block_to_region and self.block_to_region[_b6_ob] is _b6_owning_br:
+                        del self.block_to_region[_b6_ob]
+                if _b6_owning_br in boolop_regions:
+                    boolop_regions.remove(_b6_owning_br)
+                if _b6_owning_br in self.regions:
+                    self.regions.remove(_b6_owning_br)
+                if hasattr(_b6_owning_br, 'parent') and _b6_owning_br.parent and _b6_owning_br in _b6_owning_br.parent.children:
+                    _b6_owning_br.parent.children.remove(_b6_owning_br)
             if chain and len(chain) >= 2:
                 boolop_region = self._create_boolop_region_from_chain(chain, claimed)
                 if boolop_region:
@@ -23988,6 +24192,28 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         return boolop_regions
 
     def _detect_while_condition_boolop_chain(self, cond_block: BasicBlock, loop: LoopRegion) -> Optional[List[Tuple[BasicBlock, str]]]:
+        """检测 while 条件的 and/or 复合链，返回 [(block, op)] 或 None。
+
+        [B6-while]（Round 1 修复工程师二）旋转 while 条件上下文的混合链
+        ``while A and B or C:`` 的 condition_block 是链的【中间】操作数
+        （B，and→or 边界成员），既有单向 walk（前向/后向）各自只能拿到
+        半条链：
+        1. 算法依据：CPython 3.11 旋转 while 的条件求值「真出口=体入口
+           (header)、假出口=循环出口」；混合链中 and 组成员假边跳过组内
+           余量直达 or 尾、or 尾假边出循环——目标不满足 R07 all_same_
+           target（该判据仅适用均匀链）。
+        2. 归约方式（识别/归约细节见下方 [B6-while 混合链双向续接] 代码
+           注释）：后向回溯收 and 组前缀 + 前向 fall-through 续接 or 尾
+           run + 链首假边=or 尾首的边界闭合校验 + 末成员 fall-through=
+           header 的完备性闭合；混合链不经 all_same_target（结构性不满足
+           而非嵌套信号），均匀链维持原判据逐位不变。
+        3. AST 映射：完整链交 _create_boolop_region_from_chain 建
+           BoolOpRegion（LoopRegion 子区域、is_condition_context 按链形态
+           推导），_loop_generate_while 经 _build_boolop_expression 重建
+           ast.While.test；or 尾/前缀块的归属由 Step 5 调用方的所有权
+           校验与残链超越替换保证（[C1] 同层块末 opcode 与后继身份 /
+           [C2] 单 BoolOpRegion 黑箱组合 / [C3] 所有权显式守卫）。
+        """
         BOOLOP_CHAIN_JUMPS = FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
         forward_chain = self._detect_while_boolop_forward_chain(cond_block, loop, BOOLOP_CHAIN_JUMPS)
         if forward_chain and len(forward_chain) >= 2:
@@ -24230,6 +24456,103 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             current = pred
         if len(chain) < 2:
             return chain if len(chain) >= 1 else None
+        # [B6-while 混合链双向续接] 旋转 while 条件上下文中，混合 and/or 链
+        # ``while A and B or C:`` 的 condition_block 是链的【中间】操作数
+        # （B：POP_JUMP_IF_TRUE → 循环体，即 and→or 边界成员）；后向回溯已把
+        # and 组前驱 A 收进链，但 or 尾操作数 C 在 condition_block 的
+        # fall-through 方向，且回溯给 A 打上的 op 标签是「取反操作数」语义
+        # （op_type='or'），与 or_groups 重建需要的 'and' 标签不符；链尾的
+        # all_same_target 校验对混合链必然失败（A 假边 → or 尾、B 真边 →
+        # 体、C 假边 → 循环出口，三者目标天然不汇聚），整条链被丢弃后主
+        # 扫描退而装配 [B or C] 残链（r1_10 实测 `if a: while b or c:`）。
+        # 识别条件（全部为同层块末 opcode 族与后继块身份，[C1]）：
+        #   (1) 链尾（=condition_block）以正向 IF_TRUE 族跳转收尾，且其跳转
+        #       目标是 loop.header_block（or 操作数真出口=体入口）；
+        #   (2) 链首原始跳转为正向 IF_FALSE 族（and→or 边界成员的假边签名；
+        #       取反操作数 ``not X`` 的假边成员是 IF_TRUE 族，维持原路径）；
+        #   (3) or 尾续接：从 condition_block 的 fall-through 起，凡未被
+        #       loop.blocks 含纳、以正向条件跳转收尾的块——IF_TRUE 族且真
+        #       目标 = condition_block 真目标者为中间 or 成员（沿其
+        #       fall-through 继续），IF_FALSE 族且 fall-through = 恰为
+        #       loop.header_block（条件求值完毕进入体，完备性闭合）、假目标
+        #       不指向链内任何块或真出口者为末 or 尾成员（终止）；
+        #   (4) 边界闭合：链首块的条件跳转目标必须恰为第一个 or 尾成员
+        #       （A 假边跳过 and 组余量直达 or 尾——CPython 对
+        #       (A∧B)∨C 降级的「失败路径汇聚 or 尾」结构事实）。
+        # 归约方式（[C2]）：补全后的链 [(A,'and'),(B,'or'),(C,'and')] 交
+        #   _create_boolop_region_from_chain 统一归约为单个 BoolOpRegion，
+        #   由 or_groups 分组重建 ``A and B or C``；不再经 all_same_target
+        #   （混合链目标不汇聚是该形态的结构特征，非嵌套信号）。
+        # AST 映射：BoolOpRegion 作为 LoopRegion 子区域（is_condition_context
+        #   由创建器按链形态推导），_loop_generate_while 经
+        #   _build_boolop_expression 重建 ast.While.test（[C3]：or 尾块的
+        #   归属由 Step 5 的调用方所有权校验保证——链块要么未被认领，要么
+        #   仅被将被超越替换的残链 BoolOpRegion 认领）。
+        _b6_tail_blk, _b6_tail_op = chain[-1]
+        _b6_cond_last = _b6_tail_blk.get_last_instruction()
+        _b6_first_last = chain[0][0].get_last_instruction()
+        if (_b6_tail_op == 'or'
+                and _b6_cond_last is not None
+                and _b6_cond_last.argval is not None
+                and 'TRUE' in _b6_cond_last.opname
+                and _b6_cond_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                and loop.header_block is not None
+                and self.cfg.get_block_by_offset(_b6_cond_last.argval) is loop.header_block
+                and _b6_first_last is not None
+                and _b6_first_last.argval is not None
+                and 'FALSE' in _b6_first_last.opname
+                and _b6_first_last.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+            _b6_cond_true_jt = self.cfg.get_block_by_offset(_b6_cond_last.argval)
+            _b6_chain_blocks = {b for b, _ in chain}
+            _b6_ortail: List[Tuple[BasicBlock, str]] = []
+            _b6_cur = None
+            for _b6_s in _b6_tail_blk.conditional_successors:
+                if _b6_s.start_offset != _b6_cond_last.argval:
+                    _b6_cur = _b6_s
+                    break
+            _b6_seen = set(_b6_chain_blocks)
+            _b6_ok = False
+            while _b6_cur is not None and _b6_cur.start_offset not in _b6_seen:
+                if _b6_cur in loop.blocks or _b6_cur is loop.header_block \
+                        or _b6_cur is loop.back_edge_block:
+                    break
+                _b6_last = _b6_cur.get_last_instruction()
+                if (_b6_last is None or _b6_last.argval is None
+                        or _b6_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+                    break
+                _b6_jt = self.cfg.get_block_by_offset(_b6_last.argval)
+                _b6_ft = None
+                for _b6_s in _b6_cur.conditional_successors:
+                    if _b6_s.start_offset != _b6_last.argval:
+                        _b6_ft = _b6_s
+                        break
+                if _b6_jt is None or _b6_ft is None:
+                    break
+                if 'TRUE' in _b6_last.opname:
+                    # 中间 or 成员：真出口=体（与链尾同目标），假边沿
+                    # fall-through 继续求值下一 or 成员。
+                    if _b6_jt is not _b6_cond_true_jt:
+                        break
+                    _b6_ortail.append((_b6_cur, 'or'))
+                    _b6_seen.add(_b6_cur.start_offset)
+                    _b6_cur = _b6_ft
+                else:
+                    # 末 or 尾成员：假边 → 循环出口（不指向链内/真出口），
+                    # fall-through 进入体（完备性：条件求值完毕进 body）。
+                    if _b6_ft is not loop.header_block:
+                        break
+                    if _b6_jt in _b6_chain_blocks or _b6_jt is _b6_cond_true_jt:
+                        break
+                    _b6_ortail.append((_b6_cur, 'and'))
+                    _b6_seen.add(_b6_cur.start_offset)
+                    _b6_ok = True
+                    break
+            if _b6_ok and self.cfg.get_block_by_offset(_b6_first_last.argval) is _b6_ortail[0][0]:
+                _b6_chain = [(b, 'and' if 'FALSE' in b.get_last_instruction().opname else 'or')
+                             for b, _ in chain[:-1]]
+                _b6_chain.append((_b6_tail_blk, 'or'))
+                _b6_chain.extend(_b6_ortail)
+                return _b6_chain
         # 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）
         # + R07 all_same_target 判据：合法 and/or 复合条件的所有操作数块的
         # 条件跳转目标必须收敛到同一出口块。二元素及任意长度链均逐操作数

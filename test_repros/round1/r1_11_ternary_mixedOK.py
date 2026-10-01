@@ -2,5 +2,5 @@
 # File: r1_11_ternary_mixed.pyc (Python 3.11)
 
 def f(a, b, c):
-    x = (1 if c else 2) if a and b else 1
+    x = 1 if a and b or c else 2
     return x
