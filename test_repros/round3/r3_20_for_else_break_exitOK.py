@@ -10,6 +10,8 @@ def inner_break_out(m, n):
         for i in range(n):
             if i == k:
                 break
+        else:
+            break
         OUT.append(k)
         k += 1
     return k
@@ -35,4 +37,5 @@ def while_else_break_exit(n):
                 break
         else:
             break
+        acc.append(t)
     return acc

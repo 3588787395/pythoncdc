@@ -1,4 +1,4 @@
-﻿"""
+"""
 基于区域的AST生成器
 
 使用 RegionAnalyzer 的分析结果直接生成AST，替代 ast_generator_v2.py 中的补丁式生成。
@@ -4299,11 +4299,6 @@ AST 映射规则:
     _loop_process_body_block 路径独立处理，不进入此分支。
         """
         header = region.header_block
-        if os.environ.get('R3DBG_GUARD'):
-            print('[GENLOOP] hdr=%s rtype=%s has_break=%s else=%s' % (
-                header.start_offset if header else None, region.region_type,
-                getattr(region, 'has_break', None),
-                [b.start_offset for b in (region.else_blocks or [])]))
         if header is None:
             return {'type': 'Pass'}
 
@@ -5073,15 +5068,42 @@ AST 映射规则:
         # 3214 ∈ while@2476.break_blocks）；归约为 [{'type': 'Break'}]。
         # AST 映射——For.orelse = [Break]，编译器对 for-else 中的 break
         # 生成与原字节码一致的前向跳转。
+        # [R3-B10 fix] 第二证据（识别条件→归约方式→AST 映射）：
+        # 识别条件——纯跳转 else 块以 JUMP_FORWARD/JUMP_ABSOLUTE（前向，
+        # 非回边）收尾，且其落点越出最近包围 LoopRegion 的
+        # body_blocks ∪ {header_block}（同层块对象结构事实，经 region.parent
+        # 父引用链读取，C2 黑箱组合；不读偏移常量/名字/条数）。
+        # 归约方式——「无 else 的 while + break」形态中 break 落点与条件假
+        #   出口汇聚同一 natural_exit，识别层 _detect_break_continue 不将其
+        #   注册进 break_blocks（s == natural_exit 分支），旧证据集为空 →
+        #   `for...else: break`（break 属外层循环）整条丢失
+        #   （inner_break_out else@70 JF→146=外层 while 出口）。落点在祖先
+        #   循环体之外即「跳离该循环」的结构证据，与 break_blocks 证据取或。
+        # AST 映射——For.orelse = [Break]；break 在 for-else 子句中语义绑定
+        #   外层循环，重编译产生与原字节码一致的前向跳转（跳过本 for 与
+        #   外层循环体其余部分，直落外层出口）。
+        # C1——只读 region 自身 else 块与其后继、父链 LoopRegion 的
+        #   body_blocks/header_block（区域接口字段）；C2——经 parent 引用
+        #   消费祖先循环，不触其内部归约；C3——前向跳转（排除
+        #   JUMP_BACKWARD 回边=continue 形态）+ 落点在体外的显式守卫，
+        #   不命中时逐字节不变。
         if (not else_stmts and _filtered_else_blocks
                 and region.region_type == RegionType.FOR_LOOP):
             _r58_anc_break_targets = set()
             _r58_anc = region.parent
+            _r3_nearest_loop_anc = None
             while _r58_anc is not None:
-                if isinstance(_r58_anc, LoopRegion) and _r58_anc.break_blocks:
-                    _r58_anc_break_targets.update(_r58_anc.break_blocks)
+                if isinstance(_r58_anc, LoopRegion):
+                    if _r3_nearest_loop_anc is None:
+                        _r3_nearest_loop_anc = _r58_anc
+                    if _r58_anc.break_blocks:
+                        _r58_anc_break_targets.update(_r58_anc.break_blocks)
                 _r58_anc = getattr(_r58_anc, 'parent', None)
-            if _r58_anc_break_targets:
+            _r3_anc_body = set()
+            if _r3_nearest_loop_anc is not None:
+                _r3_anc_body.update(_r3_nearest_loop_anc.body_blocks or [])
+                _r3_anc_body.add(_r3_nearest_loop_anc.header_block)
+            if _r58_anc_break_targets or _r3_anc_body:
                 _r58_all_jump_to_break = True
                 for _r58_eb in _filtered_else_blocks:
                     _r58_meaningful = [i for i in _r58_eb.instructions
@@ -5092,7 +5114,16 @@ AST 映射规则:
                     if _r58_meaningful:
                         _r58_all_jump_to_break = False
                         break
-                    if not any(_s in _r58_anc_break_targets for _s in _r58_eb.successors):
+                    _r58_hit = any(_s in _r58_anc_break_targets
+                                   for _s in _r58_eb.successors)
+                    if not _r58_hit and _r3_anc_body:
+                        _r58_eb_last = _r58_eb.get_last_instruction()
+                        if (_r58_eb_last is not None
+                                and _r58_eb_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                and any(_s not in _r3_anc_body
+                                        for _s in _r58_eb.successors)):
+                            _r58_hit = True
+                    if not _r58_hit:
                         _r58_all_jump_to_break = False
                         break
                 if _r58_all_jump_to_break:
@@ -5100,6 +5131,52 @@ AST 映射规则:
                     for _r58_eb in _filtered_else_blocks:
                         self.generated_blocks.add(_r58_eb)
                         self.generated_offsets.add(_r58_eb.start_offset)
+
+            # [R3-B10 FIX-5] else 桩 JUMP_BACKWARD 归约为 Continue（生成层）：
+            # 识别条件——FOR 循环 else_stmts 为空且 _filtered_else_blocks
+            # 非空，每个块的去噪指令恰为一条 JUMP_BACKWARD
+            # （JUMP_BACKWARD_NO_INTERRUPT 同理），且其任一后继是 region
+            # 祖先链上某 LoopRegion 的 header_block——回边跳入祖先循环头即
+            # continue 语义（`else: continue` 绑定外层循环，
+            # triple_for_mixed_break 内/中层 else 桩 @174/@194 根因）。
+            # 归约方式——orelse=[{'type': 'Continue'}]，桩块标记
+            # generated（与上方 R58-B Break 归约同构）。
+            # AST 映射——For.orelse=[Continue]，重编译生成与原字节码
+            # 一致的 JUMP_BACKWARD 桩（回边到祖先循环头）。
+            # [C1] 只读块指令、后继与父链 header_block（同层结构事实），
+            # 无偏移阈值、无名字白名单；[C2] 桩块标记 generated 防重复
+            # 发射；[C3] else 已有语句、非纯 JUMP_BACKWARD 桩或目标非
+            # 祖先循环头时不触发，既有路径逐位不变。
+            if (not else_stmts and _filtered_else_blocks
+                    and region.region_type == RegionType.FOR_LOOP):
+                _r3b10_anc_headers = set()
+                _r3b10_anc = region.parent
+                while _r3b10_anc is not None:
+                    if (isinstance(_r3b10_anc, LoopRegion)
+                            and _r3b10_anc.header_block is not None):
+                        _r3b10_anc_headers.add(_r3b10_anc.header_block)
+                    _r3b10_anc = getattr(_r3b10_anc, 'parent', None)
+                if _r3b10_anc_headers:
+                    _r3b10_all_continue_stub = True
+                    for _r3b10_eb in _filtered_else_blocks:
+                        _r3b10_meaningful = [
+                            i for i in _r3b10_eb.instructions
+                            if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                'PUSH_NULL', 'EXTENDED_ARG')]
+                        _r3b10_is_stub = (
+                            len(_r3b10_meaningful) == 1
+                            and _r3b10_meaningful[0].opname in (
+                                'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                            and any(_s in _r3b10_anc_headers
+                                    for _s in _r3b10_eb.successors))
+                        if not _r3b10_is_stub:
+                            _r3b10_all_continue_stub = False
+                            break
+                    if _r3b10_all_continue_stub:
+                        else_stmts = [{'type': 'Continue'}]
+                        for _r3b10_eb in _filtered_else_blocks:
+                            self.generated_blocks.add(_r3b10_eb)
+                            self.generated_offsets.add(_r3b10_eb.start_offset)
 
         # 过滤for循环else子句中多余的return None（隐式函数返回，非for-else语义）
         if else_stmts:
@@ -5281,7 +5358,36 @@ AST 映射规则:
                             self.generated_blocks.add(_b)
                             self.generated_offsets.add(_b.start_offset)
                         self._generated_regions.add(_bb_rid)
-                elif _bb not in self.generated_blocks:
+                elif _bb not in self.generated_blocks or (
+                        _bb_region is None
+                        and _bb not in (region.else_blocks or ())
+                        and _bb in self._post_break_blocks):
+                    # [R3-B10 FIX-2a] 归零落点放行（生成层）：识别条件——
+                    # break 落点解析回本循环（_bb_region 归零为 None）且
+                    # 不属于本循环 else_blocks，但已被结构化子区域过度
+                    # 认领标记 generated（如 while_else_break_exit 落点 96
+                    # ∈ IfRegion.then_blocks，其真臂是独立纯跳转桩块，
+                    # 臂渲染止于 Break 并经 _post_break_blocks 台账搁置
+                    # 该落点——内容从未发射）。收窄判据——仅当落点 ∈
+                    # _post_break_blocks（臂渲染止于终止语句时的搁置台账
+                    # = 内容未发射的同层结构证据）才放行；臂渲染已真实
+                    # 消费的落点（如 quotation get_str_data 落点 838 ∈
+                    # IfRegion@762 else_blocks 且为条件跳转直接目标，经
+                    # BREAK 角色分支 _generate_block_statements 产出
+                    # [Assign, Break] 完整进 If 节点 orelse）不入搁置
+                    # 台账，维持原 generated 守卫跳过，防止双发射。
+                    # 归约方式——从 generated_blocks 台账摘除后按普通块
+                    # 发射再补登记（_generate_block_statements 对
+                    # generated 块早退，必须先 discard）。AST 映射——落点
+                    # 语句（acc.append(t)）追加进 _sequential_after_loop，
+                    # 循环节点后顺序输出。
+                    # [C1] 只读区域成员与生成台账（同层事实），无偏移
+                    # 阈值、无白名单；[C2] 发射后立即补登记 generated，
+                    # 后续路径不会重复消费；[C3] 落点 ∈ else_blocks、
+                    # ∉ 搁置台账（已被臂渲染消费）或归属结构化子区域时
+                    # 维持原守卫，既有路径逐位不变。
+                    self.generated_blocks.discard(_bb)
+                    self.generated_offsets.discard(_bb.start_offset)
                     _bb_stmts = self._generate_block_statements(_bb)
                     if _bb_stmts:
                         _sequential_after_loop.extend(_bb_stmts)
@@ -5336,12 +5442,6 @@ AST 映射规则:
         sequential: List[Dict[str, Any]] = []
         if not getattr(region, 'has_break', False):
             return sequential
-        if os.environ.get('R3DBG_GUARD'):
-            print('[R58COLLECT] hdr=%s body=%s gen=%s break=%s' % (
-                region.header_block.start_offset,
-                sorted(b.start_offset for b in body_set),
-                sorted(b.start_offset for b in self.generated_blocks),
-                [b.start_offset for b in (region.break_blocks or [])]))
         processed = set()
         for bb in region.break_blocks:
             if bb in body_set or bb.start_offset in processed:
@@ -5355,12 +5455,6 @@ AST 映射规则:
                 continue
             bb_region = (self.region_analyzer.get_entry_region_for_block(bb)
                          or self.region_analyzer.get_region_for_block(bb))
-            if os.environ.get('R3DBG_GUARD'):
-                print('[R58BB] off=%s gen=%s region=%s region_gen=%s meaningful=%d' % (
-                    bb.start_offset, bb.start_offset in [x.start_offset for x in self.generated_blocks],
-                    type(bb_region).__name__ if bb_region else None,
-                    (id(bb_region) in self._generated_regions or id(bb_region) in self._generating_regions) if bb_region else None,
-                    len(meaningful)))
             if bb_region is region:
                 bb_region = None
             if bb_region and isinstance(bb_region, (IfRegion, LoopRegion, TryExceptRegion)):
@@ -5380,13 +5474,58 @@ AST 映射规则:
                         self.generated_offsets.add(b.start_offset)
                     self._generated_regions.add(bb_rid)
                 else:
+                    # [R3-B10 FIX-2b] 结构化子区域已生成时的落点放行（生成层）：
+                    # 识别条件——bb 被结构化子区域认领进 blocks（如
+                    # loop_try_with_break 的 return acc 块 342 ∈
+                    # TryExceptRegion.blocks）且该子区域已生成/生成中，
+                    # 但 bb ∉ 子区域任何臂集合（body/else/then/try/
+                    # handler/finally）——子区域生成只发射臂集合内容，
+                    # bb 的内容（return acc）从未发射。
+                    # 归约方式——仅当 _r3b10_child_emits=False 时先从
+                    # generated_blocks 摘除再发射再补登记；bb ∈ 臂集合
+                    # （如 r3_20 else_break_with_flag 的 98 ∈ 内层
+                    # else_blocks，内容已随子区域 else 发射）保持原样，
+                    # 防止双发射。后继 RETURN 块若已被 break→return 折叠
+                    # 消费标记（generated），后继循环的 generated 守卫
+                    # 维持不变，防 Return 双发射。
+                    # AST 映射——bb 语句（return acc）追加进 sequential，
+                    # 循环节点后顺序输出。
+                    # [C1] 只读子区域成员集合与生成台账（同层事实）；
+                    # [C2] 发射后补登记 generated；[C3] child_emits=True
+                    # 或未标记 generated 时逐位不变（守卫封闭）。
+                    _r3b10_child_emits = False
+                    if isinstance(bb_region, (IfRegion, LoopRegion, TryExceptRegion)):
+                        for _r3b10_attr in ('body_blocks', 'else_blocks', 'then_blocks',
+                                            'try_blocks', 'handler_blocks', 'finally_blocks'):
+                            _r3b10_coll = getattr(bb_region, _r3b10_attr, None)
+                            if _r3b10_coll and bb in _r3b10_coll:
+                                _r3b10_child_emits = True
+                                break
+                    if not _r3b10_child_emits and bb in self.generated_blocks:
+                        self.generated_blocks.discard(bb)
+                        self.generated_offsets.discard(bb.start_offset)
                     bb_stmts = self._generate_block_statements(bb)
                     if bb_stmts:
                         sequential.extend(bb_stmts)
                     self.generated_blocks.add(bb)
                     self.generated_offsets.add(bb.start_offset)
                     processed.add(bb.start_offset)
-            elif bb not in self.generated_blocks:
+            elif bb not in self.generated_blocks or (
+                    bb_region is None
+                    and bb not in (region.else_blocks or ())
+                    and bb in self._post_break_blocks):
+                # [R3-B10 FIX-2b] 归零落点放行（与 FIX-2a 同构）：落点
+                # 解析回本循环（bb_region 归零为 None）且 ∉ else_blocks、
+                # 被结构化子区域过度认领标记 generated 时，摘除台账后
+                # 按普通块发射（r3_20 while_else_break_exit 落点 96 /
+                # r3_22 for_else_continue_outer 落点 136 的 append 丢失
+                # 根因）。收窄判据与 FIX-2a 一致——仅当落点 ∈
+                # _post_break_blocks（臂渲染止于终止语句的搁置台账 =
+                # 内容未发射证据）才放行；臂渲染已真实消费的落点不入
+                # 搁置台账，维持原 generated 守卫，防止双发射。
+                # [C1]/[C2]/[C3] 同 FIX-2a。
+                self.generated_blocks.discard(bb)
+                self.generated_offsets.discard(bb.start_offset)
                 bb_stmts = self._generate_block_statements(bb)
                 if bb_stmts:
                     sequential.extend(bb_stmts)
@@ -5405,12 +5544,6 @@ AST 映射规则:
         return sequential
 
     def _loop_generate_while(self, region: LoopRegion, skip_store_targets: Set[str] = None) -> Dict[str, Any]:
-        if os.environ.get('R3DBG_GUARD'):
-            print('[WHILE] hdr=%s has_break=%s else=%s break=%s' % (
-                region.header_block.start_offset if region.header_block else None,
-                getattr(region, 'has_break', None),
-                [b.start_offset for b in (region.else_blocks or [])],
-                [b.start_offset for b in (region.break_blocks or [])]))
         pre_stmts = []
 
         if region.init_blocks:
@@ -6890,9 +7023,6 @@ AST 映射规则:
         # while 条件为假时 fall through 的代码语义上不等价于 else（除非有 break 跳过 else）。
         # 无 break 的 while 循环，后续代码是普通顺序语句，不是 else 子句。
         _has_break = getattr(region, 'has_break', False)
-        if os.environ.get('R3DBG_GUARD'):
-            print('[WHILE-HB] hdr=%s has_break=%s' % (
-                region.header_block.start_offset if region.header_block else None, _has_break))
         if _has_break:
             _sequential_after_loop = []
             _body_set_w = set(region.body_blocks) | {region.header_block}
@@ -6989,8 +7119,6 @@ AST 映射规则:
             #   从不发射 → 循环后 dt/yield 整段丢失。
             # AST 映射——While 节点后随顺序语句列表返回。
             _bb_processed_offsets_w = set()
-            if os.environ.get('R3DBG_GUARD'):
-                print('[R58CALL] hdr=%s has_break=%s' % (region.header_block.start_offset, region.has_break))
             _r58_seq_main = self._r58_collect_break_target_stmts(region, _body_set_w)
             _sequential_after_loop.extend(_r58_seq_main)
         else:
@@ -15739,7 +15867,30 @@ AST 映射规则:
                         )
                         if has_overlap:
                             child_reachable_from_then = True
-            if child_reachable_from_then:
+            # [R3-B10 FIX-6] 祖先循环 break 落点子区域抑制（生成层）：
+            # 识别条件——then 臂子区域的 entry 块是 region 最近包围
+            # LoopRegion 的 break 落点（∈ 其 break_blocks）。break 落点按
+            # 登记口径必在体外，其内容是循环后顺序代码；在本 if 层发射会
+            # 使其错误进入循环体（triple_for_mixed_break 的 if i==1 块
+            # @196 ∈ LoopRegion@70.break_blocks，被 IfRegion@176 的 then
+            # 子区域派发在 j 循环体内发射根因）。
+            # 归约方式——本层跳过该子区域生成、不认领不标记，交由该
+            # LoopRegion 的 R102/R58 break 落点路径在 _sequential_after_loop
+            # 发射。AST 映射——子区域语句出现在循环节点之后的顺序位置。
+            # [C1] 只读父链与 break_blocks 集合（同层结构事实），无偏移
+            # 阈值、无名字白名单；[C2] 块保持未生成，由唯一归属路径
+            # 消费；[C3] entry 非最近包围循环 break 落点时维持既有派发
+            # 逐位不变。
+            _r3b10_post_loop_child = False
+            _r3b10_near_loop = getattr(region, 'parent', None)
+            while (_r3b10_near_loop is not None
+                   and not isinstance(_r3b10_near_loop, LoopRegion)):
+                _r3b10_near_loop = getattr(_r3b10_near_loop, 'parent', None)
+            if (_r3b10_near_loop is not None
+                    and getattr(_r3b10_near_loop, 'break_blocks', None)
+                    and child.entry in _r3b10_near_loop.break_blocks):
+                _r3b10_post_loop_child = True
+            if child_reachable_from_then and not _r3b10_post_loop_child:
                 child_id = id(child)
                 if child_id not in self._generated_regions and child_id not in self._generating_regions:
                     child_ast = self._generate_region(child)
@@ -22689,7 +22840,17 @@ AST 映射规则:
                                 in (BlockRole.BREAK, BlockRole.PURE_BREAK)
                                 and _r61_is_pure_jump_stub(region.merge_block)):
                             _r57b_skip_shared = True
-                    if not _r57b_skip_shared:
+                    # [R3-B10 FIX-4] 双 Break 补发守卫：bs 末条已是 Break
+                    # 时不再追加（识别条件——BREAK 角色块含有效语句且
+                    # _generate_block_statements 产出以 Break 收尾，如
+                    # loop_try_with_break 的 elif i==5 臂块 104 =
+                    # [NOP, finally 副本, JUMP_FORWARD]，块级生成已含
+                    # break 语义）。归约方式——同块只发射一次 Break。
+                    # [C1]/[C2] 同层台账事实、单一发射；[C3] bs 为空或
+                    # 末条非 Break 时维持原补发路径逐位不变。
+                    if (not _r57b_skip_shared
+                            and not (bs and isinstance(bs[-1], dict)
+                                     and bs[-1].get('type') == 'Break')):
                         stmts.append({'type': 'Break'})
                     self.generated_blocks.add(block)
                     self.generated_offsets.add(block.start_offset)

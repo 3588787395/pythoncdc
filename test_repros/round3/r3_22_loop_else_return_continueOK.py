@@ -17,6 +17,7 @@ def for_else_continue_outer(m, n):
         else:
             acc.append(i)
             continue
+        acc.append(j)
     return acc
 def while_else_continue_outer(m, n):
     """else 体含 continue：continue 绑定外层 while。"""

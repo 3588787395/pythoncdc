@@ -25,13 +25,13 @@ def loop_try_with_break(m):
                 continue
             elif i == 5:
                 break
-                break
             else:
                 acc.append(i)
         finally:
             acc.append('f')
     else:
         acc.append('else')
+    return acc
 def loop_with_match(m):
     """for 体 with + match，else 收尾。"""
     out = []

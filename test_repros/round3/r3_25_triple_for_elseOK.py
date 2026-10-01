@@ -30,10 +30,14 @@ def triple_for_mixed_break(m, n, p):
                 if k == 1:
                     hits.append((i, j, k))
                     break
+            else:
+                continue
             if j == 1:
                 break
-            if i == 1:
-                break
+        else:
+            continue
+        if i == 1:
+            break
     return hits
 def for_for_while_else(a, b, c):
     """for>for>while 三层，while 带 else，break 打到 for 层。"""

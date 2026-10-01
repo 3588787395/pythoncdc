@@ -4820,10 +4820,45 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             break
                 if not (_fie_pure and _fie_succ_in_break):
                     _r58_fie = None
+            # [R3-B10 fix] 真 for-else/while-else 体豁免（识别条件→归约方式→
+            # AST 映射）：
+            # 识别条件——内层循环 lr.has_break=True（存在 break 跳过 else 的
+            #   控制流证据）且候选 else 块 eb 的全部正常前驱 ∈ lr.body_blocks
+            #   ∪ {lr.header_block} ∪ lr.else_blocks（异常边前驱除外——try 范围
+            #   登记的异常边不是 else 块的正常入口）。for-else 体词法上位于
+            #   父循环体内（`for j in ...: .../else: <stmt>`），但控制流上它
+            #   是本循环 FOR_ITER 耗尽边（或 while 条件假出口）的唯一消费者：
+            #   父循环体没有任何 fall-through/跳转边直接进入该块；break 落点
+            #   在 else 之后的汇合块上（≠ else 块），正是「有 break 证据的真
+            #   loop-else」结构签名（r3_24.double_loop_inner_break 内层 else
+            #   @138 前驱仅 FOR_ITER@70，break 落点 @184 在 else 链之外）。
+            # 归约方式——命中的 eb 不判 spurious（保留在 else_blocks 与
+            #   blocks 中）；伪 else（父循环体普通块被出口 BFS 过度吸收进
+            #   else 链）必有不属于本循环的前驱（外层体前序语句 fall-through
+            #   进入），不满足判据、维持旧剔除，行为逐位不变。
+            # AST 映射——LoopRegion.else_blocks → ast.For/While.orelse，
+            #   _generate_loop 照常发射 `else:` 子句（else 体不再降级为
+            #   无条件执行的顺序语句 = 语义错误）。
+            # [C1] 只读本循环区域成员集合与前驱/异常边集合（同层块对象结构
+            #   事实，无名字/偏移阈值）；[C2] else 体经 orelse 单点由本循环节
+            #   点消费，父级不重复发射（每块唯一归属）；[C3] 显式守卫：仅豁免
+            #   「全部正常前驱归属本循环」的确证形态，其余形态保持旧剔除
+            #   （守卫封闭）。
+            _r3_lr_owned = set(lr.body_blocks or [])
+            _r3_lr_owned.add(lr.header_block)
+            _r3_lr_owned.update(lr.else_blocks or [])
+            _r3_true_else = set()
+            if getattr(lr, 'has_break', False):
+                for eb in lr.else_blocks:
+                    if eb.predecessors and all(
+                            p in _r3_lr_owned or eb in p.exception_successors
+                            for p in eb.predecessors):
+                        _r3_true_else.add(eb)
             spurious = [eb for eb in lr.else_blocks
                         if eb in parent_body
                         and eb not in _cond_exit_targets
-                        and eb is not _r58_fie]
+                        and eb is not _r58_fie
+                        and eb not in _r3_true_else]
             if not spurious:
                 continue
             for eb in spurious:
@@ -5304,6 +5339,26 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         offset+2 == for_iter_exit.start_offset）∧ 全部前驱 ∈ body_set（块只
         从循环体进入，符合「每块唯一归属」）→ 等价于 JUMP_FORWARD→exit 的
         显式跳转形态，置 _break_hits_for_iter_exit=True。
+
+        [R3-B10 FIX-1] no-break 路径 break 证据前驱扫描：
+        识别条件——for_iter_exit 存在 ∉ body_set 的正常（非异常边）前驱且
+        其末条指令为 JUMP_FORWARD/JUMP_ABSOLUTE。R58-B 形态嵌外层循环时
+        （else_break_with_flag：内层 else 体 `found=i; break`，break 源 ∈
+        内层 else、∉ 外层 body_set），上方 body_set 证据扫描必然落空，
+        旧逻辑走 no-break 路径把耗尽目标 @108（return found）吸收为幻影
+        else。归约方式——真 for-else 入口仅有耗尽边一个入口，额外前驱即
+        break 证据，存在即 return None 不吸收。AST 映射——orelse=None，
+        for_iter_exit 由函数级顺序发射。[C3] header/body_set 前驱、异常边
+        前驱、JUMP_BACKWARD 前驱（else: continue 桩）与非跳转末条前驱均
+        不触发，既有路径逐位不变。
+
+        [R3-B10 FIX-3] break_targets 路径 _else_only_pure_jump 收窄：
+        JUMP_BACKWARD 桩不再判伪。该过滤处于 break_targets 分支（post_else
+        ≠ for_iter_exit），「无 else、exhaustion 落入普通 continue 桩」形态
+        中 break 落点=桩本身，_break_hits_for_iter_exit 已先行 return None，
+        不会到达此过滤；故能到达此处的 JUMP_BACKWARD 桩（回外层循环头）必
+        为真实 `else: continue`（triple_for_mixed_break 内/中层 else 桩丢失
+        根因）。[C3] 前向纯跳转桩仍判伪丢弃，其余逐位不变。
         """
         body_set = loop_body | {header}
 
@@ -5439,11 +5494,19 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                   if b not in _with_cleanup_blocks
                                   and (b == for_iter_exit or not self._is_early_return_block(b))
                                   and not self._is_except_handler_block(b)]
-                        # [识别条件] 过滤后 else 仅剩纯跳转块（无实质语句，
-                        # 如 JUMP_BACKWARD 回外层头 / JUMP_* 落点）
-                        # [归约方式] 无实质 else 体时不建立 for-else（与无 break
-                        # 路径的 _fe_is_pure_jump 判据对称，避免伪 orelse）
-                        # [AST 映射] LoopRegion.orelse=None，循环后代码走顺序发射
+                        # [识别条件] 过滤后 else 仅剩纯跳转块（无实质语句）
+                        # [归约方式] 仅当前向纯跳转（JUMP_FORWARD/JUMP_ABSOLUTE）
+                        #   桩判伪丢弃——那是 out-of-line 落点 trampoline，无 else
+                        #   语义。[R3-B10 FIX-3] JUMP_BACKWARD 桩不再判伪：本路径
+                        #   处于 break_targets 分支（post_else ≠ for_iter_exit），
+                        #   「无 else、exhaustion 落入普通 continue 桩」的形态中
+                        #   break 落点=桩本身 → _break_hits_for_iter_exit 已先行
+                        #   return None，不会到达此过滤；故能到达此处的
+                        #   JUMP_BACKWARD 桩（回外层循环头）必为真实
+                        #   `else: continue`（r3_25 triple_for_mixed_break 内/中
+                        #   层 else 桩丢失根因）。
+                        # [AST 映射] 前向纯跳转桩 → LoopRegion.orelse=None，循环后
+                        #   代码走顺序发射；JUMP_BACKWARD 桩 → orelse=[Continue]。
                         if result:
                             _else_only_pure_jump = True
                             for _eb in result:
@@ -5451,8 +5514,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                                   if i.opname not in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME')]
                                 if not _eb_meaningful or not (
                                         len(_eb_meaningful) == 1
-                                        and _eb_meaningful[0].opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
-                                                                         'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')):
+                                        and _eb_meaningful[0].opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')):
                                     _else_only_pure_jump = False
                                     break
                             if _else_only_pure_jump:
@@ -5471,6 +5533,37 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     return None, natural_exit
             else:
                 if for_iter_exit and for_iter_exit not in body_set:
+                    # [R3-B10 FIX-1] break 证据前驱扫描（识别层）：
+                    # 识别条件——for_iter_exit 存在 ∉ body_set 的正常（非
+                    # 异常边）前驱，且其末条指令为 JUMP_FORWARD/
+                    # JUMP_ABSOLUTE 直入本块。该前驱是内层 else 体末尾的
+                    # break 跳转源（R58-B 形态嵌外层循环：break 源 ∈ 内层
+                    # else、∉ 外层 body_set，上方 body_set 证据扫描必然
+                    # 落空），此时耗尽目标实为 break 落点而非 else 入口
+                    # ——真 for-else 入口仅有耗尽边一个入口，任何额外
+                    # 前驱都是跳出循环的证据。
+                    # 归约方式——存在即判有 break 证据，return None，
+                    # for_iter_exit 不计入循环节（blocks+else_blocks）。
+                    # AST 映射——orelse=None；for_iter_exit（如
+                    # `return found`）由函数级顺序发射。
+                    # [C1] 只读前驱集合与末条 opcode（同层结构事实），
+                    # 无偏移阈值、无名字白名单；[C2] 不认领任何块；
+                    # [C3] header/body_set 前驱、异常边前驱、JUMP_BACKWARD
+                    # 前驱（else: continue 桩，r3_22 外层幻影 else）及非
+                    # 跳转末条前驱均不触发，既有路径逐位不变。
+                    _r3b10_break_pred = False
+                    for _r3b10_pred in for_iter_exit.predecessors:
+                        if _r3b10_pred is header or _r3b10_pred in body_set:
+                            continue
+                        if for_iter_exit in (_r3b10_pred.exception_successors or ()):
+                            continue
+                        _r3b10_pred_last = _r3b10_pred.get_last_instruction()
+                        if (_r3b10_pred_last is not None
+                                and _r3b10_pred_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')):
+                            _r3b10_break_pred = True
+                            break
+                    if _r3b10_break_pred:
+                        return None, natural_exit
                     # R59: for_iter_exit might be a pure JUMP_FORWARD block
                     # (e.g., for-loop fall-through to next if-elif branch).
                     # This is NOT a real for-else block - it's just the loop's
