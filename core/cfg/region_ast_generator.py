@@ -42431,6 +42431,26 @@ AST 映射规则:
         依「每块唯一归属」: container 的所有 sibling 元素 + BUILD_* 归属
         TernaryRegion 父表达式，不拆分为独立语句.
 
+        [R1-REG 守卫·R76-A1/A2 前导守卫剥离的 R59-B 升级消费端让位]（R40 W45
+        _rest_clean 段内）：识别条件——merge 块尾以「前导守卫」条件跳转收尾
+        （_detect_leading_guard 命中：fall-through 是顶层 IfRegion 的 entry、
+        跳转目标是守卫 if 的 merge），但未剥离指令流经通用语句构建器后，末语
+        句恰为单条可升级类型 Expr 且剥离流构建结果恰为未剥离结果去掉这一条
+        （守卫条件段已物化成这一条尾 Expr）。归约方式——让位：不剥离、撤销
+        _detect_leading_guard 已登记的 _leading_guard 记录，尾跳转的测试由
+        _emit_post_extra_with_if_upgrade（R59-B）把该尾 Expr 绑定为 if 条件
+        承载；仅当升级端不触达（尾段物化出多语句碎片 / 尾 Expr 类型不可绑
+        定）时才剥离并登记 wrap。AST 映射——让位形态 `if <守卫条件>:
+        <extent 区域单元>` 由既有升级端单次发射；否则 wrap 由 generate()
+        顶层循环消费发射（原 R76 通道）。[C1] 判据只读本块指令流的两次构建
+        产物与 _detect_leading_guard 记录三元组；[C2] 两消费端（升级端 / 顶层
+        wrap）对同一尾跳转互斥，extent 内子区域仍经各自 entry 被消费；[C3]
+        三重校验在 _leading_guard_candidate，撤销记录用 delattr 恢复块属性
+        原状。误触发症状（risk_calculation.get_daily_summary）：剥离抽空尾跳
+        转条件后，升级端把前一条纯表达式语句（self._returns.append(x)）绑定
+        为 if 测试、真测试丢失——最小复现 test_repros/round1/
+        r1_reg_get_daily_summary.py（真身码对象移植）。
+
         Returns the reconstructed expression dict, or None when the pattern
         does not match (caller falls through to single-element container /
         existing func_call_info / no-target consumer handlers).
@@ -42539,11 +42559,50 @@ AST 映射规则:
                 # [C1] 判据只读块尾跳转与区域表；[C2] extent 内子区域仍经 entry
                 # 被父单元消费；[C3] 三重校验在 _leading_guard_candidate 内。
                 # 未命中时不剥离，行为逐字节不变。
+                #
+                # [R1-REG 守卫·R59-B 升级消费端让位] 剥离的适用前提是「顶层循环
+                # 消费 wrap」；但 merge 尾条件段的另一既有消费端——
+                # _emit_post_extra_with_if_upgrade（R59-B）——会在 post_extra 尾
+                # 为单条可升级类型 Expr 时把该 Expr（正是守卫条件的裸物化）绑定
+                # 为 merge 块尾条件跳转的测试并生成 `if <守卫条件>: <extent 区域
+                # 单元>`，随后把 extent 内区域全部标记 generated。此形态下 wrap
+                # 记录必然孤儿化（顶层循环到 fall-through 入口区域时 allgen 直接
+                # continue），且剥离会把尾跳转的条件指令从语句流抽走——升级端退
+                # 而绑定前一条语句的表达式（如 `self._returns.append(x)` 调用语
+                # 句）为 if 测试，真测试丢失（risk_calculation.get_daily_summary
+                # 回退根因）。让位判据（同层发射后结构事实，[C1] 只读本块指令流
+                # 两次构建产物）：①未剥离流经通用语句构建器后，末语句恰为
+                # Expr 且值类型 ∈ 升级端可绑定集合（Attribute/Subscript/Call/
+                # Name/BinOp/UnaryOp/Compare，与 _emit_post_extra_with_if_upgrade
+                # 的判定集合一致）；②剥离流构建结果 == 未剥离构建结果去掉这最
+                # 后一条（守卫条件段恰好物化为这单条尾 Expr，无多语句碎片）。
+                # 两条件同时成立 ⇒ 升级端必然消费该尾部，本处不剥离、撤销
+                # _detect_leading_guard 已登记的记录（delattr 恢复块属性原状，
+                # 与消费端 delattr 幂等约定一致）；任一不成立 ⇒ 维持剥离+wrap
+                # （升级端不触达或多语句碎片形态，wrap 是唯一救援）。
                 _grd = self._detect_leading_guard(region.merge_block)
                 if _grd is not None:
                     _grd_expr, _grd_then, _grd_tgt, _grd_offs = _grd
-                    _rest_clean = [i for i in _rest_clean
-                                   if i.offset not in _grd_offs]
+                    _rest_stripped = [i for i in _rest_clean
+                                      if i.offset not in _grd_offs]
+                    _probe_keep = self._build_statements_from_instructions(
+                        list(_rest_clean))
+                    _probe_strip = self._build_statements_from_instructions(
+                        list(_rest_stripped))
+                    _r76_upgr_binds = (
+                        _probe_keep
+                        and isinstance(_probe_keep[-1], dict)
+                        and _probe_keep[-1].get('type') == 'Expr'
+                        and isinstance(_probe_keep[-1].get('value'), dict)
+                        and _probe_keep[-1]['value'].get('type') in (
+                            'Attribute', 'Subscript', 'Call', 'Name',
+                            'BinOp', 'UnaryOp', 'Compare')
+                        and _probe_strip == _probe_keep[:-1])
+                    if _r76_upgr_binds:
+                        if getattr(_grd_then, '_leading_guard', None) is not None:
+                            delattr(_grd_then, '_leading_guard')
+                    else:
+                        _rest_clean = _rest_stripped
                 _rest_stmts = self._build_statements_from_instructions(
                     list(_rest_clean))
                 while _rest_stmts and isinstance(_rest_stmts[-1], dict):

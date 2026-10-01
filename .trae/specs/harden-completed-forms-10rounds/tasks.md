@@ -7,11 +7,12 @@
 - [ ] Task 0: 规范就位与快照提交（主代理）
   - [ ] 0.1 创建本规范三件套 + 小测试集索引 `baseline/failing_index.json`（34 pyc）
   - [ ] 0.2 快照提交：在途未评审变更（region_ast_generator.py +419 行、再生成的 OK.py 与 repro 产物）+ 本规范，一笔入库存证
-- [ ] Task 1: Round 1 — BoolOp 破口族（B1）+ If 形态对抗
-  - [ ] 1.1 评审工程师：审计在途变更 `[R76-A1/A2]`/`[R75 fix1]` 的 C1/C2/C3 与算法合规；攻击 BoolOp（含 B1a 嫁接、B1b or 臂第二丢弃入口）与 If 形态，≥10 复现 + ≥2 负对照，`test_repros/round1/` + `rounds/round1/REVIEW.md`
-  - [ ] 1.2 修复工程师：按评审结论算法修复（含 B1b 定位封闭），注释三要素同步，自测复现全 MATCH + 小测试集无回退，`rounds/round1/FIX.md`
-  - [ ] 1.3 评审工程师复核修复（通过/打回循环）
-  - [ ] 1.4 主代理验证：小测试集 → 402 分片 + compare REGRESSIONS=0 → quotation.pyc → tests/ 相关测试；归档 + 提交并 push
+- [x] Task 1: Round 1 — BoolOp 破口族（B1）+ If 形态对抗
+  - [x] 1.1 评审工程师：审计在途变更 `[R76-A1/A2]`/`[R75 fix1]` 的 C1/C2/C3 与算法合规（5/5 通过）；攻击 BoolOp/If 形态：22 攻击目标 = 14 MISMATCH + 11 MATCH（含 3 负对照），`test_repros/round1/` 102 文件 + `rounds/round1/REVIEW.md`
+  - [x] 1.2 修复工程师一：B1b 核心封闭（region_analyzer.py 五臂 A/B/B2/C/D/E，or 裸尾续接判据）；修复工程师二：B6 四上下文封闭（3 文件 7 处）；注释三要素同步；自测复现全 MATCH + 小测试集无回退；FIX.md/FIX_B6.md
+  - [x] 1.3 评审工程师复核：两批放行（B6 限定表述=浅层封闭）；新破口 B7 登记（基线既有，交 Round 2）；rv_01..10 深嵌套探针 7 MATCH/3 MISMATCH（均基线既有）；REVIEW2.md
+  - [x] 1.4 主代理验证：402 全量 8 分片重生成+batch+compare = **6554/6617（99.05%，+8）文件 369/402（+1）REGRESSIONS=0**；回退拦截 1 单元（risk_calculation get_daily_summary，根因=c53df077 在途 R76 剥离误触发，修复归零后 8 片复跑）；quotation 152/153 零新增；tests/ 零新增失败（3 失败基线既有）；小测试集 34 文件 worse=0 improved=3；VERIFICATION.md
+  - [x] 1.5 归档 rounds/round1/ + 提交并 push（每轮必须）
 - [ ] Task 2: Round 2 — Try/ExceptHandler/try-finally 形态对抗（含孤儿 finally 帧守卫）
 - [ ] Task 3: Round 3 — For/While + for-else/while-else（`_find_loop_else` + clamp 守卫）形态对抗
 - [ ] Task 4: Round 4 — Match + match_case 8 模式（value/singleton/sequence/mapping/class/or/capture/star）形态对抗
