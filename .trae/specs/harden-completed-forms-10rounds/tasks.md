@@ -13,7 +13,12 @@
   - [x] 1.3 评审工程师复核：两批放行（B6 限定表述=浅层封闭）；新破口 B7 登记（基线既有，交 Round 2）；rv_01..10 深嵌套探针 7 MATCH/3 MISMATCH（均基线既有）；REVIEW2.md
   - [x] 1.4 主代理验证：402 全量 8 分片重生成+batch+compare = **6554/6617（99.05%，+8）文件 369/402（+1）REGRESSIONS=0**；回退拦截 1 单元（risk_calculation get_daily_summary，根因=c53df077 在途 R76 剥离误触发，修复归零后 8 片复跑）；quotation 152/153 零新增；tests/ 零新增失败（3 失败基线既有）；小测试集 34 文件 worse=0 improved=3；VERIFICATION.md
   - [x] 1.5 归档 rounds/round1/ + 提交并 push（每轮必须）
-- [ ] Task 2: Round 2 — Try/ExceptHandler/try-finally 形态对抗（含孤儿 finally 帧守卫）
+- [x] Task 2: Round 2 — Try/ExceptHandler/try-finally/except* 形态对抗（含孤儿 finally 帧守卫）
+  - [x] 2.1 评审：Round1 修复守卫在异常语料 5/5 通过零回退；攻击 12 MISMATCH/8 MATCH 全合成命中；B8 登记（except* 首 handler 类型丢弃，负对照翻案，台账 TryStar 判定降格）+ B9（异常区域包裹混合链）+ R2-O2 白名单违规；REVIEW.md
+  - [x] 2.2 修复：B8 封闭（帧前缀剔除 4/4 MATCH）+ R2-O2 结构性移除（_find_handler_type_load）+ B9 装配层豁免（r2_08 3/3）；消费层四单元/r2_04/06/14/B7 登记立项；FIX.md
+  - [x] 2.3 评审复核：放行无打回（帧前缀不可伪造实证 0/35、零回退抽验 13/13）；R2-NEW-1/2 登记；REVIEW2.md
+  - [x] 2.4 主代理验证：8 片 REGRESSIONS=0、units 6554/6617（99.05%）文件 369/402 持平（B8/B9 真身零增益零回退、增益在合成对抗面 5 处改善）；quotation 152/153；tests 零新增失败；VERIFICATION.md
+  - [x] 2.5 归档 rounds/round2/ + 提交并 push
 - [ ] Task 3: Round 3 — For/While + for-else/while-else（`_find_loop_else` + clamp 守卫）形态对抗
 - [ ] Task 4: Round 4 — Match + match_case 8 模式（value/singleton/sequence/mapping/class/or/capture/star）形态对抗
 - [ ] Task 5: Round 5 — 推导式族（List/Set/Dict/GenExp + 多重 for 嵌套推导）形态对抗
