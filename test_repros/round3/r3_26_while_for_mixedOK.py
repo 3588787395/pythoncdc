@@ -10,10 +10,11 @@ def while_for_mixed(m, n):
             if i * j % 7 == 3:
                 break
             acc.append((i, j))
+        else:
+            acc.append(('f-else', i))
         i += 1
         if i == 4:
             break
-        acc.append(('f-else', i))
     else:
         acc.append('w-else')
     return acc
@@ -29,13 +30,15 @@ def while_for_continue_cross(m, n):
             if j == i:
                 continue
             elif j > 5:
-                return acc
+                break
             else:
                 acc.append((i, j))
                 continue
-        if len(acc) > 9:
-            continue
-        acc.append(('fe', i))
+        else:
+            if len(acc) > 9:
+                continue
+            acc.append(('fe', i))
+    return acc
 def nested_while_in_while_else(m, n):
     """while-else 体内再嵌 while（else 含循环子区域）。"""
     acc = []

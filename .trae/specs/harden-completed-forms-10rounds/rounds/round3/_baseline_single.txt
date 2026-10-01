@@ -1,0 +1,77 @@
+﻿===== r3_20_for_else_break_exit =====
+  ***<module>.inner_break_out: Failure: Different control flow
+  ***<module>.else_break_with_flag: Failure: Different control flow
+  ***<module>.while_else_break_exit: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/r3_20_for_else_break_exit.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/r3_20_for_else_break_exitOK.py
+[single] status=failure units=1/4 success_rate=25.00%
+===== r3_21_for_else_empty =====
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/r3_21_for_else_empty.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/r3_21_for_else_emptyOK.py
+[single] status=success units=5/5 success_rate=100.00%
+===== r3_22_loop_else_return_continue =====
+  ***<module>.for_else_continue_outer: Failure: Different control flow
+  ***<module>.while_else_continue_outer: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/r3_22_loop_else_return_continue.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/r3_22_loop_else_return_continueOK.py
+[single] status=failure units=3/5 success_rate=60.00%
+===== r3_23_if_break_continue_guard =====
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/r3_23_if_break_continue_guard.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/r3_23_if_break_continue_guardOK.py
+[single] status=success units=5/5 success_rate=100.00%
+===== r3_24_double_loop_break =====
+  ***<module>.double_loop_inner_break: Failure: Different control flow
+  ***<module>.double_loop_outer_break: Failure: Different control flow
+  ***<module>.double_loop_both_else: Failure: Different control flow
+  ***<module>.double_break_with_continue: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/r3_24_double_loop_break.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/r3_24_double_loop_breakOK.py
+[single] status=failure units=1/5 success_rate=20.00%
+===== r3_25_triple_for_else =====
+  ***<module>.triple_for_else: Failure: Different control flow
+  ***<module>.triple_for_mixed_break: Failure: Different control flow
+  ***<module>.for_for_while_else: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/r3_25_triple_for_else.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/r3_25_triple_for_elseOK.py
+[single] status=failure units=1/4 success_rate=25.00%
+===== r3_26_while_for_mixed =====
+  ***<module>.while_for_mixed: Failure: Different control flow
+  ***<module>.while_for_continue_cross: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/r3_26_while_for_mixed.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/r3_26_while_for_mixedOK.py
+[single] status=failure units=2/4 success_rate=50.00%
+===== r3_27_loop_try_with_match =====
+  ***<module>.loop_try_with_break: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/r3_27_loop_try_with_match.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/r3_27_loop_try_with_matchOK.py
+[single] status=failure units=8/9 success_rate=88.89%
+===== r3_28_while_mixed_chain =====
+  ***<module>.while_and_or: Failure: Different control flow
+  ***<module>.while_or_and: Failure: Different control flow
+  ***<module>.while_chain3: Failure: Different control flow
+  ***<module>.for_body_while_mixed: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/r3_28_while_mixed_chain.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/r3_28_while_mixed_chainOK.py
+[single] status=failure units=1/5 success_rate=20.00%
+===== r3_30_for_unpack_async =====
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/r3_30_for_unpack_async.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/r3_30_for_unpack_asyncOK.py
+[single] status=success units=5/5 success_rate=100.00%
+===== r3_31_else_mixed_if =====
+  ***<module>.else_mixed_if: Failure: Different control flow
+  ***<module>.elif_chain_in_else: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/r3_31_else_mixed_if.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/r3_31_else_mixed_ifOK.py
+[single] status=failure units=3/5 success_rate=60.00%
+===== r3_32_comp_loop_interleave =====
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/r3_32_comp_loop_interleave.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/r3_32_comp_loop_interleaveOK.py
+[single] status=success units=11/11 success_rate=100.00%
+===== n3_01_simple_loops =====
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/n3_01_simple_loops.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/n3_01_simple_loopsOK.py
+[single] status=success units=5/5 success_rate=100.00%
+===== n3_02_guard_and_else =====
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/n3_02_guard_and_else.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/n3_02_guard_and_elseOK.py
+[single] status=success units=5/5 success_rate=100.00%

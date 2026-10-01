@@ -9,8 +9,10 @@ def inner_break_out(m, n):
     while k < m:
         for i in range(n):
             if i == k:
-                return k
-        break
+                break
+        OUT.append(k)
+        k += 1
+    return k
 def else_break_with_flag(m, n):
     """双层 for：内层 else break 外层（R58-B 形态嵌外层循环）。"""
     found = -1
@@ -21,8 +23,7 @@ def else_break_with_flag(m, n):
         else:
             found = i
             break
-    else:
-        return found
+    return found
 def while_else_break_exit(n):
     """while-else 的 else 体含 break 出口（跳出更外层 for）。"""
     acc = []

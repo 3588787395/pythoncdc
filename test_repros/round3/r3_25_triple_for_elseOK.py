@@ -10,12 +10,14 @@ def triple_for_else(a, b, c):
                 if i + j + k > 7:
                     break
                 acc.append((i, j, k))
+            else:
+                acc.append('k-done')
             if j == 2:
                 break
-            acc.append('k-done')
+        else:
+            acc.append('j-done')
         if i == 3:
             break
-        acc.append('j-done')
     else:
         acc.append('i-done')
     return acc
@@ -47,5 +49,6 @@ def for_for_while_else(a, b, c):
                 out.append((i, j, t))
             if (i + j) % 4 == 3:
                 break
-        out.append(('j', i))
+        else:
+            out.append(('j', i))
     return out

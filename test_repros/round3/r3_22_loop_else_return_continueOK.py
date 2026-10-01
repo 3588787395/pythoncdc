@@ -14,8 +14,9 @@ def for_else_continue_outer(m, n):
         for j in range(n):
             if j == i:
                 break
-        acc.append(i)
-        continue
+        else:
+            acc.append(i)
+            continue
     return acc
 def while_else_continue_outer(m, n):
     """else 体含 continue：continue 绑定外层 while。"""
@@ -25,11 +26,14 @@ def while_else_continue_outer(m, n):
         j = 0
         while j < n:
             if (i + j) % 3 == 0:
-                return acc
+                break
             j += 1
         else:
             i += 1
             continue
+        acc.append((i, j))
+        i += 1
+    return acc
 def for_else_return_none(n):
     for i in range(n):
         if i == n + 1:
