@@ -4,12 +4,14 @@
 def w_return(mgr, v):
     with mgr:
         return v
+        return None
 def w_break(mgr, xs):
     with mgr:
         for x in xs:
             if x > 2:
                 break
         return x
+        return None
 def w_continue(mgr, xs):
     total = 0
     with mgr:
@@ -25,10 +27,11 @@ def w_raise(mgr, v):
 def w_return_in_nest(m1, m2, v):
     with m1, m2:
         return v
+        return None
 def w_early_return(mgr, v):
     with mgr as x:
         if v > 0:
-            x
+            return x
         else:
             x = v
     return x

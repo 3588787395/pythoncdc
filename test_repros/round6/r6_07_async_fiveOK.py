@@ -8,11 +8,11 @@ async def ad_await_chain(g):
 async def af_unpack_else(ait):
     result = []
     async for k, v in ait:
-        result.append(-1)
-        return result
         result.append(k + v)
+    result.append(-1)
+    return result
 async def ad_return_await(g):
-    await g(3)
+    return await g(3)
 async def ag_yield_await(xs, g):
     for x in xs:
         yield x
@@ -20,5 +20,4 @@ async def ag_yield_await(xs, g):
     yield -1
 async def ag_af_in_ag(ait):
     async for x in ait:
-        return None
         yield x

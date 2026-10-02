@@ -7,22 +7,26 @@ def w_nest3(m1, m2, m3):
 def w_nest_same_name(m1, m2):
     with m1 as x, m2 as x:
         return x
+        return None
 def w_with_if(mgr, v):
     with mgr as x:
         if v:
-            x
+            return x
+    return None
 def w_with_for(mgr, xs):
     with mgr:
         total = 0
         for x in xs:
             total += x
         return total
+        return None
 def w_with_while(mgr, n):
     with mgr:
         i = 0
         while i < n:
             i += 1
         return i
+        return None
 def w_with_try(mgr, xs):
     with mgr:
         try:

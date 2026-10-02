@@ -5,6 +5,43 @@ from .region_analyzer import (
     CONDITIONAL_JUMP_OPS,
 )
 
+# [Round6-B30] async 挂起轮询协议操作码全集（CPython 3.11）：
+# GET_ANEXT/GET_AWAITABLE 取得挂起协程后以 LOAD_CONST None + SEND 启动，
+# YIELD_VALUE 交出控制权、RESUME 恢复、JUMP_BACKWARD_NO_INTERRUPT 回环
+# 轮询；CLEANUP_THROW/END_ASYNC_FOR 为协议尾（3.12+ 替代形态 / 迭代耗尽
+# 清理），CACHE/EXTENDED_ARG/NOP 为填充噪声。本集合是推导式子句头识别
+# （_find_async_clause_heads 协议尾）与语句级 async for/await 轮询块识别
+# （region_ast_generator 挂起协议块消费）的唯一事实源。
+ASYNC_POLL_PROTOCOL_OPS = frozenset({
+    'SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT',
+    'CLEANUP_THROW', 'END_ASYNC_FOR', 'CACHE', 'EXTENDED_ARG', 'NOP',
+})
+
+
+def is_async_poll_protocol_block(instrs: List[Instruction]) -> bool:
+    """[Round6-B30] 判定指令序列是否构成 async 挂起轮询协议块。
+
+    [识别条件] 序列非空，去噪后全部操作码 ∈ ASYNC_POLL_PROTOCOL_OPS，
+    且含 SEND（挂起启动）与 JUMP_BACKWARD_NO_INTERRUPT（轮询回环，其
+    argval 落在本序列指令偏移内 = 自循环）。用户 await 的恢复点块
+    （STORE/CALL 等用户指令）不满足全成员判定，天然排除。
+    [归约方式] 纯操作码形态判定：只读指令操作码与跳转 argval 同块性，
+    不读常量值/用户名，无偏移魔数；协议块整体消费、不重组内部。
+    [AST 映射] 无独立映射；消费方将该块标记已生成且不产出任何语句
+    （挂起协议不是用户源码）。
+    [C1] 仅读本序列操作码/偏移（同层结构事实）；[C2] 判定失败即返回
+    False，调用方维持原路径；[C3] 无状态、无副作用。
+    """
+    if not instrs:
+        return False
+    if not all(i.opname in ASYNC_POLL_PROTOCOL_OPS for i in instrs):
+        return False
+    if not any(i.opname == 'SEND' for i in instrs):
+        return False
+    _offsets = {i.offset for i in instrs}
+    return any(i.opname == 'JUMP_BACKWARD_NO_INTERRUPT' and i.argval in _offsets
+               for i in instrs)
+
 
 def _and_operand_raw_text(cond: Dict[str, Any]) -> Optional[str]:
     """把 and 链断行处的操作数渲染成「带续行换行」的原始文本。
@@ -1212,8 +1249,9 @@ class ComprehensionGenerator:
         heads: List[Tuple[int, int]] = []
         n = len(all_instrs)
         _skip = ('CACHE', 'EXTENDED_ARG', 'NOP')
-        _tail_ops = {'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT',
-                     'CLEANUP_THROW', 'END_ASYNC_FOR', 'CACHE', 'EXTENDED_ARG', 'NOP'}
+        # [Round6-B30] 协议尾集合由 ASYNC_POLL_PROTOCOL_OPS 派生（去掉头部
+        # 启动指令 SEND），与语句级挂起轮询块识别共享同一事实源。
+        _tail_ops = ASYNC_POLL_PROTOCOL_OPS - {'SEND'}
         for i, instr in enumerate(all_instrs):
             if instr.opname != 'GET_ANEXT':
                 continue

@@ -1,4 +1,4 @@
-﻿"""
+"""
 基于区域的AST生成器
 
 使用 RegionAnalyzer 的分析结果直接生成AST，替代 ast_generator_v2.py 中的补丁式生成。
@@ -145,7 +145,7 @@ from .region_analyzer import (
     NOISE_OPS, PURE_JUMP_OPS,
 )
 from .ast_generator_v2 import ExpressionReconstructor
-from .comprehension_generator import ComprehensionGenerator
+from .comprehension_generator import ComprehensionGenerator, is_async_poll_protocol_block
 from .opcode_feature_detector import get_opcode_detector
 
 # [R38] 三元条件负极性跳转集合：CPython 把三元/条件中的 `not <expr>` 折叠进
@@ -1738,6 +1738,18 @@ class RegionASTGenerator:
                 if _r57b_explicit_ret:
                     continue
                 for _cl_b in _cl_region.blocks:
+                    # [Round6-B31] 识别条件：块是 await 挂起协议链 owner（末端
+                    # resume 块）且链呈延续形态——其 RETURN_VALUE 消费的是链上
+                    # 恢复的挂起值（如 ``return await g(3)`` 的裸 RETURN_VALUE
+                    # 块），不是异常清理尾声。归约方式：豁免预标记，交由
+                    # _b31_await_chain_gate 在该块装配时合并全链发射（每块唯一
+                    # 归属：链整体归属 owner）。AST 映射：owner 经
+                    # _build_statements_from_instructions 重建 Return/Expr
+                    # （Await 内嵌），与非清理尾声 owner 的发射路径一致。
+                    _b31_chain = self._collect_await_protocol_chain(_cl_b)
+                    if (_b31_chain is not None and _b31_chain[1] is _cl_b
+                            and self._b31_continuation_owner(_cl_b)):
+                        continue
                     self.generated_blocks.add(_cl_b)
                     self.generated_offsets.add(_cl_b.start_offset)
 
@@ -3273,6 +3285,18 @@ class RegionASTGenerator:
                 return None
             return self._generate_loop(region, skip_store_targets=skip_store_targets)
         elif isinstance(region, IfRegion):
+            # [Round6-B29] 顶层协议 IfRegion 消费：IfRegion 全部块属于某
+            # async with 区域（异常表分支块在 with 区域范围内）且为异常
+            # 协议形态（_consume_async_with_protocol_if 判定）时，由该
+            # with 整体消费、不发射。此类 IfRegion 是顶层独立区域（异常
+            # 表分支不被归约为 with 的 child），块 owner 是 IfRegion 自身
+            # —— with 的标记循环跳过（owner 不是 with），顶层循环视为未
+            # 生成而发射幻影 if True: pass（aw_two IfRegion@212）。用户
+            # if 在 async with 体内时 then/else 含用户指令，判定返回
+            # False，行为与既有路径逐位一致。判据只读指令操作码形态与
+            # 区域块包含关系（同层事实），无名字/偏移白名单。
+            if self._consume_top_level_async_protocol_if(region):
+                return None
             return self._generate_if(region)
         elif isinstance(region, TryExceptRegion):
             return self._generate_try(region)
@@ -7914,6 +7938,30 @@ AST 映射规则:
                     self._generated_regions.add(id(_child))
                     return True
                 break
+        # [Round6-B30] 无子 LoopRegion 登记的挂起轮询块消费（Round5-09 推广）：
+        # 识别条件——af_else/af_unpack 等语句级 async for 中，SEND/YIELD_VALUE/
+        # RESUME/JUMP_BACKWARD_NO_INTERRUPT 自循环未注册为子 LoopRegion，而是
+        # 直接并入外层 LoopRegion 的 body_blocks；旧路径将其落入
+        # body_blocks_no_header，_loop_postprocess 的分支扫描自该块游走至
+        # END_ASYNC_FOR 出口块，把 else 体与函数尾 return 发射为循环体首部
+        # 语句（体/else 错序 + return 短路注入；async generator 内该注入
+        # return 更直接触发 SyntaxError）。判据复用
+        # comprehension_generator.is_async_poll_protocol_block（与
+        # _find_async_clause_heads 共享 ASYNC_POLL_PROTOCOL_OPS 操作码事实
+        # 源）：块指令全属挂起轮询协议集、含 SEND 且回环自跳，且所在循环
+        # header 含 GET_ANEXT/GET_AITER（region.is_async）。
+        # 归约方式——协议块整体消费：标记 generated、不产出语句；出口块
+        # 留给 _loop_generate_for 的 else_blocks 路径按 for-else 语义装配。
+        # AST 映射——无独立节点；AsyncFor.body 仅由体/回边块构成，else/
+        # 尾 return 经 orelse 或循环后顺序位置发射，重编译与原字节码一致。
+        # [C1] 只读块操作码/argval 与 region.is_async（同层结构事实），
+        # 无偏移阈值、无名字白名单；[C2] 判定命中即唯一消费（generated
+        # 守卫），不阻断用户 await 恢复点块（含 STORE/CALL 不满足全成员
+        # 判定）；[C3] 判定失败维持原分发路径，既有行为逐位不变。
+        if region.is_async and is_async_poll_protocol_block(block.instructions):
+            self.generated_blocks.add(block)
+            self.generated_offsets.add(block.start_offset)
+            return True
         # [R61 fix] BoolOpRegion entry dispatch in loop body.
         # Region reduction algorithm principle 4 (parent references child entry)
         # + principle 2 (unique block ownership) + principle 3 (nesting = abstract
@@ -8880,6 +8928,234 @@ AST 映射规则:
                     if _aw_stmt:
                         _aw_stmts.append(_aw_stmt)
         return _aw_stmts if _aw_stmts else None
+
+    def _collect_await_protocol_chain(self, block: BasicBlock):
+        """[Round6-B31] 收集 block 所属的 await 挂起协议链。
+
+        [识别条件] CPython 把 ``await <expr>`` 编译为跨块协议链：
+            setup 块（含 GET_AWAITABLE + LOAD_CONST None）
+          → poll 块（SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT
+            自循环，is_async_poll_protocol_block 判定）
+          → resume 块（SEND argval 目标，栈上承接 await 结果）。
+        resume 块可同时是下一个 await 的 setup（``h(await g(await g(1)))``
+        的中间块），链沿「resume 兼 setup → poll → resume」继续延伸；链的
+        持有者（owner）是不再含 GET_AWAITABLE 的末端 resume 块。
+        [归约方式] 纯后继/前驱图遍历：先自 block 向后回溯链头（逐层
+        「poll 前驱 → 含 GET_AWAITABLE 的 setup」），再自链头向前枚举
+        全链成员并定位 owner；只读块指令操作码与 SEND argval 目标块，
+        不读用户名/常量值/偏移魔数。
+        [AST 映射] 无独立映射；返回 (members, owner) 供门控统一装配——
+        owner 以合并指令流重建完整语句（挂起前的栈值穿透挂起点）。
+        [C1] 只读块集合与操作码形态（同层结构事实）；[C2] 链不闭合
+        （缺 setup/poll/resume 任一环）即返回 None，调用方维持原路径；
+        [C3] 无状态、无副作用。
+        """
+        def _is_setup(b: BasicBlock) -> bool:
+            return any(i.opname == 'GET_AWAITABLE' for i in b.instructions)
+
+        def _poll_targeting(cur: BasicBlock) -> Optional[BasicBlock]:
+            for pred in (getattr(cur, 'predecessors', None) or []):
+                if pred is cur:
+                    continue
+                if not is_async_poll_protocol_block(pred.instructions):
+                    continue
+                for i in pred.instructions:
+                    if i.opname == 'SEND' and i.argval is not None:
+                        if self.cfg.get_block_by_offset(i.argval) is cur:
+                            return pred
+                        break
+            return None
+
+        def _setup_of_poll(p: BasicBlock) -> Optional[BasicBlock]:
+            for pred in (getattr(p, 'predecessors', None) or []):
+                if pred is p:
+                    continue
+                if _is_setup(pred):
+                    return pred
+            return None
+
+        def _poll_succ_of(cur: BasicBlock) -> Optional[BasicBlock]:
+            for succ in cur.successors:
+                if succ is cur:
+                    continue
+                if is_async_poll_protocol_block(succ.instructions):
+                    return succ
+            return None
+
+        def _resume_of_poll(p: BasicBlock) -> Optional[BasicBlock]:
+            for i in p.instructions:
+                if i.opname == 'SEND' and i.argval is not None:
+                    r = self.cfg.get_block_by_offset(i.argval)
+                    if r is not None and r is not p:
+                        return r
+                    break
+            return None
+
+        # 向后回溯链头：cur 若是 resume，则经 poll 找到其 setup。
+        seq: List[BasicBlock] = []
+        cur = block
+        while True:
+            seq.append(cur)
+            p = _poll_targeting(cur)
+            if p is None:
+                break
+            s = _setup_of_poll(p)
+            if s is None:
+                return None
+            seq.append(p)
+            cur = s
+        seq.reverse()
+        # 自链头向前枚举全链，定位 owner（末端非 setup 的 resume）。
+        # [Round6-B31] 以身份集合去重：自 owner 回溯所得前缀与自链头前向
+        # 枚举的后缀在「block 自 owner 出发」的调用形态下重叠（链尾两块
+        # 双收），合并指令流会重复 RETURN_VALUE 等终结符，产生双 Return。
+        _seen = {id(b) for b in seq}
+        members = list(seq)
+        owner = None
+        while True:
+            p = _poll_succ_of(cur)
+            if p is None:
+                return None
+            r = _resume_of_poll(p)
+            if r is None:
+                return None
+            if id(p) not in _seen:
+                _seen.add(id(p))
+                members.append(p)
+            if id(r) not in _seen:
+                _seen.add(id(r))
+                members.append(r)
+            if _is_setup(r):
+                cur = r
+                continue
+            owner = r
+            break
+        if owner is None:
+            return None
+        return members, owner
+
+    def _b31_continuation_owner(self, owner: BasicBlock) -> bool:
+        """[Round6-B31] 只读判定：await 挂起协议链 owner 是否呈延续形态。
+
+        [识别条件] owner 去噪指令（剥 RESUME/NOP/CACHE/PUSH_NULL）含
+        STORE_*/POP_TOP 之外的操作码——await 结果不是被简单绑定/丢弃，
+        而是继续参与表达式组装（返回/容器/运算/调用实参）。
+        [归约方式] 无副作用；供 _b31_await_chain_gate 与 generate() 顶级
+        清理尾声预标记循环共用（唯一事实源，禁止复制判定）。
+        [AST 映射] 延续形态 owner 由 gate 合并全链重建 Return/Assign/Expr
+        节点；非延续（简单绑定/丢弃）维持既有 setup 持有路径逐位不变。
+        """
+        _aw_meaningful = [i for i in owner.instructions
+                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        return not all(
+            i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                         'POP_TOP')
+            for i in _aw_meaningful)
+
+    @staticmethod
+    def _const_code_is_async_comprehension(co: Any) -> bool:
+        """[Round6-B31] 只读判定：代码常量是否为编译器合成的 async 推导式。
+
+        [识别条件] LOAD_CONST 的代码操作数具编译器合成名
+        （<listcomp>/<dictcomp>/<setcomp>/<genexpr>——与 generate()
+        入口对推导式函数的既有判定同模式，是编译器合成事实而非用户
+        标识符白名单）。
+        [归约方式] 无副作用；供 _b31_await_chain_gate 合并流判定
+        「GET_AWAITABLE 由编译器为 async 推导式调用自动补发」使用。
+        [AST 映射] 命中时剥除该调用后的 GET_AWAITABLE（重编译推导式
+        源码时编译器自动再生，逐指令一致）。
+        """
+        _name = getattr(co, 'co_name', None) or getattr(co, 'name', None)
+        return _name in ('<listcomp>', '<dictcomp>', '<setcomp>', '<genexpr>')
+
+    def _b31_await_chain_gate(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
+        """[Round6-B31] await 表达式跨挂起点栈穿透门控。
+
+        [识别条件] block 属于某条 await 挂起协议链
+        （_collect_await_protocol_chain 判定），且链 owner（末端 resume
+        块）的去噪指令含有 STORE_*/POP_TOP 之外的操作码——即 await
+        结果不是被简单绑定/丢弃，而是继续参与容器/运算/调用/返回等
+        表达式组装（旧路径仅覆盖「赋值右值/裸语句」两隅，嵌套位形的
+        挂起前栈值在恢复点块独立重建时被常量/None 顶替）。
+        [归约方式] 每块唯一归属改判：整条链唯一归属 owner。block 非
+        owner 时不发射、不标记（交由 owner 统一装配）；block 是 owner
+        时把全链指令合并为单一指令流（整体跳过 poll 块，剥去
+        RESUME/NOP/CACHE/PUSH_NULL 与 GET_AWAITABLE 后的 LOAD_CONST None
+        发送值——挂起协议不是用户源码），经
+        _build_statements_from_instructions 按语句边界重建完整语句，
+        并把全链块标记已生成。合并流中另剥除「编译器为 async 推导式
+        调用自动补发的 GET_AWAITABLE」（MAKE_FUNCTION 的代码常量为
+        编译器合成推导式，见 _const_code_is_async_comprehension——重编译
+        推导式源码时编译器自动再生，保留则渲染出双重挂起链）。
+        [AST 映射] Return/Assign/Expr 节点的 value 内嵌 Await 子表达式
+        （GET_AWAITABLE 由 ExpressionReconstructor 包装为 Await），位形
+        嵌套无感：dict/list/binop/subscript/compare/call 实参均由同一
+        栈式重建自然覆盖，无逐位形补丁。
+        [C1] 只读链成员指令与归属台账（同层事实）；[C2] owner 重建
+        失败（空语句）即返回 None 回退旧路径；[C3] 简单形态（owner
+        仅含 STORE_*/POP_TOP）维持既有 setup 持有路径，逐位不变。
+        """
+        chain = self._collect_await_protocol_chain(block)
+        if chain is None:
+            return None
+        members, owner = chain
+        # [Round6-B29] 上下文管理器入口机器链不是用户 await：setup 块含
+        # BEFORE_WITH/BEFORE_ASYNC_WITH（__aenter__ 调用协议）的链整体
+        # 唯一归属 WithRegion 装配路径（as 绑定经 Round5-08 SEND 跳出
+        # 目标块首指令判定），gate 拒捕，交由 _generate_with 处理。
+        if any(i.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH')
+               for _b29m in members for i in _b29m.instructions):
+            return None
+        if not self._b31_continuation_owner(owner):
+            return None
+        if block is not owner:
+            return []
+        merged: List[Instruction] = []
+        _prev_awaitable = False
+        _prev_call = False
+        _inline_fn_pending = False
+        _inline_fn_awaited = False
+        for m in members:
+            if is_async_poll_protocol_block(m.instructions):
+                continue
+            for i in m.instructions:
+                if i.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                    continue
+                if _prev_awaitable and i.opname == 'LOAD_CONST' and i.argval is None:
+                    _prev_awaitable = False
+                    _prev_call = False
+                    continue
+                if i.opname == 'MAKE_FUNCTION':
+                    _mf_prev = merged[-1] if merged else None
+                    if (_mf_prev is not None and _mf_prev.opname == 'LOAD_CONST'
+                            and self._const_code_is_async_comprehension(_mf_prev.argval)):
+                        _inline_fn_pending = True
+                if i.opname == 'GET_AWAITABLE' and _prev_call and _inline_fn_awaited:
+                    # async 推导式调用：编译器对含 await 的推导式自动补发
+                    # GET_AWAITABLE（重编译推导式源码时自动再生），非用户级
+                    # await——剥除，避免渲染出双重 await 挂起链。
+                    _prev_awaitable = True
+                    _prev_call = False
+                    _inline_fn_awaited = False
+                    continue
+                _prev_awaitable = (i.opname == 'GET_AWAITABLE')
+                _prev_call = i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD',
+                                          'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX')
+                if i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD',
+                                'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX'):
+                    _inline_fn_awaited = _inline_fn_pending
+                    _inline_fn_pending = False
+                merged.append(i)
+        stmts = self._build_statements_from_instructions(merged, block=owner)
+        if not stmts:
+            return None
+        for m in members:
+            self.generated_blocks.add(m)
+            self.generated_offsets.add(m.start_offset)
+            for i in m.instructions:
+                self.generated_offsets.add(i.offset)
+        return stmts
+
 
     def _fallthrough_successor_excluding(self, block: Optional['BasicBlock'],
                                          exclude_offset: Optional[int]) -> Optional['BasicBlock']:
@@ -29703,6 +29979,154 @@ AST 映射规则:
     def _mark_with_cleanup_generated(self, block):
         self._with_cleanup_generated_blocks.add(block)
 
+    def _consume_async_with_protocol_if(self, with_region, if_region):
+        """[Round6-B29] with 自身异常协议 IfRegion 整体消费判定。
+
+        识别条件——async with 的异常表分支被识别为 IfRegion：其
+        then/else 全部块为异常协议路径（纯协议块 + 块内含协议特征码
+        PUSH_EXC_INFO/WITH_EXCEPT_START/RERAISE/CHECK_EXC_MATCH 等——
+        特征码仅异常表协议可产生，用户代码不可达），非用户控制流
+        （用户 if 的 then 含 LOAD/比较/调用等用户指令）。
+        归约方式——then/else 每块 ops ⊆ 协议集且含协议特征码即整
+        region 标记已生成（generated_blocks + _generated_regions），
+        不发射语句。
+        AST 映射——无（协议块不映射 AST，与同步 with 的
+        WITH_HANDLER 角色消费一致）。
+        [C1] 只读指令操作码形态（同层事实），无名字/偏移白名单；
+        [C2] 协议特征码限定异常协议（用户代码不可达）；
+        [C3] 任一块含用户指令即返回 False，行为与既有路径逐位一致。
+        """
+        if not getattr(with_region, 'is_async', False):
+            return False
+        if not isinstance(if_region, IfRegion):
+            return False
+        _proto = {'PUSH_EXC_INFO', 'WITH_EXCEPT_START', 'GET_AWAITABLE',
+                  'SEND', 'YIELD_VALUE', 'RESUME', 'CACHE', 'NOP',
+                  'JUMP_BACKWARD_NO_INTERRUPT', 'POP_TOP', 'RERAISE',
+                  'LOAD_CONST', 'SWAP', 'COPY', 'PRECALL', 'CALL',
+                  'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'CHECK_EXC_MATCH',
+                  'CLEANUP_THROW', 'CHECK_EG_MATCH', 'POP_EXCEPT',
+                  'END_ASYNC_FOR', 'END_FOR',
+                  'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+                  'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                  'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'}
+        _blocks = list(getattr(if_region, 'then_blocks', None) or []) + \
+            list(getattr(if_region, 'else_blocks', None) or [])
+        if not _blocks:
+            return False
+        # 协议特征码（仅异常表协议可产生，用户代码不可达）：
+        # PUSH_EXC_INFO / WITH_EXCEPT_START / RERAISE / CHECK_EXC_MATCH 等
+        _sig = {'PUSH_EXC_INFO', 'WITH_EXCEPT_START', 'RERAISE',
+                'CHECK_EXC_MATCH', 'CLEANUP_THROW', 'CHECK_EG_MATCH'}
+        _has_entry = False
+        for _b in _blocks:
+            _instrs = [i for i in _b.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+            if not _instrs:
+                continue
+            if not all(i.opname in _proto for i in _instrs):
+                return False
+            if any(i.opname in _sig for i in _instrs):
+                _has_entry = True
+        if not _has_entry:
+            return False
+        for _b in _blocks:
+            self._mark_with_cleanup_generated(_b)
+            self.generated_blocks.add(_b)
+        self._generated_regions.add(id(if_region))
+        return True
+
+    def _consume_top_level_async_protocol_if(self, if_region):
+        """[Round6-B29] 顶层协议 IfRegion 消费（宿主 async with 定位）。
+
+        识别条件——IfRegion 与某 async WithRegion 的 blocks 有非空交集
+        （异常表分支入口/出口框架块仍在 with 区域内；分支主体块归约为
+        IfRegion 自身后已从宿主 blocks 移除——嵌套即抽象节点），且
+        _consume_async_with_protocol_if 判定其为 with 自身异常协议
+        （then/else 全协议块 + 特征码，用户 if 必含用户指令被拒）。
+        归约方式——命中即消费并标记，返回 True。
+        AST 映射——无（协议块不映射 AST）。
+        [C1] 只读区域块交集与指令操作码形态（同层事实）；
+        [C2] 协议判定全权把关（特征码仅异常协议可产生）；
+        [C3] 无交集宿主或非协议形态返回 False，行为与既有路径逐位一致。
+        """
+        if not isinstance(if_region, IfRegion):
+            return False
+        if not getattr(if_region, 'blocks', None):
+            return False
+        _if_ids = {id(b) for b in if_region.blocks}
+        _best = None
+        _best_n = 0
+        for _r in self.regions:
+            if not isinstance(_r, WithRegion) or not getattr(_r, 'is_async', False):
+                continue
+            _n = sum(1 for b in (_r.blocks or []) if id(b) in _if_ids)
+            if _n > _best_n:
+                _best = _r
+                _best_n = _n
+        if _best is None:
+            return False
+        return self._consume_async_with_protocol_if(_best, if_region)
+
+
+    def _consume_async_exit_chain_region(self, with_region, nested_region):
+        """[Round6-B29] with 退出链子 Region 整体消费判定。
+
+        识别条件——async with 的 ``__aexit__`` await 退出链（入口块为
+        GET_AWAITABLE+SWAP 机器形态，链上 SEND 轮询自循环 → 函数尾
+        RETURN 终结块）被识别为普通子 Region；其全部块为挂起协议，
+        return 值已由体语句发射（挂起值语义），该 Region 不映射任何
+        用户 AST。判定 = _walk_async_pending_return 自入口块命中终结块
+        且 Region 全部块 ⊆ 走查链 ∪ 纯协议（PUSH_EXC_INFO 特征块除外
+        ——异常路径由协议 IfRegion 消费）。
+        归约方式——命中即整 Region 标记已生成（generated_blocks +
+        _generated_regions），不发射语句。
+        AST 映射——无（挂起协议块不映射 AST）。
+        [C1] 只读指令操作码形态（同层事实），无名字/偏移白名单；
+        [C2] 链存在性自证（终结块 RETURN 机器形态）；
+        [C3] 走查未命中或含用户指令块即返回 False，行为与既有路径
+        逐位一致。
+        """
+        if not getattr(with_region, 'is_async', False):
+            return False
+        if type(nested_region) is not Region:
+            return False
+        _entry = getattr(nested_region, 'entry', None)
+        if _entry is None:
+            return False
+        _e_opset = {i.opname for i in _entry.instructions}
+        # 不要求 SWAP：嵌套链外层 __aexit__ 调用时挂起值已在栈上位
+        # （blk@[LOAD_CONST×3, PRECALL, CALL, GET_AWAITABLE]），链存在性
+        # 由走查命中 RETURN 终结块自证。
+        if 'GET_AWAITABLE' not in _e_opset:
+            return False
+        if not _e_opset <= {'LOAD_CONST', 'SWAP', 'COPY', 'PRECALL', 'CALL',
+                            'GET_AWAITABLE', 'POP_TOP', 'NOP', 'RESUME',
+                            'CACHE', 'JUMP_FORWARD'}:
+            return False
+        _walked, _found, _val = self._walk_async_pending_return(_entry)
+        if _found is None:
+            return False
+        _chain_ids = {id(b) for b in _walked}
+        _chain_ids.add(id(_entry))
+        for _b in (nested_region.blocks or []):
+            if id(_b) in _chain_ids:
+                continue
+            _ops = {i.opname for i in _b.instructions}
+            if _ops <= {'POP_TOP', 'NOP', 'RESUME', 'CACHE', 'PUSH_EXC_INFO',
+                        'WITH_EXCEPT_START', 'RERAISE', 'COPY',
+                        'POP_EXCEPT', 'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                        'LOAD_CONST', 'RETURN_VALUE', 'RETURN_CONST',
+                        'GET_AWAITABLE', 'SWAP', 'PRECALL', 'CALL',
+                        'SEND', 'YIELD_VALUE', 'JUMP_BACKWARD_NO_INTERRUPT'}:
+                continue
+            return False
+        for _b in (nested_region.blocks or []):
+            self._mark_with_cleanup_generated(_b)
+            self.generated_blocks.add(_b)
+        self._generated_regions.add(id(nested_region))
+        return True
+
     def _generate_class_body_from_code(self, code_obj):
         """从code object生成类定义的body语句列表。"""
         try:
@@ -29916,6 +30340,154 @@ AST 映射规则:
         self._generated_regions.add(id(_nested_ternary))
         return _t_expr, _prefix_stmts
 
+    def _walk_async_pending_return(self, start_block):
+        """[Round6-B29] 自链头块走查挂起返回值终结链（只读，不标记）。
+
+        识别条件——``return <expr>`` 于 async with 体尾的值留在栈上，
+        穿越 ``__aexit__`` await 链：SWAP+LOAD_CONST×3+CALL+GET_AWAITABLE
+        机器块（无操作数加载）→ SEND 轮询自循环（纯协议块）→
+        POP_TOP/RETURN_VALUE 终结块。BFS 仅沿机器形态块扩展：
+        轮询块（SEND 纯协议）、__aexit__ 调用块（机器集含
+        GET_AWAITABLE）、纯栈清理块（POP_TOP/NOP），命中 RETURN 机器
+        终结块即成功。
+        归约方式——返回 (走查块列表, 终结块, 终结是否 RETURN_VALUE)；
+        标记由调用方执行。AST 映射——体尾 Expr 升级为
+        Return(value=挂起值)（仅 RETURN_VALUE 终结 = 值在栈上；
+        RETURN_CONST 终结 = 隐式 return None，值语句是真实表达式
+        语句，禁升级）。
+        [C1] 只读指令操作码形态（同层事实），无名字/偏移白名单；
+        [C2] 链形态唯一（GET_AWAITABLE 仅由 __aexit__/用户 await 产生，
+        用户 await 块含实参加载不在机器集内）；[C3] 走查失败返回
+        ([], None, False)，调用方维持原语句不变。
+        """
+        _walked = []
+        _queue = [start_block]
+        _visited = {id(start_block)}
+        _found = None
+        while _queue and _found is None:
+            _cur = _queue.pop(0)
+            for _ns in _cur.successors:
+                if id(_ns) in _visited:
+                    continue
+                _ops = [i.opname for i in _ns.instructions]
+                _opset = set(_ops)
+                if ('SEND' in _opset
+                        and _opset <= {'SEND', 'YIELD_VALUE', 'RESUME',
+                                       'JUMP_BACKWARD_NO_INTERRUPT', 'CACHE'}):
+                    # 挂起轮询块
+                    _visited.add(id(_ns))
+                    _walked.append(_ns)
+                    _queue.append(_ns)
+                    continue
+                _has_ret = ('RETURN_VALUE' in _opset or 'RETURN_CONST' in _opset)
+                _mach = all(
+                    o in ('LOAD_CONST', 'SWAP', 'COPY', 'PRECALL', 'CALL',
+                          'GET_AWAITABLE', 'POP_TOP', 'NOP', 'RESUME', 'CACHE',
+                          'RETURN_VALUE', 'RETURN_CONST', 'JUMP_FORWARD')
+                    for o in _ops)
+                if _has_ret and _mach:
+                    # [Round6-B29] 终结块须为挂起值形态（值在栈上穿越协议）：
+                    # 无值隐式返回形态（RETURN_CONST None，或 POP_TOP 弹
+                    # __aexit__ 结果后 LOAD_CONST None + RETURN_VALUE）不
+                    # 消费挂起值，非终结（体尾无 return 的正常退出链，
+                    # aw_two blk@190）——继续走查其后继（无后继则走查失败）。
+                    # 只读指令操作码/常量形态（同层事实），无名字/偏移白名单。
+                    _ns_nz = [i for i in _ns.instructions
+                              if i.opname not in ('NOP', 'CACHE', 'RESUME')]
+                    _implicit = any(
+                        i.opname == 'RETURN_CONST' and i.argval is None
+                        for i in _ns_nz)
+                    if not _implicit:
+                        for _wi, _wi_instr in enumerate(_ns_nz):
+                            if _wi_instr.opname == 'RETURN_VALUE':
+                                if (_wi > 0
+                                        and _ns_nz[_wi - 1].opname == 'LOAD_CONST'
+                                        and _ns_nz[_wi - 1].argval is None):
+                                    _implicit = True
+                                break
+                    if _implicit:
+                        continue
+                    _visited.add(id(_ns))
+                    _walked.append(_ns)
+                    _found = _ns
+                    break
+                if _mach and 'GET_AWAITABLE' in _opset:
+                    # __aexit__ 调用块（含挂起协议 setup 尾）
+                    _visited.add(id(_ns))
+                    _walked.append(_ns)
+                    _queue.append(_ns)
+                    continue
+                if _opset <= {'POP_TOP', 'NOP', 'RESUME', 'CACHE'}:
+                    # 纯栈清理块
+                    _visited.add(id(_ns))
+                    _walked.append(_ns)
+                    _queue.append(_ns)
+                    continue
+        _has_value = (_found is not None
+                      and any(i.opname == 'RETURN_VALUE'
+                              for i in _found.instructions))
+        return _walked, _found, _has_value
+
+    def _extract_async_enter_chain_target(self, region: WithRegion):
+        """[Round6-B29] 入口链目标提取：本层 `as` 目标 = 入口挂起轮询
+        自循环出口块首条 STORE_*。
+
+        识别条件——async with 多管理器/源生嵌套按区域归约为父子
+        WithRegion 链，每层 entry 块含 BEFORE_ASYNC_WITH；各层的
+        `as <target>` 绑定 STORE 位于本层入口的 ``__aenter__`` 挂起
+        轮询自循环（SEND 纯协议自跳块）的非自跳、非异常路径出口块
+        首条指令。旧探测仅「body 为空」时运行且回退 with_blocks[0]，
+        子层会抢走父层目标、自身目标丢失（aw_two/aw_nest2）。
+        归约方式——自 entry（经纯跳转）定位 SEND 自循环轮询块，取其
+        非自跳后继中首操作非 PUSH_EXC_INFO 的出口块，首条真实指令为
+        STORE_* 即目标；返回 (target, 轮询块列表)。
+        AST 映射——target 挂 withitem.optional_vars；轮询协议块整体
+        消费（不产出语句）。
+        [C1] 只读指令操作码形态（同层事实），无名字/偏移白名单；
+        [C2] 每层轮询链唯一归属本层（子层入口即父层出口块，不标记）
+        ；[C3] 链缺失（无 as/异常形态）返回 (None, [])，调用方走
+        既有回退路径，行为逐位不变。
+        """
+        _poll_ops = {'SEND', 'YIELD_VALUE', 'RESUME',
+                     'JUMP_BACKWARD_NO_INTERRUPT', 'CACHE'}
+        _entry = region.entry
+        if _entry is None:
+            return None, []
+        _visited = {id(_entry)}
+        _cur = _entry
+        _steps = 0
+        while _cur is not None and _steps < 8:
+            _steps += 1
+            _nxt = None
+            for _s in _cur.successors:
+                if id(_s) in _visited:
+                    continue
+                _opset = {i.opname for i in _s.instructions}
+                if _opset and _opset <= _poll_ops and 'SEND' in _opset:
+                    # 入口挂起轮询自循环命中：取出口块
+                    _poll_blocks = [_s]
+                    _target = None
+                    for _e in _s.successors:
+                        if _e is _s:
+                            continue
+                        _e_instrs = [i for i in _e.instructions
+                                     if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+                        if not _e_instrs or _e_instrs[0].opname == 'PUSH_EXC_INFO':
+                            continue
+                        _first = _e_instrs[0]
+                        if _first.opname in ('STORE_FAST', 'STORE_NAME',
+                                             'STORE_GLOBAL', 'STORE_DEREF'):
+                            _target = _first.argval
+                        break
+                    return _target, _poll_blocks
+                if len(_cur.successors) == 1:
+                    _visited.add(id(_s))
+                    _cur = _s
+                    break
+            else:
+                break
+        return None, []
+
     def _generate_with(self, region: WithRegion) -> Dict[str, Any]:
         """_generate_with — WithRegion → ast.With 映射
 
@@ -30084,20 +30656,16 @@ AST 映射规则:
             # 语句处理，导致 body_stmts 非空，使后续的 fallback 检测被
             # `if region.is_async and not body_stmts` 闸门拦截。
             if region.is_async and region.target is None:
-                _wb_blocks_early = sorted(
-                    (b for b in getattr(region, 'with_blocks', []) or []),
-                    key=lambda b: b.start_offset,
-                )
-                _async_target_early = None
-                if _wb_blocks_early:
-                    _wb_first_block = _wb_blocks_early[0]
-                    _wb_first = None
-                    for _instr in _wb_first_block.instructions:
-                        if _instr.opname not in ('RESUME', 'NOP', 'CACHE'):
-                            _wb_first = _instr
-                            break
-                    if _wb_first and _wb_first.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                        _async_target_early = _wb_first.argval
+                # [Round6-B29] 入口链提取（唯一判据，无启发式无回退）：
+                # 本层 `as` 目标 = 入口挂起轮询自循环出口块首条 STORE_*
+                # （_extract_async_enter_chain_target，判据详见该方法注释）。
+                # 旧 with_blocks[0] 首条 STORE 启发式整体移除——多管理器/
+                # 源生嵌套下子层 with_blocks[0] 是父层出口块，会抢走父层
+                # 目标（aw_two/aw_nest2 的 a 双挂、b 蒸发）；链缺失即
+                # target=None，交由体提取路径按结构事实处理。
+                _async_target_early, _ect_poll_early = self._extract_async_enter_chain_target(region)
+                for _pb in _ect_poll_early:
+                    self.generated_blocks.add(_pb)
                 if _async_target_early:
                     region.target = _async_target_early
                     if region.items:
@@ -30176,9 +30744,26 @@ AST 映射规则:
                 # （子结构的成员块不可能覆盖父结构入口），置空处理。
                 if nested_region is not None:
                     _w11a_self_entry = getattr(region, 'entry', None)
-                    if (_w11a_self_entry is not None
-                            and nested_region is not region
-                            and _w11a_self_entry in (getattr(nested_region, 'blocks', None) or [])):
+                    _w11a_is_ancestor = False
+                    if _w11a_self_entry is not None and nested_region is not region:
+                        if _w11a_self_entry in (getattr(nested_region, 'blocks', None) or []):
+                            _w11a_is_ancestor = True
+                        else:
+                            # [Round6-B29] 祖先链判定：async with 多管理器形态下
+                            # 共享挂起轮询块（SEND/YIELD/RESUME/JBNI 自循环）同
+                            # 时挂在各层 WithRegion.blocks；W11-A 的「候选区域
+                            # blocks 含本区域 entry」判据失效（归约已把子区域
+                            # 入口从父 blocks 抽象掉）。改沿区域树 parent 链上
+                            # 溯判定候选是否为本区域祖先——区域树结构事实，非
+                            # 启发式。祖先命⇒置空，防止子层反向生成正在生成的
+                            # 祖先（无限递归）。
+                            _w11a_p = region.parent
+                            while _w11a_p is not None:
+                                if _w11a_p is nested_region:
+                                    _w11a_is_ancestor = True
+                                    break
+                                _w11a_p = _w11a_p.parent
+                    if _w11a_is_ancestor:
                         nested_region = None
                 if not nested_region or nested_region is region or nested_region is region.parent:
                     for _r in self.regions:
@@ -30277,7 +30862,16 @@ AST 映射规则:
                                             break
                                 if getattr(nested_region, 'value_target', None):
                                     break
-                        generated = self._generate_region(nested_region, skip_store_targets=skip_targets)
+                        if isinstance(nested_region, IfRegion) and self._consume_async_with_protocol_if(region, nested_region):
+                            # [Round6-B29] with 自身异常协议 IfRegion 整体消费，
+                            # 不发射（判据见 _consume_async_with_protocol_if）
+                            generated = None
+                        elif self._consume_async_exit_chain_region(region, nested_region):
+                            # [Round6-B29] with 退出链子 Region 整体消费，
+                            # 不发射（判据见 _consume_async_exit_chain_region）
+                            generated = None
+                        else:
+                            generated = self._generate_region(nested_region, skip_store_targets=skip_targets)
                         # [修复] 恢复TryExceptRegion的else_blocks
                         if _try_else_fixup is not None:
                             nested_region.else_blocks, nested_region.has_else = _try_else_fixup
@@ -30376,7 +30970,18 @@ AST 映射规则:
                             skip_targets = set()
                             if region.target and isinstance(nested_region, LoopRegion):
                                 skip_targets.add(region.target)
-                            generated = self._generate_region(nested_region, skip_store_targets=skip_targets)
+                            if isinstance(nested_region, IfRegion) and self._consume_async_with_protocol_if(region, nested_region):
+                                # [Round6-B29] with 自身异常协议 IfRegion 整体
+                                # 消费，不发射（判据见
+                                # _consume_async_with_protocol_if）
+                                generated = None
+                            elif self._consume_async_exit_chain_region(region, nested_region):
+                                # [Round6-B29] with 退出链子 Region 整体消费，
+                                # 不发射（判据见
+                                # _consume_async_exit_chain_region）
+                                generated = None
+                            else:
+                                generated = self._generate_region(nested_region, skip_store_targets=skip_targets)
                             # [修复] 恢复TryExceptRegion的else_blocks
                             if _try_else_fixup2 is not None:
                                 nested_region.else_blocks, nested_region.has_else = _try_else_fixup2
@@ -30435,6 +31040,32 @@ AST 映射规则:
                                 break
 
                 stmts = self._generate_block_statements(block)
+                # [Round6-B29] 纯机器块的跨块协议残留剔除：块内仅 POP_TOP/
+                # 纯跳转/噪声（无任何用户指令）时无同块用户语句；其语句经
+                # JUMP_FORWARD 合并后继跨块重构而来，若表达式为 Await/Call
+                # 且 func=Constant None，即 CPython __aexit__/__exit__ 清理
+                # 调用「SWAP 栈上引用 + LOAD_CONST None×3 参数」的跨块重构
+                # 伪影（引用加载在协议块栈上、归约后丢失，func 位被填
+                # Constant None；用户 await 的 func 必有 LOAD_* 加载且块非
+                # 纯机器）——协议残留禁发射（aw_three blk@250）。只读指令
+                # 操作码/语句结构形态（同层事实），无名字/偏移白名单。
+                if (stmts
+                        and {i.opname for i in block.instructions} <= {
+                            'POP_TOP', 'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                            'NOP', 'RESUME', 'CACHE'}):
+                    _kept = []
+                    for _s in stmts:
+                        _sv = _s.get('value') if _s.get('type') == 'Expr' else None
+                        if _sv is not None and isinstance(_sv, dict):
+                            _sf = _sv
+                            if _sf.get('type') == 'Await':
+                                _sf = _sf.get('value') or {}
+                            if (_sf.get('type') == 'Call'
+                                    and ( _sf.get('func') or {}).get('type') == 'Constant'
+                                    and (_sf['func'].get('value') is None)):
+                                continue
+                        _kept.append(_s)
+                    stmts = _kept
                 if target_store_offset is not None:
                     stmts = [s for s in stmts
                              if not (s.get('type') == 'Assign' and
@@ -30535,6 +31166,63 @@ AST 映射规则:
                                 self._mark_with_cleanup_generated(_rcb)
                                 self.generated_blocks.add(_rcb)
                             stmts[-1] = {'type': 'Return', 'value': last_stmt.get('value')}
+                        elif region.is_async:
+                            # [Round6-B29] async with 体尾挂起返回值升级：
+                            # ``return <expr>``（含 await 位形）的值于体尾计算后
+                            # 留在栈上，穿越 __aexit__ 调用链（SWAP +
+                            # LOAD_CONST None×3 + CALL + GET_AWAITABLE 挂起
+                            # 协议，__aexit__ 经 BEFORE_ASYNC_WITH 栈保留无
+                            # 操作数加载）由函数尾 RETURN_VALUE 块消费。上方
+                            # 同步升级判据（SWAP/RETURN/WITH_EXIT_CALL）不
+                            # 穿越轮询块与 POP_TOP 清理块，对 async 全盲。
+                            # 归约：自体块后继走查挂起协议（轮询块）、纯栈
+                            # 清理块（POP_TOP）、__aexit__ 调用块（机器形态：
+                            # 仅 SWAP/LOAD_CONST/CALL/GET_AWAITABLE 等，无
+                            # 操作数加载），命中 RETURN_VALUE 终结块即把体尾
+                            # Expr 升级为 Return，走查过的机器块全部标记已
+                            # 生成（每块唯一归属：体值归体、退出机器唯一归属
+                            # WithRegion）。判据只读指令操作码形态（同层事实），
+                            # 无名字/偏移白名单。走查抽至
+                            # _walk_async_pending_return（装配后升级复用同判据）。
+                            _b29_walked, _b29_found, _b29_value = self._walk_async_pending_return(block)
+                            if _b29_found is not None:
+                                for _b29_wb in _b29_walked:
+                                    self._mark_with_cleanup_generated(_b29_wb)
+                                    self.generated_blocks.add(_b29_wb)
+                                if _b29_value:
+                                    stmts[-1] = {'type': 'Return', 'value': last_stmt.get('value')}
+                    elif region.is_async and any(s.get('type') == 'Return'
+                                                 for s in stmts):
+                        # [Round6-B29] 体尾 Return 的 __aexit__ 退出链消费：
+                        # async with 体内 return 的值于体尾计算后穿越
+                        # __aexit__ await 链（多管理器时为多层串联）由函数尾
+                        # RETURN_VALUE 消费；Return 语句本身已正确发射，链块
+                        # （SWAP+CALL+GET_AWAITABLE 调用块 → SEND 轮询块 →
+                        # POP_TOP/RETURN 终结块）不消费则后续幻影 return
+                        # None/await None(...) 残留（aw_two/aw_three）。
+                        # 判据同 _walk_async_pending_return（共享判据源，
+                        # 只读指令操作码形态，无名字/偏移白名单）。
+                        _b29r_walked, _b29r_found, _b29r_val = self._walk_async_pending_return(block)
+                        if _b29r_found is not None:
+                            for _b29r_wb in _b29r_walked:
+                                self._mark_with_cleanup_generated(_b29r_wb)
+                                self.generated_blocks.add(_b29r_wb)
+                        else:
+                            # [Round6-B29] 纯机器形态块自产的 Return = 挂起
+                            # 协议残留（with 退出链终末重发点，如 blk@[POP_
+                            # TOP, LOAD_CONST, RETURN_VALUE]，且常被后处理的
+                            # 链标记晚于本块处理）：真实 return 的宿主块含
+                            # 用户指令（LOAD_FAST/BINARY_OP 等）或其走查命中
+                            # RETURN 终结（挂起值语义）；本块纯机器且走查无
+                            # 终结 = 值非挂起、块不可达于用户语义 → Return
+                            # 剔除（每块唯一归属：值归体块、终末重发归协议）。
+                            _bops = {i.opname for i in block.instructions}
+                            if _bops <= {'LOAD_CONST', 'SWAP', 'COPY', 'PRECALL',
+                                         'CALL', 'GET_AWAITABLE', 'POP_TOP', 'NOP',
+                                         'RESUME', 'CACHE', 'RETURN_VALUE',
+                                         'RETURN_CONST', 'JUMP_FORWARD'}:
+                                stmts = [s for s in stmts
+                                         if s.get('type') != 'Return']
 
                 body_stmts.extend(stmts)
                 self.generated_blocks.add(block)
@@ -31198,6 +31886,55 @@ AST 映射规则:
                         else:
                             item['optional_vars'] = {'type': 'Name', 'id': target, 'ctx': 'Store'}
                     items.append(item)
+
+            # [Round6-B29] 装配后链消费 + 挂起返回值升级：async with 体内
+            # 任意 return 的值均穿越本层 __aexit__ await 链（SWAP+
+            # LOAD_CONST×3+CALL+GET_AWAITABLE 机器块 → SEND 轮询自循环 →
+            # POP_TOP/RETURN 终结块）由函数尾 RETURN_VALUE 消费；嵌套时
+            # 外层链由内层走查跨界标记。该值语句经 _loop_generate_for
+            # 多段装配返回（不经过通用块循环的升级分支）时被降级为裸
+            # Expr（af_in_aw 的 return total → total）。链块与 region.exc
+            # （with 自身异常协议块 PUSH_EXC_INFO...RERAISE；用户 except
+            # 在体内容器 TryRegion 子区域，不在 exc）若不消费，幻影
+            # return None/await None(...)/if True: pass 残留（aw_two/
+            # aw_three）。归约：体非空即自本层块 ∪ 本层块后继中找链头块
+            # （机器形态含 GET_AWAITABLE+SWAP），走查命中终结块即标记链
+            # 块 + exc 块已生成（链存在性自证——GET_AWAITABLE 机器形态
+            # 仅 __aexit__ 协议产生）；仅终结含 RETURN_VALUE（值在栈上）
+            # 时升级体尾 Expr→Return（RETURN_CONST 终结 = 隐式 return
+            # None，值语句是真实表达式语句，禁升级）。判据与通用块循环
+            # 升级分支共享 _walk_async_pending_return 同一判据源，只读
+            # 指令操作码形态（同层事实），无名字/偏移白名单。
+            if region.is_async and body_stmts:
+                # 候选链头 = 本层块 ∪ 本层块后继（链头块 __aexit__ 调用块
+                # 可能是子 Region 块，不在 region.blocks 内，但必为本层某块
+                # 的直接后继——体值穿 __aexit__ 的结构事实）。
+                _b29p_by_id = {}
+                for _b in (region.blocks or []):
+                    _b29p_by_id[id(_b)] = _b
+                    for _s in _b.successors:
+                        _b29p_by_id.setdefault(id(_s), _s)
+                for _cand in sorted(_b29p_by_id.values(), key=lambda b: b.start_offset):
+                    _c_opset = {i.opname for i in _cand.instructions}
+                    if not ('GET_AWAITABLE' in _c_opset and 'SWAP' in _c_opset):
+                        continue
+                    if not _c_opset <= {'LOAD_CONST', 'SWAP', 'COPY', 'PRECALL',
+                                        'CALL', 'GET_AWAITABLE', 'POP_TOP', 'NOP',
+                                        'RESUME', 'CACHE', 'JUMP_FORWARD'}:
+                        continue
+                    _b29p_walked, _b29p_found, _b29p_value = self._walk_async_pending_return(_cand)
+                    if _b29p_found is not None:
+                        for _b29p_wb in _b29p_walked:
+                            self._mark_with_cleanup_generated(_b29p_wb)
+                            self.generated_blocks.add(_b29p_wb)
+                        for _eb in list(getattr(region, 'exc', None) or []):
+                            self._mark_with_cleanup_generated(_eb)
+                            self.generated_blocks.add(_eb)
+                        if (_b29p_value
+                                and body_stmts[-1].get('type') == 'Expr'):
+                            body_stmts[-1] = {'type': 'Return',
+                                              'value': body_stmts[-1].get('value')}
+                        break
 
             with_ast = {
                 'type': 'AsyncWith' if region.is_async else 'With',
@@ -46017,7 +46754,86 @@ AST 映射规则:
         归属」下的一处判定、多处复用。
         """
         stmts = self._generate_block_statements_body(block, _cjb_parent)
+        # [Round6-B29] 协议调用伪影剔除（单一漏斗）：Expr(Await(Call(
+        # func=Constant None, args 全 Constant None))) 是 CPython
+        # __aexit__/__exit__ 清理调用「SWAP 栈上引用 + LOAD_CONST None×3
+        # 参数 + CALL + GET_AWAITABLE」跨块重构后的伪影——引用加载在协
+        # 议块栈上、归约后丢失，func 位被填 Constant None。合法可执行程
+        # 序中 None 不可调用（求值即 TypeError），该形态不可能是用户语
+        # 义（用户 await 的 func 必有 LOAD_* 加载）——协议残留禁发射
+        # （aw_in_af blk@90、aw_two blk@250）。只读语句结构形态（同层
+        # 事实），无名字/偏移白名单。
+        if stmts:
+            _kept = []
+            for _s in stmts:
+                if _s.get('type') == 'Expr' and isinstance(_s.get('value'), dict):
+                    _sv = _s.get('value')
+                    _sf = _sv
+                    if _sf.get('type') == 'Await':
+                        _sf = _sf.get('value') or {}
+                    if (_sf.get('type') == 'Call'
+                            and (_sf.get('func') or {}).get('type') == 'Constant'
+                            and _sf['func'].get('value') is None):
+                        _args = _sf.get('args') or []
+                        if (_args
+                                and all(a.get('type') == 'Constant'
+                                        and a.get('value') is None
+                                        for a in _args)):
+                            continue
+                _kept.append(_s)
+            stmts = _kept
         self._mark_with_exit_return_explicit(block, stmts)
+        # [Round6-B32] 体尾挂起值升级（单一漏斗）：``with/async with`` 体内
+        # if 分支尾 ``return <expr>`` 的值于分支块尾计算后留在栈上，穿越
+        # __exit__/__aexit__ 协议调用链由函数尾 RETURN_VALUE 消费。分支块
+        # 剥噪声后不以值消费指令（POP_TOP/STORE_*/RETURN_*/JUMP_*）终结
+        # ——值无同块消费点、唯一去向是挂起穿越；其后继（单后继链穿过
+        # SEND 轮询/纯栈清理/__exit__ 调用机器块）命中「SWAP 保存 + 协议
+        # 调用 + RETURN_VALUE」终结块即证明挂起值语义，体尾 Expr 升级为
+        # Return(value)。合法挂起仅由 with 协议产生（BoolOp/三元等跨块值
+        # 块均以 JUMP/POP_JUMP 终结，普通 return 与值同块）——判据无同名
+        # 场景。只读指令操作码形态与后继链形态（同层事实），无名字/偏移
+        # 白名单（w_with_if blk@12、aw_in_af blk@46）。
+        if (stmts and stmts[-1].get('type') == 'Expr'):
+            _b32_tail = [i for i in block.instructions
+                         if i.opname not in NOISE_OPS]
+            _b32_terminal = (_b32_tail
+                             and _b32_tail[-1].opname in (
+                                 'POP_TOP', 'STORE_FAST', 'STORE_NAME',
+                                 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_SUBSCR',
+                                 'STORE_ATTR', 'RETURN_VALUE', 'RETURN_CONST',
+                                 'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                 'POP_JUMP_FORWARD_IF_FALSE',
+                                 'POP_JUMP_FORWARD_IF_TRUE',
+                                 'POP_JUMP_BACKWARD_IF_FALSE',
+                                 'POP_JUMP_BACKWARD_IF_TRUE'))
+            if _b32_tail and not _b32_terminal:
+                _b32_proto = {'SWAP', 'LOAD_CONST', 'PRECALL', 'CALL',
+                              'POP_TOP', 'GET_AWAITABLE', 'SEND',
+                              'YIELD_VALUE', 'RESUME', 'CACHE', 'NOP',
+                              'JUMP_BACKWARD_NO_INTERRUPT', 'COPY',
+                              'RETURN_VALUE', 'RETURN_CONST', 'JUMP_FORWARD',
+                              'PUSH_NULL'}
+                _b32_queue = list(block.successors)
+                _b32_visited = {id(block)}
+                _b32_hit = False
+                while _b32_queue and not _b32_hit:
+                    _b32_cur = _b32_queue.pop(0)
+                    if id(_b32_cur) in _b32_visited:
+                        continue
+                    _b32_visited.add(id(_b32_cur))
+                    _b32_ops = [i.opname for i in _b32_cur.instructions]
+                    _b32_opset = set(_b32_ops)
+                    if 'RETURN_VALUE' in _b32_opset or 'RETURN_CONST' in _b32_opset:
+                        if 'SWAP' in _b32_opset and _b32_opset <= _b32_proto:
+                            _b32_hit = True
+                        break
+                    if _b32_opset <= _b32_proto and _b32_opset:
+                        _b32_queue.extend(_b32_cur.successors)
+                if _b32_hit:
+                    stmts[-1] = {'type': 'Return',
+                                 'value': stmts[-1].get('value')}
         self._mark_shared_return_explicit(block, stmts)
         # [R55-A] 识别条件：本块处在循环体内（self._current_loop 非空），其语句
         # 序列末尾不是任何终止型语句（Break/Return/Raise/Continue），而本块的**正常**
@@ -46107,6 +46923,14 @@ AST 映射规则:
                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
         if _meaningful and all(i.offset in self.generated_offsets for i in _meaningful):
             return []
+        # [Round6-B31] await 表达式跨挂起点栈穿透门控：挂起协议链成员的
+        # 统一装配漏斗（识别条件/归约方式/AST 映射见 _b31_await_chain_gate）。
+        # 置于本方法最前，保证 setup/poll/中间 resume 的任何生成路径都先经
+        # 门控分流——链 owner 为嵌套位形（continuation）时整链唯一归属
+        # owner，其余成员不发射、不标记。
+        _b31_gate = self._b31_await_chain_gate(block)
+        if _b31_gate is not None:
+            return _b31_gate
         # [R2-SWAP] 循环内跨块延迟返回识别：`return X`（X 在 for 体内、
         # 且函数带 try/finally）时 CPython 生成 <eval X>; SWAP(2); POP_TOP
         # （丢弃迭代器、返回值保留在栈上），finally 内联与 RETURN_VALUE

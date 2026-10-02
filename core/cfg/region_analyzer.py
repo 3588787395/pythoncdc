@@ -7548,6 +7548,30 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in start_block.instructions):
             # _check_return_for_break: False=真实 return, True=break-as-return-None
             if self._check_return_for_break(start_block, current_loop) is False:
+                # [Round6-B29] 无值隐式返回形态排除：async with 体尾无 return
+                # 时正常退出链的终末块是编译器确定形态「POP_TOP（弹 __aexit__
+                # 结果）+ LOAD_CONST None（隐式返回值）+ RETURN_VALUE」（或
+                # RETURN_CONST None）；而 return <值>（含 return None）的用户
+                # 值在 __aexit__ 调用前压栈挂起穿越协议，终末块是「POP_TOP +
+                # RETURN_VALUE」（值在栈上，块内无 LOAD_CONST）。前者无用户值
+                # 挂起，不是 return 路径——误判会在 with 体发射幻影
+                # return None（aw_two blk@152→158→182→190）。只读指令操作码
+                # /常量形态（同层事实），无名字/偏移白名单。
+                _fp_instrs = [i for i in start_block.instructions
+                              if i.opname not in ('NOP', 'CACHE', 'RESUME')]
+                _implicit_ret = any(
+                    i.opname == 'RETURN_CONST' and i.argval is None
+                    for i in _fp_instrs)
+                if not _implicit_ret:
+                    for _fp_i, _fp_instr in enumerate(_fp_instrs):
+                        if _fp_instr.opname == 'RETURN_VALUE':
+                            if (_fp_i > 0
+                                    and _fp_instrs[_fp_i - 1].opname == 'LOAD_CONST'
+                                    and _fp_instrs[_fp_i - 1].argval is None):
+                                _implicit_ret = True
+                            break
+                if _implicit_ret:
+                    return None
                 return (start_block, path)
             return None
         # JUMP_FORWARD 终结 = 正常出口清理（非 return 路径）
@@ -7578,13 +7602,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             # 不是 LoopRegion entry 而返回 True（误判 break），导致 async
             # with body 内 return 被降级为 break。自循环（target == block）
             # 永远不是 break，返回 None（不确定）让调用者继续检查后继。
-            # 区域归约算法原则 2：自循环非 break 的判定
-            # 仅在存在外层循环（current_loop is not None）时生效。无循环时
-            # break 检测本无意义，保留 R03 行为（自循环经 target_region 非
-            # LoopRegion 路径返回 True），使无循环的 async-with 多 as 场景
-            # 仍产生 break-outside-loop SyntaxError → 测试 SKIP（基线不退化）。
-            # 有循环时（R4 #09 场景）self-loop 被正确跳过，return 不被降级。
-            if target_block is block and current_loop is not None:
+            # 区域归约算法原则 2：自循环非 break 的判定无条件生效。
+            # [Round6-B29] 原「仅 current_loop 非空时豁免」保留 R03 旧行为
+            # （无循环上下文把 async-with 的挂起轮询自循环误判 break →
+            # break-outside-loop SyntaxError → 测试 SKIP 基线）。Round 6 验收
+            # 要求 async with 正确装配，且挂起轮询自循环（SEND +
+            # YIELD_VALUE + JUMP_BACKWARD_NO_INTERRUPT 指向自身）是协议
+            # 挂起点，与外层是否存在循环无关——无条件豁免（continue），
+            # 交由调用方继续检查后继（_is_with_exit_leading_to_break /
+            # _find_async_with_return_path 均依赖此语义）。
+            if target_block is block:
                 continue
             target_region = self.get_entry_region_for_block(target_block)
             if not isinstance(target_region, LoopRegion):
@@ -12016,6 +12043,22 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 # 为 WithRegion.with_blocks 内的语句发射，不被抬到 with 之后。
                 if any(body_start <= s.start_offset < exc_target for s in block.successors):
                     continue
+                # [Round6-B29] 以 RETURN_VALUE/RETURN_CONST 终结的 cleanup 形态块
+                # 是 with 体内 return 的**融合块**：CPython 对体内 return 先内联
+                # __exit__(None,None,None)（SWAP 保存返回值与 __exit__ 引用 +
+                # LOAD_CONST None×3 + CALL），协议与函数返回编译进同一块——块内
+                # 无用户指令故 _is_with_exit_cleanup 判真，且块无后继（函数在此
+                # 终结）致 R70 diag4 后继守卫不命中。嵌套 with 的清理块把控制
+                # 转移给续接块（JUMP_* 或 POP_TOP fall-through），绝不以 RETURN_*
+                # 终结——两者由终结指令互斥区分。融合块属于 with body（return
+                # 语句在体内），不得收缩 body_end：否则 _find_with_exit_block 以
+                # 融合块为 normal_exit 并在 RETURN_* 分支放弃出口定位，
+                # exit_via_jump 恒 False，with 后的显式 return None 丢失
+                # （w_with_if：JUMP_FORWARD 88 消失）。
+                _c_last = [i for i in block.instructions
+                           if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+                if _c_last and _c_last[-1].opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    continue
                 max_end = min(max_end, block.start_offset)
                 break
         return max_end
@@ -12308,7 +12351,23 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 if target is not None and target not in owned:
                     tgt_last = target.get_last_instruction()
                     if tgt_last and tgt_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                        target = None
+                        # [R84 收窄][Round6-B29] with 体内 return 块必含 with 退出
+                        # 协议：CPython 对体内 return 先内联 __exit__(None,None,None)
+                        # （SWAP 保存返回值与 __exit__ 引用 + CALL），协议与返回融合
+                        # 于同一块——块内出现 SWAP/PRECALL/CALL 即体内 return（R84
+                        # 原语义）。裸 return 块（仅 LOAD_CONST None +
+                        # RETURN_VALUE/RETURN_CONST，无协议）时 __exit__ 已在
+                        # normal_exit 块执行完毕，normal_exit 以 JUMP_FORWARD 跳达
+                        # 此处——该块是 with 之后的出口块（with 后显式 return None
+                        # 的共享函数尾，2 前驱：本跳转 + 抑制延续块 fall-through），
+                        # 必须保留，否则 exit_via_jump 恒 False、出口语句被当隐式
+                        # 返回过滤（w_with_if：JUMP_FORWARD 88 消失）。
+                        _tgt_has_proto = any(
+                            i.opname in ('SWAP', 'PRECALL', 'CALL',
+                                         'CALL_FUNCTION', 'CALL_METHOD')
+                            for i in target.instructions)
+                        if _tgt_has_proto:
+                            target = None
                 if target is not None and target not in owned:
                     return target, via_jump
         # Fallback: scan with_body for the normal-exit __exit__ call.

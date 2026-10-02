@@ -4,11 +4,9 @@
 async def for_aw(ait, mgr):
     out = []
     async for x in ait:
-        return out
         async with mgr as f:
             out.append(x + f)
-        if True:
-            pass
+    return out
 async def af_try(ait):
     out = []
     async for x in ait:
@@ -18,14 +16,11 @@ async def af_try(ait):
             pass
     return out
 async def ad_await_dict(g):
-    await g(1)
-    return {}
+    return {'k': await g(1)}
 async def ad_await_list(g):
-    await g(1)
-    await g(2)
-    return []
+    return [await g(1), await g(2)]
 async def ad_await_arg(g, h):
-    await g(1)
+    return h(await g(await g(1)))
 async def ad_with_comp(mgr, xs):
     with mgr:
         return [x + 1 for x in xs]

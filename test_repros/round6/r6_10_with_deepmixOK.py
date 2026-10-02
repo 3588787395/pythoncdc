@@ -6,7 +6,7 @@ def w_loop_nest_with(mgr, xs):
         for x in xs:
             with mgr as y:
                 if y:
-                    x
+                    return x
 def w_break_in_with(mgr, xs):
     with mgr:
         for x in xs:

@@ -18,7 +18,7 @@ def w_with_in_finally(mgr, v):
         v
     finally:
         with mgr:
-            pass
+            return None
 def w_tryfin_with_tryfin(mgr, xs):
     try:
         with mgr:
