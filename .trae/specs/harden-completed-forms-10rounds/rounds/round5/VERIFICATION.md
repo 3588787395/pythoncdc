@@ -52,3 +52,13 @@ Round 5 修复的真身增益体现于合成对抗面（round5 攻击面 16 文�
 ## 产物
 
 评审 `REVIEW.md`/`REVIEW2.md`；修复 `FIX.md`（§批次一+§批次二）；复现 `test_repros/round5/`（probe、r5_01..r5_13、n5_01、probe_lam_default、rv5_20..rv5_26 变体）；分片报告 `regen_shard0..7.json` + `shard0..7_report_new.json`；小测试集报告 `small34_report_new.json`
+
+## push 记录（网络故障登记）
+
+- 待推送提交：`45864cc5`（修复二批次）→ `9ef4597a`（评审批次二）→ `4cd1c2e3`（归档与验证），均已本地提交
+- push 结果：**失败（网络故障，6 次重试均败）**
+- 错误详情：`fatal: unable to access 'https://github.com/3588787395/pythoncdc.git/': Failed to connect to github.com port 443: Couldn't connect to server` 与 `Recv failure: Connection was reset` 交替出现（21s 连接超时）
+- 已尝试：`git push origin main`（×2）、显式 token URL（×2）、`-c http.version=HTTP/1.1`（×3）、间隔 10/20/45/60s
+- 重试命令（Round 6 启动前必须首先执行）：
+  `git -C f:\Downloads\pythoncdc-main -c http.version=HTTP/1.1 push https://3588787395:ghp_****@github.com/3588787395/pythoncdc.git main`
+- 本故障与 Round 1–4 历史 push 网络故障同型（curl 28 Recv failure 族），非代码/凭据问题
