@@ -33,12 +33,12 @@
   - [x] 4.3 评审工程师复核：逐 hunk 审查守卫判据合规（算法驱动/嵌套无感/完备精简，零容忍打回）；REVIEW2.md
   - [x] 4.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0；小测试集 34 worse=0；quotation 152/153；tests/ 零新增失败；VERIFICATION.md
   - [x] 4.5 归档 rounds/round4/ + 提交并 push
-- [ ] Task 5: Round 5 — 推导式族（List/Set/Dict/GenExp + 多重 for 嵌套推导）形态对抗
-  - [ ] 5.1 评审工程师：推导式全链对抗 = List/Set/Dict/GenExp × 单多 for × 条件 × 嵌套推导 × 循环/try 内推导式 × walrus/星号/解包组合 + 负对照；Round 4 残留复验（B12-R rv4_12 1/4、B13-R rv4_13 2/4、B16-R rv4_16 2/4、B17-R rv4_17 2/4、r4_04 4/6 登记读数不变差）；登记新破口；REVIEW.md + test_repros/round5/
-  - [ ] 5.2 修复工程师：按区域归约算法封闭登记破口（docstring 三要素 + C1/C2/C3 同步）；Round 4 残留若具备判据形态一并处理；自测零回退（哨兵 = quotation/jq/quote/tlb/risk + round1-4 抽验）；FIX.md
-  - [ ] 5.3 评审工程师复核：逐 hunk 审查守卫判据合规（算法驱动/嵌套无感/完备精简，零容忍打回）；REVIEW2.md
-  - [ ] 5.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0；小测试集 34 worse=0；quotation 152/153；tests/ 零新增失败；VERIFICATION.md
-  - [ ] 5.5 归档 rounds/round5/ + 提交并 push
+- [x] Task 5: Round 5 — 推导式族（List/Set/Dict/GenExp + 多重 for 嵌套推导）形态对抗
+  - [x] 5.1 评审工程师：推导式全链对抗 = 16 文件 192 单元 180 MATCH/12 MISMATCH（93.75%）+ r5_07 compile_error 11 单元不可比 + 负对照 n5_01 7/7，wiki「推导式完备」声明证伪；Round 4 残留五项复验全持平（rv4_12 1/4、rv4_13 2/4、rv4_16 2/4、rv4_17 2/4、r4_04 4/6）；登记 B20（跨 clause 过滤静默丢失）+ B21（解包 target 拍平/星号坍缩）+ B22（walrus 幻影迭代目标，P0）+ B23（async 组合坍缩）+ B24（try finally 包 return 推导式被剥除）+ B25（lambda 默认值丢失双杀，P0）；REVIEW.md + test_repros/round5/
+  - [x] 5.2 修复工程师：批次一（7e09e36d）B20/B21/B22 同根名袋封闭（_parse_target_store_sequence 结构解析 + B20 clause 过滤窗 + 目标渲染统一委托）；批次二（45864cc5）B25（arguments dict 经 _args_dict 挂载 + flags 位重建）+ B23（闭包过滤状态机 + _find_async_clause_heads 协议块 + 统一 clause 装配 + PUSH_NULL 双槽补消费）+ B24（R9 收窄 + 栈深模拟三重判据）；docstring 三要素 + C1/C2/C3 同步；自测零回退（哨兵 round5 16 支 + site-packages 5 支 + round1-4 抽验）；FIX.md 两批次
+  - [x] 5.3 评审工程师复核：终判放行 = 20 hunk 全合规（无白名单/阈值/跨层/self 状态/少发射）+ 读数复跑 21/21 支零虚报 + 变体攻击 6 探针 61 单元 57 MATCH（3 失败经修复前树证实为既有缺口非回归）；新破口 B26（async GenExp 作实参）/B27（嵌套 try 包 return 剥除）/B28（纯 vararg/kwarg lambda）登记；REVIEW2.md
+  - [x] 5.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0，units 6554/6617（99.05%）文件 369/402 持平；小测试集 34 REGRESSIONS=0（1505/1568）；quotation 152/153 零新增；tests 257 passed/2 failed——test_BND_21_walrus 由 failed 转 passed（B22 真身增益），零新增失败；VERIFICATION.md
+  - [x] 5.5 归档 rounds/round5/ + 提交并 push
 - [ ] Task 6: Round 6 — With/AsyncWith + async 五件套（def/for/with/await/yield from）形态对抗
 - [ ] Task 7: Round 7 — Ternary + 链式比较 + 表达式面 BoolOp 组合形态对抗
 - [ ] Task 8: Round 8 — 表A 结构形态扫尾（Return/Pass/Delete/Assign 族、Assert、Raise）+ sstrict 缺陷单元对抗抽样
