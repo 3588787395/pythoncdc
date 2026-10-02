@@ -18,7 +18,7 @@ def match_subject_attr_chain(obj):
             return 'unknown-mode'
 def match_subject_call(x):
     """Attack 2: subject = function call."""
-    match _:
+    match sorted(x):
         case [a, b, c]:
             return (a, b, c)
         case _:

@@ -7,7 +7,7 @@ def match_map_basic(d):
         case {'name': n, 'age': a}:
             return (n, a)
         case _:
-            return None
+            pass
 def match_map_rest(d):
     """Attack 2: mapping with **rest capture."""
     match d:

@@ -34,15 +34,16 @@ def match_value_int_str_mixed(x):
             return (other, 0)
 def match_value_expr_body(x):
     """Attack 4: value cases with non-trivial bodies (loop + assignment)."""
+    acc = []
     match x:
         case 1:
             for i in range(3):
                 acc.append(i * 2)
-            return acc
         case 2:
             acc = [x, x + 1]
         case _:
             acc.append(-1)
+    return acc
 def match_value_subject_tuple(x, y):
     """Attack 5: match on tuple subject with value cases."""
     match (x, y):

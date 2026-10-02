@@ -12,29 +12,31 @@ def match_case_return(x):
             return 3
 def match_case_shared_body(x):
     """Attack 2: fall-through — multiple case labels sharing one body before break."""
+    result = 'none'
     match x:
         case 1:
             pass
         case 2:
             pass
         case _:
-            if x == 1 or x == 2:
-                result = 'low'
-            else:
-                result = 'high'
-            return result
+            pass
+    if x == 1 or x == 2:
+        result = 'low'
+    else:
+        result = 'high'
+    return result
 def match_case_ifelse_body(x):
     """Attack 3: case body containing if/else with boolop conditions."""
-    if n > 0 and x % 2 == 0:
-        return 'pos-even'
-    if n > 0 or n == -100:
-        return 'pos-or-special'
-    match n:
-        case -100:
-            pass
-        case _ if x != 0:
-            pass
-    return 'weird'
+    match x:
+        case n if n > 0 and x % 2 == 0:
+            return 'pos-even'
+        case n if n > 0 or n == -100:
+            return 'pos-or-special'
+        case _:
+            if not x and x != 0:
+                return 'weird'
+            else:
+                return 'rest'
 def match_case_early_return_loop(x):
     """Attack 4: case body returns from inside a loop (early return)."""
     lst = x
@@ -48,9 +50,12 @@ def match_case_early_return_loop(x):
     return 'all-small'
 def match_case_multi_stmt(x):
     """Attack 5: case bodies with multiple statements including nested if/else."""
-    match 0:
-        case 1 as acc:
-            acc *= 10
+    acc = 0
+    match x:
+        case 1:
+            acc += 1
+            if x > 0:
+                acc *= 10
         case 2:
             acc += 2
             if acc and x:
@@ -59,14 +64,15 @@ def match_case_multi_stmt(x):
                 acc = -1
         case _:
             acc = 100
+    return acc
 def match_case_bool_guard(x, y):
     """Attack 6: guards with or-chains and boolean combinations."""
-    if a == 1 or a == 2 or y == 3:
-        return 'first'
-    else:
-        if a > 3 and y < 0 and a != 9:
+    match x:
+        case a if a == 1 or a == 2 or y == 3:
+            return 'first'
+        case a if a > 3 and y < 0 and a != 9:
             return 'second'
-        if not (a or y):
+        case a if not a and not y:
             return 'third'
-        else:
+        case _:
             return 'fourth'

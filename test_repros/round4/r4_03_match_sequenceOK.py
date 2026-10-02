@@ -7,7 +7,7 @@ def match_seq_list2(seq):
         case [a, b]:
             return a + b
         case _:
-            return None
+            pass
 def match_seq_tuple3(seq):
     """Attack 2: three-element tuple pattern."""
     match seq:

@@ -17,7 +17,7 @@ def match_class_kwargs(p):
             return 'origin'
         case Point(x=0, y=y):
             return ('y', y)
-        case Point(x=0, y=x):
+        case Point(x=x, y=0):
             return ('x', x)
         case Point(x=x, y=y):
             return ('xy', x, y)
@@ -50,7 +50,7 @@ def match_class_nested_value(p):
     match p:
         case Point(x=0, y=0):
             return 0
-        case Point(x=x, y=y):
+        case Point(x=x, y=y) if abs(x) + abs(y) <= 1:
             return 1
         case Point(x=x, y=y):
             return abs(x) + abs(y)

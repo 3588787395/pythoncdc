@@ -42,11 +42,12 @@ def match_star_literal_head(seq):
             return 'nozero'
 def match_star_body_work(seq):
     """Attack 6: star pattern case with loop body."""
+    out = []
     match seq:
         case [lead, *rest]:
             out.append(lead)
             for item in rest:
                 out.append(item + 1)
-            return out
         case _:
             out.append('empty')
+    return out

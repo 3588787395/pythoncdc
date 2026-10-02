@@ -63,17 +63,25 @@ class PatternParser:
         """
         return self._extract_case_pattern(case_block)
 
-    def parse_case_guard(self, pattern_blocks: List[BasicBlock]) -> Optional[Dict]:
+    def parse_case_guard(self, pattern_blocks: List[BasicBlock], allow_in_header_block: bool = False,
+                         fail_case_offset: Optional[int] = None) -> Optional[Dict]:
         """
         解析guard条件，返回Compare AST节点或None
 
         Args:
             pattern_blocks: 模式相关的块列表
+            allow_in_header_block: 允许 guard 与 case 头同块时提取（[B16] --
+            仅当头块不归属任何 case body 时安全：体以独立块收集，头块内
+            的守卫指令不会在体中重复发射）
+            fail_case_offset: 守卫失败边目标（下一 case 头块偏移，[B16-C3]
+            -- 供臂链极性判定：臂跳转目标 == fail 边 ⇔ 该臂以「测试失败」
+            离开守卫）
 
         Returns:
             Compare类型的AST节点字典，或None
         """
-        return self._extract_case_guard_from_blocks(pattern_blocks)
+        return self._extract_case_guard_from_blocks(pattern_blocks, allow_in_header_block,
+                                                    fail_case_offset)
 
     def collect_pattern_blocks(self, case_block: BasicBlock, all_blocks: Set[BasicBlock]) -> List[BasicBlock]:
         """
@@ -302,7 +310,9 @@ class PatternParser:
 
         return blocks
 
-    def _extract_case_guard_from_blocks(self, pattern_blocks: List[BasicBlock]) -> Optional[Dict[str, Any]]:
+    def _extract_case_guard_from_blocks(self, pattern_blocks: List[BasicBlock],
+                                        allow_in_header_block: bool = False,
+                                        fail_case_offset: Optional[int] = None) -> Optional[Dict[str, Any]]:
         all_instrs = []
         for block in pattern_blocks:
             for instr in block.instructions:
@@ -371,8 +381,44 @@ class PatternParser:
                     all_instrs[i + 1].opname == 'LOAD_CONST' and
                     all_instrs[i + 2].opname == 'IS_OP'
                 )
+                # [B16-C3] 真值臂：LOAD x + POP_JUMP_*（``case a if not (a or y):``
+                # 的臂为裸真值测试，极性由臂链提取器按跳转方向/目标判定）
+                is_truthiness = (
+                    i + 1 < len(all_instrs) and
+                    all_instrs[i + 1].opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE',
+                                                 'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE')
+                )
+                # [B18] 算术/调用混合臂：LOAD_VAR 开头的表达式段（LOAD_*/
+                # LOAD_CONST/BINARY_OP/COMPARE_OP/IS_OP/CONTAINS_OP/UNARY_*/
+                # PRECALL/CALL），被极性条件跳转终止（``case Point(x=x, y=y)
+                # if abs(x) + abs(y) <= 1:`` 的守卫臂含 CALL + BINARY_OP——
+                # 简单比较形态不覆盖，守卫整体丢失）。段内含 COMPARE_OP 或
+                # CALL（守卫必然是比较或调用真值），段界 = 首个条件跳转。
+                _GUARD_EXPR_SCAN_OPS = frozenset({
+                    'BINARY_OP', 'COMPARE_OP', 'IS_OP', 'CONTAINS_OP',
+                    'UNARY_NEGATIVE', 'UNARY_NOT', 'UNARY_INVERT',
+                    'PRECALL', 'CALL',
+                })
+                _is_expr_chain = False
+                if i + 2 < len(all_instrs):
+                    _k = i + 1
+                    _has_cmp_or_call = False
+                    while _k < len(all_instrs):
+                        _op = all_instrs[_k].opname
+                        if _op in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE',
+                                   'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE'):
+                            _is_expr_chain = _has_cmp_or_call
+                            break
+                        if (_op in _GUARD_EXPR_SCAN_OPS or _op in self.LOAD_VAR_OPS
+                                or _op == 'LOAD_CONST'):
+                            if _op in ('COMPARE_OP', 'CALL'):
+                                _has_cmp_or_call = True
+                            _k += 1
+                            continue
+                        break
 
-                if is_var_const or is_var_var or is_is_op:
+                if (is_var_const or is_var_var or is_is_op or is_truthiness
+                        or _is_expr_chain):
                     if is_var_const:
                         compare_op = all_instrs[i + 2].argval
                         if compare_op == '==' or compare_op == 2:
@@ -383,8 +429,20 @@ class PatternParser:
                                             'MATCH_MAPPING', 'MATCH_KEYS')
                                 for x in prev_instrs
                             )
-                            if not has_store_or_unpack:
-                                continue
+                            if has_store_or_unpack:
+                                # [B16] 捕获名重读例外：左操作数是先前 STORE
+                                # 绑定的捕获名的重读（`case a if a == 1 or …`
+                                # 的守卫臂 a == 1）——该比较是守卫臂而非模式
+                                # 材料。栈协议：捕获 STORE 后守卫臂重读同名
+                                # 变量参与比较；模式材料比较的操作数来自
+                                # COPY 的栈顶副本（无 LOAD 重读）。
+                                _left_is_capture_reload = (
+                                    all_instrs[i].opname in self.LOAD_VAR_OPS
+                                    and any(x.opname in self.STORE_OPS
+                                            and x.argval == all_instrs[i].argval
+                                            for x in prev_instrs))
+                                if not _left_is_capture_reload:
+                                    continue
                     guard_start = i
                     for j in range(i + 3, len(all_instrs)):
                         if all_instrs[j].opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE',
@@ -394,107 +452,153 @@ class PatternParser:
 
         if guard_start is not None and guard_end is not None:
             # guard 位于 case header 块内时不提取（避免与 body 重复）
-            if guard_start < first_block_instr_count:
+            # [B16] allow_in_header_block 例外：头块不归属任何 case body 时
+            # （体以独立块收集，如捕获+守卫头 `case n if n < 0:` 与 break 块
+            # 分离），头块内的守卫指令由 case_guards 消费，不会在体中重复
+            # 发射——此时不提取反而丢失守卫（C3 守卫封闭）。
+            if guard_start < first_block_instr_count and not allow_in_header_block:
                 return None
 
-            guard_instrs = all_instrs[guard_start:guard_end + 1]
+            # [B16-C3] 守卫臂链提取（or/and/not 混合链的统一协议）。
+            # 臂形态（CPython 短路链编译协议，均为同层结构事实）：
+            #   (a) LOAD x, [LOAD_CONST c | LOAD y], (COMPARE|IS_OP) op, POP_JUMP_DIR → G
+            #   (b) LOAD x, POP_JUMP_DIR → G（真值臂）
+            # 极性结构事实（fail_case_offset = 下一 case 头偏移）：
+            #   G == fail 边 ⇔ 该臂以「测试失败」离开守卫；G != fail ⇔ 以
+            #   「测试成功」进入 case 体。臂贡献 = T（跳转方向与角色一致）
+            #   或 UnaryOp(not, T)（方向与角色相反：IF_TRUE→fail 或
+            #   IF_FALSE→pass）。链 op = 'and'（首臂目标 == fail 边）否则
+            #   'or'。fail_case_offset 未知时回退首臂跳转方向启发式
+            #   （first_jump_is_true，原行为：真→or/正臂，假→and/正臂）。
+            # 终止：臂形状不再匹配（体材料的指令形态必然不同）。
+            # [C1] 只读 pattern_blocks 的指令序列与跳转目标；[C2] 不窥视
+            # 子/父区域；[C3] fail 边（下一 case 头）是 case 链的显式结构
+            # 事实，极性判定与 case 位置/嵌套深度无关。
+            _POP_TRUE = ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE')
+            _POP_FALSE = ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE')
+            _POP_ALL = _POP_TRUE + _POP_FALSE
+
+            def _mr_guard_arm(pos):
+                """从 pos 解析一个守卫臂 → (test, jump_dir_is_true, target, next_pos) 或 None"""
+                if pos >= len(all_instrs) or all_instrs[pos].opname not in self.LOAD_VAR_OPS:
+                    return None
+                # 形态 a: LOAD x, LOAD_CONST c, COMPARE/IS_OP, POP_JUMP → G
+                if (pos + 3 < len(all_instrs)
+                        and all_instrs[pos + 1].opname == 'LOAD_CONST'
+                        and all_instrs[pos + 2].opname in ('COMPARE_OP', 'IS_OP')
+                        and all_instrs[pos + 3].opname in _POP_ALL):
+                    test = {
+                        'type': 'Compare',
+                        'left': {'type': 'Name', 'id': all_instrs[pos].argval},
+                        'ops': [{'type': 'CompareOp', 'op': all_instrs[pos + 2].argval}],
+                        'right': {'type': 'Constant', 'value': all_instrs[pos + 1].argval},
+                    }
+                    return (test, all_instrs[pos + 3].opname in _POP_TRUE,
+                            all_instrs[pos + 3].argval, pos + 4)
+                # 形态 a': LOAD x, LOAD y, COMPARE, POP_JUMP → G（变量-变量比较）
+                if (pos + 3 < len(all_instrs)
+                        and all_instrs[pos + 1].opname in self.LOAD_VAR_OPS
+                        and all_instrs[pos + 2].opname in ('COMPARE_OP', 'IS_OP')
+                        and all_instrs[pos + 3].opname in _POP_ALL):
+                    test = {
+                        'type': 'Compare',
+                        'left': {'type': 'Name', 'id': all_instrs[pos].argval},
+                        'ops': [{'type': 'CompareOp', 'op': all_instrs[pos + 2].argval}],
+                        'right': {'type': 'Name', 'id': all_instrs[pos + 1].argval},
+                    }
+                    return (test, all_instrs[pos + 3].opname in _POP_TRUE,
+                            all_instrs[pos + 3].argval, pos + 4)
+                # 形态 b: LOAD x, POP_JUMP → G（真值臂）
+                if (pos + 1 < len(all_instrs)
+                        and all_instrs[pos + 1].opname in _POP_ALL):
+                    test = {'type': 'Name', 'id': all_instrs[pos].argval}
+                    return (test, all_instrs[pos + 1].opname in _POP_TRUE,
+                            all_instrs[pos + 1].argval, pos + 2)
+                # 形态 c: [B16] 算术臂（LOAD x; <表达式段>; POP_JUMP → G）。
+                # 守卫臂含计算（`case n if n > 0 and x % 2 == 0:` 的第二臂
+                # `x % 2 == 0` = LOAD x; LOAD_CONST 2; BINARY_OP; LOAD_CONST 0;
+                # COMPARE; POP_JUMP）——形态 a/a' 只覆盖单比较臂，算术臂使
+                # 臂链在此截断（守卫退化为首臂，and 尾臂整体丢失）。识别
+                # 条件 = LOAD_VAR 开头的表达式段（仅 LOAD_*/LOAD_CONST/
+                # BINARY_OP/COMPARE_OP/IS_OP/CONTAINS_OP/UNARY_*）被极性
+                # 条件跳转终止，且段内含计算指令（BINARY_OP/CONTAINS_OP/
+                # UNARY_*——纯比较段已由形态 a/a' 消费，不重复进入）。
+                # 归约方式 = _eval_guard_expr_stack 的操作数栈求值（与
+                # _extract_arithmetic_guard 同一归约器）；AST 映射 = Compare/
+                # BinOp/UnaryOp 守卫子表达式。
+                # [C1] 只读 all_instrs 指令流；[C2] 不窥视子/父区域；
+                # [C3] 段边界由操作码集合与跳转极性封闭，无名字/位置特例。
+                if (pos + 1 < len(all_instrs)
+                        and all_instrs[pos].opname in self.LOAD_VAR_OPS):
+                    _EXPR_SCAN_OPS = frozenset({
+                        'BINARY_OP', 'COMPARE_OP', 'IS_OP', 'CONTAINS_OP',
+                        'UNARY_NEGATIVE', 'UNARY_NOT', 'UNARY_INVERT',
+                        'PRECALL', 'CALL',
+                    })
+                    _COMPUTE_OPS = frozenset({
+                        'BINARY_OP', 'CONTAINS_OP', 'UNARY_NEGATIVE',
+                        'UNARY_NOT', 'UNARY_INVERT', 'CALL',
+                    })
+                    _j = pos + 1
+                    while (_j < len(all_instrs)
+                           and (all_instrs[_j].opname in _EXPR_SCAN_OPS
+                                or all_instrs[_j].opname in self.LOAD_VAR_OPS
+                                or all_instrs[_j].opname == 'LOAD_CONST')):
+                        _j += 1
+                    if (_j < len(all_instrs) and _j > pos + 1
+                            and all_instrs[_j].opname in _POP_ALL
+                            and any(all_instrs[_k].opname in _COMPUTE_OPS
+                                    for _k in range(pos, _j))):
+                        _expr = self._eval_guard_expr_stack(all_instrs[pos:_j])
+                        if _expr is not None:
+                            return (_expr, all_instrs[_j].opname in _POP_TRUE,
+                                    all_instrs[_j].argval, _j + 1)
+                return None
 
             first_jump_is_true = (
-                all_instrs[guard_end].opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE')
+                all_instrs[guard_end].opname in _POP_TRUE
             )
+            _first_target = all_instrs[guard_end].argval
 
-            if len(guard_instrs) >= 4:
-                left_name = guard_instrs[0].argval
-                compare_op = guard_instrs[2].argval
-
-                pattern_store_names = set()
-                pattern_loaded_names = set()
-                has_match_class = any(i.opname == 'MATCH_CLASS' for i in all_instrs[:guard_start])
-                for i in range(guard_start):
-                    if all_instrs[i].opname in self.STORE_OPS:
-                        pattern_store_names.add(all_instrs[i].argval)
-                    if has_match_class and all_instrs[i].opname in self.LOAD_VAR_OPS:
-                        pattern_loaded_names.add(all_instrs[i].argval)
-
-                # 允许 guard 引用外部变量
-                # Python 语义允许 guard 引用任何作用域内的变量（如 `case 1 if y > 0`
-                # 中 y 是外部变量）。_collect_pattern_blocks 已通过跳转目标分析
-                # （_jumps_to_next_case）区分 guard 块与 body 内 if 语句，因此
-                # 此处无需再用 pattern_store_names 拒绝外部变量。
-
-                jump_target = all_instrs[guard_end].argval
-                comparisons = []
-
-                if guard_instrs[1].opname == 'LOAD_CONST':
-                    right_val = guard_instrs[1].argval
-                    comparisons.append({
-                        'type': 'Compare',
-                        'left': {'type': 'Name', 'id': left_name},
-                        'ops': [{'type': 'CompareOp', 'op': compare_op}],
-                        'right': {'type': 'Constant', 'value': right_val}
-                    })
-                else:
-                    right_name = guard_instrs[1].argval
-                    comparisons.append({
-                        'type': 'Compare',
-                        'left': {'type': 'Name', 'id': left_name},
-                        'ops': [{'type': 'CompareOp', 'op': compare_op}],
-                        'right': {'type': 'Name', 'id': right_name}
-                    })
-
-                pos = 3
-                while pos + 2 < len(guard_instrs) - 1:
-                    if guard_instrs[pos].opname not in self.LOAD_VAR_OPS:
-                        break
-                    nxt_name = guard_instrs[pos].argval
-                    if (pos + 2 < len(guard_instrs) and
-                        guard_instrs[pos + 1].opname == 'LOAD_CONST' and
-                        guard_instrs[pos + 2].opname == 'COMPARE_OP'):
-                        nxt_cmp_op = guard_instrs[pos + 2].argval
-                        comparisons.append({
-                            'type': 'Compare',
-                            'left': {'type': 'Name', 'id': nxt_name},
-                            'ops': [{'type': 'CompareOp', 'op': nxt_cmp_op}],
-                            'right': {'type': 'Constant', 'value': guard_instrs[pos + 1].argval}
-                        })
-                        pos += 3
-                        continue
+            comparisons = []
+            _pos = guard_start
+            _first_arm_target = None
+            while True:
+                _arm = _mr_guard_arm(_pos)
+                if _arm is None:
                     break
-
-                pos = guard_end + 1
-                while pos + 3 < len(all_instrs):
-                    nxt = all_instrs[pos]
-                    if nxt.opname not in self.LOAD_VAR_OPS:
-                        break
-                    nxt_name = nxt.argval
-                    if (pos + 2 < len(all_instrs) and
-                        all_instrs[pos + 1].opname == 'LOAD_CONST' and
-                        all_instrs[pos + 2].opname == 'COMPARE_OP'):
-                        nxt_cmp_op = all_instrs[pos + 2].argval
-                        if (pos + 3 < len(all_instrs) and
-                            all_instrs[pos + 3].opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE')):
-                            if nxt_name not in pattern_store_names and nxt_name not in pattern_loaded_names:
-                                break
-                            comparisons.append({
-                                'type': 'Compare',
-                                'left': {'type': 'Name', 'id': nxt_name},
-                                'ops': [{'type': 'CompareOp', 'op': nxt_cmp_op}],
-                                'right': {'type': 'Constant', 'value': all_instrs[pos + 1].argval}
-                            })
-                            pos += 4
-                            continue
-                    break
-
-                if len(comparisons) == 1:
-                    result = comparisons[0]
+                _test, _dir_true, _target, _pos = _arm
+                if _first_arm_target is None:
+                    _first_arm_target = _target
+                if fail_case_offset is not None:
+                    _to_fail = (_target == fail_case_offset)
+                    _inverted = (( _dir_true and _to_fail)
+                                 or ((not _dir_true) and (not _to_fail)))
                 else:
-                    result = {
-                        'type': 'BoolOp',
-                        'op': 'or' if first_jump_is_true else 'and',
-                        'values': comparisons
-                    }
+                    # 回退：首臂方向启发式，臂一律正臂（原行为）
+                    _inverted = False
+                if _inverted:
+                    _test = {'type': 'UnaryOp', 'op': 'not', 'operand': _test}
+                comparisons.append(_test)
 
-                return result
+            if not comparisons:
+                return None
+
+            if fail_case_offset is not None and _first_arm_target is not None:
+                _chain_op = 'and' if _first_arm_target == fail_case_offset else 'or'
+            else:
+                _chain_op = 'or' if first_jump_is_true else 'and'
+
+            if len(comparisons) == 1:
+                result = comparisons[0]
+            else:
+                result = {
+                    'type': 'BoolOp',
+                    'op': _chain_op,
+                    'values': comparisons
+                }
+
+            return result
 
         if guard_start is None:
             for i in range(search_start, len(all_instrs)):
@@ -615,6 +719,11 @@ class PatternParser:
             aborted = False
             while j < min(n, first_block_instr_count):
                 op = all_instrs[j].opname
+                if op in ('PRECALL', 'CALL'):
+                    # [B18] 调用协议操作码属守卫表达式段（与
+                    # _eval_guard_expr_stack 的 CALL/PRECALL 支持一致）
+                    j += 1
+                    continue
                 if op in FAIL_OPS or op in TRUE_OPS:
                     expr = self._eval_guard_expr_stack(all_instrs[cur:j])
                     if expr is None:
@@ -662,6 +771,24 @@ class PatternParser:
                 stack.append({'type': 'Name', 'id': ins.argval})
             elif op == 'LOAD_CONST':
                 stack.append({'type': 'Constant', 'value': ins.argval})
+            elif op == 'PRECALL':
+                # 3.11 调用协议前置标记（参数个数），无栈效果
+                continue
+            elif op == 'CALL':
+                # [B18] 调用：弹出 argval 个实参与可调用对象 → Call 节点
+                #（``case Point(x=x, y=y) if abs(x) + abs(y) <= 1:`` 的守卫
+                # 臂含函数调用——纯比较求值器不覆盖即返回 None，守卫整体
+                # 丢失）。LOAD_GLOBAL/LOAD_NAME 已由 LOAD_VAR_OPS 分支压入
+                # Name 节点，实参同理；求值顺序 = 操作数栈后缀结构事实。
+                # [C1] 只读指令流；[C2] 不窥视子/父区域；[C3] CALL/PRECALL
+                # 是 CPython 调用协议操作码，非位置特例。
+                _nargs = ins.argval if isinstance(ins.argval, int) else 0
+                if len(stack) < _nargs + 1:
+                    return None
+                _args = [stack.pop() for _ in range(_nargs)]
+                _func = stack.pop()
+                _args.reverse()
+                stack.append({'type': 'Call', 'func': _func, 'args': _args})
             elif op == 'BINARY_OP':
                 if len(stack) < 2:
                     return None
@@ -688,7 +815,10 @@ class PatternParser:
                 })
             else:
                 return None
-        if len(stack) == 1 and isinstance(stack[0], dict) and stack[0].get('type') == 'Compare':
+        # [B18] 段结果节点类型放宽：Compare（比较臂）/ Call（调用真值臂）/
+        # BinOp/Name/Constant 均为合法守卫子表达式——求值器只保证「段是单一
+        # 纯表达式节点」，类型判定交由臂链装配。
+        if len(stack) == 1 and isinstance(stack[0], dict):
             return stack[0]
         return None
 
@@ -708,6 +838,36 @@ class PatternParser:
         MATCH_OPS = {'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
                     'MATCH_KEYS', 'MATCH_MAPPING_KEYS'}
 
+        # [B16] 前驱 BFS 限定「fall-through 连续边」：partial 块必须是候选
+        # header 经 fall-through（非条件跳转目标）路径连续可达的后继——
+        # 结构型模式（MATCH_SEQUENCE 后接 GET_LEN/UNPACK 检查块）的
+        # continuation 块经 header 的真值路径（fall-through）到达；而链上
+        # **下一个 case** 的检查块经前一个 case 的条件跳转目标（false 边）
+        # 到达。不限定边极性时，match 嵌套在结构型 match 内的多 case 字面量
+        # 链（`case 'num':`）会把外层/前序 case 的 MATCH_* 头误认为本块
+        # header，模式被改写为序列形状（r4_12 nested_match_seq 形态）。
+        # [C1] 只读前驱边与块指令；[C2] 不窥视区域内部；[C3] 跳转边极性
+        # （false 目标 = 下一 case）是编译器显式结构事实，嵌套无感。
+        def _connected_by_fallthrough(header_block: BasicBlock) -> bool:
+            visited_f = {partial_block}
+            worklist_f = [partial_block]
+            while worklist_f:
+                cur = worklist_f.pop()
+                if cur is header_block:
+                    return True
+                for pred in cur.predecessors:
+                    if pred in visited_f:
+                        continue
+                    pred_last = pred.get_last_instruction()
+                    if (pred_last is not None
+                            and pred_last.opname in self.COND_JUMP_OPS
+                            and pred_last.argval is not None
+                            and cur.start_offset == pred_last.argval):
+                        continue  # cur 是 pred 的条件跳转目标（false 边）——非 continuation
+                    visited_f.add(pred)
+                    worklist_f.append(pred)
+            return False
+
         # BFS向前搜索（通过前驱块）
         visited = {partial_block}
         worklist = list(partial_block.predecessors)
@@ -720,7 +880,10 @@ class PatternParser:
 
             # 检查是否包含MATCH_*指令
             if any(i.opname in MATCH_OPS for i in current.instructions):
-                return current
+                if _connected_by_fallthrough(current):
+                    return current
+                # 非 fall-through 连续的 MATCH_* 块是别的 case 的头，继续向前
+                # 搜索（保持旧行为的搜索范围，只是不接受该候选）
 
             # 继续向前搜索
             worklist.extend(current.predecessors)
@@ -852,6 +1015,42 @@ class PatternParser:
                 instrs = [i for i in case_block.instructions
                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                 used_real_header = True
+
+        # [B16] 捕获 case 头先于跨块收集判定。块自身不含任何模式匹配指令
+        # （MATCH_*/COMPARE_OP/IS_OP/GET_LEN/UNPACK_*）且首条有效指令为
+        # STORE_* 时，是捕获 case（`case n:`）的头块：STORE 是模式绑定
+        # （消费前序 case 失败路径留在栈上的被匹配值副本），其后同块指令
+        # 属于 case 体。此判定必须在 `_collect_all_pattern_instrs` 的跨块
+        # 收集之前——match 嵌套在循环体内时，捕获体尾的 JUMP_BACKWARD 回边
+        # 会让跨块收集沿后继走进循环头与下一 case 的检查块，把下一 case 的
+        # COPY+LOAD_CONST+COMPARE 误拼为本 case 的 pattern（`case n:` →
+        # `case 0`，r4_12 match_in_for_break 形态）。[C1] 只读本块指令；
+        # [C2] 不窥视子/父区域；[C3] 栈平衡结构事实（STORE 消费副本），
+        # 与 case 位置/嵌套深度无关。
+        _cap_head_name = self._extract_capture_head_store(case_block)
+        if _cap_head_name is not None:
+            return {'type': 'MatchAs', 'name': _cap_head_name}
+
+        # [B16/B18] 捕获+守卫 case 头（`case n if n < 0:`）：
+        # COPY 1; STORE <cap>; LOAD <cap>; <guard 引用 cap>; ...; COND_JUMP。
+        # 结构事实：COPY+STORE 是捕获绑定（被匹配值副本入变量）；其后紧跟
+        # LOAD 同名变量是守卫对捕获名的重读——walrus（:=）是 COPY; STORE
+        # 后直接以栈顶原值参与后续运算、不重读绑定名，二者以此区分（块须
+        # 以条件跳转结尾，进一步约束到 case 头形态）。pattern =
+        # MatchAs(name)；守卫表达式由 parse_case_guard 经
+        # collect_pattern_blocks 单独提取，此处分派只负责模式本体。
+        # [C1] 只读 case_block.instructions；[C2] 不窥视子/父区域；
+        # [C3] COPY+STORE+LOAD 同名是编译器捕获绑定的栈协议，与 case
+        # 位置/嵌套深度无关（嵌套无感）。
+        if not any(i.opname in ('MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
+                                'MATCH_KEYS', 'MATCH_MAPPING_KEYS') for i in instrs):
+            for _ci, _cinstr in enumerate(instrs[:-2]):
+                if (_cinstr.opname == 'COPY'
+                        and instrs[_ci + 1].opname in self.STORE_OPS
+                        and instrs[_ci + 2].opname in self.LOAD_VAR_OPS
+                        and instrs[_ci + 2].argval == instrs[_ci + 1].argval
+                        and instrs and instrs[-1].opname in self.COND_JUMP_OPS):
+                    return {'type': 'MatchAs', 'name': instrs[_ci + 1].argval}
 
         has_sequence = any(i.opname == 'MATCH_SEQUENCE' for i in instrs)
         has_class = any(i.opname == 'MATCH_CLASS' for i in instrs)
@@ -1239,9 +1438,19 @@ class PatternParser:
         pattern_ops.add('LOAD_CONST')
 
         has_pattern = any(i.opname in pattern_ops for i in instrs)
+        # [B16] 计算指令排除：BINARY_OP（含全部二元算术/位运算）/CONTAINS_OP/
+        # UNARY_* 是表达式求值指令，模式检查块（字面量比较 COMPARE_OP/
+        # IS_OP + 结构协议 MATCH_*/UNPACK_*/COPY/SWAP）绝不包含它们。
+        # case 体首语句的增广赋值（`acc += 1` → LOAD; LOAD_CONST; BINARY_OP;
+        # STORE）含 BINARY_OP——此前 has_body 判据漏掉该形态（BINARY_OP 不
+        # 在 body 指令表且 LOAD→STORE 邻接检查被中间 LOAD_CONST/BINARY_OP
+        # 隔断），体首块被误判为 pattern continuation 块，其 STORE 被沿成功
+        # 路径 BFS 误识为 as 绑定（幻影捕获 `case 1:` → `case 1 as acc:`）。
         has_body = any(i.opname in ('LOAD_GLOBAL', 'LOAD_NAME', 'CALL',
                                     'BINARY_ADD', 'BINARY_SUBTRACT',
                                     'BINARY_MULTIPLY', 'BINARY_TRUE_DIVIDE',
+                                    'BINARY_SUBSCR', 'BINARY_OP', 'CONTAINS_OP',
+                                    'UNARY_NEGATIVE', 'UNARY_NOT', 'UNARY_INVERT',
                                     'RETURN_VALUE', 'RETURN_CONST',
                                     'BUILD_LIST', 'BUILD_TUPLE', 'BUILD_MAP',
                                     'BUILD_SET', 'BUILD_STRING')
@@ -1881,10 +2090,31 @@ class PatternParser:
                 if unpack_idx + 1 < len(filtered) and filtered[unpack_idx + 1].opname in self.STORE_OPS:
                     as_name = filtered[unpack_idx + 1].argval
             else:
-                # 按属性数量逐个处理
-                attr_idx = 0
+                # [B18] 属性槽位归属 = 含 SWAP 的完整栈模拟。CPython 类模式
+                # 协议：UNPACK_SEQUENCE 把 kwd/位置属性值压栈（TOS = 槽 0），
+                # 各子模式按需以 SWAP k 轮转取值——字面量子模式在栈顶弹出前
+                # 以 LOAD_CONST+COMPARE 测试（消耗该值），捕获子模式以 STORE
+                # 绑定（弹出该值），通配以 POP_TOP 丢弃。子模式指令的**出现
+                # 顺序 ≠ 槽位顺序**（编译器把测试提前、捕获延后，SWAP 重排
+                # 栈序），线性归属把字面量填进错误的槽（`Point(x=x, y=0)` →
+                # `Point(x=0, y=x)`）。栈模拟：栈元素 = 槽位号（0..count-1，
+                # 位置槽在前、keyword 槽在后），SWAP k 交换 TOS 与 TOSk，每个
+                # 测试/捕获/通配消费 TOS 槽位 → 产出按槽位号排序的子模式
+                # 列表（与 keyword_keys 槽位对齐）。
+                # 【识别条件】UNPACK_SEQUENCE 后的 SWAP/LOAD_CONST+COMPARE/
+                # STORE_*/POP_TOP 指令序列（编译器子模式协议，操作码形态）。
+                # 【归约方式】操作数栈模拟（SWAP 交换 + 消费弹出），槽位号
+                # 即 keyword_keys/位置参数的排列事实。
+                # 【AST 映射】槽位号 → MatchClass.patterns 下标（位置段在前、
+                # keyword 段在后，与发射端 pos_count 切分一致）。
+                # [C1] 只读 filtered 指令序列；[C2] 嵌套类模式经递归独立
+                # 提取（抽象节点，外层只计一个槽位消费）；[C3] SWAP 是编译
+                # 器子模式取值的显式栈协议，与 case 位置/嵌套深度无关。
+                _total_slots = count
+                _slot_patterns = {}
+                _attr_stack = list(range(_total_slots - 1, -1, -1))  # TOS = 槽 0
                 j = unpack_idx + 1
-                while j < len(filtered) and attr_idx < count:
+                while j < len(filtered) and _attr_stack:
                     instr = filtered[j]
                     # 嵌套 class pattern（如 Outer(x=Inner(1))）
                     # 字节码特征：LOAD_NAME/LOAD_GLOBAL + LOAD_CONST(tuple) + MATCH_CLASS
@@ -1896,31 +2126,41 @@ class PatternParser:
                             filtered[j + 2].opname == 'MATCH_CLASS'):
                         nested_instrs = filtered[j:]
                         nested_pattern = self._extract_class_pattern(nested_instrs)
-                        patterns.append(nested_pattern)
+                        _slot_patterns[_attr_stack.pop()] = nested_pattern
                         # 跳过内层 class pattern 的所有指令
                         # 内层结构：LOAD_NAME + LOAD_CONST + MATCH_CLASS + COPY + POP_JUMP_IF_NONE +
                         #          UNPACK_SEQUENCE + (per attr: LOAD_CONST+COMPARE_OP+COND_JUMP 或 STORE_ 或 POP_TOP)
                         consumed = self._count_class_pattern_instrs(nested_instrs)
                         j += consumed
-                        attr_idx += 1
+                    elif instr.opname == 'SWAP' and instr.argval is not None and instr.argval >= 2:
+                        # SWAP k：交换 TOS 与 TOSk（编译器子模式取值轮转）
+                        _k = instr.argval
+                        if len(_attr_stack) >= _k:
+                            _attr_stack[-1], _attr_stack[-_k] = _attr_stack[-_k], _attr_stack[-1]
+                        j += 1
                     elif instr.opname == 'LOAD_CONST' and j + 1 < len(filtered) and filtered[j + 1].opname == 'COMPARE_OP':
-                        patterns.append({'type': 'MatchValue', 'value': {'type': 'Constant', 'value': instr.argval}})
+                        _slot_patterns[_attr_stack.pop()] = {'type': 'MatchValue', 'value': {'type': 'Constant', 'value': instr.argval}}
                         j += 2
                         # 跳过条件跳转
                         while j < len(filtered) and filtered[j].opname in self.COND_JUMP_OPS:
                             j += 1
-                        attr_idx += 1
                     elif instr.opname in self.STORE_OPS:
-                        patterns.append({'type': 'MatchAs', 'name': instr.argval})
+                        _slot_patterns[_attr_stack.pop()] = {'type': 'MatchAs', 'name': instr.argval}
                         j += 1
-                        attr_idx += 1
                     elif instr.opname == 'POP_TOP':
-                        # 通配符 _
-                        patterns.append({'type': 'MatchAs'})
+                        # 通配符 _（栈非空时消费 TOS 槽位）；栈空后的 POP_TOP
+                        # 是被匹配值副本丢弃（case 体协议），不占槽位
+                        if _attr_stack:
+                            _slot_patterns[_attr_stack.pop()] = {'type': 'MatchAs'}
                         j += 1
-                        attr_idx += 1
                     else:
                         j += 1
+                # 槽位号排序输出（发射端 pos_count = len(patterns) -
+                # len(keyword_keys) 按下标切分位置/keyword 段）；协议保证全
+                # 槽位消费，未消费槽位（提取极限形态）以通配补位，保持与
+                # keyword_keys 的下标对齐，不发生串位。
+                patterns = [_slot_patterns.get(_slot, {'type': 'MatchAs'})
+                            for _slot in range(_total_slots)]
 
         result = {'type': 'MatchClass', 'cls': {'type': 'Name', 'id': cls_name}}
         if patterns:

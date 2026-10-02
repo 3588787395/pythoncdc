@@ -7870,8 +7870,7 @@ AST 映射规则:
                             body_stmts.extend(_match_ast)
                         else:
                             body_stmts.append(_match_ast)
-                    for b in _entry_region.blocks:
-                        self.generated_blocks.add(b)
+                    self._mr_mark_match_blocks_generated(_entry_region)
                     self._generated_regions.add(_match_id)
                     return True
             self._loop_handle_header(block, region, boolop_for_while, body_stmts)
@@ -11850,8 +11849,7 @@ AST 映射规则:
                         body_stmts.extend(match_ast)
                     else:
                         body_stmts.append(match_ast)
-                for b in entry_region.blocks:
-                    self.generated_blocks.add(b)
+                self._mr_mark_match_blocks_generated(entry_region)
                 self._generated_regions.add(match_region_id)
             return True
         if entry_region and isinstance(entry_region, IfRegion) and entry_region.entry == block and block not in self.generated_blocks:
@@ -31221,6 +31219,18 @@ AST 映射规则:
 
 
 
+    def _mr_mark_match_blocks_generated(self, region) -> None:
+        """[B15] 标记 match 区域块为已生成，merge 块一并标记——merge（match
+        之后的顺序语句）由 _generate_match 在 match 节点之后发射并自行标记
+        （每块唯一归属：merge 不重复计入任何 case 体，也不被父级重复发射）。
+        [C1] 只读 region.blocks/merge_block；[C2] merge 语句由 match 生成
+        路径按块归属独立生成，不窥视内容；[C3] merge 是链级出口的显式结构
+        角色。"""
+        for block in region.blocks:
+            self.generated_blocks.add(block)
+        if region.merge_block is not None:
+            self.generated_blocks.add(region.merge_block)
+
     def _generate_match(self, region: MatchRegion) -> Dict[str, Any]:
         """_generate_match — MatchRegion → ast.Match 映射
 
@@ -31255,6 +31265,8 @@ AST 映射规则:
             MATCH_OPS = ('MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
                          'MATCH_KEYS', 'MATCH_MAPPING_KEYS')
             subject_instrs = []
+            _subject_break_idx = None
+            _subject_skipped_offsets = set()
 
             # 字面量match模式：pattern类型为MatchValue/MatchOr/MatchSingleton
             # 这些模式使用COPY+COMPARE_OP/IS_OP而非MATCH_*操作码
@@ -31292,6 +31304,7 @@ AST 映射规则:
                 if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                     continue
                 if instr.opname in MATCH_OPS:
+                    _subject_break_idx = idx
                     break
 
                 # 区域归约算法原则 2（每块唯一归属）：for 循环体内
@@ -31304,31 +31317,53 @@ AST 映射规则:
                 # for 循环的 for_iter_fall_through 且 STORE 目标名在
                 # for_target_names 中。break 仅对首个 for-target STORE 生效——
                 # 其后的 LOAD subject 才是真正 subject。
+                #
+                # [B16] 元组目标扩展：`for i, v in enumerate(xs): match v:` 的
+                # for-target 是元组解包（UNPACK_SEQUENCE + STORE i + STORE v），
+                # 目标名不落入 for_target_names（名字型判据只覆盖单目标）。
+                # 外层循环生成时记录的 for_target_consumed_offsets（UNPACK/
+                # STORE 指令偏移集）是目标物化的结构事实，按偏移跳过。
                 _enclosing_loop_for_target = None
                 if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                     _enclosing_loop_for_target = region.find_enclosing_parent((LoopRegion,))
                     if (_enclosing_loop_for_target is not None
                             and _enclosing_loop_for_target.metadata.get('for_iter_fall_through') is region.subject_block
                             and instr.argval in _enclosing_loop_for_target.metadata.get('for_target_names', set())):
+                        _subject_skipped_offsets.add(instr.offset)
                         continue
+                if (_enclosing_loop_for_target is not None
+                        and instr.offset in _enclosing_loop_for_target.metadata.get('for_target_consumed_offsets', set())):
+                    _subject_skipped_offsets.add(instr.offset)
+                    continue
 
                 if is_literal_match:
                     # 字面量match：COPY之前的指令是subject，COPY及之后是pattern
                     PATTERN_STARTERS = ('COPY', 'COMPARE_OP', 'IS_OP')
                     if instr.opname in PATTERN_STARTERS:
+                        _subject_break_idx = idx
                         break
                     if instr.opname == 'LOAD_CONST':
                         rest = region.subject_block.instructions[idx+1:]
                         if rest and rest[0].opname in ('COMPARE_OP', 'IS_OP'):
+                            _subject_break_idx = idx
                             break
                     # case None模式：POP_JUMP_IF_NOT_NONE之前没有COPY
                     if instr.opname in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE'):
+                        _subject_break_idx = idx
                         break
+                    # [B16] match×match：内层 match 的 subject 块继承外层 case
+                    # 头的被匹配值消费 POP_TOP（POP_TOP; LOAD <内层subject>;
+                    # COPY … 同块形态）。POP_TOP 属于外层模式头的栈协议，不属于
+                    # 内层 subject 表达式，跳过（否则 subject 重建混入 POP_TOP）。
+                    if instr.opname == 'POP_TOP':
+                        continue
                 else:
                     if is_wildcard_match:
                         if instr.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST'):
+                            _subject_break_idx = idx
                             break
                         if instr.opname not in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF', 'LOAD_CONST'):
+                            _subject_break_idx = idx
                             break
                     is_capture_match = (
                         not is_wildcard_match and not is_literal_match and
@@ -31337,10 +31372,31 @@ AST 映射规则:
                         region.case_patterns[0].get('name') is not None
                     )
                     if is_capture_match and instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        # [B15/B16] 捕获绑定 STORE 与前导赋值 STORE 的区分：
+                        # 捕获头协议（COPY 1; STORE cap / 末 case 无 COPY 直存
+                        # 裸捕获）之后块内不再有 COPY；前导赋值（`acc = 0`
+                        # 之后 match x:）的 STORE 之后块内还有模式头 COPY——
+                        # 此时 STORE 是前导语句（由前缀提取发射），subject
+                        # 表达式在其后（LOAD x）。判据 = 块内后续是否存在
+                        # COPY（模式头协议的栈事实），无名字/位置特例。
+                        # [C1] 只读块指令序列；[C2] 不窥视子/父区域；
+                        # [C3] COPY 是捕获绑定协议的显式结构标记，嵌套无感。
+                        _has_later_copy = any(
+                            _lc.opname == 'COPY'
+                            for _lc in region.subject_block.instructions[idx + 1:])
+                        if not _has_later_copy:
+                            _subject_break_idx = idx
+                            break
+                    # [B16] 捕获 case 的 subject 以 COPY 1 结尾（COPY; STORE cap
+                    # 是模式绑定协议）——COPY 属于模式头，subject 指令序列在其
+                    # 之前终止（字面量路径已有 PATTERN_STARTERS 等价判据）。
+                    if is_capture_match and instr.opname == 'COPY':
+                        _subject_break_idx = idx
                         break
                     if instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL'):
                         rest = region.subject_block.instructions[idx+1:]
                         if len(rest) >= 2 and rest[0].opname == 'LOAD_CONST' and isinstance(rest[0].argval, tuple) and rest[1].opname == 'MATCH_CLASS':
+                            _subject_break_idx = idx
                             break
                     if instr.opname == 'LOAD_CONST':
                         rest = region.subject_block.instructions[idx+1:]
@@ -31348,13 +31404,79 @@ AST 映射规则:
                             continue
                         if rest and len(rest) >= 2 and rest[0].opname == 'LOAD_CONST' and isinstance(rest[0].argval, tuple) and rest[1].opname in ('MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING'):
                             continue
-                    if (instr.opname in PATTERN_INSTRS and 
-                        instr.opname != 'LOAD_FAST' and 
+                    if (instr.opname in PATTERN_INSTRS and
+                        instr.opname != 'LOAD_FAST' and
                         instr.opname != 'LOAD_CONST'):
-                        continue
+                        # [B19] 类模式协议材料与 subject 调用表达式的区分：
+                        # LOAD_GLOBAL/LOAD_NAME 之后紧跟 LOAD_CONST(tuple) +
+                        # MATCH_* 是类模式协议（类引用 + keyword 名单，
+                        # `match p: case Point(...)` 的 Point 加载）；否则
+                        # （后跟实参加载/PRECALL/CALL）它是 subject 调用
+                        # 表达式的可调用对象加载（`match sorted(x):`）——
+                        # 一律按模式材料跳过会把调用主体截断（subject 退化
+                        # 为 `_`，主体丢失）。判据 = 后继指令形态（同层
+                        # 结构事实），无名字/位置特例。
+                        # [C1] 只读 subject_block 指令序列；[C2] 不窥视
+                        # 子/父区域；[C3] 类协议三元组（可调用+kw 名单+
+                        # MATCH_*）是编译器显式发射形态，嵌套无感。
+                        _nxt1 = (region.subject_block.instructions[idx + 1]
+                                 if idx + 1 < len(region.subject_block.instructions) else None)
+                        _nxt2 = (region.subject_block.instructions[idx + 2]
+                                 if idx + 2 < len(region.subject_block.instructions) else None)
+                        _is_class_protocol = (
+                            instr.opname in ('LOAD_GLOBAL', 'LOAD_NAME')
+                            and _nxt1 is not None
+                            and _nxt1.opname == 'LOAD_CONST'
+                            and isinstance(_nxt1.argval, tuple)
+                            and _nxt2 is not None
+                            and _nxt2.opname in MATCH_OPS)
+                        if (_is_class_protocol
+                                or instr.opname not in ('LOAD_GLOBAL', 'LOAD_NAME')):
+                            continue
                 
                 subject_instrs.append(instr)
-            
+
+            # [B15] subject 块前导语句提取：subject_block 可能融合了 match
+            # 之前的顺序语句（`acc = []` 之后 `match x:`、循环体内 `n += 1`
+            # 之后 `match n % 3:`）。前导语句以「语句终结指令」切分：STORE_*
+            # 族=赋值完结、POP_TOP=表达式语句完结；切分范围 = subject_block
+            # 中第一条被保留的 subject 指令之前的全部前缀指令（直接读原始
+            # 块指令，而非 subject_instrs——subject 行走的 PATTERN_INSTRS
+            # 跳过分支会把前导赋值的 BUILD_LIST/STORE 等从 subject_instrs
+            # 中丢弃，仅凭 subject_instrs 无法还原前缀）。完整语句经
+            # _build_statement 发射在 Match 节点之前；尾段（无终结指令）是
+            # subject 表达式本体，仍由 reconstruct 消费（保持既有 subject
+            # 重建行为不变）。
+            # 判据为语句终结操作码（栈平衡事实：语句完结时值栈回到块入口
+            # 深度），无位置/名字特例；for-target/unpack 消费指令已在上方
+            # 被排除，不会误入前缀。[C1] 只读 subject_block 指令序列；
+            # [C2] 不窥视子/父区域；[C3] 前缀归属以「语句终结」显式判据
+            # 封闭，任意嵌套深度同判。
+            _match_prefix_stmts = []
+            _prefix_bound = _subject_break_idx if _subject_break_idx is not None else 0
+            if _prefix_bound > 0:
+                _prefix_seg = []
+                for _p_instr in region.subject_block.instructions[:_prefix_bound]:
+                    if _p_instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG'):
+                        continue
+                    if _p_instr.offset in _subject_skipped_offsets:
+                        continue
+                    if _p_instr.opname == 'POP_TOP':
+                        if _prefix_seg:
+                            _p_stmt = self._build_statement(_prefix_seg)
+                            if _p_stmt:
+                                _match_prefix_stmts.append(_p_stmt)
+                            _prefix_seg = []
+                        continue
+                    if _p_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                           'STORE_ATTR', 'STORE_SUBSCR'):
+                        _prefix_seg.append(_p_instr)
+                        _p_stmt = self._build_statement(_prefix_seg)
+                        if _p_stmt:
+                            _match_prefix_stmts.append(_p_stmt)
+                        _prefix_seg = []
+                        continue
+                    _prefix_seg.append(_p_instr)
             if subject_instrs:
                 subject = self.expr_reconstructor.reconstruct(subject_instrs)
 
@@ -31536,11 +31658,35 @@ AST 映射规则:
 
                 _non_noise = [i for i in block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE')]
                 if all(i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE') for i in _non_noise):
+                    # [B16] case 体终块的 break 判定：纯跳转块以无条件前向跳转
+                    # 结束、目标在 match 区域之外、且 match 嵌套在循环体内时，
+                    # 该跳转是 `break`（跳出外层循环到循环出口块）——目标在
+                    # 区域之外说明不是 case 链内部汇合（merge 在区域 blocks 中），
+                    # 外层循环存在说明跳出的是循环而非函数。判据为跳转目标
+                    # 与区域 blocks 的包含关系 + 父区域类型（同层结构事实，
+                    # [C3] 显式守卫：平直 match 的链尾连接块跳向 merge（在
+                    # 区域内）不受影响）。
+                    _last_jmp = block.get_last_instruction()
+                    if (_last_jmp and _last_jmp.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                            and _last_jmp.argval is not None):
+                        _jmp_target = self.cfg.get_block_by_offset(_last_jmp.argval)
+                        if (_jmp_target is not None and _jmp_target not in region.blocks
+                                and region.find_enclosing_parent((LoopRegion,)) is not None):
+                            body_stmts.append({'type': 'Break'})
                     self.generated_blocks.add(block)
                     continue
                 
                 if all(i.opname in ('POP_TOP', 'JUMP_FORWARD', 'JUMP_ABSOLUTE',
                                     'RESUME', 'NOP', 'CACHE') for i in block.instructions):
+                    # [B16] 同上：POP_TOP 前缀（被匹配值副本消费）+ 无条件前向
+                    # 跳转到区域之外 = `case 0: break` 形态的 break 终块。
+                    _last_jmp2 = block.get_last_instruction()
+                    if (_last_jmp2 and _last_jmp2.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                            and _last_jmp2.argval is not None):
+                        _jmp_target2 = self.cfg.get_block_by_offset(_last_jmp2.argval)
+                        if (_jmp_target2 is not None and _jmp_target2 not in region.blocks
+                                and region.find_enclosing_parent((LoopRegion,)) is not None):
+                            body_stmts.append({'type': 'Break'})
                     self.generated_blocks.add(block)
                     continue
                 
@@ -31861,9 +32007,18 @@ AST 映射规则:
                                 body_stmts.append({'type': 'Break'})
                             elif _loop_continue:
                                 body_stmts.append({'type': 'Continue'})
-                        if block not in self.generated_blocks:
-                            self.generated_blocks.add(block)
-                        continue
+                        # [B15] match 区域的 merge 块例外：merge 是 match 之后
+                        # 的顺序语句（链级出口，归属父序列语句流），不被
+                        # 「归属其它区域」分支吞掉——按普通块生成语句。
+                        if not (isinstance(nested_region, MatchRegion)
+                                and nested_region.merge_block is block):
+                            # [B15] match 区域的 merge 块例外：merge 是 match
+                            # 之后的顺序语句（链级出口，归属父序列语句流），
+                            # 不被「归属其它区域」分支吞掉——落入普通块语句
+                            # 生成路径。
+                            if block not in self.generated_blocks:
+                                self.generated_blocks.add(block)
+                            continue
                 
                 PATTERN_OPS = ('MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
                                'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
@@ -31887,17 +32042,26 @@ AST 映射规则:
                 )
                 
                 if has_only_pattern and has_definitive_pattern:
-                    _jump_in_body = False
-                    body_block_set = set(body)
-                    for instr in block.instructions:
-                        if instr.opname in CONDITIONAL_JUMP_OPS and instr.argval is not None:
-                            _jt = self.cfg.get_block_by_offset(instr.argval)
-                            if _jt and _jt in body_block_set:
-                                _jump_in_body = True
-                                break
-                    if not _jump_in_body:
-                        self.generated_blocks.add(block)
-                        continue
+                    # [B16] 显式 case 体标记（NOP）守卫：携带 NOP 的块是 case
+                    # 体本体（如 `case _:` 的头块融合了体首 if 条件——
+                    # NOP; LOAD n; …; COMPARE; POP_JUMP 形态），不是模式检查
+                    # 块。无此守卫时体首 if 被 has_only_pattern 判据吞掉
+                    # （COMPARE_OP ∈ DEFINITIVE_PATTERN_OPS），case 体退化
+                    # 为 pass。[C3] NOP 是编译器按 case 发射的显式结构标记
+                    # （见 _mr_block_has_explicit_case_marker），与位置/深度
+                    # 无关。
+                    if not self.region_analyzer._mr_block_has_explicit_case_marker(block):
+                        _jump_in_body = False
+                        body_block_set = set(body)
+                        for instr in block.instructions:
+                            if instr.opname in CONDITIONAL_JUMP_OPS and instr.argval is not None:
+                                _jt = self.cfg.get_block_by_offset(instr.argval)
+                                if _jt and _jt in body_block_set:
+                                    _jump_in_body = True
+                                    break
+                        if not _jump_in_body:
+                            self.generated_blocks.add(block)
+                            continue
                 
                 pattern_store_names = set()
                 if pattern:
@@ -32020,14 +32184,82 @@ AST 映射规则:
                 case['guard'] = guard
             cases.append(case)
 
+        # [B15] merge 块由本方法在 match 节点之后按块归属发射（链级出口 =
+        # match 之后的顺序语句，如无通配 match 的隐式 fall-out
+        # `return result`）。父级序列以「区域」为单位发射、无块级补发射
+        # 走，merge 不在此发射即整体丢失；发射后随区域块一并标记已生成
+        # （每块唯一归属：merge 不重复计入任何 case 体，也不被任何父级
+        # 行走重复发射）。守卫：merge 被其它子区域认领（block_to_region
+        # 归属非本 match）时由该子区域的父级路径发射，此处跳过。
+        # 顺序约束：merge 语句生成必须在下方区域块标记之前——
+        # _generate_block_statements 对 generated_blocks 命中的块短路返回
+        # 空（先生成、后标记）。
+        _merge_stmts = []
+        if region.merge_block is not None:
+            _tail_cursor = region.merge_block
+            _tail_seen = set()
+            while _tail_cursor is not None and _tail_cursor not in _tail_seen:
+                _tail_seen.add(_tail_cursor)
+                _tail_owner = self.region_analyzer.block_to_region.get(_tail_cursor)
+                if _tail_owner is not region and _tail_owner is not None:
+                    break
+                if _tail_cursor in self.generated_blocks:
+                    break
+                _tail_region = self.region_analyzer.get_entry_region_for_block(_tail_cursor)
+                if (_tail_region is not None and _tail_region is not region
+                        and _tail_region.entry is _tail_cursor
+                        and not isinstance(_tail_region, MatchRegion)):
+                    # [B15] 尾块是子区域入口（match 之后的顺序语句是 if/while/
+                    # try 等结构）：按「嵌套即抽象节点」以子区域生成（其条件/
+                    # 体内子结构由区域归约消费）；该子区域被外层包含性过滤
+                    # （entry ∈ match blocks）排除在顶级发射序列之外，只能
+                    # 由此发射。子区域块标记已生成（每块唯一归属）。
+                    _mg = self._generate_region(_tail_region)
+                    if _mg:
+                        if isinstance(_mg, list):
+                            _merge_stmts.extend(_mg)
+                        else:
+                            _merge_stmts.append(_mg)
+                    for _mrb in getattr(_tail_region, 'blocks', []) or []:
+                        self.generated_blocks.add(_mrb)
+                    for _mi in _tail_cursor.instructions:
+                        self.generated_offsets.add(_mi.offset)
+                    _nexts = sorted(
+                        (s for blk in (getattr(_tail_region, 'blocks', None) or [])
+                         for s in blk.successors
+                         if s not in self.generated_blocks
+                         and self.region_analyzer.block_to_region.get(s) is region),
+                        key=lambda b: b.start_offset)
+                    _tail_cursor = _nexts[0] if _nexts else None
+                    continue
+                _ts = self._generate_block_statements(_tail_cursor) or []
+                _merge_stmts.extend(_ts)
+                self.generated_blocks.add(_tail_cursor)
+                for _mi in _tail_cursor.instructions:
+                    self.generated_offsets.add(_mi.offset)
+                _nexts = sorted(
+                    (s for s in _tail_cursor.successors
+                     if s not in self.generated_blocks
+                     and self.region_analyzer.block_to_region.get(s) is region),
+                    key=lambda b: b.start_offset)
+                _tail_cursor = _nexts[0] if _nexts else None
+
         for block in region.blocks:
             self.generated_blocks.add(block)
+        if region.merge_block is not None:
+            self.generated_blocks.add(region.merge_block)
 
-        return {
+        _match_node = {
             'type': 'Match',
             'subject': subject if subject else {'type': 'Name', 'id': '_'},
             'cases': cases,
         }
+        # [B15/B16] subject 块前缀语句存在时返回语句列表（前缀在前，
+        # merge 语句在 match 之后）——调用方（块级行走/嵌套体收集）均按
+        # list 归一处理
+        if _match_prefix_stmts or _merge_stmts:
+            return _match_prefix_stmts + [_match_node] + _merge_stmts
+        return _match_node
 
     def _detect_undetected_wildcard_match(self, entry_block):
         """检测未识别的通配符match语句（Phase 37.4修复 - 收紧版）
@@ -35545,6 +35777,14 @@ AST 映射规则:
                         elif else_block is region.merge_block and region.merge_block:
                             if not (self.region_analyzer._is_return_none_block(region.merge_block) or
                                     self.block_role(region.merge_block) in (BlockRole.RETURN_NONE, BlockRole.PURE_JUMP)):
+                                # [B16] merge 块在本方法上部（boolop_expr 构建处）
+                                # 已被无条件标记 generated，_generate_block_statements
+                                # 对已标记块短路返回空——false 边目标 = merge 块时
+                                # else 体（merge 块上的延续语句，如 `case _:`
+                                # 体首 if 之后的 `return 'rest'`）整体丢失。临时
+                                # 解除标记后生成、再复标（R02/R78 同一
+                                # 解除-生成-复标模式；每块唯一归属不变）。
+                                self.generated_blocks.discard(region.merge_block)
                                 else_stmts = self._generate_block_statements(region.merge_block)
                                 self.generated_blocks.add(region.merge_block)
 

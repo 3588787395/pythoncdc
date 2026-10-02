@@ -3,12 +3,13 @@
 
 def match_guard_capture(x):
     """Attack 1: guard on a capture pattern."""
-    if v > 0:
-        return ('pos', v)
-    elif v < 0:
-        return ('neg', v)
-    else:
-        return 'zero'
+    match x:
+        case v if v > 0:
+            return ('pos', v)
+        case v if v < 0:
+            return ('neg', v)
+        case _:
+            return 'zero'
 def match_guard_value(x):
     """Attack 2: guard on a value case."""
     match x:
@@ -44,13 +45,11 @@ def match_guard_mixed_multi(x):
             return 'huge'
 def match_guard_bool(x):
     """Attack 5: guard with boolean-combined condition."""
-    if v > 0 and v < 10:
-        return 'digit'
-    if v >= 10 or v == -5:
-        return 'edge'
-    match v:
-        case -5:
-            pass
+    match x:
+        case v if v > 0 and v < 10:
+            return 'digit'
+        case v if v >= 10 or v == -5:
+            return 'edge'
         case _:
             return 'other'
 def match_guard_class(p):
@@ -58,7 +57,7 @@ def match_guard_class(p):
     match p:
         case [a, b] if a == b:
             return 'same'
-        case [a, b]:
+        case [a, b] if a + b == 10:
             return 'sum10'
         case _:
             return 'plain'

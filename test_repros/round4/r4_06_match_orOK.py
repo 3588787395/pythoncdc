@@ -39,12 +39,13 @@ def match_or_mixed_types(x):
             return -1
 def match_or_capture_body(x):
     """Attack 5: or-pattern combined with guard and body work."""
+    total = []
     match x:
         case 1 | 2 | 3 | 4:
             for i in range(x):
                 total.append(i)
-            return total
         case 5 | 6:
             total.append(x * 10)
         case _:
             total = None
+    return total

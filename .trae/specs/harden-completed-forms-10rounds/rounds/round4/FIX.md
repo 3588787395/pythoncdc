@@ -153,3 +153,141 @@
 - 嵌套无感：B13 的 NOP 标记由编译器按 case 发射（与深度无关）；B14 的捕获头/fail 边/COPY 前缀判据对任意链位置与嵌套深度同判（嵌套序列修复同时覆盖 `[[a,b],c]`、`[[a,b] as c,d]`、`[[a,b],c] as whole` 三种编译同构）；每处修改 docstring 均含识别条件/归约方式/AST 映射三要素与 [C1]/[C2]/[C3] 条款注记；
 - `region_ast_generator.py` 未改动；G0 BOM 自检：`region_ast_generator.py` 头 3 字节 `efbbbf` 在位，`region_analyzer.py`/`pattern_parser.py`/`ast_converter.py` 头 3 字节 `222222`（无 BOM，与改前一致）；
 - 调试探针零残留（探针均在进程外临时脚本，源码 diff 无 print/DEBUG/探针标记）。
+
+---
+
+# Round 4 修复（批次二：P1 B16 + P3 B15 + P5 B17 + P6 B18 + P7 B19）
+
+- 修复工程师：Round 4 批次二
+- 日期：2026-10-02
+- 唯一判据：`scripts/pyc_verify.py`（single）。所有 `*OK.py` 由 `python pycdc.py -o test_repros/round4/XOK.py test_repros/round4/X.pyc` 重新生成，未手改任何 `*OK.py` 既有产物、`site-packages/`、`.trae/specs/` 既有内容（仅本文件追加本章节）。
+- 修改源文件（3 支）：`core/cfg/region_analyzer.py`、`core/cfg/region_ast_generator.py`（G0 BOM `efbbbf` 在位）、`core/cfg/pattern_parser.py`；`ast_converter.py`、`code_generator.py` 未改动。
+- 批次一判据零回退：`_mr_block_has_explicit_case_marker`（region_analyzer 8 处引用 + region_ast_generator 2 处引用原样在位）、ast_converter 模式壳保真（MatchMapping/MatchOr 壳 :1777/:1782 原样）、B14 的捕获头/fail 边/COPY 前缀判据原样。树中既有批次二在途改动（会话中断遗留），本批次在其基础上续作并收尾，未回退其在途判据。
+- 调试插桩：探针全部位于进程外临时脚本（已删除 `_r4b2_dump.py`/`_r4b2_probe.py`），源码 diff grep print/DEBUG/probe/XXX/TODO 零残留（唯一 "probe" 命中为注释中对复现名 probe_match_min 的引用）。
+
+---
+
+## §7 B16（P1）— 循环×match 装配灾难
+
+**根因**（三项，均实证）：循环体块被 LoopRegion 先占后，match 二次扫描失败/重复建区（同一入口块重复 MatchRegion、外层 match 占住内层体块）；case 链行走把循环结构块（旋转 while 迭代再检测块、FOR_ITER 块）拆成幻影 case；`case _:` 头块融合体首 if 条件时（NOP + 体条件同块），体内容被当作下一 case 检查块继续跟进拆成幻影 case 链。
+
+**修复落点**（region_analyzer.py，含会话在途判据的收尾）：
+- `:1632-1652` 嵌套 match 二次扫描收敛循环（match×match 多层：每轮只扫新区域，无新区域即收敛）+ `:1774-1826` `_mr_dissolve_match_subsumed` 溶解被 match 链误认领的同构条件/布尔区域（判据 = 候选 blocks ⊆ MatchRegion.blocks 且 entry == subject_block 或 entry ∈ case_blocks）；
+- `:1827-1836`/`:3358` match×match 内层优先：同类型 MatchRegion 块集真子集者在 block_to_region 竞争中获胜；
+- `:13221-13235` 子链去重（同一 case 头块只归属一条 case 链）+ `:15130-15138` 入口同块去重（同一 subject 块只建一个 MatchRegion）；
+- `:13608-13632`/`:13943-13983` `_mr_body_walk_predicates_closed`：merge 汇合闭合判据（支配松弛版）——未闭合前驱全部受体入口支配（循环回边形态）→ 体内部块；否则链外汇合块（真 merge）；
+- `:13633-13723` `_mr_collect_case_body_blocks`/`_mr_collect_simple_body_blocks`：case 体行走统一接入支配边界 + 回边再检测排除 + 汇合闭合守卫；
+- `:14146-14160`/`:14363-14375` 链行走「下一 case 必须受当前 case 支配」（循环再检测块不是下一 case）；`:14075-14098`/`:14146-14155` 显式 case 体标记（NOP）→ 默认 case 头短路（体可含 if 等条件结构，不再拆幻影 case）。
+
+**判据形态**：支配关系、跳转方向（回边目标支配 subject）、块集包含、NOP 显式标记——全部同层结构事实；无位置/名字特例。嵌套无感：for/while×match（r4_12 全组）、match×match（收敛扫描 + 内层优先）、try×match（r4_13）三向同判。
+
+## §8 B15（P3）— match 前导初始化吞失 + 尾 return 物化进 case 体
+
+**根因**（两项，实证）：① 默认 case（无跳转头块）的体行走沿后继无界前进，把 match 之后的顺序语句（尾 `return acc`、后继 if/else）物化进最后一个 case 体——且 merge 退化为误判的循环头（r4_01/r4_06/r4_08 形态：merge=B52/B76/B104 循环头）；② subject 块融合 match 之前的顺序语句时，subject 行走的 PATTERN_INSTRS 跳过分支把前导赋值指令丢弃，前缀提取无法还原。
+
+**修复落点**：
+- region_analyzer.py `:13695-13700`（`_mr_collect_simple_body_blocks` 纯连接头块 start 前移受汇合闭合守卫——r4_14.match_case_shared_body 的 `case _: pass` 后继 if 条件块不再被物化）；
+- region_ast_generator.py `:31268`（`_subject_break_idx` 在 subject 行走全部 8 处 break 点记录边界）+ `:31391-31418`（前导语句提取改读原始块前缀 `[0:_subject_break_idx]`，按 STORE_*/POP_TOP 语句终结指令切分，经 `_build_statement` 发射在 Match 之前——非字面量 match 的 PATTERN_INSTRS 跳过不再吞前缀）；
+- region_ast_generator.py `:32197-32240` merge 块由 `_generate_match` 在 match 节点之后按块归属发射（顺序约束：先发射后标记，`_generate_block_statements` 对已标记块短路返回空）；merge 是子区域入口（match 之后的顺序语句是 if/while 等结构，被外层包含性过滤排除在顶级发射序列之外）时以 `_generate_region` 生成子区域并随后继尾链行走（`_tail_cursor`，限 match 自有块）——r4_14.match_case_shared_body 的 `if x == 1 or x == 2: …` + `return result` 全链还原。
+
+**判据形态**：语句终结操作码（栈平衡事实）、链级出口的块归属、`block_to_region` 所有权——同层结构事实，无位置/名字特例。
+
+## §9 B17（P5）— try 包 match：try 壳整体丢失
+
+**根因**（两项，实证）：① `_mr_compute_case_merge` 出口枚举走 `successors` 含异常表隐式边——try 包 match 时各 case 体的异常边共同指向 try 的异常分派块（PUSH_EXC_INFO 头块），被误判为 match 的 merge；② 支配种子把「前驱全部经异常边可达」的 handler 机制块卷入 match 区域，TryExceptRegion 反被装成 match 子区域（层级倒置）。
+
+**修复落点**（region_analyzer.py）：
+- `:13848-13857` 出口枚举排除 `exception_successors`（merge 不再误判为异常分派块）；
+- `:14125-14152` 支配种子排除「无任何正常控制流前驱」的异常机制块（前驱闭合性判据）+ `_try_body_bound`：subject 落在某 TryExceptRegion 的 try 体内时 match 块集以该 try 体为界（C3 显式守卫：外层区域暴露的接口事实）。
+
+**判据形态**：异常表边（编译器显式结构边）、前驱闭合性、try 体边界归属——同层结构事实。`match_wrap_try`（match 内 try 面）保持 MATCH；`match_wrap_try_finally` 同批转 MATCH。
+
+## §10 B18（P6）— 类模式关键字槽位错排 + guard 丢失
+
+**根因**（两项，实证）：① 类模式子模式指令的**出现顺序 ≠ 槽位顺序**（编译器把字面量测试提前、捕获绑定延后，SWAP 链轮转取值）——线性归属把字面量填进错误的槽（`Point(x=x, y=0)` → `Point(x=0, y=x)`）；② 守卫臂含函数调用/算术（`abs(x) + abs(y) <= 1`）时臂链提取器形态不覆盖，守卫整体丢失。
+
+**修复落点**（pattern_parser.py）：
+- `:2085-2163` `_extract_class_pattern` 属性槽位归属升级为含 SWAP 的栈模拟：栈元素 = 槽位号（0..count-1），SWAP k 交换 TOS 与 TOSk，LOAD_CONST+COMPARE（字面量）/STORE（捕获）/POP_TOP（通配）各消费 TOS 槽位，产出按槽位号排序的 patterns（与 keyword_keys 下标对齐；未消费尾槽以通配补位防串位）；
+- `:365-421` guard_start 检测新增算术/调用混合臂形态（LOAD_VAR 开头的表达式段含 BINARY_OP/COMPARE/CALL/UNARY_*，被极性条件跳转终止，段内含 COMPARE 或 CALL）；
+- `:524-560` `_mr_guard_arm` 形态 c 扩展（扫描集纳入 PRECALL/CALL，计算判据 `_COMPUTE_OPS` 纳入 CALL）；
+- `:755-796` `_eval_guard_expr_stack` 支持 PRECALL（无栈效果）+ CALL（弹 argval 个实参与可调用对象 → Call 节点），段结果节点类型放宽为单一纯表达式节点。
+
+**判据形态**：UNPACK/SWAP 栈协议（编译器子模式取值的显式事实）、表达式段操作码集合与跳转极性——同层结构事实，无名字/位置特例。**B16-C3 收窄**：region_analyzer `:14356-14375` 守卫续块判定收窄（fail 极性续块只有跳转目标 == next_case_offset 或其连接桩解析头 `_mr_skip_case_connectors` :14098 时才是守卫材料）——`case 2: acc += 2; if acc and x:` 的体首融合块不再误判为守卫（r4_14.match_case_multi_stmt）；类模式 fail 边经 POP_TOP 连接桩指向下一 case 头的形态由连接桩解析覆盖（r4_05.match_class_nested_value）。
+
+## §11 B19（P7）— subject 为裸函数调用时主体丢失
+
+**根因**（实证）：subject 行走的 PATTERN_INSTRS 跳过分支把 `LOAD_GLOBAL sorted`（subject 调用表达式的可调用对象加载）当作类模式协议材料跳过，subject_instrs 截断为 `[LOAD_FAST x, PRECALL, CALL]`，reconstruct 失败退化为 `_`。
+
+**修复落点**（region_ast_generator.py `:31405-31436`）：LOAD_GLOBAL/LOAD_NAME 只有在后继为 `LOAD_CONST(tuple) + MATCH_*` 三元组时才是类模式协议材料（类引用 + keyword 名单）才跳过；否则（后跟实参加载/PRECALL/CALL）作为 subject 表达式材料保留。
+
+**判据形态**：后继指令形态（同层结构事实），无名字/位置特例。属性链/元组/下标/方法链 subject 全保持 MATCH（r4_11 10/10）。
+
+## §12 自测读数全表（pyc_verify.py single 实际输出）
+
+### 12.1 Round 4 Match 组
+
+| 文件 | 批次一后 | 批次二后 | 判定 |
+|---|---|---|---|
+| probe_match_min | 3/3 | **3/3** | 持平（绿面） |
+| r4_01_match_value | 5/6 | **6/6** | **验收达成**（match_value_expr_body = B15） |
+| r4_02_match_singleton | 5/5 | **5/5** | 持平（绿面） |
+| r4_03_match_sequence | 7/7 | **7/7** | 持平 |
+| r4_04_match_mapping | 4/6 | **4/6** | 持平（余 2 单元未落地，见 §14） |
+| r4_05_match_class | 7/9 | **9/9** | **验收达成**（B18：match_class_kwargs 槽位栈模拟、match_class_nested_value guard CALL 链） |
+| r4_06_match_or | 5/6 | **6/6** | **验收达成**（match_or_capture_body = B15） |
+| r4_07_match_capture_wildcard | 6/6 | **6/6** | 持平 |
+| r4_08_match_star | 6/7 | **7/7** | **验收达成**（match_star_body_work = B15） |
+| r4_09_match_guard | 6/7 | **7/7** | **验收达成**（match_guard_class = B18 守卫链族） |
+| r4_10_match_default_tail | 3/6 | **6/6** | **验收达成**（B15 三单元全封闭） |
+| r4_11_match_complex_subject | 9/10 | **10/10** | **验收达成**（match_subject_call = B19） |
+| r4_12_match_nested_loop | 0/7(批次一) | **7/7** | **验收达成**（B16） |
+| r4_13_match_try | 3/7(批次一) | **7/7** | **验收达成**（B17 两单元 + B15 finally + B16 in_loop；r4_14.match_case_bool_guard 同批 MATCH） |
+| r4_14_match_case_body | 3/7(批次一) | **7/7** | **验收达成**（B15 shared_body + B16 ifelse_body/multi_stmt） |
+| n4_01_no_match_control（负对照） | 7/7 | **7/7** | 持平（无误报基线） |
+
+14 攻击文件 + 探针 + 负对照：**13/14 文件全 success**（r4_04 4/6 余 2），96 单元中 94 MATCH。
+
+### 12.2 site-packages 哨兵
+
+| 哨兵 | 登记基线 | 批次二后 | 判定 |
+|---|---|---|---|
+| fly/data/quotation.pyc | 152/153 | **152/153** | 持平 |
+| IQCommon/strategy/jq_trans_module.pyc | 65/65 | **65/65** | 持平 |
+| fly/data/quote.pyc | 84/92 | **84/92** | 持平 |
+| IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc | 118/128 | **118/128** | 持平 |
+| IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc | 41/43 | **41/43** | 持平 |
+
+### 12.3 round1–3 抽验与附加回归
+
+| 项 | 登记读数 | 批次二后 | 判定 |
+|---|---|---|---|
+| round1/r1_01、r1_03、r1_18 | 各 2/2 | 各 **2/2** | 持平 |
+| round2/r2_02、r2_03 | 各 3/3 | 各 **3/3** | 持平 |
+| round2/r2_05 | 2/2 | **2/2** | 持平 |
+| round3/r3_33 | 4/4 | **4/4** | 持平 |
+| round3/r3_34（B10-R 残留，不在本批范围） | 1/2 | **1/2** | 持平（不变差） |
+| round3/r3_27（B16 哨兵） | 9/9 | **9/9** | 持平 |
+| round3/r3_32（B16 哨兵） | 11/11 | **11/11** | 持平 |
+| round4/r4_or4_and2（B11-R2 残留，不在本批范围） | 1/2 | **1/2** | 持平（不变差） |
+| 历史 round4 boolop/continue 4 支（r4_01b/r4_03b/r4_05b/r4_06c，临时产物验证后即删） | 各 2/2 | 各 **2/2** | 持平 |
+
+零回归。
+
+---
+
+## §13 合规自检
+
+- 判据全部为区域归约同层结构事实：支配关系/跳转极性/回边目标/块集包含、NOP 显式标记、语句终结操作码、UNPACK/SWAP/COPY 栈协议、异常表边、UNPACK argval——无函数名/文件名/字面量白名单，无跨层启发式；
+- 无「最后一个 case」类位置特例（merge 归属用前驱闭合 + 支配、前缀归属用语句终结切分、break 判定用跳转目标与区域 blocks 的包含关系 + 父区域类型）；
+- 嵌套无感：B16 的支配边界/回边再检测/汇合闭合对任意循环形态与嵌套深度同判（r4_12 三向嵌套全 MATCH）；B15 前缀/merge 归属以语句终结与链级出口显式判据封闭；B18 槽位栈模拟对任意 kwd 数与嵌套深度同判；每处修改 docstring 均含识别条件/归约方式/AST 映射三要素与 [C1]/[C2]/[C3] 条款注记；
+- G0 BOM 自检：`region_ast_generator.py` 头 3 字节 `efbbbf` 在位；`region_analyzer.py`/`pattern_parser.py`/`ast_converter.py` 头 3 字节 `222222`（无 BOM——pattern_parser 曾在编辑中误加 BOM，已复原并复验 r4_05/r4_09/r4_14 全 success）；
+- 调试探针零残留（源码 diff 无 print/DEBUG/探针标记；临时 dump/probe 脚本已删除）。
+
+---
+
+## §14 未落地项及原因（如实登记）
+
+| 项 | 读数 | 机制（本轮实证） | 未落地原因 |
+|---|---|---|---|
+| r4_04.match_map_nested / match_map_mixed_seq | 4/6 中余 2 | 嵌套 mapping **值槽位** + 嵌套序列**元素槽位**提取需含 SWAP 的完整栈模拟：编译器把子模式按逆序取值（SWAP 链轮转）、捕获延后绑定（`{"user": {"name": n, "roles": [r, *others]}}` 编译为 UNPACK 2; SWAP×5; MATCH_SEQUENCE; UNPACK_EX; STORE r; STORE others; POP_TOP×4; STORE n），且元素级协议与兄弟协议交错（`[(x1,y1),(x2,y2)]` 的 SWAP 4,2 / 5,3 链）、POP_TOP 同时承担「通配槽消费」与「协议中间项清理」双语义，线性归属无法还原 | 本批已实现标记项栈模拟原型（槽位项/副本/values 元组/opaque 四类标记项 + dis 栈语义演进）并经探针验证 map_nested 形态大体正确，但模拟种子深度 = 窗口起点**绝对栈深**：dis.stack_effect 实测窗口起点真深 ≠ 窗口相对推演深（SWAP 链交换位置随之错位，槽位归属漂移），绝对基深需把 dis 全函数栈深追踪贯通到 pattern_parser（pattern_parser 现无 code object/CFG 通路），改动面大、回归风险高（r4_04 现 4 绿单元全在 mapping 提取路径）。原型已自树移除（不留未接线的死代码）。交后续批次：以「dis.stack_effect 全函数线性追踪 → 按偏移查表提供窗口基深」为前置依赖接入本批已验证的槽位模拟框架 |
+| r4_04 之外 | — | — | 其余全部验收单元已落地（见 §12.1） |

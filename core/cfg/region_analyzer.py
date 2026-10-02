@@ -1632,10 +1632,22 @@ class RegionAnalyzer:
         # - 子match不能跨越父区域边界
         # - 子match的blocks必须是父区域blocks的子集
         # - 需要更新block_to_region映射以反映父子关系
-        nested_match_regions = self._identify_nested_match_regions(
-            parent_regions=conditional_regions + loop_regions + try_regions + with_regions,
-            existing_match_regions=match_regions
-        )
+        # [B16-F5] 嵌套 match 二次扫描收敛循环：match×match×match 多层嵌套时，
+        # 本轮新建的嵌套 MatchRegion 的 case 体内还可能有更内层 match（其作为
+        # MatchRegion 父区域参与下一轮扫描）。每轮只扫新区域（旧区域的块已在
+        # existing_match_blocks 中，重扫无新增），无新区域即收敛。
+        nested_match_regions = []
+        _nm_parents = conditional_regions + loop_regions + try_regions + with_regions \
+                      + [r for r in match_regions if isinstance(r, MatchRegion)]
+        while True:
+            _new_nested = self._identify_nested_match_regions(
+                parent_regions=_nm_parents,
+                existing_match_regions=match_regions + nested_match_regions
+            )
+            if not _new_nested:
+                break
+            nested_match_regions.extend(_new_nested)
+            _nm_parents = _new_nested
         match_regions = match_regions + nested_match_regions
 
         elif_chain_entries = set()
@@ -1762,6 +1774,63 @@ class RegionAnalyzer:
         filtered_conditional_regions = list(conditional_regions)
         filtered_boolop_regions = list(boolop_regions)
 
+        # [B16] 溶解被 match 链误认领的同构区域：捕获+守卫 case 链
+        # （`case a if a == 1 or a == 2:`）的条件跳转形态与 if/elif 链同构，
+        # 条件识别会以首 case 头为入口建 IfRegion（或/and 守卫链建
+        # BoolOpRegion）——它们与 MatchRegion 是同一结构的重复归约。
+        # 判据（同层结构事实）：候选区域 blocks ⊆ MatchRegion.blocks 且
+        # entry == subject_block 或 entry ∈ case_blocks（case 头唯一入口，
+        # 真正的 case 体内部 if/boolop 的 entry 落在 case_bodies 中，不受
+        # 影响）。被溶解区域的子节点脱离父级（parent=None），重新参与层级
+        # 装配；block_to_region 由 analyze() 尾部统一重建，无需逐块清理。
+        # [C1] 只读区域 blocks/entry/case_blocks 归属事实；[C2] 溶解后子
+        # 区域作为独立抽象节点重新装配，不窥视其内部；[C3] 「entry 是
+        # case 头」为显式守卫——体内部结构不受影响，嵌套无感。
+        def _mr_dissolve_match_subsumed(candidates):
+            _match_heads = []
+            for _m in match_regions:
+                if not isinstance(_m, MatchRegion):
+                    continue
+                _heads = set(_m.case_blocks) | {_m.subject_block}
+                _match_heads.append((_m, _heads, set(_m.blocks)))
+            if not _match_heads:
+                return candidates
+            _alive = []
+            for _cand in candidates:
+                _dissolved = False
+                if _cand.entry is not None and _cand.blocks:
+                    for _m, _heads, _mblocks in _match_heads:
+                        if (_cand.entry in _heads
+                                and set(_cand.blocks) <= _mblocks):
+                            # [B15] case 头融合体首条件的豁免：通配 case 头块
+                            # （NOP 显式 case 体标记 + 体首 if 条件同块，
+                            # `case _: if x > 100: ...`）既是 case 头又是体
+                            # 本体——以其为 entry 的条件区域是 case 体的真实
+                            # 结构（体首 if/elif 链），不是守卫幻影，溶解会把
+                            # 体首 if 整体丢失。判据 = _mr_block_has_explicit_
+                            # case_marker（编译器按 case 发射的 NOP 体标记，
+                            # B13）：守卫幻影头（模式测试/捕获绑定 + 守卫比较）
+                            # 的指令都在体标记之前，头块不携带 NOP——两类同以
+                            # case 头为 entry 的条件区域由此区分，无位置/名字
+                            # 特例。[C1] 只读块指令与区域归属；[C2] 不窥视
+                            # 子/父区域；[C3] NOP 标记是编译器显式结构守卫，
+                            # 嵌套无感。
+                            if self._mr_block_has_explicit_case_marker(_cand.entry):
+                                break
+                            _dissolved = True
+                            for _ch in list(_cand.children):
+                                _ch.parent = None
+                            _cand.children = []
+                            if _cand in self.regions:
+                                self.regions.remove(_cand)
+                            break
+                if not _dissolved:
+                    _alive.append(_cand)
+            return _alive
+
+        filtered_conditional_regions = _mr_dissolve_match_subsumed(filtered_conditional_regions)
+        filtered_boolop_regions = _mr_dissolve_match_subsumed(filtered_boolop_regions)
+
         all_phase12_regions = (
             loop_regions + try_regions + with_regions +
             match_regions + assert_regions + chained_compare_regions + filtered_boolop_regions + ternary_regions + filtered_conditional_regions
@@ -1820,6 +1889,17 @@ class RegionAnalyzer:
                         existing_priority = self.REGION_TYPE_PRIORITY.get(
                             existing.region_type, 0)
                         if current_priority > existing_priority:
+                            self.block_to_region[block] = region
+                        # [B16] match×match 内层优先：同类型 MatchRegion 之间，
+                        # 块集为真子集的一方是嵌套在内层 case 体中的更具体区域
+                        # （嵌套即抽象节点：外层经 case 体头块以 entry 引用内层，
+                        # 体内容归内层所有）。平局（优先级相等）时先到先得会让
+                        # 外层 match 占住内层体的块，内层生成时其 body 块被
+                        # 「归属其它区域」分支抑制成 pass。
+                        elif (isinstance(existing, MatchRegion) and isinstance(region, MatchRegion)
+                              and existing is not region
+                              and region.blocks and existing.blocks
+                              and set(region.blocks) < set(existing.blocks)):
                             self.block_to_region[block] = region
 
         self._build_region_hierarchy(regions=all_regions)
@@ -3292,6 +3372,13 @@ class RegionAnalyzer:
                         existing_priority = self.REGION_TYPE_PRIORITY.get(
                             existing_region.region_type, 0)
                         if current_priority > existing_priority:
+                            self.block_to_region[block] = region
+                        # [B16] match×match 内层优先（块集真子集 = 更具体的
+                        # 嵌套区域，见 analyze() 同名条款）
+                        elif (isinstance(existing_region, MatchRegion) and isinstance(region, MatchRegion)
+                              and existing_region is not region
+                              and region.blocks and existing_region.blocks
+                              and set(region.blocks) < set(existing_region.blocks)):
                             self.block_to_region[block] = region
 
         for region in all_regions:
@@ -13149,11 +13236,20 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 existing = self.block_to_region.get(block)
                 if isinstance(existing, MatchRegion):
                     continue
-                if not (self._has_match_op(block) or self._is_case_pattern_block(block) or self._is_match_subject_block(block)):
+                if not (self._has_match_op(block) or self._is_case_pattern_block(block) or self._is_match_subject_block(block)
+                        or self._is_capture_guard_case_block(block)):
                     continue
             else:
-                if not (self._has_match_op(block) or self._is_case_pattern_block(block)):
+                if not (self._has_match_op(block) or self._is_case_pattern_block(block)
+                        or self._is_capture_guard_case_block(block)):
                     continue
+            # [B16] 子链去重：同一 case 头块只归属一条 case 链——已存在的
+            # MatchRegion 的 case_blocks 含此块时，它是该链的中间 case（结构
+            # 事实：链头唯一入口），不再以其为 subject 重建子链区域（否则
+            # 同一 match 被拆成多条重叠区域）。
+            if any(isinstance(_r, MatchRegion) and block in _r.case_blocks
+                   for _r in self.regions):
+                continue
             subject_block = block
             if self._is_case_pattern_block(block):
                 # [Round 01 P0 fix] match-case 假阳性防护：
@@ -13194,8 +13290,21 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 all_blocks.update(body)
             if merge:
                 all_blocks.add(merge)
-            case_guards = [self.pattern_parser.parse_case_guard(
-                self.pattern_parser.collect_pattern_blocks(cb, all_blocks)) for cb in case_blocks]
+            # [B16] 头块不归属任何 case body 时允许提取同块守卫（捕获+守卫
+            # 融合头形态），否则守卫指令会随体重复发射
+            _guard_body_pool = set()
+            for _body in case_bodies:
+                _guard_body_pool.update(_body)
+            case_guards = []
+            for _ci, _cb in enumerate(case_blocks):
+                _fail_off = (case_blocks[_ci + 1].start_offset
+                             if _ci + 1 < len(case_blocks)
+                             else (merge.start_offset if merge else None))
+                case_guards.append(self.pattern_parser.parse_case_guard(
+                    self.pattern_parser.collect_pattern_blocks(_cb, all_blocks),
+                    allow_in_header_block=(_cb not in _guard_body_pool
+                                            and self._mr_head_has_capture_binding(_cb)),
+                    fail_case_offset=_fail_off))
             region = MatchRegion(
                 region_type=RegionType.MATCH, entry=subject_block, blocks=all_blocks,
                 subject_block=subject_block, case_blocks=case_blocks,
@@ -13262,6 +13371,25 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             if pattern:
                 self._mr_collect_pattern_store_names(pattern, pattern_store_names)
             instrs = block.instructions
+            # [B16] 纯通配 case（`case _:`）头块短路：通配模式没有任何模式
+            # 指令——头协议仅 POP_TOP（被匹配值丢弃）+ NOP（显式 case 体
+            # 标记，B13），其后指令全部是 case 体。通用行走会按模式材料
+            # 跳过体首 LOAD_CONST（如 `case _: return ('list?', payload)`
+            # 的 'list?'），体首元素丢失（C1 局部消费）。判据 = pattern
+            # 节点形态（MatchAs 无名无子模式）+ 头协议前缀跳过，无位置
+            # 特例。[C1] 只读块指令与 pattern 节点；[C2] 不窥视子/父区域；
+            # [C3] NOP/POP_TOP 头协议是编译器显式结构标记，嵌套无感。
+            _is_pure_wildcard_head = (isinstance(pattern, dict)
+                                      and pattern.get('type') == 'MatchAs'
+                                      and not pattern.get('name')
+                                      and not pattern.get('pattern'))
+            if _is_pure_wildcard_head:
+                _wi = 0
+                while _wi < len(instrs) and (instrs[_wi].opname in NOISE
+                                             or instrs[_wi].opname == 'POP_TOP'):
+                    _wi += 1
+                indices[block.start_offset] = _wi
+                continue
             idx = 0
             if block == region.subject_block:
                 _has_match_op_in_block = any(i.opname in MATCH_OPS for i in instrs)
@@ -13495,8 +13623,26 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 guard_cont = self._mr_find_case_success_branch(guard_cont, or_body_cand)
             else:
                 break
-        success = or_case_body_entry
-        return jt, success, guard_chain_visited - {current}
+        # [B16-C3] 逆臂守卫链（``case a if not (a or y):``）判定：IF_TRUE 的
+        # 目标若与行走收敛后的下一 case 相同，则「IF_TRUE → 体」假设不成立
+        # ——该链的臂是逆臂（测试为真 → 守卫失败 → 下一 case），case 体是
+        # 末臂的 fall-through（行走终点 guard_cont），而非 IF_TRUE 目标。
+        # 判据为跳转目标同一性（同层结构事实）；平直 or 守卫的 IF_TRUE 目标
+        # 是 case 体（≠ 下一 case），不受影响。[C3] 显式守卫，嵌套无感。
+        if (or_case_body_entry is not None and jt is not None
+                and or_case_body_entry is jt and guard_cont is not None):
+            success = guard_cont
+        else:
+            success = or_case_body_entry
+        guard_chain_blocks = guard_chain_visited - {current}
+        # [B16-C3] 行走终点（guard_cont）以「无条件跳转/无跳转」终止时是
+        # case 体入口（逆臂链的体），不是守卫材料——从链块集合中排除，
+        # 否则体块被 visited 吞掉、case 体变空。
+        if success is not None and success in guard_chain_blocks:
+            _succ_last = success.get_last_instruction()
+            if _succ_last is None or _succ_last.opname not in CONDITIONAL_JUMP_OPS:
+                guard_chain_blocks.discard(success)
+        return jt, success, guard_chain_blocks
 
     def _mr_find_case_success_branch(self, case_block, jump_target):
         if not case_block:
@@ -13539,7 +13685,15 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
         start = block
         meaningful = [i for i in start.instructions if i.opname not in NOISE_OPS]
         if all(i.opname == 'POP_TOP' for i in meaningful) and len(start.successors) == 1:
-            start = next(iter(start.successors))
+            # [B15] 纯 POP_TOP/NOP 连接头块的 start 前移同样受汇合闭合守卫：
+            # 后继是链外汇合块（前驱含其它 case 体连接块，如 match 之后顺序
+            # 语句的 if 条件块）时不得前移——case 体止于本块（`case _: pass`
+            # 的 NOP 块），match 后继语句不被物化进 case 体。前移仅当前驱
+            # 闭合（全部已见或受本块支配，循环回边形态）时进行。
+            _succ = next(iter(start.successors))
+            _unclosed_start = [p for p in _succ.predecessors if p is not start]
+            if self._mr_body_walk_predicates_closed(_unclosed_start, start):
+                start = _succ
         result = [start]
         start_last = start.get_last_instruction()
         if start_last and start_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
@@ -13549,6 +13703,15 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
         while worklist:
             succ = worklist.pop(0)
             if succ in visited or succ in local_visited:
+                continue
+            # [B15] merge 汇合守卫（与 _mr_collect_case_body_blocks 同判据）：
+            # 默认 case（无跳转头块）的体行走同样会在链外汇合块处终止——
+            # 尾 `return acc`（前驱含其它 case 体）不是本 case 体（否则 match
+            # 后继语句被物化进 case 体、且 merge 退化为误判的循环头）。
+            # 未闭合前驱全部受行走入口支配（循环回边形态）时仍属体内部。
+            _unclosed = [p for p in succ.predecessors
+                         if p not in local_visited and p not in visited]
+            if not self._mr_body_walk_predicates_closed(_unclosed, start):
                 continue
             local_visited.add(succ)
             result.append(succ)
@@ -13560,17 +13723,26 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                         worklist.append(s)
         return result
 
-    def _mr_finalize_match_region(self, case_blocks, case_patterns, case_bodies, all_blocks):
+    def _mr_finalize_match_region(self, case_blocks, case_patterns, case_bodies, all_blocks,
+                                  subject_block=None):
         """Finalize match region: merge cases with equivalent bodies into MatchOr.
 
         [每块唯一归属] merge_block（各 case 的共同后继出口）必须先计算并从每个
         case body 中移除，再判断 body 等价。否则 merge_block 会被同时计入多个
         case body，导致 `case None` 与 `case str()` 因「末块都是 merge_block」
         被错误合并为 MatchOr（违反唯一归属）。等价判定改为严格集合相等。
+
+        [B16 修复] subject_block 透传给 _mr_compute_case_merge：match 嵌套在
+        循环体内时（for/while × match），case 体结束后的「出口」可能是外层
+        循环的结构块（循环头/迭代回边/循环出口），它们不是 match 的 merge——
+        merge 候选必须受 subject 支配边界约束（见 _mr_compute_case_merge 的
+        B16 条款），否则循环结构块被卷入 match 区域，区域 offset 范围越过
+        外层循环 → 层级装配把 match 判为循环的兄弟而非子区域 → 循环整体
+        消失/幻影 case（r4_12 形态）。
         """
         # [repro_01 修复 (a)] 先计算 merge_block 并从各 case body 中移除，
         # 确保每块唯一归属（merge_block 不属于任何 case body）。
-        merge_block = self._mr_compute_case_merge(case_bodies)
+        merge_block = self._mr_compute_case_merge(case_bodies, subject_block=subject_block)
         stripped_bodies = []
         for body in case_bodies:
             stripped = set(body)
@@ -13644,16 +13816,254 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             return False
         return body_i_set == body_j_set
 
-    def _mr_compute_case_merge(self, case_bodies):
+    def _mr_compute_case_merge(self, case_bodies, subject_block=None):
+        """计算 match 各 case body 的共同出口（merge block）。
+
+        [B16 修复] subject_block 提供时施加「match 区域支配边界」守卫：
+        merge 候选必须满足两个同层结构事实——
+        (a) 被 subject 块支配（is_dominator(subject, cand)）：match 的 merge
+            是全部 case 体走完后控制流的汇合点，只可能经 case 链到达；凡
+            不受 subject 支配的「出口」（循环头、FOR_ITER 块、循环出口块、
+            函数 return 块被 break/continue 直接命中）都不是 match 的归属，
+            它们是外层循环/函数的结构块（C1：归约只消费 subject 支配子树）。
+        (b) 不是循环再检测块（_mr_is_loop_recheck_block）：旋转 while 的
+            迭代回边再检测块虽受 subject 支配，但其条件跳转目标回指 subject
+            或 subject 的支配祖先——它是循环锁存边的一部分，被 match 吞并
+            会夺走循环的回边（C3：跨区域引用必须有显式守卫排除）。
+        两判据均为操作码跳转形态 + 支配关系（区域归约同层结构事实），
+        无位置特例、无白名单；subject_block 为 None 时保持旧行为（兼容
+        无支配树上下文的调用点）。
+
+        Args:
+            case_bodies: 各 case 的 body 块列表。
+            subject_block: match 的 subject 块（B16 边界判据的支配锚点），
+                None 表示不做边界过滤。
+
+        Returns:
+            merge block 或 None（各 case 体以 return/break/continue 等
+            终结符结束、无共同汇合点时）。
+        """
         all_bod = set()
         for b in case_bodies:
             all_bod.update(b)
-        exits = {s for b in all_bod for s in b.successors if s not in all_bod}
+        # [B17] 出口枚举只走正常控制流后继，排除异常表隐式边
+        # （exception_successors）：try 包 match 时各 case 体的异常边共同
+        # 指向 try 的异常分派块（PUSH_EXC_INFO 头块）——它不是 match 的
+        # merge，而是外层 TryExceptRegion 的 handler 分派结构块。异常边目标
+        # 被误判为 merge 后，handler 分派/处理块被卷入 match 区域
+        # （TryExceptRegion 反被装成 match 子区域），try 壳整体丢失。
+        exits = {s for b in all_bod for s in b.successors
+                 if s not in all_bod
+                 and s not in (getattr(b, 'exception_successors', None) or ())}
+        if subject_block is not None:
+            exits = {
+                s for s in exits
+                if s is not subject_block
+                and self.dom_analyzer.is_dominator(subject_block, s)
+                and not self._mr_is_loop_recheck_block(s, subject_block)
+            }
         if len(exits) >= 2:
             return self.dom_analyzer.find_nearest_common_post_dominator(exits)
         elif len(exits) == 1:
             return next(iter(exits))
         return None
+
+    def _mr_is_loop_recheck_block(self, block, subject_block):
+        """[B16] 判定 block 是否是外层循环的迭代回边再检测块（latch 条件块）。
+
+        【识别条件】block 的末指令是条件跳转，且跳转目标是 subject 块自身
+        或 subject 的支配祖先（is_dominator(target, subject)）。旋转 while
+        （CPython 3.11 把 while 条件同时发射在循环头与迭代末尾）的再检测块
+        `POP_JUMP_BACKWARD_IF_TRUE → 循环体首块` 是该形态的典型实例：循环
+        体首块支配 subject（体首 → … → subject 的唯一路径），故回边目标
+        必然支配 subject 或就是 subject。平直 match 的 merge 块其后继指向
+        match 之后的语句（前向），不可能回指 subject 的祖先——判据不误伤。
+
+        【归约方式】跳转方向（backward 到支配祖先）+ 支配关系查询，均为
+        区域归约同层结构事实；不读取循环区域内部（C2），无位置/名字特例。
+
+        【AST 映射】不直接产出 AST；作为 case 体/merge 候选的排除守卫，
+        使循环再检测块留在 LoopRegion（其回边由循环归约消费），match 区域
+        不越过循环边界（嵌套即抽象节点的前提）。
+
+        [C1] 只读 block.instructions 与支配树（全函数级共享事实）；
+        [C2] 不窥视任何循环区域内部状态；[C3] 「跳转目标支配 subject」
+        是回边（自然循环锁存边）的显式结构守卫，对任意嵌套深度同判。
+        """
+        if block is None or subject_block is None:
+            return False
+        last = block.get_last_instruction()
+        if last is None or last.opname not in CONDITIONAL_JUMP_OPS:
+            return False
+        if last.argval is None:
+            return False
+        target = self.cfg.get_block_by_offset(last.argval)
+        if target is None:
+            return False
+        return (target is subject_block
+                or self.dom_analyzer.is_dominator(target, subject_block))
+
+    def _mr_apply_case_body_boundary(self, body_blocks, subject_block):
+        """[B16] case 体块的循环边界过滤（match 嵌套在循环体内时）。
+
+        【识别条件】case 体候选块 B 越界的两种同层结构事实：
+        (a) B 不受 subject 块支配——case 体只可能经 case 链（从 subject
+            出发的条件跳转链）到达，不受支配意味着存在绕过 match 的路径
+            （循环头 FOR_ITER 块、循环出口块、函数级 return 块）；这些块
+            是外层循环/函数的结构块，被 case 体吞并后 match 区域范围越过
+            循环 → 层级装配失败 → 循环消失/幻影 case（r4_12 B16 形态）。
+        (b) B 是循环再检测块（_mr_is_loop_recheck_block：条件跳转回指
+            subject 或其支配祖先）——它是循环锁存边的一部分，归 match 后
+            循环丢失回边。
+
+        【归约方式】支配关系查询 + 块末条件跳转目标判定，均为操作码/支配
+        树层面的同层结构事实。unconditional JUMP_BACKWARD 结尾的块
+        （continue 语句块、体尾融合回边的语句块）保留——它们是 case 体
+        的终结语句本体，判据只排除「条件回边再检测」与「不受支配」两类。
+
+        【AST 映射】不直接产出 AST；过滤后的块集作为 MatchRegion 的
+        case_bodies/blocks，使区域范围不越过外层循环 → _build_region_
+        hierarchy 把 match 装配为循环子区域（父引用子入口）。
+
+        [C1] 只读块指令与支配树；[C2] 不窥视循环区域内部；
+        [C3] 支配边界是显式守卫——「不受 subject 支配」与「回边再检测」
+        对任意循环形态（for/while/旋转 while）与任意嵌套深度同判。
+        """
+        if not body_blocks or subject_block is None:
+            return set(body_blocks)
+        result = set()
+        for b in body_blocks:
+            if not self.dom_analyzer.is_dominator(subject_block, b):
+                continue
+            if self._mr_is_loop_recheck_block(b, subject_block):
+                continue
+            result.add(b)
+        return result
+
+    def _mr_body_walk_predicates_closed(self, unclosed_preds, walk_entry):
+        """[B15] 行走汇合闭合判据（支配松弛版）：未闭合前驱全部受行走入口
+        支配时，该后继仍是 case 体内部块。
+
+        【识别条件】候选后继存在行走未见的前驱时，两类同层结构事实：
+        (a) 未闭合前驱不受行走入口支配 → 该后继是链外汇合块（match 的
+            merge：其它 case 体/后续 case 链也汇入，如 r4_01 尾 `return acc`
+            块的前驱含 case 1 体与 case 2 头），归属链级 merge；
+        (b) 未闭合前驱全部受行走入口支配 → 前驱只经本 case 体的路径到达
+            （循环头/循环体回边的典型形态：B52 的前驱 B54 受体入口 B20
+            支配），该后继（循环头）是体内部块，行走继续。
+
+        【归约方式】前驱闭合检查 + 支配关系查询，均为图结构/支配树的
+        同层结构事实；无位置/名字特例。
+
+        【AST 映射】不直接产出 AST；作为 case 体行走的包含守卫，使循环
+        体块进入 case 体（由生成层经 block_to_region 以子区域生成）而
+        merge 块留给链级出口归属。
+
+        [C1] 只读前驱集合与支配树；[C2] 不窥视子/父区域；
+        [C3] 「未闭合前驱受入口支配」是体内部的显式结构守卫——真 merge
+        的链外前驱必然不受单 case 体入口支配（存在绕过本 case 的路径），
+        任意嵌套深度/任意 case 链位置同判。
+        """
+        if not unclosed_preds:
+            return True
+        return all(self.dom_analyzer.is_dominator(walk_entry, p)
+                   for p in unclosed_preds)
+
+    def _mr_collect_case_body_blocks(self, body_entry, next_case_block, stop_set,
+                                     subject_block):
+        """[B15/B16] case 体收集行走（支配边界 + merge 汇合守卫）。
+
+        【识别条件】case 体候选块的三类同层结构事实：
+        (a) 不受 subject 支配（循环头/出口等外部结构，见
+            _mr_apply_case_body_boundary (a) 条款）；
+        (b) 循环再检测块（_mr_is_loop_recheck_block，(b) 条款）；
+        (c) **merge 汇合块**——存在不属于本次行走已见集合的前驱：case 体
+            以无条件跳转/直落汇入链外共享出口（无通配 match 的 merge、
+            多 case 共同后继），该出口由链级 merge 归属（
+            _mr_compute_case_merge），纳入单个 case 体即把 match 后继语句
+            物化进 case 体（r4_10 `return result` 进 case 1 体形态）。
+
+        【归约方式】工作表行走 + 支配查询 + 前驱闭合检查（全部操作码/
+        图结构事实）。JUMP_BACKWARD 终止块保留为体终结（continue 语句）。
+
+        【AST 映射】不直接产出 AST；结果作为 case_bodies（每块唯一归属：
+        merge 由链级出口归属，不重复计入任何 case 体）。
+
+        [C1] 只读块指令/后继/前驱与支配树；[C2] 不窥视子/父区域；
+        [C3] 「前驱闭合」是汇合点的显式结构守卫，任意嵌套深度同判。
+        """
+        result = set()
+        if body_entry is None:
+            return result
+        visited = {body_entry}
+        worklist = [body_entry]
+        while worklist:
+            cur = worklist.pop()
+            if next_case_block is not None and cur is next_case_block:
+                continue
+            if stop_set and cur in stop_set:
+                continue
+            if subject_block is not None and not self.dom_analyzer.is_dominator(subject_block, cur):
+                continue
+            if self._mr_is_loop_recheck_block(cur, subject_block):
+                continue
+            result.add(cur)
+            last = cur.get_last_instruction()
+            if last and last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                continue
+            for succ in cur.successors:
+                if succ in visited:
+                    continue
+                # [B15] merge 汇合守卫（支配松弛版）：存在行走未见的前驱且
+                # 未闭合前驱不受体入口支配 → 链外共享出口；未闭合前驱全部
+                # 受体入口支配（循环回边形态）→ 体内部块，行走继续。
+                _unclosed = [p for p in succ.predecessors if p not in visited]
+                if not self._mr_body_walk_predicates_closed(_unclosed, body_entry):
+                    continue
+                visited.add(succ)
+                worklist.append(succ)
+        return result
+
+    def _mr_is_case_check_shaped_block(self, block):
+        """[B16] 判定块是否具有 match case 检查块的指令形态。
+
+        【识别条件】两类编译器发射的 case 检查形态：
+        (a) 结构型：块内含 MATCH_CLASS/MATCH_SEQUENCE/MATCH_MAPPING/
+            MATCH_KEYS/MATCH_MAPPING_KEYS 指令；
+        (b) 字面量/捕获型：块内含 COPY 且其后存在 COMPARE_OP/IS_OP
+            （match subject 经 COPY 复制后参与比较的栈协议；if-elif 的
+            条件块每次重新 LOAD，无 COPY）。
+        该形态判定与 _is_match_subject_block / _has_match_op 的识别条件
+        同源，用于区分「case 体路径上遇到的下一层 case 检查」（嵌套 match
+        的头块）与「case 守卫 continuation / case 体内普通 if」（无 COPY
+        的守卫与 if 块不满足此形态）。
+
+        【归约方式】纯块内操作码序列判据（无跨块/跨层读取）。
+
+        【AST 映射】不直接产出 AST；作为嵌套 match 头的识别守卫（见
+        _mr_collect_case_body 的 [B16-F4] 条款），使外层 case 体在嵌套
+        match 头处收口，内层 match 由二次扫描独立归约。
+
+        [C1] 只读 block.instructions；[C2] 不窥视任何区域内部；
+        [C3] COPY+比较是 CPython match 编译的显式栈协议而非位置特例，
+        任意嵌套深度同判。
+        """
+        if block is None:
+            return False
+        meaningful = [i for i in block.instructions if i.opname not in NOISE_OPS]
+        if not meaningful:
+            return False
+        if any(i.opname in ('MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
+                            'MATCH_KEYS', 'MATCH_MAPPING_KEYS') for i in meaningful):
+            return True
+        has_copy = False
+        for instr in meaningful:
+            if instr.opname == 'COPY':
+                has_copy = True
+            elif instr.opname in ('COMPARE_OP', 'IS_OP') and has_copy:
+                return True
+        return False
+
 
     def _mr_is_default_case_block(self, block, visited):
         last = block.get_last_instruction()
@@ -13685,23 +14095,107 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                     return True
         return False
 
+    def _mr_skip_case_connectors(self, blk):
+        """[B16-C3] 从链上 fail 边目标解析下一 case 真实头块：跳过纯
+        POP_TOP/JUMP 连接块（CPython 在 case 头前发射的失败清理桩，
+        `case 2:` 头前 POP_TOP → COPY 形态）。
+
+        【识别条件】块的非噪声指令全部为 POP_TOP/JUMP_FORWARD/JUMP_
+        ABSOLUTE 且后继唯一——纯连接块形态（与链行走的 is_connector
+        判据同源）。
+        【归约方式】沿唯一后继行走直至首个非连接块。
+        【AST 映射】不直接产出 AST；作为守卫块 fail 边极性判定的目标
+        归一（fail 边可能指向连接桩而非 case 头本体）。
+
+        [C1] 只读块指令与后继；[C2] 不窥视区域内部；[C3] 连接块是编译
+        器显式失败清理协议，与嵌套深度无关。"""
+        _seen = set()
+        while blk is not None and blk not in _seen:
+            _seen.add(blk)
+            _mean = [i for i in blk.instructions if i.opname not in NOISE_OPS]
+            if (_mean
+                    and all(i.opname in ('POP_TOP', 'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                            for i in _mean)
+                    and len(blk.successors) == 1):
+                blk = next(iter(blk.successors))
+            else:
+                break
+        return blk
+
     def _mr_collect_case_body(self, subject_block):
         if subject_block is None:
             return [], [], [], None, set()
         all_blocks = {subject_block}
+        # [B17] try 包 match 的区域边界：subject 落在某 TryExceptRegion 的
+        # try 体内时，match 的块集以该 try 体为界（handler 分派块与处理块
+        # 是外层 try 的结构块，不属于 match 的 L(A)）。try 的处理块经正常
+        # 边（分派块的 fall-through）可达，仅靠异常边排除不够；try 体边界
+        # 是外层区域暴露的显式接口事实（C3：跨区域引用以显式守卫封闭）。
+        _try_body_bound = None
+        for _tr in self.regions:
+            if (isinstance(_tr, TryExceptRegion)
+                    and subject_block in (getattr(_tr, 'try_blocks', None) or set())):
+                _try_body_bound = set(_tr.try_blocks)
+                break
         for blk in self.cfg.blocks.values():
-            if blk != subject_block and self.dom_analyzer.is_dominator(subject_block, blk):
-                all_blocks.add(blk)
+            if blk is subject_block or not self.dom_analyzer.is_dominator(subject_block, blk):
+                continue
+            if _try_body_bound is not None and blk not in _try_body_bound:
+                continue
+            # [B17] 异常分派块排除：前驱全部经异常表隐式边（exception_
+            # successors）到达的块没有任何正常控制流前驱——它是异常处理
+            # 机制的结构块（try 包 match 时 try 体各块的异常边共同指向
+            # PUSH_EXC_INFO 分派块，其处理块随之仅由异常边可达）。支配种子
+            # 把它们卷入 match 区域后，TryExceptRegion 反被装成 match 子
+            # 区域（层级倒置），try 壳整体丢失。判据 = 前驱集合的正常边
+            # 闭合性（同层结构事实），无位置/名字特例。
+            # [C1] 只读前驱/后继边与支配树；[C2] 不窥视子/父区域；
+            # [C3] 异常表边是编译器显式结构边，排除判据与嵌套深度无关。
+            _has_normal_pred = any(
+                blk not in (getattr(p, 'exception_successors', None) or ())
+                for p in blk.predecessors)
+            if not _has_normal_pred:
+                continue
+            all_blocks.add(blk)
         if not all_blocks:
             return [], [], [], None, set()
         case_blocks, case_patterns, case_bodies, visited = [], [], [], set()
         current = subject_block
         while current and current in all_blocks and current not in visited:
             visited.add(current)
+            # [B16-F3] 显式 case 体标记（NOP）→ 默认 case（`case _:`）头。
+            # CPython 为 `case _` 发射 NOP 作为平凡模式检查（无 COPY/COMPARE），
+            # 其体可含 if 等条件结构——块以条件跳转结尾时原行走会把它当作
+            # 下一 case 的检查块继续跟进（把体内容拆成幻影 case，如
+            # `case _:` 体含 `if n > limit - 2: break` → 幻影 case 链）。
+            # 判据：_mr_block_has_explicit_case_marker（B13 引入的编译器
+            # 显式结构标记，跳过前导 POP_TOP 后认 NOP），subject 块自身
+            # 除外（通配单 case 的 subject==body 由 case_body_start_indices
+            # 切分，不走本分支）。NOP 标记由编译器按 case 发射，与 case
+            # 在链中的位置/嵌套深度无关（[C3] 显式结构守卫，嵌套无感）。
+            if (current is not subject_block
+                    and self._mr_block_has_explicit_case_marker(current)):
+                default_body = self._mr_collect_simple_body_blocks(current, visited)
+                default_body = self._mr_apply_case_body_boundary(
+                    set(default_body), subject_block)
+                if default_body:
+                    is_implicit_default = self._is_implicit_default_body(default_body)
+                    if not is_implicit_default:
+                        all_blocks.update(default_body)
+                        case_blocks.append(current)
+                        case_patterns.append({'type': 'MatchAs'})
+                        case_bodies.append(sorted(default_body, key=lambda b: b.start_offset))
+                    else:
+                        all_blocks.update(set(default_body))
+                break
             jump_instr = self._mr_find_case_jump_instruction(current)
             if jump_instr is None:
                 if current != subject_block and not self._is_pattern_fail_handler(current):
                     default_body = self._mr_collect_simple_body_blocks(current, visited)
+                    # [B16] 默认 case 体同样受循环边界约束（支配边界 +
+                    # 回边再检测排除），防止体外循环结构块被吞入 case 体。
+                    default_body = self._mr_apply_case_body_boundary(
+                        set(default_body), subject_block)
                     if default_body:
                         is_implicit_default = self._is_implicit_default_body(default_body)
                         if not is_implicit_default:
@@ -13741,8 +14235,16 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 all_blocks.add(gb)
             if not jt or not success:
                 break
+            # 区域归约算法：[B16] 下一 case 块必须受当前 case 块支配。
+            # match 嵌套在循环体内时，条件跳转的 false 目标可能是循环结构块
+            # （如旋转 while 的迭代再检测块）；它们不是下一 case，链行走到此
+            # 必须终止，否则循环结构块被拆成幻影 case（r4_12 形态）。
+            # [B15] 终止前仍须登记 current：无通配 match 的最后一个 case 其
+            # false 目标是链外汇合点（merge，不受当前 case 支配）——它本身
+            # 是真实 case，跳过登记会把最后一个 case 整体丢失。
+            _last_case_no_dom = False
             if jt == current or not self.dom_analyzer.is_dominator(current, jt):
-                break
+                _last_case_no_dom = True
             # 区域归约算法：[and-guard 链修复]
             # 当 guard 是 `A and B` 形式时，字节码为多个 IF_FALSE → next_case 块链：
             #   current: COMPARE A, POP_JUMP_FORWARD_IF_FALSE → jt (next case)
@@ -13771,6 +14273,17 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             pat = self.pattern_parser.parse_case_pattern(current)
             guard_jump_target = None
             pattern_jump_targets = set()
+            # [B16-F4] 嵌套 match 头边界：case 体路径上遇到「case 检查形态」
+            # 的块（COPY+比较 / MATCH_*，见 _mr_is_case_check_shaped_block）
+            # 且其条件跳转目标不是本 case 链的下一 case（next_case_offset）
+            # 时，它是嵌套在外层 case 体内的内层 match 的头块——外层 case
+            # 体在此收口（body = 该头块），内层 match 由二次扫描
+            # （_identify_nested_match_regions 对 MatchRegion 父区域的
+            # case 体扫描）独立归约。守卫的 continuation 块（or/and guard
+            # 链）跳转目标恒等于 next_case_offset，不会误入本判据；
+            # case 体内普通 if 无 COPY（非 case 检查形态），同样不触发。
+            nested_case_boundary = None
+            pattern_check_blocks = set()
             # 区域归约算法：[RC1 模式检查块识别]
             # 模式检查块（pattern-only 且有条件跳转）属于 case 头部，不应纳入 body。
             # 包括两类：
@@ -13816,9 +14329,9 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                     gj = self._mr_find_case_jump_instruction(gc)
                     if gj:
                         target_block = self.cfg.get_block_by_offset(gj.argval)
-                        if target_block and target_block != jt:
-                            pattern_jump_targets.add(target_block)
                         if is_pattern_only:
+                            if target_block and target_block != jt:
+                                pattern_jump_targets.add(target_block)
                             # 所有 pattern-only 且有条件跳转的块都是模式检查块
                             # （含 MATCH_* 的模式匹配块 + 含 COMPARE_OP 的值检查块）
                             pattern_check_blocks.add(gc)
@@ -13827,6 +14340,36 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                                     worklist_g.append(s)
                         else:
                             if gc != current:
+                                # [B16-F4] 嵌套 match 头判定（先于 guard 分类）：
+                                # case 检查形态 + 跳转目标 ≠ 本链下一 case →
+                                # 内层 match 的头块，外层体在此收口。
+                                if (gj.argval != next_case_offset
+                                        and self._mr_is_case_check_shaped_block(gc)):
+                                    nested_case_boundary = gc
+                                    break
+                                # [B16-C3] 守卫续块判定收窄：fail 极性（IF_FALSE
+                                # 族）续块只有跳转目标 == next_case_offset（或
+                                # 其连接桩解析后的真实头块，[B18] 类模式 fail
+                                # 边经 POP_TOP 连接桩指向下一 case 头）时才是
+                                # 守卫材料（and 臂失败边恒指下一 case，与
+                                # and_guard_chain 行走同判据）；否则它是 case
+                                # 体的体首结构（体首语句 + 体首 if 条件融合块，
+                                # `case 2: acc += 2; if acc and x: …`）——体在此
+                                # 开始，不归入 pattern_check_blocks/stop_set
+                                # （否则体首块与其 else 目标被排除，体首语句整
+                                # 体丢失）。IF_TRUE（or 臂成功边）保持既有守卫
+                                # 归类（or 臂真值边指向 case 体，体由
+                                # fall-through 链解析）。
+                                _resolved_next = self._mr_skip_case_connectors(jt)
+                                _next_head_off = (_resolved_next.start_offset
+                                                  if _resolved_next is not None else None)
+                                if (gj.opname in AND_FALSE_OPS
+                                        and gj.argval != next_case_offset
+                                        and (_next_head_off is None
+                                             or gj.argval != _next_head_off)):
+                                    break
+                                if target_block and target_block != jt:
+                                    pattern_jump_targets.add(target_block)
                                 guard_jump_target = gj.argval
                                 # guard 块（含 LOAD_VAR + 条件跳转）
                                 # 排除出 body：guard 块的字节码（如 LOAD_NAME z /
@@ -13845,23 +14388,35 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             # 区域归约算法：[RC1 解析真正 body 入口]
             # 若 success 本身是模式检查块，需沿 fall-through 链跳过所有模式检查块，
             # 找到真正的 body 入口。模式检查块加入 stop_set，避免被 body 收集纳入。
-            actual_body_entry = self._mr_resolve_pattern_check_chain(
-                success, pattern_check_blocks, jt)
-            resolved_success = self._mr_resolve_body_entry(actual_body_entry)
-            if resolved_success and resolved_success != jt:
-                stop_set = visited | {jt} | pattern_jump_targets | pattern_check_blocks
-                if guard_jump_target is not None:
-                    guard_jt_block = self.cfg.get_block_by_offset(guard_jump_target)
-                    if guard_jt_block:
-                        stop_set.add(guard_jt_block)
-                body_set = self._collect_blocks_on_path(resolved_success, jt, stop_set)
-                body_set = body_set - stop_set
-                if not body_set:
-                    body_set = self._mr_collect_case_body_by_offset(
-                        actual_body_entry, next_case_offset, visited | pattern_check_blocks)
+            if nested_case_boundary is not None:
+                # [B16-F4] 外层 case 体 = 嵌套 match 的头块；其内部块归内层
+                # match 区域（嵌套即抽象节点，外层不窥视内层内部）。
+                body_set = {nested_case_boundary}
             else:
-                body_set = self._mr_collect_case_body_by_offset(
-                    actual_body_entry, next_case_offset, visited | pattern_check_blocks)
+                actual_body_entry = self._mr_resolve_pattern_check_chain(
+                    success, pattern_check_blocks, jt)
+                resolved_success = self._mr_resolve_body_entry(actual_body_entry)
+                if resolved_success and resolved_success != jt:
+                    stop_set = visited | {jt} | pattern_jump_targets | pattern_check_blocks
+                    if guard_jump_target is not None:
+                        guard_jt_block = self.cfg.get_block_by_offset(guard_jump_target)
+                        if guard_jt_block:
+                            stop_set.add(guard_jt_block)
+                    # [B15/B16] case 体收集行走（支配边界 + 回边再检测排除
+                    # + merge 汇合守卫）
+                    body_set = self._mr_collect_case_body_blocks(
+                        resolved_success, jt, stop_set, subject_block)
+                    body_set = body_set - stop_set
+                    if not body_set:
+                        body_set = self._mr_apply_case_body_boundary(
+                            self._mr_collect_case_body_by_offset(
+                                actual_body_entry, next_case_offset, visited | pattern_check_blocks),
+                            subject_block)
+                else:
+                    body_set = self._mr_apply_case_body_boundary(
+                        self._mr_collect_case_body_by_offset(
+                            actual_body_entry, next_case_offset, visited | pattern_check_blocks),
+                        subject_block)
             # 模式检查块属于 match 区域（case 头部），纳入 all_blocks 但不纳入 body
             all_blocks.update(pattern_check_blocks)
             all_blocks.update(body_set)
@@ -13870,6 +14425,8 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             case_blocks.append(current)
             case_patterns.append(pat)
             case_bodies.append(sorted(body_set, key=lambda b: b.start_offset))
+            if _last_case_no_dom:
+                break
             current = jt
             while current and current not in visited:
                 meaningful = [i for i in current.instructions if i.opname not in NOISE_OPS]
@@ -13886,7 +14443,8 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                     break
         if not case_blocks:
             return [], [], [], None, set()
-        return self._mr_finalize_match_region(case_blocks, case_patterns, case_bodies, all_blocks)
+        return self._mr_finalize_match_region(case_blocks, case_patterns, case_bodies, all_blocks,
+                                              subject_block=subject_block)
 
     def _is_simple_match_case_block(self, block):
         """
@@ -14323,27 +14881,49 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
 
             # 扫描父区域内的blocks，寻找未识别的match模式
             parent_blocks = parent_region.blocks
-            for block in self.cfg.get_blocks_in_order():
+            # [B16-F5] match×match 嵌套：父区域是 MatchRegion 时只扫描其
+            # case 体块（嵌套 match 只可能出现在 case 体内——外层 case 匹配
+            # 成功后才进入体内）。排除集 = 外层 match 的链块（subject/case
+            # 头/pattern 检查/merge 等，即 blocks 减去全部 case 体块），外层
+            # case 体块对其开放；其它 match 区域占有的块仍照常排除。
+            # 判据为区域类型 + case 体归属（同层结构事实），非位置特例。
+            if isinstance(parent_region, MatchRegion):
+                _body_blocks_of_parent = set()
+                for _body in (parent_region.case_bodies or []):
+                    _body_blocks_of_parent.update(_body)
+                _chain_blocks_of_parent = parent_blocks - _body_blocks_of_parent
+                _scan_blocks = [b for b in self.cfg.get_blocks_in_order()
+                                if b in _body_blocks_of_parent]
+                _exclusion = (existing_match_blocks - _body_blocks_of_parent) | _chain_blocks_of_parent
+            else:
+                _scan_blocks = self.cfg.get_blocks_in_order()
+                _exclusion = existing_match_blocks
+            for block in _scan_blocks:
                 if block not in parent_blocks:
                     continue
-                if block in existing_match_blocks:
+                if block in _exclusion:
                     continue
-                if self.block_to_region.get(block) and isinstance(self.block_to_region.get(block), MatchRegion):
+                if isinstance(parent_region, MatchRegion):
+                    # [B16-F5] case 体块被外层 MatchRegion 占有是常态，
+                    # 不作为跳过条件（内层 match 要在体内重新归约）
+                    pass
+                elif self.block_to_region.get(block) and isinstance(self.block_to_region.get(block), MatchRegion):
                     continue
 
                 # 检测match特征
                 is_structured = self._has_match_op(block)
                 is_case_pattern = self._is_case_pattern_block(block)
                 is_literal_subject = self._is_match_subject_block(block)
+                is_capture_guard = self._is_capture_guard_case_block(block)
                 is_simple_case = self._is_simple_match_case_block(block)
                 is_wildcard = self._is_wildcard_match_block(block)
                 is_none_match = self._is_none_match_block(block)
 
-                if not (is_structured or is_case_pattern or is_literal_subject or is_simple_case or is_wildcard or is_none_match):
+                if not (is_structured or is_case_pattern or is_literal_subject or is_capture_guard or is_simple_case or is_wildcard or is_none_match):
                     continue
 
                 # 尝试收集match区域
-                nested_match = self._collect_nested_match_region(block, parent_blocks, existing_match_blocks)
+                nested_match = self._collect_nested_match_region(block, parent_blocks, _exclusion)
                 if nested_match:
                     nested_regions.append(nested_match)
                     # 更新已占用blocks集合
@@ -14407,8 +14987,20 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                     return None
 
             # 创建MatchRegion
-            case_guards = [self.pattern_parser.parse_case_guard(
-                self.pattern_parser.collect_pattern_blocks(cb, all_blocks)) for cb in case_blocks]
+            # [B16] 同上：头块不在任何 case body 中时允许提取同块守卫
+            _guard_body_pool = set()
+            for _body in case_bodies:
+                _guard_body_pool.update(_body)
+            case_guards = []
+            for _ci, _cb in enumerate(case_blocks):
+                _fail_off = (case_blocks[_ci + 1].start_offset
+                             if _ci + 1 < len(case_blocks)
+                             else (merge.start_offset if merge else None))
+                case_guards.append(self.pattern_parser.parse_case_guard(
+                    self.pattern_parser.collect_pattern_blocks(_cb, all_blocks),
+                    allow_in_header_block=(_cb not in _guard_body_pool
+                                            and self._mr_head_has_capture_binding(_cb)),
+                    fail_case_offset=_fail_off))
             region = MatchRegion(
                 region_type=RegionType.MATCH, entry=subject_block, blocks=all_blocks,
                 subject_block=subject_block, case_blocks=case_blocks,
@@ -14420,6 +15012,11 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
 
         # 策略2: 字面量模式匹配（COPY + LOAD_CONST + COMPARE_OP）
         if self._is_match_subject_block(candidate_block):
+            return self._collect_nested_literal_match(candidate_block, parent_blocks, exclude_blocks)
+
+        # 策略2b: 捕获+守卫 case 头（`case n if cond:`，[B16] 判据见
+        # _is_capture_guard_case_block）——与字面量 subject 同走链收集
+        if self._is_capture_guard_case_block(candidate_block):
             return self._collect_nested_literal_match(candidate_block, parent_blocks, exclude_blocks)
 
         # 策略3: 简单case块（NOP前缀的default case）
@@ -14524,11 +15121,30 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             all_blocks_l.add(current)
 
             last = current.get_last_instruction()
+            # [B16-F3] 显式 case 体标记（NOP）→ 默认 case 头（体可含条件结构）
+            if (current is not subject_block
+                    and self._mr_block_has_explicit_case_marker(current)):
+                default_body = self._mr_collect_simple_body_blocks(current, visited_l)
+                default_body = [b for b in default_body if b in parent_blocks]
+                # [B16] 默认 case 体循环边界过滤
+                default_body = self._mr_apply_case_body_boundary(set(default_body), subject_block)
+                if default_body:
+                    is_implicit_default = self._is_implicit_default_body(default_body)
+                    if not is_implicit_default:
+                        all_blocks_l.update(default_body)
+                        case_blocks_l.append(current)
+                        case_patterns_l.append({'type': 'MatchAs'})
+                        case_bodies_l.append(sorted(default_body, key=lambda b: b.start_offset))
+                    else:
+                        all_blocks_l.update(set(default_body))
+                break
             if not last or last.opname not in CONDITIONAL_JUMP_OPS:
                 # 可能是default case
                 if self._is_literal_default_block(current, visited_l):
                     default_body = self._mr_collect_simple_body_blocks(current, visited_l)
                     default_body = [b for b in default_body if b in parent_blocks]
+                    # [B16] 默认 case 体循环边界过滤
+                    default_body = self._mr_apply_case_body_boundary(set(default_body), subject_block)
                     if default_body:
                         is_implicit_default = self._is_implicit_default_body(default_body)
                         if not is_implicit_default:
@@ -14544,6 +15160,12 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             jt = self.cfg.get_block_by_offset(last.argval)
             if jt is None:
                 break
+            # [B16] 下一 case 块必须受当前 case 块支配（循环结构块不是下一
+            # case）；[B15] 终止前仍须登记 current（末 case false 目标是
+            # 链外 merge，见 _mr_collect_case_body 同名条款）。
+            _last_case_no_dom_n = False
+            if jt == current or not self.dom_analyzer.is_dominator(current, jt):
+                _last_case_no_dom_n = True
 
             ft_successor = next((s for s in sorted(current.successors, key=lambda s: s.start_offset) if s != jt), None)
             if not ft_successor:
@@ -14559,7 +15181,10 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             body_entry = self._mr_resolve_body_entry(ft_successor)
             body_set = set()
             if body_entry and body_entry != jt:
-                body_set = self._collect_blocks_on_path(body_entry, jt, visited_l | {jt})
+                # [B15/B16] case 体收集行走（支配边界 + 回边再检测排除
+                # + merge 汇合守卫）
+                body_set = self._mr_collect_case_body_blocks(
+                    body_entry, jt, visited_l | {jt}, subject_block)
                 body_set = body_set - {jt}
                 body_set = {b for b in body_set if b in parent_blocks}
             all_blocks_l.update(body_set)
@@ -14573,6 +15198,8 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             case_blocks_l.append(current)
             case_patterns_l.append(pat)
             case_bodies_l.append(sorted(body_set, key=lambda b: b.start_offset))
+            if _last_case_no_dom_n:
+                break
             current = jt
 
         if not case_blocks_l or len(case_blocks_l) < 1:
@@ -14586,7 +15213,15 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             return None
 
         # 计算merge block
-        merge_block = self._mr_compute_case_merge(case_bodies_l)
+        merge_block = self._mr_compute_case_merge(case_bodies_l, subject_block=subject_block)
+        if merge_block is None and merge_candidates:
+            # [B16] merge 候选受支配边界约束（排除循环结构块）
+            merge_candidates = [
+                c for c in merge_candidates
+                if c is not subject_block
+                and self.dom_analyzer.is_dominator(subject_block, c)
+                and not self._mr_is_loop_recheck_block(c, subject_block)
+            ]
         if merge_block is None and merge_candidates:
             from collections import Counter
             counter = Counter(id(c) for c in merge_candidates)
@@ -14645,11 +15280,19 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 continue
             if block in claimed and _existing is None:
                 continue
+            # [B16] 入口同块去重：主扫描（_identify_match_regions）已为同一
+            # 入口块建过 MatchRegion 时不再重建——同一 subject 块只对应一个
+            # match 语句（结构事实），重复区域会在层级装配/生成阶段产生
+            # 双 match 或循环块争抢（match-in-loop 场景两扫描均允许在
+            # LoopRegion 占有的块上识别，必须去重）。
+            if any(isinstance(_r, MatchRegion) and _r.entry is block for _r in self.regions):
+                continue
             is_copy_subject = self._is_match_subject_block(block)
+            is_capture_guard = self._is_capture_guard_case_block(block)
             is_nop_case = self._is_simple_match_case_block(block)
             is_wildcard = self._is_wildcard_match_block(block)
             is_none_match = self._is_none_match_block(block)
-            if not is_copy_subject and not is_nop_case and not is_wildcard and not is_none_match:
+            if not is_copy_subject and not is_capture_guard and not is_nop_case and not is_wildcard and not is_none_match:
                 continue
             if block is None:
                 continue
@@ -14692,9 +15335,31 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 visited_l.add(current)
                 all_blocks_l.add(current)
                 last = current.get_last_instruction()
+                # [B16-F3] 显式 case 体标记（NOP）→ 默认 case 头（体可含
+                # if 等条件结构）。`case _` 由 CPython 发射 NOP 作为平凡
+                # 模式检查，块以条件跳转结尾时原行走会把它当作下一 case
+                # 继续跟进，把体内容拆成幻影 case。subject 块自身除外。
+                if (current is not block
+                        and self._mr_block_has_explicit_case_marker(current)):
+                    default_body = self._mr_collect_simple_body_blocks(current, visited_l)
+                    default_body = self._mr_apply_case_body_boundary(
+                        set(default_body), block)
+                    if default_body:
+                        is_implicit_default = self._is_implicit_default_body(default_body)
+                        if not is_implicit_default:
+                            all_blocks_l.update(default_body)
+                            case_blocks_l.append(current)
+                            case_patterns_l.append({'type': 'MatchAs'})
+                            case_bodies_l.append(sorted(default_body, key=lambda b: b.start_offset))
+                        else:
+                            all_blocks_l.update(set(default_body))
+                    break
                 if not last or last.opname not in CONDITIONAL_JUMP_OPS:
                     if self._is_literal_default_block(current, visited_l):
                         default_body = self._mr_collect_simple_body_blocks(current, visited_l)
+                        # [B16] 默认 case 体循环边界过滤
+                        default_body = self._mr_apply_case_body_boundary(
+                            set(default_body), block)
                         if default_body:
                             is_implicit_default = self._is_implicit_default_body(default_body)
                             if not is_implicit_default:
@@ -14706,9 +15371,16 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                             else:
                                 all_blocks_l.update(set(default_body))
                     break
+                # [B16] 下一 case 块必须受当前 case 块支配（循环结构块不是
+                # 下一 case——旋转 while 再检测块等，链行走终止）。
+                # [B15] 终止前仍须登记 current（无通配 match 末 case 的 false
+                # 目标是链外 merge，见 _mr_collect_case_body 同名条款）。
                 jt = self.cfg.get_block_by_offset(last.argval)
                 if jt is None:
                     break
+                _last_case_no_dom_l = False
+                if jt == current or not self.dom_analyzer.is_dominator(current, jt):
+                    _last_case_no_dom_l = True
                 ft_successor = next((s for s in sorted(current.successors, key=lambda s: s.start_offset) if s != jt), None)
                 if not ft_successor:
                     break
@@ -14721,7 +15393,10 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 body_entry = self._mr_resolve_body_entry(ft_successor)
                 body_set = set()
                 if body_entry and body_entry != jt:
-                    body_set = self._collect_blocks_on_path(body_entry, jt, visited_l | {jt})
+                    # [B15/B16] case 体收集行走（支配边界 + 回边再检测排除
+                    # + merge 汇合守卫）
+                    body_set = self._mr_collect_case_body_blocks(
+                        body_entry, jt, visited_l | {jt}, block)
                     body_set = body_set - {jt}
                 all_blocks_l.update(body_set)
                 if body_set:
@@ -14732,12 +15407,22 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 case_blocks_l.append(current)
                 case_patterns_l.append(pat)
                 case_bodies_l.append(sorted(body_set, key=lambda b: b.start_offset))
+                if _last_case_no_dom_l:
+                    break
                 current = jt
             if not case_blocks_l:
                 continue
             if len(case_blocks_l) < 1:
                 continue
-            merge_block = self._mr_compute_case_merge(case_bodies_l)
+            merge_block = self._mr_compute_case_merge(case_bodies_l, subject_block=block)
+            if merge_block is None and merge_candidates:
+                # [B16] merge 候选同样受支配边界约束（排除循环结构块）
+                merge_candidates = [
+                    c for c in merge_candidates
+                    if c is not block
+                    and self.dom_analyzer.is_dominator(block, c)
+                    and not self._mr_is_loop_recheck_block(c, block)
+                ]
             if merge_block is None and merge_candidates:
                 from collections import Counter
                 counter = Counter(id(c) for c in merge_candidates)
@@ -14775,8 +15460,20 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 i = j
             case_blocks, case_patterns, case_bodies, merge, all_blocks = (
                 case_blocks_l, merged_p, merged_b, merge_block, all_blocks_l)
-            case_guards = [self.pattern_parser.parse_case_guard(
-                self.pattern_parser.collect_pattern_blocks(cb, all_blocks)) for cb in case_blocks]
+            # [B16] 同上：头块不在任何 case body 中时允许提取同块守卫
+            _guard_body_pool = set()
+            for _body in case_bodies:
+                _guard_body_pool.update(_body)
+            case_guards = []
+            for _ci, _cb in enumerate(case_blocks):
+                _fail_off = (case_blocks[_ci + 1].start_offset
+                             if _ci + 1 < len(case_blocks)
+                             else (merge.start_offset if merge else None))
+                case_guards.append(self.pattern_parser.parse_case_guard(
+                    self.pattern_parser.collect_pattern_blocks(_cb, all_blocks),
+                    allow_in_header_block=(_cb not in _guard_body_pool
+                                            and self._mr_head_has_capture_binding(_cb)),
+                    fail_case_offset=_fail_off))
             region = MatchRegion(
                 region_type=RegionType.MATCH, entry=block, blocks=all_blocks,
                 subject_block=block, case_blocks=case_blocks,
@@ -14866,6 +15563,80 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             return False
         return any(i.opname in ('MATCH_CLASS', 'MATCH_MAPPING', 'MATCH_SEQUENCE', 'MATCH_KEYS')
                   for i in block.instructions)
+
+    def _mr_head_has_capture_binding(self, block):
+        """[B16] 判定 case 头块是否携带捕获绑定（allow_in_header_block 的门槛）。
+
+        【识别条件】块首条非 NOISE 指令为 STORE_*（捕获头直存被匹配值副本，
+        CPython case 入口协议），或块内存在 COPY 紧跟 STORE_*（捕获绑定对）。
+        守卫引用捕获名的前提是捕获绑定存在于本块——纯字面量/值模式头
+        （LOAD subject; LOAD_CONST; COMPARE，无任何 STORE）不含守卫材料，
+        其 LOAD+COMPARE 序列就是模式本体。
+
+        【归约方式】纯块内操作码序列判据。
+
+        【AST 映射】不直接产出 AST；作为 parse_case_guard 的
+        allow_in_header_block 门槛——防止值模式头的模式比较被守卫提取
+        误读为幻影守卫（`case 1:` → `case 1 if x == 1:`，probe_match_min
+        回归形态）。
+
+        [C1] 只读 block.instructions；[C2] 不窥视子/父区域；[C3] 捕获绑定
+        是编译器 case 入口的显式栈协议，与 case 位置/嵌套深度无关。
+        """
+        if block is None:
+            return False
+        instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
+        if not instrs:
+            return False
+        if instrs[0].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+            return True
+        for idx in range(len(instrs) - 1):
+            if (instrs[idx].opname == 'COPY'
+                    and instrs[idx + 1].opname in ('STORE_FAST', 'STORE_NAME',
+                                                   'STORE_GLOBAL', 'STORE_DEREF')):
+                return True
+        return False
+
+    def _is_capture_guard_case_block(self, block):
+        """[B16] 判定块是否是捕获+守卫 case 头块（``case n if n < 0:``）。
+
+        【识别条件】块以条件跳转结尾、不含 MATCH_*（结构型由 _has_match_op
+        处理），且块内存在 ``COPY 1; STORE <cap>; LOAD <cap>`` 三连——
+        COPY+STORE 是捕获绑定（被匹配值副本入变量），其后紧跟 LOAD 同名
+        变量是守卫表达式对捕获名的重读。walrus（:=）是 COPY; STORE 后直接
+        以栈顶原值参与后续运算、不重读绑定名，故不会命中本判据——这就是
+        _is_match_subject_block 的 walrus 排除与本判据的分界。for 循环体
+        首块融合形态（UNPACK + for-target STORE + subject LOAD + 捕获 +
+        守卫）同样命中（捕获三连不依赖块首形态）。
+
+        【归约方式】纯块内操作码序列判据（COPY/STORE/LOAD 同名三连 +
+        条件跳转结尾），无跨块/跨层读取。
+
+        【AST 映射】不直接产出 AST；作为 case 头候选判据（_identify_match_
+        regions / _scan_literal_match_subjects / 嵌套扫描共用），使该块进入
+        _mr_collect_case_body 链行走，pattern/guard 由 pattern_parser 的
+        捕获+守卫分派与 parse_case_guard 分别提取（→ MatchAs + guard）。
+
+        [C1] 只读 block.instructions；[C2] 不窥视子/父区域；[C3]
+        COPY+STORE+LOAD 同名是编译器捕获绑定的栈协议而非位置特例，
+        任意嵌套深度/任意 case 链位置同判。
+        """
+        if block is None:
+            return False
+        instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
+        if not instrs or instrs[-1].opname not in CONDITIONAL_JUMP_OPS:
+            return False
+        if self._has_match_op(block):
+            return False
+        for idx in range(len(instrs) - 2):
+            if (instrs[idx].opname == 'COPY'
+                    and instrs[idx + 1].opname in ('STORE_FAST', 'STORE_NAME',
+                                                   'STORE_GLOBAL', 'STORE_DEREF')
+                    and instrs[idx + 2].opname in ('LOAD_FAST', 'LOAD_NAME',
+                                                   'LOAD_GLOBAL', 'LOAD_DEREF')
+                    and instrs[idx + 2].argval == instrs[idx + 1].argval):
+                return True
+        return False
 
     def _is_case_fail_handler(self, block: 'BasicBlock') -> bool:
         meaningful = [i for i in block.instructions if i.opname not in NOISE_OPS]
