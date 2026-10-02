@@ -12,8 +12,8 @@ def match_capture_after_cases(x):
             return 'zero'
         case 1:
             return 'one'
-        case _:
-            return (other,)
+        case other:
+            return ('fallback', other)
 def match_wildcard_tail(x):
     """Attack 3: wildcard _ as tail default."""
     match x:
@@ -30,6 +30,8 @@ def match_wildcard_inside(seq):
             return ('second', second)
         case [only]:
             return ('only', only)
+        case _:
+            return 'len-other'
 def match_capture_in_mapping(d):
     """Attack 5: capture inside mapping + bare capture tail."""
     match d:
@@ -37,5 +39,5 @@ def match_capture_in_mapping(d):
             return ('k', v)
         case {}:
             return 'empty-map'
-        case _:
-            return (whatever,)
+        case whatever:
+            return ('notmap', whatever)

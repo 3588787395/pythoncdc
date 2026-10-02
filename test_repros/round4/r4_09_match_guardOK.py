@@ -27,16 +27,18 @@ def match_guard_seq(seq):
             return ('desc', a, b)
         case [a, b]:
             return ('eq', a)
+        case _:
+            return 'notpair'
 def match_guard_mixed_multi(x):
     """Attack 4: guards interleaved with plain cases (multi-case + guard mixed)."""
     match x:
-        case 0 as v:
+        case 0:
             return 'zero'
-        case v:
+        case v if v % 2 == 0:
             return ('even', v)
-        case {'type': 'MatchAs', 'pattern': <core.ast_nodes.ASTConstant object at 0x000002AFE309F2E0>, 'name': 'v'} | {'type': 'MatchAs', 'pattern': <core.ast_nodes.ASTConstant object at 0x000002AFE309F330>, 'name': 'v'} | {'type': 'MatchAs', 'pattern': <core.ast_nodes.ASTConstant object at 0x000002AFE309F380>, 'name': 'v'}:
+        case 3 | 5 | 7:
             return 'prime-odd'
-        case v:
+        case v if v % 2 == 1:
             return ('odd', v)
         case _:
             return 'huge'

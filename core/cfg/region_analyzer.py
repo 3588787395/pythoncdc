@@ -13317,6 +13317,13 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                     if saw_unpack:
                         saw_unpack = False
                         idx += 1
+                        # [B14 修复] 模式绑定 STORE 全部消耗完（且无未完成的
+                        # unpack 槽位）⇒ body 从下一条指令开始。原实现继续行走，
+                        # body 首条 LOAD_CONST（如 `case other: return (other, 0)`
+                        # 体首常量 'fallback'）被 LOAD_CONST 跳过分支吞食，体首
+                        # 元素丢失（C1 局部消费破口）。
+                        if not pattern_store_names:
+                            break
                         continue
                     store_name = instrs[idx].argval
                     if store_name in pattern_store_names:
@@ -13325,6 +13332,11 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                             pattern_store_counts[store_name] = 1
                             pattern_store_names.discard(store_name)
                             idx += 1
+                            # [B14 修复] 同上：模式头 STORE（捕获绑定）消耗完
+                            # 即为模式/体边界——模式头 STORE 属于模式绑定，
+                            # 其后指令全部属于 case 体（每块唯一归属）。
+                            if not pattern_store_names and not saw_unpack:
+                                break
                             continue
                     if not pattern_store_names:
                         idx += 1
@@ -13566,7 +13578,7 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 stripped.discard(merge_block)
             stripped_bodies.append(stripped)
 
-        merged_p, merged_b, i = [], [], 0
+        merged_p, merged_b, merged_blocks, i = [], [], [], 0
         while i < len(case_blocks):
             orps, body = [case_patterns[i]], set(stripped_bodies[i])
             j = i + 1
@@ -13584,8 +13596,18 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 self._apply_or_capture_name(or_pattern, body)
             merged_p.append(or_pattern)
             merged_b.append(sorted(body, key=lambda b: b.start_offset))
+            # [B12 伴生修复] case_blocks 同步压缩为每组的首个 case 块：
+            # or 等价体合并把 k 个 case 收敛为 1 个 MatchOr pattern，但原实现
+            # 保留未压缩的 case_blocks（k 个），导致 case_blocks / case_patterns
+            # / case_bodies 三者长度失配——下游 case_guards（按 case_blocks 逐块
+            # 解析）与 patterns/bodies 按下标 zip 时错位（合并组之后的 case 全部
+            # 借位：守卫丢失、pattern 串位，如 r4_09 `case v if v % 2 == 1` 的
+            # 守卫被借给 or 组后的 case）。每组取首个 case 块（其 pattern/
+            # guard 语义代表该组：or 组各交替共享同一 body 与组首 pattern 头）
+            # 后三者严格对齐（每块唯一归属：下标即归属）。
+            merged_blocks.append(case_blocks[i])
             i = j
-        return case_blocks, merged_p, merged_b, merge_block, all_blocks
+        return merged_blocks, merged_p, merged_b, merge_block, all_blocks
 
     def _apply_or_capture_name(self, or_pattern: Dict[str, Any], body: Set[BasicBlock]):
         STORE_OPS = frozenset({'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'})
@@ -13686,7 +13708,20 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                             body_set = set(default_body)
                             all_blocks.update(body_set)
                             case_blocks.append(current)
-                            case_patterns.append({'type': 'MatchAs'})
+                            # [B14 修复] 无条件跳转的 case 块（尾通配 `case _:` 或
+                            # 捕获尾 `case other:`）此前一律硬编码通配 pattern，
+                            # 捕获名 STORE（CPython 在 case 入口 STORE 被匹配值
+                            # 副本）被丢弃 → `case other:` 降级 `case _` 且体引用
+                            # 未定义名。归约：parse_case_pattern 按块结构解析，
+                            # 仅接受「带名 MatchAs」（捕获头 STORE 归属模式绑定，
+                            # 见 pattern_parser._extract_capture_head_store 三要
+                            # 素）；其余形态保守回退通配，行为不变。
+                            _tail_pat = self.pattern_parser.parse_case_pattern(current)
+                            if not (isinstance(_tail_pat, dict)
+                                    and _tail_pat.get('type') == 'MatchAs'
+                                    and _tail_pat.get('name')):
+                                _tail_pat = {'type': 'MatchAs'}
+                            case_patterns.append(_tail_pat)
                             case_bodies.append(sorted(body_set, key=lambda b: b.start_offset))
                         else:
                             all_blocks.update(set(default_body))
@@ -14881,12 +14916,27 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
         # 对于简单 match（无 COPY），NOP 前缀块已被 _mr_collect_simple_body_blocks
         # 跳过（仅含 NOP 的块被合并到后继），因此此处不影响简单 match 的隐式
         # default 识别（简单 match 有无 case _ 字节码过滤后等价）。
+        # [B13 修复] 结构型模式（MATCH_SEQUENCE/MATCH_MAPPING/MATCH_CLASS）链的
+        # 尾通配 `case _:` 块形态为 POP_TOP（丢弃被匹配值）; NOP（显式 case 体
+        # 标记）; <体>——POP_TOP 在 NOP 之前，原判据（仅当 NOP 是首条非 NOISE
+        # 指令时才认标记）漏判该形态，尾 case 被误归为隐式 default（C1 破口：
+        # 尾 case 体局部消费丢失）。判据扩展：跳过前导 POP_TOP（通配符对被匹配
+        # 值的消费是模式头的结构组成）后再认 NOP 标记。NOP 是编译器按 case 发射
+        # 的显式结构标记而非位置特例，不依赖「这是最后一个 case」（[C3] 显式
+        # 守卫），任意 case 链位置/任意模式类型/任意嵌套深度同判（嵌套无感）。
         for block in body_blocks:
+            _saw_leading_pop = False
             for instr in block.instructions:
+                # 注意：NOP ∈ NOISE_OPS，但在本判据中 NOP 是显式 case 体标记
+                # 本体，必须先于 NOISE 跳过检查（原判据同序，勿改）。
                 if instr.opname == 'NOP':
                     return False
-                elif instr.opname not in NOISE_OPS:
-                    break
+                if instr.opname in NOISE_OPS:
+                    continue
+                if instr.opname == 'POP_TOP' and not _saw_leading_pop:
+                    _saw_leading_pop = True
+                    continue
+                break
         for block in body_blocks:
             meaningful = [i for i in block.instructions if i.opname not in trivial_ops]
             if meaningful:
@@ -14906,7 +14956,52 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 return False
         return True
 
+    def _mr_block_has_explicit_case_marker(self, block: 'BasicBlock') -> bool:
+        """[B13 修复] 检测块是否携带 CPython 显式 case 体标记（NOP）。
+
+        【识别条件】CPython 3.10+ 为每个**显式** `case` 的体发射 NOP 标记
+        （even `case _: pass`）。尾通配 `case _:` 的块形态为
+        ``POP_TOP（丢弃被匹配值）; NOP; <体>``——POP_TOP 在 NOP **之前**，
+        与「隐式 fail 后继块」（无 `case _` 时 match 结束的续块，
+        ``POP_TOP; LOAD_CONST None; RETURN_VALUE``，无 NOP）仅凭 NOP 有无区分。
+        本判据遍历块内指令：跳过 NOISE（RESUME/CACHE 等），允许前导
+        POP_TOP（通配符对被匹配值的消费），其后紧跟 NOP 即为显式 case 标记。
+
+        【归约方式】纯块内字节码结构事实判据（操作码序列形态），不读取
+        邻居块/父区域信息，不依赖 case 在链中的位置（第几个 case）。
+
+        【AST 映射】不直接产出 AST；作为守卫供 _is_pattern_fail_handler /
+        _is_implicit_default_body 排除误判，使尾通配块走 case 登记路径
+        （→ MatchAs wildcard case → ast.match_case）。
+
+        [C1] 只读 block.instructions（L(A) 局部）；[C2] 不窥视任何子/父
+        区域内部；[C3] NOP 标记是 CPython 编译器的显式结构标记而非位置
+        特例——嵌套 match 的 case 体同样带 NOP（标记由编译器按 case 发射，
+        与嵌套深度无关），故判据嵌套无感。
+        """
+        _saw_leading_pop = False
+        for instr in block.instructions:
+            # 注意：NOP ∈ NOISE_OPS，但在本判据中 NOP 是显式 case 体标记本体，
+            # 必须先于 NOISE 跳过检查（与 _is_implicit_default_body 原判据一致）。
+            if instr.opname == 'NOP':
+                return True
+            if instr.opname in NOISE_OPS:
+                continue
+            if instr.opname == 'POP_TOP' and not _saw_leading_pop:
+                _saw_leading_pop = True
+                continue
+            return False
+        return False
+
     def _is_pattern_fail_handler(self, block: 'BasicBlock') -> bool:
+        # [B13 修复] 显式 case 体标记守卫：携带 NOP 标记的块（POP_TOP; NOP; 体）
+        # 是显式 case（如尾通配 `case _:`）的头部块，不是 pattern fail handler。
+        # 此前 POP_TOP+平凡 return 的尾通配块因前驱含 MATCH_* 被误判为 fail
+        # handler，_mr_collect_case_body 据此 break，尾 case 整体不登记（C1 破口）。
+        # NOP 标记是编译器按 case 发射的结构事实（见 _mr_block_has_explicit_case_marker
+        # docstring 的 C1/C2/C3 条款），判据不依赖 case 位置，嵌套无感。
+        if self._mr_block_has_explicit_case_marker(block):
+            return False
         meaningful = [i for i in block.instructions if i.opname not in NOISE_OPS]
         if not meaningful:
             return False

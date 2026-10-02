@@ -3,8 +3,8 @@
 
 def match_in_for_break(items):
     """Attack 1: for-loop with match, break inside case body."""
-    match _:
-        case 0 as n:
+    match item:
+        case 0:
             pass
         case _:
             total += n
@@ -48,6 +48,8 @@ def nested_match_seq(pair):
             if 2:
                 return ('list2', a + b)
             return ('list?', payload)
+        case _:
+            return 'notpair'
 def match_in_for_guard(items):
     """Attack 6: for-loop with guarded match cases controlling flow."""
     acc = []

@@ -21,6 +21,8 @@ def match_class_kwargs(p):
             return ('x', x)
         case Point(x=x, y=y):
             return ('xy', x, y)
+        case _:
+            return 'notpoint'
 def match_class_positional(p):
     """Attack 2: class pattern with positional patterns (needs __match_args__)."""
     match p:
@@ -30,6 +32,8 @@ def match_class_positional(p):
             return 'white'
         case Color(r, g, b):
             return (r, g, b)
+        case _:
+            return 'notcolor'
 def match_class_mixed(p):
     """Attack 3: positional + keyword mixed class pattern."""
     match p:
@@ -39,6 +43,8 @@ def match_class_mixed(p):
             return ('diagonal', x)
         case Point(x=x):
             return ('x-only', x)
+        case _:
+            return 'other'
 def match_class_nested_value(p):
     """Attack 4: class pattern with nested literal/sequence patterns."""
     match p:
@@ -48,3 +54,5 @@ def match_class_nested_value(p):
             return 1
         case Point(x=x, y=y):
             return abs(x) + abs(y)
+        case _:
+            return -1

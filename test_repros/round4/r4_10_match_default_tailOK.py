@@ -46,8 +46,8 @@ def match_default_capture_tail(x):
             return 'false'
         case 0:
             return 'zero'
-        case _:
-            return (val,)
+        case val:
+            return ('captured', val)
 def match_default_nested_tail(x):
     """Attack 5: default tail body containing if/else."""
     match x:

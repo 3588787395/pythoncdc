@@ -30,7 +30,7 @@ def match_value_int_str_mixed(x):
             return 2
         case 'b':
             return 3
-        case _:
+        case other:
             return (other, 0)
 def match_value_expr_body(x):
     """Attack 4: value cases with non-trivial bodies (loop + assignment)."""

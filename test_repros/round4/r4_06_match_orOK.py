@@ -22,9 +22,9 @@ def match_or_str(x):
 def match_or_sequence(seq):
     """Attack 3: or-pattern over sequence shapes."""
     match seq:
-        case {'type': 'MatchSequence', 'patterns': [<core.ast_nodes.ASTConstant object at 0x0000019526368D10>, <core.ast_nodes.ASTConstant object at 0x0000019526369350>], 'as_name': None} | {'type': 'MatchSequence', 'patterns': [<core.ast_nodes.ASTConstant object at 0x0000019526368E00>, <core.ast_nodes.ASTConstant object at 0x00000195263690D0>], 'as_name': None}:
+        case [0, 0] | [1, 1]:
             return 'diagonal'
-        case {'type': 'MatchSequence', 'patterns': [<core.ast_nodes.ASTConstant object at 0x0000019526368810>, <core.ast_nodes.ASTName object at 0x0000019528469D20>], 'as_name': None} | {'type': 'MatchSequence', 'patterns': [<core.ast_nodes.ASTName object at 0x0000019528469DE0>, <core.ast_nodes.ASTConstant object at 0x00000195263687C0>], 'as_name': None}:
+        case [0, y] | [y, 0]:
             return ('axis', y)
         case _:
             return 'elsewhere'

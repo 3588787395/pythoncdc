@@ -510,6 +510,20 @@ class PatternParser:
                         var_name = instr.argval
                         return {'type': 'Name', 'id': var_name}
 
+        if guard_start is None and search_start > 0:
+            # [B12 伴生修复] capture+guard 算术守卫链回退（如
+            # `case v if v % 2 == 0:` → 守卫 v % 2 == 0）。识别/归约/映射三要素
+            # 与 [C1]/[C2]/[C3] 条款见 _extract_arithmetic_guard docstring。
+            # 守卫与模式头同块（capture+guard 形态守卫紧跟模式头 STORE），
+            # case 体在后续块（守卫跳转终止头块），不与 body 重复生成；
+            # search_start > 0（头块存在模式头 STORE）排除通配+guard 形态
+            # （守卫前无 STORE，链起点在头块且该块即 body 载体，维持原
+            # 「不提取」行为避免重复）。
+            _arith = self._extract_arithmetic_guard(
+                all_instrs, search_start, first_block_instr_count)
+            if _arith is not None:
+                return _arith
+
         if guard_start is None:
             for i in range(search_start, len(all_instrs)):
                 instr = all_instrs[i]
@@ -544,6 +558,138 @@ class PatternParser:
                                 'right': {'type': 'Constant', 'value': right_val}
                             }
 
+        return None
+
+    def _extract_arithmetic_guard(self, all_instrs: List['Instruction'],
+                                  search_start: int,
+                                  first_block_instr_count: int) -> Optional[Dict[str, Any]]:
+        """[B12 伴生修复] capture+guard 算术守卫链提取（`case v if v % 2 == 0:`）。
+
+        【识别条件】模式头 STORE 之后（search_start 起）的**首个模式块内**
+        存在 LOAD_VAR 开头的守卫表达式链：仅含 LOAD_VAR / LOAD_CONST /
+        BINARY_OP / COMPARE_OP / IS_OP / CONTAINS_OP，链被 fail 极性条件跳转
+        （IF_FALSE/IF_NONE/IF_NOT_NONE——模式失败→下一 case 的结构边）终止；
+        多段链（and/or 组合，段间以条件跳转分界）按段收集。守卫与模式头同块
+        是 capture+guard 的字节码形态（``COPY; STORE v; <守卫>; JUMP_FALSE→
+        下一case``），守卫跳转终止头块 ⇒ case 体在后续块，提取不与 body 重复；
+        search_start > 0（头块存在模式头 STORE）排除通配+guard 形态（该形态
+        头块即 body 载体，维持原「不提取」行为防重复）。
+
+        【归约方式】CPython 3.11 栈式字节码的后缀表达式结构事实：操作数栈
+        求值（LOAD_*→Name/Constant，BINARY_OP→BinOp，COMPARE_OP/IS_OP/
+        CONTAINS_OP→Compare）；多段按既有约定组合——首段跳转为 IF_TRUE
+        （or-guard 成功边）⇒ BoolOp 'or'，否则 'and'。
+
+        【AST 映射】→ Compare / BoolOp 守卫 dict（与既有 guard 词汇一致），
+        由 ast_converter._convert_expression 转换为守卫表达式。
+
+        [C1] 只读 pattern_blocks 指令流（L(A) 局部）；[C2] 守卫是 match_case
+        的接口组成部分，不窥视任何子区域内部；[C3] 链边界由操作码集合与
+        fail 边极性驱动（跳转极性是操作码语义，不是 case 位置特例），链起点
+        以「模式头 STORE 在前」封闭（显式守卫排除通配形态），任意嵌套深度/
+        case 链位置同判——嵌套无感。
+        """
+        EXPR_OPS = frozenset({
+            'BINARY_OP', 'COMPARE_OP', 'IS_OP', 'CONTAINS_OP',
+            'UNARY_NEGATIVE', 'UNARY_NOT', 'UNARY_INVERT',
+        })
+        FAIL_OPS = frozenset({
+            'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE',
+            'POP_JUMP_BACKWARD_IF_FALSE',
+            'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_IF_NONE',
+            'POP_JUMP_BACKWARD_IF_NONE',
+            'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE',
+            'POP_JUMP_BACKWARD_IF_NOT_NONE',
+        })
+        TRUE_OPS = frozenset({
+            'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE',
+            'POP_JUMP_BACKWARD_IF_TRUE',
+        })
+        n = len(all_instrs)
+        for i in range(search_start, min(n, first_block_instr_count)):
+            if all_instrs[i].opname not in self.LOAD_VAR_OPS:
+                continue
+            segments = []  # (expr, jump_opname)
+            cur = i
+            j = i
+            aborted = False
+            while j < min(n, first_block_instr_count):
+                op = all_instrs[j].opname
+                if op in FAIL_OPS or op in TRUE_OPS:
+                    expr = self._eval_guard_expr_stack(all_instrs[cur:j])
+                    if expr is None:
+                        aborted = True
+                        break
+                    segments.append((expr, op))
+                    j += 1
+                    # 守卫链继续条件：跳转后紧跟 LOAD_VAR（and/or 组合段）
+                    if j < min(n, first_block_instr_count) and all_instrs[j].opname in self.LOAD_VAR_OPS:
+                        cur = j
+                        continue
+                    break
+                if op in EXPR_OPS or op in self.LOAD_VAR_OPS or op == 'LOAD_CONST':
+                    j += 1
+                    continue
+                break
+            if aborted or not segments:
+                continue
+            if len(segments) == 1:
+                return segments[0][0]
+            first_jump_is_true = segments[0][1] in TRUE_OPS
+            return {
+                'type': 'BoolOp',
+                'op': 'or' if first_jump_is_true else 'and',
+                'values': [seg[0] for seg in segments],
+            }
+        return None
+
+    _BINARY_OP_ARG_MAP = {
+        # CPython 3.11+ BINARY_OP argval 是 NB 表整数 arg（0=NB_ADD…），非符号
+        # 字符串；与 region_ast_generator._binary_op_arg_to_str 同表同义。
+        0: '+',   1: '&',   2: '//',  3: '<<',  4: '@',   5: '*',
+        6: '%',   7: '|',   8: '**',  9: '>>',  10: '-',  11: '/',  12: '^',
+    }
+
+    def _eval_guard_expr_stack(self, instrs: List['Instruction']) -> Optional[Dict[str, Any]]:
+        """[B12 伴生修复] 对守卫表达式链做操作数栈求值（见
+        _extract_arithmetic_guard docstring 的识别/归约/映射三要素与
+        C1/C2/C3 条款）。链中出现任何非表达式操作码（STORE/POP_TOP/跳转等）
+        即判非纯表达式返回 None（保守回退，不猜测）。"""
+        stack = []
+        for ins in instrs:
+            op = ins.opname
+            if op in self.LOAD_VAR_OPS:
+                stack.append({'type': 'Name', 'id': ins.argval})
+            elif op == 'LOAD_CONST':
+                stack.append({'type': 'Constant', 'value': ins.argval})
+            elif op == 'BINARY_OP':
+                if len(stack) < 2:
+                    return None
+                right = stack.pop()
+                left = stack.pop()
+                opval = self._BINARY_OP_ARG_MAP.get(ins.argval, ins.argval) \
+                    if isinstance(ins.argval, int) else ins.argval
+                stack.append({'type': 'BinOp', 'left': left, 'op': opval, 'right': right})
+            elif op in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+                if len(stack) < 2:
+                    return None
+                right = stack.pop()
+                left = stack.pop()
+                opval = ins.argval
+                if op == 'IS_OP':
+                    opval = 'is' if not ins.argval else 'is not'
+                elif op == 'CONTAINS_OP':
+                    opval = 'in' if not ins.argval else 'not in'
+                stack.append({
+                    'type': 'Compare',
+                    'left': left,
+                    'ops': [{'type': 'CompareOp', 'op': opval}],
+                    'right': right,
+                })
+            else:
+                return None
+        if len(stack) == 1 and isinstance(stack[0], dict) and stack[0].get('type') == 'Compare':
+            return stack[0]
         return None
 
     def _find_real_match_header(self, partial_block: BasicBlock) -> Optional[BasicBlock]:
@@ -801,6 +947,12 @@ class PatternParser:
             result = self._extract_mapping_pattern(all_pattern_instrs)
         else:
             result = {'type': 'MatchAs'}
+            # [B14 修复] 捕获头 STORE 归属：裸捕获 case（`case other:`）的
+            # 头块首条有效指令是 STORE_*（CPython 在 case 入口直接 STORE
+            # 被匹配值副本），该 STORE 属于模式绑定而非 case 体。
+            _cap_name = self._extract_capture_head_store(case_block)
+            if _cap_name:
+                result['name'] = _cap_name
 
         if result.get('type') in ('MatchValue', 'MatchSingleton', 'MatchOr'):
             as_name = self._find_as_binding(case_block)
@@ -812,6 +964,54 @@ class PatternParser:
                 result['name'] = as_name
 
         return result
+
+    def _extract_capture_head_store(self, case_block: BasicBlock) -> Optional[str]:
+        """[B14 修复] 捕获模式 `case <name>:` 的模式头 STORE 归属。
+
+        【识别条件】case 头块**不含任何模式匹配指令**（MATCH_* /
+        COMPARE_OP / IS_OP / GET_LEN / UNPACK_*），且首条非 NOISE 指令为
+        STORE_*。字节码依据：CPython 把 `case <name>:` 编译为在 case 入口
+        直接 ``STORE_<name>``（前序 case 的失败跳转把被匹配值副本留在栈上，
+        STORE 消费它）——该 STORE 是模式头的绑定动作，其后同块指令（LOAD /
+        BUILD_TUPLE / RETURN…）才是 case 体。裸捕获单 case（``match x:
+        case val:``）头块首条指令是 LOAD subject，不满足本判据，维持既有
+        字节等价降级路径（``val = x``）不变。
+
+        【归约方式】块内首条 STORE 的 argval 即捕获名；后续 STORE 全部
+        归属 case 体（模式头 STORE 属于模式绑定，后续 STORE 属于 case 体
+        ——每块唯一归属：一条 STORE 一个归属）。
+
+        【AST 映射】→ {'type': 'MatchAs', 'name': <name>}（ast.MatchAs
+        捕获模式），由 code_generator 渲染 `case <name>:`。
+
+        [C1] 只读 case_block.instructions（L(A) 局部）；[C2] 不窥视子/父
+        区域；[C3] 判据是「模式匹配指令不存在 ∧ 首条有效指令为 STORE」的
+        结构事实，与 case 在链中位置无关（首 case/中间/尾 case 同判），
+        捕获名绑定语义由编译器 STORE 槽位保证，嵌套无感。
+        """
+        PATTERN_OPS = frozenset({
+            'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
+            'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
+            'COMPARE_OP', 'IS_OP', 'GET_LEN',
+            'UNPACK_SEQUENCE', 'UNPACK_EX', 'UNPACK_EXTRACT',
+        })
+        instrs = [i for i in case_block.instructions
+                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        if not instrs:
+            return None
+        if any(i.opname in PATTERN_OPS for i in instrs):
+            return None
+        # [B14 修复] 允许前导 POP_TOP：前序 case 的 COPY 1 留下的被匹配值副本
+        # 由失败路径的 POP_TOP 清理，其后紧跟的 STORE_* 才是捕获绑定（STORE
+        # 直接消费栈顶被匹配值副本——栈平衡的结构事实；case 体 STORE 前必有
+        # 加载指令，故「POP_TOP* 后紧跟 STORE」唯一对应捕获头）。
+        for ins in instrs:
+            if ins.opname == 'POP_TOP':
+                continue
+            if ins.opname in self.STORE_OPS:
+                return ins.argval
+            return None
+        return None
 
     def _has_as_binding_copy(self, filtered) -> bool:
         """区域归约算法原则 2（每块唯一归属）：区分 as-binding COPY 与
@@ -933,26 +1133,62 @@ class PatternParser:
 
         return None
 
+    def _fail_jump_target_offsets(self, block: BasicBlock) -> set:
+        """[B14 修复] 计算块内 fail 极性条件跳转的目标偏移集合。
+
+        【识别条件】match 模式匹配链中，模式失败沿条件跳转离开当前 case：
+        fail 极性跳转 = IF_FALSE 族（字面量/序列比较失败）+ IF_NONE /
+        IF_NOT_NONE 族（MATCH_KEYS 键检查 / singleton None 检查失败）。
+        IF_TRUE 族是 or-guard 的成功边（跳向 case 体），不属 fail 极性。
+
+        【归约方式】as 绑定协议（每块唯一归属）：as 绑定的 STORE 在**成功
+        路径**上（模式匹配成功后的 fall-through/无条件边可达）；fail 边的
+        目标是下一 case 的头块（其首部 STORE 是下一 case 的模式头绑定，
+        如 `case v if …:` 的 STORE v）。沿 BFS 查找 as 绑定时排除 fail 边
+        目标，防止把下一 case 的捕获头 STORE 误识为当前 case 的 as 绑定
+        （幻影捕获注入，如 `case 0:` → `case 0 as v:`）。
+
+        【AST 映射】不直接产出 AST；作为 _find_last_store_on_success_path /
+        _find_store_in_successors 的后继过滤守卫，保证 MatchAs.name 只取
+        自本 case 的绑定。
+
+        [C1] 只读 block.instructions/.successors（L(A) 局部）；[C2] 不窥视
+        子/父区域内部；[C3] fail 边目标是模式匹配链的结构事实（跳转极性由
+        操作码语义决定，不由 case 位置决定），任意嵌套深度/链位置的 case
+        同判——嵌套无感。
+        """
+        fail_ops = frozenset({
+            'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE',
+            'POP_JUMP_BACKWARD_IF_FALSE',
+            'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_IF_NONE',
+            'POP_JUMP_BACKWARD_IF_NONE',
+            'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE',
+            'POP_JUMP_BACKWARD_IF_NOT_NONE',
+        })
+        return {i.argval for i in block.instructions if i.opname in fail_ops and i.argval is not None}
+
     def _find_last_store_on_success_path(self, case_block: BasicBlock) -> Optional[str]:
         """
         沿成功路径查找最后一个STORE_指令（as绑定通常在pattern最后）
 
         成功路径：从case_block开始，沿每个条件跳转的fall-through后继遍历，
         直到遇到非pattern块。收集路径上所有STORE_指令，返回最后一个。
+
+        [B14 修复] 成功路径遍历排除 fail 极性条件跳转目标（见
+        _fail_jump_target_offsets）：fail 边目标是下一 case 头块，其首部
+        STORE 属于下一 case 的模式头绑定，不是本 case 的 as 绑定。原实现
+        对「块末为无条件跳转」的块（如 or-pattern 交替块）扩展全部后继，
+        会经 fail 边泄漏进下一 case 链（幻影捕获注入）。
         """
         stores = []
         visited = {case_block}
         queue = deque()
 
-        # 从case_block的fall-through后继开始
-        last = case_block.get_last_instruction()
-        if last and last.opname in self.COND_JUMP_OPS:
-            for succ in case_block.successors:
-                if succ.start_offset != last.argval:
-                    queue.append(succ)
-                    break
-        else:
-            queue.extend(case_block.successors)
+        # 从case_block的成功后继开始（排除 fail 极性跳转目标）
+        excluded = self._fail_jump_target_offsets(case_block)
+        for succ in case_block.successors:
+            if succ.start_offset not in excluded:
+                queue.append(succ)
 
         while queue:
             blk = queue.popleft()
@@ -970,18 +1206,11 @@ class PatternParser:
                 if instr.opname in self.STORE_OPS:
                     stores.append(instr.argval)
 
-            # 继续沿成功路径
-            last = blk.get_last_instruction()
-            if last and last.opname in self.COND_JUMP_OPS:
-                for succ in blk.successors:
-                    if succ.start_offset != last.argval:
-                        queue.append(succ)
-                        break
-            else:
-                # 非条件跳转块，检查是否还有pattern后继
-                for succ in blk.successors:
-                    if succ not in visited and self._is_pattern_block_for_as(succ):
-                        queue.append(succ)
+            # 继续沿成功路径（排除 fail 极性跳转目标）
+            excluded = self._fail_jump_target_offsets(blk)
+            for succ in blk.successors:
+                if succ not in visited and succ.start_offset not in excluded:
+                    queue.append(succ)
 
         # 返回最后一个STORE_（as绑定在pattern最后）
         if stores:
@@ -1041,9 +1270,21 @@ class PatternParser:
         return has_pattern and not has_body
 
     def _find_store_in_successors(self, case_block: BasicBlock) -> Optional[str]:
-        """BFS搜索所有后继块查找STORE_指令（用于COPY场景的as绑定）"""
+        """BFS搜索所有后继块查找STORE_指令（用于COPY场景的as绑定）
+
+        [B14 修复] BFS 排除 fail 极性条件跳转目标（见
+        _fail_jump_target_offsets docstring 的三要素与 C1/C2/C3 条款）：
+        fail 边目标是下一 case 头块，其首部 STORE（下一 case 的模式头绑定，
+        如 `case v if …:` 的 STORE v）不是本 case 的 as 绑定。原实现无差别
+        扩展全部后继，把下一 case 的捕获名误识为本 case 的 as 绑定
+        （`case 0:` → 幻影 `case 0 as v:`）。
+        """
         visited = {case_block}
-        queue = deque(case_block.successors)
+        queue = deque()
+        excluded = self._fail_jump_target_offsets(case_block)
+        for succ in case_block.successors:
+            if succ.start_offset not in excluded:
+                queue.append(succ)
 
         while queue:
             blk = queue.popleft()
@@ -1059,7 +1300,10 @@ class PatternParser:
                 if instr.opname in self.STORE_OPS:
                     return instr.argval
 
-            queue.extend(blk.successors)
+            excluded = self._fail_jump_target_offsets(blk)
+            for succ in blk.successors:
+                if succ not in visited and succ.start_offset not in excluded:
+                    queue.append(succ)
 
         return None
 
@@ -1094,7 +1338,8 @@ class PatternParser:
                 break
         return result
 
-    def _extract_sequence_pattern(self, instrs: List[Instruction]) -> Dict[str, Any]:
+    def _extract_sequence_pattern(self, instrs: List[Instruction],
+                                  allow_own_as_store: bool = True) -> Dict[str, Any]:
         """
         从指令序列中提取MatchSequence pattern
 
@@ -1109,6 +1354,24 @@ class PatternParser:
         - UNPACK_EX的arg参数：低8位=before个数，高8位=after个数
         - STORE_指令可能在后续块中，需要从all_pattern_instrs中查找
         - POP_TOP表示通配符（_），不消耗store_names
+
+        [B14 修复] allow_own_as_store 参数（嵌套无感的关键）：
+        【识别条件】嵌套子序列（外层 UNPACK 槽位上的 ``[...]`` 子模式）的
+        as 绑定（``[[a, b] as c, d]`` 的 ``as c``）在字节码中表现为子模式
+        MATCH_SEQUENCE **之前**的 COPY 1（为 as 绑定保存子值副本）——
+        ``case [[a, b], c]:``（无内层 as）无该 COPY，二者 STORE 流相同
+        （a, b, c…），纯 STORE 序列不可区分，COPY 前缀是唯一结构事实。
+        【归约方式】allow_own_as_store=False（嵌套递归调用）时，子序列自身
+        槽位消耗完（unpack_stack 空）后的 STORE 不归属本子序列的 as_name
+        ——它们属于外层模式的后续槽位绑定；外层则按
+        _nested_sequence_slot_consumers_end 计数跳过子模式自身的槽位消费指令
+        后继续绑定余下槽位（每块唯一归属：一条 STORE 只归属一个槽位）。
+        【AST 映射】→ MatchSequence.as_name 仅在 allow_own_as_store=True 且
+        存在 COPY 前缀时产出。
+        [C1] 只读传入指令窗口与 COPY 前缀（L(A) 局部）；[C2] 子模式作为
+        抽象节点由外层跳过其内部指令，不窥视其绑定细节之外的信息；[C3]
+        COPY 前缀判据由编译器按「是否确有内层 as 绑定」发射，与嵌套深度/
+        槽位序号无关，嵌套无感。
         """
         patterns = []
         length_val = None
@@ -1128,7 +1391,12 @@ class PatternParser:
         in_unpack_context = False
         unpack_stack = []
         seen_pattern_instr = False
+        skip_until = 0
         for idx, instr in enumerate(filtered):
+            if idx < skip_until:
+                # [B14 修复] 已归属嵌套子模式的槽位消费指令（其 STORE/POP_TOP）
+                # 不再被外层槽位绑定重复消费（每块唯一归属）。
+                continue
             if instr.opname in ('MATCH_SEQUENCE', 'MATCH_CLASS', 'MATCH_MAPPING',
                                 'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
                                 'GET_LEN', 'UNPACK_SEQUENCE', 'UNPACK_EX',
@@ -1205,7 +1473,7 @@ class PatternParser:
                     # 不应记录为capture也不应设为as_name，直接跳过
                     if slot != -1:
                         slot_actions.setdefault(slot, {'type': 'capture', 'name': var_name})
-                elif seen_pattern_instr:
+                elif seen_pattern_instr and allow_own_as_store:
                     # 区域归约算法原则 2（每块唯一归属）：as_name 的
                     # STORE 必须出现在 pattern 匹配指令（MATCH_*/GET_LEN/UNPACK_*/
                     # COMPARE_OP）之后——as 绑定在所有 pattern 匹配成功后才 STORE
@@ -1213,6 +1481,9 @@ class PatternParser:
                     # 它是 case header 块前导的 for-target STORE（`for i in r: match
                     # s: case [a, *b]:` 中 for-target STORE_NAME i 与 match subject
                     # LOAD_NAME s 同块），不归属 pattern，不应误设为 as_name。
+                    # [B14 修复] allow_own_as_store=False（嵌套子序列调用）时，
+                    # 自身槽位消耗完后的 STORE 属于外层模式的后续槽位，不归属
+                    # 本子序列 as_name（判据见方法 docstring）。
                     as_name = var_name
             elif instr.opname == 'LOAD_CONST' and idx + 1 < len(filtered) and filtered[idx + 1].opname == 'COMPARE_OP':
                 literal_val = instr.argval
@@ -1227,12 +1498,22 @@ class PatternParser:
                     if slot == -1:
                         continue
                     nested_instrs = filtered[idx:]
+                    # [B14 修复] 内层 as 绑定的结构事实：子模式 MATCH_SEQUENCE
+                    # 前紧邻 COPY 1（为内层 as 绑定保存子值副本）。有 COPY ⇒
+                    # 内层槽位消耗完后的下一个 STORE 是内层 as 绑定；无 COPY ⇒
+                    # 该 STORE 属于外层余下槽位（见方法 docstring 三要素）。
+                    _own_as = idx > 0 and filtered[idx - 1].opname == 'COPY'
                     if instr.opname == 'MATCH_SEQUENCE':
-                        nested_pattern = self._extract_sequence_pattern(nested_instrs)
+                        nested_pattern = self._extract_sequence_pattern(
+                            nested_instrs, allow_own_as_store=_own_as)
                     else:
                         nested_pattern = self._extract_class_pattern(nested_instrs)
                     slot_actions[slot] = {'type': 'nested', 'pattern': nested_pattern}
-                    break
+                    # 跳过内层子模式自身的槽位消费指令，外层继续绑定余下槽位
+                    # （[[a, b], c] 的 STORE c 属于外层 slot 1，不再被丢弃）。
+                    skip_until = self._nested_sequence_slot_consumers_end(
+                        filtered, idx, _own_as if instr.opname == 'MATCH_SEQUENCE' else False)
+                    continue
 
         if not has_unpack and length_val is not None:
             if length_compare_op == '==' or length_compare_op == 2:
@@ -1278,6 +1559,60 @@ class PatternParser:
         self._in_unpack_ex = False
 
         return result
+
+    def _nested_sequence_slot_consumers_end(self, filtered: List[Instruction],
+                                            idx: int, own_as: bool) -> int:
+        """[B14 修复] 计算嵌套子模式自身槽位消费指令的结束索引（不含）。
+
+        【识别条件】外层 UNPACK 槽位上的嵌套子模式（MATCH_SEQUENCE/
+        MATCH_CLASS）从 idx 开始；其自身槽位消费 = 子模式 UNPACK_*/UNPACK_EX
+        的 argval 个槽位（每个槽位由一个 STORE_* 或 POP_TOP 消费——STORE 为
+        捕获/字面量后绑定，POP_TOP 为通配），无 UNPACK 的子模式（如空序列
+        ``[]``）止于首个 POP_TOP/STORE；own_as=True（子模式 MATCH_* 前紧邻
+        COPY）时其后再多消费一个 STORE（内层 as 绑定）。
+
+        【归约方式】外层循环跳过 [idx, end) 区间指令后继续绑定余下槽位，
+        使子模式内部的 STORE 与外层余下槽位的 STORE 互不侵占（每块唯一
+        归属：一条 STORE 只归属一个槽位）。
+
+        【AST 映射】不直接产出 AST；保证嵌套 MatchSequence 的 slots 与
+        as_name 按栈消费顺序正确切分。
+
+        [C1] 只读传入 filtered 窗口（本 case 的模式指令窗口，L(A) 局部）；
+        [C2] 子模式作为抽象节点整体跳过，外层不解释其内部绑定语义；[C3]
+        消费计数由 UNPACK argval（编译器发射的槽位数）驱动，与槽位序号/
+        嵌套深度无关，嵌套无感。
+        """
+        n = len(filtered)
+        unpack_idx = None
+        unpack_count = 0
+        for j in range(idx + 1, n):
+            op = filtered[j].opname
+            if op == 'UNPACK_SEQUENCE':
+                unpack_idx = j
+                unpack_count = filtered[j].argval if filtered[j].argval is not None else 0
+                break
+            if op == 'UNPACK_EX':
+                unpack_idx = j
+                arg = filtered[j].argval if filtered[j].argval is not None else 0
+                unpack_count = (arg & 0xFF) + 1 + ((arg >> 8) & 0xFF)
+                break
+            if op in self.STORE_OPS or op == 'POP_TOP':
+                # 子模式无 UNPACK（如空序列 []）：其栈消费止于首个 POP_TOP/STORE
+                return j + 1
+        if unpack_idx is None:
+            return idx + 1
+        remaining = unpack_count
+        j = unpack_idx + 1
+        while j < n and remaining > 0:
+            op = filtered[j].opname
+            if op in self.STORE_OPS or op == 'POP_TOP':
+                remaining -= 1
+            j += 1
+        # own_as：子模式 COPY 前缀 ⇒ 其后第一个 STORE 是内层 as 绑定，一并跳过
+        if own_as and j < n and filtered[j].opname in self.STORE_OPS:
+            j += 1
+        return j
 
     def _extract_starred_sequence_pattern(self, filtered: List[Instruction]) -> Dict[str, Any]:
         length_val = None
@@ -1740,22 +2075,51 @@ class PatternParser:
             next_after_unpack = unpack_idx + 1
             has_nested_structural = (
                 next_after_unpack < len(filtered) and
-                filtered[next_after_unpack].opname in ('MATCH_SEQUENCE', 'MATCH_CLASS')
+                filtered[next_after_unpack].opname in ('MATCH_SEQUENCE', 'MATCH_CLASS', 'MATCH_MAPPING')
             )
             if has_nested_structural and count == 1 and len(patterns) >= 1:
                 nested_op = filtered[next_after_unpack].opname
                 nested_instrs = filtered[next_after_unpack:]
+                # [B14 修复] 嵌套值模式按其类型递归：MATCH_MAPPING 之前不在
+                # 判据内，嵌套 mapping（{"user": {"name": n, …}}）坍缩为对
+                # GET_LEN 常量的幻影 MatchValue（case {'user': 2}）。依据
+                # 「嵌套即抽象节点」[C2]：嵌套值模式按类型分派递归提取，
+                # mapping/sequence/class 三向同判（嵌套无感）。
                 if nested_op == 'MATCH_SEQUENCE':
                     nested_pattern = self._extract_sequence_pattern(nested_instrs)
+                elif nested_op == 'MATCH_MAPPING':
+                    nested_pattern = self._extract_mapping_pattern(nested_instrs)
                 else:
                     nested_pattern = self._extract_class_pattern(nested_instrs)
                 patterns[0] = nested_pattern
             elif count > 0:
+                # [B14 修复] **rest 的 STORE 归属 rest 绑定，不属于值槽位：
+                # ``case {'type': t, **rest}`` 编译为 …DICT_UPDATE; …;
+                # STORE rest; STORE t——rest 的 STORE 在值槽位 STORE 之前，
+                # 原槽位行走把 STORE rest 误填入 slot 0（t 丢失、rest 双绑）。
+                # 结构事实：DICT_UPDATE 之后首个 STORE_* 是 rest 绑定
+                # （步骤3 的 DICT_UPDATE→STORE 配对判据），一条 STORE 一个
+                # 归属（每块唯一归属），槽位行走跳过它。
+                _rest_store_offset = None
+                _last_dict_update = None
+                for _i, _ins in enumerate(filtered):
+                    if _ins.opname == 'DICT_UPDATE':
+                        _last_dict_update = _i
+                if _last_dict_update is not None:
+                    for _i in range(_last_dict_update + 1, len(filtered)):
+                        if filtered[_i].opname in self.STORE_OPS:
+                            _rest_store_offset = filtered[_i].offset
+                            break
                 attr_idx = 0
                 j = unpack_idx + 1
                 while j < len(filtered) and attr_idx < count and attr_idx < len(patterns):
                     instr = filtered[j]
                     if instr.opname in ('SWAP', 'POP_TOP'):
+                        j += 1
+                        continue
+                    if (_rest_store_offset is not None and
+                            instr.opname in self.STORE_OPS and
+                            instr.offset == _rest_store_offset):
                         j += 1
                         continue
                     if instr.opname == 'LOAD_CONST' and j + 1 < len(filtered) and filtered[j + 1].opname == 'COMPARE_OP':

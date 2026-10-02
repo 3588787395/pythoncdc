@@ -6,19 +6,24 @@ def match_map_basic(d):
     match d:
         case {'name': n, 'age': a}:
             return (n, a)
+        case _:
+            return None
 def match_map_rest(d):
     """Attack 2: mapping with **rest capture."""
     match d:
-        case {'type': rest}:
+        case {'type': t, **rest}:
             return (t, sorted(rest.keys()))
+        case _:
+            return 'nomap'
 def match_map_nested(d):
     """Attack 3: nested mapping pattern."""
     match d:
-        case {'user': 2}:
-            r, *others = None
+        case {'user': {'name': 1, 'roles': r}}:
             return (n, r, len(others))
-        case {'user': 1}:
+        case {'user': {'name': n}}:
             return (n, 'noroles', 0)
+        case _:
+            return 'nokey'
 def match_map_literal_values(d):
     """Attack 4: mapping with literal value constraints."""
     match d:
@@ -28,10 +33,14 @@ def match_map_literal_values(d):
             return 'err'
         case {'status': s}:
             return ('status', s)
+        case _:
+            return 'nostatus'
 def match_map_mixed_seq(d):
     """Attack 5: mapping + sequence hybrid pattern."""
     match d:
-        case {'points': {'type': 'MatchSequence', 'patterns': [{'type': 'MatchSequence', 'patterns': [<core.ast_nodes.ASTName object at 0x000001778941F640>, <core.ast_nodes.ASTName object at 0x000001778941F700>, <core.ast_nodes.ASTName object at 0x000001778941F7C0>, <core.ast_nodes.ASTName object at 0x000001778941F880>], 'as_name': 'y1'}, <core.ast_nodes.ASTName object at 0x000001778941F940>], 'as_name': None}}:
+        case {'points': [[x2, y2, _, _], _] as y1}:
             return ((x1, y1), (x2, y2))
-        case {'points': {'type': 'MatchSequence', 'patterns': [], 'as_name': None}}:
+        case {'points': []}:
             return ()
+        case _:
+            return 'nopoints'

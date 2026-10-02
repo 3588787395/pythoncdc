@@ -6,18 +6,24 @@ def match_seq_list2(seq):
     match seq:
         case [a, b]:
             return a + b
+        case _:
+            return None
 def match_seq_tuple3(seq):
     """Attack 2: three-element tuple pattern."""
     match seq:
         case [x, y, z]:
             return (z, y, x)
+        case _:
+            return ()
 def match_seq_nested(seq):
     """Attack 3: nested sequence pattern [[a, b], c]."""
     match seq:
-        case [[a, b] as c, _]:
+        case [[a, b], c]:
             return (a, b, c)
-        case [[a] as b, _]:
+        case [[a], b]:
             return (a, b, 0)
+        case _:
+            return 'nomatch'
 def match_seq_deep_nested(seq):
     """Attack 4: deeply nested sequence pattern [1, [2, [3, x]]]."""
     match seq:
@@ -25,6 +31,8 @@ def match_seq_deep_nested(seq):
             return x
         case [1, [2, rest]]:
             return rest
+        case _:
+            return -1
 def match_seq_mixed_literal(seq):
     """Attack 5: sequence with literal heads [0, x] / [1, y]."""
     match seq:
@@ -34,6 +42,8 @@ def match_seq_mixed_literal(seq):
             return ('one', y)
         case [a, b]:
             return ('pair', a, b)
+        case _:
+            return 'empty'
 def match_seq_open_ended(seq):
     """Attack 6: open-ended sequence [first, *mid, last]."""
     match seq:
@@ -41,3 +51,5 @@ def match_seq_open_ended(seq):
             return (first, len(mid), last)
         case []:
             return 'empty'
+        case _:
+            return 'noseq'

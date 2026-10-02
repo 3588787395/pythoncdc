@@ -1699,6 +1699,19 @@ class CFGASTConverter:
             }
         
         elif pattern_type == 'MatchMapping':
+            # [B12 修复-2026-10] mapping 模式保留 MatchMapping dict 壳，
+            # 不再折叠为 ASTDict 表达式节点。此前 return ASTDict(keys, values)
+            # 把「模式」降格为「字典表达式」：value 侧的子模式经
+            # _convert_match_pattern 产出的是纯 dict 壳（无 to_code），
+            # ASTDict 渲染时对 dict 子节点 str() 外泄，发射出
+            # `case {'points': {'type': 'MatchSequence', 'patterns':
+            # [<core.ast_nodes.ASTName object at 0x…>], …}}:` 之类的
+            # 语法非法垃圾（r4_04 compile_error）。依据「嵌套即抽象节点」：
+            # mapping 模式是模式匹配节点（[C2]），其子模式必须保持模式
+            # 类型分派，由 code_generator._generate_match_pattern 的
+            # MatchMapping 分支按模式语法渲染 `{'k': pat, **rest}`。
+            # 嵌套无感：子模式递归走 _convert_match_pattern，任意深度
+            # mapping/sequence/class 组合都经同一模式渲染路径（[C2]）。
             keys = []
             values = []
             for k, v in zip(pattern_dict.get('keys', []), pattern_dict.get('patterns', [])):
@@ -1707,7 +1720,10 @@ class CFGASTConverter:
                 if key_node and val_node:
                     keys.append(key_node)
                     values.append(val_node)
-            return ASTDict(keys=keys, values=values)
+            result = {'type': 'MatchMapping', 'keys': keys, 'patterns': values}
+            if pattern_dict.get('rest'):
+                result['rest'] = pattern_dict.get('rest')
+            return result
         
         elif pattern_type == 'MatchClass':
             cls = self._convert_expression(pattern_dict.get('cls', {}))
@@ -1745,30 +1761,25 @@ class CFGASTConverter:
             return {'type': 'MatchSingleton', 'value': pattern_dict.get('value')}
         
         elif pattern_type == 'MatchOr':
-            # [关键修复-2026] 支持多值OR模式 (case 0 | 1 | 2:)
-            # 新格式: {'type': 'MatchOr', 'patterns': [...]}  (多个值)
-            # 旧格式: {'type': 'MatchOr', 'left': ..., 'right': ...}  (两个值，兼容)
+            # [B12 修复-2026-10] or 模式保留 MatchOr dict 壳，不再折叠为
+            # ASTBinary(BIN_OR) 表达式链。此前 or 交替为序列/类等结构形状时，
+            # 子节点经 _convert_match_pattern 产出纯 dict 壳（无 to_code），
+            # ASTBinary 渲染对 dict 子节点 str() 外泄（r4_06 compile_error）；
+            # or 交替带 as 绑定时子节点是 MatchAs dict 壳，同样外泄（r4_09）。
+            # 依据「嵌套即抽象节点」：MatchOr 是模式匹配节点（[C2]），由
+            # code_generator._generate_match_pattern 的 MatchOr 分支以
+            # `pat1 | pat2 | …` 模式语法渲染。嵌套无感：子模式递归转换，
+            # 任意交替形状（字面量/序列/mapping/类/捕获）都经同一分派（[C2]）。
             patterns = pattern_dict.get('patterns', [])
-            
-            if len(patterns) >= 2:
-                # 新格式：多值OR模式，递归构建 BinOp 链
-                converted_patterns = [self._convert_match_pattern(p) for p in patterns]
 
-                # 用 BIN_OR 连接所有模式: 0 | 1 | 2
-                # [注意] MatchOr使用按位或操作符 |
-                result = converted_patterns[0]
-                for i in range(1, len(converted_patterns)):
-                    result = ASTBinary(
-                        left=result,
-                        right=converted_patterns[i],
-                        op=ASTBinary.BinOp.BIN_OR  # 使用 BIN_OR 而不是不存在的 BIN_BIT_OR
-                    )
-                return result
+            if len(patterns) >= 2:
+                converted_patterns = [self._convert_match_pattern(p) for p in patterns]
+                return {'type': 'MatchOr', 'patterns': converted_patterns}
             else:
                 # 旧格式兼容：left/right 结构
                 left = self._convert_match_pattern(pattern_dict.get('left', {}))
                 right = self._convert_match_pattern(pattern_dict.get('right', {}))
-                return ASTBinary(left=left, right=right, op=ASTBinary.BinOp.BIN_OR)
+                return {'type': 'MatchOr', 'patterns': [left, right]}
         
         elif pattern_type == 'MatchStar':
             name = pattern_dict.get('name', '_')
