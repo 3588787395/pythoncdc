@@ -34,6 +34,11 @@
   - [x] 4.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0；小测试集 34 worse=0；quotation 152/153；tests/ 零新增失败；VERIFICATION.md
   - [x] 4.5 归档 rounds/round4/ + 提交并 push
 - [ ] Task 5: Round 5 — 推导式族（List/Set/Dict/GenExp + 多重 for 嵌套推导）形态对抗
+  - [ ] 5.1 评审工程师：推导式全链对抗 = List/Set/Dict/GenExp × 单多 for × 条件 × 嵌套推导 × 循环/try 内推导式 × walrus/星号/解包组合 + 负对照；Round 4 残留复验（B12-R rv4_12 1/4、B13-R rv4_13 2/4、B16-R rv4_16 2/4、B17-R rv4_17 2/4、r4_04 4/6 登记读数不变差）；登记新破口；REVIEW.md + test_repros/round5/
+  - [ ] 5.2 修复工程师：按区域归约算法封闭登记破口（docstring 三要素 + C1/C2/C3 同步）；Round 4 残留若具备判据形态一并处理；自测零回退（哨兵 = quotation/jq/quote/tlb/risk + round1-4 抽验）；FIX.md
+  - [ ] 5.3 评审工程师复核：逐 hunk 审查守卫判据合规（算法驱动/嵌套无感/完备精简，零容忍打回）；REVIEW2.md
+  - [ ] 5.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0；小测试集 34 worse=0；quotation 152/153；tests/ 零新增失败；VERIFICATION.md
+  - [ ] 5.5 归档 rounds/round5/ + 提交并 push
 - [ ] Task 6: Round 6 — With/AsyncWith + async 五件套（def/for/with/await/yield from）形态对抗
 - [ ] Task 7: Round 7 — Ternary + 链式比较 + 表达式面 BoolOp 组合形态对抗
 - [ ] Task 8: Round 8 — 表A 结构形态扫尾（Return/Pass/Delete/Assign 族、Assert、Raise）+ sstrict 缺陷单元对抗抽样
