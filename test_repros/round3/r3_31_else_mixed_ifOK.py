@@ -10,10 +10,8 @@ def else_mixed_if(n, a, b, c):
             break
         acc.append(i)
     else:
-        if not (a and b):
+        if a and b or c:
             acc.append(1)
-        if c:
-            pass
         else:
             acc.append(0)
     return acc
@@ -52,11 +50,8 @@ def elif_chain_in_else(n, a, b, c):
             acc.append('ab')
         elif a or c:
             acc.append('ac')
-        elif not (b and c):
+        elif b and c or a:
             acc.append('bca')
         else:
-            if a:
-                pass
-            else:
-                acc.append('none')
+            acc.append('none')
     return acc

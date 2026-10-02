@@ -24161,6 +24161,21 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # 即撤销残链（块归还、区域注销）后按完整链重建（r1_10 的
             # `while a and b or c:` 残链 [b or c] 被 [a and b or c] 超越）。
             _b6_chain_blks = [b for b, _ in chain]
+            # [B11 修复：残链超越替换泛化] 将被完整混合链超越的残链收集为
+            # 集合：与本链块相交、entry 落在链块内（主扫描既可能自
+            # condition_block 前向装配中缀残链——原 [B6] owning_br 情形，
+            # 也可能自链首前向装配前缀残链，如 ``while (a or b) and k < m:``
+            # 的 [a or b] 前缀残链）、op_chain 严格更短（不完整装配）。
+            _b6_chain_blkset = set(_b6_chain_blks)
+            _b6_supersede = []
+            for _b6_r in self._filter_regions(boolop_regions, BoolOpRegion):
+                if not (_b6_r.blocks & _b6_chain_blkset):
+                    continue
+                if getattr(_b6_r, 'entry', None) not in _b6_chain_blkset:
+                    continue
+                if len(getattr(_b6_r, 'op_chain', [])) >= len(chain):
+                    continue
+                _b6_supersede.append(_b6_r)
             _b6_owning_br = None
             for _b6_r in self._filter_regions(boolop_regions, BoolOpRegion):
                 if loop_cond in _b6_r.blocks:
@@ -24171,26 +24186,56 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 _b6_o = self.block_to_region.get(_b6_b)
                 if _b6_o is None or _b6_o is region:
                     continue
-                if _b6_owning_br is not None and _b6_o is _b6_owning_br:
+                if any(_b6_o is _sr for _sr in _b6_supersede):
+                    continue
+                # [B11 修复：祖先循环体首块的双重角色] 混合链链首块可能同时
+                # 是包裹本 while 的祖先循环（for/while）的体首块——如
+                # `for i in range(m): j = 0; while j < i and a or c:` 中块
+                # `j = 0; j < i` 被外层 for LoopRegion 认领（自然循环体收集
+                # 把体首块并入）。该块语义上是「外层每次迭代的赋值语句 +
+                # 内层条件链首操作数」：其 STORE 前缀由生成器 op_chain 分段
+                # 器提取为 While 前置语句（位置在外层体内、语义保持），
+                # 条件求值段由 BoolOpRegion 消费——正是无包裹形态
+                # （while_and_or 的块 0 未被认领而直接通过）的认领变体。
+                # 判据（同层结构事实）：认领者是 region.parent 链上的
+                # LoopRegion（祖先循环），不跨越非循环区域边界。其余认领者
+                # （兄弟 IfRegion/其他循环）维持一票否决。
+                _b6_anc = getattr(region, 'parent', None)
+                while _b6_anc is not None:
+                    if _b6_o is _b6_anc:
+                        break
+                    _b6_anc = getattr(_b6_anc, 'parent', None)
+                if _b6_anc is not None:
+                    continue
+                # [B11 修复：祖先循环认领的结构判据] 后置阶段 parent 链可能
+                # 尚未连接（子循环区域在主扫描产出、树装配在其后完成）。
+                # 以同层结构事实补充等价判据：认领者是 LoopRegion 且其
+                # blocks 含纳本循环 header（= 外层循环体收集把「体首块 +
+                # 本链首操作数」双重角色块并入其自然循环体）。非循环区域
+                # 认领者维持一票否决。
+                if (isinstance(_b6_o, LoopRegion)
+                        and region.header_block is not None
+                        and region.header_block in getattr(_b6_o, 'blocks', ())):
                     continue
                 _b6_owner_ok = False
                 break
             if not _b6_owner_ok:
                 continue
-            if _b6_owning_br is not None:
-                if _b6_owning_br.entry not in _b6_chain_blks[1:]:
-                    continue
-                if len(_b6_owning_br.op_chain) >= len(chain):
-                    continue
-                for _b6_ob in _b6_owning_br.blocks:
-                    if _b6_ob in self.block_to_region and self.block_to_region[_b6_ob] is _b6_owning_br:
+            # 原 [B6] 否决权保留：含 condition_block 的 BoolOpRegion 未满足
+            # 超越判据（entry 不在链块内或 op_chain 不短于完整链）时，主扫
+            # 描装配已完备，跳过后置重装配（每块唯一归属不被二次认领破坏）。
+            if _b6_owning_br is not None and not any(_b6_owning_br is _sr for _sr in _b6_supersede):
+                continue
+            for _b6_sr in _b6_supersede:
+                for _b6_ob in _b6_sr.blocks:
+                    if _b6_ob in self.block_to_region and self.block_to_region[_b6_ob] is _b6_sr:
                         del self.block_to_region[_b6_ob]
-                if _b6_owning_br in boolop_regions:
-                    boolop_regions.remove(_b6_owning_br)
-                if _b6_owning_br in self.regions:
-                    self.regions.remove(_b6_owning_br)
-                if hasattr(_b6_owning_br, 'parent') and _b6_owning_br.parent and _b6_owning_br in _b6_owning_br.parent.children:
-                    _b6_owning_br.parent.children.remove(_b6_owning_br)
+                if _b6_sr in boolop_regions:
+                    boolop_regions.remove(_b6_sr)
+                if _b6_sr in self.regions:
+                    self.regions.remove(_b6_sr)
+                if hasattr(_b6_sr, 'parent') and _b6_sr.parent and _b6_sr in _b6_sr.parent.children:
+                    _b6_sr.parent.children.remove(_b6_sr)
             if chain and len(chain) >= 2:
                 boolop_region = self._create_boolop_region_from_chain(chain, claimed)
                 if boolop_region:
@@ -24542,9 +24587,45 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                                       if _ri.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')
                                                       and _ri.argval}
                                         if _pred_vars and not _pred_vars.intersection(_reeval_vars):
-                                            break
-                                else:
-                                    break
+                                            # [B11 修复：混合链链首守卫豁免] reeval 变量
+                                            # 守卫的意图是排除变量与循环条件重检无关的
+                                            # 外层 if/elif 条件块。混合链
+                                            # ``while a and k < m or b and d:`` 的 and
+                                            # 组首操作数（纯布尔名 ``a``）仅出现于回边
+                                            # 重检链的**未认领重检块**（CPython 复制条件
+                                            # 求值，首个重检块不被 loop.blocks 含纳），
+                                            # 不出现于 loop.blocks 内任何块——守卫按体内
+                                            # 变量判定会误杀链首。豁免判据（同层结构事
+                                            # 实，B6 边界闭合的镜像）：pred 的条件跳转目
+                                            # 标（链首假边）是 or 尾首成员——未被认领、
+                                            # 以正向 IF_FALSE 族收尾、其假目标在循环体
+                                            # 语义集合之外（= or 尾假出口方向）。外层
+                                            # if/elif 条件块的跳转目标是其 else/merge
+                                            # 块（被 IfRegion 认领或非 PJF→出口形态），
+                                            # 不满足豁免。
+                                            _b11_pjt = pred_jump_target
+                                            _b11_pjt_last = (_b11_pjt.get_last_instruction()
+                                                             if _b11_pjt is not None else None)
+                                            if (_b11_pjt is not None
+                                                    and self.block_to_region.get(_b11_pjt) is None
+                                                    and _b11_pjt_last is not None
+                                                    and _b11_pjt_last.argval is not None
+                                                    and 'FALSE' in _b11_pjt_last.opname
+                                                    and _b11_pjt_last.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                                                _b11_pjt_jt = self.cfg.get_block_by_offset(_b11_pjt_last.argval)
+                                                _b11_body_sem2 = set(loop.body_blocks or [])
+                                                if loop.header_block is not None:
+                                                    _b11_body_sem2.add(loop.header_block)
+                                                if loop.condition_block is not None:
+                                                    _b11_body_sem2.add(loop.condition_block)
+                                                if (_b11_pjt_jt is not None
+                                                        and _b11_pjt_jt not in _b11_body_sem2
+                                                        and _b11_pjt_jt not in loop.blocks):
+                                                    pass  # 链首豁免：继续入链
+                                                else:
+                                                    break
+                                            else:
+                                                break
                         else:
                             break
                     elif pred_ft.start_offset in visited and else_outside:
@@ -24592,6 +24673,118 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 break
             chain.insert(0, (pred, pred_op))
             current = pred
+        # [B11 or-前缀续接] or_left 形态 ``while (a or b) and k < m:`` 的
+        # or 组真出口汇入 and 组尾：or 成员块以正向 IF_TRUE 族收尾、跳转
+        # 目标落回链内（cond_block 或已收链块），其 fall-through 经 and
+        # 成员 run（各以正向 IF_FALSE 族收尾、假边目标在体语义集合之外
+        # = and 组短路出口）抵达链首。后向回溯的 cond_in_loop 判据对 or
+        # 成员不成立（其 fall-through 是下一条件成员而非体语义块），且
+        # 回溯游标可能先命中 or 成员（前驱序不定）而提前中断——此处按
+        # 同层结构事实补全前缀。
+        # 识别条件（[C1] 块末 opcode 族 + 后继身份 + block_to_region 归属
+        #   表，不读跨区域/跨层次信息）：
+        #   (1) 链首块 fall-through == loop.header_block（完备性闭合：
+        #       and 组尾真边进体）；
+        #   (2) or 成员：正向 IF_TRUE 族收尾、双后继、跳转目标 ∈
+        #       {cond_block} ∪ 已收链块（or 组真出口汇入链内）、未被认领
+        #       或仅被残链 BoolOpRegion 认领（Step 5 超越替换统一裁决）；
+        #   (3) and 成员 run：自 or 成员 fall-through 起，逐块以正向
+        #       IF_FALSE 族收尾、假边目标在体语义集合之外、fall-through
+        #       逐块推进直至链首块。
+        # 归约方式（[C2]）：补全链 [(A,'or'),(B,'and'),…,cond] 交
+        #   _create_boolop_region_from_chain 统一归约为单个 BoolOpRegion，
+        #   生成器经 _detect_boolop_grouping 的 INNER 信号（or 成员真边
+        #   目标 ∈ 链块集合）+ _build_grouped_boolop_expression 重建
+        #   ``and[or[A,B], k<m]`` 括号化形态。混合链不经 all_same_target
+        #   （or 组真边入链、and 组假边出链，各成员目标天然不汇聚——该
+        #   判据仅适用均匀链，见 R07）。
+        # AST 映射：BoolOpRegion 作为 LoopRegion 子区域（is_condition_
+        #   context 由创建器按链形态推导），_loop_generate_while 重建
+        #   ast.While.test（[C3] 链块归属由 Step 5 调用方所有权校验保证）。
+        _b11_head_blk = chain[0][0] if chain else None
+        _b11_head_last = (_b11_head_blk.get_last_instruction()
+                          if _b11_head_blk is not None else None)
+        _b11_head_jt = (self.cfg.get_block_by_offset(_b11_head_last.argval)
+                        if (_b11_head_last is not None
+                            and _b11_head_last.argval is not None) else None)
+        _b11_head_ft = None
+        if _b11_head_jt is not None:
+            for _b11_hs in _b11_head_blk.conditional_successors:
+                if _b11_hs.start_offset != _b11_head_last.argval:
+                    _b11_head_ft = _b11_hs
+                    break
+        if (_b11_head_ft is not None
+                and loop.header_block is not None
+                and _b11_head_ft is loop.header_block):
+            _b11_body_sem = set(loop.body_blocks or [])
+            if loop.header_block is not None:
+                _b11_body_sem.add(loop.header_block)
+            if loop.entry is not None:
+                _b11_body_sem.add(loop.entry)
+            if loop.condition_block is not None:
+                _b11_body_sem.add(loop.condition_block)
+            _b11_chain_blks = {b for b, _ in chain}
+            _b11_chain_offs = {b.start_offset for b, _ in chain}
+            for _b11_p in _b11_head_blk.predecessors:
+                if _b11_p.start_offset in _b11_chain_offs:
+                    continue
+                if (_b11_p is loop.header_block or _b11_p is loop.back_edge_block
+                        or _b11_p in loop.body_blocks):
+                    continue
+                _b11_p_last = _b11_p.get_last_instruction()
+                if (_b11_p_last is None or _b11_p_last.argval is None
+                        or 'TRUE' not in _b11_p_last.opname
+                        or _b11_p_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+                    continue
+                _b11_p_succs = list(_b11_p.conditional_successors)
+                if len(_b11_p_succs) != 2:
+                    continue
+                _b11_p_jt = self.cfg.get_block_by_offset(_b11_p_last.argval)
+                _b11_p_ft = next((s for s in _b11_p_succs
+                                  if s.start_offset != _b11_p_last.argval), None)
+                if (_b11_p_jt is None or _b11_p_ft is None
+                        or not (_b11_p_jt is cond_block
+                                or _b11_p_jt in _b11_chain_blks)):
+                    continue
+                _b11_p_owner = self.block_to_region.get(_b11_p)
+                if (_b11_p_owner is not None
+                        and not isinstance(_b11_p_owner, BoolOpRegion)):
+                    continue
+                # and 成员 run：or 成员假边方向逐块推进至链首
+                _b11_run: List[BasicBlock] = []
+                _b11_m = _b11_p_ft
+                _b11_ok = False
+                _b11_guard = 0
+                while _b11_m is not None and _b11_guard < 16:
+                    _b11_guard += 1
+                    if _b11_m is _b11_head_blk:
+                        _b11_ok = True
+                        break
+                    if _b11_m.start_offset in _b11_chain_offs:
+                        break
+                    _b11_ml = _b11_m.get_last_instruction()
+                    if (_b11_ml is None or _b11_ml.argval is None
+                            or 'FALSE' not in _b11_ml.opname
+                            or _b11_ml.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+                        break
+                    _b11_mj = self.cfg.get_block_by_offset(_b11_ml.argval)
+                    if _b11_mj is None or _b11_mj in _b11_body_sem:
+                        break
+                    _b11_m_owner = self.block_to_region.get(_b11_m)
+                    if (_b11_m_owner is not None
+                            and not isinstance(_b11_m_owner, BoolOpRegion)):
+                        break
+                    _b11_mft = next((s for s in _b11_m.conditional_successors
+                                     if s.start_offset != _b11_ml.argval), None)
+                    if _b11_mft is None:
+                        break
+                    _b11_run.append(_b11_m)
+                    _b11_m = _b11_mft
+                if _b11_ok:
+                    _b11_new_chain: List[Tuple[BasicBlock, str]] = [(_b11_p, 'or')]
+                    _b11_new_chain.extend((m, 'and') for m in _b11_run)
+                    _b11_new_chain.extend(chain)
+                    return _b11_new_chain
         if len(chain) < 2:
             return chain if len(chain) >= 1 else None
         # [B6-while 混合链双向续接] 旋转 while 条件上下文中，混合 and/or 链
@@ -24677,14 +24870,46 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 else:
                     # 末 or 尾成员：假边 → 循环出口（不指向链内/真出口），
                     # fall-through 进入体（完备性：条件求值完毕进 body）。
-                    if _b6_ft is not loop.header_block:
+                    if _b6_ft is loop.header_block:
+                        if _b6_jt in _b6_chain_blocks or _b6_jt is _b6_cond_true_jt:
+                            break
+                        _b6_ortail.append((_b6_cur, 'and'))
+                        _b6_seen.add(_b6_cur.start_offset)
+                        _b6_ok = True
                         break
-                    if _b6_jt in _b6_chain_blocks or _b6_jt is _b6_cond_true_jt:
+                    # [B11 修复：or 尾多成员续接] 混合链 or 尾可以是多操作数
+                    # and 组（如 ``while a and k < m or b and d:`` 的
+                    # ``or b and d``）：中间成员假边 → or 尾统一假出口（与
+                    # 末成员同目标）、真边沿 fall-through 到 or 尾内下一
+                    # 成员；末成员假边 → 假出口、真边 fall-through=header。
+                    # 原判据把「PJF 且 fall-through != header」一律终止，
+                    # 使 or 尾中间成员无法入链（整链被 all_same_target 旧路
+                    # 丢弃后只剩残链）。续接判据（同层结构事实）：下一成员
+                    # 以正向 IF_FALSE 族收尾、其假目标与当前成员假目标相同
+                    # （or 组统一短路出口）、未被认领、不在循环体内。
+                    _b11_next_last = (_b6_ft.get_last_instruction()
+                                      if _b6_ft is not None else None)
+                    if (_b11_next_last is None
+                            or _b11_next_last.argval is None
+                            or 'TRUE' in _b11_next_last.opname
+                            or _b11_next_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+                        break
+                    _b11_next_jt = self.cfg.get_block_by_offset(_b11_next_last.argval)
+                    # [B11 修复：残链认领成员放行] or 尾中间成员可能已被主
+                    # 扫描装配的残链 BoolOpRegion 认领（该残链 entry 是本链
+                    # 非首成员且 op_chain 更短，Step 5 所有权校验的残链超越
+                    # 替换将撤销它并按完整链重建）。此处放行交由 [C3] 守卫
+                    # 统一裁决；非 BoolOpRegion 认领者维持一票否决。
+                    _b6_ft_owner = self.block_to_region.get(_b6_ft)
+                    if (_b11_next_jt is not _b6_jt
+                            or (_b6_ft_owner is not None
+                                and not isinstance(_b6_ft_owner, BoolOpRegion))
+                            or _b6_ft in loop.blocks
+                            or _b6_ft.start_offset in _b6_seen):
                         break
                     _b6_ortail.append((_b6_cur, 'and'))
                     _b6_seen.add(_b6_cur.start_offset)
-                    _b6_ok = True
-                    break
+                    _b6_cur = _b6_ft
             if _b6_ok and self.cfg.get_block_by_offset(_b6_first_last.argval) is _b6_ortail[0][0]:
                 _b6_chain = [(b, 'and' if 'FALSE' in b.get_last_instruction().opname else 'or')
                              for b, _ in chain[:-1]]
@@ -27599,17 +27824,41 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 # 则放行到下方多成员识别 / 单成员 or 尾判据；否则维持原
                 # break。豁免缺失会把循环体内 ``if a and b or c:`` 的 or 尾
                 # 操作数整体排除在链外（极性反转、内层 if 被吸入）。
+                # [B11 修复：loop-else 范围认领豁免] 循环 else 体是
+                # LoopRegion 的另一类范围认领面（_find_loop_else 把自然
+                # 出口 else 体并入 blocks，else 体块同样登记进
+                # block_to_region）。``for …: … else: if a and b or c:`` 的
+                # or 尾操作数块（假边→循环后汇合、真边 fall-through→then
+                # 体）登记在 else_blocks 而非 body_blocks，原豁免判据
+                # ``not in body_blocks`` 即 break 使 or 尾被排除——残链
+                # [a and b] 的 and→or 边界导致消费端极性整体反转
+                # （``not (a and b)``）且 or 尾成孤片。豁免判据（[C1] 同层
+                # 结构事实）：候选块 ∈ else_blocks（范围认领面，与
+                # body_blocks 同构）且 ≠ header_block；链首守卫同 body
+                # 豁免（本链不是循环自身条件装配）。else 上下文不套用
+                # _b1b_loop_body_run_continuation（其 (2) 臂三元真值块守卫
+                # 对 if-else 形 or 尾误报，该加强为 body 上下文专用——
+                # 与 try 豁免分支同一取舍）；放行后落到与未认领候选完全
+                # 相同的验收路径（多成员 run 交 _detect_boolop_conditional_
+                # chain，单成员 or 尾交 [B1b] 三判据），任一不成立维持
+                # break（非条件块/帧块不被吸入，LoopRegion 认领面零扩大
+                # ——其结构消费走 entry 引用语义，不受影响）。
                 _ft_reg = self.block_to_region.get(ft_succ)
                 if isinstance(_ft_reg, LoopRegion):
+                    _b1b_in_else = (ft_succ in getattr(_ft_reg, 'else_blocks', set())
+                                    and ft_succ not in _ft_reg.body_blocks)
                     if (ft_succ == _ft_reg.header_block
-                            or ft_succ not in _ft_reg.body_blocks):
+                            or (ft_succ not in _ft_reg.body_blocks
+                                and not _b1b_in_else)):
                         break
                     _b1b_c0 = result[0][0] if result else None
                     if (_b1b_c0 is None
                             or _b1b_c0 is _ft_reg.header_block
                             or _ft_reg.condition_block is _b1b_c0):
                         break
-                    if not self._b1b_loop_body_run_continuation(
+                    if _b1b_in_else:
+                        pass  # loop-else 豁免：跳过 body 专用加强，交标准验收
+                    elif not self._b1b_loop_body_run_continuation(
                             last_block, last_instr, ft_succ,
                             has_or_member=any(op == 'or' for _, op in result)):
                         break

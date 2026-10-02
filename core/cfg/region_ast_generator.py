@@ -6600,7 +6600,7 @@ AST 映射规则:
                                         continue
                                     _tgt = self.cfg.get_block_by_offset(_p_last.argval)
                                     if not (_tgt is _cond_exit
-                                            or self._is_equivalent_exit_block(_tgt, _cond_exit)):
+                                            or self.region_analyzer._is_equivalent_exit_block(_tgt, _cond_exit)):
                                         continue
                                     # [W44 修复] fall-through 排除异常边
                                     # （原则 2：异常处理器块归属
@@ -8273,7 +8273,7 @@ AST 映射规则:
                             _hdr_last_r08.argval)
                         if (_cond_exit_r08 is not None and _hdr_jt_r08 is not None
                                 and (_hdr_jt_r08 is _cond_exit_r08
-                                     or self._is_equivalent_exit_block(
+                                     or self.region_analyzer._is_equivalent_exit_block(
                                          _hdr_jt_r08, _cond_exit_r08))):
                             # [R3-L 修复] 极性判定覆盖 NONE_CHECK 跳转：
                             # POP_JUMP_FORWARD_IF_FALSE / IF_NOT_NONE 都是
