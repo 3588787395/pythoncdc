@@ -27,12 +27,12 @@
   - [x] 3.5 打回修复（b81a0046）：R2-1 BOM 字节级恢复 efbbbf + R2-2 仅 LoopRegion 祖先豁免收窄对齐声明 + B11-R 封闭（r3_33 4/4，FIX-B11c-3 fall-through 前驱反向收集）+ B10-R 精确登记（机制勘误 :18370 内联面，折叠面守卫 :4573-4602）；评审复验 §6 四项全通过放行
   - [x] 3.6 主代理验证：8 片 REGRESSIONS=0，units 6554/6617（99.05%）文件 369/402；小测试集 34 worse=0 improved=3；quotation 152/153 零新增；tests 256 passed/3 failed 基线既有零新增；VERIFICATION.md
   - [x] 3.7 归档 rounds/round3/ + 提交并 push
-- [ ] Task 4: Round 4 — Match + match_case 8 模式（value/singleton/sequence/mapping/class/or/capture/star）形态对抗
-  - [ ] 4.1 评审工程师：Match 区域全链对抗 = 8 模式 × 组合面（多 case、守卫、通配 `_`、or 模式、star、嵌套 match/loop/try 内 match）+ 负对照；Round 3 残留复验（B10-R r3_34 1/2、B11-R2 or4_and2 MISMATCH 登记读数不变差）；登记新破口；REVIEW.md + test_repros/round4/
-  - [ ] 4.2 修复工程师：按区域归约算法封闭登记破口（docstring 三要素 + C1/C2/C3 同步）；B10-R/B11-R2 若具备判据形态一并处理；自测零回退（哨兵 = quotation/jq/quote/tlb/risk + round1-3 抽验）；FIX.md
-  - [ ] 4.3 评审工程师复核：逐 hunk 审查守卫判据合规（算法驱动/嵌套无感/完备精简，零容忍打回）；REVIEW2.md
-  - [ ] 4.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0；小测试集 34 worse=0；quotation 152/153；tests/ 零新增失败；VERIFICATION.md
-  - [ ] 4.5 归档 rounds/round4/ + 提交并 push
+- [x] Task 4: Round 4 — Match + match_case 8 模式（value/singleton/sequence/mapping/class/or/capture/star）形态对抗
+  - [x] 4.1 评审工程师：Match 区域全链对抗 = 8 模式 × 组合面（多 case、守卫、通配 `_`、or 模式、star、嵌套 match/loop/try 内 match）+ 负对照；Round 3 残留复验（B10-R r3_34 1/2、B11-R2 or4_and2 MISMATCH 登记读数不变差）；登记新破口；REVIEW.md + test_repros/round4/
+  - [x] 4.2 修复工程师：按区域归约算法封闭登记破口（docstring 三要素 + C1/C2/C3 同步）；B10-R/B11-R2 若具备判据形态一并处理；自测零回退（哨兵 = quotation/jq/quote/tlb/risk + round1-3 抽验）；FIX.md
+  - [x] 4.3 评审工程师复核：逐 hunk 审查守卫判据合规（算法驱动/嵌套无感/完备精简，零容忍打回）；REVIEW2.md
+  - [x] 4.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0；小测试集 34 worse=0；quotation 152/153；tests/ 零新增失败；VERIFICATION.md
+  - [x] 4.5 归档 rounds/round4/ + 提交并 push
 - [ ] Task 5: Round 5 — 推导式族（List/Set/Dict/GenExp + 多重 for 嵌套推导）形态对抗
 - [ ] Task 6: Round 6 — With/AsyncWith + async 五件套（def/for/with/await/yield from）形态对抗
 - [ ] Task 7: Round 7 — Ternary + 链式比较 + 表达式面 BoolOp 组合形态对抗
