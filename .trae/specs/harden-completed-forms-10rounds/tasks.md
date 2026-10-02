@@ -40,6 +40,11 @@
   - [x] 5.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0，units 6554/6617（99.05%）文件 369/402 持平；小测试集 34 REGRESSIONS=0（1505/1568）；quotation 152/153 零新增；tests 257 passed/2 failed——test_BND_21_walrus 由 failed 转 passed（B22 真身增益），零新增失败；VERIFICATION.md
   - [x] 5.5 归档 rounds/round5/ + 提交并 push
 - [ ] Task 6: Round 6 — With/AsyncWith + async 五件套（def/for/with/await/yield from）形态对抗
+  - [ ] 6.1 评审工程师：With/AsyncWith 全链对抗 = 单多上下文管理器 × as 捕获（单名/元组解包）× 嵌套 with × with 内 return/break/continue/raise × with 内推导式/lambda/async 组合 + async 五件套（async def 含 await/async for/async with/yield from）× 循环/try 包 async 结构 × Round 5 残留复验（B26 rv5_23、B27 rv5_24+rv5_26_diag、B28 rv5_25 登记读数不变差）+ 负对照；算法合规审计（在途变更）；登记新破口；REVIEW.md + test_repros/round6/
+  - [ ] 6.2 修复工程师：按区域归约算法封闭登记破口（docstring 三要素 + C1/C2/C3 同步）；Round 5 残留 B26/B27/B28 若具备判据形态一并处理；自测零回退（哨兵 = quotation/jq/quote/tlb/risk + round1-5 抽验）；FIX.md
+  - [ ] 6.3 评审工程师复核：逐 hunk 审查守卫判据合规（算法驱动/嵌套无感/完备精简，零容忍打回）；REVIEW2.md
+  - [ ] 6.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0；小测试集 34 worse=0；quotation 152/153；tests/ 零新增失败；VERIFICATION.md
+  - [ ] 6.5 归档 rounds/round6/ + 提交并 push
 - [ ] Task 7: Round 7 — Ternary + 链式比较 + 表达式面 BoolOp 组合形态对抗
 - [ ] Task 8: Round 8 — 表A 结构形态扫尾（Return/Pass/Delete/Assign 族、Assert、Raise）+ sstrict 缺陷单元对抗抽样
 - [ ] Task 9: Round 9 — B2/B3/B4 守卫族回归攻击 + 前八轮已封闭破口复验（防回归）
