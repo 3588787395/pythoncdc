@@ -19,7 +19,14 @@
   - [x] 2.3 评审复核：放行无打回（帧前缀不可伪造实证 0/35、零回退抽验 13/13）；R2-NEW-1/2 登记；REVIEW2.md
   - [x] 2.4 主代理验证：8 片 REGRESSIONS=0、units 6554/6617（99.05%）文件 369/402 持平（B8/B9 真身零增益零回退、增益在合成对抗面 5 处改善）；quotation 152/153；tests 零新增失败；VERIFICATION.md
   - [x] 2.5 归档 rounds/round2/ + 提交并 push
-- [ ] Task 3: Round 3 — For/While + for-else/while-else（`_find_loop_else` + clamp 守卫）形态对抗
+- [x] Task 3: Round 3 — For/While + for-else/while-else（`_find_loop_else` + clamp 守卫）形态对抗
+  - [x] 3.1 评审：任务A 5 项审计（2 通过/1 有条件/2 打回）；对抗 14 探针 77 单元 56/77（21 MISMATCH/8 文件）+ 负对照 n3_01/n3_02 各 5/5；B10 登记（loop-else×break 证据链失效族 15 单元/6 文件）+ B11 登记（while 混合链非名操作数装配灾难 4 单元浅层即败，B6/B7 声明降格）+ B1b 扩充 r3_31 + R3-O1/O2 观察；登记项复验 8/8 持平零回退；REVIEW.md
+  - [x] 3.2 修复一批次（5f26202c）：B10 收尾 5/5 单元 = FIX-1 for_iter_exit 前驱扫描补 break 证据 + FIX-3 纯跳转 else 判定收窄 + FIX-2a/2b 落点放行（判据=_post_break_blocks 搁置台账）+ FIX-4 双 Break 守卫 + FIX-5 else 桩→Continue + FIX-6 祖先循环落点子区域抑制；quotation 回归自纠（152→151→152/153）；R3DBG 插桩清零；FIX.md
+  - [x] 3.3 修复二批次（95046711）：B11 4/4（跨类调用 AttributeError 改调 + 祖先循环所有权判据 + or 尾多成员续接 + 残链超越替换集合判据 + or-前缀 or_left 续接）+ B1b 2/2（loop-else 认领豁免 :27827）；B6/B7 降格表述落实；FIX2.md
+  - [x] 3.4 评审复核 REVIEW2.md：21 单元复验 72/72 全 MATCH 属实；打回 3 项（R2-1 BOM 剥离、R2-2 守卫面宽于声明、B11-R/B10-R 残留）
+  - [x] 3.5 打回修复（b81a0046）：R2-1 BOM 字节级恢复 efbbbf + R2-2 仅 LoopRegion 祖先豁免收窄对齐声明 + B11-R 封闭（r3_33 4/4，FIX-B11c-3 fall-through 前驱反向收集）+ B10-R 精确登记（机制勘误 :18370 内联面，折叠面守卫 :4573-4602）；评审复验 §6 四项全通过放行
+  - [x] 3.6 主代理验证：8 片 REGRESSIONS=0，units 6554/6617（99.05%）文件 369/402；小测试集 34 worse=0 improved=3；quotation 152/153 零新增；tests 256 passed/3 failed 基线既有零新增；VERIFICATION.md
+  - [x] 3.7 归档 rounds/round3/ + 提交并 push
 - [ ] Task 4: Round 4 — Match + match_case 8 模式（value/singleton/sequence/mapping/class/or/capture/star）形态对抗
 - [ ] Task 5: Round 5 — 推导式族（List/Set/Dict/GenExp + 多重 for 嵌套推导）形态对抗
 - [ ] Task 6: Round 6 — With/AsyncWith + async 五件套（def/for/with/await/yield from）形态对抗
