@@ -24198,14 +24198,22 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 # 条件求值段由 BoolOpRegion 消费——正是无包裹形态
                 # （while_and_or 的块 0 未被认领而直接通过）的认领变体。
                 # 判据（同层结构事实）：认领者是 region.parent 链上的
-                # LoopRegion（祖先循环），不跨越非循环区域边界。其余认领者
-                # （兄弟 IfRegion/其他循环）维持一票否决。
+                # LoopRegion（祖先循环），不跨越非循环区域边界——上溯途中
+                # 遇 IfRegion/TryExceptRegion/BoolOpRegion 等结构化边界即
+                # 停止（其分支/子体块集对链首块的收编不构成自然循环体收集
+                # 式的双重角色，维持一票否决；链首块的双重角色语义仅由
+                # LoopRegion 体首收集产生，与下方结构判据 ② 的豁免面一致）。
+                # 其余认领者（兄弟 IfRegion/其他循环）维持一票否决。
                 _b6_anc = getattr(region, 'parent', None)
+                _b6_anc_hit = False
                 while _b6_anc is not None:
                     if _b6_o is _b6_anc:
+                        _b6_anc_hit = isinstance(_b6_anc, LoopRegion)
+                        break
+                    if not isinstance(_b6_anc, LoopRegion):
                         break
                     _b6_anc = getattr(_b6_anc, 'parent', None)
-                if _b6_anc is not None:
+                if _b6_anc_hit:
                     continue
                 # [B11 修复：祖先循环认领的结构判据] 后置阶段 parent 链可能
                 # 尚未连接（子循环区域在主扫描产出、树装配在其后完成）。
@@ -24750,6 +24758,63 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 if (_b11_p_owner is not None
                         and not isinstance(_b11_p_owner, BoolOpRegion)):
                     continue
+                # [B11-R 修复：or 组多成员前缀] _b11_p 可能是 or 组中间成员：
+                # CPython 对 or 组非末成员以正向 IF_TRUE 族短路真出口汇聚同
+                # 一 PJT、末成员以 IF_FALSE 假边出体（真值经 fall-through 传
+                # 递），故三成员 or 组 ``while (a or b or c) and k < m:`` 的
+                # a/b 均为链首块 IF_TRUE 前驱——仅收单成员会丢失其余 or 成
+                # 员（r3_33.or_prefix3 实证 a 被整组提出条件外成幻影 if）。
+                # 识别条件（[C1] 同层结构事实）：沿 fall-through 前驱反向收
+                # 集——p0 的 fall-through 后继恰为当前成员、p0 块尾正向
+                # IF_TRUE 族、跳转目标与命中成员同一 PJT（or 组真出口汇聚
+                # 同点的结构签名）、归属未认领或仅 BoolOpRegion；前驱不满
+                # 足即停（or 组首成员的前驱是条件入口/赋值块，非 IF_TRUE，
+                # 二成员形态在此自然收空、行为与修复前一致）。
+                # 归约方式（[C2]）：收集结果并入链头 ``[(m,'or'),…]`` 交
+                # _create_boolop_region_from_chain 统一归约，生成端
+                # _detect_boolop_grouping 按「真出口汇聚 ∈ 链块」INNER 信号
+                # 把 or 末成员（假边出体同 and 形）并入 or 组重建
+                # ``and[or[A,B,C], k<m]`` 括号化形态（二成员 or_left 先例同
+                # 一映射路径，r3_28.while_or_and 已证）。
+                # AST 映射：BoolOpRegion 作为 LoopRegion 子区域重建
+                # ast.While.test（[C3] 链块归属由 Step 5 调用方所有权校验
+                # 保证，本收集不新增认领）。
+                _b11_or_run: List[BasicBlock] = [_b11_p]
+                _b11_or_cur = _b11_p
+                _b11_or_guard = 0
+                while _b11_or_guard < 16:
+                    _b11_or_guard += 1
+                    _b11_prev = None
+                    for _b11_pp in _b11_or_cur.predecessors:
+                        if _b11_pp.start_offset in _b11_chain_offs:
+                            continue
+                        if (_b11_pp is loop.header_block
+                                or _b11_pp is loop.back_edge_block
+                                or _b11_pp in loop.body_blocks):
+                            continue
+                        _b11_pp_last = _b11_pp.get_last_instruction()
+                        if (_b11_pp_last is None or _b11_pp_last.argval is None
+                                or _b11_pp_last.argval != _b11_p_last.argval
+                                or 'TRUE' not in _b11_pp_last.opname
+                                or _b11_pp_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+                            continue
+                        _b11_pp_succs = list(_b11_pp.conditional_successors)
+                        if len(_b11_pp_succs) != 2:
+                            continue
+                        _b11_pp_ft = next((s for s in _b11_pp_succs
+                                           if s.start_offset != _b11_pp_last.argval), None)
+                        if _b11_pp_ft is not _b11_or_cur:
+                            continue
+                        _b11_pp_owner = self.block_to_region.get(_b11_pp)
+                        if (_b11_pp_owner is not None
+                                and not isinstance(_b11_pp_owner, BoolOpRegion)):
+                            continue
+                        _b11_prev = _b11_pp
+                        break
+                    if _b11_prev is None:
+                        break
+                    _b11_or_run.insert(0, _b11_prev)
+                    _b11_or_cur = _b11_prev
                 # and 成员 run：or 成员假边方向逐块推进至链首
                 _b11_run: List[BasicBlock] = []
                 _b11_m = _b11_p_ft
@@ -24781,7 +24846,8 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     _b11_run.append(_b11_m)
                     _b11_m = _b11_mft
                 if _b11_ok:
-                    _b11_new_chain: List[Tuple[BasicBlock, str]] = [(_b11_p, 'or')]
+                    _b11_new_chain: List[Tuple[BasicBlock, str]] = [
+                        (m, 'or') for m in _b11_or_run]
                     _b11_new_chain.extend((m, 'and') for m in _b11_run)
                     _b11_new_chain.extend(chain)
                     return _b11_new_chain

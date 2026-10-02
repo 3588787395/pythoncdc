@@ -1,4 +1,4 @@
-"""
+﻿"""
 基于区域的AST生成器
 
 使用 RegionAnalyzer 的分析结果直接生成AST，替代 ast_generator_v2.py 中的补丁式生成。
@@ -4570,6 +4570,37 @@ AST 映射规则:
                     stack.append(s)
         return False
 
+    def _ancestor_loop_exit_reaches_block(self, region, target) -> bool:
+        """[B10-R 修复] break→return 折叠守卫的祖先扩展：判断 target 是否位于
+        region 任一祖先循环的「非 break 正常退出路径」上。
+
+        识别条件——沿 region.parent 链上溯，对途经的每个 LoopRegion（非循
+        环区域不构成循环体收集式正常退出，仅不参与判定；多查一个祖先循环只
+        会让守卫更保守——命中即共享 return 块，必须留函数级发射）取与
+        _loop_exit_reaches_block 相同的判定面：正常退出边 = header/condition
+        的体外后继 ∪ else_blocks，只在体外块上前向遍历。
+        归约方式——纯前向可达性查询，不改区域划分与块归属（C1 局部消费：命
+        中说明该 return 块同时被祖先循环正常退出路径引用；深层 break 折叠
+        进该 return 将消费祖先尾部发射所需块，破坏祖先正常路径的每块唯一
+        归属 / C2 黑箱组合）。
+        AST 映射——调用方（_loop_generate_for / _loop_generate_while 两个折
+        叠点）把命中与本地守卫同判为「不折叠」：保留 Break 发射——源级
+        for-else 体中的 break 依 CPython 绑定规则天然绑定祖先循环，重编译
+        回到原跳转落点；尾 return 由函数级线性发射照常输出（r3_34.outer_
+        break_rise：内层 for-else 体纯 if-break 跳外层，break 落点 = 外层
+        loop-else 共享的函数尾 return 块，本地守卫未命中而折叠吞尾）。
+        """
+        _anc = getattr(region, 'parent', None)
+        while _anc is not None:
+            if isinstance(_anc, LoopRegion):
+                _anc_body = set(getattr(_anc, 'body_blocks', ()) or ())
+                if getattr(_anc, 'header_block', None) is not None:
+                    _anc_body.add(_anc.header_block)
+                if self._loop_exit_reaches_block(_anc, _anc_body, target):
+                    return True
+            _anc = getattr(_anc, 'parent', None)
+        return False
+
     def _loop_generate_for(self, region: LoopRegion) -> Dict[str, Any]:
         pre_stmts = []
 
@@ -5240,6 +5271,8 @@ AST 映射规则:
                             # 上（条件为假分支 / else 可达），说明它是循环后的
                             # 顺序 return，不能被折叠消费，否则函数尾 return 丢失。
                             if self._loop_exit_reaches_block(region, _body_set, _bsucc):
+                                continue
+                            if self._ancestor_loop_exit_reaches_block(region, _bsucc):
                                 continue
                             _bb_instrs = [i for i in _bb.instructions if i.opname not in NOISE_OPS]
                             _bb_has_pop_top = any(i.opname == 'POP_TOP' for i in _bb_instrs)
@@ -7054,6 +7087,8 @@ AST 映射规则:
                             # 上（条件为假分支 / else 可达），说明它是循环后的
                             # 顺序 return，不能被折叠消费，否则函数尾 return 丢失。
                             if self._loop_exit_reaches_block(region, _body_set_w, _bsucc):
+                                continue
+                            if self._ancestor_loop_exit_reaches_block(region, _bsucc):
                                 continue
                             _bb_instrs = [i for i in _bb.instructions if i.opname not in NOISE_OPS]
                             _bb_has_pop_top = any(i.opname == 'POP_TOP' for i in _bb_instrs)
