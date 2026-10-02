@@ -1889,13 +1889,18 @@ class CodeGenerator:
             # [Round9-02] 嵌套 Tuple 元素需加括号以保留嵌套语义：
             # `for (a, b), (c, d) in x` 中，外层 Tuple 的两个 Tuple 元素必须
             # 各自加括号，否则渲染为 `a, b, c, d`（扁平 4 元组）。
+            # [Round5-B21] 单元素 Tuple 需尾随逗号保留 arity（同
+            # _generate_for_target_from_dict 的 [Round5-B21] 注记）。
             elts_code = []
             for elt in target.elts:
                 elt_code = self._generate_for_target(elt)
                 if isinstance(elt, ASTTuple):
+                    # 递归调用对 1 元素 Tuple 已返回 `b,`，此处仅补括号。
                     elts_code.append(f'({elt_code})')
                 else:
                     elts_code.append(elt_code)
+            if len(target.elts) == 1:
+                return elts_code[0] + ','
             return ', '.join(elts_code)
         else:
             return self._generate_expression(target, 0)
@@ -1916,13 +1921,22 @@ class CodeGenerator:
             # [Round9-02] 嵌套 Tuple 元素需加括号以保留嵌套语义：
             # `for (a, b), (c, d) in x` 中，外层 Tuple 的两个 Tuple 元素必须
             # 各自加括号，否则渲染为 `a, b, c, d`（扁平 4 元组）。
+            # [Round5-B21] 单元素 Tuple 需尾随逗号保留 arity：`(b,)` 渲染成
+            # `(b)` 会退化为普通名（UNPACK_SEQUENCE 1 丢失）。[识别条件] 目标
+            # 节点 Tuple 的 elt 数；[归约方式] 按 elt 数补齐括号/逗号；
+            # [AST 映射] Tuple(1) → `(x,)`/`x,`，与重编译 UNPACK_SEQUENCE 1
+            # 字节等价。[C1] 只读目标节点自身结构。
             elts_code = []
             for elt in elts:
                 elt_code = self._generate_for_target_from_dict(elt)
                 if isinstance(elt, dict) and elt.get('type') == 'Tuple':
+                    # 递归调用对 1 元素 Tuple 已返回 `b,`（见 len(elts)==1 分支），
+                    # 此处仅需补括号：`(b,)` / `(b, c)`。
                     elts_code.append(f'({elt_code})')
                 else:
                     elts_code.append(elt_code)
+            if len(elts) == 1:
+                return elts_code[0] + ','
             return ', '.join(elts_code)
         elif node_type in ('List', 'Starred'):
             inner = self._generate_for_target_from_dict(target.get('value', target.get('values', {})))
@@ -5082,23 +5096,18 @@ class CodeGenerator:
             
             # 生成目标变量代码
             # [关键修复] 对于推导式中的元组目标（如 for k, v in ...），不要加括号
+            # [Round5-B21] 目标渲染统一委托 _generate_for_target_from_dict
+            # （[Round9-02] 判据）：嵌套 Tuple 元素加括号保留嵌套语义、
+            # Starred 元素渲染 *rest，扁平 Tuple 仍为 `k, v` 不加外括号。
+            # 识别条件：目标 AST 形态（Tuple/Starred/Name）；
+            # 归约方式：按目标节点结构递归渲染；
+            # AST 映射：Tuple→逗号连接（嵌套元组加括号）、Starred→*前缀。
+            # [C1] 只读目标节点自身结构；[C2] 子目标黑箱递归。
             if isinstance(target, dict):
-                target_type = target.get('type', '')
-                if target_type == 'Tuple':
-                    # 元组目标：生成 k, v 而不是 (k, v)
-                    elts = target.get('elts', [])
-                    elt_codes = []
-                    for elt in elts:
-                        if isinstance(elt, dict):
-                            elt_codes.append(self._generate_annotation_from_dict(elt))
-                        else:
-                            elt_codes.append(self._generate_expression(elt, 0))
-                    target_code = ', '.join(elt_codes)
-                else:
-                    target_code = self._generate_annotation_from_dict(target)
+                target_code = self._generate_for_target_from_dict(target)
             else:
                 target_code = self._generate_expression(target, 0)
-            
+
             # 生成迭代对象代码
             # [N14最终修复] 对于推导式中的迭代对象，直接使用值而不添加iter()包装
             if isinstance(iter_obj, dict):
@@ -5460,27 +5469,15 @@ class CodeGenerator:
             
             # [关键修复] 处理目标变量
             # 对于元组目标（如 for k, v in ...），生成 k, v 而不是 (k, v)
+            # [Round5-B21] 目标渲染统一委托 for-target 渲染（[Round9-02]）：
+            # 嵌套 Tuple 元素加括号、Starred 元素渲染 *前缀，扁平 Tuple 不变。
+            # [识别条件/归约方式/AST 映射] 同 _generate_comprehensions_from_dict
+            # 的 [Round5-B21] 注记；[C1]/[C2] 同。
             target_obj = gen._target
             if isinstance(target_obj, dict):
-                target_type = target_obj.get('type', '')
-                if target_type == 'Tuple':
-                    # 元组目标：生成 k, v 而不是 (k, v)
-                    elts = target_obj.get('elts', [])
-                    elt_codes = []
-                    for elt in elts:
-                        if isinstance(elt, dict):
-                            elt_codes.append(self._generate_annotation_from_dict(elt))
-                        else:
-                            elt_codes.append(self._generate_expression(elt, 0))
-                    target_code = ', '.join(elt_codes)
-                else:
-                    target_code = self._generate_annotation_from_dict(target_obj)
+                target_code = self._generate_for_target_from_dict(target_obj)
             elif isinstance(target_obj, ASTTuple):
-                # 元组目标：生成 k, v 而不是 (k, v)
-                elt_codes = []
-                for elt in target_obj.elts if hasattr(target_obj, 'elts') else []:
-                    elt_codes.append(self._generate_expression(elt, 0))
-                target_code = ', '.join(elt_codes)
+                target_code = self._generate_for_target(target_obj)
             else:
                 # [关键修复] 使用0作为parent_precedence，避免目标变量被添加括号
                 target_code = self._generate_expression(target_obj, 0)

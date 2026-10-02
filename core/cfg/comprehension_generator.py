@@ -1047,6 +1047,17 @@ class ComprehensionGenerator:
         生成多个 generator，按外→内顺序。第一个 generator 的 iter 是 iter_expr
         （外部传入），后续 generator 的 iter 由 LOAD_* + GET_ITER 重建。
         元素表达式从最内层 FOR_ITER 的 STORE_* 之后、APPEND 之前提取。
+
+        [Round5-B20] 每个 clause 的过滤条件按归属 clause 各自提取：
+        [识别条件] clause k 的过滤跳转链全部回跳 clause k 自己的 FOR_ITER
+        偏移，且位于该 clause 目标存储序列之后、下一 clause FOR_ITER 之前
+        （最内层则位于 APPEND 之前）；[归约方式] 非最内层 clause 以
+        [seq_end_k, fi_{k+1}) 为窗复用 _extract_comp_ifs 的段机制（BACKWARD
+        回跳段=and 成员、前向 IF_TRUE+回向 IF_FALSE=or 过滤，[R10]/[B6-comp]
+        判据沿用），最内层保持原窗 [store, APPEND)，互不重叠（[C3] 守卫）；
+        [AST 映射] 过滤表达式依序挂到对应 comprehension.ifs，多过滤按既有
+        and/or 合并规则合并。 [C1] 窗口边界只由本指令流的 FOR_ITER 偏移与
+        存储序列末端决定，不读父/邻区域信息。
         """
         append_op, append_idx = self._find_comp_append_op(all_instrs)
         if append_op is None:
@@ -1060,25 +1071,45 @@ class ComprehensionGenerator:
                 break
 
         generators = []
+        # [Round5-B20] 上一 clause 过滤段之后的窗起点（= 本 clause iter 表达式的
+        # 指令窗起点）。每个非最内层 clause 的过滤谓词链挂在该 clause 的
+        # FOR_ITER 之后、下一 clause FOR_ITER 之前：clause k 的过滤跳转全部
+        # 回跳 clause k 自己的 FOR_ITER 偏移，最后一个过滤跳转之后的指令才是
+        # 下一 clause 的可迭代对象求值序列。故 clause k 的 ifs 提取窗取
+        # [seq_end_k, fi_{k+1})，_extract_comp_ifs 返回的 elt_start 恰为
+        # clause k+1 的 iter 窗起点。
+        _next_iter_start = None
         for gen_idx, fi_idx in enumerate(for_iter_indices):
-            # target = STORE_* right after FOR_ITER
-            if fi_idx + 1 >= len(all_instrs):
+            # [Round5-B21] target 按存储序列结构解析（支持嵌套元组/星号），
+            # 不再要求 FOR_ITER 后恰为单条 STORE_*。
+            target, seq_end = self._parse_target_store_sequence(all_instrs, fi_idx + 1)
+            if target is None:
                 return None
-            store_instr = all_instrs[fi_idx + 1]
-            if store_instr.opname not in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
-                return None
-            target = {
-                'type': 'Name',
-                'id': store_instr.argval,
-                'ctx': 'Store',
-            }
+
+            # 本 clause 的 iter 窗起点 = 上一 clause 过滤段之后的位置
+            # （gen_idx==0 时用外部传入 iter_expr，不读该值）。
+            _iter_start = _next_iter_start
+
+            # [Round5-B20] 非最内层 clause 的过滤条件：窗口 [seq_end, 下一
+            # FOR_ITER)。_extract_comp_ifs 的段机制按同层结构事实甄别过滤段
+            # （BACKWARD 回跳段）与三元/or 过滤（[R10]/[B6-comp] 判据沿用，
+            # append 锚点换成下一 clause 的 FOR_ITER 偏移）；其返回的窗起点
+            # 即本 clause 过滤段之后的位置 = 下一 clause 的 iter 窗起点。
+            # 最内层 clause 的 ifs 由后置既有逻辑提取（窗口到 APPEND 为止），
+            # 此处置空占位，避免同一过滤被双重归属（[C3] 显式守卫）。
+            ifs = []
+            if gen_idx + 1 < len(for_iter_indices):
+                ifs, _next_iter_start = self._extract_comp_ifs(
+                    all_instrs, seq_end - 1, for_iter_indices[gen_idx + 1])
 
             if gen_idx == 0:
                 # 第一个 for 的 iter 来自外部传入
                 gen_iter_expr = iter_expr
             else:
-                # 后续 for 的 iter 来自前一个 STORE_* 之后、本 FOR_ITER 之前的 LOAD_* + GET_ITER
-                # 定位本 FOR_ITER 之前的 GET_ITER
+                # 后续 for 的 iter 来自「上一 clause 过滤段之后」到本 FOR_ITER
+                # 之前的 GET_ITER 之间的 LOAD_* + GET_ITER 序列。
+                # [Round5-B20] 窗起点不再回扫 STORE（有过滤时会把过滤跳转误
+                # 收进 iter 窗），改用上一 clause 过滤提取返回的窗起点。
                 get_iter_idx = None
                 for j in range(fi_idx - 1, -1, -1):
                     if all_instrs[j].opname == 'GET_ITER':
@@ -1086,15 +1117,10 @@ class ComprehensionGenerator:
                         break
                     if all_instrs[j].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
                         break
-                if get_iter_idx is None:
+                if get_iter_idx is None or _iter_start is None:
                     return None
-                # iter 表达式指令范围：从上一个 STORE_* 之后到 GET_ITER 之前
-                start_idx = 0
-                for j in range(get_iter_idx - 1, -1, -1):
-                    if all_instrs[j].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
-                        start_idx = j + 1
-                        break
-                iter_instrs = [i for i in all_instrs[start_idx:get_iter_idx]
+                # iter 表达式指令范围：从过滤段之后到 GET_ITER 之前
+                iter_instrs = [i for i in all_instrs[_iter_start:get_iter_idx]
                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                 gen_iter_expr = self.expr_reconstructor.reconstruct(iter_instrs) if iter_instrs else None
                 if gen_iter_expr is None:
@@ -1104,7 +1130,7 @@ class ComprehensionGenerator:
                 'type': 'comprehension',
                 'target': target,
                 'iter': gen_iter_expr,
-                'ifs': [],
+                'ifs': list(ifs),
                 'is_async': is_async,
             })
 
@@ -1346,16 +1372,125 @@ class ComprehensionGenerator:
             return 0
 
     def _find_comp_target_names(self, all_instrs: List[Instruction], first_only: bool = False) -> Union[Optional[str], List[str]]:
+        """收集推导式 code object 内的迭代目标名（名袋，仅作回退用途）。
+
+        [识别条件] 名袋 = 全部 STORE_FAST/STORE_DEREF/STORE_NAME 的 argval
+        （排除 .0），但排除 walrus 副作用块内的 STORE： walrus 在 3.11 编译为
+        ``COPY 1; STORE_*``，其 STORE 紧跟 COPY 之后且位于 elt/if 表达式窗内，
+        不属于迭代目标存储序列（与 _split_dict_comp_kv 的 [Round10-05] 守卫
+        同一结构事实）。迭代目标的 STORE 来自 FOR_ITER/UNPACK 链，其后继前
+        指令不是 COPY。
+        [归约方式] 线性扫描去重收集；first_only 时返回首个非 .0 的 STORE 名。
+        [AST 映射] 无独立映射，仅供 _build_comprehension_target 回退路径与
+        target_name 定位使用。
+
+        [C1] 仅读本推导式指令流（L(A)）；[C3] walrus STORE 经显式守卫
+        （前驱 COPY arg==1）排除，防止表达式内绑定被吸收为幻影迭代目标。
+        """
         names = []
-        for instr in all_instrs:
+        _walrus_store_indices = set()
+        for _i in range(len(all_instrs) - 1):
+            _cur = all_instrs[_i]
+            _nxt = all_instrs[_i + 1]
+            if (_cur.opname == 'COPY' and _cur.arg == 1
+                    and _nxt.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL')
+                    and _nxt.argval != '.0'):
+                _walrus_store_indices.add(_i + 1)
+        for idx, instr in enumerate(all_instrs):
             if instr.opname in ('STORE_FAST', 'STORE_DEREF', 'STORE_NAME'):
+                if idx in _walrus_store_indices:
+                    continue
                 if instr.argval != '.0' and instr.argval not in names:
                     if first_only:
                         return instr.argval
                     names.append(instr.argval)
         return names if not first_only else None
 
+    def _parse_target_store_sequence(self, all_instrs: List[Instruction], pos: int) -> Tuple[Optional[Dict], int]:
+        """[Round5-B21/B22] 按 UNPACK_SEQUENCE/UNPACK_EX 的栈结构递归解析 for-target 存储序列。
+
+        [识别条件] 目标存储序列 = FOR_ITER 之后由 STORE_* 与
+        UNPACK_SEQUENCE/UNPACK_EX 构成的前缀：叶目标是一条 STORE_*；元组目标
+        以 UNPACK_SEQUENCE n 开头，其后恰好 n 个子目标按左→右存储序展开；星号
+        目标以 UNPACK_EX arg 开头（低 8 位 = 星号前元素数，高 8 位 = 星号后
+        元素数），星号位本身是一个子目标。EXTENDED_ARG 为纯 arg 前缀，跳过。
+        walrus 的 ``COPY 1; STORE_*`` 副作用块不属于该前缀（其 STORE 位于
+        elt/if 表达式窗、且前驱是 COPY 而非 UNPACK/FOR_ITER），结构上不可达，
+        故不会被吸收为迭代目标。
+        [归约方式] 对前缀做确定性递归下降：遇 STORE_* 产出 Name 叶并前进一步；
+        遇 UNPACK_* 按其 arity/星号位递归消费对应个数的子目标后组合成
+        Tuple/Starred 节点；解析失败（前缀断裂）返回 None。
+        [AST 映射] Name(id, ctx=Store) / Tuple(elts=[...], ctx=Store) /
+        Starred(value=目标, ctx=Store)，嵌套深度与星号组合不限。
+
+        [C1] 仅读本推导式指令流的同层结构事实（操作码形态/栈效应）；
+        [C2] 子目标作为黑箱递归组合，父层不窥视子层内部。
+        """
+        n = len(all_instrs)
+        while pos < n and all_instrs[pos].opname == 'EXTENDED_ARG':
+            pos += 1
+        if pos >= n:
+            return None, pos
+        instr = all_instrs[pos]
+        if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
+            if instr.argval == '.0':
+                return None, pos
+            return {'type': 'Name', 'id': instr.argval, 'ctx': 'Store'}, pos + 1
+        if instr.opname == 'UNPACK_SEQUENCE':
+            arity = instr.arg
+            pos += 1
+            elts = []
+            for _ in range(arity):
+                elt, pos = self._parse_target_store_sequence(all_instrs, pos)
+                if elt is None:
+                    return None, pos
+                elts.append(elt)
+            return {'type': 'Tuple', 'elts': elts, 'ctx': 'Store'}, pos
+        if instr.opname == 'UNPACK_EX':
+            before = instr.arg & 0xFF
+            after = (instr.arg >> 8) & 0xFF
+            pos += 1
+            elts = []
+            for _ in range(before):
+                elt, pos = self._parse_target_store_sequence(all_instrs, pos)
+                if elt is None:
+                    return None, pos
+                elts.append(elt)
+            starred, pos = self._parse_target_store_sequence(all_instrs, pos)
+            if starred is None:
+                return None, pos
+            elts.append({'type': 'Starred', 'value': starred, 'ctx': 'Store'})
+            for _ in range(after):
+                elt, pos = self._parse_target_store_sequence(all_instrs, pos)
+                if elt is None:
+                    return None, pos
+                elts.append(elt)
+            return {'type': 'Tuple', 'elts': elts, 'ctx': 'Store'}, pos
+        return None, pos
+
     def _build_comprehension_target(self, all_instrs: List[Instruction]) -> Optional[Dict]:
+        """构造推导式迭代目标 AST（B21/B22：结构化解包解析，名袋仅作回退）。
+
+        [识别条件] 同步推导式的目标存储序列紧跟 FOR_ITER 之后（含嵌套
+        UNPACK_SEQUENCE/UNPACK_EX 与星号位）；异步推导式（GET_ANEXT/SEND
+        布局，无 FOR_ITER）暂无该前缀锚点。
+        [归约方式] 优先以 _parse_target_store_sequence 从 FOR_ITER 之后做
+        结构化递归解析；仅当找不到 FOR_ITER 或前缀断裂（异步布局等结构未
+        覆盖形态）时回退到 _find_comp_target_names 名袋（已带 walrus COPY
+        守卫），与旧行为兼容。
+        [AST 映射] 单目标 → Name；解包 → Tuple（嵌套 Tuple/Starred 依
+        UNPACK 结构保留）；不再按名袋一律拍平为顶层 Tuple。
+
+        [C1] 结构判据只读本推导式指令流；[C2] 嵌套子目标黑箱递归；
+        [C3] 名袋回退路径以 walrus COPY 守卫显式排除表达式内绑定。
+        """
+        for i, instr in enumerate(all_instrs):
+            if instr.opname == 'FOR_ITER':
+                target, _seq_end = self._parse_target_store_sequence(all_instrs, i + 1)
+                if target is not None:
+                    return target
+                break
+
         target_names = self._find_comp_target_names(all_instrs)
 
         if len(target_names) == 1:
