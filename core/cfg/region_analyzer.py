@@ -12951,12 +12951,24 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             target = None
             if bw_pos + 1 < len(instructions):
                 next_instr = instructions[bw_pos + 1]
-                if next_instr.opname == 'UNPACK_SEQUENCE':
-                    # with ctx as (a, b): 模式 - 多目标 as 绑定
-                    # 字节码模式: BEFORE_WITH, UNPACK_SEQUENCE N, STORE_* x N
+                if next_instr.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
+                    # with ctx as (a, b): / with ctx as (a, *rest): 模式 -
+                    # 多目标 as 绑定（含星号）。[Round6-B33] UNPACK_EX 与
+                    # UNPACK_SEQUENCE 同属 withitem 解包链：BEFORE_WITH 之后
+                    # 紧跟 UNPACK_EX + N×STORE_* 是「元组/星号目标」的结构
+                    # 事实（操作码形态链判据，非启发式）。UNPACK_EX.argval
+                    # 编码：低 8 位 = 前置目标数 before，高 8 位 = 后置目标数
+                    # after，目标总数 = before + 1 + after，星号目标位于第
+                    # before+1 位（前置之后、后置之前）。
                     unpack_count = next_instr.argval if isinstance(next_instr.argval, int) else next_instr.arg
                     if not isinstance(unpack_count, int):
                         unpack_count = 2
+                    _starred_idx = -1
+                    if next_instr.opname == 'UNPACK_EX':
+                        _unpack_before = unpack_count & 0xFF
+                        _unpack_after = (unpack_count >> 8) & 0xFF
+                        unpack_count = _unpack_before + 1 + _unpack_after
+                        _starred_idx = _unpack_before
                     names = []
                     j = bw_pos + 2
                     for _ in range(unpack_count):
@@ -12966,9 +12978,17 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                         else:
                             break
                     if names and len(names) == unpack_count:
+                        _elts = []
+                        for _ni, _nm in enumerate(names):
+                            if _ni == _starred_idx:
+                                _elts.append({'type': 'Starred',
+                                              'value': {'type': 'Name', 'id': _nm, 'ctx': 'Store'},
+                                              'ctx': 'Store'})
+                            else:
+                                _elts.append({'type': 'Name', 'id': _nm, 'ctx': 'Store'})
                         target = {
                             'type': 'Tuple',
-                            'elts': [{'type': 'Name', 'id': n, 'ctx': 'Store'} for n in names],
+                            'elts': _elts,
                             'ctx': 'Store',
                         }
                 elif next_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):

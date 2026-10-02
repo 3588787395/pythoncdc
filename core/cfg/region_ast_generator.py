@@ -27416,6 +27416,38 @@ AST 映射规则:
                         handler_body.append({'type': 'Break'})
                         self.generated_blocks.add(hb)
                         continue
+                    # [Round6-B29] handler 体内「异常栈清理 + 跨循环出口直跳」块
+                    # = break。区域归约语义：控制离开所属循环结构域的出口只有
+                    # 四种——return（RETURN_* 终结，role=RETURN）、raise
+                    # （RERAISE/RAISE_VARARGS 终结）、continue（回边，目标=
+                    # 循环 header，JUMP_BACKWARD）、break（唯一剩余形态：有效
+                    # 指令仅为异常栈清理 POP_EXCEPT/POP_TOP/POP_BLOCK，以无条
+                    # 件 JUMP_FORWARD/JUMP_ABSOLUTE 终结，且跳转目标在所属
+                    # LoopRegion 及其全部后代区域的块集之外）。目标仍在循环结
+                    # 构域之内时是体内续接，不进入本分支，维持既有发射。
+                    _hb_last = hb.get_last_instruction()
+                    if (_hb_last is not None
+                            and _hb_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                            and isinstance(_hb_last.argval, int)):
+                        _hb_cleanup = [i for i in hb.instructions
+                                       if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                           'EXTENDED_ARG',
+                                                           'JUMP_FORWARD',
+                                                           'JUMP_ABSOLUTE')]
+                        if _hb_cleanup and all(
+                                i.opname in ('POP_TOP', 'POP_EXCEPT', 'POP_BLOCK')
+                                for i in _hb_cleanup):
+                            _hb_loop = region.find_enclosing_parent((LoopRegion,))
+                            if _hb_loop is not None:
+                                _hb_t = self.region_analyzer.cfg.get_block_by_offset(
+                                    _hb_last.argval)
+                                _hb_scope = set(_hb_loop.blocks)
+                                for _hb_desc in _hb_loop.iter_descendants():
+                                    _hb_scope |= set(_hb_desc.blocks)
+                                if _hb_t is not None and _hb_t not in _hb_scope:
+                                    handler_body.append({'type': 'Break'})
+                                    self.generated_blocks.add(hb)
+                                    continue
                     # handler 中的 return 语句：当 handler body 块以
                     # RETURN_VALUE/RETURN_CONST 结束且 block_role 是 RETURN 时，
                     # 检测 return 值。POP_EXCEPT 被过滤后只剩 LOAD_CONST(None)+

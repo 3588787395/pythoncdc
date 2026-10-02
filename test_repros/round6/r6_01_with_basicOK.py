@@ -21,7 +21,7 @@ def w_tuple_unpack(mgr):
         return a + b
         return None
 def w_star_unpack(mgr):
-    with mgr:
+    with mgr as (a, *rest):
         a, *rest = None
         return a + rest[0]
         return None

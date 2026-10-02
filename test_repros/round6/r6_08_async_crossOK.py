@@ -13,7 +13,7 @@ async def af_try(ait):
         try:
             out.append(x)
         except TypeError:
-            pass
+            break
     return out
 async def ad_await_dict(g):
     return {'k': await g(1)}
