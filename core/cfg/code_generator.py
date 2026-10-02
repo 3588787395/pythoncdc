@@ -5438,23 +5438,39 @@ class CodeGenerator:
     
     def _generate_lambda_expr(self, node: ASTLambda) -> str:
         """[关键修复] 生成 lambda 表达式"""
-        # 生成参数列表
-        args = []
-        if hasattr(node, 'args') and node.args:
-            for arg in node.args:
-                if isinstance(arg, ASTName):
-                    args.append(arg.name)
-                elif isinstance(arg, str):
-                    args.append(arg)
-                else:
-                    args.append(str(arg))
-        
-        args_code = ', '.join(args)
-        
+        # [Round5-B25] 优先按节点携带的完整 arguments dict 渲染（含
+        # defaults/kwdefaults/vararg/kwarg）。ast_converter._convert_lambda_expr
+        # 在 args 带 defaults/kw_defaults 时把该 dict 挂到 ASTLambda._args_dict；
+        # 旧扁平路径（args→ASTName 列表）不携带默认值信息，`lambda x=x:` 被渲染
+        # 为 `lambda x:`，重编译 MAKE_FUNCTION flags 1→0（r5_11/probe_lam_default
+        # 双杀）。渲染委托 _generate_arguments_dict（与 FunctionDef 同一发射器，
+        # 按栈序把 defaults 对齐末尾等长位置形参、按名对齐 kw_defaults）。
+        # [识别条件] 节点携带 _args_dict 属性（dict）；
+        # [归约方式] 委托 _generate_arguments_dict 统一渲染；
+        # [AST 映射] arguments.defaults/kw_defaults → `x=d` / `*, y=d`。
+        # [C1] 只读节点自身携带的 args dict；[C2] 默认值表达式子节点照常递归
+        # 渲染；[C3] 未携带 _args_dict 的节点走旧扁平路径（行为不变）。
+        args_dict = getattr(node, '_args_dict', None)
+        if isinstance(args_dict, dict):
+            args_code = self._generate_arguments_dict(args_dict)
+        else:
+            # 生成参数列表
+            args = []
+            if hasattr(node, 'args') and node.args:
+                for arg in node.args:
+                    if isinstance(arg, ASTName):
+                        args.append(arg.name)
+                    elif isinstance(arg, str):
+                        args.append(arg)
+                    else:
+                        args.append(str(arg))
+
+            args_code = ', '.join(args)
+
         # 生成lambda体
         # [关键修复] 使用优先级0避免在lambda体中添加不必要的括号
         body_code = self._generate_expression(node.body, 0) if hasattr(node, 'body') and node.body else 'None'
-        
+
         return f'lambda {args_code}: {body_code}'
     
     def _generate_comprehensions(self, generators: List[ASTComprehension]) -> str:

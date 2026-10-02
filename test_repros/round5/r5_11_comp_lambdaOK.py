@@ -4,9 +4,9 @@
 def lam_late_binding(xs):
     return [lambda : x for x in xs]
 def lam_default_arg(xs):
-    return [lambda x: x * 2 for x in xs]
+    return [lambda x=x: x * 2 for x in xs]
 def lam_with_arg(xs):
-    return [lambda v, y: v + y for x in xs]
+    return [lambda v, y=x: v + y for x in xs]
 def lam_map_pair(xs):
     return list(map(lambda t: t[0], [(x, x * 2) for x in xs]))
 def lam_call_now(xs):

@@ -285,14 +285,30 @@ class ComprehensionGenerator:
                 continue
             pre_comp_instrs = instrs[prev_end:comp_idx - 1]
             _closure_setup_ops = frozenset({'MAKE_CELL', 'LOAD_CLOSURE', 'COPY_FREE_VARS'})
+            # [Round5-B23] 闭包装载序列的识别改为「局部状态机」：closure 系 op
+            # （LOAD_CLOSURE/MAKE_CELL/COPY_FREE_VARS）开启序列，紧随其后的
+            # BUILD_TUPLE 闭合该序列（= MAKE_FUNCTION 的闭包元组）。旧实现要求
+            # 「BUILD_TUPLE 之前全部指令都是 closure 系」才认领，本块只要混入
+            # 任何先导指令（async/生成器函数前导 RETURN_GENERATOR 的伴声
+            # POP_TOP、先前语句的残留）即失配，闭包元组的 BUILD_TUPLE 被当作
+            # 值生产指令留在 pre_comp 段，随后 L306 终止符守卫（末条非
+            # STORE/POP_TOP/IMPORT）把整块判 return None —— 推导式识别被整体
+            # 跳过，函数体落入通用重建坍缩为 `await <iterable>()`（r5_10
+            # a_async_multi/a_await_body 的 MAKE_FUNCTION 8 闭包形态）。
+            # 识别条件：closure 系 op 与 BUILD_TUPLE 的紧邻相邻性（同层结构
+            # 事实）；用户数据的 BUILD_TUPLE 前驱是 LOAD_*/CALL 等，不会被误认。
+            # [C1] 只读本块指令流；[C3] 终止符守卫保持原判据宽度，仅消除
+            # 闭包元组的误报。
             _filtered = []
-            _all_prior_are_closure = True
+            _in_closure_seq = False
             for _pi in pre_comp_instrs:
                 if _pi.opname in _closure_setup_ops:
+                    _in_closure_seq = True
                     continue
-                if _pi.opname == 'BUILD_TUPLE' and _all_prior_are_closure:
+                if _pi.opname == 'BUILD_TUPLE' and _in_closure_seq:
+                    _in_closure_seq = False
                     continue
-                _all_prior_are_closure = False
+                _in_closure_seq = False
                 _filtered.append(_pi)
             pre_comp_instrs = _filtered
             # 区域归约算法原则 3（嵌套即抽象节点）：当 comprehension 是
@@ -544,8 +560,20 @@ class ComprehensionGenerator:
                 # `else: return None` + 死代码重复一条推导式）。
                 # 依区域归约算法原则 3（嵌套即抽象节点）：POP_TOP 是语句终结符，
                 # 把 wrapper 段（表达式）与其后的语句段切开，两段各自归约。
-                _r9_pop_after_wrapper = any(
-                    i.opname == 'POP_TOP' for i in instrs[wrapper_end:])
+                # [Round5-B24] 判据收窄（栈顶来源/前驱形态）：只有 POP_TOP
+                # **紧邻** wrapper 段末（instrs[wrapper_end] 即 POP_TOP）时，
+                # 它弹出的才是推导式值本身 —— 判「推导式值被丢弃」；POP_TOP
+                # 位于其后若干语句之间时，弹出的是那些语句自己的值（如
+                # try/finally 清理段的 append(...) 返回值），推导式值仍悬挂
+                # 栈上，交由后置 RETURN 语义分支与 [Round5-B24] 后继块判据
+                # 归约。旧 any(全窗扫描) 会把「清理语句的 POP_TOP」误读成
+                # 「推导式值被丢弃」，是 r5_09 t_try_finally 的 return 剥除
+                # 共因之一。R9 原形（推导式; POP_TOP; LOAD_CONST None;
+                # RETURN_VALUE 单块）中 POP_TOP 恰紧邻 wrapper 段末，收窄后
+                # 仍命中（不关闭 R9）。
+                _r9_pop_after_wrapper = (
+                    wrapper_end < len(instrs)
+                    and instrs[wrapper_end].opname == 'POP_TOP')
                 last_instr = instrs[-1]
                 if _r9_pop_after_wrapper:
                     all_stmts.append({'type': 'Expr', 'value': comp_value})
@@ -616,6 +644,23 @@ class ComprehensionGenerator:
                         region_ast_gen.generated_blocks.add(_ret_succ)
                         region_ast_gen.generated_offsets.add(_ret_succ.start_offset)
                         prev_end = len(instrs)
+                    elif (_comp_loop_idx == len(comp_indices) - 1
+                          and not last_instr.opname.startswith('JUMP')
+                          and not last_instr.opname.startswith('POP_JUMP')
+                          and self._find_returns_pending_value_successor(block) is not None):
+                        # [Round5-B24] try/finally 包 `return <推导式>`：本块末条
+                        # 指令是推导式值消费型 CALL（值悬挂栈上），其前向正常
+                        # 后继块是 finally 清理段的正常路径副本 —— return 值压栈
+                        # 穿越清理段、由清理段末尾的 RETURN_VALUE 返回（3.11
+                        # 异常表把 try 体在保护区间末尾切块的必然布局）。旧实现
+                        # 在此分支无条件降级 Expr 语句，return 被剥除、值被
+                        # POP_TOP 丢弃、函数改返回 None（r5_09 t_try_finally）。
+                        # 识别条件/归约方式/AST 映射见
+                        # _find_returns_pending_value_successor 三要素注记。
+                        # 不标记后继块为已生成：它仍由 try 区域装配认领为
+                        # finalbody 语句源（原则 3 嵌套即抽象节点）。
+                        all_stmts.append({'type': 'Return', 'value': comp_value})
+                        prev_end = len(instrs)
                     else:
                         all_stmts.append({'type': 'Expr', 'value': comp_value})
                         prev_end = len(instrs)
@@ -636,6 +681,116 @@ class ComprehensionGenerator:
                 region_ast_gen.generated_offsets.add(_eb.start_offset)
 
         return all_stmts if all_stmts else None
+
+    def _find_returns_pending_value_successor(self, block):
+        """[Round5-B24] 识别「返回值穿越清理段」的前向正常后继块（try/finally 包
+        `return <推导式>` 的字节码布局特征）。
+
+        [识别条件] 本块末条指令为值消费型指令（推导式值悬挂栈上，控制流直落）
+        时，检查其前向正常后继块是否满足：
+          (a) 非异常帧头——首条有意义指令 ∈ {PUSH_EXC_INFO, CHECK_EXC_MATCH,
+              CHECK_EG_MATCH} 的块是 handler/异常路径边，不是正常出口；
+          (b) 块体线性——除末条 RETURN_VALUE 外不含任何跳转指令（清理段
+              的用户语句可含调用/属性链，但不回跳不分叉）；
+          (c) 栈效应判据——从栈深 0 起对块内指令按 dis.stack_effect 线性
+              模拟（未知操作码即放弃）：模拟过程中任何时刻不得下溢（下溢=
+              提前消费了悬挂值），且模拟至末条 RETURN_VALUE 前栈深恰为 0，
+              即 RETURN 弹出的操作数不是本块产生的值，而是进入本块前悬挂的
+              调用方值（推导式返回值）。
+        反例甄别（同一判据双向排除）：`LOAD_CONST None; RETURN_VALUE`
+        （隐式 return None 块，末条前栈深 1）、`LOAD_FAST x; RETURN_VALUE`
+        （返回块内产值）、`cleanup; POP_TOP; LOAD y; RETURN_VALUE`（返回
+        块内产值）末条前栈深均非 0，不命中。
+        [归约方式] 该后继块即 try/finally 正常路径清理副本（3.11 异常表把
+        try 体在其保护区间末尾切块，return 值保持压栈穿越清理段，由清理段
+        末尾的 RETURN_VALUE 返回）；推导式值即函数返回值，其消费 RETURN
+        位于后继块而非本块，故本块的推导式表达式归约为 Return 而非 Expr。
+        [AST 映射] Return(comp_value)；重编译后 return 值再次压栈穿越
+        finally 清理段，与原字节码同构（try/finally 与 try/except/finally
+        双形同法：异常边后继被 (a) 排除，正常边后继即清理副本）。
+        [C1] 只读本块与其直接后继的指令流与栈效应，不读区域标签/行表；
+        [C2] 后继块作为清理段整体模拟（黑箱），不窥视其语句归约内部；
+        [C3] (a)(b)(c) 三重守卫显式排除 handler 边、分叉清理段与返回块内
+        产值三类反例，未命中即放弃（交回 Expr 降级原路径）。
+        """
+        try:
+            import dis as _dis
+        except Exception:
+            return None
+        _noise = ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PUSH_NULL')
+        _frame_heads = {'PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'}
+        _jump_prefixes = ('JUMP', 'POP_JUMP')
+        # [Round5-B24] 异常帧簿记 op：POP_EXCEPT 弹的是异常帧伪状态（不承载
+        # 用户值，except handler 内 `return <值>` 经 SWAP 2 + POP_EXCEPT 把
+        # 值留在栈上后剥除帧状态），栈模拟中按 0 处理。SWAP/COPY/RERAISE
+        # 同属帧簿记（异常表把 handler 的 comp 块与清理段切成多个块时，
+        # 中间块可能只含簿记 op）。
+        _frame_bookkeeping = {'POP_EXCEPT', 'COPY', 'SWAP', 'RERAISE'}
+        _last_off = None
+        for _i in reversed(block.instructions):
+            if _i.opname in _noise:
+                continue
+            _last_off = _i.offset if hasattr(_i, 'offset') else None
+            break
+        for s in block.successors:
+            # [Round5-B24] 异常表会把 handler 的「值就位段」与「清理段」切成
+            # 多个块，二者之间可能隔着一个纯簿记块（仅 POP_EXCEPT/COPY/SWAP
+            # 等，无用户值操作）。沿前向正常边穿越簿记块（有界 4 跳、逐跳
+            # 排除异常帧头后继），对首个含用户操作的块做判据检查。
+            _chain_blk = s
+            _user_instrs = [i for i in _chain_blk.instructions if i.opname not in _noise]
+            _hops = 0
+            while (_user_instrs
+                   and all(i.opname in _frame_bookkeeping for i in _user_instrs)
+                   and _hops < 4):
+                _fwd = [t for t in _chain_blk.successors
+                        if getattr(t, 'start_offset', 0) > getattr(_chain_blk, 'start_offset', 0)
+                        and not [j for j in t.instructions[:1] if j.opname in _frame_heads]]
+                if len(_fwd) != 1:
+                    _user_instrs = None
+                    break
+                _chain_blk = _fwd[0]
+                _user_instrs = [i for i in _chain_blk.instructions if i.opname not in _noise]
+                _hops += 1
+            if not _user_instrs:
+                continue
+            s_instrs = _user_instrs
+            # (a) 异常帧头排除
+            if s_instrs[0].opname in _frame_heads:
+                continue
+            # 前向边（正常出口只能向前汇入）
+            s_off = getattr(_chain_blk, 'start_offset', None)
+            if s_off is None or (_last_off is not None and s_off <= _last_off):
+                continue
+            if s_instrs[-1].opname != 'RETURN_VALUE':
+                continue
+            # (b) 线性块：末条 RETURN_VALUE 之前不得有任何跳转
+            if any(i.opname.startswith(_jump_prefixes) for i in s_instrs[:-1]):
+                continue
+            # (c) 栈效应模拟：末条前栈深恰为 0 且全程无下溢
+            depth = 0
+            underflow = False
+            supported = True
+            for i in s_instrs[:-1]:
+                if i.opname in _frame_bookkeeping:
+                    continue
+                try:
+                    try:
+                        eff = _dis.stack_effect(_dis.opmap[i.opname], i.arg if i.arg is not None else 0)
+                    except ValueError:
+                        # 无操作数指令（POP_TOP/RETURN_VALUE 等）不接受 oparg
+                        eff = _dis.stack_effect(_dis.opmap[i.opname])
+                except (KeyError, ValueError):
+                    supported = False
+                    break
+                depth += eff
+                if depth < 0:
+                    underflow = True
+                    break
+            if not supported or underflow or depth != 0:
+                continue
+            return _chain_blk
+        return None
 
     def _generate_pre_comp_stmts(self, pre_instrs, all_instrs, start_idx, region_ast_gen=None):
         stmts = []
@@ -911,9 +1066,16 @@ class ComprehensionGenerator:
         # 多 for 子句（如 `{x+y for x in a for y in b}`）字节码含多个 FOR_ITER，
         # 每个 FOR_ITER 后接 STORE_* target，最后一个 FOR_ITER 的 body 含 element + APPEND。
         # 单 for 路径保留原逻辑；多 for 走新路径分别提取每个 generator。
+        # [Round5-B23] async for 子句（GET_ANEXT 协议块）与同步 FOR_ITER 子句
+        # 一并计入 clause 头：clause 头总数 > 1 即多 clause 路径（`async for x
+        # in ait for y in b` 的内层只有 1 个 FOR_ITER + 1 个 GET_ANEXT，旧判据
+        # 漏判走单 for 路径，异步 clause 目标被同步 FOR_ITER 的名袋/前缀解析
+        # 错误认领）。
         for_iter_indices = [i for i, instr in enumerate(all_instrs) if instr.opname == 'FOR_ITER']
-        if len(for_iter_indices) > 1:
-            return self._parse_multi_for_comprehension(code_obj, all_instrs, iter_expr, for_iter_indices)
+        _async_head_indices = self._find_async_clause_heads(all_instrs)
+        if len(for_iter_indices) + len(_async_head_indices) > 1:
+            return self._parse_multi_for_comprehension(code_obj, all_instrs, iter_expr,
+                                                       for_iter_indices, _async_head_indices)
 
         target_name = self._find_comp_target_names(all_instrs, first_only=True)
         if target_name is None:
@@ -1027,7 +1189,63 @@ class ComprehensionGenerator:
 
         return self._build_comp_result(code_obj, elt_expr, generators)
 
-    def _parse_multi_for_comprehension(self, code_obj, all_instrs, iter_expr, for_iter_indices):
+    def _find_async_clause_heads(self, all_instrs: List[Instruction]) -> List[Tuple[int, int]]:
+        """[Round5-B23] 识别推导式 code object 内 async for 子句头（GET_ANEXT 取值协议块）。
+
+        [识别条件] 3.11 async-for 取值协议：GET_ANEXT; LOAD_CONST None; SEND;
+        （YIELD_VALUE; RESUME; JUMP_BACKWARD_NO_INTERRUPT 回环），其后第一条
+        STORE_*/UNPACK_SEQUENCE/UNPACK_EX 即该 clause 目标存储序列起点
+        （协议尾可含 END_ASYNC_FOR/CLEANUP_THROW——3.12+ 以 CLEANUP_THROW
+        替代部分协议尾，同法计入）。每 async clause 恰有一个 GET_ANEXT 协议
+        块，其回跳边（JUMP_BACKWARD/JUMP_BACKWARD_NO_INTERRUPT 目标 =
+        GET_ANEXT 偏移）与过滤跳转（POP_JUMP_BACKWARD_IF_FALSE 目标 =
+        GET_ANEXT 偏移）共同构成该 clause 的循环头语义，与同步 clause 的
+        FOR_ITER 头同构。
+        [归约方式] 线性扫描：GET_ANEXT 后跳过 CACHE/EXTENDED_ARG/NOP 取
+        LOAD_CONST(None)+SEND 协议头，再跳过协议尾指令集取第一条目标存储
+        序列指令；返回 [(头索引, 目标存储序列起点索引), ...] 按偏移序。
+        [AST 映射] 无独立映射；供 _parse_multi_for_comprehension 统一 clause
+        装配（该 clause 的 is_async=1、target 自目标序列起点结构化解析）。
+        [C1] 仅读本推导式指令流（操作码形态/常量值）；[C2] 协议块整体消费，
+        不重组其内部；[C3] 头判据失败即不认领（返回空表，走既有单 for 路径）。
+        """
+        heads: List[Tuple[int, int]] = []
+        n = len(all_instrs)
+        _skip = ('CACHE', 'EXTENDED_ARG', 'NOP')
+        _tail_ops = {'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT',
+                     'CLEANUP_THROW', 'END_ASYNC_FOR', 'CACHE', 'EXTENDED_ARG', 'NOP'}
+        for i, instr in enumerate(all_instrs):
+            if instr.opname != 'GET_ANEXT':
+                continue
+            j = i + 1
+            while j < n and all_instrs[j].opname in _skip:
+                j += 1
+            if j + 1 >= n:
+                continue
+            if all_instrs[j].opname != 'LOAD_CONST' or all_instrs[j].argval is not None:
+                continue
+            j += 1
+            while j < n and all_instrs[j].opname in _skip:
+                j += 1
+            if j >= n or all_instrs[j].opname != 'SEND':
+                continue
+            pos = j + 1
+            target_pos = None
+            while pos < n:
+                op = all_instrs[pos].opname
+                if op in _tail_ops:
+                    pos += 1
+                    continue
+                if op in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL',
+                          'UNPACK_SEQUENCE', 'UNPACK_EX'):
+                    target_pos = pos
+                break
+            if target_pos is not None:
+                heads.append((i, target_pos))
+        return heads
+
+    def _parse_multi_for_comprehension(self, code_obj, all_instrs, iter_expr, for_iter_indices,
+                                       async_clause_heads=None):
         """[Round5-03] 多 for 子句推导式重建。
 
         字节码结构（以 `{x+y for x in a for y in b}` 为例）:
@@ -1058,69 +1276,99 @@ class ComprehensionGenerator:
         [AST 映射] 过滤表达式依序挂到对应 comprehension.ifs，多过滤按既有
         and/or 合并规则合并。 [C1] 窗口边界只由本指令流的 FOR_ITER 偏移与
         存储序列末端决定，不读父/邻区域信息。
+
+        [Round5-B23] async 子句统一装配：clause 头 = 同步 FOR_ITER ∪ async
+        GET_ANEXT 协议块（_find_async_clause_heads），按偏移序合并为同一
+        clause 序列。async clause 的目标存储序列位于 GET_ANEXT; LOAD_CONST
+        None; SEND; (YIELD_VALUE; RESUME; JUMP_BACKWARD_NO_INTERRUPT) 协议块
+        之后（CLEANUP_THROW/END_ASYNC_FOR 兼容计入协议尾），其过滤跳转回跳
+        该 GET_ANEXT 偏移、iter 表达式窗锚点为 GET_AITER（同步 clause 锚点
+        为 GET_ITER）——两种头的窗口语义完全同构，判据仅按头种类选择锚点
+        操作码；is_async 标志沿 clause 归位（async 头 → 1，同步头 → 0），
+        不再整推导式统一标记。 [C1] 只读本推导式指令流；[C2] GET_ANEXT/
+        SEND 协议块作为取值协议整体消费（等价于同步路径的 FOR_ITER 头）；
+        [C3] 头种类只改变锚点操作码选择，过滤窗/存储序列窗互不重叠守卫
+        与 B20 相同。
         """
         append_op, append_idx = self._find_comp_append_op(all_instrs)
         if append_op is None:
             return None
 
-        is_async = 0
-        for instr in all_instrs:
-            # 同单 for 路径，检测 async 标记。
-            if instr.opname in ('GET_AITER', 'GET_ANEXT', 'END_ASYNC_FOR'):
-                is_async = 1
-                break
+        # [Round5-B23] 统一 clause 头：同步 FOR_ITER ∪ async GET_ANEXT 协议块。
+        _async_heads = list(async_clause_heads or [])
+        _async_target_pos = {h: tp for h, tp in _async_heads}
+        _async_head_set = {h for h, _ in _async_heads}
+        heads = sorted(list(for_iter_indices) + [h for h, _ in _async_heads])
+        if not heads:
+            return None
 
         generators = []
+        _seq_ends = []
         # [Round5-B20] 上一 clause 过滤段之后的窗起点（= 本 clause iter 表达式的
         # 指令窗起点）。每个非最内层 clause 的过滤谓词链挂在该 clause 的
         # FOR_ITER 之后、下一 clause FOR_ITER 之前：clause k 的过滤跳转全部
         # 回跳 clause k 自己的 FOR_ITER 偏移，最后一个过滤跳转之后的指令才是
         # 下一 clause 的可迭代对象求值序列。故 clause k 的 ifs 提取窗取
         # [seq_end_k, fi_{k+1})，_extract_comp_ifs 返回的 elt_start 恰为
-        # clause k+1 的 iter 窗起点。
+        # clause k+1 的 iter 窗起点。 [Round5-B23] 下一 clause 头为 async 时，
+        # 锚点偏移取其 GET_ANEXT 偏移（async clause 的过滤跳转回跳该偏移，
+        # 语义与 FOR_ITER 锚点同构）。
         _next_iter_start = None
-        for gen_idx, fi_idx in enumerate(for_iter_indices):
+        for gen_idx, head_idx in enumerate(heads):
+            _is_async_clause = head_idx in _async_head_set
+            if _is_async_clause:
+                _target_pos = _async_target_pos[head_idx]
+            else:
+                _target_pos = head_idx + 1
             # [Round5-B21] target 按存储序列结构解析（支持嵌套元组/星号），
             # 不再要求 FOR_ITER 后恰为单条 STORE_*。
-            target, seq_end = self._parse_target_store_sequence(all_instrs, fi_idx + 1)
+            target, seq_end = self._parse_target_store_sequence(all_instrs, _target_pos)
             if target is None:
                 return None
+            _seq_ends.append(seq_end)
 
             # 本 clause 的 iter 窗起点 = 上一 clause 过滤段之后的位置
             # （gen_idx==0 时用外部传入 iter_expr，不读该值）。
             _iter_start = _next_iter_start
 
             # [Round5-B20] 非最内层 clause 的过滤条件：窗口 [seq_end, 下一
-            # FOR_ITER)。_extract_comp_ifs 的段机制按同层结构事实甄别过滤段
+            # 头)。_extract_comp_ifs 的段机制按同层结构事实甄别过滤段
             # （BACKWARD 回跳段）与三元/or 过滤（[R10]/[B6-comp] 判据沿用，
-            # append 锚点换成下一 clause 的 FOR_ITER 偏移）；其返回的窗起点
+            # append 锚点换成下一 clause 头偏移）；其返回的窗起点
             # 即本 clause 过滤段之后的位置 = 下一 clause 的 iter 窗起点。
             # 最内层 clause 的 ifs 由后置既有逻辑提取（窗口到 APPEND 为止），
             # 此处置空占位，避免同一过滤被双重归属（[C3] 显式守卫）。
             ifs = []
-            if gen_idx + 1 < len(for_iter_indices):
+            if gen_idx + 1 < len(heads):
                 ifs, _next_iter_start = self._extract_comp_ifs(
-                    all_instrs, seq_end - 1, for_iter_indices[gen_idx + 1])
+                    all_instrs, seq_end - 1, heads[gen_idx + 1])
 
             if gen_idx == 0:
                 # 第一个 for 的 iter 来自外部传入
                 gen_iter_expr = iter_expr
             else:
-                # 后续 for 的 iter 来自「上一 clause 过滤段之后」到本 FOR_ITER
-                # 之前的 GET_ITER 之间的 LOAD_* + GET_ITER 序列。
-                # [Round5-B20] 窗起点不再回扫 STORE（有过滤时会把过滤跳转误
-                # 收进 iter 窗），改用上一 clause 过滤提取返回的窗起点。
-                get_iter_idx = None
-                for j in range(fi_idx - 1, -1, -1):
-                    if all_instrs[j].opname == 'GET_ITER':
-                        get_iter_idx = j
+                # 后续 for 的 iter 来自「上一 clause 过滤段之后」到本 clause
+                # 迭代协议锚点之间的 LOAD_* + 锚点序列。 [Round5-B20] 窗起点
+                # 不再回扫 STORE（有过滤时会把过滤跳转误收进 iter 窗），改用
+                # 上一 clause 过滤提取返回的窗起点。 [Round5-B23] async clause
+                # 的锚点为 GET_AITER（async-for 在 comp 内对非首个 clause 需要
+                # 显式建立 async 迭代器；首个 clause 的迭代器由外层 GET_AITER
+                # 建立后传入 .0，故 gen_idx==0 不回扫），同步 clause 锚点仍为
+                # GET_ITER。
+                anchor_op = 'GET_AITER' if _is_async_clause else 'GET_ITER'
+                anchor_idx = None
+                for j in range(head_idx - 1, -1, -1):
+                    if all_instrs[j].opname == anchor_op:
+                        anchor_idx = j
                         break
                     if all_instrs[j].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
                         break
-                if get_iter_idx is None or _iter_start is None:
+                    if _iter_start is not None and j < _iter_start:
+                        break
+                if anchor_idx is None or _iter_start is None:
                     return None
-                # iter 表达式指令范围：从过滤段之后到 GET_ITER 之前
-                iter_instrs = [i for i in all_instrs[_iter_start:get_iter_idx]
+                # iter 表达式指令范围：从过滤段之后到锚点之前
+                iter_instrs = [i for i in all_instrs[_iter_start:anchor_idx]
                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                 gen_iter_expr = self.expr_reconstructor.reconstruct(iter_instrs) if iter_instrs else None
                 if gen_iter_expr is None:
@@ -1131,12 +1379,13 @@ class ComprehensionGenerator:
                 'target': target,
                 'iter': gen_iter_expr,
                 'ifs': list(ifs),
-                'is_async': is_async,
+                'is_async': 1 if _is_async_clause else 0,
             })
 
-        # 最内层 FOR_ITER 的 STORE_* 索引（用于元素提取）
-        innermost_fi_idx = for_iter_indices[-1]
-        innermost_store_idx = innermost_fi_idx + 1
+        # 最内层 clause 的目标存储序列末端（用于元素提取）。
+        # [Round5-B23] 最内层头可为 async 头：目标序列起点由
+        # _async_target_pos 给出，seq_end 由统一解析记录。
+        innermost_store_idx = _seq_ends[-1] - 1
         # 元素提取：从 innermost_store_idx + 1 到 append_idx
         elt_start_idx = innermost_store_idx + 1
 

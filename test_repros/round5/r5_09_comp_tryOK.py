@@ -23,6 +23,6 @@ def t_method_chain(raw):
 def t_try_finally(xs):
     log = []
     try:
-        [x for x in xs]
+        return [x for x in xs]
     finally:
         log.append(len(xs))

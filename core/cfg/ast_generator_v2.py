@@ -1350,6 +1350,24 @@ class ExpressionReconstructor:
                         func = None
                         break
 
+                # [Round5-B23] PUSH_NULL 双槽布局补消费：`PUSH_NULL; LOAD f` 布局
+                # 中 NULL 标记位于 callable 之下，取完 func 后仍留在栈中。语句级
+                # 窗口只取栈顶所以从未暴露；当调用嵌入更大表达式（推导式 elt =
+                # `x + y + await g(x)` 等，B23 await elt 组合）时该残渣成为
+                # BINARY_OP 的假左操作数，吞掉真实操作数。NULL 标记是伪节点
+                # （永不承载用户值），按 CALL 语义（弹 argc + callable + NULL）
+                # 补消费栈顶残渣；方法调用形（LOAD_METHOD）栈顶是接收者真节点，
+                # 非 PUSH_NULL 不受影响。
+                # [识别条件] func 弹出后栈顶仍为 PUSH_NULL 伪节点；
+                # [归约方式] 补弹一个标记（CALL 语义的第三槽）；
+                # [AST 映射] 无独立映射（纯栈簿记）。
+                # [C1] 仅读本窗口栈内伪节点形态；[C3] 仅认 'PUSH_NULL' 类型
+                # 伪节点，真值节点一律不动。
+                if (func is not None and self.stack
+                        and isinstance(self.stack[-1], dict)
+                        and self.stack[-1].get('type') == 'PUSH_NULL'):
+                    self.stack.pop()
+
             # LOAD_ASSERTION_ERROR 模式特殊处理：
             # ``assert x, msg`` 字节码为
             #   LOAD_ASSERTION_ERROR + <msg> + PRECALL 0 + CALL 0 + RAISE_VARARGS 1

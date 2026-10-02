@@ -967,27 +967,28 @@ class CFGASTConverter:
                     # [关键修复] 将lambda函数的code对象转换为Lambda AST
                     # 使用与_decompile_lambda_function相同的逻辑
                     import dis
-                    
+
                     # 获取lambda函数的参数
                     arg_names = list(code_obj.co_varnames[:code_obj.co_argcount])
                     args = [ASTName(name) for name in arg_names]
-                    
+
                     # 获取lambda函数的字节码指令
                     instructions = list(dis.get_instructions(code_obj))
-                    
+
                     # 提取lambda体（返回值表达式）
                     body_instrs = []
                     for instr in instructions:
                         if instr.opname not in ('COPY_FREE_VARS', 'RESUME', 'RETURN_VALUE'):
                             body_instrs.append(instr)
-                    
+
                     # 使用表达式重建器来解析lambda体
+                    body_dict = None
                     if body_instrs:
                         from .ast_generator_v2 import ExpressionReconstructor
                         reconstructor = ExpressionReconstructor()
                         for instr in body_instrs:
                             reconstructor._process_instruction(instr)
-                        
+
                         if reconstructor.stack:
                             body_dict = reconstructor.stack[-1]
                             body = self._convert_expression(body_dict)
@@ -995,8 +996,41 @@ class CFGASTConverter:
                             body = ASTConstant(None)
                     else:
                         body = ASTConstant(None)
-                    
+
                     if body:
+                        # [Round5-B25] lambda 默认值装配（推导式内/任意表达式位形的
+                        # FunctionObject 路径）：FunctionObject 自带 MAKE_FUNCTION
+                        # flags 解码产物（defaults=flags&1 弹出的 BUILD_TUPLE 元组
+                        # 节点、kw_defaults=flags&2 的 BUILD_CONST_KEY_MAP 字典节
+                        # 点）。旧实现仅按 co_varnames 重建扁平参数名列表，defaults
+                        # 整体丢失（`lambda x=x:` → `lambda x:`，重编译 MAKE_FUNCTION
+                        # 1→0）。此处按 co_varnames/co_flags 布局重建完整 arguments
+                        # dict（位置形参 + kwonly 形参 + vararg/kwarg），把
+                        # FunctionObject 的 defaults/kw_defaults 按栈序/按名对齐挂入，
+                        # 统一经 _convert_lambda_expr 装配（_args_dict 携带 + 发射侧
+                        # _generate_arguments_dict 渲染）。
+                        # [识别条件] code object 为 <lambda> 且宿主 FunctionObject
+                        # 携带 defaults/kw_defaults（MAKE_FUNCTION flags 位结构事实）；
+                        # [归约方式] flags 位 + co_varnames 布局 → arguments dict；
+                        # [AST 映射] defaults 元组按栈序对齐末尾等长位置形参，
+                        # kw_defaults 字典按键名对齐 kwonly 形参。
+                        # [C1] 只读该 FunctionObject 节点与其 code object 布局；
+                        # [C2] 默认值表达式节点作为子节点原样挂入，不窥视其内部；
+                        # [C3] 无 defaults/kw_defaults 时保持旧扁平路径（显式守卫）。
+                        _pos_defaults = expr_dict.get('defaults') if isinstance(expr_dict, dict) else None
+                        _kw_defaults = expr_dict.get('kw_defaults') if isinstance(expr_dict, dict) else None
+                        if _pos_defaults or _kw_defaults:
+                            _lam_args_dict = self._build_lambda_args_dict_from_function_obj(
+                                code_obj, _pos_defaults, _kw_defaults)
+                            _lam_dict = {
+                                'type': 'Lambda',
+                                'args': _lam_args_dict,
+                                'body': body_dict if body_dict is not None else {
+                                    'type': 'Constant', 'value': None},
+                            }
+                            _lam_node = self._convert_lambda_expr(_lam_dict)
+                            if _lam_node is not None:
+                                return _lam_node
                         return ASTLambda(args=args, body=body)
             
             func_def = self._convert_function_def({
@@ -1616,9 +1650,104 @@ class CFGASTConverter:
         body = self._convert_expression(node_dict.get('body', {}))
         if not body:
             body = ASTConstant(None)
-        
+
+        # [Round5-B25] lambda 默认值装配：Lambda dict 的 args 为完整 arguments
+        # dict 时（_build_function_def/_extract_function_args 产出），其
+        # defaults（MAKE_FUNCTION flags&1 弹出的 BUILD_TUPLE 元组按栈序对应
+        # 末尾等长位置形参）与 kw_defaults（flags&2 的 BUILD_CONST_KEY_MAP
+        # 字典按名对齐 kwonly 形参）在旧扁平化（args→ASTName 列表）中被静默
+        # 丢弃，重编译为 MAKE_FUNCTION 0。此处把携带默认值信息的 arguments
+        # dict 原样挂到 ASTLambda 节点（_args_dict），发射侧
+        # (_generate_lambda_expr) 优先按该 dict 渲染 `name=default`。
+        # [识别条件] args 为 dict 且 defaults/kw_defaults 任一非空；
+        # [归约方式] 节点属性携带 + 发射侧委托 _generate_arguments_dict；
+        # [AST 映射] arguments.defaults/kw_defaults → 源码 `x=d`/`*, y=d`。
+        # [C1] 只读本 Lambda 节点自身 args dict；[C2] 默认值表达式作为子节点
+        # 原样携带；[C3] 无默认值时保持旧扁平渲染路径（显式守卫，行为不变）。
+        if isinstance(args_dict, dict) and (args_dict.get('defaults') or args_dict.get('kw_defaults')):
+            lambda_node = ASTLambda(args=args, body=body)
+            lambda_node._args_dict = args_dict
+            return lambda_node
+
         # [关键修复] 创建ASTLambda节点
         return ASTLambda(args=args, body=body)
+
+    def _build_lambda_args_dict_from_function_obj(self, code_obj,
+                                                   pos_defaults: Any,
+                                                   kw_defaults_node: Any) -> Dict[str, Any]:
+        """[Round5-B25] 从 <lambda> code object 布局 + MAKE_FUNCTION flags 解码产物
+        重建完整 arguments dict（defaults/kwdefaults 装配）。
+
+        [识别条件] 宿主 FunctionObject 的 code 为 <lambda>，且其携带
+        defaults（MAKE_FUNCTION flags&1 弹出的栈顶元组节点：BUILD_TUPLE n，
+        按栈序 = 末尾 n 个位置形参的默认值序）或 kw_defaults（flags&2 弹出的
+        BUILD_CONST_KEY_MAP 字典节点：keys=参数名常量、values=默认值表达式）。
+        [归约方式] 依 CPython code object 布局（co_varnames 前 argcount 个为
+        位置形参、其后 co_kwonlyargcount 个为 kwonly 形参、CO_VARARGS/CO_
+        VARKEYWORDS 位给出 */** 形参名）构造 arguments dict；defaults 元组按
+        栈序原样放入 'defaults'（发射侧按「末尾等长位置形参」对齐），
+        kw_defaults 字典按键名对齐到 kwonly 形参位（无默认值的位置为 None）。
+        [AST 映射] arguments.defaults/kw_defaults → 源码 `x=d` / `*, y=d`，
+        经 _convert_lambda_expr 的 _args_dict 携带与发射侧渲染。
+        [C1] 只读该 FunctionObject 节点与其 code object 的布局常量；
+        [C2] 默认值表达式节点作为子节点原样挂入（黑箱）；
+        [C3] 无默认值位显式置 None，不猜测对齐。
+        """
+        arg_count = getattr(code_obj, 'co_argcount', 0)
+        varnames = list(getattr(code_obj, 'co_varnames', ()) or ())
+        kwonly_count = getattr(code_obj, 'co_kwonlyargcount', 0)
+        pos_names = varnames[:arg_count]
+        kwonly_names = varnames[arg_count:arg_count + kwonly_count]
+        vararg_name = None
+        kwarg_name = None
+        flags = getattr(code_obj, 'co_flags', 0)
+        _idx = arg_count + kwonly_count
+        if flags & 0x04 and _idx < len(varnames):
+            vararg_name = varnames[_idx]
+            _idx += 1
+        if flags & 0x08 and _idx < len(varnames):
+            kwarg_name = varnames[_idx]
+
+        args_dict = {
+            'type': 'arguments',
+            'posonlyargs': [],
+            'args': [{'type': 'arg', 'arg': n} for n in pos_names],
+            'vararg': vararg_name,
+            'kwonlyargs': [{'type': 'arg', 'arg': n} for n in kwonly_names],
+            'kw_defaults': [None] * len(kwonly_names),
+            'kwarg': kwarg_name,
+            'defaults': [],
+        }
+
+        if pos_defaults is not None:
+            if isinstance(pos_defaults, dict) and pos_defaults.get('type') in ('Tuple', 'List'):
+                args_dict['defaults'] = list(pos_defaults.get('elts', []) or [])
+            elif isinstance(pos_defaults, dict) and pos_defaults.get('type') == 'Constant' \
+                    and isinstance(pos_defaults.get('value'), (tuple, list)):
+                # [Round5-B25] 重建器对常量默认值元组可产出 Constant 包装的原始
+                # tuple（如 Constant((3,))）；MAKE_FUNCTION flags&1 协议下该元组
+                # 的元素才是各默认值——按元素展开为常量节点，与
+                # region_ast_generator._build_function_def 的同型处理一致。
+                args_dict['defaults'] = [
+                    {'type': 'Constant', 'value': v} for v in pos_defaults['value']]
+            elif isinstance(pos_defaults, list):
+                args_dict['defaults'] = list(pos_defaults)
+            else:
+                args_dict['defaults'] = [pos_defaults]
+
+        if kw_defaults_node is not None and kwonly_names:
+            kw_map = {}
+            if isinstance(kw_defaults_node, dict) and kw_defaults_node.get('type') == 'Dict':
+                keys = kw_defaults_node.get('keys', []) or []
+                values = kw_defaults_node.get('values', []) or []
+                for i, k in enumerate(keys):
+                    key_name = k.get('value') if isinstance(k, dict) else k
+                    if key_name is not None and i < len(values):
+                        kw_map[key_name] = values[i]
+            elif isinstance(kw_defaults_node, dict):
+                kw_map = dict(kw_defaults_node)
+            args_dict['kw_defaults'] = [kw_map.get(n) for n in kwonly_names]
+        return args_dict
 
     # ==================== Match/Case 转换方法 ====================
 
