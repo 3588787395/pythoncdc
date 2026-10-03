@@ -1,0 +1,59 @@
+"""R7-08 三元深层宿主面（if/while/for-else/try/with/match/async）。"""
+
+
+def t_host_if_arms(x, flag):
+    if x > 0:
+        r = "pos" if flag else "pos2"
+    else:
+        r = "neg" if flag else "neg2"
+    return r
+
+
+def t_host_while_body(n, flag):
+    acc = 0
+    while n > 0:
+        acc += n if flag else 1
+        n -= 1
+    return acc
+
+
+def t_host_for_else(xs, flag):
+    total = 0
+    for x in xs:
+        total += x if flag else 0
+    else:
+        total += 100 if flag else 1
+    return total
+
+
+def t_host_try_sections(xs, i, flag):
+    try:
+        r = xs[i] if flag else xs[0]
+    except IndexError:
+        r = -1 if flag else -2
+    finally:
+        r = r if flag else 0
+    return r
+
+
+def t_host_with_body(path, flag):
+    with open(path) as fh:
+        data = fh.read(1 if flag else 2)
+    return data
+
+
+def t_host_match_case(x, flag):
+    match x:
+        case 1:
+            return "one" if flag else "1"
+        case 2:
+            return "two" if flag else "2"
+        case _:
+            return "other" if flag else "?"
+
+
+async def t_host_async_for_body(agen, flag):
+    out = []
+    async for v in agen:
+        out.append(v if flag else 0)
+    return out

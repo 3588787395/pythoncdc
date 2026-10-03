@@ -1,0 +1,31 @@
+"""R7-14 复合条件深层宿主面（BoolOp+三元+链式比较在 if/while/推导式过滤）。"""
+
+
+def h_if_composite(a, b, c, d, flag):
+    if (a < b < c) and (flag and d):
+        return 1
+    return 0
+
+
+def h_while_composite(n, a, b, flag):
+    while n > 0 and (a < b or flag):
+        n -= 1
+    return n
+
+
+def h_listcomp_filter_composite(xs, lim, flag):
+    return [x for x in xs if 0 < x < lim and (flag or x % 2)]
+
+
+def h_if_ternary_chain_composite(a, b, c, flag):
+    if a if flag else b < c:
+        return "t"
+    return "f"
+
+
+def h_for_filter_and_ternary(xs, flag):
+    return [x if flag else -x for x in xs if x and flag]
+
+
+def h_return_composite(a, b, c, flag):
+    return (a and b) if flag else (a < b < c or flag)
