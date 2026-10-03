@@ -39,12 +39,12 @@
   - [x] 5.3 评审工程师复核：终判放行 = 20 hunk 全合规（无白名单/阈值/跨层/self 状态/少发射）+ 读数复跑 21/21 支零虚报 + 变体攻击 6 探针 61 单元 57 MATCH（3 失败经修复前树证实为既有缺口非回归）；新破口 B26（async GenExp 作实参）/B27（嵌套 try 包 return 剥除）/B28（纯 vararg/kwarg lambda）登记；REVIEW2.md
   - [x] 5.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0，units 6554/6617（99.05%）文件 369/402 持平；小测试集 34 REGRESSIONS=0（1505/1568）；quotation 152/153 零新增；tests 257 passed/2 failed——test_BND_21_walrus 由 failed 转 passed（B22 真身增益），零新增失败；VERIFICATION.md
   - [x] 5.5 归档 rounds/round5/ + 提交并 push
-- [ ] Task 6: Round 6 — With/AsyncWith + async 五件套（def/for/with/await/yield from）形态对抗
-  - [ ] 6.1 评审工程师：With/AsyncWith 全链对抗 = 单多上下文管理器 × as 捕获（单名/元组解包）× 嵌套 with × with 内 return/break/continue/raise × with 内推导式/lambda/async 组合 + async 五件套（async def 含 await/async for/async with/yield from）× 循环/try 包 async 结构 × Round 5 残留复验（B26 rv5_23、B27 rv5_24+rv5_26_diag、B28 rv5_25 登记读数不变差）+ 负对照；算法合规审计（在途变更）；登记新破口；REVIEW.md + test_repros/round6/
-  - [ ] 6.2 修复工程师：按区域归约算法封闭登记破口（docstring 三要素 + C1/C2/C3 同步）；Round 5 残留 B26/B27/B28 若具备判据形态一并处理；自测零回退（哨兵 = quotation/jq/quote/tlb/risk + round1-5 抽验）；FIX.md
-  - [ ] 6.3 评审工程师复核：逐 hunk 审查守卫判据合规（算法驱动/嵌套无感/完备精简，零容忍打回）；REVIEW2.md
-  - [ ] 6.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0；小测试集 34 worse=0；quotation 152/153；tests/ 零新增失败；VERIFICATION.md
-  - [ ] 6.5 归档 rounds/round6/ + 提交并 push
+- [x] Task 6: Round 6 — With/AsyncWith + async 五件套（def/for/with/await/yield from）形态对抗
+  - [x] 6.1 评审工程师：16 文件可比 95 单元 66/95（69.47%）+ 3 文件 compile_error，声明证伪；登记 B29–B35 七破口（P0×3/P1×2/P2×2）；Round 5 残留复验偏差 0；合规审计 10 项全过；REVIEW.md + test_repros/round6/
+  - [x] 6.2 修复工程师：四批封闭 B29/B30/B32/B33/B34b/B34c/B35（fbfc2e7b/1c059d1b/4cd2a9f6/30468033），round6 全清 115/115；FIX.md
+  - [x] 6.3 评审工程师复核：读数复跑 21/21 面零虚报但终判打回（A10 BOM 红线/A8 静默移除/A9 破损插桩/A7 四方法缺 C 条款）+ 变体攻击 7 探针 29 单元 18 MATCH 登记 B37–B41 五破口（11 单元，全归因既有缺口）；打回修复 4 项封闭（a6e33367：BOM 恢复/LOOP_BACK_EDGE 方案A 复位/插桩清零/条款补齐）；复验放行（REVIEW2.md §7/§8）
+  - [x] 6.4 主代理验证：批次一 402 重生成 402/402 + 8 分片 compare = REGRESSIONS=4 回退拦截（strategy/commission/slippage/dockerspawner）→ 修复工程师三处算法内修复 R6-F1/F1b/F2（75ca08bd，with-in-try 协同占用可达性/多管理器抑制出口/await 链头资格）→ 终验全部 8 分片 REGRESSIONS=0，**6554/6617（99.05%）369/402 与 Round 5 终态逐位持平**；小测试集 34 = 1505/1568 REGRESSIONS=0；quotation 152/153 零新增；tests 257 passed/2 failed/5 xpassed 基线一致；VERIFICATION.md
+  - [x] 6.5 归档 rounds/round6/ + 提交并 push
 - [ ] Task 7: Round 7 — Ternary + 链式比较 + 表达式面 BoolOp 组合形态对抗
 - [ ] Task 8: Round 8 — 表A 结构形态扫尾（Return/Pass/Delete/Assign 族、Assert、Raise）+ sstrict 缺陷单元对抗抽样
 - [ ] Task 9: Round 9 — B2/B3/B4 守卫族回归攻击 + 前八轮已封闭破口复验（防回归）

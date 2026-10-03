@@ -1,5 +1,5 @@
 {
- "elapsed_sec": 144.2,
+ "elapsed_sec": 16.9,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
@@ -7,7 +7,7 @@
   "success": 46
  },
  "files_total": 51,
- "generated_at": "2026-10-03T16:17:19",
+ "generated_at": "2026-10-03T17:14:12",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
@@ -72,18 +72,15 @@
   {
    "detail": null,
    "failures": [
-    "***<module>.Strategy.on_before_trading_start: Failure: Different control flow",
-    "***<module>.Strategy.on_after_trading_end: Failure: Different control flow",
-    "***<module>.Strategy.on_once_handle: Failure: Different control flow",
     "***<module>.Strategy.tick_worker_thread: Failure: Different control flow"
    ],
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
    "pyc_sha": "8c19ea3751b0",
    "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategyOK.py",
-   "source_sha": "213dbe89ea46",
+   "source_sha": "173368b22d99",
    "status": "failure",
-   "success_rate": 0.8518518518518519,
-   "units_success": 23,
+   "success_rate": 0.9629629629629629,
+   "units_success": 26,
    "units_total": 27
   },
   {
@@ -701,7 +698,7 @@
   "compare_pyc_sha256": "9c7567bd6776b36b",
   "ruler_version": "pylingual-equivalence_check"
  },
- "success_rate": 0.990990990990991,
- "units_success": 990,
+ "success_rate": 0.993993993993994,
+ "units_success": 993,
  "units_total": 999
 }

@@ -1,5 +1,5 @@
 {
- "elapsed_sec": 150.3,
+ "elapsed_sec": 14.9,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
@@ -7,7 +7,7 @@
   "success": 46
  },
  "files_total": 51,
- "generated_at": "2026-10-03T16:14:12",
+ "generated_at": "2026-10-03T17:13:28",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
