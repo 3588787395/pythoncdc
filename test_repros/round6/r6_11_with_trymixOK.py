@@ -15,15 +15,15 @@ def w_with_in_except(mgr):
             return 3
 def w_with_in_finally(mgr, v):
     try:
-        v
+        return v
     finally:
         with mgr:
-            return None
+            pass
 def w_tryfin_with_tryfin(mgr, xs):
     try:
         with mgr:
             try:
-                xs[0]
+                return xs[0]
             finally:
                 xs.append(1)
     finally:
@@ -32,5 +32,6 @@ def w_raise_caught_outside(mgr):
     try:
         with mgr:
             raise ValueError('x')
+        return None
     except ValueError:
         return 4

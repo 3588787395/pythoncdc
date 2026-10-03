@@ -11,7 +11,7 @@ def w_break(mgr, xs):
             if x > 2:
                 break
         return x
-        return None
+        return x
 def w_continue(mgr, xs):
     total = 0
     with mgr:

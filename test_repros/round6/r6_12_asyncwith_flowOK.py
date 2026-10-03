@@ -24,5 +24,4 @@ async def aw_raise(mgr, v):
         raise ValueError(v)
 async def aw_await_expr(mgr, g):
     async with mgr as f:
-        await g(f)
-        return f
+        return await g(f) + f

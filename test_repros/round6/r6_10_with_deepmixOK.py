@@ -7,15 +7,14 @@ def w_loop_nest_with(mgr, xs):
             with mgr as y:
                 if y:
                     return x
+    return None
 def w_break_in_with(mgr, xs):
     with mgr:
         for x in xs:
             if x:
                 break
         else:
-            while False:
-                pass
-        return -1
+            return -1
     return 0
 def w_assign_after_with(mgr, xs):
     with mgr:
@@ -36,3 +35,4 @@ def w_nested_flow(m1, m2, xs):
                     continue
                 elif x < 0:
                     break
+        return x

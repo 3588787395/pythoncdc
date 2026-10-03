@@ -9834,6 +9834,260 @@ AST 映射规则:
                 self.generated_offsets.add(i.offset)
         return stmts
 
+    # [Round6-B34c] 延迟 return 链走查的停机指令集：链上出现任一即非
+    # 「清理副本/协议块」形态——STORE_*/DELETE_* 产出绑定语句、JUMP_*
+    # 分支发散、RETURN_*/RAISE/RERAISE 终止语义、PUSH_EXC_INFO/POP_EXCEPT
+    # 异常帧归属异常区域、FOR_ITER/SEND/YIELD_*/GET_ITER/UNPACK_* 迭代/
+    # 解包协议、IMPORT_*/MAKE_FUNCTION 副作用构建。这些块不是挂起值
+    # 穿越的清理链成员，走查即拒绝（C3：零启发式，操作码结构事实）。
+    _B34C_CHAIN_STOP_OPS = frozenset({
+        'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+        'STORE_ATTR', 'STORE_SUBSCR', 'DELETE_FAST', 'DELETE_NAME',
+        'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR',
+        'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+        'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_IF_TRUE_OR_POP',
+        'JUMP_IF_FALSE_OR_POP', 'POP_JUMP_FORWARD_IF_TRUE',
+        'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
+        'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_IF_TRUE',
+        'POP_JUMP_IF_FALSE', 'POP_JUMP_FORWARD_IF_NONE',
+        'POP_JUMP_BACKWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE',
+        'POP_JUMP_BACKWARD_IF_NOT_NONE',
+        'RAISE_VARARGS', 'RERAISE', 'PUSH_EXC_INFO', 'POP_EXCEPT',
+        'FOR_ITER', 'END_FOR', 'SEND', 'YIELD_VALUE',
+        'GET_ITER', 'GET_AWAITABLE', 'GET_ANEXT', 'GET_AITER',
+        'UNPACK_SEQUENCE', 'UNPACK_EX', 'IMPORT_NAME', 'IMPORT_FROM',
+        'IMPORT_STAR', 'MAKE_FUNCTION', 'MAKE_CELL',
+        'RETURN_VALUE', 'RETURN_CONST',
+    })
+
+    @staticmethod
+    def _b34c_has_held_replace(instrs):
+        """[Round6-B34c] held 值替换惯用法判定：SWAP(2) 紧邻 POP_TOP。
+
+        CPython 对 ``finally: return X`` 生成 [LOAD X, SWAP(2), POP_TOP]——
+        finally 的返回值与 try 延迟 return 压栈的 held 值交换、弃 held
+        （B30 `_b30_held_replace_pair_value` 领地）。链上含该形态即挂起值
+        被替换：终端 RETURN 消费的是替换值而非 try 体值，Return 语义归属
+        finalbody（B30 W11-A 发射），本方法必须拒绝（语义守卫，非仅
+        防回归）。
+        """
+        for _hr_i in range(len(instrs) - 1):
+            if (instrs[_hr_i].opname == 'SWAP' and instrs[_hr_i].arg == 2
+                    and instrs[_hr_i + 1].opname == 'POP_TOP'):
+                return True
+        return False
+
+    @staticmethod
+    def _b34c_is_exit_window(instrs):
+        """[Round6-B34c] with 退出协议窗口判定：[SWAP?] + None×3 + PRECALL +
+        CALL + POP_TOP（净栈效应 0——exit_fn 由进入协议保留、在此消费）。
+
+        形态即 `_detect_with_body_return` 退出窗口识别的同款指令链；前置
+        SWAP(2) 为挂起值让位（值从窗口调用下方穿越）。非该形态返回 False。
+        """
+        _ew_body = list(instrs)
+        if _ew_body and _ew_body[0].opname == 'SWAP':
+            _ew_body = _ew_body[1:]
+        if len(_ew_body) != 6:
+            return False
+        return ([i.opname for i in _ew_body] == [
+            'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL',
+            'POP_TOP']
+            and all(i.argval is None for i in _ew_body[:3]))
+
+    def _b34c_finally_deferred_return(self, block):
+        """[Round6-B34c] try/finally 延迟 return 跨 with/finally 跨块归约。
+
+        [识别条件] ``try: return X finally: <体>``（体含 with 时）CPython
+        把返回值压栈后穿越 finally 内联副本与 with 进入/退出协议，由后续
+        块的 RETURN_VALUE 消费（w_with_in_finally blk@4 → blk@6/10 →
+        blk@12 终止；w_tryfin_with_tryfin blk@12 → blk@26/68 → blk@92 终止）。
+        结构事实判据链（全部满足，任一不满足立即返回 None 回退既有路径）：
+          R1. block 归属某 TryExceptRegion 的 try_blocks（try 体）且该
+              region.has_finally——只有 try/finally 产生延迟 return；
+          R2. block 剥噪声（RESUME/NOP/CACHE/EXTENDED_ARG）后非空、无
+              RETURN_*，逆向栈扫描（R2-SWAP 同款：STORE_*/栈深归零点为
+              语句边界）定位值段，块末栈深恰 1、值段非空且无跳转；
+          R3. 沿唯一非异常后继链走查（budget 16 + visited 防环），链块
+              逐一分类：
+              - 终止块：末指令 RETURN_*，前缀净栈效应 0、无停机集指令、
+                无 held 替换对（SWAP(2)+POP_TOP 相邻——B30 领地，语义上
+                挂起值已被 finally 的 return 替换，终端消费的是替换值）；
+              - 进入协议：剥噪声末指令 BEFORE_WITH/BEFORE_ASYNC_WITH，
+                且其后随的纯 POP_TOP 丢弃块（__enter__ 结果无 as 丢弃）
+                允许直随其后；
+              - 退出协议：[SWAP?] + None×3 + PRECALL + CALL + POP_TOP
+                净栈效应 0（_b34c_is_exit_window）；
+              - 清理副本：指令 ⊆ _DEFERRED_RET_CLEANUP_OPS、净栈效应 0、
+                无停机集指令、无 held 替换对，且归属有主（generated 或
+                block_to_region——语句有源码家，防吞未发射用户代码）。
+        [归约方式] 值段经表达式重建 → 单一 Return 节点；值段之前的块内
+        前缀语句按 R64-D4 同款委托 _generate_stmts_from_instrs 发射（归属
+        者必发射，语句不静默消失）；链全部成员（含 block）标记
+        generated/generated_offsets（每块唯一归属改判：链成员唯一归属值
+        块所在 try 体，with/finally 各区域主循环跳过）。
+        [AST 映射] [前缀语句...] + [Return(value)]——重编译时 CPython 在
+        相同 try/finally(含 with) 上下文重新生成值压栈 + 清理链 + RETURN
+        消费，逐指令一致。
+        [C1] 只读块指令/后继边性质/归属台账（同层事实，无名字/偏移白名单）；
+        [C2] 判据链断裂或重建失败返回 None，调用方维持既有路径（零退化）；
+        [C3] 无状态、无副作用、零启发式零回退。
+        """
+        _b34c_noise = ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG')
+        _b34c_owner = self.region_analyzer.block_to_region.get(block)
+        if not isinstance(_b34c_owner, TryExceptRegion):
+            return None
+        if block not in set(_b34c_owner.try_blocks or []):
+            return None
+        if not (_b34c_owner.has_finally and _b34c_owner.finally_blocks):
+            return None
+        _b34c_instrs = [i for i in block.instructions
+                        if i.opname not in _b34c_noise]
+        if not _b34c_instrs:
+            return None
+        if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST')
+               for i in _b34c_instrs):
+            return None
+        # R2：逆向栈扫描定位值段（语句边界 = STORE_*/栈深归零点）
+        _b34c_depth = 0
+        _b34c_val_start = 0
+        for _b34c_i, _b34c_ins in enumerate(_b34c_instrs):
+            if _b34c_ins.opname.startswith('STORE_'):
+                _b34c_depth = 0
+                _b34c_val_start = _b34c_i + 1
+                continue
+            _b34c_eff = self._instruction_stack_effect(_b34c_ins)
+            if _b34c_eff is None:
+                return None
+            _b34c_depth += _b34c_eff
+            if _b34c_depth == 0:
+                _b34c_val_start = _b34c_i + 1
+        if _b34c_depth != 1:
+            return None
+        _b34c_value = _b34c_instrs[_b34c_val_start:]
+        if not _b34c_value:
+            return None
+        if any(i.opname.startswith(('JUMP_', 'POP_JUMP_'))
+               for i in _b34c_value):
+            return None
+        # R3：链走查
+        _b34c_chain = [block]
+        _b34c_cur = block
+        _b34c_visited = {block}
+        _b34c_prev_entry = False
+        for _ in range(16):
+            _b34c_succs = [s for s in _b34c_cur.successors
+                           if s not in _b34c_cur.exception_successors]
+            if len(_b34c_succs) != 1:
+                return None
+            _b34c_nxt = _b34c_succs[0]
+            if _b34c_nxt in _b34c_visited:
+                return None
+            _b34c_visited.add(_b34c_nxt)
+            _b34c_chain.append(_b34c_nxt)
+            _b34c_ninstrs = [i for i in _b34c_nxt.instructions
+                             if i.opname not in _b34c_noise]
+            if not _b34c_ninstrs:
+                _b34c_prev_entry = False
+                _b34c_cur = _b34c_nxt
+                continue
+            _b34c_last = _b34c_ninstrs[-1]
+            if _b34c_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                # 终止块：前缀剥退出协议窗口后余量 ⊆ 清理集且净栈效应 0。
+                # 窗口内部栈自洽（消耗自身 None 参数与进入协议保留的
+                # exit_fn，模型净效应 -1），不得计入余量核算。
+                _b34c_prefix = _b34c_ninstrs[:-1]
+                if any(i.opname in self._B34C_CHAIN_STOP_OPS
+                       for i in _b34c_prefix):
+                    return None
+                if self._b34c_has_held_replace(_b34c_prefix):
+                    return None
+                _b34c_rest = []
+                _b34c_pi = 0
+                while _b34c_pi < len(_b34c_prefix):
+                    if self._b34c_is_exit_window(_b34c_prefix[_b34c_pi:]):
+                        _b34c_pi += (7 if _b34c_prefix[_b34c_pi].opname
+                                     == 'SWAP' else 6)
+                        continue
+                    _b34c_rest.append(_b34c_prefix[_b34c_pi])
+                    _b34c_pi += 1
+                _b34c_net = 0
+                for _b34c_ri in _b34c_rest:
+                    if _b34c_ri.opname not in self._DEFERRED_RET_CLEANUP_OPS:
+                        return None
+                    _b34c_pe = self._instruction_stack_effect(_b34c_ri)
+                    if _b34c_pe is None:
+                        return None
+                    _b34c_net += _b34c_pe
+                if _b34c_net != 0:
+                    return None
+                break
+            if any(i.opname in self._B34C_CHAIN_STOP_OPS
+                   for i in _b34c_ninstrs):
+                return None
+            if self._b34c_has_held_replace(_b34c_ninstrs):
+                return None
+            if _b34c_last.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
+                _b34c_prev_entry = True
+                _b34c_cur = _b34c_nxt
+                continue
+            if _b34c_prev_entry and all(i.opname == 'POP_TOP'
+                                        for i in _b34c_ninstrs):
+                _b34c_prev_entry = False
+                _b34c_cur = _b34c_nxt
+                continue
+            if self._b34c_is_exit_window(_b34c_ninstrs):
+                _b34c_prev_entry = False
+                _b34c_cur = _b34c_nxt
+                continue
+            if all(i.opname in self._DEFERRED_RET_CLEANUP_OPS
+                   for i in _b34c_ninstrs):
+                _b34c_net = 0
+                for _b34c_pi in _b34c_ninstrs:
+                    _b34c_pe = self._instruction_stack_effect(_b34c_pi)
+                    if _b34c_pe is None:
+                        return None
+                    _b34c_net += _b34c_pe
+                if (_b34c_net == 0
+                        and (_b34c_nxt in self.generated_blocks
+                             or self.region_analyzer.block_to_region.get(
+                                 _b34c_nxt) is not None)):
+                    _b34c_prev_entry = False
+                    _b34c_cur = _b34c_nxt
+                    continue
+            return None
+        else:
+            return None
+        # 归约：值段重建 → Return；链全成员标记已生成
+        _b34c_expr = self.expr_reconstructor.reconstruct(_b34c_value)
+        if _b34c_expr is None:
+            return None
+        _b34c_ret = {'type': 'Return',
+                     **self._w14_explicit_return_flag(block),
+                     'value': _b34c_expr}
+        _b34c_stmts = []
+        _b34c_pre = [i for i in _b34c_instrs[:_b34c_val_start]
+                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                         'EXTENDED_ARG')]
+        if len(_b34c_pre) >= 2:
+            try:
+                _b34c_pre_stmts = self._generate_stmts_from_instrs(
+                    _b34c_pre, block)
+            except Exception:
+                _b34c_pre_stmts = None
+            if (_b34c_pre_stmts
+                    and all(isinstance(_s, dict) and _s.get('type')
+                            in ('Assign', 'AugAssign', 'Expr', 'Return',
+                                'Delete') for _s in _b34c_pre_stmts)):
+                _b34c_stmts.extend(_b34c_pre_stmts)
+        for _b34c_m in _b34c_chain:
+            self.generated_blocks.add(_b34c_m)
+            self.generated_offsets.add(_b34c_m.start_offset)
+            for _b34c_i in _b34c_m.instructions:
+                self.generated_offsets.add(_b34c_i.offset)
+        _b34c_stmts.append(_b34c_ret)
+        return _b34c_stmts
+
     def _fallthrough_successor_excluding(self, block: Optional['BasicBlock'],
                                          exclude_offset: Optional[int]) -> Optional['BasicBlock']:
         """取条件跳转块在正常控制流下的 fall-through 后继（排除跳转目标与异常边）。
@@ -47817,6 +48071,14 @@ AST 映射规则:
         _deferred = self._try_deferred_return_in_loop(block)
         if _deferred is not None:
             return _deferred
+        # [Round6-B34c] try/finally 延迟 return 跨 with/finally 归约：
+        # try 体值块 + 清理链（finally 副本 / with 进入-退出协议）+
+        # RETURN 终止块 → [Return(值)]（判据详见
+        # _b34c_finally_deferred_return 六段注释；held 替换形态 SWAP(2)+
+        # POP_TOP 相邻即拒——B30 W11-A 领地，终端消费的是替换值）。
+        _b34c_stmts = self._b34c_finally_deferred_return(block)
+        if _b34c_stmts is not None:
+            return _b34c_stmts
         # [F-GET_ITER fix] Universal guard: if this block is a for_iter_setup
         # of any LoopRegion and ends with GET_ITER, generate the LoopRegion
         # at this position (pre_stmts + for loop). This prevents GET_ITER

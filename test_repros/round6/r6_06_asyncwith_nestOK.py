@@ -20,5 +20,4 @@ async def aw_af_aw(ait, m1, m2):
     async for x in ait:
         async with m1:
             async for y in ait:
-                pass
-            return x + y
+                return x + y

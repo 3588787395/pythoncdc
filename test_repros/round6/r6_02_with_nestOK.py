@@ -19,14 +19,14 @@ def w_with_for(mgr, xs):
         for x in xs:
             total += x
         return total
-        return None
+        return total
 def w_with_while(mgr, n):
     with mgr:
         i = 0
         while i < n:
             i += 1
         return i
-        return None
+        return i
 def w_with_try(mgr, xs):
     with mgr:
         try:

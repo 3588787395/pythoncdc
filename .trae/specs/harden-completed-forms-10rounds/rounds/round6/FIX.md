@@ -275,3 +275,144 @@ SWAP] → 幻影 `Expr(xs) + Return(None)`（`finally: xs; return None`），
 |------|------|----------|------|
 | r6_10 | w_loop_nest_with / w_nested_flow | B34b | Different control flow（内层 with 越界收编外层 return 块；B36-a 统一判据待设计） |
 | r6_11 | w_with_in_finally / w_tryfin_with_tryfin | B34c | Different control flow |
+
+## B34c 封闭（r6_11 w_with_in_finally / w_tryfin_with_tryfin 6/6 MATCH，113/115）
+
+**根因**：`try: return X finally: <体含 with 或嵌套 finally>` 时 CPython 把
+返回值压栈后穿越 finally 内联副本与 with 进入/退出协议，由后续块
+RETURN_VALUE 消费（延迟 return 跨块形态）。两单元共同缺陷 = 该跨链值流未
+重构：try 体渲染裸 `v`/`xs[0]`（Return 丢失），RETURN 消费块被 with 收编后
+经 `_detect_with_body_return` 空窗口判据误判为 with 体 return None → 幻影
+`return None` 或值丢失。
+
+两形态字节码链（Shape A w_with_in_finally / Shape B w_tryfin_with_tryfin）：
+
+```
+Shape A: blk@4(try 体: LOAD v + 跳异常链) → blk@6(LOAD mgr+BEFORE_WITH)
+         → blk@10(POP_TOP 丢 __enter__ 结果) → blk@12(NOP+退出窗口+RETURN_VALUE)
+Shape B: blk@12(finally1 副本 xs.append(1)) → blk@26(append 副本续)
+         → blk@68(SWAP+退出窗口) → blk@92(append(2) 副本+RETURN_VALUE)
+```
+
+**修复**（单一事实源 `_b34c_finally_deferred_return(block)`，六段注释模板，
+挂接点 `_generate_block_statements_body` 中 `_try_deferred_return_in_loop`
+之后）：
+
+1. R1 归属：block ∈ TryExceptRegion.try_blocks 且 has_finally（区域树归属，
+   结构事实）。
+2. R2 值段定位：剥噪声逆向栈扫描（STORE_*/栈深归零为语句边界，块末栈深恰
+   1）取 try 体压栈值段；栈效应模型（LOAD +1 / PRECALL 1参 -1 / 2参 -2 /
+   CALL -1 / POP_TOP -1 / SWAP 0）。
+3. R3 链走查（budget 16 + visited 防环）：单非异常后继链，链块四分类——
+   - 终止块：末 RETURN_*，前缀**先剥退出窗口**（`_b34c_is_exit_window`：
+     剥首 SWAP 后恰 [LOAD_CONST None×3 + PRECALL + CALL + POP_TOP]，窗口
+     内部栈自洽净 -1，不计入余量核算——初版「前缀净 0」判据错杀此形态）
+     余量 ⊆ `_DEFERRED_RET_CLEANUP_OPS` 且净 0，且无停机集命中、无 held
+     替换（`_b34c_has_held_replace`：SWAP(2) 紧邻 POP_TOP → B30 领地语义
+     守卫，防吞 w_with_wraps_finally 形态）；
+   - 进入协议块：BEFORE_WITH/BEFORE_ASYNC_WITH 尾（允许直随 POP_TOP-only
+     块）；
+   - 退出窗口块：`_b34c_is_exit_window` 命中；
+   - 清理副本块：指令 ⊆ 清理集、栈净 0、归属有主（异常表成员）。
+4. 归约：值段 `expr_reconstructor.reconstruct` → `Return(value)`（含
+   `_w14_explicit_return_flag`），前缀清理语句委托
+   `_generate_stmts_from_instrs`（R64-D4 镜像）；链全成员标记
+   generated/generated_offsets（每块唯一归属，防二次发射）。
+5. 配套改判：`_detect_with_body_return` 尾部新增——无 SWAP 且值窗口空返回
+   None（延迟 return 消费形态非 with 体 return）；有 SWAP 维持
+   Return(None)（B30/B36-e 路径依赖不变）。
+
+**AST 映射**：`Try.body += [Return(X)]`；with 体为 Pass/清理语句，与源码
+`try: return v finally: with mgr: pass` 重编译字节码逐指令一致。
+
+**判据纯度**：零名字/偏移白名单；链走查 budget/visited 封闭、held 替换
+守卫防 B30 领地误吞、终止块余量 ⊆ 清理集拒绝杂指令（C1/C2/C3 守卫齐备）。
+防回归事前验证：B30 w_with_wraps_finally（blk@24 [LOAD xs,SWAP,POP_TOP] →
+blk@30 终端）被链上 held 替换判据拒绝，全量证实 r6_04 11/11 持平。
+
+## B34c 批次进度与回归验证
+
+- 全量：**113/115**（B30/B36 后 111/115 → +2），16 文件 15 success /
+  1 failure，**零回归**（n6_01 8/8、r6_01 8/8、r6_02 7/7、r6_03 7/7、
+  r6_04 11/11、r6_05 6/6、r6_06 5/5、r6_07 6/6、r6_08 8/8、r6_09 8/8、
+  r6_12 6/6、r6_13 8/8、r6_14 7/7、r6_15 8/8 全绿；仅 r6_10 4/6 残留）
+- site-packages 6 哨兵重生成+验证全持平：tools 6/6、trade_schedule 9/9
+  （100%）、mq_connector 13/13、strategy 2/2、scheduler 52/52、
+  trade_info_utils 36/41=基线
+
+## 残留失败单元（2 单元 1 文件，较基线 8 单元减 6）
+
+| 文件 | 单元 | 缺陷登记 | 特征 |
+|------|------|----------|------|
+| r6_10 | w_loop_nest_with / w_nested_flow | B34b | Different control flow（内层 with 越界收编外层 return 块；B36-a 统一判据待设计） |
+
+## B34b 封闭（r6_10 w_loop_nest_with / w_nested_flow 6/6 MATCH，115/115 全清）
+
+**根因**：with 清理块位置扫描（`get_blocks_in_order` 为块创建序）缺少可达性
+约束——内层 with 的 cleanup 收集可沿创建序越界收编**不属于本 with 协议链**
+的外部块。两形态：
+
+1. `w_loop_nest_with`（`with mgr: for x in xs: with mgr as y: if y: return x`
+   + 尾 `return None`）：blk@180（外层函数尾 return None，无条件边到达）被
+   内层 with 越界收编 → 尾声吞入 cleanup → 渲染丢显式 else/出口结构 →
+   Different control flow。
+2. `w_nested_flow`（双层 with + for 内 continue/break + 尾 return x）：同源
+   越界收编，continue-sink 与外层协议链块混入内层 cleanup。
+
+**修复**（`_collect_normal_exit_cleanup` 统一判据 + 细化判据，六段注释模板；
+`_collect_with_cleanup_blocks` 调用点传递 `exception_blocks` 与自身处理器
+`hb`）：
+
+1. **统一判据（B36-a 遗留任务收敛）**：位置扫描候选块必须从本 with 协议种子
+   （entry ∪ body ∪ exception_blocks）**前向正常可达**（BFS 沿正常后继）；
+   扩展时三类块不穿越——已归属区域树的块、其他 with 的种子块（BEFORE_*
+   所在链）、**外部 with 处理器**（含 WITH_EXCEPT_START 且非自身处理器）。
+   外部处理器不可扩展是内层 with 越界收编外层协议链的唯一通道，切断之。
+2. **细化判据（bare-None 尾声吸收形态）**：不可达候选块去噪后恰为
+   `[LOAD_CONST None, RETURN_VALUE]` 或单条 `[RETURN_CONST None]`，且至少
+   一条正常前驱以 POP_JUMP_* 终结（条件分支假边直达尾声）时仍收编——此为
+   R113/F5 系既定 with-cleanup 语义：if-else 假分支尾声与函数尾隐式 return
+   同位，收编后经隐式 return 过滤渲染为函数尾，重编译与 pyc 逐指令同构。
+   无条件边（fall-through/JUMP_FORWARD）到达的尾声不属此形态——那是外层
+   with 的 exit-block（F5 机制经 `_find_with_exit_block` 取回顶层显式发射，
+   w_loop_nest_with blk@180），必须拒绝。
+
+**AST 映射**：条件假边 bare-None 尾声收编 → 隐式 return 过滤 → 函数尾无
+显式 return None，与源码省略尾 return None 的渲染逐指令同构；无条件边
+exit-block 拒收 → 顶层显式发射（exit_via_jump=True），结构各归其位。
+
+**判据纯度**：零名字/偏移/函数白名单；判据全部为前向可达性（控制流边性质）
++ 操作码形态链（去噪后指令序）+ 前驱终结操作码性质。
+
+**实证链（check_trade_name 细化方向判定）**：
+
+1. git stash 对照区域树：旧代码把 blk@372（外层 if 的 else 分支 return
+   None，条件前驱 POP_JUMP 假边直达）误收编进 with@150 cleanup；strict
+   统一判据正确拒收后 IfRegion 显式渲染 `else: return None` → 候选与 pyc
+   仅差 372↔376 两个跳转目标互换（80 指令数相同）→ 裁决器拒绝（哨兵回归
+   36/41 → 35/41）。
+2. 决定性事实：旧渲染（收编 + 隐式过滤）与 pyc **逐指令全等（80/80 含跳转
+   目标）**——bare-None 尾声收编正是字节码精确的正确路径。
+3. 细化判据四形态方向验证：trade_info_utils check_trade_name @14 拒
+   180/150 ✓、@0 收 164/172/174 ✓、r6_05 aw_two 两层收 190 ✓、@150 收 372
+   拒 376 ✓。
+
+## B34b 批次进度与回归验证（round6 全清）
+
+- 全量：**115/115 = 100%**（B34c 后 113/115 → +2），16 文件 16 success /
+  0 failure，**零回归**（n6_01 8/8、r6_01 8/8、r6_02 7/7、r6_03 7/7、
+  r6_04 11/11、r6_05 6/6、r6_06 5/5、r6_07 6/6、r6_08 8/8、r6_09 8/8、
+  r6_10 6/6、r6_11 6/6、r6_12 6/6、r6_13 8/8、r6_14 7/7、r6_15 8/8 全绿）
+- site-packages 6 哨兵重生成+验证全持平：tools 6/6、trade_schedule 6/6、
+  mq_connector 13/13、strategy 2/2、scheduler 52/52、trade_info_utils
+  36/41=基线（失败单元明细与基线一致：trade_operation / kill_trade_process
+  / get_trade_status / query_trade_strategy_info / query_strategy_id；
+  **check_trade_name 不在失败列表**——strict 判据回归 35/41 已由细化判据
+  修复回归）
+- region_analyzer.py B36-a 结论注释尾部已追加「[Round6-B34b 更新] 统一判据
+  已实现」段落；恒真冗余比较已清理
+
+## 残留失败单元（round6 全清：0 单元）
+
+Round 6 全部 34 复现单元 115/115 = 100% MATCH，无残留。
+

@@ -7757,6 +7757,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             if expr:
                 return {'type': 'Return', 'value': expr}
 
+        # [Round6-B34c] 无 SWAP 且值窗口空：挂起值产生于 with 进入之前的
+        # 块（try/finally 延迟 return 的消费形态——CPython 把 ``try:
+        # return X`` 的 X 压栈后穿越 finally 的 with 进入/退出协议再
+        # RETURN），不是 with 体 return。返回 None 交回调用方常规语句
+        # 路径：该块由值块侧 `_b34c_finally_deferred_return` 链走查整链
+        # 归约（Return 在值块所在 try 体发射），with 体保持空（Pass）。
+        # 有 SWAP 时维持 Return(Constant None)——B30 held 替换块对
+        # （[SWAP]+窗口+RETURN）经 W11-A/B36-e 跨块值提取路径处理。
+        if not value_instrs and swap_idx is None:
+            return None
         return {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
 
     def _is_return_none_block(self, block: BasicBlock) -> bool:
@@ -12149,13 +12159,77 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 worklist.append(succ)
         if body_end is not None and body_end > 0:
             self._collect_normal_exit_cleanup(with_body, normal_cleanup, cleanup_visited,
-                                              with_entry_blocks, body_end)
+                                              with_entry_blocks, body_end,
+                                              exception_blocks, hb)
         return exception_blocks, normal_cleanup
 
     def _collect_normal_exit_cleanup(self, with_body, cleanup, cleanup_visited,
-                                    entry_blocks, body_end):
+                                    entry_blocks, body_end, exception_blocks,
+                                    own_handler):
         body_offsets = {b.start_offset for b in with_body}
         body_offsets.update(b.start_offset for b in entry_blocks)
+        # [Round6-B34b] 正常出口可达性守卫（统一判据：正常路径/异常路径可达性
+        # 区分，收敛 B36-a 遗留设计任务——前驱归属 any/all 判据已证伪移除）。
+        # 识别条件（结构事实，零名字/偏移白名单）：
+        #   C1 种子 = entry ∪ body ∪ exception_blocks（本 with 自身协议块集；
+        #     自身 WITH_EXCEPT_START 处理器 own_handler 在种子中可扩展；嵌套
+        #     异常链收集产物的**外部** with 处理器虽入种子但不可扩展）。
+        #   C2 扩展：沿**正常**后继（剔除 exception_successors）走查——后继为
+        #     种子 → 扩展；后继已被其他区域占用 → 停（外层 with/loop/try 的
+        #     协议块不属于本 with）；后继含 BEFORE_WITH/BEFORE_ASYNC_WITH →
+        #     停（其他 with 入口，镜像位置扫描终止判据）；后继含
+        #     WITH_EXCEPT_START 且非自身处理器 → 停（外部 with 处理器——其
+        #     后续链是外层 with 的被抑制恢复/出口协议，正是位置扫描越界收编
+        #     的来源：w_loop_nest_with 内层 with 经外部处理器 158 扩展可达
+        #     164/172/174/180，把函数尾 return None 块收编为 cleanup）。
+        #   C3 位置扫描候选块 ∈ reach 才可收编。
+        # 归约方式：位置扫描（start_offset ≥ body_end）既有守卫（POP_JUMP
+        #   终止 / BEFORE_WITH 终止 / 归属守卫 / POP_EXCEPT 前驱守卫 / RETURN
+        #   值守卫）全部保留，叠加可达性过滤——cleanup 语义即「正常出口清理」，
+        #   不可从本 with 协议正常到达的块非本 with 清理。B36-a 前驱判据的反
+        #   向失败根因：blk@190（aw_two）的前驱 182 是用户码挂起轮询块不入
+        #   visited，而 blk@180 可经位置扫描先收的 174 间接入 visited——前驱
+        #   视角两类形态方向相反；前向可达性以协议种子为源，两类形态方向一
+        #   致（190 从 body 尾 152→158→182→190 可达必收，180 只能经外部处理
+        #   器 158 扩展到达必拒）。
+        # AST 映射：无直接 AST——影响 WithRegion.cleanup_blocks 归属，进而决
+        #   定函数尾 return 块（w_loop_nest_with blk@180）交还顶层发射（外层
+        #   with 经 F5 出口剔除 + exit_via_jump 显式 return 旗标）、with 体
+        #   return 值块（w_nested_flow blk@150）交还外层 with 体
+        #   _detect_with_body_return / B36-e 跨块值提取。
+        # 已知失败模式（防重蹈）：外部处理器不可扩展判据缺失时，158（外层处
+        #   理器）经种子扩展使 164/172/174/180 全部「可达」，守卫失效——种子
+        #   含外部处理器但其后续不入 reach 是判据成立的关键；自身处理器必须
+        #   可扩展（否则外层 with 的被抑制恢复链 164/172/174 漏收）。
+        _b34b_seed_set = set()
+        _b34b_stack = []
+        for _b in list(entry_blocks) + list(with_body) + list(exception_blocks):
+            if _b is not None and _b not in _b34b_seed_set:
+                _b34b_seed_set.add(_b)
+                _b34b_stack.append(_b)
+        _b34b_reach = set()
+        while _b34b_stack:
+            _b = _b34b_stack.pop()
+            if _b in _b34b_reach:
+                continue
+            _b_ops = [i.opname for i in _b.instructions]
+            if 'WITH_EXCEPT_START' in _b_ops and _b is not own_handler:
+                continue
+            _b34b_reach.add(_b)
+            for _s in _b.successors:
+                if _s in _b34b_reach or _s in _b.exception_successors:
+                    continue
+                if _s in _b34b_seed_set:
+                    _b34b_stack.append(_s)
+                    continue
+                if self.block_to_region.get(_s) is not None:
+                    continue
+                _s_ops = [i.opname for i in _s.instructions]
+                if 'BEFORE_WITH' in _s_ops or 'BEFORE_ASYNC_WITH' in _s_ops:
+                    continue
+                if 'WITH_EXCEPT_START' in _s_ops and _s is not own_handler:
+                    continue
+                _b34b_stack.append(_s)
         for block in self.cfg.get_blocks_in_order():
             if block in cleanup_visited:
                 continue
@@ -12259,6 +12333,56 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 # RETURN_CONST <非None> 同理为真实 return（如
                 # `return 1` 在某些编译布局下为单条 RETURN_CONST）。
                 if last.opname == 'RETURN_CONST' and last.argval is not None:
+                    continue
+                # [Round6-B36 结论记录] 本判据段曾试加「清理链可达」守卫
+                # （any/all 前驱归属）拒绝内层 with 位置扫描越界收编外层
+                # return 块（w_loop_nest_with blk@180）。实测两语义方向相
+                # 反：all 对 blk@180（需拒）正确，但误拒 aw_two blk@190
+                # （m1 异常路径 return None，前驱 182 挂起轮询块不被收集，
+                # 拒收后成孤儿→幻影 return None）；any 则放行 blk@180 被
+                # 内层吞。统一判据（正常路径/异常路径可达性区分）留待后
+                # 续轮次，本段维持既有逐字节行为（无守卫）。
+                # [Round6-B34b 更新] 统一判据已实现——见本方法头部的正常出口
+                # 可达性守卫（前向协议种子可达 + 外部 WITH_EXCEPT_START 处理
+                # 器不可扩展），本段 RETURN 值守卫维持既有逐字节行为不变。
+            # [Round6-B34b] C3 可达性过滤：不可从本 with 协议种子正常到达的
+            # 块非本 with 的正常出口清理（外部 with 处理器不可扩展——位置扫
+            # 描越界收编外层 with 出口链/函数尾 return 的唯一通道被封闭）。
+            if block not in _b34b_reach:
+                # [Round6-B34b 细化] break-as-return-None 尾声吸收形态：块去噪
+                # 后恰为 LOAD_CONST None + RETURN_VALUE（或单条 RETURN_CONST
+                # None），且至少一条正常前驱以 POP_JUMP_* 终结（条件分支假边
+                # 直达尾声）。此形态为 R113/F5 系既定 with-cleanup 语义（with
+                # 清理块的 return 出口恒为 LOAD_CONST None; RETURN_VALUE）——
+                # if-else 假分支尾声与函数尾隐式 return 同位，收编后经隐式
+                # return 过滤渲染为函数尾尾声，重编译与源码逐指令同构
+                # （trade_info_utils.check_trade_name 实测 80/80 全等）。无条件
+                # 边（fall-through/JUMP_FORWARD）到达的尾声不属此形态——那是
+                # 外层 with 的 exit-block（F5 机制经 _find_with_exit_block 取回
+                # 交顶层发射，w_loop_nest_with blk@180），必须拒绝。
+                _b34b_instrs = [i for i in block.instructions
+                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                    'POP_TOP', 'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                                    'POP_EXCEPT', 'COPY', 'RERAISE', 'SWAP')]
+                _b34b_bare_none = (
+                    (
+                        (len(_b34b_instrs) == 2
+                         and _b34b_instrs[0].opname == 'LOAD_CONST'
+                         and _b34b_instrs[0].argval is None
+                         and _b34b_instrs[1].opname == 'RETURN_VALUE')
+                        or (len(_b34b_instrs) == 1
+                            and _b34b_instrs[0].opname == 'RETURN_CONST'
+                            and _b34b_instrs[0].argval is None)
+                    )
+                )
+                _b34b_cond_pred = False
+                if _b34b_bare_none:
+                    for _p in block.predecessors:
+                        _pl = _p.get_last_instruction()
+                        if _pl is not None and _pl.opname.startswith('POP_JUMP_'):
+                            _b34b_cond_pred = True
+                            break
+                if not _b34b_cond_pred:
                     continue
             cleanup.append(block)
             cleanup_visited.add(block)
@@ -12948,49 +13072,86 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 i += 1
 
             # 查找目标变量（在 BEFORE_WITH 之后的 STORE 或 UNPACK_SEQUENCE）
+            # [Round6-B33] 绑定链首指令定位跳过 EXTENDED_ARG：EXTENDED_ARG 是
+            # 纯编码噪声（不产生值、不改栈、随目标指令变址出现），字节码
+            # 形态「BEFORE_WITH → EXTENDED_ARG → UNPACK_EX」中真正的绑定链
+            # 首指令是 UNPACK_EX（w_star_mid UNPACK_EX 257）。EXTENDED_ARG
+            # 不是 STORE 也不是值终结符，跳过不改变任何语义边界。
             target = None
-            if bw_pos + 1 < len(instructions):
-                next_instr = instructions[bw_pos + 1]
+            _tj = bw_pos + 1
+            while _tj < len(instructions) and instructions[_tj].opname == 'EXTENDED_ARG':
+                _tj += 1
+            if _tj < len(instructions):
+                next_instr = instructions[_tj]
                 if next_instr.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
                     # with ctx as (a, b): / with ctx as (a, *rest): 模式 -
                     # 多目标 as 绑定（含星号）。[Round6-B33] UNPACK_EX 与
                     # UNPACK_SEQUENCE 同属 withitem 解包链：BEFORE_WITH 之后
-                    # 紧跟 UNPACK_EX + N×STORE_* 是「元组/星号目标」的结构
+                    # 紧跟 UNPACK_* + N×STORE_* 是「元组/星号目标」的结构
                     # 事实（操作码形态链判据，非启发式）。UNPACK_EX.argval
                     # 编码：低 8 位 = 前置目标数 before，高 8 位 = 后置目标数
                     # after，目标总数 = before + 1 + after，星号目标位于第
                     # before+1 位（前置之后、后置之前）。
-                    unpack_count = next_instr.argval if isinstance(next_instr.argval, int) else next_instr.arg
-                    if not isinstance(unpack_count, int):
-                        unpack_count = 2
-                    _starred_idx = -1
-                    if next_instr.opname == 'UNPACK_EX':
-                        _unpack_before = unpack_count & 0xFF
-                        _unpack_after = (unpack_count >> 8) & 0xFF
-                        unpack_count = _unpack_before + 1 + _unpack_after
-                        _starred_idx = _unpack_before
-                    names = []
-                    j = bw_pos + 2
-                    for _ in range(unpack_count):
-                        if j < len(instructions) and instructions[j].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                            names.append(instructions[j].argval)
-                            j += 1
+                    #
+                    # [Round6-B33 嵌套目标] 槽位指令是 UNPACK_* 而非 STORE_*
+                    # 时为嵌套元组目标（with mgr as (a, (b, c)): 编译为
+                    # UNPACK_SEQUENCE 2 → STORE a → UNPACK_SEQUENCE 2 →
+                    # STORE b → STORE c，w_deep_unpack）。依结构递归解析：
+                    # 每个槽位要么是 STORE_*（Name 目标），要么是子 UNPACK_*
+                    # 链（Tuple 子目标，递归同一规则）——与语法产生式
+                    # withitem 目标 = Name | '(' 目标元组 ')' 一一对应。
+                    # 任一槽位既非 STORE_* 亦非 UNPACK_*（或提前越界）⇒
+                    # 链不完整 ⇒ target=None（无 fallback、无猜测）。
+                    _BIND_STORE_OPS = ('STORE_FAST', 'STORE_NAME',
+                                       'STORE_GLOBAL', 'STORE_DEREF')
+                    _BIND_UNPACK_OPS = ('UNPACK_SEQUENCE', 'UNPACK_EX')
+
+                    def _parse_bind_unpack(idx):
+                        """递归解析 idx 处 UNPACK_* 起的绑定链。
+                        返回 (目标节点, 链后继下标)；链不完整返回 (None, idx)。"""
+                        u = instructions[idx]
+                        if u.opname == 'UNPACK_SEQUENCE':
+                            _cnt = u.arg if isinstance(u.arg, int) else None
+                            _starred = -1
                         else:
-                            break
-                    if names and len(names) == unpack_count:
+                            _a = u.argval
+                            if not isinstance(_a, int):
+                                return None, idx
+                            _before, _after = _a & 0xFF, (_a >> 8) & 0xFF
+                            _cnt, _starred = _before + 1 + _after, _before
+                        if not isinstance(_cnt, int) or _cnt < 1:
+                            return None, idx
                         _elts = []
-                        for _ni, _nm in enumerate(names):
-                            if _ni == _starred_idx:
-                                _elts.append({'type': 'Starred',
-                                              'value': {'type': 'Name', 'id': _nm, 'ctx': 'Store'},
-                                              'ctx': 'Store'})
+                        j = idx + 1
+                        for _slot in range(_cnt):
+                            if j >= len(instructions):
+                                return None, idx
+                            _ins = instructions[j]
+                            if _ins.opname in _BIND_STORE_OPS:
+                                if _slot == _starred:
+                                    _elts.append({
+                                        'type': 'Starred',
+                                        'value': {'type': 'Name',
+                                                  'id': _ins.argval,
+                                                  'ctx': 'Store'},
+                                        'ctx': 'Store'})
+                                else:
+                                    _elts.append({'type': 'Name',
+                                                  'id': _ins.argval,
+                                                  'ctx': 'Store'})
+                                j += 1
+                            elif _ins.opname in _BIND_UNPACK_OPS:
+                                _sub, _nj = _parse_bind_unpack(j)
+                                if _sub is None:
+                                    return None, idx
+                                _elts.append(_sub)
+                                j = _nj
                             else:
-                                _elts.append({'type': 'Name', 'id': _nm, 'ctx': 'Store'})
-                        target = {
-                            'type': 'Tuple',
-                            'elts': _elts,
-                            'ctx': 'Store',
-                        }
+                                return None, idx
+                        return ({'type': 'Tuple', 'elts': _elts,
+                                 'ctx': 'Store'}), j
+
+                    target, _chain_end = _parse_bind_unpack(_tj)
                 elif next_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                     target = next_instr.argval
 

@@ -12,12 +12,11 @@ def w_attr_mgr(mgr):
         return v
         return None
 def w_deep_unpack(mgr):
-    with mgr:
+    with mgr as (a, (b, c)):
         return a + b + c
         return None
 def w_star_mid(mgr):
-    with mgr:
-        a, *rest, b = None
+    with mgr as (a, *rest, b):
         return a + b + rest[0]
         return None
 def w_two_noas(m1, m2):
