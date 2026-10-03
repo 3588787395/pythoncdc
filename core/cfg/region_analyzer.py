@@ -12176,7 +12176,10 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         #     异常链收集产物的**外部** with 处理器虽入种子但不可扩展）。
         #   C2 扩展：沿**正常**后继（剔除 exception_successors）走查——后继为
         #     种子 → 扩展；后继已被其他区域占用 → 停（外层 with/loop/try 的
-        #     协议块不属于本 with）；后继含 BEFORE_WITH/BEFORE_ASYNC_WITH →
+        #     协议块不属于本 with）；唯一例外见下方 [R6-F1]：TryExceptRegion
+        #     协同占用的纯栈展开块（with-in-try 下本 with 自身被抑制恢复链
+        #     对 try 的体内共观）透明遍历，否则出口终端块被拒收成孤儿；
+        #     后继含 BEFORE_WITH/BEFORE_ASYNC_WITH →
         #     停（其他 with 入口，镜像位置扫描终止判据）；后继含
         #     WITH_EXCEPT_START 且非自身处理器 → 停（外部 with 处理器——其
         #     后续链是外层 with 的被抑制恢复/出口协议，正是位置扫描越界收编
@@ -12207,6 +12210,34 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             if _b is not None and _b not in _b34b_seed_set:
                 _b34b_seed_set.add(_b)
                 _b34b_stack.append(_b)
+        # [Round6-回归拦截修复 R6-F1] try 协同占用纯展开块的透明遍历白名单：
+        # with 嵌套在 try 体内时，本 with 自身 WITH_EXCEPT_START 处理器的
+        # 被抑制恢复链（POP_TOP/POP_EXCEPT/… → LOAD_CONST None +
+        # RETURN_VALUE 出口终端）落在 try 的异常表保护区间内，被
+        # TryExceptRegion 以「区间内全部块」方式协同登记（协同占用 ≠ 冲突
+        # 归属——同一协议块对 try 是体内块、对 with 是自身协议块）。占用即
+        # 停会把链上的出口终端块一并拒之 reach 之外 → C3 拒收 → 孤儿化 →
+        # 顶层发射出幻影 `return None`（commission.FutureCommission.load /
+        # strategy.on_before_trading_start 等 9 处实证：with 后多出与源码
+        # 不符的显式 return）。白名单只放行纯栈展开形态：无用户指令
+        # （CALL/STORE_*/FOR_ITER 等）、无 BEFORE_WITH/BEFORE_ASYNC_WITH
+        # （由下方既有自由块判据继续把关）、无 PUSH_EXC_INFO（处理器入口
+        # 是协议登记点非展开块）。LoopRegion/WithRegion 拥有的块不在此
+        # 白名单——外层循环/外层 with 的协议块是独立结构，占用即停维持
+        # （w_loop_nest_with 内层 with 的 BFS 仍止于 122/114/84，blk@180
+        # 保持不可达，B34b 原修复不受影响）。识别条件（结构事实，零名字/
+        # 偏移白名单）：归属 isinstance TryExceptRegion + 全部指令操作码
+        # ∈ 本集合。[C1] 只读后继的归属登记与块内操作码（同层结构事实）
+        # ；[C2] 无归约产物、不持有/登记任何块——仅扩展 reach 集合，候选
+        # 块仍须逐个通过位置扫描全部守卫才可收编；[C3] 双向可区分：try
+        # 协同占用链的终端是 bare-None 展开出口（须收编），loop/with 占用
+        # 的块不属本 with 协议（须拒收）——两类后继按归属区域类型互斥
+        # 分流，非 try 归属或含用户指令即维持占用即停原行为。
+        _b34b_try_coowned_unwind_ops = frozenset({
+            'POP_TOP', 'POP_EXCEPT', 'RERAISE', 'COPY', 'SWAP',
+            'LOAD_CONST', 'RETURN_VALUE', 'RETURN_CONST',
+            'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'NOP', 'RESUME', 'CACHE',
+        })
         _b34b_reach = set()
         while _b34b_stack:
             _b = _b34b_stack.pop()
@@ -12214,6 +12245,73 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 continue
             _b_ops = [i.opname for i in _b.instructions]
             if 'WITH_EXCEPT_START' in _b_ops and _b is not own_handler:
+                # [Round6-回归拦截修复 R6-F1b] 多管理器 with 链的被抑制出口
+                # 终端回链。识别条件——异常链走查（_collect_with_cleanup_
+                # blocks 的 worklist 经 RERAISE 块的异常后继串收）把 with 链
+                # 上**全部嵌套层**的 WITH_EXCEPT_START 处理器都收进
+                # exception_blocks（strategy.on_handle_auction 实证：三层
+                # with 的收集调用全部得到 exception_blocks=[392,400,438,
+                # 446,486,494]），而 own_handler 只取 body_start 对应条目
+                # （多管理器链共享最内层 body_start → 恒为最内层处理器），
+                # 其余层处理器在 pop 时被判「外部」跳过——其被抑制恢复链
+                # （POP_TOP/POP_EXCEPT 纯展开 → LOAD_CONST None +
+                # RETURN_VALUE 终端）不可达，终端块成孤儿 → 顶层发射幻影
+                # `return None`（strategy.pyc 7 处实证）。
+                # 归约方式——只读走查该处理器的被抑制延续边
+                # （POP_JUMP_*_IF_TRUE 真边）：链上允许
+                #   a) try 协同占用的纯展开块（[R6-F1] 同款白名单，唯一正
+                #      常后继线性延伸），或
+                #   b) 自由纯展开块（唯一正常后继）；
+                # 终端须为自由 bare-None 块（去噪后恰为 LOAD_CONST None +
+                # RETURN_VALUE 或单条 RETURN_CONST None）且**前驱数 = 1**
+                # （被抑制专用出口——排除与正常出口 JUMP_FORWARD 共享的
+                # exit-block：w_loop_nest_with blk@180 前驱 = {156 正常跳
+                # 转, 178 展开链}，前驱 2 → 拒绝，B34b 修复不受影响）。
+                # 终端加入 reach 后仍须通过位置扫描全部守卫才可收编。
+                # [C1] 只读处理器尾指令 argval、链上块归属与操作码、终端
+                # 前驱计数（同层结构事实），零名字/偏移白名单；[C2] 无归约
+                # 产物、不持有/登记任何块——仅扩展 reach 集合，归属仍由位
+                # 置扫描守卫 + 归属台账决定；[C3] 双向可区分：被抑制专用
+                # 终端（前驱唯一 = 展开链尾，须收编进 with 协议）与正常/
+                # 被抑制共享 exit-block（前驱 ≥ 2 含正常出口跳转，须交 F5
+                # 顶层发射）按前驱计数互斥；非纯展开块（用户码/JUMP_
+                # BACKWARD 回边/非 try 占用）即断链维持原判。
+                _b34b_last_i = _b.get_last_instruction()
+                if (_b34b_last_i is not None
+                        and _b34b_last_i.opname.startswith('POP_JUMP_')
+                        and _b34b_last_i.argval is not None):
+                    _b34b_sup = self.cfg.get_block_by_offset(_b34b_last_i.argval)
+                    while _b34b_sup is not None and _b34b_sup not in _b34b_reach:
+                        _b34b_sup_owner = self.block_to_region.get(_b34b_sup)
+                        _b34b_sup_ops = [i.opname for i in _b34b_sup.instructions]
+                        if _b34b_sup_owner is not None:
+                            if (isinstance(_b34b_sup_owner, TryExceptRegion)
+                                    and all(op in _b34b_try_coowned_unwind_ops
+                                            for op in _b34b_sup_ops)):
+                                _b34b_nxt = [s for s in _b34b_sup.successors
+                                             if s not in _b34b_sup.exception_successors]
+                                _b34b_sup = _b34b_nxt[0] if len(_b34b_nxt) == 1 else None
+                                continue
+                            break
+                        _b34b_nz = [i for i in _b34b_sup.instructions
+                                    if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+                        _b34b_is_bare_none = (
+                            (len(_b34b_nz) == 2 and _b34b_nz[0].opname == 'LOAD_CONST'
+                             and _b34b_nz[0].argval is None
+                             and _b34b_nz[1].opname == 'RETURN_VALUE')
+                            or (len(_b34b_nz) == 1 and _b34b_nz[0].opname == 'RETURN_CONST'
+                                and _b34b_nz[0].argval is None))
+                        if _b34b_is_bare_none:
+                            if len(_b34b_sup.predecessors) == 1:
+                                _b34b_reach.add(_b34b_sup)
+                            break
+                        if (all(op in _b34b_try_coowned_unwind_ops
+                                for op in _b34b_sup_ops)):
+                            _b34b_nxt = [s for s in _b34b_sup.successors
+                                         if s not in _b34b_sup.exception_successors]
+                            _b34b_sup = _b34b_nxt[0] if len(_b34b_nxt) == 1 else None
+                            continue
+                        break
                 continue
             _b34b_reach.add(_b)
             for _s in _b.successors:
@@ -12222,7 +12320,14 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 if _s in _b34b_seed_set:
                     _b34b_stack.append(_s)
                     continue
-                if self.block_to_region.get(_s) is not None:
+                _b34b_owner = self.block_to_region.get(_s)
+                if _b34b_owner is not None:
+                    if (isinstance(_b34b_owner, TryExceptRegion)
+                            and all(i.opname in _b34b_try_coowned_unwind_ops
+                                    for i in _s.instructions)):
+                        # try 协同占用的纯展开块：本 with 自身被抑制恢复链，
+                        # 透明遍历（[R6-F1]，见上方白名单注释）
+                        _b34b_stack.append(_s)
                     continue
                 _s_ops = [i.opname for i in _s.instructions]
                 if 'BEFORE_WITH' in _s_ops or 'BEFORE_ASYNC_WITH' in _s_ops:

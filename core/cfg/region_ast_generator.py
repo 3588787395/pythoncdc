@@ -9174,6 +9174,10 @@ AST 映射规则:
         resume 块可同时是下一个 await 的 setup（``h(await g(await g(1)))``
         的中间块），链沿「resume 兼 setup → poll → resume」继续延伸；链的
         持有者（owner）是不再含 GET_AWAITABLE 的末端 resume 块。
+        [Round6-回归拦截修复 R6-F2] ``yield from`` 轮询环与 await 轮询环共
+        用 SEND 纯协议 poll 形态，但其 setup 含 GET_YIELD_FROM_ITER 而非
+        GET_AWAITABLE——链头资格（向前枚举起点须 _is_setup）将 yield from
+        协议排除在 await 链之外（见下方 R6-F2 注释）。
         [归约方式] 纯后继/前驱图遍历：先自 block 向后回溯链头（逐层
         「poll 前驱 → 含 GET_AWAITABLE 的 setup」），再自链头向前枚举
         全链成员并定位 owner；只读块指令操作码与 SEND argval 目标块，
@@ -9243,13 +9247,33 @@ AST 映射规则:
         # [Round6-B31] 以身份集合去重：自 owner 回溯所得前缀与自链头前向
         # 枚举的后缀在「block 自 owner 出发」的调用形态下重叠（链尾两块
         # 双收），合并指令流会重复 RETURN_VALUE 等终结符，产生双 Return。
+        # [Round6-回归拦截修复 R6-F2] 链头资格守卫：向前枚举的起点 cur 必
+        # 须自身含 GET_AWAITABLE（_is_setup）。识别条件——``yield from
+        # <expr>`` 的编译协议（GET_YIELD_FROM_ITER + LOAD_CONST None →
+        # SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT 轮询自环）
+        # 与 await 轮询环共用 SEND 纯协议 poll 块形态，唯一结构区别是
+        # await 链 setup 含 GET_AWAITABLE、yield from setup 含
+        # GET_YIELD_FROM_ITER；向后回溯方向已经由 _setup_of_poll 强制
+        # GET_AWAITABLE，向前方向若不设同等资格，会自「yield-from setup」
+        # 块误成链：门控把 setup 块 defer 给 owner（返回 []），而 owner 侧
+        # 收链因无 GET_AWAITABLE setup 必然失败——两侧不对称导致 defer
+        # 永不兑现，setup 块内先于 yield from 的语句（裸 yield 表达式语
+        # 句）被吞（dockerspawner.DockerSpawner.start 实证：
+        # ``yield self.docker('start', …)`` 蒸发、yield from 行保留）。
+        # 归约方式：链头不含 GET_AWAITABLE 即返回 None，门控不 fire，块
+        # 走既有发射路径（与 B31 前行为逐位一致）。[C1] 只读 cur 块内操
+        # 作码（同层结构事实），零名字/偏移白名单；[C2] 无归约产物、不持
+        # 有/登记任何块——仅拒绝成链资格；[C3] 双向可区分：await 协议链
+        # 链头必含 GET_AWAITABLE（编译器为 await 补发），yield from 协议
+        # 链头含 GET_YIELD_FROM_ITER 不含 GET_AWAITABLE——两者按该操作
+        # 码互斥，await 链行为不变。
         _seen = {id(b) for b in seq}
         members = list(seq)
         owner = None
         while True:
-            p = _poll_succ_of(cur)
-            if p is None:
+            if not _is_setup(cur):
                 return None
+            p = _poll_succ_of(cur)
             r = _resume_of_poll(p)
             if r is None:
                 return None

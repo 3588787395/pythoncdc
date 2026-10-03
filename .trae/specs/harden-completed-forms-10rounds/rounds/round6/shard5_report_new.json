@@ -1,13 +1,13 @@
 {
- "elapsed_sec": 17.0,
+ "elapsed_sec": 144.2,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
-  "failure": 7,
-  "success": 44
+  "failure": 5,
+  "success": 46
  },
  "files_total": 51,
- "generated_at": "2026-10-03T15:03:50",
+ "generated_at": "2026-10-03T16:17:19",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
@@ -16,8 +16,6 @@
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
-   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/commission.pyc",
-   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/slippage.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc"
   ],
@@ -53,6 +51,8 @@
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/factor_event_source.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/__init__.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/api.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/commission.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/slippage.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/tax.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_history_save/__init__.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc",
@@ -488,30 +488,26 @@
   },
   {
    "detail": null,
-   "failures": [
-    "***<module>.FutureCommission.load: Failure: Different control flow"
-   ],
+   "failures": [],
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/commission.pyc",
    "pyc_sha": "212749340a3d",
    "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/commissionOK.py",
-   "source_sha": "6ddd22f9ad81",
-   "status": "failure",
-   "success_rate": 0.96,
-   "units_success": 24,
+   "source_sha": "70fe28535c26",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 25,
    "units_total": 25
   },
   {
    "detail": null,
-   "failures": [
-    "***<module>.FixedSlippage.load: Failure: Different control flow"
-   ],
+   "failures": [],
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/slippage.pyc",
    "pyc_sha": "e948bbf0b09f",
    "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/slippageOK.py",
-   "source_sha": "6ace7990f23c",
-   "status": "failure",
-   "success_rate": 0.9473684210526315,
-   "units_success": 18,
+   "source_sha": "bfd3839dcfb0",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 19,
    "units_total": 19
   },
   {
@@ -705,7 +701,7 @@
   "compare_pyc_sha256": "9c7567bd6776b36b",
   "ruler_version": "pylingual-equivalence_check"
  },
- "success_rate": 0.988988988988989,
- "units_success": 988,
+ "success_rate": 0.990990990990991,
+ "units_success": 990,
  "units_total": 999
 }

@@ -1,0 +1,48 @@
+{
+ "elapsed_sec": 3.1,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 1,
+  "success": 0
+ },
+ "files_total": 1,
+ "generated_at": "2026-10-03T16:28:39",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.trade_operation: Failure: Different control flow",
+    "***<module>.kill_trade_process: Failure: Different control flow",
+    "***<module>.get_trade_status: Failure: Different control flow",
+    "***<module>.query_trade_strategy_info: Failure: Different control flow",
+    "***<module>.query_strategy_id: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "pyc_sha": "5419f2a32c80",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utilsOK.py",
+   "source_sha": "0bd56da795ed",
+   "status": "failure",
+   "success_rate": 0.8780487804878049,
+   "units_success": 36,
+   "units_total": 41
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.8780487804878049,
+ "units_success": 36,
+ "units_total": 41
+}

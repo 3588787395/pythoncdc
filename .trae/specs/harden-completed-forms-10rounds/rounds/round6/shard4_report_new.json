@@ -1,20 +1,19 @@
 {
- "elapsed_sec": 15.1,
+ "elapsed_sec": 150.3,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
-  "failure": 6,
-  "success": 45
+  "failure": 5,
+  "success": 46
  },
  "files_total": 51,
- "generated_at": "2026-10-03T15:03:32",
+ "generated_at": "2026-10-03T16:14:12",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
   "error": [],
   "failure": [
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc",
-   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
@@ -27,6 +26,7 @@
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/plugin_manager.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/slippage.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/__init__.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_context.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_loader.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/user_variables.pyc",
@@ -157,22 +157,14 @@
   },
   {
    "detail": null,
-   "failures": [
-    "***<module>.Strategy.on_handle_auction: Failure: Different control flow",
-    "***<module>.Strategy.on_handle_data: Failure: Different control flow",
-    "***<module>.Strategy.on_handle_tick: Failure: Different control flow",
-    "***<module>.Strategy.on_order_response: Failure: Different control flow",
-    "***<module>.Strategy.on_trade_response: Failure: Different control flow",
-    "***<module>.Strategy.on_strategy_signal_response: Failure: Different control flow",
-    "***<module>.Strategy.on_finalized: Failure: Different control flow"
-   ],
+   "failures": [],
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy.pyc",
    "pyc_sha": "4f30ba268686",
    "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategyOK.py",
-   "source_sha": "868d6bf51960",
-   "status": "failure",
-   "success_rate": 0.65,
-   "units_success": 13,
+   "source_sha": "9d052d03ecc8",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 20,
    "units_total": 20
   },
   {
@@ -707,7 +699,7 @@
   "compare_pyc_sha256": "9c7567bd6776b36b",
   "ruler_version": "pylingual-equivalence_check"
  },
- "success_rate": 0.9836257309941521,
- "units_success": 841,
+ "success_rate": 0.991812865497076,
+ "units_success": 848,
  "units_total": 855
 }

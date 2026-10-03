@@ -542,3 +542,140 @@ _b34c_finally_deferred_return / B30 发射侧）按归属台账执行——谓�
 - 判据面审查：本批零新判据（#2 为既有判据复位；#3 为插桩清除；#4 为
   docstring；#1 为字节头修复），无名字白名单、无偏移魔数（清除的
   `block.start_offset == 0` 探针属减法）、无跨层读取、无新 self 状态。
+
+## 回归拦截修复批次（全量验证回退响应）
+
+> 承接：主代理验证批次一（commit c9e33a16）REGRESSIONS=4 触发回退拦截——
+> shard4 IQEngine/core/strategy/strategy.pyc（−7 单元）、shard5
+> plugin_system_finance commission.pyc+slippage.pyc（−5 单元）、shard7
+> fly/dockerspawner/dockerspawner.pyc（单元 +2 但文件翻转）。本批定位
+> 三处根因并落三处修复，修复后 4 文件全部转回 success，shard4/5/7
+> batch+compare REGRESSIONS=0。本章节由接手收尾的修复工程师复验后落盘。
+
+### 根因结论（三处）
+
+1. **[R6-F1] with-in-try 的 try 协同占用纯展开块被拒收成孤儿 → 顶层幻影
+   `return None`**（commission.FutureCommission.load /
+   strategy.on_before_trading_start 等 9 处实证）。with 嵌套在 try 体内
+   时，本 with 自身 WITH_EXCEPT_START 处理器的被抑制恢复链
+   （POP_TOP/POP_EXCEPT/… → LOAD_CONST None + RETURN_VALUE 出口终端）落在
+   try 的异常表保护区间内，被 TryExceptRegion 以「区间内全部块」方式协同
+   登记。B34b 可达性 BFS 的「后继已被其他区域占用 → 停」判据把该链上的
+   出口终端块一并拒之 reach 之外 → C3 拒收 → 孤儿化 → 顶层发射出与源码
+   不符的显式 `return None`。协同占用 ≠ 冲突归属：同一协议块对 try 是
+   体内块、对 with 是自身协议块。
+2. **[R6-F1b] 多管理器 with 链 own_handler 恒取最内层，其余层处理器被
+   抑制出口终端不可达 → 同签名幻影**（strategy.pyc 7 处实证）。异常链
+   走查（`_collect_with_cleanup_blocks` 经 RERAISE 块异常后继串收）把
+   with 链上全部嵌套层的 WITH_EXCEPT_START 处理器都收进 exception_blocks，
+   而 own_handler 只取 body_start 对应条目（多管理器链共享最内层
+   body_start → 恒为最内层处理器），其余层处理器在 BFS pop 时被判
+   「外部」跳过——其被抑制恢复链（POP_TOP/POP_EXCEPT 纯展开 →
+   LOAD_CONST None + RETURN_VALUE 终端）不可达，终端块成孤儿 → 同签名
+   幻影 `return None`。
+3. **[R6-F2] B29 await 链头资格未设 GET_AWAITABLE 门控，yield from 轮询
+   环误成链吞掉 setup 块内裸 yield 语句**（dockerspawner.DockerSpawner.
+   start 实证：`yield self.docker('start', …)` 蒸发、yield from 行保留）。
+   `yield from <expr>` 编译协议（GET_YIELD_FROM_ITER + LOAD_CONST None →
+   SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT 轮询自环）与 await
+   轮询环共用 SEND 纯协议 poll 块形态，唯一结构区别是 await 链 setup 含
+   GET_AWAITABLE、yield from setup 含 GET_YIELD_FROM_ITER。向后回溯方向
+   由 `_setup_of_poll` 强制 GET_AWAITABLE，向前枚举方向未设同等资格 →
+   自「yield-from setup」块误成链：门控把 setup 块 defer 给 owner（返回
+   []），而 owner 侧收链因无 GET_AWAITABLE setup 必然失败——两侧不对称
+   导致 defer 永不兑现，setup 块内先于 yield from 的裸 yield 语句被吞。
+
+### 三处修复的判据与锚点
+
+| # | 锚点（file:line） | 判据（纯结构事实） |
+|---|---|---|
+| F1 | region_analyzer.py:12213–12239（白名单注释 + `_b34b_try_coowned_unwind_ops` frozenset:12236）；BFS 后继分支 :12323–12330 | 后继归属 `isinstance(owner, TryExceptRegion)` 且块内全部指令操作码 ∈ 纯展开操作码集合（POP_TOP/POP_EXCEPT/RERAISE/COPY/SWAP/LOAD_CONST/RETURN_VALUE/RETURN_CONST/JUMP_FORWARD/JUMP_ABSOLUTE/NOP/RESUME/CACHE）→ 透明遍历（入栈继续 BFS）；非 try 归属或含用户指令（CALL/STORE_*/FOR_ITER 等）维持占用即停。LoopRegion/WithRegion 拥有的块不在白名单 |
+| F1b | region_analyzer.py:12248–12293（外部处理器分支内被抑制出口终端回链走查） | 外部处理器（`WITH_EXCEPT_START` ∈ 块且 `is not own_handler`）尾指令 `get_last_instruction()` 呈 `POP_JUMP_*` 且 argval 非空 → 沿被抑制延续边（真边）只读走查：链上允许 a) try 协同占用纯展开块（F1 同款白名单 + 唯一正常后继）或 b) 自由纯展开块（唯一正常后继）；终端须为自由 bare-None 块（去噪后恰为 LOAD_CONST None + RETURN_VALUE 或单条 RETURN_CONST None）且**前驱数 = 1**（被抑制专用出口）；终端加入 reach 后仍须通过位置扫描全部守卫才可收编 |
+| F2 | region_ast_generator.py:9250–9272（注释）+ 守卫 :9273–9274（`if not _is_setup(cur): return None`） | 向前枚举起点 cur 必须自身含 GET_AWAITABLE（`_is_setup`）；不含即返回 None，门控不 fire，块走既有发射路径（与 B31 前行为逐位一致）。GET_AWAITABLE（await 协议）与 GET_YIELD_FROM_ITER（yield from 协议）按操作码互斥 |
+
+三处均带六段注释 + C1/C2/C3 条款；判据全部为纯结构事实（操作码集合、
+归属区域类型、前驱计数、SEND/GET_AWAITABLE 协议形态），零名字白名单、
+零 start_offset 魔数、零跨层回溯（全部只读同层结构：block_to_region、
+cfg 后继/前驱、块内指令）、零新 self 状态（全部函数内局部变量）。
+
+### 自测读数表（接手收尾复验，全部真实跑）
+
+| # | 自测项 | 结果 |
+|---|---|---|
+| 1 | BOM：`head -c 3 core/cfg/region_ast_generator.py \| xxd` | `00000000: efbb bf` ✓ |
+| 2 | `grep -rn "R23N21_DEBUG" core/ \| wc -l` | **0** ✓ |
+| 3 | ast.parse（analyzer utf-8 / generator utf-8-sig）+ 双模块包路径 import | 全通过 ✓ |
+| 4 | round6 全量 batch（r6_01..r6_15 + n6_01 = 16 文件，报告 `r6_regfix.json`） | **115/115**，16/16 文件 success，rate 1.0，零位移 ✓ |
+| 5 | rv6 探针 batch（7 探针 29 单元，报告 `rv6_regfix.json`） | **18/29 持平**：rv6_01=3/5、rv6_02=2/4、rv6_03=4/4、rv6_04=1/4、rv6_05=3/4、rv6_06=1/4、rv6_07=4/4，与 REVIEW2 §3 登记面逐文件一致，MISMATCH 单元名单亦一致（aw_break_in_try_for/aw_continue_in_try_for、outer_raise_catch/nested_with_else_loop、try_fin_with_nested/double_fin_overwrite/try_fin_fin_body_with、gen_for_else_mixed、deep_tuple_star/star_mid_async/nested_star_tuple）；**B37–B41 登记面无变差** ✓ |
+| 6 | 六哨兵重生成 + single | tools 6/6 ✓、trade_schedule 6/6 ✓、mq_connector 13/13 ✓、IQCommon/strategy/strategy 2/2 ✓、IQEngine/utils/scheduler 52/52 ✓、trade_info_utils **36/41**=基线（失败 5 单元 = trade_operation/kill_trade_process/get_trade_status/query_trade_strategy_info/query_strategy_id，名单不变，留档 `r6_sentinel_trade_info.json`）✓ |
+| 7 | option_account.pyc（`find site-packages` 定位 = IQEngine/plugins/plugin_system_accounts/account_model/）重生成 + single | **35/35** ✓ |
+| 8 | 4 个回退文件重生成 + single | IQEngine/core/strategy/strategy **20/20** ✓、plugin_system_finance/commission **25/25** ✓、plugin_system_finance/slippage **19/19** ✓、fly/dockerspawner/dockerspawner **26/26** ✓（全 success，与主代理读数一致） |
+| 9 | `git status` OK.py 漂移盘点（含 15 支 modified OK.py 补齐重生成） | 见下节，无新 failure 文件 ✓ |
+
+补充自测报告 json（工具产出）：`r6_regfix.json`、`rv6_regfix.json`、
+`r6_sentinel_trade_info.json`、`r6_okdrift_fail5.json`（重生成前 5 支
+failure 文件读数+失败名单）、`r6_okdrift_regen15.json`（补齐重生成后
+15 支读数）。
+
+### OK.py 漂移盘点结论（自测 #9）
+
+前工程师中断时 15 支 modified OK.py 留在盘上（sha 对账证实 = 批次一
+修复前核的重生成产物，未覆盖本批三处修复后的输出）。本批以当前核
+（含三处修复）将其**全部补齐重生成**并逐支 single（重生成允许，零手改）：
+
+- **9 支 success**：fileio_utils 15/15、client_db 9/9、strategy_context
+  31/31、json_persistance 7/7、function(risk) 15/15、broker 38/38、
+  IQEngine/utils/__init__ 33/33、oauth2 12/12、flyAccount 24/24——内容
+  变化但 single 仍全 success。
+- **4 支 failure 但与 HEAD 分片报告登记面逐单元持平**（读数 + 失败名单
+  均一致，全部既有基线缺口，非本批引入）：wizard_quant_api 55/58
+  （filter_desicion、get_DMI.calculate_di.<genexpr>×2）、trade_info_utils
+  36/41（基线 5 单元名单不变）、future_contract_info 27/29（check_user、
+  info_conbine）、quote_handler 78/79（get_kline_local）。
+- **2 支重生成后与 HEAD blob 内容一致**（git clean，HEAD 提交内已含修复
+  后产物）：flytools 65/66 持平（失败名单 modify_batcktes_info 不变）；
+  plugin_fly_data/strategy **23/27 → 26/27 = 修复净改善 +3**——
+  on_before_trading_start / on_after_trading_end / on_once_handle 三个
+  with-in-try 幻影 return 单元转绿（正属 F1 根因实证名单），
+  tick_worker_thread 为既有残留缺口继续登记。
+- **无任何新出现 failure 的文件**；4 个回退文件 OK.py 与 HEAD 一致且
+  single 全 success（见 #8）。
+
+### 与 B34b 原修复的兼容性论证
+
+B34b 原修复的关键维持项：w_loop_nest_with 内层 with 的 BFS 仍止于
+122/114/84，blk@180（函数尾 return None 块）保持不可达、交还顶层发射。
+本批三处修复不破此约束：
+
+1. **F1 白名单按归属区域类型分流**：blk@180 若被外层结构占用，其归属为
+   LoopRegion/WithRegion（非 TryExceptRegion）→ 不入白名单 → 占用即停
+   维持；try 协同占用分支仅对 `isinstance(owner, TryExceptRegion)` 且
+   纯展开形态放行。内层 with 的 BFS 扩展在到达任何 blk@180 归属块前
+   已被外层处理器 158 的「WITH_EXCEPT_START 且非 own_handler → 停」
+   判据截断，白名单不参与该路径。
+2. **F1b 终端前驱数 = 1 判据排除共享 exit-block**：blk@180 的前驱 =
+   {156 正常跳转, 178 展开链}，前驱计数 2 → 即使某路径把它误认为被
+   抑制终端也被拒绝（被抑制专用出口与正常/被抑制共享 exit-block 按前驱
+   计数互斥，C3 条款）——B34b 的 exit-block 交还顶层发射语义不变。
+3. **F2 与 B34b 无交集**：F2 只作用于 await 链资格（GET_AWAITABLE
+   门控），不触碰 with 可达性；await 链行为不变（向后回溯方向本就经
+   `_setup_of_poll` 强制同资格，向前方向补齐的是对称性）。
+4. 实证背书：六哨兵持平（#6）+ option_account 35/35（#7）+ rv6_02
+   （B34b 正向反例探针）2/4 与 §3 登记面持平（#5）+ round6 16 文件
+   115/115 零位移（#4）——B34b 全部既有守卫行为在修复后核下逐位不变。
+
+### 批次边界声明
+
+- 本批改动面 = `core/cfg/region_analyzer.py`（F1+F1b）+
+  `core/cfg/region_ast_generator.py`（F2）+ 本 FIX.md 追加 + 自测报告
+  json（`r6_regfix.json` / `rv6_regfix.json` / `r6_sentinel_trade_info.json`
+  / `r6_okdrift_fail5.json` / `r6_okdrift_regen15.json`，工具产出）+
+  15 支 modified OK.py 补齐重生成（`pycdc.py -o`，零手改）。
+- 未触碰：REVIEW2.md / REVIEW.md / spec.md / tasks.md / rv6 探针 /
+  B37–B41 相关判据面。
+- 判据面审查：三处新判据均为纯结构事实（操作码集合 / 归属区域类型 /
+  前驱计数 / GET_AWAITABLE 协议形态），无名字白名单、无 start_offset
+  魔数、无跨层回溯、无新 self 状态；全部带六段注释 + C1/C2/C3 条款。
+- 遗留清理：5 棵二分工作树（pycdc_b1tree/b2tree/b3tree/r5tree/r6tree）
+  已 `git worktree remove --force` 清理（详见 git worktree list 留档）；
+  pcdc_r0 / pcdc_wt / pcdc_r8wt 为历史遗留非本批产物，未动。
