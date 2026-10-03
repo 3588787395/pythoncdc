@@ -32,6 +32,5 @@ def w_raise_caught_outside(mgr):
     try:
         with mgr:
             raise ValueError('x')
-        return None
     except ValueError:
         return 4

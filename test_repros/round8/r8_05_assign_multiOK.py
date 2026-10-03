@@ -4,7 +4,6 @@
 __doc__ = 'R8-05 Assign family: chained / multi-target / swap / star unpack (head-mid-tail) / nested unpack / attr / subscript / slice / chained subscript.'
 def r8_assign_chain():
     a = b = c = 5
-    a + b + c
     return a + b + c
 def r8_assign_multi():
     a, b = 1, 2
@@ -33,4 +32,4 @@ def r8_assign_slice(xs, ys):
     return xs
 def r8_assign_chain_subscript(d1, d2, v):
     d1['k'] = d2['k'] = v
-    (d1, d2)
+    return (d1, d2)

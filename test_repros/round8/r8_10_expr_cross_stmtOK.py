@@ -15,8 +15,7 @@ def r8_x_augassign_ternary(x, a, b, t):
     x = x + (a if t else b)
     return x
 def r8_x_assign_ternary_chain(d, t, a, b):
-    d['k1'] = a if t else b
-    d['k2'] = None
+    d['k1'] = d['k2'] = a if t else b
     return d
 def r8_x_for_iter_ternary(xs, ys, t):
     for v in xs if t else ys:

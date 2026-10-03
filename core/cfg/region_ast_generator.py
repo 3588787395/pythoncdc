@@ -1775,6 +1775,20 @@ class RegionASTGenerator:
                     if (_b31_chain is not None and _b31_chain[1] is _cl_b
                             and self._b31_continuation_owner(_cl_b)):
                         continue
+                    # [B55] try/except 尾随 return None 豁免预标记：
+                    # 识别条件（同层结构事实）：纯 None-return 块为单前驱，唯一
+                    # 前驱含 POP_EXCEPT（try/except handler 出口的标志操作码）
+                    # 且以 JUMP_FORWARD 精确指向本块（try 语句正常完成边的跳转
+                    # 边身份），前驱由 TryExceptRegion 拥有（handler 出口片段）。
+                    # 机制：CPython 对 try/except 的正常完成边以显式跳转接入
+                    # 源码级尾随 ``return None`` 块；该块被当作异常清理尾声
+                    # 预标记后整条 return 语句蒸发（重编译缺 JUMP_FORWARD +
+                    # 尾部 RETURN_VALUE，字节码失配）。
+                    # 归约方式：豁免预标记，交由本 BASIC 区域按顶层偏移序在
+                    # try 语句之后发射 Return(None)（每块唯一归属不变）。
+                    # AST 映射：Return(Constant(None))。
+                    if self._b55_is_try_handler_exit_trailing_return(_cl_b):
+                        continue
                     self.generated_blocks.add(_cl_b)
                     self.generated_offsets.add(_cl_b.start_offset)
 
@@ -2881,6 +2895,266 @@ class RegionASTGenerator:
             'value': _assign['value'],
         }
         return _result
+
+    # [B54] 链式赋值目标 store 操作码族（Name 目标 + 容器目标）。
+    # 同层结构事实：仅操作码族与栈效应，零名字/偏移白名单。
+    _B54_CHAIN_STORE_OPS = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                            'STORE_SUBSCR', 'STORE_ATTR')
+    # [B54] 链式赋值延续窗口的装载类指令（容器/键装载段允许出现的操作码）。
+    _B54_LOADISH_OPS = (
+        'LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL',
+        'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_ATTR', 'LOAD_METHOD',
+        'BINARY_OP', 'BINARY_SUBSCR', 'BINARY_SLICE',
+        'CONTAINS_OP', 'IS_OP', 'COMPARE_OP',
+        'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP', 'BUILD_STRING', 'BUILD_TUPLE',
+        'BUILD_SLICE', 'UNARY_NEGATIVE', 'UNARY_NOT', 'UNARY_INVERT',
+    )
+    # [B54] 语句终结指令：任一完整语句（Expr/Assign/Del/…）必以其一收尾
+    # （值被消费或绑定）。不含这些操作码的指令段不可能含语句边界。
+    _B54_STMT_TERMINATOR_OPS = (
+        'POP_TOP',
+        'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+        'STORE_SUBSCR', 'STORE_ATTR',
+        'DELETE_FAST', 'DELETE_NAME', 'DELETE_GLOBAL', 'DELETE_DEREF',
+        'DELETE_SUBSCR', 'DELETE_ATTR',
+        'IMPORT_NAME', 'IMPORT_FROM', 'RAISE_VARARGS',
+        'RETURN_VALUE', 'RETURN_CONST',
+        'YIELD_VALUE', 'YIELD_FROM',
+    )
+
+    def _b54_validate_chain_target_window(self, store_op: str, window: List[Instruction]) -> bool:
+        """[B54] 校验链式赋值目标的容器/键装载窗口（同层结构事实）。
+
+        识别条件：store 消费栈值数决定窗口栈值组数——Name 目标窗口必须为空
+        （store 直接弹值）；STORE_ATTR 恰 1 组（对象）；STORE_SUBSCR 恰 2 组
+        （容器在前、键在后）。分组判据复用 _w16_split_value_groups（按栈值
+        操作数分组，CALL/嵌套下标/属性链稳健），不在本方法复制判定。
+        归约方式：仅校验，不构建。AST 映射：无（校验器）。
+        """
+        if store_op in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+            return not window
+        groups = self._w16_split_value_groups(window)
+        if store_op == 'STORE_ATTR':
+            return bool(groups) and len(groups) == 1
+        if store_op == 'STORE_SUBSCR':
+            return bool(groups) and len(groups) == 2
+        return False
+
+    def _b54_target_ast(self, store_instr: Instruction,
+                        window: List[Instruction]) -> Optional[Dict[str, Any]]:
+        """[B54] 由 store 指令 + 容器/键装载窗口构建链式赋值目标 AST。
+
+        识别条件：窗口已过 _b54_validate_chain_target_window 校验（栈值组数
+        与 store 消费数匹配）。
+        归约方式：Name 目标直取 argval；容器目标按栈值组重建（单指令组用
+        _load_instr_to_ast 直转、多指令组用 reconstruct 整体重建，与既有
+        W16 路径一致）。
+        AST 映射：Name/Attribute/Subscript（ctx=Store）。
+        """
+        op = store_instr.opname
+        if op in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+            return {'type': 'Name', 'id': store_instr.argval, 'ctx': 'Store',
+                    'lineno': store_instr.starts_line}
+        groups = self._w16_split_value_groups(window)
+        if op == 'STORE_ATTR' and groups and len(groups) == 1:
+            if len(groups[0]) == 1:
+                obj = self.expr_reconstructor._load_instr_to_ast(groups[0][0])
+            else:
+                obj = self.expr_reconstructor.reconstruct(groups[0])
+            if obj is None:
+                return None
+            return {'type': 'Attribute', 'value': obj, 'attr': store_instr.argval,
+                    'ctx': 'Store', 'lineno': store_instr.starts_line}
+        if op == 'STORE_SUBSCR' and groups and len(groups) == 2:
+            if len(groups[0]) == 1:
+                obj = self.expr_reconstructor._load_instr_to_ast(groups[0][0])
+            else:
+                obj = self.expr_reconstructor.reconstruct(groups[0])
+            if len(groups[1]) == 1:
+                key = self.expr_reconstructor._load_instr_to_ast(groups[1][0])
+            else:
+                key = self.expr_reconstructor.reconstruct(groups[1])
+            if obj is None or key is None:
+                return None
+            return {'type': 'Subscript', 'value': obj, 'slice': key,
+                    'ctx': 'Store', 'lineno': store_instr.starts_line}
+        return None
+
+    def _b54_scan_chain_continuation(self, instrs: List[Instruction], start: int,
+                                     end: Optional[int] = None):
+        """[B54] 扫描链式赋值延续目标序列（B54 链式赋值重建崩坏族）。
+
+        识别条件（同层结构事实——块内指令操作码与栈效应，零名字/偏移白名单，
+        零跨层回溯）：
+          CPython 3.11 把 ``t1 = t2 = ... = tn = value``（n ≥ 2）编译为
+            ``value; COPY 1; [t1 装载]; STORE t1; COPY 1; [t2 装载]; STORE t2;
+            ...; [tn 装载]; STORE tn``
+          每个非末目标前有 ``COPY 1``（复制栈顶值供该目标消费：Name 目标的
+          COPY 紧邻 STORE，下标/属性目标的 COPY 位于容器/键装载之前），末目标
+          无 COPY、直接消费留栈原值。故相邻目标 store 的间隙以 COPY 1 开头
+          ⇒ 非末目标；不以 COPY 1 开头（纯装载或空）⇒ 末目标，链在此终止。
+          与 walrus 前缀的互斥判定同源：walrus 是 ``value; COPY 1; STORE_*``
+          且其后无「后续 STORE 段」（本扫描要求延续以末目标 store 收尾），
+          链式赋值则存在后续目标 store——后续 STORE 段存在性互斥。
+          [调用约定] start 指向「上一目标 store 之后」的第一条延续指令；
+          扫描不越过 end（默认序列尾）。
+
+        归约方式：整体归约为单一 Assign 的追加 targets（is_chain_assign=True），
+        链值流由调用方透传至每一目标（含延续目标），禁止按单赋值逐段消费。
+        AST 映射：经 _b54_target_ast（Name/Attribute/Subscript, ctx=Store）。
+
+        返回 ``(targets, consumed)``；targets 每项为
+        ``{'store': instr, 'obj_key': [装载指令]}``（按链序），consumed 为
+        instrs 中链延续消费的结束索引（不含）。未命中返回 ``(None, start)``。
+        """
+        n = len(instrs) if end is None else min(end, len(instrs))
+        targets: List[Dict[str, Any]] = []
+        i = start
+        while i < n:
+            instr = instrs[i]
+            if instr.opname == 'COPY' and getattr(instr, 'arg', None) == 1:
+                # 非末目标边界：COPY 1 + [装载] + store
+                j = i + 1
+                window: List[Instruction] = []
+                while j < n and instrs[j].opname in self._B54_LOADISH_OPS:
+                    window.append(instrs[j])
+                    j += 1
+                if j >= n or instrs[j].opname not in self._B54_CHAIN_STORE_OPS:
+                    return (None, start)
+                if not self._b54_validate_chain_target_window(instrs[j].opname, window):
+                    return (None, start)
+                targets.append({'store': instrs[j], 'obj_key': window})
+                i = j + 1
+                # 非末目标之后必须还有末目标收尾——继续扫描
+            elif instr.opname in self._B54_LOADISH_OPS:
+                # 末目标候选：装载窗口 + store（无 COPY 前导）
+                j = i
+                window = []
+                while j < n and instrs[j].opname in self._B54_LOADISH_OPS:
+                    window.append(instrs[j])
+                    j += 1
+                if j < n and instrs[j].opname in self._B54_CHAIN_STORE_OPS:
+                    if not self._b54_validate_chain_target_window(instrs[j].opname, window):
+                        return (None, start)
+                    targets.append({'store': instrs[j], 'obj_key': window})
+                    return (targets, j + 1)
+                return (None, start)
+            else:
+                return (None, start)
+        # 扫描耗尽仍未遇末目标 store —— 非法链形（链必须以末目标收尾）
+        return (None, start)
+
+    def _b55_is_try_handler_exit_trailing_return(self, block: BasicBlock) -> bool:
+        """[B55] 判定块是否为 try/except 语句的源码级尾随 ``return None`` 块。
+
+        识别条件（同层结构事实——前驱集合、前驱块操作码、跳转边身份、区域
+        归属，零名字/偏移白名单）：
+          (1) 本块为纯 None-return 块（_is_implicit_return_block：剥噪后恰为
+              LOAD_CONST None + RETURN_VALUE / RETURN_CONST None）；
+          (2) 前驱恰一个（排除共享显式 return 收尾块——该形态由 R57-B 豁免
+              预标记，两者互斥）；
+          (3) 唯一前驱含 POP_EXCEPT 且末条指令为 JUMP_FORWARD、跳转目标 =
+              本块起始偏移——CPython 对 try/except 正常完成边以显式跳转接入
+              源码级尾随 return 块（try 语句机器边，非 fall-through 隐式
+              尾声；循环/with 出口尾声前驱不含 POP_EXCEPT）；
+          (4) 该前驱由 TryExceptRegion 拥有（handler 出口片段的区域归属）。
+
+        归约方式：仅判定（generate() 清理预标记循环据此豁免预标记，块交由
+        其 BASIC 区域按顶层偏移序在 try 语句之后发射）。AST 映射：
+        Return(Constant(None))。
+        """
+        _preds = [p for p in (getattr(block, 'predecessors', None) or []) if p is not block]
+        if len(_preds) != 1:
+            return False
+        _pred = _preds[0]
+        _self_instrs = [i for i in block.instructions
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if not _self_instrs or not self._is_implicit_return_block(_self_instrs):
+            return False
+        _pred_meaningful = [i for i in _pred.instructions
+                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        if (not _pred_meaningful
+                or _pred_meaningful[-1].opname != 'JUMP_FORWARD'
+                or _pred_meaningful[-1].argval != block.start_offset):
+            return False
+        if not any(i.opname == 'POP_EXCEPT' for i in _pred_meaningful):
+            return False
+        _owner = self.region_analyzer.block_to_region.get(_pred)
+        return isinstance(_owner, TryExceptRegion)
+
+    def _b55_is_pure_const_return_block(self, block: BasicBlock) -> bool:
+        """[B55-c] 判定块是否为纯常量 return 块（剥噪后至多两条指令）。
+
+        识别条件（同层结构事实，零名字/偏移白名单）：剥去 RESUME/NOP/CACHE
+        后，末条为 RETURN_VALUE/RETURN_CONST，且其前至多一条 LOAD_CONST
+        （值装载）。覆盖单条 RETURN_CONST 与 LOAD_CONST+RETURN_VALUE 两形，
+        任意常量值（含 None 与非 None）。异常清理机器块（含 POP_EXCEPT /
+        PUSH_EXC_INFO / RERAISE / COPY / SWAP 等）不可能满足该形状（剥噪不
+        含这些操作码，出现即 len>2 或首操作码不符）。
+
+        归约方式：仅判定。AST 映射：Return(Constant(<const>))。
+        """
+        _instrs = [i for i in block.instructions
+                   if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if not _instrs:
+            return False
+        _ops = [i.opname for i in _instrs]
+        if _ops[-1] not in ('RETURN_VALUE', 'RETURN_CONST'):
+            return False
+        return len(_ops) == 1 or (len(_ops) == 2 and _ops[0] == 'LOAD_CONST')
+
+    def _b54_build_chain_assign_from_accumulation(self, accum: List[Instruction],
+                                                  cont_targets: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """[B54] 由累积指令段 + 延续目标构建链式赋值 Assign（自循环体装配面）。
+
+        识别条件（同层结构事实）：accum 形如
+          ``[value 装载...; COPY 1; (首目标容器/键装载)?; STORE_x]``
+        ——末尾的 STORE（首目标）之前是连续装载窗口，窗口左邻必须是
+        ``COPY 1``（链值复制边界；Name 首目标窗口为空、COPY 紧邻 store），
+        COPY 1 之前为值表达式指令段（不含语句终结指令，且非空——值与首目标
+        同块装载；merge 值透传形态交 _try_build_ternary_store_assign 面处理）。
+        延续目标 cont_targets 由 _b54_scan_chain_continuation 依「非末目标
+        COPY 1 前导 / 末目标直接消费」判据给出。
+
+        归约方式：链值流完整透传至每一目标（首目标 + 全部延续目标），
+        整体归约为单一 Assign，禁止按单赋值逐段消费（逐段消费会把第二目标
+        的值位错配为 None 回填、首目标值被 COPY 副本顶替）。
+        AST 映射：Assign(targets=[Name/Subscript/Attribute...], value,
+        is_chain_assign=True)；目标经 _b54_target_ast 构建。
+        """
+        if not accum or not cont_targets:
+            return None
+        _first_store = accum[-1]
+        if _first_store.opname not in self._B54_CHAIN_STORE_OPS:
+            return None
+        _k = len(accum) - 2
+        _win: List[Instruction] = []
+        while _k >= 0 and accum[_k].opname in self._B54_LOADISH_OPS:
+            _win.insert(0, accum[_k])
+            _k -= 1
+        if _k < 0 or not (accum[_k].opname == 'COPY' and getattr(accum[_k], 'arg', None) == 1):
+            return None
+        _value_instrs = accum[:_k]
+        if (not _value_instrs
+                or any(i.opname in self._B54_STMT_TERMINATOR_OPS for i in _value_instrs)):
+            return None
+        if not self._b54_validate_chain_target_window(_first_store.opname, _win):
+            return None
+        _targets = []
+        _t1 = self._b54_target_ast(_first_store, _win)
+        if _t1 is None:
+            return None
+        _targets.append(_t1)
+        for _ct in cont_targets:
+            _tj = self._b54_target_ast(_ct['store'], _ct['obj_key'])
+            if _tj is None:
+                return None
+            _targets.append(_tj)
+        _value = self.expr_reconstructor.reconstruct(_value_instrs)
+        if _value is None:
+            return None
+        return {'type': 'Assign', 'targets': _targets, 'value': _value,
+                'is_chain_assign': True, 'lineno': _value_instrs[0].starts_line}
 
     def _build_effective_stmts(self, block: BasicBlock, effective: List[Instruction]) -> List[Dict[str, Any]]:
         stmts, expr_instrs, seen_for = [], [], set()
@@ -10765,15 +11039,34 @@ AST 映射规则:
             # `obj.attr = value`）必须作为独立语句提取，否则会被累积到
             # _self_loop_instrs 中，在遇到后续 STORE_FAST 时被 _build_store_statement
             # 错误合并或丢失。镜像 _loop_extract_pre_stmts_from_instrs 的 R10-N7 修复。
-            if _sli_instr.opname == 'STORE_SUBSCR':
+            # [B54] 链式赋值延续门控：累积段呈「value; COPY 1; [容器/键装载];
+            # STORE_*」且其后的指令含链式延续目标（非末目标 COPY 1 前导 /
+            # 末目标直接消费，判据 _b54_scan_chain_continuation）时，整链归约
+            # 为单一多目标 Assign（is_chain_assign=True），链值流透传至每一目标；
+            # 延续指令偏移加入 _sl_skip_offsets 防逐段重复消费。不识别时仍走
+            # 下方单目标路径（逐段消费会把第二目标值位错配为 None 回填）。
+            if _sli_instr.opname in ('STORE_SUBSCR', 'STORE_ATTR'):
                 _self_loop_instrs.append(_sli_instr)
-                _stmt = self._build_subscript_assign(_self_loop_instrs)
-                if _stmt:
-                    _self_loop_stmts.append(_stmt)
-                _self_loop_instrs = []
-                continue
-            if _sli_instr.opname == 'STORE_ATTR':
-                _self_loop_instrs.append(_sli_instr)
+                _b54_scan_end = len(hdr.instructions)
+                if _body_end_idx is not None:
+                    _b54_scan_end = min(_b54_scan_end, _body_end_idx + 1)
+                _b54_cont, _b54_cend = self._b54_scan_chain_continuation(
+                    hdr.instructions, _sli_idx + 1, _b54_scan_end)
+                if _b54_cont:
+                    _b54_assign = self._b54_build_chain_assign_from_accumulation(
+                        _self_loop_instrs, _b54_cont)
+                    if _b54_assign is not None:
+                        _self_loop_stmts.append(_b54_assign)
+                        for _b54_j in range(_sli_idx + 1, _b54_cend):
+                            _sl_skip_offsets.add(hdr.instructions[_b54_j].offset)
+                        _self_loop_instrs = []
+                        continue
+                if _sli_instr.opname == 'STORE_SUBSCR':
+                    _stmt = self._build_subscript_assign(_self_loop_instrs)
+                    if _stmt:
+                        _self_loop_stmts.append(_stmt)
+                    _self_loop_instrs = []
+                    continue
                 _stmt = self._build_attr_assign(_self_loop_instrs)
                 if _stmt:
                     _self_loop_stmts.append(_stmt)
@@ -28200,6 +28493,75 @@ AST 映射规则:
                                 continue
                             _post_try_seen_r19n2.add(_succ)
                             _post_try_blocks_r19n2.append(_succ)
+            # [B55-c] 空 finally 帧 try/finally 尾随纯常量 return 块的 post-try
+            # 收集（dtc-r08 判据的同层推广，窄门控）：
+            # 识别条件（同层次结构身份，全部取自本层可见的区域字段/块角色/
+            # 指令操作码，无名字/偏移白名单，无跨层回溯）：
+            #   (1) region.has_finally 且常规 post-try 收集为空——空 try/finally
+            #       不产生 finally 正常路径副本（finally_copy_blocks 为空），
+            #       dtc-r08 的副本路径不会触发；
+            #   (2) 后继块 _succ ∈ region.blocks（区域识别阶段被纳入区域跨度）
+            #       但位于异常表保护跨度之外（_succ.start_offset ≥
+            #       try_offset_end——try 体语句全部落在跨度之内，try 语句之后
+            #       的尾随代码必然在跨度终点之后），且不属于任何已知结构部分
+            #       （try_blocks/else_blocks/finally_blocks/cleanup_blocks/
+            #       handler 块/finally_copy）——依「每块唯一归属」，该块的
+            #       结构归属是 try 语句之后的顺序代码，而非 try/finally 的
+            #       任何子结构；
+            #   (3) _succ 为纯常量 return 块（_b55_is_pure_const_return_block）
+            #       且不含 RERAISE——源码级尾随 ``return <const>`` 单语句，
+            #       异常清理机器块不可能满足该形状；
+            #   (4) 归属权威映射 block_to_region 中 _succ 归本 region（或无
+            #       归属），且尚未生成。
+            # 机制：``try: pass / finally: pass / return 1`` 编译为 try 入口块
+            #   JUMP_FORWARD 直接接入尾随 return 块；该块被纳入 region.blocks
+            #   却无结构角色，常规收集因 ``_succ not in _region_block_set``
+            #   被排除，_generate_try 收尾的毯式标记把它吞掉——尾随 return
+            #   整句蒸发（重编译缺尾部 LOAD_CONST+RETURN_VALUE，字节码失配，
+            #   实测 r8_03_pass_hosts.r8_pass_try_finally）。
+            # 归约方式：收集为 post-try 块，交由既有 _post_try_blocks_r19n2
+            #   发射循环在 try 语句之后生成语句并登记已生成（每块唯一归属
+            #   不变，父层兄弟序列不再重复发射）。
+            if not _post_try_blocks_r19n2 and getattr(region, 'has_finally', False):
+                _b55c_tail_off = getattr(region, 'try_offset_end', None)
+                _b55c_known_offs = set()
+                for _b55c_b in (list(region.try_blocks or [])
+                                + list(region.else_blocks or [])
+                                + list(region.finally_blocks or [])
+                                + list(getattr(region, 'cleanup_blocks', None) or [])):
+                    _b55c_known_offs.add(_b55c_b.start_offset)
+                for _b55c_hb in (getattr(region, 'handler_entry_blocks', None) or []):
+                    _b55c_known_offs.add(_b55c_hb.start_offset)
+                for _b55c_et, _b55c_en, _b55c_hbs in (getattr(region, 'except_handlers', None) or []):
+                    for _b55c_hb in _b55c_hbs:
+                        _b55c_known_offs.add(_b55c_hb.start_offset)
+                # finally_copy_blocks 形态：{副本块起始偏移: 保留标记 int}
+                # （dtc-r08 消费端按 .items() 的 key 经 get_block_by_offset 取块），
+                # 已知结构偏移 = 其 keys 视图。
+                _b55c_known_offs.update(
+                    (getattr(region, 'finally_copy_blocks', None) or {}).keys())
+                for _b55c_tb in region.try_blocks:
+                    _b55c_role = self.region_analyzer.get_block_role(_b55c_tb)
+                    if _b55c_role in (BlockRole.BREAK, BlockRole.PURE_BREAK,
+                                      BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+                        continue
+                    for _b55c_succ in _b55c_tb.successors:
+                        if (_b55c_tail_off is not None
+                                and _b55c_succ in _region_block_set_r19n2
+                                and _b55c_succ.start_offset >= _b55c_tail_off
+                                and _b55c_succ not in _post_try_seen_r19n2
+                                and _b55c_succ.start_offset not in _b55c_known_offs
+                                and _b55c_succ not in _all_if_merge_blocks_r19n2
+                                and not any(i.opname == 'RERAISE'
+                                            for i in _b55c_succ.instructions)
+                                and self._b55_is_pure_const_return_block(_b55c_succ)):
+                            _b55c_owner = self.region_analyzer.block_to_region.get(_b55c_succ)
+                            if _b55c_owner is not None and _b55c_owner is not region:
+                                continue
+                            if _b55c_succ in self.generated_blocks:
+                                continue
+                            _post_try_seen_r19n2.add(_b55c_succ)
+                            _post_try_blocks_r19n2.append(_b55c_succ)
             # When has_finally=True, CPython creates finally normal-path copies
             # (in finally_copy_blocks) that end with JUMP_FORWARD to post-try code
             # (e.g., `return None` after try-except-else-finally). These post-try
@@ -44100,6 +44462,29 @@ AST 映射规则:
             return None
         # store_idx 之后的指令属于下一个语句，重建为 extra statements
         _after_store_instrs = merge_instrs[_store_idx + 1:]
+        # [B54] 链式赋值延续：store 消费点之后可能还有链式赋值的后续目标
+        # （``d['k1'] = d['k2'] = (ternary)`` → merge: COPY 1, [d,'k1'],
+        # STORE_SUBSCR, [d,'k2'], STORE_SUBSCR）。延续末目标直接消费留栈原值
+        # （无 COPY 前导），其值 = 同一 ternary_expr——不识别时延续目标被当
+        # 独立语句重建，值位缺栈顶 → None 回填（幻影 ``d['k2'] = None``）。
+        # 判据：_b54_scan_chain_continuation（非末目标 COPY 1 前导 / 末目标
+        # 纯装载收尾，同层结构事实）。命中后延续指令从 _after_store_instrs
+        # 剥离（extra statements 不再含之），targets 由 Pattern A 返回点折入
+        # 单一 Assign（is_chain_assign=True，链值流透传每一目标）。
+        _b54_chain_targets: Optional[List[Dict[str, Any]]] = None
+        _b54_cont, _b54_cend = self._b54_scan_chain_continuation(_after_store_instrs, 0)
+        if _b54_cont:
+            _b54_built = []
+            _b54_ok = True
+            for _ct in _b54_cont:
+                _bt = self._b54_target_ast(_ct['store'], _ct['obj_key'])
+                if _bt is None:
+                    _b54_ok = False
+                    break
+                _b54_built.append(_bt)
+            if _b54_ok:
+                _b54_chain_targets = _b54_built
+                _after_store_instrs = _after_store_instrs[_b54_cend:]
         # R36 双角色 merge 块（W36）：STORE 之后可能是下游结构化区域的入口
         # 前导（如连续属性三元 `o.x = t1 if c1 else v1` / `o.y = t2 if c2 else
         # v2` 中，第 1 个三元的 merge_block 同时是第 2 个 TernaryRegion 的
@@ -44375,6 +44760,15 @@ AST 映射规则:
                         'slice': key_expr,
                         'ctx': 'Store',
                     }
+                    # [B54] 链式延续目标折入单一 Assign（链值流 = 同一三元值
+                    # 透传至每一目标；无延续时与旧行为逐字一致）。
+                    if _b54_chain_targets:
+                        return {
+                            'type': 'Assign',
+                            'targets': [target] + _b54_chain_targets,
+                            'value': _value_expr_a,
+                            'is_chain_assign': True,
+                        }
                     return {
                         'type': 'Assign',
                         'targets': [target],
@@ -44475,6 +44869,15 @@ AST 映射规则:
                         'attr': last_instr.argval,
                         'ctx': 'Store',
                     }
+                    # [B54] 链式延续目标折入单一 Assign（与 STORE_SUBSCR
+                    # Pattern A 同判据；无延续时与旧行为逐字一致）。
+                    if _b54_chain_targets:
+                        return {
+                            'type': 'Assign',
+                            'targets': [target] + _b54_chain_targets,
+                            'value': _value_expr_attr,
+                            'is_chain_assign': True,
+                        }
                     return {
                         'type': 'Assign',
                         'targets': [target],
@@ -49858,19 +50261,29 @@ AST 映射规则:
                                             if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                                                 _ret_cut = _ii
                                                 break
-                                        _pre_ret = _rem_clean[:_ret_cut]
+                                        # [B54] 返回值后缀切分：RETURN_VALUE 之前的指令段
+                                        # 中，不含语句终结指令（POP_TOP/STORE_*/STORE_SUBSCR/
+                                        # STORE_ATTR/IMPORT_NAME/RAISE_VARARGS/RETURN_*——任一
+                                        # 完整语句必以其一收尾）的最大后缀即 return 的值表达式，
+                                        # 该后缀不可能含语句边界，禁止再经语句重建器发射为裸
+                                        # Expr（幻影语句）。后缀之前的指令段才是兄弟语句。
+                                        # 判据为纯操作码栈效应（同层事实），零名字/偏移白名单。
+                                        _rv_start = _ret_cut
+                                        while (_rv_start > 0
+                                               and _rem_clean[_rv_start - 1].opname
+                                               not in self._B54_STMT_TERMINATOR_OPS):
+                                            _rv_start -= 1
+                                        _pre_ret = _rem_clean[:_rv_start]
                                         if _pre_ret and not _has_inner_jump:
                                             _sibling_stmts = self._build_statements_from_instructions(_pre_ret)
                                             if _sibling_stmts:
                                                 _chain_stmts.extend(_sibling_stmts)
                                         if _has_return:
-                                            _rv_instrs = []
-                                            for _instr in _rem_clean:
-                                                if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                                                    break
+                                            _rv_instrs = [
+                                                _instr for _instr in _rem_clean[_rv_start:_ret_cut]
                                                 if _instr.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
-                                                                    'COPY', 'SWAP', 'POP_EXCEPT', 'PUSH_EXC_INFO'):
-                                                    _rv_instrs.append(_instr)
+                                                                         'COPY', 'SWAP', 'POP_EXCEPT', 'PUSH_EXC_INFO')
+                                            ]
                                             _return_value = self.expr_reconstructor.reconstruct(_rv_instrs) if _rv_instrs else None
                                             _chain_stmts.append({
                                                 'type': 'Return',
@@ -50102,21 +50515,37 @@ AST 映射规则:
                                             'JUMP_FORWARD', 'JUMP_BACKWARD',
                                             'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_ABSOLUTE'):
                                         _body_clean_m.pop()
+                                    # [B54] 返回值后缀切分：与纯 Name 链路径同一判据——
+                                    # 末目标 store 与 RETURN_VALUE 之间不含语句终结指令的
+                                    # 最大后缀即 return 值表达式（不可能含语句边界），
+                                    # 禁止整段交语句重建器产生幻影裸 Expr/丢 Return 框架；
+                                    # 后缀之前才是兄弟语句段。
+                                    _rv_start_m = len(_body_m)
+                                    while (_rv_start_m > 0
+                                           and _body_m[_rv_start_m - 1].opname
+                                           not in self._B54_STMT_TERMINATOR_OPS):
+                                        _rv_start_m -= 1
+                                    _pre_body_m = [i for i in _body_m[:_rv_start_m]
+                                                   if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                                       'COPY', 'SWAP', 'PUSH_NULL',
+                                                                       'POP_EXCEPT', 'PUSH_EXC_INFO')]
                                     _has_inner_jump_m = any(i.opname.startswith('JUMP')
                                                             or i.opname.startswith('POP_JUMP')
                                                             or i.opname == 'FOR_ITER'
-                                                            for i in _body_clean_m)
-                                    if _body_clean_m and not _has_inner_jump_m:
+                                                            for i in _pre_body_m)
+                                    if _pre_body_m and not _has_inner_jump_m:
                                         _tail_stmts_m = self._build_statements_from_instructions(
-                                            _body_clean_m)
+                                            _pre_body_m)
                                         if _tail_stmts_m:
                                             _mixed_chain_stmts.extend(_tail_stmts_m)
                                     if _has_ret_m:
-                                        _rv_instrs_m = [i for i in _remaining_m[_cut_m + 1:]
-                                                        if i.opname not in ('RESUME', 'NOP', 'CACHE',
-                                                                            'POP_TOP', 'PUSH_NULL',
-                                                                            'COPY', 'SWAP',
-                                                                            'POP_EXCEPT', 'PUSH_EXC_INFO')]
+                                        _rv_instrs_m = [
+                                            i for i in _body_m[_rv_start_m:]
+                                            if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                                'POP_TOP', 'PUSH_NULL',
+                                                                'COPY', 'SWAP',
+                                                                'POP_EXCEPT', 'PUSH_EXC_INFO')
+                                        ]
                                         _return_value_m = self.expr_reconstructor.reconstruct(_rv_instrs_m) if _rv_instrs_m else None
                                         _mixed_chain_stmts.append({
                                             'type': 'Return',
@@ -52510,6 +52939,28 @@ AST 映射规则:
                     succ_region = self.region_analyzer.get_region_for_block(return_succ)
                     if not succ_region or succ_region.parent is not None:
                         self.generated_blocks.add(return_succ)
+                    elif (
+                        # [B55] try 体装配吞尾：return_succ 是「裸 return 块」
+                        # （唯一有语义指令为 RETURN_VALUE/RETURN_CONST，自身不装载
+                        # 任何值——值由当前块留在栈上供其消费），且归属区域的
+                        # 入口不是该块（该块只是归属区域的内部片段，不存在以其
+                        # 为入口、负责发射它的独立结构），且前驱唯一（= 当前块，
+                        # 无其他结构共享该 return 收尾块）。此时 return_succ 的
+                        # RETURN_VALUE 已被当前块 Return 语句整体消费，必须登记
+                        # 已生成，否则归属区域的主循环会把它再发射为独立的
+                        # ``return None``（幻影 return，try 体被吞尾）。
+                        # 判据 = 同层结构事实：块末操作码 + 前驱集合 + 区域入口
+                        # 身份，零名字/偏移白名单。
+                        getattr(succ_region, 'entry', None) is not return_succ
+                        and len([_p for _p in (return_succ.predecessors or [])
+                                 if _p is not return_succ]) == 1
+                        and block in (return_succ.predecessors or [])
+                    ):
+                        _b55_succ_meaningful = [i for i in return_succ.instructions
+                                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        if (len(_b55_succ_meaningful) == 1
+                                and _b55_succ_meaningful[0].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                            self.generated_blocks.add(return_succ)
                     self.generated_blocks.add(block)
                     return stmts
             

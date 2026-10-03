@@ -5,7 +5,6 @@ __doc__ = 'R8-08 Raise forms: bare reraise / instance / class / from / call arg 
 def r8_raise_reraise(xs, i):
     try:
         return xs[i]
-        return None
     except IndexError:
         raise
 def r8_raise_instance(x):
@@ -19,7 +18,6 @@ def r8_raise_class(x):
 def r8_raise_from(a, b):
     try:
         return a / b
-        return None
     except ZeroDivisionError as exc:
         raise ValueError('bad divisor') from exc
 def r8_raise_call(f, x):
@@ -30,7 +28,6 @@ def r8_raise_call(f, x):
 def r8_raise_in_except_chain(xs, i):
     try:
         return xs[i]
-        return None
     except IndexError:
         try:
             return xs[i - 1]

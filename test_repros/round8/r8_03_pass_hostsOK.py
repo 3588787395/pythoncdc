@@ -19,9 +19,9 @@ class R8PassClass:
 def r8_pass_except(xs, i):
     try:
         return xs[i]
-        return None
     except IndexError:
         pass
+    return None
 def r8_pass_while_else(n):
     while n > 0:
         n -= 1
@@ -31,6 +31,7 @@ def r8_pass_try_finally():
         pass
     finally:
         pass
+    return 1
 def r8_pass_match(x):
     if x == 1:
         pass

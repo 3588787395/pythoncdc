@@ -20,8 +20,7 @@ def r8_dh_while_assign_chain(xs):
     out = {}
     i = 0
     while i < len(xs):
-        out[i] = xs[i]
-        out['last'] = None
+        out[i] = out['last'] = xs[i]
         i += 1
     return out
 def r8_dh_with_assert(path):
