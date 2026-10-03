@@ -19,3 +19,4 @@ def t_multi_target_ternary(a, b, flag):
     return (p, q)
 def t_unpack_ternary(pair, flag):
     m, n = pair if flag else (0, 0)
+    return m + n

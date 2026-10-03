@@ -9185,7 +9185,12 @@ AST 映射规则:
         [AST 映射] 无独立映射；返回 (members, owner) 供门控统一装配——
         owner 以合并指令流重建完整语句（挂起前的栈值穿透挂起点）。
         [C1] 只读块集合与操作码形态（同层结构事实）；[C2] 链不闭合
-        （缺 setup/poll/resume 任一环）即返回 None，调用方维持原路径；
+        即返回 None、调用方维持原路径——判定次序：先链头资格守卫
+        （向前枚举起点 cur 须含 GET_AWAITABLE，见 R6-F2），再逐环短路
+        （poll 环缺失 `_poll_succ_of` 返回 None、resume 环缺失
+        `_resume_of_poll` 返回 None，均在进入下一环前立即返回；
+        poll 短路必须先于 `_resume_of_poll`——poll 环缺失时无指令流
+        可迭代，缺失即拒绝而非崩溃）；
         [C3] 无状态、无副作用。
         """
         def _is_setup(b: BasicBlock) -> bool:
@@ -9274,6 +9279,8 @@ AST 映射规则:
             if not _is_setup(cur):
                 return None
             p = _poll_succ_of(cur)
+            if p is None:
+                return None
             r = _resume_of_poll(p)
             if r is None:
                 return None
@@ -34908,6 +34915,206 @@ AST 映射规则:
             return None
         return {'type': 'IfExp', 'test': cond_expr, 'body': true_expr, 'orelse': false_expr}
 
+    def _b45_rebuild_boolop_chain_slice(self, region: 'BoolOpRegion',
+                                        chain_slice: List[Tuple['BasicBlock', str]],
+                                        excluded_offsets: Set[int]) -> Optional[Dict[str, Any]]:
+        """[R7-B45] 链切片的扁平 or_groups 重建（_build_boolop_expression_inner
+        扁平算法的切片版，供 _build_boolop_skipedge_grouped 分段调用）。
+
+        [识别条件] 调用方已按链内 skip 边切出连续切片；本方法对切片逐成员
+        重建操作数（与主扁平算法同一组操作数来源：嵌套三元/链式比较/await
+        操作数钩子 + 尾跳转剥离），op 转折处分段，末成员 fall-through 值块
+        仅在其偏移不属于全链（excluded_offsets = 全链偏移集）时吸收为末位
+        操作数——切片边界外的链成员不是本段操作数。
+        [归约方式] or_groups 扁平组合：单段单值直返、多段外层 'or'
+        （and 段嵌套为子 BoolOp）。
+        [AST 映射] 每成员 → 操作数表达式；op 转折 → BoolOp 分段嵌套。
+        [C1] 只读切片成员块指令与后继身份；[C2] 任一操作数重建失败即返回
+        None（调用方回退既有路径，行为不变）；[C3] 无状态、无副作用。
+        """
+        STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+        TRANSFORM_OPS = frozenset({'UNARY_NOT', 'UNARY_NEGATIVE', 'UNARY_POSITIVE', 'UNARY_INVERT'})
+        segments: List[Tuple[str, List[Dict[str, Any]]]] = []
+        cur_op: Optional[str] = None
+        cur_vals: List[Dict[str, Any]] = []
+        slice_offsets = {b.start_offset for b, _ in chain_slice}
+        for _ci, (chain_block, chain_op) in enumerate(chain_slice):
+            nested_ternary = self._try_build_nested_ternary_in_boolop(chain_block, region)
+            chained_compare_expr = self._try_build_chained_compare_in_boolop(chain_block, region)
+            instrs = [i for i in chain_block.instructions
+                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            last_instr = chain_block.get_last_instruction()
+            if last_instr and last_instr.opname in STRIP_JUMP_OPS:
+                pure_instrs = [i for i in instrs if i != last_instr]
+            else:
+                clean = []
+                for i in instrs:
+                    if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                    'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                        break
+                    clean.append(i)
+                pure_instrs = clean if clean else (list(instrs[:1]) if instrs else [])
+            if (not pure_instrs and nested_ternary is None
+                    and chained_compare_expr is None):
+                sub_expr = self._try_build_await_boolop_operand(chain_block)
+            elif chained_compare_expr is not None:
+                sub_expr = chained_compare_expr
+            elif nested_ternary is not None:
+                sub_expr = nested_ternary
+            else:
+                sub_expr = self.expr_reconstructor.reconstruct(pure_instrs)
+                if sub_expr is None:
+                    sub_expr = self._try_build_await_boolop_operand(chain_block)
+            if sub_expr is not None and last_instr and last_instr.opname in NONE_CHECK_OPS:
+                _is_not_none_op = 'NOT_NONE' in last_instr.opname
+                _cmp_op = ('IsNot' if not _is_not_none_op else 'Is') if chain_op == 'and' \
+                    else ('IsNot' if _is_not_none_op else 'Is')
+                sub_expr = {
+                    'type': 'Compare', 'left': sub_expr,
+                    'ops': [{'type': _cmp_op}],
+                    'comparators': [{'type': 'Constant', 'value': None}]}
+            if (sub_expr is not None and last_instr
+                    and last_instr.opname in STRIP_JUMP_OPS):
+                _jump_op = last_instr.opname
+                if chain_op == 'and' and 'TRUE' in _jump_op:
+                    sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
+                elif (chain_op == 'or' and 'FALSE' in _jump_op
+                      and _ci < len(chain_slice) - 1):
+                    sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
+            if sub_expr is None:
+                return None
+            if cur_op is None:
+                cur_op = chain_op
+                cur_vals = [sub_expr]
+            elif chain_op == cur_op:
+                cur_vals.append(sub_expr)
+            else:
+                segments.append((cur_op, cur_vals))
+                cur_op = chain_op
+                cur_vals = [sub_expr]
+            # 末位 fall-through 值块：仅当不属于全链（切片边界外吸收）。
+            if (last_instr and last_instr.opname in STRIP_JUMP_OPS
+                    and last_instr.argval is not None
+                    and _ci == len(chain_slice) - 1):
+                _ft = next((s for s in sorted(chain_block.conditional_successors,
+                                              key=lambda s: s.start_offset)
+                            if s.start_offset != last_instr.argval
+                            and s.start_offset not in excluded_offsets
+                            and s.start_offset not in slice_offsets
+                            and s != region.merge_block
+                            and s in region.blocks
+                            and not any(i.opname == 'GET_AWAITABLE' for i in s.instructions)), None)
+                if _ft is not None:
+                    _ft_instrs = [i for i in _ft.instructions
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    _clean = []
+                    for i in _ft_instrs:
+                        if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                        'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                            break
+                        _clean.append(i)
+                    if _clean:
+                        _ft_expr = self.expr_reconstructor.reconstruct(_clean)
+                        if _ft_expr is not None:
+                            cur_vals.append(_ft_expr)
+        if cur_vals:
+            segments.append((cur_op, cur_vals))
+        if not segments:
+            return None
+        if len(segments) == 1:
+            op, values = segments[0]
+            if len(values) == 1:
+                return values[0]
+            return {'type': 'BoolOp', 'op': op, 'values': values}
+        or_values = []
+        for seg_op, seg_values in segments:
+            if seg_op == 'or':
+                or_values.extend(seg_values)
+            elif len(seg_values) == 1:
+                or_values.append(seg_values[0])
+            else:
+                or_values.append({'type': 'BoolOp', 'op': 'and', 'values': seg_values})
+        if len(or_values) == 1:
+            return or_values[0]
+        return {'type': 'BoolOp', 'op': 'or', 'values': or_values}
+
+    def _build_boolop_skipedge_grouped(self, region: 'BoolOpRegion') -> Optional[Dict[str, Any]]:
+        """[R7-B45] 链内 skip 边分段重建——嵌套 BoolOp 值链的括号保持。
+
+        [识别条件] 值上下文 BoolOp 链存在【恰好一条】链内 skip 边且极性为
+        IF_TRUE：非末成员块尾 POP_JUMP_IF_TRUE 族跳转的目标落在链成员偏移
+        集内（该 or 组的真值被外层 And 跨越——组真值被 POP 丢弃、直入下一
+        操作数求值，如 ``(a or (b and c)) and (d or e)`` 的 a 块 → RHS 首块
+        d）。IF_FALSE 链内边不构成 skip 边——那是扁平 ``A and B or C`` 的
+        and→or 边界（and 组假边直达 or 尾求值起点），扁平 or_groups 算法
+        对其重组正确，切分反而破坏结合性（neg_if_and 回归实证）。且 skip
+        边自链首发出（si==0）、目标下标 sj ≥ 2、至少一个切片含 op 转折
+        （混合 and/or——均匀切片交既有 _detect_boolop_grouping 分组算法
+        处理，本方法不接手）、seg1 切片内无 and→or 转折（扁平重建的结构
+        有效性边界）。
+        [归约方式] skip 边把链切成两段：[0..sj-1]（skip 边所在组）与
+        [sj..]（下一操作数组）；外层操作符 = skip 边极性取反
+        （IF_TRUE 跨越 → 'and'，IF_FALSE 跨越 → 'or'）；每段经
+        _b45_rebuild_boolop_chain_slice 扁平重建，外层 BoolOp 组合。
+        [AST 映射] And/Or([段1表达式, 段2表达式])——嵌套层级由 skip 边目标
+        唯一确定，禁止扁平重结合（扁平形态的短路出口目标是 merge 而非链内
+        成员，字节码不同）。
+        [C1] 只读链成员块末 opcode 与跳转目标偏移（同层结构事实），零名字/
+        常量/偏移白名单；[C2] 任一校验或分段重建失败即返回 None（回退既有
+        分组/扁平算法，输出与未命中逐位一致）；[C3] 无状态、无副作用、
+        单 skip 边硬门限（多 skip 边嵌套交后续轮次）。
+        """
+        op_chain = getattr(region, 'op_chain', None)
+        if not op_chain or len(op_chain) < 3:
+            return None
+        STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+        idx_by_offset = {b.start_offset: i for i, (b, _) in enumerate(op_chain)}
+        _skip = None
+        for _i, (b, _) in enumerate(op_chain[:-1]):
+            last = b.get_last_instruction()
+            if last is None or last.argval is None or last.opname not in STRIP_JUMP_OPS:
+                continue
+            if 'TRUE' not in last.opname:
+                # 仅接受 IF_TRUE 极性 skip 边：扁平 ``A and B or C`` 的 and→or
+                # 边界是 IF_FALSE 链内边（and 组假边直达 or 尾求值起点），由
+                # 扁平 or_groups 算法正确处理（Or([And([A,B]), C])）；把它当
+                # 组闭合 skip 边切分会把 and 组错误重组为 Or（neg_if_and
+                # ``if a and b or c:`` 回归实证）。IF_TRUE 链内边唯一对应
+                # 「or 组真值被外层 And 跨越」的嵌套形态（组真值被丢弃、
+                # POP 跳转直入下一操作数求值）。
+                continue
+            j = idx_by_offset.get(last.argval)
+            if j is not None and j > _i:
+                if _skip is not None:
+                    return None
+                _skip = (_i, j, 'and')
+        if _skip is None:
+            return None
+        si, sj, outer_op = _skip
+        if si != 0 or sj < 2:
+            return None
+        seg1 = op_chain[:sj]
+        seg2 = op_chain[sj:]
+        if all(len({op for _, op in s}) == 1 for s in (seg1, seg2)):
+            return None
+        # seg1 切片内禁止 and→or 转折：扁平 or_groups 重建仅在 op 转折单向
+        # or→and（and 组嵌套进 or，优先级一致）时结构有效；含 and→or 转折的
+        # 切片（如 [and, or, or]）扁平重建会错误重结合，交既有路径处理
+        # （行为与未命中逐位一致）。
+        _prev_op = None
+        for _b, _op in seg1:
+            if _prev_op == 'and' and _op == 'or':
+                return None
+            _prev_op = _op
+        all_offsets = {b.start_offset for b, _ in op_chain}
+        seg1_expr = self._b45_rebuild_boolop_chain_slice(region, seg1, all_offsets)
+        if seg1_expr is None:
+            return None
+        seg2_expr = self._b45_rebuild_boolop_chain_slice(region, seg2, all_offsets)
+        if seg2_expr is None:
+            return None
+        return {'type': 'BoolOp', 'op': outer_op, 'values': [seg1_expr, seg2_expr]}
+
     def _detect_boolop_grouping(self, region: 'BoolOpRegion', op_chain: List[Tuple['BasicBlock', str]]) -> tuple:
         """ 检测 BoolOp 链中是否存在显式分组（括号化的 and/or 组合）。
 
@@ -35614,6 +35821,15 @@ AST 映射规则:
         if not op_chain:
             return None
         STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+        # [R7-B45] 链内 skip 边分段重建（先于分组检测）：嵌套 BoolOp 值链
+        # （如 ``(a or (b and c)) and (d or e)``）的 skip 边形态在既有分组
+        # （双层均匀组）与扁平 or_groups 两种算法下都会丢失嵌套/重结合，
+        # 由 _build_boolop_skipedge_grouped 按 skip 边目标切段保留括号。
+        # 判据不命中（无 skip 边/多 skip 边/均匀切片）时返回 None，走既有
+        # 路径，行为逐位不变。
+        _b45_skipedge = self._build_boolop_skipedge_grouped(region)
+        if _b45_skipedge is not None:
+            return _b45_skipedge
         # 显式分组（括号化的 and/or 组合）检测：
         # 当链块的短路跳转目标指向另一个链块时，表明存在自包含子组
         # （如 (a or b) and (c or d) 中 block@0 or 的 IF_TRUE→block@10）。
@@ -36160,12 +36376,43 @@ AST 映射规则:
                     or 'FALSE' not in li.opname):
                 return None
         # 'or' 块的 IF_TRUE 目标 = merge
+        _or_stmt_ok = True
         for b in or_blocks:
             li = b.get_last_instruction()
             if (li is None or li.argval != merge_offset
                     or li.opname not in STRIP_JUMP_OPS
                     or 'TRUE' not in li.opname):
+                _or_stmt_ok = False
+                break
+        if not _or_stmt_ok:
+            # [R7-B45] while 条件上下文变体：循环复合条件 ``A and (B or C)``
+            # 中整条条件的真出口是【循环体入口】而非 merge（merge 是假出口），
+            # or 组成员的真边直达循环体入口。识别条件（同层结构事实）：区域
+            # is_condition_context 且父区域是 LoopRegion；or 组非末成员以
+            # IF_TRUE 族收尾、目标 = 父循环 header（真出口）；末成员以
+            # IF_FALSE 族收尾、目标 = merge（假出口，与 and 头假边同一出口，
+            # 已由上方 and 块校验保证）。归约方式：重建
+            # And([...and 操作数..., Or([...or 操作数...])]) 嵌套——禁止扁平
+            # or_groups 重结合（``A and B or C`` 的假边目标是 or 尾求值起点，
+            # 与本形态字节码不同）。[C1] 只读块末 opcode 族与后继身份；
+            # [C2] 任一校验失败即返回 None（回退扁平算法，行为不变）；
+            # [C3] 无状态、无副作用。
+            if not getattr(region, 'is_condition_context', False):
                 return None
+            _b45_loop = getattr(region, 'parent', None)
+            if not isinstance(_b45_loop, LoopRegion) or _b45_loop.header_block is None:
+                return None
+            _b45_body_entry = _b45_loop.header_block.start_offset
+            for _b45_oi, b in enumerate(or_blocks):
+                li = b.get_last_instruction()
+                if li is None or li.opname not in STRIP_JUMP_OPS:
+                    return None
+                if _b45_oi == len(or_blocks) - 1:
+                    if (li.argval != merge_offset or 'FALSE' not in li.opname):
+                        return None
+                else:
+                    if (li.argval != _b45_body_entry or 'TRUE' not in li.opname):
+                        return None
         # 检测成功，重建操作数表达式
         and_operands: List[Dict[str, Any]] = []
         or_operands: List[Dict[str, Any]] = []
@@ -39924,6 +40171,28 @@ AST 映射规则:
             #   single container assignment statement.
             # 依「父引用子入口」: parent container references chained ternaries
             #   via merge_block → entry links.
+            # [R7-B42] 链式三元分段值流重建（先于 chained-container 尝试）：
+            # 链（merge→entry 衔接，≥2 个三元）嵌入更大纯值表达式（容器构建/
+            # 键、比较节点、实参常量、RETURN 终结）时，既有装配路径按链上
+            # 三元集合取元素/实参、按 Pattern A 单一 BINARY_OP 包裹，外围非
+            # 三元栈项被静默丢弃（r7_01/02/04 九单元实证）。本路径按分段栈
+            # 模拟完整重建；任一校验失败返回 None 落回既有路径（行为不变）。
+            # [R7-B42] merge_context='return' 的链同受外围结构蒸发影响：
+            # ``return (aT) == x`` 既有 return 装配只发射 IfExp、丢弃
+            # COMPARE_OP（r7_04 t_compare_lhs_only 实证）。放行 'return'
+            # 上下文进分段重建；重建内「全空段守卫 + 单链受限操作码守卫」
+            # 保证纯裸三元仍回退既有路径（n7_01 5/5 行为逐位不变）。
+            if (merge_ctx in (None, 'return') and not region.value_target
+                    and region.merge_block is not None
+                    and not getattr(region, 'func_call_info', None)):
+                _b42_chain_stmt = self._b42_rebuild_chain_value_stream(
+                    region, ternary_expr)
+                if _b42_chain_stmt is not None:
+                    results.append(_b42_chain_stmt)
+                    for block in region.blocks:
+                        self.generated_blocks.add(block)
+                    return results
+
             if region.merge_block is not None:
                 # [R62 Fix2] 识别条件: 外层已是独立 store 赋值
                 # (merge_context=='store' 且 value_target 已设) 时，内层
@@ -41356,7 +41625,7 @@ AST 映射规则:
                             and _prev_instr.arg >= 1
                             and len(_stores_after) == _prev_instr.arg):
                         _up_targets = [
-                            {'type': 'Name', 'id': _s.argval if _s.argval else f'var_{_s.arg}',
+                            {'type': 'Name', 'id': (_s.argval if _s.argval else f'var_{_s.arg}'),
                              'ctx': 'Store'}
                             for _s in _stores_after
                         ]
@@ -41369,6 +41638,51 @@ AST 映射规则:
                             }],
                             'value': ternary_expr,
                         })
+                        # [R7-B42] 尾随语句处理（镜像上方模式 1 的 _mt_trailing
+                        # 修复）：merge_block 在解包赋值之后可能还承载后续独立
+                        # 语句（``m, n = pair if flag else (0, 0)`` 的
+                        # UNPACK_SEQUENCE+STORE_m+STORE_n 与尾随
+                        # ``return m + n`` 的 LOAD_m+LOAD_n+BINARY_OP+RETURN_VALUE
+                        # 被 CPython 合并到同一基本块）。旧逻辑只生成解包
+                        # Assign 并返回，尾随 return/expr 语句丢失（重编字节码
+                        # 少 4 条 LOAD/BINARY_OP/RETURN，r7_03 t_unpack_ternary
+                        # 实证）。修复：merge_block 已归属 TernaryRegion（每块
+                        # 唯一归属），由 TernaryRegion 一并生成 trailing 语句。
+                        # 判据为指令流切分（语句终结符），无名字/偏移白名单。
+                        if region.merge_block:
+                            _up_trailing = merge_all[store_idx + len(_stores_after):]
+                            _up_trailing_nn = [i for i in _up_trailing
+                                               if i.opname not in ('RESUME', 'NOP',
+                                                                   'CACHE', 'PUSH_NULL')]
+                            _up_is_trivial_ret = False
+                            if len(_up_trailing_nn) <= 2:
+                                _up_no_pop = [i for i in _up_trailing_nn
+                                              if i.opname != 'POP_TOP']
+                                if (len(_up_no_pop) == 2
+                                        and _up_no_pop[0].opname == 'LOAD_CONST'
+                                        and _up_no_pop[0].argval is None
+                                        and _up_no_pop[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                                    _up_is_trivial_ret = True
+                                elif (len(_up_no_pop) == 1
+                                        and _up_no_pop[0].opname == 'RETURN_CONST'
+                                        and _up_no_pop[0].argval is None):
+                                    _up_is_trivial_ret = True
+                            if _up_is_trivial_ret:
+                                pass  # trailing implicit return None —— 不发射
+                            elif _up_trailing_nn:
+                                _up_extra_stmts = self._build_statements_from_instructions(
+                                    list(_up_trailing_nn))
+                                while _up_extra_stmts and isinstance(_up_extra_stmts[-1], dict):
+                                    _last_up = _up_extra_stmts[-1]
+                                    if _last_up.get('type') == 'Return':
+                                        _rv_up = _last_up.get('value')
+                                        if _rv_up and isinstance(_rv_up, dict) \
+                                                and _rv_up.get('type') == 'Constant' \
+                                                and _rv_up.get('value') is None:
+                                            _up_extra_stmts = _up_extra_stmts[:-1]
+                                            continue
+                                    break
+                                results.extend(_up_extra_stmts)
                         for block in region.blocks:
                             self.generated_blocks.add(block)
                         return results
@@ -46545,6 +46859,240 @@ AST 映射规则:
                 if _before_ret and not _has_load_none:
                     return {'type': 'Return', 'value': container_info}
         return {'type': 'Expr', 'value': container_info}
+
+    _B42_VALUE_CONSUMER_OPS = frozenset({
+        'COMPARE_OP', 'IS_OP', 'CONTAINS_OP',
+        'BINARY_SUBSCR', 'BINARY_SLICE', 'BINARY_OP',
+        'BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET', 'BUILD_MAP',
+        'BUILD_CONST_KEY_MAP', 'BUILD_STRING', 'BUILD_SLICE',
+        'FORMAT_VALUE',
+        'PRECALL', 'CALL', 'KW_NAMES',
+        'LOAD_METHOD', 'LOAD_ATTR', 'LOAD_SUPER_ATTR',
+        'GET_ITER', 'LIST_EXTEND', 'SET_UPDATE', 'DICT_MERGE', 'DICT_UPDATE',
+    })
+
+    def _b42_split_cond_prefix(self, block: 'BasicBlock') -> Optional[List['object']]:
+        """[R7-B42] 切出条件块中位于条件表达式之前的纯值前缀指令。
+
+        [识别条件] 块内首个条件跳转（三元条件表达式汇入点——合并真臂续块的
+        布局中 POP_JUMP 位于块中而非块尾，锚定块尾 JUMP_FORWARD 会把真臂值
+        误并入「前缀」反扫窗，r7_04 实证）；自该跳转反扫栈效应定位条件表达
+        式起点（与 _compute_ternary_cond_preload_exprs 的 cond_val_start 反
+        扫同一栈效应模型）。
+        [归约方式] 起点之前的指令即前缀；前缀含 STORE_* 时返回 None（前缀
+        是前导语句而非栈上值，交既有路径处理）。
+        [AST 映射] 无独立映射；前缀指令交调用方进入分段栈模拟。
+        [C1] 只读本块指令序列与操作码栈效应；[C2] 无前缀/含 STORE 即返回
+        None（调用方放弃，行为不变）；[C3] 无状态、无副作用。
+        """
+        instrs = [i for i in block.instructions
+                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        if not instrs:
+            return None
+        _cond_jump_ops = (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
+                          | BACKWARD_CONDITIONAL_JUMP_OPS)
+        anchor_idx = None
+        for _idx, _ci in enumerate(instrs):
+            if _ci.opname in _cond_jump_ops:
+                anchor_idx = _idx
+                break
+        if anchor_idx is None:
+            return None
+        cond_val_start = None
+        needed = 1
+        for idx in range(anchor_idx - 1, -1, -1):
+            ci = instrs[idx]
+            if ci.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                cond_val_start = idx + 1
+                break
+            push, pop = 0, 0
+            if ci.opname in ('LOAD_ATTR', 'LOAD_METHOD'):
+                push, pop = 1, 1
+            elif ci.opname.startswith('LOAD_') or ci.opname == 'COPY':
+                push = 1
+            elif ci.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'BINARY_SUBSCR', 'BINARY_OP'):
+                push, pop = 1, 2
+            elif ci.opname.startswith('UNARY_'):
+                push, pop = 1, 1
+            elif ci.opname == 'FORMAT_VALUE':
+                push, pop = 1, (1 if (ci.arg or 0) < 2 else 2)
+            elif ci.opname == 'BUILD_STRING':
+                push, pop = 1, (ci.arg or 0)
+            elif ci.opname.startswith('BUILD_'):
+                push, pop = 1, (ci.arg or 0)
+            elif ci.opname in ('PRECALL', 'POP_TOP'):
+                push, pop = 0, 0
+            elif ci.opname == 'CALL':
+                push, pop = 1, (ci.arg or 0) + 1
+            needed = needed - push + pop
+            if needed <= 0:
+                cond_val_start = idx
+                break
+        if cond_val_start is None or cond_val_start == 0:
+            return None
+        prefix = instrs[:cond_val_start]
+        for pi in prefix:
+            if pi.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                return None
+        return prefix
+
+    def _b42_rebuild_chain_value_stream(self, region: TernaryRegion,
+                                        ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """[R7-B42] 链式三元的分段值流重建——三元操作数外围表达式结构保持。
+
+        [识别条件] TernaryRegion 链（merge_block→entry 链式衔接，长度 ≥2）
+        嵌入在更大的纯值表达式中：外围非三元栈项（容器构建/键、比较节点、
+        实参常量、RETURN 终结）以【纯值指令】形态分散在外层 cond 块前缀、
+        各内层 cond 块前缀与 innermost merge 块中。既有装配路径（chained
+        container 仅取链上三元为元素、call 模式仅取 cond preload 兄弟、
+        Pattern A 仅认 BINARY_OP）在这些形态下静默丢弃外围栈项——
+        ``xs[t1]+ys[t2]`` 丢容器加载、``{kT: vT}`` 塌缩为裸三元、
+        ``[a, t1, t2]`` 丢首元素（BUILD_LIST 3 arity 失配）、
+        ``min(t1,t2,3)`` 丢第 3 实参与 return、``(t1)<(t2)`` 比较节点蒸发
+        （r7_01/02/04 实证）。
+        [归约方式] 收集分段指令流 S0..SN（S0=外层 cond 前缀、Si=第 i 个内层
+        cond 前缀、SN=innermost merge 消费段——尾随 RETURN/隐式 None/POP_TOP
+        剥离并记录终结形态），校验全段纯值（无 STORE/POP_TOP/条件跳转），
+        用 expr_reconstructor 低层栈机按「处理 S0 → 压 elts[0] → 处理 S1 →
+        压 elts[1] → … → 处理 SN」模拟，要求终栈恰为单值；按终结形态包裹
+        Return/Expr。
+        [AST 映射] 终栈单值 = 完整外围表达式（elts 作为 IfExp 子节点嵌入），
+        终结形态 → Return/Expr 包裹。
+        [C1] 只读链块指令序列、栈效应与跳转目标身份；零名字/常量/偏移
+        白名单；[C2] 任一校验失败（链短、前缀含语句、段含非值指令、栈不
+        闭合、终栈非单值、重建异常）即返回 None，调用方回退既有装配路径，
+        输出与未命中逐位一致；[C3] 无状态、无副作用（成功时标记链上内层
+        三元块 generated，属调用方既有的归约登记语义）。
+        """
+        if region.merge_block is None:
+            return None
+        ternary_chain = [region]
+        visited = {id(region)}
+        current = region
+        while True:
+            next_inner = None
+            for r in self.regions:
+                if (isinstance(r, TernaryRegion) and id(r) not in visited
+                        and r.entry == current.merge_block):
+                    next_inner = r
+                    break
+            if next_inner is None:
+                break
+            ternary_chain.append(next_inner)
+            visited.add(id(next_inner))
+            current = next_inner
+        # [R7-B42] 后向链扩展：生成序自底向上（内层先于外层），触发重建的
+        # 往往是拥有终结 merge 块的内层区域——前向收集只得 [region]，须沿
+        # merge_block==chain[0].entry 向后收集前辈三元才能取到完整分段值流
+        # （r7_04 t_compare_both_sides 实证：内层 entry=12 的前驱外层
+        # merge=12）。visited 防环。
+        while ternary_chain[0].entry is not None:
+            _prev = None
+            for r in self.regions:
+                if (isinstance(r, TernaryRegion) and id(r) not in visited
+                        and r.merge_block is not None
+                        and r.merge_block == ternary_chain[0].entry):
+                    _prev = r
+                    break
+            if _prev is None:
+                break
+            ternary_chain.insert(0, _prev)
+            visited.add(id(_prev))
+        # [R7-B42] 链长 ≥1：单三元 + 内层 merge 消费段含比较/下标消费节点
+        # （``(aT) == x`` 的 COMPARE_OP、``xs[t1]`` 的 BINARY_SUBSCR）同属
+        # 外围结构蒸发形态（r7_04 t_compare_lhs_only 实证——merge_context=
+        # 'return' 的单三元既有路径只发射 IfExp、丢弃消费节点）。单链需
+        # SN 含受限消费操作码才接管；BINARY_OP/CALL 等其余消费形态交既有
+        # 绿路径（Pattern A / call 装配），避免劫持已对齐形态。
+        if not ternary_chain:
+            return None
+        _b42_single = len(ternary_chain) == 1
+        innermost = ternary_chain[-1]
+        if innermost.merge_block is None:
+            return None
+        elts = []
+        for tr in ternary_chain:
+            if tr is region:
+                elts.append(ternary_expr)
+            else:
+                _nested = self._build_nested_ternary_expr(tr)
+                if _nested is None:
+                    return None
+                elts.append(_nested)
+        # ── 分段收集 ────────────────────────────────────────────────
+        segments = []
+        _s0 = self._b42_split_cond_prefix(region.condition_block)
+        if _s0 is None:
+            _s0 = []
+        segments.append(list(_s0))
+        # [R7-B42] 段收集含最内层条件前缀：链上每个成员的 cond 块前缀都是
+        # 值流的一段（``xs[t1]+ys[t2]`` 内层前缀=[BINARY_SUBSCR,LOAD ys]），
+        # 旧 [1:-1] 切片漏掉最内层 → 段数 = len(elts) 栈序错乱必败。
+        # len(segments) = len(ternary_chain) + 1（N 个 cond 前缀 + 1 个
+        # innermost merge 消费段），push elts[i] 于第 i 段后。
+        for tr in ternary_chain[1:]:
+            _si = self._b42_split_cond_prefix(tr.condition_block)
+            if _si is None:
+                _si = []
+            segments.append(list(_si))
+        _mis = [i for i in innermost.merge_block.instructions
+                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        tail_kind = None
+        if _mis and _mis[-1].opname in ('RETURN_VALUE', 'RETURN_CONST'):
+            _mis.pop()
+            tail_kind = 'return'
+            if (_mis and _mis[-1].opname == 'LOAD_CONST'
+                    and _mis[-1].argval is None):
+                _mis.pop()
+        elif _mis and _mis[-1].opname == 'POP_TOP':
+            _mis.pop()
+            tail_kind = 'expr'
+        if tail_kind is None or not _mis:
+            return None
+        segments.append(_mis)
+        # [R7-B42] 全空段守卫：S0..SN 全空 = 纯裸三元（既有绿路径已正确
+        # 装配），接管只会重复产出——返回 None 回退，行为逐位不变。
+        if all(not _seg for _seg in segments):
+            return None
+        if _b42_single:
+            # 单链受限接管：SN 必须含比较/下标类消费节点（蒸发重灾区）；
+            # 其余消费形态（BINARY_OP/CALL 等）既有路径已对齐，不劫持。
+            _sn_ops = {_pi.opname for _pi in segments[-1]}
+            if not (_sn_ops & {'COMPARE_OP', 'IS_OP', 'CONTAINS_OP',
+                               'BINARY_SUBSCR', 'BINARY_SLICE'}):
+                return None
+        # ── 纯值校验 ────────────────────────────────────────────────
+        for _seg in segments:
+            for _pi in _seg:
+                _op = _pi.opname
+                if (_op not in self._B42_VALUE_CONSUMER_OPS
+                        and not _op.startswith('LOAD_')):
+                    return None
+        # ── 分段栈模拟 ──────────────────────────────────────────────
+        try:
+            self.expr_reconstructor.reset()
+            self.expr_reconstructor.stack = []
+            for _seg_i, _seg in enumerate(segments):
+                for _pi in _seg:
+                    self.expr_reconstructor._process_instruction(_pi)
+                if _seg_i < len(elts):
+                    self.expr_reconstructor.stack.append(elts[_seg_i])
+            _final = [s for s in self.expr_reconstructor.stack
+                      if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+        except Exception:
+            return None
+        if len(_final) != 1 or not isinstance(_final[0], dict):
+            return None
+        _value = _final[0]
+        # [R7-B42] 全链块归约登记：重建语句由触发区域一次发射，链上其余
+        # 三元（含尚未轮到生成的前辈）全部标记 generated——每块唯一归属
+        # 由本语句承载，防内层重复发射裸 Expr/Return。
+        for _tr in ternary_chain:
+            for _blk in _tr.blocks:
+                self.generated_blocks.add(_blk)
+        if tail_kind == 'return':
+            return {'type': 'Return', 'value': _value}
+        return {'type': 'Expr', 'value': _value}
 
     def _try_build_ternary_chained_pattern(
             self, region: TernaryRegion, ternary_expr: Dict[str, Any],

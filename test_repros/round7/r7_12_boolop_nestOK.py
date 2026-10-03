@@ -7,8 +7,7 @@ def b_nest_three_layers(a, b, c, d):
 def b_nest_deep_right(a, b, c, d):
     return a and b or c and d
 def b_nest_deep_mixed(a, b, c, d, e):
-    if not a:
-        return b and c and d
+    return (a or b and c) and (d or e)
 def b_nest_with_chain(a, b, c, d, e):
     return a < b and c < d < e
 def b_nest_with_ternary(a, b, c, d, flag):

@@ -17378,14 +17378,9 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     else:
                         return True
                 else:
-                    if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
-                        import traceback
-                        print(f" block@342 skip: not contains_block", flush=True)
                     return True
             if type(block_region) is TryExceptRegion:
                 if any(lr.condition_block == block for lr in loop_regions):
-                    if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
-                        print(f" block@342 skip: is loop condition_block", flush=True)
                     return True
                 block_in_loop = any(block in lr.blocks for lr in loop_regions)
                 if block_in_loop:
@@ -17393,11 +17388,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     if len(cond_succs_ib) == 2:
                         for _cs in cond_succs_ib:
                             _cs_role = self.block_roles.get(_cs.start_offset)
-                            if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
-                                print(f" block@342 cs@{_cs.start_offset} role={_cs_role}", flush=True)
                             if _cs_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
-                                if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
-                                    print(f" block@342 skip: cs BREAK/PURE_BREAK", flush=True)
                                 return True
             # [Phase 4 回归修复] BoolOpRegion 作为循环复合条件（如
             # `while a > 0 and b > 0:`）时，CPython 3.11 在循环入口和
@@ -17424,16 +17415,8 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         and any(i.opname.startswith('JUMP_BACKWARD') or i.opname in BACKWARD_CONDITIONAL_JUMP_OPS for i in block.instructions)
                         for lr in loop_regions
                     )
-                    if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
-                        print(f" block@342 cond_succs_check: is_loop_backedge_target={is_loop_backedge_target}", flush=True)
-                        print(f"  block.successors={[s.start_offset for s in block.successors]}", flush=True)
-                        print(f"  block.instructions opnames={[i.opname for i in block.instructions]}", flush=True)
                     if is_loop_backedge_target:
-                        if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
-                            print(f" block@342 skip: is_loop_backedge_target", flush=True)
                         return True
-        if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
-            print(f" block@342 NOT skipped (return False)", flush=True)
         return False
 
     def _identify_conditional_regions(self, loop_regions: List[Region],
@@ -25515,6 +25498,77 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                     boolop_regions[idx2] = _new_region2
                                 else:
                                     boolop_regions.append(_new_region2)
+        # [R7-B45] Step 6：值上下文 BoolOp 链的 pop-form 链头补全。
+        # 识别条件：值上下文（非 is_condition_context）BoolOpRegion 的链头块
+        # 存在未认领前驱 P——P 以 pop-form 条件跳转
+        # （POP_JUMP_FORWARD_IF_TRUE/FALSE 族）收尾、跳转目标落在【本链成员
+        # 集合内】（skip 边：P 所在组的真/假值被外层操作数求值跨越）、
+        # fall-through 恰为链头（P 向链供值）。该形态出自「嵌套 BoolOp 组的
+        # 首成员真/假值被外层 And/Or 丢弃」的编译优化（如
+        # ``(a or (b and c)) and (d or e)`` 的 a 块：真值被 And 的 RHS 求值
+        # 覆盖，POP_JUMP_FORWARD_IF_TRUE 直跳 RHS 首块），主扫描的
+        # SHORT_CIRCUIT 链检测自 JUMP_IF_*_OR_POP 块起步、看不见该 pop-form
+        # 前驱——链缺头时头部块被 IfRegion 装配认领为独立 if 条件，外层臂
+        # 蒸发（r7_12 b_nest_deep_mixed 实证：``if not a: return b and c
+        # and d``，(d or e) 臂丢失）。
+        # 归约方式：按极性入链（IF_TRUE→'or'、IF_FALSE→'and'）前插链头并
+        # 按完整链重建（原区域按「每块唯一归属」让位：块归还、区域注销、
+        # 父子关系解除）；重建交 _create_boolop_region_from_chain 统一归约。
+        # 生成侧经 _build_boolop_skipedge_grouped 按链内 skip 边分段重建嵌套
+        # BoolOp（分段内 or_groups 扁平算法保持）。
+        # [C1] 只读块末 opcode 族、后继身份与 block_to_region 归属表；[C2]
+        # 任一校验失败即放弃补全（行为与未命中逐位一致），一次只补一个前
+        # 驱、多候选拒绝；[C3] 无状态、无副作用、不读跨层信息。
+        for _b45_br in list(boolop_regions):
+            if getattr(_b45_br, 'is_condition_context', False):
+                continue
+            _b45_chain = getattr(_b45_br, 'op_chain', None)
+            if not _b45_chain or len(_b45_chain) < 2:
+                continue
+            _b45_head = _b45_chain[0][0]
+            _b45_chain_offsets = {b.start_offset for b, _ in _b45_chain}
+            _b45_matched = None
+            for _b45_pred in _b45_head.predecessors:
+                if _b45_pred.start_offset in _b45_chain_offsets:
+                    continue
+                if self.block_to_region.get(_b45_pred) is not None:
+                    continue
+                _b45_last = _b45_pred.get_last_instruction()
+                if (_b45_last is None or _b45_last.argval is None
+                        or _b45_last.opname not in (
+                            'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
+                            'POP_JUMP_IF_TRUE', 'POP_JUMP_IF_FALSE',
+                            'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE')):
+                    continue
+                if _b45_last.argval not in _b45_chain_offsets:
+                    continue
+                _b45_ft = next((s for s in _b45_pred.conditional_successors
+                                if s.start_offset != _b45_last.argval), None)
+                if _b45_ft is not _b45_head:
+                    continue
+                if _b45_matched is not None:
+                    _b45_matched = None
+                    break
+                _b45_matched = _b45_pred
+            if _b45_matched is None:
+                continue
+            _b45_op = 'or' if 'TRUE' in _b45_matched.get_last_instruction().opname else 'and'
+            _b45_new_chain = [(_b45_matched, _b45_op)] + list(_b45_chain)
+            for _b45_ob in _b45_br.blocks:
+                if _b45_ob in self.block_to_region and self.block_to_region[_b45_ob] is _b45_br:
+                    del self.block_to_region[_b45_ob]
+                claimed.discard(_b45_ob)
+            if _b45_br in boolop_regions:
+                boolop_regions.remove(_b45_br)
+            if _b45_br in self.regions:
+                self.regions.remove(_b45_br)
+            _b45_parent = getattr(_b45_br, 'parent', None)
+            if _b45_parent is not None and _b45_br in getattr(_b45_parent, 'children', []):
+                _b45_parent.children.remove(_b45_br)
+            _b45_new = self._create_boolop_region_from_chain(_b45_new_chain, claimed)
+            if _b45_new is not None:
+                boolop_regions.append(_b45_new)
+
         _for_body_enabled = True
         for region in self._filter_regions(existing_regions, LoopRegion):
             if not _for_body_enabled:
@@ -25604,6 +25658,15 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         forward_chain = self._detect_while_boolop_forward_chain(cond_block, loop, BOOLOP_CHAIN_JUMPS)
         if forward_chain and len(forward_chain) >= 2:
             return forward_chain
+        # [R7-B45] 括号化 ``while A and (B or C)`` 嵌套链检测（先于后向回溯）：
+        # 该形态的循环条件链是「and 头前缀 + or 尾 run」，扁平 all_same_target
+        # 判据结构性不满足（and 头假边直达循环出口、or 成员真边进体），既有
+        # 前向/后向 walk 各只能拿到半条链——链缺 and 头时其块被后续 IfRegion
+        # 装配认领为独立 if 条件（``if A: while B or C:``），合取被外提出循环，
+        # 每次迭代不再复查 A（纯语义破坏，r7_14 h_while_composite 实证）。
+        _nested_chain = self._detect_while_condition_nested_and_or_chain(cond_block, loop)
+        if _nested_chain and len(_nested_chain) >= 2:
+            return _nested_chain
         chain: List[Tuple[BasicBlock, str]] = []
         last = cond_block.get_last_instruction()
         if not last or last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
@@ -26312,6 +26375,138 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         if connector_target is not header:
             return False
         return True
+
+    def _detect_while_condition_nested_and_or_chain(self, cond_block: BasicBlock,
+                                                    loop: LoopRegion) -> Optional[List[Tuple[BasicBlock, str]]]:
+        """[R7-B45] 检测 while 复合条件的「and 头前缀 + 括号化 or 尾 run」嵌套链。
+
+        [识别条件] CPython 把 ``while A and (B or C):`` 编译为：and 头块
+        （POP_JUMP_FORWARD_IF_FALSE → 循环出口 = 假出口）+ or run 成员块
+        （非末成员 POP_JUMP_FORWARD_IF_TRUE → 循环体入口 = 真出口；末成员
+        POP_JUMP_FORWARD_IF_FALSE → 同一假出口）。与扁平 ``A and B or C``
+        的结构性区别（本检测的判据核心，只读同层块末 opcode 与后继身份）：
+        扁平形态的 and 头假边直达【下一组成员】（or 尾求值起点），本形态的
+        and 头假边【越过整个 or run】直达循环出口——假边目标是 or run 末
+        成员的假出口同一块。cond_block 须为 or 尾首成员（真边进体形态）。
+        [归约方式] 前向自 cond_block 沿 fall-through 收 or 尾 run（非末成员
+        真边=循环体入口；末成员假边=假出口且 fall-through 进体），后向自
+        cond_block 逐前驱收 and 头（假边=同一假出口、fall-through=当前链
+        头、无循环体语句性 STORE、非其他循环条件块）；链 = [(头,'and')…] +
+        [(or 成员,'or')…]，交 Step5 调用方经 _create_boolop_region_from_chain
+        统一归约（残链 BoolOpRegion 按 op_chain 严格更短判据被超越替换）。
+        [AST 映射] BoolOpRegion.op_chain = [(and 头…'and'), (or 成员…'or')]，
+        生成侧 _build_boolop_expression → _try_build_and_inner_or_pattern 的
+        while 条件模式重建 And([A…, Or([B…])]) 嵌套（保留括号，禁止扁平
+        重结合为 ``A and B or C``——两者字节码不同：假边目标不同）。
+        [C1] 只读块末 opcode 族、后继身份、block_to_region 归属表与循环体
+        语义集合（body_blocks/header/entry/condition_block），零名字/常量/
+        偏移白名单；[C2] 任一闭合校验失败即返回 None（调用方回退既有
+        前向/后向 walk，行为与未命中逐位一致），不持有/登记任何块；[C3]
+        无状态、无副作用、单出口。
+        """
+        last = cond_block.get_last_instruction()
+        if (last is None or last.argval is None
+                or last.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                or 'TRUE' not in last.opname):
+            return None
+        _body_sem = set(loop.body_blocks or [])
+        if loop.header_block is not None:
+            _body_sem.add(loop.header_block)
+        if loop.entry is not None:
+            _body_sem.add(loop.entry)
+        if loop.condition_block is not None:
+            _body_sem.add(loop.condition_block)
+
+        def _fallthrough_of(b: BasicBlock, jt_off: int) -> Optional[BasicBlock]:
+            for s in b.conditional_successors:
+                if s.start_offset != jt_off:
+                    return s
+            return None
+
+        # ── 前向：自 cond_block 收 or 尾 run ──────────────────────────
+        or_members: List[Tuple[BasicBlock, str]] = []
+        cur = cond_block
+        false_exit: Optional[BasicBlock] = None
+        while True:
+            cur_last = cur.get_last_instruction()
+            if (cur_last is None or cur_last.argval is None
+                    or cur_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+                return None
+            cur_ft = _fallthrough_of(cur, cur_last.argval)
+            if cur_ft is None:
+                return None
+            _ft_in_body = (cur_ft in _body_sem or cur_ft is loop.back_edge_block
+                           or cur_ft in set(loop.blocks or ()))
+            if _ft_in_body:
+                # 末成员：假边出循环（假出口），fall-through 进体。
+                if 'FALSE' not in cur_last.opname:
+                    return None
+                false_exit = self.cfg.get_block_by_offset(cur_last.argval)
+                if false_exit is None or false_exit in _body_sem:
+                    return None
+                or_members.append((cur, 'or'))
+                break
+            # 非末成员：真边进体（真出口=循环体入口）。
+            if 'TRUE' not in cur_last.opname:
+                return None
+            _true_tgt = self.cfg.get_block_by_offset(cur_last.argval)
+            if _true_tgt is None or _true_tgt not in _body_sem:
+                return None
+            or_members.append((cur, 'or'))
+            _owner = self.block_to_region.get(cur_ft)
+            if _owner is not None and not isinstance(_owner, BoolOpRegion):
+                return None
+            cur = cur_ft
+        if len(or_members) < 2:
+            return None
+        # ── 后向：自 cond_block 逐前驱收 and 头 ──────────────────────
+        and_members: List[Tuple[BasicBlock, str]] = []
+        visited = {b.start_offset for b, _ in or_members}
+        head_cur = cond_block
+        while True:
+            preds = [p for p in head_cur.predecessors
+                     if p.start_offset not in visited
+                     and p not in _body_sem
+                     and p not in set(loop.blocks or ())]
+            _matched = None
+            for p in preds:
+                p_last = p.get_last_instruction()
+                if (p_last is None or p_last.argval is None
+                        or p_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                        or 'FALSE' not in p_last.opname):
+                    continue
+                if self.cfg.get_block_by_offset(p_last.argval) is not false_exit:
+                    continue
+                p_ft = _fallthrough_of(p, p_last.argval)
+                if p_ft is not head_cur:
+                    continue
+                if _matched is not None:
+                    return None  # 多个等价前驱：归属不唯一，拒绝
+                _matched = p
+            if _matched is None:
+                break
+            _owner = self.block_to_region.get(_matched)
+            if _owner is not None and not isinstance(_owner, BoolOpRegion):
+                return None
+            # and 头不得携带循环体语句性 STORE（walrus 模式 COPY+STORE 除外）。
+            _no_noise = [i for i in _matched.instructions if i.opname not in NOISE_OPS]
+            for _si, _ins in enumerate(_no_noise):
+                if _ins.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    _prev = _no_noise[_si - 1] if _si > 0 else None
+                    if not (_prev is not None and _prev.opname == 'COPY' and _prev.arg == 1):
+                        return None
+            _other_loop_cond = False
+            _pr = self.block_to_region.get(_matched)
+            if isinstance(_pr, LoopRegion) and _pr is not loop and _pr.condition_block is _matched:
+                _other_loop_cond = True
+            if _other_loop_cond:
+                return None
+            and_members.insert(0, (_matched, 'and'))
+            visited.add(_matched.start_offset)
+            head_cur = _matched
+        if not and_members:
+            return None
+        return and_members + or_members
 
     def _detect_while_boolop_forward_chain(self, cond_block: BasicBlock, loop: LoopRegion, BOOLOP_CHAIN_JUMPS) -> Optional[List[Tuple[BasicBlock, str]]]:
         chain: List[Tuple[BasicBlock, str]] = []

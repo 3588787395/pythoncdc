@@ -11,7 +11,7 @@ def t_subscript_value(xs, i, flag):
 def t_slice_both(xs, a, b, c, d):
     return xs[a if c else 0:b if d else 2]
 def t_subscript_index_ternary(xs, ys, i, j, flag):
-    return (i if flag else j) + (j if flag else i)
+    return xs[i if flag else j] + ys[j if flag else i]
 def t_arg_nested_call(xs, flag):
     return sorted(xs, key=lambda v: v if flag else -v)
 def t_subscript_store_target(xs, flag):

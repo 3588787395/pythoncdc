@@ -7,8 +7,7 @@ def t_binop_both(a, b, c, d, f1, f2):
 def t_binop_mixed_side(a, b, c, f1):
     return (a if f1 else b) * c
 def t_compare_both_sides(a, b, x, y, f1, f2):
-    a if f1 else b
-    return x if f2 else y
+    return (a if f1 else b) < (x if f2 else y)
 def t_compare_lhs_only(a, b, x, f1):
     a if f1 else b
 def t_compare_inside_call(a, b, f1):

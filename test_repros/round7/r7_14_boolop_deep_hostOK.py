@@ -8,9 +8,8 @@ def h_if_composite(a, b, c, d, flag):
             return 1
     return 0
 def h_while_composite(n, a, b, flag):
-    if n > 0:
-        while a < b or flag:
-            n -= 1
+    while n > 0 and (a < b or flag):
+        n -= 1
     return n
 def h_listcomp_filter_composite(xs, lim, flag):
     return [x for x in xs if 0 < x < lim]
