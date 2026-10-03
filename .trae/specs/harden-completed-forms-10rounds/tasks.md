@@ -58,6 +58,11 @@
   - [x] 8.4 主代理验证：402 全量 8 分片重生成+batch+compare = 6554/6617（99.05%）369/402 REGRESSIONS=0；小测试集 34 REGRESSIONS=0 IMPROVED=0；quotation 152/153；tests 257 passed/2 failed/5 xpassed 基线一致；VERIFICATION.md
   - [x] 8.5 归档 rounds/round8/ + 提交并 push
 - [ ] Task 9: Round 9 — B2/B3/B4 守卫族回归攻击 + 前八轮已封闭破口复验（防回归）
+  - [ ] 9.1 评审工程师：B2/B3/B4 守卫族（守卫判据面重攻击：守卫适用形态变体/守卫边界外形态/守卫互斥组合）+ 前八轮已封闭破口复验（B1b/B6/B8/B9/B10/B11/B20–B35/B54/B55 逐封闭声明重放登记探针，读数不得变差）+ Round 8 残留复验（B42×3/B43/B44/B46/B48/B56–B62/B63–B65 登记面持平）+ 负对照；算法合规审计；登记新破口（B66+）；REVIEW.md + test_repros/round9/
+  - [ ] 9.2 修复工程师：封闭本轮登记破口与复验发现的回归（判据 = 同层结构事实，docstring 三要素 + C1/C2/C3 同步）；自测零回退（哨兵 = round6/round7/round8 攻击面全 MATCH 面禁变差 + 六哨兵 + option_account）；FIX.md
+  - [ ] 9.3 评审工程师复核：逐 hunk 审查（零容忍打回）；REVIEW2.md
+  - [ ] 9.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0；小测试集 34；quotation 152/153；tests/；VERIFICATION.md
+  - [ ] 9.5 归档 rounds/round9/ + 提交并 push
 - [ ] Task 10: Round 10 — 终审
   - [ ] 10.1 全台账 127 形态对抗覆盖汇总 + 残留破口处理
   - [ ] 10.2 主代理全量终验（402 分片 + compare + quotation + tests/）
