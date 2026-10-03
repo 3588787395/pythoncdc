@@ -259,6 +259,40 @@ class RegionASTGenerator:
     # IfRegion 是既有的链式比较 / elif 形状，由 [Round5-05] carve-out 处理。
     _STMT_LEVEL_STRUCTURAL_REGION_TYPES = (
         LoopRegion, TryExceptRegion, WithRegion, MatchRegion)
+    # [Round6-B30] 语句屏障指令集——不可出现在纯表达式构建区间的操作码
+    # （语句终结 POP_TOP / yield 边界 YIELD_VALUE / 绑定 STORE_*·DELETE_* /
+    # 控制流 JUMP*·POP_JUMP* / 协议 SEND·GET_AWAITABLE·FOR_ITER / 异常
+    # PUSH_EXC_INFO·RERAISE / 导入 IMPORT_* / 解包 UNPACK_* / 返回 RETURN_*
+    # 等）。屏障反向走查的单一事实源（B35 混合 else 块拆分 / B30 held 值
+    # 区间提取共用）：走查自参照指令起、遇屏障指令为止，屏障之后的连续
+    # 指令即表达式构建段。NOP/RESUME/CACHE 为噪声不作屏障（尾-strip 兜底）。
+    _STMT_BARRIER_OPS = frozenset({
+        'POP_TOP', 'YIELD_VALUE',
+        'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+        'STORE_ATTR', 'STORE_SUBSCR', 'STORE_SLICE',
+        'DELETE_FAST', 'DELETE_NAME', 'DELETE_GLOBAL', 'DELETE_DEREF',
+        'DELETE_ATTR', 'DELETE_SUBSCR',
+        'RETURN_VALUE', 'RETURN_CONST', 'RETURN_GENERATOR',
+        'RERAISE', 'PUSH_EXC_INFO', 'POP_EXCEPT',
+        'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
+        'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+        'JUMP_ABSOLUTE', 'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP',
+        'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
+        'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
+        'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
+        'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE',
+        'POP_JUMP_BACKWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
+        'JUMP_BACKWARD_IF_FALSE', 'JUMP_BACKWARD_IF_TRUE',
+        'SEND', 'GET_AWAITABLE', 'GET_ANEXT', 'FOR_ITER',
+        'END_FOR', 'END_SEND', 'END_ASYNC_FOR',
+        'CLEANUP_THROW', 'EXIT_INIT_CHECK',
+        'BEFORE_WITH', 'BEFORE_ASYNC_WITH',
+        'IMPORT_NAME', 'IMPORT_FROM', 'IMPORT_STAR',
+        'UNPACK_SEQUENCE', 'UNPACK_EX',
+        'MAKE_FUNCTION', 'MAKE_CELL',
+        'LOAD_ASSERTION_ERROR', 'LOAD_BUILD_CLASS',
+        'SETUP_FINALLY', 'SETUP_WITH', 'POP_BLOCK', 'SETUP_ANNOTATIONS',
+    })
 
     """
     基于区域的AST生成器
@@ -695,7 +729,6 @@ class RegionASTGenerator:
             entry_region = self.region_analyzer.get_entry_region_for_block(entry_block) or self.region_analyzer.get_region_for_block(entry_block)
             import os as _os
             if _os.environ.get('R23N21_DEBUG'):
-                import sys as _sys
                 _er_name = type(entry_region).__name__ if entry_region else None
                 print(f" generate() entry_block={entry_block.start_offset} entry_region={_er_name}", file=_sys.stderr)
             for r in self.regions:
@@ -767,7 +800,6 @@ class RegionASTGenerator:
                 self.generated_blocks.add(entry_block)
                 import os as _os
                 if _os.environ.get('R23N21_DEBUG'):
-                    import sys as _sys
                     print(f" generate() BoolOpRegion entry={entry_block.start_offset} pre_stmts={len(_boolop_pre_stmts)}", file=_sys.stderr)
             elif isinstance(entry_region, TernaryRegion):
                 # TernaryRegion entry may contain import statements
@@ -4411,6 +4443,63 @@ AST 映射规则:
                         continue
                     _eb_has_yf_setup = any(i.opname == 'GET_YIELD_FROM_ITER' for i in _eb.instructions)
                     if _eb_has_yf_setup:
+                        # [Round6-B35] 混合 else 块按 setup 表达式起点拆分发射。
+                        # 识别条件——is_yield_from_loop 的 else 块含
+                        # GET_YIELD_FROM_ITER：块形态为 [前环耗尽收尾 POP_TOP]
+                        # + [用户语句（裸 yield 等）] + [下一 yield-from setup
+                        # 表达式（构建可迭代对象的指令 + GET_YIELD_FROM_ITER
+                        # + LOAD_CONST None）]。该块同时是后继 yield-from 环
+                        # header 的前驱（GYFI 后缀由后继环的 yf 表达式扫描经
+                        # 前驱链消费），但 setup 之前的用户语句两环均未发射：
+                        # 本环旧实现整块跳过、后继环的 _pre_blocks 扫描被
+                        # generated 门控拦截（本环 ：4424 对 region.blocks 批量
+                        # 登记）→ 裸 yield 丢失。
+                        # 归约方式——依「每块唯一归属」按 setup 表达式起点拆分：
+                        # 从首个 GYFI 反向走查，语句屏障指令（POP_TOP 语句终结/
+                        # YIELD_VALUE yield 边界/STORE_* 绑定/跳转/协议指令/
+                        # UNPACK/IMPORT/RETURN 等不可出现在纯表达式构建区间的
+                        # 操作码）为止——屏障之后的连续指令即 setup 表达式构建
+                        # 段（含 CALL/ATTR/BINARY 等任意嵌套形态），屏障之前的
+                        # 指令子序列归本环 else 路径发射。数据流单向：拆分点 =
+                        # 结构事实（操作码形态走查），无回溯修正。
+                        # AST 映射——前缀经 _build_statements_from_instructions
+                        # 产出语句序列（YIELD_VALUE 是语句边界 →
+                        # Expr(Yield(...))；前环耗尽 POP_TOP 空栈 no-op；
+                        # yield 后 RESUME+POP_TOP 为协议清理跳过），追加至
+                        # _post_yf_stmts，装配序 [_result] + _post_yf_stmts
+                        # 保持源码顺序（yield from X; yield c; yield from Y）。
+                        # C1（局部消费）——仅本环 else 块受影响，后继环扫描与
+                        # generated 门控不受干扰（无双重发射）；C2（黑箱组合）
+                        # ——_build_statements_from_instructions 对任意前缀语句
+                        # 形态通用，无逐形态补丁；C3（守卫封闭）——GYFI 不存在
+                        # 或前缀为纯噪声时不进入发射，维持既有行为。
+                        _b35_gyfi_idx = None
+                        for _b35_ii, _b35_instr in enumerate(_eb.instructions):
+                            if _b35_instr.opname == 'GET_YIELD_FROM_ITER':
+                                _b35_gyfi_idx = _b35_ii
+                                break
+                        # 语句屏障指令集——类级单一事实源 _STMT_BARRIER_OPS
+                        # （[Round6-B30] 定义，B30 held 值区间提取共用）。
+                        # 反向走查自 GYFI 起、屏障为止：屏障之后的连续指令
+                        # 即下一 yield-from 的 setup 表达式构建段，屏障之前
+                        # 的指令前缀归本环 else 路径。NOP/RESUME 为噪声不作
+                        # 屏障（尾-strip 兜底）。
+                        _b35_barrier_ops = self._STMT_BARRIER_OPS
+                        if _b35_gyfi_idx is not None:
+                            _b35_start = _b35_gyfi_idx
+                            while _b35_start > 0 and (
+                                    _eb.instructions[_b35_start - 1].opname
+                                    not in _b35_barrier_ops):
+                                _b35_start -= 1
+                            _b35_pre = _eb.instructions[:_b35_start]
+                            while _b35_pre and _b35_pre[-1].opname in (
+                                    'NOP', 'RESUME', 'CACHE'):
+                                _b35_pre.pop()
+                            if _b35_pre:
+                                _b35_pre_stmts = self._build_statements_from_instructions(
+                                    _b35_pre, _eb)
+                                if _b35_pre_stmts:
+                                    _post_yf_stmts.extend(_b35_pre_stmts)
                         continue
                     _eb_has_unpack_store = False
                     for _ui, _uinstr in enumerate(_eb.instructions):
@@ -5112,6 +5201,148 @@ AST 映射规则:
                     _filtered_else_blocks.extend(_added)
                     _filtered_else_blocks.sort(key=lambda b: b.start_offset)
             else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
+            _b36f_claimed = False  # [Round6-B36] 两段认领 gate 共用，先于分支初始化
+
+            # [Round6-B36] for-else 退出融合 return 的 else 认领：
+            # [识别条件] else 块链产出为空（块仅 NOP/纯跳转——语义体在链后继
+            #   上），沿 else 块的正常（非异常）后继链穿透，到达 RETURN 块 B：
+            #   B 未 generated、唯一非异常前驱 ∈ else 块链（else 路径独占到达，
+            #   非多路径汇合）、_detect_with_body_return(B) 命中（with 正常
+            #   退出 __exit__ 调用与 return 融合单块，如
+            #   w_break_in_with blk@28 = __exit__ 调用 + LOAD_CONST -1 +
+            #   RETURN_VALUE），且 B 的归属台账占用者为祖先 with 区域
+            #   （B ∈ 祖先 with.blocks——字节码位置在 with 保护链上，但源码
+            #   语义是 else 体的 return）。
+            # [归约方式] 每块唯一归属改判：B 的 return 语句在 else 子句内
+            #   发射（orelse），B 标记 generated——祖先 with 主循环遍历到 B
+            #   时按已生成跳过，不再把 return 上提到 for 之后的 with 层
+            #   （旧产物 else 空体渲染为幻影 while False: pass、return -1
+            #   上提错位）。异常路径前驱（PUSH_EXC_INFO 块）不参与唯一性
+            #   判定——异常机制入口块唯一归属异常区域。
+            # [AST 映射] For.orelse += [Return]；返回值经
+            #   _detect_with_body_return 的窗口提取（融合块后半段值指令）。
+            # [C1] 只读 else 块链后继边/块 role/归属台账（同层事实）；
+            # [C2] 任一判据不满足（else 非空/链分叉/B 已生成/无融合 return/
+            #   占用者非祖先）即放弃，既有路径逐字节不变；[C3] 无状态、
+            #   无偏移白名单、无名字匹配。
+            if not else_stmts and _filtered_else_blocks:  # [B36-f] else 链穿透认领启用
+                _b36f_else_set = set(_filtered_else_blocks)
+                _b36f_ret = None
+                _b36f_cur_blocks = list(_filtered_else_blocks)
+                _b36f_visited = set(_filtered_else_blocks)
+                _b36f_claimed = False
+                while _b36f_ret is None and _b36f_cur_blocks:
+                    _b36f_next = []
+                    for _b36f_cb in _b36f_cur_blocks:
+                        for _b36f_s in _b36f_cb.successors:
+                            if (_b36f_s in _b36f_visited
+                                    or any(i.opname == 'PUSH_EXC_INFO'
+                                           for i in _b36f_s.instructions)):
+                                continue
+                            _b36f_s_last = _b36f_s.get_last_instruction()
+                            if (_b36f_s_last is not None
+                                    and _b36f_s_last.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                                    and _b36f_s not in self.generated_blocks):
+                                _b36f_preds = [
+                                    p for p in _b36f_s.predecessors
+                                    if not any(i.opname == 'PUSH_EXC_INFO'
+                                               for i in p.instructions)]
+                                if (len(_b36f_preds) == 1
+                                        and _b36f_preds[0] in _b36f_else_set):
+                                    _b36f_ret = _b36f_s
+                            elif _b36f_s_last is None or _b36f_s_last.opname in (
+                                    'JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                                _b36f_nop = [i for i in _b36f_s.instructions
+                                             if i.opname not in NOISE_OPS
+                                             and i.opname not in PURE_JUMP_OPS]
+                                if not _b36f_nop:
+                                    _b36f_visited.add(_b36f_s)
+                                    _b36f_next.append(_b36f_s)
+                    _b36f_cur_blocks = _b36f_next
+                if _b36f_ret is not None:
+                    _b36f_owner = self.region_analyzer.block_to_region.get(_b36f_ret)
+                    _b36f_owner_is_ancestor = False
+                    if _b36f_owner is not None and _b36f_owner is not region:
+                        _b36f_anc = getattr(region, 'parent', None)
+                        while _b36f_anc is not None:
+                            if _b36f_anc is _b36f_owner:
+                                _b36f_owner_is_ancestor = True
+                                break
+                            _b36f_anc = getattr(_b36f_anc, 'parent', None)
+                    if _b36f_owner_is_ancestor:
+                        _b36f_ri = self.region_analyzer._detect_with_body_return(
+                            _b36f_ret, _b36f_owner, self.expr_reconstructor)
+                        if (_b36f_ri is not None
+                                and _b36f_ri.get('type') == 'Return'):
+                            else_stmts = [_b36f_ri]
+                            _b36f_claimed = True
+                            self.generated_blocks.add(_b36f_ret)
+                            self.generated_offsets.add(_b36f_ret.start_offset)
+
+            # [Round6-B36] 占位空 else（孤立边界 NOP 摊平的 While False:Pass）
+            # 亦为「else 链产出为空」的结构证据——占位语句存在时穿透认领同
+            # 样适用（w_break_in_with blk@26 → blk@28 else 体 return -1）。
+            # 判据（结构事实）：单语句 While 节点、test=Constant(False)、
+            # body=[Pass]。认领成功以 Return 替换占位；失败维持占位原样
+            # （既有路径逐字节不变）。
+            if (not _b36f_claimed and len(else_stmts) == 1
+                    and isinstance(else_stmts[0], dict)
+                    and else_stmts[0].get('type') == 'While'
+                    and isinstance(else_stmts[0].get('test'), dict)
+                    and else_stmts[0]['test'].get('type') == 'Constant'
+                    and else_stmts[0]['test'].get('value') is False
+                    and else_stmts[0].get('body') == [{'type': 'Pass'}]
+                    and _filtered_else_blocks):
+                _b36f_else_set = set(_filtered_else_blocks)
+                _b36f_ret = None
+                _b36f_cur_blocks = list(_filtered_else_blocks)
+                _b36f_visited = set(_filtered_else_blocks)
+                while _b36f_ret is None and _b36f_cur_blocks:
+                    _b36f_next = []
+                    for _b36f_cb in _b36f_cur_blocks:
+                        for _b36f_s in _b36f_cb.successors:
+                            if (_b36f_s in _b36f_visited
+                                    or any(i.opname == 'PUSH_EXC_INFO'
+                                           for i in _b36f_s.instructions)):
+                                continue
+                            _b36f_s_last = _b36f_s.get_last_instruction()
+                            if (_b36f_s_last is not None
+                                    and _b36f_s_last.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                                    and _b36f_s not in self.generated_blocks):
+                                _b36f_preds = [
+                                    p for p in _b36f_s.predecessors
+                                    if not any(i.opname == 'PUSH_EXC_INFO'
+                                               for i in p.instructions)]
+                                if (len(_b36f_preds) == 1
+                                        and _b36f_preds[0] in _b36f_else_set):
+                                    _b36f_ret = _b36f_s
+                            elif _b36f_s_last is None or _b36f_s_last.opname in (
+                                    'JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                                _b36f_nop = [i for i in _b36f_s.instructions
+                                             if i.opname not in NOISE_OPS
+                                             and i.opname not in PURE_JUMP_OPS]
+                                if not _b36f_nop:
+                                    _b36f_visited.add(_b36f_s)
+                                    _b36f_next.append(_b36f_s)
+                    _b36f_cur_blocks = _b36f_next
+                if _b36f_ret is not None:
+                    _b36f_owner = self.region_analyzer.block_to_region.get(_b36f_ret)
+                    _b36f_owner_is_ancestor = False
+                    if _b36f_owner is not None and _b36f_owner is not region:
+                        _b36f_anc = getattr(region, 'parent', None)
+                        while _b36f_anc is not None:
+                            if _b36f_anc is _b36f_owner:
+                                _b36f_owner_is_ancestor = True
+                                break
+                            _b36f_anc = getattr(_b36f_anc, 'parent', None)
+                    if _b36f_owner_is_ancestor:
+                        _b36f_ri = self.region_analyzer._detect_with_body_return(
+                            _b36f_ret, _b36f_owner, self.expr_reconstructor)
+                        if (_b36f_ri is not None
+                                and _b36f_ri.get('type') == 'Return'):
+                            else_stmts = [_b36f_ri]
+                            self.generated_blocks.add(_b36f_ret)
+                            self.generated_offsets.add(_b36f_ret.start_offset)
 
         # [R58-B] for-else 纯跳转 else 归约为 Break。
         # 识别条件——for 循环有 else_blocks，但 _if_generate_branch_stmts 产出
@@ -7243,6 +7474,16 @@ AST 映射规则:
             if _child.entry is not None:
                 _direct_child_entries_r405.add(_child.entry)
 
+        # [Round6-B34] async-for 退化位形（体必退出，无回边）体首 resume 块
+        # 认领：归约缺口使 resume 块漏出循环区域（识别/归约/AST 映射见
+        # _b34_unclaimed_loop_resume / _b34_loop_resume_pending_return），
+        # 体语句装配时改判归属循环体，消费链标记已生成禁 with 层跨层级发射。
+        _b34_resume = self._b34_unclaimed_loop_resume(region)
+        if _b34_resume is not None:
+            _b34_stmts = self._b34_loop_resume_pending_return(region, _b34_resume)
+            if _b34_stmts:
+                body_stmts.extend(_b34_stmts)
+
         for block in region.body_blocks:
             if block in self.generated_blocks:
                 continue
@@ -9052,6 +9293,57 @@ AST 映射规则:
                          'POP_TOP')
             for i in _aw_meaningful)
 
+    def _pending_value_protocol_hit(self, start_block):
+        """[Round6-B32/B33] 只读判定：块尾挂起值是否由 with/async with 协议消费。
+
+        [识别条件] start_block 尾部留有未消费的栈值（体尾 Expr 的值），
+        其后继链是 with 协议机器：SEND 轮询/纯栈清理/__exit__ 调用块，
+        终点为「SWAP 保存挂起值 + RETURN_VALUE」终结块。CPython 把
+        ``with/async with`` 体内 ``return <expr>`` 编译为「值于分支块尾
+        计算后留在栈上，穿越 __exit__/__aexit__ 协议调用链，函数尾
+        RETURN_VALUE 消费」；SWAP 是挂起值保存的结构事实。同步形态
+        SWAP 与 RETURN_VALUE 同块；async 形态二者可分块（SWAP 在
+        SEND 保存段、RETURN 在 __aexit__ 链尾），且链上存在异常边
+        （PUSH_EXC_INFO 处理器入口）——异常处理器块唯一归属异常区域，
+        不参与正常控制流链，不穿越。
+        [归约方式] 自 start_block 后继 BFS：仅延伸操作码全集 ⊆ 协议
+        指令集（SWAP/LOAD_CONST/PRECALL/CALL/POP_TOP/GET_AWAITABLE/
+        SEND/YIELD_VALUE/RESUME/CACHE/NOP/JUMP_BACKWARD_NO_INTERRUPT/
+        COPY/RETURN_VALUE/RETURN_CONST/JUMP_FORWARD/PUSH_NULL）的块；
+        含 PUSH_EXC_INFO 的块（异常机制入口）跳过不穿越；命中条件 =
+        RETURN 块操作码全集 ⊆ 协议集且 SWAP 同块或在链中已见。
+        [AST 映射] 无独立映射；命中供 B32 漏斗把体尾 Expr 升级为
+        Return(value)（挂起值语义的语句级重分类）。
+        [C1] 只读后继块指令操作码（同层结构事实）；[C2] 首个 RETURN
+        块不满足即终止（break），不回溯修正；[C3] 无状态、无副作用。
+        """
+        _proto = {'SWAP', 'LOAD_CONST', 'PRECALL', 'CALL',
+                  'POP_TOP', 'GET_AWAITABLE', 'SEND',
+                  'YIELD_VALUE', 'RESUME', 'CACHE', 'NOP',
+                  'JUMP_BACKWARD_NO_INTERRUPT', 'COPY',
+                  'RETURN_VALUE', 'RETURN_CONST', 'JUMP_FORWARD',
+                  'PUSH_NULL'}
+        queue = list(start_block.successors)
+        visited = {id(start_block)}
+        saw_swap = False
+        while queue:
+            cur = queue.pop(0)
+            if id(cur) in visited:
+                continue
+            visited.add(id(cur))
+            opset = {i.opname for i in cur.instructions}
+            if 'PUSH_EXC_INFO' in opset:
+                continue
+            if 'RETURN_VALUE' in opset or 'RETURN_CONST' in opset:
+                if opset <= _proto and ('SWAP' in opset or saw_swap):
+                    return True
+                break
+            if opset and opset <= _proto:
+                if 'SWAP' in opset:
+                    saw_swap = True
+                queue.extend(cur.successors)
+        return False
+
     @staticmethod
     def _const_code_is_async_comprehension(co: Any) -> bool:
         """[Round6-B31] 只读判定：代码常量是否为编译器合成的 async 推导式。
@@ -9106,6 +9398,20 @@ AST 映射规则:
         if any(i.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH')
                for _b29m in members for i in _b29m.instructions):
             return None
+        # [Round6-B34] __aexit__ 消费链不是用户 await：链头 setup 呈
+        # 「SWAP 保存挂起值 + LOAD_CONST None×3 实参 + CALL + GET_AWAITABLE」
+        # 协议特征（__exit__/__aexit__(None, None, None) 调用）时，owner
+        # 的 RETURN_VALUE 消费的是挂起值（with 体内 return 穿越清理链），
+        # 语句归属挂起值生产块所在区域（生产块经 B32 漏斗升级发射，区域
+        # 树归属一致）——gate 拒捕，禁跨层级发射。
+        _b34_head = members[0]
+        _b34_ops = [i.opname for i in _b34_head.instructions]
+        if ('SWAP' in _b34_ops
+                and 'CALL' in _b34_ops
+                and 'GET_AWAITABLE' in _b34_ops
+                and sum(1 for i in _b34_head.instructions
+                        if i.opname == 'LOAD_CONST' and i.argval is None) >= 3):
+            return None
         if not self._b31_continuation_owner(owner):
             return None
         if block is not owner:
@@ -9156,6 +9462,377 @@ AST 映射规则:
                 self.generated_offsets.add(i.offset)
         return stmts
 
+    def _b33_await_owner_merged_stmts(self, region, block):
+        """[Round6-B33] 上下文协议链 owner（junction）的挂起值全链合并重建。
+
+        [识别条件] block 是上下文管理器入口协议链（成员含 BEFORE_WITH/
+        BEFORE_ASYNC_WITH）的 owner——junction：as 绑定 + 用户体首；剥头
+        绑定后 junction 尾无 GET_AWAITABLE，且其后继恰有一条纯用户 await
+        协议链（setup GET_AWAITABLE → poll → resume，链成员无 BEFORE_*）。
+        该形态即 ``async with mgr as f: return (await g(f)) + f``：await
+        左操作数结果挂起于用户链，junction 本地仅存续算片段（LOAD_FAST f
+        + BINARY_OP +），漏斗独立重建时左操作数缺失被静默丢弃，错构为
+        Expr(f)；B31 gate 对 junction 链被 B29 排除（成员含 BEFORE_*）、
+        对用户链 owner 重建时缺 junction 段指令——两既有路径均不可达完
+        整语句。
+        [归约方式] 每块唯一归属改判：junction 与后续用户 await 链整体唯
+        一归属 junction。合并流 = junction 指令（剥 as 绑定 STORE_*/
+        POP_TOP 前缀，Round5-08 判据）+ 用户链成员（整体跳过 poll 块，
+        剥 RESUME/NOP/CACHE/PUSH_NULL/EXTENDED_ARG 与 GET_AWAITABLE 后
+        的 LOAD_CONST None 发送值——挂起协议不是用户源码），经
+        _build_statements_from_instructions 按语句边界重建；重建尾为
+        Expr 且 _pending_value_protocol_hit(owner) 命中（async 形态
+        SWAP 与 RETURN_VALUE 分块的挂起值语义）时升级 Return(value)。
+        两条链全部成员标记已生成。链上其余块、跨区域 junction、非延续
+        形态、用户链缺失/歧义（多后继链）/已被发射均拒——维持既有路径。
+        [AST 映射] Return(value=BinOp(Await(Call), Add, Name))——挂起前
+        调用段与挂起后续算段由同一栈式重建自然拼接，GET_AWAITABLE 由
+        ExpressionReconstructor 包装为 Await，位形嵌套无感，无逐位形补丁。
+        [C1] 只读链成员指令/后继块/归属台账（同层事实）；[C2] 链不闭合、
+        重建空语句、判据不满足即返回 None 回退既有路径；[C3] 无状态、
+        无副作用。
+        """
+        chain = self._collect_await_protocol_chain(block)
+        if chain is None:
+            return None
+        members, owner = chain
+        # [B29 领地] 仅接管上下文协议链（成员含 BEFORE_*）；纯用户 await
+        # 链归 B31 gate，禁双路径重叠。
+        if not any(i.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH')
+                   for _m in members for i in _m.instructions):
+            return None
+        # 判据链统一在 owner（junction）上执行：成立时整条链唯一归属
+        # owner——owner 块发射合并语句，其余链成员块返回空列表禁独立
+        # 发射（镜像 B31 gate 的每块唯一归属改判）。
+        # junction 必须属于本 with 区域体块（跨区域链禁捕）。
+        if not any(b is owner
+                   for b in (getattr(region, 'with_blocks', None) or [])):
+            return None
+        # 非延续形态（as 绑定/丢弃收尾）无挂起值语义，维持既有路径。
+        if not self._b31_continuation_owner(owner):
+            return None
+        _b33_noise = set(NOISE_OPS) | {'EXTENDED_ARG'}
+        # [挂起跨链形态] as 绑定与用户 await setup 同块：链成员中恰一块
+        # 同时含 region.target 的 STORE_* 与 GET_AWAITABLE——体首块兼
+        # await setup，挂起值跨越「体首→poll→junction」两段，junction
+        # 单块重建必然缺失左操作数（漏斗错构 Expr(f) 的根因）。无 as
+        # 绑定（region.target 空）或兼 setup 块不唯一时交由既有路径
+        # （漏斗 + B32 已正确处理单块完整计算的挂起值）。
+        _target = getattr(region, 'target', None)
+        if not _target:
+            return None
+        _setup_blks = [
+            _m for _m in members
+            if any(i.opname == 'GET_AWAITABLE' for i in _m.instructions)
+            and any(i.opname.startswith('STORE_') and i.argval == _target
+                    for i in _m.instructions)]
+        if len(_setup_blks) != 1:
+            return None
+        _setup_blk = _setup_blks[0]
+        # junction 自身含 GET_AWAITABLE：await setup 内联于 junction，
+        # 链结构不同，交由既有路径。
+        if any(i.opname == 'GET_AWAITABLE' for i in owner.instructions
+               if i.opname not in _b33_noise):
+            return None
+        # junction 后继中恰一条 aexit 消费链：链 owner 去噪指令全集
+        # ⊆ {POP_TOP, RETURN_*} 且含 RETURN_*——「协议调用结果丢弃 +
+        # 挂起值消费」的结构事实（POP_TOP 丢弃 __aexit__ 结果，
+        # RETURN_VALUE 消费挂起值）；已发射块与异常机制入口块不参与
+        # 候选（异常处理器块唯一归属异常区域）。
+        _b33_subs = []
+        for succ in owner.successors:
+            if succ is owner:
+                continue
+            _sops = {i.opname for i in succ.instructions}
+            if 'PUSH_EXC_INFO' in _sops:
+                continue
+            sub = self._collect_await_protocol_chain(succ)
+            if sub is None:
+                continue
+            sub_members, sub_owner = sub
+            if any(i.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH')
+                   for _sm in sub_members for i in _sm.instructions):
+                continue
+            # 发射点冲突检查只看链 owner 的真实发射（B31 gate 成功发射才
+            # 标记全链）；generate() 清理尾声预标记与各类 _mark 台账不阻
+            # B33 接管——B33 接管后全链标记幂等。
+            _so_body = [i.opname for i in sub_owner.instructions
+                        if i.opname not in _b33_noise]
+            if (not _so_body
+                    or not all(o in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST')
+                               for o in _so_body)
+                    or not any(o in ('RETURN_VALUE', 'RETURN_CONST')
+                               for o in _so_body)):
+                continue
+            _b33_subs.append(sub)
+        if len(_b33_subs) != 1:
+            return None
+        sub_members, sub_owner = _b33_subs[0]
+        # 合并流 = 体首块（剥 as 绑定，Round5-08）→ junction 的链成员
+        # 用户段（整体跳过 poll 块，剥噪声与 GET_AWAITABLE 后的
+        # LOAD_CONST None 发送值——挂起协议不是用户源码，镜像 B31）+
+        # aexit 链 owner 的 RETURN_*（POP_TOP 为协议结果丢弃，剥）。
+        merged: List[Instruction] = []
+        _prev_awaitable = False
+        _mi = next(_k for _k, _m in enumerate(members) if _m is _setup_blk)
+        for _m in members[_mi:]:
+            if is_async_poll_protocol_block(_m.instructions):
+                continue
+            for i in _m.instructions:
+                if i.opname in _b33_noise:
+                    continue
+                if (_m is _setup_blk and i.opname.startswith('STORE_')
+                        and i.argval == _target):
+                    # as 绑定由 region.items 装配端发射，禁二次发射。
+                    continue
+                if _prev_awaitable and i.opname == 'LOAD_CONST' \
+                        and i.argval is None:
+                    _prev_awaitable = False
+                    continue
+                _prev_awaitable = (i.opname == 'GET_AWAITABLE')
+                merged.append(i)
+        for i in sub_owner.instructions:
+            if i.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                merged.append(i)
+        stmts = self._build_statements_from_instructions(merged, block=owner)
+        if not stmts:
+            return None
+        # 非 owner 链成员块：判据成立即禁独立发射，交由 owner 统一装配
+        # （B31 gate 同语义的空列表改判）。
+        if owner is not block:
+            return []
+        # 尾 Expr + 挂起值协议命中（async 形态 SWAP/RETURN_VALUE 分块）
+        # → Return(value)。
+        if (stmts[-1].get('type') == 'Expr'
+                and self._pending_value_protocol_hit(owner)):
+            stmts[-1] = {'type': 'Return', 'value': stmts[-1].get('value')}
+        # 全链唯一归属：两条链全部成员标记已生成。
+        for m in list(members) + list(sub_members):
+            self.generated_blocks.add(m)
+            self.generated_offsets.add(m.start_offset)
+            for i in m.instructions:
+                self.generated_offsets.add(i.offset)
+        return stmts
+
+    def _b36_cross_block_return_value(self, block):
+        """[Round6-B36] with 退出融合 return 的跨块值提取。
+
+        [识别条件] 块为 SWAP 融合 return 形态（`_detect_with_body_return`
+        的 exit-call 窗口 + RETURN_VALUE）且 SWAP 之前无任何值构建指令——
+        返回值全部产生于**前驱块**（for 正常耗尽后值计算落独立块，
+        w_nested_flow blk@150 = [LOAD_FAST x] → blk@152 = SWAP + __exit__
+        调用 + RETURN_VALUE）。沿唯一正常前驱链回溯收集纯值构建块：块剥
+        噪声后非空、不含 STORE_*/DELETE_*/JUMP_*/RETURN_*/POP_TOP/RAISE/
+        FOR_ITER/SEND/YIELD_*/BEFORE_*/PUSH_EXC_INFO/UNPACK_*/GET_ITER
+        （含其中任一即体块/控制块，非值块，链终止）。纯值块以值构建指令
+        结尾、无 POP_TOP 弹栈——不可能被块语句生成独立发射（表达式语句
+        必以 POP_TOP 终结），取其指令并入 return 值不构成二次发射。
+        [归约方式] 链块指令按偏移序拼接 → 表达式重建；块归属不改（前驱
+        块可能已由祖先区域登记 generated，其指令并入本块 return 值后
+        登记幂等无害）。
+        [AST 映射] 返回值表达式字典或 None（无值块链时）。
+        [C1] 只读前驱边性质/块指令操作码集合（同层事实）；[C2] 链断裂或
+        无值指令返回 None，调用方维持 Return(Constant None) 既有路径；
+        [C3] 无状态、无副作用、无名字/偏移白名单。
+        """
+        _b36_noise = {'RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'}
+        _b36_value_stop = {
+            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+            'STORE_ATTR', 'STORE_SUBSCR', 'DELETE_FAST', 'DELETE_NAME',
+            'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR',
+            'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+            'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_IF_TRUE_OR_POP',
+            'JUMP_IF_FALSE_OR_POP', 'POP_JUMP_FORWARD_IF_TRUE',
+            'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
+            'POP_JUMP_BACKWARD_IF_FALSE',
+            'RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE',
+            'POP_TOP', 'FOR_ITER', 'SEND', 'YIELD_VALUE', 'YIELD_VALUE',
+            'BEFORE_WITH', 'BEFORE_ASYNC_WITH', 'PUSH_EXC_INFO',
+            'UNPACK_SEQUENCE', 'UNPACK_EX', 'GET_ITER', 'GET_AITER',
+            'GET_ANEXT', 'END_FOR', 'RESUME_CHECK',
+        }
+        _b36_instrs = [i for i in block.instructions
+                       if i.opname not in _b36_noise]
+        _b36_swap_idx = next(
+            (idx for idx, i in enumerate(_b36_instrs) if i.opname == 'SWAP'),
+            None)
+        if _b36_swap_idx is None or _b36_swap_idx > 0:
+            # SWAP 前已有值指令：值在本块，非跨块形态
+            return None
+        _b36_chain = []
+        _b36_cur = block
+        _b36_visited = {block}
+        while True:
+            _b36_preds = [p for p in _b36_cur.predecessors
+                          if p not in _b36_visited
+                          and not any(i.opname == 'PUSH_EXC_INFO'
+                                      for i in p.instructions)]
+            if len(_b36_preds) != 1:
+                break
+            _b36_p = _b36_preds[0]
+            _b36_p_instrs = [i for i in _b36_p.instructions
+                             if i.opname not in _b36_noise]
+            if not _b36_p_instrs:
+                _b36_visited.add(_b36_p)
+                _b36_chain.insert(0, _b36_p)
+                _b36_cur = _b36_p
+                continue
+            if any(i.opname in _b36_value_stop
+                   for i in _b36_p_instrs):
+                break
+            _b36_visited.add(_b36_p)
+            _b36_chain.insert(0, _b36_p)
+            _b36_cur = _b36_p
+        _b36_value_instrs = [
+            i for _b36_p in _b36_chain for i in _b36_p.instructions
+            if i.opname not in _b36_noise]
+        if not _b36_value_instrs:
+            return None
+        return self.expr_reconstructor.reconstruct(_b36_value_instrs)
+
+    def _b34_unclaimed_loop_resume(self, region):
+        """[Round6-B34] async-for 退化位形（体必退出，无回边）未认领体首 resume 块定位。
+
+        [识别条件] region.header_block 含 GET_ANEXT（async-for 头）；字节码
+        自身恢复链接：header 后继中恰一块为 SEND 自循环轮询块（块尾
+        JUMP_BACKWARD_NO_INTERRUPT 目标为自身——await 轮询协议的循环内
+        挂起-恢复结构事实），其 SEND argval 指向 resume 块（体首绑定块）。
+        归约后 resume ∉ region.blocks：体内 return 使正常流无 header 回边，
+        自然循环体退化为 {header}（FOR_ITER 有 fall-through 体扩展、
+        GET_ANEXT 无对应扩展的归约缺口），resume 块漏出循环区域。
+        [归约方式] 仅定位不改归属；认领由调用方 _generate_loop 在体语句
+        装配时经 _b34_loop_resume_pending_return 完成改判。
+        [AST 映射] 无（返回块对象或 None）。
+        [C1] 只读 header 指令/后继块/归属台账（同层事实）；[C2] 任一判据
+        不满足返回 None 回退既有路径；[C3] 无状态、无副作用。
+        """
+        header = region.header_block
+        if header is None:
+            return None
+        if not any(i.opname == 'GET_ANEXT' for i in header.instructions):
+            return None
+        _b34_poll = None
+        for succ in header.successors:
+            _b34_last = succ.get_last_instruction()
+            if (_b34_last is not None
+                    and _b34_last.opname == 'JUMP_BACKWARD_NO_INTERRUPT'
+                    and _b34_last.argval is not None
+                    and self.cfg.get_block_by_offset(_b34_last.argval) is succ):
+                _b34_poll = succ
+                break
+        if _b34_poll is None:
+            return None
+        _b34_send = next(
+            (i for i in _b34_poll.instructions
+             if i.opname == 'SEND' and i.argval is not None), None)
+        if _b34_send is None:
+            return None
+        _b34_resume = self.cfg.get_block_by_offset(_b34_send.argval)
+        if _b34_resume is None or _b34_resume is header:
+            return None
+        # 有回边形（resume 已由自然循环体归属）或已被认领/已生成：维持既有路径。
+        if _b34_resume in region.blocks or _b34_resume in self.generated_blocks:
+            return None
+        # 归属台账守卫：祖先区域（外层循环支配集）对 resume 的登记是嵌套
+        # 可达集的合法登记，不阻最内层语义归属（每块唯一归属以最内层为准）；
+        # 兄弟/后代区域的登记才是冲突认领，拒绝维持既有路径。
+        _b34_owner = self.region_analyzer.block_to_region.get(_b34_resume)
+        if _b34_owner is not None and _b34_owner is not region:
+            _b34_anc = getattr(region, 'parent', None)
+            _b34_is_ancestor = False
+            while _b34_anc is not None:
+                if _b34_anc is _b34_owner:
+                    _b34_is_ancestor = True
+                    break
+                _b34_anc = getattr(_b34_anc, 'parent', None)
+            if not _b34_is_ancestor:
+                return None
+        return _b34_resume
+
+    def _b34_loop_resume_pending_return(self, region, block):
+        """[Round6-B34] async-for 退化位形体首 resume 块的挂起值链合并重建。
+
+        [识别条件] block 是 _b34_unclaimed_loop_resume 定位的体首 resume
+        块（SEND 恢复位形：块首 STORE_* 为 anext 值绑定），且其尾值经
+        后继 aexit 消费链（setup：SWAP + LOAD_CONST None×3 + CALL +
+        GET_AWAITABLE → poll → owner：去噪 ⊆ {POP_TOP, RETURN_*} 且含
+        RETURN_*——__aexit__ 结果丢弃 + 挂起值消费的结构事实）由函数尾
+        RETURN_VALUE 消费，_pending_value_protocol_hit(block) 命中。该
+        形态即 ``async with m1: async for y in ait: return x + y``：体
+        首 return 值计算段穿越 __aexit__ 消费链，既有 with 体链走查在
+        with 层发射 Return，层级错置（挂起值消费链语句归属生产块所在
+        区域——resume 块唯一归属循环体）。
+        [归约方式] 每块唯一归属改判：resume 块唯一归属 loop_region 循环
+        体。合并流 = resume 指令（剥块首 anext 绑定 STORE_*——由 for
+        语句装配端发射；剥尾 SWAP+POP_TOP 协议对与噪声/EXTENDED_ARG）+
+        消费链 owner 的 RETURN_*（POP_TOP 为协议结果丢弃，剥），经
+        _build_statements_from_instructions 按语句边界重建；尾 Expr 且
+        协议命中时升级 Return(value)。resume 与消费链全部成员标记已
+        生成。后继消费链不唯一/歧义、重建空语句、判据不满足均拒。
+        [AST 映射] Return(value=BinOp(...))——栈式重建自然拼接，无逐
+        位形补丁。
+        [C1] 只读链成员指令/后继块/归属台账（同层事实）；[C2] 判据不满
+        足返回 None 回退既有路径；[C3] 无状态、无副作用。
+        """
+        # 后继中恰一条 aexit 消费链（异常处理器块不参与候选）。
+        _b34_noise = set(NOISE_OPS) | {'EXTENDED_ARG'}
+        _b34_subs = []
+        for succ in block.successors:
+            _sops = {i.opname for i in succ.instructions}
+            if 'PUSH_EXC_INFO' in _sops:
+                continue
+            sub = self._collect_await_protocol_chain(succ)
+            if sub is None:
+                continue
+            _sub_members, sub_owner = sub
+            _so_body = [i.opname for i in sub_owner.instructions
+                        if i.opname not in _b34_noise]
+            # 消费端形态：去噪后剔除纯栈操作（POP_TOP 丢弃/SWAP 换位/
+            # COPY 复制——协议栈调整），余量恰为一条 RETURN_*。用户 return
+            # 块必含 LOAD_*/BINARY_OP 等值构建指令，不会被误纳；体值挂起
+            # 穿越时本块无值加载，纯协议调整 + 消费即此形态
+            # （POP_TOP 丢 aexit 结果 + SWAP/POP_TOP 丢保存上下文 +
+            # RETURN_VALUE 消费挂起值）。
+            _so_core = [o for o in _so_body
+                        if o not in ('POP_TOP', 'SWAP', 'COPY')]
+            if (len(_so_core) != 1
+                    or _so_core[0] not in ('RETURN_VALUE', 'RETURN_CONST')):
+                continue
+            _b34_subs.append(sub)
+        if len(_b34_subs) != 1:
+            return None
+        _sub_members, _sub_owner = _b34_subs[0]
+        if not self._pending_value_protocol_hit(block):
+            return None
+        # 合并流：resume 用户段（剥块首 anext 绑定 STORE_*、尾 SWAP+POP_TOP
+        # 协议对、噪声）+ 消费链 owner 的 RETURN_*。
+        _b34_tail = [i for i in block.instructions if i.opname not in _b34_noise]
+        while (len(_b34_tail) >= 2
+               and _b34_tail[-2].opname == 'SWAP'
+               and _b34_tail[-1].opname == 'POP_TOP'):
+            _b34_tail = _b34_tail[:-2]
+        merged: List[Instruction] = []
+        for _bi, _instr in enumerate(_b34_tail):
+            if _bi == 0 and _instr.opname.startswith('STORE_'):
+                # anext 值绑定由 for 语句装配端发射，禁二次发射。
+                continue
+            merged.append(_instr)
+        for i in _sub_owner.instructions:
+            if i.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                merged.append(i)
+        stmts = self._build_statements_from_instructions(merged, block=block)
+        if not stmts:
+            return None
+        if (stmts[-1].get('type') == 'Expr'
+                and self._pending_value_protocol_hit(block)):
+            stmts[-1] = {'type': 'Return', 'value': stmts[-1].get('value')}
+        # 全链唯一归属：resume + 消费链全部成员标记已生成。
+        for m in [block] + list(_sub_members):
+            self.generated_blocks.add(m)
+            self.generated_offsets.add(m.start_offset)
+            for i in m.instructions:
+                self.generated_offsets.add(i.offset)
+        return stmts
 
     def _fallthrough_successor_excluding(self, block: Optional['BasicBlock'],
                                          exclude_offset: Optional[int]) -> Optional['BasicBlock']:
@@ -26488,6 +27165,74 @@ AST 映射规则:
             off -= 2
         return max(0, run_len - 1)
 
+    def _b30_held_replace_pair_value(self, b1, b2):
+        """[Round6-B30] with 内 try/finally 的 held 值替换块对识别与返回值提取。
+
+        【区域类型】TRY_FINALLY 双副本布局的正常路径副本「单 return 块对」
+        RegionType 枚举值: RegionType.TRY_FINALLY
+
+        [识别条件]（纯操作码形态链）``with mgr: try: ... finally: return
+        <expr>`` 的 CPython 3.11 布局中，finally 的 return 与 with 退出协议
+        融合为两块：B1 = [值表达式构建..., SWAP 2, POP_TOP]——return 值入栈
+        后与 try 延迟 return 压栈的 held 值交换、弃 held（栈 [exit_fn,held]
+        → [exit_fn,新值]，held 值替换协议）；B2 = [SWAP 2, LOAD_CONST None
+        ×3, (PRECALL), CALL, POP_TOP, RETURN_*]——with-exit 协议窗口（SWAP
+        置 callable=exit_fn 于栈顶下、exit(None,None,None)、POP_TOP 丢协议
+        结果）+ RETURN_* 消费栈底替换值。异常路径副本（finally_blocks）镜像
+        含同一语句序列（PUSH_EXC_INFO 帧头 + 同款替换 + 同款窗口），双副本
+        共享同一 return 语句。判据：B1 剥噪声（_W13_NOISE_OPS）末两条为
+        SWAP(2)+POP_TOP，SWAP 前值区间经语句屏障反向走查（_STMT_BARRIER_OPS
+        类级单一事实源）自查走至块首（vi==0，遇屏障即有前置用户语句，非本
+        形态）、区间非空且不含 SWAP（内部 SWAP 属栈协议非表达式）；B2 剥噪
+        声形态 [SWAP(2)] + 中段 + [RETURN_VALUE/RETURN_CONST]，中段操作码全
+        集 ⊆ {LOAD_CONST,PRECALL,CALL,POP_TOP}、恰 3 个 LOAD_CONST（argval
+        均 None）、含 CALL、尾 POP_TOP。SWAP argval 恒为 2（held 直接位于
+        栈顶下方一层）。
+        [归约方式] 值区间经表达式重建产出返回值；B1/B2 整体归约为单条
+        Return 语句，B2 不独立发射（with-exit 由外层 With 语句渲染消费，
+        RETURN_* 消费栈底替换值即 Return 本体）；调用方将 B1/B2 标记
+        generated（每块唯一归属，单一发射点）。数据流单向：块内自底向上
+        形态走查 + 唯一正常后继边同层事实，无回溯修正。
+        [AST 映射] 返回值表达式字典（调用方装配 Try.finalbody +=
+        [Return(value)]）或 None（非本形态，调用方维持既有路径）。
+        [C1]（局部消费）仅 with 内 try/finally 的 return 融合块对命中；
+        [C2]（黑箱组合）值区间任意嵌套形态（ATTR/BINARY/CALL/下标等）由
+        表达式重建统一处理；
+        [C3]（守卫封闭）值区间含屏障（前置语句）/为空/含 SWAP、B2 形态不
+        符（中段杂指令/LC 数≠3/非 None 常量/无 CALL/尾非 POP_TOP）、重建
+        失败均返回 None。已知失败模式：B2 独立发射会复现 Expr(exit-call)+
+        Return(None) 幻影；B1 前缀语句丢弃造成语句缺失——由 vi>0 拒绝阻断。
+        """
+        _noise = self._W13_NOISE_OPS
+        _b1 = [i for i in b1.instructions if i.opname not in _noise]
+        if (len(_b1) < 3 or _b1[-2].opname != 'SWAP'
+                or _b1[-2].argval != 2 or _b1[-1].opname != 'POP_TOP'):
+            return None
+        _swap_idx = len(_b1) - 2
+        _vi = _swap_idx
+        while (_vi > 0
+               and _b1[_vi - 1].opname not in self._STMT_BARRIER_OPS):
+            _vi -= 1
+        if _vi != 0:
+            return None
+        _val_instrs = _b1[:_swap_idx]
+        if not _val_instrs or any(i.opname == 'SWAP' for i in _val_instrs):
+            return None
+        _b2s = [i for i in b2.instructions if i.opname not in _noise]
+        if (len(_b2s) < 3 or _b2s[0].opname != 'SWAP'
+                or _b2s[0].argval != 2
+                or _b2s[-1].opname not in ('RETURN_VALUE', 'RETURN_CONST')):
+            return None
+        _mid = _b2s[1:-1]
+        _mid_ops = [i.opname for i in _mid]
+        _lcs = [i for i in _mid if i.opname == 'LOAD_CONST']
+        if (len(_lcs) != 3 or not all(i.argval is None for i in _lcs)
+                or not all(op in ('LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP')
+                           for op in _mid_ops)
+                or 'CALL' not in _mid_ops or _mid_ops[-1] != 'POP_TOP'):
+            return None
+        return self.expr_reconstructor.reconstruct(_val_instrs)
+
     def _find_finally_normal_copy_blocks(self, region: TryExceptRegion) -> list:
         """W11-A：定位 finally 正常路径副本的有序块序列（复合体重组发射源）。
 
@@ -26757,7 +27502,18 @@ AST 映射规则:
                         has_struct_child = True
                         break
             if not has_struct_child:
-                continue
+                # [Round6-B30] 单 return 块对形态：with 内 try/finally 的
+                # `finally: return <expr>` 正常副本被异常表边界切分为恰两块
+                # （held 值替换块 B1 + with-exit 窗口+RETURN 块 B2），无结构
+                # 化子区域、非单块——复合门控与 W13 单块判据均不覆盖。命中
+                # _b30_held_replace_pair_value 块对判据时返回该块对序列，与
+                # 多块副本统一走偏移序重组派发，finalbody 发射 Return(<expr>)
+                # （B2 的 with-exit 由外层 With 语句渲染消费，不独立发射）。
+                # 未命中维持原拒绝路径，零改动。
+                if (len(seq) != 2
+                        or self._b30_held_replace_pair_value(
+                            seq[0], seq[1]) is None):
+                    continue
             # [W11-A 尾部终止符修剪] 纯 epilogue 块（仅含 LOAD_CONST None +
             # RETURN_VALUE / 单条 RETURN_CONST，无任何数据类指令）是函数收尾
             # 隐式 return 的独立副本（生成器 resume 路径的跳转落点），不属于
@@ -28009,6 +28765,36 @@ AST 映射规则:
                                 self._generated_regions.add(_nrid)
                                 _generated_finally_offsets.add(nb.start_offset)
                                 continue
+                        # [Round6-B30] held 值替换块对整体归约（形态判据单一
+                        # 事实源 = _b30_held_replace_pair_value）：B1=nb 末两条
+                        # SWAP(2)+POP_TOP 且其唯一正常后继 B2 ∈ finally 正常
+                        # 副本序列时，B1 值区间重建为返回值，块对整体发射
+                        # Return(<value>) 并标记 generated（B2 不独立发射，
+                        # with-exit 由外层 With 语句渲染消费）；非块对形态维
+                        # 持既有逐块发射路径。
+                        _b30_succs = [
+                            s for s in (nb.successors or [])
+                            if s not in (getattr(nb,
+                                                 'exception_successors',
+                                                 set()) or set())]
+                        if len(_b30_succs) == 1:
+                            _b30_b2 = _b30_succs[0]
+                            if (_b30_b2.start_offset in _w11a_nc_offsets
+                                    and _b30_b2.start_offset
+                                    not in _generated_finally_offsets):
+                                _b30_val = self._b30_held_replace_pair_value(
+                                    nb, _b30_b2)
+                                if _b30_val is not None:
+                                    finalbody_stmts.append(
+                                        {'type': 'Return',
+                                         'value': _b30_val})
+                                    self.generated_blocks.add(nb)
+                                    _generated_finally_offsets.add(
+                                        nb.start_offset)
+                                    self.generated_blocks.add(_b30_b2)
+                                    _generated_finally_offsets.add(
+                                        _b30_b2.start_offset)
+                                    continue
                         nbs = self._generate_handler_body_statements(nb)
                         if nbs:
                             finalbody_stmts.extend(nbs)
@@ -30717,9 +31503,6 @@ AST 映射规则:
                 if self.region_analyzer.get_block_role(block) == BlockRole.WITH_EXIT_CLEANUP:
                     self.generated_blocks.add(block)
                     continue
-                if self.region_analyzer.get_block_role(block) == BlockRole.LOOP_BACK_EDGE:
-                    self.generated_blocks.add(block)
-                    continue
                 if self.region_analyzer.get_block_role(block) == BlockRole.PURE_BREAK:
                     has_reraise = any(i.opname == 'RERAISE' for i in block.instructions)
                     if has_reraise:
@@ -31056,8 +31839,31 @@ AST 映射规则:
                     self.generated_blocks.add(block)
                     continue
 
+                # [Round6-B33] 上下文协议链 junction 的挂起值全链合并重建：
+                # as 绑定 + 用户体首（junction）后继恰一条纯用户 await 链、
+                # 挂起值穿越链由函数尾 RETURN_VALUE 消费时，junction 与用
+                # 户链整体唯一归属 junction，合并重建完整语句（如
+                # return (await g(f)) + f），链上其余块禁独立发射。
+                _b33_stmts = self._b33_await_owner_merged_stmts(region, block)
+                if _b33_stmts is not None:
+                    body_stmts.extend(_b33_stmts)
+                    continue
+
                 return_info = self.region_analyzer._detect_with_body_return(block, region, self.expr_reconstructor)
                 if return_info is not None:
+                    # [Round6-B36] 跨块 return 值提取：SWAP 融合形态且 SWAP
+                    # 前无值指令时，返回值产生于前驱块（for 耗尽后值计算落
+                    # 独立块），_detect_with_body_return 单块窗口只能得
+                    # Constant None——沿纯值块前驱链重建真实值（判据见
+                    # _b36_cross_block_return_value）。非跨块形态链断裂
+                    # 返回 None，维持既有 Return(None) 路径。
+                    _b36_ri_v = return_info.get('value') if isinstance(return_info, dict) else None
+                    if (isinstance(_b36_ri_v, dict)  # [B36-e] 跨块 return 值提取启用
+                            and _b36_ri_v.get('type') == 'Constant'
+                            and _b36_ri_v.get('value') is None):
+                        _b36_xb = self._b36_cross_block_return_value(block)
+                        if _b36_xb is not None:
+                            return_info['value'] = _b36_xb
                     body_stmts.append(return_info)
                     self.generated_blocks.add(block)
                     self._mark_with_cleanup_generated(block)
@@ -31102,6 +31908,52 @@ AST 映射规则:
                     stmts = [s for s in stmts
                              if not (s.get('type') == 'Assign' and
                                      s.get('target', {}).get('id') == region.target)]
+                # [Round6-B33] withitem 解包链二次发射剔除（单一漏斗）：
+                # _extract_with_items 已把 BEFORE_WITH 之后的 UNPACK_EX/
+                # UNPACK_SEQUENCE + N×STORE_* 链认领为 withitem 元组目标
+                # （region.items 中 target 为 Tuple 字典，元素名来自同一
+                # STORE 链）。体块语句生成端对含 UNPACK_EX 的块有专用赋值
+                # 分支，把已被认领的链当普通赋值二次发射——其值窗口取
+                # UNPACK_EX 之前的指令，仅含上下文装载与 BEFORE_WITH 协议
+                # 指令（无值生产者）→ value=null 伪影（w_star_unpack）。
+                # 结构事实判据（同层事实，无名字/偏移白名单）：
+                #   (1) 块首条非噪声指令是 UNPACK_EX/UNPACK_SEQUENCE——
+                #       withitem 绑定链紧随 BEFORE_WITH 块的控制流边事实；
+                #       用户体内解包赋值的值指令必先于 UNPACK_* 入块；
+                #   (2) 生成的 Assign 目标元组元素名（剥 Starred 壳）与
+                #       region.items 某元组目标元素名逐一相同——同源 STORE
+                #       链的名字同一性。
+                # 命中即该 Assign 是已认领链的二次发射，禁发射。
+                _b33_item_names_list = []
+                for _b33_ctx, _b33_tgt in (region.items or []):
+                    if isinstance(_b33_tgt, dict) and _b33_tgt.get('type') == 'Tuple':
+                        _b33_item_names_list.append([
+                            ((e.get('value') or {}).get('id')
+                             if e.get('type') == 'Starred' else e.get('id'))
+                            for e in (_b33_tgt.get('elts') or [])])
+                if _b33_item_names_list:
+                    _b33_head = next(
+                        (i for i in block.instructions
+                         if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                             'EXTENDED_ARG')),
+                        None)
+                    if _b33_head is not None and _b33_head.opname in (
+                            'UNPACK_EX', 'UNPACK_SEQUENCE'):
+                        _kept33 = []
+                        for _s33 in stmts:
+                            if _s33.get('type') == 'Assign':
+                                _t33 = _s33.get('target')
+                                if _t33 is None and _s33.get('targets'):
+                                    _t33 = _s33['targets'][0]
+                                if isinstance(_t33, dict) and _t33.get('type') == 'Tuple':
+                                    _names33 = [
+                                        ((e.get('value') or {}).get('id')
+                                         if e.get('type') == 'Starred' else e.get('id'))
+                                        for e in (_t33.get('elts') or [])]
+                                    if _names33 in _b33_item_names_list:
+                                        continue
+                            _kept33.append(_s33)
+                        stmts = _kept33
 
                 if not stmts:
                     _break_visited = set()
@@ -46825,10 +47677,25 @@ AST 映射规则:
         # Return(value)。合法挂起仅由 with 协议产生（BoolOp/三元等跨块值
         # 块均以 JUMP/POP_JUMP 终结，普通 return 与值同块）——判据无同名
         # 场景。只读指令操作码形态与后继链形态（同层事实），无名字/偏移
-        # 白名单（w_with_if blk@12、aw_in_af blk@46）。
+        # 白名单（w_with_if blk@12、aw_in_af blk@46）。[Round6-B32 async
+        # 补全] BFS 判据因子化为 _pending_value_protocol_hit（唯一事实源，
+        # 禁止复制判定）：async 形态 SWAP 与 RETURN_VALUE 分块（SWAP 在
+        # SEND 保存段、RETURN 在 __aexit__ 链尾），且链上存在异常边
+        # （PUSH_EXC_INFO 处理器入口）——链中已见 SWAP 即计入命中，
+        # 异常处理器块不穿越（aw_await_expr blk@56→62→88→96）。
         if (stmts and stmts[-1].get('type') == 'Expr'):
             _b32_tail = [i for i in block.instructions
                          if i.opname not in NOISE_OPS]
+            # [Round6-B34] 剥尾部 SWAP+POP_TOP 挂起保存对：with 体内循环
+            # 体尾 ``return <expr>`` 的值算完后以 SWAP+POP_TOP 保存挂起值
+            # （穿越 __aexit__ 消费链由函数尾 RETURN_VALUE 消费），该对是
+            # 挂起协议指令而非值消费点——不剥则块被误判终结，挂起值语义
+            # 丢失。升级与否仍由 _pending_value_protocol_hit 把关（后继
+            # 链呈 aexit 消费链特征才升级）。
+            while (len(_b32_tail) >= 2
+                   and _b32_tail[-2].opname == 'SWAP'
+                   and _b32_tail[-1].opname == 'POP_TOP'):
+                _b32_tail = _b32_tail[:-2]
             _b32_terminal = (_b32_tail
                              and _b32_tail[-1].opname in (
                                  'POP_TOP', 'STORE_FAST', 'STORE_NAME',
@@ -46841,29 +47708,7 @@ AST 映射规则:
                                  'POP_JUMP_BACKWARD_IF_FALSE',
                                  'POP_JUMP_BACKWARD_IF_TRUE'))
             if _b32_tail and not _b32_terminal:
-                _b32_proto = {'SWAP', 'LOAD_CONST', 'PRECALL', 'CALL',
-                              'POP_TOP', 'GET_AWAITABLE', 'SEND',
-                              'YIELD_VALUE', 'RESUME', 'CACHE', 'NOP',
-                              'JUMP_BACKWARD_NO_INTERRUPT', 'COPY',
-                              'RETURN_VALUE', 'RETURN_CONST', 'JUMP_FORWARD',
-                              'PUSH_NULL'}
-                _b32_queue = list(block.successors)
-                _b32_visited = {id(block)}
-                _b32_hit = False
-                while _b32_queue and not _b32_hit:
-                    _b32_cur = _b32_queue.pop(0)
-                    if id(_b32_cur) in _b32_visited:
-                        continue
-                    _b32_visited.add(id(_b32_cur))
-                    _b32_ops = [i.opname for i in _b32_cur.instructions]
-                    _b32_opset = set(_b32_ops)
-                    if 'RETURN_VALUE' in _b32_opset or 'RETURN_CONST' in _b32_opset:
-                        if 'SWAP' in _b32_opset and _b32_opset <= _b32_proto:
-                            _b32_hit = True
-                        break
-                    if _b32_opset <= _b32_proto and _b32_opset:
-                        _b32_queue.extend(_b32_cur.successors)
-                if _b32_hit:
+                if self._pending_value_protocol_hit(block):
                     stmts[-1] = {'type': 'Return',
                                  'value': stmts[-1].get('value')}
         self._mark_shared_return_explicit(block, stmts)

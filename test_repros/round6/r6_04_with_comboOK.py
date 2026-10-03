@@ -25,5 +25,4 @@ def w_with_wraps_finally(mgr, xs):
         try:
             return xs[0]
         finally:
-            xs
-            return None
+            return xs
