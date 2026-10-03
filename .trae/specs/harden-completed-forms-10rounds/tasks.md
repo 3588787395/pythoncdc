@@ -52,11 +52,11 @@
   - [x] 7.4 主代理验证：402 全量 8 分片重生成+batch+compare = 6554/6617（99.05%）369/402 **REGRESSIONS=0**；小测试集 34 = 1505/1568 REGRESSIONS=0 IMPROVED=0；quotation 152/153 零新增；tests 257 passed/2 failed/5 xpassed 基线一致；VERIFICATION.md
   - [x] 7.5 归档 rounds/round7/ + 提交并 push（9fb15e5a 复核放行后归档推送）
 - [ ] Task 8: Round 8 — 表A 结构形态扫尾（Return/Pass/Delete/Assign 族、Assert、Raise）+ sstrict 缺陷单元对抗抽样
-  - [ ] 8.1 评审工程师：表A 形态全链对抗 = Return 位形态（多 return/嵌套 return/生成器 return/finally return）× Pass/Delete（del 局部/下标/属性/切片）× Assign 族（链式赋值/多目标/解包/星号解包/augassign 全算子）× Assert（带消息/不带/优化 -O 形态）× Raise（裸 raise/reraise/异常实例/异常类+消息/from 语法）× 深层宿主（if/while/for/try/with/match 内）+ Round 7 残留复验（B42 残留 3 单元 + B43/B44/B46/B47/B48/B49/B50/B51 + B52/B53 登记读数不变差）+ 负对照 ≥2；算法合规审计（在途变更 = 零）；登记新破口（B54+）；REVIEW.md + test_repros/round8/
-  - [ ] 8.2 修复工程师：按区域归约算法封闭登记破口（判据 = 同层结构事实，docstring 三要素 + C1/C2/C3 同步，BOM 校验纳入自测）；Round 7 残留（B42 3 单元/B43/B44/B46–B53）若具备判据形态按交接单认领；自测零回退（哨兵 = round6 115/115 + round7 r7 面 104/128 + rv6/rv7 持平 + 六哨兵 + option_account 35/35）；FIX.md。主代理不得代笔实现，子代理故障时重试派发或如实上报
-  - [ ] 8.3 评审工程师复核：逐 hunk 审查守卫判据合规（算法驱动/嵌套无感/完备精简，零容忍打回）；REVIEW2.md
-  - [ ] 8.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0；小测试集 34 worse=0；quotation 152/153；tests/ 零新增失败；VERIFICATION.md
-  - [ ] 8.5 归档 rounds/round8/ + 提交并 push
+  - [x] 8.1 评审工程师（0c0642ab）：表A 形态全链对抗 = Return 位形态（多 return/嵌套 return/生成器 return/finally return）× Pass/Delete（del 局部/下标/属性/切片）× Assign 族（链式赋值/多目标/解包/星号解包/augassign 全算子）× Assert（带消息/不带/优化 -O 形态）× Raise（裸 raise/reraise/异常实例/异常类+消息/from 语法）× 深层宿主（if/while/for/try/with/match 内）+ Round 7 残留复验（B42 残留 3 单元 + B43/B44/B46/B47/B48/B49/B50/B51 + B52/B53 登记读数不变差）+ 负对照 ≥2；算法合规审计（在途变更 = 零）；登记新破口（B54+）；REVIEW.md + test_repros/round8/
+  - [x] 8.2 修复工程师（5aff0e32）:按区域归约算法封闭登记破口（判据 = 同层结构事实，docstring 三要素 + C1/C2/C3 同步，BOM 校验纳入自测）；Round 7 残留（B42 3 单元/B43/B44/B46–B53）若具备判据形态按交接单认领；自测零回退（哨兵 = round6 115/115 + round7 r7 面 104/128 + rv6/rv7 持平 + 六哨兵 + option_account 35/35）；FIX.md。主代理不得代笔实现，子代理故障时重试派发或如实上报
+  - [x] 8.3 评审工程师复核（612cf0f2）：终判放行 10/10 hunk + 变体 +7 补强 + B63/B64/B65 登记；REVIEW2.md
+  - [x] 8.4 主代理验证：402 全量 8 分片重生成+batch+compare = 6554/6617（99.05%）369/402 REGRESSIONS=0；小测试集 34 REGRESSIONS=0 IMPROVED=0；quotation 152/153；tests 257 passed/2 failed/5 xpassed 基线一致；VERIFICATION.md
+  - [x] 8.5 归档 rounds/round8/ + 提交并 push
 - [ ] Task 9: Round 9 — B2/B3/B4 守卫族回归攻击 + 前八轮已封闭破口复验（防回归）
 - [ ] Task 10: Round 10 — 终审
   - [ ] 10.1 全台账 127 形态对抗覆盖汇总 + 残留破口处理
