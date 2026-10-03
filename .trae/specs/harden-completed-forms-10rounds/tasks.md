@@ -48,9 +48,9 @@
 - [ ] Task 7: Round 7 — Ternary + 链式比较 + 表达式面 BoolOp 组合形态对抗
   - [x] 7.1 评审工程师：16 文件 128 单元 96 MATCH/32 MISMATCH（75%）伪完备证伪；登记 B42–B51 十族（32 单元，全归因既有缺口）+ R7-O1 打回项 + R7-O2 遗留插桩观察；Round 6 残留复验零漂移持平；REVIEW.md + 16 探针
   - [x] 7.2 修复工程师：批次一（c0ab03c1，子代理三次基础设施故障后主代理接管）= R7-O1 短路恢复 + R7-O2 插桩清零 + B45 封闭 2/2 + B42 封闭 6/9（段收集含最内层 cond 前缀/后向链扩展/全链标记/return 上下文放行/单链受限/全空段守卫）；r7 96→104/128；残留 B42 3 单元 + B43/B44/B46–B51 如实登记交 Round 8；FIX.md
-  - [ ] 7.3 评审工程师复核：逐 hunk 审查守卫判据合规（算法驱动/嵌套无感/完备精简，零容忍打回）；REVIEW2.md（子代理进行中）
+  - [x] 7.3 评审工程师复核：终判放行 = 逐 hunk 14/14 PASS + 判据面与 FIX.md 逐条相符 + 读数复跑零虚报 + 变体攻击 4 探针 12/15 零回归；新登记 B52/B53（均 pre-fix worktree 证实既有缺口）；REVIEW2.md
   - [x] 7.4 主代理验证：402 全量 8 分片重生成+batch+compare = 6554/6617（99.05%）369/402 **REGRESSIONS=0**；小测试集 34 = 1505/1568 REGRESSIONS=0 IMPROVED=0；quotation 152/153 零新增；tests 257 passed/2 failed/5 xpassed 基线一致；VERIFICATION.md
-  - [ ] 7.5 归档 rounds/round7/ + 提交并 push（待 7.3 复核终判后执行）
+  - [x] 7.5 归档 rounds/round7/ + 提交并 push（9fb15e5a 复核放行后归档推送）
 - [ ] Task 8: Round 8 — 表A 结构形态扫尾（Return/Pass/Delete/Assign 族、Assert、Raise）+ sstrict 缺陷单元对抗抽样
 - [ ] Task 9: Round 9 — B2/B3/B4 守卫族回归攻击 + 前八轮已封闭破口复验（防回归）
 - [ ] Task 10: Round 10 — 终审
