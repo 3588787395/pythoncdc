@@ -46,11 +46,11 @@
   - [x] 6.4 主代理验证：批次一 402 重生成 402/402 + 8 分片 compare = REGRESSIONS=4 回退拦截（strategy/commission/slippage/dockerspawner）→ 修复工程师三处算法内修复 R6-F1/F1b/F2（75ca08bd，with-in-try 协同占用可达性/多管理器抑制出口/await 链头资格）→ 终验全部 8 分片 REGRESSIONS=0，**6554/6617（99.05%）369/402 与 Round 5 终态逐位持平**；小测试集 34 = 1505/1568 REGRESSIONS=0；quotation 152/153 零新增；tests 257 passed/2 failed/5 xpassed 基线一致；VERIFICATION.md
   - [x] 6.5 归档 rounds/round6/ + 提交并 push
 - [ ] Task 7: Round 7 — Ternary + 链式比较 + 表达式面 BoolOp 组合形态对抗
-  - [ ] 7.1 评审工程师：Ternary（条件表达式）全链对抗 = 嵌套位置面（实参/下标/dict 值/list 元素/return/赋值 RHS/binop 两侧/推导式内/lambda 体内/await 右侧）× 深层宿主（if/while/for/try/finally/match/with/async 宿主）× 三元嵌套三元；链式比较（a<b<c、混合算子链、链内含函数调用/下标）；表达式面 BoolOp 组合（and/or/not 混排、BoolOp 嵌套 BoolOp、BoolOp 内比较链与三元、短路副作用形态）× Round 6 残留复验（B37 rv6_01 3/5、B38 rv6_02 2/4、B39 rv6_04 1/4、B40 rv6_05 3/4、B41 rv6_06 1/4 登记读数不变差）+ §8 四备忘核查（F2 副带 docstring [C2] 失同步为在途审计项）+ 负对照；算法合规审计；登记新破口；REVIEW.md + test_repros/round7/
-  - [ ] 7.2 修复工程师：按区域归约算法封闭登记破口（判据 = 同层结构事实，docstring 三要素 + C1/C2/C3 同步，BOM 校验纳入自测）；§8 备忘 F2 副带（恢复 `if p is None: return None` 短路或同步条款）若具备判据形态一并处理；自测零回退（哨兵 = round6 全量 16 文件 115/115 + rv6 18/29 持平 + 六哨兵 + option_account 35/35 + round1-5 抽验）；FIX.md
-  - [ ] 7.3 评审工程师复核：逐 hunk 审查守卫判据合规（算法驱动/嵌套无感/完备精简，零容忍打回）；REVIEW2.md
-  - [ ] 7.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0；小测试集 34 worse=0；quotation 152/153；tests/ 零新增失败；VERIFICATION.md
-  - [ ] 7.5 归档 rounds/round7/ + 提交并 push
+  - [x] 7.1 评审工程师：16 文件 128 单元 96 MATCH/32 MISMATCH（75%）伪完备证伪；登记 B42–B51 十族（32 单元，全归因既有缺口）+ R7-O1 打回项 + R7-O2 遗留插桩观察；Round 6 残留复验零漂移持平；REVIEW.md + 16 探针
+  - [x] 7.2 修复工程师：批次一（c0ab03c1，子代理三次基础设施故障后主代理接管）= R7-O1 短路恢复 + R7-O2 插桩清零 + B45 封闭 2/2 + B42 封闭 6/9（段收集含最内层 cond 前缀/后向链扩展/全链标记/return 上下文放行/单链受限/全空段守卫）；r7 96→104/128；残留 B42 3 单元 + B43/B44/B46–B51 如实登记交 Round 8；FIX.md
+  - [ ] 7.3 评审工程师复核：逐 hunk 审查守卫判据合规（算法驱动/嵌套无感/完备精简，零容忍打回）；REVIEW2.md（子代理进行中）
+  - [x] 7.4 主代理验证：402 全量 8 分片重生成+batch+compare = 6554/6617（99.05%）369/402 **REGRESSIONS=0**；小测试集 34 = 1505/1568 REGRESSIONS=0 IMPROVED=0；quotation 152/153 零新增；tests 257 passed/2 failed/5 xpassed 基线一致；VERIFICATION.md
+  - [ ] 7.5 归档 rounds/round7/ + 提交并 push（待 7.3 复核终判后执行）
 - [ ] Task 8: Round 8 — 表A 结构形态扫尾（Return/Pass/Delete/Assign 族、Assert、Raise）+ sstrict 缺陷单元对抗抽样
 - [ ] Task 9: Round 9 — B2/B3/B4 守卫族回归攻击 + 前八轮已封闭破口复验（防回归）
 - [ ] Task 10: Round 10 — 终审
