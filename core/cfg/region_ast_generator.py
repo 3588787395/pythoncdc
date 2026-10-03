@@ -1,4 +1,4 @@
-"""
+﻿"""
 基于区域的AST生成器
 
 使用 RegionAnalyzer 的分析结果直接生成AST，替代 ast_generator_v2.py 中的补丁式生成。
@@ -727,10 +727,6 @@ class RegionASTGenerator:
 
         if entry_block and entry_block not in self.generated_blocks:
             entry_region = self.region_analyzer.get_entry_region_for_block(entry_block) or self.region_analyzer.get_region_for_block(entry_block)
-            import os as _os
-            if _os.environ.get('R23N21_DEBUG'):
-                _er_name = type(entry_region).__name__ if entry_region else None
-                print(f" generate() entry_block={entry_block.start_offset} entry_region={_er_name}", file=_sys.stderr)
             for r in self.regions:
                 if isinstance(r, LoopRegion) and (r.condition_block is entry_block or
                     (r.header_block and entry_block.start_offset in [s.start_offset for s in r.header_block.predecessors])):
@@ -798,9 +794,6 @@ class RegionASTGenerator:
                     ast_nodes.extend(_boolop_pre_stmts)
                     self._entry_prefix_emitted_blocks.add(entry_block)
                 self.generated_blocks.add(entry_block)
-                import os as _os
-                if _os.environ.get('R23N21_DEBUG'):
-                    print(f" generate() BoolOpRegion entry={entry_block.start_offset} pre_stmts={len(_boolop_pre_stmts)}", file=_sys.stderr)
             elif isinstance(entry_region, TernaryRegion):
                 # TernaryRegion entry may contain import statements
                 # before the ternary condition preload (e.g., `from x import y as z
@@ -9285,6 +9278,13 @@ AST 映射规则:
         清理尾声预标记循环共用（唯一事实源，禁止复制判定）。
         [AST 映射] 延续形态 owner 由 gate 合并全链重建 Return/Assign/Expr
         节点；非延续（简单绑定/丢弃）维持既有 setup 持有路径逐位不变。
+        [C1] 判据只读 owner 单块去噪操作码序列（本层块事实），无跨区域
+        回溯修正；[C2] 谓词无归约产物、不持有/登记任何块——延续形态的
+        语句重建与全链归属标记由调用方 _b31_await_chain_gate 按归属台账
+        统一执行；[C3] 双向可区分：延续形态去噪后必含 STORE_*/POP_TOP
+        之外的操作码（await 结果参与表达式组装的编译事实），简单绑定/
+        丢弃形态去噪后全部为 STORE_*/POP_TOP——两类操作码全集互斥且
+        穷尽，各自只判一侧。
         """
         _aw_meaningful = [i for i in owner.instructions
                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -9356,6 +9356,13 @@ AST 映射规则:
         「GET_AWAITABLE 由编译器为 async 推导式调用自动补发」使用。
         [AST 映射] 命中时剥除该调用后的 GET_AWAITABLE（重编译推导式
         源码时编译器自动再生，逐指令一致）。
+        [C1] 判据只读代码常量的编译器元字段 co_name（本层对象事实），
+        无跨区域回溯修正；[C2] 谓词无归约产物、不持有/登记任何块——
+        命中仅授权调用方 gate 剥除编译器自动补发的 GET_AWAITABLE；
+        [C3] 双向可区分：区分机制 = 编译器合成名——推导式代码对象的
+        co_name 恒为 <listcomp>/<dictcomp>/<setcomp>/<genexpr>，而
+        Python 标识符语法禁止用户代码取得尖括号名，用户函数/模块代码
+        常量不可能命中，非推导式常量判 False。
         """
         _name = getattr(co, 'co_name', None) or getattr(co, 'name', None)
         return _name in ('<listcomp>', '<dictcomp>', '<setcomp>', '<genexpr>')
@@ -9870,6 +9877,15 @@ AST 映射规则:
         被替换：终端 RETURN 消费的是替换值而非 try 体值，Return 语义归属
         finalbody（B30 W11-A 发射），本方法必须拒绝（语义守卫，非仅
         防回归）。
+        [C1] 判据只读调用方传入的相邻指令对（本层块事实），无跨区域
+        回溯修正；[C2] 谓词无归约产物、不持有/登记任何块——命中仅令
+        调用方 _b34c_finally_deferred_return 拒绝该链回退既有路径，
+        Return 语义归属 finalbody 由 B30 发射侧按归属台账登记；[C3]
+        双向可区分：区分机制 = 「finally: return X」的编译器指纹相邻对
+        SWAP(arg=2)+POP_TOP（held 值交换后弃置，B30 领地同款判据），
+        非替换序列不含该相邻对判 False——try 体延迟 return 值段（R2
+        逆向栈扫描定位、无跳转）必不命中，finally 内联 return 值段必
+        命中，两侧形态互斥。
         """
         for _hr_i in range(len(instrs) - 1):
             if (instrs[_hr_i].opname == 'SWAP' and instrs[_hr_i].arg == 2
@@ -9884,6 +9900,16 @@ AST 映射规则:
 
         形态即 `_detect_with_body_return` 退出窗口识别的同款指令链；前置
         SWAP(2) 为挂起值让位（值从窗口调用下方穿越）。非该形态返回 False。
+        [C1] 判据只读调用方传入的指令段操作码与 argval（本层块事实），
+        无跨区域回溯修正；[C2] 谓词无归约产物、不持有/登记任何块——
+        命中仅授权调用方在终止块余量核算中剥除窗口段（窗口内部栈自
+        洽，不计入余量），块归属仍由归属台账决定；[C3] 双向可区分：
+        区分机制 = __exit__/__aexit__ 正常退出路径的编译指纹 [SWAP?] +
+        None×3 + PRECALL + CALL + POP_TOP——三 None 即 (None, None, None)
+        正常退出实参，异常路径实参为 PUSH_EXC_INFO 供出的异常三元组
+        （非全 None 常量），长度≠6/操作码序不匹配/任一常量非 None 均判
+        False；且调用方在窗口剥除后要求余量 ⊆ 清理集且净栈效应 0，用
+        户显式调用 g(None, None, None) 的被调对象加载指令余留即拒绝。
         """
         _ew_body = list(instrs)
         if _ew_body and _ew_body[0].opname == 'SWAP':
@@ -31755,6 +31781,23 @@ AST 映射规则:
                     self.generated_blocks.add(block)
                     continue
                 if self.region_analyzer.get_block_role(block) == BlockRole.WITH_EXIT_CLEANUP:
+                    self.generated_blocks.add(block)
+                    continue
+                # [Round6-A8] 恢复 R8/R66 判据（fbfc2e7b 前代形态，4cd2a9f6
+                # hunk @@ -30717,9 静默移除，本批原样复位）。判据语义：with
+                # 主块循环中角色为 LOOP_BACK_EDGE 的块，其语句归属由嵌套
+                # LoopRegion 的体装配（含 R66 回边多语句发射判据）负责，本层
+                # 仅登记 generated 防止 with 体兜底路径重复发射。与 Round6 新
+                # 判据共存论证：B29 协议消费链（挂起轮询块经
+                # _consume_async_with_protocol_if/_walk_async_pending_return
+                # 在本分支之前整体消费并标记 generated，不会以 LOOP_BACK_EDGE
+                # 角色流落到此）；B34b 可达性（清理块可达性 BFS 在 analyzer
+                # 侧完成，cleanup 块角色为 WITH_EXIT_CLEANUP，上一分支已拦截）；
+                # B30 块对归约（held 替换块对在 try/finally handler 路径与
+                # _w11a_nc_offsets 发射侧成对标记 generated，不经本循环兜底）。
+                # 三者消费对象均先于本分支登记，跳过分支只兜住「回边块未被任何
+                # 新判据认领」的旧形态，互斥不重叠。
+                if self.region_analyzer.get_block_role(block) == BlockRole.LOOP_BACK_EDGE:
                     self.generated_blocks.add(block)
                     continue
                 if self.region_analyzer.get_block_role(block) == BlockRole.PURE_BREAK:

@@ -25149,30 +25149,14 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     for i in block.instructions
                     if i.opname not in NOISE_OPS
                 )
-                import os as _os
-                if _os.environ.get('R23N21_DEBUG') and block.start_offset == 0:
-                    import sys as _sys
-                    _b38 = self.cfg.get_block_by_offset(38)
-                    print(f" block=0 in claimed=True, has_jump={has_jump}, b38_in_b2r={_b38 in self.block_to_region if _b38 else 'N/A'}, b38_in_claimed={_b38 in claimed if _b38 else 'N/A'}", file=_sys.stderr)
                 if not has_jump:
                     continue
-            import os as _os
-            if _os.environ.get('R23N21_DEBUG') and block.start_offset == 0:
-                import sys as _sys
-                _b38 = self.cfg.get_block_by_offset(38)
-                print(f" block=0 about to call _detect_boolop_chain_start, b38_in_b2r={_b38 in self.block_to_region if _b38 else 'N/A'}, b38_in_claimed={_b38 in claimed if _b38 else 'N/A'}, skip_claimed_for_b0={block in claimed}", file=_sys.stderr)
             chain = self._detect_boolop_chain_start(block, claimed)
             if chain is None:
                 continue
             region = self._create_boolop_region_from_chain(chain, claimed)
             if region:
                 boolop_regions.append(region)
-            import os as _os
-            if _os.environ.get('R23N21_DEBUG') and block.start_offset == 0:
-                import sys as _sys
-                print(f" block=0 chain={[(b.start_offset, op) for b, op in chain] if chain else None} region={type(region).__name__ if region else None}", file=_sys.stderr)
-                if region is None and chain:
-                    print(f" chain was detected but region creation failed", file=_sys.stderr)
         trimmed = []
         for br in boolop_regions:
             if len(br.op_chain) < 2:
@@ -27400,10 +27384,6 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         if _sb_instrs_before_jump[_idx + 1].opname == 'POP_TOP':
                             _sb_has_body = True
                             break
-            import os as _os
-            if _os.environ.get('R23N21_DEBUG'):
-                import sys as _sys
-                print(f" start_block={start_block.start_offset} _sb_last={_sb_last.opname} _cond_start_offset={_cond_start_offset} _sb_has_body={_sb_has_body}", file=_sys.stderr)
             # 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（入口引用语义）：
             # 双角色块（start_block 是已存在 BoolOpRegion 的 merge_block，且不在其
             # op_chain 中）——块内的 STORE_*/BINARY_OP 是前一 BoolOp 归约后的续接
@@ -27488,11 +27468,6 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         print(f'[DBG_OR] boolop chain start skipped (or member): '
                               f'block={start_block.start_offset} last={_sb_last_li.opname}')
                     return None
-        import os as _os
-        _dbg = bool(_os.environ.get('R23N21_DEBUG'))
-        if _dbg:
-            import sys as _sys
-            print(f" passed _sb_has_body check, building chain", file=_sys.stderr)
         chain: List[Tuple[BasicBlock, str]] = []
         current = start_block
         visited = set()
@@ -27501,12 +27476,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         while current and current.start_offset not in visited:
             visited.add(current.start_offset)
             last = current.get_last_instruction()
-            if _dbg:
-                import sys as _sys
-                print(f" loop: current={current.start_offset} last={last.opname if last else None}", file=_sys.stderr)
             if not last or last.opname not in BOOLOP_CHAIN_JUMPS:
-                if _dbg:
-                    print(f" break: last not in BOOLOP_CHAIN_JUMPS", file=_sys.stderr)
                 break
             if current in self.block_to_region:
                 existing_reg = self.block_to_region.get(current)

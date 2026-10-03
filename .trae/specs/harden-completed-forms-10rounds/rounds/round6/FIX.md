@@ -416,3 +416,129 @@ exit-block 拒收 → 顶层显式发射（exit_via_jump=True），结构各归�
 
 Round 6 全部 34 复现单元 115/115 = 100% MATCH，无残留。
 
+
+## 打回修复批次（Round 6.3 复核回应）
+
+回应 REVIEW2.md §5 打回项 #1–#4（A10 红线 / A8 / A9 / A7）。B37–B41 依
+终判登记交后续轮次，本批未越界触碰。除本节追加与 `core/cfg/
+region_ast_generator.py`、`core/cfg/region_analyzer.py` 两文件修复外，
+未改动任何其他文件（REVIEW2.md / REVIEW.md / spec.md / tasks.md / 全部
+\*OK.py / rv6 探针均未手改）。
+
+### #1 [A10 红线] region_ast_generator.py UTF-8 BOM 恢复
+
+- **事故链**：BOM `efbbbf` 于评审时点 4135e6db 在位（首 3 字节实测），
+  commit `fbfc2e7b` hunk `@@ -1,4` 将 `-﻿"""` 改为 `+"""` 时剥除；此后
+  `1c059d1b` / `4cd2a9f6` / `30468033` / `eedb08cc` 四批修复与收官快照
+  均未发现未恢复，直至本复核终判打回（A10 红线）。
+- **恢复动作**：Python bytes 级操作（`open(p,'rb')` 读全量 → 断言现头
+  3 字节为 `22 22 22` 且非 `efbbbf` → 前置 `b'\xef\xbb\xbf'` 写回），
+  只改文件头 3 字节，其余字节零触碰。恢复后文件 3 428 503 字节。
+- **验证**：`head -c 3 core/cfg/region_ast_generator.py | xxd` =
+  `00000000: efbb bf`；`git diff` 首行显示 `-"""` / `+﻿"""` 行首 BOM
+  差异，其余 hunk 均为本批代码修复。
+- **自测项固化声明**：**BOM 校验（`head -c 3` = `efbb bf`）自本批起
+  纳入后续每批修复的自测项**（与语法/导入检查同批执行）。
+
+### #2 [A8] LOOP_BACK_EDGE 跳过分支：方案 A 恢复（实测定案）
+
+- **取证**：`git show 4cd2a9f6 -- core/cfg/region_ast_generator.py` hunk
+  `@@ -30717,9 +31503,6` 确认被删分支原文（现树 :31750 WITH_EXIT_CLEANUP
+  分支之后、PURE_BREAK 分支之前）：
+
+  ```python
+  if self.region_analyzer.get_block_role(block) == BlockRole.LOOP_BACK_EDGE:
+      self.generated_blocks.add(block)
+      continue
+  ```
+
+  分支沿袭：`127b59d4`（Initial commit）落地、`889a0417` 演进、
+  `da260298`（R66 fix：LOOP_BACK_EDGE 多语句回边块 AugAssign/del 发射）
+  依赖其把回边块归属让渡给循环装配路径，`4cd2a9f6` 静默移除。
+- **与 Round6 新判据的相互作用分析**：B29 协议消费链（挂起轮询块经
+  `_consume_async_with_protocol_if`/`_walk_async_pending_return` 在 with
+  主块循环之前整体消费并标记 generated）；B34b 可达性（清理块可达性
+  BFS 在 analyzer 侧完成，cleanup 块角色为 WITH_EXIT_CLEANUP，前一分支
+  已拦截）；B30 块对归约（held 替换块对在 try/finally handler 路径与
+  `_w11a_nc_offsets` 发射侧成对标记 generated）。三者消费对象均先于该
+  分支登记，互斥不重叠——分析预测恢复无冲突，实测证实（见下）。
+- **方案 A（恢复）实施**：分支原样复位，并在代码处加「[Round6-A8] 恢复
+  R8/R66 判据，与 B29+ 判据共存论证」十三行注释（判据语义 + 三新判据
+  共存论证逐条对应）。
+- **实测裁决（方案 A 全绿，采用）**：round6 全量 115/115（16 文件全
+  success）+ 六哨兵全持平 + option_account 35/35 + 23 个重生成 OK 产物
+  与已提交版逐字节零漂移——方案 A 无任何读数回退，按任务书规则采用；
+  方案 B（声明式重落地）无需启用。
+- 哨兵选择说明（诚实记录）：`find site-packages -name
+  "*validate_data*.pyc"` 零命中（全仓库亦无该 pyc；R8 期
+  repro_r01_02_validate_data.py 为占位符，无 pyc 可测）。R8 代判据的
+  实证面由 option_account（R66 代、da260298 明示依赖本分支）承载：
+  恢复前基线 35/35、恢复后 35/35，回边多语句发射形态（AugAssign/del）
+  经 r6 全量与零漂移复核无回归。若后续轮次重建 validate_data pyc 哨兵，
+  应补跑。
+
+### #3 [A9] R23N21_DEBUG 插桩清除（7 处全清零）
+
+- **region_ast_generator.py**：`import sys as _sys` 已被 `4cd2a9f6`
+  hunk `@@ -695,7`/`@@ -767,7` 删除，遗留 :733/:803 两处
+  `print(..., file=_sys.stderr)` 呈破损态（env 置位即 NameError）。按
+  评审建议**整块清除**（含 if 门控行与配套 `import os as _os` 脚手架，
+  4 行 ×2 处）。
+- **残留一并清除**（任务书 #3「若发现其他 R23N21_DEBUG 门控残留一并
+  清除」）：`region_analyzer.py` 另有 5 处同门控残留（原 :25153/:25160/
+  :25171 三处 `block.start_offset == 0` 偏移魔数探针、原 :27404 一处、
+  原 :27492 起的 `_dbg` 门控组），均为 R23/N21 期调试插桩；虽自带
+  `import sys as _sys` 未呈破损态，仍按零残留要求整块清除（30 行）。
+  文件内其他门控插桩（DBG_OR、R7_DEBUG_IFGEN、_os_ebm/_os_dbg 系）非
+  R23N21_DEBUG 门控且自洽，未越界触碰。
+- **验证**：`grep -rn "R23N21_DEBUG" core/ | wc -l` = **0**；
+  `_sys\.`/`_os\.` 零残留；`ast.parse`（utf-8-sig）+ `import core.cfg.
+  region_ast_generator` / `import core.cfg.region_analyzer` 全通过。
+
+### #4 [A7] 四方法补 C1/C2/C3 条款声明
+
+条款语义按任务书定义（C1 只读本层块事实不跨区域回溯 / C2 归约产物只
+引用子区域入口与归属台账 / C3 用户形态与协议形态双向可区分），格式对
+齐同文件 `_collect_await_protocol_chain` / `_b34c_finally_deferred_return`
+既有写法；每条声明均按该方法实际判据行为撰写：
+
+| 方法 | C3 双向区分机制（摘要） |
+|---|---|
+| `_b31_continuation_owner` | 延续形态去噪后必含 STORE_*/POP_TOP 之外操作码，绑定/丢弃形态全为 STORE_*/POP_TOP，两类全集互斥且穷尽 |
+| `_const_code_is_async_comprehension` | 编译器合成名 <listcomp>/<dictcomp>/<setcomp>/<genexpr>；Python 标识符语法禁止用户取得尖括号名 |
+| `_b34c_has_held_replace` | 「finally: return X」指纹相邻对 SWAP(arg=2)+POP_TOP；try 体延迟 return 值段必不命中、finally 内联 return 值段必命中 |
+| `_b34c_is_exit_window` | __exit__ 正常退出指纹 [SWAP?]+None×3+PRECALL+CALL+POP_TOP；异常路径实参为异常三元组非全 None；调用方余量 ⊆ 清理集且净栈效应 0 兜底用户显式调用 |
+
+C1/C2 逐方法如实声明：两个 B34c 静态谓词与两个 B31 谓词均为「无归约
+产物、不持有/登记任何块」，归属登记均由调用方（_b31_await_chain_gate /
+_b34c_finally_deferred_return / B30 发射侧）按归属台账执行——谓词自身
+无产物，声明与行为一致。
+
+### 自测读数表（终局树：#1–#4 全部落位后实测）
+
+| # | 自测项 | 结果 |
+|---|---|---|
+| 1 | BOM：`head -c 3 core/cfg/region_ast_generator.py \| xxd` | `00000000: efbb bf` ✓ |
+| 2 | `grep -rn "R23N21_DEBUG" core/ \| wc -l` | **0** ✓ |
+| 3 | ast.parse（generator utf-8-sig / analyzer）+ 双模块 import | 全通过 ✓ |
+| 4 | round6 全量（r6_01..r6_15 + n6_01 = 16 文件）batch | **115/115 success = 100%**，16/16 文件 success，零位移 ✓ |
+| 5a | tools.pyc 重生成 + single | 6/6 ✓ |
+| 5b | trade_schedule.pyc 重生成 + single | 6/6 ✓ |
+| 5c | mq_connector.pyc 重生成 + single | 13/13 ✓ |
+| 5d | strategy/strategy.pyc 重生成 + single | 2/2 ✓ |
+| 5e | IQEngine/utils/scheduler.pyc 重生成 + single | 52/52 ✓ |
+| 5f | trade_info_utils.pyc 重生成 + single | **36/41** = 基线（失败单元 = trade_operation / kill_trade_process / get_trade_status / query_trade_strategy_info / query_strategy_id，check_trade_name 不在列表）✓ |
+| 6 | option_account.pyc 重生成 + single（R66 哨兵） | **35/35**（恢复前基线同为 35/35，持平）✓ |
+| 6′ | validate_data.pyc | site-packages 全库零命中，无 pyc 可测（诚实记录，见 #2 哨兵说明） |
+| 7 | 方案 A 定案后全套读数重跑 | 上表即终局树读数，全部持平 ✓ |
+| 8 | 重生成 23 个 OK 产物后 `git status` | 仅 `core/cfg/region_analyzer.py`、`core/cfg/region_ast_generator.py`（本批修复）+ 预期新报告 `r6_fixback.json`；**全部 OK.py 零内容变化（零漂移）** ✓ |
+
+### 批次边界声明
+
+- 本批改动面 = 2 个 core 文件 + 本 FIX.md 追加 + 自测报告 json
+  （`.trae/specs/.../rounds/round6/r6_fixback.json`，工具产出）。
+- 未触碰：REVIEW2.md / REVIEW.md / spec.md / tasks.md / 任何 \*OK.py
+  手改 / rv6 探针 / B37–B41 相关判据面。
+- 判据面审查：本批零新判据（#2 为既有判据复位；#3 为插桩清除；#4 为
+  docstring；#1 为字节头修复），无名字白名单、无偏移魔数（清除的
+  `block.start_offset == 0` 探针属减法）、无跨层读取、无新 self 状态。
