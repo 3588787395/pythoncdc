@@ -203,3 +203,29 @@
 1. **哨兵命名勘误**：任务书与 FIX.md 之「strategy 2/2」实为 `site-packages/IQCommon/strategy/strategy.pyc`（2/2 success 实测）；`site-packages/IQCommon/util/strategy_info_utils.pyc` 实为 30 单元、实测 30/30 success（Round 61 即已 30 单元全对）。两个哨兵均 100% MATCH、OK.py 与已提交版逐字节 SAME，无回归。
 2. **复核产物清单**：`rounds/round6/r6_recheck.json`（round6 batch 报告）；`test_repros/round6/rv6_01..rv6_07`（源码 + pyc + OK 产物）。复核过程零修改 core/、parsers/、scripts/、pycdc.py、FIX.md/REVIEW.md/spec.md/tasks.md；未手改任何 `*OK.py`。
 3. **正向确认**（打回不掩盖的成果）：四批修复对 115 单元全清读数真实成立；B29 封闭使 async with 体 return/raise 态获得宿主无感装配（rv6_01 return/raise 态、rv6_02 inner_with_outer_tail MATCH）；B36-f 在 while-else/多语句 else/双层循环 else 宿主下无感（rv6_07 4/4）；B34b bare-None 细化判据双向形态正确（rv6_03 4/4）；B35 线性多夹层封闭（rv6_05 三段交替 MATCH）；B33 同步宿主递归解析（r6_01/r6_09 全对维持）。判据面本身无白名单、无偏移魔数、无跨层读取、无新 self 状态——**算法方向合规，工艺与边界面不合规**。
+
+---
+
+## §7 复验放行（打回修复批次复验）
+
+复验对象：commit `a6e33367`（`core/cfg/region_ast_generator.py` +51/−8、`core/cfg/region_analyzer.py` −30、FIX.md 追加打回修复章节 +126/−0、`r6_fixback.json` +237/−0）。复验方法：静态取证（`git show` 三代比对 + 逐行 diff 审查）+ 全部读数独立真实复跑——本节读数均为复验时点实测，非转录 FIX.md。复验过程零修改任何代码，未手改任何 \*OK.py；校验用临时 batch 报告已清理，工作区除本节追加外零残留。
+
+### V1–V6 逐项判定表
+
+| # | 复验项 | 判定 | 实测证据（锚点） |
+|---|---|---|---|
+| V1 | A10 BOM 红线 | **放行** | `head -c 3 core/cfg/region_ast_generator.py \| xxd` = `00000000: efbb bf`（复验首尾两次实测一致）；`git show a6e33367` 头部 hunk `@@ -1,4 +1,4 @@` 仅 `-"""` → `+<BOM>"""` 一行，文件头无其他改动；`core/cfg/pattern_parser.py` 首 3 字节 = `22 22 22`（无 BOM，历史合规未回退） |
+| V2 | A8 LOOP_BACK_EDGE 跳过恢复（方案 A） | **放行** | ① 三代逐行比对：`4cd2a9f6` hunk `@@ -30717,9` 删除的 3 行在 `a6e33367` hunk `@@ -31757,6 +31783,23` 于**原位原样复位**（`for block in region.with_blocks:` 主块循环 :31777 内，WITH_EXIT_CLEANUP 分支之后、PURE_BREAK 分支之前的 :31800–:31802），跳过条件（`get_block_role(block) == BlockRole.LOOP_BACK_EDGE`）与动作（`generated_blocks.add` + `continue`）与 127b59d4（时点 :4390）及 da260298（R66 落地代 :19502，同位同形）逐字节等价；② 13 行共存论证抽点核对：B34b 段属实（WITH_EXIT_CLEANUP 分支确实先于恢复分支拦截清理块）；B30 段属实（held 替换块对在 try/finally handler 发射侧 :29073/:29077 `generated_blocks.add(nb)` + `add(_b30_b2)` 成对登记，`_w11a_nc_offsets` 领地判据在位）；B29 段行为等价（消费函数 :31131–:31133 / :31222–:31224 整批标记 generated、不发射语句，识别判据为指令操作码形态 + `_walk_async_pending_return` 后继走查、不依赖 generated 状态——消费块即使先经恢复分支登记，消费结果逐位一致；详见记录性备注 2）；③ 实测：round6 16 文件 batch（r6_\*.pyc + n6_01\*.pyc）= **115/115，success_rate 1.0**；option_account 重生成（sha1 `bc1da7d8` 不变）+ single = **35/35**（R66 回边多语句发射判据实证面无损） |
+| V3 | A9 插桩清零 | **放行** | `grep -rn "R23N21_DEBUG" core/` = **0 命中**；analyzer 4 hunk −30 行逐行审查：全部为 env 门控 `import os as _os`/`import sys as _sys` + `print(..., file=_sys.stderr)` 残留（含 3 处 `block.start_offset == 0` 偏移魔数探针与 `_dbg` 门控组），`_dbg` 定义与引用成对删除无悬挂引用；`_detect_boolop_chain_start` 调用链零变化（`chain = self._detect_boolop_chain_start(block, claimed)` / `if chain is None: continue` / `_create_boolop_region_from_chain` / `boolop_regions.append` 原样，`if not last or last.opname not in BOOLOP_CHAIN_JUMPS: break` 逻辑原样）；generator :727/:798 两 hunk 同类清除（−4/−3）；非该门控 `DBG_OR` 仍有 **18 处**命中未被越界清除；`ast.parse`（analyzer/generator）+ `import core.cfg.region_analyzer` 全通过 |
+| V4 | A7 四方法 C1/C2/C3 条款 | **放行** | 逐方法 docstring ↔ 方法体比对：`_b31_continuation_owner`（去噪后 ∃op ∉ {STORE_\*, POP_TOP} ↔ True，与 C3「全集互斥且穷尽」声明一致；实际调用点 :1776 generate() 清理尾声预标记 + :9422 `_b31_await_chain_gate` + :9519 `_b33_await_owner_merged_stmts` 复用，与「唯一事实源、禁止复制判定」声明相符）；`_const_code_is_async_comprehension`（co_name ∈ 四编译器合成名，纯谓词，C3 尖括号名论证成立）；`_b34c_has_held_replace`（SWAP(arg=2)+POP_TOP 相邻对扫描，纯谓词）；`_b34c_is_exit_window`（剥首 SWAP 后恰 6 指令 [LOAD_CONST×3, PRECALL, CALL, POP_TOP] 且前三 argval 均 None）——四方法 C1（只读本层事实）/C2（谓词无归约产物、不持有/登记任何块）均与代码一致；**C3 兜底拒绝机制实证存在于调用方**：`_b34c_finally_deferred_return` 终止块分支 :10033–:10053 窗口剥除后余量逐条要求 ∈ `_DEFERRED_RET_CLEANUP_OPS` 且净栈效应 = 0，否则 `return None`——用户显式 `g(None, None, None)` 的被调对象加载指令必落余量被拒，声明与行为一致 |
+| V5 | 读数抽验 | **放行** | 六哨兵抽 2（均重生成 + single）：`IQCommon/util/trade_info_utils.pyc` 重生成 sha1 `a719a77e` 不变 + single = **36/41 = 87.80%**，失败 5 单元经 batch 报告逐一核对 = trade_operation / kill_trade_process / get_trade_status / query_trade_strategy_info / query_strategy_id（"Different control flow"），**check_trade_name 不在失败列表**——与基线声明逐一相符；`IQEngine/utils/scheduler.pyc` 重生成 sha1 `4b1db68c` 不变 + single = **52/52**。变体探针抽 2：rv6_03_bare_none_dual_form 重反编译 sha1 `5c29856d` 与已提交 OK **逐字节 SAME** + single **4/4 MATCH**；rv6_07_foreach_fused_return sha1 `3b874a7f` **SAME** + single **4/4 MATCH**。全部重生成后 `git status` 无任何 \*OK.py 变化（**零漂移**） |
+| V6 | 越界检查 | **放行** | numstat：仅 4 文件（FIX.md +126/−0 纯追加、r6_fixback.json +237/−0、generator +51/−8、analyzer −30）；generator 8 个 hunk 逐个归类 = BOM 1 行 + R23N21_DEBUG 残留删除 2 处 + docstring 条款 4 处 + A8 恢复 1 处，**无第五类改动**；REVIEW2.md / REVIEW.md / spec.md / tasks.md / 全部 \*OK.py 零触碰；B37–B41 未越界修复实证：rv6_01 = 3/5、rv6_04 = 1/4、rv6_06 = 1/4，与 §3 登记面逐一持平（r6_fixback.json 237 行 = §5 #5 登记推进项之履行） |
+
+### 记录性备注（不阻断放行）
+
+1. **A8 注释行数勘误**：FIX.md 与 commit message 称「十三行注释」，实测恢复块为 **14 行注释 + 3 行代码 = +17 行**（hunk `@@ -31757,6 +31783,23`；numstat +51 = 33 条款行 + 17 恢复块 + 1 BOM 行，严丝合缝）。计数口径偏差，代码无涉。
+2. **A8 共存论证之 B29 时序措辞**：注释称 B29 消费链「在本分支之前整体消费并标记 generated」——嵌套调用点 `_consume_async_with_protocol_if`(:31977) / `_consume_async_exit_chain_region`(:31981) 在 `_generate_with` 内位于 with 主块循环**之后**，顶层协议 IfRegion 消费（:3323）取决于顶层区域迭代顺序，字面时序不恒成立；但消费动作仅为整批标记 generated（不发射语句），其识别判据（协议操作码形态 + 后继走查）不依赖 generated 状态，故无论消费先于或后于恢复分支发生，块归属与发射结果逐位一致——共存结论（互斥不重叠、跳过分支只兜底登记不发射）在行为层成立，r6_05/r6_06/r6_07/r6_08 异步面与全量 115/115 实测背书。属措辞精度问题，不构成 A7 类「判据与注释不一致」违规（该条款约束 C1/C2/C3 判据声明，本批四方法声明已逐方法核对一致）。
+
+### §7 终判
+
+**放行**。打回五项中 #1（A10 BOM `efbbbf` 字节级恢复）/ #2（A8 方案 A：与 R8/R66 两代判据逐字节等价的原位复位 + 实测全绿）/ #3（A9：−30 行均为门控插桩残留减法，调用链零变化）/ #4（A7：四方法条款与实际判据行为逐方法核对一致，C3 兜底机制实证存在）全部封闭；#5（B37–B41）按终判登记推进（r6_fixback.json + 探针 MISMATCH 面持平实证未越界）。全部读数由复验工程师独立复跑证实：round6 115/115、option_account 35/35（重生成零漂移）、trade_info_utils 36/41 基线（失败名单逐项相符）、scheduler 52/52、rv6_03 / rv6_07 4/4 零漂移 MATCH、rv6_01 / rv6_04 / rv6_06 MISMATCH 面持平。Round 6.3 复验通过，**打回修复批次放行**。
