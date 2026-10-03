@@ -1,0 +1,303 @@
+{
+ "elapsed_sec": 6.0,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 17,
+  "success": 0
+ },
+ "files_total": 17,
+ "generated_at": "2026-10-03T22:27:14",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_01_asyncwith_threestate.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_02_outer_handler_boundary.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_04_finally_deferred_double.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_05_yieldfrom_mixed_else.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_06_withitem_deep_async.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_01_ternary_args_index.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_04_ternary_binop_compare.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_06_ternary_lambda_await.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nest.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_host.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_10_chain_compare_calls.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_11_boolop_mixed.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_12_boolop_nest.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_14_boolop_deep_host.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/rv7_02_compare_chain_ternary.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/rv7_04_dict3_ternary.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_arg_multi_mixed: Failure: Different bytecode"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_01_ternary_args_index.pyc",
+   "pyc_sha": "0691762d3015",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_01_ternary_args_indexOK.py",
+   "source_sha": "e652f6d6e325",
+   "status": "failure",
+   "success_rate": 0.8888888888888888,
+   "units_success": 8,
+   "units_total": 9
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_compare_lhs_only: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_04_ternary_binop_compare.pyc",
+   "pyc_sha": "af2127d9a00f",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_04_ternary_binop_compareOK.py",
+   "source_sha": "2f7c09134539",
+   "status": "failure",
+   "success_rate": 0.8571428571428571,
+   "units_success": 6,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_listcomp_ternary_filter.<listcomp>: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha": "ded1b82a2ce6",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_05_ternary_comprehensionOK.py",
+   "source_sha": "007fe6537217",
+   "status": "failure",
+   "success_rate": 0.9375,
+   "units_success": 15,
+   "units_total": 16
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_await_ternary_branches: Failure: Different control flow",
+    "***<module>.t_await_assign_ternary: Failure: Different control flow",
+    "***<module>.t_await_deep_ternary: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_06_ternary_lambda_await.pyc",
+   "pyc_sha": "6aa2a07020ae",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_06_ternary_lambda_awaitOK.py",
+   "source_sha": "ef4ea9b239a5",
+   "status": "failure",
+   "success_rate": 0.7,
+   "units_success": 7,
+   "units_total": 10
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_nest_left_assoc: Failure: Different control flow",
+    "***<module>.t_nest_in_condition: Failure: Different control flow",
+    "***<module>.t_nest_mixed_binop: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nest.pyc",
+   "pyc_sha": "a4a9ebb2b71a",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nestOK.py",
+   "source_sha": "7090967fe581",
+   "status": "failure",
+   "success_rate": 0.5714285714285714,
+   "units_success": 4,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_host_while_body: Failure detected at line number 14 and instruction offset 24: Different bytecode",
+    "***<module>.t_host_for_else: Failure detected at line number 20 and instruction offset 24: Different bytecode",
+    "***<module>.t_host_try_sections: Failure: Different control flow",
+    "***<module>.t_host_match_case: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_host.pyc",
+   "pyc_sha": "24d30a590338",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_hostOK.py",
+   "source_sha": "dba44162cb07",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 4,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.c_chain_and_combo: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_10_chain_compare_calls.pyc",
+   "pyc_sha": "57a30c2e8465",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_10_chain_compare_callsOK.py",
+   "source_sha": "9a42871e7f74",
+   "status": "failure",
+   "success_rate": 0.875,
+   "units_success": 7,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.b_and_or_repeat: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_11_boolop_mixed.pyc",
+   "pyc_sha": "5577bb96a009",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_11_boolop_mixedOK.py",
+   "source_sha": "6d6d817e2b87",
+   "status": "failure",
+   "success_rate": 0.8571428571428571,
+   "units_success": 6,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.b_nest_three_layers: Failure: Different control flow",
+    "***<module>.b_nest_deep_right: Failure: Different control flow",
+    "***<module>.b_ternary_lhs_and: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_12_boolop_nest.pyc",
+   "pyc_sha": "f69583856ec6",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_12_boolop_nestOK.py",
+   "source_sha": "e8d4c127b284",
+   "status": "failure",
+   "success_rate": 0.625,
+   "units_success": 5,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.h_listcomp_filter_composite: Failure: Different bytecode",
+    "***<module>.h_listcomp_filter_composite.<listcomp>: Failure: Different control flow",
+    "***<module>.h_if_ternary_chain_composite: Failure: Different control flow",
+    "***<module>.h_return_composite: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_14_boolop_deep_host.pyc",
+   "pyc_sha": "415d31312d6f",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_14_boolop_deep_hostOK.py",
+   "source_sha": "ef21b8855847",
+   "status": "failure",
+   "success_rate": 0.5555555555555556,
+   "units_success": 5,
+   "units_total": 9
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.aw_break_in_try_for: Failure: Different control flow",
+    "***<module>.aw_continue_in_try_for: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_01_asyncwith_threestate.pyc",
+   "pyc_sha": "56fe46959ecd",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_01_asyncwith_threestateOK.py",
+   "source_sha": "792c833d51e0",
+   "status": "failure",
+   "success_rate": 0.6,
+   "units_success": 3,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.outer_raise_catch: Failure: Different control flow",
+    "***<module>.nested_with_else_loop: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_02_outer_handler_boundary.pyc",
+   "pyc_sha": "627c6d1d98cc",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_02_outer_handler_boundaryOK.py",
+   "source_sha": "bf7296c1304d",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 2,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.try_fin_with_nested: Failure: Different control flow",
+    "***<module>.double_fin_overwrite: Failure: Different control flow",
+    "***<module>.try_fin_fin_body_with: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_04_finally_deferred_double.pyc",
+   "pyc_sha": "aa2f2e0800a9",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_04_finally_deferred_doubleOK.py",
+   "source_sha": "9a3bf4dc9d6f",
+   "status": "failure",
+   "success_rate": 0.25,
+   "units_success": 1,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.gen_for_else_mixed: Failure: Different bytecode"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_05_yieldfrom_mixed_else.pyc",
+   "pyc_sha": "a8673150b7b8",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_05_yieldfrom_mixed_elseOK.py",
+   "source_sha": "cdef92a2709d",
+   "status": "failure",
+   "success_rate": 0.75,
+   "units_success": 3,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.deep_tuple_star: Failure detected at line number 11 and instruction offset 18: Different bytecode",
+    "***<module>.star_mid_async: Failure: Different bytecode",
+    "***<module>.nested_star_tuple: Failure: Different bytecode"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_06_withitem_deep_async.pyc",
+   "pyc_sha": "5dccbdadae92",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_06_withitem_deep_asyncOK.py",
+   "source_sha": "e767f853a963",
+   "status": "failure",
+   "success_rate": 0.25,
+   "units_success": 1,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.chain_two_ternary: Failure: Different control flow",
+    "***<module>.chain_three_ternary: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/rv7_02_compare_chain_ternary.pyc",
+   "pyc_sha": "786a6174b9d0",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/rv7_02_compare_chain_ternaryOK.py",
+   "source_sha": "6a19813cca4f",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 2,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.dict3_nested_value: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/rv7_04_dict3_ternary.pyc",
+   "pyc_sha": "cbaf768bc2c5",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/rv7_04_dict3_ternaryOK.py",
+   "source_sha": "2a2d9e03d295",
+   "status": "failure",
+   "success_rate": 0.6666666666666666,
+   "units_success": 2,
+   "units_total": 3
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.6923076923076923,
+ "units_success": 81,
+ "units_total": 117
+}
