@@ -75,3 +75,13 @@
 3. 复核批次（0caea12b）：终判放行 6/6 hunk + 哨兵口径裁决 + 变体 26/27 + B76 登记
 4. 主代理终验（本报告）：402 八分片 + 34 小集 + quotation + tests 六套件 + §8.2 六步全过
 5. 终归档：tasks.md 10.1–10.4 勾选 + checklist 终态核验 + 提交并 push origin main
+
+## 10. 网络故障记录（push 重试）
+
+- 终归档提交 `f831eeae` 后 push 连续失败 3 次：
+  1. `git push origin main` → `fatal: unable to access 'https://github.com/3588787395/pythoncdc.git/': Recv failure: Connection was reset`
+  2. `git push https://<TOKEN>@github.com/3588787395/pythoncdc.git main` → 同上 Connection was reset
+  3. 等待 20s/60s 后两次重试 → `Failed to connect to github.com port 443 after 21398/21242/21139 ms: Couldn't connect to server`
+- 判定：github.com:443 网络中断（非凭据问题，显式 token 同样失败）；与 Round 9 push 网络故障同型
+- 重试命令（网络恢复后执行）：`git push origin main`（origin 已内嵌 token）或 `git push https://<TOKEN>@github.com/3588787395/pythoncdc.git main`（<TOKEN> = origin remote URL 内嵌凭据，依 GITHUB PUSH PROTECTION 要求脱敏不落盘）
+- 待推送提交：`f831eeae`（round10 终审归档）与本网络记录提交
