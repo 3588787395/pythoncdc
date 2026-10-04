@@ -168,7 +168,7 @@ elif 链（`IF_ELIF_CHAIN:176`、`'_is_elif'` 标记）；for-else/while-else（
 - **旧 round10 新封闭**：B72（nonlocal，co_freevars/co_cellvars + STORE_DEREF 元数据判据）、B48 主形态（in-place BINARY_OP oparg 13-25 + AugAssign 发射）、B64（B68 修复覆盖实测划除）、B46 部分（true 臂嵌套三元对称放行，净 +7 单元）
 - **实施降级未封闭（取证在案 D:\Temp\r10_incond.py / r10_then38.py）**：B71（finally 体仅含循环控制 fin_continue/fin_break 发射归属层，W11-A 认领分支）、B46 尾项（t_nest_in_condition 融合条件三件套）
 - **旧 round10 新登记未封闭**：B73（try 四段 import 宿主泄漏）、B74（match case 体首 import guard 幻影）、B75（try 宿主 global 声明 + finally 条件段归属错位）、B76（augassign × BoolOp RHS 体蒸发）、B48 残留变体（r7_08 t_host_while_body while 体宿主）
-- **沿袭残留（round10 复核逐位持平）**：B42×3 / B43 / B44 / B47 / B49 / B50 / B51 / B56–B62 / B65 / B69 / B70 / B11-R2（r4_or4_and2 1/2）
+- **沿袭残留（round10 复核逐位持平；Round 1.1 复验补录 B52/B53/B63——round10 决策表有残留实测但 v6 初稿漏列）**：B42×3 / B43 / B44 / B47 / B49 / B50 / B51 / B52 / B53 / B56–B62 / B63 / B65 / B69 / B70 / B11-R2（r4_or4_and2 1/2）
 - **零专攻形态组 6 组（round10 覆盖矩阵如实登记，本规范 Round 2–9 主题输入）**：Module 专攻、ClassDef 体专攻、AnnAssign、fstring_conversion、keyword_args/star_args、decorator_with_args
 - **挂账**：组合级挂账 25 号（上列未封闭部分 + 残留单元）+ round7 残留登记面 81/117，按 wiki §8.3 状态机继续推进
 - **新登记自 B77 续接**（B71–B76 已用尽）

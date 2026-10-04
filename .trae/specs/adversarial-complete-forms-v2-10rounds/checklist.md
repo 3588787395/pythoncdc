@@ -27,7 +27,7 @@
 
 ## 破口与台账
 - [ ] 新发现破口已登记 Bn 续接（自 B77 起，B71–B76 已用尽；锚点 + 机制 + 违反条款），按 wiki §8.3 状态机推进（未定位→已定位→已落地→已复审），只有已复审判入完备分子
-- [ ] 残余破口（III.5 v6 口径：沿袭 B42×3/B43/B44/B47/B49/B50/B51/B56–B62/B65/B69/B70/B11-R2 + B71/B73–B76/B48 残留变体/B46 尾项）清零，或经对抗证伪降级并记录机制；零专攻 6 组（Module/ClassDef 体/AnnAssign/fstring_conversion/keyword_args+star_args/decorator_with_args）全部专攻覆盖
+- [ ] 残余破口（III.5 v6 口径：沿袭 B42×3/B43/B44/B47/B49/B50/B51/B52/B53/B56–B62/B63/B65/B69/B70/B11-R2 + B71/B73–B76/B48 残留变体/B46 尾项，Round 1.1 复验确认 23 项）清零，或经对抗证伪降级并记录机制；零专攻 6 组（Module/ClassDef 体/AnnAssign/fstring_conversion/keyword_args+star_args/decorator_with_args）全部专攻覆盖
 - [ ] 每轮封闭破口的台账判定随轮更新（II.3 三态落位）；Round 10 统一执行 wiki §8.2 复审六步（grep 落地标记 → 台账 → syntax_coverage 重跑 → 占比重算 → 数字同步 → log）
 - [ ] 完备占比只按 II.1 口径计算（完备形态数 ÷ 128），分母不取自 RegionType 枚举/语料，不随嵌套膨胀；三维度（语法完备/结构正确率/字节等价）读数分列不互替
 - [ ] 台账数字与 wiki 页面一致（禁手改、禁矛盾数字）
