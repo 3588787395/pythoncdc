@@ -1,0 +1,71 @@
+{
+ "elapsed_sec": 0.6,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 1,
+  "success": 2
+ },
+ "files_total": 3,
+ "generated_at": "2026-10-04T13:25:25",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/test_repros/round10/rv10_32_augassign_variant.pyc"
+  ],
+  "success": [
+   "F:/Downloads/pythoncdc-main/test_repros/round10/rv10_31_nonlocal_variant.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round10/rv10_33_ternary_variant.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/rv10_31_nonlocal_variant.pyc",
+   "pyc_sha": "946d9f0cdfde",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/rv10_31_nonlocal_variantOK.py",
+   "source_sha": "70c26647094f",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 13,
+   "units_total": 13
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.v_aug_boolop_rhs: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/rv10_32_augassign_variant.pyc",
+   "pyc_sha": "46857f08816d",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/rv10_32_augassign_variantOK.py",
+   "source_sha": "06598179762d",
+   "status": "failure",
+   "success_rate": 0.875,
+   "units_success": 7,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/rv10_33_ternary_variant.pyc",
+   "pyc_sha": "eb51d2e940cb",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/rv10_33_ternary_variantOK.py",
+   "source_sha": "4686721ac99a",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9629629629629629,
+ "units_success": 26,
+ "units_total": 27
+}

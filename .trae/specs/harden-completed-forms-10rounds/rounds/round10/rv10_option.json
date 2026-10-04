@@ -1,0 +1,42 @@
+{
+ "elapsed_sec": 1.0,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 0,
+  "success": 1
+ },
+ "files_total": 1,
+ "generated_at": "2026-10-04T13:22:26",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [],
+  "success": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc",
+   "pyc_sha": "f4ee631f3b74",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_accountOK.py",
+   "source_sha": "a1b31b92ea2f",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 35,
+   "units_total": 35
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 1.0,
+ "units_success": 35,
+ "units_total": 35
+}

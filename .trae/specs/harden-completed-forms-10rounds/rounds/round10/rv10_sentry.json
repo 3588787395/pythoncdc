@@ -1,0 +1,114 @@
+{
+ "elapsed_sec": 27.4,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 1,
+  "success": 5
+ },
+ "files_total": 6,
+ "generated_at": "2026-10-04T13:21:49",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc"
+  ],
+  "success": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connector.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategy.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/tools.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_schedule.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/tools.pyc",
+   "pyc_sha": "2dbc8c9218a4",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/toolsOK.py",
+   "source_sha": "19a2fc186aeb",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_schedule.pyc",
+   "pyc_sha": "77d31bd52f56",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_scheduleOK.py",
+   "source_sha": "52ca97eacaae",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connector.pyc",
+   "pyc_sha": "e4b38d9986f8",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connectorOK.py",
+   "source_sha": "c5f841ceacfb",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 13,
+   "units_total": 13
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategy.pyc",
+   "pyc_sha": "9c62c29157f1",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategyOK.py",
+   "source_sha": "15b90c9a6f96",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+   "pyc_sha": "9d6abeaad7a3",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/schedulerOK.py",
+   "source_sha": "9a0cca3d8746",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 52,
+   "units_total": 52
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.trade_operation: Failure: Different control flow",
+    "***<module>.kill_trade_process: Failure: Different control flow",
+    "***<module>.get_trade_status: Failure: Different control flow",
+    "***<module>.query_trade_strategy_info: Failure: Different control flow",
+    "***<module>.query_strategy_id: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "pyc_sha": "5419f2a32c80",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utilsOK.py",
+   "source_sha": "0bd56da795ed",
+   "status": "failure",
+   "success_rate": 0.8780487804878049,
+   "units_success": 36,
+   "units_total": 41
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9583333333333334,
+ "units_success": 115,
+ "units_total": 120
+}
