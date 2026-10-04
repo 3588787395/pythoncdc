@@ -1,0 +1,185 @@
+{
+ "elapsed_sec": 0.7,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 0,
+  "success": 12
+ },
+ "files_total": 12,
+ "generated_at": "2026-10-04T09:01:05",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [],
+  "success": [
+   "F:/Downloads/pythoncdc-main/test_repros/round9/n9_01_simple_guard.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round9/n9_02_plain_forms.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round9/r9_01_b2_cont_loopelse.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round9/r9_02_b2_dual_continue.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round9/r9_03_b3_shared_tail.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round9/r9_04_b3_thenover_w23.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round9/r9_05_b4_orphan_release.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round9/r9_06_b2_with_try_cross.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round9/r9_07_b3_gen_yield.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round9/r9_08_b54_augassign_mix.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round9/r9_09_b55_boundary.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round9/r9_10_b2b3_shrink.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_01_b2_cont_loopelse.pyc",
+   "pyc_sha": "af4c65f76669",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_01_b2_cont_loopelseOK.py",
+   "source_sha": "87792e57ad36",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_02_b2_dual_continue.pyc",
+   "pyc_sha": "db5d5c8dfc10",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_02_b2_dual_continueOK.py",
+   "source_sha": "bfc13a7c22d9",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_03_b3_shared_tail.pyc",
+   "pyc_sha": "0ee9f4f54181",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_03_b3_shared_tailOK.py",
+   "source_sha": "e7a7f2fada7f",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_04_b3_thenover_w23.pyc",
+   "pyc_sha": "6fad168fbf70",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_04_b3_thenover_w23OK.py",
+   "source_sha": "18ed3e1fa5af",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_05_b4_orphan_release.pyc",
+   "pyc_sha": "cc2d2d895246",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_05_b4_orphan_releaseOK.py",
+   "source_sha": "53bed5569536",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_06_b2_with_try_cross.pyc",
+   "pyc_sha": "8b322d3b3050",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_06_b2_with_try_crossOK.py",
+   "source_sha": "af6ffe9bdcee",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_07_b3_gen_yield.pyc",
+   "pyc_sha": "005a1cdb34c1",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_07_b3_gen_yieldOK.py",
+   "source_sha": "687e6f849edf",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_08_b54_augassign_mix.pyc",
+   "pyc_sha": "7fdc605f1720",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_08_b54_augassign_mixOK.py",
+   "source_sha": "25b3f9fd93cb",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_09_b55_boundary.pyc",
+   "pyc_sha": "ff6e126173cc",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_09_b55_boundaryOK.py",
+   "source_sha": "e2bec9a148c2",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_10_b2b3_shrink.pyc",
+   "pyc_sha": "8c87a1c8a3d8",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/r9_10_b2b3_shrinkOK.py",
+   "source_sha": "48c64ad14522",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/n9_01_simple_guard.pyc",
+   "pyc_sha": "c6a296aefd2f",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/n9_01_simple_guardOK.py",
+   "source_sha": "45a6aca85a6a",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/n9_02_plain_forms.pyc",
+   "pyc_sha": "98f5b45ccd56",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/n9_02_plain_formsOK.py",
+   "source_sha": "fc2b0c99cc57",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 1.0,
+ "units_success": 50,
+ "units_total": 50
+}

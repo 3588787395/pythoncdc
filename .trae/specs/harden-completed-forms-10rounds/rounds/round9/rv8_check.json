@@ -1,0 +1,73 @@
+{
+ "elapsed_sec": 0.4,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 2,
+  "success": 1
+ },
+ "files_total": 3,
+ "generated_at": "2026-10-04T09:02:29",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_01_chain3_subscript.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_02_with_tryfin_constret.pyc"
+  ],
+  "success": [
+   "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_03_except_return_trailing.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.chain_value_boolop: Failure: Different bytecode"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_01_chain3_subscript.pyc",
+   "pyc_sha": "7bf3dfcdcba9",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_01_chain3_subscriptOK.py",
+   "source_sha": "d7310daa9265",
+   "status": "failure",
+   "success_rate": 0.8571428571428571,
+   "units_success": 6,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.tryfin_then_more: Failure: Different bytecode"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_02_with_tryfin_constret.pyc",
+   "pyc_sha": "34c2b7e1f9a4",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_02_with_tryfin_constretOK.py",
+   "source_sha": "aebdee3ef343",
+   "status": "failure",
+   "success_rate": 0.8571428571428571,
+   "units_success": 6,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_03_except_return_trailing.pyc",
+   "pyc_sha": "108741ba7806",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_03_except_return_trailingOK.py",
+   "source_sha": "5ec9cf8175ee",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9,
+ "units_success": 18,
+ "units_total": 20
+}

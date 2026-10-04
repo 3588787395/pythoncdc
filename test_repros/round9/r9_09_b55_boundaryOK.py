@@ -9,20 +9,28 @@ __doc__ = """Round 9 守卫面新构造 9：B55 窄门控边界外形态（循�
 """
 def tryfin_trailing_break(xs, a):
     for x in xs:
+        try:
+            pass
+        finally:
+            pass
         if a(x):
             break
+    return 1
 def tryfin_trailing_cont(xs, a):
-    try:
-        while xs:
-            if a(1):
-                continue
-            xs.pop()
-    finally:
-        pass
+    while xs:
+        try:
+            pass
+        finally:
+            pass
+        if a(1):
+            continue
+        xs.pop()
     return 2
 def tryfin_shared_guard(a, b):
     try:
         pass
     finally:
         pass
+    if a and b:
+        return 3
     return 4

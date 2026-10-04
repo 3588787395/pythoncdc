@@ -19,11 +19,11 @@ def tryfin_then_more(x):
     finally:
         pass
 def with_body_tryfin_chain(p):
-    try:
-        with open(p) as fh:
+    with open(p) as fh:
+        try:
             pass
-    finally:
-        pass
+        finally:
+            pass
     return fh
 def try_except_fin_nonempty(x):
     try:

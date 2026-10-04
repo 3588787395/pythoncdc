@@ -1,4 +1,4 @@
-﻿"""
+﻿﻿"""
 基于区域的AST生成器
 
 使用 RegionAnalyzer 的分析结果直接生成AST，替代 ast_generator_v2.py 中的补丁式生成。
@@ -3102,6 +3102,153 @@ class RegionASTGenerator:
         if _ops[-1] not in ('RETURN_VALUE', 'RETURN_CONST'):
             return False
         return len(_ops) == 1 or (len(_ops) == 2 and _ops[0] == 'LOAD_CONST')
+
+    def _b68_is_tryfin_tail_releasable(self, block: BasicBlock,
+                                       region: TryExceptRegion) -> bool:
+        """[B68] 空 finally 帧区域收尾毯式标记的尾随块释放判据（B63/B64 同根）。
+
+        识别条件（同层结构事实，全部取自本层可见的区域字段/块指令/块属性，
+        无名字/偏移白名单，无跨层回溯）：
+          (1) region.has_finally 且 region.finally_copy_blocks 为空且
+              finally_blocks 全为异常机制块（剥噪后仅 PUSH_EXC_INFO/RERAISE/
+              POP_EXCEPT/COPY/SWAP/JUMP_* 等，无用户语句）——即「空/不可抛
+              try 体 + 空 finally」退化帧；非空 finally 的正常路径副本结构
+              （W21 保护面）不进入本判据；
+          (2) block ∈ region.blocks（区域识别阶段的跨度归属）但位于异常表
+              保护跨度之外（block.start_offset ≥ region.try_offset_end），
+              且不属于 try/else/finally/cleanup/handler/finally_copy 任何
+              结构部分——依「每块唯一归属」，其结构归属是 try 语句之后的
+              宿主顺序代码；
+          (3) block 不含异常机制指令（PUSH_EXC_INFO/RERAISE/POP_EXCEPT/
+              WITH_EXCEPT_START/CHECK_*），不含 backward 跳转，且非循环
+              header（loop_header 属性为假）——循环控制流结构块必须由
+              宿主循环装配面消费，不随 try 收尾吞没。
+
+        机制：``try: pass / finally: pass`` 的退化帧区域经 Pattern A 正常
+          路径收集把宿主尾随块（if 守卫头、循环后 return、try 后语句段）
+          拉进 region.blocks；_generate_try 收尾毯式标记把它们整体标记
+          已生成——尾随 if/BoolOp 守卫（B68）、尾随语句段（B63）、with
+          宿主尾随 return（B64）自此无派发面，整段蒸发或错序。
+        归约方式：仅判定（毯式标记跳过）。释放块由其归属区域（宿主循环体
+          走查 / 顶层区域序列 / post-try 队列）按入口引用语义正常派发。
+        AST 映射：无（归属修正）。
+        """
+        if block is None or region is None or not getattr(region, 'has_finally', False):
+            return False
+        if getattr(region, 'finally_copy_blocks', None):
+            return False
+        _b68_tail_off = getattr(region, 'try_offset_end', None)
+        if _b68_tail_off is None or block.start_offset < _b68_tail_off:
+            return False
+        _b68_known = set()
+        for _b68_coll in (list(getattr(region, 'try_blocks', None) or [])
+                          + list(getattr(region, 'else_blocks', None) or [])
+                          + list(getattr(region, 'finally_blocks', None) or [])
+                          + list(getattr(region, 'cleanup_blocks', None) or [])
+                          + list(getattr(region, 'handler_entry_blocks', None) or [])):
+            if _b68_coll is not None:
+                _b68_known.add(_b68_coll.start_offset)
+        for _b68_et, _b68_en, _b68_hbs in (getattr(region, 'except_handlers', None) or []):
+            for _b68_hb in _b68_hbs:
+                _b68_known.add(_b68_hb.start_offset)
+        _b68_known.update((getattr(region, 'finally_copy_blocks', None) or {}).keys())
+        if block.start_offset in _b68_known:
+            return False
+        _b68_machinery = ('PUSH_EXC_INFO', 'RERAISE', 'POP_EXCEPT',
+                          'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH')
+        _b68_last = None
+        for _b68_ins in block.instructions:
+            if _b68_ins.opname in _b68_machinery:
+                return False
+            if _b68_ins.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'):
+                _b68_last = _b68_ins
+        if _b68_last is not None and _b68_last.opname in BACKWARD_JUMP_OPS:
+            return False
+        if getattr(block, 'loop_header', None):
+            return False
+        # 空 finally 帧门槛：finally_blocks 全为异常机制块（无用户语句）。
+        _b68_fin_user = False
+        for _b68_fb in (getattr(region, 'finally_blocks', None) or []):
+            for _b68_ins in _b68_fb.instructions:
+                if _b68_ins.opname in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'):
+                    continue
+                if _b68_ins.opname in _b68_machinery or _b68_ins.opname in (
+                        'COPY', 'SWAP', 'POP_TOP', 'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                        'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                    continue
+                _b68_fin_user = True
+                break
+            if _b68_fin_user:
+                break
+        if _b68_fin_user:
+            return False
+        return True
+
+    def _b66_is_with_exit_continue_chain_head(self, block: BasicBlock) -> bool:
+        """[B66] with 宿主内 continue 链头判定（B2 continue 守卫外推一格）。
+
+        识别条件（同层结构事实，无名字/偏移白名单，无跨层回溯）：
+          (1) 当前处于循环帧（_current_loop 非 None）；
+          (2) block 剥噪后无任何用户语句——链头是 with 保护跨度内的
+              边界 NOP 块（``if c: continue`` 的 then 臂块）；
+          (3) block 的唯一普通（非异常）后继 succ 满足 with 退出回边
+              签名：succ 末指令为 JUMP_BACKWARD 且目标为当前循环
+              header，且 succ 剥噪内容全部为 __exit__(None, None, None)
+              清理调用序列（LOAD_CONST None×3 + PRECALL/CALL + POP_TOP，
+              与 _is_with_exit_back_edge 的内容签名一致）；
+          (4) block 或 succ 至少一个归属某个 WithRegion 块集合（with
+              宿主锚定——排除 ``if c: f(None, None, None); continue``
+              这类同形状普通调用语句块）。
+        机制：``with open(p) as f: if a(f): continue`` 的 then 臂 =
+          with 保护跨度内边界 NOP 块 + with 退出调用块（JUMP_BACKWARD
+          回边）。`_block_is_continue_target` 只看块自身末指令（链头
+          末指令是 NOP），判据链未命中 → 臂渲染把链头 NOP 当孤立边界
+          NOP 发射幻影 ``while False: pass``、退出调用块吞没——continue
+          蒸发、use 落入 else 臂。
+        归约方式：then 臂发射 Continue 并将链头+退出块登记已生成（with
+          语句重编译时自然再生 __exit__ 调用与回边，每块唯一归属不变）。
+        AST 映射：ast.Continue。
+        """
+        if self._current_loop is None or block is None:
+            return False
+        _b66_noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')
+        if any(i.opname not in _b66_noise for i in block.instructions):
+            return False
+        _b66_exc = getattr(block, 'exception_successors', None) or set()
+        _b66_succs = [s for s in (block.successors or []) if s not in _b66_exc]
+        if len(_b66_succs) != 1:
+            return False
+        succ = _b66_succs[0]
+        _b66_last = succ.get_last_instruction()
+        if (_b66_last is None
+                or _b66_last.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                or _b66_last.argval is None):
+            return False
+        _b66_tgt = self.cfg.get_block_by_offset(_b66_last.argval)
+        if _b66_tgt is None or _b66_tgt is not self._current_loop.header_block:
+            return False
+        _b66_ops = []
+        for _b66_i in succ.instructions:
+            if _b66_i.opname in _b66_noise or _b66_i.opname in (
+                    'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT', 'POP_TOP'):
+                continue
+            _b66_ops.append(_b66_i)
+        if not _b66_ops:
+            return False
+        _b66_all_cleanup = all(
+            i.opname in ('LOAD_CONST', 'PRECALL', 'CALL', 'LOAD_FAST', 'LOAD_NAME',
+                         'LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_METHOD', 'PUSH_NULL')
+            for i in _b66_ops)
+        _b66_has_call = any(i.opname == 'CALL' for i in _b66_ops)
+        _b66_has_none = any(i.opname == 'LOAD_CONST' and i.argval is None
+                            for i in _b66_ops)
+        if not (_b66_all_cleanup and _b66_has_call and _b66_has_none):
+            return False
+        for _b66_r in self.region_analyzer.regions:
+            if isinstance(_b66_r, WithRegion) and (block in _b66_r.blocks
+                                                   or succ in _b66_r.blocks):
+                return True
+        return False
 
     def _b54_build_chain_assign_from_accumulation(self, accum: List[Instruction],
                                                   cont_targets: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
@@ -8390,6 +8537,12 @@ AST 映射规则:
                         else:
                             body_stmts.append(_ast)
                     for b in _target_region.blocks:
+                        # [B68] 空 finally 帧尾随块释放（B63/B64 同根）：仅对
+                        # TryExceptRegion 派发收尾生效，判据见
+                        # _b68_is_tryfin_tail_releasable。
+                        if (isinstance(_target_region, TryExceptRegion)
+                                and self._b68_is_tryfin_tail_releasable(b, _target_region)):
+                            continue
                         self.generated_blocks.add(b)
                     self._generated_regions.add(_region_id)
                     return True
@@ -13320,6 +13473,11 @@ AST 映射规则:
                     else:
                         body_stmts.append(try_ast)
                 for b in entry_region.blocks:
+                    # [B68] 空 finally 帧尾随块释放（B63/B64 同根，判据见
+                    # _b68_is_tryfin_tail_releasable）：宿主尾随块不随子区域
+                    # 派发收尾吞没，交还宿主循环体走查按入口引用语义派发。
+                    if self._b68_is_tryfin_tail_releasable(b, entry_region):
+                        continue
                     self.generated_blocks.add(b)
                 self._generated_regions.add(try_id)
             return True
@@ -13346,6 +13504,11 @@ AST 映射规则:
                     else:
                         body_stmts.append(try_ast)
                 for b in entry_region.blocks:
+                    # [B68] 空 finally 帧尾随块释放（B63/B64 同根，判据见
+                    # _b68_is_tryfin_tail_releasable）：宿主尾随块不随子区域
+                    # 派发收尾吞没，交还宿主循环体走查按入口引用语义派发。
+                    if self._b68_is_tryfin_tail_releasable(b, entry_region):
+                        continue
                     self.generated_blocks.add(b)
                 self._generated_regions.add(try_id)
             return True
@@ -29819,6 +29982,13 @@ AST 映射规则:
             self._generating_regions.discard(region_id)
             self._generated_regions.add(region_id)
             for block in region.blocks:
+                # [B68] 空 finally 帧的尾随块释放（B63/B64 同根，判据见
+                # _b68_is_tryfin_tail_releasable）：宿主尾随块（if 守卫头/
+                # 循环后 return/try 后语句段）被 Pattern A 跨度收集拉进
+                # region.blocks 时，不再随毯式标记吞没，交还宿主装配面/
+                # 顶层序列按入口引用语义派发（每块唯一归属）。
+                if self._b68_is_tryfin_tail_releasable(block, region):
+                    continue
                 self.generated_blocks.add(block)
             self._try_depth -= 1
 
@@ -30136,6 +30306,23 @@ AST 映射规则:
                     })
                 elif (instr.opname == 'NOP' and not stmt_instrs
                         and self._is_orphan_boundary_nop(instr, block.instructions)):
+                    # [B66] with 宿主内 continue 链头（B2 判据外推一格）：
+                    # 链头块剥噪后无用户语句、唯一普通后继满足 with 退出回边
+                    # 签名（__exit__(None,None,None) 清理调用 + JUMP_BACKWARD
+                    # 回当前循环 header）且链头/后继任一归属 WithRegion——
+                    # 该 NOP 块是 `if c: continue` 的 then 臂块而非孤立边界
+                    # NOP，发射 Continue（with 语句重编译时自然再生退出调用
+                    # 与回边），链头+退出块登记已生成；不落幻影 while False。
+                    if self._b66_is_with_exit_continue_chain_head(block):
+                        _b66_exc_succs = [s for s in (block.successors or [])
+                                          if s not in (getattr(block, 'exception_successors', None) or set())]
+                        stmts.append({'type': 'Continue'})
+                        self.generated_blocks.add(block)
+                        self.generated_offsets.add(block.start_offset)
+                        for _b66_sb in _b66_exc_succs:
+                            self.generated_blocks.add(_b66_sb)
+                            self.generated_offsets.add(_b66_sb.start_offset)
+                        continue
                     stmts.append({
                         'type': 'While',
                         'test': {'type': 'Constant', 'value': False},
@@ -51919,6 +52106,23 @@ AST 映射规则:
                     })
                 elif (instr.opname == 'NOP' and not stmt_instrs
                         and self._is_orphan_boundary_nop(instr, block.instructions)):
+                    # [B66] with 宿主内 continue 链头（B2 判据外推一格，
+                    # 与 _process_if_blocks 同名站点同根）：链头块剥噪后无
+                    # 用户语句、唯一普通后继满足 with 退出回边签名
+                    # （__exit__(None,None,None) 清理调用 + JUMP_BACKWARD 回
+                    # 当前循环 header）且链头/后继任一归属 WithRegion——
+                    # 发射 Continue 而非幻影 while False（with 语句重编译时
+                    # 自然再生退出调用与回边），链头+退出块登记已生成。
+                    if self._b66_is_with_exit_continue_chain_head(block):
+                        _b66_exc_succs = [s for s in (block.successors or [])
+                                          if s not in (getattr(block, 'exception_successors', None) or set())]
+                        stmts.append({'type': 'Continue'})
+                        self.generated_blocks.add(block)
+                        self.generated_offsets.add(block.start_offset)
+                        for _b66_sb in _b66_exc_succs:
+                            self.generated_blocks.add(_b66_sb)
+                            self.generated_offsets.add(_b66_sb.start_offset)
+                        continue
                     stmts.append({
                         'type': 'While',
                         'test': {'type': 'Constant', 'value': False},

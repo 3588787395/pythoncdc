@@ -10,10 +10,8 @@ def cont_in_with(xs, p, a):
     for x in xs:
         with open(p) as f:
             if a(f):
-                while False:
-                    pass
-            else:
-                use(f, x)
+                continue
+            use(f, x)
     return 1
 def cont_in_try(xs, a, b):
     for x in xs:
@@ -26,9 +24,7 @@ def cont_in_try(xs, a, b):
     return 2
 def cont_with_boolop(xs, a, b, c):
     for x in xs:
-        if a(x):
-            pass
-        if b(x) or c(x):
+        if a(x) and b(x) or c(x):
             continue
         keep(x)
         continue

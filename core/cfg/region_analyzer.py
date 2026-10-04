@@ -1,4 +1,4 @@
-"""
+﻿﻿"""
 区域分析器模块
 
 基于编译器理论的区域归约算法，将CFG分解为层次化的区域结构。
@@ -8414,6 +8414,39 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             continue
                         if succ in self.block_to_region:
                             continue
+                        # [B68 fix] 区域归约算法原则 2（每块唯一归属）：
+                        # try 体的帧跳 JUMP_FORWARD 落点若是条件分支头（POP_JUMP_*
+                        # 结尾）或 for 迭代头（含 FOR_ITER），它是宿主 if/循环
+                        # 结构的入口块（B2 守卫面 if 守卫头、循环续体），不是
+                        # try-finally 的正常路径 finally 体——不纳入跨度归属，
+                        # 交由宿主结构区域（IfRegion/LoopRegion）按入口引用
+                        # 语义派发。否则该块被拉进 region.blocks 后，宿主
+                        # IfRegion 在顶层装配被「包含过滤」剔除、入口被收尾
+                        # 毯式标记吞没，尾随 if/循环整段蒸发或错序。
+                        # [B68 fix 门控] 本种子收窄仅适用于「退化空 finally
+                        # 帧」——finally_blocks（异常路径）全为异常机制块
+                        # （剥噪后无任何用户语句，即源码空 finally）。非空
+                        # finally 的正常路径/副本后继结构（W21 保护面）维持
+                        # 原种子收集，防止 finally 体内容泄漏为顶层重复语句
+                        # （trade_info_utils get_user_info/get_trade_unit_info
+                        # 的幻影 fp.close 回归即此）。
+                        _b68_fin_machinery_only = all(
+                            all(_b68_fi.opname in (
+                                'RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG',
+                                'PUSH_EXC_INFO', 'RERAISE', 'POP_EXCEPT', 'COPY',
+                                'SWAP', 'POP_TOP', 'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                for _b68_fi in _b68_fb.instructions)
+                            for _b68_fb in finally_blocks)
+                        if not _b68_fin_machinery_only:
+                            _worklist_np.append(succ)
+                            continue
+                        _b68_seed_last = succ.get_last_instruction()
+                        if (_b68_seed_last is not None
+                                and _b68_seed_last.opname in CONDITIONAL_JUMP_OPS):
+                            continue
+                        if any(i.opname == 'FOR_ITER' for i in succ.instructions):
+                            continue
                         _worklist_np.append(succ)
                 # 计算 finally_blocks (异常路径) 的最大偏移。
                 # normal-path finally body 的块偏移应小于此最大偏移；超出此范围的
@@ -9660,12 +9693,39 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 for pred in push_exc_block.predecessors:
                     if pred.start_offset < search_start:
                         search_start = pred.start_offset
-            for block in self.cfg.get_blocks_in_order():
-                if block.start_offset >= entry['try_start']:
+            # [B68 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4
+            # （入口引用语义）——退化空 finally 帧的 try_start 回扩判据收窄：
+            # 识别条件（同层结构事实）：try 体不可抛异常时编译器省略 try 范围
+            #   表项，仅存帧自清理条目（try_start = 帧头 PUSH_EXC_INFO 偏移）。
+            #   真实 try 体 = 帧前的「帧跳块」B——B 以 JUMP_FORWARD 终结且目标
+            #   越过帧清理尾（handler_start 之后）：正常路径靠这条跳转越过
+            #   [帧头..清理尾] 异常机制区间。旧实现取 get_blocks_in_order 的
+            #   首块（函数入口块），当退化帧不在函数入口时（循环体/函数中部）
+            #   会把 try_start 拖到函数首块，try_blocks 随之吞并外层循环的
+            #   entry/header/条件块——_generate_try 的 try 体装配据此把整个
+            #   外层循环内联进 try 体（try/while 嵌套倒置，B64 形态），或因
+            #   entry（函数入口块）在函数入口处理中被消费而永不派发（try/
+            #   finally 整体蒸发，B68 形态）。
+            # 归约方式：search_start 收窄为帧跳块 B 的 start_offset——取
+            #   start_offset < entry['try_start'] 且末指令为 JUMP_FORWARD 且
+            #   argval > entry['handler_start'] 的块中 start_offset 最大者；
+            #   不存在此类块时不回扩（try_start 维持帧头偏移，try 体语句为
+            #   空，由 try/finally 语句整体表达 NOP 帧）。
+            # AST 映射：try_blocks = [B]（帧头/清理块仍由 finally_blocks/
+            #   cleanup 排除），try 体语句从 B 发射；B 在宿主 body_blocks 中
+            #   时由宿主按入口引用语义在正确嵌套位置派发本区域。
+            _b68_skip_block = None
+            for _b68_blk in self.cfg.get_blocks_in_order():
+                if _b68_blk.start_offset >= entry['try_start']:
                     break
-                if block.start_offset < entry['handler_start']:
-                    search_start = block.start_offset
-                    break
+                _b68_last = _b68_blk.get_last_instruction()
+                if (_b68_last is not None
+                        and _b68_last.opname == 'JUMP_FORWARD'
+                        and _b68_last.argval is not None
+                        and _b68_last.argval > entry['handler_start']):
+                    _b68_skip_block = _b68_blk
+            if _b68_skip_block is not None:
+                search_start = _b68_skip_block.start_offset
             if search_start < entry['try_start']:
                 entry['try_start'] = search_start
 
@@ -27661,12 +27721,41 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         if _depth <= 0:
                             _cond_start_offset = _ci.offset
                             break
+            # [B67 fix] 区域归约算法原则 2（每块唯一归属）：循环体首块
+            # （FOR_ITER 的直接后继）上的裸 STORE_* 是 for 迭代目标绑定
+            # （``for x in xs:`` 的 ``x``），不是 if 体语句——它已由 for
+            # 语句头发射。识别条件（同层结构事实）：本块首条非噪声指令
+            # 为 STORE_* 且某普通前驱以 FOR_ITER/GET_ANEXT/GET_AITER
+            # 收尾（CPython 对 for 目标的绑定恒为 FOR_ITER+STORE_* 相邻
+            # 对；真 body 赋值只会出现在该 STORE 之后，不受豁免影响）。
+            # 机制：``for x in xs: if a(x) and b(x) or c(x): continue``
+            # 中目标 STORE 与首操作数 a(x) 同块，`_sb_has_body` 把它当
+            # body 语句 → 链检测从首块拒绝启动 → 混合链回落单条件拆裂
+            # （``if a(x): pass / if b(x) or c(x): continue``）且 continue
+            # 块被重复登记发射。豁免后完整链 [and,or,or] 经 B1b 边汇聚
+            # 判据装配为单个 BoolOpRegion。
+            _b67_iter_target_offsets = set()
+            _b67_first_meaningful = None
+            for _b67_i in start_block.instructions:
+                if _b67_i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'):
+                    _b67_first_meaningful = _b67_i
+                    break
+            if (_b67_first_meaningful is not None
+                    and _b67_first_meaningful.opname in ('STORE_FAST', 'STORE_NAME',
+                                                         'STORE_GLOBAL', 'STORE_DEREF')):
+                for _b67_p in (getattr(start_block, 'predecessors', None) or []):
+                    _b67_pl = _b67_p.get_last_instruction()
+                    if (_b67_pl is not None
+                            and _b67_pl.opname in ('FOR_ITER', 'GET_ANEXT', 'GET_AITER')):
+                        _b67_iter_target_offsets.add(_b67_first_meaningful.offset)
+                        break
             _sb_has_body = any(
                 i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
                              'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR',
                              'BINARY_OP', 'DELETE_NAME', 'DELETE_FAST',
                              'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR')
                 and i.offset not in _import_store_offsets
+                and i.offset not in _b67_iter_target_offsets
                 and i.offset >= _cond_start_offset
                 for i in start_block.instructions
                 if i.offset < _sb_last.offset
