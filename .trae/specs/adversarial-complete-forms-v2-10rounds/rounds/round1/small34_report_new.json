@@ -1,5 +1,5 @@
 {
- "elapsed_sec": 163.6,
+ "elapsed_sec": 77.5,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
@@ -7,7 +7,7 @@
   "success": 1
  },
  "files_total": 34,
- "generated_at": "2026-10-05T03:06:00",
+ "generated_at": "2026-10-05T07:37:40",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
@@ -494,7 +494,7 @@
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc",
    "pyc_sha": "0c2c8b975dc2",
    "source": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccountOK.py",
-   "source_sha": "93dc9d2b2f3d",
+   "source_sha": "b49059e70a35",
    "status": "failure",
    "success_rate": 0.9854014598540146,
    "units_success": 135,

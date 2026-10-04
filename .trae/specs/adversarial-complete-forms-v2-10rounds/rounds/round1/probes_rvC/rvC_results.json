@@ -1,0 +1,50 @@
+{
+  "review": "REVIEW3 批次C对抗审计（提交 12d7ddb9）",
+  "date": "2026-10-05",
+  "python": "3.11.7",
+  "fixed_head": "12d7ddb9",
+  "baseline": "616437c3（批次B在位、批次C未在位；git worktree --detach 隔离，core/ 零触碰，已删除）",
+  "anchor": {
+    "op_station": "site-packages/fly/common/op_station.pyc single = 21/21 success_rate=100.00%（修复后HEAD）"
+  },
+  "variants": [
+    {
+      "id": "rvC_v1",
+      "shape": "try 体含 for 循环、finally 含语句 sink.append(total)",
+      "baseline": {"verify": "FAIL 1/2 (sum_items Different control flow)", "shape": "finally: pass —— finally 语句蒸发"},
+      "fixed": {"verify": "MATCH 2/2", "shape": "finally: sink.append(total) 保留"},
+      "outputs": "DIFFERS",
+      "verdict": "修复生效：正常出口边认领路径工作，finally 语句保留"
+    },
+    {
+      "id": "rvC_v2",
+      "shape": "try 体含 while 循环 + 循环内 raise、finally 含语句 sink.append(len(out))",
+      "baseline": {"verify": "FAIL 1/2 (drain Different control flow)", "shape": "finalbody 泄漏循环体镜像（v=q.pop(); if v>limit: pass; raise; out.append(v); q）"},
+      "fixed": {"verify": "FAIL 1/2 (drain Different control flow)", "shape": "与基线逐字节同态（SHA256 IDENTICAL）"},
+      "outputs": "IDENTICAL",
+      "verdict": "存量破口（触发条件=循环内 raise），批次C前后同态，非本次修复引入或加剧；建议登记 III.5/B77+"
+    },
+    {
+      "id": "rvC_v3",
+      "shape": "try/finally 外层套 with + if（宿主结构混合），for 循环出口 + finally 语句 res.touch()",
+      "baseline": {"verify": "FAIL 5/6 (guarded Different control flow)", "shape": "finally: pass 且 res.touch() 泄漏到 try/finally 之外"},
+      "fixed": {"verify": "MATCH 6/6", "shape": "with 内 try/finally 完整保留"},
+      "outputs": "DIFFERS",
+      "verdict": "修复生效，不比修复前差（严格更优）"
+    },
+    {
+      "id": "rvC_v4",
+      "shape": "诊断：与 v2 同形但循环内无 raise（while + finally 含语句）",
+      "baseline": {"verify": "FAIL 1/2 (drain_plain Different control flow)", "shape": "finally: pass —— 与 op_station 蒸发同型，直接复现批次B失效机理"},
+      "fixed": {"verify": "MATCH 2/2", "shape": "finally: sink.append(len(out)) 保留"},
+      "outputs": "DIFFERS",
+      "verdict": "修复生效：复现并验证边类型封闭机理（v2 的残余失败由循环内 raise 单独触发）"
+    }
+  ],
+  "repro": [
+    "python -c \"import py_compile; py_compile.compile('<v>.py', '<v>.pyc')\"",
+    "python pycdc.py -o <v>OK.py <v>.pyc",
+    "python scripts/pyc_verify.py single <v>.pyc"
+  ],
+  "files": "baseline 对照产物在 baseline_616437c3/ 子目录（worktree 删除前归档）"
+}

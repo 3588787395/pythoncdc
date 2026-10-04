@@ -1,13 +1,13 @@
 {
- "elapsed_sec": 121.1,
+ "elapsed_sec": 40.0,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
-  "failure": 9,
-  "success": 36
+  "failure": 8,
+  "success": 37
  },
  "files_total": 45,
- "generated_at": "2026-10-05T02:58:18",
+ "generated_at": "2026-10-05T07:36:07",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
@@ -15,7 +15,6 @@
   "failure": [
    "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
-   "F:/Downloads/pythoncdc-main/site-packages/fly/common/op_station.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
@@ -34,6 +33,7 @@
    "F:/Downloads/pythoncdc-main/site-packages/fly/common/login_time.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/fly/common/market_time.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/fly/common/multiprocess_syn.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/fly/common/op_station.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/fly/common/trading_schedule.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/fly/common/tradingday_calendar.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/fly/common/user_error.pyc",
@@ -214,16 +214,14 @@
   },
   {
    "detail": null,
-   "failures": [
-    "***<module>.OpStation.__new__: Failure: Different control flow"
-   ],
+   "failures": [],
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/op_station.pyc",
    "pyc_sha": "5e09167a062b",
    "source": "F:/Downloads/pythoncdc-main/site-packages/fly/common/op_stationOK.py",
-   "source_sha": "f33f0d8ab329",
-   "status": "failure",
-   "success_rate": 0.9523809523809523,
-   "units_success": 20,
+   "source_sha": "620d345cc8ff",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 21,
    "units_total": 21
   },
   {
@@ -588,7 +586,7 @@
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc",
    "pyc_sha": "0c2c8b975dc2",
    "source": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccountOK.py",
-   "source_sha": "93dc9d2b2f3d",
+   "source_sha": "b49059e70a35",
    "status": "failure",
    "success_rate": 0.9854014598540146,
    "units_success": 135,
@@ -636,7 +634,7 @@
   "compare_pyc_sha256": "9c7567bd6776b36b",
   "ruler_version": "pylingual-equivalence_check"
  },
- "success_rate": 0.9859594383775351,
- "units_success": 1264,
+ "success_rate": 0.9867394695787831,
+ "units_success": 1265,
  "units_total": 1282
 }
