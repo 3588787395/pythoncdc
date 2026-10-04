@@ -1,0 +1,45 @@
+{
+ "elapsed_sec": 0.1,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 1,
+  "success": 0
+ },
+ "files_total": 1,
+ "generated_at": "2026-10-04T11:23:21",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/test_repros/round10/r10_21_fin_loopctrl.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.fin_continue: Failure: Different control flow",
+    "***<module>.fin_break: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_21_fin_loopctrl.pyc",
+   "pyc_sha": "6dd911f8746b",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_21_fin_loopctrlOK.py",
+   "source_sha": "4c02001f9a9c",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 2,
+   "units_total": 4
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.5,
+ "units_success": 2,
+ "units_total": 4
+}
