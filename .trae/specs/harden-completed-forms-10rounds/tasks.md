@@ -57,12 +57,12 @@
   - [x] 8.3 评审工程师复核（612cf0f2）：终判放行 10/10 hunk + 变体 +7 补强 + B63/B64/B65 登记；REVIEW2.md
   - [x] 8.4 主代理验证：402 全量 8 分片重生成+batch+compare = 6554/6617（99.05%）369/402 REGRESSIONS=0；小测试集 34 REGRESSIONS=0 IMPROVED=0；quotation 152/153；tests 257 passed/2 failed/5 xpassed 基线一致；VERIFICATION.md
   - [x] 8.5 归档 rounds/round8/ + 提交并 push
-- [ ] Task 9: Round 9 — B2/B3/B4 守卫族回归攻击 + 前八轮已封闭破口复验（防回归）
-  - [ ] 9.1 评审工程师：B2/B3/B4 守卫族（守卫判据面重攻击：守卫适用形态变体/守卫边界外形态/守卫互斥组合）+ 前八轮已封闭破口复验（B1b/B6/B8/B9/B10/B11/B20–B35/B54/B55 逐封闭声明重放登记探针，读数不得变差）+ Round 8 残留复验（B42×3/B43/B44/B46/B48/B56–B62/B63–B65 登记面持平）+ 负对照；算法合规审计；登记新破口（B66+）；REVIEW.md + test_repros/round9/
-  - [ ] 9.2 修复工程师：封闭本轮登记破口与复验发现的回归（判据 = 同层结构事实，docstring 三要素 + C1/C2/C3 同步）；自测零回退（哨兵 = round6/round7/round8 攻击面全 MATCH 面禁变差 + 六哨兵 + option_account）；FIX.md
-  - [ ] 9.3 评审工程师复核：逐 hunk 审查（零容忍打回）；REVIEW2.md
-  - [ ] 9.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0；小测试集 34；quotation 152/153；tests/；VERIFICATION.md
-  - [ ] 9.5 归档 rounds/round9/ + 提交并 push
+- [x] Task 9: Round 9 — B2/B3/B4 守卫族回归攻击 + 前八轮已封闭破口复验（防回归）
+  - [x] 9.1 评审工程师：B2/B3/B4 守卫族（守卫判据面重攻击：守卫适用形态变体/守卫边界外形态/守卫互斥组合）+ 前八轮已封闭破口复验（B1b/B6/B8/B9/B10/B11/B20–B35/B54/B55 逐封闭声明重放登记探针，读数不得变差）+ Round 8 残留复验（B42×3/B43/B44/B46/B48/B56–B62/B63–B65 登记面持平）+ 负对照；算法合规审计；登记新破口（B66+）；REVIEW.md + test_repros/round9/ —— 实测：前八轮复验 326/361（round6 115/115 + round7 104/128 + round8 107/118）+ 残留登记面 98/137 + round1/3/4/5 抽样 168/169 全部零漂移；守卫族双向攻击 10 探针 43 单元 38/43（5 MISMATCH 经 201234ab worktree 逐字节同败证实既有缺口）；负对照 n9_01 3/3 + n9_02 4/4；合规审计全过；登记 B66（B2×with 宿主，P2）/B67（BoolOp 混合链×continue，P2）/B68（空 try-finally×循环控制流尾随族 3 单元，P2）
+  - [x] 9.2 修复工程师：封闭本轮登记破口与复验发现的回归（判据 = 同层结构事实，docstring 三要素 + C1/C2/C3 同步）；自测零回退（哨兵 = round6/round7/round8 攻击面全 MATCH 面禁变差 + 六哨兵 + option_account）；FIX.md —— 实测：B66/B67/B68 全封闭（region_ast_generator.py B68 尾随块释放判据方法 + B66 with 宿主 continue 链头 + 4 处装配守卫；region_analyzer.py B68 退化空 finally 帧种子收窄），r9 攻击面 45/50→**50/50**；双 BOM 事故字节级恢复单头（be58c97d 快照存证 + 1624ef6d 修复）；六哨兵/option_account/quotation 302/308 基线一致；round6 115/115 + round7 104/128 + round8 107/118 + rv8 18/20 逐位持平
+  - [x] 9.3 评审工程师复核：逐 hunk 审查（零容忍打回）；REVIEW2.md —— 实测：终判**放行**（8/8 hunk PASS，判据全为同层结构事实，零白名单/阈值/跨层/self 状态/少发射）；独立复跑 rv9_ 前缀零覆盖读数一致；变体攻击 3 探针 14 单元 12/14 = +2 补强零回归；新登记 B69/B70（均 pre-fix 逐字节同败）；红线四项全过
+  - [x] 9.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0；小测试集 34；quotation 152/153；tests/；VERIFICATION.md —— 实测：402 regen 402/402 + 8 分片 REGRESSIONS=0，units **6554/6617（99.05%，较盘上基线分片 +8）**文件 369/402（shard0 jq_trans_module failure→success 文件级 +1）；小测试集 34 = 1505/1568 REGRESSIONS=0；quotation 152/153 唯一失败 change_his_to_forward 基线一致；tests 六套件 277 passed/2 failed（= 基线 test_B01 + test_BOUNDARY_02，零新增）/2 xpassed
+  - [x] 9.5 归档 rounds/round9/ + 提交并 push
 - [ ] Task 10: Round 10 — 终审
   - [ ] 10.1 全台账 127 形态对抗覆盖汇总 + 残留破口处理
   - [ ] 10.2 主代理全量终验（402 分片 + compare + quotation + tests/）
