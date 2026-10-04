@@ -1,0 +1,44 @@
+{
+ "elapsed_sec": 17.3,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 1,
+  "success": 0
+ },
+ "files_total": 1,
+ "generated_at": "2026-10-04T09:57:44",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.change_his_to_forward: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+   "pyc_sha": "1a51fbb50212",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotationOK.py",
+   "source_sha": "a280c00d534c",
+   "status": "failure",
+   "success_rate": 0.9934640522875817,
+   "units_success": 152,
+   "units_total": 153
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9934640522875817,
+ "units_success": 152,
+ "units_total": 153
+}

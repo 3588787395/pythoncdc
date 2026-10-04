@@ -1,0 +1,73 @@
+{
+ "elapsed_sec": 0.2,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 2,
+  "success": 1
+ },
+ "files_total": 3,
+ "generated_at": "2026-10-04T10:00:26",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/test_repros/round9/rv9_01_b68_nonfin_tail.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round9/rv9_02_b66_with_nest.pyc"
+  ],
+  "success": [
+   "F:/Downloads/pythoncdc-main/test_repros/round9/rv9_03_b67_mixed_chain.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.emptyfin_in_if: Failure: Different bytecode"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/rv9_01_b68_nonfin_tail.pyc",
+   "pyc_sha": "cfd48d0d353f",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/rv9_01_b68_nonfin_tailOK.py",
+   "source_sha": "019594d624a7",
+   "status": "failure",
+   "success_rate": 0.8,
+   "units_success": 4,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.while_with_whole_body: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/rv9_02_b66_with_nest.pyc",
+   "pyc_sha": "61ce0b0161e4",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/rv9_02_b66_with_nestOK.py",
+   "source_sha": "33392188a293",
+   "status": "failure",
+   "success_rate": 0.8,
+   "units_success": 4,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round9/rv9_03_b67_mixed_chain.pyc",
+   "pyc_sha": "4b364df41737",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round9/rv9_03_b67_mixed_chainOK.py",
+   "source_sha": "db1237f3ab18",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.8571428571428571,
+ "units_success": 12,
+ "units_total": 14
+}
