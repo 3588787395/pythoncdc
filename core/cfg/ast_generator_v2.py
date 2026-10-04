@@ -9046,10 +9046,6 @@ class ASTGeneratorV2:
                             # 这是独立的IfStructure，应该是else分支的内容，不是elif链的一部分
                             continue
                 
-                # [临时调试] 硬编码跳过 offset 62（验证思路）
-                if elif_block.start_offset == 62:
-                    continue
-                
                 # 生成elif条件（True，对应elif True:）
                 elif_condition = {'type': 'Constant', 'value': True, 'lineno': self._get_block_line(elif_block)}
                 elif_tests.append(elif_condition)
@@ -14987,8 +14983,6 @@ class ASTGeneratorV2:
                     
                     # [关键修复] 检查块是否是某个结构的入口块
                     nested_struct = self._find_structure_by_entry_block(block)
-                    if hasattr(block, 'start_offset') and block.start_offset == 74:
-                        pass
                     if nested_struct and id(nested_struct) not in self.processed_structure_ids:
                         # [关键修复] 防止循环递归：如果嵌套结构是循环且与当前循环相同，跳过
                         if isinstance(nested_struct, LoopStructure) and nested_struct is loop:

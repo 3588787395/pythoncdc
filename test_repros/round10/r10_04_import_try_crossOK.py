@@ -8,9 +8,7 @@ def imp_try_sections(path):
         fh = opener(path)
     except OSError as e:
         from m4 import fallback as fb
-        fb(str(e))
-        from m6 import closer
-        closer(fh)
+        return fb(str(e))
     else:
         from m5 import reader
         data = reader(fh)

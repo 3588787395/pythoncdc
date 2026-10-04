@@ -1,0 +1,193 @@
+
+======================================================================
+### fin_continue
+======================================================================
+  4           0 RESUME                   0
+
+  5           2 BUILD_LIST               0
+              4 STORE_FAST               1 (out)
+
+  6           6 LOAD_FAST                0 (rows)
+              8 GET_ITER
+        >>   10 FOR_ITER                68 (to 148)
+             12 STORE_FAST               2 (r)
+
+  7          14 NOP
+
+  8          16 LOAD_FAST                2 (r)
+             18 LOAD_CONST               1 (0)
+             20 COMPARE_OP               0 (<)
+             26 POP_JUMP_FORWARD_IF_FALSE    15 (to 58)
+
+  9          28 LOAD_GLOBAL              1 (NULL + ValueError)
+             40 LOAD_FAST                2 (r)
+             42 PRECALL                  1
+             46 CALL                     1
+             56 RAISE_VARARGS            1
+
+  8     >>   58 NOP
+
+ 11          60 LOAD_FAST                2 (r)
+             62 LOAD_CONST               1 (0)
+             64 COMPARE_OP               0 (<)
+             70 POP_JUMP_FORWARD_IF_FALSE     1 (to 74)
+
+ 12          72 JUMP_BACKWARD           32 (to 10)
+
+ 11     >>   74 JUMP_FORWARD            14 (to 104)
+        >>   76 PUSH_EXC_INFO
+             78 LOAD_FAST                2 (r)
+             80 LOAD_CONST               1 (0)
+             82 COMPARE_OP               0 (<)
+             88 POP_JUMP_FORWARD_IF_FALSE     3 (to 96)
+
+ 12          90 POP_TOP
+             92 POP_EXCEPT
+             94 JUMP_BACKWARD           43 (to 10)
+        >>   96 RERAISE                  0
+        >>   98 COPY                     3
+            100 POP_EXCEPT
+            102 RERAISE                  1
+
+ 13     >>  104 LOAD_FAST                1 (out)
+            106 LOAD_METHOD              1 (append)
+            128 LOAD_FAST                2 (r)
+            130 PRECALL                  1
+            134 CALL                     1
+            144 POP_TOP
+            146 JUMP_BACKWARD           69 (to 10)
+
+ 14     >>  148 LOAD_FAST                1 (out)
+            150 RETURN_VALUE
+ExceptionTable:
+  16 to 56 -> 76 [1]
+  76 to 90 -> 98 [2] lasti
+  96 to 96 -> 98 [2] lasti
+
+======================================================================
+### fin_break
+======================================================================
+ 17           0 RESUME                   0
+
+ 18           2 LOAD_CONST               1 (0)
+              4 STORE_FAST               1 (total)
+
+ 19           6 LOAD_FAST                0 (rows)
+              8 GET_ITER
+        >>   10 FOR_ITER                31 (to 74)
+             12 STORE_FAST               2 (r)
+
+ 20          14 NOP
+
+ 21          16 LOAD_FAST                1 (total)
+             18 LOAD_FAST                2 (r)
+             20 BINARY_OP               13 (+=)
+             24 STORE_FAST               1 (total)
+
+ 23          26 LOAD_FAST                1 (total)
+             28 LOAD_CONST               2 (100)
+             30 COMPARE_OP               4 (>)
+             36 POP_JUMP_FORWARD_IF_FALSE     2 (to 42)
+
+ 24          38 POP_TOP
+             40 JUMP_FORWARD            16 (to 74)
+
+ 23     >>   42 JUMP_BACKWARD           17 (to 10)
+        >>   44 PUSH_EXC_INFO
+             46 LOAD_FAST                1 (total)
+             48 LOAD_CONST               2 (100)
+             50 COMPARE_OP               4 (>)
+             56 POP_JUMP_FORWARD_IF_FALSE     4 (to 66)
+
+ 24          58 POP_TOP
+             60 POP_EXCEPT
+             62 POP_TOP
+             64 JUMP_FORWARD             4 (to 74)
+        >>   66 RERAISE                  0
+        >>   68 COPY                     3
+             70 POP_EXCEPT
+             72 RERAISE                  1
+
+ 25     >>   74 LOAD_FAST                1 (total)
+             76 RETURN_VALUE
+ExceptionTable:
+  16 to 24 -> 44 [1]
+  44 to 58 -> 68 [2] lasti
+  66 to 66 -> 68 [2] lasti
+
+======================================================================
+### fin_continue_stmt
+======================================================================
+ 28           0 RESUME                   0
+
+ 29           2 BUILD_LIST               0
+              4 STORE_FAST               1 (out)
+
+ 30           6 LOAD_CONST               1 (0)
+              8 STORE_FAST               2 (i)
+
+ 31     >>   10 LOAD_FAST                2 (i)
+             12 LOAD_GLOBAL              1 (NULL + len)
+             24 LOAD_FAST                0 (rows)
+             26 PRECALL                  1
+             30 CALL                     1
+             40 COMPARE_OP               0 (<)
+             46 POP_JUMP_FORWARD_IF_FALSE    73 (to 194)
+
+ 32     >>   48 NOP
+
+ 33          50 LOAD_FAST                0 (rows)
+             52 LOAD_FAST                2 (i)
+             54 BINARY_SUBSCR
+             64 STORE_FAST               3 (v)
+
+ 35          66 LOAD_FAST                2 (i)
+             68 LOAD_CONST               2 (1)
+             70 BINARY_OP               13 (+=)
+             74 STORE_FAST               2 (i)
+
+ 36          76 LOAD_FAST                3 (v)
+             78 POP_JUMP_FORWARD_IF_NOT_NONE     1 (to 82)
+
+ 37          80 JUMP_BACKWARD           36 (to 10)
+
+ 36     >>   82 JUMP_FORWARD            15 (to 114)
+        >>   84 PUSH_EXC_INFO
+
+ 35          86 LOAD_FAST                2 (i)
+             88 LOAD_CONST               2 (1)
+             90 BINARY_OP               13 (+=)
+             94 STORE_FAST               2 (i)
+
+ 36          96 LOAD_FAST                3 (v)
+             98 POP_JUMP_FORWARD_IF_NOT_NONE     3 (to 106)
+
+ 37         100 POP_TOP
+            102 POP_EXCEPT
+            104 JUMP_BACKWARD           48 (to 10)
+        >>  106 RERAISE                  0
+        >>  108 COPY                     3
+            110 POP_EXCEPT
+            112 RERAISE                  1
+
+ 38     >>  114 LOAD_FAST                1 (out)
+            116 LOAD_METHOD              1 (append)
+            138 LOAD_FAST                3 (v)
+            140 PRECALL                  1
+            144 CALL                     1
+            154 POP_TOP
+
+ 31         156 LOAD_FAST                2 (i)
+            158 LOAD_GLOBAL              1 (NULL + len)
+            170 LOAD_FAST                0 (rows)
+            172 PRECALL                  1
+            176 CALL                     1
+            186 COMPARE_OP               0 (<)
+            192 POP_JUMP_BACKWARD_IF_TRUE    73 (to 48)
+
+ 39     >>  194 LOAD_FAST                1 (out)
+            196 RETURN_VALUE
+ExceptionTable:
+  50 to 64 -> 84 [0]
+  84 to 100 -> 108 [1] lasti
+  106 to 106 -> 108 [1] lasti

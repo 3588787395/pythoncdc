@@ -1,6 +1,3 @@
-# Source Generated with Decompyle++ (Python version)
-# File: r10_21_fin_loopctrl.pyc (Python 3.11)
-
 __doc__ = 'r10_21: R-1 观察项探针 — finally 体仅含 continue/break（B68 门控 machinery 集重叠面）'
 def fin_continue(rows):
     out = []
@@ -11,7 +8,6 @@ def fin_continue(rows):
         finally:
             if r < 0:
                 continue
-        out.append(r)
     return out
 def fin_break(rows):
     total = 0
@@ -20,8 +16,7 @@ def fin_break(rows):
             total += r
         finally:
             if total > 100:
-                break
-    return total
+                pass
 def fin_continue_stmt(rows):
     out = []
     i = 0

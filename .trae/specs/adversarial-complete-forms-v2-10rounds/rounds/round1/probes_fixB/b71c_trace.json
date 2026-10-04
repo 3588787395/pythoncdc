@@ -1,0 +1,125 @@
+[
+ {
+  "fn": "_generate_loop",
+  "type": "RegionType.FOR_LOOP",
+  "entry": 10,
+  "has_break": true,
+  "header": [
+   10
+  ],
+  "cond": [
+   null
+  ],
+  "back_edge": [
+   42
+  ],
+  "body": [
+   10,
+   12,
+   16,
+   26,
+   42
+  ],
+  "blocks": [
+   0,
+   10,
+   12,
+   38,
+   42,
+   16,
+   26
+  ],
+  "else_blocks": [],
+  "else_preds": {},
+  "break_blocks_succ": {
+   "38": [
+    74
+   ]
+  }
+ },
+ {
+  "fn": "_build_function_def",
+  "regions": [
+   {
+    "type": "RegionType.FOR_LOOP",
+    "entry": 10,
+    "blocks": [
+     0,
+     10,
+     12,
+     38,
+     42,
+     16,
+     26
+    ],
+    "try_blocks": [],
+    "finally_blocks": []
+   },
+   {
+    "type": "RegionType.TRY_FINALLY",
+    "entry": 16,
+    "blocks": [
+     38,
+     42,
+     44,
+     58,
+     66,
+     68,
+     16,
+     26,
+     60
+    ],
+    "try_blocks": [
+     16
+    ],
+    "finally_blocks": [
+     44,
+     66,
+     68,
+     58,
+     60
+    ]
+   },
+   {
+    "type": "RegionType.IF_THEN",
+    "entry": 26,
+    "blocks": [
+     26,
+     38
+    ],
+    "try_blocks": [],
+    "finally_blocks": []
+   }
+  ],
+  "block_to_region": {
+   "0": "RegionType.FOR_LOOP@10",
+   "10": "RegionType.FOR_LOOP@10",
+   "12": "RegionType.FOR_LOOP@10",
+   "38": "RegionType.TRY_FINALLY@16",
+   "42": "RegionType.TRY_FINALLY@16",
+   "16": "RegionType.TRY_FINALLY@16",
+   "26": "RegionType.TRY_FINALLY@16",
+   "44": "RegionType.TRY_FINALLY@16",
+   "58": "RegionType.TRY_FINALLY@16",
+   "66": "RegionType.TRY_FINALLY@16",
+   "68": "RegionType.TRY_FINALLY@16",
+   "74": "RegionType.TRY_FINALLY@16",
+   "60": "RegionType.TRY_FINALLY@16"
+  },
+  "generated": [
+   0,
+   10,
+   12,
+   16,
+   26,
+   38,
+   42,
+   44,
+   58,
+   60,
+   66,
+   68,
+   74
+  ]
+ }
+]

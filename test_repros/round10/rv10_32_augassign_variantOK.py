@@ -24,6 +24,8 @@ def v_aug_cold_ops(x, c, t, d):
     return (x, y, z)
 def v_aug_boolop_rhs(x, a, b):
     """BoolOp RHS 非三元——负对照（旧路径）"""
+    x += a or b
+    return x
 def v_aug_plain_ternary(c, t, d):
     """普通 Assign 三元——负对照（不得误判 AugAssign）"""
     x = t if c else d

@@ -1,0 +1,64 @@
+[
+ {
+  "co": "fin_continue",
+  "kind": "pib",
+  "blocks": [
+   28
+  ],
+  "branch": "then",
+  "region_t": "RegionType.IF_ELIF_CHAIN",
+  "n": 1
+ },
+ {
+  "co": "fin_continue",
+  "type": "RegionType.TRY_FINALLY",
+  "children": [],
+  "blocks": [
+   16,
+   28,
+   58,
+   72,
+   74,
+   76,
+   90,
+   92,
+   96,
+   98
+  ]
+ },
+ {
+  "co": "fin_continue",
+  "type": "RegionType.IF_ELIF_CHAIN",
+  "children": [
+   [
+    "RegionType.TRY_FINALLY",
+    16
+   ]
+  ],
+  "blocks": [
+   16,
+   28,
+   58,
+   72,
+   74,
+   104
+  ]
+ },
+ {
+  "co": "fin_break",
+  "type": "RegionType.TRY_FINALLY",
+  "children": [],
+  "blocks": [
+   16,
+   26,
+   38,
+   42,
+   44,
+   58,
+   60,
+   66,
+   68,
+   74
+  ]
+ }
+]

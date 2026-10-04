@@ -14326,13 +14326,11 @@ class StructuredAnalyzer:
         
         # 递归搜索所有后继块（仅限于with相关的块）
         visited = set()
-        def search_for_store_fast(block, depth=0):
-            if depth > 3:  # 限制搜索深度，避免搜索到不相关的块
-                return None
+        def search_for_store_fast(block):
             if id(block) in visited:
                 return None
             visited.add(id(block))
-            
+
             for instr in block.instructions:
                 if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL'):
                     return str(instr.argval)
@@ -14342,13 +14340,13 @@ class StructuredAnalyzer:
                 # 如果遇到其他类型的指令，停止搜索这个块
                 if instr.opname not in ('NOP', 'RESUME', 'CACHE', 'SEND', 'YIELD_VALUE', 'JUMP_BACKWARD_NO_INTERRUPT', 'SWAP'):
                     break
-            
-            # 递归搜索后继块
-            for succ in block.successors:
-                result = search_for_store_fast(succ, depth + 1)
-                if result is not None:
-                    return result
-            return None
+
+            # [结构判据] as 目标的 STORE 装配在 BEFORE_WITH 之后的线性
+            # 框架链上；多后继块 = 已进入 with 体控制流（分支位），非
+            # STORE 装配位，停止下探。终止性由 visited 防环保证。
+            if len(block.successors) != 1:
+                return None
+            return search_for_store_fast(block.successors[0])
         
         for succ in entry_block.successors:
             result = search_for_store_fast(succ)

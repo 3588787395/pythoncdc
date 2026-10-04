@@ -1,0 +1,155 @@
+[
+ {
+  "co": "fin_continue",
+  "type": "RegionType.FOR_LOOP",
+  "entry": 10,
+  "merge": null,
+  "blocks": [
+   0,
+   10,
+   12,
+   16,
+   28,
+   58,
+   72,
+   74,
+   76,
+   90,
+   92,
+   104,
+   148
+  ],
+  "id": 88624,
+  "else_blocks": [
+   148
+  ]
+ },
+ {
+  "co": "fin_continue",
+  "type": "RegionType.TRY_FINALLY",
+  "entry": 16,
+  "merge": null,
+  "blocks": [
+   16,
+   28,
+   58,
+   72,
+   74,
+   76,
+   90,
+   92,
+   96,
+   98
+  ],
+  "id": 87984,
+  "try_blocks": [
+   16,
+   28
+  ],
+  "finally_blocks": [
+   76,
+   90,
+   92,
+   96,
+   98
+  ],
+  "has_finally": true,
+  "try_offset_end": 58,
+  "parent": "RegionType.IF_ELIF_CHAIN@16"
+ },
+ {
+  "co": "fin_continue",
+  "type": "RegionType.IF_ELIF_CHAIN",
+  "entry": 16,
+  "merge": null,
+  "blocks": [
+   16,
+   28,
+   58,
+   72,
+   74,
+   104
+  ],
+  "id": 43088,
+  "then_blocks": [
+   28
+  ],
+  "parent": "RegionType.FOR_LOOP@10"
+ },
+ {
+  "co": "fin_continue",
+  "kind": "AST",
+  "ast": "{'type': 'FunctionDef', 'name': 'fin_continue', 'args': {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'rows'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}, 'body': [{'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'out', 'ctx': 'Store'}], 'value': {'type': 'List', 'elts': [], 'ctx': 'Load', 'lineno': 5}}, {'type': 'For', 'target': {'type': 'Name', 'id': 'r', 'ctx': 'Store'}, 'iter': {'type': 'Name', 'id': 'rows', 'ctx': 'Load', 'lineno': 6}, 'body': [{'type': 'Try', 'body': [{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': 8}, 'ops': ['<'], 'comparators': [{'type': 'Constant', 'value': 0, 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Raise', 'exc': {'type': 'Call', 'func': {'type': 'Name', 'id': 'ValueError', 'ctx': 'Load', 'lineno': 9}, 'args': [{'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}, 'lineno': None}], 'orelse': []}], 'handlers': [], 'finalbody': [{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': None}, 'ops': ['<'], 'comparators': [{'type': 'Constant', 'value': 0, 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Continue'}]}]}]}, {'type': 'Return', 'value': {'type': 'Name', 'id': 'out', 'ctx': 'Load', 'lineno': 14}}], 'decorator_list': [], 'returns': None}"
+ },
+ {
+  "co": "fin_break",
+  "type": "RegionType.FOR_LOOP",
+  "entry": 10,
+  "merge": null,
+  "blocks": [
+   0,
+   10,
+   12,
+   16,
+   26,
+   38,
+   42
+  ],
+  "id": 91216,
+  "break_blocks": [
+   38
+  ]
+ },
+ {
+  "co": "fin_break",
+  "type": "RegionType.TRY_FINALLY",
+  "entry": 16,
+  "merge": null,
+  "blocks": [
+   16,
+   26,
+   38,
+   42,
+   44,
+   58,
+   60,
+   66,
+   68,
+   74
+  ],
+  "id": 90576,
+  "try_blocks": [
+   16
+  ],
+  "finally_blocks": [
+   44,
+   58,
+   60,
+   66,
+   68,
+   74
+  ],
+  "has_finally": true,
+  "try_offset_end": 26
+ },
+ {
+  "co": "fin_break",
+  "type": "RegionType.IF_THEN",
+  "entry": 26,
+  "merge": 42,
+  "blocks": [
+   26,
+   38
+  ],
+  "id": 93776,
+  "then_blocks": [
+   38
+  ],
+  "parent": "RegionType.FOR_LOOP@10"
+ },
+ {
+  "co": "fin_break",
+  "kind": "AST",
+  "ast": "{'type': 'FunctionDef', 'name': 'fin_break', 'args': {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'rows'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}, 'body': [{'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'total', 'ctx': 'Store'}], 'value': {'type': 'Constant', 'value': 0, 'lineno': 18}}, {'type': 'For', 'target': {'type': 'Name', 'id': 'r', 'ctx': 'Store'}, 'iter': {'type': 'Name', 'id': 'rows', 'ctx': 'Load', 'lineno': 19}, 'body': [{'type': 'Try', 'body': [{'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'total', 'ctx': 'Store'}, 'op': '+', 'value': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': None}, 'lineno': None}], 'handlers': [], 'finalbody': [{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'total', 'ctx': 'Load', 'lineno': None}, 'ops': ['>'], 'comparators': [{'type': 'Constant', 'value': 100, 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Pass'}]}]}]}], 'decorator_list': [], 'returns': None}"
+ }
+]

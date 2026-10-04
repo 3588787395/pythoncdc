@@ -1,0 +1,69 @@
+[
+ {
+  "fn": "v_aug_boolop_rhs",
+  "blocks": [
+   {
+    "off": 0,
+    "instrs": [
+     "RESUME",
+     "LOAD_FAST",
+     "LOAD_FAST",
+     "JUMP_IF_TRUE_OR_POP"
+    ],
+    "succs": [
+     8,
+     10
+    ],
+    "preds": []
+   },
+   {
+    "off": 8,
+    "instrs": [
+     "LOAD_FAST"
+    ],
+    "succs": [
+     10
+    ],
+    "preds": [
+     0
+    ]
+   },
+   {
+    "off": 10,
+    "instrs": [
+     "BINARY_OP",
+     "STORE_FAST",
+     "LOAD_FAST",
+     "RETURN_VALUE"
+    ],
+    "succs": [],
+    "preds": [
+     0,
+     8
+    ]
+   }
+  ],
+  "regions": [
+   {
+    "type": "RegionType.BOOL_OP",
+    "entry": 0,
+    "blocks": [
+     0,
+     8,
+     10
+    ]
+   }
+  ],
+  "block_to_region": {
+   "0": "RegionType.BOOL_OP@0",
+   "8": "RegionType.BOOL_OP@0",
+   "10": "RegionType.BOOL_OP@0"
+  },
+  "generated_blocks": [
+   0,
+   8,
+   10
+  ],
+  "generated_offsets": []
+ }
+]

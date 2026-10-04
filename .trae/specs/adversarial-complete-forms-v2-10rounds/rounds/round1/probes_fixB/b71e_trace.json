@@ -1,0 +1,30 @@
+[
+ {
+  "fn": "_generate_region",
+  "type": "RegionType.TRY_FINALLY",
+  "entry": 16,
+  "res": "{'type': 'Try', 'body': [{'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'total', 'ctx': 'Store'}, 'op': '+', 'value': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': None}, 'lineno': None}], 'handlers': [], 'finalbody': [{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'total', 'ctx': 'Load', 'lineno': None}, 'ops': ['>'], 'comparators': [{'type': 'Constant', "
+ },
+ {
+  "fn": "_loop_generate_for",
+  "entry": 10,
+  "else_blocks_at_entry": [],
+  "else_blocks_at_exit": [
+   74
+  ],
+  "has_orelse": false,
+  "orelse": "None"
+ },
+ {
+  "fn": "_generate_loop",
+  "type": "RegionType.FOR_LOOP",
+  "entry": 10,
+  "res": "[{'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'total', 'ctx': 'Store'}], 'value': {'type': 'Constant', 'value': 0, 'lineno': 18}}, {'type': 'For', 'target': {'type': 'Name', 'id': 'r', 'ctx': 'Store'}, 'iter': {'type': 'Name', 'id': 'rows', 'ctx': 'Load', 'lineno': 19}, 'body': [{'type': 'Try', 'body': [{'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'total', 'ctx': 'Store'}, 'op':"
+ },
+ {
+  "fn": "_generate_region",
+  "type": "RegionType.FOR_LOOP",
+  "entry": 10,
+  "res": "[{'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'total', 'ctx': 'Store'}], 'value': {'type': 'Constant', 'value': 0, 'lineno': 18}}, {'type': 'For', 'target': {'type': 'Name', 'id': 'r', 'ctx': 'Store'}, 'iter': {'type': 'Name', 'id': 'rows', 'ctx': 'Load', 'lineno': 19}, 'body': [{'type': 'Try', 'body': [{'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'total', 'ctx': 'Store'}, 'op':"
+ }
+]

@@ -1,0 +1,105 @@
+[
+ {
+  "kind": "pib",
+  "co": "fin_continue",
+  "blocks": [
+   28
+  ],
+  "branch": "then",
+  "pre_generated": [],
+  "region": "RegionType.IF_ELIF_CHAIN",
+  "region_entry": 16,
+  "result_n": 1,
+  "result": "[{'type': 'Raise', 'exc': {'type': 'Call', 'func': {'type': 'Name', 'id': 'ValueError', 'ctx': 'Load', 'lineno': 9}, 'args': [{'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}, 'lineno': None}]"
+ },
+ {
+  "kind": "region",
+  "co": "fin_continue",
+  "type": "RegionType.FOR_LOOP",
+  "entry": 10,
+  "blocks": [
+   0,
+   10,
+   12,
+   16,
+   28,
+   58,
+   72,
+   74,
+   76,
+   90,
+   92,
+   104,
+   148
+  ],
+  "try_blocks": [],
+  "finally_blocks": [],
+  "finally_copy": [],
+  "result": "[{'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'out', 'ctx': 'Store'}], 'value': {'type': 'List', 'elts': [], 'ctx': 'Load', 'lineno': 5}}, {'type': 'For', 'target': {'type': 'Name', 'id': 'r', 'ctx': 'Store'}, 'iter': {'type': 'Name', 'id': 'rows', 'ctx': 'Load', 'lineno': 6}, 'body': [{'type': 'Try', 'body': [{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': 8}, 'ops': ['<'], 'comparators': [{'type': 'Constant', 'value': 0, 'lineno'"
+ },
+ {
+  "kind": "region",
+  "co": "fin_break",
+  "type": "RegionType.FOR_LOOP",
+  "entry": 10,
+  "blocks": [
+   0,
+   10,
+   12,
+   16,
+   26,
+   38,
+   42
+  ],
+  "try_blocks": [],
+  "finally_blocks": [],
+  "finally_copy": [],
+  "result": "[{'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'total', 'ctx': 'Store'}], 'value': {'type': 'Constant', 'value': 0, 'lineno': 18}}, {'type': 'For', 'target': {'type': 'Name', 'id': 'r', 'ctx': 'Store'}, 'iter': {'type': 'Name', 'id': 'rows', 'ctx': 'Load', 'lineno': 19}, 'body': [{'type': 'Try', 'body': [{'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'total', 'ctx': 'Store'}, 'op': '+', 'value': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': None}, 'lineno': None}], 'handle",
+  "break_blocks": [
+   38
+  ]
+ },
+ {
+  "kind": "region",
+  "co": "fin_continue_stmt",
+  "type": "RegionType.WHILE_LOOP",
+  "entry": 10,
+  "blocks": [
+   10,
+   48,
+   50,
+   66,
+   82,
+   114
+  ],
+  "try_blocks": [],
+  "finally_blocks": [],
+  "finally_copy": [],
+  "result": "{'type': 'While', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': 31}, 'ops': ['<'], 'comparators': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'len', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Name', 'id': 'rows', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Try', 'body': [{'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'v', 'ctx': 'Store'}], 'value': {'type': 'Subscript', 'value'"
+ },
+ {
+  "kind": "region",
+  "co": "fin_continue_stmt",
+  "type": "RegionType.WHILE_LOOP",
+  "entry": 10,
+  "blocks": [
+   10,
+   48,
+   50,
+   66,
+   80,
+   82,
+   84,
+   100,
+   102,
+   106,
+   108,
+   114,
+   194
+  ],
+  "try_blocks": [],
+  "finally_blocks": [],
+  "finally_copy": [],
+  "result": "[{'type': 'While', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': 31}, 'ops': ['<'], 'comparators': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'len', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Name', 'id': 'rows', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Try', 'body': [{'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'v', 'ctx': 'Store'}], 'value': {'type': 'Subscript', 'value"
+ }
+]

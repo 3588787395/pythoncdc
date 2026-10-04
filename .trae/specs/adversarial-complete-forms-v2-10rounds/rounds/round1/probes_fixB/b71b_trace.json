@@ -1,0 +1,96 @@
+[
+ {
+  "fn": "gbs",
+  "blk": 12,
+  "res": "[]"
+ },
+ {
+  "fn": "pib",
+  "blocks": [
+   12
+  ],
+  "branch": "standalone",
+  "res": "[]"
+ },
+ {
+  "fn": "gbs",
+  "blk": 16,
+  "res": "[{'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'total', 'ctx': 'Store'}, 'op': '+', 'value': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': None}, 'lineno': None}]"
+ },
+ {
+  "fn": "gbs",
+  "blk": 58,
+  "res": "[]"
+ },
+ {
+  "fn": "gbs",
+  "blk": 66,
+  "res": "[]"
+ },
+ {
+  "fn": "hbs",
+  "blk": 44,
+  "res": "[{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'total', 'ctx': 'Load', 'lineno': None}, 'ops': ['>'], 'comparators': [{'type': 'Constant', 'value': 100, 'lineno': None}], '"
+ },
+ {
+  "fn": "hbs",
+  "blk": 68,
+  "res": "[]"
+ },
+ {
+  "fn": "hbs",
+  "blk": 60,
+  "res": "[]"
+ },
+ {
+  "fn": "_generate_region",
+  "type": "RegionType.TRY_FINALLY",
+  "entry": 16,
+  "blocks": [
+   38,
+   42,
+   44,
+   58,
+   66,
+   68,
+   16,
+   26,
+   60
+  ],
+  "res": "{'type': 'Try', 'body': [{'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'total', 'ctx': 'Store'}, 'op': '+', 'value': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': None}, 'lineno': None}], 'handlers': [], 'finalbody': [{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name'"
+ },
+ {
+  "fn": "pib",
+  "blocks": [],
+  "branch": "standalone",
+  "res": "[]"
+ },
+ {
+  "fn": "gbs",
+  "blk": 74,
+  "res": "[{'type': 'Return', 'value': {'type': 'Name', 'id': 'total', 'ctx': 'Load', 'lineno': 25}}]"
+ },
+ {
+  "fn": "pib",
+  "blocks": [
+   74
+  ],
+  "branch": "standalone",
+  "res": "[{'type': 'Return', 'value': {'type': 'Name', 'id': 'total', 'ctx': 'Load', 'lineno': 25}}]"
+ },
+ {
+  "fn": "_generate_region",
+  "type": "RegionType.FOR_LOOP",
+  "entry": 10,
+  "blocks": [
+   0,
+   10,
+   12,
+   38,
+   42,
+   16,
+   26
+  ],
+  "res": "[{'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'total', 'ctx': 'Store'}], 'value': {'type': 'Constant', 'value': 0, 'lineno': 18}}, {'type': 'For', 'target': {'type': 'Name', 'id': 'r', 'ctx': 'Store'}, 'iter': {'type': 'Name', 'id': 'rows', 'ctx': 'Load', 'lineno': 19}, 'body': [{'type': 'T"
+ }
+]

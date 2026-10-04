@@ -1,0 +1,81 @@
+[
+ {
+  "fn": "_generate_region",
+  "type": "RegionType.BOOL_OP",
+  "entry": 0,
+  "blocks": [
+   0,
+   8,
+   10
+  ],
+  "res": "[{'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'x', 'ctx': 'Store'}, 'op': '+', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}]"
+ },
+ {
+  "fn": "v_aug_boolop_rhs",
+  "ast": {
+   "type": "FunctionDef",
+   "name": "v_aug_boolop_rhs",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "x"
+     },
+     {
+      "type": "arg",
+      "arg": "a"
+     },
+     {
+      "type": "arg",
+      "arg": "b"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "Expr",
+     "value": {
+      "type": "Constant",
+      "value": "BoolOp RHS \u975e\u4e09\u5143\u2014\u2014\u8d1f\u5bf9\u7167\uff08\u65e7\u8def\u5f84\uff09"
+     }
+    },
+    {
+     "type": "AugAssign",
+     "target": {
+      "type": "Name",
+      "id": "x",
+      "ctx": "Store"
+     },
+     "op": "+",
+     "value": {
+      "type": "BoolOp",
+      "op": "or",
+      "values": [
+       {
+        "type": "Name",
+        "id": "a",
+        "ctx": "Load",
+        "lineno": null
+       },
+       {
+        "type": "Name",
+        "id": "b",
+        "ctx": "Load",
+        "lineno": null
+       }
+      ]
+     }
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  }
+ }
+]

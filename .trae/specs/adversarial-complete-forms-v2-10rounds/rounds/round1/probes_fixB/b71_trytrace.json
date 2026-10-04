@@ -1,0 +1,72 @@
+[
+ {
+  "kind": "nc",
+  "co": "fin_continue",
+  "region_entry": 16,
+  "nc": []
+ },
+ {
+  "kind": "gen_region",
+  "co": "fin_continue",
+  "type": "RegionType.IF_ELIF_CHAIN",
+  "entry": 16,
+  "result": "{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': 8}, 'ops': ['<'], 'comparators': [{'type': 'Constant', 'value': 0, 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Pass'}], 'orelse': [{'type': 'If', '_is_elif': True, 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': 11}, 'ops': ['<'], 'comparators': [{'type': 'Constant', 'value': 0, 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Continue'}]"
+ },
+ {
+  "kind": "try",
+  "co": "fin_continue",
+  "region_entry": 16,
+  "added_blocks": [
+   16,
+   28,
+   58,
+   72,
+   74,
+   76,
+   90,
+   92,
+   96,
+   98,
+   104
+  ],
+  "finalbody": "[{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': None}, 'ops': ['<'], 'comparators': [{'type': 'Constant', 'value': 0, 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Continue'}]}]"
+ },
+ {
+  "kind": "gen_region",
+  "co": "fin_continue",
+  "type": "RegionType.TRY_FINALLY",
+  "entry": 16,
+  "result": "{'type': 'Try', 'body': [{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': 8}, 'ops': ['<'], 'comparators': [{'type': 'Constant', 'value': 0, 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Pass'}], 'orelse': [{'type': 'If', '_is_elif': True, 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': 11}, 'ops': ['<'], 'comparators': [{'type': 'Constant', 'value': 0, 'lineno': None}], 'lineno': None}, 'body"
+ },
+ {
+  "kind": "nc",
+  "co": "fin_break",
+  "region_entry": 16,
+  "nc": []
+ },
+ {
+  "kind": "try",
+  "co": "fin_break",
+  "region_entry": 16,
+  "added_blocks": [
+   16,
+   26,
+   38,
+   42,
+   44,
+   58,
+   60,
+   66,
+   68,
+   74
+  ],
+  "finalbody": "[{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'total', 'ctx': 'Load', 'lineno': None}, 'ops': ['>'], 'comparators': [{'type': 'Constant', 'value': 100, 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Pass'}]}, {'type': 'Return', 'value': {'type': 'Name', 'id': 'total', 'ctx': 'Load', 'lineno': 25}}]"
+ },
+ {
+  "kind": "gen_region",
+  "co": "fin_break",
+  "type": "RegionType.TRY_FINALLY",
+  "entry": 16,
+  "result": "{'type': 'Try', 'body': [{'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'total', 'ctx': 'Store'}, 'op': '+', 'value': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': None}, 'lineno': None}], 'handlers': [], 'finalbody': [{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'total', 'ctx': 'Load', 'lineno': None}, 'ops': ['>'], 'comparators': [{'type': 'Constant', 'value': 100, 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Pass'}]}, {'type': 'Return', 'va"
+ }
+]

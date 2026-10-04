@@ -1,0 +1,83 @@
+[
+ {
+  "co": "fin_continue",
+  "blk": 76,
+  "role": "BlockRole.LOOP_BODY",
+  "loop_depth": 1,
+  "cur_loop": 10,
+  "last_ops": [
+   "PUSH_EXC_INFO",
+   "LOAD_FAST",
+   "LOAD_CONST",
+   "COMPARE_OP",
+   "POP_JUMP_FORWARD_IF_FALSE"
+  ],
+  "result": "[{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'r', 'ctx': 'Load', 'lineno': None}, 'ops': ['<'], 'comparators': [{'type': 'Constant"
+ },
+ {
+  "co": "fin_continue",
+  "blk": 98,
+  "role": "BlockRole.FINALLY_BODY",
+  "loop_depth": 1,
+  "cur_loop": 10,
+  "last_ops": [
+   "COPY",
+   "POP_EXCEPT",
+   "RERAISE"
+  ],
+  "result": "[]"
+ },
+ {
+  "co": "fin_break",
+  "blk": 44,
+  "role": "BlockRole.FINALLY_BODY",
+  "loop_depth": 1,
+  "cur_loop": 10,
+  "last_ops": [
+   "PUSH_EXC_INFO",
+   "LOAD_FAST",
+   "LOAD_CONST",
+   "COMPARE_OP",
+   "POP_JUMP_FORWARD_IF_FALSE"
+  ],
+  "result": "[{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'total', 'ctx': 'Load', 'lineno': None}, 'ops': ['>'], 'comparators': [{'type': 'Cons"
+ },
+ {
+  "co": "fin_break",
+  "blk": 68,
+  "role": "BlockRole.FINALLY_BODY",
+  "loop_depth": 1,
+  "cur_loop": 10,
+  "last_ops": [
+   "COPY",
+   "POP_EXCEPT",
+   "RERAISE"
+  ],
+  "result": "[]"
+ },
+ {
+  "co": "fin_break",
+  "blk": 60,
+  "role": "BlockRole.FINALLY_BODY",
+  "loop_depth": 1,
+  "cur_loop": 10,
+  "last_ops": [
+   "POP_EXCEPT",
+   "POP_TOP",
+   "JUMP_FORWARD"
+  ],
+  "result": "[]"
+ },
+ {
+  "co": "fin_break",
+  "blk": 74,
+  "role": "BlockRole.FINALLY_BODY",
+  "loop_depth": 1,
+  "cur_loop": 10,
+  "last_ops": [
+   "LOAD_FAST",
+   "RETURN_VALUE"
+  ],
+  "result": "[{'type': 'Return', 'value': {'type': 'Name', 'id': 'total', 'ctx': 'Load', 'lineno': 25}}]"
+ }
+]

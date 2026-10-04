@@ -9,17 +9,9 @@ def g_in_try_except(key):
     try:
         if key not in CACHE:
             CACHE[key] = key * 2
-        CACHE[key]
-        if CACHE:
-            return LOG.append(key)
-        else:
-            return None
+        return CACHE[key]
     except TypeError:
-        if CACHE:
-            LOG.append(key)
-            return None
-        else:
-            return None
+        return None
     finally:
         if CACHE:
             LOG.append(key)

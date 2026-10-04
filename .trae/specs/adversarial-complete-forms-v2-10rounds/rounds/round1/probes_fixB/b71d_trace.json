@@ -1,0 +1,547 @@
+[
+ {
+  "fn": "fin_continue",
+  "ast": {
+   "type": "FunctionDef",
+   "name": "fin_continue",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "rows"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "Assign",
+     "targets": [
+      {
+       "type": "Name",
+       "id": "out",
+       "ctx": "Store"
+      }
+     ],
+     "value": {
+      "type": "List",
+      "elts": [],
+      "ctx": "Load",
+      "lineno": 5
+     }
+    },
+    {
+     "type": "For",
+     "target": {
+      "type": "Name",
+      "id": "r",
+      "ctx": "Store"
+     },
+     "iter": {
+      "type": "Name",
+      "id": "rows",
+      "ctx": "Load",
+      "lineno": 6
+     },
+     "body": [
+      {
+       "type": "Try",
+       "body": [
+        {
+         "type": "If",
+         "test": {
+          "type": "Compare",
+          "left": {
+           "type": "Name",
+           "id": "r",
+           "ctx": "Load",
+           "lineno": 8
+          },
+          "ops": [
+           "<"
+          ],
+          "comparators": [
+           {
+            "type": "Constant",
+            "value": 0,
+            "lineno": null
+           }
+          ],
+          "lineno": null
+         },
+         "body": [
+          {
+           "type": "Raise",
+           "exc": {
+            "type": "Call",
+            "func": {
+             "type": "Name",
+             "id": "ValueError",
+             "ctx": "Load",
+             "lineno": 9
+            },
+            "args": [
+             {
+              "type": "Name",
+              "id": "r",
+              "ctx": "Load",
+              "lineno": null
+             }
+            ],
+            "kwargs": [],
+            "lineno": null
+           },
+           "lineno": null
+          }
+         ],
+         "orelse": []
+        }
+       ],
+       "handlers": [],
+       "finalbody": [
+        {
+         "type": "If",
+         "test": {
+          "type": "Compare",
+          "left": {
+           "type": "Name",
+           "id": "r",
+           "ctx": "Load",
+           "lineno": null
+          },
+          "ops": [
+           "<"
+          ],
+          "comparators": [
+           {
+            "type": "Constant",
+            "value": 0,
+            "lineno": null
+           }
+          ],
+          "lineno": null
+         },
+         "body": [
+          {
+           "type": "Continue"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "Expr",
+       "value": {
+        "type": "Call",
+        "func": {
+         "type": "Attribute",
+         "value": {
+          "type": "Name",
+          "id": "out",
+          "ctx": "Load",
+          "lineno": 13
+         },
+         "attr": "append",
+         "ctx": "Load",
+         "lineno": null
+        },
+        "args": [
+         {
+          "type": "Name",
+          "id": "r",
+          "ctx": "Load",
+          "lineno": null
+         }
+        ],
+        "kwargs": [],
+        "lineno": null
+       }
+      }
+     ]
+    },
+    {
+     "type": "Return",
+     "value": {
+      "type": "Name",
+      "id": "out",
+      "ctx": "Load",
+      "lineno": 14
+     }
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  }
+ },
+ {
+  "fn": "fin_break",
+  "hbs_blk": 44,
+  "res": [
+   {
+    "type": "If",
+    "test": {
+     "type": "Compare",
+     "left": {
+      "type": "Name",
+      "id": "total",
+      "ctx": "Load",
+      "lineno": null
+     },
+     "ops": [
+      ">"
+     ],
+     "comparators": [
+      {
+       "type": "Constant",
+       "value": 100,
+       "lineno": null
+      }
+     ],
+     "lineno": null
+    },
+    "body": [
+     {
+      "type": "Break"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "fn": "fin_break",
+  "ast": {
+   "type": "FunctionDef",
+   "name": "fin_break",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "rows"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "Assign",
+     "targets": [
+      {
+       "type": "Name",
+       "id": "total",
+       "ctx": "Store"
+      }
+     ],
+     "value": {
+      "type": "Constant",
+      "value": 0,
+      "lineno": 18
+     }
+    },
+    {
+     "type": "For",
+     "target": {
+      "type": "Name",
+      "id": "r",
+      "ctx": "Store"
+     },
+     "iter": {
+      "type": "Name",
+      "id": "rows",
+      "ctx": "Load",
+      "lineno": 19
+     },
+     "body": [
+      {
+       "type": "Try",
+       "body": [
+        {
+         "type": "AugAssign",
+         "target": {
+          "type": "Name",
+          "id": "total",
+          "ctx": "Store"
+         },
+         "op": "+",
+         "value": {
+          "type": "Name",
+          "id": "r",
+          "ctx": "Load",
+          "lineno": null
+         },
+         "lineno": null
+        }
+       ],
+       "handlers": [],
+       "finalbody": [
+        {
+         "type": "If",
+         "test": {
+          "type": "Compare",
+          "left": {
+           "type": "Name",
+           "id": "total",
+           "ctx": "Load",
+           "lineno": null
+          },
+          "ops": [
+           ">"
+          ],
+          "comparators": [
+           {
+            "type": "Constant",
+            "value": 100,
+            "lineno": null
+           }
+          ],
+          "lineno": null
+         },
+         "body": [
+          {
+           "type": "Break"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "orelse": [
+      {
+       "type": "Return",
+       "value": {
+        "type": "Name",
+        "id": "total",
+        "ctx": "Load",
+        "lineno": 25
+       }
+      }
+     ]
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  }
+ },
+ {
+  "fn": "fin_continue_stmt",
+  "ast": {
+   "type": "FunctionDef",
+   "name": "fin_continue_stmt",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "rows"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "Assign",
+     "targets": [
+      {
+       "type": "Name",
+       "id": "out",
+       "ctx": "Store"
+      }
+     ],
+     "value": {
+      "type": "List",
+      "elts": [],
+      "ctx": "Load",
+      "lineno": 29
+     }
+    },
+    {
+     "type": "Assign",
+     "targets": [
+      {
+       "type": "Name",
+       "id": "i",
+       "ctx": "Store"
+      }
+     ],
+     "value": {
+      "type": "Constant",
+      "value": 0,
+      "lineno": 30
+     }
+    },
+    {
+     "type": "While",
+     "test": {
+      "type": "Compare",
+      "left": {
+       "type": "Name",
+       "id": "i",
+       "ctx": "Load",
+       "lineno": 31
+      },
+      "ops": [
+       "<"
+      ],
+      "comparators": [
+       {
+        "type": "Call",
+        "func": {
+         "type": "Name",
+         "id": "len",
+         "ctx": "Load",
+         "lineno": null
+        },
+        "args": [
+         {
+          "type": "Name",
+          "id": "rows",
+          "ctx": "Load",
+          "lineno": null
+         }
+        ],
+        "kwargs": [],
+        "lineno": null
+       }
+      ],
+      "lineno": null
+     },
+     "body": [
+      {
+       "type": "Try",
+       "body": [
+        {
+         "type": "Assign",
+         "targets": [
+          {
+           "type": "Name",
+           "id": "v",
+           "ctx": "Store"
+          }
+         ],
+         "value": {
+          "type": "Subscript",
+          "value": {
+           "type": "Name",
+           "id": "rows",
+           "ctx": "Load",
+           "lineno": 33
+          },
+          "slice": {
+           "type": "Name",
+           "id": "i",
+           "ctx": "Load",
+           "lineno": null
+          },
+          "ctx": "Load",
+          "lineno": null
+         }
+        }
+       ],
+       "handlers": [],
+       "finalbody": [
+        {
+         "type": "AugAssign",
+         "target": {
+          "type": "Name",
+          "id": "i",
+          "ctx": "Store"
+         },
+         "op": "+",
+         "value": {
+          "type": "Constant",
+          "value": 1,
+          "lineno": null
+         },
+         "lineno": null
+        },
+        {
+         "type": "If",
+         "test": {
+          "type": "Compare",
+          "left": {
+           "type": "Name",
+           "id": "v",
+           "ctx": "Load",
+           "lineno": 36
+          },
+          "ops": [
+           {
+            "type": "Is"
+           }
+          ],
+          "comparators": [
+           {
+            "type": "Constant",
+            "value": null
+           }
+          ]
+         },
+         "body": [
+          {
+           "type": "Continue"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "Expr",
+       "value": {
+        "type": "Call",
+        "func": {
+         "type": "Attribute",
+         "value": {
+          "type": "Name",
+          "id": "out",
+          "ctx": "Load",
+          "lineno": 38
+         },
+         "attr": "append",
+         "ctx": "Load",
+         "lineno": null
+        },
+        "args": [
+         {
+          "type": "Name",
+          "id": "v",
+          "ctx": "Load",
+          "lineno": null
+         }
+        ],
+        "kwargs": [],
+        "lineno": null
+       }
+      }
+     ]
+    },
+    {
+     "type": "Return",
+     "value": {
+      "type": "Name",
+      "id": "out",
+      "ctx": "Load",
+      "lineno": 39
+     }
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  }
+ }
+]

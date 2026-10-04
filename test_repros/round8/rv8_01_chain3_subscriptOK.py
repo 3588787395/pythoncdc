@@ -14,7 +14,7 @@ def chain_then_return_expr(xs, i):
     a = b = xs[i]
     return a * 2 + b
 def chain_value_boolop(x, y):
-    a = (x or y) and x and y
+    a = b = c = (x or y) and x and y
     return (a, b, c)
 def single_assign_negctrl(q, w):
     q = w

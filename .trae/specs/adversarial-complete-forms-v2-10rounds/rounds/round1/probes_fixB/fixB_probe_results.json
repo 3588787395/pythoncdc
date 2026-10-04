@@ -1,0 +1,53 @@
+{
+  "role": "fix-engineer-B (Round 1.2 takeover)",
+  "spec": "adversarial-complete-forms-v2-10rounds",
+  "code_landed": true,
+  "changed_files": [
+    "core/cfg/region_ast_generator.py",
+    "core/cfg/ast_generator_v2.py",
+    "core/cfg/structured_analyzer.py"
+  ],
+  "anchors": {
+    "B71": {"target": "test_repros/round10/r10_21_fin_loopctrl.pyc", "before": "2/4", "after": "4/4", "status": "MATCH (predecessor in-flight fix verified + completed)"},
+    "B76": {"target": "test_repros/round10/rv10_32_augassign_variant.pyc", "before": "7/8", "after": "8/8", "status": "MATCH", "mechanism": "_generate_boolop_impl augassign branch: after closed AugAssign emission, re-emit merge_block residual instrs after first STORE (F3 downstream dispatch + merge_block restore)"},
+    "B65": {"target": "probes_fixB/b6576_probe.pyc", "before": "4/4", "after": "4/4", "status": "MATCH (predecessor implementation verified, no change needed)"},
+    "B73": {"target": "test_repros/round10/r10_04_import_try_cross.pyc", "before": "2/3", "after": "3/3", "status": "MATCH", "mechanism": "_find_return_chain_via_successors: new _is_finally_copy_return closure — finally conditional-segment third copy on handler return path identified by opname-sequence isomorphism vs finally exception copy (strip PUSH_EXC_INFO head + RERAISE/COPY/POP_EXCEPT/SWAP tail); BFS accepts it as return path, existing leftover mechanism rebuilds Return(expr)"},
+    "B75": {"target": "test_repros/round10/r10_15_global_hosts.pyc", "before": "5/6", "after": "6/6", "status": "MATCH", "mechanism": "new pre-reduction _b75_consume_arm_return_copies called at _generate_try head (before handler snapshot); consumes arm-return finally conditional copies ([72,86,140] in try_blocks, [164,178,234] in handler blocks) by IfRegion scan: hard-reserved (finally/else/handler_entry/cleanup) exclusion + other-TryExcept exclusion + opname-seq prefix isomorphism vs _exc_seq + RETURN terminal + predecessor guard (value-tail with copy-inward JUMP_FORWARD stripped for try arm; transparent-chain backtrack to CHECK_EXC_MATCH for handler arm); arm Returns attached as region transient attrs (_b75_try_arm_returns/_b75_handler_returns keyed by block offset) claimed in _generate_try_body block loop head and handler loop tail"}
+  },
+  "compliance_cleanup": [
+    {"file": "core/cfg/ast_generator_v2.py", "line_before": 9049, "removed": "[临时调试] hardcoded skip start_offset==62"},
+    {"file": "core/cfg/ast_generator_v2.py", "line_before": 14990, "removed": "magic number start_offset==74 no-op"},
+    {"file": "core/cfg/structured_analyzer.py", "line_before": 14330, "removed": "depth>3 hardcoded depth cap", "replaced_by": "structural criterion: with-as STORE assembles on linear frame chain (single-successor blocks); multi-successor = with-body control flow, stop; termination by visited cycle guard"}
+  ],
+  "negative_controls": {
+    "n6_01": "8/8", "n7_01": "5/5", "n7_02": "5/5", "n8_01": "4/4", "n8_02": "5/5",
+    "n9_01": "3/3", "n9_02": "4/4", "n10_01": "2/2", "n10_02": "2/2", "n10_03": "2/2", "n10_04": "3/3",
+    "rv9_03": "4/4", "rv10_31": "13/13", "rv10_33": "6/6",
+    "with_hosts_r6": {"r6_01": "8/8", "r6_03": "7/7", "r6_09": "8/8", "r6_11": "6/6"}
+  },
+  "sentry_rows": {
+    "round6": {"value": "115/115", "baseline": "115/115", "verdict": "flat"},
+    "round7": {"value": "124/143", "baseline": "108/128", "verdict": "up (fixA joint fixes B50/B46/B74; REGRESSED=0 backed by 34-set)"},
+    "round8": {"value": "129/138", "baseline": "110/118", "verdict": "up (fixA joint fixes)"},
+    "round9": {"value": "62/64", "baseline": "50/50", "verdict": "up net; 2 residual MISMATCH rv9_01 4/5 + rv9_02 4/5 HEAD-attributed legacy (stash A/B test: HEAD regen identical 4/5,4/5), not introduced this round"},
+    "sentry_site_packages": {"value": "302/308", "baseline": "302/308", "verdict": "flat"}
+  },
+  "small34": {"value": "1505/1568", "baseline": "1505/1568", "regressed": 0, "json": "fixB_small34_pycverify.json", "index": "fixB_small34_index.json", "quotation": "152/153"},
+  "iv2_gate": {
+    "bom": {"core/cfg/region_ast_generator.py": "efbbbf single-head x1", "core/cfg/region_analyzer.py": "efbbbf single-head x1"},
+    "instrumentation_residue_grep": 0,
+    "import_ok": ["region_ast_generator", "structured_analyzer", "ast_generator_v2"],
+    "compile_ok": true
+  },
+  "orphans_removed": ["test_repros/round6/_cmpOK.py"],
+  "docstring_template": {
+    "_b75_consume_arm_return_copies": "6-section template landed with method (①-⑥ + C3 clause)",
+    "_find_return_chain_via_successors": "6-section template appended (B73 mechanism)",
+    "note": "_generate_boolop_impl B76 augassign branch documented inline at emission site; _generate_try_body/_generate_try claim points documented at injection comments"
+  },
+  "handover_notes": [
+    "rv9_01_b68_nonfin_tail (4/5) + rv9_02_b66_with_nest (4/5): legacy residuals, HEAD-verified not caused by B71-B76 fixes",
+    "fixA §8 handover items B65/B76 both closed this round",
+    "B75 global-declaration finding: global statement has zero co_code impact in global-read + STORE_SUBSCR form (experiment); r10_15 failure was purely return/copy ownership, module-level 'global LOG, CACHE' emission remains registered lazy noise"
+  ]
+}

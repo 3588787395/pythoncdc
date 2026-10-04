@@ -1,0 +1,57 @@
+[
+ {
+  "ev": "LOOP gen ENTER",
+  "id": 2435884632720,
+  "else": [],
+  "finally": []
+ },
+ {
+  "ev": "get_region_for_block(10)",
+  "ret_id": 2435884632720,
+  "ret_type": "FOR_LOOP"
+ },
+ {
+  "ev": "TRY_FINALLY gen ENTER",
+  "id": 2435884632080,
+  "else": [],
+  "finally": [
+   44,
+   66,
+   68,
+   58,
+   60,
+   74
+  ]
+ },
+ {
+  "ev": "get_region_for_block(10)",
+  "ret_id": 2435884632720,
+  "ret_type": "FOR_LOOP"
+ },
+ {
+  "ev": "TRY_FINALLY gen EXIT",
+  "id": 2435884632080,
+  "else": [],
+  "finally": [
+   44,
+   66,
+   68,
+   58,
+   60
+  ]
+ },
+ {
+  "ev": "get_region_for_block(10)",
+  "ret_id": 2435884632720,
+  "ret_type": "FOR_LOOP"
+ },
+ {
+  "ev": "LOOP gen EXIT",
+  "id": 2435884632720,
+  "else": [
+   74
+  ],
+  "finally": [],
+  "has_orelse_in_res": true
+ }
+]
