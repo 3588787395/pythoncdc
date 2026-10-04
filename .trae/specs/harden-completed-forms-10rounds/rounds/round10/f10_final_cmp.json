@@ -1,0 +1,42 @@
+{
+ "elapsed_sec": 0.3,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 0,
+  "success": 1
+ },
+ "files_total": 1,
+ "generated_at": "2026-10-04T13:04:52",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [],
+  "success": [
+   "F:/Downloads/pythoncdc-main/test_repros/round6/_cmp.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/_cmp.pyc",
+   "pyc_sha": "71991a368067",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round6/_cmpOK.py",
+   "source_sha": "9a2412579b80",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 1.0,
+ "units_success": 7,
+ "units_total": 7
+}

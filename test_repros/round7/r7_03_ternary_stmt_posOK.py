@@ -8,11 +8,11 @@ def t_assign_rhs(a, b, flag):
     r = a if flag else b
     return r
 def t_augassign_ternary(x, a, b, flag):
-    x = x + (a if flag else b)
+    x += a if flag else b
     return x
 def t_augassign_mul_ternary(x, a, b, flag):
-    x = x + (a if flag else b)
-    x = x + (b if flag else a)
+    x *= a if flag else b
+    x -= b if flag else a
     return x
 def t_multi_target_ternary(a, b, flag):
     p = q = a if flag else b

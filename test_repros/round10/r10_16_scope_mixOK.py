@@ -9,6 +9,7 @@ def mix_global_nonlocal(base):
     def layer2():
         def layer3():
             global MOD_TOTAL
+            nonlocal acc
             if acc > 0:
                 MOD_TOTAL += acc
                 acc -= 1

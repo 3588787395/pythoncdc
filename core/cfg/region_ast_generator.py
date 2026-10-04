@@ -3114,6 +3114,9 @@ class RegionASTGenerator:
               POP_EXCEPT/COPY/SWAP/JUMP_* 等，无用户语句）——即「空/不可抛
               try 体 + 空 finally」退化帧；非空 finally 的正常路径副本结构
               （W21 保护面）不进入本判据；
+              [B71] 循环控制终结块显式排除：仅含 POP_TOP/JUMP_* 的 finally
+              块（continue 终结 = backward 跳转；break 终结 = 无 machinery
+              的纯前向跳转终结）按用户控制流计，不豁免判空；
           (2) block ∈ region.blocks（区域识别阶段的跨度归属）但位于异常表
               保护跨度之外（block.start_offset ≥ region.try_offset_end），
               且不属于 try/else/finally/cleanup/handler/finally_copy 任何
@@ -3172,6 +3175,23 @@ class RegionASTGenerator:
             return False
         # 空 finally 帧门槛：finally_blocks 全为异常机制块（无用户语句）。
         _b68_fin_user = False
+        # [B71] 循环控制终结块显式排除：仅含 POP_TOP/JUMP_* 的 finally 块
+        # 若含 backward 跳转（continue 终结）或不 carry 任何异常框架
+        # machinery 的纯前向跳转终结（break 终结：卸载簿记后跳出循环出口，
+        # 异常帧相关块必含 PUSH_EXC_INFO/POP_EXCEPT/RERAISE 等 machinery），
+        # 是真实的用户循环控制流——不得按 machinery 豁免判空，否则空
+        # finally 释放判据会吞没含循环控制终结块的 finally 帧
+        # （BlockSemantics.is_break/is_continue 同层 opcode 事实）。
+        for _b68_fb in (getattr(region, 'finally_blocks', None) or []):
+            _b71_eff = [i for i in _b68_fb.instructions
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG')]
+            if not _b71_eff:
+                continue
+            if all(i.opname in ('POP_TOP', 'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                   for i in _b71_eff):
+                _b68_fin_user = True
+                break
         for _b68_fb in (getattr(region, 'finally_blocks', None) or []):
             for _b68_ins in _b68_fb.instructions:
                 if _b68_ins.opname in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'):
@@ -40524,6 +40544,10 @@ AST 映射规则:
                 'body': true_expr,
                 'orelse': false_expr,
             }
+            # [B48] 保留纯 IfExp 形态：下方 merge 消费链重建（BINARY_OP/
+            # CALL 等 full_expr 路径）会把三元折叠进父 BinOp，augassign
+            # 发射需要未折叠的三元值作为 AugAssign.value。
+            _b48_ternary_raw = ternary_expr
 
             results = list(pre_stmts)
             if skip_store_targets:
@@ -42469,11 +42493,49 @@ AST 映射规则:
                                 for block in region.blocks:
                                     self.generated_blocks.add(block)
                                 return results
-                results.append({
-                    'type': 'Assign',
-                    'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
-                    'value': ternary_expr,
-                })
+                # [B48] augassign × 三元 RHS：merge 块 STORE 前紧邻
+                # in-place BINARY_OP（oparg 13..25，3.11 编码事实）时，
+                # 该 STORE 是增强赋值写回而非普通 Assign。识别条件：
+                # region 已由 _b48_attach_ternary_augassign 登记通道，且
+                # store 前最后一条有效指令复核为 in-place BINARY_OP（双端
+                # 同判据，防陈旧登记）；发射用 _b48_ternary_raw（未折叠
+                # IfExp）作 AugAssign.value，CodeGenerator 重发
+                # LOAD(target) + <ternary> + BINARY_OP(in-place) + STORE，
+                # 与原始字节码逐指令一致。旧路径把 in-place BINARY_OP 折叠
+                # 成 BinOp 发射 Assign（`x += t` → `x = x + (t)`），oparg
+                # 位丢失、跨算子时操作符被固定模板替换。归约方式：表达式
+                # 位按 AugAssign 语句归约，trailing 语句处理与 Assign 共用。
+                # AST 映射：ast.AugAssign(target=Name(value_target),
+                # op=<in-place 算法>, value=IfExp)。C1——判据只来自本层
+                # merge 块指令 opcode/oparg；C2——无跨层回溯修正；
+                # C3——无按名字/文件名的个案特判。
+                _b48_aug_op = None
+                if (store_idx is not None and store_idx >= 1
+                        and getattr(region, 'is_augassign', False)
+                        and getattr(region, 'augassign_target_kind', None) == 'name'
+                        and getattr(region, 'augassign_op', None)):
+                    for _b48_ins in reversed(merge_all[:store_idx]):
+                        if _b48_ins.opname in ('RESUME', 'NOP', 'CACHE',
+                                               'PUSH_NULL'):
+                            continue
+                        if (_b48_ins.opname == 'BINARY_OP'
+                                and isinstance(_b48_ins.arg, int)
+                                and 13 <= _b48_ins.arg <= 25):
+                            _b48_aug_op = getattr(region, 'augassign_op')
+                        break
+                if _b48_aug_op is not None:
+                    results.append({
+                        'type': 'AugAssign',
+                        'target': {'type': 'Name', 'id': region.value_target, 'ctx': 'Store'},
+                        'op': _b48_aug_op,
+                        'value': _b48_ternary_raw,
+                    })
+                else:
+                    results.append({
+                        'type': 'Assign',
+                        'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
+                        'value': ternary_expr,
+                    })
                 if region.merge_block:
                     # 处理 merge_block 中 STORE_* 之后的后续语句。
                     # 当 if 体内三元赋值后还有其他语句（如 `b = a if x else 2; c = b + 1`），

@@ -1981,7 +1981,88 @@ class RegionAnalyzer:
 
         return self.regions
 
+    # [B48] CPython 3.11 BINARY_OP oparg>=13 为 in-place 算法编码段
+    # (+=, &=, //=, <<=, @=, *=, %=, |=, **=, >>=, -=, /=, ^=)——字节码
+    # 格式事实（dis 模块 nb_inplace 映射），非阈值启发式。
+    _B48_INPLACE_BINOP_MAP = {13: '+', 14: '&', 15: '//', 16: '<<', 17: '@',
+                              18: '*', 19: '%', 20: '|', 21: '**', 22: '>>',
+                              23: '-', 24: '/', 25: '^'}
+
+    def _b48_attach_ternary_augassign(self, region) -> None:
+        """[B48] TernaryRegion 增强赋值 RHS 通道检测（augassign × 三元）。
+
+        识别条件（同层结构事实：merge 块指令 opcode/oparg + 目标存储
+        opcode，无名字白名单、无偏移阈值、无跨层回溯）：
+          merge_block 剥噪后首个 STORE_FAST/STORE_NAME/STORE_GLOBAL/
+          STORE_DEREF 之前，从该 STORE 位置向前回扫（仅跳过 SWAP——
+          attr/subscr 目标的栈重排，Name 目标无 SWAP——与 NOP/CACHE/
+          RESUME/PUSH_NULL 噪声），首条有效指令为 BINARY_OP 且 oparg
+          ∈ [13,25]（3.11 in-place 编码段）。此时 BINARY_OP 的左操作数
+          即 cond 前置段的目标装载（Python 语义保证 `x += v` 的目标 x
+          只求值一次且位于三元条件之前），三元值是右操作数。
+        机制：旧装配把 merge 块的 BINARY_OP(in-place) 经通用表达式重建
+          折叠为 BinOp 发射 Assign（`x += t` → `x = x + (t)`），in-place
+          oparg 位丢失，跨算子时操作符被固定模板替换（`*=` 误发射 `+`）。
+        归约方式：登记 is_augassign / augassign_op / 
+          augassign_target_kind='name'（与 BoolOpRegion 既有通道同构），
+          由 _generate_ternary 发射 AugAssign。
+        AST 映射：ast.AugAssign(target=Name(value_target),
+          op=<in-place 算法>, value=IfExp)。
+        C1/C2/C3 条款：C1——判据只来自本层 merge 块指令 opcode/oparg 与
+          目标 STORE opcode；C2——无跨层/跨区域回溯修正；C3——无按名字/
+          文件名的个案特判。
+        """
+        merge = getattr(region, 'merge_block', None)
+        if merge is None or getattr(region, 'is_augassign', False):
+            return
+        instrs = [i for i in merge.instructions
+                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        _store_i = None
+        for _i, ins in enumerate(instrs):
+            if ins.opname in ('STORE_FAST', 'STORE_NAME',
+                              'STORE_GLOBAL', 'STORE_DEREF'):
+                _store_i = _i
+                break
+        if not _store_i:
+            return
+        _j = _store_i - 1
+        while _j >= 0 and instrs[_j].opname == 'SWAP':
+            _j -= 1
+        if _j < 0:
+            return
+        _prev = instrs[_j]
+        if (_prev.opname == 'BINARY_OP'
+                and isinstance(_prev.arg, int)
+                and _prev.arg in self._B48_INPLACE_BINOP_MAP):
+            region.is_augassign = True
+            region.augassign_op = self._B48_INPLACE_BINOP_MAP[_prev.arg]
+            region.augassign_target_kind = 'name'
+
     def _detect_global_declarations(self, code_obj) -> List[Dict[str, Any]]:
+        """作用域声明集重建（global / nonlocal）——B72 修复后判据。
+
+        识别条件（同层结构事实，全部取自本 code object 元数据与块指令
+        opcode/oparg，无名字白名单，无跨层回溯）：
+          - Global：本函数存在 STORE_GLOBAL/DELETE_GLOBAL 指令且目标名不
+            在 co_varnames（Python 语义：仅读取模块变量 LOAD_GLOBAL 不需
+            要声明，见方法尾注）；
+          - Nonlocal：本函数存在 STORE_DEREF/DELETE_DEREF 指令且目标名
+            ∈ co_freevars 且 ∉ co_cellvars。co_cellvars 排除项覆盖「本
+            函数自建 cell 供内层捕获」形态（写本地 cell 是普通本地赋值，
+            声明 nonlocal 反而 SyntaxError）；孙代闭包（freevar 经中间
+            层透传，中间层 co_cellvars 为空）由 freevars 成员事实直接
+            命中，不再要求目标名出现在直接父层 co_cellvars——旧判据以
+            parent.co_cellvars 为过滤器，把「对自由变量执行写访问」这一
+            编译器已验证的封闭函数绑定事实误杀（s3/s4 层 nonlocal 蒸发，
+            闭包写降级 UnboundLocalError）。
+        归约方式：声明集按指令扫描序去重收集，Global 前置、Nonlocal 随后
+          各为一条声明记录，由装配层前置到函数体开头。
+        AST 映射：ast.Global(names) / ast.Nonlocal(names)。
+        C1/C2/C3 条款：C1——判据只来自本层 code object 元数据
+          （co_varnames/co_freevars/co_cellvars）与块指令 opcode；C2——
+          parent_code 元数据仅用于 fallback 补收路径的绑定存在性确认，
+          不回溯改写任何区域归属；C3——无按名字/文件名的个案特判。
+        """
         if code_obj is None:
             return []
         import dis as _dis
@@ -2001,17 +2082,12 @@ class RegionAnalyzer:
                         load_global_names.append(instr.argval)
                 if instr.opname == 'STORE_DEREF' and instr.argval not in nonlocal_names:
                     if instr.argval in free_vars and instr.argval not in cell_vars:
-                        # Verify the variable is actually in the parent's
-                        # cellvars. If not, it may be a free var from a grandparent
-                        # scope or a compiler artifact, and declaring it nonlocal
-                        # would cause SyntaxError.
-                        parent_code = getattr(self, 'parent_code', None)
-                        if parent_code is not None and hasattr(parent_code, 'co_cellvars'):
-                            parent_cellvars = set(getattr(parent_code, 'co_cellvars', ()))
-                            if instr.argval in parent_cellvars:
-                                nonlocal_names.append(instr.argval)
-                        else:
-                            nonlocal_names.append(instr.argval)
+                        # [B72] 对自由变量的写访问（STORE_DEREF）即编译器已
+                        # 验证的封闭函数绑定事实——源代码必有 nonlocal 声明，
+                        # 直接命中；孙代透传（中间层 co_cellvars 为空）不再
+                        # 被直接父层 cellvars 过滤误杀。co_cellvars 排除项
+                        # 保留：本函数自建 cell 的名字写访问是普通本地赋值。
+                        nonlocal_names.append(instr.argval)
 
         if not nonlocal_names and free_vars:
             # Only declare nonlocal for free variables that are actually
@@ -22894,6 +22970,15 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 else:
                     print('non-positive')  # CALL + POP_TOP
             这种print()语句是语句而非表达式，不应该被识别为Ternary。
+
+            [B46] true 臂嵌套三元对称放行：true_block 为已归约 TernaryRegion
+            入口（区域成员关系）且其尾部条件跳转目标仍落在该内层区域成员块
+            集合内（内层自身判别跳转，非嵌套 if 语句头逃逸边）、false_block
+            为单表达式值块、内层 merge 块以 STORE_*/RETURN_* 终结（值被同块
+            后续消费的栈事实 = 表达式位）时，两道嵌套 if 拒绝门
+            （_boolop_merge_to_ternary 门与 false_is_ternary 门）均放行，
+            建外层 TernaryRegion；AST 映射 ast.IfExp(body=内层 IfExp)，
+            禁止 IfRegion 语句路径接管表达式位。[C1][C2][C3] 条款见放行处注释。
             """
 
             if not _can_be_ternary_header(block):
@@ -23384,6 +23469,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 # BoolOp 链中条件块跳转目标 == false_block；嵌套 if 跳转目标不同。
                 _true_last_check = true_block.get_last_instruction()
                 _boolop_merge_to_ternary = False
+                _b46_true_nested = False  # [B46] true 臂嵌套三元放行标志
                 if (_true_last_check and _true_last_check.argval is not None
                         and _true_last_check.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)):
                     _jt_check = self.cfg.get_block_by_offset(_true_last_check.argval)
@@ -23407,7 +23493,43 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                         _fb_succs = list(false_block.successors)
                                         if _bm_target in _fb_succs or _bm_target is false_block:
                                             _boolop_merge_to_ternary = True
-                        if not _boolop_merge_to_ternary:
+                        # [B46] true 臂嵌套三元对称放行（与下方 false 臂
+                        # false_existing=TernaryRegion 通道对称）：
+                        # 识别条件（全部同层块结构事实）：true_block 已归属某
+                        # TernaryRegion 且为其入口（区域成员关系），其尾部条件
+                        # 跳转目标 _jt_check 仍落在该内层区域成员块集合内——
+                        # 该跳转是内层三元自身判别跳转，而非嵌套 if 语句头的
+                        # 语句逃逸边；false_block 为单表达式值块（无 STORE 副作
+                        # 用）；内层 merge 块以 STORE_*/RETURN_* 终结——内层三
+                        # 元值被同块后续 STORE/RETURN 消费（栈事实 = 表达式位）。
+                        # 归约方式：命中 ⇒ 放行建外层 TernaryRegion（嵌套即抽
+                        # 象节点：true_value_block 引用内层区域入口）；不命中
+                        # ⇒ 维持嵌套 if 拒绝原行为，逐字节不变。
+                        # AST 映射：ast.IfExp(test=外层条件, body=内层 IfExp,
+                        # orelse=false 值)——禁止 IfRegion 语句路径把表达式位
+                        # 接管为 if/else 双语句。
+                        # [C1] 判据仅用同层块结构事实（块末 opcode/后继集合/
+                        #   区域成员关系/merge 栈消费），无名称白名单与魔数。
+                        # [C2] 数据流自底向上：内层 TernaryRegion 先归约，外层
+                        #   仅以入口引用，无跨层回溯修正。
+                        # [C3] 每块唯一归属不变：内层块仍归内层区域。
+                        if (not _boolop_merge_to_ternary and not _b46_true_nested
+                                and _jt_check is not None):
+                            _b46_true_reg = self.block_to_region.get(true_block)
+                            if (isinstance(_b46_true_reg, TernaryRegion)
+                                    and _b46_true_reg.entry is true_block
+                                    and _jt_check in _b46_true_reg.blocks
+                                    and self._is_single_expression_block(false_block)):
+                                _b46_merge = _b46_true_reg.merge_block
+                                if _b46_merge is not None:
+                                    _b46_merge_eff = [i for i in _b46_merge.instructions
+                                                      if i.opname not in NOISE_OPS]
+                                    if (_b46_merge_eff and _b46_merge_eff[-1].opname in (
+                                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                            'STORE_DEREF', 'RETURN_VALUE',
+                                            'RETURN_CONST')):
+                                        _b46_true_nested = True
+                        if not _boolop_merge_to_ternary and not _b46_true_nested:
                             return None
                 false_is_ternary = False
                 if _boolop_merge_to_ternary and self._is_single_expression_block(true_block) and self._is_single_expression_block(false_block):
@@ -23528,7 +23650,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             elif all(self._is_single_expression_block(s) for s in false_succs):
                                 if all(not _block_ends_with_return(s) for s in false_succs):
                                     false_is_ternary = True
-                if not false_is_ternary and not has_jump_forward_skip:
+                # [B46] _b46_true_nested 命中时同样放行本门：true 臂为已归约
+                # 内层 TernaryRegion 入口（表达式位栈事实已验），false 臂为单
+                # 表达式值块，两臂汇合于共享 merge，不依赖 has_jump_forward_skip
+                # 的 while-cond 路径，也不依赖 false 臂嵌套区域通道。
+                if (not false_is_ternary and not has_jump_forward_skip
+                        and not _b46_true_nested):
                     return None
 
             # [Issue 1 fix] 在 has_jump_forward_skip 逻辑完成后，应用 return-body 检查。
@@ -24820,6 +24947,9 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             if region.chained_compare_ops and len(region.chained_compare_ops) >= 2:
                 self.compute_chained_compare_operands(region)
 
+            # [B48] augassign × 三元 RHS：登记 in-place BINARY_OP 通道。
+            self._b48_attach_ternary_augassign(region)
+
             for nested in pattern['nested_ternary_regions']:
                 if nested in self.regions:
                     self.regions.remove(nested)
@@ -24993,6 +25123,9 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 self.compute_chained_compare_operands(region)
                 for cb in region.chained_compare_blocks:
                     all_blocks.add(cb)
+
+            # [B48] augassign × 三元 RHS：登记 in-place BINARY_OP 通道。
+            self._b48_attach_ternary_augassign(region)
 
             return region
 

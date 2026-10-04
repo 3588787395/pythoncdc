@@ -1,0 +1,110 @@
+{
+ "elapsed_sec": 0.4,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 1,
+  "success": 5
+ },
+ "files_total": 6,
+ "generated_at": "2026-10-04T11:58:01",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/test_repros/round10/r10_15_global_hosts.pyc"
+  ],
+  "success": [
+   "F:/Downloads/pythoncdc-main/test_repros/round10/n10_03_simple_global.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round10/n10_04_simple_nonlocal.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round10/r10_11_global_basic.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round10/r10_12_global_deep.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round10/r10_13_nonlocal_basic.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_03_simple_global.pyc",
+   "pyc_sha": "8cb4a2507a46",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_03_simple_globalOK.py",
+   "source_sha": "9dcd1432c032",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_04_simple_nonlocal.pyc",
+   "pyc_sha": "9e41424a41da",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_04_simple_nonlocalOK.py",
+   "source_sha": "1672700dfad7",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_11_global_basic.pyc",
+   "pyc_sha": "708c16bb3b92",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_11_global_basicOK.py",
+   "source_sha": "3b54accbb959",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_12_global_deep.pyc",
+   "pyc_sha": "cf56d280ba7c",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_12_global_deepOK.py",
+   "source_sha": "a8acf5117ebb",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_13_nonlocal_basic.pyc",
+   "pyc_sha": "173f8b94f730",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_13_nonlocal_basicOK.py",
+   "source_sha": "5456fd2ebe91",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.g_in_try_except: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_15_global_hosts.pyc",
+   "pyc_sha": "bec8677c965d",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_15_global_hostsOK.py",
+   "source_sha": "adba2530b33d",
+   "status": "failure",
+   "success_rate": 0.8333333333333334,
+   "units_success": 5,
+   "units_total": 6
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9615384615384616,
+ "units_success": 25,
+ "units_total": 26
+}

@@ -1,0 +1,181 @@
+{
+ "elapsed_sec": 1.0,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 9,
+  "success": 0
+ },
+ "files_total": 9,
+ "generated_at": "2026-10-04T11:50:55",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deep.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mix.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round10/r10_21_fin_loopctrl.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nest.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_12_boolop_nest.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_14_boolop_deep_host.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_ops.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round8/r8_10_expr_cross_stmt.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.nl_level4.s2: Failure: Different bytecode",
+    "***<module>.nl_level4.s2.s3: Failure: Different bytecode",
+    "***<module>.nl_level4.s2.s3.s4: Failure: Different bytecode"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deep.pyc",
+   "pyc_sha": "0b2a2054499e",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deepOK.py",
+   "source_sha": "99d0fd9d23de",
+   "status": "failure",
+   "success_rate": 0.5714285714285714,
+   "units_success": 4,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.mix_global_nonlocal: Failure: Different bytecode",
+    "***<module>.mix_global_nonlocal.layer2: Failure: Different bytecode",
+    "***<module>.mix_global_nonlocal.layer2.layer3: Failure: Different bytecode"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mix.pyc",
+   "pyc_sha": "dcd2e53052cd",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mixOK.py",
+   "source_sha": "0be5b68875f7",
+   "status": "failure",
+   "success_rate": 0.5714285714285714,
+   "units_success": 4,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.fin_continue: Failure: Different control flow",
+    "***<module>.fin_break: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_21_fin_loopctrl.pyc",
+   "pyc_sha": "6dd911f8746b",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_21_fin_loopctrlOK.py",
+   "source_sha": "4c02001f9a9c",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 2,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.r8_aug_chain_rhs: Failure detected at line number 33 and instruction offset 16: Different bytecode"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_ops.pyc",
+   "pyc_sha": "6001f57d85d2",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_opsOK.py",
+   "source_sha": "e746fc239371",
+   "status": "failure",
+   "success_rate": 0.9,
+   "units_success": 9,
+   "units_total": 10
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+    "***<module>.r8_x_augassign_ternary: Failure detected at line number 15 and instruction offset 12: Different bytecode",
+    "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+    "***<module>.r8_x_raise_ternary_class: Failure: Different control flow",
+    "***<module>.r8_x_ret_nested_ternary: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_10_expr_cross_stmt.pyc",
+   "pyc_sha": "917cf426aceb",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_10_expr_cross_stmtOK.py",
+   "source_sha": "30f0776754d1",
+   "status": "failure",
+   "success_rate": 0.5833333333333334,
+   "units_success": 7,
+   "units_total": 12
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_augassign_ternary: Failure detected at line number 11 and instruction offset 12: Different bytecode",
+    "***<module>.t_augassign_mul_ternary: Failure detected at line number 14 and instruction offset 12: Different bytecode"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+   "pyc_sha": "ea6468a1da85",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_posOK.py",
+   "source_sha": "e86951d7df71",
+   "status": "failure",
+   "success_rate": 0.7142857142857143,
+   "units_success": 5,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_nest_left_assoc: Failure: Different control flow",
+    "***<module>.t_nest_in_condition: Failure: Different control flow",
+    "***<module>.t_nest_mixed_binop: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nest.pyc",
+   "pyc_sha": "a4a9ebb2b71a",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nestOK.py",
+   "source_sha": "7090967fe581",
+   "status": "failure",
+   "success_rate": 0.5714285714285714,
+   "units_success": 4,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.b_nest_three_layers: Failure: Different control flow",
+    "***<module>.b_nest_deep_right: Failure: Different control flow",
+    "***<module>.b_ternary_lhs_and: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_12_boolop_nest.pyc",
+   "pyc_sha": "f69583856ec6",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_12_boolop_nestOK.py",
+   "source_sha": "e8d4c127b284",
+   "status": "failure",
+   "success_rate": 0.625,
+   "units_success": 5,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.h_listcomp_filter_composite: Failure: Different bytecode",
+    "***<module>.h_listcomp_filter_composite.<listcomp>: Failure: Different control flow",
+    "***<module>.h_if_ternary_chain_composite: Failure: Different control flow",
+    "***<module>.h_return_composite: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_14_boolop_deep_host.pyc",
+   "pyc_sha": "415d31312d6f",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_14_boolop_deep_hostOK.py",
+   "source_sha": "ef21b8855847",
+   "status": "failure",
+   "success_rate": 0.5555555555555556,
+   "units_success": 5,
+   "units_total": 9
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.6338028169014085,
+ "units_success": 45,
+ "units_total": 71
+}

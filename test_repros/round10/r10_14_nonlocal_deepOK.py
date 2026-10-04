@@ -8,9 +8,11 @@ def nl_level4(start):
         nonlocal l1
         l1 += 1
         def s3():
+            nonlocal l1
             if l1 % 3 == 0:
                 l1 *= 2
             def s4():
+                nonlocal l1
                 l1 -= 5
                 return l1
             return s4()

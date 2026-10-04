@@ -1,0 +1,78 @@
+{
+ "elapsed_sec": 1.5,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 3,
+  "success": 0
+ },
+ "files_total": 3,
+ "generated_at": "2026-10-04T13:03:51",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_01_asyncwith_threestate.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_02_outer_handler_boundary.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_04_finally_deferred_double.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.aw_break_in_try_for: Failure: Different control flow",
+    "***<module>.aw_continue_in_try_for: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_01_asyncwith_threestate.pyc",
+   "pyc_sha": "56fe46959ecd",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_01_asyncwith_threestateOK.py",
+   "source_sha": "792c833d51e0",
+   "status": "failure",
+   "success_rate": 0.6,
+   "units_success": 3,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.outer_raise_catch: Failure: Different control flow",
+    "***<module>.nested_with_else_loop: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_02_outer_handler_boundary.pyc",
+   "pyc_sha": "627c6d1d98cc",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_02_outer_handler_boundaryOK.py",
+   "source_sha": "bf7296c1304d",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 2,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.try_fin_with_nested: Failure: Different control flow",
+    "***<module>.double_fin_overwrite: Failure: Different control flow",
+    "***<module>.try_fin_fin_body_with: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_04_finally_deferred_double.pyc",
+   "pyc_sha": "aa2f2e0800a9",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round6/rv6_04_finally_deferred_doubleOK.py",
+   "source_sha": "9a3bf4dc9d6f",
+   "status": "failure",
+   "success_rate": 0.25,
+   "units_success": 1,
+   "units_total": 4
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.46153846153846156,
+ "units_success": 6,
+ "units_total": 13
+}

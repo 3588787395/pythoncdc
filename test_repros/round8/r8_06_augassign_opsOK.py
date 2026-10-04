@@ -30,7 +30,7 @@ def r8_aug_subscript_rhs(xs, ys):
     xs[0] += ys[1]
     return xs
 def r8_aug_chain_rhs(x, a, b):
-    x = x + (a if a > b else b)
+    x *= a if a > b else b
     return x
 def r8_aug_attr_target(o, v):
     o.total += v

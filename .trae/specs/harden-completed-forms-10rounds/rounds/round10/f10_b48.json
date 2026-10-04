@@ -1,0 +1,74 @@
+{
+ "elapsed_sec": 0.7,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 1,
+  "success": 2
+ },
+ "files_total": 3,
+ "generated_at": "2026-10-04T12:10:44",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/test_repros/round8/r8_10_expr_cross_stmt.pyc"
+  ],
+  "success": [
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_ops.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+   "pyc_sha": "ea6468a1da85",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_posOK.py",
+   "source_sha": "8cd25ff4f767",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_ops.pyc",
+   "pyc_sha": "6001f57d85d2",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_opsOK.py",
+   "source_sha": "567312483546",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 10,
+   "units_total": 10
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+    "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+    "***<module>.r8_x_raise_ternary_class: Failure: Different control flow",
+    "***<module>.r8_x_ret_nested_ternary: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_10_expr_cross_stmt.pyc",
+   "pyc_sha": "917cf426aceb",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_10_expr_cross_stmtOK.py",
+   "source_sha": "2799f248d090",
+   "status": "failure",
+   "success_rate": 0.6666666666666666,
+   "units_success": 8,
+   "units_total": 12
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.8620689655172413,
+ "units_success": 25,
+ "units_total": 29
+}

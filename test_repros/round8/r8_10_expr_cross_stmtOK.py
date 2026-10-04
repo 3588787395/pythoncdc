@@ -12,7 +12,7 @@ def r8_x_assert_ternary(a, b, t):
 def r8_x_ret_ternary_tuple(a, b, t):
     return (a if t else b, b if t else a)
 def r8_x_augassign_ternary(x, a, b, t):
-    x = x + (a if t else b)
+    x += a if t else b
     return x
 def r8_x_assign_ternary_chain(d, t, a, b):
     d['k1'] = d['k2'] = a if t else b
@@ -30,7 +30,4 @@ def r8_x_lambda_return_ternary(a, b):
     f = lambda v: (v, a if v else b)
     return f(1)
 def r8_x_ret_nested_ternary(a, b, t, u):
-    if u:
-        return a if t else b
-    else:
-        return b if t else a
+    return (a if t else b) if u else b if t else a
