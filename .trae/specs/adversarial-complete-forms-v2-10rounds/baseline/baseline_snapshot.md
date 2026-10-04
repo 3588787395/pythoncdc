@@ -1,9 +1,11 @@
 # 基线快照（Task 0.1 落盘）
 
 生成时间：2026-10-04
-代码基点：本地 HEAD b49b5b61（旧规范 `harden-completed-forms-10rounds` Round 9 终态，工作树干净）
+代码基点：本地工作树 = 旧规范 `harden-completed-forms-10rounds` Round 10 终态（提交链 72f46912→b53d449c→0caea12b→f831eeae 终审归档 + fc2aa1b1 网络故障记录；**唯 push 未竟**，待推送 f831eeae/fc2aa1b1 由本规范 push 时一并补推）
 验证工具：`scripts/pyc_verify.py`（ruler = pylingual-equivalence_check，sha256 前缀 9c7567bd6776b36b，interpreter 3.11.7）
 用途：本规范全部 10 轮 compare 的 before 基线（fresh 生成，非旧规范 round1 时代的过期报告）。
+
+> 承接勘误：初稿误记基点为 b49b5b61（round9）；git log 核实旧 Round 10 已完成终审归档，本快照读数与 round10 VERIFICATION.md 终态（6554/6617、369/402）逐位一致即为佐证。规范三件套 II.6/III.5 承接口径已同步修正（v6：形式层 128/128 = 100%，新登记自 B77 续接）。
 
 ## 1. 全量语料（402 pyc，8 分片）
 
@@ -33,8 +35,8 @@
 
 ## 4. 一致性声明
 
-三组 fresh 读数与 spec II.6「承接基线读数表」逐项相等（6554/6617、369/402、1505/1568、152/153），
-证明当前 HEAD 即旧规范 Round 9 终态、无未登记改动。后续每轮 compare 以本目录 8 份 shard 报告为 before，
+三组 fresh 读数与 spec II.6「承接读数基线」逐项相等（6554/6617、369/402、1505/1568、152/153），
+与旧规范 round10 VERIFICATION.md 终态亦逐位一致，证明当前工作树即旧规范 Round 10 终态、无未登记改动。后续每轮 compare 以本目录 8 份 shard 报告为 before，
 REGRESSIONS=0 为硬门禁（checklist §2）。
 
 ## 5. 文件清单

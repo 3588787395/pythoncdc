@@ -104,16 +104,19 @@
 
 **语法完备**（本规范）/ **结构正确率**（sstrict 缺陷口径）/ **字节等价**（门禁口径）——三个维度独立测量，任何一方读数不得反驳另一方。
 
-### II.6 承接读数基线（round9 终态 7453e670，2026-10-04 承接）
+### II.6 承接读数基线（旧规范 round10 终态 f831eeae，2026-10-04 承接；基线快照实测复核逐位一致）
+
+**承接事实修正（Task 0 实测确认）**：旧规范 Round 10 已完成终审归档（提交链 72f46912→b53d449c→0caea12b→f831eeae + 网络故障记录 fc2aa1b1），唯 push 因 github.com:443 网络中断未竟（待推送 f831eeae/fc2aa1b1，本轮 push 时一并补推）；wiki §8.2 复审六步已在旧 round10 全量执行（口径 v6：形式层 128/128 = 100%，B1 族升格已封闭；组合级挂账 25 号透明分层不计入形式层分母）。本规范 Round 1 定位由"承接旧 Round 10 未竟终审"修正为"round10 终态承接复验"（v6 口径核对 + 残余名单实测 + 覆盖矩阵盘点 + 合规审计），Round 10 终审做全量重验与增量更新而非首跑。
 
 | 读数 | 值 |
 |------|-----|
-| 402 全量单元级 | 6554/6617（99.05%）；文件级 369/402 |
-| 小测试集 34 pyc | 1505/1568 |
+| 402 全量单元级 | 6554/6617（99.05%）；文件级 369/402（Task 0 fresh 复核逐位一致） |
+| 小测试集 34 pyc | 1505/1568（Task 0 fresh 复核一致） |
 | quotation.pyc | 152/153（唯一失败 change_his_to_forward 基线一致） |
 | tests 六套件 | 277 passed / 2 failed（基线名单 test_B01 + test_BOUNDARY_02）/ 2 xpassed |
-| 路径存在 | 128/128（syntax-coverage.json 实测） |
-| 台账不变式 | 完备 127 / 破口 1（B1，wiki 口径）/ 零能力 0；九轮对抗另登记 B6–B70（已封闭：B1b/B6/B8/B9/B10/B11/B20–B25/B29–B35/B37–B40/B45/B54/B55/B66/B67/B68 等；残余见 III.5） |
+| 路径存在 | 128/128（syntax-coverage.json 实测，旧 round10 §8.2 第 4 步重跑确认） |
+| 台账不变式（v6） | 形式层 完备 128 / 破口 0 / 零能力 0 = 100%；组合级挂账 25 号透明分层（见 III.5）；已封闭：B1b/B6/B8/B9/B10/B11/B20–B25/B29–B35/B37–B40/B45/B48/B54/B55/B64/B66/B67/B68/B72 等 |
+| 哨兵面（站桩回归基线） | round6 全量 16 pyc = 115/115、round7 108/128、round8 110/118、六哨兵 + option_account 302/308 |
 
 ### II.7 评审反模式 = 知识库 13 条误解清单（对抗时逐条对准）
 
@@ -160,7 +163,15 @@ elif 链（`IF_ELIF_CHAIN:176`、`'_is_elif'` 标记）；for-else/while-else（
 | B3 | Loop 共享尾 | W14-C `region_analyzer.py:27282/27304/19602`、fix3-T1/T2 `:12945-13075`、fix3-T6 `:18593`、W23 `:19185`、R71-thenover `:22758` |
 | B4 | 孤儿子 | `region_ast_generator.py:1593-1663`、`region_analyzer.py:1410-1424/:9017-9019` |
 
-**残余破口承接名单（round9 终态口径，以 Round 1 评审逐项复验实测为准）**：B42（残 3 单元）/B43/B44/B46–B51/B56–B65/B69/B70（B54/B55/B66/B67/B68 已封闭；登记面以各轮 REVIEW/FIX 归档为准）。新登记自 B71 续接。
+**残余破口承接名单（round10 终态 v6 口径，权威清单 = `harden-completed-forms-10rounds/rounds/round10/REVIEW.md` §4 残留决策表 + `REVIEW2.md`；以 Round 1 评审逐项复验实测为准）**：
+
+- **旧 round10 新封闭**：B72（nonlocal，co_freevars/co_cellvars + STORE_DEREF 元数据判据）、B48 主形态（in-place BINARY_OP oparg 13-25 + AugAssign 发射）、B64（B68 修复覆盖实测划除）、B46 部分（true 臂嵌套三元对称放行，净 +7 单元）
+- **实施降级未封闭（取证在案 D:\Temp\r10_incond.py / r10_then38.py）**：B71（finally 体仅含循环控制 fin_continue/fin_break 发射归属层，W11-A 认领分支）、B46 尾项（t_nest_in_condition 融合条件三件套）
+- **旧 round10 新登记未封闭**：B73（try 四段 import 宿主泄漏）、B74（match case 体首 import guard 幻影）、B75（try 宿主 global 声明 + finally 条件段归属错位）、B76（augassign × BoolOp RHS 体蒸发）、B48 残留变体（r7_08 t_host_while_body while 体宿主）
+- **沿袭残留（round10 复核逐位持平）**：B42×3 / B43 / B44 / B47 / B49 / B50 / B51 / B56–B62 / B65 / B69 / B70 / B11-R2（r4_or4_and2 1/2）
+- **零专攻形态组 6 组（round10 覆盖矩阵如实登记，本规范 Round 2–9 主题输入）**：Module 专攻、ClassDef 体专攻、AnnAssign、fstring_conversion、keyword_args/star_args、decorator_with_args
+- **挂账**：组合级挂账 25 号（上列未封闭部分 + 残留单元）+ round7 残留登记面 81/117，按 wiki §8.3 状态机继续推进
+- **新登记自 B77 续接**（B71–B76 已用尽）
 
 ---
 
@@ -181,18 +192,18 @@ elif 链（`IF_ELIF_CHAIN:176`、`'_is_elif'` 标记）；for-else/while-else（
 
 ## What Changes
 
-- 新建本规范承接旧规范 Round 10 未竟终审（本规范 Round 1 = 承接轮），历史归档全部保留、禁止回滚
+- 新建本规范承接旧规范 Round 10 终态（已完成归档，唯 push 未竟，本规范 push 时补推 f831eeae/fc2aa1b1；本规范 Round 1 = 终态承接复验轮），历史归档全部保留、禁止回滚
 - 优化迭代流程（相对旧规范的四点变化）：
   - **修复工程师多位协同**：单轮评审登记 ≥2 个互不相交破口族（破口族不相交 ∧ 涉改文件不相交）时并行派发，合并后统一验证
-  - **站桩回归常设化**：每轮强制重放已封闭破口登记探针面（round6 115/115、round7 r7 面、round8 r8 面、round9 50/50 及本规范已完结各轮），读数不得变差，不再单设回归轮
+  - **站桩回归常设化**：每轮强制重放已封闭破口登记探针面（round6 全量 16 pyc = 115/115、round7 108/128、round8 110/118、round9 50/50、round10 修复面（B72 23/23、B48 面、B46 面）及本规范已完结各轮），读数不得变差，不再单设回归轮
   - **注释合规入对抗面**：识别/生成方法 docstring 六项模板（I.7）与代码行为不一致 = 打回项，设专轮全量审计
   - **主代理零实现**：主代理只做调度、阶段边界提交、全量验证、归档 push
-- 对抗优先级：台账 §5 判"完备"形态（表A/表B/表C 全名单见 III.2–III.4）→ 已封闭守卫族（B2/B3/B4）深度外推 → 残余破口族（III.5）
-- 破口登记 Bn 续接（自 B71 起），走 wiki §8.3 状态机（未定位→已定位→已落地→已复审）；每轮封闭破口随轮更新台账；Round 10 终审统一执行 wiki §8.2 复审六步全量（grep 落地标记→台账更新→syntax_coverage 重跑→占比重算→数字同步→log 记录）
+- 对抗优先级：零专攻形态组 6 组（Module 专攻、ClassDef 体专攻、AnnAssign、fstring_conversion、keyword_args/star_args、decorator_with_args）→ 台账 §5 判"完备"形态（表A/表B/表C 全名单见 III.2–III.4）→ 已封闭守卫族（B2/B3/B4）深度外推 → 残余破口族（III.5）
+- 破口登记 Bn 续接（自 B77 起），走 wiki §8.3 状态机（未定位→已定位→已落地→已复审）；每轮封闭破口随轮更新台账；Round 10 终审统一执行 wiki §8.2 复审六步全量重验与增量更新（旧 round10 已执行 v6 首跑；本规范 = grep 全部落地标记核验（含 B77+）→ 台账更新 → syntax_coverage 重跑 → 占比重算 → 数字同步 → log 记录）
 
 ## Impact
 
-- Affected specs: `harden-completed-forms-10rounds`（Round 10 未竟项由本规范 Round 1 承接、终审定稿由本规范 Round 10 完成；归档保留，禁止回滚）
+- Affected specs: `harden-completed-forms-10rounds`（Round 10 已完成归档、唯 push 未竟；本规范 Round 1 承接其终态复验、Round 10 承接终审重验与增量更新；归档保留，禁止回滚）
 - Affected code: `core/cfg/region_analyzer.py`、`core/cfg/region_ast_generator.py`、`core/cfg/comprehension_generator.py`、`core/cfg/code_generator.py`、`core/cfg/exception_handler.py`、`core/cfg/pattern_parser.py`
 - Affected wiki: `wiki/concepts/decompile-invariant-completeness.md`（台账判定、破口登记、占比重算、§8.2 六步、log）
 - 小测试集 = 34 个未完全 OK 的 pyc（`harden-completed-forms-10rounds/baseline/failing_index.json`），仅供子代理回归自测；全量验证（402）由主代理执行
@@ -267,8 +278,8 @@ elif 链（`IF_ELIF_CHAIN:176`、`'_is_elif'` 标记）；for-else/while-else（
 ### Requirement: 台账推进与终态
 
 - 每个确认破口按 wiki §8.3 状态机推进（未定位→已定位→已落地→已复审），只有走到已复审才允许计入完备分子；每轮封闭的破口随轮更新台账判定
-- Round 10 终审 SHALL 统一执行 wiki §8.2 复审六步全量：grep 全部落地标记 → 台账（§5）全量更新 → `tools/kb/syntax_coverage.py` 重跑 → 完备占比重算 → wiki 页面数字同步（禁手改、禁矛盾数字）→ log 记录
-- 终态目标：残余破口（III.5 名单及 B71+）全部封闭或经对抗证伪降级；台账 128 形态全部经对抗验证仍成立 = 完备占比 128/128；`_identify_*` 十族方法注释六项模板全量过审
+- Round 10 终审 SHALL 统一执行 wiki §8.2 复审六步全量重验与增量更新（旧 round10 已执行 v6 首跑）：grep 全部落地标记（含本规范各轮「代码已落地」声明与 B77+ 核验，I.6）→ 台账（§5）全量更新 → `tools/kb/syntax_coverage.py` 重跑 → 完备占比重算 → wiki 页面数字同步（禁手改、禁矛盾数字）→ log 记录
+- 终态目标：残余破口（III.5 名单及 B77+）全部封闭或经对抗证伪降级；台账 128 形态全部经对抗验证仍成立 = 完备占比 128/128（形式层）且组合级挂账清零或如实分层；`_identify_*` 十族方法注释六项模板全量过审
 
 ## MODIFIED Requirements
 

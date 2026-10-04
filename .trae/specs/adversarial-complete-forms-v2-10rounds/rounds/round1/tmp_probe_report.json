@@ -1,0 +1,350 @@
+{
+ "elapsed_sec": 4.1,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 17,
+  "success": 4
+ },
+ "files_total": 21,
+ "generated_at": "2026-10-04T15:23:33",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "test_repros/round10/r10_21_fin_loopctrl.pyc",
+   "test_repros/round7/r7_01_ternary_args_index.pyc",
+   "test_repros/round7/r7_04_ternary_binop_compare.pyc",
+   "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "test_repros/round7/r7_06_ternary_lambda_await.pyc",
+   "test_repros/round7/r7_07_ternary_nest.pyc",
+   "test_repros/round7/r7_08_ternary_deep_host.pyc",
+   "test_repros/round7/r7_10_chain_compare_calls.pyc",
+   "test_repros/round7/r7_11_boolop_mixed.pyc",
+   "test_repros/round7/r7_12_boolop_nest.pyc",
+   "test_repros/round7/r7_14_boolop_deep_host.pyc",
+   "test_repros/round8/r8_07_assert_forms.pyc",
+   "test_repros/round8/r8_10_expr_cross_stmt.pyc",
+   "test_repros/round8/rv8_01_chain3_subscript.pyc",
+   "test_repros/round8/rv8_02_with_tryfin_constret.pyc",
+   "test_repros/round9/rv9_01_b68_nonfin_tail.pyc",
+   "test_repros/round9/rv9_02_b66_with_nest.pyc"
+  ],
+  "success": [
+   "test_repros/round10/r10_14_nonlocal_deep.pyc",
+   "test_repros/round10/r10_16_scope_mix.pyc",
+   "test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+   "test_repros/round8/r8_06_augassign_ops.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_arg_multi_mixed: Failure: Different bytecode"
+   ],
+   "pyc": "test_repros/round7/r7_01_ternary_args_index.pyc",
+   "pyc_sha": "0691762d3015",
+   "source": "test_repros/round7/r7_01_ternary_args_indexOK.py",
+   "source_sha": "e652f6d6e325",
+   "status": "failure",
+   "success_rate": 0.8888888888888888,
+   "units_success": 8,
+   "units_total": 9
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+   "pyc_sha": "ea6468a1da85",
+   "source": "test_repros/round7/r7_03_ternary_stmt_posOK.py",
+   "source_sha": "8cd25ff4f767",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_compare_lhs_only: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round7/r7_04_ternary_binop_compare.pyc",
+   "pyc_sha": "af2127d9a00f",
+   "source": "test_repros/round7/r7_04_ternary_binop_compareOK.py",
+   "source_sha": "2f7c09134539",
+   "status": "failure",
+   "success_rate": 0.8571428571428571,
+   "units_success": 6,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_listcomp_ternary_filter.<listcomp>: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "pyc_sha": "ded1b82a2ce6",
+   "source": "test_repros/round7/r7_05_ternary_comprehensionOK.py",
+   "source_sha": "007fe6537217",
+   "status": "failure",
+   "success_rate": 0.9375,
+   "units_success": 15,
+   "units_total": 16
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_await_ternary_branches: Failure: Different control flow",
+    "***<module>.t_await_assign_ternary: Failure: Different control flow",
+    "***<module>.t_await_deep_ternary: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round7/r7_06_ternary_lambda_await.pyc",
+   "pyc_sha": "6aa2a07020ae",
+   "source": "test_repros/round7/r7_06_ternary_lambda_awaitOK.py",
+   "source_sha": "ef4ea9b239a5",
+   "status": "failure",
+   "success_rate": 0.7,
+   "units_success": 7,
+   "units_total": 10
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_nest_in_condition: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round7/r7_07_ternary_nest.pyc",
+   "pyc_sha": "a4a9ebb2b71a",
+   "source": "test_repros/round7/r7_07_ternary_nestOK.py",
+   "source_sha": "a6a9237a4df3",
+   "status": "failure",
+   "success_rate": 0.8571428571428571,
+   "units_success": 6,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_host_while_body: Failure detected at line number 14 and instruction offset 24: Different bytecode",
+    "***<module>.t_host_for_else: Failure detected at line number 20 and instruction offset 24: Different bytecode",
+    "***<module>.t_host_try_sections: Failure: Different control flow",
+    "***<module>.t_host_match_case: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+   "pyc_sha": "24d30a590338",
+   "source": "test_repros/round7/r7_08_ternary_deep_hostOK.py",
+   "source_sha": "dba44162cb07",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 4,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.c_chain_and_combo: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round7/r7_10_chain_compare_calls.pyc",
+   "pyc_sha": "57a30c2e8465",
+   "source": "test_repros/round7/r7_10_chain_compare_callsOK.py",
+   "source_sha": "9a42871e7f74",
+   "status": "failure",
+   "success_rate": 0.875,
+   "units_success": 7,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.b_and_or_repeat: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round7/r7_11_boolop_mixed.pyc",
+   "pyc_sha": "5577bb96a009",
+   "source": "test_repros/round7/r7_11_boolop_mixedOK.py",
+   "source_sha": "6d6d817e2b87",
+   "status": "failure",
+   "success_rate": 0.8571428571428571,
+   "units_success": 6,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.b_nest_three_layers: Failure: Different control flow",
+    "***<module>.b_nest_deep_right: Failure: Different control flow",
+    "***<module>.b_ternary_lhs_and: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round7/r7_12_boolop_nest.pyc",
+   "pyc_sha": "f69583856ec6",
+   "source": "test_repros/round7/r7_12_boolop_nestOK.py",
+   "source_sha": "e8d4c127b284",
+   "status": "failure",
+   "success_rate": 0.625,
+   "units_success": 5,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.h_listcomp_filter_composite: Failure: Different bytecode",
+    "***<module>.h_listcomp_filter_composite.<listcomp>: Failure: Different control flow",
+    "***<module>.h_if_ternary_chain_composite: Failure: Different control flow",
+    "***<module>.h_return_composite: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round7/r7_14_boolop_deep_host.pyc",
+   "pyc_sha": "415d31312d6f",
+   "source": "test_repros/round7/r7_14_boolop_deep_hostOK.py",
+   "source_sha": "ef21b8855847",
+   "status": "failure",
+   "success_rate": 0.5555555555555556,
+   "units_success": 5,
+   "units_total": 9
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.chain_value_boolop: Failure: Different bytecode"
+   ],
+   "pyc": "test_repros/round8/rv8_01_chain3_subscript.pyc",
+   "pyc_sha": "7bf3dfcdcba9",
+   "source": "test_repros/round8/rv8_01_chain3_subscriptOK.py",
+   "source_sha": "d7310daa9265",
+   "status": "failure",
+   "success_rate": 0.8571428571428571,
+   "units_success": 6,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.tryfin_then_more: Failure: Different bytecode"
+   ],
+   "pyc": "test_repros/round8/rv8_02_with_tryfin_constret.pyc",
+   "pyc_sha": "34c2b7e1f9a4",
+   "source": "test_repros/round8/rv8_02_with_tryfin_constretOK.py",
+   "source_sha": "aebdee3ef343",
+   "status": "failure",
+   "success_rate": 0.8571428571428571,
+   "units_success": 6,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round8/r8_06_augassign_ops.pyc",
+   "pyc_sha": "6001f57d85d2",
+   "source": "test_repros/round8/r8_06_augassign_opsOK.py",
+   "source_sha": "567312483546",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 10,
+   "units_total": 10
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.r8_assert_nested_func: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round8/r8_07_assert_forms.pyc",
+   "pyc_sha": "7a27de948755",
+   "source": "test_repros/round8/r8_07_assert_formsOK.py",
+   "source_sha": "2fb1be988033",
+   "status": "failure",
+   "success_rate": 0.9090909090909091,
+   "units_success": 10,
+   "units_total": 11
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+    "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+    "***<module>.r8_x_raise_ternary_class: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round8/r8_10_expr_cross_stmt.pyc",
+   "pyc_sha": "917cf426aceb",
+   "source": "test_repros/round8/r8_10_expr_cross_stmtOK.py",
+   "source_sha": "2465aa4b5ad2",
+   "status": "failure",
+   "success_rate": 0.75,
+   "units_success": 9,
+   "units_total": 12
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.emptyfin_in_if: Failure: Different bytecode"
+   ],
+   "pyc": "test_repros/round9/rv9_01_b68_nonfin_tail.pyc",
+   "pyc_sha": "cfd48d0d353f",
+   "source": "test_repros/round9/rv9_01_b68_nonfin_tailOK.py",
+   "source_sha": "019594d624a7",
+   "status": "failure",
+   "success_rate": 0.8,
+   "units_success": 4,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.while_with_whole_body: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round9/rv9_02_b66_with_nest.pyc",
+   "pyc_sha": "61ce0b0161e4",
+   "source": "test_repros/round9/rv9_02_b66_with_nestOK.py",
+   "source_sha": "33392188a293",
+   "status": "failure",
+   "success_rate": 0.8,
+   "units_success": 4,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.fin_continue: Failure: Different control flow",
+    "***<module>.fin_break: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round10/r10_21_fin_loopctrl.pyc",
+   "pyc_sha": "6dd911f8746b",
+   "source": "test_repros/round10/r10_21_fin_loopctrlOK.py",
+   "source_sha": "4c02001f9a9c",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 2,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round10/r10_14_nonlocal_deep.pyc",
+   "pyc_sha": "0b2a2054499e",
+   "source": "test_repros/round10/r10_14_nonlocal_deepOK.py",
+   "source_sha": "5ed945f39ec0",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round10/r10_16_scope_mix.pyc",
+   "pyc_sha": "dcd2e53052cd",
+   "source": "test_repros/round10/r10_16_scope_mixOK.py",
+   "source_sha": "89612b150f44",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.8245614035087719,
+ "units_success": 141,
+ "units_total": 171
+}

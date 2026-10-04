@@ -1,0 +1,23 @@
+[
+  {"path": "test_repros/round7/r7_01_ternary_args_index.pyc"},
+  {"path": "test_repros/round7/r7_03_ternary_stmt_pos.pyc"},
+  {"path": "test_repros/round7/r7_04_ternary_binop_compare.pyc"},
+  {"path": "test_repros/round7/r7_05_ternary_comprehension.pyc"},
+  {"path": "test_repros/round7/r7_06_ternary_lambda_await.pyc"},
+  {"path": "test_repros/round7/r7_07_ternary_nest.pyc"},
+  {"path": "test_repros/round7/r7_08_ternary_deep_host.pyc"},
+  {"path": "test_repros/round7/r7_10_chain_compare_calls.pyc"},
+  {"path": "test_repros/round7/r7_11_boolop_mixed.pyc"},
+  {"path": "test_repros/round7/r7_12_boolop_nest.pyc"},
+  {"path": "test_repros/round7/r7_14_boolop_deep_host.pyc"},
+  {"path": "test_repros/round8/rv8_01_chain3_subscript.pyc"},
+  {"path": "test_repros/round8/rv8_02_with_tryfin_constret.pyc"},
+  {"path": "test_repros/round8/r8_06_augassign_ops.pyc"},
+  {"path": "test_repros/round8/r8_07_assert_forms.pyc"},
+  {"path": "test_repros/round8/r8_10_expr_cross_stmt.pyc"},
+  {"path": "test_repros/round9/rv9_01_b68_nonfin_tail.pyc"},
+  {"path": "test_repros/round9/rv9_02_b66_with_nest.pyc"},
+  {"path": "test_repros/round10/r10_21_fin_loopctrl.pyc"},
+  {"path": "test_repros/round10/r10_14_nonlocal_deep.pyc"},
+  {"path": "test_repros/round10/r10_16_scope_mix.pyc"}
+]
