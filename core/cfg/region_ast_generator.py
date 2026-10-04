@@ -1,4 +1,4 @@
-﻿﻿"""
+﻿"""
 基于区域的AST生成器
 
 使用 RegionAnalyzer 的分析结果直接生成AST，替代 ast_generator_v2.py 中的补丁式生成。
@@ -3132,6 +3132,10 @@ class RegionASTGenerator:
         归约方式：仅判定（毯式标记跳过）。释放块由其归属区域（宿主循环体
           走查 / 顶层区域序列 / post-try 队列）按入口引用语义正常派发。
         AST 映射：无（归属修正）。
+        C1/C2/C3 条款：C1——判据只来自同层块对象结构事实（区域自身
+          跨度字段、区域成员集合、块指令 opcode、loop_header 属性）；
+          C2——无跨层/跨区域回溯修正（只决定「不标记」，释放块的派发
+          仍由其归属区域完成）；C3——无按名字/文件名的个案特判。
         """
         if block is None or region is None or not getattr(region, 'has_finally', False):
             return False
@@ -3208,6 +3212,11 @@ class RegionASTGenerator:
         归约方式：then 臂发射 Continue 并将链头+退出块登记已生成（with
           语句重编译时自然再生 __exit__ 调用与回边，每块唯一归属不变）。
         AST 映射：ast.Continue。
+        C1/C2/C3 条款：C1——判据只来自同层块对象结构事实（块指令
+          opcode、普通后继集合、后继末指令/回边目标、WithRegion 成员
+          关系）；C2——无跨层/跨区域回溯修正（region_analyzer.regions
+          仅作成员关系查询，不改写任何区域归属）；C3——无按名字/
+          文件名的个案特判。
         """
         if self._current_loop is None or block is None:
             return False
