@@ -1,0 +1,211 @@
+{
+ "elapsed_sec": 1.6,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 0,
+  "success": 14
+ },
+ "files_total": 14,
+ "generated_at": "2026-10-05T00:49:24",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [],
+  "success": [
+   "test_repros/round10/n10_01_simple_import.pyc",
+   "test_repros/round10/n10_02_simple_fromimport.pyc",
+   "test_repros/round10/n10_03_simple_global.pyc",
+   "test_repros/round10/n10_04_simple_nonlocal.pyc",
+   "test_repros/round10/rv10_31_nonlocal_variant.pyc",
+   "test_repros/round10/rv10_33_ternary_variant.pyc",
+   "test_repros/round6/n6_01_control.pyc",
+   "test_repros/round7/n7_01_simple_ternary.pyc",
+   "test_repros/round7/n7_02_simple_andor.pyc",
+   "test_repros/round8/n8_01_return_const.pyc",
+   "test_repros/round8/n8_02_simple_stmts.pyc",
+   "test_repros/round9/n9_01_simple_guard.pyc",
+   "test_repros/round9/n9_02_plain_forms.pyc",
+   "test_repros/round9/rv9_03_b67_mixed_chain.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round6/n6_01_control.pyc",
+   "pyc_sha": "431cf3ad841a",
+   "source": "test_repros/round6/n6_01_controlOK.py",
+   "source_sha": "9e14deeda05b",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 8,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round7/n7_01_simple_ternary.pyc",
+   "pyc_sha": "4afa6d7f1f86",
+   "source": "test_repros/round7/n7_01_simple_ternaryOK.py",
+   "source_sha": "8bdcd8cf031c",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round7/n7_02_simple_andor.pyc",
+   "pyc_sha": "d7f6f2969da8",
+   "source": "test_repros/round7/n7_02_simple_andorOK.py",
+   "source_sha": "ebfb32369c8f",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round8/n8_01_return_const.pyc",
+   "pyc_sha": "e41f734f676e",
+   "source": "test_repros/round8/n8_01_return_constOK.py",
+   "source_sha": "a9ed97cac6c8",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round8/n8_02_simple_stmts.pyc",
+   "pyc_sha": "6c70b389c6a5",
+   "source": "test_repros/round8/n8_02_simple_stmtsOK.py",
+   "source_sha": "e61d84440d5a",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round9/n9_01_simple_guard.pyc",
+   "pyc_sha": "c6a296aefd2f",
+   "source": "test_repros/round9/n9_01_simple_guardOK.py",
+   "source_sha": "45a6aca85a6a",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round9/n9_02_plain_forms.pyc",
+   "pyc_sha": "98f5b45ccd56",
+   "source": "test_repros/round9/n9_02_plain_formsOK.py",
+   "source_sha": "fc2b0c99cc57",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round10/n10_01_simple_import.pyc",
+   "pyc_sha": "35299bab62aa",
+   "source": "test_repros/round10/n10_01_simple_importOK.py",
+   "source_sha": "35dd4ab05174",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round10/n10_02_simple_fromimport.pyc",
+   "pyc_sha": "61dd83f463b0",
+   "source": "test_repros/round10/n10_02_simple_fromimportOK.py",
+   "source_sha": "4cb6adb665f0",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round10/n10_03_simple_global.pyc",
+   "pyc_sha": "8cb4a2507a46",
+   "source": "test_repros/round10/n10_03_simple_globalOK.py",
+   "source_sha": "9dcd1432c032",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round10/n10_04_simple_nonlocal.pyc",
+   "pyc_sha": "9e41424a41da",
+   "source": "test_repros/round10/n10_04_simple_nonlocalOK.py",
+   "source_sha": "1672700dfad7",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round9/rv9_03_b67_mixed_chain.pyc",
+   "pyc_sha": "4b364df41737",
+   "source": "test_repros/round9/rv9_03_b67_mixed_chainOK.py",
+   "source_sha": "db1237f3ab18",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round10/rv10_31_nonlocal_variant.pyc",
+   "pyc_sha": "946d9f0cdfde",
+   "source": "test_repros/round10/rv10_31_nonlocal_variantOK.py",
+   "source_sha": "70c26647094f",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 13,
+   "units_total": 13
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round10/rv10_33_ternary_variant.pyc",
+   "pyc_sha": "eb51d2e940cb",
+   "source": "test_repros/round10/rv10_33_ternary_variantOK.py",
+   "source_sha": "4686721ac99a",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 1.0,
+ "units_success": 66,
+ "units_total": 66
+}

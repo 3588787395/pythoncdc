@@ -1,0 +1,24 @@
+[
+ {
+  "pyc": "test_repros/round9/rv9_01_b68_nonfin_tail.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.emptyfin_in_if: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round9/rv9_01_b68_nonfin_tail.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round9/rv9_01_b68_nonfin_tailOK.py",
+   "[single] status=failure units=4/5 success_rate=80.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round9/rv9_02_b66_with_nest.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.while_with_whole_body: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round9/rv9_02_b66_with_nest.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round9/rv9_02_b66_with_nestOK.py",
+   "[single] status=failure units=4/5 success_rate=80.00%"
+  ]
+ }
+]

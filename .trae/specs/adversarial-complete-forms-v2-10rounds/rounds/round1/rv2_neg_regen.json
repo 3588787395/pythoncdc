@@ -1,0 +1,142 @@
+[
+ {
+  "pyc": "test_repros/round6/n6_01_control.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/n6_01_control.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/n6_01_controlOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/n7_01_simple_ternary.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/n7_01_simple_ternary.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/n7_01_simple_ternaryOK.py",
+   "[single] status=success units=5/5 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/n7_02_simple_andor.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/n7_02_simple_andor.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/n7_02_simple_andorOK.py",
+   "[single] status=success units=5/5 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/n8_01_return_const.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/n8_01_return_const.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/n8_01_return_constOK.py",
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/n8_02_simple_stmts.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/n8_02_simple_stmts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/n8_02_simple_stmtsOK.py",
+   "[single] status=success units=5/5 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round9/n9_01_simple_guard.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round9/n9_01_simple_guard.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round9/n9_01_simple_guardOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round9/n9_02_plain_forms.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round9/n9_02_plain_forms.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round9/n9_02_plain_formsOK.py",
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/n10_01_simple_import.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/n10_01_simple_import.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/n10_01_simple_importOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/n10_02_simple_fromimport.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/n10_02_simple_fromimport.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/n10_02_simple_fromimportOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/n10_03_simple_global.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/n10_03_simple_global.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/n10_03_simple_globalOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/n10_04_simple_nonlocal.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/n10_04_simple_nonlocal.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/n10_04_simple_nonlocalOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round9/rv9_03_b67_mixed_chain.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round9/rv9_03_b67_mixed_chain.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round9/rv9_03_b67_mixed_chainOK.py",
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/rv10_31_nonlocal_variant.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/rv10_31_nonlocal_variant.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/rv10_31_nonlocal_variantOK.py",
+   "[single] status=success units=13/13 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/rv10_33_ternary_variant.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/rv10_33_ternary_variant.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/rv10_33_ternary_variantOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ }
+]

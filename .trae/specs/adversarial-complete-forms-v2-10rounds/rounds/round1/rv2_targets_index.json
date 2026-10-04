@@ -1,0 +1,10 @@
+[
+  {"path": "test_repros/round7/r7_08_ternary_deep_host.pyc"},
+  {"path": "test_repros/round7/r7_07_ternary_nest.pyc"},
+  {"path": "test_repros/round10/r10_06_import_deep_combo.pyc"},
+  {"path": "test_repros/round10/r10_21_fin_loopctrl.pyc"},
+  {"path": "test_repros/round10/r10_04_import_try_cross.pyc"},
+  {"path": "test_repros/round10/r10_15_global_hosts.pyc"},
+  {"path": "test_repros/round10/rv10_32_augassign_variant.pyc"},
+  {"path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_fixB/b6576_probe.pyc"}
+]

@@ -1,0 +1,83 @@
+[
+ {
+  "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.t_host_match_case: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_host.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_hostOK.py",
+   "[single] status=failure units=7/8 success_rate=87.50%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_07_ternary_nest.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nest.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nestOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/r10_06_import_deep_combo.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/r10_06_import_deep_combo.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/r10_06_import_deep_comboOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/r10_21_fin_loopctrl.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/r10_21_fin_loopctrl.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/r10_21_fin_loopctrlOK.py",
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/r10_04_import_try_cross.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/r10_04_import_try_cross.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/r10_04_import_try_crossOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/r10_15_global_hosts.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/r10_15_global_hosts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/r10_15_global_hostsOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/rv10_32_augassign_variant.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/rv10_32_augassign_variant.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/rv10_32_augassign_variantOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_fixB/b6576_probe.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_fixB/b6576_probe.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_fixB/b6576_probeOK.py",
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ }
+]

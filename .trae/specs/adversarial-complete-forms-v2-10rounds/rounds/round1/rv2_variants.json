@@ -1,0 +1,87 @@
+[
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b50_face.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b50_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b50_faceOK.py",
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "  ***<module>.n_for_body_nest: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_faceOK.py",
+   "[single] status=failure units=1/4 success_rate=25.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.v_nest_fin_continue: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_faceOK.py",
+   "[single] status=failure units=3/4 success_rate=75.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.v_imp_cond_fin: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_faceOK.py",
+   "[single] status=failure units=2/3 success_rate=66.67%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.n_true_guard: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_faceOK.py",
+   "[single] status=failure units=3/4 success_rate=75.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "  ***<module>.n_fin_noseg: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_faceOK.py",
+   "[single] status=failure units=1/3 success_rate=33.33%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b76_face.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b76_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b76_faceOK.py",
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b65_face.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b65_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b65_faceOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ }
+]

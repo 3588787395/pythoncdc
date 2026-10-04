@@ -1,0 +1,136 @@
+{
+ "elapsed_sec": 1.9,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 1,
+  "success": 7
+ },
+ "files_total": 8,
+ "generated_at": "2026-10-05T00:49:24",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "test_repros/round7/r7_08_ternary_deep_host.pyc"
+  ],
+  "success": [
+   ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_fixB/b6576_probe.pyc",
+   "test_repros/round10/r10_04_import_try_cross.pyc",
+   "test_repros/round10/r10_06_import_deep_combo.pyc",
+   "test_repros/round10/r10_15_global_hosts.pyc",
+   "test_repros/round10/r10_21_fin_loopctrl.pyc",
+   "test_repros/round10/rv10_32_augassign_variant.pyc",
+   "test_repros/round7/r7_07_ternary_nest.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_host_match_case: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+   "pyc_sha": "24d30a590338",
+   "source": "test_repros/round7/r7_08_ternary_deep_hostOK.py",
+   "source_sha": "61a2cb23d2e0",
+   "status": "failure",
+   "success_rate": 0.875,
+   "units_success": 7,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round7/r7_07_ternary_nest.pyc",
+   "pyc_sha": "a4a9ebb2b71a",
+   "source": "test_repros/round7/r7_07_ternary_nestOK.py",
+   "source_sha": "678b6f87926d",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round10/r10_06_import_deep_combo.pyc",
+   "pyc_sha": "42603d707319",
+   "source": "test_repros/round10/r10_06_import_deep_comboOK.py",
+   "source_sha": "23117f6f3cf1",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round10/r10_21_fin_loopctrl.pyc",
+   "pyc_sha": "6dd911f8746b",
+   "source": "test_repros/round10/r10_21_fin_loopctrlOK.py",
+   "source_sha": "08f2c0d3c3fe",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round10/r10_04_import_try_cross.pyc",
+   "pyc_sha": "ce5a8873285b",
+   "source": "test_repros/round10/r10_04_import_try_crossOK.py",
+   "source_sha": "8da5493e7e53",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round10/r10_15_global_hosts.pyc",
+   "pyc_sha": "bec8677c965d",
+   "source": "test_repros/round10/r10_15_global_hostsOK.py",
+   "source_sha": "1885a6664443",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round10/rv10_32_augassign_variant.pyc",
+   "pyc_sha": "46857f08816d",
+   "source": "test_repros/round10/rv10_32_augassign_variantOK.py",
+   "source_sha": "3ce90951eaf2",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 8,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_fixB/b6576_probe.pyc",
+   "pyc_sha": "a76d88a58c88",
+   "source": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_fixB/b6576_probeOK.py",
+   "source_sha": "13d954fa74a3",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9767441860465116,
+ "units_success": 42,
+ "units_total": 43
+}

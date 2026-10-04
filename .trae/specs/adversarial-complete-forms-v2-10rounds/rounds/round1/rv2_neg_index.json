@@ -1,0 +1,16 @@
+[
+  {"path": "test_repros/round6/n6_01_control.pyc"},
+  {"path": "test_repros/round7/n7_01_simple_ternary.pyc"},
+  {"path": "test_repros/round7/n7_02_simple_andor.pyc"},
+  {"path": "test_repros/round8/n8_01_return_const.pyc"},
+  {"path": "test_repros/round8/n8_02_simple_stmts.pyc"},
+  {"path": "test_repros/round9/n9_01_simple_guard.pyc"},
+  {"path": "test_repros/round9/n9_02_plain_forms.pyc"},
+  {"path": "test_repros/round10/n10_01_simple_import.pyc"},
+  {"path": "test_repros/round10/n10_02_simple_fromimport.pyc"},
+  {"path": "test_repros/round10/n10_03_simple_global.pyc"},
+  {"path": "test_repros/round10/n10_04_simple_nonlocal.pyc"},
+  {"path": "test_repros/round9/rv9_03_b67_mixed_chain.pyc"},
+  {"path": "test_repros/round10/rv10_31_nonlocal_variant.pyc"},
+  {"path": "test_repros/round10/rv10_33_ternary_variant.pyc"}
+]
