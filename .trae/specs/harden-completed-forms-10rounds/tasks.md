@@ -63,11 +63,12 @@
   - [x] 9.3 评审工程师复核：逐 hunk 审查（零容忍打回）；REVIEW2.md —— 实测：终判**放行**（8/8 hunk PASS，判据全为同层结构事实，零白名单/阈值/跨层/self 状态/少发射）；独立复跑 rv9_ 前缀零覆盖读数一致；变体攻击 3 探针 14 单元 12/14 = +2 补强零回归；新登记 B69/B70（均 pre-fix 逐字节同败）；红线四项全过
   - [x] 9.4 主代理验证：402 全量 8 分片重生成+batch+compare = REGRESSIONS=0；小测试集 34；quotation 152/153；tests/；VERIFICATION.md —— 实测：402 regen 402/402 + 8 分片 REGRESSIONS=0，units **6554/6617（99.05%，较盘上基线分片 +8）**文件 369/402（shard0 jq_trans_module failure→success 文件级 +1）；小测试集 34 = 1505/1568 REGRESSIONS=0；quotation 152/153 唯一失败 change_his_to_forward 基线一致；tests 六套件 277 passed/2 failed（= 基线 test_B01 + test_BOUNDARY_02，零新增）/2 xpassed
   - [x] 9.5 归档 rounds/round9/ + 提交并 push
-- [ ] Task 10: Round 10 — 终审
-  - [ ] 10.1 全台账 127 形态对抗覆盖汇总 + 残留破口处理
-  - [ ] 10.2 主代理全量终验（402 分片 + compare + quotation + tests/）
-  - [ ] 10.3 wiki §8.2 复审六步全量执行：syntax_coverage.py 重跑、占比重算、log 记录
-  - [ ] 10.4 终归档 + 提交并 push
+- [x] Task 10: Round 10 — 终审
+  - [x] 10.1 全台账 127 形态对抗覆盖汇总 + 残留破口处理（72f46912）—— 实测：41 组全映射，35 组有对抗覆盖（新增专攻 Import 族与 Global/Nonlocal 族），6 组零专攻如实登记；补攻击 17 文件组 61/72 + 负对照 9/9；残留 29 项全判 (a) 可封闭（P1=B48/B46/B72/B71）、(b) 不可达清单为空、B64 实测更正已封闭；新登记 B71–B75（均 worktree @ d8246a8e 逐字节同败证实既有缺口）
+  - [x] 10.1b 修复封闭 + 复核放行 —— 实测：修复批次（b53d449c）B72/B48 封闭 + B46 部分（净 +7 单元；B46 尾项 t_nest_in_condition 与 B71 实施降级如实登记取证）；复核（0caea12b）终判放行 6/6 hunk + 哨兵口径裁决（round6 权威重跑 115/115）+ 变体 26/27（x >>= t 真增益实证）+ B76 登记（既有缺口）
+  - [x] 10.2 主代理全量终验（402 分片 + compare + quotation + tests/）—— 实测：402 regen 402/402 + 8 分片 REGRESSIONS=0 = **6554/6617（99.05%）369/402** 与 Round 9 终态逐位持平（shard7 触 290s 上限按纪律拆两半合并 1265/1282）；小测试集 34 = 1505/1568 REGRESSIONS=0；quotation 152/153 零新增；tests 六套件 277 passed/2 failed（基线名单）/2 xpassed 零新增；VERIFICATION.md
+  - [x] 10.3 wiki §8.2 复审六步全量执行：syntax_coverage.py 重跑（128/128 = 100%）、占比重算、log 记录 —— 实测：落地标记 grep 在树（本轮 13+ 处 + B1 族十余处）→ 台账 §5/§6/§8.1 更新（完备 128/破口 0 形式层）→ coverage 重跑 → 五页数字同步（总纲/branch-coverage/syntax-audit-ledger/overview/index，v6 口径 = 形式层 100% + 组合级挂账 25 号透明未清零）→ log 2026-10-04 条目
+  - [x] 10.4 终归档 + 提交并 push —— 实测：VERIFICATION.md 归档 + checklist 终态核验（「破口清零」诚实保持未勾）+ 提交并 push origin main
 
 注：每轮内部流程同构 = 评审攻击 → 修复 → 评审复核 → 主代理验证 → 归档 push；轮与轮之间形态不重复（round9 回归攻击除外）。
 

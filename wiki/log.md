@@ -1,5 +1,10 @@
 # Research Log
 
+## 2026-10-04（对抗规范 Round 10 终审：B1 族升格 + 口径 v6）
+
+- **B1 族升格「已封闭」**（§8.2 复审六步全量执行）：①fix 批归档落位（round10 FIX.md，B72/B48/B46 部分封闭 +7 单元）→ ②grep 落地标记在树确认（本轮 `[B48]`×5/`[B46]`×5/`[B71]`×2/`[B72]`；历史 B1 族 `[B1b fix]`/`[B1b fix-r2]` + `_sb_has_body` 十余处——round75 归档嫁接方案 `_graft_pending_operand` 确证废弃，改由 Round 1 五臂算法路线封闭）→ ③台账 §5/§6/§8.1 更新（完备 127→128、破口 1→0，B1a/B1b 状态改「已封闭（防回归监控）」）→ ④`tools/kb/syntax_coverage.py` 重跑 **128/128 = 100%** → ⑤占比重算同步五页（总纲/branch-coverage/syntax-audit-ledger/overview/index，overview 乱行修复）→ ⑥本条 log。
+- **口径 v6（对抗分层）**：路径 100% / 形式层（路径 × 单形态不变式）128/0/0 ⇒ **100%**；对抗 10 轮（`harden-completed-forms-10rounds`）登记的**组合级挂账 25 号未清零**（B42–B51/B56–B65/B69–B71/B73–B76 内未封闭部分 + 残留单元 + 6 组零专攻形态组，权威清单 = spec rounds/round10/REVIEW.md 残留决策表 + REVIEW2.md）——透明挂账，不计入形式层分母，按 §8.3 状态机继续推进。终审全量验证零回退：402 = 6554/6617（99.05%）369/402、小测试集 34 = 1505/1568、quotation 152/153、tests 六套件 277 passed/2 failed（基线名单）——全与 Round 9 终态逐位持平。
+
 ## 2026-09-29（夜：总纲合并，消除散乱）
 
 - **信息散乱收口**：完备性标准原拆在 branch-coverage（标准）/syntax-audit-ledger（台账）/branch-conditions（条件库）/rules.md（工程条款）/spec 三处，用户裁定"落实效果较差、信息散乱"⇒ 合并为单一权威文档 **[[decompile-invariant-completeness]]**（反编译迭代总纲：嵌套无感与语法完备）：§0 读数 / §1 C1-C2-C3 不变式+归纳 / §2 分母 128+三级判定 / §3 十三条误解 / §4 T1-T8 映射 / §5 128 形态台账全量 / §6 破口登记 B1a-B4 / §7 except\* 纠正 / §8 迭代机制（标记+六步+状态机）/ §9 口径演变史 v1-v5+正确性旁证+BOM / §10 可用资源索引（工具/数据/归档复现/页面/门禁全表）。旧两页降为转址页（含位置映射表，链接完整性保留）；index/overview/branch-conditions/cfg-anatomy/rules.md 全部活引用改指总纲；历史 log/spec 记录不改动。
