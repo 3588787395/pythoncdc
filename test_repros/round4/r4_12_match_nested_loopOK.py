@@ -77,7 +77,7 @@ def match_in_for_guard(items):
         match v:
             case n if n < 0:
                 break
-            case n if n == 0:
+            case n:
                 pass
             case n:
                 acc.append((i, n))

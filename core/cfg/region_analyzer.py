@@ -1974,12 +1974,228 @@ class RegionAnalyzer:
             #print(f"  region: {type(r).__name__}, blocks={[b.start_offset for b in r.blocks]}, region_type={r.region_type}")
             pass
 
+        # [B50] finally 副本结构面修复（t_host_try_sections）：归约完成后
+        # 调整生成端可见的副本登记/父子边，语义见
+        # _b50_fix_try_hosted_ternary_normal_copies docstring。
+        self._b50_fix_try_hosted_ternary_normal_copies()
+
         self._compute_generator_entry_metadata()
 
         code_obj = getattr(self.cfg, 'code', None)
         self.global_declarations = self._detect_global_declarations(code_obj) if code_obj else []
 
         return self.regions
+
+    def _b50_finally_copy_iso_seqs(self, region) -> list:
+        """[B50] finally 副本同构序列：逐块剥噪声与异常机制指令、忽略块尾
+        纯跳转后的 opname 序列（normal/exception 副本仅差尾部跳转目标与
+        PUSH_EXC_INFO/RERAISE，剥除后同构；try 体语句区域与副本异构）。
+        [C1] 判据仅取块结构事实（指令 opname 序列），无名称白名单。
+        [C2] 纯只读投影，不改任何区域状态，数据流自底向上。
+        [C3] 不触碰块归属。
+        """
+        _seqs = []
+        for _b in sorted(region.blocks, key=lambda x: x.start_offset):
+            _ops = [i.opname for i in _b.instructions
+                    if i.opname not in NOISE_OPS
+                    and i.opname not in ('PUSH_EXC_INFO', 'RERAISE',
+                                         'WITH_EXCEPT_START',
+                                         'CHECK_EXC_MATCH',
+                                         'CHECK_EG_MATCH', 'POP_EXCEPT')]
+            if _ops and _ops[-1] in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                _ops = _ops[:-1]
+            _seqs.append(_ops)
+        return _seqs
+
+    def _b50_fix_try_hosted_ternary_normal_copies(self) -> None:
+        """[B50] try 宿主三元的 finally 副本结构面修复（t_host_try_sections）。
+
+        区域类型：TryExceptRegion(has_finally) 的两类 TernaryRegion 子区
+          域：(a) try 体首语句三元（entry 与 try 区域入口共享同一块）；
+          (b) finally body 的 normal path 副本三元（entry ∈
+          finally_copy_blocks 键集、不在 try_blocks、try 体 fallthrough
+          可达）。
+        算法描述：CPython 3.11+ 把 finally body 复制两份——normal path
+          副本落在 try 体 fallthrough 路径上、exception path 副本在
+          finally_blocks（含 PUSH_EXC_INFO+RERAISE）。生成端 finally 副
+          本跳过预_pass 以「entry ∈ try_blocks + parent 为
+          TryExceptRegion + 存在 finally_blocks 中等长兄弟三元」识别
+          normal 副本：本形态 normal 副本 entry 不在 try_blocks（try 体
+          与副本之间有边界块）→ 预_pass 条件 1 不命中 → normal 副本被
+          try 体沿 fallthrough 消费（连同其 merge 块上的 return 一并吸
+          入 try body）；同时 try 体首语句三元因与 exception 副本等长被
+          该弱判据假配对误标为已生成 → try 体内容丢失。
+        字节码形态：try 体 [cond 跳转 + 真臂 + 假臂 + store] → 边界块 →
+          normal 副本 [与 exception 副本剥尾跳转后同构的指令序列] →
+          return；exception 副本 [PUSH_EXC_INFO..同构指令序列]；
+          handler 三元 [与两副本均不同构的指令序列]。
+        边界条件：仅当 (a) 三元与全部 exception 副本**不同构**（
+          _b50_finally_copy_iso_seqs 序列不等）时 detach——同构（try 体
+          空形态：try 入口即 normal 副本入口）时预_pass 跳过是正确行为，
+          不得 detach；且三元块集须 ⊆ try_blocks（try 体语句区域的成员
+          关系事实）；(b) 仅当常规副本候选与某 exception 副本同构、
+          entry ∈ finally_copy_blocks 键集（analyzer try 识别阶段自产的
+          常规副本入口映射，handler 三元 entry 不在键集）且 entry 尚未
+          在 try_blocks（R7-05/11 形态已登记，不重复）时补登记。
+        归约语义：detach 仅解除父子边（区域成员关系与 block_to_region
+          不变，try 体仍经入口派发生成该三元）；补登记使生成端预_pass
+          条件 1 命中、把 normal 副本正确标记为已生成（其语义由
+          exception 副本在 finalbody 归约表达）。
+        AST 映射：try body 首语句 IfExp 赋值恢复；finalbody 由
+          exception 副本归约；return 回归 try-finally 之后的函数级语句
+          位，不再被吸入 try body。
+        已知失败形态：try 体首语句三元与 exception 副本剥尾跳转后同构
+          （如 try/finally 两级相同三元字面量）时不 detach，try 体仍被
+          预_pass 误标丢失；finally_copy_blocks 未生成的旧形态无法补登
+          记（维持原行为）。
+        [C1] 判据仅取块结构事实（入口块同一性/区域父子关系/块集成员
+          关系/剥噪 opname 序列同构/finally_copy_blocks 键集），无名称
+          白名单、无魔数偏移、无跨层反查。
+        [C2] 数据流自底向上：仅调整生成端可见的结构面（父子边/块登
+          记），不修改任何区域归约结果，无回溯修正。
+        [C3] 每块唯一归属不变：所有块的 block_to_region 保持原状。
+        """
+        for _reg in list(self.regions):
+            if not isinstance(_reg, TryExceptRegion):
+                continue
+            if not (getattr(_reg, 'has_finally', False) and _reg.finally_blocks):
+                continue
+            _fin_off = {b.start_offset for b in _reg.finally_blocks}
+            _fc_keys = set(getattr(_reg, 'finally_copy_blocks', None) or {})
+            _try_blocks = list(getattr(_reg, 'try_blocks', None) or [])
+            _try_entry_ids = {id(_b) for _b in _try_blocks}
+            _children = [c for c in (getattr(_reg, 'children', None) or [])
+                         if isinstance(c, TernaryRegion) and c.entry is not None]
+            _exc_copies = [c for c in _children
+                           if c.entry.start_offset in _fin_off]
+            if not _exc_copies:
+                continue
+            # ① try 体首语句三元 detach：与 try 区域共享入口块、块集 ⊆
+            # try_blocks、且与全部 exception 副本不同构（同构 = try 体空
+            # 形态的 normal 副本，预_pass 跳过是正确行为）。
+            for _t in _children:
+                if _t.entry is not getattr(_reg, 'entry', None):
+                    continue
+                if _t.entry.start_offset in _fin_off:
+                    continue
+                if not set(_t.blocks) <= set(_try_blocks):
+                    continue
+                _t_seq = self._b50_finally_copy_iso_seqs(_t)
+                if any(_t_seq == self._b50_finally_copy_iso_seqs(_e)
+                       for _e in _exc_copies):
+                    continue
+                _t.parent = None
+                _ch = getattr(_reg, 'children', None)
+                if _ch and _t in _ch:
+                    _ch.remove(_t)
+            # ② normal 副本入口补进 try_blocks：使生成端预_pass 条件 1
+            # 命中，把 normal 副本正确标记为已生成（语义由 exception 副
+            # 本在 finalbody 归约表达），不再被 try 体 fallthrough 消费。
+            for _e in _exc_copies:
+                _e_seq = self._b50_finally_copy_iso_seqs(_e)
+                for _sib in _children:
+                    if (_sib is _e
+                            or _sib.entry.start_offset in _fin_off
+                            or _sib.entry.start_offset not in _fc_keys
+                            or len(_sib.blocks) != len(_e.blocks)
+                            or id(_sib.entry) in _try_entry_ids):
+                        continue
+                    if self._b50_finally_copy_iso_seqs(_sib) != _e_seq:
+                        continue
+                    _reg.try_blocks.append(_sib.entry)
+                    _try_entry_ids.add(id(_sib.entry))
+                    break
+
+    def _b74_guard_arm_targets_case_body(self, pattern_blocks, case_bodies) -> bool:
+        """[B74] 幻影 guard 后校验：guard 提取器将选中的臂段，其终止条件
+        跳转目标是否落入 case 体块集。
+
+        区域类型：MatchRegion 的 case guard 解析（case 体首块兼作 pattern
+          材料块的形态）。
+        算法描述：`case P:` 体首 if 语句与 pattern 捕获（UNPACK_SEQUENCE
+          +STORE）同块直落时，guard 提取器在最后 STORE 之后扫到体首 if
+          的臂段（LOAD_VAR..COMPARE/条件跳转），极性协议据「跳转目标 !=
+          fail 边」判为取反臂，产生幻影 guard 与幻影 else。真 guard 臂的
+          失败边指向下一 case 头/merge（guard 失败必须离开 case），绝不
+          落入体块集；体首 if 的跳转目标（体内 merge/体尾跳转块）必在体
+          块集内。
+        字节码形态：blk_case_body_head = [UNPACK_SEQUENCE, STORE v,
+          POP_TOP.., <import 序列>, LOAD v, LOAD_CONST 0, COMPARE_OP,
+          POP_JUMP_FORWARD_IF_FALSE → 体尾块(JUMP_BACKWARD 循环头)]。
+        边界条件：重放提取器的 search_start（最后 STORE_OPS 之后，无
+          STORE 时按 pattern_end_ops 回扫）与首臂定位（LOAD_VAR 开头的
+          var-const/var-var/is-op/truthiness 形态）；重放不到臂、臂终止
+          跳转目标不在体块集、或 pattern_blocks 不含体块时返回 False
+          （保留 guard，维持原行为）；guard 段位于头块内
+          （allow_in_header_block）的形态目标为 fail 边，不命中。
+        归约语义：命中 ⇒ 撤销幻影 guard（case 体首 if 由体语句归约发
+          射）；不命中 ⇒ 原行为逐字节不变。
+        AST 映射：撤销后 case 无 guard，体首 if 恢复为体语句
+          ast.If；幻影 else continue 消失。
+        已知失败形态：体首 if 的跳转目标块未被收进 case_bodies 时检测
+          不到（维持原行为）；提取器判据演进时本重放需同步。
+        [C1] 判据仅取块结构事实（指令 opname/跳转目标偏移/体块成员关
+          系），无名称白名单、无魔数、无跨层反查。
+        [C2] 数据流自底向上：仅校验 guard 提取结果的结构合法性，不改任
+          何区域归约结果。
+        [C3] 每块唯一归属不变。
+        """
+        if not pattern_blocks or not case_bodies:
+            return False
+        _pp = self.pattern_parser
+        _body_offs = set()
+        for _body in case_bodies:
+            for _b in (_body or []):
+                _body_offs.add(_b.start_offset)
+        if not _body_offs:
+            return False
+        all_instrs = []
+        for block in pattern_blocks:
+            for instr in block.instructions:
+                if instr.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                    all_instrs.append(instr)
+        if not all_instrs:
+            return False
+        store_indices = [i for i, instr in enumerate(all_instrs)
+                         if instr.opname in _pp.STORE_OPS]
+        search_start = 0
+        if store_indices:
+            search_start = store_indices[-1] + 1
+        else:
+            pattern_end_ops = ('MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
+                               'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
+                               'UNPACK_SEQUENCE', 'UNPACK_EX', 'UNPACK_EXTRACT',
+                               'COPY', 'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_IF_NONE',
+                               'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE')
+            for i in range(len(all_instrs) - 1, -1, -1):
+                if all_instrs[i].opname in pattern_end_ops:
+                    search_start = i + 1
+                    break
+        _POP_ALL = ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE',
+                    'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE')
+        for i in range(search_start, len(all_instrs)):
+            instr = all_instrs[i]
+            if instr.opname not in _pp.LOAD_VAR_OPS:
+                continue
+            _arm_end = None
+            if (i + 3 < len(all_instrs)
+                    and all_instrs[i + 1].opname == 'LOAD_CONST'
+                    and all_instrs[i + 2].opname in ('COMPARE_OP', 'IS_OP')
+                    and all_instrs[i + 3].opname in _POP_ALL):
+                _arm_end = i + 3
+            elif (i + 3 < len(all_instrs)
+                    and all_instrs[i + 1].opname in _pp.LOAD_VAR_OPS
+                    and all_instrs[i + 2].opname in ('COMPARE_OP', 'IS_OP')
+                    and all_instrs[i + 3].opname in _POP_ALL):
+                _arm_end = i + 3
+            elif (i + 1 < len(all_instrs)
+                    and all_instrs[i + 1].opname in _POP_ALL):
+                _arm_end = i + 1
+            if _arm_end is None:
+                continue
+            _tgt = all_instrs[_arm_end].argval
+            return isinstance(_tgt, int) and _tgt in _body_offs
+        return False
 
     # [B48] CPython 3.11 BINARY_OP oparg>=13 为 in-place 算法编码段
     # (+=, &=, //=, <<=, @=, *=, %=, |=, **=, >>=, -=, /=, ^=)——字节码
@@ -13673,7 +13889,11 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
         否则跳过。对未被 claimed 的块，仅当 _has_match_op 或 _is_case_pattern_block
         为真时才进入处理。case body 边界由 _mr_collect_case_body BFS 收集，
         stop_set 包含 pattern_check_blocks；guard 块（位于 case body 内且条件跳转
-        目标指向下一 case_block）归 MatchRegion 所有。MatchRegion 注册时仅对
+        目标指向下一 case_block）归 MatchRegion 所有。[B74] 幻影 guard 后校验：
+        parse_case_guard 产出的 guard 经 _b74_guard_arm_targets_case_body 重放
+        提取器定位臂终止跳转，目标落入 case 体块集时撤销（case_guards 置
+        None）——结构事实：真 guard 臂的失败边必离开 case（下一 case 头或
+        merge），体首 if 语句的跳转目标必在体块集内。MatchRegion 注册时仅对
         `b not in self.block_to_region` 的块登记，先到先得不覆盖既有归属。
         每个基本块经 block_to_region 唯一归属一个 MatchRegion。
 
@@ -13781,11 +14001,26 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 _fail_off = (case_blocks[_ci + 1].start_offset
                              if _ci + 1 < len(case_blocks)
                              else (merge.start_offset if merge else None))
-                case_guards.append(self.pattern_parser.parse_case_guard(
-                    self.pattern_parser.collect_pattern_blocks(_cb, all_blocks),
+                _pb = self.pattern_parser.collect_pattern_blocks(_cb, all_blocks)
+                _gd = self.pattern_parser.parse_case_guard(
+                    _pb,
                     allow_in_header_block=(_cb not in _guard_body_pool
                                             and self._mr_head_has_capture_binding(_cb)),
-                    fail_case_offset=_fail_off))
+                    fail_case_offset=_fail_off)
+                # [B74] 幻影 guard 封闭：case 体首块兼作 pattern 材料（如
+                # `case {"k": v}:` 的 UNPACK_SEQUENCE+STORE 捕获与体首 if
+                # 条件同块）时，guard 提取器在最后 STORE 之后扫到体首 if
+                # 的臂段，极性协议把「跳转目标 != fail 边」判为取反臂 →
+                # 幻影 guard + 幻影 else。结构事实：真 guard 臂的失败边指
+                # 向下一 case 头/merge（离开 case），绝不可能落入 case 体
+                # 块集；体首 if 语句的跳转目标必在体块集内。后校验重放提
+                # 取器的 search_start+首臂定位，臂终止跳转目标 ∈ 体块集即
+                # 撤销该 guard。六项模板与 [C1][C2][C3] 见
+                # _b74_guard_arm_targets_case_body docstring。
+                if (_gd is not None
+                        and self._b74_guard_arm_targets_case_body(_pb, case_bodies)):
+                    _gd = None
+                case_guards.append(_gd)
             region = MatchRegion(
                 region_type=RegionType.MATCH, entry=subject_block, blocks=all_blocks,
                 subject_block=subject_block, case_blocks=case_blocks,
@@ -15477,11 +15712,26 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 _fail_off = (case_blocks[_ci + 1].start_offset
                              if _ci + 1 < len(case_blocks)
                              else (merge.start_offset if merge else None))
-                case_guards.append(self.pattern_parser.parse_case_guard(
-                    self.pattern_parser.collect_pattern_blocks(_cb, all_blocks),
+                _pb = self.pattern_parser.collect_pattern_blocks(_cb, all_blocks)
+                _gd = self.pattern_parser.parse_case_guard(
+                    _pb,
                     allow_in_header_block=(_cb not in _guard_body_pool
                                             and self._mr_head_has_capture_binding(_cb)),
-                    fail_case_offset=_fail_off))
+                    fail_case_offset=_fail_off)
+                # [B74] 幻影 guard 封闭：case 体首块兼作 pattern 材料（如
+                # `case {"k": v}:` 的 UNPACK_SEQUENCE+STORE 捕获与体首 if
+                # 条件同块）时，guard 提取器在最后 STORE 之后扫到体首 if
+                # 的臂段，极性协议把「跳转目标 != fail 边」判为取反臂 →
+                # 幻影 guard + 幻影 else。结构事实：真 guard 臂的失败边指
+                # 向下一 case 头/merge（离开 case），绝不可能落入 case 体
+                # 块集；体首 if 语句的跳转目标必在体块集内。后校验重放提
+                # 取器的 search_start+首臂定位，臂终止跳转目标 ∈ 体块集即
+                # 撤销该 guard。六项模板与 [C1][C2][C3] 见
+                # _b74_guard_arm_targets_case_body docstring。
+                if (_gd is not None
+                        and self._b74_guard_arm_targets_case_body(_pb, case_bodies)):
+                    _gd = None
+                case_guards.append(_gd)
             region = MatchRegion(
                 region_type=RegionType.MATCH, entry=subject_block, blocks=all_blocks,
                 subject_block=subject_block, case_blocks=case_blocks,
@@ -15950,11 +16200,26 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 _fail_off = (case_blocks[_ci + 1].start_offset
                              if _ci + 1 < len(case_blocks)
                              else (merge.start_offset if merge else None))
-                case_guards.append(self.pattern_parser.parse_case_guard(
-                    self.pattern_parser.collect_pattern_blocks(_cb, all_blocks),
+                _pb = self.pattern_parser.collect_pattern_blocks(_cb, all_blocks)
+                _gd = self.pattern_parser.parse_case_guard(
+                    _pb,
                     allow_in_header_block=(_cb not in _guard_body_pool
                                             and self._mr_head_has_capture_binding(_cb)),
-                    fail_case_offset=_fail_off))
+                    fail_case_offset=_fail_off)
+                # [B74] 幻影 guard 封闭：case 体首块兼作 pattern 材料（如
+                # `case {"k": v}:` 的 UNPACK_SEQUENCE+STORE 捕获与体首 if
+                # 条件同块）时，guard 提取器在最后 STORE 之后扫到体首 if
+                # 的臂段，极性协议把「跳转目标 != fail 边」判为取反臂 →
+                # 幻影 guard + 幻影 else。结构事实：真 guard 臂的失败边指
+                # 向下一 case 头/merge（离开 case），绝不可能落入 case 体
+                # 块集；体首 if 语句的跳转目标必在体块集内。后校验重放提
+                # 取器的 search_start+首臂定位，臂终止跳转目标 ∈ 体块集即
+                # 撤销该 guard。六项模板与 [C1][C2][C3] 见
+                # _b74_guard_arm_targets_case_body docstring。
+                if (_gd is not None
+                        and self._b74_guard_arm_targets_case_body(_pb, case_bodies)):
+                    _gd = None
+                case_guards.append(_gd)
             region = MatchRegion(
                 region_type=RegionType.MATCH, entry=block, blocks=all_blocks,
                 subject_block=block, case_blocks=case_blocks,
@@ -18321,10 +18586,6 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 break
                         if (_r67_tail_ft is not None
                                 and _r67_tail_ft.start_offset == _r67_link_last.argval):
-                            if os.environ.get('DBG_OR'):
-                                print(f'[DBG_OR] R67 C1 or-tail restore: head={_r67_head.start_offset} '
-                                      f'link={_r67_link.start_offset} tail={_r67_tail.start_offset} '
-                                      f'exit={_r67_link_last.argval}')
                             condition_block = _r67_head
                             chain_blocks = set()
             elif boolop_region and boolop_region.entry == block:
@@ -18477,14 +18738,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             _or_walk_seen.add(_or_walk_nxt.start_offset)
                             _or_walk = _or_walk_nxt
                         if _or_walk_has_false_tail:
-                            if os.environ.get('DBG_OR'):
-                                print(f'[DBG_OR] or-chain member skip: block={block.start_offset} '
-                                      f'last={_blk_last_oc.opname} '
-                                      f'pred_ft={_blk_ft_oc.start_offset if _blk_ft_oc else None}')
                             continue
-                        if os.environ.get('DBG_OR'):
-                            print(f'[DBG_OR] or-member rejected (no false tail in walk): '
-                                  f'block={block.start_offset} last={_blk_last_oc.opname}')
                 # [Round 33 根因] `if A or B:` 的 or 短路链检测。
                 # 与 and 链（首段 IF_FALSE 跳同一 merge）镜像：or 链的首段
                 # 以 POP_JUMP_IF_TRUE 跳 then 入口（短路进入 body），fallthrough
@@ -18611,27 +18865,16 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                                and b.get_last_instruction().argval == _then_entry_offset
                                                for b in _or_chain))
                     if len(_or_chain) >= 2 and _or_has_false_tail:
-                        if os.environ.get('DBG_OR'):
-                            print(f'[DBG_OR] or-chain detected: cond={condition_block.start_offset} '
-                                  f'chain={[b.start_offset for b in _or_chain]} '
-                                  f'then_entry={_then_entry_offset}')
                         _main_inline_boolop_chain = {'blocks': list(_or_chain), 'op': 'or'}
                         _main_orig_cond_block = condition_block
                         _main_orig_chain_blocks = set(chain_blocks)
                         condition_block = _or_chain[-1]
                         chain_blocks = set(_or_chain)
                     elif len(_or_chain) >= 2 and _or_all_if_true:
-                        if os.environ.get('DBG_OR'):
-                            print(f'[DBG_OR] negated or-chain detected: cond={condition_block.start_offset} '
-                                  f'chain={[b.start_offset for b in _or_chain]} '
-                                  f'then_entry={_then_entry_offset}')
                         _main_inline_boolop_chain = {'blocks': list(_or_chain), 'op': 'or', 'negate': True}
                         _main_orig_cond_block = condition_block
                         _main_orig_chain_blocks = set(chain_blocks)
                         chain_blocks = set(_or_chain)
-                    elif os.environ.get('DBG_OR') and len(_or_chain) >= 2:
-                        print(f'[DBG_OR] or-candidate rejected (no false tail): '
-                              f'chain={[b.start_offset for b in _or_chain]} then_entry={_then_entry_offset}')
                 # [Round 33 回归修复] or 链判定成功后跳过 and 链检测：
                 # or 链重定向后 condition_block 指向链末块（IF_FALSE 结尾），
                 # 若不跳过，and 链检测会把它与其 fallthrough（then body 首块，
@@ -19765,12 +20008,6 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 all_condition_blocks.update(_await_pred_blocks)
                 chain_blocks.update(_await_pred_blocks)
 
-            if os.environ.get('DBG_OR') and _main_inline_boolop_chain is not None:
-                print(f'[DBG_OR] region-build: cond={block.start_offset} condition_block={condition_block.start_offset} '
-                      f'then_succ={then_succ.start_offset} else_succ={else_succ.start_offset} merge={merge.start_offset if merge else None} '
-                      f'then=[{",".join(str(b.start_offset) for b in then_blocks)}] '
-                      f'else=[{",".join(str(b.start_offset) for b in else_blocks)}] '
-                      f'chain={[b.start_offset for b in _main_inline_boolop_chain.get("blocks", [])]}')
             region = self._build_elif_region(block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block, boundary_stop=boundary_stop, ternary_regions=ternary_regions, main_inline_boolop_chain=_main_inline_boolop_chain)
             if region is None:
                 region = self._build_basic_if_region(block, then_blocks, else_blocks, merge,
@@ -19785,12 +20022,6 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             if region is not None and _merge_boolop_guard_prefix_end is not None:
                 region.guard_clause_prefix_end = _merge_boolop_guard_prefix_end
             if region is not None:
-                if os.environ.get('DBG_OR') and _main_inline_boolop_chain is not None:
-                    print(f'[DBG_OR] region-built: type={type(region).__name__} '
-                          f'rt={getattr(region, "region_type", None)} '
-                          f'then=[{",".join(str(b.start_offset) for b in getattr(region, "then_blocks", []))}] '
-                          f'else=[{",".join(str(b.start_offset) for b in getattr(region, "else_blocks", []))}] '
-                          f'cond=[{",".join(str(b.start_offset) for b in getattr(region, "condition_blocks", []))}]')
                 if_regions.append(region)
                 if boolop_region is not None:
                     if boolop_region.entry == region.entry and boolop_region.value_target is not None:
@@ -22956,6 +23187,57 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 }, None, None
             return None, None, None, None
 
+        def _b46_tail_connector_value_target(conn_block):
+            """[B46-tail] 融合条件三件套纯连接块解引用判据（检测门与 R39b
+            守卫共用，保证两处语义一致）。
+
+            区域类型：TernaryRegion（嵌套 IfExp 融合条件形态的外层路径判别
+              三元，如 `(a if f1 else b) if (c if f2 else d) else 0` 的 c 路
+              径 IfExp(c, IfExp(f1,a,b), 0)）。
+            算法描述：编译器对嵌套 IfExp 共享求值路径做布局合并——多条外层
+              路径的真臂各自经一条纯连接块跳往同一个共享内层三元入口；连接
+              块本身不产生值，值由目标内层 TernaryRegion 提供。
+            字节码形态：conn_block 剥噪（NOISE_OPS）后恰余一条
+              JUMP_FORWARD/JUMP_ABSOLUTE（int argval），目标块已归属某
+              TernaryRegion 且处于该区域值位——入口或真/假值臂（区域成员
+              关系 + 值位同一性；内层三元若已被外层吸收，则按当前归属区域
+              的值臂呈现）。
+            边界条件：JUMP_BACKWARD（回边）不属连接块；目标块无归属、归属
+              非 TernaryRegion、或不处于该区域值位（merge 等消费位一律不命
+              中）→ 返回 None，维持原拒绝行为，逐字节不变。
+            归约语义：命中 ⇒ 放行建外层 TernaryRegion（嵌套即抽象节点：值
+              臂引用连接块，生成端沿纯跳转连接块跟随递归至内层区域入口重建
+              臂值）；不命中 ⇒ 维持嵌套 if 语句路径，不接管表达式位。
+            AST 映射：ast.IfExp(test=入口条件, body=内层 IfExp（经连接块解
+              引用）, orelse=另一臂值)；外层融合条件头经生成端 adv03 折叠为
+              IfExp(IfExp(c1,x,y), body, orelse)。
+            已知失败形态：连接块目标为 IfRegion 等语句区域入口时不命中（语
+              句位不得接入表达式位）。
+            [C1] 判据仅用同层块结构事实（剥噪指令序列/跳转 opcode/int
+              argval/区域成员关系与值位同一性），无名称白名单、无魔数、无跨
+              层反查。
+            [C2] 数据流自底向上：内层 TernaryRegion 先归约完毕，外层仅以入
+              口引用，无回溯修正。
+            [C3] 每块唯一归属不变：连接块随引用方区域归属，内层块仍归内层
+              区域。
+            """
+            _eff = [i for i in conn_block.instructions
+                    if i.opname not in NOISE_OPS]
+            if (len(_eff) != 1
+                    or _eff[0].opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                    or not isinstance(_eff[0].argval, int)):
+                return None
+            _tgt = self.cfg.get_block_by_offset(_eff[0].argval)
+            if _tgt is None:
+                return None
+            _reg = self.block_to_region.get(_tgt)
+            if (isinstance(_reg, TernaryRegion)
+                    and (_reg.entry is _tgt
+                         or _reg.true_value_block is _tgt
+                         or _reg.false_value_block is _tgt)):
+                return _tgt
+            return None
+
         def _detect_ternary_pattern(block):
             """检测三元表达式模式
 
@@ -23602,6 +23884,13 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     # TernaryRegion，9 个分支退化为 6 个裸 return。
                     true_existing = self.block_to_region.get(true_block)
                     if isinstance(true_existing, TernaryRegion):
+                        false_is_ternary = True
+                    # [B46-tail] 融合条件三件套真臂连接块解引用（与上方 true 臂
+                    # 嵌套三元通道、本分支 false 臂嵌套区域通道对称外推）：真臂
+                    # 为纯连接块且跳转目标处于某 TernaryRegion 值位时放行——
+                    # 六项模板与 [C1][C2][C3] 条款见
+                    # _b46_tail_connector_value_target docstring。
+                    elif _b46_tail_connector_value_target(true_block) is not None:
                         false_is_ternary = True
                     elif self._is_single_expression_block(true_block):
                         _tb_last = true_block.get_last_instruction()
@@ -24621,7 +24910,40 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # 此时 has_jump_forward_skip=True 表示三元与循环测试融合，
             # merge_context 应优先设为 'while_cond'（三元消费者是 while 条件测试，
             # 不是 body 赋值），覆盖 'store' 等其他上下文。
-            if has_jump_forward_skip:
+            # [B46-tail] while_cond 语境改写守卫：has_jump_forward_skip 仅表
+            # 明「真臂 fallthrough 经纯连接块跳过假臂」，不足以证明三元处于
+            # while 条件位——融合条件三件套（嵌套 IfExp 共享求值路径，如
+            # `(a if f1 else b) if (c if f2 else d) else 0` 的外层头）同样呈
+            # 现该形态，但其 merge 块以 RETURN_VALUE/RETURN_CONST 终结（IfExp
+            # 值被 return 消费）。循环头块必以条件跳转延续测试，不可能以
+            # RETURN_* 终结，故以 merge 块末条非噪声指令判界：RETURN_* 终结
+            # 时维持已扫描出的 'return' 语境不改写（adv03 折叠与 return 发
+            # 射依赖之）。
+            # 字节码形态：merge 块末条非噪声指令 ∈ {RETURN_VALUE,
+            #   RETURN_CONST} 且 has_jump_forward_skip=True。
+            # 边界条件：merge_block 为 None 或块内全噪声时维持原改写行为
+            #   （只收紧 RETURN 终结一种情形，其余逐字节不变）。
+            # 归约语义：命中 ⇒ 保留扫描语境（merge_context='return'），外层
+            #   三元按表达式位发射并被 Return 消费；不命中 ⇒ 维持 while_cond
+            #   改写原行为。
+            # AST 映射：Return(IfExp(IfExp(c1,x,y), body, orelse))（经生成端
+            #   adv03 折叠），而非 while 条件位提升。
+            # 已知失败形态：真 while 融合头的 merge 含 STORE_*/POP_JUMP_* 续
+            #   测，末条非 RETURN_*，不命中，原行为保留。
+            # [C1] 判据仅用 merge 块末 opcode（同层块结构事实），无名称白名
+            #   单、无魔数、无跨层反查。
+            # [C2] 数据流自底向上：merge 消费事实由扫描先行得出，此处仅守卫
+            #   改写，无回溯修正。
+            # [C3] 每块唯一归属不变：本守卫不改任何块归属。
+            _b46_tail_merge_last = None
+            if merge_block is not None:
+                _b46_tail_merge_eff = [i for i in merge_block.instructions
+                                       if i.opname not in NOISE_OPS]
+                if _b46_tail_merge_eff:
+                    _b46_tail_merge_last = _b46_tail_merge_eff[-1].opname
+            if (has_jump_forward_skip
+                    and _b46_tail_merge_last not in ('RETURN_VALUE',
+                                                     'RETURN_CONST')):
                 merge_context = 'while_cond'
                 value_target = '__while_cond_target__'
 
@@ -24918,6 +25240,16 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             _vb40b_eff[-1])):
                     _vb40b_eff.pop()
                 if not _vb40b_eff:
+                    # [B46-tail] 纯连接块值臂豁免：值块剥尾后为空但本身是纯
+                    # 连接块（恰一条 JUMP_FORWARD/JUMP_ABSOLUTE）且跳转目标
+                    # 处于某 TernaryRegion 值位（入口/真值臂/假值臂）时，臂值
+                    # 由目标内层区域提供（生成端沿连接块跟随递归重建），守卫
+                    # "无值可发"前提不成立，放行。判据复用
+                    # _b46_tail_connector_value_target（六项模板与
+                    # [C1][C2][C3] 条款见其 docstring）；目标非值位时维持原
+                    # 拒绝，交由 IfRegion 语句级归约，逐字节不变。
+                    if _b46_tail_connector_value_target(_vb40b) is not None:
+                        continue
                     return None
             region = TernaryRegion(
                 region_type=RegionType.TERNARY,
@@ -27986,9 +28318,6 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     _sb_walk_seen.add(_sb_wnxt.start_offset)
                     _sb_walk = _sb_wnxt
                 if _sb_walk_has_false_tail:
-                    if os.environ.get('DBG_OR'):
-                        print(f'[DBG_OR] boolop chain start skipped (or member): '
-                              f'block={start_block.start_offset} last={_sb_last_li.opname}')
                     return None
         chain: List[Tuple[BasicBlock, str]] = []
         current = start_block

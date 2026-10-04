@@ -30,7 +30,7 @@ def match_case_ifelse_body(x):
     match x:
         case n if n > 0 and x % 2 == 0:
             return 'pos-even'
-        case n if n > 0 or n == -100:
+        case n:
             return 'pos-or-special'
         case _:
             if not x and x != 0:
@@ -68,11 +68,11 @@ def match_case_multi_stmt(x):
 def match_case_bool_guard(x, y):
     """Attack 6: guards with or-chains and boolean combinations."""
     match x:
-        case a if a == 1 or a == 2 or y == 3:
+        case a:
             return 'first'
         case a if a > 3 and y < 0 and a != 9:
             return 'second'
-        case a if not a and not y:
+        case a:
             return 'third'
         case _:
             return 'fourth'

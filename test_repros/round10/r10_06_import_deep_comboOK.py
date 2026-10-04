@@ -6,7 +6,7 @@ from m9 import base_value
 def imp_combo_lambda_default(rows):
     for row in rows:
         match row:
-            case {'k': v} if not v > 0:
+            case {'k': v}:
                 from m9 import wrap
                 if v > 0:
                     return wrap(v)

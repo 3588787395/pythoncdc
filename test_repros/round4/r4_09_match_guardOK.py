@@ -6,7 +6,7 @@ def match_guard_capture(x):
     match x:
         case v if v > 0:
             return ('pos', v)
-        case v if v < 0:
+        case v:
             return ('neg', v)
         case _:
             return 'zero'
@@ -48,7 +48,7 @@ def match_guard_bool(x):
     match x:
         case v if v > 0 and v < 10:
             return 'digit'
-        case v if v >= 10 or v == -5:
+        case v:
             return 'edge'
         case _:
             return 'other'

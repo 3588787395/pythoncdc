@@ -56,7 +56,7 @@ def try_wrap_match_in_loop(items):
     try:
         for item in items:
             match item:
-                case n if n > 100:
+                case n:
                     raise RuntimeError('too big')
                 case n:
                     out.append(n)

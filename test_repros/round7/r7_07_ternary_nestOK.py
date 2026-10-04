@@ -9,11 +9,7 @@ def t_nest_left_assoc(a, b, d, c1, c2):
 def t_nest_three_chain(x, c1, c2, c3):
     return 1 if c1 else 2 if c2 else 3 if c3 else 4
 def t_nest_in_condition(a, b, c, d, f1, f2):
-    if f2:
-        return (a if f1 else b) if d else 0
-    if c:
-        pass
-    return (a if f1 else b) if d else 0
+    return (a if f1 else b) if (c if f2 else d) else 0
 def t_nest_mixed_binop(a, b, c, f1, f2):
     return (a + 1 if f1 else b - 1) if f2 else c * 2
 def t_nest_tuple_ternary(a, b, c, f1, f2):

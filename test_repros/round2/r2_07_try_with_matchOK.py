@@ -18,3 +18,4 @@ def f(path, mode, x):
                 res.append(0)
     except (OSError, TypeError):
         res.append('err')
+    return res

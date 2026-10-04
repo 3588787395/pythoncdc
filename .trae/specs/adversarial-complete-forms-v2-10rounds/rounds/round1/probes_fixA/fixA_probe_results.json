@@ -1,0 +1,74 @@
+{
+  "round": "adversarial-complete-forms-v2 Round 1.2 (fix engineer seat A)",
+  "scope_file": "core/cfg/region_analyzer.py",
+  "generated_at": "2026-10-04",
+  "target_probes": {
+    "B50_t_host_try_sections": {
+      "probe": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+      "units": "8/8",
+      "match_rate": "100.00%",
+      "verified_runs": ["修复后", "插桩清理后", "BOM 恢复后"],
+      "evidence": "exp_try_parent.py（detach/补登记三态对照）+ exp_iso_check.py（副本同构矩阵）"
+    },
+    "B46_t_nest_in_condition": {
+      "probe": "test_repros/round7/r7_07_ternary_nest.pyc",
+      "units": "7/7",
+      "match_rate": "100.00%",
+      "note": "前会话落地，本会话清理后未回退"
+    },
+    "B74_phantom_guard": {
+      "probe": "test_repros/round10/r10_06_import_deep_combo.pyc",
+      "units": "3/3",
+      "match_rate": "100.00%",
+      "variants": {
+        "A_no_import": {"pyc": "probes_fixA/tmp/b74_a_noimport.pyc", "units": "2/2", "match_rate": "100.00%"},
+        "B_with_import": {"pyc": "probes_fixA/tmp/b74_b_import.pyc", "units": "2/2", "match_rate": "100.00%"},
+        "conclusion": "import 非根因；真根因 = case 体首 if 臂被 guard 极性协议误判为取反臂"
+      }
+    }
+  },
+  "negative_controls_post_cleanup": [
+    {"file": "test_repros/round7/rv7_02_compare_chain_ternary.pyc", "rate": "50.00%", "baseline": "一致"},
+    {"file": "test_repros/round7/rv7_04_dict3_ternary.pyc", "rate": "66.67%", "baseline": "一致"},
+    {"file": "test_repros/round4/r4_01_match_value.pyc", "rate": "100.00%", "baseline": "一致"},
+    {"file": "test_repros/round2/r2_07_try_with_match.pyc", "rate": "50.00%", "baseline": "一致"},
+    {"file": "test_repros/round2/r2_07_with_lock_dropped.pyc", "rate": "87.50%", "baseline": "HEAD stash 复测一致"}
+  ],
+  "match_series_pre_cleanup": [
+    {"file": "r4_01..r4_03/r4_05..r4_08/r4_10/r4_11/r3_27/r10_03", "rate": "100%"},
+    {"file": "r4_04", "rate": "66.67%"}, {"file": "rv4_16", "rate": "25%"},
+    {"file": "rv4_17", "rate": "50%"}, {"file": "r2_07", "rate": "50%"},
+    {"file": "r10_04", "rate": "66.67%"}, {"file": "r10_21", "rate": "50%"}
+  ],
+  "small_test_set_34": {
+    "tool": "scripts/pyc_verify.py batch（权威尺 = pylingual compare_pyc）",
+    "report_json": "probes_fixA/tmp/fixA_34set_pycverify.json",
+    "baseline": "1497/1568（failing_index.json）",
+    "after": "1505/1568",
+    "task0_fresh_reference": "1505/1568（逐位一致）",
+    "regressed": 0,
+    "improved": [
+      "fly/data/quote.pyc 81/92 -> 84/92",
+      "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc 115/128 -> 118/128",
+      "IQCommon/strategy/jq_trans_module.pyc 63/65 -> 65/65"
+    ],
+    "same_failure_files": 31,
+    "caveat": "scripts/pyc_batch_verify.py single 的 total_functions 为交集分母，漏函数被静默排除（quotation 143≠153），不得用作回归判据；本位曾据其误报 19 文件回归，HEAD stash 复测证伪"
+  },
+  "iv2_gate": {
+    "BOM": "region_analyzer.py head=efbbbf count=1；region_ast_generator.py head=efbbbf count=1（本会话编辑曾剥离 region_analyzer.py BOM，已按 round9 红线恢复单头）",
+    "IMPORT_OK": true,
+    "COMPILE_OK": true,
+    "residual_instrumentation": "grep 'DBG_OR|FIXA-DBG|_fixa_trace' in core/ = 0 命中"
+  },
+  "instrument_cleanup": {
+    "DBG_OR_removed": ["or-tail restore", "or-chain member skip(合并为裸 continue)", "or-member rejected", "or-chain detected(elif 整删)", "negated or-chain detected(elif 整删)", "or-candidate rejected(elif 整删)", "region-build", "region-built", "boolop chain start skipped"],
+    "FIXA_DBG_removed": ["FIXA det entry/true/false", "FIXA fe entry/false/fe", "FIXA gate-reject entry/fit/hjfs/b46tn（保留 return None）"],
+    "trace_create_py": "ra._fixa_trace = True 开关行删除",
+    "behavior_equivalence": "删除后 r7_08 8/8、r10_06 3/3、负对照 5 文件读数与删除前一致"
+  },
+  "handover": {
+    "B65": {"status": "已定位未封闭", "anchor": "region_ast_generator.py:37913-37928 仅 2 目标形态", "reason": "发射端越界（region_ast_generator 非本位涉改文件）", "owner": "修复位 B（region_ast_generator 位）"},
+    "B76": {"status": "已定位未封闭", "anchor": "region_ast_generator.py:37881-37890 未 return 穿透 → :38193 UnboundLocalError", "reason": "发射端越界", "owner": "修复位 B"}
+  }
+}

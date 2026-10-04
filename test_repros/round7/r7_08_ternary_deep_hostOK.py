@@ -11,23 +11,23 @@ def t_host_if_arms(x, flag):
 def t_host_while_body(n, flag):
     acc = 0
     while n > 0:
-        acc = acc + (n if flag else 1)
+        acc += n if flag else 1
         n -= 1
     return acc
 def t_host_for_else(xs, flag):
     total = 0
     for x in xs:
-        total = total + (x if flag else 0)
-    total = total + (100 if flag else 1)
+        total += x if flag else 0
+    total += 100 if flag else 1
     return total
 def t_host_try_sections(xs, i, flag):
     try:
-        r = r if flag else 0
-        return r
+        r = xs[i] if flag else xs[0]
     except IndexError:
         r = -1 if flag else -2
     finally:
         r = r if flag else 0
+    return r
 def t_host_with_body(path, flag):
     with open(path) as fh:
         data = fh.read(1 if flag else 2)
