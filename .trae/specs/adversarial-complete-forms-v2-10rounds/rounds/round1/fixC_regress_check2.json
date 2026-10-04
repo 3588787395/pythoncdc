@@ -1,0 +1,147 @@
+{
+ "elapsed_sec": 1.5,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 5,
+  "success": 3
+ },
+ "files_total": 8,
+ "generated_at": "2026-10-05T04:04:01",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+   "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc",
+   "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc",
+   "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc"
+  ],
+  "success": [
+   "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b50_face.pyc",
+   "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b65_face.pyc",
+   "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b76_face.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.v_while_cond_nest: Failure: Different control flow",
+    "***<module>.v_if_cond_nest: Failure: Different control flow",
+    "***<module>.n_for_body_nest: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+   "pyc_sha": "fa4abb01bb79",
+   "source": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_faceOK.py",
+   "source_sha": "0be6bee8b16a",
+   "status": "failure",
+   "success_rate": 0.25,
+   "units_success": 1,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b50_face.pyc",
+   "pyc_sha": "0addda2be0cb",
+   "source": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b50_faceOK.py",
+   "source_sha": "f3e8779d2f5b",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b65_face.pyc",
+   "pyc_sha": "5d9fbeae0130",
+   "source": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b65_faceOK.py",
+   "source_sha": "e5dfb2e2a978",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.v_nest_fin_continue: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "pyc_sha": "73dad646fd5b",
+   "source": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_faceOK.py",
+   "source_sha": "23e270e41417",
+   "status": "failure",
+   "success_rate": 0.75,
+   "units_success": 3,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.v_imp_cond_fin: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc",
+   "pyc_sha": "29e682fed614",
+   "source": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_faceOK.py",
+   "source_sha": "e5f1f4185ff2",
+   "status": "failure",
+   "success_rate": 0.6666666666666666,
+   "units_success": 2,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.n_true_guard: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc",
+   "pyc_sha": "2a7a2576eeda",
+   "source": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_faceOK.py",
+   "source_sha": "db848047c5d1",
+   "status": "failure",
+   "success_rate": 0.75,
+   "units_success": 3,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.v_swap_arm_returns: Failure: Different bytecode",
+    "***<module>.n_fin_noseg: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+   "pyc_sha": "272f036a855a",
+   "source": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_faceOK.py",
+   "source_sha": "34ad112dc542",
+   "status": "failure",
+   "success_rate": 0.3333333333333333,
+   "units_success": 1,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b76_face.pyc",
+   "pyc_sha": "8c5348fe01cb",
+   "source": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b76_faceOK.py",
+   "source_sha": "a6ddebe117bb",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.7241379310344828,
+ "units_success": 21,
+ "units_total": 29
+}

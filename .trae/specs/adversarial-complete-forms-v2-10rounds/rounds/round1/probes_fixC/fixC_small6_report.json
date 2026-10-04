@@ -1,0 +1,119 @@
+{
+ "elapsed_sec": 9.5,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 6,
+  "success": 0
+ },
+ "files_total": 6,
+ "generated_at": "2026-10-05T03:59:20",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utils.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.send_email: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utils.pyc",
+   "pyc_sha": "23270e1e3181",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utilsOK.py",
+   "source_sha": "4543d1726012",
+   "status": "failure",
+   "success_rate": 0.75,
+   "units_success": 3,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.set_cgroup_config: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
+   "pyc_sha": "9f1ab0da8621",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utilsOK.py",
+   "source_sha": "77132e1458fb",
+   "status": "failure",
+   "success_rate": 0.875,
+   "units_success": 7,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.Executor.check_before_trading: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc",
+   "pyc_sha": "e451dcfe45ec",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executorOK.py",
+   "source_sha": "7de580ce31e4",
+   "status": "failure",
+   "success_rate": 0.9,
+   "units_success": 9,
+   "units_total": 10
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.StrategyUniverse._on_clear_de_listed: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc",
+   "pyc_sha": "598639badc2a",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universeOK.py",
+   "source_sha": "c6cc05ab5fee",
+   "status": "failure",
+   "success_rate": 0.9090909090909091,
+   "units_success": 10,
+   "units_total": 11
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.TradingDatesMixin.trading_dates_reload: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
+   "pyc_sha": "c34a6044c924",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixinOK.py",
+   "source_sha": "7bed0c40b6f2",
+   "status": "failure",
+   "success_rate": 0.9285714285714286,
+   "units_success": 13,
+   "units_total": 14
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.RealtimeEventSource.clock_worker: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+   "pyc_sha": "01055eae05c2",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py",
+   "source_sha": "9df8134559ea",
+   "status": "failure",
+   "success_rate": 0.9230769230769231,
+   "units_success": 12,
+   "units_total": 13
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9,
+ "units_success": 54,
+ "units_total": 60
+}

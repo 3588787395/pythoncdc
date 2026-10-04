@@ -1,0 +1,138 @@
+{
+ "elapsed_sec": 1.5,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 2,
+  "success": 6
+ },
+ "files_total": 8,
+ "generated_at": "2026-10-05T04:03:35",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_host.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_02_with_tryfin_constret.pyc"
+  ],
+  "success": [
+   "F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deep.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mix.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round10/r10_21_fin_loopctrl.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_ops.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_01_chain3_subscript.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+   "pyc_sha": "ea6468a1da85",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_posOK.py",
+   "source_sha": "8cd25ff4f767",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_host_match_case: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_host.pyc",
+   "pyc_sha": "24d30a590338",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_hostOK.py",
+   "source_sha": "61a2cb23d2e0",
+   "status": "failure",
+   "success_rate": 0.875,
+   "units_success": 7,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_ops.pyc",
+   "pyc_sha": "6001f57d85d2",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_opsOK.py",
+   "source_sha": "567312483546",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 10,
+   "units_total": 10
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deep.pyc",
+   "pyc_sha": "0b2a2054499e",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deepOK.py",
+   "source_sha": "5ed945f39ec0",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mix.pyc",
+   "pyc_sha": "dcd2e53052cd",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mixOK.py",
+   "source_sha": "89612b150f44",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_21_fin_loopctrl.pyc",
+   "pyc_sha": "6dd911f8746b",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_21_fin_loopctrlOK.py",
+   "source_sha": "08f2c0d3c3fe",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_01_chain3_subscript.pyc",
+   "pyc_sha": "7bf3dfcdcba9",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_01_chain3_subscriptOK.py",
+   "source_sha": "4ff750938dd2",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.tryfin_then_more: Failure: Different bytecode"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_02_with_tryfin_constret.pyc",
+   "pyc_sha": "34c2b7e1f9a4",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round8/rv8_02_with_tryfin_constretOK.py",
+   "source_sha": "aebdee3ef343",
+   "status": "failure",
+   "success_rate": 0.8571428571428571,
+   "units_success": 6,
+   "units_total": 7
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9649122807017544,
+ "units_success": 55,
+ "units_total": 57
+}

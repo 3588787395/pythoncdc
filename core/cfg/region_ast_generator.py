@@ -28848,6 +28848,38 @@ AST 映射规则:
           - 非补丁: 守卫基于权威映射，无硬编码 offset / 无跨区域启发式 / 无
             后处理；与 R07 Pattern T 守卫语义一致，仅位置不同（_generate_try
             post-try 检测 vs _generate_with / _process_if_blocks 标记循环）。
+
+        归约六要素:
+          ① 算法依据: No More Gotos 区域归约——TryExceptRegion 由 CPython
+            3.11 异常表（range/target）界定，ast.Try 一次表示 try/handler/
+            else/finally 全部控制流；finally 双副本（正常副本 +
+            finally_blocks 异常副本）由 try/finally 语句重编译自然再生，
+            不逐副本发射。
+          ② 归约顺序: 自底向上——B75 前置归约先消化臂内 return 穿过的
+            finally 条件段副本 → handler 块快照 → try 体块循环（子区域入口
+            派发）→ handler 臂 → else/cleanup → finalbody（W11-A 正常副本
+            重组或 finally_blocks 迭代）。
+          ③ 唯一归属判定: 每块以 block_to_region 为权威归属；post-try 收集
+            拒绝非本域块；[B71] 循环出口块守卫以「正常出口边前驱含循环头」
+            （fb ∉ pred.exception_successors，边类型封闭）把误并入
+            finally_blocks 的宿主循环出口块三重释放移交宿主循环 else_blocks；
+            异常副本入口（经异常边相连）不构成出口证据，必须留在
+            finally_blocks 作 finalbody 语句源。
+          ④ 嵌套处理: 嵌套即抽象节点——try 体/handler/else/finalbody 内的
+            IfRegion/LoopRegion/WithRegion/TernaryRegion/内层 Try 由父层按
+            入口引用整树派发，不拆散成员块；B75 副本段以 IfRegion 抽象节点
+            为扫描单位。
+          ⑤ 入口引用语义: 子区域由 entry 块引用派发（Pattern T3）；
+            handler 经 handler_entry_blocks 引用；W11-A 复合体以正常副本
+            首块为序列锚点；孤儿 finally 帧经
+            _identify_empty_body_finally_regions 完整重建。
+          ⑥ 反编译流程: TryExceptRegion → ast.Try 字典（body/handlers/
+            orelse/finalbody）→ CFGASTConverter → CFGCodeGenerator → 源码；
+            重编译恢复异常表、双副本布局与控制流。C 条款：C1（判据仅用
+            异常表/前驱后继集合/边类型 exception_successors/区域成员关系/
+            块末 opcode）、C2（不新增跨方法状态，B75 臂 Return 挂 region
+            瞬态属性）、C3（守卫不命中时既有发射逐位不变，B75 任一重建
+            失败整体放弃）。
         """
         region_id = id(region)
         self._generating_regions.add(region_id)
@@ -30092,10 +30124,24 @@ AST 映射规则:
                         # block_to_region 仍指向本域而不补发射，``return total``
                         # 整句蒸发（实测）。原则 2：每块唯一归属——循环后语句归
                         # 循环体外的语句流。
+                        # [B71 边类型封闭] 循环头前驱仅计**正常出口边**
+                        # （fb ∉ pred.exception_successors）：3.11 异常表覆盖
+                        # try 体全程，finally 异常副本入口（PUSH_EXC_INFO 块）
+                        # 经异常边持有 try 体内任意块（含循环头）作前驱，该边
+                        # 不是循环出口证据——异常副本必须留在 finally_blocks
+                        # 作 finalbody 语句源，否则 finalbody 蒸发（实测
+                        # op_station.__new__：PUSH_EXC_INFO 副本块被本守卫误判
+                        # 移交宿主循环 else_blocks，而自底向上发射序下宿主循环
+                        # 先于 finalbody 已生成完毕，移交永不发射，
+                        # ``lock.release()`` 整句蒸发 → finally: pass）。
                         if any(getattr(_p, 'loop_header', False)
+                               and fb not in (getattr(_p, 'exception_successors', None) or ())
                                for _p in (getattr(fb, 'predecessors', None) or ())):
                             for _b71_lh in (getattr(fb, 'predecessors', None) or ()):
-                                if not getattr(_b71_lh, 'loop_header', False):
+                                if (not getattr(_b71_lh, 'loop_header', False)
+                                        or fb in (getattr(_b71_lh, 'exception_successors', None) or ())):
+                                    # 非循环头，或经异常边相连的循环头（异常
+                                    # 副本入口，非循环出口证据）一律跳过。
                                     continue
                                 _b71_host_loop = self.region_analyzer.get_region_for_block(_b71_lh)
                                 if (_b71_host_loop is not None
