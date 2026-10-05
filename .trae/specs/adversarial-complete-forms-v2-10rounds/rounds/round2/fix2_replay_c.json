@@ -1,0 +1,194 @@
+[
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "  ***<module>.n_for_body_nest: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_faceOK.py",
+   "[single] status=failure units=1/4 success_rate=25.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.v_nest_fin_continue: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_faceOK.py",
+   "[single] status=failure units=3/4 success_rate=75.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.v_imp_cond_fin: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_faceOK.py",
+   "[single] status=failure units=2/3 success_rate=66.67%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.n_true_guard: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_faceOK.py",
+   "[single] status=failure units=3/4 success_rate=75.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "  ***<module>.n_fin_noseg: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_faceOK.py",
+   "[single] status=failure units=1/3 success_rate=33.33%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b50_face.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b50_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b50_faceOK.py",
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b65_face.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b65_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b65_faceOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b76_face.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b76_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b76_faceOK.py",
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v1.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v1.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v1OK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.drain: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2OK.py",
+   "[single] status=failure units=1/2 success_rate=50.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v3.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v3.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v3OK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v4.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v4.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v4OK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "site-packages/IQCommon/util/email_utils.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.send_email: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utils.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utilsOK.py",
+   "[single] status=failure units=3/4 success_rate=75.00%"
+  ]
+ },
+ {
+  "pyc": "site-packages/IQCommon/util/cgroup_utils.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.set_cgroup_config: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utilsOK.py",
+   "[single] status=failure units=7/8 success_rate=87.50%"
+  ]
+ },
+ {
+  "pyc": "site-packages/IQEngine/core/executor.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.Executor.check_before_trading: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executorOK.py",
+   "[single] status=failure units=9/10 success_rate=90.00%"
+  ]
+ },
+ {
+  "pyc": "site-packages/IQEngine/core/strategy/strategy_universe.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.StrategyUniverse._on_clear_de_listed: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universeOK.py",
+   "[single] status=failure units=10/11 success_rate=90.91%"
+  ]
+ },
+ {
+  "pyc": "site-packages/IQEngine/data/trading_dates_mixin.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.TradingDatesMixin.trading_dates_reload: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixinOK.py",
+   "[single] status=failure units=13/14 success_rate=92.86%"
+  ]
+ },
+ {
+  "pyc": "site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.RealtimeEventSource.clock_worker: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py",
+   "[single] status=failure units=12/13 success_rate=92.31%"
+  ]
+ }
+]

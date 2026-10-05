@@ -76,6 +76,42 @@ def _and_operand_raw_text(cond: Dict[str, Any]) -> Optional[str]:
     return text + '\n' + ' ' * 15
 
 
+def parse_comprehension_code_object(code_obj: Any,
+                                    iter_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """[Round2-B96] 把推导式 code object（<listcomp>/<dictcomp>/<setcomp>/
+    <genexpr>）解析为推导式表达式 dict（ListComp/SetComp/DictComp/
+    GeneratorExp），供 dict→AST 转换层（ast_converter）在收到
+    ``Call(func=ComprehensionObject(code), args=[iter])`` 泄漏形态时
+    恢复推导式节点使用。
+
+    [识别条件] code object 的编译器合成名 ∈ {<listcomp>, <dictcomp>,
+    <setcomp>, <genexpr>}（与 generate_comprehension_function、
+    region_analyzer 侧 _const_code_is_async_comprehension 同一编译器
+    合成事实，非用户标识符白名单）；is_async 由内层 code object 的
+    GET_AITER/GET_ANEXT/END_ASYNC_FOR 协议指令元数据判定
+    （_parse_comprehension_inner_impl 既有判据）。
+    [归约方式] 自底向上：对 code object 独立建 CFG（CFGBuilder.build），
+    归约顺序 = 内层 clause 先归约（多 for/async 混合 clause 走
+    _parse_multi_for_comprehension，单 clause 走单 for 路径），目标/
+    元素/filter 全部从内层指令流结构化提取；迭代对象 = 调用方传入的
+    iter_expr（推导式调用指令的实参，即外层 iterable 构造表达式）。
+    [AST 映射] 返回值是 dict 形式的推导式表达式（'type': 'ListComp'/
+    'SetComp'/'DictComp'/'GeneratorExp' + generators[].is_async），
+    由调用方经 ast_converter._convert_expression 落到对应 ASTNode。
+    [反编译流程] 位于表达式重建管线末端：区域装配层产出
+    ComprehensionObject 泄漏 dict → 本函数解析内层 code object →
+    ast_converter 生成 AST → code_generator 发射。
+    [C1] 只读 code object 自身指令流（内层 CFG）与调用方 iter_expr，
+    不读宿主块/区域信息；[C2] 内层推导式整体黑箱解析，宿主只见
+    返回的表达式 dict；[C3] 解析失败返回 None，调用方保持原路径
+    （不静默降级为占位表达式）。
+    """
+    from .ast_generator_v2 import ExpressionReconstructor
+    er = ExpressionReconstructor(None)
+    cg = ComprehensionGenerator(er)
+    return cg.parse_comprehension_inner(code_obj, iter_expr)
+
+
 class ComprehensionGenerator:
     def __init__(self, expr_reconstructor):
         self.expr_reconstructor = expr_reconstructor
