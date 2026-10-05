@@ -33,3 +33,6 @@ Thumbs.db
 .obsidian/
 .llm-wiki/
 raw/
+
+# session memory tool state (per-session auto-generated)
+.workbuddy/
