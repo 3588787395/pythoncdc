@@ -1,0 +1,137 @@
+[
+ {
+  "path": "test_repros/round10/r10_04_import_try_cross.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_06_import_deep_combo.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_14_nonlocal_deep.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_15_global_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_16_scope_mix.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_21_fin_loopctrl.pyc"
+ },
+ {
+  "path": "test_repros/round10/rv10_31_nonlocal_variant.pyc"
+ },
+ {
+  "path": "test_repros/round10/rv10_32_augassign_variant.pyc"
+ },
+ {
+  "path": "test_repros/round10/rv10_33_ternary_variant.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_03_ternary_stmt_pos.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_07_ternary_nest.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_08_ternary_deep_host.pyc"
+ },
+ {
+  "path": "test_repros/round8/rv8_01_chain3_subscript.pyc"
+ },
+ {
+  "path": "test_repros/round8/rv8_02_with_tryfin_constret.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_06_augassign_ops.pyc"
+ },
+ {
+  "path": "test_repros/round6/n6_01_control.pyc"
+ },
+ {
+  "path": "test_repros/round7/n7_01_simple_ternary.pyc"
+ },
+ {
+  "path": "test_repros/round7/n7_02_simple_andor.pyc"
+ },
+ {
+  "path": "test_repros/round8/n8_01_return_const.pyc"
+ },
+ {
+  "path": "test_repros/round8/n8_02_simple_stmts.pyc"
+ },
+ {
+  "path": "test_repros/round9/n9_01_simple_guard.pyc"
+ },
+ {
+  "path": "test_repros/round9/n9_02_plain_forms.pyc"
+ },
+ {
+  "path": "test_repros/round9/rv9_03_b67_mixed_chain.pyc"
+ },
+ {
+  "path": "test_repros/round10/n10_01_simple_import.pyc"
+ },
+ {
+  "path": "test_repros/round10/n10_02_simple_fromimport.pyc"
+ },
+ {
+  "path": "test_repros/round10/n10_03_simple_global.pyc"
+ },
+ {
+  "path": "test_repros/round10/n10_04_simple_nonlocal.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b50_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b65_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b76_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v1.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v3.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v4.pyc"
+ },
+ {
+  "path": "site-packages/IQCommon/util/email_utils.pyc"
+ },
+ {
+  "path": "site-packages/IQCommon/util/cgroup_utils.pyc"
+ },
+ {
+  "path": "site-packages/IQEngine/core/executor.pyc"
+ },
+ {
+  "path": "site-packages/IQEngine/core/strategy/strategy_universe.pyc"
+ },
+ {
+  "path": "site-packages/IQEngine/data/trading_dates_mixin.pyc"
+ },
+ {
+  "path": "site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc"
+ }
+]

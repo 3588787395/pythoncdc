@@ -1,0 +1,128 @@
+[
+ {
+  "path": "test_repros/round2/c01_class_assign.pyc"
+ },
+ {
+  "path": "test_repros/round2/c02_class_if.pyc"
+ },
+ {
+  "path": "test_repros/round2/c03_class_for.pyc"
+ },
+ {
+  "path": "test_repros/round2/c04_class_try.pyc"
+ },
+ {
+  "path": "test_repros/round2/c05_class_with.pyc"
+ },
+ {
+  "path": "test_repros/round2/c06_class_match.pyc"
+ },
+ {
+  "path": "test_repros/round2/c07_between_methods.pyc"
+ },
+ {
+  "path": "test_repros/round2/c08_decorators.pyc"
+ },
+ {
+  "path": "test_repros/round2/c09_class_import_global.pyc"
+ },
+ {
+  "path": "test_repros/round2/c10_nested_class.pyc"
+ },
+ {
+  "path": "test_repros/round2/c11_class_func_class.pyc"
+ },
+ {
+  "path": "test_repros/round2/c12_class_deep_cross.pyc"
+ },
+ {
+  "path": "test_repros/round2/c13_class_misc.pyc"
+ },
+ {
+  "path": "test_repros/round2/c14_class_docstring.pyc"
+ },
+ {
+  "path": "test_repros/round2/c15_class_augassign.pyc"
+ },
+ {
+  "path": "test_repros/round2/m01_docstring_order.pyc"
+ },
+ {
+  "path": "test_repros/round2/m02_top_ifmain.pyc"
+ },
+ {
+  "path": "test_repros/round2/m03_module_ifchain.pyc"
+ },
+ {
+  "path": "test_repros/round2/m04_module_try.pyc"
+ },
+ {
+  "path": "test_repros/round2/m05_module_match.pyc"
+ },
+ {
+  "path": "test_repros/round2/m06_module_loops.pyc"
+ },
+ {
+  "path": "test_repros/round2/m07_module_with.pyc"
+ },
+ {
+  "path": "test_repros/round2/m08_module_stmts.pyc"
+ },
+ {
+  "path": "test_repros/round2/m09_module_deep_cross.pyc"
+ },
+ {
+  "path": "test_repros/round2/m10_module_order.pyc"
+ },
+ {
+  "path": "test_repros/round2/m11_module_finonly.pyc"
+ },
+ {
+  "path": "test_repros/round2/m12_module_values.pyc"
+ },
+ {
+  "path": "test_repros/round2/nc01_plain_class.pyc"
+ },
+ {
+  "path": "test_repros/round2/nc02_simple_class_body.pyc"
+ },
+ {
+  "path": "test_repros/round2/nm01_simple_module.pyc"
+ },
+ {
+  "path": "test_repros/round2/nm02_shallow_module_forms.pyc"
+ },
+ {
+  "path": "test_repros/round2/nx01_shallow_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x01_if_deep_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x02_for_deep_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x03_while_deep_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x04_try_deep_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x05_with_deep_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x06_match_deep_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x07_trystar_deep.pyc"
+ },
+ {
+  "path": "test_repros/round2/x08_stmt_leaves.pyc"
+ },
+ {
+  "path": "test_repros/round2/x09_funcdef_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x10_handler_hosts.pyc"
+ }
+]

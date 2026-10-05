@@ -1,0 +1,87 @@
+{
+ "test_repros/round2/c01_class_assign.pyc": [
+  "***<module>.CAssign: Failure: Different bytecode"
+ ],
+ "test_repros/round2/c02_class_if.pyc": [
+  "***<module>.CIf.items: Failure: Different control flow"
+ ],
+ "test_repros/round2/c03_class_for.pyc": [
+  "***<module>.CFor: Failure: Different control flow"
+ ],
+ "test_repros/round2/c04_class_try.pyc": [
+  "***<module>.CTryNest: Failure: Different control flow"
+ ],
+ "test_repros/round2/c06_class_match.pyc": [],
+ "test_repros/round2/c07_between_methods.pyc": [
+  "***<module>.CBetween.third: Failure: Different control flow"
+ ],
+ "test_repros/round2/c11_class_func_class.pyc": [
+  "***<module>.top_make: Failure: Different bytecode",
+  "***<module>.top_make.Top: Failure: Different bytecode"
+ ],
+ "test_repros/round2/c13_class_misc.pyc": [
+  "***<module>.CMisc: Failure: Different bytecode",
+  "***<module>.CMisc.boom: Failure: Different control flow"
+ ],
+ "test_repros/round2/m01_docstring_order.pyc": [
+  "***<module>: Failure: Different bytecode"
+ ],
+ "test_repros/round2/m02_top_ifmain.pyc": [
+  "***<module>: Failure: Different control flow"
+ ],
+ "test_repros/round2/m03_module_ifchain.pyc": [
+  "***<module>: Failure: Different control flow"
+ ],
+ "test_repros/round2/m04_module_try.pyc": [
+  "***<module>: Failure: Different control flow"
+ ],
+ "test_repros/round2/m05_module_match.pyc": [
+  "***<module>: Failure: Different control flow"
+ ],
+ "test_repros/round2/m06_module_loops.pyc": [
+  "***<module>: Failure: Different control flow"
+ ],
+ "test_repros/round2/m07_module_with.pyc": [
+  "***<module>: Failure: Different control flow"
+ ],
+ "test_repros/round2/m08_module_stmts.pyc": [
+  "***<module>: Failure: Different bytecode"
+ ],
+ "test_repros/round2/m09_module_deep_cross.pyc": [
+  "***<module>: Failure: Different control flow"
+ ],
+ "test_repros/round2/m12_module_values.pyc": [],
+ "test_repros/round2/x01_if_deep_hosts.pyc": [
+  "***<module>.if_in_while: Failure: Different control flow",
+  "***<module>.if_in_try: Failure: Different bytecode",
+  "***<module>.if_in_match: Failure: Different control flow"
+ ],
+ "test_repros/round2/x02_for_deep_hosts.pyc": [
+  "***<module>.for_in_try: Failure: Different control flow",
+  "***<module>.for_in_match: Failure: Different control flow"
+ ],
+ "test_repros/round2/x03_while_deep_hosts.pyc": [
+  "***<module>.while_in_try: Failure: Different bytecode"
+ ],
+ "test_repros/round2/x04_try_deep_hosts.pyc": [
+  "***<module>.try_in_if: Failure: Different bytecode",
+  "***<module>.try_in_while: Failure: Different control flow",
+  "***<module>.try_in_with: Failure: Different control flow"
+ ],
+ "test_repros/round2/x05_with_deep_hosts.pyc": [
+  "***<module>.with_in_match: Failure: Different control flow"
+ ],
+ "test_repros/round2/x08_stmt_leaves.pyc": [
+  "***<module>.assert_leaf: Failure: Different control flow",
+  "***<module>.raise_leaf: Failure: Different control flow",
+  "***<module>.return_leaf: Failure: Different control flow"
+ ],
+ "test_repros/round2/x09_funcdef_hosts.pyc": [
+  "***<module>.AHost.a1: Failure: Different control flow",
+  "***<module>.AHost.a2: Failure detected at line number 31 and instruction offset 26: Different bytecode",
+  "***<module>.AHost.a2.<listcomp>: Failure: Missing bytecode"
+ ],
+ "test_repros/round2/x10_handler_hosts.pyc": [
+  "***<module>.h_basic: Failure: Different control flow"
+ ]
+}
