@@ -4279,7 +4279,27 @@ class CodeGenerator:
         return ' '.join(parts)
     
     def _generate_call(self, node: ASTCall) -> str:
-        """生成函数调用表达式"""
+        """生成函数调用表达式。
+
+        [算法依据] 表B 发射路径：ASTCall → 源码；func/args 各子树递归
+        _generate_expression（自底向上，子表达式先归约），调用优先级括号
+        由 _precedence['call'] 决定。
+        [识别条件] node 为 ASTCall；前置特形：推导式作 func（直接发射
+        推导式本体）、func 为字符串常量（异常结构 → RuntimeError 归一）、
+        func 为 Attribute(attr='join') 且 value 为空串常量、恰一 List 实参
+        且元素含拼接片段事实 → BUILD_STRING 拼接重建形态，归一为整体
+        f-string 发射（[Round2-RG1] 拼接片段以 _b90_wrapped 标记还原裸
+        ASTFormattedValue 后判定，见下方注记）。
+        [归约方式] func 渲染后括号调用；实参按位置/关键字分别渲染，
+        lambda func 补括号、Yield/YieldFrom 实参补括号、**kwargs 渲染。
+        [AST 映射] ASTCall → ``func(args, kw=..., **kw)`` 源码；拼接归一
+        路径 → ASTJoinedStr → _generate_joined_str 的 f'...' 字面量。
+        [反编译流程位置] 转换层 ASTNode → 本发射器 → 源码。
+        [C1] 只读 AST 子树，拼接归一只消费转换层 _b90_wrapped 标记事实；
+        [C2] 归一判据与转换层包裹产出成对（包裹/解包口径一致），用户码
+        f-string 字面量元素（无标记）不归一；[C3] 判据不命中（无标记/
+        非单字段/无 FV 片段）维持通用 Call 发射路径，零静默吞节点。
+        """
         # [关键修复] 检查func是否是推导式类型（ListComp, DictComp, SetComp, GeneratorExp）
         # 这种情况发生在推导式被包装在Call节点中时（如 Iter -> DictComp）
         if isinstance(node.func, (ASTListComp, ASTDictComp, ASTSetComp, ASTGenExpr)):
@@ -4295,15 +4315,34 @@ class CodeGenerator:
         # ''.join([Constant, FormattedValue, ...]) → f-string
         # 当反编译器将 BUILD_STRING 结果错误识别为 ''.join([...]) 时，
         # 将其转换回 f-string 以保证语法正确性。
+        # [Round2-RG1] 拼接片段解包（C2 判据与转换层产出一致）：
+        # ast_converter 分发入口把 FormattedValue 统一包裹为单字段
+        # ASTJoinedStr（B90，_b90_wrapped 标记），拼接列表元素的裸
+        # ASTFormattedValue 事实被包裹形态遮蔽，has_fv 判据脱节 → 整体
+        # 发射 ''.join([...]) 源码 → 重编译 LIST+CALL ≠ 原
+        # FORMAT_VALUE+BUILD_STRING（trade_info_utils 实测回退）。据此：
+        # 携带 _b90_wrapped 标记且 _values 恰一个 FV 的元素先还原为裸 FV
+        # 再做拼接归一；用户码 f-string 字面量元素（无标记的 JoinedStr）
+        # 不解包，维持「拼接片段 vs 用户 f-string 字面量」的区分语义
+        # （真实 ''.join([f'{x}', ...]) 用户调用不误归一）。
+        # 判据全落节点元数据（I.4 白名单），非文件/函数名白名单；
+        # 无标记或非单字段元素保持既有发射路径（C3）。
         if isinstance(node.func, ASTAttribute) and getattr(node.func, 'attr', None) == 'join':
             func_value = getattr(node.func, 'value', None)
             if isinstance(func_value, ASTConstant) and func_value.value == '':
                 pparams = node.pparams if hasattr(node, 'pparams') else []
                 if len(pparams) == 1 and isinstance(pparams[0], ASTList):
-                    elts = pparams[0].elts
+                    elts = []
+                    for e in pparams[0].elts:
+                        if (isinstance(e, ASTJoinedStr)
+                                and getattr(e, '_b90_wrapped', False)):
+                            _vals = getattr(e, '_values', None) or []
+                            if len(_vals) == 1 and isinstance(_vals[0], ASTFormattedValue):
+                                e = _vals[0]
+                        elts.append(e)
                     has_fv = any(isinstance(e, ASTFormattedValue) for e in elts)
                     if has_fv:
-                        joined = ASTJoinedStr(values=list(elts))
+                        joined = ASTJoinedStr(values=elts)
                         return self._generate_joined_str(joined)
         
         # [关键修复] 使用call优先级，确保属性访问和方法调用不会添加括号

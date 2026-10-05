@@ -1,0 +1,178 @@
+[
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedataOK.py",
+  "success_rate": 0.953125,
+  "units_success": 61,
+  "units_total": 64,
+  "failures": [
+   "***<module>.get_kline_by_count_new: Failure: Different control flow",
+   "***<module>.get_multiminute_his_data: Failure: Different control flow",
+   "***<module>.kline_datetime_list: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__OK.py",
+  "success_rate": 0.9534883720930233,
+  "units_success": 41,
+  "units_total": 43,
+  "failures": [
+   "***<module>.PluginRiskCalculation._on_publish_after_trading_end: Failure: Different control flow",
+   "***<module>.PluginRiskCalculation._save_testds_to_csv: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quoteOK.py",
+  "success_rate": 0.9555555555555556,
+  "units_success": 43,
+  "units_total": 45,
+  "failures": [
+   "***<module>.RealQuoteData.get_real_minute_kline: Failure: Different control flow",
+   "***<module>.RealQuoteData.get_tick_direction: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategyOK.py",
+  "success_rate": 0.9629629629629629,
+  "units_success": 26,
+  "units_total": 27,
+  "failures": [
+   "***<module>.Strategy.tick_worker_thread: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_dailyOK.py",
+  "success_rate": 0.9629629629629629,
+  "units_success": 26,
+  "units_total": 27,
+  "failures": [
+   "***<module>: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_baseOK.py",
+  "success_rate": 0.9642857142857143,
+  "units_success": 27,
+  "units_total": 28,
+  "failures": [
+   "***<module>.get_history_df: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlersOK.py",
+  "success_rate": 0.9666666666666667,
+  "units_success": 29,
+  "units_total": 30,
+  "failures": [
+   "***<module>.TWHThreadController._target: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/financeOK.py",
+  "success_rate": 0.96875,
+  "units_success": 31,
+  "units_total": 32,
+  "failures": [
+   "***<module>.get_fields: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/jq_trans_module.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/jq_trans_moduleOK.py",
+  "success_rate": 0.9692307692307692,
+  "units_success": 63,
+  "units_total": 65,
+  "failures": [
+   "***<module>.func_attribute_history_convert_code.replace_args: Failure: Different control flow",
+   "***<module>.func_get_bars_convert_code.replace_args: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_positionOK.py",
+  "success_rate": 0.972972972972973,
+  "units_success": 36,
+  "units_total": 37,
+  "failures": [
+   "***<module>.StockPosition.make_trade: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/fly/loggerOK.py",
+  "success_rate": 0.984375,
+  "units_success": 63,
+  "units_total": 64,
+  "failures": [
+   "***<module>.SafeFileHandler.check_baseFilename: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytoolsOK.py",
+  "success_rate": 0.9848484848484849,
+  "units_success": 65,
+  "units_total": 66,
+  "failures": [
+   "***<module>.ProcessWrite.modify_batcktes_info: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccountOK.py",
+  "success_rate": 0.9854014598540146,
+  "units_success": 135,
+  "units_total": 137,
+  "failures": [
+   "***<module>.PtradeAccount.order_response_order_update: Failure: Different control flow",
+   "***<module>.PtradeAccount.trade_response_order_update: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/functionOK.py",
+  "success_rate": 0.9859154929577465,
+  "units_success": 70,
+  "units_total": 71,
+  "failures": [
+   "***<module>.reconnect: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handlerOK.py",
+  "success_rate": 0.9873417721518988,
+  "units_success": 78,
+  "units_total": 79,
+  "failures": [
+   "***<module>.get_kline_local: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/bar.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/barOK.py",
+  "success_rate": 0.9882352941176471,
+  "units_success": 84,
+  "units_total": 85,
+  "failures": [
+   "***<module>.BarData._history_bars: Failure: Different control flow"
+  ]
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+  "source": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotationOK.py",
+  "success_rate": 0.9934640522875817,
+  "units_success": 152,
+  "units_total": 153,
+  "failures": [
+   "***<module>.change_his_to_forward: Failure: Different control flow"
+  ]
+ }
+]
