@@ -1498,13 +1498,27 @@ class CFGASTConverter:
         _generate_joined_str 输出 f'...' 字面量，重编译恢复原
         FORMAT_VALUE(+BUILD_STRING) 指令流。
         [反编译流程位置] CFG 语句 dict → 本转换层 → code_generator 发射。
-        [C1] 只读本节点子树；[C2] 包裹后经既有 JoinedStr 发射器黑箱组合；
+        [Round2-RG1] 包裹产物携带内部元数据 ``_b90_wrapped = True``
+        （AST 节点属性，I.4 白名单「节点元数据」判据）。区分信号用途：
+        reconstructor 的 BUILD_STRING 拼接重建形态 ``''.join([FV, ...])``
+        经同一分发项转换时，其列表元素 FV 也会被包裹——发射端
+        _generate_call 的 join→f-string 恢复判据（has_fv）以裸
+        ASTFormattedValue 为拼接片段事实，包裹后判据脱节 → 整体发射
+        ''.join([...]) 源码 → 重编译 LIST+CALL ≠ 原 BUILD_STRING 指令流
+        （trade_info_utils.create_user_code_iqe 实测 36→35 回退）。发射端
+        据此标记把包裹元素还原为裸 FV 后再做拼接归一（C2 恢复一致：
+        包裹/解包成对；用户码 f-string 字面量经 _convert_joined_str_full
+        转换无此标记，不受解包影响）。
+        [C1] 只读本节点子树；[C2] 包裹后经既有 JoinedStr 发射器黑箱组合，
+        标记供发射端拼接归一消费（包裹与解包口径一致）；
         [C3] 内层转换失败返回 None，调用方维持原路径。
         """
         fv = self._convert_formatted_value_full(expr_dict)
         if fv is None:
             return None
-        return ASTJoinedStr(values=[fv])
+        joined = ASTJoinedStr(values=[fv])
+        joined._b90_wrapped = True
+        return joined
 
     def _render_format_spec_source(self, spec_dict: Any) -> Optional[str]:
         """[Round2-B90] 把 FormattedValue.format_spec 子树渲染为规范上下文源码。

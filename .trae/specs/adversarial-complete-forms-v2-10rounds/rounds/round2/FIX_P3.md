@@ -234,3 +234,108 @@ Phase 7 链内 fall-through 吸收的候选选择追加排除：候选块起始�
 | 5 | `git status --porcelain` 跟踪文件 | 仅 `core/cfg/region_ast_generator.py` + 本文件（FIX_P3.md）变化；regen 产物字节级可复现（4 探针 OK.py 零漂移） | ✓ |
 
 smoked 结论：重命名与 docstring 整改零读数回归，工作树变化面收窄于两文件，落地声明同步完成。
+
+---
+
+## §8 回退拦截整改（create_user_code_iqe 跨文件状态污染）
+
+> Round 2 修复工程师（Round 2 追加批次）：主代理发现 shard1 batch 读数 461/469（基线 462/469），
+> `IQCommon/util/trade_info_utils.pyc` 的 `<module>.create_user_code_iqe` 在 batch 方法学下
+> Different bytecode（文件 36/41→35/41）。本节记录二分定位、根因证伪与修复。
+
+### 8.1 现象复核与「batch 上下文专属」假象证伪
+
+主代理登记的现象描述为「batch 同进程顺序状态污染」（嫌疑：`_generated_regions` 预生成登记的
+跨文件泄漏）。实测复核**证伪跨文件状态污染**：
+
+1. **隔离读数实测 = 35/41 而非登记的 36/41**：`pyc_verify.py single`（compare 现存 OK.py）与
+   `pycdc.py` 独立进程重新反编译 + single，读数一致均为 35/41（create_user_code_iqe
+   Different bytecode）。隔离与 batch 无读数差异。
+2. **regen 逐文件独立进程**：`verify_driver.py regen` 对每个 pyc 单独 `subprocess.run`
+   （verify_driver.py:35-47），反编译器不存在跨文件进程内状态；`pyc_verify.py batch` 仅做
+   compare（py_compile + 判据），不执行反编译。
+3. **真因 = 验证时序的产物版本错位**：隔离验证跑在 HEAD 提交内的 OK.py（round1 终态产物，
+   36/41）上；batch 验证序先 regen（用 round2 代码重写全部 OK.py）再 verify，读的是 round2
+   产物（35/41）。看似「batch 专属」，实为 round2 代码的确定性反编译行为回退，与进程状态、
+   文件顺序无关（`_generated_regions` 为实例属性 per-file 新建，上一轮评审观察项排除）。
+
+### 8.2 二分证据链
+
+| 步骤 | 方法 | 结果 |
+|---|---|---|
+| 1 | shard1 batch（HEAD，51 文件） | 461/469，trade_info_utils 35/41（create_user_code_iqe Different bytecode） |
+| 2 | 基线 shard1_report.json 同文件 | 36/41，失败 5 单元（无 create_user_code_iqe） |
+| 3 | 独立进程反编译 + single（HEAD） | 35/41 —— 排除 batch/顺序因素 |
+| 4 | git worktree @87e59c49（de039b80 前）反编译 | `user_code = f'...'` 整体 f-string 字面量（基线形态） |
+| 5 | git worktree @de039b80（P2）反编译 | `user_code = ''.join([...])` join 列表形态 —— **P2 单独即引入** |
+| 6 | round2 输出 diff round1 输出 | 仅 create_user_code_iqe 的 user_code 一处（f-string → ''.join） |
+
+提交区间收窄到 de039b80（P2：ast_converter.py / comprehension_generator.py）；
+P3（3a9db846/fd04c276）不涉及。
+
+### 8.3 根因（锚点 + 机制 + 违反条款）
+
+**锚点**：
+- `core/cfg/ast_converter.py`（de039b80 引入，修复前行号 1481-1507）：`_convert_formatted_value_expr`
+  ——B90 分发项把 `'FormattedValue'` 分发从 `_convert_formatted_value_full`（裸 FV）改为
+  单字段 `ASTJoinedStr` 包裹（`ASTJoinedStr(values=[fv])`，无形态标记）。
+- `core/cfg/code_generator.py:4295-4307`（修复前）：`_generate_call` 的
+  `''.join([Constant, FormattedValue, ...]) → f-string` 拼接归一恢复判据
+  `has_fv = any(isinstance(e, ASTFormattedValue))`。
+
+**机制**：reconstructor 对 BUILD_STRING 的表达层重建形态是 `''.join([...])` Call dict，
+列表元素为裸 `FormattedValue` dict；发射端据「元素含裸 FV = 拼接片段事实」归一为整体
+f-string（重编译恢复原 FORMAT_VALUE+BUILD_STRING 指令流）。B90 包裹改动使所有经
+`_convert_expression` 分发的 FV（含 join 列表元素位）变成单字段 `ASTJoinedStr`，裸 FV
+事实被遮蔽 → has_fv 判 False → 恢复失效 → 整体发射 `''.join([...])` 源码 → 重编译
+BUILD_LIST+CALL 指令流 ≠ 原文 → Different bytecode。AST 层实测（探针）：join 列表 65 元素
+全为 `ASTConstant / JS[ASTFormattedValue]` 交替，0 个裸 FV。真实用户码
+`''.join([f'{x}', ...])`（元素为 JoinedStr dict）在 round1/round2 均不归一，行为未变。
+
+**违反条款**：
+- **C2**（转换层产出与发射端消费判据一致）：B90 包裹改变了拼接列表元素的 AST 形态，
+  发射端 join 归一判据（has_fv）未同步，两端口径脱节，恢复通路静默失效。
+- **C1**（用户语句形态保真）：既有 success 单元（create_user_code_iqe）的发射形态被
+  转换层内部表示变化静默改变（整体 f-string → join 源码），用户级形态蒸发。
+- I.4-④（方法/节点状态口径）：包裹产物无区分信号，接收方（发射端）无法按原语义消费——
+  修复补齐节点元数据口径（见 8.4）。
+
+### 8.4 修复语义（封闭，非个案补丁）
+
+修复方向 = 恢复「转换层包裹」与「发射端拼接归一」两端的口径一致（C2 闭合），
+B90 守卫本身不删：
+
+1. `core/cfg/ast_converter.py::_convert_formatted_value_expr`：包裹产物携带内部元数据
+   `_b90_wrapped = True`（AST 节点属性，I.4 白名单「节点元数据」判据；ASTJoinedStr 无
+   `__slots__` 约束，属性写入合法）。docstring 六项同步（[Round2-RG1] 注记）。
+2. `core/cfg/code_generator.py::_generate_call`：join 拼接归一前，对携带 `_b90_wrapped`
+   且 `_values` 恰一个 ASTFormattedValue 的元素还原为裸 FV，再做 has_fv 判定与
+   ASTJoinedStr 归一；无标记的 JoinedStr（用户码 f-string 字面量元素）不解包，维持
+   round1 的「拼接片段 vs 用户 f-string 字面量」区分语义（真实 join 调用不误归一）；
+   判据不命中维持既有发射路径（C3）。docstring 六项模板补齐（本方法此前为单行 docstring）。
+3. 禁忌核对：无函数名/文件名白名单（`attr == 'join'` 为既有恢复判据，未新增）、无
+   start_offset 魔数、无个案补丁（判据 = 节点元数据 + 结构事实，对全部 BUILD_STRING
+   重建形态生效）、无深度特判；`_b90_wrapped` 为 AST 节点属性非 self 方法状态（G0）。
+
+### 8.5 修复后输出一致性
+
+`pycdc.py`（修复后 HEAD）反编译 trade_info_utils 与 worktree@87e59c49（round1 终态）
+输出 **diff 逐字节一致**（仅 user_code 处恢复整体 f-string；文件内另一处真实
+`''.join([Constant, Call, Subscript])` 用户调用保持不归一）。
+
+### 8.6 自测读数（门禁 1–6 before/after）
+
+| # | 门禁 | before（HEAD 修复前） | after（修复后） | 判定 |
+|---|---|---|---|---|
+| 1 | shard1 batch（regen 51 文件后 verify） | 461/469 | **462/469**；trade_info_utils 36/41，失败单元回到基线（trade_operation/kill_trade_process/get_trade_status/query_trade_strategy_info/query_strategy_id + email_utils 1 + api_base 1） | ✓ |
+| 2 | trade_info_utils 隔离 single | 35/41 | **36/41**（基线 5 失败单元，无 create_user_code_iqe） | ✓ |
+| 3 | 42 探针 regen+verify | 172/196 | **172/196 逐位一致**（m01 5/5、m07 1/1、m08 2/2、m12 3/3、c01 5/5、c06 3/4、c11 10/10、x04 6/7、x09 10/10；负对照 nm01 3/3、nc01 4/4、nx01 7/7 全 MATCH） | ✓ |
+| 4 | 34 集抽验 3 文件（regen 后 single） | — | email_utils **3/4**、cgroup_utils **7/8**、executor **9/10**（基线同读数） | ✓ |
+| 5 | IV.2 | — | BOM 单头：region_analyzer/region_ast_generator 首 3 字节 `efbbbf` 保持；IMPORT_OK：42 探针 regen+verify 全过（`import` 通路零异常）；COMPILE_OK：shard1 batch compile_error=0、修复产物 compile 通过（compare 通路）；插桩残留：git diff core/ 中 `print(/breakpoint(/pdb` 新增 **0**；新增 def **0**（无禁止前缀方法）；ast.parse 两改动文件通过 | ✓ |
+| 6 | shard4 抽验 batch | 基线 848/855 | **848/855**（regen 51 文件后 batch，与基线一致） | ✓ |
+
+### 8.7 落地声明（I.6）
+
+**代码已落地**：`core/cfg/ast_converter.py`（+16/-2）、`core/cfg/code_generator.py`
+（+42/-3，含 `_generate_call` docstring 六项补齐）。工作树无调试脚本/临时文件残留
+（探针脚本全部位于 D:/Temp，工作区外）。未 git commit（移交主代理）。
