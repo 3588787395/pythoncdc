@@ -1,0 +1,148 @@
+[
+ {
+  "pyc": "c04_class_try.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.CTryNest: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/c04_class_try.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/c04_class_tryOK.py",
+   "[single] status=failure units=5/6 success_rate=83.33%"
+  ]
+ },
+ {
+  "pyc": "x04_try_deep_hosts.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.try_in_if: Failure: Different bytecode",
+   "  ***<module>.try_in_while: Failure: Different control flow",
+   "  ***<module>.try_in_with: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/x04_try_deep_hosts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/x04_try_deep_hostsOK.py",
+   "[single] status=failure units=4/7 success_rate=57.14%"
+  ]
+ },
+ {
+  "pyc": "x08_stmt_leaves.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.assert_leaf: Failure: Different control flow",
+   "  ***<module>.raise_leaf: Failure: Different control flow",
+   "  ***<module>.return_leaf: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/x08_stmt_leaves.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/x08_stmt_leavesOK.py",
+   "[single] status=failure units=5/8 success_rate=62.50%"
+  ]
+ },
+ {
+  "pyc": "x10_handler_hosts.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.h_basic: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/x10_handler_hosts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/x10_handler_hostsOK.py",
+   "[single] status=failure units=2/3 success_rate=66.67%"
+  ]
+ },
+ {
+  "pyc": "c02_class_if.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.CIf.items: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/c02_class_if.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/c02_class_ifOK.py",
+   "[single] status=failure units=6/7 success_rate=85.71%"
+  ]
+ },
+ {
+  "pyc": "nc02_simple_class_body.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/nc02_simple_class_body.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/nc02_simple_class_bodyOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "c13_class_misc.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.CMisc.boom: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/c13_class_misc.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/c13_class_miscOK.py",
+   "[single] status=failure units=2/3 success_rate=66.67%"
+  ]
+ },
+ {
+  "pyc": "nx01_shallow_hosts.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/nx01_shallow_hosts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/nx01_shallow_hostsOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "x01_if_deep_hosts.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.if_in_while: Failure: Different control flow",
+   "  ***<module>.if_in_try: Failure: Different bytecode",
+   "  ***<module>.if_in_match: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/x01_if_deep_hosts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/x01_if_deep_hostsOK.py",
+   "[single] status=failure units=4/7 success_rate=57.14%"
+  ]
+ },
+ {
+  "pyc": "x02_for_deep_hosts.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.for_in_try: Failure: Different control flow",
+   "  ***<module>.for_in_match: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/x02_for_deep_hosts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/x02_for_deep_hostsOK.py",
+   "[single] status=failure units=5/7 success_rate=71.43%"
+  ]
+ },
+ {
+  "pyc": "m12_module_values.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m12_module_values.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/m12_module_valuesOK.py",
+   "[single] status=failure units=2/3 success_rate=66.67%"
+  ]
+ },
+ {
+  "pyc": "c06_class_match.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/c06_class_match.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/c06_class_matchOK.py",
+   "[single] status=compile_error units=0/0 success_rate=-"
+  ]
+ },
+ {
+  "pyc": "c11_class_func_class.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.top_make: Failure: Different bytecode",
+   "  ***<module>.top_make.Top: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/c11_class_func_class.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/c11_class_func_classOK.py",
+   "[single] status=failure units=8/10 success_rate=80.00%"
+  ]
+ },
+ {
+  "pyc": "x09_funcdef_hosts.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.AHost.a1: Failure: Different control flow",
+   "  ***<module>.AHost.a2: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/x09_funcdef_hosts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/x09_funcdef_hostsOK.py",
+   "[single] status=failure units=8/10 success_rate=80.00%"
+  ]
+ }
+]

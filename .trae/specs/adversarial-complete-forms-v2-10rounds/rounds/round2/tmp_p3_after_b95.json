@@ -1,0 +1,12 @@
+[
+ {
+  "pyc": "x09_funcdef_hosts.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.AHost.a2: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/x09_funcdef_hosts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/x09_funcdef_hostsOK.py",
+   "[single] status=failure units=9/10 success_rate=90.00%"
+  ]
+ }
+]

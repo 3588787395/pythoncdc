@@ -1,5 +1,5 @@
 # Source Generated with Decompyle++ (Python version)
-# File: m01_docstring_order.pyc (Python 3.11)
+# File: m01_docstring_orderOK.pyc (Python 3.11)
 
 __doc__ = 'm01: module docstring position and statement order at root.'
 MOD_CONST = 1
@@ -24,7 +24,5 @@ if MOD_CONST:
     _R = [_f() for _ in range(1)]
 else:
     _R = None
-MOD_AFTER = _OD
-del _os
 assert MOD_CONST == 1
 __all__ = ['MOD_CONST', 'MOD_SECOND']

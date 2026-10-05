@@ -23,5 +23,3 @@ class CMatchDeep:
                             continue
                         case _:
                             GOT = None
-            else:
-                return None

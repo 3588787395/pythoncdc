@@ -1,0 +1,289 @@
+[
+ {
+  "pyc": "test_repros/round10/r10_04_import_try_cross.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/r10_06_import_deep_combo.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/r10_14_nonlocal_deep.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/r10_15_global_hosts.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/r10_16_scope_mix.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/r10_21_fin_loopctrl.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/rv10_31_nonlocal_variant.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=13/13 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/rv10_32_augassign_variant.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/rv10_33_ternary_variant.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_07_ternary_nest.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.t_host_match_case: Failure: Different control flow",
+   "[single] status=failure units=7/8 success_rate=87.50%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/rv8_01_chain3_subscript.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/rv8_02_with_tryfin_constret.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.tryfin_then_more: Failure: Different bytecode",
+   "[single] status=failure units=6/7 success_rate=85.71%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/r8_06_augassign_ops.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=10/10 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/n6_01_control.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/n7_01_simple_ternary.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=5/5 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/n7_02_simple_andor.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=5/5 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/n8_01_return_const.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/n8_02_simple_stmts.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=5/5 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round9/n9_01_simple_guard.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round9/n9_02_plain_forms.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round9/rv9_03_b67_mixed_chain.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/n10_01_simple_import.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/n10_02_simple_fromimport.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/n10_03_simple_global.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/n10_04_simple_nonlocal.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.v_while_cond_nest: Failure: Different control flow",
+   "  ***<module>.v_if_cond_nest: Failure: Different control flow",
+   "  ***<module>.n_for_body_nest: Failure: Different control flow",
+   "[single] status=failure units=1/4 success_rate=25.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.v_nest_fin_continue: Failure: Different control flow",
+   "[single] status=failure units=3/4 success_rate=75.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.v_imp_cond_fin: Failure: Different control flow",
+   "[single] status=failure units=2/3 success_rate=66.67%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.n_true_guard: Failure: Different control flow",
+   "[single] status=failure units=3/4 success_rate=75.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.v_swap_arm_returns: Failure: Different bytecode",
+   "  ***<module>.n_fin_noseg: Failure: Different control flow",
+   "[single] status=failure units=1/3 success_rate=33.33%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b50_face.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b65_face.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b76_face.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v1.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.drain: Failure: Different control flow",
+   "[single] status=failure units=1/2 success_rate=50.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v3.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>._Ctx.__enter__: Failure: Different bytecode",
+   "  ***<module>._Ctx.__exit__: Failure: Different bytecode",
+   "  ***<module>._Ctx.touch: Failure: Different bytecode",
+   "[single] status=failure units=3/6 success_rate=50.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v4.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ }
+]

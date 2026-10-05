@@ -1,0 +1,9 @@
+[
+ {
+  "pyc": "test_repros/round2/c14_class_docstring.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ }
+]

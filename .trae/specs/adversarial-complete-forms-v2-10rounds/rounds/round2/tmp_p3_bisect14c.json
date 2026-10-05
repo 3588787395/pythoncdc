@@ -1,0 +1,18 @@
+[
+ {
+  "pyc": "test_repros/round2/c06_class_match.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.CMatchDeep: Failure: Different control flow",
+   "[single] status=failure units=3/4 success_rate=75.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/c14_class_docstring.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.CDocDeep: Failure: Different control flow",
+   "[single] status=failure units=6/7 success_rate=85.71%"
+  ]
+ }
+]

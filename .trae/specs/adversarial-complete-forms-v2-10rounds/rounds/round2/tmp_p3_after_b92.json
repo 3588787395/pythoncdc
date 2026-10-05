@@ -1,0 +1,11 @@
+[
+ {
+  "pyc": "c11_class_func_class.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/c11_class_func_class.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/c11_class_func_classOK.py",
+   "[single] status=success units=10/10 success_rate=100.00%"
+  ]
+ }
+]

@@ -1,0 +1,11 @@
+[
+ {
+  "pyc": "x09_funcdef_hosts.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/x09_funcdef_hosts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/x09_funcdef_hostsOK.py",
+   "[single] status=success units=10/10 success_rate=100.00%"
+  ]
+ }
+]

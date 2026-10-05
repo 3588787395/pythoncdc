@@ -1,0 +1,34 @@
+[
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v1.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.drain: Failure: Different control flow",
+   "[single] status=failure units=1/2 success_rate=50.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v3.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>._Ctx.__enter__: Failure: Different bytecode",
+   "  ***<module>._Ctx.__exit__: Failure: Different bytecode",
+   "  ***<module>._Ctx.touch: Failure: Different bytecode",
+   "[single] status=failure units=3/6 success_rate=50.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v4.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ }
+]

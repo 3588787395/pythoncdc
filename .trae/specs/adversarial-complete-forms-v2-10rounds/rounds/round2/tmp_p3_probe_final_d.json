@@ -1,0 +1,10 @@
+[
+ {
+  "pyc": "test_repros/round2/x10_handler_hosts.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.h_basic: Failure: Different control flow",
+   "[single] status=failure units=2/3 success_rate=66.67%"
+  ]
+ }
+]

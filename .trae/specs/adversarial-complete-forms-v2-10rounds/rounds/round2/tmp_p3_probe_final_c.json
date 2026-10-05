@@ -1,0 +1,85 @@
+[
+ {
+  "pyc": "test_repros/round2/nx01_shallow_hosts.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.if_in_while: Failure: Different control flow",
+   "  ***<module>.if_in_try: Failure: Different bytecode",
+   "  ***<module>.if_in_match: Failure: Different control flow",
+   "[single] status=failure units=4/7 success_rate=57.14%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/x02_for_deep_hosts.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.for_in_try: Failure: Different control flow",
+   "  ***<module>.for_in_match: Failure: Different control flow",
+   "[single] status=failure units=5/7 success_rate=71.43%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/x03_while_deep_hosts.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.while_in_try: Failure: Different bytecode",
+   "[single] status=failure units=6/7 success_rate=85.71%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.try_in_if: Failure: Different bytecode",
+   "  ***<module>.try_in_while: Failure: Different control flow",
+   "  ***<module>.try_in_with: Failure: Different control flow",
+   "[single] status=failure units=4/7 success_rate=57.14%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/x05_with_deep_hosts.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.with_in_match: Failure: Different control flow",
+   "[single] status=failure units=6/7 success_rate=85.71%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/x06_match_deep_hosts.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/x07_trystar_deep.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/x08_stmt_leaves.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.assert_leaf: Failure: Different control flow",
+   "  ***<module>.raise_leaf: Failure: Different control flow",
+   "  ***<module>.return_leaf: Failure: Different control flow",
+   "[single] status=failure units=5/8 success_rate=62.50%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/x09_funcdef_hosts.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=10/10 success_rate=100.00%"
+  ]
+ }
+]

@@ -4,6 +4,7 @@
 __doc__ = 'c13: class-level del/assert/raise/pass/Expr statements.'
 class CMisc:
     TMP = 1
+    del TMP
     KEEP = 2
     assert KEEP
     def boom(self):

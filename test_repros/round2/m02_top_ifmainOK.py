@@ -22,6 +22,15 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         for k in range(3):
             while k:
-                pass
+                try:
+                    pass
+                except ValueError:
+                    k -= 1
+                    continue
+                    _run(k)
+                    k -= 1
+                    k
+                finally:
+                    k -= 1
     else:
         _main([])

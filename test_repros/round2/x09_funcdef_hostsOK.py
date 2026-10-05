@@ -25,12 +25,11 @@ class AHost:
         async with _A() as a:
             if a:
                 for i in range(2):
-                    pass
+                    await self.a2(i)
     async def a2(self, v):
         async for i in _AIT():
             if i:
-                acc = await None(_AIT())
-                i
-                return None
+                acc = [x async for x in _AIT()]
+                return i
     def sync_use(self):
         return (self.a1, self.a2)

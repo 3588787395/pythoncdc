@@ -1,5 +1,5 @@
 # Source Generated with Decompyle++ (Python version)
-# File: m08_module_stmts.pyc (Python 3.11)
+# File: m08_module_stmtsOK.pyc (Python 3.11)
 
 __doc__ = 'm08: module-level statement mix (AnnAssign/AugAssign/chain/Expr).'
 import os as _os

@@ -1,0 +1,77 @@
+[
+ {
+  "pyc": "nm01_simple_module.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/nm01_simple_module.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/nm01_simple_moduleOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "nm02_shallow_module_forms.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/nm02_shallow_module_forms.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/nm02_shallow_module_formsOK.py",
+   "[single] status=success units=1/1 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "nc01_plain_class.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/nc01_plain_class.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/nc01_plain_classOK.py",
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "nc02_simple_class_body.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/nc02_simple_class_body.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/nc02_simple_class_bodyOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "nx01_shallow_hosts.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/nx01_shallow_hosts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/nx01_shallow_hostsOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "m07_module_with.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m07_module_with.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/m07_module_withOK.py",
+   "[single] status=failure units=0/1 success_rate=0.00%"
+  ]
+ },
+ {
+  "pyc": "m02_top_ifmain.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m02_top_ifmain.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/m02_top_ifmainOK.py",
+   "[single] status=failure units=2/3 success_rate=66.67%"
+  ]
+ },
+ {
+  "pyc": "c04_class_try.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.CTryNest: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/c04_class_try.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/c04_class_tryOK.py",
+   "[single] status=failure units=5/6 success_rate=83.33%"
+  ]
+ }
+]

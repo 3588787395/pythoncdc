@@ -20,6 +20,7 @@ class CHolder:
         return self.make()
 def top_make(x):
     class Top:
+        TV = x
         def t(self):
             return self.TV
     return Top

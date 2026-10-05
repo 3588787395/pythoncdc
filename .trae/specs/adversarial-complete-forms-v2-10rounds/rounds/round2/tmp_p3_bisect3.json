@@ -1,0 +1,98 @@
+[
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.v_while_cond_nest: Failure: Different control flow",
+   "  ***<module>.v_if_cond_nest: Failure: Different control flow",
+   "  ***<module>.n_for_body_nest: Failure: Different control flow",
+   "[single] status=failure units=1/4 success_rate=25.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.v_nest_fin_continue: Failure: Different control flow",
+   "[single] status=failure units=3/4 success_rate=75.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.v_imp_cond_fin: Failure: Different control flow",
+   "[single] status=failure units=2/3 success_rate=66.67%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.n_true_guard: Failure: Different control flow",
+   "[single] status=failure units=3/4 success_rate=75.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.v_swap_arm_returns: Failure: Different bytecode",
+   "  ***<module>.n_fin_noseg: Failure: Different control flow",
+   "[single] status=failure units=1/3 success_rate=33.33%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b50_face.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b65_face.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b76_face.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v1.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.drain: Failure: Different control flow",
+   "[single] status=failure units=1/2 success_rate=50.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v3.pyc",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>._Ctx.__enter__: Failure: Different bytecode",
+   "  ***<module>._Ctx.__exit__: Failure: Different bytecode",
+   "  ***<module>._Ctx.touch: Failure: Different bytecode",
+   "[single] status=failure units=3/6 success_rate=50.00%"
+  ]
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v4.pyc",
+  "verify_rc": 0,
+  "tail": [
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ }
+]
