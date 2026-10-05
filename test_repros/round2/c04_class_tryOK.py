@@ -27,6 +27,7 @@ class CTryNest:
                 DEEP = 1
             finally:
                 MID = 3
+            OUT = 5
         except ValueError:
             DEEP = 2
         except NameError:

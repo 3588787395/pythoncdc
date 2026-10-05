@@ -27285,6 +27285,15 @@ AST 映射规则:
             同为 10），前三个判据全部失效，唯有跨度包含能捕获该内层
             try，否则其 try 体语句整体丢失。命中后内层 region 作为抽象
             节点在预循环中整树生成（每块唯一归属不变）。
+          - [B87] 中间循环宿主守卫：内层 try 的 entry 被某个中间
+            LoopRegion 认领（entry ∈ 循环 blocks）且该循环 entry 位于本
+            region 的 try_blocks 中时，预生成豁免——内层 try 归属循环体，
+            由循环体走查经子区域入口派发整树生成。否则 (a) 语句被提升到
+            循环之前（装配序错位），(b) 循环走查二次派发时内层体块已被
+            标记 generated、内层 try 体退化为 Pass（x04.try_in_while 实测
+            R=1 蒸发）。判据 = 区域成员关系（双向 blocks 包含），无偏移/
+            宿主/个案判据。C1（守卫恢复体语句唯一归属发射）/C2（循环体
+            内 try 装配序与源码一致）/C3（早退路径显式豁免、无静默吞块）。
         _is_in_if_branch 排除项对所有判据生效：entry 已归属兄弟 IfRegion
         分支的内层 try 由该 IfRegion 的分支体派发，不在此预生成。
 
@@ -27379,8 +27388,29 @@ AST 映射规则:
                         if r.entry in _ir_then_set or r.entry in _ir_else_set:
                             _is_in_if_branch = True
                             break
-                is_nested = (is_child_in_try or is_in_try_blocks or is_before_try_start
-                             or handler_in_range or _is_span_contained) and not _is_in_if_branch
+                # [B87] 中间循环宿主守卫（x04.try_in_while）：内层 try 的
+                # entry 被某个中间 LoopRegion 认领（内层 entry ∈ 循环 blocks）
+                # 且该循环入口位于本 region 的 try_blocks 中时，内层 try 位于
+                # 本 try 的循环体内——其语句顺序归属循环体，必须由循环体走查
+                # 经子区域入口派发（_loop_handle_child_region_entry）整树生成。
+                # 若在此预生成：(a) 内层 try 语句被提升到循环之前（语句顺序
+                # 错位，违反原则 2 每块唯一归属的装配序）；(b) 循环体走查二次
+                # 派发时内层体块已被标记 generated，内层 try 体退化为 Pass
+                # （try 体语句蒸发）。判据 = 区域成员关系（I.4 白名单：内层
+                # entry ∈ 中间循环 blocks ∧ 循环 entry ∈ 本 region
+                # try_blocks 双向成员事实），无偏移/宿主/个案判据。
+                _is_inside_intermediate_loop = False
+                for _lr in self.region_analyzer.regions:
+                    if not isinstance(_lr, LoopRegion) or _lr is region or _lr is r:
+                        continue
+                    if (r.entry is not None and r.entry in set(_lr.blocks)
+                            and _lr.entry in set(region.try_blocks)):
+                        _is_inside_intermediate_loop = True
+                        break
+                is_nested = ((is_child_in_try or is_in_try_blocks or is_before_try_start
+                              or handler_in_range or _is_span_contained)
+                             and not _is_in_if_branch
+                             and not _is_inside_intermediate_loop)
                 if is_nested and (r.parent is None or r.parent is region):
                     nested_is_smaller = r.try_offset_end - r.try_offset_start < region.try_offset_end - region.try_offset_start
                     if nested_is_smaller or is_child_in_try:
@@ -28970,6 +29000,12 @@ AST 映射规则:
           - 接收 Region 子类: TryExceptRegion
           - 关键字段: entry, try_blocks, except_handlers, handler_entry_blocks,
             else_blocks, finally_blocks, cleanup_blocks, try_offset_start/end
+          - [B87] handler 臂块走查的祖先区域豁免：handler body 块同时出现
+            在某祖先区域（parent 链判定）的 blocks 中时，该块集重叠是异常
+            传播/清理路径的共享事实（如 with 区域吸收 handler 臂块），并非
+            祖先对该块的生成认领——臂语句仍归属本 region 的 except_handlers
+            body，不得按「嵌套子区域成员」跳过（x04.try_in_with 实测 R=2
+            蒸发为幻影 pass）。判据 = 区域父子关系 + 块集成员（I.4 白名单）。
 
         AST 映射规则:
           - 输出 AST 节点: ast.Try（字典形式 {'type': 'Try', ...}）
@@ -29613,6 +29649,24 @@ AST 映射规则:
                         if nr is region or not isinstance(nr, (LoopRegion, IfRegion, WithRegion, TernaryRegion)):
                             continue
                         if hb in nr.blocks and hb is not nr.entry:
+                            # [B87] 祖先区域豁免（x04.try_in_with）：nr 经
+                            # parent 链是 region 的祖先时，hb ∈ nr.blocks 是
+                            # 异常传播/清理路径的共享块集事实（handler 臂块
+                            # 被祖先 WithRegion.blocks 吸收），并非 nr 对该块
+                            # 的生成认领——handler 臂语句归属本 region 的
+                            # except_handlers body（原则 2 每块唯一归属），
+                            # 不得据此跳过发射（实测 R=2 蒸发为幻影 pass）。
+                            # 判据 = 区域父子关系 + 块集成员（I.4 白名单），
+                            # 无偏移/宿主/个案判据。
+                            _anc = getattr(region, 'parent', None)
+                            _nr_is_ancestor = False
+                            while _anc is not None:
+                                if _anc is nr:
+                                    _nr_is_ancestor = True
+                                    break
+                                _anc = getattr(_anc, 'parent', None)
+                            if _nr_is_ancestor:
+                                continue
                             if region.entry and region.entry in nr.blocks:
                                 continue
                             _in_other_nested = True
@@ -37143,6 +37197,16 @@ AST 映射规则:
         a or (b and c) or d:
           分类 [OUTER, INNER, OUTER, LAST], outer='or'
           → or[ a, and[b,c], d ]
+
+        【B89 外层操作数边界守卫】
+        链内某块的短路跳转目标若恰为当前块的 fall-through 候选块，该候选块
+        是外层链的下一操作数入口（短路退出落点），不是本内层组的续接操作数
+        ——吸收会把外层操作数错误并入内层组（m12 实测 `(_F and 1) or
+        (_G and 2) or 3` 的块 34 被并成 and(_G, 2, 3)，重编译 LOAD_CONST
+        值改变 → units 差）。判据 = 链块跳转目标集合成员（指令 oparg 事实，
+        I.4 白名单），无偏移/个案判据。C1（外层操作数唯一归属外层链发射）/
+        C2（混合 and/or 链重建与 CPython 求值序一致）/C3（判据不命中时维持
+        既有吸收路径，行为逐位不变）。
         """
         STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
         TRANSFORM_OPS = frozenset({'UNARY_NOT', 'UNARY_NEGATIVE', 'UNARY_POSITIVE', 'UNARY_INVERT'})
@@ -37288,6 +37352,19 @@ AST 映射规则:
                     and last_instr.opname in STRIP_JUMP_OPS
                     and last_instr.argval is not None):
                 _next_cb = op_chain[i + 1][0] if i + 1 < len(op_chain) else None
+                # [B89] 外层操作数边界守卫：链内某块的短路跳转目标若恰为本块
+                # fall-through 候选块，则该候选块是外层链的下一操作数入口
+                # （短路退出落点），不是本内层组的续接操作数——吸收会把外层
+                # 操作数错误并入内层组（m12 实测 `(_F and 1) or (_G and 2)
+                # or 3` 的块 34 被并成 and(_G, 2, 3)，重编译 LOAD_CONST 值
+                # 改变）。判据 = 链块跳转目标集合成员（指令 oparg 事实，
+                # I.4 白名单），无偏移/个案判据。
+                _bo_chain_jump_targets = set()
+                for _cjt_b, _ in op_chain:
+                    _cjt_li = _cjt_b.get_last_instruction()
+                    if (_cjt_li is not None
+                            and isinstance(getattr(_cjt_li, 'argval', None), int)):
+                        _bo_chain_jump_targets.add(_cjt_li.argval)
                 _ft_succs = sorted(chain_block.conditional_successors,
                                    key=lambda s: s.start_offset)
                 _ft_block = next((s for s in _ft_succs
@@ -37297,6 +37374,7 @@ AST 映射规则:
                                   and s is not region.merge_block
                                   and s in region.blocks
                                   and s.start_offset not in processed_ft_blocks
+                                  and s.start_offset not in _bo_chain_jump_targets
                                   and not any(inst.opname == 'GET_AWAITABLE'
                                                for inst in s.instructions)), None)
                 if _ft_block is not None:

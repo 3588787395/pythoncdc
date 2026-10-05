@@ -11921,6 +11921,39 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
     def _collect_finally_body_blocks(self, handler_entry: BasicBlock,
                                       try_blocks: List[BasicBlock] = None,
                                       except_handlers: List = None) -> Tuple[List[BasicBlock], Dict[int, int]]:
+        """_collect_finally_body_blocks — finally 异常路径体块收集 + 内联副本标记
+
+        ①算法依据：No More Gotos 区域归约——finally 体在 CPython 3.11+ 编译
+          为异常路径副本（PUSH_EXC_INFO + 体 + RERAISE）与正常完成路径内联
+          副本两份；异常路径副本经 handler_entry 后继走查收集为 body_blocks，
+          正常路径副本按异常表跨度 + 出口后继判据标记进 finally_copy_blocks
+          （值 = 该副本块需发射的有义指令数，0 = 纯框架副本整体抑制）。
+        ②识别条件：异常表条目 target 落入 body_blocks 偏移集（异常边白名单）
+          分深度分组；正常路径副本 = 深度 0 条目保护跨度内的 try 出口后继块。
+          指令匹配检测（第二段）：以异常路径副本 PUSH_EXC_INFO..RERAISE 之间
+          的体指令序列为签名，在 try/handler 出口块的后继中寻找前缀匹配副本。
+        ③归约方式：副本块登记 finally_copy_blocks，发射端只发射 keep_count
+          之前的指令（通常仅控制流），体语句归 finally body 唯一归属发射。
+        ④嵌套处理：副本检测不越出本 region 的 try/handler 块集与保护跨度；
+          嵌套 try 的副本由其自身 region 收集（每块唯一归属）。
+        ⑤入口引用语义：handler_entry 是异常边的唯一入口引用；副本块经
+          出口块后继（普通边）引用，不重复计入口。
+        ⑥反编译流程位置：region_analyzer 识别阶段（_identify_try_except_regions
+          调用），产物供 region_ast_generator._generate_try 的副本抑制消费。
+
+        [B87] 副本签名含 argval（指令 oparg，I.4 白名单）：纯 opname 序列
+          (LOAD_CONST, STORE_*) 对任意 `X = <常量>` + 跳转块都成立，会把
+          try-else 臂等用户语句块误标为副本（keep=0）而蒸发（c04.CTryNest
+          实测 OUT = 5 丢失）。真副本是同一 finally 体指令序列的复制，
+          opname 与 argval（常量值/名字）逐项相同。C1（用户语句块不被误
+          抑制，守卫恢复唯一归属发射）/C2（副本判定与发射端消费一致）/
+          C3（不匹配时维持既有发射路径、零静默吞块）。
+
+        :param handler_entry: finally 异常路径入口块（异常表 target）
+        :param try_blocks: 本 region 的 try 体块列表（可为 None 跳过副本检测）
+        :param except_handlers: 本 region 的 handler 三元组列表
+        :return: (异常路径体块列表, {副本块起始偏移: 需发射的有义指令数})
+        """
         body_blocks: List[BasicBlock] = [handler_entry]
         visited: Set[BasicBlock] = set()
 
@@ -12121,7 +12154,15 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             _e = _si
                             break
                     if _s is not None and _e is not None and _e > _s:
-                        _ops = tuple(i.opname for i in _m[_s:_e])
+                        # [B87] 副本签名含 argval（指令 oparg，I.4 白名单）：
+                        # 纯 opname 序列 (LOAD_CONST, STORE_*) 对任意
+                        # `X = <常量>` + 跳转块都成立，会把 try-else 臂等
+                        # 用户语句块误标为 finally 内联副本（keep=0）而蒸发
+                        # （c04.CTryNest 实测 OUT = 5 丢失）。真副本是同一
+                        # finally 体指令序列的复制，opname 与 argval（常量
+                        # 值/名字）逐项相同；两者其一不同即非副本。
+                        _ops = tuple((i.opname, getattr(i, 'argval', None))
+                                     for i in _m[_s:_e])
                         break
             if _ops and len(_ops) >= 2:
                 _foff = {b.start_offset for b in body_blocks}
@@ -12205,14 +12246,18 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             continue
                         _m = [i for i in _succ.instructions
                                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                        _ops_succ = tuple(i.opname for i in _m)
+                        # [B87] 与 _ops 同一签名口径：opname + argval 成对比较
+                        _ops_succ = tuple((i.opname, getattr(i, 'argval', None))
+                                          for i in _m)
                         _cleanup = False
                         for _mi in range(len(_ops_succ) - len(_ops) + 1):
                             if _ops_succ[_mi:_mi + len(_ops)] == _ops:
                                 _cleanup = True
                                 break
                         if _cleanup:
-                            _op = _ops_succ[-1] if _ops_succ else None
+                            # [B87] _ops_succ 元素已改为 (opname, argval) 对，
+                            # 终结 opname 判定取对首元素，与上方签名口径配套。
+                            _op = _ops_succ[-1][0] if _ops_succ else None
                             if _op in ('JUMP_BACKWARD', 'JUMP_FORWARD',
                                                'JUMP_ABSOLUTE', 'JUMP_BACKWARD_NO_INTERRUPT',
                                                'RETURN_VALUE', 'RETURN_CONST'):

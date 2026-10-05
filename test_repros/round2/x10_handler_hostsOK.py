@@ -15,9 +15,11 @@ def h_basic():
     except (TypeError, KeyError) as e2:
         with _A():
             if True:
-                pass
+                R = 't'
             else:
                 R = 'o'
+    else:
+        E = 0
     finally:
         F = 9
     return X

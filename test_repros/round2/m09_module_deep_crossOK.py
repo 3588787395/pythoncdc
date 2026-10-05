@@ -8,7 +8,7 @@ with _A() as a:
             while i and i:
                 match i:
                     case 1:
-                        pass
+                        RES = 'one'
                     case _:
                         RES = 'other'
     finally:

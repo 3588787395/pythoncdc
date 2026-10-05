@@ -25,11 +25,11 @@ def try_in_for():
 def try_in_while():
     while True:
         try:
-            try:
-                pass
-            finally:
-                F = 1
-            continue
+            while True:
+                try:
+                    R = 1
+                finally:
+                    F = 1
         except ValueError:
             R = 2
 def try_in_with():
@@ -41,7 +41,7 @@ def try_in_with():
                 finally:
                     F = 1
         except ValueError:
-            pass
+            R = 2
     return 4
 def try_in_match():
     if 1 == 1:

@@ -21,6 +21,7 @@ def v_nest_fin_continue(rows):
             if r == 0:
                 try:
                     out.append(1)
+                    out.append(1)
                 finally:
                     out.append(2)
         finally:
