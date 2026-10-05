@@ -1,0 +1,92 @@
+[
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/n6_01_control.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_01_with_basic.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_02_with_nest.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_03_with_flow.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_04_with_combo.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_05_asyncwith_basic.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_06_asyncwith_nest.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_07_async_five.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_08_async_cross.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_09_with_multimgr.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_10_with_deepmix.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_11_with_trymix.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_12_asyncwith_flow.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_13_async_await_pos.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_14_asyncfor_forms.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_15_yield_forms.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/n7_01_simple_ternary.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/n7_02_simple_andor.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_01_ternary_args_index.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_02_ternary_containers.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_pos.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_04_ternary_binop_compare.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_05_ternary_comprehension.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_06_ternary_lambda_await.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nest.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_host.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_09_chain_compare_basic.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_10_chain_compare_calls.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_11_boolop_mixed.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_12_boolop_nest.pyc"
+ }
+]

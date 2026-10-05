@@ -1,0 +1,89 @@
+[
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_13_boolop_shortcut.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_14_boolop_deep_host.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round8/n8_01_return_const.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round8/n8_02_simple_stmts.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_01_return_positions.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_02_return_deep_hosts.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_03_pass_hosts.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_04_delete_forms.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_05_assign_multi.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_ops.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_07_assert_forms.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_08_raise_forms.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_09_deep_host_combo.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_10_expr_cross_stmt.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_11_deep_host_combo2.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/tools.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_schedule.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connector.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategy.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deep.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mix.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_01_simple_import.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_02_simple_fromimport.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_03_simple_global.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_04_simple_nonlocal.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc"
+ }
+]

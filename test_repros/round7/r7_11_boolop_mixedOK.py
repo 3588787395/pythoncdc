@@ -11,7 +11,7 @@ def b_not_eq(a, b):
 def b_or_and_precedence(a, b, c, d):
     return a or b and c or d
 def b_and_or_repeat(a, b, c):
-    return a and b or b and c and a or a
+    return a and b or b and c or a
 def b_if_guard_not(a, b, c):
     if not a and b:
         return c

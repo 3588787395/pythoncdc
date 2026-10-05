@@ -1,0 +1,11 @@
+# ne03: G3 负对照——浅层比较与操作符（预期 MATCH）
+def n_simple_compare(a, b):
+    return a < b
+
+
+def n_simple_binop(a, b):
+    return a + b * 2 - 1
+
+
+def n_simple_unary(a):
+    return -a

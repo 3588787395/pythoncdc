@@ -1,0 +1,309 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/n6_01_control.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/n6_01_control.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/n6_01_controlOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_01_with_basic.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_01_with_basic.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_01_with_basicOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_02_with_nest.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_02_with_nest.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_02_with_nestOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_03_with_flow.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_03_with_flow.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_03_with_flowOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_04_with_combo.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_04_with_combo.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_04_with_comboOK.py",
+   "[single] status=success units=11/11 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_05_asyncwith_basic.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_05_asyncwith_basic.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_05_asyncwith_basicOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_06_asyncwith_nest.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_06_asyncwith_nest.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_06_asyncwith_nestOK.py",
+   "[single] status=success units=5/5 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_07_async_five.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_07_async_five.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_07_async_fiveOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_08_async_cross.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_08_async_cross.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_08_async_crossOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_09_with_multimgr.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_09_with_multimgr.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_09_with_multimgrOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_10_with_deepmix.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_10_with_deepmix.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_10_with_deepmixOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_11_with_trymix.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_11_with_trymix.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_11_with_trymixOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_12_asyncwith_flow.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_12_asyncwith_flow.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_12_asyncwith_flowOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_13_async_await_pos.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_13_async_await_pos.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_13_async_await_posOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_14_asyncfor_forms.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_14_asyncfor_forms.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_14_asyncfor_formsOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round6/r6_15_yield_forms.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_15_yield_forms.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_15_yield_formsOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/n7_01_simple_ternary.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/n7_01_simple_ternary.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/n7_01_simple_ternaryOK.py",
+   "[single] status=success units=5/5 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/n7_02_simple_andor.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/n7_02_simple_andor.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/n7_02_simple_andorOK.py",
+   "[single] status=success units=5/5 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_01_ternary_args_index.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.t_arg_multi_mixed: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_01_ternary_args_index.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_01_ternary_args_indexOK.py",
+   "[single] status=failure units=8/9 success_rate=88.89%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_02_ternary_containers.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_02_ternary_containers.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_02_ternary_containersOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_posOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_04_ternary_binop_compare.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.t_compare_lhs_only: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_04_ternary_binop_compare.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_04_ternary_binop_compareOK.py",
+   "[single] status=failure units=6/7 success_rate=85.71%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_05_ternary_comprehension.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.t_listcomp_ternary_filter.<listcomp>: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_05_ternary_comprehensionOK.py",
+   "[single] status=failure units=15/16 success_rate=93.75%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_06_ternary_lambda_await.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "  ***<module>.t_await_deep_ternary: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_06_ternary_lambda_await.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_06_ternary_lambda_awaitOK.py",
+   "[single] status=failure units=7/10 success_rate=70.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nest.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nest.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nestOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_host.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.t_host_match_case: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_host.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_hostOK.py",
+   "[single] status=failure units=7/8 success_rate=87.50%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_09_chain_compare_basic.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_09_chain_compare_basic.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_09_chain_compare_basicOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_10_chain_compare_calls.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.c_chain_and_combo: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_10_chain_compare_calls.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_10_chain_compare_callsOK.py",
+   "[single] status=failure units=7/8 success_rate=87.50%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_11_boolop_mixed.pyc",
+  "regen": "ok",
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_11_boolop_mixed.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_11_boolop_mixedOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_12_boolop_nest.pyc",
+  "regen": "ok",
+  "verify_rc": 1,
+  "tail": [
+   "  ***<module>.b_ternary_lhs_and: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_12_boolop_nest.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_12_boolop_nestOK.py",
+   "[single] status=failure units=5/8 success_rate=62.50%"
+  ]
+ }
+]

@@ -1,0 +1,110 @@
+[
+ {
+  "path": "test_repros/round8/rv8_03_except_return_trailing.pyc"
+ },
+ {
+  "path": "test_repros/round9/n9_01_simple_guard.pyc"
+ },
+ {
+  "path": "test_repros/round9/n9_02_plain_forms.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_01_b2_cont_loopelse.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_02_b2_dual_continue.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_03_b3_shared_tail.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_04_b3_thenover_w23.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_05_b4_orphan_release.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_06_b2_with_try_cross.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_07_b3_gen_yield.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_08_b54_augassign_mix.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_09_b55_boundary.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_10_b2b3_shrink.pyc"
+ },
+ {
+  "path": "test_repros/round9/rv9_01_b68_nonfin_tail.pyc"
+ },
+ {
+  "path": "test_repros/round9/rv9_02_b66_with_nest.pyc"
+ },
+ {
+  "path": "test_repros/round9/rv9_03_b67_mixed_chain.pyc"
+ },
+ {
+  "path": "test_repros/round10/n10_01_simple_import.pyc"
+ },
+ {
+  "path": "test_repros/round10/n10_02_simple_fromimport.pyc"
+ },
+ {
+  "path": "test_repros/round10/n10_03_simple_global.pyc"
+ },
+ {
+  "path": "test_repros/round10/n10_04_simple_nonlocal.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_01_import_alias.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_02_fromimport_alias.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_03_import_nested_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_04_import_try_cross.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_05_relative_star.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_06_import_deep_combo.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_11_global_basic.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_12_global_deep.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_13_nonlocal_basic.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_14_nonlocal_deep.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_15_global_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_16_scope_mix.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_21_fin_loopctrl.pyc"
+ },
+ {
+  "path": "test_repros/round10/rv10_31_nonlocal_variant.pyc"
+ },
+ {
+  "path": "test_repros/round10/rv10_32_augassign_variant.pyc"
+ },
+ {
+  "path": "test_repros/round10/rv10_33_ternary_variant.pyc"
+ }
+]

@@ -1,0 +1,110 @@
+[
+ {
+  "path": "test_repros/round4/r4_or4_and2.pyc"
+ },
+ {
+  "path": "test_repros/round7/n7_01_simple_ternary.pyc"
+ },
+ {
+  "path": "test_repros/round7/n7_02_simple_andor.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_01_ternary_args_index.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_02_ternary_containers.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_03_ternary_stmt_pos.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_04_ternary_binop_compare.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_05_ternary_comprehension.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_06_ternary_lambda_await.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_07_ternary_nest.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_08_ternary_deep_host.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_09_chain_compare_basic.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_10_chain_compare_calls.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_11_boolop_mixed.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_12_boolop_nest.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_13_boolop_shortcut.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_14_boolop_deep_host.pyc"
+ },
+ {
+  "path": "test_repros/round7/rv7_01_quad_chain_container.pyc"
+ },
+ {
+  "path": "test_repros/round7/rv7_02_compare_chain_ternary.pyc"
+ },
+ {
+  "path": "test_repros/round7/rv7_03_subscript_slice_ternary.pyc"
+ },
+ {
+  "path": "test_repros/round7/rv7_04_dict3_ternary.pyc"
+ },
+ {
+  "path": "test_repros/round8/n8_01_return_const.pyc"
+ },
+ {
+  "path": "test_repros/round8/n8_02_simple_stmts.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_01_return_positions.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_02_return_deep_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_03_pass_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_04_delete_forms.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_05_assign_multi.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_06_augassign_ops.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_07_assert_forms.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_08_raise_forms.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_09_deep_host_combo.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_10_expr_cross_stmt.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_11_deep_host_combo2.pyc"
+ },
+ {
+  "path": "test_repros/round8/rv8_01_chain3_subscript.pyc"
+ },
+ {
+  "path": "test_repros/round8/rv8_02_with_tryfin_constret.pyc"
+ }
+]
