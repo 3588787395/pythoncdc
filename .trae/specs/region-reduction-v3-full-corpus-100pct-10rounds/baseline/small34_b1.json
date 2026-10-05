@@ -1,0 +1,50 @@
+[
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+  "rel": "IQCommon/api/klinedata.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+  "rel": "IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+  "rel": "IQData/plugins/plugin_system_realquote/real_quote.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+  "rel": "IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc",
+  "rel": "fly/dumpload/load_daily.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/api/api_base.pyc",
+  "rel": "IQData/api/api_base.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc",
+  "rel": "IQCommon/logger/handlers.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+  "rel": "IQCommon/data/finance.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQCommon/strategy/jq_trans_module.pyc",
+  "rel": "IQCommon/strategy/jq_trans_module.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc",
+  "rel": "IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/logger.pyc",
+  "rel": "fly/logger.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/flytools.pyc",
+  "rel": "fly/common/flytools.pyc"
+ }
+]

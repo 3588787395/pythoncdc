@@ -1,0 +1,105 @@
+{
+ "elapsed_sec": 91.6,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 5,
+  "success": 0
+ },
+ "files_total": 5,
+ "generated_at": "2026-10-05T20:10:29",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/bar.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.PtradeAccount.order_response_order_update: Failure: Different control flow",
+    "***<module>.PtradeAccount.trade_response_order_update: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc",
+   "pyc_sha": "0c2c8b975dc2",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/simtradding/ptradeAccountOK.py",
+   "source_sha": "b49059e70a35",
+   "status": "failure",
+   "success_rate": 0.9854014598540146,
+   "units_success": 135,
+   "units_total": 137
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.reconnect: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
+   "pyc_sha": "b67c0b5dfb1e",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/functionOK.py",
+   "source_sha": "7d05a760daea",
+   "status": "failure",
+   "success_rate": 0.9859154929577465,
+   "units_success": 70,
+   "units_total": 71
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.get_kline_local: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+   "pyc_sha": "1bfaa1f6e75c",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quote_handlerOK.py",
+   "source_sha": "6b7558eba3a6",
+   "status": "failure",
+   "success_rate": 0.9873417721518988,
+   "units_success": 78,
+   "units_total": 79
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.BarData._history_bars: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/bar.pyc",
+   "pyc_sha": "3db6e599ca1e",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/barOK.py",
+   "source_sha": "0c175045e3b0",
+   "status": "failure",
+   "success_rate": 0.9882352941176471,
+   "units_success": 84,
+   "units_total": 85
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.change_his_to_forward: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+   "pyc_sha": "1a51fbb50212",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quotationOK.py",
+   "source_sha": "a280c00d534c",
+   "status": "failure",
+   "success_rate": 0.9934640522875817,
+   "units_success": 152,
+   "units_total": 153
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9885714285714285,
+ "units_success": 519,
+ "units_total": 525
+}

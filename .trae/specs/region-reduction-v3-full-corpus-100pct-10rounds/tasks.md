@@ -4,18 +4,29 @@
 理论依据：`rules.md` §1（四原则 + C1/C2/C3 + 判据白名单 + 禁止事项 + 修复语义 + 注释口径）+ 继承 v2 spec 理论基准 I/II/III/IV。角色：主代理 = 调度 + 阶段提交 + 全量验证 + push（零实现）；测试工程师（子代理）= 逐 pyc 复现与登记破口；修复工程师（子代理）= 区域归约算法完善 + 注释合规。
 纪律：每轮独立文件夹；派发子代理前必须本地提交；每轮 ≥1 个 pyc 转完全 OK（或读数净增）否则禁止下一轮；每轮提交并 push（前缀 `rr-v3rNN:`）；单条命令 ≤300s；禁止手改 `*OK.py`；判据唯一 `scripts/pyc_verify.py`。
 
-- [ ] Task 0: 三件套与语料普查就位（主代理）
-  - [ ] 0.1 本规范 `spec.md`/`tasks.md`/`checklist.md` 落盘
-  - [ ] 0.2 落盘 `tools/corpus_census.py`：输出 `total=1721 A=402 B=1312 C=7` + A/B/C 名单 + `A_delta`（A 与 `pyc_index.json` 对称差），非 0 则退出码 1
-  - [ ] 0.3 普查读数与名单快照写入 `baseline/corpus_census.json`（封表时点 2026-10-05）
-  - [ ] 0.4 本地提交（派发前置）
+- [x] Task 0: 三件套与语料普查就位（主代理）
+  - [x] 0.1 本规范 `spec.md`/`tasks.md`/`checklist.md` 落盘
+  - [x] 0.2 落盘 `tools/corpus_census.py`：输出 `total=1721 A=402 B=1312 C=7` + A/B/C 名单 + `A_delta`（A 与 `pyc_index.json` 对称差），非 0 则退出码 1
+  - [x] 0.3 普查读数与名单快照写入 `baseline/corpus_census.json`（封表时点 2026-10-05）
+  - [x] 0.4 本地提交（派发前置）
+  - 落地补记（rr-v3r01）：本工作树重跑夹钳得 `total=1722 A=402 B=1312 C=8 A_delta=0`，+1 为 C-8
+    `IQCommon/util/email_utils.py.pyc`（非字节码：magic `2320536f`、前 80 字节是 Decompyle++ 生成的 py 文本），
+    已按类别登记；B/C 逐类字节级证据（1722 全量探测，非抽样）落盘 `baseline/exclusion_evidence.md`。
 
-- [ ] Task 1: Fresh 全量基线重验（主代理，作废 v2 Round2 过期读数）
-  - [ ] 1.1 八分片 regen：`verify_driver.py` 同构驱动（`pycdc.py -o <pyc>OK.py <pyc>`，每文件 90s 上限），产物写回 site-packages 同目录
-  - [ ] 1.2 八分片 `pyc_verify batch` → `baseline/shard{0..7}_report.json`（每片 ≤290s）
-  - [ ] 1.3 聚合 → `baseline_snapshot.md`：预期 units ≈ 6554/6617、files 369/402、quotation 152/153、34 小测试集 1505/1568
-  - [ ] 1.4 交叉核对：`trade_info_utils.pyc` batch 读数 = `single` 实测 36/41（证明基线与当前 HEAD 一致）
-  - [ ] 1.5 tests 六套件基线失败名单落盘 + 本地提交
+- [x] Task 1: Fresh 全量基线重验（主代理，作废 v2 Round2 过期读数）
+  - [x] 1.1 八分片 regen：`verify_driver.py` 同构驱动（`pycdc.py -o <pyc>OK.py <pyc>`，每文件 90s 上限），产物写回 site-packages 同目录
+  - [x] 1.2 八分片 `pyc_verify batch` → `baseline/shard{0..7}_report.json`（每片 ≤290s）
+  - [x] 1.3 聚合 → `baseline_snapshot.md`：预期 units ≈ 6554/6617、files 369/402、quotation 152/153、34 小测试集 1505/1568
+  - [x] 1.4 交叉核对：`trade_info_utils.pyc` batch 读数 = `single` 实测 36/41（证明基线与当前 HEAD 一致）
+  - [x] 1.5 tests 六套件基线失败名单落盘 + 本地提交
+  - 落地补记（rr-v3r01）：实得 units **6554/6617（99.0479%）**、files **369/402**、compile_error/error **0**；
+    34 小测试集 **1505/1568**（all34 触发 driver 290s 上限 rc=TIMEOUT，按 v2 惯例拆 a/b1/b2 三片合规重跑）；
+    quotation **152/153**（batch=single，唯一失败单元 `<module>.change_his_to_forward`）；
+    trade_info_utils **36/41**（batch=single，坐实 v2 报告 35/41 为过期读数）；
+    tests 六套件 277 passed / 2 failed（test_B01 + test_BOUNDARY_02，基线名单不变）/ 2 xpassed；
+    逐文件与归档 round2 after 报告位移 = **0**。
+    代码起点为 merge `47785867`（rr-v3r00 ⊕ main，含 d8db3448 create_user_code_iqe 回退修复）——主代理裁定项。
+    工具纠正两处（非判据）：driver.py `ROOT` 上溯四级→三级 + ROOT 自检 fatal；shard/full/small34 索引 `path` 前缀重绑本工作树。
 
 - [ ] Task 2: Round 1 — 单单元损失族（22 个文件各失 1 单元，含 quotation 除外）
   - [ ] 2.1 测试工程师：按索引每次只取 1 个 pyc（顺序 `IQCommon/util/cgroup_utils` → `IQCommon/util/email_utils` → `IQData/utils/calexrights_func` → `IQData/plugins/plugin_system_fly_basicdata/calexrights_func` → `IQCommon/data/finance` → `IQCommon/logger/handlers`），逐单元定位不一致点，每个缺陷建 ≥10 最小复现（深度 ≥3 变体 + ≥2 MATCH 负对照），登记破口（B98+ 续接：锚点 + 机制 + 违反条款）→ `rounds/round1/REVIEW.md` + `test_repros/round1/`
