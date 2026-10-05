@@ -14,12 +14,12 @@
   - [ ] 1.3 评审工程师复核：逐 hunk 审查（对照 I.1–I.7 逐条款，零容忍打回）+ 读数独立复跑（防虚报）+ 变体攻击；REVIEW2.md
   - [ ] 1.4 主代理验证：验证序六步（spec「主代理无回退验证」：34 batch → 402 八分片 batch+compare REGRESSIONS=0 → quotation 152/153 零新增 → tests 零新增失败 → IV.2 门禁自检 → 读数汇报）；VERIFICATION.md
   - [ ] 1.5 归档 rounds/round1/ + 提交并 push origin main
-- [ ] Task 2: Round 2 — 表A 语句结构形态对抗（III.2 全名单：If/For/While/Try/TryStar/With/Match/Assert/Raise/Return/Assign/Delete/Import/Global/FunctionDef/ExceptHandler × 深层宿主，优先文档标榜完备者与覆盖矩阵空白格）
-  - [ ] 2.1 评审工程师：每形态 ≥10 深层/交叉复现（深度 ≥3）+ ≥2 MATCH 负对照，实测深层与浅层产物结构一致（C2 判据）；宣告完备前逐条自查 13 误解（II.7）；站桩回归重放；合规审计；登记新破口（B71+ 续接，锚点+机制+违反条款）；REVIEW.md + test_repros/round2/
-  - [ ] 2.2 修复工程师（≥2 个不相交破口族时多位并行）：封闭登记破口（I.4 白名单判据 + I.3 推论修复方向 + I.7 注释）；自测 = IV.2 门禁自检清单全过；FIX.md（可多份）
-  - [ ] 2.3 评审工程师复核：逐 hunk + 读数独立复跑 + 变体攻击；通过/打回；REVIEW2.md
-  - [ ] 2.4 主代理验证：验证序六步；VERIFICATION.md
-  - [ ] 2.5 归档 rounds/round2/ + 提交并 push origin main
+- [x] Task 2: Round 2 — 表A 语句结构形态对抗（III.2 全名单：If/For/While/Try/TryStar/With/Match/Assert/Raise/Return/Assign/Delete/Import/Global/FunctionDef/ExceptHandler × 深层宿主，优先文档标榜完备者与覆盖矩阵空白格）
+  - [x] 2.1 评审工程师：每形态 ≥10 深层/交叉复现（深度 ≥3）+ ≥2 MATCH 负对照，实测深层与浅层产物结构一致（C2 判据）；宣告完备前逐条自查 13 误解（II.7）；站桩回归重放；合规审计；登记新破口（B71+ 续接，锚点+机制+违反条款）；REVIEW.md + test_repros/round2/
+  - [x] 2.2 修复工程师（≥2 个不相交破口族时多位并行）：封闭登记破口（I.4 白名单判据 + I.3 推论修复方向 + I.7 注释）；自测 = IV.2 门禁自检清单全过；FIX.md（可多份）
+  - [x] 2.3 评审工程师复核：逐 hunk + 读数独立复跑 + 变体攻击；通过/打回；REVIEW2.md
+  - [x] 2.4 主代理验证：验证序六步；VERIFICATION.md
+  - [x] 2.5 归档 rounds/round2/ + 提交并 push origin main
 - [ ] Task 3: Round 3 — 表B 表达式形态对抗（III.3 全名单：BoolOp/IfExp/Compare 链/BinOp/UnaryOp/Lambda/推导式族/Call/JoinedStr/Await/Yield/NamedExpr/操作符叶子 32 个 × 嵌套宿主，B1 台账口径重点复核）
   - [ ] 3.1 评审工程师：同 2.1 攻击协议（II.7 自查 + 站桩回归 + 合规审计 + Bn 登记）；REVIEW.md + test_repros/round3/
   - [ ] 3.2 修复工程师（可多位协同）：封闭登记破口（I.4/I.3/I.7 约束）；自测 = IV.2 门禁自检清单全过；FIX.md

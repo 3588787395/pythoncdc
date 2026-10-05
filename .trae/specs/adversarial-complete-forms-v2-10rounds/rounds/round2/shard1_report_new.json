@@ -1,5 +1,5 @@
 {
- "elapsed_sec": 33.0,
+ "elapsed_sec": 29.8,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
@@ -7,7 +7,7 @@
   "success": 48
  },
  "files_total": 51,
- "generated_at": "2026-10-05T16:35:16",
+ "generated_at": "2026-10-05T17:54:11",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
@@ -220,7 +220,6 @@
    "failures": [
     "***<module>.trade_operation: Failure: Different control flow",
     "***<module>.kill_trade_process: Failure: Different control flow",
-    "***<module>.create_user_code_iqe: Failure: Different bytecode",
     "***<module>.get_trade_status: Failure: Different control flow",
     "***<module>.query_trade_strategy_info: Failure: Different control flow",
     "***<module>.query_strategy_id: Failure: Different control flow"
@@ -228,10 +227,10 @@
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
    "pyc_sha": "5419f2a32c80",
    "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utilsOK.py",
-   "source_sha": "274e773fa6f9",
+   "source_sha": "0bd56da795ed",
    "status": "failure",
-   "success_rate": 0.8536585365853658,
-   "units_success": 35,
+   "success_rate": 0.8780487804878049,
+   "units_success": 36,
    "units_total": 41
   },
   {
@@ -698,7 +697,7 @@
   "compare_pyc_sha256": "9c7567bd6776b36b",
   "ruler_version": "pylingual-equivalence_check"
  },
- "success_rate": 0.9829424307036247,
- "units_success": 461,
+ "success_rate": 0.9850746268656716,
+ "units_success": 462,
  "units_total": 469
 }
