@@ -182,8 +182,54 @@ P2 声明里程碑亦复核成立：m12 COMPILE_OK（3/3）、x09 8/10→10/10�
 
 ---
 
+## §5 终审放行（Round 2 复核 · 整改批次 2258f5ac 窄范围复审）
+
+受审对象：`git diff fd04c276..2258f5ac -- core/`（1 文件 +159/−4）；整改记录 = FIX_P3.md §7。复审口径 = REVIEW2.md §0 打回的 I.5 + I.7 两项，不含算法重审。
+
+### 5.1 整改核验记录
+
+| # | 核验项 | 方法 | 结果 | 判定 |
+|---|---|---|---|---|
+| 1 | 旧名清除 | `grep -rn _merge_annassign_statements core/ --include=*.py` | **0 命中**（仅 `core/cfg/__pycache__/*.pyc` 陈旧字节码缓存命中——该目录 0 个 git 跟踪文件，为本地未跟踪产物，随下次 import 刷新，不构成树中残留） | **PASS** |
+| 2 | 新名接线 | grep `_combine_annassign_statements` region_ast_generator.py | 5 处：def + docstring 标题/自引用 + 2 调用点，全部接通 | **PASS** |
+| 3 | I.5 前缀合规 | 新名 `_combine_` 对照七前缀禁用表 | 不命中任何禁止前缀；存量豁免仍仅 `_merge_block_is_*` | **PASS** |
+| 4 | I.7 六项模板 | 脚本核验五方法 docstring（def 行号：_generate_region:3899 / _generate_try_body:27311 / _generate_with:33672 / _generate_block_statements:50831 / _generate_block_statements_body:50999） | 五方法 ①算法依据/②归约顺序/③唯一归属/④嵌套处理/⑤入口引用/⑥反编译流程 + C1/C2/C3 **全部齐全、docstring 闭合** | **PASS** |
+| 5 | docstring 与代码行为一致性 | 抽读 `_generate_region` 全文比对代码 | ①-⑥ 与实际分派表（_generate_loop/_if/_try/_with/_match/_assert/_boolop/_ternary/_basic_region）、(a) WITH 清理角色登记、(b) [B87] 早退守卫判据（与 §1.2 已审代码逐句对应）、(c) SEND/YIELD 轮询区域、TernaryRegion merge_block 双角色（[R2-With]/[R59-B]）**全部与代码行为一致**；C 条款表述准确 | **PASS** |
+| 6 | 无算法夹带 | 纯代码行提取（diff 全量新增/删除行剔除注释/docstring 中文散文后对比） | 删除纯代码行 3 = 新增纯代码行 3，**逐行为同名替换**（`_merge_annassign_statements` → `_combine_annassign_statements`）；其余新增行全部为 docstring 散文；**零算法改动** | **PASS** |
+| 7 | 读数抽验 | m08 / c01 regen+verify（RV2 方法学），附加负对照 nc01 | m08 **2/2 MATCH**、c01 **5/5 MATCH**、nc01 4/4 MATCH——与整改前读数逐位一致 | **PASS** |
+| 8 | 工作树状态 | 复核 regen 后 `git status --porcelain` | 跟踪文件零变化（OK.py 字节级可复现） | **PASS** |
+| 9 | FIX_P3 §7 声明核对 | 逐条对照 | 七前缀自检口径补 `_merge_` 项、regen 产物零漂移、涉改面=两文件——声明与实测一致 | **PASS** |
+
+### 5.2 终判
+
+## **通过**（Round 2 修复批次 P2+P3 整改后放行）
+
+I.5/I.7 两项打回项全部整改到位且无夹带；42 探针 172/196、站桩 45/45 持平、变体攻击零回归的既有复核结论（§2/§3）继续有效。落地标记更新：`_combine_annassign_statements`（region_ast_generator.py，5 处）。
+
+### 5.3 最终移交清单确认（承接后续轮）
+
+| 项 | 来源 | 状态 |
+|---|---|---|
+| B87 残余（c04.CTryNest，else 臂发射位错位，读数持平） | FIX_P3 §6.1 | 确认移交（region_analyzer try/else 区域构造域） |
+| B88 残余（x08.return_leaf，与 B78 纠缠） | FIX_P3 §6.2 | 确认移交（随 B78 封闭批次一并验证） |
+| B93（x05.with_in_match 幻影镜像替换） | FIX_P3 §6.4 | 确认移交（位 1 识别域） |
+| B94（x01.if_in_while NOP 假循环） | FIX_P3 §6.5 | 确认移交（位 1 识别域） |
+| B97（x10.h_basic handler 臂 break 蒸发；rv3_06 获又一实证） | FIX_P3 §6.3 | 确认移交（随 B78/B59-61 族批次） |
+| **分组 boolop 保真新破口（登记建议 B98）**：模块根 `(_A or _B) and _C` 展平为 or 链、混合三元链重建保真差（rv3_02/rv3_07 实证；锚点 `_build_grouped_boolop_expression` 分组检测段） | REVIEW2.md §3/§4.3 | **建议 Round 3 正式登记并专攻** |
+| 在途预生成未登记 `_generated_regions` 观察项 | FIX_P3 §6.6 | 确认移交 |
+| 杂散产物清理：`test_repros/round2/m01_docstring_orderOKOK.py`、`m08_module_stmtsOKOK.py`（在途提交 3a9db846 引入，未跟踪树中现为 git 跟踪状态则随下批删除） | REVIEW2.md §4.5 | 确认移交（过程卫生项） |
+| 存量族外推证据（rv3_01 finally 副本泄漏进 handler 臂、rv3_04 类体 match subject 错构、rv3_06 while 折叠） | REVIEW2.md §3 | 归档为对应 Bn 族扩展证据，随各封闭批次复用 |
+| FIX 报告基线口径显式化（「新增方法 0」类声明须标注 commit 范围；自检 grep 七前缀全列） | REVIEW2.md §4.6 | 流程改进项，Round 3 起执行 |
+
+### 5.4 复审产物与合规声明
+
+- 本节为 REVIEW2.md 唯一新增内容；复审过程零 git 提交、跟踪文件零修改、除本报告外零写入（`__pycache__` 的 .pyc 刷新为解释器自动行为）。
+- 本轮复审命令全部 ≤300s。
+
+---
+
 ## 附：复核产物
 
-- 本报告：`rounds/round2/REVIEW2.md`
+- 本报告：`rounds/round2/REVIEW2.md`（含 §1–§4 初审 + §5 终审放行）
 - 变体探针：`test_repros/round2/rv3_01..rv3_07`（.py/.pyc/OK.py，未跟踪文件）
-- 复核过程零 git 提交、跟踪文件零修改；基线复跑临时环境（/tmp/rv3_base）已清理。
+- 复核全程零 git 提交；基线复跑临时环境（/tmp/rv3_base）已清理。
