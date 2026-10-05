@@ -194,3 +194,43 @@ Phase 7 链内 fall-through 吸收的候选选择追加排除：候选块起始�
 6. **在途预生成未登记 `_generated_regions`**：`_generate_try_body` 嵌套预循环 `_generate_try(ntr)` 后未 `add(id(ntr))`，依赖块级 generated 标记兜底（本批监视实测二次生成路径存在）。当前无读数影响（块标记已防双份发射），登记为观察项：后续若块标记被回滚语义（`generated_blocks -= ...`）清除，可能复现双份生成。
 7. **存量族**：c02/c03/c07/c13/m02/m03/m04/m05/m06/m09/x01/x02/x08/x10 的其余失败单元全部归 B78/B81/B83/B56/B49/B59-61/B61 存量（评审 §4.2 已登记宿主外推证据），非本批新增破口；3 伪差单元（x01.if_in_try、x03.while_in_try、x04.try_in_if）为探针退化（评审 §4.3 口径）。
 8. **临时脚本清理**：round2 目录内 tmp_p3_*.py、tmp_*_b94.py、tmp_dump/tmp_trace/tmp_split 及全部 tmp_p3_*.json 中间读数已删除（git 历史 3a9db846 已存证）；终态证据保留为 `p3_probe_final.json`（42 探针）与 `p3_regress_final.json`（站桩 45 文件）。
+
+---
+
+## §7 复核整改记录（Round 2 复核打回窄口径整改，依据 REVIEW2.md）
+
+整改范围：仅 REVIEW2.md §0 打回的两项（I.5 命名前缀违反 + I.7 docstring 部分缺口），无任何算法改动。
+
+### 7.1 I.5 整改：方法重命名
+
+- `_merge_annassign_statements` → **`_combine_annassign_statements`**（避开全部禁止前缀 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_`），位置 `core/cfg/region_ast_generator.py`，共 3 处：def（:32776）+ 2 调用点（:32671、:50754）；docstring 内自引用同步更新。
+- 本文件未出现旧名（grep 复核 0 命中）；落地标记名随本节同步更新为 `_combine_annassign_statements`。
+- 自检口径缺口同步：门禁 5 的禁止前缀 grep 现覆盖 `_fix_|_merge_|_patch_|_fallback_|_hack_|_workaround_|_temp_` 七项（补 `_merge_` 项）；既有豁免仍仅覆盖存量 `_merge_block_is_*`（:19937/:40760），本批无新增禁止前缀方法。
+
+### 7.2 I.7 整改：4 个 `_generate_*` 方法 docstring 补齐六项模板 + C1/C2/C3
+
+| 方法 | 位置 | 变更 |
+|---|---|---|
+| `_generate_region` | region_ast_generator.py | **新增完整 docstring**（原缺失，仅代码内注释承载）：六项模板 + [B87] 早退守卫唯一归属判定 + [R2-With]/[R59-B] merge_block 双角色入口 + C1/C2/C3 |
+| `_generate_try_body` | region_ast_generator.py | docstring 标题后插入六项模板块 + C 条款（既有嵌套派发判据与 [B87] 条目保留不动） |
+| `_generate_with` | region_ast_generator.py | docstring 标题后插入六项模板块 + C 条款（既有输入契约/AST 映射/R08b/R10-W10 段保留不动） |
+| `_generate_block_statements` | region_ast_generator.py | docstring 插入六项模板块 + C 条款（[B86-phantom] 单一漏斗 / AnnAssign 归并 / 伪影剔除 / B32 / R55 收口口径） |
+| `_generate_block_statements_body` | region_ast_generator.py | docstring 插入六项模板块 + C 条款（跨块守卫分流 / GET_ITER 抽象节点 / R11 / C1/C2/C3） |
+
+全部六项内容以方法体真实算法为准撰写（与代码行为一致），对照 `_generate_try`/`_generate_assert` 的既有合规 docstring 风格。
+
+### 7.3 整改后自测（smoked 级）
+
+| # | 自测项 | 读数 | 判定 |
+|---|---|---|---|
+| 1 | `import core.cfg.region_ast_generator` | IMPORT_OK | ✓ |
+| 2 | BOM：region_ast_generator.py 首 3 字节 | `efbbbf` 保持 | ✓ |
+| 3a | 探针 m08（B85 AnnAssign 面）regen+verify | **2/2 MATCH（保持）** | ✓ |
+| 3b | 探针 m12 regen+verify | **3/3 MATCH（持平）** | ✓ |
+| 3c | 探针 c01 regen+verify | **5/5 MATCH（持平）** | ✓ |
+| 3d | 负对照 nc01 regen+verify | **4/4 MATCH（保持 MATCH）** | ✓ |
+| 4 | grep `_merge_annassign_statements` 全树（*.py/*.md，排除评审文档本身） | **0 命中** | ✓ |
+| 4b | grep `def (_fix_\|_merge_\|...)\` 七前缀 | 仅存量豁免 `_merge_block_is_*` 2 处，0 新增 | ✓ |
+| 5 | `git status --porcelain` 跟踪文件 | 仅 `core/cfg/region_ast_generator.py` + 本文件（FIX_P3.md）变化；regen 产物字节级可复现（4 探针 OK.py 零漂移） | ✓ |
+
+smoked 结论：重命名与 docstring 整改零读数回归，工作树变化面收窄于两文件，落地声明同步完成。

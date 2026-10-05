@@ -3897,6 +3897,45 @@ class RegionASTGenerator:
         return out
 
     def _generate_region(self, region: Region, skip_store_targets: Set[str] = None) -> Union[Dict[str, Any], List[Dict[str, Any]], None]:
+        """_generate_region — 区域统一分派入口（Region 子类 → 对应 _generate_* 结构节点）
+
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」——自底向上归约 /
+        每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。本方法不做具体结构装配，
+        只按区域类型把 region 分派给对应的 _generate_loop/_generate_if/
+        _generate_try/_generate_with/_generate_match/_generate_assert/
+        _generate_boolop/_generate_ternary/_generate_basic_region。
+        ②归约顺序：自底向上，内层区域先归约——本方法被各结构体的体走查
+        （if/loop/try/with 臂与体循环）按子区域入口递归调用，内层子区域经
+        本分派先整树生成，父序列再装配自身语句。
+        ③唯一归属判定：本方法的块归属判定逻辑——
+          (a) WITH 清理角色区域（全部块角色 ∈ WITH_EXIT_CLEANUP/WITH_STACK_
+              CLEANUP/WITH_HANDLER）整体登记 generated_blocks 后返回 None，
+              不输出源码（清理协议由 with 语句重编译自然再生）；
+          (b) [B87] TryExceptRegion 早退守卫：「已完整生成」的唯一可信事实
+              是区域生成器登记（_generated_regions/_generating_regions）。
+              try_blocks 全部已生成但两集合均不含本区域时，是兄弟/父级路径
+              逐块消费了成员块（m02 实测体蒸发），必须继续进入 _generate_try
+              发射结构；仅当登记含本区域时才早退。try_blocks 为空（嵌套子
+              区域情形）维持原行为；
+          (c) LoopRegion entry 为 SEND/YIELD 轮询形态的 async with 内嵌循环
+              整体登记后返回 None。
+        ④嵌套处理：嵌套区域一律作为抽象节点——按类型分派整树生成，本方法
+          从不拆散子区域逐块重建；TernaryRegion 的 merge_block 双角色入口
+          （同为 WithRegion/IfRegion/LoopRegion/TryExceptRegion 等结构区域
+          的 entry）时按「父引用子入口」把结构区域归约结果并入三元归约结果
+          （[R2-With]/[R59-B Fix2]），不让外层按内部块名二次认领。
+        ⑤入口引用语义：父序列引用子区域结果仅经本方法分派——输入 region
+          （即其 entry/成员块结构事实），输出单个 AST 节点字典或语句列表
+          （或 None=整区域不发射）；调用方以返回值装配，不读子区域内部块。
+        ⑥反编译流程：区域生成层的中央分派步，处于 generate() 顶层扫描与
+          各结构体走查的交汇点——所有「遇到子区域入口」的路径（块→区域映射、
+          GET_ITER 守卫、体循环派发）都经本方法进入具体 _generate_*。
+
+        C 条款：[C1] 早退仅信 _generated_regions/_generating_regions 登记，
+        恢复 B87 场景 try 体语句的唯一归属发射；[C2] 分派路径与各 _generate_*
+        既有契约一致，无旁路重建；[C3] 各早退/让位分支均为显式守卫（清理
+        角色、登记命中、让位判据命中），不命中时进入正常分派，无静默吞块。
+        """
         if isinstance(region, RegionASTGenerator._ALL_REGION_TYPES):
             with_cleanup_roles = (BlockRole.WITH_EXIT_CLEANUP, BlockRole.WITH_STACK_CLEANUP, BlockRole.WITH_HANDLER)
             if all(self.region_analyzer.get_block_role(b) in with_cleanup_roles for b in region.blocks):
@@ -27272,6 +27311,38 @@ AST 映射规则:
     def _generate_try_body(self, region: TryExceptRegion) -> List[Dict[str, Any]]:
         """_generate_try_body — TryExceptRegion.try_blocks → ast.Try.body
 
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」（自底向上归约 /
+        每块唯一归属 / 嵌套即抽象节点 / 父引用子入口）——try 主臂语句序由
+        本方法从 try_blocks 走查装配，框架指令（PUSH_EXC_INFO/CHECK_EXC_MATCH
+        等）不生成源码。
+        ②归约顺序：自底向上，内层区域先归约——嵌套 try 判定并集筛出的内层
+        TryExceptRegion 按 try_offset_start 排序，在预循环中先于 try_blocks
+        遍历整树生成（_generate_try），随后本方法再走查 try_blocks 剩余块，
+        保证内层语句在装配序中位于其源码位置。
+        ③唯一归属判定：本方法的块归属判定逻辑——嵌套判定并集（is_child_in_try
+        / is_in_try_blocks / is_before_try_start / handler_in_range / [W11]
+        span containment）命中且未被排除项（_is_in_if_branch、[B87] 中间
+        循环宿主守卫 _is_inside_intermediate_loop、entry 被 handler/else 持有）
+        排除的内层 try 归本方法预生成；其余块按 generated_blocks/
+        generated_offsets 去重后逐块发射（预生成前 discard 内层块标记，防止
+        双份/蒸发）。
+        ④嵌套处理：嵌套区域作为抽象节点——命中判定的内层 TryExceptRegion
+        经 _generate_try 整树生成单个 ast.Try 节点直接 append 进 body_stmts，
+        其成员块随后登记 generated_blocks，外层不再按块重建；[R13]/[R86]
+        延迟生成变体在 try_blocks 遍历到合适位置时才派发，保装配序。
+        ⑤入口引用语义：父 try body 引用内层区域仅经其 entry/结构入口——
+        预循环引用内层 region 归约结果（_generate_try(ntr) 返回值），非按
+        内部块名认领；Ternary-With overlap 处经 merge_block 引用共享入口的
+        WithRegion 归约结果。
+        ⑥反编译流程：本方法由 _generate_try 调用（:29516），是 ast.Try 装配
+        的 body 填充步——_generate_try 负责 handlers/else/finalbody 与节点
+        组装，本方法专司 try 主臂语句序，处于区域生成层 try 结构装配的内层。
+
+        C 条款：[C1] 中间循环宿主守卫恢复循环体内 try 的唯一归属发射
+        （x04.try_in_while）；[C2] 预生成与延迟生成两路径同判据同语义、
+        装配序与源码一致；[C3] 全部排除项（handler/else 持有、if 分支、
+        中间循环宿主）为显式豁免，不命中时走查路径行为逐位保持。
+
         嵌套 try 派发（nested_try_regions 预循环）判定并集：
           - is_child_in_try：parent 关系 + entry 未被 handler/else 持有；
           - is_in_try_blocks：内层 entry 在外层 try_blocks 中；
@@ -32668,7 +32739,7 @@ AST 映射规则:
                 stmts.append(stmt)
         # [B85] AnnAssign 装配归并：模块/类体注解赋值的值绑定 + 注解登记
         # 两条指令序列归并为单一 AnnAssign 节点（见方法 docstring）。
-        stmts = self._merge_annassign_statements(stmts)
+        stmts = self._combine_annassign_statements(stmts)
         return stmts
 
     def _scan_prefix_chain_assign(self, instrs: List[Instruction], store_idx: int,
@@ -32773,8 +32844,8 @@ AST 映射规则:
             'lineno': _value_instrs[0].starts_line,
         }, i
 
-    def _merge_annassign_statements(self, stmts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """_merge_annassign_statements - AnnAssign 装配归并（[B85] 同域装配修复）
+    def _combine_annassign_statements(self, stmts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """_combine_annassign_statements - AnnAssign 装配归并（[B85] 同域装配修复）
 
         ①算法依据：No More Gotos 自底向上归约——模块/类体级注解赋值
         `x: int = 1` 的字节码形态为「SETUP_ANNOTATIONS + 值 STORE_NAME x +
@@ -33600,6 +33671,36 @@ AST 映射规则:
 
     def _generate_with(self, region: WithRegion) -> Dict[str, Any]:
         """_generate_with — WithRegion → ast.With 映射
+
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」（自底向上归约 /
+        每块唯一归属 / 嵌套即抽象节点 / 父引用子入口）——with 语句的
+        cleanup/异常协议块语义由 ast.With 节点重编译自然再生，不发射源码。
+        ②归约顺序：自底向上，内层区域先归约——with 头上下文表达式
+        （region.items 经 context_instrs → expr_reconstructor 重建）先归约，
+        体内嵌套区域经块走查递归 _generate_region 整树生成，最后装配
+        With.body。
+        ③唯一归属判定：本方法的块归属判定逻辑——cleanup_blocks ∪
+        exception_blocks 整体登记 generated_blocks 不输出源码；该集合显式
+        排除嵌套 TryExceptRegion 的 handler_entry_blocks 与祖先 IfRegion 的
+        else/elif_final_else 块（每块唯一归属守卫）；pre-BEFORE_WITH 前缀段
+        按语句终结符切分发射，并经 _entry_prefix_emitted_blocks 登记去重
+        （R08b），防止双份前导赋值。
+        ④嵌套处理：嵌套区域作为抽象节点——体循环遇到子区域入口时递归
+        _generate_region 整树生成，不拆散子区域逐块重建；with 上下文表达式
+        为 TernaryRegion 的 merge_block 时经 _resolve_nested_ternary_context_expr
+        按父引用子入口取归约结果。
+        ⑤入口引用语义：as 目标经 withitem.optional_vars 体现（_build_store_
+        statement 契约，STORE_* 由 withitem 而非独立 Assign 承载）；父序列
+        引用本区域仅经 WithRegion.entry 的归约结果（返回单个 ast.With 字典）。
+        ⑥反编译流程：区域生成层 with 结构装配步，由 _generate_region 分派
+        与 generate() 顶层扫描调用；async with（is_async）同路径装配为
+        AsyncWith。
+
+        C 条款：[C1] cleanup/handler/else 块唯一归属守卫，恢复被 with 误消费
+        块的原属主发射；[C2] items 重建与 region_analyzer._extract_with_items
+        的上下文边界互补（KW_NAMES 白名单同步），无重叠无遗漏；[C3] 守卫
+        （嵌套 try handler 排除、祖先 else 排除、前缀登记去重）不命中时走
+        原路径，行为逐位保持。
 
         输入契约:
           - 接收 Region 子类: WithRegion
@@ -50730,6 +50831,34 @@ AST 映射规则:
     def _generate_block_statements(self, block: BasicBlock, _cjb_parent: BasicBlock = None) -> List[Dict[str, Any]]:
         """[Round 02 F5] 薄包装：块语句生成 + with 出口块 return 的指令背书。
 
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」（自底向上归约 /
+        每块唯一归属 / 嵌套即抽象节点 / 父引用子入口）——普通基本块的语句
+        序由块内指令重建，装配后做相邻 AnnAssign 对线性归并（[B85]）。
+        ②归约顺序：自底向上，内层区域先归约——先调 _generate_block_statements_
+        body 完成块级重建（跨块守卫在内层已分流），再做装配后归并
+        （_combine_annassign_statements）与伪影剔除，最后做 with 出口
+        return 背书与 break 中转块消费。
+        ③唯一归属判定：本方法的块归属判定逻辑——[B86-phantom] 纯异常协议块
+        守卫（块内非噪声指令全属异常帧协议集 + 含协议特征码）命中即整块登记
+        generated_blocks/generated_offsets 并发射空语句；[R55] break 中转块
+        要求唯一前驱为本块、角色 BREAK/PURE_BREAK、未被认领才消费；其余块
+        交 body 层按 generated 集合去重。
+        ④嵌套处理：嵌套区域作为抽象节点——本包装层不拆散子区域；body 层的
+        GET_ITER for_iter_setup 守卫等遇子区域入口时经 _generate_region 整树
+        生成，本层仅接收其归约结果并做装配后处理。
+        ⑤入口引用语义：输出语句字典列表经调用方（各区域体走查）装配进结构
+        节点；AnnAssign 归并与 Return 升级均按节点类型字段（AST 映射接口）
+        操作，不触碰指令偏移以外的表达层信息。
+        ⑥反编译流程：通用块装配的单一漏斗——try body/with body/if 臂/
+        循环体/顶层扫描等全部生成路径对普通块的语句产出都经本方法收口
+        （协议块守卫、伪影剔除、B32 挂起值升级、R55 break 消费各一处判定、
+        多处复用）。
+
+        C 条款：[C1] 单一漏斗保证「无论哪条路径产出的语句都得到同一处理」，
+        恢复/维持每块唯一归属；[C2] 本层判据与 body 层既有判据同构同语义
+        （B32 挂起链、R55 与 R19N3 同构）；[C3] 全部守卫不命中时语句列表
+        逐位保持原行为（协议块判据含任何用户值生产即否定）。
+
         把 _mark_with_exit_return_explicit 放在这里（而非散落到主体各处 return
         点）是因为：主体有几十个 return 出口，逐点标记既易漏也会把同一结构性
         判据复制多份。包装层是单一漏斗，保证「无论是哪条生成路径产出的 return，
@@ -50751,7 +50880,7 @@ AST 映射规则:
             self.generated_offsets.add(block.start_offset)
             return []
         stmts = self._generate_block_statements_body(block, _cjb_parent)
-        stmts = self._merge_annassign_statements(stmts)
+        stmts = self._combine_annassign_statements(stmts)
         # [Round6-B29] 协议调用伪影剔除（单一漏斗）：Expr(Await(Call(
         # func=Constant None, args 全 Constant None))) 是 CPython
         # __aexit__/__exit__ 清理调用「SWAP 栈上引用 + LOAD_CONST None×3
@@ -50869,6 +50998,32 @@ AST 映射规则:
 
     def _generate_block_statements_body(self, block: BasicBlock, _cjb_parent: BasicBlock = None) -> List[Dict[str, Any]]:
         """_generate_block_statements - 基本块 AST 语句生成（BasicBlock → ast.stmt 列表）
+
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」（自底向上归约 /
+        每块唯一归属 / 嵌套即抽象节点 / 父引用子入口）——单基本块的有语义
+        指令按偏移序完整重建为 ast.stmt，不得丢弃。
+        ②归约顺序：自底向上，内层区域先归约——跨块守卫（[B31] await 链门控、
+        [R2-SWAP] 循环内延迟返回、[B34c] try/finally 延迟 return、GET_ITER
+        for_iter_setup 守卫、[W22] SWAP 弃顶返回）先分流，命中即返回该结构
+        的整树归约结果；未命中走通用语句重建路径（语句边界 + 表达式重建）。
+        ③唯一归属判定：本方法的块归属判定逻辑——block 已在 generated_blocks
+        或全部有语义指令偏移已在 generated_offsets 中时返回空列表（去重）；
+        GET_ITER 守卫命中 LoopRegion 时登记块与偏移并整树生成，防 GET_ITER
+        被发射为独立表达式语句；跨块守卫消费的成员块由对应结构登记归属。
+        ④嵌套处理：嵌套区域作为抽象节点——普通块不递归子区域；仅 GET_ITER
+        守卫识别到本块为某 LoopRegion 的 for_iter_setup 时，经 _generate_region
+        把整个循环作为抽象节点生成并返回其语句列表。
+        ⑤入口引用语义：输出语句字典列表交装配层（_generate_block_statements）
+        与各区域体走查消费；子区域引用仅经区域 entry/for_iter_setup 结构
+        事实（metadata['for_iter_setup'] is block），不按内部指令认领。
+        ⑥反编译流程：生成层最底层的块级语句重建步——所有区域体装配
+        （if/loop/try/with/顶层扫描）最终都落到本方法或其包装层完成
+        指令→语句的还原。
+
+        C 条款：[C1] generated 集合去重 + 跨块守卫登记，维持每块唯一归属；
+        [C2] 跨块延迟返回守卫与通用重建路径同语义（R11 移除 peephole 后
+        自赋值走正常路径产出 Assign）；[C3] 各守卫不命中时走通用重建路径，
+        行为与既有路径逐位一致。
 
         输入契约:
           - 接收 BasicBlock 及可选的父块 _cjb_parent（用于条件跳转上下文）。
