@@ -1,306 +1,306 @@
 [
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/core/execution_context.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/execution_context.pyc",
   "rel": "IQEngine/core/execution_context.pyc",
   "function_count": 17,
   "size": 7234
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/core/executor.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/executor.pyc",
   "rel": "IQEngine/core/executor.pyc",
   "function_count": 10,
   "size": 10189
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/core/manager/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/manager/__init__.pyc",
   "rel": "IQEngine/core/manager/__init__.pyc",
   "function_count": 1,
   "size": 226
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/core/persist_helper.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/persist_helper.pyc",
   "rel": "IQEngine/core/persist_helper.pyc",
   "function_count": 9,
   "size": 4846
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/core/plugin_manager.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/plugin_manager.pyc",
   "rel": "IQEngine/core/plugin_manager.pyc",
   "function_count": 9,
   "size": 7548
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/core/slippage.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/slippage.pyc",
   "rel": "IQEngine/core/slippage.pyc",
   "function_count": 7,
   "size": 3008
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/core/strategy/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/strategy/__init__.pyc",
   "rel": "IQEngine/core/strategy/__init__.pyc",
   "function_count": 1,
   "size": 762
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy.pyc",
   "rel": "IQEngine/core/strategy/strategy.pyc",
   "function_count": 19,
   "size": 23046
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_context.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_context.pyc",
   "rel": "IQEngine/core/strategy/strategy_context.pyc",
   "function_count": 31,
   "size": 13708
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_loader.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_loader.pyc",
   "rel": "IQEngine/core/strategy/strategy_loader.pyc",
   "function_count": 9,
   "size": 7636
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc",
   "rel": "IQEngine/core/strategy/strategy_universe.pyc",
   "function_count": 11,
   "size": 6671
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/core/user_variables.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/user_variables.pyc",
   "rel": "IQEngine/core/user_variables.pyc",
   "function_count": 6,
   "size": 2334
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/data/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/data/__init__.pyc",
   "rel": "IQEngine/data/__init__.pyc",
   "function_count": 1,
   "size": 299
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/data/asset_mixin.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/data/asset_mixin.pyc",
   "rel": "IQEngine/data/asset_mixin.pyc",
   "function_count": 16,
   "size": 11622
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/data/data_cache.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/data/data_cache.pyc",
   "rel": "IQEngine/data/data_cache.pyc",
   "function_count": 13,
   "size": 4505
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/data/data_proxy.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/data/data_proxy.pyc",
   "rel": "IQEngine/data/data_proxy.pyc",
   "function_count": 9,
   "size": 5062
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/data/default_info.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/data/default_info.pyc",
   "rel": "IQEngine/data/default_info.pyc",
   "function_count": 1,
   "size": 21400
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/data/exrights_storage.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/data/exrights_storage.pyc",
   "rel": "IQEngine/data/exrights_storage.pyc",
   "function_count": 6,
   "size": 3216
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/data/merger_storage.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/data/merger_storage.pyc",
   "rel": "IQEngine/data/merger_storage.pyc",
   "function_count": 7,
   "size": 3814
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
   "rel": "IQEngine/data/trading_dates_mixin.pyc",
   "function_count": 14,
   "size": 8150
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/data/trading_dates_storage.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/data/trading_dates_storage.pyc",
   "rel": "IQEngine/data/trading_dates_storage.pyc",
   "function_count": 4,
   "size": 1814
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/interface.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/interface.pyc",
   "rel": "IQEngine/interface.pyc",
   "function_count": 105,
   "size": 48870
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/main.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/main.pyc",
   "rel": "IQEngine/main.pyc",
   "function_count": 3,
   "size": 15280
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/__init__.pyc",
   "rel": "IQEngine/plugins/__init__.pyc",
   "function_count": 1,
   "size": 295
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/__init__.pyc",
   "rel": "IQEngine/plugins/plugin_fly_api/__init__.pyc",
   "function_count": 7,
   "size": 2569
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/base_api.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/base_api.pyc",
   "rel": "IQEngine/plugins/plugin_fly_api/base_api.pyc",
   "function_count": 6,
   "size": 5184
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/empty_api_backtest.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/empty_api_backtest.pyc",
   "rel": "IQEngine/plugins/plugin_fly_api/empty_api_backtest.pyc",
   "function_count": 62,
   "size": 30389
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/empty_api_trade.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/empty_api_trade.pyc",
   "rel": "IQEngine/plugins/plugin_fly_api/empty_api_trade.pyc",
   "function_count": 10,
   "size": 4652
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/__init__.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/__init__.pyc",
   "function_count": 20,
   "size": 14079
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/const.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/const.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/const.pyc",
   "function_count": 9,
   "size": 6023
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/__init__.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/fly_api/__init__.pyc",
   "function_count": 1,
   "size": 198
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/fly_api/base.pyc",
   "function_count": 41,
   "size": 30588
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
   "function_count": 18,
   "size": 40363
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_backtest.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_backtest.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/fly_api/individual_api_backtest.pyc",
   "function_count": 3,
   "size": 3300
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_trade.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_trade.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/fly_api/individual_api_trade.pyc",
   "function_count": 4,
   "size": 3846
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
   "function_count": 34,
   "size": 45964
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_backtest.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_backtest.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/fly_api/order_api_backtest.pyc",
   "function_count": 10,
   "size": 5538
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc",
   "function_count": 24,
   "size": 17278
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/other_api.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/other_api.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/fly_api/other_api.pyc",
   "function_count": 12,
   "size": 12912
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/fly_api/real_api.pyc",
   "function_count": 8,
   "size": 7412
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api_backtest.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api_backtest.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/fly_api/real_api_backtest.pyc",
   "function_count": 2,
   "size": 1790
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api_trade.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api_trade.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/fly_api/real_api_trade.pyc",
   "function_count": 3,
   "size": 2936
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/scheduler_api.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/scheduler_api.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/fly_api/scheduler_api.pyc",
   "function_count": 13,
   "size": 13753
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc",
   "function_count": 15,
   "size": 19179
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/__init__.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/local_variables/__init__.pyc",
   "function_count": 1,
   "size": 188
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/bar.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/bar.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/local_variables/bar.pyc",
   "function_count": 22,
   "size": 5972
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc",
   "function_count": 108,
   "size": 44872
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/__init__.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/quote/__init__.pyc",
   "function_count": 1,
   "size": 178
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/get_stock_status.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/get_stock_status.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/quote/get_stock_status.pyc",
   "function_count": 8,
   "size": 7075
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/open_platform.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/open_platform.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/quote/open_platform.pyc",
   "function_count": 19,
   "size": 15318
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/__init__.pyc",
   "rel": "IQEngine/plugins/plugin_fly_data/strategy/__init__.pyc",
   "function_count": 1,
   "size": 181

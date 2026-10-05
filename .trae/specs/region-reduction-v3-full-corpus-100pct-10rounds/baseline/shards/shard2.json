@@ -1,306 +1,306 @@
 [
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/interface.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/interface.pyc",
   "rel": "IQData/interface.pyc",
   "function_count": 42,
   "size": 14519
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/manager/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/manager/__init__.pyc",
   "rel": "IQData/manager/__init__.pyc",
   "function_count": 1,
   "size": 237
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/manager/data_info_manager.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/manager/data_info_manager.pyc",
   "rel": "IQData/manager/data_info_manager.pyc",
   "function_count": 9,
   "size": 9299
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/manager/plugin_manager.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/manager/plugin_manager.pyc",
   "rel": "IQData/manager/plugin_manager.pyc",
   "function_count": 10,
   "size": 7477
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/manager/trading_day_manager.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/manager/trading_day_manager.pyc",
   "rel": "IQData/manager/trading_day_manager.pyc",
   "function_count": 17,
   "size": 12440
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/gtn_client.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/gtn_client.pyc",
   "rel": "IQData/modules/WEBCLIENT/gtn_client.pyc",
   "function_count": 11,
   "size": 7584
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/ibrain_client.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/ibrain_client.pyc",
   "rel": "IQData/modules/WEBCLIENT/ibrain_client.pyc",
   "function_count": 6,
   "size": 3771
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/web_socket_client.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/web_socket_client.pyc",
   "rel": "IQData/modules/WEBCLIENT/web_socket_client.pyc",
   "function_count": 7,
   "size": 3452
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/modules/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/modules/__init__.pyc",
   "rel": "IQData/modules/__init__.pyc",
   "function_count": 1,
   "size": 154
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/__init__.pyc",
   "rel": "IQData/plugins/__init__.pyc",
   "function_count": 1,
   "size": 154
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/__init__.pyc",
   "rel": "IQData/plugins/plugin_history_data_source/__init__.pyc",
   "function_count": 6,
   "size": 1356
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/data_source_func.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/data_source_func.pyc",
   "rel": "IQData/plugins/plugin_history_data_source/data_source_func.pyc",
   "function_count": 5,
   "size": 1230
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/history_bar_storage.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/history_bar_storage.pyc",
   "rel": "IQData/plugins/plugin_history_data_source/history_bar_storage.pyc",
   "function_count": 5,
   "size": 4386
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/history_data_source.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/history_data_source.pyc",
   "rel": "IQData/plugins/plugin_history_data_source/history_data_source.pyc",
   "function_count": 18,
   "size": 25503
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/__init__.pyc",
   "rel": "IQData/plugins/plugin_system_basicdata/__init__.pyc",
   "function_count": 1,
   "size": 344
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/api_basicdata.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/api_basicdata.pyc",
   "rel": "IQData/plugins/plugin_system_basicdata/api_basicdata.pyc",
   "function_count": 25,
   "size": 14869
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/basic_data_source.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/basic_data_source.pyc",
   "rel": "IQData/plugins/plugin_system_basicdata/basic_data_source.pyc",
   "function_count": 1,
   "size": 1412
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/__init__.pyc",
   "rel": "IQData/plugins/plugin_system_client_db/__init__.pyc",
   "function_count": 6,
   "size": 1739
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/base_db_table.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/base_db_table.pyc",
   "rel": "IQData/plugins/plugin_system_client_db/base_db_table.pyc",
   "function_count": 2,
   "size": 2046
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/client_db.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/client_db.pyc",
   "rel": "IQData/plugins/plugin_system_client_db/client_db.pyc",
   "function_count": 9,
   "size": 6774
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/const.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/const.pyc",
   "rel": "IQData/plugins/plugin_system_client_db/const.pyc",
   "function_count": 1,
   "size": 584
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/dynamic_table.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/dynamic_table.pyc",
   "rel": "IQData/plugins/plugin_system_client_db/dynamic_table.pyc",
   "function_count": 16,
   "size": 10229
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/__init__.pyc",
   "rel": "IQData/plugins/plugin_system_db/__init__.pyc",
   "function_count": 6,
   "size": 1534
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/api_db.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/api_db.pyc",
   "rel": "IQData/plugins/plugin_system_db/api_db.pyc",
   "function_count": 2,
   "size": 1415
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/db_utils.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/db_utils.pyc",
   "rel": "IQData/plugins/plugin_system_db/db_utils.pyc",
   "function_count": 4,
   "size": 2423
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/iqdata_db_base.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/iqdata_db_base.pyc",
   "rel": "IQData/plugins/plugin_system_db/iqdata_db_base.pyc",
   "function_count": 21,
   "size": 17315
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/iqdata_db_helper.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/iqdata_db_helper.pyc",
   "rel": "IQData/plugins/plugin_system_db/iqdata_db_helper.pyc",
   "function_count": 6,
   "size": 3069
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/__init__.pyc",
   "rel": "IQData/plugins/plugin_system_db_tools/__init__.pyc",
   "function_count": 6,
   "size": 1599
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/api_db.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/api_db.pyc",
   "rel": "IQData/plugins/plugin_system_db_tools/api_db.pyc",
   "function_count": 8,
   "size": 5311
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_base.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_base.pyc",
   "rel": "IQData/plugins/plugin_system_db_tools/db_base.pyc",
   "function_count": 30,
   "size": 21809
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_utils.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_utils.pyc",
   "rel": "IQData/plugins/plugin_system_db_tools/db_utils.pyc",
   "function_count": 2,
   "size": 1770
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/FLYMODULE/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/FLYMODULE/__init__.pyc",
   "rel": "IQData/plugins/plugin_system_fly_basicdata/FLYMODULE/__init__.pyc",
   "function_count": 1,
   "size": 192
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/__init__.pyc",
   "rel": "IQData/plugins/plugin_system_fly_basicdata/__init__.pyc",
   "function_count": 6,
   "size": 1577
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/api.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/api.pyc",
   "rel": "IQData/plugins/plugin_system_fly_basicdata/api.pyc",
   "function_count": 33,
   "size": 15629
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc",
   "rel": "IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc",
   "function_count": 41,
   "size": 30398
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc",
   "rel": "IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc",
   "function_count": 8,
   "size": 12537
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/data_source_func.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/data_source_func.pyc",
   "rel": "IQData/plugins/plugin_system_fly_basicdata/data_source_func.pyc",
   "function_count": 24,
   "size": 7638
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/fly_enum.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/fly_enum.pyc",
   "rel": "IQData/plugins/plugin_system_fly_basicdata/fly_enum.pyc",
   "function_count": 1,
   "size": 921
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/__init__.pyc",
   "rel": "IQData/plugins/plugin_system_fly_historyquote/__init__.pyc",
   "function_count": 6,
   "size": 1507
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/api.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/api.pyc",
   "rel": "IQData/plugins/plugin_system_fly_historyquote/api.pyc",
   "function_count": 11,
   "size": 10640
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/data_source_func.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/data_source_func.pyc",
   "rel": "IQData/plugins/plugin_system_fly_historyquote/data_source_func.pyc",
   "function_count": 3,
   "size": 1944
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/enumerate.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/enumerate.pyc",
   "rel": "IQData/plugins/plugin_system_fly_historyquote/enumerate.pyc",
   "function_count": 4,
   "size": 2335
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_bar_storage.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_bar_storage.pyc",
   "rel": "IQData/plugins/plugin_system_fly_historyquote/history_bar_storage.pyc",
   "function_count": 5,
   "size": 3004
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc",
   "rel": "IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc",
   "function_count": 18,
   "size": 39226
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_quote.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_quote.pyc",
   "rel": "IQData/plugins/plugin_system_fly_historyquote/history_quote.pyc",
   "function_count": 4,
   "size": 1505
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/__init__.pyc",
   "rel": "IQData/plugins/plugin_system_gtn_request/__init__.pyc",
   "function_count": 6,
   "size": 1416
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/api.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/api.pyc",
   "rel": "IQData/plugins/plugin_system_gtn_request/api.pyc",
   "function_count": 4,
   "size": 1657
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/gtn_request.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/gtn_request.pyc",
   "rel": "IQData/plugins/plugin_system_gtn_request/gtn_request.pyc",
   "function_count": 6,
   "size": 4163
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/__init__.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/__init__.pyc",
   "rel": "IQData/plugins/plugin_system_hqsdk_data_source/__init__.pyc",
   "function_count": 6,
   "size": 2075
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source.pyc",
   "rel": "IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source.pyc",
   "function_count": 15,
   "size": 32276
  },
  {
-  "path": "D:/admin/.qoder/worktrees/app/6f79dd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source_api.pyc",
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source_api.pyc",
   "rel": "IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source_api.pyc",
   "function_count": 9,
   "size": 4071

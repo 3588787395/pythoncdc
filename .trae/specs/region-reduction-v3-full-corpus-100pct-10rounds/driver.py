@@ -19,10 +19,15 @@ import sys
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..', '..'))
+ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
 BL = os.path.join(HERE, 'baseline', 'shards')
 SMALL = os.path.join(HERE, 'baseline', 'small34_index.json')
 PY = sys.executable
+
+# 本文件在 .trae/specs/<change-id>/ 下，仓库根 = 上溯三级。根算错时每次 regen 都会
+# 以 "can't open file .../pycdc.py" 全片失败，故在此钉死，不允许静默跑空。
+if not os.path.isfile(os.path.join(ROOT, 'pycdc.py')):
+    sys.exit('[fatal] ROOT 解析错误：%s 下没有 pycdc.py' % ROOT)
 
 
 def shard_json(n):
