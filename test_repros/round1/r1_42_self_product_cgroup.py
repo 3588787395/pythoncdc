@@ -93,7 +93,6 @@ def set_cgroup_config(user_id):
             system_log.info('用户 {} 设置研究内存 CGroup配置成功，{}OOM Killer机制'.format(user_id, message))
         else:
             delete_cgroup_config(user_id, 'notebook_memory')
-        return None
     except BaseException:
         system_log.error('设置CGroup配置失败，错误原因：{}'.format(get_traceback_message()))
         return None

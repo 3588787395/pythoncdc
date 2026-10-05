@@ -1786,36 +1786,35 @@ class RegionASTGenerator:
                         break
                 if _has_meaningful_return:
                     continue
-                # [R57-B] 识别条件: BASIC 区域内存在纯 None-return 块
-                # （跳过 RESUME/NOP/CACHE 后恰为 LOAD_CONST None + RETURN_VALUE /
-                # RETURN_CONST）且其前驱数 ≥ 2。
-                # 归约方式: 不预标记 generated（不按异常清理块吞掉），交由顶级
-                # 区域循环按 BASIC 区域正常发射 `return None` 语句。
-                # AST 映射: 该块发射为 Return(Constant(None))。
+                # [R57-B ⊂ B98] return None 汇合块认领（豁免清理预标记）。
+                # 单一守卫，判据全部取自白名单结构事实（块末 opcode、前驱/
+                # 后继集合、异常边），实现在 _is_return_none_join_block 的
+                # 六项 docstring 里；本循环是它唯一消费端：命中即整块豁免
+                # 预标记，交由顶级区域循环按 BASIC 区域正常发射 `return None`。
                 # 实证依据（CPython 3.11 控制实验，本机 3.11.7）:
                 #   - 隐式函数尾声（源码无尾随 return）按路径**内联**——
                 #     `if/else`（无尾随 return）then 臂内直接 LOAD_CONST None +
-                #     RETURN_VALUE，无 JUMP_FORWARD、无共享尾声块；单前驱
-                #     （fall-through 或条件跳转）的纯 None-return 块只出现在
-                #     循环/with 出口等位置，丢弃后重编译逐指令再生（旧行为，
-                #     字节码等价）。
-                #   - 显式 `return None` 才产生**共享 return 块**：臂以
-                #     JUMP_FORWARD / fall-through 汇入同一块（前驱 ≥ 2）。
-                #     丢弃它会让重编译源码退化为隐式形状（按臂内联尾声），
-                #     指令序列错位（严格尺 seq_len +1，实测
-                #     plugin_system_trade.cancel_order_ex_handle）。
-                #   - try/except 后的隐式尾声若恰为 ≥2 前驱共享块，发射
-                #     `return None` 重编译仍逐指令一致（共享块再生），无回归
-                #     风险——判据保守取「前驱 ≥ 2」而非「存在无条件跳转前驱」。
-                # 判据只读块内容类别与前驱计数（结构性质），不读名字/常量值/
-                # 绝对偏移/指令数; 仅新增跳过预标记的分支，其余形状行为逐字
-                # 保持（严格附加）。
+                #     RETURN_VALUE，无 JUMP_FORWARD、无共享尾声块；仅由
+                #     fall-through 或条件跳转接入的单前驱纯 None-return 块
+                #     只出现在循环/with 出口等位置，丢弃后重编译逐指令再生。
+                #   - 源码级 `return None` 才产生**汇合 return 块**：臂以
+                #     JUMP_FORWARD / fall-through 汇入同一块（前驱 ≥ 2），或
+                #     区域自然出口以无条件跳转接入它（跳转前驱）。丢弃它会让
+                #     重编译源码退化为隐式形状（按臂内联尾声），指令序列错位
+                #     （严格尺 seq_len +1，实测 plugin_system_trade.
+                #     cancel_order_ex_handle 与本轮 B98 的 cgroup_utils.
+                #     set_cgroup_config）。
+                # 旧判据只取「前驱 ≥ 2」，把「无条件跳转前驱」显式排除在外
+                # （注释自陈「判据保守取前驱≥2」）；而 try/if 区域自然出口
+                # 必须跳过其后物理相邻的 handler 表代码，故该出口边恒为
+                # JUMP_FORWARD，被跳过的汇合点又只剩这一个前驱（当区域内最
+                # 后一个臂/handler 以终止 return 收口时），于是函数级
+                # `return None` 被当作清理尾声吞掉 = 破口 B98（深度 1 即触
+                # 发，非深度形）。补齐这一支后守卫对所有区域类型与所有嵌套
+                # 深度同判（rules.md §1.5 C3 封闭）。
                 _r57b_explicit_ret = False
                 for _cl_b in _cl_region.blocks:
-                    _cl_b_instrs = [i for i in _cl_b.instructions
-                                    if i.opname not in ('RESUME', 'NOP', 'CACHE')]
-                    if (self._is_implicit_return_block(_cl_b_instrs)
-                            and len(getattr(_cl_b, 'predecessors', None) or []) >= 2):
+                    if self._is_return_none_join_block(_cl_b):
                         _r57b_explicit_ret = True
                         break
                 if _r57b_explicit_ret:
@@ -1832,20 +1831,6 @@ class RegionASTGenerator:
                     _b31_chain = self._collect_await_protocol_chain(_cl_b)
                     if (_b31_chain is not None and _b31_chain[1] is _cl_b
                             and self._b31_continuation_owner(_cl_b)):
-                        continue
-                    # [B55] try/except 尾随 return None 豁免预标记：
-                    # 识别条件（同层结构事实）：纯 None-return 块为单前驱，唯一
-                    # 前驱含 POP_EXCEPT（try/except handler 出口的标志操作码）
-                    # 且以 JUMP_FORWARD 精确指向本块（try 语句正常完成边的跳转
-                    # 边身份），前驱由 TryExceptRegion 拥有（handler 出口片段）。
-                    # 机制：CPython 对 try/except 的正常完成边以显式跳转接入
-                    # 源码级尾随 ``return None`` 块；该块被当作异常清理尾声
-                    # 预标记后整条 return 语句蒸发（重编译缺 JUMP_FORWARD +
-                    # 尾部 RETURN_VALUE，字节码失配）。
-                    # 归约方式：豁免预标记，交由本 BASIC 区域按顶层偏移序在
-                    # try 语句之后发射 Return(None)（每块唯一归属不变）。
-                    # AST 映射：Return(Constant(None))。
-                    if self._b55_is_try_handler_exit_trailing_return(_cl_b):
                         continue
                     self.generated_blocks.add(_cl_b)
                     self.generated_offsets.add(_cl_b.start_offset)
@@ -3123,43 +3108,139 @@ class RegionASTGenerator:
         # 扫描耗尽仍未遇末目标 store —— 非法链形（链必须以末目标收尾）
         return (None, start)
 
-    def _b55_is_try_handler_exit_trailing_return(self, block: BasicBlock) -> bool:
-        """[B55] 判定块是否为 try/except 语句的源码级尾随 ``return None`` 块。
+    def _is_return_none_join_block(self, block: BasicBlock) -> bool:
+        """[r1-b98-exitjoin] 判定块是否为「语句级 return None 的汇合出口块」。
 
-        识别条件（同层结构事实——前驱集合、前驱块操作码、跳转边身份、区域
-        归属，零名字/偏移白名单）：
-          (1) 本块为纯 None-return 块（_is_implicit_return_block：剥噪后恰为
-              LOAD_CONST None + RETURN_VALUE / RETURN_CONST None）；
-          (2) 前驱恰一个（排除共享显式 return 收尾块——该形态由 R57-B 豁免
-              预标记，两者互斥）；
-          (3) 唯一前驱含 POP_EXCEPT 且末条指令为 JUMP_FORWARD、跳转目标 =
-              本块起始偏移——CPython 对 try/except 正常完成边以显式跳转接入
-              源码级尾随 return 块（try 语句机器边，非 fall-through 隐式
-              尾声；循环/with 出口尾声前驱不含 POP_EXCEPT）；
-          (4) 该前驱由 TryExceptRegion 拥有（handler 出口片段的区域归属）。
+        ①算法依据：No More Gotos §2（区域出口边与汇合点）+ rules.md §1.2
+          原则2（每块唯一归属）/ 原则4（入口引用语义）+ §1.5 C3（守卫封闭：
+          汇合块被区域外引用时必须由显式守卫认领）。本判定是 generate()
+          顶层「异常清理尾声预标记」循环的唯一认领守卫；它把旧 R57-B
+          （只认「前驱数 >= 2」）与旧 B55（只认「唯一前驱含 POP_EXCEPT 且
+          由 TryExceptRegion 拥有」）两条形态专判合并为一条边身份判据，
+          旧两形都是本判定的真子集。
+        ②归约顺序：自底向上——区域归约完成后、顶层区域序列发射前运行一次；
+          不回溯修正已归约的区域（§1.3 单向数据流）。
+        ③唯一归属判定：命中即宣告本块归属**父级作用域的兄弟语句序列**
+          （发射为一条 `return None` 语句），既不归任何区域内部，也不是被
+          CPython 就地内联进某条路径的隐式函数尾声。
+        ④嵌套处理：判据只读该块与其前驱集合的同层结构事实，不读区域类型、
+          不读嵌套深度、不读语句条数；跳转来源区域 R 可以是任意类型、任意
+          深度。当 R 的最后一个臂/handler 以终止 return 收口时，R 的自然
+          出口汇合块只剩这一个认领者，本判定仍然命中，故该块不会被 R 吞并
+          ——这正是破口 B98 的机制（r1_53 深度 1 即触发，非深度形）。由归纳
+          （一层正确 + 组合封闭）得任意深度同判，无需逐深度验证。
+        ⑤入口引用语义：本块的入口引用语义为 ast.Return(Constant(None))，
+          由其 BASIC 区域按顶层偏移序发射在所属区域语句之后。
+        ⑥反编译流程：识别（region_analyzer）→ 归约与本认领判定
+          （region_ast_generator.generate）→ 语句生成
+          （_generate_block_statements）→ 发射（code_generator；其
+          _filter_trailing_return_none 依 _explicit_return 指令背书保留）。
 
-        归约方式：仅判定（generate() 清理预标记循环据此豁免预标记，块交由
-        其 BASIC 区域按顶层偏移序在 try 语句之后发射）。AST 映射：
-        Return(Constant(None))。
+        判据（全部取自理论基准 I.4 白名单：块末指令 opcode、前驱/后继集合、
+        异常边；零文件名/函数名/偏移阈值/深度阈值/计数上限/常量值特判）：
+          (0) block 无正常后继（CFG 终块）；
+          (1) block 剥噪（RESUME/NOP/CACHE）后恰为 LOAD_CONST None +
+              RETURN_VALUE 或 RETURN_CONST None（_is_implicit_return_block）；
+          (2) 汇合身份，两支持之一：
+              (2a) 前驱数 >= 2 —— 多条路径共用同一出口语句块（旧 R57-B 形）；
+              (2b) 存在前驱 p，其块末 opcode 为无条件前向跳转
+                   （JUMP_FORWARD / JUMP_ABSOLUTE）且 argval 精确等于
+                   block.start_offset，且 p→block 不是异常边。依据：CPython
+                   只在「该位置确有源语句」时才发射这条跳转——区域的自然
+                   出口必须跳过物理相邻的后继代码（handler 表 / 另一臂 /
+                   循环尾），故以无条件跳转接入汇合块；无对应源语句时
+                   CPython 把隐式尾声**就地内联**在该路径末尾（无
+                   JUMP_FORWARD、无独立汇合块）。旧 B55 形（handler 出口
+                   片段 POP_EXCEPT + JUMP_FORWARD）是本支持的一个实例。
+        仅由 fall-through 或条件跳转单前驱接入的纯 None-return 终块（循环
+        从未进入 / 循环正常退出 / with 出口的隐式尾声）不满足 (2a)(2b)，
+        照旧由预标记丢弃，保持既有正确读数。
+
+        C 条款：C1 只读本块与前驱块的同层事实；C2 不窥视任何区域内部；
+        C3 以显式守卫认领「汇合块被区域外的退出边引用」这一非局部信息。
         """
-        _preds = [p for p in (getattr(block, 'predecessors', None) or []) if p is not block]
-        if len(_preds) != 1:
+        if getattr(block, 'successors', None):
             return False
-        _pred = _preds[0]
+        _preds = [p for p in (getattr(block, 'predecessors', None) or []) if p is not block]
+        if not _preds:
+            return False
         _self_instrs = [i for i in block.instructions
                         if i.opname not in ('RESUME', 'NOP', 'CACHE')]
         if not _self_instrs or not self._is_implicit_return_block(_self_instrs):
             return False
-        _pred_meaningful = [i for i in _pred.instructions
-                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-        if (not _pred_meaningful
-                or _pred_meaningful[-1].opname != 'JUMP_FORWARD'
-                or _pred_meaningful[-1].argval != block.start_offset):
+        if len(_preds) >= 2:
+            return True
+        for _pred in _preds:
+            _pred_meaningful = [i for i in _pred.instructions
+                                if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                   'PUSH_NULL', 'EXTENDED_ARG')]
+            if not _pred_meaningful:
+                continue
+            _last = _pred_meaningful[-1]
+            if _last.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                continue
+            if _last.argval != block.start_offset:
+                continue
+            _exc = getattr(_pred, 'exception_successors', None) or set()
+            if block in _exc:
+                continue
+            return True
+        return False
+
+    def _is_region_internal_exit_sink(self, block: BasicBlock) -> bool:
+        """[r1-b99-sinkclaim] 判定块是否为「被某个区域内部区域认领的退出汇合块」。
+
+        ①算法依据：No More Gotos §2.2/§3 + rules.md §1.2 原则2（每块唯一归
+          属）/ 原则3（嵌套即抽象节点）+ §1.5 C3（守卫封闭：fall-through 是
+          别区域的 entry / 汇合块被区域认领时必须有显式守卫）。本判定把旧
+          「函数末语句才是隐式 return」的作用域限定（`region.parent is None`
+          / 函数 CFG 出口计数）换成区域成员关系判据，对嵌套无感（B99）。
+        ②归约顺序：区域归约完成后按块查询；沿 parent 链自下而上一次，不改
+          变任何区域边界（§1.3 不回溯修正）。
+        ③唯一归属判定：block 自身的归属区域 = block_to_region[block]；自该
+          区域的 parent 起向上，任一祖先区域的结构角色字段（else_blocks /
+          try_blocks / handler_entry_blocks / finally_blocks /
+          finally_copy_blocks / cleanup_blocks / orelse_blocks）持有本块，
+          即本块已被该祖先区域**内部**认领——它归属那个区域的语义子句
+          （循环 else / try 体 / handler / finally），不再作为「本作用域的
+          隐式尾声」被丢弃。
+        ④嵌套处理：判据对任意深度的祖先同判：祖先既可以是顶层区域（函数
+          末语句，旧行为保持），也可以是 if 臂 / try 体 / 循环体内的嵌套
+          区域（B99 缺失的一支）。不读深度、不读语句条数、不读区域类型名。
+        ⑤入口引用语义：命中时本块由认领区域的入口引用路径发射（循环
+          else / try 尾 / handler 尾），其 Return 语义带指令背书
+          （_explicit_return），不是可剥离的隐式尾声。
+        ⑥反编译流程：供 if/elif 链与循环的「隐式 return None 剥离」守卫作
+          为认领条件使用（region_ast_generator 的 then/else 剥离点），是剥
+          离动作的唯一排除判据。
+
+        C 条款：C1 只读 block 的前驱集合与该块自身指令 + 各祖先区域自身的
+        结构字段；C2 不读兄弟/父级的其它信息；C3 显式认领「该 sink 已被区域
+        内部路径消费」。零文件名/函数名/偏移阈值/深度阈值/计数上限。
+        """
+        if block is None:
             return False
-        if not any(i.opname == 'POP_EXCEPT' for i in _pred_meaningful):
+        _region = self.region_analyzer.block_to_region.get(block)
+        if _region is None:
             return False
-        _owner = self.region_analyzer.block_to_region.get(_pred)
-        return isinstance(_owner, TryExceptRegion)
+        # 认领链自本块的归属区域自身起算，再逐级向上：归属区域自己就用
+        # 结构角色字段持有它时（如 LoopRegion.else_blocks 持有循环退出
+        # sink），该块同样已归那个区域的语义子句。
+        _anc = _region
+        while _anc is not None:
+            for _field in ('else_blocks', 'try_blocks', 'handler_entry_blocks',
+                           'finally_blocks', 'orelse_blocks', 'cleanup_blocks'):
+                _val = getattr(_anc, _field, None) or []
+                if isinstance(_val, (list, tuple, set)) and any(_b is block for _b in _val):
+                    return True
+            _copy_val = getattr(_anc, 'finally_copy_blocks', None)
+            if isinstance(_copy_val, dict):
+                for _cv in _copy_val.values():
+                    _items = _cv if isinstance(_cv, (list, tuple, set)) else [_cv]
+                    if any(_b is block for _b in _items):
+                        return True
+            _anc = getattr(_anc, 'parent', None)
+        return False
 
     def _b55_is_pure_const_return_block(self, block: BasicBlock) -> bool:
         """[B55-c] 判定块是否为纯常量 return 块（剥噪后至多两条指令）。
@@ -6144,6 +6225,17 @@ AST 映射规则:
                 # 仅限 FOR_LOOP：while 的 else_blocks 由自然出口可达性计算，
                 # 有 break 时仍可能混入函数尾声，维持旧行为待独立复现再修。
                 if region.region_type == RegionType.FOR_LOOP and getattr(region, 'has_break', False):
+                    pass
+                elif self._is_region_internal_exit_sink(
+                        _filtered_else_blocks[0] if _filtered_else_blocks else None):
+                    # [r1-b99-sinkclaim] C3 封闭（与 if/elif 臂剥离点同一判据、
+                    # 同一方法）：else 块链的汇合 sink 若被本循环区域或其任一
+                    # 祖先区域的结构角色字段认领，它已是该区域语义子句指向的
+                    # 语句，不是本作用域可丢弃的隐式尾声。「循环从未进入 /
+                    # 迭代耗尽」两条路径汇合成的 LOAD_CONST None; RETURN_VALUE
+                    # 块在臂内（父级是 IfRegion 而非函数体）时同样成立——旧
+                    # 判据按 has_break / 顶层作用域限定，漏掉这一支 = B99。
+                    # 判据是区域成员关系，不读深度、不读语句数、不读名字。
                     pass
                 else:
                     else_stmts = []
@@ -15674,6 +15766,17 @@ AST 映射规则:
             if _tb_last and _tb_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                 if _tb in _then_loop_exit_blocks:
                     if self.region_analyzer._check_block_has_trailing_return_none(_tb):
+                        # [r1-b99-sinkclaim] C3 封闭：该 sink 若被本 arm 内
+                        # 某区域的结构角色认领（循环 else 子句 / try 体尾 /
+                        # handler 尾 / finally），它就是该区域语义的一部分，
+                        # 而非本作用域可丢弃的隐式尾声——「循环从未进入」与
+                        # 「循环正常退出」两个 LOAD_CONST None; RETURN_VALUE
+                        # 前驱汇合成的这条 sink 是真实语句，丢弃即 B99。
+                        # 判据是区域成员关系，对顶层与任意深度的臂同判，
+                        # 取代旧的「只有函数末才成立」作用域限定。
+                        if self._is_region_internal_exit_sink(_tb):
+                            _then_has_explicit_return = True
+                            break
                         continue
                 _then_has_explicit_return = True
                 break
@@ -27985,9 +28088,28 @@ AST 映射规则:
                 # 多一条跳转，字节码失配。
                 # 实例：IQCommon/util/resource_utils.pyc（R53 起 1.0 -> 0.5，
                 # release_memory_with_measurement 的 try 体尾部）。
+                # [r1-b98-tryparent] R6 否决的补全（破口 B98 的 try 体内尾
+                # 实例，锚点 IQCommon/util/cgroup_utils.pyc
+                # <module>.set_cgroup_config orig off 4412
+                # JUMP_FORWARD 4446 vs 产物 LOAD_CONST/RETURN_VALUE）：
+                # 「是别的区域的 merge_block」并不等于「已被那条区域路径
+                # 消费」。依 §3.2.1「then-region 边界止于 then 臂末尾的
+                # JUMP_FORWARD 跳转点」，IfRegion 只把 merge_block 当边界，
+                # 从不发射它的语句；merge 块归属父级序列（此处即 try 体）
+                # 的末条语句。因此当且仅当该块不是语句级汇合出口时否决。
+                # 判据复用同一条白名单守卫 _is_return_none_join_block：
+                #   · resource_utils 三臂各自就地内联的尾声（单前驱、前驱
+                #     块末为 POP_TOP fall-through）→ 非汇合 → 照旧否决丢弃
+                #     （R6 行为逐位保持）；
+                #   · cgroup_utils/标本 vA 的 if-else 汇合出口（then 臂
+                #     JUMP_FORWARD + else fall-through，≥2 前驱）→ 汇合 →
+                #     发射为 try 体末条 `return None`。
+                # 无深度、无语句计数、无名字/偏移特判；对嵌套无感。
                 _is_other_region_merge = any(
                     getattr(_r, 'merge_block', None) is block and _r is not region
                     for _r in self.region_analyzer.regions)
+                if _is_other_region_merge and self._is_return_none_join_block(block):
+                    _is_other_region_merge = False
                 # [R7 fix] 只发射「由上方 [F-TRY-BODY-RETURN] pass 判定为
                 # 内联到 try 体末尾」的隐式 return。
                 #
@@ -30686,7 +30808,8 @@ AST 映射规则:
             #       region_type is RegionType.BASIC、单块 B、
             #       B.start_offset == try_offset_end、
             #       R.has_trailing_return_none 为真、B 无任何后继块、
-            #       R.parent is region.parent；
+            #       R.parent 是 region 本身（R 为本区域的成员块区域）或
+            #       R.parent is region.parent（R 为本区域的兄弟）——见下；
             #   (3) 该 try 无 finalbody（带 finally 时体尾 return 必须走
             #       finally 清理，不属于本形态）。
             # 机制：CPython 把 try 体最后一条语句发射在保护跨度之外，于是
@@ -30716,7 +30839,19 @@ AST 映射规则:
                         continue
                     if not getattr(_r65_r, 'has_trailing_return_none', False):
                         continue
-                    if getattr(_r65_r, 'parent', None) is not getattr(region, 'parent', None):
+                    # [r1-b98-tryparent] 归属判据（区域成员关系，非深度、
+                    # 非计数）：R.parent is region —— R 是本 try 区域的成员
+                    # 块区域（CPython 把 try 体末条语句发射在保护跨度终点
+                    # offset == try_offset_end 处，analyzer 按跨度把它挂为
+                    # 本区域的子区域，而 try 体走查只遍历 try_blocks，故该块
+                    # 无人发射 = B98 的 try 体内尾形，实测 cgroup_utils.
+                    # set_cgroup_config）；或 R.parent is region.parent ——
+                    # R 是本区域的兄弟（原 r65 形，analyzer 把它排在兄弟序列
+                    # 里，发射位置错到 handler 之后）。两种归属下该块的源码
+                    # 身份相同：ast.Try.body 的末条语句。判据只读 parent 关系
+                    # 与块身份，对嵌套无感（C3 守卫封闭）。
+                    _r65_par = getattr(_r65_r, 'parent', None)
+                    if _r65_par is not region and _r65_par is not getattr(region, 'parent', None):
                         continue
                     _r65_bs = sorted(_r65_r.blocks, key=lambda b: b.start_offset)
                     if len(_r65_bs) != 1:
@@ -30724,7 +30859,17 @@ AST 映射规则:
                     _r65_b = _r65_bs[0]
                     if _r65_b.start_offset != _r65_tail_off or _r65_b.successors:
                         continue
-                    if _r65_b in self.generated_blocks:
+                    # [r1-b98-tryparent] 「未被生成」的身份判据：R 是本区域
+                    # 的成员块区域时（_r65_par is region），try 体走查会把
+                    # 跨度内的每个块登记进 generated_blocks（含本块），此时
+                    # generated_blocks 成员身份不再等于「语句已被发射」——
+                    # 该汇合 return None 块从未被任何语句装配路径消费。改用
+                    # 生成偏移集合判定：_generate_block_statements 每发射一
+                    # 条语句都登记其指令偏移，故「块首偏移已被登记」才是
+                    # 「该块语句已归属某条已发射语句」的同层身份。
+                    if _r65_par is not region and _r65_b in self.generated_blocks:
+                        continue
+                    if _r65_b.start_offset in self.generated_offsets:
                         continue
                     _r65_stmts = self._generate_block_statements(_r65_b)
                     if not _r65_stmts:

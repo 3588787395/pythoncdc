@@ -1,5 +1,5 @@
 # Source Generated with Decompyle++ (Python version)
-# File: cgroup_utils.pyc (Python 3.11)
+# File: r1_42_self_product_cgroup.pyc (Python 3.11)
 
 import os
 import psutil
@@ -91,9 +91,10 @@ def set_cgroup_config(user_id):
             else:
                 message = '开启'
             system_log.info('用户 {} 设置研究内存 CGroup配置成功，{}OOM Killer机制'.format(user_id, message))
+            return None
         else:
             delete_cgroup_config(user_id, 'notebook_memory')
-        return None
+            return None
     except BaseException:
         system_log.error('设置CGroup配置失败，错误原因：{}'.format(get_traceback_message()))
         return None

@@ -1,0 +1,666 @@
+{
+ "elapsed_sec": 25.6,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 19,
+  "success": 27
+ },
+ "files_total": 46,
+ "generated_at": "2026-10-05T21:03:05",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "test_repros/round1/_search/handler_ifelse.pyc",
+   "test_repros/round1/r1_43_cand_try_ifelse_hret_trailing.pyc",
+   "test_repros/round1/r1_44_cand_cgroup_microcosm.pyc",
+   "test_repros/round1/r1_47_cand_try_while_hret_trailing.pyc",
+   "test_repros/round1/r1_48_cand_try_for_hret_trailing.pyc",
+   "test_repros/round1/r1_49_cand_tryintry_hret_trailing.pyc",
+   "test_repros/round1/r1_50_cand_method_hret_trailing.pyc",
+   "test_repros/round1/r1_52_cand_hraise_trailing.pyc",
+   "test_repros/round1/r1_53_cand_trystmt_hret_trailing.pyc",
+   "test_repros/round1/r1_65_cand_while_try_sinkpair.pyc",
+   "test_repros/round1/r1_68_cand_for_arm_absorb.pyc",
+   "test_repros/round1/r1_69_cand_for_nested_absorb.pyc",
+   "test_repros/round1/r1_73_cand_fortry_sinkpair.pyc",
+   "test_repros/round1/r1_74_cand_whiletry_noelse.pyc",
+   "test_repros/round1/r1_75_cand_try_arm_absorb.pyc",
+   "test_repros/round1/r1_76_cand_while_arm_absorb.pyc",
+   "test_repros/round1/r1_77_cand_nestedfn_arm_absorb.pyc",
+   "test_repros/round1/r1_78_cand_method_arm_absorb.pyc",
+   "test_repros/round1/r1_80_cand_try_arm_absorb_ctrl.pyc"
+  ],
+  "success": [
+   "test_repros/round1/r1_30_cand_plain_ifelse_epi.pyc",
+   "test_repros/round1/r1_31_cand_try_ifelse_epi.pyc",
+   "test_repros/round1/r1_32_cand_try_nest_ifelse.pyc",
+   "test_repros/round1/r1_33_cand_try_ifelse_then_stmt.pyc",
+   "test_repros/round1/r1_34_cand_module_try_nest.pyc",
+   "test_repros/round1/r1_35_cand_method_try_nest.pyc",
+   "test_repros/round1/r1_36_cand_loop_try_nest.pyc",
+   "test_repros/round1/r1_37_cand_try_elif_epi.pyc",
+   "test_repros/round1/r1_38_cand_try_ifelse_hret.pyc",
+   "test_repros/round1/r1_39_cand_try_nest_hret.pyc",
+   "test_repros/round1/r1_40_cand_plain_ifelse_expret.pyc",
+   "test_repros/round1/r1_41_cand_try_two_ifelse_hret.pyc",
+   "test_repros/round1/r1_42_self_product_cgroup.pyc",
+   "test_repros/round1/r1_45_cand_hnoreturn_trailing.pyc",
+   "test_repros/round1/r1_46_cand_notry_ifelse_trailing.pyc",
+   "test_repros/round1/r1_51_cand_hret_trailing_nonnone.pyc",
+   "test_repros/round1/r1_60_cand_tryret_hret.pyc",
+   "test_repros/round1/r1_61_cand_tryret_hret_plainbody.pyc",
+   "test_repros/round1/r1_62_cand_while_epi_dup.pyc",
+   "test_repros/round1/r1_63_cand_while_epi_dup_fn.pyc",
+   "test_repros/round1/r1_64_cand_while_if_sinkpair.pyc",
+   "test_repros/round1/r1_66_cand_else_absorb_siblings.pyc",
+   "test_repros/round1/r1_67_cand_loop_else_absorb.pyc",
+   "test_repros/round1/r1_70_cand_chain_controls.pyc",
+   "test_repros/round1/r1_72_cand_whiletry_sinkpair_fn.pyc",
+   "test_repros/round1/r1_79_cand_flat_arm_absorb.pyc",
+   "test_repros/round1/r1_81_cand_flat_arm_absorb2.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f43: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_43_cand_try_ifelse_hret_trailing.pyc",
+   "pyc_sha": "eb0cd8b5a694",
+   "source": "test_repros/round1/r1_43_cand_try_ifelse_hret_trailingOK.py",
+   "source_sha": "91f88cdc9c7c",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f44: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_44_cand_cgroup_microcosm.pyc",
+   "pyc_sha": "8e19a2cb36ba",
+   "source": "test_repros/round1/r1_44_cand_cgroup_microcosmOK.py",
+   "source_sha": "77550bc26fc2",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f47: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_47_cand_try_while_hret_trailing.pyc",
+   "pyc_sha": "27366ac95a9e",
+   "source": "test_repros/round1/r1_47_cand_try_while_hret_trailingOK.py",
+   "source_sha": "3ef6cafb3cfb",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f48: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_48_cand_try_for_hret_trailing.pyc",
+   "pyc_sha": "5e261eaeeae4",
+   "source": "test_repros/round1/r1_48_cand_try_for_hret_trailingOK.py",
+   "source_sha": "660b47133774",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f49: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_49_cand_tryintry_hret_trailing.pyc",
+   "pyc_sha": "9fa5ca22c89c",
+   "source": "test_repros/round1/r1_49_cand_tryintry_hret_trailingOK.py",
+   "source_sha": "9e63b3831572",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.K49.m: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_50_cand_method_hret_trailing.pyc",
+   "pyc_sha": "fe2de1c24f78",
+   "source": "test_repros/round1/r1_50_cand_method_hret_trailingOK.py",
+   "source_sha": "287c13067ba3",
+   "status": "failure",
+   "success_rate": 0.6666666666666666,
+   "units_success": 2,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f52: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_52_cand_hraise_trailing.pyc",
+   "pyc_sha": "b07f94481940",
+   "source": "test_repros/round1/r1_52_cand_hraise_trailingOK.py",
+   "source_sha": "523ec5918d8c",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f53: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_53_cand_trystmt_hret_trailing.pyc",
+   "pyc_sha": "4892e99d8335",
+   "source": "test_repros/round1/r1_53_cand_trystmt_hret_trailingOK.py",
+   "source_sha": "978d3edf038f",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.C65._target: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_65_cand_while_try_sinkpair.pyc",
+   "pyc_sha": "f1dbb736312a",
+   "source": "test_repros/round1/r1_65_cand_while_try_sinkpairOK.py",
+   "source_sha": "40d6714aab33",
+   "status": "failure",
+   "success_rate": 0.75,
+   "units_success": 3,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f73: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_73_cand_fortry_sinkpair.pyc",
+   "pyc_sha": "0d3e6506b7a4",
+   "source": "test_repros/round1/r1_73_cand_fortry_sinkpairOK.py",
+   "source_sha": "767fbed4b6fb",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f74: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_74_cand_whiletry_noelse.pyc",
+   "pyc_sha": "8dfc89c75af8",
+   "source": "test_repros/round1/r1_74_cand_whiletry_noelseOK.py",
+   "source_sha": "299f5e59ffab",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f68: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_68_cand_for_arm_absorb.pyc",
+   "pyc_sha": "314e7624f15a",
+   "source": "test_repros/round1/r1_68_cand_for_arm_absorbOK.py",
+   "source_sha": "72c9fb1a3dc4",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f69: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_69_cand_for_nested_absorb.pyc",
+   "pyc_sha": "943a99455d6e",
+   "source": "test_repros/round1/r1_69_cand_for_nested_absorbOK.py",
+   "source_sha": "94c5dfb1ea22",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f75: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_75_cand_try_arm_absorb.pyc",
+   "pyc_sha": "da61bfc26152",
+   "source": "test_repros/round1/r1_75_cand_try_arm_absorbOK.py",
+   "source_sha": "4c44030bbdce",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f76: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_76_cand_while_arm_absorb.pyc",
+   "pyc_sha": "f72bf4240e22",
+   "source": "test_repros/round1/r1_76_cand_while_arm_absorbOK.py",
+   "source_sha": "141ceac0bb90",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f77: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_77_cand_nestedfn_arm_absorb.pyc",
+   "pyc_sha": "6609bf01a991",
+   "source": "test_repros/round1/r1_77_cand_nestedfn_arm_absorbOK.py",
+   "source_sha": "27407a041e60",
+   "status": "failure",
+   "success_rate": 0.6666666666666666,
+   "units_success": 2,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.C78.m: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_78_cand_method_arm_absorb.pyc",
+   "pyc_sha": "25055faf9360",
+   "source": "test_repros/round1/r1_78_cand_method_arm_absorbOK.py",
+   "source_sha": "42ff41811f74",
+   "status": "failure",
+   "success_rate": 0.6666666666666666,
+   "units_success": 2,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f80: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/r1_80_cand_try_arm_absorb_ctrl.pyc",
+   "pyc_sha": "52fee82dcbd1",
+   "source": "test_repros/round1/r1_80_cand_try_arm_absorb_ctrlOK.py",
+   "source_sha": "bf7800163574",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 1,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round1/_search/handler_ifelse.pyc",
+   "pyc_sha": "0b775154a26c",
+   "source": "test_repros/round1/_search/handler_ifelseOK.py",
+   "source_sha": "6673f5861ef0",
+   "status": "failure",
+   "success_rate": 0.8,
+   "units_success": 4,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_30_cand_plain_ifelse_epi.pyc",
+   "pyc_sha": "51f9a0e54f24",
+   "source": "test_repros/round1/r1_30_cand_plain_ifelse_epiOK.py",
+   "source_sha": "1a17077b251d",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_31_cand_try_ifelse_epi.pyc",
+   "pyc_sha": "061f95bd63a5",
+   "source": "test_repros/round1/r1_31_cand_try_ifelse_epiOK.py",
+   "source_sha": "0013671cc991",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_32_cand_try_nest_ifelse.pyc",
+   "pyc_sha": "9dd54963a709",
+   "source": "test_repros/round1/r1_32_cand_try_nest_ifelseOK.py",
+   "source_sha": "4a70c7e0b373",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_33_cand_try_ifelse_then_stmt.pyc",
+   "pyc_sha": "9b57adb7d03c",
+   "source": "test_repros/round1/r1_33_cand_try_ifelse_then_stmtOK.py",
+   "source_sha": "1200465aa031",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_34_cand_module_try_nest.pyc",
+   "pyc_sha": "c3ecfc2ce709",
+   "source": "test_repros/round1/r1_34_cand_module_try_nestOK.py",
+   "source_sha": "b861451dab5b",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 1,
+   "units_total": 1
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_35_cand_method_try_nest.pyc",
+   "pyc_sha": "28767cc0aba5",
+   "source": "test_repros/round1/r1_35_cand_method_try_nestOK.py",
+   "source_sha": "dce532cca930",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_36_cand_loop_try_nest.pyc",
+   "pyc_sha": "188d68db070d",
+   "source": "test_repros/round1/r1_36_cand_loop_try_nestOK.py",
+   "source_sha": "3d2523720765",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_37_cand_try_elif_epi.pyc",
+   "pyc_sha": "b3c45d3a39a5",
+   "source": "test_repros/round1/r1_37_cand_try_elif_epiOK.py",
+   "source_sha": "290cdf71dd09",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_38_cand_try_ifelse_hret.pyc",
+   "pyc_sha": "c7d23dd15874",
+   "source": "test_repros/round1/r1_38_cand_try_ifelse_hretOK.py",
+   "source_sha": "ab51baba0232",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_39_cand_try_nest_hret.pyc",
+   "pyc_sha": "39ee33ad7b62",
+   "source": "test_repros/round1/r1_39_cand_try_nest_hretOK.py",
+   "source_sha": "4aa64722c122",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_40_cand_plain_ifelse_expret.pyc",
+   "pyc_sha": "7e699898d59b",
+   "source": "test_repros/round1/r1_40_cand_plain_ifelse_expretOK.py",
+   "source_sha": "6c18981c795f",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_41_cand_try_two_ifelse_hret.pyc",
+   "pyc_sha": "61520224bbf1",
+   "source": "test_repros/round1/r1_41_cand_try_two_ifelse_hretOK.py",
+   "source_sha": "550c178f67c5",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_45_cand_hnoreturn_trailing.pyc",
+   "pyc_sha": "1b545cfc594e",
+   "source": "test_repros/round1/r1_45_cand_hnoreturn_trailingOK.py",
+   "source_sha": "f07bfd119aca",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_46_cand_notry_ifelse_trailing.pyc",
+   "pyc_sha": "7db8116bb3ff",
+   "source": "test_repros/round1/r1_46_cand_notry_ifelse_trailingOK.py",
+   "source_sha": "f1e63f9320aa",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_51_cand_hret_trailing_nonnone.pyc",
+   "pyc_sha": "57cf73204dbf",
+   "source": "test_repros/round1/r1_51_cand_hret_trailing_nonnoneOK.py",
+   "source_sha": "669e98bd172f",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_60_cand_tryret_hret.pyc",
+   "pyc_sha": "13f481b7b9a6",
+   "source": "test_repros/round1/r1_60_cand_tryret_hretOK.py",
+   "source_sha": "e7127bdb25bc",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_61_cand_tryret_hret_plainbody.pyc",
+   "pyc_sha": "6ca15c7d76c3",
+   "source": "test_repros/round1/r1_61_cand_tryret_hret_plainbodyOK.py",
+   "source_sha": "778b6208f6a4",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_62_cand_while_epi_dup.pyc",
+   "pyc_sha": "fbbbc2cf192a",
+   "source": "test_repros/round1/r1_62_cand_while_epi_dupOK.py",
+   "source_sha": "dc1b98bf6903",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_63_cand_while_epi_dup_fn.pyc",
+   "pyc_sha": "6cd4cfa59181",
+   "source": "test_repros/round1/r1_63_cand_while_epi_dup_fnOK.py",
+   "source_sha": "4b204642b6f1",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_64_cand_while_if_sinkpair.pyc",
+   "pyc_sha": "53624f5f344b",
+   "source": "test_repros/round1/r1_64_cand_while_if_sinkpairOK.py",
+   "source_sha": "de3aca92567f",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_72_cand_whiletry_sinkpair_fn.pyc",
+   "pyc_sha": "5f79a4bdff68",
+   "source": "test_repros/round1/r1_72_cand_whiletry_sinkpair_fnOK.py",
+   "source_sha": "d7d12dd9cefe",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_66_cand_else_absorb_siblings.pyc",
+   "pyc_sha": "e72f3c64148c",
+   "source": "test_repros/round1/r1_66_cand_else_absorb_siblingsOK.py",
+   "source_sha": "d468044d6f1f",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_67_cand_loop_else_absorb.pyc",
+   "pyc_sha": "766dee0cb9fa",
+   "source": "test_repros/round1/r1_67_cand_loop_else_absorbOK.py",
+   "source_sha": "4524b6fe28ce",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_70_cand_chain_controls.pyc",
+   "pyc_sha": "41b7c897ebf4",
+   "source": "test_repros/round1/r1_70_cand_chain_controlsOK.py",
+   "source_sha": "756519a5a2b1",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_79_cand_flat_arm_absorb.pyc",
+   "pyc_sha": "fd9697531fb8",
+   "source": "test_repros/round1/r1_79_cand_flat_arm_absorbOK.py",
+   "source_sha": "8ab63845471f",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_81_cand_flat_arm_absorb2.pyc",
+   "pyc_sha": "0c701d8776fe",
+   "source": "test_repros/round1/r1_81_cand_flat_arm_absorb2OK.py",
+   "source_sha": "c0a350cb8cc6",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round1/r1_42_self_product_cgroup.pyc",
+   "pyc_sha": "c09bae3d674d",
+   "source": "test_repros/round1/r1_42_self_product_cgroupOK.py",
+   "source_sha": "c07c6c96ca24",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 8,
+   "units_total": 8
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.8272727272727273,
+ "units_success": 91,
+ "units_total": 110
+}
