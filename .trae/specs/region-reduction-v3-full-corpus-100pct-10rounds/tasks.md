@@ -44,10 +44,18 @@
     文档落点：`REVIEW.md`、`FIX_B98_REGRESS.md`、`FIX_B100_REGRESS.md`、`FIX_B103.md`、`VERIFICATION.md`；
     未合成单一 `FIX.md`（三份分家族 FIX 文档代替，如实标注，不虚构文件名）。
 
-- [ ] Task 3: Round 2 — 双单元损失族（real_quote 43/45、risk_calculation/__init__ 41/43、future_contract_info 27/29、ptradeAccount 135/137）
-  - [ ] 3.1 测试工程师：同 2.1 攻击协议，逐 pyc 一个，≥10 复现/缺陷
-  - [ ] 3.2 修复工程师：同 2.2 约束
-  - [ ] 3.3 复核 + 验证序六步 + push
+- [x] Task 3: Round 2 — 双单元损失族（real_quote 43/45、risk_calculation/__init__ 41/43、future_contract_info 27/29、ptradeAccount 135/137）
+  - [x] 3.1 测试工程师：同 2.1 攻击协议，逐 pyc 一个，≥10 复现/缺陷
+  - [x] 3.2 修复工程师：同 2.2 约束
+  - [x] 3.3 复核 + 验证序六步 + push
+  - 落地读数（rr-v3r02，详见 `rounds/round2/VERIFICATION.md`）：units 6554→**6566/6617（99.2293%）**、files 369→**377/402**；
+    对基线与对 Round 1 终态**双重** compare 均 REGRESSIONS=0 ∧ UNIT_REGRESSIONS=0；compile_error/error 0；
+    本轮转完全 OK 的 pyc＝**1**（`fly/logger.pyc` 63/64→64/64）；电池 `r2v3` 62 臂 85/114→**105/126**（零臂由绿转红，新增永久臂 b20/b21/b22-b25 全绿）；
+    三批修复＝B108（混合极性 or 链，future_contract 27/29→28/29）、B106（处理器尾回边按循环入口归属）、B107（if 臂按循环入口认领抽象节点），
+    全部标为**部分封闭**并逐条实名移交（B99、B104 a 族、B105 无合成孪生、B106 残 b09/b10/b11/b18、B107 残 b01/b03/b12/b13/b15、B108 残 c06/c11/c12）；
+    quotation 152/153 失败单元仍 `get_fundflow_day`（B102 未回退）；tests 六套件 277/2/2 同名单；
+    语料残局 **25 文件 / 51 单元**（48 Different control flow + 3 Different bytecode）；
+    push 至 `origin/rr-v3-full-corpus`（非 main，理由见该文档 §III）。
 
 - [ ] Task 4: Round 3 — 三单元损失族（klinedata 61/64、wizard_quant_api 55/58、order_api 34/37）
   - [ ] 4.1/4.2/4.3 同 Round 2 结构
