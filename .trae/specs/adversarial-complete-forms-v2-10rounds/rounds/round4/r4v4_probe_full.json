@@ -1,0 +1,260 @@
+[
+ {
+  "pyc": "test_repros/round4/c4_01_elif_chain.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round4/c4_02_loop_else.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 13,
+  "units_total": 14,
+  "failures": [
+   "***<module>.CL.m: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round4/c4_03_except_star.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 11,
+  "units_total": 13,
+  "failures": [
+   "***<module>.e01_root: Failure: Different control flow",
+   "***<module>.e04_with: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round4/c4_04_match_patterns.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 8,
+  "units_total": 13,
+  "failures": [
+   "***<module>.e04_mapping: Failure: Different control flow",
+   "***<module>.e05_class_kw: Failure: Different control flow",
+   "***<module>.e06_or_guard: Failure: Different control flow",
+   "***<module>.e07_capture.inner: Failure detected at line number 93 and instruction offset 72: Different bytecode",
+   "***<module>.CM.m: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round4/c4_05_multi_with.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 12,
+  "units_total": 14,
+  "failures": [
+   "***<module>.e09_comp_host: Failure: Different bytecode",
+   "***<module>.e09_comp_host.<listcomp>: Failure: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round4/c4_06_try_finally_only.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 12,
+  "units_total": 14,
+  "failures": [
+   "***<module>.e01_root: Failure: Different control flow",
+   "***<module>.e06_while: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round4/c4_07_multi_target.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 14,
+  "failures": [
+   "***<module>.e04_unpack: Failure: Different bytecode",
+   "***<module>.e05_star_unpack: Failure: Different bytecode",
+   "***<module>.e06_chain_target: Failure detected at line number 23 and instruction offset 18: Different bytecode",
+   "***<module>.e09_attr_chain: Failure detected at line number 47 and instruction offset 24: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round4/c4_08_augassign.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round4/c4_09_chained_compare.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 11,
+  "units_total": 14,
+  "failures": [
+   "***<module>.e04_deep: Failure: Different control flow",
+   "***<module>.e08_while: Failure: Different control flow",
+   "***<module>.CCMP.m: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round4/c4_10_walrus.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 8,
+  "units_total": 13,
+  "failures": [
+   "***<module>.e01_root: Failure: Different control flow",
+   "***<module>.e05_nested: Failure: Different bytecode",
+   "***<module>.e06_call_arg: Failure: Different bytecode",
+   "***<module>.CW2.m: Failure: Different control flow",
+   "***<module>.e09_with: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round4/c4_11_keyword_args.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round4/c4_12_star_args.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 13,
+  "failures": [
+   "***<module>.e02_shallow: Failure: Different bytecode",
+   "***<module>.e03_mixed: Failure: Different bytecode",
+   "***<module>.e04_deep: Failure: Different bytecode",
+   "***<module>.e06_nested.inner: Failure: Different bytecode",
+   "***<module>.CSA.m: Failure: Different bytecode",
+   "***<module>.e07_match_host: Failure: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round4/c4_13_slice.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round4/c4_14_relative_import.pyc",
+  "verify_rc": 1,
+  "status": "compile_error",
+  "units_success": 0,
+  "units_total": 0,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round4/c4_15_star_import.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 7,
+  "failures": [
+   "***<module>: Failure: Different bytecode",
+   "***<module>.e01_use: Failure: Missing bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round4/c4_16_global_nonlocal.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 21,
+  "units_total": 21,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round4/c4_17_fstring_conv.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 12,
+  "units_total": 12,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round4/c4_18_nested_comprehension.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 30,
+  "units_total": 30,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round4/c4_19_decorator_args.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 27,
+  "units_total": 28,
+  "failures": [
+   "***<module>.e09_method_local.Local: Failure: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round4/c4_20_async_five.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 21,
+  "units_total": 24,
+  "failures": [
+   "***<module>.e05_async_compound.go: Failure: Different control flow",
+   "***<module>.e07_async_closure.outer.inner: Failure: Different control flow",
+   "***<module>.e07_async_closure.outer.inner.<listcomp>: Failure: Missing bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round4/n4_01_neg_control_flow.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round4/n4_01_no_match_control.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round4/n4_02_neg_expr.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 12,
+  "units_total": 12,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round4/n4_03_neg_match_with.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round4/n4_04_neg_deco_async.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round4/n4_05_neg_except_star.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>.n_except_star_two: Failure: Different control flow"
+  ]
+ }
+]
