@@ -2,4 +2,5 @@
 # File: k4_bare_ann.pyc (Python 3.11)
 
 def f():
+    b: str
     return b

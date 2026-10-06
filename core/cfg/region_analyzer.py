@@ -18193,6 +18193,33 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 for _extra in _cc_info.get('extra_chain_blocks', []):
                     chained_compare_extra_blocks.add(_extra)
 
+        # [B115 fix] 循环守卫块集合（I.4 白名单：区域成员关系）。
+        # ①算法依据：区域归约算法原则 2（每块唯一归属）/ 原则 3（嵌套即抽象节点）/
+        #   原则 4（父引用子入口）+ C3 守卫封闭。复合 `and` 短路链的成员必须是
+        #   **纯条件求值块**；循环区域的入口/条件块是嵌套控制流构造（LoopRegion）
+        #   的边界，绝不能并入上层 IfRegion 的 and 链——否则外层 if 的
+        #   condition_block 被重定向进循环头，等价于 `while` 条件与 `if` 条件融合
+        #   （`if i: while i>0:` → `while i and i>0`），且 LoopRegion 与 IfRegion
+        #   对同一块双重归属。
+        # ②归约顺序：_identify_loop_regions 先于 _identify_conditional_regions
+        #   执行（analyze() L1463 → L1571），故此处 loop_regions 已完整。
+        # ③唯一归属判定：候选块 ∈ {LoopRegion.entry / condition_block /
+        #   header_block} ⇒ 该块归 LoopRegion，拒绝并入本 and 链。
+        # ④嵌套处理：更深的内层循环头同理（其 LoopRegion 也在列表中）。
+        # ⑤入口引用语义：IfRegion 仍以自己的 entry 引用守卫块；被拒绝的循环块由
+        #   LoopRegion 经其 entry 独立归约（父 IfRegion 以 then-body 引用子入口）。
+        # ⑥反编译流程：region_analyzer 归约 → AST（If.test=BoolOp / While）。
+        # C1：仅本地消费 loop_regions（本方法形参），不新增 self 跨方法状态。
+        # C2：被拒绝的循环块只经 LoopRegion.entry 组合，不由 and 链展开。
+        # C3：外层 if 守卫与其体（LoopRegion）独立成区域，守卫封闭不被跨越。
+        _loop_guard_blocks = set()
+        for _lr in (loop_regions or []):
+            for _lrb in (getattr(_lr, 'entry', None),
+                         getattr(_lr, 'condition_block', None),
+                         getattr(_lr, 'header_block', None)):
+                if _lrb is not None:
+                    _loop_guard_blocks.add(_lrb)
+
         blocks_in_reverse = sorted(
             self.cfg.get_blocks_in_order(),
             key=lambda b: b.start_offset, reverse=True
@@ -19043,6 +19070,15 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                         _main_ft_next = _s
                                         break
                             if _main_ft_next is None or _main_ft_next.start_offset in _main_visited:
+                                break
+                            # [B115 fix] 循环守卫块不得并入本 and 链：候选 ft_next
+                            # 若为某 LoopRegion 的 entry / condition_block /
+                            # header_block，则该块归该循环区域（区域成员关系，
+                            # I.4 白名单），并入会把外层 if 条件与循环头融合
+                            # （`if i: while i>0:` → `while i and i>0`），
+                            # 违反 C3 守卫封闭 + 原则 2 每块唯一归属。
+                            # 归约即在此终止（原行为：链在无合法后继时终止）。
+                            if _main_ft_next in _loop_guard_blocks:
                                 break
                             _main_ft_last = _main_ft_next.get_last_instruction()
                             if _main_ft_last is None or _main_ft_last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
@@ -28456,6 +28492,36 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         visited = set()
         BOOLOP_CHAIN_JUMPS = FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
         first_jump_type = None
+        # [B115 fix] 循环守卫块集合（I.4 白名单：区域成员关系）。
+        # ①算法依据：区域归约算法原则 2（每块唯一归属）/ 原则 3（嵌套即抽象节点）/
+        #   原则 4（父引用子入口）+ C3 守卫封闭。复合 `and` 短路链的候选成员必须
+        #   是**纯条件求值块**；某 LoopRegion 的 {entry, condition_block,
+        #   header_block} 是嵌套控制流构造的边界，绝不是表达式操作数。当外层 if
+        #   的条件块与其体首的循环头共享同一失败出口（`for i in xs: if i: while
+        #   i>0:` 中 blk@12 与 while 头 blk@18 均跳 78），误将循环头纳入链即把
+        #   `if i:` 与 `while i>0:` 融合成 `while i and i>0`（外层 if 的
+        #   condition_block 被重定向进循环头，同块被 IfRegion 与 LoopRegion 双重
+        #   归属）。
+        # ②归约顺序：_identify_loop_regions 先于 _identify_boolop_regions 执行
+        #   （analyze() 中 L1463 → L1494），故此处 self.regions 已含全部 LoopRegion。
+        # ③唯一归属判定：非首成员候选块 ∈ 任一 LoopRegion 的守卫块集 ⇒ 该块归该
+        #   LoopRegion，拒绝并入本 and 链；链在此截断（首成员若确为循环体首块则退
+        #   化为单成员链，交 IfRegion 独立归约）。
+        # ④嵌套处理：更深内层循环头同理（其 LoopRegion 亦在列表中）。
+        # ⑤入口引用语义：IfRegion 仍以自身 entry 引用其条件块；被拒绝的循环块由
+        #   LoopRegion 经其 entry 独立归约（父 IfRegion 以 then-body 引用子循环入口）。
+        # ⑥反编译流程：region_analyzer 归约 → AST（If.test 为单条件 / While）。
+        # C1：仅本地只读 self.regions，不新增 self 跨方法状态。
+        # C2：被拒绝的循环块只经 LoopRegion.entry 组合，不由 and 链展开。
+        # C3：外层 if 守卫与其体（LoopRegion）独立成区域，守卫封闭不被跨越。
+        _b115_loop_guard_map = {}
+        for _b115_lr in self.regions:
+            if isinstance(_b115_lr, LoopRegion):
+                for _b115_gb in (_b115_lr.entry,
+                                 _b115_lr.condition_block,
+                                 _b115_lr.header_block):
+                    if _b115_gb is not None:
+                        _b115_loop_guard_map[_b115_gb] = _b115_lr
         while current and current.start_offset not in visited:
             visited.add(current.start_offset)
             last = current.get_last_instruction()
@@ -28830,6 +28896,47 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     break
             if _cc_internal_hit:
                 break
+            # [B115 fix] 循环守卫块不得作为外层 if 的 and 链成员：非首成员候选
+            # 块若为任一 LoopRegion 的 {entry, condition_block, header_block}，
+            # 则该块归该循环区域（I.4 白名单：区域成员关系），链在此截断
+            # （[C2] 单个 BoolOpRegion 黑箱组合、[C3] 守卫封闭；注释六项见本方法
+            # 起点的 _b115_loop_guard_map 定义处）。首成员仍可为循环条件块（该循环
+            # 自身的条件链装配，由 _detect_while_boolop_forward_chain / Step 5 承担）。
+            #
+            # 收窄判据（I.4 白名单：块末 opcode / 后继-前驱指令集合 / 区域成员
+            # 关系）：`while A and B:` 与 `if A: while B:` 在守卫点局部同形（A 的
+            # 假后继 == B 的假后继），仅凭块末 opcode 无法区分，须看该循环是否在
+            # **自身回边重检中重新求值链首操作数 A**。真复合 while 条件的回边块会
+            # 重检 A（如 quote.pyc `while not redata and count < 3:` 的回边前块重
+            # 复 `LOAD_FAST:redata; POP_JUMP_FORWARD_IF_TRUE:<exit>`）；`if A:
+            # while B:` 的回边只重检 B，A 从不重求值（k1_ifwhile 回边块仅
+            # `POP_JUMP_BACKWARD_IF_TRUE:<header>`）。故：链首尾二指令（条件跳转 +
+            # 其值来源）在本循环任一非守卫块中连续重现 ⇒ A 属本循环条件装配，放行；
+            # 否则 A 为循环之外的外层守卫，链在此截断。
+            if chain and current in _b115_loop_guard_map:
+                _b115_lr = _b115_loop_guard_map[current]
+                _b115_c0 = chain[0][0]
+                _b115_tail = [(i.opname, i.argval)
+                              for i in (_b115_c0.instructions or [])[-2:]]
+                _b115_reeval = False
+                if _b115_tail:
+                    for _b115_cb in (_b115_lr.blocks or []):
+                        if _b115_cb is current or _b115_cb is _b115_c0:
+                            continue
+                        if _b115_cb is _b115_lr.condition_block:
+                            continue
+                        _b115_ci = _b115_cb.instructions or []
+                        _b115_win = len(_b115_tail)
+                        for _b115_k in range(len(_b115_ci) - _b115_win + 1):
+                            _b115_seg = [(j.opname, j.argval)
+                                         for j in _b115_ci[_b115_k:_b115_k + _b115_win]]
+                            if _b115_seg == _b115_tail:
+                                _b115_reeval = True
+                                break
+                        if _b115_reeval:
+                            break
+                if not _b115_reeval:
+                    break
             chain.append((current, op_type))
             # [CPython peephole P4 + P5 interaction] Chained compare as
             # BoolOp operand hop. When `if a < b < c and d < e < f:` is

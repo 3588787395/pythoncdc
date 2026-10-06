@@ -2,13 +2,14 @@
 # File: s34_funcs.pyc (Python 3.11)
 
 def ifwhile(i, flag):
-    if flag and i > 0:
-        pass
-    while i > 0:
-        i -= 1
+    if flag:
+        while i > 0:
+            i -= 1
     return i
 def ann_bare(x):
+    b: str
     a = x + 1
     return (a, b)
 def ann_bare_only(x):
+    b: str
     return b

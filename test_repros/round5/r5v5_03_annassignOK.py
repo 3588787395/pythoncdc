@@ -5,6 +5,7 @@ MOD_AN: int = 0
 MOD_AN2: 'list'
 MOD_AN3: dict = {}
 def ann_root(x):
+    b: str
     a = x + 1
     c = {}
     d = []

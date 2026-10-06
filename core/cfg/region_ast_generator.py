@@ -2484,6 +2484,88 @@ class RegionASTGenerator:
                 'body': body_expr,
             }
 
+        # [B116 fix] 函数局部裸注解声明登记（I.4 白名单：co 元数据 / 指令流）。
+        # ①算法依据：C1 局部消费 —— 函数 code object 的 co_varnames 是权威局部名
+        #   清单；CPython 对**函数局部裸注解** `b: <T>`（无值）不发射任何指令，
+        #   仅把 b 登记进 co_varnames。若反编译器不恢复该声明，`return b` 会
+        #   退化为 LOAD_GLOBAL（重编后 co_varnames 丢失 b），字节码不一致。
+        # ②归约顺序：函数体结构在此之前已归约成型（filtered_body），本步只做
+        #   名称级补全，不改变任何已归约的控制流结构。
+        # ③唯一归属判定：候选 = co_varnames 中既非形参、又无 STORE_*/DELETE_*/
+        #   MAKE_CELL、且非 cellvar 的名字；这正是裸注解声明的无语义绑定名。
+        # ④嵌套处理：每个函数 code object 各自独立判定（递归 generate() 逐层）。
+        # ⑤入口引用语义：发射 AnnAssign(target=Name(n,Store), annotation=<T>,
+        #   value=None) 作为 body 前置声明；局部注解不求值，故 annotation 取值
+        #   不影响字节码，仅恢复 co_varnames 登记（docstring 之后插入以保表序）。
+        # ⑥反编译流程：region_ast_generator 归约 → AST（AnnAssign 无值）。
+        # C1：仅本地消费 co_varnames / 指令流，不新增 self 跨方法状态。
+        # C2：声明语句只经 body 前置消费，不改动任何子区域。
+        # C3：不改写守卫/区域边界，仅补一个无字节码的声明节点。
+        if isinstance(code_obj, types.CodeType):
+            _b116_arg_names = set()
+            for _b116_a in (args.get('args') or []):
+                _b116_a_name = _b116_a.get('arg') if isinstance(_b116_a, dict) else _b116_a
+                if _b116_a_name:
+                    _b116_arg_names.add(_b116_a_name)
+            for _b116_a in (args.get('kwonlyargs') or []):
+                _b116_a_name = _b116_a.get('arg') if isinstance(_b116_a, dict) else _b116_a
+                if _b116_a_name:
+                    _b116_arg_names.add(_b116_a_name)
+            for _b116_a in (args.get('vararg'), args.get('kwarg')):
+                if _b116_a:
+                    _b116_arg_names.add(_b116_a)
+            _b116_declared = set(getattr(code_obj, 'co_cellvars', ()) or ())
+            _b116_scan_ok = True
+            try:
+                import dis as _b116_dis
+                for _b116_instr in _b116_dis.get_instructions(code_obj):
+                    if (_b116_instr.opname.startswith('STORE_')
+                            or _b116_instr.opname.startswith('DELETE_')
+                            or _b116_instr.opname == 'MAKE_CELL'):
+                        if isinstance(_b116_instr.argval, str):
+                            _b116_declared.add(_b116_instr.argval)
+            except Exception:
+                _b116_scan_ok = False
+            if _b116_scan_ok:
+                _b116_existing = set()
+                _b116_walk = [filtered_body]
+                while _b116_walk:
+                    _b116_cur = _b116_walk.pop()
+                    for _b116_s in (_b116_cur if isinstance(_b116_cur, list) else []):
+                        if not isinstance(_b116_s, dict):
+                            continue
+                        if (_b116_s.get('type') == 'AnnAssign'
+                                and isinstance(_b116_s.get('target'), dict)
+                                and _b116_s['target'].get('type') == 'Name'):
+                            _b116_existing.add(_b116_s['target'].get('id'))
+                        for _b116_key in ('body', 'orelse', 'finalbody'):
+                            if isinstance(_b116_s.get(_b116_key), list):
+                                _b116_walk.append(_b116_s[_b116_key])
+                _b116_ann_stmts = []
+                for _b116_name in (getattr(code_obj, 'co_varnames', ()) or ()):
+                    if (_b116_name in _b116_arg_names
+                            or _b116_name in _b116_declared
+                            or _b116_name in _b116_existing
+                            or not _b116_name.isidentifier()):
+                        continue
+                    _b116_ann_stmts.append({
+                        'type': 'AnnAssign',
+                        'target': {'type': 'Name', 'id': _b116_name, 'ctx': 'Store'},
+                        'annotation': {'type': 'Name', 'id': 'str', 'ctx': 'Load'},
+                        'value': None,
+                    })
+                if _b116_ann_stmts:
+                    _b116_insert_at = 0
+                    if (filtered_body and isinstance(filtered_body[0], dict)
+                            and filtered_body[0].get('type') == 'Expr'
+                            and isinstance(filtered_body[0].get('value'), dict)
+                            and filtered_body[0]['value'].get('type') == 'Constant'
+                            and isinstance(filtered_body[0]['value'].get('value'), str)):
+                        _b116_insert_at = 1
+                    filtered_body = (filtered_body[:_b116_insert_at]
+                                     + _b116_ann_stmts
+                                     + filtered_body[_b116_insert_at:])
+
         result = {
             'type': 'AsyncFunctionDef' if is_async else 'FunctionDef',
             'name': func_name,
@@ -32548,7 +32630,26 @@ AST 映射规则:
                         else:
                             _module = _imp_module_name
                             _sto_n = instr.argval
-                            if _module != _sto_n:
+                            # [B114 fix] 未别名点号 import 的绑定名判定。
+                            # ①算法依据：CPython `import a.b`（未别名）编译为
+                            #   `IMPORT_NAME 'a.b'` + `STORE_NAME a`——绑定的是模块名
+                            #   的**顶层段** `a`（= module.split('.')[0]），非完整点号名。
+                            #   本分支正是「无 IMPORT_FROM 的普通 import」（fromlist=None
+                            #   且 _imp_from_pending is None），故 STORE 名与顶层段同名时
+                            #   是未别名导入；原实现与完整点号名比较，把它误判为别名，
+                            #   凭空发射 `import a.b as a`（多 IMPORT_FROM+POP_TOP）。
+                            # ②归约顺序：IMPORT_NAME 状态机已判定为无 fromlist/无
+                            #   IMPORT_FROM，此处只做绑定名比较。
+                            # ③唯一归属判定：本 STORE 归该 Import；绑定名 = 顶层段。
+                            # ④嵌套处理：模块/类/函数体共用本指令级归约，语义一致。
+                            # ⑤入口引用语义：Import(name=module, asname=None) 即未别名；
+                            #   仅当 STORE 名确为显式别名（本分支不可能，保留防御）才带 asname。
+                            # ⑥反编译流程：region_ast_generator 归约 → AST Import。
+                            # C1：仅本地消费指令流（IMPORT_NAME/STORE argval）。
+                            # C2：本分支的 Import 只经 _module/_sto_n 组合，不展开外部状态。
+                            # C3：不改写任何区域/守卫边界；有 IMPORT_FROM 的别名分支不受影响。
+                            _bound_n = _module.split('.')[0] if _module else _module
+                            if _bound_n != _sto_n:
                                 stmts.append({'type': 'Import',
                                               'names': [{'name': _module, 'asname': _sto_n}]})
                             else:
@@ -53494,7 +53595,34 @@ AST 映射规则:
                             _ua_import_skip = False
                             continue
                         _import_name = _ua_mod
-                        _alias = _instr.argval if _instr.argval != _ua_pending_import.argval else None
+                        # [B114 fix] 未别名点号 import 的绑定名判定。
+                        # ①算法依据：CPython `import a.b`（无 as）编译为
+                        #   IMPORT_NAME 'a.b' + STORE_NAME a——绑定的是顶层名
+                        #   a = argval.split('.')[0]；`import a.b as c` 绑定 c。
+                        #   判据取自 I.4 白名单（IMPORT_NAME 后继 STORE_* 的
+                        #   指令 oparg=argval）。
+                        # ②归约顺序：本解包/多目标/链式赋值子路由单遍扫描，
+                        #   IMPORT_NAME 处记录 pending，后继 STORE_* 处收口。
+                        # ③唯一归属判定：store 名 == 顶层绑定名即非别名路径，归
+                        #   本 Import（asname=None）；仅当 store 名 ≠ 顶层绑定名
+                        #   （如 `import a.b as c`）才发别名。
+                        # ④嵌套处理：只消费本块指令序列，不展开嵌套区域。
+                        # ⑤入口引用语义：产出 Import(names=[{name,asname}])，由
+                        #   _generate_block_statements_body 顺序体引用。
+                        # ⑥反编译流程：模块根/函数体的解包·多目标·链式赋值块中
+                        #   import 的归约路径。
+                        # 原实现以 store 名与完整点号 module 名（'os.path'）比较：
+                        # 未别名 `import os.path` 的 STORE_NAME 'os' != 'os.path'
+                        # 被误判为别名，凭空发射 `import os.path as os`（多
+                        # IMPORT_FROM/POP_TOP，C1/C3 破口）。现按顶层绑定名比较，
+                        # 与 _process_instruction / _generate_block_statements_body
+                        # 主 import 入口 (L54421) 同源。
+                        # C1——判据只来自本指令序列 opcode/argval（IMPORT_NAME 与
+                        #   后继 STORE_*），无跨函数/文件信息；C2——等名（含无点号
+                        #   `import os` 的 STORE 'os'）逐位不变，仅点号误判路径修正；
+                        # C3——别名与否由绑定名事实封闭判定，无名字白名单。
+                        _bound_name = (_ua_pending_import.argval or '').split('.')[0]
+                        _alias = _instr.argval if _instr.argval != _bound_name else None
                         _ua_stmts.append({'type': 'Import', 'names': [{'name': _import_name, 'asname': _alias}]})
                         _ua_pending_import = None
                         continue
@@ -56272,7 +56400,26 @@ AST 映射规则:
                     else:
                         break
                 if _gi_store_names:
-                    if len(_gi_store_names) == 1 and _gi_store_names[0] != _gi_imp_module:
+                    # [B114 fix] 未别名点号 import 的绑定名 = 模块名首段。
+                    # ①算法依据：CPython 3.11 对 `import a.b` 编译为
+                    #   IMPORT_NAME 'a.b' + STORE_NAME a（绑定顶级名 a），
+                    #   无 IMPORT_FROM；`import a.b as c` 才带 IMPORT_FROM（走上
+                    #   方 _gi_has_from 分支）。故本分支唯一的 STORE 名恒为
+                    #   module.split('.')[0]，绝不等于完整点号模块名。
+                    # ②归约顺序：本条与 _generate_block_statements_body /
+                    #   _build_statements_from_instructions 的同族修正一致，
+                    #   均以「绑定名首段」判定别名，覆盖 for 回边块重建路径。
+                    # ③唯一归属判定：仅当 STORE 名 != 模块名首段时才追加 asname，
+                    #   否则发射无 asname 的 Import（原始 `import a.b`）。
+                    # ④嵌套处理：多 STORE（多模块）走 else 逐名发射，不受影响。
+                    # ⑤入口引用语义：Import 节点 names 的 name 保持完整模块名，
+                    #   asname 仅在真别名时非空。
+                    # ⑥反编译流程：本方法发射 ast.Import → CFGCodeGenerator。
+                    # C1：仅本地消费 instrs/_buf，不新增 self 跨方法状态。
+                    # C2：以模块名首段为唯一别名判据，黑箱归一。
+                    # C3：别名守卫封闭，未别名点号 import 不再退化 `import a.b as a`。
+                    _gi_bound_root = _gi_imp_module.split('.')[0] if _gi_imp_module else _gi_imp_module
+                    if len(_gi_store_names) == 1 and _gi_store_names[0] != _gi_bound_root:
                         _aliases = [{'name': _gi_imp_module, 'asname': _gi_store_names[0]}]
                     else:
                         _aliases = [{'name': _n, 'asname': None} for _n in _gi_store_names]

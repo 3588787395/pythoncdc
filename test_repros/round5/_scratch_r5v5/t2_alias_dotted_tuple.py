@@ -1,0 +1,3 @@
+import os as _os
+import os.path
+XX, YY = 1, 2

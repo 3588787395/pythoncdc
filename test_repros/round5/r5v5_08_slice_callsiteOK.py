@@ -10,9 +10,10 @@ def sl_call(s, g):
 def sl_deep(s, xs):
     r = 0
     for i in xs:
-        while i and i > 0:
-            r = s[i:i + 2]
-            i -= 1
+        if i:
+            while i > 0:
+                r = s[i:i + 2]
+                i -= 1
     return r
 class CSl:
     def m(self, s):

@@ -3,7 +3,7 @@
 
 __doc__ = 'Round5 module root probe docstring（模块根 docstring 位）。'
 import os as _os
-import os.path as os
+import os.path
 MOD_A = 3
 MOD_B = 5
 MOD_B: int
