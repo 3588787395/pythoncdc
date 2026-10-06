@@ -1,0 +1,80 @@
+{
+ "baseline": "r6v6_ (REVIEW round evidence)",
+ "faces": [
+  {
+   "face": "round2face",
+   "base_files": 45,
+   "new_files": 45,
+   "common": 45,
+   "only_base": [],
+   "only_new": [],
+   "base_units": "234/251",
+   "new_units": "234/251",
+   "same": 45,
+   "improved": 0,
+   "worsened": 0,
+   "unit_level_compared": false,
+   "details": []
+  },
+  {
+   "face": "probe42",
+   "base_files": 42,
+   "new_files": 42,
+   "common": 42,
+   "only_base": [],
+   "only_new": [],
+   "base_units": "176/196",
+   "new_units": "176/196",
+   "same": 42,
+   "improved": 0,
+   "worsened": 0,
+   "unit_level_compared": false,
+   "details": []
+  },
+  {
+   "face": "round1face",
+   "base_files": 24,
+   "new_files": 24,
+   "common": 24,
+   "only_base": [],
+   "only_new": [],
+   "base_units": "417/423",
+   "new_units": "417/423",
+   "same": 24,
+   "improved": 0,
+   "worsened": 0,
+   "unit_level_compared": true,
+   "details": []
+  },
+  {
+   "face": "residual",
+   "base_files": 72,
+   "new_files": 72,
+   "common": 72,
+   "only_base": [],
+   "only_new": [],
+   "base_units": "417/446",
+   "new_units": "417/446",
+   "same": 72,
+   "improved": 0,
+   "worsened": 0,
+   "unit_level_compared": true,
+   "details": []
+  },
+  {
+   "face": "oldface",
+   "base_files": 59,
+   "new_files": 59,
+   "common": 59,
+   "only_base": [],
+   "only_new": [],
+   "base_units": "664/692",
+   "new_units": "664/692",
+   "same": 59,
+   "improved": 0,
+   "worsened": 0,
+   "unit_level_compared": true,
+   "details": []
+  }
+ ]
+}

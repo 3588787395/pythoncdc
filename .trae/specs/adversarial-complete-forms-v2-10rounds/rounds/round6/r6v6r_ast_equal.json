@@ -1,0 +1,19 @@
+{
+ "files": [
+  {
+   "file": "core/cfg/region_analyzer.py",
+   "old_ok": true,
+   "new_ok": true,
+   "equal": true,
+   "verdict": "AST_EQUAL"
+  },
+  {
+   "file": "core/cfg/region_ast_generator.py",
+   "old_ok": true,
+   "new_ok": true,
+   "equal": true,
+   "verdict": "AST_EQUAL"
+  }
+ ],
+ "all_equal": true
+}

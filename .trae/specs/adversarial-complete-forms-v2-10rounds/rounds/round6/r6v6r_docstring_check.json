@@ -1,0 +1,368 @@
+{
+ "identify_all_ok": true,
+ "generate_all_ok": true,
+ "all_ok": true,
+ "rows": [
+  {
+   "layer": "identify",
+   "method": "_identify_loop_regions",
+   "doc_len": 5491,
+   "item_marks": [
+    "算法依据",
+    "归约顺序",
+    "唯一归属判定",
+    "嵌套处理",
+    "入口引用语义",
+    "反编译流程"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "identify",
+   "method": "_identify_try_except_regions",
+   "doc_len": 5234,
+   "item_marks": [
+    "算法依据",
+    "归约顺序",
+    "唯一归属判定",
+    "嵌套处理",
+    "入口引用语义",
+    "反编译流程"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "identify",
+   "method": "_identify_with_regions",
+   "doc_len": 6885,
+   "item_marks": [
+    "算法依据",
+    "归约顺序",
+    "唯一归属判定",
+    "嵌套处理",
+    "入口引用语义",
+    "反编译流程"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "identify",
+   "method": "_identify_match_regions",
+   "doc_len": 4271,
+   "item_marks": [
+    "算法依据",
+    "归约顺序",
+    "唯一归属判定",
+    "嵌套处理",
+    "入口引用语义",
+    "反编译流程"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "identify",
+   "method": "_identify_assert_regions",
+   "doc_len": 7286,
+   "item_marks": [
+    "算法依据",
+    "归约顺序",
+    "唯一归属判定",
+    "嵌套处理",
+    "入口引用语义",
+    "反编译流程"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "identify",
+   "method": "_identify_chained_compare_regions",
+   "doc_len": 4389,
+   "item_marks": [
+    "算法依据",
+    "归约顺序",
+    "唯一归属判定",
+    "嵌套处理",
+    "入口引用语义",
+    "反编译流程"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "identify",
+   "method": "_identify_conditional_regions",
+   "doc_len": 7047,
+   "item_marks": [
+    "算法依据",
+    "归约顺序",
+    "唯一归属判定",
+    "嵌套处理",
+    "入口引用语义",
+    "反编译流程"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "identify",
+   "method": "_identify_ternary_regions",
+   "doc_len": 6409,
+   "item_marks": [
+    "算法依据",
+    "归约顺序",
+    "唯一归属判定",
+    "嵌套处理",
+    "入口引用语义",
+    "反编译流程"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "identify",
+   "method": "_identify_boolop_regions",
+   "doc_len": 8990,
+   "item_marks": [
+    "算法依据",
+    "归约顺序",
+    "唯一归属判定",
+    "嵌套处理",
+    "入口引用语义",
+    "反编译流程"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "identify",
+   "method": "_identify_sequence_regions",
+   "doc_len": 3932,
+   "item_marks": [
+    "算法依据",
+    "归约顺序",
+    "唯一归属判定",
+    "嵌套处理",
+    "入口引用语义",
+    "反编译流程"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "generate",
+   "method": "_generate_loop",
+   "doc_len": 4903,
+   "item_marks": [
+    "①",
+    "②",
+    "③",
+    "④",
+    "⑤",
+    "⑥"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "generate",
+   "method": "_generate_assert",
+   "doc_len": 4875,
+   "item_marks": [
+    "①",
+    "②",
+    "③",
+    "④",
+    "⑤",
+    "⑥"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "generate",
+   "method": "_generate_if",
+   "doc_len": 2255,
+   "item_marks": [
+    "①",
+    "②",
+    "③",
+    "④",
+    "⑤",
+    "⑥"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "generate",
+   "method": "_generate_value_context_chain_compare_assign",
+   "doc_len": 2440,
+   "item_marks": [
+    "①",
+    "②",
+    "③",
+    "④",
+    "⑤",
+    "⑥"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "generate",
+   "method": "_generate_match",
+   "doc_len": 2130,
+   "item_marks": [
+    "①",
+    "②",
+    "③",
+    "④",
+    "⑤",
+    "⑥"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "generate",
+   "method": "_generate_boolop",
+   "doc_len": 1006,
+   "item_marks": [
+    "①",
+    "②",
+    "③",
+    "④",
+    "⑤",
+    "⑥"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "generate",
+   "method": "_generate_boolop_impl",
+   "doc_len": 4787,
+   "item_marks": [
+    "①",
+    "②",
+    "③",
+    "④",
+    "⑤",
+    "⑥"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "generate",
+   "method": "_generate_ternary",
+   "doc_len": 4021,
+   "item_marks": [
+    "①",
+    "②",
+    "③",
+    "④",
+    "⑤",
+    "⑥"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  },
+  {
+   "layer": "generate",
+   "method": "_generate_basic_region",
+   "doc_len": 3472,
+   "item_marks": [
+    "①",
+    "②",
+    "③",
+    "④",
+    "⑤",
+    "⑥"
+   ],
+   "items_ok": true,
+   "has_C_clause": true,
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "ok": true
+  }
+ ]
+}
