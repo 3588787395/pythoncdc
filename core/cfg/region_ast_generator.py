@@ -24514,6 +24514,156 @@ AST 映射规则:
                 break
         return False
 
+    def _arm_loop_child_entry(self, block: BasicBlock, region: IfRegion,
+                              branch: str = 'then'):
+        """[R2-B107 修复·if 臂按循环入口认领抽象节点] if 臂块作为「嵌套 LoopRegion 入口」的认领谓词 + 其循环前导块识别。
+
+        实测缺陷形（r2v3_b01/b02/b03/b05、语料 IQEngine/plugins/
+        plugin_system_risk_calculation ``_on_publish_after_trading_end``）：分析器
+        已把 ``while`` 交付为 LoopRegion，并把其 entry 登记为父 IfRegion 的直接子
+        区域（``child.parent is region``），臂的 then/else 列表按**入口块**引用它
+        （原则 4）。但 _process_if_blocks 的臂块扫描只对 for_iter_setup（R59）、
+        TryExceptRegion、BoolOp/Ternary、嵌套 IfRegion 四类入口做抽象节点派发，
+        **唯独缺 LoopRegion 入口这一支** ⇒ 入口块被当普通顺序块展开：`while` 层
+        凭空消失、break/return 臂退化为 `pass`、LoopRegion 其余成员块（体尾兄弟、
+        回边）在 `block in child_region_blocks and block not in child_entries`
+        处被静默跳过；随后 _if_generate_then_branch 的 children 派发也因 entry
+        已进入 generated_blocks 而失效（原则 1 自底向上归约 + 原则 3 嵌套即抽象
+        节点同时被破坏；C3 守卫没闭合到 if 臂层，与 B99 同判据面）。
+
+        ①算法依据：No More Gotos 区域归约 + §1.2 原则 1（内层区域先归约、交付
+           父级为抽象节点）/原则 2（每块唯一归属）/原则 3/原则 4（父引用子入口）
+           + §1.5 C3 守卫封闭。
+        ②归约顺序：内层→外层——本谓词在父 IfRegion 发射臂体（_process_if_blocks
+           预扫描）时判定；命中即由调用点先归约循环前导块、再整树派发 LoopRegion。
+        ③唯一归属判定：只读同层结构事实——(a) 成员关系：LoopRegion ∈ region.children
+           且 child.parent is region；(b) 入口身份：child.entry is block 且
+           block ∈ 本臂块集；(c) 臂间排斥：block ∉ 另一臂块集（then 认领时排
+           else_blocks，反之亦然）；(d) 区域类型排斥：block 不是任何
+           TryExceptRegion/WithRegion 的 entry（try/with 外壳优先，沿用 R1 既有
+           优先级）；(e) 出口归属：block 不是本区域或任一**祖先**区域的
+           merge_block——汇合块上的循环是 if 之后的兄弟语句，不属臂内；祖先链从
+           `region` 起走（不从 block 自身所属区域起，避开 [r1-b98-elsescope] 形
+           误判），并以已访问集合保证终止。
+        ④嵌套处理：命中的 LoopRegion 作为**单个**抽象节点插入臂语句序中该入口块
+           的地址序位置；其内部块（内层 IfRegion、break/return 臂、回边）由
+           LoopRegion 自己的生成流程消费，父臂不窥视（C2）。
+        ⑤入口引用语义：把「父臂 then/else 引用子区域 entry」兑现为「在该 entry
+           块位置派发子区域整树生成」，而非重建该块的指令；循环前导块（见
+           _loop_preheader_blocks）按臂的入口引用先发射。
+        ⑥反编译流程：区域分析 → IfRegion 生成 → _if_generate_then/else_branch →
+           _process_if_blocks 预扫描 → 本谓词 → _generate_region(LoopRegion)。
+           无发射后 AST 文本改写（§1.3 单向数据流）。
+
+        C 条款：[C1] 判据消费面 = region.children / entry 身份 / 臂块集 /
+        merge_block 归属，均为同层或父子接口事实；[C2] 不展开子区域内部；
+        [C3] 五项任一不成立即返回 None，输出与编辑前逐位一致（不认领 = 旧行为）。
+        无深度/数量上限、无文件名/函数名/偏移白名单、无新增 opcode 字面量。
+        """
+        if region is None or block is None:
+            return None
+        _r2_b107_other = (getattr(region, 'else_blocks', None) or []
+                          if branch == 'then'
+                          else (getattr(region, 'then_blocks', None) or []))
+        if block in _r2_b107_other:
+            return None
+        _r2_b107_child = None
+        for _r2_b107_c in (getattr(region, 'children', None) or []):
+            if not isinstance(_r2_b107_c, LoopRegion):
+                continue
+            if _r2_b107_c.entry is not block or _r2_b107_c.parent is not region:
+                continue
+            _r2_b107_child = _r2_b107_c
+            break
+        if _r2_b107_child is None:
+            return None
+        for _r2_b107_r in self.region_analyzer.regions:
+            if not isinstance(_r2_b107_r, (TryExceptRegion, WithRegion)):
+                continue
+            if _r2_b107_r is _r2_b107_child or _r2_b107_r.entry is not block:
+                continue
+            return None
+        _r2_b107_anc = region
+        _r2_b107_seen = set()
+        while _r2_b107_anc is not None and id(_r2_b107_anc) not in _r2_b107_seen:
+            _r2_b107_seen.add(id(_r2_b107_anc))
+            if getattr(_r2_b107_anc, 'merge_block', None) is block:
+                return None
+            _r2_b107_anc = getattr(_r2_b107_anc, 'parent', None)
+        return _r2_b107_child
+
+    def _r2_b107_block_is_outer_exit(self, block: BasicBlock,
+                                     region: IfRegion):
+        """[R2-B107 修复·if 臂按循环入口认领抽象节点] 判据：某块是**本臂或其祖先区域**的汇合出口（不属于被派发的循环）。
+
+        ①算法依据：区域归约原则 2（每块唯一归属）+ §1.5 C3 守卫封闭——「汇合块
+           被区域外引用」时必须显式排除，不得由内层区域消费。实测 b03
+           （``if is_end: while not stop: ...``）：LoopRegion@6.blocks 把外层
+           IfRegion@0 的 merge_block（环后兄弟 ``event_bus = get_bus()``）误纳为
+           成员；认领循环时若不排除，该兄弟语句整条丢失。
+        ②归约顺序：内层循环整树派发时调用，命中块留给外层在其自身位置发射。
+        ③唯一归属判定：判据 = 块是 `region` 或任一祖先区域的 merge_block /
+           exit（成员关系与出口身份，同层结构事实）；祖先链自 `region` 起走
+           （不从块自身所属区域起，避开 [r1-b98-elsescope] 形）。
+        ④嵌套处理：仅比较出口身份，不窥视任何子区域内部（C2）。
+        ⑤入口引用语义：循环的入口引用仍是 loop.entry；本判据针对的是循环的
+           **出口边**落点，落点在区域外即不认领。
+        ⑥反编译流程：_process_if_blocks 认领命中处（登记 generated_blocks 之前）。
+        C 条款：C1（读 region.merge_block/exit 与 parent 链）·C2·C3（不命中返回
+        False，行为逐位不变）。终止性由祖先链已访问集合保证，无深度上限。
+        """
+        _r2_b107_anc = region
+        _r2_b107_seen = set()
+        while _r2_b107_anc is not None and id(_r2_b107_anc) not in _r2_b107_seen:
+            _r2_b107_seen.add(id(_r2_b107_anc))
+            if (getattr(_r2_b107_anc, 'merge_block', None) is block
+                    or getattr(_r2_b107_anc, 'exit', None) is block):
+                return True
+            _r2_b107_anc = getattr(_r2_b107_anc, 'parent', None)
+        return False
+
+    def _loop_preheader_blocks(self, loop: LoopRegion):
+        """[R2-B107 修复·if 臂按循环入口认领抽象节点] 循环区域的「前导块」识别：区域内、但只能从区域外进入的块。
+
+        ①算法依据：区域归约原则 2（每块唯一归属）——回边只指向循环入口，故
+           区域内没有任何**区域内前驱**的块不可能被迭代重访，它是外层臂进入
+           循环时执行一次的入口块（编译器为行号锚点插入的 NOP 即典型形态），
+           语义上属外层分支的语句序，不属循环体。实测 b01：LoopRegion@8 的
+           blocks 含 off6 NOP（preds=[off0 的 then 边]，回边 off78 指向 off8），
+           该块留在 body_blocks 里会使循环体扫描先以「standalone 臂」发射一次
+           子区域，再在 header 块位置发射一次（体语句重复/错位）。
+        ②归约顺序：在派发 LoopRegion 整树之前由调用点消费（自底向上：先外层
+           的单次入口语句，再归约循环本身）。
+        ③唯一归属判定：判据 = block ∈ loop.blocks 且 block is not loop.entry
+           且 block 的所有前驱（自环除外）都 ∉ loop.blocks；命中块交调用点登记
+           generated_blocks/generated_offsets，循环内不再发射。
+        ④嵌套处理：只看本循环自身的成员/前驱关系，不窥视任何子区域内部（C2）。
+        ⑤入口引用语义：循环的入口引用仍由 loop.entry 表示；本方法产出的块是
+           「外层 → 循环」这条边的中转，不参与回边。
+        ⑥反编译流程：_process_if_blocks 认领命中的 LoopRegion 之前调用。
+        C 条款：C1（读 blocks/predecessors/entry）·C2·C3（无命中即空列表，逐位
+        保持旧行为）。按 start_offset 升序返回，保证语句序与执行序一致。
+        """
+        _r2_b107_blocks = list(getattr(loop, 'blocks', None) or [])
+        if not _r2_b107_blocks:
+            return []
+        _r2_b107_in = set(_r2_b107_blocks)
+        _r2_b107_pre = []
+        for _r2_b107_b in sorted(_r2_b107_blocks,
+                                 key=lambda z: z.start_offset):
+            if _r2_b107_b is loop.entry or _r2_b107_b is loop.header_block:
+                continue
+            _r2_b107_inpred = False
+            for _r2_b107_p in (getattr(_r2_b107_b, 'predecessors', None) or []):
+                if _r2_b107_p is _r2_b107_b:
+                    continue
+                if _r2_b107_p in _r2_b107_in:
+                    _r2_b107_inpred = True
+                    break
+            if not _r2_b107_inpred:
+                _r2_b107_pre.append(_r2_b107_b)
+        return _r2_b107_pre
+
     def _process_if_blocks(self, blocks, region: IfRegion, branch: str = 'then',
                            anchor_stmts: dict = None) -> List[Dict[str, Any]]:
         """处理 if/else 分支的块列表。
@@ -24758,6 +24908,21 @@ AST 映射规则:
                             # it from being processed inside the if branch.
                             _fis_skip_blocks.add(b)
                     break
+        # [R2-B107 修复·if 臂按循环入口认领抽象节点] 预扫描：把「臂块 = 本区域直接子 LoopRegion 的 entry」
+        # 登记为抽象节点派发点（原则 3/4），并算出该循环的前导块（原则 2：
+        # 只能从区域外进入的块属外层臂，不属循环体）。
+        _r2_b107_child_generate = {}
+        for b in _block_set:
+            if b in self.generated_blocks:
+                continue
+            _r2_b107_lr = self._arm_loop_child_entry(b, region, branch)
+            _r2_b107_lid0 = id(_r2_b107_lr) if _r2_b107_lr is not None else None
+            if (_r2_b107_lid0 is not None
+                    and _r2_b107_lid0 not in self._generated_regions
+                    and _r2_b107_lid0 not in self._generating_regions):
+                _r2_b107_child_generate[b] = (
+                    _r2_b107_lr, self._loop_preheader_blocks(_r2_b107_lr))
+
         # [Round 10 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（入口引用语义）：
         # 函数末尾的隐式 return None 块（CPython 为「无显式 return 的出口」生成的
         # `LOAD_CONST None; RETURN_VALUE`），当它同时是某个嵌套 IfRegion 的
@@ -24832,6 +24997,59 @@ AST 映射规则:
             # block (pre_stmts + for loop) will be generated at the
             # merge_block processing position.
             if block in _fis_skip_blocks:
+                continue
+            if block in _r2_b107_child_generate:
+                # [R2-B107 修复·if 臂按循环入口认领抽象节点] 认领：先发射循环前导块（外层臂的单次入口
+                # 语句），再以抽象节点整树派发 LoopRegion，并把其全部成员块
+                # 登记为已生成（原则 2），本臂不再展开其内部（原则 3/C2）。
+                _r2_b107_lr, _r2_b107_pre = _r2_b107_child_generate[block]
+                for _r2_b107_pb in _r2_b107_pre:
+                    if _r2_b107_pb in self.generated_blocks:
+                        continue
+                    stmts.extend(self._generate_block_statements(_r2_b107_pb))
+                    self.generated_blocks.add(_r2_b107_pb)
+                    self.generated_offsets.add(_r2_b107_pb.start_offset)
+                _r2_b107_lid = id(_r2_b107_lr)
+                _r2_b107_gen_before = set(self.generated_blocks)
+                self._generating_regions.add(_r2_b107_lid)
+                try:
+                    _r2_b107_ast = self._generate_region(_r2_b107_lr)
+                finally:
+                    self._generating_regions.discard(_r2_b107_lid)
+                # [R2-B107 修复·if 臂按循环入口认领抽象节点] 出口边归属：_generate_region(LoopRegion) 会把循
+                # 环出口之后的顺序代码一并返回并登记（其块**不在**循环成员集
+                # 内）。这些块按成员关系属外层（臂的汇合块 / 父级顺序代码），
+                # 不属本臂，也不属本循环：臂只接收循环自身的抽象节点，其余块
+                # 的认领登记在此撤销，交外层在其自身位置发射一次（原则 2 唯一
+                # 归属；C3「汇合块被区域外引用须显式排除」；判据 = 成员关系
+                # loop.blocks 与 generated 增量集合，非文本、非偏移阈值）。
+                _r2_b107_nodes = (_r2_b107_ast if isinstance(_r2_b107_ast, list)
+                                  else [_r2_b107_ast] if _r2_b107_ast else [])
+                _r2_b107_loop_members = set(_r2_b107_lr.blocks)
+                _r2_b107_outer_tail = []
+                for _r2_b107_nb in (self.generated_blocks - _r2_b107_gen_before):
+                    if _r2_b107_nb in _r2_b107_loop_members:
+                        continue
+                    if not self._r2_b107_block_is_outer_exit(_r2_b107_nb, region):
+                        continue
+                    _r2_b107_outer_tail.append(_r2_b107_nb)
+                    self.generated_blocks.discard(_r2_b107_nb)
+                    self.generated_offsets.discard(_r2_b107_nb.start_offset)
+                for _r2_b107_node in _r2_b107_nodes:
+                    _r2_b107_ntype = (_r2_b107_node.get('type')
+                                      if isinstance(_r2_b107_node, dict) else None)
+                    if _r2_b107_ntype in ('While', 'For', 'AsyncFor', 'AsyncWhile'):
+                        stmts.append(_r2_b107_node)
+                    elif not _r2_b107_outer_tail:
+                        stmts.append(_r2_b107_node)
+                for _r2_b107_lb in _r2_b107_lr.blocks:
+                    if self._r2_b107_block_is_outer_exit(_r2_b107_lb, region):
+                        # [R2-B107 修复·if 臂按循环入口认领抽象节点] 循环成员集把外层
+                        # 汇合块误纳为成员时同样不认领（b03：环后兄弟整条丢失）。
+                        continue
+                    self.generated_blocks.add(_r2_b107_lb)
+                    self.generated_offsets.add(_r2_b107_lb.start_offset)
+                self._generated_regions.add(_r2_b107_lid)
                 continue
             if block in _nested_merge_return_skip:
                 # [Round 10 fix] 函数末尾隐式 return None（= 嵌套 IfRegion 的

@@ -172,5 +172,17 @@
  },
  {
   "path": "test_repros/round2/r2v3_b21_except_pass_iteration_backedge.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b22_while_after_stmt_in_ifarm_break_tail.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b23_while_in_ifarm_no_arm_sibling.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b24_while_in_ifarm_returntail_no_arm_sibling.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b25_while_inside_for_body_control.pyc"
  }
 ]

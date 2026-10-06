@@ -3,8 +3,10 @@
 
 def f(is_end, TH):
     if is_end:
-        from mod import THREAD_STATUS
-        if THREAD_STATUS:
-            pass
+        while True:
+            THREAD_STATUS = ('THREAD_STATUS',)
+            if THREAD_STATUS:
+                break
+            time.sleep(0.01)
     event_bus = get_bus()
     event_bus.publish()

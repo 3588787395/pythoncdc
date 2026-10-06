@@ -3,7 +3,8 @@
 
 def f(is_end, TH):
     if is_end:
-        if TH:
-            pass
+        while True:
+            if TH:
+                break
     event_bus = get_bus()
     event_bus.publish()
