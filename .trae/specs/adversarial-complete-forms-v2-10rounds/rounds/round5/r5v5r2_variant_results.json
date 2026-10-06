@@ -1,0 +1,233 @@
+[
+ {
+  "pyc": "test_repros/round5/r5v5r_b114_deep3.pyc",
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b114_from.pyc",
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b114_in_for.pyc",
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b114_in_func_for.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b114_in_try.pyc",
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b114_in_while.pyc",
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b114_module.pyc",
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b114_multi.pyc",
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b114_realias.pyc",
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b114_tuple.pyc",
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b115_for_if_while.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b115_if_and_while.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b115_if_while.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b115_nested_for_while.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b115_while_and.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b115_while_and3.pyc",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>.f: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b115_while_in_try.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b115_while_or.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b115_while_reeval.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b115_while_true_break.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b116_bare.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b116_class_bare.pyc",
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b116_closure_bare.pyc",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 3,
+  "failures": [
+   "***<module>.f: Failure: Different bytecode",
+   "***<module>.f.g: Failure: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b116_cond_bare.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b116_default.pyc",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>: Failure: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b116_kwonly.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b116_loop_bare.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b116_mix.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b116_nested_bare.pyc",
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b116_posonly.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b116_posonly_kw.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5r_b116_posonly_only.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ }
+]

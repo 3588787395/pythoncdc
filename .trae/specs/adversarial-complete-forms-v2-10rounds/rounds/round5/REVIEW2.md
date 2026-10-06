@@ -172,3 +172,71 @@ REGRESSIONS=0 IMPROVED=0
 - 探针：`test_repros/round5/r5v5r_*.py(+.pyc/+OK.py)`（32 变体）、`test_repros/round5/gen_probes_r5v5r.py`
 
 *复核纪律：零 core 修改、零 git 提交。所有读数经 RV2 独立复跑，未采信 FIX.md 数字。判据唯一 = `scripts/pyc_verify.py`。*
+
+---
+
+## §6 终审（整改批次 R2，HEAD `711dc506`）
+
+- 复核基线 `dcca6518` → 整改 HEAD `711dc506`；`git diff --stat dcca6518..711dc506 -- core/` = **仅 `core/cfg/region_ast_generator.py` +62/-12**（FIX_R2 §3 自述 `+43/-12`，出入不影响合规判定，仅为计数口径差异）。
+- 整改目标：修正上轮 §4.1 打回项（B114 path3 else 分支丢点号子模块），并同机制修复 `_loop_extract_self_loop_stmts`（while 宿主）两条收口路径。
+- 本轮零 core 修改、零 git 提交；`git status --porcelain core/` 为空。
+
+### 6.1 逐 hunk 整改合规（判据 I.4 白名单 / 黑名单 / I.5 / BOM）
+
+| # | hunk 锚点 | 实质 | I.4 判据归类 | 黑名单核查 | 结论 |
+|---|---|---|---|---|---|
+| R1 | `region_ast_generator.py:11498-11532`（`_loop_extract_self_loop_stmts` 普通 import 扫描分支） | 由 store 名列表反推 `Import.names`：单 store 时 `asname = store[0] if store[0] != bound_root else None`，`name` 恒为完整模块名；多 store 逐名 `asname:None` | 指令 oparg（IMPORT_NAME/STORE argval） | 纯 oparg；标识符 `_sl_bound_root/_sl_alias/_aliases` 全方法内局部；无特判/无阈值 | **PASS** |
+| R2 | `:11625-11656`（同方法 STORE 收口） | `{name:_module, asname:_sto_n if _sto_n != bound_root else None}`（`bound_root=_module.split('.')[0]`） | 指令 oparg | 纯 oparg；全局部；无 `self.` 新增 | **PASS** |
+| R3 | `:56453-56476`（B114 path3 for 回边块重建，**上轮打回项**） | else 分支由旧 `[{name:_n,asname:None}]` 改为 `{name:_gi_imp_module, asname:None}`（未别名点号 → 保留完整模块名，与 path1/path2 对齐） | 指令 oparg | 纯 oparg；`_gi_bound_root/_gi_alias` 全方法内局部；无窄门控 | **PASS（打回项已修正）** |
+
+横切审计（本轮 3 hunk）：**无窄门控、无新增 `self.` 跨方法状态、无 `start_offset` 常数阈值、无硬编码深度上限、无「少发射换绿」**；注释②③④⑤与代码一致（⑤「name 保持完整模块名」现已成立）；I.5 七前缀新增命中 **0**（存量 2 处 `_merge_*` 与上轮相同）；`region_ast_generator.py` BOM 头仍为 `efbbbf`、全文计数 = **1**（单头）。
+
+### 6.2 独立复跑读数（RV2，先 regen 再 verify；禁信 FIX_R2 数字）
+
+**打回复现项（上轮 §4.1）**
+
+| 复现 | 上轮读数 | 本轮 RV2 回读 | 产物直读 | 判定 |
+|---|---|---|---|---|
+| `r5v5r_b114_in_for` | 0/1（`import os` 丢 `.path`） | **1/1 success** | `r5v5r_b114_in_forOK.py:6` = `import os.path` | **真转 MATCH** |
+| `r5v5r_b114_in_while` | 0/1（幻影 `import os.path as os`） | **1/1 success** | `r5v5r_b114_in_whileOK.py:7` = `import os.path` | **真转 MATCH** |
+
+**B114 全变体（要求无 success→failure）**：`b114_module`(1/1)、`b114_multi`(1/1)、`b114_realias`(1/1)、`b114_from`(1/1)、`b114_deep3`(1/1)、`b114_tuple`(1/1)、`b114_in_try`(1/1)、`b114_in_func_for`(**2/2，由 1/2 转 MATCH**) —— **全 success，零回归**。
+
+**变体集（32 文件 / 58 单元，`r5v5r2_variant_results.json`）**：**54/58**（上轮 51/58，+3）。余 3 失败 `b115_while_and3`(1/2)、`b116_closure_bare`(1/3)、`b116_default`(1/2) 均为 §3 已登记**既有失败** → **NEWFAIL = 0**。
+
+**34 小测试集（batch 拆 17+17 合并 compare，`r5v5r2_batch34_compare.txt`）**：`units: 1505/1568 (95.98%) → 1505/1568 (95.98%)`，`files success 1→1`，`REGRESSIONS=0 IMPROVED=0` → **NEWFAIL = 0**。
+
+**站桩 6 面（单进程串行，`r5v5r2_station_regress_compare.json`；B115/B116 面无新增 failure）**：
+
+| 面 | 本轮 RV2 回读 | common | same | improved | **WORSE** |
+|---|---|---|---|---|---|
+| round2 45 文件面 | **234/251** | 45 | 45 | 0 | **0** |
+| round2 42 探针面 | **176/196** | 42 | 28 | 14 | **0** |
+| round1 哨兵面 | **417/423** | 24 | 24 | 0 | **0** |
+| v1 残余面 | **417/446** | 72 | 62 | 10 | **0** |
+| 旧规范 round6–10 面 | **664/692** | 59 | 55 | 4 | **0** |
+| quotation.pyc 单验 | **152/153** | 1 | 1 | 0 | **0** |
+
+**六面 WORSE = 0**，无任何文件回退；改善项均为历史累计 + 本轮导入修复外溢。
+
+### 6.3 终审结论
+
+| 维度 | 结论 |
+|---|---|
+| 逐 hunk 整改合规 | **PASS**（R1/R2/R3 判据纯 oparg；无窄门控/无新 `self.`/无阈值/无深度上限；注释⑤已对齐；I.5 新增 0；BOM 单头） |
+| 打回复现转 MATCH | **PASS**（`in_for`、`in_while` 均真转 1/1，产物均 `import os.path`） |
+| B114 全变体回归 | **PASS**（零 success→failure，含 `in_func_for` 转 MATCH） |
+| 34 小测试集 | **PASS**（1505/1568，REGRESSIONS=0） |
+| 站桩 6 面 | **PASS**（WORSE=0，全 6 面） |
+| **终审** | **放行** |
+
+**判定：整改批次 `711dc506` 放行。** 上轮打回项（B114 path3 else 分支丢点号子模块）已按 §4.1 建议修正为 `{name:_gi_imp_module, asname:None}`，且同机制 while 宿主两处收口一并修复；打回复现 `r5v5r_b114_in_for` / `r5v5r_b114_in_while` **真转 MATCH**；无任何观测回归（变体 NEWFAIL=0、34 集 REGRESSIONS=0、站桩 WORSE=0）。§4.2/§4.3 **仍为非阻断登记项**（`posonlyargs` 潜在缺口、`co_cellvars` 排除致闭包裸注解未修、注解硬编码 `str`），**不阻断本轮放行**，随附备查，**无新残余**。
+
+### 6.4 本轮新增证据（`r5v5r2_*`，零覆盖既有 `r5v5r_*`/`r5v5fix2_*`）
+
+- 驱动（`rounds/round5/`）：`r5v5r2_station.py`、`r5v5r2_compare_regress.py`、`r5v5r2_verify.py`、`r5v5r2_cmp34.py`
+- 证据：`r5v5r2_variant_results.json`、`r5v5r2_batch34_{a,b,merged}.json` + `r5v5r2_batch34_compare.txt`、`r5v5r2_regress_{round2face,probe42}.json`、`r5v5r2_full_{round1face,residual_a|b,oldface_a|b}.json`、`r5v5r2_quotation.json`、`r5v5r2_station_regress_compare.json`
+
+---
+
+*终审纪律：只读 core/（本轮零 core 修改）、零 git add/commit；所有读数经 RV2 独立复跑，未采信 FIX_R2.md 数字；判据唯一 = `scripts/pyc_verify.py`。*
