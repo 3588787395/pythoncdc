@@ -31,7 +31,7 @@
   - [x] 4.2 修复工程师（可多位协同）：封闭登记破口；自测 = IV.2 门禁自检清单全过；FIX_G/FIX_R.md（位1 生成层封闭 B100 相对导入层级 + B101 star 导入；位2 识别层封闭 B102 except\* 多 handler + B109 while-else + B103 match 守卫部分）
   - [x] 4.3 评审工程师复核；REVIEW2.md（逐 hunk 合规 PASS、独立复跑 NEWFAIL=0、站桩 WORSE=0、新变体误伤 0、B113 驳回证伪降级维持破口；终审放行）
   - [x] 4.4 主代理验证：验证序六步；VERIFICATION.md（首跑 shard4 回退 → B109 守卫收紧整改 `3eb329d1` → 复跑 402 全量 6554/6617、369/402 与基线逐位一致；8 片 REGRESSIONS=0；34 集 1505/1568；quotation 152/153；tests 277/2/2；IV.2 全过）
-  - [x] 4.5 归档 rounds/round4/ + 提交并 push origin main
+  - [x] 4.5 归档 rounds/round4/ + 提交并 push origin main（归档提交 `44d77e72` 已完成；push 因 github.com:443 连接中断未竟——`Recv failure: Connection was reset` / `Failed to connect to port 443`，按旧规范网络故障先例登记待补推，届时与后续轮次一并 push）
 - [ ] Task 5: Round 5 — 深层嵌套交叉矩阵对抗（覆盖矩阵剩余空白格：形态 × 宿主区域组合，深度 ≥3；重点 = 台账"完备"声明从未被交叉攻击过的组合；C1/C2/C3 逐条款攻击设计）
   - [ ] 5.1 评审工程师：交叉矩阵抽样攻击（每空白格 ≥3 探针）+ 站桩回归 + 合规审计 + Bn 登记；REVIEW.md + test_repros/round5/
   - [ ] 5.2 修复工程师（可多位协同）：封闭登记破口（深层才错 = C 条款破坏，按 I.3 推论封闭守卫）；自测 = IV.2 门禁自检清单全过；FIX.md
