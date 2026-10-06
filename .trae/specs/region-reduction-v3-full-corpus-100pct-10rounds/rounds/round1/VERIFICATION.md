@@ -69,6 +69,23 @@ after  = `rounds/round1/after3/shard*_report.json`（402 产物在终态代码�
 - 派发子代理前均有本地提交 ✓
 - **Round 1 判定：通过，可开启 Round 2**
 
+### V.1 push 状态（未达成项，如实登记）
+
+本轮 6 个提交（`fd06c87b`…`2eb319bc`）已在本地，**未 push 成功**：本工作树环境无法连通 github.com:443。
+
+```
+git push origin HEAD:refs/heads/rr-v3-full-corpus
+fatal: unable to access 'https://github.com/3588787395/pythoncdc.git/': Recv failure: Connection was reset   （两次）
+git ls-remote --heads origin
+fatal: unable to access ...: Failed to connect to github.com port 443 after 21724 ms: Couldn't connect to server
+```
+
+`git rev-list --count origin/main..HEAD` = **6**（origin/main 仍为 `088b0579`）。
+推送目标选择说明：`F:\Downloads\pythoncdc-main` 的本地 main 已前进到 `1aecc150`（rr-v2r03 round3 两个提交，未入本线、亦未推送），
+故本线不推 `refs/heads/main`（那会令用户本地 main 与 origin/main 分叉、下次推送被迫合并），
+改推独立分支 `rr-v3-full-corpus`；网络可用时执行上面那条 push 命令即可，无需其他动作。
+
+
 ## VI. 遗留的工具面事实（供后续轮次，勿重踩）
 
 - `driver.py verify N` 默认把报告写进 `baseline/shards/`，会**覆盖基线**。本轮起一律显式传第二参数指向轮次目录
