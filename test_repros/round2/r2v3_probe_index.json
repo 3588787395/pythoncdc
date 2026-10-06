@@ -1,0 +1,170 @@
+[
+ {
+  "path": "test_repros/round2/r2v3_a01_chain_join_terminal_return.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a02_chain_no_code_after_join.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a03_chain_join_plain_stmt.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a04_chain_join_return_with_else.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a05_chain_two_arms_join_return.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a06_method_host_chain_join_return.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a07_inside_while_chain_join_return.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a08_inside_try_chain_join_return.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a09_kline_or_isnone_join.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a10_kline_nested_control.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a11_kline_or_both_notnone.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a12_module_host_chain_join_return.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a13_loop_break_chain_join_return.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a14_control_join_plain_stmt.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a15_control_no_break_in_loop.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a16_while_host_break_chain_join.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a17_ifelse_arms_break_chain_join.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a18_control_nothing_after_loop.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a19_or_isnone_join_in_loop_break.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a20_or_isnone_inside_try.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a21_or_isnone_nested_in_elsearm.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a22_method_host_break_chain_join.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a23_postloop_sibling_is_return.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_a24_module_host_raise_join.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b01_whiletrue_break_tail_in_if.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b02_whiletrue_break_no_tail.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b03_whilecond_break_tail_in_if.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b04_whiletrue_break_tail_toplevel.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b05_whiletrue_return_tail_in_if.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b06_except_continue_in_while.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b07_except_continue_nothing_after_try.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b08_except_pass_then_stmts.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b09_except_continue_method_host.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b10_except_continue_in_try_finally.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b11_except_continue_inside_with.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b12_whiletail_return_after_if_arm.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b13_except_break_in_while.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b14_whiletail_return_no_tailstmt.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b15_whiletail_break_after_if_arm.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b16_whiletrue_break_tail_inside_try.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b17_whiletrue_break_tail_inside_for.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b18_except_continue_try_else.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b19_except_continue_nested_while.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_c01_or_not_operand_elifchain.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_c02_or_not_operand_plain.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_c03_control_single_operand.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_c04_control_explicit_not_or.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_c05_control_and_form.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_c06_keys_call_second_operand.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_c07_or_isnone_two_operands.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_c08_or_not_compare_operand.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_c09_method_host_or_not_operand.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_c10_inside_try_or_not_operand.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_c11_inside_while_or_not_operand.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_c12_or_three_operands.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_c13_and_not_operand_control.pyc"
+ }
+]

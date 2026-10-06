@@ -19159,7 +19159,15 @@ AST 映射规则:
                                                              for i in _eb_meaningful))
                                 if not _is_continue_exit:
                                     _elif_then_offsets.add(_eb.start_offset)
+                        # [R2-B108 修复·混合极性 or 链逐项还原] 混合极性 or 链
+                        # （真边分裂到 elif 体与 merge）的负极性成员已由
+                        # _build_boolop_expression_inner 逐项还原，整体取反会把
+                        # `A or not B` 写成 `not (A or not B)`（双重取反）。
                         _elif_negate = (_elif_last.argval in _elif_then_offsets) != _elif_if_true
+                        if (_elif_negate
+                                and self._boolop_mixed_polarity_or_chain(
+                                    elif_boolop) is not None):
+                            _elif_negate = False
                     if _elif_negate:
                         # 区域归约算法「一次正确」原则：elif 条件路径
                         # 的 negate 逻辑与 _if_extract_condition_from_instructions 中
@@ -23805,7 +23813,15 @@ AST 映射规则:
                     _last_ci = _last_cb.get_last_instruction()
                     if _last_ci and _last_ci.argval is not None and _last_ci.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                         if 'TRUE' in _last_ci.opname:
-                            _boolop_negate = True
+                            # [R2-B108 修复·混合极性 or 链逐项还原] 白名单判据
+                            # 补集：_w14_uniform_and 只覆盖「全员同目标」链，
+                            # 混合极性 or 链（真边分裂到 S 与 merge）的极性已由
+                            # _build_boolop_expression_inner 逐操作数携带，整体
+                            # 取反会把 `A or not B` 写成 `not (A or B)`——条件
+                            # 取反 + 两条臂入口互换（B108）。
+                            if self._boolop_mixed_polarity_or_chain(
+                                    boolop_region_for_cond) is None:
+                                _boolop_negate = True
                 if _boolop_negate:
                     # 区域归约算法「一次正确」原则：当 BoolOp 表达式
                     # 是 `a and (b or c)` 形式（由 _try_build_and_inner_or_pattern
@@ -37832,6 +37848,75 @@ AST 映射规则:
                                        'values': [operand, values[0]]}] + values[1:])
         return expr
 
+    def _boolop_mixed_polarity_or_chain(self, region):
+        """[R2-B108 修复·混合极性 or 链逐项还原] or 链操作数极性判定器。
+
+        ①算法依据（区域归约算法原则 4 入口引用语义）：CPython 把 ``if``/``while``
+          上下文里的 or 链编成「每个成员块尾一条正向条件跳转 + 落空边接下一成员」，
+          成员块的两条出边恒指向链的两个入口：真入口 S（条件为真时进入的臂/循环体）
+          与假入口 F（区域汇合块 merge_block）。成员极性与出边一一对应：
+            正极性成员（X）     ：真边 = 跳转 → S，落空 → 下一成员（非末）/S（末）
+            负极性成员（not X） ：非末成员把跳转翻成 IF_FALSE→S；末成员把跳转翻成
+                                  IF_TRUE→F，落空仍为 S。
+          因此「全员以 IF_TRUE 族跳转结尾 + 跳转目标分裂（一部分是 S、一部分是 F）」
+          是 ``A or ... or not Z`` 这类混合极性链的唯一签名；全员目标 = S 是正极性
+          or 链，全员目标 = F（同一块）是负极性整链 ``not (A or B ...)``（R14c 形态），
+          两者本判定器一律返回 None，行为逐位不变。
+        ②归约顺序（原则 1 自底向上）：判定只读 op_chain 内每个成员块自身的末指令、
+          跳转目标块与末成员的非跳转后继；这些是已归约到块粒度的同层事实，先于
+          表达式重建执行，重建阶段（_build_boolop_expression_inner）据此逐项还原。
+        ③唯一归属判定（原则 2）：判据要求离开 S 的成员跳转目标是区域自身的
+          merge_block（链的假入口），且不落在链内任何成员块上——跳转边一旦指向链内
+          块即为分组/嵌套结构，不由本判定器解释，归属仍由分组路径独占。
+        ④嵌套处理（原则 3 嵌套即抽象节点）：判定器对成员块内部结构无感（只读末指令
+          与出边），成员操作数含嵌套 ternary / chained compare / await 时同样成立；
+          不对成员数设上限、不按操作数类型或文件名特判（[C1]），链内链（分组）由
+          ③的链内目标排除条件拒绝。
+        ⑤入口引用语义：返回值即「成员索引 → 该成员的真边是否离开 S」，供重建层把
+          负极性成员逐个包成 UnaryOp(not, 操作数)，父级条件仍引用同一 S/F 入口，
+          不再出现「整链取反 + 臂入口互换」。
+        ⑥反编译流程：识别端（region_analyzer._detect_boolop_conditional_chain 的
+          [W14-A]/[R14c] 同目标归一守卫）已把该形态交给逐操作数 implicit-not 路径，
+          本判定器补全消费端：AST 映射 BoolOp(op='or', values=[X, ..., UnaryOp(not, Z)])，
+          即 ``X or ... or not Z``；同时三处整体取反闩锁（IfRegion 条件、while 融合
+          条件、独立 BoolOp 值）读取本判定器结果后不再整体取反，避免二次取反。
+        """
+        chain = list(getattr(region, 'op_chain', None) or [])
+        if len(chain) < 2 or any(op != 'or' for _, op in chain):
+            return None
+        chain_blocks = {b for b, _ in chain}
+        targets = []
+        for blk, _ in chain:
+            li = blk.get_last_instruction()
+            if (li is None or getattr(li, 'argval', None) is None
+                    or li.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                    or 'TRUE' not in li.opname):
+                return None
+            tb = self.cfg.get_block_by_offset(li.argval)
+            if tb is None:
+                return None
+            targets.append(tb)
+        last_blk = chain[-1][0]
+        last_li = last_blk.get_last_instruction()
+        success = None
+        for s in last_blk.conditional_successors:
+            if s.start_offset != last_li.argval:
+                success = s
+                break
+        if success is None:
+            return None
+        if not any(t is success for t in targets):
+            return None
+        leaving = [t for t in targets if t is not success]
+        if not leaving:
+            return None
+        merge = getattr(region, 'merge_block', None)
+        if any(t in chain_blocks for t in leaving):
+            return None
+        if merge is not None and any(t is not merge for t in leaving):
+            return None
+        return {idx: (t is not success) for idx, t in enumerate(targets)}
+
     def _build_boolop_expression(self, region: 'BoolOpRegion', skip_elif_blocks: bool = True) -> Optional[Dict[str, Any]]:
         """[R75 fix1] 对外入口：先按原算法重建布尔表达式，再嫁接被丢掉的前置操作数。
 
@@ -38159,6 +38244,12 @@ AST 映射规则:
                     _elif_cond_offsets.add(ec.start_offset)
         chain_blocks_set = set(b for b, _ in op_chain)
         processed_ft_blocks = set()
+        # [R2-B108 修复·混合极性 or 链逐项还原] 混合极性 or 链（全员 IF_TRUE 族
+        # 跳转、真边一部分指向链的真入口、一部分指向 merge）的操作数极性表：
+        # 真边离开真入口的成员是 `not X` 操作数，由下面的 implicit-not 分支逐项
+        # 还原，不再由消费端整体取反（见 _boolop_mixed_polarity_or_chain）。
+        # 判据不命中时为 None，重建结果与本编辑前逐位一致。
+        _b108_polarity = self._boolop_mixed_polarity_or_chain(region)
         TRANSFORM_OPS = frozenset({'UNARY_NOT', 'UNARY_NEGATIVE', 'UNARY_POSITIVE', 'UNARY_INVERT'})
         for chain_idx, (chain_block, chain_op) in enumerate(op_chain):
             if skip_elif_blocks and chain_block.start_offset in _elif_cond_offsets:
@@ -38282,6 +38373,16 @@ AST 映射规则:
                     sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
                 elif (chain_op == 'or' and 'FALSE' in _jump_op
                       and chain_idx < len(op_chain) - 1):
+                    sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
+                elif (_b108_polarity is not None
+                      and _b108_polarity.get(chain_idx, False)):
+                    # [R2-B108 修复·混合极性 or 链逐项还原] or 链末位负极性成员
+                    # （`A or ... or not Z` 的 Z 测试块：IF_TRUE→merge、落空→真
+                    # 入口）与上方两条 implicit-not 分支同族——跳转方向即极性，
+                    # 差别只在它是链的最后一个成员（其跳转边是假出口边而非短路
+                    # 边，故不受 chain_idx < len-1 约束）。上一行分支的「末成员
+                    # 豁免」为正极性 or 链（IF_FALSE→exit）而设，对本形态恰是
+                    # B108 的语义反转入口：末成员不还原、消费端改用整链取反。
                     sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
             # Group transition for sub_expr
             if sub_expr is not None:
