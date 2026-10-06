@@ -11498,6 +11498,27 @@ AST 映射规则:
                             _self_loop_stmts.append({'type': 'ImportFrom', 'module': _imp_module, 'names': _nl})
                     continue
                 # 普通 import: IMPORT_NAME + STORE_*
+                # [B114 fix] 未别名点号 import 的绑定名 = 模块名首段。
+                # ①算法依据：CPython 3.11 对 `import a.b` 编译为
+                #   IMPORT_NAME 'a.b' + STORE_NAME a（绑定顶级名 a），无
+                #   IMPORT_FROM；`import a.b as c` 带 IMPORT_FROM（走上方
+                #   _imp_has_from 分支）。原实现以 STORE 名与完整点号名比较，
+                #   把未别名 `import os.path`（STORE 'os' != 'os.path'）误判为
+                #   别名，发射幻影 `import os.path as os`。
+                # ②归约顺序：本条与 _generate_stmts_from_instrs /
+                #   _build_statements_from_instructions 的同族修正一致，均以
+                #   「绑定名首段」判定别名，覆盖 while 自循环体归约路径。
+                # ③唯一归属判定：单 STORE 且 STORE 名 != 模块名首段 → 真别名
+                #   （name=完整模块名, asname=store 名）；单 STORE 且等名 →
+                #   未别名（name=完整模块名, asname=None）；多 STORE 逐名发射。
+                # ④嵌套处理：只消费本块指令序列，不展开嵌套区域。
+                # ⑤入口引用语义：Import 节点 names 的 name 保持完整模块名，
+                #   asname 仅在真别名时非空。
+                # ⑥反编译流程：_loop_extract_self_loop_stmts 归约 → ast.Import。
+                # C1：判据只来自本块指令 opcode/argval（IMPORT_NAME 与后继
+                #   STORE_*），无跨方法状态；C2：等名（含无点号 `import os`）
+                #   逐位不变，仅点号误判路径修正；C3：别名与否由绑定名事实
+                #   封闭判定，无名字白名单。
                 _store_names = []
                 for _ii in range(_imp_idx + 1, _imp_scan_end):
                     _ni = hdr.instructions[_ii]
@@ -11511,8 +11532,10 @@ AST 映射规则:
                     else:
                         break
                 if _store_names:
-                    if len(_store_names) == 1 and _store_names[0] != _imp_module:
-                        _aliases = [{'name': _imp_module, 'asname': _store_names[0]}]
+                    _sl_bound_root = _imp_module.split('.')[0] if _imp_module else _imp_module
+                    if len(_store_names) == 1:
+                        _sl_alias = _store_names[0] if _store_names[0] != _sl_bound_root else None
+                        _aliases = [{'name': _imp_module, 'asname': _sl_alias}]
                     else:
                         _aliases = [{'name': _n, 'asname': None} for _n in _store_names]
                     _self_loop_stmts.append({'type': 'Import', 'names': _aliases})
@@ -11602,11 +11625,35 @@ AST 映射规则:
                         _sl_imp_pairs.append((_imp_n, _sto_n if _sto_n != _imp_n else None))
                         _sl_imp_from = None
                     else:
+                        # [B114 fix] 未别名点号 import 的绑定名 = 模块名首段。
+                        # ①算法依据：CPython 3.11 对 `import a.b` 编译为
+                        #   IMPORT_NAME 'a.b' + STORE_NAME a（绑定顶级名 a），
+                        #   无 IMPORT_FROM；`import a.b as c` 带 IMPORT_FROM（走上
+                        #   方 _sl_imp_from 分支）。原实现以 STORE 名与完整点号名
+                        #   比较，把未别名 `import os.path`（STORE 'os' !=
+                        #   'os.path'）误判为别名，发射幻影 `import os.path as os`。
+                        # ②归约顺序：与 _loop_extract_self_loop_stmts 上方
+                        #   「普通 import」扫描、_generate_stmts_from_instrs 同族
+                        #   修正一致，均以「绑定名首段」判定别名，覆盖 STORE 处
+                        #   收口路径。
+                        # ③唯一归属判定：STORE 名 == 模块名首段 → 未别名
+                        #   （name=完整模块名, asname=None）；否则真别名
+                        #   （name=完整模块名, asname=store 名）。
+                        # ④嵌套处理：只消费本 IMPORT_NAME 与其后继 STORE，不展开
+                        #   嵌套区域。
+                        # ⑤入口引用语义：Import 节点 names 的 name 保持完整模块名，
+                        #   asname 仅在真别名时非空。
+                        # ⑥反编译流程：_loop_extract_self_loop_stmts 归约 →
+                        #   ast.Import。
+                        # C1：判据只来自本指令 argval（I.4 白名单），无跨方法状态。
+                        # C2：等名（含无点号 `import os`）逐位不变，仅点号误判路径
+                        #   修正。C3：别名与否由绑定名事实封闭判定，无名字白名单。
                         _module = _sl_imp_name.argval or ''
                         _sto_n = _sli_instr.argval
+                        _sl_bound_root = _module.split('.')[0] if _module else _module
                         _self_loop_stmts.append({'type': 'Import',
                                                  'names': [{'name': _module,
-                                                            'asname': _sto_n if _sto_n != _module else None}]})
+                                                            'asname': _sto_n if _sto_n != _sl_bound_root else None}]})
                         _sl_imp_name = None
                         _sl_imp_pairs = []
                     _self_loop_instrs = []
@@ -56406,21 +56453,24 @@ AST 映射规则:
                     #   无 IMPORT_FROM；`import a.b as c` 才带 IMPORT_FROM（走上
                     #   方 _gi_has_from 分支）。故本分支唯一的 STORE 名恒为
                     #   module.split('.')[0]，绝不等于完整点号模块名。
-                    # ②归约顺序：本条与 _generate_block_statements_body /
-                    #   _build_statements_from_instructions 的同族修正一致，
-                    #   均以「绑定名首段」判定别名，覆盖 for 回边块重建路径。
-                    # ③唯一归属判定：仅当 STORE 名 != 模块名首段时才追加 asname，
-                    #   否则发射无 asname 的 Import（原始 `import a.b`）。
-                    # ④嵌套处理：多 STORE（多模块）走 else 逐名发射，不受影响。
+                    # ②归约顺序：本条与 _build_statements_from_instructions /
+                    #   _build_prefix_stmt_list 的同族修正一致，均以「绑定名首段」
+                    #   判定别名，覆盖 for 回边块重建路径。
+                    # ③唯一归属判定：单 STORE 且 STORE 名 != 模块名首段 → 真别名
+                    #   （name=完整模块名, asname=store 名）；单 STORE 且等名 →
+                    #   未别名（name=完整模块名, asname=None）；多 STORE 逐名发射。
+                    # ④嵌套处理：本分支的 STORE 由本 IMPORT_NAME 唯一拥有；良构
+                    #   字节码每 IMPORT_NAME 恰一 STORE，多 STORE 仅为防御性分支。
                     # ⑤入口引用语义：Import 节点 names 的 name 保持完整模块名，
                     #   asname 仅在真别名时非空。
                     # ⑥反编译流程：本方法发射 ast.Import → CFGCodeGenerator。
                     # C1：仅本地消费 instrs/_buf，不新增 self 跨方法状态。
                     # C2：以模块名首段为唯一别名判据，黑箱归一。
-                    # C3：别名守卫封闭，未别名点号 import 不再退化 `import a.b as a`。
+                    # C3：别名守卫封闭，未别名点号 import 保真为完整模块名。
                     _gi_bound_root = _gi_imp_module.split('.')[0] if _gi_imp_module else _gi_imp_module
-                    if len(_gi_store_names) == 1 and _gi_store_names[0] != _gi_bound_root:
-                        _aliases = [{'name': _gi_imp_module, 'asname': _gi_store_names[0]}]
+                    if len(_gi_store_names) == 1:
+                        _gi_alias = _gi_store_names[0] if _gi_store_names[0] != _gi_bound_root else None
+                        _aliases = [{'name': _gi_imp_module, 'asname': _gi_alias}]
                     else:
                         _aliases = [{'name': _n, 'asname': None} for _n in _gi_store_names]
                     _stmts.append({'type': 'Import', 'names': _aliases})

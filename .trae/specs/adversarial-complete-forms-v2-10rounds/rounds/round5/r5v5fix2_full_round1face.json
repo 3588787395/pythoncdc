@@ -1,0 +1,328 @@
+[
+ {
+  "pyc": "test_repros/round6/n6_01_control.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/n6_01_control.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/n6_01_controlOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_01_with_basic.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_01_with_basic.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_01_with_basicOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_02_with_nest.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_02_with_nest.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_02_with_nestOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_03_with_flow.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_03_with_flow.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_03_with_flowOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_04_with_combo.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_04_with_combo.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_04_with_comboOK.py",
+   "[single] status=success units=11/11 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_05_asyncwith_basic.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_05_asyncwith_basic.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_05_asyncwith_basicOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_06_asyncwith_nest.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_06_asyncwith_nest.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_06_asyncwith_nestOK.py",
+   "[single] status=success units=5/5 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_07_async_five.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_07_async_five.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_07_async_fiveOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_08_async_cross.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_08_async_cross.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_08_async_crossOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_09_with_multimgr.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_09_with_multimgr.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_09_with_multimgrOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_10_with_deepmix.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_10_with_deepmix.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_10_with_deepmixOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_11_with_trymix.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_11_with_trymix.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_11_with_trymixOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_12_asyncwith_flow.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_12_asyncwith_flow.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_12_asyncwith_flowOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_13_async_await_pos.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_13_async_await_pos.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_13_async_await_posOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_14_asyncfor_forms.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_14_asyncfor_forms.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_14_asyncfor_formsOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round6/r6_15_yield_forms.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round6/r6_15_yield_forms.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round6/r6_15_yield_formsOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connector.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connector.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connectorOK.py",
+   "[single] status=success units=13/13 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategy.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategy.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategyOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/tools.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/tools.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/toolsOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_schedule.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_schedule.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_scheduleOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 52,
+  "units_total": 52,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/schedulerOK.py",
+   "[single] status=success units=52/52 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 36,
+  "units_total": 41,
+  "failures": [
+   "***<module>.trade_operation: Failure: Different control flow",
+   "***<module>.kill_trade_process: Failure: Different control flow",
+   "***<module>.get_trade_status: Failure: Different control flow",
+   "***<module>.query_trade_strategy_info: Failure: Different control flow",
+   "***<module>.query_strategy_id: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.trade_operation: Failure: Different control flow",
+   "  ***<module>.kill_trade_process: Failure: Different control flow",
+   "  ***<module>.get_trade_status: Failure: Different control flow",
+   "  ***<module>.query_trade_strategy_info: Failure: Different control flow",
+   "  ***<module>.query_strategy_id: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utilsOK.py",
+   "[single] status=failure units=36/41 success_rate=87.80%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 35,
+  "units_total": 35,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_accountOK.py",
+   "[single] status=success units=35/35 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 152,
+  "units_total": 153,
+  "failures": [
+   "***<module>.change_his_to_forward: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.change_his_to_forward: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/fly/data/quotationOK.py",
+   "[single] status=failure units=152/153 success_rate=99.35%"
+  ]
+ }
+]
