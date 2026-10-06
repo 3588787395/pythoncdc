@@ -4853,38 +4853,54 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF')
                     for i in condition_block.instructions)
             # [B109 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）
-            # 识别条件——仅当**未**命中「有 break 证据 ∧ 尾部 return None 恰为
-            # 循环正常出口入口块」时标记 has_trailing_return_none。判据：break
-            # 证据（verified_break_blocks 非空）证明 else_blocks 是真正的 else
-            # 子句（break 跳过它）；此时 else 体自身即 `return None` 的形态里，
-            # 该 return None 是 else 体的语句，不是函数级隐式 return None。循环
-            # 正常出口入口块 = 条件求值块（condition_block 或 header）的非异常、
-            # 非循环体后继（同层后继/前驱集合事实）。
-            # 归约方式——满足上述形态时跳过标记；其余逐位不变（无 break 循环、
-            # else 体非纯 return None、else 体后另有隐式 return None 的布局均
-            # 维持既有标记）。
-            # AST 映射——LoopRegion.has_trailing_return_none 保持 False → 生成器
-            # _loop_generate_while 尾部不把 else 的 return None 摘出 orelse，而按
-            # has_break=True 分支把 orelse=[Return None] 正常发射，循环后的
-            # `return <var>` 由 break 落点顺序发射（不再被无条件 return None 判为
-            # 死代码而丢弃）。
-            # [C1] 只读 break 落点集合与 (condition_block|header) 后继集合（同层
-            # 事实），不读文件名/偏移阈值；[C2] 不新增跨层/跨方法状态；[C3] 命中
-            # 面仅「break 且尾部 return None 即正常出口入口」这一形态，其他形态
-            # 逐位不变。
-            _b109_exit_entry = set()
-            _b109_gate = condition_block if condition_block is not None else header
-            if _b109_gate is not None:
-                for _b109_s in _b109_gate.successors:
-                    if _b109_s in body or _b109_s == header:
-                        continue
-                    if _b109_s in _b109_gate.exception_successors:
-                        continue
-                    _b109_exit_entry.add(_b109_s)
+            # 识别条件——仅当循环**确为真实 loop-else 结构**时跳过标记，否则标记
+            # has_trailing_return_none=True（= 生成器可摘除隐式收尾 return None）。
+            # 「真实 loop-else」的结构事实（I.4 白名单：条件求值块的后继集合 +
+            # 区域成员关系）：循环的**每个**条件求值块（condition_block/header 与
+            # 回边块 back_edge_block）其条件为假的**越体后继**（不在循环体 body、
+            # 非 header、非 break 落点）都收敛到**同一个块**——该块即 else 入口。
+            # 此判据把「真 else」与「无 else 时各出口各自重复的隐式 return」区分开：
+            # 真 else 时 while 的初判与回边复判必为同一跳出目标（共享 else 块）；
+            # 无 else 而函数紧跟循环收尾时，编译器为初判与回边复判各发射**独立**的
+            # RETURN None 块（跳出目标互异），故不收敛。
+            # 归约方式——收敛命中且 break 证据存在时跳过标记（has_trailing_return_none
+            # 维持 False → 生成器按 has_break 分支正常发射 orelse=[Return None]，避免
+            # CL.m 形态丢 else）；不收敛、或条件求值块不足两个时维持既有标记 True
+            # （无 break 循环、for-else、else 体非纯 return None、else 体后另有隐式
+            # return None 的布局均逐位不变）。
+            # AST 映射——LoopRegion.has_trailing_return_none 经生成器
+            # _loop_generate_while 消费：True 时由 _other_return_none_blocks 判定该
+            # return None 是否与其它重复出口并存，并存则摘除，避免凭空补出
+            # `else: return None`。
+            # [C1] 只读 break 落点集合、条件求值块与回边块的 conditional_successors
+            # 及 body 成员关系（同层事实），不读文件名/函数名/偏移阈值/条数上限；
+            # [C2] 不新增跨层/跨方法状态；[C3] 守卫面仅「else 尾块为 trailing
+            # return None」这一形态，未命中时逐位不变（守卫封闭）。
+            _b109_real_loop_else = False
+            if else_blocks and verified_break_blocks:
+                _b109_gates = []
+                _b109_g0 = condition_block if condition_block is not None else header
+                if _b109_g0 is not None:
+                    _b109_gates.append(_b109_g0)
+                if (back_edge_block is not None
+                        and back_edge_block not in _b109_gates):
+                    _b109_gates.append(back_edge_block)
+                if len(_b109_gates) >= 2:
+                    _b109_targets = set()
+                    _b109_converge = True
+                    for _b109_g in _b109_gates:
+                        _b109_gcont = [s for s in _b109_g.conditional_successors
+                                       if s not in body and s != header
+                                       and s not in verified_break_blocks]
+                        if len(_b109_gcont) != 1:
+                            _b109_converge = False
+                            break
+                        _b109_targets.add(_b109_gcont[0])
+                    if _b109_converge and len(_b109_targets) == 1:
+                        _b109_real_loop_else = (else_blocks[-1] in _b109_targets)
             if (else_blocks
                     and self._check_block_has_trailing_return_none(else_blocks[-1])
-                    and not (verified_break_blocks
-                             and else_blocks[-1] in _b109_exit_entry)):
+                    and not _b109_real_loop_else):
                 region.mark_trailing_return_none()
             if is_yield_from:
                 region.metadata['is_yield_from_loop'] = True

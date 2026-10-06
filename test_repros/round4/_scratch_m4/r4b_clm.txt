@@ -1,0 +1,18 @@
+﻿FOUND m nlocals 3
+LOOP RegionType.WHILE_LOOP entry 0
+   blocks [0, 6, 58, 60, 64]
+   body_blocks [6, 58, 60]
+   else_blocks [64]
+   header 6
+   cond 0
+   back_edge 60
+   has_break True
+   break_blocks [68]
+   has_trailing_return_none False
+--- blocks ---
+0 ['RESUME', 'LOAD_FAST', 'POP_JUMP_FORWARD_IF_FALSE'] succ [6, 64] pred [] exc []
+6 ['LOAD_CONST', 'COMPARE_OP', 'POP_JUMP_FORWARD_IF_FALSE'] succ [58, 60] pred [0, 60] exc []
+58 ['JUMP_FORWARD'] succ [68] pred [6] exc []
+60 ['LOAD_FAST', 'POP_JUMP_BACKWARD_IF_TRUE'] succ [6, 64] pred [6] exc []
+64 ['LOAD_CONST', 'RETURN_VALUE'] succ [] pred [0, 60] exc []
+68 ['LOAD_FAST', 'RETURN_VALUE'] succ [] pred [58] exc []

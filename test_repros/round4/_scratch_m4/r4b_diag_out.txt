@@ -1,0 +1,19 @@
+﻿FOUND _on_handle_order nlocals 5
+LOOP RegionType.WHILE_LOOP entry 0
+   blocks [0, 16, 160, 254, 258, 272, 276]
+   body_blocks [16, 160, 254, 258]
+   else_blocks [276]
+   header 16
+   cond 0
+   back_edge 258
+   has_break True
+   break_blocks [254]
+   has_trailing_return_none False
+--- blocks ---
+0 ['LOAD_FAST', 'LOAD_ATTR', 'POP_JUMP_FORWARD_IF_FALSE'] succ [16, 276] pred [] exc []
+16 ['LOAD_ATTR', 'COMPARE_OP', 'POP_JUMP_FORWARD_IF_FALSE'] succ [160, 254] pred [0, 258] exc []
+160 ['CALL', 'POP_TOP', 'JUMP_FORWARD'] succ [258] pred [16] exc []
+254 ['LOAD_CONST', 'RETURN_VALUE'] succ [] pred [16] exc []
+258 ['LOAD_FAST', 'LOAD_ATTR', 'POP_JUMP_BACKWARD_IF_TRUE'] succ [16, 272] pred [160] exc []
+272 ['LOAD_CONST', 'RETURN_VALUE'] succ [] pred [258] exc []
+276 ['LOAD_CONST', 'RETURN_VALUE'] succ [] pred [0] exc []

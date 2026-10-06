@@ -63,12 +63,13 @@
 `while xs: … if y>3: break \n else: return None \n return y` 形态下，`else` 体自身即 `return None`。原 `region_analyzer.py:4855` **无条件**调用 `region.mark_trailing_return_none()`，生成器（`region_ast_generator.py:7957`，**禁改**）据此把 else 体的 `return None` 摘出 `orelse` 并移到循环后 → 变成无条件 `return None`，令后续 `return y` 被判为死代码丢弃。违反 C1（else 体语句被错位消费）+ C3（未封闭 break 与 else 的归属）。
 
 ### 2.3 算法修复（封闭守卫）
-仅当**未**命中「有 break 证据（`verified_break_blocks` 非空）∧ else 尾块恰为循环正常出口入口块」时标记 `has_trailing_return_none`；`has_trailing_return_none` 保持 False → 生成器按 `has_break=True` 分支正常发射 `orelse=[Return None]`。其余形态（无 break 循环、else 体非纯 return None、else 体后另有隐式 return None 的布局）逐位不变（C2 黑箱组合）。
+仅当**命中真实 loop-else 结构事实**时跳过标记（`has_trailing_return_none` 维持 False → 生成器按 `has_break=True` 分支正常发射 `orelse=[Return None]`）。真实 loop-else 判据：`verified_break_blocks` 非空 ∧ 循环**每个**条件求值块（`condition_block|header` 与回边块 `back_edge_block`）的越体条件假后继都收敛到**同一个块**，且 `else_blocks[-1]` 即该块。其余形态（无 break 循环、for-else、else 体非纯 return None、else 体后另有隐式 return None 的布局）逐位不变（C2 黑箱组合）。
+> ⚠ 本判据在首批实现中过宽（仅看首个条件块），触发**回退**，已收紧——详见 **§10 回退拦截整改**。
 
 ### 2.4 改动 hunk（`core/cfg/region_analyzer.py`）
 | 站点 | 行 | 说明 |
 |---|---|---|
-| `_create_loop_region` 末端（`mark_trailing_return_none` 调用点） | 4855–4888 | 加封闭守卫 |
+| `_create_loop_region` 末端（`mark_trailing_return_none` 调用点） | 4855–4904 | 加封闭守卫（收敛判据，§10 收紧后） |
 
 ### 2.5 复现读数（前 → 后，RV2）
 | 探针 | 前 | 后 |
@@ -165,5 +166,55 @@
 
 ## 9 探针清单（`test_repros/round4/_scratch_m4/`）
 - B109 形态复现：`r4_b109_shapes.py/.pyc/OK.py`
+- **回退整改复现**：`r4b_loop_else.py/.pyc/OK.py`（① 末尾 while+break 无 else ② 真 while-else ③ for-else）+ `r4b_diag.py` / `r4b_diag_out.txt`（回退文件结构）/ `r4b_clm.txt`（CL.m 结构）
 - B113 peephole 证据：`comp.py`、`comp2.py`（+ `r4_dis_comp.txt` / `r4_dis_comp2.txt`）
 - 诊断工具（`r4_diag*.py`、`r4_dis_all.py`、`r4_dis_c4_04.txt`）为只读诊断脚本，含绝对 `sys.path` 引导行，不影响交付产物，保留作复审证据。
+
+---
+
+## 10 回退拦截整改（B109 守卫收紧）
+
+### 10.1 根因（主代理实测回退）
+- **回退文件**：`site-packages/IQEngine/plugins/plugin_fly_data/__init__.pyc`（全量 shard4）——基线 **success** → 首批修复后 **failure**（`ApiMethodPlugin._on_handle_order`，-1 单元）。
+- **产物 diff**：`_on_handle_order` 的 while 循环之后**凭空多发射** `else:\n    return None`；该函数源码循环后**无 else 子句、无 return**，`RETURN_CONST None` 只是函数收尾。
+- **根因一句话**：首批 B109 守卫只检查了**首个**条件求值块（`condition_block|header`）的越体后继，未检查**回边复判块**的越体后继，故把「无 else 时各出口各自重复的隐式 RETURN None」误判为「共享 else 块」，跳过标记 → 生成器未摘除 → 凭空补出 `else: return None`。
+- **结构对照**（`r4b_diag.py` 实测）：
+  | | 条件初判块 | 回边复判块 | 越体条件假后继 | 结论 |
+  |---|---|---|---|---|
+  | **CL.m**（真 else） | `@0 → @64` | `@60 → @64` | **收敛于 @64** | 真 loop-else |
+  | **`_on_handle_order`**（无 else） | `@0 → @276` | `@258 → @272` | **互异（@276 vs @272）** | 隐式重复收尾 |
+
+### 10.2 判据收紧（I.4 白名单事实）
+真实 loop-else ⟺ `verified_break_blocks` 非空 ∧ **每个**条件求值块（`condition_block|header` + `back_edge_block`，须 ≥2 个）的 `conditional_successors` 中「不在 body、非 header、非 break 落点」的越体后继**恰好各 1 个且并集收敛为同一块** ∧ `else_blocks[-1]` 为该块。命中才跳过标记；否则维持 `has_trailing_return_none=True`（生成器经 `_other_return_none_blocks` 判定重复隐式 return 并摘除）。判据只用**同层后继集合 + 区域成员关系（body/break 落点）**——无文件名/函数名、无 `start_offset` 常数、无跨层 `entry in blocks`、无新增 `self` 状态、无计数/深度上限（C3 守卫封闭）。
+
+### 10.3 改动 hunk（`core/cfg/region_analyzer.py`）
+| 站点 | 行 | 说明 |
+|---|---|---|
+| `_create_loop_region` 末端 `mark_trailing_return_none` 调用点 | 4855–4904 | 收敛判据（I.7 六项 + C1/C2/C3，注释与行为一致） |
+
+### 10.4 前 → 后读数（RV2）
+| 探针 | 首批（回退） | 收紧后 | 判定 |
+|---|---|---|---|
+| `plugin_fly_data/__init__.pyc` | failure **20/21** | **success 21/21** | **回退封闭（恢复基线）** |
+| `c4_02_loop_else` | 14/14 | **14/14** | B109 目标保持 |
+| `c4_03_except_star` | 12/13 | **12/13** | B102 未误伤 |
+| `c4_04_match_patterns` | 10/13 | **10/13** | B103 未误伤 |
+| `_scratch_m4/r4b_loop_else.pyc` | — | **success 4/4** | 新复现 |
+
+**新复现** `_scratch_m4/r4b_loop_else.py`（`r4b_*` 前缀）：① `f` = 函数末尾 while+break **无 else**（产物**不**发射 else ✓）；② `h` = 真 while-else（产物发射 `else: return None` + 末尾 `return y` ✓）；③ `k` = for-else 变体（产物发射 `else: return None` + 末尾 `return xs` ✓）。
+
+### 10.5 「代码已落地」声明 + 落地标记 grep
+```
+[B109 fix] × 1  → region_analyzer.py:4855
+```
+`git status --porcelain core/`：` M core/cfg/pattern_parser.py`、` M core/cfg/region_analyzer.py`（本席）；`region_ast_generator.py` 为位 1 属主，本席**未改**。**未**改 `comprehension_generator.py` / `exception_handler.py` / `code_generator.py`；无 `git commit`；`*OK.py` 全部经 `pycdc.py` 重建（无手改）。
+
+### 10.6 IV.2 自检（本轮整改）
+| 项 | 方法 | 结果 |
+|---|---|---|
+| py_compile | `python -m py_compile core/cfg/region_analyzer.py` | **OK（exit 0）** |
+| import | `python -c "import core.cfg.region_analyzer"` | **IMPORT_OK** |
+| I.4 新增违规 | 名称白名单 / `start_offset` 魔数 / 跨层反查 / 新增 `self` 状态 / 硬编码计数·深度上限 | **新增 0** |
+| I.5 禁止前缀 | 未新增任何方法 | **新增 0** |
+| `*OK.py` 手改 / git commit | — | **无 / 未执行** |
+| 未跑全量 | 402 全量 / 242 桩批 regen·verify | 由主代理统一重验 |
