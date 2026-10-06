@@ -31,19 +31,19 @@
   - [x] 4.2 修复工程师（可多位协同）：封闭登记破口；自测 = IV.2 门禁自检清单全过；FIX_G/FIX_R.md（位1 生成层封闭 B100 相对导入层级 + B101 star 导入；位2 识别层封闭 B102 except\* 多 handler + B109 while-else + B103 match 守卫部分）
   - [x] 4.3 评审工程师复核；REVIEW2.md（逐 hunk 合规 PASS、独立复跑 NEWFAIL=0、站桩 WORSE=0、新变体误伤 0、B113 驳回证伪降级维持破口；终审放行）
   - [x] 4.4 主代理验证：验证序六步；VERIFICATION.md（首跑 shard4 回退 → B109 守卫收紧整改 `3eb329d1` → 复跑 402 全量 6554/6617、369/402 与基线逐位一致；8 片 REGRESSIONS=0；34 集 1505/1568；quotation 152/153；tests 277/2/2；IV.2 全过）
-  - [x] 4.5 归档 rounds/round4/ + 提交并 push origin main（归档提交 `44d77e72` 已完成；push 因 github.com:443 连接中断未竟——`Recv failure: Connection was reset` / `Failed to connect to port 443`，按旧规范网络故障先例登记待补推，届时与后续轮次一并 push）
+  - [x] 4.5 归档 rounds/round4/ + 提交并 push origin main（归档提交 `44d77e72` 已完成；push 已于 round5 归档时补推成功 origin/main → `ae1b06bf`）
 - [x] Task 5: Round 5 — 深层嵌套交叉矩阵对抗（覆盖矩阵剩余空白格：形态 × 宿主区域组合，深度 ≥3；重点 = 台账"完备"声明从未被交叉攻击过的组合；C1/C2/C3 逐条款攻击设计）
   - [x] 5.1 评审工程师：交叉矩阵抽样攻击（每空白格 ≥3 探针）+ 站桩回归 + 合规审计 + Bn 登记；REVIEW.md + test_repros/round5/（20 组探针 187/208，attack 165/186、neg 22/22；新登记 B114 模块根未别名点号 import × 序列赋值→幻影 import a.b as a / B115 外层 if 体首 while→条件融合 / B116 函数内裸注解丢弃→局部名退化 LOAD_GLOBAL；同 Bn 存量 5 项；站桩 6 面 WORSE=0；合规全 PASS 新增 0）
   - [x] 5.2 修复工程师（可多位协同）：封闭登记破口（深层才错 = C 条款破坏，按 I.3 推论封闭守卫）；自测 = IV.2 门禁自检清单全过；FIX.md（三破口全封闭：B116 region_ast_generator L2486-2503、B114 三条 import 归约路径、B115 region_analyzer L18196/L19074/L28495/L28899 回边重检收窄判据；三最小复现转 MATCH；34 集 1505/1568 NEWFAIL=0；站桩 WORSE=0）
   - [x] 5.3 评审工程师复核；REVIEW2.md（逐 hunk 合规 PASS、独立复跑一致、变体 32 文件/58 单元 51/58 NEWFAIL=0；终审=有条件放行，B114 path3 else 分支打回 1 项 → 整改 `711dc506`（else 改发 {name:_gi_imp_module,asname:None} + while 宿主同机制修复，r5v5r_b114_in_for/in_while 0/1→1/1 转 MATCH）→ 终审放行、无新残余）
   - [x] 5.4 主代理验证：验证序六步；VERIFICATION.md（402 全量 6554/6617、369/402 与基线逐位一致；8 片 compare REGRESSIONS=0；34 集 1505/1568；quotation 152/153；tests 277 passed/2 failed/2 xpassed；IV.2 全过；落地标记 10 处）
-  - [x] 5.5 归档 rounds/round5/ + 提交并 push origin main（归档提交待 5.5；push 因 github.com:443 网络中断与前序轮次一并待补推）
-- [ ] Task 6: Round 6 — `_identify_*` 十族方法注释合规与算法一致性审计（III.1 锚点逐方法：docstring 六项模板齐全性（I.7）∧ 与代码行为一致性 ∧ C1/C2/C3 条款声明；不一致即打回）
-  - [ ] 6.1 评审工程师：十族识别方法 + 对应生成方法逐方法审计（六项模板逐项对照代码真实行为；③唯一归属判定/④嵌套处理/⑤入口引用语义与四原则 I.1 对照）+ 站桩回归 + 合规审计；REVIEW.md（逐方法结论表：合规/打回+条款）
-  - [ ] 6.2 修复工程师（可多位协同，按方法族分派）：注释与代码对齐（以代码真实算法为准修正注释，或以注释声明的正确算法为准修正代码——两者必居其一，禁止含糊；代码修正同样受 I.4 白名单约束）；FIX.md
-  - [ ] 6.3 评审工程师复核：逐方法重审一致性 + 读数复跑；REVIEW2.md
-  - [ ] 6.4 主代理验证：验证序六步；VERIFICATION.md
-  - [ ] 6.5 归档 rounds/round6/ + 提交并 push origin main
+  - [x] 5.5 归档 rounds/round5/ + 提交并 push origin main（归档提交 `ae1b06bf`；push 已补推成功 origin/main → `ae1b06bf`，含 round4/round5 累积提交）
+- [x] Task 6: Round 6 — `_identify_*` 十族方法注释合规与算法一致性审计（III.1 锚点逐方法：docstring 六项模板齐全性（I.7）∧ 与代码行为一致性 ∧ C1/C2/C3 条款声明；不一致即打回）
+  - [x] 6.1 评审工程师：十族识别方法 + 对应生成方法逐方法审计（六项模板逐项对照代码真实行为；③唯一归属判定/④嵌套处理/⑤入口引用语义与四原则 I.1 对照）+ 站桩回归 + 合规审计；REVIEW.md（识别方法 合规0/打回10——六项齐全但均未声明 C1/C2/C3 条款，以 I.1 四原则收尾；生成方法 合规6/打回9——旧格式缺六项标号+C条款；合计打回19 R6-D1..D10 全属 I.7 形式层；注释↔代码一致性抽查无实质矛盾；站桩 6 面 WORSE=0 与 round5 逐位一致；合规审计新增违反 0；新破口 Bn=0；r6v6_* 证据 + 前缀偏差登记 r6_*→r6v6_*）
+  - [x] 6.2 修复工程师（可多位协同，按方法族分派）：注释与代码对齐（以代码真实算法为准修正注释，或以注释声明的正确算法为准修正代码——两者必居其一，禁止含糊；代码修正同样受 I.4 白名单约束）；FIX_A/FIX_B.md（两位并行、涉改文件不相交：识别层 region_analyzer.py 10 方法各增补独立 C1/C2/C3 条款声明 +70；生成层 region_ast_generator.py 9 方法改建为 I.7 六项标号①-⑥ + 独立 C 条款行 +255/-9；纯 docstring，剥 docstring 后两文件 AST_EQUAL 零可执行代码变更；BOM 单头保持；r6v6fixa_*/r6v6fixb_* 证据）
+  - [x] 6.3 评审工程师复核：逐方法重审一致性 + 读数复跑；REVIEW2.md（19/19 通过；对抗性核对 6 个跨族攻击点无反例、C 条款声明均经代码实证；独立 AST_EQUAL 两文件 ALL_OK；站桩 6 面 WORSE=0 全 same；合规新增 0；终审放行；r6v6r_* 证据）
+  - [x] 6.4 主代理验证：验证序六步；VERIFICATION.md（402 全量 6554/6617、369/402 与基线逐位一致；8 分片 compare REGRESSIONS=0；34 集 1505/1568；quotation 152/153；tests 277 passed/2 failed/2 xpassed；IV.2 全过；落地标记 analyzer 10 + generator 23）
+  - [x] 6.5 归档 rounds/round6/ + 提交并 push origin main
 - [ ] Task 7: Round 7 — 已封闭守卫族与已复审破口全量深度外推重放（站桩回归强化轮：B2/B3/B4 守卫族 + B1b/B6–B40/B45/B54/B55/B66–B68 已封闭面，外推变体 + 收缩变体双向攻击）
   - [ ] 7.1 评审工程师：守卫判据面重攻击（守卫适用形态变体/守卫边界外形态/守卫互斥组合；外推验证守卫确实恢复无感而非窄门控）+ 前六轮新封闭面重放；读数不得变差；REVIEW.md + test_repros/round7/
   - [ ] 7.2 修复工程师（可多位协同）：封闭攻击暴露的守卫缺口（I.3 推论：封闭守卫恢复无感，禁止窄门控/个案补丁——窄门控 = I.4 黑名单「以少发射换全绿」变体，打回）；FIX.md
