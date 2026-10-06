@@ -2,26 +2,26 @@
 # File: e02_g1_b98_hosts.pyc (Python 3.11)
 
 _P, _Q, _R, _S = 1, 2, 3, 4
-M1 = _P or _Q or _R
+M1 = (_P or _Q) and _R
 M2 = _P or _Q and _R
 class CB98:
-    C1 = _P or _Q or _R
+    C1 = (_P or _Q) and _R
     C2 = _P or _Q and _R
     def m_handler(self, a, b, c):
         try:
             for i in range(3):
                 if i:
-                    return a or b or c
+                    return (a or b) and c
         except ValueError:
             if a:
-                a or b or c
+                (a or b) and c
             else:
                 return -1
         return 0
     def m_class_body_host(self, a, b, c):
         for i in range(2):
             if i:
-                return None
+                return a or b and c
         return 0
 def f_comp_cond_host(a, b, c, xs):
     for i in range(2):
@@ -50,8 +50,14 @@ def f_nested_func_host(a, b, c):
             return inner()
     return 0
 def f_match_arm_host(a, b, c, cmd):
-    if cmd == 1:
-        pass
+    for i in range(2):
+        if i:
+            match cmd:
+                case 1:
+                    pass
+                    return b and c
+                case _:
+                    return a or b and c
     return 0
 def f_with_body_host(a, b, c):
     class CM:
@@ -69,7 +75,7 @@ def f_try_body_host(a, b, c):
     try:
         for i in range(2):
             if i:
-                return a or b or c
+                return (a or b) and c
     except KeyError:
         return -1
     return 0

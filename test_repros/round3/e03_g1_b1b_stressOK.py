@@ -73,6 +73,7 @@ def f_b1b_loop_header_cond(a, b, c):
 def f_b1b_ifexp_trueval(a, b, c):
     for i in range(3):
         if i:
+            a and b if c else a or b
             return None
     return 0
 def f_b1b_elif_mixed(a, b, c):

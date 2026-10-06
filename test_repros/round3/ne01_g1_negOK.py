@@ -4,19 +4,21 @@
 def n_flat_or(a, b, c):
     for i in range(3):
         if i:
-            return None
+            return a or b or c
     return 0
 def n_flat_and(a, b, c):
     for i in range(3):
         if i:
-            return None
+            return a and b and c
     return 0
 def n_grouped_pair(a, b, c, d):
-    if a:
-        pass
+    for i in range(3):
+        if i:
+            if a or b:
+                pass
     return 0
 def n_simple_two(a, b):
     for i in range(3):
         if i:
-            return None
+            return a and b
     return 0

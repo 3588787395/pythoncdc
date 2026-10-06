@@ -1,0 +1,296 @@
+[
+ {
+  "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 15,
+  "failures": [
+   "***<module>.f_or_in_and_deep: Failure: Different control flow",
+   "***<module>.f_or_in_and_pair_deep: Failure: Different control flow",
+   "***<module>.f_b98_ternary_cross: Failure: Different control flow",
+   "***<module>.f_b98_compare_cross: Failure: Different control flow",
+   "***<module>.f_b98_walrus_cross: Failure: Different control flow",
+   "***<module>.f_b98_return_pos: Failure: Different control flow",
+   "***<module>.f_b98_call_arg_pos: Failure: Different control flow",
+   "***<module>.f_b98_or_tail_and_group: Failure: Different control flow",
+   "***<module>.f_b98_not_wrapped: Failure: Different control flow",
+   "***<module>.f_b98_and_tail_or_group: Failure: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 11,
+  "units_total": 18,
+  "failures": [
+   "***<module>.CB98.m_handler: Failure: Different control flow",
+   "***<module>.f_comp_cond_host.<listcomp>: Failure: Different control flow",
+   "***<module>.f_genexp_cond_host.<genexpr>: Failure: Different control flow",
+   "***<module>.f_dictcomp_value_host.<dictcomp>: Failure: Different control flow",
+   "***<module>.f_nested_func_host.inner: Failure: Different control flow",
+   "***<module>.f_match_arm_host: Failure: Different control flow",
+   "***<module>.f_with_body_host: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round3/e03_g1_b1b_stress.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 9,
+  "units_total": 14,
+  "failures": [
+   "***<module>.f_b1b_and_or_and: Failure: Different control flow",
+   "***<module>.f_b1b_deep_right: Failure: Different control flow",
+   "***<module>.f_b1b_none_check_prefix: Failure: Different control flow",
+   "***<module>.f_b1b_loop_body_chain: Failure: Different control flow",
+   "***<module>.f_b1b_ifexp_trueval: Failure: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round3/ne01_g1_neg.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 4,
+  "units_total": 5,
+  "failures": [
+   "***<module>.n_grouped_pair: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 8,
+  "units_total": 19,
+  "failures": [
+   "***<module>.f_chain_ternary: Failure: Different control flow",
+   "***<module>.f_ternary_deep_right: Failure: Different control flow",
+   "***<module>.f_ternary_boolop_group: Failure: Different bytecode",
+   "***<module>.f_ternary_return: Failure: Different control flow",
+   "***<module>.f_ternary_comp_cond.<listcomp>: Failure detected at line number 40 and instruction offset 12: Different bytecode",
+   "***<module>.f_ternary_default_arg: Failure: Different bytecode",
+   "***None: Failure: Extra bytecode",
+   "***<module>.f_ternary_subscript: Failure: Different control flow",
+   "***<module>.f_ternary_walrus_rhs: Failure: Different control flow",
+   "***<module>.f_ternary_as_cond: Failure: Different control flow",
+   "***<module>.f_ternary_nested_in_boolop: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round3/ne02_g2_neg.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/e05_g3_compare_chain.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 4,
+  "units_total": 11,
+  "failures": [
+   "***<module>.f_compare_chain6: Failure: Different control flow",
+   "***<module>.f_compare_binop_inside: Failure: Different control flow",
+   "***<module>.f_compare_subscript_inside: Failure: Different control flow",
+   "***<module>.f_compare_is_chain: Failure: Different control flow",
+   "***<module>.f_compare_in_chain: Failure: Different control flow",
+   "***<module>.f_compare_walrus_value: Failure: Different control flow",
+   "***<module>.f_compare_notin_chain: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round3/e06_g3_op_leaves.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/ne03_g3_neg.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/e07_g4_star_slice_containers.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 15,
+  "units_total": 16,
+  "failures": [
+   "***<module>.f_slice_expr_bounds: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round3/ne04_g4_neg.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/e08_g5_lambda_deep.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 28,
+  "units_total": 30,
+  "failures": [
+   "***<module>.f_lambda_deco_factory.deco.<lambda>: Failure detected at line number 30 and instruction offset 6: Different bytecode",
+   "***<module>.f_lambda_starargs.<lambda>: Failure detected at line number 73 and instruction offset 4: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round3/ne05_g5_neg.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/e09_g6_comprehensions.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 30,
+  "units_total": 30,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/e09b_g6_async_comps.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 11,
+  "units_total": 13,
+  "failures": [
+   "***<module>.a_three: Failure: Different control flow",
+   "***<module>.a_four.<genexpr>: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round3/ne06_g6_neg.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/e10_g7_call_args.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 31,
+  "units_total": 32,
+  "failures": [
+   "***<module>.f_starargs_mixed: Failure: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round3/ne07_g7_neg.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/e11_g8_fstrings.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/ne08_g8_neg.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/e12b_g9_yield_split.pyc",
+  "verify_rc": 1,
+  "status": "compile_error",
+  "units_success": 0,
+  "units_total": 0,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/e12c_g9_yield_arg.pyc",
+  "verify_rc": 1,
+  "status": "compile_error",
+  "units_success": 0,
+  "units_total": 0,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/e12d_g9_awaits.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 11,
+  "failures": [
+   "***<module>.f_await_cond_pos: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round3/e12e_g9_yield_from.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/e12f_g9_yield_boolop.pyc",
+  "verify_rc": 1,
+  "status": "compile_error",
+  "units_success": 0,
+  "units_total": 0,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/ne09_g9_neg.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round3/e13_g10_walrus.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 11,
+  "units_total": 18,
+  "failures": [
+   "***<module>.f_walrus_chain: Failure: Different bytecode",
+   "***<module>.f_walrus_rhs_ternary: Failure: Different control flow",
+   "***<module>.f_walrus_rhs_boolop: Failure: Different control flow",
+   "***<module>.f_walrus_call_arg: Failure: Different bytecode",
+   "***<module>.f_walrus_deep_host: Failure: Different control flow",
+   "***<module>.f_walrus_in_while_body: Failure: Different control flow",
+   "***<module>.f_walrus_elif_chain: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round3/ne10_g10_neg.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 3,
+  "failures": [
+   "***<module>.n_simple_walrus: Failure: Different control flow",
+   "***<module>.n_walrus_while: Failure: Different control flow"
+  ]
+ }
+]

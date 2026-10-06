@@ -42,7 +42,7 @@ def f_walrus_rhs_ternary(a, b, c):
 def f_walrus_rhs_boolop(a, b, c):
     for i in range(3):
         if i and i:
-            (w := (c if b else w) if not a else c) + w
+            (w := b and c if not a else c) + w
             return None
     return 0
 def f_walrus_call_arg(a):

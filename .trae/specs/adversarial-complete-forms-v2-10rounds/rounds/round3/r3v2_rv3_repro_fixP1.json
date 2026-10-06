@@ -1,0 +1,23 @@
+[
+ {
+  "pyc": "rv3_02_b89_boolop_chain",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/rv3_02_b89_boolop_chain.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/rv3_02_b89_boolop_chainOK.py",
+   "[single] status=success units=1/1 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "rv3_07_b89_trim_overtrim",
+  "regen_rc": 0,
+  "verify_rc": 1,
+  "tail": [
+   "***<module>.ternary_chain_then_while: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/rv3_07_b89_trim_overtrim.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round2/rv3_07_b89_trim_overtrimOK.py",
+   "[single] status=failure units=3/4 success_rate=75.00%"
+  ]
+ }
+]

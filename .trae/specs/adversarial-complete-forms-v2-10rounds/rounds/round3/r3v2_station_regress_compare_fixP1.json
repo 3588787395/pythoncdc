@@ -1,0 +1,371 @@
+{
+ "faces": [
+  {
+   "face": "round2face",
+   "base_files": 45,
+   "new_files": 45,
+   "common": 45,
+   "only_base": [],
+   "only_new": [],
+   "base_units": "234/251",
+   "new_units": "234/251",
+   "same": 45,
+   "improved": 0,
+   "worsened": 0,
+   "unit_level_compared": false,
+   "details": []
+  },
+  {
+   "face": "probe42",
+   "base_files": 42,
+   "new_files": 42,
+   "common": 42,
+   "only_base": [],
+   "only_new": [],
+   "base_units": "154/189",
+   "new_units": "172/196",
+   "same": 32,
+   "improved": 10,
+   "worsened": 0,
+   "unit_level_compared": false,
+   "details": [
+    {
+     "pyc": "test_repros/round2/c01_class_assign.pyc",
+     "verdict": "improved",
+     "base_units": 4,
+     "new_units": 5,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>.CAssign: Failure: Different bytecode"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round2/c06_class_match.pyc",
+     "verdict": "improved",
+     "base_units": 0,
+     "new_units": 3,
+     "base_status": "compile_error",
+     "new_status": "failure",
+     "fail_missing": [],
+     "fail_extra": [
+      "***<module>.CMatchDeep: Failure: Different control flow"
+     ]
+    },
+    {
+     "pyc": "test_repros/round2/c11_class_func_class.pyc",
+     "verdict": "improved",
+     "base_units": 8,
+     "new_units": 10,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>.top_make.Top: Failure: Different bytecode"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round2/c13_class_misc.pyc",
+     "verdict": "improved",
+     "base_units": 1,
+     "new_units": 2,
+     "base_status": "failure",
+     "new_status": "failure",
+     "fail_missing": [],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round2/m01_docstring_order.pyc",
+     "verdict": "improved",
+     "base_units": 4,
+     "new_units": 5,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>: Failure: Different bytecode"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round2/m07_module_with.pyc",
+     "verdict": "improved",
+     "base_units": 0,
+     "new_units": 1,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>: Failure: Different control flow"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round2/m08_module_stmts.pyc",
+     "verdict": "improved",
+     "base_units": 1,
+     "new_units": 2,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>: Failure: Different bytecode"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round2/m12_module_values.pyc",
+     "verdict": "improved",
+     "base_units": 0,
+     "new_units": 3,
+     "base_status": "compile_error",
+     "new_status": "success",
+     "fail_missing": [],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
+     "verdict": "improved",
+     "base_units": 4,
+     "new_units": 6,
+     "base_status": "failure",
+     "new_status": "failure",
+     "fail_missing": [
+      "***<module>.try_in_with: Failure: Different control flow"
+     ],
+     "fail_extra": [
+      "***<module>.try_in_if: Failure: Different bytecode"
+     ]
+    },
+    {
+     "pyc": "test_repros/round2/x09_funcdef_hosts.pyc",
+     "verdict": "improved",
+     "base_units": 7,
+     "new_units": 10,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [],
+     "fail_extra": []
+    }
+   ]
+  },
+  {
+   "face": "round1face",
+   "base_files": 24,
+   "new_files": 24,
+   "common": 24,
+   "only_base": [],
+   "only_new": [],
+   "base_units": "417/423",
+   "new_units": "417/423",
+   "same": 24,
+   "improved": 0,
+   "worsened": 0,
+   "unit_level_compared": true,
+   "details": []
+  },
+  {
+   "face": "residual",
+   "base_files": 72,
+   "new_files": 72,
+   "common": 72,
+   "only_base": [],
+   "only_new": [],
+   "base_units": "404/446",
+   "new_units": "417/446",
+   "same": 62,
+   "improved": 10,
+   "worsened": 0,
+   "unit_level_compared": true,
+   "details": [
+    {
+     "pyc": "test_repros/round10/r10_04_import_try_cross.pyc",
+     "verdict": "improved",
+     "base_units": 2,
+     "new_units": 3,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>.imp_try_sections: Failure: Different control flow"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round10/r10_06_import_deep_combo.pyc",
+     "verdict": "improved",
+     "base_units": 2,
+     "new_units": 3,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>.imp_combo_lambda_default: Failure: Different control flow"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round10/r10_15_global_hosts.pyc",
+     "verdict": "improved",
+     "base_units": 5,
+     "new_units": 6,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>.g_in_try_except: Failure: Different control flow"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round10/r10_21_fin_loopctrl.pyc",
+     "verdict": "improved",
+     "base_units": 2,
+     "new_units": 4,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>.fin_break: Failure: Different control flow",
+      "***<module>.fin_continue: Failure: Different control flow"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round10/rv10_32_augassign_variant.pyc",
+     "verdict": "improved",
+     "base_units": 7,
+     "new_units": 8,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>.v_aug_boolop_rhs: Failure: Different control flow"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round7/r7_07_ternary_nest.pyc",
+     "verdict": "improved",
+     "base_units": 6,
+     "new_units": 7,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>.t_nest_in_condition: Failure: Different control flow"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+     "verdict": "improved",
+     "base_units": 4,
+     "new_units": 7,
+     "base_status": "failure",
+     "new_status": "failure",
+     "fail_missing": [
+      "***<module>.t_host_for_else: Failure detected at line number 20 and instruction offset 24: Different bytecode",
+      "***<module>.t_host_try_sections: Failure: Different control flow",
+      "***<module>.t_host_while_body: Failure detected at line number 14 and instruction offset 24: Different bytecode"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round7/r7_11_boolop_mixed.pyc",
+     "verdict": "improved",
+     "base_units": 6,
+     "new_units": 7,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>.b_and_or_repeat: Failure: Different control flow"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round7/r7_12_boolop_nest.pyc",
+     "verdict": "improved",
+     "base_units": 5,
+     "new_units": 6,
+     "base_status": "failure",
+     "new_status": "failure",
+     "fail_missing": [
+      "***<module>.b_nest_three_layers: Failure: Different control flow"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round8/rv8_01_chain3_subscript.pyc",
+     "verdict": "improved",
+     "base_units": 6,
+     "new_units": 7,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>.chain_value_boolop: Failure: Different bytecode"
+     ],
+     "fail_extra": []
+    }
+   ]
+  },
+  {
+   "face": "oldface",
+   "base_files": 59,
+   "new_files": 59,
+   "common": 59,
+   "only_base": [],
+   "only_new": [],
+   "base_units": "658/692",
+   "new_units": "664/692",
+   "same": 55,
+   "improved": 4,
+   "worsened": 0,
+   "unit_level_compared": true,
+   "details": [
+    {
+     "pyc": "test_repros/round7/r7_07_ternary_nest.pyc",
+     "verdict": "improved",
+     "base_units": 6,
+     "new_units": 7,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>.t_nest_in_condition: Failure: Different control flow"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+     "verdict": "improved",
+     "base_units": 4,
+     "new_units": 7,
+     "base_status": "failure",
+     "new_status": "failure",
+     "fail_missing": [
+      "***<module>.t_host_for_else: Failure detected at line number 20 and instruction offset 24: Different bytecode",
+      "***<module>.t_host_try_sections: Failure: Different control flow",
+      "***<module>.t_host_while_body: Failure detected at line number 14 and instruction offset 24: Different bytecode"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round7/r7_11_boolop_mixed.pyc",
+     "verdict": "improved",
+     "base_units": 6,
+     "new_units": 7,
+     "base_status": "failure",
+     "new_status": "success",
+     "fail_missing": [
+      "***<module>.b_and_or_repeat: Failure: Different control flow"
+     ],
+     "fail_extra": []
+    },
+    {
+     "pyc": "test_repros/round7/r7_12_boolop_nest.pyc",
+     "verdict": "improved",
+     "base_units": 5,
+     "new_units": 6,
+     "base_status": "failure",
+     "new_status": "failure",
+     "fail_missing": [
+      "***<module>.b_nest_three_layers: Failure: Different control flow"
+     ],
+     "fail_extra": []
+    }
+   ]
+  }
+ ]
+}

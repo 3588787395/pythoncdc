@@ -1,0 +1,333 @@
+[
+ {
+  "pyc": "test_repros/round4/r4_or4_and2.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>.or4_and2: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/n7_01_simple_ternary.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/n7_02_simple_andor.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7_01_ternary_args_index.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 8,
+  "units_total": 9,
+  "failures": [
+   "***<module>.t_arg_multi_mixed: Failure: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_02_ternary_containers.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7_04_ternary_binop_compare.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 7,
+  "failures": [
+   "***<module>.t_compare_lhs_only: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 15,
+  "units_total": 16,
+  "failures": [
+   "***<module>.t_listcomp_ternary_filter.<listcomp>: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_06_ternary_lambda_await.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 10,
+  "failures": [
+   "***<module>.t_await_ternary_branches: Failure: Different control flow",
+   "***<module>.t_await_assign_ternary: Failure: Different control flow",
+   "***<module>.t_await_deep_ternary: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_07_ternary_nest.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 8,
+  "failures": [
+   "***<module>.t_host_match_case: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_09_chain_compare_basic.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7_10_chain_compare_calls.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 8,
+  "failures": [
+   "***<module>.c_chain_and_combo: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_11_boolop_mixed.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7_12_boolop_nest.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 8,
+  "failures": [
+   "***<module>.b_nest_deep_right: Failure: Different control flow",
+   "***<module>.b_ternary_lhs_and: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_13_boolop_shortcut.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7_14_boolop_deep_host.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 9,
+  "failures": [
+   "***<module>.h_listcomp_filter_composite: Failure: Different bytecode",
+   "***<module>.h_listcomp_filter_composite.<listcomp>: Failure: Different control flow",
+   "***<module>.h_if_ternary_chain_composite: Failure: Different control flow",
+   "***<module>.h_return_composite: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/rv7_01_quad_chain_container.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/rv7_02_compare_chain_ternary.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 4,
+  "failures": [
+   "***<module>.chain_two_ternary: Failure: Different control flow",
+   "***<module>.chain_three_ternary: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/rv7_03_subscript_slice_ternary.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/rv7_04_dict3_ternary.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>.dict3_nested_value: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/n8_01_return_const.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round8/n8_02_simple_stmts.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round8/r8_01_return_positions.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round8/r8_02_return_deep_hosts.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 10,
+  "units_total": 10,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round8/r8_03_pass_hosts.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 9,
+  "units_total": 9,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round8/r8_04_delete_forms.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 10,
+  "units_total": 10,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round8/r8_05_assign_multi.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round8/r8_06_augassign_ops.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 10,
+  "units_total": 10,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round8/r8_07_assert_forms.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 11,
+  "failures": [
+   "***<module>.r8_assert_nested_func: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/r8_08_raise_forms.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 9,
+  "units_total": 9,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round8/r8_09_deep_host_combo.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 10,
+  "failures": [
+   "***<module>.r8_dh_for_else_del: Failure: Different control flow",
+   "***<module>.r8_dh_with_assert: Failure: Different bytecode",
+   "***<module>.r8_dh_match_multi: Failure: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/r8_10_expr_cross_stmt.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 9,
+  "units_total": 12,
+  "failures": [
+   "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+   "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+   "***<module>.r8_x_raise_ternary_class: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/r8_11_deep_host_combo2.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 6,
+  "failures": [
+   "***<module>.r8_dh2_match_guard: Failure detected at line number 40 and instruction offset 36: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/rv8_01_chain3_subscript.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round8/rv8_02_with_tryfin_constret.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 7,
+  "failures": [
+   "***<module>.tryfin_then_more: Failure: Different bytecode"
+  ]
+ }
+]

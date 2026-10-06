@@ -3,7 +3,7 @@
 
 __doc__ = 'R7-12 BoolOp 嵌套 BoolOp（≥3 层）+ 链式比较/三元内嵌。'
 def b_nest_three_layers(a, b, c, d):
-    return a and b and c
+    return a and b and (c or d)
 def b_nest_deep_right(a, b, c, d):
     return a and b or c and d
 def b_nest_deep_mixed(a, b, c, d, e):

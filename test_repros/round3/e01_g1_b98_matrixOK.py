@@ -23,7 +23,7 @@ def f_or_in_and_pair_deep(a, b, c, d):
     acc = []
     for i in range(3):
         if i and len(acc) < 4:
-            r = b and c if not a else c
+            r = b and (c or d) if not a else c
             acc.append(r)
             while False:
                 pass
@@ -40,7 +40,7 @@ def f_b98_ternary_cross(a, b, c, d):
 def f_b98_compare_cross(a, b, c):
     for i in range(3):
         if i and i:
-            (c if b else 2) if not a else c
+            b and c if not a else c
             return None
     return False
 def f_b98_walrus_cross(a, b, c):
@@ -94,7 +94,7 @@ def f_b98_and_tail_or_group(a, b, c, d):
     acc = []
     for i in range(3):
         if i and len(acc) < 3:
-            if a or b:
+            if (a or b) and (c or d) and a:
                 pass
             acc.append(r)
             while False:

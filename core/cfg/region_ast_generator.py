@@ -37201,6 +37201,137 @@ AST 映射规则:
             return None
         return {'type': 'BoolOp', 'op': outer_op, 'values': [seg1_expr, seg2_expr]}
 
+    def _resolve_boolop_tail_value_block(self, region: 'BoolOpRegion',
+                                         chain: List[Tuple['BasicBlock', str]],
+                                         last_block: 'BasicBlock',
+                                         require_not_chain_target: bool = False
+                                         ) -> Optional['BasicBlock']:
+        """[B98] 解析 BoolOp 链末尾的 fall-through 值块（链外收尾操作数）。
+
+        算法角色：结构定位器（Structural Locator）。
+        输入：区域 + 操作数链 + 末链块（+ 是否要求该值块不是任何链块的跳转目标）。
+        输出：末尾值块 或 None。
+
+        【① 算法依据】CPython 3.11 编译布尔表达式时，一组操作数中除末位外都以
+        短路跳转块承载（块末为 IF_TRUE/IF_FALSE 族），而末位操作数是「纯取值
+        收尾」——它落在末链块的 fall-through 分支上、自身无短路跳转，故不入
+        op_chain。定位该块只需读末链块的块末 opcode 族与后继集合（I.4 白名单：
+        后继集合 + 指令 oparg），无偏移魔法常数、无名白名单。
+        【② 归约顺序】在分组检测/内层 or 组重建之前调用；只做结构定位，不改归属。
+        【③ 唯一归属判定】候选值块必须是区域内成员、非 merge、非链块；当
+        require_not_chain_target=True 时进一步排除「被任一链块跳转目标命中的块」
+        ——那类块是外层链的操作数入口（某内层组的短路出口），不属内层组末位。
+        【④ 嵌套处理】末链块若自身是嵌套 ternary/比较链宿主，其 fall-through 已
+        由对应检测器消费；本定位器不区分，交由调用方按既有守卫过滤。
+        【⑤ 入口引用语义】返回的块自身即末位操作数入口，调用方以其指令段重建
+        操作数表达式；本方法不发射、不认领块。
+        【⑥ 反编译流程位置】`_try_build_and_inner_or_pattern`（内层 or 组收尾）与
+        `_build_grouped_boolop_expression`（分组末尾归属）共用。
+
+        C1：仅读块末 opcode 族/后继身份，无副作用。
+        C2：定位失败返回 None，调用方维持既有路径，行为逐位不变。
+        C3：判据全部为同层块结构事实，不跨层反查、不新增实例状态。
+        """
+        _chain_offsets = {b.start_offset for b, _ in chain}
+        _li = last_block.get_last_instruction()
+        if (_li is None
+                or _li.opname not in (SHORT_CIRCUIT_JUMP_OPS
+                                      | FORWARD_CONDITIONAL_JUMP_OPS
+                                      | BACKWARD_CONDITIONAL_JUMP_OPS)
+                or getattr(_li, 'argval', None) is None):
+            return None
+        _chain_targets = set()
+        if require_not_chain_target:
+            for _cb, _ in chain:
+                _cli = _cb.get_last_instruction()
+                if (_cli is not None
+                        and isinstance(getattr(_cli, 'argval', None), int)):
+                    _chain_targets.add(_cli.argval)
+        for _s in sorted(last_block.conditional_successors,
+                         key=lambda s: s.start_offset):
+            if (_s.start_offset != _li.argval
+                    and _s.start_offset not in _chain_offsets
+                    and _s is not region.merge_block
+                    and _s in region.blocks
+                    and _s.start_offset not in _chain_targets):
+                return _s
+        return None
+
+    def _reconstruct_boolop_tail_value_operand(self, region: 'BoolOpRegion',
+                                               chain: List[Tuple['BasicBlock', str]],
+                                               last_block: 'BasicBlock',
+                                               require_not_chain_target: bool = False
+                                               ) -> Optional[Dict[str, Any]]:
+        """[B98] 重建 BoolOp 链末尾 fall-through 值块的操作数表达式。
+
+        算法角色：末尾操作数重建器（Tail Operand Reconstructor）。
+        输入：区域 + 操作数链 + 末链块（+ 链目标排除开关）。
+        输出：AST 节点 或 None。
+
+        【① 算法依据】定位（`_resolve_boolop_tail_value_block`）+ 取值收尾指令段
+        重建；收尾段以语句屏障（POP_TOP/RETURN_*/JUMP_*）截断，与既有各重建器
+        的过滤口径一致。
+        【② 归约顺序】在内层组操作数收集之后调用，把丢失的末位操作数补回其归属组。
+        【③ 唯一归属判定】块级归属由定位器给出；本方法只重建表达式，不二次认领。
+        【④ 嵌套处理】委托 expr_reconstructor 处理段内嵌套表达式。
+        【⑤ 入口引用语义】以块入口指令段为重建输入，不引用子区域入口。
+        【⑥ 反编译流程位置】`_try_build_and_inner_or_pattern` 的内层 or 组末位补收。
+
+        C1：只读指令序列。C2：重建失败返回 None（调用方维持既有输出）。
+        C3：无状态、无副作用。
+        """
+        _blk = self._resolve_boolop_tail_value_block(
+            region, chain, last_block,
+            require_not_chain_target=require_not_chain_target)
+        if _blk is None:
+            return None
+        _instrs = [i for i in _blk.instructions
+                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        _clean = []
+        for i in _instrs:
+            if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                break
+            _clean.append(i)
+        if not _clean:
+            return None
+        return self.expr_reconstructor.reconstruct(_clean)
+
+    def _has_boolop_tail_value_boundary(self, region: 'BoolOpRegion',
+                                        op_chain: List[Tuple['BasicBlock', str]]) -> bool:
+        """[B98] 判定 BoolOp 链是否存在「子组末位为裸值块」的内层组边界。
+
+        算法角色：分组边界判定器（Grouping Boundary Predicate）。
+        输入：区域 + 操作数链。输出：bool。
+
+        【① 算法依据】当某个非末链块的短路跳转目标恰为链末尾的 fall-through
+        值块时，该块所辖内层组以「值块入口」为组内续接点，即它是内层子组的
+        封闭边界。判据 = 块末 opcode 族 + 后继集合（I.4 白名单）。
+        【② 归约顺序】先于 B45 skip 边重建调用：此形态下 skip 边重建会把内层
+        子组误并入外层（如 `(a or b) and (c or d) and e` → `or(c, and(d, e))`），
+        故须让分组重建先手。
+        【③ 唯一归属判定】边界块自身唯一归属内层组；值块归属外层链末位。
+        【④ 嵌套处理】仅判定存在性，不在本方法内展开嵌套结构。
+        【⑤ 入口引用语义】只读链块跳转目标（指令 oparg），不认领块。
+        【⑥ 反编译流程位置】`_build_boolop_expression_inner` 的分组重建前置守卫。
+
+        C1：只读块末 opcode/后继，无副作用。C2：不命中返回 False，调用方维持
+        既有 skip 边优先顺序，行为逐位不变。C3：判据全为同层块结构事实。
+        """
+        if len(op_chain) < 2:
+            return False
+        _tail = self._resolve_boolop_tail_value_block(region, op_chain, op_chain[-1][0])
+        if _tail is None:
+            return False
+        _tail_offset = _tail.start_offset
+        for _b, _ in op_chain[:-1]:
+            _li = _b.get_last_instruction()
+            if (_li is not None
+                    and isinstance(getattr(_li, 'argval', None), int)
+                    and _li.argval == _tail_offset):
+                return True
+        return False
+
     def _detect_boolop_grouping(self, region: 'BoolOpRegion', op_chain: List[Tuple['BasicBlock', str]]) -> tuple:
         """ 检测 BoolOp 链中是否存在显式分组（括号化的 and/or 组合）。
 
@@ -37234,6 +37365,23 @@ AST 映射规则:
         if len(op_chain) < 2:
             return False, None, []
         chain_block_offsets = {b.start_offset for b, _ in op_chain}
+        # [B98] 末尾值块（末链块的 fall-through 纯取值收尾块）。当某非末链块的
+        # 短路跳转目标恰为该值块时，说明该块的组以「值块入口」为组内续接点、
+        # 即它是内层子组的封闭边界（如 `(a or b) and c` 中 block@0(or) 的
+        # IF_TRUE→值块 c）。此信号与「目标 ∈ 链块」互补：后者覆盖 `(a or b)
+        # and (c or d)`，前者覆盖子组末位操作数是裸值块的浅层形。判据 = 块末
+        # opcode 族 + 后继集合（I.4 白名单），无偏移魔法常数。
+        # 【I.7 六项】①依据=CPython 3.11 短路块末 opcode 族定义分组极性、组末位
+        # 裸值落 fall-through；②顺序=分组检测段内、早于分组重建；③归属=目标命中
+        # 末尾值块的非末链块标 INNER，其组封闭于值块入口；④嵌套=只加信号、不展开
+        # 嵌套子组；⑤入口=块入口即操作数重建入口；⑥流程=_build_boolop_expression_inner
+        # → _detect_boolop_grouping 的 raw_signals 判定段。
+        # C1 只读块末 opcode 族/后继集合；C2 不命中即维持既有分类（逐位不变）；
+        # C3 全为同层块结构事实，无跨层反查、无新增实例状态。
+        _tail_value_block = self._resolve_boolop_tail_value_block(
+            region, op_chain, op_chain[-1][0])
+        _tail_value_offset = (_tail_value_block.start_offset
+                              if _tail_value_block is not None else None)
         has_internal_or = False
         has_internal_and = False
         raw_signals = []  # 'INNER' / None（待定）
@@ -37248,7 +37396,9 @@ AST 映射规则:
                 raw_signals.append(None)
                 continue
             target_is_chain_block = last_instr.argval in chain_block_offsets
-            if target_is_chain_block:
+            target_is_tail_value = (_tail_value_offset is not None
+                                    and last_instr.argval == _tail_value_offset)
+            if target_is_chain_block or target_is_tail_value:
                 raw_signals.append('INNER')
                 if _chain_op == 'or':
                     has_internal_or = True
@@ -37541,7 +37691,28 @@ AST 映射规则:
                     if clean_ft:
                         ft_expr = self.expr_reconstructor.reconstruct(clean_ft)
                         if ft_expr is not None:
-                            if last_chain_op == outer_op:
+                            # [B98] 末尾值块被某链块跳转目标命中 ⇒ 该值块是内层
+                            # 子组的短路出口/外层操作数入口，不得并入末尾内层子组
+                            # （否则 `(a or b) and c` 会退化为 `or(a, b, c)`）。
+                            # 判据 = 链块跳转目标集合成员（指令 oparg 事实，I.4
+                            # 白名单），无偏移/个案判据。C1（外层操作数唯一归属
+                            # 外层链发射）/C2（不命中时维持既有归属分支，逐位不变）/
+                            # C3（无状态、无副作用）。
+                            # 【I.7 六项】①依据=链块短路跳转目标集合（指令 oparg）
+                            # 标记内层子组短路出口；②顺序=分组重建末尾归属判定段；
+                            # ③归属=命中值块唯一归外层链、未命中按既有分支；④嵌套=
+                            # 不展开嵌套、仅改归属；⑤入口=值块入口即外层操作数入口；
+                            # ⑥流程=_build_grouped_boolop_expression 末尾 fall-through。
+                            _ft_is_chain_target = any(
+                                (_li is not None
+                                 and isinstance(getattr(_li, 'argval', None), int)
+                                 and _li.argval == ft_block.start_offset)
+                                for _cb, _ in op_chain
+                                for _li in [_cb.get_last_instruction()])
+                            if _ft_is_chain_target:
+                                # 值块是内层组短路出口 ⇒ 外层操作数
+                                outer_values.append(ft_expr)
+                            elif last_chain_op == outer_op:
                                 # Fall-through 是外层操作符的最后一个操作数
                                 outer_values.append(ft_expr)
                             elif current_inner_values:
@@ -37931,6 +38102,25 @@ AST 映射规则:
         if not op_chain:
             return None
         STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+        # [B98] 子组末位为裸值块的边界形（`(a or b) and c` /
+        # `(a or b) and (c or d) and e`）：该形态下 B45 skip 边重建会把内层子组
+        # 误并入外层（实测 `(a or b) and (c or d) and e` → `or(c, and(d, e))`），
+        # 故分组重建须先于 skip 边重建。判据 = 存在非末链块的短路跳转目标恰为
+        # 末尾值块（块末 opcode 族 + 后继集合，I.4 白名单，见
+        # `_has_boolop_tail_value_boundary`）。C1（内层组唯一归属内层发射）/
+        # C2（predicate 不命中即维持 skip 边优先，行为逐位不变）/
+        # C3（无状态、无副作用）。
+        # 【I.7 六项】①依据=非末链块短路跳转目标是否命中末尾值块（同层结构事实）；
+        # ②顺序=_build_boolop_expression_inner 首段，先于 B45 skip 边重建；③归属=
+        # 命中即令分组重建先手、内层组唯一归属内层发射；④嵌套=存在性判定不展开；
+        # ⑤入口=只读链块跳转目标、不认领块；⑥流程=分组重建前置守卫。
+        if self._has_boolop_tail_value_boundary(region, op_chain):
+            _b98_hg, _b98_oo, _b98_cls = self._detect_boolop_grouping(region, op_chain)
+            if _b98_hg:
+                _b98_grouped = self._build_grouped_boolop_expression(
+                    region, op_chain, _b98_oo, _b98_cls)
+                if _b98_grouped is not None:
+                    return _b98_grouped
         # [R7-B45] 链内 skip 边分段重建（先于分组检测）：嵌套 BoolOp 值链
         # （如 ``(a or (b and c)) and (d or e)``）的 skip 边形态在既有分组
         # （双层均匀组）与扁平 or_groups 两种算法下都会丢失嵌套/重结合，
@@ -38536,6 +38726,21 @@ AST 映射规则:
             if expr is None:
                 return None
             or_operands.append(expr)
+        # [B98] 内层 or 组的末位操作数常驻于末 or 块的 fall-through 值块
+        # （纯取值收尾、无短路跳转，故不入 op_chain）。
+        # 例 `a and (b or c)`：or 组=(b or c)，b 在链块、c 在 fall-through 值块；
+        # 不补收则输出 `a and b`（or 子组蒸发）。判据 = 末 or 块块末 opcode 族
+        # 与其后继集合（I.4 白名单）；排除「被链块跳转目标命中的块」以免把外层
+        # 操作数入口误并入内层组。C1（末位操作数唯一归属内层 or 组发射）/
+        # C2（重建失败维持既有输出，逐位不变）/C3（无链目标命中时不命中本补收）。
+        # 【I.7 六项】①依据=末 or 块 fall-through 值块承载组末位裸值操作数；②顺序=
+        # _try_build_and_inner_or_pattern 操作数收集末尾；③归属=排除链目标命中后，
+        # 值块唯一归内层 or 组；④嵌套=经 expr_reconstructor 处理段内嵌套；⑤入口=
+        # 以块入口指令段重建、不引用子区域入口；⑥流程=内层 or 组末位补收。
+        _tail_operand = self._reconstruct_boolop_tail_value_operand(
+            region, op_chain, op_chain[-1][0], require_not_chain_target=True)
+        if _tail_operand is not None:
+            or_operands.append(_tail_operand)
         # 构建 AST: and([and_operands..., or([or_operands...])])
         if len(or_operands) == 1:
             or_expr = or_operands[0]

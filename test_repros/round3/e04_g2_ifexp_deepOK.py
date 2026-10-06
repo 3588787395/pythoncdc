@@ -14,6 +14,7 @@ def f_ternary_deep_right(a, b, c, d, e, f, g):
 def f_ternary_boolop_group(a, b, c, d, e):
     for i in range(3):
         if i and i:
+            a or b if c else d and e
             return None
     return 0
 def f_ternary_call_arg(a, b, c):
