@@ -13,7 +13,6 @@ def f(username, uinfo, acct):
             return 1
         except BaseException:
             acct.lock.release()
-            acct.lock.release()
             return 2
         finally:
             acct.lock.release()

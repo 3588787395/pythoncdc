@@ -9,7 +9,6 @@ def f73(r, v):
             except ValueError:
                 print('empty')
             print('ok')
-        return None
     elif v == 5:
         print('five')
     return None
