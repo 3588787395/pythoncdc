@@ -22591,6 +22591,10 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 # BoolOpRegion，令 `return <BoolOp>` 蒸发为 `return None`（B99）。
                 # 依原则 2（每块唯一归属）：链步块归属 BoolOpRegion，不得再被
                 # ternary 认领（判据只读块末 opcode 族，I.4 白名单）。
+                # C1：只读本块末指令 opcode 族（SHORT_CIRCUIT_JUMP_OPS），同层结构事实；
+                # C2：真 ternary 条件恒以条件跳转收尾，不被本守卫命中；守卫未命中
+                #     时逐位维持既有 ternary 认领行为，BoolOp 与 ternary 各自独立保真；
+                # C3：守卫封闭 ternary 认领域，令值位 BoolOp 链步块唯一归 BoolOpRegion。
                 return False
             if block not in self.block_to_region:
                 # 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
@@ -31183,15 +31187,14 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
 
         【算法依据】
         链式比较（`a < b < c` 等）在值上下文由 [R113 fix] 引入的清理块
-        （SWAP 2 + POP_TOP）承载中间值抹除；清理块的指令序列与 `for` 循环体
-        内 `return <表达式>` 的隐藏迭代器拆除段（SWAP 2; POP_TOP; RETURN_VALUE）
-        完全同形。原实现仅凭两条有效指令（SWAP + POP_TOP）判定，会把循环
-        返回拆除段误判为比较链清理块，使 `for` 体宿主下的值位 BoolOp 消费链
-        在短路跳转处被 R113 分支截断（B99 表达式蒸发）。[B99 fix] 追加
-        `_has_compare_chain_step_predecessor` 守卫：只有存在「短路跳转收尾且
-        跳转前紧跟比较族操作码」的前驱块时才认定为清理块。
-        判据只读同层块结构事实（块末 opcode 族 + 前驱集合 + 前驱块指令
-        opcode），符合 I.4 白名单。
+        （SWAP 2 + POP_TOP）承载中间值抹除。**本方法只按 `SWAP 2 + POP_TOP`
+        指令序列（NOISE_OPS 过滤后恰两条有效指令）判定「清理块形态」，不做
+        任何前驱判定**；因该指令序列与 `for` 循环体内 `return <表达式>` 的隐藏
+        迭代器拆除段（SWAP 2; POP_TOP; RETURN_VALUE）完全同形，单凭本方法会把
+        循环返回拆除段一并判为清理块。B99 的「比较链步前驱」追加条件由**调用点**
+        （`_detect_boolop_short_circuit_chain` 的 R113 分支）以
+        `_has_compare_chain_step_predecessor` 施加，不在本方法内。判据只读本块
+        指令序列与 opcode，符合 I.4 白名单。
 
         【归约顺序】
         BoolOp 归约期（`_boolop_resolve_merge` / `_create_boolop_region_from_chain`
@@ -31213,8 +31216,10 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         BoolOp/链式比较归约期的清理块识别原语，被
         `_get_effective_merge_through_cleanup` 与 BoolOp 链检测共用。
 
-        满足 C1（同层结构事实）/ C2（真实链式比较判定不变）/ C3（对循环
-        返回拆除段显式排除，守卫封闭）。
+        满足 C1（只读本块指令序列与 opcode，同层结构事实）/ C2（真实链式比较
+        判定不变：形态相同则判定逐位不变）/ C3（本方法只判形态；对循环返回
+        拆除段的显式排除由调用点 `_has_compare_chain_step_predecessor` 施加，
+        守卫封闭在调用侧）。
         """
         meaningful = [i for i in block.instructions if i.opname not in NOISE_OPS]
         if len(meaningful) == 2 and meaningful[0].opname == 'SWAP' and meaningful[1].opname == 'POP_TOP':

@@ -174,8 +174,8 @@ def _has_compare_chain_step_predecessor(self, block: BasicBlock) -> bool:
 | 方法（file:line） | ①算法依据 | ②归约顺序 | ③唯一归属判定 | ④嵌套处理 | ⑤入口引用语义 | ⑥反编译流程位置 | C1/C2/C3 |
 |---|---|---|---|---|---|---|---|
 | `_has_compare_chain_step_predecessor` `:31131` | 真·比较链清理块必有「短路跳转收尾 + 跳转前紧跟比较族操作码」前驱 | 作为 `_is_chained_compare_cleanup_block` 前置谓词，任意时点求值 | 仅判存在性，不认领块 | 只查一层直接前驱，不展开嵌套 | 不返回块、不引用入口 | BoolOp/链式比较归约期清理块识别守卫 | C1/C2/C3 齐全 |
-| `_is_chained_compare_cleanup_block` `:31181` | 清理块（SWAP+POP_TOP）与循环返回拆除段同形 | 归约期按需调用，只判不认领 | 命中的块交 `_get_effective_merge_through_cleanup` 继续下溯 | 只读本块/直接前驱，不跨层 | 不返回块、不引用入口 | BoolOp/链式比较归约期清理块识别原语 | C1/C2/C3 齐全 |
-| `_can_be_ternary_header` 新增段 `:22580` | ternary 条件恒以条件跳转收尾；短路跳转是 BoolOp 链步求值 | ternary 识别期条件头判定段 | 短路收尾块判否 → 唯一归 `BoolOpRegion` | 存在性判定不展开嵌套 | 不返回块、不引用入口 | `_identify_ternary_regions` 条件头认领守卫 | C1/C2/C3 齐全 |
+| `_is_chained_compare_cleanup_block` `:31185` | **本方法只按 `SWAP 2 + POP_TOP` 指令序列（NOISE_OPS 过滤后恰两条有效指令）判定「清理块形态」，不做任何前驱判定**；B99 的「比较链步前驱」追加条件由调用点（R113 分支）以 `_has_compare_chain_step_predecessor` 施加，不在本方法内 | 归约期按需调用，只判不认领 | 只判形态、不认领块；命中的块交调用方决定（R113 分支再经守卫，`_get_effective_merge_through_cleanup` 按可穿透语义下溯） | 只读本块指令序列与 opcode，不跨层 | 不返回块、不引用入口 | BoolOp/链式比较归约期清理块识别原语 | C1（只读本块指令序列与 opcode，同层结构事实）/ C2（形态相同则判定逐位不变）/ C3（本方法只判形态；对循环返回拆除段的显式排除由调用点 `_has_compare_chain_step_predecessor` 施加，守卫封闭在调用侧）——与代码逐字一致 |
+| `_can_be_ternary_header` 新增段 `:22580` | ternary 条件恒以条件跳转收尾；短路跳转是 BoolOp 链步求值 | ternary 识别期条件头判定段 | 短路收尾块判否（`:22598`）→ 唯一归 `BoolOpRegion` | 存在性判定不展开嵌套 | 不返回块、不引用入口 | `_identify_ternary_regions` 条件头认领守卫 | C1/C2/C3 **显式齐全**（`:22594-22597`，评审整改项 B 已闭环） |
 
 ---
 
@@ -203,6 +203,83 @@ def _has_compare_chain_step_predecessor(self, block: BasicBlock) -> bool:
 - R113 分支守卫行 `_has_compare_chain_step_predecessor(_jt_block)` → `:30076`；
 - `import core.cfg.region_analyzer` → IMPORT_OK；`py_compile` → PY_COMPILE_OK；BOM `bom_count=1`；
 - 落地证据为零回归字节级读数：28 探针 248/305（+4）、位 1 零回归（e01 5/15、e02 11/18、rv3_02 1/1、hosts 7/7）、站桩 6 面 `WORSE=0`、quotation 152/153 持平。
-- 证据 JSON：`r3v2_probe_results_fixP2.json`、`r3v2_full_round1face.json`、`r3v2_full_residual_a.json`/`_b.json`、`r3v2_full_oldface_a.json`/`_b.json`、`r3v2_regress_round2face.json`、`r3v2_regress_probe42.json`、`r3v2_station_regress_compare.json`；驱动 `r3v2_fixP2_station.py`。
+- 证据 JSON（**FIX_P2 期实际归档名**，与无后缀的更早基线/评审产物区分）：`r3v2_probe_results_fixP2.json`、`r3v2_full_round1face_fixP2.json`、`r3v2_full_residual_a_fixP2.json` / `r3v2_full_residual_b_fixP2.json`、`r3v2_full_oldface_a_fixP2.json` / `r3v2_full_oldface_b_fixP2.json`、`r3v2_regress_round2face_fixP2.json`、`r3v2_regress_probe42_fixP2.json`、`r3v2_station_regress_compare_fixP2.json`；驱动 `r3v2_fixP2_station.py`。（FIX_P1 期同名读数并存归档为 `*_fixP1.json`，未覆盖。）
 
 **未提交 git**（按任务单要求，由主代理阶段边界统一提交）。
+
+---
+
+## 9 整改（REVIEW2 §5.2 打回项闭环）
+
+> 本段为 Task 3.3 复核**打回项 A / B**（I.7 项）的整改记录。**纯文档级，零算法改动**：仅改注释/docstring 文本，未改任何判据、控制流或发射逻辑；行号可位移，逻辑 hunk = 0。
+
+### 9.1 打回项 A —— `_is_chained_compare_cleanup_block` docstring ① 与代码行为不符
+
+- 事实（复核）：docstring ① 声称方法体追加了 `_has_compare_chain_step_predecessor` 守卫，但方法体未变；守卫实际施加在**调用点** `_detect_boolop_short_circuit_chain` R113 分支。
+- **改前文本**（① 算法依据，`:31183`）：
+  ```
+  链式比较（`a < b < c` 等）在值上下文由 [R113 fix] 引入的清理块
+  （SWAP 2 + POP_TOP）承载中间值抹除；清理块的指令序列与 `for` 循环体
+  内 `return <表达式>` 的隐藏迭代器拆除段（SWAP 2; POP_TOP; RETURN_VALUE）
+  完全同形。原实现仅凭两条有效指令（SWAP + POP_TOP）判定，会把循环
+  返回拆除段误判为比较链清理块，使 `for` 体宿主下的值位 BoolOp 消费链
+  在短路跳转处被 R113 分支截断（B99 表达式蒸发）。[B99 fix] 追加
+  `_has_compare_chain_step_predecessor` 守卫：只有存在「短路跳转收尾且
+  跳转前紧跟比较族操作码」的前驱块时才认定为清理块。
+  判据只读同层块结构事实（块末 opcode 族 + 前驱集合 + 前驱块指令
+  opcode），符合 I.4 白名单。
+  ```
+- **改后文本**（① 算法依据，`:31184-31193`）：
+  ```
+  链式比较（`a < b < c` 等）在值上下文由 [R113 fix] 引入的清理块
+  （SWAP 2 + POP_TOP）承载中间值抹除。**本方法只按 `SWAP 2 + POP_TOP`
+  指令序列（NOISE_OPS 过滤后恰两条有效指令）判定「清理块形态」，不做
+  任何前驱判定**；因该指令序列与 `for` 循环体内 `return <表达式>` 的隐藏
+  迭代器拆除段（SWAP 2; POP_TOP; RETURN_VALUE）完全同形，单凭本方法会把
+  循环返回拆除段一并判为清理块。B99 的「比较链步前驱」追加条件由**调用点**
+  （`_detect_boolop_short_circuit_chain` 的 R113 分支）以
+  `_has_compare_chain_step_predecessor` 施加，不在本方法内。判据只读本块
+  指令序列与 opcode，符合 I.4 白名单。
+  ```
+- **C 条款尾行改后文本**（`:31218-31221`）：
+  ```
+  满足 C1（只读本块指令序列与 opcode，同层结构事实）/ C2（真实链式比较
+  判定不变：形态相同则判定逐位不变）/ C3（本方法只判形态；对循环返回
+  拆除段的显式排除由调用点 `_has_compare_chain_step_predecessor` 施加，
+  守卫封闭在调用侧）。
+  ```
+- **方法体原样证据**：`_is_chained_compare_cleanup_block`（def 现 `:31185`）方法体仍为原 **4 行**（`:31223-31226`）：
+  `meaningful = [...] / if len(meaningful) == 2 and meaningful[0].opname == 'SWAP' and meaningful[1].opname == 'POP_TOP': / return True / return False`，无任何前驱守卫调用。守卫调用点 `_has_compare_chain_step_predecessor(_jt_block)` 仍在 R113 分支 `:30076`（未移动、未增删）。
+
+### 9.2 打回项 B —— `_can_be_ternary_header` 新增段缺显式 C1/C2/C3
+
+- 事实（复核）：FIX_P2 §6 声明该段「C1/C2/C3 齐全」，但代码该段注释为散文，未显式给出 C1/C2/C3。
+- **改后文本**（在守卫注释段末尾、`return False` 前补 3 行，`:22594-22597`）：
+  ```
+  # C1：只读本块末指令 opcode 族（SHORT_CIRCUIT_JUMP_OPS），同层结构事实；
+  # C2：真 ternary 条件恒以条件跳转收尾，不被本守卫命中；守卫未命中
+  #     时逐位维持既有 ternary 认领行为，BoolOp 与 ternary 各自独立保真；
+  # C3：守卫封闭 ternary 认领域，令值位 BoolOp 链步块唯一归 BoolOpRegion。
+  ```
+- **守卫位置原样证据**：`if last.opname in SHORT_CIRCUIT_JUMP_OPS:` 守卫段仍在 `_can_be_ternary_header` 内、`if block not in self.block_to_region:` 之前（未移动）；仅在其注释块内追加 3 行注释，`return False` 顺延至 `:22598`。
+
+### 9.3 「纯文档级、零算法改动」自证（逻辑 hunk = 0）
+
+| 证据 | 方法 | 结果 |
+|---|---|---|
+| **AST 恒等** | `test_repros/round3/_scratch_b99/doconly_check.py`：将当前文本按 A/B 三处编辑**反向还原**为整改前文本 → 各自 `ast.parse` + 剥离 docstring → `ast.dump` 比较 | **`LOGIC_AST_EQUAL = True`**（`cur_len=1687539`，`pre_len=1687185`，`delta=354` 全部来自注释/docstring 文本） |
+| **git diff 逐 hunk** | `git diff -- core/cfg/region_analyzer.py`（HEAD 已含位 2 阶段一逻辑提交 `7090ad96`，故 diff 仅含本轮 doc-only 编辑） | 3 个 hunk，**全部为 `#` 注释行 / docstring 文本**：`@@ -22591`（+4 注释行）、`@@ -31183`（docstring ① 段重写）、`@@ -31213`（docstring C 条款尾行重写）；**无任何可执行语句行增删** |
+| **diff 统计** | `git diff --stat -- core/cfg/region_analyzer.py` | `1 file changed, 16 insertions(+), 11 deletions(-)`（均为注释/docstring） |
+| **BOM** | 首 6 字节 + 全文计数 | `ef bb bf 22 22 22`，`bom_count=1` |
+| **编译/导入** | `python -m py_compile core/cfg/region_analyzer.py`；`import core.cfg.region_analyzer` | `PY_COMPILE_OK` / `IMPORT_OK` |
+
+### 9.4 抽验读数（regen 后 `pyc_verify.py batch`，判据唯一）
+
+| 抽验 pyc | 期望 | 实测 | 判读 |
+|---|---|---|---|
+| `test_repros/round3/e02_g1_b98_hosts.pyc` | 11/18 | **11/18** | 持平（doc-only 无位移） |
+| `test_repros/round3/ne01_g1_neg.pyc` | 4/5 | **4/5** | 持平（doc-only 无位移） |
+
+> 两者均**先 `pycdc.py -o <OK.py> <pyc>` 重建产物**再 `pyc_verify batch`（证据 `test_repros/round3/_scratch_b99/doconly_sample.json`）。读数与整改前一致，印证 doc-only 未触及任何判据/发射。
+
+**整改落地状态**：打回项 A / B 均已闭环，`FIX_P2.md` §6 对照表对应两行已同步为与整改后代码逐字一致。

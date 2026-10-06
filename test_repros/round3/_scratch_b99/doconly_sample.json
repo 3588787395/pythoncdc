@@ -1,0 +1,65 @@
+{
+ "elapsed_sec": 0.5,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 2,
+  "success": 0
+ },
+ "files_total": 2,
+ "generated_at": "2026-10-06T09:37:56",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/test_repros/round3/e02_g1_b98_hosts.pyc",
+   "F:/Downloads/pythoncdc-main/test_repros/round3/ne01_g1_neg.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.CB98.m_handler: Failure: Different control flow",
+    "***<module>.f_comp_cond_host.<listcomp>: Failure: Different control flow",
+    "***<module>.f_genexp_cond_host.<genexpr>: Failure: Different control flow",
+    "***<module>.f_dictcomp_value_host.<dictcomp>: Failure: Different control flow",
+    "***<module>.f_nested_func_host.inner: Failure: Different control flow",
+    "***<module>.f_match_arm_host: Failure: Different control flow",
+    "***<module>.f_with_body_host: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed49",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round3/e02_g1_b98_hostsOK.py",
+   "source_sha": "3df27604957c",
+   "status": "failure",
+   "success_rate": 0.6111111111111112,
+   "units_success": 11,
+   "units_total": 18
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.n_grouped_pair: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round3/ne01_g1_neg.pyc",
+   "pyc_sha": "57bba639ec0b",
+   "source": "F:/Downloads/pythoncdc-main/test_repros/round3/ne01_g1_negOK.py",
+   "source_sha": "a92d9b42c862",
+   "status": "failure",
+   "success_rate": 0.8,
+   "units_success": 4,
+   "units_total": 5
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.6521739130434783,
+ "units_success": 15,
+ "units_total": 23
+}
