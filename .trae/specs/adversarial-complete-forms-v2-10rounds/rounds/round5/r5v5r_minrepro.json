@@ -1,0 +1,62 @@
+[
+ {
+  "file": "test_repros/round5/r5v5_01_module_root.pyc",
+  "bug": "B114",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "file": "test_repros/round5/r5v5_08_slice_callsite.pyc",
+  "bug": "B115",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": []
+ },
+ {
+  "file": "test_repros/round5/_scratch_r5v5/k1_ifwhile.pyc",
+  "bug": "B115",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "file": "test_repros/round5/_scratch_r5v5/k2_ifwhile_flag.pyc",
+  "bug": "B115",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "file": "test_repros/round5/r5v5_03_annassign.pyc",
+  "bug": "B116",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": []
+ },
+ {
+  "file": "test_repros/round5/_scratch_r5v5/k4_bare_ann.pyc",
+  "bug": "B116",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ }
+]

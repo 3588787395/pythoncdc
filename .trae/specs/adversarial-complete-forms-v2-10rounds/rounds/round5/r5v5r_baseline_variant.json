@@ -1,0 +1,8 @@
+[
+ {"variant": "b114_in_for", "base_status": "failure", "base_units": 0, "base_total": 1, "current_units": 0, "current_total": 1, "verdict": "same"},
+ {"variant": "b114_in_while", "base_status": "failure", "base_units": 0, "base_total": 1, "current_units": 0, "current_total": 1, "verdict": "same"},
+ {"variant": "b114_in_func_for", "base_status": "failure", "base_units": 1, "base_total": 2, "current_units": 1, "current_total": 2, "verdict": "same"},
+ {"variant": "b115_while_and3", "base_status": "failure", "base_units": 1, "base_total": 2, "current_units": 1, "current_total": 2, "verdict": "same"},
+ {"variant": "b116_closure_bare", "base_status": "failure", "base_units": 1, "base_total": 3, "current_units": 1, "current_total": 3, "verdict": "same"},
+ {"variant": "b116_default", "base_status": "failure", "base_units": 0, "base_total": 2, "current_units": 1, "current_total": 2, "verdict": "improved"}
+]
