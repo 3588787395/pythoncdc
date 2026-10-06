@@ -1,0 +1,4 @@
+﻿  ***<module>.get_kline_local: Failure: Different control flow
+[single] f:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round6/r6v6fixa_quote_handler.pyc
+[single] 产物 f:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round6/r6v6fixa_quote_handlerOK.py
+[single] status=failure units=78/79 success_rate=98.73%

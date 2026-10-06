@@ -1,0 +1,29 @@
+{
+  "task": "6.2-identify-layer (FIX_A)",
+  "scope": "core/cfg/region_analyzer.py only; 10 _identify_*_regions docstrings",
+  "base_head": "ce19bf05",
+  "change_nature": "docstring-only; +70 / -0 lines; no executable code touched",
+  "methods": [
+    {"name": "_identify_loop_regions", "def_line": 4171, "c_clause_line": 4275, "six_items": "1/2/3/4/5/6 present"},
+    {"name": "_identify_try_except_regions", "def_line": 8178, "c_clause_line": 8263, "six_items": "1/2/3/4/5/6 present"},
+    {"name": "_identify_with_regions", "def_line": 13275, "c_clause_line": 13405, "six_items": "1/2/3/4/5/6 present"},
+    {"name": "_identify_match_regions", "def_line": 13977, "c_clause_line": 14067, "six_items": "1/2/3/4/5/6 present"},
+    {"name": "_identify_assert_regions", "def_line": 16690, "c_clause_line": 16838, "six_items": "1/2/3/4/5/6 present"},
+    {"name": "_identify_chained_compare_regions", "def_line": 17501, "c_clause_line": 17602, "six_items": "1/2/3/4/5/6 present"},
+    {"name": "_identify_conditional_regions", "def_line": 17976, "c_clause_line": 18122, "six_items": "1/2/3/4/5/6 present"},
+    {"name": "_identify_ternary_regions", "def_line": 22572, "c_clause_line": 22706, "six_items": "1/2/3/4/5/6 present"},
+    {"name": "_identify_boolop_regions", "def_line": 25714, "c_clause_line": 25881, "six_items": "1/2/3/4/5/6 present"},
+    {"name": "_identify_sequence_regions", "def_line": 30943, "c_clause_line": 31035, "six_items": "1/2/3/4/5/6 present"}
+  ],
+  "checks": {
+    "py_compile": {"cmd": "python -m py_compile core/cfg/region_analyzer.py", "rc": 0},
+    "import": {"cmd": "python -c \"import core.cfg.region_analyzer\"", "result": "IMPORT_OK"},
+    "bom": {"head3": "efbbbf", "bom_full_count": 1},
+    "git_diff_stat": {"file": "core/cfg/region_analyzer.py", "insertions": 70, "deletions": 0},
+    "grep_c_clause": {"pattern": "C 条款：C1——", "hits": 10}
+  },
+  "rv2_zero_behavior": [
+    {"pyc": "site-packages/fly/data/quotation.pyc", "head_baseline": "152/153", "after_fix": "152/153", "verdict": "unchanged (only change_his_to_forward baseline failure)"},
+    {"pyc": "site-packages/fly/data/quote_handler.pyc", "head_baseline": "78/79", "after_fix": "78/79", "verdict": "unchanged (only get_kline_local baseline failure)"}
+  ]
+}

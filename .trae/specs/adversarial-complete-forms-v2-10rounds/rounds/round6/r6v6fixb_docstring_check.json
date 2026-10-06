@@ -1,0 +1,123 @@
+{
+  "methods": {
+    "_generate_assert": {
+      "lineno": 4330,
+      "marks": [
+        "①",
+        "②",
+        "③",
+        "④",
+        "⑤",
+        "⑥"
+      ],
+      "has_C": true,
+      "doc_len": 4875
+    },
+    "_generate_loop": {
+      "lineno": 5089,
+      "marks": [
+        "①",
+        "②",
+        "③",
+        "④",
+        "⑤",
+        "⑥"
+      ],
+      "has_C": true,
+      "doc_len": 4903
+    },
+    "_generate_if": {
+      "lineno": 14416,
+      "marks": [
+        "①",
+        "②",
+        "③",
+        "④",
+        "⑤",
+        "⑥"
+      ],
+      "has_C": true,
+      "doc_len": 2255
+    },
+    "_generate_value_context_chain_compare_assign": {
+      "lineno": 14856,
+      "marks": [
+        "①",
+        "②",
+        "③",
+        "④",
+        "⑤",
+        "⑥"
+      ],
+      "has_C": true,
+      "doc_len": 2440
+    },
+    "_generate_match": {
+      "lineno": 35636,
+      "marks": [
+        "①",
+        "②",
+        "③",
+        "④",
+        "⑤",
+        "⑥"
+      ],
+      "has_C": true,
+      "doc_len": 2130
+    },
+    "_generate_boolop": {
+      "lineno": 39319,
+      "marks": [
+        "①",
+        "②",
+        "③",
+        "④",
+        "⑤",
+        "⑥"
+      ],
+      "has_C": true,
+      "doc_len": 1006
+    },
+    "_generate_boolop_impl": {
+      "lineno": 39365,
+      "marks": [
+        "①",
+        "②",
+        "③",
+        "④",
+        "⑤",
+        "⑥"
+      ],
+      "has_C": true,
+      "doc_len": 4787
+    },
+    "_generate_ternary": {
+      "lineno": 41808,
+      "marks": [
+        "①",
+        "②",
+        "③",
+        "④",
+        "⑤",
+        "⑥"
+      ],
+      "has_C": true,
+      "doc_len": 4021
+    },
+    "_generate_basic_region": {
+      "lineno": 51085,
+      "marks": [
+        "①",
+        "②",
+        "③",
+        "④",
+        "⑤",
+        "⑥"
+      ],
+      "has_C": true,
+      "doc_len": 3472
+    }
+  },
+  "all_ok": true,
+  "count": 9
+}

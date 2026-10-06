@@ -1,0 +1,21 @@
+{
+  "task": "Round6 Task 6.2 generation-layer docstring remediation (Fix Engineer B)",
+  "file": "core/cfg/region_ast_generator.py",
+  "scope": "docstring only (9 _generate_* methods)",
+  "py_compile": {"cmd": "python -m py_compile core/cfg/region_ast_generator.py", "rc": 0},
+  "import": {"cmd": "python -c import core.cfg.region_ast_generator", "result": "IMPORT_OK", "rc": 0},
+  "bom": {"head3": "efbbbf", "bom_count": 1, "ok": true},
+  "git_diff_stat": {"insertions": 255, "deletions": 9, "note": "all removed lines are docstring text; zero executable code lines changed"},
+  "docstring_check": {"all_ok": true, "count": 9, "evidence": "r6v6fixb_docstring_check.json"},
+  "rv2": {
+    "pyc": "site-packages/fly/data/quotation.pyc",
+    "verify_cmd": "python scripts/pyc_verify.py single site-packages/fly/data/quotation.pyc",
+    "status": "failure",
+    "units": "152/153",
+    "success_rate": "99.35%",
+    "sole_failure": "<module>.change_his_to_forward (baseline-identical)",
+    "regen_sha_before": "A280C00D534C15EA66D2209A521D007D62618FFB855DEB2633C4305164C47D92",
+    "regen_sha_after": "A280C00D534C15EA66D2209A521D007D62618FFB855DEB2633C4305164C47D92",
+    "byte_identical_regen": true
+  }
+}

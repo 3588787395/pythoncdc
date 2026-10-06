@@ -4331,6 +4331,34 @@ class RegionASTGenerator:
                          skip_store_targets: Set[str] = None) -> Dict[str, Any]:
         """_generate_assert - 断言区域 AST 生成（Assert Region → ast.Assert）
 
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」（自底向上归约 /
+        每块唯一归属 / 嵌套即抽象节点 / 父引用子入口）——assert 条件/消息由
+        ast.Assert 承载，LOAD_ASSERTION_ERROR/RAISE_VARARGS 等 raise 基础设施
+        由节点重编译自然再生，不发射源码。
+        ②归约顺序：自底向上，内层区域先归约——先经 _collect_assert_prefix_stmts
+        按 CPython 栈纪律切出入口块前导语句段并暂存（父序列在 ast.Assert 之前
+        发射），再重建条件（链式比较/BoolOp 分支优先于主路径），最后重建消息。
+        ③唯一归属判定：本方法的块归属判定逻辑——condition_block 的前导段移交
+        父序列发射并登记 _assert_prefix_emitted_blocks（父序列通用扫描据此
+        跳过，不重复发射）；region.blocks 全部登记 generated_blocks，避免外层
+        IfRegion/LoopRegion 重复生成；skip_store_targets 中的 STORE 属外层赋值
+        而跳过。
+        ④嵌套处理：嵌套区域作为抽象节点——AssertRegion 为叶节点不递归
+        _generate_region；链式比较/BoolOp 条件经 chained_compare_blocks /
+        boolop_chain_blocks 手工整树重建为单一 Compare/BoolOp 节点，避免被
+        独立识别为多条 AssertRegion（(0<a)<10 误形与首段丢失）。
+        ⑤入口引用语义：condition_block → Assert.test（expr_reconstructor 重建，
+        失败兜底 Constant(True)），message_block → Assert.msg（无消息省略）；
+        None 检查方向经 _invert_assert_none_check_direction 按 assert 跳转语义
+        互换（assert 与 if 语义相反）。
+        ⑥反编译流程：区域生成层 assert 结构装配步，由 _generate_region 按
+        RegionType 分派；处于表达式重建与语句装配之间。
+
+        C 条款：[C1] 只读 L(A) = AssertRegion 自身块指令（前导段唯一移交父序列
+        并登记去重），维持每块唯一归属；[C2] 链式比较/BoolOp 条件整树黑箱重建
+        为单一断言，不自展开子区域内部；[C3] 前导段栈纪律切分与 None 检查方向
+        修正为显式封闭守卫，不命中时走原条件重建路径，行为逐位保持。
+
 输入契约:
   - 接收 Region 子类: AssertRegion
   - 关键字段:
@@ -5062,6 +5090,38 @@ AST 映射规则:
                         exclude_blocks: Set[BasicBlock] = None,
                         skip_store_targets: Set[str] = None) -> Dict[str, Any]:
         """_generate_loop - 循环区域 AST 生成（Loop Region → ast.For / ast.While）
+
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」（自底向上归约 /
+        每块唯一归属 / 嵌套即抽象节点 / 父引用子入口）——循环头/回边/else 的
+        控制流语义由 ast.For / ast.While 节点重编译自然再生，回边不发射源码。
+        ②归约顺序：自底向上，内层区域先归约——循环体/else/yield-from 前驱中的
+        嵌套子区域先经 _generate_region 整树生成，本方法再按 header →
+        条件重检 → body → else → break 顺序装配 For/While 节点。
+        ③唯一归属判定：本方法的块归属判定逻辑——header_block 为 None 时返回
+        Pass；back_edge_block（BlockRole.LOOP_BACK_EDGE）是隐式 continue 不
+        发射源码；break_blocks 经 BlockRole.BREAK 归 ast.Break；for 目标的裸
+        STORE（无前序表达式）由 `for x in` 承载而跳过，有前序表达式时归独立
+        Assign（R2）；其余块按 generated_blocks/generated_offsets 去重防外层
+        重复生成。
+        ④嵌套处理：嵌套区域作为抽象节点——体内子区域遇入口即递归
+        _generate_region 整树生成，不拆散子区域逐块重建；内层循环的
+        break/continue 经 _current_loop 栈隔离不泄漏到外层；_loop_depth
+        递增/递减维持层级正确，_generating_regions/_generated_regions 防重入。
+        ⑤入口引用语义：while 条件写入 AST.test（condition_block 或 header）；
+        for 循环从 header_block 的 FOR_ITER 前驱块提取 target/iter，body_blocks
+        → AST.body，else_blocks → AST.orelse，break_blocks → body 内 ast.Break；
+        复合条件经 BoolOpRegion.condition_expr 取归约结果；父序列仅引用本区域
+        entry 的归约结果（返回单个 For/While/YieldFrom 字典）。
+        ⑥反编译流程：区域生成层循环结构装配步，由 _generate_region 按
+        RegionType 分派（LOOP/FOR/WHILE）；yield from 隐式循环
+        （metadata['is_yield_from_loop']）在本方法内改装配为 ast.Expr(YieldFrom)。
+
+        C 条款：[C1] 只读 L(A) = header/condition/body/else/back_edge/break 同层
+        结构事实，回边隐式 continue 与 for 目标裸 STORE 的归属守卫恢复每块
+        唯一归属；[C2] 体内/else/嵌套子区域均经 entry 接口黑箱组合，内层
+        break/continue 不泄漏至外层；[C3] yield-from 路径、while True、
+        for_target 重赋值等守卫显式封闭，不命中时走 For/While 原装配路径，
+        行为逐位保持。
 
 输入契约:
   - 接收 Region 子类: LoopRegion
@@ -14356,6 +14416,35 @@ AST 映射规则:
     def _generate_if(self, region: IfRegion) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """_generate_if — IfRegion → ast.If 映射
 
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」（自底向上归约 /
+        每块唯一归属 / 嵌套即抽象节点 / 父引用子入口）——if 条件的
+        POP_JUMP_FORWARD_IF_FALSE 跳转方向与 then/else 布局由 ast.If 节点
+        重编译自然再生，then 末尾跳转不发射源码。
+        ②归约顺序：自底向上，内层区域先归约——条件表达式先重建，then/else
+        中的嵌套区域经 _generate_region 整树生成后，本方法再装配 If.body /
+        If.orelse；elif 链（region_type=IF_ELIF_CHAIN）先走
+        _if_generate_full_elif_chain 整链归约。
+        ③唯一归属判定：本方法的块归属判定逻辑——entry 被 BoolOpRegion 经
+        block_to_region 认领时按 R36 守卫跳过或交 _if_generate_normal；R59
+        例外：BoolOpRegion 为本 IfRegion 的条件子区域（value_target 为空且
+        parent 为本区域）时不跳过；[R36 双角色块例外] 分析层写下
+        guard_clause_prefix_end 且 BoolOpRegion.merge_block 为本区域 entry 时，
+        块尾剩余指令归后继语句测试、不跳过；then/else 块登记 generated 去重。
+        ④嵌套处理：嵌套区域作为抽象节点——then/else 中的子区域经块→区域
+        映射识别入口后递归 _generate_region 整树生成，不拆散逐块重建；elif
+        链的 else 为单个 IfRegion 时 orelse 直接为 [ast.If] 而非嵌套列表。
+        ⑤入口引用语义：entry → If.test（expr_reconstructor 重建）；chained_
+        compare_ops ≥ 2 时重建为单一 ast.Compare（多算子链，非嵌套 And+Compare）；
+        then_blocks → If.body，else_blocks → If.orelse（空则省略，空 body → Pass）。
+        ⑥反编译流程：区域生成层 IfRegion 装配步，由 _generate_region 按
+        RegionType 分派；conditional 与 chained_compare 两种条件形态共用本方法。
+
+        C 条款：[C1] 只读 L(A) = 本 IfRegion 的 entry/then_blocks/else_blocks/
+        chained_compare_ops 同层结构事实；[C2] then/else 嵌套子区域经 entry
+        接口黑箱组合，父级不窥视子区域内部；[C3] BoolOpRegion 认领 entry 的
+        跳过守卫、R59 条件子区域不跳过例外、R36 双角色块例外均为显式封闭，
+        不命中时走 _if_generate_normal，行为逐位保持。
+
         输入契约:
           - 接收 Region 子类: IfRegion
           - 关键字段: entry, then_blocks, else_blocks, region_type,
@@ -14765,7 +14854,34 @@ AST 映射规则:
         return None
 
     def _generate_value_context_chain_compare_assign(self, region: IfRegion) -> Optional[Dict[str, Any]]:
-        """[Round4-04] 链式比较作赋值右值的 AST 生成。
+        """_generate_value_context_chain_compare_assign — 链式比较作赋值右值的 AST 生成。
+
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」（自底向上归约 /
+        每块唯一归属 / 嵌套即抽象节点 / 父引用子入口）——值上下文链式比较
+        （`z = 0 < a < 10`）由 ast.Compare 作为 Assign.value 承载，短路跳转
+        （JUMP_IF_FALSE_OR_POP）由节点重编译自然再生，不发射独立语句。
+        ②归约顺序：自底向上，内层区域先归约——先按 header 条件段 →
+        chain_block → cleanup/merge 顺序重建 Compare 链，再生成 Assign；[W15-B]
+        merge_block 含 STORE 后缀真实语句时在其后追加由后缀重建的后继语句。
+        ③唯一归属判定：本方法的块归属判定逻辑——识别条件 = region.chained_
+        compare_ops 长度 ≥ 2 ∧ condition_block 末指令 ∈ SHORT_CIRCUIT_JUMP_OPS
+        （值上下文）∧ merge_block 含 STORE_*（R82 例外：return 上下文 merge 为
+        SWAP+POP_TOP+RETURN_VALUE）；命中即重建 Assign 并标记 region.blocks 为
+        generated，避免父 IfRegion 重复处理，未命中返回 None。
+        ④嵌套处理：嵌套区域作为抽象节点——输出单个 Assign（value=Compare），
+        链式各段作为 Compare.ops/comparators 子节点整体归约，不拆散为独立语句；
+        纯栈操纵指令（SWAP/COPY/POP_TOP）不产生用户语句但真实语句不得被吞并。
+        ⑤入口引用语义：merge_block 的 STORE 目标 → Assign.targets（Name Store），
+        重建的链式比较 → Assign.value（Compare）；尾部「LOAD_CONST None +
+        RETURN_VALUE」隐式返回按既有约定剥离不发射。
+        ⑥反编译流程：区域生成层 IfRegion 的值上下文链式比较分支，由
+        _generate_if 调用（非 None 返回值即接管本区域）。
+
+        C 条款：[C1] 只读 L(A) = 本区域的 chained_compare_ops/blocks、condition_
+        block 末指令 opcode、merge_block 的 STORE/RETURN 同层结构事实；[C2]
+        输出单一 Assign/后继语句序列黑箱，不拆子区域内部；[C3] 三条识别守卫
+        （长度/短路 op/STORE 或 R82 return）为显式封闭，不命中返回 None 交回
+        _generate_if 原路径，行为逐位保持。
 
         字节码模式（`z = 0 < a < 10`）:
             header(cond_block):
@@ -35520,6 +35636,33 @@ AST 映射规则:
     def _generate_match(self, region: MatchRegion) -> Dict[str, Any]:
         """_generate_match — MatchRegion → ast.Match 映射
 
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」（自底向上归约 /
+        每块唯一归属 / 嵌套即抽象节点 / 父引用子入口）——match subject 与各
+        case 的 pattern 检查/守卫跳转由 ast.Match/match_case 节点重编译自然
+        再生，MATCH_* 检查指令不发射源码。
+        ②归约顺序：自底向上，内层区域先归约——先重建 subject 表达式，再按
+        case_blocks 的 start_offset 升序逐 case 解析 pattern → guard → body
+        （body 内嵌套区域整树生成），最后装配 Match.cases。
+        ③唯一归属判定：本方法的块归属判定逻辑——MATCH_MAPPING/MATCH_KEYS/
+        MATCH_CLASS/MATCH_SEQUENCE 等检查块不生成源码；含 MATCH_* +
+        POP_JUMP_IF 的 pattern check 块不发射独立语句；cleanup 块过滤；case
+        按 start_offset 排序保证 case 间跳转目标与顺序一致。
+        ④嵌套处理：嵌套区域作为抽象节点——case body 中的 IfRegion/LoopRegion
+        等经 _generate_region 整树生成作为抽象节点；pattern 经 pattern_parser
+        解析 MATCH_* 指令重建模式 AST（不自展开为块语句）。
+        ⑤入口引用语义：subject_block → Match.subject；case_blocks → Match.cases
+        （每个 match_case: pattern + guard + body）；guard 条件必须在 body
+        语句之前生成。
+        ⑥反编译流程：区域生成层 MatchRegion 结构装配步，由 _generate_region
+        按 RegionType 分派。
+
+        C 条款：[C1] 只读 L(A) = MatchRegion 自身 subject_block/blocks/
+        case_blocks/case_patterns 同层结构事实；[C2] case body 嵌套区域经
+        entry 接口黑箱组合，pattern 经 pattern_parser 黑箱解析；[C3] 字面量
+        match（MatchValue/MatchOr/MatchSingleton，COPY+COMPARE_OP/IS_OP）、
+        wildcard match（MatchAs 无 pattern）、case None（POP_JUMP_IF_NOT_NONE）
+        等识别守卫显式封闭 case 模式差异，不命中时走 MATCH_* 标准解析路径。
+
         输入契约:
           - 接收 Region 子类: MatchRegion
           - 关键字段: entry, blocks, case_blocks, case_bodies, subject
@@ -39176,14 +39319,29 @@ AST 映射规则:
     def _generate_boolop(self, region: BoolOpRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
         """[Round15-A2b] 重入保护包装：生成期间把本区域登记进 _generating_regions。
 
-        识别条件：BoolOp 区域的 merge_block 常常同时是某个 IfRegion 的 entry/条件块
-          （双角色块），于是 BoolOpRegion 生成中会派发该 IfRegion，而 IfRegion 又会经
-          _boolop_merge_owner_for 回头取本 BoolOp 区域——形成双向认领。
-        归约方式：原则 2（每个块在任何层级只属于一个区域）在区域层要求「正在生成中
-          的区域」不得被自己的子节点再生成一次；子节点据此判定「本赋值已由祖先发射」，
-          只从语句边界 STORE_* 之后认领 if 条件。
-        AST 映射：包装本身不产出 AST。修复的是同一份 Assign 出现两次（实测 round14_join
-          r14j_11/r14j_12 的 `b = a and 2` 各多 4 条指令）。
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」，本包装聚焦原则 2
+        每块唯一归属——区域层面「正在生成中的区域」不得被自己的子节点再生成，
+        防双角色块（BoolOpRegion.merge_block 同时是某 IfRegion 的 entry/条件块）
+        造成双向认领。
+        ②归约顺序：自底向上，内层区域先归约——本包装层不做任何表达式重建，
+        仅登记生成态后立即委托 _generate_boolop_impl 完成内层归约。
+        ③唯一归属判定：本方法的块归属判定逻辑——进入时把 id(region) 加入
+        _generating_regions，子节点（经 _boolop_merge_owner_for 回头的 IfRegion）
+        据此判定「本赋值已由祖先发射」，只从语句边界 STORE_* 之后认领 if 条件；
+        退出（finally）时 discard 撤销登记。
+        ④嵌套处理：嵌套区域作为抽象节点——包装本身不产出 AST，不拆散子区域；
+        内层归约全部交 _generate_boolop_impl（BoolOpRegion 通常为叶区域）。
+        ⑤入口引用语义：本包装不改 AST 映射接口，原样返回 impl 的 BoolOp 语句
+        列表或 None；prefix_emitted_upto 认领快照在 impl 无输出时整体撤销，保证
+        真正发射的那次调用不被链首切片切掉同一条语句。
+        ⑥反编译流程：区域生成层 BoolOpRegion 的生成入口，由 _generate_region
+        分派经本包装进入 _generate_boolop_impl；修复同一份 Assign 出现两次
+        （实测 round14_join r14j_11/r14j_12 的 `b = a and 2` 各多 4 条指令）。
+
+        C 条款：[C1] 包装层只做本区域单次调用作用域内的记账（_generating_regions
+        进出栈、prefix_emitted_upto 认领快照），不改数据流；[C2] 仅经 impl 返回值
+        与祖先通信，不窥视子区域内部；[C3] 「无输出即撤销认领」为显式封闭守卫
+        （guard_clause_skip 让渡发射权路径），正常输出时逐位保持原行为。
         """
         _bo_rid = id(region)
         self._generating_regions.add(_bo_rid)
@@ -39206,6 +39364,35 @@ AST 映射规则:
 
     def _generate_boolop_impl(self, region: BoolOpRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
         """生成 BoolOpRegion 的 AST 节点列表
+
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」（自底向上归约 /
+        每块唯一归属 / 嵌套即抽象节点 / 父引用子入口）——`and`/`or` 短路链
+        （JUMP_IF_FALSE_OR_POP / JUMP_IF_TRUE_OR_POP）由 ast.BoolOp(op=And|Or,
+        values=[...]) 重编译自然再生，短路跳转不发射源码。
+        ②归约顺序：自底向上，内层区域先归约——先经 find_enclosing_parent
+        ((LoopRegion, IfRegion)) 判定条件上下文，再按 op_chain 顺序重建布尔
+        表达式，最后按模式装配 Assign/Return/Expr 或写入 condition_expr。
+        ③唯一归属判定：本方法的块归属判定逻辑——条件上下文模式
+        （prefix_block 或某 chain_block == enclosing.condition_block）不产独立
+        语句，将表达式写入 region.condition_expr 返回 None 交父级消费；独立模式
+        按 value_target 与 merge_block 终结指令选 Assign/Return/Expr/分支；R78
+        分支用 _downstream_region_entry 认领下游区域；pre_stmts 前导语句按归约
+        入口（STORE_* / IMPORT_NAME）切分归属。
+        ④嵌套处理：嵌套区域作为抽象节点——BoolOpRegion 通常为叶区域不含子区域；
+        作为 Loop/If 条件时父级经 region.condition_expr 接口黑箱读取，不窥视
+        op_chain 内部；R78 命中下游区域时按原则 4 派发 _generate_region。
+        ⑤入口引用语义：op_chain → BoolOp.values（按原序，操作符与操作数顺序
+        精确匹配以保证短路语义）；value_target → Assign.targets；merge 块
+        RETURN → Return(value=BoolOp)；链末 IF_TRUE/NONE 跳转经 _negate_expr 取反
+        后再写入 condition_expr。
+        ⑥反编译流程：区域生成层 BoolOpRegion 装配步，由 _generate_boolop 包装
+        调用（_generate_region 经包装进入）。
+
+        C 条款：[C1] 只读 L(A) = 本区域 op_chain/blocks/merge_block/value_target/
+        prefix_block 同层结构事实，条件上下文判定只比块指针；[C2] 条件上下文经
+        condition_expr 接口被父级消费、下游区域经 entry 派发，父级不窥视子区域
+        内部；[C3] 条件上下文判定与 R78 下游认领守卫均为显式封闭，未命中时走
+        通用块语句路径（F8 修复后 pre_stmts 不重复前置），行为逐位保持。
 
         输入契约:
         -----------
@@ -41620,6 +41807,37 @@ AST 映射规则:
 
     def _generate_ternary(self, region: TernaryRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
         """生成 TernaryRegion 的 AST 语句列表
+
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」（自底向上归约 /
+        每块唯一归属 / 嵌套即抽象节点 / 父引用子入口）——条件三元的
+        POP_JUMP_IF_FALSE / JUMP_FORWARD 布局由 ast.IfExp(test, body, orelse)
+        重编译自然再生；条件表达式起点的判定用通用栈效应判据，无目标启发式。
+        ②归约顺序：自底向上，内层区域先归约——先做嵌套容器构造检测与
+        elif/while_cond 重叠守卫，再重建条件（BoolOp 条件链或单块），再重建
+        true/false 值（可递归嵌套三元），最后按 value_target/container_type/
+        merge 终结选择输出形态。
+        ③唯一归属判定：本方法的块归属判定逻辑——_ternary_nested_in_container_
+        construction 命中（条件跳转下方仍有栈上元素）时整树归约为单个容器构造
+        表达式；merge_context='while_cond' 或 entry 与某 IfRegion.elif_conditions
+        重叠时为合法 elif 条件三元，跳过抢占守卫；[R102] 用栈效应表
+        （含 BINARY_SUBSCR = push1/pop2）向后扫描确定 preload 边界，避免把条件
+        测试前缀并入 preload_exprs。
+        ④嵌套处理：嵌套区域作为抽象节点——true/false 值块经
+        _build_ternary_value_expr 递归重建为嵌套 IfExp 子节点；嵌套容器构造经
+        _generate_container_construction_region 整树归约为一个容器字面量表达式，
+        不切断构造区域致键值对错位。
+        ⑤入口引用语义：condition_chain_blocks（长度>1）经
+        _build_ternary_boolop_condition → IfExp.test；true/false 值块 →
+        IfExp.body/orelse；value_target → Assign.targets；container_type 非空 →
+        容器字面量 Expr（Dict keys/values 配对、List/Tuple/Set elts）。
+        ⑥反编译流程：区域生成层 TernaryRegion 装配步，由 _generate_region 按
+        RegionType 分派；亦被 _if_generate_elif_chain 复用于重建 elif 条件 IfExp。
+
+        C 条款：[C1] 只读 L(A) = 本区域 condition/true_value/false_value/
+        merge_block/condition_chain_blocks 同层结构事实（起点判定用栈效应判据）；
+        [C2] 嵌套三元/容器构造整树黑箱归约为单节点，不拆散内部键值对；[C3]
+        嵌套容器构造检测、elif/while_cond 重叠跳过、R102 栈效应边界均为显式
+        封闭守卫，未命中时走标准 IfExp 装配路径，行为逐位保持。
 
         输入契约:
         -----------
@@ -50866,6 +51084,34 @@ AST 映射规则:
 
     def _generate_basic_region(self, region: Region) -> List[Dict[str, Any]]:
         """生成基础区域 AST（Basic Region → statement list）
+
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」，本方法聚焦原则 1
+        自底向上归约 + 原则 2 每块唯一归属——BASIC Region 仅剩未被结构化区域
+        抢占的「裸」块，按 CPython 线性偏移还原语句，控制流由块角色再生。
+        ②归约顺序：自底向上，内层区域先归约——进入本方法时结构化区域
+        （If/Loop/Try/With/Match/...）已先于本 region 完成生成；本方法再按
+        region.blocks 的 start_offset 升序逐块 dispatch。
+        ③唯一归属判定：本方法的块归属判定逻辑——WITH_EXIT_CLEANUP 块仅登记
+        generated_blocks 不输出语句（语义已由父 WithRegion 表达）；LOOP_EXIT
+        返回 []（循环退出填充块不产语句）；其余块经 block_role
+        （PURE_CONTINUE/CONTINUE/BREAK/PURE_BREAK）走相应短路路径；所有块处理
+        后即加入 generated_blocks 作全局去重依据。
+        ④嵌套处理：嵌套区域作为抽象节点——BASIC Region 为叶节点，本方法不
+        递归 _generate_region；真正的逐块生成 + 控制流短路逻辑由
+        _generate_block_statements 完成（结构化子区域已被其提前认领跳过）。
+        ⑤入口引用语义：region.blocks 按 start_offset → 语句字典列表；
+        block_role → 短路控制流（Continue/Break/Loop exit/while True）；
+        块内 effective_instructions 经 expr_reconstructor 还原表达式；
+        trailing_return_none 由下游 Pass/Return 逻辑决定是否省略隐式 return None。
+        ⑥反编译流程：区域生成层 BASIC 分支，由 _generate_region 在
+        region.region_type == RegionType.BASIC 时分派，是结构化生成后的兜底
+        块装配步。
+
+        C 条款：[C1] 只消费本 Basic Region 的 blocks 同层结构事实（start_offset/
+        block_role），维持每块唯一归属；[C2] 叶节点不窥视结构化子区域内部，
+        结构化区域先归约的结果经块映射与 generated_blocks 被跳过；[C3]
+        WITH_EXIT_CLEANUP/LOOP_EXIT 短路为显式归属守卫，未命中时走
+        _generate_block_statements 通用重建路径，行为逐位保持。
 
         本方法由 _generate_region 在 region.region_type == RegionType.BASIC 时
         分派调用，负责把一个 BASIC Region 内的所有块按字节码顺序还原为

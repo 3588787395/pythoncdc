@@ -4272,6 +4272,14 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
 当前测试矩阵通过率: 100%（while_loop 120/120 + for_loop 193/193 = 313/313）。
 本方法遵循区域归约算法 4 核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 /
 父引用子入口。
+C 条款：C1——判据只来自本层块对象结构事实（回边 src/tgt、header 末条 FOR_ITER/
+GET_ITER 等 opcode、前驱集合、异常边）；C2——嵌套 IfRegion/TryExceptRegion/
+WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopRegion，
+父区域不展开循环体内部（每块唯一归属）；C3——识别须参考非局部信息：回边合法性依赖
+全函数级支配关系 dom_analyzer.is_dominator(header, src)，出口/else 候选若是已被先归约
+结构化区域登记的入口块（_is_post_merge_sibling_head 跨区域 entry 反查），由 R09 边界
+规则显式排除并归还其归属结构；二者共同以 block_to_region「先到先得」登记封闭归一，
+避免循环与尾随 IfRegion 双重归属。
         """
         all_loops = self.loop_analyzer.get_all_loops()
         sorted_loops = sorted(all_loops.items(), key=lambda x: self._get_dominance_depth(x[0]), reverse=True)
@@ -8252,6 +8260,13 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
           finally_blocks    → Try.finalbody
         当前测试矩阵通过率: 100%（try_except 230/230）。本方法遵循区域归约算法 4
         核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
+        C 条款：C1——判据只来自本层块对象结构事实（异常表 (start,end,target,depth)
+        条目、handler 入口首指令 opcode、excluded_offsets 区间包含判定）；C2——内层
+        try / 配对 except 经 handler 入口被外层抽象节点消费，父级不窥视子 handler
+        body 内部；C3——须参考非局部信息：handler 类型与 try 范围来自异常表，同级/
+        更深层 handler 偏移经 excluded_offsets 结构包含显式排除，已被其它区域（如
+        WithRegion 的 WITH_EXCEPT_START 块）占用的块由 block_to_region「先到先得」
+        守卫排除（TRY 优先级最高，确保 try 块不被下游 LOOP/IF 抢走）。
 
         [R101 fix] 显式 return 块收集判据精化（isVaildDate 形态）：
         dtc-r01 引入的 `succ.start_offset >= try_end_for_blocks → continue`
@@ -13387,6 +13402,13 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
 
         当前测试矩阵通过率: 100%（with_region 191/191）。本方法遵循区域归约算法 4
         核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
+        C 条款：C1——判据只来自本层块对象结构事实（BEFORE_WITH/BEFORE_ASYNC_WITH/
+        WITH_EXCEPT_START 等 opcode、异常表 [start,end) body 范围、后继边性质）；C2
+        ——with body 内嵌套区域经 add_child/entry 抽象节点被本 WithRegion 消费，父
+        序列不展开其内部；C3——须参考非局部信息：with 出口块（with 之后第一块）归父
+        序列所有，本区域仅以 exit_block/exit_via_jump 引用而不改其归属；cleanup 扫描
+        遇条件跳转结尾块（兄弟 IfRegion 条件块）即终止，并以 block_to_region
+        「先到先得」排除已被非-WithRegion 占用的块（避免出口块被误收为清理块）。
         """
         # 识别阶段即合并连续 WithRegion（区域归约算法：一次正确，无后处理补丁）
         # 合并条件由 WithRegion.should_merge_with 多态方法判定：相邻 entry + 同一异常表 depth
@@ -14042,6 +14064,12 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
         结构型 match + guard 模式下 pattern check chain 解析依赖 CPython 字节码
         细节，标记为 skipped（非缺陷，与上游 CPython 行为一致）。本方法遵循区域归约
         算法 4 核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
+        C 条款：C1——判据只来自本层块对象结构事实（MATCH_*/COPY+COMPARE_OP 等
+        opcode、条件跳转目标、case body 成员关系）；C2——case body 内嵌套区域经
+        add_child/entry 抽象节点被 MatchRegion 消费，父区域不展开子 match 内部；C3
+        ——须参考非局部信息：入口 subject_block 经前驱反查回溯（前驱关系），起始
+        claimed 集合取自 block_to_region（先到先得，先到者不覆盖既有归属），幻影
+        guard 经 B74 臂终止跳转目标重放校验后显式撤销（目标落入 case 体块集即判伪）。
         """
         match_regions = []
         claimed = set(self.block_to_region.keys())
@@ -16807,6 +16835,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
 
 当前测试矩阵通过率: 100%（assert 在 basic 测试集内通过）。本方法遵循区域归约
 算法 4 核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
+C 条款：C1——判据只来自本层块对象结构事实（末条前向条件跳转 opcode、恰 2 个
+conditional_successors、LOAD_ASSERTION_ERROR 指令），本方法不依赖支配树/回边；C2——
+message_block 可为嵌套 TernaryRegion.entry，AssertRegion 经该入口引用子区域，不窥视
+其内部；C3——唯一跨区域接触 = message_block 与嵌套 TernaryRegion.blocks 的重叠，由
+block_to_region「先到先得」（仅 not in 时登记，不覆盖既有归属）+ analyze() 后段
+_region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局部引用。
         """
         regions = []
         for block in self.cfg.get_blocks_in_order():
@@ -17565,6 +17599,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         完成识别并标记 claimed）。与 BoolOp 区域无冲突（先于 BoolOp 识别，避免被
         短路求值拆分）。本方法遵循区域归约算法 4 核心原则: 自底向上归约 / 每块
         唯一归属 / 嵌套即抽象节点 / 父引用子入口。
+        C 条款：C1——判据只来自本层块对象结构事实（COPY(arg=2)+COMPARE_OP 指令对、
+        fallthrough 后继、conditional_successors）；C2——嵌套区域经 add_child/entry
+        抽象节点被本 IfRegion 消费，父区域不感知 chained_compare_blocks 内部结构；
+        C3——须参考非局部信息：候选块若已被 Phase 1 区域（loop/try/with/match/
+        assert）占用，则由 claimed 集合（取自 block_to_region）显式跳过；链追踪以
+        「存在后向边」终止，避免侵入循环结构。
         """
         claimed = set()
         for regions in [loop_regions, try_regions, with_regions, match_regions, assert_regions]:
@@ -18079,6 +18119,14 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
           elif_conditions / elif_bodies / elif_final_else → 嵌套 ast.If 链
         当前测试矩阵通过率: 100%（if_region 311/311）。本方法遵循区域归约算法 4
         核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
+        C 条款：C1——判据只来自本层块对象结构事实（末条 FORWARD_CONDITIONAL_JUMP_OPS
+        opcode、跳转目标、then/else 分支成员关系）；C2——嵌套 IfRegion/BoolOpRegion/
+        TernaryRegion 等经 add_child/entry 抽象节点被父区域消费，父区域不展开
+        then/else/elif body 内部；C3——须参考非局部信息：分支收集边界经
+        _get_enclosing_structural_boundary_stop 回溯外层结构区域（try/loop）边界并
+        显式传播（仅传播边界，不改 block_to_region 直接归属），_should_skip_block_for_
+        if_region 以 LoopRegion.condition_block/header/back-edge 身份排除，
+        block_to_region「先到先得」排除已被 loop/try/with/match/boolop/ternary 占用的块。
         """
         if_regions = []
         # 存储 if_regions 引用供 _build_basic_if_region 访问，
@@ -22655,6 +22703,15 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         `block in match_case_body_blocks` 守卫，避免误吞 Match case 体。本方法
         遵循区域归约算法 4 核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象
         节点 / 父引用子入口。
+        C 条款：C1——判据只来自本层块对象结构事实（condition_block 末条条件跳转
+        opcode、true/false 值块的 JUMP_FORWARD/fallthrough、merge_block 身份）；C2——
+        嵌套 BoolOpRegion/嵌套三元/条件链经 entry 抽象节点被父区域引用，父区域不展开
+        value/merge 块内部；C3——须参考非局部信息：候选头块若为既有区域的 entry/
+        condition_block（chained_compare IfRegion.entry / AssertRegion.entry /
+        LoopRegion.condition_block / 落入 LoopRegion.blocks）则经 self.regions 显式
+        拒绝，块已归属时委托 existing.can_be_ternary_header 多态守卫，merge 汇合引用 +
+        后段 _ternary_block_sets 重叠过滤（AssertRegion.message_block 重叠为合法嵌套
+        特例）。
         """
 
         def _can_be_ternary_header(block):
@@ -25821,6 +25878,14 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
   涉及复现: repro_03.py / repro_04.py（2/2 PASS）。
 - 本方法遵循区域归约算法 4 核心原则: 自底向上归约 / 每块唯一归属 /
   嵌套即抽象节点 / 父引用子入口。
+- C 条款：C1——判据只来自本层块对象结构事实（SHORT_CIRCUIT_JUMP_OPS /
+  FORWARD_CONDITIONAL_JUMP_OPS 块末 opcode、后继身份、block_to_region 归属表）；
+  C2——本 BoolOpRegion 作为单一表达式节点经 entry 被父 IfRegion/LoopRegion 引用，
+  内部 op_chain 操作数块不展开；C3——须参考非局部信息：claimed 集合取自
+  block_to_region + existing_regions（先到先得），Step 5 残链超越替换的链块所有权
+  经 block_to_region 显式校验（仅允许「未认领 / 本循环 condition_block 惯例 / 待
+  超越残链」三类），loop_condition_blocks / match_case_body_blocks 允许重叠为显式
+  认领例外。
 
         调用链：
           analyze() → _identify_boolop_regions(existing_regions)
@@ -30967,6 +31032,11 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         识别的块都能进入 AST，无遗漏。与结构化区域无冲突（结构化区域已在
         Phase 1/Phase 2 先识别并抢占块）。本方法遵循区域归约算法 4 核心原则:
         自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
+        C 条款：C1——判据只来自本层块对象结构事实（单块 entry/blocks 成员关系、
+        _is_return_none_block 指令判定），不构造跨块 Sequence；C2——BASIC 区域作为
+        叶子抽象节点经 entry 被父区域引用，父区域不展开 {block} 内部；C3——须参考
+        非局部信息：仅读取 block_to_region 归属表「先到先得」以排除已被结构化区域
+        抢占的块，不读写任何其它区域内部，无跨层窥视。
         """
         regions = []
         for block in self.cfg.get_blocks_in_order():

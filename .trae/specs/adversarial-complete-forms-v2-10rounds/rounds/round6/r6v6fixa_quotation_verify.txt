@@ -1,0 +1,4 @@
+﻿  ***<module>.change_his_to_forward: Failure: Different control flow
+[single] f:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round6/r6v6fixa_quotation.pyc
+[single] 产物 f:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round6/r6v6fixa_quotationOK.py
+[single] status=failure units=152/153 success_rate=99.35%
