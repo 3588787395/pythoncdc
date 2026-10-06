@@ -1,0 +1,465 @@
+{
+ "elapsed_sec": 3.0,
+ "files_by_status": {
+  "compile_error": 3,
+  "error": 0,
+  "failure": 13,
+  "success": 12
+ },
+ "files_total": 28,
+ "generated_at": "2026-10-06T09:25:05",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [
+   "test_repros/round3/e12b_g9_yield_split.pyc",
+   "test_repros/round3/e12c_g9_yield_arg.pyc",
+   "test_repros/round3/e12f_g9_yield_boolop.pyc"
+  ],
+  "error": [],
+  "failure": [
+   "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "test_repros/round3/e03_g1_b1b_stress.pyc",
+   "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "test_repros/round3/e05_g3_compare_chain.pyc",
+   "test_repros/round3/e07_g4_star_slice_containers.pyc",
+   "test_repros/round3/e08_g5_lambda_deep.pyc",
+   "test_repros/round3/e09b_g6_async_comps.pyc",
+   "test_repros/round3/e10_g7_call_args.pyc",
+   "test_repros/round3/e12d_g9_awaits.pyc",
+   "test_repros/round3/e13_g10_walrus.pyc",
+   "test_repros/round3/ne01_g1_neg.pyc",
+   "test_repros/round3/ne10_g10_neg.pyc"
+  ],
+  "success": [
+   "test_repros/round3/e06_g3_op_leaves.pyc",
+   "test_repros/round3/e09_g6_comprehensions.pyc",
+   "test_repros/round3/e11_g8_fstrings.pyc",
+   "test_repros/round3/e12e_g9_yield_from.pyc",
+   "test_repros/round3/ne02_g2_neg.pyc",
+   "test_repros/round3/ne03_g3_neg.pyc",
+   "test_repros/round3/ne04_g4_neg.pyc",
+   "test_repros/round3/ne05_g5_neg.pyc",
+   "test_repros/round3/ne06_g6_neg.pyc",
+   "test_repros/round3/ne07_g7_neg.pyc",
+   "test_repros/round3/ne08_g8_neg.pyc",
+   "test_repros/round3/ne09_g9_neg.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f_or_in_and_deep: Failure: Different control flow",
+    "***<module>.f_or_in_and_pair_deep: Failure: Different control flow",
+    "***<module>.f_b98_ternary_cross: Failure: Different control flow",
+    "***<module>.f_b98_compare_cross: Failure: Different control flow",
+    "***<module>.f_b98_walrus_cross: Failure: Different control flow",
+    "***<module>.f_b98_return_pos: Failure: Different control flow",
+    "***<module>.f_b98_call_arg_pos: Failure: Different control flow",
+    "***<module>.f_b98_or_tail_and_group: Failure: Different control flow",
+    "***<module>.f_b98_not_wrapped: Failure: Different control flow",
+    "***<module>.f_b98_and_tail_or_group: Failure: Different bytecode"
+   ],
+   "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+   "pyc_sha": "ef2a32a20b39",
+   "source": "test_repros/round3/e01_g1_b98_matrixOK.py",
+   "source_sha": "1ce7c5c8aebd",
+   "status": "failure",
+   "success_rate": 0.3333333333333333,
+   "units_success": 5,
+   "units_total": 15
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.CB98.m_handler: Failure: Different control flow",
+    "***<module>.f_comp_cond_host.<listcomp>: Failure: Different control flow",
+    "***<module>.f_genexp_cond_host.<genexpr>: Failure: Different control flow",
+    "***<module>.f_dictcomp_value_host.<dictcomp>: Failure: Different control flow",
+    "***<module>.f_nested_func_host.inner: Failure: Different control flow",
+    "***<module>.f_match_arm_host: Failure: Different control flow",
+    "***<module>.f_with_body_host: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+   "pyc_sha": "f59ba0b4ed49",
+   "source": "test_repros/round3/e02_g1_b98_hostsOK.py",
+   "source_sha": "3df27604957c",
+   "status": "failure",
+   "success_rate": 0.6111111111111112,
+   "units_success": 11,
+   "units_total": 18
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f_b1b_and_or_and: Failure: Different control flow",
+    "***<module>.f_b1b_deep_right: Failure: Different control flow",
+    "***<module>.f_b1b_none_check_prefix: Failure: Different control flow",
+    "***<module>.f_b1b_loop_body_chain: Failure: Different control flow",
+    "***<module>.f_b1b_ifexp_trueval: Failure: Different bytecode"
+   ],
+   "pyc": "test_repros/round3/e03_g1_b1b_stress.pyc",
+   "pyc_sha": "c049125bc9e4",
+   "source": "test_repros/round3/e03_g1_b1b_stressOK.py",
+   "source_sha": "1a34bc469505",
+   "status": "failure",
+   "success_rate": 0.6428571428571429,
+   "units_success": 9,
+   "units_total": 14
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.n_grouped_pair: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round3/ne01_g1_neg.pyc",
+   "pyc_sha": "57bba639ec0b",
+   "source": "test_repros/round3/ne01_g1_negOK.py",
+   "source_sha": "a92d9b42c862",
+   "status": "failure",
+   "success_rate": 0.8,
+   "units_success": 4,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f_chain_ternary: Failure: Different control flow",
+    "***<module>.f_ternary_deep_right: Failure: Different control flow",
+    "***<module>.f_ternary_boolop_group: Failure: Different bytecode",
+    "***<module>.f_ternary_return: Failure: Different control flow",
+    "***<module>.f_ternary_comp_cond.<listcomp>: Failure detected at line number 40 and instruction offset 12: Different bytecode",
+    "***<module>.f_ternary_default_arg: Failure: Different bytecode",
+    "***None: Failure: Extra bytecode",
+    "***<module>.f_ternary_subscript: Failure: Different control flow",
+    "***<module>.f_ternary_walrus_rhs: Failure: Different control flow",
+    "***<module>.f_ternary_as_cond: Failure: Different control flow",
+    "***<module>.f_ternary_nested_in_boolop: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round3/e04_g2_ifexp_deep.pyc",
+   "pyc_sha": "babc1446dcb8",
+   "source": "test_repros/round3/e04_g2_ifexp_deepOK.py",
+   "source_sha": "b17718ec175e",
+   "status": "failure",
+   "success_rate": 0.42105263157894735,
+   "units_success": 8,
+   "units_total": 19
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round3/ne02_g2_neg.pyc",
+   "pyc_sha": "14f8da29e187",
+   "source": "test_repros/round3/ne02_g2_negOK.py",
+   "source_sha": "a7dec77fa5e7",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f_compare_chain6: Failure: Different control flow",
+    "***<module>.f_compare_binop_inside: Failure: Different control flow",
+    "***<module>.f_compare_subscript_inside: Failure: Different control flow",
+    "***<module>.f_compare_is_chain: Failure: Different control flow",
+    "***<module>.f_compare_in_chain: Failure: Different control flow",
+    "***<module>.f_compare_walrus_value: Failure: Different control flow",
+    "***<module>.f_compare_notin_chain: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round3/e05_g3_compare_chain.pyc",
+   "pyc_sha": "d27ce87c7462",
+   "source": "test_repros/round3/e05_g3_compare_chainOK.py",
+   "source_sha": "362be1602765",
+   "status": "failure",
+   "success_rate": 0.36363636363636365,
+   "units_success": 4,
+   "units_total": 11
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round3/e06_g3_op_leaves.pyc",
+   "pyc_sha": "442d3a018906",
+   "source": "test_repros/round3/e06_g3_op_leavesOK.py",
+   "source_sha": "8dc77fcbdaa8",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 14,
+   "units_total": 14
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round3/ne03_g3_neg.pyc",
+   "pyc_sha": "1cc3e55edf8c",
+   "source": "test_repros/round3/ne03_g3_negOK.py",
+   "source_sha": "b0519dca77b2",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f_slice_expr_bounds: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round3/e07_g4_star_slice_containers.pyc",
+   "pyc_sha": "35e59c2e9494",
+   "source": "test_repros/round3/e07_g4_star_slice_containersOK.py",
+   "source_sha": "bec315e4cefe",
+   "status": "failure",
+   "success_rate": 0.9375,
+   "units_success": 15,
+   "units_total": 16
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round3/ne04_g4_neg.pyc",
+   "pyc_sha": "43072a267700",
+   "source": "test_repros/round3/ne04_g4_negOK.py",
+   "source_sha": "893cf2f47499",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f_lambda_deco_factory.deco.<lambda>: Failure detected at line number 30 and instruction offset 6: Different bytecode",
+    "***<module>.f_lambda_starargs.<lambda>: Failure detected at line number 73 and instruction offset 4: Different bytecode"
+   ],
+   "pyc": "test_repros/round3/e08_g5_lambda_deep.pyc",
+   "pyc_sha": "ef59f46ed160",
+   "source": "test_repros/round3/e08_g5_lambda_deepOK.py",
+   "source_sha": "a9abb9e4405e",
+   "status": "failure",
+   "success_rate": 0.9333333333333333,
+   "units_success": 28,
+   "units_total": 30
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round3/ne05_g5_neg.pyc",
+   "pyc_sha": "cd83628b8985",
+   "source": "test_repros/round3/ne05_g5_negOK.py",
+   "source_sha": "709af99abdd1",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round3/e09_g6_comprehensions.pyc",
+   "pyc_sha": "bbb95fd47a0c",
+   "source": "test_repros/round3/e09_g6_comprehensionsOK.py",
+   "source_sha": "488053c3e92b",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 30,
+   "units_total": 30
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.a_three: Failure: Different control flow",
+    "***<module>.a_four.<genexpr>: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round3/e09b_g6_async_comps.pyc",
+   "pyc_sha": "5fff58db71b1",
+   "source": "test_repros/round3/e09b_g6_async_compsOK.py",
+   "source_sha": "82f126400856",
+   "status": "failure",
+   "success_rate": 0.8461538461538461,
+   "units_success": 11,
+   "units_total": 13
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round3/ne06_g6_neg.pyc",
+   "pyc_sha": "1f27bdc377bb",
+   "source": "test_repros/round3/ne06_g6_negOK.py",
+   "source_sha": "2bccfa506e37",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f_starargs_mixed: Failure: Different bytecode"
+   ],
+   "pyc": "test_repros/round3/e10_g7_call_args.pyc",
+   "pyc_sha": "d18154765212",
+   "source": "test_repros/round3/e10_g7_call_argsOK.py",
+   "source_sha": "86efc2f1e36f",
+   "status": "failure",
+   "success_rate": 0.96875,
+   "units_success": 31,
+   "units_total": 32
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round3/ne07_g7_neg.pyc",
+   "pyc_sha": "48962ed87466",
+   "source": "test_repros/round3/ne07_g7_negOK.py",
+   "source_sha": "d0cbcdadb229",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round3/e11_g8_fstrings.pyc",
+   "pyc_sha": "5fae415a75b4",
+   "source": "test_repros/round3/e11_g8_fstringsOK.py",
+   "source_sha": "353c4bf5f5c9",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 13,
+   "units_total": 13
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round3/ne08_g8_neg.pyc",
+   "pyc_sha": "43e0bf7141eb",
+   "source": "test_repros/round3/ne08_g8_negOK.py",
+   "source_sha": "7e5714f643a2",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": "File \"test_repros\\round3\\e12b_g9_yield_splitOK.py\", line 65\n    yield yield i or 0\n          ^^^^^\nSyntaxError: invalid syntax",
+   "failures": [],
+   "pyc": "test_repros/round3/e12b_g9_yield_split.pyc",
+   "pyc_sha": "f133659a8d25",
+   "source": "test_repros/round3/e12b_g9_yield_splitOK.py",
+   "source_sha": "4a518e7f66db",
+   "status": "compile_error",
+   "success_rate": null,
+   "units_success": 0,
+   "units_total": 0
+  },
+  {
+   "detail": "File \"test_repros\\round3\\e12c_g9_yield_argOK.py\", line 9\n    yield sink(yield i)\n               ^^^^^\nSyntaxError: invalid syntax",
+   "failures": [],
+   "pyc": "test_repros/round3/e12c_g9_yield_arg.pyc",
+   "pyc_sha": "36bef7c0bd86",
+   "source": "test_repros/round3/e12c_g9_yield_argOK.py",
+   "source_sha": "5d7af6e9a4b4",
+   "status": "compile_error",
+   "success_rate": null,
+   "units_success": 0,
+   "units_total": 0
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f_await_cond_pos: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round3/e12d_g9_awaits.pyc",
+   "pyc_sha": "ea7bd83daae1",
+   "source": "test_repros/round3/e12d_g9_awaitsOK.py",
+   "source_sha": "7168d0a055d1",
+   "status": "failure",
+   "success_rate": 0.9090909090909091,
+   "units_success": 10,
+   "units_total": 11
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round3/e12e_g9_yield_from.pyc",
+   "pyc_sha": "ee2e7543c7ae",
+   "source": "test_repros/round3/e12e_g9_yield_fromOK.py",
+   "source_sha": "071edfdb33ce",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": "File \"test_repros\\round3\\e12f_g9_yield_boolopOK.py\", line 7\n    yield yield i or 0\n          ^^^^^\nSyntaxError: invalid syntax",
+   "failures": [],
+   "pyc": "test_repros/round3/e12f_g9_yield_boolop.pyc",
+   "pyc_sha": "2100f066cfcd",
+   "source": "test_repros/round3/e12f_g9_yield_boolopOK.py",
+   "source_sha": "dd8e73ca66a9",
+   "status": "compile_error",
+   "success_rate": null,
+   "units_success": 0,
+   "units_total": 0
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round3/ne09_g9_neg.pyc",
+   "pyc_sha": "6cf3eb88cdd0",
+   "source": "test_repros/round3/ne09_g9_negOK.py",
+   "source_sha": "0641dc8b7fed",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.f_walrus_chain: Failure: Different bytecode",
+    "***<module>.f_walrus_rhs_ternary: Failure: Different control flow",
+    "***<module>.f_walrus_rhs_boolop: Failure: Different control flow",
+    "***<module>.f_walrus_call_arg: Failure: Different bytecode",
+    "***<module>.f_walrus_deep_host: Failure: Different control flow",
+    "***<module>.f_walrus_in_while_body: Failure: Different control flow",
+    "***<module>.f_walrus_elif_chain: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round3/e13_g10_walrus.pyc",
+   "pyc_sha": "b7a65b1d09d4",
+   "source": "test_repros/round3/e13_g10_walrusOK.py",
+   "source_sha": "026dcdb258a0",
+   "status": "failure",
+   "success_rate": 0.6111111111111112,
+   "units_success": 11,
+   "units_total": 18
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.n_simple_walrus: Failure: Different control flow",
+    "***<module>.n_walrus_while: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round3/ne10_g10_neg.pyc",
+   "pyc_sha": "9d9c9a2e50fd",
+   "source": "test_repros/round3/ne10_g10_negOK.py",
+   "source_sha": "7434336b2264",
+   "status": "failure",
+   "success_rate": 0.3333333333333333,
+   "units_success": 1,
+   "units_total": 3
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.8131147540983606,
+ "units_success": 248,
+ "units_total": 305
+}

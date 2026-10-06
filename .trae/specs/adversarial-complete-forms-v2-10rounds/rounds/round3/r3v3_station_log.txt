@@ -1,0 +1,10 @@
+﻿batch rc=0
+  "success": 105,
+  "failure": 51,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 42.5
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round3\r3v3_station_results.json
+-> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round3\r3v3_station_compare.json

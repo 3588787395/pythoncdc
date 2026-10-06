@@ -1,0 +1,60 @@
+{
+ "mine": {
+  "units_success": 248,
+  "units_total": 305
+ },
+ "fixP1": {
+  "base_units_success": 244,
+  "newfail_units": 0,
+  "newfail_detail": [],
+  "fixed_units": 4,
+  "fixed_detail": [
+   [
+    "e02_g1_b98_hosts.pyc",
+    [
+     "***<module>.CB98.m_class_body_host"
+    ]
+   ],
+   [
+    "ne01_g1_neg.pyc",
+    [
+     "***<module>.n_flat_and",
+     "***<module>.n_flat_or",
+     "***<module>.n_simple_two"
+    ]
+   ]
+  ]
+ },
+ "fixP2": {
+  "base_units_success": 248,
+  "newfail_units": 0,
+  "newfail_detail": [],
+  "fixed_units": 0,
+  "fixed_detail": []
+ },
+ "review241": {
+  "base_units_success": 241,
+  "newfail_units": 0,
+  "newfail_detail": [],
+  "fixed_units": 7,
+  "fixed_detail": [
+   [
+    "e02_g1_b98_hosts.pyc",
+    [
+     "***<module>",
+     "***<module>.CB98",
+     "***<module>.CB98.m_class_body_host",
+     "***<module>.f_try_body_host"
+    ]
+   ],
+   [
+    "ne01_g1_neg.pyc",
+    [
+     "***<module>.n_flat_and",
+     "***<module>.n_flat_or",
+     "***<module>.n_simple_two"
+    ]
+   ]
+  ]
+ }
+}

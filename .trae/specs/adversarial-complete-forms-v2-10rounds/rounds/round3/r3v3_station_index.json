@@ -1,0 +1,470 @@
+[
+ {
+  "path": "test_repros/round10/r10_04_import_try_cross.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_06_import_deep_combo.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_14_nonlocal_deep.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_15_global_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_16_scope_mix.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_21_fin_loopctrl.pyc"
+ },
+ {
+  "path": "test_repros/round10/rv10_31_nonlocal_variant.pyc"
+ },
+ {
+  "path": "test_repros/round10/rv10_32_augassign_variant.pyc"
+ },
+ {
+  "path": "test_repros/round10/rv10_33_ternary_variant.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_03_ternary_stmt_pos.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_07_ternary_nest.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_08_ternary_deep_host.pyc"
+ },
+ {
+  "path": "test_repros/round8/rv8_01_chain3_subscript.pyc"
+ },
+ {
+  "path": "test_repros/round8/rv8_02_with_tryfin_constret.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_06_augassign_ops.pyc"
+ },
+ {
+  "path": "test_repros/round6/n6_01_control.pyc"
+ },
+ {
+  "path": "test_repros/round7/n7_01_simple_ternary.pyc"
+ },
+ {
+  "path": "test_repros/round7/n7_02_simple_andor.pyc"
+ },
+ {
+  "path": "test_repros/round8/n8_01_return_const.pyc"
+ },
+ {
+  "path": "test_repros/round8/n8_02_simple_stmts.pyc"
+ },
+ {
+  "path": "test_repros/round9/n9_01_simple_guard.pyc"
+ },
+ {
+  "path": "test_repros/round9/n9_02_plain_forms.pyc"
+ },
+ {
+  "path": "test_repros/round9/rv9_03_b67_mixed_chain.pyc"
+ },
+ {
+  "path": "test_repros/round10/n10_01_simple_import.pyc"
+ },
+ {
+  "path": "test_repros/round10/n10_02_simple_fromimport.pyc"
+ },
+ {
+  "path": "test_repros/round10/n10_03_simple_global.pyc"
+ },
+ {
+  "path": "test_repros/round10/n10_04_simple_nonlocal.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b50_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b65_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b76_face.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v1.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v3.pyc"
+ },
+ {
+  "path": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v4.pyc"
+ },
+ {
+  "path": "site-packages/IQCommon/util/email_utils.pyc"
+ },
+ {
+  "path": "site-packages/IQCommon/util/cgroup_utils.pyc"
+ },
+ {
+  "path": "site-packages/IQEngine/core/executor.pyc"
+ },
+ {
+  "path": "site-packages/IQEngine/core/strategy/strategy_universe.pyc"
+ },
+ {
+  "path": "site-packages/IQEngine/data/trading_dates_mixin.pyc"
+ },
+ {
+  "path": "site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc"
+ },
+ {
+  "path": "test_repros/round2/c01_class_assign.pyc"
+ },
+ {
+  "path": "test_repros/round2/c02_class_if.pyc"
+ },
+ {
+  "path": "test_repros/round2/c03_class_for.pyc"
+ },
+ {
+  "path": "test_repros/round2/c04_class_try.pyc"
+ },
+ {
+  "path": "test_repros/round2/c05_class_with.pyc"
+ },
+ {
+  "path": "test_repros/round2/c06_class_match.pyc"
+ },
+ {
+  "path": "test_repros/round2/c07_between_methods.pyc"
+ },
+ {
+  "path": "test_repros/round2/c08_decorators.pyc"
+ },
+ {
+  "path": "test_repros/round2/c09_class_import_global.pyc"
+ },
+ {
+  "path": "test_repros/round2/c10_nested_class.pyc"
+ },
+ {
+  "path": "test_repros/round2/c11_class_func_class.pyc"
+ },
+ {
+  "path": "test_repros/round2/c12_class_deep_cross.pyc"
+ },
+ {
+  "path": "test_repros/round2/c13_class_misc.pyc"
+ },
+ {
+  "path": "test_repros/round2/c14_class_docstring.pyc"
+ },
+ {
+  "path": "test_repros/round2/c15_class_augassign.pyc"
+ },
+ {
+  "path": "test_repros/round2/m01_docstring_order.pyc"
+ },
+ {
+  "path": "test_repros/round2/m02_top_ifmain.pyc"
+ },
+ {
+  "path": "test_repros/round2/m03_module_ifchain.pyc"
+ },
+ {
+  "path": "test_repros/round2/m04_module_try.pyc"
+ },
+ {
+  "path": "test_repros/round2/m05_module_match.pyc"
+ },
+ {
+  "path": "test_repros/round2/m06_module_loops.pyc"
+ },
+ {
+  "path": "test_repros/round2/m07_module_with.pyc"
+ },
+ {
+  "path": "test_repros/round2/m08_module_stmts.pyc"
+ },
+ {
+  "path": "test_repros/round2/m09_module_deep_cross.pyc"
+ },
+ {
+  "path": "test_repros/round2/m10_module_order.pyc"
+ },
+ {
+  "path": "test_repros/round2/m11_module_finonly.pyc"
+ },
+ {
+  "path": "test_repros/round2/m12_module_values.pyc"
+ },
+ {
+  "path": "test_repros/round2/nc01_plain_class.pyc"
+ },
+ {
+  "path": "test_repros/round2/nc02_simple_class_body.pyc"
+ },
+ {
+  "path": "test_repros/round2/nm01_simple_module.pyc"
+ },
+ {
+  "path": "test_repros/round2/nm02_shallow_module_forms.pyc"
+ },
+ {
+  "path": "test_repros/round2/nx01_shallow_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x01_if_deep_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x02_for_deep_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x03_while_deep_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x04_try_deep_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x05_with_deep_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x06_match_deep_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x07_trystar_deep.pyc"
+ },
+ {
+  "path": "test_repros/round2/x08_stmt_leaves.pyc"
+ },
+ {
+  "path": "test_repros/round2/x09_funcdef_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round2/x10_handler_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_01_with_basic.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_02_with_nest.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_03_with_flow.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_04_with_combo.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_05_asyncwith_basic.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_06_asyncwith_nest.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_07_async_five.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_08_async_cross.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_09_with_multimgr.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_10_with_deepmix.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_11_with_trymix.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_12_asyncwith_flow.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_13_async_await_pos.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_14_asyncfor_forms.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_15_yield_forms.pyc"
+ },
+ {
+  "path": "site-packages/IQCommon/mq_connector.pyc"
+ },
+ {
+  "path": "site-packages/IQCommon/strategy/strategy.pyc"
+ },
+ {
+  "path": "site-packages/IQCommon/tools.pyc"
+ },
+ {
+  "path": "site-packages/IQCommon/trade_schedule.pyc"
+ },
+ {
+  "path": "site-packages/IQEngine/utils/scheduler.pyc"
+ },
+ {
+  "path": "site-packages/IQCommon/util/trade_info_utils.pyc"
+ },
+ {
+  "path": "site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc"
+ },
+ {
+  "path": "site-packages/fly/data/quotation.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4_or4_and2.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_01_ternary_args_index.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_02_ternary_containers.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_04_ternary_binop_compare.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_05_ternary_comprehension.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_06_ternary_lambda_await.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_09_chain_compare_basic.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_10_chain_compare_calls.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_11_boolop_mixed.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_12_boolop_nest.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_13_boolop_shortcut.pyc"
+ },
+ {
+  "path": "test_repros/round7/r7_14_boolop_deep_host.pyc"
+ },
+ {
+  "path": "test_repros/round7/rv7_01_quad_chain_container.pyc"
+ },
+ {
+  "path": "test_repros/round7/rv7_02_compare_chain_ternary.pyc"
+ },
+ {
+  "path": "test_repros/round7/rv7_03_subscript_slice_ternary.pyc"
+ },
+ {
+  "path": "test_repros/round7/rv7_04_dict3_ternary.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_01_return_positions.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_02_return_deep_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_03_pass_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_04_delete_forms.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_05_assign_multi.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_07_assert_forms.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_08_raise_forms.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_09_deep_host_combo.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_10_expr_cross_stmt.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8_11_deep_host_combo2.pyc"
+ },
+ {
+  "path": "test_repros/round8/rv8_03_except_return_trailing.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_01_b2_cont_loopelse.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_02_b2_dual_continue.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_03_b3_shared_tail.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_04_b3_thenover_w23.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_05_b4_orphan_release.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_06_b2_with_try_cross.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_07_b3_gen_yield.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_08_b54_augassign_mix.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_09_b55_boundary.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9_10_b2b3_shrink.pyc"
+ },
+ {
+  "path": "test_repros/round9/rv9_01_b68_nonfin_tail.pyc"
+ },
+ {
+  "path": "test_repros/round9/rv9_02_b66_with_nest.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_01_import_alias.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_02_fromimport_alias.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_03_import_nested_hosts.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_05_relative_star.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_11_global_basic.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_12_global_deep.pyc"
+ },
+ {
+  "path": "test_repros/round10/r10_13_nonlocal_basic.pyc"
+ }
+]

@@ -1,0 +1,430 @@
+{
+ "round2face": {
+  "face": "round2face",
+  "base_files": 45,
+  "new_files": 156,
+  "common": 45,
+  "only_base": [],
+  "base_units": "234/251",
+  "new_units": "234/251",
+  "same": 45,
+  "improved": 0,
+  "worsened": 0,
+  "details": [
+   {
+    "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+    "verdict": "same",
+    "base_units": 1,
+    "new_units": 1,
+    "base_status": "failure",
+    "new_status": "failure",
+    "new_extras": [
+     "***<module>.v_if_cond_nest",
+     "***<module>.v_while_cond_nest"
+    ],
+    "fixed": []
+   },
+   {
+    "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+    "verdict": "same",
+    "base_units": 1,
+    "new_units": 1,
+    "base_status": "failure",
+    "new_status": "failure",
+    "new_extras": [
+     "***<module>.v_swap_arm_returns"
+    ],
+    "fixed": []
+   }
+  ]
+ },
+ "probe42": {
+  "face": "probe42",
+  "base_files": 42,
+  "new_files": 156,
+  "common": 42,
+  "only_base": [],
+  "base_units": "154/189",
+  "new_units": "172/196",
+  "same": 32,
+  "improved": 10,
+  "worsened": 0,
+  "details": [
+   {
+    "pyc": "test_repros/round2/c01_class_assign.pyc",
+    "verdict": "improved",
+    "base_units": 4,
+    "new_units": 5,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.CAssign"
+    ]
+   },
+   {
+    "pyc": "test_repros/round2/c06_class_match.pyc",
+    "verdict": "improved",
+    "base_units": 0,
+    "new_units": 3,
+    "base_status": "compile_error",
+    "new_status": "failure",
+    "new_extras": [
+     "***<module>.CMatchDeep"
+    ],
+    "fixed": []
+   },
+   {
+    "pyc": "test_repros/round2/c11_class_func_class.pyc",
+    "verdict": "improved",
+    "base_units": 8,
+    "new_units": 10,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.top_make.Top"
+    ]
+   },
+   {
+    "pyc": "test_repros/round2/c13_class_misc.pyc",
+    "verdict": "improved",
+    "base_units": 1,
+    "new_units": 2,
+    "base_status": "failure",
+    "new_status": "failure",
+    "new_extras": [],
+    "fixed": []
+   },
+   {
+    "pyc": "test_repros/round2/m01_docstring_order.pyc",
+    "verdict": "improved",
+    "base_units": 4,
+    "new_units": 5,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>"
+    ]
+   },
+   {
+    "pyc": "test_repros/round2/m07_module_with.pyc",
+    "verdict": "improved",
+    "base_units": 0,
+    "new_units": 1,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>"
+    ]
+   },
+   {
+    "pyc": "test_repros/round2/m08_module_stmts.pyc",
+    "verdict": "improved",
+    "base_units": 1,
+    "new_units": 2,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>"
+    ]
+   },
+   {
+    "pyc": "test_repros/round2/m12_module_values.pyc",
+    "verdict": "improved",
+    "base_units": 0,
+    "new_units": 3,
+    "base_status": "compile_error",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": []
+   },
+   {
+    "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
+    "verdict": "same",
+    "base_units": 4,
+    "new_units": 4,
+    "base_status": "failure",
+    "new_status": "failure",
+    "new_extras": [
+     "***<module>.if_in_try",
+     "***<module>.if_in_while"
+    ],
+    "fixed": []
+   },
+   {
+    "pyc": "test_repros/round2/x02_for_deep_hosts.pyc",
+    "verdict": "same",
+    "base_units": 5,
+    "new_units": 5,
+    "base_status": "failure",
+    "new_status": "failure",
+    "new_extras": [
+     "***<module>.for_in_try"
+    ],
+    "fixed": []
+   },
+   {
+    "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
+    "verdict": "improved",
+    "base_units": 4,
+    "new_units": 6,
+    "base_status": "failure",
+    "new_status": "failure",
+    "new_extras": [
+     "***<module>.try_in_if"
+    ],
+    "fixed": [
+     "***<module>.try_in_with"
+    ]
+   },
+   {
+    "pyc": "test_repros/round2/x08_stmt_leaves.pyc",
+    "verdict": "same",
+    "base_units": 5,
+    "new_units": 5,
+    "base_status": "failure",
+    "new_status": "failure",
+    "new_extras": [
+     "***<module>.assert_leaf",
+     "***<module>.raise_leaf"
+    ],
+    "fixed": []
+   },
+   {
+    "pyc": "test_repros/round2/x09_funcdef_hosts.pyc",
+    "verdict": "improved",
+    "base_units": 7,
+    "new_units": 10,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": []
+   }
+  ]
+ },
+ "round1face": {
+  "face": "round1face",
+  "base_files": 24,
+  "new_files": 156,
+  "common": 24,
+  "only_base": [],
+  "base_units": "417/423",
+  "new_units": "417/423",
+  "same": 24,
+  "improved": 0,
+  "worsened": 0,
+  "details": []
+ },
+ "residual": {
+  "face": "residual",
+  "base_files": 72,
+  "new_files": 156,
+  "common": 72,
+  "only_base": [],
+  "base_units": "404/446",
+  "new_units": "417/446",
+  "same": 62,
+  "improved": 10,
+  "worsened": 0,
+  "details": [
+   {
+    "pyc": "test_repros/round10/r10_04_import_try_cross.pyc",
+    "verdict": "improved",
+    "base_units": 2,
+    "new_units": 3,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.imp_try_sections"
+    ]
+   },
+   {
+    "pyc": "test_repros/round10/r10_06_import_deep_combo.pyc",
+    "verdict": "improved",
+    "base_units": 2,
+    "new_units": 3,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.imp_combo_lambda_default"
+    ]
+   },
+   {
+    "pyc": "test_repros/round10/r10_15_global_hosts.pyc",
+    "verdict": "improved",
+    "base_units": 5,
+    "new_units": 6,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.g_in_try_except"
+    ]
+   },
+   {
+    "pyc": "test_repros/round10/r10_21_fin_loopctrl.pyc",
+    "verdict": "improved",
+    "base_units": 2,
+    "new_units": 4,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.fin_break",
+     "***<module>.fin_continue"
+    ]
+   },
+   {
+    "pyc": "test_repros/round10/rv10_32_augassign_variant.pyc",
+    "verdict": "improved",
+    "base_units": 7,
+    "new_units": 8,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.v_aug_boolop_rhs"
+    ]
+   },
+   {
+    "pyc": "test_repros/round7/r7_07_ternary_nest.pyc",
+    "verdict": "improved",
+    "base_units": 6,
+    "new_units": 7,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.t_nest_in_condition"
+    ]
+   },
+   {
+    "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+    "verdict": "improved",
+    "base_units": 4,
+    "new_units": 7,
+    "base_status": "failure",
+    "new_status": "failure",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.t_host_for_else",
+     "***<module>.t_host_try_sections",
+     "***<module>.t_host_while_body"
+    ]
+   },
+   {
+    "pyc": "test_repros/round7/r7_11_boolop_mixed.pyc",
+    "verdict": "improved",
+    "base_units": 6,
+    "new_units": 7,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.b_and_or_repeat"
+    ]
+   },
+   {
+    "pyc": "test_repros/round7/r7_12_boolop_nest.pyc",
+    "verdict": "improved",
+    "base_units": 5,
+    "new_units": 6,
+    "base_status": "failure",
+    "new_status": "failure",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.b_nest_three_layers"
+    ]
+   },
+   {
+    "pyc": "test_repros/round8/rv8_01_chain3_subscript.pyc",
+    "verdict": "improved",
+    "base_units": 6,
+    "new_units": 7,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.chain_value_boolop"
+    ]
+   }
+  ]
+ },
+ "oldface": {
+  "face": "oldface",
+  "base_files": 59,
+  "new_files": 156,
+  "common": 59,
+  "only_base": [],
+  "base_units": "658/692",
+  "new_units": "664/692",
+  "same": 55,
+  "improved": 4,
+  "worsened": 0,
+  "details": [
+   {
+    "pyc": "test_repros/round7/r7_07_ternary_nest.pyc",
+    "verdict": "improved",
+    "base_units": 6,
+    "new_units": 7,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.t_nest_in_condition"
+    ]
+   },
+   {
+    "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+    "verdict": "improved",
+    "base_units": 4,
+    "new_units": 7,
+    "base_status": "failure",
+    "new_status": "failure",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.t_host_for_else",
+     "***<module>.t_host_try_sections",
+     "***<module>.t_host_while_body"
+    ]
+   },
+   {
+    "pyc": "test_repros/round7/r7_11_boolop_mixed.pyc",
+    "verdict": "improved",
+    "base_units": 6,
+    "new_units": 7,
+    "base_status": "failure",
+    "new_status": "success",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.b_and_or_repeat"
+    ]
+   },
+   {
+    "pyc": "test_repros/round7/r7_12_boolop_nest.pyc",
+    "verdict": "improved",
+    "base_units": 5,
+    "new_units": 6,
+    "base_status": "failure",
+    "new_status": "failure",
+    "new_extras": [],
+    "fixed": [
+     "***<module>.b_nest_three_layers"
+    ]
+   }
+  ]
+ },
+ "quotation": {
+  "face": "quotation",
+  "base_units": "152/153",
+  "new_units": "152/153",
+  "new_status": "failure",
+  "new_failure_count": 1
+ }
+}

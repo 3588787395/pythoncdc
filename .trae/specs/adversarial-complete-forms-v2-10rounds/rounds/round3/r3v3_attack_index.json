@@ -1,0 +1,17 @@
+[
+ {
+  "path": "test_repros/round3/r3v3_a_ternary_boolop_cond.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3v3_b_compare_chains.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3v3_c_b98_group.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3v3_d_interaction.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3v3_e_negctl.pyc"
+ }
+]

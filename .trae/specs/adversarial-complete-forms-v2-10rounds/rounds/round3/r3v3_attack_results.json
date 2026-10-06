@@ -1,0 +1,115 @@
+{
+ "elapsed_sec": 0.8,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 3,
+  "success": 2
+ },
+ "files_total": 5,
+ "generated_at": "2026-10-06T09:28:16",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "test_repros/round3/r3v3_a_ternary_boolop_cond.pyc",
+   "test_repros/round3/r3v3_b_compare_chains.pyc",
+   "test_repros/round3/r3v3_d_interaction.pyc"
+  ],
+  "success": [
+   "test_repros/round3/r3v3_c_b98_group.pyc",
+   "test_repros/round3/r3v3_e_negctl.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.t_or_cond_pair: Failure: Different control flow",
+    "***<module>.t_cond_or_of_and: Failure: Different control flow",
+    "***<module>.t_cond_chain_or: Failure: Different control flow",
+    "***<module>.t_in_for_return: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round3/r3v3_a_ternary_boolop_cond.pyc",
+   "pyc_sha": "59bfd975c879",
+   "source": "test_repros/round3/r3v3_a_ternary_boolop_condOK.py",
+   "source_sha": "2fd98385df1d",
+   "status": "failure",
+   "success_rate": 0.6666666666666666,
+   "units_success": 8,
+   "units_total": 12
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.cc_while: Failure: Different control flow",
+    "***<module>.cc_for_value: Failure detected at line number 37 and instruction offset 12: Different bytecode",
+    "***<module>.cc_for_return: Failure: Different control flow",
+    "***<module>.cc_ternary: Failure: Different control flow",
+    "***<module>.cc_and: Failure: Different control flow",
+    "***<module>.cc_or: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round3/r3v3_b_compare_chains.pyc",
+   "pyc_sha": "bf2a172e6af5",
+   "source": "test_repros/round3/r3v3_b_compare_chainsOK.py",
+   "source_sha": "e0f4490950b6",
+   "status": "failure",
+   "success_rate": 0.625,
+   "units_success": 10,
+   "units_total": 16
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round3/r3v3_c_b98_group.pyc",
+   "pyc_sha": "40fbb80a7f61",
+   "source": "test_repros/round3/r3v3_c_b98_groupOK.py",
+   "source_sha": "12b796400639",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 15,
+   "units_total": 15
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.i_for_return_group: Failure: Different control flow",
+    "***<module>.i_for_if_return_group: Failure: Different control flow",
+    "***<module>.i_while_if_return_group: Failure: Different control flow",
+    "***<module>.i_for_return_group_pair: Failure: Different control flow",
+    "***<module>.i_for_return_chain_compare: Failure: Different control flow",
+    "***<module>.i_for_return_group_and_chain: Failure: Different control flow",
+    "***<module>.i_while_group_value: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round3/r3v3_d_interaction.pyc",
+   "pyc_sha": "38a775a13346",
+   "source": "test_repros/round3/r3v3_d_interactionOK.py",
+   "source_sha": "be3850d51eb3",
+   "status": "failure",
+   "success_rate": 0.2222222222222222,
+   "units_success": 2,
+   "units_total": 9
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round3/r3v3_e_negctl.pyc",
+   "pyc_sha": "e331235f30a1",
+   "source": "test_repros/round3/r3v3_e_negctlOK.py",
+   "source_sha": "9f54c85951d1",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 11,
+   "units_total": 11
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.7301587301587301,
+ "units_success": 46,
+ "units_total": 63
+}
