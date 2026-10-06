@@ -1,0 +1,53 @@
+[
+ {
+  "path": "test_repros/round1/r1_90_regress_if_for_tail_bench.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_91_regress_if_for_tail_stock.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_92_regress_if_for_seq_setup.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_93_regress_b98win_try_hret_trailing.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_94_regress_b98win_try_ifelse_hret.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_95_regress_if_for_tail_in_try.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_96_regress_if_for_tail_while_host.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_97_regress_b100reg_tailexit_if_host.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_98_regress_b100reg_tailexit_try_stop.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_99_regress_b100reg_tailexit_func_host.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_100_regress_b100reg_tailexit_loop_cont.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_101_regress_b100win_try_chain_seq_tail.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_102_regress_b100win_elif_arm_tailjoin.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_104_regress_b103_rollover_break_forelse.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_105_regress_b103_getstrat_tailexit.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_106_regress_b103_loop_termarm_tailjoin.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_107_regress_b103_getstrat_noexitarm.pyc"
+ }
+]

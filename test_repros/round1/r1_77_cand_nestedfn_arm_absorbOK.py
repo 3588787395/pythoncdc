@@ -15,8 +15,9 @@ def f77(xs, start, end):
             if n[0] == start:
                 print(inner(n))
             if n[0] == end:
-                if n is not None:
-                    print(n)
-                else:
-                    print('none')
+                pass
+        if n is not None:
+            print(n)
+        else:
+            print('none')
         print('tail-in-loop')

@@ -3030,6 +3030,368 @@ class RegionAnalyzer:
                 return _exit
         return None
 
+    # [r3-b100-armjoin] 块末终止 opcode（退出本作用域的前向流的那一类臂尾）。
+    _ARMJOIN_EXIT_OPS = frozenset({'RETURN_VALUE', 'RETURN_CONST',
+                                   'RAISE_VARARGS', 'RERAISE'})
+
+    def _armjoin_is_skip_edge(self, pred: BasicBlock, join: BasicBlock) -> bool:
+        """[r3-b100-armjoin] pred 是否以「跳过本条件结构的条件跳转边」进入 join。
+
+        判据只用块末指令 opcode 与跳转目标（理论基准 I.4 白名单）：pred 的
+        块末是前向条件跳转（POP_JUMP_FORWARD_IF_* / POP_JUMP_IF_*）或短路
+        跳转（JUMP_IF_FALSE_OR_POP / JUMP_IF_TRUE_OR_POP），且其跳转目标恰为
+        join。这类边是 CPython 为「条件不成立 ⇒ 直接落到该结构之后的语句」
+        发射的续行边，即父级作用域**绕过**本 if 链接入 join 的同层兄弟路径；
+        普通 fall-through（块末是语句指令）与清理边（POP_TOP/异常边）不
+        构成这种证据。零名字/偏移阈值/深度/计数判据。
+        """
+        _last = pred.get_last_instruction() if pred is not None else None
+        if _last is None or _last.argval != join.start_offset:
+            return False
+        return (_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                or _last.opname in SHORT_CIRCUIT_JUMP_OPS)
+
+    def _compute_arm_level_join(self, then_succ: BasicBlock,
+                                else_succ: BasicBlock,
+                                struct_blocks: Set[BasicBlock],
+                                current_merge: Optional[BasicBlock]) -> Optional[BasicBlock]:
+        """[r3-b100-armjoin] 求 if/elif 链各臂的「同层最近汇合块」（宿主无感）。
+
+        ①算法依据：No More Gotos §3（If 区域归约：merge = 两臂的唯一同层
+          汇合点）+ rules.md §1.2 原则2（每块唯一归属）/ 原则3（嵌套即抽象
+          节点）/ 原则4（入口引用语义）+ §1.5 C1（归约只读本区域的出边）与
+          C3（汇合块被区域外路径引用时必须显式认领）。本方法是 R24A/B3
+          （continue 臂 → merge=对侧臂入口）、`_compute_in_loop_if_merge`
+          （循环宿主、臂尾 JUMP_FORWARD 目标）、`_r57e_in_loop_branch_convergence`
+          （两臂唯一公共前向跳转目标）这一族 merge 守卫的**封闭补全**，不是
+          旁路：三者都只认「臂以无条件前向跳转收尾」这一种臂尾形态，且只在
+          merge 落在循环块集之外时才重算；本方法把判据换成「沿臂的前向流走
+          到第一个由两条不同控制路径汇入、且其中一条是本作用域兄弟路径的
+          块」，对宿主是循环体 / try 体 / 函数体的三种情形同判，臂尾形态含
+          fall-through（空体 `pass` 的 NOP 块）、无条件跳转、回边、
+          return/raise 四类。
+        ②归约顺序：自底向上——本区域在内层归约完成后、`_collect_branch_blocks`
+          有界收集之前调用一次；不回溯修正已归约区域（§1.3 单向数据流）。
+          命中即作为 IfRegion.merge_block 交付父级，父级据此把公共尾块归还
+          给本作用域的兄弟语句序列。
+        ③唯一归属判定：候选块 J 的归属由「J 的正常前驱集合按路径身份分箱」
+          唯一决定：箱数 ≥ 2（两条不同控制路径汇入）**且** E 箱非空（其中
+          一条来自本 if 之外的同层兄弟路径）才是本 if 与父级作用域的汇合块；
+          箱数 = 1 时 J 是某一条臂的内部块（内层结构的汇合点，属子区域，
+          原则3），E 箱为空时 J 只被本 if 自己的臂汇入（链尾出口形），两种
+          情形本方法都不认领，继续沿 BFS 向外走。认领的 J 既不在任何臂闭包
+          内、也不在本 if 的条件结构块集内，故它归父级作用域的兄弟序列
+          （原则2）。退化 merge（current_merge 就等于某条臂入口）由上游
+          continue/break 守卫判定，本方法直接返回 None，不重复认领。
+        ④嵌套处理：判据不读嵌套深度、不读语句条数、不读区域类型名、不读
+          文件名/函数名/绝对偏移；只读块末 opcode、前驱/后继集合、异常边。
+          臂闭包遇到本区域的条件结构块（elif 条件）时**沿其继续展开**但
+          不把它当候选，因此 elif 链任意层数同一判据；宿主是循环体、try 体
+          还是函数体，同样只由「前向边」关系决定，无需按宿主干支。
+          触发条件对嵌套无感：一条臂的前向流在本作用域内无出口（return/
+          raise 终态，或只有回边/异常边可用 = continue/break）——这正是
+          NCPD 把 merge 后推到作用域尾（循环头 / try 体尾 / 函数尾）或判为
+          None 的唯一成因。由归纳（一层正确 + 组合封闭）得任意深度同判。
+        ⑤入口引用语义：命中后 IfRegion 以 J 为出口引用（merge_block=J），
+          J 的语句由父级序列作为兄弟节点发射，臂体在 J 处停止收集；
+          J 的前驱关系即父级引用它的入口语义（原则4）。
+        ⑥反编译流程：region_analyzer 的 merge 选择 → IfRegion.merge_block →
+          _collect_branch_blocks 有界收集 → region_ast_generator 的
+          then/else 语句列表 → code_generator 发射。本方法只改 merge。
+
+        判据（全部取自白名单结构事实）：
+          (1) 前向流：自两条臂入口做**逐层**广度优先，只走「正常后继
+              （排除异常边目标）且目标起始偏移 > 当前块起始偏移（排除回边）」
+              的边；`_arm_of[块]` 记录该块属于哪几条臂的前向流。
+          (2) 臂收束：某块的块末 opcode ∈ {RETURN_VALUE, RETURN_CONST,
+              RAISE_VARARGS, RERAISE}，或它没有前向正常后继（只有回边/异常边
+              /空后继）⇒ 该臂不参与本作用域的前向汇合（return/raise/
+              continue/break 四形统一由块末 opcode 与后继关系判出）。
+          (3) 条件结构块（本 if 的 header 与各 elif 条件）沿其继续展开，但
+              本身不作汇合候选（原则3：链自身不是兄弟语句）。
+          (4) 汇合身份：候选 J 的**正常前驱**按 {臂 i 的前向流 / 条件结构块 /
+              结构外兄弟路径(E)} 分箱。接受 J 需同时满足：箱数 ≥ 2（两条不同
+              控制路径汇入）且 **E 箱非空**（紧随 if 链之后的同层兄弟路径接入
+              J，即 J 是 if 链与本作用域顺序流的汇合点）。箱数 = 1 ⇒ J 在单条
+              臂内部（子区域的汇合点，属子区域，原则2/3），拒绝并继续向外走；
+              E 箱为空 ⇒ 该块只被本 if 自己的臂汇入（`if A / elif B / else C`
+              的链尾出口即此形，实测 IQCommon/util/cgroup_utils.
+              set_cgroup_config 的 if@4），其 merge 由链构造器/退化 merge 守卫
+              给出，本方法不介入。分箱在**整层展开完成后**统一进行，故同层
+              块的前向流归属已知，子区域汇合块不会被误认领。
+          (4b) 单臂汇入的同层兄弟例外（[r3-b100-armjoin-tailexit]，(4) 中
+              缺失的成员条件）：其余臂的前向流已在本作用域内**终态收束**
+              （_term_exhausted：块末为 return/raise 终态 opcode = 控制流从
+              本作用域永久消失）时，汇入 J 的臂只剩一条，J 的
+              箱数必然 = 1，(4) 的「箱数 ≥ 2 且 E 箱非空」在此永不成立——
+              于是本方法越过 J、在更外层把**外层链**的汇合块（其 E 证据来自
+              外层 if/elif 的跳过边，不是本 if 的同层兄弟路径）认领为 merge，
+              臂跳转外推。补齐条件：汇入臂 i 的**直落尾块**（自臂入口沿
+              「块末非任何跳转/终态、且恰有一个前向正常后继」的链走到的臂
+              自身序列最后一块；链不经跳转故该块不在任何嵌套结构内部）以
+              **无条件前向跳转**（JUMP_FORWARD/JUMP_ABSOLUTE）收尾且落点恰为
+              J——这条跳转即该臂显式声明的作用域出口。此时若其余臂全部
+              _term_exhausted，J 即同层最近汇合块（_arm_declared_exit）。
+              尾块块末若是条件/短路/后向跳转或终态 ⇒ 该臂仍在本作用域内
+              展开（嵌套结构自身或臂体未结束），不成立。
+              [r3-b103-armjoin-termexit] 收束**种类**是本例外的成员条件之一，
+              (2) 的两种收束不可混用：靠回边/异常边收束的臂（continue/break）
+              并未离开本作用域，它把控制交回**外层结构**（循环头）继续迭代，
+              本 if 所在的同层层序因此尚未结束；该臂尾的无条件跳转落点是
+              **外层区域自己的出口**（跨区跳转，如 break 跳出 for 环后的块），
+              而不是紧随本 if 链的同层兄弟语句——按 §1.5 C1（归约只读本区域
+              的出边）/C2（外层区域是黑箱）与 §1.2 原则3，这种汇合块属外层
+              区域，由既有循环守卫族（R24A/B3、_compute_in_loop_if_merge、
+              _r57e_in_loop_branch_convergence）判定，(4b) 不介入。只有终态
+              收束（return/raise）才使本 if 只剩一条活臂、从而令该臂自声明的
+              出口成为唯一同层汇合块。实测两侧：反例 IQEngine/utils/logger.
+              handlers.perform_rollover（同形副本 IQCommon/logger/handlers.
+              perform_rollover）的 `for x in xrange(…): if exists(src): break
+              / else: … return None`，臂 (82,86) 中 86 只有回边 ⇒ 不得认领
+              114（break 的落点 = for 区域出口）；正例 IQCommon/util/
+              strategy_info_utils.get_strategy，臂 (990,1038) 中 1038 块末
+              RETURN_VALUE ⇒ 认领 1088。判据只用块末 opcode 与前驱/后继关系，
+              不读区域类型名/嵌套深度/语句条数/文件名/绝对偏移。
+          (5) 最近性：J 取首个存在合格汇合块的层内起始偏移最小者（逐层即
+              最小跳数，无需任何深度/计数上限）。
+          (6) 只在现 merge 确实越过同层汇合时替换：
+              · current_merge 为 None ⇒ 还需 (2) 至少命中一条臂（缺陷签名），
+                否则两臂均继续的 merge=None 形态交由下游 sink 守卫判定；
+              · current_merge == J ⇒ 返回 None（零行为差）；
+              · current_merge 落在「自臂入口的前向可达集」内 ⇒ 它是前向可达
+                的汇合点（NCPD 的正常结论），返回 None 逐字保留原判；
+              · 否则（current_merge 是回边目标 / 作用域出口 / 函数尾，前向流
+                根本到不了它）⇒ 以 J 为 merge。
+              current_merge 恰等于某条臂入口时直接返回 None：退化 merge 由
+              上游 continue/break 守卫（R24A/B3 形态）判定，不在此重复认领。
+
+        C 条款：C1 只读本区域两臂的同层出边与前驱集合；C2 不窥视任何子
+        区域内部（子区域的汇合块按 (4) 单箱拒绝）；C3 显式认领「汇合块被
+        区域外兄弟路径引用」。零深度阈值、零计数上限、零名字/偏移特判。
+        """
+        _arms = [a for a in (then_succ, else_succ) if a is not None]
+        if not _arms:
+            return None
+        if current_merge is not None and current_merge in _arms:
+            # 退化 merge（对侧臂入口）：上游 continue/break 守卫的判定域。
+            return None
+        _struct = set(struct_blocks or ()) | set(_arms)
+
+        def _normal_succ(_b):
+            _exc = getattr(_b, 'exception_successors', None) or set()
+            return [s for s in (_b.successors or []) if s not in _exc]
+
+        def _forward_reachable(_seeds):
+            _seen = set()
+            _q = list(_seeds)
+            while _q:
+                _cur = _q.pop(0)
+                for _s in _normal_succ(_cur):
+                    if _s in _seen or _s.start_offset <= _cur.start_offset:
+                        continue
+                    _seen.add(_s)
+                    _q.append(_s)
+            return _seen
+
+        # 逐层前向广度优先：_arm_of[块] = 该块属于哪几条臂的前向流。
+        _arm_of = {}
+        _sub_arm = {}           # 臂内子区域的内部块 → 所属臂序号（广度优先后填）
+        for _i, _a in enumerate(_arms):
+            _arm_of[_a] = {_i}
+        _cur_layer = list(_arms)
+        _exhausted = set()      # 前向流收束（终态 opcode / 只有回边）的臂序号
+        # [r3-b103-armjoin-termexit] 收束方式的分野：_exhausted 含两种臂尾，
+        # _term_exhausted 只含「块末为终态 opcode（return/raise）」那一种。
+        # 靠回边收束（continue/break）的臂并未离开本作用域——它把控制交回
+        # **外层结构**（循环头）继续迭代，本 if 的层序仍未结束；它的臂尾
+        # 无条件跳转落点是**外层区域自己的出口**（跨区跳转），不是紧随本
+        # if 链的同层兄弟语句。终态收束才是真正「从本作用域消失」。
+        _term_exhausted = set()
+        _layers = []            # 逐层候选发现序（广度优先跑完后再判汇合身份）
+        _join = None
+
+        def _pred_labels(_j):
+            """J 的正常前驱按路径身份分箱（臂序号 / 条件结构块 / 结构外兄弟）。"""
+            _labels = set()
+            for _p in (_j.predecessors or []):
+                if _j not in _normal_succ(_p):
+                    continue
+                if _p.start_offset >= _j.start_offset:
+                    continue
+                _ai = _arm_of.get(_p)
+                if _ai:
+                    _labels |= _ai
+                elif _p in _struct:
+                    _labels.add('S')
+                elif _p in _sub_arm:
+                    # 经异常边/清理边接入的臂内子区域块（臂内 with/try 的
+                    # handler、finally、POP_TOP 尾声）：按区域成员关系折算回
+                    # 它所属那条臂的箱，否则会被误判为同层兄弟路径。
+                    _labels |= _sub_arm[_p]
+                elif (self._armjoin_is_skip_edge(_p, _j)):
+                    _labels.add('E')
+                else:
+                    # 既不在臂流内、也不是条件结构块、其块末也不是「跳过本
+                    # 结构的条件跳转边」：它不构成父级作用域绕过 if 链的续行
+                    # 路径（实测 IQCommon/data/finance.
+                    # func_get_fundamentals_daily_data 的 if@180：候选 450 的
+                    # 前驱 444 是臂内 with 区域的 POP_TOP 尾声块），记为中性
+                    # 箱 N，不满足 E 要求。
+                    _labels.add('N')
+            return _labels
+
+        def _arm_declared_exit(_i):
+            """[r3-b100-armjoin-tailexit] 臂 _i 的直落尾块声明的作用域出口块。
+
+            自臂入口沿「块末既非条件跳转、亦非短路跳转/后向跳转/终态，且
+            恰有一个前向正常后继」的直落链走到臂尾块 T——链上不经任何跳转，
+            故 T 必是本作用域里臂自身序列的最后一块（不在任何嵌套结构内部，
+            原则3）。若 T 的块末是无条件前向跳转（JUMP_FORWARD/JUMP_ABSOLUTE），
+            其落点即臂 _i 自己显式声明的作用域出口：紧随本 if 链之后的同层
+            兄弟语句入口。判据只读块末 opcode 与前驱/后继关系，零名字/偏移
+            阈值/深度/计数判据。
+            """
+            _cur = _arms[_i]
+            while True:
+                if _cur in _sub_arm:
+                    # 直落链已走进臂内嵌套子区域（try/with/循环体…）的内部：
+                    # 该处的前向跳转属于子区域自身，不是臂在本作用域的出口。
+                    return None
+                _last = _cur.get_last_instruction()
+                if _last is None:
+                    return None
+                _op = _last.opname
+                if _op in _R20_FWD_JUMPS:
+                    return self._get_jump_forward_target(_cur)
+                if (_op in CONDITIONAL_JUMP_OPS
+                        or _op in SHORT_CIRCUIT_JUMP_OPS
+                        or _op in BACKWARD_JUMP_OPS
+                        or _op in self._ARMJOIN_EXIT_OPS):
+                    return None
+                _fwd = [s for s in _normal_succ(_cur)
+                        if s.start_offset > _cur.start_offset]
+                if len(_fwd) != 1:
+                    return None
+                _cur = _fwd[0]
+
+        while _cur_layer:
+            _next_layer = []
+            _newly = []
+            for _cur in _cur_layer:
+                _last = _cur.get_last_instruction()
+                _terminal = (_last is not None
+                             and _last.opname in self._ARMJOIN_EXIT_OPS)
+                _fwd = [s for s in _normal_succ(_cur)
+                        if s.start_offset > _cur.start_offset]
+                for _ai in sorted(_arm_of.get(_cur, ())):
+                    if _terminal or not _fwd:
+                        # 该臂以 return/raise 终态，或只有回边（continue/break）
+                        # /异常边可走：它不参与本作用域的前向汇合。
+                        _exhausted.add(_ai)
+                        if _terminal:
+                            # [r3-b103-armjoin-termexit] 终态收束（块末 ∈
+                            # _ARMJOIN_EXIT_OPS）：控制流从本作用域**永久**消失。
+                            # 只有这一种收束能为 (4b) 提供「本 if 只剩一条活臂」
+                            # 的成员证据；靠回边收束的臂仍由外层结构（循环）持有，
+                            # 交 §1.5 C2（外层区域是黑箱）/ C1（其出口不属本区域
+                            # 的出边），由既有循环守卫族处理，(4b) 不介入。
+                            _term_exhausted.add(_ai)
+                        continue
+                    for _s in _fwd:
+                        if _s in _arm_of:
+                            _arm_of[_s].add(_ai)
+                            continue
+                        _arm_of[_s] = {_ai}
+                        _next_layer.append(_s)
+                        if _s not in _struct:
+                            # 本 if 的条件结构块（header / elif 条件）沿其继续
+                            # 展开，但本身不作汇合候选（原则3：链自身不是
+                            # 兄弟语句）。
+                            _newly.append(_s)
+            _layers.append(sorted(_newly, key=lambda b: b.start_offset))
+            _cur_layer = _next_layer
+
+        # 广度优先已走完整个前向流：先按**区域成员关系**把「臂内子区域的
+        # 内部块」折算回它所属的那条臂（这些块只能经异常边/清理边进入，
+        # 正常流广度优先收不到，会被误判成同层兄弟路径），再按层序（最小
+        # 跳数）取最近的合格汇合块。
+        for _x in self.regions:
+            _xe = getattr(_x, 'entry', None)
+            if _xe is None:
+                continue
+            for _ai in tuple(_arm_of.get(_xe, ())):
+                for _b in (_x.blocks or ()):
+                    if _b is _xe:
+                        continue
+                    _sub_arm.setdefault(_b, set()).add(_ai)
+
+        # [r3-b100-armjoin-tailexit] 两臂各自声明的作用域出口（直落链走完后
+        # 才判定，此时 _sub_arm 已按区域成员关系填好）。
+        _arm_exit = {i: _arm_declared_exit(i) for i in range(len(_arms))}
+
+        for _layer in _layers:
+            for _s in _layer:
+                _lbl = _pred_labels(_s)
+                # (4) 两条以上不同控制路径汇入，且其中至少一条来自本 if 的
+                # 前向流之外（E 箱）——即「紧随 if 链之后的同层兄弟路径」确实
+                # 接入该块。箱数 = 1 ⇒ 单臂内部（子区域出口，原则2/3）的汇合
+                # 点；E 箱为空 ⇒ 该块只被本 if 自己的臂汇入（链尾出口形，如
+                # `if A / elif B / else C` 中 C 的出口），两种都不认领：前者
+                # 属子区域，后者的 merge 由链构造器按既有判据给出。实测反例
+                # IQCommon/util/cgroup_utils.set_cgroup_config 的 if@4（认领
+                # 1562 会把 elif 链降级成 else: if）、IQCommon/data/finance.
+                # func_get_fundamentals_daily_data 的 if@180（臂内 with 区域
+                # 的 POP_TOP 尾声块 444 折算回臂箱后 E 箱为空）、
+                # r1_65_cand_while_try_sinkpair 的 if@0（臂内 while 区域的
+                # handler 尾声块 142 同理）。
+                if len(_lbl) >= 2 and 'E' in _lbl:
+                    _join = _s
+                    break
+                # [r3-b100-armjoin-tailexit] 单臂汇入 + 其余臂已在作用域内
+                # 收束时，臂自身无条件前向跳转的落点即同层最近汇合块；它比
+                # 后一层「与外层链其他臂汇合」的块更近，先到先得，故须在 E
+                # 判据之后、进入下一层之前判定。
+                # [r3-b103-armjoin-termexit] 收束条件收紧为「终态收束」：其余
+                # 臂必须以 return/raise 块末（_term_exhausted）消失，不能只是
+                # 走回边（continue/break）。回边臂把控制交回**外层结构**继续
+                # 迭代，本 if 的同层层序还没结束，此时臂尾无条件跳转的落点是
+                # 外层区域自己的出口（实测 break 跳出 for 环）——跨区目标，不
+                # 是紧随本 if 链的同层兄弟语句（§1.5 C1 只读本区域的出边、
+                # C2 外层区域是黑箱、§1.2 原则3）。实测反例
+                # IQEngine/utils/logger.handlers.perform_rollover 与 IQCommon/
+                # logger/handlers.perform_rollover 的 `for …: if exists(src):
+                # break / else: … return`：臂 (82,86) 的 86 只有回边（循环续行），
+                # 82 的 JUMP_FORWARD 114 即 break 的落点 = 外层 for 区域的出口，
+                # 认领它会把 for-else 支体（88..112）吸进 break 臂。正例
+                # IQCommon/util/strategy_info_utils.get_strategy 的臂 (990,1038)：
+                # 1038 块末 RETURN_VALUE（1086）= 终态收束，1088 确是同层兄弟
+                # 语句入口 ⇒ 判据成立。判据仍只读块末 opcode 与前驱/后继关系。
+                _solo = next(iter(_lbl)) if len(_lbl) == 1 else None
+                if (isinstance(_solo, int) and len(_arms) == 2
+                        and _arm_exit.get(_solo) is _s
+                        and all(_k in _term_exhausted or _k == _solo
+                                for _k in range(len(_arms)))):
+                    _join = _s
+                    break
+            if _join is not None:
+                break
+
+        if _join is None:
+            return None
+        if current_merge is _join:
+            return None
+        if current_merge is None:
+            # 缺陷签名：必须确有一条臂的前向流在本作用域内收束（return/raise
+            # /continue/break），否则 merge=None 是「两臂各自继续」的既有形态，
+            # 由下游 sink 守卫判定，本判据不介入。
+            if not _exhausted:
+                return None
+        elif current_merge in _forward_reachable(_arms):
+            # 现 merge 在臂的前向流里：它是前向可达的汇合点（NCPD 正常结论），
+            # 逐字保留（严格附加，零行为差）。
+            return None
+        return _join
+
     def _r57e_in_loop_branch_convergence(self, then_succ: BasicBlock, else_succ: BasicBlock,
                                          loop_region, exclude: Set[BasicBlock],
                                          current_merge: Optional[BasicBlock] = None) -> Optional[BasicBlock]:
@@ -19257,6 +19619,29 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         then_succ, else_succ, _loop, _exclude, merge)
                     if _merge_e is not None and merge is not getattr(_loop, 'header_block', None):
                         merge = _merge_e
+
+            # [r3-b100-armjoin] 臂的同层最近汇合块重算（宿主区域无感：循环体
+            # / try 体 / 函数体同一判据，判据与不触发条件全部写在
+            # _compute_arm_level_join 的六项 docstring；本处是它在
+            # _identify_conditional_regions 里的唯一消费点）。破口 B100 的
+            # 机制：一条臂以 return/raise/continue/break 离开本作用域的前向
+            # 流时，NCPD 只能给出更晚的公共后必经块（循环头 / try 体尾 /
+            # 函数尾）或 None，_collect_branch_blocks 遂越过紧随 if 链之后
+            # 的同层兄弟汇合块把它吸收进臂，臂跳转外推（实测
+            # IQCommon/util/email_utils.send_email off130 674→1120、
+            # IQData/utils/calexrights_func.change_his_to_forward off1022
+            # 1328→2148、IQCommon/data/finance.get_fields off92 236→742）。
+            # R24A/B3 家族（continue 臂 → merge=对侧臂入口）与
+            # _compute_in_loop_if_merge / _r57e_in_loop_branch_convergence
+            # 是本判据在「臂尾恰为无条件前向跳转」这一子集上的既往形态，
+            # 此处封闭其另一侧（fall-through 臂尾与非循环宿主），不旁路、
+            # 不重复认领：current_merge 已是前向汇合点时逐字保持原判。
+            _r100_join = self._compute_arm_level_join(
+                then_succ, else_succ,
+                {block, then_succ, else_succ, _else_succ_original} | chain_blocks,
+                merge)
+            if _r100_join is not None:
+                merge = _r100_join
 
             # 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
             # 当 then_succ 以 JUMP_BACKWARD 终止、且目标为包围循环的循环头（continue

@@ -14,10 +14,11 @@ def f75(p):
                 if p == '2':
                     info['z'] = 2
                     return info
-                print('inner')
-                print('after-if')
-                info['n'] = 0
-                return info
+                else:
+                    print('inner')
+        print('after-if')
+        info['n'] = 0
+        return info
     except BaseException:
         info['e'] = 1
         return info

@@ -8,8 +8,9 @@ class C78:
                 if n[0] == start:
                     print('skip')
                 elif n[0] == end:
-                    if n is not None:
-                        print(n)
-                    else:
-                        print('none')
+                    pass
+            if n is not None:
+                print(n)
+            else:
+                print('none')
             print('tail-in-loop')

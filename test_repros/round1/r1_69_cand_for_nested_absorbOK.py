@@ -7,13 +7,14 @@ def f69(xs, start, end):
             if n[0] == start:
                 continue
             elif n[0] == end:
-                pre = n[0]
-                if pre is not None:
-                    tmp = n[1:]
-                    if not tmp:
-                        print('empty')
-                        continue
-                    print('full')
-                    continue
+                pass
+        pre = n[0]
+        if pre is not None:
+            tmp = n[1:]
+            if not tmp:
+                print('empty')
+                continue
+            print('full')
+            continue
         print('none')
     print('after-loop')

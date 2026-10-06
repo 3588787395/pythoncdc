@@ -28,10 +28,21 @@
     代码起点为 merge `47785867`（rr-v3r00 ⊕ main，含 d8db3448 create_user_code_iqe 回退修复）——主代理裁定项。
     工具纠正两处（非判据）：driver.py `ROOT` 上溯四级→三级 + ROOT 自检 fatal；shard/full/small34 索引 `path` 前缀重绑本工作树。
 
-- [ ] Task 2: Round 1 — 单单元损失族（22 个文件各失 1 单元，含 quotation 除外）
-  - [ ] 2.1 测试工程师：按索引每次只取 1 个 pyc（顺序 `IQCommon/util/cgroup_utils` → `IQCommon/util/email_utils` → `IQData/utils/calexrights_func` → `IQData/plugins/plugin_system_fly_basicdata/calexrights_func` → `IQCommon/data/finance` → `IQCommon/logger/handlers`），逐单元定位不一致点，每个缺陷建 ≥10 最小复现（深度 ≥3 变体 + ≥2 MATCH 负对照），登记破口（B98+ 续接：锚点 + 机制 + 违反条款）→ `rounds/round1/REVIEW.md` + `test_repros/round1/`
-  - [ ] 2.2 修复工程师：依区域归约算法封闭（判据只取白名单：块末 opcode / 后继前驱 / 异常边 / 区域成员关系；修复语义 = 封闭守卫恢复 C1/C2/C3，禁个案补丁 / 按深度特判 / 窄门控）；触及方法 docstring 六项模板 + C 条款；自测 = 复现转 MATCH ∧ 负对照不变差 ∧ 34 小测试集 ∧ 单元级不回退 ∧ IV.2 门禁自检 → `rounds/round1/FIX.md`（含「代码已落地」声明）
-  - [ ] 2.3 派发前本地提交；本轮结束按验证序六步验证并 push
+- [x] Task 2: Round 1 — 单单元损失族（22 个文件各失 1 单元，含 quotation 除外）
+  - [x] 2.1 测试工程师：按索引每次只取 1 个 pyc（顺序 `IQCommon/util/cgroup_utils` → `IQCommon/util/email_utils` → `IQData/utils/calexrights_func` → `IQData/plugins/plugin_system_fly_basicdata/calexrights_func` → `IQCommon/data/finance` → `IQCommon/logger/handlers`），逐单元定位不一致点，每个缺陷建 ≥10 最小复现（深度 ≥3 变体 + ≥2 MATCH 负对照），登记破口（B98+ 续接：锚点 + 机制 + 违反条款）→ `rounds/round1/REVIEW.md` + `test_repros/round1/`
+  - [x] 2.2 修复工程师：依区域归约算法封闭（判据只取白名单：块末 opcode / 后继前驱 / 异常边 / 区域成员关系；修复语义 = 封闭守卫恢复 C1/C2/C3，禁个案补丁 / 按深度特判 / 窄门控）；触及方法 docstring 六项模板 + C 条款；自测 = 复现转 MATCH ∧ 负对照不变差 ∧ 34 小测试集 ∧ 单元级不回退 ∧ IV.2 门禁自检 → `rounds/round1/FIX.md`（含「代码已落地」声明）
+  - [x] 2.3 派发前本地提交；本轮结束按验证序六步验证并 push
+  - 落地读数（rr-v3r01，终态详见 `rounds/round1/VERIFICATION.md`）：
+    files 369→**376/402**、units 6554→**6564/6617（99.1990%）**、compile_error/error **0**、
+    **REGRESSIONS=0 ∧ UNIT_REGRESSIONS=0**；电池 91/110→**108/110**（残余 2 = B101 线索 + B99，为原 19 条失败的严格子集⇒负对照零变差）；
+    回退哨兵臂 17 臂 **34/34**；34 集 1505→**1516/1568**；tests 六套件 277 passed/2 failed/2 xpassed（基线名单）；
+    本轮转完全 OK 的 pyc = **7**（cgroup_utils、email_utils、calexrights_func×2、executor、history_api、ptradeAccount）；
+    封闭 B98/B100 及其派生 **B103**，同轮拦下并封闭 **3 次语料回退**（三次都在 34 集之外，唯 402 全量可见）；
+    如实移交：B99 残余（`r1_73` + `handlers._target`）、B101 线索、`finance` 31/32、
+    **B102 quotation 失败单元替换**（`change_his_to_forward`→`get_fundflow_day`，152/153 计数持平，纯计数门禁不可见）；
+    语料残余 33 文件/63 单元 → **26 文件/53 单元**。
+    文档落点：`REVIEW.md`、`FIX_B98_REGRESS.md`、`FIX_B100_REGRESS.md`、`FIX_B103.md`、`VERIFICATION.md`；
+    未合成单一 `FIX.md`（三份分家族 FIX 文档代替，如实标注，不虚构文件名）。
 
 - [ ] Task 3: Round 2 — 双单元损失族（real_quote 43/45、risk_calculation/__init__ 41/43、future_contract_info 27/29、ptradeAccount 135/137）
   - [ ] 3.1 测试工程师：同 2.1 攻击协议，逐 pyc 一个，≥10 复现/缺陷

@@ -7,9 +7,10 @@ def f68(xs, start, end):
             if n[0] == start:
                 continue
             elif n[0] == end:
-                if n is not None:
-                    print(n)
-                else:
-                    print('none')
+                pass
+        if n is not None:
+            print(n)
+        else:
+            print('none')
         print('tail-in-loop')
     print('after-loop')

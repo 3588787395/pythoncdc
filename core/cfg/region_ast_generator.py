@@ -3187,7 +3187,7 @@ class RegionASTGenerator:
             return True
         return False
 
-    def _is_region_internal_exit_sink(self, block: BasicBlock) -> bool:
+    def _is_region_internal_exit_sink(self, block: BasicBlock, deciding_region=None) -> bool:
         """[r1-b99-sinkclaim] 判定块是否为「被某个区域内部区域认领的退出汇合块」。
 
         ①算法依据：No More Gotos §2.2/§3 + rules.md §1.2 原则2（每块唯一归
@@ -3217,6 +3217,12 @@ class RegionASTGenerator:
         C 条款：C1 只读 block 的前驱集合与该块自身指令 + 各祖先区域自身的
         结构字段；C2 不读兄弟/父级的其它信息；C3 显式认领「该 sink 已被区域
         内部路径消费」。零文件名/函数名/偏移阈值/深度阈值/计数上限。
+        作用域条件（deciding_region，破口 B98 回退整改补齐的一支）：调用点
+        正在裁决「本块是不是该区域的隐式尾声」时，该区域自身结构字段对本块
+        的持有 = 被裁决的那个事实本身，不是独立认领证据——区域归约把「无
+        break 循环的自然出口 sink」记进它自己的 else_blocks，任何此类 sink
+        都满足该字段，旧写法在循环 else 剥离点因此恒真。真正的认领必须来自
+        裁决者之外的区域（§1.2 原则2 每块唯一归属 + §1.5 C1 局部消费）。
         """
         if block is None:
             return False
@@ -3228,6 +3234,17 @@ class RegionASTGenerator:
         # sink），该块同样已归那个区域的语义子句。
         _anc = _region
         while _anc is not None:
+            # [r1-b98-elsescope] 自指排除（§1.2 原则2 每块唯一归属 + §1.5
+            # C3）：deciding_region 是正在为本块裁决「它是不是本作用域的隐式
+            # 尾声」的那个区域（调用点 = 该区域的 else 子句生成）。它自身的
+            # else_blocks / orelse_blocks 持有本块，正是被裁决的那个事实本身
+            # 而不是独立的认领证据：区域归约把「无 break 循环的自然出口 sink
+            # 记入本循环 else_blocks」当作 fall-through 记账副产品，任何这类
+            # sink 都满足它，于是旧写法在循环 else 剥离点恒真（本次三处回退的
+            # 机制）。真正的认领必须来自裁决者之外的区域，故跳过该层继续向上。
+            if deciding_region is not None and _anc is deciding_region:
+                _anc = getattr(_anc, 'parent', None)
+                continue
             for _field in ('else_blocks', 'try_blocks', 'handler_entry_blocks',
                            'finally_blocks', 'orelse_blocks', 'cleanup_blocks'):
                 _val = getattr(_anc, _field, None) or []
@@ -6227,7 +6244,7 @@ AST 映射规则:
                 if region.region_type == RegionType.FOR_LOOP and getattr(region, 'has_break', False):
                     pass
                 elif self._is_region_internal_exit_sink(
-                        _filtered_else_blocks[0] if _filtered_else_blocks else None):
+                        _filtered_else_blocks[0] if _filtered_else_blocks else None, deciding_region=region):
                     # [r1-b99-sinkclaim] C3 封闭（与 if/elif 臂剥离点同一判据、
                     # 同一方法）：else 块链的汇合 sink 若被本循环区域或其任一
                     # 祖先区域的结构角色字段认领，它已是该区域语义子句指向的
@@ -6236,6 +6253,9 @@ AST 映射规则:
                     # 块在臂内（父级是 IfRegion 而非函数体）时同样成立——旧
                     # 判据按 has_break / 顶层作用域限定，漏掉这一支 = B99。
                     # 判据是区域成员关系，不读深度、不读语句数、不读名字。
+                    # [r1-b98-elsescope] 本调用点的裁决对象正是本区域的 else
+                    # 子句，故把 region 作为 deciding_region 传入：本区域自身
+                    # else_blocks 对本块的持有不再算认领（否则判据自指恒真）。
                     pass
                 else:
                     else_stmts = []
@@ -25884,9 +25904,30 @@ AST 映射规则:
                     # is misidentified as a break trampoline, generating a false
                     # Break and leaving the nested region to be generated as
                     # sequential code after the loop (indentation collapse).
+                    _r100_mrg = (getattr(region, 'merge_block', None)
+                                 if region is not None else None)
                     _ungenerated_region_succ = None
                     for _succ in block.successors:
+                        # [r3-b100-armjoin] C1/C3 封闭（与 region_analyzer
+                        # _compute_arm_level_join 同一判据的发射端）：空体
+                        # `if …: pass` 的臂尾只有一个 NOP 块，其唯一后继正是
+                        # 本 IfRegion 的 merge_block —— 紧随整个 if/elif 链之后
+                        # 的同层兄弟语句入口。依 §1.2 原则2（每块唯一归属）与
+                        # §3.2.1「then-region 边界止于臂末尾跳转的落点」，
+                        # merge_block 归**父级作用域的兄弟语句序列**，永不属
+                        # 于任何一条臂；把它当「未生成后继区域」认领进臂内，
+                        # 就是破口 B100 的臂吸收形态（实测标本
+                        # r1_68/r1_69/r1_75/r1_76/r1_80 与语料
+                        # email_utils.send_email off130 674→1120、
+                        # calexrights_func.change_his_to_forward off1022
+                        # 1328→2148）。判据只读区域角色字段（本帧区域的
+                        # merge_block 身份）与前继关系，不读深度/语句数/名字，
+                        # 对循环体、try 体、函数体三种宿主同判（C3 守卫封闭）。
+                        # 不命中时逐字保持原续接行为（严格附加，零行为差）。
+                        if _succ is _r100_mrg:
+                            continue
                         _sr = self.region_analyzer.get_entry_region_for_block(_succ)
+
                         if _sr and isinstance(_sr, (TryExceptRegion, WithRegion,
                                                      MatchRegion, LoopRegion, IfRegion,
                                                      AssertRegion)):

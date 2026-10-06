@@ -9,8 +9,9 @@ def f76(xs, start, end):
             if n == start:
                 continue
             elif n == end:
-                if n is not None:
-                    print(n)
-                else:
-                    print('none')
+                pass
+        if n is not None:
+            print(n)
+        else:
+            print('none')
         print('tail-in-loop')
