@@ -26,12 +26,12 @@
   - [x] 3.3 评审工程师复核；REVIEW2.md（打回项 A/B 文档级 → 整改 `3b098f99` 纯文档（AST 恒等）→ §5.5 终审放行；新变体 5 探针 HEAD 46/63 vs 旧码 37/63 零误伤）
   - [x] 3.4 主代理验证：验证序六步；VERIFICATION.md（402 全量 6554/6617、369/402 与基线逐位一致；8 片 compare REGRESSIONS=0；34 集 1505/1568；quotation 152/153；tests 277 passed/2 failed/2 xpassed；IV.2 全过）
   - [x] 3.5 归档 rounds/round3/ + 提交并 push origin main
-- [ ] Task 4: Round 4 — 表C 31 扩展形态对抗（III.4 全名单：elif 链/for-else/while-else/except\*/match+守卫+8 模式/多上下文 with/try-finally-only/multi_target/augassign/chained_comparison/walrus/keyword_args/star_args/slice/relative_import/star_import/global_nonlocal/fstring_conversion/nested_comprehension/decorator_with_args/async 五件套）
-  - [ ] 4.1 评审工程师：同 2.1 攻击协议；except\* 检测标准对准 3.11 标记（II.7 第 12 条：CHECK_EG_MATCH/PREP_RERAISE_STAR/is_except_star）；REVIEW.md + test_repros/round4/
-  - [ ] 4.2 修复工程师（可多位协同）：封闭登记破口；自测 = IV.2 门禁自检清单全过；FIX.md
-  - [ ] 4.3 评审工程师复核；REVIEW2.md
-  - [ ] 4.4 主代理验证：验证序六步；VERIFICATION.md
-  - [ ] 4.5 归档 rounds/round4/ + 提交并 push origin main
+- [x] Task 4: Round 4 — 表C 31 扩展形态对抗（III.4 全名单：elif 链/for-else/while-else/except\*/match+守卫+8 模式/多上下文 with/try-finally-only/multi_target/augassign/chained_comparison/walrus/keyword_args/star_args/slice/relative_import/star_import/global_nonlocal/fstring_conversion/nested_comprehension/decorator_with_args/async 五件套）
+  - [x] 4.1 评审工程师：同 2.1 攻击协议；except\* 检测标准对准 3.11 标记（II.7 第 12 条：CHECK_EG_MATCH/PREP_RERAISE_STAR/is_except_star）；REVIEW.md + test_repros/round4/（20 形态族：13 破口 / 7 完备；新登记 B100–B113；探针 301/338；站桩 6 面 WORSE=0）
+  - [x] 4.2 修复工程师（可多位协同）：封闭登记破口；自测 = IV.2 门禁自检清单全过；FIX_G/FIX_R.md（位1 生成层封闭 B100 相对导入层级 + B101 star 导入；位2 识别层封闭 B102 except\* 多 handler + B109 while-else + B103 match 守卫部分）
+  - [x] 4.3 评审工程师复核；REVIEW2.md（逐 hunk 合规 PASS、独立复跑 NEWFAIL=0、站桩 WORSE=0、新变体误伤 0、B113 驳回证伪降级维持破口；终审放行）
+  - [x] 4.4 主代理验证：验证序六步；VERIFICATION.md（首跑 shard4 回退 → B109 守卫收紧整改 `3eb329d1` → 复跑 402 全量 6554/6617、369/402 与基线逐位一致；8 片 REGRESSIONS=0；34 集 1505/1568；quotation 152/153；tests 277/2/2；IV.2 全过）
+  - [x] 4.5 归档 rounds/round4/ + 提交并 push origin main
 - [ ] Task 5: Round 5 — 深层嵌套交叉矩阵对抗（覆盖矩阵剩余空白格：形态 × 宿主区域组合，深度 ≥3；重点 = 台账"完备"声明从未被交叉攻击过的组合；C1/C2/C3 逐条款攻击设计）
   - [ ] 5.1 评审工程师：交叉矩阵抽样攻击（每空白格 ≥3 探针）+ 站桩回归 + 合规审计 + Bn 登记；REVIEW.md + test_repros/round5/
   - [ ] 5.2 修复工程师（可多位协同）：封闭登记破口（深层才错 = C 条款破坏，按 I.3 推论封闭守卫）；自测 = IV.2 门禁自检清单全过；FIX.md
