@@ -88,8 +88,14 @@ def cmd_verify(n, log, dest_dir=None):
         idx, label = shard_json(n), 'shard%d' % n
     dest = dest_dir or BL
     out = os.path.join(dest, label + '_report.json')
+    # 崩掉的 batch 不会写报告，却会把上一轮的同名报告留在原地，读起来像本次读数。
+    # 故先删旧件、跑完再验新件；缺一即 fatal，禁止把陈旧读数当本轮。
+    if os.path.isfile(out):
+        os.remove(out)
     rc, o = run([PY, '-X', 'utf8', 'scripts/pyc_verify.py', 'batch', '--index', idx, '--json', out],
                 290, 'verify %s' % label, log)
+    if not os.path.isfile(out):
+        sys.exit('[fatal] %s 本次未产出报告（rc=%s）——%s 上的任何数字都不属于本轮' % (label, rc, out))
     return rc, out
 
 

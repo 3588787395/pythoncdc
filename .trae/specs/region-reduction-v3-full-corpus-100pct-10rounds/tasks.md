@@ -57,8 +57,18 @@
     语料残局 **25 文件 / 51 单元**（48 Different control flow + 3 Different bytecode）；
     push 至 `origin/rr-v3-full-corpus`（非 main，理由见该文档 §III）。
 
-- [ ] Task 4: Round 3 — 三单元损失族（klinedata 61/64、wizard_quant_api 55/58、order_api 34/37）
-  - [ ] 4.1/4.2/4.3 同 Round 2 结构
+- [x] Task 4: Round 3 — 三单元损失族（klinedata 61/64、wizard_quant_api 55/58、order_api 34/37）
+  - [x] 4.1/4.2/4.3 同 Round 2 结构
+  - 落地读数（rr-v3r03，详见 `rounds/round3/VERIFICATION.md`）：units 6554→**6569/6617（99.2746%）**、files 369→**378/402**；
+    对基线与对 Round 2 终态双向 compare 均 REGRESSIONS=0 ∧ UNIT_REGRESSIONS=0；compile_error/error 0；
+    本轮转完全 OK 的 pyc＝**1**（`fly/common/future_contract_info.pyc` 29/29）；电池 r3 84/114→**101/122**、r2v3 105/126、r1_probe 108/110、r1_regress 34/34；
+    quotation 152/153 失败单元仍 `get_fundflow_day`；tests 六套件 277/2/2 同名单；IV.2 全过；语料残局 **24 文件 / 48 单元**
+  - 三批成色（如实）：B109 落地（`order_api` 34/37→35/37）、**B114 整批回滚并记「仅归档 spec 未落地」**（补完链式调用实参装配需改
+    `func_call_info` 热路径，越出工单许可）、B115 落地并翻转 `future_contract_info`；
+    **三单元族本身未被攻穿**（klinedata 61/64、wizard 55/58、order_api 35/37），翻转来自单单元残项——后续轮按族内单元数排序派发，不按目录顺序
+  - 非确定性红处置：`verify shard4` 首跑 rc=1/MemoryError 且未写报告，同目录陈旧报告险被当本轮读数；
+    已复跑确证 + 排除判据面因素（64 位解释器、最大文件 59KB）+ **落常驻牙**：`driver.py cmd_verify` 先删旧报告、跑完无新报告即 fatal
+  - 新登记移交：B110/B111/B112/B113/B114 未闭，B99/B101/B102 原样在册
 
 - [ ] Task 5: Round 4 — quotation 终局单元（`<module>.change_his_to_forward` Different control flow，152→153）
   - [ ] 5.1 测试工程师：change_his_to_forward 逐指令 diff + ≥10 复现 + 负对照；quotation 其余 152 单元作站桩回归面
