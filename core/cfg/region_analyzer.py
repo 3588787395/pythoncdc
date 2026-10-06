@@ -21070,6 +21070,47 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         _generate_if 中 _d2_has_non_if_trailing 守卫：orelse 含非 If 尾随节点
         时不展平为 elif，作为 else 块整体渲染。本方法遵循区域归约算法 4 核心原则:
         自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 入口引用语义。
+
+        ── [R3-B109 修复·elif 臂 or 链成员真边同一性核验] 六项（本票改动面）──
+        ①算法依据：No More Gotos §3「If/BoolOp 区域归约」——or 短路链的定义是
+          「全体成员的真边汇入同一个链体入口」；本方法内嵌 _check_elif_chain 的
+          elif 臂 or 链收集据此核验每个候选成员。违反面（rules.md §1.2 原则2/
+          原则4 + §1.5 C1）：负极性单臂 `if not A(): <臂体>` 的臂头 IF_TRUE 边是
+          「跳过臂体直达作用域续行块」的**出口边**，旧码先 append 后在两个分支里
+          一律 break（21677-21681 的核验结果被丢弃），链长按未核验的收集计，于是
+          把出口边折进 elif 条件（`not A` → `A or B`），臂体被无条件执行、终态汇合
+          块丢失臂前驱（order_api.base_order 终态块 preds [154,196] → [196]，
+          future_order/option_order 臂体 −16/−9 指令）。本分支是
+          `_compute_arm_level_join` 判据 (4)「箱数 = 1 ⇒ 拒绝」正确弃权之后链构造侧
+          必须对齐的另一侧（同一块两侧结论必须一致），并与主条件侧的同名核验
+          （`_identify_conditional_regions` 的 `_or_ft_fallthrough != _then_entry_offset`
+          断链，19232）对称——同一判据此前只在主条件侧被 honour。
+        ②归约顺序：自底向上，内层区域先归约。核验发生在 _check_elif_chain 为下
+          一条 elif 臂展开短路链时（该臂所属外层区域尚未建区、臂内子区域已在
+          self.regions 中），命中即在识别阶段定形：链不成立 → 不写
+          inline_boolop_chains、不改 inner_condition_block；无发射后回溯修正
+          （§1.3 单向数据流）。
+        ③唯一归属判定：链体入口 T := 臂头块块末跳转的操作数落点。候选成员只有
+          在其**真边**（IF_TRUE 族 = 跳转目标 / IF_FALSE 族 = 非跳转后继）恰为 T
+          时才是链成员（归本链、由 chain_blocks 唯一认领）；否则它是臂体内下一条
+          语句的条件测试块，归该臂的 then 体子区域。T 若同时被链外同层前向路径
+          汇入（臂体末尾落穿），它是父级兄弟序列的汇合块，不属本链（原则2）。
+        ④嵌套处理：核验只读块末 opcode 与两条后继的归属，不读深度/语句条数/
+          区域类型名/名字/绝对偏移；臂体内再嵌套 if/elif/while/try/with 时同一
+          判据逐层成立，嵌套区域仍作为抽象节点由 bodies 引用其入口，链不展开子
+          区域内部（原则3、C2）。由归纳（一层正确 + 组合封闭）得任意深度同判。
+        ⑤入口引用语义：核验通过 → `inline_boolop_chain = {'blocks': _or_chain,
+          'op': 'or'}`，inner_condition_block 引用链末块入口，AST 端
+          `_if_generate_elif_chain` 以 BoolOp(or, […]) 重建臂条件；核验不过 →
+          inner_condition_block 保持臂头块本身，臂以自身条件块入口引用，AST 端按
+          臂头 IF_TRUE 与 then/else 归属对该臂取反（`elif not A():`），T 由父级
+          序列作为兄弟语句发射（臂跳保留为「→T」的入口引用）。
+        ⑥反编译流程：region_analyzer._build_elif_region(_check_elif_chain) →
+          IfRegion.inline_boolop_chains（本形不写入）→ region_ast_generator
+          ._if_generate_elif_chain → code_generator 发射 → pyc 逐指令比对。
+        C 条款：C1 只读臂头块与链成员块的同层出边；C2 不窥视子区域内部；
+        C3 对「臂头真边落点非链体入口而是作用域续行块」显式拒绝认领。
+        零深度阈值、零计数上限、零名字/偏移/操作码字面量特判。
         """
         # When collecting inner elif branch blocks inside a loop, the loop's
         # boundary_stop (which includes break/return exit blocks and the loop header)
@@ -21671,16 +21712,39 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         _ft_last = _ft_next.get_last_instruction()
                         if _ft_last is None or _ft_last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
                             break
-                        _or_chain.append(_ft_next)
-                        _or_visited.add(_ft_next.start_offset)
+                        # [R3-B109 修复·elif 臂 or 链成员真边同一性核验] 成员资格先核验后入链：
+                        # or 短路链的全部成员，其「真边」必须汇入同一个链体入口 _or_body_block
+                        # （IF_TRUE 族成员 = 跳转目标，IF_FALSE 族成员 = 非跳转后继/落穿）。
+                        # 核验不过 ⇒ _ft_next 是**下一条语句的条件测试**（臂体首条件），不是
+                        # 本链的操作数：`if not A(): if B: X else: Y` 里 A 的真边是「跳过臂体直达
+                        # 作用域续行块」的出口边，与 B 的真边（→X）并不同 sink。旧码先 append
+                        # 再在两个分支里一律 break，核验结果被丢弃，于是把出口边折进链条件
+                        # （`not A` → `A or B`），臂体两臂无条件执行、终态汇合块丢臂前驱
+                        # （order_api.future_order/option_order −16/−9 指令）。判据只读块末
+                        # opcode 与后继归属，零名字/偏移/计数特判。
                         if 'IF_FALSE' in _ft_last.opname:
                             _or_ft = next((s for s in _ft_next.conditional_successors if s.start_offset != _ft_last.argval), None)
-                            if _or_ft is not None and _or_ft == _or_body_block:
+                            if _or_ft is None or _or_ft.start_offset != _or_body_block.start_offset:
                                 break
-                            else:
-                                break
+                            _or_chain.append(_ft_next)
+                            _or_visited.add(_ft_next.start_offset)
+                            break
+                        if _ft_last.argval != _or_body_block.start_offset:
+                            break
+                        _or_chain.append(_ft_next)
+                        _or_visited.add(_ft_next.start_offset)
                         _or_current = _ft_next
                     if len(_or_chain) >= 2:
+                        # [R3-B109 修复·elif 臂 or 链成员真边同一性核验] 只有上一步逐成员核验
+                        # 通过的块集才是 or 短路链：全体成员的真边汇入同一个链体入口
+                        # _or_body_block。核验不过 ⇒ 臂头 IF_TRUE 的那条边是**跳过臂体直达作用域
+                        # 续行块**的出口边（`if not A(): <臂体>`；该续行块同时被臂体末尾落穿汇入，
+                        # 实测 order_api.base_order 终态块 preds=[154,196]），不是链成员真边，
+                        # 于是整链弃权：inner_condition_block 保持臂头块本身，inline_boolop_chain
+                        # 不记录，臂以 `elif not A():` 的单臂条件入链、终态汇合块归还父级兄弟序列
+                        # （原则2 每块唯一归属 / 原则4 入口引用语义 / C1 局部消费）。
+                        # 旧码在 21677-21681 处已写出同一判据，却先 append 后在两个分支里一律
+                        # break，核验结果被丢弃，链长按未核验的收集计。
                         inner_condition_block = _or_chain[-1]
                         inline_boolop_chain = {'blocks': _or_chain, 'op': 'or'}
             inner_cond_succs = list(inner_condition_block.conditional_successors)

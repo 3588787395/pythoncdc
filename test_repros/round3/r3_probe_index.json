@@ -1,0 +1,164 @@
+[
+ {
+  "path": "test_repros/round3/r3_a01_terminal_return_join_absorbed.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a02_no_preceding_guard_return.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a03_ternary_and_format_future_shape.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a04_body_single_stmt.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a05_method_host.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a06_for_host_module_level.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a07_try_host.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a08_with_host.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a09_explicit_elif_source.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a10_positive_polarity.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a11_inner_if_no_else.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a12_guard_is_call_not_isnone.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a13_body_ends_terminal_return.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a14_three_arm_inner_chain.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a15_sibling_after_negated_if.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b01_mixedjump_chain_then_skipped.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b02_mixedjump_chain_no_loop.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b03_alliffalse_family_chain.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b04_andor_family_chain.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b05_isnone_not_only_two_members.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b06_mixedjump_method_host.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b07_mixedjump_chain_return_join.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b08_loopexit_break_before_tailreturn.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b09_loopexit_in_elsearm_for_else.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b10_loopexit_arm_sibling_elsebranch.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b11_for_else_tail_join.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b12_loopexit_in_ifarm_elsebranch.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b13_notx_andchain_join_absorbed.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b14_notx_andchain_short.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_b15_positive_andchain.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c01_genexpr_andtest_ternary_corpus.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c02_genexpr_andtest_ternary_assign.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c03_listcomp_andtest_ternary.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c04_method_host_genexpr_andtest.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c05_max_default_genexpr_andtest.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c06_genexpr_single_conjunct.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c07_plain_func_andtest_ternary.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c08_loop_try_host_andtest.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c09_lambda_host_andtest.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c10_genexpr_or_test_ternary.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c11_genexpr_three_conjuncts.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c12_elifchain_isnone_or_shared_sink.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c13_single_if_isnone_or_shared_sink.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c14_single_if_isnone_and_shared_sink.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c15_thenarm_stmt_not_return.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c16_minimal_if_a_isnone_or.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c17_elifchain_no_trailing_return.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c18_elifchain_plain_args.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c19_elifchain_single_member_chain.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c20_ifarm_not_elif_chain.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c21_elifchain_then_returns_const.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_c22_elifchain_three_members.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a16_orchain_real_chain_folds.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a17_negated_if_empty_then_no_fold.pyc"
+ }
+]
