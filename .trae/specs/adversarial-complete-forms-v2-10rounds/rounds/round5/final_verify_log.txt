@@ -1,0 +1,439 @@
+=== REGEN0 rc=0 35.3s
+regen shard0 [0:51]: 51 ok, 0 failed -> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\regen_shard0.json
+
+=== REGEN1 rc=0 24.1s
+regen shard1 [0:51]: 51 ok, 0 failed -> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\regen_shard1.json
+
+=== REGEN2 rc=0 20.5s
+regen shard2 [0:51]: 51 ok, 0 failed -> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\regen_shard2.json
+
+=== REGEN3 rc=0 22.5s
+regen shard3 [0:51]: 51 ok, 0 failed -> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\regen_shard3.json
+
+=== REGEN4 rc=0 23.9s
+regen shard4 [0:51]: 51 ok, 0 failed -> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\regen_shard4.json
+
+=== REGEN5 rc=0 24.3s
+regen shard5 [0:51]: 51 ok, 0 failed -> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\regen_shard5.json
+
+=== REGEN6 rc=0 28.2s
+regen shard6 [0:51]: 51 ok, 0 failed -> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\regen_shard6.json
+
+=== REGEN7 rc=0 30.2s
+regen shard7 [0:45]: 45 ok, 0 failed -> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\regen_shard7.json
+
+=== VERIFY0 rc=0 25.8s
+... 25/51  13s  units=6/6
+... 50/51  24s  units=9/9
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 786,
+ "units_success": 777,
+ "success_rate": 0.9885496183206107,
+ "files_by_status": {
+  "success": 46,
+  "failure": 5,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 24.7
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\shard0_report_new.json
+
+shard0 NEW: {'compile_error': 0, 'error': 0, 'failure': 5, 'success': 46} units=777/786
+
+=== COMPARE0 rc=0 1.1s
+Movement Matrix (before -> after)
+                success       failure       compile_error error         
+success         46            -             -             -             
+failure         -             5             -             -             
+compile_error   -             -             -             -             
+error           -             -             -             -             
+
+units: 777/786 (98.85%) -> 777/786 (98.85%)
+files: success 46 -> 46
+REGRESSIONS=0 IMPROVED=0
+
+
+=== VERIFY1 rc=0 14.2s
+... 25/51  10s  units=1/1
+... 50/51  13s  units=14/14
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 469,
+ "units_success": 462,
+ "success_rate": 0.9850746268656716,
+ "files_by_status": {
+  "success": 48,
+  "failure": 3,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 13.3
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\shard1_report_new.json
+
+shard1 NEW: {'compile_error': 0, 'error': 0, 'failure': 3, 'success': 48} units=462/469
+
+=== COMPARE1 rc=0 1.0s
+Movement Matrix (before -> after)
+                success       failure       compile_error error         
+success         48            -             -             -             
+failure         -             3             -             -             
+compile_error   -             -             -             -             
+error           -             -             -             -             
+
+units: 462/469 (98.51%) -> 462/469 (98.51%)
+files: success 48 -> 48
+REGRESSIONS=0 IMPROVED=0
+
+
+=== VERIFY2 rc=0 8.9s
+... 25/51  3s  units=4/4
+... 50/51  8s  units=16/16
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 538,
+ "units_success": 537,
+ "success_rate": 0.9981412639405205,
+ "files_by_status": {
+  "success": 50,
+  "failure": 1,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 8.1
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\shard2_report_new.json
+
+shard2 NEW: {'compile_error': 0, 'error': 0, 'failure': 1, 'success': 50} units=537/538
+
+=== COMPARE2 rc=0 0.9s
+Movement Matrix (before -> after)
+                success       failure       compile_error error         
+success         50            -             -             -             
+failure         -             1             -             -             
+compile_error   -             -             -             -             
+error           -             -             -             -             
+
+units: 537/538 (99.81%) -> 537/538 (99.81%)
+files: success 50 -> 50
+REGRESSIONS=0 IMPROVED=0
+
+
+=== VERIFY3 rc=0 13.8s
+... 25/51  7s  units=1/1
+... 50/51  13s  units=11/11
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 887,
+ "units_success": 883,
+ "success_rate": 0.9954904171364148,
+ "files_by_status": {
+  "success": 48,
+  "failure": 3,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 13.0
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\shard3_report_new.json
+
+shard3 NEW: {'compile_error': 0, 'error': 0, 'failure': 3, 'success': 48} units=883/887
+
+=== COMPARE3 rc=0 0.9s
+Movement Matrix (before -> after)
+                success       failure       compile_error error         
+success         48            -             -             -             
+failure         -             3             -             -             
+compile_error   -             -             -             -             
+error           -             -             -             -             
+
+units: 883/887 (99.55%) -> 883/887 (99.55%)
+files: success 48 -> 48
+REGRESSIONS=0 IMPROVED=0
+
+
+=== VERIFY4 rc=0 15.5s
+... 25/51  5s  units=7/7
+... 50/51  15s  units=19/19
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 855,
+ "units_success": 848,
+ "success_rate": 0.991812865497076,
+ "files_by_status": {
+  "success": 46,
+  "failure": 5,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 14.5
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\shard4_report_new.json
+
+shard4 NEW: {'compile_error': 0, 'error': 0, 'failure': 5, 'success': 46} units=848/855
+
+=== COMPARE4 rc=0 0.9s
+Movement Matrix (before -> after)
+                success       failure       compile_error error         
+success         46            -             -             -             
+failure         -             5             -             -             
+compile_error   -             -             -             -             
+error           -             -             -             -             
+
+units: 848/855 (99.18%) -> 848/855 (99.18%)
+files: success 46 -> 46
+REGRESSIONS=0 IMPROVED=0
+
+
+=== VERIFY5 rc=0 17.0s
+... 25/51  7s  units=67/67
+... 50/51  16s  units=6/6
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 999,
+ "units_success": 993,
+ "success_rate": 0.993993993993994,
+ "files_by_status": {
+  "success": 46,
+  "failure": 5,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 16.2
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\shard5_report_new.json
+
+shard5 NEW: {'compile_error': 0, 'error': 0, 'failure': 5, 'success': 46} units=993/999
+
+=== COMPARE5 rc=0 1.1s
+Movement Matrix (before -> after)
+                success       failure       compile_error error         
+success         46            -             -             -             
+failure         -             5             -             -             
+compile_error   -             -             -             -             
+error           -             -             -             -             
+
+units: 993/999 (99.40%) -> 993/999 (99.40%)
+files: success 46 -> 46
+REGRESSIONS=0 IMPROVED=0
+
+
+=== VERIFY6 rc=0 24.0s
+... 25/51  18s  units=23/23
+... 50/51  23s  units=4/4
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 801,
+ "units_success": 789,
+ "success_rate": 0.9850187265917603,
+ "files_by_status": {
+  "success": 48,
+  "failure": 3,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 22.6
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\shard6_report_new.json
+
+shard6 NEW: {'compile_error': 0, 'error': 0, 'failure': 3, 'success': 48} units=789/801
+
+=== COMPARE6 rc=0 0.9s
+Movement Matrix (before -> after)
+                success       failure       compile_error error         
+success         48            -             -             -             
+failure         -             3             -             -             
+compile_error   -             -             -             -             
+error           -             -             -             -             
+
+units: 789/801 (98.50%) -> 789/801 (98.50%)
+files: success 48 -> 48
+REGRESSIONS=0 IMPROVED=0
+
+
+=== VERIFY7-SPLIT rc=0 32.0s
+"ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 23,
+ "units_total": 608,
+ "units_success": 595,
+ "success_rate": 0.9786184210526315,
+ "files_by_status": {
+  "success": 18,
+  "failure": 5,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 21.0
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\_shard7_a.json
+
+half a: {'compile_error': 0, 'error': 0, 'failure': 5, 'success': 18} units=595/608 elapsed=21.7s
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 22,
+ "units_total": 674,
+ "units_success": 670,
+ "success_rate": 0.9940652818991098,
+ "files_by_status": {
+  "success": 19,
+  "failure": 3,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 9.1
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\_shard7_a.json
+
+half a: {'compile_error': 0, 'error': 0, 'failure': 3, 'success': 19} units=670/674 elapsed=10.1s
+shard7 MERGED: {'compile_error': 0, 'error': 0, 'failure': 8, 'success': 37} units=1265/1282 -> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\shard7_report_new.json
+
+=== COMPARE7 rc=0 0.9s
+Movement Matrix (before -> after)
+                success       failure       compile_error error         
+success         37            -             -             -             
+failure         -             8             -             -             
+compile_error   -             -             -             -             
+error           -             -             -             -             
+
+units: 1265/1282 (98.67%) -> 1265/1282 (98.67%)
+files: success 37 -> 37
+REGRESSIONS=0 IMPROVED=0
+
+
+=== SMALL34-A rc=0 25.3s
+lure     7/8   IQData/utils/calexrights_func.pyc
+[5/17] failure    36/41  IQCommon/util/trade_info_utils.pyc
+[6/17] failure    84/92  fly/data/quote.pyc
+[7/17] failure   118/128 IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc
+[8/17] failure     9/10  IQEngine/core/executor.pyc
+[9/17] failure    10/11  IQEngine/core/strategy/strategy_universe.pyc
+[10/17] failure    34/37  IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc
+[11/17] failure    12/13  IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc
+[12/17] failure    13/14  IQEngine/data/trading_dates_mixin.pyc
+[13/17] failure    27/29  fly/common/future_contract_info.pyc
+[14/17] failure    16/17  IQEngine/plugins/plugin_system_matcher/matcher.pyc
+[15/17] failure    17/18  IQEngine/utils/profiler_func.pyc
+[16/17] failure    18/19  IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc
+[17/17] failure    55/58  IQCommon/strategy/wizard_quant_api.pyc
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 17,
+ "units_total": 515,
+ "units_success": 473,
+ "success_rate": 0.9184466019417475,
+ "files_by_status": {
+  "success": 0,
+  "failure": 17,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 24.5
+}
+-> F:\Downloads\pythoncdc-main\.trae\specs\adversarial-complete-forms-v2-10rounds\rounds\round5\small34_report_a.json
+
+=== SMALL34-B rc=0 37.4s
+ if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+
+=== SMALL34-CMP rc=0 0.8s
+Movement Matrix (before -> after)
+                success       failure       compile_error error         
+success         1             -             -             -             
+failure         -             33            -             -             
+compile_error   -             -             -             -             
+error           -             -             -             -             
+
+units: 1505/1568 (95.98%) -> 1505/1568 (95.98%)
+files: success 1 -> 1
+REGRESSIONS=0 IMPROVED=0
+
+=== QUOTATION rc=1 9.1s
+  ***<module>.change_his_to_forward: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/site-packages/fly/data/quotationOK.py
+[single] status=failure units=152/153 success_rate=99.35%
+
+=== TESTS6 rc=1 4.7s
+.....F.........................F........................................ [ 25%]
+........................................................................ [ 51%]
+........................................................................ [ 76%]
+.....X...........X...............................................        [100%]
+=========================== short test summary info ===========================
+FAILED tests/test_algorithm_correctness.py::TestDominanceFrontierIf::test_B01_simple_if_then_else_merge - AssertionError: unexpectedly None : If with else branch should have merge point
+FAILED tests/test_deep_nesting_pressure.py::TestBoundaryConditions::test_BOUNDARY_02_large_function - AssertionError: <VerificationStatus.ERROR: 'ERROR'> not found in [<VerificationStatus.PASSED: 'PASSED'>, <VerificationStatus.WARNING: 'WARNING'>] : 边界测试失败！状态: ERROR
+错误: ['原始源码语法无效']
+等价率: 0.00%
+2 failed, 277 passed, 2 xpassed in 3.53s
+
