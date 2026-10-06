@@ -4852,7 +4852,39 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 region.metadata['is_degenerate_while'] = any(
                     i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF')
                     for i in condition_block.instructions)
-            if else_blocks and self._check_block_has_trailing_return_none(else_blocks[-1]):
+            # [B109 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）
+            # 识别条件——仅当**未**命中「有 break 证据 ∧ 尾部 return None 恰为
+            # 循环正常出口入口块」时标记 has_trailing_return_none。判据：break
+            # 证据（verified_break_blocks 非空）证明 else_blocks 是真正的 else
+            # 子句（break 跳过它）；此时 else 体自身即 `return None` 的形态里，
+            # 该 return None 是 else 体的语句，不是函数级隐式 return None。循环
+            # 正常出口入口块 = 条件求值块（condition_block 或 header）的非异常、
+            # 非循环体后继（同层后继/前驱集合事实）。
+            # 归约方式——满足上述形态时跳过标记；其余逐位不变（无 break 循环、
+            # else 体非纯 return None、else 体后另有隐式 return None 的布局均
+            # 维持既有标记）。
+            # AST 映射——LoopRegion.has_trailing_return_none 保持 False → 生成器
+            # _loop_generate_while 尾部不把 else 的 return None 摘出 orelse，而按
+            # has_break=True 分支把 orelse=[Return None] 正常发射，循环后的
+            # `return <var>` 由 break 落点顺序发射（不再被无条件 return None 判为
+            # 死代码而丢弃）。
+            # [C1] 只读 break 落点集合与 (condition_block|header) 后继集合（同层
+            # 事实），不读文件名/偏移阈值；[C2] 不新增跨层/跨方法状态；[C3] 命中
+            # 面仅「break 且尾部 return None 即正常出口入口」这一形态，其他形态
+            # 逐位不变。
+            _b109_exit_entry = set()
+            _b109_gate = condition_block if condition_block is not None else header
+            if _b109_gate is not None:
+                for _b109_s in _b109_gate.successors:
+                    if _b109_s in body or _b109_s == header:
+                        continue
+                    if _b109_s in _b109_gate.exception_successors:
+                        continue
+                    _b109_exit_entry.add(_b109_s)
+            if (else_blocks
+                    and self._check_block_has_trailing_return_none(else_blocks[-1])
+                    and not (verified_break_blocks
+                             and else_blocks[-1] in _b109_exit_entry)):
                 region.mark_trailing_return_none()
             if is_yield_from:
                 region.metadata['is_yield_from_loop'] = True
@@ -8299,7 +8331,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             if i in inner_handler_indices:
                 continue
             for j, other in enumerate(handler_infos):
-                if i == j or other.get('handler_type') != 'except':
+                # [B102 fix] except-finally 配对判据须同时认领普通 except 与
+                # except* 异常组 handler：`except*` 的 handler_type 为
+                # 'except_star'（见 `_classify_handler_type` 规则4）。此前只认
+                # 'except'，使 `try/except*/else/finally` 中的 except* 手无法与
+                # finally 配对，finally 被拆成独立 TryExceptRegion，其 try 范围
+                # 吞掉 else 体块，外层 try-except 的 ast.Try.orelse 丢失（else
+                # 体被发射为第二个独立 try-finally）。判据只读 code object
+                # 异常表条目（try_start/try_end/handler_start）与 handler 类型
+                # 元数据，符合 I.4 白名单。
+                if i == j or other.get('handler_type') not in ('except', 'except_star'):
                     continue
                 if (other['try_start'] >= info['try_start'] and
                     other['try_end'] <= info['try_end']):
@@ -11079,21 +11120,26 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 # （含 CHECK_EG_MATCH）。此前直接 break 导致第二个 except*
                 # handler 丢失，其块被并入第一个 handler 的 body。
                 # 修正：若 next_block 是简单过渡块（仅含 POP_TOP / NOP /
-                # JUMP_FORWARD），沿其后继查找下一个含 CHECK_OP 的 handler。
+                # JUMP_FORWARD），沿其**正常后继**查找下一个含 CHECK_OP 的 handler。
+                # [B102 fix] 过渡块探测只走 `conditional_successors`
+                # （= successors - exception_successors，即排除异常边）：
+                # CPython 3.11 对任何可抛指令登记异常边到外层 cleanup 块
+                # （COPY; POP_EXCEPT; RERAISE），若沿 `successors` 取首元素
+                # 会先命中该 cleanup 块（含 RERAISE）而误判「无下一 handler」，
+                # 第二及后续 except* handler 即被丢弃、其块降级为 else 臂。
+                # 遍历用 visited 集合封闭（终结性由块数有限保证），不再用
+                # 硬编码计数上限。判据只读同层块结构事实（块内指令 opcode 族 +
+                # 后继/异常边集合），符合 I.4 白名单。
                 _is_transition = all(
                     i.opname in ('POP_TOP', 'NOP', 'CACHE', 'JUMP_FORWARD', 'JUMP_ABSOLUTE')
                     for i in next_block.instructions
                 )
                 if _is_transition:
-                    _probe = next_block
+                    _probe_queue = [next_block]
                     _probe_visited = {next_block}
                     _found_next_handler = False
-                    for _ in range(8):
-                        _probe_succs = [s for s in _probe.successors if s not in _probe_visited and s not in visited]
-                        if not _probe_succs:
-                            break
-                        _probe = _probe_succs[0]
-                        _probe_visited.add(_probe)
+                    while _probe_queue:
+                        _probe = _probe_queue.pop(0)
                         if any(i.opname == 'PREP_RERAISE_STAR' for i in _probe.instructions):
                             break
                         if any(i.opname == 'RERAISE' for i in _probe.instructions):
@@ -11106,6 +11152,12 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             current = _probe
                             _found_next_handler = True
                             break
+                        for _probe_succ in sorted(_probe.conditional_successors,
+                                                  key=lambda s: s.start_offset):
+                            if _probe_succ in _probe_visited or _probe_succ in visited:
+                                continue
+                            _probe_visited.add(_probe_succ)
+                            _probe_queue.append(_probe_succ)
                     if _found_next_handler:
                         continue
                     _is_real_handler = (not _is_transition) or (len(body) > 1)

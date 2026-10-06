@@ -444,7 +444,16 @@ class PatternParser:
                                 if not _left_is_capture_reload:
                                     continue
                     guard_start = i
-                    for j in range(i + 3, len(all_instrs)):
+                    # [B103 fix] 守卫臂终结跳转定位：真值臂（形式 b：LOAD x,
+                    # POP_JUMP → G）的终结跳转紧邻 LOAD 之后（i+1）；比较臂
+                    # （形式 a/a'：LOAD x, [LOAD_CONST|LOAD y], (COMPARE|IS_OP),
+                    # POP_JUMP → G）的终结跳转在 i+3。旧逻辑一律从 i+3 起扫，
+                    # 真值臂的 i+1 跳转被跳过，guard_end 落空（或误取后续 case
+                    # 的跳转）→ 守卫丢失（CM.m 的 `case {'a': v} if v:` 守卫
+                    # 被吞根因）。判据只读 pattern_blocks 指令序列的相邻操作码
+                    # （同层 opcode 事实）。
+                    _ge_scan_from = i + 1 if is_truthiness else i + 3
+                    for j in range(_ge_scan_from, len(all_instrs)):
                         if all_instrs[j].opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE',
                                                 'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE'):
                             guard_end = j
@@ -729,6 +738,22 @@ class PatternParser:
                     if expr is None:
                         aborted = True
                         break
+                    # [B103 fix] NONE 族跳转臂：表达式段被 IF_NONE/IF_NOT_NONE
+                    # 族终结时，该臂语义是 `expr is not None` / `expr is None`
+                    # （None-ness 比较），不是真值测试。旧逻辑直接取栈求值结果
+                    # → 裸 Name（`case a if a is not None:` 被发射成 `if a:`
+                    # 根因）。判据只读段末跳转操作码族（opcode 语义，非位置/
+                    # 偏移），[C3] 仅 NONE 族臂改写，IF_TRUE/IF_FALSE 族逐位不变。
+                    if op in ('POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_IF_NONE',
+                              'POP_JUMP_BACKWARD_IF_NONE'):
+                        expr = {'type': 'Compare', 'left': expr,
+                                'ops': [{'type': 'CompareOp', 'op': 'is not'}],
+                                'right': {'type': 'Constant', 'value': None}}
+                    elif op in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE',
+                                'POP_JUMP_BACKWARD_IF_NOT_NONE'):
+                        expr = {'type': 'Compare', 'left': expr,
+                                'ops': [{'type': 'CompareOp', 'op': 'is'}],
+                                'right': {'type': 'Constant', 'value': None}}
                     segments.append((expr, op))
                     j += 1
                     # 守卫链继续条件：跳转后紧跟 LOAD_VAR（and/or 组合段）

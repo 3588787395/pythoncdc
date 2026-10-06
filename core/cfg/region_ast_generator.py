@@ -558,19 +558,25 @@ class RegionASTGenerator:
         return self.region_analyzer.get_block_role(block)
 
     def _extract_imports_from_block_prefix(self, block: 'BasicBlock') -> List[Dict[str, Any]]:
-        """ Extract import statements from the prefix of a block.
+        """从块前导指令序列提取 import 语句（TernaryRegion 入口模块根归约入口）。
 
-        Scans the block's instructions for IMPORT_NAME + IMPORT_FROM + STORE_*
-        sequences, stopping at the first jump instruction or non-import
-        instruction. Returns a list of ImportFrom/Import AST dicts.
-
-        Used by generate() to extract imports from entry_block when the entry
-        region is TernaryRegion — the ternary's condition preload scan doesn't
-        emit imports, so they'd be lost without this extraction.
-
-        依「每块唯一归属」+「父引用子入口」：import 指令归 generate()
-        预扫描，ternary condition preload 归 TernaryRegion。两者通过
-        指令序列前后划分归属，不重叠。
+        ①算法依据：CPython 3.11 import 字节码形态——`IMPORT_NAME` 前导
+        `LOAD_CONST(level:int)`+`LOAD_CONST(fromlist)`，后继 `IMPORT_FROM`+
+        `STORE_*`（from-import）或 `IMPORT_STAR`/普通 `STORE_*`（plain import）。
+        依据为指令 opcode/argval 结构事实（I.4 白名单）。
+        ②归约顺序：块内指令顺序扫描（前导），遇跳转/非 import 指令即停，
+        不改变全局自底向上归约顺序。
+        ③唯一归属判定：`IMPORT_NAME..IMPORT_FROM/STORE_*` 序列唯一归本
+        ImportFrom 语句；level 常量唯一归该 ImportFrom 的入口引用语义；
+        ternary condition preload 归 TernaryRegion（前后划分，不重叠）。
+        ④嵌套处理：只消费本块指令，不展开任何嵌套区域内部。
+        ⑤入口引用语义：返回 Import/ImportFrom 语句 dict 列表，供 generate()
+        在 Assert/Ternary 入口前发射；相对层级经 module 名前置 `'.' * level`
+        显式表达。
+        ⑥反编译流程：generate() 在 entry_region 为 TernaryRegion 时调用。
+        满足 C1（只读本块前导指令与常量，非局部信息不参与）/ C2（level=0
+        时 module 名逐位不变，非 import 指令走既有分支）/ C3（相对层级显式
+        封闭进 module 名，杜绝 `from  import m` 非法产物与相对→绝对降级）。
         """
         _pre_stmts: List[Dict[str, Any]] = []
         _import_pending_store = False
@@ -590,6 +596,33 @@ class RegionASTGenerator:
             if _instr.opname == 'IMPORT_NAME':
                 module_name = _instr.argval if _instr.argval else ''
                 _instr_idx = block.instructions.index(_instr)
+                # [B100] 相对导入层级：本块前导扫描路径（TernaryRegion 入口
+                # 模块根）的 `from . import m` / `from .sub import n`，其 level
+                # 存于 IMPORT_NAME 前导 LOAD_CONST int。依「每块唯一归属」+
+                # 「入口引用语义」（原则 4），level 归本 ImportFrom，前置到
+                # module 名（'.' * level）。判据取自 I.4 白名单（IMPORT_NAME
+                # 前导指令 opcode/oparg 结构事实），与 _process_instruction
+                # 的归约入口同源；level=0 时 module 名逐位不变（C2）。不封闭
+                # 则相对层级丢失 → 降级为绝对导入（B100，compile_error）。
+                _pre_level = self._import_level_from_prefix(block.instructions[:_instr_idx])
+                if _pre_level > 0:
+                    module_name = ('.' * _pre_level) + module_name
+                # [B101] star import：`from m import *` 的 IMPORT_NAME 后继
+                # IMPORT_STAR（块内 opcode 事实）。依「每块唯一归属」，star
+                # 形态与 from-import 共用同一 IMPORT_NAME 归约入口，统一产出
+                # ImportFrom(names=[{'name':'*'}])，不再降级为 Import(module)
+                # （后者丢 star 名与后续 LOAD_NAME 自由名）。判据取自 I.4
+                # 白名单（后继指令 opcode 结构事实）。
+                _star_hit = False
+                for _ss in range(_instr_idx + 1, min(_instr_idx + 4, len(block.instructions))):
+                    if block.instructions[_ss].opname == 'IMPORT_STAR':
+                        _pre_stmts.append({'type': 'ImportFrom', 'module': module_name,
+                                           'names': [{'name': '*', 'asname': None}]})
+                        _star_hit = True
+                        break
+                if _star_hit:
+                    _import_pending_store = True
+                    continue
                 _has_import_from = False
                 _scan_start = _instr_idx + 1
                 for _s in range(_scan_start, min(_scan_start + 3, len(block.instructions))):
@@ -685,7 +718,7 @@ class RegionASTGenerator:
                         _pre_stmts.append({'type': 'Import', 'names': [{'name': module_name, 'asname': None}]})
                 _import_pending_store = True
                 continue
-            if _instr.opname == 'IMPORT_FROM':
+            if _instr.opname in ('IMPORT_FROM', 'IMPORT_STAR'):
                 _import_pending_store = True
                 continue
             if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
@@ -1129,6 +1162,14 @@ class RegionASTGenerator:
                             continue
                         if _instr.opname == 'IMPORT_FROM':
                             _import_pending_store = True
+                            continue
+                        # [B101] star import 的 IMPORT_STAR 是 IMPORT_NAME 归约序列
+                        # 的终点（无后继 STORE_*）。依「每块唯一归属」，其已由
+                        # _process_instruction(IMPORT_NAME) 一次性认领；此处清空缓冲
+                        # 并跳过，避免 IMPORT_STAR 残留在 _stmt_instrs 中污染后续
+                        # MAKE_FUNCTION/STORE（导致紧随其后的函数定义整条丢失）。
+                        if _instr.opname == 'IMPORT_STAR':
+                            _stmt_instrs = []
                             continue
                         if _instr.opname == 'UNPACK_SEQUENCE':
                             _stmt_instrs.append(_instr)
@@ -17122,6 +17163,14 @@ AST 映射规则:
             if instr.opname == 'IMPORT_FROM':
                 import_pending_store = True
                 continue
+            # [B101] star import 的 IMPORT_STAR 是 IMPORT_NAME 归约序列终点（无后继
+            # STORE_*）。依「每块唯一归属」，其已由上方 _process_instruction
+            # (IMPORT_NAME) 一次性认领；此处清空 pending 缓冲，避免紧随其后的函数
+            # 定义 STORE_* 被误当作 import-as 目标吞并（导致函数整条丢失）。
+            if instr.opname == 'IMPORT_STAR':
+                pre_instrs = []
+                import_pending_store = False
+                continue
             if instr.opname == 'RAISE_VARARGS':
                 _raise_stmt = self._build_raise_stmt_from_instrs(pre_instrs, instr.arg if instr.arg else 0)
                 pre_instrs = []
@@ -31067,7 +31116,35 @@ AST 映射规则:
         return False
 
     def _generate_handler_body_statements(self, block: BasicBlock) -> List[Dict[str, Any]]:
-        """_generate_handler_body_statements — handler/finally 体单块语句发射。
+        """_generate_handler_body_statements — except handler / finally 副本体单块语句发射。
+
+        ①算法依据：No More Gotos「区域归约四原则」（自底向上 / 每块唯一归属 /
+        嵌套即抽象节点 / 父引用子入口）——handler / finally 副本块的有语义
+        指令按偏移序完整重建为 ast.stmt；框架指令（PUSH_EXC_INFO / POP_EXCEPT /
+        CHECK_EXC_MATCH / CHECK_EG_MATCH / WITH_EXCEPT_START / RERAISE / COPY，
+        及 except* 的 BUILD_LIST / LIST_APPEND / PREP_RERAISE_STAR / SWAP）
+        不生成源码。
+        ②归约顺序：自底向上——先滤框架指令与 as-var 清理三元组
+        （LOAD_CONST None + STORE <v> + DELETE <v>，同名判据），再按语句边界
+        逐条重建（先表达式后语句）；跨块 return 链（SWAP n; POP_TOP;
+        RETURN(_CONST)）在尾部统一归约为单一 Return(expr)。
+        ③唯一归属判定：handler / finally 体的语义指令唯一归本块语句列表；
+        IMPORT_NAME(+IMPORT_FROM/IMPORT_STAR)+STORE_* 序列唯一归单一
+        Import/ImportFrom（相对层级经 module 名前置 '.'*level 显式表达，
+        判据 = IMPORT_NAME 前导 LOAD_CONST int，I.4 白名单）；as-var 清理
+        指令归 except 机制，不产生源码。
+        ④嵌套处理：本方法只处理单个基本块，不递归子区域；嵌套区域由调用方
+        （try/finally 装配）以抽象节点整树生成。
+        ⑤入口引用语义：返回 AST 语句字典列表，供 except handler 体 / finally
+        副本体装配消费；import 的入口引用语义（相对层级、star 形态）在发射处
+        按字节码结构事实显式还原。
+        ⑥反编译流程：try 区域装配期调用——except handler 体与 finally 副本
+        线性段成员块经本方法完成指令→语句还原。
+
+        C 条款：[C1] 只消费本块指令（滤框架与 as-var 清理），维持每块唯一
+        归属；[C2] 非 import 指令与既有重建路径逐位一致（level=0 时 module
+        名逐位不变）；[C3] handler / finally 副本体的相对 import 层级与 star
+        形态显式封闭，不降级为绝对导入或普通 Import。
 
         输入契约:
           - 接收 BasicBlock（except handler 体块或 finally 副本线性段成员块）
@@ -32012,6 +32089,16 @@ AST 映射规则:
                 stmt_instrs = []
                 _r64_mod = instr.argval if instr.argval else ''
                 _r64_idx = block.instructions.index(instr)
+                # [B100] 相对导入层级：handler/finally 副本体内的
+                # `from .u import m9` 其 level 存于 IMPORT_NAME 前导 LOAD_CONST int。
+                # 依「每块唯一归属」+「入口引用语义」（原则 4），level 归本
+                # ImportFrom，前置到 module 名（'.' * level）；level=0 时 module 名
+                # 逐位不变（C2）。判据取自 I.4 白名单（IMPORT_NAME 前导指令
+                # opcode/oparg 结构事实），与 _process_instruction 的归约入口同源；
+                # 不封闭则相对层级丢失 → 相对导入降级为绝对（B100）。
+                _r64_level = self._import_level_from_prefix(block.instructions[:_r64_idx])
+                if _r64_level > 0:
+                    _r64_mod = ('.' * _r64_level) + _r64_mod
                 _r64_rest = block.instructions[_r64_idx + 1:]
                 _r64_skip = set()
                 # from m import *: IMPORT_NAME + IMPORT_STAR
@@ -32241,6 +32328,11 @@ AST 映射规则:
         #   from-import-multi 等所有 import 形式，以及在 ternary cond_block
         #   前序、函数体、类体等任意上下文中出现的 import 前驱语句。
         _imp_name_instr = None
+        # [B100] 当前 pending IMPORT_NAME 的带回溯 module 名（含相对导入
+        # level 前缀 `'.' * level`）。与 _imp_name_instr 同步设置，供各
+        # flush 站点构造 Import/ImportFrom 时使用；level 判据取自 I.4
+        # 白名单（IMPORT_NAME 前导指令 opcode/argval 结构事实）。
+        _imp_module_name = ''
         _imp_from_pending = None
         _imp_pairs = []
         # UNPACK_SEQUENCE / UNPACK_EX 状态机。
@@ -32326,7 +32418,7 @@ AST 映射规则:
             # the next unrelated STORE_* gets consumed as import-as alias.
             if _imp_name_instr is not None and _imp_from_pending is None and _imp_pairs:
                 if instr.opname not in ('IMPORT_FROM', 'IMPORT_NAME'):
-                    _module = _imp_name_instr.argval or ''
+                    _module = _imp_module_name
                     _names = [{'name': _n, 'asname': _a}
                               for _n, _a in _imp_pairs]
                     stmts.append({'type': 'ImportFrom',
@@ -32339,7 +32431,7 @@ AST 映射规则:
             if instr.opname == 'IMPORT_NAME':
                 if _imp_name_instr is not None:
                     # 前一个 import 序列未正常终结（无 STORE_*），先 flush。
-                    _module = _imp_name_instr.argval or ''
+                    _module = _imp_module_name
                     if _imp_pairs:
                         _names = [{'name': _n, 'asname': _a}
                                   for _n, _a in _imp_pairs]
@@ -32364,6 +32456,17 @@ AST 映射规则:
                             stmts.append(_prev_stmt)
                     stmt_instrs = []
                 _imp_name_instr = instr
+                # [B100] 相对导入层级：`from . import a` / `from .sub import b`
+                # / `from ..pkg import c` 的 level 存于 IMPORT_NAME 前导
+                # LOAD_CONST int。判据取自 I.4 白名单（前导指令 opcode/argval
+                # 结构事实），与 _process_instruction 归约入口同源。依「每块
+                # 唯一归属」+「入口引用语义」（原则 4），level 归本
+                # Import/ImportFrom，前置到 module 名（'.' * level）；level=0
+                # 逐位不变（C2）。不封闭则相对层级丢失 → 降级绝对导入（B100）。
+                _imp_module_name = instr.argval if instr.argval else ''
+                _imp_level = self._import_level_from_prefix(instrs[:instrs.index(instr)])
+                if _imp_level > 0:
+                    _imp_module_name = ('.' * _imp_level) + _imp_module_name
                 _imp_from_pending = None
                 _imp_pairs = []
                 _imp_fromlist_is_none = False
@@ -32411,7 +32514,7 @@ AST 映射规则:
                 if _imp_name_instr is not None:
                     if _imp_from_pending is not None:
                         if _imp_fromlist_is_none:
-                            _module = _imp_name_instr.argval or ''
+                            _module = _imp_module_name
                             _sto_n = instr.argval
                             if _module != _sto_n:
                                 stmts.append({'type': 'Import',
@@ -32433,7 +32536,7 @@ AST 映射规则:
                             _imp_from_pending = None
                     else:
                         if _imp_pairs:
-                            _module = _imp_name_instr.argval or ''
+                            _module = _imp_module_name
                             _names = [{'name': _n, 'asname': _a}
                                       for _n, _a in _imp_pairs]
                             stmts.append({'type': 'ImportFrom',
@@ -32443,7 +32546,7 @@ AST 映射规则:
                             _imp_pairs = []
                             _imp_fromlist_is_none = False
                         else:
-                            _module = _imp_name_instr.argval or ''
+                            _module = _imp_module_name
                             _sto_n = instr.argval
                             if _module != _sto_n:
                                 stmts.append({'type': 'Import',
@@ -32724,7 +32827,7 @@ AST 映射规则:
         # _imp_from_pending 但 _imp_name_instr 仍非 None，_imp_pairs 收集了
         # 导入名但未生成 ImportFrom 语句。循环结束后必须 flush。
         if _imp_name_instr is not None:
-            _module = _imp_name_instr.argval or ''
+            _module = _imp_module_name
             if _imp_pairs:
                 _names = [{'name': _n, 'asname': _a}
                           for _n, _a in _imp_pairs]
@@ -53308,6 +53411,19 @@ AST 映射规则:
                             _ua_stmt_instrs = []
                         _ua_pending_import = _instr
                         _ua_imp_idx = block.instructions.index(_instr)
+                        # [B100] 相对导入层级：解包/多目标/链式赋值子路由（_ua_
+                        # 循环）内的 import 同样需恢复 level。level 存于
+                        # IMPORT_NAME 前导 LOAD_CONST int，判据取自 I.4 白名单
+                        # （前导指令 opcode/argval 结构事实），与
+                        # _process_instruction 归约入口同源。依「每块唯一归属」
+                        # +「入口引用语义」（原则 4），level 归本
+                        # Import/ImportFrom，前置到 module 名（'.' * level）；
+                        # level=0 时 module 名逐位不变（C2）。不封闭则相对层级
+                        # 丢失 → 降级为绝对导入（B100，compile_error）。
+                        _ua_mod = _instr.argval if _instr.argval else ''
+                        _ua_level = self._import_level_from_prefix(block.instructions[:_ua_imp_idx])
+                        if _ua_level > 0:
+                            _ua_mod = ('.' * _ua_level) + _ua_mod
                         _ua_has_from = False
                         for _ua_s in range(_ua_imp_idx + 1, min(_ua_imp_idx + 4, len(block.instructions))):
                             if block.instructions[_ua_s].opname == 'IMPORT_FROM':
@@ -53364,7 +53480,7 @@ AST 映射规则:
                                     else:
                                         _ua_nl.append({'name': _ipd, 'asname': None})
                                 _ua_stmts.append({'type': 'ImportFrom',
-                                                  'module': _ua_pending_import.argval or '',
+                                                  'module': _ua_mod,
                                                   'names': _ua_nl})
                                 _ua_pending_import = None
                                 _ua_import_skip = True
@@ -53377,8 +53493,8 @@ AST 映射规则:
                         if _ua_import_skip:
                             _ua_import_skip = False
                             continue
-                        _import_name = _ua_pending_import.argval
-                        _alias = _instr.argval if _instr.argval != _import_name else None
+                        _import_name = _ua_mod
+                        _alias = _instr.argval if _instr.argval != _ua_pending_import.argval else None
                         _ua_stmts.append({'type': 'Import', 'names': [{'name': _import_name, 'asname': _alias}]})
                         _ua_pending_import = None
                         continue
@@ -55532,16 +55648,82 @@ AST 映射规则:
                 return
         func_def['name'] = target_name
 
+    def _import_level_from_prefix(self, prefix_instrs) -> int:
+        """从 IMPORT_NAME 前导指令序列提取相对导入层级 level。
+
+        ①算法依据：CPython 3.11 编译 `from ..m import n` / `from . import m` 时，
+        在 IMPORT_NAME 前压入两条 LOAD_CONST——先 level（int，相对层级），再
+        fromlist（tuple 或 None）。level 是编译器写入的 int 常量（指令常量/
+        oparg 结构事实），符合 I.4 判据白名单，禁按模块名/文件名字面量判定。
+        ②归约顺序：仅作 IMPORT_NAME 归约入口的参数读取，不改变自底向上归约顺序。
+        ③唯一归属判定：level 常量唯一归 IMPORT_NAME 所属的 ImportFrom 语句；
+        从 IMPORT_NAME 前导指令向前回看，跳过 fromlist（tuple/None），取最近 int。
+        ④嵌套处理：只读同层前导指令，不展开任何嵌套区域/子区域内部。
+        ⑤入口引用语义：返回 int；调用点据此将 module 名前置 `'.' * level`，
+        显式表达 ImportFrom 的入口引用语义（原则 4）。
+        ⑥反编译流程：import 重建期调用（`_process_instruction` /
+        `_build_statements_from_instructions` / `_extract_imports_from_block_prefix`）。
+        满足 C1（只读同层前导指令常量，非局部信息不参与）/ C2（level=0 时
+        module 名逐位不变）/ C3（相对层级显式封闭进 module 名，杜绝降级为绝对
+        导入的非法产物）。
+        """
+        _level = 0
+        for _ins in reversed(list(prefix_instrs)):
+            if _ins.opname == 'PUSH_NULL':
+                continue
+            if _ins.opname != 'LOAD_CONST':
+                break
+            _av = _ins.argval
+            if isinstance(_av, int) and not isinstance(_av, bool):
+                _level = _av
+                break
+            # fromlist（tuple）或 None 常量：继续向前找 level
+        return _level
+
     def _process_instruction(self, instr, block, stmt_instrs=None):
+        """将单条指令归约为语句/表达式 AST dict（import/delete 的前导入口）。
+
+        ①算法依据：No More Gotos 的指令级归约 + 四原则；IMPORT_NAME 是 import
+        语句的归约入口，消费前导 LOAD_CONST(level)/LOAD_CONST(fromlist) 与后继
+        IMPORT_FROM/IMPORT_STAR/STORE_* 生成单一 Import/ImportFrom 节点。
+        ②归约顺序：入口块前导语句扫描期逐条指令归约，自底向上（先表达式后语句）。
+        ③唯一归属判定：IMPORT_NAME..IMPORT_FROM/IMPORT_STAR..STORE_* 序列唯一归
+        本 Import/ImportFrom；DELETE_ATTR/DELETE_SUBSCR 归 Delete 语句。
+        ④嵌套处理：只消费本块指令，不展开嵌套区域（块级归约由区域层完成）。
+        ⑤入口引用语义：返回语句 dict 列表（Import/ImportFrom/Delete），供父级
+        顺序体引用；相对导入层级经 module 名前置 `'.' * level` 显式表达。
+        ⑥反编译流程：generate() 入口块前导扫描与 _generate_block_statements 调用。
+        满足 C1（只读本块指令序列与常量）/ C2（非 import 指令返回 _UNHANDLED，
+        既有分支逐位不变）/ C3（相对层级与 star 形态显式封闭）。
+        """
         opname = instr.opname
 
         if opname == 'IMPORT_NAME':
             module_name = instr.argval if instr.argval else ''
             instr_idx = block.instructions.index(instr)
+            # [B100] 相对导入层级：`from . import m` / `from .sub import n` /
+            # `from ..pkg import o` 的 level 存于 IMPORT_NAME 前导 LOAD_CONST
+            # int。依「每块唯一归属」+「入口引用语义」（原则 4），level 归本
+            # ImportFrom，前置到 module 名（'.' * level），杜绝 `from  import m`
+            # 非法产物与相对→绝对降级。level=0 时 module 名不变（C2 逐位不变）。
+            _imp_level = self._import_level_from_prefix(block.instructions[:instr_idx])
+            if _imp_level > 0:
+                module_name = ('.' * _imp_level) + module_name
 
             has_import_from = False
             _scan_start = instr_idx + 1
             _max_lookahead = 3
+            # [B101] star import：`from m import *` 的 IMPORT_NAME 后继
+            # IMPORT_STAR（块末 opcode 族事实）。依「每块唯一归属」，star 形态
+            # 与 from-import 共用同一 IMPORT_NAME 归约入口，统一产出
+            # ImportFrom(names=[{'name':'*'}])，不再降级为 Import(module)（后者
+            # 会丢失 star 名与后续 LOAD_NAME 的自由名）。
+            for i in range(_scan_start, min(_scan_start + _max_lookahead, len(block.instructions))):
+                if block.instructions[i].opname == 'IMPORT_STAR':
+                    return [{'type': 'ImportFrom', 'module': module_name,
+                             'names': [{'name': '*', 'asname': None}]}]
+                if block.instructions[i].opname not in ('LOAD_CONST', 'PUSH_NULL'):
+                    break
             for i in range(_scan_start, min(_scan_start + _max_lookahead, len(block.instructions))):
                 if block.instructions[i].opname == 'IMPORT_FROM':
                     has_import_from = True

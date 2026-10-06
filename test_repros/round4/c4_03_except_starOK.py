@@ -7,9 +7,7 @@ def e01_root(fn):
         fn()
     except* ValueError as eg:
         r = eg.exceptions
-    else:
-        if TypeError is not None:
-            pass
+    except* TypeError as eg:
         r = eg.exceptions
     return r
 def e02_shallow(fn):
@@ -33,10 +31,11 @@ def e04_with(fn):
     with ctx() as c:
         try:
             fn()
+            if True:
+                pass
+            ok()
         except* KeyError as eg:
             handle(eg)
-        try:
-            ok()
         finally:
             done()
     return c

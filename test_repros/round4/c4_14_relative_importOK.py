@@ -1,9 +1,9 @@
 # Source Generated with Decompyle++ (Python version)
 # File: c4_14_relative_import.pyc (Python 3.11)
 
-from  import mod
-from sub import name as n2
-from pkg import other as o2
+from . import mod
+from .sub import name as n2
+from ..pkg import other as o2
 def e01_use():
     return (mod, n2, o2)
 def e02_deep():

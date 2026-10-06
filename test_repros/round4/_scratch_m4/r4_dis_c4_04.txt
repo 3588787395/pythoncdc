@@ -1,0 +1,1542 @@
+﻿==================== <module> ====================
+  0           0 RESUME                   0
+
+  1           2 LOAD_CONST               0 (<code object e01_value at 0x000001F5CFD98FA0, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 1>)
+              4 MAKE_FUNCTION            0
+              6 STORE_NAME               0 (e01_value)
+
+ 17           8 LOAD_CONST               1 (<code object e02_singleton at 0x000001F5CFD99B80, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 17>)
+             10 MAKE_FUNCTION            0
+             12 STORE_NAME               1 (e02_singleton)
+
+ 31          14 LOAD_CONST               2 (<code object e03_sequence at 0x000001F5CFDB4FF0, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 31>)
+             16 MAKE_FUNCTION            0
+             18 STORE_NAME               2 (e03_sequence)
+
+ 45          20 LOAD_CONST               3 (<code object e04_mapping at 0x000001F5CFDB57D0, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 45>)
+             22 MAKE_FUNCTION            0
+             24 STORE_NAME               3 (e04_mapping)
+
+ 57          26 LOAD_CONST               4 (<code object e05_class_kw at 0x000001F5CFDAD6B0, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 57>)
+             28 MAKE_FUNCTION            0
+             30 STORE_NAME               4 (e05_class_kw)
+
+ 71          32 LOAD_CONST               5 (<code object e06_or_guard at 0x000001F5CFEDA420, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 71>)
+             34 MAKE_FUNCTION            0
+             36 STORE_NAME               5 (e06_or_guard)
+
+ 83          38 LOAD_CONST               6 (<code object e07_capture at 0x000001F5CFF1C810, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 83>)
+             40 MAKE_FUNCTION            0
+             42 STORE_NAME               6 (e07_capture)
+
+ 97          44 LOAD_CONST               7 (<code object e08_star_nest at 0x000001F5CFD34D20, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 97>)
+             46 MAKE_FUNCTION            0
+             48 STORE_NAME               7 (e08_star_nest)
+
+110          50 LOAD_CONST               8 (<code object e09_nested_match at 0x000001F5CFD66120, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 110>)
+             52 MAKE_FUNCTION            0
+             54 STORE_NAME               8 (e09_nested_match)
+
+127          56 PUSH_NULL
+             58 LOAD_BUILD_CLASS
+             60 LOAD_CONST               9 (<code object CM at 0x000001F5CFDED620, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 127>)
+             62 MAKE_FUNCTION            0
+             64 LOAD_CONST              10 ('CM')
+             66 PRECALL                  2
+             70 CALL                     2
+             80 STORE_NAME               9 (CM)
+             82 LOAD_CONST              11 (None)
+             84 RETURN_VALUE
+
+Disassembly of <code object e01_value at 0x000001F5CFD98FA0, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 1>:
+  1           0 RESUME                   0
+
+  2           2 LOAD_FAST                0 (x)
+              4 LOAD_CONST               1 (0)
+              6 COMPARE_OP               4 (>)
+             12 POP_JUMP_FORWARD_IF_FALSE    45 (to 104)
+
+  3          14 LOAD_FAST                0 (x)
+
+  4          16 COPY                     1
+             18 LOAD_CONST               2 (1)
+             20 COMPARE_OP               2 (==)
+             26 POP_JUMP_FORWARD_IF_FALSE     4 (to 36)
+             28 POP_TOP
+
+  5          30 LOAD_CONST               3 ('one')
+             32 STORE_FAST               1 (r)
+             34 JUMP_FORWARD            36 (to 108)
+
+  6     >>   36 COPY                     1
+             38 LOAD_CONST               4 (2)
+             40 COMPARE_OP               2 (==)
+             46 POP_JUMP_FORWARD_IF_FALSE     4 (to 56)
+             48 POP_TOP
+
+  7          50 LOAD_CONST               5 ('two')
+             52 STORE_FAST               1 (r)
+             54 JUMP_FORWARD            26 (to 108)
+
+  8     >>   56 COPY                     1
+             58 LOAD_CONST               6 (3)
+             60 COMPARE_OP               2 (==)
+             66 POP_JUMP_FORWARD_IF_FALSE     1 (to 70)
+             68 JUMP_FORWARD             9 (to 88)
+        >>   70 COPY                     1
+             72 LOAD_CONST               7 (4)
+             74 COMPARE_OP               2 (==)
+             80 POP_JUMP_FORWARD_IF_FALSE     1 (to 84)
+             82 JUMP_FORWARD             2 (to 88)
+        >>   84 POP_TOP
+             86 JUMP_FORWARD             4 (to 96)
+        >>   88 POP_TOP
+
+  9          90 LOAD_CONST               8 ('few')
+             92 STORE_FAST               1 (r)
+             94 JUMP_FORWARD             6 (to 108)
+
+ 10     >>   96 NOP
+
+ 11          98 LOAD_CONST               9 ('many')
+            100 STORE_FAST               1 (r)
+            102 JUMP_FORWARD             2 (to 108)
+
+ 13     >>  104 LOAD_CONST              10 ('neg')
+            106 STORE_FAST               1 (r)
+
+ 14     >>  108 LOAD_FAST                1 (r)
+            110 RETURN_VALUE
+
+Disassembly of <code object e02_singleton at 0x000001F5CFD99B80, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 17>:
+ 17           0 RESUME                   0
+
+ 18           2 LOAD_GLOBAL              1 (NULL + range)
+             14 LOAD_CONST               1 (3)
+             16 PRECALL                  1
+             20 CALL                     1
+             30 GET_ITER
+        >>   32 FOR_ITER                41 (to 116)
+             34 STORE_FAST               1 (i)
+
+ 19          36 LOAD_FAST                0 (x)
+
+ 20          38 COPY                     1
+             40 POP_JUMP_FORWARD_IF_NOT_NONE     4 (to 50)
+             42 POP_TOP
+
+ 21          44 LOAD_CONST               2 (0)
+             46 STORE_FAST               2 (r)
+             48 JUMP_BACKWARD            9 (to 32)
+
+ 22     >>   50 COPY                     1
+             52 LOAD_CONST               3 (True)
+             54 IS_OP                    0
+             56 POP_JUMP_FORWARD_IF_FALSE     4 (to 66)
+             58 POP_TOP
+
+ 23          60 LOAD_CONST               4 (1)
+             62 STORE_FAST               2 (r)
+             64 JUMP_BACKWARD           17 (to 32)
+
+ 24     >>   66 COPY                     1
+             68 LOAD_CONST               5 (False)
+             70 IS_OP                    0
+             72 POP_JUMP_FORWARD_IF_FALSE     4 (to 82)
+             74 POP_TOP
+
+ 25          76 LOAD_CONST               6 (2)
+             78 STORE_FAST               2 (r)
+             80 JUMP_BACKWARD           25 (to 32)
+
+ 26     >>   82 LOAD_GLOBAL              2 (object)
+             94 LOAD_CONST               7 (())
+             96 MATCH_CLASS              0
+             98 COPY                     1
+            100 POP_JUMP_FORWARD_IF_NONE     5 (to 112)
+            102 UNPACK_SEQUENCE          0
+
+ 27         106 LOAD_CONST               1 (3)
+            108 STORE_FAST               2 (r)
+            110 JUMP_BACKWARD           40 (to 32)
+
+ 26     >>  112 POP_TOP
+            114 JUMP_BACKWARD           42 (to 32)
+
+ 28     >>  116 LOAD_FAST                2 (r)
+            118 RETURN_VALUE
+
+Disassembly of <code object e03_sequence at 0x000001F5CFDB4FF0, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 31>:
+ 31           0 RESUME                   0
+
+ 32           2 LOAD_FAST                0 (x)
+              4 POP_JUMP_FORWARD_IF_FALSE    65 (to 136)
+
+ 33           6 LOAD_FAST                1 (y)
+
+ 34           8 COPY                     1
+             10 MATCH_SEQUENCE
+             12 POP_JUMP_FORWARD_IF_FALSE    21 (to 56)
+             14 GET_LEN
+             16 LOAD_CONST               1 (3)
+             18 COMPARE_OP               2 (==)
+             24 POP_JUMP_FORWARD_IF_FALSE    15 (to 56)
+             26 UNPACK_SEQUENCE          3
+             30 STORE_FAST               3 (a)
+             32 STORE_FAST               4 (b)
+             34 STORE_FAST               5 (c)
+             36 POP_TOP
+
+ 35          38 LOAD_FAST                3 (a)
+             40 LOAD_FAST                4 (b)
+             42 BINARY_OP                0 (+)
+             46 LOAD_FAST                5 (c)
+             48 BINARY_OP                0 (+)
+             52 STORE_FAST               6 (r)
+             54 JUMP_FORWARD            40 (to 136)
+
+ 34     >>   56 POP_TOP
+
+ 36          58 COPY                     1
+             60 MATCH_SEQUENCE
+             62 POP_JUMP_FORWARD_IF_FALSE    13 (to 90)
+             64 GET_LEN
+             66 LOAD_CONST               2 (1)
+             68 COMPARE_OP               5 (>=)
+             74 POP_JUMP_FORWARD_IF_FALSE     7 (to 90)
+             76 UNPACK_EX                1
+             78 STORE_FAST               3 (a)
+             80 STORE_FAST               7 (rest)
+             82 POP_TOP
+
+ 37          84 LOAD_FAST                3 (a)
+             86 STORE_FAST               6 (r)
+             88 JUMP_FORWARD            23 (to 136)
+
+ 36     >>   90 POP_TOP
+
+ 38          92 MATCH_SEQUENCE
+             94 POP_JUMP_FORWARD_IF_FALSE    16 (to 128)
+             96 GET_LEN
+             98 LOAD_CONST               3 (2)
+            100 COMPARE_OP               2 (==)
+            106 POP_JUMP_FORWARD_IF_FALSE    10 (to 128)
+            108 UNPACK_SEQUENCE          2
+            112 STORE_FAST               3 (a)
+            114 STORE_FAST               4 (b)
+
+ 39         116 LOAD_FAST                3 (a)
+            118 LOAD_FAST                4 (b)
+            120 BINARY_OP               10 (-)
+            124 STORE_FAST               6 (r)
+            126 JUMP_FORWARD             4 (to 136)
+
+ 38     >>  128 POP_TOP
+
+ 40         130 NOP
+
+ 41         132 LOAD_CONST               4 (0)
+            134 STORE_FAST               6 (r)
+
+ 42     >>  136 LOAD_FAST                6 (r)
+            138 RETURN_VALUE
+
+Disassembly of <code object e04_mapping at 0x000001F5CFDB57D0, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 45>:
+ 45           0 RESUME                   0
+
+ 46           2 LOAD_FAST                0 (x)
+              4 POP_JUMP_FORWARD_IF_FALSE    68 (to 142)
+
+ 47     >>    6 LOAD_FAST                0 (x)
+
+ 48           8 COPY                     1
+             10 MATCH_MAPPING
+             12 POP_JUMP_FORWARD_IF_FALSE    26 (to 66)
+             14 GET_LEN
+             16 LOAD_CONST               1 (2)
+             18 COMPARE_OP               5 (>=)
+             24 POP_JUMP_FORWARD_IF_FALSE    20 (to 66)
+             26 LOAD_CONST               7 (('a', 'b'))
+             28 MATCH_KEYS
+             30 COPY                     1
+             32 POP_JUMP_FORWARD_IF_NONE    14 (to 62)
+             34 UNPACK_SEQUENCE          2
+             38 LOAD_CONST               4 (1)
+             40 COMPARE_OP               2 (==)
+             46 POP_JUMP_FORWARD_IF_FALSE     7 (to 62)
+             48 STORE_FAST               1 (b)
+             50 POP_TOP
+             52 POP_TOP
+             54 POP_TOP
+
+ 49          56 LOAD_FAST                1 (b)
+             58 STORE_FAST               2 (r)
+             60 JUMP_FORWARD            38 (to 138)
+
+ 48     >>   62 POP_TOP
+             64 POP_TOP
+        >>   66 POP_TOP
+
+ 50          68 MATCH_MAPPING
+             70 POP_JUMP_FORWARD_IF_FALSE    29 (to 130)
+             72 GET_LEN
+             74 LOAD_CONST               4 (1)
+             76 COMPARE_OP               5 (>=)
+             82 POP_JUMP_FORWARD_IF_FALSE    23 (to 130)
+             84 LOAD_CONST               8 (('k',))
+             86 MATCH_KEYS
+             88 COPY                     1
+             90 POP_JUMP_FORWARD_IF_NONE    17 (to 126)
+             92 UNPACK_SEQUENCE          1
+             96 SWAP                     3
+             98 SWAP                     2
+            100 BUILD_MAP                0
+            102 SWAP                     3
+            104 DICT_UPDATE              2
+            106 UNPACK_SEQUENCE          1
+            110 COPY                     2
+            112 SWAP                     2
+            114 DELETE_SUBSCR
+            116 STORE_FAST               4 (rest)
+            118 STORE_FAST               3 (v)
+
+ 51         120 LOAD_FAST                3 (v)
+            122 STORE_FAST               2 (r)
+            124 JUMP_FORWARD             6 (to 138)
+
+ 50     >>  126 POP_TOP
+            128 POP_TOP
+        >>  130 POP_TOP
+
+ 52         132 NOP
+
+ 53         134 LOAD_CONST               6 (0)
+            136 STORE_FAST               2 (r)
+
+ 46     >>  138 LOAD_FAST                0 (x)
+            140 POP_JUMP_BACKWARD_IF_TRUE    68 (to 6)
+
+ 54     >>  142 LOAD_FAST                2 (r)
+            144 RETURN_VALUE
+
+Disassembly of <code object e05_class_kw at 0x000001F5CFDAD6B0, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 57>:
+ 57           0 RESUME                   0
+
+ 58           2 NOP
+
+ 59           4 LOAD_FAST                0 (x)
+
+ 60           6 COPY                     1
+              8 LOAD_GLOBAL              0 (Point)
+             20 LOAD_CONST               1 (('x', 'y'))
+             22 MATCH_CLASS              0
+             24 COPY                     1
+             26 POP_JUMP_FORWARD_IF_NONE    16 (to 60)
+             28 UNPACK_SEQUENCE          2
+             32 LOAD_CONST               2 (0)
+             34 COMPARE_OP               2 (==)
+             40 POP_JUMP_FORWARD_IF_FALSE     9 (to 60)
+             42 LOAD_CONST               2 (0)
+             44 COMPARE_OP               2 (==)
+             50 POP_JUMP_FORWARD_IF_FALSE     5 (to 62)
+             52 POP_TOP
+
+ 61          54 LOAD_CONST               3 ('origin')
+             56 STORE_FAST               1 (r)
+             58 JUMP_FORWARD            25 (to 110)
+
+ 60     >>   60 POP_TOP
+
+ 62     >>   62 LOAD_GLOBAL              0 (Point)
+             74 LOAD_CONST               1 (('x', 'y'))
+             76 MATCH_CLASS              0
+             78 COPY                     1
+             80 POP_JUMP_FORWARD_IF_NONE    10 (to 102)
+             82 UNPACK_SEQUENCE          2
+             86 STORE_FAST               2 (px)
+             88 STORE_FAST               3 (py)
+
+ 63          90 LOAD_FAST                2 (px)
+             92 LOAD_FAST                3 (py)
+             94 BINARY_OP                0 (+)
+             98 STORE_FAST               1 (r)
+            100 JUMP_FORWARD             4 (to 110)
+
+ 62     >>  102 POP_TOP
+
+ 64         104 NOP
+
+ 65         106 LOAD_CONST               2 (0)
+            108 STORE_FAST               1 (r)
+
+ 67     >>  110 JUMP_FORWARD             5 (to 122)
+        >>  112 PUSH_EXC_INFO
+            114 RERAISE                  0
+        >>  116 COPY                     3
+            118 POP_EXCEPT
+            120 RERAISE                  1
+
+ 68     >>  122 LOAD_FAST                1 (r)
+            124 RETURN_VALUE
+ExceptionTable:
+  4 to 108 -> 112 [0]
+  112 to 114 -> 116 [1] lasti
+
+Disassembly of <code object e06_or_guard at 0x000001F5CFEDA420, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 71>:
+ 71           0 RESUME                   0
+
+ 72           2 LOAD_GLOBAL              1 (NULL + ctx)
+             14 PRECALL                  0
+             18 CALL                     0
+             28 BEFORE_WITH
+             30 POP_TOP
+
+ 73          32 LOAD_FAST                0 (x)
+
+ 74          34 COPY                     1
+             36 COPY                     1
+             38 LOAD_CONST               1 (1)
+             40 COMPARE_OP               2 (==)
+             46 POP_JUMP_FORWARD_IF_FALSE     1 (to 50)
+             48 JUMP_FORWARD            16 (to 82)
+        >>   50 COPY                     1
+             52 LOAD_CONST               2 (2)
+             54 COMPARE_OP               2 (==)
+             60 POP_JUMP_FORWARD_IF_FALSE     1 (to 64)
+             62 JUMP_FORWARD             9 (to 82)
+        >>   64 COPY                     1
+             66 LOAD_CONST               3 (3)
+             68 COMPARE_OP               2 (==)
+             74 POP_JUMP_FORWARD_IF_FALSE     1 (to 78)
+             76 JUMP_FORWARD             2 (to 82)
+        >>   78 POP_TOP
+             80 JUMP_FORWARD            11 (to 104)
+        >>   82 POP_TOP
+             84 LOAD_FAST                0 (x)
+             86 LOAD_CONST               1 (1)
+             88 COMPARE_OP               4 (>)
+             94 POP_JUMP_FORWARD_IF_FALSE     4 (to 104)
+             96 POP_TOP
+
+ 75          98 LOAD_CONST               4 ('small')
+            100 STORE_FAST               1 (r)
+            102 JUMP_FORWARD            29 (to 162)
+
+ 76     >>  104 COPY                     1
+            106 LOAD_CONST               5 (4)
+            108 COMPARE_OP               2 (==)
+            114 POP_JUMP_FORWARD_IF_FALSE     1 (to 118)
+            116 JUMP_FORWARD             9 (to 136)
+        >>  118 COPY                     1
+            120 LOAD_CONST               6 (5)
+            122 COMPARE_OP               2 (==)
+            128 POP_JUMP_FORWARD_IF_FALSE     1 (to 132)
+            130 JUMP_FORWARD             2 (to 136)
+        >>  132 POP_TOP
+            134 JUMP_FORWARD            10 (to 156)
+        >>  136 POP_TOP
+            138 LOAD_FAST                0 (x)
+            140 LOAD_CONST               5 (4)
+            142 COMPARE_OP               4 (>)
+            148 POP_JUMP_FORWARD_IF_FALSE     3 (to 156)
+
+ 77         150 LOAD_CONST               7 ('mid')
+            152 STORE_FAST               1 (r)
+            154 JUMP_FORWARD             3 (to 162)
+
+ 78     >>  156 NOP
+
+ 79         158 LOAD_CONST               8 ('other')
+            160 STORE_FAST               1 (r)
+
+ 72     >>  162 LOAD_CONST               0 (None)
+            164 LOAD_CONST               0 (None)
+            166 LOAD_CONST               0 (None)
+            168 PRECALL                  2
+            172 CALL                     2
+            182 POP_TOP
+            184 JUMP_FORWARD            11 (to 208)
+        >>  186 PUSH_EXC_INFO
+            188 WITH_EXCEPT_START
+            190 POP_JUMP_FORWARD_IF_TRUE     4 (to 200)
+            192 RERAISE                  2
+        >>  194 COPY                     3
+            196 POP_EXCEPT
+            198 RERAISE                  1
+        >>  200 POP_TOP
+            202 POP_EXCEPT
+            204 POP_TOP
+            206 POP_TOP
+
+ 80     >>  208 LOAD_FAST                1 (r)
+            210 RETURN_VALUE
+ExceptionTable:
+  30 to 160 -> 186 [1] lasti
+  186 to 192 -> 194 [3] lasti
+  200 to 200 -> 194 [3] lasti
+
+Disassembly of <code object e07_capture at 0x000001F5CFF1C810, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 83>:
+              0 MAKE_CELL                0 (x)
+
+ 83           2 RESUME                   0
+
+ 84           4 LOAD_CLOSURE             0 (x)
+              6 BUILD_TUPLE              1
+              8 LOAD_CONST               1 (<code object inner at 0x000001F5CFD59110, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 84>)
+             10 MAKE_FUNCTION            8 (closure)
+             12 STORE_FAST               2 (inner)
+
+ 94          14 PUSH_NULL
+             16 LOAD_FAST                2 (inner)
+             18 PRECALL                  0
+             22 CALL                     0
+             32 RETURN_VALUE
+
+Disassembly of <code object inner at 0x000001F5CFD59110, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 84>:
+              0 COPY_FREE_VARS           1
+
+ 84           2 RESUME                   0
+
+ 85           4 LOAD_DEREF               2 (x)
+
+ 86           6 COPY                     1
+              8 MATCH_SEQUENCE
+             10 POP_JUMP_FORWARD_IF_FALSE    19 (to 50)
+             12 GET_LEN
+             14 LOAD_CONST               1 (2)
+             16 COMPARE_OP               2 (==)
+             22 POP_JUMP_FORWARD_IF_FALSE    13 (to 50)
+             24 UNPACK_SEQUENCE          2
+             28 STORE_FAST               0 (a)
+             30 STORE_FAST               1 (b)
+             32 LOAD_FAST                0 (a)
+             34 LOAD_FAST                1 (b)
+             36 COMPARE_OP               4 (>)
+             42 POP_JUMP_FORWARD_IF_FALSE     4 (to 52)
+             44 POP_TOP
+
+ 87          46 LOAD_FAST                0 (a)
+             48 RETURN_VALUE
+
+ 86     >>   50 POP_TOP
+
+ 88     >>   52 COPY                     1
+             54 MATCH_SEQUENCE
+             56 POP_JUMP_FORWARD_IF_FALSE    13 (to 84)
+             58 GET_LEN
+             60 LOAD_CONST               1 (2)
+             62 COMPARE_OP               2 (==)
+             68 POP_JUMP_FORWARD_IF_FALSE     7 (to 84)
+             70 UNPACK_SEQUENCE          2
+             74 STORE_FAST               0 (a)
+             76 STORE_FAST               1 (b)
+             78 POP_TOP
+
+ 89          80 LOAD_FAST                1 (b)
+             82 RETURN_VALUE
+
+ 88     >>   84 POP_TOP
+
+ 90          86 STORE_FAST               0 (a)
+             88 LOAD_FAST                0 (a)
+             90 POP_JUMP_FORWARD_IF_NONE     2 (to 96)
+
+ 91          92 LOAD_FAST                0 (a)
+             94 RETURN_VALUE
+
+ 92     >>   96 NOP
+
+ 93          98 LOAD_CONST               2 (0)
+            100 RETURN_VALUE
+
+Disassembly of <code object e08_star_nest at 0x000001F5CFD34D20, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 97>:
+ 97           0 RESUME                   0
+
+ 98           2 LOAD_FAST                0 (x)
+
+ 99           4 COPY                     1
+              6 MATCH_SEQUENCE
+              8 POP_JUMP_FORWARD_IF_FALSE    25 (to 60)
+             10 GET_LEN
+             12 LOAD_CONST               1 (2)
+             14 COMPARE_OP               5 (>=)
+             20 POP_JUMP_FORWARD_IF_FALSE    19 (to 60)
+             22 EXTENDED_ARG             1
+             24 UNPACK_EX              257
+             26 LOAD_CONST               2 (1)
+             28 COMPARE_OP               2 (==)
+             34 POP_JUMP_FORWARD_IF_FALSE    11 (to 58)
+             36 SWAP                     2
+             38 LOAD_CONST               3 (9)
+             40 COMPARE_OP               2 (==)
+             46 POP_JUMP_FORWARD_IF_FALSE     6 (to 60)
+             48 STORE_FAST               1 (mid)
+             50 POP_TOP
+
+100          52 LOAD_FAST                1 (mid)
+             54 STORE_FAST               2 (r)
+             56 JUMP_FORWARD            55 (to 168)
+
+ 99     >>   58 POP_TOP
+        >>   60 POP_TOP
+
+101          62 COPY                     1
+             64 MATCH_MAPPING
+             66 POP_JUMP_FORWARD_IF_FALSE    31 (to 130)
+             68 GET_LEN
+             70 LOAD_CONST               2 (1)
+             72 COMPARE_OP               5 (>=)
+             78 POP_JUMP_FORWARD_IF_FALSE    25 (to 130)
+             80 LOAD_CONST               5 (('key',))
+             82 MATCH_KEYS
+             84 COPY                     1
+             86 POP_JUMP_FORWARD_IF_NONE    19 (to 126)
+             88 UNPACK_SEQUENCE          1
+             92 MATCH_SEQUENCE
+             94 POP_JUMP_FORWARD_IF_FALSE    15 (to 126)
+             96 GET_LEN
+             98 LOAD_CONST               2 (1)
+            100 COMPARE_OP               5 (>=)
+            106 POP_JUMP_FORWARD_IF_FALSE     9 (to 126)
+            108 UNPACK_EX                1
+            110 STORE_FAST               3 (first)
+            112 STORE_FAST               4 (rest)
+            114 POP_TOP
+            116 POP_TOP
+            118 POP_TOP
+
+102         120 LOAD_FAST                3 (first)
+            122 STORE_FAST               2 (r)
+            124 JUMP_FORWARD            21 (to 168)
+
+101     >>  126 POP_TOP
+            128 POP_TOP
+        >>  130 POP_TOP
+
+103         132 MATCH_SEQUENCE
+            134 POP_JUMP_FORWARD_IF_FALSE    12 (to 160)
+            136 GET_LEN
+            138 LOAD_CONST               2 (1)
+            140 COMPARE_OP               5 (>=)
+            146 POP_JUMP_FORWARD_IF_FALSE     6 (to 160)
+            148 UNPACK_EX                1
+            150 STORE_FAST               5 (head)
+            152 STORE_FAST               6 (tail)
+
+104         154 LOAD_FAST                6 (tail)
+            156 STORE_FAST               2 (r)
+            158 JUMP_FORWARD             4 (to 168)
+
+103     >>  160 POP_TOP
+
+105         162 NOP
+
+106         164 LOAD_CONST               0 (None)
+            166 STORE_FAST               2 (r)
+
+107     >>  168 LOAD_FAST                2 (r)
+            170 RETURN_VALUE
+
+Disassembly of <code object e09_nested_match at 0x000001F5CFD66120, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 110>:
+110           0 RESUME                   0
+
+111           2 LOAD_FAST                0 (x)
+
+112           4 MATCH_SEQUENCE
+              6 POP_JUMP_FORWARD_IF_FALSE    23 (to 54)
+              8 GET_LEN
+             10 LOAD_CONST               1 (2)
+             12 COMPARE_OP               2 (==)
+             18 POP_JUMP_FORWARD_IF_FALSE    17 (to 54)
+             20 UNPACK_SEQUENCE          2
+             24 STORE_FAST               2 (a)
+             26 STORE_FAST               3 (b)
+
+113          28 LOAD_FAST                2 (a)
+
+114          30 LOAD_CONST               2 (1)
+             32 COMPARE_OP               2 (==)
+             38 POP_JUMP_FORWARD_IF_FALSE     3 (to 46)
+
+115          40 LOAD_CONST               3 ('a1')
+             42 STORE_FAST               4 (r)
+             44 JUMP_FORWARD            18 (to 82)
+
+116     >>   46 NOP
+
+117          48 LOAD_CONST               4 ('ax')
+             50 STORE_FAST               4 (r)
+             52 JUMP_FORWARD            14 (to 82)
+
+112     >>   54 POP_TOP
+
+118          56 NOP
+
+119          58 LOAD_FAST                1 (y)
+
+120          60 LOAD_CONST               1 (2)
+             62 COMPARE_OP               2 (==)
+             68 POP_JUMP_FORWARD_IF_FALSE     3 (to 76)
+
+121          70 LOAD_CONST               5 ('y2')
+             72 STORE_FAST               4 (r)
+             74 JUMP_FORWARD             3 (to 82)
+
+122     >>   76 NOP
+
+123          78 LOAD_CONST               6 ('yx')
+             80 STORE_FAST               4 (r)
+
+124     >>   82 LOAD_FAST                4 (r)
+             84 RETURN_VALUE
+
+Disassembly of <code object CM at 0x000001F5CFDED620, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 127>:
+127           0 RESUME                   0
+              2 LOAD_NAME                0 (__name__)
+              4 STORE_NAME               1 (__module__)
+              6 LOAD_CONST               0 ('CM')
+              8 STORE_NAME               2 (__qualname__)
+
+128          10 LOAD_CONST               1 (<code object m at 0x000001F5CFD66AB0, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 128>)
+             12 MAKE_FUNCTION            0
+             14 STORE_NAME               3 (m)
+             16 LOAD_CONST               2 (None)
+             18 RETURN_VALUE
+
+Disassembly of <code object m at 0x000001F5CFD66AB0, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 128>:
+128           0 RESUME                   0
+
+129           2 LOAD_FAST                1 (x)
+
+130           4 COPY                     1
+              6 MATCH_MAPPING
+              8 POP_JUMP_FORWARD_IF_FALSE    22 (to 54)
+             10 GET_LEN
+             12 LOAD_CONST               1 (1)
+             14 COMPARE_OP               5 (>=)
+             20 POP_JUMP_FORWARD_IF_FALSE    16 (to 54)
+             22 LOAD_CONST               3 (('a',))
+             24 MATCH_KEYS
+             26 COPY                     1
+             28 POP_JUMP_FORWARD_IF_NONE    10 (to 50)
+             30 UNPACK_SEQUENCE          1
+             34 STORE_FAST               2 (v)
+             36 POP_TOP
+             38 POP_TOP
+             40 LOAD_FAST                2 (v)
+             42 POP_JUMP_FORWARD_IF_FALSE     6 (to 56)
+             44 POP_TOP
+
+131          46 LOAD_FAST                2 (v)
+             48 RETURN_VALUE
+
+130     >>   50 POP_TOP
+             52 POP_TOP
+        >>   54 POP_TOP
+
+132     >>   56 MATCH_SEQUENCE
+             58 POP_JUMP_FORWARD_IF_FALSE     4 (to 68)
+             60 UNPACK_EX                0
+             62 STORE_FAST               3 (items)
+
+133          64 LOAD_FAST                3 (items)
+             66 RETURN_VALUE
+
+132     >>   68 POP_TOP
+
+134          70 NOP
+
+135          72 LOAD_CONST               0 (None)
+             74 RETURN_VALUE
+==================== <module>.e01_value ====================
+  1           0 RESUME                   0
+
+  2           2 LOAD_FAST                0 (x)
+              4 LOAD_CONST               1 (0)
+              6 COMPARE_OP               4 (>)
+             12 POP_JUMP_FORWARD_IF_FALSE    45 (to 104)
+
+  3          14 LOAD_FAST                0 (x)
+
+  4          16 COPY                     1
+             18 LOAD_CONST               2 (1)
+             20 COMPARE_OP               2 (==)
+             26 POP_JUMP_FORWARD_IF_FALSE     4 (to 36)
+             28 POP_TOP
+
+  5          30 LOAD_CONST               3 ('one')
+             32 STORE_FAST               1 (r)
+             34 JUMP_FORWARD            36 (to 108)
+
+  6     >>   36 COPY                     1
+             38 LOAD_CONST               4 (2)
+             40 COMPARE_OP               2 (==)
+             46 POP_JUMP_FORWARD_IF_FALSE     4 (to 56)
+             48 POP_TOP
+
+  7          50 LOAD_CONST               5 ('two')
+             52 STORE_FAST               1 (r)
+             54 JUMP_FORWARD            26 (to 108)
+
+  8     >>   56 COPY                     1
+             58 LOAD_CONST               6 (3)
+             60 COMPARE_OP               2 (==)
+             66 POP_JUMP_FORWARD_IF_FALSE     1 (to 70)
+             68 JUMP_FORWARD             9 (to 88)
+        >>   70 COPY                     1
+             72 LOAD_CONST               7 (4)
+             74 COMPARE_OP               2 (==)
+             80 POP_JUMP_FORWARD_IF_FALSE     1 (to 84)
+             82 JUMP_FORWARD             2 (to 88)
+        >>   84 POP_TOP
+             86 JUMP_FORWARD             4 (to 96)
+        >>   88 POP_TOP
+
+  9          90 LOAD_CONST               8 ('few')
+             92 STORE_FAST               1 (r)
+             94 JUMP_FORWARD             6 (to 108)
+
+ 10     >>   96 NOP
+
+ 11          98 LOAD_CONST               9 ('many')
+            100 STORE_FAST               1 (r)
+            102 JUMP_FORWARD             2 (to 108)
+
+ 13     >>  104 LOAD_CONST              10 ('neg')
+            106 STORE_FAST               1 (r)
+
+ 14     >>  108 LOAD_FAST                1 (r)
+            110 RETURN_VALUE
+==================== <module>.e02_singleton ====================
+ 17           0 RESUME                   0
+
+ 18           2 LOAD_GLOBAL              1 (NULL + range)
+             14 LOAD_CONST               1 (3)
+             16 PRECALL                  1
+             20 CALL                     1
+             30 GET_ITER
+        >>   32 FOR_ITER                41 (to 116)
+             34 STORE_FAST               1 (i)
+
+ 19          36 LOAD_FAST                0 (x)
+
+ 20          38 COPY                     1
+             40 POP_JUMP_FORWARD_IF_NOT_NONE     4 (to 50)
+             42 POP_TOP
+
+ 21          44 LOAD_CONST               2 (0)
+             46 STORE_FAST               2 (r)
+             48 JUMP_BACKWARD            9 (to 32)
+
+ 22     >>   50 COPY                     1
+             52 LOAD_CONST               3 (True)
+             54 IS_OP                    0
+             56 POP_JUMP_FORWARD_IF_FALSE     4 (to 66)
+             58 POP_TOP
+
+ 23          60 LOAD_CONST               4 (1)
+             62 STORE_FAST               2 (r)
+             64 JUMP_BACKWARD           17 (to 32)
+
+ 24     >>   66 COPY                     1
+             68 LOAD_CONST               5 (False)
+             70 IS_OP                    0
+             72 POP_JUMP_FORWARD_IF_FALSE     4 (to 82)
+             74 POP_TOP
+
+ 25          76 LOAD_CONST               6 (2)
+             78 STORE_FAST               2 (r)
+             80 JUMP_BACKWARD           25 (to 32)
+
+ 26     >>   82 LOAD_GLOBAL              2 (object)
+             94 LOAD_CONST               7 (())
+             96 MATCH_CLASS              0
+             98 COPY                     1
+            100 POP_JUMP_FORWARD_IF_NONE     5 (to 112)
+            102 UNPACK_SEQUENCE          0
+
+ 27         106 LOAD_CONST               1 (3)
+            108 STORE_FAST               2 (r)
+            110 JUMP_BACKWARD           40 (to 32)
+
+ 26     >>  112 POP_TOP
+            114 JUMP_BACKWARD           42 (to 32)
+
+ 28     >>  116 LOAD_FAST                2 (r)
+            118 RETURN_VALUE
+==================== <module>.e03_sequence ====================
+ 31           0 RESUME                   0
+
+ 32           2 LOAD_FAST                0 (x)
+              4 POP_JUMP_FORWARD_IF_FALSE    65 (to 136)
+
+ 33           6 LOAD_FAST                1 (y)
+
+ 34           8 COPY                     1
+             10 MATCH_SEQUENCE
+             12 POP_JUMP_FORWARD_IF_FALSE    21 (to 56)
+             14 GET_LEN
+             16 LOAD_CONST               1 (3)
+             18 COMPARE_OP               2 (==)
+             24 POP_JUMP_FORWARD_IF_FALSE    15 (to 56)
+             26 UNPACK_SEQUENCE          3
+             30 STORE_FAST               3 (a)
+             32 STORE_FAST               4 (b)
+             34 STORE_FAST               5 (c)
+             36 POP_TOP
+
+ 35          38 LOAD_FAST                3 (a)
+             40 LOAD_FAST                4 (b)
+             42 BINARY_OP                0 (+)
+             46 LOAD_FAST                5 (c)
+             48 BINARY_OP                0 (+)
+             52 STORE_FAST               6 (r)
+             54 JUMP_FORWARD            40 (to 136)
+
+ 34     >>   56 POP_TOP
+
+ 36          58 COPY                     1
+             60 MATCH_SEQUENCE
+             62 POP_JUMP_FORWARD_IF_FALSE    13 (to 90)
+             64 GET_LEN
+             66 LOAD_CONST               2 (1)
+             68 COMPARE_OP               5 (>=)
+             74 POP_JUMP_FORWARD_IF_FALSE     7 (to 90)
+             76 UNPACK_EX                1
+             78 STORE_FAST               3 (a)
+             80 STORE_FAST               7 (rest)
+             82 POP_TOP
+
+ 37          84 LOAD_FAST                3 (a)
+             86 STORE_FAST               6 (r)
+             88 JUMP_FORWARD            23 (to 136)
+
+ 36     >>   90 POP_TOP
+
+ 38          92 MATCH_SEQUENCE
+             94 POP_JUMP_FORWARD_IF_FALSE    16 (to 128)
+             96 GET_LEN
+             98 LOAD_CONST               3 (2)
+            100 COMPARE_OP               2 (==)
+            106 POP_JUMP_FORWARD_IF_FALSE    10 (to 128)
+            108 UNPACK_SEQUENCE          2
+            112 STORE_FAST               3 (a)
+            114 STORE_FAST               4 (b)
+
+ 39         116 LOAD_FAST                3 (a)
+            118 LOAD_FAST                4 (b)
+            120 BINARY_OP               10 (-)
+            124 STORE_FAST               6 (r)
+            126 JUMP_FORWARD             4 (to 136)
+
+ 38     >>  128 POP_TOP
+
+ 40         130 NOP
+
+ 41         132 LOAD_CONST               4 (0)
+            134 STORE_FAST               6 (r)
+
+ 42     >>  136 LOAD_FAST                6 (r)
+            138 RETURN_VALUE
+==================== <module>.e04_mapping ====================
+ 45           0 RESUME                   0
+
+ 46           2 LOAD_FAST                0 (x)
+              4 POP_JUMP_FORWARD_IF_FALSE    68 (to 142)
+
+ 47     >>    6 LOAD_FAST                0 (x)
+
+ 48           8 COPY                     1
+             10 MATCH_MAPPING
+             12 POP_JUMP_FORWARD_IF_FALSE    26 (to 66)
+             14 GET_LEN
+             16 LOAD_CONST               1 (2)
+             18 COMPARE_OP               5 (>=)
+             24 POP_JUMP_FORWARD_IF_FALSE    20 (to 66)
+             26 LOAD_CONST               7 (('a', 'b'))
+             28 MATCH_KEYS
+             30 COPY                     1
+             32 POP_JUMP_FORWARD_IF_NONE    14 (to 62)
+             34 UNPACK_SEQUENCE          2
+             38 LOAD_CONST               4 (1)
+             40 COMPARE_OP               2 (==)
+             46 POP_JUMP_FORWARD_IF_FALSE     7 (to 62)
+             48 STORE_FAST               1 (b)
+             50 POP_TOP
+             52 POP_TOP
+             54 POP_TOP
+
+ 49          56 LOAD_FAST                1 (b)
+             58 STORE_FAST               2 (r)
+             60 JUMP_FORWARD            38 (to 138)
+
+ 48     >>   62 POP_TOP
+             64 POP_TOP
+        >>   66 POP_TOP
+
+ 50          68 MATCH_MAPPING
+             70 POP_JUMP_FORWARD_IF_FALSE    29 (to 130)
+             72 GET_LEN
+             74 LOAD_CONST               4 (1)
+             76 COMPARE_OP               5 (>=)
+             82 POP_JUMP_FORWARD_IF_FALSE    23 (to 130)
+             84 LOAD_CONST               8 (('k',))
+             86 MATCH_KEYS
+             88 COPY                     1
+             90 POP_JUMP_FORWARD_IF_NONE    17 (to 126)
+             92 UNPACK_SEQUENCE          1
+             96 SWAP                     3
+             98 SWAP                     2
+            100 BUILD_MAP                0
+            102 SWAP                     3
+            104 DICT_UPDATE              2
+            106 UNPACK_SEQUENCE          1
+            110 COPY                     2
+            112 SWAP                     2
+            114 DELETE_SUBSCR
+            116 STORE_FAST               4 (rest)
+            118 STORE_FAST               3 (v)
+
+ 51         120 LOAD_FAST                3 (v)
+            122 STORE_FAST               2 (r)
+            124 JUMP_FORWARD             6 (to 138)
+
+ 50     >>  126 POP_TOP
+            128 POP_TOP
+        >>  130 POP_TOP
+
+ 52         132 NOP
+
+ 53         134 LOAD_CONST               6 (0)
+            136 STORE_FAST               2 (r)
+
+ 46     >>  138 LOAD_FAST                0 (x)
+            140 POP_JUMP_BACKWARD_IF_TRUE    68 (to 6)
+
+ 54     >>  142 LOAD_FAST                2 (r)
+            144 RETURN_VALUE
+==================== <module>.e05_class_kw ====================
+ 57           0 RESUME                   0
+
+ 58           2 NOP
+
+ 59           4 LOAD_FAST                0 (x)
+
+ 60           6 COPY                     1
+              8 LOAD_GLOBAL              0 (Point)
+             20 LOAD_CONST               1 (('x', 'y'))
+             22 MATCH_CLASS              0
+             24 COPY                     1
+             26 POP_JUMP_FORWARD_IF_NONE    16 (to 60)
+             28 UNPACK_SEQUENCE          2
+             32 LOAD_CONST               2 (0)
+             34 COMPARE_OP               2 (==)
+             40 POP_JUMP_FORWARD_IF_FALSE     9 (to 60)
+             42 LOAD_CONST               2 (0)
+             44 COMPARE_OP               2 (==)
+             50 POP_JUMP_FORWARD_IF_FALSE     5 (to 62)
+             52 POP_TOP
+
+ 61          54 LOAD_CONST               3 ('origin')
+             56 STORE_FAST               1 (r)
+             58 JUMP_FORWARD            25 (to 110)
+
+ 60     >>   60 POP_TOP
+
+ 62     >>   62 LOAD_GLOBAL              0 (Point)
+             74 LOAD_CONST               1 (('x', 'y'))
+             76 MATCH_CLASS              0
+             78 COPY                     1
+             80 POP_JUMP_FORWARD_IF_NONE    10 (to 102)
+             82 UNPACK_SEQUENCE          2
+             86 STORE_FAST               2 (px)
+             88 STORE_FAST               3 (py)
+
+ 63          90 LOAD_FAST                2 (px)
+             92 LOAD_FAST                3 (py)
+             94 BINARY_OP                0 (+)
+             98 STORE_FAST               1 (r)
+            100 JUMP_FORWARD             4 (to 110)
+
+ 62     >>  102 POP_TOP
+
+ 64         104 NOP
+
+ 65         106 LOAD_CONST               2 (0)
+            108 STORE_FAST               1 (r)
+
+ 67     >>  110 JUMP_FORWARD             5 (to 122)
+        >>  112 PUSH_EXC_INFO
+            114 RERAISE                  0
+        >>  116 COPY                     3
+            118 POP_EXCEPT
+            120 RERAISE                  1
+
+ 68     >>  122 LOAD_FAST                1 (r)
+            124 RETURN_VALUE
+ExceptionTable:
+  4 to 108 -> 112 [0]
+  112 to 114 -> 116 [1] lasti
+==================== <module>.e06_or_guard ====================
+ 71           0 RESUME                   0
+
+ 72           2 LOAD_GLOBAL              1 (NULL + ctx)
+             14 PRECALL                  0
+             18 CALL                     0
+             28 BEFORE_WITH
+             30 POP_TOP
+
+ 73          32 LOAD_FAST                0 (x)
+
+ 74          34 COPY                     1
+             36 COPY                     1
+             38 LOAD_CONST               1 (1)
+             40 COMPARE_OP               2 (==)
+             46 POP_JUMP_FORWARD_IF_FALSE     1 (to 50)
+             48 JUMP_FORWARD            16 (to 82)
+        >>   50 COPY                     1
+             52 LOAD_CONST               2 (2)
+             54 COMPARE_OP               2 (==)
+             60 POP_JUMP_FORWARD_IF_FALSE     1 (to 64)
+             62 JUMP_FORWARD             9 (to 82)
+        >>   64 COPY                     1
+             66 LOAD_CONST               3 (3)
+             68 COMPARE_OP               2 (==)
+             74 POP_JUMP_FORWARD_IF_FALSE     1 (to 78)
+             76 JUMP_FORWARD             2 (to 82)
+        >>   78 POP_TOP
+             80 JUMP_FORWARD            11 (to 104)
+        >>   82 POP_TOP
+             84 LOAD_FAST                0 (x)
+             86 LOAD_CONST               1 (1)
+             88 COMPARE_OP               4 (>)
+             94 POP_JUMP_FORWARD_IF_FALSE     4 (to 104)
+             96 POP_TOP
+
+ 75          98 LOAD_CONST               4 ('small')
+            100 STORE_FAST               1 (r)
+            102 JUMP_FORWARD            29 (to 162)
+
+ 76     >>  104 COPY                     1
+            106 LOAD_CONST               5 (4)
+            108 COMPARE_OP               2 (==)
+            114 POP_JUMP_FORWARD_IF_FALSE     1 (to 118)
+            116 JUMP_FORWARD             9 (to 136)
+        >>  118 COPY                     1
+            120 LOAD_CONST               6 (5)
+            122 COMPARE_OP               2 (==)
+            128 POP_JUMP_FORWARD_IF_FALSE     1 (to 132)
+            130 JUMP_FORWARD             2 (to 136)
+        >>  132 POP_TOP
+            134 JUMP_FORWARD            10 (to 156)
+        >>  136 POP_TOP
+            138 LOAD_FAST                0 (x)
+            140 LOAD_CONST               5 (4)
+            142 COMPARE_OP               4 (>)
+            148 POP_JUMP_FORWARD_IF_FALSE     3 (to 156)
+
+ 77         150 LOAD_CONST               7 ('mid')
+            152 STORE_FAST               1 (r)
+            154 JUMP_FORWARD             3 (to 162)
+
+ 78     >>  156 NOP
+
+ 79         158 LOAD_CONST               8 ('other')
+            160 STORE_FAST               1 (r)
+
+ 72     >>  162 LOAD_CONST               0 (None)
+            164 LOAD_CONST               0 (None)
+            166 LOAD_CONST               0 (None)
+            168 PRECALL                  2
+            172 CALL                     2
+            182 POP_TOP
+            184 JUMP_FORWARD            11 (to 208)
+        >>  186 PUSH_EXC_INFO
+            188 WITH_EXCEPT_START
+            190 POP_JUMP_FORWARD_IF_TRUE     4 (to 200)
+            192 RERAISE                  2
+        >>  194 COPY                     3
+            196 POP_EXCEPT
+            198 RERAISE                  1
+        >>  200 POP_TOP
+            202 POP_EXCEPT
+            204 POP_TOP
+            206 POP_TOP
+
+ 80     >>  208 LOAD_FAST                1 (r)
+            210 RETURN_VALUE
+ExceptionTable:
+  30 to 160 -> 186 [1] lasti
+  186 to 192 -> 194 [3] lasti
+  200 to 200 -> 194 [3] lasti
+==================== <module>.e07_capture ====================
+              0 MAKE_CELL                0 (x)
+
+ 83           2 RESUME                   0
+
+ 84           4 LOAD_CLOSURE             0 (x)
+              6 BUILD_TUPLE              1
+              8 LOAD_CONST               1 (<code object inner at 0x000001F5CFD59110, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 84>)
+             10 MAKE_FUNCTION            8 (closure)
+             12 STORE_FAST               2 (inner)
+
+ 94          14 PUSH_NULL
+             16 LOAD_FAST                2 (inner)
+             18 PRECALL                  0
+             22 CALL                     0
+             32 RETURN_VALUE
+
+Disassembly of <code object inner at 0x000001F5CFD59110, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 84>:
+              0 COPY_FREE_VARS           1
+
+ 84           2 RESUME                   0
+
+ 85           4 LOAD_DEREF               2 (x)
+
+ 86           6 COPY                     1
+              8 MATCH_SEQUENCE
+             10 POP_JUMP_FORWARD_IF_FALSE    19 (to 50)
+             12 GET_LEN
+             14 LOAD_CONST               1 (2)
+             16 COMPARE_OP               2 (==)
+             22 POP_JUMP_FORWARD_IF_FALSE    13 (to 50)
+             24 UNPACK_SEQUENCE          2
+             28 STORE_FAST               0 (a)
+             30 STORE_FAST               1 (b)
+             32 LOAD_FAST                0 (a)
+             34 LOAD_FAST                1 (b)
+             36 COMPARE_OP               4 (>)
+             42 POP_JUMP_FORWARD_IF_FALSE     4 (to 52)
+             44 POP_TOP
+
+ 87          46 LOAD_FAST                0 (a)
+             48 RETURN_VALUE
+
+ 86     >>   50 POP_TOP
+
+ 88     >>   52 COPY                     1
+             54 MATCH_SEQUENCE
+             56 POP_JUMP_FORWARD_IF_FALSE    13 (to 84)
+             58 GET_LEN
+             60 LOAD_CONST               1 (2)
+             62 COMPARE_OP               2 (==)
+             68 POP_JUMP_FORWARD_IF_FALSE     7 (to 84)
+             70 UNPACK_SEQUENCE          2
+             74 STORE_FAST               0 (a)
+             76 STORE_FAST               1 (b)
+             78 POP_TOP
+
+ 89          80 LOAD_FAST                1 (b)
+             82 RETURN_VALUE
+
+ 88     >>   84 POP_TOP
+
+ 90          86 STORE_FAST               0 (a)
+             88 LOAD_FAST                0 (a)
+             90 POP_JUMP_FORWARD_IF_NONE     2 (to 96)
+
+ 91          92 LOAD_FAST                0 (a)
+             94 RETURN_VALUE
+
+ 92     >>   96 NOP
+
+ 93          98 LOAD_CONST               2 (0)
+            100 RETURN_VALUE
+==================== <module>.e07_capture.inner ====================
+              0 COPY_FREE_VARS           1
+
+ 84           2 RESUME                   0
+
+ 85           4 LOAD_DEREF               2 (x)
+
+ 86           6 COPY                     1
+              8 MATCH_SEQUENCE
+             10 POP_JUMP_FORWARD_IF_FALSE    19 (to 50)
+             12 GET_LEN
+             14 LOAD_CONST               1 (2)
+             16 COMPARE_OP               2 (==)
+             22 POP_JUMP_FORWARD_IF_FALSE    13 (to 50)
+             24 UNPACK_SEQUENCE          2
+             28 STORE_FAST               0 (a)
+             30 STORE_FAST               1 (b)
+             32 LOAD_FAST                0 (a)
+             34 LOAD_FAST                1 (b)
+             36 COMPARE_OP               4 (>)
+             42 POP_JUMP_FORWARD_IF_FALSE     4 (to 52)
+             44 POP_TOP
+
+ 87          46 LOAD_FAST                0 (a)
+             48 RETURN_VALUE
+
+ 86     >>   50 POP_TOP
+
+ 88     >>   52 COPY                     1
+             54 MATCH_SEQUENCE
+             56 POP_JUMP_FORWARD_IF_FALSE    13 (to 84)
+             58 GET_LEN
+             60 LOAD_CONST               1 (2)
+             62 COMPARE_OP               2 (==)
+             68 POP_JUMP_FORWARD_IF_FALSE     7 (to 84)
+             70 UNPACK_SEQUENCE          2
+             74 STORE_FAST               0 (a)
+             76 STORE_FAST               1 (b)
+             78 POP_TOP
+
+ 89          80 LOAD_FAST                1 (b)
+             82 RETURN_VALUE
+
+ 88     >>   84 POP_TOP
+
+ 90          86 STORE_FAST               0 (a)
+             88 LOAD_FAST                0 (a)
+             90 POP_JUMP_FORWARD_IF_NONE     2 (to 96)
+
+ 91          92 LOAD_FAST                0 (a)
+             94 RETURN_VALUE
+
+ 92     >>   96 NOP
+
+ 93          98 LOAD_CONST               2 (0)
+            100 RETURN_VALUE
+==================== <module>.e08_star_nest ====================
+ 97           0 RESUME                   0
+
+ 98           2 LOAD_FAST                0 (x)
+
+ 99           4 COPY                     1
+              6 MATCH_SEQUENCE
+              8 POP_JUMP_FORWARD_IF_FALSE    25 (to 60)
+             10 GET_LEN
+             12 LOAD_CONST               1 (2)
+             14 COMPARE_OP               5 (>=)
+             20 POP_JUMP_FORWARD_IF_FALSE    19 (to 60)
+             22 EXTENDED_ARG             1
+             24 UNPACK_EX              257
+             26 LOAD_CONST               2 (1)
+             28 COMPARE_OP               2 (==)
+             34 POP_JUMP_FORWARD_IF_FALSE    11 (to 58)
+             36 SWAP                     2
+             38 LOAD_CONST               3 (9)
+             40 COMPARE_OP               2 (==)
+             46 POP_JUMP_FORWARD_IF_FALSE     6 (to 60)
+             48 STORE_FAST               1 (mid)
+             50 POP_TOP
+
+100          52 LOAD_FAST                1 (mid)
+             54 STORE_FAST               2 (r)
+             56 JUMP_FORWARD            55 (to 168)
+
+ 99     >>   58 POP_TOP
+        >>   60 POP_TOP
+
+101          62 COPY                     1
+             64 MATCH_MAPPING
+             66 POP_JUMP_FORWARD_IF_FALSE    31 (to 130)
+             68 GET_LEN
+             70 LOAD_CONST               2 (1)
+             72 COMPARE_OP               5 (>=)
+             78 POP_JUMP_FORWARD_IF_FALSE    25 (to 130)
+             80 LOAD_CONST               5 (('key',))
+             82 MATCH_KEYS
+             84 COPY                     1
+             86 POP_JUMP_FORWARD_IF_NONE    19 (to 126)
+             88 UNPACK_SEQUENCE          1
+             92 MATCH_SEQUENCE
+             94 POP_JUMP_FORWARD_IF_FALSE    15 (to 126)
+             96 GET_LEN
+             98 LOAD_CONST               2 (1)
+            100 COMPARE_OP               5 (>=)
+            106 POP_JUMP_FORWARD_IF_FALSE     9 (to 126)
+            108 UNPACK_EX                1
+            110 STORE_FAST               3 (first)
+            112 STORE_FAST               4 (rest)
+            114 POP_TOP
+            116 POP_TOP
+            118 POP_TOP
+
+102         120 LOAD_FAST                3 (first)
+            122 STORE_FAST               2 (r)
+            124 JUMP_FORWARD            21 (to 168)
+
+101     >>  126 POP_TOP
+            128 POP_TOP
+        >>  130 POP_TOP
+
+103         132 MATCH_SEQUENCE
+            134 POP_JUMP_FORWARD_IF_FALSE    12 (to 160)
+            136 GET_LEN
+            138 LOAD_CONST               2 (1)
+            140 COMPARE_OP               5 (>=)
+            146 POP_JUMP_FORWARD_IF_FALSE     6 (to 160)
+            148 UNPACK_EX                1
+            150 STORE_FAST               5 (head)
+            152 STORE_FAST               6 (tail)
+
+104         154 LOAD_FAST                6 (tail)
+            156 STORE_FAST               2 (r)
+            158 JUMP_FORWARD             4 (to 168)
+
+103     >>  160 POP_TOP
+
+105         162 NOP
+
+106         164 LOAD_CONST               0 (None)
+            166 STORE_FAST               2 (r)
+
+107     >>  168 LOAD_FAST                2 (r)
+            170 RETURN_VALUE
+==================== <module>.e09_nested_match ====================
+110           0 RESUME                   0
+
+111           2 LOAD_FAST                0 (x)
+
+112           4 MATCH_SEQUENCE
+              6 POP_JUMP_FORWARD_IF_FALSE    23 (to 54)
+              8 GET_LEN
+             10 LOAD_CONST               1 (2)
+             12 COMPARE_OP               2 (==)
+             18 POP_JUMP_FORWARD_IF_FALSE    17 (to 54)
+             20 UNPACK_SEQUENCE          2
+             24 STORE_FAST               2 (a)
+             26 STORE_FAST               3 (b)
+
+113          28 LOAD_FAST                2 (a)
+
+114          30 LOAD_CONST               2 (1)
+             32 COMPARE_OP               2 (==)
+             38 POP_JUMP_FORWARD_IF_FALSE     3 (to 46)
+
+115          40 LOAD_CONST               3 ('a1')
+             42 STORE_FAST               4 (r)
+             44 JUMP_FORWARD            18 (to 82)
+
+116     >>   46 NOP
+
+117          48 LOAD_CONST               4 ('ax')
+             50 STORE_FAST               4 (r)
+             52 JUMP_FORWARD            14 (to 82)
+
+112     >>   54 POP_TOP
+
+118          56 NOP
+
+119          58 LOAD_FAST                1 (y)
+
+120          60 LOAD_CONST               1 (2)
+             62 COMPARE_OP               2 (==)
+             68 POP_JUMP_FORWARD_IF_FALSE     3 (to 76)
+
+121          70 LOAD_CONST               5 ('y2')
+             72 STORE_FAST               4 (r)
+             74 JUMP_FORWARD             3 (to 82)
+
+122     >>   76 NOP
+
+123          78 LOAD_CONST               6 ('yx')
+             80 STORE_FAST               4 (r)
+
+124     >>   82 LOAD_FAST                4 (r)
+             84 RETURN_VALUE
+==================== <module>.CM ====================
+127           0 RESUME                   0
+              2 LOAD_NAME                0 (__name__)
+              4 STORE_NAME               1 (__module__)
+              6 LOAD_CONST               0 ('CM')
+              8 STORE_NAME               2 (__qualname__)
+
+128          10 LOAD_CONST               1 (<code object m at 0x000001F5CFD66AB0, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 128>)
+             12 MAKE_FUNCTION            0
+             14 STORE_NAME               3 (m)
+             16 LOAD_CONST               2 (None)
+             18 RETURN_VALUE
+
+Disassembly of <code object m at 0x000001F5CFD66AB0, file "F:\Downloads\pythoncdc-main\test_repros\round4\c4_04_match_patterns.py", line 128>:
+128           0 RESUME                   0
+
+129           2 LOAD_FAST                1 (x)
+
+130           4 COPY                     1
+              6 MATCH_MAPPING
+              8 POP_JUMP_FORWARD_IF_FALSE    22 (to 54)
+             10 GET_LEN
+             12 LOAD_CONST               1 (1)
+             14 COMPARE_OP               5 (>=)
+             20 POP_JUMP_FORWARD_IF_FALSE    16 (to 54)
+             22 LOAD_CONST               3 (('a',))
+             24 MATCH_KEYS
+             26 COPY                     1
+             28 POP_JUMP_FORWARD_IF_NONE    10 (to 50)
+             30 UNPACK_SEQUENCE          1
+             34 STORE_FAST               2 (v)
+             36 POP_TOP
+             38 POP_TOP
+             40 LOAD_FAST                2 (v)
+             42 POP_JUMP_FORWARD_IF_FALSE     6 (to 56)
+             44 POP_TOP
+
+131          46 LOAD_FAST                2 (v)
+             48 RETURN_VALUE
+
+130     >>   50 POP_TOP
+             52 POP_TOP
+        >>   54 POP_TOP
+
+132     >>   56 MATCH_SEQUENCE
+             58 POP_JUMP_FORWARD_IF_FALSE     4 (to 68)
+             60 UNPACK_EX                0
+             62 STORE_FAST               3 (items)
+
+133          64 LOAD_FAST                3 (items)
+             66 RETURN_VALUE
+
+132     >>   68 POP_TOP
+
+134          70 NOP
+
+135          72 LOAD_CONST               0 (None)
+             74 RETURN_VALUE
+==================== <module>.CM.m ====================
+128           0 RESUME                   0
+
+129           2 LOAD_FAST                1 (x)
+
+130           4 COPY                     1
+              6 MATCH_MAPPING
+              8 POP_JUMP_FORWARD_IF_FALSE    22 (to 54)
+             10 GET_LEN
+             12 LOAD_CONST               1 (1)
+             14 COMPARE_OP               5 (>=)
+             20 POP_JUMP_FORWARD_IF_FALSE    16 (to 54)
+             22 LOAD_CONST               3 (('a',))
+             24 MATCH_KEYS
+             26 COPY                     1
+             28 POP_JUMP_FORWARD_IF_NONE    10 (to 50)
+             30 UNPACK_SEQUENCE          1
+             34 STORE_FAST               2 (v)
+             36 POP_TOP
+             38 POP_TOP
+             40 LOAD_FAST                2 (v)
+             42 POP_JUMP_FORWARD_IF_FALSE     6 (to 56)
+             44 POP_TOP
+
+131          46 LOAD_FAST                2 (v)
+             48 RETURN_VALUE
+
+130     >>   50 POP_TOP
+             52 POP_TOP
+        >>   54 POP_TOP
+
+132     >>   56 MATCH_SEQUENCE
+             58 POP_JUMP_FORWARD_IF_FALSE     4 (to 68)
+             60 UNPACK_EX                0
+             62 STORE_FAST               3 (items)
+
+133          64 LOAD_FAST                3 (items)
+             66 RETURN_VALUE
+
+132     >>   68 POP_TOP
+
+134          70 NOP
+
+135          72 LOAD_CONST               0 (None)
+             74 RETURN_VALUE

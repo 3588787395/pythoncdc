@@ -1,0 +1,359 @@
+﻿==================== <module> ====================
+  0           0 RESUME                   0
+
+  1           2 LOAD_CONST               0 (<code object e1 at 0x000001DAF34F21F0, file "test_repros/round4/_scratch_m4/comp2.py", line 1>)
+              4 MAKE_FUNCTION            0
+              6 STORE_NAME               0 (e1)
+
+  4           8 LOAD_CONST               1 (<code object e2 at 0x000001DAF34F35A0, file "test_repros/round4/_scratch_m4/comp2.py", line 4>)
+             10 MAKE_FUNCTION            0
+             12 STORE_NAME               1 (e2)
+
+  7          14 LOAD_CONST               2 (<code object e3 at 0x000001DAF369C650, file "test_repros/round4/_scratch_m4/comp2.py", line 7>)
+             16 MAKE_FUNCTION            0
+             18 STORE_NAME               2 (e3)
+
+ 10          20 LOAD_CONST               3 (<code object e4 at 0x000001DAF3685110, file "test_repros/round4/_scratch_m4/comp2.py", line 10>)
+             22 MAKE_FUNCTION            0
+             24 STORE_NAME               3 (e4)
+             26 LOAD_CONST               4 (None)
+             28 RETURN_VALUE
+
+Disassembly of <code object e1 at 0x000001DAF34F21F0, file "test_repros/round4/_scratch_m4/comp2.py", line 1>:
+              0 MAKE_CELL                0 (xs)
+
+  1           2 RESUME                   0
+
+  2           4 LOAD_CLOSURE             0 (xs)
+              6 BUILD_TUPLE              1
+              8 LOAD_CONST               1 (<code object <listcomp> at 0x000001DAF36296F0, file "test_repros/round4/_scratch_m4/comp2.py", line 2>)
+             10 MAKE_FUNCTION            8 (closure)
+             12 LOAD_GLOBAL              0 (x)
+             24 BUILD_TUPLE              1
+             26 GET_ITER
+             28 PRECALL                  0
+             32 CALL                     0
+             42 RETURN_VALUE
+
+Disassembly of <code object <listcomp> at 0x000001DAF36296F0, file "test_repros/round4/_scratch_m4/comp2.py", line 2>:
+              0 COPY_FREE_VARS           1
+
+  2           2 RESUME                   0
+              4 BUILD_LIST               0
+              6 LOAD_FAST                0 (.0)
+        >>    8 FOR_ITER                13 (to 36)
+             10 STORE_FAST               1 (a)
+             12 LOAD_FAST                2 (x)
+             14 STORE_FAST               3 (b)
+             16 LOAD_DEREF               4 (xs)
+             18 GET_ITER
+        >>   20 FOR_ITER                 6 (to 34)
+             22 STORE_FAST               2 (x)
+             24 LOAD_FAST                1 (a)
+             26 LOAD_FAST                3 (b)
+             28 BUILD_TUPLE              2
+             30 LIST_APPEND              3
+             32 JUMP_BACKWARD            7 (to 20)
+        >>   34 JUMP_BACKWARD           14 (to 8)
+        >>   36 RETURN_VALUE
+
+Disassembly of <code object e2 at 0x000001DAF34F35A0, file "test_repros/round4/_scratch_m4/comp2.py", line 4>:
+              0 MAKE_CELL                0 (xs)
+
+  4           2 RESUME                   0
+
+  5           4 LOAD_CLOSURE             0 (xs)
+              6 BUILD_TUPLE              1
+              8 LOAD_CONST               1 (<code object <listcomp> at 0x000001DAF3629C30, file "test_repros/round4/_scratch_m4/comp2.py", line 5>)
+             10 MAKE_FUNCTION            8 (closure)
+             12 LOAD_DEREF               0 (xs)
+             14 LOAD_CONST               2 (0)
+             16 BINARY_SUBSCR
+             26 BUILD_TUPLE              1
+             28 GET_ITER
+             30 PRECALL                  0
+             34 CALL                     0
+             44 RETURN_VALUE
+
+Disassembly of <code object <listcomp> at 0x000001DAF3629C30, file "test_repros/round4/_scratch_m4/comp2.py", line 5>:
+              0 COPY_FREE_VARS           1
+
+  5           2 RESUME                   0
+              4 BUILD_LIST               0
+              6 LOAD_FAST                0 (.0)
+        >>    8 FOR_ITER                12 (to 34)
+             10 STORE_FAST               1 (a)
+             12 LOAD_DEREF               3 (xs)
+             14 LOAD_CONST               0 (1)
+             16 BINARY_SUBSCR
+             26 STORE_FAST               2 (b)
+             28 LOAD_FAST                1 (a)
+             30 LIST_APPEND              2
+             32 JUMP_BACKWARD           13 (to 8)
+        >>   34 RETURN_VALUE
+
+Disassembly of <code object e3 at 0x000001DAF369C650, file "test_repros/round4/_scratch_m4/comp2.py", line 7>:
+  7           0 RESUME                   0
+
+  8           2 LOAD_CONST               1 (<code object <listcomp> at 0x000001DAF369C810, file "test_repros/round4/_scratch_m4/comp2.py", line 8>)
+              4 MAKE_FUNCTION            0
+              6 LOAD_CONST               2 ((1, 2))
+              8 GET_ITER
+             10 PRECALL                  0
+             14 CALL                     0
+             24 RETURN_VALUE
+
+Disassembly of <code object <listcomp> at 0x000001DAF369C810, file "test_repros/round4/_scratch_m4/comp2.py", line 8>:
+  8           0 RESUME                   0
+              2 BUILD_LIST               0
+              4 LOAD_FAST                0 (.0)
+        >>    6 FOR_ITER                11 (to 30)
+              8 STORE_FAST               1 (a)
+             10 LOAD_CONST               0 ((3, 4))
+             12 GET_ITER
+        >>   14 FOR_ITER                 6 (to 28)
+             16 STORE_FAST               2 (b)
+             18 LOAD_FAST                1 (a)
+             20 LOAD_FAST                2 (b)
+             22 BUILD_TUPLE              2
+             24 LIST_APPEND              3
+             26 JUMP_BACKWARD            7 (to 14)
+        >>   28 JUMP_BACKWARD           12 (to 6)
+        >>   30 RETURN_VALUE
+
+Disassembly of <code object e4 at 0x000001DAF3685110, file "test_repros/round4/_scratch_m4/comp2.py", line 10>:
+              0 MAKE_CELL                0 (xs)
+
+ 10           2 RESUME                   0
+
+ 11           4 LOAD_CLOSURE             0 (xs)
+              6 BUILD_TUPLE              1
+              8 LOAD_CONST               1 (<code object <listcomp> at 0x000001DAF369C730, file "test_repros/round4/_scratch_m4/comp2.py", line 11>)
+             10 MAKE_FUNCTION            8 (closure)
+             12 LOAD_GLOBAL              0 (x)
+             24 BUILD_TUPLE              1
+             26 GET_ITER
+             28 PRECALL                  0
+             32 CALL                     0
+             42 RETURN_VALUE
+
+Disassembly of <code object <listcomp> at 0x000001DAF369C730, file "test_repros/round4/_scratch_m4/comp2.py", line 11>:
+              0 COPY_FREE_VARS           1
+
+ 11           2 RESUME                   0
+              4 BUILD_LIST               0
+              6 LOAD_FAST                0 (.0)
+        >>    8 FOR_ITER                 9 (to 28)
+             10 STORE_FAST               1 (a)
+             12 LOAD_DEREF               3 (xs)
+             14 GET_ITER
+        >>   16 FOR_ITER                 4 (to 26)
+             18 STORE_FAST               2 (x)
+             20 LOAD_FAST                1 (a)
+             22 LIST_APPEND              3
+             24 JUMP_BACKWARD            5 (to 16)
+        >>   26 JUMP_BACKWARD           10 (to 8)
+        >>   28 RETURN_VALUE
+==================== <module>.e1 ====================
+              0 MAKE_CELL                0 (xs)
+
+  1           2 RESUME                   0
+
+  2           4 LOAD_CLOSURE             0 (xs)
+              6 BUILD_TUPLE              1
+              8 LOAD_CONST               1 (<code object <listcomp> at 0x000001DAF36296F0, file "test_repros/round4/_scratch_m4/comp2.py", line 2>)
+             10 MAKE_FUNCTION            8 (closure)
+             12 LOAD_GLOBAL              0 (x)
+             24 BUILD_TUPLE              1
+             26 GET_ITER
+             28 PRECALL                  0
+             32 CALL                     0
+             42 RETURN_VALUE
+
+Disassembly of <code object <listcomp> at 0x000001DAF36296F0, file "test_repros/round4/_scratch_m4/comp2.py", line 2>:
+              0 COPY_FREE_VARS           1
+
+  2           2 RESUME                   0
+              4 BUILD_LIST               0
+              6 LOAD_FAST                0 (.0)
+        >>    8 FOR_ITER                13 (to 36)
+             10 STORE_FAST               1 (a)
+             12 LOAD_FAST                2 (x)
+             14 STORE_FAST               3 (b)
+             16 LOAD_DEREF               4 (xs)
+             18 GET_ITER
+        >>   20 FOR_ITER                 6 (to 34)
+             22 STORE_FAST               2 (x)
+             24 LOAD_FAST                1 (a)
+             26 LOAD_FAST                3 (b)
+             28 BUILD_TUPLE              2
+             30 LIST_APPEND              3
+             32 JUMP_BACKWARD            7 (to 20)
+        >>   34 JUMP_BACKWARD           14 (to 8)
+        >>   36 RETURN_VALUE
+==================== <module>.e1.<listcomp> ====================
+              0 COPY_FREE_VARS           1
+
+  2           2 RESUME                   0
+              4 BUILD_LIST               0
+              6 LOAD_FAST                0 (.0)
+        >>    8 FOR_ITER                13 (to 36)
+             10 STORE_FAST               1 (a)
+             12 LOAD_FAST                2 (x)
+             14 STORE_FAST               3 (b)
+             16 LOAD_DEREF               4 (xs)
+             18 GET_ITER
+        >>   20 FOR_ITER                 6 (to 34)
+             22 STORE_FAST               2 (x)
+             24 LOAD_FAST                1 (a)
+             26 LOAD_FAST                3 (b)
+             28 BUILD_TUPLE              2
+             30 LIST_APPEND              3
+             32 JUMP_BACKWARD            7 (to 20)
+        >>   34 JUMP_BACKWARD           14 (to 8)
+        >>   36 RETURN_VALUE
+==================== <module>.e2 ====================
+              0 MAKE_CELL                0 (xs)
+
+  4           2 RESUME                   0
+
+  5           4 LOAD_CLOSURE             0 (xs)
+              6 BUILD_TUPLE              1
+              8 LOAD_CONST               1 (<code object <listcomp> at 0x000001DAF3629C30, file "test_repros/round4/_scratch_m4/comp2.py", line 5>)
+             10 MAKE_FUNCTION            8 (closure)
+             12 LOAD_DEREF               0 (xs)
+             14 LOAD_CONST               2 (0)
+             16 BINARY_SUBSCR
+             26 BUILD_TUPLE              1
+             28 GET_ITER
+             30 PRECALL                  0
+             34 CALL                     0
+             44 RETURN_VALUE
+
+Disassembly of <code object <listcomp> at 0x000001DAF3629C30, file "test_repros/round4/_scratch_m4/comp2.py", line 5>:
+              0 COPY_FREE_VARS           1
+
+  5           2 RESUME                   0
+              4 BUILD_LIST               0
+              6 LOAD_FAST                0 (.0)
+        >>    8 FOR_ITER                12 (to 34)
+             10 STORE_FAST               1 (a)
+             12 LOAD_DEREF               3 (xs)
+             14 LOAD_CONST               0 (1)
+             16 BINARY_SUBSCR
+             26 STORE_FAST               2 (b)
+             28 LOAD_FAST                1 (a)
+             30 LIST_APPEND              2
+             32 JUMP_BACKWARD           13 (to 8)
+        >>   34 RETURN_VALUE
+==================== <module>.e2.<listcomp> ====================
+              0 COPY_FREE_VARS           1
+
+  5           2 RESUME                   0
+              4 BUILD_LIST               0
+              6 LOAD_FAST                0 (.0)
+        >>    8 FOR_ITER                12 (to 34)
+             10 STORE_FAST               1 (a)
+             12 LOAD_DEREF               3 (xs)
+             14 LOAD_CONST               0 (1)
+             16 BINARY_SUBSCR
+             26 STORE_FAST               2 (b)
+             28 LOAD_FAST                1 (a)
+             30 LIST_APPEND              2
+             32 JUMP_BACKWARD           13 (to 8)
+        >>   34 RETURN_VALUE
+==================== <module>.e3 ====================
+  7           0 RESUME                   0
+
+  8           2 LOAD_CONST               1 (<code object <listcomp> at 0x000001DAF369C810, file "test_repros/round4/_scratch_m4/comp2.py", line 8>)
+              4 MAKE_FUNCTION            0
+              6 LOAD_CONST               2 ((1, 2))
+              8 GET_ITER
+             10 PRECALL                  0
+             14 CALL                     0
+             24 RETURN_VALUE
+
+Disassembly of <code object <listcomp> at 0x000001DAF369C810, file "test_repros/round4/_scratch_m4/comp2.py", line 8>:
+  8           0 RESUME                   0
+              2 BUILD_LIST               0
+              4 LOAD_FAST                0 (.0)
+        >>    6 FOR_ITER                11 (to 30)
+              8 STORE_FAST               1 (a)
+             10 LOAD_CONST               0 ((3, 4))
+             12 GET_ITER
+        >>   14 FOR_ITER                 6 (to 28)
+             16 STORE_FAST               2 (b)
+             18 LOAD_FAST                1 (a)
+             20 LOAD_FAST                2 (b)
+             22 BUILD_TUPLE              2
+             24 LIST_APPEND              3
+             26 JUMP_BACKWARD            7 (to 14)
+        >>   28 JUMP_BACKWARD           12 (to 6)
+        >>   30 RETURN_VALUE
+==================== <module>.e3.<listcomp> ====================
+  8           0 RESUME                   0
+              2 BUILD_LIST               0
+              4 LOAD_FAST                0 (.0)
+        >>    6 FOR_ITER                11 (to 30)
+              8 STORE_FAST               1 (a)
+             10 LOAD_CONST               0 ((3, 4))
+             12 GET_ITER
+        >>   14 FOR_ITER                 6 (to 28)
+             16 STORE_FAST               2 (b)
+             18 LOAD_FAST                1 (a)
+             20 LOAD_FAST                2 (b)
+             22 BUILD_TUPLE              2
+             24 LIST_APPEND              3
+             26 JUMP_BACKWARD            7 (to 14)
+        >>   28 JUMP_BACKWARD           12 (to 6)
+        >>   30 RETURN_VALUE
+==================== <module>.e4 ====================
+              0 MAKE_CELL                0 (xs)
+
+ 10           2 RESUME                   0
+
+ 11           4 LOAD_CLOSURE             0 (xs)
+              6 BUILD_TUPLE              1
+              8 LOAD_CONST               1 (<code object <listcomp> at 0x000001DAF369C730, file "test_repros/round4/_scratch_m4/comp2.py", line 11>)
+             10 MAKE_FUNCTION            8 (closure)
+             12 LOAD_GLOBAL              0 (x)
+             24 BUILD_TUPLE              1
+             26 GET_ITER
+             28 PRECALL                  0
+             32 CALL                     0
+             42 RETURN_VALUE
+
+Disassembly of <code object <listcomp> at 0x000001DAF369C730, file "test_repros/round4/_scratch_m4/comp2.py", line 11>:
+              0 COPY_FREE_VARS           1
+
+ 11           2 RESUME                   0
+              4 BUILD_LIST               0
+              6 LOAD_FAST                0 (.0)
+        >>    8 FOR_ITER                 9 (to 28)
+             10 STORE_FAST               1 (a)
+             12 LOAD_DEREF               3 (xs)
+             14 GET_ITER
+        >>   16 FOR_ITER                 4 (to 26)
+             18 STORE_FAST               2 (x)
+             20 LOAD_FAST                1 (a)
+             22 LIST_APPEND              3
+             24 JUMP_BACKWARD            5 (to 16)
+        >>   26 JUMP_BACKWARD           10 (to 8)
+        >>   28 RETURN_VALUE
+==================== <module>.e4.<listcomp> ====================
+              0 COPY_FREE_VARS           1
+
+ 11           2 RESUME                   0
+              4 BUILD_LIST               0
+              6 LOAD_FAST                0 (.0)
+        >>    8 FOR_ITER                 9 (to 28)
+             10 STORE_FAST               1 (a)
+             12 LOAD_DEREF               3 (xs)
+             14 GET_ITER
+        >>   16 FOR_ITER                 4 (to 26)
+             18 STORE_FAST               2 (x)
+             20 LOAD_FAST                1 (a)
+             22 LIST_APPEND              3
+             24 JUMP_BACKWARD            5 (to 16)
+        >>   26 JUMP_BACKWARD           10 (to 8)
+        >>   28 RETURN_VALUE

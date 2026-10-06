@@ -90,7 +90,7 @@ def e07_capture(x, y):
                 return a
             case [a, b]:
                 return b
-            case a if a:
+            case a if a is not None:
                 return a
             case _:
                 return 0
@@ -123,7 +123,7 @@ def e09_nested_match(x, y):
 class CM:
     def m(self, x):
         match x:
-            case {'a': v}:
+            case {'a': v} if v:
                 return v
             case [*items]:
                 return items

@@ -13,8 +13,6 @@ def n_except_star_two(fn):
         fn()
     except* ValueError as eg:
         handle(eg)
-    else:
-        if TypeError is not None:
-            pass
+    except* TypeError as eg:
         handle(eg)
     return None

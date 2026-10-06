@@ -1,8 +1,10 @@
 # Source Generated with Decompyle++ (Python version)
 # File: c4_15_star_import.pyc (Python 3.11)
 
-import os.path
-import collections
+from os.path import *
+from collections import *
+def e01_use():
+    return (join, path)
 def e02_deep(x):
     r = 0
     for i in range(2):

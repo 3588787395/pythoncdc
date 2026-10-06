@@ -67,7 +67,9 @@ class CL:
             y = xs.pop()
             if y > 3:
                 break
-        return None
+        else:
+            return None
+        return y
 def e08_closure(xs):
     def inner():
         for x in xs:
