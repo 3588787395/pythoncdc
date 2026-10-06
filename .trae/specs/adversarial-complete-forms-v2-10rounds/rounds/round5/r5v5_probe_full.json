@@ -1,0 +1,183 @@
+[
+ {
+  "pyc": "test_repros/round5/n5v5_01_module_class_shallow.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/n5v5_02_callsite_shallow.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/n5v5_03_fstring_deco_shallow.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/n5v5_04_control_shallow.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_01_module_root.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>: Failure: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_02_class_body.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 9,
+  "units_total": 9,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_03_annassign.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 11,
+  "failures": [
+   "***<module>.ann_root: Failure detected at line number 11 and instruction offset 18: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_04_elif_cross.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_05_augassign_cross.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 10,
+  "units_total": 10,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_06_keywordargs_callsite.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_07_starargs_callsite.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 4,
+  "units_total": 13,
+  "failures": [
+   "***<module>.st_nontail: Failure: Different bytecode",
+   "***<module>.st_mixed: Failure: Different bytecode",
+   "***<module>.st_multistar: Failure: Different bytecode",
+   "***<module>.st_deep: Failure: Different bytecode",
+   "***<module>.CSt.m: Failure: Different bytecode",
+   "***<module>.st_close.inner: Failure: Different bytecode",
+   "***<module>.st_match: Failure: Different bytecode",
+   "***<module>.st_comp: Failure: Different bytecode",
+   "***<module>.st_comp.<listcomp>: Failure: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_08_slice_callsite.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 11,
+  "failures": [
+   "***<module>.sl_deep: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_09_walrus_callsite.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 12,
+  "failures": [
+   "***<module>.w_root: Failure: Different control flow",
+   "***<module>.w_call: Failure: Different bytecode",
+   "***<module>.w_nested_call: Failure: Different bytecode",
+   "***<module>.w_deep: Failure: Different bytecode",
+   "***<module>.CW.m: Failure: Different control flow",
+   "***<module>.w_with: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_10_fstring_cross.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_11_global_nonlocal_cross.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 15,
+  "units_total": 15,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_12_decorator_cross.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 21,
+  "units_total": 22,
+  "failures": [
+   "***<module>.d_deep.Local: Failure: Different bytecode"
+  ]
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_13_for_else_cross.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_14_except_star_deep.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 9,
+  "units_total": 10,
+  "failures": [
+   "***<module>.es_with: Failure: Different control flow"
+  ]
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_15_lambda_combo.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 26,
+  "units_total": 27,
+  "failures": [
+   "***<module>.lam_star.<lambda>: Failure: Different bytecode"
+  ]
+ }
+]

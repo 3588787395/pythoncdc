@@ -1,0 +1,306 @@
+{
+ "elapsed_sec": 3.7,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 8,
+  "success": 11
+ },
+ "files_total": 19,
+ "generated_at": "2026-10-06T13:11:49",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "test_repros/round5/r5v5_01_module_root.pyc",
+   "test_repros/round5/r5v5_03_annassign.pyc",
+   "test_repros/round5/r5v5_07_starargs_callsite.pyc",
+   "test_repros/round5/r5v5_08_slice_callsite.pyc",
+   "test_repros/round5/r5v5_09_walrus_callsite.pyc",
+   "test_repros/round5/r5v5_12_decorator_cross.pyc",
+   "test_repros/round5/r5v5_14_except_star_deep.pyc",
+   "test_repros/round5/r5v5_15_lambda_combo.pyc"
+  ],
+  "success": [
+   "test_repros/round5/n5v5_01_module_class_shallow.pyc",
+   "test_repros/round5/n5v5_02_callsite_shallow.pyc",
+   "test_repros/round5/n5v5_03_fstring_deco_shallow.pyc",
+   "test_repros/round5/n5v5_04_control_shallow.pyc",
+   "test_repros/round5/r5v5_02_class_body.pyc",
+   "test_repros/round5/r5v5_04_elif_cross.pyc",
+   "test_repros/round5/r5v5_05_augassign_cross.pyc",
+   "test_repros/round5/r5v5_06_keywordargs_callsite.pyc",
+   "test_repros/round5/r5v5_10_fstring_cross.pyc",
+   "test_repros/round5/r5v5_11_global_nonlocal_cross.pyc",
+   "test_repros/round5/r5v5_13_for_else_cross.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round5/n5v5_01_module_class_shallow.pyc",
+   "pyc_sha": "203a92b3c206",
+   "source": "test_repros/round5/n5v5_01_module_class_shallowOK.py",
+   "source_sha": "91a23e7edb27",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round5/n5v5_02_callsite_shallow.pyc",
+   "pyc_sha": "7db73bdfd132",
+   "source": "test_repros/round5/n5v5_02_callsite_shallowOK.py",
+   "source_sha": "8b495481cca3",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round5/n5v5_03_fstring_deco_shallow.pyc",
+   "pyc_sha": "f588a9bc220d",
+   "source": "test_repros/round5/n5v5_03_fstring_deco_shallowOK.py",
+   "source_sha": "92e7dc6fac9d",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round5/n5v5_04_control_shallow.pyc",
+   "pyc_sha": "8b58cabedada",
+   "source": "test_repros/round5/n5v5_04_control_shallowOK.py",
+   "source_sha": "b1e1402f43ed",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>: Failure: Different bytecode"
+   ],
+   "pyc": "test_repros/round5/r5v5_01_module_root.pyc",
+   "pyc_sha": "9b6c01d1760b",
+   "source": "test_repros/round5/r5v5_01_module_rootOK.py",
+   "source_sha": "f74523c06439",
+   "status": "failure",
+   "success_rate": 0.6666666666666666,
+   "units_success": 2,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round5/r5v5_02_class_body.pyc",
+   "pyc_sha": "7e22560fe43a",
+   "source": "test_repros/round5/r5v5_02_class_bodyOK.py",
+   "source_sha": "78ec83aee271",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 9,
+   "units_total": 9
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.ann_root: Failure detected at line number 11 and instruction offset 18: Different bytecode"
+   ],
+   "pyc": "test_repros/round5/r5v5_03_annassign.pyc",
+   "pyc_sha": "572b718420a9",
+   "source": "test_repros/round5/r5v5_03_annassignOK.py",
+   "source_sha": "3342590cd94e",
+   "status": "failure",
+   "success_rate": 0.9090909090909091,
+   "units_success": 10,
+   "units_total": 11
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round5/r5v5_04_elif_cross.pyc",
+   "pyc_sha": "0893ab535567",
+   "source": "test_repros/round5/r5v5_04_elif_crossOK.py",
+   "source_sha": "e478f48e0c84",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round5/r5v5_05_augassign_cross.pyc",
+   "pyc_sha": "49754cb17487",
+   "source": "test_repros/round5/r5v5_05_augassign_crossOK.py",
+   "source_sha": "08ce2dc0a08e",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 10,
+   "units_total": 10
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round5/r5v5_06_keywordargs_callsite.pyc",
+   "pyc_sha": "a0146a60a383",
+   "source": "test_repros/round5/r5v5_06_keywordargs_callsiteOK.py",
+   "source_sha": "c095c1f78a23",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 14,
+   "units_total": 14
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.st_nontail: Failure: Different bytecode",
+    "***<module>.st_mixed: Failure: Different bytecode",
+    "***<module>.st_multistar: Failure: Different bytecode",
+    "***<module>.st_deep: Failure: Different bytecode",
+    "***<module>.CSt.m: Failure: Different bytecode",
+    "***<module>.st_close.inner: Failure: Different bytecode",
+    "***<module>.st_match: Failure: Different bytecode",
+    "***<module>.st_comp: Failure: Different bytecode",
+    "***<module>.st_comp.<listcomp>: Failure: Different bytecode"
+   ],
+   "pyc": "test_repros/round5/r5v5_07_starargs_callsite.pyc",
+   "pyc_sha": "1f17de1cbc15",
+   "source": "test_repros/round5/r5v5_07_starargs_callsiteOK.py",
+   "source_sha": "f4fd9a442600",
+   "status": "failure",
+   "success_rate": 0.3076923076923077,
+   "units_success": 4,
+   "units_total": 13
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.sl_deep: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round5/r5v5_08_slice_callsite.pyc",
+   "pyc_sha": "80c94e99ce0a",
+   "source": "test_repros/round5/r5v5_08_slice_callsiteOK.py",
+   "source_sha": "706324fdeba3",
+   "status": "failure",
+   "success_rate": 0.9090909090909091,
+   "units_success": 10,
+   "units_total": 11
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.w_root: Failure: Different control flow",
+    "***<module>.w_call: Failure: Different bytecode",
+    "***<module>.w_nested_call: Failure: Different bytecode",
+    "***<module>.w_deep: Failure: Different bytecode",
+    "***<module>.CW.m: Failure: Different control flow",
+    "***<module>.w_with: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round5/r5v5_09_walrus_callsite.pyc",
+   "pyc_sha": "c43d60dcf244",
+   "source": "test_repros/round5/r5v5_09_walrus_callsiteOK.py",
+   "source_sha": "f18cc24f311a",
+   "status": "failure",
+   "success_rate": 0.5,
+   "units_success": 6,
+   "units_total": 12
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round5/r5v5_10_fstring_cross.pyc",
+   "pyc_sha": "0a0bf7e370b9",
+   "source": "test_repros/round5/r5v5_10_fstring_crossOK.py",
+   "source_sha": "bdd625b42d42",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 13,
+   "units_total": 13
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round5/r5v5_11_global_nonlocal_cross.pyc",
+   "pyc_sha": "f8c75729debe",
+   "source": "test_repros/round5/r5v5_11_global_nonlocal_crossOK.py",
+   "source_sha": "d090e755f8a5",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 15,
+   "units_total": 15
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.d_deep.Local: Failure: Different bytecode"
+   ],
+   "pyc": "test_repros/round5/r5v5_12_decorator_cross.pyc",
+   "pyc_sha": "cc9c00cc639a",
+   "source": "test_repros/round5/r5v5_12_decorator_crossOK.py",
+   "source_sha": "89322a23bb07",
+   "status": "failure",
+   "success_rate": 0.9545454545454546,
+   "units_success": 21,
+   "units_total": 22
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round5/r5v5_13_for_else_cross.pyc",
+   "pyc_sha": "a20496026edb",
+   "source": "test_repros/round5/r5v5_13_for_else_crossOK.py",
+   "source_sha": "5d657ea57d03",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 11,
+   "units_total": 11
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.es_with: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round5/r5v5_14_except_star_deep.pyc",
+   "pyc_sha": "ad36691fd817",
+   "source": "test_repros/round5/r5v5_14_except_star_deepOK.py",
+   "source_sha": "c617f89d362f",
+   "status": "failure",
+   "success_rate": 0.9,
+   "units_success": 9,
+   "units_total": 10
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.lam_star.<lambda>: Failure: Different bytecode"
+   ],
+   "pyc": "test_repros/round5/r5v5_15_lambda_combo.pyc",
+   "pyc_sha": "69c0b632ea1a",
+   "source": "test_repros/round5/r5v5_15_lambda_comboOK.py",
+   "source_sha": "ba596cd575a4",
+   "status": "failure",
+   "success_rate": 0.9629629629629629,
+   "units_success": 26,
+   "units_total": 27
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.8990384615384616,
+ "units_success": 187,
+ "units_total": 208
+}

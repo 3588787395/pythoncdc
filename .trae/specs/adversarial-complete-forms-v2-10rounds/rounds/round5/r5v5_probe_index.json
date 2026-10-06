@@ -1,0 +1,59 @@
+[
+ {
+  "path": "test_repros/round5/n5v5_01_module_class_shallow.pyc"
+ },
+ {
+  "path": "test_repros/round5/n5v5_02_callsite_shallow.pyc"
+ },
+ {
+  "path": "test_repros/round5/n5v5_03_fstring_deco_shallow.pyc"
+ },
+ {
+  "path": "test_repros/round5/n5v5_04_control_shallow.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_01_module_root.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_02_class_body.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_03_annassign.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_04_elif_cross.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_05_augassign_cross.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_06_keywordargs_callsite.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_07_starargs_callsite.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_08_slice_callsite.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_09_walrus_callsite.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_10_fstring_cross.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_11_global_nonlocal_cross.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_12_decorator_cross.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_13_for_else_cross.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_14_except_star_deep.pyc"
+ },
+ {
+  "path": "test_repros/round5/r5v5_15_lambda_combo.pyc"
+ }
+]
