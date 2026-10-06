@@ -7,7 +7,7 @@ class C:
             try:
                 is_end, daily = q.get(timeout=1)
             except ValueError:
-                pass
+                continue
             w(is_end, daily)
             if is_end:
                 break

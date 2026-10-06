@@ -23291,40 +23291,111 @@ AST 映射规则:
                 return False
         return True
 
-    def _handler_backedge_is_explicit_continue(self, hb) -> bool:
-        """[R67-diag4-A try-handler-backedge-explicit-continue] except 处理器纯回边块判定。
+    def _except_tail_backedge_is_loop_continue(self, block, loop,
+                                               region=None) -> bool:
+        """[R2-B106 修复·处理器尾回边按循环入口归属] except 处理器尾「异常帧簿记 +
+        无条件回边」块的 continue 归属判据（纯白名单谓词，B106 本体）。
 
-        识别条件：正在生成的 TryExceptRegion 的某个 handler body 块 hb 仅由异常清理
-        指令（RESUME/NOP/CACHE/PUSH_NULL/POP_TOP/POP_EXCEPT/COPY）加一条无条件
-        JUMP_BACKWARD 组成，该回边的目标块恰为当前循环的 header_block（CPython 的
-        continue 汇合点），且 hb 本身就是该循环登记的唯一回边块
-        （loop.back_edge_block is hb）——循环体内不存在另一个独立收尾回边块。
+        ①算法依据：No More Gotos 区域归约 + rules.md §1.2 原则4（入口引用语义：
+          Continue 节点必须引用回边 entry）、原则2（每块唯一归属）、§1.5 C1
+          （判据只消费 L(A)=A.blocks ∪ A.out_edges ∪ A.exception_table）、
+          C3（continue 目标跨区域时必须显式认领）。旧判据把「块末指令即回边」与
+          「回边前一条是 POP_EXCEPT」混为一谈：它在块内做 opcode 白名单穷举时把
+          异常帧簿记指令当作用户语句，于是处理器尾块不被认作 continue 出口
+          （B106：POP_EXCEPT + JUMP_BACKWARD→循环头 退化为 JUMP_FORWARD 落入 try
+          之后的语句）。本谓词把三项白名单输入分开判定，不再隐含要求回边必须是块
+          内最后一条之外的某条指令所属族的穷举结果。
+        ②归约顺序：自底向上——本判据在处理器臂块被归约的那一刻定类一次（handler
+          body 归约与循环体内 if 的后继分类共用同一结论），发射阶段不再二次判断，
+          符合 §1.3 单向数据流（识别即正确，无回溯修正）。
+        ③唯一归属判定：三条白名单输入同时成立才认作 continue 出口——
+          (a) 块终止 opcode ∈ BACKWARD_JUMP_OPS 且 ∉ CONDITIONAL_JUMP_OPS，
+              即无条件回跳（两个既有集合，不新增 opcode 字面量）；
+          (b) 回跳目标块是本循环自身的入口：LoopRegion.is_block_entry(tgt)
+              （header_block/entry/condition_block 三者之一，纯区域成员关系），
+              且块的普通后继集（successors 去掉 exception_successors）恰等于
+              {tgt}（后继关系唯一，排除落穿与多目标）；
+          (c) 终止指令之前的全部指令 ∈ _W13_FRAME_OPS ∪ _W13_NOISE_OPS ∪
+              NOISE_OPS（帧簿记与框架噪声，无用户语句），其中至少一条
+              ∈ _W13_NORMAL_BAN_OPS（该集合的既有定义即「无在途异常的正常路径绝不
+              出现的异常帧标记」），并且块本身属于 region.except_handlers 登记的
+              某个 except 臂（异常表归属，即 C1 的 exception_table 一侧）。
+          任一不成立即返回 False，块交给既有顺序/后继归约，不做默认认领。
+        ④嵌套处理：loop 由调用方给出（当前归约中的 self._current_loop，或区域父链
+          上登记的 LoopRegion），判据只比较回跳目标与该 loop 的入口，不窥视子区域
+          内部块（C2 黑箱组合）；处理器嵌在更深的 with/try/if 区域内时结论不变；
+          region 缺省时按 get_region_for_block 取块自身所属区域。
+        ⑤入口引用语义：命中即表示该块是「指向循环入口的 Continue 引用」，处理器侧
+          据此追加显式 {'type': 'Continue'} 兄弟节点（原则4），回边由循环结构在
+          重编译时自然再生；块内除帧簿记外无语句，故不发射其它节点，handler 不再
+          落 pass 兜底。
+        ⑥反编译流程：region_analyzer 定块角色/异常表 → 本谓词定「处理器尾跨区
+          continue」→ region_ast_generator 的 handler body（模式 TE）与循环体内
+          if 后继分类（_is_continue_like）消费 → CFGASTConverter/code_generator
+          发射；不参与发射后的文本改写。
+        """
+        if block is None or loop is None:
+            return False
+        _te_last = block.get_last_instruction()
+        if _te_last is None or _te_last.opname not in BACKWARD_JUMP_OPS:
+            return False
+        if _te_last.opname in CONDITIONAL_JUMP_OPS:
+            return False
+        if _te_last.argval is None:
+            return False
+        _te_tgt = self.cfg.get_block_by_offset(_te_last.argval)
+        if _te_tgt is None or not loop.is_block_entry(_te_tgt):
+            return False
+        _te_succ = (set(getattr(block, 'successors', None) or ())
+                    - set(getattr(block, 'exception_successors', None) or ()))
+        if _te_succ != {_te_tgt}:
+            return False
+        _te_body = list(block.instructions[:-1])
+        if not _te_body:
+            return False
+        _te_frame = self._W13_FRAME_OPS | self._W13_NOISE_OPS | NOISE_OPS
+        if any(_te_i.opname not in _te_frame for _te_i in _te_body):
+            return False
+        if not any(_te_i.opname in self._W13_NORMAL_BAN_OPS for _te_i in _te_body):
+            return False
+        if region is None:
+            region = self.region_analyzer.get_region_for_block(block)
+        _te_arms = set()
+        for _te_h in (getattr(region, 'except_handlers', None) or []):
+            _te_arms.update(_te_h[2])
+        if block not in _te_arms:
+            return False
+        return True
+
+    def _handler_backedge_is_explicit_continue(self, hb, region=None) -> bool:
+        """[R2-B106 修复·处理器尾回边按循环入口归属] except 处理器回边块 = 源码显式
+        continue 的判定（模式 TE 的 handler 出口认领）。
+
+        识别条件：白名单三条（同 _except_tail_backedge_is_loop_continue 的 ①-③，
+        此处不复述）之后，再排除隐式迭代——
+        _handler_backedge_is_natural_loop_iteration 判定「try-except 即循环体末条
+        语句」（hb 之后循环体内无待执行的普通语句块）时，该回边是循环的自然迭代，
+        重编译时由循环结构再生，不补发 Continue。
         CPython 对 `while True: try: return ... except E: pass` 编译出的是 handler 尾
         POP_EXCEPT + JUMP_FORWARD 指向循环尾的独立回边块（探针 c1_pass_true/
         p_true2），只有源码写显式 `continue` 才产生 POP_EXCEPT + JUMP_BACKWARD 直达
-        header（探针 s1/c_true2/c_cond）；for 形两形态字节等价（探针 c4_cont_for），
+        循环入口（探针 s1/c_true2/c_cond）；for 形两形态字节等价（探针 c4_cont_for），
         故本判据在 for 上不产生差异。
-        归约方式：handler body 尚无其它语句时，把该纯回边块归约为一条显式控制流
-        语句，而不是交给循环结构隐式再生回边——隐式再生会额外物化出 JUMP_FORWARD
-        加循环尾 JUMP_BACKWARD 两条指令（realtime_event_source::get_one_event
-        22->23、synth s1 18->19 的严格尺 seq_len 缺陷即此形状）。
+        归约方式：handler body 尚无其它语句时，把该回边块归约为一条显式控制流语句，
+        而不是交给循环结构隐式再生回边——隐式再生会额外物化出 JUMP_FORWARD 加循环尾
+        JUMP_BACKWARD 两条指令（realtime_event_source::get_one_event 22->23、
+        synth s1 18->19 的严格尺 seq_len 缺陷即此形状）。
         AST 映射：ExceptHandler.body 追加 {'type': 'Continue'}，渲染为 `continue`；
-        块内无用户语句故不发射其它节点，handler 也不再落 `pass` 兜底。
+        块内无用户语句故不发射其它节点，handler 也不再落 pass 兜底。
         """
         if not self._current_loop:
             return False
-        _hc_hdr = getattr(self._current_loop, 'header_block', None)
-        if _hc_hdr is None or getattr(self._current_loop, 'back_edge_block', None) is not hb:
+        if region is None:
+            region = self.region_analyzer.get_region_for_block(hb)
+        if not self._except_tail_backedge_is_loop_continue(hb, self._current_loop,
+                                                          region):
             return False
-        _hc_last = hb.get_last_instruction()
-        if (_hc_last is None
-                or _hc_last.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
-                or _hc_last.argval is None):
-            return False
-        if self.cfg.get_block_by_offset(_hc_last.argval) is not _hc_hdr:
-            return False
-        _hc_noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP', 'POP_EXCEPT', 'COPY')
-        if any(i.opname not in _hc_noise for i in hb.instructions[:-1]):
+        if self._handler_backedge_is_natural_loop_iteration(hb, region):
             return False
         return True
 
@@ -26503,7 +26574,12 @@ AST 映射规则:
                        and i.opname not in CONDITIONAL_JUMP_OPS
                        and i.opname not in SHORT_CIRCUIT_JUMP_OPS]
                 if _lnj:
-                    return False
+                    # [R2-B106 修复·处理器尾回边按循环入口归属] 上述白名单穷举把异常帧
+                    # 簿记指令当作用户语句，故「POP_EXCEPT + JUMP_BACKWARD」收尾的处理器尾
+                    # 块此前一律否为 continue-like（B106）。改由同一白名单谓词认领：块末为
+                    # 无条件回跳、回跳目标是本循环自身的入口、余下指令全为异常帧簿记且块属
+                    # 异常表登记的 except 臂时，仍是指向循环入口的 Continue 引用。
+                    return self._except_tail_backedge_is_loop_continue(b, loop)
             role = self.region_analyzer.get_block_role(b)
             if role in (BlockRole.PURE_CONTINUE, BlockRole.LOOP_BACK_EDGE):
                 return True
@@ -29932,8 +30008,11 @@ AST 映射规则:
                     # 会将 POP_EXCEPT+JUMP_BACKWARD 过滤为空，导致 handler body
                     # 被填充为 pass（如 te001 的 `except ValueError: continue` → `pass`）。
                     _hb_role = self.region_analyzer.get_block_role(hb)
+                    # [R2-B106 修复·处理器尾回边按循环入口归属] 处理器尾回边块的身份判定
+                    # 交给白名单谓词 _except_tail_backedge_is_loop_continue（回跳目标 = 本循环
+                    # 入口 + 帧簿记 + except 臂成员关系），并在本区域上下文中排除隐式迭代。
                     if (_hb_role == BlockRole.LOOP_BACK_EDGE and not handler_body
-                            and self._handler_backedge_is_explicit_continue(hb)):
+                            and self._handler_backedge_is_explicit_continue(hb, region)):
                         # [R67-diag4-A] handler 以纯回边块收尾 = 源码显式 continue，
                         # 不是循环的隐式迭代（判据见上面同名方法）。
                         handler_body.append({'type': 'Continue'})

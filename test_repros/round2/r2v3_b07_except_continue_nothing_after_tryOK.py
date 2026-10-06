@@ -6,5 +6,5 @@ def f(q, stop):
         try:
             is_end, daily = q.get(timeout=1)
         except ValueError:
-            pass
+            continue
         w(daily)

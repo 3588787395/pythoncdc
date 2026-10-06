@@ -166,5 +166,11 @@
  },
  {
   "path": "test_repros/round2/r2v3_c13_and_not_operand_control.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b20_except_continue_after_pop_except.pyc"
+ },
+ {
+  "path": "test_repros/round2/r2v3_b21_except_pass_iteration_backedge.pyc"
  }
 ]
