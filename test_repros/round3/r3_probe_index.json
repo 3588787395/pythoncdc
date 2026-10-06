@@ -160,5 +160,11 @@
  },
  {
   "path": "test_repros/round3/r3_a17_negated_if_empty_then_no_fold.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a18_finally_copy_release_dup_in_handler_arm.pyc"
+ },
+ {
+  "path": "test_repros/round3/r3_a19_handler_own_release_not_folded.pyc"
  }
 ]

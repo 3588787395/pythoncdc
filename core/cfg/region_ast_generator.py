@@ -30294,6 +30294,21 @@ AST 映射规则:
                     # 检测 return 值。POP_EXCEPT 被过滤后只剩 LOAD_CONST(None)+
                     # RETURN_VALUE → 应生成 `return` 而非 `return None`（在 loop
                     # 上下文中 `return None` 可能被误转为 Break）。
+                    # [R3-B115 修复·handler 臂终态块 finally 副本前缀唯一归属]
+                    # 臂块命中本区域 finally_copy_blocks 台账、以 RETURN_* 终结、且剥帧后
+                    # 用户指令序列以本区域 finally 体序列为严格前缀 ⇒ 该清理段已由
+                    # finalbody 归属方发射一次（原则 2 每块唯一归属），臂侧交回块级
+                    # 归约只重建自己的终态 Return；判据不命中或块级归约结果非纯 Return
+                    # 时，既有 _generate_handler_body_statements 路径逐位不变。
+                    if self._handler_arm_block_is_finally_copy(hb, region):
+                        _b115_block_stmts = self._generate_block_statements(hb)
+                        if (_b115_block_stmts
+                                and all(isinstance(_b115_s, dict)
+                                        and _b115_s.get('type') == 'Return'
+                                        for _b115_s in _b115_block_stmts)):
+                            handler_body.extend(_b115_block_stmts)
+                            self.generated_blocks.add(hb)
+                            continue
                     if _hb_role == BlockRole.RETURN:
                         hbs = self._generate_handler_body_statements(hb)
                         if hbs:
@@ -31563,6 +31578,83 @@ AST 映射规则:
                 # Allow return value expression instructions between cleanup
                 # and RETURN_VALUE (e.g. LOAD_CONST False in `return False`)
                 continue
+        return False
+
+    def _handler_arm_block_is_finally_copy(self, block: BasicBlock,
+                                           region: TryExceptRegion) -> bool:
+        """_handler_arm_block_is_finally_copy — handler 臂终态块的 finally 正常副本唯一归属判定。
+
+        ① 算法依据（区域归约算法原则 2「每块唯一归属」+ CPython 3.11 finally 内联）：
+           3.11 把 finally 体指令序列**就地内联**到每一个退出点（try 体内 return、
+           try 体自然完成、各 except 臂 return、异常展开臂），另在
+           ``region.finally_blocks`` 保留一份带 PUSH_EXC_INFO 头 / RERAISE 尾的
+           异常路径副本；分析器已把这些就地内联点登记进
+           ``region.finally_copy_blocks``（本区域自有的归属台账）。handler 臂块若同时
+           满足 (a) 是该台账成员、(b) 块末 opcode 为 RETURN_VALUE/RETURN_CONST、
+           (c) 剥帧噪声后的用户 opcode 序列以本区域异常副本体序列为**严格前缀**，
+           则该前缀段的语句已由 finalbody 归属方发射过一次，臂侧只剩自己的
+           终态 Return——命中后交回 ``_generate_block_statements`` 的 inlined-cleanup
+           归约（既有唯一实现），本方法不重复构造语句。
+        ② 归约顺序：自底向上——先由臂块的终止 opcode 定形（RETURN_*），再与本区域
+           自有的 finally 副本体序列逐项比对；本方法只作归属裁决，语句重建仍由
+           调用方的块级归约完成（不做发射后回溯）。
+        ③ 唯一归属判定：判据三元组 = （本区域 finally_copy_blocks 台账成员，
+           块末 opcode ∈ RETURN_*，剥帧后用户指令序列严格包含本区域 finally_blocks
+           体序列作为前缀）；全部只读**本区域自身**字段与**本块自身**指令，
+           不跨层比较其它区域、不读绝对偏移/函数名/文件名、无深度或数量阈值。
+        ④ 嵌套处理：仅用 region 的直属字段（finally_blocks / finally_copy_blocks），
+           嵌套 try 的副本登记在各自区域的台账上，外层区域无权也无法认领内层副本；
+           finally 体含结构化子区域（if/with/loop）时异常副本体不是臂块的线性前缀
+           ，前缀比对自然不命中，维持既有发射。
+        ⑤ 入口引用语义：命中块经调用方的 generated_blocks 登记，臂语句归属本 region
+           的 ExceptHandler；finally 语句源（异常副本代表）经入口引用发射恰好一份
+           ，二者不重叠——与 _generate_block_statements 中 ``finally_copy_blocks`` +
+           RETURN_* 的 try 体分支同一归属口径，不是新建第二套发射面。
+        ⑥ 反编译流程：_generate_try 的 handler 臂块遍历在 RETURN 分支**之前**询问
+           本方法；True 时改走块级归约（产出纯 Return 才接管），False 时既有
+           _generate_handler_body_statements 路径逐位不变。
+           C1 局部消费：只消费本块与本区域自身台账；C2 单向数据流：归属一次裁决
+           定形，无文本级/发射后修正；C3 保守拒绝：三元素任一不满足即 False，
+           输出与编辑前逐位一致（对照标本即此路径）。
+        """
+        if not isinstance(region, TryExceptRegion):
+            return False
+        if not (getattr(region, 'has_finally', False)
+                and getattr(region, 'finally_blocks', None)):
+            return False
+        _b115_off = getattr(block, 'start_offset', None)
+        _b115_copy_ledger = getattr(region, 'finally_copy_blocks', None) or {}
+        if _b115_off is None or _b115_off not in _b115_copy_ledger:
+            return False
+        _b115_last = block.get_last_instruction()
+        if _b115_last is None or _b115_last.opname not in ('RETURN_VALUE', 'RETURN_CONST'):
+            return False
+        _b115_frame_noise = frozenset((
+            'RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG', 'POP_TOP',
+            'JUMP_BACKWARD', 'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'COPY', 'SWAP',
+            'POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE', 'PRECALL',
+            'RETURN_VALUE', 'RETURN_CONST'))
+
+        def _b115_user_opcode_seq(_blk):
+            _b115_seq = []
+            for _b115_i in _blk.instructions:
+                if _b115_i.opname in _b115_frame_noise:
+                    continue
+                if _b115_i.opname == 'LOAD_CONST' and _b115_i.argval is None:
+                    continue
+                _b115_seq.append(_b115_i.opname)
+            return _b115_seq
+
+        _b115_arm_seq = _b115_user_opcode_seq(block)
+        if not _b115_arm_seq:
+            return False
+        for _b115_fb in (getattr(region, 'finally_blocks', None) or []):
+            _b115_body_seq = _b115_user_opcode_seq(_b115_fb)
+            if not _b115_body_seq:
+                continue
+            if (len(_b115_arm_seq) > len(_b115_body_seq)
+                    and _b115_arm_seq[:len(_b115_body_seq)] == _b115_body_seq):
+                return True
         return False
 
     def _generate_handler_body_statements(self, block: BasicBlock) -> List[Dict[str, Any]]:
