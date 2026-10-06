@@ -1,0 +1,270 @@
+{
+ "OLD": "f:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round4/r4v4_probe_full.json",
+ "NEW": "f:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round4/r4v4r_probe_full.json",
+ "newfail_count": 0,
+ "newfail_files": [],
+ "rows": [
+  {
+   "pyc": "test_repros/round4/c4_01_elif_chain.pyc",
+   "old_status": "success",
+   "new_status": "success",
+   "old_units": "14/14",
+   "new_units": "14/14",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_02_loop_else.pyc",
+   "old_status": "failure",
+   "new_status": "success",
+   "old_units": "13/14",
+   "new_units": "14/14",
+   "new_failures": [],
+   "improved_missing": [
+    "***<module>.CL.m: Failure: Different control flow"
+   ],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_03_except_star.pyc",
+   "old_status": "failure",
+   "new_status": "failure",
+   "old_units": "11/13",
+   "new_units": "12/13",
+   "new_failures": [],
+   "improved_missing": [
+    "***<module>.e01_root: Failure: Different control flow"
+   ],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_04_match_patterns.pyc",
+   "old_status": "failure",
+   "new_status": "failure",
+   "old_units": "8/13",
+   "new_units": "10/13",
+   "new_failures": [],
+   "improved_missing": [
+    "***<module>.CM.m: Failure: Different control flow",
+    "***<module>.e07_capture.inner: Failure detected at line number 93 and instruction offset 72: Different bytecode"
+   ],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_05_multi_with.pyc",
+   "old_status": "failure",
+   "new_status": "failure",
+   "old_units": "12/14",
+   "new_units": "12/14",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_06_try_finally_only.pyc",
+   "old_status": "failure",
+   "new_status": "failure",
+   "old_units": "12/14",
+   "new_units": "12/14",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_07_multi_target.pyc",
+   "old_status": "failure",
+   "new_status": "failure",
+   "old_units": "10/14",
+   "new_units": "10/14",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_08_augassign.pyc",
+   "old_status": "success",
+   "new_status": "success",
+   "old_units": "13/13",
+   "new_units": "13/13",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_09_chained_compare.pyc",
+   "old_status": "failure",
+   "new_status": "failure",
+   "old_units": "11/14",
+   "new_units": "11/14",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_10_walrus.pyc",
+   "old_status": "failure",
+   "new_status": "failure",
+   "old_units": "8/13",
+   "new_units": "8/13",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_11_keyword_args.pyc",
+   "old_status": "success",
+   "new_status": "success",
+   "old_units": "14/14",
+   "new_units": "14/14",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_12_star_args.pyc",
+   "old_status": "failure",
+   "new_status": "failure",
+   "old_units": "7/13",
+   "new_units": "7/13",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_13_slice.pyc",
+   "old_status": "success",
+   "new_status": "success",
+   "old_units": "13/13",
+   "new_units": "13/13",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_14_relative_import.pyc",
+   "old_status": "compile_error",
+   "new_status": "success",
+   "old_units": "0/0",
+   "new_units": "5/5",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_15_star_import.pyc",
+   "old_status": "failure",
+   "new_status": "success",
+   "old_units": "5/7",
+   "new_units": "7/7",
+   "new_failures": [],
+   "improved_missing": [
+    "***<module>.e01_use: Failure: Missing bytecode",
+    "***<module>: Failure: Different bytecode"
+   ],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_16_global_nonlocal.pyc",
+   "old_status": "success",
+   "new_status": "success",
+   "old_units": "21/21",
+   "new_units": "21/21",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_17_fstring_conv.pyc",
+   "old_status": "success",
+   "new_status": "success",
+   "old_units": "12/12",
+   "new_units": "12/12",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_18_nested_comprehension.pyc",
+   "old_status": "success",
+   "new_status": "success",
+   "old_units": "30/30",
+   "new_units": "30/30",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_19_decorator_args.pyc",
+   "old_status": "failure",
+   "new_status": "failure",
+   "old_units": "27/28",
+   "new_units": "27/28",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/c4_20_async_five.pyc",
+   "old_status": "failure",
+   "new_status": "failure",
+   "old_units": "21/24",
+   "new_units": "21/24",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/n4_01_neg_control_flow.pyc",
+   "old_status": "success",
+   "new_status": "success",
+   "old_units": "5/5",
+   "new_units": "5/5",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/n4_02_neg_expr.pyc",
+   "old_status": "success",
+   "new_status": "success",
+   "old_units": "12/12",
+   "new_units": "12/12",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/n4_03_neg_match_with.pyc",
+   "old_status": "success",
+   "new_status": "success",
+   "old_units": "5/5",
+   "new_units": "5/5",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/n4_04_neg_deco_async.pyc",
+   "old_status": "success",
+   "new_status": "success",
+   "old_units": "8/8",
+   "new_units": "8/8",
+   "new_failures": [],
+   "improved_missing": [],
+   "NEWFAIL": false
+  },
+  {
+   "pyc": "test_repros/round4/n4_05_neg_except_star.pyc",
+   "old_status": "failure",
+   "new_status": "success",
+   "old_units": "2/3",
+   "new_units": "3/3",
+   "new_failures": [],
+   "improved_missing": [
+    "***<module>.n_except_star_two: Failure: Different control flow"
+   ],
+   "NEWFAIL": false
+  }
+ ]
+}

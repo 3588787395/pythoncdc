@@ -1,0 +1,395 @@
+{
+ "elapsed_sec": 4.5,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 10,
+  "success": 15
+ },
+ "files_total": 25,
+ "generated_at": "2026-10-06T12:01:28",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "test_repros/round4/c4_03_except_star.pyc",
+   "test_repros/round4/c4_04_match_patterns.pyc",
+   "test_repros/round4/c4_05_multi_with.pyc",
+   "test_repros/round4/c4_06_try_finally_only.pyc",
+   "test_repros/round4/c4_07_multi_target.pyc",
+   "test_repros/round4/c4_09_chained_compare.pyc",
+   "test_repros/round4/c4_10_walrus.pyc",
+   "test_repros/round4/c4_12_star_args.pyc",
+   "test_repros/round4/c4_19_decorator_args.pyc",
+   "test_repros/round4/c4_20_async_five.pyc"
+  ],
+  "success": [
+   "test_repros/round4/c4_01_elif_chain.pyc",
+   "test_repros/round4/c4_02_loop_else.pyc",
+   "test_repros/round4/c4_08_augassign.pyc",
+   "test_repros/round4/c4_11_keyword_args.pyc",
+   "test_repros/round4/c4_13_slice.pyc",
+   "test_repros/round4/c4_14_relative_import.pyc",
+   "test_repros/round4/c4_15_star_import.pyc",
+   "test_repros/round4/c4_16_global_nonlocal.pyc",
+   "test_repros/round4/c4_17_fstring_conv.pyc",
+   "test_repros/round4/c4_18_nested_comprehension.pyc",
+   "test_repros/round4/n4_01_neg_control_flow.pyc",
+   "test_repros/round4/n4_02_neg_expr.pyc",
+   "test_repros/round4/n4_03_neg_match_with.pyc",
+   "test_repros/round4/n4_04_neg_deco_async.pyc",
+   "test_repros/round4/n4_05_neg_except_star.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/c4_01_elif_chain.pyc",
+   "pyc_sha": "ba99a5de4ad7",
+   "source": "test_repros/round4/c4_01_elif_chainOK.py",
+   "source_sha": "3496d85eac39",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 14,
+   "units_total": 14
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/c4_02_loop_else.pyc",
+   "pyc_sha": "cb94ee6fe103",
+   "source": "test_repros/round4/c4_02_loop_elseOK.py",
+   "source_sha": "55da2c871ef5",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 14,
+   "units_total": 14
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.e04_with: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round4/c4_03_except_star.pyc",
+   "pyc_sha": "2b312f6cf2a2",
+   "source": "test_repros/round4/c4_03_except_starOK.py",
+   "source_sha": "c675befbf2ce",
+   "status": "failure",
+   "success_rate": 0.9230769230769231,
+   "units_success": 12,
+   "units_total": 13
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.e04_mapping: Failure: Different control flow",
+    "***<module>.e05_class_kw: Failure: Different control flow",
+    "***<module>.e06_or_guard: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round4/c4_04_match_patterns.pyc",
+   "pyc_sha": "a05d619255d5",
+   "source": "test_repros/round4/c4_04_match_patternsOK.py",
+   "source_sha": "6f494b0dd7ad",
+   "status": "failure",
+   "success_rate": 0.7692307692307693,
+   "units_success": 10,
+   "units_total": 13
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.e09_comp_host: Failure: Different bytecode",
+    "***<module>.e09_comp_host.<listcomp>: Failure: Different bytecode"
+   ],
+   "pyc": "test_repros/round4/c4_05_multi_with.pyc",
+   "pyc_sha": "bb1b87d0a86b",
+   "source": "test_repros/round4/c4_05_multi_withOK.py",
+   "source_sha": "7212af4bc16a",
+   "status": "failure",
+   "success_rate": 0.8571428571428571,
+   "units_success": 12,
+   "units_total": 14
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.e01_root: Failure: Different control flow",
+    "***<module>.e06_while: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round4/c4_06_try_finally_only.pyc",
+   "pyc_sha": "47d790ca2997",
+   "source": "test_repros/round4/c4_06_try_finally_onlyOK.py",
+   "source_sha": "654113c4b65b",
+   "status": "failure",
+   "success_rate": 0.8571428571428571,
+   "units_success": 12,
+   "units_total": 14
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.e04_unpack: Failure: Different bytecode",
+    "***<module>.e05_star_unpack: Failure: Different bytecode",
+    "***<module>.e06_chain_target: Failure detected at line number 23 and instruction offset 18: Different bytecode",
+    "***<module>.e09_attr_chain: Failure detected at line number 47 and instruction offset 24: Different bytecode"
+   ],
+   "pyc": "test_repros/round4/c4_07_multi_target.pyc",
+   "pyc_sha": "87cfa303f961",
+   "source": "test_repros/round4/c4_07_multi_targetOK.py",
+   "source_sha": "8775fa3c17dd",
+   "status": "failure",
+   "success_rate": 0.7142857142857143,
+   "units_success": 10,
+   "units_total": 14
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/c4_08_augassign.pyc",
+   "pyc_sha": "b465a15bbb0e",
+   "source": "test_repros/round4/c4_08_augassignOK.py",
+   "source_sha": "5a41a03ef7ce",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 13,
+   "units_total": 13
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.e04_deep: Failure: Different control flow",
+    "***<module>.e08_while: Failure: Different control flow",
+    "***<module>.CCMP.m: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round4/c4_09_chained_compare.pyc",
+   "pyc_sha": "8235c5bc8df5",
+   "source": "test_repros/round4/c4_09_chained_compareOK.py",
+   "source_sha": "7fa6501b01b9",
+   "status": "failure",
+   "success_rate": 0.7857142857142857,
+   "units_success": 11,
+   "units_total": 14
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.e01_root: Failure: Different control flow",
+    "***<module>.e05_nested: Failure: Different bytecode",
+    "***<module>.e06_call_arg: Failure: Different bytecode",
+    "***<module>.CW2.m: Failure: Different control flow",
+    "***<module>.e09_with: Failure: Different control flow"
+   ],
+   "pyc": "test_repros/round4/c4_10_walrus.pyc",
+   "pyc_sha": "260b61aecfb0",
+   "source": "test_repros/round4/c4_10_walrusOK.py",
+   "source_sha": "9f196ddae2f6",
+   "status": "failure",
+   "success_rate": 0.6153846153846154,
+   "units_success": 8,
+   "units_total": 13
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/c4_11_keyword_args.pyc",
+   "pyc_sha": "b93fb5091dd2",
+   "source": "test_repros/round4/c4_11_keyword_argsOK.py",
+   "source_sha": "60eb20666da7",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 14,
+   "units_total": 14
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.e02_shallow: Failure: Different bytecode",
+    "***<module>.e03_mixed: Failure: Different bytecode",
+    "***<module>.e04_deep: Failure: Different bytecode",
+    "***<module>.e06_nested.inner: Failure: Different bytecode",
+    "***<module>.CSA.m: Failure: Different bytecode",
+    "***<module>.e07_match_host: Failure: Different bytecode"
+   ],
+   "pyc": "test_repros/round4/c4_12_star_args.pyc",
+   "pyc_sha": "b72b77301cec",
+   "source": "test_repros/round4/c4_12_star_argsOK.py",
+   "source_sha": "4c6bb58fa6b1",
+   "status": "failure",
+   "success_rate": 0.5384615384615384,
+   "units_success": 7,
+   "units_total": 13
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/c4_13_slice.pyc",
+   "pyc_sha": "5fe2787b7905",
+   "source": "test_repros/round4/c4_13_sliceOK.py",
+   "source_sha": "f09c49e3cd27",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 13,
+   "units_total": 13
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/c4_14_relative_import.pyc",
+   "pyc_sha": "0967e39b793c",
+   "source": "test_repros/round4/c4_14_relative_importOK.py",
+   "source_sha": "4412f368de5d",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/c4_15_star_import.pyc",
+   "pyc_sha": "9d2dae0f4457",
+   "source": "test_repros/round4/c4_15_star_importOK.py",
+   "source_sha": "258b61980ffb",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/c4_16_global_nonlocal.pyc",
+   "pyc_sha": "0ffbc5d72f6e",
+   "source": "test_repros/round4/c4_16_global_nonlocalOK.py",
+   "source_sha": "a3b848fc6d52",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 21,
+   "units_total": 21
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/c4_17_fstring_conv.pyc",
+   "pyc_sha": "e021362eae7c",
+   "source": "test_repros/round4/c4_17_fstring_convOK.py",
+   "source_sha": "3c5efb7440d1",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 12,
+   "units_total": 12
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/c4_18_nested_comprehension.pyc",
+   "pyc_sha": "a5067e8a5ccf",
+   "source": "test_repros/round4/c4_18_nested_comprehensionOK.py",
+   "source_sha": "2fdfce5be527",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 30,
+   "units_total": 30
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.e09_method_local.Local: Failure: Different bytecode"
+   ],
+   "pyc": "test_repros/round4/c4_19_decorator_args.pyc",
+   "pyc_sha": "17ab9f9bb0fb",
+   "source": "test_repros/round4/c4_19_decorator_argsOK.py",
+   "source_sha": "93a0e9eec5a1",
+   "status": "failure",
+   "success_rate": 0.9642857142857143,
+   "units_success": 27,
+   "units_total": 28
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.e05_async_compound.go: Failure: Different control flow",
+    "***<module>.e07_async_closure.outer.inner: Failure: Different control flow",
+    "***<module>.e07_async_closure.outer.inner.<listcomp>: Failure: Missing bytecode"
+   ],
+   "pyc": "test_repros/round4/c4_20_async_five.pyc",
+   "pyc_sha": "9c6de4f8f589",
+   "source": "test_repros/round4/c4_20_async_fiveOK.py",
+   "source_sha": "bdd7fb4a7f01",
+   "status": "failure",
+   "success_rate": 0.875,
+   "units_success": 21,
+   "units_total": 24
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/n4_01_neg_control_flow.pyc",
+   "pyc_sha": "f5151892ccc9",
+   "source": "test_repros/round4/n4_01_neg_control_flowOK.py",
+   "source_sha": "b5616e00c51b",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/n4_02_neg_expr.pyc",
+   "pyc_sha": "440eac8b1cfa",
+   "source": "test_repros/round4/n4_02_neg_exprOK.py",
+   "source_sha": "850b55ddffa0",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 12,
+   "units_total": 12
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/n4_03_neg_match_with.pyc",
+   "pyc_sha": "ae86e558509c",
+   "source": "test_repros/round4/n4_03_neg_match_withOK.py",
+   "source_sha": "d3335f8076c1",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/n4_04_neg_deco_async.pyc",
+   "pyc_sha": "844e2eca9990",
+   "source": "test_repros/round4/n4_04_neg_deco_asyncOK.py",
+   "source_sha": "ddd5924b4e11",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 8,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "test_repros/round4/n4_05_neg_except_star.pyc",
+   "pyc_sha": "999c7078eea4",
+   "source": "test_repros/round4/n4_05_neg_except_starOK.py",
+   "source_sha": "dba974c07994",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9107142857142857,
+ "units_success": 306,
+ "units_total": 336
+}

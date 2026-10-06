@@ -1,0 +1,18 @@
+[
+ {
+  "pyc": "f:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 152,
+  "units_total": 153,
+  "failures": [
+   "***<module>.change_his_to_forward: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.change_his_to_forward: Failure: Different control flow",
+   "[single] f:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+   "[single] 产物 f:/Downloads/pythoncdc-main/site-packages/fly/data/quotationOK.py",
+   "[single] status=failure units=152/153 success_rate=99.35%"
+  ]
+ }
+]

@@ -1,0 +1,77 @@
+[
+ {
+  "path": "test_repros/round4/c4_01_elif_chain.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_02_loop_else.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_03_except_star.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_04_match_patterns.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_05_multi_with.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_06_try_finally_only.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_07_multi_target.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_08_augassign.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_09_chained_compare.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_10_walrus.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_11_keyword_args.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_12_star_args.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_13_slice.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_14_relative_import.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_15_star_import.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_16_global_nonlocal.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_17_fstring_conv.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_18_nested_comprehension.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_19_decorator_args.pyc"
+ },
+ {
+  "path": "test_repros/round4/c4_20_async_five.pyc"
+ },
+ {
+  "path": "test_repros/round4/n4_01_neg_control_flow.pyc"
+ },
+ {
+  "path": "test_repros/round4/n4_02_neg_expr.pyc"
+ },
+ {
+  "path": "test_repros/round4/n4_03_neg_match_with.pyc"
+ },
+ {
+  "path": "test_repros/round4/n4_04_neg_deco_async.pyc"
+ },
+ {
+  "path": "test_repros/round4/n4_05_neg_except_star.pyc"
+ }
+]

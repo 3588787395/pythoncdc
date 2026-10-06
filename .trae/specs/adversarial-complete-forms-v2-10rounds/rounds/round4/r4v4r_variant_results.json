@@ -1,0 +1,109 @@
+[
+ {
+  "probe": "r4v4r_b100_levels",
+  "head": {
+   "status": "success",
+   "units": "5/5",
+   "failures": []
+  },
+  "base": {
+   "status": "compile_error",
+   "units": "0/0",
+   "failures": []
+  },
+  "false_negative_units": [],
+  "healed_units": [],
+  "verdict": "clean"
+ },
+ {
+  "probe": "r4v4r_b101_star",
+  "head": {
+   "status": "success",
+   "units": "6/6",
+   "failures": []
+  },
+  "base": {
+   "status": "failure",
+   "units": "5/6",
+   "failures": [
+    "***<module>: Failure detected at line number 4 and instruction offset 2: Different bytecode"
+   ]
+  },
+  "false_negative_units": [],
+  "healed_units": [
+   "***<module>: Failure detected at line number 4 and instruction offset 2: Different bytecode"
+  ],
+  "verdict": "improved"
+ },
+ {
+  "probe": "r4v4r_b102_except",
+  "head": {
+   "status": "failure",
+   "units": "5/8",
+   "failures": [
+    "***<module>.nested_star: Failure: Different bytecode",
+    "***<module>.normal_finally: Failure: Different bytecode",
+    "***<module>.star_else_finally: Failure: Different bytecode"
+   ]
+  },
+  "base": {
+   "status": "failure",
+   "units": "5/8",
+   "failures": [
+    "***<module>.nested_star: Failure: Different bytecode",
+    "***<module>.normal_finally: Failure: Different bytecode",
+    "***<module>.star_else_finally: Failure: Different bytecode"
+   ]
+  },
+  "false_negative_units": [],
+  "healed_units": [],
+  "verdict": "both_fail_same"
+ },
+ {
+  "probe": "r4v4r_b109_loopelse",
+  "head": {
+   "status": "failure",
+   "units": "8/9",
+   "failures": [
+    "***<module>.nested_loop_else: Failure: Different control flow"
+   ]
+  },
+  "base": {
+   "status": "failure",
+   "units": "7/9",
+   "failures": [
+    "***<module>.CL2.m: Failure: Different control flow",
+    "***<module>.nested_loop_else: Failure: Different control flow"
+   ]
+  },
+  "false_negative_units": [],
+  "healed_units": [
+   "***<module>.CL2.m: Failure: Different control flow"
+  ],
+  "verdict": "improved"
+ },
+ {
+  "probe": "r4v4r_b103_guard",
+  "head": {
+   "status": "failure",
+   "units": "5/8",
+   "failures": [
+    "***<module>.GT.m: Failure: Different control flow",
+    "***<module>.nested_guard: Failure: Different control flow",
+    "***<module>.none_guard: Failure: Different control flow"
+   ]
+  },
+  "base": {
+   "status": "failure",
+   "units": "5/8",
+   "failures": [
+    "***<module>.GT.m: Failure: Different control flow",
+    "***<module>.nested_guard: Failure: Different control flow",
+    "***<module>.none_guard: Failure: Different control flow"
+   ]
+  },
+  "false_negative_units": [],
+  "healed_units": [],
+  "verdict": "both_fail_same"
+ }
+]
