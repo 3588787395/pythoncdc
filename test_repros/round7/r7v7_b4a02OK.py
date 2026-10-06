@@ -1,0 +1,33 @@
+# Source Generated with Decompyle++ (Python version)
+# File: r7v7_b4a02.pyc (Python 3.11)
+
+def b4a02_shallow(xs, flag):
+    acc = 0
+    try:
+        for x in xs:
+            try:
+                acc += x
+            finally:
+                acc += 1
+    finally:
+        acc += 2
+    return acc
+def b4a02_deep(xs, flag):
+    acc = 0
+    if flag:
+        try:
+            for x in xs:
+                if x > 0:
+                    try:
+                        if x > 10:
+                            acc += 10
+                        else:
+                            acc += x
+                    finally:
+                        acc += 1
+                    continue
+                acc -= 1
+                continue
+        finally:
+            acc += 2
+    return acc

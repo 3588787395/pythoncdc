@@ -1,0 +1,21 @@
+# Source Generated with Decompyle++ (Python version)
+# File: r7v7_b4b02.pyc (Python 3.11)
+
+def b4b02_shallow(xs, k):
+    try:
+        i = xs.index(k)
+    except ValueError:
+        return -1
+    return i
+def b4b02_deep(xs, k, flag):
+    if flag:
+        try:
+            if k > 0:
+                i = xs.index(k)
+            else:
+                i = -2
+        except ValueError:
+            return -1
+        return i
+    else:
+        return -3

@@ -1,0 +1,340 @@
+{
+ "summary": {
+  "funcs_equal": 42,
+  "funcs_unequal": 54,
+  "funcs_pairing_missing": 0
+ },
+ "probes": [
+  {
+   "stem": "n7v7_b2n01",
+   "funcs": {
+    "n2a": "UNEQUAL",
+    "n2b": "equal"
+   }
+  },
+  {
+   "stem": "n7v7_b2n02",
+   "funcs": {
+    "n2c": "UNEQUAL",
+    "n2d": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "n7v7_b3n01",
+   "funcs": {
+    "n3a": "equal",
+    "n3b": "equal"
+   }
+  },
+  {
+   "stem": "n7v7_b3n02",
+   "funcs": {
+    "n3c": "equal",
+    "n3d": "equal"
+   }
+  },
+  {
+   "stem": "n7v7_b4n01",
+   "funcs": {
+    "n4a": "equal",
+    "n4b": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "n7v7_b4n02",
+   "funcs": {
+    "n4c": "equal",
+    "n4d": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b2a01",
+   "funcs": {
+    "b2a01_deep": "equal",
+    "b2a01_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_b2a02",
+   "funcs": {
+    "b2a02_deep": "equal",
+    "b2a02_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_b2a03",
+   "funcs": {
+    "B2A03.b2a03_deep": "UNEQUAL",
+    "B2A03.b2a03_shallow": "UNEQUAL",
+    "b2a03_deep": "UNEQUAL",
+    "b2a03_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_b2a04",
+   "funcs": {
+    "b2a04_deep": "equal",
+    "b2a04_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b2a05",
+   "funcs": {
+    "b2a05_deep": "UNEQUAL",
+    "b2a05_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_b2a06",
+   "funcs": {
+    "b2a06_deep": "UNEQUAL",
+    "b2a06_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_b2b01",
+   "funcs": {
+    "b2b01_deep": "UNEQUAL",
+    "b2b01_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b2b02",
+   "funcs": {
+    "b2b02_deep": "UNEQUAL",
+    "b2b02_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b2b03",
+   "funcs": {
+    "b2b03_deep": "UNEQUAL",
+    "b2b03_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b2b04",
+   "funcs": {
+    "b2b04_deep": "UNEQUAL",
+    "b2b04_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_b2c01",
+   "funcs": {
+    "b2c01_deep": "UNEQUAL",
+    "b2c01_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_b2c02",
+   "funcs": {
+    "b2c02_deep": "UNEQUAL",
+    "b2c02_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_b2c03",
+   "funcs": {
+    "b2c03_deep": "UNEQUAL",
+    "b2c03_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_b3a01",
+   "funcs": {
+    "b3a01_deep": "equal",
+    "b3a01_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b3a02",
+   "funcs": {
+    "b3a02_deep": "equal",
+    "b3a02_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b3a03",
+   "funcs": {
+    "b3a03_deep": "equal",
+    "b3a03_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b3a04",
+   "funcs": {
+    "B3A04.b3a04_deep": "UNEQUAL",
+    "B3A04.b3a04_shallow": "equal",
+    "b3a04_deep": "UNEQUAL",
+    "b3a04_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b3a05",
+   "funcs": {
+    "b3a05_deep": "UNEQUAL",
+    "b3a05_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b3a06",
+   "funcs": {
+    "b3a06_deep": "equal",
+    "b3a06_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b3b01",
+   "funcs": {
+    "b3b01_deep": "UNEQUAL",
+    "b3b01_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_b3b02",
+   "funcs": {
+    "b3b02_deep": "UNEQUAL",
+    "b3b02_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b3b03",
+   "funcs": {
+    "b3b03_deep": "UNEQUAL",
+    "b3b03_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b3c01",
+   "funcs": {
+    "b3c01_deep": "UNEQUAL",
+    "b3c01_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_b3c02",
+   "funcs": {
+    "b3c02_deep": "UNEQUAL",
+    "b3c02_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_b3c03",
+   "funcs": {
+    "b3c03_deep": "equal",
+    "b3c03_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b4a01",
+   "funcs": {
+    "b4a01_deep": "equal",
+    "b4a01_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b4a02",
+   "funcs": {
+    "b4a02_deep": "UNEQUAL",
+    "b4a02_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b4a03",
+   "funcs": {
+    "b4a03_deep": "UNEQUAL",
+    "b4a03_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_b4a04",
+   "funcs": {
+    "B4A04.b4a04_deep": "UNEQUAL",
+    "B4A04.b4a04_shallow": "equal",
+    "b4a04_deep": "UNEQUAL",
+    "b4a04_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b4a05",
+   "funcs": {
+    "b4a05_deep": "equal",
+    "b4a05_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b4a06",
+   "funcs": {
+    "b4a06_deep": "UNEQUAL",
+    "b4a06_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b4b01",
+   "funcs": {
+    "b4b01_deep": "UNEQUAL",
+    "b4b01_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_b4b02",
+   "funcs": {
+    "b4b02_deep": "UNEQUAL",
+    "b4b02_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b4b03",
+   "funcs": {
+    "b4b03_deep": "UNEQUAL",
+    "b4b03_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b4c01",
+   "funcs": {
+    "b4c01_deep": "UNEQUAL",
+    "b4c01_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b4c02",
+   "funcs": {
+    "b4c02_deep": "UNEQUAL",
+    "b4c02_shallow": "equal"
+   }
+  },
+  {
+   "stem": "r7v7_b4c03",
+   "funcs": {
+    "b4c03_deep": "UNEQUAL",
+    "b4c03_shallow": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_x_b2b04_d2",
+   "funcs": {
+    "x_b2b04_d2": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_x_b2c03_pure",
+   "funcs": {
+    "x_b2c03_pure": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_x_b4a03_pure",
+   "funcs": {
+    "x_b4a03_pure": "UNEQUAL"
+   }
+  },
+  {
+   "stem": "r7v7_x_b4c03_d2",
+   "funcs": {
+    "x_b4c03_d2": "UNEQUAL"
+   }
+  }
+ ]
+}
