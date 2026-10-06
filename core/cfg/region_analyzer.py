@@ -28006,7 +28006,96 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             fixed_chain.append((block, op_type))
         return fixed_chain
 
+    def _boolop_chain_exits_are_distinct_sinks(self, chain: List[Tuple[BasicBlock, str]]) -> bool:
+        """[R4-B116 sinkexit] 短路链出口是否为「≥2 个互不相同的终结隐式 return None 块」。
+
+        ①算法依据：CPython 3.11 的短路 BoolOp 在语句条件上下文中，全部操作数的
+        短路跳转汇入**同一个** merge/exit 标签；而「逐语句嵌套 if」为每个未覆盖的
+        出口各建一个块。块优化器不会把尾部相邻的两个 `LOAD_CONST None; RETURN_VALUE`
+        合并（b01/b03 实测同一份字节）。因此「链成员的短路目标落在 ≥2 个互不相同、
+        无后继、且以隐式 return None 收尾的块上」时，该结构在字节层面只能由
+        每个出口各自持有一个 return None 块的嵌套区域表达——单个 BoolOp 表达式区域
+        只有一个 merge，无法为第二条出口发射第二个 sink 块（B116 的 −2 即此）。
+        判据只读块末指令 opcode、后继集与隐式 return None 尾部（区域归约算法
+        允许的块级事实），不含任何名字/偏移/深度/宿主类型门控。
+        ②归约顺序：BoolOp 在 Conditional（IfRegion）之前识别，本判据是
+        `_create_boolop_region_from_chain` 创建前的最后一道不变量门（与 R38 操作数
+        纯度门同位）；返回 True 时链不建 BoolOpRegion，链成员块保持未认领，
+        由随后的 IfRegion 检测按语句级结构逐层认领。
+        ③唯一归属判定：折叠会令 off122 型第二出口掉成 `parent=None` 的孤儿 BASIC
+        区域（原则2 被破坏）；拒绝折叠后每个 sink 块由其所属内层 IfRegion 唯一认领，
+        每个出口块恰好一个 owning region。
+        ④嵌套处理：判据成立即承认「嵌套即抽象节点」（原则3）——外层 IfRegion 的
+        then 块是内层 IfRegion 的入口块，而非外层 BoolOpRegion 的操作数块。
+        ⑤入口引用语义：拒绝折叠后条件由外层 IfRegion 以自身入口块引用，内层 if
+        以其入口块引用（原则4）；链成员不再共享一个被改投的 merge 入口。
+        ⑥反编译流程：True → `_identify_boolop_regions` 该 walk 不产区域 →
+        IfRegion 建嵌套两臂 → generator 发射 `if A:` / `if not B:` 两层，
+        两对 None-return sink 各自发射，指令数复原。
+        C1 局部消费：只读被裁决链自身的成员块与它们的跳转目标块，不查全局状态。
+        C2 黑箱组合：判据不区分 and/or/mixed，也不假设链长度，仅按链成员目标集判定。
+        C3 守卫封闭：判定与拒绝同在 `_create_boolop_region_from_chain` 一处生效，
+        该方法是 BoolOpRegion 的唯一创建点，无旁路。
+        """
+        if len(chain) < 2:
+            return False
+        _BOOLOP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+        _targets: List[BasicBlock] = []
+        for _cb, _op in chain:
+            _cb_li = _cb.get_last_instruction()
+            if (_cb_li is None
+                    or getattr(_cb_li, 'argval', None) is None
+                    or _cb_li.opname not in _BOOLOP_JUMP_OPS):
+                return False
+            _tb = self.cfg.get_block_by_offset(_cb_li.argval)
+            if _tb is None:
+                return False
+            if not any(_tb is _d for _d in _targets):
+                _targets.append(_tb)
+        if len(_targets) < 2:
+            return False
+        for _d in _targets:
+            if list(_d.successors):
+                return False
+            if not self._check_block_has_trailing_return_none(_d):
+                return False
+        return True
+
     def _create_boolop_region_from_chain(self, chain: List[Tuple[BasicBlock, str]], claimed: Set[BasicBlock]) -> Optional[BoolOpRegion]:
+        """把已检测到的短路链归约为单个 BoolOpRegion —— BoolOpRegion 的唯一创建点。
+
+        ①算法依据：No More Gotos 的短路条件归约——POP_JUMP_IF_* / *_OR_POP 链对应
+        Python `and`/`or` 的短路语义；链成员按各自短路跳转目标串联，出口汇合点由
+        `_boolop_resolve_merge` 给出 merge，是否处于条件上下文由
+        `_boolop_check_condition_context` 判定，三元（IfExp）操作数由 W14-A / Edit H
+        分支做值块扩展，链式比较操作数由 R113 分支补齐 SWAP+POP_TOP 清理块。
+        ②归约顺序：BoolOp 先于 Conditional（IfRegion）识别，本方法由
+        `_identify_boolop_regions` 的装配步调用，看到的链只应含表达式级块。三道
+        创建前不变量门任一成立即 `return None`，块集原样交还后续 IfRegion 的
+        语句级归约：R14b（首块属性链前缀的存储目标被后续操作数读取 → 前缀是独立
+        语句）、R38（非首成员含 STORE_* → 链跨越语句边界）、[R4-B116 sinkexit]
+        （成员短路目标为 ≥2 个互不相同、无后继、以隐式 return None 收尾的 sink 块
+        → 单个 merge 无法承载两条出口）。
+        ③唯一归属判定：`region_blocks` = 链成员 ∪ merge ∪ 链式比较清理块 ∪ 三元
+        值块（值块仅在 `not in self.block_to_region` 时纳入）；认领时条件上下文
+        覆盖 `block_to_region`，非条件上下文只认领尚无归属的块，并同步登记
+        `claimed`——已被其它区域拥有的块不被抢占（原则2）。
+        ④嵌套处理：链成员的 body 语句块不属于本区域，由父 IfRegion 认领；
+        [R4-B116 sinkexit] 命中时整条链不折叠，嵌套 if 由 IfRegion 逐层抽象为
+        子区域节点（原则3），每条出口恰好归属一个 owning region。
+        ⑤入口引用语义：`entry` 为链首块 `start_block`，父区域的条件表达式只引用
+        该入口，链内操作数块对父区域不可见；`op_chain` 保留每个成员的短路算子
+        （'and'/'or'），`merge_block`/`value_target` 记录出口与赋值目标。
+        ⑥反编译流程：BoolOpRegion(op_chain, merge_block, value_target,
+        is_augassign, …) → `region_ast_generator._generate_boolop` 发射
+        ast.BoolOp / 链式 Compare / AugAssign；条件上下文时由所属 IfRegion 取作
+        test，非条件上下文时由赋值语句取作 value。
+        C1 局部消费：只读链成员块与它们的目标/后继块的块级事实（末指令 opcode、
+        指令集、后继集、`block_to_region` 归属），无宿主名字/深度/计数门控。
+        C2 黑箱组合：对外只产出一个 Region 对象，父层只见 entry。
+        C3 守卫封闭：本方法是 BoolOpRegion 的唯一创建点（`_identify_boolop_regions`
+        的全部调用点均经此），拒绝即整条链不产区域，不存在旁路创建。
+        """
         chain = self._normalize_none_check_op_types(chain)
         # [R14b·W14-D 门控细化] 属性链回溯放行（首成员尾部为
         # LOAD_ATTR/LOAD_METHOD 的真值测试）时，若首块前置语句的存储目标被
@@ -28369,6 +28458,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 continue
             if any(_detector_r38.is_any_store(i) for i in _pcb.instructions):
                 return None
+        # [R4-B116 sinkexit] 出口不变量门：链成员的短路目标若是 ≥2 个互不相同、
+        # 无后继、以隐式 return None 收尾的 sink 块，则单个 BoolOpRegion（唯一
+        # merge）无法为第二条出口发射第二个 sink —— 该形态是可编译为同一字节串的
+        # 「逐语句嵌套 if」，交还 IfRegion 层级按原则2/原则3 逐层认领。
+        if self._boolop_chain_exits_are_distinct_sinks(chain):
+            return None
         region = BoolOpRegion(
             region_type=RegionType.BOOL_OP,
             entry=start_block,

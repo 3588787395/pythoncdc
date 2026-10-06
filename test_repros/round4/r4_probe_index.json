@@ -1,95 +1,104 @@
 [
-  {
-    "path": "test_repros/round4/r4v3_a01_corpus_tick_elifchain.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a02_while_no_try.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a03_no_loop_host.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a04_module_host.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a05_for_host.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a06_two_arm_control.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a07_no_or_control.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a08_diff_body_control.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a09_else_only_control.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a10_and_outer_member.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a11_try_if_tail_b100.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a12_try_if_tail_sibling.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a13_no_outer_guard.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a14_min_arm.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b01_nested_not_method.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b02_nested_not_sibling.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b03_flat_and_control.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b04_single_if_control.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b05_func_host.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b06_module_host.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b07_positive_polarity.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b08_three_nested.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b09_b99_while_try_ifarm.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b10_b99_while_try_fnend.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b11_nested_not_in_loop.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b12_module_single_if_control.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_c01_all_paths_return_expr.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_c02_dead_tail_return_control.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_c03_loop_else_terminal_return.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_c04_loop_plain_control.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_c05_early_return_chain.pyc"
-  }
+ {
+  "path": "test_repros/round4/r4v3_a01_corpus_tick_elifchain.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_a02_while_no_try.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_a03_no_loop_host.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_a04_module_host.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_a05_for_host.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_a06_two_arm_control.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_a07_no_or_control.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_a08_diff_body_control.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_a09_else_only_control.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_a10_and_outer_member.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_a11_try_if_tail_b100.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_a12_try_if_tail_sibling.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_a13_no_outer_guard.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_a14_min_arm.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b01_nested_not_method.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b02_nested_not_sibling.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b03_flat_and_control.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b04_single_if_control.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b05_func_host.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b06_module_host.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b07_positive_polarity.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b08_three_nested.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b09_b99_while_try_ifarm.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b10_b99_while_try_fnend.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b11_nested_not_in_loop.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b12_module_single_if_control.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_c01_all_paths_return_expr.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_c02_dead_tail_return_control.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_c03_loop_else_terminal_return.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_c04_loop_plain_control.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_c05_early_return_chain.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b12_three_sink_and_chain.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b13_or_head_nested_tail_sink.pyc"
+ },
+ {
+  "path": "test_repros/round4/r4v3_b14_converging_exit_control.pyc"
+ }
 ]

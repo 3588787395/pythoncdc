@@ -3,9 +3,8 @@
 
 class M:
     def reload(self):
-        if not (self.pre_flag and self.upd_flag):
-            self._dates = self.engine.cal.get()
-            self.upd_flag = True
-            return None
-        else:
-            return None
+        if self.pre_flag:
+            if not self.upd_flag:
+                self._dates = self.engine.cal.get()
+                self.upd_flag = True
+                return None
