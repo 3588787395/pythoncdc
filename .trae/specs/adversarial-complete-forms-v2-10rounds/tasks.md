@@ -20,12 +20,12 @@
   - [x] 2.3 评审工程师复核：逐 hunk + 读数独立复跑 + 变体攻击；通过/打回；REVIEW2.md
   - [x] 2.4 主代理验证：验证序六步；VERIFICATION.md
   - [x] 2.5 归档 rounds/round2/ + 提交并 push origin main
-- [ ] Task 3: Round 3 — 表B 表达式形态对抗（III.3 全名单：BoolOp/IfExp/Compare 链/BinOp/UnaryOp/Lambda/推导式族/Call/JoinedStr/Await/Yield/NamedExpr/操作符叶子 32 个 × 嵌套宿主，B1 台账口径重点复核）
-  - [ ] 3.1 评审工程师：同 2.1 攻击协议（II.7 自查 + 站桩回归 + 合规审计 + Bn 登记）；REVIEW.md + test_repros/round3/
-  - [ ] 3.2 修复工程师（可多位协同）：封闭登记破口（I.4/I.3/I.7 约束）；自测 = IV.2 门禁自检清单全过；FIX.md
-  - [ ] 3.3 评审工程师复核；REVIEW2.md
-  - [ ] 3.4 主代理验证：验证序六步；VERIFICATION.md
-  - [ ] 3.5 归档 rounds/round3/ + 提交并 push origin main
+- [x] Task 3: Round 3 — 表B 表达式形态对抗（III.3 全名单：BoolOp/IfExp/Compare 链/BinOp/UnaryOp/Lambda/推导式族/Call/JoinedStr/Await/Yield/NamedExpr/操作符叶子 32 个 × 嵌套宿主，B1 台账口径重点复核）
+  - [x] 3.1 评审工程师：同 2.1 攻击协议（II.7 自查 + 站桩回归 + 合规审计 + Bn 登记）；REVIEW.md + test_repros/round3/（28 探针 241/305、COMPILE_ERROR 3；新登记 B98 分组 boolop 保真 / B99 for 宿主 BoolOp 蒸发；BoolOp 由「完备」降「破口」）
+  - [x] 3.2 修复工程师（可多位协同）：封闭登记破口（I.4/I.3/I.7 约束）；自测 = IV.2 门禁自检清单全过；FIX_P1/FIX_P2（B98+B1b 守卫域扩展落 `region_ast_generator.py`、B99 落 `region_analyzer.py`；28 探针 244→248/305，NEWFAIL=0）
+  - [x] 3.3 评审工程师复核；REVIEW2.md（打回项 A/B 文档级 → 整改 `3b098f99` 纯文档（AST 恒等）→ §5.5 终审放行；新变体 5 探针 HEAD 46/63 vs 旧码 37/63 零误伤）
+  - [x] 3.4 主代理验证：验证序六步；VERIFICATION.md（402 全量 6554/6617、369/402 与基线逐位一致；8 片 compare REGRESSIONS=0；34 集 1505/1568；quotation 152/153；tests 277 passed/2 failed/2 xpassed；IV.2 全过）
+  - [x] 3.5 归档 rounds/round3/ + 提交并 push origin main
 - [ ] Task 4: Round 4 — 表C 31 扩展形态对抗（III.4 全名单：elif 链/for-else/while-else/except\*/match+守卫+8 模式/多上下文 with/try-finally-only/multi_target/augassign/chained_comparison/walrus/keyword_args/star_args/slice/relative_import/star_import/global_nonlocal/fstring_conversion/nested_comprehension/decorator_with_args/async 五件套）
   - [ ] 4.1 评审工程师：同 2.1 攻击协议；except\* 检测标准对准 3.11 标记（II.7 第 12 条：CHECK_EG_MATCH/PREP_RERAISE_STAR/is_except_star）；REVIEW.md + test_repros/round4/
   - [ ] 4.2 修复工程师（可多位协同）：封闭登记破口；自测 = IV.2 门禁自检清单全过；FIX.md
