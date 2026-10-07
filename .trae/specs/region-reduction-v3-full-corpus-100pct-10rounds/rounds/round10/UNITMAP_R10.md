@@ -71,3 +71,24 @@
 但它在 `<genexpr>` 内部 ⇒ **不得并案**，须各自以逐单元名单证明；
 两处的共同宿主若被找到，须是一条不问「是否处在生成器内」的判据（原则 3：嵌套即抽象节点，
 宿主对内部结构无感才算封闭）。
+
+## 五、再定标两条（同轮复跑，逐 hunk）
+
+**(a) `order_api.pyc`（35/37）的 `option_order` / `future_order` 共享同一对形状**——
+两单元各只有 2 个大 hunk，且**互为镜像**：
+
+| hunk | `option_order` | `future_order` | 被吞内容（实测指令串读回的语句） |
+|---|---|---|---|
+| 9 → 1 | `orig[38:47]` | `orig[71:80]` | `if <cond>: strategy_log.info('生成订单，订单号：{order_id}，合约代码：{symbol}，方向：{side}{oper}，数量：{share}手…'.format(order_.order_id, …))` —— **条件体里的一整条日志调用**，产物只留下那条 `POP_JUMP_FORWARD_IF_TRUE` |
+| delete 31 / 19 | `orig[59:90]` | `orig[92:111]` | `order_.futures_direction.value.upper() == 'OPEN' and '开仓' or '平仓'` —— **属性链 + 方法调用 + 比较 + and/or 三元**的整串操作数（它原是上面那条格式串的实参） |
+
+⇒ 一条判据面（长操作数链在**条件发射/汇合处**被截）记 2 单元；`real_quote` 不在本案（见 b）。
+与 #21（`<genexpr>` 内的下标操作数链）同族不同层，仍禁并案：判据若须问「是不是在生成器里」即不封闭。
+
+**(b) `real_quote.pyc`（43/45）两条被撤销「省略」归类**：
+`get_tick_direction` 12 个 hunk、`get_real_minute_kline` 3 个 hunk，**零个大 hunk**（`big=0`）——
+即没有任何多指令块被吞或被摊，两单元全部差在小粒度（≤4 指令的 replace/insert）。
+`unitmap` 把它们记进 `EXTRA` 是按**净条数**（ins 12/del 11、ins 4/del 2）分类的结果，
+不是省略证据。⇒ 这两条改归 **#14 的细粒度落点/排位面**，
+派 #13 系票时**不得**把它们写进名单（先前我的 `FIX_OMISSION_R10_BRIEF.md` 未列它们，无须订正；
+此处只钉住「EXTRA ≠ 省略」这条分类学事实，防下一次按桶名派票）。
