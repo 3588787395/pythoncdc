@@ -153,3 +153,25 @@ C 轴里剔 NOP 后**只有 1 处配对不同**的六个单元（`_process_tick_
 - 仪器已知缺陷：单元名 → code object 用路径尾段匹配，同名/嵌套宿主可能错配；
   本轮 §II/§III 的关键读数（520/42、344/40、94/55）已用 `co_firstlineno` + 唯一命中复核，
   确认**不是**错配而是真实截断。
+
+## VIII. C 轴三个标本的逐位对齐（把「落点差」收敛成一个候选根因）
+
+剔 NOP/CACHE/EXTENDED_ARG 并按真实指令下标重标跳转后，三个单元**只有 1 条指令不同，且只差目标下标**：
+
+| 单元 | 位置 | orig 落点 | prod 落点 | 方向 |
+|---|---|---|---|---|
+| `bar._history_bars` | #27 `POP_JUMP_FORWARD_IF_FALSE` | #32（跳 5 条） | #51（跳 24 条） | prod 更晚 |
+| `strategy_universe._on_clear_de_listed` | #19 `POP_JUMP_FORWARD_IF_FALSE` | #27 | #33 | prod 更晚 |
+| `trade_live_broker._process_tick_order` | #30 `JUMP_BACKWARD` | #22 | #19 | prod 更早 |
+
+「prod 更晚」两侧指令流完全同序同长、只有一条边不同，含义唯一：原码里该条件假边的**汇合块**
+就是 5 条指令之后那个块（两条边在同一块汇合），而产物把中间那段排进了臂内部，
+于是假边一路跳到更后。⇒ 形状是 **IfRegion 的 merge/边界取得过晚，把本属区域之后的块吸进臂里**。
+「prod 更早」（回边锚到更靠前的块）是同族的另一端：回边锚点选择偏早。
+
+**统一假设（待工单验证，不作结论）**：A1（`IfRegion@318.else_blocks` 吸入父循环前导块 44、
+`merge_block` 取到父循环 back_edge 块 3128）与 C 轴「prod 更晚」两例，同为
+**IfRegion 的 merge/成员边界计算错误**——一侧吸过界（吞到区域入口之前与父区域出口），
+一侧吸太晚（吞掉汇合块之后的块）。若成立，一处边界判据的修正上界约 **A1 3 + C 8 ≈ 11 个单元**，
+是 42 残差中最大的单一杠杆。工单必须先用最小合成孪生分别复现**两个方向**（Battery before corpus），
+禁止只按其中一侧调门限。
