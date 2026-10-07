@@ -207,3 +207,23 @@ C 轴里剔 NOP 后**只有 1 处配对不同**的六个单元（`_process_tick_
 两桶相加＝42，是**互斥且完备**的分区；#14 落地后必须重算本表，
 届时「先落点错、后内容差」的 24 个可能整段消失，也可能暴露新的内容轴——以重测为准，
 禁止用算术代替重测（既有约定：台账数字须在写入时算出）。
+
+## X. 轮门禁可行性核对（决定 #13/#14 派发次序，实测非推断）
+
+从 `rounds/round8/after` 逐文件读数：**只差 1 个单元就整文件 OK 的文件共 10 个**——
+
+    finance.get_fields / bar.BarData._history_bars / strategyUniverse._on_clear_de_listed /
+    load_daily.<module> / function.reconnect / Strategy.tick_worker_thread /
+    DefaultMatcher.match / api_base.get_history_df / TWHThreadController._target /
+    RealtimeEventSource.clock_worker
+
+把 §IX 的首分歧二分套到这 10 个单元上：**全部落在「首分歧＝落点」的 35 个之列，
+无一出现在 7 个内容先行单元名单里**（那份名单是 `_process_order`、`_process_cancel_order`、
+`_sync_worker`、`_trade_status_handle`、`option_order`、`future_order`、`run_individual_transform`）。
+
+⇒ 结论（对派发次序是硬约束）：
+- **#14 一条票就可能带来最多 10 个文件转完全 OK**（384→394），轮门禁「≥1 个 pyc 由 failure 转 success」
+  由 #14 单独即可满足；这也正是判据该统一的地方——一个边界/落点修正若只翻动这 10 个中的 1–2 个，
+  说明机制还没找对，而不是"先收下这一两个"。
+- **#13 是第二条独立路径**（`order_api` 35/37→37/37，加 2 个省略单元），不得用它的翻转去抵 #14 的射程。
+- 本轮若 #14 零翻转，仍须由 #13 单独交付 ≥1 文件转 OK 才能开下一轮；两者皆零翻转＝门禁未过，禁止下一轮。
