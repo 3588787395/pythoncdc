@@ -175,3 +175,35 @@ C 轴里剔 NOP 后**只有 1 处配对不同**的六个单元（`_process_tick_
 一侧吸太晚（吞掉汇合块之后的块）。若成立，一处边界判据的修正上界约 **A1 3 + C 8 ≈ 11 个单元**，
 是 42 残差中最大的单一杠杆。工单必须先用最小合成孪生分别复现**两个方向**（Battery before corpus），
 禁止只按其中一侧调门限。
+
+## IX. 42 单元互斥台账与「落点」轴的真实射程（单趟重算，阈值明示）
+
+仪器：`D:/Temp/r9main/ledger.py`（只读 stdlib：marshal+dis+compile+ast+difflib，**不导入 core**，
+故在 `region_analyzer.py` 处于中间态时仍可安全运行）。每单元记四项：
+剔噪后指令数比、差块数、首个差块是否仅跳转目标不同、产物该函数是否存在死码。
+
+| 互斥桶 | 判据 | 单元数 | 代表读数 |
+|---|---|---|---|
+| A1 体吞并 | 比≥1.15 ∧ 有死码 | **3** | `_process_order` 507/42、`_process_cancel_order` 333/40、`run_individual_transform` 407/355 |
+| A2 整段省略 | 比≥1.28 ∧ 无死码 | **4** | `option_order` 94/55、`future_order` 115/88、`calculate_di.<genexpr>` ×2（64/50，各少 14 条＝一条 boolop `and` 支腿） |
+| 纯落点 | opcode 序列**完全相同**，仅跳转目标不同 | **11** | 8 个只差 1 块：`_history_bars` 32→51、`get_fields` 50→143、`reconnect` 84→99、`load_daily.<module>` 661→679、`_on_clear_de_listed` 27→33、`kill_trade_process` 641→643、`get_trade_status` 151→147、`_process_tick_order` 22→19、`rzrq_credit_order` 490→485、`get_ipo_stocks` 225→215；另 2 个差 2 块、`tick_worker_thread` 差 4 块 |
+| 混合内容差 | opcode 序列不等 | **24** | 但其中 **24 个的首个差块仍是同 opcode 的跳转目标差**（IF_FALSE 12、FOR_ITER 4、IF_NONE 3、IF_TRUE 3、JUMP_FORWARD 2） |
+
+**对 §VIII 的自我修正（按精确谓词重测，不用算术）**：谓词取「首个差块两侧**长度相等且 opcode 序列逐位相同**
+⇒ 该单元第一处分歧只是跳转落点」。42 单元实测结果是一个**完整二分**（35+7=42，无重叠、无未归类）：
+
+| 第一处分歧 | 单元数 | 名单 |
+|---|---|---|
+| **仅落点**（first-hunk target-only） | **35** | 其余全部；含 11 个「整条 opcode 序列相同、只有目标不同」的紧致例与 24 个「先落点错、其后才有内容差」的单元 |
+| **内容缺失/多出**（first-hunk content） | **7** | `trade_live_broker`: `_process_order`、`_process_cancel_order`、`_sync_worker`、`_trade_status_handle`；`order_api`: `option_order`、`future_order`；`quote`: `run_individual_transform` |
+| 归一化后完全相等（NOP_ONLY） | **0** | §I/§VI 两次独立否证 NOP 主体假说，此处再次为 0 |
+
+⇒ **#14（落点/边界）的真实射程是 35 个单元**，而不是 §VIII 按互斥桶估的「≈11」；
+**#13（内容缺失）开局单元是 7 个**——注意 `wizard_quant_api.calculate_di.<genexpr>` 两条
+**不在**此列：它们的 boolop `and` 支腿丢失发生在序列后段，第一处分歧仍是落点，
+故该二单元归 #14 之后再补 #13 复测，不得预先认领。
+`_sync_worker` 与 `_trade_status_handle` 是**新落入内容轴**的两个（此前只在 §III 的比值表里出现过），
+#13 工单靶面由 6 修正为 7。
+两桶相加＝42，是**互斥且完备**的分区；#14 落地后必须重算本表，
+届时「先落点错、后内容差」的 24 个可能整段消失，也可能暴露新的内容轴——以重测为准，
+禁止用算术代替重测（既有约定：台账数字须在写入时算出）。
