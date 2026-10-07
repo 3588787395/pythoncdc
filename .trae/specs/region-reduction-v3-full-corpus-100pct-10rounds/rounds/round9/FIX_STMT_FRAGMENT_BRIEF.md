@@ -196,6 +196,22 @@
 | **隐式尾声只缺 2 条**（`LOAD_CONST`+`RETURN_VALUE`） | `handlers.TWHThreadController._target` −2、`risk_calculation._save_testds_to_csv` −8/+1 | 2 / 8 | **→ #15**，不属 #13 |
 | **未定性小差**（−1 到 −12，无签名特征） | `trade_info_utils.query_strategy_id` −1、`trade_live_broker.ipo_stocks_order` −1、`etf_purchase_redemption` −12、`_trade_status_handle` −6/+3、`_sync_worker` −9/+6、`quote.get_real_from_zeromq` −5/+3、`risk_calculation._on_publish_after_trading_end` −4 | ≤12 | **无归属**：须逐单元查具体块，禁止当成 #13 的既有战果 |
 
+## 附二：那 7 个「小差单元」已逐条定名（不再有无主残差）
+
+| 单元 | 纯增删块的实内容 | 判定 |
+|---|---|---|
+| `trade_info_utils.query_strategy_id` | 仅缺 `LOAD_CONST None; RETURN_VALUE` | **→ #15 隐式尾声** |
+| `trade_live_broker.ipo_stocks_order` | 纯增删 0 块（−1 出在 replace 内部） | **实为落点族 → #14**（此前被我按长度差误分进 LOSS） |
+| `trade_live_broker.etf_purchase_redemption` | 缺 `LOAD_ATTR order_id`、`LOAD_ATTR symbol` | 表达式**属性链被截断** → #13 |
+| `trade_live_broker._trade_status_handle` | 缺 `get_trade_status(self.trade_id, …)` 调用段，多出循环测试操作数 | 语句错位/吞并，与 #16 的体尾形同单元 |
+| `trade_live_broker._sync_worker` | 缺 `COMPARE_OP <` + `POP_JUMP_BACKWARD_IF_TRUE`、缺 `LOAD_CONST True; STORE_ATTR reconnect_flag` | **链式比较 (`a < b < c`) 的腿被丢** → 新机制，#13 面 |
+| `quote.get_real_from_zeromq` | 缺 `UNPACK_SEQUENCE` + `STORE_FAST exc_obj/exc_tb`，多 1 条 `JUMP_FORWARD` | **异常解包被丢** → try/except 形，与 #14 相邻 |
+| `risk_calculation._on_publish_after_trading_end` | 缺 `IMPORT_NAME …function; IMPORT_FROM` | **函数内 `from … import …` 语句整条丢失** → 新机制，#13 面 |
+
+⇒ 两个**新机制**值得单列（都还没人立案）：链式比较腿丢失（签名 `COMPARE_OP` + `POP_JUMP_BACKWARD_IF_*`）
+与函数内 import 语句丢失（签名 `IMPORT_NAME`+`IMPORT_FROM` 成对消失）。
+`ipo_stocks_order` 由 LOSS 改回落点族，说明**长度差本身不足以定家**，定家要靠增删块里的实际 opcode。
+
 ⇒ #13 真实可主张的面是 **call_stmt 3 + boolop 2 + subscr 1 + slice 1 = 7 单元**（外加 2 个复合形与 A1 簇的耦合部分），
 不是「18 个 LOSS 全归我」；`tail_return` 2 单元归 #15，剩下 **7 个小差单元无人认领**，
 需在落点票落地后重跑本聚类再分派。
