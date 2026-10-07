@@ -76,3 +76,32 @@ units ≥ 33/37  ∧ BROKE=0 再作业；翻正按逐单元名单记，**两票�
 （该文件只差这 1 个单元，无共要件，翻正即整文件 OK）。
 `clock_worker`（一形三态）、`_process_order`/`_process_cancel_order`（须共要件）各自另立次刀，
 不要在一票里同吃三种机制——Round 10 的两次 150 回合截断都发生在「一票多机制」上。
+
+## 九、新工单候选的**宿主级**线索：函数内 `import` 的发射（`_on_publish_after_trading_end`）
+
+事实（`git show HEAD:` 副本实测，`region_ast_generator.py`）：`IMPORT_NAME` 的协议走查被**复制进至少 4 条发射路径**
+（`:590`、`:922`、`:1123`、`:1223`），且**走查窗宽度不一致**：
+
+```
+:590   for _s in range(_scan_start, min(_scan_start + 3, len(block.instructions)))        ← 硬编码 3
+:922   for _s in range(_scan_start, min(_scan_start + 3, len(entry_block.instructions)))  ← 硬编码 3
+:1223  for _es in range(_ei_idx + 1, min(_ei_idx + 4, len(entry_block.instructions)))     ← 硬编码 4
+:1123  （委托 _process_instruction，另立一套 _import_pending_store 状态机）
+```
+
+两处违例同时成立：① `rules.md §2` 禁**硬编码指令条数**——这里直接写死「往后看 3 条／4 条」；
+② 「一处决策、多处复用」——同一协议判据被抄成 4 份且**抄得不一样宽**。
+后果面：3.11 的 `from X import Y` 在语句前部可能夹 `LOAD_CONST/PUSH_NULL` 之外的指令
+（如注解存储、`COPY`、异常边序），窗口一过短就识别不到 `IMPORT_FROM`，
+整条 `IMPORT_NAME + IMPORT_FROM` 对被丢（正是本单元实测的 `delete orig[482:484]`）。
+
+**给工程师的要求**（先证后改，勿照抄我的推断）：
+1. 用自有探针在 HEAD 字节上跑 `_on_publish_after_trading_end` 所在块，
+   **打印四条路径中实际命中哪一条**、以及该块内 `IMPORT_NAME` 之后到 `IMPORT_FROM` 的实际距离；
+   距离 > 3 即坐实窗口过短；否则本候选被否证，须继续找真宿主（不许强行改窗口凑绿）。
+2. 修法是**一条协议走查、四处复用**（同一函数/同一谓词），窗口边界必须由**边/opcode 事实**决定
+   （例如「直到遇到 `IMPORT_FROM` 或遇到块内下一条语句边界/终止跳转为止」），
+   不得把 3 改成更大的常数——那仍是硬编码，只是宽一点。
+3. 负对照必须包含：模块级 `import`、`from X import *`、`try` 内 `from X import Y`、
+   以及 `entry_block` 与 `block` 两条不同路径的样本；四条路径在改后**共用同一谓词**（grep 证：
+   `IMPORT_FROM` 的走查循环在文件里只剩一处实现被调用）。
