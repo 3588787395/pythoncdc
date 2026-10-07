@@ -175,7 +175,19 @@
         `_probe_keep/_probe_strip`（`region_ast_generator.py:48342`）与 `_probe_*`（`region_analyzer.py:11451`）
         为已落地判据的局部变量命名（`check_patch_patterns.py` PASS，不计残留），登记为清理项
 
-- [ ] Task 10: Round 9 — 402 全量终局复验（目标 units 6617/6617、files 402/402）
+- [ ] Task 10: Round 9 — 残余清零续战 + 402 全量终局复验（目标 units 6617/6617、files 402/402）
+  - [ ] 10.0 **本轮在飞工单的次序与依据**（2026-10-07 主代理定，防上下文丢失后重议）：
+        #14 落点/边界（`region_analyzer.py`，工程师在飞，标记 `[R9-B122 fwdonly]`）
+        → #13 语句省略（`region_ast_generator.py`，6 单元；简报 `FIX_STMT_FRAGMENT_BRIEF.md`）
+        → #15 尾声落点身份（替掉 G7 的 POP_TOP 巧合支；简报 `FIX_G7B_LANDING_IDENTITY_BRIEF.md`）。
+        串行不可并行的理由：三者都改变**同一判据面**——#13/#15 的输入含区域成员关系，
+        而 #14 正在改成员边界，先落地者会使后者的取证作废（#15 的 G5 直接消费成员关系）；
+        且 #13/#15 都落在 `region_ast_generator.py`，与 spec「多位修复工程师仅在破口族 ∧ 涉改文件不相交时可并行」不符。
+        每票派发前须先有本地提交；票面翻转只认逐单元名单，不认总数。
+        轮门禁可达性：只差 1 单元的 10 个文件其失败单元**全部**属落点族（`REVIEW_RESIDUAL_CENSUS.md` §X），
+        故 #14 单独即可满足「≥1 pyc 转 success」；#13 为第二条独立路径（`order_api` 35/37→37/37）。
+        **上界约束**：落点修好≠单元翻正——9 个大单元压着 1–9 条内容差（§XI），
+        故 #14 的成绩按实际翻转计，禁止按「35 全翻」记账。
   - [ ] 10.1 八分片 regen + batch + compare（before = Task 1 基线），双门禁 REGRESSIONS=0 ∧ UNIT_REGRESSIONS=0
   - [ ] 10.2 逐文件 `+OK.py` 存在性与 `single` status 抽验（≥30 文件覆盖各区域族）
   - [ ] 10.3 残余非 success 文件（若有）逐 pyc 登记 → 同轮封闭 → 重跑
