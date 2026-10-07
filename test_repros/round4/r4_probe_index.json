@@ -42,6 +42,15 @@
     "path": "test_repros/round4/r4v3_a14_min_arm.pyc"
   },
   {
+    "path": "test_repros/round4/r4v3_a15_shared_target_is_merge.pyc"
+  },
+  {
+    "path": "test_repros/round4/r4v3_a16_shared_target_is_true_entry.pyc"
+  },
+  {
+    "path": "test_repros/round4/r4v3_a17_shared_target_is_merge_three.pyc"
+  },
+  {
     "path": "test_repros/round4/r4v3_b01_nested_not_method.pyc"
   },
   {
@@ -78,6 +87,15 @@
     "path": "test_repros/round4/r4v3_b12_module_single_if_control.pyc"
   },
   {
+    "path": "test_repros/round4/r4v3_b12_three_sink_and_chain.pyc"
+  },
+  {
+    "path": "test_repros/round4/r4v3_b13_or_head_nested_tail_sink.pyc"
+  },
+  {
+    "path": "test_repros/round4/r4v3_b14_converging_exit_control.pyc"
+  },
+  {
     "path": "test_repros/round4/r4v3_c01_all_paths_return_expr.pyc"
   },
   {
@@ -91,23 +109,5 @@
   },
   {
     "path": "test_repros/round4/r4v3_c05_early_return_chain.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b12_three_sink_and_chain.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b13_or_head_nested_tail_sink.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_b14_converging_exit_control.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a15_shared_target_is_merge.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a16_shared_target_is_true_entry.pyc"
-  },
-  {
-    "path": "test_repros/round4/r4v3_a17_shared_target_is_merge_three.pyc"
   }
 ]
