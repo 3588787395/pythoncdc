@@ -51574,7 +51574,19 @@ AST 映射规则:
           (G5) 前驱与本块同属至少一个区域（self.regions 成员集合，认领面不变；
               原则 2 的一块一主不被移动）；
           (G6) 本块不在 `_with_jump_exit_blocks()`（F5：with 之后仍有真源码时
-              其出口块由无条件跳转到达，是语句而非尾声落点），
+              其出口块由无条件跳转到达，是语句而非尾声落点）；
+          (G7) 本块的尾部必须由**前驱那条语句自身的退出路径**再生，而不是某个
+              臂的唯一语句。两形之一即可：块为 'handler-epilogue'（退栈对就在
+              本块内，它是 except 臂正常路径的出口续体），或前驱块末 opcode 为
+              `POP_TOP`（with `__exit__` 结果丢弃 / 调用返回值丢弃之后的顺序
+              续体）。反例实测 history_data_source::get_bars off288/off292：
+              两块都是 pure-none 且由条件测试的**假边跳转**接入、且分别是
+              IfRegion@218 / IfRegion@0 的 `else_blocks` 唯一成员，源码就写了
+              `else: return None`，抑制即丢两条 RETURN_VALUE ⇒ 单元回退。
+              「臂的唯一语句」与「区域出口边的落点」在 pure-none 形上无法由
+              跳转身份区分（flytools off918/930 同为假边落点），能区分的只有
+              该尾是否由已发射语句的退出路径携带——故本门取 opcode 事实，
+              不取宿主类型、不取深度、不取计数。
         这些终块就是「per-edge  landing site」而不是语句，发射它们即把一条
         边的落点材料化成语句（flytools 实测：with 体尾 1 条 + handler 臂尾 4
         条凭空 `return None`，重编译后臂出口跳转目标 918/942/930 被置换）。
@@ -51667,6 +51679,13 @@ AST 映射规则:
                 _cands = None
                 break
             if _b in self._with_jump_exit_blocks():
+                _cands = None
+                break
+            # [G7] 只有「由前驱语句自身退出路径携带的尾」才是落点；pure-none 且
+            # 由条件测试跳转边接入的终块是某个臂的唯一语句（源码写了 return
+            # None），必须发射（实测反例 history_data_source::get_bars 288/292）。
+            if (self._r8_b121_scope_return_sink_kind(_b) != 'handler-epilogue'
+                    and not (_pli is not None and _pli.opname == 'POP_TOP')):
                 _cands = None
                 break
             _joint_owner = False
