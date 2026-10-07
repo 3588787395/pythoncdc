@@ -86,3 +86,24 @@ PROD  #18 LOAD_FAST i (77)   #19 POP_JUMP_IF_FALSE to 198  #20..#25 同上 (78)
 **+2 抖动**，那是 2 字节编码差异造成的噪声（指令条数与 opcode 序列两边完全相同），
 不是缺陷；只有把目标重映射到序列下标后剩下的那一处才是真差。
 任何用原始偏移做的「差块数」统计都会把噪声算成故障数。
+
+
+## 五、`IQEngine/plugins/plugin_fly_data/strategy.strategy.tick_worker_thread`（26/27，只差 1 单元）
+
+两侧剔噪后**都是 288 条真实指令、opcode 序列完全相同**，只有 4 条边的目标不同，
+且**四条全是 `POP_JUMP_FORWARD_IF_TRUE`，偏差恒定 +66**：
+
+    seq#70  orig to#87  → prod to#153     （#74 与它同目标，同样 87→153）
+    seq#180 orig to#197 → prod to#263     （#184 同上）
+    orig 落点块：`LOAD_GLOBAL` 且带源行号（325 / 339）
+    prod 落点块：`JUMP_FORWARD` / `JUMP_BACKWARD` 且 **line=None**（合成控制块）
+
+⇒ 不是随机错位：**恒定 +66 说明有一段 66 条指令的块簇被放到了这些边的汇合点之前**，
+于是四条真边一起被推过汇合点，落到更后的控制块上。
+两两同目标（70/74、180/184）＝两处 `if A or B:` 的成员边共用的汇合块——
+与 §三 `finance`、§一 `bar._history_bars`、`strategy_universe` 同属
+**「boolop 成员边 / 条件边的汇合块被取晚」**一族。
+
+累计：这条判据同时压着 **5 个只差 1 单元的文件**（`finance`、`function`、`load_daily`、
+`strategy`、`strategy_universe`），全部修对的最好情形是 384→389；
+这仍是**候选上界而非承诺**——最终以主代理 402 逐文件差值实测为准。
