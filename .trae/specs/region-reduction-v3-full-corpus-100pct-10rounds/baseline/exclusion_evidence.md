@@ -97,6 +97,25 @@ magic = 2320536f（≠ a70d0d0a）；marshal 失败（unknown type code）
    因此本轮按本树磁盘复核仍然有效；但**以该 JSON 的 root 字段去解析路径会指到陈旧树**。
    后续任何脚本一律以 `*_roster`（相对）+ 当前树 root 组合，禁止直接取 `corpus_root`。
 
+## 产物侧夹钳（同日补测，407 ≠ 402 的解释）
+
+穷举 `site-packages/**/*OK.py` 得 **407** 个产物，而 A 类只有 402 ⇒ 差 5 个**无对应 A 类输入的孤儿产物**。
+逐个溯源（`XOK.py` 的应有输入是 `X.pyc`）：
+
+| 孤儿产物 | 大小 | 其名义输入 `.pyc` | 归类 |
+|---|---|---|---|
+| `IQCommon/api/klinedataOKOK.py` | 102521 | `klinedataOK.pyc`（C 类，在盘） | **C 类输入的二阶产物** |
+| `IQCommon/api/klinedataOK_checkOK.py` | 102348 | `klinedataOK_check.pyc`（C 类，在盘） | **C 类输入的二阶产物** |
+| `fly/dumpload/_load_algo_recompOK.py` | 1188 | `_load_algo_recomp.pyc`（C 类，在盘） | **C 类输入的二阶产物** |
+| `IQCommon/util/cgroup_utils OK.py` | **0** | `cgroup_utils␠.pyc` 不存在 | 名字中多一个空格的垃圾副本（早期轮次 shell 引用失误） |
+| `IQCommon/util/email_utils OK.py` | 3866 | `email_utils␠.pyc` 不存在 | 名字中多一个空格的垃圾副本，且与 `email_utils.py.pyc` 逐字节相同（同为伪 pyc 文本） |
+
+⇒ 夹钳等式改为此式才不漏：**产物数 407 = A 402 + C 类二阶产物 3 + 空格名垃圾 2**；
+反向夹钳：**A 类缺产物数 = 0**（逐 A 条目验证同目录 `XOK.py` 存在，全部命中）。
+这 5 个孤儿**本轮不删除**：它们已被 git 跟踪，删除属改动入库历史内容，
+且当前有修复工单在飞、任何非其作者的写操作都会污染其差异面；登记为清理项，
+待本轮封表后由主代理单独提交删除。
+
 结论：A=402 的语料边界经字节级反证后仍然成立，"100% 成功"的分母就是 402 文件 / 6617 单元，
 不存在被误排除的真实模块。
 
