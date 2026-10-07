@@ -53,6 +53,22 @@ CFG 事实：`blk@44`（单条 NOP，唯一的后继是循环测块 46）`own = 
 
 `_sync_worker` 虽有 855/856 两处死码，比值却 412/410≈1.0，其差为测试极性反转，属另一轴。
 
+## 附：A2 的实测形状（另案，主代理已定位到指令段）
+
+`order_api.option_order`（orig 94 / prod 55，剔 NOP 后 difflib 对齐）四处差异中两处是**整段缺失**：
+
+    delete  A[59:90]  ← 原码 31 条指令在产物中完全不存在，起于
+                        `order_.futures_direction.value.upper()` 一串属性/调用链
+    replace A[38:47] → B[38:39]
+       orig: POP_JUMP_FORWARD_IF_TRUE to@91 | LOAD_GLOBAL strategy_log | LOAD_ATTR info
+             | LOAD_CONST '生成订单，订单号：{orde…' …   ← 一条 if 臂体内的日志语句
+       prod: POP_JUMP_FORWARD_IF_TRUE to@52          ← 只剩跳转，臂体被丢
+
+另两处是 `POP_JUMP_FORWARD_IF_FALSE` / `JUMP_FORWARD` 的目标差 1–8（C 轴形）。
+⇒ A2 的缺陷面是「**臂体语句与区域尾块被生成端省略**」，与 A1 的「文本在、字节码被死码规则抹掉」
+是两种不同的丢失，修法与归属都不同：A2 要查的是走查/装配循环为何不把这些块放进输出，
+而非终止边的语义。本工单**不含** A2；若 A1 的修复顺带影响 A2 读数，须在报告里单列证据。
+
 ## 要求（不许做的事）
 
 - 修在**识别端**（`region_analyzer.py` 的区域边界/merge 判定），使任何子区域的 `blocks` /
