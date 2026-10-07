@@ -29079,24 +29079,33 @@ AST 映射规则:
             # try_blocks 作判定，必须用 entry not in finally_blocks。
             _ids = set()
             if region.has_finally and region.finally_blocks:
+                # [B108 fix] 恢复 R7 原始双变量结构：d826d7fa 重命名时误把
+                # 「finally 块偏移全集」与「finally 内 ternary 子区域入口偏移
+                # 集」折叠为同一变量 `_offsets`，第二行 `_offsets = set()` 把
+                # 全集立即清空，导致循环恒不命中、`_ids` 恒空——try-finally
+                # 的 finally 体 normal path 副本 ternary 永远被 try 体消费
+                # （实测 e01_root：finally 体 `r = r if r else 0` 复制进 try
+                # 体且吞掉 try 后续 return）。判据不变（I.4 白名单）：子区域
+                # 入口 ∈ 本域 finally_blocks + 存在等块数 sibling。无新增
+                # self 状态、无偏移常量、无宿主名。
                 _offsets = {b.start_offset for b in region.finally_blocks}
-                _offsets = set()
+                _finally_ternary_entry_offsets = set()
                 for child in region.children:
                     if (isinstance(child, TernaryRegion)
                             and child.entry is not None
                             and child.entry.start_offset in _offsets):
-                        _offsets.add(child.entry.start_offset)
-                if _offsets:
+                        _finally_ternary_entry_offsets.add(child.entry.start_offset)
+                if _finally_ternary_entry_offsets:
                     for child in region.children:
                         if (isinstance(child, TernaryRegion)
                                 and child.entry is not None
-                                and child.entry.start_offset not in _offsets):
+                                and child.entry.start_offset not in _finally_ternary_entry_offsets):
                             # 检查是否有结构相同的 sibling 在 finally_blocks 内
                             for _sib in region.children:
                                 if (_sib is child or not isinstance(_sib, TernaryRegion)):
                                     continue
                                 if (_sib.entry is not None
-                                        and _sib.entry.start_offset in _offsets
+                                        and _sib.entry.start_offset in _finally_ternary_entry_offsets
                                         and len(_sib.blocks) == len(child.blocks)):
                                     _ids.add(id(child))
                                     break
@@ -32839,6 +32848,60 @@ AST 映射规则:
                 stmt = self._build_attr_assign(stmt_instrs + [instr])
                 if stmt:
                     stmts.append(stmt)
+                stmt_instrs = []
+                continue
+
+            # [B108 fix] DELETE_* 语句分支：handler/finally 副本体单块发射路径
+            # 此前缺失任何 DELETE 处理——`del x` 的 DELETE_FAST 落入默认累积，
+            # 在 RERAISE/块尾 flush 时经 _build_statement 只识别
+            # DELETE_ATTR/DELETE_SUBSCR（见 _build_statement 的同名分支），普通
+            # DELETE_* 整句蒸发（实测 try-finally-only e06_while：
+            # ``finally: del x`` → ``finally: pass``；except handler 体内
+            # ``del x`` 同蒸发）。归约方式镜像 _generate_block_statements 既有
+            # DELETE 分支（同 opcode 集、同 Delete(Name, ctx='Del') 映射、
+            # DELETE_ATTR/DELETE_SUBSCR 复用 _build_delete_stmt），保证 C2
+            # 两条语句重建路径同语义。识别条件 = opcode 事实（I.4 白名单）；
+            # as-var 清理三元组（LOAD_CONST None + STORE v + DELETE v，同名
+            # 相邻，与 _bsi_cleanup_skip 同判据）归 except 机制，不发射
+            # Delete（守卫仅查本块前导指令形态，不跨层、无名字/偏移白名单）。
+            # AST 映射：DELETE_FAST/NAME/GLOBAL/DEREF → Delete([Name(id,
+            # ctx='Del')])；DELETE_ATTR/SUBSCR → Delete([Attribute/Subscript
+            # ctx='Del'])。嵌套任意宿主同语义；每块唯一归属不变。
+            if instr.opname in ('DELETE_FAST', 'DELETE_NAME',
+                                 'DELETE_DEREF', 'DELETE_GLOBAL'):
+                # as-var 清理守卫：本块内（滤噪后）紧邻前驱为
+                # LOAD_CONST None + STORE <v>（同名）⇒ 该 DELETE 是 except
+                # as-var 清理帧，不产生用户语句。
+                _b108_prev = [i for i in block.instructions
+                              if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                  'PUSH_NULL', 'EXTENDED_ARG')
+                              and i.offset < instr.offset]
+                _b108_is_cleanup = (
+                    len(_b108_prev) >= 2
+                    and _b108_prev[-2].opname == 'LOAD_CONST'
+                    and _b108_prev[-2].argval is None
+                    and _b108_prev[-1].opname in ('STORE_FAST', 'STORE_NAME',
+                                                  'STORE_GLOBAL', 'STORE_DEREF')
+                    and _b108_prev[-1].argval == instr.argval)
+                if not _b108_is_cleanup:
+                    stmts.append({
+                        'type': 'Delete',
+                        'targets': [{
+                            'type': 'Name',
+                            'id': instr.argval if instr.argval else f'var_{instr.arg}',
+                            'ctx': 'Del',
+                        }],
+                    })
+                stmt_instrs = []
+                continue
+            if instr.opname in ('DELETE_ATTR', 'DELETE_SUBSCR'):
+                stmt_instrs.append(instr)
+                delete_stmt = self._build_delete_stmt(instr, stmt_instrs)
+                if delete_stmt:
+                    if isinstance(delete_stmt, list):
+                        stmts.extend(delete_stmt)
+                    elif isinstance(delete_stmt, dict):
+                        stmts.append(delete_stmt)
                 stmt_instrs = []
                 continue
 

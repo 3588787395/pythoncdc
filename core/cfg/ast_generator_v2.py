@@ -443,7 +443,16 @@ class ExpressionReconstructor:
             })
         
         # 加载变量
-        elif opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_CLOSURE'):
+        # [B111 fix] LOAD_CLASSDEREF 补入加载指令族：3.11 类体内对既非局部又非
+        # 全局的自由变量（外层函数参数/局部量被类体或其方法捕获）以
+        # LOAD_CLASSDEREF 加载。旧清单缺此 opcode 时该指令被静默丢弃，栈模拟
+        # 错位——类体内任何引用类外自由变量的表达式（装饰器调用 @deco(x)、
+        # 调用实参 f(x)、二元操作 a+x 等）整体重建损坏（实测 @deco(x) 退化为
+        # @((x,))：closure BUILD_TUPLE 被误当 callable）。判据 = opcode 事实
+        # （I.4 白名单：块内指令 opname），与 LOAD_DEREF 同族同语义（均从
+        # cell 加载名字引用），宿主无关（类体任意位置生效，非个案补丁）。
+        elif opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF',
+                        'LOAD_CLOSURE', 'LOAD_CLASSDEREF'):
             self.stack.append({
                 'type': 'Name',
                 'id': instr.argval,
@@ -2385,7 +2394,10 @@ class ExpressionReconstructor:
                 'value': instr.argval,
                 'lineno': instr.starts_line
             }
-        elif opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF'):
+        # [B111 fix] LOAD_CLOSURE/LOAD_CLASSDEREF 与 LOAD_DEREF 同族（cell 名字
+        # 引用），占位符兜底会产生 `<LOAD_CLASSDEREF>` 假名。判据 = opcode 事实。
+        elif opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF',
+                        'LOAD_CLOSURE', 'LOAD_CLASSDEREF'):
             return {
                 'type': 'Name',
                 'id': instr.argval,
