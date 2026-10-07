@@ -8,7 +8,7 @@ def f(rows):
                 Q.put(dt_strf)
                 sleep(3)
                 continue
-            elif dt_strf > '15:15:00' or dt_strf < '08:30:00':
+            elif not (dt_strf > '15:15:00' or dt_strf < '08:30:00'):
                 if '11:30:00' < dt_strf < '12:30:00':
                     sleep(60)
                     continue

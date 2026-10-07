@@ -30233,8 +30233,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
               等非条件块），walk 经 current 的真边（fall-through）抵达
               candidate 本身就是 and-run 续接签名；纯 and 链（尚无 or 成员）
               维持原拒绝，普通循环体内 ``if a and b:`` 的装配路径行为不变。
-          current 与 candidate 同为 TRUE 族的组合不是任何合法降级续接，拒绝
-          （纯 or 链在循环体内仍走既有 IfRegion or 链路径，行为不变）。
+          current 与 candidate 同为 TRUE 族且两条跳边同目标时，按该共享目标的
+          身份分判（[R5-B100-armjoin-trueentry] _boolop_shared_target_is_join）：
+          目标被非成员前驱以无条件跳边/自然直落认领为出口（本层汇合块）⇒ 放行，
+          该对成员是同一条负极性 or-run 的操作数，消费端 R14c 整体取反成立；
+          目标只被条件测试边进入（run 的真入口 / 臂体首块）⇒ 维持原拒绝，
+          纯 or 链在循环体内仍走既有 IfRegion or 链路径，行为不变。
         归约方式（[C2] 黑箱组合 + [C3] 孤儿显式认领）：命中即允许链 walk 越过
         body_blocks 守卫把 candidate 吸收为下一链成员；不命中维持原 break。
         吸收后的完整链交 _create_boolop_region_from_chain 统一归约为单个
@@ -30244,6 +30248,26 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         [and,and,or,or]）由消费端 _build_boolop_expression_inner 的 or_groups
         分组重建为单个 ast.BoolOp，循环体内层 `if a and b or c:` /
         `if b or c and a: break` 不再拆裂为嵌套 if、or 尾操作数不再丢失。
+
+        ── [R5-B100-armjoin-trueentry] 六项（本票改动面：TRUE/TRUE 同目标成员对）──
+        ①算法依据（原则 4 入口引用语义）：current 与 candidate 同为正向 TRUE 族跳转、
+          两条跳边共享同一目标 T 时，合法性完全取决于 T 的身份（判据见
+          _boolop_shared_target_is_join）：T 若被非成员前驱以无条件跳边/自然直落认领为
+          出口，则该对成员本就是同一条负极性 or-run（源文 `not (A or B)`）的相邻操作数。
+        ②归约顺序（原则 1 自底向上）：本判定发生在链 walk 之内、区域创建之前，只读已
+          归约为块粒度的两块与其共享目标的入边事实，不参与任何区域重建。
+        ③唯一归属判定（原则 2 每块唯一归属）：判 True 即把 candidate 收为本 run 的下一
+          成员，其后由 _create_boolop_region_from_chain 独占认领；判 False 维持原 break，
+          candidate 仍由它自己的 IfRegion 独占，不存在两块两主或无主块。
+        ④嵌套处理（原则 3 嵌套即抽象节点）：T 只被条件测试边进入时（T 是嵌套结构或臂体
+          入口）一律拒绝并入，嵌套条件体不会被折进布尔条件。
+        ⑤入口引用语义：命中后区域以 T 为汇合块被引用（臂体经 run 的落空侧进入、出口
+          引用 T），消费端 R14c 发射 `not (A or B)`，两臂入口不互换、臂体不丢失。
+        ⑥反编译流程 + C1/C2/C3：完整 op_chain 由 _build_boolop_expression_inner 重建为
+          单个 ast.BoolOp。[C1] 判据只读白名单结构事实（块末 opcode、后继/前驱关系、
+          异常边、本 run 自身成员集），无深度/数量/操作数上限，无文件名、函数名、偏移
+          特判；[C2] 纯查询，不写任何区域字段；[C3] 目标缺失、前驱仅经异常边、判据不
+          命中时一律 return False，产物与入轮逐字节一致。
         """
         if cur_last is None or getattr(cur_last, 'argval', None) is None:
             return False
@@ -30315,6 +30339,76 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # candidate 经 current 真边（fall-through）抵达即 and-run 续接；
             # 纯 and 链维持原拒绝（排除普通 and 链共用的语句 merge 块）。
             return bool(has_or_member)
+        # [R5-B100-armjoin-trueentry] current 与 candidate 同为正向 TRUE 族跳转、且两条
+        # 跳边共享同一目标 T（纯 or-run 在跳转语境下的降级形状）时，按 T 的身份分判
+        # （见 _boolop_shared_target_is_join）：T 是本层汇合块（假出口）⇒ 放行，两名成员
+        # 成为同一条 or-run 的负极性操作数，消费端 R14c 整体取反正确；T 只被条件测试边
+        # 进入（run 的真入口 / 臂体首块）⇒ 维持原拒绝，交消费端正极性路径。
+        if (_cur_true and _cand_true
+                and _cand_tgt is _cur_tgt
+                and self._boolop_shared_target_is_join(
+                    _cur_tgt, (cur_block, cand_block))):
+            return True
+        return False
+
+    def _boolop_shared_target_is_join(self, target: BasicBlock,
+                                      member_blocks) -> bool:
+        """[R5-B100-armjoin-trueentry] or-run 成员共享跳转目标 T 的身份判别器。
+
+        ①算法依据（原则 4 入口引用语义）：CPython 把跳转语境里的 or-run 编成
+          「每名成员块尾一条正向条件跳边指向同一块 T，落空边接下一成员」。仅凭
+          opcode 形状无法区分两种截然不同的 T：(i) T 是本层汇合块 / 该 run 的假
+          出口——源文为 `if not (A or B ...)`，全员 TRUE 边即「跳过臂体」的出口，
+          消费端整体取反（R14c）成立；(ii) T 是 run 的真入口（臂体首块）——源文
+          为 `if A or B`，成员 TRUE 边进入臂体、落空侧才是假出口，此时取反会互换
+          两臂入口并丢掉臂体。判别只用前驱/后继与块末 opcode：(i) 中 T 必被链外
+          同层块认领为出口——某个非成员前驱以无条件跳边（JUMP_FORWARD /
+          JUMP_BACKWARD）或自然直落进入 T（兄弟臂尾汇到同一汇合点）；(ii) 中 T 的
+          全部入边都是条件测试边（成员自身或同一 run 的续接腿），没有任何块把 T
+          当出口跳进。
+        ②归约顺序（原则 1 自底向上）：在链 walk 判定 (current, candidate) 是否构成
+          同一 run 的续接对时调用；两块已归约为块粒度，T 的前驱集由建图阶段给出，
+          本判别只读已成立的后继/前驱关系，不参与区域重建。
+        ③唯一归属判定（原则 2 每块唯一归属）：证据只来自 T 自身的入边与入边块的
+          块末 opcode；成员集合取自本 run 自身的块，不把祖先区域的成员关系当外部
+          证据（承 [r1-b98-elsescope] 教训），也不以后继穷尽当终态证据（承
+          [r3-b103-armjoin-termexit] 教训）。
+        ④嵌套处理（原则 3 嵌套即抽象节点）：判据对 T 内部结构无感；若 T 是嵌套
+          结构入口，其入边仍只有测试边，返回 False，嵌套体由 IfRegion 独占。
+        ⑤入口引用语义：True ⇒ 区域把 T 当汇合块引用（臂体经 run 落空侧进入，出口
+          引用 T）；False ⇒ T 是臂体入口，父级不得整链取反。
+        ⑥反编译流程 + C1/C2/C3：命中时链 walk 放行该成员对，BoolOpRegion 得到完整
+          op_chain，消费端按 R14c 发射 `not (A or B)`；未命中逐字节维持原 break 行为。
+          [C1] 只读白名单事实（块末 opcode、后继/前驱关系、异常边、区域成员集合），
+          无深度/数量/操作数上限，无文件名、函数名或偏移特判；[C2] 纯查询，不写任何
+          区域字段；[C3] 证据不足（前驱集为空、仅异常边入块、目标缺失）一律返回
+          False 保守弃权。
+        """
+        if target is None:
+            return False
+        _members = set(member_blocks or ())
+        for _p in sorted(set(getattr(target, 'predecessors', None) or ()),
+                         key=lambda b: b.start_offset):
+            if _p is target or _p in _members:
+                continue
+            _exc = set(getattr(_p, 'exception_successors', None) or ())
+            _norm = [s for s in (_p.successors or ()) if s not in _exc]
+            if target not in _norm:
+                continue
+            _pl = _p.get_last_instruction()
+            if _pl is None:
+                continue
+            if _pl.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                # 条件测试边进入 T：该前驱是本 run 的成员或续接腿，不构成出口证据
+                continue
+            if getattr(_pl, 'argval', None) == target.start_offset:
+                # 无条件跳边落入 T：T 是链外同层块的出口 ⇒ 本层汇合块
+                return True
+            if _pl.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                  'JUMP_BACKWARD',
+                                  'JUMP_BACKWARD_NO_INTERRUPT'):
+                # 非跳转收尾、自然直落进 T：同样是汇合证据
+                return True
         return False
 
     def _is_valid_2elem_mixed_chain(self, chain: List[Tuple[BasicBlock, str]]) -> bool:
