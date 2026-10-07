@@ -1,113 +1,122 @@
 [
- {
-  "path": "test_repros/round6/r6_g1_forhost_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g1_forhost_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g1_tickloop_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g1_tickloop_ctl2.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g1_tickloop_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g1_tryhost_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g1_tryhost_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g2_hdrbreak_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g2_hdrbreak_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g2_twoloop_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g2_twoloop_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g3_chainexit_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g3_chainexit_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g4_reloc_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g4_reloc_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g5_fstring_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g5_fstring_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g6_genexpr_and_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g6_genexpr_doubleif_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g6_genexpr_nestedhost_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g6_genexpr_or_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_g6_genexpr_single_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_q1_sinkjoin_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_q1_sinkjoin_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_q2_whilehost_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_q2_whilehost_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_q3_forhost_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_q3_forhost_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_q4_tryhost_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_q4_tryhost_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_q5_chain_sink_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_q5_chain_sink_spec.pyc"
- },
- {
-  "path": "test_repros/round6/r6_q6_widened_ctl.pyc"
- },
- {
-  "path": "test_repros/round6/r6_q6_widened_spec.pyc"
- },
- {
-  "path": "test_repros/round6\\r6_b111_a01_armchain_twin.pyc"
- },
- {
-  "path": "test_repros/round6\\r6_b111_a02_armchain_sibling.pyc"
- },
- {
-  "path": "test_repros/round6\\r6_b111_a03_armends_fn_control.pyc"
- }
+  {
+    "path": "test_repros/round6/r6_g1_forhost_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g1_forhost_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g1_tickloop_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g1_tickloop_ctl2.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g1_tickloop_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g1_tryhost_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g1_tryhost_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g2_hdrbreak_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g2_hdrbreak_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g2_twoloop_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g2_twoloop_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g3_chainexit_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g3_chainexit_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g4_reloc_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g4_reloc_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g5_fstring_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g5_fstring_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g6_genexpr_and_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g6_genexpr_doubleif_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g6_genexpr_nestedhost_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g6_genexpr_or_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_g6_genexpr_single_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_q1_sinkjoin_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_q1_sinkjoin_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_q2_whilehost_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_q2_whilehost_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_q3_forhost_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_q3_forhost_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_q4_tryhost_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_q4_tryhost_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_q5_chain_sink_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_q5_chain_sink_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_q6_widened_ctl.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_q6_widened_spec.pyc"
+  },
+  {
+    "path": "test_repros/round6\\r6_b111_a01_armchain_twin.pyc"
+  },
+  {
+    "path": "test_repros/round6\\r6_b111_a02_armchain_sibling.pyc"
+  },
+  {
+    "path": "test_repros/round6\\r6_b111_a03_armends_fn_control.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_b117_a01_loopexit_run.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_b117_a02_forrange_past.pyc"
+  },
+  {
+    "path": "test_repros/round6/r6_b117_a03_forelse_ctl.pyc"
+  }
 ]

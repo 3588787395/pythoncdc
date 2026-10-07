@@ -51689,6 +51689,81 @@ AST 映射规则:
                     self.generated_offsets.add(_r55_s.start_offset)
         return stmts
 
+    def _loop_unemitted_exit_landing(self, region: LoopRegion,
+                                     block: BasicBlock) -> bool:
+        """[R7-B117 exitclaim] 循环区域「出口边落点且本区域未发射」块判据。
+
+        ①算法依据：区域归约算法原则 1（自底向上）要求每个区域向父层交付
+        「区域出口边之后的顺序代码」；原则 2（每块唯一归属）要求「认领」与
+        「发射」同一主体。FOR/WHILE 区域的 blocks 会把其出口边（FOR_ITER 耗尽
+        目标 / 条件块条件跳转目标）的落点块登记进来（for_iter_exit 兼作
+        else_blocks），而 _loop_generate_for 在把该落点块让给「后继循环的
+        for_iter_setup」时（_other_loop_fis 过滤）并不发射它。若认领方仍按
+        区域成员把整块登记 generated，则该语句段既不在循环节点里、也不在父
+        顺序流里 ⇒ 离开区域的边被当成区域内直落吞掉，尾随语句段整块不发射
+        （B117 D 族，方向与 A 族外推相反）。判据输入全在白名单内：区域成员
+        关系（header/condition/body/back_edge/for_iter_setup 角色集合）、块间
+        正常后继与前驱关系、块末 opcode（经 successors 体现的跳转落点）；
+        异常后继（exception_successors）不参与可达性。
+        ②归约顺序：自底向上——区域归约完成后（_generate_region(region) 已返回）
+        才评估，只用于「成员块认领广播」这一步，不参与区域识别、不改变任何
+        区域的成员集合，也不回退已完成的归约。
+        ③唯一归属判定：本判据只裁「认领」这一件事——落点块若已被区域自身
+        发射（其 generated_blocks 登记由发射漏斗完成）就不属于本判据的适用
+        范围；判据为真时该块保持未认领，由父顺序流按块序再次走查并交给该块
+        自身的宿主（如后继 LoopRegion 的 for_iter_setup 守卫）发射，一块一度
+        归属、一次发射，不复制块、不向任何区域追加块。
+        ④嵌套处理：只读角色集合与直接后继关系，与嵌套层数、宿主类型无关；
+        体内可达性从 body_blocks 去掉 header/condition 后的块出发正向展开，
+        因此循环体内部出口（break 落点、体内 continue 回边）与循环耗尽边
+        可区分；后继循环的 setup 块本身仍由其区域抽象节点承载（原则 3）。
+        ⑤入口引用语义：父层只经该块的 entry/单块 BASIC 区域或本方法的
+        GET_ITER 守卫引用它，不按内部指令认领；本判据不消费 region.exit
+        （该字段无写入方），也不读写任何全局计数器。
+        ⑥反编译流程：判据为真 → 认领广播跳过该块 → 重编译时该落点块由父
+        顺序流再发射一次跳转边之后的语句，FOR_ITER/条件跳转的出口边落点与
+        指令数复原；判据为假（区域已发射该块 / 块在体内可达 / 非出口边落点）
+        → 认领逐字节不变。
+        C1 局部消费：只读同层区域成员与块间边，无跨方法状态。
+        C2 黑箱组合：对外只交付布尔判定，不修改区域、不生成 AST。
+        C3 守卫封闭：唯一消费点是本文件 GET_ITER for_iter_setup 守卫的认领
+        广播，且仅在「该块未被区域自身登记 generated」时参与裁决。
+        """
+        header = region.header_block
+        condition = region.condition_block
+        if header is None and condition is None:
+            return False
+        body = set(region.body_blocks or ())
+        roles = {b for b in (header, condition,
+                             getattr(region, 'back_edge_block', None),
+                             region.metadata.get('for_iter_setup'))
+                 if b is not None}
+        if block in body or block in roles:
+            return False
+        # 出口边落点：区域角色块（头/条件）的正常后继中、不属于循环体的那块
+        exit_srcs = [b for b in (header, condition) if b is not None]
+        if not any(block in list(src.successors or ())
+                   for src in exit_srcs):
+            return False
+        # 体内可达性（异常后继不参与）：可达则该块是循环内部延续而非尾随落点。
+        # 遍历不得越过角色块（header/condition）——它们的对外跳转正是被检验的
+        # 出口边，越过去会把落点自身当成「体内可达」。
+        seen = set()
+        stack = [b for b in body if b not in exit_srcs]
+        while stack:
+            cur = stack.pop()
+            if cur in exit_srcs:
+                continue
+            if cur is block:
+                return False
+            if cur in seen:
+                continue
+            seen.add(cur)
+            for succ in (cur.successors or ()):
+                if succ not in seen:
+                    stack.append(succ)
+        return True
+
     def _generate_block_statements_body(self, block: BasicBlock, _cjb_parent: BasicBlock = None) -> List[Dict[str, Any]]:
         """_generate_block_statements - 基本块 AST 语句生成（BasicBlock → ast.stmt 列表）
 
@@ -51703,6 +51778,9 @@ AST 映射规则:
         或全部有语义指令偏移已在 generated_offsets 中时返回空列表（去重）；
         GET_ITER 守卫命中 LoopRegion 时登记块与偏移并整树生成，防 GET_ITER
         被发射为独立表达式语句；跨块守卫消费的成员块由对应结构登记归属。
+        [R7-B117 exitclaim] 该登记只覆盖循环自身消费的成员：守卫的认领广播
+        跳过 _loop_unemitted_exit_landing 为真的块（区域出口边落点且区域未
+        发射），使离开区域的边的落点块回到父顺序流并保持唯一归属。
         ④嵌套处理：嵌套区域作为抽象节点——普通块不递归子区域；仅 GET_ITER
         守卫识别到本块为某 LoopRegion 的 for_iter_setup 时，经 _generate_region
         把整个循环作为抽象节点生成并返回其语句列表。
@@ -51815,7 +51893,13 @@ AST 映射规则:
                                 for _fi_instr in block.instructions:
                                     self.generated_offsets.add(_fi_instr.offset)
                                 _lr_ast = self._generate_region(_lr)
+                                # [R7-B117 exitclaim] 认领广播不得吞掉「本区域
+                                # 未发射的出口边落点块」（判据六项见该方法 docstring）：
+                                # 该块留在父顺序流，由它自己的宿主发射，出口边复原。
                                 for _lb in _lr.blocks:
+                                    if (_lb not in self.generated_blocks
+                                            and self._loop_unemitted_exit_landing(_lr, _lb)):
+                                        continue
                                     self.generated_blocks.add(_lb)
                                     self.generated_offsets.add(_lb.start_offset)
                                 self._generated_regions.add(_lr_id)
