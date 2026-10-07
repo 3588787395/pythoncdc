@@ -29103,6 +29103,9 @@ AST 映射规则:
             for child in region.children:
                 if isinstance(child, RegionASTGenerator._EXPR_REGION_TYPES):
                     child_id = id(child)
+                    import os as _os_r8fb
+                    if _os_r8fb.environ.get('R8FIXBDBG') == '1':
+                        print(f"[R8FIXBDBG] child walk region@{region.entry.start_offset} child@{child.entry.start_offset if child.entry else None} in_ids={child_id in _ids} gen={child.entry in self.generated_blocks if child.entry else None} genreg={child_id in self._generated_regions}", flush=True)
                     if child_id not in self._generated_regions and child_id not in self._generating_regions:
                         # 跳过 entry 落在 handler 内部的子区域 —
                         # 这些 ternary/boolop 应由 handler body 遍历处理
@@ -31228,6 +31231,10 @@ AST 映射规则:
                     for fb in region.finally_blocks:
                         self.generated_blocks.discard(fb)
                     for fb in region.finally_blocks:
+                        import os as _os_r8fb2
+                        if _os_r8fb2.environ.get('R8FIXBDBG') == '1':
+                            _gb34 = fb in self.generated_blocks
+                            print(f"[R8FIXBDBG] finalbody legacy fb@{fb.start_offset} gen={_gb34} genoff={fb.start_offset in _generated_finally_offsets}", flush=True)
                         if fb.start_offset in _generated_finally_offsets:
                             continue
                         # [R09 fix] 每块唯一归属：本循环内子区域派发（上方分支）
