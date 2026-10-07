@@ -129,3 +129,26 @@
    ptradeAccount 137/137；七套 r1–r8 电池 + `r9_probe_index`(8/8) + `r9_quote_index`(43/53 中
    **16 条对照臂必须仍 2/2**) 零绿转红；pytest 六套件仍 277/2/2 同名单。
 6. 全量 402 门禁由主代理执行。零翻转则按 sha256 逐字节回滚并把否证作为交付。
+
+## 第二波已定形的一个目标：`matcher.DefaultMatcher.match`（只差 1 条内容差）
+
+取证（HEAD 产物 + 盘上 pyc，剔噪后逐块）：该单元 25 个差块里 24 个是落点，**只有 1 个是内容差**，
+形状是一段 10 条指令的整句缺失，原码 line 241：
+
+    LOAD_FAST order | LOAD_ATTR asset | LOAD_ATTR symbol | LOAD_CONST None | LOAD_CONST 3
+    BUILD_SLICE | BINARY_SUBSCR | LOAD_CONST ('688','689') | CONTAINS_OP
+    POP_JUMP_FORWARD_IF_FALSE →2464 | LOAD_FAST is_first_five_trad… | POP_JUMP_FORWARD_IF_TRUE →2464
+    ⇒ 源语句为 `if order.asset.symbol[:3] in ('688', '689') and is_first_five_trading_day…:`
+
+产物里这个测试**完全不存在**（`matcherOK.py:152` 只有 `if order.asset.symbol[:3] not in ('300','688','689'):`）。
+`co_consts` 实测同时含 `('300','688','689')` 与 `('688','689')` 两个元组，
+⇒ 缺陷形状是**两个同形成员测试只在常量元组上不同，被合并/吞掉其一**：
+发射端按形状对齐同族测试时，**没有把常量操作数身份算作区分事实**。
+
+判据方向（须写成块/操作数事实，禁止按名字或元组内容特判）：
+两条 `CONTAINS_OP` 测试若 `LOAD_CONST` 的元组对象**不同一**，即为两条独立语句，不得合并、不得互相顶替；
+合并只允许发生在常量也相同的情形。
+
+排序：本条**在 #14 落地后**再取（它的第一处分歧是落点，落点噪声退去才能确认这条内容差是否就是最后障碍）。
+若届时该单元只剩这 1 条差，它就是本票最经济的单点靶；若落点修复顺带把它带走，则如实记为 #14 的战果，
+不得算进 #13。
