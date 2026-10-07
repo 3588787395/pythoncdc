@@ -52,8 +52,22 @@ while len(self.open_orders) > 0:
 则 else 块应由循环**出口边**进入并向后跳过循环（fall through 到循环之后），
 绝不会带一条 `JUMP_BACKWARD` 回测试块。产物把它降格成 `while … else:` **在字节码层面即可判为错**。
 
-同法尚未对另外三处（`_process_order`、`_process_cancel_order`、`_save_testds_to_csv`）逐条复验，
-工单须自行以同一判据（sleep 块后继是否为回边）确认/否证，不得把我这一次证明当作四处的担保。
+同法已逐条复验其余三处，结论**不是一致的**，必须分家：
+
+| 站点 | `else` 体 | sleep/尾块之后第一条控制指令 | 判定 |
+|---|---|---|---|
+| `_trade_status_handle` | `time.sleep(0.5)` | `JUMP_BACKWARD to 46`（off 872） | **体尾被降格**（铁证） |
+| `_process_order` | `time.sleep(0.001)` | `JUMP_BACKWARD to 46`（LOAD_CONST 0.001 @off3150 之后） | **体尾被降格**（铁证） |
+| `_process_cancel_order` | `time.sleep(0.001)` | `JUMP_BACKWARD to 46`（@off2022 之后） | **体尾被降格**（铁证） |
+| `_save_testds_to_csv` | `return None`（While@540 `not self._stop_save_csv_thread`，体末为 `if is_end: break`） | 无 sleep；`else` 体是 `return None` | **不属本形**——这是 B121/G7 的隐式尾声落点被写成 `while…else: return None`，归 #15 判据面 |
+
+⇒ 本轴的真实射程是 **3 个单元**（`trade_live_broker` 的三个 `_process_*`/`_trade_status_handle`），
+第 4 处经复验**移出本轴**。三处都在 `REVIEW_RESIDUAL_CENSUS.md` §X「只差 1 单元」的十个文件名单内
+（`trade_live_broker` 本身差 10 单元，非一步可翻正——故此轴的价值在于关掉这 3 个单元，
+而非直接交付一个完全 OK 文件）。
+
+**负对照实形**（必须保住）：`api_base.decorate_api_exc` 的 While@33 `else` 体是
+`while False: pass`——退化但**该单元读 Equal**。收紧判据时若把它一起改掉，即为以改判据换读数。
 
 **全量占比补测**（407 产物穷举 `ast`）：`while…else` 全文仅 **7 处**，4 处在失败单元上、3 处在通过单元上。
 ⇒ 本形解释 **42 个残差单元中的 4 个**，不是 35 个落点单元的通用解释；
