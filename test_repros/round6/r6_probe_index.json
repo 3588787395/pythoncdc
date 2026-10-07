@@ -100,5 +100,14 @@
  },
  {
   "path": "test_repros/round6/r6_q6_widened_spec.pyc"
+ },
+ {
+  "path": "test_repros/round6\\r6_b111_a01_armchain_twin.pyc"
+ },
+ {
+  "path": "test_repros/round6\\r6_b111_a02_armchain_sibling.pyc"
+ },
+ {
+  "path": "test_repros/round6\\r6_b111_a03_armends_fn_control.pyc"
  }
 ]

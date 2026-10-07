@@ -26032,6 +26032,23 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                   经 block_to_region 归属表显式校验：仅允许未认领/本循环
                   condition_block 惯例/待超越残链三类，[C3]）。
           Step 6: 后处理优化——尝试扩展 boolop 区域以包含值块（value block）。
+          Step 4c: [R6-B111 armscope]「循环条件前缀剥链」步的归属门
+                  （`_boolop_member_is_loop_condition_entry`，本方法内唯一消费点）。
+                  ①算法依据：链成员被改判为某循环的条件前缀，其身份证据只能是
+                  该块正是该 LoopRegion 的 condition_block 角色块；从 condition_block
+                  沿「前驱以 POP_JUMP_*_IF_* 结尾」反向可达不构成归属。
+                  ②归约顺序：位于 Step 4 建区之后、Step 5 循环条件装配之前，只决定
+                  已建链是否被剥去前缀，不新建区域。
+                  ③唯一归属判定：门放行即成员仍由原 BoolOpRegion 唯一认领；门拦截
+                  时不得把它改投循环（否则外层 if 臂条件被双重认领，实测
+                  quote_handler.get_kline_local 的 344/382 即此形态）。
+                  ④嵌套处理：按对象同一性裁决，与循环/if 嵌套层数无关。
+                  ⑤入口引用语义：拦截后链的每条出口边都在链内取得落点，臂出口不必
+                  在函数尾另造 `LOAD_CONST None; RETURN_VALUE`（B111 的 +2 凭空 sink）。
+                  ⑥反编译流程：拦截 → 发射单条 `if A and B or C1 and C2:`，边归属
+                  复原；放行 → 原剥链行为逐位不变。
+                  C1 只读该循环角色字段与该块对象；C2 对外只交付布尔裁决；
+                  C3 该步是本判据的唯一消费点，无旁路、不补写任何语句。
 
         **归约顺序**
         Phase 2 的高层表达式级区域（analyze() 中显式调用顺序：
@@ -26288,7 +26305,11 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                     _cq.append(_cp)
                     _found = False
                     for _cb, _ in br.op_chain[:-1]:
-                        if _cb.start_offset in _cond_chain_offsets and _cb not in _lr.blocks:
+                        # [R6-B111 armscope] 只有该成员正是本循环的 condition_block
+                        # 角色块时，它才是循环条件前缀；仅「反向可达」不构成归属。
+                        if (_cb.start_offset in _cond_chain_offsets
+                                and _cb not in _lr.blocks
+                                and self._boolop_member_is_loop_condition_entry(_cb, _lr)):
                             _found = True
                             break
                     if _found:
@@ -28060,6 +28081,55 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             if not self._check_block_has_trailing_return_none(_d):
                 return False
         return True
+
+    def _boolop_member_is_loop_condition_entry(self, member: Optional[BasicBlock],
+                                               loop: Optional[LoopRegion]) -> bool:
+        """[R6-B111 armscope] 短路链成员可否被改判为「某循环的条件前缀」的唯一归属判据。
+
+        ①算法依据：区域归约算法原则 2（每块唯一归属）+ 原则 4（父只经入口引用
+        子）。`while A and B or C:` 的字节形态是「条件表达式链在循环体入口处结束」，
+        链成员被循环条件占用的**唯一身份证据**是该块本身就是该 LoopRegion 的
+        condition_block 角色块——角色块由建区步按循环入口/出口边选定，是区域对
+        「谁持有这条边」的正式裁决。反之，从 condition_block 出发沿「前驱以
+        POP_JUMP_*_IF_* 结尾」反向可达，只说明该块有一条边**通向**条件链，不说明
+        它归属该循环：一条 if 语句的短路链（`if A and B or C:`）后面只要出现任何
+        循环，其成员都会因这条反向可达性被误认为循环条件前缀。实测
+        quote_handler.get_kline_local：外层 if@344 的链成员 344/382 与循环
+        LoopRegion@710/1070/1430/1790/2150 的可达集相交（5 个循环全部命中），
+        于是主扫描装配好的 4 元链 [344 and, 382 or, 420 and, 458 and] 被剥掉首
+        成员，重建为残链 [382,420,458]；生成端只能把 344 作为**外层 if 的条件**
+        发射，而该 if 的臂出口（A 假边在原字节里落回链内 420）在源码里没有落点，
+        只能落到作用域尾 ⇒ 重编译在函数尾凭空生成 `LOAD_CONST None;
+        RETURN_VALUE`（+2 指令，off3534）并使终态 `return <expr>` 块少一条汇入边。
+        判据只读块身份（是否与角色块同一对象）与区域成员关系，无名字/偏移/深度/
+        计数门控，不区分 and/or/mixed 与链长度。
+        ②归约顺序：在 `_identify_boolop_regions` 的「循环条件前缀剥链」步被消费，
+        位置在主扫描建区**之后**、区域集合交还 IfRegion 检测**之前**，故它只能
+        撤销/维持剥链决定，不新增区域、不改变任何成员集合的其它部分。
+        ③唯一归属判定：命中（返回 True）才允许把链成员改判为该循环的条件前缀并
+        剥去前缀；返回 False 时成员留在原 BoolOpRegion 内，由该区域唯一认领
+        （原则 2）。被反向可达性冒充的 if 臂条件块因此不再被双重认领
+        （实测原状态 block_to_region[344]=IfRegion@32 同时 IfRegion@344 又把
+        382 列为成员——一块两主，正是本判据要禁止的形态）。
+        ④嵌套处理：判据按「成员 ↔ 该 LoopRegion 角色块」的对象同一性裁决，与
+        循环嵌套层数、宿主是 while/for/if 臂均无关（原则 3：抽象节点不被窥视，
+        只按其入口侧角色引用）；多层循环各自只认自己的 condition_block。
+        ⑤入口引用语义：True 时循环以其条件入口引用该成员（父引用子入口，原则 4）；
+        False 时循环不引用该块，链以自身 entry 被父级 IfRegion 引用，链的每条出口
+        边都仍在链内取得落点，臂出口不再需要在函数尾另造 sink。
+        ⑥反编译流程：True → 原剥链行为逐位不变（发射 `while <前缀> and <残链>:`）；
+        False → 不剥链，发射单条 `if A and B or C1 and C2:`，重编译复原
+        `344→420 / 382→496 / 420→500 / 458→500` 四条边，凭空尾 sink 消失。
+        C1 局部消费：只读该 LoopRegion 的角色字段与该块对象，不查全局状态。
+        C2 黑箱组合：对外只交付一个布尔裁决，不暴露链/循环内部结构。
+        C3 守卫封闭：本判据是「循环条件前缀剥链」步的唯一身份门，该步在
+        `_identify_boolop_regions` 一处、别无旁路；返回 False 即完全维持原链，
+        不引入第二处发射或补写语句。
+        """
+        if member is None or loop is None:
+            return False
+        _cond = getattr(loop, 'condition_block', None)
+        return _cond is not None and _cond is member
 
     def _loop_tail_exit_sink_pair(self) -> Set[BasicBlock]:
         """[R5-B119 loopsink] 循环/for-iter 区域的「相邻双隐式 return None 尾 sink」不变式。
