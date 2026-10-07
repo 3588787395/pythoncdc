@@ -121,6 +121,27 @@
       判据未改、读数未凑、语料未删。分派见 `tasks.md` §10.0 与 `REVIEW_RESIDUAL_CENSUS.md` §XVI
       （`#18 极性轴` 已作为**假轴撤销**：目标解析后逐 hunk 复验＝零条孤立换 opcode 差）。
 
+## 轮次核验记录（round10 · 进行中，尚未封表）
+
+- [x] 独立文件夹 `rounds/round10/`（含 `after/` 八份报告）＋ 派发简报 `round10/FIX_LANDING_R10_BRIEF.md`、
+      `FIX_OMISSION_R10_BRIEF.md`、`FIX_TAILLANDING_R10_BRIEF.md`、`TASK11_COMMENT_AUDIT_BRIEF.md`、
+      取证 `REVIEW_ROUTE_R10.md`、`UNITMAP_R10.md`、裁定 `ADJUDICATION_R10_B126_REVERTED.md`、终局 `AUDIT_STATE.md`
+- [x] **#16 零翻转裁定合规**：工程师 150 回合截断但回报**边做边写**（其 §〇/§一/§一B 已落盘，
+      优于 Round 9 的 0 字节）；主代理自有复测＝自有 `r9w16_*` 电池 **26/37→33/37、BROKE=0**、
+      402 八分片 **REGRESSIONS=0 ∧ UNIT_REGRESSIONS=0 ∧ 逐单元新增失败 0**、产物变更面仅 1 文件；
+      零翻转 ⇒ 按 sha256 逐字节回滚（analyzer `38a1d5142d13`、generator `e9a8f65f6451` 均已复核等于封表值），
+      补丁存档并列为 #13 的共要件（`RAVED_R10_B126.patch`，288 行）
+- [x] 残余**逐单元具名**完成：40 条单元逐条读回具体源语句/构造（§十二 收尾断言），
+      档位固定为 具名-语句／半具名／未具名，现计 **33 / 7 / 0**；宿主未定位者如实记半具名，不升级
+- [x] 仪器自我订正四处并留痕：嵌套 code object 的 `repr` 假差、行锚 `NOP` 无标签造成的假盲区、
+      「净条数分桶」把搬位误记成省略（`real_quote`、`run_tick_socket`）、同名尾段配对造成的假盲区（`handlers._target`）
+- [ ] **#13-P0 在飞**（`matcher.DefaultMatcher.match` 被吞的切片成员测试）：
+      电池 `r10ls_*` 基线、实现、`matcher 16/17→17/17`、哨兵复读与 402 双门禁均待工程师落地后由主代理自有复跑
+- [ ] **本轮 ≥1 个 pyc 由 failure 转 success：尚未达成**（现读 386/402；#13-P0 与 #14 均为可达路径）
+- [ ] 本轮尚未提交 push 成交：`ahead=9`（`git push` 连续 `Out of memory (524288000 bytes)` 与 443 不通），
+      封表前必须补推并在此记 `ahead=0` 的实测时刻
+- [ ] Task 11（`_identify_*` 12 方法逐方法注释 vs 行为；实测现仅 1 个含六项模板）未开始，见 `TASK11_COMMENT_AUDIT_BRIEF.md`
+
 ## 终态验收
 - [ ] 402 全量 units = 6617/6617（100%）、files = 402/402 success、0 compile_error、0 error
 - [ ] `site-packages/fly/data/quotation.pyc` single = 153/153 status=success
