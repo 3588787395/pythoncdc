@@ -1,0 +1,77 @@
+[
+ {
+  "path": "test_repros/round8/r8nop_01_with_implicit_tail_return.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_02_with_explicit_tail_return.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_03_while_condition.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_04_while_true_guard.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_05_empty_if_pass.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_06_except_arm_implicit_returns.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_07_except_arm_explicit_returns.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_08_except_pass_body.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_09_with_return_value.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_10_with_no_tail_stmt.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_11_multiitem_with.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_12_while_true_in_try.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_13_flytools_mini_nested_with.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_14_flytools_mini_arm_returns.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_15_except_elif_pass.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_16_while_cond_body_pass.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_17_while_cond_plain.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_18_nested_if_tail_no_return.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_19_nested_with_explicit_tail_return.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_20_except_elif_real_stmt.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_21_while_no_pass_arm.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_22_ifchain_outside_except.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_23_while_pass_arm_no_continue.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_24_nested_with_no_tail_stmt.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8nop_25_nested_with_arm_return_only.pyc"
+ }
+]
