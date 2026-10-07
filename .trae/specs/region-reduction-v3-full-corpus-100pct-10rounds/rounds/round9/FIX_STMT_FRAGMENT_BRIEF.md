@@ -215,3 +215,22 @@
 ⇒ #13 真实可主张的面是 **call_stmt 3 + boolop 2 + subscr 1 + slice 1 = 7 单元**（外加 2 个复合形与 A1 簇的耦合部分），
 不是「18 个 LOSS 全归我」；`tail_return` 2 单元归 #15，剩下 **7 个小差单元无人认领**，
 需在落点票落地后重跑本聚类再分派。
+
+## 附三：原 #18「极性」两单元并入本案（共享靶形：**5 指令语句被压成 1 条 ∧ 别处 1 条被摊成 9 条**）
+
+主代理用目标解析后的序列 + `difflib` 对齐复验（`D:/Temp/r9main/pol.py`，HEAD 产物口径，`REVIEW_RESIDUAL_CENSUS.md` §XVI）：
+两单元**零条孤立「换 opcode」hunk**，其全部差＝同 opcode 的跳转目标差（#14 面）＋ 下列多指令块（本案面）：
+
+| 单元 | 被压掉的语句块（orig，实测逐条） | 摊开的位置 | 另有 |
+|---|---|---|---|
+| `IQData/api/api_base.pyc :: <module>.get_history_df` | `orig[449:454]`＝`POP_JUMP_FORWARD_IF_TRUE / LOAD_CONST 1 / BINARY_OP -= / STORE_FAST time_count / LOAD_FAST frequency` → prod 只剩 1 条跳转 | `orig[514:515]` 1 条 → prod **9 条**；`orig[527:536]` 9 条 → prod 1 条 | 6 个多指令块 + 17 个仅目标差 |
+| `IQCommon/api/klinedata.pyc :: <module>.kline_datetime_list` | `orig[158:163]`＝同形（`IF_TRUE / LOAD_CONST 1 / -= / STORE_FAST time_count / LOAD_FAST frequency`） | `orig[327:328]` 1 条 → prod **9 条** | 7 个多指令块（含 `delete orig[333:341]` 整 8 条）+ 27 个仅目标差 |
+
+**形状读法**：`time_count -= 1` 与紧随的循环测试算术被吃进一条跳转里，该测试随后写成反极性——
+**极性差是省略的后果，不是原因**（故不得为其立独立工单，见 §XVI）。
+本案要收的是这条具体靶形：**复合赋值语句 + 其后的循环测试被折叠到同一发射点**。
+它与 §附 的 `call_stmt / boolop / subscr / slice` 四类签名并列，机制清单由 3 条增为 4 条。
+
+⇒ #13 可主张面由 **7 单元** 增至 **9 单元**（新增 `get_history_df`、`kline_datetime_list`），
+但两单元同时受 #14 的落点差牵制（17 / 27 个仅目标差），**单独修本案不保证翻正**——
+翻正仍按逐单元名单记，禁止按桶数入账。

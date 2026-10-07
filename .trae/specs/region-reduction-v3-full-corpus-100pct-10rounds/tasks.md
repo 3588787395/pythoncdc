@@ -192,8 +192,10 @@
         **排队次序**：#16（`while True` + 体内 `if` 的汇合块被当 else；分析端 `_find_loop_else`）
         → #14（落点/重排，射程上限 14，口径须明示：多重集 14／长度 18）
         → #13（语句省略 16 单元，6 文件 3 机制；`MIN_INSTRS_FOR_SUBSCR_ASSIGN` 六处门控必除）
-        → #15（隐式尾声身份，替掉 G7 的 POP_TOP 巧合支；含 #17 的 5 个少量多发射单元）
-        → #18（跳转种类互换）。
+        → #15（隐式尾声身份，替掉 G7 的 POP_TOP 巧合支；含 #17 的 5 个少量多发射单元）。
+        ~~→ #18（跳转种类互换）~~ **已撤销为独立工单**：目标解析后逐 hunk 复验＝**零条孤立极性互换**，
+        `api_base.get_history_df` 与 `klinedata.kline_datetime_list` 并入 #14/#13（见
+        `REVIEW_RESIDUAL_CENSUS.md` §XVI）；共享靶形「5 指令语句被压成 1 条 ∧ 别处 1 条摊成 9 条」记入 #13 机制清单。
 
         **#16 提前的理由（本轮新证）**：#16 改的是**区域成员关系**——把被误当循环测试的那条 `if`
         归还成体内 `IfRegion`、把 `LoopRegion.condition_block` 改判为 `None`。
