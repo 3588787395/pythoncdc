@@ -1962,3 +1962,27 @@ D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\oauthentic
 }
 -> D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/.trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round5/after\shard2_report.json
 
+=== verify shard3 rc=0 44.6s
+... 25/51  24s  units=1/1
+... 50/51  41s  units=11/11
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 887,
+ "units_success": 884,
+ "success_rate": 0.9966178128523112,
+ "files_by_status": {
+  "success": 49,
+  "failure": 2,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 41.6
+}
+-> D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/.trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round5/after\shard3_report.json
+
