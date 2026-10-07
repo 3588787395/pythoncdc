@@ -6,6 +6,3 @@ def f(running, pre, upd):
         while running:
             if not upd:
                 reset()
-        return None
-    else:
-        return None

@@ -73,5 +73,23 @@
  },
  {
   "path": "test_repros/round8/r8nop_25_nested_with_arm_return_only.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8b121_01_except_arms_empty_else.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8b121_02_with_tail_and_arms.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8b121_03_if_then_return_in_loop.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8b121_04_explicit_arms_plus_tail.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8b121_02_with_body_and_arms.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8b121_03_two_handlers.pyc"
  }
 ]

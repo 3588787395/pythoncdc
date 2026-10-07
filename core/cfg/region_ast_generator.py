@@ -2346,35 +2346,16 @@ class RegionASTGenerator:
                                 return True
                 return False
             has_explicit_return = _has_explicit_return_recursive(filtered_body)
-            # 区域归约算法原则 2（每块唯一归属）：当函数末语句是
-            # while/for 循环时，Python 编译器为隐式 return None 生成 2+ 个独立
-            # LOAD_CONST None; RETURN_VALUE 出口块（"循环从未进入"路径 + "循环
-            # 正常退出"路径）。反编译器把这些出口块归并为单条 `return None` 语句，
-            # 重编后只剩 1 个出口块，字节码指令数减少，与原始不匹配。
-            # 修复：统计函数 CFG 中 trailing return None 出口块数量，>=2 时判定
-            # 为隐式 return None，即使函数体内有嵌套显式 return（如循环体内的
-            # `return 1`）也过滤末尾 `return None`，使重编恢复 2+ 出口块布局。
-            _trailing_rn_exit_count = 0
-            if _func_cfg is not None and hasattr(_func_cfg, 'blocks'):
-                for _blk in _func_cfg.blocks.values():
-                    if _blk.successors:
-                        continue
-                    if self.region_analyzer._check_block_has_trailing_return_none(_blk):
-                        _trailing_rn_exit_count += 1
-            # 区域归约算法 + 字节码一致性：保留隐式 return None
-            # CPython 编译器为每个函数/模块末尾生成隐式 return None（
-            # LOAD_CONST None; RETURN_VALUE 或 RETURN_CONST None），反编译
-            # 省略它导致重编字节码少 2-4 字节。为字节码完全匹配，不过滤。
-            # 唯一例外：函数体只有 return None 单条语句时，替换为 pass
-            # （因为 def f(): return None 与 def f(): pass 语义相同但后者
-            # 更简洁，且 CPython 对 pass 不生成 return None——但等等，
-            # CPython 对空函数体也生成 return None，所以应保留 return None）。
-            # 最终决定：始终保留 return None，确保字节码一致。
-            if filtered_body and self._is_trailing_return_none_statement(filtered_body[-1]):
-                if len(filtered_body) == 1:
-                    # 单条 return None → 保留（字节码一致需要）
-                    pass
-                # else: 保留末尾 return None
+            # [R8-B121 sinkarms] 此处原为「统计函数 CFG 的 trailing return None
+            # 出口块数量」的死判定：置 0、逐块 +1，从无读取点，下方守卫体只有
+            # pass 与注释，恒常物化尾部 `return None`（Round8 REVIEW_NOP §4 站点
+            # 1）。本票把同一问题（哪些隐式 return None 出口块是**逐边落点**而不
+            # 是语句）改为按成员关系裁决：`_r8_b121_implicit_tail_landing_sinks`
+            # 以「本 code object 图内无汇合 return 块 + 块末 opcode + 单前驱转移
+            # 边 + 前驱与落点同区 + ≥2 个互不相同 sink」全有或全无判定，在
+            # `_generate_block_statements` 单一漏斗消费，覆盖 with 体尾与 handler
+            # 臂尾两类（原计数只按数量、且从未接入发射端）。故该计数块与其消费
+            # 守卫一并删除；本票规则即其替代品。
             if not filtered_body:
                 filtered_body = [{'type': 'Pass'}]
 
@@ -51504,6 +51485,204 @@ AST 映射规则:
                            and val.get('value') is None):
             last['_explicit_return'] = True
 
+    def _r8_b121_scope_return_sink_kind(self, block: BasicBlock) -> Optional[str]:
+        """[R8-B121 sinkarms] 块形态类别：本终块是否为「隐式 return None 的落点块」。
+
+        ①算法依据：No More Gotos 章节「区域归约算法四原则」原则 2（每块唯一
+        归属）+ CPython 3.11 隐式尾声内联的实证面（与 [r1-b98-exitjoin]/[R57-B]
+        / [R57-C] 同一控制实验事实）：函数尾的隐式 return None 只在「把控制权
+        送出作用域的那条边」处生成，源码不写 return 时它被**就地内联**进该
+        路径末尾，块体只可能是两形——'pure-none'（`LOAD_CONST None;
+        RETURN_VALUE`，或同义的 `RETURN_CONST None`，作用域尾落点）与
+        'handler-epilogue'（`except … as X:` 的退栈对 POP_EXCEPT + LOAD_CONST
+        None + STORE_FAST + DELETE_FAST 之后紧跟同一对，handler 臂正常路径的
+        落点）。`LOAD_CONST None` 之前还夹着任何其他 opcode 的终块不属于
+        两形（该 return 与用户语句同块，是语句级事实，不归本判据裁）。判据
+        只读块内 opcode 序列与 None 常量身份，不读名字/偏移/深度/条数上限/
+        宿主类型（理论基准 I.4 白名单）。
+        ②归约顺序：自底向上的块级同层事实——先于成员关系步评估，命中与否只
+        描述本块，不参与区域识别、不改变任何成员集合。
+        ③唯一归属判定：本方法不认领块、不登记 generated，只交付形态类别；
+        归属仍由 `block_to_region`/区域成员集合决定，消费方（落点集合判据）
+        要求前驱与本块同属一个区域才裁「不发射」，一块一主不变。
+        ④嵌套处理：与宿主（WithRegion 体尾 / TryExceptRegion handler 臂尾 /
+        IfRegion 臂尾）和嵌套层数无关——同一 code object 图内所有终块按同一
+        判据裁决，全有或全无由消费方统一把关，故任意深度同判。
+        ⑤入口引用语义：命中块的入口引用语义为空——它由其前驱的边引用（原则 4），
+        重编译时该落点块由所属语句（with 语句尾 / except 子句尾）自然再生。
+        ⑥反编译流程：三值 ('pure-none' | 'handler-epilogue' | None) 交
+        `_r8_b121_implicit_tail_landing_sinks` 消费；返回 None 的终块把本函数
+        整体排除在判据面之外。
+
+        C1 局部消费：只读本块 instructions。C2 黑箱组合：对外只交付形态字符串。
+        C3 守卫封闭：两形以外（RETURN_VALUE 前缀非 None 常量、退栈对长度或
+        次序不符、块内含任何其他 opcode）一律 None，不放行。
+        """
+        _meaningful = [i for i in block.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                           'EXTENDED_ARG', 'PUSH_NULL')]
+        if not _meaningful:
+            return None
+        _last = _meaningful[-1]
+        if _last.opname == 'RETURN_CONST':
+            if _last.argval is not None:
+                return None
+            _prefix = _meaningful[:-1]
+        elif _last.opname == 'RETURN_VALUE':
+            if len(_meaningful) < 2:
+                return None
+            _prev = _meaningful[-2]
+            if not (_prev.opname == 'LOAD_CONST' and _prev.argval is None):
+                return None
+            _prefix = _meaningful[:-2]
+        else:
+            return None
+        if not _prefix:
+            return 'pure-none'
+        _epilogue = ('POP_EXCEPT', 'LOAD_CONST', 'STORE_FAST', 'DELETE_FAST')
+        if ([i.opname for i in _prefix] == list(_epilogue)
+                and _prefix[1].opname == 'LOAD_CONST'
+                and _prefix[1].argval is None):
+            return 'handler-epilogue'
+        return None
+
+    def _r8_b121_implicit_tail_landing_sinks(self) -> Set[BasicBlock]:
+        """[R8-B121 sinkarms] 本 code object 图内「隐式 return None 的逐边落点块」集合。
+
+        ①算法依据：区域归约算法原则 2（每块唯一归属）/ 原则 3（嵌套即抽象
+        节点）+ 本项目既有的汇合块身份证据（唯一事实源
+        `_is_return_none_join_block`，[r1-b98-exitjoin] 合并 [R57-B] 与 [B55]
+        两形）：源码**显式** `return None` 才产生**汇合** return 块（前驱 ≥2，
+        或区域自然出口以无条件前向跳转接入它）；隐式尾声则被 CPython **按边
+        就地内联**，每条送出作用域的边各得一份单前驱副本。故当且仅当
+          (G1) 本图内每一个以隐式 return None 收尾的终块都恰好只有一个前驱，
+              且都不满足汇合块身份（`_is_return_none_join_block` 为假）——
+              即「本函数没有任何源码级 return 汇合点」；
+          (G2) 这样的终块 ≥2 个（R4-B116/R5-B119 同一不变式：一条源码语句只
+              能产出一个块，两个互不相同的同形块只能是隐式尾声的逐边副本）；
+          (G3) 每块形态属 'pure-none'/'handler-epilogue'（块内无用户语句）；
+          (G4) 前驱→本块是一条**控制转移边**：前驱块末 opcode 属
+              {JUMP_FORWARD, JUMP_ABSOLUTE, FOR_ITER, POP_JUMP_*_IF_*} 且
+              argval 恰为本块起始偏移，或本块是前驱剔除异常边后的顺序
+              fall-through 后继（与 [R5-B119 loopsink] 的出口边身份判据同构）
+              ——本块是这条边的落点；异常边不计（handler 落点是真语句）；
+              (G4b) 该边必须是**区域的出口边**：条件测试块（块末 POP_JUMP_*）的
+              顺序落点是臂的**入口**，落在它上面的 return None 是 then 臂语句
+              本身，不是出口落点；条件边只有以 argval 接入本块（被跳过的空臂 /
+              臂尾汇合出口）才计。非跳转终结块（末指令为 POP_TOP/STORE_* 等）
+              的顺序落点才是臂尾出口；
+          (G5) 前驱与本块同属至少一个区域（self.regions 成员集合，认领面不变；
+              原则 2 的一块一主不被移动）；
+          (G6) 本块不在 `_with_jump_exit_blocks()`（F5：with 之后仍有真源码时
+              其出口块由无条件跳转到达，是语句而非尾声落点），
+        这些终块就是「per-edge  landing site」而不是语句，发射它们即把一条
+        边的落点材料化成语句（flytools 实测：with 体尾 1 条 + handler 臂尾 4
+        条凭空 `return None`，重编译后臂出口跳转目标 918/942/930 被置换）。
+        判据输入全在白名单内：块末 opcode、前驱/后继集合、异常边、区域成员
+        关系；无名字/偏移/函数名/文件名/计数上限特判。
+        ②归约顺序：自底向上——区域识别完成后（self.regions 已定）才评估，
+        只在生成端取语句时被消费；不参与区域识别，不改变任何区域的成员集合，
+        也不回退已完成的归约。
+        ③唯一归属判定：命中块仍由其原 owning region 唯一认领（G5 要求前驱与
+        落点同区），本判据只裁「发射 / 不发射」，与 [R5-B119 loopsink]/
+        [R4-B116 sinkexit] 同法：不向任何区域追加或转移块，不复制块。**全有
+        或全无**：任一候选终块不满足 G1–G6 即整集为空，绝不半抑制（否则臂尾
+        与体尾被拆开，落点次序反被重排——正是 P1 探针的失效形态）。
+        ④嵌套处理：按每个 code object 各自的 generator 实例评估（递归嵌套
+        函数各自成图），与区域嵌套层数无关；with 体尾、handler 臂尾、if 臂尾
+        在同一集合内按同一判据裁决，不做宿主类型特判。
+        ⑤入口引用语义：命中块由其前驱边引用（原则 4），语句层不再引用它；
+        重编译时 with 语句尾/except 子句尾自然再生同一落点块与退栈对，指令
+        数与边归属复原。
+        ⑥反编译流程：命中 → `_generate_block_statements` 单一漏斗把该块登记
+        generated_blocks/generated_offsets 并发射空语句列表 → 产物不再凭空写
+        `return None`（flytools 的 805 与 812/814/815/817 五条同源消失）；
+        不命中（含候选数 <2、存在汇合块）→ 发射逐字节不变。
+
+        C1 局部消费：只读本 CFG 的块级事实 + self.regions 成员集合 + 既有
+        `_is_return_none_join_block`/`_with_jump_exit_blocks`/
+        `_check_block_has_trailing_return_none` 三条既有判据（不复制判定），
+        结果按本实例缓存，不引入跨方法全局状态。
+        C2 黑箱组合：对外只交付一个块集合（隐式尾声落点接口），不暴露区域内部。
+        C3 守卫封闭：唯一消费点是 `_generate_block_statements` 单一漏斗一处；
+        ≥2 下限沿用 R4-B116/R5-B119 的 sink  multiplicty 不变式；任一门失败
+        即返回空集 = 行为逐位退回修复前。
+        """
+        cached = getattr(self, '_r8_b121_sink_set_cache', None)
+        if cached is not None:
+            return cached
+        try:
+            _all_blocks = list(self.cfg.blocks.values())
+        except Exception:
+            _all_blocks = []
+        _R8_B121_TRANSFER_OPS = ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'FOR_ITER',
+                                 'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
+                                 'POP_JUMP_FORWARD_IF_FALSE',
+                                 'POP_JUMP_FORWARD_IF_TRUE',
+                                 'POP_JUMP_BACKWARD_IF_FALSE',
+                                 'POP_JUMP_BACKWARD_IF_TRUE')
+        _cands: Optional[List[BasicBlock]] = []
+        for _b in _all_blocks:
+            if list(_b.successors):
+                continue
+            if list(getattr(_b, 'exception_successors', None) or ()):
+                continue
+            if getattr(_b, 'exception_handler', False):
+                continue
+            if not self.region_analyzer._check_block_has_trailing_return_none(_b):
+                continue
+            _preds = [p for p in (_b.predecessors or ()) if p is not _b]
+            if len(_preds) != 1:
+                _cands = None
+                break
+            if self._is_return_none_join_block(_b):
+                _cands = None
+                break
+            if self._r8_b121_scope_return_sink_kind(_b) is None:
+                _cands = None
+                break
+            _p = _preds[0]
+            _p_exc = set(getattr(_p, 'exception_successors', None) or ())
+            if _b in _p_exc:
+                _cands = None
+                break
+            _p_norm = [s for s in (_p.successors or ()) if s not in _p_exc]
+            _pli = _p.get_last_instruction()
+            _fed_by_jump = (_pli is not None
+                            and _pli.opname in _R8_B121_TRANSFER_OPS
+                            and _pli.argval == _b.start_offset)
+            _fed_by_fallthrough = any(_s is _b and _s.start_offset > _p.start_offset
+                                       for _s in _p_norm)
+            if not (_fed_by_jump or _fed_by_fallthrough):
+                _cands = None
+                break
+            # [G4b] 条件测试块的 fall-through 是**臂的入口**，不是臂的出口：
+            # `if cond: return None` 的 then 臂 return 块正由测试块的顺序落点
+            # 承载，它是源码语句（实测 flytools::write_backtest_info off248
+            # pred=182 末指令 POP_JUMP_FORWARD_IF_FALSE→252、off498 pred=484
+            # →510 即此形）。条件跳转只有以其 argval 目标接入本块（被跳过的空
+            # 臂 / 臂尾汇合出口）才算区域出口的落点。
+            if (_pli is not None and _pli.opname.startswith('POP_JUMP')
+                    and not _fed_by_jump):
+                _cands = None
+                break
+            if _b in self._with_jump_exit_blocks():
+                _cands = None
+                break
+            _joint_owner = False
+            for _r in self.regions:
+                _rb = set(_r.blocks or ())
+                if _p in _rb and _b in _rb:
+                    _joint_owner = True
+                    break
+            if not _joint_owner:
+                _cands = None
+                break
+            _cands.append(_b)
+        _out: Set[BasicBlock] = set(_cands) if (_cands and len(_cands) >= 2) else set()
+        self._r8_b121_sink_set_cache = _out
+        return _out
+
     def _generate_block_statements(self, block: BasicBlock, _cjb_parent: BasicBlock = None) -> List[Dict[str, Any]]:
         """[Round 02 F5] 薄包装：块语句生成 + with 出口块 return 的指令背书。
 
@@ -51521,7 +51700,13 @@ AST 映射规则:
         按区域成员关系 + 块末 opcode + 单前驱区域出口边判定）命中同样整块登记
         generated 并发射空语句——该二块是循环/for-iter 出口边的**落点**而非语句，
         材料化其中任一块即把两条出口边并到同一落点（B99 −2）或调换其落点次序
-        （B102 268/272 互换），每块仍恰有一个 owning 区域（原则2）；[R55] break
+        （B102 268/272 互换），每块仍恰有一个 owning 区域（原则2）；[R8-B121
+        sinkarms] with 体尾 / handler 臂尾的隐式 return None **逐边落点块**
+        守卫（判据面 `_r8_b121_implicit_tail_landing_sinks`：本 code object 图
+        内无汇合 return 块 + 块末 opcode 属两形 + 唯一前驱的正常后继恰为本块 +
+        前驱与落点同属一区域，全有或全无）命中同样整块登记 generated 并发射空
+        语句——它与 B119 的区别是不要求二块相邻、也不要求循环角色边，按「同图
+        无汇合点」这一区域级成员证据裁决；[R55] break
         中转块要求唯一前驱为本块、角色 BREAK/PURE_BREAK、未被认领才消费；
         其余块交 body 层按 generated 集合去重。
         ④嵌套处理：嵌套区域作为抽象节点——本包装层不拆散子区域；body 层的
@@ -51569,6 +51754,18 @@ AST 映射规则:
         # 判据（区域成员关系 + 块末 opcode + 单前驱出口边 + 无后继 + 本 CFG 末尾
         # 相邻二块）全在分析端一处判定，本漏斗是唯一消费点（C3 守卫封闭）。
         if block in self.region_analyzer._loop_tail_exit_sink_pair():
+            self.generated_blocks.add(block)
+            self.generated_offsets.add(block.start_offset)
+            return []
+        # [R8-B121 sinkarms] 隐式 return None 的**逐边落点块**不是语句（G1–G6
+        # 全有或全无门与 ≥2 sink 不变式都在 _r8_b121_implicit_tail_landing_sinks
+        # 一处判定，本漏斗是唯一消费点）：with 体尾与 `except … as X:` 臂尾的每
+        # 一条送出作用域的边都由 CPython 各发一份单前驱落点块，材料化其中任一块
+        # 即把该边写成一条 `return None` 语句，重编译时臂出口落点次序被置换
+        # （flytools modify_batcktes_info 的 805 与 812/814/815/817 五条同源）。
+        # 与 [R5-B119 loopsink] 的区别：本判据按「本图无汇合 return 块 + 区域
+        # 成员关系」裁决，不要求二块相邻、也不要求循环角色边。
+        if block in self._r8_b121_implicit_tail_landing_sinks():
             self.generated_blocks.add(block)
             self.generated_offsets.add(block.start_offset)
             return []

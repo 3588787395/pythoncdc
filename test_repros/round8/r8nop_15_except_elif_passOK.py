@@ -10,11 +10,7 @@ def n8p15(a, log):
             if a:
                 log.info(e)
             elif a is None:
-                return None
+                pass
             else:
                 log.warn(e)
                 flag = 1
-                return None
-            return None
-        else:
-            return None

@@ -11,11 +11,6 @@ def n8p20(a, log):
                 log.info(e)
             elif a is None:
                 flag = 1
-                return None
             else:
                 log.warn(e)
                 flag = 1
-                return None
-            return None
-        else:
-            return None

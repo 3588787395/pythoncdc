@@ -11,9 +11,3 @@ def n8p06(log, ex):
                 log.backtest.info(e)
             elif not ex:
                 log.trade.info(e)
-                return None
-            else:
-                return None
-            return None
-        else:
-            return None

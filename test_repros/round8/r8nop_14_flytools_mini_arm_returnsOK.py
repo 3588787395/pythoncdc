@@ -12,9 +12,3 @@ def n8p14(a, log):
                 log.info(e)
             elif not r:
                 log.warn(e)
-                return None
-            else:
-                return None
-            return None
-        else:
-            return None

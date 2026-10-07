@@ -11,6 +11,3 @@ class TWH:
                     LOG.error('boom')
                 else:
                     self.ok += 1
-            return None
-        else:
-            return None
