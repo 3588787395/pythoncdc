@@ -239,3 +239,32 @@
 **未具名者现只剩 2 条**：`quote.run_tick_socket`（24 条块搬位已证，「为何搬」未定位）、
 `trade_live_broker._sync_worker`（178/180，链式比较腿形状已知，宿主未定位）。
 具名状态逐条重列：具名 **33** ＋ 半具名 **5** ＋ 未具名 **2** ＝ **40** ✓。
+
+## 十一、块计数揭示：`_process_order`/`_process_cancel_order` 不是「少几条语句」，是**发射截断**
+
+仪器：`D:/Temp/r9main/blkdiff.py`（块边界＝跳转目标为块首，剔 `NOP/CACHE/EXTENDED_ARG`，
+按 `(首 opcode, 末 opcode, 块长)` 签名做**多重集**差，避免把顺序差误记成缺块）。
+
+| 单元（均在 `trade_live_broker`） | 块数 orig/prod | 指令 orig/prod | 签名级缺块 | 判读 |
+|---|---|---|---|---|
+| `<module>.TradeLiveBroker._process_order` | **27 → 4** | 507 → 42 | **26** | **截断**：产物只发到「`while` 头 ＋ `sleep` ＋ 返回」为止 |
+| `<module>.TradeLiveBroker._process_cancel_order` | **17 → 4** | 333 → 40 | **15** | 同形截断 |
+| `_trade_status_handle` | 8 → 10 | 127 → 124 | 3（多 5） | 近等量 ⇒ 语句级/排位问题，**不是**截断 |
+| `_sync_worker` | 23 → 24 | 404 → 401 | 5（多 6） | 近等量 ⇒ 排位＋链式比较腿 |
+| `etf_purchase_redemption` | **17 → 17** | 426 → 414 | 2（多 2） | 块数相等 ⇒ 纯属性链截断（#13 的具名形） |
+| `etf_basket_order` | 44 → 44 | 756 → 756 | （§十：一次置换） | 排位面 |
+
+被吞块的规模（`_process_order` 的 orig-only 大块，按块长降序，前 6 枚）：
+`@854 n=79`（`int(amount)` 后的下单主体）、`@318 n=56`（`trade_status in (TRADE_STOP, TRADE_DELETE)` 检查）、
+`@46 n=41`（循环测试块本体，产物里另有一枚 `@44 n=25` 的同首块 ⇒ 被压缩改写而非整丢）、
+`@1802 n=40`（`order.symbol.split('.')`）、`@2648 n=39`（`CALL 5` 建单）、
+另有两枚 `n=19` 的 `strategy_log.info('生成订单，订单号：{order_id}…'.format(...))`（与 #22 在 `order_api` 读到的同一语句形）。
+
+**与既有票的关系（不得另立新案的重复）**：
+Round 9 的 `rounds/round9/FIX_BODY_SWALLOW_BRIEF.md` 已把这一形的**根因面貌**写好——
+嵌套 `IfRegion` 吸收了父循环的**前导块 `blk@44`（单条 NOP）与出口块 `3128`**
+（正是 `_process_order` 的两个块号），后果即此处的「27 块只剩 4 块」。
+⇒ 因此本档不新增工单，而是**把这三条单元的靶面重述为**：
+先应用 #16 共要件补丁（结构改判 `while True:`），再按 A1 的判据（候选 merge 块若为父 `LoopRegion` 的
+`back_edge_block`／其前导块则不得认领）恢复被吞的 23 枚块，二者缺一即本档实测的
+465/293/3 条差额原样存在。**任何一票单独宣称能翻正这三条单元，都与本表矛盾。**
