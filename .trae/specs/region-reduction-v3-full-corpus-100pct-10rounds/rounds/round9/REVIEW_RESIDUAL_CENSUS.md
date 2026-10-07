@@ -52,8 +52,28 @@ C 轴里剔 NOP 后**只有 1 处配对不同**的六个单元（`_process_tick_
 
 - A 轴优先：无条件 `break` 的发射必须回到区域归约事实（该边是否为循环出口边、落点是否同区、
   出口之后是否还有未被认领的体语句），**不允许**用「发射后再搬语句」的事后修正（rules.md §1.3 单向数据流）。
+  工单简报见 `FIX_BODY_SWALLOW_BRIEF.md`（根因已定位到 `IfRegion@318.else_blocks` 含块 44、
+  `merge_block=3128`＝父循环 `back_edge_block`）。
 - B/C 轴禁止并案：`_sync_worker` 是**测试极性反转**（orig `POP_JUMP_FORWARD_IF_TRUE→704`
   vs 产物 `POP_JUMP_FORWARD_IF_FALSE→562`），与 target-delta 不同轴。
+
+## V. C 轴的紧致子族（补测：difflib 逐指令对齐，剔 NOP 后）
+
+对 41 个可映射单元做「剔 NOP/CACHE/EXTENDED_ARG + 跳转目标改为序列下标」后的差异块计数：
+**`NOP_ONLY_after_strip` 仍为 0**，而 **8 个单元只有 1–2 处差异、且每一处都是同 opcode、
+只有跳转目标下标不同**：
+
+    get_trade_status                    JUMP_FORWARD            to@155 vs to@150
+    BarData._history_bars               POP_JUMP_FORWARD_IF_FALSE  to@32  vs ...
+    StrategyUniverse._on_clear_de_listed POP_JUMP_FORWARD_IF_FALSE to@27  vs ...
+    TradeLiveBroker._process_tick_order  JUMP_BACKWARD          to@24  vs to@20
+    TradeLiveBroker.rzrq_credit_order    JUMP_FORWARD           to@496 vs to@491
+    TradeLiveBroker.get_ipo_stocks       POP_JUMP_FORWARD_IF_TRUE to@230 vs ...
+    load_daily <module>                  JUMP_FORWARD           to@666 vs to@684
+    kill_trade_process / filter_desicion 各 2 处（POP_JUMP_FORWARD_IF_NONE 目标）
+
+目标下标差为 4–5 条指令 ⇒ 区域边界附近的**语句排布次序**换了 4–5 条指令的位置，
+而不是多写/少写语句。这 8 个单元是本轮单位成本最低的一族（其余单元的差块数 ≥5，最多 53）。
 - 仪器已知缺陷：单元名 → code object 用路径尾段匹配，同名/嵌套宿主可能错配；
   本轮 §II/§III 的关键读数（520/42、344/40、94/55）已用 `co_firstlineno` + 唯一命中复核，
   确认**不是**错配而是真实截断。
