@@ -80,5 +80,7 @@
 ## 五、本轮结论
 
 Round 9 门禁**达标**（≥1 pyc 转 success 实为 2 个，`REGRESSIONS=0 ∧ UNIT_REGRESSIONS=0`，
-quotation 与六套件零新增），可提交并 push。**未达 100%**：残余 40 单元如实上表，
-判据未改、产物未手改、语料未删。
+quotation 与六套件零新增）。落地提交 `3ed58f77`，并已 push：
+`git push origin HEAD:refs/heads/rr-v3-full-corpus` 于 17:44 成功（`106695dd..3ed58f77`），
+`git rev-list --count origin/rr-v3-full-corpus..HEAD` ＝ **0**（此前多次连接层失败，二次补推方成）。
+**未达 100%**：残余 40 单元如实上表，判据未改、产物未手改、语料未删。

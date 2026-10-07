@@ -113,9 +113,10 @@
 - [x] 全程单条命令 ≤300s（regen 分 8 片 25–32s/片；verify 分 8 片 11–32s/片；六套件 3.1s）
 - [x] 无任何 `*OK.py` 被手改（402 产物全部来自 `pycdc.py -o` 重生成，先删后产）；用户既有变更未被回滚
       （`git status -- core` 除本票单文件外为空；867 个 `wt_head` 长路径缺件为工作树固有状态，未动）
-- [ ] **本轮已提交并 push——提交完成，push 待补**：`ahead` 于 17:16 时点为 3（已推 `106695dd`），
-      此后 `git push origin HEAD:refs/heads/rr-v3-full-corpus` 再报
-      `Recv failure: Connection was reset`；本工作树无稳定外网，网络可用时执行该命令即可。
+- [x] **本轮已提交并 push 完成**：`git push origin HEAD:refs/heads/rr-v3-full-corpus`
+      于 2026-10-08 17:44（本地时刻 01:44 +0800）成功，`106695dd..3ed58f77`，
+      `git rev-list --count origin/rr-v3-full-corpus..HEAD` ＝ **0**。
+      此前该命令在本工作树连续失败（`Recv failure: Connection was reset`），故本轮二次补推方成。
 - [ ] **残余未清零，如实上报**：40 单元 / 16 文件（最大头 `trade_live_broker` 118/128 差 10）；
       判据未改、读数未凑、语料未删。分派见 `tasks.md` §10.0 与 `REVIEW_RESIDUAL_CENSUS.md` §XVI
       （`#18 极性轴` 已作为**假轴撤销**：目标解析后逐 hunk 复验＝零条孤立换 opcode 差）。
