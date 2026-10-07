@@ -1831,6 +1831,55 @@ class RegionAnalyzer:
         filtered_conditional_regions = _mr_dissolve_match_subsumed(filtered_conditional_regions)
         filtered_boolop_regions = _mr_dissolve_match_subsumed(filtered_boolop_regions)
 
+        # [B121-secondary 修复] inline and/or 链合并 IfRegion 与被吸收内层
+        # IfRegion 的归属一致性。机理：`if A: if B: <体>`（内层 if 假边与外层
+        # if 假边同落合并块）由 inline_boolop_chain 判据折叠为扁平 and 链合并
+        # 区域 R（entry=链首、condition_block=链末、blocks 重收集链块与臂块）。
+        # 内层 IfRegion S（entry==链中后继成员块）创建序早于 R：S.blocks 已被
+        # R.blocks 整体覆盖，但 S 仍存留于区域列表且其 children（如包裹的
+        # LoopRegion）挂在 S 之下——下游生成层沿 parent 链判定可达性时，S 被
+        # 「entry 落于其它区域 blocks」包含过滤剔除后该链断裂，子区域体块被
+        # 误判孤儿（continue 语句丢失，r7v7r_b121_whilehdr::
+        # b121r_min_continue_deep 实测）。修复 = 守卫性溶解：仅当 S 无 else 臂、
+        # 非 elif 链、parent 尚未挂接、且 S.blocks ⊆ R.blocks（区域成员关系，
+        # I.4 白名单）时，把 S 从区域列表移除、S 独占的 block_to_region 归属
+        # 移交 R、S.children 重新挂接 R——原则 3（嵌套即抽象节点）+ 原则 4
+        # （父引用子入口）在合并区域上重建，子区域重新可达，无块丢失。
+        for _ibc_r in list(filtered_conditional_regions):
+            if not isinstance(_ibc_r, IfRegion) or not getattr(_ibc_r, 'inline_boolop_chains', None):
+                continue
+            _ibc_r_blocks = set(_ibc_r.blocks)
+            for _ibc_info in _ibc_r.inline_boolop_chains.values():
+                for _ibc_blk in (list(_ibc_info.get('blocks') or [])[1:]):
+                    _ibc_s = None
+                    for _cand in list(filtered_conditional_regions):
+                        if (_cand is not _ibc_r and isinstance(_cand, IfRegion)
+                                and _cand.entry is _ibc_blk and _cand.parent is None):
+                            _ibc_s = _cand
+                            break
+                    if _ibc_s is None:
+                        continue
+                    if getattr(_ibc_s, 'else_blocks', None):
+                        continue
+                    if _ibc_s.region_type == RegionType.IF_ELIF_CHAIN:
+                        continue
+                    if not (set(_ibc_s.blocks) <= _ibc_r_blocks):
+                        continue
+                    # 溶解 S：列表移除 + 独占归属移交 + children 重新挂接
+                    if _ibc_s in filtered_conditional_regions:
+                        filtered_conditional_regions.remove(_ibc_s)
+                    if _ibc_s in self.regions:
+                        self.regions.remove(_ibc_s)
+                    for _s_blk in _ibc_s.blocks:
+                        if (_s_blk in self.block_to_region
+                                and self.block_to_region[_s_blk] is _ibc_s):
+                            self.block_to_region[_s_blk] = _ibc_r
+                    for _s_child in list(getattr(_ibc_s, 'children', None) or []):
+                        _s_child.parent = _ibc_r
+                        if _s_child not in (_ibc_r.children or []):
+                            _ibc_r.add_child(_s_child)
+                    _ibc_s.children = []
+
         all_phase12_regions = (
             loop_regions + try_regions + with_regions +
             match_regions + assert_regions + chained_compare_regions + filtered_boolop_regions + ternary_regions + filtered_conditional_regions
@@ -4194,7 +4243,9 @@ header 能到达 back_edge_source 的所有节点。Python 字节码特性映射
           FOR_ITER/GET_ANEXT 循环若无显式回边源，允许继续。
   Step 3: _collect_natural_loop_body 栈式 DFS 收集循环体；frozenset(body) 去重。
   Step 4: _is_fake_loop 过滤 continue 形成的假回边伪循环；_is_await_polling_loop
-          抑制 await 轮询自循环。
+          抑制 await 轮询自循环；_is_while_guard_continue_only_backedge 抑制
+          B121 rotate-while 入口 guard 被 continue 回边误立为独立 header（宿主
+          if 条件被提升为外层 while 条件）的伪循环。
   Step 5: 子集过滤——若 body ⊂ 已处理 body 且非 for 循环则跳过。
   Step 6: _classify_loop_type 返回 loop_type、for_iter_setup/exit/fall_through、
           is_while_true、is_yield_from。
@@ -4307,6 +4358,21 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
 
             is_fake_loop = self._is_fake_loop(header, body, back_edge_sources)
             if is_fake_loop:
+                continue
+
+            # [B121 修复] while 头形成误归约抑制：rotate-while 布局下，入口 guard
+            # 块因体内 continue 的 JUMP_BACKWARD 落于其上而获得回边，被误当成
+            # 独立循环 header。此时宿主 if 条件块经 Step 7(b) 扫描被提升为该伪
+            # 循环的 condition_block，`if gate: while rest:（体内 continue）` 被
+            # 重建为 `while gate: while rest:`——gate 语义由「进入前测一次」变为
+            # 「每迭代重测」，宿主 IfRegion 消失（违反原则 2 每块唯一归属 + 原则 3
+            # 嵌套即抽象节点）。守卫判据见 _is_while_guard_continue_only_backedge：
+            # 回边全部为落回 guard 自身的无条件 JUMP_BACKWARD（continue 语义边）、
+            # 体内存在另一 rotate-while 的条件闩锁回边（guard 实为该 while 的入口
+            # 条件块）、且存在共享 guard 条件出口的前向条件跳转前驱（宿主 if 假边
+            # 与 guard 假边同落合并块）。命中则跳过该伪 header，guard 归属内层
+            # while 的 condition_block，宿主 if 由 IfRegion 识别归约。
+            if self._is_while_guard_continue_only_backedge(header, body, back_edge_sources):
                 continue
 
             # [聚类2 修复] 抑制 await 轮询自循环的 LoopRegion 创建。
@@ -5128,6 +5194,49 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
                         self.block_roles[body_block.start_offset] = BlockRole.LOOP_BODY
 
     def _cleanup_try_else_in_loop_body(self, loop_regions: List['LoopRegion'], try_regions: List['TryExceptRegion']):
+        """_cleanup_try_else_in_loop_body - 循环体内 try-else / 子循环伪 else 清理
+
+【区域类型】无（清理步：修剪 TryExceptRegion.else_blocks 与嵌套 LoopRegion.
+else_blocks 中被父循环体过度吸收的伪 else 块，不改归约次序）。
+
+**算法依据**
+try/子循环的 else 块与父循环体的顺序代码在字节码层面共享布局：父循环体普通块
+被出口 BFS 过度吸收进 else 链时（eb ∈ 父循环 body_blocks 且非 else 语义），
+else 子句错误展开。真 else 的结构签名 = 其全部正常前驱均归属本循环节点
+（body_blocks/header_block/condition_block/else_blocks 集合，或前驱经异常边
+进入）；不满足者剔除并归还父循环体。
+
+**归约顺序**
+analyze() 在 _identify_loop_regions / _identify_try_except_regions 之后、
+_build_region_hierarchy 之前调用（自底向上：先清理再挂接父子）。
+
+**唯一归属判定**
+被剔除的 eb 同步移出 lr.blocks；保留块仍由本循环节点独占（orelse 单点消费，
+父级不重复发射）。[B109 残余修复·嵌套双宿主]：新增「while 双门收敛豁免」支
+（仅 WHILE_LOOP）——循环条件块与回边块的条件假出口收敛到同一 else 块（真
+loop-else 结构签名）时豁免剔除，覆盖 else 体唯一正常前驱 = 条件块假出口的
+嵌套双宿主形态（orelse 丢失修复）；不收敛（初判/回边复判各落独立 return
+块）时维持旧剔除，守卫封闭。
+
+**嵌套处理**
+只读 enclosing_loops 的 body_blocks 集合与 lr 自身成员集合，不跨层反查子
+区域内部；嵌套双宿主（内层 while 位于外层 for 体内）与平铺单宿主同判。
+
+**入口引用语义**
+清理不改变 entry/merge 引用；else 体经 LoopRegion/TryExceptRegion 的
+orelse 出口被父区域以抽象节点引用。
+
+**反编译流程**
+对应生成方法: _generate_loop / _generate_try（region_ast_generator.py）。
+保留的 else_blocks → ast.For/While/Try 的 orelse；被剔除块由父循环体顺序
+发射，语句只移位不丢失。
+
+C 条款：C1——判据只来自本层块对象结构事实（body_blocks/header_block/
+condition_block/else_blocks 集合成员、前驱集合、异常边、try_offset_end 对应
+块的后继）；C2——剔除/保留均不新增跨层状态、不窥视子区域内部，每块唯一归属
+不变；C3——豁免与剔除互为守卫（真 else 豁免要求全部前驱归属本循环，不命中
+维持旧剔除），无按名字/偏移/深度的个案特判。
+        """
         for tr in try_regions:
             if not tr.else_blocks or not tr.has_else:
                 continue
@@ -5281,7 +5390,24 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
             #   （守卫封闭）。
             _r3_lr_owned = set(lr.body_blocks or [])
             _r3_lr_owned.add(lr.header_block)
-            _r3_lr_owned.update(lr.else_blocks or [])
+            # [B109 残余修复·嵌套双宿主] while 真循环 else 的双门收敛豁免：
+            # 嵌套双宿主（`for x: … while x: … else: return None …`，内层 while
+            # 位于外层 for 体内）下，else 体（return None 块）的唯一正常前驱 =
+            # 内层 while 的条件块（假出口），而该条件块可能本身是父循环体的
+            # body_blocks 成员（for 体首与 while 守卫融合）——按「全部正常前驱
+            # 归属本循环」的原豁免判据失守，真 else 被误判 spurious 剔除
+            # （orelse 丢失，r4v4r_b109_loopelse::nested_loop_else 实测）。
+            # 补充豁免支（仅 WHILE_LOOP）：循环的每个条件求值块（条件块，
+            # 无则 header；与回边块）的条件假出口——越体、非 header、非 break
+            # 落点——收敛到同一块且该块 ∈ else_blocks（真 loop-else 结构签名，
+            # 与区域创建期 _b109_real_loop_else 判据同源同层）。初判/回边复判
+            # 各落独立 return 块（无 else 语义的顺序收尾，如
+            # plugin_system_risk_calculation.__init__）不收敛、不豁免，维持旧
+            # 剔除。判据 = 条件后继集合 + 区域成员关系（I.4 白名单）。
+            # [C1] 只读 conditional_successors、body_blocks/header_block/
+            #      condition_block/back_edge_block/break_blocks/else_blocks
+            #      成员与 region_type；[C2] 不新增跨层状态、不窥视子区域；
+            #      [C3] 收敛不成立时维持旧剔除，守卫封闭，无少发射。
             _r3_true_else = set()
             if getattr(lr, 'has_break', False):
                 for eb in lr.else_blocks:
@@ -5289,6 +5415,33 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
                             p in _r3_lr_owned or eb in p.exception_successors
                             for p in eb.predecessors):
                         _r3_true_else.add(eb)
+                if lr.region_type == RegionType.WHILE_LOOP:
+                    _b109_gates = []
+                    _b109_g0 = (lr.condition_block
+                                if lr.condition_block is not None else lr.header_block)
+                    if _b109_g0 is not None:
+                        _b109_gates.append(_b109_g0)
+                    if (lr.back_edge_block is not None
+                            and lr.back_edge_block not in _b109_gates):
+                        _b109_gates.append(lr.back_edge_block)
+                    if len(_b109_gates) >= 2:
+                        _b109_lr_body = set(lr.body_blocks or [])
+                        _b109_breaks = set(lr.break_blocks or [])
+                        _b109_targets = set()
+                        _b109_converge = True
+                        for _b109_g in _b109_gates:
+                            _b109_cont = [s for s in _b109_g.conditional_successors
+                                          if s not in _b109_lr_body
+                                          and s != lr.header_block
+                                          and s not in _b109_breaks]
+                            if len(_b109_cont) != 1:
+                                _b109_converge = False
+                                break
+                            _b109_targets.add(_b109_cont[0])
+                        if _b109_converge and len(_b109_targets) == 1:
+                            _b109_conv_target = next(iter(_b109_targets))
+                            if _b109_conv_target in lr.else_blocks:
+                                _r3_true_else.add(_b109_conv_target)
             spurious = [eb for eb in lr.else_blocks
                         if eb in parent_body
                         and eb not in _cond_exit_targets
@@ -7470,12 +7623,131 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
             return False
 
         src_meaningful = [i for i in src.instructions
-                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
-                         and i.opname not in BACKWARD_JUMP_OPS]
+                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                          and i.opname not in BACKWARD_JUMP_OPS]
         if any(i.opname in self._BODY_CODE_OPS for i in src_meaningful):
             return False
 
         return True
+
+    def _is_while_guard_continue_only_backedge(self, header: BasicBlock, body: Set[BasicBlock],
+                                               back_edge_sources: List[BasicBlock]) -> bool:
+        """_is_while_guard_continue_only_backedge - B121 伪循环 header 判定（rotate-while 入口 guard 的 continue 回边识别）
+
+【区域类型】无（bool 谓词，服务 _identify_loop_regions 的 WHILE_LOOP 识别步骤）。
+
+**算法依据**
+3.11 rotate-while 布局下 `while cond:` 编译为「入口 guard 块（POP_JUMP_FORWARD_*
+→ exit）+ 体 + 底部闩锁（LOAD cond; POP_JUMP_BACKWARD_IF_* → 体首块）」。体内
+`continue` 生成 JUMP_BACKWARD → 入口 guard 块，使 guard 块获得回边、被自然循环
+收集当作独立 header。若该 guard 块同时是宿主 if 的体首（宿主 if 假边与 guard 假
+边同落合并块），Step 7(b) 的 condition_block 扫描会把宿主 if 条件块选为该伪循环
+的条件 → `if gate: while rest:` 误归约为 `while gate: while rest:`。真嵌套
+`while gate: while rest:` 的判别结构事实：外层闩锁是条件反向跳转
+（POP_JUMP_BACKWARD_IF_* → header 本身），header 的回边并非全部为无条件
+JUMP_BACKWARD；而 continue 语义边是无条件 JUMP_BACKWARD 且目标恒为 guard 自身。
+
+**判定要点（三条同时满足才判伪，任一不满足即放行既有识别路径）**
+  1. 回边唯一来源为 continue 语义边：back_edge_sources 非空，且每条回边源块末条
+     指令为 JUMP_BACKWARD / JUMP_BACKWARD_NO_INTERRUPT，其 argval 目标块 ==
+     header（回边目标同一性）。真嵌套外层 while 的闩锁回边源为
+     POP_JUMP_BACKWARD_IF_*（条件反向跳转），在此即被排除。
+  2. header 本身是 rotate-while 入口 guard：末条指令为前向条件跳转
+     （FORWARD_CONDITIONAL_JUMP_OPS），跳转目标 E（guard 出口）在 body 之外
+     （E 为循环后合并/出口块）；且 body 内存在另一 rotate-while 的条件闩锁回边
+     （源块与目标块均 ∈ body、目标 ≠ header、源块末条为
+     BACKWARD_CONDITIONAL_JUMP_OPS）——证明 header 实为内层 while 的入口
+     条件块而非真循环 header（while True 折叠形无前向条件跳转、for 循环 header
+     末条为 FOR_ITER，均不满足，天然排除）。
+  3. 宿主 if 假边共享 guard 出口：存在 header 的前驱 P（P ∉ body、P ≠ header、
+     P.start_offset < header.start_offset），P 末条指令为条件跳转且其跳转目标
+     == E（与 guard 假边同落合并块）。无此共享前驱（如顶层 while + continue、
+     真嵌套 while）时不判伪，维持既有识别路径不变。
+
+**归约顺序**
+由 _identify_loop_regions 在 _is_fake_loop 之后、区域构建之前调用；命中即
+continue 跳过该伪 header（不创建 LoopRegion），guard 块留给内层 while 的
+condition_block 扫描认领，宿主 if 条件块由 _identify_if_regions 归约为 IfRegion。
+
+**唯一归属判定**
+被抑制的伪循环不登记 block_to_region；guard 块唯一归属内层 while（其
+condition_block 扫描以「header 前驱 + 条件跳转」结构事实选定），宿主 if 条件块
+唯一归属 IfRegion——每块仍恰好一个归属，无重复登记。
+
+**嵌套处理**
+命中抑制后，宿主 if（若为多层的内层）由 IfRegion 识别并以子 LoopRegion entry
+为抽象节点装配；本谓词不递归、不展开任何区域内部，仅读本层块结构事实。
+
+**入口引用语义**
+不创建区域，无入口引用；抑制结果表现为该 header 不出现在任何 LoopRegion 的
+header/condition_block 位置，其块经内层 while 的 region_blocks 归并认领。
+
+**反编译流程**
+无直接生成映射；效果是消除 `while gate: while rest:` 幻影外层 while，使
+_generate_loop 只为真实 while 发射 ast.While、宿主 if 由 IfRegion 发射
+ast.If，gate 恢复「进入前测一次」语义。
+
+C 条款：C1——判据只来自本层块对象结构事实（回边源块末条 opcode 与 argval 目标
+块同一性、header 末条前向条件跳转 opcode、前驱集合及其末条条件跳转目标、
+body 成员关系、block start_offset 次序）；C2——命中抑制不创建任何区域、不改写
+既有归属，guard/宿主 if 条件块由既有扫描按唯一归属认领，无跨层反查；C3——回边
+合法性复用 loop_analyzer.back_edges 与 dom_analyzer 支配校验结果（back_edge_
+sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个案特判。
+        """
+        # 判据 1：回边唯一来源为 continue 语义边（无条件 JUMP_BACKWARD 落回
+        # header 自身）。真嵌套外层 while 的闩锁回边源为条件反向跳转
+        # （POP_JUMP_BACKWARD_IF_*），不满足本条即放行。
+        if not back_edge_sources:
+            return False
+        for _src in back_edge_sources:
+            _src_last = _src.get_last_instruction()
+            if _src_last is None or _src_last.opname not in (
+                    'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                return False
+            if _src_last.argval is None:
+                return False
+            if self.cfg.get_block_by_offset(_src_last.argval) is not header:
+                return False
+
+        # 判据 2a：header 末条为前向条件跳转（rotate-while 入口 guard 形态），
+        # 其出口 E 在 body 之外（循环后合并/出口块）。
+        _hdr_last = header.get_last_instruction()
+        if _hdr_last is None or _hdr_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return False
+        if _hdr_last.argval is None:
+            return False
+        _guard_exit = self.cfg.get_block_by_offset(_hdr_last.argval)
+        if _guard_exit is None or _guard_exit in body:
+            return False
+
+        # 判据 2b：body 内存在另一 rotate-while 的条件闩锁回边（源/目标均在
+        # body、目标 != header）——header 实为该内层 while 的入口条件块。
+        _has_inner_rotated_latch = False
+        for _be_src, _be_tgt in self.loop_analyzer.back_edges:
+            if _be_src in body and _be_tgt in body and _be_tgt is not header:
+                _be_src_last = _be_src.get_last_instruction()
+                if (_be_src_last is not None
+                        and _be_src_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS):
+                    _has_inner_rotated_latch = True
+                    break
+        if not _has_inner_rotated_latch:
+            return False
+
+        # 判据 3：存在共享 guard 出口 E 的前向条件跳转前驱（宿主 if 假边与
+        # guard 假边同落合并块），且该前驱位于 header 之前、不属于 body。
+        for _pred in header.predecessors:
+            if _pred in body or _pred is header:
+                continue
+            if _pred.start_offset >= header.start_offset:
+                continue
+            _pred_last = _pred.get_last_instruction()
+            if _pred_last is None or _pred_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+                continue
+            if _pred_last.argval is None:
+                continue
+            if self.cfg.get_block_by_offset(_pred_last.argval) is _guard_exit:
+                return True
+        return False
 
     def _is_await_polling_loop(self, header: BasicBlock, body: Set[BasicBlock]) -> bool:
         """检测当前循环是否为 `await <expr>` 或 `async for` 的轮询自循环。

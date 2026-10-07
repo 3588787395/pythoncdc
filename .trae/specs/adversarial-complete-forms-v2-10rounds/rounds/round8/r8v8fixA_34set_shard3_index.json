@@ -1,0 +1,26 @@
+[
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/calexrights_func.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc"
+ },
+ {
+  "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc"
+ }
+]

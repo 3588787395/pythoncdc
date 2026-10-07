@@ -1,0 +1,422 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_13_boolop_shortcut.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_13_boolop_shortcut.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_13_boolop_shortcutOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_14_boolop_deep_host.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 9,
+  "failures": [
+   "***<module>.h_listcomp_filter_composite: Failure: Different bytecode",
+   "***<module>.h_listcomp_filter_composite.<listcomp>: Failure: Different control flow",
+   "***<module>.h_if_ternary_chain_composite: Failure: Different control flow",
+   "***<module>.h_return_composite: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.h_listcomp_filter_composite: Failure: Different bytecode",
+   "  ***<module>.h_listcomp_filter_composite.<listcomp>: Failure: Different control flow",
+   "  ***<module>.h_if_ternary_chain_composite: Failure: Different control flow",
+   "  ***<module>.h_return_composite: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_14_boolop_deep_host.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7_14_boolop_deep_hostOK.py",
+   "[single] status=failure units=5/9 success_rate=55.56%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/n8_01_return_const.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/n8_01_return_const.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/n8_01_return_constOK.py",
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/n8_02_simple_stmts.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/n8_02_simple_stmts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/n8_02_simple_stmtsOK.py",
+   "[single] status=success units=5/5 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_01_return_positions.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/r8_01_return_positions.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/r8_01_return_positionsOK.py",
+   "[single] status=success units=11/11 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_02_return_deep_hosts.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 10,
+  "units_total": 10,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/r8_02_return_deep_hosts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/r8_02_return_deep_hostsOK.py",
+   "[single] status=success units=10/10 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_03_pass_hosts.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 9,
+  "units_total": 9,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/r8_03_pass_hosts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/r8_03_pass_hostsOK.py",
+   "[single] status=success units=9/9 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_04_delete_forms.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 10,
+  "units_total": 10,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/r8_04_delete_forms.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/r8_04_delete_formsOK.py",
+   "[single] status=success units=10/10 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_05_assign_multi.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/r8_05_assign_multi.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/r8_05_assign_multiOK.py",
+   "[single] status=success units=11/11 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_ops.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 10,
+  "units_total": 10,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_ops.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_opsOK.py",
+   "[single] status=success units=10/10 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_07_assert_forms.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 11,
+  "failures": [
+   "***<module>.r8_assert_nested_func: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.r8_assert_nested_func: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/r8_07_assert_forms.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/r8_07_assert_formsOK.py",
+   "[single] status=failure units=10/11 success_rate=90.91%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_08_raise_forms.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 9,
+  "units_total": 9,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/r8_08_raise_forms.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/r8_08_raise_formsOK.py",
+   "[single] status=success units=9/9 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_09_deep_host_combo.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 10,
+  "failures": [
+   "***<module>.r8_dh_for_else_del: Failure: Different control flow",
+   "***<module>.r8_dh_with_assert: Failure: Different bytecode",
+   "***<module>.r8_dh_match_multi: Failure: Different bytecode"
+  ],
+  "tail": [
+   "  ***<module>.r8_dh_for_else_del: Failure: Different control flow",
+   "  ***<module>.r8_dh_with_assert: Failure: Different bytecode",
+   "  ***<module>.r8_dh_match_multi: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/r8_09_deep_host_combo.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/r8_09_deep_host_comboOK.py",
+   "[single] status=failure units=7/10 success_rate=70.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_10_expr_cross_stmt.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 9,
+  "units_total": 12,
+  "failures": [
+   "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+   "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+   "***<module>.r8_x_raise_ternary_class: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+   "  ***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+   "  ***<module>.r8_x_raise_ternary_class: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/r8_10_expr_cross_stmt.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/r8_10_expr_cross_stmtOK.py",
+   "[single] status=failure units=9/12 success_rate=75.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_11_deep_host_combo2.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 6,
+  "failures": [
+   "***<module>.r8_dh2_match_guard: Failure detected at line number 40 and instruction offset 36: Different bytecode"
+  ],
+  "tail": [
+   "  ***<module>.r8_dh2_match_guard: Failure detected at line number 40 and instruction offset 36: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/r8_11_deep_host_combo2.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round8/r8_11_deep_host_combo2OK.py",
+   "[single] status=failure units=5/6 success_rate=83.33%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/tools.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/tools.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/toolsOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_schedule.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_schedule.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_scheduleOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connector.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connector.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connectorOK.py",
+   "[single] status=success units=13/13 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategy.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategy.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategyOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 52,
+  "units_total": 52,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/schedulerOK.py",
+   "[single] status=success units=52/52 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 36,
+  "units_total": 41,
+  "failures": [
+   "***<module>.trade_operation: Failure: Different control flow",
+   "***<module>.kill_trade_process: Failure: Different control flow",
+   "***<module>.get_trade_status: Failure: Different control flow",
+   "***<module>.query_trade_strategy_info: Failure: Different control flow",
+   "***<module>.query_strategy_id: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.trade_operation: Failure: Different control flow",
+   "  ***<module>.kill_trade_process: Failure: Different control flow",
+   "  ***<module>.get_trade_status: Failure: Different control flow",
+   "  ***<module>.query_trade_strategy_info: Failure: Different control flow",
+   "  ***<module>.query_strategy_id: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utilsOK.py",
+   "[single] status=failure units=36/41 success_rate=87.80%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deep.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deep.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deepOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mix.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mix.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mixOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_01_simple_import.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/n10_01_simple_import.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/n10_01_simple_importOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_02_simple_fromimport.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/n10_02_simple_fromimport.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/n10_02_simple_fromimportOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_03_simple_global.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/n10_03_simple_global.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/n10_03_simple_globalOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_04_simple_nonlocal.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/n10_04_simple_nonlocal.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round10/n10_04_simple_nonlocalOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 35,
+  "units_total": 35,
+  "failures": [],
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_accountOK.py",
+   "[single] status=success units=35/35 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 152,
+  "units_total": 153,
+  "failures": [
+   "***<module>.change_his_to_forward: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.change_his_to_forward: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/fly/data/quotationOK.py",
+   "[single] status=failure units=152/153 success_rate=99.35%"
+  ]
+ }
+]
