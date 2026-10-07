@@ -41,3 +41,27 @@ PROD  #18 LOAD_FAST i (77)   #19 POP_JUMP_IF_FALSE to 198  #20..#25 同上 (78)
   工单应先 grep 这些既有标记，确认本案是否本就归它们管（禁止另立第二真相源）。
 - 行号摊开（单行→多行）可能与发射端的语句拆分有关，但行号不是判据的比较对象，
   不得据此立票。
+
+
+## 三、`IQCommon/data/finance.get_fields`（31/32，整文件只差这一个单元）
+
+两侧剔噪后**都是 175 条真实指令、都只有 2 条 `JUMP_FORWARD`**，第二条完全一致（seq#109 → seq#121）；
+唯一差的就是第一条 `JUMP_FORWARD`（seq#21）的落点：
+
+    ORIG  #21 off=92  line=654  → off 236 ＝ seq#50：
+            LOAD_FAST error_msg | LOAD_CONST 'error_no' | BINARY_SUBSCR | LOAD_CONST 0 | COMPARE_OP ==
+            POP_JUMP_FORWARD_IF_FALSE → 672                ← 原码 665 行的 `if error_msg['error_no'] == 0:`
+    PROD  #21 off=94  line=None → off 742 ＝ seq#143：
+            LOAD_FAST fields | RETURN_VALUE                 ← 函数的 `return fields`，紧接在另一条 RETURN_VALUE(seq#142) 之后
+
+⇒ 这条边在原码里是「提前汇合」：从 654 行（存 `error_msg` / `financial_data_type` 之后）
+**跳过 658–662 段**，落到 665 行那个两条路径共用的 `error_no == 0` 测试上；
+产物却把它送到 `return fields`，等于让那条路径**绕开整个共用测试区**。
+另外两点可作旁证：产物该 jump 的行号是 `None`（合成边，不对应任何源语句），
+且它的目标块前面紧挨着另一条 `RETURN_VALUE`。
+
+判据方向（块/边事实，不许按行号或偏移）：一条前向无条件边的落点必须是**两条入边共享的汇合块**
+（本例为被 `POP_JUMP_IF_FALSE` 与顺序流共同指向的那个块），
+不得取该汇合块之后、位于别的出口路径上的块。
+⇒ 本单元属 §X「只差 1 个单元即可整文件 OK」名单，修好即交付 `finance` 32/32；
+   这也是轮门禁本轮最该拿下的一个点。
