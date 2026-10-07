@@ -119,6 +119,37 @@ C 轴里剔 NOP 后**只有 1 处配对不同**的六个单元（`_process_tick_
 差值分两种符号形态：prod 落点**靠前**（−2/−4/−5/−10，共 5 条）与**靠后**（+3/+16/+19/+24/+62/+69）。
 靠前＝产物少跳过了几条指令（块被前移）；靠后＝产物把目标块排到了更后面（块被后移或中间多塞了块）。
 两类都属「语句/块在区域边界处的排布次序」，与 §II 的 A 轴（体被 `break` 吞掉）不同机制，不得并案。
+
+## VII. A 轴再切分：AST 级死码扫描（把「体被吞」拆成两个不同缺陷）
+
+谓词（一次性扫描，未落地为常驻仪器）：解析每个残差产物，`ast.walk` 中对任一语句列表 `body`，
+若下标 i 处为 `Break/Continue/Return/Raise` 且 `body[i+1:]` 非空，即报告一处死码。
+18 个残差产物中只有 **3 个文件、共 11 处**（逐处实测，函数名以产物 AST 的 `walk` 路径为近似，不作证据）：
+
+| 产物 | 处数 | 明细（宿主函数 / 行号 / 终止语句 / 其后死亡语句数→后继类型） |
+|---|---|---|
+| `trade_live_broker` | 5 | `_process_order` 429 `break`→2→Try；`_process_cancel_order` 528 `continue`→5→Assign、564 `continue`→1→Try；`_sync_worker` 855 `return`→4→Continue、856 `continue`→3→If |
+| `quote` | 3 | `run_individual_transform` 1332 `continue`→9→If；`get_real_from_zeromq` 1084/1116 `continue`→1→`continue` |
+| `wizard_quant_api` | 3 | `read_config_file` 543/597/622 `continue`→1→`continue` |
+
+**关键反例（限定的实证）**：`wizard_quant_api.read_config_file` 的 3 处与 `quote.get_real_from_zeromq`
+的 2 处所在单元**都读 Equal**（该文件失败单元是 `get_DMI.calculate_di.<genexpr>`×2 与 `filter_desicion`；
+`get_real_from_zeromq` 的失败单元另有其形）。⇒ 原码本身就写有不可达语句时，两侧编译结果相同，
+死码形状本身**不是**缺陷；只有与「指令数比 ≥1.3」同时成立才算 A1。
+按「指令数比 ≥1.3 ∧ 存在死码形状」的严格交集，**A1＝3 个单元**：
+`_process_order`(520/42)、`_process_cancel_order`(344/40)、`run_individual_transform`(412/359)。
+`_sync_worker` 虽有 855/856 两处死码，但比值 412/410≈1.0 ⇒ 原码同处本就不可达，
+它的差是测试极性反转，不是吞并（不得并案）。
+**A2＝4 个单元**（比值≥1.3 而**无**死码形状，语句被直接省略）：`order_api.option_order`(94/55)、
+`order_api.future_order`(115/88)、`wizard_quant_api.get_DMI.calculate_di.<genexpr>`(64/50，两条单元)。
+
+**A1＝死码吞并**（上述 3 文件）与 **A2＝发射端整块缺失**：§III 指令数比里的 `order_api.option_order`
+（94/55）与 `order_api.future_order`（115/88）**在本扫描中零命中**——产物文本里没有任何
+「终止语句之后还有语句」的形状，字节码却少了 39/27 条指令 ⇒ 语句是被生成端**直接省略**的，
+不是被 CPython 当死码丢弃的。两种形状修法不同，禁止并案。
+
+须同时记录的诚实限定：原始源码本身就可能写有不可达语句；若原码也这样，两侧编译结果相同，
+该处死码就不是缺陷。判据以「指令数比 ≥1.3」为准（已逐单元核对），死码扫描只用于**定位形状**。
 - 仪器已知缺陷：单元名 → code object 用路径尾段匹配，同名/嵌套宿主可能错配；
   本轮 §II/§III 的关键读数（520/42、344/40、94/55）已用 `co_firstlineno` + 唯一命中复核，
   确认**不是**错配而是真实截断。

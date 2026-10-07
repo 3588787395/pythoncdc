@@ -38,6 +38,21 @@ CFG 事实：`blk@44`（单条 NOP，唯一的后继是循环测块 46）`own = 
 根因面貌：从区域出口做「避开入口的可达性」走查时，循环回边把**前导块 44**（以及出口 3128）
 当成了可达节点吸收进来——即回边方向未参与区域边界裁剪。
 
+## 影响面（AST 级死码扫描 + 指令数比交集，见 `REVIEW_RESIDUAL_CENSUS.md` §VII）
+
+**A1（本工单）＝终止语句后被吞，严格交集 3 个单元 / 2 个文件**：
+`trade_live_broker._process_order`(520/42，产物 429 行 `break` 后死 2 条)、
+`trade_live_broker._process_cancel_order`(344/40，528 行 `continue` 后死 5 条、564 行死 1 条)、
+`quote.run_individual_transform`(412/359，1332 行 `continue` 后死 **9** 条)。
+死码扫描另有 5 处命中但**所在单元读 Equal**（`wizard_quant_api.read_config_file` 3 处、
+`quote.get_real_from_zeromq` 2 处）⇒ 原码同处本就不可达，不是缺陷；本工单不得去动它们。
+
+**A2（另案，不得并案）**：比值≥1.3 而**无**死码形状＝语句被生成端直接省略，4 个单元：
+`order_api.option_order`(94/55)、`order_api.future_order`(115/88)、
+`wizard_quant_api.get_DMI.calculate_di.<genexpr>`(64/50，两条单元)。
+
+`_sync_worker` 虽有 855/856 两处死码，比值却 412/410≈1.0，其差为测试极性反转，属另一轴。
+
 ## 要求（不许做的事）
 
 - 修在**识别端**（`region_analyzer.py` 的区域边界/merge 判定），使任何子区域的 `blocks` /
@@ -55,11 +70,12 @@ CFG 事实：`blk@44`（单条 NOP，唯一的后继是循环测块 46）`own = 
 1. 复现电池先行：`test_repros/round9/` 至少 2 条最小合成臂复现「循环体首成员是 with/try 区域、
    体内后段有 if 臂、其出口经回边指回前导块」形状；**先对已落地字节跑绿/跑红确认形状成立**，
    再动生产代码（Battery before corpus）。
-2. `pyc_verify single` 目标单元翻转：`_process_order`、`_process_cancel_order` 从 failure → Equal；
-   同时 `trade_live_broker` 其余 8 个失败单元**不得**因本案换形态（逐单元名单前后对比，
-   不许只看 118/128 这类总数）。
-3. `order_api.option_order` / `future_order`（94/55、115/88）**同向核对但不得并案**：该文件
-   `loops=[]`、无循环回边，形状不同轴；若被顺带翻正须单列证据。
+2. `pyc_verify single` 目标单元翻转：`_process_order`、`_process_cancel_order`
+   （`trade_live_broker.pyc`）与 `run_individual_transform`（`fly/data/quote.pyc`）从 failure → Equal；
+   同文件其余失败单元**不得**因本案换形态（逐单元名单前后对比，不许只看 118/128 这类总数）。
+3. A2 的 4 个单元（`order_api.option_order` 94/55、`future_order` 115/88、
+   `wizard_quant_api` 的 `calculate_di.<genexpr>` 64/50 两条）**同向核对但不得并案**：
+   `order_api` 无循环回边、且死码扫描零命中，形状不同轴；若被顺带翻正须单列证据。
 4. 七套电池（r1/r1_regress/r2v3/r3/r4/r6/r8）零绿臂转红；quotation 153/153、quote_handler 79/79、
    ptradeAccount 137/137、`history_data_source` 19/19 四枚锚点不回退。
 5. 全量 402 门禁由**主代理**执行（工单自测不得作为轮的判定）：402 重生成 + 八分片 per-file unit diff，
