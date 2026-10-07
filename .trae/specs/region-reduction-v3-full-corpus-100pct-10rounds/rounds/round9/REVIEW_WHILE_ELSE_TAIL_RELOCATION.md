@@ -41,6 +41,24 @@ while len(self.open_orders) > 0:
 `_process_order` / `_process_cancel_order` / `_trade_status_handle` 三单元同时受它影响，
 其中 `_trade_status_handle` 只差 1 个单元（属 §X 的十个一步可翻正文件之一）。
 
+## 二B、字节码铁证（`_trade_status_handle`，主代理 stdlib 取证）
+
+原码 `dis` 中 `time.sleep(0.5)` 那段（off 830–868，行 1470）之后紧接的是：
+
+    off=870  EXTENDED_ARG
+    off=872  JUMP_BACKWARD  to 46        ← 回到循环测试块
+
+⇒ 该 sleep 是**循环体的最后一块**，其后是回边；若源码真写成 `while … else: sleep(0.5)`，
+则 else 块应由循环**出口边**进入并向后跳过循环（fall through 到循环之后），
+绝不会带一条 `JUMP_BACKWARD` 回测试块。产物把它降格成 `while … else:` **在字节码层面即可判为错**。
+
+同法尚未对另外三处（`_process_order`、`_process_cancel_order`、`_save_testds_to_csv`）逐条复验，
+工单须自行以同一判据（sleep 块后继是否为回边）确认/否证，不得把我这一次证明当作四处的担保。
+
+**全量占比补测**（407 产物穷举 `ast`）：`while…else` 全文仅 **7 处**，4 处在失败单元上、3 处在通过单元上。
+⇒ 本形解释 **42 个残差单元中的 4 个**，不是 35 个落点单元的通用解释；
+不得因它形状漂亮就把它当成主因（§X 的落点族射程不因此改变）。
+
 ## 三、禁止项
 
 - 不得用「看到 `While.orelse` 就一律不发射 else」这种输出端禁令（那是以少发射换全绿）。
