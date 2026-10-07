@@ -118,3 +118,26 @@ delete  orig[75:77]=2  prod[75:75]=0
 
 ⇒ 守卫**未丢**；「grep 零命中」在断言缺失之前必须先怀疑大小写与所查文件
 （本案三处标记在 `region_analyzer.py` 而非 generator）。
+
+## 八、名单扩至 9 条后的**逐单元验收夹钳**（取代 §一/§五 的 3 条版；机制同一）
+
+| # | 单元（完整 qualname） | 实测差（读回语句） | 该单元的验收夹钳 |
+|---|---|---|---|
+| 1 | `IQCommon/logger/handlers.pyc :: <module>.TWHThreadController._target` | `orig[75:77]` 一对 `LOAD_CONST None/RETURN_VALUE` 未发（#72 `POP_JUMP_BACKWARD_IF_TRUE→@104` 的出口尾与 `#77` 之后语句的共用尾并成一块） | hunks **17→0** ∧ `single` 30/30；**只补一对不算过**（余 16 处是那 4 字节的传播） |
+| 2 | `IQCommon/util/trade_info_utils.pyc :: <module>.query_strategy_id` | `orig[108] JUMP_FORWARD→@648` 被写成内联 `LOAD_CONST None; RETURN_VALUE`，且 `orig[115:117]` 共用尾缺失 | 内联必须**改回跳转**且共用尾**在位**；不得反向（把共用尾删了凑数＝少发射换全绿） |
+| 3 | 同文件 `:: <module>.query_trade_strategy_info` | 两处同类内联（`orig[94]`、`orig[113]` 的 `JUMP_FORWARD→@618`） | **净差为 0 但缺陷为真**：判据必须让两处内联同时消失，逐 hunk 归零，不得以 `net==0` 判无缺陷 |
+| 4 | `fly/data/quote.pyc :: <module>.Quote.check_frequency` | `orig[106:108]` 就地返回被写成 `JUMP_FORWARD`，另在函数末多出 `prod[130:132]` 一对 | 返回**归位**且末位多余对**消失**（两处同判据，缺一即仍红） |
+| 5 | `IQCommon/api/klinedata.pyc :: <module>.get_multiminute_his_data` | `orig[512] JUMP_FORWARD→@527` 变内联 `LOAD_FAST his_data_dict; RETURN_VALUE`，且 `orig[527]` 的 `LOAD_FAST his_data_dict` 在产物里成了 `LOAD_CONST None` | 共用尾内容**记回正确返回点**：两条必须同时修，否则值错为 `None` |
+| 6 | `IQCommon/strategy/wizard_quant_api.pyc :: <module>.filter_desicion` | `IF_NONE` 应落 `if x is None: return` 的 `@710`，产物落 `@774` 尾部且函数末多一对 `LOAD_CONST None/RETURN_VALUE` | 落点归位 ∧ 多余对消失 |
+| 7 | `fly/data/quote.pyc :: <module>.Quote.get_real_from_zeromq` | 真差两条：`JUMP_FORWARD`(#174) 与 `POP_JUMP_IF_FALSE`(#178) 应进共用尾 `return None, flag`，产物在块前多插 `JUMP_FORWARD@1024→1034` 把两条入边都跳过 | **先做常数位移检验**：31 处差里只有一条 `JUMP_FORWARD` 多余，其余是 2 字节位移影子 ⇒ 夹钳＝多余跳转消失后位移自动归零，不许逐 offset 对齐 |
+| 8 | `IQCommon/util/trade_info_utils.pyc :: <module>.kill_trade_process` | 两条跳转目标互换（`IF_NONE`/`IF_FALSE`） | 互换纠正后 hunks→0；单向规则必错（见 `FIX_LANDING_R10_BRIEF.md` §六.2） |
+| 9 | 同文件 `:: <module>.get_trade_status` | 应落 `error_no == 0` 共用测试段，实落 `POP_EXCEPT/RERAISE` 尾声 | 与 §六.2 的 F1 同一判据（**一判据吃 `load_daily` 与本文件**） |
+
+**同一性断言（本票的立论，不可拆成多票各自记功）**：1–7 都是
+「**共用返回尾未被认成一个落点**」——产物要么逐路内联返回、要么把入口跳到尾之后。
+8、9 属落点票的汇合块判据，但 §六.2 的 F1 与本票 #7 读回的是同一枚 handler/尾块身份 ⇒
+两票须互相复跑对方名单，任一票改动使对方名单出现新红即判回退。
+
+**翻正预期（只按文件差 1 单元者）**：#1 即 `handlers` 整文件翻正。
+`trade_info_utils`（37/41）需 2/3/8/9 四条齐闭合；`quote`（86/92）需 6 条；`klinedata`（61/64）需 3 条；
+`wizard_quant_api`（55/58）需 3 条 —— 除 #1 外**一律不作翻正承诺**。
