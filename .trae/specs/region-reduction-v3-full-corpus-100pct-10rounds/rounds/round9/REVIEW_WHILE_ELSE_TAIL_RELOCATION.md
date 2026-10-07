@@ -61,10 +61,12 @@ while len(self.open_orders) > 0:
 | `_process_cancel_order` | `time.sleep(0.001)` | `JUMP_BACKWARD to 46`（@off2022 之后） | **体尾被降格**（铁证） |
 | `_save_testds_to_csv` | `return None`（While@540 `not self._stop_save_csv_thread`，体末为 `if is_end: break`） | 无 sleep；`else` 体是 `return None` | **不属本形**——这是 B121/G7 的隐式尾声落点被写成 `while…else: return None`，归 #15 判据面 |
 
-⇒ 本轴的真实射程是 **3 个单元**（`trade_live_broker` 的三个 `_process_*`/`_trade_status_handle`），
-第 4 处经复验**移出本轴**。三处都在 `REVIEW_RESIDUAL_CENSUS.md` §X「只差 1 单元」的十个文件名单内
-（`trade_live_broker` 本身差 10 单元，非一步可翻正——故此轴的价值在于关掉这 3 个单元，
-而非直接交付一个完全 OK 文件）。
+⇒ 本轴的真实射程是 **3 个单元**（`_process_order`、`_process_cancel_order`、`_trade_status_handle`），
+第 4 处经复验**移出本轴**。三处**同属 `trade_live_broker` 一个文件**，而该文件当前差 10 单元（118/128），
+**不在** §X「只差 1 单元即可整文件 OK」的十个文件名单内。
+⇒ 因此本轴**不会**直接产出轮门禁所需的「≥1 个 pyc 由 failure 转 success」：
+它把 128 单元里 3 个单元关掉（最好情形 118→121/128），文件仍非完全 OK。
+轮门禁仍须由 §X 那十个文件之一的落点修正来交付；把本轴当门禁来源记账即是虚报。
 
 **负对照实形**（必须保住）：`api_base.decorate_api_exc` 的 While@33 `else` 体是
 `while False: pass`——退化但**该单元读 Equal**。收紧判据时若把它一起改掉，即为以改判据换读数。
