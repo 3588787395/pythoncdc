@@ -105,3 +105,24 @@ units ≥ 33/37  ∧ BROKE=0 再作业；翻正按逐单元名单记，**两票�
 3. 负对照必须包含：模块级 `import`、`from X import *`、`try` 内 `from X import Y`、
    以及 `entry_block` 与 `block` 两条不同路径的样本；四条路径在改后**共用同一谓词**（grep 证：
    `IMPORT_FROM` 的走查循环在文件里只剩一处实现被调用）。
+
+## 十、一次**不成立**的取证尝试（记下来以免后来者重复走）
+
+主代理试过用「块是某区域成员、但不是任何区域的 `condition_block`」的计数，
+把 `matcher` 的丢弃面推广到 `order_api.option_order` / `future_order`（#22）。
+在 HEAD 上实跑（`core.cfg.build_cfg` + `CFGRegionAnalyzer.analyze()`）得
+`option_order: blocks=17 regions=12 cond_heads=5 member-but-not-condition=12`、
+`future_order: blocks=19 regions=18 cond_heads=6 member-but-not-condition=13`。
+
+⇒ **该度量无判别力**：`then_blocks / else_blocks / body_blocks` 里的成员**本来就不该是 condition**，
+所以 12/13 这个数是正常值，不是吞并证据。把它当信号会派出一张按假指标写的票。
+
+**正确的问法**（#22 的工程师须照此自证，勿用我的计数）：
+对具体被吞的块（`option_order` 的 `strategy_log.info('生成订单…'.format(…))` 所在块、
+`order_api` 两单元各自的 and/or 三元操作数串），问三件事——
+① 该块是否在某区域的 `condition_block`／臂入口／`merge_block` 任一身份上出现；
+② 若出现为「臂列表成员」，发射端是否**访问**了它（AST 里找它对应的语句）；
+③ 未访问时，是哪个循环/递归分支跳过了它（给出 `文件:函数:行` 与误发条件的白名单事实表述）。
+`matcher` 的诊断（`DIAG_B128_MATCHER_DROPSITE.md` Q0）已经示范了这个正确形状：
+被吞块 `blk#47@2164` **不是任何区域的 condition**、又确在 `IF_ELIF_CHAIN` 的成员表内——
+关键在于它还**没在产物 AST 里出现**（②），两者合起来才是吞并证据，单看①不是。
