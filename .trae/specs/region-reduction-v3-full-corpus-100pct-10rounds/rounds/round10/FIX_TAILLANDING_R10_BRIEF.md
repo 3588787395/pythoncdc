@@ -71,7 +71,38 @@ delete  orig[75:77]=2  prod[75:75]=0
   （其中一条**必须**是 `TWHThreadRotatingFileHandler._target` 形的干净同名单元）。
 - 回报边做边写：`rounds/round10/FIX_B127_G7_MEMBER.md`；零翻转按 sha256 逐字节回滚。
 
-## 五、附：落地标记的**准确拼写**（防未来的假阴性 grep）
+## 六、同判据面的另外两条单元（本轮新取证）——`trade_info_utils` 因此成为第二扇可翻正的门
+
+对 `IQCommon/util/trade_info_utils.pyc` 的四个失败单元逐条复跑同款 hunk 仪器：
+
+| 单元 | len | 真实内容差 | 形状 |
+|---|---|---|---|
+| `<module>.get_trade_status` | 171/171 | **0**（1 hunk 是 `JUMP_FORWARD` 目标 `@810→@786`） | 纯落点（属 #14 A 档） |
+| `<module>.kill_trade_process` | 659/659 | **0**（2 hunk 是 `IF_NONE↔IF_FALSE` 两条目标**互相换位**；第三条见 §七 是仪器假差） | 换位（属 #14 B 档） |
+| `<module>.query_strategy_id` | 117/116 | **2**：`orig[108] JUMP_FORWARD ->@648` 在产物里变成 `LOAD_CONST None; RETURN_VALUE`（就地内联返回），且 `orig[115:117]` 那对 `LOAD_CONST None/RETURN_VALUE` 消失 | **与 §一 `_target` 同一枚硬币的两面** |
+| `<module>.query_trade_strategy_info` | 122/122 | **3**：两处同形（`orig` 的 `JUMP_FORWARD ->@618` 被写成就地内联 `LOAD_CONST None; RETURN_VALUE`） | 同上 |
+
+⇒ 本票的机制表述要按此收紧：**共享的隐式尾声 epilogue 没有被识别为单一落点**，
+于是每条路径各自内联一份 `return None`，而真正该被跳进去的共用尾反而不发。
+`_target` 表现为「少发一对」，`query_*` 表现为「多发内联 + 少发共用尾」——
+**一条判据同时管三单元**。
+`trade_info_utils.pyc` 现 37/41：若本票收 `query_strategy_id` + `query_trade_strategy_info`，
+#14 收 `get_trade_status` + `kill_trade_process`（换位形），**该文件即可 41/41 整文件翻正**。
+⇒ 轮门禁因此有两条独立路径：`handlers`（本票 1 单元）与 `trade_info_utils`（本票 2 + #14 2）。
+
+## 七、仪器假差登记（禁把它记成缺陷）
+
+`kill_trade_process` 的第一条 hunk 是
+`LOAD_CONST <code object <listcomp> at 0x000001EF2BE9E330, file "./fly_docker_py311/…", line 228>`
+对 `LOAD_CONST <code object <listcomp> at 0x000001EF2BE9E230, file "p", line 228>` ——
+差的是 **`repr()` 里的内存地址与文件名**，两个 listcomp 本体未必不同。
+`seq()` 直接取 `argrepr`，凡含嵌套 code object 的常量都必然产生假差。
+⇒ 计数已剔除该条（故上表写「0 真实内容差」）；
+未来任何按 `argrepr` 比较的统计都必须先把嵌套 code object 归一为 `<co>`，
+否则假差会混进「单元数」里（Round 9 的 `NORMALIZER_BLIND` 误判即同源）。
+
+
+## 八、附：落地标记的**准确拼写**（防未来的假阴性 grep）
 
 主代理本轮一次 grep 误报「Round 1 的三处守卫标记在 HEAD 已不存在」——
 实为我的模式写错大小写/轮次（`r8-b98` 应为 `r1-b98`）。`git show HEAD:` 复测命中数：
