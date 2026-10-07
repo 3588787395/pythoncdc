@@ -1,0 +1,80 @@
+[
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_control/__init__.pyc",
+  "rel": "IQEngine/plugins/plugin_system_control/__init__.pyc",
+  "function_count": 13,
+  "size": 4730
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_debug/__init__.pyc",
+  "rel": "IQEngine/plugins/plugin_system_debug/__init__.pyc",
+  "function_count": 6,
+  "size": 2948
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/__init__.pyc",
+  "rel": "IQEngine/plugins/plugin_system_event_source/__init__.pyc",
+  "function_count": 6,
+  "size": 2119
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc",
+  "rel": "IQEngine/plugins/plugin_system_event_source/default_event_source.pyc",
+  "function_count": 14,
+  "size": 14728
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/factor_event_source.pyc",
+  "rel": "IQEngine/plugins/plugin_system_event_source/factor_event_source.pyc",
+  "function_count": 5,
+  "size": 3351
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+  "rel": "IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+  "function_count": 12,
+  "size": 25996
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/__init__.pyc",
+  "rel": "IQEngine/plugins/plugin_system_finance/__init__.pyc",
+  "function_count": 6,
+  "size": 3527
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/api.pyc",
+  "rel": "IQEngine/plugins/plugin_system_finance/api.pyc",
+  "function_count": 5,
+  "size": 7578
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/commission.pyc",
+  "rel": "IQEngine/plugins/plugin_system_finance/commission.pyc",
+  "function_count": 18,
+  "size": 12707
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/slippage.pyc",
+  "rel": "IQEngine/plugins/plugin_system_finance/slippage.pyc",
+  "function_count": 14,
+  "size": 9889
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/tax.pyc",
+  "rel": "IQEngine/plugins/plugin_system_finance/tax.pyc",
+  "function_count": 7,
+  "size": 2183
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_history_save/__init__.pyc",
+  "rel": "IQEngine/plugins/plugin_system_history_save/__init__.pyc",
+  "function_count": 10,
+  "size": 9576
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc",
+  "rel": "IQEngine/plugins/plugin_system_log/__init__.pyc",
+  "function_count": 10,
+  "size": 11912
+ }
+]

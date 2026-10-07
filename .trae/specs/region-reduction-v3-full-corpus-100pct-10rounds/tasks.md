@@ -70,10 +70,28 @@
     已复跑确证 + 排除判据面因素（64 位解释器、最大文件 59KB）+ **落常驻牙**：`driver.py cmd_verify` 先删旧报告、跑完无新报告即 fatal
   - 新登记移交：B110/B111/B112/B113/B114 未闭，B99/B101/B102 原样在册
 
-- [ ] Task 5: Round 4 — quotation 终局单元（`<module>.change_his_to_forward` Different control flow，152→153）
-  - [ ] 5.1 测试工程师：change_his_to_forward 逐指令 diff + ≥10 复现 + 负对照；quotation 其余 152 单元作站桩回归面
-  - [ ] 5.2 修复工程师：封闭并使 quotation.pyc `single` 达 `status=success`（本规范首个全量锚点文件级 100%）
-  - [ ] 5.3 验证序六步 + push
+- [x] Task 5: Round 4 — quotation 终局单元（`<module>.change_his_to_forward` Different control flow，152→153）
+  - 实际执行改道（如实记）：本轮开工前 `change_his_to_forward` 已被 Round 3 的 B100 封闭，quotation 的失败单元在
+    Round 1 就被替换成 `<module>.get_fundflow_day`（B102），故「quotation 152→153」这一靶已失真。
+    本轮按 Round 3 结论改用**族内单元数排序**派发给 16 个单单元文件簇（1 文件 1 单元者最多，翻转性价比最高）。
+  - [x] 5.1 测试工程师：8/8 主靶逐指令第一分歧 + 8 次靶钉第一分歧；电池 31 臂 51/67（16 MISMATCH / 15 MATCH，主代理复算逐位一致）；
+        结论推翻「一族通吃」假设——16 个单单元文件分为 **4 族**（A 汇合块身份 7 文件、B 双 sink 归并 4 文件、
+        B117 内吞 2 文件、B111 轴 1 文件、未归族 1 文件、quotation 归 B 族）；新登记 B116/B117
+  - [x] 5.2 修复工程师：**5 个工单，1 落地 + 4 整批回滚**。落地＝B116/B99 分析端 sink 归属
+        （`_boolop_chain_exits_are_distinct_sinks` + 建区前置不变式门）→ `trading_dates_mixin` 14/14、`stock_position` 37/37；
+        四次回滚均为「守卫命中但零翻转」按验收线当场否决（12/633、0+4、7、α/β/γ 各形），零残留、文档留配方与排除项
+  - [x] 5.3 验证序六步 + push
+  - 落地读数（详见 `rounds/round4/VERIFICATION.md`）：units 6554→**6571/6617（99.3048%）**、files 369→**380/402**、
+        compile_error/error **0**；对基线与对 Round 3 终态**双向** compare 均 REGRESSIONS=0 ∧ UNIT_REGRESSIONS=0；
+        r4 电池 51/67→**64/75**（23/11，零绿臂转红）；r1 108/110、r1_regress 34/34、r2v3 105/126、r3 101/122；
+        quotation 152/153（失败单元仍 `get_fundflow_day`，B102 未闭）；tests 277/2/2 同名单；
+        本轮转完全 OK 的 pyc＝**2**；语料残局 **22 文件 / 46 单元**；
+        A 族 7 文件整轮零推进，最有价值未执行线索＝`_boolop_mixed_polarity_or_chain`（`region_ast_generator.py:38240`）
+        「目标必须分裂为 S/F」判据**过严**（实测成员边全 IF_TRUE 族且目标相同；a06/a07/a09 仍红 ⇒ 跳族混合/or 成员/elif 层均非必要条件）
+  - 流程与工具增量：陈旧读数守卫本轮真的挡住一次（shard5 首跑 rc=TIMEOUT，若无守卫将把上一轮报告当本轮）；
+        新增 `split_verify.py`（分片四分合规拆跑合并，每跑 <280s，断言 files/rows 等量）；
+        本机存在**并行会话**（v2 round7 脚本、`pytest new_tests`、跑在 F: 的 pyc_verify），争用是本轮多次超时的主因，
+        另含我自己的处置失误——并发两条自有链相互拖累，后续 gate 一律单链串行
 
 - [ ] Task 6: Round 5 — Different bytecode 残余（quote 84/92 的 8 单元 + trade_live_broker 的 3 个 bytecode 单元）
   - [ ] 6.1/6.2/6.3 同构；bytecode 差异必须回到发射层归约正确性，禁止字面拼装

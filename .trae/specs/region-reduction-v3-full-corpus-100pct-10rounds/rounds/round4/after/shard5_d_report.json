@@ -1,0 +1,191 @@
+{
+ "elapsed_sec": 48.1,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 2,
+  "success": 10
+ },
+ "files_total": 12,
+ "generated_at": "2026-10-07T09:03:29",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc"
+  ],
+  "success": [
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/json_persistance.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/recorder.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_progress/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_progress/system_progress.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/risk_calculation.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/base_validator.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/__init__.pyc",
+   "pyc_sha": "73c2c87e58bf",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/__init__OK.py",
+   "source_sha": "e379bfbf1228",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.DefaultMatcher.match: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc",
+   "pyc_sha": "39494959516a",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcherOK.py",
+   "source_sha": "a4e4980f31e5",
+   "status": "failure",
+   "success_rate": 0.9411764705882353,
+   "units_success": 16,
+   "units_total": 17
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc",
+   "pyc_sha": "1e9dca402b32",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__OK.py",
+   "source_sha": "36f2382a83e9",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 15,
+   "units_total": 15
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/json_persistance.pyc",
+   "pyc_sha": "e466a12021c9",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/json_persistanceOK.py",
+   "source_sha": "f30699df82c1",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/recorder.pyc",
+   "pyc_sha": "2ecfc2fb32a8",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/recorderOK.py",
+   "source_sha": "1dfae83a7581",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 11,
+   "units_total": 11
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_progress/__init__.pyc",
+   "pyc_sha": "824cbcb3ae15",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_progress/__init__OK.py",
+   "source_sha": "89271e2f03af",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_progress/system_progress.pyc",
+   "pyc_sha": "175298e4c32b",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_progress/system_progressOK.py",
+   "source_sha": "43b2c57efb18",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 11,
+   "units_total": 11
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.PluginRiskCalculation._on_publish_after_trading_end: Failure: Different bytecode",
+    "***<module>.PluginRiskCalculation._save_testds_to_csv: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+   "pyc_sha": "5b622e087a0a",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__OK.py",
+   "source_sha": "f9311c8b0f2c",
+   "status": "failure",
+   "success_rate": 0.9534883720930233,
+   "units_success": 41,
+   "units_total": 43
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc",
+   "pyc_sha": "21db46d2096b",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/functionOK.py",
+   "source_sha": "84fe714bf1e0",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 15,
+   "units_total": 15
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/risk_calculation.pyc",
+   "pyc_sha": "8a7d865b9909",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/risk_calculationOK.py",
+   "source_sha": "9a6d804f31cd",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 29,
+   "units_total": 29
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/__init__.pyc",
+   "pyc_sha": "de5115392329",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/__init__OK.py",
+   "source_sha": "68771260073a",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/base_validator.pyc",
+   "pyc_sha": "c38346612b7b",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/base_validatorOK.py",
+   "source_sha": "1332c7912b46",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9825581395348837,
+ "units_success": 169,
+ "units_total": 172
+}

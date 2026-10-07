@@ -1,0 +1,238 @@
+{
+ "elapsed_sec": 58.8,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 4,
+  "success": 11
+ },
+ "files_total": 15,
+ "generated_at": "2026-10-07T09:07:53",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quote.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc"
+  ],
+  "success": [
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/user_error.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dockerspawner/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dockerspawner/dockerspawner.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dumpload/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dumpload/load_algo.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/event.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/event_engine.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/event_priority.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/event_type.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/user_error.pyc",
+   "pyc_sha": "6f782a5f9999",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/user_errorOK.py",
+   "source_sha": "94ed7ab7d7b6",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/__init__.pyc",
+   "pyc_sha": "31815f659733",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/__init__OK.py",
+   "source_sha": "cfb8d11104df",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 1,
+   "units_total": 1
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.get_fundflow_day: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+   "pyc_sha": "1a51fbb50212",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quotationOK.py",
+   "source_sha": "36eb7841b334",
+   "status": "failure",
+   "success_rate": 0.9934640522875817,
+   "units_success": 152,
+   "units_total": 153
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.Quote.build_current_period_df: Failure: Different bytecode",
+    "***<module>.Quote.check_frequency: Failure: Different control flow",
+    "***<module>.Quote.get_real_from_zeromq: Failure: Different control flow",
+    "***<module>.Quote.run_individual_transform: Failure: Different control flow",
+    "***<module>.Quote.run_tick_socket: Failure: Different control flow",
+    "***<module>.Quote.get_individual_data: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quote.pyc",
+   "pyc_sha": "4ff6ff65699d",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quoteOK.py",
+   "source_sha": "ecbca274b413",
+   "status": "failure",
+   "success_rate": 0.9347826086956522,
+   "units_success": 86,
+   "units_total": 92
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.get_kline_local: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+   "pyc_sha": "1bfaa1f6e75c",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quote_handlerOK.py",
+   "source_sha": "7d1caafab51c",
+   "status": "failure",
+   "success_rate": 0.9873417721518988,
+   "units_success": 78,
+   "units_total": 79
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dockerspawner/__init__.pyc",
+   "pyc_sha": "5a5e2dead82c",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dockerspawner/__init__OK.py",
+   "source_sha": "4cdce63242e8",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 1,
+   "units_total": 1
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dockerspawner/dockerspawner.pyc",
+   "pyc_sha": "9a7636a76108",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dockerspawner/dockerspawnerOK.py",
+   "source_sha": "b10013f9dfb9",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 26,
+   "units_total": 26
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dumpload/__init__.pyc",
+   "pyc_sha": "f41c88ebc093",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dumpload/__init__OK.py",
+   "source_sha": "080e5f1b8b2b",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 1,
+   "units_total": 1
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dumpload/load_algo.pyc",
+   "pyc_sha": "3a47515cf8eb",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dumpload/load_algoOK.py",
+   "source_sha": "7d87cfd08394",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 2,
+   "units_total": 2
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc",
+   "pyc_sha": "26023377e15e",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/dumpload/load_dailyOK.py",
+   "source_sha": "63c013c960cf",
+   "status": "failure",
+   "success_rate": 0.9629629629629629,
+   "units_success": 26,
+   "units_total": 27
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/__init__.pyc",
+   "pyc_sha": "251ccdbe3a75",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/__init__OK.py",
+   "source_sha": "080e5f1b8b2b",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 1,
+   "units_total": 1
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/event.pyc",
+   "pyc_sha": "f5539d2512da",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/eventOK.py",
+   "source_sha": "1f1187652bf1",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/event_engine.pyc",
+   "pyc_sha": "02f73ab3c119",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/event_engineOK.py",
+   "source_sha": "68730e736a99",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 19,
+   "units_total": 19
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/event_priority.pyc",
+   "pyc_sha": "7bbc3e256683",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/event_priorityOK.py",
+   "source_sha": "d7edb087bd2f",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 1,
+   "units_total": 1
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/event_type.pyc",
+   "pyc_sha": "e452045782dc",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/event/event_typeOK.py",
+   "source_sha": "3e78335cef1d",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9783653846153846,
+ "units_success": 407,
+ "units_total": 416
+}
