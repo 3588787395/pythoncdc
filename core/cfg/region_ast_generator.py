@@ -13063,16 +13063,36 @@ AST 映射规则:
                 _r47_ter = self.region_analyzer.get_entry_region_for_block(_then_succ)
                 _r47_loop = self._current_loop
                 _r47_last = _then_succ.get_last_instruction()
-                if (not _then_is_continue and _else_succ is not None
+                # [R9-B125 loopheader-arm-exit-confluence] 臂出口 = 臂的接口，不是臂首块末指令
+                # 原则 3（嵌套即抽象节点）+ 原则 2：then 臂若已被某区域认领并作
+                # 抽象节点发射，则该臂的出口是该区域的汇出块 merge_block，臂首块自身
+                # 的末指令只是该区域的条件跳转。此时「_else_succ 是臂的落入块」的唯一
+                # 正确读法就是 _else_succ 即该臂区域的汇出块——它同时是循环头条件跳转
+                # 的落点，两条入边共享它，按定义是两臂的汇合点而非 else 子句体
+                # （真 else 臂的 then 臂必以无条件前向跳转越过它）。判据只读 L(A) 内的
+                # 区域出口接口与该块的归属身份，无名字/偏移/深度/计数条件。
+                _r47_arm_region = (_r47_ter is not None
+                                   and _r47_ter.entry is _then_succ
+                                   and id(_r47_ter) in self._generated_regions)
+                _r47_arm_exit = (getattr(_r47_ter, 'merge_block', None)
+                                 if _r47_arm_region else None)
+                _r47_seq_tail = (
+                        _else_succ is not None
                         and _else_succ is not block
-                        and _else_succ in (list(_then_succ.successors) or [])
-                        and _r47_last is not None
-                        and _r47_last.opname not in FORWARD_JUMP_OPS
-                        and _r47_last.opname not in BACKWARD_JUMP_OPS
-                        and (_r47_ter is None or _r47_ter.entry is not _then_succ)
                         and _r47_loop is not None
                         and _else_succ in (getattr(_r47_loop, 'blocks', None) or set())
-                        and _else_succ not in self.generated_blocks):
+                        and _else_succ not in self.generated_blocks
+                        and (
+                            (_r47_arm_region
+                             and _r47_arm_exit is not None
+                             and _r47_arm_exit is _else_succ)
+                            or (not _r47_arm_region
+                                and _else_succ in (list(_then_succ.successors) or [])
+                                and _r47_last is not None
+                                and _r47_last.opname not in FORWARD_JUMP_OPS
+                                and _r47_last.opname not in BACKWARD_JUMP_OPS)
+                        ))
+                if not _then_is_continue and _r47_seq_tail:
                     self.generated_blocks.add(_then_succ)
                     self.generated_offsets.add(_then_succ.start_offset)
                     _hdr_stmts.append({'type': 'If', 'test': _expr, 'body': _then_stmts})
@@ -15049,6 +15069,110 @@ AST 映射规则:
             'comparators': _comparators,
         }
 
+    def _split_arm_at_chain_exit(self, region: IfRegion,
+                                 arm_blocks: List[Any]) -> Optional[Tuple[List[Any], List[Any]]]:
+        """_split_arm_at_chain_exit — 链出口被臂块表认领时的发射边界切分器。
+
+        ═══════════════════════════════════════════════════════════════════════
+        标记 [R9-B124 elifchain-exit-in-armtail]
+        ═══════════════════════════════════════════════════════════════════════
+
+        ①算法依据（原则 2 每块唯一归属 + 原则 4 入口引用语义）：CPython 编译
+          if/elif/else 链时，链的汇出块 M（region.merge_block）是**链后代码的
+          入口**而非任何臂的内部块：某个臂以一条无条件前向跳转
+          （JUMP_FORWARD/JUMP_ABSOLUTE）**越过**后续全部臂落到 M，另一个臂
+          （通常是末臂 else）以 fall-through 进入 M。因此「M 有一条来自链内
+          某臂的无条件前向入边」是 M 属于链出口、不属于末臂的充分结构证据。
+          发射端若把 M 及其链后后续留在臂块表（elif_bodies[i] / elif_final_else）
+          里，M 就被嵌进该臂体内部；那条越臂跳转在产物里没有合法落点，被重新
+          定位到整个区域之后，于是该路径**绕过了两条入边共用的汇出区域**
+          （实测 IQCommon/data/finance.pyc :: <module>.get_fields 从 654 行跳过
+          665 行共用的 error_no == 0 测试，直达 return fields）。本方法把臂块表
+          在链出口处切开：留在臂内的只有「不经过 M 就能从臂入口到达」的块，
+          M 及其只经 M 可达的后续交回链后发射。
+
+        ②归约顺序（原则 1 自底向上）：内层区域先归约并已作为抽象节点交付，
+          本切分只消费已归约的块粒度事实——块的前驱/后继身份、块末指令的
+          opcode 与目标偏移。切分发生在 _if_generate_full_elif_chain 调用
+          _if_generate_elif_chain **之前**（发射边界先于臂体渲染确定），链后
+          语句在该方法末尾既有 post-if 汇聚点统一发射，晚于 then/elif/else 装配。
+
+        ③唯一归属判定：三个合取条件全部成立才接手，任一不成立返回 None（调用
+          方逐字节沿用既有路径）——
+          (a) region.merge_block 存在且确实是该臂块表的成员（认领冲突的证据）；
+          (b) 链内存在块 b（b != M 且 b 不属于切出的链后集）以无条件前向跳转
+              终止且目标即 M（越臂短路入边；fall-through 不算，它不构成落点歧义）；
+          (c) 切分后臂仍留有至少一个块（否则本方法会把整条臂删空，那是另一个
+              缺陷面，不属本判据）。
+          归属唯一性由「可达性」而非偏移排序决定：臂入口 = 臂内没有任何臂内前驱
+          的块（链出口本身在臂表内，故它的直接后继不构成入口）；臂体闭包 = 从
+          入口出发、遇 M 即停的后继闭包。闭包内的块唯一归属该臂，闭包外的块
+          （含 M）唯一归属链后序列。
+
+        ④嵌套处理（原则 3 嵌套即抽象节点）：判据对块内部结构无感——M 的后续
+          若是完整嵌套区域（IfRegion/LoopRegion/TryRegion，实测 finance 的 M
+          之后是 if/else + 两层 for + try），切出的只是**该区域的入口块**，
+          区域整体由 _process_if_blocks → _generate_region 作抽象节点发射，
+          本方法不窥视其内部块、也不改其父指针。成员数/深度/块数不进入判据。
+
+        ⑤入口引用语义：链区域经「链后语句」引用 M 入口（原则 4），臂体经子
+          区域入口引用其内部结构；M 在切分后被登记进 generated_blocks/
+          generated_offsets，父序列不再重复发射它，与既有 R45-A/R46-B 补发路径
+          互斥（那两条以 `not _r91_post_if_blocks` 为门）。
+
+        ⑥反编译流程：region_ast_generator._if_generate_full_elif_chain 在装配
+          elif_bodies[0] 与 elif_final_else 两处调用本方法 → 臂体只渲染真正属
+          于该臂的语句 → 链后语句在 if/elif/else 之后按原序渲染 → 重编译时
+          越臂臂以 JUMP_FORWARD 落到 M、末臂 fall-through 落到 M，与原始字节码
+          逐条一致。
+
+        C1 局部消费：只读 L(A) = A.blocks ∪ A.out_edges ∪ A.exception_table 内
+          的事实（region.merge_block、臂块表、这些块的 predecessors/successors
+          与末指令），不读函数名/文件名/绝对偏移阈值/深度计数，零跨层查询。
+        C2 黑箱组合：切出的链后块以入口为单位交给区域发射器整体渲染，本方法
+          不展开嵌套区域内部；失败返回 None 时调用方行为与未命中逐位一致。
+        C3 守卫封闭：(a)(b)(c) 三条合取判据即显式守卫；尤其 (b) 要求越臂短路
+          边存在，排除「M 只是末臂的自然 fall-through 延续」这种本就正确的
+          归属；(c) 排除整臂被清空。无隐式全局状态。
+
+        :param region: 正在生成的 IfRegion（IF_ELIF_CHAIN）
+        :param arm_blocks: 该区域某个臂的块表（elif_bodies[i] 或 elif_final_else）
+        :return: (留在臂内的块表, 切给链后的块表)；判据不成立时 None
+        """
+        _exit = region.merge_block
+        if _exit is None or not arm_blocks or _exit not in arm_blocks:
+            return None
+        _arm_set = set(arm_blocks)
+        _ordered = sorted(_arm_set, key=lambda _b: _b.start_offset)
+        _seeds = [_b for _b in _ordered
+                  if _b is not _exit
+                  and not any(_p in _arm_set for _p in _b.predecessors)]
+        if not _seeds:
+            return None
+        _closure = set()
+        _work = list(_seeds)
+        while _work:
+            _b = _work.pop()
+            if _b is _exit or _b in _closure or _b not in _arm_set:
+                continue
+            _closure.add(_b)
+            _work.extend(sorted(_b.successors, key=lambda _s: _s.start_offset))
+        _kept = [_b for _b in arm_blocks if _b in _closure]
+        _past = [_b for _b in arm_blocks if _b not in _closure]
+        if not _kept or _exit not in _past:
+            return None
+        _past_set = set(_past)
+        for _ab in (region.blocks or []):
+            if _ab is _exit or _ab in _past_set:
+                continue
+            _li = _ab.get_last_instruction()
+            if (_li is not None
+                    and _li.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                    and isinstance(getattr(_li, 'argval', None), int)
+                    and _li.argval == _exit.start_offset):
+                return _kept, _past
+        return None
+
     def _if_generate_full_elif_chain(self, region: IfRegion) -> Dict[str, Any]:
         """
         生成完整的 if-elif[-else] 链结构
@@ -15603,41 +15727,39 @@ AST 映射规则:
         # This generates spurious implicit return None and changes code scope.
         # Fix: detect merge_block in elif_bodies[0], split blocks into
         # pre-merge (elif body) and post-merge (post-if statements).
+        # [R9-B124 elifchain-exit-in-armtail] 链出口被臂块表认领 ⇒ 在链出口处
+        # 切开该臂。_split_arm_at_chain_exit 是本决策的唯一实现点：elif_bodies[0]
+        # 与 elif_final_else 两个臂位都走同一条判据（原则 2：同一判据不得在两处
+        # 各写一份，否则单点修正是部分修正）。
         _r91_saved_elif_bodies_0 = None
+        _r91_saved_final_else = None
         _r91_post_if_blocks = []
-        if (region.merge_block is not None
-                and getattr(region, 'elif_bodies', None)
-                and region.elif_bodies
-                and region.merge_block in region.elif_bodies[0]
-                and any(b.start_offset < region.merge_block.start_offset
-                        for b in region.elif_bodies[0])):
-            _r91_saved_elif_bodies_0 = region.elif_bodies[0]
-            _mb = region.merge_block
-            _pre_merge = [b for b in region.elif_bodies[0]
-                          if b.start_offset < _mb.start_offset]
-            _post_merge = [b for b in region.elif_bodies[0]
-                           if b.start_offset >= _mb.start_offset]
-            # Only move post-merge blocks that are NOT reachable from pre-merge
-            # blocks (i.e., blocks that are only reachable from merge_block).
-            # Blocks reachable from pre-merge blocks may be legitimate elif
-            # body blocks (e.g., backward jump targets).
-            _pre_merge_set = set(_pre_merge)
-            _reachable_from_pre = set()
-            _worklist = list(_pre_merge)
-            while _worklist:
-                _b = _worklist.pop()
-                for _s in _b.successors:
-                    if _s not in _reachable_from_pre and _s in set(region.elif_bodies[0]):
-                        _reachable_from_pre.add(_s)
-                        _worklist.append(_s)
-            _r91_post_if_blocks = [b for b in _post_merge
-                                   if b not in _reachable_from_pre]
-            region.elif_bodies[0] = [b for b in region.elif_bodies[0]
-                                     if b not in _r91_post_if_blocks]
+        if region.merge_block is not None:
+            for _r91_arm_attr in ('elif_bodies_0', 'elif_final_else'):
+                if _r91_arm_attr == 'elif_bodies_0':
+                    if not getattr(region, 'elif_bodies', None):
+                        continue
+                    _r91_arm = region.elif_bodies[0]
+                else:
+                    _r91_arm = getattr(region, 'elif_final_else', None)
+                _r91_split = self._split_arm_at_chain_exit(region, _r91_arm)
+                if _r91_split is None:
+                    continue
+                _r91_kept, _r91_post = _r91_split
+                if _r91_arm_attr == 'elif_bodies_0':
+                    _r91_saved_elif_bodies_0 = _r91_arm
+                    region.elif_bodies[0] = _r91_kept
+                else:
+                    _r91_saved_final_else = _r91_arm
+                    region.elif_final_else = _r91_kept
+                _r91_post_if_blocks = _r91_post
+                break
         elif_part = self._if_generate_elif_chain(region)
         # R91: Restore original elif_bodies[0] if modified
         if _r91_saved_elif_bodies_0 is not None:
             region.elif_bodies[0] = _r91_saved_elif_bodies_0
+        if _r91_saved_final_else is not None:
+            region.elif_final_else = _r91_saved_final_else
         if _ft3_elif_shared:
             _ft3_elif_shared_stmts = self._process_if_blocks(
                 _ft3_elif_shared, region, branch='else')

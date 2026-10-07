@@ -74,19 +74,51 @@
 - [ ] **本轮纪律缺陷（如实自记）**：修复工程师的自测清单未含 402 逐文件差值，故回退由其自测面漏过、
       由主代理门禁抓到。已把「落地票必须等主代理 402 差值才算数」写入项目记忆与本轮 VERIFICATION.md §III。
 
-## 轮次核验记录（round9 · 进行中，尚未封表）
+## 轮次核验记录（round9 · 2026-10-08 封表）
 
-- [x] 独立文件夹 `rounds/round9/` + `test_repros/round9/`（G7 变形臂 4 条 8/8、quote 定性臂 26 条 43/53、
-      落点/边界臂由在逃工单自建）
-- [x] 派发前本地提交并 push（`6f9db7a6`…`0e667a6e` 等，`ahead=0` 于 15:02 时点成立）
-      **23:42 时点更新**：远端此后又收 `7801cc46`/`e392b8dc`；当前尚有 **2 个本地提交未推**
-      （`git push` 连续 7 次 `unable to access`，非认证失败而是连接层），
-      封表前必须补推并在 VERIFICATION.md 记 `ahead=0` 的实测时刻。
-- [x] 主代理未执行修复实现任务：**一处例外如实登记**——G7 判据由主代理落地（纠第一击的回退），
-      随后把回退风险交回工单面（#15 要求以区域成员事实替换 POP_TOP 巧合支并一次改全）
-- [ ] **本轮 ≥1 个 pyc 由 failure 转 success：尚未达成**（当前读数仍为 6575/6617、384/402；
-      落点/边界票在飞，其候选面是「只差 1 单元的 10 个文件」，全部单元经实测属首分歧＝落点）
-- [ ] 六步验证序与双门禁未跑（须在该票落地后由主代理执行）
+- [x] 独立文件夹 `rounds/round9/` + `test_repros/round9/`：取证 8 份（`REVIEW_RESIDUAL_CENSUS.md`、
+      `REVIEW_LANDING_SPECIMENS.md`、`REVIEW_WHILE_ELSE_TAIL_RELOCATION.md`、`REVIEW_QUOTE_6UNITS.md`、
+      `PREAUDIT_IDENTIFY_COMMENTS.md`、`FALSIFIED_R9B122_FWDONLY.md`、`ADJUDICATION_R9B122_INFLIGHT.md`、
+      `ADJUDICATION_R9LO_REVERTED.md`）、工单简报 5 份（#13/#14/#15/#16 + `FIX_BODY_SWALLOW_BRIEF.md`）、
+      落地文档 2 份（`FIX_B124_B125_ELIFCHAIN.md`、`VERIFICATION.md`）
+- [ ] **测试工程师「每缺陷 ≥10 复现 · 深度 ≥3 变体 · ≥2 MATCH 负对照」——本票未达成，如实登记**：
+      B124/B125 建臂命中 **0**（`test_repros/round9/` 无相应命名臂）。本轮既有臂面为
+      `r9_probe_index.json` 4 条（8/8）、`r9_quote_index.json` 26 条（43/53）、
+      `r9a1_probe_index.json` 10 条（15/20，其中 `03/08` 判 void、`06/07` 为名不符形的负对照）、
+      `r9lo_probe_index.json` 6 条（9/12）。落地判据因此只由**逐单元翻转**背书，补臂登记为轮 10 前置项。
+- [x] 破口登记格式齐全：B122（否证）、B123（零翻转回滚）、**B124/B125（本轮落地）**，编号自 B98 续接
+- [x] 修复判据只取白名单：`_split_arm_at_chain_exit` 读 `region.merge_block` 成员关系 ∧ 块末
+      `JUMP_FORWARD/JUMP_ABSOLUTE` 且目标＝M ∧ 臂内可达性闭包；B125 读「臂已被区域认领（`entry is then_succ`
+      ∧ `id ∈ _generated_regions`）⇒ 臂出口＝该区域 `merge_block`」∧ 该块归属身份。
+      G3 禁止前缀新增方法命中 **0**；G4 硬编码深度/计数/偏移/名特判命中 **0**
+- [x] 修复语义＝封闭守卫恢复 C1/C2/C3：三条合取判据缺一返回 `None`，调用方逐字节走既有路径；
+      无深度门控、无文件名/偏移特判、无以少发射换全绿的窄门控
+- [ ] 触及方法 docstring 六项模板：**新方法齐备（六项 + C 条款）**；
+      消费者 `_if_generate_full_elif_chain` 本体被改而自身 docstring 未补，
+      且其「两处调用本方法」措辞与实现（1 个调用点遍历 2 类臂表、首个命中即 `break`）不同形
+      ⇒ 两项并入 Task 11 逐方法审计
+- [x] 修复工程师自测门禁：本票由**主代理代跑**（工程师被 150 回合上限截断、回报文件 0 字节）。
+      其 scratch 读数（`D:/Temp/rrv9/regress_step3.log`）为锚集 454/454 保持、既有四臂集不变差；
+      IV.2 面：COMPILE_OK ∧ AST parse_OK ∧ BOM 单头 ∧ CRLF 未被整文件改写 ∧ 新增 `print(` 0 ∧
+      影响面抽验＝只有 2 个单元变化
+- [x] FIX.md 含「代码已落地」声明，落地以 grep 标记为凭（`[R9-B124 elifchain-exit-in-armtail]` 2 处、
+      `[R9-B125 loopheader-arm-exit-confluence]` 1 处）
+- [x] 主代理验证序六步全跑，双门禁 **REGRESSIONS=0 ∧ UNIT_REGRESSIONS=0**（402 全量实测，非 34 集推断；
+      逐单元名集差＝新增失败 0 条）
+- [x] **本轮 ≥1 个 pyc 由 failure 转 success：达成 2 个**——`IQCommon/data/finance.pyc`（31/32→32/32，
+      `<module>.get_fields`）与 `IQEngine/plugins/plugin_system_trade/function.pyc`（70/71→71/71，
+      `<module>.reconnect`），两者同属 §X「只差 1 单元」名单，预测与实测吻合。
+      units **6575→6577**／6617（99.3955%）、files **384→386**／402
+- [x] 单元级不回退门禁：402 逐文件 `units_success` 差值全表核对，无任何文件下降
+- [x] 全程单条命令 ≤300s（regen 分 8 片 25–32s/片；verify 分 8 片 11–32s/片；六套件 3.1s）
+- [x] 无任何 `*OK.py` 被手改（402 产物全部来自 `pycdc.py -o` 重生成，先删后产）；用户既有变更未被回滚
+      （`git status -- core` 除本票单文件外为空；867 个 `wt_head` 长路径缺件为工作树固有状态，未动）
+- [ ] **本轮已提交并 push——提交完成，push 待补**：`ahead` 于 17:16 时点为 3（已推 `106695dd`），
+      此后 `git push origin HEAD:refs/heads/rr-v3-full-corpus` 再报
+      `Recv failure: Connection was reset`；本工作树无稳定外网，网络可用时执行该命令即可。
+- [ ] **残余未清零，如实上报**：40 单元 / 16 文件（最大头 `trade_live_broker` 118/128 差 10）；
+      判据未改、读数未凑、语料未删。分派见 `tasks.md` §10.0 与 `REVIEW_RESIDUAL_CENSUS.md` §XVI
+      （`#18 极性轴` 已作为**假轴撤销**：目标解析后逐 hunk 复验＝零条孤立换 opcode 差）。
 
 ## 终态验收
 - [ ] 402 全量 units = 6617/6617（100%）、files = 402/402 success、0 compile_error、0 error
