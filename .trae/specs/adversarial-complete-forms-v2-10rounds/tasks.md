@@ -44,12 +44,12 @@
   - [x] 6.3 评审工程师复核：逐方法重审一致性 + 读数复跑；REVIEW2.md（19/19 通过；对抗性核对 6 个跨族攻击点无反例、C 条款声明均经代码实证；独立 AST_EQUAL 两文件 ALL_OK；站桩 6 面 WORSE=0 全 same；合规新增 0；终审放行；r6v6r_* 证据）
   - [x] 6.4 主代理验证：验证序六步；VERIFICATION.md（402 全量 6554/6617、369/402 与基线逐位一致；8 分片 compare REGRESSIONS=0；34 集 1505/1568；quotation 152/153；tests 277 passed/2 failed/2 xpassed；IV.2 全过；落地标记 analyzer 10 + generator 23）
   - [x] 6.5 归档 rounds/round6/ + 提交并 push origin main
-- [ ] Task 7: Round 7 — 已封闭守卫族与已复审破口全量深度外推重放（站桩回归强化轮：B2/B3/B4 守卫族 + B1b/B6–B40/B45/B54/B55/B66–B68 已封闭面，外推变体 + 收缩变体双向攻击）
-  - [ ] 7.1 评审工程师：守卫判据面重攻击（守卫适用形态变体/守卫边界外形态/守卫互斥组合；外推验证守卫确实恢复无感而非窄门控）+ 前六轮新封闭面重放；读数不得变差；REVIEW.md + test_repros/round7/
-  - [ ] 7.2 修复工程师（可多位协同）：封闭攻击暴露的守卫缺口（I.3 推论：封闭守卫恢复无感，禁止窄门控/个案补丁——窄门控 = I.4 黑名单「以少发射换全绿」变体，打回）；FIX.md
-  - [ ] 7.3 评审工程师复核；REVIEW2.md
-  - [ ] 7.4 主代理验证：验证序六步；VERIFICATION.md
-  - [ ] 7.5 归档 rounds/round7/ + 提交并 push origin main
+- [x] Task 7: Round 7 — 已封闭守卫族与已复审破口全量深度外推重放（站桩回归强化轮：B2/B3/B4 守卫族 + B1b/B6–B40/B45/B54/B55/B66–B68 已封闭面，外推变体 + 收缩变体双向攻击）
+  - [x] 7.1 评审工程师：守卫判据面重攻击（三方向 47 探针 attack 114/122 + neg 18/18 全 MATCH；站桩 6 面 WORSE=0 持平 round6；登记守卫缺口型新破口 4 项 B117–B120——编号勘误：初稿误用 B77–B80 与台账冲突，已按最高号 B116 续接重编号；B3 族三方向封闭成立；合规新增违反 0）；REVIEW.md + test_repros/round7/ r7v7_*/n7v7_*（零覆盖既有 61 tracked）
+  - [x] 7.2 修复工程师（单位续作——前任配额中断，四守卫已在途，续作核实并收紧 3 处过火守卫）：四破口全封闭（唯 core 改动 region_ast_generator.py +516/-6：B117 then 臂吸收守卫+else-continue 尾区域前置守卫+新谓词 _if_region_is_loop_body_tail、B118 else-break 出口边显式认领 orelse=[Break]、B119 try 体镜像守卫+回边释放用户语句载体判据+帧尾释放封闭、B120 祖先汇合块守卫）；7 复现全 MATCH；攻击面 122/122(+8)；站桩 6 面 WORSE=0 且 round2face 235/251(+1)、residual 418/446(+1)；34 集 1505/1568 NEWFAIL=0；IV.2 全过；FIX.md 代码已落地
+  - [x] 7.3 评审工程师复核；REVIEW2.md（终判通过打回 0：逐 hunk 19 处判据全 I.4 白名单、落地锚点 20/20 grep 实证、读数独立复跑一致、变体 r7v7r_* B118 7/7·B120 7/7·B119 9/9 不误伤、B117 6/7 浅层 while 宿主基线 FAIL 转 MATCH 正向生效；新登记 B121 while 头形成误归约——基线同败确证存量缺口非本批回归，移交 Round 8）
+  - [x] 7.4 主代理验证：验证序六步；VERIFICATION.md（402 全量 6554/6617、369/402 与基线逐位一致；8 分片 compare REGRESSIONS=0 IMPROVED=0；34 集 1505/1568；quotation 152/153；tests 277/2/2 基线名单；IV.2 全过 R7FIXDBG 清零/落地标记 analyzer10+generator24；轮门禁达成=4 破口封闭+3 读数改善）
+  - [x] 7.5 归档 rounds/round7/ + 提交并 push origin main
 - [ ] Task 8: Round 8 — 残余破口清零冲刺（任何未封闭 B 项：定位→封闭→复审；不具备判据形态者按 wiki §8.3 证伪降级并记录机制）
   - [ ] 8.1 评审工程师：残余破口全量清单盘点 + 逐项判据形态评估（可封闭/需证伪；对每项给出 C1/C2/C3 违反条款归属）+ 站桩回归 + 合规审计；REVIEW.md
   - [ ] 8.2 修复工程师（可多位协同）：按清单封闭（I.4 白名单）或配合证伪归档；FIX.md
