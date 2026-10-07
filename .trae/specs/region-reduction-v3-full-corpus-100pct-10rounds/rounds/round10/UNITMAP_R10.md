@@ -132,3 +132,35 @@
 ⇒ **本表是工作清单，不是分派表**：票面归属一律由 §二/§四/§五 的**具名机制**决定；
 类名只用于排序与覆盖检查。（`matcher.DefaultMatcher.match` 一行在 #13-P0 工程师重生成产物期间可能瞬时失真，
 本档结论不依赖它——该单元已由 §一 具名为「一条被吞的切片成员测试」。）
+
+## 七、40 单元的**机制具名覆盖表**（本档的终点：把工作清单转成可派工单）
+
+状态图例：**具名**＝已有可读回的语句/边事实；**半具名**＝知形状未定位宿主；**未具名**＝只有 hunk 计数。
+
+| 票 | 单元（文件） | 具名机制 | 状态 |
+|---|---|---|---|
+| **#13-P0（在飞）** | `matcher.match` | 条件体内整条 `order.asset.symbol[None:3] in ('688','689')` 测试被吞（`big=10/0`，该文件唯一失败单元） | 具名 |
+| **#22** | `order_api.option_order` / `future_order` | 镜像两形：条件体 `strategy_log.info('生成订单…'.format(…))` 被吞（9→1）＋ `…futures_direction.value.upper()=='OPEN' and '开仓' or '平仓'` 操作数链被吞（delete 31/19） | 具名 |
+| **#21** | `wizard_quant_api.get_DMI.calculate_di.<genexpr>` ×2 | 生成器元素里负眼下标 + `+1` 偏移的操作数链被吞（各 `delete 14`，`high`/`low` 对称实例） | 具名 |
+| **#15** | `handlers.TWHThreadController._target`、`trade_info_utils.query_strategy_id`、`query_trade_strategy_info` | 共享隐式尾声 epilogue 未被认成单一落点：产物逐路内联 `LOAD_CONST None/RETURN_VALUE`，共用尾反不发 | 具名 |
+| **#16 共要件 ＋ #13** | `trade_live_broker._process_order`(big 469/3)、`_process_cancel_order`(298/4)、`_trade_status_handle`(9/5) | 结构改判（`while True:` + 体内 `if`）已由 `RAVED_R10_B126.patch` 解决；余下的大省略**未定位宿主** | **半具名** |
+| #13 | `trade_live_broker.etf_purchase_redemption`(11/1) | 属性链截断 | 半具名 |
+| #13 | `realtime_event_source.clock_worker`(144/27) | 一形三态：`if persist_flag is not False:` 110 条体被跳 ＋ 17 条块搬到循环后 ＋ 3 处目标差 | 具名 |
+| #13 | `quote.run_individual_transform`(71/18) | 循环体半丢：`socket.recv()` → `message` → 空数据告警分支 → `list(...)[0]` 一串被压成 2 条（三处独立 hunk 同形） | 具名 |
+| #13 | `quote.build_current_period_df`(12/2) | 函数尾被吞：`tempdict['is_open'] = …` ＋ `pandas.DataFrame(tempdict, index=…)` 构造整串消失，产物只剩 `POP_TOP; LOAD_CONST None` | 具名 |
+| #13 | `plugin_system_risk_calculation._save_testds_to_csv`(14/5) | 只有计数（曾按 §二B 记为「`while…else` 的 else 体是 `return None`」，现测得 14 条真删）⇒ 需逐读 | **未具名** |
+| #13/#14 | `klinedata.kline_datetime_list`、`api_base.get_history_df` | 5→1 压形（`time_count -= 1` 与其后循环测试算术）＋ 别处 1→9 摊开 | 具名 |
+| #14 邻面 | `__init__._on_publish_after_trading_end`(2/2) | 函数内 `import`（`IMPORT_NAME`+`IMPORT_FROM` 成对消失）＋小摊开 | 具名 |
+| #14（纯落点） | `bar._history_bars`、`strategy_universe._on_clear_de_listed`、`load_daily.<module>`、`strategy.tick_worker_thread`(含 2 处 ANCHOR)、`trade_info_utils.get_trade_status`、`trade_live_broker.get_ipo_stocks`、`rzrq_credit_order`、`_process_tick_order`(ANCHOR)、`ipo_stocks_order`、`kill_trade_process`(换位) | 汇合块/锚点归属；**方向不一**（有早有晚），单向规则必错 | 具名 |
+| 未具名 | `wizard_quant_api.filter_desicion`(−2)、`klinedata.get_multiminute_his_data`(−1)、`klinedata.get_kline_by_count_new`(0)、`quote.check_frequency`(−1)、`quote.get_individual_data`(−1)、`quote.run_tick_socket`(27/28 搬位)、`trade_live_broker._sync_worker`(178/180 链式比较腿＋搬位)、`trade_live_broker.etf_basket_order`(13/13，落点副本不可分) | 只有 hunk 计数或已知「搬位而非省略」 | **未具名/待逐读** |
+
+计数核对：具名 **24**、半具名 **5**、未具名 **11**，合计 **40** ✓。
+
+**下一步取证次序（按「离翻正几个单元」排，不按桶大小）**：
+1. `realtime_event_source`(12/13) 与 `plugin_system_risk_calculation`(41/43)、`quote`(86/92)、
+   `klinedata`(61/64)、`trade_info_utils`(37/41) 中，**只差 1–2 单元的文件优先**：
+   `realtime_event_source`、`matcher`(在飞)、`api_base`、`bar`、`strategy`、`strategy_universe`、`load_daily`、`handlers`；
+2. 未具名的 8 条小差单元（`check_frequency`、`get_individual_data`、`get_multiminute_his_data`、
+   `get_kline_by_count_new`、`filter_desicion`、`run_tick_socket`、`etf_basket_order`、`_sync_worker`）
+   逐条读 hunk 语义后再定票面——**不得先给它们派票再找机制**；
+3. 每票落地后重跑 `unitmap.py`，本表随之改版（本表已是第二次改版：分类键改正一次、real_quote 与 `_target` 各撤销一次）。
