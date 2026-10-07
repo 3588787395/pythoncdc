@@ -14,7 +14,8 @@
 → `<module>.TradeLiveBroker._process_order` / `_process_cancel_order` / `_trade_status_handle`
 （HEAD 产物 `trade_live_brokerOK.py` line 425 / 524 / 897 三处 `while … else:`，`else` 体分别是 `sleep(0.001)/sleep(0.001)/sleep(0.5)`）。
 
-锚点：`_find_loop_else`（`region_analyzer.py:6028`），WHILE 分支出口收集 `:6361–6394`，
+锚点：`_find_loop_else`（`region_analyzer.py:6028`）——**此锚点已被 §七 订正：该函数对三单元返回
+`(None, None)`，else 实由 `:4810` 起的 `_else_backedge_blocks` 构造段认领**；下列其余锚点不变。，WHILE 分支出口收集 `:6361–6394`，
 `natural_exit` 求解 `:6423`，既有 no-break 兄弟结构判据 `_is_post_merge_sibling_head`；
 生成端消费者 `_loop_generate_while`（`region_ast_generator.py:6638`）／`_loop_generate_body:8251`。
 
@@ -89,10 +90,32 @@
 
 ## 六、交付要求
 
-1. 先臂后码：在当前 HEAD 字节下把 §三 判据做成/复用 `r9lo_*` 臂并读红，再动生产码。
-2. 落地以 grep 标记为凭（建议 `[r9-b124-whiletrue-ifjoin-else]`），`FIX.md` 声明「代码已落地」或「仅归档 spec 未落地」。
-3. 触及方法（`_find_loop_else`，以及若改动的 `_annotate_loop_structural_roles:4041`／`_is_loop_exit_block:2954`／
-   `_loop_generate_while:6638`）补六项模板 docstring（①算法依据②归约顺序③唯一归属判定④嵌套处理⑤入口引用语义⑥反编译流程）＋ C 条款，且与行为一致。
+1. 先臂后码：在当前 HEAD 字节下把 §三 判据做成臂并读红，再动生产码
+   （工程师实际交付 `r9w16_*` 18 臂：11 红复现 + 6 绿对照 + 1 意外绿，基线 26/37，见 `rounds/round10/FIX_B126_WHILE_TRUE_IFJOIN.md` §一）。
+2. 落地以 grep 标记为凭（工程师标记 `[R9-B126…]`/`[r10-b126…]` 以其实报为准），`FIX.md` 声明「代码已落地」或「仅归档 spec 未落地」。
+3. 触及方法**以 §七 订正后的锚点为准**（`:4810` 起的 `_else_backedge_blocks` 构造段、`_is_while_true:5811`，
+   以及若改动的生成端 `_loop_generate_while:6638`）补六项模板 docstring
+   （①算法依据②归约顺序③唯一归属判定④嵌套处理⑤入口引用语义⑥反编译流程）＋ C 条款，且与行为一致。
 4. 无 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀新方法（G3）；无硬编码深度／计数／偏移／文件名特判（G4）。
-5. 自测门禁顺序：`r9lo` 6 臂 → 34 小测试集 batch → `trade_live_broker` 单验逐单元名单（须见 `while True:` 形状）
-   → 402 八分片双门禁（REGRESSIONS=0 ∧ UNIT_REGRESSIONS=0）。零翻转即按 sha256 逐字节回滚（B123 已立此例）。
+5. 自测门禁顺序：自有 `r9w16_*` 臂 → 34 小测试集 batch → `trade_live_broker` 单验逐单元名单（须见 `while True:` 形状）
+   → 主代理跑 402 八分片双门禁（REGRESSIONS=0 ∧ UNIT_REGRESSIONS=0）。零翻转即按 sha256 逐字节回滚（B123 已立此例）。
+
+## 七、本简报锚点订正（由 #16 工程师实测＋主代理 grep 复验，2026-10-08）
+
+§一 说「落点＝`_find_loop_else:6028`」**不对**。复验事实：
+
+- `_find_loop_else` 对这三单元返回 `(None, None)`——它**没有**认领 else；
+- 真正的认领在**同文件调用方**：`region_analyzer.py:4810` 起的
+  `if condition_block == header and not else_blocks:` 段（4820 `_else_backedge_blocks=[_hdr_jump_target]`、
+  4834 追加其 `JUMP_FORWARD` 前驱、4837 成集、4844 `else_blocks = sorted(_else_backedge_blocks…)`）：
+  读「header 的前向假边落点 ∈ body ∧ 该落点末条＝`JUMP_BACKWARD → header`」，
+  把该落点及其跳入前驱**从 body 摘出塞进 else**；
+- 配套第二处：`_is_while_true`（def 在 `:5811`，调用点 `:5808`）对同一形状显式返回 False，
+  于是 Step 7 把该 if 块当作 `condition_block`。
+
+⇒ **本简报 §三 的判据本身成立**（「else 入口末条是跳回本循环区段的向后边」即否证条件），
+只是它恰好是 `:4810` 那段**的成立条件取反**——修的是那一段，不是 `_find_loop_else`。
+执行顺序仍按 §三 的两步（取消认领 ∧ 归还体内 `if`）。
+教训（并入 §六 之外的排产纪律）：**工单里我给的函数名必须由工程师/主代理复验后才可用**；
+本轮已第三次出现「简报锚点错、机制对」（前两次：B122 的 merge 判据、B123 的发射边界）。
+其余 §二 的逐边事实、§四 的负对照与臂名册、§五 的分家与门禁关系**不变**。
