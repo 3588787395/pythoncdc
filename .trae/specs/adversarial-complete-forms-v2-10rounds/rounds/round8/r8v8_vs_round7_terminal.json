@@ -1,0 +1,101 @@
+{
+ "compare": "r8v8 vs round7 terminal (r7v7fix_*)",
+ "faces": [
+  {
+   "face": "round2face",
+   "base_json": "r7v7fix_regress_round2face.json",
+   "new_json": "r8v8_regress_round2face.json",
+   "base_units": "235/251",
+   "new_units": "235/251",
+   "common": 45,
+   "missing_files": [],
+   "extra_files": [],
+   "unit_diffs": [],
+   "WORSE": 0
+  },
+  {
+   "face": "probe42",
+   "base_json": "r7v7fix_regress_probe42.json",
+   "new_json": "r8v8_regress_probe42.json",
+   "base_units": "176/196",
+   "new_units": "176/196",
+   "common": 42,
+   "missing_files": [],
+   "extra_files": [],
+   "unit_diffs": [],
+   "WORSE": 0
+  },
+  {
+   "face": "round1face",
+   "base_json": "r7v7fix_full_round1face.json",
+   "new_json": "r8v8_full_round1face.json",
+   "base_units": "417/423",
+   "new_units": "417/423",
+   "common": 24,
+   "missing_files": [],
+   "extra_files": [],
+   "unit_diffs": [],
+   "WORSE": 0
+  },
+  {
+   "face": "residual",
+   "base_json": "r7v7fix_full_residual_a.json",
+   "new_json": "r8v8_full_residual_a.json",
+   "base_units": "251/277",
+   "new_units": "251/277",
+   "common": 36,
+   "missing_files": [],
+   "extra_files": [],
+   "unit_diffs": [],
+   "WORSE": 0
+  },
+  {
+   "face": "residual",
+   "base_json": "r7v7fix_full_residual_b.json",
+   "new_json": "r8v8_full_residual_b.json",
+   "base_units": "167/169",
+   "new_units": "167/169",
+   "common": 36,
+   "missing_files": [],
+   "extra_files": [],
+   "unit_diffs": [],
+   "WORSE": 0
+  },
+  {
+   "face": "oldface",
+   "base_json": "r7v7fix_full_oldface_a.json",
+   "new_json": "r8v8_full_oldface_a.json",
+   "base_units": "217/227",
+   "new_units": "217/227",
+   "common": 30,
+   "missing_files": [],
+   "extra_files": [],
+   "unit_diffs": [],
+   "WORSE": 0
+  },
+  {
+   "face": "oldface",
+   "base_json": "r7v7fix_full_oldface_b.json",
+   "new_json": "r8v8_full_oldface_b.json",
+   "base_units": "447/465",
+   "new_units": "447/465",
+   "common": 29,
+   "missing_files": [],
+   "extra_files": [],
+   "unit_diffs": [],
+   "WORSE": 0
+  },
+  {
+   "face": "quotation",
+   "base_json": "r7v7fix_quotation.json",
+   "new_json": "r8v8_quotation.json",
+   "base_units": "152/153",
+   "new_units": "152/153",
+   "common": 1,
+   "missing_files": [],
+   "extra_files": [],
+   "unit_diffs": [],
+   "WORSE": 0
+  }
+ ]
+}

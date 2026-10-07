@@ -1,0 +1,836 @@
+[
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 4,
+  "failures": [
+   "***<module>.v_while_cond_nest: Failure: Different control flow",
+   "***<module>.v_if_cond_nest: Failure: Different control flow",
+   "***<module>.n_for_body_nest: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.v_while_cond_nest: Failure: Different control flow",
+   "  ***<module>.v_if_cond_nest: Failure: Different control flow",
+   "  ***<module>.n_for_body_nest: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_faceOK.py",
+   "[single] status=failure units=1/4 success_rate=25.00%"
+  ],
+  "item": "B78",
+  "registration": "round1 REVIEW2 §5 / round2 REVIEW §2.3"
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+  "status": "failure",
+  "units_success": 3,
+  "units_total": 4,
+  "failures": [
+   "***<module>.v_nest_fin_continue: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.v_nest_fin_continue: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_faceOK.py",
+   "[single] status=failure units=3/4 success_rate=75.00%"
+  ],
+  "item": "B79",
+  "registration": "round1 REVIEW2 §5 / round2 REVIEW §2.3"
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>.v_imp_cond_fin: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.v_imp_cond_fin: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_faceOK.py",
+   "[single] status=failure units=2/3 success_rate=66.67%"
+  ],
+  "item": "B80",
+  "registration": "round1 REVIEW2 §5 / round2 REVIEW §2.3"
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc",
+  "status": "failure",
+  "units_success": 3,
+  "units_total": 4,
+  "failures": [
+   "***<module>.n_true_guard: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.n_true_guard: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_faceOK.py",
+   "[single] status=failure units=3/4 success_rate=75.00%"
+  ],
+  "item": "B81",
+  "registration": "round1 REVIEW2 §5 / round2 REVIEW §2.3"
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 3,
+  "failures": [
+   "***<module>.v_swap_arm_returns: Failure: Different bytecode",
+   "***<module>.n_fin_noseg: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.v_swap_arm_returns: Failure: Different bytecode",
+   "  ***<module>.n_fin_noseg: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_faceOK.py",
+   "[single] status=failure units=1/3 success_rate=33.33%"
+  ],
+  "item": "B82",
+  "registration": "round1 REVIEW2 §5 / round2 REVIEW §2.3"
+ },
+ {
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2.pyc",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>.drain: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.drain: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2OK.py",
+   "[single] status=failure units=1/2 success_rate=50.00%"
+  ],
+  "item": "B83",
+  "registration": "round1 REVIEW3 §2 / round2 REVIEW §2.3"
+ },
+ {
+  "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 15,
+  "failures": [
+   "***<module>.f_or_in_and_deep: Failure: Different control flow",
+   "***<module>.f_or_in_and_pair_deep: Failure: Different control flow",
+   "***<module>.f_b98_ternary_cross: Failure: Different control flow",
+   "***<module>.f_b98_compare_cross: Failure: Different control flow",
+   "***<module>.f_b98_walrus_cross: Failure: Different control flow",
+   "***<module>.f_b98_return_pos: Failure: Different control flow",
+   "***<module>.f_b98_call_arg_pos: Failure: Different control flow",
+   "***<module>.f_b98_or_tail_and_group: Failure: Different control flow",
+   "***<module>.f_b98_not_wrapped: Failure: Different control flow",
+   "***<module>.f_b98_and_tail_or_group: Failure: Different bytecode"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.f_b98_or_tail_and_group: Failure: Different control flow",
+   "  ***<module>.f_b98_not_wrapped: Failure: Different control flow",
+   "  ***<module>.f_b98_and_tail_or_group: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round3/e01_g1_b98_matrix.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/e01_g1_b98_matrixOK.py",
+   "[single] status=failure units=5/15 success_rate=33.33%"
+  ],
+  "item": "B98-face",
+  "registration": "round3 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+  "status": "failure",
+  "units_success": 11,
+  "units_total": 18,
+  "failures": [
+   "***<module>.CB98.m_handler: Failure: Different control flow",
+   "***<module>.f_comp_cond_host.<listcomp>: Failure: Different control flow",
+   "***<module>.f_genexp_cond_host.<genexpr>: Failure: Different control flow",
+   "***<module>.f_dictcomp_value_host.<dictcomp>: Failure: Different control flow",
+   "***<module>.f_nested_func_host.inner: Failure: Different control flow",
+   "***<module>.f_match_arm_host: Failure: Different control flow",
+   "***<module>.f_with_body_host: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.f_nested_func_host.inner: Failure: Different control flow",
+   "  ***<module>.f_match_arm_host: Failure: Different control flow",
+   "  ***<module>.f_with_body_host: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round3/e02_g1_b98_hosts.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/e02_g1_b98_hostsOK.py",
+   "[single] status=failure units=11/18 success_rate=61.11%"
+  ],
+  "item": "B98-face2",
+  "registration": "round3 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round3/_scratch_b98/resid.pyc",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 5,
+  "failures": [
+   "***<module>.r_d1: Failure: Different control flow",
+   "***<module>.r_e3: Failure: Different control flow",
+   "***<module>.r_g2: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.r_d1: Failure: Different control flow",
+   "  ***<module>.r_e3: Failure: Different control flow",
+   "  ***<module>.r_g2: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round3/_scratch_b98/resid.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/_scratch_b98/residOK.py",
+   "[single] status=failure units=2/5 success_rate=40.00%"
+  ],
+  "item": "B98-min",
+  "registration": "round3 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round3/_scratch_b99/b99min.pyc",
+  "status": "failure",
+  "units_success": 8,
+  "units_total": 9,
+  "failures": [
+   "***<module>.for_grouped: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.for_grouped: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round3/_scratch_b99/b99min.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/_scratch_b99/b99minOK.py",
+   "[single] status=failure units=8/9 success_rate=88.89%"
+  ],
+  "item": "B99-min",
+  "registration": "round3 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round3/e09b_g6_async_comps.pyc",
+  "status": "failure",
+  "units_success": 11,
+  "units_total": 13,
+  "failures": [
+   "***<module>.a_three: Failure: Different control flow",
+   "***<module>.a_four.<genexpr>: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.a_three: Failure: Different control flow",
+   "  ***<module>.a_four.<genexpr>: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round3/e09b_g6_async_comps.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round3/e09b_g6_async_compsOK.py",
+   "[single] status=failure units=11/13 success_rate=84.62%"
+  ],
+  "item": "B96",
+  "registration": "round3 REVIEW §4.2（round2 B96 承接）"
+ },
+ {
+  "pyc": "test_repros/round4/c4_02_loop_else.pyc",
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": [],
+  "compile_error_hint": false,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/c4_02_loop_else.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/c4_02_loop_elseOK.py",
+   "[single] status=success units=14/14 success_rate=100.00%"
+  ],
+  "item": "B109-residual",
+  "registration": "round4 REVIEW §4.1 / REVIEW2 §4.1"
+ },
+ {
+  "pyc": "test_repros/round4/r4v4r_b109_loopelse.pyc",
+  "status": "failure",
+  "units_success": 8,
+  "units_total": 9,
+  "failures": [
+   "***<module>.nested_loop_else: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.nested_loop_else: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/r4v4r_b109_loopelse.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/r4v4r_b109_loopelseOK.py",
+   "[single] status=failure units=8/9 success_rate=88.89%"
+  ],
+  "item": "B109-residual2",
+  "registration": "round4 REVIEW2 §4.1"
+ },
+ {
+  "pyc": "test_repros/round4/c4_03_except_star.pyc",
+  "status": "failure",
+  "units_success": 12,
+  "units_total": 13,
+  "failures": [
+   "***<module>.e04_with: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.e04_with: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/c4_03_except_star.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/c4_03_except_starOK.py",
+   "[single] status=failure units=12/13 success_rate=92.31%"
+  ],
+  "item": "B102",
+  "registration": "round4 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round4/r4v4r_b102_except.pyc",
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 8,
+  "failures": [
+   "***<module>.normal_finally: Failure: Different bytecode",
+   "***<module>.star_else_finally: Failure: Different bytecode",
+   "***<module>.nested_star: Failure: Different bytecode"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.normal_finally: Failure: Different bytecode",
+   "  ***<module>.star_else_finally: Failure: Different bytecode",
+   "  ***<module>.nested_star: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/r4v4r_b102_except.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/r4v4r_b102_exceptOK.py",
+   "[single] status=failure units=5/8 success_rate=62.50%"
+  ],
+  "item": "B102-residual",
+  "registration": "round4 REVIEW2 §4.1"
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_14_except_star_deep.pyc",
+  "status": "failure",
+  "units_success": 9,
+  "units_total": 10,
+  "failures": [
+   "***<module>.es_with: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.es_with: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round5/r5v5_14_except_star_deep.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round5/r5v5_14_except_star_deepOK.py",
+   "[single] status=failure units=9/10 success_rate=90.00%"
+  ],
+  "item": "B102-residual5",
+  "registration": "round5 REVIEW §3"
+ },
+ {
+  "pyc": "test_repros/round4/c4_04_match_patterns.pyc",
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 13,
+  "failures": [
+   "***<module>.e04_mapping: Failure: Different control flow",
+   "***<module>.e05_class_kw: Failure: Different control flow",
+   "***<module>.e06_or_guard: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.e04_mapping: Failure: Different control flow",
+   "  ***<module>.e05_class_kw: Failure: Different control flow",
+   "  ***<module>.e06_or_guard: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/c4_04_match_patterns.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/c4_04_match_patternsOK.py",
+   "[single] status=failure units=10/13 success_rate=76.92%"
+  ],
+  "item": "B103",
+  "registration": "round4 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round4/r4v4r_b103_guard.pyc",
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 8,
+  "failures": [
+   "***<module>.GT.m: Failure: Different control flow",
+   "***<module>.none_guard: Failure: Different control flow",
+   "***<module>.nested_guard: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.GT.m: Failure: Different control flow",
+   "  ***<module>.none_guard: Failure: Different control flow",
+   "  ***<module>.nested_guard: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/r4v4r_b103_guard.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/r4v4r_b103_guardOK.py",
+   "[single] status=failure units=5/8 success_rate=62.50%"
+  ],
+  "item": "B103-residual",
+  "registration": "round4 REVIEW2 §4.1"
+ },
+ {
+  "pyc": "test_repros/round4/c4_05_multi_with.pyc",
+  "status": "failure",
+  "units_success": 12,
+  "units_total": 14,
+  "failures": [
+   "***<module>.e09_comp_host: Failure: Different bytecode",
+   "***<module>.e09_comp_host.<listcomp>: Failure: Different bytecode"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.e09_comp_host: Failure: Different bytecode",
+   "  ***<module>.e09_comp_host.<listcomp>: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/c4_05_multi_with.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/c4_05_multi_withOK.py",
+   "[single] status=failure units=12/14 success_rate=85.71%"
+  ],
+  "item": "B110",
+  "registration": "round4 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round4/c4_06_try_finally_only.pyc",
+  "status": "failure",
+  "units_success": 12,
+  "units_total": 14,
+  "failures": [
+   "***<module>.e01_root: Failure: Different control flow",
+   "***<module>.e06_while: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.e01_root: Failure: Different control flow",
+   "  ***<module>.e06_while: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/c4_06_try_finally_only.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/c4_06_try_finally_onlyOK.py",
+   "[single] status=failure units=12/14 success_rate=85.71%"
+  ],
+  "item": "B108",
+  "registration": "round4 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round4/c4_07_multi_target.pyc",
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 14,
+  "failures": [
+   "***<module>.e04_unpack: Failure: Different bytecode",
+   "***<module>.e05_star_unpack: Failure: Different bytecode",
+   "***<module>.e06_chain_target: Failure detected at line number 23 and instruction offset 18: Different bytecode",
+   "***<module>.e09_attr_chain: Failure detected at line number 47 and instruction offset 24: Different bytecode"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.e05_star_unpack: Failure: Different bytecode",
+   "  ***<module>.e06_chain_target: Failure detected at line number 23 and instruction offset 18: Different bytecode",
+   "  ***<module>.e09_attr_chain: Failure detected at line number 47 and instruction offset 24: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/c4_07_multi_target.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/c4_07_multi_targetOK.py",
+   "[single] status=failure units=10/14 success_rate=71.43%"
+  ],
+  "item": "B107",
+  "registration": "round4 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round4/c4_09_chained_compare.pyc",
+  "status": "failure",
+  "units_success": 11,
+  "units_total": 14,
+  "failures": [
+   "***<module>.e04_deep: Failure: Different control flow",
+   "***<module>.e08_while: Failure: Different control flow",
+   "***<module>.CCMP.m: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.e04_deep: Failure: Different control flow",
+   "  ***<module>.e08_while: Failure: Different control flow",
+   "  ***<module>.CCMP.m: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/c4_09_chained_compare.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/c4_09_chained_compareOK.py",
+   "[single] status=failure units=11/14 success_rate=78.57%"
+  ],
+  "item": "B104",
+  "registration": "round4 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round4/c4_10_walrus.pyc",
+  "status": "failure",
+  "units_success": 8,
+  "units_total": 13,
+  "failures": [
+   "***<module>.e01_root: Failure: Different control flow",
+   "***<module>.e05_nested: Failure: Different bytecode",
+   "***<module>.e06_call_arg: Failure: Different bytecode",
+   "***<module>.CW2.m: Failure: Different control flow",
+   "***<module>.e09_with: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.e06_call_arg: Failure: Different bytecode",
+   "  ***<module>.CW2.m: Failure: Different control flow",
+   "  ***<module>.e09_with: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/c4_10_walrus.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/c4_10_walrusOK.py",
+   "[single] status=failure units=8/13 success_rate=61.54%"
+  ],
+  "item": "B105",
+  "registration": "round4 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_09_walrus_callsite.pyc",
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 12,
+  "failures": [
+   "***<module>.w_root: Failure: Different control flow",
+   "***<module>.w_call: Failure: Different bytecode",
+   "***<module>.w_nested_call: Failure: Different bytecode",
+   "***<module>.w_deep: Failure: Different bytecode",
+   "***<module>.CW.m: Failure: Different control flow",
+   "***<module>.w_with: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.w_deep: Failure: Different bytecode",
+   "  ***<module>.CW.m: Failure: Different control flow",
+   "  ***<module>.w_with: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round5/r5v5_09_walrus_callsite.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round5/r5v5_09_walrus_callsiteOK.py",
+   "[single] status=failure units=6/12 success_rate=50.00%"
+  ],
+  "item": "B105-residual5",
+  "registration": "round5 REVIEW §3"
+ },
+ {
+  "pyc": "test_repros/round4/c4_12_star_args.pyc",
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 13,
+  "failures": [
+   "***<module>.e02_shallow: Failure: Different bytecode",
+   "***<module>.e03_mixed: Failure: Different bytecode",
+   "***<module>.e04_deep: Failure: Different bytecode",
+   "***<module>.e06_nested.inner: Failure: Different bytecode",
+   "***<module>.CSA.m: Failure: Different bytecode",
+   "***<module>.e07_match_host: Failure: Different bytecode"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.e06_nested.inner: Failure: Different bytecode",
+   "  ***<module>.CSA.m: Failure: Different bytecode",
+   "  ***<module>.e07_match_host: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/c4_12_star_args.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/c4_12_star_argsOK.py",
+   "[single] status=failure units=7/13 success_rate=53.85%"
+  ],
+  "item": "B106",
+  "registration": "round4 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_07_starargs_callsite.pyc",
+  "status": "failure",
+  "units_success": 4,
+  "units_total": 13,
+  "failures": [
+   "***<module>.st_nontail: Failure: Different bytecode",
+   "***<module>.st_mixed: Failure: Different bytecode",
+   "***<module>.st_multistar: Failure: Different bytecode",
+   "***<module>.st_deep: Failure: Different bytecode",
+   "***<module>.CSt.m: Failure: Different bytecode",
+   "***<module>.st_close.inner: Failure: Different bytecode",
+   "***<module>.st_match: Failure: Different bytecode",
+   "***<module>.st_comp: Failure: Different bytecode",
+   "***<module>.st_comp.<listcomp>: Failure: Different bytecode"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.st_match: Failure: Different bytecode",
+   "  ***<module>.st_comp: Failure: Different bytecode",
+   "  ***<module>.st_comp.<listcomp>: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round5/r5v5_07_starargs_callsite.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round5/r5v5_07_starargs_callsiteOK.py",
+   "[single] status=failure units=4/13 success_rate=30.77%"
+  ],
+  "item": "B106-residual5",
+  "registration": "round5 REVIEW §3"
+ },
+ {
+  "pyc": "test_repros/round4/c4_18_nested_comprehension.pyc",
+  "status": "success",
+  "units_success": 30,
+  "units_total": 30,
+  "failures": [],
+  "compile_error_hint": false,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/c4_18_nested_comprehension.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/c4_18_nested_comprehensionOK.py",
+   "[single] status=success units=30/30 success_rate=100.00%"
+  ],
+  "item": "B113",
+  "registration": "round4 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round4/_scratch_m4/comp2.pyc",
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 9,
+  "failures": [
+   "***<module>.e1.<listcomp>: Failure: Different bytecode",
+   "***<module>.e2: Failure: Different bytecode",
+   "***<module>.e2.<listcomp>: Failure: Different bytecode"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.e1.<listcomp>: Failure: Different bytecode",
+   "  ***<module>.e2: Failure: Different bytecode",
+   "  ***<module>.e2.<listcomp>: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/_scratch_m4/comp2.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/_scratch_m4/comp2OK.py",
+   "[single] status=failure units=6/9 success_rate=66.67%"
+  ],
+  "item": "B113-min",
+  "registration": "round4 REVIEW §4.1 最小复现"
+ },
+ {
+  "pyc": "test_repros/round4/c4_19_decorator_args.pyc",
+  "status": "failure",
+  "units_success": 27,
+  "units_total": 28,
+  "failures": [
+   "***<module>.e09_method_local.Local: Failure: Different bytecode"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.e09_method_local.Local: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/c4_19_decorator_args.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/c4_19_decorator_argsOK.py",
+   "[single] status=failure units=27/28 success_rate=96.43%"
+  ],
+  "item": "B111",
+  "registration": "round4 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_12_decorator_cross.pyc",
+  "status": "failure",
+  "units_success": 21,
+  "units_total": 22,
+  "failures": [
+   "***<module>.d_deep.Local: Failure: Different bytecode"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.d_deep.Local: Failure: Different bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round5/r5v5_12_decorator_cross.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round5/r5v5_12_decorator_crossOK.py",
+   "[single] status=failure units=21/22 success_rate=95.45%"
+  ],
+  "item": "B111-residual5",
+  "registration": "round5 REVIEW §3"
+ },
+ {
+  "pyc": "test_repros/round4/c4_20_async_five.pyc",
+  "status": "failure",
+  "units_success": 21,
+  "units_total": 24,
+  "failures": [
+   "***<module>.e05_async_compound.go: Failure: Different control flow",
+   "***<module>.e07_async_closure.outer.inner: Failure: Different control flow",
+   "***<module>.e07_async_closure.outer.inner.<listcomp>: Failure: Missing bytecode"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.e05_async_compound.go: Failure: Different control flow",
+   "  ***<module>.e07_async_closure.outer.inner: Failure: Different control flow",
+   "  ***<module>.e07_async_closure.outer.inner.<listcomp>: Failure: Missing bytecode",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/c4_20_async_five.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round4/c4_20_async_fiveOK.py",
+   "[single] status=failure units=21/24 success_rate=87.50%"
+  ],
+  "item": "B112",
+  "registration": "round4 REVIEW §4.1"
+ },
+ {
+  "pyc": "test_repros/round7/r7v7r_b121_whilehdr.pyc",
+  "status": "failure",
+  "units_success": 3,
+  "units_total": 5,
+  "failures": [
+   "***<module>.b121r_min_continue: Failure: Different control flow",
+   "***<module>.b121r_min_continue_deep: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.b121r_min_continue: Failure: Different control flow",
+   "  ***<module>.b121r_min_continue_deep: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7v7r_b121_whilehdr.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7v7r_b121_whilehdrOK.py",
+   "[single] status=failure units=3/5 success_rate=60.00%"
+  ],
+  "item": "B121",
+  "registration": "round7 REVIEW2 §4.2"
+ },
+ {
+  "pyc": "test_repros/round7/r7v7r_b117_f2tail.pyc",
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 7,
+  "failures": [
+   "***<module>.b117r_while_host_deep: Failure: Different control flow"
+  ],
+  "compile_error_hint": false,
+  "tail": [
+   "  ***<module>.b117r_while_host_deep: Failure: Different control flow",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7v7r_b117_f2tail.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7v7r_b117_f2tailOK.py",
+   "[single] status=failure units=6/7 success_rate=85.71%"
+  ],
+  "item": "B121-secondary",
+  "registration": "round7 REVIEW2 §4.2"
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2b04.pyc",
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": [],
+  "compile_error_hint": false,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7v7_b2b04.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7v7_b2b04OK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ],
+  "item": "B117-closed-confirm",
+  "registration": "round7 REVIEW §3.1 / REVIEW2 §3a"
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_x_b2b04_d2.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": [],
+  "compile_error_hint": false,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7v7_x_b2b04_d2.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7v7_x_b2b04_d2OK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ],
+  "item": "B117-closed-confirm2",
+  "registration": "round7 REVIEW2 §3a"
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2c03.pyc",
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": [],
+  "compile_error_hint": false,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7v7_b2c03.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7v7_b2c03OK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ],
+  "item": "B118-closed-confirm",
+  "registration": "round7 REVIEW §3.1 / REVIEW2 §3a"
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_x_b2c03_pure.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": [],
+  "compile_error_hint": false,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7v7_x_b2c03_pure.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7v7_x_b2c03_pureOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ],
+  "item": "B118-closed-confirm2",
+  "registration": "round7 REVIEW2 §3a"
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b4a03.pyc",
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": [],
+  "compile_error_hint": false,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7v7_b4a03.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7v7_b4a03OK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ],
+  "item": "B119-closed-confirm",
+  "registration": "round7 REVIEW §3.3 / REVIEW2 §3a"
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_x_b4a03_pure.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": [],
+  "compile_error_hint": false,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7v7_x_b4a03_pure.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7v7_x_b4a03_pureOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ],
+  "item": "B119-closed-confirm2",
+  "registration": "round7 REVIEW2 §3a"
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b4c03.pyc",
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": [],
+  "compile_error_hint": false,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7v7_b4c03.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round7/r7v7_b4c03OK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ],
+  "item": "B120-closed-confirm",
+  "registration": "round7 REVIEW §3.3 / REVIEW2 §3a"
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_01_module_root.pyc",
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": [],
+  "compile_error_hint": false,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round5/r5v5_01_module_root.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round5/r5v5_01_module_rootOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ],
+  "item": "B114-closed-confirm",
+  "registration": "round5 REVIEW2 §2.1"
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_08_slice_callsite.pyc",
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": [],
+  "compile_error_hint": false,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round5/r5v5_08_slice_callsite.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round5/r5v5_08_slice_callsiteOK.py",
+   "[single] status=success units=11/11 success_rate=100.00%"
+  ],
+  "item": "B115-closed-confirm",
+  "registration": "round5 REVIEW2 §2.1"
+ },
+ {
+  "pyc": "test_repros/round5/r5v5_03_annassign.pyc",
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": [],
+  "compile_error_hint": false,
+  "tail": [
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round5/r5v5_03_annassign.pyc",
+   "[single] 产物 F:/Downloads/pythoncdc-main/test_repros/round5/r5v5_03_annassignOK.py",
+   "[single] status=success units=11/11 success_rate=100.00%"
+  ],
+  "item": "B116-closed-confirm",
+  "registration": "round5 REVIEW2 §2.1"
+ }
+]

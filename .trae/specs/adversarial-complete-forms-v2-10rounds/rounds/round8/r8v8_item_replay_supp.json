@@ -1,0 +1,82 @@
+[
+ {
+  "item": "B100-confirm",
+  "pyc": "test_repros/round4/c4_14_relative_import.pyc",
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "item": "B101-confirm",
+  "pyc": "test_repros/round4/c4_15_star_import.pyc",
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "item": "B100-confirm2",
+  "pyc": "test_repros/round4/r4v4r_b100_levels.pyc",
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "item": "B101-confirm2",
+  "pyc": "test_repros/round4/r4v4r_b101_star.pyc",
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ },
+ {
+  "item": "c4_01-elif",
+  "pyc": "test_repros/round4/c4_01_elif_chain.pyc",
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "item": "c4_08-augassign",
+  "pyc": "test_repros/round4/c4_08_augassign.pyc",
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "item": "c4_11-kwargs",
+  "pyc": "test_repros/round4/c4_11_keyword_args.pyc",
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "item": "c4_13-slice",
+  "pyc": "test_repros/round4/c4_13_slice.pyc",
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "item": "c4_16-globalnonlocal",
+  "pyc": "test_repros/round4/c4_16_global_nonlocal.pyc",
+  "status": "success",
+  "units_success": 21,
+  "units_total": 21,
+  "failures": []
+ },
+ {
+  "item": "c4_17-fstring",
+  "pyc": "test_repros/round4/c4_17_fstring_conv.pyc",
+  "status": "success",
+  "units_success": 12,
+  "units_total": 12,
+  "failures": []
+ }
+]
