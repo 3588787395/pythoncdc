@@ -51516,9 +51516,14 @@ AST 映射规则:
         return 背书与 break 中转块消费。
         ③唯一归属判定：本方法的块归属判定逻辑——[B86-phantom] 纯异常协议块
         守卫（块内非噪声指令全属异常帧协议集 + 含协议特征码）命中即整块登记
-        generated_blocks/generated_offsets 并发射空语句；[R55] break 中转块
-        要求唯一前驱为本块、角色 BREAK/PURE_BREAK、未被认领才消费；其余块
-        交 body 层按 generated 集合去重。
+        generated_blocks/generated_offsets 并发射空语句；[R5-B119 loopsink] 函数
+        尾声相邻双隐式 return None sink 对守卫（分析端 `_loop_tail_exit_sink_pair`
+        按区域成员关系 + 块末 opcode + 单前驱区域出口边判定）命中同样整块登记
+        generated 并发射空语句——该二块是循环/for-iter 出口边的**落点**而非语句，
+        材料化其中任一块即把两条出口边并到同一落点（B99 −2）或调换其落点次序
+        （B102 268/272 互换），每块仍恰有一个 owning 区域（原则2）；[R55] break
+        中转块要求唯一前驱为本块、角色 BREAK/PURE_BREAK、未被认领才消费；
+        其余块交 body 层按 generated 集合去重。
         ④嵌套处理：嵌套区域作为抽象节点——本包装层不拆散子区域；body 层的
         GET_ITER for_iter_setup 守卫等遇子区域入口时经 _generate_region 整树
         生成，本层仅接收其归约结果并做装配后处理。
@@ -51552,6 +51557,18 @@ AST 映射规则:
         # 块内 opcode 形态（I.4 白名单）；归约方式=整块登记 generated 并发
         # 射空语句；不命中时行为逐位不变（C3）。
         if self._rag_is_pure_exception_protocol_block(block):
+            self.generated_blocks.add(block)
+            self.generated_offsets.add(block.start_offset)
+            return []
+        # [R5-B119 loopsink] 循环/for-iter 尾出口的相邻双隐式 return None sink 对
+        # 不是语句：每条送出区域的跳转边（while 头测假边 / 回边正落 / elif 假边 /
+        # FOR_ITER 耗尽）各有自己的落点块，重编译在函数尾声按边数各生成一份
+        # LOAD_CONST None; RETURN_VALUE。把其中任何一块材料化为 `return None`
+        # 都会让两条边落到同一块（B99 handlers off404+408 → 单 sink，−2 指令）或
+        # 改变二者的落点次序（B102 quotation off196/off202 目标 268/272 互换）。
+        # 判据（区域成员关系 + 块末 opcode + 单前驱出口边 + 无后继 + 本 CFG 末尾
+        # 相邻二块）全在分析端一处判定，本漏斗是唯一消费点（C3 守卫封闭）。
+        if block in self.region_analyzer._loop_tail_exit_sink_pair():
             self.generated_blocks.add(block)
             self.generated_offsets.add(block.start_offset)
             return []

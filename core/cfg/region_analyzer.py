@@ -28061,6 +28061,105 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 return False
         return True
 
+    def _loop_tail_exit_sink_pair(self) -> Set[BasicBlock]:
+        """[R5-B119 loopsink] 循环/for-iter 区域的「相邻双隐式 return None 尾 sink」不变式。
+
+        ①算法依据：CPython 3.11 在函数尾声为**每一条**指向「隐式 return None」
+        落点的跳转边各materialize一份 `LOAD_CONST None; RETURN_VALUE`（B99 的
+        off404 preds=[390] 回边正落 + off408 preds=[90] while 头测假边、B102 的
+        off268 preds=[156] elif 假边 + off272 preds=[198] FOR_ITER 耗尽边实测都
+        是两条独立单前驱块）。sink 块无后继、恰好一个前驱、且该前驱的本块末指令
+        是一条把控制权**送出自身所属区域**的条件跳转（POP_JUMP_*_IF_* / FOR_ITER）
+        时，sink 是「区域出口的落点」而不是语句：发射一条 `return None` 语句会把
+        两条出口边并成同一落点（B99 −2 指令）或改变二者的落点次序（B102 的
+        268/272 目标互换）。二者在源码层不可辨识（同 R4-B116 建区门的
+        b01/b03 逐字节相同事实），故唯一正确的发射形态是**不发射**，让重编译在
+        函数尾按边数再生 sink 副本。判据只读块末 opcode、前驱/后继集、异常边与
+        区域成员关系，无名字/偏移/深度/宿主类型门控。
+        ②归约顺序：区域识别完成后方可评估（读 block_to_region），本判据不参与
+        识别，只在生成端取语句时被消费，故不改变任何区域的成员集合。
+        ③唯一归属判定：两块 sink 各自被其所属区域唯一认领（`block_to_region`），
+        且每条边都有**自己**的落点块；把二块并为一条语句即破坏原则2（两块一语句），
+        本判据以「整对不发射」恢复每块唯一归属，不向任何区域追加或转移块。
+        ④嵌套处理：判据按 sink 块自己的前驱所属区域裁决，与宿主是 while/for/
+        elif 链及其嵌套层数无关（原则3 抽象节点不被窥视，只消费 entry 侧边）。
+        ⑤入口引用语义：sink 无后继 ⇒ 它是本作用域的终止落点，父级只经其所属区域
+        的出口边引用它（原则4）；异常边不在前驱白名单内（handler 落点是真语句）。
+        ⑥反编译流程：命中对 → 生成端 `_generate_block_statements` 单一漏斗把该块
+        登记 generated 并发射空语句列表 → 重编译在函数尾按边数产出 2 份 sink，
+        指令数与边归属复原（B99/B102 的 −2 / 目标互换同时消除）。
+        C1 局部消费：只读本 CFG 的块序与块级事实 + block_to_region，不查全局状态。
+        C2 黑箱组合：对外只交付一个块集合（出口落点接口），不暴露区域内部结构。
+        C3 守卫封闭：要求二块是本 CFG 中偏移最大的**相邻**二块（函数尾声落点），
+        且每条边都来自区域内块的**区域出口角色**（LoopRegion 的 condition_block /
+        header_block / back_edge_block 之一，即 while 头测假边、回边正落或
+        FOR_ITER 耗尽边）——本对中至少一条必须是循环出口边，纯 if 链的臂尾
+        `return None`（两条边都来自条件块且无循环角色）不在本判据面内，它属
+        R4-B116 建区门已闭的短路面，本票实测：把它一并放行会让
+        quotation.get_stock_exrights 由 Equal 转 Different（出口边→落点块的
+        认领被误删），故按 C3 收窄。被区域外路径引用的出口块不在此列
+        （须显式认领），故判据只在「函数尾隐式返回」这一语义位置生效，
+        消费点唯一（单一漏斗）。
+        """
+        _cached = getattr(self, '_loop_tail_sink_pair_cache', None)
+        if _cached is not None:
+            return _cached
+        _out: Set[BasicBlock] = set()
+        _EXIT_JUMP_OPS = ('POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
+                          'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
+                          'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                          'FOR_ITER')
+
+        def _is_trivial_sink(_b: BasicBlock) -> bool:
+            if _b is None or list(_b.successors) or len(_b.instructions) != 2:
+                return False
+            if not self._check_block_has_trailing_return_none(_b):
+                return False
+            _first = _b.instructions[0]
+            return (_first.opname == 'LOAD_CONST' and _first.argval is None
+                    and _b.instructions[-1].opname == 'RETURN_VALUE')
+
+        def _exit_edge_owner(_b: BasicBlock):
+            _preds = list(_b.predecessors)
+            if len(_preds) != 1:
+                return None
+            _p = _preds[0]
+            _li = _p.get_last_instruction()
+            if _li is None or _li.opname not in _EXIT_JUMP_OPS:
+                return None
+            if _li.argval != _b.start_offset:
+                # 回边测试块的正落（fall-through）也算送出自身的边：此时
+                # 目标不是 argval，而是本块的直接后继偏移。
+                _fs = list(_p.successors)
+                if not any(_s is _b and _s.start_offset > _p.start_offset for _s in _fs):
+                    return None
+            _own = self.block_to_region.get(_p)
+            if _own is None or _p not in set(_own.blocks or ()):
+                return None
+            if _b not in set(_own.blocks or ()):
+                return None
+            _roles = {id(_own.condition_block) if getattr(_own, 'condition_block', None) else None,
+                      id(_own.header_block) if getattr(_own, 'header_block', None) else None,
+                      id(getattr(_own, 'back_edge_block', None) or None)}
+            _is_region_exit = (isinstance(_own, LoopRegion)
+                               and id(_p) in _roles
+                               and _li.opname in ('FOR_ITER',) + _EXIT_JUMP_OPS)
+            return (_own, _is_region_exit)
+
+        try:
+            _ordered = sorted(self.cfg.blocks.values(), key=lambda _b: _b.start_offset)
+        except Exception:
+            _ordered = []
+        if len(_ordered) >= 2:
+            _t1, _t2 = _ordered[-2], _ordered[-1]
+            _e1 = _exit_edge_owner(_t1) if _is_trivial_sink(_t1) else None
+            _e2 = _exit_edge_owner(_t2) if _is_trivial_sink(_t2) else None
+            if (_t1 is not _t2 and _e1 is not None and _e2 is not None
+                    and (_e1[1] or _e2[1])):
+                _out = {_t1, _t2}
+        self._loop_tail_sink_pair_cache = _out
+        return _out
+
     def _create_boolop_region_from_chain(self, chain: List[Tuple[BasicBlock, str]], claimed: Set[BasicBlock]) -> Optional[BoolOpRegion]:
         """把已检测到的短路链归约为单个 BoolOpRegion —— BoolOpRegion 的唯一创建点。
 
