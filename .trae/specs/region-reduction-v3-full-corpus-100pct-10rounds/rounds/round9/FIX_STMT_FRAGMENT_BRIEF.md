@@ -29,9 +29,36 @@
 先前作废表里 `_process_cancel_order` 被判为 DISPLACEMENT，也是同一污染所致——HEAD 口径为 OMISSION。
 `wizard_quant_api.calculate_di.<genexpr>` 两条仍不在本表（首分歧是落点，见 `REVIEW_RESIDUAL_CENSUS.md` §IX）。
 
+## 计数门的实际散布面（HEAD 口径逐调用点取证，工单必须先读完）
+
+`git show HEAD:core/cfg/region_ast_generator.py` + `ast` 归属（BOM 需 `utf-8-sig` 才能 `ast.parse`）：
+
+    :27      MIN_INSTRS_FOR_SUBSCR_ASSIGN = 3      # 注释自陈：value + container + index 三指令
+    :2863    _split_subscr_operands(def 2812)
+    :3535    _build_effective_stmts(def 3493)
+    :52734   ┐
+    :52957   ├ _generate_block_statements_body(def 51983)   ← 同一判定复制 3 处
+    :53083   ┘
+    :56683   _generate_stmts_from_instrs(def 56626)
+
+⇒ 该「`STORE_SUBSCR` ∧ 表达式指令数 ≥3」判定被**复制到 4 个方法、6 个调用点**。
+两点直接后果，工单必须一并处理：
+
+1. **只改 `_build_effective_stmts` 是无效修复**：另外 3 个方法仍按旧计数取捨，
+   会出现"一个单元翻正、同族其他单元原地不动"的假进展——历史上本规范已因此判退过零翻转票。
+2. **C3 违反本身就是缺陷**（rules.md「一处判定、多处复用」）：修复的正确形态是把该判定收敛为
+   **一个** 结构判据方法（输入＝本语句指令段 + 块成员事实；输出＝能否解出 container/index/value
+   三元），6 个调用点全部改调它；删除常量时须报告影响面（几处调用被收敛、原语义何处保留）。
+
+计数为何是错的代理：CPython 把 `a[b] = c` 的下标与容器装载可能跨块或被拆进表达式续体，
+此时"段内指令条数 <3"并不等于"不是下标赋值"，而 `build_current_period_df`（del 17 / ins 7）
+正是 LHS 的 `LOAD_FAST+LOAD_CONST+STORE_SUBSCR` 被当成"凑不满三条"而裸发射值段。
+判据应问「段内是否存在 `STORE_SUBSCR`，且其容器/下标/值三个操作数在本语句段内都能归位」，
+不问条数。
+
 ## 与 #14 的关系（不得并案）
 
-`#14` 是**区域边界/落点**错（臂把汇合块之后的块吸进来、回边锚点偏早）；本案 5 个单元是
+`#14` 是**区域边界/落点**错（臂把汇合块之后的块吸进来、回边锚点偏早）；本案 6 个单元是
 **内容根本不产出**——区域划分在探针里是对的，丢的内容发生在把块内指令重建为语句的那一步。
 两个口径要分清，不得混用：按「首处分歧」二分是 35 落点 / 7 内容；按「机制」分（本表 del≈ins 判据）
 是 **#14 36 个（35 落点 − `build_current_period_df` + `_sync_worker` + `_trade_status_handle` + `get_individual_data`）/ #13 6 个**，两数互斥且相加＝42。
@@ -88,11 +115,16 @@
    「boolop 成员若有多条同目标假边 ⇒ 每个成员腿各自重建，不得合并成一条」。
    禁止以指令条数阈值、函数名、文件名为条件（rules.md §2）。
 3. 若确认 `MIN_INSTRS_FOR_SUBSCR_ASSIGN` 就是罪魁，**移除该计数门**并以块成员事实取代；
-   删除须报告运行时影响面（不许留下未消费的死常量）。
+   必须**一次收敛全部 6 个调用点 / 4 个方法**（见上节），只改一处即宣告修好属无效修复；
+   删除常量须报告运行时影响面（不许留下未消费的死常量）。
 4. docstring 六项模板 + C1/C2/C3 + 标记 `[R9-B1xx <slug>]`；识别与发射两端各自改动须在报告分列。
-5. 验收（逐单元名单前后对比，不许只报总数）：
-   `wizard_quant_api` 55/58→≥57/58（两条 `<genexpr>` 转 Equal）、
-   `order_api` 35/37→37/37、`quote` 86/92 中 `build_current_period_df` 与 `get_individual_data` 转 Equal；
+5. 验收（逐单元名单前后对比，不许只报总数）——靶面按机制口径＝**6 个单元**：
+   `trade_live_broker` 118/128：`_process_order`、`_process_cancel_order` 转 Equal（≥120/128）；
+   `order_api` 35/37：`option_order`、`future_order` 转 Equal（37/37）；
+   `quote` 86/92：**仅 `build_current_period_df`** 转 Equal。
+   **不在本票靶面**（按机制已移交 #14，若被顺带翻正须单列证据而非计入成绩）：
+   `wizard_quant_api` 的两条 `calculate_di.<genexpr>`、`quote.get_individual_data`、
+   `trade_live_broker._sync_worker`、`_trade_status_handle`。
    锚点不回退：quotation 153/153、flytools 66/66、history_data_source 19/19、quote_handler 79/79、
    ptradeAccount 137/137；七套 r1–r8 电池 + `r9_probe_index`(8/8) + `r9_quote_index`(43/53 中
    **16 条对照臂必须仍 2/2**) 零绿转红；pytest 六套件仍 277/2/2 同名单。
