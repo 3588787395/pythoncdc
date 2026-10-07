@@ -15,16 +15,30 @@
 
 ## 二、机制归并（把 Round 9 的 4 类收成 3 条判据面）
 
-1. **切片/下标操作数被吞**（P0）：`BUILD_SLICE` + `BINARY_SUBSCR` + `CONTAINS_OP` 一串整体消失。
-   宿主即 Round 9 记名的 `_split_subscr_operands` / `_build_effective_stmts`，
-   并由**明令禁止的 `MIN_INSTRS_FOR_SUBSCR_ASSIGN` 计数门控**放行——
-   `rules.md §2` 禁硬编码计数上限，本案（10 条语句被整条丢掉）就是该门控的代价。
-   **要求**：该常量在**当前 HEAD** 是 1 处定义 + **6 处使用**（Round 9 记的行号已被 B124/B125 落地推移，
-   以下为 `git show HEAD:` 复测）：定义 `:27`；
-   使用 `_split_subscr_operands:2863`、`_build_effective_stmts:3535`、
-   `_generate_block_statements_body:52856 / 53079 / 53205`、`_generate_stmts_from_instrs:56805`
-   （4 个宿主方法、6 个调用点）。**一次改全**，不得只改一处（改一处＝部分修，
-   且同一决策被复制进 4 个方法本身违反「一处决策，复用它」）。
+1. **切片下标测试表达式被整条吞**（P0）：`BUILD_SLICE` + `BINARY_SUBSCR` + `CONTAINS_OP` 一串整体消失。
+
+   **主代理自纠（本简报首版的机制归因被代码否证）**：我首版写「宿主即
+   `MIN_INSTRS_FOR_SUBSCR_ASSIGN` 计数门控」——**不对**。`git show HEAD:` 读该常量两处使用：
+   `_split_subscr_operands:2863`（`if len(expr_instrs) < MIN_…: return None`，其职责是把
+   `value/container/index` 三段切开供**下标赋值**用）与 `_build_effective_stmts:3535`
+   （`if instr.opname == 'STORE_SUBSCR' and len(expr_instrs) >= MIN_…`，R102 增广赋值委托路径）。
+   两者都以 **`STORE_SUBSCR`** 为前提，而 P0 被吞的是
+   `… symbol[None:3] in ('688','689')` 的**测试表达式**（`CONTAINS_OP` + `POP_JUMP_FORWARD_IF_FALSE`，
+   全串无 `STORE_SUBSCR`）⇒ 该计数门控**不是 P0 的宿主**。
+   这是本 campaign 第四次「简报锚点/机制错、靶面事实对」，事实部分（10 条指令、单 hunk、单文件差 1）不变。
+
+   **给工程师的替代候选（须自行证实/否证，不得当结论用）**：表达式重建失败即静默丢整条语句——
+   `Subscript(value=Attribute(order.asset.symbol), slice=Slice(None,3))` 套在
+   `Compare(…, In)` 内，若重建器返回 `None`，其宿主语句分支是否**静默不发**？
+   要求：用自有探针（导入 core、打点，跑完即撤）定位**实际丢弃点**，并检查该处是否属
+   `rules.md` 禁的「静默豁免」（失败即丢而不留痕）。找到丢弃点才算命中，勿照我的候选写判据。
+
+   **顺带项（与本条分开，不得并案）**：`MIN_INSTRS_FOR_SUBSCR_ASSIGN` 本身仍是
+   `rules.md §2` 明令禁止的硬编码计数门控——当前 HEAD 实测 1 处定义（`:27`）+ **6 处使用**
+   分布于 4 方法：`_split_subscr_operands:2863`、`_build_effective_stmts:3535`、
+   `_generate_block_statements_body:52856 / 53079 / 53205`、`_generate_stmts_from_instrs:56805`。
+   它的消除属**其自身能解释的那些单元**（如 `etf_purchase_redemption` 的属性链截断一类下标/切片形），
+   若改须六处一次改全（改一处＝部分修，且同一决策被复制进 4 个方法本身违规）。
 2. **`is not` / 极性测试作臂头时整个体被跳**（P1 ①）。判据须问块的事实：
    臂入口块末条是前向条件跳转、其**真/假**落点之一在循环区段内、且该区段块的回边存在 ⇒ 该体属臂，不属汇合。
    与 `FIX_WHILE_ELSE_TAIL_BRIEF.md` §七 订正后的 `region_analyzer.py:4810` 认领面**同源不同层**：
