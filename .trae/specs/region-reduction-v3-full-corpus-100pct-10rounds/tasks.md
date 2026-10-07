@@ -112,8 +112,25 @@
     （我两次把 timeout 设小，逐片被杀且无产出，守卫如实报 fatal 而非留下陈旧读数）；gate 一律单链串行；
     同一轴连续 2-3 张零翻转即换轴，残差收窄是信息不是进度
 
-- [ ] Task 7: Round 6 — 大损失文件（trade_live_broker 118/128 剩余 control-flow 单元）
-  - [ ] 7.1/7.2/7.3 同构
+- [x] Task 7: Round 6 — 大损失文件（trade_live_broker 118/128 剩余 control-flow 单元）
+  - [x] 7.1/7.2/7.3 同构
+  - 落地读数（rr-v3r06，详见 `rounds/round6/VERIFICATION.md`）：units 6554→**6573/6617（99.3350%）**、files 369→**382/402**、
+    compile_error/error 0；对基线与对 Round 5 终态双向 **REGRESSIONS=0 ∧ UNIT_REGRESSIONS=0**；
+    本轮转完全 OK 的 pyc＝**1**（`fly/data/quote_handler.pyc` 79/79，B111 落地：
+    `_boolop_member_is_loop_condition_entry` 禁止把仅反向可达的成员从已建 boolop 链中剥为后缀，
+    臂边恢复 344→420 / 382→496 / 420·458→500，凭空 None 尾 sink 消失）；
+    电池 r6 **70/79**（37 臂 28/9）、r1 108/110、r1reg 34/34、r2v3 105/126、r3 101/122、r4 77/87；quotation 仍 153/153；
+    tests 277/2/2 同名单；IV.2 全过；语料残局 **20 文件 / 44 单元**
+  - 成色如实记：**四票 = 1 落地 + 3 否证**。B121 否证（8 单元链皆收敛于单一共享目标，门在
+    `region_analyzer.py:28055` 提前返回 ⇒ 加宽＝恒等变换；私有落点逐链 ∈{0,1} 从不 ≥2）；
+    B120 否证于所给站点（头 NOP@44 早在 `dominator_analyzer.py:502 get_all_loops` 回边归一化时被折叠 ⇒ 同层加宽仍是恒等变换；
+    G-A 经探针确认区域模型本已正确，差在 CPython 行锚放置，拒绝按 offset/文本 hack）；
+    测试工程师另**推翻主代理「trade_live_broker 8/10 同源」假设**，改判六组
+  - 轴切换纪律在本轮兑现：连续两票零翻转即换轴，第 3 轴（从未触碰的 B111 凭空 sink 面）即翻文件
+  - 主代理数据失误登记：我给 B120/B111 简报的 analyzer 字节/行数（2045409/32168）是 B119 之前旧值，
+    来树实测为 2052197 B / 32266 行（sha `0212c54e…`）；工单以实测为准故未受损，
+    此后简报一律现测现用当轮 sha
+  - 未推进项：trade_live_broker 仍 118/128（真根上移至 `dominator_analyzer.py:502`，为 Round 7 首选靶）
 
 - [ ] Task 8: Round 7 — 已封闭守卫族外推重放（外推/收缩双向攻击，验证守卫恢复嵌套无感而非窄门控）
   - [ ] 8.1 测试工程师：前六轮封闭面做外推/收缩双向攻击 + 站桩回归重放，读数不得变差；新破口登记 Bn 续接（锚点 + 机制 + 违反条款）
