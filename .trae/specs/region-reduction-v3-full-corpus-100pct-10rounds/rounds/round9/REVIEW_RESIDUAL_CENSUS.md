@@ -227,3 +227,35 @@ C 轴里剔 NOP 后**只有 1 处配对不同**的六个单元（`_process_tick_
   说明机制还没找对，而不是"先收下这一两个"。
 - **#13 是第二条独立路径**（`order_api` 35/37→37/37，加 2 个省略单元），不得用它的翻转去抵 #14 的射程。
 - 本轮若 #14 零翻转，仍须由 #13 单独交付 ≥1 文件转 OK 才能开下一轮；两者皆零翻转＝门禁未过，禁止下一轮。
+
+## XI. #14 的上界检验：落点之外每个大单元还压着内容差（HEAD 口径逐块分类）
+
+把每单元的差块分成「两侧 opcode 序列相同、只差目标」与「内容差」两类（9 个大单元实测）：
+
+| 文件.单元 | 差块数 | 仅落点 | 内容差 |
+|---|---|---|---|
+| `trade_live_broker.etf_basket_order` | 39 | 37 | **2** |
+| `trade_live_broker.ipo_stocks_order` | 35 | 34 | **1** |
+| `matcher.DefaultMatcher.match` | 25 | 24 | **1** |
+| `klinedata.kline_datetime_list` | 31 | 27 | 4 |
+| `realtime_event_source.clock_worker` | 45 | 38 | 7 |
+| `quote.get_real_from_zeromq` | 39 | 34 | 5 |
+| `api_base.get_history_df` | 20 | 15 | 5 |
+| `trade_live_broker._sync_worker` | 18 | 9 | 9 |
+| `quote.run_individual_transform` | 21 | 12 | 9 |
+
+⇒ **落点修好≠单元翻正**：这些单元即使 37/34/24 条落点全部对上，
+仍被 1–9 条内容差挡着。内容差的形状（逐条打印取证）：
+
+- `ipo_stocks_order`：orig `JUMP_BACKWARD to@450` + `JUMP_FORWARD to@732`，产物只剩一条
+  `JUMP_FORWARD to@731` ⇒ **回边跳消失**（与 #14 的回边锚点同族，非新增轴）。
+- `matcher.match`：产物**少 10 条**——`order.asset.symbol` 取属性 + `LOAD_CONST None/3` +
+  `BUILD_SLICE`… ⇒ **表达式/切片整段未产出**，属 #13 的省略形。
+- `etf_basket_order`：产物少 11 条（`BINARY_OP %`…`POP_TOP/POP_TOP/LOAD_CONST None/RETURN_VALUE`…）
+  同时多 11 条（`strategy_log.warning('该股票【%s】行情数据异常'…`）⇒ **语句被放进了错误的臂**，
+  删除与插入成对，属排位形。
+
+结论：#13 的第二波候选（在 #14 落地、落点噪声退去后才可判）至少含 `matcher.match`（省略形）；
+`etf_basket_order` 的成对删插与 `ipo_stocks_order` 的回边消失应并回 #14 而不是新开票。
+本表的意义是给 #14 的验收设**上界预期**：它单独最多把这 9 个单元中「内容差恰为回边/排位形」者翻正，
+不能按「35 全翻」计成绩。
