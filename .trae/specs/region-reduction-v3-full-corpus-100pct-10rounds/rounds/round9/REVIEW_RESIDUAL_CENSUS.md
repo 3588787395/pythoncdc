@@ -74,6 +74,51 @@ C 轴里剔 NOP 后**只有 1 处配对不同**的六个单元（`_process_tick_
 
 目标下标差为 4–5 条指令 ⇒ 区域边界附近的**语句排布次序**换了 4–5 条指令的位置，
 而不是多写/少写语句。这 8 个单元是本轮单位成本最低的一族（其余单元的差块数 ≥5，最多 53）。
+
+## VI. 仪器自我纠偏（两次测量，结论未变但过程必须入库）
+
+上表 §V 用的 `nop_census2.py` 在重标跳转目标时有缺陷：目标若落在被剔除的 NOP 上就退回**原始偏移**，
+两侧口径不一致。我随即另写一个探针 `D:/Temp/r9main/ctx.py`，把无法解析的目标一律记为哨兵 `-1`，
+它报 `bar._history_bars` 两侧**完全相同**——我据此一度怀疑「NOP_ONLY=0」是错的。
+
+复核结论：那个「完全相同」才是仪器假象。ctx.py 把**两个不同的**错误落点都折叠成同一个 `-1`，
+制造了伪等式（`to@-1 == to@-1`）。改用正确口径——目标落在 NOP 上时**向后推进到第一条真实指令**
+再按下标比对——重跑 42 个单元：
+
+| 差块数（剔 NOP、目标按真实指令下标解析） | 单元数 |
+|---|---|
+| `NOP_ONLY`（差异全由 NOP 足迹解释） | **0** |
+| 1 | 8 |
+| 2 | 4 |
+| 3 | 3 |
+| 4 | 7 |
+| 5 | 5 |
+| ≥8 | 15 |
+
+⇒ §I 的否证与 §V 的「8 个单元只差 1 处」都成立，且 `bar._history_bars` 的差是**落点真的不同**，
+不是 NOP 足迹。教训与既有约定同源（归一化器必须说明它真正重绑了什么；把「查不到」折成常量
+会让两侧的不同塌成相同）：任何判据/仪器的归一化函数，都要先拿一对已知不同的样本验证哨兵不可达。
+
+### 正确口径下的紧致靶面名单（12 个单元，逐条实测）
+
+| 差块数 | 文件 | 单元 | 不同的那条跳转：orig → prod（真实指令下标） |
+|---|---|---|---|
+| 1 | `IQCommon/data/finance` | `get_fields` | `JUMP_FORWARD` to@50 → to@143 |
+| 1 | `IQCommon/util/trade_info_utils` | `get_trade_status` | `JUMP_FORWARD` to@151 → to@147 |
+| 1 | `IQEngine/core/bar` | `BarData._history_bars` | `POP_JUMP_FORWARD_IF_FALSE` to@32 → to@51 |
+| 1 | `IQEngine/core/strategy/strategy_universe` | `_on_clear_de_listed` | `POP_JUMP_FORWARD_IF_FALSE` to@27 → to@33 |
+| 1 | `trade_live_broker` | `_process_tick_order` | `JUMP_BACKWARD` to@22 → to@19 |
+| 1 | `trade_live_broker` | `rzrq_credit_order` | `JUMP_FORWARD` to@490 → to@485 |
+| 1 | `trade_live_broker` | `get_ipo_stocks` | `POP_JUMP_FORWARD_IF_TRUE` to@225 → to@215 |
+| 1 | `fly/dumpload/load_daily` | `<module>` | `JUMP_FORWARD` to@661 → to@679 |
+| 2 | `IQCommon/strategy/wizard_quant_api` | `filter_desicion` | `POP_JUMP_FORWARD_IF_NONE` to@181 → to@195 |
+| 2 | `IQCommon/util/trade_info_utils` | `kill_trade_process` | `POP_JUMP_FORWARD_IF_NONE` to@641 → to@643 |
+| 2 | `IQEngine/plugins/plugin_system_trade/function` | `reconnect` | `JUMP_FORWARD` to@84 → to@99 |
+| 2 | `fly/data/quote` | `build_current_period_df` | `POP_JUMP_FORWARD_IF_TRUE` to@121 → to@111 |
+
+差值分两种符号形态：prod 落点**靠前**（−2/−4/−5/−10，共 5 条）与**靠后**（+3/+16/+19/+24/+62/+69）。
+靠前＝产物少跳过了几条指令（块被前移）；靠后＝产物把目标块排到了更后面（块被后移或中间多塞了块）。
+两类都属「语句/块在区域边界处的排布次序」，与 §II 的 A 轴（体被 `break` 吞掉）不同机制，不得并案。
 - 仪器已知缺陷：单元名 → code object 用路径尾段匹配，同名/嵌套宿主可能错配；
   本轮 §II/§III 的关键读数（520/42、344/40、94/55）已用 `co_firstlineno` + 唯一命中复核，
   确认**不是**错配而是真实截断。
