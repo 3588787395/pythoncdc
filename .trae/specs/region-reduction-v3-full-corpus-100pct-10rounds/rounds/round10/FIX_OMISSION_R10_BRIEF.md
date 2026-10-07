@@ -56,3 +56,23 @@
 - 回报**边做边写**（`rounds/round10/FIX_OMISSION_R10.md`），零翻转按 sha256 逐字节回滚。
 - 排序前置：#16 在飞（改成员关系）→ 落地后本表所有 seq 下标须用 `r10loss.py` 重取；
   与 #14 A 档**同轮不同判据面**，若同票派发须按 `tasks.md §10.0` 的串行门禁执行（402 gate 唯一）。
+
+## 八、共要件与派切分（Round 10 裁定后追加，见 `ADJUDICATION_R10_B126_REVERTED.md`）
+
+`trade_live_broker` 的 `_process_order` / `_process_cancel_order` / `_trade_status_handle` 三条 LOSS_COLLAPSE 单元
+**同时需要** #16 的结构改判（`while True:` + 体内 `if`）与本案的省略补回才会翻正。
+#16 的补丁已按零翻转纪律回滚，但**已验证可用**，保存在：
+
+- 补丁 `D:/Temp/r9main/RAVED_R10_B126.patch`（288 行，标记 `[r10-b126-else-backedge-refute]`／
+  `[r10-b126-whiletrue-ifjoin]`／`[r10-b126-loopheader-tail-confluence]`）
+- 回滚前整文件字节 `D:/Temp/r9main/WIP_R10_B126_analyzer.py`（sha256 `515da6c6e1a21f76…`）
+- 其自有电池复测读数：`r9w16_*` 18 臂 **26/37 → 33/37，BROKE=0**（主代理自有复验，非工程师自述）
+
+⇒ **谁接 `trade_live_broker` 那三条，谁必须先应用该补丁**，且应用后先复跑 `r9w16_*` 达到
+units ≥ 33/37  ∧ BROKE=0 再作业；翻正按逐单元名单记，**两票共担，禁止任一票单独记功**。
+
+**派切分建议（因两次截断的教训）**：本案首刀只取 **P0 一条**——
+`matcher.DefaultMatcher.match` 中被吞的整条 `order.asset.symbol[None:3] in ('688','689')` 测试语句
+（该文件只差这 1 个单元，无共要件，翻正即整文件 OK）。
+`clock_worker`（一形三态）、`_process_order`/`_process_cancel_order`（须共要件）各自另立次刀，
+不要在一票里同吃三种机制——Round 10 的两次 150 回合截断都发生在「一票多机制」上。
