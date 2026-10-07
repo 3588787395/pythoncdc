@@ -144,3 +144,24 @@ CPython 3.11 用 `NOP` 做行锚，跳进锚点与跳进锚点后的第一条实
 **换位形（`kill_trade_process`）**：两条跳转的目标互为对方的目标，说明两个候选汇合块都存在、
 只是被分配反了——判据必须能区分二者（一个在 handler 尾声之后、一个在其之前），
 单向规则「取最早/最晚」在此必然错一次（§二 已记 `get_ipo_stocks` 方向相反）。
+
+## 九、落点面按「读回的语句」分型（本轮自有复跑，仪器 `D:/Temp/r9main` 内联探针）
+
+对差候选逐条打印**原始目标块**与**产物目标块**的实际指令窗（±7 条），把偏移翻译回源语句：
+
+| 型 | 单元 | 原始该落之处（读回的语句） | 产物实落之处 | 判据要点 |
+|---|---|---|---|---|
+| **F1 汇合块被让给 handler 尾声** | `load_daily.<module>`（26/27，**只差这 1 条**） | `@2478`＝`print('++++++结束更新的执行时间' + time.strftime('%Y%m%d %H:%M:%S'))` —— try/except **之后**的顺序续体 | `@2562`＝`JUMP_FORWARD→2626; PUSH_EXC_INFO; except Exception as err:` —— **异常处理器区** | 候选块若以 `PUSH_EXC_INFO/POP_EXCEPT/RERAISE` 开头，即归 TryExceptRegion，不得作 try 后汇合块（原则 2） |
+| 同型 | `trade_info_utils.get_trade_status`（37/41） | `@151` 起＝`error_no == 0` 的共用测试段 | `@147`＝`POP_EXCEPT / RERAISE` 尾声 | 同上；两文件同判据 |
+| **F2 目标跳过本应进入的语句** | `bar.BarData._history_bars`（84/85，**只差这 1 条**） | `@140`＝`ExecutionContext().phase` 起，且其前一条是 `POP_JUMP_FORWARD_IF_TRUE@138→206`（同一 if 的真臂尾） | `@304`＝`dt; engine.data_proxy.get_history(self.asset, intervals, …)` | 假臂入口须是**该测试的假边直接落点**，而非其后再跳一次的语句；此处产物把整段 `if phase == ExecutionPhase.BEFORE_TRADING_START` 收进了别的臂 |
+| **F3 假臂语句被挂错边** | `strategy_universe._on_clear_de_listed`（10/11，**只差这 1 条**） | `@156`＝`de_listed.add(o)`（假边直指这条语句） | `@198`＝`POP_TOP; JUMP_BACKWARD→44`（循环回边） | 假边落点是回边块 ⇒ 语句被挂到**真臂**去了；判据须读该 if 两条出边的目标语句身份，不得按跳转距离取近/取远 |
+
+⇒ **F1 是一条判据吃两文件**（`load_daily` 与 `trade_info_utils`），F2/F3 各吃一个**只差 1 单元**的文件；
+连同 §七 的 ANCHOR 子形（`strategy.tick_worker_thread`、`_process_tick_order`、`get_kline_by_count_new`）、
+§七 的换位形（`kill_trade_process`）与 §八 的置换形（`etf_basket_order`），
+#14 的名单已**全数有语句级靶面**，无一票靠偏移猜测。
+
+**禁止项追加**：以上三类都曾被本轮不同版本的「取最早／取最晚／取共享最多」单向规则误伤，
+实测方向不一致（F1 让给 handler＝取错侧，F2 取过远，F3 取过近）。
+⇒ 判据必须是**身份式**（该块是什么：handler 区／回边块／测试的直接假边落点），
+**不得**是**位置式**（最早、最晚、第 N 个后继）。
