@@ -1,0 +1,14 @@
+[
+ {
+  "path": "test_repros/round9/r9g7_01_else_arm_twin.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9g7_02_with_handler_tail_twin.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9g7_03_single_landing_negative.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9g7_04_mixed_elsearm_and_tail.pyc"
+ }
+]
