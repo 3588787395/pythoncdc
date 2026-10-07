@@ -57,3 +57,24 @@ G7 现式：`kind == 'handler-epilogue' ∨ 前驱末指令 == POP_TOP`。`POP_T
   仍要做，但验收改为「零回退 + 判据表达为区域事实」，不再声称翻单元。
 - 禁止同时保留 POP_TOP 支与新角色支（两真相源）；替换即替换，删除的常量/分支须在报告列明影响面。
 - 验收读数一律逐单元名单，不许只报 `86/92` 这类总数。
+
+## 复现臂名册（预置；前缀 `r9s15_`，索引 `r9_s15_probe_index.json`）
+
+已由常驻臂覆盖、**不得重造**：`r9g7_01`（get_bars 双 else 臂）、`r9g7_04`（else 臂 + 真尾声混合）、
+`r9g7_02`（with/handler 尾声）、`r9g7_03`（单落点 G2 反例）、`r9q_02`（assert/raise 馈入的尾声，当前红＝目标）。
+
+需新增的变体（每个都要先证明在**当前字节**下按旧 G7 判错的形状存在，再用于新判据）：
+
+1. `r9s15_01_else_arm_in_loop` — `while …: if c: x() else: return None`（臂体在循环内，检验 G5 同区要求与新角色判据不冲突）
+2. `r9s15_02_elif_chain_two_rn` — `if/elif/else` 两支臂各写 `return None`（≥2 同形臂成员，新判据须都认成语句）
+3. `r9s15_03_try_else_rn` — `try: … else: return None`（else 臂成员，handler-epilogue 之外的第二形干扰）
+4. `r9s15_04_nested_if_in_with_body` — with 体内层 `if` 的 else 臂 `return None`，与 with 体尾落点**同函数共存**（全有或全无一侧被拆开即失败）
+5. `r9s15_05_raise_then_tail_landing` — `raise` 之后由跳转 argval 接入的汇合尾块（新判据应认落点；对应 `check_frequency`）
+6. `r9s15_06_for_else_rn_and_tail` — `for … else: return None` 与函数隐式尾共存（else 臂成员 vs 迭代锚）
+7. `r9s15_07_deep3_arm_nesting` — 三层 if 嵌套、最内层 else 臂 `return None`（深度无感证明：一层正确 + 组合封闭）
+
+**双向变形牙**：
+- 把「臂成员 ⇒ 语句」一侧 stub 掉 → `r9g7_01/04` 与新臂 01/02/03/04/06/07 必须转红；
+- 把「handler-epilogue 也算语句」放大（过度发射）→ `r9g7_02`、`flytools` 66/66 必须转红。
+两侧都红过才说明新判据既必要又不越界；只验一侧等于没牙。
+
