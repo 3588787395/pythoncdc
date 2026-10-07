@@ -164,3 +164,34 @@
    `get_kline_by_count_new`、`filter_desicion`、`run_tick_socket`、`etf_basket_order`、`_sync_worker`）
    逐条读 hunk 语义后再定票面——**不得先给它们派票再找机制**；
 3. 每票落地后重跑 `unitmap.py`，本表随之改版（本表已是第二次改版：分类键改正一次、real_quote 与 `_target` 各撤销一次）。
+
+## 八、§七 里 6 条「未具名」已具名（逐 hunk 语义读回，2026-10-08 主代理自有复跑）
+
+它们**全部落进 #15 的隐式尾声／共用返回面**或其邻面，机制各自主体不同但同属「返回尾的归属」一族：
+
+| 单元 | 实测小差 | 读回的机制 | 归属 |
+|---|---|---|---|
+| `quote.check_frequency` | `orig[106:108]=2`（`LOAD_CONST None; RETURN_VALUE`）→ prod `JUMP_FORWARD 128`，并在函数末 `prod[130:132]` **多出**一对 | 该处本应**就地返回**，产物改成跳到共用尾，再把共用尾挪到函数末尾——**返回尾的归属点错位** | **#15** |
+| `wizard_quant_api.filter_desicion` | 末位 `prod[195:197]` 多出 `LOAD_CONST None; RETURN_VALUE` | 源在共用尾已有隐式返回，产物**重复内联**一份 | **#15** |
+| `real_quote.get_real_minute_kline` | `prod[251:253]` 多出一对 | 同上 | **#15** |
+| `klinedata.get_multiminute_his_data` | `orig[512] JUMP_FORWARD 527` → prod `LOAD_FAST his_data_dict; RETURN_VALUE`；且 `orig[527] LOAD_FAST his_data_dict` → prod `LOAD_CONST None` | 共用尾的**内容被记到错误的返回点**：跳转变内联，真返回点的值被换成 `None` | **#15** |
+| `quote.get_individual_data` | `prod[203]` 多出一枚 `JUMP_FORWARD ANCHOR` | 跳转落到行锚 vs 锚后实指令——**锚点归属** | #14（ANCHOR 子形） |
+| `klinedata.get_kline_by_count_new` | `orig[567] JUMP_BACKWARD ANCHOR` → prod `JUMP_FORWARD ANCHOR` | 同一位置的**回边被写成正向跳过**（方向反） | #14（ANCHOR 子形） |
+
+⇒ **#15 名单由 3 条扩为 7 条**：`handlers.TWHThreadController._target`、
+`trade_info_utils.query_strategy_id`、`query_trade_strategy_info`、
+`quote.check_frequency`、`wizard_quant_api.filter_desicion`、
+`real_quote.get_real_minute_kline`、`klinedata.get_multiminute_his_data`。
+它因此**不再是「单文件小票」**，而是当前最大的具名机制簇；
+`handlers` 一条即翻正该文件，另外四条各自把所在文件推进 1 单元
+（`quote` 86→87、`wizard_quant_api` 55→56、`real_quote` 43→44、`klinedata` 61→62）。
+
+**重算后的具名状态**（按上表与本节逐条重列，不用加减法推）：
+具名 **30** 单元（含本节 6 条）、半具名 **5**（`_process_order`/`_process_cancel_order`/`_trade_status_handle`
+的结构改判已知、剩余大省略未定位；`etf_purchase_redemption` 只知「属性链截断」形状）、
+未具名 **5**：`plugin_system_risk_calculation._save_testds_to_csv`（14 条真删，语义未读）、
+`trade_live_broker.etf_basket_order`（32 处目标差但落点副本不可分，须先定标）、
+`quote.run_tick_socket`（24 条块搬位＝#14 面，但未定位「为何搬」）、
+`trade_live_broker._sync_worker`（178/180，链式比较腿＋搬位＝形状已知宿主未定位）、
+`__init__._on_publish_after_trading_end`（函数内 `import` 成对消失，宿主未定位）。
+合计 30+5+5 = **40** ✓。
