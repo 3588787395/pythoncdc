@@ -3372,6 +3372,33 @@ class RegionASTGenerator:
             if _b68_ins.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'):
                 _b68_last = _b68_ins
         if _b68_last is not None and _b68_last.opname in BACKWARD_JUMP_OPS:
+            # [B119-deep] 循环回边/条件块释放：块末指令为 backward 跳转且
+            # 跳转目标 is 某 LoopRegion 的 header_block 时，该块是循环尾
+            # 条件/回边块（如 r7v7_b4a03_deep 的 `n -= 1` +
+            # POP_JUMP_BACKWARD_IF_TRUE→header 块）——它由**包围循环的装
+            # 配面**消费（while/for 结构重编译再生条件与回边，块内用户语
+            # 句由循环尾处理按既有次序发射），毯式标记会把体尾语句吞掉。
+            # 此处从「拒绝释放」改为「显式释放」：判据 = 块末指令 opcode ∈
+            # BACKWARD_JUMP_OPS + 目标与循环 header 同一性（I.4 白名单：
+            # 块末 opcode + 循环结构字段，无名字/偏移条件）。目标不是任何
+            # 循环 header 的 backward 块维持原拒绝路径（C3）。
+            # [B119-deep 收紧] 纯回边块（剥噪后仅剩跳转指令、无任何用户语
+            # 句载体，如 r10_21 fin_continue_stmt 的 JUMP_BACKWARD continue
+            # 终结块）不释放：释放的意义只在把块内用户语句交还循环装配
+            # 面按次序发射，无语句载体的纯回边块没有可移交的发射内容，
+            # 维持原认领路径（毯式标记无副作用），避免卸载 continue 终结
+            # 边的登记职责（C3——判据不命中保持既有行为逐位不变）。
+            _b68_be_user = any(
+                i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG',
+                                 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                for i in block.instructions)
+            if _b68_be_user and _b68_last.argval is not None:
+                _b68_be_tgt = self.cfg.get_block_by_offset(_b68_last.argval)
+                if _b68_be_tgt is not None:
+                    for _b68_lr in self.region_analyzer.regions:
+                        if (isinstance(_b68_lr, LoopRegion)
+                                and _b68_lr.header_block is _b68_be_tgt):
+                            return True
             return False
         if getattr(block, 'loop_header', None):
             return False
@@ -3407,7 +3434,28 @@ class RegionASTGenerator:
             if _b68_fin_user:
                 break
         if _b68_fin_user:
-            return False
+            # [B119] 非空 finally 帧的宿主尾随块释放（判据 2/3 的同层外推）：
+            # ``try: <不可抛体> finally: <非空体>`` 的正常路径副本内联在
+            # try 体块中（无独立副本块），Pattern A 跨度收集仍会把 try 语句
+            # 之后的宿主尾随块（如 r7v7_x_b4a03_pure 的 `return flag` 块）
+            # 拉进 region.blocks——上方毯式标记把它整体吞没，宿主顺序代码
+            # 蒸发（重编译缺 return）。副本身份封闭：块起点必须**大于**
+            # finally_blocks（异常副本）全部指令的最大偏移——一切正常/异常
+            # 副本块（含清理尾 COPY/POP_EXCEPT/RERAISE）都 ≤ 该帧尾边界，
+            # W21 保护面（非空 finally 的正常路径副本结构）不受影响；帧尾
+            # 之外且通过判据 2（位于保护跨度之外、不属 try/else/finally/
+            # cleanup/handler 任何结构部分）与判据 3（无异常机制指令、无
+            # backward 跳转、非循环 header）的块只可能是 try 语句之后的宿主
+            # 顺序代码——释放交宿主装配面/顶层序列派发（每块唯一归属）。
+            # 帧内块维持毯式标记逐位不变（C3）。
+            _b119_frame_last = None
+            for _b119_fb in (getattr(region, 'finally_blocks', None) or []):
+                for _b119_fi in _b119_fb.instructions:
+                    if _b119_frame_last is None or _b119_fi.offset > _b119_frame_last:
+                        _b119_frame_last = _b119_fi.offset
+            if _b119_frame_last is None or block.start_offset <= _b119_frame_last:
+                return False
+            return True
         return True
 
     def _b66_is_with_exit_continue_chain_head(self, block: BasicBlock) -> bool:
@@ -6446,6 +6494,29 @@ AST 映射规则:
                                   and i.opname not in CONDITIONAL_JUMP_OPS
                                   and i.opname not in ('POP_TOP', 'EXTENDED_ARG')]
                 if not _bb_meaningful:
+                    continue
+                # [B120] 祖先汇合块守卫（原则 2 每块唯一归属 + 原则 3 嵌套即
+                # 抽象节点）：break 落点同时是本循环**祖先区域**（parent 链）
+                # 的 merge_block 时（如宿主 `if flag:` 的假出口与 break 边共
+                # 享循环后 `return acc` 块，r7v7_b4c03_deep 实测），该块服务
+                # 宿主层的控制流汇合——把它的语句发射进本循环的
+                # _sequential_after_loop（= 宿主臂体内），宿主假路径被改写为
+                # 隐式 return None（函数级 return 消失）。识别条件（I.4 白
+                # 名单：区域父子关系 + merge_block 同一性）：沿 region.parent
+                # 链存在祖先区域其 merge_block is _bb。归约方式：跳过本循环
+                # 对该落点的发射与 generated 认领（不 discard/add），落点保
+                # 持其权威归属区域（顶级 BASIC 区域）的发射责任，由宿主层按
+                # 既有次序输出（原则 4：块归拥有其全部到达边的层级）。无祖
+                # 先命中（break 落点专属本循环，如 fin_break 形态）时既有发
+                # 射逐位保持（C3）。
+                _b120_anc = getattr(region, 'parent', None)
+                _b120_is_ancestor_merge = False
+                while _b120_anc is not None:
+                    if getattr(_b120_anc, 'merge_block', None) is _bb:
+                        _b120_is_ancestor_merge = True
+                        break
+                    _b120_anc = getattr(_b120_anc, 'parent', None)
+                if _b120_is_ancestor_merge:
                     continue
                 _bb_region = self.region_analyzer.get_entry_region_for_block(_bb) or self.region_analyzer.get_region_for_block(_bb)
                 # [R3-B10 fix] break 落点归属判定的「自身区域」归零（与
@@ -21291,6 +21362,32 @@ AST 映射规则:
                     self.generated_blocks.add(b)
             for b in _elif_exclude:
                 self.generated_blocks.add(b)
+            # [B117] 循环回边块的 then 臂吸收守卫（区域归约算法原则 2 每块
+            # 唯一归属）：当本 if 区域处于循环上下文、当前循环的自然回边块
+            # （back_edge_block，末指令 JUMP_BACKWARD→header）被分析器并入
+            # then_blocks，且该回边块存在**区域外前驱**（其前驱不全在本区域
+            # 的 then/else/blocks 与 merge_block 内）时，该块同时服务宿主
+            # 区域的一条边（如宿主 if 的假出口直落循环尾块）——把它的语句
+            # 吸收进本 if 的 then 臂会改变那条区域外边的落点语义（宿主假
+            # 路径丢失循环尾语句）。归约方式：把回边块从 then_blocks 摘除、
+            # 不标记 generated，交还宿主/循环尾按既有次序发射（原则 4 父引
+            # 用子入口的反向：块的去向由**拥有全部到达边**的层级决定）。
+            # 判据只读后继/前驱集合与区域成员关系（I.4 白名单，同层结构事
+            # 实），无名字/偏移/深度条件；回边块无区域外前驱（f2 共享尾
+            # 形态）时不触发，then_blocks 逐位保持（C3）。
+            if self._current_loop is not None and region.then_blocks:
+                _b117_be = getattr(self._current_loop, 'back_edge_block', None)
+                if (_b117_be is not None and _b117_be in region.then_blocks
+                        and _b117_be not in (region.else_blocks or [])):
+                    _b117_inside = set(region.then_blocks) | set(region.else_blocks or []) | set(getattr(region, 'blocks', None) or [])
+                    _b117_mb = getattr(region, 'merge_block', None)
+                    if _b117_mb is not None:
+                        _b117_inside.add(_b117_mb)
+                    _b117_outside = [p for p in (getattr(_b117_be, 'predecessors', None) or [])
+                                     if p not in _b117_inside]
+                    if _b117_outside:
+                        region.then_blocks = [b for b in region.then_blocks
+                                              if b is not _b117_be]
             then_stmts = self._if_generate_then_branch(region)
             # [R3-Continue] 分支终结边 continue 发射：merge_block 与当前循环
             # 头重合、且 then 分支终结边 JUMP_BACKWARD 直达循环头时，该分支
@@ -21437,11 +21534,50 @@ AST 映射规则:
                             region.else_blocks = [region.merge_block]
                             region.merge_block = None
             else_stmts = self._if_generate_else_branch(region)
+            # [B118] else-break 出口边显式认领守卫（原则 4 入口引用语义 +
+            # 原则 2 每块唯一归属的 C3 显式认领）：`if c: <终结臂> else: break`
+            # 编译后 else 边直落循环 break 落点块（break_blocks 成员，POP_TOP
+            # 出口清理），分析器把该块记为 merge_block 而非 else 臂——本 if
+            # 无 else_blocks、merge 的语句为空，若不认领，重编译后假边改落
+            # 循环体尾隐式 JUMP_BACKWARD，break 语义变「继续迭代」。识别条件
+            # （全部同层结构事实，I.4 白名单）：① 本区域无 else_blocks 且
+            # else 生成结果为空、无 elif 链；② 处于循环上下文且 merge_block
+            # ∈ 当前循环 break_blocks（分析器对 break 落点的权威登记）；③
+            # then 臂不可达 merge_block（then 各块后继集均不含 merge——then
+            # 以跳转终结，假边是 merge 的唯一来源）。满足时归约方式：orelse
+            # = [Break]（显式认领假边语义，break 语句重编译自然再生出口
+            # POP_TOP，merge 块无需发射）；不满足（then 臂落入 merge 的
+            # `if c: S; break` 共享汇合形态）时维持既有 post-if 发射路径
+            # 逐位不变（C3）。
+            if (not else_stmts
+                    and not region.else_blocks
+                    and not getattr(region, 'elif_conditions', None)
+                    and getattr(region, 'merge_block', None) is not None
+                    and self._current_loop is not None
+                    and region.merge_block in (getattr(self._current_loop,
+                                                       'break_blocks', None) or [])):
+                _b118_mb = region.merge_block
+                _b118_then_reaches = any(
+                    _b118_mb in (getattr(_tb, 'successors', None) or ())
+                    for _tb in (region.then_blocks or []))
+                if not _b118_then_reaches:
+                    else_stmts = [{'type': 'Break'}]
+            # [B117] else-continue 隐式再生守卫（原则 2 每块唯一归属）：上述
+            # 删除 else=[Continue] 的「降级重排」只在**本 if 区域覆盖整个循
+            # 环体**（if 区域 = 循环体尾区域，假边落空即自然回边）时保语义；
+            # 当循环体还有本区域之外的块（宿主 if 条件块、后续语句块），假
+            # 边落空改落宿主/后继语句，continue 语义丢失（r7v7_b2b04_deep /
+            # r7v7_x_b2b04_d2 实测）。识别条件（I.4 白名单：区域成员关系）：
+            # 当前循环 body_blocks（除 header）全部 ⊆ 本区域
+            # blocks∪then_blocks∪else_blocks。满足（尾区域）时既有降级重排
+            # 逐位保持；不满足时保留显式 else-continue 发射（通用发射路径，
+            # 不触发本删除分支，C3）。
             if (else_stmts
                     and len(else_stmts) == 1
                     and isinstance(else_stmts[0], dict)
                     and else_stmts[0].get('type') == 'Continue'
-                    and self._current_loop is not None):
+                    and self._current_loop is not None
+                    and self._if_region_is_loop_body_tail(region)):
                 else_stmts = []
                 for b in (region.else_blocks or []):
                     self.generated_blocks.discard(b)
@@ -21502,6 +21638,110 @@ AST 映射规则:
                     then_stmts = _kept + _merge_then_stmts
                 self.generated_blocks.add(region.merge_block)
                 self.generated_offsets.add(region.merge_block.start_offset)
+
+        # [B119] 宿主 if 的 merge 后继兄弟发射（原则 2 每块唯一归属 + 原则 4
+        # 入口引用语义）：`if c: <终结真臂>` 编译后假边与真臂尾跳转共享
+        # try/循环后的宿主汇合块（merge_block，如 r7v7_b4a03_shallow 的
+        # `return flag` 块 = 宿主 if 假出口 + try 正常路径的共同落点）。该
+        # 块被跨度收集拉进子区域（try）blocks 时，子区域的毯式标记/收尾发
+        # 射会吞掉或错位它；W15-C 的 merge-into-then 只适用空真臂形态（真
+        # 臂含语句时会把后继语句错缩进进臂体）。识别条件（全部同层结构事
+        # 实，I.4 白名单）：① merge_block 存在且不在 then/else 臂内；② 未
+        # 被任何发射面认领（∉ generated_blocks）；③ 块内含有效用户指令
+        # （剥噪后非空）；④ merge 的全部前驱都收敛于本 if 的两条出边（前
+        # 驱 ⊆ then 臂块 ∪ else 臂块 ∪ 条件块/entry）；⑤ merge 不是循环
+        # 回边块（is 某 LoopRegion 的 back_edge_block，或其末指令 backward
+        # 跳转目标 is 某 LoopRegion header）——回边块由包围循环装配面消费
+        # （r7v7_b4a03_deep 的 `n -= 1` 循环尾块）；⑥ 吞没风险事实——merge
+        # 位于某个**已完成生成**的 TryExceptRegion（≠本区域）的 blocks 中
+        # （子 try 的收尾认领循环已运行并按释放判据跳过它，本 if 是其剩余
+        # 唯一发射面；不在任何已生成 try 块集内的普通汇合块由既有兄弟发射
+        # 面处理，提前发射会同其重排冲突，cgroup_utils/
+        # neg_simple_and_or/g_in_try_except 实测）。满足时归约方式：merge
+        # 块语句作为 If 节点的**后继兄弟语句**发射（非臂体内容），并登记
+        # generated。④/⑤/⑥ 不成立时跳过，交既有发射面（C3）。
+        _b119m_pending = []
+        if (getattr(region, 'merge_block', None) is not None
+                and region.merge_block not in (region.then_blocks or [])
+                and region.merge_block not in (region.else_blocks or [])
+                and region.merge_block not in self.generated_blocks):
+            _b119m = region.merge_block
+            _b119m_eff = [i for i in _b119m.instructions
+                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                              'POP_TOP', 'JUMP_FORWARD',
+                                              'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                                              'JUMP_BACKWARD_NO_INTERRUPT',
+                                              'EXTENDED_ARG')]
+            if _b119m_eff:
+                _b119m_preds = [p for p in (getattr(_b119m, 'predecessors', None) or [])
+                                if p is not _b119m]
+                _b119m_allowed = set(region.then_blocks or []) | set(region.else_blocks or [])
+                _b119m_cond = getattr(region, 'condition_block', None)
+                if _b119m_cond is not None:
+                    _b119m_allowed.add(_b119m_cond)
+                _b119m_entry = region.entry
+                if _b119m_entry is not None:
+                    _b119m_allowed.add(_b119m_entry)
+                _b119m_loop_owned = False
+                for _b119m_lr in self.region_analyzer.regions:
+                    if not isinstance(_b119m_lr, LoopRegion):
+                        continue
+                    if _b119m_lr.back_edge_block is _b119m:
+                        _b119m_loop_owned = True
+                        break
+                if not _b119m_loop_owned and self._current_loop is not None:
+                    _b119m_last = _b119m.get_last_instruction()
+                    if (_b119m_last is not None
+                            and _b119m_last.opname in BACKWARD_JUMP_OPS
+                            and _b119m_last.argval is not None):
+                        _b119m_tgt = self.cfg.get_block_by_offset(_b119m_last.argval)
+                        if _b119m_tgt is not None and any(
+                                isinstance(_b119m_lr, LoopRegion)
+                                and _b119m_lr.header_block is _b119m_tgt
+                                for _b119m_lr in self.region_analyzer.regions):
+                            _b119m_loop_owned = True
+                _b119m_false_edge = False
+                _b119m_cblk = getattr(region, 'condition_block', None)
+                if _b119m_cblk is not None and _b119m in (_b119m_cblk.successors or ()):
+                    # [B119] 假边同侧守卫：merge 必须是条件块**假出口**的跳转
+                    # 目标（两出边之一的落点）——否则它只是 then 臂尾的续接块
+                    # （分析器跨度记账），发射它会把循环后代码错误缩进进臂体
+                    # （r7v7_b3b02 的 return 1 块实测）。
+                    _b119m_false_edge = True
+                # [B119] 收紧⑥（吞没风险事实，I.4 白名单：区域成员关系 + 区
+                # 域生成状态）：merge 必须位于某个**已完成生成**的
+                # TryExceptRegion（≠本区域）的 blocks 中——即该块的跨度收
+                # 集归属已脱离本 if 的正常兄弟发射时序（子 try 的收尾认领循
+                # 环已运行并按释放判据跳过它），本 if 是它剩余的唯一发射面。
+                # merge 不在任何已生成 try 区域块集内（普通汇合块，兄弟发射
+                # 面随后按既有次序处理）时不触发（r7v7_b3b02/cgroup_utils
+                # add_process_to_cgroup/neg_simple_and_or/g_in_try_except
+                # 实测：提前发射会与既有 merge 兄弟/else-continue 路径重排冲
+                # 突）。_generated_regions 为生成器既有登记（非新增状态）。
+                _b119m_swallow_risk = False
+                if _b119m_false_edge:
+                    for _b119m_tr in self.region_analyzer.regions:
+                        if (not isinstance(_b119m_tr, TryExceptRegion)
+                                or _b119m_tr is region):
+                            continue
+                        if id(_b119m_tr) not in self._generated_regions:
+                            continue
+                        if _b119m in (getattr(_b119m_tr, 'blocks', None) or ()):
+                            _b119m_swallow_risk = True
+                            break
+                if (_b119m_false_edge
+                        and _b119m_swallow_risk
+                        and not _b119m_loop_owned
+                        and _b119m_preds
+                        and all(p in _b119m_allowed for p in _b119m_preds)):
+                    _b119m_stmts = self._generate_block_statements(_b119m)
+                    if _b119m_stmts:
+                        for _b119m_s in _b119m_stmts:
+                            if isinstance(_b119m_s, dict) and _b119m_s.get('type') == 'Return':
+                                _b119m_s['_explicit_return'] = True
+                        _b119m_pending.append(_b119m_stmts)
+                    self.generated_blocks.add(_b119m)
+                    self.generated_offsets.add(_b119m.start_offset)
 
         def _strip_implicit_return_none(stmts):
             if not stmts:
@@ -21785,6 +22025,15 @@ AST 映射规则:
         if_result = result
         if pre_stmts:
             if_result = pre_stmts + [if_result]
+        # [B119] 宿主 if 的 merge 后继兄弟语句装配（见上方 [B119] 识别条
+        # 件）：merge 块语句在 If 节点之后按块序追加为兄弟节点（非臂体内
+        # 容），重编译恢复「假边与真臂尾跳转共同落点」的原 CFG。
+        if _b119m_pending:
+            for _b119m_stmts in _b119m_pending:
+                if isinstance(if_result, list):
+                    if_result = if_result + _b119m_stmts
+                else:
+                    if_result = [if_result] + _b119m_stmts
         # 区域归约算法原则 2（每块唯一归属）+ 原则 4（入口引用语义）：
         # 当 IfRegion.merge_block 是当前循环的 back_edge_block（纯 JUMP_BACKWARD）
         # 且 IfRegion 无 else_blocks 时，if 的 true 分支（fallthrough 到 merge）和
@@ -23378,6 +23627,43 @@ AST 映射规则:
                                 return False
             return True
         return False
+
+    def _if_region_is_loop_body_tail(self, region) -> bool:
+        """[B117] 判定 if 区域是否覆盖当前循环的整个循环体（循环体尾区域）。
+
+        ①算法依据：区域归约算法原则 2（每块唯一归属）——「删除显式
+        else-continue、让假边落空由循环回边隐式再生」这一降级重排只在 if
+        区域 = 循环体尾区域（循环体内没有本区域之外的语句块）时保语义。
+        ②归约顺序：本谓词在 if 区域 else 臂发射后、else=[Continue] 删除
+        判定处调用，为该删除提供前置守卫，不改变任何归约次序。
+        ③唯一归属判定：循环体 body_blocks（除 header）的每一块都 ∈ 本区域
+        blocks∪then_blocks∪else_blocks ⇒ 循环体没有第三方归属块，假边落空
+        与回边等价；任一块属于其它区域/后续语句 ⇒ 本区域不是尾区域。
+        ④嵌套处理：只读当前 _current_loop（生成栈顶 = 最内层包围循环）与
+        本区域自身成员集合，不跨层反查子区域内部。
+        ⑤入口引用语义：body_blocks/header_block 为 LoopRegion 的入口引用
+        字段；成员判定用块对象同一性（is / 集合成员），非偏移推断。
+        ⑥反编译流程：_if_generate_normal → else 臂生成 [Continue] → 本谓
+        词守卫 → 命中（尾区域）走既有降级重排，未命中保留显式
+        else: continue。
+
+        C 条款：[C1] 判据仅取区域成员关系（I.4 白名单：blocks/then_blocks/
+        else_blocks/body_blocks 集合事实）；[C2] 无新增跨方法状态、无深度
+        条件；[C3] 判据不命中（非尾区域）时返回 False，调用方保留显式
+        else-continue——通用发射路径，无少发射。
+        """
+        _loop = self._current_loop
+        if _loop is None:
+            return False
+        _hdr = getattr(_loop, 'header_block', None)
+        _body = [b for b in (getattr(_loop, 'body_blocks', None) or [])
+                 if b is not _hdr]
+        if not _body:
+            return False
+        _covered = (set(getattr(region, 'blocks', None) or [])
+                    | set(region.then_blocks or [])
+                    | set(region.else_blocks or []))
+        return all(b in _covered for b in _body)
 
     def _if_false_path_is_loop_iteration(self, region) -> bool:
         """判定 if 语句是否为循环体最后一条语句（if 无 else 且假出口直通迭代）。
@@ -24990,6 +25276,21 @@ AST 映射规则:
                 for _nb in _nr.blocks:
                     if (not _nr_ast and _nb is not _nr.entry and _nb in child_entries):
                         continue
+                    # [B117] 处于悬置态的循环回边块不随嵌套区域认领：块是当
+                    # 前循环的 back_edge_block（或 ∈ back_edge_blocks）、且
+                    # 既不在嵌套区域 then 臂也不在 else 臂（[B117] 去吸收守
+                    # 卫已把它摘出 then_blocks——它同时服务宿主区域的到达
+                    # 边）时，它的语句由循环尾装配面（LOOP_BACK_EDGE 分派）
+                    # 发射；此处全集认领会在循环体走查到达它之前把它吞没
+                    # （r7v7_x_b2b04_d2 的 acc+=1 块蒸发）。回边块仍属某臂
+                    # （f2 共享尾形态）时照旧认领，逐位保持（C3）。
+                    if self._current_loop is not None:
+                        _b117_be_cur = getattr(self._current_loop, 'back_edge_block', None)
+                        _b117_be_set = set(getattr(self._current_loop, 'back_edge_blocks', None) or ())
+                        if ((_nb is _b117_be_cur or _nb in _b117_be_set)
+                                and _nb not in (_nr.then_blocks or [])
+                                and _nb not in (_nr.else_blocks or [])):
+                            continue
                     self.generated_blocks.add(_nb)
                     self.generated_offsets.add(_nb.start_offset)
                 self._generated_regions.add(_nr_id)
@@ -25027,6 +25328,14 @@ AST 映射规则:
                     else:
                         stmts.append(_tr_ast)
                 for _tb in _tr.blocks:
+                    # [B119] 与 _generate_try 收尾毯式标记同一释放判据：try
+                    # 区域 blocks 中被跨度收集拉进来的宿主尾随块/循环回边块
+                    # （_b68_is_tryfin_tail_releasable 为真）不随子区域认领
+                    # 标记——否则子区域生成后此处的全集标记会把已释放的块
+                    # 重新吞没，宿主 if merge 发射面/循环装配面失去发射对象
+                    # （r7v7_b4a03 shallow/deep 实测 return/n -= 1 蒸发）。
+                    if self._b68_is_tryfin_tail_releasable(_tb, _tr):
+                        continue
                     self.generated_blocks.add(_tb)
                     self.generated_offsets.add(_tb.start_offset)
                 self._generated_regions.add(_tr_id)
@@ -25442,11 +25751,18 @@ AST 映射规则:
                                                            'JUMP_BACKWARD_NO_INTERRUPT')
                                 and _r100_mlast.argval is not None):
                             _r100_mtgt = self.cfg.get_block_by_offset(_r100_mlast.argval)
-                            if _r100_mtgt is _r100_hdr:
+                            # [B117] 尾区域守卫：「merge 末指令 JUMP_BACKWARD→
+                            # header ⇒ 回边由循环结构再生」只在本 if 区域覆盖
+                            # 整个循环体（= 循环体尾区域）时成立；循环体还有
+                            # 本区域之外的块时，假边落空改落宿主/后继语句，
+                            # 显式 continue 不可省（r7v7_b2b04_deep 实测）。
+                            if (_r100_mtgt is _r100_hdr
+                                    and self._if_region_is_loop_body_tail(region)):
                                 _r100_suppress = True
                         elif (_r100_hdr is not None
                               and region.merge_block is _r100_hdr
-                              and self._if_false_path_is_loop_iteration(region)):
+                              and self._if_false_path_is_loop_iteration(region)
+                              and self._if_region_is_loop_body_tail(region)):
                             _r100_suppress = True
                     # [RC3 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
                     # （嵌套即抽象节点）+ 原则 4（父引用子入口）：循环体内
@@ -25503,7 +25819,14 @@ AST 映射规则:
                                             block, (IfRegion,))
                                         if _rc3_enclosing is not None:
                                             _rc3_merge = getattr(_rc3_enclosing, 'merge_block', None)
-                                            if _rc3_merge is not None and _rc3_merge is _cur_hdr:
+                                            # [B117] 尾区域守卫：「merge 即循环
+                                            # header ⇒ 回边由循环结构再生」只在
+                                            # 该 if 区域覆盖整个循环体时成立
+                                            # （r7v7_b2b04_deep 的 else-continue
+                                            # 实测被误抑制）。
+                                            if (_rc3_merge is not None
+                                                    and _rc3_merge is _cur_hdr
+                                                    and self._if_region_is_loop_body_tail(_rc3_enclosing)):
                                                 _r100_suppress = True
                                 else:
                                     _in_try_r11 = False
@@ -25521,7 +25844,11 @@ AST 映射规则:
                                             block, (IfRegion,))
                                         if _rc3_enclosing is not None:
                                             _rc3_merge = getattr(_rc3_enclosing, 'merge_block', None)
-                                            if _rc3_merge is not None and _rc3_merge is _cur_hdr:
+                                            # [B117] 同上：尾区域守卫（C3——非尾
+                                            # 区域保留显式 Continue，通用发射路径）。
+                                            if (_rc3_merge is not None
+                                                    and _rc3_merge is _cur_hdr
+                                                    and self._if_region_is_loop_body_tail(_rc3_enclosing)):
                                                 _r100_suppress = True
                     # [R4-H 修复] 显式 continue 优先于 R100 冗余抑制。
                     # 识别条件：_r4h_explicit_continue 为真——本块被上方结构判据
@@ -25664,6 +25991,18 @@ AST 映射规则:
                     for _b in _region.blocks:
                         if _b is _r71sh:
                             continue
+                        # [B117] 处于悬置态的循环回边块不随嵌套区域认领（同
+                        # _nested_if_entry_generate / LOOP_BODY 认领循环判据）：
+                        # 回边块是当前循环 back_edge_block 且不在嵌套区域两臂
+                        # 内（[B117] 去吸收守卫摘出后的 limbo 块）时，交循环
+                        # 尾装配面发射（r7v7_x_b2b04_d2 acc+=1）。
+                        if self._current_loop is not None:
+                            _b117_be_cur3 = getattr(self._current_loop, 'back_edge_block', None)
+                            _b117_be_set3 = set(getattr(self._current_loop, 'back_edge_blocks', None) or ())
+                            if ((_b is _b117_be_cur3 or _b in _b117_be_set3)
+                                    and _b not in (_region.then_blocks or [])
+                                    and _b not in (_region.else_blocks or [])):
+                                continue
                         self.generated_blocks.add(_b)
                         self.generated_offsets.add(_b.start_offset)
                     self._generated_regions.add(_rid)
@@ -25680,6 +26019,18 @@ AST 映射规则:
                             else:
                                 stmts.append(_nr_ast)
                         for _b in _nested_region.blocks:
+                            # [B117] 处于悬置态的循环回边块不随嵌套区域认领
+                            # （与 _nested_if_entry_generate 认领循环同一判据）：
+                            # 回边块是当前循环 back_edge_block 且不在嵌套区域
+                            # 两臂内（[B117] 去吸收守卫摘出后的 limbo 块）时，
+                            # 交循环尾装配面发射（r7v7_x_b2b04_d2 acc+=1）。
+                            if self._current_loop is not None:
+                                _b117_be_cur2 = getattr(self._current_loop, 'back_edge_block', None)
+                                _b117_be_set2 = set(getattr(self._current_loop, 'back_edge_blocks', None) or ())
+                                if ((_b is _b117_be_cur2 or _b in _b117_be_set2)
+                                        and _b not in (_nested_region.then_blocks or [])
+                                        and _b not in (_nested_region.else_blocks or [])):
+                                    continue
                             self.generated_blocks.add(_b)
                         self._generated_regions.add(_nrid)
                     continue
@@ -27636,6 +27987,21 @@ AST 映射规则:
         （x04.try_in_while）；[C2] 预生成与延迟生成两路径同判据同语义、
         装配序与源码一致；[C3] 全部排除项（handler/else 持有、if 分支、
         中间循环宿主）为显式豁免，不命中时走查路径行为逐位保持。
+        [B119] 空/不可抛 try 体 + finally 正常副本内联守卫（Round 7 增
+        补）：CPython 3.11 对 ``try: <不可抛体> finally: <体>`` 把体的正
+        常路径副本内联在 try 体块内（try 体无异常表保护区间 ⇒ 块不被切
+        分），异常路径副本另存 finally_blocks——try 体走查若发射该块，
+        体语句即同时进 Try.body 与 Try.finalbody（原则 2 每块唯一归属被
+        破坏，r7v7_x_b4a03_pure 实测重复发射）。识别条件（全部块内
+        opcode 形态事实，I.4 白名单）：① has_finally、无 except handler、
+        finally_blocks 非空且无独立 finally_copy_blocks；② try 体块末指
+        令为前向跳转（正常路径出界，非 return/reraise 终结）；③
+        finally_blocks 首块 PUSH_EXC_INFO 开头、RERAISE 终结；④ try 体
+        块与 finally 首块剥噪后的 opcode 序列逐指令镜像（体的全部有效指
+        令都是体的正常副本，try 体语义为空）。归约方式：整块登记
+        generated 不发射，Try.body 保持空（由调用途空体回填 Pass），体
+        语句唯一归属 finalbody；④ 不匹配（体含用户语句的混合块）或
+        ①②③ 任一不成立时既有走查逐位保持（C3 显式豁免，无少发射）。
 
         嵌套 try 派发（nested_try_regions 预循环）判定并集：
           - is_child_in_try：parent 关系 + entry 未被 handler/else 持有；
@@ -27979,6 +28345,54 @@ AST 映射规则:
                 body_stmts.append(_b75_try_rets[block.start_offset])
                 self.generated_blocks.add(block)
                 continue
+
+            # [B119] 空/不可抛 try 体 + finally 正常副本内联守卫（原则 2
+            # 每块唯一归属）：CPython 3.11 对 ``try: <不可抛体> finally:
+            # BODY`` 把 BODY 的正常路径副本**内联**在 try 体之后同一基本块
+            # 内（try 体无异常表保护区间 ⇒ 块不被切分），异常路径副本
+            # （finally_blocks，PUSH_EXC_INFO 帧头 + 同序 BODY + RERAISE）
+            # 另存一份。try 体走查若发射该块的语句，BODY 即同时进 try 体
+            # 与 finalbody（重复发射，r7v7_x_b4a03_pure 实测）。识别条件
+            # （全部块内 opcode 形态事实，I.4 白名单）：① 本区域
+            # has_finally、无 except handler、finally_blocks 非空；② try 体
+            # 块末指令为前向跳转（正常路径继续出界，非 return/reraise 终
+            # 结）；③ finally_blocks 首块以 PUSH_EXC_INFO 开头、RERAISE 终
+            # 结；④ 块剥噪（RESUME/NOP/CACHE/EXTENDED_ARG/PUSH_NULL）去终
+            # 结跳转后的 opcode 序列 == 首块剥噪去 PUSH_EXC_INFO/RERAISE 后
+            # 的 opcode 序列（逐块操作码镜像，与
+            # _identify_empty_body_finally_regions 的副本对齐同构）——即该
+            # 块的全部有效指令都是 BODY 的正常副本，try 体语义为空。归约
+            # 方式：整块登记 generated 不发射（BODY 唯一归属 finalbody），
+            # body_stmts 保持空 → Try.body=[Pass]（调用途空体回填）；
+            # ④ 不匹配（try 体含用户语句的混合块）或 ①②③ 任一不成立时
+            # 既有走查逐位保持（C3）。
+            if (getattr(region, 'has_finally', False)
+                    and not (getattr(region, 'except_handlers', None))
+                    and getattr(region, 'finally_blocks', None)
+                    and not getattr(region, 'finally_copy_blocks', None)):
+                _b119_last = block.get_last_instruction()
+                _b119_f0 = region.finally_blocks[0]
+                _b119_f0_last = _b119_f0.get_last_instruction() if _b119_f0 else None
+                if (_b119_last is not None
+                        and _b119_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                        and _b119_f0 is not None and _b119_f0_last is not None
+                        and _b119_f0_last.opname == 'RERAISE'
+                        and any(i.opname == 'PUSH_EXC_INFO'
+                                for i in _b119_f0.instructions)):
+                    _b119_noise = ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG',
+                                   'PUSH_NULL')
+                    _b119_b_ops = [i.opname for i in block.instructions
+                                   if i.opname not in _b119_noise
+                                   and i.opname not in ('JUMP_FORWARD',
+                                                        'JUMP_ABSOLUTE')]
+                    _b119_f_ops = [i.opname for i in _b119_f0.instructions
+                                   if i.opname not in _b119_noise
+                                   and i.opname not in ('PUSH_EXC_INFO',
+                                                        'RERAISE')]
+                    if _b119_b_ops and _b119_b_ops == _b119_f_ops:
+                        self.generated_blocks.add(block)
+                        self.generated_offsets.add(block.start_offset)
+                        continue
 
             _fc_keep = region.finally_copy_blocks.get(block.start_offset)
             if _fc_keep is not None:
@@ -29479,6 +29893,22 @@ AST 映射规则:
             块末 opcode）、C2（不新增跨方法状态，B75 臂 Return 挂 region
             瞬态属性）、C3（守卫不命中时既有发射逐位不变，B75 任一重建
             失败整体放弃）。
+          [B119] 非空 finally 帧（正常副本内联形态）的宿主尾随块收集
+            （Round 7 增补，B55-c 判据的同层外推）：``try: <不可抛体>
+            finally: <非空体>`` 的体正常路径副本内联在 try 体块中，try 体
+            块的正常后继 = try 语句之后的宿主尾随块（r7v7_x_b4a03_pure 的
+            `return flag` 块）。该块被纳入 region.blocks 却不属 try/else/
+            finally/cleanup/handler 任何结构部分，常规收集因 else_blocks
+            为空不触发、B55-c 因非纯常量 return 不命中——post-try 无人发
+            射，收尾毯式标记把它吞掉（宿主顺序代码蒸发）。识别条件（同层
+            结构事实，I.4 白名单）：后继 ∈ region.blocks、起点 ≥
+            try_offset_end 且 **> finally_blocks 全部指令的最大偏移**（整
+            个异常帧的帧尾边界之外；W11-A/W21 布局的一切副本块都 ≤ 该边
+            界，不受影响）、无 RERAISE、非祖先 IfRegion merge（parent 链
+            merge_block 同一性）、非循环回边块（块末 backward 跳转目标 is
+            某 LoopRegion header）、归属权威为本区域、未生成。归约方式：
+            收集进 _post_try_blocks_r19n2 交既有发射循环在 try 语句之后生
+            成（每块唯一归属）。条件不命中维持既有收集逐位不变（C3）。
         """
         region_id = id(region)
         self._generating_regions.add(region_id)
@@ -29774,6 +30204,86 @@ AST 映射规则:
                                 continue
                             _post_try_seen_r19n2.add(_b55c_succ)
                             _post_try_blocks_r19n2.append(_b55c_succ)
+            # [B119] 非空 finally 帧（正常副本内联形态）的宿主尾随块收集
+            # （B55-c 判据的同层外推）：``try: <不可抛体> finally: <非空体>``
+            # 的 finally 正常路径副本内联在 try 体块中（try 体无异常表保护
+            # 区间 ⇒ 块不切分），try 体块的正常后继 = try 语句之后的宿主尾
+            # 随块（如 r7v7_x_b4a03_pure 的 `return flag` 块）。该块被纳入
+            # region.blocks 却不属于 try/else/finally/cleanup/handler 任何
+            # 结构部分，常规收集因 else_blocks 为空不触发、B55-c 因非纯常量
+            # return 不命中——post-try 无人发射，_generate_try 收尾毯式标记
+            # 把它吞掉（宿主顺序代码蒸发，重编译缺 return）。识别条件（同
+            # 层结构事实，I.4 白名单）：后继 ∈ region.blocks、起点 ≥
+            # try_offset_end（保护跨度之外）、起点 **> finally_blocks 全部
+            # 指令的最大偏移**（整个异常帧——正常/异常副本与清理尾——的
+            # 帧尾边界之外；W11-A/W21 布局的一切副本块都 ≤ 该边界，不受影
+            # 响）、无 RERAISE、非祖先 IfRegion merge、归属权威为本区域、
+            # 未生成。归约方式：收集进 _post_try_blocks_r19n2，交既有发射
+            # 循环在 try 语句之后生成语句（每块唯一归属）。条件不命中维持
+            # 既有收集逐位不变（C3）。
+            if (not _post_try_blocks_r19n2
+                    and getattr(region, 'has_finally', False)
+                    and getattr(region, 'finally_blocks', None)):
+                _b119_frame_last = None
+                for _b119_fb in region.finally_blocks:
+                    for _b119_fi in _b119_fb.instructions:
+                        if (_b119_frame_last is None
+                                or _b119_fi.offset > _b119_frame_last):
+                            _b119_frame_last = _b119_fi.offset
+                if _b119_frame_last is not None:
+                    # [B119] 归属排除：候选块同时是本区域**祖先区域**
+                    # （parent 链）的 merge_block（宿主 if 假出口与会合边共
+                    # 享，如 b4a03_shallow 的 return 块 = 宿主 if merge）或
+                    # 循环回边块（末指令 backward 跳转目标 is 某 LoopRegion
+                    # header，如 b4a03_deep 的 `n -= 1` 循环尾块）时，该块
+                    # 由宿主 if 的 merge 发射面 / 包围循环的装配面消费——
+                    # post-try 发射会把宿主顺序代码错误地嵌进 try 所在的
+                    # 臂体（原则 2 每块唯一归属：交还拥有全部到达边的层
+                    # 级）。两类排除只读 parent 链 merge_block 同一性与块
+                    # 末 opcode + 循环 header 同一性（I.4 白名单）。
+                    _b119_anc = getattr(region, 'parent', None)
+                    _b119_anc_merges = set()
+                    while _b119_anc is not None:
+                        _b119_amb = getattr(_b119_anc, 'merge_block', None)
+                        if _b119_amb is not None:
+                            _b119_anc_merges.add(id(_b119_amb))
+                        _b119_anc = getattr(_b119_anc, 'parent', None)
+                    for _b119_tb in region.try_blocks:
+                        _b119_tb_role = self.region_analyzer.get_block_role(_b119_tb)
+                        if _b119_tb_role in (BlockRole.BREAK, BlockRole.PURE_BREAK,
+                                             BlockRole.CONTINUE,
+                                             BlockRole.PURE_CONTINUE):
+                            continue
+                        for _b119_succ in _b119_tb.successors:
+                            if (_b119_succ in _region_block_set_r19n2
+                                    and _b55c_tail_off is not None
+                                    and _b119_succ.start_offset >= _b55c_tail_off
+                                    and _b119_succ.start_offset > _b119_frame_last
+                                    and _b119_succ not in _post_try_seen_r19n2
+                                    and _b119_succ.start_offset not in _b55c_known_offs
+                                    and _b119_succ not in _all_if_merge_blocks_r19n2
+                                    and not any(i.opname == 'RERAISE'
+                                                for i in _b119_succ.instructions)):
+                                if id(_b119_succ) in _b119_anc_merges:
+                                    continue
+                                _b119_slast = _b119_succ.get_last_instruction()
+                                if (_b119_slast is not None
+                                        and _b119_slast.opname in BACKWARD_JUMP_OPS
+                                        and _b119_slast.argval is not None):
+                                    _b119_stgt = self.cfg.get_block_by_offset(_b119_slast.argval)
+                                    if _b119_stgt is not None and any(
+                                            isinstance(_b119_lr, LoopRegion)
+                                            and _b119_lr.header_block is _b119_stgt
+                                            for _b119_lr in self.region_analyzer.regions):
+                                        continue
+                                _b119_owner = self.region_analyzer.block_to_region.get(_b119_succ)
+                                if (_b119_owner is not None
+                                        and _b119_owner is not region):
+                                    continue
+                                if _b119_succ in self.generated_blocks:
+                                    continue
+                                _post_try_seen_r19n2.add(_b119_succ)
+                                _post_try_blocks_r19n2.append(_b119_succ)
             # When has_finally=True, CPython creates finally normal-path copies
             # (in finally_copy_blocks) that end with JUMP_FORWARD to post-try code
             # (e.g., `return None` after try-except-else-finally). These post-try

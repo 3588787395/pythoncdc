@@ -1,0 +1,150 @@
+{
+ "elapsed_sec": 11.8,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 8,
+  "success": 0
+ },
+ "files_total": 8,
+ "generated_at": "2026-10-07T09:13:58",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "site-packages/IQCommon/logger/handlers.pyc",
+   "site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+   "site-packages/IQData/utils/calexrights_func.pyc",
+   "site-packages/IQEngine/core/executor.pyc",
+   "site-packages/IQEngine/data/trading_dates_mixin.pyc",
+   "site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
+   "site-packages/fly/data/quote_handler.pyc",
+   "site-packages/fly/logger.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.change_his_to_forward: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/IQData/utils/calexrights_func.pyc",
+   "pyc_sha": "f06e2bb323b5",
+   "source": "site-packages/IQData/utils/calexrights_funcOK.py",
+   "source_sha": "0d04eb54479d",
+   "status": "failure",
+   "success_rate": 0.875,
+   "units_success": 7,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.Executor.check_before_trading: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/IQEngine/core/executor.pyc",
+   "pyc_sha": "e451dcfe45ec",
+   "source": "site-packages/IQEngine/core/executorOK.py",
+   "source_sha": "7de580ce31e4",
+   "status": "failure",
+   "success_rate": 0.9,
+   "units_success": 9,
+   "units_total": 10
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.TradingDatesMixin.trading_dates_reload: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/IQEngine/data/trading_dates_mixin.pyc",
+   "pyc_sha": "c34a6044c924",
+   "source": "site-packages/IQEngine/data/trading_dates_mixinOK.py",
+   "source_sha": "7bed0c40b6f2",
+   "status": "failure",
+   "success_rate": 0.9285714285714286,
+   "units_success": 13,
+   "units_total": 14
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.get_price: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
+   "pyc_sha": "7cd452b0017f",
+   "source": "site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_apiOK.py",
+   "source_sha": "4065f88a1a74",
+   "status": "failure",
+   "success_rate": 0.9473684210526315,
+   "units_success": 18,
+   "units_total": 19
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.RealQuoteData.get_real_minute_kline: Failure: Different control flow",
+    "***<module>.RealQuoteData.get_tick_direction: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+   "pyc_sha": "461e3bc834bd",
+   "source": "site-packages/IQData/plugins/plugin_system_realquote/real_quoteOK.py",
+   "source_sha": "5635e538e54b",
+   "status": "failure",
+   "success_rate": 0.9555555555555556,
+   "units_success": 43,
+   "units_total": 45
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.TWHThreadController._target: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/IQCommon/logger/handlers.pyc",
+   "pyc_sha": "6eef0926a872",
+   "source": "site-packages/IQCommon/logger/handlersOK.py",
+   "source_sha": "9ae24f68d60c",
+   "status": "failure",
+   "success_rate": 0.9666666666666667,
+   "units_success": 29,
+   "units_total": 30
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.SafeFileHandler.check_baseFilename: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/fly/logger.pyc",
+   "pyc_sha": "d14295469ce8",
+   "source": "site-packages/fly/loggerOK.py",
+   "source_sha": "1c85c580ecfd",
+   "status": "failure",
+   "success_rate": 0.984375,
+   "units_success": 63,
+   "units_total": 64
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.get_kline_local: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/fly/data/quote_handler.pyc",
+   "pyc_sha": "1bfaa1f6e75c",
+   "source": "site-packages/fly/data/quote_handlerOK.py",
+   "source_sha": "857fe618c1fb",
+   "status": "failure",
+   "success_rate": 0.9873417721518988,
+   "units_success": 78,
+   "units_total": 79
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.966542750929368,
+ "units_success": 260,
+ "units_total": 269
+}

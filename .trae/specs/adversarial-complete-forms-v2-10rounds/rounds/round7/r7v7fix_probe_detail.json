@@ -1,0 +1,378 @@
+[
+ {
+  "pyc": "test_repros/round7/n7v7_b2n01.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/n7v7_b2n02.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/n7v7_b3n01.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/n7v7_b3n02.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/n7v7_b4n01.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/n7v7_b4n02.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2a01.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2a02.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2a03.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2a04.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2a05.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2a06.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2b01.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2b02.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2b03.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2b04.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2c01.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2c02.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b2c03.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b3a01.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b3a02.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b3a03.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b3a04.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b3a05.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b3a06.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b3b01.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b3b02.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b3b03.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b3c01.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b3c02.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b3c03.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b4a01.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b4a02.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b4a03.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b4a04.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b4a05.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b4a06.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b4b01.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b4b02.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b4b03.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b4c01.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b4c02.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_b4c03.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_x_b2b04_d2.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_x_b2c03_pure.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_x_b4a03_pure.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "pyc": "test_repros/round7/r7v7_x_b4c03_d2.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ }
+]

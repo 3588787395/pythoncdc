@@ -1,0 +1,171 @@
+{
+ "elapsed_sec": 38.1,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 9,
+  "success": 0
+ },
+ "files_total": 9,
+ "generated_at": "2026-10-07T09:11:48",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "site-packages/IQCommon/data/finance.pyc",
+   "site-packages/IQCommon/strategy/wizard_quant_api.pyc",
+   "site-packages/IQCommon/util/email_utils.pyc",
+   "site-packages/IQCommon/util/trade_info_utils.pyc",
+   "site-packages/IQEngine/core/bar.pyc",
+   "site-packages/IQEngine/core/strategy/strategy_universe.pyc",
+   "site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+   "site-packages/fly/common/flytools.pyc",
+   "site-packages/fly/common/future_contract_info.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.send_email: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/IQCommon/util/email_utils.pyc",
+   "pyc_sha": "23270e1e3181",
+   "source": "site-packages/IQCommon/util/email_utilsOK.py",
+   "source_sha": "4543d1726012",
+   "status": "failure",
+   "success_rate": 0.75,
+   "units_success": 3,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.trade_operation: Failure: Different control flow",
+    "***<module>.kill_trade_process: Failure: Different control flow",
+    "***<module>.get_trade_status: Failure: Different control flow",
+    "***<module>.query_trade_strategy_info: Failure: Different control flow",
+    "***<module>.query_strategy_id: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/IQCommon/util/trade_info_utils.pyc",
+   "pyc_sha": "5419f2a32c80",
+   "source": "site-packages/IQCommon/util/trade_info_utilsOK.py",
+   "source_sha": "0bd56da795ed",
+   "status": "failure",
+   "success_rate": 0.8780487804878049,
+   "units_success": 36,
+   "units_total": 41
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.StrategyUniverse._on_clear_de_listed: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/IQEngine/core/strategy/strategy_universe.pyc",
+   "pyc_sha": "598639badc2a",
+   "source": "site-packages/IQEngine/core/strategy/strategy_universeOK.py",
+   "source_sha": "c6cc05ab5fee",
+   "status": "failure",
+   "success_rate": 0.9090909090909091,
+   "units_success": 10,
+   "units_total": 11
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.FutureInfoCache.check_user: Failure: Different control flow",
+    "***<module>.FutureInfoCache.info_conbine: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/fly/common/future_contract_info.pyc",
+   "pyc_sha": "882d3ccc0d31",
+   "source": "site-packages/fly/common/future_contract_infoOK.py",
+   "source_sha": "b12a41510d5c",
+   "status": "failure",
+   "success_rate": 0.9310344827586207,
+   "units_success": 27,
+   "units_total": 29
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.filter_desicion: Failure: Different control flow",
+    "***<module>.get_DMI.calculate_di.<genexpr>: Failure: Different control flow",
+    "***<module>.get_DMI.calculate_di.<genexpr>: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/IQCommon/strategy/wizard_quant_api.pyc",
+   "pyc_sha": "cf93b0e65afe",
+   "source": "site-packages/IQCommon/strategy/wizard_quant_apiOK.py",
+   "source_sha": "0f8ec52303f4",
+   "status": "failure",
+   "success_rate": 0.9482758620689655,
+   "units_success": 55,
+   "units_total": 58
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.Strategy.tick_worker_thread: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+   "pyc_sha": "8c19ea3751b0",
+   "source": "site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategyOK.py",
+   "source_sha": "a387e7e0f434",
+   "status": "failure",
+   "success_rate": 0.9629629629629629,
+   "units_success": 26,
+   "units_total": 27
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.get_fields: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/IQCommon/data/finance.pyc",
+   "pyc_sha": "26c46289e086",
+   "source": "site-packages/IQCommon/data/financeOK.py",
+   "source_sha": "3c235e80e85d",
+   "status": "failure",
+   "success_rate": 0.96875,
+   "units_success": 31,
+   "units_total": 32
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.ProcessWrite.modify_batcktes_info: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/fly/common/flytools.pyc",
+   "pyc_sha": "883f61a64cb2",
+   "source": "site-packages/fly/common/flytoolsOK.py",
+   "source_sha": "592c6eeb0932",
+   "status": "failure",
+   "success_rate": 0.9848484848484849,
+   "units_success": 65,
+   "units_total": 66
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.BarData._history_bars: Failure: Different control flow"
+   ],
+   "pyc": "site-packages/IQEngine/core/bar.pyc",
+   "pyc_sha": "3db6e599ca1e",
+   "source": "site-packages/IQEngine/core/barOK.py",
+   "source_sha": "0c175045e3b0",
+   "status": "failure",
+   "success_rate": 0.9882352941176471,
+   "units_success": 84,
+   "units_total": 85
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9546742209631728,
+ "units_success": 337,
+ "units_total": 353
+}
