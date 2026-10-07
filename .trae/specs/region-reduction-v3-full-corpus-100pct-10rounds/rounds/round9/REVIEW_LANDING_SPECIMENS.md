@@ -107,3 +107,28 @@ PROD  #18 LOAD_FAST i (77)   #19 POP_JUMP_IF_FALSE to 198  #20..#25 同上 (78)
 累计：这条判据同时压着 **5 个只差 1 单元的文件**（`finance`、`function`、`load_daily`、
 `strategy`、`strategy_universe`），全部修对的最好情形是 384→389；
 这仍是**候选上界而非承诺**——最终以主代理 402 逐文件差值实测为准。
+
+
+## 六、十个「只差 1 单元」文件的完备归类（按指令多重集判定，非按感受）
+
+判据：剔噪后比较两侧 **opcode 多重集**与**指令数**。
+多重集相同而顺序不同 ⇒ 纯重排/落点族；多重集不等 ⇒ 该单元另有内容增删或测试极性反转，
+**落点修复不可能翻正它**。
+
+| 文件.单元 | 指令数 orig/prod | 判定 | 归属 |
+|---|---|---|---|
+| `finance.get_fields` | 175/175 | 序列全同，仅 1 条边落点 | **落点族** |
+| `function.reconnect` | 101/101 | 同上 | **落点族** |
+| `load_daily.<module>` | 1010/1010 | 同上 | **落点族** |
+| `strategy.tick_worker_thread` | 288/288 | 4 条边恒 +66 | **落点族** |
+| `strategy_universe._on_clear_de_listed` | 70/70 | 1 条短路假边落点 | **落点族** |
+| `bar._history_bars` | 66/66 | 1 条假边落点 | **落点族** |
+| `handlers.TWHThreadController._target` | 199/**197** | 缺 `LOAD_CONST`+`RETURN_VALUE` 各 1 ＝ **隐式尾声** | → **#15**（G7b） |
+| `api_base.get_history_df` | 1881/1881 | 缺 2 条 `POP_JUMP_IF_TRUE`、多 2 条 `POP_JUMP_IF_FALSE` ＝ **测试极性反转** | → 新轴（与 `_sync_worker` 同形） |
+| `matcher.DefaultMatcher.match` | 776/**766** | 缺 10 条（`BINARY_SUBSCR`/`BUILD_SLICE`/`LOAD_CONST`…）＝ `('688','689')` 成员测试被吞 | → **#13 第二波** |
+| `realtime_event_source.clock_worker` | 1424/**1311** | 缺 113 条真实内容 | → **#13** |
+
+**这直接改写轮门禁的预期**：在飞工单（落点族）最多翻正 **6** 个文件（384→390），
+另外 4 个文件各属别的判据面，**不可能**被同一改动带走。
+先前我写的「5 个文件」是未含 `bar` 的漏数，而 §X 的「十个文件全在落点集内」也只对
+**首分歧**成立——按本表的多重集口径，其中 4 个的后继内容差才是决定性的。
