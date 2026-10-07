@@ -272,7 +272,7 @@ C 轴里剔 NOP 后**只有 1 处配对不同**的六个单元（`_process_tick_
 | `REORDER_ONLY` | 多重集相同，仅顺序/目标不同 | **12** | **#14（落点与重排）——这才是它的真实射程** |
 | `CONTENT_LOSS` | 产物净少指令 | **16** | #13（省略/吞并族） |
 | `CONTENT_EXTRA` | 产物**净多**指令 | **9** | **此前无人开票 ⇒ 新轴 #17「多发射」** |
-| `POLARITY_or_jump_kind` | 跳转种类互换（IF_TRUE↔IF_FALSE 等） | **2** | 新轴 #18（`api_base.get_history_df`、`_sync_worker`） |
+| `POLARITY_or_jump_kind` | 跳转种类互换（IF_TRUE↔IF_FALSE 等） | **2** | 新轴 #18（`api_base.get_history_df`、`klinedata.kline_datetime_list`）——**本行原写 `_sync_worker` 为误记**：`routing2.py` 对 HEAD 产物实测该桶只含这两条，`_sync_worker` 落 `CONTENT_LOSS(+3)`（miss 前列 `LOAD_ATTR×2, JUMP_FORWARD×2`）。2026-10-08 主代理按仪器原读数订正 |
 | `IMPLICIT_TAIL` | 只差 `LOAD_CONST`+`RETURN_VALUE` | **1** | #15（G7b） |
 | `NORMALIZER_BLIND` | 归一化序列已相同却仍判失败 | **2** | 未定：差在常量身份或行号表，我这仪器看不见 |
 

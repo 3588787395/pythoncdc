@@ -176,18 +176,54 @@
         为已落地判据的局部变量命名（`check_patch_patterns.py` PASS，不计残留），登记为清理项
 
 - [ ] Task 10: Round 9 — 残余清零续战 + 402 全量终局复验（目标 units 6617/6617、files 402/402）
-  - [ ] 10.0 **本轮在飞工单的次序与依据**（2026-10-07 主代理定，防上下文丢失后重议）：
-        #14 落点/边界（`region_analyzer.py`，工程师在飞，标记 `[R9-B122 fwdonly]`）
-        → #13 语句省略（`region_ast_generator.py`，6 单元；简报 `FIX_STMT_FRAGMENT_BRIEF.md`）
-        → #15 尾声落点身份（替掉 G7 的 POP_TOP 巧合支；简报 `FIX_G7B_LANDING_IDENTITY_BRIEF.md`）。
-        串行不可并行的理由：三者都改变**同一判据面**——#13/#15 的输入含区域成员关系，
-        而 #14 正在改成员边界，先落地者会使后者的取证作废（#15 的 G5 直接消费成员关系）；
-        且 #13/#15 都落在 `region_ast_generator.py`，与 spec「多位修复工程师仅在破口族 ∧ 涉改文件不相交时可并行」不符。
-        每票派发前须先有本地提交；票面翻转只认逐单元名单，不认总数。
-        轮门禁可达性：只差 1 单元的 10 个文件其失败单元**全部**属落点族（`REVIEW_RESIDUAL_CENSUS.md` §X），
-        故 #14 单独即可满足「≥1 pyc 转 success」；#13 为第二条独立路径（`order_api` 35/37→37/37）。
-        **上界约束**：落点修好≠单元翻正——9 个大单元压着 1–9 条内容差（§XI），
-        故 #14 的成绩按实际翻转计，禁止按「35 全翻」记账。
+  - [ ] 10.0 **本轮工单的次序与依据**（2026-10-08 主代理重发整节，替换 2026-10-07 版——旧版仍指着两次已被否证的尝试）：
+
+        **已否证/已回滚（不得重走同轴）**
+        - `r9-fix-landing-ordering` B122「前向可达仅取 merge」（`[R9-B122 fwdonly]`）→ 否证，逐字节回滚，
+          `FALSIFIED_R9B122_FWDONLY.md`；
+        - `r9-fix-landing-ordering` B123「分析端认领 merge_block」→ 零翻转，按 sha256 回滚，
+          裁定见 `ADJUDICATION_R9LO_REVERTED.md`（B123 回报的独立裁定）：merge 认领命中却不翻正，
+          **发射边界由生成端 `_check_elif_chain` 的 per-arm/`final_else` 收集决定**。
+
+        **在飞**：`r9-fix-elif-chain-grouping`（第三攻，生成端）——`_check_elif_chain` /
+        `_if_generate_full_elif_chain`（`:15052`）的臂收集 + or/and 混合链的**嵌套操作数树**。
+        涉改文件 `region_ast_generator.py`（工作树 +7 KB／131 插 29 删，仍在写）。
+
+        **排队次序**：#16（`while True` + 体内 `if` 的汇合块被当 else；分析端 `_find_loop_else`）
+        → #14（落点/重排，射程上限 14，口径须明示：多重集 14／长度 18）
+        → #13（语句省略 16 单元，6 文件 3 机制；`MIN_INSTRS_FOR_SUBSCR_ASSIGN` 六处门控必除）
+        → #15（隐式尾声身份，替掉 G7 的 POP_TOP 巧合支；含 #17 的 5 个少量多发射单元）
+        → #18（跳转种类互换）。
+
+        **#16 提前的理由（本轮新证）**：#16 改的是**区域成员关系**——把被误当循环测试的那条 `if`
+        归还成体内 `IfRegion`、把 `LoopRegion.condition_block` 改判为 `None`。
+        #14/#13 的取证输入正是「哪些块属于哪个区域」，成员一改，其臂收集名单全部作废重取。
+        ⇒ 在飞票的名单是**在 #16 之前**取的，#16 落地后必须按新字节重跑其 `REORDER_ONLY` 12 单元名单，
+        不得沿用旧名单报翻转。
+
+        **并行派单已否决**：#16 只动 `region_analyzer.py`、在飞票只动 `region_ast_generator.py`，
+        文件确实不相交，形式上符合 spec「破口族 ∧ 涉改文件不相交可并行」；但 402 门禁资源唯一，
+        两条 gate 交错即无法把单元翻转归给具体一票 ⇒ 保持串行，一票一 gate 一封表。
+
+        **每票通则**：派发前先有本地提交；翻转只认逐单元名单（完整路径 + qualname，同名多实例用最佳匹配配对），
+        不认总数；零翻转即按 sha256 逐字节回滚。
+
+        **轮门禁可达性**：只差 1 单元的 10 个文件其失败单元全部属落点族（§X），故 #14 单独即可满足
+        「≥1 pyc 转 success」；#13 为第二条独立路径（`order_api` 35/37→37/37）；#15 是第三条
+        （`handlers` 29/30，`_target` −2）。**#16 不产出门禁**（`trade_live_broker` 118/128，最好 121/128）。
+
+        **上界约束**：落点修好≠单元翻正——9 个大单元压着 1–9 条内容差（§XI），#14 的成绩按实际翻转计，禁止按「35 全翻」记账。
+
+        **分桶口径（防再次自相矛盾）**：42 单元在 §XII／§XIII 用了**两条不同的判定链**，
+        同一单元可落不同桶——`routing2.py` 对 HEAD 产物实测 `POLARITY` 只含
+        `{api_base.get_history_df, klinedata.kline_datetime_list}`（§XII 原表把第二条误记成 `_sync_worker`，
+        已在 `REVIEW_RESIDUAL_CENSUS.md` 订正），而 §XIII 的 insert/delete 分列链把
+        `get_history_df`(ins=4)、`_sync_worker`(ins=174/del=140) 划入 `NET_EXTRA`。
+        ⇒ 桶数 2 与 3 之争是**链之差，不是事实之差**；自本节起只认一条链（首中即止，谓词与阈值随表打印）：
+        `A==B → BLIND` ▸ `opcode 多重集相等 → REORDER` ▸ `跳转种类互换 ∧ |net|≤2 → POLARITY` ▸
+        `net>0 ∧ 无 LOAD_ATTR/LOAD_METHOD/BUILD_SLICE/CALL 类多出 ∧ RETURN_VALUE+LOAD_CONST 缺 ∧ net≤6 → IMPLICIT_TAIL` ▸
+        `net>0 → CONTENT_LOSS` ▸ `else → CONTENT_EXTRA`；
+        `#18` 的真实名单待 #14/#13 落地后按新字节用此链重取，当前不作定数（估 2–3）。
   - [ ] 10.1 八分片 regen + batch + compare（before = Task 1 基线），双门禁 REGRESSIONS=0 ∧ UNIT_REGRESSIONS=0
   - [ ] 10.2 逐文件 `+OK.py` 存在性与 `single` status 抽验（≥30 文件覆盖各区域族）
   - [ ] 10.3 残余非 success 文件（若有）逐 pyc 登记 → 同轮封闭 → 重跑
