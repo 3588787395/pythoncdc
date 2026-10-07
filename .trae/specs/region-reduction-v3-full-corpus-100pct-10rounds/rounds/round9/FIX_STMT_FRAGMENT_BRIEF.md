@@ -152,3 +152,31 @@
 排序：本条**在 #14 落地后**再取（它的第一处分歧是落点，落点噪声退去才能确认这条内容差是否就是最后障碍）。
 若届时该单元只剩这 1 条差，它就是本票最经济的单点靶；若落点修复顺带把它带走，则如实记为 #14 的战果，
 不得算进 #13。
+
+## 复现臂名册（主代理按实测形状预置，满足 spec「每缺陷 ≥10 复现 · 深度 ≥3 变体 · ≥2 MATCH 负对照」）
+
+前缀 `r9s13_`，写在 `test_repros/round9/`，索引另立 `r9_s13_probe_index.json`（勿动 `r9_probe_index.json`
+/ `r9_quote_index.json` / 在飞工单的 `r9a1_*`）。
+
+必须复现的**省略形**（当前应读 1/2 或更低，落地后转 2/2）：
+
+1. `r9s13_01_subscr_value_only` — `t['k'] = [1 if c else 0]`（LHS `LOAD_FAST+LOAD_CONST+STORE_SUBSCR` 被丢，值段裸发射）＝`build_current_period_df` 形
+   ※ 形状已由 `r9q_01` 复现（红）；本臂的价值在**变体深度**，不得原样重造，须带 #7/#8 的长值段或跨块续体
+2. `r9s13_02_nested_subscr_ternary` — `d[a][b] = [x if y else z]`；`r9q_18` 已复现该形（红），本臂只补**它没有的变体**（如三元两侧均为下标、或嵌套三层），不得重造同形臂
+3. `r9s13_03_fstring_subscr_call` — `log.info(f'…{a[:3] in ("688","689")}…')` 内嵌成员测试 ＝ `option_order` 形（父调用消失）
+4. `r9s13_04_slice_contains_two_tuples` — 同函数内两个 `x[:3] in (…)` 测试，常量元组**不同**（`('300','688','689')` 与 `('688','689')`）＝`matcher.match` 形
+5. `r9s13_05_kwcall_embedded_ternary` — `f(name=a if c else b, other=d if e else g)`（kwargs + 三元）＝ del 段含 `KW_NAMES/CALL`
+6. `r9s13_06_boolop_leg_in_test` — `if a and b and c:` 三条同目标假边只留两条
+7. `r9s13_07_stmt_long_value_span` — 语句值段 >3 指令（多层属性/算术）但存储段存在 → 现计数门误判
+8. `r9s13_08_subscr_across_blockedge` — LHS 的容器/下标装载与被 `POP_JUMP` 截断的表达式续体同块
+9. `r9s13_09_subscr_in_for_body` — 循环体内 `d[k] = [...]`，验证修复不只在顶层有效
+10. `r9s13_10_comprehension_dump` — genexpr/comprehension 内的省略形（第二波，若 #14 后仍红则计入）
+
+**已常驻的负对照**（今日即读 2/2，修复后必须仍 2/2，直接复用、不必重写）：
+`r9q_19_subscript_listcomp_assign`、`r9q_22_fstring_subscript_assign`（同为下标赋值族但当前正确，
+是防"过度重建"的正面夹钳），`r9q_16_boolop_elif_and_leg`（boolop 成员腿当前正确），
+`r9q_07_else_arm_pure_none_cond_false_edge`（G7 侧的臂体语句，防止本票把语句当省略吞掉）。
+
+**变形牙**（必须做，否则臂不成立）：把新判据 stub 成恒不成立 → `r9s13_01/04/06` 必须转红；
+把新判据放宽为"凡有 STORE_SUBSCR 即重建" → `r9q_19/22` 或 `r9q_07` 必须转红。
+两侧都要红过，才证明判据既必要又不越界（deform 要打在守卫本体，不是打在它的打印标签上）。
