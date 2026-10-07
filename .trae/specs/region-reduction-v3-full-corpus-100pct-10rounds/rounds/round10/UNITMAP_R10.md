@@ -195,3 +195,19 @@
 `trade_live_broker._sync_worker`（178/180，链式比较腿＋搬位＝形状已知宿主未定位）、
 `__init__._on_publish_after_trading_end`（函数内 `import` 成对消失，宿主未定位）。
 合计 30+5+5 = **40** ✓。
+
+## 九、再补两条具名（§八 剩下的可读单元，2026-10-08）
+
+| 单元 | 实测 hunk | 读回的机制 | 归属 |
+|---|---|---|---|
+| `plugin_system_risk_calculation._save_testds_to_csv` | `delete orig[67:80]=13`；`insert prod[54:56]=2`；另 3 处目标/回边重构 | 丢的是**循环体尾块**：`time.sleep(0.01)` ＋ `self._stop_save_csv_thread` 的向后条件跳（`POP_JUMP_BACKWARD_IF_FALSE 57`）＋其后 `LOAD_CONST None; RETURN_VALUE`；同时产物在**更早的位置内联**一对 `LOAD_CONST None/RETURN_VALUE`，并把回边改写成 `JUMP_FORWARD; LOAD_FAST self._stop…; POP_JUMP_BACKWARD_IF_FALSE 59` | **#16 体尾面 ＋ #15 返回尾面**（两族同宿主的两个面孔，须在同一轮里同判据复验，禁拆成两票各自记功） |
+| `__init__._on_publish_after_trading_end` | `delete orig[482:484]=2` ＋ 2 处目标差 | **函数内 `import` 的被丢**：`IMPORT_NAME IQEngine.plugins.plugin_system_risk_calculation.function` ＋ `IMPORT_FROM THREAD_STATUS` 成对消失（即 `from … import THREAD_STATUS` 这条函数内导入没发） | #13（独立宿主：import 语句发射），与 `matcher` 的被吞测试语句不同宿主，**不得并案** |
+
+⇒ **未具名者只剩 3 条**：`trade_live_broker.etf_basket_order`（32 处目标差但两处落点块指令逐同，
+须先按出现次序定标才可判「该落哪一个」）、`quote.run_tick_socket`（已知 24 条块被**搬位**，
+未定位「为何搬」）、`trade_live_broker._sync_worker`（178/180，链式比较腿形状已知，宿主未定位）。
+
+**具名状态（逐条重列，非加减）**：具名 **32** ＋ 半具名 **5** ＋ 未具名 **3** ＝ **40** ✓
+（半具名 5 条为 §七 所列的 `trade_live_broker` 三条大省略宿主未定位 ＋ `etf_purchase_redemption`
+只知形状 ＋ `_sync_worker` 计入未具名者，两档边界按「能否读回一条具体源语句」定，
+读不回就记半具名，禁止为了让表格好看而升级状态）。
