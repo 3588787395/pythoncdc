@@ -4,7 +4,7 @@
 只读 stdlib（`dis`/`marshal`/`compile`/`difflib`），**未导入 core、未跑发射器**，
 因在飞工单 #16 正在写 `core/cfg/region_analyzer.py`。
 仪器：`D:/Temp/r9main/r10land.py` → 原表 `D:/Temp/r9main/r10land.txt`（逐站点带上下文）。
-配对按**完整 qualname 路径**（`/` + unit 点换斜杠），副本数≠1 者显式拒判（见 §五）。
+配对按**完整 qualname 路径**（`/` + unit 点换斜杠），副本数≠1 者显式拒判（见 §六.4 与 §七 末两行）。
 
 序列归一化：剔 `NOP/CACHE/EXTENDED_ARG`；跳转目标归一化为「目标 offset 在保留序列中的下标」，
 **`-1` 的含义是跳转落点恰被剥掉的行锚 `NOP` 占据**（不是错误，是一条独立事实，见 §三）。
@@ -77,7 +77,7 @@ CPython 3.11 用 `NOP` 做行锚，跳进锚点与跳进锚点后的第一条实
 - 方向不可预设：`get_ipo_stocks` 是选早，`_history_bars`/`_on_clear_de_listed` 是选晚，
   `get_trade_status` 是把控制权让给了异常尾声。
 
-## 六、两台仪器的 hunk 数不一致——A 档扩容前必须先解这处歧义（不得按乐观值记账）
+## 五、两台仪器的 hunk 数不一致——A 档扩容前必须先解这处歧义（不得按乐观值记账）
 
 同两个文件、同一段字节码，两台仪器对「差多少处」给出不同数：
 
@@ -94,17 +94,53 @@ CPython 3.11 用 `NOP` 做行锚，跳进锚点与跳进锚点后的第一条实
 - 反过来说，若那 19 处确为同一根因的下游表现（例如一个块被错误认领导致其中的名字归属改变），
   则 A 档判据**同时**是 `load_daily` 的解——两种解释都要写进回报，不得只报有利的一种。
 
-## 七、派发前置与禁止项
+## 六、派发前置与禁止项
 
-1. **等 #16 落地/封表后再派**：#16 改区域成员关系（`while True` 归还体内 `if`），
-   本简报的 seq 下标全部要在**新字节**下用 `r10land.py` 重取一遍；旧下标只作形状凭据。
-2. **先臂后码**：A 档四条各做合成臂（前缀 `r10ld_`），≥3 深度变体，≥2 MATCH 负对照
+1. **前置条件已变更（2026-10-08）**：#16 已裁定为零翻转并按 sha256 逐字节回滚，
+   语料回到封表态，故本票的名单可直接用 `unitmap.py`/`r10land.py` 在封表字节上取；
+   但 `trade_live_broker` 的三条若要与 #16 的改判同时生效，须先应用共要件补丁
+   `D:/Temp/r9main/RAVED_R10_B126.patch`（见 `ADJUDICATION_R10_B126_REVERTED.md` §四），否则那三条必不翻正。
+2. **先臂后码**：§七 名单里四条「整文件只差 1 条」者各做合成臂（前缀 `r10ld_`），≥3 深度变体，≥2 MATCH 负对照
    （至少含：一个汇合块本就在 handler 之后的合法形；一个真 `while…else`）。
    红→绿才算命中；红→红＝该轴被否证（B122/B123 的先例）。
 3. 禁 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀；禁硬编码深度/计数/偏移/名；
    禁「少发射换全绿」；禁按文件名/函数名特判。
-4. D 档（`etf_basket_order` 31 个、`load_daily` 20 个）**不得当成 31/20 个缺陷记账**：
-   其落点上下文逐条相同，是我的仪器分不出副本，不是有 31 处独立错位。
-   要动须先按出现次序人工定标，再以区域成员关系定归属。
+4. `etf_basket_order`（32 处目标差）**不得当成 32 个缺陷记账**：其落点上下文逐条相同，
+   是我的仪器分不出该落哪一个副本。`load_daily` 曾按此被记为「20 处」——修好仪器后实测 **1 处**，
+   该撤销已记入 `UNITMAP_R10.md` 〇 节；其余同路径多副本者（如两条 `calculate_di.<genexpr>`）
+   仍须先按出现次序人工定标，再以区域成员关系定归属。
 5. 零翻转即按 sha256 逐字节回滚；**回报必须边做边写**（`rounds/round10/FIX_LANDING_R10.md`），
    Round 9 的工程师在 150 回合上限处截断且回报文件 0 字节，本票禁止重复该缺陷。
+
+## 七、按 `UNITMAP_R10.md` 重分档后的修订（2026-10-08，主代理自有复跑）
+
+仪器修掉「嵌套 code object 按 repr 比较」与「跳转目标落在被剥离行锚 NOP 上无标签」两处缺陷后，
+本票名单与优先级如下（**取代 §一 的 A/B/C/D 分档；§二 的逐条字节事实仍是同一批证据**）：
+
+**`TARGET_ONLY` 8 条 ＋ `TRANSPOSED` 1 条 ＝ 9 条，零内容差**
+
+| 单元 | 文件读数 | hunk 形状 | 该档能否单独翻正文件 |
+|---|---|---|---|
+| `bar.BarData._history_bars` | 84/85 | 1 处 `IF_FALSE` 目标差 | **能** |
+| `strategy_universe.StrategyUniverse._on_clear_de_listed` | 10/11 | 1 处 `IF_FALSE` 目标差 | **能** |
+| `load_daily.<module>` | 26/27 | 1 处 `JUMP_FORWARD` 目标差（**曾被我误记为「20 处说不清的差」**） | **能** |
+| `strategy.Strategy.tick_worker_thread` | 26/27 | 4 处（其中 2 处是 ANCHOR 型，见下） | **能** |
+| `trade_info_utils.get_trade_status` | 37/41 | 1 处 | 否（同文件另有 #15 的 3 条与换位 1 条） |
+| `trade_live_broker.get_ipo_stocks` | 118/128 | 1 处 | 否 |
+| `trade_live_broker.rzrq_credit_order` | 118/128 | 1 处 | 否 |
+| `trade_live_broker._process_tick_order` | 118/128 | 1 处 ANCHOR 型（**曾被我误记为「仪器盲区」**） | 否 |
+| `trade_info_utils.kill_trade_process`（`TRANSPOSED`） | 37/41 | 2 处目标**互换**（`IF_NONE` 与 `IF_FALSE` 各取对方落点） | 否 |
+
+⇒ **本票首刀的靶面是「4 个整文件各差 1 条」**：`bar`、`strategy_universe`、`load_daily`、`strategy`。
+其余 5 条同判据面但不设翻正预期，只按名单记单元数。
+
+**ANCHOR 子形（`tick_worker_thread` 2 处、`_process_tick_order` 1 处）**：原始字节码里跳转落在一枚
+`NOP`（CPython 3.11 的行锚）上，产物把同一跳转落到锚点之后的第一条实指令——偏移不同即控制流不同，
+判据据此判失败是合理的。这一形**不是**「块选错」，而是「锚点的归属」：
+哪一块拥有这枚行锚，决定回边/越臂跳变的落点偏移。修法须由工程师以自己的探针证实
+（提示：与 `[R9-B125 loopheader-arm-exit-confluence]` 已处理的「臂出口＝区域 merge_block 接口」同一族，
+但那是 else 认领，这里是锚点归属；不得直接复用那段条件式当万能钥匙）。
+
+**换位形（`kill_trade_process`）**：两条跳转的目标互为对方的目标，说明两个候选汇合块都存在、
+只是被分配反了——判据必须能区分二者（一个在 handler 尾声之后、一个在其之前），
+单向规则「取最早/最晚」在此必然错一次（§二 已记 `get_ipo_stocks` 方向相反）。
