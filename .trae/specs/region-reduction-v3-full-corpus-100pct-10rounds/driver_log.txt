@@ -2378,3 +2378,399 @@ D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\l
 D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\oauthenticator\hsidOK.py:19: SyntaxWarning: "is" with a literal. Did you mean "=="?
   if hsid_login_url is '':
 
+=== verify shard0 rc=0 26.2s
+... 25/51  14s  units=6/6
+... 50/51  25s  units=9/9
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 786,
+ "units_success": 778,
+ "success_rate": 0.989821882951654,
+ "files_by_status": {
+  "success": 47,
+  "failure": 4,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 25.4
+}
+-> .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round8/after\shard0_report.json
+
+=== verify shard1 rc=0 15.3s
+... 25/51  11s  units=1/1
+... 50/51  14s  units=14/14
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 469,
+ "units_success": 464,
+ "success_rate": 0.9893390191897654,
+ "files_by_status": {
+  "success": 49,
+  "failure": 2,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 14.4
+}
+-> .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round8/after\shard1_report.json
+
+=== verify shard2 rc=0 8.9s
+... 25/51  3s  units=4/4
+... 50/51  8s  units=16/16
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 538,
+ "units_success": 537,
+ "success_rate": 0.9981412639405205,
+ "files_by_status": {
+  "success": 50,
+  "failure": 1,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 8.1
+}
+-> .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round8/after\shard2_report.json
+
+=== verify shard3 rc=0 14.1s
+... 25/51  8s  units=1/1
+... 50/51  13s  units=11/11
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 887,
+ "units_success": 884,
+ "success_rate": 0.9966178128523112,
+ "files_by_status": {
+  "success": 49,
+  "failure": 2,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 13.4
+}
+-> .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round8/after\shard3_report.json
+
+=== verify shard4 rc=0 15.9s
+... 25/51  6s  units=7/7
+... 50/51  15s  units=19/19
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 855,
+ "units_success": 852,
+ "success_rate": 0.9964912280701754,
+ "files_by_status": {
+  "success": 49,
+  "failure": 2,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 15.2
+}
+-> .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round8/after\shard4_report.json
+
+=== verify shard5 rc=0 16.8s
+... 25/51  7s  units=67/67
+... 50/51  16s  units=6/6
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 999,
+ "units_success": 994,
+ "success_rate": 0.994994994994995,
+ "files_by_status": {
+  "success": 47,
+  "failure": 4,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 16.1
+}
+-> .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round8/after\shard5_report.json
+
+=== verify shard6 rc=0 24.8s
+... 25/51  19s  units=23/23
+... 50/51  24s  units=4/4
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 801,
+ "units_success": 790,
+ "success_rate": 0.9862671660424469,
+ "files_by_status": {
+  "success": 49,
+  "failure": 2,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 24.0
+}
+-> .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round8/after\shard6_report.json
+
+=== verify shard7 rc=0 32.4s
+min\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\oauthenticator\hsidOK.py:19: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if hsid_login_url is '':
+
+=== verify shard0 rc=0 25.7s
+... 25/51  13s  units=6/6
+... 50/51  25s  units=9/9
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 786,
+ "units_success": 778,
+ "success_rate": 0.989821882951654,
+ "files_by_status": {
+  "success": 47,
+  "failure": 4,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 24.9
+}
+-> .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round8/after\shard0_report.json
+
+=== verify shard1 rc=0 15.1s
+... 25/51  11s  units=1/1
+... 50/51  14s  units=14/14
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 469,
+ "units_success": 464,
+ "success_rate": 0.9893390191897654,
+ "files_by_status": {
+  "success": 49,
+  "failure": 2,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 14.3
+}
+-> .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round8/after\shard1_report.json
+
+=== verify shard2 rc=0 9.7s
+... 25/51  3s  units=4/4
+... 50/51  9s  units=16/16
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 538,
+ "units_success": 538,
+ "success_rate": 1.0,
+ "files_by_status": {
+  "success": 51,
+  "failure": 0,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 8.9
+}
+-> .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round8/after\shard2_report.json
+
+=== verify shard3 rc=0 14.5s
+... 25/51  8s  units=1/1
+... 50/51  14s  units=11/11
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 887,
+ "units_success": 884,
+ "success_rate": 0.9966178128523112,
+ "files_by_status": {
+  "success": 49,
+  "failure": 2,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 13.8
+}
+-> .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round8/after\shard3_report.json
+
+=== verify shard4 rc=0 16.6s
+... 25/51  6s  units=7/7
+... 50/51  16s  units=19/19
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 855,
+ "units_success": 852,
+ "success_rate": 0.9964912280701754,
+ "files_by_status": {
+  "success": 49,
+  "failure": 2,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 15.8
+}
+-> .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round8/after\shard4_report.json
+
+=== verify shard5 rc=0 18.2s
+... 25/51  7s  units=67/67
+... 50/51  17s  units=6/6
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 999,
+ "units_success": 994,
+ "success_rate": 0.994994994994995,
+ "files_by_status": {
+  "success": 47,
+  "failure": 4,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 17.4
+}
+-> .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round8/after\shard5_report.json
+
+=== verify shard6 rc=0 25.4s
+... 25/51  20s  units=23/23
+... 50/51  24s  units=4/4
+{
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "interpreter": "3.11.7",
+ "files_total": 51,
+ "units_total": 801,
+ "units_success": 790,
+ "success_rate": 0.9862671660424469,
+ "files_by_status": {
+  "success": 49,
+  "failure": 2,
+  "compile_error": 0,
+  "error": 0
+ },
+ "elapsed_sec": 24.5
+}
+-> .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round8/after\shard6_report.json
+
+=== verify shard7 rc=0 31.5s
+min\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\oauthenticator\hsidOK.py:19: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if hsid_login_url is '':
+
+=== verify small34 rc=0 60.8s
+site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:196: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:\admin\.qoder\worktrees\app\f557fd\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:385: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+

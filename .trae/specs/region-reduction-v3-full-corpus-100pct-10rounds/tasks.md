@@ -151,10 +151,29 @@
     标记核查改用**前缀口径**（九枚标记实带「 修复·…」后缀，字面量 grep 计数为 0）；
     新追加 3 条臂虽绿但**不具变形判别力**，按残项登记而非计为成绩
 
-- [ ] Task 9: Round 8 — 残余清零冲刺（任何仍未转 success 的文件逐 pyc 处理）
-  - [ ] 9.1 测试工程师：按残余名单每次取 1 个 pyc，≥10 复现 + 逐项判据形态评估（可封闭 / 需证伪 + C1/C2/C3 归属）
-  - [ ] 9.2 修复工程师：封闭；不具备判据形态者按 wiki §8.3 证伪降级并记录机制
-  - [ ] 9.3 验证序六步 + push
+- [x] Task 9: Round 8 — 残余清零冲刺（任何仍未转 success 的文件逐 pyc 处理）
+  - [x] 9.1 测试工程师：按残余名单每次取 1 个 pyc，≥10 复现 + 逐项判据形态评估（可封闭 / 需证伪 + C1/C2/C3 归属）
+        → 四票取序：`flytools`(隐式尾 return 族) / `clock_worker` / `handlers` / NOP 族普查；
+          电池 `test_repros/round8` 25→29→**31 臂**（孤儿标本经形状核对后登记，非删除）
+  - [x] 9.2 修复工程师：封闭；不具备判据形态者按 wiki §8.3 证伪降级并记录机制
+        → **落地 1 枚**：`[R8-B121 sinkarms]`（`region_ast_generator.py`，G1–G6 逐边落点不发射）；
+          NOP 族**证伪**（语料 15 失败单元中纯 NOP 形 0 个：NOP 是行锚足迹不是缺陷）；
+          `clock_worker`／尾随 return-None 提升两票回滚（成因链被实测推翻）
+  - [x] 9.3 验证序六步 + push
+        → **主代理全量门禁抓到工单未报的附带回退**：`history_data_source.get_bars` 19/19→18/19
+          （两条 `else: return None` 臂体被误判为尾声落点；工单前提「显式 return None 必为汇合块」被证伪）。
+          主代理自行落地 **G7 出口携带门**（handler-epilogue 或前驱末 opcode = POP_TOP 才算落点，
+          块级 opcode 事实，无宿主类型特判），探针双向复算：`get_bars` 集合→∅、`flytools` 集合不变；
+          随后 **重跑完整门禁**：402 重生成 ok=402 bad=0 → 8 片判据 rc=0 →
+          units 6554→**6575/6617（99.3653%）**、files 369→**384/402**、对 Round 7 净 +1 单元 +1 文件、
+          **双向零回退**；quotation 153/153、quote_handler 79/79、ptradeAccount 137/137；
+          tests 六套件 277/2/2 同名单；七套电池 292 臂产物先删后重生成，读数零绿转红
+          （`r4` 77→79、`r8` 56/62）；IV.2 全过。
+          证据链：`rounds/round8/VERIFICATION.md`、留证 `rounds/round8/after_preG7_b121_only/`
+  - [ ] 9.4 残项（登记不作成绩）：**G7 无变形牙**——`r8b121_*` 六臂只打 G1–G6，
+        需补「else 臂唯一语句 = pure-none + 条件假边接入」正反两臂并验 stub-G7 变红；
+        `_probe_keep/_probe_strip`（`region_ast_generator.py:48342`）与 `_probe_*`（`region_analyzer.py:11451`）
+        为已落地判据的局部变量命名（`check_patch_patterns.py` PASS，不计残留），登记为清理项
 
 - [ ] Task 10: Round 9 — 402 全量终局复验（目标 units 6617/6617、files 402/402）
   - [ ] 10.1 八分片 regen + batch + compare（before = Task 1 基线），双门禁 REGRESSIONS=0 ∧ UNIT_REGRESSIONS=0
