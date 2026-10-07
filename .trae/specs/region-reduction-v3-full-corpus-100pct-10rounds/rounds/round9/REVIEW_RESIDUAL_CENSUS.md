@@ -286,3 +286,24 @@ C 轴里剔 NOP 后**只有 1 处配对不同**的六个单元（`_process_tick_
 两点仪器限定：单元名到 code object 仍按名字尾段匹配（同名多实例会错配，本表内 `calculate_di.<genexpr>`
 两条即属此情形）；`NORMALIZER_BLIND` 说明我的归一化丢掉了判据真正比较的某些事实，
 不能当作「这两单元没差别」。
+
+
+## XIII. §XII 的收紧复算（把「净多指令」桶里的搬运与真多出分开）
+
+§XII 用 opcode 多重集的**净值**分桶，把「先搬走一大批、再补回一小批」的单元也算进了 `CONTENT_EXTRA`。
+按 **insert / delete 分列**重算 42 个单元（同 HEAD 产物、同归一化）：
+
+| 严格分派 | 单元数 | 说明 |
+|---|---|---|
+| `NET_LOSS`（删多于插） | **16** | #13 省略族 |
+| `MIXED/REORDER`（插删相抵或纯重排） | **14** | #14 落点/重排族（含 §XII 的 12 个 `REORDER_ONLY`） |
+| `NET_EXTRA`（插多于删） | **7** | 其中 **5 个只多 1–2 条指令**（`check_frequency`、`get_individual_data`、`get_tick_direction`、`get_real_minute_kline`、`filter_desicion`），形如多一个 `LOAD_CONST None` 之类 ⇒ **归 #15 隐式尾声面**；另 2 个是重排量大（`get_history_df` ins=4、`_sync_worker` ins=174/del=140） |
+| `JUMP_KIND_SWAP`（IF_TRUE↔IF_FALSE 类互换） | **3** | #18 极性轴（比 §XII 估的 2 个多 1） |
+| `NORMALIZER_BLIND` | **2** | 我的归一化看不见其差别（常量身份/行号表面），不得当作无差别 |
+
+合计 16+14+7+3+2 = **42**，互斥完备。
+
+**自我纠正两处**：① §XII 的「9 个净多指令单元」在分列 insert/delete 后是 **7**，且其中只有 5 个是真正的
+少量多发射，应并入 #15 而不是自成一大族；② 极性等桶由 2 修正为 **3**。
+排产含义不变的一点是硬的：**#14 的可达上限就是 14 个（其中 12 个连多重集都相同）**，
+剩下 28 个必须靠 #13/#15/#18 或尚未立案的 `NORMALIZER_BLIND` 两单元。
