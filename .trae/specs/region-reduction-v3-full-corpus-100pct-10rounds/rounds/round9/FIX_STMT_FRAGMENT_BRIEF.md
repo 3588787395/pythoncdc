@@ -180,3 +180,22 @@
 **变形牙**（必须做，否则臂不成立）：把新判据 stub 成恒不成立 → `r9s13_01/04/06` 必须转红；
 把新判据放宽为"凡有 STORE_SUBSCR 即重建" → `r9q_19/22` 或 `r9q_07` 必须转红。
 两侧都要红过，才证明判据既必要又不越界（deform 要打在守卫本体，不是打在它的打印标签上）。
+
+
+## 附：18 个 LOSS 单元的签名全景（`routing3`+签名聚类，主代理只读实测）
+
+签名取自「原码有、产物无」的 opcode 计数（−缺失/+多出）：
+
+| 簇 | 单元 | 缺/多 | 归属 |
+|---|---|---|---|
+| **A1 体吞并**（−467/−295/−113 级） | `trade_live_broker._process_order` −467/+2、`_process_cancel_order` −295/+2、`realtime_event_source.clock_worker` −113/+0 | 巨大 | #14 已证「体回来但仍差 28–32 处」；本簇与重排耦合 |
+| **整条语句省略**（`call_stmt`，无 subscr/boolop 特征） | `order_api.option_order` −39、`future_order` −27、`quote.run_individual_transform` −53/+1 | 27–53 | **#13 主面** |
+| **boolop `and` 支腿丢失**（≥2 个 `COMPARE_OP` 缺失） | `wizard_quant_api` 两个 `calculate_di.<genexpr>`（各 −14）、及上两行的复合形 | 中 | #13 |
+| **下标赋值裸发射**（`STORE_SUBSCR` 缺） | `quote.build_current_period_df` −11/+1 | 11 | **#13（计数门 `MIN_INSTRS_FOR_SUBSCR_ASSIGN`）** |
+| **切片成员测试整句消失**（`BUILD_SLICE` 缺） | `matcher.DefaultMatcher.match` −10/+0 | 10 | #13（`('688','689')` 与 `('300','688','689')` 同形不同常量被吞） |
+| **隐式尾声只缺 2 条**（`LOAD_CONST`+`RETURN_VALUE`） | `handlers.TWHThreadController._target` −2、`risk_calculation._save_testds_to_csv` −8/+1 | 2 / 8 | **→ #15**，不属 #13 |
+| **未定性小差**（−1 到 −12，无签名特征） | `trade_info_utils.query_strategy_id` −1、`trade_live_broker.ipo_stocks_order` −1、`etf_purchase_redemption` −12、`_trade_status_handle` −6/+3、`_sync_worker` −9/+6、`quote.get_real_from_zeromq` −5/+3、`risk_calculation._on_publish_after_trading_end` −4 | ≤12 | **无归属**：须逐单元查具体块，禁止当成 #13 的既有战果 |
+
+⇒ #13 真实可主张的面是 **call_stmt 3 + boolop 2 + subscr 1 + slice 1 = 7 单元**（外加 2 个复合形与 A1 簇的耦合部分），
+不是「18 个 LOSS 全归我」；`tail_return` 2 单元归 #15，剩下 **7 个小差单元无人认领**，
+需在落点票落地后重跑本聚类再分派。
