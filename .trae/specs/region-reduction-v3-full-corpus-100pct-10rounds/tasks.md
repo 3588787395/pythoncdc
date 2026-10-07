@@ -95,6 +95,22 @@
 
 - [ ] Task 6: Round 5 — Different bytecode 残余（quote 84/92 的 8 单元 + trade_live_broker 的 3 个 bytecode 单元）
   - [ ] 6.1/6.2/6.3 同构；bytecode 差异必须回到发射层归约正确性，禁止字面拼装
+  - **本任务仍未执行——如实保持未勾**。第 5 轮（`rr-v3r05`）按「轴切换」纪律改打了**相邻隐式 None 出口 sink 归属轴**，
+    未触碰本任务的 bytecode 残余靶（现值：`quote.pyc` 86/92、`trade_live_broker.pyc` 118/128，其中 3 个 Different bytecode 单元在册）。
+  - 第 5 轮实际成果（详见 `rounds/round5/VERIFICATION.md`）：7 张工单 = **2 落地 / 5 整批回滚**；
+    落地 1＝B116 分析端 boolop 链 sink 归属 → `trading_dates_mixin` 14/14、`stock_position` 37/37；
+    落地 2＝**B119 循环/for-iter 出口 sink 落点 → `fly/data/quotation.pyc` 152/153 → 153/153 status=success**
+    （本规范点名锚点文件首次整文件 100%，B102 关闭；含变形反证与逐指令 orig=203/cand=203/posdiff=0 复核）；
+    回滚 5 张均为「守卫命中而零翻转」当场否决（633 调用/12 True/0、0+4 命中/0、or-run 完整 7 命中/0、
+    α/β/γ 形 −387 变差当场删、父边级联 9 次重挂/0 翻转且 v1 曾重新打开绿单元 r1_42 被当场拦下）；
+    主代理自己提出的 `LoopRegion exit=` 假设被工单**实测否证**（`Region.exit` 生成端零消费者、补交付后全局读数一字不变）
+  - 第 5 轮全量读数：units 6554→**6572/6617（99.3199%）**、files 369→**381/402**、compile_error/error 0、
+    对基线与对 Round 4 终态双向 **REGRESSIONS=0 ∧ UNIT_REGRESSIONS=0**；电池 r1 108/110、r1_regress 34/34、
+    r4 77/87（40 臂 30/10）、r2v3 105/126、r3 101/122；tests 277/2/2 同名单；IV.2 全过；
+    语料残局 **21 文件 / 45 单元**；轮门禁（≥1 语料 pyc 转完全 OK）以锚点文件达成
+  - 纪律增量（写入 `rounds/round5/VERIFICATION.md` §III）：外层命令 timeout 必须大于被包工具内部 290s 上限
+    （我两次把 timeout 设小，逐片被杀且无产出，守卫如实报 fatal 而非留下陈旧读数）；gate 一律单链串行；
+    同一轴连续 2-3 张零翻转即换轴，残差收窄是信息不是进度
 
 - [ ] Task 7: Round 6 — 大损失文件（trade_live_broker 118/128 剩余 control-flow 单元）
   - [ ] 7.1/7.2/7.3 同构
