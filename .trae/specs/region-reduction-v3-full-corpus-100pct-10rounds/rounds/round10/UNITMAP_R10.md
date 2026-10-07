@@ -320,3 +320,35 @@ Round 9 的 `rounds/round9/FIX_BODY_SWALLOW_BRIEF.md` 已把这一形的**根因
   **具名-语句**＝能读回一条源语句且知道丢/错在哪个构造；
   **半具名**＝能读回语句但宿主未定位，或只知形状；
   **未具名**＝只有计数。本档现计 **具名 33 / 半具名 7 / 未具名 0 = 40** ✓。
+
+## 十三、新机制：**f-string 字面量被拼进无关标识符**（并撤销我给该单元起的旧名）
+
+`etf_purchase_redemption` 我先前两次记作「属性链截断」（`FIX_STMT_FRAGMENT_BRIEF.md` 附二/附三亦如此）。
+**那个名字是错的**。逐 hunk 读回时产物侧出现一枚奇怪的整块常量，直接查产物源码即坐实：
+
+```
+site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py:1592
+    return f"list_info00orderstrresultentrust_noselforderorderselfstrorderselforderselforderstrategy_log_生成订单，订单号：{order!s} 代码：{order!s} 数量：order{…}"
+```
+
+`ast` 级核验（同一解释器 `compile` 产物源码后遍历 `JoinedStr`）：该 `f-string` 的**字面量前缀**是
+`'list_info00orderstrresultentrust_noselforderorderselfstrorderselforderselforderstrategy_lo…'`
+（101 字符，由周边代码的变量名 `list_info/order/str/result/entrust_no/self/strategy_log` 拼成），
+而**原始 pyc 里对应常量只有 `'生成订单，订单号：'`**（`ORIG len>60 字符串常量条数=0`）。
+⇒ 不是少发语句，是**字面片段的切片/拼接错**：真实字面被留在尾部，前缀被灌进别处的标识符文本。
+
+**全量扫面（407 产物，判据：`JoinedStr` 的字面片段 ≥40 字符且不含任何空白与常见标点）**：
+命中 **2** 处／2 文件——本处，加 `fly/simtradding/pboxAccount_jupyterhubOK.py:86`
+（该处为中文标点串 `'】在其他地方登录过，重新登录，jupyterhub缓存账户信息中op_station：'`，
+是我扫描正则未列 `】` 造成的**假命中**，其所在单元读 Equal）。
+⇒ **本机制在全语料只伤这 1 个单元**，不是系统性错误；但也因此它是那 1 单元的唯一真因。
+
+**宿主候选（HEAD 实测，须由工程师证实何者）**：f-string 的 `FORMAT_VALUE/BUILD_STRING` 名单被抄成三份
+（`:13492`、`:13521`、`:13546`），另有两处「无 `FORMAT_VALUE` 就清空 `pre_instrs`」的启发式
+（`:17247` 段注释与其代码、`:17594 _has_format_value`）。清空/切片任一处越界，都会把**相邻上下文的
+指令 argrepr 当作字面量拼进串里**。要求：先做能复现该 101 字符前缀的最小臂，再逐份验证三名单与两启发式；
+修成**一条 f-string 片段装配谓词**（不得再抄第二份），并按 `rules.md` 检验「清空」是否有封闭守卫。
+
+**连带撤销**：本档 §十一 表里 `etf_purchase_redemption` 的「纯属性链截断」判读、
+`FIX_STMT_FRAGMENT_BRIEF.md` 附二/附三对该单元的同名标注，一律以本节为准。
+档位变更：该单元由「半具名」升为**具名-语句（宿主候选已列）**——升档依据是上面那条 `ast` 级证据，不是感觉。
