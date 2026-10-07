@@ -352,3 +352,26 @@ site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py:1592
 **连带撤销**：本档 §十一 表里 `etf_purchase_redemption` 的「纯属性链截断」判读、
 `FIX_STMT_FRAGMENT_BRIEF.md` 附二/附三对该单元的同名标注，一律以本节为准。
 档位变更：该单元由「半具名」升为**具名-语句（宿主候选已列）**——升档依据是上面那条 `ast` 级证据，不是感觉。
+
+## 十四、再收三条：「N 处目标差」常常只是**一次位移**
+
+判据（本轮新加的机械检查）：把每条目标差的 `orig 目标偏移 − prod 目标偏移` 求出来，
+**若全等于同一个常数，则它们不是 N 个缺陷，而是 1 个「插入/删除了一条 k 字节指令」的下游影子**。
+
+| 单元 | 目标差数 | 实测位移 | 真身 |
+|---|---|---|---|
+| `real_quote.get_tick_direction` | 11 | **全部 −2 字节**（如 `RETURN_VALUE@1572→@1574`、`LOAD_FAST redata@1102→@1104`） | 函数前部**多插了一条 2 字节指令**（`net = del 11/ins 12` 与之一致）⇒ **1 个缺陷**，不是 11 个 |
+| `quote.get_real_from_zeromq` | 31 | 混合：部分 −2（同为位移影子），部分是**真落点差** | 真差处读回：`@174 JUMP_FORWARD` 与 `@178 POP_JUMP_FORWARD_IF_FALSE` 应进 `POP_TOP; LOAD_CONST None; LOAD_FAST flag; BUILD_TUPLE 2; RETURN_VALUE`＝**共用尾 `return None, flag`**，产物在该块前**多插了一条 `JUMP_FORWARD@1024→1034`** 把两条入边都从返回块前跳过去 |
+| `wizard_quant_api.filter_desicion` | 1 | 真差 | `POP_JUMP_FORWARD_IF_NONE` 应落 `LOAD_CONST None; RETURN_VALUE`（即源码 `if x is None: return`），产物落到 `…RETURN_VALUE; LOAD_CONST None; RETURN_VALUE` 的**尾部**，并在函数末多出一对 `LOAD_CONST None/RETURN_VALUE` |
+
+⇒ 三条并流：**`get_real_from_zeromq` 与 `filter_desicion` 属 #15 的「共用返回尾未被进入／尾部被重复内联」**，
+`get_tick_direction` 属「单条多余指令」型（宿主未定位，但靶面已从 11 缩到 1）。
+
+**票面变更（按 §十三 之后的再核对）**：#15 名单 **7 → 9 单元**
+（新增 `quote.get_real_from_zeromq`、`wizard_quant_api.filter_desicion`）；
+#14 剩 `get_tick_direction`（1 缺陷型）与 §七/§八 各形；`quote`（86/92）与 `wizard_quant_api`（55/58）
+的翻正因此**更可能由一条 #15 判据推动**，但仍各需 6 条／3 条齐闭合，不设翻正承诺。
+
+**方法固化**：今后任何「目标差计数」入档前，先做常数位移检验；
+未做该检验就写「N 处落点错」＝把一次位移摊成 N 个虚构缺陷（本轮我差点在 `etf_basket_order` 上这么记，
+后以块级置换改正，见 §十二）。
