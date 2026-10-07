@@ -268,3 +268,40 @@ Round 9 的 `rounds/round9/FIX_BODY_SWALLOW_BRIEF.md` 已把这一形的**根因
 先应用 #16 共要件补丁（结构改判 `while True:`），再按 A1 的判据（候选 merge 块若为父 `LoopRegion` 的
 `back_edge_block`／其前导块则不得认领）恢复被吞的 23 枚块，二者缺一即本档实测的
 465/293/3 条差额原样存在。**任何一票单独宣称能翻正这三条单元，都与本表矛盾。**
+
+## 十二、最后两条未具名单元的块级读回 ⇒ **40 条全部有可读源语句**（宿主定位另计）
+
+`blkdiff` 逐块签名差（块数与尾类型同看，避免把「分区不同」误记成「丢块」）：
+
+**`quote.run_tick_socket`**（orig 12 块 / 343 条 → prod 13 块 / 344 条）
+
+| 侧 | 块 | 读回的源语句 |
+|---|---|---|
+| ORIG-ONLY | `@1190 n=46`（末 `JUMP_FORWARD`） | `message[stocks[-1]]` 起的一整段（`BINARY_SUBSCR / LOAD_CONST -1 / BINARY_SUBSCR …`） |
+| PROD-ONLY | `@1034 n=18` ＋ `@1032 n=1`（`JUMP_FORWARD`） | 同一段**被压成 18 条** ⇒ 约 27 条实际丢失 |
+| ORIG-ONLY | `@528 n=24`（末 `RETURN_VALUE`） | `self.log.quote.warning('tick数据返回为空') … return` |
+| PROD-ONLY | `@1122 n=52` | 同一 warning 块**与后续块合并**（24 → 52）且位置后移 |
+
+⇒ 机制＝**基本块分区/合并错**（不是单纯落点错）：产物把「warning 后返回」的块与后续合并，
+又把另一段截半。合并与截半都源于发射边界选错，属 #13/#14 的交界面，宿主未定位。
+
+**`trade_live_broker._sync_worker`**（orig 23 块 / 404 条 → prod 24 块 / 401 条）
+
+| 侧 | 块 | 读回的源语句 |
+|---|---|---|
+| ORIG-ONLY | `@704 n=59` | `time.sleep(60)` 起的一整块（本轮此前只知「链式比较腿丢失」的形状） |
+| ORIG-ONLY / PROD-ONLY | `@232 n=53`（末 `JUMP_FORWARD`）→ prod `@232 n=39`（末 **`RETURN_VALUE`**）＋ prod `@1400 n=39` | 同一块的**前半被塞进一个 return 后切断**，余下内容被推到远处新块 |
+| ORIG-ONLY / PROD-ONLY | `@2378 n=14`（`if sync_data_flag: self.sync_account()`）→ prod `@1982 n=19` | 该条件块被改写扩张 |
+
+⇒ 机制＝**块中 premature 返回（返回尾被提前，正是 #15 面）＋ `time.sleep(60)` 整块丢失（#13 面）** 的叠形。
+
+### 收尾断言（写明它**不**意味着什么）
+
+- **未具名者＝0**：40 条单元逐条都能读回**具体源语句或具体构造**（本轮最后两条补齐）。
+- 这不等于修法已知：**宿主函数未定位的仍有 7 条**——`_process_order`/`_process_cancel_order`/`_trade_status_handle`
+  （截断，宿主即 A1 的认领面，待工程师定位）、`etf_purchase_redemption`、`_sync_worker`、
+  `run_tick_socket`、`_save_testds_to_csv`（形状已读回，发射端宿主未定位）。
+- 档位定义就此固定，避免以后再漂移：
+  **具名-语句**＝能读回一条源语句且知道丢/错在哪个构造；
+  **半具名**＝能读回语句但宿主未定位，或只知形状；
+  **未具名**＝只有计数。本档现计 **具名 33 / 半具名 7 / 未具名 0 = 40** ✓。
