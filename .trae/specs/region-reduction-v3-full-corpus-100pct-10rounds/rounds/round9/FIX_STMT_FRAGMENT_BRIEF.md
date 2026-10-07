@@ -1,10 +1,41 @@
-# Round 9 ticket #13 简报：A2「语句碎片化」族（6 个单元，主代理实测定位）
+# Round 9 ticket #13 简报：A2「语句省略」族（HEAD 机制口径 6 个单元，主代理实测定位）
+
+## 靶面修正：以 HEAD 字节重测「省略 vs 挪位」（写盘一次，口径明示）
+
+口径：`.pyc` 输入不在 git 内（`.gitignore: *.pyc`），但**输入从不被重写**，故直接读盘；
+产物一律取 `git show HEAD:<path>` 到 `D:/Temp/r9main/headstate/`，**不读工作树**
+（`r9-fix-ifregion-boundary` 正在改生产码并重生成 `trade_live_brokerOK.py`——
+我一度用工作树读数，同一函数在两条命令之间从 42 条指令变成 463 条，那张表随即作废）。
+序列剔 `NOP/CACHE/EXTENDED_ARG`、嵌套 code object 归一为 `<co>`，再按 difflib 统计删除段与插入段：
+
+| 单元 | 指令数 orig/prod | del | ins | 差块数 | 形状 | 归属 |
+|---|---|---|---|---|---|---|
+| `_process_order` | 507/42 | 470 | 5 | 5 | **OMISSION** | #13 |
+| `_process_cancel_order` | 333/40 | 299 | 6 | 3 | **OMISSION** | #13 |
+| `option_order` | 94/55 | 42 | 3 | 4 | **OMISSION** | #13 |
+| `future_order` | 115/88 | 30 | 3 | 4 | **OMISSION** | #13 |
+| `run_individual_transform` | 407/355 | 84 | 32 | 21 | **OMISSION** | #13 |
+| `_sync_worker` | 404/401 | 192 | 189 | 18 | **DISPLACEMENT** | → 移交 #14 |
+| `_trade_status_handle` | 127/124 | 18 | 15 | 11 | **DISPLACEMENT** | → 移交 #14 |
+| `build_current_period_df` | 123/113 | 17 | 7 | 6 | **OMISSION** | #13（虽属"首分歧＝落点"集） |
+| `get_individual_data` | 351/352 | 13 | 14 | 14 | **DISPLACEMENT** | → 移交 #14 |
+
+判据：`min(del,ins) ≥ 0.5·max(del,ins) ∧ max ≥ 10` 记 DISPLACEMENT（大块挪位），否则 OMISSION。
+⇒ **#13 按机制的靶面是 6 个单元**：`_process_order`、`_process_cancel_order`、`option_order`、
+`future_order`、`run_individual_transform`、`build_current_period_df`（后者首分歧虽是落点，
+但 del 17 / ins 7 是净缺失，且它的宿主计数门正是本案要修的 `MIN_INSTRS_FOR_SUBSCR_ASSIGN`）。
+`_sync_worker`、`_trade_status_handle`、`get_individual_data` 三个删除段≈插入段，
+是**大块被重新排位**，属 #14 的落点/边界轴；把它们留在 #13 会让工单去"补语句"，而真正缺的是排位。
+先前作废表里 `_process_cancel_order` 被判为 DISPLACEMENT，也是同一污染所致——HEAD 口径为 OMISSION。
+`wizard_quant_api.calculate_di.<genexpr>` 两条仍不在本表（首分歧是落点，见 `REVIEW_RESIDUAL_CENSUS.md` §IX）。
 
 ## 与 #14 的关系（不得并案）
 
-`#14` 是**区域边界**错（臂把汇合块之后的块吸进来，回边锚点偏早）；本案所有失败都不需要动区域
-成员关系——区域划分在探针里是对的，**丢内容发生在把块内指令重建为语句的那一步**。
-两案共同上界约 11 + 6 ＝ 17 个单元，占残差 42 的四成。
+`#14` 是**区域边界/落点**错（臂把汇合块之后的块吸进来、回边锚点偏早）；本案 5 个单元是
+**内容根本不产出**——区域划分在探针里是对的，丢的内容发生在把块内指令重建为语句的那一步。
+两个口径要分清，不得混用：按「首处分歧」二分是 35 落点 / 7 内容；按「机制」分（本表 del≈ins 判据）
+是 **#14 36 个（35 落点 − `build_current_period_df` + `_sync_worker` + `_trade_status_handle` + `get_individual_data`）/ #13 6 个**，两数互斥且相加＝42。
+先前写的「11 + 6 ＝ 17」是按互斥桶估的旧数，已被 `REVIEW_RESIDUAL_CENSUS.md` §IX 与本表取代，不再引用。
 
 ## 共同形状（三处独立实测，同一宿主）
 
