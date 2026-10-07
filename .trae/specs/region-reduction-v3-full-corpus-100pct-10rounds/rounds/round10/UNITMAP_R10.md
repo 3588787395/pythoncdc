@@ -92,3 +92,43 @@
 不是省略证据。⇒ 这两条改归 **#14 的细粒度落点/排位面**，
 派 #13 系票时**不得**把它们写进名单（先前我的 `FIX_OMISSION_R10_BRIEF.md` 未列它们，无须订正；
 此处只钉住「EXTRA ≠ 省略」这条分类学事实，防下一次按桶名派票）。
+
+## 六、类的**定义**改正：桶名不再等于工单（净条数与 hunk 大小都只是代理量）
+
+§一/§五 暴露出同一个毛病两次：`LOSS`/`EXTRA` 是按**净条数**分的，于是
+**纯搬位**（块从 A 处挪到 B 处）也被记成省略或多出。故 `unitmap.py` 的分类键改为
+「**是否存在 ≥4 指令的多指令 hunk**」，净条数降为子标签：
+
+| 新类 | 数 | 定义 | 工单含义 |
+|---|---|---|---|
+| `FINE_LANDING` | **20** | 无任何 ≥4 指令 hunk | 落点/排位面（#14 与其邻面）；**注意：仍可能含 ≤3 指令的小内容差** |
+| `FINE_TRANSPOSED` | 1 | 同上且两条位移互取对方落点 | `kill_trade_process` |
+| `CONTENT_OMISSION` | **11** | 多指令 hunk 删多于插 | #13/#21/#22 池 |
+| `CONTENT_SPREAD` | 2 | 多指令 hunk 插多于删（摊开/搬位） | `kline_datetime_list`、`get_history_df` 一类 |
+| `CONTENT_MIXED` | 4 | 多指令 hunk 收支相抵 | 须逐单元读机制 |
+| `COPY_AMBIG` | 2 | 同路径副本不唯一 | 已定标（§四），按 `#21` 开票 |
+
+**关键自我限制（写下来防再犯）**：`FINE_LANDING` **不等于**「无内容差」。
+本档 §一 曾把 `handlers._target` 判成「看不见」、§五 曾把 `real_quote` 两条判成「省略」，
+两次都是把代理量当机制。现给 `FINE_LANDING` 内部按 `net = del − ins` 列出**带小内容差**的单元，
+供工单认领时复核，而非由类名推定：
+
+| 单元 | net | 实测小内容差 | 认领票 |
+|---|---|---|---|
+| `handlers.TWHThreadController._target` | **+2** | 一对 `LOAD_CONST None/RETURN_VALUE` 未发（`orig[75:77]`） | **#15** |
+| `trade_info_utils.query_strategy_id` | **+1** | 一处 `JUMP_FORWARD → 共用尾` 被写成内联 `LOAD_CONST None; RETURN_VALUE`，且另一处共用尾 2 条未发 | **#15** |
+| `trade_info_utils.query_trade_strategy_info` | **0** | 两处内联（各 +1）与一处共用尾缺失（−2）相抵 ⇒ **净 0 不等于无缺陷** | **#15** |
+| `wizard_quant_api.filter_desicion` | −2 | ≤3 指令的小摊开 | #14 邻面，派单前逐读 |
+| `klinedata.get_multiminute_his_data` | −1 | 同上 | 同上 |
+| `quote.check_frequency` / `quote.get_individual_data` | −1 / −1 | 同上 | 同上 |
+| `real_quote.get_real_minute_kline` | −2 | 同上 | 同上 |
+| `trade_live_broker.ipo_stocks_order` | +1 | 35 处目标差 + 1 条净少 | #14（D 档禁按 35 记账） |
+
+其余 11 条 `FINE_LANDING`（`load_daily.<module>`、`bar._history_bars`、
+`strategy_universe._on_clear_de_listed`、`strategy.tick_worker_thread`、
+`get_trade_status`、`get_ipo_stocks`、`rzrq_credit_order`、`_process_tick_order`、
+`get_kline_by_count_new` 等）`net=0` 且只由同 opcode 目标/锚点位移构成 ⇒ **#14 的纯落点名单**。
+
+⇒ **本表是工作清单，不是分派表**：票面归属一律由 §二/§四/§五 的**具名机制**决定；
+类名只用于排序与覆盖检查。（`matcher.DefaultMatcher.match` 一行在 #13-P0 工程师重生成产物期间可能瞬时失真，
+本档结论不依赖它——该单元已由 §一 具名为「一条被吞的切片成员测试」。）
