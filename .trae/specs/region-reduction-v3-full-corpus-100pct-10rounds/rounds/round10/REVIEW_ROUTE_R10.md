@@ -75,6 +75,13 @@
 3. **同路径歧义必须人工定标**：`calculate_di.<genexpr>` 的 3 个副本共享 qualname 路径，
    最佳匹配在此无效（`ratio` 全等时配对结果不可复现）。分派前要先用出现次序定标。
 
+4. **本表的 `LANDED_TARGET` 不等于「归 #14」**。逐内容差复跑后改判：
+   `trade_info_utils.query_strategy_id` 与 `query_trade_strategy_info` 的真差是**共享隐式尾声 epilogue
+   未被认成单一落点**（产物逐路内联 `LOAD_CONST None/RETURN_VALUE`、共用尾不发），与
+   `handlers.TWHThreadController._target` 同一判据面 ⇒ 三条并入 **#15**；本表把它们列在
+   `LANDED_TARGET` 是链序（先查 hunk 形状再查语义）所致，**分派以 #15 简报为准**。
+   `trade_info_utils` 剩下两条（`get_trade_status` 纯目标偏移、`kill_trade_process` 两跳转目标换位）仍属 #14。
+
 ## 四、与轮门禁的关系（Round 10 交付路径）
 
 盘上「只差 1 单元」文件 8 个，恰分为 **4 + 3 + 1**：
