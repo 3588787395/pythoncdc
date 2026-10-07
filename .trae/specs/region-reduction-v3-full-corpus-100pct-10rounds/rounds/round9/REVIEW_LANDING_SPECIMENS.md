@@ -1,0 +1,43 @@
+# Round 9：落点轴两个紧标本的逐指令与行号取证（只读，未下语义结论）
+
+仪器：stdlib only（marshal + dis + compile + co_lines），**不导入 core**，
+因 `r9-fix-ifregion-boundary` 可能随时写 `region_analyzer.py`。
+两例均属 `REVIEW_RESIDUAL_CENSUS.md` §IX 的「整条 opcode 序列相同、只有跳转目标不同」11 例。
+
+## 标本 1 `IQEngine/core/bar._history_bars`（66/66 指令，第一差块＝#27 的目标）
+
+```
+        #24 LOAD_ATTR frequency      #25 LOAD_CONST '1m'   #26 COMPARE_OP ==
+ORIG  #27 POP_JUMP_FORWARD_IF_FALSE  to 140   src_line=394
+PROD  #27 POP_JUMP_FORWARD_IF_FALSE  to 304   src_line=287
+        #28 LOAD_FAST frequency  #29 LOAD_CONST '1d'  #30 COMPARE_OP ==
+        #31 POP_JUMP_FORWARD_IF_TRUE  to 206（两侧相同）
+```
+
+关键旁证：ORIG 的 #24..#31 **全在源文件同一行 394**；PROD 把 #24..#27 放在 287 行、
+#28..#31 放在 **288 行**——即产物把一个原本写在单行的 `… == '1m' or … == '1d'` 拆成了两行，
+且第一条短路边落点从 140 变成 304。**其余指令与第二个测试的目标完全一致。**
+
+## 标本 2 `IQEngine/core/strategy/strategy_universe._on_clear_de_listed`（70/70，差块 #19）
+
+```
+ORIG  #18 LOAD_FAST i (104)  #19 POP_JUMP_IF_FALSE to 156  #20..#25 i.delisted_date > trading_dt (104)
+      #26 POP_JUMP_IF_TRUE to 198   #27..#32 de_listed.add(o) 在 off 156（即 #19 的假边落点＝体首）
+      #33 JUMP_BACKWARD to 44       #34 LOAD_FAST de_listed (106)
+PROD  #18 LOAD_FAST i (77)   #19 POP_JUMP_IF_FALSE to 198  #20..#25 同上 (78)
+      #26 POP_JUMP_IF_TRUE to 198   #27..#32 同体（off 156）
+      #33 JUMP_BACKWARD to 44       #34 同上
+```
+
+即：**两例都只差"第一个操作数的短路边落在哪个块"**，回边锚点、第二测试目标、体与后续块都逐位相同；
+行号上 ORIG 是单行（104）、PROD 把它摊成 77/78/79 多行。
+
+## 尚未下的结论（留给 #14 工单，禁止照抄本节的形状猜测）
+
+- 两例的 `#19/#27` 假边方向与原码布尔结构（`and` / `or` / `not` 的组合与短路次序）之间的关系，
+  我没有用源码或区域模型证实；本节只保证**指令与行号事实**。
+- 标本 1 的 140→304 与标本 2 的 156→198 是否同一个判据（`BoolOpRegion` 成员边 vs `IfRegion` 汇合块）
+  **未知**。`region_ast_generator.py` 里已有 `[R3-B109 elif 臂 or 链成员真边同一性核验]` 三处，
+  工单应先 grep 这些既有标记，确认本案是否本就归它们管（禁止另立第二真相源）。
+- 行号摊开（单行→多行）可能与发射端的语句拆分有关，但行号不是判据的比较对象，
+  不得据此立票。
