@@ -69,7 +69,7 @@ difflib 在对齐错位后把不同语句配成一对，才显出「操作数反
 教训与本 campaign 的 truncation 教训同源：**hunk 的配对身份必须由语句/行号证据确立，不能由对齐算法代证**。
 只看 `replace 5→5` 的形状就写机制，等于让仪器替我下结论。此单元今后不得再用「极性」立案。
 
-## 五、B134 档里一处**不可能成立**的读数，暂不采信
+## 五、B134 档里一处**不可能成立**的读数（已裁定：status 为转写误差，units 属实）
 
 `DIAG_B134_TARGET_ONLY_LANDING.md` §2.2 的 oracle 实验写：
 `bar.pyc → status=failure units=85/85 success_rate=100.00%`、`strategy_universe.pyc → status=failure units=11/11`。
@@ -86,3 +86,6 @@ difflib 在对齐错位后把不同语句配成一对，才显出「操作数反
 （`units_success < units_total` 即算残余）。若允许「85/85 但仍 failure」这种自相矛盾的读数进入工单，
 下一轮就会出现按不存在的状态开票的空转——B129/B132/B127 三票空转的成因都是「读到的形状对了，宿主错了」，
 这次是「读数本身不可能成立」，性质更严重，须在采信前拦截。
+
+**裁定（05:21 我自己重跑）**：`bar.pyc` 用同一处单语句改形的 scratch 副本判出 **status=success units=85/85 rc=0**，
+故 `units=85/85` 属实、`status=failure` 是抄写误差；见 `MEASURED_FLIPS.md` §3。

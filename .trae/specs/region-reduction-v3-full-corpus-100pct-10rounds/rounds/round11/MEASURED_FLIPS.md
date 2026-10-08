@@ -33,3 +33,31 @@
 4. 跑整链路 `gate_round.py 11 10 --stage regen/verify/report/checks` + `residual_report.py 11 10`，
    `regen` 若非 `ok=402 bad=0` 则**先 stat 产物尺寸再读 report**（本轮 9 单元假回退即出自 99 字节残次产物）；
 5. 四项门禁必须为 0 才记翻正；任一哨兵回退即按 sha256 逐字节回滚并把证据留档。
+
+## 3. B139 前置 oracle — 我亲自复现 `IQEngine/core/bar.pyc` **85/85 status=success**
+
+时间 2026-10-08 05:21。做法：把封表产物**复制到 `D:/Temp/r139mine/barOK_oracle.py`**（仓内产物未动，
+`git status --porcelain -- site-packages/` 复验为 0），只改一处语句：
+
+```
+改前（产物现形，嵌套）：
+    if engine.config.strategy.frequency == '1m':
+        if frequency == '1d' or ExecutionContext.phase() == ExecutionPhase.BEFORE_TRADING_START:
+            dt = engine.data_proxy.get_previous_trading_date(engine.calendar_dt.date())
+
+改后（原语形，单一 BoolOp 测试）：
+    if engine.config.strategy.frequency == '1m' and frequency == '1d' or ExecutionContext.phase() == ExecutionPhase.BEFORE_TRADING_START:
+        dt = engine.data_proxy.get_previous_trading_date(engine.calendar_dt.date())
+```
+
+判据：`pyc_verify single site-packages/IQEngine/core/bar.pyc --source D:/Temp/r139mine/barOK_oracle.py`
+→ **`status=success units=85/85 success_rate=100.00%`，rc=0**。
+
+结论与含义：
+1. `_history_bars` 的差**不是落点选择错**，而是把 `(A and B) or C` 渲染成了 `if A: if B or C:`——
+   两者**语义不等**（`A and (B or C)` ≠ `(A and B) or C`），所以 opcode 序列不变而跳转目标全变，
+   这才在我先前的 TARGET_ONLY 分类里伪装成「纯落点」。分类键只说「同 opcode 仅目标不同」，
+   并不说宿主是落点选择器——又验证一次「形状≠机制」。
+2. 整文件只差这一条语句 ⇒ bar.pyc 是**第二个可翻正文件**，且目标形状已被 oracle 钉死为唯一一处。
+3. 顺带把 §五 那条不采信记落成结论：B134 的 `units=85/85` 是对的，`status=failure` 是转写误差
+   （判据 :129 使 failure 与 85/85 不可共存，我实测的正是 success）。
