@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """program_cfg.py — **程序自身**（61 个白名单模块）的控制流图分支点枚举
 
 分析对象是反编译器**自己的源码**（不是任何 pyc 语料）：把白名单模块编译成字节码，
@@ -18,7 +18,7 @@ import os
 import sys
 import types
 
-ROOT = r'F:\Downloads\pythoncdc-main'
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 OUT = os.path.join(ROOT, 'docs', 'refactor', 'program-cfg.json')
 WL_DIRS = ['core', 'parsers', 'bytecode', 'utils']
 ENTRIES = ['pycdc', 'pycdas']

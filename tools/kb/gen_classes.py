@@ -1,9 +1,9 @@
-import ast
+﻿import ast
 import hashlib
 from datetime import date
 from pathlib import Path
 
-ROOT = Path(r"F:\Downloads\pythoncdc-main")
+ROOT = Path(__file__).resolve().parents[2]
 CLASSES = ROOT / "wiki" / "classes"
 WL_DIRS = ["core", "parsers", "bytecode", "utils"]
 TODAY = date.today().isoformat()

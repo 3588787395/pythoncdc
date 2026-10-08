@@ -1,4 +1,4 @@
-"""补丁标记语义聚类：把 PATCH_RE 命中的行按缺陷/关注类型分类。
+﻿"""补丁标记语义聚类：把 PATCH_RE 命中的行按缺陷/关注类型分类。
 
 口径与 gen_modules.py 完全一致（同一 PATCH_RE，同一白名单）。
 输出：docs/refactor/patch-semantic-clusters.json + stdout 汇总表。
@@ -13,7 +13,7 @@ from collections import Counter, defaultdict
 from datetime import date
 from pathlib import Path
 
-ROOT = Path(r"F:\Downloads\pythoncdc-main")
+ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs" / "refactor" / "patch-semantic-clusters.json"
 WL_DIRS = ["core", "parsers", "bytecode", "utils"]
 
