@@ -1,4 +1,4 @@
-# Round 11 派工队列（不复制读数，只登记「谁在跑 / 缺什么证据 / 谁能动哪一处」）
+﻿# Round 11 派工队列（不复制读数，只登记「谁在跑 / 缺什么证据 / 谁能动哪一处」）
 
 真相源纪律：本文件**不重述**残余单元数、文件数或逐单元名单——那些只存在于
 `rounds/round10/RESIDUAL_R10.md`（由 `residual_report.py` 从八份分片报告直接生成）与
@@ -42,3 +42,19 @@
    （最小样例常无判别力：B131 的 7 条臂全读 2/2）。
 5. 门禁资源唯一：402 全量重生成由主代理跑 `bash /d/Temp/r10gate/gate_chain.sh`，
    且 `regen` 报 `bad>0` 时**先 stat 产物尺寸再读 report**（本轮 9 单元假回退即出自 99 字节残次产物）。
+
+## 四、我于 04:24 直接实测的四个候选单元（差形分类，非台账转述）
+
+仪器：stdlib-only（`dis` + `difflib`，CACHE 剔除、跳转目标写成 `->@off`、嵌套 code object 归一 `<co>`），
+按**完整 qualname** 配对且断言副本唯一（`copies 1/1`）；产物取盘上现字节。
+分类键：hunk 为 `replace` 且两侧长度相同且 opcode 序列相同 ⇒ **target-only**；否则 **content**；
+content 里 `删+插 ≥4` ⇒ **big**（即 UNITMAP 的分类键）。
+
+| 单元 | len orig/prod | hunks | target-only | content | big | 结论（对我原登记口径的更正） |
+|---|---|---|---|---|---|---|
+| `strategy.tick_worker_thread` | **294/294** | 4 | **4** | **0** | 0 | 全差皆同 opcode 仅目标不同 ⇒ **最干净的纯落点**，且是只差 1 单元的整文件。我此前登记的 ANCHOR 子形**未由本测量证实**：4 处目标差是否须落在线锚 NOP 上，须逐差再判，不得沿用旧标签 |
+| `realtime_event_source.clock_worker` | 1442/1330 | 53 | 38 | **15** | 6 | 单元内并存省略与搬位：`delete orig[959:976]=17` 是 `if holiday_not_do_before == '0': self.event_queue.put(dt)…` 整块被吞；另有 `replace 1→3`（一条假边被拆成两条跳转）与 `7→1`。**多机制单单元**，不可一判据草率并案 |
+| `api_base.get_history_df` | **1900/1900** | 20 | 15 | 5 | 5 | 长度相同但内容差真实存在：`5→1` 把 `time_count -= 1` 复合赋值压进跳转；`1→9` 把一条假边拆成嵌套测试；`orig 5→prod 5` 处 **`count > 0` 被发成 `0 < count`**（操作数顺序与极性同翻）。故「极性」不是独立轴（与 round 9 对极性轴的否证一致），此项应按**压形 + 比较子重排**取证 |
+| `handlers.TWHThreadController._target` | 203/200 | 17 | 15 | 2 | **0** | 与 B127 的读数一致（少发一对 `LOAD_CONST None/RETURN_VALUE`，其余为该 4 字节沿跳转图的位移），且**无 ≥4 指令 hunk** ⇒ 与 clock_worker 那种大块省略不同面 |
+
+注：本表只登记**分类**，不登记修复方案；具体宿主由在飞票 B133/B134/B136 与新增 B137 给出。
