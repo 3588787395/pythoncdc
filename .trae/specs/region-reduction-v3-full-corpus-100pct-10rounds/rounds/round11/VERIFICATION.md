@@ -11,8 +11,7 @@ CPython 3.11.7 64 位，**只比较不产码** ⇒ 每项读数前必先按当�
 | 票 | 机制 | 落地状态 | 装前筛（镜像，16 残余文件，按失败单元**名集合**比较） |
 |---|---|---|---|
 | **B133** | `region_analyzer._compute_arm_level_join` 新增 `(4c)`「双臂共落点」认领（一臂无条件前向跳入 ∧ 另一臂 fall-through 入、两臂集不相交、J 不在臂内子区域），与发射端 `[R9-B124]/[R9-B125]` 同判据的两半；第二半重写 `_try_body_terminates_abnormally`（不再在未填充阶段读 `self.regions`） | **已装入**：`core/cfg/region_analyzer.py` sha256 前 16 位 `e926a54f17753b33`（原字节留档 `D:/Temp/r10gate/pre_b133_analyzer.py`），`py_compile` 通过，标记 `_armjoin_is_dual_role_meeting` / `[r10-b133-armjoin-dualrole]` 各 3 次 | 706 → **709** 单元；`load_daily` 26/27→**27/27**（整文件翻正）、`klinedata` 61→62、`trade_info_utils` 37→38；其余 13 文件 0 变化；**regressions = []**；quotation 153/153 不回退。详见 `MEASURED_FLIPS.md` §8 |
-| B139 | or 短路链被折叠成嵌套 if（bar `A and B or C`、su `¬A∨¬B`、strategy `A∨B∨C` 三形同一族） | ⟨填：是否落地；补丁 `D:/Temp/r139b/b139.patch`⟩ | ⟨填：r139_ 电池 16 臂基线与改后逐臂读数⟩ |
-| B127 / B129 / B132 | 见 `rounds/round10/VERIFICATION.md` §二 | 均已否证并逐字节回滚 | — |
+| B139 | or 短路链被折叠成嵌套 if（bar `A and B or C`、su `¬A∨¬B`、strategy `A∨B∨C` 三形同一族） | ⟨填：是否落地；补丁 `D:/Temp/r139b/b139.patch`⟩ | ⟨填：r139_ 电池 16 臂基线与改后逐臂读数⟩ | | 施工中（镜像 `D:/Temp/r139b/wt`）。**与 B137 的发现合并后本票覆盖面扩大**：三文件同族 or 链折叠（bar 84/85、strategy_universe 10/11、strategy 26/27），且 matcher 的 `is_first_five` 面亦疑为同族，故其落地顺序须排在 B133 之后并以当前字节重做（不得整份覆盖 B133）。基线电池 `r139_` 16 臂已入库 | 由工程师增量回报 `FIX_B139_BOOLOP_PRECEDENCE.md`；主代理以镜像/仓库复验为准 || B127 / B129 / B132 | 见 `rounds/round10/VERIFICATION.md` §二 | 均已否证并逐字节回滚 | — |
 
 ## 二、门禁读数（label 11 / before 10）
 
