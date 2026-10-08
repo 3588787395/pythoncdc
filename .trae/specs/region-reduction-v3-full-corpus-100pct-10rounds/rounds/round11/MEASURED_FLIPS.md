@@ -178,3 +178,25 @@ matcher 16/17、risk_calculation/__init__ 41/43、trade_live_broker 118/128、qu
 `rounds/round10/after` 的封表读数即本轮对照基线。
 **本轮翻正在门禁四项（文件级回退=0 ∧ UNIT_REGRESSIONS=0 ∧ 新增失败单元=0）读回之前不算成立**；
 任一非 0 即执行 `cp /d/Temp/r10gate/pre_b133_analyzer.py core/cfg/region_analyzer.py` 回滚。
+
+## 9. 三个只差 1 单元的文件收敛到**同一族**：or 链被折叠成嵌套 if（B137 @06:44）
+
+`strategy.tick_worker_thread` 实测 `len 294/294 net=+0 hunks=4 全为 same-opcode target-only content=0`
+（**否证我给它贴的 ANCHOR 标签**：四处差没有一处需要线锚 NOP，两对跳转各共享同一原始落点）。
+真实形状：原字节是一条三操作数 `or` 链
+`dt_strf > '15:15:00' or dt_strf < '08:30:00' or ('11:30:00' < dt_strf < '12:30:00')`，体为 `time.sleep(60)`；
+产物发成 `elif not (A or B): if C: time.sleep(60)`（`strategyOK.py:231-237`，第二对在同函数 :241-246），
+即把 `A or B or C` 折成 `¬(A∨B) ∧ C`——**语义不等**（原式任一操作数为真即执行体，折后须 A、B 皆假且 C 真）。
+证据细节：操作数 C 的真边 `@562 JUMP_FORWARD ->@568` 两侧一致，只有 A、B 的 `POP_JUMP_FORWARD_IF_TRUE`
+边被改投到链尾汇合 `@820 ->@1286` 与外层 `while` 回边块，故差异全落在目标上而 opcode 序列不变。
+
+⇒ 与 §3（bar：`A and B or C` 被折成 `A ∧ (B ∨ C)`）、§5（su：`¬A ∨ ¬B` 被折成 `A ∧ ¬B`）同族：
+**三处都是「or 的短路链被折叠/逆 De Morgan」**，涉及 3 个只差 1 单元的整文件
+（bar 84/85、strategy_universe 10/11、strategy 26/27）。B139 的判据若按「or 链的每一操作数真边
+须投到同一臂体」这一身份事实成立，则一票可覆盖三文件；若只覆盖 bar/su，strategy 另案，
+不得为凑三绿放宽判据。宿主线索（B134 实测）：`region_analyzer.py:_detect_boolop_conditional_chain`
+的 `:29013-29014`（`_sb_has_body` 闸）与 `:29736-29737`+`:29942-29943`（循环归属豁免 + `len(chain)<2`）。
+
+**锚点漂移声明**：B133 已装入 `region_analyzer.py`（+76 行 @3051 之后、+119 行 @11524 之后），
+故 B134/B137/B139 若在装入后仍引用 `>11524` 的行号，须整体 **+195**、`3051..11524` 区间 **+76**
+再核对；本档记录的行号一律以**它们自己实测时的字节**为准，采用前由主代理逐条 grep 复验。
