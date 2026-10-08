@@ -61,3 +61,23 @@
 2. 整文件只差这一条语句 ⇒ bar.pyc 是**第二个可翻正文件**，且目标形状已被 oracle 钉死为唯一一处。
 3. 顺带把 §五 那条不采信记落成结论：B134 的 `units=85/85` 是对的，`status=failure` 是转写误差
    （判据 :129 使 failure 与 85/85 不可共存，我实测的正是 success）。
+
+## 4. B139 判别臂实测（05:31，HEAD 字节，全部在 scratch 生成与判定）
+
+| 臂 | 源码形状 | 读数 | 产物 `if` 形 |
+|---|---|---|---|
+| `b1_call_in_or` | `if cfg=='1m' and freq=='1d' or C.phase()==1:`，体为赋值，函数随后 `return` | **failure 3/4** | `if cfg == '1m':` + `if freq == '1d' or C.phase() == 1:` |
+| `b2_no_call` | 同上，`or` 侧换成普通比较 `ph == 1`（隔离「调用」变量） | **failure 1/2** | 同样嵌套 |
+| `b3_tail_stmt` | 同上，体后另有 `print(dt)` 再 `return` | **failure 1/2** | 同样嵌套 |
+| `a1_and_or` | `if a and b or c:` 体为 **`return 1`** | success 2/2 | `if a and b or c:`（正确平铺） |
+| `a2_or_and` | `if a or b and c:` 体为 `return 1` | success 2/2 | 正确 |
+| `a3_not_or` | `if not i or not x:` 体为 `return 1` | success 2/2 | 发成 `not (i and x)`（De Morgan，字节仍可判等） |
+| `a4_ctl_plain_and` | `if a and b:` | success 2/2 | 正确 |
+
+⇒ **判别变量不是优先级本身**：同为 `(A and B) or C`，体为 `return`（终止）时平铺正确，
+体为赋值（**非终止、落空续体**）时被拆成嵌套 `if A: if B or C:`。
+所以「`a and b or c` 在我们这儿是坏的」这种笼统说法不成立，工单须按「and 短路 + or 操作数尾部
+汇合回外层序列」这一结构事实立案；`b2` 已隔离掉「调用」这一无关变量（无调用同样红）。
+另注 `a3`：`not i or not x` 被发成 `not (i and x)` 仍判等通过——
+故 B134 记的 `strategy_universe` 目标形 `if not i or not X:` **未必**与本缺陷同源，
+B139 若不能自然覆盖它，须另案而非放宽判据换读数。
