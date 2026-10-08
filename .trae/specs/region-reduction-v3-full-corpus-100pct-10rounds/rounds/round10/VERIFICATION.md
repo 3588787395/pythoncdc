@@ -96,4 +96,31 @@ HEAD 基线残余（本轮起点）：**16 文件 / 40 单元**，机制分组�
 | 日志静默解释 | 首轮 `verify` 段长时间无行 | 管道块缓冲所致，非卡死；驱动器子命令已加 `-u`，后续跑可逐行观测 |
 
 另记一条本轮自查纠正：我曾把「`[G7]` 注释与行为矛盾（`self.regions` 只遍历顶级区域）」当作坐实缺陷写入
-提交 `274b6a2c`/`110f5236`——B131 实测 `self.regions` 是含嵌套区域的展平列表，该断言**作废**，以本文件 §四 为准。
+提交 `274b6a2c`/`110f5236`——B131 实测 `self.regions` 是含嵌套区域的展平列表，该注释**并无矛盾**，
+以本文件 §四 为准。
+
+## 八、续跑点（本轮收尾被回合预算截断时的交接，2026-10-08 03:30 写入）
+
+状态事实：`core/` 为封表字节（`region_ast_generator.py = e9a8f65f6451bcc8…`、
+`region_analyzer.py = 38a1d5142d132fd7…`，`git status --porcelain -- core/` 为空），
+本轮三个修复补丁全部**未落地**：B127 由主代理装入工作树实测后 handlers 仍 29/30 ⇒ 已逐字节回滚；
+B132、B133 仍在镜像内施工。远端分支 `rr-v3r01-f557fd` 已推至 `e2547d3e` 之后（推送 rc=0）。
+
+1. 门禁链路正在后台跑：日志 `D:/Temp/r10gate/gate_chain_1122.log`（脚本 `D:/Temp/r10gate/gate_chain.sh`，
+   四段串接 regen→verify→report→checks→残余表）。跑完须核对：
+   `[regen 合计] ok=402 bad=0`、`[units] 6577/6617 → x/y`、`[gates]` 四项为 0、
+   `[quotation] 153/153`、`[small34] 1528/1568`、`[selfcheck] OK`、`[pytest] 2 failed/280 passed/2 xpassed`、
+   `UNREGISTERED 行数=0`。把上述读数写入 §一 的「round10 终态」列（现为 ⟨填⟩），不得只填好数不填坏数。
+2. 补丁留档与复验方式：`D:/Temp/r15b/b127.patch` 与改后整份文件
+   `D:/Temp/r15b/wt/core/cfg/region_ast_generator.py`（`47d52c5443c4004e`）；
+   `D:/Temp/r132b/b132.patch`、`D:/Temp/r133/b133.patch`（后两者落地时同样**取整份文件**装入：
+   镜像生成的 diff 在本仓 `git apply --check` 报 `corrupt patch at line 70`，装入步骤固定为
+   先存原字节 → 复制整份 → `py_compile` → 标记 grep 计数 → 目标单元 single 复验 →
+   零翻转则按 sha256 逐字节回滚）。
+3. 任一补丁翻正整文件后，必须**重跑一次整链路**（不可沿用本轮 §一 的列，因产物按旧字节生成）：
+   `bash /d/Temp/r10gate/gate_chain.sh`。
+4. 下一轮候选票面已在 `tasks.md` 与本档 §二/§六 具名：B130 拆出的两票
+   （case1 `_compute_arm_level_join` 越区取汇合证据；case2 `_try_body_terminates_abnormally`
+   在 `self.regions` 未填充阶段读它，致 try 体尾 `break` 丢失，判据应改由边导出循环归属）、
+   #14 落点面、#21–#24、以及 41 页 wiki 台账重生成（含 1 页作废）。
+
