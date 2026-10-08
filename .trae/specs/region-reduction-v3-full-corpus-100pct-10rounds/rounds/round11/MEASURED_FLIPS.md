@@ -200,3 +200,36 @@ matcher 16/17、risk_calculation/__init__ 41/43、trade_live_broker 118/128、qu
 **锚点漂移声明**：B133 已装入 `region_analyzer.py`（+76 行 @3051 之后、+119 行 @11524 之后），
 故 B134/B137/B139 若在装入后仍引用 `>11524` 的行号，须整体 **+195**、`3051..11524` 区间 **+76**
 再核对；本档记录的行号一律以**它们自己实测时的字节**为准，采用前由主代理逐条 grep 复验。
+
+## 10. 主代理自做的判据实验（07:57，镜像 `D:/Temp/r139m/wt`，仓库 core 未动）
+
+**探针读数**（在 `_detect_boolop_conditional_chain` 内按 `self.cfg.code.co_name == '_history_bars'` 打印）：
+
+```
+head=0   _sb_has_body=False cond_start=0   last_off=12
+head=18  _sb_has_body=False cond_start=0   last_off=28
+head=34  _sb_has_body=True  cond_start=0   last_off=126     ← bar 的链头块被误拒
+head=128 _sb_has_body=False cond_start=132 last_off=138
+```
+
+根因坐实：算 `_cond_start_offset` 的栈深回溯**只在** `if _r54_mixed or (前一条为 LOAD_*)` 分支里跑；
+未跑时它保持初值 0（`:29008`，且 `:29007` 注释「扫描整个块…因为它们的条件可能更复杂」是**有意**的豁免），
+于是 `_sb_has_body`（`:29208-29218`）从块首扫起，把块内**前一条已完成语句**的 `STORE_FAST`
+（`engine = Engine.instance()`、`dt = engine.calendar_dt`）当成 if 体语句 ⇒ `:29246 return None`，
+混合链不启动，`or` 尾被折进嵌套 if。
+
+**实验**：把同一段栈深回溯改为在 `_cond_start_offset <= 0` 时也无条件执行（12 行）。读数：
+
+| 项 | 基线 | 实验后 |
+|---|---|---|
+| `IQEngine/core/bar.pyc` | 84/85 | **85/85 status=success**（整文件翻正；产物里那条测试已是 `… == '1m' and frequency == '1d' or ExecutionContext.phase() == …`） |
+| `fly/data/quotation.pyc` | 153/153 | **152/153**（破一个原本通过的单元） |
+| r139_ 电池 16 臂 | 30/35（5 红） | **30/35，逐臂无变化**（r139_01/02/03/08/09 同红，其余 11 同绿） |
+| head=34 | `_sb_has_body=True, cond_start=0` | `_sb_has_body=False, cond_start=120` |
+
+**结论（不落地）**：方向对、判据过宽——`:29007` 的有意豁免正是 quotation 那一格的护身符，
+ blanket 回溯把它抹掉了；且电池臂一动不动，说明「块内含前置已完成语句」并非该族全部形状的必要条件，
+ 真正缺的是「用哪一条身份事实把 bar 的 @34 与被豁免块分开」。已按此派 B139b：
+ 要求找出可测的判别事实（候选：条件段之前是否存在**栈深归零的语句边界**、块是否有多条语句、
+ 是否区域入口/循环体头、前置语句目标是否落在同一区域内），并把判据贴着既有豁免
+ （`_import_store_offsets`、`_b67_iter_target_offsets`）同风格落地，禁止放宽任何 `[C3]` 守卫换读数。
