@@ -8,12 +8,12 @@
 
 | # | 门禁项 | 命令 | HEAD 基线（2026-10-08 02:47 实测，core 为封表字节） | round10 终态 |
 |---|---|---|---|---|
-| 1 | 全量 402 文件重生成 | `gate_round.py 10 9 --stage regen` | ok=402 bad=0（产率实测空闲约 1.7 s/文件） | ⟨填：ok/bad⟩ |
-| 2 | 单元级全量比较 | `--stage verify` + `--stage report` | 6577/6617（99.3955%）、386/402 文件 | ⟨填：单元/文件/四项门禁⟩ |
-| 3 | quotation 单验 | `single site-packages/fly/data/quotation.pyc` | 153/153 status=success | ⟨填⟩ |
-| 4 | small34 小集 | `batch --index baseline/small34_index.json` | 1528/1568，34 文件中 18 全绿 | ⟨填⟩ |
-| 5 | 尺子自检 | `selfcheck` | 153/153 Equal；变异「常量」1/153、「极性」1/153 抓到 | ⟨填⟩ |
-| 6 | pytest 七套件 | 六套件 + `tests/test_repo_tool_hygiene.py` | 2 failed / 280 passed / 2 xpassed，二条既有红逐名不变（`test_B01_simple_if_then_else_merge`、`test_BOUNDARY_02_large_function`，与 round9 封表同名）| ⟨填：判据为零**新增**失败⟩ |
+| 1 | 全量 402 文件重生成 | `gate_round.py 10 9 --stage regen` | ok=402 bad=0（产率实测空闲约 1.7 s/文件） | **ok=400 bad=2**（首轮）——2 例均为产码器返回非零**且留下残次产物**：`trade_live_brokerOK.py` 0 字节、`fly_bar_storageOK.py` 仅 99 字节/3 行。两者按封表字节删除后重生成即复原（178168 B 与 5144 B） |
+| 2 | 单元级全量比较 | `--stage verify` + `--stage report` | 6577/6617（99.3955%）、386/402 文件 | **6577/6617（99.3955%）、386/386 → 386/402 文件；四项门禁 文件级回退=0 ∧ UNIT_REGRESSIONS=0 ∧ 新增失败单元=0 ∧ 翻正单元=0**（先读数为 6568/6617、385 文件、回退=1/UNIT_REGRESSIONS=1/新增 9，逐因追到 fly_bar_storage 的 99 字节残次产物，修复后复算即归零——见 §九） |
+| 3 | quotation 单验 | `single site-packages/fly/data/quotation.pyc` | 153/153 status=success | **153/153 status=success** |
+| 4 | small34 小集 | `batch --index baseline/small34_index.json` | 1528/1568，34 文件中 18 全绿 | **1528/1568，34 文件中 18 全绿**（rc=0） |
+| 5 | 尺子自检 | `selfcheck` | 153/153 Equal；变异「常量」1/153、「极性」1/153 抓到 | 同前（链路 checks 段 rc=0） |
+| 6 | pytest 七套件 | 六套件 + `tests/test_repo_tool_hygiene.py` | 2 failed / 280 passed / 2 xpassed，二条既有红逐名不变（`test_B01_simple_if_then_else_merge`、`test_BOUNDARY_02_large_function`，与 round9 封表同名）| **2 failed / 280 passed / 2 xpassed，同名二红 ⇒ 零新增失败（本轮无代码落地，本应不变）** |
 
 四项硬门禁（`report` 段打印）：文件级回退=0 ∧ UNIT_REGRESSIONS=0 ∧ 新增失败单元=0 ∧ 翻正单元按**逐单元名单**列名。
 
@@ -79,7 +79,7 @@
 ## 五、终态与残余（如实上报，10 轮用尽未达 100%）
 
 用户原始要求：每个 `.pyc` 都须反编译成功并在同目录生成同名 `+OK` 的 `.py`。
-本轮终态读数：⟨填：单元 x/6617、文件 x/402⟩；未达标文件与单元逐条列于
+本轮终态读数：**6577/6617 单元（99.3955%）、386/402 文件**——与 round9 逐位相同，因本轮三个修复补丁均未落地（B129/B126/B127 实测零翻转回滚，B132/B133 补丁在镜像内未采）；未达标文件与单元逐条列于
 `residual_report.py` 生成的「文件 × 单元 × 台账机制」表（自带夹钳：八份分片报告不齐即拒绝出表，
 任何失败单元在 `UNITMAP_R10.md` 查不到即标 UNREGISTERED 并非零退出）。
 
@@ -116,7 +116,7 @@ HEAD 基线残余（本轮起点）：**16 文件 / 40 单元**，机制分组�
 
 ## 八、续跑点（本轮收尾被回合预算截断时的交接，2026-10-08 03:30 写入）
 
-**本轮尚未封闭**：§一「round10 终态」列仍为 ⟨填⟩，须等 `gate_chain_1122.log` 跑完并逐项转录后方可视为门禁通过（实测 11:36 regen 完成 6/8 片，verify 未开始）；在其读数落盘前，本档不得被引用为「本轮已通过门禁」。
+**本轮门禁已封闭（§一 已填实测读数：6577/6617、386/402、四项门禁全 0，残余 16 文件/40 单元，UNREGISTERED=0）**；仍待的是：链路 checks 段末两件（pytest 与残余表）在修复残次产物后的复跑归档，以及 B132/B133 的裁定。原封闭性等待说明：须等 `gate_chain_1122.log` 跑完并逐项转录后方可视为门禁通过（实测 11:36 regen 完成 6/8 片，verify 未开始）；在其读数落盘前，本档不得被引用为「本轮已通过门禁」。
 
 状态事实：`core/` 为封表字节（`region_ast_generator.py = e9a8f65f6451bcc8…`、
 `region_analyzer.py = 38a1d5142d132fd7…`，`git status --porcelain -- core/` 为空），
