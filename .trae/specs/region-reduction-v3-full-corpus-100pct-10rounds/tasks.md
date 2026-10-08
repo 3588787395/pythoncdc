@@ -236,6 +236,28 @@
   - [ ] 11.2 `tools/kb/syntax_coverage.py` 重跑 + wiki 台账数字同步（禁手改矛盾数字）
   - [ ] 11.3 终验（全量 + quotation + tests 六套件 + 普查反向夹钳）+ 汇报终态读数（单元级/文件级/破口状态/注释合规面）+ push
 
+Task 11 本轮实际状态（2026-10-08，逐条按完成度如实标注，勾选项未全做完就不勾）：
+- 11.1 **普查在飞、修复未做（本条写入时该档尚未落盘）**：审计工程师仍在工作，预期产出
+  `rounds/round10/AUDIT_TASK11_COMMENT_COMPLIANCE.md`，对
+  `_identify_/_is_/_find_/_compute_/_split_/_generate_region/_if_generate_/_loop_generate_/_try_` 各族方法
+  做六项模板完整度普查并分 MATCH / COMMENT_OVERCLAIMS / CODE_UNDOCUMENTED 三类；
+  在其读数落盘前本条不宣称任何计数。已在本轮由其它票实测到的两处注释问题（`region_ast_generator.py:54913`
+  注释自称「替代对条件的静默丢弃」而该路径仍被走到）与一处**本方误断的撤销**
+  （`:19316` 「不限于顶级区域」并非矛盾——`self.regions` 实为含嵌套区域的展平列表）。
+  逐方法的「以代码为准修注释 / 以注释为准修代码」未执行，故本项不勾。
+- 11.2 **台账工具取数面已修正、wiki 页未重生成**：`syntax_coverage.py` 在本工作树实测分母 128 / 分子 128
+  （语法面 100%，与语料成功率两回事）；`check_stale.py` 实测 `checked=60 stale=41`
+  （core 24 / parsers 8 / bytecode 5 / utils 2 / pycdc 1 / pycdas 1），其中
+  `parsers-ast_builder_cleaned` 页是**源码已不存在**应作废；同类硬编码仓库根已清 10 处并落常驻牙
+  `tests/test_repo_tool_hygiene.py`（已入门禁 checks 段）。41 页 wiki 未逐页重生成，故本项不勾。
+- 11.3 **终验读数与 push 见 `rounds/round10/VERIFICATION.md`**：本轮门禁为
+  `gate_round.py 10 9 --stage regen/verify/report/checks` 四段串接一次后台跑，
+  残余清单由 `residual_report.py` 出表（八份分片报告不齐即拒绝出表、失败单元在台账查不到即非零退出）。
+  本轮工单收束：B129 否证回滚、B126 判据成立但零翻转回滚、**B127 装入实测后 handlers 仍 29/30 ⇒ 零翻转回滚**、
+  B131/B130 诊断完成（B131 并否证本票与 B129 前提）、B132/B133 在飞。
+  **截至本条写入时（03:25）本轮未新增「整文件翻正」**——B132/B133 仍在飞，若其补丁经语料实测翻正则以此处终态为准；
+  未翻正则按本节标题所示如实上报残余，不改判据、不手改产物。
+
 注：10 轮用尽仍未达 100% 时，如实上报残余清单（文件 × 单元 × 违反条款），不得为凑读数改判据或手改产物。
 
 # Task Dependencies
