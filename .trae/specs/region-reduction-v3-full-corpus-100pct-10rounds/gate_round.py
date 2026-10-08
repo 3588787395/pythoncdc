@@ -59,22 +59,43 @@ def load_rows(label):
     return rows
 
 
-def stage_regen(label):
+def stage_regen(label, budget=240):
+    """Regenerate every corpus product from the CURRENT working-tree bytes.
+
+    Each shard needs more wall time than one bounded child allows (measured ~7 s per file, so a
+    50-file shard is ~350 s against a 120 s budget), and `regen_list.py` exits rc=3 with
+    `BUDGET NEXT=<cursor>`. The previous version of this stage ignored that cursor, so any
+    re-invocation restarted the shard from zero and the 402-file regen could never complete.
+    Cursors are therefore kept per shard and advanced in-process only: an invocation always
+    begins at zero, because re-running the gate after a landing must not reuse products made by
+    the previous bytes.
+    """
     ok = bad = 0
     for s in range(SHARDS):
-        rc, so, se = run([sys.executable, '-X', 'utf8', os.path.join(SPEC, 'regen_list.py'),
-                          '120', rel_list(s)], timeout=150)
-        lines = [l for l in so.splitlines() if l.startswith('REGEN') or l.startswith('BUDGET')]
-        print('[regen %d] rc=%d %s' % (s, rc, ' | '.join(lines)))
-        for l in lines:
-            if 'ok=' in l:
+        path = rel_list(s)
+        cursor, passes = 0, 0
+        while True:
+            rc, so, se = run([sys.executable, '-X', 'utf8', os.path.join(SPEC, 'regen_list.py'),
+                              str(budget), path] + ([str(cursor)] if cursor else []),
+                             timeout=budget + 40)
+            lines = [l for l in so.splitlines() if l.startswith('REGEN') or l.startswith('BUDGET')]
+            for l in lines:
                 for tok in l.split():
                     if tok.startswith('ok='):
                         ok += int(tok[3:])
                     elif tok.startswith('bad='):
                         bad += int(tok[4:].rstrip('s'))
-        if rc == 3:
-            print('   !! BUDGET 未跑完，须用 NEXT=<n> 续跑本分片')
+            nxt = [tok for l in lines if 'NEXT=' in l for tok in l.split() if tok.startswith('NEXT=')]
+            passes += 1
+            if rc == 0:
+                print('[regen %d] done in %d pass(es) ok=%d bad=%d' % (s, passes, ok, bad))
+                break
+            if rc == 3 and nxt:
+                cursor = int(nxt[-1].split('=')[1])
+                print('[regen %d] BUDGET 续跑 cursor=%d (pass %d)' % (s, cursor, passes))
+                continue
+            print('[regen %d] rc=%d 未预期，停止本分片：%s' % (s, rc, (se or so).strip()[-200:]))
+            break
     print('[regen 合计] ok=%d bad=%d（应 ok=%d bad=0）' % (ok, bad, TOTAL_FILES))
 
 
