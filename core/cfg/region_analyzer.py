@@ -3051,6 +3051,82 @@ class RegionAnalyzer:
         return (_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
                 or _last.opname in SHORT_CIRCUIT_JUMP_OPS)
 
+    def _armjoin_is_dual_role_meeting(self, join: BasicBlock,
+                                      arm_of: Dict[BasicBlock, Set[int]]) -> bool:
+        """[r10-b133-armjoin-dualrole] join 是否恰是两条臂的「共落点」。
+
+        ═══════════════════════════════════════════════════════════════════════
+        标记 [R10-B133-ARMJOIN-DUALROLE]
+        ═══════════════════════════════════════════════════════════════════════
+
+        ①算法依据：No More Gotos §3（If 区域归约：merge = 两臂的唯一同层汇合
+          块）+ rules.md §1.2 原则2（每块唯一归属）/ 原则4（入口引用语义）+
+          §1.5 C3（汇合块被区域外路径引用时必须显式认领）。CPython 编译 if/
+          else 时，若汇合块 J 的一条臂以**无条件前向跳转**收尾（JUMP_FORWARD/
+          JUMP_ABSOLUTE 的落点恰为 J）、另一臂以 **fall-through** 收尾（臂尾
+          块块末既非任何跳转亦非终态，其唯一正常后继即 J），则 J 的两条入边
+          一条来自臂自身的显式声明、一条来自臂的自然续行——这正是 [R9-B124
+          elifchain-exit-in-armtail]（`region_ast_generator._split_arm_at_chain_exit`
+          条件 (b)）在发射端消费的同一结构签名，本方法把它补在归约端：两者
+          是同一条判据的两半，不是并行尺子。此形下 J 的 E 箱恒空（J 的两条
+          正常前驱全是本 if 自己的臂），(4) 永不成立，BFS 因此越出本 if 所属
+          的作用域，把**外层链**的汇合块（其 E 证据来自跨越外层结构的跳过边）
+          认领为 merge，真汇合块连同其后续被吸进臂块表。
+        ②归约顺序：自底向上——只在 `compute_arm_level_join` 的逐层 BFS 内、
+          对当前层候选调用一次；不回溯修正任何已归约区域（§1.3）。
+        ③唯一归属判定：存在前驱 P、Q（均在本 if 臂前向流 `arm_of` 内、均在
+          join 之前、均以正常后继边指向 join）使得 P 的块末是无条件前向跳转
+          且跳转目标恰为 join、Q 的块末既非无条件/条件/短路/后向跳转也非
+          return/raise 终态（即顺序边），且「跳转臂集合」与「直落臂集合」
+          不相交 ⇒ join 由两条不同臂的入边共落，是这两臂的同层汇合块。
+          两集合相交（同一臂既跳入又直落）时 join 只是该臂内部的结构汇合点，
+          不认领。
+        ④嵌套处理：调用方另以「join ∉ 臂内子区域块集」与「箱集合恰为两臂」
+          为门；本方法只看块末 opcode 与前驱/后继身份，不读嵌套深度、不读
+          区域类型、不数块、不读绝对偏移。
+        ⑤入口引用语义：认领成立时 join 作为 IfRegion.merge_block 被本 if 引用，
+          其语句由父级作用域按入口发射（原则4），臂块表在 join 之前停住
+          （发射端 [R9-B124] 切分器同判）。
+        ⑥反编译流程：region_analyzer 的 merge 选择 → IfRegion.merge_block →
+          `_collect_branch_blocks` 有界收集 → region_ast_generator 的
+          `_split_arm_at_chain_exit` / then-else 语句列表 → code_generator 发射。
+
+        C 条款：C1 只读本 if 两臂的出边与前驱集合；C2 不窥视子区域内部；
+        C3 把「汇合块仅有区域外 E 证据」的越权认领封闭为「共落点显式认领」。
+        零名字/偏移/计数/深度判据，零新增 self 状态。
+
+        :param join: 当前 BFS 层的汇合候选块
+        :param arm_of: 块 → 该块属于哪几条臂的前向流
+        :return: join 是否为两条臂的共落点
+        """
+        _jump_arms: Set[int] = set()
+        _fall_arms: Set[int] = set()
+        for _p in (join.predecessors or []):
+            _ai = arm_of.get(_p)
+            if not _ai:
+                continue
+            if _p.start_offset >= join.start_offset:
+                continue
+            _pexc = set(getattr(_p, 'exception_successors', None) or ())
+            if join not in (_p.successors or ()) or join in _pexc:
+                continue
+            _nn = [i for i in _p.instructions if i.opname not in _R20_NOISE_OPS]
+            if not _nn:
+                continue
+            _tail = _nn[-1]
+            if (_tail.opname in _R20_FWD_JUMPS
+                    and isinstance(getattr(_tail, 'argval', None), int)
+                    and _tail.argval == join.start_offset):
+                _jump_arms |= _ai
+            elif (_tail.opname not in _R20_FWD_JUMPS
+                    and _tail.opname not in CONDITIONAL_JUMP_OPS
+                    and _tail.opname not in SHORT_CIRCUIT_JUMP_OPS
+                    and _tail.opname not in FORWARD_JUMP_OPS
+                    and _tail.opname not in BACKWARD_JUMP_OPS
+                    and _tail.opname not in self._ARMJOIN_EXIT_OPS):
+                _fall_arms |= _ai
+        return bool(_jump_arms) and bool(_fall_arms) and not (_jump_arms & _fall_arms)
+
     def _compute_arm_level_join(self, then_succ: BasicBlock,
                                 else_succ: BasicBlock,
                                 struct_blocks: Set[BasicBlock],
@@ -3069,7 +3145,10 @@ class RegionAnalyzer:
           到第一个由两条不同控制路径汇入、且其中一条是本作用域兄弟路径的
           块」，对宿主是循环体 / try 体 / 函数体的三种情形同判，臂尾形态含
           fall-through（空体 `pass` 的 NOP 块）、无条件跳转、回边、
-          return/raise 四类。
+          return/raise 四类。臂尾的两两组合另见 (4b)（单臂汇入 + 其余臂终态
+          收束）与 (4c)（双臂共落同一块：一臂无条件前向跳入、另一臂
+          fall-through 入，E 箱恒空）两个显式例外，二者都不是旁路。
+          宿主是循环体 / try 体 / 函数体的三种情形同判。
         ②归约顺序：自底向上——本区域在内层归约完成后、`_collect_branch_blocks`
           有界收集之前调用一次；不回溯修正已归约区域（§1.3 单向数据流）。
           命中即作为 IfRegion.merge_block 交付父级，父级据此把公共尾块归还
@@ -3079,7 +3158,9 @@ class RegionAnalyzer:
           一条来自本 if 之外的同层兄弟路径）才是本 if 与父级作用域的汇合块；
           箱数 = 1 时 J 是某一条臂的内部块（内层结构的汇合点，属子区域，
           原则3），E 箱为空时 J 只被本 if 自己的臂汇入（链尾出口形），两种
-          情形本方法都不认领，继续沿 BFS 向外走。认领的 J 既不在任何臂闭包
+          情形本方法都不认领，继续沿 BFS 向外走；唯一例外是 (4c)「双臂共落点」
+          （该形 E 箱恒空而 J 确是两臂的同层最近汇合块），该形按 (4c)
+          显式认领。认领的 J 既不在任何臂闭包
           内、也不在本 if 的条件结构块集内，故它归父级作用域的兄弟序列
           （原则2）。退化 merge（current_merge 就等于某条臂入口）由上游
           continue/break 守卫判定，本方法直接返回 None，不重复认领。
@@ -3119,6 +3200,24 @@ class RegionAnalyzer:
               set_cgroup_config 的 if@4），其 merge 由链构造器/退化 merge 守卫
               给出，本方法不介入。分箱在**整层展开完成后**统一进行，故同层
               块的前向流归属已知，子区域汇合块不会被误认领。
+          (4c) 双臂共落点例外（[r10-b133-armjoin-dualrole]，(4) 缺的另一半
+              成员条件）：`len(_arms)==2` 且 J 的前驱分箱恰为 {0,1}（两臂各出
+              一条入边，**无** E/S/N 箱）且 J 不在任何臂内嵌套子区域内部
+              （J ∉ _sub_arm，原则3）且 `_armjoin_is_dual_role_meeting(J)` 成立
+              ——一臂的块末是无条件前向跳转且落点恰为 J、另一臂的块末是顺序
+              指令（既非任何跳转亦非 return/raise 终态）而 J 即其唯一正常后继，
+              两条入边分属两条不同臂。此时 J 就是两臂的**同层最近汇合块**：
+              臂自身的跳转与臂的自然续行落在同一块，源码里 if 之后就那一条
+              兄弟语句。E 箱在此恒空（J 的正常前驱全是本 if 自己的臂），(4)
+              永不成立，旧行为是 BFS 越出本 if 所属作用域、把跨越外层结构的
+              外层链汇合块认领为 merge（实测 fly/dumpload/load_daily.pyc
+              :: <module> 的 if@740：@2478 因 {0,1} 且 E 空被拒，@2768 因
+              外层 if@104 的跳过边 @104→@2768 被认领），真汇合块连同其后续被
+              `_collect_branch_blocks` 吸进 else 臂 ⇒ if 之后不再有兄弟语句。
+              本例外与发射端 [R9-B124 elifchain-exit-in-armtail]（其条件 (b)
+              正是「链内某臂以无条件前向跳转落在 merge_block」）是同一条结构
+              判据的两半：归约端认领、发射端切开，不另立并行尺子。判据只用
+              块末 opcode 与前驱/后继身份，零名字/偏移/计数/深度。
           (4b) 单臂汇入的同层兄弟例外（[r3-b100-armjoin-tailexit]，(4) 中
               缺失的成员条件）：其余臂的前向流已在本作用域内**终态收束**
               （_term_exhausted：块末为 return/raise 终态 opcode = 控制流从
@@ -3166,8 +3265,10 @@ class RegionAnalyzer:
               上游 continue/break 守卫（R24A/B3 形态）判定，不在此重复认领。
 
         C 条款：C1 只读本区域两臂的同层出边与前驱集合；C2 不窥视任何子
-        区域内部（子区域的汇合块按 (4) 单箱拒绝）；C3 显式认领「汇合块被
-        区域外兄弟路径引用」。零深度阈值、零计数上限、零名字/偏移特判。
+        区域内部（子区域的汇合块按 (4) 单箱拒绝、按 (4c) 只认两臂共落点）；C3 显式认领「汇合块被
+        区域外兄弟路径引用」（(4) 的 E 箱）**且**在区域外证据出现之前先认
+        领区域内的共落点（(4c)），不再让 merge 越过本作用域。零深度阈值、
+        零计数上限、零名字/偏移特判。
         """
         _arms = [a for a in (then_succ, else_succ) if a is not None]
         if not _arms:
@@ -3345,6 +3446,16 @@ class RegionAnalyzer:
                 # r1_65_cand_while_try_sinkpair 的 if@0（臂内 while 区域的
                 # handler 尾声块 142 同理）。
                 if len(_lbl) >= 2 and 'E' in _lbl:
+                    _join = _s
+                    break
+                # [r10-b133-armjoin-dualrole] (4c) 双臂共落点：J 恰是两条臂的
+                # 同层汇合块（一臂以无条件前向跳转落在 J，另一臂 fall-through
+                # 落在 J，两箱分属两臂，J 不在任何臂内子区域内部）时认领 J。
+                # 该形 E 箱恒空，(4) 永不成立，旧行为是继续向外走到跨越本作用域
+                # 的块（其 E 证据来自外层链的跳过边）并把它当 merge。
+                if (len(_arms) == 2 and _lbl == {0, 1}
+                        and _s not in _sub_arm
+                        and self._armjoin_is_dual_role_meeting(_s, _arm_of)):
                     _join = _s
                     break
                 # [r3-b100-armjoin-tailexit] 单臂汇入 + 其余臂已在作用域内
@@ -11524,26 +11635,145 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         return True
         return False
 
+    def _try_nested_loop_body_blocks(self, scan_blocks) -> Set[BasicBlock]:
+        """_try_nested_loop_body_blocks — 由边与支配事实给出「嵌在本 try 体内的循环」块集。
+
+        ═══════════════════════════════════════════════════════════════════════
+        标记 [R10-B133-trytail-edgeloop]
+        ═══════════════════════════════════════════════════════════════════════
+
+        ①算法依据：No More Gotos §附录（自然循环 = 回边闭包）+ rules.md §1.2
+          原则1（自底向上）/ 原则3（嵌套即抽象节点）+ §1.3 单向数据流。
+          「某 try 体块尾是 return/break/continue」这一 veto 只有在**该块自身
+          就是 try 体的收尾**时才成立；块若落在嵌于 try 体内的循环里，它的
+          return 只离开本函数、它的回边只续行本循环，try 体另有一条正常完成
+          路径（循环耗尽/条件为假/break）通向 try 体尾，else 子句照旧存在。
+          旧实现读 `self.regions` 里的 LoopRegion.blocks，而本判据的唯一消费
+          点（`_find_try_else_blocks` ← `_identify_try_except_regions`
+          ← `analyze`）跑在区域表填充之前，读到的永远是空集 ⇒ veto 从不豁免。
+          本方法改读**同一阶段已经算好**的边/支配事实：`loop_analyzer` 的循环
+          头集合（回边目标 ∪ FOR_ITER/GET_ANEXT 块）与前驱/后继边集合。
+        ②归约顺序：自底向上——循环头是已归约的内层结构入口，本方法只消费它的
+          边关系，不回溯修正任何区域（§1.3）。调用点在 try 区域识别阶段之内，
+          返回值只用于本次扫描，不写回任何 self 状态。
+        ③唯一归属判定：块 B 属于「嵌在本 try 体内的循环」当且仅当存在循环头 H
+          满足：H ∈ 本次扫描的 try 体块集（循环整体被本 try 体覆盖 = 嵌套方向
+          的唯一结构证据）∧ H 支配 B ∧ B 自「循环体入口」起沿正常后继、只经过
+          仍在扫描块集内的块前向可达。循环体入口 = H 的正常后继中**能回到 H**
+          者（回边闭包由 H 沿前驱反向可达求得）；H 那条回不到 H 的后继即循环
+          的正常出口（FOR_ITER 耗尽边 / while 条件为假边 / break 落点），它被
+          排除在种子之外，故循环之后的 try 体块不计入，veto 面不被放宽。
+          入口之内不再做回指过滤：循环体内的死胡同块（`return` 这类无后继者）
+          本就回不到 H，若按回指过滤把它们漏掉，try 体的收尾就会被误判成异常
+          收尾——那正是本判据要封闭的缺陷面。
+        ④嵌套处理：判据对循环体内部结构无感——内层循环的头同样落在 H 的有界
+          前向闭包里时，其体块由同一条闭包自然覆盖，不另立规则、不读深度、不数
+          块。外层循环（本 try 区域宿身其中者）其头不在扫描块集内，整条被排除：
+          try 体外层的循环成员身份不改变本区域的 veto。
+        ⑤入口引用语义：返回值只用作「块 B 属循环体」的身份断言；循环仍由既有
+          LoopRegion 识别路径按入口交付抽象节点，本方法不建区域、不改指针。
+        ⑥反编译流程：region_analyzer 的 try 区域识别 →
+          `_try_body_terminates_abnormally` 的循环成员豁免 →
+          `_find_try_else_blocks` 的 else 块认定 → region_ast_generator 的
+          `ast.Try.orelse`（`else: break` 一类语句）→ code_generator 发射。
+
+        C 条款：C1 只读本区域 try 体块集的出边/入边与支配关系；C2 不窥视任何
+        子区域内部、不与 `self.regions` 比较；C3 豁免面由「循环头 ∈ try 体块集
+        ∧ 种子 = 能回到循环头的后继 ∧ 有界前向闭包」显式闭合，无静默跳过、
+        无新增 self 状态、无名字/偏移/计数判据。
+
+        :param scan_blocks: 本次扫描的 try 体块集（已按异常表身份收窄）
+        :return: 嵌在本 try 体内的循环的成员块集
+        """
+        _scan = set(scan_blocks)
+        _body: Set[BasicBlock] = set()
+        if not _scan:
+            return _body
+
+        def _succs(_b):
+            _exc = set(getattr(_b, 'exception_successors', None) or ())
+            return [s for s in (_b.successors or []) if s not in _exc]
+
+        for _h in self.loop_analyzer.loop_headers:
+            if _h not in _scan:
+                # 循环头不被本 try 体覆盖：该循环不是嵌在本 try 体内的结构。
+                continue
+            # 回边闭包：能沿正常后继回到 _h 的块（含 _h 自身）。
+            _cycle = {_h}
+            _rev = [_h]
+            while _rev:
+                _cur = _rev.pop()
+                for _p in (_cur.predecessors or []):
+                    if _p in _cycle or _cur not in _succs(_p):
+                        continue
+                    _cycle.add(_p)
+                    _rev.append(_p)
+            _body.add(_h)
+            # 种子 = 循环头的后继中能回到循环头者（= 循环体入口）。回到不了
+            # 循环头的那条边就是循环的正常出口（FOR_ITER 耗尽边 / while 条件
+            # 为假边），其目标块属 try 体在循环之后的续行，不计入循环成员。
+            _walk = [_s for _s in _succs(_h)
+                     if _s in _scan and _s in _cycle and _h.dominates(_s)]
+            for _s in _walk:
+                _body.add(_s)
+            while _walk:
+                _cur = _walk.pop()
+                for _s in _succs(_cur):
+                    if _s in _body or _s not in _scan or not _h.dominates(_s):
+                        continue
+                    _body.add(_s)
+                    _walk.append(_s)
+        return _body
+
     def _try_body_terminates_abnormally(self, try_region) -> bool:
-        """[TRY_EXCEPT_ELSE_MISORDER fix] Check if the try body terminates abnormally.
+        """[TRY_EXCEPT_ELSE_MISORDER fix] 判断 try 体是否以异常方式收尾（无 else 子句）。
 
-        CPython try/except/else semantics: the else clause runs ONLY when the try
-        block completes normally (no exception AND no return/break/continue). If the
-        try body ends with a return, break, or continue, there is no else clause --
-        any code between the try body and the first handler is still part of the try
-        body or is dead code, NOT else code.
+        ═══════════════════════════════════════════════════════════════════════
+        标记 [R10-B133-trytail-edgeloop]（循环成员豁免改由边/支配事实给出）
+        ═══════════════════════════════════════════════════════════════════════
 
-        Algorithm: examine try body blocks for terminal instructions that indicate
-        abnormal termination. A try body block that ends with RETURN_VALUE or
-        RETURN_CONST (return), JUMP_BACKWARD (continue/break to loop), or
-        JUMP_FORWARD to a loop header (break) indicates abnormal termination.
-        RERAISE/PUSH_EXC_INFO/POP_EXCEPT blocks are exception framework code,
-        not user code, and are excluded from this check.
+        CPython try/except/else 语义：else 子句只在 try 体**正常完成**（既无异常
+        也无 return/break/continue）时执行；若 try 体的收尾本身就是 return/
+        break/continue，源码里就没有 else 子句，try 体尾与第一个 handler 之间的
+        代码属于 try 体或死代码，不是 else。
 
-        This is a structural control-flow判据: CPython's compiler emits JUMP_FORWARD
-        past the else/handlers ONLY when the try body falls through normally. When
-        the try body has a return, the RETURN instruction replaces the JUMP_FORWARD,
-        and no else clause exists in the source.
+        ①算法依据：No More Gotos 区域归约 + rules.md §1.2 原则2/原则3、§1.5 C1。
+          扫描集合 = 本区域 try 体块（按异常表身份收窄，[R71-exctable]），
+          逐块读**块末 opcode**：RETURN_VALUE/RETURN_CONST（return）、
+          JUMP_BACKWARD/JUMP_BACKWARD_NO_INTERRUPT（continue 或循环尾跳）、
+          JUMP_FORWARD 且落点是某循环的 header_block（break）⇒ try 体异常收尾。
+          异常框架块（RERAISE/PUSH_EXC_INFO/POP_EXCEPT/CHECK_EXC_MATCH/
+          CHECK_EG_MATCH/WITH_EXCEPT_START）是 CPython 脚手架，不是用户代码，
+          不参与判定。
+        ②归约顺序：自底向上——内层循环/条件区域先于本判定归约并作为抽象节点
+          存在；本判定只消费块末 opcode、前驱/后继与回边闭包，不回溯修正任何
+          已归约区域（§1.3 单向数据流）。
+        ③唯一归属判定：块的两条豁免身份互斥且显式——
+          (a) 块内含异常框架指令 ⇒ 属 CPython 异常机制，不属 try 体语句；
+          (b) 块 ∈ `_try_nested_loop_body_blocks`（循环头本身是本 try 体成员，
+              块在该循环的回边闭包前向流内）⇒ 该块的 return 是**循环体内的
+              return**、回边是循环续行，try 体另有正常完成路径通向自身尾部，
+              不构成 try 体的异常收尾。
+          [R119b] 第三条豁免：JUMP_BACKWARD 落点块含 FOR_ITER 或含正向条件跳转
+          且有 ≥2 前驱 ⇒ 该边是循环回边（continue），不是 try 出口。
+        ④嵌套处理：判据对嵌套无感——循环/条件嵌套任意深，豁免身份 (b) 都由
+          「循环头 ∈ try 体块集 ∧ 回边闭包」同一条边关系判出；不读嵌套深度、
+          不数块、不读偏移。旧实现把 (b) 写成 `self.regions` 的 LoopRegion
+          成员查询，而本方法的唯一调用点（`_find_try_else_blocks` ←
+          `_identify_try_except_regions`）跑在区域表填充之前，`self.regions`
+          恒为空 ⇒ 该豁免此前从未生效，嵌套在 try 体内的循环里的 return 被
+          误判为 try 体异常收尾，`ast.Try.orelse` 整条被抑制。现改读同一阶段
+          已算好的 `loop_analyzer` 循环头与前驱/后继边，豁免真正可用。
+        ⑤入口引用语义：返回值只决定本 try 区域是否继续识别 else 子句块；else
+          块一旦认定，仍由既有 `_find_try_else_blocks` 闭包与发射端按入口引用
+          循环子区域，本方法不引用任何区域入口。
+        ⑥反编译流程：region_analyzer 的 try 区域识别 → `_find_try_else_blocks`
+          → `region.has_else` / `region.else_blocks` → region_ast_generator 的
+          `ast.Try.orelse`（如 `else: break`）→ code_generator 发射。
+
+        这是结构性控制流判据：CPython 只在 try 体正常 fall-through 时才发射越过
+        else/handler 的 JUMP_FORWARD；try 体尾部本身是 return 时该跳转被 RETURN
+        取代，源码里不存在 else 子句。
         """
         try_blocks = getattr(try_region, 'try_blocks', [])
         if not try_blocks:
@@ -11558,7 +11788,8 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         # 归约方式：只有在收窄后集合非空时才用它替换扫描集合；收窄集合为空
         #   则保持原集合与原行为。下方 RETURN/JUMP_BACKWARD/JUMP_FORWARD 判据
         #   逐条不变。不读异常表 offset 区间数值、不读块 offset 常量、无阈值、
-        #   无名字白名单、无新增 self 状态、无跨层 region 比较。
+        #   无名字白名单、无新增 self 状态、无跨层 region 比较（循环成员身份由
+        #   _try_nested_loop_body_blocks 的边/支配闭包给出，见 [R10-B133]）。
         # AST 映射：决定 _find_try_else_blocks 是否继续识别 ast.Try.orelse。
         _he = set(getattr(try_region, 'handler_entry_blocks', []) or [])
         if _he:
@@ -11579,9 +11810,11 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             'RERAISE', 'PUSH_EXC_INFO', 'POP_EXCEPT', 'CHECK_EXC_MATCH',
             'CHECK_EG_MATCH', 'WITH_EXCEPT_START',
         })
-        _loop_region_blocks = set()
-        for _lr in self._filter_regions(self.regions, LoopRegion):
-            _loop_region_blocks.update(_lr.blocks)
+        # [R10-B133-trytail-edgeloop] 循环成员豁免：此前读 self.regions 里的
+        # LoopRegion.blocks，而调用点（_identify_try_except_regions 之内）跑在
+        # 区域表填充之前 ⇒ 恒为空集，豁免从未生效。现由 _try_nested_loop_body_blocks
+        # 用同一阶段已算好的循环头 + 前驱/后继边 + 支配关系给出。
+        _loop_region_blocks = self._try_nested_loop_body_blocks(try_blocks)
         for block in try_blocks:
             non_noise = [i for i in block.instructions
                          if i.opname not in NOISE_OPS]

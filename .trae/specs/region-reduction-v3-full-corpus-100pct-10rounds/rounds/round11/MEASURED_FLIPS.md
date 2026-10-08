@@ -144,3 +144,37 @@ B139 须分别以两文件的逐单元读数证明覆盖了哪一面，未覆盖
    必须等它们交回基线与读数，再装 B133；
 2. B133 与 B139 交付的都是**整份文件**，同文件覆盖风险见 `TICKETS_ROUND11.md` §六 的顺序纪律；
 3. 装入即触发整链路 `gate_round.py`，四项门禁任一非 0 便按 sha256 回到本节记录的封表字节。
+
+## 8. B133 **已装入仓库**（06:42），装前先在镜像里做了 16 文件回归筛
+
+### 8.1 装前筛（全部在 `D:/Temp/r11b133/wt` 镜像内产出与判定，未动仓内产物）
+
+以 round 9 封表读数为基线，对**全部 16 个残余文件**用改后 analyzer 重新产码 + 逐单元判等：
+
+```
+file                                                      baseline  patched  delta
+IQCommon/api/klinedata.pyc                                    61/64     62/64    +1 (improved)
+IQCommon/util/trade_info_utils.pyc                            37/41     38/41    +1 (improved)
+fly/dumpload/load_daily.pyc                                   26/27     27/27    +1 (整文件翻正)
+其余 13 个残余文件（handlers 29/30、wizard 55/58、api_base 27/28、real_quote 43/45、
+bar 84/85、strategy_universe 10/11、order_api 35/37、strategy 26/27、realtime_event_source 12/13、
+matcher 16/17、risk_calculation/__init__ 41/43、trade_live_broker 118/128、quote 86/92）  全部 0
+16 文件合计单元 706 -> 709    regressions = []    （quotation 仍 153/153）
+```
+
+判据是**失败单元名集合**而非只比总数；两处 +1 的改进是工程师 A/B 表里没有的：
+`klinedata` 61→62 与 `trade_info_utils` 在其表中被记为「case 1 单独不动」，
+实测最终交付字节下 case 1 也各推进 1 单元 ⇒ 工程师的 A/B 表是**旧一字节的读数**，
+不能当最终事实引用（我据此更正 §7 之前那句「case-1-only」判断的来路：
+交付补丁确实含 case 2，见 hunk `@@ -11524,26 +11635,145 @@`，
+而我先前用自拟标记名 grep 判成「无 case 2」是方法错误，已在同条更正）。
+
+### 8.2 装入动作与序位
+
+`cp core/cfg/region_analyzer.py → /d/Temp/r10gate/pre_b133_analyzer.py`（原字节留档）→
+整份复制改后文件 → `py_compile` 通过 → 落地 sha256 前 16 位 `e926a54f17753b33`，
+标记 `_armjoin_is_dual_role_meeting` 与 `[r10-b133-armjoin-dualrole]` 各命中 3 次。
+整链路以 **label 11 / before 10** 启动（`gate_chain11.sh`：regen → verify → report → checks → residual），
+`rounds/round10/after` 的封表读数即本轮对照基线。
+**本轮翻正在门禁四项（文件级回退=0 ∧ UNIT_REGRESSIONS=0 ∧ 新增失败单元=0）读回之前不算成立**；
+任一非 0 即执行 `cp /d/Temp/r10gate/pre_b133_analyzer.py core/cfg/region_analyzer.py` 回滚。
