@@ -248,3 +248,27 @@ head=128 _sb_has_body=False cond_start=132 last_off=138
 索引格式事实（我自己踩的）：`scripts/pyc_verify.py` 的 `--index` 要求条目是**对象**（`e['path']`，可选 `source`），
 写成字符串列表会在 `collect_targets` 抛 `TypeError: string indices must be integers`；
 仓内既有索引（如 `r139_probe_index.json`）即 `[{"path": "..."}]` 形状。新建索引一律照该形状并先跑一次 batch 复验。
+
+## 12. handlers 的宿主实测（主代理 08:23，镜像 `D:/Temp/r11b133/wt`）
+
+`build_cfg(_target, co_firstlineno=61)` + 真实 `RegionASTGenerator(cfg).region_analyzer.analyze()`：
+
+```
+loops: 2
+ Loop entry=90  WHILE header=104 cond=90  body=12 else=[408] back=390
+   404 in body=False  in else=False  in blocks=True
+   408 in body=False  in else=True   in blocks=True
+blk@404 owner=LoopRegion role=None preds=[390] succ=[]  tail=RETURN_VALUE
+blk@408 owner=LoopRegion role=None preds=[90]  succ=[]  tail=RETURN_VALUE
+```
+
+即 **`@404` 是 LoopRegion 的普通成员**（在 `blocks` 内、既不在 `body_blocks` 也不在 `else_blocks`）、
+零后继、唯一前驱是回边块 `390` ——它就是「循环出口后的落点」。消费端 `_loop_generate_while`
+只取 `body_blocks` 与 `else_blocks`，因此**没有任何人请求发射 `@404`**，那一对
+`LOAD_CONST None/RETURN_VALUE` 就此消失（与 B127 工程师的结论一致，与他否证的 G7/sink 面无关）。
+
+**建议判据（身份事实，供 B136b 实测）**：某块 owner 为 LoopRegion ∧ `∈ blocks` ∧
+`∉ body_blocks ∪ else_blocks` ∧ 零后继 ∧ 其前驱含本循环的回边/尾块 ⇒ 它是循环出口的落点，
+必须由循环区域之后作为续体发射（原则 2：成员关系即发射责任；不得再用「登记 generated」代替发射）。
+须测的反例边界：真 `while…else` 的 else 入口（如 `@408`：前驱是 condition_block 90 而非回边块）
+必须**不**被本判据捕获；`r10g7_`/`r133_` 电池与 quotation/anchor/small34 哨兵按主代理既有清单执行。
