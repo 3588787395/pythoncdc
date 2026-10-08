@@ -51,8 +51,8 @@
 
 | 步 | 要求 |
 |---|---|
-| 1 臂 | 复用/扩展 `test_repros/round9/r10ls_probe_index.json`（磁盘已有 7 臂：`r10ls_01/02/04/05` 复现、`c1…c6` 对照）。**建臂前先用 14 条索引本身生成清单**，禁止 glob `*OK.pyc` 当输入（B128 的 `final_base.json` 因 `files=28` vs 索引 14、表头 `units=33/16` 自相矛盾而被判不可信） |
-| 2 | 红臂 → 绿；`c*` 对照臂**保持**绿（尤其 `c6_nonslice_twochain` 在 HEAD 态读红：它是**已知既存红**，不得算本票成绩，也不得为它改判据） |
+| 1 臂 | **以 `test_repros/round9/r10ls_probe_index.json` 现况为准**（主代理 2026-10-08 00:50 复核：14 条、逐条存在、**无** `*OK.pyc` 混入、磁盘源臂 14 枚，命名已是 `r10ls_01_else_ctx / 02_elif_ctx / 03_except_ctx / 04_finally_ctx …`）。我先前引用的 `flat_twochain / c1…c6` 是那批**已被替换的旧臂名，现已不存在**，勿按旧名找臂。先跑一次**自有基线**（`--index` 该 14 条，`files` 必须＝14）确认复现臂红、对照臂绿，再动生产码 |
+| 2 | 红臂 → 绿；对照臂**保持**绿。**基线即红的臂不得算本票成绩**（先记名再复跑：HEAD 态红、改后仍红＝该轴被否证，不是「进步了一半」）；也不得为让某条臂变绿而放宽判据 |
 | 3 | `python -X utf8 scripts/pyc_verify.py single site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc` → **17/17 status=success**（该文件只差这 1 单元 ⇒ 整文件翻正） |
 | 4 | 产物文本须出现 `order.asset.symbol[None:3] in ('688', '689')`（或其等价正确形状），**不得**以删语句达成 |
 | 5 | 哨兵不回退：`D:/Temp/r9w16/anchor_index.json`（5 文件 454/454）、`quotation` 153/153、`baseline/small34_index.json`（现 1528/1568、18 文件） |
