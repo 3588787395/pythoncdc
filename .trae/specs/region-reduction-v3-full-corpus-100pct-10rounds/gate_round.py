@@ -79,6 +79,9 @@ def stage_regen(label, budget=240):
                               str(budget), path] + ([str(cursor)] if cursor else []),
                              timeout=budget + 40)
             lines = [l for l in so.splitlines() if l.startswith('REGEN') or l.startswith('BUDGET')]
+            badl = [l for l in so.splitlines() if l.startswith('BAD ')]  # 不打印就看不见：产码器把失败文件名单独列在 BAD 行
+            if badl:
+                print('[regen %d] 失败文件：%s' % (s, ' ; '.join(badl)))
             for l in lines:
                 for tok in l.split():
                     if tok.startswith('ok='):
