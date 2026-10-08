@@ -68,3 +68,21 @@ difflib 在对齐错位后把不同语句配成一对，才显出「操作数反
 
 教训与本 campaign 的 truncation 教训同源：**hunk 的配对身份必须由语句/行号证据确立，不能由对齐算法代证**。
 只看 `replace 5→5` 的形状就写机制，等于让仪器替我下结论。此单元今后不得再用「极性」立案。
+
+## 五、B134 档里一处**不可能成立**的读数，暂不采信
+
+`DIAG_B134_TARGET_ONLY_LANDING.md` §2.2 的 oracle 实验写：
+`bar.pyc → status=failure units=85/85 success_rate=100.00%`、`strategy_universe.pyc → status=failure units=11/11`。
+但判据自身的定义排除了这种组合——`scripts/pyc_verify.py:129`：
+`row['status'] = 'success' if units_success == units_total else 'failure'`，
+且 `cmd_single` 直接打印同一行的 `status` 与 `units_success/units_total`（129→176）。
+故 **「failure 且 85/85」不可能由该工具产出**：要么单元数是 85/86（仍差 1 单元，oracle 并未把文件推到全绿），
+要么 status 抄错。两个数里必有一个是转写误差，我不采信其中任何一个，等 B134 完成后**由我自己重跑 oracle**
+（做法：把封表产物复制到 scratch，只改那一处条件表达式，用 `single <pyc> --source <scratch 副本>` 判定；
+绝不改仓内产物）。
+
+为何值得为这一个数较真：本 campaign 的整文件翻正判据就是 `status==success`，
+而 §一 的终态表、`residual_report.py` 与 `gate_round.py` 的 `report` 段全部读的是同一对字段
+（`units_success < units_total` 即算残余）。若允许「85/85 但仍 failure」这种自相矛盾的读数进入工单，
+下一轮就会出现按不存在的状态开票的空转——B129/B132/B127 三票空转的成因都是「读到的形状对了，宿主错了」，
+这次是「读数本身不可能成立」，性质更严重，须在采信前拦截。
