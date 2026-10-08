@@ -233,3 +233,18 @@ head=128 _sb_has_body=False cond_start=132 last_off=138
  要求找出可测的判别事实（候选：条件段之前是否存在**栈深归零的语句边界**、块是否有多条语句、
  是否区域入口/循环体头、前置语句目标是否落在同一区域内），并把判据贴着既有豁免
  （`_import_store_offsets`、`_b67_iter_target_offsets`）同风格落地，禁止放宽任何 `[C3]` 守卫换读数。
+
+## 11. B133 的常驻电池入库（08:09）与一条索引格式事实
+
+把工程师留在 `D:/Temp/r133/arms/` 的 9 枚臂提升进仓：`test_repros/round11/{r1..r4,s5..s9}_b130_*.py{,.c}`，
+产物一律先删后用 `pycdc.py -o` 重生成（9/9 生成成功），索引 `test_repros/round11/r133_probe_index.json`。
+当前字节读数：**9 文件 18/18 单元全绿**。
+
+**牙口只在一处**：`s9_b130_c2_return_in_loop_then_break` 在 B133 之前是 **1/2 红**、装后 2/2（工程师 A/B 表
+与我镜像复验一致），故它能侦测 `(4c)`/case 2 被回退；`r1..r4`（我原票要求的四条最小复现）在 HEAD 就是 2/2，
+**没有判别力**（B130 §Q4 早已如实写明），它们只能证明「未把健康例子改坏」，不能证明判据仍在。
+以后登记电池须照此逐臂标注「装前是红还是绿」，否则 9/9 绿会被误读成 9 枚牙。
+
+索引格式事实（我自己踩的）：`scripts/pyc_verify.py` 的 `--index` 要求条目是**对象**（`e['path']`，可选 `source`），
+写成字符串列表会在 `collect_targets` 抛 `TypeError: string indices must be integers`；
+仓内既有索引（如 `r139_probe_index.json`）即 `[{"path": "..."}]` 形状。新建索引一律照该形状并先跑一次 batch 复验。

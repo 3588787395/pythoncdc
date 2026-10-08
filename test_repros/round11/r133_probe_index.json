@@ -1,0 +1,38 @@
+[
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/test_repros/round11/r1_b130_1_posttry_stmt.pyc",
+  "rel": "test_repros/round11/r1_b130_1_posttry_stmt.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/test_repros/round11/r2_b130_2_try_except_else.pyc",
+  "rel": "test_repros/round11/r2_b130_2_try_except_else.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/test_repros/round11/r3_b130_3_for_posttry.pyc",
+  "rel": "test_repros/round11/r3_b130_3_for_posttry.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/test_repros/round11/r4_b130_4_control_nothing_after.pyc",
+  "rel": "test_repros/round11/r4_b130_4_control_nothing_after.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/test_repros/round11/s5_b130_shapeA_ifmerge_is_trytail.pyc",
+  "rel": "test_repros/round11/s5_b130_shapeA_ifmerge_is_trytail.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/test_repros/round11/s6_b130_shapeB_break_last_in_trybody.pyc",
+  "rel": "test_repros/round11/s6_b130_shapeB_break_last_in_trybody.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/test_repros/round11/s7_b130_shapeB_else_break.pyc",
+  "rel": "test_repros/round11/s7_b130_shapeB_else_break.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/test_repros/round11/s8_b130_c1_raise_in_arm_merge_is_trytail.pyc",
+  "rel": "test_repros/round11/s8_b130_c1_raise_in_arm_merge_is_trytail.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/test_repros/round11/s9_b130_c2_return_in_loop_then_break.pyc",
+  "rel": "test_repros/round11/s9_b130_c2_return_in_loop_then_break.pyc"
+ }
+]
