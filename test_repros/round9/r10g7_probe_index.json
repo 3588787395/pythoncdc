@@ -1,0 +1,59 @@
+[
+  {
+    "path": "test_repros/round9/r10g7_01_loopexit_pair_elsestmt.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_02_loopexit_pair_deep3.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_03_loopexit_pair_handler_in_loop.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_04_loopexit_pair_for_twin.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_05_loopexit_pair_two_loops.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_06_loopexit_pair_handler_then_loop.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_07_querytail_inline_single.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_08_querytail_inline_two_sites.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_09_querytail_inline_deep3.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_10_querytail_inline_double_pair.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_11_querytail_inline_handler_stmt.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_12_querytail_inline_else_arm.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_13_probe_valuetail_multiminute.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_14_probe_isnone_late_landing.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_15_probe_tuple_tail_handler.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_16_probe_checkfreq_assert_tail.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_17_ctl_rotatingfilehandler_twin.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_18_ctl_plain_try_except_trailing.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10g7_19_ctl_while_return_no_tail.pyc"
+  }
+]

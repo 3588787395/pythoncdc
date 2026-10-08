@@ -51,6 +51,12 @@
 - 11.2 台账同步：`tools/kb/syntax_coverage.py` 在本工作树实测 **分母 ast 97 + 扩展 31 = 128，分子 128，占比 100.0%**，
   未覆盖清单为空——注意此项是**语法面覆盖**，不是语料反编译成功率，两者禁止混报。
   `tools/kb/check_stale.py` 本工作树实测 `checked=60 stale=41`（此前 10 是拿用户原始 checkout 的 wiki 页比对的假数）。
+  41 页按族分：**core 24 / parsers 8 / bytecode 5 / utils 2 / pycdc 1 / pycdas 1**（清单
+  `D:/Temp/r10gate/wiki_stale_41.txt`，含逐页 page-hash 与 src-hash）。其中 1 页不是「哈希过期」而是
+  **源码已不存在**：`parsers-ast-builder-cleaned.md` 指向 `parsers/ast_builder_cleaned.py`（已无此文件），
+  该页应作废而非刷新——按「禁手改矛盾数字」的口径，它不计入「已同步」面。
+  本轮**未完成**这 41 页的重生成（每页须按当前源码重述其算法与判据，属逐页写作量），
+  如实登记为残余：Task 11.2 的 wiki 台账同步 = 41 页待重生成 + 1 页待作废。
   同类硬编码 ROOT 已清除 10 处，并落常驻牙 `tests/test_repo_tool_hygiene.py`（已入 checks 段）。
 - 11.3 终验与 push：见 §一 与文末提交记录。
 
