@@ -23,7 +23,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(r'F:\Downloads\pythoncdc-main')
+ROOT = Path(os.environ.get('KB_ROOT') or Path(__file__).resolve().parents[2])
 OUT = ROOT / 'docs' / 'refactor' / 'syntax-coverage.json'
 GEN_DIRS = [ROOT / 'core' / 'cfg', ROOT / 'parsers', ROOT / 'core']
 GEN_FILES_EXTRA = [ROOT / 'core' / 'control_flow.py', ROOT / 'core' / 'astree.py']
