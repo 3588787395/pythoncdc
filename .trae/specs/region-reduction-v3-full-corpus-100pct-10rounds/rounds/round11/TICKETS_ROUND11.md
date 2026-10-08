@@ -54,7 +54,17 @@ content 里 `删+插 ≥4` ⇒ **big**（即 UNITMAP 的分类键）。
 |---|---|---|---|---|---|---|
 | `strategy.tick_worker_thread` | **294/294** | 4 | **4** | **0** | 0 | 全差皆同 opcode 仅目标不同 ⇒ **最干净的纯落点**，且是只差 1 单元的整文件。我此前登记的 ANCHOR 子形**未由本测量证实**：4 处目标差是否须落在线锚 NOP 上，须逐差再判，不得沿用旧标签 |
 | `realtime_event_source.clock_worker` | 1442/1330 | 53 | 38 | **15** | 6 | 单元内并存省略与搬位：`delete orig[959:976]=17` 是 `if holiday_not_do_before == '0': self.event_queue.put(dt)…` 整块被吞；另有 `replace 1→3`（一条假边被拆成两条跳转）与 `7→1`。**多机制单单元**，不可一判据草率并案 |
-| `api_base.get_history_df` | **1900/1900** | 20 | 15 | 5 | 5 | 长度相同但内容差真实存在：`5→1` 把 `time_count -= 1` 复合赋值压进跳转；`1→9` 把一条假边拆成嵌套测试；`orig 5→prod 5` 处 **`count > 0` 被发成 `0 < count`**（操作数顺序与极性同翻）。故「极性」不是独立轴（与 round 9 对极性轴的否证一致），此项应按**压形 + 比较子重排**取证 |
+| `api_base.get_history_df` | **1900/1900** | 20 | 15 | 5 | 5 | **此行上一版写作「`count > 0` 被发成 `0 < count`（操作数顺序与极性同翻）」，是错的，见 §4.1 更正**。扩窗复打（两侧各 ±15 条并附行号）证明真实差因是**语句顺序跨越 if 边界被交换**：原序 `431-433 if _query_date > pm_close_market_datetime: max_len_real_data -= 1` → `434 max_len_real_data = count if count>0 else max_len_real_data` → `435 … = 0 if max_len_real_data < 0 else …`；产物把 434 的三元式提到 `-=` 之前（`@2498..@2516` 三元、`@2518..@2526` 才是 `-=`），并把该 if 的测试由 `POP_JUMP_FORWARD_IF_TRUE ->@2518` 发成 `POP_JUMP_FORWARD_IF_FALSE ->@2518`（同目标、体/跳过侧互换）。故归**体序/分支互换**族；与 round 9 已否证的「极性独立轴」无关 |
 | `handlers.TWHThreadController._target` | 203/200 | 17 | 15 | 2 | **0** | 与 B127 的读数一致（少发一对 `LOAD_CONST None/RETURN_VALUE`，其余为该 4 字节沿跳转图的位移），且**无 ≥4 指令 hunk** ⇒ 与 clock_worker 那种大块省略不同面 |
 
 注：本表只登记**分类**，不登记修复方案；具体宿主由在飞票 B133/B134/B136 与新增 B137 给出。
+
+### 4.1 对 §四 一行的更正（我自己在同一表里写错了口径）
+
+上一版把 `orig[528:533] LOAD_FAST count | COMPARE_OP '>'` 对到 `prod[532:537] LOAD_CONST '0' | COMPARE_OP '<'`，
+据以断言「比较子操作数顺序与极性同翻」。扩窗复打显示这两段**不是同一条语句**：产物的 `count > 0` 出现在更早的
+`@2502`，而 `@2532` 的 `0 <` 对应原字节 `@2542` 的另一条比较——差因是两条语句在序列里换了位置，
+difflib 在对齐错位后把不同语句配成一对，才显出「操作数反转」的假形。
+
+教训与本 campaign 的 truncation 教训同源：**hunk 的配对身份必须由语句/行号证据确立，不能由对齐算法代证**。
+只看 `replace 5→5` 的形状就写机制，等于让仪器替我下结论。此单元今后不得再用「极性」立案。
