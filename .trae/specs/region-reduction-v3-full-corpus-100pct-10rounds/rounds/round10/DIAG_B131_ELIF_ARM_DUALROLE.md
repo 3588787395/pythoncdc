@@ -406,3 +406,24 @@ IfRegion@2208 (IF_THEN)`，且 `match` 的 BoolOpRegion entry 只有 `1912/2038/
 - 门禁：`matcher.pyc` 的 `match` 单元 16/17 → 须见翻转；两个哨兵
   `trade_info_utils`（HEAD 正确，同走静默认领族）与 `jq_trans_module` 不得变红；
   **最小样例 r1–r7 无判别力，不得用作复现门禁**（三.4）。
+
+## 七、B132 FIX 票裁决：§三.3 vs §六.3 何者成立（发射端字节实测，镜像 `e9a8f65f…`）
+
+B132 工程师在封表字节 `core/cfg/region_ast_generator.py`（发射端）实测标识符读数（定义 vs 使用分列）：
+`block_roles`（复数属性，直接读）= **0**；`get_block_role(`（访问器调用）= **102**；`BlockRole`（枚举比较）= **186**；
+`IF_ELIF_CONDITION`（§三.3 拟赋予的臂入口角色）在发射端 = **0**。三个丢弃点（`:16140-16177`/`:19307-19324`/`:54886-54921`）
+实测 `get_block_role`/`BlockRole` 命中均为 **0**。
+
+⇒ **§六.3 成立**：§三.3/§五末句所荐「把臂入口身份优先级修进 `region_analyzer` 角色表 + 禁 IF_ELIF_CHAIN 相交」
+对本缺陷产物**惰性**（发射端既不直接读 `block_roles`，也不读 `IF_ELIF_CONDITION`，三条拒绝路径一条都不查角色），
+作为落地判据**作废**；角色优先级修正本身可作为分析器可解释性改进另计，非本缺陷修复点。落地机制为 §六.3 更正后
+给出的三个**发射端**站点。**此矛盾至此收口，仓库不再并存两条相反主张。**
+
+B132 追加实测（据 §六.3 三站点施于镜像，逐字节 A/B，见 `FIX_B132_ELIF_ROLE_PRIORITY.md`）：三站点协同把
+@2164 恢复到**正确兄弟层级**（缩进 28；仅 #2+#3 时误挂缩进 32）——层级修复有效；**但 `match` 仍 16/17**，
+因 @2164 体的字节码正确形 `if not is_first_five: if BUY and >=up: continue elif SELL and <=down: continue`
+（and-链扁平 + `is_first_five` 真→块后邻语句非 continue）无法由三站点产出：裸内联构造器产嵌套形、经
+`IfRegion@2208`（IF_THEN）发臂又把 guard 折进子 or 链，均 16/17；且 #3 的全称「登记⇔接收者」门把哨兵
+`trade_info_utils.create_user_code_iqe` 由 HEAD 正确打成失败（37/41→36/41，正是本文件 §一.3 预警）。
+故 §六.3 的三站点**方向正确但不足以翻转本缺陷**：最后一环是 @2208 区域的 guard/and-链渲染（越出三站点范围），
+且 #3 须收成能区分 @2164 与 `create_user_code_iqe` 的 pend_key 身份判据。**门禁不可达，B132 patch 归档不落地。**
