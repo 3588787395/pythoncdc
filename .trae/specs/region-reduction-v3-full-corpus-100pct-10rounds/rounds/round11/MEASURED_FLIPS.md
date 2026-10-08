@@ -81,3 +81,29 @@
 另注 `a3`：`not i or not x` 被发成 `not (i and x)` 仍判等通过——
 故 B134 记的 `strategy_universe` 目标形 `if not i or not X:` **未必**与本缺陷同源，
 B139 若不能自然覆盖它，须另案而非放宽判据换读数。
+
+## 5. 第二个 oracle 实测：`strategy_universe.pyc` **11/11 status=success**（05:39）
+
+产物现形（`strategy_universeOK.py`，`_on_clear_de_listed` 内）：
+```
+            if i:
+                if not i.delisted_date > self._engine.trading_dt:
+                    de_listed.add(o)
+```
+把这两行 if 合成一条语句后（scratch 副本 `D:/Temp/r139mine/su_oracle.py`，仓内产物未动）：
+```
+            if not i or not i.delisted_date > self._engine.trading_dt:
+                de_listed.add(o)
+```
+判据 `single strategy_universe.pyc --source <副本>` → **status=success units=11/11 rc=0**。
+
+**这条比字节不等更重：产物的形与原语义不等价。**
+`if i: if not X: add(o)` 只在 `i 真且 X 假` 时 add；
+`if not i or not X: add(o)` 在 `i 假` 时也 add（等价于 `not (i and X)`）。
+即当 `get_assets(o)` 返回假值时，现产物**漏掉** `de_listed.add(o)`。
+故这不是「同义改写后字节不同」，而是**逆 De Morgan 方向走错**：
+发射端把 `not i or not X` 折成了 `i and not X`（否定只作用到第二个操作数）。
+与 §3/§4 的 bar 面同族（都该是**单一 BoolOp `or` 测试**，却被拆成嵌套 if），
+但 bar 是 `A and B or C` 被拆成 `A and (B or C)`，su 是 `¬A ∨ ¬B` 被拆成 `A ∧ ¬B`——
+两个方向都是「把 or 的短路结构拆成外层 if 的嵌套」，所以一条判据**可能**同时覆盖；
+B139 须分别以两文件的逐单元读数证明覆盖了哪一面，未覆盖的一面另案，禁止放宽换数。
