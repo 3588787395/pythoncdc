@@ -15399,6 +15399,12 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 for gb in and_guard_chain:
                     visited.add(gb)
                     all_blocks.add(gb)
+            import os as _os_r8dbg
+            if _os_r8dbg.environ.get('R8CDBG'):
+                print('[R8CDBG] subj=%s cur=%s jt=%s next_off=%s success=%s and_chain=%s visited=%s' % (
+                    subject_block.start_offset, current.start_offset, jt and jt.start_offset, next_case_offset,
+                    success and success.start_offset, [b.start_offset for b in and_guard_chain],
+                    sorted(b.start_offset for b in visited)))
             pat = self.pattern_parser.parse_case_pattern(current)
             guard_jump_target = None
             pattern_jump_targets = set()
