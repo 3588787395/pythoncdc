@@ -82,7 +82,7 @@ def stage_verify(label):
     out = after_dir(label)
     for s in range(SHARDS):
         rc, so, se = run([sys.executable, '-X', 'utf8', 'scripts/pyc_verify.py', 'batch',
-                          '--index', os.path.join('baseline', 'shards', 'shard%d.json' % s),
+                          '--index', os.path.join(SPEC, 'baseline', 'shards', 'shard%d.json' % s),
                           '--json', os.path.join(out, 'shard%d_report.json' % s)], timeout=250)
         agg = {}
         for l in so.splitlines():
@@ -131,10 +131,13 @@ def stage_checks(label):
     got = [l for l in so.splitlines() if 'status=' in l]
     print('[quotation] rc=%d %s' % (rc, got[-1] if got else 'NO STATUS LINE'))
     rc, so, se = run([sys.executable, '-X', 'utf8', 'scripts/pyc_verify.py', 'batch',
-                      '--index', os.path.join('baseline', 'small34_index.json'),
+                      '--index', os.path.join(SPEC, 'baseline', 'small34_index.json'),
                       '--json', 'D:/Temp/r9main/gate_small34_%s.json' % label], timeout=250)
-    print('[small34] rc=%d %s' % (rc, ' '.join(l.strip() for l in so.splitlines()
-                                               if '"units_success"' in l or '"success"' in l)))
+    got = [l.strip() for l in so.splitlines()
+           if '"units_success"' in l or '"success"' in l]
+    print('[small34] rc=%d %s' % (rc, ' '.join(got) if got else
+                                  'NO SUMMARY LINE（本项未被测量，不得当作通过）: '
+                                  + (se.strip().splitlines()[-1] if se.strip() else '')))
     rc, so, se = run([sys.executable, '-X', 'utf8', 'scripts/pyc_verify.py', 'selfcheck',
                       'site-packages/fly/data/quotation.pyc'], timeout=200)
     print('[selfcheck] rc=%d %s' % (rc, ' | '.join(l for l in so.splitlines() if 'selfcheck' in l)))

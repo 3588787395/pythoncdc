@@ -1,9 +1,10 @@
 import hashlib
+import os
 import re
 import sys
 from pathlib import Path
 
-ROOT = Path(r"F:\Downloads\pythoncdc-main")
+ROOT = Path(os.environ.get("KB_ROOT") or Path(__file__).resolve().parents[2])
 MODULES = ROOT / "wiki" / "modules"
 
 
