@@ -182,8 +182,8 @@ For both, with X = the block carrying the failing tail (`blk@34` / `blk@46`):
 
 Hand-editing ONLY that statement in the sealed products (`D:/Temp/r134/bar_oracle.py`,
 `D:/Temp/r134/su_oracle.py`), judged with `pyc_verify single … --source`:
-* `bar.pyc` → **status=failure units=85/85 success_rate=100.00%**
-* `strategy_universe.pyc` → **status=failure units=11/11 success_rate=100.00%**
+* `bar.pyc` → **status=success units=85/85 success_rate=100.00%**
+* `strategy_universe.pyc` → **status=success units=11/11 success_rate=100.00%**
 Target shapes: bar `if A and B or C: body` (single BoolOp test); su
 `if not i or not X: body`. ⇒ Each unit is indeed the sole failing unit, and the only thing
 that must change is the *shape of that one test* — nothing is missing or extra in the product.
@@ -193,6 +193,71 @@ that must change is the *shape of that one test* — nothing is missing or extra
 ## 3. Host emitter/analyzer line
 
 (pending)
+
+## 3. Host line (measured by line-level trace on the real pipeline)
+
+Instrument `D:/Temp/r134/probe_chain2.py` (wraps the analyzer's whole BoolOp-chain family,
+filters by `cfg.code.co_name`) established that on the real path the chain detector IS
+attempted for the failing head block, and `D:/Temp/r134/probe_guard2.py` (sys.settrace inside
+that one method, frames parented to the wrapped call) recorded the exact rejecting branch.
+Call path in the analyzer: `RegionAnalyzer.analyze:1494` → `_identify_boolop_regions:26278` →
+`_detect_boolop_chain_start:27713` → **`_detect_boolop_conditional_chain`**.
+
+### U1 bar — rejected at `core/cfg/region_analyzer.py:_detect_boolop_conditional_chain:29013-29014`
+
+```
+CALL _detect_boolop_chain_start(@34 set()) from _identify_boolop_regions:26278
+CALL _detect_boolop_conditional_chain(@34 set()) from _detect_boolop_chain_start:27713  ->  None
+...
+  :28891  _r54_j=@140 _r54_f=@128          (head jump successor / fall-through successor)
+  :28916  _r54_k=@206                      (the other operand's non-target successor)
+  :28923  _r54_mixed=False                 (needs _r54_k tail ∈ FORWARD_CONDITIONAL_JUMP_OPS;
+                                            @206 tail is STORE_FAST ⇒ False)
+  :28975  _sb_has_body=True                (a STORE_FAST before the tail inside blk@34)
+  :29009  _existing_dual_br=None           (blk@34 not owned by any BoolOpRegion yet)
+  :29013  if _sb_has_body:
+  :29014  return None
+```
+⇒ The chain head `blk@34` carries two unrelated leading statements
+(`engine = Engine.instance()`, `dt = engine.calendar_dt`) **inside the same basic block** as the
+last operand test, so the `_sb_has_body` gate refuses to start a chain there and the `or`-tail
+never gets absorbed. The analyzer then reduces `blk@34` to `IfRegion(34, merge=140, then=[128,206])`
+whose merge is right, but which the emitter can only render as a nested `if`.
+
+### U2 su — chain walk stops at `…:29736-29737`, rejected at `…:29942-29943`
+
+```
+CALL _detect_boolop_conditional_chain(@46 {…blocks of the loop…}) from _detect_boolop_chain_start:27713  ->  None
+  :28891  _r54_j=@156 _r54_f=@114        (head jump successor = BODY, fall-through = next test)
+  :28975  _sb_has_body=False             (⇒ the bar gate does NOT fire here)
+  :29492  chain=[(46, 'and')]            (operand polarity inferred as `and`, not `or`)
+  :29726  ft_succ=@114 ∈ block_to_region → _ft_reg = LoopRegion
+  :29729  ft_succ ∈ _ft_reg.body_blocks  → B1b carve-out consulted
+  :29736  _b1b_loop_body_run_continuation(@46, tail, @114, has_or_member=False) → False → break
+  :29942  if len(chain) < 2:
+  :29943  return None
+```
+⇒ su is stopped by the **loop-ownership carve-out** of the chain walk (the `R2-B9`/`B1b` branch
+at `:29711-29737`), not by `_sb_has_body`. The walk never even tried `blk@114` as a second
+operand, so no `BoolOpRegion` exists anywhere in the unit (census §2 U2 confirms).
+Also note `_detect_boolop_conditional_chain(@114)` → None (the second operand as head), and
+`_resolve_boolop_condition_region(@46)` → None.
+
+### 3.1 The identity that both rejections ignore (shared criterion, separate branches)
+
+Measured whitelisted facts, identical in both units, with `H` = head block carrying the failing
+tail, `J` = H's jump successor, `F` = H's fall-through successor:
+
+* H's tail is a `POP_JUMP_FORWARD_IF_FALSE` with argval = `J.start_offset` (bar @126→140,
+  su @112→156);
+* `preds(J) == {H, F}` and `succs(J)` contains the body/next-operand while `succs(F)` contains
+  `J` (bar: F=@128 tail `POP_JUMP_FORWARD_IF_TRUE→206`, succs=[140,206];
+  su: F=@114 tail `POP_JUMP_FORWARD_IF_TRUE→198`, succs=[156,198]);
+* `J` is **not** a member of H's region `blocks` — it is held only as `merge_block` (bar) or as
+  the inner region's `then_blocks` (su);
+* no exception edge on H, F, J;
+* the emitted `IfRegion(H)` merge is exactly `J` — i.e. **the analyzer already names the correct
+  landing; nothing else in the pipeline ever consults it when attaching the tail.**
 
 ## 4. Same site or separate?
 

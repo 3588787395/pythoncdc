@@ -1,4 +1,4 @@
-# Round 11 门禁验证（region-reduction-v3-full-corpus-100pct-10rounds 续轮）
+﻿# Round 11 门禁验证（region-reduction-v3-full-corpus-100pct-10rounds 续轮）
 
 判据与口径完全沿用 round 10：唯一判据 `scripts/pyc_verify.py`（pylingual `compare_pyc`，
 CPython 3.11.7 64 位，**只比较不产码** ⇒ 每项读数前必先按当前字节删除旧产物再 `pycdc.py -o`）；
@@ -18,14 +18,28 @@ CPython 3.11.7 64 位，**只比较不产码** ⇒ 每项读数前必先按当�
 
 | # | 门禁项 | 命令 | round10 基线 | round11 终态 |
 |---|---|---|---|---|
-| 1 | 402 全量重生成 | `gate_round.py 11 10 --stage regen` | ok=402 bad=0（首轮 ok=400 bad=2 系产码器残次产物，非代码问题） | ⟨填⟩ |
-| 2 | 逐文件逐单元比较 | `--stage verify` + `--stage report` | 6577/6617（99.3955%）、386/402 | ⟨填⟩ |
-| 3 | 四项硬门禁 | 同上 report 段 | 文件级回退 0 ∧ UNIT_REGRESSIONS 0 ∧ 新增失败单元 0 | ⟨填：翻正单元须列名⟩ |
-| 4 | quotation | `single site-packages/fly/data/quotation.pyc` | 153/153 | ⟨填⟩ |
-| 5 | small34 | `batch --index baseline/small34_index.json` | 1528/1568，34 文件中 18 全绿 | ⟨填⟩ |
-| 6 | 尺子自检 | `selfcheck` | 153/153 Equal；变异常量 1/153、极性 1/153 | ⟨填⟩ |
-| 7 | pytest 七套件 | `--stage checks` | 2 failed / 280 passed / 2 xpassed，二红同名 ⇒ 零新增失败 | ⟨填⟩ |
-| 8 | 残余表 | `residual_report.py 11 10` | 16 文件 / 40 单元，UNREGISTERED=0 | ⟨填⟩ |
+| 1 | 402 全量重生成 | `gate_round.py 11 10 --stage regen` | ok=402 bad=0（首轮 ok=400 bad=2 系产码器残次产物，非代码问题） | **ok=402 bad=0**，且无 `BUDGET` 截断 |
+| 2 | 逐文件逐单元比较 | `--stage verify` + `--stage report` | 6577/6617（99.3955%）、386/402 | **6580/6617（99.4408%）、387/402**；八份分片报告齐（402 行） |
+| 3 | 四项硬门禁 | 同上 report 段 | 文件级回退 0 ∧ UNIT_REGRESSIONS 0 ∧ 新增失败单元 0 | **全部 0；翻正单元 3**（列名：`klinedata.get_multiminute_his_data`、`trade_info_utils.get_trade_status`、`load_daily.<module>`；UNIT-UP 三文件 61→62、37→38、26→27） |
+| 4 | quotation | `single site-packages/fly/data/quotation.pyc` | 153/153 | **153/153** |
+| 5 | small34 | `batch --index baseline/small34_index.json` | 1528/1568，34 文件中 18 全绿 | **1531/1568，34 文件中 19 全绿** |
+| 6 | 尺子自检 | `selfcheck` | 153/153 Equal；变异常量 1/153、极性 1/153 | **153/153 Equal；1/153、1/153 ⇒ 判据可用** |
+| 7 | pytest 七套件 | `--stage checks` | 2 failed / 280 passed / 2 xpassed，二红同名 ⇒ 零新增失败 | **2 failed / 280 passed / 2 xpassed**，二红逐名同基线 ⇒ 零新增失败 |
+| 8 | 残余表 | `residual_report.py 11 10` | 16 文件 / 40 单元，UNREGISTERED=0 | **15 文件 / 37 单元**，UNREGISTERED=0（表见 `RESIDUAL_R11.md`） |
+
+### 一处本轮自查的方法错误（写明以免重犯）
+
+`gate_chain11.sh` 是用 `sed` 从 `gate_chain.sh` 改出来的，而脚本内实际调用形如
+`python -X utf8 -u "$G" 10 9 --stage …`（`gate_round.py` 只出现在变量赋值行），
+故我的替换式 `s/gate_round.py 10 9/…/` **一条都没命中**：整条链路以 **label 10 / before 9** 跑完，
+把改后读数写进了 `rounds/round10/after/`，覆盖掉工作树里的 round-10 封表基线。
+数值本身不错（10 vs 9 与 11 vs 10 的比较基线同为封表 6577/386），但**标签是错的**，
+且会让下一轮把 round10/after 当作封表基线复用。处置：先把八份报告原样复制到
+`rounds/round11/after/`，再 `git checkout -- rounds/round10/after/` 取回封表基线（复验 diff=0），
+然后以正确标签重跑 `--stage report`（纯 JSON、无子进程）与 `residual_report.py 11 10`，
+两者读数与原运行逐位一致（6580/6617、387/402、四项门禁 0、翻正 3 同名）。
+教训：**改脚本要用能命中实际调用形的模式，改完必须 grep 复验命中数**；
+跨轮读写同一目录的门禁产物前，先确认标签与目录一致（本项目 `report` 段本就按目录取数）。
 
 ## 三、纪律核对
 
