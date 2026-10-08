@@ -89,3 +89,27 @@ difflib 在对齐错位后把不同语句配成一对，才显出「操作数反
 
 **裁定（05:21 我自己重跑）**：`bar.pyc` 用同一处单语句改形的 scratch 副本判出 **status=success units=85/85 rc=0**，
 故 `units=85/85` 属实、`status=failure` 是抄写误差；见 `MEASURED_FLIPS.md` §3。
+
+## 六、B134 宿主已钉（14:10）与一条**文件级冲突**预警
+
+宿主全在 `core/cfg/region_analyzer.py:_detect_boolop_conditional_chain`（调用链
+`analyze:1494 → _identify_boolop_regions:26278 → _detect_boolop_chain_start:27713 → 本方法`），
+但**两条拒绝分支不同**：
+* **bar**：`:29013-29014` 的 `if _sb_has_body: return None`。实测 `_sb_has_body=True`，因为链头块
+  `blk@34` 里在最后一个操作数测试之前带着**两条无关前置语句**（`engine = Engine.instance()`、
+  `dt = engine.calendar_dt`）——同一基本块内的前置语句让链检测直接放弃，`or` 尾操作数无从吸收；
+  随后分析器仍给出 merge 正确的 `IfRegion(34, merge=140, then=[128,206])`，但发射端只能渲染成嵌套 `if`。
+* **su**：链走查在 `:29736-29737` 的循环归属豁免 `_b1b_loop_body_run_continuation(...) → False` 处
+  break，最终 `:29942-29943` 因 `len(chain) < 2` 返回 None；`_sb_has_body` 在此为 False，
+  所以 bar 那扇门**根本没有触发**。该单元内不存在任何 BoolOpRegion。
+
+⇒ **一面判据不可能同时收两门**：B139 须分别处理这两个分支（或找到 §3.1 那条两态共用的身份判据），
+且 su 侧要动的是循环归属豁免、bar 侧要动的是「块内前置语句」闸——两者与 §5/§6 的 oracle 目标形一致。
+
+**冲突预警（施工纪律）**：B133 的宿主也在 `region_analyzer.py`（`_compute_arm_level_join`、
+`_try_body_terminates_abnormally`），与 B139 同文件不同方法。两票都按纪律只交付**整份改后文件**，
+而整份复制会**互相覆盖**。故落地顺序固定为：
+① 先装 B133 整份文件 → 复验其靶（load_daily / trade_info_utils）→ 跑一次整链路；
+② 再以**当前已含 B133 的字节**为基线，把 B139 的改动重做（不能直接复制 B139 镜像里的整份文件，
+   那会抹掉 B133），并在工单里逐 hunk 核对；
+③ 任一阶段哨兵回退即按 sha256 回到上一阶段字节。
