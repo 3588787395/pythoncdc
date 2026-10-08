@@ -1,4 +1,4 @@
-"""One-shot round gate driver for the region-reduction campaign (staged to respect the 300s cap).
+﻿"""One-shot round gate driver for the region-reduction campaign (staged to respect the 300s cap).
 
 Stages (run one per invocation; `all` is refused so no single command can exceed 300s):
   regen   - regenerate the 402 corpus products from the CURRENT working-tree code, shard by shard
@@ -167,7 +167,8 @@ def stage_checks(label):
                       'tests/test_algorithm_correctness.py', 'tests/test_deep_nesting_pressure.py',
                       'tests/test_control_flow_completeness_matrix.py',
                       'tests/test_complete_syntax_coverage.py', 'tests/test_boundary_cases.py',
-                      'tests/test_core_functional.py'], timeout=200)
+                      'tests/test_core_functional.py',
+                      'tests/test_repo_tool_hygiene.py'], timeout=200)
     tail = [l for l in (so + se).splitlines() if ' passed' in l or ' failed' in l]
     print('[pytest] rc=%d %s' % (rc, tail[-1] if tail else 'NO SUMMARY LINE'))
 
