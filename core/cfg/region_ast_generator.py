@@ -27970,7 +27970,14 @@ AST 映射规则:
         循环宿主守卫 _is_inside_intermediate_loop、entry 被 handler/else 持有）
         排除的内层 try 归本方法预生成；其余块按 generated_blocks/
         generated_offsets 去重后逐块发射（预生成前 discard 内层块标记，防止
-        双份/蒸发）。
+        双份/蒸发）。表达式子区域（_EXPR_REGION_TYPES）的 entry 落在本域
+        handler 块集（_06_handler_block_set）或 else 块集（_06_else_block_set，
+        [R71-exctable]）时跳过发射，唯一归属交回 handler/else 体装配；
+        [B108] finally 体 normal path 副本 ternary 跳过：entry ∉ 本域
+        finally 块集、但存在等块数 sibling TernaryRegion 的 entry ∈ 本域
+        finally 块集（结构同构 ⇒ 副本）时，该子区域整体标记 generated 不
+        发射，唯一归属 finalbody（经 exception path 副本归约单份 IfExp）；
+        判据全部为区域成员关系 + 块数事实（I.4 白名单）。
         ④嵌套处理：嵌套区域作为抽象节点——命中判定的内层 TryExceptRegion
         经 _generate_try 整树生成单个 ast.Try 节点直接 append 进 body_stmts，
         其成员块随后登记 generated_blocks，外层不再按块重建；[R13]/[R86]
@@ -29112,9 +29119,6 @@ AST 映射规则:
             for child in region.children:
                 if isinstance(child, RegionASTGenerator._EXPR_REGION_TYPES):
                     child_id = id(child)
-                    import os as _os_r8fb
-                    if _os_r8fb.environ.get('R8FIXBDBG') == '1':
-                        print(f"[R8FIXBDBG] child walk region@{region.entry.start_offset} child@{child.entry.start_offset if child.entry else None} in_ids={child_id in _ids} gen={child.entry in self.generated_blocks if child.entry else None} genreg={child_id in self._generated_regions}", flush=True)
                     if child_id not in self._generated_regions and child_id not in self._generating_regions:
                         # 跳过 entry 落在 handler 内部的子区域 —
                         # 这些 ternary/boolop 应由 handler body 遍历处理
@@ -31240,10 +31244,6 @@ AST 映射规则:
                     for fb in region.finally_blocks:
                         self.generated_blocks.discard(fb)
                     for fb in region.finally_blocks:
-                        import os as _os_r8fb2
-                        if _os_r8fb2.environ.get('R8FIXBDBG') == '1':
-                            _gb34 = fb in self.generated_blocks
-                            print(f"[R8FIXBDBG] finalbody legacy fb@{fb.start_offset} gen={_gb34} genoff={fb.start_offset in _generated_finally_offsets}", flush=True)
                         if fb.start_offset in _generated_finally_offsets:
                             continue
                         # [R09 fix] 每块唯一归属：本循环内子区域派发（上方分支）
@@ -31903,7 +31903,11 @@ AST 映射规则:
         IMPORT_NAME(+IMPORT_FROM/IMPORT_STAR)+STORE_* 序列唯一归单一
         Import/ImportFrom（相对层级经 module 名前置 '.'*level 显式表达，
         判据 = IMPORT_NAME 前导 LOAD_CONST int，I.4 白名单）；as-var 清理
-        指令归 except 机制，不产生源码。
+        指令归 except 机制，不产生源码；DELETE_FAST/NAME/GLOBAL/DEREF
+        重建为 Delete([Name(ctx='Del')])、DELETE_ATTR/DELETE_SUBSCR 经
+        _build_delete_stmt 重建（[B108] 与 _generate_block_statements 的
+        DELETE 分支同 opcode 集同语义，两路径 C2 一致），as-var 清理守卫
+        命中（本块内紧邻前驱 LOAD_CONST None + STORE <v> 同名）时不发射。
         ④嵌套处理：本方法只处理单个基本块，不递归子区域；嵌套区域由调用方
         （try/finally 装配）以抽象节点整树生成。
         ⑤入口引用语义：返回 AST 语句字典列表，供 except handler 体 / finally

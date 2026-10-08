@@ -221,7 +221,35 @@ class ExpressionReconstructor:
         return None
     
     def _process_instruction(self, instr: Instruction) -> None:
-        """处理单条指令"""
+        """_process_instruction — 单条指令的栈机派发（表达式重建最内层步）。
+
+        ①算法依据：No More Gotos「区域归约四原则」在表达式层的对应——按
+        指令序单遍栈模拟，每条指令的语义只由 opcode 与本实例栈内已有节点
+        决定（算法驱动，不回溯修正）。
+        ②归约顺序：自底向上——操作数指令先入栈，消费型指令
+        （BINARY_OP/COMPARE_OP/CALL/BUILD_*/MAP_ADD/MATCH_* 等）后弹出
+        操作数归约出父节点；开启中的三元区域经 _track_ternary_region 在
+        扫描抵达汇合点时先闭合（[test, body, orelse] → IfExp）再处理当前
+        指令，保证消费端栈契约。
+        ③唯一归属判定：每条指令恰被一个 elif 分支处理——加载指令族
+        （LOAD_NAME/GLOBAL/FAST/DEREF，及 [B111] 补全的 cell 引用族
+        LOAD_CLOSURE/LOAD_CLASSDEREF）产生 Name(Load) 入栈（漏列会静默
+        丢栈导致消费端操作数错位，如 @deco(x) 退化 @((x,))）；COPY+
+        STORE 组合按海象语义归约 NamedExpr；无对应分支的 opcode 显式
+        落空（框架/未涉表达式指令不产生节点）。
+        ④嵌套处理：嵌套表达式（嵌套海象/链式比较/嵌套三元/嵌套 Call）
+        作为栈上抽象节点被外层消费型指令整体引用，不展开重算。
+        ⑤入口引用语义：节点只经栈顶序被消费端引用（栈契约）；本方法
+        不返回值，产物留在 self.stack 由 reconstruct 取栈顶非 PUSH_NULL
+        者为表达式根。
+        ⑥反编译流程：位于表达式重建管线最内层（reconstruct → 本方法
+        逐指令派发），被区域生成层的语句装配按表达式段调用。
+
+        C 条款：[C1] 只消费单条指令与本实例栈状态（局部消费）；[C2]
+        同 opcode 同语义——加载族清单与 _load_instr_to_ast 一致
+        （[B111] 两处同族同集）；[C3] 无分支 opcode 的落空是显式豁免
+        （不吞并已知 opcode，不产生幻影节点）。
+        """
         opname = instr.opname
 
         # [三元区域] 先把可能已抵达汇合点的三元区域闭合，再处理当前指令，
@@ -2386,7 +2414,26 @@ class ExpressionReconstructor:
         return op_map.get(opname, opname)
     
     def _load_instr_to_ast(self, instr) -> Dict[str, Any]:
-        """将加载指令转换为AST节点"""
+        """_load_instr_to_ast — 加载指令 → 表达式节点（Name/Constant）。
+
+        ①算法依据：No More Gotos「区域归约四原则」表达式层对应——单条
+        指令的确定性映射，语义只由 opcode 决定。
+        ②归约顺序：自底向上——本方法是叶子级归约（无子表达式可先归约）。
+        ③唯一归属判定：LOAD_CONST → Constant；加载名字族
+        （LOAD_NAME/GLOBAL/FAST/DEREF + [B111] cell 引用族
+        LOAD_CLOSURE/LOAD_CLASSDEREF）→ Name(id=argval, ctx='Load')，
+        与 _process_instruction 加载分支同 opcode 集同语义（漏列会落占位
+        符分支产生 `<LOAD_CLASSDEREF>` 假名）；其余 opcode 落显式占位符
+        分支 Name(id=f'<{opname}>')。
+        ④嵌套处理：无嵌套（叶子映射）。
+        ⑤入口引用语义：返回单表达式节点 dict 交调用方装配。
+        ⑥反编译流程：表达式重建管线的叶子映射步，被本类各复合重建
+        路径按需调用。
+
+        C 条款：[C1] 只读单条指令；[C2] 与 _process_instruction 加载
+        分支同集同语义（[B111]）；[C3] 未知 opcode 占位符是显式豁免
+        分支，不静默丢弃。
+        """
         opname = instr.opname
         if opname in ('LOAD_CONST', 'LOAD_CONSTANT'):
             return {

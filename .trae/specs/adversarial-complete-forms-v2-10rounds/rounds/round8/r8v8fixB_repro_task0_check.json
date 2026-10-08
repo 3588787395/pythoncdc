@@ -1,0 +1,26 @@
+[
+ {
+  "name": "B108_main",
+  "pyc": "test_repros/round4/c4_06_try_finally_only.pyc",
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "name": "B111_main",
+  "pyc": "test_repros/round4/c4_19_decorator_args.pyc",
+  "status": "success",
+  "units_success": 28,
+  "units_total": 28,
+  "failures": []
+ },
+ {
+  "name": "B111_cross",
+  "pyc": "test_repros/round5/r5v5_12_decorator_cross.pyc",
+  "status": "success",
+  "units_success": 22,
+  "units_total": 22,
+  "failures": []
+ }
+]
