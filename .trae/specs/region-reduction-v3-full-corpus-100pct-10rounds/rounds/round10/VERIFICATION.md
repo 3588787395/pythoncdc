@@ -1,4 +1,4 @@
-# Round 10 门禁验证与终态台账（region-reduction-v3-full-corpus-100pct-10rounds）
+﻿# Round 10 门禁验证与终态台账（region-reduction-v3-full-corpus-100pct-10rounds）
 
 封表口径：唯一判据 `scripts/pyc_verify.py`（pylingual `compare_pyc`，本机 CPython 3.11.7 64 位，
 **只比较、不产码**，故每项读数都须先按当前字节删除旧产物再 `pycdc.py -o` 重生成）。
@@ -26,6 +26,7 @@
 | B128 → B131 | matcher 被吞的 10 条切片测试语句 | **诊断完成**：真实宿主链为 R(entry 1912)，`@2164` 是其 `merge_block`；两条**独立**丢弃通道（`:19324` 认领 + `:54896-54921` 递延无人接手），仅抑制前者产物**逐字节不变**；病根在分析端——R(1912)∩R(2038)={2038,2160} 的幽灵链与 `BlockRole.IF_ELIF_CONDITION` 在 `match` 中命中 0 次（循环先 stamp `LOOP_BODY` + `_assign_region_role` 先写者胜） | `DIAG_B131_ELIF_ARM_DUALROLE.md` 三.1–三.4/五/六 |
 | B132 | 同上之**修复**（臂入口身份写回识别阶段 + 禁链块集相交 + 发射端事后认领限于自有块） | ⟨填：补丁是否落地、matcher 是否 17/17、两哨兵读数⟩ | `FIX_B132_ELIF_ROLE_PRIORITY.md`、`D:/Temp/r132/b132.patch` |
 | #15 / B127 | 共享隐式尾声 epilogue 未被认成单一落点；以**区域臂成员事实**替换 `:51806-51812` 的 `POP_TOP` 巧合支（标记 `[r10-b127-g7member]`） | **主代理实测零翻转 ⇒ 逐字节回滚**（2026-10-08 03:18–03:22）。工程师在镜像内实现并自证镜像等价后，主代理把补丁装入工作树复验：`IQCommon/logger/handlers.pyc` 重生成后仍 **29/30**（目标单元 `<module>.TWHThreadController._target` 未翻正，票面 §二.1 夹钳 17→0 未达），quotation 仍 153/153（无回退亦无收益）。回滚后 sha256 复验 `e9a8f65f6451bcc8` 与封表一致、标记 grep 计数 0、`git status --porcelain -- core/` 为空，两个被重生成的产物（handlers/quotation）按当前字节重生成并复验读数与封表一致 | `FIX_B127_G7_MEMBER.md`；补丁留档 `D:/Temp/r15b/b127.patch`（63 行变更，判据面为 then/else/elif_final_else/elif_bodies 成员） |
+| ↑ 的**成因**（工程师与我各独立测到同一结论） | 该票面指定的 `[G7]` 站点**对本单元根本不执行**：按门序逐条复演，循环在 **G4b 于 `@404`** 处（`:51799`）就已 break，永远走不到 `:51806-51812`；且本 sink 集是**只抑制不发射**的面（`:51909` 返回空语句表），强制把 `@408` 或两块都纳入只让产物掉到 195 条指令、hunks 仍 17 ⇒ **任何 G7 侧改写都无法补回那一对**。真正的缺陷在发射端：`_generate_block_statements` 对 `@404` **从未被调用**——`_loop_generate_while` 只消费 `body_blocks` 与 `else_blocks=[@408]`。另订正票面 §一：`@408` **不是**「其后语句的共用尾」（`@404` 前驱末指令为 `POP_JUMP_BACKWARD_IF_TRUE→@104` 的落空边、`@408` 前驱 `@90` 末指令为 `POP_JUMP_FORWARD_IF_FALSE→@408` 的跳转落点，两者旧新判据**同判为拒**，故读数不变）；而我给的四处锚点 `:51700/:51806-51812/:51813-51821` 经复验**全部正确**（巧合支恰在 `:51810`）。轴面不是装饰的量化证据：G1–G6 存活终块 194 个，新旧判据分歧 35 处（19+16 双向） |
 | B127 交付方式的一条工艺教训 | 补丁**装不进工作树**：`git apply --check` 报 `corrupt patch at line 70`（镜像内生成的 diff 与本仓文本过滤器/CRLF 不合） | 主代理改法：直接从镜像取**整份已改文件**装入（先存 `D:/Temp/r10gate/pre_b127_generator.py` 原字节，装入后 `py_compile` + 标记计数 + 逐字节回滚复验）。今后派工单一律要求同时交付补丁与已改文件副本，且工程师须自报「在仓内 `git apply --check` 是否通过」 | `D:/Temp/r15b/wt/core/cfg/region_ast_generator.py`（改后字节 `47d52c5443c4004e`）、`region_ast_generator.HEAD.blob` |
 | B130 | F1「try/except 之后的顺序续体被让给 handler 尾声」 | **诊断完成且否证本票前提**：`load_daily` 的 `@2478` 实为 try 体内末条语句且是 `IfRegion(cond@740)` 的汇合块，该 if 的 `merge_block` 被解到整个 try 结构之外（`@2768`）；`trade_info_utils.get_trade_status` 的真实缺口是 try 体尾的 `break`/`else: break` 未发射。**两文件机制不同，禁止并案**；另更正 `TryExceptRegion` 根本没有 `merge_block`/`natural_exit` 字段 | `DIAG_B130_POSTTRY_LANDING.md` §1/§1.1/§1.2 |
 | #21–#24 | 生成器内下标操作数链 / `order_api` 被吞条件语句与三元操作数链 / 函数内 import 丢失（4 处复制的硬编码前瞻窗）/ f-string 字面碎片拼接外来标识符 | 本轮未派工（各自机制已在 `UNITMAP_R10.md` 具名登记） | 同档 §五–§七 |
@@ -100,6 +101,8 @@ HEAD 基线残余（本轮起点）：**16 文件 / 40 单元**，机制分组�
 以本文件 §四 为准。
 
 ## 八、续跑点（本轮收尾被回合预算截断时的交接，2026-10-08 03:30 写入）
+
+**本轮尚未封闭**：§一「round10 终态」列仍为 ⟨填⟩，须等 `gate_chain_1122.log` 跑完并逐项转录后方可视为门禁通过（实测 11:36 regen 完成 6/8 片，verify 未开始）；在其读数落盘前，本档不得被引用为「本轮已通过门禁」。
 
 状态事实：`core/` 为封表字节（`region_ast_generator.py = e9a8f65f6451bcc8…`、
 `region_analyzer.py = 38a1d5142d132fd7…`，`git status --porcelain -- core/` 为空），
