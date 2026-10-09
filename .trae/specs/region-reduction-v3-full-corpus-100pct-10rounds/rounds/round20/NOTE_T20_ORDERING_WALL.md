@@ -324,10 +324,13 @@ landed（无判据）：len 295/296 delta=+1  hunks=1 landings=1   ← 多发的
 
 ```
 生成端 `core/cfg/region_ast_generator.py`
-  :20110-:20113  工具函数 docstring 自述「返回 (jump_target_block, fallthrough_block)；
-                 jump 目标取自末指令 argval」，:20121 `jump_target = self.cfg.get_block_by_offset(last.argval)`
-                 :20124-:20128 仅校验「另一后继是否≠jump_target」后原样返回 ——
-                 即**臂尾落点取自原字节码的既有跳**，而不是区域声明的 merge；
+  :20105-:20128  【更正】我先前把它记作「臂尾落点取自原块既有跳」是**错的**：
+                 它的入参是**条件块**（`cond_block`，末指令必须是条件跳转族），
+                 返回 (jump_target_block, fallthrough_block) 只用于**区分嵌套 if 与扁平 and**
+                 （docstring 自述），不参与 elif 臂尾落点。⇒ 落点族**不能**改这里；
+                 真正要找的是 elif 链装配里写臂尾/汇合落点的支路
+                 （候选仍是 :19454 `elif_jump_target = elif_last.argval` 与五处
+                 `{'type': 'Continue'}` 支路，以及 :39406 这一处唯一按声明 merge 落点的用法）。
   :39406         `merge_offset = region.merge_block.start_offset`（全文件 33 处读 `merge_block.start_offset`
                  中唯一把声明 merge 当跳落点用的地方 —— #37 已落地的正是「尾巴按声明 merge 落点」这一族，
                  但覆盖不全）；
