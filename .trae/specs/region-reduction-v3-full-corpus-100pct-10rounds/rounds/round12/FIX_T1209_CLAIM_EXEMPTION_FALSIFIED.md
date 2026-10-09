@@ -73,11 +73,11 @@ hunk 剖面（`D:/Temp/r138/hunk138.py` 口径）：`delete orig[1179:1289]=110`
      读数为 `er=IfRegion [8166, 7972, 7980] contained=True er_gen=False er_ing=False gen_blk=False`
      ⇒ 包含性成立、id 排除也未命中，两道前置门都没拦。
 3. 真正的残余形状在**产物文本**里（`diff` HEAD 20555 vs 候选 21692，唯一 hunk 在 clock_worker）：
-   候选把 @7972 发成了**负极性的空臂**，语句体掉在 if 之后无条件执行——
+   候选把 @7972 发成了**空臂**，语句体掉在 if 之后无条件执行——
 
 ```
 -                    server_restart_do_before_type = '0'
-+                                if persist_flag is False:      # 原文是 if persist_flag is not False:
++                                if persist_flag is False:      # 文本本身是对的，见下方订正
 +                                    pass                        # 臂体没有挂进来
 +                                try:                            # 以下 63 条指令 = 原臂体，位置对但归属错
 +                                    server_restart_do_before_type = str(self._engine.config.user.server_restart_not_do_before)
@@ -91,12 +91,34 @@ hunk 剖面（`D:/Temp/r138/hunk138.py` 口径）：`delete orig[1179:1289]=110`
 +                                                pass            # 第三次
 ```
 
+   **订正（同日只读普查，`D:/Temp/r141/p1_census.txt:39-41`）**：本文件 §5 初稿把这一形写作
+   「负极性的空臂（原文是 `if persist_flag is not False:`）」——**极性判断是错的**。
+   块 @7972 自己的指令就是
+   `LOAD_FAST persist_flag | LOAD_CONST False | IS_OP 0 | POP_JUMP_FORWARD_IF_FALSE 8170`，
+   succs `[9218, 7980, 8170]` ⇒ 真边落到 7980（体）、假边跳到 8170（汇合），
+   所以产物里的文本 `if persist_flag is False:` **与字节一致**，缺陷只在**臂体归属丢失**
+   （以及由此产生的两条边都落到体）。写这段初稿时我手上有普查文件却没打开——
+   这是「结论先于读数」的旧病，登记在此。
+
    同一单元 hunk 剖面（候选产物）：`len 1424/1372 net=+52 hunks=51 real=7 reloc=44 deleted=186 inserted=134`。
-   即：**语句回来了（63 条）但归属没回来**——IfRegion@7972 的 If 节点臂体为空，
-   真臂体由父臂走查当作普通块续发，因此单元仍红。
-4. 下一票（T12-11）的宿主因此收窄到一处：`_generate_region(IfRegion@7972)` 产出的 If 节点里
-   `then/else` 关联为何为空（以及 `is not False` 为何被写成 `is False`）。三处「空臂 pass」同形
-   出现在同一产物内 ⇒ 先按**一形三例**取证再定判据，不得单例成说。
+   即：**语句回来了（63 条）但归属没回来**。
+4. **取「谁在分派前认领了臂体」的探针本身失效，读数作废**：
+   `D:/Temp/r141/t1211_writer.py`（类属性 TSet 写栈 + `_generate_region` 包装，跑在候选字节上）
+   自证结果 = **PERTURBING**（LF 归一后 cand 21327 vs probe 21225，差 102 字节）。
+   因此它打印的「分派瞬间 `7980 in generated_blocks=False`」与首写栈
+   （`_if_generate_normal → _if_generate_then_branch → _process_if_blocks(region.then_blocks=@7972,'then') → add(7980)`）
+   描述的**不是被判决的那个运行**，不得作为事实引用；本票只保留一个方法论结论：
+   加 `_generate_region` 包装会改变产物，写栈类探针必须在**同构建 A/B 逐字节相同**的自证之后才可用
+   （t1210 的只读探针做到了：A==B）。
+5. 下一票（T12-11，见 `tasks` #33）的宿主因此仍未定：@7972 的 If 节点臂体为何为空。
+   同一「空臂 pass」形在同一产物内出现三次 ⇒ 先按**一形三例**用**已证惰性**的行级追踪取证
+   （r150/t1217 那类仪器对 HEAD 产物逐字节相同），再定判据。
    注意 `if X: pass` + 体无条件后继在字节上是**两条边都落到体**，与原文 `true→体 / false→体后`
    不同 ⇒ 这正是残余 `reloc=44` 的来源之一。
+6. **轴切换**：clock_worker 的「认领/归属」轴已有 T12-05/06/08/09 四张零翻正工单
+   （09 首次让派发真正发生并回收 63 条指令，但判决仍为 0 翻正）。
+   按「两三次零翻正就换轴」的既定规则，下一张落地票改打**从未攻过的 matcher 轴**
+   （`rounds/round11/DIAG_B138_MATCHER_LAST_MILE.md` 已给出 17/17 的字节正确文本与三处折叠，
+   生成端 boolop 臂渲染/操作数树从未被实测定位），#33 作为该轴的后续票排队而不占用本轮派发。
+
 
