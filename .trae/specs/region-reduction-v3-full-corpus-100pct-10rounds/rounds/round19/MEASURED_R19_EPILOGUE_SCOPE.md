@@ -12,3 +12,25 @@
 在该处丢了 local/global 判定（与 task #23「函数内 import 丢失」是同一作用域家族的两个面）。
 两条 hunk 同形 ⇒ 一处判据可同时解两处，但 `get_real_from_zeromq` 仍有第 3~5 条 hunk 未誊出，
 开票前先用 `unit_diff.py --all` 看全 5 条再定共要件。
+
+## 第 19 轮复核：trade_live_broker 大缺失族前提仍然成立（19.2 票未失效）
+
+`unit_diff.py <broker.pyc> _process_order --all`（landed 字节，2026-10-09 13:44）：
+
+```
+len orig=507 prod=42 delta=-465      hunks=4
+== delete orig[15..48 @98..@316] del=33 ins=0
+   - @98  LOAD_FAST self   - @100 LOAD_ATTR lock   - @110 LOAD_METHOD acquire
+   - @132 PRECALL          - @136 CALL             - @146 POP_TOP
+   - @148 LOAD_FAST self   - @150 LOAD_ATTR open_orders - @160 LOAD_METHOD pop …
+== …  orig[506..507 @3170] del=1 ins=2:  - JUMP_BACKWARD  → + LOAD_CONST None / RETURN_VALUE
+```
+
+⇒ 函数在第 15 条之后**整体截断**（`self.lock.acquire()` 起的 33 条连同其后全部语句未发），
+且循环回边 `JUMP_BACKWARD@3170` 被写成 `LOAD_CONST None; RETURN_VALUE`。
+这与 19.2 登记的角色读反（`@94` 条件臂真边=循环体被发射成出口，体成死代码被丢）一致，
+且说明截断点在**第一条 with/lock 语句之前**，不是尾部钳制问题。
+本族三个单元（`_process_order −465/507`、`_process_cancel_order −293/333`、`_trade_status_handle −18`）
+在同一文件，`trade_live_broker` 128 单元里 10 个失败 ⇒ 该族只涨单元数、不解整文件，
+排优先级时须与「唯一失败单元即整文件」的两票（api_base / strategy / order_api）分开。
+
