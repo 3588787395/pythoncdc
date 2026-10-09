@@ -472,6 +472,29 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 - 仓库此刻：`git status --porcelain -- core/` 空；三哈希 `dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`；
   门读数 6586/6617 units、391/402 files；残差 11 files / 31 units；
   哨兵 `tests/test_product_freshness.py` 与 R20-3 裁定已推送（远端 `527eeb18`，`git ls-remote` 判真）。
+
+## 20C. 三名并行工程师与两件我实测的新事实（2026-10-10 02:45）
+
+**在飞（两个，互不重叠，都在各自镜像里测量）**：
+- `r20n`（`D:/Temp/r20n`，拥有 `core/cfg/region_analyzer.py`）= 任务 #50，BoolOp 链成员与 arm 属主的识别期声明。
+- `r20q`（`D:/Temp/r20q`，**只诊断、不许改仓库字节**）= 任务 #51，函数内 `import` 丢失的主机定位。
+- 另：`r20m` 已收票（0 落地），不要再派同一机制。
+
+我在落地字节上自己测的（无门链在跑，`tests/test_product_freshness.py` 已证产物新鲜，读数可信）：
+- `IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc` = 41/43，两个失败单元**不是同一机制**，
+  所以 #23 那张票只能按一个单元记账：
+  - `<module>.PluginRiskCalculation._on_publish_after_trading_end`：`len orig=528 prod=524 delta=-4 hunks=3 landings=1 judge_diff=True`
+    ⇒ 一条函数内 `import` 整串未发（#23 轴）；
+  - `<module>.PluginRiskCalculation._save_testds_to_csv`：删 `LOAD_CONST 0.01 / PRECALL / CALL / POP_TOP`
+    ＋ 多插一条 `JUMP_FORWARD` ＋ 3 处落点差 ⇒ **另一条轴**，禁止与上者捆绑进同一票。
+- 发射点 grep 结果（供 #51 用，不必重扫）：真正的语句发射器在
+  `core/cfg/ast_generator_v2.py:23759`（`opname == 'IMPORT_NAME'`）与 `:23803`（`IMPORT_FROM`）；
+  推导式内的 import 在 `core/cfg/comprehension_generator.py:917/:1028`；
+  `region_ast_generator.py` 的 107 处 `IMPORT_NAME` 绝大多数是 opcode 分类集合而非决策点。
+- 记账口径：#51 若翻正只到 41→42/43（不翻文件），但单元 6586→6587，符合"以单元翻正收票"的既有口径（gate 18 的 klinedata 62→63 就是这么收的）。
+
+**恢复后的顺序**：先读 `r20n` 的 `DELIVER/FIX_T20-4.md` 走 §19C（换文件为 analyzer，锚点 `640d33a77dcb71c2`）；
+门链跑完再动 `r20q` 的诊断结论（它不改字节，因此不占门资源，但它若在测量，仓库 `core/` 一个字节都不要改）。
 2. 有交付文件 ⇒ 走 §19C 全文（数哈希 → 丢弃镜像复测 → install → 一条后台门链 → 封表 → 提交推送）。
 3. 门链期间**不安装、不改 `core/`、不读仓库 `*OK.py`**（产物正在被删除重写）。
 4. 任何一张票落地都要提交并 `git push origin HEAD:refs/heads/rr-v3r01-f557fd`，用 `git ls-remote` 判真。
