@@ -95,3 +95,29 @@ IfRegion entry=2802 cond=2802 merge=3076
   抽查实判 `klinedata 63/64`、`api_base 27/28`
 - 残差名册 `RESIDUAL_ROUND18.md`：12 文件 / **33 单元**（= 6617 − 6584），UNREGISTERED=0
 - 全部提交并推送 `rr-v3r01-f557fd`（远端 = 本地）
+
+## 7. R15-13（生成端取反闩锁守卫）实测：零回退、零翻正 ⇒ 惰性
+
+判据：`region_ast_generator.py:24109-24111` 的整链取反闩锁，当链的「全员同目标 T」
+其实是**真值进入点**时不得取反（`_r15_uni_target_is_true_entry`：末成员除跳转边外的
+另一条件后继若是测试块且其跳回 T，则 T 为 S 而非 F）。
+13 文件面板（`D:/Temp/r150/uniguard.log`，跑完即还原 `5066b1367b6de3c7 byte_exact=True`）：
+strategy 26/27、api_base 27/28 均**不变**；quotation 153/153、matcher 17/17、
+IQEngine/core/strategy 20/20 全部守住；其余残差文件读数与封盘逐文件相同。
+
+不可翻正的原因（与 DIAG_B137 自述一致）：strategy 的 or 链里，回到 @568 的边来自
+链式比较段内的**后一个块**（@562 `JUMP_FORWARD -> @568`），不是末成员 @524 的直接条件后继
+⇒ 判据在真实数据上从不命中。而 B137 早已实测：把该闩锁真正抑制掉（negate-guard 臂）
+会把 4 处 target-only 变成 **2 target-only + 2 CONTENT**，即生成端单独动只把误差挪位。
+⇒ **生成端单独路线关闭**（三次独立实测：本臂惰性、negate-guard 挪位、
+`inner-38744` 臂逐字节相同）。strategy/api_base 的翻正必须走识别端
+「三成员 or 链（第二成员为链式比较）的成链资格 + 父臂/merge 身份同判」，
+即 R14-05 的诊断票；镜像诊断子代理正在追该 trace。
+
+## 8. 会话累计（截至本条）
+
+已落地并认证：R14-04（门链 18：units 6583→6584、files 390、回退 0、翻正 1）。
+本会话新增实测负结果：T12-11 共要件（label 17，0 翻正）、R15-11、R15-12 宽/窄两版、
+R15-13，以及 R14-05 子代理补丁（不安装）。所有负结果均已登记并逐字节还原，
+core 现为 `region_ast_generator.py 5066b1367b6de3c7` / `region_analyzer.py 640d33a77dcb71c2`，
+`site-packages` 零漂移，残差 12 文件 / 33 单元。
