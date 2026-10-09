@@ -216,3 +216,28 @@ IfRegion entry=944  merge=1102  elif_conditions=[1024]  elif_bodies=[[1036]]  el
 已确证的缺陷事实不变（不依赖探针）：唯一真差 1 条死 `JUMP_FORWARD @1102`、
 `elif_final_else=[1102]`、`@1022 JUMP_FORWARD->1102`、末臂 `@1036` 以 `CALL; POP_TOP` 落空入 `1102`、
 实编对照 A/B 形给出产物形/原形各自逐指令同形。
+
+## 探针四连败的收束结论（17:28，主代理停手；镜像 r20h/r20i/r20j/r20k 全部为**具坏读数＝VOID**）
+
+四次失败的原因逐条登记（都不是判据结论）：
+1. `crlf()` 全局转换把探针格式串内的 `\n` 变成真换行 → `unterminated string literal`；
+2. 把一行的多个隐式拼接片段写成了**列表的多个元素** → 每个片段自成一行 → 同类语法断裂；
+3. 用 `% tag` 套含 `%s` 的模板 → `not enough arguments for format string`（此时文件未写，
+   `inert: YES` 是**空读**，不是惰性证明）；
+4. 把探针插在 `if …:` **头部与其语句体之间**（S1_18776、S3_15994 都是这种位置）→ IndentationError。
+   ⇒ 规则：插桩只能插在**语句行之前**或**纯语句位置**（如 `_r23n18_partial_merge_block = None` 那类），
+   绝不插在 `if`/`for`/`while` 头与其体之间；写日志用 `chr(10)` 结尾、`write(fmt, args)` 单行形式。
+
+可由已完成的实验**直接推得**、不必再靠探针的事实：v1/v2 两次都改在 S2（纯语句位置，本身可编译、
+`py_compile` 通过、面板与 real_quote 全部零变化），若 `entry=858` 这条链经过 S2 且带着
+非空 `elif_final_else`，v1/v2 至少会改变产物。**四次读数一字节未动 ⇒ S2 对该链未命中**；
+v3 改在 S1（else 语句装配函数内）同样零变化 ⇒ S1 亦未命中。
+∴ 本单元的 else 臂由**尚未试过的三个消费点**之一装配：`:18442`（`for b in region.elif_final_else`）、
+`:19009-:19049`（`_expanded_final_else` 回填，会把块**重新填回** `region.elif_final_else`）、
+`:19543`。下一手：
+1) 只在这三处插桩（插在各自语句块的**合法位置**，用上面第 4 条规则），拿到 `entry=858` 的命中序列；
+2) 判据放在**最后一次填回 `1102` 的站点**（`region.elif_final_else = _expanded_final_else` 是最可疑的填回者）；
+3) 每次读数前先 `cmp` 证明探针惰性；探针未命中就先别写判据。
+
+主代理本轮**未**向实时仓库写入任何试验字节：`git status --porcelain core/` 为空，
+三件哈希仍是已认证的 `dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`。
