@@ -30697,7 +30697,7 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             result.append((ft_succ, 'and'))
         return result
 
-    def _detect_boolop_short_circuit_chain(self, start_block: BasicBlock, skip_first_claimed_check: bool = False) -> Optional[List[Tuple[BasicBlock, str]]]:
+    def _detect_boolop_short_circuit_chain(self, start_block: BasicBlock, skip_first_claimed_check: bool = False, _b99_absorb: bool = True) -> Optional[List[Tuple[BasicBlock, str]]]:
         chain: List[Tuple[BasicBlock, str]] = []
         # [B99 残] 值位分组 BoolOp 前缀段反向吸收：``return (a or b) and c``
         # 的 CPython 值位 lowering 把 or 组编为 ``a; POP_JUMP_FORWARD_IF_TRUE
@@ -30709,40 +30709,56 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         # 前缀段被 IfRegion 语句路径抢占（值链 RETURN 蒸发为 ``if …:
         # pass``，C2 破坏）。逐前驱回溯（多操作数前缀组同目标递归吸收），
         # 无命中时行为逐位不变（C3）。
+        # [B99-C3 提交收紧（r1face 回退修复）] 吸收的前缀块与锚点属不同
+        # 操作符组，两组的短路跳出目标按组不同（内层组目标 = 外层组下
+        # 一操作数块，外层组目标 = 值链终点）。主走查的共享 merge 判据
+        # （Phase 3 adv14）以「链首块跳转目标 == 当前块跳转目标」为单一
+        # 表达式判据，见前缀后必然判不等——豁免面仅覆盖 exit-like 终点
+        # （Phase 7，如 ``return (a or b) and c`` 的 RETURN_VALUE 块）。
+        # 值位消费点为普通块时（如 ``…append((x and y or z)[0])`` 的
+        # BINARY_SUBSCR 续接块）豁免不命中，锚点在首迭代即被截断，链
+        # 退化为「仅前缀」半链——前缀块无值消费点却整体建区，属非法
+        # 认领（C1：区域只读自身块集，半链建区后 TERNARY 全形态认领被
+        # 唯一归属压制、IfRegion 语句路径反抢占 ⇒ ``if x and y:`` 错构）。
+        # 收紧：吸收仅在锚点确实入链（走查通过共享 merge 判据）时提交；
+        # 锚点未入链 ⇒ 放弃前缀、按无吸收路径重走（= 吸收前原链，行为
+        # 逐位复原）。判据 = 链成员集合（I.4 白名单：区域成员关系），不
+        # 引入新状态（C3 封闭）。
         _b99_prefix_visited = {start_block.start_offset}
         _b99_prefixes: List[Tuple[BasicBlock, str]] = []
-        _b99_anchor_last = start_block.get_last_instruction()
-        _b99_ft = None
-        if _b99_anchor_last is not None and _b99_anchor_last.opname in SHORT_CIRCUIT_JUMP_OPS:
-            for _b99_s in start_block.conditional_successors:
-                if _b99_s.start_offset != _b99_anchor_last.argval:
-                    _b99_ft = _b99_s
-                    break
-        if _b99_ft is not None:
-            _b99_cur = start_block
-            while True:
-                _b99_pred_hit = None
-                for _b99_p in _b99_cur.predecessors:
-                    if _b99_p.start_offset in _b99_prefix_visited:
-                        continue
-                    _b99_pl = _b99_p.get_last_instruction()
-                    if (_b99_pl is None
-                            or _b99_pl.opname not in FORWARD_CONDITIONAL_JUMP_OPS
-                            or _b99_pl.argval is None):
-                        continue
-                    if self.cfg.get_block_by_offset(_b99_pl.argval) is not _b99_ft:
-                        continue
-                    _b99_pred_hit = _b99_p
-                    break
-                if _b99_pred_hit is None:
-                    break
-                _b99_p_last = _b99_pred_hit.get_last_instruction()
-                _b99_prefixes.append((_b99_pred_hit,
-                                      'and' if 'FALSE' in _b99_p_last.opname else 'or'))
-                _b99_prefix_visited.add(_b99_pred_hit.start_offset)
-                _b99_cur = _b99_pred_hit
-        if _b99_prefixes:
-            _b99_prefixes.reverse()
+        if _b99_absorb:
+            _b99_anchor_last = start_block.get_last_instruction()
+            _b99_ft = None
+            if _b99_anchor_last is not None and _b99_anchor_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+                for _b99_s in start_block.conditional_successors:
+                    if _b99_s.start_offset != _b99_anchor_last.argval:
+                        _b99_ft = _b99_s
+                        break
+            if _b99_ft is not None:
+                _b99_cur = start_block
+                while True:
+                    _b99_pred_hit = None
+                    for _b99_p in _b99_cur.predecessors:
+                        if _b99_p.start_offset in _b99_prefix_visited:
+                            continue
+                        _b99_pl = _b99_p.get_last_instruction()
+                        if (_b99_pl is None
+                                or _b99_pl.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                                or _b99_pl.argval is None):
+                            continue
+                        if self.cfg.get_block_by_offset(_b99_pl.argval) is not _b99_ft:
+                            continue
+                        _b99_pred_hit = _b99_p
+                        break
+                    if _b99_pred_hit is None:
+                        break
+                    _b99_p_last = _b99_pred_hit.get_last_instruction()
+                    _b99_prefixes.append((_b99_pred_hit,
+                                          'and' if 'FALSE' in _b99_p_last.opname else 'or'))
+                    _b99_prefix_visited.add(_b99_pred_hit.start_offset)
+                    _b99_cur = _b99_pred_hit
+            if _b99_prefixes:
+                _b99_prefixes.reverse()
         current = start_block
         visited = set()
         _is_first_iter = True
@@ -30953,6 +30969,17 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 if op_type == prev_op and not self.dom_analyzer.dominates(prev_block, current):
                     break
             current = ft_succ
+        # [B99-C3 提交收紧] 前缀吸收已发生但锚点（本方法起点块）未入链
+        # ⇒ 链仅含前缀段（被主走查共享 merge 判据/已建区前驱判据在首迭代
+        # 截断），前缀块的值消费点不在链内——吸收结果为非法半链。放弃
+        # 前缀、按无吸收路径重走（递归深度 ≤1：_b99_absorb=False 分支不
+        # 再吸收），行为 = 吸收前原链，逐位复原（判据 = 链成员集合，
+        # I.4 白名单：区域成员关系；C1：半链不建区）。
+        if (_b99_absorb and _b99_prefixes
+                and not any(_cb is start_block for _cb, _ in chain)):
+            return self._detect_boolop_short_circuit_chain(
+                start_block, skip_first_claimed_check=skip_first_claimed_check,
+                _b99_absorb=False)
         return chain if len(chain) >= 1 else None
 
     def _25b_then_arm_orphan_return_none(self, then_blocks, else_succ) -> bool:

@@ -1,0 +1,48 @@
+[
+ {
+  "name": "B82_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>.v_swap_arm_returns: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "B79_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+  "status": "failure",
+  "units_success": 3,
+  "units_total": 4,
+  "failures": [
+   "***<module>.v_nest_fin_continue: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B80_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>.v_imp_cond_fin: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B83_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "B108_main",
+  "pyc": "test_repros/round4/c4_06_try_finally_only.pyc",
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ }
+]

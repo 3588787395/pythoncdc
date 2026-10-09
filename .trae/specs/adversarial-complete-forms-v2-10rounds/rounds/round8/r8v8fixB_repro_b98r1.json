@@ -1,0 +1,45 @@
+[
+ {
+  "name": "B98_matrix",
+  "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 15,
+  "failures": [
+   "***<module>.f_or_in_and_pair_deep: Failure: Different control flow",
+   "***<module>.f_b98_ternary_cross: Failure: Different control flow",
+   "***<module>.f_b98_compare_cross: Failure: Different bytecode",
+   "***<module>.f_b98_walrus_cross: Failure: Different control flow",
+   "***<module>.f_b98_call_arg_pos: Failure: Different control flow",
+   "***<module>.f_b98_or_tail_and_group: Failure: Different control flow",
+   "***<module>.f_b98_not_wrapped: Failure: Different control flow",
+   "***<module>.f_b98_and_tail_or_group: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "B98_hosts",
+  "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+  "status": "failure",
+  "units_success": 13,
+  "units_total": 18,
+  "failures": [
+   "***<module>.CB98.m_handler: Failure: Different control flow",
+   "***<module>.f_comp_cond_host.<listcomp>: Failure: Different control flow",
+   "***<module>.f_genexp_cond_host.<genexpr>: Failure: Different control flow",
+   "***<module>.f_dictcomp_value_host.<dictcomp>: Failure: Different control flow",
+   "***<module>.f_with_body_host: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B98_resid",
+  "pyc": "test_repros/round3/_scratch_b98/resid.pyc",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 5,
+  "failures": [
+   "***<module>.r_d1: Failure: Different control flow",
+   "***<module>.r_e3: Failure: Different control flow",
+   "***<module>.r_g2: Failure: Different control flow"
+  ]
+ }
+]

@@ -1,0 +1,62 @@
+[
+ {
+  "name": "B77_face",
+  "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": []
+ },
+ {
+  "name": "B103_main",
+  "pyc": "test_repros/round4/c4_04_match_patterns.pyc",
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 13,
+  "failures": [
+   "***<module>.e04_mapping: Failure: Different control flow",
+   "***<module>.e05_class_kw: Failure: Different control flow",
+   "***<module>.e06_or_guard: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B103_guard",
+  "pyc": "test_repros/round4/r4v4r_b103_guard.pyc",
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 8,
+  "failures": [
+   "***<module>.GT.m: Failure: Different control flow",
+   "***<module>.none_guard: Failure: Different control flow",
+   "***<module>.nested_guard: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B113_host",
+  "pyc": "test_repros/round4/c4_05_multi_with.pyc",
+  "status": "failure",
+  "units_success": 12,
+  "units_total": 14,
+  "failures": [
+   "***<module>.e09_comp_host: Failure: Different bytecode",
+   "***<module>.e09_comp_host.<listcomp>: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "B98_matrix",
+  "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 15,
+  "failures": [
+   "***<module>.f_or_in_and_pair_deep: Failure: Different control flow",
+   "***<module>.f_b98_ternary_cross: Failure: Different control flow",
+   "***<module>.f_b98_compare_cross: Failure: Different bytecode",
+   "***<module>.f_b98_walrus_cross: Failure: Different control flow",
+   "***<module>.f_b98_call_arg_pos: Failure: Different control flow",
+   "***<module>.f_b98_or_tail_and_group: Failure: Different control flow",
+   "***<module>.f_b98_not_wrapped: Failure: Different control flow",
+   "***<module>.f_b98_and_tail_or_group: Failure: Different bytecode"
+  ]
+ }
+]

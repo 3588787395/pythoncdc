@@ -7,7 +7,7 @@
   "success": 0
  },
  "files_total": 4,
- "generated_at": "2026-10-08T18:51:24",
+ "generated_at": "2026-10-09T16:30:00",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
@@ -48,7 +48,7 @@
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
    "pyc_sha": "882d3ccc0d31",
    "source": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_infoOK.py",
-   "source_sha": "b12a41510d5c",
+   "source_sha": "3d95f17ffd8e",
    "status": "failure",
    "success_rate": 0.9310344827586207,
    "units_success": 27,

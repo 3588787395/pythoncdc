@@ -144,18 +144,15 @@
  },
  {
   "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
-  "verify_rc": 1,
-  "status": "failure",
-  "units_success": 7,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
   "units_total": 8,
-  "failures": [
-   "***<module>.t_host_match_case: Failure: Different control flow"
-  ],
+  "failures": [],
   "tail": [
-   "  ***<module>.t_host_match_case: Failure: Different control flow",
    "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_host.pyc",
    "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_hostOK.py",
-   "[single] status=failure units=7/8 success_rate=87.50%"
+   "[single] status=success units=8/8 success_rate=100.00%"
   ]
  },
  {
@@ -425,18 +422,16 @@
   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
   "verify_rc": 1,
   "status": "failure",
-  "units_success": 1,
+  "units_success": 2,
   "units_total": 3,
   "failures": [
-   "***<module>.v_swap_arm_returns: Failure: Different bytecode",
-   "***<module>.n_fin_noseg: Failure: Different control flow"
+   "***<module>.v_swap_arm_returns: Failure: Different bytecode"
   ],
   "tail": [
    "  ***<module>.v_swap_arm_returns: Failure: Different bytecode",
-   "  ***<module>.n_fin_noseg: Failure: Different control flow",
    "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
    "[single] ���� F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_faceOK.py",
-   "[single] status=failure units=1/3 success_rate=33.33%"
+   "[single] status=failure units=2/3 success_rate=66.67%"
   ]
  },
  {
@@ -493,18 +488,15 @@
  },
  {
   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2.pyc",
-  "verify_rc": 1,
-  "status": "failure",
-  "units_success": 1,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
   "units_total": 2,
-  "failures": [
-   "***<module>.drain: Failure: Different control flow"
-  ],
+  "failures": [],
   "tail": [
-   "  ***<module>.drain: Failure: Different control flow",
    "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2.pyc",
    "[single] ���� F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2OK.py",
-   "[single] status=failure units=1/2 success_rate=50.00%"
+   "[single] status=success units=2/2 success_rate=100.00%"
   ]
  },
  {

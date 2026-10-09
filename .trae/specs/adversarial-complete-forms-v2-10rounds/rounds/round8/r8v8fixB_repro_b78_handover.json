@@ -1,0 +1,14 @@
+[
+ {
+  "name": "B78_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 4,
+  "failures": [
+   "***<module>.v_while_cond_nest: Failure: Different control flow",
+   "***<module>.v_if_cond_nest: Failure: Different control flow",
+   "***<module>.n_for_body_nest: Failure: Different control flow"
+  ]
+ }
+]

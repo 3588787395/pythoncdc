@@ -1,0 +1,12 @@
+[
+ {
+  "name": "B82_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>.v_swap_arm_returns: Failure: Different bytecode"
+  ]
+ }
+]

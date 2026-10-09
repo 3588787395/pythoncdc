@@ -342,18 +342,15 @@
  },
  {
   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_host.pyc",
-  "verify_rc": 1,
-  "status": "failure",
-  "units_success": 7,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
   "units_total": 8,
-  "failures": [
-   "***<module>.t_host_match_case: Failure: Different control flow"
-  ],
+  "failures": [],
   "tail": [
-   "  ***<module>.t_host_match_case: Failure: Different control flow",
    "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_host.pyc",
    "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_hostOK.py",
-   "[single] status=failure units=7/8 success_rate=87.50%"
+   "[single] status=success units=8/8 success_rate=100.00%"
   ]
  },
  {
