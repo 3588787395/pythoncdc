@@ -132,3 +132,24 @@ r19t3 买到的可用结论（存档 `D:/Temp/r19t3/README_T20-1.md`，判决 `M
 臂成员仍走 `_collect_branch_blocks` + `[R31-B]` 停止集规则；
 每臂出口标签记在既有 merge-claim 守卫（`:22920`「leave merge_block unclaimed」）处，
 **不要**改写 `IfRegion.merge_block`（那会连带扰动父链自有的顺序汇合）。
+
+---
+
+# 追加（00:06）trade_live_broker 三个**纯落点**单元：每个只差 1 条跳转，方向全同
+
+```
+_process_tick_order  len 182/182 delta=0 hunks=0 landings=1
+   orig[30] @178  JUMP_BACKWARD            -> idx22   | prod -> idx19     （差 3 条）
+rzrq_credit_order    len 780/780 delta=0 hunks=0 landings=1
+   orig[453] @2368 JUMP_FORWARD            -> idx490  | prod -> idx485    （差 5 条）
+get_ipo_stocks       len 481/481 delta=0 hunks=0 landings=1
+   orig[206] @1108 POP_JUMP_FORWARD_IF_TRUE -> idx225 | prod -> idx215    （差 10 条）
+```
+
+三条**同向**：产物的落点都比原字节码**早**（靠近）若干条，即原目标块的前若干条指令在产物里被划进了
+**前一块的尾部**——区域/臂边界少切了几条。这与已由 #37（门 18 前落地）解掉的
+「尾巴跳转应按区域声明的 merge 落点」一族同形（`bar`/`strategy_universe`/`load_daily` 三文件当时即为此形并翻绿），
+⇒ 本三条是同一轴的**残余实例**，不是三个独立缺陷；判据应写成一条、覆盖三处
+（依 [[count-predicate-call-sites-before-patching-one]]：先数该谓词的调用点，单点改只算半修）。
+注意该文件另有 7 个失败单元（`_process_order −465` 等），故此三条修好**不产生整文件翻绿**，
+只涨单元数 ⇒ 优先级低于 handlers / api_base / strategy 两个整文件档。
