@@ -40,25 +40,25 @@
 regen `ok=402 bad=0`、`文件级回退=0`、`UNIT_REGRESSIONS=0`、`新增失败单元=0`、
 `翻正单元≥1`，checks 四项与封盘同值（quotation 153/153、small34 1535/22、
 自证 153/153 Equal、pytest 2 failed/280 passed/2 xpassed），随后提交并推送。
-
 ### T19-2 施工点精确到行（由 R15-14/R15-15 实测确定，勿再重新推导）
 
 - **strategy（26/27，唯一失败单元 tick_worker_thread）需两条同时成立**：
-  1. 准入侧：（B1b 循环头守卫）——a03/strategy 的
-     链走在此 break，实测条件 （chain 首成员
+  1. 准入侧：`region_analyzer.py:30009-30022`（B1b 循环头守卫）—— a03/strategy 的
+     链走在此 break，实测条件 `_b1b_c0 is _ft_reg.header_block`（chain 首成员
      = LoopRegion@2 的 header B@16）；放行判据必须只针对「后继成员是链式比较操作数」
-     的情形（候选判据 §5-2），否则破坏循环自身条件装配。
-  2. 修剪侧：（W14-A 一致性修剪）——已实现并实测
-     **单独施加零回退零翻正**（惰性，因步骤 1 未同时成立）；helper 已在
-      的 TRIM_NEW/HELPER 里，可直接复用。
+     的情形（候选判据见 DIAG_R1514 §5-2），否则破坏循环自身条件装配。
+  2. 修剪侧：`region_analyzer.py:30250-30258`（W14-A 一致性修剪）—— 已实现并实测
+     **单独施加零回退零翻正**（惰性，因步骤 1 未同时成立）；helper 与判据文本在
+     `D:/Temp/r150/cctrim_rig.py` 的 TRIM_NEW / HELPER 里，可直接复用。
 - **api_base（27/28，唯一失败单元 get_history_df）只需一条**：父 IfRegion 的
-  then/merge 身份（DIAG_R1405 §5）；其认领守卫断点实测值
-   第 (2) 合取项  != 
-  （prefix 混 and/or 成员）⇒ 候选判据 §5-1「按算子分层的共享出口」。
-  注意：banked 补丁的 merge 计算段（banked 19675/19717/19757）使 api_base
-  27/28 -> **25/29**（多生成一个 code object），施工时必须排除该三段。
-- 施加与复判：
+  then/merge 身份（DIAG_R1405 §5）；其认领守卫断点实测值为
+  `_r16_boolop_cc_run_operand` 的第 (2) 合取项：`_T=B@1098` 不等于 `_t=B@1040`
+  （prefix 混 and/or 成员）⇒ 候选判据 DIAG_R1514 §5-1「按算子分层的共享出口」。
+  注意：banked 补丁的 merge 计算三段（banked 行 19675 / 19717 / 19757）使
+  api_base 27/28 → **25/29**（多生成一个 code object）⇒ 施工时必须排除这三段。
+- 施加与复判：`python -X utf8 D:/Temp/r150/integ_rig.py <candidate_region_analyzer.py>`
   （控制读数已封：battery GREEN=0 RED=3/3、api_base 27/28、strategy 26/27、
-  quotation 153/153、matcher 17/17、klinedata 63/64、trade_info 38/41、wizard 55/58、real_quote 43/45）；
-  单点判据另有 （修剪侧）与  系列的已否清单可查，
-  避免重复尝试已登记为惰性的判据。
+  quotation 153/153、matcher 17/17、klinedata 63/64、trade_info 38/41、
+  wizard 55/58、real_quote 43/45）；单点判据另有 `cctrim_rig.py`（修剪侧）以及
+  `hold_rig / join2c_rig / retguard_rig / cont3_rig / uniguard_rig / order_abl`
+  系列已否清单可查，避免重复尝试已登记为惰性的判据。
