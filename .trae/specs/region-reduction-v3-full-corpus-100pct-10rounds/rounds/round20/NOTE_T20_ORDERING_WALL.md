@@ -129,3 +129,31 @@ klinedata 63/64、trade_live_broker 118/128
 导出 `condition_block / elif_conditions / elif_bodies（逐臂块表）/ elif_final_else / merge_block / blocks`
 六个字段的实际值与偏移，再判断「else 臂」究竟在哪个字段、由哪一段代码取得。
 注意本战役已两次栽在「未先看字段实值就写判据」上（klinedata 的单点修、api_base 的停止集）。
+
+## R20-2 的判决字段实值（独立进程建 CFG 所得，`real_quote.pyc::<module>.RealQuoteData.get_tick_direction`）
+
+```
+IfRegion entry=858  merge=1106
+   elif_conditions = [944, 1024]        # flag == 1  /  flag == -1
+   elif_bodies     = [[956], [1036]]
+   elif_final_else = [1102]             ← 被当成 else 臂的块
+IfRegion entry=944  merge=1102  elif_conditions=[1024]  elif_bodies=[[1036]]  elif_final_else=[]
+（另有 @1102/@1106 的 BASIC 区域、TryExceptRegion entry=1108、LoopRegion entry=1174）
+```
+
+关键结构事实（原字节码跳转）：`@942 JUMP_FORWARD -> 1106`、**`@1022 JUMP_FORWARD -> 1102`**、
+`@1034 POP_JUMP_FORWARD_IF_FALSE -> 1102`（orig），且末条臂体 `@1036` 以 `CALL; POP_TOP`（@1090/@1100）
+**落空进入 @1102**。⇒ `@1102` 同时是**臂尾跳过跳的落点**与**末臂的落空后继**：
+它是链之后的续体语句（`return redata`），不是 else 臂。产物把它当 else 臂 ⇒
+末臂必须跳过它 ⇒ 多发一条死 `JUMP_FORWARD`（就是本单元唯一真差）。
+
+**下一手应用的判据（比我先前的两条都强，且有实值支撑）**：
+`elif_final_else[0]` 若等于**本链任一臂体末指令 `JUMP_FORWARD` 的落点**，
+或等于**末条臂体的落空后继**，即判为幻影 else：清 `elif_final_else`、
+`else_blocks=[]`，并把该块从 `region.blocks` 释放给宿主语句流（照 `[B71]` 的释放写法）。
+我先前两版只测了「末臂落空后继」一条，且都在 `_if_generate_elif_chain` 里
+（`region.elif_bodies[-1][-1]` / 按最大 start_offset 取臂尾块），**两次均零翻正**——
+说明该链在生成端根本没走到我插桩的那段（或 `elif_bodies` 的实参形态与我假设不同：
+本 dump 显示它确实是按臂分组的块表）。⇒ 先确认这条链由哪个入口装配
+（`entry=858` 的 IfRegion 在生成端的分派路径），再决定插桩点；
+不要在未确认命中前先猜第三版判据。
