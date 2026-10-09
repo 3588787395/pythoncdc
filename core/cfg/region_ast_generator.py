@@ -20171,6 +20171,96 @@ AST 映射规则:
                 return False
         return True
 
+    def _or_multi_leg_chain_consistent(self, region, chain_blocks, child_regions, op_type):
+        """_or_multi_leg_chain_consistent — or 折叠在「disjunct 跨多条短路腿」时的放宽判定
+
+        输入契约:
+          - region: 发起折叠的外层 IfRegion（只读其 merge_block）；
+          - chain_blocks: _fold_chain_consistent 解析出的链块列表，仅取第一元素＝外层腿
+            （region.condition_block 或 region.entry）；
+          - child_regions: 本次候选折叠的子 IfRegion 列表（已按 entry 升序；其 entry 必属
+            region.then_blocks——由 _fold_child_if_regions 的成员关系保证，不在这里重复）；
+          - op_type: 折叠模式。非 'or' 一律返回 False：'and' 链的判据完全留在
+            _condition_chain_targets_consistent 内，本放宽在结构上不可能触及 and 站
+            （and 型负对照因此不可能被翻转）。
+
+        AST 映射规则: 返回 bool。True 才允许把外层区域与子区域折叠成单个 BoolOp(or)；
+        False 时保持嵌套 If 结构、由既有渲染机制输出（一次正确、事后不修补）。本判定只在
+        严格判据失败后被调用一次，对既有通过点没有任何影响，只补「结构成立但被严格判据
+        误挡」的那一类许可；三条折叠路径共用同一个决定（本方法只有一个调用点）。
+
+        子区域处理: 只读；拒绝折叠时子区域整体仍归其自身 IfRegion，块归属不变（原则 2）。
+
+        字节码一致性约束（放宽的根据；全部是边与成员关系，无指令计数、无具体偏移、无名字）:
+          _condition_chain_targets_consistent 的 'or' 判据假设「每个 disjunct 只有一条短路
+          腿」，于是要求 FT(c_i) is c_{i+1}。当某个 disjunct 本身是 and 复合（源码
+          `A and B or A and C` 的第二 disjunct）时，它在字节码里是若干条连续短路腿：子
+          IfRegion 的 entry 落在第一条腿、condition_block 落在最后一条腿，父腿的
+          fall-through 命中 entry 而非 condition_block，严格判据必然落空——这是判据的覆盖
+          缺口，不是结构不成立。放宽后仍逐条要求：
+            1. 腿链 =「外层腿 + 各子区域 entry→condition_block 的 fall-through 边」，展开
+               不得离开该子区域自己的 blocks 成员集（越界或回环即拒），且链上每块的
+               fall-through 恰为下一块（腿必须首尾相接）；
+            2. 链尾块的 fall-through 就是本区域的 merge_block（折叠后 if 体的入口）；
+            3. 首腿的跳转目标就是该 merge_block——or 区别于 and 的本质特征（首 disjunct 为
+               真即短路进体），同时排除把更长的纯 and 腿链误读成 or；
+            4. 中间腿的跳转目标只允许 {merge_block, 链尾腿的跳转目标} 两个块；链尾腿的跳转
+               目标（整体假出口）必须不同于 merge_block；并且必须至少有一条中间腿确实跳到
+               整体假出口——本放宽正是为这类腿而设，没有这种腿时本判定不给任何新许可
+               （等价于退回严格判据）。
+          退化说明：三个以上 disjunct 且中间 disjunct 自身跨腿时，其内部腿的跳转目标是
+          「下一个 disjunct 的入口」，既非 merge 亦非整体假出口，被第 4 条拒绝，维持嵌套
+          输出——安全侧退化，不做猜测性折叠。
+        """
+        if op_type != 'or' or not chain_blocks or not child_regions:
+            return False
+        _or_outer_leg = chain_blocks[0]
+        merge = getattr(region, 'merge_block', None)
+        if _or_outer_leg is None or merge is None:
+            return False
+        legs = [_or_outer_leg]
+        for ir in child_regions:
+            entry = getattr(ir, 'entry', None)
+            cond = getattr(ir, 'condition_block', None) or entry
+            own = set(getattr(ir, 'blocks', None) or [])
+            if entry is None or cond is None or not own or entry not in own:
+                return False
+            cur = entry
+            seen = set()
+            while True:
+                if cur in seen:
+                    return False
+                seen.add(cur)
+                legs.append(cur)
+                if cur is cond:
+                    break
+                _or_jt, _or_ft = self._cond_block_branch_targets(cur)
+                if _or_ft is None or _or_ft not in own:
+                    return False
+                cur = _or_ft
+        _or_targets = [self._cond_block_branch_targets(b) for b in legs]
+        if any(t == (None, None) for t in _or_targets):
+            return False
+        for _or_i in range(len(legs) - 1):
+            if _or_targets[_or_i][1] is not legs[_or_i + 1]:
+                return False
+        _or_body = _or_targets[-1][1]
+        _or_after = _or_targets[-1][0]
+        if _or_body is None or _or_after is None or _or_body is _or_after:
+            return False
+        if _or_body is not merge:
+            return False
+        if _or_targets[0][0] is not _or_body:
+            return False
+        _or_borrowed = False
+        for _or_i in range(1, len(legs) - 1):
+            _or_jt = _or_targets[_or_i][0]
+            if _or_jt is _or_after:
+                _or_borrowed = True
+            elif _or_jt is not _or_body:
+                return False
+        return _or_borrowed
+
     def _merge_block_is_then_exclusive(self, region: IfRegion) -> bool:
         """[W15-C 判定] IfRegion.merge_block 是否为真臂专属延续（可归入 then 体）。
 
@@ -21505,7 +21595,14 @@ AST 映射规则:
                 blocks.append(getattr(ir, 'condition_block', None) or ir.entry)
             if any(b is None for b in blocks) or len(blocks) < inner_depth + 1:
                 return False
-            return self._condition_chain_targets_consistent(blocks, _fold_op_mode)
+            if self._condition_chain_targets_consistent(blocks, _fold_op_mode):
+                return True
+            # [R142-D] 严格判据假设每个 disjunct 只有一条短路腿；disjunct 为 and 复合时子区域
+            # 的链首是它的 entry 而非 condition_block，FT(c_i) is c_{i+1} 必然落空。放宽判定
+            # 单点实现于 _or_multi_leg_chain_consistent，本闭包是其唯一调用点，故上面三条
+            # 折叠路径（多 cond 合并 / 单层合并 / 内层带 orelse）复用同一个决定。
+            return self._or_multi_leg_chain_consistent(
+                region, blocks, _fold_child_if_regions[:inner_depth], _fold_op_mode)
 
         if then_stmts and isinstance(then_stmts[0], dict) and then_stmts[0].get('type') == 'If' and not then_stmts[0].get('orelse'):
             _merge_conds = [condition]
@@ -21634,6 +21731,12 @@ AST 映射规则:
         #   1. condition 是 UnaryOp(Not, ...)（条件被取反）
         #   2. then_stmts[0] 是 If，body == [Continue]，且有 orelse
         #   3. 无 elif_conditions、无 else_stmts
+        _r142_head_share = any(
+            _r142pr is not region and isinstance(_r142pr, IfRegion)
+            and region.merge_block is not None
+            and _r142pr.merge_block is region.merge_block
+            and region.entry in (_r142pr.then_blocks or [])
+            for _r142pr in self.region_analyzer.regions)
         _5_post_extra = None
         if (isinstance(condition, dict) and condition.get('type') == 'UnaryOp'
                 and condition.get('op') == 'not'
@@ -21644,7 +21747,8 @@ AST 映射规则:
                 and then_stmts[0]['body'][0].get('type') == 'Continue'
                 and then_stmts[0].get('orelse')
                 and not getattr(region, 'elif_conditions', None)
-                and not else_stmts):
+                and not else_stmts
+                and not _r142_head_share):
             _5_outer_cond = condition.get('operand', condition)
             _5_inner_if = then_stmts[0]
             _5_inner_cond = _5_inner_if.get('test')

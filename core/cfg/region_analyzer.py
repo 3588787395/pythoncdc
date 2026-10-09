@@ -21849,6 +21849,29 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 if _te_non_conditional is not None:
                     return None
 
+            # [r12-t1221 elif-arm-entry-own-region] 臂候选必须是「只由本链头所属区域进入」的块。
+            # ①算法依据：No More Gotos 原则 2（每块唯一归属）+ 原则 4（父层只引用子区域入口）。
+            #   elif 臂的条件块在字节上只被上一条臂的假边进入；若候选还有来自链外区域的前驱，
+            #   它就是一条**后继语句**的测试块，不是臂。
+            # ②归约顺序：本判据在 _check_elif_chain 接受首个臂候选处生效，先于链的 blocks 汇总，
+            #   因此链的成员表从一开始就不含该语句块（实测被误收的 matcher @2164 一旦在删除侧
+            #   豁免，block_to_region 仍归链，区域活着却永不分派 —— 见 rounds/round12/DIAG_T1212 §9）。
+            # ③唯一归属判定：只读 header_ 与候选的 block_to_region 归属（既有表，识别期已填实，
+            #   实测 n_preds=6 非空），不用偏移/指令数/名字（rules.md §1.4 G4）。
+            # ④嵌套处理：递归层同样经过本判据；父层收到 None 时按既有路径把剩余块交 final_else。
+            # ⑤入口引用语义：拒绝后 @2164 保留其 IfRegion(entry=2164, merge=2464) 抽象节点，
+            #   父层按入口引用它，不展开内部块。
+            # ⑥反编译流程：IQEngine/plugins/plugin_system_matcher/matcher.pyc ::
+            #   DefaultMatcher.match 的 else 臂里 `if order.asset.symbol[:3] in ('688','689'):`
+            #   （头测试 10 指令，原判据未过时被 IF_ELIF_CHAIN@2038 吞成 elif，整条语句消失）。
+            # 控制实测（惰性探针 t1220，产物逐字节相同）：真 elif 1570/2038/2338/2846 的每条前驱
+            #   都归 header_ 的 BoolOpRegion，判据全过；@2164 的前驱含 LoopRegion@6 与兄弟
+            #   BoolOpRegion@1884，判据拒绝。
+            _r1221_howner = self.block_to_region.get(header_)
+            if _r1221_howner is not None:
+                for _r1221_p in (first_else.predecessors or []):
+                    if self.block_to_region.get(_r1221_p) is not _r1221_howner:
+                        return None
             conditions = [first_else]
             bodies = []
             final_else = []

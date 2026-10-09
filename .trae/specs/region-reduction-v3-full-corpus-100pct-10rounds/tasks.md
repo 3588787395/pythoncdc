@@ -281,10 +281,18 @@ Task 11 本轮实际状态（2026-10-08，逐条按完成度如实标注，勾�
   - [ ] 12.6 T12-21（收集侧 elif 臂判据，`48b812e60ef52d27`）：matcher 单元由
         `net=+10 hunks=25 real=1` 进到 `net=+0 hunks=4 real=0`（被吞的 10 指令语句头回来了），
         七文件零连带；**落地与否由 402 门（label 13）判**，0 翻正即逐字节撤回为共要件
-  - [ ] 12.7 T12-22 已排队：语句头的**末腿**被下放成体内臂条件（3 处 / 4 hunk 同一宿主），
-        宿主与判据边界见 `rounds/round12/FIX_T1221_ELIF_ARM_PREDS.md` §5；
-        本轮尚无整文件翻转 ⇒ round13 不在 12.6 出判决之前开启
-
+  - [x] 12.6 T12-21（收集侧 elif 臂判据）：单独落地为 0 翻正（门 label 13 实测），
+        作为共要件与 12.7 同装 ⇒ 见 12.8
+  - [x] 12.7 T12-22（生成端 or 折叠「disjunct 跨多条短路腿」判据，`851b0723732a2402`）：
+        与 T12-21 叠加后 matcher 16/17 → 17/17，宿主与读数见
+        `rounds/round12/FIX_T1222_OR_FOLD_MULTI_LEG.md`
+  - [x] 12.8 **门 label 14 判决：`387 → 388` 文件、`翻正单元=1`、`新增失败单元=0`、
+        regen `ok=402 bad=0`、残余 `14 文件 / 36 单元`、`UNREGISTERED=0`、四门同读数**
+        ⇒ 本轮已解决整文件 `IQEngine/plugins/plugin_system_matcher/matcher.pyc`；
+        全仓产物漂移面 = 1 个文件（两票除 matcher 外不触及任何产物）
+  - [ ] 12.9 下一票 T12-23 已排队（`bar` + `strategy_universe` 各只剩 1 个失败单元，
+        同一条「尾巴按区域声明的 merge 落点」判据；镜像诊断已给出：声明的 merge 就是正确落点，
+        而尾巴发射处从不读它 ⇒ 合规的归处是分析端链记录，不是生成端事后重排）
 # Task Dependencies
 
 - Task 0 → Task 1 → Task 2 … Task 11 严格顺序（前一轮门禁未过禁止开启下一轮）

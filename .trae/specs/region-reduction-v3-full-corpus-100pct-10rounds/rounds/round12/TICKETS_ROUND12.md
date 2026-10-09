@@ -276,3 +276,48 @@ region_ast_generator.py:8868  def _loop_dispatch_block(...)
    重新定位**真正的**登记者；
 2. 拿到真登记者之后再谈豁免；镜像与仓库当前都是 HEAD 字节（`971df5e2c9cd7d0a` +
    `e926a54f17753b33`），候选留在 `D:/Temp/r141/t1208_candidate_generator_a50aadd5.py`。
+
+## T12-09 判决：全量门 0 翻正 ⇒ 逐字节撤回（详见 `FIX_T1209_CLAIM_EXEMPTION_FALSIFIED.md`）
+
+门（label 12）：regen `ok=402 bad=0`；`6580/6617 -> 6580/6617`、`387 -> 387`、
+`文件级回退=0 UNIT_REGRESSIONS=0 新增失败单元=0 翻正单元=0`；
+checks 与 round11 同读数（quotation 153/153、small34 1531/19、selfcheck OK、
+pytest `2 failed / 280 passed / 2 xpassed` 同名两红）；residual 15 文件 / 37 单元、`UNREGISTERED=0`。
+候选已复原（`971df5e2c9cd7d0a`，标记 grep 0，`git status -- core/` 0 行），
+唯一漂移产物 `realtime_event_sourceOK.py` 用复原后的代码删除重生成 = 20555 字节（`site-packages/` 0 行）。
+
+同轮用**惰性自证**的派发探针否掉了本票先前的两句推断（就地派发其实发生了；`_generated_regions`
+的 id 排除与包含性两道门都没拦），并把残余定位到「臂体归属丢失 + 空臂 `pass`」；
+登记详见该文件 §5。另记一次仪器自曝：`t1211_writer.py` 的「PERTURBING」判定其实是
+**进程内 harness vs CLI 的口径差**（约 90–100 字节），不是探针扰动 —— 之后所有惰性自证
+一律 CLI-vs-CLI（t1213/t1216b/t1217/t1219/t1220 全部 13255 = 13255）。
+
+## matcher 轴（本轮新开的、从未攻过的轴）：T12-12 诊断 ⇒ T12-18 惰性 ⇒ T12-21 在测
+
+诊断全文 `DIAG_T1212_MATCHER_MERGE_AS_ENTRY.md`。一句话结论：
+**识别端是对的，链收集端把下一条语句的测试块当成了自己的 elif 臂。**
+
+- `IfRegion@2164`（`cond=2164 merge=2464` 8 块，语句头 `symbol[:3] in ('688','689')`）**被正常建出**
+  （`_identify_conditional_regions` 返回 36 个区域），随后 `IF_ELIF_CHAIN@2038` 把 @2164 收进
+  `elif_conditions`，于是 `region_analyzer.py:1672-1691` 的吞并循环把它从 `conditional_regions`
+  删掉（到 `:1774` 只剩 32 个）—— 语句因此整条丢失。
+- **T12-18＝不落地**：给 `:1677` 的吞并判据加「入边不得来自链外」的钳制，确实让 @2164 活下来，
+  但七个……实际是五个文件的产物**逐字节相同**（matcher 16/17、quotation 153/153、handlers 29/30、
+  wizard_quant_api 55/58、realtime_event_source 12/13）。原因实测：链 @2038 的 `blocks` 本身含 2164，
+  `block_to_region[2164]` 仍归该链 ⇒ 区域活着也不会被分派。**决定物在收集侧，不在删除侧。**
+- **T12-21（在测）**：`_check_elif_chain` 接受臂候选处（`:21852`）加判据——
+  候选的**每条前驱**必须归 `header_` 所属的同一区域。实测分离度干净：
+  真 elif 1570/2038/2338/2846 全部满足（各自前驱恰为 header 的 BoolOpRegion 两块），
+  而 @2164（header_=2038）的前驱含 `LoopRegion@6` ×2 与兄弟 `BoolOpRegion@1884` ×2 ⇒ 被拒。
+  验收：matcher 16/17 → 17/17（逐字对照 round11 的 17/17 oracle 文本），
+  且 quotation/handlers/wizard_quant_api/realtime_event_source/bar/load_daily 不出现新增失败名；
+  通过后还要跑满 402 门（label 13）才谈落地。
+
+## 本轮队列状态（截至本次提交）
+
+- 已闭合：T12-01…T12-09（含 09 的门判决）、T12-12（诊断）、T12-18（惰性）。
+- 在测：T12-21（收集侧钳制）。
+- 排队未动：#33 evt 空臂归属、#30 handlers 隐式尾声拒绝、#21–#24、#16、#14、#5。
+- **本轮尚无整文件翻转**（残余仍 15 文件 / 37 单元）。按役规「没解决一个 pyc 不得进下一轮」，
+  round13 不在 T12-21 出结果之前开启。
+

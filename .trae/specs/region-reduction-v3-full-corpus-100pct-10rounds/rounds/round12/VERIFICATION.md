@@ -44,10 +44,22 @@ T12-21 的门判决见 §三（本文件不预判）。仓库 core 当前状态�
 
 ## 四、本轮是否满足「至少解决一个 pyc」
 
-**尚未满足。** 截至本文书写入时，本轮没有任何整文件翻转：残差仍是 15 文件 / 37 单元，
-T12-21 使 matcher 的**缺陷内容**减少一条（被吞语句回来了），但该单元仍因 4 条跳转落点而红。
-按役规「没解决一个 pyc 不得进行下一轮」，round13 不在 T12-21 判决 + T12-22 出结果之前开启；
-下一步的靶仍是同一条链：matcher（16/17，四落点）与 realtime_event_source（12/13，空臂归属）。
+**已满足（门为凭）。** 门（label 14，见 §三逐字读数）：`[files] 387 -> 388`、`翻正单元=1`、
+`新增失败单元=0`、`文件级回退=0`，small34 同步 `units_success 1531 -> 1532 / success 19 -> 20`，
+残余由 15 文件 / 37 单元降到 **14 文件 / 36 单元**，`UNREGISTERED=0`。
+解决的是 `IQEngine/plugins/plugin_system_matcher/matcher.pyc`：
+`<module>.DefaultMatcher.match` 由 16/17 → **17/17 status=success**，
+整文件由「有失败单元」变为「全单元 Equal」，产物 `matcherOK.py` 13255 → 13299 字节，
+由 `pycdc.py -o` 删除重生成得到（役规：不得手改产物）。
+落地 = T12-21（分析端 elif 臂判据）+ T12-22（生成端 or 折叠多腿判据）两票叠加；
+单独落任一票都是 0 翻正，已实测（label 13 门对 T12-21 读 `翻正单元=0`）。
+全仓产物漂移面 = **1 个文件**（regen 后 `git status -- site-packages/` 行数），
+⇒ 两票在语料上除 matcher 外不触及任何产物。
+
+剩余 14 文件 / 36 单元；下一票已排队：T12-23（`bar` 与 `strategy_universe` 两个「唯一失败单元」文件，
+同一条尾部落点判据，判据的实测形式见 `rounds/round11/DIAG_B134_TARGET_ONLY_LANDING.md` §3.1
+与其后的镜像诊断：区域声明的 merge 已经是正确落点，而尾巴发射处从不读它）。
+
 
 ## 五、本轮的方法账（跨轮适用，均已进 memory）
 
@@ -64,3 +76,19 @@ T12-21 使 matcher 的**缺陷内容**减少一条（被吞语句回来了），
 5. **自订正入册**：本票族里我自己写错又被实测否掉的三句（「就地派发从未发生」、
    「`_generated_regions` 的 id 排除是拦路条件」、「负极性的空臂」）都留在文档里并标明证据，
    不删改历史读数。
+
+门（label 14 vs 13）读数，逐字取自链日志 `D:/Temp/r10gate/gate_chain14_1230.log`：
+
+```
+[regen 合计] ok=402 bad=0（应 ok=402 bad=0）
+dirty product count after regen (= blast radius vs committed products): 1
+[units] 6580/6617 -> 6581/6617  (99.4559%)   [files] 387 -> 388
+[gates] 文件级回退=0  UNIT_REGRESSIONS=0  新增失败单元=0  翻正单元=1
+[quotation] rc=0 [single] status=success units=153/153 success_rate=100.00%
+[small34] rc=0 "units_success": 1532, "success": 20,
+[selfcheck] rc=0 [selfcheck] 自证：153/153 单元 Equal | [selfcheck] 变异「常量」抓到 1/153 单元 | [selfcheck] 变异「极性」抓到 1/153 单元 | [selfcheck] OK —— 判据可用
+[pytest] rc=1 2 failed, 280 passed, 2 xpassed in 6.57s
+单元 6581/6617 (99.4559%)  文件 388/402  残余文件 14 个  残余单元 36 条
+UNREGISTERED 行数=0（应为 0）
+### chain end 12:45:45
+```

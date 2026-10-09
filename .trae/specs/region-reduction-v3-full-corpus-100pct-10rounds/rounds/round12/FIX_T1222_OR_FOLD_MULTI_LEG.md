@@ -92,3 +92,19 @@ residual 表由 `residual_report.py` 重发且 `UNREGISTERED=0`。
 **尚未验证（明列）**：402 全量重生成与逐单元比对（门在做）；pytest 七套件与 residual（门在做）；
 超过 2 个 disjunct 的多腿链（判据故意拒绝）；`_all_negated` 与 De Morgan 分支（未触碰）；
 以及本票对**其它文件**是否存在单元级增益（只有门能回答）。
+
+门（label 14 vs 13）读数，逐字取自链日志 `D:/Temp/r10gate/gate_chain14_1230.log`：
+
+```
+[regen 合计] ok=402 bad=0（应 ok=402 bad=0）
+dirty product count after regen (= blast radius vs committed products): 1
+[units] 6580/6617 -> 6581/6617  (99.4559%)   [files] 387 -> 388
+[gates] 文件级回退=0  UNIT_REGRESSIONS=0  新增失败单元=0  翻正单元=1
+[quotation] rc=0 [single] status=success units=153/153 success_rate=100.00%
+[small34] rc=0 "units_success": 1532, "success": 20,
+[selfcheck] rc=0 [selfcheck] 自证：153/153 单元 Equal | [selfcheck] 变异「常量」抓到 1/153 单元 | [selfcheck] 变异「极性」抓到 1/153 单元 | [selfcheck] OK —— 判据可用
+[pytest] rc=1 2 failed, 280 passed, 2 xpassed in 6.57s
+单元 6581/6617 (99.4559%)  文件 388/402  残余文件 14 个  残余单元 36 条
+UNREGISTERED 行数=0（应为 0）
+### chain end 12:45:45
+```
