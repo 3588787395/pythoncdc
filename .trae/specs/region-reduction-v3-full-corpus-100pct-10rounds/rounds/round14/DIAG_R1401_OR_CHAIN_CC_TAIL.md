@@ -135,3 +135,16 @@ IfRegion     e=0  merge=58 cc=True  blocks=[0,42,52]             ← 父 if 区�
   在那之前 `exempt`（R64 结构豁免）只是把错误从「取反」搬到「父区域被打脏」，不可落地。
 - 本票未翻正任何单元，core/ 保持 `640d33a77dcb71c2 / 851b0723732a2402`，残余仍
   **12 文件 / 34 单元**（门 label 16 出表）。
+
+
+## 9. 追加实测（同日第五轮，graft 支路也排除）
+
+在 20682 处加「条件块已是 cc 区域入口 ⇒ 不把 chained_compare_ops/blocks 记到父区域」的豁免
+（arm 组合 c12+guard+clamp+hop+rb2+graft）：父区域 cc 标志确实不再泄漏
+（IfRegion e=0 cc=False），但 blocks 仍是 [0,42,52]，产物进一步退化为
+ —— A/B 两个 or 操作数整体不发了。判决仍 1/2 红。
+⇒ 三个候选施工点（blocks 组装 28577/28666、Phase 3 标志继承 20682）**全部不足以翻正**；
+剩余的真问题是父 IfRegion 的**条件装配**：它的 condition_block/blocks 现在指向 cc 内部块，
+生成端因此丢掉 or run 的前两个操作数。下一票请从  给父区域
+选定 condition_block 的那一段（以及它如何与 BoolOpRegion 的 op_chain 引用交互）入手，
+不要再碰 blocks 组装或标志继承。core 依旧 640d33a77dcb71c2 / 851b0723732a2402，0 落地。
