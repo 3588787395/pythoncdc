@@ -495,6 +495,15 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 
 **恢复后的顺序**：先读 `r20n` 的 `DELIVER/FIX_T20-4.md` 走 §19C（换文件为 analyzer，锚点 `640d33a77dcb71c2`）；
 门链跑完再动 `r20q` 的诊断结论（它不改字节，因此不占门资源，但它若在测量，仓库 `core/` 一个字节都不要改）。
+
+02:49 判活补记（**两个都还活着，禁止重复派发**）：
+- `r20n`：`DELIVER/FIX_T20-4.md` 已 7948 字节（step-1 规则生效），此刻在写 `tools/dump_regions.py`（区域普查），
+  尚无 `DELIVER/*.py` 交付文件。
+- `r20q`：`FIX_T20-5_DIAG.md` 已建（1522 字节），02:48 正在产出 `out/ast_dict.json` 与 `out/py_ast_unparsed.py`
+  ⇒ 它正在做本票第一个交付物"哪一级丢的指令"的阶段归因。
+- 编排侧此刻 turn 预算耗尽，未安装任何东西：`git status --porcelain -- core/` 空，
+  三哈希仍为 `dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`，远端 `f877c6b2`。
+  **本会话没有半安装态、没有跑中的门链**，恢复时直接从 §19C 第 1 步开始即可。
 2. 有交付文件 ⇒ 走 §19C 全文（数哈希 → 丢弃镜像复测 → install → 一条后台门链 → 封表 → 提交推送）。
 3. 门链期间**不安装、不改 `core/`、不读仓库 `*OK.py`**（产物正在被删除重写）。
 4. 任何一张票落地都要提交并 `git push origin HEAD:refs/heads/rr-v3r01-f557fd`，用 `git ls-remote` 判真。
