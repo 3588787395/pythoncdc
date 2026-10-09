@@ -68,3 +68,21 @@ or-fold（`@1382`）、guard-fold（`@1910`）、被吞的 `@2164` 十指令测�
 `jq_trans_module` 65/65、small34 ≥1531/1568、anchor 名单 454/454 为哨兵）；
 七套 pytest 与封表同名同数（2 failed / 280 passed / 2 xpassed）；
 零翻正 ⇒ 逐字节回退并登记为本轮证伪臂。
+
+## T12-02 施工尝试记录（未落地，工具教训先记）
+
+按 §5 的窄道装过一版候选（台账 helper `_r164_note_emitted` + 出口边判据
+`_r164_sits_on_foreign_loop_exit` + 臂循环内一处放行），**没有取得读数**：安装脚本用
+「字节锚点 + 固定 `\r\n` 结尾」写 `region_ast_generator.py`，而该文件是 **混合行尾**，
+于是 `b[:_P] + ADM + b[_P+len(CHK):]` 从一条注释的中部切断，产出
+`SyntaxError: invalid character '」' (line 25146)`，三个文件的 decompile 全部报同一异常。
+镜像随后已复原（`971df5e2c9cd7d0a` + `e926a54f17753b33`，仓库 `core/`、`site-packages/` 0 项改动）。
+下一张票的施工规矩（照此做，别再花轮次在管道上）：
+1. 插入必须**按物理行**做：`io.BytesIO(bytes).readlines()` 切行，找到唯一含锚点子串的那一行，
+   用**那一行自身的结尾**（`\r\n` 或 `\n`）生成新行；禁止整文件统一换行、也禁止按字节偏移切文件。
+2. 每次插入后**立刻**重新搜索下一个锚点（前面的插入会使旧偏移失效——本次就是这么坏的）。
+3. 写盘后先 `py_compile`，再跑一个最小产物（quotation）与封存产物逐字节比对；
+   产物异常（体积骤降 / GEN_FAIL）即说明改动污染了语法或语义，先回退再谈判据。
+4. 候选判据本身仍按 §5：台账记入口偏移（`_emitted_entry_offsets`，单一 helper 两处共用），
+   放行面限定在「入口块 ∧ 入口未记 ∧ 前驱是**另一条**循环的 back_edge_block 或以 FOR_ITER 结尾」，
+   必测反例是 quotation `get_eps` 的 @994（已被直连路径发过）与两处同入口重复 LoopRegion。
