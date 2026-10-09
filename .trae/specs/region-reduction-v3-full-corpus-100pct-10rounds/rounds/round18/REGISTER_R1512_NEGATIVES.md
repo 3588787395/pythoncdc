@@ -165,3 +165,27 @@ real_quote 43/45、evt 12/13 全部与封盘同值 ⇒ **零回退但零翻正**
 ⇒ 修 api_base 需要「父臂 then/merge 身份」判据（DIAG_R1405 §5），与本修剪无关。
 两条各自都是独立一票，单点判据不会翻正任何单元 —— 本票由此**关闭单点尝试**，
 第 19 轮按这两张票分头施工（票面见 `rounds/round19/TICKETS_ROUND19.md` T19-2 拆分说明）。
+
+## 12. R15-16（strategy 组合判据：准入侧 B1b 例外放行 + 修剪侧 cc 出口）实测：目标不变、别处大面积回退 ⇒ 不落地
+
+两条同时施加（`D:/Temp/r150/cccompose_rig.py both`，站点
+`region_analyzer.py:30012-30018` 与 `:30250-30256`，helper
+`_cc_operand_success_edge`）：
+
+| 文件 | 封盘（round18） | 施加 R15-16 |
+|---|---|---|
+| `IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc` | 26/27 | 26/27（**目标单元未翻正**） |
+| `IQData/api/api_base.pyc` | 27/28 | **26/28**（−1） |
+| `fly/data/quotation.pyc` | 153/153 | **137/153**（−16） |
+
+⇒ 循环头守卫的「链式比较操作数例外」放行过宽：`quotation` 一次性回退 16 个单元，
+而目标链仍未成形（说明 a03/strategy 断点虽在 30016-30018，但仅放行该处不足以建链——
+后续 R59/`claimed` 一侧还要同时成立，正是 banked 补丁合取项 (2) 的失败点）。
+跑完即还原：`restored=640d33a77dcb71c2 byte_exact=True`。
+
+⇒ 结论（本会话第 6 条已否判据）：strategy 的成链需要**三处同时**改动
+（B1b 放行 + 认领守卫按算子分层 + 修剪读 cc 出口），任何子集都惰性；而完整三处
+在单点放宽时立即伤及 quotation。第 19 轮若要收此票，应先从
+`quotation` 的 16 个回退单元里回读「放行误伤的共同结构」，把它作为放行的**必要条件**
+（而不是先放宽再收紧），并把它写成 `repro/` 级的对照例——这一步需要独立的诊断轮，
+不在本轮预算内。本会话到此为止不再动 core。
