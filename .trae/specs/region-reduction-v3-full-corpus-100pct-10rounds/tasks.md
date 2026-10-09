@@ -423,3 +423,24 @@ Task 11 本轮实际状态（2026-10-08，逐条按完成度如实标注，勾�
    网络会间歇失败：用 `git ls-remote origin refs/heads/rr-v3r01-f557fd` 判真，不要相信管道的退出码。
 7. 若门链出现回退：立即 `restore` 两个文件 → `gate_chain.py 20 19` 重跑一遍以把 `after/` 与产物扫回一致态，
    再把负极性写进 `rounds/round20/` 登记（本轮 banked_r19t1 就是这么处理的）。
+
+## 20. 第 20 轮 park 记录（2026-10-10 02:14 封版，编排侧 turn 预算见底）
+
+在飞状态（**勿重复派发，勿在它测量期间改仓库 `core/`**）：
+- 工程师 `r20m`（镜像 `D:/Temp/r20m`，只拥有 `core/cfg/region_ast_generator.py`）仍处在**基线取证阶段**：
+  `DELIVER/` 里只有 `FIX_T20-3.md`（31 行，仅写了镜像搭建记录），**没有任何 `*.py` 交付文件**，
+  镜像内的 `core/` 与仓库字节一致（未打过补丁）。判活依据不是 mtime 而是进程：
+  02:13:32 / 02:13:38 两个 `D:\Python\python.exe` 与 `out/*_prod.py` 的写入时刻成对出现。
+- 它下一步产出的即是 §19C 的输入；在它写出 `DELIVER/*.py` 之前，§19C 的第 1 步不可能通过。
+
+实时仓库状态（可直接采信，无需重测）：
+- `core/cfg/` 三文件哈希 `dff6e81a5f2ff9f6`（generator）/ `beeaf14435e22922`（v2）/ `640d33a77dcb71c2`（analyzer），
+  `git status --porcelain -- core/` 为空；门读数 6586/6617 units、391/402 files，残差 11 files / 31 units。
+- 本轮新增常驻哨兵 `tests/test_product_freshness.py`（4 个小样本重生成后与在位 `*OK.py` 逐字节比对，
+  `1 passed in 4.40s`）：它把"回退后产物是旧字节"这个坑变成每次 `pytest` 都会叫的红灯，不再依赖人的记性。
+
+恢复后的前四步：
+1. `ls -l /d/Temp/r20m/DELIVER/`；仍无 `*.py` ⇒ 先读 `FIX_T20-3.md` 判断它是截断还是在飞，截断则按 §19C 第 1 步的失败面处理（不收票）。
+2. 有交付文件 ⇒ 走 §19C 全文（数哈希 → 丢弃镜像复测 → install → 一条后台门链 → 封表 → 提交推送）。
+3. 门链期间**不安装、不改 `core/`、不读仓库 `*OK.py`**（产物正在被删除重写）。
+4. 任何一张票落地都要提交并 `git push origin HEAD:refs/heads/rr-v3r01-f557fd`，用 `git ls-remote` 判真。
