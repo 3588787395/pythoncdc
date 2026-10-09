@@ -97,6 +97,27 @@ B142 判据没命中（或命中后仍被 `:7998` 的 `_child_region_blocks` 分
 注意这是**单点放行**：同一类跳过在 loop 的 else 臂消费点 `:7998` 也存在，
 若只改一处就必须在票里写明只覆盖哪一个臂消费，不得声称整族已修。
 
+**B145 已按上述判据实现并实测（同日第三次惰性）**：补丁字节 `3c0ce73bf16adbef`，
+helper `_r145_arm_terminal_exception`（终块 ∧ 无任何角色字段（全局遍历 self.regions）
+∧ 前驱全在同一子区域内）装在 `_process_if_blocks` 的
+`if anchor_stmts and block.start_offset in anchor_stmts: …` 之后的那个
+`if block in self.generated_blocks: continue` 上（读回确认这才是 `_process_if_blocks`
+自己的逐块发射循环，`:24966/:25019/:25073` 三处都是检测循环）。读数：
+
+| 文件 | HEAD | B145 |
+|---|---|---|
+| `IQCommon/logger/handlers.pyc` | 29/30 | 29/30，产物 `9093` 字节 **SAME_as_HEAD** |
+| `fly/data/quotation.pyc` | 153/153 | 153/153，**SAME_as_HEAD** |
+
+⇒ 该循环**不是**渲染 `IfRegion@0.then_blocks=[90,404,408]` 的那条路径（或 helper 对 `@404` 返回 False，
+两种可能都还未分离）。因此本轴第四次动手的前提是**派发追踪**，不是再改判据：
+用已证明惰性的探针形（只读 `block.start_offset` 与局部量，跑一遍与 HEAD 产物逐字节对比自证）
+在候选消费点打印「谁以什么 blocks 参数调用了谁」，先确定 `IfRegion@0` 的右臂经由
+`_generate_if` / `_process_if_blocks` / `_if_generate_branch_stmts` / `:13034/:13116`
+之中哪一条真正消费到 `@404` 的位置，再决定放行点。镜像补丁留在
+`D:/Temp/r141/wt/core/cfg/region_ast_generator.py`（安装脚本 `patch_b145.py`），仓库字节未动。
+
+
 
 
 
