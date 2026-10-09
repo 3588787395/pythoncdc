@@ -98,3 +98,37 @@ len orig=659 prod=659 delta=0   hunks=0 landings=2
 `klinedata`（r19t3 诊断中，1 内容 hunk + 2 影子）、`order_api`（r19t1 施工中，2 单元）、
 **`handlers`（本文件 §1 新读数，第一次把缺陷钉到 idx 73/75 那对被并掉）**。
 `quote`/`trade_info_utils`/`trade_live_broker`/`__init__`(risk) 只涨单元数。
+
+---
+
+# 更正登记（2026-10-09 15:54，r19t3 诊断回报到位之后）
+
+**本文 §1 与 `DIAG_R1516_KLINEDATA_ARM_EXIT_IDENTITY.md` 对 klinedata 的「1 条指令之差 ⇒ 最廉价整文件翻绿」判断作废。**
+r19t3 用目标感知比较实测：该单元除臂尾 `@2924` 方向差之外，另有**第二个独立落点残差**
+`@974/@978` 两条假出口 orig→1200 vs prod→1264（外层 BoolOp/elif 链的臂成员 + merge 身份，
+即 r19t2/r19t4 所在的 `region_analyzer` 轴）。
+⇒ 修好臂尾一处后 `pyc_verify` 仍读 **63/64**（零单元翻正）；依 fires-without-flips，
+臂尾判据**单独不得落地**，klinedata 需要两处同修。
+
+我自己的漏读过程也登记在这里：修好的 `unit_diff.py` 当时已对这单元打印
+`hunks=1 landings=2`，我在 `DIAG_R1516` 里把其中 2 条落点读成「2 字节位移影子」，
+未经逐条验尸就写进验收标准；该列本已按对齐映射比目标（位移影子已被消除），
+所以这 2 条是**真差**。教训＝[[artifact-counts-before-conclusions]]：
+分列读数拿到后仍要逐条 specimen-check 才能定性。
+
+r19t3 买到的可用结论（存档 `D:/Temp/r19t3/README_T20-1.md`，判决 `MEASURED-READY`）：
+臂尾那处的判据是唯一的、且可精确表达——该 nested if 为 `IfRegion@2802`，
+`then=[2894,2898,2902,2916,2924]`、`else=[2928,3050,3054,3068]`、`merge_block=@3076`
+（恰为 `LoopRegion@1268` 的 `back_edge_block`），而臂尾块 `@2924` 的后继集合＝`{1268}`＝循环头部；
+`merge_in_succ=False ∧ hdr_in_succ=True` 在本单元 16 个 IfRegion 中**只命中这 1 个**，
+三条已经正确的臂都是 `merge == 循环头部`（故按「负门禁」写法不会被扰动）。
+消融实测：`[R3-Continue]`、elif 链 `:19483/:19537`、then 支 `:18411`、
+`_block_is_child_loop_natural_backedge`、`_is_loop_tail_convergence_block`、CONTINUE 角色分派 `:52896`
+**七个负桩全部逐字节不变**；唯一能动该槽的是把 `[R3-Continue]`（`region_ast_generator.py:21378-21398`）
+的 merge-同一性合取项**放宽**，于是该槽变 `JUMP_BACKWARD`、`hunks 1→0`。
+施工点归处：判据写在识别端 `_compute_in_loop_if_merge`（`region_analyzer.py:2974`，3 个调用点
+`:19839/:20346/:22048`）内部，使三处共享同一决定；条件 3 用
+`_find_nearest_common_post_dominator`（`:2354`）已有的环路局部后支配词汇表达；
+臂成员仍走 `_collect_branch_blocks` + `[R31-B]` 停止集规则；
+每臂出口标签记在既有 merge-claim 守卫（`:22920`「leave merge_block unclaimed」）处，
+**不要**改写 `IfRegion.merge_block`（那会连带扰动父链自有的顺序汇合）。
