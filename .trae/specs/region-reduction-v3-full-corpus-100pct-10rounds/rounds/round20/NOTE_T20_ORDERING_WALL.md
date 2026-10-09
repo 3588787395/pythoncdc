@@ -40,3 +40,24 @@ quotation 153 -> 151      matcher 17 -> 16
   `rounds/round19/banked_r19t3/` 与 `DIAG_R1516`），三处可能共一条判据。
 
 镜像工程师 r20d 正按上述出口施工（`D:/Temp/r20d`，只交整文件，不动实时仓库）。
+
+## 附：`real_quote.<module>.RealQuoteData.get_tick_direction`（+1 单元档，生成端，唯一真差已定位）
+
+`unit_diff … --all` 读 `hunks=1 landings=1 delta=1`；把对齐后**逐条带操作数**比出来，
+真差只有**一处插入**，其余 11 条 `replace` 全是它造成的 2 字节位移影子：
+
+```
+ORIG  @1090 CALL ; @1100 POP_TOP ; @1102 LOAD_FAST redata ; @1104 RETURN_VALUE
+PROD  @1090 CALL ; @1100 POP_TOP ; @1102 JUMP_FORWARD ->1108 ; @1104 LOAD_FAST redata ; @1106 RETURN_VALUE
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                                          原来「顺序落入共享 return redata」的那条路径，
+                                                          被改成先无条件跳到 @1108（下一段 redata 检查块），
+                                                          于是多插 1 条 JUMP_FORWARD（+2 字节）
+```
+
+⇒ 缺陷形状：**一条臂体以 `Call`（`self.log.quote.debug(…)`）语句结尾时，发射端在该语句之后
+补了一条无条件跳转**，而原字节码此处**落空进入共享的 `return redata`**（该 `return` 在产物里也发了，
+所以不是丢语句，是多插一条死跳）。
+开票要点：判据应为「臂尾语句本身以无条件跳/返回结尾 or 臂的后继就是区域的 merge 且 merge 由落空边进入」
+时不发这条跳；`landings=1` 那处 `@1022 JUMP_FORWARD ->199 vs ->202` 同为位移影子，不是第二缺陷
+（勿按 11 条记账）。该文件另有 1 个失败单元 `get_real_minute_kline`（+2 ⇒ 不产生整文件翻绿）。
