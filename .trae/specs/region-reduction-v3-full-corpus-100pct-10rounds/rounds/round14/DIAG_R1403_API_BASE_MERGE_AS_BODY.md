@@ -86,3 +86,59 @@ BoolOpRegion e=2144 merge=2296 chain=[(2144,'and'),(2148,'and'),(2190,'and')]
   `trade_live_broker 118/128`、`api_base 27/28` …），零翻正零回归 ⇒ 该臂族对语料为惰性，
   按「fires without flips」不落地；api_base 的失败与链式比较无关，属本节 §2 的 merge/极性判据缺口。
 * 语料仍 **390/402 文件、6583/6617 单元**，残余 12 文件 / 34 单元（门 label 16 出表）。
+
+## 5. 触发条件已收到 5 行最小例（同日追加实测，电池 repro_ccneg/）
+
+新建电池 `rounds/round14/repro_ccneg/`（跑法见文件内 docstring；产物写到 %TEMP%/r14ccneg）：
+
+```
+m02_plain_and_not   success units=2/2   对照：成员是纯比较，折叠为 if not (a > b or c > d): x -= 1  ← 正确
+m03_cc_only         failure units=1/2   首操作数换成链式比较：产物 if a > b > c or d > e: return x（体 x -= 1 整条丢失）
+m04_cc_cc           failure units=1/2   两操作数都是链式比较：if a>b>c or d>e>f: return x / x -= 1（臂互换）
+m01_and_not_cc      failure units=1/2   api_base 原形（外层再套一条 and 守卫）
+GREEN=1 RED=3 / 4
+```
+
+⇒ **触发条件不是「嵌套 if」也不是「merge 太远」，而是：负极性 and 链里有一个操作数是链式比较。**
+对照 m02 与 m03 的区域表差异给出了机制：
+
+```
+m02：两个纯比较成员被识别端合成一条 BoolOpRegion(and/or 链)，成员末指令都是 IF_TRUE->merge，
+      整体取反闩锁（R14c：全员 IF_TRUE 同目标 ⇒ 保持 or 链并整体取反）生效 ⇒ if not (A or B): 体 正确。
+m03：首操作数是链式比较，Phase 2 的 _identify_chained_compare_regions 先把 @0 做成 cc IfRegion，
+      于是布尔算子链不再包含它 —— 识别端给出的是嵌套 IfRegion：
+        IfRegion e=0  cond=0  merge=54  then=[32] else=[30]   cc=True
+        IfRegion e=32 cond=32 merge=54  then=[44] else=[]
+      两个区域的 then 都是「落空边」(32/44)，真值边都指向 merge=54，
+      即正确的源码形状是 if not (a>b>c) and not (d>e): x -= 1。
+```
+
+折叠侧读到的是区域链而非 BoolOp 链：`_detect_or_short_circuit`（`region_ast_generator.py:21220`）
+以「跳转目标是否落在某个嵌套 IfRegion 的 then_blocks」判 OR-success，本例跳转目标 54 是 merge、
+不在任何 then_blocks ⇒ 判为 and；随后的 and 折叠路径（`21591` 起的 `_fold_chain_consistent` 三条路径）
+把两个「未取反」的条件表达式串起来（`21690` 处 `condition = BoolOp(and, [condition, inner_cond])`
+分支不带取反），最终发射成 `A or B` 并把 merge 块 54 当体、真体 44 落到臂外。
+
+## 6. 判据缺口定稿（写给下一票，两个方向同一条结构事实）
+
+负极性成员需要整体取反的判据，目前只看「成员末指令的跳转方向与目标是不是嵌套区域的 then 块」，
+从不比较「目标 == 本区域 merge_block」与「then 体 == 落空边」。链式比较操作数的末指令是
+**首段** 的 IF_FALSE->清理块（真正的极性在**末段**：IF_TRUE->merge），所以：
+
+* m02/m03 对照说明：布尔算子闩锁（R14c 全员 IF_TRUE 同目标 ⇒ 整体取反）对 cc 成员失真 ——
+  应当以 cc 的**末段**（`_detect_chained_compare_pattern(...).extra_chain_blocks` 的最后一块）
+  的末指令参与「全员 IF_TRUE 同目标」判定；
+* 折叠路径同理：`and` 折叠在「成员真值边指向本区域 merge_block ∧ then 体是落空边」时必须逐员取反，
+  且 merge 块不得进臂内。
+
+同一条结构事实也是 `strategy.tick_worker_thread`（R14-01 §4 形状 B）需要的判据，只是方向相反：
+那条链的统一目标 @568 恰是**真入口**，所以不该取反。两边合起来就是把「目标 == merge_block？」
+与「目标 ∈ then_blocks？」这两条同层事实补进同一处判定（单点复用，不写名字/偏移/指令计数）。
+
+## 7. 门侧状态（同日 checks 阶段实测，core/ 未动）
+
+`gate_round.py 17 rounds/round13/after --stage checks` rc=0 全绿读数：
+quotation **153/153**；small34 **1534 / success 22**；判据自证 153/153 Equal，
+变异「常量」1/153、「极性」1/153；pytest 2 failed / 280 passed / 2 xpassed
+（两条失败是第 9 轮已封表的基线红，判据为「零新增失败」）。
+本票仍未落地任何 core/ 改动；语料 390/402 文件、6583/6617 单元，残余 12 文件 / 34 单元。
