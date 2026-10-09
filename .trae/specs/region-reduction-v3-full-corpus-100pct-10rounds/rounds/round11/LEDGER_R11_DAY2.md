@@ -41,11 +41,25 @@
 
 ## 下一票（未派，按代价排序）
 
-1. `handlers`：清点 `_generate_region` 返回值的全部消费点（grep `isinstance(_child_ast, list)` = 1 命中），
-   在**消费侧**补对称处理后再让 loop 分支交付落点语句；判据本身已由 §0 读数钉死（`@404` 可发、角色取全局）。
-2. `trade_info_utils` 的共用尾家族（`query_strategy_id` +1、`query_trade_strategy_info` 净 0）——
+**先记一票的前置被实测推翻**：B144 原本写「清点 `_generate_region` 返回值的全部消费点再补对称处理」。
+在仓库字节上 `grep -c "_generate_region("` = **108**（含定义 1 处，消费点 107 处，遍布
+`:1911 / :4215 / :6390 / :6557 / :7990 / :8358 / :9076 / :11828 / :13034 / :13961 / :14019 …`）。
+逐点判定「是否接受 list」不是本回合能承受的成本，且任一单点改动都会牵动上百个非本案例区域 ⇒
+**「让 loop 分支用 list 交付落点语句」这条通道按架构不可用**，不是我没写对。
+
+因此 handlers 的可行方向改回**集合侧**（未做，留给下一轮，先要读数不要先动刀）：
+IfRegion@0 的右臂块集来自 `then_blocks/else_blocks`，而 `@404` 只是 IfRegion@0 的 plain member、
+不在任何字段里 ⇒ 要么分析器把落点收进**父区域**的臂集合（成员关系变更，与 B127 同族风险），
+要么发射器在消费子区域之后按「子区域终块成员」续取一次（新通道，仍需逐案证明不双发）。
+两条都要先回答同一个问题：**@404 应归父区域还是归循环**——这是分析器裁决，不是发射开关。
+
+其余按代价排序：
+
+1. `trade_info_utils` 的共用尾家族（`query_strategy_id` +1、`query_trade_strategy_info` 净 0）——
    与 handlers 同族但不同单元，2 单元，不翻文件。
-3. `matcher` 三形同单元票（oracle 文本已钉死，`m_or_full.py` 17/17），需一次改三处，风险最高、收益 1 文件。
+2. `matcher` 三形同单元票（oracle 文本已钉死，`m_or_full.py` 17/17），需一次改三处，风险最高、收益 1 文件。
+3. `handlers` 归属裁决票（上述两条方向，先读数后动刀）。
+
 
 网络事实：`git push` 今日连续 4 次失败（`Recv failure: Connection was reset` / `port 443 … Couldn't connect`），
 三个 round-11 提交（`9a738074`、`cdee0498`、`8b5a0c56`）仍在本地待推。
