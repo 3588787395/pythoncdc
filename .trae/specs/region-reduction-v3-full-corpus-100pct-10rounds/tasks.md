@@ -457,6 +457,21 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 所以 `:19454` 与五个裸 `Continue` 分支对这一族是瞎的。残留族的根在 **analyzer**
 （`inline_boolop_chains[id(cond_block)] = None`；`else=[1098]` 被给了 `IfRegion@1008` 而非 `@992`），
 下一票须拥有 `core/cfg/region_analyzer.py`、generator 禁改，并受 §19B 记录的顺序墙约束。
+
+## 20B. 再 park（2026-10-10 02:40，编排侧 turn 预算 <10）
+
+- 在飞：**工程师 `r20n`**（镜像 `D:/Temp/r20n`，只拥有 `core/cfg/region_analyzer.py`，generator 与 v2 对它只读），
+  02:38 派出，票面 = 任务 #50：在**识别期**声明 BoolOp 链成员与 arm 属主
+  （`inline_boolop_chains` 对条件块 512/992 实测为空；`else=[1098]` 目前归 `IfRegion@1008`；块 536 归 `IfRegion@536`）。
+  它的 `DELIVER/FIX_T20-4.md` 被要求作为 step 1 建立并增量追加，所以截断也能读到判据与读数。
+- **此刻不要动 `region_analyzer.py`／`region_ast_generator.py`，也不要跑门链**：它在镜像里测量，
+  我改仓库字节会让它的前提失效；402 产物若正在删除重写则任何读数都不可采信。
+- 恢复后的第一步 = 照 §19C 执行，只把文件换成 `core/cfg/region_analyzer.py`，备份锚点 `640d33a77dcb71c2`，
+  门槛 `strategy 27/27` 或 `api_base 28/28`、另一件不降、六电池不倒
+  （`repro 9R / arm 0G3R / ccneg 3G1R / retbreak 2G2R / orderapi 5G / tail 13G`）。
+- 仓库此刻：`git status --porcelain -- core/` 空；三哈希 `dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`；
+  门读数 6586/6617 units、391/402 files；残差 11 files / 31 units；
+  哨兵 `tests/test_product_freshness.py` 与 R20-3 裁定已推送（远端 `527eeb18`，`git ls-remote` 判真）。
 2. 有交付文件 ⇒ 走 §19C 全文（数哈希 → 丢弃镜像复测 → install → 一条后台门链 → 封表 → 提交推送）。
 3. 门链期间**不安装、不改 `core/`、不读仓库 `*OK.py`**（产物正在被删除重写）。
 4. 任何一张票落地都要提交并 `git push origin HEAD:refs/heads/rr-v3r01-f557fd`，用 `git ls-remote` 判真。
