@@ -157,3 +157,17 @@ IfRegion entry=944  merge=1102  elif_conditions=[1024]  elif_bodies=[[1036]]  el
 本 dump 显示它确实是按臂分组的块表）。⇒ 先确认这条链由哪个入口装配
 （`entry=858` 的 IfRegion 在生成端的分派路径），再决定插桩点；
 不要在未确认命中前先猜第三版判据。
+
+## R20-2 停手登记（主代理，17:12）
+
+- v1/v2 两版判据**零翻正 ⇒ 插桩点未被命中**（该链 `entry=858` 的装配路径不是
+  `_if_generate_elif_chain` 里我改的那一段，或 `elif_bodies` 在运行时的形态与 dump 所见不同）。
+  下一手必须**先证明命中**再写判据：在镜像里给该处加一个只写文件计数器（不读 CFG 属性），
+  跑 `real_quote` 看计数是否为正；计数为零就说明走的是别的路径，改判据没用。
+- v3（加「else 块 == 任一臂体末跳的落点」一条）在镜像里把 `region_ast_generator.py` 写成
+  **语法错误**（IndentationError @15603），随后所有产物读数 `units=0/45`、`0/92`、`0/17`、`0/153`、`0/64`
+  全部是**坏具产生的 VOID**，不是回退也不是证据（依 [[feedback-no-record-before-measurement]]：
+  失败的具给出的数不记账）。实时仓库 `core/` 全程未写（`git status --porcelain core/` = 0，
+  三件哈希仍 `dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`）。
+- 本轮（第 19 轮）落地成果不变：**6586/6617 单元、391/402 文件**（`order_api` 整文件翻绿）。
+  R20-1（api_base+strategy，工程师 r20d 在飞）与 R20-2 均**未**产生可安装候选。
