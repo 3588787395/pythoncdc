@@ -395,3 +395,31 @@ Task 11 本轮实际状态（2026-10-08，逐条按完成度如实标注，勾�
       或末臂落空后继即判幻影 else（实值 `entry=858 / elif_final_else=[1102] /
       @1022 JUMP_FORWARD->1102`），但**先用只写文件计数器证明插桩命中**，
       我两次未命中的教训写在 `rounds/round20/NOTE_T20_ORDERING_WALL.md`。
+
+## 19C. 候选落地 runbook（照抄即可，约 8 个 turn；勿凭记忆改步骤）
+
+前提：`r20m`（`D:/Temp/r20m/DELIVER/`，只碰 `core/cfg/region_ast_generator.py`，
+必要时另交 `ast_generator_v2.py`）带回 `LANDED-READY`。**未翻正单元就不要走这段。**
+
+1. 数清交付文件个数并核对哈希（两文件判据只装一个＝假惰，本轮踩过）：
+   `ls -l /d/Temp/r20m/DELIVER/ && sha256sum /d/Temp/r20m/DELIVER/*.py | cut -c1-16`
+2. 丢弃式镜像先复测（不动实时仓库）：
+   `M=/d/Temp/r20v; rm -rf $M; mkdir -p $M; cd <repo> && cp -r pycdc.py core parsers utils bytecode scripts $M/`
+   `cp --parents -r .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round14/{repro,repro_arm,repro_ccneg} .../round18/repro_retbreak .../round19/{repro_orderapi,repro_tail} $M/`
+   覆盖交付文件 → `python -X utf8 -m py_compile $M/core/cfg/region_ast_generator.py`
+   → 在 `$M` 里跑 6 个 runner 与 `strategy`/`api_base`/`trade_live_broker`/`real_quote` 判决。
+   门槛：`strategy 27/27` 或 `api_base 28/28`，另一件不降，六电池不倒。
+3. 安装（备份已锚定在落地态 `dff6e81a5f2ff9f6 / beeaf14435e22922`）：
+   `python -X utf8 /d/Temp/r150/install_deliver.py install <DELIVER文件> core/cfg/region_ast_generator.py`
+   失败或要回退：`python -X utf8 /d/Temp/r150/install_deliver.py restore core/cfg/region_ast_generator.py`（会打印 byte_exact）
+4. 门链（一次后台跑完四阶段，勿逐阶段占 turn）：
+   `python -X utf8 -u .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/gate_chain.py 20 19`
+   覆盖墙钟用一条 `sleep 275` 的有界命令轮询：`grep -E "STAGE_END|units\]|files\]|gates\]" /d/Temp/gate_chain_20_*.log | tail`
+   读数必须：`regen ok=402 bad=0`、`files >= 391`、`文件级回退=0`、`新增失败单元=0`、pytest 不新增红。
+5. 封表：`python -X utf8 .trae/specs/.../residual_report.py 20 19 > rounds/round20/RESIDUAL_ROUND20.md`
+   （UNREGISTERED 必须为 0，否则先补登记再提交）。
+6. 提交并推送（含 `rounds/round20/after/` 八份 JSON、工程师 FIX 文档、门链证据）：
+   `git add .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/ && git commit -q -m "gate 20: …" && git push origin HEAD:refs/heads/rr-v3r01-f557fd`
+   网络会间歇失败：用 `git ls-remote origin refs/heads/rr-v3r01-f557fd` 判真，不要相信管道的退出码。
+7. 若门链出现回退：立即 `restore` 两个文件 → `gate_chain.py 20 19` 重跑一遍以把 `after/` 与产物扫回一致态，
+   再把负极性写进 `rounds/round20/` 登记（本轮 banked_r19t1 就是这么处理的）。
