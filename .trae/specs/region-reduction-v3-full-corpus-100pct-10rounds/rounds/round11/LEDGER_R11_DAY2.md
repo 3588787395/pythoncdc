@@ -60,6 +60,45 @@ IfRegion@0 的右臂块集来自 `then_blocks/else_blocks`，而 `@404` 只是 I
 2. `matcher` 三形同单元票（oracle 文本已钉死，`m_or_full.py` 17/17），需一次改三处，风险最高、收益 1 文件。
 3. `handlers` 归属裁决票（上述两条方向，先读数后动刀）。
 
+## 追加（同日晚，读数把 handlers 的宿主钉到行）：归属其实已经解决
+
+用无副作用普查（新建 CFG + 新建 RegionAnalyzer，独立进程）读 `IfRegion` 的臂字段：
+
+```
+IfRegion entry@0   condition_block=46  merge_block=412  exit=412
+                   then_blocks = [90, 404, 408]      else_blocks = []
+                   blocks      = [0, 90, 404, 408]
+IfRegion entry@412 condition_block=412  else_blocks=[1012]  blocks=[412,458,504,658,1008,1012,1016,1020]
+```
+
+⇒ **`@404` 已经在父区域 IfRegion@0 的 `then_blocks` 里**，「归属未定」这个前提不成立；
+把它丢掉的是父臂消费时对 `generated_blocks` 的跳过（该方法的 6 节模板自己写着
+「遇到已在标记集中的块直接 continue」），而 `@404` 正是被 loop 收尾扫
+（`:5361-5374`）登记进 `generated_blocks` 的。这同时解释了 B142 为什么逐字节惰性：
+B142 判据没命中（或命中后仍被 `:7998` 的 `_child_region_blocks` 分支跳过），
+所以父臂的 `continue` 照旧发生。
+
+**锚点自我更正（必须留着，别再被引用成施工点）**：我先写「实际语句在 `:24966`
+`if b in self.generated_blocks: continue`」，随后逐行读回 `:24958-24975` 证明**错位**——
+那一段是 `_loop_entry_generate` / `_fis_skip_blocks` 的**检测循环**（R59：为
+`for_iter_setup` 块决定改走 `_generate_region`），不是发射跳过点。
+发射跳过点在 `_process_if_blocks`（`:24770` 起）里，`24900-25100` 段内
+`if … in self.generated_blocks: continue` 形式共 **5 处**（相对行 67/120/174/195 等），
+下一票**必须先把这 5 处逐条读回、指出哪一处消费 `then_blocks`**，再动手；
+本台账不再给出未读回的行号。
+
+下一票（B145，判据已给定，站点待读回）：在真正的父臂发射跳过处放一个**结构例外**——
+块为终块（零正常后继 ∧ 零异常后继）∧ ∈ 某子区域 `blocks` ∧ 不在**任何**区域的角色字段里
+∧ 前驱全落在该子区域内 ⇒ 该块的 `generated_blocks` 登记来自「只登记不发射」的收尾扫，
+应当在此发射一次。必须同时证明：(i) 真被子区域发射过的终块不会命中
+（需先读 `_loop_generate_while` 对 body/else 终块的登记路径）；
+(ii) 同文件 `TWHThreadRotatingFileHandler._target` 的两个 entry@2 LoopRegion 不因此双发
+（`@780` 在另一区域是 `body_blocks` 成员，被第 3 条排除）。
+注意这是**单点放行**：同一类跳过在 loop 的 else 臂消费点 `:7998` 也存在，
+若只改一处就必须在票里写明只覆盖哪一个臂消费，不得声称整族已修。
+
+
+
 
 网络事实：`git push` 今日连续 4 次失败（`Recv failure: Connection was reset` / `port 443 … Couldn't connect`），
 三个 round-11 提交（`9a738074`、`cdee0498`、`8b5a0c56`）仍在本地待推。
