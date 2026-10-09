@@ -308,3 +308,17 @@ Task 11 本轮实际状态（2026-10-08，逐条按完成度如实标注，勾�
 - [x] 14.3 13 文件面板 A/B：分析端四臂 13/13 与基线逐文件相同（0 翻正 0 回归）⇒ 不落地，core/ 保持基线字节
 - [x] 14.4 本轮 checks 阶段零漂移：quotation 153/153、small34 1534/22、自证 153/153（变异常量 1/153、极性 1/153）、pytest 2 failed/280 passed/2 xpassed
 - [ ] 14.5 R14-02/R14-04 待下一票：判据「成员真值边==本区域 merge_block? ∧ then 体==落空边?」，链式比较按末段判极性，单点实现两处复用（api_base 需取反、strategy 需取消取反）；验收=两电池先绿→13 文件面板→完整门链 label 17 vs 16→提交推送
+
+## 15-18. 第 15–18 轮（15/16 为诊断+双臂轮，18 为落地轮）
+
+- [x] 15.1 合成电池空判据自我纠正：判据只喂 `pycdc.py --region` 产物；手写源当 `--source` 的 9 例「绿」全部作废，重跑后 9/9 红
+- [x] 15.2 识别端四处链走判据（认领守卫 29975 / hop 安全闸 29786 / W14 尾钳 30234 / `_boolop_resolve_merge` elif 支 27989）与 blocks 组装两点、Phase-3 标志继承点全部实测惰性 ⇒ 该族施工点收敛到父 IfRegion 臂成员/merge 身份
+- [x] 15.3 R14-04（同目标真值边取反判据）在小电池与面板上零回归，但当时 0 单元翻正 ⇒ 暂存共要件
+- [x] 18.1 **口径自我纠正**：`dis.hasjrel/hasjabs` 是操作码编号列表而非名字列表，旧 hunk 工具把内容差与落点差混为一谈；修正后 34 个残差单元中 6 个为纯落点残差、5 个为内容缺失型，名册与优先级据此重排（工具 `unit_diff.py` 已入仓，只做测量，名册仍归 `residual_report.py`）
+- [x] 18.2 T12-11 旧前提被推翻：`clock_worker` 识别端完整（unowned 指令=0，字节偏移≠块边界），缺陷在发射端批量认领（`_if_generate_normal:21290` + `_process_if_blocks:25339`）；成员版判据把该单元 −113→−6 并找回三条被吞语句，但门链 label 17 读数 `6583/6617→6583/6617、翻正 0、回退 0` ⇒ 依 fires-without-flips 逐字节回退，脚本与共要件留档
+- [x] 18.3 **R14-04 落地**：提交 `1577a2b0`；门链 label 18 vs 16 ⇒ `regen ok=402 bad=0`、`[units] 6583/6617 -> 6584/6617 (99.5013%)`、`[files] 390 -> 390`、`文件级回退=0 / UNIT_REGRESSIONS=0 / 新增失败单元=0 / 翻正单元=1`（`klinedata <module>.kline_datetime_list`，该文件 62→63）；checks：quotation `153/153`、small34 `1535/22`（新封盘）、自证 `153/153 Equal` 且两变异各抓 1/153、pytest `2 failed / 280 passed / 2 xpassed`（零新增失败）；证据与产物提交 `a9dedc29`+`12378d5e`，已推送 `rr-v3r01-f557fd`
+- [x] 18.4 handlers._target 三个候选守卫全部实测无效（`_nested_merge_return_skip` 在本码对象内匹配数 0；两条 while 臂尾剥离器消融后逐字节不变；`_is_return_none_join_block` 加 (2c) 后 8 文件面板读数与控制全同）；且产物源码**已含** `return None`，故缺口是 CPython 对循环两条出口边的跳转穿线，不是丢语句 ⇒ 该票改列为形状复现票，禁止再加发射/剥离守卫
+- [x] 18.5 R15-10 新族登记 + 仓库常驻电池 `rounds/round18/repro_retbreak/`（4 例：r01 红 / r02 红（控制例因第二缺陷 `while…else` else 子句丢失而无效，须重做配对）/ r03 绿 / r04 绿）；机制：外层 `while True:` 被消除后内层真 `return` 臂被发射成 `break`，角色判定点 `:13280`/`:12178`，正解在识别端块角色（臂块末指令为 RETURN_VALUE 时不得记 BREAK）
+- [ ] 19.1 R14-05（镜像修理工进行中，独立复判其电池产物仍 1/2 红）：`api_base.get_history_df` 距 28/28 只差 2 处落点、`strategy.tick_worker_thread` 只差 4 处；施工点=链起点资格（`_identify_boolop_regions`）+ 父臂入口与 merge 身份同判；验收=电池 2/3 全绿 → 13 文件面板 → 门链 label 19 vs **18** → 提交推送
+- [ ] 19.2 trade_live_broker 大缺失家族（`_process_order` −465/507、`_process_cancel_order` −293/333）：`@94` 条件臂身份被读反（真边=循环体被发射为 `break`，体成为其后死代码）；先做最小复现再动判据
+- [ ] 19.3 本轮推送受阻一次（github 443 连接重置，6 次重试未成，第 2 轮重试成功）：`unit_diff.py` 提交 `ec23262c` 已确认远端=本地
