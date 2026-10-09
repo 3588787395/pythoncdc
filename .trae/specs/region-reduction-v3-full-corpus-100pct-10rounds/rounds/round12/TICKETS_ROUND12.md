@@ -252,3 +252,27 @@ region_ast_generator.py:8868  def _loop_dispatch_block(...)
 `path repointed: False`），那份日志仍是 HEAD 的，别拿它当候选证据），
 读出候选下 `@7972` 实际执行到哪一行被跳过，再决定是给 `child_expr_regions`/`_nested_if_entry_generate`
 补一条分派，还是把该块交给循环体的 `_loop_dispatch_block`。
+
+## 方法冲突已判：`writes_of_7972 = 0` 是探针假象，候选仍未真正放开
+
+同一候选构建 `a50aadd50b01e036` 用两种独立方法测同一事实，结果相反：
+
+* 集合写栈探针（`t1209`：把实例的 `generated_blocks`/`generated_offsets` 换成记录型 set 子类）
+  报 `writes_of_7972 = 0`；
+* 行级追踪（`t1217`：monkey-patch `_process_if_blocks` + `sys.settrace('line')`，
+  只在 `block.start_offset == 7972` 时记行号）报候选下三次走到
+  `:25110 if block in self.generated_blocks:` → `:25111 continue`，
+  即**该块仍在集合里**，产物也因此与封存逐字节相同（`has_persist_flag=False`）。
+
+判定：**采信行级追踪**。理由具体——集合探针的前提是「实例属性 `generated_blocks` 自 `__init__`
+之后不被重绑定」，而本仓多条路径会整体替换或另建集合（例如 `self.generated_blocks = set(...)`
+式重建、或把集合传给别处再 add），一旦重绑定，我的子类就不再看得到写入；行级追踪是直接读
+当时的成员关系，不依赖任何属性身份假设。⇒ 写栈探针可用但要配一条**自检**：在打印前
+`assert type(self.generated_blocks) is TSet`，否则其「零」不可信。
+
+由此，T12-08 的结论也要相应撤回一半：认领豁免**没有**让 @7972 脱离 `generated_blocks`
+（登记另有其处），所以「宿主在派发侧」这句为时尚早。下一票的确定动作只有两个：
+1. 先补上探针自检（`type(...) is TSet`）或改用「在 `:25110` 处直接打印成员关系」的方式，
+   重新定位**真正的**登记者；
+2. 拿到真登记者之后再谈豁免；镜像与仓库当前都是 HEAD 字节（`971df5e2c9cd7d0a` +
+   `e926a54f17753b33`），候选留在 `D:/Temp/r141/t1208_candidate_generator_a50aadd5.py`。
