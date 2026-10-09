@@ -146,3 +146,22 @@ core 现为 `region_ast_generator.py 5066b1367b6de3c7` / `region_analyzer.py 640
 镜像施加 banked `region_analyzer.py` 后：a01/a02/a03 仍 1/2；
 `api_base` 由 27/28 退到 **25/29**（单元总数 28→29 ⇒ 该补丁额外生成了一个 code object）；
 `strategy` 26/27 不变 ⇒ 除「不成链」外还多造对象，进一步坐实不安装。
+
+## 11. R15-15（W14-A 修剪读 cc success edge）实测：零回退、零翻正 ⇒ 惰性，且暴露 strategy 的真正断点更靠前
+
+`cctrim_rig.py ccedge`（把 `_cc_operand_success_edge` 接进 `region_analyzer.py:30250-30258`
+的一致性修剪 keep 循环）8 文件面板：strategy 26/27、api_base 27/28 不变，
+quotation 153/153、matcher 17/17、klinedata 63/64、trade_info_utils 38/41、
+real_quote 43/45、evt 12/13 全部与封盘同值 ⇒ **零回退但零翻正**，跑完
+`restored=640d33a77dcb71c2 byte_exact=True`。
+
+原因即镜像 trace 自述的对称事实：修剪只会在成员**已被准入**之后才轮到剥；
+而在未打补丁的 live 构建里 strategy/a03 的链走断在更前面一处 ——
+**`region_analyzer` 的循环头判据**（banked 30018 对应 live ≈30005-30018，
+`_b1b_c0 = (B@16 is LoopRegion@2.header_block)` 时 break），
+不是认领守卫（api_base 才是断在认领守卫：`claimed` n=55 含 `B@1008`，
+且 `_r16_boolop_cc_run_operand` 第 (2) 合取项 `_T=B@1098` ≠ `_t=B@1040`）。
+⇒ 修 strategy 需要「准入侧」改动（放行 cc 成员越过循环头判据）+ 本修剪接线两条一起；
+⇒ 修 api_base 需要「父臂 then/merge 身份」判据（DIAG_R1405 §5），与本修剪无关。
+两条各自都是独立一票，单点判据不会翻正任何单元 —— 本票由此**关闭单点尝试**，
+第 19 轮按这两张票分头施工（票面见 `rounds/round19/TICKETS_ROUND19.md` T19-2 拆分说明）。
