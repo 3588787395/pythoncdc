@@ -40,6 +40,10 @@ class ExpressionReconstructor:
         # [三元区域] 已开启、尚未闭合的三元表达式区域，结构见
         # _open_ternary_region；None 表示当前不在三元区域内。
         self._ternary_region = None
+        # [T19-4] 是否把 POP_JUMP_*_IF_FALSE/IF_TRUE 也当作三元区域边界登记。
+        # 默认 False ⇒ 所有既有调用路径行为不变；只由 reconstruct 的
+        # fold_cond_jump_ternary 形参按需开启。
+        self._fold_cond_jump_ternary = False
 
     def reset(self):
         """重置状态"""
@@ -50,6 +54,10 @@ class ExpressionReconstructor:
         self.copy_depth = 0
         self._jump_since_last_compare = False
         self._ternary_region = None
+        # [T19-4] 复位为默认关闭：只有 reconstruct(fold_cond_jump_ternary=True)
+        # 在 reset 之后显式开启，避免直接循环调用 _process_instruction 的路径
+        # 继承上一次归约的开关。
+        self._fold_cond_jump_ternary = False
 
     def _open_ternary_region(self, test_node, else_entry):
         """开启一个三元表达式区域，记录其条件节点与假分支入口。"""
@@ -192,18 +200,23 @@ class ExpressionReconstructor:
             values.append(None)
         return keys, values
 
-    def reconstruct(self, instructions: List[Instruction], initial_stack: Optional[List[Dict[str, Any]]] = None) -> Optional[Dict[str, Any]]:
+    def reconstruct(self, instructions: List[Instruction], initial_stack: Optional[List[Dict[str, Any]]] = None,
+                    fold_cond_jump_ternary: bool = False) -> Optional[Dict[str, Any]]:
         """
         从指令序列重建表达式
         
         Args:
             instructions: 指令列表
             initial_stack: 初始栈状态，用于链式比较的后续条件块
+            fold_cond_jump_ternary: [T19-4] 是否把 POP_JUMP_*_IF_FALSE/IF_TRUE
+                登记为三元区域边界（整体跨度归约时使用；默认 False，既有
+                调用路径逐字节行为不变）
             
         Returns:
             表达式AST
         """
         self.reset()
+        self._fold_cond_jump_ternary = bool(fold_cond_jump_ternary)
         
         # [关键修复] 如果有初始栈状态，使用它（用于链式比较）
         if initial_stack is not None:
@@ -753,6 +766,25 @@ class ExpressionReconstructor:
                 # 汇合点由真分支末尾的 JUMP_FORWARD 给出。
                 # 见 _track_ternary_region / _close_ternary_region。
                 self._open_ternary_region(compare_node, instr.argval)
+
+        # [T19-4] 三元区域的 IF_FALSE / IF_TRUE 族开启（同一机制，另一极性）。
+        # 宿主调用前缀与三元条件测试融在同一基本块时，交给本重建器的指令流里
+        # 出现的是 POP_JUMP_*_IF_FALSE 形态的分支：条件节点已由 COMPARE_OP 等
+        # 指令压栈，这里只登记区域边界（假分支入口 = 跳转目标，汇合点 = 真分支
+        # 末尾 JUMP_FORWARD 的目标），由 _track_ternary_region /
+        # _close_ternary_region 把栈上的 [test, body, orelse] 归约为单个 IfExp，
+        # 从而恢复其后 CALL 等消费端所要求的栈契约。
+        # 只在调用方显式要求时启用（见 reconstruct 的 fold_cond_jump_ternary），
+        # 默认关闭 ⇒ 既有全部调用路径的栈行为逐字节不变；链式比较等其它
+        # POP_JUMP_*_IF_FALSE 形态即便被登记，也会因 _close_ternary_region 的
+        # 「栈顶测试节点必须仍是区域开启时那个」守卫而放弃归约。
+        elif (self._fold_cond_jump_ternary
+                and opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE',
+                               'POP_JUMP_BACKWARD_IF_FALSE',
+                               'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE',
+                               'POP_JUMP_BACKWARD_IF_TRUE')):
+            if self._ternary_region is None and self.stack:
+                self._open_ternary_region(self.stack[-1], instr.argval)
 
         # 函数调用 (Python 3.10及以下版本)
         # [关键修复] 不处理CALL指令，让后面的专门处理CALL的代码处理

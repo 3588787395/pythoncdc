@@ -41789,6 +41789,273 @@ AST 映射规则:
         self._generated_regions.add(id(region))
         return statements
 
+    # ---- [T19-4] 三元条件测试与「未闭合宿主调用前缀」融在同一基本块 ----
+    # 调用消费族：把一个调用构造（接收者/可调用物 + 实参）从值栈上消费掉的指令。
+    # 只用于「族」判定，栈深数值一律取自 _instruction_stack_effect（单一真相源）。
+    _CALL_CONSUMER_OPS = frozenset((
+        'CALL', 'PRECALL', 'CALL_METHOD', 'CALL_FUNCTION', 'CALL_FUNCTION_KW',
+        'CALL_FUNCTION_EX', 'INSTRUMENTED_CALL', 'INSTRUMENTED_PRECALL',
+        'INSTRUMENTED_CALL_METHOD', 'INSTRUMENTED_CALL_FUNCTION',
+        'INSTRUMENTED_CALL_FUNCTION_KW', 'INSTRUMENTED_CALL_FUNCTION_EX',
+    ))
+
+    @classmethod
+    def _is_statement_close_op(cls, opname: str) -> bool:
+        """栈深归零处必须是语句级消费者，跨度才算落在一条完整语句上。
+
+        POP_TOP（丢弃表达式结果的表达式语句）、STORE_*（赋值目标）、
+        RETURN_VALUE/RETURN_CONST（返回）三类；其它指令把值留给后续构造，
+        说明该表达式仍嵌在更大的式子里，本判据不接管（保持既有行为）。
+        """
+        # [r20a narrowing] STORE_* 不作闭合：赋值语句的栈深归零点落在存目标指令上，
+        # 此时跨度会把整条赋值语句吞成条件片段（实测 plugin_system_log/__init__ 的
+        # RotatingFileHandler(...) 少发 16 条指令）。
+        return (opname == 'POP_TOP'
+                or opname in ('RETURN_VALUE', 'RETURN_CONST'))
+
+    def _ternary_chain_cond_jump_ops(self) -> frozenset:
+        """链上「条件跳转」集合：与三元区域识别端使用的条件跳转族同一来源。"""
+        return (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS)
+
+    def _ternary_host_call_prefix_span(self, region):
+        """判定该三元是否嵌套在「尚未闭合的宿主调用」内，并给出整体归约跨度。
+
+        【判据】只读栈效应与指令族，不读名字/常量/绝对偏移/块数阈值：
+          1. 区域条件块末为条件跳转，前向模拟块体（跳转之前）的值栈得净深 R，
+             跳转弹出条件值后仍残留 L = R - 1 >= 1 个元素——即跳转时栈上除条件
+             之外还压着下层元素（既有 `_ternary_nested_in_container_construction`
+             的栈深判据，本判据补上它 docstring 第 3 条逃逸的另一半）。
+          2. 沿 merge 链继续前向模拟（每步「弹条件 + 臂压回一个结果」净值 0，
+             两条臂不重复计数），链上**第一个把栈深降到 L 以下的指令属于调用
+             消费族**（CALL/PRECALL/…）：它消费的元素在跳转时就已经活着，
+             所以栈底那些元素不是「若干彼此独立的已求值表达式」，而是一个尚未
+             闭合的调用构造（宿主调用的接收者与已成型实参）。⇒ 该跳转不是语句级
+             分派，三元是嵌套表达式，不得作为顶层 TernaryRegion 独立归约。
+             若先降到 L 以下的指令属于其它族（STORE_*/POP_TOP/BINARY_SUBSCR…），
+             栈底属于别的结构（如 `d[k] = (a if c else b)` 的赋值目标 d/k），
+             返回 None，保持既有行为。
+          3. 同一条链继续模拟直到栈深回到 0（该语句整体被消费）；链上经过的全部
+             块（条件块 + 两侧臂块 + merge 块，含同一语句内的兄弟三元）的指令，
+             按 offset 排序，即整体归约为**一个**表达式的跨度。
+        模拟不可靠（效应不可得、栈下溢、臂非纯值块、链断裂/成环、跨度未闭合）
+        一律返回 None。
+        """
+        cond_block = getattr(region, 'condition_block', None)
+        if cond_block is None:
+            return None
+        cond_jump_ops = self._ternary_chain_cond_jump_ops()
+        instrs = list(getattr(cond_block, 'instructions', None) or [])
+        if len(instrs) < 2 or instrs[-1].opname not in cond_jump_ops:
+            return None
+        depth = 0
+        for ins in instrs[:-1]:
+            eff = self._instruction_stack_effect(ins)
+            if eff is None or depth + eff < 0:
+                return None
+            depth += eff
+        residual = depth - 1
+        if residual < 1:
+            return None
+        # 块是「极大直线块」，里面可以并存若干条**已完结的前导语句**与本表达式
+        # 的前缀（栈深在块内回到过 0）。前导语句不属于本跨度：沿用既有的块内
+        # 栈深划界器 _split_block_condition_prefix 取出前导段，跨度从其之后开始，
+        # 前导段交回 _build_statements_from_instructions 单独成语句发射。
+        prefix_instrs = list(self._split_block_condition_prefix(cond_block))
+
+        visited = {cond_block}
+        span = [cond_block]
+        arm_blocks = []
+
+        def _adopt_arm(arm, merge) -> bool:
+            """臂必须是「净压入一个值、且只落到 merge」的纯值块。"""
+            if arm is None or arm in visited or arm in arm_blocks:
+                return False
+            ai = list(getattr(arm, 'instructions', None) or [])
+            if not ai:
+                return False
+            s = 0
+            for x in ai:
+                ex = self._instruction_stack_effect(x)
+                if ex is None or s + ex < 0:
+                    return False
+                s += ex
+            if s != 1:
+                return False
+            # 臂必须是纯值块：块内不得再有条件跳转（否则臂里嵌着另一个分支
+            # 区域，单槽位的三元归约机制无法正确嵌套）。
+            if len(ai) > 1 and any(
+                    x.opname in cond_jump_ops for x in ai[:-1]):
+                return False
+            for sb in (getattr(arm, 'successors', None) or set()):
+                if sb is not merge:
+                    return False
+            visited.add(arm)
+            arm_blocks.append(arm)
+            return True
+
+        def _owner_ternary(block):
+            for r in self.regions:
+                if isinstance(r, TernaryRegion) and r.condition_block is block:
+                    return r
+            return None
+
+        first_sub = None
+        for r in self.regions:
+            if isinstance(r, TernaryRegion) and r.condition_block is cond_block:
+                first_sub = r
+                break
+        if first_sub is None or first_sub.merge_block is None:
+            return None
+        for _a in (first_sub.true_value_block, first_sub.false_value_block):
+            if not _adopt_arm(_a, first_sub.merge_block):
+                return None
+
+        dipped = None
+        closed = False
+        close_offset = None
+        cur = first_sub.merge_block
+        cur_depth = depth
+        steps = 0
+        while cur is not None and steps < 64:
+            steps += 1
+            if cur in visited:
+                return None
+            visited.add(cur)
+            span.append(cur)
+            c_instrs = list(getattr(cur, 'instructions', None) or [])
+            if not c_instrs:
+                return None
+            c_term = c_instrs[-1]
+            is_cond_jump = c_term.opname in cond_jump_ops
+            body = c_instrs[:-1] if is_cond_jump else c_instrs
+            d = cur_depth
+            for ins in body:
+                eff = self._instruction_stack_effect(ins)
+                if eff is None or d + eff < 0:
+                    return None
+                d += eff
+                if dipped is None and d < residual:
+                    dipped = ins.opname in self._CALL_CONSUMER_OPS
+                if d == 0:
+                    # 语句在这里被整体消费（栈深回到 0）：跨度到此为止，
+                    # 之后的指令属于下一条语句。终结指令必须是语句级消费者，
+                    # 否则说明该表达式仍是更大表达式的子式，保守放弃。
+                    if not self._is_statement_close_op(ins.opname):
+                        return None
+                    closed = True
+                    close_offset = ins.offset
+                    break
+            if closed:
+                break
+            if not is_cond_jump:
+                cur_depth = d
+                succs = [s for s in (getattr(cur, 'successors', None) or set())
+                         if s not in (getattr(cur, 'exception_successors', None)
+                                      or set())]
+                if len(succs) != 1:
+                    return None
+                cur = succs[0]
+                continue
+            sub = _owner_ternary(cur)
+            if sub is None or sub.merge_block is None:
+                return None
+            for a in (sub.true_value_block, sub.false_value_block):
+                if not _adopt_arm(a, sub.merge_block):
+                    return None
+            # 弹条件值(-1) + 臂压回一个结果(+1)：链上净值 0
+            cur_depth = d
+            cur = sub.merge_block
+        if not closed or dipped is not True:
+            return None
+        # 闭合块在 close_offset 之后可能还留着**后续语句**的指令（极大直线块把
+        # 本语句的结尾与下一条语句连在一起，如 `log.error(...); return False`）。
+        # 这些指令不在跨度内，但本块会被整体登记为已生成，故必须取出来单独成
+        # 语句发射，否则下一条语句消失。
+        closing_block = cur
+        tail_instrs = [i for i in (getattr(closing_block, 'instructions', None) or [])
+                       if i.offset > close_offset]
+        all_blocks = span + arm_blocks
+        _prefix_last = prefix_instrs[-1].offset if prefix_instrs else None
+        span_instrs = []
+        for b in all_blocks:
+            for ins in getattr(b, 'instructions', None) or []:
+                if _prefix_last is not None and ins.offset <= _prefix_last:
+                    continue
+                if ins.offset <= close_offset:
+                    span_instrs.append(ins)
+        span_instrs.sort(key=lambda i: i.offset)
+        if not span_instrs:
+            return None
+        # 跨度必须是连续的一段指令（块集合无空洞），否则交重建器会吞入无关指令。
+        covered = {i.offset for i in span_instrs}
+        lo_off = span_instrs[0].offset
+        hi_off = span_instrs[-1].offset
+        _all_blocks = (self.cfg.blocks.values() if isinstance(self.cfg.blocks, dict)
+                       else self.cfg.blocks)
+        for b in _all_blocks:
+            for ins in getattr(b, 'instructions', None) or []:
+                if lo_off <= ins.offset <= hi_off and ins.offset not in covered:
+                    return None
+        return span_instrs, all_blocks, prefix_instrs, tail_instrs
+
+    def _generate_host_prefix_ternary_statement(self, region, span_instrs,
+                                                span_blocks, prefix_instrs,
+                                                tail_instrs):
+        """把「宿主调用前缀未闭合」形的整体跨度归约为一条语句。
+
+        发射形态由跨度的最后一条指令决定（原终结指令）：RETURN_VALUE → Return，
+        POP_TOP → Expr；其它终结（STORE_* 等）交给重建器自己产出的语句节点，
+        节点不是语句时保守返回 None（此时尚未登记任何块/偏移，既有行为不受影响）。
+        块内前导语句（栈深曾回到 0 的已完结语句）先按原顺序发射，闭合块里跨度
+        之后的后续语句指令随后发射——本跨度把覆盖到的块整体登记为已生成，
+        块内不属于本语句的指令必须由本函数补齐，否则那些语句消失。
+        跨度覆盖到的兄弟三元区域一并登记为已生成，避免同一语句被重复发射。
+        """
+        node = self.expr_reconstructor.reconstruct(
+            span_instrs, fold_cond_jump_ternary=True)
+        if not isinstance(node, dict):
+            return None
+        if node.get('type') in ('Return', 'Assign', 'Expr', 'AugAssign',
+                                'AnnAssign'):
+            statements = [node]
+        else:
+            last_op = span_instrs[-1].opname
+            if last_op == 'RETURN_VALUE':
+                statements = [{'type': 'Return', 'value': node}]
+            elif last_op == 'POP_TOP':
+                statements = [{'type': 'Expr', 'value': node}]
+            else:
+                return None
+        cond_block_for_prefix = getattr(region, 'condition_block', None)
+        if prefix_instrs:
+            _built = self._build_statements_from_instructions(
+                prefix_instrs, cond_block_for_prefix)
+            if _built:
+                statements = list(_built) + statements
+        if tail_instrs:
+            _tail_block = self.cfg.get_block_by_offset(tail_instrs[0].offset)
+            _tail_stmts = self._build_statements_from_instructions(
+                tail_instrs, _tail_block)
+            if _tail_stmts is None:
+                return None
+            if _tail_stmts:
+                statements = statements + list(_tail_stmts)
+        span_set = set(span_blocks)
+        for b in span_blocks:
+            self.generated_blocks.add(b)
+            for ins in getattr(b, 'instructions', None) or []:
+                self.generated_offsets.add(ins.offset)
+        self._generated_regions.add(id(region))
+        for r in self.regions:
+            if r is region or id(r) in self._generated_regions:
+                continue
+            if not isinstance(r, TernaryRegion):
+                continue
+            _rb = set(getattr(r, 'blocks', None) or [])
+            if _rb and _rb <= span_set:
+                self._generated_regions.add(id(r))
+        return statements
+
     def _try_build_andor_boolop_from_ternary(
             self, region: TernaryRegion, cond_expr, true_block, false_block):
         """混合布尔链识别：`cond and X or Y` 的 CFG 不应重建为 IfExp 三元。
@@ -42178,6 +42445,18 @@ AST 映射规则:
         # 判据为栈效应（条件跳转下方是否还有其它栈上元素），非形态启发式。
         if self._ternary_nested_in_container_construction(cond_block):
             return self._generate_container_construction_region(region)
+
+        # [T19-4] 条件跳转下方残留的栈元素属于一个**尚未闭合的宿主调用**
+        # （其 PRECALL/CALL 在本区域之外才执行）时，该跳转同样不是语句级分派：
+        # 三元是宿主调用的一个实参/子表达式。此时把跨度沿 merge 链扩到「模拟
+        # 值栈回到 0」的那条语句（含同语句内的兄弟三元块），整体归约为一个
+        # 表达式并按原终结指令发射为 Expr/Return 语句，宿主语句不再消失。
+        _hp = self._ternary_host_call_prefix_span(region)
+        if _hp is not None:
+            _hp_stmts = self._generate_host_prefix_ternary_statement(
+                region, _hp[0], _hp[1], _hp[2], _hp[3])
+            if _hp_stmts is not None:
+                return _hp_stmts
 
         # [Phase 3 adv15_ternary_elif_test] 条件上下文三元（merge_context='while_cond'）
         # 的 entry 必然与某个 IfRegion 的 elif_conditions 重叠——这正是"三元作为
