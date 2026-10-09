@@ -64,3 +64,34 @@ api_base 回退**。我方的独立复判（不读子代理叙述，只判它自
 5. `realtime_event_source` 12/13：需共要件（批量认领抑制）+ 重定位判据两条
 6. `real_quote` 43/45：两处 1 指令过发射，发射分支待定（先消融定位）
 7. `trade_live_broker` 118/128：臂身份读反族（−465/−293）
+
+## 5. R15-12 窄化版实测（补充）：零回退但零翻正 ⇒ 惰性，站点未命中
+
+`merge_block is 循环头` 前置保留、只加「双臂 if 且臂末块跳回当前循环 header/condition」
+一支后，11 文件面板读数与封盘**逐文件相同**（klinedata 仍 63/64、broker 118/128、
+handlers 29/30、quote 86/92、user_info_utils 9/9、fly_basicdata 43/43、local_finance 21/21、
+IQEngine/core/strategy 20/20、api_base 27/28、strategy 26/27、real_quote 43/45）
+⇒ 判据没走到实际装配点。识别端实测（只读 analyze）给出目标区域事实：
+
+```
+IfRegion entry=2802 cond=2802 merge=3076
+  then=[2894,2898,2902,2916,2924]  else=[2928,3050,3054,3068]  elif_conds=[] elif_bodies=[]
+  臂末块 @2924 尾指令 JUMP_BACKWARD -> 1268
+外层循环 LoopRegion entry=1268 header=1268 condition_block=None
+父链 IfRegion entry=2742 cond=2764 merge=3076 then=[2802,...]   ← 2802 是 2742 的臂
+```
+
+三个前件在 2802 上全部成立，但 `region_ast_generator.py:21333/21378` 这个站点是
+`_if_generate_normal` 的 then 分支装配处；2802 由父链 2742 经
+`_if_generate_full_elif_chain`(:15183)/`_if_generate_elif_chain`(:18867) 装配。
+**实测：`_if_generate_elif_chain` 函数体内没有任何 Continue 发射逻辑**
+（18867-19100 段内只出现 JUMP_FORWARD/JUMP_BACKWARD 文本判断两处），
+⇒ 下一版的施工点是 elif 链臂装配处，而不是再在 `_if_generate_normal` 上叠判据。
+
+## 6. 会话结束时的认证态
+
+- core：`region_ast_generator.py 5066b1367b6de3c7`（含 R14-04）、`region_analyzer.py 640d33a77dcb71c2`（未改）
+- 磁盘产物 = 第 18 轮认证产物：`git status --porcelain -- site-packages` 为空；
+  抽查实判 `klinedata 63/64`、`api_base 27/28`
+- 残差名册 `RESIDUAL_ROUND18.md`：12 文件 / **33 单元**（= 6617 − 6584），UNREGISTERED=0
+- 全部提交并推送 `rr-v3r01-f557fd`（远端 = 本地）
