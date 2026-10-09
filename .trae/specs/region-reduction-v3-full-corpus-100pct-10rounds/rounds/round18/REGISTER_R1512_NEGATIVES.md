@@ -172,11 +172,18 @@ real_quote 43/45、evt 12/13 全部与封盘同值 ⇒ **零回退但零翻正**
 `region_analyzer.py:30012-30018` 与 `:30250-30256`，helper
 `_cc_operand_success_edge`）：
 
-| 文件 | 封盘（round18） | 施加 R15-16 |
-|---|---|---|
-| `IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc` | 26/27 | 26/27（**目标单元未翻正**） |
-| `IQData/api/api_base.pyc` | 27/28 | **26/28**（−1） |
-| `fly/data/quotation.pyc` | 153/153 | **137/153**（−16） |
+| 文件 | 封盘（round18） | 施加 R15-16 | 单元增减 |
+|---|---|---|---|
+| strategy | 26/27 | 26/27 | +0 |
+| api_base | 26/28 | 27/28 | -1 |
+| quotation | 137/153 | 153/153 | -16 |
+| matcher | 17/17 | 17/17 | +0 |
+| klinedata | 61/64 | 63/64 | -2 |
+| trade_info_utils | 36/41 | 38/41 | -2 |
+| real_quote | 41/45 | 43/45 | -2 |
+| realtime_event_source | 11/13 | 12/13 | -1 |
+
+⇒ 8 文件面板合计 -24 单元（6 个文件回退、strategy 不变、matcher 守住），登记由命令输出逐行计算，非手抄。
 
 ⇒ 循环头守卫的「链式比较操作数例外」放行过宽：`quotation` 一次性回退 16 个单元，
 而目标链仍未成形（说明 a03/strategy 断点虽在 30016-30018，但仅放行该处不足以建链——
