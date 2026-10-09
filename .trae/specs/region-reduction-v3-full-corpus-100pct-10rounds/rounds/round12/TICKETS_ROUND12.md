@@ -140,3 +140,42 @@ or-fold（`@1382`）、guard-fold（`@1910`）、被吞的 `@2164` 十指令测�
    没命中却继续跑会给出「假阴性读数」；探针插入用物理行 + 该行自身结尾，
    插入前断言唯一命中，插完立刻 `py_compile`，失败即从仓库字节复原镜像（本次照做，
    镜像已复原 `971df5e2c9cd7d0a` + `e926a54f17753b33`，仓库 0 项改动）。
+
+## T12-05 / T12-06：认领点已找到并改到位，但仍逐字节不变——存在第二个写入者
+
+写栈追踪（`t1209`，HEAD 字节、只在本进程把两个集合换成记录型子类，不改仓库文件）给出
+`@7972` 在 HEAD 被登记的全部三次写入：
+
+| 次序 | 写入行 | 调用链摘要 |
+|---|---|---|
+| 0 | `region_ast_generator.py:25236 self.generated_offsets.add(_nb.start_offset)` | `… _nr_ast = self._generate_region(_nr)` → `_if_generate_then_branch` → `_process_if_blocks(then)` |
+| 1 | 同上 `:25236` | `_if_generate_full_elif_chain` → `_if_generate_elif_chain` → `_process_if_blocks(region.elif_final_else, branch='else')` |
+| 2 | `region_ast_generator.py:8462 handled = self._loop_dispatch_block(` ← `:9246 if self._loop_handle_child_region_entry(block, region, child_info, body_stmts):` | 循环体逐块消费路径 |
+
+两次改动都已装到镜像并实测（每形都 `compile()`+`py_compile` 通过，产物与封存产物逐字节比对）：
+
+* **T12-05** `a375d8be8c4043ad`：把认领豁免从「只在 `not _nr_ast`（让位）时跳过兄弟入口」
+  扩成「兄弟入口只要没被渲染过就不认领」，台账 `_emitted_entry_offsets` 记在
+  `_generate_region`/`_generate_if` **入口处** ⇒ evt `20555` SAME_as_HEAD、12/13；
+  quotation 153/153、handlers 29/30 均 SAME_as_HEAD。
+  ⇒ 该台账把「进入漏斗」当成了「已发语句」，语义错位（`_generate_region` 的 `finally`
+  无论返回值是否为空都会记 id，同理入口记录过宽）。
+* **T12-06** `0a0da79adf426623`：台账改成**只在 `_nr_ast` 非空处**记（唯一锚点对
+  `discard(_nr_id)` + `if _nr_ast:` 配对断言命中数后插入），并同步放宽认领 ⇒
+  三个文件产物**仍逐字节相同**，evt 仍 12/13。
+
+⇒ 结论：**光放开 `:25236` 的认领不够**，因为还有第 2 个写入者（循环体路径
+`:8462` / `:9246`）把同一个块登记掉；要让 `@7972` 走到发射，必须一并处理
+`_loop_handle_child_region_entry` / `_loop_dispatch_block` 的登记语义，或把消费顺序改成
+「先派发该入口区域、再让认领循环看到它」。下一票的起点因此不再是找判据，而是：
+
+1. 读 `:9246`→`:8462` 这条链在 `@7972` 上做了什么（它 `handled` 返回真值吗？
+   若返回真值却没发语句，就是同一类「吞而不发」，应在此处补；
+   若返回假值，则登记发生在它之前，需按写入次序排序）。
+2. 沿用已验证有效的记录型集合探针（`t1209`）逐次打印写入者与 `handled` 返回值。
+3. 判据侧不再新增放宽条件：T12-05/06 的认领豁免语义是对的（原则 2/4，且 quotation
+   153/153 零改动证明它不吞健康单元），保留它，另补循环路径。
+
+装配管道本轮又踩实了三条，全部进记忆：替换/插入脚本必须断言**命中数**（我用 7 命中的
+锚点跑了一次「假成功」，靠 assert 才没写坏文件；另一次替换未命中导致读数重复上一轮的假阴性）；
+台账语义要区分「进入过渲染函数」与「真的产出了语句」；探针与候选混装会让结论错向。
