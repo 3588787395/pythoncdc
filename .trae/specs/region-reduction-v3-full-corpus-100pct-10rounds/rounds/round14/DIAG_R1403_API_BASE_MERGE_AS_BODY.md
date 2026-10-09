@@ -142,3 +142,30 @@ quotation **153/153**；small34 **1534 / success 22**；判据自证 153/153 Equ
 变异「常量」1/153、「极性」1/153；pytest 2 failed / 280 passed / 2 xpassed
 （两条失败是第 9 轮已封表的基线红，判据为「零新增失败」）。
 本票仍未落地任何 core/ 改动；语料 390/402 文件、6583/6617 单元，残余 12 文件 / 34 单元。
+
+## 8. 已实测排除的修法（下一票不要再走）
+
+`R14-04` 臂：在单层 and 折叠支路（`region_ast_generator.py:21689-21690`
+`condition = {'type': 'BoolOp', 'op': _merge_op, 'values': [condition, inner_cond]}`）之前加
+「两员都满足 `真值边指向本区域 merge_block ∧ then 体是落空边` ⇒ 逐员取反」，
+新谓词 `_r14_operand_negated` 用 `_detect_chained_compare_pattern` 取链式比较末段再判极性。
+实测（电池 repro_ccneg 全 4 例 + 判据喂产物）：
+
+```
+m01_and_not_cc   failure 1/2      m03_cc_only   failure 1/2
+m02_plain_and_not success 2/2     m04_cc_cc     failure 1/2
+```
+
+m03 产物逐字节不变（仍是 `if a > b > c or d > e: return x`，体 `x -= 1` 丢失）
+⇒ **该形状根本不经过单层 and 折叠支路**。结合 `_detect_or_short_circuit`（`:21220`）在
+`region@0` 上的判据（其 cond 块末指令是 IF_FALSE->清理块，`'IF_TRUE' not in opname` ⇒ 直接
+非 or 候选），本例的 `or` 串接与「跳转目标当体」必定来自**条件指令扫描的后备拼接路径**
+（把落空边上的下一个比较块并进来并用其跳转目标作臂），而不是折叠路径。
+下一票请从 `_if_extract_condition_from_instructions` 的链式扫描支路查起；
+折叠支路（21591-21717 三条路径）与 blocks 组装（28577/28666）、标志继承（20682）都已实测无关。
+
+对照证据（同形但成员是纯比较时走的是另一条路）：m02 的 `not (a > b or c > d)` 由
+**BoolOpRegion 链 + 整体取反闩锁（R14c）**产出，正确；m03 里第一个成员被
+Phase 2 的 `_identify_chained_compare_regions` 抢先做成 cc IfRegion，布尔链不再含它，
+闩锁无从参与 —— 所以本族的根仍是**识别端的相序/成员归属**（链式比较区域把布尔算子链的
+成员抢走），与 R14-01 记录的「cc 区域与布尔 run 的成员归属」是同一处未解结。
