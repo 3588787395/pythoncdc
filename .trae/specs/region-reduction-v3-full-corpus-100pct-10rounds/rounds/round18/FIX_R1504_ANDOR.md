@@ -60,3 +60,19 @@ units 6583/6617 → 6583/6617、文件 390 → 390、回退 0、**翻正 0**，
 依「fires without flips」逐字节回退，脚本与 pristine 副本见
 `D:/Temp/r150/evt_patch.py`、`D:/Temp/r150/pristine_851b0723732a2402_region_ast_generator.py`，
 细节在 `DIAG_R1507_ARM_CLAIM_YIELD.md`。
+
+## 门链 label 18 vs 16 完整读数（2026-10-09 实测，逐条来自命令输出）
+
+- regen：`[regen 合计] ok=402 bad=0`
+- report：`[units] 6583/6617 -> 6584/6617  (99.5013%)   [files] 390 -> 390`、
+  `[gates] 文件级回退=0  UNIT_REGRESSIONS=0  新增失败单元=0  翻正单元=1`、
+  `FIXED IQCommon/api/klinedata.pyc <module>.kline_datetime_list`、
+  `UNIT-UP IQCommon/api/klinedata.pyc 62 -> 63`
+- checks：`[quotation] rc=0 status=success units=153/153`（与封盘同值）；
+  `[small34] rc=0 "units_success": 1535, "success": 22`（封盘为 1534/22 ⇒ 单元 +1、文件数不变，
+  本值即新封盘基准）；`[selfcheck] 自证：153/153 单元 Equal | 变异「常量」抓到 1/153 |
+  变异「极性」抓到 1/153 | OK —— 判据可用`；
+  `[pytest] rc=1 2 failed, 280 passed, 2 xpassed in 4.44s` —— 与既有的 2 项预存失败同值，
+  本轮零新增失败（rc=1 由该两项预存失败造成，已登记而非放宽判据）。
+- 提交：`1577a2b0`（core 判据）、`a9dedc29`（门链证据 + round17/18 文档与报告 + 漂移产物 2 个），
+  已推送自有分支 `rr-v3r01-f557fd`（`43c5588b..a9dedc29`）。
