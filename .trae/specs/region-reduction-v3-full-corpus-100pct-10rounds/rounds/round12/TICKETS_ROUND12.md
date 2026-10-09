@@ -179,3 +179,28 @@ or-fold（`@1382`）、guard-fold（`@1910`）、被吞的 `@2164` 十指令测�
 装配管道本轮又踩实了三条，全部进记忆：替换/插入脚本必须断言**命中数**（我用 7 命中的
 锚点跑了一次「假成功」，靠 assert 才没写坏文件；另一次替换未命中导致读数重复上一轮的假阴性）；
 台账语义要区分「进入过渲染函数」与「真的产出了语句」；探针与候选混装会让结论错向。
+
+## 写作者地图（截至 T12-06，供下一票直接用，不必重新推导）
+
+`@7972`（clock_worker 里 `if persist_flag is not False:` 的入口块）在 HEAD 被登记三处；
+两处已由 T12-05/06 的认领豁免放开（quotation/handlers 逐字节不变，说明放开是安全的），
+第三处仍在循环体路径里，其代码形状是共通的：
+
+```
+region_ast_generator.py:13884 def _loop_handle_child_region_entry(...)   # 6+ 个分支
+    _x_ast = self._generate_region(entry_region)      # Try/With/Try/Loop/Loop 各分支同形
+    for b in entry_region.blocks: self.generated_blocks.add(b)   # 认领整块
+    return True
+region_ast_generator.py:8868  def _loop_dispatch_block(...)
+    self.generated_blocks.add(block); self.generated_offsets.add(block.start_offset); return True
+```
+
+⇒ 关键待读问题（一次探针就能定）：`@7972` 走到 `_loop_handle_child_region_entry` 的**哪个分支**、
+该分支把 `_x_ast` 追加进 `body_stmts` 了吗？若「return True 但没追加」，那才是这条语句真正
+被吞的位置；若它压根没走到（被 `generated_blocks` 早退挡住），则要把 T12-05/06 的同一豁免
+应用到 `:8868`/`:13884` 的认领循环上。探针形制已验证可用：把 `body_stmts` 长度与
+`handled` 返回值在 co_name=='clock_worker' ∧ block.start_offset==7972 时打到 stderr，
+跑完与封存产物逐字节比对自证惰性。
+
+不要重复的动作：不要再加第三条「兄弟入口未渲染则不认领」的判据变体——那条已随 T12-06 装在
+`_process_if_blocks` 的认领循环里且经 quotation/handlers 逐字节验证安全；现在的瓶颈是**循环体路径**。
