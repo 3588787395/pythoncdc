@@ -204,3 +204,28 @@ region_ast_generator.py:8868  def _loop_dispatch_block(...)
 
 不要重复的动作：不要再加第三条「兄弟入口未渲染则不认领」的判据变体——那条已随 T12-06 装在
 `_process_if_blocks` 的认领循环里且经 quotation/handlers 逐字节验证安全；现在的瓶颈是**循环体路径**。
+
+## T12-07 定位完成：豁免范围太窄 + 循环路径根本不经过这里
+
+两条新实测（都在镜像上跑，产物逐字节比对自证；探针仍是包一层方法，不改仓库文件）：
+
+1. `t1213`（包住 `_loop_handle_child_region_entry` 与 `_loop_dispatch_block`，对
+   co_name=='clock_worker' ∧ block@7972 记录 `body_stmts` 前后长度与返回值）：
+   **两个方法对 @7972 一次都没被调用**（日志只有收尾行）。所以 HEAD 里那次
+   「循环路径写入」是发生在别的块/别的顺序下，不是 @7972 的实际吞点 ——
+   我先前把写栈第 2 条解释成循环体吞点，是过度推断，撤回。
+2. T12-05/06 的豁免形如 `if (_nb is not _nr.entry and _nb in child_entries and ...)`，
+   而 `child_entries` 只收 **本臂 region.children** 的区域入口；`IfRegion@7972` 是
+   `LoopRegion@5598` 的孩子（不是 IfRegion@7582/7164 的孩子），所以
+   `_nb in child_entries` 为假 ⇒ 豁免**从未对 @7972 生效**，认领照旧，产物自然不变。
+   这与 `[R165]` 的读数是自洽的：`entry_regions=1`（`self.regions` 里确有以 @7972 为
+   entry 的区域）而 `edge=True`，但那条打印量的是**另一处**（臂循环 generated 闸），
+   认领循环里的判据用的是 `child_entries`，两者不是一回事。
+
+下一票的**唯一**待试改动（已定位到行，不再需要找判据）：把认领豁免的作用域从
+`_nb in child_entries` 扩到「`_nb` 是 `self.regions` 中某区域的 entry」，
+即 `any(getattr(_q, 'entry', None) is _nb for _q in (self.regions or []))`，
+并保持「且该入口未产过语句」（`_emitted_entry_offsets`，T12-06 语义：只在
+`_nr_ast` 非空处记录）；锚点 = HEAD 行 `region_ast_generator.py:25233`
+`                    if (not _nr_ast and _nb is not _nr.entry and _nb in child_entries):`。
+必测反例不变：quotation 153/153、handlers 29/30 必须逐字节不动；若 evt 翻正则立刻跑满 402 门。
