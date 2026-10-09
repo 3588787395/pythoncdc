@@ -153,3 +153,24 @@ get_ipo_stocks       len 481/481 delta=0 hunks=0 landings=1
 （依 [[count-predicate-call-sites-before-patching-one]]：先数该谓词的调用点，单点改只算半修）。
 注意该文件另有 7 个失败单元（`_process_order −465` 等），故此三条修好**不产生整文件翻绿**，
 只涨单元数 ⇒ 优先级低于 handlers / api_base / strategy 两个整文件档。
+
+---
+
+# 追加（00:54）blocker A 的一种直白写法已实测否决（勿重复）
+
+在 r19t4 存档的分析器候选（`5ea802f2975b1f35`，已单独复测为**零翻正且零回退**：
+api_base 27/28、strategy 26/27、klinedata 63/64、quotation 153/153、trade_live_broker 118/128）之上，
+按「原则3：嵌套区域=单一抽象节点」在**调用方停止集**处加一条：
+`then_succ/else_succ` 若已是 `self.regions` 中某区域的 entry，则把该区域 `blocks` 减去 entry 并入本臂停止集
+（插入点：`else_stop = {then_succ} | (boundary_stop - {else_succ})` 之后；镜像 `D:/Temp/r20b`，仓库未写）。
+
+```
+api_base 27/28（未翻正）   strategy 26 -> 25   klinedata 63 -> 61
+quotation 153 -> 151       matcher 17 -> 16
+```
+
+⇒ **零翻正 + 四处回退**：该时刻 `self.regions` 里的区域集合与「子区已成形」并不一致
+（正是 `_collect_branch_blocks` docstring 自己声明的「不使用 block_to_region 排除，
+区域归属冲突由上层调用者处理」所指的秩序问题），把未定序的区域块当边界会切掉正常臂体。
+下一手若仍要做 blocker A，必须先回答：**构造父区时，子区是否已经在 `self.regions` 里？**
+（用独立进程按识别顺序打印 regions 的成形序列，不要在 analyzer 内打印。）
