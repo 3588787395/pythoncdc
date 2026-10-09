@@ -273,3 +273,25 @@ klinedata 63/64  log/__init__ 10/10  trade/function 71/71   ← 全部与基线�
 再在递归装配 `nested_elif_stmts` 的入口加同样一条；两次命中序列一比即可定位真正那层。
 主代理本轮**未**写入实时仓库（`git status --porcelain core/` 空，哈希仍是
 `dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`），停止第 5 次尝试以保留门链预算。
+
+## R20-2 收尾读数（17:53，探针已证惰性 `inert: YES`，全部为实测值）
+
+`:19817` 那行**确实**对本链执行（一次），且我判据的两个条件在当时均为真：
+
+```
+ARMS|[(956, 'JUMP_FORWARD', 1102, [1102]), (1036, 'POP_TOP', None, [1102])]
+THEN|[(862, 'JUMP_FORWARD', 1106, [1106])]      FE|[1102]
+```
+
+即末臂 `@1036` 以 `POP_TOP` 落空进入 `1102`，且 `@956` 的跳过跳正落在 `1102` ⇒ 幻影 else 判据成立。
+但把 `region.elif_final_else` 置 None 并从 `region.blocks`/`else_blocks` 释放该块之后，
+**失败单元一字未变**（`43/45`，仍是 `get_real_minute_kline` + `get_tick_direction` 两个，
+与未装判据的 landed 产物同一对名字）⇒ 该函数的返回值 `final_else_stmts` **不决定**这条链的 `orelse`：
+else 体是由别处（`nested_elif_stmts`/`_nested_trailing_stmts` 递归层，或调用方直接用
+`region.else_blocks`）装配的。
+
+⇒ 本票的下一步不是再写判据，而是**顺着 `orelse` 的赋值反向找**：在生成端搜
+`'type': 'If'` 的 `orelse=` 组装处（`_if_generate_elif_chain` 返回值的使用点），
+把探针从「本函数入口」改放到「返回值被消费处」，看 `final_else_stmts=[]` 时 orelse 被填成什么。
+主代理本轮停止（预算已不足以再走一次门链），实时仓库 `core/` 全程未写：
+`git status --porcelain core/` 空，哈希 `dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`。
