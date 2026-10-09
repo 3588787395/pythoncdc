@@ -109,3 +109,23 @@ else 体」进入，而该 else 体自身以无条件终结（RETURN/RAISE）结
 （`_if_generate_elif_chain` 读 `elif_conditions/elif_bodies/elif_final_else` 的段）。
 注意本轮 r20d 工程师只占 `region_analyzer.py`；若要动分析端须等其交付落地或否决后再做，
 或先在生成端装配处加同一条结构判据（读区域已有字段，不新建第二真相源）。
+
+## R20-2 两次生成端尝试＝实测零翻正（未装实时仓库，镜像 `D:/Temp/r20e`）
+
+在 `_if_generate_elif_chain` 的 `_r23n18_partial_merge_block = None` 之前插入
+「末条 elif 臂体落空即进入候选 else 体 ⇒ 判为链续体，清 `elif_final_else`、
+`else_blocks=[]`、并从 `region.blocks` 释放这些块」的结构判据，两版取臂尾块的写法都试过：
+
+```
+v1  region.elif_bodies[-1][-1]                       → real_quote 43/45（无翻正）
+v2  max(所有 elif_bodies 的块, key=start_offset)      → real_quote 43/45（无翻正）
+两版 collateral 全部不动：quote 86/92、matcher 17/17、quotation 153/153、
+klinedata 63/64、trade_live_broker 118/128
+```
+
+⇒ 判据**没有在该区域命中**（或命中后仍被别处重新取得 else 臂）。
+下一手不要再接这个猜测，先做**一次只读打印**（独立进程建 CFG，不在 analyzer/generator 内 print）：
+对 `real_quote.pyc` 里含原偏移 `@1022/@1090/@1102/@1108` 的那条 IfRegion/IF_ELIF_CHAIN，
+导出 `condition_block / elif_conditions / elif_bodies（逐臂块表）/ elif_final_else / merge_block / blocks`
+六个字段的实际值与偏移，再判断「else 臂」究竟在哪个字段、由哪一段代码取得。
+注意本战役已两次栽在「未先看字段实值就写判据」上（klinedata 的单点修、api_base 的停止集）。
