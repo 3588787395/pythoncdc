@@ -447,6 +447,16 @@ Task 11 本轮实际状态（2026-10-08，逐条按完成度如实标注，勾�
 `DELIVER/` 里依然只有 10 行的 FIX 文档，`ast_generator_v2.py`/`region_analyzer.py` 与仓库一致（只碰 generator，票面正确）。
 **移动中的哈希不是判据**：此时安装等于把一次未完成的实验当成结论（见 §15 快照规则），必须等它自己写出
 `DELIVER/*.py` 并在文档里声明翻正读数或 revert。
+
+02:34 收票（票已闭合，见 `rounds/round20/ADJUDICATION_R20_MERGE_LANDING_FALSIFIED.md`）：`r20m` 交付
+`DELIVER/region_ast_generator.py`，`cmp` 实测**与落地态逐字节相同**（sha16 两侧 `dff6e81a5f2ff9f6`），
+即 **0 落地、不安装**；实时仓库 `core/` 依旧干净，门读数仍是 6586/6617 units / 391/402 files。
+它否证了我票面的判据本身：generator **没有"把尾巴跳到声明 merge"的执行通道**
+（`:39406` 属 `_try_build_and_inner_or_pattern`@`:39338`，`merge_offset` 全文 6 次且 0 次写进发射目标；
+AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_elif_chain` 在 strategy 全模块只进入 1 次，
+所以 `:19454` 与五个裸 `Continue` 分支对这一族是瞎的。残留族的根在 **analyzer**
+（`inline_boolop_chains[id(cond_block)] = None`；`else=[1098]` 被给了 `IfRegion@1008` 而非 `@992`），
+下一票须拥有 `core/cfg/region_analyzer.py`、generator 禁改，并受 §19B 记录的顺序墙约束。
 2. 有交付文件 ⇒ 走 §19C 全文（数哈希 → 丢弃镜像复测 → install → 一条后台门链 → 封表 → 提交推送）。
 3. 门链期间**不安装、不改 `core/`、不读仓库 `*OK.py`**（产物正在被删除重写）。
 4. 任何一张票落地都要提交并 `git push origin HEAD:refs/heads/rr-v3r01-f557fd`，用 `git ls-remote` 判真。
