@@ -30627,6 +30627,28 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         return True
         return False
 
+    def _r1234_pair_join(self, tgt, a, b):
+        # [r12-t1234 pair-join] 目标块是否「恰由这两个操作数块进入」的二入汇合点。
+        # 判定只用入边身份（predecessors 与来块一一对应），不看偏移/指令数/名字（rules.md §1.4 G4）。
+        # [C3] 本方法只有一个调用点（情形 (1) 的返回处），不另设第二套口径。
+        # [C1] 局部消费：读到的就是本轮 walk 的 current 与 candidate 两块，不回看区域。
+        # 反例控制（实测）：bar/quotation/handlers/wizard_quant_api/realtime_event_source/
+        #   klinedata/trade_info_utils/strategy/quote/trade_live_broker 产物逐字节不变；
+        #   matcher 的 17/17 亦不变。
+        if tgt is None or a is None or b is None or a is b:
+            return False
+        preds = getattr(tgt, 'predecessors', None)
+        if not preds:
+            return False
+        want = {a.start_offset, b.start_offset}
+        got = set()
+        for p in preds:
+            off = getattr(p, 'start_offset', None)
+            if off is None:
+                return False
+            got.add(off)
+        return got == want
+
     def _b1b_loop_body_run_continuation(self, cur_block: BasicBlock, cur_last,
                                         cand_block: BasicBlock,
                                         has_or_member: bool = False) -> bool:
@@ -30752,7 +30774,15 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             return False
         if not _cur_true and _cand_true:
             # (1) and→or 边界：candidate 落空边汇聚到 current 假出口 Y（下一 run 头）
-            return _cand_ft is _cur_tgt and _tgt_is_cond
+            # [r12-t1234 pair-join] 情形 (1) 的第二个放行形：候选汇合块 Y 不必自己是条件测试块，
+            #   只要 Y 的前驱**恰为** (current, candidate) 这一对操作数块——二入纯汇合点在结构上
+            #   不可能是另一条语句的入口，故把 candidate 收为同一短路链的下一成员不违反原则 2。
+            #   实测拦下的正是这一条：bar 的 Y=@140 与 strategy_universe 的 Y=@156 都不以正向条件
+            #   跳转结尾，原判据一律拒绝，于是外层 IfRegion 声明的 merge（已等于原始落点）在尾巴
+            #   附着时从不被读取，产物把尾巴落到内层语句末（304 / 198）。
+            return ((_cand_ft is _cur_tgt and _tgt_is_cond)
+                    or (_cand_ft is _cur_tgt
+                        and self._r1234_pair_join(_cur_tgt, cur_block, cand_block)))
         if not _cur_true and not _cand_true:
             # (3) and-run 续接：假边共享同一「下一 run 头」失败出口
             if _cand_tgt is not _cur_tgt:

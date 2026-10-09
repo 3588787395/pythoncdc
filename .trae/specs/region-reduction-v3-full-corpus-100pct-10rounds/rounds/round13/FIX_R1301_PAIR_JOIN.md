@@ -89,3 +89,19 @@ matcher `17/17` 不变，quotation/handlers/realtime_event_source/bar 读数不�
 验收：`翻正单元 ≥ 1 ∧ 新增失败单元 = 0` 且四门同读数；否则逐字节回滚
 （`cp D:/Temp/r142/pre_r1301_analyzer.py core/cfg/region_analyzer.py`）并按共要件留档。
 判决读数由 `D:/Temp/r142/fill_gate15.py` 从链日志逐字取回填进本文末节，不手抄。
+
+门（label 15 vs 14）读数，逐字取自链日志 `D:/Temp/r10gate/gate_chain15_1329.log`：
+
+```
+[regen 合计] ok=402 bad=0（应 ok=402 bad=0）
+dirty product count after regen (= blast radius vs committed products): 1
+[units] 6581/6617 -> 6582/6617  (99.4711%)   [files] 388 -> 389
+[gates] 文件级回退=0  UNIT_REGRESSIONS=0  新增失败单元=0  翻正单元=1
+[quotation] rc=0 [single] status=success units=153/153 success_rate=100.00%
+[small34] rc=0 "units_success": 1533, "success": 21,
+[selfcheck] rc=0 [selfcheck] 自证：153/153 单元 Equal | [selfcheck] 变异「常量」抓到 1/153 单元 | [selfcheck] 变异「极性」抓到 1/153 单元 | [selfcheck] OK —— 判据可用
+[pytest] rc=1 2 failed, 280 passed, 2 xpassed in 6.56s
+单元 6582/6617 (99.4711%)  文件 389/402  残余文件 13 个  残余单元 35 条
+UNREGISTERED 行数=0（应为 0）
+### chain end 13:44:12
+```
