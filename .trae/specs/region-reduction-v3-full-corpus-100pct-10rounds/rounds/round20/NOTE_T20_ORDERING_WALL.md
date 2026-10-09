@@ -171,3 +171,23 @@ IfRegion entry=944  merge=1102  elif_conditions=[1024]  elif_bodies=[[1036]]  el
   三件哈希仍 `dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`）。
 - 本轮（第 19 轮）落地成果不变：**6586/6617 单元、391/402 文件**（`order_api` 整文件翻绿）。
   R20-1（api_base+strategy，工程师 r20d 在飞）与 R20-2 均**未**产生可安装候选。
+
+## R20-2 第三次未命中（17:18，镜像 `D:/Temp/r20f`，sha16 `396107171c241960`）⇒ 主代理停手
+
+改在**真正的 else 臂装配点**（`if region.elif_final_else:` →
+`_process_if_blocks(..., branch='else')`，:18776 前）插入幻影 else 判据
+（候选块 == 任一臂体跳过跳落点，或 == 某臂体落空后继且该臂末指令非跳过跳）：
+`real_quote 仍 43/45`，quote 86/92、matcher 17/17、quotation 153/153、klinedata 63/64 全不动。
+
+三次未命中合起来排除的是「位置猜测」这条路：
+`_if_generate_elif_chain:15580`（v1/v2）与 `:18776`（v3）两个装配点都**不是**
+`entry=858` 这条链在本单元走到 else 臂的那段——要么该链由别处分派，
+要么 `elif_final_else` 在这两处读取**之前**已被别处改写/重新填回（本文件里
+`elif_final_else` 被赋值/清空的站点有 :15265、:15309、:15761、:15769、:19049 等多处）。
+
+下一手**不要再猜第四个判据**，只做一件事：在上述每个读写站点各放一个只写文件的计数器
+（只记 `region.entry.start_offset` 与调用序号，不读任何 CFG 派生属性，不 print 到 stdout），
+跑 `real_quote` 一次，列出「`entry=858` 这条链实际经过的读写序列」。
+拿到该序列后，判据要放在**最后一次填回 `elif_final_else=[1102]` 的那个站点**。
+主代理已把本单元的真差与实值钉死（1 条死跳、`elif_final_else=[1102]`、
+`@1022 JUMP_FORWARD->1102`、末臂 `@1036` 落空入 `1102`），缺的只是命中点。
