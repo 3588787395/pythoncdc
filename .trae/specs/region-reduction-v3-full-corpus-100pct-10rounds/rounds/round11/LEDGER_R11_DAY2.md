@@ -62,6 +62,19 @@ IfRegion@0 的右臂块集来自 `then_blocks/else_blocks`，而 `@404` 只是 I
 
 ## 追加（同日晚，读数把 handlers 的宿主钉到行）：归属其实已经解决
 
+**施工环境自证（补记，先于读数引用）**：本节 B141/B142/B145 的 handlers 读数做在镜像
+`D:/Temp/r141/wt`，而该镜像的 `core/cfg/region_analyzer.py` 在我为 v2 判别式装入
+`cand_gated_v2.py`（sha `1e5fdda8351ff923`）之后**没有复原过**，也就是说这三条 handlers 臂
+是在「带链首 J+F 放宽的分析器 + 被改的发射器」组合下测的，不是纯仓库字节。
+影响判定：三条读数的 handlers 产物 `9093` 字节、quotation 产物 `182759` 字节都与仓库封存产物
+**逐字节相同**，而 v2 判别式对这两个文件的产物本就无差（v2 测量时 bar 有差、quote 有差，
+这两个文件 SAME），所以「惰性」的结论方向不受影响；但复核者要么按此状态复现，要么先把镜像
+分析器复原成 `e926a54f17753b33` 再跑。镜像两个文件现已复原
+（`region_ast_generator.py = e9a8f65f6451bcc8`、`region_analyzer.py = e926a54f17753b33`），
+仓库 `core/` 全程 0 项改动。教训并入方法账：**每条臂都要打印当时那份 core 的哈希**，
+我之前只在票首打印过一次。
+
+
 用无副作用普查（新建 CFG + 新建 RegionAnalyzer，独立进程）读 `IfRegion` 的臂字段：
 
 ```
