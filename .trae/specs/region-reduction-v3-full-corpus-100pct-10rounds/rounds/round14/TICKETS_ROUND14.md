@@ -34,3 +34,19 @@
   两侧方向相反（api_base 需要取反，strategy 需要取消取反），单点实现、两处复用。
 * 验收顺序不变：`repro/` 与 `repro_ccneg/` 两电池先绿 ⇒ 12 残余文件 + quotation 的 13 文件面板 A/B
   ⇒ 完整门链（下一 label 17 regen/verify/report 对 16）⇒ 提交并推送。
+
+
+## 四、追加实测（R14-04 判据成立、R14-05 的新阻塞点）
+
+* R14-04「同目标真值边」判据在电池上三例翻正（m01/m02 对照/m03 全为 2/2），语料面板
+  quotation 153/153 与 12 个残余文件逐文件读数与基线相同 ⇒ **零回归、零单元翻正 ⇒ 不落地**，
+  补丁与判据保留在 arms/r14_04_and_polarity_reps.py；api_base 的 get_history_df 由
+  hunks 20 / real 5 降到 hunks 2 / real 0。
+* R14-05 需要的新事实（本轮实测）：strategy 的 IfRegion@512 **merge_block=568 恰是体首块**，
+  而条件装配处按设计把 merge 从 then 中剔除（region_analyzer.py:20969
+  则 then_blocks = [b for b in then_blocks if b not in real_merge]），
+  因此任何「真值边落在 then 入口」的测试在该形必然失效。正镜像判据要成立，
+  必须先决定 if-with-elif 且条件为 or 链时 merge 的正确身份（体首块 vs 臂后汇合点），
+  这会牵动 R13-01 / T12-23 已入库的 merge 相关规则 —— 属下一票的独立决定，不在本轮内偷改。
+* 收尾：core/ 工作树 0 行差异，region_analyzer 640d33a77dcb71c2、region_ast_generator 851b0723732a2402；
+  语料 390/402 文件、6583/6617 单元，残余 12 文件 / 34 单元。
