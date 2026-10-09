@@ -1,5 +1,5 @@
 #!/bin/bash
-# 17-file panel: regenerate products with the CURRENT working-tree code into $TEMP and judge them.
+# 19-file panel: regenerate products with the CURRENT working-tree code into $TEMP and judge them.
 # Cheap pre-gate signal (the 402-file gate is the only certification, but it costs minutes).
 # Never writes into site-packages: products go to $TMPDIR/panel17_<stamp>/, judged with --source.
 #
@@ -28,7 +28,9 @@ IQEngine/plugins/plugin_system_matcher/matcher
 fly/data/quotation
 IQEngine/core/bar
 IQEngine/core/strategy/strategy_universe
-fly/dumpload/load_daily"
+fly/dumpload/load_daily
+IQEngine/plugins/plugin_system_log/__init__
+IQEngine/plugins/plugin_system_trade/function"
 for f in $FILES; do
   P="site-packages/$f.pyc"
   [ -f "$P" ] || { echo "MISSING INPUT $P"; continue; }
