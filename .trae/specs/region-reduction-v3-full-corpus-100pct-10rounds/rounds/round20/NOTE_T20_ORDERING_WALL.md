@@ -85,3 +85,27 @@ else 体」进入，而该 else 体自身以无条件终结（RETURN/RAISE）结
 落点候选与既往否决：`_if_generate_normal` / `_process_if_blocks` 的臂尾跳支（`:21283-21319`、
 `:25336-25340` 带 R64-B2 让位契约注释）；`_loop_tail_exit_sink_pair`（分析端 :28390 / 生成端 :52045）
 经 r19t5 实测只打另一对（本形上把 landings 3→0 但仍 29/30 那类），**不是**本单元的支路。
+
+### 判决性实验（同解释器实编两形，非推断）：本单元的根因是**把链后的语句捏成 `else:` 臂**
+
+```
+形A  if r: a() elif 1: b() elif -1: c() else: return r ; after()
+     →  … CALL; POP_TOP @152; JUMP_FORWARD 160 @154; LOAD_FAST redata @156; RETURN_VALUE @158
+        （JUMP_FORWARD 计 3 条）                ↑ 与**产物**逐指令同形（多这一条跳）
+形B  if r: a() elif 1: b() elif -1: c() ; return r
+     →  … CALL; POP_TOP @152; LOAD_FAST redata @154; RETURN_VALUE @156
+        （JUMP_FORWARD 计 2 条）                ↑ 与**原字节码**逐指令同形（无此跳）
+```
+
+⇒ 原源码在该处**没有 else**：`return redata` 是 **if/elif 链之后的语句**（链的 merge/续体）。
+产物把它当成 `else:` 臂发出，于是末条 elif 臂必须跳过 else 体 ⇒ 多一条死跳（+2 字节），
+连带 11 处位移影子与 1 处落点差。**先前把它记作「发射端多发一条跳」是错的定性**——
+缺的是「else 臂的身份判错」，不是跳本身。
+
+判据形状（识别端/装配端二选一，结构判据）：**`elif_final_else` 不得等于本区域的 merge/续体块**；
+若候选 else 体块就是「末条臂落空所到达、且链条件跳转的目标同一块」，则该块是续体不是臂，
+链不带 else，语句交回链后正常发射。
+候选落点：分析端 IfRegion 构造里的 `elif_final_else` 赋值处，与生成端 elif 链装配
+（`_if_generate_elif_chain` 读 `elif_conditions/elif_bodies/elif_final_else` 的段）。
+注意本轮 r20d 工程师只占 `region_analyzer.py`；若要动分析端须等其交付落地或否决后再做，
+或先在生成端装配处加同一条结构判据（读区域已有字段，不新建第二真相源）。
