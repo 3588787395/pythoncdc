@@ -1,0 +1,70 @@
+[
+ {
+  "name": "B98_matrix",
+  "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 15,
+  "failures": [
+   "***<module>.f_or_in_and_deep: Failure: Different control flow",
+   "***<module>.f_or_in_and_pair_deep: Failure: Different control flow",
+   "***<module>.f_b98_ternary_cross: Failure: Different control flow",
+   "***<module>.f_b98_compare_cross: Failure: Different control flow",
+   "***<module>.f_b98_walrus_cross: Failure: Different control flow",
+   "***<module>.f_b98_return_pos: Failure: Different control flow",
+   "***<module>.f_b98_call_arg_pos: Failure: Different control flow",
+   "***<module>.f_b98_or_tail_and_group: Failure: Different control flow",
+   "***<module>.f_b98_not_wrapped: Failure: Different control flow",
+   "***<module>.f_b98_and_tail_or_group: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "B98_hosts",
+  "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+  "status": "failure",
+  "units_success": 11,
+  "units_total": 18,
+  "failures": [
+   "***<module>.CB98.m_handler: Failure: Different control flow",
+   "***<module>.f_comp_cond_host.<listcomp>: Failure: Different control flow",
+   "***<module>.f_genexp_cond_host.<genexpr>: Failure: Different control flow",
+   "***<module>.f_dictcomp_value_host.<dictcomp>: Failure: Different control flow",
+   "***<module>.f_nested_func_host.inner: Failure: Different control flow",
+   "***<module>.f_match_arm_host: Failure: Different control flow",
+   "***<module>.f_with_body_host: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B99_min",
+  "pyc": "test_repros/round3/_scratch_b99/b99min.pyc",
+  "status": "failure",
+  "units_success": 8,
+  "units_total": 9,
+  "failures": [
+   "***<module>.for_grouped: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B78_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 4,
+  "failures": [
+   "***<module>.v_while_cond_nest: Failure: Different control flow",
+   "***<module>.v_if_cond_nest: Failure: Different control flow",
+   "***<module>.n_for_body_nest: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B82_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 3,
+  "failures": [
+   "***<module>.v_swap_arm_returns: Failure: Different bytecode",
+   "***<module>.n_fin_noseg: Failure: Different control flow"
+  ]
+ }
+]

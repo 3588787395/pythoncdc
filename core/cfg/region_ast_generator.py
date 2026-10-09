@@ -7927,6 +7927,22 @@ AST 映射规则:
                     for _b in region.body_blocks:
                         if _b in self.generated_blocks:
                             continue
+                        # [B104] 链式比较短路清理块（体成员位形）：块内指令全为
+                        # 栈操纵（POP_TOP/SWAP/COPY + 噪声），且全部后继越出
+                        # 循环区域（区域成员关系）——它是链协议假路径的清栈段
+                        # （丢弃链留在栈上的待比较操作数），非用户语句；整块
+                        # 抑制不发射，其出口块（循环后语句）由父层顺序归约。
+                        # 判据只读块内 opcode 序 + 后继/区域成员关系（I.4 白名
+                        # 单）；用户语句（CALL+POP_TOP 表达式、赋值）必含集合
+                        # 外指令，不命中。
+                        if all(i.opname in ('POP_TOP', 'SWAP', 'COPY', 'NOP', 'CACHE',
+                                           'RESUME', 'PUSH_NULL', 'EXTENDED_ARG')
+                               for i in _b.instructions):
+                            if _b.successors and all(_s not in (region.blocks or set())
+                                                     for _s in _b.successors):
+                                self.generated_blocks.add(_b)
+                                self.generated_offsets.add(_b.start_offset)
+                                continue
                         _b_last = _b.get_last_instruction()
                         if not _b_last or _b_last.opname not in CONDITIONAL_JUMP_OPS:
                             continue
@@ -7961,6 +7977,34 @@ AST 映射规则:
                                 self.generated_blocks.add(_b)
                                 self.generated_offsets.add(_b.start_offset)
                                 continue
+                        # [B104] 纯重检链段（非回边块）：3+ 元链的中间重检段以
+                        # 条件跳转收尾、指令全为比较求值（与上方 back_edge 纯
+                        # 重检同一 opcode 白名单），且其条件跳出目标为纯协议
+                        # 清理块（POP_TOP/JUMP_FORWARD 序列）或直接越出循环体
+                        # ——该段是 while 条件回边重检的组成部分，非用户语句，
+                        # 整块抑制。判据只读块内 opcode 序、跳转目标块指令序
+                        # 与区域成员关系（I.4 白名单）；体内真实 if 的假出口
+                        # 落在含 STORE/CALL 的合并块或回边链上，不命中。
+                        _b_jt_b104 = (self.cfg.get_block_by_offset(_b_last.argval)
+                                      if _b_last.argval is not None else None)
+                        _jt_is_cleanup_exit_b104 = (
+                            _b_jt_b104 is not None
+                            and (_b_jt_b104 not in (region.blocks or set())
+                                 or all(i.opname in ('POP_TOP', 'JUMP_FORWARD',
+                                                     'JUMP_ABSOLUTE', 'NOP', 'CACHE',
+                                                     'RESUME', 'PUSH_NULL',
+                                                     'EXTENDED_ARG')
+                                        for i in _b_jt_b104.instructions)))
+                        if (_jt_is_cleanup_exit_b104
+                                and all(i.opname in ('LOAD_CONST', 'LOAD_FAST',
+                                                     'LOAD_NAME', 'LOAD_GLOBAL',
+                                                     'LOAD_DEREF', 'COPY', 'SWAP',
+                                                     'COMPARE_OP', 'IS_OP',
+                                                     'CONTAINS_OP', 'POP_TOP')
+                                        for i in _b_non_jmp)):
+                            self.generated_blocks.add(_b)
+                            self.generated_offsets.add(_b.start_offset)
+                            continue
                         # Chained-compare short-circuit exit blocks
                         # (POP_TOP + LOAD_CONST + RETURN_VALUE) land in body_blocks
                         # because they are reachable from the header's recheck. They
@@ -13655,6 +13699,40 @@ AST 映射规则:
     def _loop_find_cond_start_idx(self, block: BasicBlock) -> Optional[int]:
         _nbe_cond_start_idx = None
         _has_call = any(i.opname in ('CALL', 'PRECALL', 'LOAD_METHOD') for i in block.instructions)
+        # [B105] walrus 条件回边重检（栈需求模拟）：重检求值段含
+        # COPY(1)+STORE_* 副作用对时（``while (m := x * 2) < 20:`` 的回边块
+        # [体语句…, <walrus 值计算>, COPY 1, STORE m, <比较右操作数…>,
+        # COMPARE_OP, POP_JUMP_BACKWARD_*]），基于「条件跳转恰需 1 个栈值」
+        # 自块尾逆向做栈需求模拟（镜像 _loop_generate_while walrus 重检分支
+        # 的同名算法）求重检起点——walrus 值计算段整体划入重检（抑制为
+        # generated），体语句完整保留。原 LOAD-only 逆向扫描在 walrus STORE
+        # 处截断，把 walrus 值链误划为前驱体语句（``m = x * 2`` 泄漏进循环体，
+        # C1 破坏：条件值生产链被语句边界切断）。判据只读块内 opcode 序与
+        # CPython 值栈净效应（I.4 白名单）；无 walrus 对或模拟不可判定时
+        # 落回原扫描，行为逐位不变（C3）。
+        _b105_walrus_pair = False
+        for _b105_wi in range(len(block.instructions) - 1):
+            if (block.instructions[_b105_wi].opname == 'COPY'
+                    and block.instructions[_b105_wi].arg == 1
+                    and block.instructions[_b105_wi + 1].opname in (
+                        'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')):
+                _b105_walrus_pair = True
+                break
+        if _b105_walrus_pair:
+            _b105_need = 1
+            for _b105_si in range(len(block.instructions) - 2, -1, -1):
+                _b105_ib = block.instructions[_b105_si]
+                if _b105_ib.opname in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'):
+                    continue
+                _b105_eff = self._instruction_stack_effect(_b105_ib)
+                if _b105_eff is None:
+                    _b105_need = None
+                    break
+                _b105_need = (_b105_need
+                               - (_b105_eff if _b105_eff > 0 else 0)
+                               + (-_b105_eff if _b105_eff < 0 else 0))
+                if _b105_need <= 0:
+                    return _b105_si
         # [区域归约算法 - 条件块起始索引检测]
         # 当条件块包含CALL指令时（如len(data) > 0中的len(data)），
         # CALL指令是条件表达式的一部分，不是前置语句。
@@ -16640,6 +16718,17 @@ AST 映射规则:
                        if i.opname not in ('RESUME', 'NOP', 'CACHE')]
         if not cond_instrs:
             return None
+        # [B104] 前驱语句 STORE_* 前缀剥离（镜像 [R106]，同
+        # _try_build_call_middle_from_blocks）：with/for 宿主目标绑定合入链头块
+        # 时，其消费的栈值不在本块产生——逆向栈模拟越过它会吸收前缀指令、
+        # 污染 left/middle1 切分（如 with 体 ``return a < b < c < len(f.read())``
+        # 的链头块 STORE_FAST f 前缀）。剥离后边界恢复正确（I.4 白名单）。
+        while (cond_instrs
+               and cond_instrs[0].opname in ('STORE_FAST', 'STORE_NAME',
+                                              'STORE_GLOBAL', 'STORE_DEREF')):
+            cond_instrs = cond_instrs[1:]
+        if not cond_instrs:
+            return None
         # walrus 由 _try_build_walrus_chained_compare 处理
         for idx in range(len(cond_instrs) - 1):
             if (cond_instrs[idx].opname == 'COPY' and cond_instrs[idx].argval == 1
@@ -16866,6 +16955,17 @@ AST 映射规则:
                        if i.opname not in ('RESUME', 'NOP', 'CACHE')]
         if not cond_instrs:
             return None
+        # [B104] 前驱语句 STORE_* 前缀剥离（镜像 _try_build_complex_operand_
+        # chained_compare_from_blocks 的 [R106]）：with/for 宿主把目标绑定
+        # （STORE_FAST f / STORE_FAST x）合入链头块，其消费的栈值不在本块
+        # 产生——逆向栈模拟越过它会吸收前缀指令、污染 left/middle 切分。
+        # 剥离后 left/middle1 边界恢复正确（块内 opcode 序事实，I.4 白名单）。
+        while (cond_instrs
+               and cond_instrs[0].opname in ('STORE_FAST', 'STORE_NAME',
+                                              'STORE_GLOBAL', 'STORE_DEREF')):
+            cond_instrs = cond_instrs[1:]
+        if not cond_instrs:
+            return None
         # 触发条件：含 CALL 且不含 LOAD_METHOD（后者由 _try_build_method_call_chained_compare 处理）
         has_call = any(i.opname == 'CALL' for i in cond_instrs)
         has_load_method = any(i.opname == 'LOAD_METHOD' for i in cond_instrs)
@@ -17009,6 +17109,15 @@ AST 映射规则:
             return None
         cond_instrs = [i for i in cond_block.instructions
                        if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if not cond_instrs:
+            return None
+        # [B104] 前驱语句 STORE_* 前缀剥离（镜像 [R106]，同
+        # _try_build_call_middle_from_blocks）：宿主目标绑定前缀不参与
+        # left/middle 逆向栈切分（I.4 白名单：块内 opcode 序）。
+        while (cond_instrs
+               and cond_instrs[0].opname in ('STORE_FAST', 'STORE_NAME',
+                                              'STORE_GLOBAL', 'STORE_DEREF')):
+            cond_instrs = cond_instrs[1:]
         if not cond_instrs:
             return None
         # 触发条件：含 LOAD_ATTR，不含 CALL/LOAD_METHOD
@@ -17832,6 +17941,25 @@ AST 映射规则:
         _last_store_in_iter = -1
         for _i, _instr in enumerate(_iter_instrs):
             if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
+                # [B105] walrus STORE 排除（镜像 _loop_handle_exit_successors
+                # 同名判据）：紧邻前驱为 COPY(1) 的 STORE_* 是 NamedExpr 副作用
+                # （``if (n := len(x)) > 3:`` 的 COPY 把值留栈供 COMPARE_OP 消费，
+                # STORE 只落副本），值消费链延续到条件跳转——不是语句边界。把
+                # 它当「最后 STORE」切分会把整个 walrus 值链排除在 cond_instrs
+                # 之外（条件退化为比较右操作数占位 ``if 3:``，C1 破坏：值消费
+                # 链被语句边界切断）。判据只读块内指令序（I.4 白名单）；链式
+                # 赋值 a=b=f() 的首 STORE 虽亦前邻 COPY(1)，但其后继为 STORE_*
+                # （非条件跳转），仍作语句边界，行为不变。
+                if _i > 0 and _iter_instrs[_i - 1].opname == 'COPY' \
+                        and _iter_instrs[_i - 1].arg == 1:
+                    _b105_next = _i + 1
+                    while _b105_next < len(_iter_instrs) \
+                            and _iter_instrs[_b105_next].opname in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'):
+                        _b105_next += 1
+                    if _b105_next < len(_iter_instrs) and _iter_instrs[_b105_next].opname in (
+                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        _last_store_in_iter = _i
+                    continue
                 _last_store_in_iter = _i
         if _last_store_in_iter >= 0:
             _cond_iter_source = _iter_instrs[_last_store_in_iter + 1:]
@@ -33481,6 +33609,31 @@ AST 映射规则:
                             _bsi_unpack_info = None
                         stmt_instrs = []
                         continue
+                # [B107] 链式下标目标值链保持 + 整链归约（判据与
+                # _generate_block_statements_body 的 STORE_SUBSCR 分支同源：
+                # 本 STORE 弹出 [值, 容器, 键] 后净栈深 > 0 ⇒ 链式份额仍在
+                # 栈上待后续目标段消费，保持累积；末段由
+                # _build_chained_complex_target_assign 归约为单一
+                # Assign(targets=[...], value)。单目标/AugAssign 弹后恒 0，
+                # 不命中，行为逐位不变）。
+                _b107_d = 0
+                _b107_dok = True
+                for _b107_di in stmt_instrs:
+                    _b107_eff = self._instruction_stack_effect(_b107_di)
+                    if _b107_eff is None:
+                        _b107_dok = False
+                        break
+                    _b107_d += _b107_eff
+                if _b107_dok:
+                    _b107_d -= 3
+                if _b107_dok and _b107_d > 0:
+                    stmt_instrs.append(instr)
+                    continue
+                _b107_chain = self._build_chained_complex_target_assign(stmt_instrs + [instr])
+                if _b107_chain is not None:
+                    stmts.append(_b107_chain)
+                    stmt_instrs = []
+                    continue
                 stmt = self._build_subscript_assign(stmt_instrs + [instr])
                 if stmt:
                     stmts.append(stmt)
@@ -33509,6 +33662,28 @@ AST 映射规则:
                             _bsi_unpack_info = None
                         stmt_instrs = []
                         continue
+                # [B107] 链式属性目标值链保持 + 整链归约（判据与
+                # _generate_block_statements_body 的 STORE_ATTR 分支同源：
+                # 本 STORE 弹出 [值, 对象] 后净栈深 > 0 ⇒ 保持累积至末段
+                # 整链归约；单目标弹后恒 0，不命中，行为逐位不变）。
+                _b107_d = 0
+                _b107_dok = True
+                for _b107_di in stmt_instrs:
+                    _b107_eff = self._instruction_stack_effect(_b107_di)
+                    if _b107_eff is None:
+                        _b107_dok = False
+                        break
+                    _b107_d += _b107_eff
+                if _b107_dok:
+                    _b107_d -= 2
+                if _b107_dok and _b107_d > 0:
+                    stmt_instrs.append(instr)
+                    continue
+                _b107_chain = self._build_chained_complex_target_assign(stmt_instrs + [instr])
+                if _b107_chain is not None:
+                    stmts.append(_b107_chain)
+                    stmt_instrs = []
+                    continue
                 stmt = self._build_attr_assign(stmt_instrs + [instr])
                 if stmt:
                     stmts.append(stmt)
@@ -54297,55 +54472,65 @@ AST 映射规则:
         if _has_unpack:
             _has_unpack_ex = any(i.opname == 'UNPACK_EX' for i in block.instructions)
             if _has_unpack_ex:
-                _ua_all_instrs = [i for i in block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                _unpack_ex_idx = None
-                for _idx, _instr in enumerate(_ua_all_instrs):
-                    if _instr.opname == 'UNPACK_EX':
-                        _unpack_ex_idx = _idx
-                        break
-                if _unpack_ex_idx is not None:
-                    _ua_value_instrs = _ua_all_instrs[:_unpack_ex_idx]
-                    _ua_value_expr = self.expr_reconstructor.reconstruct(_ua_value_instrs) if _ua_value_instrs else None
-                    _ua_unpack_instr = _ua_all_instrs[_unpack_ex_idx]
-                    _ua_arg = _ua_unpack_instr.argval
-                    _ua_before = _ua_arg & 0xFF
-                    _ua_after = (_ua_arg >> 8) & 0xFF
-                    _ua_elts = []
-                    _ua_idx = _unpack_ex_idx + 1
-                    for _ in range(_ua_before):
-                        if _ua_idx < len(_ua_all_instrs):
-                            _ua_store_instr = _ua_all_instrs[_ua_idx]
-                            if _ua_store_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF'):
-                                _ua_elts.append({'type': 'Name', 'id': _ua_store_instr.argval, 'ctx': 'Store'})
-                            _ua_idx += 1
-                    if _ua_idx < len(_ua_all_instrs):
-                        _ua_star_instr = _ua_all_instrs[_ua_idx]
-                        if _ua_star_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF'):
-                            _ua_elts.append({'type': 'Starred', 'value': {'type': 'Name', 'id': _ua_star_instr.argval, 'ctx': 'Store'}})
-                        _ua_idx += 1
-                    for _ in range(_ua_after):
-                        if _ua_idx < len(_ua_all_instrs):
-                            _ua_store_instr = _ua_all_instrs[_ua_idx]
-                            if _ua_store_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF'):
-                                _ua_elts.append({'type': 'Name', 'id': _ua_store_instr.argval, 'ctx': 'Store'})
-                            _ua_idx += 1
-                    _ua_target = {'type': 'Tuple', 'elts': _ua_elts, 'ctx': 'Store'}
-                    _unpack_result = [{'type': 'Assign', 'targets': [_ua_target], 'value': _ua_value_expr}]
-                    # 区域归约算法原则 2（每块唯一归属）：UNPACK_EX 赋值
-                    # 之后的剩余指令（如 `*a, b = items; return a, b` 中的
-                    # LOAD_FAST/BUILD_TUPLE/RETURN_VALUE）属于同一块内的后续语句，
-                    # 必须一并重建。原实现仅生成赋值即返回，导致 trailing 语句丢失
-                    # （指令数不匹配）。复用 _build_statements_from_instructions 按
-                    # 语句边界（STORE/POP_TOP/JUMP/RETURN）拆分剩余指令。
-                    _remaining_instrs = _ua_all_instrs[_ua_idx:]
-                    if _remaining_instrs:
-                        _trailing_stmts = self._build_statements_from_instructions(_remaining_instrs, block)
-                        if _trailing_stmts:
-                            _unpack_result.extend(_trailing_stmts)
+                # [B107] 星号解包多目标链优先路由：COPY(1) 紧邻 UNPACK_EX
+                # 是多目标链标志（``a, *b = c, *d = rhs`` 的协议
+                # <rhs>; COPY 1; UNPACK_EX; STORE…; UNPACK_EX; STORE…），
+                # 与 UNPACK_SEQUENCE 链同一 COPY(1) 标志判据。单组星号解包
+                # （无 COPY(1) 前邻）维持既有单目标路径。判据只读块内
+                # opcode 序（I.4 白名单）。
+                _b107_mt_ex = self._build_multi_target_unpack(block)
+                if _b107_mt_ex is not None:
+                    _unpack_result = _b107_mt_ex
                 else:
-                    _ua_expr = self.expr_reconstructor.reconstruct(_ua_all_instrs)
-                    if _ua_expr:
-                        _unpack_result = [_ua_expr]
+                    _ua_all_instrs = [i for i in block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    _unpack_ex_idx = None
+                    for _idx, _instr in enumerate(_ua_all_instrs):
+                        if _instr.opname == 'UNPACK_EX':
+                            _unpack_ex_idx = _idx
+                            break
+                    if _unpack_ex_idx is not None:
+                        _ua_value_instrs = _ua_all_instrs[:_unpack_ex_idx]
+                        _ua_value_expr = self.expr_reconstructor.reconstruct(_ua_value_instrs) if _ua_value_instrs else None
+                        _ua_unpack_instr = _ua_all_instrs[_unpack_ex_idx]
+                        _ua_arg = _ua_unpack_instr.argval
+                        _ua_before = _ua_arg & 0xFF
+                        _ua_after = (_ua_arg >> 8) & 0xFF
+                        _ua_elts = []
+                        _ua_idx = _unpack_ex_idx + 1
+                        for _ in range(_ua_before):
+                            if _ua_idx < len(_ua_all_instrs):
+                                _ua_store_instr = _ua_all_instrs[_ua_idx]
+                                if _ua_store_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF'):
+                                    _ua_elts.append({'type': 'Name', 'id': _ua_store_instr.argval, 'ctx': 'Store'})
+                                _ua_idx += 1
+                        if _ua_idx < len(_ua_all_instrs):
+                            _ua_star_instr = _ua_all_instrs[_ua_idx]
+                            if _ua_star_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF'):
+                                _ua_elts.append({'type': 'Starred', 'value': {'type': 'Name', 'id': _ua_star_instr.argval, 'ctx': 'Store'}})
+                            _ua_idx += 1
+                        for _ in range(_ua_after):
+                            if _ua_idx < len(_ua_all_instrs):
+                                _ua_store_instr = _ua_all_instrs[_ua_idx]
+                                if _ua_store_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF'):
+                                    _ua_elts.append({'type': 'Name', 'id': _ua_store_instr.argval, 'ctx': 'Store'})
+                                _ua_idx += 1
+                        _ua_target = {'type': 'Tuple', 'elts': _ua_elts, 'ctx': 'Store'}
+                        _unpack_result = [{'type': 'Assign', 'targets': [_ua_target], 'value': _ua_value_expr}]
+                        # 区域归约算法原则 2（每块唯一归属）：UNPACK_EX 赋值
+                        # 之后的剩余指令（如 `*a, b = items; return a, b` 中的
+                        # LOAD_FAST/BUILD_TUPLE/RETURN_VALUE）属于同一块内的后续语句，
+                        # 必须一并重建。原实现仅生成赋值即返回，导致 trailing 语句丢失
+                        # （指令数不匹配）。复用 _build_statements_from_instructions 按
+                        # 语句边界（STORE/POP_TOP/JUMP/RETURN）拆分剩余指令。
+                        _remaining_instrs = _ua_all_instrs[_ua_idx:]
+                        if _remaining_instrs:
+                            _trailing_stmts = self._build_statements_from_instructions(_remaining_instrs, block)
+                            if _trailing_stmts:
+                                _unpack_result.extend(_trailing_stmts)
+                    else:
+                        _ua_expr = self.expr_reconstructor.reconstruct(_ua_all_instrs)
+                        if _ua_expr:
+                            _unpack_result = [_ua_expr]
             else:
                 # 多目标解包预检: a, b = c = d, e 或 a, b = e, f = g, h
                 # 字节码模式: <value>; COPY 1; UNPACK_SEQUENCE N; STORE...; [COPY 1; STORE | UNPACK_SEQUENCE N; STORE...]...
@@ -55442,6 +55627,27 @@ AST 映射规则:
                 continue
 
             if instr.opname == 'STORE_ATTR' and stmt_instrs:
+                # [B107] 链式属性目标值链保持：本 STORE 弹出 [值, 对象] 后
+                # 净栈深仍 > 0 ⇒ 值是 COPY 复制出来的链式份额，后续目标段
+                # 仍待消费（``o.a = o.b = x`` 的协议：值; COPY 1;
+                # [对象; STORE_ATTR]×N，每段净 -1）——不在此切分语句（否则
+                # 后续目标退 None），保持累积至末段由
+                # _build_chained_complex_target_assign 整链归约。判据只读
+                # 块内 opcode 序 + CPython 值栈净效应（I.4 白名单）；单目标
+                # 赋值弹后恒为 0，不命中（行为逐位不变）。
+                _b107_d = 0
+                _b107_dok = True
+                for _b107_di in stmt_instrs:
+                    _b107_eff = self._instruction_stack_effect(_b107_di)
+                    if _b107_eff is None:
+                        _b107_dok = False
+                        break
+                    _b107_d += _b107_eff
+                if _b107_dok:
+                    _b107_d -= 2  # STORE_ATTR 弹 [值, 对象]
+                if _b107_dok and _b107_d > 0:
+                    stmt_instrs.append(instr)
+                    continue
                 # AnnAssign with attribute target: `x.y: int = 1`
                 # 字节码: <value>; LOAD_NAME x; STORE_ATTR y; <ann_expr>; POP_TOP
                 # CPython 不为属性/下标目标写 __annotations__，仅以 POP_TOP 丢弃注解。
@@ -55453,6 +55659,12 @@ AST 映射规则:
                     stmts.append(_ann_attr_stmt)
                     stmt_instrs = []
                     skip_offsets.update(_ann_attr_skip)
+                    continue
+                # [B107] 链式属性目标整链归约（复杂 STORE 数 ≥ 2）。
+                _b107_chain = self._build_chained_complex_target_assign(stmt_instrs + [instr])
+                if _b107_chain is not None:
+                    stmts.append(_b107_chain)
+                    stmt_instrs = []
                     continue
                 attr_stmt = self._build_attr_assign(stmt_instrs + [instr])
                 if attr_stmt:
@@ -55554,6 +55766,26 @@ AST 映射规则:
                         continue
 
             if instr.opname == 'STORE_SUBSCR' and stmt_instrs:
+                # [B107] 链式下标目标值链保持（与上方 STORE_ATTR 分支同一
+                # 判据族）：本 STORE 弹出 [值, 容器, 键] 后净栈深仍 > 0 ⇒
+                # 值是 COPY 复制出来的链式份额（``a[0] = b[1] = v`` 协议：
+                # 值; COPY 1; [容器; 键; STORE_SUBSCR]×N，每段净 -1）——
+                # 保持累积至末段整链归约。判据只读块内 opcode 序 + 值栈
+                # 净效应（I.4 白名单）；单目标/AugAssign 协议弹后恒为 0，
+                # 不命中（行为逐位不变）。
+                _b107_d = 0
+                _b107_dok = True
+                for _b107_di in stmt_instrs:
+                    _b107_eff = self._instruction_stack_effect(_b107_di)
+                    if _b107_eff is None:
+                        _b107_dok = False
+                        break
+                    _b107_d += _b107_eff
+                if _b107_dok:
+                    _b107_d -= 3  # STORE_SUBSCR 弹 [值, 容器, 键]
+                if _b107_dok and _b107_d > 0:
+                    stmt_instrs.append(instr)
+                    continue
                 # AnnAssign with subscript target: `x[0]: int = 1`
                 # 字节码: <value>; LOAD_NAME x; LOAD_CONST 0; STORE_SUBSCR; <ann_expr>; POP_TOP
                 # 与 err1 同理：CPython 不为属性/下标目标写 __annotations__。
@@ -55563,6 +55795,12 @@ AST 映射规则:
                     stmts.append(_ann_subscr_stmt)
                     stmt_instrs = []
                     skip_offsets.update(_ann_subscr_skip)
+                    continue
+                # [B107] 链式下标目标整链归约（复杂 STORE 数 ≥ 2）。
+                _b107_chain = self._build_chained_complex_target_assign(stmt_instrs + [instr])
+                if _b107_chain is not None:
+                    stmts.append(_b107_chain)
+                    stmt_instrs = []
                     continue
                 subscr_stmt = self._build_subscript_assign(stmt_instrs + [instr])
                 if subscr_stmt:
@@ -55741,12 +55979,14 @@ AST 映射规则:
                         _has_literal_build = False
                         _has_integrating_op = False
                         _lit_consumed_offsets = set()
+                        _b105_fs_prev = None
                         for ri in remaining:
                             if ri.opname in _lit_skip_ops:
                                 continue
                             if ri.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                                 _final_store = ri
                                 break
+                            _b105_fs_prev = ri
                             if ri.opname in _lit_consume_ops:
                                 if ri.opname in _LITERAL_BUILD_OPS:
                                     _has_literal_build = True
@@ -55755,6 +55995,21 @@ AST 映射规则:
                                 _lit_consumed_offsets.add(ri.offset)
                                 continue
                             break
+                        # [B105] 终结 STORE 不得是 walrus 副作用对：紧邻前驱为
+                        # COPY(1) 的 STORE_*（如 ``f((a := g(x)), (b := a + 1))``
+                        # 中 STORE a 向前扫描命中的 _final_store=STORE b）是第
+                        # 二个 NamedExpr 的副作用落点——值仍留栈被后续指令消费
+                        # （PRECALL/CALL/RETURN…），语句未终结。把它当终结 STORE
+                        # 会把双 walrus 实参链错切（首 walrus 蒸发、次 walrus 退
+                        # 化为独立赋值、return 蒸发）。判据只读块内 opcode 序
+                        # （I.4 白名单，与 AugAssign/POP_TOP/RETURN 三分支同一
+                        # 「值消费链延续」判据族）；命中即放弃本路径，落回下方
+                        # 通用 STORE 归约点（[B105] 值链位保持分支按净栈深续接）。
+                        if (_final_store is not None
+                                and _b105_fs_prev is not None
+                                and _b105_fs_prev.opname == 'COPY'
+                                and _b105_fs_prev.arg == 1):
+                            _final_store = None
                         # 必须找到终结 STORE，且中间有字面量构造或 walrus 整合指令
                         # （否则可能是 chained store `a = b = c`，由专门路径处理）
                         if (_final_store is not None
@@ -55931,6 +56186,47 @@ AST 映射规则:
                         stmt_instrs = []
                         for _b85_ci in range(_b85_idx + 1, min(_b85_end, len(block.instructions))):
                             skip_offsets.add(block.instructions[_b85_ci].offset)
+                        continue
+                    # [B105] walrus 值链位保持（实参/返回值/比较位walrus）：
+                    # 紧邻 COPY(1)+STORE_* 是 NamedExpr 副作用对——COPY 把值
+                    # 复制留栈、STORE 只落副作用副本，值仍被同块后续指令消费
+                    # （``f((n := x + 1), n)`` 的 PRECALL/CALL 实参链、
+                    # ``return f((n := g(x)), (b := a + 1))`` 的 RETURN 值链）。
+                    # 判据（I.4 白名单：块内 opcode 序 + CPython 值栈净效应）：
+                    #   ① B85 链扫描未命中（排除 a=b=c 链式赋值——其后继必为
+                    #      [COPY 1 + STORE_*]* / [STORE_*] 形）；
+                    #   ② 该 STORE 的下一非噪声指令不是 STORE_*（链式赋值排除
+                    #      面，与 _generate_block_statements 聚类1 同一排除面）；
+                    #   ③ stmt_instrs 净栈深弹出该 STORE 后仍 > 0（值仍留栈
+                    #      待消费——纯赋值语句 ``n = x + 1`` 弹后为 0）。
+                    # 三条全中 ⇒ 不在此切分语句（否则 walrus 值链断链：Assign
+                    # 副本 + RETURN/CALL 重建失败蒸发，C1 破坏：值消费链被语句
+                    # 边界切断）；保持累积，让 expr_reconstructor 把 COPY(1)+
+                    # STORE 重建为 NamedExpr 子节点（原则 3：walrus 是外层
+                    # 表达式的子节点，不是兄弟语句）。未命中时逐位保持旧行为。
+                    _b105_next_is_store = False
+                    _b105_scan = block.instructions.index(instr) + 1
+                    while _b105_scan < len(block.instructions):
+                        _b105_ni = block.instructions[_b105_scan]
+                        if _b105_ni.opname in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'):
+                            _b105_scan += 1
+                            continue
+                        _b105_next_is_store = _b105_ni.opname in (
+                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                        break
+                    _b105_depth = 0
+                    _b105_depth_ok = True
+                    for _b105_di in stmt_instrs:
+                        _b105_eff = self._instruction_stack_effect(_b105_di)
+                        if _b105_eff is None:
+                            _b105_depth_ok = False
+                            break
+                        _b105_depth += _b105_eff
+                    if _b105_depth_ok:
+                        _b105_depth -= 1  # 本 STORE 弹栈
+                    if (not _b105_next_is_store and _b105_depth_ok
+                            and _b105_depth > 0):
+                        stmt_instrs.append(instr)
                         continue
                 store_stmt = self._build_store_statement(stmt_instrs + [instr], block=block)
                 if store_stmt:
@@ -57851,6 +58147,174 @@ AST 映射规则:
                 _w19_stmts.extend(_w19_trailing)
         return _w19_stmts
 
+    def _build_chained_complex_target_assign(self, instrs: List[Instruction]) -> Optional[Dict[str, Any]]:
+        """[B107] 链式属性/下标目标赋值重建：``a[0] = b[1] = v`` / ``o.a = o.b = v``。
+
+        ①算法依据：区域归约四原则 + CPython 3.11 链式赋值编译协议——多目标
+        赋值把值复制给每个目标：``<value>; COPY 1×(N-1); <t1 前缀>;
+        STORE_SUBSCR|STORE_ATTR; <t2 前缀>; STORE_…; …``（STORE_SUBSCR 弹
+        [值, 容器, 键]、STORE_ATTR 弹 [值, 对象]，每个目标段净栈效应恰 -1，
+        末段后归零）。判据全为块内 opcode 序与 CPython 值栈净效应（I.4
+        白名单）。
+        ②归约顺序：自底向上——本方法在通用块语句走查的 STORE_SUBSCR/
+        STORE_ATTR 归约点被调用；调用方已按「段后净栈深 > 0 ⇒ 值链延续」
+        保持累积，本方法在末段（净栈深归零）把整条链归约为单一 Assign。
+        ③唯一归属判定：值段边界 = 首个复杂 STORE 前最后一条「后继非
+        STORE_* 的 COPY(1)」（排除 walrus 副作用对 COPY(1)+STORE_*）；从
+        该 COPY 起正向模拟，每段以前缀指令 + STORE_SUBSCR/STORE_ATTR
+        收尾且段后深度 == 剩余段数，末段后深度必须恰为 0；复杂 STORE
+        数 ≥ 2 才认链（单段交回单目标构建器，行为逐位不变）。
+        ④嵌套处理：值段经 expr_reconstructor 重建为单一 value 节点（可含
+        Call/BinOp/walrus 等任意子表达式）；各目标段内容器/键经逆向需求
+        模拟切分（镜像 _loop_find_cond_start_idx 的 need 算法）后重建为
+        Subscript/Attribute 子节点——嵌套即抽象节点，父 Assign 经
+        targets 列表引用。
+        ⑤入口引用语义：产出 ast.Assign(targets=[t1, t2, ...], value=v)，
+        is_chain_assign=True 交 code_generator 按 ``t1 = t2 = v`` 渲染，
+        重编译逐字节再生 COPY 协议。
+        ⑥反编译流程：通用块装配域（_generate_block_statements_body 的
+        STORE_SUBSCR/STORE_ATTR 归约点），链式目标不再退化为
+        ``t1 = v; t2 = None``。
+
+        C 条款：[C1] 只读传入指令序列的 opcode/oparg 与值栈净效应；
+        [C2] 整条链归约为单一 Assign 黑箱，不拆散为兄弟语句；
+        [C3] 任一判据不满足（段后深度非零、复杂 STORE 数 < 2、值段重建
+        失败）返回 None 交回既有单目标路径，行为逐位保持。
+        """
+        _b107_store_ops = ('STORE_SUBSCR', 'STORE_ATTR')
+        _b107_complex_positions = [i for i, ins in enumerate(instrs)
+                                    if ins.opname in _b107_store_ops]
+        if len(_b107_complex_positions) < 2:
+            return None
+        _b107_first_store = _b107_complex_positions[0]
+        # 值段边界：前向找首个 COPY(1) 且其后继非 STORE_*（排除 walrus 副作用
+        # 对）；3+ 链的多条 COPY(1) 中首个即链区起点（后继为 COPY/前缀指令）。
+        _b107_copy_boundary = None
+        for _b107_ci in range(0, _b107_first_store):
+            _b107_ins = instrs[_b107_ci]
+            if (_b107_ins.opname == 'COPY' and _b107_ins.arg == 1
+                    and _b107_ci + 1 < len(instrs)
+                    and instrs[_b107_ci + 1].opname not in (
+                        'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')):
+                _b107_copy_boundary = _b107_ci
+                break
+        if _b107_copy_boundary is None:
+            return None
+        # 全量正向段验证（含值段与链区 COPY，自深度 0 起）：每个复杂 STORE
+        # 收尾段后深度 == 剩余段数（每段净 -1：段前缀压入目标槽、STORE 连同
+        # 链值份额一并弹出）；末段后深度恰为 0 且为本指令序列末条。
+        _b107_depth = 0
+        _b107_segments = []  # (seg_start, store_idx)
+        _b107_seg_start = _b107_copy_boundary + 1
+        _b107_ok = True
+        _b107_seen_stores = 0
+        for _b107_ii in range(0, len(instrs)):
+            _b107_ins = instrs[_b107_ii]
+            _b107_eff = self._instruction_stack_effect(_b107_ins)
+            if _b107_eff is None:
+                _b107_ok = False
+                break
+            _b107_depth += _b107_eff
+            if _b107_ins.opname in _b107_store_ops:
+                _b107_seen_stores += 1
+                _b107_segments.append((_b107_seg_start, _b107_ii))
+                _b107_seg_start = _b107_ii + 1
+                if _b107_depth < 0:
+                    _b107_ok = False
+                    break
+                if _b107_depth == 0:
+                    if _b107_ii != len(instrs) - 1:
+                        _b107_ok = False
+                    break
+        if (not _b107_ok or _b107_depth != 0
+                or len(_b107_segments) < 2
+                or _b107_seen_stores != len(_b107_complex_positions)):
+            return None
+        # 段数一致性：段后深度 == 剩余段数（每段净 -1）。
+        for _b107_si, (_b107_ss, _b107_se) in enumerate(_b107_segments):
+            _b107_d = 0
+            for _b107_ii in range(0, _b107_se + 1):
+                _b107_eff = self._instruction_stack_effect(instrs[_b107_ii])
+                if _b107_eff is None:
+                    return None
+                _b107_d += _b107_eff
+            if _b107_d != len(_b107_segments) - _b107_si - 1:
+                return None
+        # 值段重建。
+        _b107_value_instrs = instrs[:_b107_copy_boundary]
+        if not _b107_value_instrs:
+            return None
+        _b107_value = self.expr_reconstructor.reconstruct(_b107_value_instrs)
+        if _b107_value is None:
+            return None
+        # 目标段重建：两段逆向需求模拟（镜像 _loop_find_cond_start_idx 的
+        # need 算法）——第一阶段（STORE_SUBSCR 需 2 / STORE_ATTR 需 1）定位
+        # 目标区起点；第二阶段（STORE_SUBSCR 需 1）在目标区内定位键起点，
+        # 容器段与键段分离重建。
+        _b107_targets = []
+        for _b107_ss, _b107_se in _b107_segments:
+            _b107_store = instrs[_b107_se]
+            _b107_need = 2 if _b107_store.opname == 'STORE_SUBSCR' else 1
+            _b107_split = None
+            _b107_i2 = _b107_se - 1
+            while _b107_i2 >= _b107_ss:
+                _b107_bin = instrs[_b107_i2]
+                _b107_eff = self._instruction_stack_effect(_b107_bin)
+                if _b107_eff is None:
+                    return None
+                _b107_need = (_b107_need
+                               - (_b107_eff if _b107_eff > 0 else 0)
+                               + (-_b107_eff if _b107_eff < 0 else 0))
+                if _b107_need <= 0:
+                    _b107_split = _b107_i2
+                    break
+                _b107_i2 -= 1
+            if _b107_split is None:
+                return None
+            _b107_region = instrs[_b107_split:_b107_se]
+            if _b107_store.opname == 'STORE_SUBSCR':
+                _b107_need2 = 1
+                _b107_idx_start = None
+                for _b107_i3 in range(len(_b107_region) - 1, -1, -1):
+                    _b107_eff = self._instruction_stack_effect(_b107_region[_b107_i3])
+                    if _b107_eff is None:
+                        return None
+                    _b107_need2 = (_b107_need2
+                                   - (_b107_eff if _b107_eff > 0 else 0)
+                                   + (-_b107_eff if _b107_eff < 0 else 0))
+                    if _b107_need2 <= 0:
+                        _b107_idx_start = _b107_i3
+                        break
+                if _b107_idx_start is None:
+                    return None
+                _b107_container = self.expr_reconstructor.reconstruct(_b107_region[:_b107_idx_start])
+                _b107_index = self.expr_reconstructor.reconstruct(_b107_region[_b107_idx_start:])
+                if _b107_container is None or _b107_index is None:
+                    return None
+                _b107_targets.append({
+                    'type': 'Subscript',
+                    'value': _b107_container,
+                    'slice': _b107_index,
+                    'ctx': 'Store',
+                })
+            else:
+                _b107_obj = self.expr_reconstructor.reconstruct(_b107_region)
+                if _b107_obj is None:
+                    return None
+                _b107_targets.append({
+                    'type': 'Attribute',
+                    'value': _b107_obj,
+                    'attr': _b107_store.argval if _b107_store.argval else 'attr_%d' % _b107_store.arg,
+                    'ctx': 'Store',
+                })
+        return {
+            'type': 'Assign',
+            'targets': _b107_targets,
+            'value': _b107_value,
+            'is_chain_assign': True,
+            'lineno': _b107_value_instrs[0].starts_line if _b107_value_instrs[0].starts_line else _b107_value.get('lineno'),
+        }
+
     def _build_multi_target_unpack(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
         """ 多目标解包重建: a, b = c = d, e 或 a, b = e, f = g, h。
 
@@ -57871,11 +58335,12 @@ AST 映射规则:
                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
         if not _mt_all:
             return None
-        # 查找 COPY 1 紧跟 UNPACK_SEQUENCE 的位置（多目标解包标志）
+        # 找 COPY 1 紧跟 UNPACK_SEQUENCE/UNPACK_EX 的位置（多目标链标志；
+        # [B107] 扩展 UNPACK_EX：``a, *b = c, *d = rhs`` 的星号解包链）。
         _mt_copy_idx = None
         for _mt_i, _mt_instr in enumerate(_mt_all):
             if _mt_instr.opname == 'COPY' and _mt_instr.arg == 1:
-                if _mt_i + 1 < len(_mt_all) and _mt_all[_mt_i + 1].opname == 'UNPACK_SEQUENCE':
+                if _mt_i + 1 < len(_mt_all) and _mt_all[_mt_i + 1].opname in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
                     _mt_copy_idx = _mt_i
                     break
         if _mt_copy_idx is None:
@@ -57910,6 +58375,46 @@ AST 映射规则:
                     _mt_targets.append({'type': 'Tuple', 'elts': _mt_elts, 'ctx': 'Store'})
                 else:
                     break
+            elif _mt_instr.opname == 'UNPACK_EX':
+                # [B107] 星号解包目标组：arg = before | (after << 8)（镜像
+                # _has_unpack 分支的 UNPACK_EX 消费协议）——before 个 Name、
+                # 1 个 Starred、after 个 Name，整体为一个 Tuple 目标。
+                _mt_arg = _mt_instr.argval
+                _mt_before = _mt_arg & 0xFF
+                _mt_after = (_mt_arg >> 8) & 0xFF
+                _mt_idx += 1
+                _mt_elts = []
+                for _ in range(_mt_before):
+                    if _mt_idx < len(_mt_all) and _mt_all[_mt_idx].opname in _mt_store_ops:
+                        _mt_elts.append({
+                            'type': 'Name',
+                            'id': _mt_all[_mt_idx].argval if _mt_all[_mt_idx].argval else f'var_{_mt_all[_mt_idx].arg}',
+                            'ctx': 'Store',
+                        })
+                        _mt_idx += 1
+                    else:
+                        break
+                if _mt_idx < len(_mt_all) and _mt_all[_mt_idx].opname in _mt_store_ops:
+                    _mt_elts.append({
+                        'type': 'Starred',
+                        'value': {'type': 'Name',
+                                  'id': _mt_all[_mt_idx].argval if _mt_all[_mt_idx].argval else f'var_{_mt_all[_mt_idx].arg}',
+                                  'ctx': 'Store'},
+                    })
+                    _mt_idx += 1
+                else:
+                    break
+                for _ in range(_mt_after):
+                    if _mt_idx < len(_mt_all) and _mt_all[_mt_idx].opname in _mt_store_ops:
+                        _mt_elts.append({
+                            'type': 'Name',
+                            'id': _mt_all[_mt_idx].argval if _mt_all[_mt_idx].argval else f'var_{_mt_all[_mt_idx].arg}',
+                            'ctx': 'Store',
+                        })
+                        _mt_idx += 1
+                    else:
+                        break
+                _mt_targets.append({'type': 'Tuple', 'elts': _mt_elts, 'ctx': 'Store'})
             elif _mt_instr.opname in _mt_store_ops:
                 _mt_targets.append({
                     'type': 'Name',
@@ -57921,10 +58426,19 @@ AST 映射规则:
                 break
         if len(_mt_targets) < 2:
             return None
-        # 标记 is_chain_assign=True 以触发链式赋值渲染
-        # （CodeGenerator 用 ' = ' 连接多目标，而非 ', ' 元组解包风格）。
-        return [{'type': 'Assign', 'targets': _mt_targets, 'value': _mt_value_expr,
-                 'is_chain_assign': True}]
+        _mt_result = [{'type': 'Assign', 'targets': _mt_targets, 'value': _mt_value_expr,
+                       'is_chain_assign': True}]
+        # [B107] 链后尾随语句归约（每块唯一归属）：多目标链只消费到末个
+        # 目标 STORE，其后的剩余指令（如 ``a, b = c, d = t; return a+b+c+d``
+        # 的 RETURN 段）是同块后继语句，交 _build_statements_from_instructions
+        # 按语句边界重建——否则整段蒸发（镜像 _has_unpack 分支 UNPACK_EX
+        # 路径的同名处理）。
+        _mt_remaining = _mt_all[_mt_idx:]
+        if _mt_remaining:
+            _mt_trailing = self._build_statements_from_instructions(_mt_remaining, block)
+            if _mt_trailing:
+                _mt_result.extend(_mt_trailing)
+        return _mt_result
 
     def _build_store_statement(self, instrs: List[Instruction],
                                 block: Optional[BasicBlock] = None) -> Optional[Dict[str, Any]]:

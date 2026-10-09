@@ -1,0 +1,89 @@
+{
+ "elapsed_sec": 6.5,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 4,
+  "success": 0
+ },
+ "files_total": 4,
+ "generated_at": "2026-10-08T18:52:42",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.Executor.check_before_trading: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc",
+   "pyc_sha": "e451dcfe45ec",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executorOK.py",
+   "source_sha": "7de580ce31e4",
+   "status": "failure",
+   "success_rate": 0.9,
+   "units_success": 9,
+   "units_total": 10
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.get_price: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
+   "pyc_sha": "7cd452b0017f",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_apiOK.py",
+   "source_sha": "4065f88a1a74",
+   "status": "failure",
+   "success_rate": 0.9473684210526315,
+   "units_success": 18,
+   "units_total": 19
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.TWHThreadController._target: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc",
+   "pyc_sha": "6eef0926a872",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlersOK.py",
+   "source_sha": "9ae24f68d60c",
+   "status": "failure",
+   "success_rate": 0.9666666666666667,
+   "units_success": 29,
+   "units_total": 30
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.get_kline_local: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+   "pyc_sha": "1bfaa1f6e75c",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handlerOK.py",
+   "source_sha": "857fe618c1fb",
+   "status": "failure",
+   "success_rate": 0.9873417721518988,
+   "units_success": 78,
+   "units_total": 79
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9710144927536232,
+ "units_success": 134,
+ "units_total": 138
+}

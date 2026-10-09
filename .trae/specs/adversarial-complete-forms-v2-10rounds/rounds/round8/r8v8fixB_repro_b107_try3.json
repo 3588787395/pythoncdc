@@ -1,0 +1,13 @@
+[
+ {
+  "name": "B107_main",
+  "pyc": "test_repros/round4/c4_07_multi_target.pyc",
+  "status": "failure",
+  "units_success": 12,
+  "units_total": 14,
+  "failures": [
+   "***<module>.e06_chain_target: Failure: Different bytecode",
+   "***<module>.e09_attr_chain: Failure: Different bytecode"
+  ]
+ }
+]

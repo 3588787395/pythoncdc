@@ -1,0 +1,26 @@
+[
+ {
+  "name": "B105_main",
+  "pyc": "test_repros/round4/c4_10_walrus.pyc",
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "B105_call",
+  "pyc": "test_repros/round5/r5v5_09_walrus_callsite.pyc",
+  "status": "success",
+  "units_success": 12,
+  "units_total": 12,
+  "failures": []
+ },
+ {
+  "name": "B104_main",
+  "pyc": "test_repros/round4/c4_09_chained_compare.pyc",
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ }
+]

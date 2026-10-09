@@ -4506,9 +4506,57 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
                             if self._is_chained_compare_header(_walk):
                                 _cc_info = self._detect_chained_compare_pattern(_walk)
                                 if _cc_info and _cc_info.get('extra_chain_blocks'):
-                                    _chain_head = _walk
-                                    _chain_extra = list(_cc_info['extra_chain_blocks'])
-                                    _chain_ops = list(_cc_info['compare_ops'])
+                                    # [B104] while 条件链回溯续接：链式比较的
+                                    # **中间段**同样携带 COPY(2)+COMPARE_OP 指令对
+                                    # （每段为下一段复制中间操作数），上方回溯在首个
+                                    # 命中段即停——3+ 元链（如 ``while 0 < x < n
+                                    # < 100:``）的真链头（首段）被漏掉，链头块未被
+                                    # 循环唯一归属（原则 2 破坏：condition_block 落
+                                    # 在第二段、首段操作数丢失），被下游抢占为重叠
+                                    # 区域、循环折叠为 if。协议续接判据（I.4 白名单：
+                                    # 块末 opcode + 跳转目标同一性 + 后继/前驱集合）：
+                                    # 前驱 P 以 FORWARD 条件/短路跳转收尾、P 的跳转
+                                    # 目标 == 当前段的短路跳出目标（共享清理块）、
+                                    # 且当前段 ∈ P 的后继集（fall-through 续接）⇒ P
+                                    # 是链的前一段；逐段回溯至真链头（其前驱不满足
+                                    # 协议续接）。外层语句前缀（如 ``if q < 1:`` 落
+                                    # 入链头块）的跳转目标指向自身合并块而非链清理块，
+                                    # 不满足共享目标判据，被显式排除（C3 封闭）。
+                                    while True:
+                                        _wl_last = _walk.get_last_instruction()
+                                        if (_wl_last is None
+                                                or _wl_last.argval is None
+                                                or _wl_last.opname not in (
+                                                    FORWARD_CONDITIONAL_JUMP_OPS
+                                                    | SHORT_CIRCUIT_JUMP_OPS)):
+                                            break
+                                        _wl_jt = self.cfg.get_block_by_offset(_wl_last.argval)
+                                        _cont_pred = None
+                                        for _cp in _walk.predecessors:
+                                            if _cp in body or _cp in _visited_walk:
+                                                continue
+                                            _cp_last = _cp.get_last_instruction()
+                                            if (_cp_last is None
+                                                    or _cp_last.argval is None
+                                                    or _cp_last.opname not in (
+                                                        FORWARD_CONDITIONAL_JUMP_OPS
+                                                        | SHORT_CIRCUIT_JUMP_OPS)):
+                                                continue
+                                            if _walk not in _cp.successors:
+                                                continue
+                                            _cp_jt = self.cfg.get_block_by_offset(_cp_last.argval)
+                                            if _cp_jt is not None and _cp_jt is _wl_jt:
+                                                _cont_pred = _cp
+                                                break
+                                        if _cont_pred is None:
+                                            break
+                                        _walk = _cont_pred
+                                        _visited_walk.add(_walk)
+                                    _cc_info = self._detect_chained_compare_pattern(_walk)
+                                    if _cc_info and _cc_info.get('extra_chain_blocks'):
+                                        _chain_head = _walk
+                                        _chain_extra = list(_cc_info['extra_chain_blocks'])
+                                        _chain_ops = list(_cc_info['compare_ops'])
                                     break
                         if _chain_head is not None:
                             condition_block = _chain_head
@@ -17838,10 +17886,14 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         单比较运算，交由后续 Conditional 识别。header 必须有且仅有 2 个
         conditional_successors；否则跳过。fallthrough 链追踪在以下情况终止：
         后继 < 2、已被访问、不含 COMPARE_OP、或存在后向边（避免侵入循环结构）。
-        block_to_region 守卫：起始即把 loop/try/with/match/assert 的所有块合入
-        claimed 集合，已被 Phase 1 区域占用的块直接跳过（每块唯一归属）。构造
-        成功后把 region.blocks 合入 claimed，保证后续识别不会再分配这些块
-        （先到先得，CHAINED_COMPARE > BOOLOP > TERNARY > CONDITIONAL）。
+        block_to_region 守卫（[B104] C3 守卫收窄后口径）：Phase 1 宿主区域仅其
+        **结构边界块**（protected：while 全块 / for 结构边界 / try 全块 / match
+        全块 / assert 全块 / with cleanup+exception+entry）被跳过；宿主普通体块
+        放行参与链式比较归约（for 体 / with 体嵌套链），由本方法先于
+        BOOLOP/CONDITIONAL 认领（先到先得，CHAINED_COMPARE > BOOLOP >
+        TERNARY > CONDITIONAL）。构造成功后把 region.blocks 合入 claimed
+        （动态认领集），保证本方法后续遍历与下游识别不会再分配这些块（每块
+        唯一归属）。
 
         **嵌套处理**
         本方法构造的 IfRegion 通过 chained_compare_blocks / chained_compare_ops
@@ -17878,21 +17930,77 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         短路求值拆分）。本方法遵循区域归约算法 4 核心原则: 自底向上归约 / 每块
         唯一归属 / 嵌套即抽象节点 / 父引用子入口。
         C 条款：C1——判据只来自本层块对象结构事实（COPY(arg=2)+COMPARE_OP 指令对、
-        fallthrough 后继、conditional_successors）；C2——嵌套区域经 add_child/entry
-        抽象节点被本 IfRegion 消费，父区域不感知 chained_compare_blocks 内部结构；
-        C3——须参考非局部信息：候选块若已被 Phase 1 区域（loop/try/with/match/
-        assert）占用，则由 claimed 集合（取自 block_to_region）显式跳过；链追踪以
+        fallthrough 后继、conditional_successors、Phase 1 区域成员关系）；C2——嵌套
+        区域经 add_child/entry 抽象节点被本 IfRegion 消费，父区域不感知
+        chained_compare_blocks 内部结构；C3——须参考非局部信息：Phase 1 宿主区域
+        的结构边界块由 protected 集合（区域成员关系 + 块身份，[B104] 收窄面）显式
+        跳过，本方法自建区域块由 claimed 动态认领集显式跳过；链追踪以
         「存在后向边」终止，避免侵入循环结构。
         """
+        # [B104] 动态认领集与 Phase 1 结构保护集分离：claimed 仅承载本方法
+        # 新建链式比较区域的块（防止链中段被再次作为链头重复建区，每块唯一
+        # 归属）；Phase 1 宿主块的跳过职责由下方 protected（结构边界块收窄
+        # 面）承担——原实现把 Phase 1 区域全部块并入 claimed 整体跳过，使
+        # 嵌套在宿主体内的链式比较（for 体 ``if 0 < x < 10 < x*2:``、with 体
+        # ``return a < b < c < len(f.read())``）永得不到链式比较归约，下游
+        # BoolOp/Conditional 以半链 + 占位符形态误认领（``0 < x and 10 < True``
+        # / ``return None``），宿主相关 = 嵌套无感破口（C2：协议块被语句
+        # 路径接管）。修复 = 封闭守卫恢复无感：跳过面收窄为「结构边界块」
+        # （protected），普通体块放行——与 _identify_boolop_regions 的嵌套
+        # claimed 放宽（Phase 32/33/34）同构。保护集构成（全部 I.4 白名单：
+        # 区域成员关系 + 块身份）：
+        #   - WHILE_LOOP：全部块。while 体含条件回边重检副本（COPY(2)+
+        #     COMPARE_OP 指令对与真链同形），逐块无法与真链区分，整体保护；
+        #     while 条件位链式比较由 _identify_loop_regions 的 pre-loop 链
+        #     回溯认领（condition_block + condition_chain_blocks），非本方法
+        #     职责（e08_while ``while 0 < x < n < 100:`` 判据族）。
+        #   - FOR/ASYNC_FOR：header/condition/back_edge/condition_chain/else/
+        #     init 结构边界块保护；体块（纯用户代码）放行。
+        #   - TRY：全部块保护（本轮不动 try 宿主面——elif 位已有 R23-N7
+        #     生成层兜底在案，保持逐位不变）。
+        #   - MATCH：全部块保护（case 守卫块与模式块由 MatchRegion 专用
+        #     机制消费）；ASSERT：全部块保护（AssertRegion 自带链式比较
+        #     归约：chained_compare_ops + _build_assert_chained_compare）。
+        #   - WITH：cleanup_blocks/exception_blocks（with 退出协议与异常边）
+        #     与 entry 保护；with_blocks（体）放行。
+        # [C1] 只读本方法形参区域对象的成员关系（区域对象即 L(A) 输入）；
+        # [C2] 放行的体块经 _build_chained_compare_region 归约为单一
+        #      Compare 抽象节点，宿主经 entry 引用，不感知链内部；
+        # [C3] 结构边界块显式保护 = 封闭守卫；未命中保护集的宿主块维持
+        #      放行，命中时逐位保持旧行为。
         claimed = set()
-        for regions in [loop_regions, try_regions, with_regions, match_regions, assert_regions]:
-            for region in regions:
-                claimed.update(region.blocks)
+        protected = set()
+        for region in loop_regions:
+            if getattr(region, 'region_type', None) == RegionType.WHILE_LOOP:
+                protected.update(region.blocks or set())
+            else:
+                for attr in ('header_block', 'condition_block', 'back_edge_block'):
+                    b = getattr(region, attr, None)
+                    if b is not None:
+                        protected.add(b)
+                protected.update(getattr(region, 'condition_chain_blocks', None) or [])
+                protected.update(region.else_blocks or [])
+                protected.update(getattr(region, 'init_blocks', None) or [])
+        for region in try_regions:
+            protected.update(region.blocks or set())
+        for region in match_regions:
+            protected.update(region.blocks or set())
+        for region in assert_regions:
+            protected.update(region.blocks or set())
+        for region in with_regions:
+            protected.update(getattr(region, 'cleanup_blocks', None) or [])
+            protected.update(getattr(region, 'exception_blocks', None) or [])
+            if getattr(region, 'entry', None) is not None:
+                protected.add(region.entry)
 
         chained_compare_regions = []
         blocks_in_order = self.cfg.get_blocks_in_order()
         for block in blocks_in_order:
+            # 本方法自建区域的动态认领（链中段防重复建区）：
+            # 无条件跳过（每块唯一归属）。
             if block in claimed:
+                continue
+            if block in protected:
                 continue
             if not self._is_chained_compare_header(block):
                 continue
@@ -18603,6 +18711,26 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                     and block_region.entry is block
                     and getattr(block_region, 'chained_compare_ops', None)):
                 continue
+            # [B104] 同上条款的宿主嵌套形态：块已被链式比较 IfRegion 认领为
+            # entry，但 block_to_region 登记的是 Phase 1 宿主（for 体 / with 体
+            # 块先到先得）——block_to_region 查询命不中链式比较 IfRegion。按
+            # 「嵌套即抽象节点」（原则 3）+「每块唯一归属」（原则 2）以
+            # self.regions 的 entry 身份直接查找（与 _detect_boolop_
+            # conditional_chain 的链式比较原子操作数查找同构，不依赖
+            # block_to_region 优先级）：命中则该块的 if 语义已由链式比较
+            # IfRegion 承载，跳过独立 IfRegion 创建。判据只读区域 entry
+            # 与 chained_compare_ops/blocks 结构字段（I.4 白名单）。
+            _b104_cc_entry_owner = None
+            for _b104_r in self.regions:
+                if (isinstance(_b104_r, IfRegion)
+                        and _b104_r.entry is block
+                        and getattr(_b104_r, 'chained_compare_ops', None)
+                        and len(_b104_r.chained_compare_ops) >= 2
+                        and getattr(_b104_r, 'chained_compare_blocks', None)):
+                    _b104_cc_entry_owner = _b104_r
+                    break
+            if _b104_cc_entry_owner is not None:
+                continue
 
             if any(instr.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH', 'PREP_RERAISE_STAR') for instr in block.instructions):
                 continue
@@ -18872,6 +19000,42 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                             continue
                     else:
                         continue
+
+            # [B99 残] 值位分组 BoolOp 链成员整链认领：块是某 BoolOpRegion 的
+            # 非入口、非 merge 成员（值位 or/and 前缀段，如 ``return (a or b)
+            # and c`` 的 ``a; POP_JUMP_IF_TRUE→X`` 段）⇒ 该块是值链的组成
+            # 部分，其值消费链终于 RETURN/短路跳转（块末 opcode 序）——禁止
+            # IfRegion 语句路径抢占（C2：值链被语句路径接管 → return 蒸发为
+            # ``if …: pass``）。上方 merge 三例外均为 merge 块专属形态
+            # （COMPARE/语句边界 STORE/hosting-next-if），链成员块不适用；
+            # 条件上下文链成员经既有 isinstance 路径同判跳过。判据只读
+            # BoolOpRegion.blocks 成员关系（I.4 白名单：区域成员关系）。
+            # 同条款·入口位：值上下文（is_condition_context=False）BoolOpRegion
+            # 的 entry 以 FORWARD 条件跳转收尾且跳转目标 ∈ 本区域块集（值位
+            # or/and 前缀段签名——用户 if 的分支目标必在表达式区域之外）⇒
+            # 该入口是值链首段，非用户 if 条件；条件上下文入口（``if a and
+            # b:``）不命中（is_condition_context=True），维持既有 IfRegion
+            # 创建流（block 经 _resolve_boolop_condition_region 组合为条件）。
+            _b99_skip_block = False
+            for _b99_br in self._filter_regions(boolop_regions or [], BoolOpRegion):
+                if block not in _b99_br.blocks:
+                    continue
+                if (_b99_br.entry is not block
+                        and _b99_br.merge_block is not block):
+                    if _owning_boolop is None:
+                        _b99_skip_block = True
+                    break
+                if (_b99_br.entry is block
+                        and not getattr(_b99_br, 'is_condition_context', True)
+                        and last_instr is not None
+                        and last_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                        and last_instr.argval is not None):
+                    _b99_jt = self.cfg.get_block_by_offset(last_instr.argval)
+                    if _b99_jt is not None and _b99_jt in _b99_br.blocks:
+                        _b99_skip_block = True
+                    break
+            if _b99_skip_block:
+                continue
 
             boolop_region = self._resolve_boolop_condition_region(block)
 
@@ -26184,6 +26348,21 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 loop_condition_blocks.add(region.condition_block)
                 for cb in getattr(region, 'condition_chain_blocks', []):
                     loop_condition_blocks.add(cb)
+        # [B104] while 链式比较条件（is_chained_compare_cond）的成员块由
+        # LoopRegion 自身的条件重建机制唯一消费（condition_block +
+        # condition_chain_blocks + metadata chained_compare_ops → 生成器
+        # _loop_generate_while 的链式比较分支）。链式比较协议段共享同一短路
+        # 清理跳出目标（COPY(2)+COMPARE_OP 链段与 'and' 短路链同形），若被
+        # 本方法误装配为 BoolOp 会以「条件子区域」身份叠加到循环条件上
+        #（``while 0 < x < n < 100 and n < 100``），违反每块唯一归属。判据
+        # 只读区域 metadata 标志与成员关系（I.4 白名单：区域成员关系）。
+        loop_cc_cond_blocks = set()
+        for region in self._filter_regions(existing_regions, LoopRegion):
+            if (getattr(region, 'metadata', {}) or {}).get('is_chained_compare_cond'):
+                if region.condition_block:
+                    loop_cc_cond_blocks.add(region.condition_block)
+                for _cb in getattr(region, 'condition_chain_blocks', []) or []:
+                    loop_cc_cond_blocks.add(_cb)
         match_case_body_blocks = set()
         match_case_entry_offsets = set()
         for region in self._filter_regions(existing_regions, MatchRegion):
@@ -26240,6 +26419,10 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 continue
             # [Round4-04] 值上下文链式比较 IfRegion.entry 不应被识别为 BoolOp 链起点
             if block in value_chain_cmp_if_entries:
+                continue
+            # [B104] while 链式比较条件成员块归 LoopRegion 条件重建机制，
+            # 不作 BoolOp 链起点（见上方 loop_cc_cond_blocks 构建处注释）。
+            if block in loop_cc_cond_blocks:
                 continue
             # 区域归约算法 [每块唯一归属]：guard 块（case X if cond:）的条件
             # 跳转目标指向下一个 case_block。这些块含 COMPARE_OP +
@@ -28865,6 +29048,12 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                                  _b115_lr.header_block):
                     if _b115_gb is not None:
                         _b115_loop_guard_map[_b115_gb] = _b115_lr
+                # [B104] while 链式比较条件的后续段（condition_chain_blocks）
+                # 与 entry/condition/header 同为循环守卫块——从其它块发起的
+                # and/or 链 walk 不得把它们吸收为非首成员（区域成员关系）。
+                for _b115_cb in (getattr(_b115_lr, 'condition_chain_blocks', None) or []):
+                    if _b115_cb is not None and _b115_cb not in _b115_loop_guard_map:
+                        _b115_loop_guard_map[_b115_cb] = _b115_lr
         while current and current.start_offset not in visited:
             visited.add(current.start_offset)
             last = current.get_last_instruction()
@@ -30510,10 +30699,60 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
 
     def _detect_boolop_short_circuit_chain(self, start_block: BasicBlock, skip_first_claimed_check: bool = False) -> Optional[List[Tuple[BasicBlock, str]]]:
         chain: List[Tuple[BasicBlock, str]] = []
+        # [B99 残] 值位分组 BoolOp 前缀段反向吸收：``return (a or b) and c``
+        # 的 CPython 值位 lowering 把 or 组编为 ``a; POP_JUMP_FORWARD_IF_TRUE
+        # →X``（真值保留跳过 b 段直达 X）、and 段编为 ``b; JUMP_IF_FALSE_
+        # OR_POP``（X 即 b 段的 fall-through 后继）。短路链起点（b 段块）
+        # 的前驱 P 以 FORWARD 条件跳转收尾、P 的跳转目标 == 起点块的
+        # fall-through 后继 ⇒ P 是同一值链的前缀段——整体认领为链首
+        # （判据 = 块末 opcode + 跳转目标/后继集合，I.4 白名单），防止
+        # 前缀段被 IfRegion 语句路径抢占（值链 RETURN 蒸发为 ``if …:
+        # pass``，C2 破坏）。逐前驱回溯（多操作数前缀组同目标递归吸收），
+        # 无命中时行为逐位不变（C3）。
+        _b99_prefix_visited = {start_block.start_offset}
+        _b99_prefixes: List[Tuple[BasicBlock, str]] = []
+        _b99_anchor_last = start_block.get_last_instruction()
+        _b99_ft = None
+        if _b99_anchor_last is not None and _b99_anchor_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+            for _b99_s in start_block.conditional_successors:
+                if _b99_s.start_offset != _b99_anchor_last.argval:
+                    _b99_ft = _b99_s
+                    break
+        if _b99_ft is not None:
+            _b99_cur = start_block
+            while True:
+                _b99_pred_hit = None
+                for _b99_p in _b99_cur.predecessors:
+                    if _b99_p.start_offset in _b99_prefix_visited:
+                        continue
+                    _b99_pl = _b99_p.get_last_instruction()
+                    if (_b99_pl is None
+                            or _b99_pl.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                            or _b99_pl.argval is None):
+                        continue
+                    if self.cfg.get_block_by_offset(_b99_pl.argval) is not _b99_ft:
+                        continue
+                    _b99_pred_hit = _b99_p
+                    break
+                if _b99_pred_hit is None:
+                    break
+                _b99_p_last = _b99_pred_hit.get_last_instruction()
+                _b99_prefixes.append((_b99_pred_hit,
+                                      'and' if 'FALSE' in _b99_p_last.opname else 'or'))
+                _b99_prefix_visited.add(_b99_pred_hit.start_offset)
+                _b99_cur = _b99_pred_hit
+        if _b99_prefixes:
+            _b99_prefixes.reverse()
         current = start_block
         visited = set()
         _is_first_iter = True
         while current and current.start_offset not in visited:
+            if current is start_block and _b99_prefixes:
+                visited.add(current.start_offset)
+                for _b99_pb, _b99_po in _b99_prefixes:
+                    if _b99_pb.start_offset not in visited:
+                        chain.append((_b99_pb, _b99_po))
+                        visited.add(_b99_pb.start_offset)
             visited.add(current.start_offset)
             last = current.get_last_instruction()
             if not last or last.opname not in SHORT_CIRCUIT_JUMP_OPS:

@@ -1,0 +1,328 @@
+[
+ {
+  "name": "B108_main",
+  "pyc": "test_repros/round4/c4_06_try_finally_only.pyc",
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "name": "B99_min",
+  "pyc": "test_repros/round3/_scratch_b99/b99min.pyc",
+  "status": "success",
+  "units_success": 9,
+  "units_total": 9,
+  "failures": []
+ },
+ {
+  "name": "B104_main",
+  "pyc": "test_repros/round4/c4_09_chained_compare.pyc",
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "name": "B105_main",
+  "pyc": "test_repros/round4/c4_10_walrus.pyc",
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "B105_call",
+  "pyc": "test_repros/round5/r5v5_09_walrus_callsite.pyc",
+  "status": "success",
+  "units_success": 12,
+  "units_total": 12,
+  "failures": []
+ },
+ {
+  "name": "B107_main",
+  "pyc": "test_repros/round4/c4_07_multi_target.pyc",
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "name": "B111_main",
+  "pyc": "test_repros/round4/c4_19_decorator_args.pyc",
+  "status": "success",
+  "units_success": 28,
+  "units_total": 28,
+  "failures": []
+ },
+ {
+  "name": "B111_cross",
+  "pyc": "test_repros/round5/r5v5_12_decorator_cross.pyc",
+  "status": "success",
+  "units_success": 22,
+  "units_total": 22,
+  "failures": []
+ },
+ {
+  "name": "B98_matrix",
+  "pyc": "test_repros/round3/e01_g1_b98_matrix.pyc",
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 15,
+  "failures": [
+   "***<module>.f_or_in_and_deep: Failure: Different control flow",
+   "***<module>.f_or_in_and_pair_deep: Failure: Different control flow",
+   "***<module>.f_b98_ternary_cross: Failure: Different control flow",
+   "***<module>.f_b98_compare_cross: Failure: Different control flow",
+   "***<module>.f_b98_walrus_cross: Failure: Different control flow",
+   "***<module>.f_b98_call_arg_pos: Failure: Different control flow",
+   "***<module>.f_b98_or_tail_and_group: Failure: Different control flow",
+   "***<module>.f_b98_not_wrapped: Failure: Different control flow",
+   "***<module>.f_b98_and_tail_or_group: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B98_hosts",
+  "pyc": "test_repros/round3/e02_g1_b98_hosts.pyc",
+  "status": "failure",
+  "units_success": 13,
+  "units_total": 18,
+  "failures": [
+   "***<module>.CB98.m_handler: Failure: Different control flow",
+   "***<module>.f_comp_cond_host.<listcomp>: Failure: Different control flow",
+   "***<module>.f_genexp_cond_host.<genexpr>: Failure: Different control flow",
+   "***<module>.f_dictcomp_value_host.<dictcomp>: Failure: Different control flow",
+   "***<module>.f_with_body_host: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B98_resid",
+  "pyc": "test_repros/round3/_scratch_b98/resid.pyc",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 5,
+  "failures": [
+   "***<module>.r_d1: Failure: Different control flow",
+   "***<module>.r_e3: Failure: Different control flow",
+   "***<module>.r_g2: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B78_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 4,
+  "failures": [
+   "***<module>.v_while_cond_nest: Failure: Different control flow",
+   "***<module>.v_if_cond_nest: Failure: Different control flow",
+   "***<module>.n_for_body_nest: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B79_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc",
+  "status": "failure",
+  "units_success": 3,
+  "units_total": 4,
+  "failures": [
+   "***<module>.v_nest_fin_continue: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B80_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>.v_imp_cond_fin: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B82_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 3,
+  "failures": [
+   "***<module>.v_swap_arm_returns: Failure: Different bytecode",
+   "***<module>.n_fin_noseg: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B83_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rvC/rvC_v2.pyc",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>.drain: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B77_face",
+  "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 8,
+  "failures": [
+   "***<module>.t_host_match_case: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B81_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc",
+  "status": "failure",
+  "units_success": 3,
+  "units_total": 4,
+  "failures": [
+   "***<module>.n_true_guard: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B103_main",
+  "pyc": "test_repros/round4/c4_04_match_patterns.pyc",
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 13,
+  "failures": [
+   "***<module>.e04_mapping: Failure: Different control flow",
+   "***<module>.e05_class_kw: Failure: Different control flow",
+   "***<module>.e06_or_guard: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B103_guard",
+  "pyc": "test_repros/round4/r4v4r_b103_guard.pyc",
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 8,
+  "failures": [
+   "***<module>.GT.m: Failure: Different control flow",
+   "***<module>.none_guard: Failure: Different control flow",
+   "***<module>.nested_guard: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B102_main",
+  "pyc": "test_repros/round4/c4_03_except_star.pyc",
+  "status": "failure",
+  "units_success": 12,
+  "units_total": 13,
+  "failures": [
+   "***<module>.e04_with: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B102_except",
+  "pyc": "test_repros/round4/r4v4r_b102_except.pyc",
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 8,
+  "failures": [
+   "***<module>.normal_finally: Failure: Different bytecode",
+   "***<module>.star_else_finally: Failure: Different bytecode",
+   "***<module>.nested_star: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "B102_deep",
+  "pyc": "test_repros/round5/r5v5_14_except_star_deep.pyc",
+  "status": "failure",
+  "units_success": 9,
+  "units_total": 10,
+  "failures": [
+   "***<module>.es_with: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B113_min",
+  "pyc": "test_repros/round4/_scratch_m4/comp2.pyc",
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 9,
+  "failures": [
+   "***<module>.e1.<listcomp>: Failure: Different bytecode",
+   "***<module>.e2: Failure: Different bytecode",
+   "***<module>.e2.<listcomp>: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "B113_host",
+  "pyc": "test_repros/round4/c4_05_multi_with.pyc",
+  "status": "failure",
+  "units_success": 12,
+  "units_total": 14,
+  "failures": [
+   "***<module>.e09_comp_host: Failure: Different bytecode",
+   "***<module>.e09_comp_host.<listcomp>: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "B96_async",
+  "pyc": "test_repros/round3/e09b_g6_async_comps.pyc",
+  "status": "failure",
+  "units_success": 11,
+  "units_total": 13,
+  "failures": [
+   "***<module>.a_three: Failure: Different control flow",
+   "***<module>.a_four.<genexpr>: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B112_async",
+  "pyc": "test_repros/round4/c4_20_async_five.pyc",
+  "status": "failure",
+  "units_success": 21,
+  "units_total": 24,
+  "failures": [
+   "***<module>.e05_async_compound.go: Failure: Different control flow",
+   "***<module>.e07_async_closure.outer.inner: Failure: Different control flow",
+   "***<module>.e07_async_closure.outer.inner.<listcomp>: Failure: Missing bytecode"
+  ]
+ },
+ {
+  "name": "B106_main",
+  "pyc": "test_repros/round4/c4_12_star_args.pyc",
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 13,
+  "failures": [
+   "***<module>.e02_shallow: Failure: Different bytecode",
+   "***<module>.e03_mixed: Failure: Different bytecode",
+   "***<module>.e04_deep: Failure: Different bytecode",
+   "***<module>.e06_nested.inner: Failure: Different bytecode",
+   "***<module>.CSA.m: Failure: Different bytecode",
+   "***<module>.e07_match_host: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "B106_call",
+  "pyc": "test_repros/round5/r5v5_07_starargs_callsite.pyc",
+  "status": "failure",
+  "units_success": 4,
+  "units_total": 13,
+  "failures": [
+   "***<module>.st_nontail: Failure: Different bytecode",
+   "***<module>.st_mixed: Failure: Different bytecode",
+   "***<module>.st_multistar: Failure: Different bytecode",
+   "***<module>.st_deep: Failure: Different bytecode",
+   "***<module>.CSt.m: Failure: Different bytecode",
+   "***<module>.st_close.inner: Failure: Different bytecode",
+   "***<module>.st_match: Failure: Different bytecode",
+   "***<module>.st_comp: Failure: Different bytecode",
+   "***<module>.st_comp.<listcomp>: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "B106_lam",
+  "pyc": "test_repros/round5/r5v5_15_lambda_combo.pyc",
+  "status": "failure",
+  "units_success": 26,
+  "units_total": 27,
+  "failures": [
+   "***<module>.lam_star.<lambda>: Failure: Different bytecode"
+  ]
+ }
+]

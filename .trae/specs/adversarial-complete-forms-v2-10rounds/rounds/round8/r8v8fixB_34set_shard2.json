@@ -1,0 +1,90 @@
+{
+ "elapsed_sec": 6.2,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 4,
+  "success": 0
+ },
+ "files_total": 4,
+ "generated_at": "2026-10-08T18:50:46",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.change_his_to_forward: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc",
+   "pyc_sha": "5ed0caa3576f",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/calexrights_funcOK.py",
+   "source_sha": "521bd2bb8bfe",
+   "status": "failure",
+   "success_rate": 0.875,
+   "units_success": 7,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.RealtimeEventSource.clock_worker: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+   "pyc_sha": "01055eae05c2",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py",
+   "source_sha": "9df8134559ea",
+   "status": "failure",
+   "success_rate": 0.9230769230769231,
+   "units_success": 12,
+   "units_total": 13
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.PluginRiskCalculation._on_publish_after_trading_end: Failure: Different control flow",
+    "***<module>.PluginRiskCalculation._save_testds_to_csv: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+   "pyc_sha": "5b622e087a0a",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__OK.py",
+   "source_sha": "972d49e7faba",
+   "status": "failure",
+   "success_rate": 0.9534883720930233,
+   "units_success": 41,
+   "units_total": 43
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.StockPosition.make_trade: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc",
+   "pyc_sha": "4cc933d2140d",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_positionOK.py",
+   "source_sha": "43753651045d",
+   "status": "failure",
+   "success_rate": 0.972972972972973,
+   "units_success": 36,
+   "units_total": 37
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9504950495049505,
+ "units_success": 96,
+ "units_total": 101
+}

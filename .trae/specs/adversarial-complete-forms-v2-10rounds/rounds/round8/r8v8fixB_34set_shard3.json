@@ -1,0 +1,90 @@
+{
+ "elapsed_sec": 5.4,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 4,
+  "success": 0
+ },
+ "files_total": 4,
+ "generated_at": "2026-10-08T18:51:09",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/calexrights_func.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.change_his_to_forward: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/calexrights_func.pyc",
+   "pyc_sha": "f06e2bb323b5",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/calexrights_funcOK.py",
+   "source_sha": "0d04eb54479d",
+   "status": "failure",
+   "success_rate": 0.875,
+   "units_success": 7,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.TradingDatesMixin.trading_dates_reload: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
+   "pyc_sha": "c34a6044c924",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixinOK.py",
+   "source_sha": "7bed0c40b6f2",
+   "status": "failure",
+   "success_rate": 0.9285714285714286,
+   "units_success": 13,
+   "units_total": 14
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.RealQuoteData.get_real_minute_kline: Failure: Different control flow",
+    "***<module>.RealQuoteData.get_tick_direction: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+   "pyc_sha": "461e3bc834bd",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quoteOK.py",
+   "source_sha": "5635e538e54b",
+   "status": "failure",
+   "success_rate": 0.9555555555555556,
+   "units_success": 43,
+   "units_total": 45
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.SafeFileHandler.check_baseFilename: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc",
+   "pyc_sha": "d14295469ce8",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/fly/loggerOK.py",
+   "source_sha": "1c85c580ecfd",
+   "status": "failure",
+   "success_rate": 0.984375,
+   "units_success": 63,
+   "units_total": 64
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9618320610687023,
+ "units_success": 126,
+ "units_total": 131
+}

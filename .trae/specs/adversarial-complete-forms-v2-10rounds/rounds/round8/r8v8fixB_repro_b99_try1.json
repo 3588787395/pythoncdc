@@ -1,0 +1,12 @@
+[
+ {
+  "name": "B99_min",
+  "pyc": "test_repros/round3/_scratch_b99/b99min.pyc",
+  "status": "failure",
+  "units_success": 8,
+  "units_total": 9,
+  "failures": [
+   "***<module>.for_grouped: Failure: Different control flow"
+  ]
+ }
+]

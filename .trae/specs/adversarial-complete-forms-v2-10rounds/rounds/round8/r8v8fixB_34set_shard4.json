@@ -1,0 +1,94 @@
+{
+ "elapsed_sec": 7.7,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 4,
+  "success": 0
+ },
+ "files_total": 4,
+ "generated_at": "2026-10-08T18:51:24",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc"
+  ],
+  "success": []
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.trade_operation: Failure: Different control flow",
+    "***<module>.kill_trade_process: Failure: Different control flow",
+    "***<module>.get_trade_status: Failure: Different control flow",
+    "***<module>.query_trade_strategy_info: Failure: Different control flow",
+    "***<module>.query_strategy_id: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "pyc_sha": "5419f2a32c80",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utilsOK.py",
+   "source_sha": "0bd56da795ed",
+   "status": "failure",
+   "success_rate": 0.8780487804878049,
+   "units_success": 36,
+   "units_total": 41
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.FutureInfoCache.check_user: Failure: Different control flow",
+    "***<module>.FutureInfoCache.info_conbine: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
+   "pyc_sha": "882d3ccc0d31",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_infoOK.py",
+   "source_sha": "b12a41510d5c",
+   "status": "failure",
+   "success_rate": 0.9310344827586207,
+   "units_success": 27,
+   "units_total": 29
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.Strategy.tick_worker_thread: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+   "pyc_sha": "8c19ea3751b0",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategyOK.py",
+   "source_sha": "a387e7e0f434",
+   "status": "failure",
+   "success_rate": 0.9629629629629629,
+   "units_success": 26,
+   "units_total": 27
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.ProcessWrite.modify_batcktes_info: Failure: Different control flow"
+   ],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
+   "pyc_sha": "883f61a64cb2",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytoolsOK.py",
+   "source_sha": "592c6eeb0932",
+   "status": "failure",
+   "success_rate": 0.9848484848484849,
+   "units_success": 65,
+   "units_total": 66
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9447852760736196,
+ "units_success": 154,
+ "units_total": 163
+}

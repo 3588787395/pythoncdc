@@ -1,0 +1,21 @@
+[
+ {
+  "name": "B105_main",
+  "pyc": "test_repros/round4/c4_10_walrus.pyc",
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "B105_call",
+  "pyc": "test_repros/round5/r5v5_09_walrus_callsite.pyc",
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 12,
+  "failures": [
+   "***<module>.w_nested_call: Failure: Different bytecode",
+   "***<module>.w_deep: Failure: Different bytecode"
+  ]
+ }
+]
