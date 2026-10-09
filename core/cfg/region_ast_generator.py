@@ -5358,6 +5358,9 @@ AST 映射规则:
             else:
                 result = self._loop_generate_while(region, skip_store_targets=skip_store_targets)
 
+            # [r11-b159-fact] 本收尾扫对循环区域的剩余成员块**只登记不发射**（下面的 generated_blocks.add(block)）。实测后果两处，读数均由自证惰性的追踪给出（打印前后产物逐字节相同）：
+            # ① IQCommon/logger/handlers :: TWHThreadController._target 的 @404（LOAD_CONST None; RETURN_VALUE，唯一前驱是回边块 @390）在此被登记后，父臂 _process_if_blocks 便按「已在标记集即 continue」跳过，单元 197 指令 / orig 199。该块属**隐式尾声**族：_generate_block_statements 被直接请求时返回空列表（分支探针实测：放行分支确实执行，产物 9093→9147 出现 3 处注入点），所以改登记/改顺序/改归属都动不了它。
+            # ② 同一 code object 内可能出现**两个 entry 相同的 LoopRegion**（handlers 的 @2、realtime_event_source 外层循环的 @5598 都在 self.regions 里重复出现）⇒ 凡用 id(region) 判「该区域是否已生成」的修法在这两处都会失真。
             for block in region.blocks:
                 if block not in region.else_blocks:
                     if exclude_blocks is None or block not in exclude_blocks:
@@ -25091,6 +25094,8 @@ AST 映射规则:
             # 前置（保持旧行为）。
             if anchor_stmts and block.start_offset in anchor_stmts:
                 stmts.extend(anchor_stmts.pop(block.start_offset))
+            # [r11-b159-fact] 这道闸会吞掉**父臂自己认领的语句区域入口**，实测：realtime_event_source :: <module>.clock_worker 的 @7972（`if persist_flag is not False:`，110 指令语句体）既在父臂块表里（_process_if_blocks branch=then reg_entry@7582 blocks=[…,7706,7708,7972,…]）又是 IfRegion@7972 的 entry， yet `_generate_if entry@7972` 全 run 从未出现。
+            # 但「按代理判未生成就重派发」已被四条实测形否掉（镜像字节 3c3778f145ba64a3 / 3691de831e42dafd / e79a458c31561c38 / 6c0ac1b80ea5e9e0）：无约束形与把 id 换成入口偏移的形都使 fly/data/quotation **153/153→137/153**（16 个本绿的单元回归）；加 child.parent is region 形逐字节惰性；加 blocks 包含形更使 clock_worker 产物 20555→5423 字节、12/13→10/13。根因：循环体发射路径发出兄弟臂子区域时**只登记块、不登记区域**，故 self._generated_regions、generated_blocks、generated_offsets 都无法区分「已发但不登记区域」与「从未发」。要碰这条必须先建立可判别的「已发射区域入口」集合（候选消费点：_loop_generate_while 内对 region.body_blocks 的逐块消费 :8291、:7538、:7766），在那之前不得重派发。
             if block in self.generated_blocks:
                 continue
             # [F-GET_ITER fix] Skip blocks that are for_iter_setup of a
