@@ -315,3 +315,31 @@ landed（无判据）：len 295/296 delta=+1  hunks=1 landings=1   ← 多发的
 ②再针对「链尾汇合点应为条件跳/臂尾跳的公共落点」写落点判据（与 `#37`、broker 三条同族）。
 主代理本轮到此停手：无单元翻正即不得占用门链预算。实时仓库 `git status --porcelain core/` 空，
 哈希仍 `dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`。
+
+## 落点（merge-landing）族的具名站点（17:59 读码所得；未据此改动任何字节）
+
+一条判据可能同解的四张：`api_base.get_history_df`（0/2）、`strategy.tick_worker_thread`（0/4）、
+`trade_live_broker` 三条纯落点（各 0/1，产物落点一律**偏早** 3/5/10 条）、
+以及 `real_quote.get_tick_direction` 装上幻影 else 判据后**剩下**的那 2 条落点。
+
+```
+生成端 `core/cfg/region_ast_generator.py`
+  :20110-:20113  工具函数 docstring 自述「返回 (jump_target_block, fallthrough_block)；
+                 jump 目标取自末指令 argval」，:20121 `jump_target = self.cfg.get_block_by_offset(last.argval)`
+                 :20124-:20128 仅校验「另一后继是否≠jump_target」后原样返回 ——
+                 即**臂尾落点取自原字节码的既有跳**，而不是区域声明的 merge；
+  :39406         `merge_offset = region.merge_block.start_offset`（全文件 33 处读 `merge_block.start_offset`
+                 中唯一把声明 merge 当跳落点用的地方 —— #37 已落地的正是「尾巴按声明 merge 落点」这一族，
+                 但覆盖不全）；
+  :19454/:19471  elif 臂尾 `elif_jump_target = elif_last.argval` 与 `elif_jumps_to_then` 判定；
+  :19501/:19573/:19809/:19854/:20039  五处把臂尾直接写成 `{'type': 'Continue'}` 的支路
+                 （Continue 重编译后的落点由包围循环决定，不看区域声明 merge）。
+分析端 `core/cfg/region_analyzer.py`：`get_if_branch_boundary_stop`(:864)、
+  `_compute_in_loop_if_merge`(:2974, 3 调用点)、`[R31-B]`(:20366/:22744)、merge-claim 守卫(:22920/:29975-29993)。
+```
+
+施工提示（写给下一手，不是本轮承诺）：判据应是**「臂尾跳落点＝本区域声明的 merge/else_blocks[0]，
+而非原块里那条既有跳的目标」**，且要同时覆盖 Continue 支路（19501/19573/19809/19854/20039 五处
+——依 [[count-predicate-call-sites-before-patching-one]]，单点改只算半修）。
+主代理本轮到此为止（余量不足以再验一次门链），实时仓库 core 未动：
+`git status --porcelain core/` 空，哈希 `dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`。
