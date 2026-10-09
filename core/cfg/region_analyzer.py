@@ -29132,8 +29132,10 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 # 反向排除 B（第二 run 只有一名操作数）：`X and Y or Z`
                 #   （实测 `IQEngine/core/bar._history_bars`）虽满足 (1)-(4)，但其
                 #   J=Z 的 normal 后继是 then 体而非同出口的下一名操作数，条件 (5)
-                #   失败，故本候选在该处保持 head 现状（官方尺 58/58）；三操作数混合
-                #   链被截断成 `if not (X and Y)` 属 BoolOp 统一阶段的其他族缺陷，
+                #   失败——该形态由下方 (5b) single-operand-second-run 同族臂另行判定
+                #   （同一处 _r54_mixed 决策点，不另起第二套口径；本候选在此处保持
+                #   head 现状，实测该单元 84/85 → 85/85 由 (5b) 记录完整链后达成）。
+                #   三操作数混合链被截断成 `if not (X and Y)` 属 BoolOp 统一阶段的其他族缺陷，
                 #   不在本 hunk 内顺手改。
 
                 _r54_mixed = False
@@ -29176,13 +29178,38 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 and getattr(_r54_k_last, 'argval', None) is not None
                                 and self.cfg.get_block_by_offset(_r54_k_last.argval)
                                 is _r54_tj)
+                            # [r1301-b134 single-operand-second-run] 区域归约算法原则 1（自底向上）+ 原则 2
+                            # （每块唯一归属）+ 原则 4（入口引用语义）：and→or 混合链的第二 run 只有一名操作数
+                            # 时，条件 (5) 的「J 与 K 同出口」形态按构造不存在——第二 run 的末名操作数其短路边
+                            # 就是该 run 的假出口，落空边就是 then 体，没有「同出口的下一名操作数」可查。此时
+                            # 用同一批边事实改判，识别条件（[C1] 只读边/归属事实：来块身份 + 两条成功沿同落一块；
+                            # 无函数名、无常量、无绝对偏移、无指令计数）：
+                            #   (5b-1) J 的落空边 K 恰为 F 的短路边目标 T_F——两条 run 的成功沿汇合到同一个体块
+                            #          入口（and-run 经 B 的短路真边入体，or-run 经 C 的落空边入体）；
+                            #   (5b-2) J 的前驱恰为 {本块, F}（_r1234_pair_join）——该二入纯汇合点除本对操作数外
+                            #          无别的主，不可能是另一条语句的入口，收它作下一 run 的头不违反原则 2；
+                            #   (5b-3) T_F 的前驱恰为 {F, J}——体块也只由这两条成功沿进入；链出口 T_J 另在体块
+                            #          之后（(4) 已要求），故 T_F 是体、T_J 是出口，两侧不混同。
+                            # 归约方式：命中即与 (5) 同等放行 `_cond_start_offset` 的栈深回溯（复用本分支已有回溯
+                            # 体，与 R38/W14/R54-A 同一机制），使块内先于该操作数的语句不再被 `_sb_has_body` 当作
+                            # if 体，链得以在首操作数块启动；不命中则与本方法现状逐字节一致。判定发生在链识别时，
+                            # 不回看任何已渲染区域、不重写或吸收别的区域已认领的块（非事后修补）。
+                            # AST 映射：链 [(A,'and'), (B,'or')] 由既有 _try_unify_mixed_boolop_chain 的 run 子
+                            # walk 收齐 or-run 末名操作数 C，再经 _create_boolop_region_from_chain 归约为单个
+                            # BoolOpRegion；父 IfRegion 得到单个 BoolOp 测试 `if A and B or C: body`，A 的假边落到
+                            # C 的测试块（正是区域已声明的 merge），不再拆成 `if A: if B or C:`（实测
+                            # IQEngine/core/bar.BarData._history_bars 84/85 → 85/85）。
+                            _r54_one_operand_run = bool(
+                                _r54_k is _r54_tf
+                                and self._r1234_pair_join(_r54_j, start_block, _r54_f)
+                                and self._r1234_pair_join(_r54_tf, _r54_f, _r54_j))
                             _r54_mixed = bool(
                                 _r54_tf is not None and _r54_tf is not _r54_j
                                 and _r54_tf.start_offset > _r54_j.start_offset
                                 and _r54_f_ft is _r54_j
                                 and _r54_tj is not None and _r54_tj is not _r54_tf
                                 and _r54_tj.start_offset > _r54_tf.start_offset
-                                and _r54_k_shares_exit)
+                                and (_r54_k_shares_exit or _r54_one_operand_run))
                 if _r54_mixed or (_prev_instrs and _prev_instrs[-1].opname in ('LOAD_FAST', 'LOAD_NAME',
                                                                   'LOAD_GLOBAL', 'LOAD_DEREF',
                                                                   'LOAD_ATTR', 'LOAD_METHOD')):
@@ -30630,7 +30657,9 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
     def _r1234_pair_join(self, tgt, a, b):
         # [r12-t1234 pair-join] 目标块是否「恰由这两个操作数块进入」的二入汇合点。
         # 判定只用入边身份（predecessors 与来块一一对应），不看偏移/指令数/名字（rules.md §1.4 G4）。
-        # [C3] 本方法只有一个调用点（情形 (1) 的返回处），不另设第二套口径。
+        # [C3] 本方法是「二入纯汇合点」的唯一判据：情形 (1) 的返回处与
+        # _detect_boolop_conditional_chain 的 (5b) single-operand-second-run
+        # 臂共用它，不另设第二套口径。
         # [C1] 局部消费：读到的就是本轮 walk 的 current 与 candidate 两块，不回看区域。
         # 反例控制（实测）：bar/quotation/handlers/wizard_quant_api/realtime_event_source/
         #   klinedata/trade_info_utils/strategy/quote/trade_live_broker 产物逐字节不变；
