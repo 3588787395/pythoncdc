@@ -112,3 +112,31 @@ or-fold（`@1382`）、guard-fold（`@1910`）、被吞的 `@2164` 十指令测�
 「`@7972` 在 `_process_if_blocks` 循环里到底走到第几条 `continue`、
 `_emitted_entry_offsets` 当时是否含 7972」，再决定放行点与守卫。
 镜像已复原 `971df5e2c9cd7d0a` + `e926a54f17753b33`，仓库 `core/`、`site-packages/` 0 项改动。
+
+## T12-03 读数更正：放行**确实执行了**，丢语句发生在 `_process_if_blocks` 返回之后
+
+前一段我写「放行分支一次也没命中」——那是**假的**：我以为装上了诊断打印，实际那次替换没命中，
+跑的还是无打印版，于是把「产物不变」误读成「没触发」。直接按物理行插入打印后拿到真读数
+（镜像 `core/cfg/region_ast_generator.py`，`[R165]`）：
+
+```
+[R165] block@7972 in_ledger=False edge=True entry_regions=1 generating=True     (第一次访问)
+[R165] block@8170 in_ledger=False edge=False entry_regions=0
+[R165] block@7972 in_ledger=True  edge=True entry_regions=1                     (第二次、第三次访问)
+```
+
+⇒ 三个条件全满足、分支进入、`_generate_region(IfRegion@7972)` 被调用（第二次访问时入口偏移已出现在
+台账里，正说明第一次确实派发了），**而产物仍与封存产物逐字节相同（20555）**。
+同一条判据在 quotation 上零改动（153/153、产物 SAME_as_HEAD）⇒ 放行面本身是干净的，
+问题在**下游**：`_process_if_blocks` 为 reg@7582 产出的语句列表被调用方覆盖或丢弃。
+
+所以下一票的施工顺序改成（不要再改放行判据）：
+1. 用行级追踪（已证明只读 `f_locals['block']`，不改产物）打印 reg@7582 那次调用
+   **返回之后**调用方拿到的语句数与随后对 `then`/`orelse` 的赋值；
+   候选调用方：`_generate_if` 主体、`_if_generate_elif_chain`、`_if_generate_branch_stmts`
+   （`region_ast_generator.py:27593` 一带已是转发层，真正的覆盖点在 `_generate_if` 里）。
+2. 只有确认「结果被覆盖」之后，才谈改那一处的合成逻辑；放行判据（台账 + 出口边）保持现状。
+3. 管道教训两条（都已进记忆）：装配脚本的**替换字符串必须验证命中数**，
+   没命中却继续跑会给出「假阴性读数」；探针插入用物理行 + 该行自身结尾，
+   插入前断言唯一命中，插完立刻 `py_compile`，失败即从仓库字节复原镜像（本次照做，
+   镜像已复原 `971df5e2c9cd7d0a` + `e926a54f17753b33`，仓库 0 项改动）。
