@@ -46,3 +46,30 @@
 
 390/402 文件、6583/6617 单元（99.4862 %），残余 12 文件 / 34 单元。
 core/ 与 site-packages/、tests/ 工作树 0 行差异。
+
+
+## 5. 根因锁定（同轮再实测，只读）
+
+对 @7982-@8166（缺失体的块范围）做区域成员检索：
+
+```
+所有区域与该范围的交集 = {8166}（每个区域只命中 8166 这一块）
+block_to_region 逐块归属：@7982..@7996… → TryExceptRegion entry=6（按 try 范围认领）
+IfRegion entry=7972 blocks = [7972, 7980, 8166]
+```
+
+⇒ **那 110 条指令所属的块既不在 IfRegion@7972 的 blocks 里，也不在任何区域的 blocks 里**，
+只被外层 `TryExceptRegion@6` 按范围登记在 `block_to_region`。
+所以「重派发 IfRegion@7972」这条路必然发不出东西（区域本身没有体块），与 B153 系列四次失败一致；
+而循环体/try 体的按块发射路径又会因这些块已被 try 认领而跳过 —— 这正是缺失 113 条指令的机制。
+
+## 6. 下一票的施工点（据 §5 收窄）
+
+缺陷在识别端的 **IfRegion then 体收集被 try 范围认领截断**：
+@7980（IfRegion@7972 的真实体首块）与后续 7982..8164 未进入 `then_blocks/blocks`。
+候选施工处即 `round11/DIAG_B153` 记过的 `_process_if_blocks branch=then reg_entry@7582`
+那一层向 try 范围要块的逻辑，与 `region_analyzer` 的 IfRegion 体收集
+（`_collect_branch_blocks` 一带，try/handler 边界停止集把 try 范围内但属于本臂的块剔掉）：
+需要区分「try 帧块」与「try 范围内的普通用户语句块」（分析端已有
+`_EXC_FRAME_GUARD_OPS` 这类帧指令集判据，见 `region_analyzer` R2-B9 豁免），
+把后者收进 IfRegion 的 then 体。验收：本文件 13/13 → 13 文件面板 → 门链 label 17 vs 16。
