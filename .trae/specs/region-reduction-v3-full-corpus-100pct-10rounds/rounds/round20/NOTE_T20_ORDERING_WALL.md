@@ -191,3 +191,28 @@ IfRegion entry=944  merge=1102  elif_conditions=[1024]  elif_bodies=[[1036]]  el
 拿到该序列后，判据要放在**最后一次填回 `elif_final_else=[1102]` 的那个站点**。
 主代理已把本单元的真差与实值钉死（1 条死跳、`elif_final_else=[1102]`、
 `@1022 JUMP_FORWARD->1102`、末臂 `@1036` 落空入 `1102`），缺的只是命中点。
+
+## 命中探针（hit-capture）仍未做成——我的具坏了，登记正确做法（17:19）
+
+镜像 `D:/Temp/r20g` 的探针补丁把 `region_ast_generator.py:15584` 写成语法错误
+（`SyntaxError: unterminated string literal`）：原因＝我用 `crlf()` 整段转换插入文本时，
+**把探针里格式串内部的 `\n` 也换成了真实 CRLF**。随后两侧产物比对打印
+`inert: NO`、`hit.log` 为空 ⇒ 本轮所有读数为 **VOID**（坏具不记账，
+[[feedback-no-record-before-measurement]]），实时仓库 `core/` 全程未写。
+
+正确的探针写法（下一手照抄即可）：
+1. 只把**行的结尾**转成 CRLF，逐行 `+"\r\n"` 拼接，绝不对含字符串字面量的整段做全局替换；
+   或干脆用 `\n` 写文件（Python 源码允许 LF，仓库是混合行尾）。
+2. 探针内**不要**用 `%` 格式串里的换行符；每条形写成一行 `write(...)` 再单独写换行。
+3. 只读**已绑定的标量**（`region.entry.start_offset`、`elif_final_else` 内各块的
+   `start_offset`、`merge_block.start_offset`、`elif_conditions`/`elif_bodies` 的偏移表），
+   不读 `block.successors`/`get_block_by_offset`（会改动产物）。
+4. **每次都要做惰性自证**：`pycdc.py --region <pyc> -o probe_on.py`（带探针的镜像）
+   与同一 pyc 用**实时仓库**跑 `probe_off.py`，`cmp` 逐字节相同才算读数有效。
+5. 站点清单（本文件读写 `elif_final_else` 的全部处）：`:15265`、`:15309`、`:15580` 段、
+   `:15761`、`:15769`、`:18442`、`:18776`、`:19009-:19049`、`:19315`、`:19543`。
+   目标是拿到 `entry=858` 那条链的实际读写序列，把判据放在**最后一次填回 `1102` 的站点**。
+
+已确证的缺陷事实不变（不依赖探针）：唯一真差 1 条死 `JUMP_FORWARD @1102`、
+`elif_final_else=[1102]`、`@1022 JUMP_FORWARD->1102`、末臂 `@1036` 以 `CALL; POP_TOP` 落空入 `1102`、
+实编对照 A/B 形给出产物形/原形各自逐指令同形。
