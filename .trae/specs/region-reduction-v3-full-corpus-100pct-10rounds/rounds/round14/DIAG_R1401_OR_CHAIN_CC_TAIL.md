@@ -112,9 +112,7 @@ IfRegion     e=0  merge=58 cc=True  blocks=[0,42,52]             ← 父 if 区�
 
 即：把链式比较入口 @26 放进 `BoolOpRegion.blocks` 后，Phase 3 的条件区域装配既把 `chained_compare_ops`
 认到父区域头上，又把 @62（下一 elif 入口）留在 cc 区域的 blocks 里 ⇒ elif 臂被吞。
-尝试过 `nocb`（在 `:28577 region_blocks = chain_blocks | {merge}` 后把 cc 入口从 blocks 摘掉）—— **无效**，
-因为条件上下文分支在 `:28666` 重新 `region_blocks = chain_blocks`。⇒ 施工点是 `:28666` 那一支
-（以及 op_chain 成员与 blocks 的分离语义），不是 `:28577`。
+`nocb`/`rb2` 两种「把 cc 入口移出 blocks」的尝试都已实测：加在 `:28577` （`region_blocks = chain_blocks | {merge}`）之后 **无效**，因为条件上下文分支在 `:28666` 重新 `region_blocks = chain_blocks` 覆盖了它；改加在 `:28666` 之后，blocks 确实变干净（`BoolOpRegion e=0 merge=62 blocks=[0,14]`），但父区域依旧被打脏 （`IfRegion e=0 merge=58 cc=True blocks=[0,42,52]`），产物进一步退化成只剩 `if '11:30:00' < dt_strf < '12:30:00': return 1`（A/B 两臂与 elif 全丢），判决仍 1/2 红。⇒ 真正的所有权污染发生在 **Phase 3 条件区域装配**：父 IfRegion 从被引用的 cc 区域继承了 `chained_compare_ops` 并把 cc 内部块 [42,52] 收进 blocks，同时丢掉 @62 起的 elif 臂。下一票的施工点是 `_identify_conditional_regions` 里「条件块落在链式比较区域」的那条继承支路，不是 blocks 组装
 
 ## 7. 方法记录（本票实测，写给后续票）
 
@@ -131,7 +129,7 @@ IfRegion     e=0  merge=58 cc=True  blocks=[0,42,52]             ← 父 if 区�
 
 - 形状 A（链式比较区域已在 `self.regions`）：`c12+guard+clamp+hop` 四处的豁免文本已在
   本目录 `r14_arms_reference.py`（`HELPER/OLD_C12/NEW_C12/OLD_GUARD/NEW_GUARD/OLD_CLAMP/NEW_CLAMP/OLD_MERGE/NEW_HOPM`），
-  再补 `:28666` 分支的 blocks/op_chain 分离，就能让 r01 走到判决；电池 `rounds/round14/repro/` 9 例做前置门。
+  blocks 侧已实测两处（:28577 与 :28666，见 6 节，都不足以翻正——父区域被打脏发生在 Phase 3）；下一施工点是 _identify_conditional_regions 中把链式比较标志继承给父 IfRegion 的那条支路；电池 rounds/round14/repro/ 的 9 例作前置门。
 - 形状 B（strategy 一族）：先解决「布尔算子识别时链式比较区域尚未登记」，
   即 `_identify_chained_compare_regions`（`:17994`，Phase 2）与 try/except 嵌套的相互作用；
   在那之前 `exempt`（R64 结构豁免）只是把错误从「取反」搬到「父区域被打脏」，不可落地。
