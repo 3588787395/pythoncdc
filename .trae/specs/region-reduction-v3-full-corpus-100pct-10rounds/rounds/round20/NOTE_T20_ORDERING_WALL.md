@@ -295,3 +295,23 @@ else 体是由别处（`nested_elif_stmts`/`_nested_trailing_stmts` 递归层，
 把探针从「本函数入口」改放到「返回值被消费处」，看 `final_else_stmts=[]` 时 orelse 被填成什么。
 主代理本轮停止（预算已不足以再走一次门链），实时仓库 `core/` 全程未写：
 `git status --porcelain core/` 空，哈希 `dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`。
+
+## R20-2 部分推进（17:58，镜像 `D:/Temp/r28`；未装实时仓库，core 哈希未变）
+
+判据（:19817 前的幻影 else 检出，探针已证两个条件均为真）生效后该单元的差形**改变**：
+
+```
+landed（无判据）：len 295/296 delta=+1  hunks=1 landings=1   ← 多发的死 JUMP_FORWARD
+装判据          ：len 295/295 delta=0  hunks=0 landings=2   ← 多余指令**消失**
+                  残余＝orig[6]  @34  POP_JUMP_IF_FALSE -> idx293 vs 产物 idx201
+                        orig[171] @942 JUMP_FORWARD       -> idx201 vs 产物 idx199
+```
+
+⇒ 幻影 else 判据方向正确（它确实清掉了那条过发指令），但**还差落点**：
+移除 else 后，链的条件跳与 `@942` 的臂尾跳应落在 `return pd_dict` 所在的**函数尾**（idx293）与
+`return redata` 块（idx201）上，而产物把两者都往前挪了一格。
+把释放块经 `_nested_trailing_stmts` 交回链尾**没有效果**（该 append 路径 `:20040` 对本区域未走到），
+所以下一手应当：①先确认 `return redata` 在产物源码里究竟落在哪一层（是否被并入嵌套链内部），
+②再针对「链尾汇合点应为条件跳/臂尾跳的公共落点」写落点判据（与 `#37`、broker 三条同族）。
+主代理本轮到此停手：无单元翻正即不得占用门链预算。实时仓库 `git status --porcelain core/` 空，
+哈希仍 `dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`。
