@@ -91,7 +91,32 @@ gate_chain13.sh 严格串行 regen→verify→report→checks→residual）读�
 - checks：quotation / small34 / selfcheck / 七套件（须仍 `2 failed / 280 passed / 2 xpassed` 同名两红）
 - residual 表：残余文件/单元数与 `UNREGISTERED`
 
-## 5. 判决（门出数后填写；不得预先写「已解决」）
+## 5. 四条落点的**同一宿主**（与 17/17 oracle 文本逐字对照，只读比对 `diff --strip-trailing-cr`）
+
+`diff D:/Temp/r138/m_or_full.py D:/Temp/r142/wt/cand_m.py` 只剩三处（155–179 行窗口），
+每条都能对上 §3 的 hunk：
+
+| 残余形状（产物） | oracle（字节正确） | hunk |
+|---|---|---|
+| `if not (A∧B):` 套 `if (A∧C):` | `if (A∧B) or (A∧C):` | @1382 |
+| 头 `… and C:` ＋ 体内 `if X or BUY…` | 头 `… and C and not X:` ＋ 体内 `if BUY…` | @1910 |
+| `if symbol[:3] in ('688','689'):` 体内 `if X or BUY…` | 同头 ＋ 体内 `if not X: if BUY…` | @2210 |
+| 臂尾 `JUMP_FORWARD ->@3210` | 应落 `->@2464`（if/else 汇合） | @1322 |
+
+⇒ 三处**同一机制**：一条语句头里的 `and`/`or` 链没有被整条重建为**一个**条件表达式，
+末腿被下放成了体内臂的条件（@1322 只是它顺带造成的落点差）。区域侧证据与此一致：
+同一个头测试被拆成 `IfRegion@1834/1884/1908/1912`（`cond` 同为 1896/1908/1954，
+`merge` 同为 2164）加 `BoolOpRegion@1884(merge=2208)/@1912(merge=2038)/@2038(merge=2164)`，
+即腿的分段发生在识别/分组层，而 oracle 要的是「一头一区域 + 一条完整布尔表达式」。
+这正是 `pythoncdc-falsified-residual-axes` 项 13 记的那道未攻的两层生成端改动
+（扁平 `{'blocks':[…],'op':'or'}` 表达不了 `(A∧B)∨(A∧C)`，还需要极性-aware 的尾承接）。
+
+下一票 **T12-22** 的边界：先只处理**@1910/@2210 这一形**（头的末腿 `and not X` 被下放成体内
+`X or …`），因为它在 oracle 里允许两种等价写法（`if not X:` 嵌套 与 头内 `and not X` 扁平，
+B138 实测两者字节相同），改动面比 `(A∧B)∨(A∧C)` 的操作数树小；@1382/@1322 留作第二刀。
+
+
+## 6. 判决（门出数后填写；不得预先写「已解决」）
 
 - 若 `翻正单元 ≥ 1` 且 `新增失败单元 = 0` ⇒ 保留 `48b812e60ef52d27`，
   本轮以实测翻转收尾，残余重算并入 `RESIDUAL_R13.md`；
