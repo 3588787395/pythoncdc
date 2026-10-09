@@ -1,19 +1,18 @@
 {
- "elapsed_sec": 24.8,
+ "elapsed_sec": 24.2,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
-  "failure": 2,
-  "success": 49
+  "failure": 1,
+  "success": 50
  },
  "files_total": 51,
- "generated_at": "2026-10-10T00:19:45",
+ "generated_at": "2026-10-10T00:29:06",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
   "error": [],
   "failure": [
-   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc"
   ],
   "success": [
@@ -28,6 +27,7 @@
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/api.pyc",
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/brokerFactory.pyc",
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/enums.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc",
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_future_broker.pyc",
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_hks_broker.pyc",
@@ -203,16 +203,14 @@
   },
   {
    "detail": null,
-   "failures": [
-    "***<module>.get_entrust_item_info: Failure: Different bytecode"
-   ],
+   "failures": [],
    "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
    "pyc_sha": "b67c0b5dfb1e",
    "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/functionOK.py",
-   "source_sha": "cfcf7a38758c",
-   "status": "failure",
-   "success_rate": 0.9859154929577465,
-   "units_success": 70,
+   "source_sha": "f34c63966015",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 71,
    "units_total": 71
   },
   {
@@ -292,7 +290,7 @@
    "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
    "pyc_sha": "34dbb235b637",
    "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py",
-   "source_sha": "6a71fc95a5e6",
+   "source_sha": "d6af28bf3086",
    "status": "failure",
    "success_rate": 0.921875,
    "units_success": 118,
@@ -700,7 +698,7 @@
   "compare_pyc_sha256": "9c7567bd6776b36b",
   "ruler_version": "pylingual-equivalence_check"
  },
- "success_rate": 0.9862671660424469,
- "units_success": 790,
+ "success_rate": 0.9875156054931336,
+ "units_success": 791,
  "units_total": 801
 }

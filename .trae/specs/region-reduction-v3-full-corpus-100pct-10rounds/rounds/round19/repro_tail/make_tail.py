@@ -125,7 +125,7 @@ def f(items):
 D = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(D, "src")
 os.makedirs(SRC, exist_ok=True)
-ROOT = r"D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main"
+ROOT = os.path.abspath(os.path.join(D, *(['..'] * 6)))
 TD = os.path.join(tempfile.gettempdir(), "r19tail")
 os.makedirs(TD, exist_ok=True)
 

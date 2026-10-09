@@ -1,13 +1,13 @@
 {
- "elapsed_sec": 16.9,
+ "elapsed_sec": 19.0,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
-  "failure": 4,
-  "success": 47
+  "failure": 3,
+  "success": 48
  },
  "files_total": 51,
- "generated_at": "2026-10-10T00:19:19",
+ "generated_at": "2026-10-10T00:28:41",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
@@ -15,7 +15,6 @@
   "failure": [
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
-   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc",
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc"
   ],
   "success": [
@@ -55,6 +54,7 @@
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/slippage.pyc",
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/tax.pyc",
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_history_save/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc",
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/__init__.pyc",
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc",
    "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc",
@@ -531,16 +531,14 @@
   },
   {
    "detail": null,
-   "failures": [
-    "***<module>.DefaultLogger.setup: Failure: Different control flow"
-   ],
+   "failures": [],
    "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc",
    "pyc_sha": "1485a14de261",
    "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__OK.py",
-   "source_sha": "82f95e2455f0",
-   "status": "failure",
-   "success_rate": 0.9,
-   "units_success": 9,
+   "source_sha": "f52b26c399fb",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 10,
    "units_total": 10
   },
   {
@@ -696,7 +694,7 @@
   "compare_pyc_sha256": "9c7567bd6776b36b",
   "ruler_version": "pylingual-equivalence_check"
  },
- "success_rate": 0.994994994994995,
- "units_success": 994,
+ "success_rate": 0.995995995995996,
+ "units_success": 995,
  "units_total": 999
 }

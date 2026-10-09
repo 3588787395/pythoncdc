@@ -14,7 +14,8 @@ usage: python -X utf8 unit_diff.py <pyc-rel-or-abs> <unit-co-name> [--prod PATH]
 """
 import dis, difflib, marshal, os, re, sys, types
 
-ROOT = r"D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main"
+SPEC_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(SPEC_DIR, '..', '..', '..'))
 DROP = ("NOP", "CACHE", "EXTENDED_ARG")
 JR = {dis.opname[o] for o in (list(dis.hasjrel) + list(dis.hasjabs))
       if isinstance(o, int)}
