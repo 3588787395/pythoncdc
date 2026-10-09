@@ -136,3 +136,51 @@ helper `_r145_arm_terminal_exception`（终块 ∧ 无任何角色字段（全�
 
 网络事实：`git push` 今日连续 4 次失败（`Recv failure: Connection was reset` / `port 443 … Couldn't connect`），
 三个 round-11 提交（`9a738074`、`cdee0498`、`8b5a0c56`）仍在本地待推。
+
+## B146 与「分支是否真的执行」探针：handlers 重新归类到隐式尾声族
+
+派发追踪 `[R147]`（先自证惰性：产物 `9093` 字节与 HEAD 逐字节相同）给出两条硬读数：
+
+```
+[R147] _generate_if entry@0 then=[90, 408, 404] else=[] already_gen_in_then=0 gen=0
+[R147] _process_if_blocks branch=then reg_entry@0 blocks=[90, 408, 404] already_gen=0
+```
+
+⇒ `_process_if_blocks` **就是**消费 `@404` 的父臂方法；进入时 `@404` 尚未登记，登记发生在兄弟
+循环收尾扫之后，被 `generated` 闸跳过。
+
+逐检查诊断 `[R148]`（helper 内逐项打印失败原因）：
+
+```
+[R148] succ=[] exc=[] preds=[390]                 # @404 确为终块，正常/异常后继都空
+[R148] member_of=LoopRegion@90 preds_inside=True  # 判据成立，helper 返回 True
+```
+
+（第一版 helper 把「第一个包含它的区域」当宿主，取到 `IfRegion@0` 时 `preds_inside` 为假 ⇒
+全 False；改成「任一包含区域满足前驱全在内」才出现上面这行。这是我自己判据里的真 bug，记在此。）
+
+B146（`0ed645f846efc551`）不再只放行第一道闸，而是在该处**直接调一次漏斗发射**
+（`_generate_block_statements(@404)` → `stmts.extend` → `continue`），读数仍是 handlers `29/30`、
+产物 `9093` 字节与 HEAD 逐字节相同。为分离「分支没执行」与「执行但发不出语句」，加一枚
+`stmts.append({'type': 'Pass'})` 分支探针：产物 `9093 → 9147`，diff 显示 **3 处注入点**。
+
+⇒ 按实测改判：**分支执行了，`_generate_block_statements` 对这些块返回空**。所以 handlers 的
+`@404` 不是发射顺序/归属/登记问题，而是被 `_generate_block_statements` 自身的**隐式尾声拒绝**
+吃掉——属 `#15` 隐式尾声/共用尾族，与 `query_strategy_id`、`query_trade_strategy_info`、
+`filter_desicion`、`check_frequency`、`get_individual_data` 同族。这回头解释了 B127、B141、
+B142、B145、B146 **五臂**为何全部惰性：五臂都在改登记/顺序/归属，没有一臂碰这个拒绝谓词。
+
+下一票方向（写死，别再碰归属与登记）：读 `_generate_block_statements` /
+`_generate_block_statements_body` 对 `LOAD_CONST None; RETURN_VALUE` 块的拒绝路径
+（候选 `has_trailing_return_none`、`_is_trailing_return_none_statement`、
+`_r8_b121_implicit_tail_landing_sinks`），并解释**同一块在 B141 的循环收尾扫处返回 1 条语句、
+在父臂处返回空**的差别来源（只可能是当时上下文：`self._current_loop`、区域标志或
+`generated_offsets`）——那个差别就是机制本体。双发反例仍有效：探针的 3 处注入点里包含兄弟单元
+`TWHThreadRotatingFileHandler._target` 的 `@780`，放行条件必须排除「已被兄弟区域以角色字段
+认领」的块。
+
+施工环境自证（B145/B146 两段）：读数取于镜像 `D:/Temp/r141/wt`，其中 `region_ast_generator.py`
+为各臂补丁字节，而 `region_analyzer.py` 当时仍是 `1e5fdda8351ff923`（带链首 J+F 放宽，未复原）。
+handlers 与 quotation 产物在这套状态下均与仓库封存字节相同，且 J+F 放宽对这两个文件本就无差，
+故结论方向不变；复现要么按该状态，要么先把分析器复原。现镜像两文件已复原
+（`e9a8f65f6451bcc8` + `e926a54f17753b33`），仓库 `core/`、`site-packages/` 全程 0 项改动。
