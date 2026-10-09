@@ -86,3 +86,29 @@ or-fold（`@1382`）、guard-fold（`@1910`）、被吞的 `@2164` 十指令测�
 4. 候选判据本身仍按 §5：台账记入口偏移（`_emitted_entry_offsets`，单一 helper 两处共用），
    放行面限定在「入口块 ∧ 入口未记 ∧ 前驱是**另一条**循环的 back_edge_block 或以 FOR_ITER 结尾」，
    必测反例是 quotation `get_eps` 的 @994（已被直连路径发过）与两处同入口重复 LoopRegion。
+
+## T12-02 第二次施工：装配成功但放行零命中，并更正我先前写错的行尾结论
+
+按 §规矩重做装配（物理行插入 + 沿用该行结尾），脚本 `D:/Temp/r141/t1202_rig.py`
+（产物字节 `05b7e6f38108980d`，`compile()` 通过）。读数：
+`realtime_event_source` 仍 **12/13**、产物 `20555` 字节 **SAME_as_HEAD**；
+`handlers` 仍 29/30、`9093` 字节 SAME_as_HEAD ⇒ **放行分支一次也没命中**。
+
+先更正我自己写错的事实（先前提交 `619f9525` 把它当成结论，是错的）：
+`region_ast_generator.py` **不是混合行尾**——本次逐行统计：59112 行全部以 `\r\n` 结尾。
+上一轮 `SyntaxError: invalid character '」' (line 25146)` 的真因是
+**旧字节偏移复用**：我在一次插入之后仍用插入前算好的 `_P` 做切片，切点落在注释中部。
+所以 §规矩里「按物理行插入并沿用该行自身结尾」是对的，但把它归因于混合行尾是错的；
+正确的必要性表述是：**任何一次插入之后都必须重新搜索锚点**，不得复用旧偏移。
+另记一条同类失误：`body_of(line)` 无条件去掉最后一个字符，
+使没有结尾换行的插入块丢掉末字符（`self._r164_note_emitted(region` 少了 `)`），
+判据应是「只有真的以 `\r\n` 或 `\n` 结尾才剥掉」。
+
+下一步（不是再叠判据，而是先读命中路径）：`@7972` 没走到我放行的那道闸，
+说明在它之前还有别的 `continue`（同方法内 `if … in self.generated_blocks` 形式有 5 处，
+另有 anchor/子区域入口/`_fis_skip_blocks`/`_loop_entry_generate` 等分支），
+或者 `_emitted_entry_offsets` 已被**同入口的另一个区域对象**写入（本仓已两处实测到
+同入口重复区域）。下一票第一件事是用自证惰性的探针打印
+「`@7972` 在 `_process_if_blocks` 循环里到底走到第几条 `continue`、
+`_emitted_entry_offsets` 当时是否含 7972」，再决定放行点与守卫。
+镜像已复原 `971df5e2c9cd7d0a` + `e926a54f17753b33`，仓库 `core/`、`site-packages/` 0 项改动。
