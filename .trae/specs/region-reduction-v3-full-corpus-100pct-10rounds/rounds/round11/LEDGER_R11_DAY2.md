@@ -1,0 +1,51 @@
+# Round 11 第二日台账（主代理自施工，无子代理可用）
+
+背景：四张在飞子代理票（B139b、B136b、B138、B140）全部因供应商**每日 Chat 用量上限**中途死掉
+（B139b 只交了 `FIX_B139B_*.md` §0 基线表、无补丁；B136b 只建好镜像；B138/B140 只留探针与产物草稿）。
+今日所有施工由主代理在镜像里做，仓库 `core/` 全程未动。
+
+## 封表基线（不变，仍是本回合唯一落地读数）
+
+| 项 | 值 | 来源 |
+|---|---|---|
+| 单元 | **6580/6617（99.4408 %）** | `rounds/round11/after`（8 分片报告） |
+| 文件 | **387/402** | 同上 |
+| 四硬门 | 0 / 0 / 0 / 0 | `gate_round.py … checks` |
+| 残余 | **15 文件 / 37 单元** | `RESIDUAL_R11.md`（封表 15:37:42） |
+| quotation | 153/153 | 本轮多次复测一致 |
+| small34 | 1531/1568（19 绿文件） | 同上 |
+
+今日**没有**新增落地：三张新票（B139c / B141 / B142）共 **5 个臂**全部证伪，逐臂读数在
+`DIAG_B139C_CHAIN_START_JGATE_FALSIFIED.md` §2/§4 与 `DIAG_B142_LOOP_LANDING_INERT.md` §0/§8/§9。
+
+## 逐票状态
+
+| 票 | 目标 | 臂 | 读数 | 裁决 |
+|---|---|---|---|---|
+| B139c | `bar` 84/85、`strategy_universe` 10/11、`strategy` 26/27 | blanket 回溯 | bar 85/85，quotation 152/153 | 不落地 |
+| B139c | 同上 | J-gate `360fae76ce699366` | bar **85/85**；quotation/tiu/suni/strategy/klinedata/wqa/tlb **产物逐字节 SAME_as_HEAD**；quote 86→85（新红 `load_bars_from_hundsun`） | 不落地（净 0 单元、0 文件） |
+| B139c | 同上 | J+F-gate `1e5fdda8351ff923` | bar 85/85、quotation SAME、quote **仍 85/92 同一红** | 不落地；无副作用普查证明 bar 头与 hundsun 头在我能测的 CFG 事实上**不可分**，本轴收口 |
+| B141 | `handlers` 29/30 | 循环终块强发 `2aa23a5a453b94cc` | **28/30**：目标单元未翻正、兄弟单元新红；控制器单元 199→**77** 指令 | 证伪；`[result] + stmts` 的列表返回只被 `:7992` 一处消费 |
+| B142 | 同上 | 收尾扫放开登记 `a0a13cfad723da6d` | 产物 `9093` 字节 **与 HEAD 逐字节相同**（惰性）；quotation 仍 SAME | 证伪；下一票唯一入口在 §9 |
+| B138 | `matcher` 16/17 | （死票，读数继承） | oracle `m_or_full.py` **17/17**：需 or-fold + guard-fold + 补回 `@2164` 测试**三形同单元** | 不是单机制票，挂起 |
+| B140 | `api_base` 27/28 | （死票） | 我此前做的语句交换 oracle 无改善 ⇒ 结构性差 | 挂起 |
+
+## 方法账（今日新立的两条硬规则，已进记忆）
+
+1. **分析器内探针不惰性**：读 `.successors/.predecessors/get_block_by_offset` 自身会改产物
+   （实测把 `trade_info_utils` 从 61281 字节/38/41 变成 60591/37/41，且判据置死仍如此）。
+   新规矩：探针只读作用域内局部量 + `start_offset`/`len(...)`，并在引用任何读数之前做一次
+   「有探针 / 无探针」产物逐字节对比自证。
+2. **子区域返回值契约**：`_generate_region` 返回列表的通道在发射器里只有 1 个消费点（`:7992`），
+   想「在循环之后再发兄弟语句」必须先清点全部消费点，不能靠加判据绕开。
+
+## 下一票（未派，按代价排序）
+
+1. `handlers`：清点 `_generate_region` 返回值的全部消费点（grep `isinstance(_child_ast, list)` = 1 命中），
+   在**消费侧**补对称处理后再让 loop 分支交付落点语句；判据本身已由 §0 读数钉死（`@404` 可发、角色取全局）。
+2. `trade_info_utils` 的共用尾家族（`query_strategy_id` +1、`query_trade_strategy_info` 净 0）——
+   与 handlers 同族但不同单元，2 单元，不翻文件。
+3. `matcher` 三形同单元票（oracle 文本已钉死，`m_or_full.py` 17/17），需一次改三处，风险最高、收益 1 文件。
+
+网络事实：`git push` 今日连续 4 次失败（`Recv failure: Connection was reset` / `port 443 … Couldn't connect`），
+三个 round-11 提交（`9a738074`、`cdee0498`、`8b5a0c56`）仍在本地待推。
