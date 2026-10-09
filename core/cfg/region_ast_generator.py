@@ -384,6 +384,10 @@ class RegionASTGenerator:
         self._or_then_block: Optional['BasicBlock'] = None
         self._or_else_block: Optional['BasicBlock'] = None
         self._or_rhs_block: Optional['BasicBlock'] = None
+        # [R14-04] not A and not B（同目标真值边）复用 or 扩展臂装配时的状态位：
+        # 该形状没有 else 臂，_or_else_block 必须为 None，故 _has_or_ext 不能只看
+        # then/else 双双非空。
+        self._r14_and_ext: bool = False
         self.detector = get_opcode_detector()
         # 记录已被 generate() 预扫描提取 import 前缀的
         # entry_block。防止 _generate_ternary 的 cond_block pre-statement
@@ -20817,6 +20821,7 @@ AST 映射规则:
         self._or_then_block = None
         self._or_else_block = None
         self._or_rhs_block = None
+        self._r14_and_ext = False
         # 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（入口引用语义）：
         # 当 IfRegion 的 cond_block 同时是某 BoolOpRegion 的 merge_block，且该
         # BoolOpRegion 的 enclosing 不是本 IfRegion（即 BoolOpRegion 在本 IfRegion
@@ -21192,7 +21197,8 @@ AST 映射规则:
             if region.elif_final_else:
                 for b in region.elif_final_else:
                     _elif_exclude.add(b)
-        _has_or_ext = self._or_then_block is not None and self._or_else_block is not None
+        _has_or_ext = ((self._or_then_block is not None and self._or_else_block is not None)
+                       or self._r14_and_ext)
         _then_terminal_overflow = []
         def _is_pass_like(stmts):
             if not stmts:
@@ -24232,11 +24238,44 @@ AST 映射规则:
                         _rhs_expr = self.expr_reconstructor.reconstruct(_rhs_pure) if _rhs_pure else None
                     if _rhs_expr:
                         self.generated_blocks.add(_or_rhs_block)
-                        compare_expr = {'type': 'BoolOp', 'op': 'or', 'values': [compare_expr, _rhs_expr]}
-                        last = _or_rhs_block.get_last_instruction()
-                        self._or_then_block = _or_then_block
-                        self._or_else_block = _or_else_block
-                        self._or_rhs_block = _or_rhs_block
+                        # [R14-04] 同目标真值边判据（结构事实，与 or 短路互斥）：
+                        # 头块（链式比较取末段）与 rhs 操作数块（链式比较同样取
+                        # 末段）的条件跳转都是 IF_TRUE 且落在同一个块时，源码形状是
+                        # `not A and not B`——两条真值边都跳过体；or 短路的形状是头
+                        # 成员真值边落在体入口。此形状逐员取反，臂体取 rhs 的落空边，
+                        # 且**没有 else 臂**（rhs 的跳转目标是自然续接的汇合点），故用
+                        # _r14_and_ext 复用 or 扩展的臂装配而不登记 _or_else_block。
+                        # 不满足时逐字节维持原 or 拼接。
+                        _r14_tail_block = _or_rhs_block
+                        if self.region_analyzer._is_chained_compare_header(_or_rhs_block):
+                            _r14_info = self.region_analyzer._detect_chained_compare_pattern(_or_rhs_block)
+                            if _r14_info and _r14_info.get('extra_chain_blocks'):
+                                _r14_tail_block = _r14_info['extra_chain_blocks'][-1]
+                        _r14_rhs_last = _r14_tail_block.get_last_instruction()
+                        _r14_same_true = (last_cc is not None
+                                          and _r14_rhs_last is not None
+                                          and getattr(last_cc, 'argval', None) is not None
+                                          and _r14_rhs_last.argval == last_cc.argval
+                                          and 'IF_TRUE' in last_cc.opname
+                                          and 'IF_TRUE' in _r14_rhs_last.opname
+                                          and _r14_rhs_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                                                       | BACKWARD_CONDITIONAL_JUMP_OPS))
+                        if _r14_same_true:
+                            compare_expr = {'type': 'BoolOp', 'op': 'and', 'values': [
+                                _negate_expr(compare_expr), _negate_expr(_rhs_expr)]}
+                            _r14_fts = [s for s in _r14_tail_block.successors
+                                        if s.start_offset != _r14_rhs_last.argval]
+                            self._or_then_block = _r14_fts[0] if _r14_fts else None
+                            self._or_else_block = None
+                            self._or_rhs_block = _or_rhs_block
+                            self._r14_and_ext = self._or_then_block is not None
+                            last = None
+                        else:
+                            compare_expr = {'type': 'BoolOp', 'op': 'or', 'values': [compare_expr, _rhs_expr]}
+                            last = _or_rhs_block.get_last_instruction()
+                            self._or_then_block = _or_then_block
+                            self._or_else_block = _or_else_block
+                            self._or_rhs_block = _or_rhs_block
                     else:
                         last = _chain_negate_fallback
                 else:
