@@ -359,3 +359,29 @@ Task 11 本轮实际状态（2026-10-08，逐条按完成度如实标注，勾�
       `get_if_branch_boundary_stop`/`[R31-B]`，见 `banked_r19t4/README.md`）；
       ②`klinedata`（两处同修：臂尾出口身份 + `@974/@978`，见 `banked_r19t3/` 与 `DIAG_R1516`）；
       ③`handlers._target` 前提已否证（CPython 按出口边复制尾对，非发射折叠），改列为源码形状可表达性问题。
+
+## 19B. 第 19 轮收口状态与第 20 轮交接（park 记录，2026-10-09 收尾）
+
+- [x] 19B.1 **当前封盘＝已验证**：`core/cfg` 三件 `region_ast_generator.py dff6e81a5f2ff9f6`、
+      `ast_generator_v2.py beeaf14435e22922`、`region_analyzer.py 640d33a77dcb71c2`；
+      `git status --porcelain core/` 空；本地=远端 `e3df7faa`；
+      语料 **6586/6617 单元、391/402 文件**（门 19 四阶段全过，`rounds/round19/after` 八分片名册入库），
+      `order_api.pyc` 就地产物复验 `37/37`。残余 **11 文件 / 31 单元**＝`rounds/round19/RESIDUAL_ROUND19.md`。
+- [ ] 19B.2 **在飞工程师（勿重复派发、勿与其争抢同一文件）**：镜像 `D:/Temp/r20d`，
+      工单 R20-1（api_base + strategy，任务 #47），**只许动 `core/cfg/region_analyzer.py`**，
+      交整文件 + `FIX_T20-1.md`（其文档当前停在 step 0：镜像已建、电池已按同深度放置）。
+      其起始材料＝`rounds/round19/banked_r19t4/region_analyzer.py`（`5ea802f2975b1f35`，
+      我已实测：无害但惰——api_base 27/28、strategy 26/27、klinedata 63/64、quotation 153/153、broker 118/128）。
+      回收时的前四步：①`diff -rq` 数清它改了几个文件（上轮两文件判据只装一个文件＝假惰）；
+      ②在自己的丢弃式镜像里装**全套**后测两文件 + 6 电池；③只有出现
+      `api_base 28/28` 或 `strategy 27/27` 才安装到实时树；④跑门 **label 20 vs 19**
+      （`python -X utf8 -u .trae/specs/.../gate_chain.py 20 19`，先 `--dry`）。
+- [ ] 19B.3 已预消化、可直接开工的第二张：R20-2（任务 #48，`real_quote.get_tick_direction`，
+      判据＝`elif_final_else` 不得是链的续体块；判决性实编实验在 `rounds/round20/NOTE_T20_ORDERING_WALL.md`；
+      **属生成端文件**，与 19B.2 的分析端不冲突，可并行，但两条判据必须**分别跑门**，不得同门混判）。
+- [ ] 19B.4 本轮（第 19 轮）满足「至少解决一个 pyc」：`order_api.pyc` 35/37 → **37/37** 整文件翻绿。
+      目标「全部 pyc 成功」**未达成**，剩余 11 文件 / 31 单元；已否证的轴见
+      `pythoncdc-falsified-residual-axes` 与 `rounds/round19/REGISTER_R19_NEGATIVES.md`，
+      下一轮不得重走：handlers `_target` 的发射端折叠（前提被否证）、
+      「子区内部块并入父臂停止集」的直白写法（零翻正 + 4 处回退）、
+      klinedata 单点修（另一处未修则零翻正）。
