@@ -241,3 +241,35 @@ v3 改在 S1（else 语句装配函数内）同样零变化 ⇒ S1 亦未命中�
 
 主代理本轮**未**向实时仓库写入任何试验字节：`git status --porcelain core/` 为空，
 三件哈希仍是已认证的 `dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`。
+
+## 探针成功 + 第四次未命中（17:38，镜像 `r21`/`r21b`，判据 c7afe001f309ce4d）
+
+探针（只在纯语句位置插入、一行 `try:`/`if …: <语句>`/`except`，只读标量）
+**成功且惰性已证**：`on.py` 与实时树跑的 `off.py` **逐字节相同（inert: YES）**，
+命中序列只有一条：
+
+```
+S5_19022 | (entry=858, elif_final_else=[1102], merge=1106)
+```
+
+⇒ 该链**确实**经过 `_if_generate_elif_chain` 后半段的 `_expanded_final_else` 逻辑；
+`:18443`/`:19049`/`:19315` 三点未命中。
+据此把幻影 else 判据放在**真正的 else 语句装配行** `:19817`
+（`final_else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')`）
+之前，并释放该块（`elif_final_else=None`、从 `region.blocks`/`else_blocks` 移除）：
+
+```
+real_quote 43/45（仍未翻正）  quote 86/92  matcher 17/17  quotation 153/153
+klinedata 63/64  log/__init__ 10/10  trade/function 71/71   ← 全部与基线同
+```
+
+⇒ 第四处**零效果**。合起来四次未命中说明：不是判据写错，而是 `:19817` 这一支在本单元
+**未被走到**（该函数在更早处返回/走了另一分支），或 else 臂的实际语句来自
+`nested_elif_stmts`/`_nested_trailing_stmts` 之类**再入递归**（本链 `elif_conditions` 有 2 项，
+`len>1` 分支会递归装配嵌套链，else 很可能在**递归层**里装配）。
+
+下一手的最小诊断（一次就够，别再猜判据）：在 `:19817` 行**之前**加一条只写文件的标量日志
+（记 `entry`、`len(elif_conditions)`、`bool(elif_final_else)`、`_r21_ph` 的计算值），
+再在递归装配 `nested_elif_stmts` 的入口加同样一条；两次命中序列一比即可定位真正那层。
+主代理本轮**未**写入实时仓库（`git status --porcelain core/` 空，哈希仍是
+`dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`），停止第 5 次尝试以保留门链预算。
