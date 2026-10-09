@@ -121,3 +121,28 @@ IQEngine/core/strategy 20/20 全部守住；其余残差文件读数与封盘逐
 R15-13，以及 R14-05 子代理补丁（不安装）。所有负结果均已登记并逐字节还原，
 core 现为 `region_ast_generator.py 5066b1367b6de3c7` / `region_analyzer.py 640d33a77dcb71c2`，
 `site-packages` 零漂移，残差 12 文件 / 33 单元。
+
+## 9. T12-22（order_api 两条单元同失一段调用）首两枪实测
+
+目标：`IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc` 35/37，两个失败单元
+`future_order` / `option_order` 丢的是同一形：整条
+`strategy_log.info('生成订单…{side}{oper}…'.format(o.order_id, o.symbol, side=('开仓' if o.futures_direction.value.upper()=='OPEN' else '平仓'), …))`
+日志调用丢失，产物该臂只剩一行裸三元 ⇒ 一条判据即可整文件翻正。
+
+- 猜测一「臂走 `_EXPR_REGION_TYPES`（含 TernaryRegion）的表达式区域路由」：把
+  `region_ast_generator.py:314` 改成 `(BoolOpRegion,)` ⇒ order_api 仍 35/37，
+  needle 计数（`strategy_log.info('生成订单`=1、`.format(`=13、`'买入' if`=3、`hedge_type`=5）
+  与基线逐字节相同，quotation 153/153、matcher 17/17 不变 ⇒ 惰性，猜测被否。
+- 猜测二「`:25422` 的 `child_expr_regions` 分派把臂入口交给三元区域」：加环境变量门旁路
+  （`ABL_T` 未设时逻辑上必然等价于原路径）。结果 control 侧与 withABL 侧读数完全相同，
+  但与**未打补丁的基线**不同：order_api 35/37 → **34/37**，`.format(` 13→12、`'买入' if` 3→0。
+  ⇒ (1) 旁路没有找回丢失的 `strategy_log.info(...format(...))` 调用，丢失点在更上游；
+  (2) 证实本管线输出对**源码文本布局本身**敏感（id() keyed 缓存与集合迭代次序随分配改变）——
+  「逻辑死支路」的编辑不是惰性对照，唯一有效控制是逐字节相同的树。
+  该条已并入用户级记忆 `in-analyzer-probes-perturb-cfg` 第 4 点。
+
+## 10. 存档：R14-05 上一版补丁在镜像里的独立复判（诊断子代理测得）
+
+镜像施加 banked `region_analyzer.py` 后：a01/a02/a03 仍 1/2；
+`api_base` 由 27/28 退到 **25/29**（单元总数 28→29 ⇒ 该补丁额外生成了一个 code object）；
+`strategy` 26/27 不变 ⇒ 除「不成链」外还多造对象，进一步坐实不安装。
