@@ -229,3 +229,26 @@ region_ast_generator.py:8868  def _loop_dispatch_block(...)
 `_nr_ast` 非空处记录）；锚点 = HEAD 行 `region_ast_generator.py:25233`
 `                    if (not _nr_ast and _nb is not _nr.entry and _nb in child_entries):`。
 必测反例不变：quotation 153/153、handlers 29/30 必须逐字节不动；若 evt 翻正则立刻跑满 402 门。
+
+## T12-08 结果：认领侧问题已解决（登记次数归零），但语句仍不发 ⇒ 宿主在派发侧
+
+候选 `a50aadd50b01e036`（镜像已归档到 `D:/Temp/r141/t1208_candidate_generator_a50aadd5.py`，
+镜像随后复原 HEAD 字节）把认领豁免的作用域从本臂 `child_entries` 扩到
+「`self.regions` 里任一区域的 entry」并保留「未产出语句才豁免」（台账只在 `_nr_ast` 非空处记录）。
+
+两条实测：
+
+* 写栈探针（`t1209`，同一进程包集合，不改仓库文件）在候选下报 **`writes_of_7972 = 0`**
+  ⇒ HEAD 里那三处认领/登记全部不再命中 `@7972`，豁免按设计生效，且
+  quotation `153/153`、handlers `29/30` 产物**逐字节不变**（安全性再次确认）。
+* 但 `realtime_event_source` 仍是 `12/13`、产物 `20555` 字节与封存**逐字节相同**
+  ⇒ 「无人认领」并不等于「有人发射」。这条语句的宿主不在认领侧，而在**派发侧**：
+  块序走到 `@7972` 时，没有任何消费者把它作为 `IfRegion@7972` 的入口分派出去
+  （HEAD 的行级追踪显示它在臂循环里走到 `if block in self.generated_blocks: continue`；
+  候选下该闸不再拦它，但它仍不出现在输出里 ⇒ 需要重新追踪候选构建下它走到哪一条 `continue`）。
+
+下一票的第一步因此很具体：**在候选构建 `a50aadd50b01e036` 上**重跑行级追踪
+（`t1202_lines.py` 形式；注意我这次 `t1216` 的 REPO→镜像 替换**没生效**（打印
+`path repointed: False`），那份日志仍是 HEAD 的，别拿它当候选证据），
+读出候选下 `@7972` 实际执行到哪一行被跳过，再决定是给 `child_expr_regions`/`_nested_if_entry_generate`
+补一条分派，还是把该块交给循环体的 `_loop_dispatch_block`。
