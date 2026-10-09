@@ -61,3 +61,27 @@ PROD  @1090 CALL ; @1100 POP_TOP ; @1102 JUMP_FORWARD ->1108 ; @1104 LOAD_FAST r
 开票要点：判据应为「臂尾语句本身以无条件跳/返回结尾 or 臂的后继就是区域的 merge 且 merge 由落空边进入」
 时不发这条跳；`landings=1` 那处 `@1022 JUMP_FORWARD ->199 vs ->202` 同为位移影子，不是第二缺陷
 （勿按 11 条记账）。该文件另有 1 个失败单元 `get_real_minute_kline`（+2 ⇒ 不产生整文件翻绿）。
+
+### 源码级补充（同单元，实读 `real_quoteOK.py` line 984-997）
+
+```
+if redata: …
+elif flag == 1:  system_log.debug('分笔数据转化异常，默认返回空值')
+elif flag == -1: system_log.debug('分笔数据返回空值')      ← 末条 elif 臂
+else:            return redata                             ← else 体就紧跟在臂体之后
+try:
+    if redata: …                                            ← 区域的 merge（@1108）
+```
+
+原字节码：末条 elif 臂体 `CALL; POP_TOP`（@1090/@1100）之后**无跳**，直接**落入紧随的 else 体**
+`@1102 LOAD_FAST redata; RETURN_VALUE`。
+产物：同一位置多发一条 `@1102 JUMP_FORWARD -> 1108`（即臂尾“跳过 else 体去往 merge”的跳），
+而它要去的 merge 前面紧接的 else 体本身**以 RETURN 结尾**（永不落到 merge），
+CPython 因此**省略**这条臂尾跳 ⇒ 产物多出的是一条**死跳**（+1 条 / +2 字节），
+其余 11 处差异全是这 2 字节的位移影子。
+
+判据形状（生成端，勿写成绝对偏移）：**当 if/elif 链的 merge 只能经由「紧随某臂体之后的
+else 体」进入，而该 else 体自身以无条件终结（RETURN/RAISE）结尾时，末条臂不得再发臂尾跳过跳**。
+落点候选与既往否决：`_if_generate_normal` / `_process_if_blocks` 的臂尾跳支（`:21283-21319`、
+`:25336-25340` 带 R64-B2 让位契约注释）；`_loop_tail_exit_sink_pair`（分析端 :28390 / 生成端 :52045）
+经 r19t5 实测只打另一对（本形上把 landings 3→0 但仍 29/30 那类），**不是**本单元的支路。
