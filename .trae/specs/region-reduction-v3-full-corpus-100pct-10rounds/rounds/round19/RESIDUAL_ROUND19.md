@@ -1,6 +1,6 @@
-# 封表时点 00:34:17 / label round19 / 数据源 rounds/round19/after(8 shards)
-单元 6584/6617 (99.5013%)  文件 390/402  残余文件 12 个  残余单元 33 条
-对照 round18：单元 6584 -> 6584  文件 390 -> 390
+# 封表时点 00:51:13 / label round19 / 数据源 rounds/round19/after(8 shards)
+单元 6586/6617 (99.5315%)  文件 391/402  残余文件 11 个  残余单元 31 条
+对照 round18：单元 6584 -> 6586  文件 390 -> 391
 
 | 文件 | 单元读数 | 失败单元（完整 qualname） | 台账登记的机制/条款 |
 |---|---|---|---|
@@ -15,8 +15,6 @@
 | `IQData/api/api_base.pyc` | 27/28 | `<module>.get_history_df` | \| #13/#14 \| `klinedata.kline_datetime_list`、`api_base.get_history_df` \| 5→1 压形（`time_count -= 1` 与其后循环测试算术）＋ 别处 1→9 摊开 \| 具名 \| |
 | `IQData/plugins/plugin_system_realquote/real_quote.pyc` | 43/45 | `<module>.RealQuoteData.get_real_minute_kline` | \| `real_quote.get_real_minute_kline` \| −2 \| 同上 \| 同上 \| |
 | `IQData/plugins/plugin_system_realquote/real_quote.pyc` | 43/45 | `<module>.RealQuoteData.get_tick_direction` | \| `real_quote.get_tick_direction` \| 11 \| **全部 −2 字节**（如 `RETURN_VALUE@1572→@1574`、`LOAD_FAST redata@1102→@1104`） \| 函数前部**多插了一条 2 字节指令**（`net = del 11/ins 12` 与之一致）⇒ **1 个缺陷**，不是 11 个 \| |
-| `IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc` | 35/37 | `<module>.future_order` | \| 4 \| #13 次刀 \| `order_api` 35/37（`option_order`+`future_order`）、`__init__`(risk) 41/43、`real_quote` 43/45 \| 各自 del/ins 同形，且无 #16 共要件 \| |
-| `IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc` | 35/37 | `<module>.option_order` | \| 4 \| #13 次刀 \| `order_api` 35/37（`option_order`+`future_order`）、`__init__`(risk) 41/43、`real_quote` 43/45 \| 各自 del/ins 同形，且无 #16 共要件 \| |
 | `IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc` | 26/27 | `<module>.Strategy.tick_worker_thread` | \| **1** \| **#14（`TARGET_ONLY` 8 条）** \| **4 个整文件**：`bar` 84/85、`strategy_universe` 10/11、`load_daily` 26/27、`strategy` 26/27（`_history_bars`/`_on_clear_de_listed`/`<module>`/`tick_worker_thread` 各自是所在文件的**唯一**失败单元） \| 零内容差 ⇒ 一条落点判据即可，无共要件、无省略纠缠 \| |
 | `IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc` | 12/13 | `<module>.RealtimeEventSource.clock_worker` | \| #13 \| `realtime_event_source.clock_worker`(144/27) \| 一形三态：`if persist_flag is not False:` 110 条体被跳 ＋ 17 条块搬到循环后 ＋ 3 处目标差 \| 具名 \| |
 | `IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc` | 41/43 | `<module>.PluginRiskCalculation._on_publish_after_trading_end` | \| #14 邻面 \| `__init__._on_publish_after_trading_end`(2/2) \| 函数内 `import`（`IMPORT_NAME`+`IMPORT_FROM` 成对消失）＋小摊开 \| 具名 \| |

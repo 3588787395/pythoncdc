@@ -335,3 +335,27 @@ Task 11 本轮实际状态（2026-10-08，逐条按完成度如实标注，勾�
 - [x] 19.14 回退后重封门链（pristine 代码）：`regen ok=402 bad=0`、`[units] 6584/6617 -> 6584/6617`、`[files] 390 -> 390`、`文件级回退=0 / UNIT_REGRESSIONS=0 / 新增失败单元=0 / 翻正单元=0`、quotation 153/153、small34 1535/22、自证 153/153 Equal（两变异各抓 1）⇒ 站点与名册与 pristine 代码一致（回退只还原代码不重扫产物会留下陈旧被打红产物，本轮已重扫）
 - [x] 19.15 **pytest 由 2 例升至 3 例的真因不是本轮补丁**：常驻守卫 `tests/test_repo_tool_hygiene.py::TestNoHardcodedRepoRoot` 抓到 `unit_diff.py:17` 写死 checkout 绝对路径（该文件是在门 18 checks 跑完之后才入仓，故封盘读数仍是 2 failed）。⇒ 依 [[register-reds-dont-relax-rulers]] 只改工具不改判据：`unit_diff.py` 与 `repro_tail/make_tail.py` 的 ROOT 改为按 `__file__` 推导（unit_diff 上溯 3 级、make_tail 上溯 6 级；我第一次写 5 级，`make_tail --run` 立刻以 FileNotFoundError 自证错级），复跑七套＝**2 failed / 280 passed / 2 xpassed**（与封盘同），两工具的相对路径调用与 `GREEN=13 RED=0` 均复验通过
 - [x] 19.16 T20-2 handlers 诊断回报 **BLOCKED 且推翻本票前提**（`rounds/round19/banked_r19t5/README_T20-2.md`）：`@404` 与 `@408` 是两个不同 CFG 块，均在 `LoopRegion@90`（`else_blocks=[@408]`）与 `IfRegion@0.then_blocks=[@90,@408,@404]` 内；产物里活下来的 `return None` 出自 **@408**，丢的抽象节点是 **@404**；`:5364` 声称 `_generate_block_statements` 对 @404 返回 `[]` 在当前字节上是假的（返回完整 `Return(_explicit_return=True)`），且同时移除 `:5378` 清扫与 `:25301 [R2-B107]` 两处认领点产物仍逐字节相同 ⇒ 折叠既非发射支也非认领/顺序问题；15 次消融 12 次逐字节相同，唯一能动字节的 `[R5-B119 loopsink]`（生成端 `:52045` / 分析端 `_loop_tail_exit_sink_pair` `:28390`）打的是**另一对** @1016/@1020（`landings 3→0` 仍 29/30）。0/1/2/3 条 return 与 `while…else` 最小核全部编译成**一条共享尾**⇒ 原字节码的相邻两对是 CPython 按出口边复制，非反编译可折叠点；本票此前「发射端折叠」的说法作废，改列为「源码形状可表达性」问题
+
+## 19A. 第 19 轮落地（T19-4 收窄后翻正并过门）
+
+- [x] 19A.1 **收窄判据落地**：在 r19t1 的两文件路线上，把 `_is_statement_close_op` 的闭合族**去掉 `STORE_*`**
+      （`region_ast_generator.py`，加 3 行注释；理由写进注释：赋值语句的栈深归零点落在存目标指令上，
+      此时跨度会把整条赋值语句吞成条件片段）。镜像三点复测：
+      `order_api 37/37`、`plugin_system_log/__init__ 10/10`、`plugin_system_trade/function 71/71`
+      ⇒ 门 19 的两处回退**同源于这一族**，一处收窄同时解掉两条（不是两个独立缺陷）。
+- [x] 19A.2 安装凭据：`region_ast_generator.py 5066b1367b6de3c7 -> dff6e81a5f2ff9f6`、
+      `ast_generator_v2.py e1e0dcda2e745298 -> beeaf14435e22922`（均 py_compile 通过；备份在
+      `D:/Temp/r150/deliver_backup/`，restore 可逐字节还原）。装后实时树电池：
+      `repro_orderapi GREEN=5 RED=0`、`repro_arm 0G/3R`、`repro_ccneg 3G/1R`、`repro_retbreak 2G/2R DRIFT=0`
+- [x] 19A.3 **门链 label 19 vs 18 全四阶段通过**：
+      `regen ok=402 bad=0`；`[units] 6584/6617 -> 6586/6617 (99.5315%)`；`[files] 390 -> 391`；
+      `文件级回退=0 / UNIT_REGRESSIONS=0 / 新增失败单元=0 / 翻正单元=2`
+      （FIXED `order_api <module>.future_order`、`<module>.option_order`；UNIT-UP order_api 35 -> 37 ⇒ 整文件翻绿）；
+      checks：`quotation 153/153`、`small34 units_success 1536 -> 1537 / success 22 -> 23`、
+      自证 `153/153 Equal` 且两变异各抓 1、`pytest 2 failed / 280 passed / 2 xpassed`
+      （＝封盘的常驻两红，零新增失败）
+- [ ] 19A.4 下一轮：残余 **11 文件 / 31 单元**（`RESIDUAL_ROUND19.md`）。可直接接手的三张：
+      ①`api_base`+`strategy`（各只差落点 2/4，卡点＝父 IfRegion 与子区争抢 @1040，归处为调用方停止集
+      `get_if_branch_boundary_stop`/`[R31-B]`，见 `banked_r19t4/README.md`）；
+      ②`klinedata`（两处同修：臂尾出口身份 + `@974/@978`，见 `banked_r19t3/` 与 `DIAG_R1516`）；
+      ③`handlers._target` 前提已否证（CPython 按出口边复制尾对，非发射折叠），改列为源码形状可表达性问题。

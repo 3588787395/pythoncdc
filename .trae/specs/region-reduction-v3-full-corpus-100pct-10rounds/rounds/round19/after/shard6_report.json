@@ -1,5 +1,5 @@
 {
- "elapsed_sec": 24.2,
+ "elapsed_sec": 23.3,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
@@ -7,7 +7,7 @@
   "success": 50
  },
  "files_total": 51,
- "generated_at": "2026-10-10T00:29:06",
+ "generated_at": "2026-10-10T00:46:59",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
@@ -290,7 +290,7 @@
    "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
    "pyc_sha": "34dbb235b637",
    "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py",
-   "source_sha": "d6af28bf3086",
+   "source_sha": "6a71fc95a5e6",
    "status": "failure",
    "success_rate": 0.921875,
    "units_success": 118,
