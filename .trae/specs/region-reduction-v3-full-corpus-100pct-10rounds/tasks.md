@@ -787,3 +787,32 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   外层 try 以 5 个 span 保护 [640,1620]，含 else 臂。
 - `clock_worker`：v5 产物与封版逐字节相同（`-113/7/18`）⇒ 同路径但**未证明**，不记为覆盖；
   `_generate_ternary@46121` 亦确认不参与本单元。
+
+## 20Q. 我在派 #50 之前先量了这个"merge 未声明"特征的种群——结果**部分反驳了收敛说**（2026-10-10 10:49）
+
+- 口径：同进程对每个失败单元的代码对象跑 `build_cfg(co)` + `RegionAnalyzer(cfg).analyze()`（它返回区域**列表**，
+  我第一次写成 `.regions` 所以七个文件全 ERR——那是我的探针 bug，不是数据）；
+  特征＝`type(r).__name__.startswith('IfRegion')` 且 `r.merge_block is None`；再附加一条臂尾 `JUMP_BACKWARD` 判定。
+
+| 文件 :: 单元 | 区域数 | IfRegion | merge_block=None | 且臂尾跳回 |
+|---|---|---|---|---|
+| quote :: run_individual_transform | 10 | 5 | **0** | 0 |
+| klinedata :: get_kline_by_count_new | 49 | 21 | 1 | **1** |
+| wizard_quant_api :: filter_desicion | 80 | 29 | **10** | 0 |
+| trade_info_utils :: query_strategy_id | 7 | 2 | 2 | 0 |
+| api_base :: get_history_df | 217 | 72 | 4 | 0 |
+| real_quote :: get_tick_direction | 31 | 10 | 1 | **1** |
+| strategy :: tick_worker_thread | 20 | 14 | **0** | 0 |
+| realtime_event_source :: clock_worker | 67 | 55 | **0** | 0 |
+
+- **要点一（对我上一条"三票同向收敛"的自我纠正）**：r20t 说残余是 `IfRegion@640` 的 `merge=None`，
+  但在 `run_individual_transform` 的代码对象上**当前没有任何 IfRegion 的 merge_block 为 None**（0/5）。
+  要么它指的是别的容器（TryRegion/Region 或它自建的中间量），要么它的措辞不等于 `merge_block is None`。
+  同理 `strategy.tick_worker_thread` 与 `clock_worker` 也是 0。⇒ **不许按"一个 analyzer merge 声明判据通吃"开票**；
+  下一票必须以"逐单元先复现该特征"为第一交付物，命中才动判据。
+- **要点二（特征真正有种群的地方）**：`wizard_quant_api.filter_desicion`（10 个 merge-less IfRegion，但它只差 1 个落点）、
+  `api_base.get_history_df`（4）、`trade_info_utils.query_strategy_id`（2），
+  而 `klinedata.get_kline_by_count_new` 与 `real_quote.get_tick_direction` 各命中 **1 且臂尾跳回**——
+  这两条正是 #45/#48 挂着"需要两个站点/残余是落点"的单元，**是最像"一条 analyzer 声明判据能翻正"的两个候选**。
+  建议 #50 起手就用这两个单元做判据靶（各只要 1 个翻正即满足门槛），而不是先攻 wizard 的 10 个。
+- 本会话结束时仍未安装任何东西：`core/` 干净，`region_ast_generator.py = 4f295dfc6ebd2caa`，门 21 封版 6588/6617。
