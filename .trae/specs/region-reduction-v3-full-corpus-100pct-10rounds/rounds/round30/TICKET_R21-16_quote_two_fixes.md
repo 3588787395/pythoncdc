@@ -31,20 +31,21 @@ dead-code-eliminates it. Copy that file over your mirror's `core/cfg/region_anal
 the same rule; either way **report the per-unit shape before you start** so I can attribute the two halves.
 
 ## 2. Fix #2 is YOUR work — the residual `delta=-3`
-After D the unit reads `len orig=407 prod=404 delta=-3 hunks=3 landings=2`. That is the
-**return-`None` threading family** (`rounds/round29/RESIDUAL_ROUND29.md` rows for `trade_info_utils`
-and the `#15` register entries): the product materialises an inline `LOAD_CONST None; RETURN_VALUE`
-where the original jumps to a shared tail, or vice versa. Two things I already proved about this
-family, so do not spend your run on them:
-- No arrangement of `return None` **statements** changes the layout: `else: return None`, `else: pass`,
-  and no-`else` all compile byte-identically on this interpreter (3.11.7), because CPython threads a
-  `return None` else-arm onto the function's implicit tail. A trailing function-level `return None`
-  shortens the code instead. Decide every shape question by **compiling candidate sources**.
-- The generator cannot write a jump target (AST has no jump operands); only the analyzer's
-  *declaration* or a different **nesting** can change which copy an exit lands on.
-So: dump the unit's diff hunks after D (`unit_diff.py … --all`), identify each remaining hunk's owning
-region and block role, and find the emission/declaration that produces the extra/missing tail copy.
-Note this file also contains a second, still-correct handler shape (`run_tick_socket`) — treat it as
+**Correction to this section, measured at 17:33 on your own in-flight state (`region_analyzer.py =
+f2bb527550ecf03c`, my read: `delta=-3 hunks=3 landings=2`, file 91/92, `run_tick_socket` staying
+`Equal`): the residual is NOT the return-`None` threading family.** Diffing the raw opcodes shows a
+**handler-suite relocation** — the original emits the inner `except BaseException as x:` block at
+`@752..@1114` (62 instructions, starting `JUMP_FORWARD / PUSH_EXC_INFO / LOAD_GLOBAL BaseException /
+CHECK_EXC_MATCH / POP_JUMP_IF_FALSE / STORE_FAST x / self.log.quote.error('eval转化逐笔数据异常')`),
+immediately after the inner try body, while the product emits that same block at `@1260+`. So the two
+except handlers of the nested/outer try pair are laid out in the opposite order, and `delta=-3` plus
+the two landings follow from that ordering, not from a missing tail copy. Treat the threading
+hypothesis below as retired and work the ordering instead (same family as the `run_tick_socket`
+relocation that gate 28 fixed via the else-arm remainder rule at `region_ast_generator.py:21341` /
+`:22182`).
+
+Retired hypothesis, kept only so you do not re-test it: after D the unit was `delta=-3`, and this file
+also contains a second, still-correct handler shape (`run_tick_socket`) — treat it as
 your sentinel: any change that makes it leave `Equal` is a regression, not progress.
 
 ## 3. Acceptance (quote literal rig output)
