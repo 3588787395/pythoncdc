@@ -1201,3 +1201,25 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 - 教训入册：成对落地前必须先做**冗余性检验**（各半边单独 cmp 产物、再合起来 cmp），
   否则一次门只能证明"两个判据里有一个在干活"；这条比"fire census"更进一步，下次写进派单模板。
 - 现在在飞：`r35a`（generator 轴的 run_tick_socket 臂发射位置；analyzer 侧成员修复已被实测为不动产物，票面已禁止它再去那边找）。
+
+## §32 round29 — gate 29 certified: 6600/6617 units (99.7431%), 393/402 files (two file flips, one criterion)
+- Landed `core/cfg/region_ast_generator.py` pre=ac8ec5aa2d5796ea post=**e8e8a9b6b88080b9** (+83/-7, one file):
+  r36a's R21-13 criterion — new read-only `_inline_and_chain_exits_agree(chain_blocks)` (legs of a claimed
+  `and` chain must share one false-exit, a necessary condition of real `A and B` codegen), a `[R21-13 判据]`
+  veto before the `inline_boolop_chains` `'and'` record is lifted into the enclosing elif test, and a
+  `_r2113_legs_back` route that returns the leg blocks to the arm body (`elif_bodies[0] + legs` sorted by
+  `start_offset`, passed as a copy to preserve object identity when there are no legs).
+- Result: `wizard_quant_api 57/58 -> 58/58` and `real_quote 44/45 -> 45/45`, per-unit `delta=0 hunks=0
+  landings=0 judge_diff=False` on both; `文件级回退=0 UNIT_REGRESSIONS=0 新增失败单元=0 翻正单元=2`;
+  quotation 153/153; small34 1549 -> 1551; selfcheck catches both mutants; pytest 2 failed/280 passed
+  (same as gate 28); all six batteries reproduce their recorded values; **only two products changed corpus-wide**.
+- Residual now **9 files / 17 units** (`rounds/round29/RESIDUAL_ROUND29.md`, UNREGISTERED 行数=0). Next gate label 30.
+- All four round engineers (`r36a` R21-13, `r37a` R21-14, `r38a` R21-15, `r39a` R21-16) were killed by
+  "daily usage limit for Chat" before writing any `DELIVER/FIX_*.md`; this landing rests on my own
+  mirror measurements, and `FIX_R21-13_r36a_LANDED.md` states which parts are mine.
+  Reclaimable results: r37a pinned the synthetic `while True:` wrapper site at `:6917 _can_merge`
+  (its ablation moved `_save_testds_to_csv` from `delta=-7 hunks=3 landings=3` to `hunks=2 landings=2`
+  with `time.sleep(0.01)` still missing); r31/r32 mirrors never left pristine.
+- New rig trap banked (see `ADJUDICATION_R21-13_provisional.md`): never `cmp` a regenerated product
+  against a **checked-out** product in this worktree — checkout is CRLF, the decompiler writes LF, so
+  every file reads DIFF. Compare against `git show HEAD:<path>` or read the gate's file-level diff.

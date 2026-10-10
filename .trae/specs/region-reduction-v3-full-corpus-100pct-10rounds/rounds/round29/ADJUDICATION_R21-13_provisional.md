@@ -21,10 +21,17 @@ returns the leg blocks to the arm body via `region.elif_bodies[0] + legs` sorted
 Mechanism matches the ticket's premise (the analyzer records an `or` chain's first leg as an `and`
 conjunction; disagreeing short-circuit exits falsify it, so the lift is refused).
 
-**Install hazard:** the candidate file is **CRLF** (59 767 CR bytes) while the repo file is LF-only
-(0 CR). A naive whole-file install would rewrite every line of a 59 747-line file. On install,
-transplant the added/removed line ranges onto the sealed LF bytes (or normalise the candidate to LF)
-and then verify `git diff --stat` shows only the intended line count.
+**EOL note — my first reading of it was wrong and is corrected here.** I initially wrote that the
+candidate's CRLF was an install hazard against an "LF-only repo file". Measured just now: the repo's
+*working-tree* `core/cfg/region_ast_generator.py` contains **59 691 CR bytes** (CRLF) while
+`git show c0744254:core/cfg/region_ast_generator.py` contains **0 CR** (LF) — git normalises on check
+in/out in this worktree, which is also why `git show HEAD:x.pyc`-style reads and disk reads are not
+interchangeable here. The candidate's CRLF is therefore **the working-tree convention**, and a whole-file
+install of it as delivered is correct; the real content delta, measured after stripping CR from both
+sides, is **+83 / −7 lines in 4 hunks** (the file is 59 747 → 59 823 lines). A `git diff --no-index`
+comparison across the two trees reports ~59 700 changed lines and is meaningless for this file —
+compare with CR stripped, in python, as above.
+
 
 ## Readings under the candidate
 | file | sealed (gate 28) | under candidate | verdict |
@@ -53,7 +60,13 @@ real_quote        <module>.RealQuoteData.get_real_minute_kline len orig=279 prod
 ## Expected gate 29 reading if this is installed alone
 units `6598 -> 6600` of 6617, files `391 -> 393` of 402, residual files `11 -> 9`,
 residual units `19 -> 17`, with `regen ok=402 bad=0`, `文件级回退=0`, `UNIT_REGRESSIONS=0`.
-Note the criterion is NOT surgical at the byte level — four panel files change product bytes while
-their unit counts stay equal, so the gate (not this panel) is what must certify that no other file of
-the 402 regresses. That is also why the engineer's own fire-census number is still required before
-claiming the criterion is narrow.
+**Correction after the gate ran (this supersedes the paragraph that was here).** I had written that
+the criterion is "not surgical at the byte level" because four panel files (api_base, strategy,
+handlers, klinedata) appeared to change product bytes with equal unit counts. That appearance was my
+own rig artifact: I `cmp`-ed products written by the mirror against the repo's **checked-out**
+products, and this worktree checks files out with CRLF while the decompiler writes LF, so `cmp`
+reports DIFF on essentially every file. The gate's own in-place regeneration settled it — after the
+install `git status --porcelain -- site-packages` lists **exactly two** modified products,
+`wizard_quant_apiOK.py` and `real_quoteOK.py`. So the criterion changes nothing else in the corpus,
+and the durable rule is: never `cmp` a regenerated product against a checked-out product; compare
+against `git show HEAD:<path>` bytes or read the gate's own file-level diff.

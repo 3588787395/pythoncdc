@@ -18871,6 +18871,39 @@ AST 映射规则:
             return False
         return False
 
+    def _inline_and_chain_exits_agree(self, chain_blocks) -> bool:
+        """_inline_and_chain_exits_agree — 否证分析端 inline_boolop_chains 的 'and' 记录。
+
+        **算法依据** CPython 3.11 把 ``elif A and B: arm`` 编译成两条短路腿，每条腿的
+        假出口（POP_JUMP_IF_FALSE / 其 NONE_CHECK 同族）跳到**同一个**「跳过本臂」块；
+        而 ``if A or B: arm`` 的腿跳的是 **arm 入口**（真出口汇合），假出口跳到链后。
+        于是「所有腿的跳转目标是同一块」是 and 链的必要条件（区域归约侧的既有判据见
+        _condition_chain_targets_consistent 的 'and' 分支，本方法只复用同一事实，
+        不引入任何新形状假设）。分析端把 or 链的首腿误记为
+        inline_boolop_chains[..] = {'op': 'and', 'blocks': [elif 条件块, 首腿]} 时，
+        两条腿的目标必然不同（一条跳链尾、一条跳共享臂体），本方法判 False。
+
+        **输入契约** chain_blocks: 记录里的块列表（链首 + 合取支），可为空。
+
+        **归约方式** 返回 bool。True = 与 and 语义相容（或不可证伪），调用方维持既有
+        行为；False = 证伪，调用方**不得**把合取支抬进 elif 测试。
+
+        **唯一归属判定** 本方法只读跳转目标，不标记 generated_blocks、不改任何块归属。
+
+        **字节码一致性约束** 任一腿的最后一条指令不是条件跳转（取不到目标）时不判伪：
+        本判据只在**测得矛盾**时否决，绝不因证据不足而否决，避免把既有正确折叠放宽或收紧。
+        """
+        if not chain_blocks or len(chain_blocks) < 2:
+            return True
+        _exits = []
+        for _b in chain_blocks:
+            _jt, _ft = self._cond_block_branch_targets(_b)
+            if _jt is None:
+                return True
+            _exits.append(_jt)
+        return all(_x is _exits[0] for _x in _exits[1:])
+
+
     def _if_generate_elif_chain(self, region: IfRegion) -> List[Dict[str, Any]]:
         """生成 if-elif[-else] 链中 elif 部分的 AST（由 _if_generate_full_elif_chain 调用）。
 
@@ -19336,8 +19369,22 @@ AST 映射规则:
                                     break
                             if not _merge_is_region_entry_2:
                                 self.generated_blocks.add(elif_boolop.merge_block)
+        # [R21-13] 被否证的 'and' 记录：腿块交还臂体，不抬进 elif 测试。
+        _r2113_legs_back = []
         if elif_condition is None:
             _inline_chain_info = getattr(region, 'inline_boolop_chains', {}).get(id(elif_cond_block))
+            # [R21-13 判据] 分析端把 or 链首腿记成 and 合取支时，两条腿的短路出口
+            #   必然不同（一条跳链尾、一条跳共享臂体），抬进 elif 测试会让该腿的出口
+            #   失去可落地的臂体副本，被 CPython 牵到函数尾的隐式 return None，实测
+            #   wizard_quant_api.filter_desicion delta=+2 hunks=1 landings=1。证伪即
+            #   否决抬升，并把腿块交还给臂体（见下方 _r2113_legs_back 的消费点）。
+            if (_inline_chain_info
+                    and _inline_chain_info.get('op') == 'and'
+                    and not self._inline_and_chain_exits_agree(
+                        _inline_chain_info.get('blocks') or [])):
+                _r2113_legs_back = list(
+                    _inline_chain_info.get('blocks') or [])[1:]
+                _inline_chain_info = None
             if _inline_chain_info:
                 _chain_blocks = _inline_chain_info['blocks']
                 _chain_op = _inline_chain_info['op']
@@ -19480,7 +19527,17 @@ AST 映射规则:
                 elif_condition = _negate_expr(expr2) if elif_negate else expr2
         elif_body_stmts = []
         if region.elif_bodies:
-            elif_body_stmts = self._process_if_blocks(region.elif_bodies[0], region, branch='elif')
+            # [R21-13] 交还的腿块是该臂的第一条语句（or 链首块），由其自身 IfRegion
+            #   归约为完整 BoolOp(or) 测试。无交还时把原块表对象原样传入，保持既有
+            #   对象同一性（_process_if_blocks 可能就地改块表）。
+            _r2113_body_blocks = region.elif_bodies[0]
+            if _r2113_legs_back:
+                _r2113_body_blocks = list(region.elif_bodies[0]) + [
+                    _gb for _gb in _r2113_legs_back
+                    if not any(_gb is _eb for _eb in region.elif_bodies[0])]
+                _r2113_body_blocks.sort(key=lambda _bb: _bb.start_offset)
+            elif_body_stmts = self._process_if_blocks(
+                _r2113_body_blocks, region, branch='elif')
             elif_body_stmts = [s for s in elif_body_stmts if not (s.get('type') == 'Expr' and isinstance(s.get('value'), dict) and s['value'].get('type') == 'Constant')]
             # [RC3-continue fix] elif body 全部为 PURE_CONTINUE 块（已被
             # LoopRegion 提前标记为 generated）时，_process_if_blocks 返回
@@ -20126,12 +20183,31 @@ AST 映射规则:
                 FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS):
             return None, None
         jump_target = self.cfg.get_block_by_offset(last.argval)
-        fallthrough = None
-        for s in cond_block.successors:
-            if (jump_target is None
-                    or s.start_offset != jump_target.start_offset):
-                fallthrough = s
-                break
+        # [R21-13] successors 是 set，迭代顺序按对象哈希而非字节码顺序；「第一个
+        #   非跳转后继」会把 try/except 的异常边误判成 fall-through。实测
+        #   get_real_minute_kline 的 blk@574 successors={578,582,1310}（1310 是
+        #   PUSH_EXC_INFO handler，见 exception_successors），JT=582，被取中的是
+        #   1310 ⇒ or 折叠判据「非末操作数 true 出口 == 末操作数 fall-through」必然
+        #   落空，`fq is None or ex_info is None` 的两条腿被渲染成嵌套 if（`if fq
+        #   is not None:` 包住整段），布局与语义同时偏离。fall-through 是**顺序**后继：
+        #   起点紧跟本块末指令的那一条；取不到时退回既有「第一个非跳转后继」行为，
+        #   故本站点只可能把误判的异常边改回真正的链尾，不会否决任何既有正确判定。
+        _r2113_seq = None
+        for _s in cond_block.successors:
+            if (jump_target is not None
+                    and _s.start_offset == jump_target.start_offset):
+                continue
+            if (_s.start_offset > cond_block.end_offset
+                    and (_r2113_seq is None
+                         or _s.start_offset < _r2113_seq.start_offset)):
+                _r2113_seq = _s
+        fallthrough = _r2113_seq
+        if fallthrough is None:
+            for s in cond_block.successors:
+                if (jump_target is None
+                        or s.start_offset != jump_target.start_offset):
+                    fallthrough = s
+                    break
         return jump_target, fallthrough
 
     def _condition_chain_targets_consistent(self, cond_blocks, op_type):
