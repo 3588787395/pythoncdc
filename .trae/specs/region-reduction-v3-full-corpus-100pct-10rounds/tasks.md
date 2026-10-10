@@ -1186,3 +1186,18 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   在 `region_analyzer.py` 里改认领规则；门记里写明归因是这一对，任一档回退就整体回退。
 - 会话末：门 27 封版 **6596/6617、391/402、残差 11 档 21 单元**；本会话 +10 单元 8 次认证落地；
   无工程师在飞、`core/` 干净。
+
+## 31. r33a：父认领修好了、也合规，但**产物逐字节不变** ⇒ 两半合起来仍不翻正（2026-10-10 17:11）
+
+- 它的判据（`region_analyzer.py:32280`，在 `_build_region_hierarchy` 选父处）：若 child 是 TryExceptRegion、
+  `child.entry` 不在 best_parent.blocks、而**另有候选持有 entry**，就改认领那个候选（按 ranges 取最内层）。
+  实测：@96/@98/@200/@252/@306 的持有者从 `IfRegion@312`（持有 0/5）改为 `LoopRegion@46`（持有 5/5），
+  `LoopRegion@46.children` 多出 `TryExceptRegion@98`；全 14 档"entry 不被父持有"事件 6→0，13/14 区域树逐字节不变。
+- **但产品 0/14 变化**（`cmp` 证 `broker.BASE == broker.V1`，175536 B）：
+  因为 r32a 的 generator 半边已经把那个 try/finally 放到正确位置了——**父认领修复在当前组合里是冗余的**。
+  反事实（V1 半边 + 封版 analyzer）：broker 仍 120/128，delta 只从 −293/−465 收到 −262/−432。
+- 我自己的丢弃镜像复测与它一致：`_process_cancel_order len orig=333 prod=334 delta=+1 hunks=5 landings=3`、
+  `_process_order delta=-59 hunks=19 landings=14`、quote 90/92、quotation 153/153 ⇒ **不安装，两半都不装**。
+- 教训入册：成对落地前必须先做**冗余性检验**（各半边单独 cmp 产物、再合起来 cmp），
+  否则一次门只能证明"两个判据里有一个在干活"；这条比"fire census"更进一步，下次写进派单模板。
+- 现在在飞：`r35a`（generator 轴的 run_tick_socket 臂发射位置；analyzer 侧成员修复已被实测为不动产物，票面已禁止它再去那边找）。
