@@ -629,3 +629,18 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   要么把余下指令作为语句一并产出）；这是"识别期宣告 + 每块唯一归属"的违反面，不是第 6 个 append 守卫。
 - 收益账：`quote.pyc` 86/92；本机制同时是 `run_individual_transform`（del 84）与
   `realtime_event_source.clock_worker`（110 条体被跳）的同形描述，但**必须逐一实测**，不得按同族记账。
+
+## 20I. 派出 r20r（R20-7 施工）并 park（2026-10-10 09:05）
+
+- 工程师 `r20r`：镜像 `D:/Temp/r20r/wt`，**只拥有 `core/cfg/region_ast_generator.py`**，
+  交付 `DELIVER/region_ast_generator.py`（整文件）+ `DELIVER/FIX_T20-7.md`（要求 step 1 建立、增量追加）。
+  票面＝任务 #52：`_generate_ternary:46118-46121` 把整块宣告消费、块内余下 12 条指令无人发射；
+  要求它按 `_gt_exclude_merge`（:46110-46119）已有先例的形态做"跨度未覆盖整块 ⇒ 不宣告该块"，
+  并禁止为其它同形受害者（`run_individual_transform`/`clock_worker`/`filter_desicion`）搭车。
+  门槛：`quote.pyc` 86/92 → ≥87/92（至少 1 个具名单元翻正），其余 10 个面板文件不降，
+  quotation 153/153 / matcher 17/17 / order_api 37/37，六电池按封版读数不倒。
+- **它测量期间我不动仓库字节、不跑门链**（它从仓库读 `.pyc` 输入与逐字节对照用的在位 `*OK.py`）。
+- 恢复后的动作：数 `DELIVER/` 交付文件与哈希 → 丢弃镜像里复测（§19C 第 2 步，文件换成 generator，
+  备份锚点 `e17603a761eaadef`）→ 有翻正才装、装完跑一次 `gate_chain.py 21 20` → `residual_report.py 21 20` 封表 → 提交推送。
+- 本轮已落地并封版的读数不变：**6587/6617 单元 / 391/402 文件**，残差 11 文件 30 单元；
+  远端在最后一次次提交为 `fef79e80`（本条提交后即更新），`core/` 工作树干净。
