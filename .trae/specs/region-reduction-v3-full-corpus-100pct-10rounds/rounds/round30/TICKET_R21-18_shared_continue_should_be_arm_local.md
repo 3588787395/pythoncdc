@@ -85,3 +85,33 @@ must read `len orig=642 prod=642 delta=0 hunks=0 landings=0 judge_diff=False`, a
 only if acceptance is met with no panel regression. If the criterion must be narrowed to avoid wide
 byte churn, deliver the narrowed version and report the fire census — a measured negative with the
 census is accepted and banked.
+
+## 7. My own attempt at §3, MEASURED and REVERTED (orchestrator, this round) — do not repeat it
+Patch (additive, 18 lines) inserted immediately after `if_result = result` / `if pre_stmts:` at
+`:21963-21965`, guarded on `region.merge_block is self._current_loop.back_edge_block and else_stmts
+and then_stmts and region.then_blocks and region.else_blocks`, then appending `{'type': 'Continue'}`
+to the `If` node's `body` whenever a then-block AND an else-block both list the back-edge block in
+`successors`.
+```
+product size 102 808 -> 102 831  (the route DID fire)
+target hunk UNCHANGED:  - @2926 JUMP_BACKWARD   /   + @2924 JUMP_FORWARD
+file reading  63/64  ->  56/64      (7 units broken by the extra continues)
+```
+Reverted byte-exactly (`git checkout -- core/cfg/region_ast_generator.py`, back to `fd0e4c4d73cf5efc`,
+`git status --porcelain -- core/ site-packages` empty, klinedata product `cmp`-identical to sealed).
+Two facts follow, and both are the next attempt's starting point:
+1. The victim arm is **not** emitted by `_if_generate_normal` at `:21960` — my route fired (bytes
+   changed) yet the hunk stayed. So find which function returns the statement list for the nested
+   `if symbol_four not in dividends_stock:` (entry 2802 / merge 3076 per the rejection probe) —
+   candidates are `_if_generate_full_elif_chain`, `_process_if_blocks`, and the inline tail handling
+   in `_generate_block_statements`; use the proven-inert line-event tracer keyed on those functions'
+   return lines rather than guessing.
+2. Any criterion of the shape "arm reaches the registered back-edge block ⇒ append a continue" is
+   **broad**: many if/else regions inside loops satisfy it and each extra `continue` costs a unit.
+   The narrow signal must come from the arm's own block shape (in the original the then-block *ends*
+   in its own `JUMP_BACKWARD`), not from reachability of a shared back-edge block.
+Rejection-probe evidence for this file (222 rows, rig `D:/Temp/t30/probe_r68c3.py`, `cmp`-proved inert
+with the patched hash differing): the two regions with `mb=3076` are refused by the existing R68 route
+as `entry=2802 bad=not_be,not_bes,preds_in,lab_cont` and `entry=2742 bad=not_be,not_bes,both_arms,lab_cont`
+— i.e. `merge_block is back_edge_block` (so `not_be` fails by design) and, for 2802, not all merge
+predecessors lie inside the region.
