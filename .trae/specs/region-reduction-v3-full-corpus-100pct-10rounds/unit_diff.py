@@ -98,7 +98,7 @@ def dump_raw(co):
     return out
 
 
-def main(pyc, unit, prod):
+def main(pyc, unit, prod, show_all=False):
     orig = marshal.loads(open(pyc, "rb").read()[16:])
     comp = compile(open(prod, encoding="utf-8-sig").read(), "<p>", "exec")
     o, p = [], []
@@ -117,7 +117,7 @@ def main(pyc, unit, prod):
             eq.extend(zip(range(i1, i2), range(j1, j2)))
             continue
         n += 1
-        if min(i2 - i1, j2 - j1) == 0 and max(i2 - i1, j2 - j1) < 3:
+        if not show_all and min(i2 - i1, j2 - j1) == 0 and max(i2 - i1, j2 - j1) < 3:
             continue
         print("== %s orig[%d..%d @%s..@%s] prod[%d..%d] del=%d ins=%d" % (
             tag, i1, i2, ol[i1].split()[0] if i1 < len(ol) else "-",
@@ -159,4 +159,4 @@ if __name__ == "__main__":
         prod = sys.argv[sys.argv.index("--prod") + 1]
     if prod is None:
         prod = pyc[:-4] + "OK.py"
-    main(pyc, sys.argv[2], prod)
+    main(pyc, sys.argv[2], prod, show_all=("--all" in sys.argv))

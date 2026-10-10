@@ -1008,3 +1008,28 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   而不是再加声明字段——否则等于第三次踩同一面墙。api_base/strategy 现仍各差 1 单元（27/28、26/27，形态 `landings=2 / landings=4`）。
 - 此刻：门 23 封版 **6592/6617、391/402、残差 11 档 25 单元**；在飞只剩 `r23d`（只诊断 broker 10 元的机制数，禁改 `core/`）。
   本会话累计 +6 单元（6586→6592），全部经 402 门认证、零回退。
+
+## 22. broker 10 元＝**7 种机制**（r23d 只诊断票）+ 我自己那把尺子的缺陷已修（2026-10-10 12:31）
+
+- 诊断报告入库：`rounds/round23/DIAG_R21-4_r23d.md`（22.9 KB；镜像 97 文件与仓库逐哈希一致、
+  全程未打桩未跑门、结束时四哈希未变 `git status -- core site-packages scripts` 空）。
+- 结论：**不是一个机制吃 10 元**，而是 7 个桶（3+1+2+1+1+1+1=10），且**没有任何一个桶能单独翻正这个文件**
+  （128/128 需要 7 桶全闭）⇒ broker 是"最大池子 / 最差性价比"，别把它当翻文件的目标。
+- 最大的桶 B1（3 元：`_process_order` −465、`_process_cancel_order` −293、`_sync_worker`）机制是新的：
+  **生成器把 `break/continue/return` 印在它自己语句串的余下部分之前**，于是 CPython>=3.10 的死代码消除在
+  `compile()` 时删掉余下文本——丢的内容**在产物源码里物理存在**（`trade_live_brokerOK.py` 430-493 行）。
+  证据是普查而非叙述：dead-suites-after-terminator 在这三元上是 1/2/2，在另外七元上是 **0**。
+  主机（按块角色命名，**未测**）：`region_ast_generator.py:_generate_block_statements_body:52557`（role→Break 站点 53051）。
+- 三个"纯落点"单元**分属三种不同机制**（这条正面否证了"一条落点判据覆盖三兄弟"）：
+  `_process_tick_order` 是 `WHILE_LOOP entry=114 ≠ header_block=130`；`rzrq_credit_order` 才是真的声明缺失
+  （`IF_ELIF_CHAIN entry=2136 merge=None`）；`get_ipo_stocks` 的 merge **声明正确**（=1154 正是原始落点），
+  但产物把 `if not X: (if A: continue)(if B: continue)` 融合成 `if X or A: continue / elif B: continue`（生成器侧）。
+- 另一条独立分类证据：`etf_purchase_redemption`（f-string 前缀被未决栈名污染）是 10 元里**唯一**被判据归为
+  `Different bytecode` 的（其余九元都是 `Different control flow`）——单凭这一点就能把它与别桶切开。
+- **修了我自己的尺子**：`unit_diff.py` 文档写了 `--all`（保留 <3 指令的小 hunk）但**从未被解析**，
+  于是 `etf_purchase_redemption` 的 2 个 1 指令删除与 `ipo_stocks_order` 的 1 个一直是隐形的。
+  现已打通并实测两种模式：默认输出不变（`hunks=5`），`--all` 多印出
+  `delete orig[387..388 @@2312]` 与 `delete orig[391..392 @@2328]` 两条；`py_compile` 通过，原件存 `D:/Temp/r23d/unit_diff.pristine`。
+- 台账旧数同时纠正：del 471/300/18、"32 处目标差"、"35 处目标差"、"#16 共要件补丁"这些前提**按今天的字节已失效**。
+- 在飞：`r24a`（generator：except 句柄 `as` 绑定丢失，`exc_tb` 被编译成 LOAD_GLOBAL）。
+  B1 那张票**必须等 r24a 结束**再派——同一文件两个整文件交付会互相覆盖。
