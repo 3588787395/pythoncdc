@@ -21216,6 +21216,80 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             _arm_shared = set(then_blocks) & set(else_blocks)
             if _arm_shared:
                 then_blocks = [b for b in then_blocks if b not in _arm_shared]
+        # [r26a FIX_R21-8 判据 · 「体只有一条回边」的 if 形状是空体 while 循环]
+        # 区域归约算法原则 1（块 = 前导语句 + 恰好一个终结子）＋ No More Gotos
+        # §4.2（自然循环：回边 n→d 中 d DOM n，d 即 header）＋ 原则 2（每块唯一
+        # 归属）＋ 原则 3（嵌套即抽象节点）：CPython 把【空体 while】`while cond:
+        # pass` 编成「条件块 C：…；POP_JUMP_*_IF_FALSE → E（循环出口）；真分支
+        # 落到的唯一体块 B：一条无条件回跳 JUMP_BACKWARD → C」。本判据在条件区域
+        # 识别步【建区的当下】识别这一形状：若 B 回跳的目标恰是 C 自身的入口，
+        # 则该结构没有「跳过一段语句后继续执行」的 if 语义，只有「条件为真就
+        # 重测条件」的循环语义——它是一个自然循环（header = C，back_edge = B，
+        # body = ∅）。原判据缺失时它被建成 IfRegion(IF_THEN, entry=C, then=[B],
+        # merge=E)，AST 一一映射成 `if cond: continue`，而 `continue` 按 CPython
+        # 的语义落到【外层循环】的入口，于是 B 的回跳目标从 C 退化为外层 while 的
+        # 条件块（_process_tick_order：orig @178 JUMP_BACKWARD→@130，prod 落成
+        # @114；指令序列逐条相同，只有这一个跳转槽错位的同形换位）。
+        # 判据（取材面仅为本区域自身的 entry/then/merge 三块与它们自身的末指令
+        # opname/argval 与体块指令集合，不读 .successors、不读 get_block_by_offset、
+        # 不读兄弟/父区域、不读名字与常量、不依赖区域处理顺序）：
+        #   ① else_blocks 为空（空体 while 没有 else 臂；有 else 即普通 if/else）；
+        #   ② then_blocks 恰为单块 B，且 B 去掉编译噪声后只剩一条无条件跳转，
+        #      其目标 == 本区域入口 C 的 start_offset（回跳到条件自身 ⇒ B 体内
+        #      没有任何语句，if 的「跳过语句」语义无从谈起）；
+        #   ③ C 的末指令是【前向】IF_FALSE 条件跳转，目标 == merge 的 start_offset
+        #      （假分支一次性离开循环 ⇒ merge 就是循环出口 E）。
+        # 真分支方向（②回跳 C）与假分支方向（③前跳 E）互反，正是 while 的
+        # 双出口定义；普通 `if cond: continue` 的回跳目标必是外层循环入口
+        # ≠ C（本判据在其余 13 个面板文件上命中数见交付文档的 fire census）。
+        # 命中即就地建 LoopRegion(WHILE_LOOP, entry=header=condition=C,
+        # back_edge_block=B, body_blocks=[C, B])，块集合与原 IfRegion 完全相同
+        # （原则 2 不变），区域类型 WHILE_LOOP → ast.While 单射（生成器
+        # _generate_loop 已有 body_stmts 空 ⇒ Pass 的分支，故 emits `while C: pass`），
+        # 不新增区域类型、不新增 AST 节点类型、无跨级回补、不回溯修正已建区域。
+        if ((not else_blocks) and len(then_blocks) == 1 and block is not None
+                and all_condition_blocks == {block}):
+            _r26a_then = then_blocks[0]
+            _r26a_c_last = block.get_last_instruction()
+            _r26a_b_last = _r26a_then.get_last_instruction()
+            _r26a_bare = frozenset({'NOP', 'CACHE', 'RESUME', 'PUSH_NULL', 'EXTENDED_ARG'})
+            _r26a_back = frozenset({'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                    'JUMP_ABSOLUTE'})
+            if (_r26a_c_last is not None and merge is not None
+                    and _r26a_c_last.opname in ('POP_JUMP_FORWARD_IF_FALSE',
+                                                'POP_JUMP_IF_FALSE')
+                    and isinstance(_r26a_c_last.argval, int)
+                    and _r26a_c_last.argval == merge.start_offset
+                    and _r26a_b_last is not None
+                    and _r26a_b_last.opname in _r26a_back
+                    and isinstance(_r26a_b_last.argval, int)
+                    and _r26a_b_last.argval == block.start_offset
+                    and all(_r26a_i.opname in (_r26a_bare | _r26a_back)
+                            for _r26a_i in _r26a_then.instructions)
+                    and any(_r26a_i.opname in _r26a_back
+                            for _r26a_i in _r26a_then.instructions)):
+                _r26a_loop = LoopRegion(
+                    region_type=RegionType.WHILE_LOOP, entry=block,
+                    blocks=all_condition_blocks | {block, _r26a_then},
+                    header_block=block, back_edge_block=_r26a_then,
+                    is_while_true=False, has_break=False, else_is_follow=False)
+                _r26a_loop.body_blocks = sorted([block, _r26a_then],
+                                                key=lambda b: b.start_offset)
+                _r26a_loop.condition_block = block
+                _r26a_loop.else_blocks = []
+                _r26a_loop.init_blocks = []
+                _r26a_loop.back_edge_blocks = {_r26a_then}
+                _r26a_loop.break_blocks = []
+                _r26a_loop.continue_map = {}
+                _r26a_loop.condition_chain_blocks = []
+                _r26a_loop.condition_recheck_blocks = set()
+                _r26a_loop.metadata.update({
+                    'for_iter_setup': None, 'for_iter_exit': None,
+                    'for_iter_fall_through': None, 'natural_back_edge': _r26a_then,
+                    'has_break_in_body': False, 'break_blocks_precise': [],
+                    'exit_successors': None, 'is_degenerate_while': False})
+                return _r26a_loop
+
         region_type = RegionType.IF_THEN_ELSE if else_blocks else RegionType.IF_THEN
         all_blocks = all_condition_blocks | set(then_blocks) | set(else_blocks)
         # 主条件的 inline_boolop_chain 也存入 IF_THEN /
