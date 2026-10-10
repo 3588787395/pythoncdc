@@ -1168,3 +1168,21 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   会话净 **+10 单元**、8 次认证落地；无在飞工程师；`core/` 干净，远端随本条更新。
   下一位接手请从 §28（run_tick_socket 换 generator 轴）与 §29（#64 组合票）开始，
   并记住两条我本轮付过学费的规矩：**票面细节也要我本人实测**；**判据先做 14 档 fire census 再谈落地**。
+
+## 30. r32a 把 #64 推到"只差一次分析器认领修复"，generator 半边已入库备用（2026-10-10 16:48）
+
+- 它交付 `region_ast_generator.py`（sha16 `a34cdcf4a4ae7147`，+73/−1，`py_compile` OK，mirror==deliver），
+  **但按规矩未安装**（0 翻正）；我复测过它的说法：仓库该文件仍是封版 `c16daa4f87dc68e6`。
+- 两条判据：①重放 r25b 的"再入 pad 不是循环出口"（锚点按内容+索引重定到 pristine 25706，
+  因为**入库的候选文件已被两次落地污染**——它同时删掉了已落地的 R27-9 臂尾块，只能摘 `+` 那一段）；
+  ②`_loop_generate_body` 的推迟跳过只在"声明的父区域真的持有该块"时才生效（`block in parent.blocks`），
+  R32A-2 的 14 档 fire census = **1**、13/14 产物逐字节不变。
+- 形态推进：`_process_order` −465→−59（33 条锁 hunk 消失），`_process_cancel_order` −293→**+1**，
+  只剩 5 个纯跳点 hunk；14 档全部与封版持平（broker 120/128、quote 90/92、quotation 153/153…）。
+- **根因被它指到分析器**：`TryExceptRegion@98.parent = IfRegion@312/318`，而那个 IfRegion 并不持有
+  `@96/@98/@200/@252/@306`，于是 `LoopRegion@46.children` 少了这个子区域；主机（对它只读）：
+  `region_analyzer.py:9925-9935` 与 `Region.add_child:221-233` 的**首个认领者获胜**规则。
+- 所以 #64 的下一票必须**成对落**：以 `rounds/round27/CANDIDATE_r32a_generator_pair_half.py` 为 generator 基线，
+  在 `region_analyzer.py` 里改认领规则；门记里写明归因是这一对，任一档回退就整体回退。
+- 会话末：门 27 封版 **6596/6617、391/402、残差 11 档 21 单元**；本会话 +10 单元 8 次认证落地；
+  无工程师在飞、`core/` 干净。
