@@ -22572,6 +22572,70 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         elif_info = _check_elif_chain(block, else_blocks, merge)
         if elif_info is None:
             return None
+        # [r24b FIX_R21-6 判据 · merge=None 链的臂间汇合点不一致 ⇒ 弃权 elif 展平]
+        # 区域归约算法原则 1（块 = 前导语句 + 恰好一个终结子）＋ No More Gotos §3
+        # （If 区域归约）＋原则 2（每块唯一归属）：一条【扁平】elif 链的所有非终态臂
+        # 必然汇合于【同一个】出口块——CPython 把 if/elif/…/else 的每个臂末都跳向链的
+        # 唯一出口。当 post-dominator 因某臂以 RETURN/RAISE 终结而把 merge 判为 None 时，
+        # 若本区域自身的各臂末指令跳出本区域后落在【两个不同】的块上，则这些臂压根没有
+        # 共同汇合点，扁平链解释不成立：落在较早目标 T_early 上的臂其实属于一个更晚才
+        # 结束的嵌套子链（T_early 是该子链自己的汇合点，其后还跟着子链所在 else 侧的
+        # 尾随语句），而落在较晚目标 T_late 上的臂才是跳过了整个嵌套结构。强行展平会把
+        # T_early 及其尾随语句剔出本区域（原则 2 被破坏），尾随语句被外提为链的兄弟语句，
+        # 先前臂的臂末 JUMP_FORWARD 落点便从链出口 T_late 退化为被外提语句的入口 T_early
+        # （rzrq_credit_order：臂末 @2368 JUMP_FORWARD 应落 @2534，实际落 @2506）。
+        # 判据（三条全满足才弃权；取材面仅为本区域自身的 conditions/bodies/final_else/
+        # then_blocks 块表与其末指令的 opname/argval，不读兄弟区域、不读名字与常量、
+        # 不读绝对偏移、不依赖区域处理顺序）：
+        #   ① merge is None（汇合声明确实缺失，不是回补既有声明）；
+        #   ② 某臂以 RETURN_VALUE/RETURN_CONST/RAISE_VARARGS/RERAISE 终结——这正是
+        #      post-dominator 求不出汇合点的原因，也是它与「臂末回跳（JUMP_BACKWARD）
+        #      的循环内链」的区别；
+        #   ③ 至少两个臂各自以【前向】跳转离开本区域的结构块集，且这些落点不全相同
+        #      ⇒ 不存在单一汇合点（etf_basket_order 链@484 只有一个离开落点 {568} 且无
+        #      终态臂，klinedata get_kline_by_count_new 链@0 的臂末全部回跳，均不触发）。
+        # 返回 None 后调用方走既有的 _build_basic_if_region 回退按 IF_THEN_ELSE 建区：
+        # 嵌套子链保持为其自身的 IfRegion 抽象节点（原则 3），其汇合块与尾随语句留在
+        # else 侧体内，不新增区域类型、不新增 AST 节点类型、无跨级回补。
+        if merge is None:
+            _r24b_own = set()
+            if block is not None:
+                _r24b_own.add(block.start_offset)
+            for _r24b_coll in (then_blocks, elif_info.get("conditions", []),
+                               elif_info.get("final_else", [])):
+                for _r24b_b in (_r24b_coll or []):
+                    _r24b_own.add(_r24b_b.start_offset)
+            for _r24b_body in (elif_info.get("bodies") or []):
+                for _r24b_b in _r24b_body:
+                    _r24b_own.add(_r24b_b.start_offset)
+            _r24b_arms = [list(then_blocks or [])]
+            _r24b_arms.extend(list(_r24b_bd) for _r24b_bd in (elif_info.get("bodies") or []))
+            if elif_info.get("final_else"):
+                _r24b_arms.append(list(elif_info["final_else"]))
+            _r24b_has_sink = False
+            _r24b_exit_sets = []
+            for _r24b_arm in _r24b_arms:
+                _r24b_exits = set()
+                for _r24b_b in _r24b_arm:
+                    _r24b_li = _r24b_b.get_last_instruction()
+                    if _r24b_li is None:
+                        continue
+                    if _r24b_li.opname in ('RETURN_VALUE', 'RETURN_CONST',
+                                            'RAISE_VARARGS', 'RERAISE'):
+                        _r24b_has_sink = True
+                        continue
+                    if (_r24b_li.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                            or _r24b_li.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                        _r24b_t = (_r24b_li.argval
+                                   if isinstance(_r24b_li.argval, int) else None)
+                        if _r24b_t is not None and _r24b_t not in _r24b_own:
+                            _r24b_exits.add(_r24b_t)
+                if _r24b_exits:
+                    _r24b_exit_sets.append(_r24b_exits)
+            if (_r24b_has_sink and len(_r24b_exit_sets) >= 2
+                    and any(_r24b_s != _r24b_exit_sets[0] for _r24b_s in _r24b_exit_sets)):
+                return None
+
         # 区域归约算法原则 2（每块唯一归属）：当 merge=None 时，
         # _collect_branch_blocks 会过度收集 else_blocks，把 if-elif 结构之后
         # 的 post-if 块（如两分支都 sink 后的 `return X`）也纳入。这些块不
