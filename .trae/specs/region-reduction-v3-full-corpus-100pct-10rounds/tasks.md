@@ -688,3 +688,18 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   有翻正才 `install_deliver.py install` → `gate_chain.py 22 21` → `residual_report.py 22 21` → 提交推送。
 - 未开的同形票（各自需要独立翻正证据，禁止搭车）：`clock_worker`（12/13）、`filter_desicion`（仅落点差）、
   `handlers._target`（逐出口边复制族，已否证发射点说）、#50 analyzer 侧 BoolOp 声明。
+
+## 20L. 第 21 轮封版时的廉价阶段读数（下一票落地前的基线，勿凭记忆）
+
+口径＝`gate_chain.py 21 20` 的 checks 阶段日志 `/d/Temp/gate_chain_21_093202.log`（落地字节上实测）：
+
+- `[quotation] rc=0 units=153/153 success_rate=100.00%`（尺子自证目标文件）
+- `[small34] rc=0 units_success=1539, success=23`（上一轮 1538/22 ⇒ 本次小批 +1 单元、+1 全绿文件）
+- `[selfcheck] rc=0 自证 153/153 Equal｜变异「常量」抓到 1/153｜变异「极性」抓到 1/153｜OK —— 判据可用`
+- `[pytest] rc=1 2 failed, 280 passed, 2 xpassed in 3.33s`
+  ⇒ **这两条红就是第 19/20 轮封过的那一对**（`test_B01_simple_if_then_else_merge`、`test_BOUNDARY_02_large_function`），
+  `checks` 阶段的判据是"零新增红"，先前存在的红不构成对本票落地的反证。
+- 门 21 主读数：`6588/6617 (99.5617%)`、`391/402` 文件、`regen ok=402 bad=0`、
+  `文件级回退=0 UNIT_REGRESSIONS=0 新增失败单元=0 翻正单元=1`；`rounds/round21/RESIDUAL_ROUND21.md`＝11 文件 29 单元，UNREGISTERED=0。
+- 下一票的门标签＝**22 vs `rounds/round21/after`**；安装前先重读
+  `sha256sum core/cfg/region_ast_generator.py | cut -c1-16`（当前 `4f295dfc6ebd2caa`），别用本文里任何旧哈希。
