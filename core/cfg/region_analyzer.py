@@ -2155,7 +2155,8 @@ class RegionAnalyzer:
                     _try_entry_ids.add(id(_sib.entry))
                     break
 
-    def _b74_guard_arm_targets_case_body(self, pattern_blocks, case_bodies) -> bool:
+    def _b74_guard_arm_targets_case_body(self, pattern_blocks, case_bodies,
+                                          fail_case_offset=None) -> bool:
         """[B74] 幻影 guard 后校验：guard 提取器将选中的臂段，其终止条件
         跳转目标是否落入 case 体块集。
 
@@ -2166,17 +2167,25 @@ class RegionAnalyzer:
           的臂段（LOAD_VAR..COMPARE/条件跳转），极性协议据「跳转目标 !=
           fail 边」判为取反臂，产生幻影 guard 与幻影 else。真 guard 臂的
           失败边指向下一 case 头/merge（guard 失败必须离开 case），绝不
-          落入体块集；体首 if 的跳转目标（体内 merge/体尾跳转块）必在体
-          块集内。
+          落入**本 case** 体块集；体首 if 的跳转目标（体内 merge/体尾跳转
+          块）必在本 case 体块集内。
+        [B81 细化]：臂终止跳转目标 == fail_case_offset（下一 case 头/
+          merge 偏移）时该臂以「守卫失败」离开 case——这是真 guard 的定义
+          判据（guard 尾随条件跳转目标指向下一 case header，跳转目标
+          oparg 事实）；下一 case 为 `case _:` 单块融合体（NOP 标记+体同
+          块）时该头块同时是其 case 体成员，体块集成员关系单独看会误杀
+          真 guard——fail 边同一性判据优先于体成员关系判据。
         字节码形态：blk_case_body_head = [UNPACK_SEQUENCE, STORE v,
           POP_TOP.., <import 序列>, LOAD v, LOAD_CONST 0, COMPARE_OP,
           POP_JUMP_FORWARD_IF_FALSE → 体尾块(JUMP_BACKWARD 循环头)]。
         边界条件：重放提取器的 search_start（最后 STORE_OPS 之后，无
-          STORE 时按 pattern_end_ops 回扫）与首臂定位（LOAD_VAR 开头的
-          var-const/var-var/is-op/truthiness 形态）；重放不到臂、臂终止
-          跳转目标不在体块集、或 pattern_blocks 不含体块时返回 False
-          （保留 guard，维持原行为）；guard 段位于头块内
-          （allow_in_header_block）的形态目标为 fail 边，不命中。
+          STORE 时按 pattern_end_ops 回扫，[B81] 两者皆无时按头块终结
+          条件跳转锚——与 _extract_case_guard_from_blocks 同步）与首臂
+          定位（LOAD_VAR 开头的 var-const/var-var/is-op/truthiness 形
+          态）；重放不到臂、臂终止跳转目标不在体块集、目标 == fail 边、
+          或 pattern_blocks 不含体块时返回 False（保留 guard，维持原行
+          为）；guard 段位于头块内（allow_in_header_block）的形态目标
+          为 fail 边，不命中。
         归约语义：命中 ⇒ 撤销幻影 guard（case 体首 if 由体语句归约发
           射）；不命中 ⇒ 原行为逐字节不变。
         AST 映射：撤销后 case 无 guard，体首 if 恢复为体语句
@@ -2184,9 +2193,9 @@ class RegionAnalyzer:
         已知失败形态：体首 if 的跳转目标块未被收进 case_bodies 时检测
           不到（维持原行为）；提取器判据演进时本重放需同步。
         [C1] 判据仅取块结构事实（指令 opname/跳转目标偏移/体块成员关
-          系），无名称白名单、无魔数、无跨层反查。
+        系），无名称白名单、无魔数、无跨层反查。
         [C2] 数据流自底向上：仅校验 guard 提取结果的结构合法性，不改任
-          何区域归约结果。
+        何区域归约结果。
         [C3] 每块唯一归属不变。
         """
         if not pattern_blocks or not case_bodies:
@@ -2205,11 +2214,16 @@ class RegionAnalyzer:
                     all_instrs.append(instr)
         if not all_instrs:
             return False
+        first_block_instr_count = sum(
+            1 for i in pattern_blocks[0].instructions
+            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'))
         store_indices = [i for i, instr in enumerate(all_instrs)
                          if instr.opname in _pp.STORE_OPS]
         search_start = 0
+        _pattern_anchor_found = False
         if store_indices:
             search_start = store_indices[-1] + 1
+            _pattern_anchor_found = True
         else:
             pattern_end_ops = ('MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
                                'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
@@ -2219,9 +2233,19 @@ class RegionAnalyzer:
             for i in range(len(all_instrs) - 1, -1, -1):
                 if all_instrs[i].opname in pattern_end_ops:
                     search_start = i + 1
+                    _pattern_anchor_found = True
+                    break
+        if not _pattern_anchor_found:
+            # [B81] 与 _extract_case_guard_from_blocks 的头块终结跳转锚同步
+            # （提取器判据演进时本重放需同步，见上「已知失败形态」）。
+            for i in range(min(first_block_instr_count, len(all_instrs))):
+                if all_instrs[i].opname in _pp.COND_JUMP_OPS:
+                    search_start = i + 1
                     break
         _POP_ALL = ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE',
-                    'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE')
+                    'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE',
+                    'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_IF_NONE',
+                    'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE')
         for i in range(search_start, len(all_instrs)):
             instr = all_instrs[i]
             if instr.opname not in _pp.LOAD_VAR_OPS:
@@ -2243,6 +2267,11 @@ class RegionAnalyzer:
             if _arm_end is None:
                 continue
             _tgt = all_instrs[_arm_end].argval
+            if (fail_case_offset is not None
+                    and isinstance(_tgt, int) and _tgt == fail_case_offset):
+                # [B81] 臂以「守卫失败」离开 case（fail 边同一性）——真
+                # guard 判据优先，非幻影。
+                return False
             return isinstance(_tgt, int) and _tgt in _body_offs
         return False
 
@@ -14412,6 +14441,10 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             if any(isinstance(_r, MatchRegion) and block in _r.case_blocks
                    for _r in self.regions):
                 continue
+            import os as _os_r8ph2
+            if _os_r8ph2.environ.get('R8CDBGH'):
+                print('[R8CDBGH] cand blk=%s claimed=%r exist=%r' % (
+                    block.start_offset, block in claimed, type(self.block_to_region.get(block)).__name__))
             subject_block = block
             if self._is_case_pattern_block(block):
                 # [Round 01 P0 fix] match-case 假阳性防护：
@@ -14443,6 +14476,9 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                         if self._is_case_pattern_block(pred) or self._has_match_op(pred):
                             subject_block = pred
                             break
+            import os as _os_r8ph
+            if _os_r8ph.environ.get('R8CDBGH'):
+                print('[R8CDBGH] walk subj=%s' % subject_block.start_offset)
             case_blocks, case_patterns, case_bodies, merge, all_raw_blocks = self._mr_collect_case_body(subject_block)
             if not case_blocks:
                 continue
@@ -14462,6 +14498,10 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 _fail_off = (case_blocks[_ci + 1].start_offset
                              if _ci + 1 < len(case_blocks)
                              else (merge.start_offset if merge else None))
+                import os as _os_r8gp
+                if _os_r8gp.environ.get('R8CDBGP'):
+                    print('[R8CDBGP] cb=%s pat=%s' % (_cb.start_offset,
+                        self.pattern_parser.parse_case_pattern(_cb)))
                 _pb = self.pattern_parser.collect_pattern_blocks(_cb, all_blocks)
                 _gd = self.pattern_parser.parse_case_guard(
                     _pb,
@@ -14478,8 +14518,13 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 # 取器的 search_start+首臂定位，臂终止跳转目标 ∈ 体块集即
                 # 撤销该 guard。六项模板与 [C1][C2][C3] 见
                 # _b74_guard_arm_targets_case_body docstring。
+                import os as _os_r8gg
+                if _os_r8gg.environ.get('R8CDBGD'):
+                    print('[R8CDBGD] cb=%s fail=%s pb=%s _gd=%s' % (
+                        _cb.start_offset, _fail_off, [b.start_offset for b in _pb], _gd))
                 if (_gd is not None
-                        and self._b74_guard_arm_targets_case_body(_pb, case_bodies)):
+                        and self._b74_guard_arm_targets_case_body(_pb, case_bodies,
+                                                                 fail_case_offset=_fail_off)):
                     _gd = None
                 case_guards.append(_gd)
             region = MatchRegion(
@@ -14820,6 +14865,74 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             if _succ_last is None or _succ_last.opname not in CONDITIONAL_JUMP_OPS:
                 guard_chain_blocks.discard(success)
         return jt, success, guard_chain_blocks
+
+    def _mr_resolve_or_arm_jump(self, current, jump_instr, jt, success):
+        """_mr_resolve_or_arm_jump — 字面量 or 模式 IF_FALSE 臂链解析
+
+        ①算法依据：No More Gotos「多分支选择结构」+ I.1 原则4（case 头
+        栈协议）。CPython 3.11 字面量 or 模式（``case 1 | 2 | 3 if g:``）
+        编译协议（同层 opcode/跳转目标事实）：
+          臂_i: COPY; LOAD_CONST c_i; COMPARE_OP; POP_JUMP_FORWARD_IF_
+          FALSE → 臂_{i+1}; （成功边）纯 JUMP_FORWARD 连接块 → 公共
+          成功块 S；末臂失败边 → 清理桩 → 下一 case。
+        本方法识别「当前块的失败目标是同 or 模式的后续臂」：判据 =
+        当前 ft 为纯 JUMP_FORWARD 连接块（目标 S）∧ 游标块以 IF_FALSE
+        结尾 ∧ 游标 ft 连接块同汇 S——臂成功边公共汇合是 or 协议本体。
+        单字面量 case（成功边直落 POP_TOP 清理块，非纯跳转）与真守卫
+        链（IF_FALSE→fail 但 ft 无公共汇合跳转）均不触发，行为不变。
+        ②归约顺序：自底向上——臂链块是模式材料（归 case 的 pattern
+        段），解析后 jt=末臂失败链游标、success=S，行走继续归约 case
+        体与下一 case。
+        ③唯一归属判定：后续臂块归本 case（visited/all_blocks，模式材
+        料），不再被登记为幻影 case；末臂失败链归链行走（连接桩由
+        既有 connector 行走解析为下一 case 头）。
+        ④嵌套处理：嵌套 or 模式的臂链同判据递推（游标 ft 汇合同一 S
+        才续链）；臂内嵌套结构模式（MATCH_*）不以 IF_FALSE 字面量臂
+        形态出现，不触发。
+        ⑤入口引用语义：不直接产出 AST；返回 (jt, success, 臂块集) 供
+        链行走续用；模式 AST（MatchOr）由 parse_case_pattern 经材料
+        行走（jt 续块纯模式判据）独立提取。
+        ⑥反编译流程：识别层 `_mr_collect_case_body` 链行走的中段
+        （or-guard 解析之后、支配检查之前）。
+        C 条款：[C1] 只读块指令/后继/跳转目标（L(A) 局部）；[C2] 不窥
+        视区域树；[C3] or 臂公共汇合协议与 case 位置/嵌套深度无关。
+        """
+        OR_ARM_FALSE_OPS = ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE')
+        if jump_instr is None or jump_instr.opname not in OR_ARM_FALSE_OPS:
+            return jt, success, set()
+        if jt is None or success is None or jt is current:
+            return jt, success, set()
+
+        def _pure_jump_target(blk):
+            """纯 JUMP_FORWARD 连接块 → 其目标块；否则 None。"""
+            if blk is None:
+                return None
+            _mean = [i for i in blk.instructions if i.opname not in NOISE_OPS]
+            if len(_mean) == 1 and _mean[0].opname == 'JUMP_FORWARD':
+                return self.cfg.get_block_by_offset(_mean[0].argval)
+            return None
+
+        s_block = _pure_jump_target(success)
+        if s_block is None:
+            return jt, success, set()
+        arm_blocks = []
+        _seen = {current}
+        cursor = jt
+        while (cursor is not None and cursor not in _seen
+               and cursor is not success and cursor is not s_block):
+            _seen.add(cursor)
+            _cursor_jump = self._mr_find_case_jump_instruction(cursor)
+            if _cursor_jump is None or _cursor_jump.opname not in OR_ARM_FALSE_OPS:
+                break
+            _cursor_ft = next((s for s in sorted(cursor.successors, key=lambda b: b.start_offset)
+                              if s.start_offset != _cursor_jump.argval), None)
+            if _pure_jump_target(_cursor_ft) is not s_block:
+                break
+            arm_blocks.append(cursor)
+            cursor = self.cfg.get_block_by_offset(_cursor_jump.argval)
+        if not arm_blocks:
+            return jt, success, set()
+        return cursor, s_block, set(arm_blocks)
 
     def _mr_find_case_success_branch(self, case_block, jump_target):
         if not case_block:
@@ -15312,6 +15425,10 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
         for _tr in self.regions:
             if (isinstance(_tr, TryExceptRegion)
                     and subject_block in (getattr(_tr, 'try_blocks', None) or set())):
+                import os as _os_r8tb
+                if _os_r8tb.environ.get('R8CDBGT'):
+                    print('[R8CDBGT] subj=%s try_blocks=%s' % (subject_block.start_offset,
+                        sorted(b.start_offset for b in (_tr.try_blocks or set()))))
                 _try_body_bound = set(_tr.try_blocks)
                 break
         for blk in self.cfg.blocks.values():
@@ -15412,6 +15529,31 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 all_blocks.add(gb)
             if not jt or not success:
                 break
+            # 区域归约算法：[B103 or 臂链解析]（or+guard 组合错构破口）。
+            # CPython 3.11 把字面量 or 模式（``case 1 | 2 | 3 if x > 1:``）
+            # 编译为 IF_FALSE 臂链：各臂 ``COPY; LOAD_CONST c; COMPARE_OP;
+            # POP_JUMP_FORWARD_IF_FALSE→下一臂``，每臂成功边 = 纯
+            # JUMP_FORWARD 连接块 → 公共成功块 S（守卫块/体首）；
+            # 末臂失败边 → 清理桩 → 真正的下一 case。原行走把臂链的
+            # 下一臂当作「下一 case」跟进——臂被登记为幻影 case、
+            # case 体按错误 jt 收集体（吞入下一 case 的头块），
+            # MatchOr 合并因体不等价而失败 → `case 1 / case 2: pass`
+            # 错构（e06_or_guard 破口）。判据（同层结构事实，白名单）：
+            # 当前块 ft 后继为纯 JUMP_FORWARD 连接块（目标 S）∧ 游标
+            # 块以 IF_FALSE 条件跳转结尾 ∧ 游标 ft 连接块同汇 S——臂的
+            # 成功边公共汇合是 or 模式协议本体；单字面量 case 的成功边
+            # 是直落 POP_TOP 块（非纯跳转），不触发。命中后：臂块归
+            # match 区域（visited/all_blocks，模式材料由
+            # parse_case_pattern 经材料行走消费），jt = 末臂失败链游标
+            # （连接桩由既有 connector 行走继续解析），success = S。
+            # [C1] 只读块指令/后继/跳转目标；[C2] 不窥视区域树；
+            # [C3] or 臂协议与 case 位置/嵌套深度无关（嵌套无感）。
+            jt, success, or_arm_blocks = self._mr_resolve_or_arm_jump(current, jump_instr, jt, success)
+            for ob in or_arm_blocks:
+                visited.add(ob)
+                all_blocks.add(ob)
+            if not jt or not success:
+                break
             # 区域归约算法：[B16] 下一 case 块必须受当前 case 块支配。
             # match 嵌套在循环体内时，条件跳转的 false 目标可能是循环结构块
             # （如旋转 while 的迭代再检测块）；它们不是下一 case，链行走到此
@@ -15449,10 +15591,11 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                     all_blocks.add(gb)
             import os as _os_r8dbg
             if _os_r8dbg.environ.get('R8CDBG'):
-                print('[R8CDBG] subj=%s cur=%s jt=%s next_off=%s success=%s and_chain=%s visited=%s' % (
+                print('[R8CDBG] subj=%s cur=%s jt=%s next_off=%s success=%s and_chain=%s visited=%s jtinall=%s trybound=%s' % (
                     subject_block.start_offset, current.start_offset, jt and jt.start_offset, next_case_offset,
                     success and success.start_offset, [b.start_offset for b in and_guard_chain],
-                    sorted(b.start_offset for b in visited)))
+                    sorted(b.start_offset for b in visited), jt in all_blocks,
+                    len(_try_body_bound) if _try_body_bound is not None else None))
             pat = self.pattern_parser.parse_case_pattern(current)
             guard_jump_target = None
             pattern_jump_targets = set()
@@ -15613,15 +15756,29 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             current = jt
             while current and current not in visited:
                 meaningful = [i for i in current.instructions if i.opname not in NOISE_OPS]
+                # 区域归约算法：[B103 try 宿主连接桩判定] case 链 fail 边的
+                # 纯 POP_TOP/JUMP 清理桩在 try 宿主下携带异常表隐式边（
+                # exception_successors → PUSH_EXC_INFO 分派块）——异常边是
+                # try 区域的结构边，不是 case 链控制流边；连接桩的「唯一
+                # 后继」判定按正常边集合（successors − exception_successors）
+                # 计数。原实现按 successors 总数计数，try 宿主下恒 >1 → 桩
+                # 不再被跳过 → 桩块被当 case 候选走 default 分支 → 隐式
+                # default 判定吞掉行走 → 链上后续 case 整体丢失
+                # （e05_class_kw 破口）。判据 = 异常边集合差（I.4 白名单：
+                # 异常边），无宿主特判——非 try 宿主的桩块异常边集为空，
+                # 行为逐位不变。[C1] 只读块后继/异常边；[C2] 不窥视区域
+                # 树；[C3] 异常表边是编译器显式结构边协议，嵌套无感。
+                _normal_succs = set(current.successors) - set(
+                    getattr(current, 'exception_successors', None) or ())
                 is_connector = (
                     len(meaningful) > 0 and
                     all(i.opname in ('POP_TOP', 'JUMP_FORWARD', 'JUMP_ABSOLUTE') for i in meaningful) and
-                    len(current.successors) == 1
+                    len(_normal_succs) == 1
                 )
                 if is_connector:
                     visited.add(current)
                     all_blocks.add(current)
-                    current = next(iter(current.successors))
+                    current = next(iter(_normal_succs))
                 else:
                     break
         if not case_blocks:
@@ -16179,6 +16336,10 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 _fail_off = (case_blocks[_ci + 1].start_offset
                              if _ci + 1 < len(case_blocks)
                              else (merge.start_offset if merge else None))
+                import os as _os_r8gp
+                if _os_r8gp.environ.get('R8CDBGP'):
+                    print('[R8CDBGP] cb=%s pat=%s' % (_cb.start_offset,
+                        self.pattern_parser.parse_case_pattern(_cb)))
                 _pb = self.pattern_parser.collect_pattern_blocks(_cb, all_blocks)
                 _gd = self.pattern_parser.parse_case_guard(
                     _pb,
@@ -16195,8 +16356,13 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 # 取器的 search_start+首臂定位，臂终止跳转目标 ∈ 体块集即
                 # 撤销该 guard。六项模板与 [C1][C2][C3] 见
                 # _b74_guard_arm_targets_case_body docstring。
+                import os as _os_r8gg
+                if _os_r8gg.environ.get('R8CDBGD'):
+                    print('[R8CDBGD] cb=%s fail=%s pb=%s _gd=%s' % (
+                        _cb.start_offset, _fail_off, [b.start_offset for b in _pb], _gd))
                 if (_gd is not None
-                        and self._b74_guard_arm_targets_case_body(_pb, case_bodies)):
+                        and self._b74_guard_arm_targets_case_body(_pb, case_bodies,
+                                                                 fail_case_offset=_fail_off)):
                     _gd = None
                 case_guards.append(_gd)
             region = MatchRegion(
@@ -16587,6 +16753,45 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 for gb in guard_chain_blocks:
                     visited_l.add(gb)
                     all_blocks_l.add(gb)
+                # 区域归约算法：[B81 and-guard 链修复]（真 guard 装配缺口）。
+                # 字面量 case 链的真守卫臂（``case 1 if flag:`` 编译为
+                # ``LOAD subj; LOAD_CONST c; COMPARE_OP; POP_JUMP→下一 case``
+                # 后随独立守卫块 ``LOAD flag; POP_JUMP_FORWARD_IF_FALSE→
+                # 下一 case``）此前未被本行走收集——守卫块被并入 case 体，
+                # 体发射时被合成幻影 if/else（守卫真值臂无 COMPARE_OP，
+                # 发射侧 guard_pattern_blocks 的 compare 判据不覆盖），真
+                # 守卫语义丢失（B81 破口）。判据与 _mr_collect_case_body
+                # 的 and-guard 链行走同源（同层结构事实）：臂块尾随条件跳
+                # 跳转目标 == 下一 case 头偏移（fail 边同一性——guard 失败
+                # 必须离开 case，B81 判据本体），极性取 IF_FALSE/IF_TRUE 两
+                # 族全集（真值臂正/反两态：``if flag``→IF_FALSE、
+                # ``if not flag``→IF_TRUE，同以 fail 边为目标；or 臂的
+                # IF_TRUE 目标是 case 体 ≠ fail 边，不受影响）。
+                # 命中的臂块归 match 区域（visited/all_blocks），体入口跳过
+                # 守卫链前进到真体首块；不命中（体首 if 的跳转目标在体内
+                # ≠ 下一 case）则行走原样终止，行为不变。
+                # [C1] 只读臂块指令与跳转目标；[C2] 不窥视区域树；
+                # [C3] fail 边是 case 链显式结构协议，嵌套无感。
+                GUARD_FAIL_OPS = ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+                                  'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                                  'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
+                                  'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE')
+                and_guard_chain = set()
+                agc = ft_successor
+                while agc and agc != jt and agc not in and_guard_chain and agc not in visited_l:
+                    agc_jump = self._mr_find_case_jump_instruction(agc)
+                    if (agc_jump and agc_jump.argval == last.argval and
+                            agc_jump.opname in GUARD_FAIL_OPS):
+                        and_guard_chain.add(agc)
+                        agc_jt = self.cfg.get_block_by_offset(agc_jump.argval)
+                        agc = self._mr_find_case_success_branch(agc, agc_jt)
+                    else:
+                        break
+                if and_guard_chain:
+                    ft_successor = agc
+                    for gb in and_guard_chain:
+                        visited_l.add(gb)
+                        all_blocks_l.add(gb)
                 pat = self.pattern_parser.parse_case_pattern(current)
                 body_entry = self._mr_resolve_body_entry(ft_successor)
                 body_set = set()
@@ -16667,6 +16872,10 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 _fail_off = (case_blocks[_ci + 1].start_offset
                              if _ci + 1 < len(case_blocks)
                              else (merge.start_offset if merge else None))
+                import os as _os_r8gp
+                if _os_r8gp.environ.get('R8CDBGP'):
+                    print('[R8CDBGP] cb=%s pat=%s' % (_cb.start_offset,
+                        self.pattern_parser.parse_case_pattern(_cb)))
                 _pb = self.pattern_parser.collect_pattern_blocks(_cb, all_blocks)
                 _gd = self.pattern_parser.parse_case_guard(
                     _pb,
@@ -16683,8 +16892,13 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 # 取器的 search_start+首臂定位，臂终止跳转目标 ∈ 体块集即
                 # 撤销该 guard。六项模板与 [C1][C2][C3] 见
                 # _b74_guard_arm_targets_case_body docstring。
+                import os as _os_r8gg
+                if _os_r8gg.environ.get('R8CDBGD'):
+                    print('[R8CDBGD] cb=%s fail=%s pb=%s _gd=%s' % (
+                        _cb.start_offset, _fail_off, [b.start_offset for b in _pb], _gd))
                 if (_gd is not None
-                        and self._b74_guard_arm_targets_case_body(_pb, case_bodies)):
+                        and self._b74_guard_arm_targets_case_body(_pb, case_bodies,
+                                                                 fail_case_offset=_fail_off)):
                     _gd = None
                 case_guards.append(_gd)
             region = MatchRegion(
@@ -16808,6 +17022,30 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                     and instrs[idx + 1].opname in ('STORE_FAST', 'STORE_NAME',
                                                    'STORE_GLOBAL', 'STORE_DEREF')):
                 return True
+        # [B81/B103] 无 COPY 直耗变体：主体 LOAD_VAR 推送（或 COPY 副本）run
+        # 后紧跟捕获 STORE（``case b if b is None:`` 融合头首 case 形态，
+        # 后续 case 不引用主体时 CPython 免 COPY 协议直耗）。判据与
+        # _extract_capture_head_store 的捕获协议前缀同源（栈平衡：STORE 消费
+        # run 推送的被匹配值）；run 中途 POP_TOP（通配丢弃）即中断，不误认
+        # 通配+体赋值。纯字面量头（LOAD subj; LOAD_CONST; COMPARE…）run 后
+        # 非 STORE，不触发（防 `case 1:` 模式比较被误读为守卫的原保护不变）。
+        # [B103] 前导 POP_TOP*（B14：前序 case 副本清理桩）先行跳过——融合
+        # 头 ``POP_TOP; STORE cap; LOAD cap; <guard>`` 形态（e07_capture.inner
+        # 的 ``case a if a is not None:`` case 头）的捕获绑定同属本协议；
+        # 不认领时 allow_in_header_block=False，主提取路径的同块抑制吞掉
+        # 守卫且阻断 _extract_arithmetic_guard 回退，守卫整体丢失。
+        _run_idx = 0
+        while _run_idx < len(instrs) and instrs[_run_idx].opname == 'POP_TOP':
+            _run_idx += 1
+        while (_run_idx < len(instrs)
+               and (instrs[_run_idx].opname in ('LOAD_FAST', 'LOAD_NAME',
+                                               'LOAD_GLOBAL', 'LOAD_DEREF')
+                    or instrs[_run_idx].opname == 'COPY')):
+            _run_idx += 1
+        if (_run_idx < len(instrs)
+                and instrs[_run_idx].opname in ('STORE_FAST', 'STORE_NAME',
+                                               'STORE_GLOBAL', 'STORE_DEREF')):
+            return True
         return False
 
     def _is_capture_guard_case_block(self, block):

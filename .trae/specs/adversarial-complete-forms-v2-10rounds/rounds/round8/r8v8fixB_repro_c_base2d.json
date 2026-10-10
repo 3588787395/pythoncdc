@@ -1,0 +1,45 @@
+[
+ {
+  "name": "B106_main",
+  "pyc": "test_repros/round4/c4_12_star_args.pyc",
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 13,
+  "failures": [
+   "***<module>.e02_shallow: Failure: Different bytecode",
+   "***<module>.e03_mixed: Failure: Different bytecode",
+   "***<module>.e04_deep: Failure: Different bytecode",
+   "***<module>.e06_nested.inner: Failure: Different bytecode",
+   "***<module>.CSA.m: Failure: Different bytecode",
+   "***<module>.e07_match_host: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "B106_call",
+  "pyc": "test_repros/round5/r5v5_07_starargs_callsite.pyc",
+  "status": "failure",
+  "units_success": 4,
+  "units_total": 13,
+  "failures": [
+   "***<module>.st_nontail: Failure: Different bytecode",
+   "***<module>.st_mixed: Failure: Different bytecode",
+   "***<module>.st_multistar: Failure: Different bytecode",
+   "***<module>.st_deep: Failure: Different bytecode",
+   "***<module>.CSt.m: Failure: Different bytecode",
+   "***<module>.st_close.inner: Failure: Different bytecode",
+   "***<module>.st_match: Failure: Different bytecode",
+   "***<module>.st_comp: Failure: Different bytecode",
+   "***<module>.st_comp.<listcomp>: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "B106_lam",
+  "pyc": "test_repros/round5/r5v5_15_lambda_combo.pyc",
+  "status": "failure",
+  "units_success": 26,
+  "units_total": 27,
+  "failures": [
+   "***<module>.lam_star.<lambda>: Failure: Different bytecode"
+  ]
+ }
+]

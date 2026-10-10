@@ -37175,7 +37175,19 @@ AST 映射规则:
                                     body_stmts.extend(filtered)
                 self.generated_blocks.add(body[0])
 
+            import os as _os_r8ge
+            if _os_r8ge.environ.get('R8CDBGE'):
+                print('[R8CDBGE] case=%s guard=%s gpb=%s body=%s' % (
+                    i, guard, sorted(b.start_offset for b in guard_pattern_blocks),
+                    sorted(b.start_offset for b in body)))
             for block in body:
+                if _os_r8ge.environ.get('R8CDBGE'):
+                    _nr1 = self.region_analyzer.get_entry_region_for_block(block)
+                    _nr2 = self.region_analyzer.get_region_for_block(block) if not _nr1 else None
+                    print('[R8CDBGE] blk=%s gen=%s entry_r=%s own_r=%s' % (
+                        block.start_offset, block in self.generated_blocks,
+                        type(_nr1).__name__ if _nr1 else None,
+                        type(_nr2).__name__ if _nr2 else None))
                 if block in self.generated_blocks:
                     continue
 

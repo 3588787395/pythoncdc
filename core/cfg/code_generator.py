@@ -121,7 +121,7 @@ class CodeGenerator:
             return self.output.getvalue()
         except Exception as e:
             logger.error(f"Code generation error: {e}")
-            if self.verbose:
+            if True or self.verbose:
                 logger.exception("Generation error details")
             raise CodeGenerationError(f"Failed to generate code: {e}")
     
