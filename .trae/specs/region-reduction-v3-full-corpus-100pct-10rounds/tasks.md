@@ -1072,3 +1072,21 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 - 此刻：门 25 封版 6594/6617、391/402、残差 11 档 23 单元；`core/` 干净（无未提交改动）。
 - 下一张派单（analyzer 文件空闲、且此刻没有门在跑）：任务 #63 `_process_tick_order` 的
   `WHILE_LOOP entry=114 ≠ header_block=130` 回边错位（1 元，broker 119→120/128）。
+
+## 25. 我自己动了一次刀：镜像里改 `_loop_preheader_blocks`，实测**惰**（2026-10-10 14:30）
+
+- 动机：r26a 被截断（`ps` 零进程 + 文档停在 624 字节 + 镜像未打补丁 + 无交付件），
+  我按"同文件同主机"的先验自己试一次，代价按规矩只算 turn 与读数，不算候选。
+- 假设：`region_ast_generator.py:24910` 无条件 `if b is loop.entry or b is loop.header_block: continue`
+  ⇒ entry≠header 的循环永远无法把"只执行一次的入口块"提前，回边因此错位。
+  我把跳过条件收窄为 `b is header_block or (b is entry and entry is header_block)`（+1 个条件，2 行）。
+- 实测（镜像 /d/Temp/r27chk，仓库字节未动，`py_compile` OK）：
+  `trade_live_broker.pyc` **119/128 不变**，产物 178471 字节＝封版同一大小，
+  `_process_tick_order` 仍 `delta=0 hunks=0 landings=1 judge_diff=True` ⇒ **补丁在本档是惰的**，假设被否证。
+- 顺带把 r23d 的桶标签纠正一次：该单元的分析器声明本身**是对的**——
+  `LoopRegion entry=114 header=130 back_edge=724 body=[130,178,180,182,290,342,396,402,444,446,558,560]`，
+  原始 `@178 JUMP_BACKWARD to 130` 正是指向 header；所以"entry≠header 是声明缺陷"不成立（任务 #63 前提作废）。
+  真正要解释的是：为何产物把回边发到比 130 早 3 条处——那需要先看**该臂在产物源码里的落位**，
+  与 #62（run_tick_socket 的 24 条臂被整体延后发射）看着是同一族：臂被发射到别的串里，而不是落点常量。
+- 纪律自查：这次我没有安装、没有跑门（0 翻正 ⇒ 不占门），补丁只存在于丢弃镜像，仓库 `core/` 仍封版 `5043790fbeaca162`。
+- 会话累计：门 20–25 四次认证落地，**6586 → 6594/6617（+8）**，残差 11 档 23 单元；远端＝本地＝`76b54549`。
