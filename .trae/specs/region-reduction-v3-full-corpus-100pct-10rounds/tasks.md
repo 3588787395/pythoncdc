@@ -1055,3 +1055,20 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 - 队列（各一张、互不搭车）：#59 broker 死代码桶（r25b 在飞）、#55 check_frequency 显式 return 折成 fallthrough、
   #56 handlers 单单元、#61 kill_trade_process 两目标精确换位、#62 run_tick_socket 24 条块整体错位、
   #45 klinedata 双臂、#24 f-string 前缀污染（r23d 已把它与其余九元按判据类别 `Different bytecode` 分开）。
+
+## 24. r25b 的"终结符之后死代码"判据：大幅缩小残差但 0 翻正 ⇒ 不安装（2026-10-10 14:10）
+
+- 交付面我自己在丢弃镜像里复测（仓库字节未动）：候选 `446c82d884448ecf`（封版 `5043790fbeaca162`），
+  `py_compile` OK；`trade_live_broker.pyc` **119/128 不变**，`fly/data/quotation.pyc` 153/153 ⇒ 无回退也**无翻正**。
+- 逐单元形态（`unit_diff --all --prod <我的新产物>`）：
+  - `_process_order`：台账 −465 ⇒ **−59**（hunks=20 landings=14）
+  - `_process_cancel_order`：台账 −293 ⇒ **−30**（hunks=6 landings=3）
+  - `_sync_worker`：⇒ **−3**（hunks=5 landings=6）
+- 读法：这条机制是**真的**（三元单元各自缩小 5–8 倍，且 11 个面板文件与哨兵不动），
+  但这三个单元**每个还含其它缺陷**，所以按"fires-without-flips"规矩不能占门。
+  候选整文件与报告已入库 `rounds/round25/CANDIDATE_r25b_dead_suite_region_ast_generator.py`（供续票直接接手）。
+- 这也修正了我票面里"翻正 1 元即 +1 文件"的期望：**broker 不是单机制文件**（r23d 已测出 7 种机制），
+  缩小 ≠ 翻正；下一票若动 broker，必须先看这三个单元的**剩余** hunks 属哪几类。
+- 此刻：门 25 封版 6594/6617、391/402、残差 11 档 23 单元；`core/` 干净（无未提交改动）。
+- 下一张派单（analyzer 文件空闲、且此刻没有门在跑）：任务 #63 `_process_tick_order` 的
+  `WHILE_LOOP entry=114 ≠ header_block=130` 回边错位（1 元，broker 119→120/128）。
