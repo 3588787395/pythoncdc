@@ -1033,3 +1033,25 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 - 台账旧数同时纠正：del 471/300/18、"32 处目标差"、"35 处目标差"、"#16 共要件补丁"这些前提**按今天的字节已失效**。
 - 在飞：`r24a`（generator：except 句柄 `as` 绑定丢失，`exc_tb` 被编译成 LOAD_GLOBAL）。
   B1 那张票**必须等 r24a 结束**再派——同一文件两个整文件交付会互相覆盖。
+
+## 23. 门 24 与门 25 连续落地（2026-10-10 12:56–13:36，本会话第 3、4 次落地）
+
+| 门 | 单元 | 文件 | 落地判据（工程师自己纠正了我的票面前提） | 回退 |
+|---|---|---|---|---|
+| 24 vs 23 | 6592 → **6593**/6617 | 391/402 | r24a：`_generate_handler_body_statements` 把 `exc_type, exc_obj, exc_tb = sys.exc_info()` 折成了单目标赋值 ⇒ `exc_tb` 无本地绑定，被 `compile()` 解析成 LOAD_GLOBAL；判据在 :32775 认领 `UNPACK_SEQUENCE/UNPACK_EX N + 随后 N 条全为简单 STORE_*` 的窗口，并在 :32820 发一个 Tuple 目标的 Assign（+83 行纯新增）。我的"except as 绑定丢失"前提被原始字节码否证：原处理器是 `except BaseException as x:`，根本不绑 exc_tb | 0 |
+| 25 vs 24 | 6593 → **6594**/6617 (99.6524%) | 391/402 | r24b：`_build_elif_region`（:22600-22637，+64/−0）在 merge 为 None 且某臂以 sink 终结、且 ≥2 个臂以前跳离开区域而外部落点集合不全等时，**识别期拒绝扁平 elif 折叠**；只用本区域自身块与臂尾指令，无 `.successors`、无兄弟读。翻正 broker 的 `rzrq_credit_order` 118→119/128 | 0 |
+
+- 两次安装前我都在丢弃镜像里自己复测：门 24 前 quote 89/92、wizard 57/58、real_quote 44/45、
+  产物第 1144 行已是完整解包、`--all` 下 `len 782/782 delta=0 hunks=0`；
+  门 25 前 broker 119/128、quotation 153/153、quote 89/92、klinedata 63/64、`rzrq_credit_order delta=0 hunks=0 landings=0`。
+- **本会话新增的资源教训（值得常驻）**：门链（402 档重生成）与第二名工程师同时跑，把进程句柄打爆——
+  `bash` 自身出现 `fork: Resource temporarily unavailable` 与 `0xC0000142`。
+  我的处置是先 `TaskStop` 第二名工程师保住认证读数（不是让门链在资源错误下产出假读数），
+  随后再单独复派。**规矩：门链在跑时不并行派施工者。**
+- 被停的那位（r25a）镜像与产物留在 `D:/Temp/r25a`（含 `pristine/` 与 `out/broker.UNPATCHED.py`），
+  继任 `r25b` 已带着"复制后必须重新逐文件验哈希、并确认那份 broker 产物与当前字节一致，否则丢弃"的指令复派。
+- 累计：本会话 **6586 → 6594 单元（+8）**、四次门认证（20/21/22/23→24→25 全部零回退）；
+  残差 **11 档 23 单元**；远端＝本地＝`88ca6602`；`git status -- core/` 在门 25 提交后仅剩已安装的落地字节（无未提交改动）。
+- 队列（各一张、互不搭车）：#59 broker 死代码桶（r25b 在飞）、#55 check_frequency 显式 return 折成 fallthrough、
+  #56 handlers 单单元、#61 kill_trade_process 两目标精确换位、#62 run_tick_socket 24 条块整体错位、
+  #45 klinedata 双臂、#24 f-string 前缀污染（r23d 已把它与其余九元按判据类别 `Different bytecode` 分开）。
