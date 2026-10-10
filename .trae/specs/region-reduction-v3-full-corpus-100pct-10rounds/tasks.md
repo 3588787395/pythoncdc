@@ -722,3 +722,20 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   ⇒ 这是门 21 落地态在异进程/异镜像下的第二次独立复现（不是我自己的读数）。
 - 它的 census 中间件留在 `D:/Temp/r20s/probe_census1.py` 与 `out/census1.json`（含 `pristine/` 对照），
   下一票可复用；本票标签仍为 R20-8/#53，门槛不变（`quote 87→88/92`，其余不降）。
+
+## 20N. R20-8 续派 r20t（复用 r20s 的镜像与取证）——本会话最后一次封版（2026-10-10 10:12）
+
+- 工程师 `r20t` 在 `D:/Temp/r20s`（**复用**已验证为封版字节 `4f295dfc6ebd2caa` 的镜像、
+  `pristine/` 对照、`run_panel.sh` 面板、`out/victim_unidadiff_base.txt` 与 `out/census1.json` 普查）继续 #53，
+  只拥有 `core/cfg/region_ast_generator.py`；交付要求＝整文件 + `DELIVER/FIX_T20-8b.md`（step 1 建档、增量追加）。
+  门槛不变：`fly/data/quote.pyc` 87/92 → ≥88/92（`run_individual_transform` 转 Equal），
+  其余十个面板文件与三哨兵不降、六电池按封版读数不倒；`delta -52 → -20` 而无翻正＝FALSIFIED-but-supporting。
+- 我在票面上强制了今天用一票换来的设计课：动手前先用记录型 `generated_blocks` 证明**本单元每个受害块被几处宣告消费**，
+  再在"取消标记"与"发射余下部分"之间选（gate 21 那票就是因为 `@514` 同时被 `:46121` 与调用方 `:18008` 宣告，
+  取消标记会被彼此 Undo，而不宣告又让父级无法重建只在栈上的容器值）。
+- **它测量期间我不再动 `core/` 字节、不跑门链。** 本会话结束时的仓库状态：
+  门 21 已封版（`6588/6617` 单元、`391/402` 文件、残差 11 文件 **29** 单元），
+  `git status --porcelain -- core/` 空，`region_ast_generator.py = 4f295dfc6ebd2caa`，远端与本地同为本次最后提交。
+- 下一会话的第一个动作：读 `D:/Temp/r20s/DELIVER/`（`FIX_T20-8b.md` / `region_ast_generator.py`）判 R20-8；
+  若已 LANDED-READY，走 §19C（数文件与哈希 → 丢弃镜像复测 → `install_deliver.py install`，
+  锚点须**重新读**当前 generator 哈希 → `gate_chain.py 22 21` → `residual_report.py 22 21` → 提交推送）。
