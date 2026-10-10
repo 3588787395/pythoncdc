@@ -934,3 +934,21 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 3. 三条已否证的轴别再派：generator 里改尾巴落点（AST 无跳转操作数）、wizard 的 10 个 merge-less IfRegion（无跳回臂，正常形态）、
    `run_individual_transform`/`tick_worker_thread`/`clock_worker` 的"merge 未声明"（普查计数为 0）。
 4. 两条口径纪律：桩只能装在**产生工件的同一进程**（subprocess 驱动＝假全惰）；`pyc_verify single` 不加 `--source` 是比旧产物（尺子已会提示）。
+
+## 20Y. 预算续期后：两名工程师并行在不同文件上测量（2026-10-10 11:08）
+
+- 先复核而不是重复派发：**`r20u` 其实还活着**（11:07 刚写完 Stage 1：镜像里面板 42/43、118/128
+  与三哨兵 153/153·17/17·37/37 全部复现，六电池 `orderapi 5G/0R`、`tail 13G/0R` 到 `BATT_DONE`），
+  镜像 `region_analyzer.py` 仍＝封版 `640d33a77dcb71c2`（还没打补丁）⇒ 判活仍要"进程 + 新文件"两路看，
+  我上一会话把它误判成"已终止"，因为那 12 分钟它正在跑长测量，不在写文件。
+- 并行派 **`r21a`**（`D:/Temp/r21a`，只拥有 `core/cfg/region_ast_generator.py`）＝任务 #57：
+  `realtime_event_source :: clock_worker`（12/13，唯一失败单元 ⇒ 翻正同时 +1 单元 **+1 文件**），
+  实测 `delta=-113`，@6690 起 17 条条件体被吞。票面把三条纪律写死：先用记录型 `generated_blocks`
+  数清每个受害块被几处宣告消费（先前教训：同一块在区域点与调用点被标两次，取消标记会被 Undo，
+  正解是"发射余下部分"）；`_generate_ternary@46121` 与 analyzer 的 merge 声明轴都已被证不参与本单元；
+  台账里 T12-11 曾把它 −113→−6 却 0 翻正，所以判据必须闭合整条 hunk 链。
+- 文件所有权隔离：r20u 只碰 `region_analyzer.py`，r21a 只碰 `region_ast_generator.py`，
+  两者互不读取对方镜像；我此刻不动仓库字节、不跑门链（门标签等他们带回翻正再用 **22 vs `rounds/round21/after`**）。
+- 此刻基线（我自己刚测）：`core/`、`scripts/` 干净，HEAD＝远端＝`2cb9a195`，quotation 153/153。
+- 排队中未派发的票（都与在飞文件冲突或需要门后资源）：#55 quote.check_frequency（generator，等 r21a 结束）、
+  #56 handlers._target（generator，同上）、#50/#45 klinedata（analyzer，可作 r20u 的后续）。
