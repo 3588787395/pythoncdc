@@ -21207,6 +21207,7 @@ AST 映射规则:
         _has_or_ext = ((self._or_then_block is not None and self._or_else_block is not None)
                        or self._r14_and_ext)
         _then_terminal_overflow = []
+        _r2115_tail_blocks = []
         def _is_pass_like(stmts):
             if not stmts:
                 return True
@@ -21337,7 +21338,48 @@ AST 映射规则:
                     self.generated_blocks.add(b)
             for b in _elif_exclude:
                 self.generated_blocks.add(b)
-            then_stmts = self._if_generate_then_branch(region)
+            # [R21-15 HOIST] else 臂终结 ⇒ then 臂中位于 else 之后的块属于 if 语句之后。
+            # 识别条件（全部是本区域自身的结构事实，在发射时判定；不回读已完成输出、
+            #   不跨兄弟区域内部重排、不读任何跳转目标——AST 没有跳转操作数）：
+            #   ① else_blocks 非空，且本区域不是 elif 链（elif_conditions 为空）；
+            #   ② else 臂里偏移最大的块（按块序即臂尾块）的最后一条指令是
+            #      RETURN_VALUE / RETURN_CONST / RAISE_VARARGS ⇒ 该臂不会落到 merge；
+            #   ③ then_blocks 中存在偏移 **大于** ②那块偏移的块；
+            #   ④ then_blocks 中存在偏移小于②的块（真臂非空，head 可独立发射）。
+            # 归约方式：3.11 反编译期没有块重排 ⇒ 字节码线性顺序就是源码发射顺序，
+            #   ③ 成立即说明这些块在源码里位于整个 if/else 之后（把它们留在真臂里，
+            #   重编译时 else 臂会被推到真臂之后，并多出一条 then 臂尾 JUMP_FORWARD）。
+            #   于是把 region.then_blocks 临时换成 head 交给 _if_generate_then_branch，
+            #   调用后立即复原（与 _generate_try 的臂尾认领、_generate_ternary 的
+            #   merge 余量同为「在归属点发射余量」）。
+            # AST 映射：[If(test, body=head_stmts, orelse=else_stmts)] + tail_stmts；
+            #   等价性由 ② 保证——else 臂终结，尾块只在 test 为真时执行，两种写法同义。
+            _r2115_else_term = None
+            if (region.else_blocks
+                    and not getattr(region, 'elif_conditions', None)):
+                _r2115_else_term = max(region.else_blocks,
+                                       key=lambda b: b.start_offset)
+                _r2115_term_i = _r2115_else_term.get_last_instruction()
+                _r2115_then_offs = [b.start_offset for b in (region.then_blocks or [])]
+                if (_r2115_term_i is not None
+                        and _r2115_term_i.opname in ('RETURN_VALUE', 'RETURN_CONST',
+                                                     'RAISE_VARARGS')
+                        and any(o > _r2115_else_term.start_offset for o in _r2115_then_offs)
+                        and any(o < _r2115_else_term.start_offset for o in _r2115_then_offs)):
+                    _r2115_tail_blocks = [
+                        b for b in region.then_blocks
+                        if b.start_offset > _r2115_else_term.start_offset]
+            if _r2115_tail_blocks:
+                _r2115_saved_then = region.then_blocks
+                region.then_blocks = [
+                    b for b in _r2115_saved_then
+                    if b.start_offset <= _r2115_else_term.start_offset]
+                try:
+                    then_stmts = self._if_generate_then_branch(region)
+                finally:
+                    region.then_blocks = _r2115_saved_then
+            else:
+                then_stmts = self._if_generate_then_branch(region)
             # [R3-Continue] 分支终结边 continue 发射：merge_block 与当前循环
             # 头重合、且 then 分支终结边 JUMP_BACKWARD 直达循环头时，该分支
             # 是 `continue` 终结分支，必须在 then 体末尾发射显式 Continue。
@@ -22137,6 +22179,17 @@ AST 映射规则:
                 if_result = if_result + _then_terminal_overflow
             else:
                 if_result = [if_result] + _then_terminal_overflow
+        # [R21-15 HOIST-EMIT] 判据③的尾块由本区域（其归属点）在 If 节点之后
+        # 按块序补发；不读跳转目标，不触碰兄弟区域内部。
+        if _r2115_tail_blocks:
+            _r2115_tail_stmts = self._process_if_blocks(
+                sorted(_r2115_tail_blocks, key=lambda b: b.start_offset),
+                region, branch='then')
+            if _r2115_tail_stmts:
+                if isinstance(if_result, list):
+                    if_result = if_result + _r2115_tail_stmts
+                else:
+                    if_result = [if_result] + _r2115_tail_stmts
         return if_result
 
     def _try_build_await_condition(self, region: IfRegion, cond_block: 'BasicBlock') -> Optional[Dict[str, Any]]:
