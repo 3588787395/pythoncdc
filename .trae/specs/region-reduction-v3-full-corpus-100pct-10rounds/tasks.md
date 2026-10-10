@@ -952,3 +952,20 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 - 此刻基线（我自己刚测）：`core/`、`scripts/` 干净，HEAD＝远端＝`2cb9a195`，quotation 153/153。
 - 排队中未派发的票（都与在飞文件冲突或需要门后资源）：#55 quote.check_frequency（generator，等 r21a 结束）、
   #56 handlers._target（generator，同上）、#50/#45 klinedata（analyzer，可作 r20u 的后续）。
+
+## 20Z. 我把"COPY_AMBIG（拒判）"这条标签拆开看了——里面是真缺陷（任务 #21 重开）
+
+- 台账里 `wizard_quant_api.get_DMI.calculate_di.<genexpr>` 两元记成"同路径副本不唯一，拒判"，
+  还写着"须人工按出现次序定标后才可开票"。我自己做了副本配对与逐条反汇编：
+  - `<module>.get_DMI.calculate_di` 下共 **3 个** `<genexpr>`；#0（226 条，free=`high_now/low_now/pre_close`）**两侧一致**；
+  - **#1 与 #2：原始各 216 条、含 2 个 `POP_JUMP_FORWARD_IF_FALSE`；产物各 164 条、只剩 1 个**
+    ⇒ 链式条件表达式 `a if c1 else (b if c2 else d)` 的**中间择支被丢**，false 分支直接跳到尾部；
+  - 两侧的 `varnames / argcount / freevars / consts` 全同，代码对象**顺序与数量也全同**（57 个对 57 个，`calculate_di` 都在下标 22）。
+- 为什么我的 `unit_diff` 第一次读出 `delta=0 hunks=0 judge_diff=False`：**那把尺子只比较"第一个匹配副本"**，
+  所以我自己的工具把真缺陷洗成了"相等"，而判据端只能报"副本不唯一、拒判"。⇒ 这是**尺子局限**，不是判据坏了；
+  以后凡见 `COPY_AMBIG`，必须逐副本配对（长度/跳转数/varnames）再定性，不能引用标签开票。
+- 收益账：`wizard_quant_api.pyc` 55/58 里 2 元属这条（修好可到 57/58），第 3 元 `filter_desicion` 是纯落点差（另一轴）。
+- 已并行派第三名工程师 **`r21b`**（`D:/Temp/r21b`，候选文件 `comprehension_generator.py`），
+  并在票面明令：`region_analyzer.py`（r20u 在测）与 `region_ast_generator.py`（r21a 在测）**禁止它改**，
+  若结论是主机在那两个文件里，只能交出主机与判据、报 BLOCKED-BY-FILE-OWNERSHIP，不许动字节。
+- 三名并行工程师互不读对方镜像，我继续不安装、不跑门链。
