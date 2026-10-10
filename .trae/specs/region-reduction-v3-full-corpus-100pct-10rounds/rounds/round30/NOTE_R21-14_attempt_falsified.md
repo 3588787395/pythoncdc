@@ -130,3 +130,22 @@ in `_collect_handler_chain` (`region_analyzer.py:11143-11149`) or from a later r
 or the `block_to_region` ownership writes at `:11106-11130`). Next attempt should therefore log
 *which* of those steps first puts block 586/638/640/684 into the handler's block set, instead of
 widening `_collect_body`. Reverted: `region_analyzer.py` back to `35e227ac3e7b25af`.
+
+## Fourth addendum, 17:08 — Variant D MEASURED: strict improvement, no regression, still not a flip
+`_collect_body` split into `_collect_body_raw(entry, _r2116_pe_stop=False)` plus a wrapper
+`_collect_body(entry)` that runs the normal walk and re-runs with `_r2116_pe_stop=True` ONLY if the
+first result contains a block preceding the handler entry. Patch = `+29/-1` lines in
+`core/cfg/region_analyzer.py`, `py_compile` OK; a copy is kept at `D:/Temp/t30/VARIANT_D_region_analyzer.py`.
+```
+fly/data/quote.pyc          product 93 063 B (sealed 94 155 B)
+run_individual_transform    delta -52 -> -3      hunks=3 landings=2   (try body restored, still not Equal)
+run_tick_socket             still Equal          [single] 91/92       (Variant A's regression is GONE)
+```
+So the two-pass trigger does exactly what Variant A could not: it fixes the swallow only where the
+swallow is provable. It is NOT landable this round because the campaign rule requires at least one
+unit flip per round, and this unit still reads `delta=-3`. Remaining sub-defects after D are the
+`return None` threading family (3 hunks / 2 landings on the same unit) — i.e. `quote.run_individual_transform`
+needs **two** fixes (D + a threading fix), like `clock_worker` (3) and `broker` (7); it is not a
+one-criterion file flip. Next round: install D as-is (its patch is ready and measured inert-of-regression
+on the only sibling unit in the same file), then close the residual `delta=-3` in the same gate.
+All variants are reverted; `region_analyzer.py` = `35e227ac3e7b25af`.
