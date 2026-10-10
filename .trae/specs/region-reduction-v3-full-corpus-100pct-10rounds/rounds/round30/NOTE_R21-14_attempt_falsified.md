@@ -83,3 +83,31 @@ numbers as indicative and re-derive any counting reading with the `runpy`-based 
 (3) blast radius is every `TryExceptRegion` in the corpus — run the fire census over the 14-file panel
 before delivering, and expect `fly/data/quotation.pyc` 153/153 to be the first thing this breaks.
 
+## Second addendum, 17:03 — two variants of the R21-16 analyzer fix, both MEASURED and REVERTED
+The swallow lives in `region_analyzer.py::_extract_except_handler._collect_body` (`:11292+`), the same
+walk the `[W21 fix]`/`[W27 fix]` comments already fence (POP_EXCEPT + `JUMP_FORWARD`, POP_EXCEPT +
+backward jump). The unhandled third case is a block that contains `POP_EXCEPT`, then only `as`-cleanup
+instructions, and **ends without any jump** — its successors are the code after the whole `try`
+statement, and following them walks back around the loop into the try body.
+Variant A (stop the walk at such a block entirely):
+```
+run_individual_transform  delta -52 -> -3   hunks 3 landings 2      (the try body IS restored)
+fly/data/quote.pyc        91/92 -> 90/92                            (run_tick_socket REGRESSES to Different control flow)
+```
+Variant B (keep following successors but refuse only those whose `start_offset` is below the handler
+entry, i.e. the back edge into pre-handler code):
+```
+product byte-identical to sealed (94 155 B); delta still -52, file still 91/92   -> NO EFFECT AT ALL
+```
+Why B is inert: the pre-entry blocks (586/638/640/684) are reached through other blocks of the walk,
+not from the POP_EXCEPT-cleanup block itself, so a skip keyed only on that one block never triggers.
+**Therefore the next attempt must bound the handler body by the exception table, not by successor
+direction.** The data is already in scope at the call site (`:8966-8988`): `handler_info['try_end']`,
+`handler_infos[j]['handler_start']`, and `self.cfg.exception_table` entries as
+`(start, end, target, depth)`. Note the *last* handler in a region has no following `handler_start`, so
+its upper bound must come from the try statement's end, not from the next handler — that is the part
+Variant A stumbled on, since cutting at the cleanup block also truncated `run_tick_socket`'s legitimate
+handler tail. Both variants are reverted; the tree is back at
+`region_analyzer.py = 35e227ac3e7b25af` with the quote product `cmp`-identical to sealed.
+
+
