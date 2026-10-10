@@ -909,3 +909,28 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 - 已开任务 #57（不要与 #55/#56 搭车：三条机制不同）。翻正它＝单元 +1 **且** 文件 391→392。
 - 本会话终态：未安装任何新字节，`core/`/`scripts/` 干净，封版＝门 21（**6588/6617、391/402**，残差 11 档 29 单元）；
   `r20u`（#54）仍在 Stage 1（10:59 还在重生成哨兵），镜像 `region_analyzer.py` 未偏离 `640d33a77dcb71c2` ⇒ 无候选可装。
+
+## 20W. 会话封版 park（turn 预算耗尽；读数全部来自本会话实测，非记忆）
+
+**已完成并过门**：门 20＝6587/6617、门 21＝**6588/6617 (99.5617%) / 391/402**，四阶段全 rc=0，
+  `regen ok=402 bad=0`、`文件级回退=0 UNIT_REGRESSIONS=0 新增失败单元=0`、quotation 153/153、
+  small34 1539、selfcheck 153/153（两变异各抓到 1/153）、pytest 2 failed/280 passed＝封版那一对。
+  落地机制两个：①函数内 import 窗口改走公共 import 状态机（`region_ast_generator.py` 原 :9729）；
+  ②`_generate_ternary:45841` 三元消费跨度未覆盖 merge 块时**发射余下部分**（补回 `tempdict[...] =` 与 `tmp = pandas.DataFrame(...)`）。
+
+**未完成**：残差 **11 档 / 29 单元**（封表 `rounds/round21/RESIDUAL_ROUND21.md`，UNREGISTERED=0）。
+  距 100% 还差 29 个代码对象的判据等值，以及 11 个文件各自的 `*OK.py` 全绿。
+
+**在飞/未落地的事实状态**：`r20u`（#54）被封版时仍在 Stage 1（`DELIVER/` 只有 2003 字节的文档，
+  镜像 `region_analyzer.py` 仍＝`640d33a77dcb71c2`）⇒ **没有候选，没有安装**；
+  仓库 `core/ scripts/ site-packages/` 全部干净，HEAD 与远端同为 `172bfd76`。
+
+**下一会话照这个顺序做（勿凭记忆改步骤）**：
+1. `ls -l /d/Temp/r20u/DELIVER/`：若有 `region_analyzer.py` 且 sha16 ≠ `640d33a77dcb71c2` ⇒ 读它的 `## Final declaration`，
+   有具名翻正才走 §19C（丢弃镜像复测 → install，锚点先重读 → `gate_chain.py 22 21` → `residual_report.py 22 21` → 提交推送）；
+   若仍是 pending/无文件 ⇒ 本票按截断处理，从 §20R 的具名区域 `IfRegion entry=1112` 重新派单，别当判据被否。
+2. 优先啃"只差 1 单元"的档（翻正 1 单元＝单元 +1 且文件 +1）：#57 clock_worker（12/13，delta=-113，17 条条件体被吞）、
+   #56 handlers._target（29/30，delta=-2 三条落点，须先复算哪条在对齐后存活）、api_base/strategy/klinedata/risk_calc 同型。
+3. 三条已否证的轴别再派：generator 里改尾巴落点（AST 无跳转操作数）、wizard 的 10 个 merge-less IfRegion（无跳回臂，正常形态）、
+   `run_individual_transform`/`tick_worker_thread`/`clock_worker` 的"merge 未声明"（普查计数为 0）。
+4. 两条口径纪律：桩只能装在**产生工件的同一进程**（subprocess 驱动＝假全惰）；`pyc_verify single` 不加 `--source` 是比旧产物（尺子已会提示）。
