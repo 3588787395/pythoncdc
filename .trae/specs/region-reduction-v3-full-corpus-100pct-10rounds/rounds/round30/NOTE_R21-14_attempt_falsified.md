@@ -48,3 +48,38 @@ victim's *outer* shape is also wrong (two sequential `while not flag:` loops bec
 already pinned the wrapper merge decision at `:6917 _can_merge` — force-unwrap alone left
 `delta=-7 -> hunks=2 landings=2` with `time.sleep` still missing, so the wrapper and the terminator
 must be fixed as a pair or the pairing must be proven non-redundant first.
+
+## Addendum, 16:57 — R21-16's root cause found, and it is an ANALYZER declaration defect
+`owner file for R21-16 should be core/cfg/region_analyzer.py, NOT the generator.`
+Evidence, from an in-process region dump of `fly/data/quote.pyc`'s `run_individual_transform` code
+object (`build_cfg` → `RegionASTGenerator(cfg).region_analyzer.analyze()`, 10 regions):
+```
+== TryExceptRegion entry=686
+   try_blocks             []                              <-- the try body is EMPTY by declaration
+   handler_entry_blocks   [754]
+   except_handlers        [('BaseException','x', 23 blocks)]
+      those 23 blocks include offsets 586, 638, 640, 684, 686, 752, 774, 1024, 1032,
+      1050, 1112, 1116, 1240, 1282, 1354, 1396, 1468, 1510, 1578, 1620, 2116, 2208
+      i.e. blocks that PRECEDE the region entry (586 < 686) and the try-body blocks themselves
+   else_blocks [] finally_blocks [] merge_block None exit_block None continue_map None
+```
+That single declaration explains the whole emitted shape I read in `quoteOK.py:1326-1347`:
+`try:` body `pass` (because `try_blocks` is empty), the handler suite holding everything that should
+be the try body and the statements AFTER the try, and — since that handler ends in `continue` —
+CPython ≥3.10 deleting the 15 instructions (`message = socket.recv()`, `if message:
+message = eval(message.decode())`) that the unit is missing (`delta=-52`).
+Criterion to implement: a `TryExceptRegion` whose declared handler body contains blocks with
+`start_offset < region.entry.start_offset`, or has `try_blocks == []` while its handler body lists
+blocks that precede `handler_entry_blocks[0]`, is mis-assembled — the pre-entry/try-body blocks must be
+owned by the region's try side (or by the enclosing loop body), never by the handler. This is a
+*correct-at-identification* fix in the analyzer, and `region_analyzer.py` is currently unowned by any
+other ticket, so it cannot collide with R21-13's landed generator bytes.
+Caveats to honour while implementing: (1) an isolated `analyze()` census can name regions the real run
+never renders, so confirm with the live run (the generator-side log of `_generate_try` for `entry=686`
+showed `body=1 handlers[...:13]`, i.e. the real run does render this region exactly as dumped);
+(2) my monkeypatch driver that produced that log was NOT byte-inert (it wrote 90 167 B against the
+sealed 94 155 B because `pycdc.main()` was called with a different cwd/flag path), so treat call-count
+numbers as indicative and re-derive any counting reading with the `runpy`-based inert rig;
+(3) blast radius is every `TryExceptRegion` in the corpus — run the fire census over the 14-file panel
+before delivering, and expect `fly/data/quotation.pyc` 153/153 to be the first thing this breaks.
+
