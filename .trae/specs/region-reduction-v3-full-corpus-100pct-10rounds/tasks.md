@@ -864,3 +864,21 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   其余面板与六电池不降；`gate_chain.py 22 21`；安装锚点先重读当前 generator 哈希（本会话为 `4f295dfc6ebd2caa`）。
 - 提醒施工者两条今天重复踩中的规矩：桩/包装必须装在**产生工件的同一进程**里（subprocess 驱动会让所有候选看似全惰）；
   `pyc_verify single` 不加 `--source` 会拿在位旧产物比（尺子现已会在该情形打印 NOTE）。
+
+## 20T. 战略账：11 个残差文件里有 **6 个只差 1 个单元**（2026-10-10 10:57，我用封表＋实测算的）
+
+- 按 `rounds/round21/RESIDUAL_ROUND21.md`（11 文件 29 单元）逐档相加，**单单元文件**（翻正 1 个即整档变绿）有 6 个：
+  `handlers.pyc` 29/30、`realtime_event_source.pyc` 12/13、`IQData/api/api_base.pyc` 27/28、
+  `plugin_fly_data/strategy/strategy.pyc` 26/27、`klinedata.pyc` 63/64、`risk_calculation/__init__.pyc` 42/43；
+  多单元文件 5 个：`trade_live_broker` 118/128（10）、`quote` 87/92（5）、`wizard_quant_api` 55/58（3）、
+  `trade_info_utils` 38/41（3）、`real_quote` 43/45（2）。合计 6×1+10+5+3+3+2 = **29**，与封表一致（我是把两栏加出来核对的，不是引用）。
+- 意义：文件计数 391/402 若要爬，性价比最高的不是先去啃 broker 的 10 个单元，
+  而是把这 6 个"只差 1 单元"的档各开一票：每翻正一个单元＝单元 +1 **且**文件 +1。
+- 新开票 #56（handlers）：我今天实测 `<module>.TWHThreadController._target` =
+  `len orig=199 prod=197 delta=-2 hunks=1 landings=3 judge_diff=True`，三条落点行是
+  `@456 orig->idx193/prod->idx195`、`@502 orig->idx195/prod->idx191`、`@516 orig->idx197/prod->idx193`
+  ⇒ 只有 @502（差 4 个索引）像真差，其余可能是 −2 的 2 字节位移影子；票面要求施工者**先复算哪条落点在对齐后仍存活**，
+  再决定写判据（这条纪律来自本会话两次"按位移影子记账"的返工）。
+- 本轮在手的票：#54 `r20u`（analyzer 为 `IfRegion@1112` 声明 merge，仍在测，镜像 `region_analyzer.py` 尚未偏离 `640d33a77dcb71c2`）、
+  #55（generator：raise 之后显式 return 被折成 fallthrough）、#56（handlers 单单元档）、#50（analyzer 优先轴）。
+- 会话末仍**未安装**任何新字节：`core/` 与 `scripts/` 干净，封版＝门 21（6588/6617、391/402）。
