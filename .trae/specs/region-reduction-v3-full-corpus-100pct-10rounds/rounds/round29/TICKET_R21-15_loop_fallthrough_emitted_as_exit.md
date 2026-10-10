@@ -111,6 +111,17 @@ prompted me to census every `{'type': 'Break'}` construction in that file agains
 Note the file has more than eight such sites, so count the sites that actually FIRE for your region
 before editing one of them — a single-site fix on a duplicated predicate is only a partial fix.
 
+**Correction to that addendum, measured 12:55-13:09 (this supersedes the list above as a shortcut):**
+I instrumented the six sites named above with a file-only log in a throwaway mirror and proved the
+probe INERT (`klinedata` and `plugin_system_risk_calculation` products both `cmp`-identical to the
+sealed ones), and it recorded **zero** firings on either file — while the sealed products of those
+same files plainly contain `break` statements. The reason is that the file holds **71** occurrences
+of the literal `'type': 'Break'`, so those six are not the operative ones. Treat the list above as a
+*sample of the shape of the predicate*, not as a candidate short-cut: the way to find the real site is
+**ablation** (stub candidate builder methods to return None and watch the emitted text change, as my
+sibling engineer did at `:6917 _can_merge` for R21-14) or a container watch, not more line probes.
+An empty probe log in this campaign has always meant a broken rig, never a negative about the site.
+
 ## 6. Deliverable
 `D:/Temp/r31/DELIVER/FIX_R21-15.md` — (0) ticket as received, (1) mirror + sealed-hash + cmp proof,
 (2) baseline readings (victim + panel), (3) 取证 with file:line of the `Break`/exit construction and
