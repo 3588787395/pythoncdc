@@ -816,3 +816,26 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   这两条正是 #45/#48 挂着"需要两个站点/残余是落点"的单元，**是最像"一条 analyzer 声明判据能翻正"的两个候选**。
   建议 #50 起手就用这两个单元做判据靶（各只要 1 个翻正即满足门槛），而不是先攻 wizard 的 10 个。
 - 本会话结束时仍未安装任何东西：`core/` 干净，`region_ast_generator.py = 4f295dfc6ebd2caa`，门 21 封版 6588/6617。
+
+## 20R. 派出 r20u（R20-9：为 `IfRegion@1112` 声明 merge）并把两个靶子写死（2026-10-10 10:51）
+
+- 我按 §20Q 的种群计数又下钻了一层，得到**可施工的具名区域**（口径：同进程 `build_cfg` + `RegionAnalyzer(...).analyze()`）：
+  - `real_quote.pyc :: get_tick_direction`（43/45，现差 `delta=0 hunks=0 landings=2`）：该代码对象里
+    **唯一**一个 `merge_block is None` 的 IfRegion 是 `entry=1112 cond=1112 then=[1124,1126]
+    else=[1128,1174,1176,1388,1224,1332,1390]`，其 else 臂尾块 **@1332 以 `JUMP_BACKWARD` 结束**。
+  - `klinedata.pyc :: get_kline_by_count_new`（63/64）：`entry=0 cond=80`，**两条**臂尾跳回
+    （then@134 与 else@252），`elif_final_else=[266,536,678,754,828]` ⇒ 已知需要两个站点，禁止一票 claiming。
+  - 反证并写进票面：`wizard_quant_api :: filter_desicion` 那 10 个 merge-less IfRegion 全是
+    `entry==cond / then=[x] / else=[y]` 且**没有任何跳回臂尾**（14/92/178/236/318/404/514/570/626/706），
+    那里 merge 缺失是正常的；`strategy.tick_worker_thread`、`clock_worker`、`run_individual_transform`
+    三个单元的 merge-less IfRegion 数为 **0** ⇒ 不许再说它们同族。
+- 工程师 `r20u`：镜像 `D:/Temp/r20u`（由已验证的 `D:/Temp/r20s` 复制，含 `pristine/`、`run_panel.sh`、六电池），
+  **只拥有 `core/cfg/region_analyzer.py`**；交付整文件 + `DELIVER/FIX_T20-9.md`（step 1 建档、增量追加，
+  判据段不许空白）。门槛：`real_quote 43→44/45` 或 `klinedata 63→64/64`，其余面板不降、三哨兵与六电池按封版值。
+  票面同时禁止它跑 402 门、写仓库产物、动 generator/v2，并要求任何探针先 `cmp` 证惰（违者记 VOID）。
+- 它票面里我明确写了"不要安装 `D:/Temp/r20s/out/candidate_r20s_region_ast_generator.py`（`b95573720306a2ca`）
+  当作基线"——那是上一票未翻正的在测候选，只作起点。
+- 会话状态：未安装任何东西；`core/` 干净，三哈希 `region_ast_generator.py=4f295dfc6ebd2caa`、
+  `ast_generator_v2.py=beeaf14435e22922`、`region_analyzer.py=640d33a77dcb71c2`；门 21 封版 6588/6617、391/402，
+  残差 11 文件 29 单元。下一票回来先读 `DELIVER/region_analyzer.py` 的 sha16 是否异于 `640d33a77dcb71c2`，
+  再走 §19C（丢弃镜像复测 → install → `gate_chain.py 22 21` → `residual_report.py 22 21` → 提交推送）。
