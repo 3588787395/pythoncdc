@@ -1223,3 +1223,20 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 - New rig trap banked (see `ADJUDICATION_R21-13_provisional.md`): never `cmp` a regenerated product
   against a **checked-out** product in this worktree — checkout is CRLF, the decompiler writes LF, so
   every file reads DIFF. Compare against `git show HEAD:<path>` or read the gate's file-level diff.
+
+## §33 corpus-directory coverage audit (round 30) — every current-magic pyc now has its OK.py, by evidence
+Requirement re-checked from disk rather than assumed: "每个 pyc 在同目录生成同名 +OK.py".
+Scan of `site-packages/` (excluding `__pycache__`) found **4 current-magic `.pyc` with no product**:
+`fly/common/market_time_probe_recompile.pyc` (8 989 B, mtime 09-25), `fly/data/_tmp_difffn.pyc`
+(124 871 B, 09-22), `fly/simtradding/ptradeAccountOK_marker_test.pyc` (78 124 B, 08-30),
+`IQEngine/plugins/plugin_system_risk_calculation/__init__OK.py.tmp.pyc` (69 171 B, 10-01).
+All four are untracked (`git ls-files --error-unmatch` fails), none appears in any of the eight
+`rounds/round29/after/*.json` gate reports (so they were never part of the 402-file verification face),
+and no script under `scripts/` or the spec directory references them — i.e. rig scratch left in the
+corpus by earlier rounds, not app modules. They were **moved, not deleted**, to
+`D:/Temp/quarantine/corpus-scratch-20261011/` preserving relative paths, so the action is reversible.
+Re-scan after the move: `pyc_total=406 current_magic=405 products=407 missing_product=0`, and
+`git status --porcelain -- core site-packages` is empty (nothing tracked changed). 405 inputs = the
+402 gate face + the 3 foreign-magic pyc excluded by the boundary clamp; 407 products = 402 + 3 + 2
+known orphans, matching the sealed boundary counts. Remaining unmet requirement is unchanged:
+17 units in 9 files still fail bytecode equality (gate 29 = 6600/6617, 393/402).
