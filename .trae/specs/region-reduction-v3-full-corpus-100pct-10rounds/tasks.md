@@ -572,3 +572,28 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 - 封表：`rounds/round20/RESIDUAL_ROUND20.md`（6587/6617、11 files / 30 units、UNREGISTERED=0）。
 - 下一票：孪生站点 :12164（同一判据的第二处副本，按"一处决定多处复用"应把它接到同一个 helper），
   以及 #50（analyzer 侧 BoolOp 声明，r20n 截断未交付，需重走 §19C）。
+
+## 20F. 孪生站点已按规矩回退 + 下一票的证据已备好（2026-10-10 08:56）
+
+- **孪生 :12171 判据＝零翻正，已逐字节回退**：同一 import 判据装到第二份副本后，
+  11 个残余文件全部维持封版读数（handlers 29/30、wizard 55/58、trade_info_utils 38/41、klinedata 63/64、
+  api_base 27/28、real_quote 43/45、strategy 26/27、realtime_event_source 12/13、risk_calculation 42/43、
+  quote 86/92、trade_live_broker 118/128；口径＝`pycdc.py --region` 重生成到 $TEMP 后
+  `pyc_verify single --source`，判决来自外部 compare_pyc）。
+  `core/cfg/region_ast_generator.py` 回封版哈希 `e17603a761eaadef`（落地态），`py_compile` 通过。
+  ⇒ :9729 那份副本是这一族唯一的实测生产者；:12171 保留旧判据，**已证明它在这 11 个文件上不参与**，
+  若日后要为一致性统一两处，须另找会命中它的单元，不能记作翻正。
+
+- **下一票（R20-6）证据已量好，主机候选已缩到 5 处 append 点**：
+  `IQCommon/util/trade_info_utils.pyc :: <module>.query_strategy_id`，`len orig=117 prod=116 delta=-1 hunks=2 landings=0 judge_diff=True`，
+  唯一内容差是：`@634 JUMP_FORWARD`（被 try/except 的自然出口吞进共享尾 `@648 LOAD_CONST None; RETURN_VALUE`）
+  被产物替换为在 handler 体**内部内联** `LOAD_CONST None; RETURN_VALUE`（产物第 1084-1086 行 `except BaseException:` 体后）。
+  ⇒ 该发的是"handler 自然出口 = 落到 try 之后的共享 return"，不是"handler 里再返回一次 None"。
+  候选发射点（`stmts.append({'type': 'Return', 'value': None})` 全文 5 处）：
+  :32159 / :32448 / :32964 / :56716 / :56807，其中 :32159 落在 `_generate_handler_body_statements`（:31911）内＝首要嫌疑；
+  可复用的既有判据名：`_is_return_none_join_block`（:3096）、`_w14_join_bare_return_none`（:59118）、
+  `_strip_implicit_return_none`（:21552）、`_is_trailing_return_none_statement`（:58995）。
+  **测量口径提醒（本会话踩过的坑）**：桩必须装在**同一进程**里跑 `pycdc.decompile_pyc()`，
+  用 subprocess 驱动会让所有 stub 全惰＝假否证；先装计数包装打印每个候选的调用次数，确认它真的执行，再打桩。
+  收益账：这一族若成立可覆盖 trade_info_utils 的 `query_strategy_id`(+1 单元) 与同形的 `query_trade_strategy_info`，
+  门槛按"≥1 单元翻正、其余不降、quotation 153/153、六电池不倒"收票。
