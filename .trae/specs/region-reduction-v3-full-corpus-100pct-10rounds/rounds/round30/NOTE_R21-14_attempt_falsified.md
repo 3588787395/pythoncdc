@@ -111,3 +111,22 @@ handler tail. Both variants are reverted; the tree is back at
 `region_analyzer.py = 35e227ac3e7b25af` with the quote product `cmp`-identical to sealed.
 
 
+
+## Third addendum, 17:05 — Variant C also measured, no effect; revert proven
+Variant C = two-pass bound inside `_extract_except_handler`: `_collect_body(entry, _r2116_limit=None)`
+skips any popped block with `start_offset < limit`, and `_collect_body_checked(entry)` runs the normal
+walk first and re-runs with `limit = entry.start_offset` ONLY if the first result contains a block
+preceding the handler entry. Applied at both `handler_body_blocks = _collect_body(handler_entry)`
+sites; `+23/-3` lines, `py_compile` OK.
+```
+fly/data/quote.pyc product size 94 155 == sealed (byte-identical)
+run_individual_transform  len orig=407 prod=355 delta=-52 hunks=10 landings=3   (unchanged)
+[single] 91/92 (unchanged, no regression either)
+```
+So the pre-entry blocks in the victim's handler body are **not** produced by either of those two
+`_collect_body` call sites — they must come from `_follow_except_chain` / the `chain_handlers` extend
+in `_collect_handler_chain` (`region_analyzer.py:11143-11149`) or from a later re-attribution pass
+(the `exclude_from_try` filter at `:9792`, the `Pattern C`/`else_set` adjustments at `:9869`/`:9900`,
+or the `block_to_region` ownership writes at `:11106-11130`). Next attempt should therefore log
+*which* of those steps first puts block 586/638/640/684 into the handler's block set, instead of
+widening `_collect_body`. Reverted: `region_analyzer.py` back to `35e227ac3e7b25af`.
