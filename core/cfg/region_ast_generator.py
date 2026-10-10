@@ -9726,9 +9726,16 @@ AST 映射规则:
                                 for _li in _leading:
                                     _acc.append(_li)
                                     if _li.opname in ('POP_TOP', 'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF', 'RETURN_VALUE', 'RETURN_CONST'):
-                                        _ls = self._build_statement(_acc)
-                                        if _ls:
-                                            body_stmts.append(_ls)
+                                        # [r20-r51] 前导窗口含 IMPORT_NAME 时必须走公共 import 状态机；
+                                        # _build_statement 会把 LOAD_CONST(fromlist)+STORE_FAST 读成 NAME = (fromlist,) 赋值、
+                                        if any(_ai.opname == 'IMPORT_NAME' for _ai in _acc):
+                                            _r20l_stmts = self._build_statements_from_instructions(_acc)
+                                            if _r20l_stmts:
+                                                body_stmts.extend(_r20l_stmts)
+                                        else:
+                                            _ls = self._build_statement(_acc)
+                                            if _ls:
+                                                body_stmts.append(_ls)
                                         _acc = []
                                 test_expr = self.expr_reconstructor.reconstruct(_cond_instrs)
                             else:

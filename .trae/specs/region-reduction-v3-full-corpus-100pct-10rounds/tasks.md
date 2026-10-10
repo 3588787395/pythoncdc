@@ -553,3 +553,22 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 2. 有交付文件 ⇒ 走 §19C 全文（数哈希 → 丢弃镜像复测 → install → 一条后台门链 → 封表 → 提交推送）。
 3. 门链期间**不安装、不改 `core/`、不读仓库 `*OK.py`**（产物正在被删除重写）。
 4. 任何一张票落地都要提交并 `git push origin HEAD:refs/heads/rr-v3r01-f557fd`，用 `git ls-remote` 判真。
+
+## 20E. R20-5 落地并过门（gate 20 certified，2026-10-10 08:51）
+
+- 生产者定位：先前那次"8 处候选全惰"的消融是**作废读数**——stub 装在我这个进程里，
+  反编译却用 subprocess 跑在新进程，补丁从未生效。改成进程内 `pycdc.decompile_pyc()` 后
+  调用计数立刻给出真实生产者：`_loop_handle_header` 在 **region_ast_generator.py:9729** 用
+  `_build_statement(_acc)` 收尾前导窗口，窗口实测 `[LOAD_CONST, LOAD_CONST, IMPORT_NAME, IMPORT_FROM, STORE_FAST]`，
+  于是 fromlist 常量被当成赋值右边，产出 `THREAD_STATUS = ('`'THREAD_STATUS'`',)`（同时正确 import 在别处仍发了一次 ⇒ 是**退化/错位发射**，不是丢失）。
+- 判据（复用既有状态机，不再复制第 9 份）：窗口含 `IMPORT_NAME` 时改走 `_build_statements_from_instructions(_acc)`。
+- 测量（判决来自外部判据 compare_pyc，非我自己数指令）：目标单元 `delta=-4 → len orig=528 prod=528 hunks=0 landings=0 judge_diff=False`；
+  文件 41/43 → **42/43**。**同一份退化行在孪生站点 :12164 仍存在**（那条 accumulator 是第 2 份副本），本票只改了实测命中的 :9729。
+- 门 20 vs 19（一次后台链，四阶段全 rc=0）：`regen ok=402 bad=0`；
+  `[units] 6586/6617 → 6587/6617 (99.5466%)`；`[files] 391 → 391`；
+  `[gates] 文件级回退=0 UNIT_REGRESSIONS=0 新增失败单元=0 翻正单元=1`；
+  quotation 153/153、small34 units_success 1537→1538、selfcheck 153/153 且两个变异各被抓到 1/153、
+  pytest `2 failed, 280 passed, 2 xpassed`＝第 19 轮封版的那一对既有红，**零新增红**。
+- 封表：`rounds/round20/RESIDUAL_ROUND20.md`（6587/6617、11 files / 30 units、UNREGISTERED=0）。
+- 下一票：孪生站点 :12164（同一判据的第二处副本，按"一处决定多处复用"应把它接到同一个 helper），
+  以及 #50（analyzer 侧 BoolOp 声明，r20n 截断未交付，需重走 §19C）。
