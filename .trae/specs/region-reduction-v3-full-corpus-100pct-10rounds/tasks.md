@@ -882,3 +882,15 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 - 本轮在手的票：#54 `r20u`（analyzer 为 `IfRegion@1112` 声明 merge，仍在测，镜像 `region_analyzer.py` 尚未偏离 `640d33a77dcb71c2`）、
   #55（generator：raise 之后显式 return 被折成 fallthrough）、#56（handlers 单单元档）、#50（analyzer 优先轴）。
 - 会话末仍**未安装**任何新字节：`core/` 与 `scripts/` 干净，封版＝门 21（6588/6617、391/402）。
+
+## 20U. 门 22 之前把十个残差档的产物新鲜度逐档 `cmp` 证过了（2026-10-10 10:58）
+
+- 口径：对 10 个残差文件逐个 `pycdc.py --region -o $TEMP/...` 重生成，再与**在位** `*OK.py` 做 `cmp`；
+  结果逐档 `FRESH`，`stale_count=0`（handlers / klinedata / wizard_quant_api / trade_info_utils / api_base /
+  real_quote / strategy / realtime_event_source / risk_calculation / quote）。
+- 为什么值得花这个 turn：门 21 之后我在 generator 上没再改过字节，但**"没改"是记忆不是读数**；
+  `rounds/round21/after` 是门 22 的 before 侧输入，若任何一档产物是旧字节，门 22 会把"旧产物 vs 新产物"
+  读成翻正或回退（本战役已经踩过一次 stale-product 假回退）。现在这条基线是被证明的，不是假设的。
+- 注意：常驻哨兵 `tests/test_product_freshness.py` 只覆盖 4 个小样本（跑得起），这 10 档是**一次性核对**，
+  不要把它误当成常驻门禁；每次安装后仍应重跑门链而不是重跑我这个循环。
+- 会话末：未安装任何字节；`core/`、`scripts/` 干净；封版＝门 21（6588/6617、391/402、残差 11 档 29 单元）。
