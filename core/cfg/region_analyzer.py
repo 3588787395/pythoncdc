@@ -22344,6 +22344,27 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                         'RAISE_VARARGS', 'RERAISE'))
                 if not _d2_terminal:
                     return None
+                # [r20u T20-9 判据 · 终态豁免的反例：then 臂越过 inner_merge 落到 merge_]
+                # 判据⑤ 把 inner_merge 的终态（RETURN/RAISE/RERAISE）当作「整条 if 的共享
+                # 退出」而放行 elif 展平。共享退出成立的前提是【then 臂也汇聚到 inner_merge】。
+                # 若 then 臂自身的末指令是一条前向跳转且落点正是外层合并点 merge_，而 merge_
+                # 排在 inner_merge 之后（then 臂【越过】inner_merge），则 inner_merge 位于 else
+                # 臂内部，是 else 臂里那个嵌套 if 自己的汇合点，其后紧跟的终态块是 else 臂的
+                # 尾随语句，不是本 if 的共享退出（get_tick_direction：then 臂 @942
+                # JUMP_FORWARD->1106=merge_，inner_merge=1102 即 `return redata`，嵌套链的
+                # @956/@1024/@1036 三臂皆汇于 1102）。此时与判据①②③⑤ 同构地弃权：调用方按
+                # IF_THEN_ELSE 建区，嵌套 if 作子 IfRegion、终态块留作 else 臂兄弟节点
+                # （原则 2 每块唯一归属 / 原则 3 嵌套即抽象节点）。取材面仅为本区域自身的
+                # then_blocks 末指令类别与跳转落点、inner_merge/merge_ 偏移序；不读兄弟区域
+                # 成员、不读名字/常量、无跨级回补。
+                if (_d2_terminal and inner_merge.start_offset < merge_.start_offset):
+                    for _t9_tb in then_blocks:
+                        _t9_last = _t9_tb.get_last_instruction()
+                        if (_t9_last is not None
+                                and _t9_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                and _t9_last.argval is not None
+                                and _t9_last.argval == merge_.start_offset):
+                            return None
             # [R48-C 同层谓词 · 链汇合的前驱侧对偶] 区域归约算法原则 1（块 = 前导
             # 语句 + 恰好一个终结子）＋原则 2（每块唯一归属且归属者必须发射）：
             # inner_merge 是 first_else 两臂的声称汇合块，故 first_else 的 then 臂
