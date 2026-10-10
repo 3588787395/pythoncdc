@@ -661,3 +661,30 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   它们各自的主嫌疑路径是 try/loop 侧的块消费（`_generate_try*` 与 `_loop_handle_child_region_entry`），
   应各开一票并各自以"至少 1 个具名单元翻正"收票。此结论也回证了票面里"同族必须逐单元实测"的规矩。
 - 仓库仍未动：`core/` 干净、`region_ast_generator.py = e17603a761eaadef`，门读数 6587/6617、391/402。
+
+## 20K. 第 21 轮门已封版落地 + 派出 r20s 并 park（2026-10-10 09:44）
+
+- **门 21 vs 20 已封版（一次后台链，四阶段全 rc=0）**：`regen ok=402 bad=0`；
+  `[units] 6587 → 6588/6617 (99.5617%)`；`[files] 391 → 391`；
+  `[gates] 文件级回退=0 UNIT_REGRESSIONS=0 新增失败单元=0 翻正单元=1`；quotation 153/153、六电池不倒。
+  落地件＝r20r 的 `_generate_ternary:45841`（18 行纯新增）：当三元自己的 `merge_block` 在容器值之后仍有
+  `STORE_SUBSCR/STORE_ATTR/DELETE_SUBSCR`，说明消费跨度未覆盖整块 ⇒ 走 `_try_build_ternary_store_assign`
+  重放 `before_store`（让 `@514 BUILD_LIST` 把 IfExp 折回列表）补回 `tempdict['is_open'] = [...]`，
+  并发射 store 之后的余下语句（`tmp = pandas.DataFrame(tempdict, index=index)` / `return tmp`）。
+  我自己复测过的读数：`fly/data/quote.pyc` 86→**87/92**，`build_current_period_df` `delta -10 → 0 hunks=0 landings=0 judge_diff=False`。
+- **本票最重要的否证（r20r 实测）**：我在票面上建议的"不宣告该块被消费"单独**不成立**——
+  `@514`（以及 `@508/@512`）在 `:46121` 与调用方 `_if_generate_then_branch:18008` **两处同时**被宣告消费，
+  只放行一处会被另一处Undo；若不宣告，父 `_generate_block_statements` 又无法重建只存在于栈上的容器值。
+  ⇒ 这一族的正确机制是"发射余下部分"，不是"取消标记"。
+- 提交与推送：`d235c0f8`（含 `rounds/round21/after` 八份 JSON、`RESIDUAL_ROUND21.md`＝11 文件 **29** 单元、
+  r20r 的 `FIX_T20-7_r20r.md`、落地后的 generator 字节与扫新的 402 产物），`git ls-remote` 判真。
+- **在飞**：工程师 `r20s`（镜像 `D:/Temp/r20s`，只拥有 `core/cfg/region_ast_generator.py`）＝任务 #53：
+  `quote.pyc <module>.Quote.run_individual_transform`（del 84，`socket.recv()`→`message`→空数据告警分支→`list(...)[0]` 被压成 2 条）。
+  我给它的普查主路径是 try/loop 侧（`_generate_region@4076→_generate_try@31595` 等），并明确
+  `_generate_ternary@46121` 不参与本单元；门槛 `quote 87→88/92` 且十个面板文件与三哨兵不降、六电池不倒。
+  **它测量期间我不动 `core/` 字节、不跑门链。**
+- 恢复后的动作（照抄）：数 `D:/Temp/r20s/DELIVER/` 交付文件与哈希 → 丢弃镜像复测（§19C 第 2 步，
+  备份锚点＝**重新读当前** `core/cfg/region_ast_generator.py` 哈希，今天已是 `4f295dfc6ebd2caa`）→
+  有翻正才 `install_deliver.py install` → `gate_chain.py 22 21` → `residual_report.py 22 21` → 提交推送。
+- 未开的同形票（各自需要独立翻正证据，禁止搭车）：`clock_worker`（12/13）、`filter_desicion`（仅落点差）、
+  `handlers._target`（逐出口边复制族，已否证发射点说）、#50 analyzer 侧 BoolOp 声明。
