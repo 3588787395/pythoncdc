@@ -739,3 +739,26 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 - 下一会话的第一个动作：读 `D:/Temp/r20s/DELIVER/`（`FIX_T20-8b.md` / `region_ast_generator.py`）判 R20-8；
   若已 LANDED-READY，走 §19C（数文件与哈希 → 丢弃镜像复测 → `install_deliver.py install`，
   锚点须**重新读**当前 generator 哈希 → `gate_chain.py 22 21` → `residual_report.py 22 21` → 提交推送）。
+
+## 20O. R20-8 在飞臂次轨迹（2026-10-10 10:28–10:33 我逐臂实测镜像产物所得）
+
+- 口径：我直接读 `D:/Temp/r20s/out/victim_unidadiff_v*.txt` 的表头（工程师每打一臂就重跑一次
+  `unit_diff.py`），并配合镜像 generator 的 sha16 变化确认"这一臂真的装了不同字节"：
+  封版 `4f295dfc6ebd2caa` → v1 `c6bb17006f962f6e` → v3/v4 `9738cebbf9786ca2`。
+
+| 臂 | victim `run_individual_transform` |
+|---|---|
+| base | `len orig=407 prod=355 delta=-52 hunks=10 landings=3 judge_diff=True` |
+| v1 | `delta=-27 hunks=8 landings=3 judge_diff=True` |
+| **v2** | `delta=-2 hunks=5 landings=3 judge_diff=True` |
+| v3 | `delta=-127 hunks=6 landings=3 judge_diff=True`（**过头：比基线更差 ⇒ 是一次回退臂**） |
+
+- 读法：v2 只剩 **2 条指令 + 5 个 hunk + 3 个落点差**，说明这一族"块被 try/loop 侧过度宣告"的方向是对的，
+  但按现判据还差一步；v3 反而 −127 ⇒ 同一判据放宽一处会连带吞别处，**不可按"最接近的那臂"记账**。
+- 规矩照旧：我只读它的臂次文件，**没有安装、没有跑门链**（它的 `DELIVER/` 至今没有 `region_ast_generator.py`，
+  文档里判据实现/阶段读数/最终声明三段仍是 `(pending)`）。移动中的哈希不是判据。
+- 下一会话续做 #53 的第一动作：读 `D:/Temp/r20s/DELIVER/FIX_T20-8b.md` 的 `## Final declaration`；
+  若仍为 pending ⇒ 该工程师已死，从 v2 那臂的字节继续（v2 的镜像哈希 `c6bb17006f962f6e` 之后的一步），
+  目标是把 `delta=-2 landings=3` 收掉；若 LANDED-READY ⇒ 走 §19C，门标签 **22 vs `rounds/round21/after`**。
+- 会话末状态：门 21 封版不变（6588/6617、391/402、残差 11 文件 29 单元），
+  仓库 `core/` 干净、`region_ast_generator.py = 4f295dfc6ebd2caa`。
