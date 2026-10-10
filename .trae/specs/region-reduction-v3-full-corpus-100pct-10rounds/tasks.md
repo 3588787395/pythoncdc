@@ -644,3 +644,20 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   备份锚点 `e17603a761eaadef`）→ 有翻正才装、装完跑一次 `gate_chain.py 21 20` → `residual_report.py 21 20` 封表 → 提交推送。
 - 本轮已落地并封版的读数不变：**6587/6617 单元 / 391/402 文件**，残差 11 文件 30 单元；
   远端在最后一次次提交为 `fef79e80`（本条提交后即更新），`core/` 工作树干净。
+
+## 20J. 同形受害者已用容器监视否证"一票多吃"（2026-10-10 09:16）
+
+- 先记一条我自己的 rigs 事故：第一次普查把 `mk('x')` 的键写死成字面量，过滤器永远取不到集合 ⇒
+  `claim-adds=0` 是 **VOID 读数**，不是"该站点不参与"。修好后同一次跑得到 290 / 1272 条命中。
+- 修好后的读数（口径：记录型 `generated_blocks` 子类 + 同进程 `pycdc.decompile_pyc`，只观察不改字节）：
+  - `fly/data/quote.pyc :: run_individual_transform`：claim-adds=290，主要路径
+    `_generate_region@4076→_generate_try@31595`(37)、`_loop_dispatch_block@9250→_loop_handle_child_region_entry`、
+    `_if_generate_branch_stmts@27752→_process_if_blocks@26059`(35)、`_generate_try_body@28260`(30)；
+    **`_generate_ternary@46121` 不参与**（any 46121 = False）。
+  - `realtime_event_source.pyc :: clock_worker`：claim-adds=1272，主要路径同上但 try/loop 占大头
+    （`_generate_region@4076→_generate_try@31595` 217、`_generate_try@30318→_generate_try_body@28578` 183、
+    `_generate_region@4060→_generate_loop@5378` 158），**`46121` 亦不参与**。
+- 结论：r20r 的三元过消费判据**覆盖不到这两个受害者**，"一票多吃"被实测否证；
+  它们各自的主嫌疑路径是 try/loop 侧的块消费（`_generate_try*` 与 `_loop_handle_child_region_entry`），
+  应各开一票并各自以"至少 1 个具名单元翻正"收票。此结论也回证了票面里"同族必须逐单元实测"的规矩。
+- 仓库仍未动：`core/` 干净、`region_ast_generator.py = e17603a761eaadef`，门读数 6587/6617、391/402。
