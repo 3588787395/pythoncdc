@@ -969,3 +969,23 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   并在票面明令：`region_analyzer.py`（r20u 在测）与 `region_ast_generator.py`（r21a 在测）**禁止它改**，
   若结论是主机在那两个文件里，只能交出主机与判据、报 BLOCKED-BY-FILE-OWNERSHIP，不许动字节。
 - 三名并行工程师互不读对方镜像，我继续不安装、不跑门链。
+
+## 21. 门 22 与门 23 连续落地（本段全部是我自己复测过的读数，2026-10-10 12:05）
+
+| 门 | 单元 | 文件 | 判据 | 翻正 | 回退 |
+|---|---|---|---|---|---|
+| 22 vs 21 | 6588 → **6590**/6617 | 391 | analyzer `_check_elif_chain:22360-22367`：`inner_merge` 终结且本区 then 臂**跨过** inner_merge 跳到 merge 时，识别期拒绝 elif 折叠 | real_quote 43→44/45、quote 87→88/92 | 0 |
+| 23 vs 22 | 6590 → **6592**/6617 | 391 | comprehension `_r21_fold_boolop_test_chain:2510`（在 `_detect_comp_ternary:2437-2440` 取代裸 reconstruct）：段内所有条件跳转都是同一条非反向 false-exit 且共用同一目标时，按切点分段重建并合成 BoolOp(and) | wizard 55→**57**/58（两个 genexpr 副本各 216↔164 条复原） | 0 |
+
+- 两票我都先在**丢弃镜像**里自己复测再安装：门 22 前测得 real_quote 44/45、quote 88/92、quotation 153/153（产物 53910/94202/182759 字节）；
+  门 23 前测得 wizard 57/58、quotation 153/153、quote 88/92、broker 118/128（产物 34538/182759/94202/178161 字节）。
+- 我自己的两次读数错误被工程师实测纠正，记下来免得再犯：
+  ①票面写 `get_tick_direction` 的封版形态是 `delta=0 landings=2`，**封版字节实为 `delta=1 hunks=1 landings=1`**；
+  ②票面点名的 `IfRegion entry=1112` 对残余差**贡献为 0**（两臂以 RETURN_VALUE 终结、回边是臂内 for 循环边），
+     真差属 `entry=858` 的幻影 `elif_final_else=[1102]`；`region_analyzer` 里那条 `merge=None` 特征在 api_base 有 4、strategy 有 0，
+     所以"一个 analyzer merge 判据通吃"仍不成立。
+- 度量口径新增一条：**`翻正单元` 不等于副本数**——门 23 单元 +2 而报告显示 `翻正单元=1`，
+  因为两个 `<genexpr>` 副本共用一个 qualname；这也是封表把 wizard 那两元错标成 `COPY_AMBIG（拒判）` 的同一根因（尺子只比第一副本）。
+- 在飞：`r23a`（analyzer，靶 api_base 27/28 与 strategy 26/27，两个**只差 1 单元即翻文件**的档）、
+  `r23d`（只诊断 `trade_live_broker` 118/128 的 10 元里到底有几种机制，禁止改 `core/`）。
+- 此刻基线：门 23 封版 **6592/6617、391/402、残差 11 档 25 单元**；远端＝本地＝`bc0ba6ef`；`git status -- core/` 干净。
