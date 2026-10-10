@@ -32025,6 +32025,18 @@ AST 映射规则:
 
         stmts: List[Dict[str, Any]] = []
         stmt_instrs: List[Instruction] = []
+        # [R21-5] UNPACK_SEQUENCE / UNPACK_EX 状态机（handler/finally 体单块语句发射路径）。
+        # 字节码模式: <value_expr> + UNPACK_SEQUENCE N + N×STORE_* → (t1, ..., tN) = value_expr
+        # 本路径此前缺此判据: 累积指令在首个 STORE_* 处交 _build_store_statement，
+        # 仅绑定首个目标，其余 N-1 个名字在函数作用域内从未被 STORE →
+        # 源码中对其的读取被 compile() 判为全局名（LOAD_GLOBAL），与原始
+        # LOAD_FAST 不等价（fly/data/quote.pyc::get_real_from_zeromq handler 的
+        # `exc_type, exc_obj, exc_tb = sys.exc_info()`）。
+        # 依「识别即正确」: 仅当 UNPACK 之后紧邻的 N 条非噪声指令全部是简单
+        # STORE_* 时才整体认领，否则照旧回落既有路径。
+        # 镜像 _build_statements_from_instructions 的同名判据（同一字节码事实在两条
+        # 语句重建路径必须同语义）。
+        _hb_unpack_info = None
         # [repro_07 修复] skip_initial_pop 应根据 block 首指令动态判定，而非无条件 True。
         # 旧的无条件 True 会误跳 block 中部的 POP_TOP（如 call 结果丢弃的 POP_TOP），
         # 导致 call 表达式被误绑定为后续 Assign 的 value。仅当首条非噪声指令是 POP_TOP
@@ -32756,7 +32768,78 @@ AST 映射规则:
                         stmts.append({'type': 'Break'})
                 continue
 
+            # [R21-5] UNPACK_SEQUENCE/UNPACK_EX 入口：消费 stmt_instrs 作为 value，
+            # 等待 N 个简单 STORE_*（每块唯一归属：UNPACK + N×STORE 归单个 Assign 节点）。
+            # 认领前瞻：紧随其后的 N 条非噪声指令必须全是 STORE_FAST/NAME/GLOBAL/DEREF，
+            # 否则（属性/下标目标、链式 COPY 等）不认领，保持既有行为。
+            if instr.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
+                _hb_noise_ops = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')
+                if instr.opname == 'UNPACK_SEQUENCE':
+                    _hb_n = instr.arg if instr.arg is not None else (
+                        instr.argval if isinstance(instr.argval, int) else 0)
+                    _hb_starred = False
+                    _hb_star_idx = -1
+                else:
+                    _hb_arg = instr.argval if isinstance(instr.argval, int) else (
+                        instr.arg if instr.arg is not None else 0)
+                    _hb_star_idx = _hb_arg & 0xFF
+                    _hb_n = _hb_star_idx + 1 + ((_hb_arg >> 8) & 0xFF)
+                    _hb_starred = True
+                _hb_ok = _hb_n >= 2
+                if _hb_ok:
+                    _hb_seen = 0
+                    _hb_following = block.instructions[block.instructions.index(instr) + 1:]
+                    for _hb_fi in _hb_following:
+                        if _hb_fi.opname in _hb_noise_ops:
+                            continue
+                        if _hb_fi.opname in ('STORE_FAST', 'STORE_NAME',
+                                             'STORE_GLOBAL', 'STORE_DEREF'):
+                            _hb_seen += 1
+                            if _hb_seen == _hb_n:
+                                break
+                            continue
+                        _hb_ok = False
+                        break
+                    if _hb_seen != _hb_n:
+                        _hb_ok = False
+                if not _hb_ok:
+                    stmt_instrs.append(instr)
+                    continue
+                _hb_val_instrs = [i for i in stmt_instrs if i.opname not in _hb_noise_ops]
+                _hb_val = (self.expr_reconstructor.reconstruct(_hb_val_instrs)
+                             if _hb_val_instrs else None)
+                _hb_unpack_info = {'value': _hb_val, 'targets': [], 'count': _hb_n,
+                                     'is_starred': _hb_starred, 'starred_idx': _hb_star_idx}
+                stmt_instrs = []
+                continue
+
             if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                # [R21-5] unpack 状态机收集：N 个 STORE_* 到齐后发射
+                # Assign(targets=[Tuple(elts)], value=<前驱表达式>)，与
+                # _build_statements_from_instructions 同形态。
+                if _hb_unpack_info is not None:
+                    _hb_cur = len(_hb_unpack_info['targets'])
+                    if (_hb_unpack_info.get('is_starred')
+                            and _hb_cur == _hb_unpack_info.get('starred_idx', -1)):
+                        _hb_unpack_info['targets'].append(
+                            {'type': 'Starred',
+                             'value': {'type': 'Name', 'id': instr.argval,
+                                       'ctx': 'Store', 'lineno': instr.starts_line}})
+                    else:
+                        _hb_unpack_info['targets'].append(
+                            {'type': 'Name', 'id': instr.argval, 'ctx': 'Store',
+                             'lineno': instr.starts_line})
+                    if len(_hb_unpack_info['targets']) == _hb_unpack_info['count']:
+                        _hb_tuple = {'type': 'Tuple',
+                                     'elts': _hb_unpack_info['targets'],
+                                     'ctx': 'Store'}
+                        if _hb_unpack_info['value'] is not None:
+                            stmts.append({'type': 'Assign',
+                                          'targets': [_hb_tuple],
+                                          'value': _hb_unpack_info['value']})
+                        _hb_unpack_info = None
+                        stmt_instrs = []
+                    continue
                 has_copy = any(i.opname == 'COPY' and i.arg == 1 for i in stmt_instrs)
                 if has_copy:
                     remaining = block.instructions[block.instructions.index(instr)+1:]
