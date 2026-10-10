@@ -703,3 +703,22 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   `文件级回退=0 UNIT_REGRESSIONS=0 新增失败单元=0 翻正单元=1`；`rounds/round21/RESIDUAL_ROUND21.md`＝11 文件 29 单元，UNREGISTERED=0。
 - 下一票的门标签＝**22 vs `rounds/round21/after`**；安装前先重读
   `sha256sum core/cfg/region_ast_generator.py | cut -c1-16`（当前 `4f295dfc6ebd2caa`），别用本文里任何旧哈希。
+
+## 20M. r20s 被截断（无判据、无交付），但它的取证纠正了我两个数（2026-10-10 10:11）
+
+- 判活方式照例是"进程 + 文件"两路：`ps -W | grep -ic python` = **0**，且 `D:/Temp/r20s` 内 12 分钟无任何新文件
+  ⇒ 该工程师已被终止，`DELIVER/` 里只有 37 行 FIX 文档，**没有 `region_ast_generator.py` 交付件**，
+  镜像 `wt/core/cfg/region_ast_generator.py` 仍是基线 `4f295dfc6ebd2caa`（未打过补丁）。
+  所以本票**没有可安装的候选**，不是"候选被判否"——下一位工程师可直接接着它的取证做。
+- 它纠正了我票面两个数（它按"信文件不信引用"处理，正确）：
+  `quote.pyc <module>.Quote.run_individual_transform` 在**封版字节**上的实测是
+  `len orig=407 prod=355 delta=-52 hunks=10 landings=3 judge_diff=True`，
+  而非我引用的 `del 84` 单 hunk；三个同形 hunk 是 `del=15 / del=5+3 / del=21(+ins 9)`
+  （`socket.recv()`→`message`→`if not message` 告警→`list(keys)[0]`）。全文转储在它镜像的 `out/victim_unidadiff_base.txt`。
+- 附带收益（对我独立有意义）：它在**新建镜像**里逐项复现了 13 项面板与三哨兵
+  `quote 87/92 · klinedata 63/64 · handlers 29/30 · wizard 55/58 · trade_info_utils 38/41 · api_base 27/28 ·
+  real_quote 43/45 · strategy 26/27 · realtime_event_source 12/13 · risk/__init__ 42/43 · trade_live_broker 118/128 ·
+  quotation 153/153 · matcher 17/17 · order_api 37/37`
+  ⇒ 这是门 21 落地态在异进程/异镜像下的第二次独立复现（不是我自己的读数）。
+- 它的 census 中间件留在 `D:/Temp/r20s/probe_census1.py` 与 `out/census1.json`（含 `pristine/` 对照），
+  下一票可复用；本票标签仍为 R20-8/#53，门槛不变（`quote 87→88/92`，其余不降）。
