@@ -989,3 +989,22 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 - 在飞：`r23a`（analyzer，靶 api_base 27/28 与 strategy 26/27，两个**只差 1 单元即翻文件**的档）、
   `r23d`（只诊断 `trade_live_broker` 118/128 的 10 元里到底有几种机制，禁止改 `core/`）。
 - 此刻基线：门 23 封版 **6592/6617、391/402、残差 11 档 25 单元**；远端＝本地＝`bc0ba6ef`；`git status -- core/` 干净。
+
+## 21B. analyzer 声明轴在 api_base/strategy 上被**结构性否证**（r23a，2026-10-10 12:13）
+
+- 交付面：`DELIVER/region_analyzer.py` sha16 `ec6bd48826c65df9` ＝**当前封版字节**（0 改动行、`py_compile` OK），
+  工程师自己立即回退——因为候选把 `fly/data/quote.pyc` 从 **88/92 打到 84/92（−4）**。仓库从未被我或它写入。
+- 它实现的判据（已撤销，但形态值得记录）：`region_analyzer.py:19617` 在既有 `and`-only BoolOpRegion 兜底（:19613-19615）
+  下加一条 `elif`：`_op_chain_ops == {'or'} 且 len(op_chain) >= 2` 时把 `op_chain` 的块列表声明为 or 链。只用原则 4 的入口引用，
+  不读兄弟区域，识别期决定。
+- **要害负极（本会话最硬的一条）**：`op_chain` 存的是**链接**而不是**操作数**。strategy 源码条件是 3 操作数
+  （`@512 or @524 or <@536 尾>`，尾块经 `@562` 落到 then `@568`），但 `op_chain=[(512,'or'),(524,'or')]`，
+  第三个操作数 `@536` 属**兄弟** `IfRegion@536` ⇒ `inline_boolop_chains` **无法从区域 512 自身数据补全**：
+  挡路的是**识别顺序墙**，不是缺字段。api_base 更要另一种机制：根本不存在 `BoolOpRegion@992`，
+  且 `@992` 以 `POP_JUMP_FORWARD_IF_TRUE → @1098`（＝它自己声明的 merge）结尾，是 `not X and (Y or (Z and W))`
+  的取反 and 头，两条既有链遍历都在第一块就拒。另测得 `@1254` 不是块起点、两单元所有 IfRegion 的
+  `inline_boolop_chains={}` 且 `op_chain=[]`。
+- 结论与后续：#50/#40/#47 这条"analyzer 补声明"轴按实测**关闭**；若重开，必须写成**识别顺序重构**（子先于父），
+  而不是再加声明字段——否则等于第三次踩同一面墙。api_base/strategy 现仍各差 1 单元（27/28、26/27，形态 `landings=2 / landings=4`）。
+- 此刻：门 23 封版 **6592/6617、391/402、残差 11 档 25 单元**；在飞只剩 `r23d`（只诊断 broker 10 元的机制数，禁改 `core/`）。
+  本会话累计 +6 单元（6586→6592），全部经 402 门认证、零回退。
