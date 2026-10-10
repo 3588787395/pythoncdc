@@ -839,3 +839,28 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   `ast_generator_v2.py=beeaf14435e22922`、`region_analyzer.py=640d33a77dcb71c2`；门 21 封版 6588/6617、391/402，
   残差 11 文件 29 单元。下一票回来先读 `DELIVER/region_analyzer.py` 的 sha16 是否异于 `640d33a77dcb71c2`，
   再走 §19C（丢弃镜像复测 → install → `gate_chain.py 22 21` → `residual_report.py 22 21` → 提交推送）。
+
+## 20S. generator 侧的下一票已备好（`quote.check_frequency`，与 r20u 的 analyzer 票不冲突）（2026-10-10 10:55）
+
+- 我此刻**不安装、不开门链**（`r20u` 正在 analyzer 上测量，安装会让它的自证 cmp 失准），
+  所以这一票先以"实测取证"入库，等下一位施工者动手。
+- 同文件另两枚 −1 单元的差别（口径＝我自己的 `unit_diff`）：
+  - `<module>.Quote.get_individual_data`：`len orig=351 prod=352 delta=1 hunks=1 **landings=1**`
+    ⇒ 纯落点差，属 analyzer 轴（#50/#54 的地盘），**不要**在 generator 里找它。
+  - `<module>.Quote.check_frequency`：`len orig=131 prod=132 delta=1 hunks=2 landings=2`，内容 hunk 是
+    `orig[106..108] @456..@458 = LOAD_CONST None; RETURN_VALUE` 被产物的 **一条 `JUMP_FORWARD`** 取代。
+- 原始字节码上下文（同进程 `dis` 实测）：`@424 LOAD_FAST tmp / @426 LOAD_CONST 0 / @428 COMPARE_OP > /
+  @434 POP_JUMP_FORWARD_IF_TRUE→@456 / @436 LOAD_ASSERTION_ERROR … @454 RAISE_VARARGS /
+  **@456 LOAD_CONST None; @458 RETURN_VALUE** / @460 PUSH_EXC_INFO …`
+  即源码形态是 `if not tmp > 0: <log>; raise AssertionError(msg)` 之后**函数显式 return None**，
+  raise 分支与 fallthrough 分支共用 @456 这个 return 块。
+- 产物形态（在位 `quoteOK.py` 第 995-1011 行）把 assert/raise 重排成
+  `else: if not tmp > 0: log; assert tmp > 0, msg` 然后在 try 之外统一 `return None`（第 1011 行），
+  于是 raise 路径的落点从"@456 显式 return"变成"跳到共享尾"，净 +1 条指令 ⇒
+  **这一票的机制候选是"raise/assert 之后共用 return 块被折叠成 fallthrough"**，
+  与已登记的"CPython 逐出口边复制"族（#46/#30）相邻但**方向相反**：那里是产物少发一对 None/return，
+  这里是产物把显式 return 折成了跳转。施工者须先自己复现这两个读数，再决定是"补发 return"还是"不折叠"。
+- 门槛照旧：`quote.pyc` 87/92 → ≥88/92 需翻正 `check_frequency`（或同文件任一具名单元），
+  其余面板与六电池不降；`gate_chain.py 22 21`；安装锚点先重读当前 generator 哈希（本会话为 `4f295dfc6ebd2caa`）。
+- 提醒施工者两条今天重复踩中的规矩：桩/包装必须装在**产生工件的同一进程**里（subprocess 驱动会让所有候选看似全惰）；
+  `pyc_verify single` 不加 `--source` 会拿在位旧产物比（尺子现已会在该情形打印 NOTE）。
