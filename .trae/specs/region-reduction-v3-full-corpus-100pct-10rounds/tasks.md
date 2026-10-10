@@ -894,3 +894,18 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 - 注意：常驻哨兵 `tests/test_product_freshness.py` 只覆盖 4 个小样本（跑得起），这 10 档是**一次性核对**，
   不要把它误当成常驻门禁；每次安装后仍应重跑门链而不是重跑我这个循环。
 - 会话末：未安装任何字节；`core/`、`scripts/` 干净；封版＝门 21（6588/6617、391/402、残差 11 档 29 单元）。
+
+## 20V. 第三个"只差 1 单元"的档已解剖并开票（本会话最后一条记录，2026-10-10 11:00）
+
+- `realtime_event_source.pyc <module>.RealtimeEventSource.clock_worker`（12/13）实测：
+  `len orig=1424 prod=1311 delta=-113`，首个内容 hunk 连删 **17 条**自 `@6690` 起：
+  `LOAD_FAST holiday_not_do_before / LOAD_CONST '0' / COMPARE_OP == / POP_JUMP_FORWARD_IF_FALSE /
+  LOAD_DEREF self / LOAD_ATTR event_queue / LOAD_METHOD put / LOAD_FAST dt / LOAD_GLOBAL EventEnum /
+  LOAD_ATTR BEFORE_TRADING_START / BUILD_TUPLE / PRECALL / CALL / POP_TOP / LOAD_FAST now_date / LOAD_DEREF self`
+  ⇒ 被吞的是循环里 `if holiday_not_do_before == '0': self.event_queue.put((dt, EventEnum.BEFORE_TRADING_START))` 的**整个条件体**
+  （就是台账里"110 条体被跳、一形三态"那一档）。
+- 与我今天的普查对齐：该代码对象的 merge_block=None IfRegion 数为 **0** ⇒ **analyzer 的 merge 声明轴（#50/#54）覆盖不到它**；
+  它的 claim 主路径在 try/loop 侧（`_generate_region@4076→_generate_try@31595` 217 次等）。
+- 已开任务 #57（不要与 #55/#56 搭车：三条机制不同）。翻正它＝单元 +1 **且** 文件 391→392。
+- 本会话终态：未安装任何新字节，`core/`/`scripts/` 干净，封版＝门 21（**6588/6617、391/402**，残差 11 档 29 单元）；
+  `r20u`（#54）仍在 Stage 1（10:59 还在重生成哨兵），镜像 `region_analyzer.py` 未偏离 `640d33a77dcb71c2` ⇒ 无候选可装。
