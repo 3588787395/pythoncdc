@@ -762,3 +762,28 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   目标是把 `delta=-2 landings=3` 收掉；若 LANDED-READY ⇒ 走 §19C，门标签 **22 vs `rounds/round21/after`**。
 - 会话末状态：门 21 封版不变（6588/6617、391/402、残差 11 文件 29 单元），
   仓库 `core/` 干净、`region_ast_generator.py = 4f295dfc6ebd2caa`。
+
+## 20P. R20-8 收票＝FALSIFIED(supporting)，但它把三票同向指到同一个 analyzer 轴（2026-10-10 10:46）
+
+- 交付面（我自己复核）：`DELIVER/region_ast_generator.py` sha16 `4f295dfc6ebd2caa` ＝封版字节 ⇒ **无可安装候选**；
+  真正的在测候选另存 `out/candidate_r20s_region_ast_generator.py` sha16 `b95573720306a2ca`，
+  已入库 `rounds/round22/CANDIDATE_r20t_v5_region_ast_generator.py`（不是落地件，只是下一步的起点）。
+- 臂次读数（与我逐臂实测一致）：base `delta=-52 hunks=10 landings=3` → v1 `-27/8` → v2 `-2/5/3`
+  → v3 `-127` → v4 `-119` → **v5 `delta=+6 hunks=3 landings=2`，判据仍 Different control flow ⇒ 0 翻正**；
+  13/14 产物与 pristine 逐字节不变，六电池与 14 文件面板全在封版值（quote 87/92 不降不升）。
+- 它的判据（不许空白，确实填了）：`识别期的 try 区域自有领土`——从 `handler_entry` 沿非异常后继在
+  `region.blocks` 内做 arm-closure 可达性，作用在 10 处 claim/discard 站点（:28249/55-57/63-64、:28577-78、
+  :28790/96/07-09、:28834、:26507-09、:30402/07、:31587/95，helper 在 :29798 前）。
+- 普查级事实：内层 try 的 `except_handlers` 清单挂了 **19 个宿主块**（@586…@2208），
+  arm 循环走到 @586 后合成出 `If(isSet, then=整个循环余下体, else=@2208)` 的垃圾；
+  `:28834` 型静默 claim 丢弃了 `message = eval(...)`；`:31595` 的 finally 标记吞掉 @2208。
+- **两条要命的负极**：(1) 只在没有 `:26507-09` 守卫时推迟 ⇒ 直接回退到 `delta=-127`（v3/v4 实测）；
+  (2) 剩余残差不在 claim 领土族里，而是 `IfRegion@640` 的 **merge 声明缺失**（两臂都以 `continue` 结束、
+  `merge=None` ⇒ then/else 融合 + 兄弟 `continue` + 被 `while True` 包住）。
+- 三票同向收敛（这是本轮最有价值的结构结论）：r20m（策略/api_base 的 else=[1098] 属主错位）、
+  r20d（显式边判据在识别期成立但不改字节）、r20t（`IfRegion@640` merge=None）
+  ⇒ 剩余 29 单元里这一族**必须由 `core/cfg/region_analyzer.py` 在识别期声明 merge/臂属主**，
+  generator 侧已两度实测无通道。任务 #50 应升为当前第一优先，且按 r20t 的 ground truth 起手：
+  外层 try 以 5 个 span 保护 [640,1620]，含 else 臂。
+- `clock_worker`：v5 产物与封版逐字节相同（`-113/7/18`）⇒ 同路径但**未证明**，不记为覆盖；
+  `_generate_ternary@46121` 亦确认不参与本单元。
