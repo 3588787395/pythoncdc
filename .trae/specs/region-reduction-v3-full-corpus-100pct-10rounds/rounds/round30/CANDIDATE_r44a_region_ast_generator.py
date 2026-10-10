@@ -307,67 +307,6 @@ class _IfRegionProxy:
         self.chained_compare_blocks = chained_compare_blocks or []
 
 
-def _r2114_wrapper_is_sequential_loops(body_stmts):
-    """[R21-14] Decide whether a synthetic `while True:` wrapper region is CPython's
-    hoisted-condition split of a SEQUENCE of sibling loops rather than a real loop.
-
-    Shape under test: body = [Loop, Loop+, Break/Pass*] - every top-level element after
-    the first loop is itself a loop statement and the only trailing elements are the
-    wrapper's compensation `break`/`pass`. A top-level `continue`, or any non-loop
-    statement (If / Raise / a Break in the middle) disqualifies the shape, because such
-    a statement binds to the wrapper and would change meaning once the wrapper is gone.
-    `while True: A; B; break` with no top-level continue is statement-equivalent to
-    `A; B`: breaks/continues written INSIDE A or B bind to A or B in both shapes.
-    """
-    if not body_stmts or len(body_stmts) < 2:
-        return False
-    if not all(isinstance(s, dict) for s in body_stmts):
-        return False
-    if body_stmts[0].get('type') not in ('While', 'For'):
-        return False
-    if any(s.get('type') == 'Continue' for s in body_stmts):
-        return False
-    kinds = [s.get('type') for s in body_stmts[1:]]
-    i = 0
-    while i < len(kinds) and kinds[i] in ('While', 'For'):
-        i += 1
-    if any(k not in ('Break', 'Pass') for k in kinds[i:]):
-        return False
-    return i >= 1
-
-
-
-def _r2114_defer_to_unemitted_sibling_loop(gen, block, child):
-    """[R21-14] True when marking `block` as generated on behalf of `child` would
-    delete it from a SIBLING loop region that has not been emitted yet.
-
-    The analyzer's block set for a hoisted-condition loop can overlap the block set
-    of the loop that follows it (risk victim: loop1@108 declares 292/296/350, which
-    are loop2@262's body blocks). When the parent marks the whole child block set as
-    generated, those sibling body blocks are consumed before loop2 is walked and
-    their statements (`time.sleep(0.01)`) vanish from the output. A block that is
-    part of the child's own emitted content (entry / header / condition / body /
-    back edge) is still consumed by the child; only blocks reached through the
-    child's tail declaration are deferred to the sibling that owns them as body.
-    """
-    content = set(getattr(child, 'body_blocks', None) or [])
-    for _attr in ('header_block', 'condition_block', 'back_edge_block', 'entry'):
-        _v = getattr(child, _attr, None)
-        if _v is not None:
-            content.add(_v)
-    if block in content:
-        return False
-    for _r in (gen.regions or []):
-        if _r is child or not isinstance(_r, LoopRegion):
-            continue
-        if block not in (getattr(_r, 'body_blocks', None) or []):
-            continue
-        if id(_r) in gen._generated_regions or id(_r) in gen._generating_regions:
-            continue
-        return True
-    return False
-
-
 class RegionASTGenerator:
     _ALL_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, BoolOpRegion, TernaryRegion)
     _STRUCTURAL_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion)
@@ -2021,6 +1960,73 @@ class RegionASTGenerator:
                             ast_nodes.extend(_b84_prefix)
                 # 守卫 wrap 打开期间，顶层单元的发射目标改为 wrap 体；wrap
                 # 未打开时行为不变。
+                # [R44A-elif] 顶级 IfRegion 的 merge_block 指向另一顶级 IfRegion 的入口/
+                # 条件块、而分析端未声明 elif_bodies 时，在生成端把后继区域装配成 elif。
+                # 否则二者被发射成并列 if，then 臂尾被材料化为显式 return None，令 CPython
+                # 共享循环出口尾声、少物化一对 return None（handlers._target 的唯一破口）。
+                if (isinstance(region, IfRegion) and isinstance(region_ast, dict)
+                        and region_ast.get('type') == 'If'
+                        and not region_ast.get('orelse')
+                        and getattr(region, 'merge_block', None) is not None
+                        and not (getattr(region, 'else_blocks', None) or [])
+                        and not (getattr(region, 'elif_conditions', None) or [])
+                        and not (getattr(region, 'elif_bodies', None) or [])
+                        and getattr(region, 'entry', None) is not None
+                        and (region_ast.get('body')
+                             and self._is_trailing_return_none_statement(
+                                 region_ast['body'][-1]))
+                        # 落点判据：then 臂尾必须是「单前驱 / 纯 None / 非汇合」
+                        # 的隐式尾声逐边落点（与 R8-B121 同族），而非源码显式
+                        # return None 汇合块——后者（trade_live_broker 实测）转
+                        # elif 会丢真实 return，令单元回退。
+                        and any(_tl is not None
+                                and not list(_tl.successors)
+                                and not list(getattr(_tl, 'exception_successors',
+                                                     None) or ())
+                                and self._r8_b121_scope_return_sink_kind(_tl)
+                                == 'pure-none'
+                                and not self._is_return_none_join_block(_tl)
+                                and len([_p for _p in (_tl.predecessors or ())
+                                         if _p is not _tl]) == 1
+                                for _tl in (region.then_blocks or []))):
+                    _r44a_mb = region.merge_block
+                    _r44a_r2 = None
+                    for _r44a_cand in top_level_regions:
+                        if (_r44a_cand is not region
+                                and isinstance(_r44a_cand, IfRegion)
+                                and getattr(_r44a_cand, 'parent', None) is None
+                                and _r44a_cand.entry is not None
+                                and (_r44a_cand.condition_block is _r44a_mb
+                                     or _r44a_cand.entry is _r44a_mb)
+                                and region.entry is not None
+                                and _r44a_cand.entry.start_offset > region.entry.start_offset
+                                and not all(_b in self.generated_blocks
+                                            for _b in _r44a_cand.blocks)):
+                            _r44a_r2 = _r44a_cand
+                            break
+                    if _r44a_r2 is not None:
+                        try:
+                            _r44a_elif = self._generate_region(_r44a_r2)
+                        except Exception:
+                            _r44a_elif = None
+                        if (isinstance(_r44a_elif, dict)
+                                and _r44a_elif.get('type') == 'If'):
+                            _r44a_body = region_ast.get('body') or []
+                            if (_r44a_body
+                                    and self._is_trailing_return_none_statement(
+                                        _r44a_body[-1])):
+                                region_ast['body'] = (_r44a_body[:-1]
+                                                       or [{'type': 'Pass'}])
+                            if _r44a_r2.merge_block is None:
+                                _r44a_o = _r44a_elif.get('orelse') or []
+                                if (_r44a_o and all(
+                                        self._is_trailing_return_none_statement(_s)
+                                        for _s in _r44a_o)):
+                                    _r44a_elif['orelse'] = []
+                            region_ast['orelse'] = [_r44a_elif]
+                            for _r44a_b in _r44a_r2.blocks:
+                                self.generated_blocks.add(_r44a_b)
+                                self.generated_offsets.add(_r44a_b.start_offset)
                 if isinstance(region_ast, list):
                     if _r76g_stack:
                         _r76g_stack[-1]['body'].extend(region_ast)
@@ -6970,10 +6976,6 @@ AST 映射规则:
                               or all(isinstance(s, dict) and s.get('type') in ('Continue', 'Break', 'Pass')
                                      for s in body_stmts[1:])):
                             pass
-                        elif _r2114_wrapper_is_sequential_loops(body_stmts):
-                            # [R21-14] wrapper is the recheck-split of sequential loops:
-                            # unwrap it (fall through to the merge path below).
-                            pass
                         else:
                             _can_merge = False
                 # [R58-B] while True 早退路径也须发射非平凡 break 目标后的
@@ -8054,10 +8056,8 @@ AST 映射规则:
                         _child_region_blocks_r23.update(_r.blocks)
                         if _r.entry:
                             _child_entries_r23[_r.entry] = _r
-            _r2114_else_owned_skipped = 0
             for _eb in _filtered_else_blocks:
                 if _eb in self.generated_blocks:
-                    _r2114_else_owned_skipped += 1
                     continue
                 # 子区域 entry 块：递归生成完整子区域
                 if _eb in _child_entries_r23:
@@ -8070,7 +8070,6 @@ AST 映射规则:
                     continue
                 # 子区域非 entry 块：跳过（由子区域 entry 递归生成时处理）
                 if _eb in _child_region_blocks_r23:
-                    _r2114_else_owned_skipped += 1
                     continue
                 _eb_stmts = self._generate_block_statements(_eb)
                 if _eb_stmts:
@@ -8078,16 +8077,7 @@ AST 映射规则:
                     self.generated_blocks.add(_eb)
                     self.generated_offsets.add(_eb.start_offset)
             # Fallback: if direct generation failed, try _if_generate_branch_stmts
-            # [R21-14] When EVERY declared else block was skipped because another
-            # region already owns/emits it, the while-else clause has no content of
-            # its own: re-running the branch builder would emit a foreign body as the
-            # else clause AND mark those blocks generated, deleting them from their
-            # owning sibling loop (risk victim: loop1's else swallowed loop2's body).
-            if (not else_stmts
-                    and _r2114_else_owned_skipped
-                    and _r2114_else_owned_skipped == len(_filtered_else_blocks)):
-                else_stmts = []
-            elif not else_stmts:
+            if not else_stmts:
                 else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
 
         if else_stmts and getattr(region, 'has_trailing_return_none', False):
@@ -8446,11 +8436,6 @@ AST 映射规则:
                         else:
                             body_stmts.append(nested_ast)
                 for b in _r08_nested_loop_child.blocks:
-                    # [R21-14] never consume a block a not-yet-emitted sibling
-                    # loop still owns as its body (see helper docstring).
-                    if _r2114_defer_to_unemitted_sibling_loop(
-                            self, b, _r08_nested_loop_child):
-                        continue
                     self.generated_blocks.add(b)
                 continue
             # 跳过属于后代区域的块（非直接子区域 entry）。
@@ -18986,130 +18971,6 @@ AST 映射规则:
         return all(_x is _exits[0] for _x in _exits[1:])
 
 
-    def _r2119_or_tail_extension(self, region, boolop_region, boolop_expr):
-        """[R21-19] 短路 or 链的尾腿被区域归约拆成嵌套 IfRegion ⇒ 并回同一 BoolOp 测试。
-
-        CPython 3.11 把 `if A or B or (a < x < b): arm` 编译成所有腿的**真出口汇合**
-        在 arm 入口：
-            A; POP_JUMP_IF_TRUE -> arm
-            B; POP_JUMP_IF_TRUE -> arm
-            链式比较腿; POP_JUMP_IF_FALSE -> after / 真 -> arm
-        区域归约只把 A、B 记成 BoolOpRegion（腿全部 IF_TRUE -> region.merge_block），
-        把尾腿单独建成 IfRegion@F（其 merge_block 也是同一个 arm 入口），于是本区域
-        被读成「假出口 fallthrough 才是 then 臂」，发射为
-        `if not (A or B): if F: arm ... else: after`——腿的真出口被移到 arm **之后**
-        （IQEngine/.../strategy.pyc :: tick_worker_thread 实测 4 处 landing，内容零差）。
-
-        判据（全部是 CFG 结构事实，不读函数名/文件名/偏移常量，不猜布局）：
-          ① boolop_region.op_chain 的每条腿以 IF_TRUE（非 NONE_CHECK）结尾且跳到**同一个**
-             块 T —— 与 gate-29 `_inline_and_chain_exits_agree` 读的同一事实，方向相反；
-          ② T 就是本区域 merge_block 且本区域 else_blocks 为空（即当前被判为负极性 or 链）；
-          ③ 末腿的非 T 后继 F 是某个 IfRegion 的入口，该区域的 merge_block 也是 T、
-             它自己的腿同样以 IF_TRUE 汇合到 T、且它没有 elif_conditions
-             —— 同一真出口 ⇒ 同一条 or 链的下一腿，而非嵌套 if；
-          ④ F 的条件可重建（链式比较走 _build_chained_compare_from_region_data，
-             其余走 expr_reconstructor），其假出口 E 起点大于 T（E 是链后续接）。
-        归约：把 F 的条件作为最后一个 or 操作数接进测试，并把本区域的臂改为
-        then = [T]、else = [E]、merge = None —— 即原源码
-        `if A or B or C: arm else: <E 续接>` 的形状；CPython 重编译后各腿真目标即 T。
-        判据不成立时返回 None，调用方走既有取反路径，产物逐字节不变。
-        """
-        try:
-            _legs = [b for b, _op in (getattr(boolop_region, 'op_chain', None) or [])]
-            if len(_legs) < 2:
-                return None
-            if not (isinstance(boolop_expr, dict)
-                    and boolop_expr.get('type') == 'BoolOp'
-                    and boolop_expr.get('op') == 'or'
-                    and (boolop_expr.get('values') or [])):
-                return None
-            _t_off = None
-            for _lb in _legs:
-                _li = _lb.get_last_instruction()
-                if (_li is None or getattr(_li, 'argval', None) is None
-                        or 'IF_TRUE' not in _li.opname
-                        or _li.opname in NONE_CHECK_OPS):
-                    return None
-                if _t_off is None:
-                    _t_off = _li.argval
-                elif _li.argval != _t_off:
-                    return None
-            if _t_off is None:
-                return None
-            _t = self.cfg.get_block_by_offset(_t_off)
-            if _t is None or _t is not getattr(region, 'merge_block', None):
-                return None
-            if getattr(region, 'else_blocks', None):
-                return None
-            _fl = [s for s in (_legs[-1].conditional_successors
-                               or _legs[-1].successors or [])
-                   if s.start_offset != _t_off]
-            if len(_fl) != 1:
-                return None
-            _f = _fl[0]
-            if _f.start_offset >= _t_off:
-                return None
-            if _f in (getattr(boolop_region, 'blocks', None) or []):
-                return None
-            _fr = None
-            for _r in self.region_analyzer.regions:
-                if isinstance(_r, IfRegion) and _r.entry is _f:
-                    _fr = _r
-                    break
-            if _fr is None or _fr.merge_block is not _t:
-                return None
-            if getattr(_fr, 'elif_conditions', None):
-                return None
-            _cc = list(getattr(_fr, 'chained_compare_blocks', None) or [])
-            if _cc and getattr(_fr, 'chained_compare_ops', None):
-                _c = self._build_chained_compare_from_region_data(_fr)
-            else:
-                _f_last = _f.get_last_instruction()
-                _pure = [i for i in _f.instructions
-                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
-                         and i is not _f_last]
-                _c = self.expr_reconstructor.reconstruct(_pure) if _pure else None
-            if _c is None:
-                return None
-            _exit_blk = _cc[-1] if _cc else _f
-            _eli = _exit_blk.get_last_instruction()
-            if (_eli is None or getattr(_eli, 'argval', None) is None
-                    or 'IF_FALSE' not in _eli.opname
-                    or _eli.opname in NONE_CHECK_OPS):
-                return None
-            _e = self.cfg.get_block_by_offset(_eli.argval)
-            if _e is None or _e.start_offset <= _t_off or _e is _t:
-                return None
-            if _e in (getattr(_fr, 'then_blocks', None) or []):
-                return None
-            # 尾腿块归本区域条件唯一引用
-            for _b in [_f] + _cc:
-                self.generated_blocks.add(_b)
-                self.generated_offsets.add(_b.start_offset)
-            _fr_pool = set(getattr(_fr, 'blocks', None) or [])
-            try:
-                _fr_pool |= set(_fr.get_content_blocks() or set())
-            except Exception:
-                pass
-            for _b in _fr_pool:
-                if (_b is not _t and _b is not _e
-                        and _f.start_offset <= _b.start_offset < _t_off):
-                    self.generated_blocks.add(_b)
-                    self.generated_offsets.add(_b.start_offset)
-            for _b in _fr_pool:
-                if (_b is not _t and _b is not _e
-                        and _f.start_offset <= _b.start_offset < _t_off):
-                    self.generated_blocks.add(_b)
-                    self.generated_offsets.add(_b.start_offset)
-            region.then_blocks = [_t]
-            region.else_blocks = [_e]
-            region.merge_block = None
-            return {'type': 'BoolOp', 'op': 'or',
-                    'values': list(boolop_expr['values']) + [_c]}
-        except Exception:
-            return None
-
-
     def _if_generate_elif_chain(self, region: IfRegion) -> List[Dict[str, Any]]:
         """生成 if-elif[-else] 链中 elif 部分的 AST（由 _if_generate_full_elif_chain 调用）。
 
@@ -22164,62 +22025,6 @@ AST 映射规则:
                             for _mi2 in _cand2.instructions:
                                 self.generated_offsets.add(_mi2.offset)
         result = {'type': 'If', 'test': condition, 'body': then_stmts, 'orelse': else_stmts if else_stmts else None}
-        # [R21-18b] 语句级 `and` 折叠的**出口落点否证**。
-        # 识别条件（只读本区域/本块/直接子区域自身字段，无名称/常量/偏移阈值）：
-        #   (1) 本 IfRegion 测试是 BoolOp('and') 且合取支 >= 2（折叠已发生）；
-        #   (2) 本区域无 else_blocks，then 臂只产出一条语句且它是 If 节点
-        #       （即折叠后残留在臂内的第二个条件区域）；
-        #   (3) region.merge_block（各合取支条件跳转的公共落点，分析端登记的
-        #       汇合块）**位于臂内**：臂首块的直接子 IfRegion 把自己的
-        #       then_blocks 含该块。CPython 3.11 的 `if A and B: body` 里任一合取
-        #       支的假出口恒跳到整条 if 语句**之后**，永不跳进 body，故 (3) 成立时
-        #       源码不可能是 and 链，而是 De Morgan 后的 or 链：`if not A or not B
-        #       or R: body`（各支真出口 = body，末支落空 = body）。
-        # 反例（IQCommon/api/klinedata.pyc :: <module>.get_kline_by_count_new）：
-        #   IfRegion@862 cond 腿 blk@862(POP_JUMP_IF_NONE→1200)/blk@976
-        #   (POP_JUMP_IF_FALSE→1200)，merge=blk@1200 = `need_exrights = 0` 臂体，
-        #   臂首块 blk@980 的子区域 IfRegion@980 的 then_blocks=[blk@1200]。
-        #   and 折叠产物把两条假出口落到 @1264（if 之后），原字节码落在 @1200，
-        #   读出 landings=2（orig[180]@974/orig[182]@978 -> idx216 vs idx228）。
-        # 归约方式：把 and 各支按既有极性翻转器逐项取反（`x is not None` →
-        #   `x is None` 用 _flip_is_none_compare，纯真值支用 _negate_expr 的
-        #   `not (...)`），与臂内 If 的测试（or 链时并入其操作数，否则整支相接）
-        #   组成单条 or 测试，臂体/臂内 If 的 orelse 上升为本 if 的 body/orelse。
-        #   不改块归属、不新增 self 状态、不动任何区域的 then/else/merge。
-        # AST 映射：If(BoolOp('or',[¬A, ¬B, R...]), body, orelse) —— 与原始源码
-        #   的同一条 if/elif 语句一一对应，重编译后各支出口落在臂体入口 blk@1200。
-        _r2118b_body = result.get('body') or []
-        _r2118b_cond = result.get('test')
-        if (isinstance(_r2118b_cond, dict)
-                and _r2118b_cond.get('type') == 'BoolOp'
-                and _r2118b_cond.get('op') == 'and'
-                and len(_r2118b_cond.get('values') or []) >= 2
-                and len(_r2118b_body) == 1
-                and isinstance(_r2118b_body[0], dict)
-                and _r2118b_body[0].get('type') == 'If'
-                and (_r2118b_body[0].get('body') or [])
-                and not (getattr(region, 'else_blocks', None) or [])
-                and getattr(region, 'merge_block', None) is not None
-                and (getattr(region, 'then_blocks', None) or [])):
-            _r2118b_arm = min(region.then_blocks, key=lambda b: b.start_offset)
-            _r2118b_child = self.region_analyzer.get_entry_region_for_block(_r2118b_arm)
-            if (isinstance(_r2118b_child, IfRegion)
-                    and region.merge_block in (_r2118b_child.then_blocks or [])
-                    and _r2118b_child is not region):
-                _r2118b_if = _r2118b_body[0]
-                _r2118b_test = _r2118b_if.get('test')
-                _r2118b_vals = [_flip_is_none_compare(_r2118b_v)
-                                for _r2118b_v in (_r2118b_cond.get('values') or [])]
-                if (isinstance(_r2118b_test, dict)
-                        and _r2118b_test.get('type') == 'BoolOp'
-                        and _r2118b_test.get('op') == 'or'):
-                    _r2118b_vals.extend(_r2118b_test.get('values') or [])
-                else:
-                    _r2118b_vals.append(_r2118b_test)
-                result = {'type': 'If',
-                          'test': {'type': 'BoolOp', 'op': 'or', 'values': _r2118b_vals},
-                          'body': _r2118b_if.get('body'),
-                          'orelse': _r2118b_if.get('orelse')}
         self._generating_regions.discard(region_id)
         self._generated_regions.add(region_id)
         if_result = result
@@ -24508,18 +24313,6 @@ AST 映射规则:
                                     boolop_region_for_cond) is None:
                                 _boolop_negate = True
                 if _boolop_negate:
-                    # [R21-19] 负极性 or 链的尾腿若与链共享真出口，则不取反、
-                    # 不嵌套：把尾腿并回同一条 BoolOp(or) 测试（见
-                    # _r2119_or_tail_extension 判据）。成功时臂已重声明为
-                    # then=[真出口汇合块] / else=[尾腿假出口]。
-                    _r2119_ext = self._r2119_or_tail_extension(
-                        region, boolop_region_for_cond, boolop_expr)
-                    if _r2119_ext is not None:
-                        boolop_region_for_cond.condition_expr = _r2119_ext
-                        for _r2119_b in (boolop_region_for_cond.blocks or []):
-                            self.generated_blocks.add(_r2119_b)
-                        return _r2119_ext
-                if _boolop_negate:
                     # 区域归约算法「一次正确」原则：当 BoolOp 表达式
                     # 是 `a and (b or c)` 形式（由 _try_build_and_inner_or_pattern
                     # 构建，最后一个操作数是 BoolOp(or, ...)），且最后一个链块的
@@ -26222,35 +26015,13 @@ AST 映射规则:
                     #   4. 分支已产出至少一条语句：`if c: continue` 形态中
                     #      纯 continue 块独占分支（stmts 为空），其回边不由
                     #      循环结构保证，必须保留显式 Continue。
-                    #   5. [R21-18] merge_block 是本块在**代码布局上的物理下一条块**
-                    #      （二者之间没有其它块）。判据 2 的「merge 即迭代终止符」
-                    #      隐含这一前提：只有本块的语句序列重编译后能 fall-through
-                    #      落进 merge 的那条回边，回边才「由循环结构自然再生」。
-                    #      if/else 两臂齐备时 then 臂的纯回边块之后是 else 臂的块
-                    #      （IQCommon/api/klinedata.pyc :: <module>.get_kline_by_count_new
-                    #      的 blk@2924（then 臂末，JUMP_BACKWARD→header）之后是
-                    #      blk@2928（else 臂首），merge=blk@3076），then 臂与 merge
-                    #      不相邻：抑制后重编译把该臂出口写成 JUMP_FORWARD@2924（跳过
-                    #      else 落到共享回边），而原字节码此处是一条**独立的**
-                    #      JUMP_BACKWARD@2926→header（idx567），于是 delta=0 却读出
-                    #      hunks=1/landings=2。补发臂内显式 Continue 后两臂各生成一条
-                    #      JUMP_BACKWARD，与原始逐条一致（klinedata 该单元 → 0/0）。
-                    #      判据 5 只在 merge 位于本块**之后**时生效：merge 在前时
-                    #      fall-through 本就不可能，维持既有抑制行为，逐字节退回落地
-                    #      形态。只读本区域 merge_block 与本块 start_offset 及 CFG 的
-                    #      块偏移序，不读名称/常量/指令数，不新增 self 状态。
                     _r100_suppress = False
                     if (isinstance(region, IfRegion)
                             and getattr(region, 'merge_block', None) is not None
                             and region.merge_block is not block
                             and stmts
                             and blocks
-                            and block.start_offset == max(b.start_offset for b in blocks)
-                            and (region.merge_block.start_offset <= block.start_offset
-                                 or block.start_offset == max(
-                                     _r100_adj_bo for _r100_adj_bo in
-                                     (b.start_offset for b in self.cfg.blocks.values())
-                                     if _r100_adj_bo < region.merge_block.start_offset))):
+                            and block.start_offset == max(b.start_offset for b in blocks)):
                         _r100_hdr = (getattr(self._current_loop, 'header_block', None)
                                                      if self._current_loop else None)
                         _r100_mlast = region.merge_block.get_last_instruction()

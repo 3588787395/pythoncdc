@@ -1240,3 +1240,31 @@ Re-scan after the move: `pyc_total=406 current_magic=405 products=407 missing_pr
 402 gate face + the 3 foreign-magic pyc excluded by the boundary clamp; 407 products = 402 + 3 + 2
 known orphans, matching the sealed boundary counts. Remaining unmet requirement is unchanged:
 17 units in 9 files still fail bytecode equality (gate 29 = 6600/6617, 393/402).
+
+## 34. Gate 30 certified and landed (2026-10-11, orchestrator-measured)
+
+`core/cfg/region_ast_generator.py` `fd0e4c4d73cf5efc` → `7d336164eff5bf65` (+296 lines, 13 additive
+disjoint hunks merged from three engineer candidates; byte-level install, `py_compile OK`).
+
+- **Units 6600 → 6603 /6617 (99.7884%), files 393 → 396**, `文件级回退=0 UNIT_REGRESSIONS=0
+  新增失败单元=0 翻正单元=3`, regen `ok=402 bad=0`, quotation 153/153, small34 1554/28, ruler
+  selfcheck OK, pytest `2 failed, 280 passed, 2 xpassed` (the two reds are the registered residents
+  `test_B01_simple_if_then_else_merge` / `test_BOUNDARY_02_large_function`).
+- Flips: `klinedata 63→64` (r41a: arm-local `continue` via R100 suppression narrowed by layout adjacency,
+  + an `and`-lift refutation that rebuilds the De Morgan `or` chain — the ticket's §0/§1 premise that
+  one mechanism sufficed was **falsified** by the engineer's own three-way proof),
+  `strategy 26→27` (r43a `_r2119_or_tail_extension`: legs all jump `IF_TRUE` to `T == merge_block`,
+  empty `else_blocks`, tail leg's non-`T` successor is an IfRegion also merging on `T` ⇒ fold into one
+  `BoolOp('or', legs+[C])` and re-declare `then=[T]/else=[E]/merge=None`),
+  `risk_calculation 42→43` (r42a, turn-capped before reporting; two co-requisite halves proved by my
+  ablation, wrapper-only `delta=-6`, defer-only `delta=-3`, both `0/0/0`).
+- Residual now **6 files / 14 units** (`RESIDUAL_ROUND30.md`, `UNREGISTERED 行数=0`).
+- Rejected this gate: r44a's `handlers` flip. It reads 30/30 alone and with either of the other two, but
+  **29/30 when paired with R21-14** — measured in four builds; landing the quad would have bought the
+  same three flips plus 67 inert lines. Registered as `TICKET_R21-23_handlers_flip_suppressed_by_R21-14.md`
+  with the pair table and the two-build ablation the next engineer must run.
+- Registered deviation: R21-14's defer half reads `gen.regions` (a cross-region read at emission time)
+  because the analyzer lets `LoopRegion@108` declare `LoopRegion@262`'s body blocks — root cause filed as
+  `TICKET_R21-22_analyzer_loop_block_overlap.md`, whose acceptance oracle is exactly the ablation table
+  (with the analyzer fixed, the wrapper-only build must reach `0/0/0` and the defer helper must be deletable).
+- Next gate label **31** against `rounds/round30/after`.

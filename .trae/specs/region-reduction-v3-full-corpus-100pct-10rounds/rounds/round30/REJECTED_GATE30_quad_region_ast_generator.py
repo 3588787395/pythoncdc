@@ -2021,6 +2021,73 @@ class RegionASTGenerator:
                             ast_nodes.extend(_b84_prefix)
                 # 守卫 wrap 打开期间，顶层单元的发射目标改为 wrap 体；wrap
                 # 未打开时行为不变。
+                # [R44A-elif] 顶级 IfRegion 的 merge_block 指向另一顶级 IfRegion 的入口/
+                # 条件块、而分析端未声明 elif_bodies 时，在生成端把后继区域装配成 elif。
+                # 否则二者被发射成并列 if，then 臂尾被材料化为显式 return None，令 CPython
+                # 共享循环出口尾声、少物化一对 return None（handlers._target 的唯一破口）。
+                if (isinstance(region, IfRegion) and isinstance(region_ast, dict)
+                        and region_ast.get('type') == 'If'
+                        and not region_ast.get('orelse')
+                        and getattr(region, 'merge_block', None) is not None
+                        and not (getattr(region, 'else_blocks', None) or [])
+                        and not (getattr(region, 'elif_conditions', None) or [])
+                        and not (getattr(region, 'elif_bodies', None) or [])
+                        and getattr(region, 'entry', None) is not None
+                        and (region_ast.get('body')
+                             and self._is_trailing_return_none_statement(
+                                 region_ast['body'][-1]))
+                        # 落点判据：then 臂尾必须是「单前驱 / 纯 None / 非汇合」
+                        # 的隐式尾声逐边落点（与 R8-B121 同族），而非源码显式
+                        # return None 汇合块——后者（trade_live_broker 实测）转
+                        # elif 会丢真实 return，令单元回退。
+                        and any(_tl is not None
+                                and not list(_tl.successors)
+                                and not list(getattr(_tl, 'exception_successors',
+                                                     None) or ())
+                                and self._r8_b121_scope_return_sink_kind(_tl)
+                                == 'pure-none'
+                                and not self._is_return_none_join_block(_tl)
+                                and len([_p for _p in (_tl.predecessors or ())
+                                         if _p is not _tl]) == 1
+                                for _tl in (region.then_blocks or []))):
+                    _r44a_mb = region.merge_block
+                    _r44a_r2 = None
+                    for _r44a_cand in top_level_regions:
+                        if (_r44a_cand is not region
+                                and isinstance(_r44a_cand, IfRegion)
+                                and getattr(_r44a_cand, 'parent', None) is None
+                                and _r44a_cand.entry is not None
+                                and (_r44a_cand.condition_block is _r44a_mb
+                                     or _r44a_cand.entry is _r44a_mb)
+                                and region.entry is not None
+                                and _r44a_cand.entry.start_offset > region.entry.start_offset
+                                and not all(_b in self.generated_blocks
+                                            for _b in _r44a_cand.blocks)):
+                            _r44a_r2 = _r44a_cand
+                            break
+                    if _r44a_r2 is not None:
+                        try:
+                            _r44a_elif = self._generate_region(_r44a_r2)
+                        except Exception:
+                            _r44a_elif = None
+                        if (isinstance(_r44a_elif, dict)
+                                and _r44a_elif.get('type') == 'If'):
+                            _r44a_body = region_ast.get('body') or []
+                            if (_r44a_body
+                                    and self._is_trailing_return_none_statement(
+                                        _r44a_body[-1])):
+                                region_ast['body'] = (_r44a_body[:-1]
+                                                       or [{'type': 'Pass'}])
+                            if _r44a_r2.merge_block is None:
+                                _r44a_o = _r44a_elif.get('orelse') or []
+                                if (_r44a_o and all(
+                                        self._is_trailing_return_none_statement(_s)
+                                        for _s in _r44a_o)):
+                                    _r44a_elif['orelse'] = []
+                            region_ast['orelse'] = [_r44a_elif]
+                            for _r44a_b in _r44a_r2.blocks:
+                                self.generated_blocks.add(_r44a_b)
+                                self.generated_offsets.add(_r44a_b.start_offset)
                 if isinstance(region_ast, list):
                     if _r76g_stack:
                         _r76g_stack[-1]['body'].extend(region_ast)

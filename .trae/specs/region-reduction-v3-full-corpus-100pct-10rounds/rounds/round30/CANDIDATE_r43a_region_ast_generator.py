@@ -307,67 +307,6 @@ class _IfRegionProxy:
         self.chained_compare_blocks = chained_compare_blocks or []
 
 
-def _r2114_wrapper_is_sequential_loops(body_stmts):
-    """[R21-14] Decide whether a synthetic `while True:` wrapper region is CPython's
-    hoisted-condition split of a SEQUENCE of sibling loops rather than a real loop.
-
-    Shape under test: body = [Loop, Loop+, Break/Pass*] - every top-level element after
-    the first loop is itself a loop statement and the only trailing elements are the
-    wrapper's compensation `break`/`pass`. A top-level `continue`, or any non-loop
-    statement (If / Raise / a Break in the middle) disqualifies the shape, because such
-    a statement binds to the wrapper and would change meaning once the wrapper is gone.
-    `while True: A; B; break` with no top-level continue is statement-equivalent to
-    `A; B`: breaks/continues written INSIDE A or B bind to A or B in both shapes.
-    """
-    if not body_stmts or len(body_stmts) < 2:
-        return False
-    if not all(isinstance(s, dict) for s in body_stmts):
-        return False
-    if body_stmts[0].get('type') not in ('While', 'For'):
-        return False
-    if any(s.get('type') == 'Continue' for s in body_stmts):
-        return False
-    kinds = [s.get('type') for s in body_stmts[1:]]
-    i = 0
-    while i < len(kinds) and kinds[i] in ('While', 'For'):
-        i += 1
-    if any(k not in ('Break', 'Pass') for k in kinds[i:]):
-        return False
-    return i >= 1
-
-
-
-def _r2114_defer_to_unemitted_sibling_loop(gen, block, child):
-    """[R21-14] True when marking `block` as generated on behalf of `child` would
-    delete it from a SIBLING loop region that has not been emitted yet.
-
-    The analyzer's block set for a hoisted-condition loop can overlap the block set
-    of the loop that follows it (risk victim: loop1@108 declares 292/296/350, which
-    are loop2@262's body blocks). When the parent marks the whole child block set as
-    generated, those sibling body blocks are consumed before loop2 is walked and
-    their statements (`time.sleep(0.01)`) vanish from the output. A block that is
-    part of the child's own emitted content (entry / header / condition / body /
-    back edge) is still consumed by the child; only blocks reached through the
-    child's tail declaration are deferred to the sibling that owns them as body.
-    """
-    content = set(getattr(child, 'body_blocks', None) or [])
-    for _attr in ('header_block', 'condition_block', 'back_edge_block', 'entry'):
-        _v = getattr(child, _attr, None)
-        if _v is not None:
-            content.add(_v)
-    if block in content:
-        return False
-    for _r in (gen.regions or []):
-        if _r is child or not isinstance(_r, LoopRegion):
-            continue
-        if block not in (getattr(_r, 'body_blocks', None) or []):
-            continue
-        if id(_r) in gen._generated_regions or id(_r) in gen._generating_regions:
-            continue
-        return True
-    return False
-
-
 class RegionASTGenerator:
     _ALL_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, BoolOpRegion, TernaryRegion)
     _STRUCTURAL_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion)
@@ -6970,10 +6909,6 @@ AST 映射规则:
                               or all(isinstance(s, dict) and s.get('type') in ('Continue', 'Break', 'Pass')
                                      for s in body_stmts[1:])):
                             pass
-                        elif _r2114_wrapper_is_sequential_loops(body_stmts):
-                            # [R21-14] wrapper is the recheck-split of sequential loops:
-                            # unwrap it (fall through to the merge path below).
-                            pass
                         else:
                             _can_merge = False
                 # [R58-B] while True 早退路径也须发射非平凡 break 目标后的
@@ -8054,10 +7989,8 @@ AST 映射规则:
                         _child_region_blocks_r23.update(_r.blocks)
                         if _r.entry:
                             _child_entries_r23[_r.entry] = _r
-            _r2114_else_owned_skipped = 0
             for _eb in _filtered_else_blocks:
                 if _eb in self.generated_blocks:
-                    _r2114_else_owned_skipped += 1
                     continue
                 # 子区域 entry 块：递归生成完整子区域
                 if _eb in _child_entries_r23:
@@ -8070,7 +8003,6 @@ AST 映射规则:
                     continue
                 # 子区域非 entry 块：跳过（由子区域 entry 递归生成时处理）
                 if _eb in _child_region_blocks_r23:
-                    _r2114_else_owned_skipped += 1
                     continue
                 _eb_stmts = self._generate_block_statements(_eb)
                 if _eb_stmts:
@@ -8078,16 +8010,7 @@ AST 映射规则:
                     self.generated_blocks.add(_eb)
                     self.generated_offsets.add(_eb.start_offset)
             # Fallback: if direct generation failed, try _if_generate_branch_stmts
-            # [R21-14] When EVERY declared else block was skipped because another
-            # region already owns/emits it, the while-else clause has no content of
-            # its own: re-running the branch builder would emit a foreign body as the
-            # else clause AND mark those blocks generated, deleting them from their
-            # owning sibling loop (risk victim: loop1's else swallowed loop2's body).
-            if (not else_stmts
-                    and _r2114_else_owned_skipped
-                    and _r2114_else_owned_skipped == len(_filtered_else_blocks)):
-                else_stmts = []
-            elif not else_stmts:
+            if not else_stmts:
                 else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
 
         if else_stmts and getattr(region, 'has_trailing_return_none', False):
@@ -8446,11 +8369,6 @@ AST 映射规则:
                         else:
                             body_stmts.append(nested_ast)
                 for b in _r08_nested_loop_child.blocks:
-                    # [R21-14] never consume a block a not-yet-emitted sibling
-                    # loop still owns as its body (see helper docstring).
-                    if _r2114_defer_to_unemitted_sibling_loop(
-                            self, b, _r08_nested_loop_child):
-                        continue
                     self.generated_blocks.add(b)
                 continue
             # 跳过属于后代区域的块（非直接子区域 entry）。
@@ -22164,62 +22082,6 @@ AST 映射规则:
                             for _mi2 in _cand2.instructions:
                                 self.generated_offsets.add(_mi2.offset)
         result = {'type': 'If', 'test': condition, 'body': then_stmts, 'orelse': else_stmts if else_stmts else None}
-        # [R21-18b] 语句级 `and` 折叠的**出口落点否证**。
-        # 识别条件（只读本区域/本块/直接子区域自身字段，无名称/常量/偏移阈值）：
-        #   (1) 本 IfRegion 测试是 BoolOp('and') 且合取支 >= 2（折叠已发生）；
-        #   (2) 本区域无 else_blocks，then 臂只产出一条语句且它是 If 节点
-        #       （即折叠后残留在臂内的第二个条件区域）；
-        #   (3) region.merge_block（各合取支条件跳转的公共落点，分析端登记的
-        #       汇合块）**位于臂内**：臂首块的直接子 IfRegion 把自己的
-        #       then_blocks 含该块。CPython 3.11 的 `if A and B: body` 里任一合取
-        #       支的假出口恒跳到整条 if 语句**之后**，永不跳进 body，故 (3) 成立时
-        #       源码不可能是 and 链，而是 De Morgan 后的 or 链：`if not A or not B
-        #       or R: body`（各支真出口 = body，末支落空 = body）。
-        # 反例（IQCommon/api/klinedata.pyc :: <module>.get_kline_by_count_new）：
-        #   IfRegion@862 cond 腿 blk@862(POP_JUMP_IF_NONE→1200)/blk@976
-        #   (POP_JUMP_IF_FALSE→1200)，merge=blk@1200 = `need_exrights = 0` 臂体，
-        #   臂首块 blk@980 的子区域 IfRegion@980 的 then_blocks=[blk@1200]。
-        #   and 折叠产物把两条假出口落到 @1264（if 之后），原字节码落在 @1200，
-        #   读出 landings=2（orig[180]@974/orig[182]@978 -> idx216 vs idx228）。
-        # 归约方式：把 and 各支按既有极性翻转器逐项取反（`x is not None` →
-        #   `x is None` 用 _flip_is_none_compare，纯真值支用 _negate_expr 的
-        #   `not (...)`），与臂内 If 的测试（or 链时并入其操作数，否则整支相接）
-        #   组成单条 or 测试，臂体/臂内 If 的 orelse 上升为本 if 的 body/orelse。
-        #   不改块归属、不新增 self 状态、不动任何区域的 then/else/merge。
-        # AST 映射：If(BoolOp('or',[¬A, ¬B, R...]), body, orelse) —— 与原始源码
-        #   的同一条 if/elif 语句一一对应，重编译后各支出口落在臂体入口 blk@1200。
-        _r2118b_body = result.get('body') or []
-        _r2118b_cond = result.get('test')
-        if (isinstance(_r2118b_cond, dict)
-                and _r2118b_cond.get('type') == 'BoolOp'
-                and _r2118b_cond.get('op') == 'and'
-                and len(_r2118b_cond.get('values') or []) >= 2
-                and len(_r2118b_body) == 1
-                and isinstance(_r2118b_body[0], dict)
-                and _r2118b_body[0].get('type') == 'If'
-                and (_r2118b_body[0].get('body') or [])
-                and not (getattr(region, 'else_blocks', None) or [])
-                and getattr(region, 'merge_block', None) is not None
-                and (getattr(region, 'then_blocks', None) or [])):
-            _r2118b_arm = min(region.then_blocks, key=lambda b: b.start_offset)
-            _r2118b_child = self.region_analyzer.get_entry_region_for_block(_r2118b_arm)
-            if (isinstance(_r2118b_child, IfRegion)
-                    and region.merge_block in (_r2118b_child.then_blocks or [])
-                    and _r2118b_child is not region):
-                _r2118b_if = _r2118b_body[0]
-                _r2118b_test = _r2118b_if.get('test')
-                _r2118b_vals = [_flip_is_none_compare(_r2118b_v)
-                                for _r2118b_v in (_r2118b_cond.get('values') or [])]
-                if (isinstance(_r2118b_test, dict)
-                        and _r2118b_test.get('type') == 'BoolOp'
-                        and _r2118b_test.get('op') == 'or'):
-                    _r2118b_vals.extend(_r2118b_test.get('values') or [])
-                else:
-                    _r2118b_vals.append(_r2118b_test)
-                result = {'type': 'If',
-                          'test': {'type': 'BoolOp', 'op': 'or', 'values': _r2118b_vals},
-                          'body': _r2118b_if.get('body'),
-                          'orelse': _r2118b_if.get('orelse')}
         self._generating_regions.discard(region_id)
         self._generated_regions.add(region_id)
         if_result = result
@@ -26222,35 +26084,13 @@ AST 映射规则:
                     #   4. 分支已产出至少一条语句：`if c: continue` 形态中
                     #      纯 continue 块独占分支（stmts 为空），其回边不由
                     #      循环结构保证，必须保留显式 Continue。
-                    #   5. [R21-18] merge_block 是本块在**代码布局上的物理下一条块**
-                    #      （二者之间没有其它块）。判据 2 的「merge 即迭代终止符」
-                    #      隐含这一前提：只有本块的语句序列重编译后能 fall-through
-                    #      落进 merge 的那条回边，回边才「由循环结构自然再生」。
-                    #      if/else 两臂齐备时 then 臂的纯回边块之后是 else 臂的块
-                    #      （IQCommon/api/klinedata.pyc :: <module>.get_kline_by_count_new
-                    #      的 blk@2924（then 臂末，JUMP_BACKWARD→header）之后是
-                    #      blk@2928（else 臂首），merge=blk@3076），then 臂与 merge
-                    #      不相邻：抑制后重编译把该臂出口写成 JUMP_FORWARD@2924（跳过
-                    #      else 落到共享回边），而原字节码此处是一条**独立的**
-                    #      JUMP_BACKWARD@2926→header（idx567），于是 delta=0 却读出
-                    #      hunks=1/landings=2。补发臂内显式 Continue 后两臂各生成一条
-                    #      JUMP_BACKWARD，与原始逐条一致（klinedata 该单元 → 0/0）。
-                    #      判据 5 只在 merge 位于本块**之后**时生效：merge 在前时
-                    #      fall-through 本就不可能，维持既有抑制行为，逐字节退回落地
-                    #      形态。只读本区域 merge_block 与本块 start_offset 及 CFG 的
-                    #      块偏移序，不读名称/常量/指令数，不新增 self 状态。
                     _r100_suppress = False
                     if (isinstance(region, IfRegion)
                             and getattr(region, 'merge_block', None) is not None
                             and region.merge_block is not block
                             and stmts
                             and blocks
-                            and block.start_offset == max(b.start_offset for b in blocks)
-                            and (region.merge_block.start_offset <= block.start_offset
-                                 or block.start_offset == max(
-                                     _r100_adj_bo for _r100_adj_bo in
-                                     (b.start_offset for b in self.cfg.blocks.values())
-                                     if _r100_adj_bo < region.merge_block.start_offset))):
+                            and block.start_offset == max(b.start_offset for b in blocks)):
                         _r100_hdr = (getattr(self._current_loop, 'header_block', None)
                                                      if self._current_loop else None)
                         _r100_mlast = region.merge_block.get_last_instruction()
