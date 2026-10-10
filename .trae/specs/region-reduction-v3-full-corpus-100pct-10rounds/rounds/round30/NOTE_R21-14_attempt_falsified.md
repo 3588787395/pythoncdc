@@ -149,3 +149,23 @@ needs **two** fixes (D + a threading fix), like `clock_worker` (3) and `broker` 
 one-criterion file flip. Next round: install D as-is (its patch is ready and measured inert-of-regression
 on the only sibling unit in the same file), then close the residual `delta=-3` in the same gate.
 All variants are reverted; `region_analyzer.py` = `35e227ac3e7b25af`.
+
+## Fifth addendum, 17:32 — what fix #2 actually is (measured on r40a's in-flight patch)
+`r40a` has Variant D applied in `D:/Temp/r34/wt` (`region_analyzer.py = f2bb527550ecf03c`,
+`py_compile` OK) and my own read of that state reproduces my D numbers exactly:
+```
+run_individual_transform  len orig=407 prod=404 delta=-3 hunks=3 landings=2 judge_diff=True
+quote.pyc                 91/92  (run_tick_socket still Equal -> D is regression-free as predicted)
+```
+The residual is NOT the return-`None` threading family as I assumed in the ticket. Diffing the raw
+opcodes shows it is a **handler-suite relocation**: the original emits the inner
+`except BaseException as x:` block at `@752..@1114` (62 instructions, opening
+`JUMP_FORWARD / PUSH_EXC_INFO / LOAD_GLOBAL BaseException / CHECK_EXC_MATCH / POP_JUMP_IF_FALSE /
+STORE_FAST x / self.log.quote.error('eval转化逐笔数据异常') ...`) immediately after the inner try body,
+whereas the product emits that same block 53 instructions later at `@1260+`, i.e. the two handlers of
+the nested/outer try pair are laid out in the opposite order. `delta=-3` and the two landings follow
+from that reordering, not from a missing `return None`.
+So the next attempt on this unit must ask *which statement order the emitted source uses for the two
+except handlers* (same family as the relocation that gate 28 fixed for `run_tick_socket` by the
+else-arm remainder rule at `:21341`/`:22182`), and should stop looking for a tail-copy fold. Recording
+this so the measurement is not repeated.
