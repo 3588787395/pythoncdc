@@ -91,6 +91,26 @@ Rig: `python -X utf8 .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds
 - Only `core/cfg/region_ast_generator.py` may change. If the fix belongs in
   `core/cfg/region_analyzer.py`, do NOT edit it — write the finding up as the next ticket.
 
+## 5b. ADDENDUM from the orchestrator, 12:36 (use it only if your own measurement agrees)
+A sibling engineer ablating the `while True:` wrapper at `region_ast_generator.py:6917` (`_can_merge`)
+prompted me to census every `{'type': 'Break'}` construction in that file against sealed bytes
+`ac8ec5aa2d5796ea`. The candidates most likely to be YOUR site, with the code I actually read:
+- `:12100-12112` — an elif fall-through block whose role is `IF_THEN/BREAK/PURE_BREAK` and whose
+  **last instruction is `RETURN_VALUE`/`RETURN_CONST`** is emitted as `_then_stmts = [{'type':'Break'}]`,
+  i.e. a return-terminated arm rendered as a loop break. This is a terminator-kind substitution and it
+  is the shape your victim shows (fall-through-to-back-edge replaced by a forward loop exit).
+- `:12188-12228` — `if then_succ in region.break_blocks:` emits `If(test, body=[Break])`, with the
+  comment at `:12188` admitting an earlier bug ("此前代码检测到 LOAD_CONST 就生成 Return(None)，但实际应为 Break").
+  Your criterion may be the mirror-image condition: the successor is the loop **header/back-edge**,
+  not a break block.
+- `:9780-9792` and `:11955-11970` — more `body=[{'type':'Break'}]` / `_orelse_stmts=[{'type':'Break'}]`
+  sites gated on successor `BlockRole` being BREAK/PURE_BREAK/RETURN/RETURN_NONE, i.e. role-driven, and
+  therefore sensitive to a mis-declared role.
+- `:6155-6161` (`else_stmts = [{'type':'Break'}]` for a for-else that breaks an ANCESTOR loop) and
+  `:8500-8506` (`_child_has_break_to_outer` appends a trailing `Break` to the body).
+Note the file has more than eight such sites, so count the sites that actually FIRE for your region
+before editing one of them — a single-site fix on a duplicated predicate is only a partial fix.
+
 ## 6. Deliverable
 `D:/Temp/r31/DELIVER/FIX_R21-15.md` — (0) ticket as received, (1) mirror + sealed-hash + cmp proof,
 (2) baseline readings (victim + panel), (3) 取证 with file:line of the `Break`/exit construction and
