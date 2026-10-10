@@ -504,6 +504,52 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
 - 编排侧此刻 turn 预算耗尽，未安装任何东西：`git status --porcelain -- core/` 空，
   三哈希仍为 `dff6e81a5f2ff9f6 / beeaf14435e22922 / 640d33a77dcb71c2`，远端 `f877c6b2`。
   **本会话没有半安装态、没有跑中的门链**，恢复时直接从 §19C 第 1 步开始即可。
+
+## 20D. 两名工程师被强制暂停（截断但有效读数）+ #51 主机搜索空间已排除 8 处（2026-10-10 08:30）
+
+**截断状态**（都不是零进度，文档已入库 `be5a43d0`）：
+- `r20n`（#50，analyzer）：Stage 1 **PASS** 并给出 corpus-product `cmp` 逐字节等值证明，
+  还纠正了**我自己票面的路径**：`strategy_universe/api_base/real_quote/matcher/order_api` 的真实位置是
+  `IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc`、`IQData/api/api_base.pyc`、
+  `IQData/plugins/plugin_system_realquote/real_quote.pyc`、`IQEngine/plugins/plugin_system_matcher/matcher.pyc`、
+  `IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc`——我 brief 里的路径根本不持有这些单元。
+  §3–§7 仍是 TODO，没有 `DELIVER/*.py`，所以**不能按"候选"记账**，下一票要重走 §19C。
+- `r20q`（#51，诊断）：交付了本票第一个交付物并且**推翻了我的票面表述**——
+  那条函数内 import 不是"没发"，而是**发成了退化赋值**：
+  丢的 4 条＝ `LOAD_CONST 0 / IMPORT_NAME …function / IMPORT_FROM THREAD_STATUS / POP_TOP`，
+  留下的是 `LOAD_CONST ('THREAD_STATUS',)`（fromlist）与 `STORE_FAST THREAD_STATUS`，
+  因此产物第 253 行（在 `while True:` 内）是 `THREAD_STATUS = ('THREAD_STATUS',)`。
+
+**我自己做的两件事（都是实测，不是推断）**：
+1. 逐行扫描确认 `IMPORT_NAME` 的决策点在仓库里有 **7 处副本**
+   （`_extract_imports_from_block_prefix:564`（只做块前缀，遇跳转即停，故覆盖不到循环体深处的 import）、
+   `generate()` 内 3 处（926/1127/1227，只对入口块）、`_collect_ternary_load_names:6788`、
+   `_loop_extract_for_iter_pre_stmts:8612`、`_loop_extract_pre_stmts_from_block:8800`），
+   而通用块级构造器 `_build_statements_from_instructions:33043` **自带完整 IMPORT 状态机**（:33063 起 22 处提及）。
+   顺带发现卫生问题：`_take_assert_prefix_stmts` 在 :561 返回之后还留了一行
+   `return self.region_analyzer.get_block_role(block)`（:562，不可达死码）。
+2. **消融普查排除 8 个候选主机**（脚本 `D:/Temp/r20main/ablate.py`，在进程内把
+   `_build_statements_from_instructions / _loop_extract_pre_stmts_from_instrs /
+   _loop_extract_for_iter_pre_stmts / _loop_extract_pre_stmts_from_block /
+   _build_effective_stmts / _generate_degraded_statements / _build_store_statement /
+   _extract_imports_from_block_prefix` 逐个 `return None`，每次跑 `pycdc.py --region` 输出到 `$TEMP`）：
+   ```
+   BASELINE len=54089 degenerate=1 realimport=1
+   8 个 STUB 全部 len=54089 degenerate=1 realimport=1
+   RESTORED len=54089 degenerate=1 realimport=1
+   ```
+   两个要点：(a) **没有一个 stub 改变产物** ⇒ 这 8 个函数都不是退化行的生产者；
+   (b) 基线里 `realimport=1` 与 `degenerate=1` **同时存在** ⇒ 同一条 import 在某处被正确地发了一次，
+   另有一处把 fromlist 元组当成值发了赋值——所以这不是"整条语句丢失"，而是**重复/错位发射**。
+   下一步的生产者搜索应换到 `core/cfg/ast_generator_v2.py` 的栈机与
+   `expr_reconstructor.reconstruct(...)`：那里才有 `ImportFromPending` 标记
+   （`:22779/:22793/:22824/:23787/:23804`），且退化行的形态正是"栈里剩一个 tuple 常量、被 STORE 消费"。
+   （stub 全惰也说明我的度量口径要换：只数 `THREAD_STATUS` 行不够，应当 `cmp` 产物字节。）
+
+**恢复后的第一张票**（#51 的正确形态）：诊断-only、只许改 `core/cfg/ast_generator_v2.py` 的读路径、
+判据＝"块窗口被切在 `IMPORT_FROM`/`STORE_*` 之间时，栈机不得把 fromlist 常量交给 STORE"，
+度量口径＝该单元 `delta=-4 → 0` 且文件 41/43→42/43（不翻文件，但翻 1 个单元＝门读数 6586→6587，
+与 gate 18 收 klinedata 62→63 同口径）。仓库此刻仍是 §20C 的封版态，三哈希未动。
 2. 有交付文件 ⇒ 走 §19C 全文（数哈希 → 丢弃镜像复测 → install → 一条后台门链 → 封表 → 提交推送）。
 3. 门链期间**不安装、不改 `core/`、不读仓库 `*OK.py`**（产物正在被删除重写）。
 4. 任何一张票落地都要提交并 `git push origin HEAD:refs/heads/rr-v3r01-f557fd`，用 `git ls-remote` 判真。
