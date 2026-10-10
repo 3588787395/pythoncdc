@@ -30843,6 +30843,57 @@ AST 映射规则:
                                 and _r09_r.try_offset_start < _r09_first_handler_off
                                 and _r09_r.entry not in _filtered_else):
                             _filtered_else.append(_r09_r.entry)
+                # [R27-9 try/except/else arm-tail ownership] CPython 3.11 lays a
+                # try/except/else out as: <try body> <else clause: one contiguous
+                # run> <first handler: PUSH_EXC_INFO>.  The else clause therefore
+                # ends immediately before the first handler entry.  A block inside
+                # that interval whose EVERY predecessor already belongs to the arm
+                # can only execute on the no-exception path, so it is part of the
+                # arm -- including its own terminator (an explicit `return None`).
+                # Claim it here so it is emitted INSIDE the orelse suite; otherwise
+                # the enclosing suite re-emits it after the whole Try node and the
+                # compiled layout gains a JUMP_FORWARD plus a relocated tail
+                # (quote.check_frequency: else arm @360/@372/@424/@436, tail block
+                # @456 LOAD_CONST None;RETURN_VALUE, first handler @460).
+                # [C1] reads only block offsets and CFG predecessor identity; no
+                #   region-membership re-derivation, no jump-operand targeting.
+                # [C2] only EXTENDS _filtered_else, appended after the analyzer's
+                #   own else blocks and only for offsets strictly greater than the
+                #   last declared else block, so order is preserved and a region
+                #   without such a tail block emits byte-identically.
+                # [C3] reservation: blocks owned by this region's other arms (try
+                #   body / handler entries / finally / cleanup) are never claimed,
+                #   and the fixpoint accepts only all-predecessors-inside-the-arm.
+                if region.else_blocks and region.handler_entry_blocks:
+                    _r27_arm_hi = max(_b.start_offset for _b in region.else_blocks)
+                    _r27_handler_lo = min(
+                        _hb.start_offset for _hb in region.handler_entry_blocks)
+                    _r27_reserved = set()
+                    for _r27_field in ('try_blocks', 'handler_entry_blocks',
+                                       'finally_blocks', 'cleanup_blocks'):
+                        _r27_reserved |= set(
+                            id(_b) for _b in (getattr(region, _r27_field, None) or []))
+                    _r27_arm = set(id(_b) for _b in region.else_blocks)
+                    _r27_tail = []
+                    while True:
+                        _r27_added = False
+                        for _r27_b in self.cfg.blocks.values():
+                            if (id(_r27_b) in _r27_arm or id(_r27_b) in _r27_reserved
+                                    or _r27_b.start_offset <= _r27_arm_hi
+                                    or _r27_b.start_offset >= _r27_handler_lo):
+                                continue
+                            _r27_ps = list(getattr(_r27_b, 'predecessors', None) or [])
+                            if not _r27_ps:
+                                continue
+                            if all(id(_p) in _r27_arm for _p in _r27_ps):
+                                _r27_arm.add(id(_r27_b))
+                                _r27_tail.append(_r27_b)
+                                _r27_added = True
+                        if not _r27_added:
+                            break
+                    for _r27_b in sorted(_r27_tail, key=lambda x: x.start_offset):
+                        if _r27_b not in _filtered_else:
+                            _filtered_else.append(_r27_b)
                 _parent_is_loop = isinstance(region.parent, LoopRegion) or any(
                     isinstance(r, LoopRegion) and any(b in r.body_blocks for b in region.try_blocks)
                     for r in self.region_analyzer.regions
