@@ -45838,6 +45838,24 @@ AST 映射规则:
                             'elts': [{'type': 'Starred', 'value': ternary_expr, 'ctx': 'Load'}],
                         }
                 if container_info:
+                    _c_store_assign = None
+                    if region.merge_block is not None:
+                        _c_mb_instrs = [i for i in region.merge_block.instructions
+                                        if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+                        if any(i.opname in ('STORE_SUBSCR', 'STORE_ATTR',
+                                            'DELETE_SUBSCR')
+                               for i in _c_mb_instrs):
+                            _c_store_assign = self._try_build_ternary_store_assign(
+                                region, ternary_expr)
+                    if _c_store_assign is not None:
+                        results.append(_c_store_assign)
+                        _c_extra = getattr(
+                            region, 'post_consumer_extra_stmts', None)
+                        if _c_extra:
+                            results.extend(_c_extra)
+                        for block in region.blocks:
+                            self.generated_blocks.add(block)
+                        return results
                     results.append({'type': 'Expr', 'value': container_info})
                 else:
                     # Ternary as outer statement argument
