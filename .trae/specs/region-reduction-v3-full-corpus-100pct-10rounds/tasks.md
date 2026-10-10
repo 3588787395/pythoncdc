@@ -609,3 +609,23 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   另一个消失——与 #46 `handlers._target` 登记过的 **CPython 逐出口边复制**同族，不是发射点的重复 append 判据。
   下一票若要动它，应查 region 划分（谁拥有 `@644` 那块与 `@648` 那块）而不是再写第 6 个 append 守卫。
 - 本轮 tree 状态不变：`core/cfg/region_ast_generator.py` = 封版 `e17603a761eaadef`，门读数 6587/6617、391/402。
+
+## 20H. R20-7 主机已由"容器监视"定位（quote.build_current_period_df 尾被吞）
+
+- 读数（`unit_diff`）：`len orig=123 prod=113 delta=-10 hunks=1 landings=0`，
+  删 12 条＝`LOAD_FAST tempdict; LOAD_CONST 'is_open'; STORE_SUBSCR;` 之后整串
+  `LOAD_GLOBAL NULL+pandas; LOAD_ATTR DataFrame; LOAD_FAST tempdict; LOAD_FAST index; KW_NAMES; PRECALL; CALL; STORE_FAST tmp; LOAD_FAST tmp`，
+  产物只留 `POP_TOP; LOAD_CONST None`。
+- 定位法（可复用，2 条记录就够）：把 `RegionASTGenerator.generated_blocks` 换成记录型 set 子类
+  （重写 `add`/`discard`，按 `start_offset in {514,516,524,546,566}` 且 `codename(self)=='build_current_period_df'` 命中），
+  同进程调用 `pycdc.decompile_pyc(pyc)`，实测命中：
+  `:46121 in _generate_ternary`（经 `:21340 _if_generate_normal → :17993 _if_generate_then_branch`）、
+  `:14529 _generate_if → :21340 → :18008 _if_generate_then_branch`。
+- 根因读数：`_generate_ternary` 在 :46118-46121 把 **region.blocks 全体**标记为已生成
+  （`for block in region.blocks: … self.generated_blocks.add(block)`），
+  而被三元消费只用到块的前段，块内 **剩余指令**（上面那 12 条）此后再无人发射 ⇒ 静默丢弃。
+  同函数上方已有先例可参照：`_gt_exclude_merge` 分支在标记时 `continue` 跳过 merge 块（:46110-46119）。
+- 该票的正确判据形态：三元消费跨度未覆盖整块时，不得把该块整体宣告为已消费（要么留块给后续发射，
+  要么把余下指令作为语句一并产出）；这是"识别期宣告 + 每块唯一归属"的违反面，不是第 6 个 append 守卫。
+- 收益账：`quote.pyc` 86/92；本机制同时是 `run_individual_transform`（del 84）与
+  `realtime_event_source.clock_worker`（110 条体被跳）的同形描述，但**必须逐一实测**，不得按同族记账。
