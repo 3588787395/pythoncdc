@@ -597,3 +597,15 @@ AST 不带跳转操作数，落地全由嵌套涌现），并且 `_if_generate_e
   用 subprocess 驱动会让所有 stub 全惰＝假否证；先装计数包装打印每个候选的调用次数，确认它真的执行，再打桩。
   收益账：这一族若成立可覆盖 trade_info_utils 的 `query_strategy_id`(+1 单元) 与同形的 `query_trade_strategy_info`，
   门槛按"≥1 单元翻正、其余不降、quotation 153/153、六电池不倒"收票。
+
+## 20G. R20-6 五个候选发射点被"已证明惰性的行迹"排除（2026-10-10 09:01）
+
+- 口径：`sys.settrace` 只观察 `region_ast_generator.py` 的行事件，**同进程**调用 `pycdc.decompile_pyc()`；
+  先证明探针惰性——带迹产物与不带迹产物 `len` 与全文一致（57911 字节，TRACER INERT True）。
+- 读数：`line hits: {}` ⇒ :32159/:32448/:32964（都在 `_generate_handler_body_statements:31918` 内）、
+  :56716（`_cjb_append_continue:55384`）、:56807（`_apply_r23n6_return_promotion:56749`）
+  **在 trade_info_utils 整个文件上都不执行** ⇒ `query_strategy_id` 内联的那个 `return None` 不是这 5 处 append 造的。
+- 由此改判：原函数里本就有**两个** `return None` 块（`@644/@646` 与共享尾 `@648`），产物把其中一个搬进 handler、
+  另一个消失——与 #46 `handlers._target` 登记过的 **CPython 逐出口边复制**同族，不是发射点的重复 append 判据。
+  下一票若要动它，应查 region 划分（谁拥有 `@644` 那块与 `@648` 那块）而不是再写第 6 个 append 守卫。
+- 本轮 tree 状态不变：`core/cfg/region_ast_generator.py` = 封版 `e17603a761eaadef`，门读数 6587/6617、391/402。
