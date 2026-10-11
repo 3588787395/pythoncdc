@@ -40,3 +40,26 @@ guess.
 
 Not dispatched: six engineer mirrors are already running (r50a, r51a, r52a, r53a, r54a, r56a), and I do not
 start a seventh on a mechanism whose cheapest disambiguation is a measurement of someone else's candidate.
+
+## RESULTS of the predicted free measurement (02:07, on r51a's live build — a trend read, not a verdict)
+
+Analyzer snapshot measured: `36dea812a1f9c180` (r51a's mirror at 01:49, still mid-flight), generator =
+sealed `37d9fecb893704ac`, products regenerated in my own mirror and judged with `--prod`/absolute pyc paths.
+
+| unit | sealed shape | under r51a's live analyzer | verdict |
+|---|---|---|---|
+| `clock_worker` | `−113 / 7 / 18` | **`−122 / 7 / 18`** | 9 instructions WORSE, no hunk or landing change |
+| `quote.run_individual_transform` | `−52 / 10 / 3` | `−52 / 10 / 3` | byte-for-byte unaffected (product 94155 B = sealed size) |
+| `trade_live_broker._sync_worker` | `−3 / 5 / 6` | `−3 / 5 / 6` | unaffected |
+
+So the "one dispatch-order family covers three units" hypothesis is **falsified for quote and for
+`_sync_worker` by this build**: M2's current criterion does not move them at all. Two consequences, stated
+without flattering the intermediate state:
+1. Do NOT collapse `_sync_worker` or `quote` into the clock_worker ticket on the strength of a shared
+   *appearance*; each keeps its own ticket (R21-28/R21-32 family notes and r46a's banked analyzer half).
+2. r51a's in-flight build is currently moving `clock_worker` in the wrong direction (−113 → −122 with the
+   same 7 hunks). That is not yet a judgement of the delivered candidate — the file was still being edited,
+   and a moving hash is never a verdict — but when the DELIVER lands I will re-measure this exact triple, and
+   if the delivered build still fails to reduce the M2 hunk while having zero effect elsewhere, the
+   "analyzer role declaration" route for M2 closes and the relocation becomes generator-side, which is a
+   materially different round 33.
