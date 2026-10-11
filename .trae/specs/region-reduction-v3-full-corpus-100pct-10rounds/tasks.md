@@ -1336,3 +1336,36 @@ base-line coordinates, byte-level install, `py_compile OK`, only 2 products move
   still running with an instruction to measure merged-with-M1.
 - Residual now **4 files / 9 units** (`rounds/round32/RESIDUAL_ROUND32.md`, `UNREGISTERED 行数=0`).
 - Next gate label **33** against `rounds/round32/after`.
+
+## 37. Gate 33 certified and landed (2026-10-11, orchestrator-built after r50a died on the Chat quota)
+
+`core/cfg/region_ast_generator.py` `e7e2b2dd4cf6ed64` -> `fcf2b870f0fb71b3` (R21-26 handlers `_target`:
+three pieces ported byte-level from r50a's sealed mirror build `78f88001394ed59b` — helper
+`_r45a_else_is_implicit_tail_only` 371-400, R44A-elif dispatch 2399-2466 — plus the new **a2 conjunct**;
+probe scaffolding dropped so the candidate is probe-free; built by `rounds/round33/build_cand_r33.py`
+on content-anchored asserts, `py_compile OK`, exactly 1 product moved corpus-wide).
+
+- **Units 6608 -> 6609 /6617 (99.8791%), files 398 -> 399**, `文件级回退=0 UNIT_REGRESSIONS=0
+  新增失败单元=0 翻正单元=1`, regen `ok=402 bad=0` (309 s), quotation 153/153, small34 1560/31
+  (moved by exactly +1 unit / +1 green file), ruler selfcheck OK, pytest `2 failed, 282 passed, 2 xpassed`
+  (the two registered residents).
+- Flip: `handlers 29/30 -> 30/30` — the **second fully green residual file** of the campaign
+  (trade_info_utils was first at gate 32).
+- The discriminator that held is **a2, not the note's proposed conjunct**: r50a's census
+  (`D:/Temp/r50/census/pop_h123`, 2317 pre / 13 fires across 259 pyc) shows exactly ONE fire with
+  `len(body)>1` (`handlers._target`) while all six canary damages are bare-`return None` arms —
+  stripping a bare-return-None arm deletes the arm and lets a `JUMP_FORWARD` take the function's
+  implicit tail (the NOTE_R21-26 signature: `-LOAD_CONST None -RETURN_VALUE +JUMP_FORWARD` at the
+  terminal offset). Measured, then adopted; the operand-named-landing idea from the hand-off note was
+  NOT installed unmeasured.
+- Authorship: r50a hit "daily usage limit for Chat" with no DELIVER, so per the standing quota rule I
+  extracted its verified build from `D:/Temp/r30chkC`, authored the candidate and `FIX_R21-26_r33.md`
+  myself, and re-measured the probe-free build independently in the r30chk mirror (handlers 30/30,
+  `_target` 0/0/0 judge False, 20-file panel: only handlers changed, six canaries byte-identical).
+- Banked entering gate 34: M1 `01970a924b74afb4` (needs re-anchor onto the current base), M2
+  `36dea812a1f9c180` (measured worse alone; r51a's re-measure-on-merged-base flag still open),
+  M3b `3aa27a55eff25a80` (+23 lines at :19918, unmeasured), r58a `8a6272f9bdae6ec4`
+  (panel-clean falsified-for-flips; follow-on R58B analyzer re-parent named).
+- Residual now **3 files / 8 units** (`rounds/round33/RESIDUAL_ROUND33.md`, `UNREGISTERED 行数=0`):
+  broker 6, clock_worker 1, quote 1.
+- Next gate label **34** against `rounds/round33/after`.
