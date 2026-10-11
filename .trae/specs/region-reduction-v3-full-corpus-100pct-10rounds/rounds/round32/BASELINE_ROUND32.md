@@ -46,3 +46,19 @@ M3 is held back until I can measure the merged pair. Broker keeps 6 further mech
   (asserts a unique anchor hit and that any replaced line still matches). This is what attributed gate 31's
   regression to h2 rather than to the narrowing hunks.
 - `D:/Temp/t30/mkmix.py` still merges whole candidates by base coordinates and asserts non-overlap.
+
+## Mid-flight trend reads (02:17–02:22) — NOT verdicts
+
+Measured on the engineers' live mirror files, which were still being edited; a moving hash is never a
+verdict, and each DELIVER will be re-measured from scratch in my own mirror before anything is installed.
+
+| build | measurement | reading |
+|---|---|---|
+| r50a `d677077be490f11b` | handlers **30/30**, arg_checker **48/49**, profiler_func **16/17** | the flip works on the current bytes, but the canary narrowing is not in place yet — this is exactly the gap R21-26 was written for |
+| r52a `01970a924b74afb4` | clock_worker `−113 → −10`, hunks 7→8, landings 18→14 | M1's bulk-claim guard is closing the −109 skip almost entirely (−10 left); note hunks ROSE by 1 and landings fell by 4, so the residual is no longer the skip — consistent with M2/M3 owning what remains, and still zero flips |
+| r51a `36dea812a1f9c180` | clock_worker `−113 → −122`; quote `−52/10/3` unchanged; `_sync_worker −3/5/6` unchanged | see `NOTE_R21-31`: M2's current build worsens its own unit and does not touch the other two, so the three-unit family claim is dead |
+
+Both adjudication mirrors (`D:/Temp/r30chk`, `D:/Temp/r30chkB`) are re-seeded from the repo's sealed bytes
+after these reads, and note for future runs: those mirrors have no `site-packages`, so `unit_diff.py` must be
+given the **absolute** pyc path there — the relative form resolves against `ROOT/site-packages` and dies,
+which is what made two of my earlier loops print nothing.
