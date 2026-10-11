@@ -145,3 +145,26 @@ an else block whose terminator is a back-edge to this loop's header **inside the
 then the back-edge), rather than as the `else:` suite. Verify per §3 that the three units' shapes actually
 shrink before claiming anything, and panel it - this prototype is the second time in two rounds that a
 structurally reasonable rule moved a diff the wrong way (`_sync_worker`'s M2 was the first).
+
+## 6. Scope correction to §5 — the prototype moved only the direct offender, not its feeder
+
+The prototype's negative result does **not** close the renderer axis, and the ticket must not be read that
+way. In `_trade_status_handle` the declared else pair is `[720, 830]`:
+
+- `@830` = `time.sleep(0.5) … POP_TOP` then `@872 JUMP_BACKWARD -> 46` (this header) → moved by the guard;
+- `@720` = a one-instruction `JUMP_FORWARD -> 830`, i.e. an earlier body arm's exit that lands **inside**
+  the block that was moved → **not** matched by the guard (its terminator is a forward jump), so it stayed
+  declared as else content while the code it jumps into moved to the body.
+
+So the prototype produced a half-moved pair, which is exactly the shape that would mis-render and add
+hunks. §4 already stated the transitive clause ("move any else block whose only forward edge lands on such
+a body block"); the prototype implemented only the first half of that sentence. Before this axis is declared
+closed, re-run the prototype with the **transitive** move (one hop is enough here: `@720 -> @830`), and
+report both variants separately, because "partial move worsens" and "full move worsens" are different
+findings with different consequences.
+
+Second, independent caution, measured: even a perfect fix for hunk 2/3 leaves hunk 1 (`del=9`, the dropped
+`self.trade_info = get_trade_status(self.trade_id, True)`) outstanding, so the unit goes from `−3/3/2` to
+about `−9/1/0` and **still fails**. Neither half alone flips `_trade_status_handle`; the pair is the
+acceptance bar, and the same is true of `_process_order` / `_process_cancel_order` (their measured worsening
+`−465→−471`, `−293→−299` is the same half-moved artifact and should be re-measured with the transitive rule).
