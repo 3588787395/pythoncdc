@@ -3338,6 +3338,88 @@ class RegionASTGenerator:
             return (None, None)
         return (else_sink, tail_sink)
 
+    def _r2125_identical_none_tail_else(self, region) -> bool:
+        """[R21-25] elif 链尾 else 臂与父 if 假边专属 None 尾同形（重复隐式尾声）判据。
+
+        ①算法依据：CPython 3.11.7 compile() 实测（逐指令 + 逐跳转目标，非推理）——
+          同一 code object 内两条出口边（父 `if COND is not None:` 的假边落点 F、
+          本 elif 链尾 else 的假边落点 T）各落在一个「纯 LOAD_CONST None + RETURN_VALUE」
+          块时，源码两处都不写 else（均为 fallthrough）编译出的两份尾声分配顺序
+          = F→第一份、T→第二份；一旦在 elif 链尾补一条 `else: return None`，两份
+          尾声的分配顺序对调（T→第一份、F→第二份），即 victim kill_trade_process 的
+          @3274/@3602 两跳转操作数互换（TARGET_ONLY, delta=0 hunks=0 landings=2）。
+          本判据裁的是「该 else 臂是否为与父 if 专属 None 尾同形的重复隐式尾声」
+          ——命中即把本 elif 链尾 else 臂留作 fallthrough（不物化 `else: return None`），
+          与既有「隐式 return None 弹除」族（R35-B/R23-N16/R51-A）同向，绝不新增语句。
+        ②归约顺序：区域归约完成后、本 elif 链装配末尾评估一次；不增删块、不回溯。
+        ③唯一归属判定（全同层结构事实，I.4 白名单，零名字/常量值/偏移阈值）：
+           (a) region 为 IfRegion 且带 elif_conditions（确是 if/elif 链），merge_block 为空；
+           (b) region.elif_final_else 恰一块 arm，剥噪后恒为隐式 None 尾
+               (_is_implicit_return_block)、无正常后继、且其唯一前驱 = 末 elif 条件块；
+           (c) region.parent 为 IfRegion，其 elif_conditions/elif_final_else 均空、
+               merge_block 为空，else_blocks 恰一块 S != arm，S 剥噪后亦为隐式 None 尾、
+               无正常后继，且 S 的唯一前驱 = parent 的条件块（父 if 假边专属落点）。
+           三条全真才 True；任一不真返回 False，调用点逐字节不变。
+        C 条款：C1 只读 region/parent/arm/S 四者的同层结构字段；C2 复用
+        _is_implicit_return_block；C3 无副作用（不改区域、不标记块、不读名字）。
+        与 [R21-21] `_r2121_shared_tail_sinks` 互斥：后者要求 parent 为 None（函数体作用域）
+        且无 else/elif 内容（用以「添 else+尾随」重建两份尾声）；本判据要求 parent 为
+        IfRegion 且带 elif 链（用以「剔 elif 链 else」让两边 fallthrough 合成自然顺序）；
+        二者前提互斥，不可能同时命中，故不互相否决。
+        """
+        if not isinstance(region, IfRegion):
+            return False
+        if not (getattr(region, 'elif_conditions', None) or []):
+            return False
+        if getattr(region, 'merge_block', None) is not None:
+            return False
+        _fe = list(getattr(region, 'elif_final_else', None) or [])
+        if len(_fe) != 1:
+            return False
+        _arm = _fe[0]
+        if _arm is None or not _arm.instructions:
+            return False
+        if getattr(_arm, 'successors', None):
+            return False
+        if getattr(_arm, 'exception_handler', False):
+            return False
+        _arm_core = [i for i in _arm.instructions
+                     if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if not _arm_core or not self._is_implicit_return_block(_arm_core):
+            return False
+        _arm_preds = [p for p in (getattr(_arm, 'predecessors', None) or []) if p is not _arm]
+        _last_elif_cond = region.elif_conditions[-1]
+        if len(_arm_preds) != 1 or _arm_preds[0] is not _last_elif_cond:
+            return False
+        _parent = getattr(region, 'parent', None)
+        if not isinstance(_parent, IfRegion):
+            return False
+        if (getattr(_parent, 'elif_conditions', None) or []
+                or (getattr(_parent, 'elif_final_else', None) or [])):
+            return False
+        if getattr(_parent, 'merge_block', None) is not None:
+            return False
+        _pe = list(getattr(_parent, 'else_blocks', None) or [])
+        if len(_pe) != 1:
+            return False
+        _S = _pe[0]
+        if _S is _arm or _S is None or not _S.instructions:
+            return False
+        if getattr(_S, 'successors', None):
+            return False
+        if getattr(_S, 'exception_handler', False):
+            return False
+        _S_core = [i for i in _S.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if not _S_core or not self._is_implicit_return_block(_S_core):
+            return False
+        _S_preds = [p for p in (getattr(_S, 'predecessors', None) or []) if p is not _S]
+        _pcond = (_parent.condition_block
+                  if getattr(_parent, 'condition_block', None) is not None
+                  else _parent.entry)
+        if _pcond is None or len(_S_preds) != 1 or _S_preds[0] is not _pcond:
+            return False
+        return True
+
     def _is_region_internal_exit_sink(self, block: BasicBlock, deciding_region=None) -> bool:
         """[r1-b99-sinkclaim] 判定块是否为「被某个区域内部区域认领的退出汇合块」。
 
@@ -20396,6 +20478,10 @@ AST 映射规则:
                     and elif_body_stmts
                     and any(isinstance(s, dict) and s.get('type') == 'While' for s in elif_body_stmts)):
                 final_else_stmts = []
+            # [R21-25 发射] elif 链尾 else 臂与父 if 假边专属 None 尾同形（重复隐式尾声）则留作
+            # fallthrough，不物化 `else: return None`（arm 块已由 _process_if_blocks 标记 generated，不会被重复发射）。
+            if final_else_stmts and self._r2125_identical_none_tail_else(region):
+                final_else_stmts = []
         # [R51-A 同层判据] 区域归约算法原则 1（块 = 前导语句 + 恰好一个终结子）＋
         # 原则 2（每块唯一归属且归属者必须发射）：链尾 else 臂的全部块都不含语句
         # （只剩噪声指令，或噪声 + 一条无条件跳转）时，这块的存在本身即源码里有
@@ -22320,6 +22406,25 @@ AST 映射规则:
             and _r142pr.merge_block is region.merge_block
             and region.entry in (_r142pr.then_blocks or [])
             for _r142pr in self.region_analyzer.regions)
+        # [R54-B1] rule-5 or-fold 的出口同一性判据（取证：trade_live_broker.get_ipo_stocks）。
+        # `if not X: <if Q: continue elif R: continue>` 的 CPython 布局是
+        #   [X; PJIT->merge][Q 的 and 两腿; PJIF->elif][continue 回边][R...][merge]
+        # ——守卫 X 的短路出口就是**本区域的 merge**：X 为真时整条内层链（含其
+        # elif/else 臂）一并跳过。此时 rule-5 的扁平形 `if X or Q: continue` 会把同一
+        # 出口改写到臂体（回边）上：指令流逐条相同，只有 jump target 偏移到更早的块，
+        # 尺读作 delta=0 hunks=0 landings>=1 的 TARGET_ONLY 残差，且语义已经改变。
+        # 真实 `if X or Q: continue` 的守卫出口落在**臂体自身**，永不是 merge，
+        # 故用「守卫条件块的短路出口是否就是本区域 merge」区分两种形态：
+        # 是 ⇒ 保持嵌套（由既有嵌套渲染输出），否 ⇒ 折叠行为逐字节不变。
+        # 判据只读条件块跳转目标与 merge_block 的块同一性，不读名字、不用偏移常量、
+        # 不用文件白名单，也不改任何区域归属/声明。
+        _r54_r5_cb = (getattr(region, 'condition_block', None) or region.entry)
+        _r54_r5_exit_is_merge = False
+        if _r54_r5_cb is not None and region.merge_block is not None:
+            _r54_r5_jt, _r54_r5_ft = self._cond_block_branch_targets(_r54_r5_cb)
+            _r54_r5_exit_is_merge = (_r54_r5_jt is not None
+                                     and _r54_r5_jt is region.merge_block
+                                     and _r54_r5_ft in (region.then_blocks or []))
         _5_post_extra = None
         if (isinstance(condition, dict) and condition.get('type') == 'UnaryOp'
                 and condition.get('op') == 'not'
@@ -22331,7 +22436,8 @@ AST 映射规则:
                 and then_stmts[0].get('orelse')
                 and not getattr(region, 'elif_conditions', None)
                 and not else_stmts
-                and not _r142_head_share):
+                and not _r142_head_share
+                and not _r54_r5_exit_is_merge):
             _5_outer_cond = condition.get('operand', condition)
             _5_inner_if = then_stmts[0]
             _5_inner_cond = _5_inner_if.get('test')

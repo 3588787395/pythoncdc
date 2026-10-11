@@ -1307,3 +1307,32 @@ two products moved corpus-wide).
   `_r2119_or_tail_extension` (0 calls for this unit).
 - Residual now **5 files / 11 units** (`rounds/round31/RESIDUAL_ROUND31.md`, `UNREGISTERED 行数=0`).
 - Next gate label **32** against `rounds/round31/after`.
+
+## 36. Gate 32 certified and landed (2026-10-11, orchestrator-measured)
+
+`core/cfg/region_ast_generator.py` `37d9fecb893704ac` -> `e7e2b2dd4cf6ed64` (+86/+22 lines from two candidates merged by
+base-line coordinates, byte-level install, `py_compile OK`, only 2 products moved corpus-wide).
+
+- **Units 6606 -> 6608 /6617 (99.8640%), files 397 -> 398**, `文件级回退=0 UNIT_REGRESSIONS=0
+  新增失败单元=0 翻正单元=2`, regen `ok=402 bad=0` (431 s under six live mirrors), quotation 153/153, small34 1559/30
+  (moved by exactly +2 units / +1 green file), ruler selfcheck OK, pytest `2 failed, 282 passed, 2 xpassed`.
+- Flips: `trade_info_utils 40->41` = **first fully green file of the round** (r53a R21-25: two byte-identical
+  `LOAD_CONST None/RETURN_VALUE` tails whose exit operands were swapped; `compile()` on 3.11.7 decides that the
+  elif chain's `else: return None` produces the SWAPPED allocation and dropping the `else:` arm reproduces the
+  original, both with identical tail offsets; construction site `_if_generate_elif_chain` 20357-20398, the
+  surviving `[Return None]` coming from `_r23n16_blocks_have_explicit_return([@3868])` skipping the pop) and
+  `broker 121->122` (r54a, `get_ipo_stocks` `landings=1 -> 0`).
+- r53a also measured the TARGET_ONLY family down to exactly TWO units corpus-wide and stated that
+  `get_ipo_stocks` swaps a different pair, so it is NOT the same mechanism as R21-25 - which is why the two
+  candidates are separate criteria in one file and why neither was bundled with the other's predicate.
+- Merge discipline held: each candidate measured alone, then the MERGE measured on the 20-file panel (18 SAME,
+  exactly the two intended products changed, all six duplicated-module canaries green) - neither the gate-30
+  suppression mode nor the gate-31 over-fire mode appears here. r54a had not written its DELIVER when the gate
+  opened; I installed only after re-hashing its mirror to the same `34e4464845e95447` used for the merge, and
+  r53a independently reported the repo reading 41/41 without ever writing the repo. If r54a's delivered file
+  later differs, it is a fresh candidate for gate 33.
+- clock_worker this round: M1 banked (-113 -> -10, seven never-dispatched entries now render), M2 banked after
+  I reproduced its own negative verdict (-122, hunks/landings unchanged, quote and _sync_worker untouched), M3
+  still running with an instruction to measure merged-with-M1.
+- Residual now **4 files / 9 units** (`rounds/round32/RESIDUAL_ROUND32.md`, `UNREGISTERED 行数=0`).
+- Next gate label **33** against `rounds/round32/after`.
