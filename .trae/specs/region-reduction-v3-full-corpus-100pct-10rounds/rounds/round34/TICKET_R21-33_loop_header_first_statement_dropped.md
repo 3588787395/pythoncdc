@@ -197,6 +197,18 @@ the repo analyzer was never edited, and neither prototype went near `core/`.
 
 ## 8. Hunk 1 hand-off: what the header walk actually does (read at :12722-12800, this base)
 
+> **FALSIFIED by measurement at 17:40 — do not start from this site.** An inert logging wrapper
+> (no-op vs log run both produced 175258-char source) shows the while loop with `header @46` is rendered
+> by `_loop_generate_while` + `_loop_generate_body`, and `_loop_process_header_instructions` is **never
+> called for this region**; `_loop_generate_pre_stmts` returns `[]` for non-FOR loops, and
+> `_loop_extract_pre_stmts_from_block` is never called at all. Separately, calling
+> `_build_attr_assign` directly on this block's instruction prefix returns the **correct**
+> `Assign(Attribute(self,'trade_info'), Call(get_trade_status, ...))` node — so the builder is not the
+> defect either. The open question is which renderer owns the fused header block, not how this one
+> handles STORE_ATTR. Everything below is kept as the (incorrect) premise I started from, so the next
+> session does not re-derive it. See `NOTE_R21-27_ast_side_fstring_stack_pollution.md` §4 for the
+> probe-inertness evidence and `D:/Temp/r35_loopwho.py` for the call census.
+
 `_loop_process_header_instructions` walks `block.instructions` and accumulates into `_hdr_instrs`,
 flushing a statement into `_hdr_stmts` at these branches only:
 
