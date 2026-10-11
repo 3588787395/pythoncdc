@@ -1449,3 +1449,31 @@ content-anchored asserts, `py_compile OK`; **3 products moved corpus-wide**: bro
   broker 4 (`_process_order`, `_process_cancel_order`, `_sync_worker`, `_trade_status_handle`),
   clock_worker 1, quote 1.
 - Next gate label **36** against `rounds/round35/after`.
+
+## §40 Round 36 — gate 36 run and refused; four R21-33/M-candidates banked with numbers
+
+Landed: **nothing**. Corpus stays **6611/6617 units (99.9093%), 399/402 files, residual 3 files / 6
+units**; the next gate label stays 36 against `rounds/round35/after`.
+
+Certification actually performed (`D:/Temp/gate_chain_36_030645.log`): hunk A installed alone, chain
+regen ok=402 bad=0 / verify 8 shards / report / checks all rc=0, and the report reads
+`文件级回退=0 UNIT_REGRESSIONS=0 新增失败单元=0 翻正单元=0` with every shard equal to the round-35
+baseline. Reverted byte-exactly (restore proved by sha16 `87910190b7ef7c35` +
+`git status --porcelain -- core/ site-packages/` = 0 lines).
+
+New measurements recorded in `rounds/round36/`:
+* `FIX_R21-33_r36.md` — the victim's true source shape settled by `compile()` on 3.11.7 (a
+  `while True:` whose header block carries a nested `if` whose merge is `time.sleep(0.5)` +
+  unconditional back edge, NOT a `while … else`, which CPython compiles with the test twice);
+  hunk A (gen `7344dcc566442e58`) −3/3→+6/2; hunk B (analyzer `efd455859b69d8a1`) −3/3→+1/2;
+  hunk C (gen `7a02cc2a06d55447`) −3/3→**−85/2**, falsified, and it names the blocker: the outer
+  `if` has no declared region, so no block-level generator call can build its then arm.
+* `NOTE_R21-34_placement_and_nested_ifregion.md` — M1+M3b re-anchored by hunk onto the current base
+  (`merge_m1_m3b.py` → `3d4f27de6d80ab6e`, only the candidates' own hunks kept: M3b carried four
+  already-landed hunks because its base predates gate 32) and measured **as a pair** at
+  `clock_worker` −113/7 → −3/8; the residual is one relocation (del 109 @7972 vs ins 106 @9194)
+  plus the still-lost 17 @6690. Next tickets: R21-34 (declare the nested IfRegion, analyzer) and a
+  placement-side measurement for clock_worker's else-arm splice.
+* `small34` witness corrected: gate 35's own JSON already read 1562/1568 and a per-row 35-vs-36 diff
+  returns 0 differing rows, so it does not track the corpus flip count the way my note claimed.
+
