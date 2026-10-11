@@ -81,3 +81,38 @@ rendering; the acceptance bar is `delta=0 hunks=0 landings=0 judge_diff=False` (
   write it up rather than editing both files in one round.
 - `python -X utf8`, never `PYTHONIOENCODING`; byte-level CRLF-preserving patches; nothing over 300 s;
   judge a fresh product with `scripts/pyc_verify.py single <abs pyc> --source <product>`.
+
+## 4. Hunk 2/3 mechanism, measured on the same base (17:22)
+
+The analyzer's own declaration for this loop is the defect:
+
+```
+LoopRegion hdr=46 cond=46 init_blocks=[] pre_condition_blocks=[]
+           body=[46,150,186,296,318,340,452,474,680,722]  else=[720, 830]
+```
+
+`@830` is `time.sleep(0.5)` and its block's terminator is `@872 JUMP_BACKWARD -> 46`, i.e. **this loop's own
+header**. A `while ... else:` clause runs after the loop exits, so it can never jump back to the header; and
+`@720` is just the preceding body arm's tail `JUMP_FORWARD -> 830`, a jump *into* that content. So both
+`else_blocks` entries are body-tail blocks, and the generator faithfully renders the wrong construct:
+
+```python
+        else:            # product lines 916-917 -> while-else, runs once, not per iteration
+            time.sleep(0.5)
+```
+
+which is also why hunk 3 replaces the original `@872 JUMP_BACKWARD` with `LOAD_CONST None / RETURN_VALUE`
+(the emitted loop has no tail left to jump from), and why the product shows an extra
+`self.trade_status != trade_status / POP_JUMP_BACKWARD_IF_TRUE` at the tail — CPython's rotated-while form
+for the source it was handed, not an independent bug.
+
+**Candidate rule (own-data, decided at identification time, no cross-region scan):** a block listed in a
+`LoopRegion.else_blocks` whose last instruction is `JUMP_BACKWARD`/`JUMP_BACKWARD_NO_INTERRUPT` to *that same
+loop's* `header_block` is not else-clause content; move it to `body_blocks`, and move any else block whose
+only forward edge lands on such a body block (`@720 -> @830` here).
+
+**Duty before adopting (the R21-28 lesson, measured this round):** first census how many
+`LoopRegion.else_blocks` entries corpus-wide contain a back-edge-to-own-header block — that is the
+population the rule moves; then measure the rule **alone** on the 20-file panel, because hunk 2/3 interacts
+with the header emission of every while loop, and an over-fire here shows up as green files going red, not as
+a bad number on the victim file.
