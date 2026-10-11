@@ -496,10 +496,10 @@
   "units_success": 5,
   "units_total": 6,
   "failures": [
-   "***<module>.r8_dh2_match_guard: Failure detected at line number 40 and instruction offset 36: Different bytecode"
+   "***<module>.r8_dh2_match_guard: Failure: Different control flow"
   ],
   "tail": [
-   "  ***<module>.r8_dh2_match_guard: Failure detected at line number 40 and instruction offset 36: Different bytecode",
+   "  ***<module>.r8_dh2_match_guard: Failure: Different control flow",
    "[single] F:/Downloads/pythoncdc-main/test_repros/round8/r8_11_deep_host_combo2.pyc",
    "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round8/r8_11_deep_host_combo2OK.py",
    "[single] status=failure units=5/6 success_rate=83.33%"

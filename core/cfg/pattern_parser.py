@@ -304,12 +304,31 @@ class PatternParser:
                         'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
                         'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
                     })
+                    # 区域归约算法：[B103 守卫链边界]（guard_like 续块扩展
+                    # 收窄）。守卫块的后续守卫材料（and/or 守卫链的
+                    # continuation）以条件跳转**终结**（其失败边离开 case 指向
+                    # 下一 case——守卫链协议本体）；而守卫块的真值后继是
+                    # case 体入口——体块以无条件跳转/RETURN/裸落穿终结，
+                    # 以条件跳转终结的后继若真是体首 if，其跳转目标在体内
+                    # ≠ fail 边，经守卫块分类判定自然排除（不误吞）。原实现
+                    # 无差别扩展全部后继，纯赋值体块（LOAD_CONST; STORE;
+                    # JUMP_FORWARD）落入 store-only 判据被收进守卫材料，
+                    # 其 STORE 把守卫提取器的「最后 STORE」锚推过守卫段——
+                    # 真守卫整体丢失（``case 1 | 2 | 3 if x > 1: r='small'``
+                    # B103 破口机理）。判据 = 后继块末指令 opcode（I.4 白名
+                    # 名单），仅收窄 guard_like 分支；非 guard_like 路径与其
+                    # 余分类判据不变。
+                    # [C1] 只读后继块末指令；[C2] 不窥视区域树；[C3] 守卫
+                    # 链失败边协议与 case 位置/嵌套深度无关（嵌套无感）。
                     for s in current.successors:
                         if s in visited:
                             continue
                         if s.start_offset == jump_target_offset:
                             continue
                         if cur_jt_offset is not None and s.start_offset == cur_jt_offset:
+                            continue
+                        _s_last = s.get_last_instruction()
+                        if _s_last is None or _s_last.opname not in self.COND_JUMP_OPS:
                             continue
                         meaningful_s = [i for i in s.instructions if i.opname not in ('RESUME','NOP','CACHE','PUSH_NULL')]
                         if meaningful_s and any(i.opname in CASE_HEADER_OPS for i in meaningful_s):
@@ -402,6 +421,34 @@ class PatternParser:
                     _pattern_anchor_found = True
                     break
         if not _pattern_anchor_found:
+            # 区域归约算法：[B103 t2 通配丢弃锚] (b') 前导 ``LOAD subj;
+            # POP_TOP`` 通配丢弃——``case _ if <guard>:`` 融合头的通配模式
+            # 检查协议（被匹配值直接 POP_TOP 丢弃：无捕获 STORE、无 COPY
+            # 副本、无 MATCH_* 结构指令，(a)(b) 锚均不可及），丢弃之后、
+            # 头块终结跳转之前是守卫材料。链中位变体：前导裸 POP_TOP 直
+            # 接消费栈上被匹配值副本，后跟 LOAD_VAR（守卫操作数装载）。
+            # 判据与 _extract_case_pattern 的通配丢弃判定（wildcard_
+            # discard，含两臂）同源（块内 opcode 序，I.4 白名单）；字面量
+            # 头前导 POP_TOP 后跟 COPY/LOAD_CONST（模式比较材料），且
+            # POP_TOP 后出现 COPY = 内层 match 主体装载（外层 ``case _:``
+            # 融合头，e09_nested_match 形态），判据互斥不误触，行为逐位
+            # 不变。[C1] 只读指令序列；[C2] 不窥视区域
+            # 树；[C3] 通配丢弃是 CPython `case _` 栈协议，与 case 链位置/
+            # 嵌套深度无关（嵌套无感）。
+            for i in range(min(first_block_instr_count - 1, len(all_instrs) - 1)):
+                if (all_instrs[i].opname in self.LOAD_VAR_OPS
+                        and all_instrs[i + 1].opname == 'POP_TOP'):
+                    search_start = i + 2
+                    _pattern_anchor_found = True
+                    break
+                if (all_instrs[i].opname == 'POP_TOP'
+                        and all_instrs[i + 1].opname in self.LOAD_VAR_OPS
+                        and self._head_pop_top_then_guard_load(
+                            pattern_blocks[0] if pattern_blocks else None)):
+                    search_start = i + 1
+                    _pattern_anchor_found = True
+                    break
+        if not _pattern_anchor_found:
             # 区域归约算法：[B81 真 guard 锚点] (a)STORE/(b)模式终结锚均不存在
             # 时，头块是纯字面量/单例子检查（无捕获绑定、无 COPY 副本协议、无
             # MATCH_* 结构指令），其唯一条件跳转即模式检查自身的失败边（基本
@@ -412,9 +459,8 @@ class PatternParser:
             # 块指令数而被同块抑制吞掉，真守卫整体丢失——B81 破口机理）。
             # 判据 = 头块内条件跳转位置 + 无 STORE/无模式终结锚（同层 opcode
             # 事实）；[C1] 只读指令序列；[C2] 不窥视区域树；[C3] 失败边协议
-            # 与 case 位置/嵌套深度无关。通配+守卫融合头（POP_TOP+守卫同块，
-            # 守卫在终结跳转之前）不受本锚影响——其守卫材料同样位于终结跳转
-            # 之前，锚定后无可提取段，与旧行为（同块抑制→None）结果一致。
+            # 与 case 位置/嵌套深度无关。通配+守卫融合头已由 (b') 通配丢弃
+            # 锚先行接管（守卫在丢弃之后、终结跳转之前）。
             for i in range(min(first_block_instr_count, len(all_instrs))):
                 if all_instrs[i].opname in self.COND_JUMP_OPS:
                     search_start = i + 1
@@ -1160,6 +1206,159 @@ class PatternParser:
 
         return False
 
+    def _pure_jf_argval(self, blk):
+        """[B103 or 臂链材料] 纯 JUMP_FORWARD 连接块 → 其目标偏移；否则 None。
+
+        判据 = 块内非噪声指令恰为单条 JUMP_FORWARD（同层 opcode 事实，
+        与区域层 _mr_resolve_or_arm_jump 的 _pure_jump_target 判据同源——
+        同判据双实现同步）。[C1] 只读块指令；[C2] 不窥视区域；[C3] 连接
+        块是 CPython or 臂成功边协议，与 case 位置/嵌套深度无关。"""
+        if blk is None:
+            return None
+        _mean = [i for i in blk.instructions
+                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        if len(_mean) == 1 and _mean[0].opname == 'JUMP_FORWARD':
+            return _mean[0].argval
+        return None
+
+    def _collect_or_arm_chain_instrs(self, case_block: BasicBlock) -> List[Instruction]:
+        """_collect_or_arm_chain_instrs — 字面量 or 模式后续臂块指令收集
+
+        ①算法依据：No More Gotos「多分支选择结构」+ I.1 原则4（case 头
+        栈协议）。CPython 3.11 字面量 or 模式（``case 1 | 2 | 3 [if g]:``）
+        编译协议（同层 opcode/跳转目标事实，与区域层 _mr_resolve_or_arm
+        _jump 判据同源）：臂_i = ``COPY; LOAD_CONST c_i; COMPARE_OP;
+        POP_JUMP_FORWARD_IF_FALSE → 臂_{i+1}``，每臂成功边 = 纯
+        JUMP_FORWARD 连接块 → 公共成功块 S；末臂失败边 → 清理桩（POP_TOP
+        +JUMP）→ 下一 case。臂成功边公共汇合（同汇 S）是 or 协议本体，
+        也是「后续臂」与「下一 case 头」的区分判据——下一 case 头虽有同
+        形比较指令，但其成功边汇合到**它自己的**体块 S' ≠ S。
+        ②归约顺序：自底向上——臂块是模式材料，指令按链序追加到头块
+        指令之后，由 _extract_or_or_literal_pattern 在平铺序列上提取
+        MatchOr；不重排块。
+        ③唯一归属判定：命中判据 = 头块以 IF_FALSE 族条件跳转终结 ∧ 头块
+        ft 后继为纯 JUMP 连接块（目标偏移 S）∧ 游标臂以 IF_FALSE 终结 ∧
+        游标 ft 连接块同汇 S；逐臂递推至清理桩/异形块终止。臂块指令归
+        pattern AST（MatchOr 交替），不归 case 体；无命中返回空表，调用
+        方行为逐位不变（单字面量 case 的成功边直落体/守卫块，非纯连接
+        块；or 守卫短路的 IF_TRUE 极性不以 IF_FALSE 终结，均不触发）。
+        ④嵌套处理：嵌套 or 模式（match 臂内再嵌 match）由识别层二次扫
+        描独立归约，本方法只按同汇协议收集本 case 的直接臂链；终止性由
+        _seen 有限集合保证（无深度/计数上限）。
+        ⑤入口引用语义：不直接产出 AST；返回臂指令序列供
+        _extract_or_or_literal_pattern 合成 MatchOr pattern dict（发射层
+        以 ``case 1 | 2:`` 再生）。
+        ⑥反编译流程：_extract_case_pattern 字面量分派位（is_literal_
+        match）调用本方法扩展材料；识别层（_mr_collect_case_body /
+        _scan_literal_match_subjects）已按同判据将臂块归 match 区域。
+        C 条款：[C1] 只读块指令 opname/argval 与后继集合（成功边解析经
+        exception_successors 排除异常表隐式边——异常边是宿主区域结构边，
+        不是 or 臂控制流边，I.4 白名单）；[C2] 不窥视区域树；[C3] or 臂
+        公共汇合协议与 case 位置/嵌套深度无关（嵌套无感）。
+        """
+        last = case_block.get_last_instruction()
+        if last is None or last.opname not in ('POP_JUMP_FORWARD_IF_FALSE',
+                                              'POP_JUMP_BACKWARD_IF_FALSE'):
+            return []
+        _exc = set(getattr(case_block, 'exception_successors', None) or ())
+        _succs = [s for s in case_block.successors if s not in _exc]
+        jt = next((s for s in _succs if s.start_offset == last.argval), None)
+        ft = next((s for s in sorted(_succs, key=lambda b: b.start_offset)
+                   if s is not jt), None)
+        s_off = self._pure_jf_argval(ft)
+        if jt is None or ft is None or s_off is None:
+            return []
+        arm_instrs = []
+        _seen = {case_block}
+        cursor = jt
+        while cursor is not None and cursor not in _seen:
+            _seen.add(cursor)
+            cj = cursor.get_last_instruction()
+            if cj is None or cj.opname not in ('POP_JUMP_FORWARD_IF_FALSE',
+                                               'POP_JUMP_BACKWARD_IF_FALSE'):
+                break
+            _cexc = set(getattr(cursor, 'exception_successors', None) or ())
+            _csuccs = [s for s in cursor.successors if s not in _cexc]
+            cjt = next((s for s in _csuccs if s.start_offset == cj.argval), None)
+            cft = next((s for s in sorted(_csuccs, key=lambda b: b.start_offset)
+                        if s is not cjt), None)
+            if self._pure_jf_argval(cft) != s_off:
+                break
+            arm_instrs.extend(
+                i for i in cursor.instructions
+                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'))
+            cursor = cjt
+        return arm_instrs
+
+    def _head_pop_top_then_guard_load(self, case_block):
+        """_head_pop_top_then_guard_load — 链中位通配丢弃+守卫操作数判定
+
+        ①算法依据：No More Gotos「多分支选择结构」+ I.1 原则4（case 头栈
+        协议）。``case _ if <guard>:`` 在链中位（非首 case）的融合头：被
+        匹配值副本由前导裸 POP_TOP 直接消费（无主体重 LOAD、无 COPY——
+        首 case 的 ``LOAD subj; POP_TOP`` 形态退化），其后紧随 LOAD_VAR =
+        守卫操作数装载，守卫材料位于丢弃之后、头块终结跳转之前。
+        ②归约顺序：自底向上——本判定只界定模式段/守卫段边界，不重排块。
+        ③唯一归属判定：raw 序判据双守卫（I.4 白名单：块内指令序）——
+        (i) POP_TOP 与 LOAD_VAR 在 raw 序中紧邻（仅容 RESUME/CACHE/
+        PUSH_NULL 噪音）：其间出现 **NOP = 编译器显式 case 体标记**
+        （B13 协议，_mr_block_has_explicit_case_marker 同源），其后的
+        LOAD_VAR 是 case 体首语句装载（如内层 match 主体，e09_nested_
+        match 外层 ``case _:`` 融合头形态），不是守卫材料；
+        (ii) POP_TOP 之后出现 COPY = 内层 match 主体装载 + 比较副本协议
+        （外层 ``case _:`` 融合头 + 内层 subject+case1 头同块），不是
+        守卫材料。守卫段自身无 COPY（COPY 是被匹配值比较协议，守卫操作
+        数直接 LOAD）。字面量头的比较左操作数是栈上主体（前导 POP_TOP
+        后跟 COPY/LOAD_CONST），与守卫操作数装载判据互斥。
+        ④嵌套处理：嵌套 match 由识别层二次扫描独立归约；本判定以 NOP
+        标记/COPY 协议区分融合头内材料的归属（外层通配 vs 内层主体），
+        不跨层读取。
+        ⑤入口引用语义：不直接产出 AST；供 _extract_case_pattern 的
+        wildcard_discard 判定与 _extract_case_guard_from_blocks 的 (b')
+        锚判定材料边界。
+        ⑥反编译流程：字面量模式分派位（is_literal_match）与守卫提取
+        锚点序 (b') 调用。
+        C 条款：[C1] 只读 case_block 指令序列（L(A) 局部）；[C2] 不窥视
+        区域树；[C3] NOP 标记/COPY 协议/通配丢弃均为编译器显式结构协议，
+        与 case 链位置/嵌套深度无关（嵌套无感）。
+        """
+        if case_block is None:
+            return False
+        _noise = ('RESUME', 'CACHE', 'PUSH_NULL')
+        raw = case_block.instructions
+        # ③补判据（前驱集合事实）：链中位守卫——本块的裸 POP_TOP 丢弃只在
+        # 链中位出现（前 case 的 COPY 副本清理 + 通配消费，前驱以条件跳转
+        # 失败边指入本块）；首 case 的通配+守卫头带主体装载（pair1 形态），
+        # with 宿主首 case 头的前导 POP_TOP 是 with ``as``-less 弃值（前驱
+        # BEFORE_WITH 终结），均不触发（w_match_ret ``case 1:`` 字面量头
+        # 误吞回归防护）。
+        _mid_chain = any(
+            (p.get_last_instruction() is not None
+             and p.get_last_instruction().opname in self.COND_JUMP_OPS
+             and p.get_last_instruction().argval == case_block.start_offset)
+            for p in case_block.predecessors)
+        if not _mid_chain:
+            return False
+        idx = 0
+        saw_pop = False
+        while idx < len(raw):
+            if raw[idx].opname in _noise:
+                idx += 1
+                continue
+            if raw[idx].opname == 'POP_TOP':
+                # POP_TOP run（B14 前序 case 副本清理桩 + 通配丢弃可融合）
+                saw_pop = True
+                idx += 1
+                continue
+            break
+        if not saw_pop or idx >= len(raw):
+            return False
+        if raw[idx].opname not in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+            return False
+        if any(x.opname == 'COPY' for x in raw[idx + 1:]):
+            return False
+        return True
+
     def _extract_case_pattern(self, case_block: BasicBlock) -> Dict[str, Any]:
         """提取case的pattern并构建AST
 
@@ -1314,11 +1513,40 @@ class PatternParser:
                             and instrs[_i + 1].opname == 'POP_TOP'):
                         _has_wildcard_discard = True
                         break
+                    # [B103 t2] 链中位通配丢弃变体：前导 POP_TOP 直接消费栈上
+                    # 被匹配值副本（首个 case 的 ``LOAD subj; POP_TOP`` 形态在
+                    # 链中位退化为裸 POP_TOP），丢弃后紧跟 LOAD_VAR = 守卫操
+                    # 作数装载（守卫材料，非模式比较）。raw NOP/COPY 双守卫
+                    # （_head_pop_top_then_guard_load 判据同源）：NOP = 编译器
+                    # 显式 case 体标记（其后的 LOAD_VAR 是体首语句/内层 match
+                    # 主体装载）；COPY = 内层 match 主体比较协议——均非守卫
+                    # 材料，不触发（e09_nested_match 融合头回归防护）。
+                    # 判据 = raw 指令序（I.4 白名单）；[C1] 只读指令序列；
+                    # [C3] 通配丢弃/NOP 标记/COPY 协议与 case 链位置无关。
+                    if (instrs[_i].opname == 'POP_TOP'
+                            and _i + 1 < literal_compare_pos
+                            and instrs[_i + 1].opname in self.LOAD_VAR_OPS
+                            and self._head_pop_top_then_guard_load(case_block)):
+                        _has_wildcard_discard = True
+                        break
                 if _has_wildcard_discard:
                     is_literal_match = False
 
         if is_literal_match:
-            result = self._extract_or_or_literal_pattern(instrs)
+            # 区域归约算法：[B103 or 臂链材料扩展]。字面量 or 模式
+            # （``case 3 | 4:`` / ``case 1 | 2 | 3 if g:``）的后续臂块
+            # （识别层已按同汇协议归 match 区域）不在头块内——原实现只
+            # 用头块局部指令提取，MatchValue 只含首个交替，其余交替丢失
+            # （``case 3 | 4:`` 降级 ``case 3:``，B103 破口）。按同汇协议
+            # （_collect_or_arm_chain_instrs，与区域层 _mr_resolve_or_
+            # arm_jump 判据同源）收集臂材料扩展指令序列，
+            # _extract_or_or_literal_pattern 在平铺序列上合成 MatchOr。
+            # 无臂链（单字面量 case）返回空表，行为逐位不变。
+            # [C1] 只读块指令/后继/跳转目标；[C2] 不窥视区域树；
+            # [C3] or 臂公共汇合协议与 case 位置/嵌套深度无关。
+            _or_arm_instrs = self._collect_or_arm_chain_instrs(case_block)
+            _lit_instrs = instrs + _or_arm_instrs if _or_arm_instrs else instrs
+            result = self._extract_or_or_literal_pattern(_lit_instrs)
             if result.get('type') in ('MatchValue', 'MatchSingleton', 'MatchOr'):
                 as_name = self._find_as_binding(case_block)
                 if as_name:

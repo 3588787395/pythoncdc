@@ -404,18 +404,15 @@
  },
  {
   "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc",
-  "verify_rc": 1,
-  "status": "failure",
-  "units_success": 3,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
   "units_total": 4,
-  "failures": [
-   "***<module>.n_true_guard: Failure: Different control flow"
-  ],
+  "failures": [],
   "tail": [
-   "  ***<module>.n_true_guard: Failure: Different control flow",
    "[single] F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc",
    "[single] ���� F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_faceOK.py",
-   "[single] status=failure units=3/4 success_rate=75.00%"
+   "[single] status=success units=4/4 success_rate=100.00%"
   ]
  },
  {

@@ -266,18 +266,15 @@
  },
  {
   "pyc": "test_repros/round2/m05_module_match.pyc",
-  "verify_rc": 1,
-  "status": "failure",
-  "units_success": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 1,
   "units_total": 1,
-  "failures": [
-   "***<module>: Failure: Different control flow"
-  ],
+  "failures": [],
   "tail": [
-   "  ***<module>: Failure: Different control flow",
    "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m05_module_match.pyc",
    "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/m05_module_matchOK.py",
-   "[single] status=failure units=0/1 success_rate=0.00%"
+   "[single] status=success units=1/1 success_rate=100.00%"
   ]
  },
  {

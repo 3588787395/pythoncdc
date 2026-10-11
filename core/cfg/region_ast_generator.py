@@ -35319,13 +35319,22 @@ AST 映射规则:
                         if isinstance(_r, (BoolOpRegion, TernaryRegion)) and _r.entry == block and _r is not region:
                             nested_region = _r
                             break
-                if nested_region and nested_region != region and nested_region is not region.parent and isinstance(nested_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, AssertRegion, BoolOpRegion, TernaryRegion)):
+                # [B103 with 宿主 match 消费缺口] MatchRegion 加入本消费门
+                # （与 _generate_try 的同位消费门 31260 同步——match in try 已
+                # 消费、match in with 漏网）：with 体块走查遇到嵌套 MatchRegion
+                # 时不消费 ⇒ match 入口块落入裸语句发射、其余链块被逐块散射
+                # （臂块成幻影 if、体块成顺序语句），match 整体被顶层扫描再
+                # 发射一份（e06_or_guard 破口）。判据 = 区域类型 + 入口引用
+                # （嵌套即抽象节点，原则 3）：nested_region.entry == block 或
+                # block ∈ nested_region.blocks ⇒ 归 _generate_region 整树消费，
+                # 每块唯一归属（原则 2）。
+                if nested_region and nested_region != region and nested_region is not region.parent and isinstance(nested_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, BoolOpRegion, TernaryRegion)):
                     if isinstance(nested_region, LoopRegion) and isinstance(region, WithRegion) and region.is_async and nested_region.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'NOP') for i in nested_region.entry.instructions):
                         continue
                     _direct_child = nested_region
                     while _direct_child.parent is not None and _direct_child.parent is not region and _direct_child.parent is not region.parent:
                         _direct_child = _direct_child.parent
-                    if _direct_child is not nested_region and isinstance(_direct_child, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, AssertRegion, BoolOpRegion, TernaryRegion)):
+                    if _direct_child is not nested_region and isinstance(_direct_child, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, BoolOpRegion, TernaryRegion)):
                         if id(_direct_child) in self._generated_regions:
                             self.generated_blocks.add(block)
                             continue
@@ -35340,7 +35349,12 @@ AST 映射规则:
                                     if _cr2.entry == block or (hasattr(_cr2, 'condition_block') and _cr2.condition_block == block):
                                         nested_region = _cr2
                                         break
-                if nested_region and nested_region != region and nested_region is not region.parent and isinstance(nested_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, AssertRegion, BoolOpRegion, TernaryRegion)):
+                # [B103 with 宿主 match 消费缺口] 同上门（entry 命中路径）：
+                # 门类型集补 MatchRegion，nested_region.entry == block 时经
+                # _generate_region → _generate_match 整树生成（嵌套即抽象
+                # 节点），链块经下方 for b in nested_region.blocks 登记
+                # generated 防逐块散射。
+                if nested_region and nested_region != region and nested_region is not region.parent and isinstance(nested_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, BoolOpRegion, TernaryRegion)):
                     if nested_region.entry == block or (hasattr(nested_region, 'condition_block') and nested_region.condition_block == block):
                         # [修复] TryExceptRegion在WithRegion内时，else_blocks可能包含with清理代码
                         _try_else_fixup = None
@@ -37531,6 +37545,22 @@ AST 映射规则:
                     elif block in nested_region.blocks:
                         if (isinstance(nested_region, TryExceptRegion) and
                             block in set(nested_region.try_blocks)):
+                            stmts = self._generate_block_statements(block)
+                            body_stmts.extend(stmts)
+                        # [B103 with 宿主 match 体块消费缺口] 与上方 Try 分支
+                        # 同判据同构（with 先于 match 识别 ⇒ with 体块归
+                        # WithRegion 首Claim，match 体块 block_to_region 指向
+                        # 祖先 WithRegion）：case 体块 ∈ 祖先 with_blocks 时按
+                        # 普通块生成语句归本 case 体发射（每块唯一归属的归属
+                        # 主 = 正在生成的 MatchRegion，WithRegion 仅是块集
+                        # 首登记者——嵌套即抽象节点，祖先不吞子区域成员的
+                        # 语句语义）。原实现 With 分支缺失，体块被无语句标记
+                        # generated ⇒ case 体退化为 pass（e06_or_guard 破口）。
+                        # [C1] 只读区域成员关系；[C2] 祖先区域仅经 entry 被
+                        # 引用；[C3] 首Claim 归属与语义归属的分离 = 识别顺序
+                        # 协议，嵌套无感（try 宿主同形态自证）。
+                        elif (isinstance(nested_region, WithRegion)
+                              and block in (getattr(nested_region, 'with_blocks', None) or [])):
                             stmts = self._generate_block_statements(block)
                             body_stmts.extend(stmts)
                         elif isinstance(nested_region, LoopRegion):
