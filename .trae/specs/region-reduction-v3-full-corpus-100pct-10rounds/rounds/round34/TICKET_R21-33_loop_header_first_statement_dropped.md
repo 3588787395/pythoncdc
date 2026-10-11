@@ -168,3 +168,29 @@ Second, independent caution, measured: even a perfect fix for hunk 2/3 leaves hu
 about `−9/1/0` and **still fails**. Neither half alone flips `_trade_status_handle`; the pair is the
 acceptance bar, and the same is true of `_process_order` / `_process_cancel_order` (their measured worsening
 `−465→−471`, `−293→−299` is the same half-moved artifact and should be re-measured with the transitive rule).
+
+## 7. Variant B measured (17:33) — the §6 half-move explanation is FALSIFIED; membership axis closed
+
+Re-ran the guard with the **transitive** clause implemented (`e6f1c1de71615d5c` in the mirror: move the
+back-edge-to-own-header else block **and** any else block whose terminator jumps forward into one of them,
+iterated twice, so `@720 -> @830` moved together). Result is **byte-for-byte the same verdict as the partial
+move**:
+
+| unit | sealed | A (direct only) | B (transitive) |
+|---|---|---|---|
+| `_trade_status_handle` | `−3 / 3 / 2` | `−7 / 2 / 3` | `−7 / 2 / 3` |
+| `_process_order` | `−465 / 4 / 1` | `−471 / 3 / 2` | `−471 / 3 / 2` |
+| `_process_cancel_order` | `−293 / 3 / 0` | `−299 / 3 / 1` | `−299 / 3 / 1` |
+| `_sync_worker` / `etf_purchase_redemption` / `ipo_stocks_order` | unchanged | unchanged | unchanged |
+
+Broker held 123/128 in both arms; no unit flipped and none regressed. Because identical numbers come out of
+a partial and a complete re-parenting, the defect is **not** which list the block belongs to: the current
+`else_blocks` declaration is compensating for something in the generator's loop rendering, and moving the
+blocks makes the rendered text worse either way. **Do not spend another round on
+`region_analyzer.py`'s `else_blocks` for this unit** — §6's "re-run the transitive move" duty is now
+discharged, and the open lever is hunk 1 (§1-§2, the dropped header-prefix statement in
+`_loop_process_header_instructions`) plus a renderer-side study of how these three units' bodies reach the
+`time.sleep(0.5)` tail.
+
+Mirror `D:/Temp/r30chk` restored to `35e227ac3e7b25af` and re-hashed byte-identical to the repo file;
+the repo analyzer was never edited, and neither prototype went near `core/`.
