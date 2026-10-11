@@ -1,0 +1,1 @@
+M2 measured by the orchestrator in a re-sealed mirror: clock_worker delta -113 -> -122, hunks 7, landings 18, judge 12/13; quote and _sync_worker byte-identical. Declared by its author as MEASURED CO-REQUISITE PARTIAL and independently confirmed to close nothing. NOT installed.
