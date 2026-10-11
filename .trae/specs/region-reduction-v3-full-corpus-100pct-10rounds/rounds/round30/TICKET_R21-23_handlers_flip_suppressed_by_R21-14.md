@@ -66,3 +66,16 @@ byte-level CRLF-preserving patches; `python -X utf8`, never `PYTHONIOENCODING`; 
 scratch under `D:/Temp/r31/`; deliver a whole file plus `FIX_R21-23.md` (0 as-received, 1 mirror + sealed
 hash proof, 2 baseline, 3 取证 with the region census under both builds, 4 criterion, 5 post-patch
 readings + census, 6 negative evidence, 7 declaration).
+
+## ADDENDUM from the orchestrator, 00:21 (supersedes the shape quoted in §0)
+
+Re-measured from the gate-30 sealed products (`rounds/round31/BASELINE_ROUND31.md`): `_target` is now
+**`len orig=199 prod=195 delta=-4 hunks=1 landings=4`**, not the `delta=-2 hunks=1 landings=3` that §0
+carries from gate 29. The file's count stayed 29/30 while the unit moved two instructions FURTHER from the
+original and gained a fourth mis-landed jump — a shift the gate cannot see because it reports counts only.
+
+Two consequences: (1) r44a's banked criterion was tuned against the `−2/1/3` shape, so expect its
+preconditions to sit further from matching now; the suppression itself is still exactly reproducible,
+because the `p3644` build is precisely gate-30 bytes plus D. (2) Score your narrowing on `_target`'s
+**delta**, not only on pass/fail — a change that keeps 29/30 while restoring `delta=-2` is real progress
+that the count would hide. `risk_calculation 43/43` and `klinedata 64/64` may not be spent to buy this one.
