@@ -1369,3 +1369,44 @@ on content-anchored asserts, `py_compile OK`, exactly 1 product moved corpus-wid
 - Residual now **3 files / 8 units** (`rounds/round33/RESIDUAL_ROUND33.md`, `UNREGISTERED 行数=0`):
   broker 6, clock_worker 1, quote 1.
 - Next gate label **34** against `rounds/round33/after`.
+
+## 38. Gate 34 certified and landed (2026-10-11, orchestrator-built solo; v1 rejected on measurement)
+
+`core/cfg/region_ast_generator.py` `fcf2b870f0fb71b3` -> `065e4d77243190dc` (R21-28: one 19-line hunk at
+13252..13270 inside `_is_loop_tail_convergence_block`, built by `rounds/round34/build_cand_r34b.py` with
+content-anchored asserts, `py_compile OK`; **3 products moved corpus-wide**: broker +1 (the flip),
+`fly/common/flytoolsOK.py` +1 (qualifying site `process_filter @1236`, unit already Equal), and
+`trade_info_utilsOK.py` +2/-1 (`get_trade_list` gained a second, already-unreachable `continue` plus an
+`elif` re-rendered as `if`; units held 41/41 — registered as emitted-text redundancy, not as clean).
+
+- **Units 6609 -> 6610 /6617 (99.8942%), files 399 -> 399**, `文件级回退=0 UNIT_REGRESSIONS=0
+  新增失败单元=0 翻正单元=1`, regen `ok=402 bad=0` (259 s), quotation 153/153, small34 1561/31 (moved by
+  exactly the flip count), ruler selfcheck OK, pytest `2 failed, 282 passed, 2 xpassed`.
+- Flip: `broker 122 -> 123/128` — `ipo_stocks_order` was `delta=-1 / 1 hunk / 1 landing`, one missing
+  `JUMP_BACKWARD`. The dropped statement is the **arm-tail `continue`** of
+  `if stock_type == 'Y': if submarket_type in ('4', []): error(...); continue`, proven a real source
+  statement by the asymmetric exits of the nested condition (`@3512` leaves the chain to `@3640`, `@3524`
+  lands on the back-edge `@3572`) — no `and`-chain compiles that way. Inserting that one line into a copy of
+  the sealed product measured `0/0/0 judge_diff=False` before any generator edit.
+- Root cause of the swallow: P1-3b suppresses `Continue` for any back-edge block with >=2 in-body
+  predecessors, and the call site's own comment (`:26886-26887`) asserted "a real explicit continue block has
+  only the single FOR_ITER predecessor". False: the victim IS an explicit continue and has two predecessors
+  (`@3514` the nested if's false edge, `@3526` its then fall-through), because the continue block doubles as
+  the nested IfRegion's merge.
+- **v1 was built, panelled and rejected**: interior-only conjunct `724f1843f9522fec` gave broker +1 but
+  `quote 91->90` and `real_quote 45->44` (net -1) — both are blocks that CARRY STATEMENTS before their
+  back-edge (`quote @1818` = `index.append(temp_time)` + jump), and the added `continue` makes the following
+  instructions unreachable, so CPython deletes them (`518 -> 504` compiled). Gate-31's over-fire mode, caught
+  by the 20-file panel before the gate; banked as `CANDIDATE_r34_v1_interior_only_FALSIFIED.py`.
+- v2 criterion denies suppression only when the block has none of the three facts that let recompile
+  regenerate the jump: not this LoopRegion's declared `back_edge_block`/`back_edge_blocks`, not the body's
+  terminal block in offset order, and no statement payload (`EXTENDED_ARG` is an operand-width prefix, so it
+  does not count). All three read only the block's own instructions and this loop's own fields.
+- Census (read-only, whole verification face): `543 hits -> 479 terminal -> 64 interior -> 41 interior
+  payload-free -> 24 qualifying`; controls: victim `broker @3572` in, `quote @1818` / `real_quote @1464` /
+  `handlers._target @200` out. Panel: only broker gained, `trade_info_utils` bytes moved while holding 41/41
+  (six qualifying blocks there compile to the same stream) — registered, not smoothed over.
+- Residual now **3 files / 7 units** (`rounds/round34/RESIDUAL_ROUND34.md`, `UNREGISTERED 行数=0`):
+  broker 5 (`_process_order`, `_process_cancel_order`, `_trade_status_handle`, `_sync_worker`,
+  `etf_purchase_redemption`), clock_worker 1, quote 1.
+- Next gate label **35** against `rounds/round34/after`.

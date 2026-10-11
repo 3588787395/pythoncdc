@@ -13250,6 +13250,25 @@ AST 映射规则:
         _lc_body = set(getattr(self._current_loop, 'body_blocks', None) or []) | {_lc_hdr}
         if not all(p in _lc_body for p in _lc_preds):
             return False
+        # [R21-28] 回边块的收尾资格：本 LoopRegion 自己声明的回边块、或体内最高偏移的
+        # 收尾块、或本身带语句载荷（语句照常发射，回边由循环结构重编译再生）时才抑制
+        # 显式 Continue。三者皆无 => 本块是源码 continue 的专属块，抑制会少发一条
+        # JUMP_BACKWARD（ipo_stocks_order @3572 = [EXTENDED_ARG, JUMP_BACKWARD]，非声明
+        # 回边、体内到 @6194 仍有语句；反例 quote.one_prod_to_dataframe @1818 带语句载荷，
+        # 补发 continue 会把它之后 14 条可达语句变成死码，实测 91/92->90/92）。
+        _lc_payload = [i for i in block.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG',
+                                           'PUSH_NULL', 'POP_TOP', 'JUMP_BACKWARD',
+                                           'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_FORWARD',
+                                           'JUMP_ABSOLUTE')]
+        _lc_declared = getattr(self._current_loop, 'back_edge_block', None)
+        _lc_declared_set = set(getattr(self._current_loop, 'back_edge_blocks', None) or set())
+        if _lc_declared is not None:
+            _lc_declared_set.add(_lc_declared)
+        if (not _lc_payload
+                and block not in _lc_declared_set
+                and block.start_offset != max(_lc_b.start_offset for _lc_b in _lc_body)):
+            return False
         return True
 
     def _block_is_pure_continue(self, block: BasicBlock) -> bool:
