@@ -45042,6 +45042,59 @@ AST 映射规则:
                         if (_r65_pushy and self._ternary_pending_callee(
                                 cond_block) is not None):
                             _r65_callee_skip = _r65_e
+                # [R21-27] 前缀窗口止于最后一条语句边界。cond_block 里 f-string 之前的窗口可能
+                # 残留整条前序语句（实测被拒段 @[1968..2312] n=54 含 STORE_*），R66-d2 分段归约
+                # 正确地拒绝它，调用方随即回退 fstring_parts = _stack，把每条 LOAD_* 伪造成一个
+                # JoinedStr 片段，渲染出 'list_info00orderstrresultentrust_no...' 的粘连字面量。
+                # 边界判据只读本块指令流：STORE_*/POP_TOP/DELETE_*/JUMP_*/RETURN_VALUE/
+                # RAISE_VARARGS 之后不可能再接本 f-string 的字面片段。
+                if cond_val_start is not None and cond_val_start > 0:
+                    for _r27_i in range(cond_val_start - 1, _r65_callee_skip - 1, -1):
+                        _r27_op = cond_block_instrs[_r27_i].opname
+                        if (_r27_op.startswith('STORE_')
+                                or _r27_op in ('POP_TOP', 'RETURN_VALUE',
+                                                'RAISE_VARARGS')
+                                or _r27_op.startswith('DELETE_')
+                                or _r27_op.startswith('JUMP_')):
+                            _r65_callee_skip = _r27_i + 1
+                            break
+                        if (_r27_op.startswith('STORE_')
+                                or _r27_op in ('POP_TOP', 'RETURN_VALUE',
+                                                'RAISE_VARARGS')
+                                or _r27_op.startswith('DELETE_')
+                                or _r27_op.startswith('JUMP_')):
+                            _r65_callee_skip = _r27_i + 1
+                            break
+                # [R21-27c] 窗口开头连续的「本块内未消费的 callee 压栈」组全部剔除：
+                # [R65-d3 C1a] 只跳一组，x.m(_(f'..')) 压了两组（strategy_log.info 与 gettext 的 _），
+                # 剩下那组被逐条 LOAD_* 扫描渲染成假字面量（实测 f"strategy_log_生成订单…"）。
+                # 组形态沿用 C1a 的同一判据：[PUSH_NULL]? LOAD_{GLOBAL,NAME,FAST,DEREF}
+                # (LOAD_ATTR|LOAD_METHOD)*；遇到不可能开启该组的指令（LOAD_CONST/FORMAT_VALUE/
+                # BUILD_*/比较/算术等）即停止，因此真正的字面片段永不被吞。
+                if cond_val_start is not None and cond_val_start > 0:
+                    _r27c_i = _r65_callee_skip
+                    while _r27c_i < cond_val_start:
+                        _r27c_a = cond_block_instrs[_r27c_i]
+                        if _r27c_a.opname == 'PUSH_NULL':
+                            _r27c_i += 1
+                            if _r27c_i >= cond_val_start:
+                                break
+                            _r27c_a = cond_block_instrs[_r27c_i]
+                        if _r27c_a.opname not in ('LOAD_GLOBAL', 'LOAD_NAME',
+                                                  'LOAD_FAST', 'LOAD_DEREF'):
+                            break
+                        _r27c_null = (isinstance(_r27c_a.arg, int)
+                                      and bool(_r27c_a.arg & 1))
+                        _r27c_j = _r27c_i + 1
+                        _r27c_attrs = 0
+                        while _r27c_j < cond_val_start and cond_block_instrs[
+                                _r27c_j].opname in ('LOAD_ATTR', 'LOAD_METHOD'):
+                            _r27c_attrs += 1
+                            _r27c_j += 1
+                        if not _r27c_null and _r27c_attrs == 0:
+                            break
+                        _r65_callee_skip = _r27c_j
+                        _r27c_i = _r27c_j
                 fstring_parts = []
                 if cond_val_start is not None and cond_val_start > 0:
                     _prefix_instrs = cond_block_instrs[
@@ -45116,6 +45169,15 @@ AST 映射规则:
                                     if _p3_te:
                                         _p3_tail.append(_p3_te)
                             fstring_parts = _p3_parts + _p3_tail
+                # [R21-27d] 前缀片段只保留两类：字面 Constant、或已被某条 FORMAT_VALUE 消费的
+                # FormattedValue。逐条 LOAD_* 回退会把三元条件自身的操作数名（实测 ' 数量：'
+                # 之后多出的 'order'，即未被消费的 LOAD_FAST order）压进 values，渲染端把它折
+                # 进字面量。依「每块唯一归属」，没有被本串 FORMAT_VALUE 消费的裸 Name/str/Call
+                # 片段属于后续条件表达式，不属于这个 JoinedStr。
+                fstring_parts = [_r27d_p for _r27d_p in fstring_parts
+                                 if isinstance(_r27d_p, dict)
+                                 and _r27d_p.get('type') in ('Constant',
+                                                              'FormattedValue')]
                 # ternary是最后一个FormattedValue（merge_block的FORMAT_VALUE格式化它）
                 _r65_chain_part = {
                     'type': 'FormattedValue',
@@ -50714,6 +50776,56 @@ AST 映射规则:
                     return _expr
         return None
 
+    def _ternary_pending_callee_chain(self, cond_block):
+        """[R21-27b] cond_block 前缀里所有「本块内未被 CALL 消费」的被调对象压栈，按出现顺序返回。
+
+        识别条件与 _ternary_pending_callee 同一条栈语义判据，只是不再只看第一条：顺序扫描前缀，
+        [PUSH_NULL] 或 LOAD_GLOBAL 的 NULL 低位标记开头的 callee 压栈入 pending，遇 CALL 弹出最近
+        一个（说明该 callee 在本块内被消费，如 {abs(amount)} 的 abs），扫描结束后仍留在栈上的即
+        跨块待定 callee 链（外→内）。不引入函数名/文件名/偏移/阈值判据，不跨区域。
+        归约方式：每个待定组归约为 Name 或其上的 Attribute 链，与既有单 callee 分支同形。
+        AST 映射：嵌套 Call 的每一层 func；链长为 1 时结果与 _ternary_pending_callee 一致。
+        """
+        if cond_block is None:
+            return []
+        _cc_instrs = [i for i in cond_block.instructions
+                      if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        _cc_end = len(_cc_instrs)
+        _cc_last = cond_block.get_last_instruction()
+        if _cc_last and _cc_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                            | SHORT_CIRCUIT_JUMP_OPS):
+            for _cc_i in range(len(_cc_instrs) - 1, -1, -1):
+                if _cc_instrs[_cc_i] is _cc_last:
+                    _cc_end = _cc_i
+                    break
+        _cc_prefix = _cc_instrs[:_cc_end]
+        _cc_pending = []
+        _cc_i = 0
+        while _cc_i < len(_cc_prefix):
+            _cc_ins = _cc_prefix[_cc_i]
+            _cc_null = (_cc_ins.opname in ('LOAD_GLOBAL', 'LOAD_NAME')
+                        and isinstance(_cc_ins.arg, int) and (_cc_ins.arg & 1))
+            if _cc_ins.opname == 'PUSH_NULL' or _cc_null:
+                _cc_b = _cc_i + 1 if _cc_ins.opname == 'PUSH_NULL' else _cc_i
+                _cc_bi = _cc_prefix[_cc_b] if _cc_b < len(_cc_prefix) else None
+                if (_cc_bi is not None and _cc_bi.opname in
+                        ('LOAD_GLOBAL', 'LOAD_NAME', 'LOAD_FAST', 'LOAD_DEREF')):
+                    _cc_node = {'type': 'Name', 'id': _cc_bi.argval, 'ctx': 'Load'}
+                    _cc_j = _cc_b + 1
+                    while (_cc_j < len(_cc_prefix)
+                           and _cc_prefix[_cc_j].opname in ('LOAD_ATTR', 'LOAD_METHOD')
+                           and isinstance(_cc_prefix[_cc_j].argval, str)):
+                        _cc_node = {'type': 'Attribute', 'value': _cc_node,
+                                    'attr': _cc_prefix[_cc_j].argval, 'ctx': 'Load'}
+                        _cc_j += 1
+                    _cc_pending.append(_cc_node)
+                    _cc_i = _cc_b + 1 if _cc_ins.opname == 'PUSH_NULL' else _cc_i + 1
+                    continue
+            if _cc_ins.opname == 'CALL' and _cc_pending:
+                _cc_pending.pop()
+            _cc_i += 1
+        return _cc_pending
+
     def _try_wrap_fstring_pending_call(self, region, innermost_merge, joined_str):
         """f-string 是跨块待定调用的实参时，把整条归约为表达式语句 + 后续语句。
 
@@ -50743,17 +50855,44 @@ AST 映射规则:
         if _bs is None or _bs + 1 >= len(eff):
             return None
         _tail = eff[_bs + 1:]
-        _j = 0
-        while _j < len(_tail) and _tail[_j].opname in ('PRECALL', 'KW_NAMES'):
-            _j += 1
-        if _j == 0 or _j >= len(_tail) or _tail[_j].opname != 'CALL':
+        # [R21-27b] 尾部调用对数：BUILD_STRING 之后连续的 PRECALL?/KW_NAMES* + CALL(arg==1) 对。
+        # 既有实现只认一对（x.m(f'...')）；gettext 惯用法 x.m(_(f'...')) 是两对，第二对的
+        # PRECALL 使末判据 _rest[0] != POP_TOP 退回，语句被降级为 return f'...' 并丢掉后续语句。
+        # 对数==1 时逐字节沿用既有路径（语料实测 36 处），仅 >1 时才走链式扩展。
+        _r27_pairs = 0
+        _r27_k = 0
+        while _r27_k < len(_tail):
+            _r27_m = _r27_k
+            while (_r27_m < len(_tail)
+                   and _tail[_r27_m].opname in ('PRECALL', 'KW_NAMES')):
+                _r27_m += 1
+            if _r27_m >= len(_tail) or _tail[_r27_m].opname != 'CALL':
+                break
+            if (_tail[_r27_m].arg or 0) != 1:
+                break
+            _r27_pairs += 1
+            _r27_k = _r27_m + 1
+        if _r27_pairs == 0:
             return None
-        if (_tail[_j].arg or 0) != 1:
-            return None
-        _callee = self._ternary_pending_callee(region.condition_block)
-        if _callee is None:
-            return None
-        _rest = _tail[_j + 1:]
+        if _r27_pairs == 1:
+            _j = 0
+            while _j < len(_tail) and _tail[_j].opname in ('PRECALL', 'KW_NAMES'):
+                _j += 1
+            if _j == 0 or _j >= len(_tail) or _tail[_j].opname != 'CALL':
+                return None
+            if (_tail[_j].arg or 0) != 1:
+                return None
+            _callee = self._ternary_pending_callee(region.condition_block)
+            if _callee is None:
+                return None
+            _r27_funcs = None
+            _rest = _tail[_j + 1:]
+        else:
+            _r27_funcs = self._ternary_pending_callee_chain(region.condition_block)
+            if len(_r27_funcs) != _r27_pairs:
+                return None
+            _callee = _r27_funcs[0]
+            _rest = _tail[_r27_k:]
         while _rest and _rest[0].opname in ('CACHE', 'NOP'):
             _rest = _rest[1:]
         if not _rest or _rest[0].opname != 'POP_TOP':
@@ -50795,15 +50934,16 @@ AST 映射规则:
                 _extra = _extra[:-1]
             if _extra:
                 region.post_consumer_extra_stmts = _extra
-        return {
-            'type': 'Expr',
-            'value': {
-                'type': 'Call',
-                'func': _callee,
-                'args': [joined_str],
-                'keywords': [],
-            },
-        }
+        if _r27_funcs:
+            # 外→内的待定 callee 逐层嵌套：最内层包住 JoinedStr，最外层即 _callee。
+            _r27_value = joined_str
+            for _r27_f in reversed(_r27_funcs):
+                _r27_value = {'type': 'Call', 'func': _r27_f,
+                              'args': [_r27_value], 'keywords': []}
+        else:
+            _r27_value = {'type': 'Call', 'func': _callee,
+                          'args': [joined_str], 'keywords': []}
+        return {'type': 'Expr', 'value': _r27_value}
 
     def _try_build_ternary_chained_container(self, region: TernaryRegion,
                                                ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:

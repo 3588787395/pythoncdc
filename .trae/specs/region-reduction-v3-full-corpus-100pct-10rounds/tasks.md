@@ -1,4 +1,4 @@
-﻿# Tasks
+# Tasks
 
 目标：402 真实语料逐文件达到字节码完全一致（units 6617/6617 = 100%，files 402/402 success），quotation 153/153；`_identify_*` 与对应生成方法注释六项模板与代码一致；单元级 + 文件级双不回退门禁全程成立。
 理论依据：`rules.md` §1（四原则 + C1/C2/C3 + 判据白名单 + 禁止事项 + 修复语义 + 注释口径）+ 继承 v2 spec 理论基准 I/II/III/IV。角色：主代理 = 调度 + 阶段提交 + 全量验证 + push（零实现）；测试工程师（子代理）= 逐 pyc 复现与登记破口；修复工程师（子代理）= 区域归约算法完善 + 注释合规。
@@ -1410,3 +1410,42 @@ content-anchored asserts, `py_compile OK`; **3 products moved corpus-wide**: bro
   broker 5 (`_process_order`, `_process_cancel_order`, `_trade_status_handle`, `_sync_worker`,
   `etf_purchase_redemption`), clock_worker 1, quote 1.
 - Next gate label **35** against `rounds/round34/after`.
+
+## 39. Gate 35 certified and landed (2026-10-11, orchestrator-built solo; four co-requisite hunks)
+
+`core/cfg/region_ast_generator.py` `065e4d77243190dc` -> `87910190b7ef7c35` (R21-27 broker
+`etf_purchase_redemption`: four anchor-asserted hunks in
+`build_cand_r35_R21-27.py` / `...b_..._chain.py` / `...c_..._callee_skip.py` / `...d_..._part_kind_filter.py`,
+`py_compile OK`; one product moved corpus-wide).
+
+- **Units 6610 -> 6611 /6617 (99.9093%), files 399 -> 399**, `文件级回退=0 UNIT_REGRESSIONS=0
+  新增失败单元=0 翻正单元=1`, regen `ok=402 bad=0` (187 s), quotation 153/153, small34 1562/31 (moved by
+  exactly the flip count), ruler selfcheck OK, pytest `2 failed, 282 passed, 2 xpassed`.
+- Flip: `broker 123 -> 124/128`. The unit was `-12 / 5 hunks / 0 landings` and looked like one f-string
+  bug; measured, it was four causes, and no single one flipped it: (1) the prefix window swept whole
+  preceding statements (segment reducer handed a **54-instruction window containing STORE_***, @1968..@2312,
+  refused -> caller fabricated one JoinedStr part per `LOAD_*`); (2)
+  `_try_wrap_fstring_pending_call` accepts **one** `(PRECALL|KW_NAMES)* -> CALL(arg=1)` before `POP_TOP`, but
+  `strategy_log.info(_(f'..'))` is the gettext **two**-call idiom, so `_rest[0]` was the second PRECALL and the
+  screen returned None, degrading the statement to `return f'..'` and dropping both calls plus
+  `return order.order_id` (the 12 missing instructions); (3) `[R65-d3 C1a]` strips only the first pending
+  callee group; (4) the ternary condition's own unconsumed `LOAD_FAST order` was folded into the literal
+  (`' 数量：order'`). Per-hunk progression -12/5 -> (1) **-12/5, text-only** -> (2) -2/4 -> (3) 0/1 ->
+  (4) **0/0/0 Equal**.
+- Hunk 1 is recorded as the cautionary measurement: it removed every visible symptom of the glue and moved
+  **zero** instructions, because a shorter string constant is still one `LOAD_CONST`. Kept as a named
+  co-requisite, never presented as progress.
+- Population and controls measured first (`D:/Temp/r35_chain_census.py`): 36 one-call merge tails keep the
+  untouched path, 3 two-call sites = `etf_purchase_redemption`, `_process_order`, and `get_covered_amount`;
+  the last is a **green** unit and was re-measured as `0/0/0 judge_diff=False`. Panel: 19/20 files
+  byte-identical, only broker moved and moved up - the same check that rejected gate 31 attempt 1 and this
+  round's own R21-28 v1, run before the gate again.
+- Ticket corrections by measurement: R21-27's "defect is upstream of code_generator" and its three root-site
+  line numbers were replaced (`NOTE_R21-27_ast_side_fstring_stack_pollution.md` §0/§6); the register label
+  `属性链截断` describes the symptom, not the cause. R21-33's §8 named site was falsified the same way
+  (`_loop_process_header_instructions` is never called for that region; `_build_attr_assign` returns the
+  correct node when called directly).
+- Residual now **3 files / 6 units** (`rounds/round35/RESIDUAL_ROUND35.md`, `UNREGISTERED 行数=0`):
+  broker 4 (`_process_order`, `_process_cancel_order`, `_sync_worker`, `_trade_status_handle`),
+  clock_worker 1, quote 1.
+- Next gate label **36** against `rounds/round35/after`.
