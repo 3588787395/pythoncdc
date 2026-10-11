@@ -62,3 +62,19 @@ Both adjudication mirrors (`D:/Temp/r30chk`, `D:/Temp/r30chkB`) are re-seeded fr
 after these reads, and note for future runs: those mirrors have no `site-packages`, so `unit_diff.py` must be
 given the **absolute** pyc path there — the relative form resolves against `ROOT/site-packages` and dies,
 which is what made two of my earlier loops print nothing.
+
+### Second round of trend reads (04:35, same non-verdict rule)
+
+| build | hunks vs sealed | victim reading |
+|---|---|---|
+| r53a `5eee6feaa1ee1e94` | 2 (3340 +82, 20398 +4) | `kill_trade_process` `delta=0 hunks=0 landings=0 judge_diff=False` → **trade_info_utils 41/41, a full file flip** (+1 unit, +1 file); 20-file panel running |
+| r54a `34e4464845e95447` | 2 (22323 +19, 22334 +2/−1) | `get_ipo_stocks` `0/0/0 judge_diff=False` → **broker 121 → 122/128** at file level |
+| r58a `b168167266b15b41` | 1 (26435 +42) | not measured yet — one additive hunk, the size and shape of the re-anchored gate-25 pad it was told to start from |
+| r56a | 0 (mirror unpatched) | still diagnosing; nothing to measure |
+| r50a second build `78f88001394ed59b` | 3 | handlers **30/30** but **all six canaries lose exactly one unit each** → narrowing still absent; the byte signature of the mis-fire is in `NOTE_R21-26_misfire_signature.md` |
+
+Mergeability for the gate: r53a (3340, 20398), r54a (22323, 22334) and r58a (26435) sit in disjoint base
+ranges, so they can go into one gate by base-coordinate merge — but each is re-measured from its own DELIVER
+file, and the pair probe runs again on the merge, because both failure modes have now happened once:
+a candidate suppressed by a co-installed criterion (gate 30) and a candidate correct on its victim yet
+over-firing elsewhere (gate 31).
