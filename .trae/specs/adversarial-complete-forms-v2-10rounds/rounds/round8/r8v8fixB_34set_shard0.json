@@ -1,5 +1,5 @@
 {
- "elapsed_sec": 6.4,
+ "elapsed_sec": 4.7,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
@@ -7,7 +7,7 @@
   "success": 0
  },
  "files_total": 5,
- "generated_at": "2026-10-10T14:47:53",
+ "generated_at": "2026-10-11T19:05:26",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
@@ -60,7 +60,7 @@
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc",
    "pyc_sha": "cf93b0e65afe",
    "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_apiOK.py",
-   "source_sha": "0f8ec52303f4",
+   "source_sha": "87886bb8598e",
    "status": "failure",
    "success_rate": 0.9482758620689655,
    "units_success": 55,

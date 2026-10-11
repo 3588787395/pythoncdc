@@ -116,6 +116,12 @@ class ComprehensionGenerator:
     def __init__(self, expr_reconstructor):
         self.expr_reconstructor = expr_reconstructor
 
+    # [B96] async 推导式 code object co_flags 位（inspect.CO_COROUTINE=0x80 /
+    # CO_ASYNC_GENERATOR=0x200，Python 3.11 实测：await 内嵌或 async for 的
+    # <listcomp>/<setcomp>/<dictcomp> 恒置 0x80；含 await 的 <genexpr> 恒置
+    # 0x200）。code object 元数据 = I.4 白名单判据（任务 B96 判据方向）。
+    _B96_ASYNC_COMP_FLAG_MASK = 0x80 | 0x200
+
     def convert_comprehension_objects(self, expr: Dict[str, Any],
                                       cond_block) -> Dict[str, Any]:
         if not expr or not isinstance(expr, dict):
@@ -127,6 +133,8 @@ class ComprehensionGenerator:
                 iter_expr = self.extract_comp_iter_expr(cond_block)
                 comp_ast = self.parse_comprehension_inner(comp_code, iter_expr)
                 if comp_ast:
+                    # [B96] async 标注由 _build_comp_result 单点完成
+                    #（co_flags 元数据判据，见该方法注释）。
                     return comp_ast
 
         for key in ('value', 'func', 'left', 'right', 'comparators', 'args', 'elt'):
@@ -1158,7 +1166,16 @@ class ComprehensionGenerator:
         if target is None:
             return None
 
-        append_op, append_idx = self._find_comp_append_op(all_instrs)
+        # [B106] 元素产出锚点按推导式种类精化（co_name → 产出 opcode，
+        # 见 _find_comp_append_op 的 [B106] 注释；普通形态首=末不变；
+        # <genexpr> 产出 YIELD——星实参调用形元素的实参构建 LIST_APPEND
+        # 同样先于产出，最末 YIELD = 元素产出，async 轮询 YIELD 恒在前，
+        # 与 B96 判据结论一致）。
+        _b106_kind = {'<listcomp>': 'LIST_APPEND', '<setcomp>': 'SET_ADD',
+                      '<dictcomp>': 'MAP_ADD',
+                      '<genexpr>': 'YIELD_VALUE'}.get(getattr(code_obj, 'co_name', ''))
+        append_op, append_idx = self._find_comp_append_op(
+            all_instrs, append_kind=_b106_kind)
         if append_op is None:
             return None
 
@@ -1205,6 +1222,9 @@ class ComprehensionGenerator:
 
         # 检测三元模式：条件跳转的目标在LIST_APPEND之前
         ternary_info = self._detect_comp_ternary(all_instrs, store_idx, append_idx)
+        # [B113] 单 for 路径前导扁平子句（仅非三元分支消费；三元+扁平共存
+        # 形态未及，见 FIX_C §4 残余登记）
+        _b113_flats = []
         if ternary_info is not None:
             if append_op == 'MAP_ADD':
                 # [Round7-08] Dict comprehension with ternary: ternary can be either key
@@ -1231,6 +1251,15 @@ class ComprehensionGenerator:
             ifs, _ = self._extract_comp_ifs(all_instrs, store_idx, append_idx)
         else:
             ifs, elt_start_idx = self._extract_comp_ifs(all_instrs, store_idx, append_idx)
+            # [B113] 单 for 路径的元素窗前导扁平子句：唯一真子句之后、元素
+            # 表达式之前的 ``<expr>; STORE T`` 内联对（e2/e09_comp_host 形——
+            # 源码 ``for a in [X] for b in [Y]`` 的第二子句被内联，全式仅剩
+            # 一个 FOR_ITER）。贪心消费为追加 generator（源序在真子句之后）；
+            # 不命中时元素窗起点不变（C3）。
+            _b113_flats, _b113_flat_end = self._b113_extract_flat_clauses(
+                all_instrs, elt_start_idx, append_idx)
+            if _b113_flat_end != elt_start_idx:
+                elt_start_idx = _b113_flat_end
             if append_op == 'MAP_ADD':
                 key_expr, value_expr = self._split_dict_comp_kv(all_instrs, elt_start_idx, append_idx)
                 if key_expr is None:
@@ -1259,6 +1288,15 @@ class ComprehensionGenerator:
             'ifs': ifs,
             'is_async': is_async,
         }]
+        # [B113] 前导扁平子句按源序追加在真子句之后（单 for 路径）。
+        for _b113_tgt, _b113_expr in _b113_flats:
+            generators.append({
+                'type': 'comprehension',
+                'target': _b113_tgt,
+                'iter': _b113_expr,
+                'ifs': [],
+                'is_async': 0,
+            })
 
         return self._build_comp_result(code_obj, elt_expr, generators)
 
@@ -1364,7 +1402,12 @@ class ComprehensionGenerator:
         [C3] 头种类只改变锚点操作码选择，过滤窗/存储序列窗互不重叠守卫
         与 B20 相同。
         """
-        append_op, append_idx = self._find_comp_append_op(all_instrs)
+        # [B106] 同款种类精化（多 for 路径）。
+        _b106_kind_m = {'<listcomp>': 'LIST_APPEND', '<setcomp>': 'SET_ADD',
+                        '<dictcomp>': 'MAP_ADD',
+                        '<genexpr>': 'YIELD_VALUE'}.get(getattr(code_obj, 'co_name', ''))
+        append_op, append_idx = self._find_comp_append_op(
+            all_instrs, append_kind=_b106_kind_m)
         if append_op is None:
             return None
 
@@ -1441,6 +1484,23 @@ class ComprehensionGenerator:
                         break
                 if anchor_idx is None or _iter_start is None:
                     return None
+                # [B113] iter 窗前导扁平子句：``for T in [<单元素>]`` 内联为
+                # ``<expr>; STORE T``，位于上一真子句过滤段之后、本子句
+                # GET_ITER 之前。先贪心消费扁平子句（各成独立 generator，
+                # 插在本真子句之前），剩余窗口才是本子句 iter 表达式。
+                # 不命中（窗首即 GET_ITER 协议）时窗口起点不变（C3）。
+                _b113_flats, _b113_flat_end = self._b113_extract_flat_clauses(
+                    all_instrs, _iter_start, anchor_idx)
+                for _b113_tgt, _b113_expr in _b113_flats:
+                    generators.append({
+                        'type': 'comprehension',
+                        'target': _b113_tgt,
+                        'iter': _b113_expr,
+                        'ifs': [],
+                        'is_async': 0,
+                    })
+                if _b113_flat_end != _iter_start:
+                    _iter_start = _b113_flat_end
                 # iter 表达式指令范围：从过滤段之后到锚点之前
                 iter_instrs = [i for i in all_instrs[_iter_start:anchor_idx]
                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -1511,6 +1571,22 @@ class ComprehensionGenerator:
                 generators[-1]['ifs'] = ifs
         else:
             ifs, elt_start_idx = self._extract_comp_ifs(all_instrs, innermost_store_idx, append_idx)
+            # [B113] 最内层元素窗前导扁平子句：末真子句之后、元素表达式之前
+            # 的 ``<expr>; STORE T`` 内联对（e2/e09_comp_host 形——扁平子句是
+            # 全部子句的最后一个）。贪心消费后元素窗起点前移；不命中时窗口
+            # 起点不变（C3）。
+            _b113_flats, _b113_flat_end = self._b113_extract_flat_clauses(
+                all_instrs, elt_start_idx, append_idx)
+            for _b113_tgt, _b113_expr in _b113_flats:
+                generators.append({
+                    'type': 'comprehension',
+                    'target': _b113_tgt,
+                    'iter': _b113_expr,
+                    'ifs': [],
+                    'is_async': 0,
+                })
+            if _b113_flat_end != elt_start_idx:
+                elt_start_idx = _b113_flat_end
             if append_op == 'MAP_ADD':
                 key_expr, value_expr = self._split_dict_comp_kv(all_instrs, elt_start_idx, append_idx)
                 if key_expr is None:
@@ -1616,7 +1692,24 @@ class ComprehensionGenerator:
                 stack_depth += delta
                 depth_history.append((i, stack_depth))
                 continue
-            delta = self._get_stack_delta(instr)
+            elif instr.opname == 'PUSH_NULL':
+                # [B106] CALL_FUNCTION_EX 调用协议的 NULL 槽（压栈 +1）
+                delta = 1
+            elif instr.opname == 'CALL_FUNCTION_EX':
+                # [B106] 星实参调用协议：弹 args 元组 + callable + NULL
+                #（flag&1 再弹 kwargs dict），压 1 个结果。键/值窗含星实参
+                # 调用（``{f(*k, v): ...}``）时旧 sim 未覆盖该协议族
+                # （PUSH_NULL/LIST_EXTEND/LIST_APPEND/CALL_FUNCTION_EX 均按
+                # delta=0 计），深度历史虚高 ⇒ 键窗切分错位（v8 实测键窗
+                # 截到 BUILD_LIST 0 → 键退化为 []）。判据 = 块内 opcode 栈
+                # 效应（I.4 白名单），普通形态深度路径不变（C3）。
+                delta = -(3 + (1 if (instr.arg or 0) & 1 else 0)) + 1
+            elif instr.opname in ('LIST_EXTEND', 'LIST_APPEND',
+                                   'DICT_UPDATE', 'DICT_MERGE', 'SET_UPDATE'):
+                # [B106] 容器原地更新/追加协议：弹 1（可迭代表/值），容器留栈
+                delta = -1
+            else:
+                delta = self._get_stack_delta(instr)
             stack_depth += delta
             depth_history.append((i, stack_depth))
 
@@ -1668,7 +1761,12 @@ class ComprehensionGenerator:
         if instr.opname.startswith('LOAD_') and not instr.opname.startswith('LOAD_ATTR'):
             return 1
         elif instr.opname in ('BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET', 'BUILD_STRING'):
-            return 1 - instr.arg if instr.arg else 0
+            # [B106] BUILD_* n 弹 n 压 1——arg=0（空容器种子，星实参构建
+            # BUILD_LIST 0 的标准起点）同样压 1；旧 `if instr.arg else 0`
+            # 把 BUILD_LIST 0 记为 0，dict comp 键/值切分点的深度历史
+            # 全程偏低一位 ⇒ 星实参键窗切分失败（v8 形）。判据 = opcode
+            # 栈效应（I.4 白名单）。
+            return 1 - (instr.arg or 0)
         elif instr.opname == 'BUILD_MAP':
             return 1 - 2 * instr.arg if instr.arg else 1
         elif instr.opname in ('BINARY_OP', 'COMPARE_OP'):
@@ -1791,6 +1889,92 @@ class ComprehensionGenerator:
             return {'type': 'Tuple', 'elts': elts, 'ctx': 'Store'}, pos
         return None, pos
 
+    def _b113_extract_flat_clauses(self, all_instrs: List[Instruction], start_idx: int,
+                                   end_idx: int) -> Tuple[List[Tuple[Dict, Dict]], int]:
+        """[B113] 单元素 for 子句内联（扁平子句）识别与重构。
+
+        ①算法依据：CPython 3.11 推导式 codegen 不变式 + I.1 原则 4（入口引用
+        语义）。``for T in [<单元素>]`` 的单元素列表字面量被编译器内联展开为
+        ``<expr 求值>; STORE T``——无 BUILD_LIST/GET_ITER/FOR_ITER 协议，仅剩
+        扁平赋值对。等价源 = ``for T in (<expr>,)``（单元素元组同样内联，重
+        编译逐字节复现原始指令序；c4_18 直接探针 e4 形已证）。多 for 子句
+        （含嵌套最内层窗口）中该扁平对位于真子句迭代协议之间/元素表达式之前，
+        不识别则子句整条丢失（comp2 e1/e2、c4_05 e09_comp_host 实测）。
+        ②归约顺序：自底向上——由 _parse_multi_for_comprehension 的两处窗口
+        （真子句 iter 窗前导、最内层元素窗前导）自左向右贪心消费；消费后窗口
+        起点前移，真子句 iter/元素表达式提取不受扰动。
+        ③唯一归属判定（识别条件，I.4 白名单 = 块内指令 opcode 序）：候选段 =
+        [窗口起点, 首个 STORE_*) 之间的指令，且段内只含表达式构造类 opcode
+        （LOAD_*/BUILD_*/BINARY_*/COMPARE_OP/UNARY_*/PRECALL/CALL/
+        CALL_FUNCTION*/MAKE_FUNCTION 等可重建表达式）；含 COPY（walrus
+        ``COPY 1; STORE`` 副作用对，[Round10-05] 判据）、POP_*、任意跳转、
+        FOR_ITER/GET_ITER、LIST_APPEND/SET_ADD/MAP_ADD/YIELD_VALUE、
+        STORE、UNPACK_*、RETURN、RAISE 之一即终止扫描（不命中，窗口起点
+        不变，既有行为零扰动）。目标存储序列经 _parse_target_store_sequence
+        结构化解析（支持元组/星号目标）；表达式经 expr_reconstructor 重建，
+        失败即终止。
+        ④嵌套处理：连续多个扁平子句按序贪心消费（e1 的双扁平+单真子句形态）；
+        扁平子句作为独立 comprehension 生成元插入 generators 序列，保持源序。
+        ⑤入口引用语义：返回 ([(target, iter_expr)], 新窗口起点)；iter 表达式
+        包装为单元素元组 ``{'type': 'Tuple', 'elts': [expr], 'ctx': 'Load'}``。
+        ⑥反编译流程：多 for 推导式重建的子句收集步；终止性由窗口有限长度保证
+        （无计数上限）。
+        [C1] 只读本推导式指令流的块内 opcode 序；[C2] 扁平子句经独立
+        comprehension 节点被父推导式黑箱消费；[C3] 扫描遇任何非表达式构造
+        opcode 立即终止，不命中时窗口起点不变（既有 iter/元素提取逐位保持）。
+        """
+        flats = []
+        pos = start_idx
+        _b113_stop_ops = ('COPY', 'FOR_ITER', 'GET_ITER', 'LIST_APPEND',
+                          'SET_ADD', 'MAP_ADD', 'YIELD_VALUE', 'YIELD_FROM',
+                          'RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS',
+                          'GET_AWAITABLE', 'GET_AITER', 'SEND',
+                          'BEFORE_WITH', 'BEFORE_ASYNC_WITH')
+        while pos < end_idx:
+            first_instr = all_instrs[pos]
+            if first_instr.opname.startswith('POP_'):
+                break
+            if first_instr.opname in _b113_stop_ops:
+                break
+            if first_instr.opname.startswith('JUMP'):
+                break
+            if first_instr.opname.startswith('POP_JUMP'):
+                break
+            if first_instr.opname.startswith('STORE_'):
+                break
+            if first_instr.opname.startswith('UNPACK_'):
+                break
+            # 扫描到首个 STORE_*：候选扁平段 = [pos, store_pos)
+            store_pos = None
+            for j in range(pos, end_idx):
+                _op = all_instrs[j].opname
+                if _op in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
+                    store_pos = j
+                    break
+                if _op in _b113_stop_ops or _op.startswith('JUMP') or _op.startswith('POP_'):
+                    break
+                if _op.startswith('STORE_') or _op.startswith('UNPACK_'):
+                    break
+                if _op in CONDITIONAL_JUMP_OPS:
+                    break
+            if store_pos is None or store_pos == pos:
+                break
+            if all_instrs[store_pos].argval == '.0':
+                break
+            target, seq_end = self._parse_target_store_sequence(all_instrs, store_pos)
+            if target is None or seq_end <= store_pos:
+                break
+            expr_instrs = [i for i in all_instrs[pos:store_pos]
+                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            if not expr_instrs:
+                break
+            expr = self.expr_reconstructor.reconstruct(expr_instrs)
+            if expr is None:
+                break
+            flats.append((target, {'type': 'Tuple', 'elts': [expr], 'ctx': 'Load'}))
+            pos = seq_end
+        return flats, pos
+
     def _build_comprehension_target(self, all_instrs: List[Instruction]) -> Optional[Dict]:
         """构造推导式迭代目标 AST（B21/B22：结构化解包解析，名袋仅作回退）。
 
@@ -1834,16 +2018,51 @@ class ComprehensionGenerator:
         else:
             return None
 
-    def _find_comp_append_op(self, all_instrs: List[Instruction], target_name: str = None) -> Tuple[Optional[str], Optional[int]]:
+    def _find_comp_append_op(self, all_instrs: List[Instruction], target_name: str = None,
+                              append_kind: str = None) -> Tuple[Optional[str], Optional[int]]:
         if target_name:
             for idx, instr in enumerate(all_instrs):
                 if instr.opname in ('STORE_FAST', 'STORE_DEREF', 'STORE_NAME') and instr.argval == target_name:
                     return 'STORE', idx
+        # [B106] 元素产出锚点按推导式种类精化（code object co_name → 产出
+        # opcode）：星实参调用形元素（``[f(*xs, v) for v in xs]``）的实参
+        # 构建段含内层 BUILD_LIST + LIST_EXTEND + LIST_APPEND + LIST_TO_TUPLE
+        # （CALL_FUNCTION_EX 协议）——首个 LIST_APPEND 属内层实参构建，
+        # 被误当元素产出锚点 ⇒ 元素窗错位、Call 整体蒸发（st_comp 实测
+        # 元素退化为回退 Name(target)）。判据（I.4 白名单：code object
+        # co_name 元数据 + 块内 opcode 序）= 该推导式种类的产出 opcode 的
+        # **最末**出现（元素产出是循环体最后一条有效指令，其后即回边
+        # JUMP_BACKWARD；内层实参构建的 LIST_APPEND 恒在其前）。普通形态
+        # 首=末，行为逐位不变（C3）。
+        if append_kind is not None:
+            _b106_last = None
+            for idx, instr in enumerate(all_instrs):
+                if instr.opname == append_kind:
+                    _b106_last = idx
+            if _b106_last is not None:
+                return append_kind, _b106_last
+            return None, None
         for idx, instr in enumerate(all_instrs):
             if instr.opname in ('LIST_APPEND', 'SET_ADD', 'MAP_ADD', 'DICT_MERGE'):
                 return instr.opname, idx
+        # [B96] async genexpr 的元素产出 YIELD 识别：含 await 的
+        # <genexpr> code object（co_flags 置 CO_ASYNC_GENERATOR）内，
+        # 用户级 ``await <expr>`` 的挂起协议（GET_AWAITABLE; LOAD_CONST
+        # None; SEND; YIELD_VALUE; RESUME; JUMP_BACKWARD_NO_INTERRUPT 回
+        # SEND）先于元素产出执行——其 YIELD_VALUE 以 RESUME +
+        # JUMP_BACKWARD_NO_INTERRUPT 收尾（轮询回环），元素产出 YIELD 以
+        # RESUME + POP_TOP/JUMP_BACKWARD 收尾（无 NO_INTERRUPT 回环）。
+        # 判据（I.4 白名单：块内指令 opcode 序）= 跳过轮询回环 YIELD，
+        # 取首个非协议 YIELD 为 append 锚点；否则 a_four 形（``sum(1 for
+        # x in xs if await g2(x))``）把 await 轮询 YIELD 误当元素产出，
+        # 过滤窗错位 ⇒ 元素 1 丢失、await 表达式错位为元素。无协议
+        # YIELD 的同步 genexpr 行为逐位不变（C3）。
         for idx, instr in enumerate(all_instrs):
             if instr.opname == 'YIELD_VALUE':
+                if (idx + 2 < len(all_instrs)
+                        and all_instrs[idx + 1].opname == 'RESUME'
+                        and all_instrs[idx + 2].opname == 'JUMP_BACKWARD_NO_INTERRUPT'):
+                    continue
                 return 'YIELD_VALUE', idx
         return None, None
 
@@ -2630,20 +2849,38 @@ class ComprehensionGenerator:
 
     def _build_comp_result(self, code_obj: Any, elt_expr: Dict, generators: List[Dict]) -> Optional[Dict]:
         func_name = code_obj.co_name
+        result = None
         if func_name == '<listcomp>':
-            return {'type': 'ListComp', 'elt': elt_expr, 'generators': generators}
-        if func_name == '<setcomp>':
-            return {'type': 'SetComp', 'elt': elt_expr, 'generators': generators}
-        if func_name == '<dictcomp>':
+            result = {'type': 'ListComp', 'elt': elt_expr, 'generators': generators}
+        elif func_name == '<setcomp>':
+            result = {'type': 'SetComp', 'elt': elt_expr, 'generators': generators}
+        elif func_name == '<dictcomp>':
             if isinstance(elt_expr, tuple) and len(elt_expr) == 2:
                 key_expr, value_expr = elt_expr
             else:
                 key_expr = elt_expr
                 value_expr = {'type': 'Constant', 'value': None}
-            return {'type': 'DictComp', 'key': key_expr, 'value': value_expr, 'generators': generators}
-        if func_name == '<genexpr>':
-            return {'type': 'GeneratorExp', 'elt': elt_expr, 'generators': generators}
-        return None
+            result = {'type': 'DictComp', 'key': key_expr, 'value': value_expr, 'generators': generators}
+        elif func_name == '<genexpr>':
+            result = {'type': 'GeneratorExp', 'elt': elt_expr, 'generators': generators}
+        if result is None:
+            return None
+        # [B96] async 推导式标注（co_flags 元数据白名单，单一产出点）：
+        # 编译器对含 await / async for 的推导式 code object 置
+        # CO_COROUTINE(0x80) / CO_ASYNC_GENERATOR(0x200) 位（inspect 常量；
+        # Python 3.11 实测：async <listcomp>/<setcomp>/<dictcomp> 恒置
+        # 0x80，含 await 的 <genexpr> 恒置 0x200），并在调用点自动补发
+        # GET_AWAITABLE+SEND 协议——源码不可能显式写 await(<推导式>)
+        # （推导式求值为容器不可 await，唯一合法形态即 async 推导式的
+        # 隐式协议）。标注供 CFGASTConverter._convert_await_expr_full 剥除
+        # 该编译器补发的 Await 包装（a_three 形 ``acc.extend({k: await g(v)
+        # for ...})``）；同步推导式（位为零）不标注，用户级 await 语义
+        # 保持 ASTAwaitable 包裹（C3 显式豁免）。本方法是一切推导式
+        # dict 的唯一组装点（convert_comprehension_objects / 表达式重建
+        # / generate_comprehension_function 三路汇聚），单点标注全覆盖。
+        if getattr(code_obj, 'co_flags', 0) & self._B96_ASYNC_COMP_FLAG_MASK:
+            result['is_async_comp'] = 1
+        return result
 
     def generate_comprehension_function(self, cfg) -> Dict[str, Any]:
         func_name = cfg.name

@@ -1,0 +1,24 @@
+[
+ {
+  "name": "B113_min",
+  "pyc": "test_repros/round4/_scratch_m4/comp2.pyc",
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 9,
+  "failures": [
+   "***<module>.e2: Failure: Different bytecode",
+   "***<module>.e2.<listcomp>: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "B113_host",
+  "pyc": "test_repros/round4/c4_05_multi_with.pyc",
+  "status": "failure",
+  "units_success": 12,
+  "units_total": 14,
+  "failures": [
+   "***<module>.e09_comp_host: Failure: Different bytecode",
+   "***<module>.e09_comp_host.<listcomp>: Failure: Different bytecode"
+  ]
+ }
+]

@@ -1,0 +1,26 @@
+[
+ {
+  "name": "B106_main",
+  "pyc": "test_repros/round4/c4_12_star_args.pyc",
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "B106_call",
+  "pyc": "test_repros/round5/r5v5_07_starargs_callsite.pyc",
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "B106_lam",
+  "pyc": "test_repros/round5/r5v5_15_lambda_combo.pyc",
+  "status": "success",
+  "units_success": 27,
+  "units_total": 27,
+  "failures": []
+ }
+]

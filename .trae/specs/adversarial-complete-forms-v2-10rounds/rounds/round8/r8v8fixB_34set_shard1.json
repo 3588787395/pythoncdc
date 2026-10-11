@@ -1,5 +1,5 @@
 {
- "elapsed_sec": 23.8,
+ "elapsed_sec": 16.8,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
@@ -7,7 +7,7 @@
   "success": 1
  },
  "files_total": 5,
- "generated_at": "2026-10-10T14:48:35",
+ "generated_at": "2026-10-11T19:05:54",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
@@ -63,7 +63,7 @@
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
    "pyc_sha": "80804f7f8451",
    "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedataOK.py",
-   "source_sha": "1cba285174d4",
+   "source_sha": "5061486c50be",
    "status": "failure",
    "success_rate": 0.953125,
    "units_success": 61,

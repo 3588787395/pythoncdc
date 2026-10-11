@@ -1,5 +1,5 @@
 {
- "elapsed_sec": 5.3,
+ "elapsed_sec": 5.0,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
@@ -7,7 +7,7 @@
   "success": 0
  },
  "files_total": 4,
- "generated_at": "2026-10-10T14:55:25",
+ "generated_at": "2026-10-11T19:07:13",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
@@ -71,7 +71,7 @@
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
    "pyc_sha": "1bfaa1f6e75c",
    "source": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handlerOK.py",
-   "source_sha": "857fe618c1fb",
+   "source_sha": "254c93e9b0c6",
    "status": "failure",
    "success_rate": 0.9873417721518988,
    "units_success": 78,

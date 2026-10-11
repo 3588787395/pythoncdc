@@ -8545,6 +8545,159 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                     return True
         return False
 
+    # [B102] 退化链配对判据的区段框架/胶水/绑定清理操作码集（块内 opcode 序
+    # + 异常表区间成员 + CFG 可达集三类同层结构事实，I.4 白名单）：
+    # 帧操作、无条件/条件跳转、异常组清理（PREP_RERAISE_STAR/LIST_APPEND/
+    # BUILD_LIST）、as 绑定隐式清理（LOAD_CONST None + STORE_* + DELETE_*）。
+    _B102_ZONE_FRAME_OPS = frozenset({
+        'RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PUSH_NULL',
+        'PUSH_EXC_INFO', 'POP_EXCEPT', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
+        'RERAISE', 'COPY', 'SWAP', 'POP_TOP', 'PREP_RERAISE_STAR',
+        'LIST_APPEND', 'BUILD_LIST', 'WITH_EXCEPT_START',
+        'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+        'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_NO_INTERRUPT',
+        'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
+        'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE',
+        'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
+        'POP_JUMP_BACKWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
+        'LOAD_CONST', 'STORE_FAST', 'STORE_NAME', 'STORE_DEREF',
+        'STORE_GLOBAL', 'DELETE_FAST', 'DELETE_NAME', 'DELETE_DEREF',
+        'DELETE_GLOBAL',
+    })
+
+    def _b102_chain_reachable_blocks(self, head_offsets, bound_offset):
+        """_b102_chain_reachable_blocks — except/except* 链的可达块集（正常边 ∪ 异常边 BFS）
+
+        ①算法依据：No More Gotos 异常区域归约 + I.1 原则 2（每块唯一归属）——
+        语句自有 except 链的退出胶水/清理尾/RERAISE 续投全部经链可达（正常后继
+        或异常表异常边）；try 体续体（链后语句）经链正常出口可达；else 臂代码
+        只经 try 体帧胶水跳转到达、不经链可达——该可达性差即「链自有材料」与
+        「体续体/else 臂」的区分判据（B102 配对与 else 识别共用）。
+        ②归约顺序：自底向上，被 _b102_degenerate_chain_pairs_finally（配对判定）
+        与 _find_star_else_blocks（else 臂识别）调用，先于区域构建。
+        ③唯一归属判定：BFS 种子 = 链头块集；扩展边 = block.successors ∪
+        block.exception_successors（异常边白名单）；越界守卫 = 后继起点 ≥
+        bound_offset（宿主 finally 帧头）不入队——链材料全部位于宿主帧之前。
+        ④嵌套处理：嵌套子结构块照常入可达集（链体内的一切均归链侧）。
+        ⑤入口引用语义：返回可达块集合（set[BasicBlock]），调用方以其做成员
+        排除，不改变任何区域状态。
+        ⑥反编译流程：try/except*/finally 单语句重建的子判定；终止性由有限块
+        集 + 已访集保证（无 G4 计数上限）。
+        [C1] 只读块后继/异常边集合（同层结构事实）；[C2] 不窥视任何区域内部；
+        [C3] bound_offset 守卫显式排除宿主 finally 帧及之后的一切块。
+        """
+        visited = set()
+        worklist = []
+        for _off in head_offsets:
+            _blk = self.cfg.get_block_by_offset(_off)
+            if _blk is not None and _blk not in visited:
+                visited.add(_blk)
+                worklist.append(_blk)
+        while worklist:
+            _cur = worklist.pop()
+            for _succ in list(_cur.successors) + list(_cur.exception_successors):
+                if _succ in visited:
+                    continue
+                if _succ.start_offset >= bound_offset:
+                    continue
+                visited.add(_succ)
+                worklist.append(_succ)
+        return visited
+
+    def _b102_degenerate_chain_pairs_finally(self, chain_info, finally_info,
+                                             handler_infos) -> bool:
+        """_b102_degenerate_chain_pairs_finally — 退化 except/except* 链与其宿主 finally 的配对合法性
+
+        ①算法依据：CPython 3.11 异常表 codegen 不变式 + I.1 原则 2。try 体编译
+        为单 NOP（``try: pass``）时编译器省略 body→handler 表项，except/except*
+        链仅存 handler 体自清理保护条目（合成区间退化签名 try_start ==
+        handler_start）；该链与其宿主 finally 属同一 try 语句，须配对为单抽象
+        节点（ast.Try），否则退化链自建区域后 handler 整链丢失。配对合法性 =
+        链确为语句自有链（非内层独立 try 的链）：
+        （a）前置区 [finally.try_start, 首链头) 无实代码——退化不变式保证自
+        有链前只有帧胶水（体为单 NOP）；存在实代码（LOAD_GLOBAL/CALL 等）⇒
+        链前还有 try 体实代码 ⇒ 内层链，拒绝；
+        （b）尾部区 [末链合成区间尾, finally.try_end) 无「链可达」实代码——
+        链可达实代码 = try 体在链后的续体（正常/异常边 BFS）；else 臂代码只
+        经体帧胶水到达、不经链可达，不受此限（由 _find_star_else_blocks 认领）。
+        ②归约顺序：自底向上——由 paired_except_indices 收集步调用；命中后退化
+        链不建独立区域，由 finally 宿主区域经 paired_except_infos 吸收。
+        ③唯一归属判定：只读两 handler_info 的异常表区间成员关系 + 块内指令
+        opcode（_B102_ZONE_FRAME_OPS）+ _b102_chain_reachable_blocks 可达集。
+        ④嵌套处理：同语句多 handler 退化链族（同一清理 target、区间落在
+        finally 范围内的全部退化链）以整体前/后界（首链头/末链尾）判定——
+        链族内互为材料，不触发（a）（b）排除；配对后链族作为宿主
+        except_handlers 列表成员归约（嵌套即抽象节点）。
+        ⑤入口引用语义：返回值仅控制 paired_except_indices 登记；链头偏移经
+        paired_except_infos 由宿主区域收集（_collect_handler_chain）。
+        ⑥反编译流程：try/except*/finally 单语句重建（_generate_try 经
+        region.except_handlers + finally_blocks 发射完整 ast.Try）的前置判定。
+        [C1] 判据只读异常表区间、块指令 opcode、后继/异常边可达集（同层结构
+        事实，无文件名白名单/无偏移阈值/无跨层反查）；[C2] 链与 finally 只经
+        区间与入口接口配对，不窥视对方区域内部；[C3] 非退化链（try_start !=
+        handler_start）与清理条目缺失时恒返回 False，原互斥分支逐位保持。
+        """
+        if chain_info.get('handler_type') not in ('except', 'except_star'):
+            return False
+        # 退化签名：合成 try 区间以链头为起点（body→handler 表项被编译器省略）
+        if chain_info['try_start'] != chain_info['handler_start']:
+            return False
+        fin_start = finally_info['try_start']
+        fin_end = finally_info['try_end']
+        fin_handler = finally_info['handler_start']
+
+        def _b102_cleanup_target_of(hstart):
+            # 退化链的原始条目以链头偏移为 start、清理块为 target
+            for _e in self.cfg.exception_table:
+                if _e.get('start') == hstart:
+                    return _e.get('target')
+            return None
+
+        chain_cleanup = _b102_cleanup_target_of(chain_info['handler_start'])
+        if chain_cleanup is None:
+            return False
+        # 同语句退化链族：同清理 target、链头落在 finally 区间内的全部退化链
+        stmt_heads = []
+        stmt_ends = []
+        for _h in handler_infos:
+            if _h.get('handler_type') not in ('except', 'except_star'):
+                continue
+            if _h['try_start'] != _h['handler_start']:
+                continue
+            if not (fin_start <= _h['handler_start'] < fin_end):
+                continue
+            if _b102_cleanup_target_of(_h['handler_start']) != chain_cleanup:
+                continue
+            stmt_heads.append(_h['handler_start'])
+            stmt_ends.append(_h['try_end'])
+        if not stmt_heads:
+            return False
+        first_head = min(stmt_heads)
+        last_end = max(stmt_ends)
+        # （a）前置区实代码排除：[fin_start, first_head) 内任何非框架指令 ⇒
+        # 链前还有 try 体实代码 ⇒ 该链是内层独立 try 的链，拒绝配对
+        for _blk in self.cfg.get_blocks_in_order():
+            if _blk.start_offset >= first_head:
+                break
+            for _ins in _blk.instructions:
+                if (fin_start <= _ins.offset < first_head
+                        and _ins.opname not in self._B102_ZONE_FRAME_OPS):
+                    return False
+        # （b）尾部区链可达实代码排除：[last_end, fin_end) 内经链可达的块含
+        # 非框架指令 ⇒ 链后还有 try 体续体（ideg 形），拒绝配对
+        _reach = self._b102_chain_reachable_blocks(stmt_heads, fin_handler)
+        for _blk in self.cfg.get_blocks_in_order():
+            if _blk.start_offset >= fin_end:
+                break
+            if _blk.start_offset < last_end:
+                continue
+            if _blk not in _reach:
+                continue
+            for _ins in _blk.instructions:
+                if _ins.opname not in self._B102_ZONE_FRAME_OPS:
+                    return False
+        return True
+
     def _identify_try_except_regions(self) -> List[Region]:
         """_identify_try_except_regions — 识别异常处理区域
 
@@ -8752,8 +8905,25 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                         # 且两者深度相同，则 except handler 可能是 finally 块内部的
                         # 独立 try-except 结构，而非与 finally 配对的 except handler
                         if other['try_start'] != info['try_start']:
+                            # [B102-fix2] 退化 except/except* 链（try 体编译为单 NOP ⇒
+                            # CPython 3.11 省略 body→handler 表项，链的合成 try 区间
+                            # = handler 体自清理条目，退化签名 try_start ==
+                            # handler_start）与 finally 的 try_start 必然不同（finally
+                            # 的区间起点是 try 体帧胶水）。原互斥分支把语句自有的退化
+                            # 链当「finally 体内独立 try-except」拒绝配对 ⇒ 退化链自建
+                            # 区域后 handler 整链丢失（r4v4r_b102_except 的
+                            # normal_finally/star_else_finally）。配对合法性判据
+                            # （I.4 白名单）= _b102_degenerate_chain_pairs_finally：
+                            # 退化签名 + 前置区无实代码（有 ⇒ 链前还有 try 体实代码，
+                            # 该链是内层独立 try 的链）+ 尾部区无链可达实代码（有 ⇒
+                            # 链后还有 try 体续体；else 臂代码只经体帧胶水跳转到达、
+                            # 不经链可达，不受此限）。非退化链维持原互斥分支逐位
+                            # 不变（C3 显式豁免）。
+                            _b102_deg_pair = self._b102_degenerate_chain_pairs_finally(
+                                other, info, handler_infos)
                             if ((other['try_start'] < info['try_start'] and info['try_end'] <= other['try_end']) or
-                                (info['try_start'] < other['try_start'] and other['try_end'] <= info['try_end'])):
+                                (info['try_start'] < other['try_start'] and other['try_end'] <= info['try_end']
+                                 and not _b102_deg_pair)):
                                 continue
                         paired_except_indices.add(j)
 
@@ -9725,6 +9895,43 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                     cleanup_blocks.extend(_star_framework)
                     all_blocks |= set(_star_framework)
 
+            # [B102-fix1b] finally 配对 except* 链的框架清理块同样从 try_blocks
+            # 移至 cleanup_blocks：try/except*/[else]/finally 单语句在 finally
+            # 宿主区域归并后，except* 框架清理代码（LIST_APPEND +
+            # PREP_RERAISE_STAR 路径、as 绑定隐式 e=None/del e、POP_TOP 合并块、
+            # PJN 条件块）落在 try 范围内且非 handler body。留 in try_blocks 时
+            # try 体走查把它们误生成为 `if True: pass` 等框架幻影——退化空 try
+            # 体（`try: pass`）下重编译多出 body→handler 异常表条目，字节级
+            # 发散（r4v4r_b102_except star_else_finally 实测）。判据（I.4 白名
+            # 单）＝配对链头块含 CHECK_EG_MATCH（3.11 except* 标记口径）∧ 块
+            # 起点 ≥ 首链头 ∧ 非链 handler body ∧ 经链可达（_b102_chain_
+            # reachable_blocks 正常+异常边；else 臂不经链可达，不受影响——else
+            # 识别在后续步骤按可达性差另行认领）。非配对 finally（无 except*
+            # 链）不命中，行为逐位不变（C3）。
+            if (handler_type == 'finally' and paired_except_infos):
+                _b102_fw_gate = False
+                for _pi_fw in paired_except_infos:
+                    _pi_fw_blk = self.cfg.get_block_by_offset(_pi_fw['handler_start'])
+                    if (_pi_fw_blk is not None
+                            and any(_i.opname == 'CHECK_EG_MATCH'
+                                    for _i in _pi_fw_blk.instructions)):
+                        _b102_fw_gate = True
+                        break
+                if _b102_fw_gate:
+                    _b102_fw_first = min(pi['handler_start'] for pi in paired_except_infos)
+                    _b102_fw_reach = self._b102_chain_reachable_blocks(
+                        [pi['handler_start'] for pi in paired_except_infos],
+                        handler_info['handler_start'])
+                    _b102_fw_blocks = [
+                        blk for blk in try_blocks
+                        if blk not in all_handler_blocks_set
+                        and blk.start_offset >= _b102_fw_first
+                        and blk in _b102_fw_reach
+                    ]
+                    if _b102_fw_blocks:
+                        cleanup_blocks.extend(_b102_fw_blocks)
+                        all_blocks |= set(_b102_fw_blocks)
+
             preceding_blocks = []
             for block in self.cfg.blocks.values():
                 if block in all_blocks:
@@ -9800,7 +10007,35 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
 
             else_blocks = []
             if all_except_handlers:
-                else_blocks = self._find_try_else_blocks(region)
+                # [B102-fix1] except* + else + finally：CPython 3.11 把 else 体放在
+                # 全部 except* handler 之后（PEP 654 异常组协议；普通 except 的
+                # else 体在 handler 之前，走 _find_try_else_blocks 既有路径）。
+                # 既有路径在 (try 体尾, 首 handler) 区间找 else，命中的是 try 体
+                # 正常出口的帧胶水跳转块（c4_03 e04_with / r5v5_14 es_with /
+                # tesf 形），真 else 体被留在 try_blocks 中误入 Try.body。else
+                # 臂改由异常表无 handler 边判定（本任务判据白名单）：候选 = 
+                # [首链头, finally.try_end) 内不经链可达的块（链可达 = 退出胶
+                # 水/清理尾/RERAISE 续投等链自有材料 + 体续体；else 臂只经体帧
+                # 胶水跳转到达）。门控 = finally 宿主 ∧ 配对链 ∧ 链头块含
+                # CHECK_EG_MATCH（3.11 except* 标记口径，II.7 第 12 条）；不命中
+                # 门控时 _find_try_else_blocks 既有行为逐位不变（C3）。
+                _b102_star_else = []
+                if (handler_type == 'finally' and paired_except_infos
+                        and all_handler_entry_blocks):
+                    _b102_star_gate = any(
+                        any(_i.opname == 'CHECK_EG_MATCH'
+                            for _i in _heb.instructions)
+                        for _heb in all_handler_entry_blocks)
+                    if _b102_star_gate:
+                        _b102_star_else = self._find_star_else_blocks(
+                            region,
+                            min(pi['handler_start'] for pi in paired_except_infos),
+                            handler_info['handler_start'],
+                            set(all_handler_blocks_set) | set(finally_blocks))
+                if _b102_star_else:
+                    else_blocks = _b102_star_else
+                else:
+                    else_blocks = self._find_try_else_blocks(region)
                 # [R71-exctable] else 尾块闭包。识别条件（同层次结构身份）：
                 #   与已认定的 else 块链相邻（前驱在本区域自己已认定的 else
                 #   块集内）、位于「最后一个 else 块之后、本区域第一个
@@ -9930,6 +10165,49 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                                 and not region_b.except_handlers
                                 and region_a.except_handlers
                                 and getattr(region_a, 'try_offset_start', -1) == region_b.try_offset_start):
+                            region_b.add_child(region_a)
+                        break
+
+                # [B102-fix3] 退化内层 try 嵌套判定（等起点包含形态）：
+                # 内层 try 体编译为单 NOP ⇒ 退化签名（try_offset_start ==
+                # 首链头）；外层 try 的异常表经区间扩展吞并内层结构后两者
+                # try_offset_start 相等，R90 严格大于判据失效 ⇒ 内外层被平级
+                # 发射为两个兄弟 try（r4v4r_b102_except nested_star 形）。
+                # 嵌套判据（I.4 白名单）＝退化签名 + 等起点严格包含 + 外层
+                # handler 位于内层跨度之外 + 异常表区间成员关系（∃ 原始条目
+                # target=外层 handler 且其区间与内层区域块相交——内层清理尾
+                # RERAISE 必经外层 handler 续投，嵌套 try-in-try 的结构不变
+                # 式）。非退化等起点对（如 c4_03 e05_nested 正常嵌套形）不受
+                # 影响，维持既有通用层级归约（C3 显式豁免）。
+                if (region_a.parent is None
+                        and region_a.handler_entry_blocks
+                        and region_b.handler_entry_blocks
+                        and region_a.try_offset_start == region_b.try_offset_start
+                        and region_a.try_offset_end < region_b.try_offset_end
+                        and min(heb.start_offset for heb in region_a.handler_entry_blocks)
+                            == region_a.try_offset_start
+                        and min(heb.start_offset for heb in region_b.handler_entry_blocks)
+                            >= region_a.try_offset_end):
+                    _b102_a_min = min(b.start_offset for b in region_a.blocks) if region_a.blocks else None
+                    _b102_a_max = max(b.start_offset for b in region_a.blocks) if region_a.blocks else None
+                    _b102_b_handler = min(heb.start_offset for heb in region_b.handler_entry_blocks)
+                    _b102_overlap = False
+                    for _b102_e in self.cfg.exception_table:
+                        if _b102_e.get('target') != _b102_b_handler:
+                            continue
+                        if (_b102_a_min is not None
+                                and _b102_e.get('start', 0) <= _b102_a_max
+                                and _b102_e.get('end', 0) > _b102_a_min):
+                            for _b102_blk in region_a.blocks:
+                                if any(_b102_e['start'] <= ins.offset < _b102_e['end']
+                                       for ins in _b102_blk.instructions):
+                                    _b102_overlap = True
+                                    break
+                        if _b102_overlap:
+                            break
+                    if _b102_overlap:
+                        region_a.enclosing_try = region_b
+                        if region_a not in region_b.children:
                             region_b.add_child(region_a)
                         break
 
@@ -11710,6 +11988,63 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
             if last.opname in BACKWARD_JUMP_OPS:
                 return True
         return False
+
+    def _find_star_else_blocks(self, try_region, first_chain_head,
+                               finally_handler_start,
+                               frame_blocks_set) -> List[BasicBlock]:
+        """_find_star_else_blocks — except* 链后 else 臂识别（异常表无 handler 边判定）
+
+        ①算法依据：CPython 3.11 PEP 654 布局不变式 + I.1 原则 2/原则 4。含
+        except* 的 try/except*/else/finally 语句中，else 体位于全部 except*
+        handler 之后、finally 之前；try 体正常出口的帧胶水跳转块以 JUMP_
+        FORWARD 越过链直达 else 入口。else 臂判据（I.4 白名单）＝区间成员
+        关系 + 可达性差：候选块落在 [first_chain_head, finally.try_end) 内、
+        且不经链可达（_b102_chain_reachable_blocks：链自有材料——退出胶水/
+        清理尾/RERAISE 续投——与 try 体续体均经链可达，唯一不经链到达的区间
+        成员即 else 臂）；异常表在此区间只存 finally 无 handler 边的条目
+        （else 臂异常只由 finally 接续）。
+        ②归约顺序：自底向上——由 _identify_try_except_regions 的 else 识别步
+        调用（先于 _find_try_else_blocks 回退路径）；识别出的块从 try_blocks
+        分离归 else_blocks（每块唯一归属）。
+        ③唯一归属判定：候选 ∉ frame_blocks_set（handler 链体 ∪ finally 帧）、
+        ∉ 链可达集、与候选区间相交（块任一指令偏移 ∈ [first_chain_head,
+        try_region.try_offset_end)）。NOP-only 块（``else: pass`` 的帧标记）
+        照常纳入——重编译 ``else: pass`` 再生该 NOP，保持字节一致。
+        ④嵌套处理：else 体内的子结构（if/循环/内层 try）照常作为块集成员
+        返回，由 _generate_try 的 else 装配按入口引用派发整树生成。
+        ⑤入口引用语义：返回块列表 → Try.orelse；else 入口 = try 体帧胶水
+        的跳转目标（不经链可达的首块）。
+        ⑥反编译流程：try/except*/else/finally 单语句重建的 else 臂识别步；
+        空结果时调用方回退 _find_try_else_blocks 既有路径。
+        [C1] 判据只读块偏移区间成员、指令 opcode、可达集（同层结构事实）；
+        [C2] else 臂只经区间/可达性接口被宿主区域消费；[C3] 门控（finally
+        宿主 ∧ 配对链 ∧ CHECK_EG_MATCH 标记）不命中时本方法不被调用，既有
+        else 识别行为逐位不变。
+        """
+        fin_end = try_region.try_offset_end
+        if fin_end is None or first_chain_head is None:
+            return []
+        reach = self._b102_chain_reachable_blocks(
+            [heb.start_offset for heb in (try_region.handler_entry_blocks or [])],
+            finally_handler_start if finally_handler_start is not None else fin_end)
+        else_blocks = []
+        for block in self.cfg.get_blocks_in_order():
+            if block.start_offset >= fin_end:
+                break
+            if not any(first_chain_head <= ins.offset < fin_end
+                       for ins in block.instructions):
+                continue
+            if block in frame_blocks_set or block in reach:
+                continue
+            if not block.instructions:
+                continue
+            # 噪声-only 块（``else: pass`` 的 NOP 帧标记）不入 else——ast.Try
+            # 无 orelse 与 ``else: pass`` 语义等价（NOP 无用户语句），生成器
+            # 对空体 else 臂无 Pass 回填路径，纳入反而产出幻影语句。
+            if all(ins.opname in NOISE_OPS for ins in block.instructions):
+                continue
+            else_blocks.append(block)
+        return else_blocks
 
     def _find_try_else_blocks(self, try_region) -> List[BasicBlock]:
         if not hasattr(try_region, 'except_handlers') or not try_region.except_handlers:
@@ -14486,10 +14821,6 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                         break
             if _skip_chain_material:
                 continue
-            import os as _os_r8ph2
-            if _os_r8ph2.environ.get('R8CDBGH'):
-                print('[R8CDBGH] cand blk=%s claimed=%r exist=%r' % (
-                    block.start_offset, block in claimed, type(self.block_to_region.get(block)).__name__))
             subject_block = block
             if self._is_case_pattern_block(block):
                 # [Round 01 P0 fix] match-case 假阳性防护：
@@ -14518,12 +14849,9 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 for pred in sorted(block.predecessors, key=lambda p: p.start_offset):
                     last = pred.get_last_instruction()
                     if last and last.opname in CONDITIONAL_JUMP_OPS:
-                        if self._is_case_pattern_block(pred) or self._has_match_op(pred):
-                            subject_block = pred
-                            break
-            import os as _os_r8ph
-            if _os_r8ph.environ.get('R8CDBGH'):
-                print('[R8CDBGH] walk subj=%s' % subject_block.start_offset)
+                            if self._is_case_pattern_block(pred) or self._has_match_op(pred):
+                                subject_block = pred
+                                break
             case_blocks, case_patterns, case_bodies, merge, all_raw_blocks = self._mr_collect_case_body(subject_block)
             if not case_blocks:
                 continue
@@ -14543,10 +14871,6 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 _fail_off = (case_blocks[_ci + 1].start_offset
                              if _ci + 1 < len(case_blocks)
                              else (merge.start_offset if merge else None))
-                import os as _os_r8gp
-                if _os_r8gp.environ.get('R8CDBGP'):
-                    print('[R8CDBGP] cb=%s pat=%s' % (_cb.start_offset,
-                        self.pattern_parser.parse_case_pattern(_cb)))
                 _pb = self.pattern_parser.collect_pattern_blocks(_cb, all_blocks)
                 _gd = self.pattern_parser.parse_case_guard(
                     _pb,
@@ -14564,10 +14888,6 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 # 取器的 search_start+首臂定位，臂终止跳转目标 ∈ 体块集即
                 # 撤销该 guard。六项模板与 [C1][C2][C3] 见
                 # _b74_guard_arm_targets_case_body docstring。
-                import os as _os_r8gg
-                if _os_r8gg.environ.get('R8CDBGD'):
-                    print('[R8CDBGD] cb=%s fail=%s pb=%s _gd=%s' % (
-                        _cb.start_offset, _fail_off, [b.start_offset for b in _pb], _gd))
                 if (_gd is not None
                         and self._b74_guard_arm_targets_case_body(_pb, case_bodies,
                                                                  fail_case_offset=_fail_off)):
@@ -15480,10 +15800,6 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
         for _tr in self.regions:
             if (isinstance(_tr, TryExceptRegion)
                     and subject_block in (getattr(_tr, 'try_blocks', None) or set())):
-                import os as _os_r8tb
-                if _os_r8tb.environ.get('R8CDBGT'):
-                    print('[R8CDBGT] subj=%s try_blocks=%s' % (subject_block.start_offset,
-                        sorted(b.start_offset for b in (_tr.try_blocks or set()))))
                 _try_body_bound = set(_tr.try_blocks)
                 break
         # [B103 with 宿主边界] 与 [B17] try 体边界同判据同构（C3：宿主结构
@@ -15693,13 +16009,6 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 for gb in and_guard_chain:
                     visited.add(gb)
                     all_blocks.add(gb)
-            import os as _os_r8dbg
-            if _os_r8dbg.environ.get('R8CDBG'):
-                print('[R8CDBG] subj=%s cur=%s jt=%s next_off=%s success=%s and_chain=%s visited=%s jtinall=%s trybound=%s' % (
-                    subject_block.start_offset, current.start_offset, jt and jt.start_offset, next_case_offset,
-                    success and success.start_offset, [b.start_offset for b in and_guard_chain],
-                    sorted(b.start_offset for b in visited), jt in all_blocks,
-                    len(_try_body_bound) if _try_body_bound is not None else None))
             pat = self.pattern_parser.parse_case_pattern(current)
             guard_jump_target = None
             pattern_jump_targets = set()
@@ -16440,10 +16749,6 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 _fail_off = (case_blocks[_ci + 1].start_offset
                              if _ci + 1 < len(case_blocks)
                              else (merge.start_offset if merge else None))
-                import os as _os_r8gp
-                if _os_r8gp.environ.get('R8CDBGP'):
-                    print('[R8CDBGP] cb=%s pat=%s' % (_cb.start_offset,
-                        self.pattern_parser.parse_case_pattern(_cb)))
                 _pb = self.pattern_parser.collect_pattern_blocks(_cb, all_blocks)
                 _gd = self.pattern_parser.parse_case_guard(
                     _pb,
@@ -16461,10 +16766,6 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 # 取器的 search_start+首臂定位，臂终止跳转目标 ∈ 体块集即
                 # 撤销该 guard。六项模板与 [C1][C2][C3] 见
                 # _b74_guard_arm_targets_case_body docstring。
-                import os as _os_r8gg
-                if _os_r8gg.environ.get('R8CDBGD'):
-                    print('[R8CDBGD] cb=%s fail=%s pb=%s _gd=%s' % (
-                        _cb.start_offset, _fail_off, [b.start_offset for b in _pb], _gd))
                 if (_gd is not None
                         and self._b74_guard_arm_targets_case_body(_pb, case_bodies,
                                                                  fail_case_offset=_fail_off)):
@@ -17014,10 +17315,6 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 _fail_off = (case_blocks[_ci + 1].start_offset
                              if _ci + 1 < len(case_blocks)
                              else (merge.start_offset if merge else None))
-                import os as _os_r8gp
-                if _os_r8gp.environ.get('R8CDBGP'):
-                    print('[R8CDBGP] cb=%s pat=%s' % (_cb.start_offset,
-                        self.pattern_parser.parse_case_pattern(_cb)))
                 _pb = self.pattern_parser.collect_pattern_blocks(_cb, all_blocks)
                 _gd = self.pattern_parser.parse_case_guard(
                     _pb,
@@ -17035,10 +17332,6 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 # 取器的 search_start+首臂定位，臂终止跳转目标 ∈ 体块集即
                 # 撤销该 guard。六项模板与 [C1][C2][C3] 见
                 # _b74_guard_arm_targets_case_body docstring。
-                import os as _os_r8gg
-                if _os_r8gg.environ.get('R8CDBGD'):
-                    print('[R8CDBGD] cb=%s fail=%s pb=%s _gd=%s' % (
-                        _cb.start_offset, _fail_off, [b.start_offset for b in _pb], _gd))
                 if (_gd is not None
                         and self._b74_guard_arm_targets_case_body(_pb, case_bodies,
                                                                  fail_case_offset=_fail_off)):

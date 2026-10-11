@@ -35370,10 +35370,22 @@ AST 映射规则:
                                 elif self.region_analyzer.get_block_role(eb) in (BlockRole.WITH_EXIT_CLEANUP, BlockRole.WITH_STACK_CLEANUP, BlockRole.WITH_HANDLER):
                                     _is_cleanup = True
                                 elif nested_region.has_finally and nested_region.finally_blocks:
+                                    # [B102 with 宿主 else 镜像误杀收紧]（跨文件锚，
+                                    # FIX_C §3 登记）：纯指令镜像判据（eb 与 finally 体
+                                    # 剥噪后同形）对「单调用 else 体 × 单调用 finally
+                                    # 体」同形误杀 else 臂（es_with 的 else: ok() ×
+                                    # finally: _done()）。收紧 = 镜像命中还须经
+                                    # handler 链可达（finally 正常路径副本在 handler
+                                    # 正常完成路径上执行 ⇒ 经链可达；else 臂只经
+                                    # try 体帧胶水跳转到达 ⇒ 不经链可达）。判据 =
+                                    # 正常/异常边可达集（I.4 白名单），非镜像块零扰动。
+                                    _b102_reach = self.region_analyzer._b102_chain_reachable_blocks(
+                                        [heb.start_offset for heb in (nested_region.handler_entry_blocks or [])],
+                                        max((b.start_offset for b in self.cfg.blocks.values()), default=0) + 2)
                                     for fb in nested_region.finally_blocks:
                                         _eb_r = [i for i in eb.instructions if i.opname not in ('RESUME','NOP','CACHE','PUSH_NULL','PUSH_EXC_INFO','POP_EXCEPT','POP_TOP','RERAISE','COPY','JUMP_FORWARD','JUMP_BACKWARD','JUMP_ABSOLUTE','JUMP_BACKWARD_NO_INTERRUPT')]
                                         _fb_r = [i for i in fb.instructions if i.opname not in ('RESUME','NOP','CACHE','PUSH_NULL','PUSH_EXC_INFO','POP_EXCEPT','POP_TOP','RERAISE','COPY','JUMP_FORWARD','JUMP_BACKWARD','JUMP_ABSOLUTE','JUMP_BACKWARD_NO_INTERRUPT')]
-                                        if _eb_r and _fb_r and len(_eb_r) == len(_fb_r) and all(a.opname == b.opname for a, b in zip(_eb_r, _fb_r)):
+                                        if _eb_r and _fb_r and len(_eb_r) == len(_fb_r) and all(a.opname == b.opname for a, b in zip(_eb_r, _fb_r)) and eb in _b102_reach:
                                             _is_cleanup = True
                                             break
                                 if _is_cleanup:
@@ -35497,10 +35509,17 @@ AST 映射规则:
                                     elif self.region_analyzer.get_block_role(eb) in (BlockRole.WITH_EXIT_CLEANUP, BlockRole.WITH_STACK_CLEANUP, BlockRole.WITH_HANDLER):
                                         _is_cleanup2 = True
                                     elif nested_region.has_finally and nested_region.finally_blocks:
+                                        # [B102 with 宿主 else 镜像误杀收紧]（同上方
+                                        # entry 命中路径副本，判据与理由同源）：
+                                        # 镜像命中还须经 handler 链可达，else 臂
+                                        # （不经链可达）零误杀。
+                                        _b102_reach2 = self.region_analyzer._b102_chain_reachable_blocks(
+                                            [heb.start_offset for heb in (nested_region.handler_entry_blocks or [])],
+                                            max((b.start_offset for b in self.cfg.blocks.values()), default=0) + 2)
                                         for fb in nested_region.finally_blocks:
                                             _eb_r2 = [i for i in eb.instructions if i.opname not in ('RESUME','NOP','CACHE','PUSH_NULL','PUSH_EXC_INFO','POP_EXCEPT','POP_TOP','RERAISE','COPY','JUMP_FORWARD','JUMP_BACKWARD','JUMP_ABSOLUTE','JUMP_BACKWARD_NO_INTERRUPT')]
                                             _fb_r2 = [i for i in fb.instructions if i.opname not in ('RESUME','NOP','CACHE','PUSH_NULL','PUSH_EXC_INFO','POP_EXCEPT','POP_TOP','RERAISE','COPY','JUMP_FORWARD','JUMP_BACKWARD','JUMP_ABSOLUTE','JUMP_BACKWARD_NO_INTERRUPT')]
-                                            if _eb_r2 and _fb_r2 and len(_eb_r2) == len(_fb_r2) and all(a.opname == b.opname for a, b in zip(_eb_r2, _fb_r2)):
+                                            if _eb_r2 and _fb_r2 and len(_eb_r2) == len(_fb_r2) and all(a.opname == b.opname for a, b in zip(_eb_r2, _fb_r2)) and eb in _b102_reach2:
                                                 _is_cleanup2 = True
                                                 break
                                     if _is_cleanup2:
@@ -37189,19 +37208,7 @@ AST 映射规则:
                                     body_stmts.extend(filtered)
                 self.generated_blocks.add(body[0])
 
-            import os as _os_r8ge
-            if _os_r8ge.environ.get('R8CDBGE'):
-                print('[R8CDBGE] case=%s guard=%s gpb=%s body=%s' % (
-                    i, guard, sorted(b.start_offset for b in guard_pattern_blocks),
-                    sorted(b.start_offset for b in body)))
             for block in body:
-                if _os_r8ge.environ.get('R8CDBGE'):
-                    _nr1 = self.region_analyzer.get_entry_region_for_block(block)
-                    _nr2 = self.region_analyzer.get_region_for_block(block) if not _nr1 else None
-                    print('[R8CDBGE] blk=%s gen=%s entry_r=%s own_r=%s' % (
-                        block.start_offset, block in self.generated_blocks,
-                        type(_nr1).__name__ if _nr1 else None,
-                        type(_nr2).__name__ if _nr2 else None))
                 if block in self.generated_blocks:
                     continue
 

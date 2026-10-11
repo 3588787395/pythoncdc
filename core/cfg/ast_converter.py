@@ -1359,8 +1359,20 @@ class CFGASTConverter:
         for a in expr_dict.get('args', []):
             if isinstance(a, dict):
                 if a.get('type') == 'Starred':
-                    # *args 参数
-                    var_arg = self._convert_expression(a.get('value', {}))
+                    # [B106] star 实参保序转换：多 `*` / 非尾 `*` 的位置
+                    # 保真（任务判据：CALL 实参序列按指令顺序重建，禁重排/
+                    # 去重）。Starred 保留在 pparams 位置实参序内（经
+                    # _convert_expression 落为 Starred dict，渲染层按位发射
+                    # `*expr`）；旧实现抽到 var 槽——ASTCall.var 仅一个槽位且
+                    # 恒渲染在尾 ⇒ 位置重排（e02 `f(*x, 1)` → `f(1, *x)`，
+                    # 字节级发散：BUILD_LIST 追加序倒置）与多星丢失（e04
+                    # `f(*xs, *ys)` → `f(*ys)`，LIST_EXTEND xs 蒸发）。同步
+                    # 推导式（e01 单尾星）等价形不受影响（渲染 `*expr` 同构）。
+                    # 判据 = dict args 内的 Starred 成员事实（I.4 白名单：
+                    # CALL 前操作数块序），无名字/偏移特判。
+                    star_arg = self._convert_expression(a)
+                    if star_arg:
+                        args.append(star_arg)
                 else:
                     arg = self._convert_expression(a)
                     if arg:
@@ -1811,6 +1823,24 @@ class CFGASTConverter:
                     # 剥除 Await 与调用包装，返回推导式本体（重编译时
                     # 编译器自动再生，字节码一致）。
                     return comp_node
+        # [B96] 推导式 dict 形态的同款剥除：区域装配层
+        # （comprehension_generator.convert_comprehension_objects）已把
+        # ComprehensionObject 转为推导式 dict，并按内层 code object
+        # co_flags（CO_COROUTINE=0x80 / CO_ASYNC_GENERATOR=0x200，
+        # is_async_comp 标注）判定 async。判据（I.4 白名单「code object
+        # 元数据」）：value 为推导式 dict ∧ is_async_comp 标注 ⇒ 该
+        # GET_AWAITABLE+SEND 是编译器为 async 推导式调用自动补发的协议
+        # （源码不可能显式写 await(<推导式>)——推导式求值为容器不可
+        # await，唯一合法形态即 async 推导式的隐式协议，如
+        # ``acc.extend({k: await g(v) for ...})`` 的 a_three 形），
+        # 剥除 Await 返回推导式本体；未标注（同步推导式）保持
+        # ASTAwaitable 包裹原语义（用户级 await 保留，重编译再生
+        # GET_AWAITABLE）。
+        if (isinstance(value_dict, dict)
+                and value_dict.get('type') in ('ListComp', 'SetComp',
+                                               'DictComp', 'GeneratorExp')
+                and value_dict.get('is_async_comp')):
+            return self._convert_expression(value_dict)
         value = self._convert_expression(value_dict)
         return ASTAwaitable(value=value)
 
@@ -1891,7 +1921,22 @@ class CFGASTConverter:
         # [AST 映射] arguments.defaults/kw_defaults → 源码 `x=d`/`*, y=d`。
         # [C1] 只读本 Lambda 节点自身 args dict；[C2] 默认值表达式作为子节点
         # 原样携带；[C3] 无默认值时保持旧扁平渲染路径（显式守卫，行为不变）。
-        if isinstance(args_dict, dict) and (args_dict.get('defaults') or args_dict.get('kw_defaults')):
+        if isinstance(args_dict, dict) and (args_dict.get('defaults') or args_dict.get('kw_defaults')
+                                            # [B106] lambda `*args`/`**kwargs` 形参保真：
+                                            # vararg/kwarg 存在时同样携带完整 arguments
+                                            # dict 走 _generate_arguments_dict 渲染——
+                                            # 旧扁平化路径只读位置形参列表（args→
+                                            # ASTName），`lambda *a: a` 的 *a（CO_
+                                            # VARARGS 位形参，region 层 arguments
+                                            # dict 已携带）被静默丢弃、重编译缺
+                                            # *a ⇒ <lambda> code object 字节级发散
+                                            #（r5v5_15 lam_star 实测）。判据 =
+                                            # arguments dict 的 vararg/kwarg 成员
+                                            # 事实（I.4 白名单：code object 形参
+                                            # 布局元数据）；两者皆无时保持旧扁平
+                                            # 渲染路径（C3 显式守卫）。
+                                            or args_dict.get('vararg')
+                                            or args_dict.get('kwarg')):
             lambda_node = ASTLambda(args=args, body=body)
             lambda_node._args_dict = args_dict
             return lambda_node

@@ -1,0 +1,32 @@
+[
+ {
+  "name": "B102_main",
+  "pyc": "test_repros/round4/c4_03_except_star.pyc",
+  "status": "failure",
+  "units_success": 12,
+  "units_total": 13,
+  "failures": [
+   "***<module>.e04_with: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "B102_except",
+  "pyc": "test_repros/round4/r4v4r_b102_except.pyc",
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 8,
+  "failures": [
+   "***<module>.star_else_finally: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "B102_deep",
+  "pyc": "test_repros/round5/r5v5_14_except_star_deep.pyc",
+  "status": "failure",
+  "units_success": 9,
+  "units_total": 10,
+  "failures": [
+   "***<module>.es_with: Failure: Different control flow"
+  ]
+ }
+]

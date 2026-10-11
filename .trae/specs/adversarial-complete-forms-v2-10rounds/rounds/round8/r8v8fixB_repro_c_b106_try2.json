@@ -1,0 +1,29 @@
+[
+ {
+  "name": "B106_main",
+  "pyc": "test_repros/round4/c4_12_star_args.pyc",
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "B106_call",
+  "pyc": "test_repros/round5/r5v5_07_starargs_callsite.pyc",
+  "status": "failure",
+  "units_success": 11,
+  "units_total": 13,
+  "failures": [
+   "***<module>.st_comp: Failure: Different bytecode",
+   "***<module>.st_comp.<listcomp>: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "B106_lam",
+  "pyc": "test_repros/round5/r5v5_15_lambda_combo.pyc",
+  "status": "success",
+  "units_success": 27,
+  "units_total": 27,
+  "failures": []
+ }
+]

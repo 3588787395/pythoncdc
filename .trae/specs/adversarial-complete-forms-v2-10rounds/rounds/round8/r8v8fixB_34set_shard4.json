@@ -1,5 +1,5 @@
 {
- "elapsed_sec": 6.0,
+ "elapsed_sec": 5.8,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
@@ -7,7 +7,7 @@
   "success": 0
  },
  "files_total": 4,
- "generated_at": "2026-10-10T14:54:32",
+ "generated_at": "2026-10-11T19:06:24",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
@@ -48,7 +48,7 @@
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
    "pyc_sha": "882d3ccc0d31",
    "source": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_infoOK.py",
-   "source_sha": "3d95f17ffd8e",
+   "source_sha": "0c5609ce9ae6",
    "status": "failure",
    "success_rate": 0.9310344827586207,
    "units_success": 27,
@@ -76,7 +76,7 @@
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
    "pyc_sha": "883f61a64cb2",
    "source": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytoolsOK.py",
-   "source_sha": "592c6eeb0932",
+   "source_sha": "2291b071c96b",
    "status": "failure",
    "success_rate": 0.9848484848484849,
    "units_success": 65,
