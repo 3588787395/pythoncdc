@@ -368,6 +368,38 @@ def _r2114_defer_to_unemitted_sibling_loop(gen, block, child):
     return False
 
 
+def _r45a_else_is_implicit_tail_only(gen, blocks):
+    """[R21-23/r45a] True when every block in `blocks` is only the code object's implicit
+    function-tail landing (a terminal `LOAD_CONST None; RETURN_VALUE` with a single
+    predecessor that is not itself and that no other region joins on).
+
+    R21-14's while-else guard exists so that a hoisted-condition loop does not swallow the
+    *user body* of the sibling loop that follows it (risk: loop1's else emitted loop2's
+    `time.sleep(0.01)` blocks and marked them generated). Blocks that carry no user
+    statement at all cannot be swallowed in that sense, and suppressing the fallback for
+    them additionally deleted the per-exit-edge `return None` materialisation that the
+    [R44A-elif] criterion reads as the region's then-tail (handlers._target). The guard is
+    therefore refused for that shape only.
+    """
+    if not blocks:
+        return False
+    for _b in blocks:
+        try:
+            if _b is None or list(_b.successors):
+                return False
+            if list(getattr(_b, "exception_successors", None) or ()):
+                return False
+            if gen._r8_b121_scope_return_sink_kind(_b) != "pure-none":
+                return False
+            if gen._is_return_none_join_block(_b):
+                return False
+            if len([_p for _p in (_b.predecessors or ()) if _p is not _b]) != 1:
+                return False
+        except Exception:
+            return False
+    return True
+
+
 class RegionASTGenerator:
     _ALL_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, BoolOpRegion, TernaryRegion)
     _STRUCTURAL_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion)
@@ -2021,6 +2053,73 @@ class RegionASTGenerator:
                             ast_nodes.extend(_b84_prefix)
                 # 守卫 wrap 打开期间，顶层单元的发射目标改为 wrap 体；wrap
                 # 未打开时行为不变。
+                # [R44A-elif] 顶级 IfRegion 的 merge_block 指向另一顶级 IfRegion 的入口/
+                # 条件块、而分析端未声明 elif_bodies 时，在生成端把后继区域装配成 elif。
+                # 否则二者被发射成并列 if，then 臂尾被材料化为显式 return None，令 CPython
+                # 共享循环出口尾声、少物化一对 return None（handlers._target 的唯一破口）。
+                if (isinstance(region, IfRegion) and isinstance(region_ast, dict)
+                        and region_ast.get('type') == 'If'
+                        and not region_ast.get('orelse')
+                        and getattr(region, 'merge_block', None) is not None
+                        and not (getattr(region, 'else_blocks', None) or [])
+                        and not (getattr(region, 'elif_conditions', None) or [])
+                        and not (getattr(region, 'elif_bodies', None) or [])
+                        and getattr(region, 'entry', None) is not None
+                        and (region_ast.get('body')
+                             and self._is_trailing_return_none_statement(
+                                 region_ast['body'][-1]))
+                        # 落点判据：then 臂尾必须是「单前驱 / 纯 None / 非汇合」
+                        # 的隐式尾声逐边落点（与 R8-B121 同族），而非源码显式
+                        # return None 汇合块——后者（trade_live_broker 实测）转
+                        # elif 会丢真实 return，令单元回退。
+                        and any(_tl is not None
+                                and not list(_tl.successors)
+                                and not list(getattr(_tl, 'exception_successors',
+                                                     None) or ())
+                                and self._r8_b121_scope_return_sink_kind(_tl)
+                                == 'pure-none'
+                                and not self._is_return_none_join_block(_tl)
+                                and len([_p for _p in (_tl.predecessors or ())
+                                         if _p is not _tl]) == 1
+                                for _tl in (region.then_blocks or []))):
+                    _r44a_mb = region.merge_block
+                    _r44a_r2 = None
+                    for _r44a_cand in top_level_regions:
+                        if (_r44a_cand is not region
+                                and isinstance(_r44a_cand, IfRegion)
+                                and getattr(_r44a_cand, 'parent', None) is None
+                                and _r44a_cand.entry is not None
+                                and (_r44a_cand.condition_block is _r44a_mb
+                                     or _r44a_cand.entry is _r44a_mb)
+                                and region.entry is not None
+                                and _r44a_cand.entry.start_offset > region.entry.start_offset
+                                and not all(_b in self.generated_blocks
+                                            for _b in _r44a_cand.blocks)):
+                            _r44a_r2 = _r44a_cand
+                            break
+                    if _r44a_r2 is not None:
+                        try:
+                            _r44a_elif = self._generate_region(_r44a_r2)
+                        except Exception:
+                            _r44a_elif = None
+                        if (isinstance(_r44a_elif, dict)
+                                and _r44a_elif.get('type') == 'If'):
+                            _r44a_body = region_ast.get('body') or []
+                            if (_r44a_body
+                                    and self._is_trailing_return_none_statement(
+                                        _r44a_body[-1])):
+                                region_ast['body'] = (_r44a_body[:-1]
+                                                       or [{'type': 'Pass'}])
+                            if _r44a_r2.merge_block is None:
+                                _r44a_o = _r44a_elif.get('orelse') or []
+                                if (_r44a_o and all(
+                                        self._is_trailing_return_none_statement(_s)
+                                        for _s in _r44a_o)):
+                                    _r44a_elif['orelse'] = []
+                            region_ast['orelse'] = [_r44a_elif]
+                            for _r44a_b in _r44a_r2.blocks:
+                                self.generated_blocks.add(_r44a_b)
+                                self.generated_offsets.add(_r44a_b.start_offset)
                 if isinstance(region_ast, list):
                     if _r76g_stack:
                         _r76g_stack[-1]['body'].extend(region_ast)
@@ -3232,111 +3331,6 @@ class RegionASTGenerator:
                 continue
             return True
         return False
-
-    def _r2121_shared_tail_sinks(self, region):
-        """_r2121_shared_tail_sinks - [R21-21] 「共用尾被复制成 N 份内联尾」的形状判据。
-
-        ①算法依据：CPython 3.11 控制实验（本机 3.11.7，`compile()` 逐指令 + 逐跳转
-          目标实测，非推理）：源码形如
-              if COND: <臂>
-              else: return None
-              return None
-          编译为「COND 的假边跳到一个 `LOAD_CONST None; RETURN_VALUE` 块 F，臂的各
-          出口再以 JUMP_FORWARD 跳到**另一个** `LOAD_CONST None; RETURN_VALUE` 块 T」。
-          而
-              if COND: <臂>            （无 else）
-              if COND: <臂> else: return None      （无尾随 return）
-              if COND: <臂> else: pass             （同前二者）
-          三形**逐字节相同**：CPython 把 else 臂与函数隐式尾声汇成同一块，并把每条
-          出口边在原地内联一份尾声。故「假边落点 F 与函数终块 T 是两个不同块」是
-          源码级 `else: return None` + 尾随 `return None` 的唯一字节码见证——本判据
-          裁的就是这一件事：哪一个块是函数的终块（T），哪一个块是假边的专属落点（F）。
-        ②归约顺序：区域归约完成、本区域装配末尾时评估一次；不增删任何区域的成员
-          集合，不回溯修正（§1.3 单向数据流）。
-        ③唯一归属判定（全部同层事实，I.4 白名单：块末 opcode、前驱/后继集合、异常
-          边、区域自身结构字段；零文件名/函数名/常量值/偏移阈值/深度阈值/计数上限）：
-            (G1) region 是本 code object 函数体作用域（`region.parent is None`）的
-                 IF_THEN IfRegion，且 else_blocks / elif_conditions / elif_final_else
-                 / merge_block 全空——有 else 内容或有 merge 的区域由既有臂语句与
-                 R15-N5 post-if merge 发射路径负责，本判据不重复认领；
-            (G2) 条件块块末是前向 IF_FALSE 条件跳转，其 argval 落点 F 存在、在条件块
-                 之后、且不属于本区域块集（假边被**跳到**一处 sink，而不是顺序落入臂）；
-            (G3) F 是终块（无正常后继）、不是异常处理器入口、剥噪后恰为
-                 `LOAD_CONST None + RETURN_VALUE`（`_is_implicit_return_block`），且其
-                 **唯一前驱就是本区域的条件块**——该 sink 只由这条假边接入，故它就是
-                 本 if 的 else 臂本身，不是任何别处的汇合点（汇合点由 G4 单独裁决）；
-            (G4) T = 本 code object 里 start_offset 最大的块（即函数尾），T is not F、
-                 T 是终块、纯 None-return，且满足汇合出口块身份
-                 `_is_return_none_join_block`（前驱 ≥2，或某前驱以无条件前向跳转精确
-                 接入）。T 属于本区域块集与否不作要求：分析端把「臂落出即函数尾」的
-                 出口块记进本区域 then_blocks 正是本形状的常态（victim
-                 `query_trade_strategy_info` @618），此时本区域的臂走查只登记该块而
-                 不发射语句，发射权仍归本判据（见⑤）。
-          四条全真才返回 (F, T)；任一不真返回 (None, None)，调用点逐字节不变。
-        ④嵌套处理：判据只在函数体作用域的 IfRegion 上评估（G1），但其 F/T 身份全部
-          由块级同层事实决定，与该 IfRegion 臂内部的嵌套（try/with/循环任意深度）无
-          关；嵌套函数各自成图、各自成实例，同判。
-        ⑤入口引用语义：命中时 F 由本区域的 ast.If.orelse 引用为一条 Return 语句，T
-          由本区域在 If 节点之后按块序补发为兄弟语句——与 [R21-15 HOIST-EMIT] 及
-          R15-N5 post-if merge 同一发射位；两块各恰一个发射者（原则 2），补发前对 T
-          先撤销本区域臂走查留下的 generated 标记（同 R15-N5 对 merge_block 的既有
-          处理），发射后重新登记，令 T 自身的 BASIC 区域在顶层派发时按既有去重让位。
-        ⑥反编译流程：识别（region_analyzer 不改）→ 本判据 + 发射（region_ast_generator
-          两处：本方法一处判定、`_if_generate_normal` 末尾一处消费）→ 语句体仍来自
-          `_generate_block_statements` 单一漏斗 → `_explicit_return` 指令背书沿用
-          R57-C/R15-10 既有通道（code_generator._filter_trailing_return_none 据此不
-          过滤，ast_converter 保留该标记）。
-
-        C 条款：C1 只读本区域自身结构字段与 F/T 两个块的块级事实（前驱/后继/块末
-        opcode/异常边），不读兄弟区域内部、不读文件名或名字、不读偏移常量；C2 判据
-        与 `_is_return_none_join_block`/`_is_implicit_return_block` 复用，不复制判定；
-        C3 消费点唯一（`_if_generate_normal` 末尾一处），且不命中时零副作用——本方法
-        不修改任何状态。
-        """
-        if not isinstance(region, IfRegion) or getattr(region, 'parent', None) is not None:
-            return (None, None)
-        if region.region_type is not RegionType.IF_THEN:
-            return (None, None)
-        if (region.else_blocks or region.elif_conditions or region.elif_final_else
-                or getattr(region, 'merge_block', None) is not None):
-            return (None, None)
-        cond = region.condition_block if region.condition_block is not None else region.entry
-        if cond is None or not cond.instructions:
-            return (None, None)
-        _last = cond.get_last_instruction()
-        if _last is None or _last.opname not in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE'):
-            return (None, None)
-        if _last.argval is None:
-            return (None, None)
-        else_sink = self.cfg.get_block_by_offset(_last.argval)
-        if (else_sink is None or else_sink is cond or else_sink is region.entry
-                or else_sink.start_offset <= cond.start_offset
-                or else_sink in region.blocks):
-            return (None, None)
-        if list(else_sink.successors) or getattr(else_sink, 'exception_handler', False):
-            return (None, None)
-        _exc_succ = getattr(cond, 'exception_successors', None) or set()
-        if else_sink in _exc_succ:
-            return (None, None)
-        if not self._is_implicit_return_block(
-                [i for i in else_sink.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE')]):
-            return (None, None)
-        _else_preds = [p for p in (else_sink.predecessors or ()) if p is not else_sink]
-        if len(_else_preds) != 1 or _else_preds[0] is not cond:
-            return (None, None)
-        _all_blocks = list(self.cfg.blocks.values())
-        if not _all_blocks:
-            return (None, None)
-        tail_sink = max(_all_blocks, key=lambda b: b.start_offset)
-        if (tail_sink is else_sink or list(tail_sink.successors)
-                or getattr(tail_sink, 'exception_handler', False)):
-            return (None, None)
-        if not self._is_implicit_return_block(
-                [i for i in tail_sink.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE')]):
-            return (None, None)
-        if not self._is_return_none_join_block(tail_sink):
-            return (None, None)
-        return (else_sink, tail_sink)
 
     def _is_region_internal_exit_sink(self, block: BasicBlock, deciding_region=None) -> bool:
         """[r1-b99-sinkclaim] 判定块是否为「被某个区域内部区域认领的退出汇合块」。
@@ -8190,7 +8184,8 @@ AST 映射规则:
             # owning sibling loop (risk victim: loop1's else swallowed loop2's body).
             if (not else_stmts
                     and _r2114_else_owned_skipped
-                    and _r2114_else_owned_skipped == len(_filtered_else_blocks)):
+                    and _r2114_else_owned_skipped == len(_filtered_else_blocks)
+                    and not _r45a_else_is_implicit_tail_only(self, _filtered_else_blocks)):
                 else_stmts = []
             elif not else_stmts:
                 else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
@@ -19215,147 +19210,6 @@ AST 映射规则:
             return None
 
 
-    def _r4701_and_lift_or_tail(self, region, cond_block, expr):
-        """[R47-01] 负极性单腿 if 的内层短路 or 尾 ⇒ 整体 and 提升为一条测试。
-
-        CPython 3.11 把 `if not X and (A or B): arm else: tail` 编译为：
-            X; POP_JUMP_IF_TRUE -> tail          (负极性单腿，真出口=else)
-            A; POP_JUMP_IF_TRUE -> arm           (or 腿一)
-            B 链式比较; 真 -> arm / 假 -> tail   (or 尾腿)
-        区域归约不声明 BoolOpRegion（无 inline_boolop_chains），三层各成一个
-        IfRegion：@R(腿X, merge=tail)、@FR(腿A, merge=arm, else空)、
-        @FFR(cc 尾腿, merge=arm, else=[tail])。逐层取反发射为三层嵌套后，
-        X/A 两腿的真出口被移到 tail 链末端（IQData/api/api_base.pyc ::
-        get_history_df 实测 landings=2，内容零差）。
-
-        判据（全部 CFG 结构事实，不读函数名/偏移常量/跳转操作数，与已落地
-        _r2119_or_tail_extension 同族但作用于无 BoolOpRegion 的单腿区域）：
-        ① 本区域 cond_block 末跳 IF_TRUE（非 NONE_CHECK）-> T，T 即 merge_block
-           且 else_blocks 为空（当前已被极性判定取反）；
-        ② 该腿的唯一非 T 条件后继 F 是 IfRegion FR 入口，FR 自身同判 ①（腿末跳
-           IF_TRUE -> T2==FR.merge_block、else 空、无 elif），且 T2 < T；
-        ③ FR 腿的唯一非 T2 条件后继 FF 是 IfRegion FFR 入口，FFR.merge_block
-           为 T2、无 elif；FFR 条件可重建（链式比较走
-           _build_chained_compare_from_region_data，否则 expr_reconstructor）；
-        ④ FFR 末段假出口 E 恰为本区域腿的真出口 T（E is T）且 E > T2、
-           E 不在 FFR.then_blocks —— 内层 if 的 else 臂正是外层腿跳往的续接块。
-        归约：测试 = BoolOp(and, [not X, BoolOp(or, [A, B])])；臂重声明为
-        then=[T2]、else=[E]、merge=None；F..T 之间除 T2/E 外的内层块全部标记
-        generated。任一合取不成立返回 None，走既有取反路径，产物逐字节不变。
-        """
-        try:
-            _li = cond_block.get_last_instruction()
-            if (_li is None or getattr(_li, 'argval', None) is None
-                    or 'IF_TRUE' not in _li.opname
-                    or _li.opname in NONE_CHECK_OPS):
-                return None
-            _t_off = _li.argval
-            _t = self.cfg.get_block_by_offset(_t_off)
-            if _t is None or _t is not getattr(region, 'merge_block', None):
-                return None
-            if getattr(region, 'else_blocks', None):
-                return None
-            _fl = [s for s in (cond_block.conditional_successors
-                               or cond_block.successors or [])
-                   if s.start_offset != _t_off]
-            if len(_fl) != 1:
-                return None
-            _f = _fl[0]
-            if _f.start_offset >= _t_off:
-                return None
-            _fr = None
-            for _r in self.region_analyzer.regions:
-                if isinstance(_r, IfRegion) and _r.entry is _f:
-                    _fr = _r
-                    break
-            if _fr is None or getattr(_fr, 'else_blocks', None):
-                return None
-            if getattr(_fr, 'elif_conditions', None):
-                return None
-            if getattr(_fr, 'condition_block', None) is not _f:
-                return None
-            _fi = _f.get_last_instruction()
-            if (_fi is None or getattr(_fi, 'argval', None) is None
-                    or 'IF_TRUE' not in _fi.opname
-                    or _fi.opname in NONE_CHECK_OPS):
-                return None
-            _t2_off = _fi.argval
-            _t2 = self.cfg.get_block_by_offset(_t2_off)
-            if _t2 is None or _t2 is not getattr(_fr, 'merge_block', None):
-                return None
-            if _t2_off >= _t_off:
-                return None
-            _fl2 = [s for s in (_f.conditional_successors or _f.successors or [])
-                    if s.start_offset != _t2_off]
-            if len(_fl2) != 1:
-                return None
-            _ff = _fl2[0]
-            if _ff.start_offset >= _t2_off:
-                return None
-            _ffr = None
-            for _r in self.region_analyzer.regions:
-                if isinstance(_r, IfRegion) and _r.entry is _ff:
-                    _ffr = _r
-                    break
-            if _ffr is None or _ffr.merge_block is not _t2:
-                return None
-            if getattr(_ffr, 'elif_conditions', None):
-                return None
-            _a_pure = [i for i in _f.instructions
-                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
-                       and i is not _fi]
-            _a = self.expr_reconstructor.reconstruct(_a_pure) if _a_pure else None
-            if _a is None:
-                return None
-            _cc = list(getattr(_ffr, 'chained_compare_blocks', None) or [])
-            if _cc and getattr(_ffr, 'chained_compare_ops', None):
-                _b = self._build_chained_compare_from_region_data(_ffr)
-            else:
-                _ff_last = _ff.get_last_instruction()
-                _b_pure = [i for i in _ff.instructions
-                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
-                           and i is not _ff_last]
-                _b = self.expr_reconstructor.reconstruct(_b_pure) if _b_pure else None
-            if _b is None:
-                return None
-            _exit_blk = _cc[-1] if _cc else _ff
-            _eli = _exit_blk.get_last_instruction()
-            if (_eli is None or getattr(_eli, 'argval', None) is None
-                    or 'IF_FALSE' not in _eli.opname
-                    or _eli.opname in NONE_CHECK_OPS):
-                return None
-            _e = self.cfg.get_block_by_offset(_eli.argval)
-            if _e is None or _e is not _t:
-                return None
-            if _e.start_offset <= _t2_off:
-                return None
-            if _e in (getattr(_ffr, 'then_blocks', None) or []):
-                return None
-            for _mb in [_f, _ff] + _cc:
-                self.generated_blocks.add(_mb)
-                self.generated_offsets.add(_mb.start_offset)
-            for _sub in (_fr, _ffr):
-                _pool = set(getattr(_sub, 'blocks', None) or [])
-                try:
-                    _pool |= set(_sub.get_content_blocks() or set())
-                except Exception:
-                    pass
-                for _pb in _pool:
-                    if (_pb is not _t2 and _pb is not _e
-                            and _f.start_offset <= _pb.start_offset < _t_off):
-                        self.generated_blocks.add(_pb)
-                        self.generated_offsets.add(_pb.start_offset)
-            region.then_blocks = [_t2]
-            region.else_blocks = [_e]
-            region.merge_block = None
-            _or_expr = {'type': 'BoolOp', 'op': 'or', 'values': [_a, _b]}
-            _and_expr = {'type': 'BoolOp', 'op': 'and',
-                         'values': [_negate_expr(expr), _or_expr]}
-            return self._convert_lambda_function_objects(_and_expr)
-        except Exception:
-            return None
-
-
     def _if_generate_elif_chain(self, region: IfRegion) -> List[Dict[str, Any]]:
         """生成 if-elif[-else] 链中 elif 部分的 AST（由 _if_generate_full_elif_chain 调用）。
 
@@ -22774,74 +22628,6 @@ AST 映射规则:
                     if_result = if_result + _r2115_tail_stmts
                 else:
                     if_result = [if_result] + _r2115_tail_stmts
-        # [R21-21 发射] 判据（`_r2121_shared_tail_sinks`，一处判定）命中 ⇒ 本区域在 If
-        # 节点之后补发两条源码语句：`else: return None`（F——只由本 if 的假边接入的
-        # 纯 None 终块）与尾随 `return None`（T——本 code object 的终块，由臂出口以
-        # 无条件前向跳转接入的汇合出口块）。二者缺一，重编译都会把隐式尾声按出口边
-        # **逐边内联**，一个共用尾就被复制成 N 份内联尾（本票实测形：query_trade_
-        # strategy_info delta=0 hunks=3、query_strategy_id delta=-1 hunks=2）。
-        # 归约方式：orelse=[Return]（AST 映射 If.orelse）+ 兄弟语句（AST 映射函数体
-        # 末条 Return 语句），与 [R21-15 HOIST-EMIT]/R15-N5 post-if merge 同一发射位；
-        # 语句体仍来自 `_generate_block_statements` 单一漏斗，`_explicit_return` 指令
-        # 背书沿用 R57-C/R15-10 既有通道（否则 code_generator 把函数末 return None
-        # 当隐式尾声过滤掉）。T 的 generated 标记先撤后登（同 R15-N5 对 merge_block
-        # 的既有处理），发射后重新登记，令 T 自身的 BASIC 区域在顶层派发时按既有去重
-        # 让位——每块恰一个发射者（原则 2）。
-        # C3 守卫封闭：判据不命中零副作用；命中但任一发射前提不成立（节点不是末尾的
-        # If、orelse 非空、elif/nested-if 标记在场、别的区域已认领 T、漏斗语句不是
-        # Return 形）则**逐字节退回原行为**，包括把本块临时撤销的 generated 标记按
-        # 进入前的状态复原，绝不留半程状态。
-        _r2121_else_sink, _r2121_tail_sink = self._r2121_shared_tail_sinks(region)
-        if _r2121_else_sink is not None and _r2121_tail_sink is not None:
-            _r2121_node = None
-            if isinstance(if_result, dict) and if_result.get('type') == 'If':
-                _r2121_node = if_result
-            elif isinstance(if_result, list) and if_result:
-                _r2121_last = if_result[-1]
-                if isinstance(_r2121_last, dict) and _r2121_last.get('type') == 'If':
-                    _r2121_node = _r2121_last
-            _r2121_else_was_gen = _r2121_else_sink in self.generated_blocks
-            _r2121_tail_was_gen = _r2121_tail_sink in self.generated_blocks
-            _r2121_tail_theirs = _r2121_tail_was_gen and _r2121_tail_sink not in region.blocks
-            if (_r2121_node is not None
-                    and not (_r2121_node.get('orelse') or [])
-                    and '_is_elif' not in _r2121_node
-                    and '_is_nested_if' not in _r2121_node
-                    and not _r2121_tail_theirs):
-                self.generated_blocks.discard(_r2121_else_sink)
-                self.generated_offsets.discard(_r2121_else_sink.start_offset)
-                self.generated_blocks.discard(_r2121_tail_sink)
-                self.generated_offsets.discard(_r2121_tail_sink.start_offset)
-                _r2121_else_stmts = self._generate_block_statements(_r2121_else_sink) or []
-                _r2121_tail_stmts = self._generate_block_statements(_r2121_tail_sink) or []
-                _r2121_ok = bool(_r2121_else_stmts) and bool(_r2121_tail_stmts) and all(
-                    isinstance(_r2121_s, dict) and _r2121_s.get('type') == 'Return'
-                    for _r2121_s in _r2121_else_stmts + _r2121_tail_stmts)
-                if _r2121_ok:
-                    for _r2121_s in _r2121_else_stmts + _r2121_tail_stmts:
-                        _r2121_s['_explicit_return'] = True
-                    _r2121_node['orelse'] = _r2121_else_stmts
-                    self.generated_blocks.add(_r2121_else_sink)
-                    self.generated_offsets.add(_r2121_else_sink.start_offset)
-                    self.generated_blocks.add(_r2121_tail_sink)
-                    self.generated_offsets.add(_r2121_tail_sink.start_offset)
-                    if isinstance(if_result, list):
-                        if_result = if_result + _r2121_tail_stmts
-                    else:
-                        if_result = [if_result] + _r2121_tail_stmts
-                else:
-                    if not _r2121_else_was_gen:
-                        self.generated_blocks.discard(_r2121_else_sink)
-                        self.generated_offsets.discard(_r2121_else_sink.start_offset)
-                    else:
-                        self.generated_blocks.add(_r2121_else_sink)
-                        self.generated_offsets.add(_r2121_else_sink.start_offset)
-                    if not _r2121_tail_was_gen:
-                        self.generated_blocks.discard(_r2121_tail_sink)
-                        self.generated_offsets.discard(_r2121_tail_sink.start_offset)
-                    else:
-                        self.generated_blocks.add(_r2121_tail_sink)
-                        self.generated_offsets.add(_r2121_tail_sink.start_offset)
         return if_result
 
     def _try_build_await_condition(self, region: IfRegion, cond_block: 'BasicBlock') -> Optional[Dict[str, Any]]:
@@ -25084,15 +24870,6 @@ AST 映射规则:
                             negate = False
                             expr = {'type': 'BoolOp', 'op': 'or', 'values': [expr, _or_rhs_expr]}
                 expr = self._convert_lambda_function_objects(expr)
-                # [R47-01] 负极性单腿 + 内层 `or` 短路尾 ⇒ and 提升（判据见
-                # _r4701_and_lift_or_tail）。成功时本区域臂已重声明为
-                # then=[内层真出口臂] / else=[腿真出口]，测试为
-                # `not X and (A or B)`；不成立时走既有取反路径。
-                if negate and not region.else_blocks:
-                    _r4701_lift = self._r4701_and_lift_or_tail(
-                        region, cond_block, expr)
-                    if _r4701_lift is not None:
-                        return _r4701_lift
                 return _negate_expr(expr) if negate else expr
         return {'type': 'Constant', 'value': True}
 

@@ -1268,3 +1268,42 @@ disjoint hunks merged from three engineer candidates; byte-level install, `py_co
   `TICKET_R21-22_analyzer_loop_block_overlap.md`, whose acceptance oracle is exactly the ablation table
   (with the analyzer fixed, the wrapper-only build must reach `0/0/0` and the defer helper must be deletable).
 - Next gate label **31** against `rounds/round30/after`.
+
+## 35. Gate 31 certified and landed (2026-10-11, orchestrator-measured)
+
+`core/cfg/region_ast_generator.py` `7d336164eff5bf65` → `37d9fecb893704ac` (+313 lines, 4 additive hunks
+from two engineer candidates merged by base-line coordinates; byte-level install, `py_compile OK`; only
+two products moved corpus-wide).
+
+- **Units 6603 → 6606 /6617 (99.8338%), files 396 → 397**, `文件级回退=0 UNIT_REGRESSIONS=0
+  新增失败单元=0 翻正单元=3`, regen `ok=402 bad=0`, quotation 153/153, small34 1557/29 (moved by exactly
+  +3), ruler selfcheck OK, pytest `2 failed, 282 passed, 2 xpassed` (residents unchanged; +2 passed is
+  this round's two new validator arms).
+- Flips: `api_base 27→28` (r47a `_r4701_and_lift_or_tail`: or-tail merge **plus** the `and`-lift of the
+  enclosing single-leg region `IfRegion@992`, exactly the shape r43a had pre-digested by `compile()`),
+  `trade_info_utils 38→40` (r48a `_r2121_shared_tail_sinks`: `else:[Return None]` + a trailing sibling
+  `Return None` ⇒ both exit edges join the function's terminal block instead of each inlining its own
+  tail; this proves the AST CAN express the shared tail, correcting the earlier falsification list).
+- **Rejected this gate, and it mattered:** the first run merged three candidates including r45a's handlers
+  fix, which is real on its own victim (`handlers 30/30` with `risk 43/43` kept) and read
+  `TOTAL_FIRES=1` on the 14-file panel. The gate said otherwise: **6603→6601, 396→392, 6 new failures**
+  in `arg_checker`/`profiler_func` (`ArgumentChecker.is_valid_date.check_is_valid_date`,
+  `ProfilerTool.show_func`). Per-candidate ablation isolates r45a alone (48/49 and 16/17); r47a and r48a
+  keep both green, so the two-candidate merge landed and r45a is banked. The panel's blind spot is
+  structural: those six files are green, non-residual, and absent from the panel — widened for round 32.
+  Registered in `rounds/round31/ADJUDICATION_GATE31_LANDED.md` §3 with the attempt-1 log and bytes kept.
+- r46a's analyzer candidate for `quote` is a measured partial, not a candidate: `run_individual_transform`
+  `delta -52 → 0`, `hunks 3 → 2`, still `91/92` (`landings=2`, relocated `else: warning` block). Banked as
+  the co-requisite half; the remainder needs the `_identify_conditional_regions` merge re-attribution
+  (~`:20461`), the documented ordering wall — deliberately not attempted to keep the change narrow.
+- r49a delivered the `clock_worker` mechanism map (`DIAG_R21-24_clock_worker_r49a.md`): M2 = analyzer
+  declares `BlockRole.BREAK` on @6690, which is IfRegion@6690's own entry/condition block, so the BREAK
+  path renders nothing and the region is dispatched after the loop (→ region_analyzer.py); M1 =
+  `_if_generate_normal:21586` `_r23_or_*` branch bulk-claims `region.else_blocks` including the entries of
+  seven never-dispatched child regions (→ generator, in the `_r2114_defer_*` guard style); M3 = arm
+  assembly wires the next sequential statement as `else` and the inline-and elif fold drops @7270's
+  `system_log.debug` (→ generator). Falsified axes re-verified with numbers: bulk-claim widening
+  (−113→−6, 0 flips), analyzer merge axis (0 merge-less IfRegions), R21-14 helpers (115 calls / 0 True),
+  `_r2119_or_tail_extension` (0 calls for this unit).
+- Residual now **5 files / 11 units** (`rounds/round31/RESIDUAL_ROUND31.md`, `UNREGISTERED 行数=0`).
+- Next gate label **32** against `rounds/round31/after`.
