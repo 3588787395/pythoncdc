@@ -116,3 +116,32 @@ only forward edge lands on such a body block (`@720 -> @830` here).
 population the rule moves; then measure the rule **alone** on the 20-file panel, because hunk 2/3 interacts
 with the header emission of every while loop, and an over-fire here shows up as green files going red, not as
 a bad number on the victim file.
+
+## 5. The §4 rule was PROTOTYPED and MEASURED as a negative (17:30) — the analyzer-membership route is closed for this shape
+
+Prototype: `build_prototype_r35_else_guard.py` applied to a byte-identical copy of the analyzer
+(`35e227ac3e7b25af` -> `ab25e98a4f708b6b`, 26 lines at :5303, mirror `D:/Temp/r30chk` only, repo untouched;
+mirror restored byte-identical afterwards and re-hashed to prove it). Population measured first
+(`D:/Temp/r34/else_census.py`): **1169 loops have non-empty `else_blocks`, exactly 3 contain a block whose
+terminator jumps back to that same loop's header** - `_process_order @3128`, `_process_cancel_order @2000`,
+`_trade_status_handle @830`, all with `hdr=46` in `trade_live_broker.pyc`. So the rule is narrow, and narrow
+was not enough:
+
+| unit | sealed (gate-34 base) | under the else-guard prototype | direction |
+|---|---|---|---|
+| `_trade_status_handle` | `−3 / 3 hunks / 2 landings` | `−7 / 2 / 3` | delta **worse by 4** |
+| `_process_order` | `−465 / 4 / 1` | `−471 / 3 / 2` | worse by 6 |
+| `_process_cancel_order` | `−293 / 3 / 0` | `−299 / 3 / 1` | worse by 6 |
+| `_sync_worker`, `etf_purchase_redemption`, `ipo_stocks_order` | unchanged | unchanged | untouched |
+
+Broker units held at 123/128 (no flip, no regression). Reading of the result: the membership list is not the
+defect - the generator already emits those blocks' content in a defensible position, and re-parenting them
+into `body_blocks` (appended last) **misplaces** the tail text, so hunks grow. The construct-level defect
+(`else: time.sleep(0.5)` rendered as a while-else instead of as body-tail statements that then take the
+back-edge) therefore belongs to the **loop renderer**, not to `region_analyzer.py`'s `else_blocks`.
+
+Named follow-on for whoever takes this ticket: keep `else_blocks` as declared, and in the loop emitter render
+an else block whose terminator is a back-edge to this loop's header **inside the body tail** (statements
+then the back-edge), rather than as the `else:` suite. Verify per §3 that the three units' shapes actually
+shrink before claiming anything, and panel it - this prototype is the second time in two rounds that a
+structurally reasonable rule moved a diff the wrong way (`_sync_worker`'s M2 was the first).
