@@ -194,3 +194,45 @@ discharged, and the open lever is hunk 1 (§1-§2, the dropped header-prefix sta
 
 Mirror `D:/Temp/r30chk` restored to `35e227ac3e7b25af` and re-hashed byte-identical to the repo file;
 the repo analyzer was never edited, and neither prototype went near `core/`.
+
+## 8. Hunk 1 hand-off: what the header walk actually does (read at :12722-12800, this base)
+
+`_loop_process_header_instructions` walks `block.instructions` and accumulates into `_hdr_instrs`,
+flushing a statement into `_hdr_stmts` at these branches only:
+
+| instruction | behaviour |
+|---|---|
+| `POP_TOP` | if the buffer holds a `CALL*`, `self._build_statement(_hdr_instrs)` → append, reset (`:12741-12752`) |
+| `RAISE_VARARGS` | `_build_raise_stmt_from_instrs` → append, reset (`:12767-12770`) |
+| `UNPACK_SEQUENCE` / `UNPACK_EX` | reconstruct value, start `_unpack_info`, reset buffer |
+| `IMPORT_NAME` (R69-diag5 A1, `:12789+`) | push `ImportFrom`, reset buffer so the trailing `STORE_*` + `POP_TOP` of an import do not merge into an expression buffer |
+| `JUMP_FORWARD` / `JUMP_BACKWARD` / `JUMP_ABSOLUTE`, or a backward conditional jump | **`break`** out of the walk (`:12753-12763`) |
+
+`_hdr_stmts` is then flushed to the caller once, at `:12915` (`body_stmts.extend(_hdr_stmts)`).
+
+For `_trade_status_handle` the fused header block `@46` holds **two assignment-terminated statements**
+before the condition test:
+
+```
+@46..@90   self.trade_info = get_trade_status(self.trade_id, True)     STORE_ATTR   ← lost
+@100..@~118 trade_status  = self.trade_info[2]                         STORE_FAST   ← kept
+@122..     self.trade_status != trade_status ; POP_JUMP_FORWARD_IF_FALSE            ← while cond
+```
+
+so both statements end in a `STORE_*`, and the walk's only route that turns a `STORE_*` into a completed
+statement is the store branch guarded by the `_seen_store` flag declared at `:12727`. The prime suspect is
+therefore **not** a missing flush branch but the `_seen_store` bookkeeping (or the caller-side consumption of
+`_hdr_stmts`) letting the second assignment swallow the first. Note the import branch's own comment already
+documents the failure mode this family produces: "`_hdr_instrs` 累积…" — buffer accumulation across
+statement boundaries.
+
+Duty for whoever takes this (cheap, in order):
+1. Read the `STORE_*` branch of this walk and the `_seen_store` handling; state which instruction ends
+   statement 1 and where its `_hdr_stmts.append` does or does not happen.
+2. Measure `_hdr_stmts` length for this block with a **read-only** mirror driver (wrap the method from
+   outside, per [[ablate-builders-to-locate-emission-site]] — do not edit the walk to print, since probes
+   inside the pipeline perturb products).
+3. Decide whether the loss is in this walk or in `body_stmts.extend(_hdr_stmts)` at `:12915`; the fix must be
+   one statement-boundary rule, not a special case for two assignments.
+4. Remember §7: this unit cannot flip from hunk 1 alone, and the `else_blocks` membership axis is closed —
+   the body-tail rendering has to be solved in the renderer before a gate for this ticket can be worth running.
