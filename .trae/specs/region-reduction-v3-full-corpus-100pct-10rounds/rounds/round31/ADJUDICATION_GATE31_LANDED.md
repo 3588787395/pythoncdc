@@ -63,6 +63,28 @@ r45a's handlers fix is therefore correct on its own victim (`handlers 30/30` wit
 2. **The engineer's fire census used the same blind panel.** Its report claims `TOTAL_FIRES=1`, which the
    gate contradicts. The claim was not false about the 14 files; it was silently scoped to them.
 
+### 3a. Hunk-level attribution (measured 01:27–01:30 on the sealed gate-31 base `37d9fecb893704ac`)
+
+r45a's candidate is three hunks on the gate-30 base: **h1** = +32 (a helper block), **h2** = +67 at base
+2024 — which is *r44a's criterion itself*, transplanted — and **h3** = +2/−1 at base 8088 (the narrowing of
+R21-14's third hunk). Applying each subset by content anchor (`D:/Temp/t31_hunkpick.py`) gives:
+
+| build | `arg_checker` (49/49 sealed) | `profiler_func` (17/17 sealed) | `handlers` (29/30 sealed) |
+|---|---|---|---|
+| h1 | 49/49 | 17/17 | 29/30 |
+| h3 | 49/49 | 17/17 | 29/30 |
+| **h2** | **48/49** | **16/17** | 29/30 |
+| h2+h3 | 48/49 | 16/17 | 29/30 |
+| h1+h2 | 48/49 | 16/17 | 29/30 |
+| h1+h2+h3 | 48/49 | 16/17 | **30/30** |
+
+So the over-fire is **h2 — r44a's own handlers criterion**, not r45a's narrowing: the narrowing hunks are
+inert on the canaries (each alone leaves all three files at their sealed counts) and the flip needs both of
+them plus h2. That also means r44a's `FIX_R21-20` claim of `1/14 changed, TOTAL_FIRES=1` was measured on
+the same blind panel, and the earlier note in this round's ledger ("r45a over-fires") is coarse: at build
+level r45a is the first candidate that carried h2 onto the sealed bytes, so it is where the gate saw it.
+Follow-up ticket: `TICKET_R21-26_handlers_criterion_over_fires_canaries.md`.
+
 Action taken: r45a is **not installed**; its candidate stays banked (`CANDIDATE_r45a_region_ast_generator.py`,
 `FIX_R21-23_r45a.md`) and the handlers ticket is re-opened with the regression named. Panel widened for the
 next round to include `IQCommon/arg_checker.pyc`, `IQCommon/profiler_func.pyc` and the duplicated-package
