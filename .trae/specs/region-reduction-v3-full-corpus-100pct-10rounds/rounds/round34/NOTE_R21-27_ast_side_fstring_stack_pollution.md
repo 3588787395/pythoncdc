@@ -89,3 +89,34 @@ is currently byte-identical to the landed base (generator `065e4d77243190dc`, an
 pristine copies at `D:/Temp/r33/backup_r30chk_generator_e7e2b2dd4cf6ed64.py`,
 `D:/Temp/r34/pristine_fcf2b870f0fb71b3_region_ast_generator.py`,
 `D:/Temp/r34/pristine_35e227ac3e7b25af_region_analyzer.py`.
+
+## 6. The refusing segment is measured — the prefix window sweeps in preceding statements (17:47)
+
+Wrapping `_fstring_parts_from_segment` to log its inputs (`D:/Temp/r35_seg.py`, whole-module generation of
+`trade_live_broker.pyc`):
+
+```
+segment calls=2  refused(None)=1
+   REFUSED seg @[1968]..@[2312] n=54 hasSTORE=True
+   ok       seg @[2392]..@[2410] n=4  -> ['FormattedValue']
+```
+
+So the reducer is handed a **54-instruction window that contains `STORE_*` opcodes** — preceding statements
+(`list_info = (result, '')`, `result = list_info[0][0]`, `order.set_entrust_no(...)`, `self.orders.append(...)`,
+the two callee pushes `strategy_log` / `_`) — and it refuses, correctly: no f-string prefix segment contains
+an assignment. The caller's fallback then fabricates **one part per `LOAD_*`**, which is precisely the glued
+`list_info`, `0`, `0`, `order`, `str`, `result`, `entrust_no`, `self`, …, `strategy_log`, `_`.
+
+**Fix shape (measured target):** bound the prefix window at the last statement boundary before the f-string's
+own parts. The window is sliced at `region_ast_generator.py:45048-45051`
+(`_prefix_instrs = cond_block_instrs[_r65_callee_skip:cond_val_start]`) and the same `_r65_callee_skip` bounds
+the R66-d2 segment loop at `:45097-45103`, so advancing that skip past `STORE_*` / call-closing `POP_TOP` /
+jumps fixes both the per-`LOAD_*` scan and the segmenter in one place. The chained path has its own twin
+window at `:51120-51135`, so check whether the refusing call comes from `:45103` or `:51210` before editing —
+the 54-instruction segment is the evidence to match, not the line numbers.
+
+Honest caveat on these numbers: this wrapped run emitted 166370 chars while the unwrapped and the 2-method
+wrapped runs emitted 175258, so **sizes from wrapped runs are not evidence** (probing inside the pipeline
+perturbates, as already recorded in §4). The segment offsets/instruction-count/`STORE_*` presence are
+structural readings of the arguments a method receives and stand on their own; re-verify against a clean run
+before quoting any byte count.
