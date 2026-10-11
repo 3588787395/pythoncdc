@@ -96,7 +96,7 @@ class RegionGeneratorSignatureValidator:
             print(f"错误: 文件不存在 {self.source_file}")
             return False
 
-        with open(self.source_file, 'r', encoding='utf-8') as f:
+        with open(self.source_file, 'r', encoding='utf-8-sig') as f:
             source = f.read()
 
         self.source_lines = source.splitlines()

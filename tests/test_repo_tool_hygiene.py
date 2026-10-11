@@ -9,6 +9,7 @@ instead of one-time readings.
 import io
 import os
 import re
+import sys
 import unittest
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -70,6 +71,47 @@ class TestGateDriverResume(unittest.TestCase):
     def test_every_shard_is_driven_to_completion(self):
         self.assertIn('while True', self.body,
                       'regen 段每片只跑一次即视为完成：预算截断后该片永不补齐')
+
+
+class TestSignatureValidatorHasTeeth(unittest.TestCase):
+    """`scripts/validate_region_generator_signatures.py` must be able to READ its target, and its
+    registered red count must not grow.
+
+    Measured 2026-10-11: the tool opened the generator with `encoding='utf-8'` while that file has
+    carried a UTF-8 BOM since at least gate 29 (pristine pre-landing backup `fd0e4c4d73cf5efc`
+    starts ef bb bf), so every run died on `SyntaxError: invalid non-printable character U+FEFF
+    (line 1)`. A guard that cannot parse its target is BLIND, not green — and nothing in the suite
+    called it, so the blindness was invisible for the whole campaign. Its verdict on gate-29 bytes
+    and gate-30 bytes is identical (14 errors / 6 warnings), so those reds are pre-existing; they
+    are clamped here rather than relaxed away.
+    """
+
+    SCRIPT = os.path.join(ROOT, 'scripts', 'validate_region_generator_signatures.py')
+    TARGET = os.path.join(ROOT, 'core', 'cfg', 'region_ast_generator.py')
+    BASELINE_ERRORS = 14
+    BASELINE_WARNINGS = 6
+
+    def setUp(self):
+        import subprocess
+        proc = subprocess.run([sys.executable, '-X', 'utf8', self.SCRIPT, self.TARGET],
+                              capture_output=True, text=True, timeout=200)
+        self.out = (proc.stdout or '') + (proc.stderr or '')
+
+    def test_validator_actually_parses_its_target(self):
+        self.assertNotIn('语法错误', self.out,
+                         '签名验证器读不了自己的目标文件（编码/语法），它此时给出的任何结论都是假的')
+        self.assertIn('统计:', self.out, '验证器没有打印统计行，无法判定')
+
+    def test_registered_red_count_does_not_grow(self):
+        m = re.search(r'统计:\s*(\d+)\s*个错误,\s*(\d+)\s*个警告', self.out)
+        self.assertIsNotNone(m, '统计行格式变了，读数不可信: ' + self.out[-200:])
+        errors, warnings = int(m.group(1)), int(m.group(2))
+        self.assertLessEqual(errors, self.BASELINE_ERRORS,
+                             '新增了违反"一个区域类型一个主生成方法/禁用命名"的方法（基线 %d，实测 %d）'
+                             % (self.BASELINE_ERRORS, errors))
+        self.assertLessEqual(warnings, self.BASELINE_WARNINGS,
+                             '新增了重复生成方法警告（基线 %d，实测 %d）'
+                             % (self.BASELINE_WARNINGS, warnings))
 
 
 if __name__ == '__main__':
