@@ -1711,3 +1711,44 @@ Net for the campaign: `_process_cancel_order` is now reachable in the opcode str
 work is (a) the landing-target/CFG shape and (b) not touching `ipo_stocks_order`. Nothing installed;
 repo byte-clean at gate-37 bytes; corpus stays 6613/6617 (99.9395%), 400/402, residual 2 files / 4
 units; next gate label remains 38 against `rounds/round37/after`.
+## §47 Round 38 last word — the residual of `_process_cancel_order` is measured as 2 jump targets, and one of them is a different axis
+
+This supersedes the sentence in §46 that said "the continue and the body-end edge now land on blocks
+other than the original's" — that was an inference from the judge's verdict, not a reading. The reading
+(`shape`-compare of the two streams by instruction INDEX, so absolute offsets do not matter):
+
+```
+lengths 333 333
+positions differing (opcode/arg or target index) = 2
+   #277 JUMP_FORWARD   orig_target=('ABS', 1822)  prod_target=294
+   #332 JUMP_BACKWARD  orig_target=7  prod_target=('ABS', 44)
+```
+
+* **#277 is an artifact of my own tool**: `EXTENDED_ARG` is dropped from the filtered stream, so the
+  original's target offset @1822 (the `continue` block, which begins with `EXTENDED_ARG`) has no index
+  and prints as `ABS`; the product's index 294 is the same block. Not a difference.
+* **#332 is the real one and it is a loop-declaration fact, not a continue fact**: the ORIGINAL's loop
+  tail `JUMP_BACKWARD` lands on **@46 = the header that carries the test**, while the product's lands on
+  **@44 = the pure-noise re-entry NOP**. That is exactly the signature of `while True: if test: …`
+  (product `trade_live_brokerOK.py:525` reads `while True:` + `if len(self.pending_cancel_orders) > 0:`)
+  versus the original's `while len(self.pending_cancel_orders) > 0:`. So `_process_cancel_order` is now
+  **opcode-identical with one wrong loop form**, which the judge reports as *Different control flow*.
+
+Consequences for the next attempt, in cost order:
+
+1. The [R21-40]-family work is DONE for this unit at the instruction level: analyzer `f7d849e974904492`
+   + generator `c1eba55fb9900412` (40c placement + the chain-shared continue relaxation) produce
+   `len 333/333, delta=0, hunks=0, landings=1`. Broker, however, reads **124/128**: `ipo_stocks_order`
+   regresses, because relaxation ③ accepts predecessors from anywhere in `region.blocks` instead of only
+   arms of the same chain. Narrow ③ first (chain-local predecessor test) and use `ipo_stocks_order` as
+   the gate-free canary.
+2. The last landing difference is the **rotated-while declaration** (`_is_while_true` family, gate 36's
+   analyzer rule and its `while … else` compile-shape finding), i.e. a different axis that this unit now
+   exposes cleanly. Measure it as a declaration question: for which loops does the header block itself
+   carry the test while the product emits `while True:` plus an `if`? Do not expect a generator-side
+   fix: the AST has the loop form baked in, and this is the same structural boundary recorded in
+   `pythoncdc-no-landing-channel-in-generator` — but here the choice IS expressible (`While(test=…)`
+   versus `While(test=Constant(True))` + `If`), so it is an analyzer/`_is_while_true` ticket.
+Nothing installed. Repo byte-clean at generator `20fa73b4e8231f0f` / analyzer `c069d359cbfe76b0`,
+`git status --porcelain -- core/ site-packages/` = 0 lines, mirror `cmp`-restored, corpus
+**6613/6617 (99.9395%), 400/402**, residual 2 files / 4 units, gate label 38 still owed to a flip.
