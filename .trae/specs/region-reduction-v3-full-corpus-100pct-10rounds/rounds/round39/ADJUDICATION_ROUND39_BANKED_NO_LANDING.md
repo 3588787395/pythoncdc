@@ -421,3 +421,46 @@ So the reclaim-guard + back-edge-fold axis is closed with a verdict, which is wh
 
 Recovering an engineer's work by measuring their candidate files directly is much cheaper than a fresh ticket:
 seven judge runs cost me two commands. Worth making standard when a run dies mid-measurement.
+
+
+## 17. r87a (R21-57) answers my dispatch question with a measured NO, and the answer is the useful part
+
+I dispatched `_sync_worker` on the gate-39 bytes on the hypothesis that the newly landed [R21-55]/[R21-56]
+machinery might now reach it (r71a/r79a had worked on gate-38 bytes, so the base had genuinely moved).
+r87a was killed at the 150-turn cap but its doc was written first, as instructed, and it answers the question
+with instrumentation rather than argument:
+
+```
+JOIN calls=7  FIRES=6   all seven inside code object `_process_order`
+                        (arm pairs 2642/2646, 2568/2572, 2390/2394, 2304/2308, 2230/2234, 1754/1758
+                         -> joins 2648/2574/2396/2310/2236/1760); one further call in
+                        `market_fund_transfer` (242/352) declines.
+R2156 calls=2 TRUE=2 FALSE=0  (both on _process_order host-call spans)
+JOIN code objects = ['_process_order', 'market_fund_transfer']
+```
+
+**Zero evaluations in `_sync_worker`.** Mechanically explained: the join mount point is `if merge_block is None`
+*inside the ternary-value-diamond candidate path*, entered only after `_is_ternary_block` accepts both arms as
+single-value blocks; every arm of this loop ends in a statement-level conditional jump, so the predicate
+"`false_block` must not end in a conditional/short-circuit jump" can never hold — and the one pair that looks like
+a diamond (700→704, 702→1214) fails the next conjunct because 704 has six predecessors.
+
+It then tested expressibility directly instead of theorizing: three hand-composed "ideal" source shapes for the
+loop-1 region, judged on the real pyc.
+
+| hand shape | delta | windows | judge (my own re-run of `ideal_b`) |
+|---|---|---|---|
+| A: §4 text substituted for the loop-1 statement only | `+68` | 4 | — |
+| B: §4 text **+** statement order loop1 → if@1214 → loop2 | `+19` | 4 | **127/128, `_sync_worker: Different control flow`** |
+| C: variant | `-71` | 5 | 127/128 |
+| runtime re-parent probe (cross-region ⇒ unimplementable) | `-3` | 5 | 127/128, landings 6→3 |
+
+I re-ran B myself (the best of them) and it holds at 127/128. The conclusion I accept: **when the best text a
+human can write for a region still judges `Different control flow`, the blocker is not a missing criterion but an
+unpinned source text** — r87a's §6 says exactly that, and it is the honest state of this unit. `delta=-3` here is
+the net of +221 inserted against −224 deleted over five windows; the loop body is restructured, and neither the
+BoolOp-reclaim axis (§16: seven candidates, none flips) nor the [R21-55] reach (this section) explains the gap.
+
+Both remaining units are now bounded by *unknown source text*, not by missing predicates — which changes what the
+next hand should build: a way to recover the statement sequence for a restructured loop region from the CFG (an
+identification problem over the whole body, not per-arm), rather than another per-arm veto.

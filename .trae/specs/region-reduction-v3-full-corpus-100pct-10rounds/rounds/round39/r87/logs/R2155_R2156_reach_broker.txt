@@ -1,0 +1,11 @@
+counters {'JOIN': 7, 'R2156': 2}
+JOIN calls=7 FIRES=6
+  join co=_process_order true=2642 false=2646 -> 2648
+  join co=_process_order true=2568 false=2572 -> 2574
+  join co=_process_order true=2390 false=2394 -> 2396
+  join co=_process_order true=2304 false=2308 -> 2310
+  join co=_process_order true=2230 false=2234 -> 2236
+  join co=_process_order true=1754 false=1758 -> 1760
+  join co=market_fund_transfer true=242 false=352 -> None
+R2156 calls=2 TRUE=2 FALSE=0
+JOIN cos ['_process_order', 'market_fund_transfer']

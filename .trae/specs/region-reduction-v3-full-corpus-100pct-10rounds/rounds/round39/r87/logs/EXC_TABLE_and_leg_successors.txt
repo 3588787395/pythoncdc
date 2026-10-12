@@ -1,0 +1,10 @@
+_sync_worker co_exceptiontable entries = 3
+   {'start': 2090, 'end': 2168, 'target': 2192, 'depth': 1, 'lasti': True}
+   {'start': 2192, 'end': 2200, 'target': 2200, 'depth': 3, 'lasti': True}
+   {'start': 2206, 'end': 2208, 'target': 2200, 'depth': 3, 'lasti': True}
+successors of the compound test legs (exception edges would appear here as a handler block):
+  @232   last=POP_JUMP_FORWARD_IF_TRUE     succ=[364, 704] pred=[230, 2886]
+  @364   last=POP_JUMP_FORWARD_IF_TRUE     succ=[522, 704] pred=[232]
+  @522   last=POP_JUMP_FORWARD_IF_FALSE    succ=[544, 702] pred=[364]
+  @544   last=POP_JUMP_FORWARD_IF_TRUE     succ=[700, 1214] pred=[522]
+  body @704 pred=[232, 364, 700, 704, 876, 1056]

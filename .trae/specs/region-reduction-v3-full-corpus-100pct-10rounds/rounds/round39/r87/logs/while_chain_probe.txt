@@ -1,0 +1,8 @@
+inner loop entry 232 cond 232 header 704 back [704] body [704, 876, 1034, 1056, 1212] else []
+forward_chain -> [(232, 'or')]
+nested_and_or -> None
+full -> [(232, 'or')]
+cond last POP_JUMP_FORWARD_IF_TRUE 704
+  blk 232 POP_JUMP_FORWARD_IF_TRUE 704 succ [364, 704]
+  blk 364 POP_JUMP_FORWARD_IF_TRUE 704 succ [522, 704]
+  blk 704 POP_JUMP_BACKWARD_IF_TRUE 704 succ [704, 876]
