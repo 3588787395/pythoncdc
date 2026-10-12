@@ -1752,3 +1752,41 @@ Consequences for the next attempt, in cost order:
 Nothing installed. Repo byte-clean at generator `20fa73b4e8231f0f` / analyzer `c069d359cbfe76b0`,
 `git status --porcelain -- core/ site-packages/` = 0 lines, mirror `cmp`-restored, corpus
 **6613/6617 (99.9395%), 400/402**, residual 2 files / 4 units, gate label 38 still owed to a flip.
+## §48 Round 38 closing lead — the compile-shape signature of the remaining landing difference
+
+`compile()` experiment on this interpreter (3.11.7), three source shapes, backward jumps only
+(`head` = the first four instructions of the code object):
+
+```
+S1 while True + explicit continue inside an arm   head=(2 NOP, 4 LOAD_GLOBAL, …)
+   backwards = [(60 → 2), (118 → 4)]        ← explicit continue → the NOP, implicit tail → NOP+2
+S2 while True, no explicit continue           head=(2 NOP, 4 LOAD_GLOBAL, …)
+   backwards = [(88 → 4)]                   ← only the implicit tail, → NOP+2
+S3 tested while                               head=(2 LOAD_GLOBAL, …)  (no NOP)
+   backwards = [(58 → 2), (114 → 30 POP_JUMP_BACKWARD_IF_TRUE)]
+```
+
+`_process_cancel_order`'s original matches **S1** exactly: its explicit continues land on `@44` (the
+loop-entry NOP) and its body tail lands on `@46` (= NOP+2). The 40d product emits its body tail onto
+`@44` as well — the S1 *continue* target, i.e. our loop body's last back edge behaves like an explicit
+`continue` rather than the implicit fall-through that S1/S2 both place at NOP+2. The two streams are
+otherwise 333/333 identical, which is why every opcode tool reads zero windows while the judge reads a
+different CFG.
+
+Reading this as a task, not a conclusion: the difference is produced by which statement CPython treats
+as the body's terminal one, so the next attempt on R21-41 should enumerate the small source shapes that
+put the `if order in self.orders: … else: error(); continue` chain and the trailing `time.sleep(0.001)`
+in both orders (with and without a chain-level `continue`) and keep only the one whose backward-jump
+TARGET SET is `{(@44 by the continues), (@46 by the tail)}`. That is a closed search — every candidate
+is decided by `compile()` before any generator code is touched, which is the method that settled the
+`while … else` shape question at gate 36.
+
+Session state at close: repo byte-clean (generator `20fa73b4e8231f0f`, analyzer `c069d359cbfe76b0`,
+`git status --porcelain -- core/ site-packages/` = 0 lines), mirror `cmp`-restored, corpus
+**6613/6617 units (99.9395%) · 400/402 files · residual 2 files / 4 units**, no gate label consumed,
+label 38 owed to the first candidate that flips a unit. Banked in `rounds/round38/`: `c4a934d595200c84`
+(clock_worker −113/7 → −6/5, one-file footprint), `07ff9a163b07140a` (clock_worker delta → 0, 17-instruction
+relocation left), `f7d849e974904492` + `a8155727b47e3bea` + `ccd97ff680b7434c` + `c1eba55fb9900412`
+(`_process_cancel_order` at opcode parity, 1 landing from Equal, the last of these regressing
+`ipo_stocks_order` until relaxation ③ is made chain-local), plus the inert pair `e845b06fc515c221` /
+`8b56ad6dfd874c01` and the over-firing `50397af2773eb726` / `e1a984048121243b`.
