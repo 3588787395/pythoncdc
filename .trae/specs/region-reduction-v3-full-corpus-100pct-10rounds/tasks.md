@@ -1898,3 +1898,59 @@ permanently and the ticket is re-filed against `region_analyzer`'s chain/merge d
 All variants banked; nothing installed; repo byte-clean (generator `20fa73b4e8231f0f`, analyzer
 `c069d359cbfe76b0`), mirror `cmp`-restored, corpus 6613/6617 (99.9395%) · 400/402 · residual 2 files /
 4 units, gate label 38 still owed to a flip.
+## §52 Round 38 — R21-42 (widening the landed `[R41-B]` arm-continue rule) falsified by its own claim log
+
+Hypothesis tested: `[R41-B]` (`region_ast_generator.py:26819-26852`, a rule written for exactly the
+`else: stmt; continue` shape) rejects our target block only because its conjunct ① requires the
+`JUMP_BACKWARD` to land on `header_block`, while CPython 3.11 puts explicit continues on the re-entry
+NOP. ① was therefore widened to accept the pure-noise single-successor predecessor of the header
+(`build_cand_r38_R21-42_r41b_reentry.py`, generator **`fe46a65cdff58b7e`**, with analyzer
+`f7d849e974904492`). Broker panel:
+
+| unit | `ccd97ff680b7434c` (40c) | with the widened ① |
+|---|---|---|
+| `ipo_stocks_order` | 0 bytes (Equal) | 0 bytes (Equal) |
+| `_process_cancel_order` | 28 bytes, `len_delta=+4` | 2 bytes, `len_delta=0` |
+| `_trade_status_handle` | 0 bytes (Equal) | **874 → 338 bytes** (green unit destroyed) |
+| broker units | 124/128 | 124/128 |
+
+The claim log settles the mechanism: instrumenting the fire site produced **exactly one** record in the
+whole file — `R42FIRE blk@186 land@44 hdr@46 merge@296 entry@150 pos=0/2 nsucc=1 succs=[44]`.
+`pos=0/2` says the block is the FIRST of two in its arm, so the emitted `Continue` makes the arm's
+remaining statements unreachable and CPython ≥3.10 eliminates the dead tail — that is the 874 → 338
+collapse, the same failure mode already recorded for the terminator family
+(`[[pythoncdc-return-none-vs-break-terminator-family]]`). The record belongs to `_trade_status_handle`
+(its loop header is `@46`, re-entry `@44`); the victim unit produced **no** fire at that site, so its
+28 → 2 byte gain is not attributable to the widened condition.
+
+Verdict: falsified as written. The re-entry landing case needs a guard the header case does not — the
+block must terminate its arm's statement sequence, which is the mirror image of the landed conjunct ③
+(`pos != last`, whose own comment warns that claiming the connector produces a duplicate continue).
+Tested in §53.
+
+## §53 Round 38 — the arm-terminal guard (R21-43) restores the green unit and reveals that byte-count is not the criterion
+
+`build_cand_r38_R21-43` = `7a15d6cdcd820bc5` = the §52 rule with the guard the claim log named: the
+re-entry landing is accepted only when the block TERMINATES its arm (`pos == len(blocks)-1`), while the
+header landing keeps the landed `pos != last`. Broker panel: **125/128** — `_trade_status_handle` is
+back to being judged Equal, `ipo_stocks_order` still 0 bytes, and `_process_cancel_order` 62 bytes
+(worse than `fe46a65cdff58b7e`'s 2, `len_delta=-4`).
+
+| reading under `7a15d6cdcd820bc5` | `co_code` bytes diff | `len_delta` | judge |
+|---|---|---|---|
+| `ipo_stocks_order` | 0 | 0 | Equal |
+| `_trade_status_handle` | **3** | 0 | **Equal** |
+| `_process_cancel_order` | 62 | −4 | Different |
+
+The middle row is the measurement that reorders the priorities: a unit can differ from the original by
+**three `co_code` bytes and still be judged Equal**, because the judge decides CFG equivalence and
+patches unreachable code, while a two-byte difference in two jump operands is enough to make a unit
+*Different*. So `co_code` parity is neither necessary nor sufficient; it is only the sharpest available
+*differential* — use it to rank candidates, never as the acceptance test, which stays
+`pyc_verify`/the gate.
+
+Banked set for this axis, with what each proves: `ccd97ff680b7434c` (28 bytes, no green unit touched),
+`fe46a65cdff58b7e` (2 bytes, one green unit destroyed by dead-code elimination), `7a15d6cdcd820bc5`
+(green unit restored, victim worse), `1bdc3206451cef57` (1 byte, `ipo` 419 bytes). None flips a unit;
+the decision waits on r68a's `compile()` answer to whether ANY source shape reproduces the original's
+target pattern (arm B into the shared continue block together with the body tail onto `NOP+2`).
