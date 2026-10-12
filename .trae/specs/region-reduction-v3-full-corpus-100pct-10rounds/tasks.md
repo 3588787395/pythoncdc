@@ -1503,3 +1503,43 @@ round and stays banked; M1+M3b merged (`3d4f27de6d80ab6e`) measured as a pair at
 `clock_worker −113/7 → −3/8`, a relocation not a content loss, also banked. Next gate label 37
 against `rounds/round36/after`.
 
+## §42 Round 37 LANDED — gate 37: R21-36 closed, 6612→6613/6617 (99.9395%), files 399→400, residual 2 files / 4 units
+
+Analyzer `efd455859b69d8a1`→`c069d359cbfe76b0` (the banked R21-16 half re-anchored hunk-by-hunk, the
+merge proved by re-diffing against its own candidate so the landed R21-33b hunk could not be silently
+reverted) + generator `37997bdac555b2e9`→`20fa73b4e8231f0f` (`[R21-36 r62a]` continue-arm hoisting,
++112 lines). The analyzer half alone leaves `run_individual_transform` at `delta=0 / 2 hunks`; the pair
+reaches `delta=0 hunks=0`. quote.pyc 91/92 → **92/92 = a whole file green** (first file flip since
+gate 32); broker product byte-identical, 125/128 held; panel 19/20 SAME, canaries exact; chain regen
+ok=402 bad=0, verify 8/8, report 翻正=1 回退=0, small34 1563→1564, pytest only the two residents.
+
+Provenance note that matters: engineer r62a hit its 150-turn cap with NO candidate file and NO FIX doc
+(last message "now let me run the panel"), and had already restored its own mirror to the landed bytes —
+the WIP survived only as side files `patched_generator_20fa73b4.py` /
+`DELIVER_installed_analyzer_c069d359.py`. I measured those in my own mirror instead of trusting a
+report, and read the criterion out of the diff against the landed bytes: an arm ending in a PURE
+back-edge block (unowned by the region, single JUMP_BACKWARD payload, sole predecessor = the arm tail,
+marked `'CONTINUE'` by the loop's own continue_map) cannot reach the merge, so then-blocks with offsets
+beyond the arm tail are sequential code after the whole `if`; forward reachability from `else_blocks`
+stopping at the loop header must NOT intersect them — that single test is what separates this from the
+gate-36 landing, where the join IS reached from the other arm and so had to be emitted after the `if`
+with the arm negated into a guard.
+
+Negative recorded: `_sync_worker` did NOT move (broker bytes unchanged), so the round-32 claim that one
+placement family covers quote + `_sync_worker` + clock_worker is dead for `_sync_worker`; it needs its
+own polarity/moved-call mechanism. clock_worker untouched too.
+
+Also banked this round: r64a's R21-37 analyzer hunk (`9f229b71bb95ddb4`, 69 lines in
+`_detect_ternary_pattern`, predicate fires exactly ONCE corpus-wide at blk 1634 → join 1760) restores
+the dropped `strategy_log.info(_(f'…'))` statement and takes `_process_order` −68/14 → **−42/11** with
+broker held — no flip, so it is a co-requisite, and it must be re-measured on the new base. Its real
+finding: the ternary is never an `IfExp` because the analyzer's `_detect_ternary_pattern` declines at
+the R47 "no value consumer" guard, and `find_nearest_common_post_dominator` returns None because BOTH
+arms carry the enclosing try's exception-edge successor; relaxing the classification further makes all
+six chain sites into TernaryRegions but only two are ever dispatched, so the blocker is a
+generator-side region-scheduling gap, not the classification.
+
+Residual after gate 37 (sealed 09:23:04, UNREGISTERED=0): 2 files / 4 units —
+`_process_order` −68/14, `_process_cancel_order` −1/3, `_sync_worker` −3/5, `clock_worker` −113/7.
+Next gate label 38 against `rounds/round37/after`.
+

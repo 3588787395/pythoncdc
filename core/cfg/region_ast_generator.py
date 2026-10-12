@@ -21970,6 +21970,11 @@ AST 映射规则:
                        or self._r14_and_ext)
         _then_terminal_overflow = []
         _r2115_tail_blocks = []
+        # [R21-36 r62a] continue-arm 上提：本判据的三条状态（尾块清单 / 臂尾块偏移 /
+        # 臂的纯回边块），在检测处写入，在发射处消费；判据不命中时恒为假 ⇒ 零副作用。
+        _r62_hoist_blocks = []
+        _r62_arm_off = None
+        _r62_back_block = None
         def _is_pass_like(stmts):
             if not stmts:
                 return True
@@ -22131,11 +22136,85 @@ AST 映射规则:
                     _r2115_tail_blocks = [
                         b for b in region.then_blocks
                         if b.start_offset > _r2115_else_term.start_offset]
-            if _r2115_tail_blocks:
+            # [R21-36 r62a] 「else 臂以 continue 终结」⇒ 该臂不可达汇合块，于是 then_blocks
+            # 里偏移大于臂尾块的块不是臂体，而是整条 if 语句之后的顺序代码（CPython 3.11 反编译
+            # 期无块重排 ⇒ 字节码线性顺序 = 源码发射顺序；把它们留在臂里，重编译会把臂推到汇合块
+            # 之后并多出一条臂尾 JUMP_FORWARD 之外的整体错位）。
+            # 判据（全部是结构事实：本区域的臂列表 + 臂尾块到纯回边块的 CFG 边 + 当前循环头；
+            #   不读函数名/常量/偏移字面量，无计数器、无阈值）：
+            #   ① else_blocks 非空且本区域不是 elif 链（与 [R21-15 HOIST] 同一前提，二者互斥并联）；
+            #   ② 臂尾块 E = else_blocks 中偏移最大者，存在唯一后继块 B：B 不在本区域内、被本循环
+            #      区域自己声明的 continue_map 标为 'CONTINUE'（不是 'LOOP_BACK_EDGE'：共享自然回边
+            #      由 `while` 重编译再生，归父循环所有）、B 除 EXTENDED_ARG/NOP/CACHE/RESUME 外只有一条
+            #      回边跳转（即 B 是「纯回边块」= 源码里 E 末尾那条 continue 的编码），且 B 的前驱只有 E；
+            #   ③ 从 else_blocks 出发沿 CFG 前向可达（在循环头处停止展开，否则回边会把整个循环体
+            #      都算进臂可达集）的块集与「偏移大于 E 的 then 块」不相交 —— 这正是与 gate 36
+            #      已落地形状的结构判别：那里汇合块另有来自另一臂内部的前驱，故汇合块必须在 if 之后
+            #      且臂被取反成守卫；这里汇合块只由 then 侧到达、另一臂以 continue 终结，故臂必须
+            #      原极性保留并把 continue 写在臂内。
+            #   ④ 存在偏移小于 E 的 then 块（真臂非空，head 可独立发射）。
+            # 归约方式：与 [R21-15 HOIST] 同一通道 —— 临时把 region.then_blocks 裁到 <=E 交给
+            #   _if_generate_then_branch，调用后复原；尾块留在本区域归属点、在 If 节点之后补发，
+            #   并把臂的纯回边块 B 登记为已发射（原则 2：每块恰一个发射者），否则父循环体会再发
+            #   一条 continue，重编译多出一条 JUMP_BACKWARD。
+            # AST 映射：If(test, body=head, orelse=arm+[Continue]) + tail_stmts。
+            if (not _r2115_tail_blocks
+                    and region.else_blocks
+                    and not getattr(region, 'elif_conditions', None)
+                    and self._current_loop is not None):
+                _r62_arm = max(region.else_blocks, key=lambda b: b.start_offset)
+                _r62_cont = getattr(self._current_loop, 'continue_map', None) or {}
+                _r62_in_region = set(region.blocks or [])
+                _r62_backs = []
+                for _r62_s in sorted((getattr(_r62_arm, 'successors', None) or []),
+                                     key=lambda b: b.start_offset):
+                    if _r62_s is _r62_arm or _r62_s in _r62_in_region:
+                        continue
+                    if _r62_cont.get(_r62_s) != 'CONTINUE':
+                        continue
+                    if any(_r62_i.opname not in ('EXTENDED_ARG', 'NOP', 'CACHE',
+                                                 'RESUME', 'JUMP_BACKWARD',
+                                                 'JUMP_BACKWARD_NO_INTERRUPT')
+                           for _r62_i in _r62_s.instructions):
+                        continue
+                    if any(_r62_p is not _r62_arm
+                           for _r62_p in (_r62_s.predecessors or [])):
+                        continue
+                    _r62_backs.append(_r62_s)
+                if len(_r62_backs) == 1:
+                    _r62_stop = {b for b in (getattr(self._current_loop, 'header_block', None),
+                                            getattr(self._current_loop, 'condition_block', None),
+                                            getattr(self._current_loop, 'entry', None))
+                                 if b is not None}
+                    _r62_arm_reach = set()
+                    _r62_queue = list(region.else_blocks)
+                    _r62_guard = 0
+                    while _r62_queue and _r62_guard < 64:
+                        _r62_guard += 1
+                        _r62_cur = _r62_queue.pop(0)
+                        if _r62_cur in _r62_arm_reach or _r62_cur in _r62_stop:
+                            continue
+                        _r62_arm_reach.add(_r62_cur)
+                        for _r62_nxt in (getattr(_r62_cur, 'successors', None) or []):
+                            if _r62_nxt not in _r62_arm_reach:
+                                _r62_queue.append(_r62_nxt)
+                    _r62_then_offs = [b.start_offset for b in (region.then_blocks or [])]
+                    _r62_tail = [b for b in (region.then_blocks or [])
+                                 if b.start_offset > _r62_arm.start_offset]
+                    if (_r62_tail
+                            and any(o < _r62_arm.start_offset for o in _r62_then_offs)
+                            and not ({b.start_offset for b in _r62_tail}
+                                     & {b.start_offset for b in _r62_arm_reach})):
+                        _r62_hoist_blocks = _r62_tail
+                        _r62_arm_off = _r62_arm.start_offset
+                        _r62_back_block = _r62_backs[0]
+            if _r2115_tail_blocks or _r62_hoist_blocks:
+                _r62_cut_off = (_r2115_else_term.start_offset if _r2115_tail_blocks
+                                else _r62_arm_off)
                 _r2115_saved_then = region.then_blocks
                 region.then_blocks = [
                     b for b in _r2115_saved_then
-                    if b.start_offset <= _r2115_else_term.start_offset]
+                    if b.start_offset <= _r62_cut_off]
                 try:
                     then_stmts = self._if_generate_then_branch(region)
                 finally:
@@ -23028,6 +23107,39 @@ AST 映射规则:
                     if_result = if_result + _r2115_tail_stmts
                 else:
                     if_result = [if_result] + _r2115_tail_stmts
+        # [R21-36 r62a 发射] 判据命中 ⇒ ①在 orelse 末尾补一条显式 Continue（臂的纯回边块 B
+        # 的编码，登记 generated 以撤销父循环体原本的补发）；②尾块由本区域在 If 节点之后按块序
+        # 补发。任一发射前提不成立（If 节点不在末尾、orelse 为空、臂里已有终止符、尾块语句为空）
+        # ⇒ 逐字节退回原行为：既不补 Continue 也不上提，也不登记 generated。
+        if _r62_hoist_blocks:
+            _r62_node = None
+            if isinstance(if_result, dict) and if_result.get('type') == 'If':
+                _r62_node = if_result
+            elif isinstance(if_result, list) and if_result:
+                _r62_last_node = if_result[-1]
+                if isinstance(_r62_last_node, dict) and _r62_last_node.get('type') == 'If':
+                    _r62_node = _r62_last_node
+            _r62_orelse = list(_r62_node.get('orelse') or []) if _r62_node else []
+            _r62_arm_terminated = any(
+                isinstance(_r62_s, dict) and _r62_s.get('type') in
+                ('Continue', 'Break', 'Return', 'Raise') for _r62_s in _r62_orelse)
+            _r62_tail_stmts = []
+            if _r62_node is not None and _r62_orelse and not _r62_arm_terminated:
+                _r62_tail_stmts = self._process_if_blocks(
+                    sorted(_r62_hoist_blocks, key=lambda b: b.start_offset),
+                    region, branch='then')
+            if (_r62_node is not None and _r62_orelse and not _r62_arm_terminated
+                    and _r62_tail_stmts):
+                _r62_node['orelse'] = _r62_orelse + [{'type': 'Continue'}]
+                if _r62_back_block is not None:
+                    self.generated_blocks.add(_r62_back_block)
+                    self.generated_offsets.add(_r62_back_block.start_offset)
+                    for _r62_bi in _r62_back_block.instructions:
+                        self.generated_offsets.add(_r62_bi.offset)
+                if isinstance(if_result, list):
+                    if_result = if_result + _r62_tail_stmts
+                else:
+                    if_result = [if_result] + _r62_tail_stmts
         # [R21-21 发射] 判据（`_r2121_shared_tail_sinks`，一处判定）命中 ⇒ 本区域在 If
         # 节点之后补发两条源码语句：`else: return None`（F——只由本 if 的假边接入的
         # 纯 None 终块）与尾随 `return None`（T——本 code object 的终块，由臂出口以

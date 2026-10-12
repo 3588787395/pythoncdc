@@ -11307,7 +11307,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         行为，组合段产出完整表达式 dict（属性链/下标/调用/deref 全保留），
         无法识别时回退 'Exception'，绝不静默退化为裸 except。
         """
-        def _collect_body(entry):
+        def _collect_body_raw(entry, _r2116_pe_stop=False):
             _blocks: List[BasicBlock] = []
             _visited: Set[BasicBlock] = set()
             _worklist = [entry]
@@ -11345,6 +11345,40 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         _last.opname == 'JUMP_FORWARD'
                         or _last.opname in BACKWARD_JUMP_OPS):
                     continue
+                # [R21-16 variant D] POP_EXCEPT 之后只剩 `as` 变量清理且本块不以跳转/返回收尾
+                # => 该 handler 的语句已发完，其后继属于 try 语句**之后**的代码。仅在二次走查
+                # (_r2116_pe_stop) 中生效：首次走查维持既有行为，以免截断 [W21]/[W27] 记录的
+                # 合法尾块分裂（无条件截断实测让 gate 28 翻正的 run_tick_socket 回退）。
+                if _r2116_pe_stop and _has_pop_except and _last is not None and (
+                        _last.opname not in ('JUMP_FORWARD', 'RETURN_VALUE', 'RETURN_CONST', 'RERAISE')
+                        and _last.opname not in BACKWARD_JUMP_OPS):
+                    _r2116_ops = [i.opname for i in _current.instructions
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if 'POP_EXCEPT' in _r2116_ops and all(
+                            o in ('LOAD_CONST', 'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                  'STORE_DEREF', 'DELETE_FAST', 'DELETE_NAME', 'DELETE_GLOBAL',
+                                  'DELETE_DEREF', 'POP_TOP', 'SWAP', 'COPY')
+                            for o in _r2116_ops[_r2116_ops.index('POP_EXCEPT') + 1:]):
+                        # [R21-16 fix #2b] the handler's own terminator may be a
+                        # continue/break emitted as a standalone backward-jump block
+                        # immediately after the POP_EXCEPT cleanup block (quote
+                        # .run_individual_transform inner handler: POP_EXCEPT block
+                        # @1024 -> JUMP_BACKWARD block @1032). That block belongs to
+                        # the handler, but its backward edge must NOT be followed (it
+                        # re-enters the loop and swallows pre-entry blocks). Append it
+                        # without expanding, so the handler keeps its `continue`.
+                        for _r2116_s in _current.successors:
+                            if _r2116_s in _current.exception_successors:
+                                continue
+                            if _r2116_s in _visited:
+                                continue
+                            _r2116_sl = _r2116_s.get_last_instruction()
+                            if _r2116_sl is not None and _r2116_sl.opname in BACKWARD_JUMP_OPS and all(
+                                    _i.opname in ('RESUME', 'NOP', 'CACHE') or _i is _r2116_sl
+                                    for _i in _r2116_s.instructions):
+                                _visited.add(_r2116_s)
+                                _blocks.append(_r2116_s)
+                        continue
                 for _succ in _current.successors:
                     # [Phase 3 adv17_try_except_star] 不跟踪异常后继
                     # （exception_successors）。except* handler body 的异常后继
@@ -11373,6 +11407,19 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 continue
                         _worklist.append(_succ)
             return _blocks
+
+        def _collect_body(entry):
+            """[R21-16] 二次走查：常规走查若把前于 handler 入口的块纳入 handler body，说明控制流
+            沿循环回边吞掉了 try body（实测 fly/data/quote.pyc ::Quote.run_individual_transform 的
+            TryExceptRegion@686 try_blocks=[]，handler body 含 586/638/640/684 < 入口 754），
+            此时改用带 pe_tail 截断的走查；只在测得矛盾时改变形状，否则原样返回。"""
+            _first = _collect_body_raw(entry)
+            _ent = getattr(entry, 'start_offset', None)
+            if _ent is None:
+                return _first
+            if any(getattr(b, 'start_offset', _ent) < _ent for b in _first):
+                return _collect_body_raw(entry, True)
+            return _first
 
         exc_type = None
         exc_name = None
@@ -12231,6 +12278,14 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 if _cur is merge_point:
                     return True
                 if _cur in set(try_region.try_blocks or []):
+                    continue
+                _r3i_last = None
+                for _r3i_i in reversed(_cur.instructions):
+                    if _r3i_i.opname in ('RESUME', 'NOP', 'CACHE'):
+                        continue
+                    _r3i_last = _r3i_i
+                    break
+                if _r3i_last is not None and _r3i_last.opname in BACKWARD_JUMP_OPS:
                     continue
                 for _succ in _cur.successors:
                     if _succ in _cur.exception_successors:
