@@ -104,6 +104,50 @@ class T:
 '''
 
 
+# Two rows added as controls for the landed criteria. MEASURED OUTCOME, kept because it is a
+# negative about the rig itself: row E is GREEN on the gate-37 bytes AND on the pre-gate-36
+# bytes (generator 87910190b7ef7c35 + analyzer 35e227ac3e7b25af), i.e. its needle never
+# bites, so E is a VACUOUS guard and must NOT be read as protecting the gate-36 landing - the
+# real witness for that landing is the sealed corpus unit `_trade_status_handle` (0/0) plus the
+# gates. Shape E round-trips correctly without the fix, which also localises the victim's extra
+# ingredient: the header block fusing statements + test is not enough, the join block must be
+# reached from two distinct blocks of a nested arm chain (@830 preds {@46,@720,@722}).
+# Row F is RED on both bases (len 37 vs 36, first diff at @2 is the polarity flip), i.e. the
+# landed gate-37 criterion does not cover it either - that is the same non-coverage measured on
+# the corpus for `_sync_worker`, so F is a useful 20-line repro for the open ticket, not a guard.
+SHAPES['E_gate36_while_true_if_merge'] = """
+class T:
+    def h(self, engine, status):
+        engine.set_engine(engine)
+        while True:
+            info = get_status(engine)
+            value = info[2]
+            if status != value:
+                status = value
+                if value == PAUSE:
+                    bus.publish(1)
+                    continue
+                else:
+                    bus.publish(3)
+            else:
+                time.sleep(0.5)
+"""
+
+SHAPES['F_gate37_arm_ends_in_continue'] = """
+class T:
+    def h(self, message, deques):
+        while True:
+            if message:
+                data = message.get('k')
+                if data:
+                    handle(data)
+                log.info('seen')
+            else:
+                log.warning('empty')
+                continue
+            time.sleep(0.001)
+"""
+
 def gather(c, acc):
     acc.append(c)
     for cst in c.co_consts:
