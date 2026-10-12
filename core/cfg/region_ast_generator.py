@@ -15604,6 +15604,136 @@ AST 映射规则:
                 return _kept, _past
         return None
 
+    # ══════════════════════════════════════════════════════════════════
+    # [R21-43] elif 链尾两臂收敛于「纯 continue 块」⇒ 第三臂不得折叠成 elif
+    # ══════════════════════════════════════════════════════════════════
+    def _r2143_block_is_pure_continue(self, block, hdr):
+        """[R21-43] 结构事实①：`block` 是一条源码级 `continue` 语句的唯一实体块。
+
+        去掉噪声指令（NOISE_OPS，以及作为跳转操作数前缀的 EXTENDED_ARG）后，
+        块里剩下的**唯一**一条指令就是它的终结子，且该终结子是回跳；其落点
+        要么是循环 header 本身，要么是 header 的「纯噪声单后继前驱块」（CPython 3.11
+        为 while 循环放在 header 前的 NOP，continue 跳的就是它）——后者与已落地的
+        [R21-40]（分析端同一谓词）逐字一致，不是新谓词。
+        不读函数名、常量、绝对偏移；「剩下唯一一条指令 = 终结子」是块的角色定义，
+        不是指令数阈值。
+        """
+        _r2143_rest = [i for i in (getattr(block, 'instructions', None) or [])
+                       if i.opname not in NOISE_OPS and i.opname != 'EXTENDED_ARG']
+        if len(_r2143_rest) != 1:
+            return False
+        _r2143_one = _r2143_rest[0]
+        if _r2143_one.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+            return False
+        if not isinstance(_r2143_one.argval, int):
+            return False
+        _r2143_tgt = self.cfg.get_block_by_offset(_r2143_one.argval)
+        if _r2143_tgt is None:
+            return False
+        if _r2143_tgt is hdr:
+            return True
+        _r2143_reentry = list(_r2143_tgt.successors or [])
+        if (_r2143_tgt.start_offset >= hdr.start_offset
+                or [i for i in (_r2143_tgt.instructions or [])
+                    if i.opname not in NOISE_OPS and i.opname != 'EXTENDED_ARG']
+                or len(_r2143_reentry) != 1 or hdr not in _r2143_reentry):
+            return False
+        return True
+
+    def _r2143_arm_exit_target(self, tail):
+        """[R21-43] 结构事实②：臂块序列末块 `tail` 的**正常出口块**。
+
+        - `tail` 的终结子是无条件前跳（JUMP_FORWARD / JUMP_ABSOLUTE）⇒ 出口 = 跳转目标块；
+        - `tail` 的终结子不是跳转（臂直落）⇒ 出口 = 唯一的非异常后继（排除以
+          PUSH_EXC_INFO / WITH_EXCEPT_START 开头的块，与已落地 [R39-B] 同一排除）；
+        - 其它形态（条件跳转结尾、回边、return、raise）⇒ None，判据不成立。
+        """
+        _r2143_last = tail.get_last_instruction()
+        if _r2143_last is None:
+            return None
+        if _r2143_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+            if not isinstance(_r2143_last.argval, int):
+                return None
+            return self.cfg.get_block_by_offset(_r2143_last.argval)
+        if 'JUMP' in _r2143_last.opname:
+            return None
+        _r2143_succs = [s for s in (list(getattr(tail, 'successors', None) or []))
+                        if s.start_offset > tail.start_offset
+                        and not (list(getattr(s, 'instructions', None) or [])
+                                 and s.get_first_instruction().opname in
+                                 ('PUSH_EXC_INFO', 'WITH_EXCEPT_START'))]
+        return _r2143_succs[0] if len(_r2143_succs) == 1 else None
+
+    def _r2143_last_arms_converge_on_continue(self, region: IfRegion):
+        """[R21-43] 判据：本 elif 链的「最后一个 elif 臂」与「链尾 else 臂」是否共同落到
+        同一个纯 continue 块 T，且 T 不是本链的 merge_block。
+
+        为什么这是「必须嵌套」的证明，而不是一个偏好：CPython 的块布局里，写成
+        `if A / elif B / else C` 时 B、C 两臂的出口恰好是**整条链的汇合点**（即
+        region.merge_block）；写成 `if A / else: (if B / else: C) / continue` 时，B、C
+        的出口是那个嵌套 if 自己的汇合点，而该点正是后继语句 `continue` 的实体块 T，
+        链的 merge_block 另有其块（A 臂出口跳的就是它）。于是「两臂出口相同且为纯
+        continue 块、且不等于 merge_block」在 flat 布局下不可能出现：它只能是嵌套形状。
+
+        可用数据全部来自区域声明与 opcode 类别 / 前驱后继关系：
+          ③ 链只有一个 elif 条件块与一组 elif 臂块（此时被折叠的节点恰好是
+             「这一个 elif 臂 + 链尾 else 臂」，其余多 elif 链的根节点不是该两臂，故意不烩）；
+          ④ 两臂块序列的正常出口块存在且为同一块 T（②）；
+          ⑤ T 不是本链 merge_block、不在本链 blocks 内、不是循环指定的
+             back_edge_block / back_edge_blocks（那是循环体自然尾，不是源码 continue），
+             也尚未被发射（原则 2 每块唯一归属）；
+          ⑥ T 是纯 continue 块（①，落点 = 当前循环 header 或其纯噪声单后继前驱）；
+          ⑦ T 的前驱（除自身）>= 2 个、全部属于这两个臂，且每个臂至少贡献一个
+             （「被多个臂共享」的准确含义：共享者是链的臂，不是别处搬来的边）。
+
+        保守性：任一条不成立即返回 None ⇒ 调用方保持现有 flat elif 渲染，产物逐字节不变。
+        本方法**无副作用**（不改 generated_blocks、不改区域数据），因此可被探针包裹做
+        点名数派，且探针可证明惯性。
+        """
+        _r2143_loop = getattr(self, '_current_loop', None)
+        _r2143_hdr = getattr(_r2143_loop, 'header_block', None) if _r2143_loop else None
+        if _r2143_hdr is None:
+            return None
+        _r2143_conds = list(getattr(region, 'elif_conditions', None) or [])
+        _r2143_bodies = list(getattr(region, 'elif_bodies', None) or [])
+        if len(_r2143_conds) != 1 or len(_r2143_bodies) != 1:
+            return None
+        _r2143_elif_arm = list(_r2143_bodies[0] or [])
+        _r2143_else_arm = list(getattr(region, 'elif_final_else', None) or [])
+        if not _r2143_elif_arm or not _r2143_else_arm:
+            return None
+        _r2143_merge = getattr(region, 'merge_block', None)
+        if _r2143_merge is None:
+            return None
+        _r2143_T = self._r2143_arm_exit_target(_r2143_elif_arm[-1])
+        if _r2143_T is None or _r2143_T is not self._r2143_arm_exit_target(_r2143_else_arm[-1]):
+            return None
+        if _r2143_T is _r2143_merge:
+            return None
+        _r2143_be = set(getattr(_r2143_loop, 'back_edge_blocks', None) or [])
+        if getattr(_r2143_loop, 'back_edge_block', None) is not None:
+            _r2143_be.add(_r2143_loop.back_edge_block)
+        if _r2143_T in _r2143_be:
+            return None
+        if _r2143_T in (getattr(region, 'blocks', None) or set()):
+            return None
+        if _r2143_T in self.generated_blocks:
+            return None
+        if not self._r2143_block_is_pure_continue(_r2143_T, _r2143_hdr):
+            return None
+        _r2143_preds = [p for p in (list(getattr(_r2143_T, 'predecessors', None) or []))
+                        if p is not _r2143_T]
+        if len(_r2143_preds) < 2:
+            return None
+        _r2143_es = set(_r2143_elif_arm) | set(_r2143_else_arm)
+        if not all(p in _r2143_es for p in _r2143_preds):
+            return None
+        if not (any(p in set(_r2143_elif_arm) for p in _r2143_preds)
+                and any(p in set(_r2143_else_arm) for p in _r2143_preds)):
+            return None
+        return _r2143_T
+
+
     def _if_generate_full_elif_chain(self, region: IfRegion) -> Dict[str, Any]:
         """
         生成完整的 if-elif[-else] 链结构
@@ -16462,6 +16592,36 @@ AST 映射规则:
                 _ft3_root.pop('_is_elif', None)
                 _ft3_root['_is_nested_if'] = True
                 _ft3_orelse = [_ft3_root] + list(_ft3_orelse[1:])
+        # [R21-43] 链尾两臂收敛于纯 continue 块 ⇒ 解除 elif 折叠，改发 else 子句。
+        # 识别条件（全部为结构事实，见 _r2143_last_arms_converge_on_continue）：
+        #   ① 此刻挂到本 if 假边的 orelse 只有一个节点，它是带 _is_elif 的 If，
+        #      且自身带非空 orelse（= 「最后一个 elif 臂 + 链尾 else 臂」两级结构）；
+        #   ② 这两个臂的正常出口是同一个纯 continue 块 T，T 不是本链 merge_block。
+        # 归约方式：②成立时 flat elif 布局可证伪 —— flat 链的这两臂出口必然是链的
+        #   merge_block，而 CFG 实测它们落在 T。源码里这两臂同属一个语句序列，其尾是
+        #   continue，因此第三臂必须写成 `else: If(...)`。像已落地 _ft3_elif_shared
+        #   同一惯用写法：摘掉 _is_elif、标 _is_nested_if（发射器走 code_generator
+        #   _generate_elif_or_else 的「嵌套 if ≠ elif」分支，把 orelse 整个列表作为 else
+        #   子句依次发射），并在 orelse 末尾按序补一条 Continue；同时按原则 2 认领 T
+        #   （标记已生成），否则它会被父序列当作链后/try 后的兄弟语句重复发射。
+        #   不改动任何跳转目标、不读名字/偏移/阈值；不烩时零副作用 ⇒ 产物不变。
+        # AST 映射：If(test, body, orelse=[If(_is_nested_if), Continue])
+        #   ⇒ `if test: ... / else: if ...: ... / else: ... / continue`。
+        _r2143_hit = None
+        if isinstance(_ft3_orelse, list) and len(_ft3_orelse) == 1:
+            _r2143_root = _ft3_orelse[0]
+            if (isinstance(_r2143_root, dict) and _r2143_root.get('type') == 'If'
+                    and _r2143_root.get('_is_elif')
+                    and (_r2143_root.get('orelse') or [])):
+                _r2143_hit = self._r2143_last_arms_converge_on_continue(region)
+        if _r2143_hit is not None:
+            _r2143_new_root = dict(_r2143_root)
+            _r2143_new_root.pop('_is_elif', None)
+            _r2143_new_root['_is_nested_if'] = True
+            _ft3_orelse = [_r2143_new_root, {'type': 'Continue'}]
+            self.generated_blocks.add(_r2143_hit)
+            self.generated_offsets.add(_r2143_hit.start_offset)
+
         result = {'type': 'If', 'test': condition, 'body': then_stmts if then_stmts else [{'type': 'Pass'}], 'orelse': _ft3_orelse}
         if pre_stmts:
             result = pre_stmts + [result]

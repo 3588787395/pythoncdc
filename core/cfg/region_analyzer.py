@@ -4957,6 +4957,37 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             self._current_loop_blocks = body
             back_edges_for_header = [src for src, tgt in self.loop_analyzer.back_edges if tgt == header]
             _else_blocks_set = set(else_blocks) if else_blocks else set()
+            # [R21-40] 上面的 :4960 守卫只在 condition_block 就是 header 时排除「continue 落点」回边块，
+            # 但本文件大量循环把条件求值放在 header 块里而 condition_block=None（实测 _process_cancel_order
+            # 的循环 header=@46，末指令 POP_JUMP_FORWARD_IF_FALSE，condition_block=None）。漏掉这一形态时，
+            # :4992 的选择键按「体内指令条数」排序，会把 `else: 语句; continue` 臂块（其回边操作数落在
+            # header 之前的纯噪声再入块 @44 上）选成循环的自然回边，真正的循环尾（操作数正好落在 header 上）
+            # 反被标成 CONTINUE ⇒ 臂尾的 continue 无人发射。
+            # 判据与 :4961-4966 逐字相同（header 的纯噪声单后继前驱 = CPython 的 continue 再入块），只是把
+            # 它补到被漏掉的那一形态上；此处不新增谓词，也不读名字/偏移/计数阈值。
+            # 保守性：header 末指令不是条件跳转、再入块集合为空、或过滤后候选为空时一律不改
+            # back_edges_for_header ⇒ 与修改前逐字节相同。
+            _r40_hdr_last = header.get_last_instruction()
+            if (condition_block is not header and back_edges_for_header and _r40_hdr_last is not None
+                    and _r40_hdr_last.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                _r40_ph_set = set()
+                for _r40_ph in header.predecessors:
+                    if (_r40_ph.start_offset < header.start_offset
+                            and all(i.opname in NOISE_OPS for i in _r40_ph.instructions)
+                            and len(_r40_ph.successors) == 1 and header in _r40_ph.successors):
+                        _r40_ph_set.add(_r40_ph)
+                if _r40_ph_set:
+                    _r40_kept = []
+                    for _r40_src in back_edges_for_header:
+                        _r40_last = _r40_src.get_last_instruction()
+                        if (_r40_last and _r40_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')):
+                            _r40_tgt = (self.cfg.get_block_by_offset(_r40_last.argval)
+                                        if _r40_last.argval is not None else None)
+                            if _r40_tgt in _r40_ph_set:
+                                continue
+                        _r40_kept.append(_r40_src)
+                    if _r40_kept:
+                        back_edges_for_header = _r40_kept
             if condition_block == header:
                 _ph_set = set()
                 for _ph in header.predecessors:
