@@ -1825,3 +1825,35 @@ Nothing installed this session: repo byte-clean (generator `20fa73b4e8231f0f`, a
 `c069d359cbfe76b0`, `git status --porcelain -- core/ site-packages/` = 0 lines), mirror `cmp`-restored,
 and a cheap no-drift witness on the sealed in-place products reads quotation **153/153**, quote **92/92**,
 `realtime_event_source` **12/13**, `trade_live_broker` **125/128** — identical to the gate-37 seal.
+## §50 Round 38 addendum - R21-41 measured: the last broker unit is ONE BYTE from byte-identical
+
+`1bdc3206451cef57` (40d + E1/E2 from `build_cand_r38_R21-41_tail_continue.py`) with analyzer
+`f7d849e974904492` recompiles `_process_cancel_order` to a code object that differs from the original in
+**exactly one byte of `co_code`** - offset 1711, `orig 0x37` vs `prod 0x39`, the
+`elif ... node_type == '7': pass` arm's relative `JUMP_FORWARD`, target `@1822` in the original and
+`@1826` in ours (`@1712 + 55*2` vs `+ 57*2`). `co_exceptiontable` (37 bytes), `co_names`, `co_varnames`
+and `co_consts` are already identical; only `co_linetable` differs and the judge does not read it for
+control flow. 40d itself was 2 bytes off (1711 plus the loop-tail jump at 2043), so E1 halved the
+residual and moved the tail jump onto the original's `@46`, exactly as the `compile()` experiment
+predicted.
+
+§49's named cause is therefore **partly falsified on the record**: the chain-level trailing `continue`
+is not spurious for the pass arm - the original's `pass` arm jumps INTO the shared continue block
+`@1822` - and removing it also costs `ipo_stocks_order` a `JUMP_BACKWARD` (`@5582`, product
+1181 -> 1180, broker 125 -> **124/128**), so `[R8 fix]`'s header-landing condition is genuinely needed
+for some loops and wrong for this one. The surviving difference is a jump **target** chosen by CPython's
+block layout: the standing no-landing-channel boundary, now demonstrated at single-byte resolution
+rather than argued from prose.
+
+Next steps, both decidable with `compile()` before any generator edit (see
+`FIX_R21-41_one_byte_residual.md`): (1) narrow E1 to suppress only when the block IS
+`self._current_loop.back_edge_block`, and check `ipo_stocks_order` FIRST as this family's canary;
+(2) enumerate inner-chain source shapes that put arm B's exit on the same block as arm C's fall-through
+while arm A's exit lands past it and the loop tail still lands on `@46` - if none exists, re-file the
+ticket against the analyzer's chain/merge declaration instead of the emitter. Under (1) alone the best
+case is broker 125/128 held with the victim unit at 1 byte, i.e. still zero flips, so no gate is owed.
+
+Nothing installed: `git status --porcelain -- core/ site-packages/` = 0 lines, mirror `cmp`-restored to
+generator `20fa73b4e8231f0f` / analyzer `c069d359cbfe76b0`, corpus sealed at **6613/6617 (99.9395%),
+400/402 files, residual 2 files / 4 units**, gate label **38** owed to the first candidate that flips a
+unit.
