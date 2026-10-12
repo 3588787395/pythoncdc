@@ -1598,3 +1598,41 @@ Next-round work items, each with its acceptance measurement, are in
 (2) merge-block-carrying-statements population census + criterion for (B); (3) the two banked broker
 halves (`_process_order` −68/14 with r64a's analyzer half at −42/11, `_process_cancel_order` −1/3 with
 35a at −2/2) — neither flips alone.
+## §44 Round 38 continued — R21-35a re-anchored and measured on broker (2026-10-12, still no landing)
+
+The round-37 banked half (`CANDIDATE_r37_R21-35a_trybody_continue_BANKED_not_landed.py`, built on the
+gate-36 base) was transplanted onto the gate-37 landed bytes with `merge_hunks.py`; the tool printed
+`FAIL: 1 residual block not explained`, and the refusal was inspected instead of trusted: the merged
+file carries the candidate's single NEW block **verbatim** and `diff(landed → merged)` is exactly one
+`insert +44`, so the unexplained block is a line of gate 37's own `[R21-36]` arm trim.
+**Merged = `a8155727b47e3bea`**, banked as `rounds/round38/CANDIDATE_r35a_reanchored_BANKED_not_landed.py`.
+
+Measurement (`allwin_r63.py`, so the sub-3-instruction windows are visible):
+
+* `_process_cancel_order`: landed `orig=333 prod=332 delta=-1 hunks=3` → `delta=-2 hunks=2`.
+  The **spurious `JUMP_BACKWARD` after `COPY/POP_EXCEPT/RERAISE` disappears** — the ticket's claim
+  (the trailing `continue` belongs inside the `try` arm) is now proved by a window vanishing.
+  Two windows remain, both one instruction, both a jump the original emits and the product does not:
+  after `CALL @1810 / POP_TOP @1820 / JUMP_BACKWARD @1824` the original also has `JUMP_FORWARD @1826`;
+  and the second copy of the same `finally` tail `PRECALL @1980 / CALL @1984 / POP_TOP @1994` is
+  followed by `JUMP_BACKWARD @1998`. ⇒ residual re-scoped to **per-exit-edge continuation threading**
+  of the duplicated `finally` suite (CPython 3.11 duplicates the `finally` code per exit edge of the
+  `try`; each copy keeps that edge's continuation), which the AST cannot name — the standing
+  no-landing-channel finding — so the next step is a `compile()` shape search on the two
+  source layouts around `trade_live_brokerOK.py:527-531 / 566-568`, not another emit-side rule.
+* `abs(delta)` went 1 → 2 while the shape went 3 mixed windows → 2 same-class windows: judged by
+  windows + flips, never by the magnitude of `delta`.
+* Blast radius over the 20-file panel (tag `r38x`): **5 files CHANGED** — `klinedata` 102772→102872
+  (64/64), `handlers` 9030→9056 (30/30), `real_quote` 53841→53923 (45/45), `trade_live_broker`
+  179102→179132 (125/128), `risk_calculation` 55531→55569 (43/43) — 15 SAME including all six
+  duplicated canaries, **0 unit decreases, 0 flips**. Five files of blast radius for zero flips is
+  why it stays banked, and it is 5× the footprint of `c4a934d595200c84` (1 file), so any future gate
+  pairing them must be measured as a pair first.
+* Mirror restored to `20fa73b4e8231f0f` and `cmp`-proved; repo `core/` + `site-packages/` still 0 lines.
+
+Two census engineers are dispatched in isolated mirrors for the clock_worker halves and must not be
+duplicated: **r66a** `D:/Temp/r66` — ablation dispatch census naming the method that renders
+`IfRegion@7270`, the prerequisite for placing a fourth `_split_block_condition_prefix` consumer
+without double-emitting; **r67a** `D:/Temp/r67` — emission-site ablation for the
+`@6778..@6782` merge-block statement plus the merge-block-carrying-statements population over the
+20 panel files. Neither may edit the repo; deliverables are census docs + optional candidate files.
