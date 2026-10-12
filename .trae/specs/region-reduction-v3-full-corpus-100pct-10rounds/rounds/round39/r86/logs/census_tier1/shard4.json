@@ -1,0 +1,410 @@
+{
+ "shard": [
+  4,
+  8
+ ],
+ "totals": {
+  "regions": 38,
+  "eligible": 10
+ },
+ "files": {
+  "IQCommon/api/gtn_api.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/common/config.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/const.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/exception.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/mq_connector.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/strategy/wizard_quant_api.pyc": {
+   "regions": 5,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/datetime_func.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/replace_utils.pyc": {
+   "regions": 6,
+   "eligible": 6,
+   "sites": [
+    {
+     "co": "decrypt_database_url",
+     "cond": 748,
+     "arm": 828,
+     "merge": 846,
+     "non_merge_succs": [
+      996
+     ]
+    },
+    {
+     "co": "decrypt_database_url",
+     "cond": 748,
+     "arm": 844,
+     "merge": 846,
+     "non_merge_succs": [
+      996
+     ]
+    },
+    {
+     "co": "decrypt_database_url",
+     "cond": 442,
+     "arm": 484,
+     "merge": 506,
+     "non_merge_succs": [
+      996
+     ]
+    },
+    {
+     "co": "decrypt_database_url",
+     "cond": 442,
+     "arm": 504,
+     "merge": 506,
+     "non_merge_succs": [
+      996
+     ]
+    },
+    {
+     "co": "decrypt_database_url",
+     "cond": 292,
+     "arm": 368,
+     "merge": 400,
+     "non_merge_succs": [
+      996
+     ]
+    },
+    {
+     "co": "decrypt_database_url",
+     "cond": 292,
+     "arm": 398,
+     "merge": 400,
+     "non_merge_succs": [
+      996
+     ]
+    }
+   ],
+   "err": null
+  },
+  "IQCommon/util/user_info_utils.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/api/api_helper.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/core/data_cache.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/default_history_quote.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/engine/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/manager/plugin_manager.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_history_data_source/data_source_func.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_client_db/client_db.pyc": {
+   "regions": 1,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_db_tools/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc": {
+   "regions": 18,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_local_finance/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/arg_checker.pyc": {
+   "regions": 2,
+   "eligible": 4,
+   "sites": [
+    {
+     "co": "_is_valid_quarter",
+     "cond": 168,
+     "arm": 222,
+     "merge": 236,
+     "non_merge_succs": [
+      240
+     ]
+    },
+    {
+     "co": "_is_valid_quarter",
+     "cond": 168,
+     "arm": 232,
+     "merge": 236,
+     "non_merge_succs": [
+      240
+     ]
+    },
+    {
+     "co": "_is_valid_quarter",
+     "cond": 94,
+     "arm": 152,
+     "merge": 166,
+     "non_merge_succs": [
+      240
+     ]
+    },
+    {
+     "co": "_is_valid_quarter",
+     "cond": 94,
+     "arm": 162,
+     "merge": 166,
+     "non_merge_succs": [
+      240
+     ]
+    }
+   ],
+   "err": null
+  },
+  "IQData/utils/logger/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/api/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/events/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/slippage.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/data/asset_mixin.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/interface.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/const.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc": {
+   "regions": 1,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/local_variables/bar.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data_source/fly_bar_storage.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/account_model/live_hks_account.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/position_model/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_control/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_finance/commission.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_persist/json_persistance.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_risk_control/base_validator.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/ptrade_option_broker.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/bcolz_help.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/i18n.pyc": {
+   "regions": 1,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/scheduler.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/convert.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/function.pyc": {
+   "regions": 1,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/op_station.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/dockerspawner/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/event/event_engine.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/oauthenticator/itn.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/simtradding/ptradeOptionAccount.pyc": {
+   "regions": 3,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  }
+ }
+}

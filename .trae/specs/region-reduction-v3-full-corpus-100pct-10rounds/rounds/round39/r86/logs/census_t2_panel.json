@@ -1,0 +1,196 @@
+{
+ "site-packages/IQCommon/api/klinedata.pyc": {
+  "calls": 66,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQCommon/arg_checker.pyc": {
+  "calls": 0,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQCommon/logger/handlers.pyc": {
+  "calls": 0,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQCommon/profiler_func.pyc": {
+  "calls": 0,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQCommon/strategy/wizard_quant_api.pyc": {
+  "calls": 3,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQCommon/util/trade_info_utils.pyc": {
+  "calls": 6,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQData/api/api_base.pyc": {
+  "calls": 16,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc": {
+  "calls": 24,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQData/utils/arg_checker.pyc": {
+  "calls": 0,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQData/utils/profiler_func.pyc": {
+  "calls": 0,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc": {
+  "calls": 6,
+  "fired": 6,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc": {
+  "calls": 3,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc": {
+  "calls": 0,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc": {
+  "calls": 9,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc": {
+  "calls": 44,
+  "fired": 3,
+  "relaxed_fired": 3,
+  "permit": 3,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": [
+   [
+    548,
+    null
+   ]
+  ]
+ },
+ "site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc": {
+  "calls": 27,
+  "fired": 21,
+  "relaxed_fired": 6,
+  "permit": 6,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": [
+   [
+    2092,
+    "JUMP_FORWARD"
+   ],
+   [
+    2430,
+    "POP_TOP"
+   ]
+  ]
+ },
+ "site-packages/IQEngine/utils/arg_checker.pyc": {
+  "calls": 0,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQEngine/utils/profiler_func.pyc": {
+  "calls": 0,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/fly/data/quotation.pyc": {
+  "calls": 8,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/fly/data/quote.pyc": {
+  "calls": 27,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ }
+}

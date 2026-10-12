@@ -2152,3 +2152,27 @@ Two axes are still untried: arm-tail emission shape for clock_worker's two spuri
 connect failure) the queue drained and `3631c3cf..0855b5d8 HEAD -> rr-v3r01-f557fd` landed with rc=0;
 verified by the ref line and by `git rev-list --count origin/rr-v3r01-f557fd..HEAD` = 0, so round 39's
 banked evidence is off this box.
+## 61. ROUND 39 CLOSED WITH A LANDING — gate 39 label consumed: 6614 -> 6615/6617 (99.9698 %), broker 126 -> 127 (2026-10-12)
+
+`[gates] 文件级回退=0  UNIT_REGRESSIONS=0  新增失败单元=0  翻正单元=1`, `[regen 合计] ok=402 bad=0` (188 s), verify
+8/8 shards rc=0, quotation 153/153, small34 1566/32, selfcheck 153/153 with mutations 常量 1/153 + 极性 1/153,
+pytest 2 failed / 282 passed / 2 xpassed (the two permanent residents). Landed pair: analyzer
+`f7d849e974904492 -> 842e2748bcdfeb66` ([R21-55] diamond-join recovery, r85a) + generator
+`11324f276cce6d5b -> b4363f5858e58074` ([R21-55c] arm exception-edge correction gated by [R21-56]
+`_r2156_tail_is_bounded_statements`, r86a). Install commit `092c107e`; I verified both arms in my own mirror first
+(broker 127/128 with `_process_order` `orig=507 prod=507 delta=0 hunks=0`, and `replace_utils` back to 9/9).
+
+The first attempt at this label flipped the unit AND regressed `IQCommon/util/replace_utils.pyc` 9 -> 8
+(files 400 -> 399), so it was reverted instead of shipped and the label was re-run after narrowing — the standing
+rule that a zero-flip or regressing gate does not consume the label held again. Two of my own diagnoses were
+wrong and are corrected in `rounds/round39/ADJUDICATION_ROUND39_BANKED_NO_LANDING.md` §15: the analyzer half did
+NOT cause the collateral (my A-alone ablation reused a mirror that still held the generator half, so it was really
+A+C), and the `POP_TOP` veto I prescribed is not implementable because both the real flips and the collateral close
+on `POP_TOP` — the working discriminator is the closing block's leftover opcode class.
+
+Round 39 is 16 engineer-runs (r71a, r73a, r74a, r75a, r76a, r77a, r78a, r79a, r82a, r83a, r84a, r85a, r86a plus the
+three killed at caps) producing one flip and ~20 banked candidates; thirteen of them died on clock_worker, which is
+still 12/13. Residual: **2 files / 2 units** (`clock_worker`, `_sync_worker`), next gate label **40** against
+`rounds/round39/after`. New mandatory step now in force: before ANY install, regen all 402 products and byte-diff
+CR-stripped against `git archive HEAD` (~185 s), then judge only the changed files — the 20-file panel declared the
+first attempt clean while the corpus was already broken outside it.

@@ -356,3 +356,40 @@ candidate and byte-diff against the committed ones** (no judging needed, ~200 s)
 files. The panel's purpose is to catch collateral, and a 20-file panel by construction cannot catch collateral in
 the other 382. Related: `rounds/round38/PANEL_20files.txt` was itself created from residual + canaries, which is
 the bias that produced this miss.
+
+
+## 15. ROUND 39 LANDED — gate 39 certified `trade_live_broker._process_order` at 6615/6617 (2026-10-12)
+
+Attempt 2 of label 39, on analyzer `842e2748bcdfeb66` + generator `b4363f5858e58074` (r85a's diamond-join
+recovery + r86a's `_r2156_tail_is_bounded_statements` conjunct), installed after I verified BOTH arms in my own
+mirror and committed the install (`092c107e`). Chain log: `rounds/round39/gate39_landed/gate_chain_39.log.txt`.
+
+```
+[regen 合计] ok=402 bad=0                                  188s
+[verify 0..7] rc=0  786/786 468/469 538/538 887/887 855/855 998/999 800/801 1282/1282   142s
+[units] 6614/6617 -> 6615/6617  (99.9698%)   [files] 400 -> 400
+[gates] 文件级回退=0  UNIT_REGRESSIONS=0  新增失败单元=0  翻正单元=1
+   FIXED  trade_live_broker.pyc <module>.TradeLiveBroker._process_order   (126 -> 127)
+[quotation] 153/153   [small34] units_success 1566   [selfcheck] 153/153, 变异「常量」1/153 「极性」1/153
+[pytest] 2 failed, 282 passed, 2 xpassed（两个常驻红，零新增）
+```
+
+Residual emitted by `residual_report.py 39 38` into `RESIDUAL_ROUND39.md`: **2 files / 2 units**, `UNREGISTERED=0`
+— `realtime_event_source.clock_worker` 12/13 and `trade_live_broker._sync_worker` (127/128 now). Next gate label
+**40** against `rounds/round39/after`.
+
+**Two of my own recorded claims were wrong and are corrected here rather than quietly dropped.**
+1. §14 said the analyzer half A caused the `replace_utils` collateral. It did not: my "A alone" test reused a
+   mirror whose generator already held half C, so what I measured was A+C. r86a re-ran all four combinations and
+   measured A alone = `replace_utils` byte-identical to base (9/9), C alone = 8/9, which is why the conjunct went
+   into the generator. Lesson recorded: an ablation must reset BOTH files, not the one being tested.
+2. §14 prescribed a `POP_TOP` veto. Also wrong: both real flip spans and both collateral spans close on
+   `POP_TOP`. The separator with zero overlap is the *shape of the closing block's leftover* — site 1 ends in
+   `POP_JUMP_FORWARD_IF_FALSE` (it is the next region's test) while site 2 ends in `LOAD_FAST url` (its
+   `RETURN_VALUE` lies outside the span). r86a implemented exactly that as an opcode-class predicate.
+
+**The process change paid for itself immediately.** The new corpus-wide collateral sweep (regen all 402 products,
+CR-stripped byte-diff vs `git archive HEAD`, judge only the changed files) reported 401 identical and
+`CHANGED = 1` = the victim — and the gate confirmed exactly one changed file. The 20-file panel had declared the
+first attempt clean while the corpus broke a file outside it; that panel design (residual + canaries) is the bias
+that hid it. Sweep cost ≈ 185 s, less than a gate, and it is now mandatory before any install.
