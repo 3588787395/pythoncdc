@@ -166,3 +166,35 @@ continue-arm-hoisting family, on the analyzer side of the region data.*
 
 Best banked base for the next hand stays **`30a4d7827122e165`** (`+2 / 2 windows / 7 landings`), and the
 corpus stays at gate 38's **6614/6617, 400/402 files** because nothing from this round was installed.
+
+
+## 9. r79a (R21-50) — the `_sync_worker` reclaim-guard + back-edge-fold pair, measured by me after its run was cut off
+
+r79a died at the 150-turn cap with its FIX doc containing only §0 (a clean premise re-check: base broker
+**126/128**, the four canaries Equal at base, `allwin` 5 windows `del 1/ins 7` @362, `ins 37` @520, `ins 177`
+@522, `del 61` @700..@1210, `del 162` @1890..@2884, plus the `dis.dis` ground truth for the compound
+`while (A or B or (C and D))` loop and the admission that its first hand-computed jump dump was WRONG and was
+discarded). It left seven analyzer candidates and no measurement table.
+
+I installed its `CANDIDATE_r79a_AB_region_analyzer.py` (sha16 `583506e7035f438a`) over the landed generator
+`11324f276cce6d5b` in my own mirror and regenerated broker:
+
+```
+[single] status=failure units=126/128 success_rate=98.44%
+  ***<module>.TradeLiveBroker._sync_worker: Failure: Different control flow
+```
+
+⇒ **no flip**, banked (`rounds/round39/r79/`, including my product `MEASURED_by_orchestrator_AB_broker_product.py`).
+The 5-window table above is also the honest answer to "why is `_sync_worker` not a −3 unit": `delta=-3` is the
+*net* of +221 inserted and −224 deleted across five windows — it is a restructured loop body, not a missing
+instruction, which is why three separate criteria have now changed nothing the judge can accept.
+
+## 10. Round 39 in one line for the next hand
+
+Ten engineer-runs, 0 flips, ~14 banked candidates with sha16'd builders in `rounds/round39/`. The landed bytes
+are still gate 38's (`11324f276cce6d5b` / `f7d849e974904492`, **6614/6617 = 99.9547 %, 400/402 files**),
+`git status --porcelain -- core/ site-packages/` = 0, and gate label **39 is unconsumed** — re-run
+`gate_chain.py 39 38` after the next flip rather than advancing the label. Two axes remain genuinely untried:
+arm-tail emission shape for clock_worker's two spurious `JUMP_FORWARD`s (`@7252`/`@7590`, the `[R21-36]`
+family, base `30a4d7827122e165`), and `_process_order`'s two loss classes (ternary-as-CALL-argument reaching
+`compile()` with empty arms, plus one whole `strategy_log.info(f'…')` statement missing).

@@ -2135,3 +2135,19 @@ Corpus unchanged at **6614/6617 (99.9547 %), 400/402 files**; landed bytes uncha
 (`11324f276cce6d5b` / `f7d849e974904492`); `git status --porcelain -- core/ site-packages/` = 0 lines all
 round. Round 39 therefore owes its flip to the next hand, and gate label 39 must be RE-RUN against
 `rounds/round38/after` after the next candidate rather than advanced.
+## 60. Round 39 close of session: ten engineer-runs, zero flips, all bytes banked, push still owed (2026-10-12)
+
+r79a (R21-50, `_sync_worker` BoolOp reclaim guard + back-edge fold) was cut off at the subagent turn cap with a
+clean §0 premise check and no measurement table. I installed its AB analyzer (`583506e7035f438a`) over the landed
+generator in my own mirror and regenerated broker: **126/128, `_sync_worker` still `Different control flow`** →
+banked in `rounds/round39/r79/`. Its §0 numbers also reframe the unit: `delta=-3` is the NET of +221 inserted and
+−224 deleted over five windows, i.e. a restructured loop body rather than a missing instruction — which is why
+three independent criteria have moved nothing the judge accepts.
+
+Round state handed to the next hand: landed bytes still gate 38's `11324f276cce6d5b` / `f7d849e974904492`, corpus
+**6614/6617 (99.9547 %), 400/402 files**, residual 2 files / 3 units, `git status --porcelain -- core/
+site-packages/` = 0 lines, **gate label 39 unconsumed** (re-run `gate_chain.py 39 38` after the next flip).
+Two axes are still untried: arm-tail emission shape for clock_worker's two spurious `JUMP_FORWARD` (`@7252` /
+`@7590`) on base `30a4d7827122e165`, and `_process_order`'s two loss classes. OPEN OBLIGATION: this round's five
+commits are NOT pushed — github.com:443 has been unreachable (connection reset / 21 s connect failure) since
+12:29; retry with `-c http.postBuffer=8388608` and verify by the ref, never by exit status.
