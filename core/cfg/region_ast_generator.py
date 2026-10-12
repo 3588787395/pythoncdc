@@ -43232,6 +43232,39 @@ AST 映射规则:
         """链上「条件跳转」集合：与三元区域识别端使用的条件跳转族同一来源。"""
         return (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS)
 
+    def _r2156_tail_is_bounded_statements(self, tail_instrs):
+        """[R21-56] 消费判据（栈形状 / opcode 类）：跨度闭合块里剩余的那段指令必须是若干条
+        完整语句——即它的最后一个栈上值在尾段内部就被取走，尾段也不得以「某个区域的条件测试
+        "结尾」的形式替下一条语句代持操作数。
+
+        结构事实（只读 opcode 族，不读名字/常量/绝对偏移/块数阈值/跨层信息）：
+          ① 尾段任何位置不得出现条件跳转（`POP_JUMP_*` / `JUMP_IF_*`）：条件跳转的两侧分支块
+             不在尾段里，说明尾段是**下一个区域**（if/while/布尔链）的测试前半段，不是完整语句；
+          ② 尾段末条必须是语句边界：`POP_TOP`（丢弃结果的表达式语句）/ `RETURN_VALUE`、
+             `RETURN_CONST`（返回）/ `RAISE_VARARGS`（抛出）/ `STORE_*`（赋值收尾）/
+             `JUMP_*`（无条件跳转，控制流收尾）——这些 opcode 把栈上的值取走或转移控制，
+             尾段在其处恰好结束，每条语句都自足；
+          ③ 其它末条（`LOAD_*`、`BUILD_*`、`CALL`、`BINARY_OP`…）意味着尾段最后压栈（或未取）的
+             值要在**其后另外的块**里才被消费；本跨度已把这些块整体登记为已生成，于是那个值以
+             裸表达式语句发射，而真正的语句（如 return）消失——正是 [R21-55c] 放宽在
+             `replace_utils` 造成的两处产物差异。
+
+        与 `_is_statement_close_op`（跨度自身闭合指令判据，[r20a] 特意排除 STORE_*）不冲突：
+        那条判据问的是「本三元是不是嵌在一条尚未闭合的语句里」，STORE_* 作为闭合说明赋值语句
+        整体已被吞入 ⇒ 保守放弃；本判据问的是「剩余尾段是否自足」，`x = y` 以 STORE_FAST 收尾
+        正是一条完整语句 ⇒ 放行。两者面向跨度的两端，不可互相替代。
+        """
+        _r2156_cond_jump = self._ternary_chain_cond_jump_ops()
+        for _r2156_i in tail_instrs:
+            _r2156_op = _r2156_i.opname
+            if _r2156_op in _r2156_cond_jump or _r2156_op.startswith('JUMP_IF'):
+                return False
+        _r2156_last = tail_instrs[-1].opname
+        if _r2156_last.startswith('STORE_') or _r2156_last.startswith('JUMP_'):
+            return True
+        return _r2156_last in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                               'RAISE_VARARGS')
+
     def _ternary_host_call_prefix_span(self, region):
         """判定该三元是否嵌套在「尚未闭合的宿主调用」内，并给出整体归约跨度。
 
@@ -43277,6 +43310,9 @@ AST 映射规则:
         # 前导段交回 _build_statements_from_instructions 单独成语句发射。
         prefix_instrs = list(self._split_block_condition_prefix(cond_block))
 
+        # [R21-56] 记录本跨度是否**依赖** [R21-55c] 的异常边放宽才认领到臂：新增许可必须
+        # 自带消费证明（见 _r2156_tail_is_bounded_statements），未使用该放宽的跨度不受影响。
+        _r2156_relaxed_used = []
         visited = {cond_block}
         span = [cond_block]
         arm_blocks = []
@@ -43302,8 +43338,24 @@ AST 映射规则:
                     x.opname in cond_jump_ops for x in ai[:-1]):
                 return False
             for sb in (getattr(arm, 'successors', None) or set()):
-                if sb is not merge:
+                if sb is merge:
+                    continue
+                # [R21-55c] 臂的「非 merge 后继」若是异常入口块（首指令 PUSH_EXC_INFO /
+                # WITH_EXCEPT_START），它不是正常完成路径：CFG 给 try 范围内的**每个**块都
+                # 挂一条指向 handler 的边，于是纯值臂的后继集合里混进了 handler（本单元实测
+                # 臂 @1754/@1758 的后继 = {汇合块, handler @3026}）。既有判据「臂只落到 merge」
+                # 因此永远不成立，宿主调用跨度 (_ternary_host_call_prefix_span) 整体退回 None，
+                # 兄弟三元被降级成裸表达式语句、宿主语句消失。放行条件只读该后继的首指令
+                # opcode 类（结构事实，不读名字/偏移/计数器/跨层信息）；其余后继一律 return False，
+                # 保持既有「臂只落到 merge」判据 ⇒ 判据不成立时产物逐字节不变。
+                _r2155_sb_first = (sb.get_first_instruction()
+                                   if getattr(sb, 'instructions', None) else None)
+                if _r2155_sb_first is None:
                     return False
+                if _r2155_sb_first.opname not in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START'):
+                    return False
+                # [R21-56] 本臂正是靠异常边放宽才被认领 —— 记下，跨度收尾时必须过消费判据。
+                _r2156_relaxed_used.append(1)
             visited.add(arm)
             arm_blocks.append(arm)
             return True
@@ -43411,6 +43463,20 @@ AST 映射规则:
             for ins in getattr(b, 'instructions', None) or []:
                 if lo_off <= ins.offset <= hi_off and ins.offset not in covered:
                     return None
+        # [R21-56 消费判据] 只有「闭合块里跨度之后剩余的那段指令」本身是若干条完整语句时，
+        # 本跨度才允许接管该语句：否则剩余段里被压栈的值没有人消费（或被下一个区域的测试消费），
+        # 通用剩余语句构造器会把该值发成一条**裸表达式语句**，并把它的消费指令（return）留在
+        # 已被登记为已生成的块里永远消失。实测 IQCommon/util/replace_utils.pyc 的两处即此形态：
+        #   尾段 = [LOAD_FAST decrypted_url, POP_JUMP_FORWARD_IF_FALSE]  ⇒ 多发一条 `decrypted_url`
+        #   尾段 = [..., POP_TOP, LOAD_FAST url]（RETURN_VALUE 在下一块）⇒ `return url` 变成 `url`
+        # 判据成立与否只读 opcode 族/栈形状，不读名字、常量、绝对偏移、计数器、阈值；不成立即
+        # return None，此时尚未登记任何块或偏移，行为逐字节退回既有（gate-38）版本。
+        # 实测六处真实触发（_process_order 的宿主 .format/f-string 语句）全部满足该判据：
+        #   尾段末条分别为 JUMP_FORWARD @2428 与 POP_TOP @2910，臂均为纯常量值块。
+        if _r2156_relaxed_used and tail_instrs:
+            if not self._r2156_tail_is_bounded_statements(tail_instrs):
+                return None
+
         return span_instrs, all_blocks, prefix_instrs, tail_instrs
 
     def _generate_host_prefix_ternary_statement(self, region, span_instrs,
