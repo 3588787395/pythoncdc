@@ -1,0 +1,32 @@
+{
+ "generated_by": "Round8 REVIEW2 independent review engineer (task 8.3)",
+ "protocol": "RV2: regen (pycdc -o) then verify (scripts/pyc_verify.py single); probes = test_repros/round8/ r8v8rev_* prefix",
+ "station_faces": {
+  "quotation": {"expected": "152/153", "measured": "152/153", "match": true, "only_fail": "change_his_to_forward"},
+  "round1face": {"expected": "417/423", "measured": "417/423", "match": true, "fails": ["trade_info_utils 36/41 (5 stock)", "quotation 152/153"]},
+  "round2face": {"expected": "239/251", "measured": "239/251", "match": true, "fails": ["v_b46_face 1/4", "v_b71_face 3/4", "v_b73_face 2/3", "v_b75_face 2/3", "email_utils 3/4", "cgroup_utils 7/8", "executor 9/10", "strategy_universe 10/11", "trading_dates_mixin 13/14", "realtime_event_source 12/13"]},
+  "34set_shard0": {"expected": "183/190 NEWFAIL=0", "measured": "183/190 NEWFAIL=0", "match": true, "note": "per-file failure sets and regen sha identical to HEAD evidence; predecessor M-state rerun also bit-identical (elapsed/generated_at only)"},
+  "attack_surface_31": {"source": "r8v8fixB_repro_rev2B.json + rev2C.json (predecessor session)", "verified": "readings match FIX terminal state probe-by-probe"}
+ },
+ "variant_probes": [
+  {"probe": "r8v8rev_b104_chain4_battery", "family": "B104", "units": "4/6", "fails": ["v2 while 0<x<10 and flag: -> loop folded to if-guard + phantom break", "v4 while 0<x<10<x*2<100: -> recheck leaks as phantom body if 0<x and 10<True and x*2<True (registered e04 corruption signature)"], "passes": ["v1 for-host 4-elem", "v3 Call final operand return", "v5 for-host + continue"], "judgment": "in-claimed-domain FAIL -> reject"},
+  {"probe": "r8v8rev_b105_walrus_battery", "family": "B105", "units": "4/5", "fails": ["v2 nested walrus f((a := g((b := h()))), a+b) -> outer call + arg2 + return evaporate (0-byte-equivalent semantic loss)"], "passes": ["v1 while (n:=f(x))>3 backedge recheck", "v3 a=b=f() negative control", "v4 if-cond walrus + consumption"], "judgment": "in-claimed-domain FAIL (walrus arg-position value chain, depth 2) -> reject"},
+  {"probe": "r8v8rev_b107_mtarget3_battery + r8v8rev_b107_iso_battery + r8v8rev_b107_iso2_battery", "family": "B107", "units": "aggregate: chains-alone pass any N; 2-target+preceding-stmt pass; >=3-target+preceding-stmt all fail", "fails": ["v1 o.a=p[k]=q.r=v with q=Q() preceding -> targets 2-3 + q=Q() evaporate", "t2/t3 3-target chain + preceding stmt -> targets 2-3 evaporate", "u1 4-target + preceding stmt -> only p[k]=s survives", "u2 3-target + preceding stmt -> only o.a=s survives"], "passes": ["t1 3-target chain alone", "v3 4-target chain alone", "u3 2-target + preceding stmt", "v2 UNPACK_EX chain a,*b=c,*d=e,f"], "judgment": "in-claimed-domain FAIL (multi_target: targets after first lost with ordinary preceding statement) -> reject"},
+  {"probe": "r8v8rev_bmatch_guards_battery (+v1..v4 split, r8v8rev_bmatch_or3iso w1-w4, r8v8rev_bmatch_nestnoguard n1)", "family": "B77/B81/B103", "units": "v1 2/2 PASS; v3 1/2 FAIL; v4 2/2 PASS; v2 pycdc crash 0-byte; w2/w3 guard dropped; w1/w4 pass; n1 pycdc HANG", "fails": ["v3/w2/w3 bare-name guard on or-patterns (case 1|2|3 if g:) -> guard silently dropped; comparison guard (x>1) preserved (w1); single-literal bare-name guard preserved (w4) -> guard-expression-form sensitivity", "v2/n1 nested match under LITERAL outer case (match x: case 1: match y:...) -> pycdc hang/crash, 0-byte regen; HANG CONFIRMED PRE-EXISTING at 5f784272 worktree -> not a round8 regression"], "passes": ["v1 guard + multi-statement body", "v4 true guard + return body"], "judgment": "bare-name or-guard drop = in-claimed-domain FAIL (B103 e06 or+guard closure) -> reject; nested-literal-case hang = outside claimed domain (e09 self-cert was sequence-host only) -> register new Bn candidate, hand to next round"},
+  {"probe": "r8v8rev_b102_2eselsefin", "family": "B102", "units": "4/4", "fails": [], "passes": ["v1 double except* + else + finally non-empty body", "v2 nested function host double except* + else + finally"], "judgment": "PASS"},
+  {"probe": "r8v8fc_b102_battery (reuse)", "family": "B102", "units": "8/10", "fails": ["ideg", "pin (=pre_inner)"], "note": "both are FIX_C-registered handover residuals (fixed reading registered as 8/10); no new failure vs registration", "judgment": "PASS (registered state confirmed)"},
+  {"probe": "r8v8rev_b113_doubfor_battery", "family": "B113", "units": "10/10", "fails": [], "passes": ["v1 [i*j for i in a for j in b if i>j]", "v2 [[k for k in row] for row in m]", "v3 triple-for double-if", "v4 dict comp double for + if"], "judgment": "PASS"},
+  {"probe": "r8v8rev_b106_mixed_battery", "family": "B106", "units": "7/7", "fails": [], "passes": ["v1 f(a,*b,**kw)", "v2 f(*a,*b)", "v3 lambda *a,**k: k(*a)", "v4 star arg as comprehension element"], "judgment": "PASS"},
+  {"probe": "station negative control future_contract_info.pyc", "family": "-", "units": "27/29", "fails": ["check_user", "info_conbine"], "note": "identical reading (27/29, same 2 failure units) at 5f784272 worktree and HEAD -> zero disturbance from round8", "judgment": "PASS (pre-existing stock, untouched)"}
+ ],
+ "reject_items": [
+  "B104-R2a: while-host chain+and mixed condition -> loop folding (H5 design case form fails)",
+  "B104-R2b: while-host 4-element chain -> back-edge recheck leaks as phantom body if with 10<True operand corruption",
+  "B105-R2: nested walrus (walrus inside walrus value) in call-arg position -> outer call + args + return evaporation",
+  "B107-R2: complex chain >=3 targets with ordinary preceding statement in same block -> targets 2+ evaporate",
+  "B103-R2: bare-name guard on or-patterns -> guard silently dropped (guard-expression-form sensitivity in or+guard closure)"
+ ],
+ "out_of_domain_registrations": [
+  "B122 candidate: nested match under literal outer case (match x: case 1: match y:...) -> pycdc hang (n1) / 0-byte crash (v2 with guard); pre-existing at 5f784272; never covered by any probe face (e09_nested_match = sequence host only); registered B103_guard 'nested_guard' unit is not a nested match (for-host is-not-None guard)"
+ ]
+}
