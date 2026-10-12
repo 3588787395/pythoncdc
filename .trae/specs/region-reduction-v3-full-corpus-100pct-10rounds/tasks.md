@@ -1857,3 +1857,44 @@ Nothing installed: `git status --porcelain -- core/ site-packages/` = 0 lines, m
 generator `20fa73b4e8231f0f` / analyzer `c069d359cbfe76b0`, corpus sealed at **6613/6617 (99.9395%),
 400/402 files, residual 2 files / 4 units**, gate label **38** owed to the first candidate that flips a
 unit.
+## §51 Round 38 attribution table — the continue/chain-tail family is coupled, and every variant so far costs `ipo_stocks_order`
+
+Measured the way the campaign should measure: `co_code` byte-for-byte against the original code object
+per unit (no filters, no window merging, jump operands included), on the panel products of five
+candidates. `bytes_diff` = number of differing `co_code` bytes; `len_delta` = orig minus product, in
+bytes (a missing instruction is 2 bytes).
+
+| candidate | what it changes | `ipo_stocks_order` | `_process_cancel_order` | `_trade_status_handle` (green) | broker units |
+|---|---|---|---|---|---|
+| landed `20fa73b4e8231f0f` | — | **0 (Equal)** | several windows (−1/3) | 0 (Equal) | 125/128 |
+| `ccd97ff680b7434c` (40c) | 35a Continue → then-suite of the body-final `If` | **0** | 28 bytes | 0 | 125/128 |
+| `c1eba55fb9900412` (40d = 40c + shared-pred clause) | also claims chain-`shared` continue blocks | **1** | **2** | 0 | 124/128 |
+| `1bdc3206451cef57` (41 = 40d + E1 re-entry condition) | [R8 fix] fires only on a continue re-entry landing | **419** | **1** | 0 | 124/128 |
+| `780ef81d522bf29b` (41c = 41 with E1 as an exception) | header landing kept, re-entry branch added | **419** | 1 | 0 | 124/128 |
+| `9d53f9f4b6a8769f` (41e = 40d + exclusion only) | suppress solely for the designated `back_edge_block` | **420** | 28 | — | 124/128 (and `_process_order` `len_delta=+358`, i.e. far worse than its own −68-instruction shape) |
+
+Readings that matter:
+
+1. **The regression starts at 40d's shared-predecessor clause**, not at E1: `ipo_stocks_order` goes from
+   0 to 1 byte there, and E1 then multiplies it to 419 because the re-entry branch makes `[R8 fix]` fire
+   for blocks it never covered before. My §50 sentence "E1 as written also takes a Continue away from
+   `ipo_stocks_order`" understated it — E1 does not remove a Continue, it adds one where the landed rule
+   stayed silent, and 41e shows that even the narrow exclusion alone is harmful elsewhere.
+2. **`_trade_status_handle` stays 0 in every variant**, so gate-36's landed rule is not what these
+   hunks collide with; the collision partner is `ipo_stocks_order` (gate 30's arm-tail continue).
+3. Progress on the victim unit and safety for `ipo_stocks_order` are currently **mutually exclusive** in
+   this emitter-side family: the byte that separates them is a jump TARGET, and the target is chosen by
+   CPython's block layout, not by the AST. That is the standing no-landing-channel boundary, and the
+   variants above are the evidence rather than an argument.
+
+Decision recorded from the table: the family moves to the **analyzer** (which block is declared the
+chain's tail / the region's merge), not to more `[R8 fix]` or `[R39-B]` condition edits. r68a was
+dispatched to answer the expressibility question with `compile()` over the source-shape family
+(`D:/Temp/r68`, deliverable `ANSWER_R21-41_LAYOUT.md`): if no shape reproduces arm-B landing on the
+shared continue block while the body tail lands on `NOP+2`, then `1bdc3206451cef57` (1 byte, best
+victim reading) and `ccd97ff680b7434c` (0-byte `ipo`, closest safe co-requisite) stay banked
+permanently and the ticket is re-filed against `region_analyzer`'s chain/merge declaration.
+
+All variants banked; nothing installed; repo byte-clean (generator `20fa73b4e8231f0f`, analyzer
+`c069d359cbfe76b0`), mirror `cmp`-restored, corpus 6613/6617 (99.9395%) · 400/402 · residual 2 files /
+4 units, gate label 38 still owed to a flip.
