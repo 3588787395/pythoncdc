@@ -2121,3 +2121,17 @@ Dispatch discipline learned this round: pre-assign ticket numbers (44 was claime
 before implementation (two engineers died with bytes and no doc), and never let an engineer inherit a claim
 from my own brief without re-measuring it — three of my claims were corrected by subordinates today, each
 time by a measurement rather than an argument.
+## 59. Round 39's eighth engineer-run closes the collection axis too; gate label 39 still unconsumed (2026-10-12)
+
+r78a (R21-49) re-measured my elif-mis-collection premise and found it TRUE in the data (230 evals / 1 fire /
+`true_in_body=False` / `two_owner=186` unchanged base-vs-candidate), yet falsified as a fix: both
+granularities take clock_worker from `delta=+2` to `delta=-269`, because `IF_ELIF_CHAIN@7186`'s
+`elif_final_else` is 44 blocks = the whole function tail, so derefusing `@7248` makes a downstream merge
+guard abandon the fold. `changed files = 1` (the victim, regressed) -> banked in `rounds/round39/r78/`, not
+installed. See `rounds/round39/ADJUDICATION_ROUND39_BANKED_NO_LANDING.md` section 8 for the list of axes
+closed today and for what remains: **two spurious `JUMP_FORWARD`s at `@7252`/`@7590` plus 7 landing diffs**,
+which is arm-tail emission shape (the landed `[R21-36]` family), not a declaration or collection rule.
+Corpus unchanged at **6614/6617 (99.9547 %), 400/402 files**; landed bytes unchanged
+(`11324f276cce6d5b` / `f7d849e974904492`); `git status --porcelain -- core/ site-packages/` = 0 lines all
+round. Round 39 therefore owes its flip to the next hand, and gate label 39 must be RE-RUN against
+`rounds/round38/after` after the next candidate rather than advanced.

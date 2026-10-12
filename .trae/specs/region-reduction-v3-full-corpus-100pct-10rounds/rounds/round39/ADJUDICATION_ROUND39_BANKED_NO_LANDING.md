@@ -133,3 +133,36 @@ are read from code rather than inferred:
 
 Clock_worker has now had six tickets today: r73a, r74a, r75a, r76a, r77a, plus the re-anchor. Best banked
 state remains `30a4d7827122e165` at `delta=+2 / 2 windows / 7 landings`, judge 12/13, `changed files = 1`.
+
+
+## 8. r78a (R21-49) — the elif-mis-collection reframe is FALSIFIED too, with clean numbers
+
+I framed the residual as a collection defect (the chain claims `@7248` as an elif condition while
+`elif_bodies=[[7372,7488]]` omits `@7248`'s true successor `@7270`). r78a re-measured the premise and it
+**holds** — inert probe, `true_in_body=False`, the sibling `@6846/@6868` correctly does not fire (it is a
+pre-formed BoolOpRegion pure operand), census 230 evaluations / **1 fire**, membership
+`two_owner=186 / zero_owner=0` identical base-vs-candidate — but both fix granularities destroy the unit:
+
+| variant | delta | windows | landings | judge |
+|---|---|---|---|---|
+| base `30a4d7827122e165` | `+2` | 2 | 7 | 12/13 Different control flow |
+| A: walk `break`, don't fold `@7270` | `-269` | 4 | 2 | 12/13 |
+| B: `return None`, refuse the `@7186` fold | `-269` | 4 | 2 | 12/13 |
+| A+B | = B (A subsumed; byte-identical product) | | | |
+
+Cause, from its own reading: `@7186` is a single-elif chain whose `elif_final_else` is **44 blocks = the
+entire function tail**, so derefusing `@7248` makes a downstream merge guard abandon the fold and orphan the
+tail. `changed files = 1`, and it is the target, **regressing** `+2 -> -269`. Banked, not installed.
+
+**Axes closed on clock_worker in one day (eight engineer-runs):** filter-suppression + phantom-else pair
+(R21-48), conjunct-8 relaxation blanket and gated (R21-44/47, twice), `_orphaned_blocks` as the emitter,
+`merge_block is None` census, the `@7248+@7270` BoolOp reading, and the elif mis-collection (R21-49). What is
+LEFT is not a collection or placement problem: **two spurious `JUMP_FORWARD`s at `@7252` and `@7590`** (arm
+tails of `@7164`/`@7186`) plus 7 landing diffs. r78a concludes "the generator has no landing channel", but
+that sentence was already proven too narrow today by the landed `[R21-43]`; the honest statement is that
+*neither a declaration nor a collection rule reaches these two jumps — what is untried is the arm-tail
+emission shape itself (which arm falls through vs. takes the explicit jump), i.e. the `[R21-36]`
+continue-arm-hoisting family, on the analyzer side of the region data.*
+
+Best banked base for the next hand stays **`30a4d7827122e165`** (`+2 / 2 windows / 7 landings`), and the
+corpus stays at gate 38's **6614/6617, 400/402 files** because nothing from this round was installed.
