@@ -2006,3 +2006,46 @@ r69a holds the recipe (nested third arm + the `Continue` as a sibling after the 
 then-suite) with the acceptance bar: `_process_cancel_order` `co_code` diffs = 0, `ipo_stocks_order`
 and `_trade_status_handle` still 0, broker 125/128 → 126/128. Nothing installed by me; tree and mirror
 byte-clean at generator `20fa73b4e8231f0f` / analyzer `c069d359cbfe76b0`.
+## 55. Round 38 CLOSED WITH A LANDING — R21-43 (+ co-requisite R21-40) certified by gate 38 (2026-10-12)
+
+`trade_live_broker._process_cancel_order` flipped: broker **125/128 -> 126/128**, corpus
+**6613 -> 6614 / 6617 (99.9547%)**, files **400 -> 400**, and the gate's four gates read
+`文件级回退=0  UNIT_REGRESSIONS=0  新增失败单元=0  翻正单元=1`. Installed as one pair in commit
+`ac41a928`: analyzer `c069d359cbfe76b0 -> f7d849e974904492` ([R21-40], the `back_edge_block`
+mis-designation guard that the identification code only applied when `condition_block == header`)
+plus generator `20fa73b4e8231f0f -> 11324f276cce6d5b` ([R21-43], an elif chain whose last two arms
+converge on a pure `continue` block that is not the chain's merge block must render the third arm as
+a **nested** `else: if …`, with the `continue` emitted as a sibling after the inner `If`).
+
+Why this is a new axis rather than a re-attempt of the falsified ones: the campaign had recorded
+"merge-landing residuals have no generator channel" (`pythoncdc-no-landing-channel-in-generator`).
+What R21-43 shows is that the *nesting* of the AST is the channel — the divergence lives in which
+suite the arm's statements land in, and CPython gives a whole `if/elif/else` chain exactly ONE end
+label, so a flat chain provably cannot give two arms different exit targets. The criterion is
+decidable from region data plus opcode classes (7 conjuncts, `region_ast_generator.py:15668` applied
+at `:16595`), names no function, reads no offset or instruction-count threshold, and has no side
+effect when it refuses.
+
+Population, measured before installing (`CENSUS_r69a_R21-43_fire.txt`): **306** evaluations of the
+criterion across the 20-file panel, **FIRES = 1**, the single fire being
+`trade_live_broker region@entry@946 -> T@1822`. Panel: `changed files = 1`, 19 byte-identical, with
+`ipo_stocks_order` and `_trade_status_handle` — the two units this family destroyed in earlier
+attempts — still green. Gate 38 log `/tmp/gate_chain_38_121133.log` (copied to `rounds/round38/gate_chain_38.log`, uncommitted because `*.log` is gitignored repo-wide): `regen ok=402 bad=0` (232 s),
+verify 8/8 shards rc=0 (786/786 469/469 538/538 887/887 855/855 998/999 799/801 1282/1282),
+quotation 153/153, small34 `units_success: 1565 / success: 32`, selfcheck 153/153 Equal with
+mutations 常量 1/153 and 极性 1/153, pytest `2 failed, 282 passed, 2 xpassed` (the two permanent
+residents, zero new failures).
+
+Honest limits on the attribution: the analyzer half alone is on the record as **not** flipping
+(`MEASURE_R21-40_backedge_chain.md` row "+ [R21-40] | landed | delta=0 hunks=2"); the generator half
+alone was never measured, because I installed and panelled the pair. Anyone reverting one half owes
+a fresh single-half ablation — this section is not evidence about half-ownership.
+
+Residual after the landing, emitted by `residual_report.py 38 37` into `RESIDUAL_ROUND38.md`
+(`UNREGISTERED 行数=0`): **2 files / 3 units** — `realtime_event_source.clock_worker` 12/13 (−3/8 on
+the re-anchored base `3d4f27de6d80ab6e`, content restored but misplaced, plus the still-lost 17-instruction
+`holiday_not_do_before == '0'` guard at `@6690`), `trade_live_broker._process_order` 126/128 (−68/14:
+a conditional expression used as a CALL argument reaches `compile()` with empty arms, and one whole
+`strategy_log.info(f'…')` statement missing), `trade_live_broker._sync_worker` (−3/5 relocations).
+Next gate label **39**, comparison input `rounds/round38/after` (8 shard reports, committed with this
+round so a later `residual_report.py` has something to read).
