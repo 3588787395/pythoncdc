@@ -2148,7 +2148,7 @@ Round state handed to the next hand: landed bytes still gate 38's `11324f276cce6
 **6614/6617 (99.9547 %), 400/402 files**, residual 2 files / 3 units, `git status --porcelain -- core/
 site-packages/` = 0 lines, **gate label 39 unconsumed** (re-run `gate_chain.py 39 38` after the next flip).
 Two axes are still untried: arm-tail emission shape for clock_worker's two spurious `JUMP_FORWARD` (`@7252` /
-`@7590`) on base `30a4d7827122e165`, and `_process_order`'s two loss classes. PUSH RESOLVED THE SAME HOUR: after five refused attempts (12:29-19:04, connection reset then a 21 s
-connect failure) the queue drained and `3631c3cf..0855b5d8 HEAD -> rr-v3r01-f557fd` landed with rc=0;
-verified by the ref line and by `git rev-list --count origin/rr-v3r01-f557fd..HEAD` = 0, so round 39's
+`@7590`) on base `30a4d7827122e165`, and `_process_order`'s two loss classes. PUSH RESOLVED THE SAME HOUR: after five refused attempts (12:29-19:04, connection reset then a 21 s
+connect failure) the queue drained and `3631c3cf..0855b5d8 HEAD -> rr-v3r01-f557fd` landed with rc=0;
+verified by the ref line and by `git rev-list --count origin/rr-v3r01-f557fd..HEAD` = 0, so round 39's
 banked evidence is off this box.
