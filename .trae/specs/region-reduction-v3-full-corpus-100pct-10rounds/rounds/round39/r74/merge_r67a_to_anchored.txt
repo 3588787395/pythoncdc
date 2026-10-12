@@ -1,0 +1,16 @@
+applied 1 hunks, dropped 0; merged size=3862307 sha16=1a8939044f51e85c (current was cf5868e68208adf6)
+   base 23029..23027 -> +78 lines via ctx(12)+0old
+residual merged-vs-candidate: 8 blocks
+   delete  merged 401..502 (102) vs cand 401..400 (0) explained-by-marker=False
+   delete  merged 6998..7001 (4) vs cand 6896..6895 (0) explained-by-marker=False
+   delete  merged 15713..15842 (130) vs cand 15607..15606 (0) explained-by-marker=False
+   delete  merged 16701..16730 (30) vs cand 16465..16464 (0) explained-by-marker=False
+   delete  merged 22330..22371 (42) vs cand 22064..22063 (0) explained-by-marker=False
+   delete  merged 27149..27163 (15) vs cand 26841..26840 (0) explained-by-marker=False
+   delete  merged 32030..32035 (6) vs cand 31707..31706 (0) explained-by-marker=False
+   replace merged 54271..54272 (2) vs cand 53942..53942 (1) explained-by-marker=False
+FAIL: 8 residual block(s) not explained by --expect-residual: the merge did not transplant the candidate faithfully
+diff(anchored base -> r67a transplant):
+   insert base[23335..23335] merged[23335..23413] +78 -0
+r67a_on_anchored_recheck sha16 1a8939044f51e85c
+identical to work/r67a_on_anchored.py: True

@@ -1,0 +1,23 @@
+fly/data/quotation.pyc                                         head_ok=0   or_run2=0   and_ok=0   fire=0  
+fly/data/quote.pyc                                             head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQCommon/api/klinedata.pyc                                     head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQCommon/logger/handlers.pyc                                   head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQCommon/strategy/wizard_quant_api.pyc                         head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQCommon/util/trade_info_utils.pyc                             head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQData/api/api_base.pyc                                        head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQData/plugins/plugin_system_realquote/real_quote.pyc          head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc         head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc         head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc     head_ok=1   or_run2=1   and_ok=1   fire=1  
+IQEngine/plugins/plugin_system_matcher/matcher.pyc             head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc   head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQCommon/arg_checker.pyc                                       head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQData/utils/arg_checker.pyc                                   head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQEngine/utils/arg_checker.pyc                                 head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQCommon/profiler_func.pyc                                     head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQData/utils/profiler_func.pyc                                 head_ok=0   or_run2=0   and_ok=0   fire=0  
+IQEngine/utils/profiler_func.pyc                               head_ok=0   or_run2=0   and_ok=0   fire=0  
+TOTAL {'head_ok': 1, 'or_run2': 1, 'and_ok': 1, 'fire': 1}
+=== fires (1)
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc :: _sync_worker cond@232 chain=[(232, 'or'), (364, 'or'), (522, 'and'), (544, 'and')]

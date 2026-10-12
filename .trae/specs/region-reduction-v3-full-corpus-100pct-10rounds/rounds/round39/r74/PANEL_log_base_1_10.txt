@@ -1,0 +1,10 @@
+ 1 fly/data/quotation.pyc                                                 size=182759  sha16=302f449afc9245eb units=153/153  
+ 2 fly/data/quote.pyc                                                     size=93018   sha16=a39899ca939523e0 units=92/92    
+ 3 IQCommon/api/klinedata.pyc                                             size=102772  sha16=3253817d2a930f82 units=64/64    
+ 4 IQCommon/logger/handlers.pyc                                           size=9030    sha16=dd5f2d196248e9b1 units=30/30    
+ 5 IQCommon/strategy/wizard_quant_api.pyc                                 size=34541   sha16=f0d81c252c7b3d4c units=58/58    
+ 6 IQCommon/util/trade_info_utils.pyc                                     size=61343   sha16=a6b1797112fe623d units=41/41    
+ 7 IQData/api/api_base.pyc                                                size=33123   sha16=ec75d27dd3135041 units=28/28    
+ 8 IQData/plugins/plugin_system_realquote/real_quote.pyc                  size=53841   sha16=4e2954762ccfe412 units=45/45    
+ 9 IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc                 size=13021   sha16=795e9f0989de7fd4 units=27/27    
+10 IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc                 size=34308   sha16=1c7d6451e34eac79 units=37/37    

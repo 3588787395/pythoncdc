@@ -2075,3 +2075,28 @@ Conclusion recorded in 6: **[R21-40] and [R21-43] are true co-requisites** — n
 whose conjuncts read the *analyzer's declared* role (`back_edge_block`, `merge_block`) must be
 measured with and without the analyzer change that establishes that role, otherwise its apparent
 "over-fire" is a missing prerequisite rather than a defect.
+## 57. Round 39 so far: five engineers, four banked candidates, ZERO flips, gate label 39 unconsumed (2026-10-12)
+
+Full measured table in `rounds/round39/ADJUDICATION_ROUND39_BANKED_NO_LANDING.md`; every number there is
+one I re-measured in a clean mirror (`D:/Temp/v39`), not transcribed. Corpus stays **6614/6617
+(99.9547%), 400/402 files**; landed bytes stay generator `11324f276cce6d5b` / analyzer `f7d849e974904492`;
+`git status --porcelain -- core/ site-packages/` = 0 lines all round.
+
+* `_sync_worker` (r71a): analyzer candidate `0d568cdd7fe0f167`, census FIRES=1 (corpus-unique), judge
+  126/128 unchanged, delta stays -3 — the BoolOpRegion it builds is reclaimed by `analyze()`'s
+  priority rebuild (`region_analyzer.py:1871`/`:4119`), and forced retention worsens delta -3 -> +19.
+* clock_worker chain, my own readings: landed -113 -> re-anchored P1+P2 `cf5868e68208adf6` **-6** ->
+  r74a A+B `f51f9de14d216cda` **-4** -> r75a A+B `0a2f4a81c593b1c6` **+3** (all three residual windows
+  are single spurious `JUMP_FORWARD`s @6496/@7254/@7592, the 17-instruction block is back inside its
+  arm) -> **best known `30a4d7827122e165` = +2 / 2 windows / 7 landings**. Still 12/13.
+* Two of my own brief claims were corrected by r76a's re-measurement and confirmed by me: r75's A+B
+  (not A alone) is the in-arm rendering, and the deliverable base is `r74d + R2146AB` because @6496 is
+  a [R21-44] site.
+* The blocker is now a single named region: `compile()`-proven shape at site @7164 is
+  `if A and B or C:` then `if D: debug(); if E: ... ; <@7492 tail sequential>`, and after the fold the
+  arm's `then=[@7248,@7270,@7492,@7372,@7488]` contains **@7248 owned by no region**, so
+  `_generate_block_statements` swallows it (relaxing conjunct 8, blanket or gated, measures **-274/5** —
+  falsified twice now). Next ticket R21-48: declare `IfRegion(entry=@7248, then=[@7270], else=[],
+  merge=@7492)` analyzer-side at identification time, paired with the phantom-else rule.
+* Numbering collision recorded rather than hidden: R21-44 was taken by two engineers; from here I
+  pre-assign numbers in every dispatch (45=r74a, 46=r75a, 47=r76a).

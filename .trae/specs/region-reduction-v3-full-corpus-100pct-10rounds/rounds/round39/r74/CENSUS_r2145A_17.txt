@@ -1,0 +1,10 @@
+R2145EVAL mb=@16 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@16 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@330 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@250 np=3 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145EVAL mb=@354 np=4 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145EVAL mb=@354 np=4 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145EVAL mb=@268 np=5 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145EVAL mb=@72 np=3 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145EVAL mb=@72 np=3 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145EVAL mb=@998 np=2 term=RAISE_VARARGS rej=shape

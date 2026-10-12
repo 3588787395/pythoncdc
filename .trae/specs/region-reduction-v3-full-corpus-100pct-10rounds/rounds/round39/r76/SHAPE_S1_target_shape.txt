@@ -1,0 +1,99 @@
+S1  orig window n=75  prod window n=98
+   LOAD_FAST                    now_date   [@7164] | LOAD_FAST                    now_date
+** LOAD_DEREF                   self   [@7166] | LOAD_FAST                    self
+   LOAD_ATTR                    pre_before_trading_date   [@7168] | LOAD_ATTR                    pre_before_trading_date
+   COMPARE_OP                   >   [@7178] | COMPARE_OP                   >
+   POP_JUMP_FORWARD_IF_FALSE    -> @52   [@7184] | POP_JUMP_FORWARD_IF_FALSE    -> @52
+   LOAD_FAST                    pre_before_trading   [@7186] | LOAD_FAST                    pre_before_trading
+   LOAD_FAST                    now_time   [@7188] | LOAD_FAST                    now_time
+   SWAP                            [@7190]  | SWAP                         
+   COPY                            [@7192]  | COPY                         
+   COMPARE_OP                   <=   [@7194] | COMPARE_OP                   <=
+   POP_JUMP_FORWARD_IF_FALSE    -> @50   [@7200] | POP_JUMP_FORWARD_IF_FALSE    -> @50
+   LOAD_FAST                    pm_close   [@7202] | LOAD_FAST                    pm_close
+   COMPARE_OP                   <   [@7204] | COMPARE_OP                   <
+   POP_JUMP_FORWARD_IF_TRUE     -> @84   [@7210] | POP_JUMP_FORWARD_IF_TRUE     -> @84
+   JUMP_FORWARD                 -> @52   [@7212] | JUMP_FORWARD                 -> @52
+   POP_TOP                         [@7214]  | POP_TOP                      
+** LOAD_DEREF                   self   [@7216] | LOAD_FAST                    self
+   LOAD_ATTR                    pre_before_trading_date   [@7218] | LOAD_ATTR                    pre_before_trading_date
+** LOAD_DEREF                   self   [@7228] | LOAD_FAST                    self
+   LOAD_ATTR                    initial_trading_date   [@7230] | LOAD_ATTR                    initial_trading_date
+   COMPARE_OP                   ==   [@7240] | COMPARE_OP                   ==
+** POP_JUMP_FORWARD_IF_FALSE    -> @418   [@7246] | POP_JUMP_FORWARD_IF_FALSE    -> @394
+   LOAD_FAST                    now_date   [@7248] | LOAD_FAST                    now_date
+** LOAD_DEREF                   self   [@7250] | LOAD_FAST                    self
+   LOAD_ATTR                    first_run_date   [@7252] | LOAD_ATTR                    first_run_date
+   COMPARE_OP                   !=   [@7262] | COMPARE_OP                   !=
+** POP_JUMP_FORWARD_IF_FALSE    -> @328   [@7268] | POP_JUMP_FORWARD_IF_FALSE    -> @314
+** LOAD_GLOBAL                  NULL + system_log   [@7270] | LOAD_FAST                    system_log
+** LOAD_ATTR                    debug   [@7282] | LOAD_METHOD                  debug
+** LOAD_CONST                   '获取重登信号量'   [@7292] | LOAD_CONST                   'x'
+   PRECALL                         [@7294]  | PRECALL                      
+   CALL                            [@7298]  | CALL                         
+   POP_TOP                         [@7308]  | POP_TOP                      
+** LOAD_GLOBAL                  NULL + login_semaphore   [@7310] | LOAD_FAST                    login_semaphore
+** LOAD_ATTR                    acquire   [@7322] | LOAD_METHOD                  acquire
+** LOAD_GLOBAL                  LOGIN_TIMEOUT   [@7332] | LOAD_FAST                    LOGIN_TIMEOUT
+   LOAD_CONST                   60   [@7344] | LOAD_CONST                   60
+   BINARY_OP                    *   [@7346] | BINARY_OP                    *
+   KW_NAMES                        [@7350]  | KW_NAMES                     
+   PRECALL                         [@7352]  | PRECALL                      
+   CALL                            [@7356]  | CALL                         
+   LOAD_CONST                   False   [@7366] | LOAD_CONST                   False
+   IS_OP                           [@7368]  | IS_OP                        
+** POP_JUMP_FORWARD_IF_FALSE    -> @328   [@7370] | POP_JUMP_FORWARD_IF_FALSE    -> @314
+** LOAD_GLOBAL                  NULL + system_log   [@7372] | LOAD_FAST                    system_log
+** LOAD_ATTR                    error   [@7384] | LOAD_METHOD                  error
+** LOAD_CONST                   '获取重登信号量超时，系统退出'   [@7394] | LOAD_CONST                   'y'
+   PRECALL                         [@7396]  | PRECALL                      
+   CALL                            [@7400]  | CALL                         
+   POP_TOP                         [@7410]  | POP_TOP                      
+** LOAD_DEREF                   self   [@7412] | LOAD_FAST                    self
+   LOAD_ATTR                    event_queue   [@7414] | LOAD_ATTR                    event_queue
+   LOAD_METHOD                  put   [@7424] | LOAD_METHOD                  put
+   LOAD_FAST                    dt   [@7446] | LOAD_FAST                    dt
+** LOAD_GLOBAL                  EventEnum   [@7448] | LOAD_FAST                    EventEnum
+   LOAD_ATTR                    SYSTEM_EXIT   [@7460] | LOAD_ATTR                    SYSTEM_EXIT
+   BUILD_TUPLE                     [@7470]  | BUILD_TUPLE                  
+   PRECALL                         [@7472]  | PRECALL                      
+   CALL                            [@7476]  | CALL                         
+   POP_TOP                         [@7486]  | POP_TOP                      
+   LOAD_CONST                   None   [@7488] | LOAD_CONST                   None
+   RETURN_VALUE                    [@7490]  | RETURN_VALUE                 
+** LOAD_DEREF                   self   [@7492] | LOAD_FAST                    self
+   LOAD_ATTR                    event_queue   [@7494] | LOAD_ATTR                    event_queue
+   LOAD_METHOD                  put   [@7504] | LOAD_METHOD                  put
+   LOAD_FAST                    dt   [@7526] | LOAD_FAST                    dt
+** LOAD_GLOBAL                  EventEnum   [@7528] | LOAD_FAST                    EventEnum
+   LOAD_ATTR                    PRE_BEFORE_TRADING_START   [@7540] | LOAD_ATTR                    PRE_BEFORE_TRADING_START
+   BUILD_TUPLE                     [@7550]  | BUILD_TUPLE                  
+   PRECALL                         [@7552]  | PRECALL                      
+   CALL                            [@7556]  | CALL                         
+   POP_TOP                         [@7566]  | POP_TOP                      
+   LOAD_FAST                    now_date   [@7568] | LOAD_FAST                    now_date
+** LOAD_DEREF                   self   [@7570] | LOAD_FAST                    self
+   STORE_ATTR                   pre_before_trading_date   [@7572] | STORE_ATTR                   pre_before_trading_date
+**                                          | LOAD_FAST                    now_date
+**                                          | LOAD_FAST                    self
+**                                          | LOAD_ATTR                    before_trading_date
+**                                          | COMPARE_OP                   >
+**                                          | POP_JUMP_FORWARD_IF_FALSE    -> @446
+**                                          | LOAD_FAST                    before_trading
+**                                          | LOAD_FAST                    now_time
+**                                          | SWAP                         
+**                                          | COPY                         
+**                                          | COMPARE_OP                   <=
+**                                          | POP_JUMP_FORWARD_IF_FALSE    -> @444
+**                                          | LOAD_FAST                    pm_close
+**                                          | COMPARE_OP                   <
+**                                          | POP_JUMP_FORWARD_IF_TRUE     -> @478
+**                                          | JUMP_FORWARD                 -> @446
+**                                          | POP_TOP                      
+**                                          | LOAD_FAST                    self
+**                                          | LOAD_ATTR                    before_trading_date
+**                                          | LOAD_FAST                    self
+**                                          | LOAD_ATTR                    initial_trading_date
+**                                          | COMPARE_OP                   ==
+**                                          | POP_JUMP_FORWARD_IF_FALSE    -> @486
+**                                          | LOAD_CONST                   1

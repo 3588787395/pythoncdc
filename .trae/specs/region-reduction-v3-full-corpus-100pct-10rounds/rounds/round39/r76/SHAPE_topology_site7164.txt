@@ -1,0 +1,11 @@
+orig window instructions=75 conditional/uncond jumps=7
+orig topology: [('POP_JUMP_FORWARD_IF_FALSE', 12), ('POP_JUMP_FORWARD_IF_FALSE', 5), ('POP_JUMP_FORWARD_IF_TRUE', 9), ('JUMP_FORWARD', 2), ('POP_JUMP_FORWARD_IF_FALSE', None), ('POP_JUMP_FORWARD_IF_FALSE', 36), ('POP_JUMP_FORWARD_IF_FALSE', 19)]
+S1: instructions=98 jumps=12 topology_equal_to_orig=False
+    POP_JUMP_FORWARD_IF_FALSE    orig_rel=None prod_rel=54
+S2: instructions=102 jumps=12 topology_equal_to_orig=False
+    POP_JUMP_FORWARD_IF_FALSE    orig_rel=12 prod_rel=None
+    POP_JUMP_FORWARD_IF_FALSE    orig_rel=None prod_rel=3
+    POP_JUMP_FORWARD_IF_FALSE    orig_rel=36 prod_rel=51
+S3: instructions=98 jumps=12 topology_equal_to_orig=False
+    POP_JUMP_FORWARD_IF_FALSE    orig_rel=None prod_rel=54
+    POP_JUMP_FORWARD_IF_FALSE    orig_rel=36 prod_rel=49

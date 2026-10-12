@@ -1,0 +1,31 @@
+PANEL_20files (rounds/round38/PANEL_20files.txt) - R21-44 ticket r73
+mirror D:/Temp/r73; products regenerated from the mirror bytes named in the column header
+landed = gate-38 bytes 11324f276cce6d5b | anchored = cf5868e68208adf6 (P1+P2 re-anchored)
+R2144  = 83a430f2700ae3a4 (anchored + [R21-44], no-probe deliverable)
+
+#   file                                                                 landed sha16  anchored      +R2144        units land units anch units R2144 changed vs anchored
+1   fly/data/quotation.pyc                                               302f449afc9245eb 302f449afc9245eb 302f449afc9245eb 153/153    153/153    153/153    no
+2   fly/data/quote.pyc                                                   a39899ca939523e0 a39899ca939523e0 a39899ca939523e0 92/92      92/92      92/92      no
+3   IQCommon/api/klinedata.pyc                                           3253817d2a930f82 3253817d2a930f82 3253817d2a930f82 64/64      64/64      64/64      no
+4   IQCommon/logger/handlers.pyc                                         dd5f2d196248e9b1 dd5f2d196248e9b1 dd5f2d196248e9b1 30/30      30/30      30/30      no
+5   IQCommon/strategy/wizard_quant_api.pyc                               f0d81c252c7b3d4c f0d81c252c7b3d4c f0d81c252c7b3d4c 58/58      58/58      58/58      no
+6   IQCommon/util/trade_info_utils.pyc                                   a6b1797112fe623d a6b1797112fe623d a6b1797112fe623d 41/41      41/41      41/41      no
+7   IQData/api/api_base.pyc                                              ec75d27dd3135041 ec75d27dd3135041 ec75d27dd3135041 28/28      28/28      28/28      no
+8   IQData/plugins/plugin_system_realquote/real_quote.pyc                4e2954762ccfe412 4e2954762ccfe412 4e2954762ccfe412 45/45      45/45      45/45      no
+9   IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc               795e9f0989de7fd4 795e9f0989de7fd4 795e9f0989de7fd4 27/27      27/27      27/27      no
+10  IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc               1c7d6451e34eac79 1c7d6451e34eac79 1c7d6451e34eac79 37/37      37/37      37/37      no
+11  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           a6d6deb78a5a5eac a6d6deb78a5a5eac a6d6deb78a5a5eac 126/128    126/128    126/128    no
+12  IQEngine/plugins/plugin_system_matcher/matcher.pyc                   7f5ab1467621a033 7f5ab1467621a033 7f5ab1467621a033 17/17      17/17      17/17      no
+13  IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc 174e1174f28a669c 585d39d826bd000f c20c938badf89559 12/13      12/13      12/13      YES
+14  IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc         858bda4386a943dd 858bda4386a943dd 858bda4386a943dd 43/43      43/43      43/43      no
+15  IQCommon/arg_checker.pyc                                             13ecf3d013261e2d 13ecf3d013261e2d 13ecf3d013261e2d 49/49      49/49      49/49      no
+16  IQData/utils/arg_checker.pyc                                         ce082927d0b163b5 ce082927d0b163b5 ce082927d0b163b5 39/39      39/39      39/39      no
+17  IQEngine/utils/arg_checker.pyc                                       9bb394516a5b8474 9bb394516a5b8474 9bb394516a5b8474 43/43      43/43      43/43      no
+18  IQCommon/profiler_func.pyc                                           a6a1c48c4b16d331 a6a1c48c4b16d331 a6a1c48c4b16d331 17/17      17/17      17/17      no
+19  IQData/utils/profiler_func.pyc                                       b8faf146c5594489 b8faf146c5594489 b8faf146c5594489 15/15      15/15      15/15      no
+20  IQEngine/utils/profiler_func.pyc                                     18a08e5a58d7edc7 18a08e5a58d7edc7 18a08e5a58d7edc7 18/18      18/18      18/18      no
+
+panel unit totals: landed=954  anchored=954  anchored+[R21-44]=954  (of 966 judged units in these 20 files)
+changed files landed -> anchored (P1+P2 re-anchored)  = 1
+changed files anchored -> anchored+[R21-44]           = 1
+flips = 0; regressions = 0; every other file byte-identical (probe build with census ON == no-probe build, 20/20 cmp clean)

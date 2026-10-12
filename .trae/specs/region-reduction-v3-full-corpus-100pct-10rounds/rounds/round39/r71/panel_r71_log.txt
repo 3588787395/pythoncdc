@@ -1,0 +1,30 @@
+R21-44 20-file panel log (mirror D:/Temp/r71, generator 11324f276cce6d5b / analyzer candidate 0d568cdd7fe0f167)
+Regenerated from the mirror with the candidate analyzer installed; base regenerated with the landed analyzer.
+Products byte-compared file-by-file.
+
+changed_files = 0 of 20 (candidate product is byte-identical to landed base on EVERY panel file)
+
+file                                                     base units  cand units  byte-identical
+fly/data/quotation.pyc                                   153/153     153/153     YES
+fly/data/quote.pyc                                        92/92       92/92      YES
+IQCommon/api/klinedata.pyc                                64/64       64/64      YES
+IQCommon/logger/handlers.pyc                              30/30       30/30      YES
+IQCommon/strategy/wizard_quant_api.pyc                    58/58       58/58      YES
+IQCommon/util/trade_info_utils.pyc                        41/41       41/41      YES
+IQData/api/api_base.pyc                                   28/28       28/28      YES
+IQData/plugins/plugin_system_realquote/real_quote.pyc     45/45       45/45      YES
+IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc    27/27       27/27      YES
+IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc    37/37       37/37      YES
+IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc 126/128    126/128    YES  <- target file, _sync_worker NOT flipped
+IQEngine/plugins/plugin_system_matcher/matcher.pyc        17/17       17/17      YES
+IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc 12/13 12/13 YES
+IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc 43/43     43/43      YES
+IQCommon/arg_checker.pyc                                  49/49       49/49      YES
+IQData/utils/arg_checker.pyc                              39/39       39/39      YES
+IQEngine/utils/arg_checker.pyc                            43/43       43/43      YES
+IQCommon/profiler_func.pyc                                17/17       17/17      YES
+IQData/utils/profiler_func.pyc                            15/15       15/15      YES
+IQEngine/utils/profiler_func.pyc                          18/18       18/18      YES
+
+Canaries on the target file (unchanged, all Equal before and after):
+  ipo_stocks_order = Equal ; _process_cancel_order = Equal ; _trade_status_handle = Equal ; etf_purchase_redemption = Equal

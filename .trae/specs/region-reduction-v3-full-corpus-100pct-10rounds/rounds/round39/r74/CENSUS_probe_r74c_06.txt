@@ -1,0 +1,117 @@
+R2145bEVAL eb=@484 nh=1 bare=True rej=None
+R2145bFIRE eb=@484 T=@594 try=@256
+R2145EVAL mb=@594 np=4 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@1010 np=4 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@1140 np=4 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@814 np=7 term=FOR_ITER rej=shape
+R2145EVAL mb=@1326 np=3 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@1404 np=2 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@1520 np=3 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@814 np=7 term=FOR_ITER rej=shape
+R2145EVAL mb=@814 np=7 term=FOR_ITER rej=shape
+R2145EVAL mb=@814 np=7 term=FOR_ITER rej=shape
+R2145EVAL mb=@814 np=7 term=FOR_ITER rej=shape
+R2145EVAL mb=@1524 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@1734 np=3 term=JUMP_FORWARD rej=shape
+R2145bEVAL eb=@1734 nh=1 bare=True rej=None
+R2145bFIRE eb=@1734 T=@1844 try=@180
+R2145EVAL mb=@788 np=5 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@650 np=2 term=GET_ITER rej=shape
+R2145EVAL mb=@704 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@726 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@896 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@918 np=2 term=POP_TOP rej=other-arm-member
+R2145EVAL mb=@1000 np=2 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@1000 np=2 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@1332 np=3 term=- rej=shape
+R2145EVAL mb=@1360 np=1 term=POP_TOP rej=shape
+R2145EVAL mb=@236 np=2 term=POP_TOP rej=None
+R2145FIRE mb=@236 region=@178
+R2145EVAL mb=@82 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@558 np=2 term=STORE_FAST rej=other-arm-member
+R2145EVAL mb=@2326 np=1 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@2614 np=4 term=JUMP_FORWARD rej=shape
+R2145EVAL mb=@2614 np=4 term=JUMP_FORWARD rej=shape
+R2145bEVAL eb=@826 nh=1 bare=True rej=None
+R2145bFIRE eb=@826 T=@2626 try=@646
+R2145EVAL mb=@3128 np=3 term=JUMP_FORWARD rej=shape
+R2145bEVAL eb=@3128 nh=1 bare=True rej=None
+R2145bFIRE eb=@3128 T=@3270 try=@2784
+R2145EVAL mb=@338 np=2 term=LOAD_FAST rej=shape
+R2145EVAL mb=@184 np=4 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@332 np=4 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@358 np=2 term=POP_JUMP_FORWARD_IF_NONE rej=shape
+R2145bEVAL eb=@270 nh=1 bare=True rej=None
+R2145bFIRE eb=@270 T=@358 try=@110
+R2145EVAL mb=@460 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@678 np=2 term=STORE_FAST rej=other-arm-member
+R2145EVAL mb=@846 np=2 term=GET_ITER rej=shape
+R2145EVAL mb=@3776 np=2 term=JUMP_FORWARD rej=shape
+R2145bEVAL eb=@3776 nh=1 bare=True rej=None
+R2145bFIRE eb=@3776 T=@3874 try=@538
+R2145EVAL mb=@3874 np=3 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@518 np=2 term=JUMP_FORWARD rej=shape
+R2145bEVAL eb=@518 nh=1 bare=True rej=handler-exit-not-shared
+R2145EVAL mb=@1050 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@1184 np=4 term=JUMP_BACKWARD rej=shape
+R2145bEVAL eb=@1186 nh=1 bare=True rej=None
+R2145bFIRE eb=@1186 T=@1296 try=@828
+R2145EVAL mb=@94 np=3 term=FOR_ITER rej=shape
+R2145EVAL mb=@1400 np=2 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@256 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@312 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@250 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@464 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@560 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@592 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@592 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@288 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@364 np=2 term=LOAD_FAST rej=shape
+R2145EVAL mb=@128 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@232 np=2 term=- rej=shape
+R2145EVAL mb=@362 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@540 np=2 term=- rej=shape
+R2145EVAL mb=@534 np=2 term=BEFORE_WITH rej=shape
+R2145EVAL mb=@978 np=2 term=JUMP_FORWARD rej=shape
+R2145bEVAL eb=@978 nh=3 bare=True rej=handler-exit-not-shared
+R2145EVAL mb=@1148 np=6 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@1684 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@1842 np=2 term=- rej=shape
+R2145EVAL mb=@1912 np=2 term=JUMP_FORWARD rej=shape
+R2145bEVAL eb=@1912 nh=1 bare=True rej=None
+R2145bFIRE eb=@1912 T=@2030 try=@1844
+R2145EVAL mb=@2148 np=2 term=POP_JUMP_FORWARD_IF_NONE rej=shape
+R2145EVAL mb=@2908 np=2 term=BEFORE_WITH rej=shape
+R2145EVAL mb=@3114 np=2 term=POP_TOP rej=shape
+R2145EVAL mb=@3436 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@4438 np=6 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145EVAL mb=@4438 np=6 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145EVAL mb=@4438 np=6 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145EVAL mb=@162 np=3 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@216 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@250 np=2 term=- rej=shape
+R2145EVAL mb=@846 np=2 term=BUILD_TUPLE rej=shape
+R2145EVAL mb=@846 np=2 term=BUILD_TUPLE rej=shape
+R2145EVAL mb=@70 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@802 np=4 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@802 np=4 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@802 np=4 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@1090 np=2 term=JUMP_FORWARD rej=shape
+R2145EVAL mb=@1276 np=2 term=POP_TOP rej=None
+R2145FIRE mb=@1276 region=@1156
+R2145bEVAL eb=@1136 nh=1 bare=True rej=handler-exit-not-shared
+R2145EVAL mb=@186 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@460 np=2 term=POP_TOP rej=other-arm-member
+R2145EVAL mb=@598 np=3 term=- rej=shape
+R2145bEVAL eb=@646 nh=1 bare=True rej=None
+R2145bFIRE eb=@646 T=@806 try=@266
+R2145EVAL mb=@868 np=3 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@202 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@786 np=1 term=POP_JUMP_BACKWARD_IF_TRUE rej=shape
+R2145EVAL mb=@810 np=3 term=JUMP_FORWARD rej=shape
+R2145EVAL mb=@810 np=3 term=JUMP_FORWARD rej=shape
+R2145bEVAL eb=@598 nh=1 bare=True rej=handler-exit-not-shared
+R2145EVAL mb=@890 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@618 np=2 term=RETURN_VALUE rej=shape
+R2145bEVAL eb=@478 nh=1 bare=True rej=None
+R2145bFIRE eb=@478 T=@618 try=@200

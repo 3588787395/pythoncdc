@@ -1,0 +1,31 @@
+len orig=1424 prod=1420 delta=-4
+== #1 insert orig[904..904 @6496..-] prod[904..905] del=0 ins=1
+   - @6482    LOAD_FAST                      now_date
+   - @6484    LOAD_DEREF                     self
+   - @6486    STORE_ATTR                     pre_before_trading_date
+   + @6482    LOAD_FAST                      now_date
+   + @6484    LOAD_DEREF                     self
+   + @6486    STORE_ATTR                     pre_before_trading_date
+   + @6496    JUMP_FORWARD                   
+== #2 insert orig[1046..1046 @7248..-] prod[1047..1048] del=0 ins=1
+   - @7230    LOAD_ATTR                      initial_trading_date
+   - @7240    COMPARE_OP                     ==
+   - @7246    POP_JUMP_FORWARD_IF_FALSE      
+   + @7234    LOAD_ATTR                      initial_trading_date
+   + @7244    COMPARE_OP                     ==
+   + @7250    POP_JUMP_FORWARD_IF_FALSE      
+   + @7254    JUMP_FORWARD                   
+== #3 delete orig[1051..1057 @7270..@7308] prod[1053..1053] del=6 ins=0
+   - @7252    LOAD_ATTR                      first_run_date
+   - @7262    COMPARE_OP                     !=
+   - @7268    POP_JUMP_FORWARD_IF_FALSE      
+   - @7270    LOAD_GLOBAL                    NULL + system_log
+   - @7282    LOAD_ATTR                      debug
+   - @7292    LOAD_CONST                     '获取重登信号量'
+   - @7294    PRECALL                        
+   - @7298    CALL                           
+   - @7308    POP_TOP                        
+   + @7260    LOAD_ATTR                      first_run_date
+   + @7270    COMPARE_OP                     !=
+   + @7276    POP_JUMP_FORWARD_IF_FALSE      
+hunks=3
