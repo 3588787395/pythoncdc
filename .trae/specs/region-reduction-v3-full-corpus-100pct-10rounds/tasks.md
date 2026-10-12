@@ -1636,3 +1636,45 @@ duplicated: **r66a** `D:/Temp/r66` — ablation dispatch census naming the metho
 without double-emitting; **r67a** `D:/Temp/r67` — emission-site ablation for the
 `@6778..@6782` merge-block statement plus the merge-block-carrying-statements population over the
 20 panel files. Neither may edit the repo; deliverables are census docs + optional candidate files.
+## §45 Round 38 late session — analyzer back-edge defect found; `_process_cancel_order` is ONE instruction from Equal (still no landing)
+
+Repo stayed at gate-37 bytes (generator `20fa73b4e8231f0f`, analyzer `c069d359cbfe76b0`;
+`git status --porcelain -- core/ site-packages/` = 0 lines; mirror `cmp`-restored after every
+measurement). Corpus unchanged **6613/6617 (99.9395%), 400/402**, no gate label consumed.
+
+* **Analyzer defect located and censused** (`census_backedge_r38.py`, `probe_r39b_r38.py`):
+  `region_analyzer.py:4958` pools every theoretical back edge of the loop, and the exclusion that
+  recognises CPython 3.11's pure-noise continue re-entry block sits behind `if condition_block ==
+  header:` (:4960). Loops whose region declares `condition_block=None` while the header block itself
+  ends in a conditional jump skip it, so the :4992 key (more body instructions wins) selects a fat
+  `else: stmt; continue` arm (@1930..@1998, operand → @44) as the loop's natural back edge and marks
+  the true tail (@2000..@2042, operand → @46 = header) as CONTINUE. Over 11 of the 20 panel files:
+  393 loops, **42** skip the guard, **67** designated back edges do not land on their header, **14**
+  designations would move (incl. `_process_order`, `_process_cancel_order`, and the currently green
+  `_trade_status_handle`) — hence panel-before-gate.
+* Candidate `f7d849e974904492` (additive, reuses the guard's own predicate, keeps the pool when the
+  filter would empty it): panel `r38y` = **1 file CHANGED, 19 SAME, all counts held, 0 flips**;
+  `_process_cancel_order` `delta=-1 hunks=3 → delta=0 hunks=2` (outer-else continue appears, the dead
+  jump after `RERAISE` disappears).
+* Progression table (`rounds/38/MEASURE_R21-40_backedge_chain.md` §2): pair (analyzer
+  `f7d849e974904492` + generator `a8155727b47e3bea`) = **`delta=-1 hunks=1`**, the only loss being the
+  try body's normal-completion edge `@1826 JUMP_FORWARD → @2000`; variant 40c
+  (`ccd97ff680b7434c`, Continue handed to the then-suite of the body-final `If` with no `orelse`) =
+  **`delta=-1 hunks=1`** too, but with the loss moved to `@1998 JUMP_BACKWARD`. Two variants, one
+  instruction each, opposite arms ⇒ the closure is 40c's placement PLUS a chain-shared continue claim.
+* 40a `e845b06fc515c221` and 40b `8b56ad6dfd874c01` are **byte-inert** (broker product md5
+  `bcaeb54d65e5`, identical to the pair's 179228-byte product) — proven, not assumed: a 247-record
+  conjunct probe (`PROBE_R39B_conjuncts_sample.txt`) shows the widened rule reaches T@1822 with
+  payload/landing/reentry all true and fails ONLY `len(T.predecessors)==1` (`Tpreds=[1710, 1712]`).
+  That is the rule's arm-privacy test working as designed: a block entered by two arms of one chain is
+  the chain's shared tail, i.e. the source `continue` sits after the chain, inside the enclosing then
+  arm — exactly what 40c then placed correctly.
+* r66a's clock_worker census + candidate `07ff9a163b07140a` (refusal-only guard at both
+  `inline_boolop_chains` fold sites, emits nothing so double-emission is impossible by construction):
+  `IfRegion@7270` is **never dispatched** — the arm is rendered by
+  `_if_generate_elif_chain(7186)`'s first-elif consumption site; probes proven inert (22322 = 22322);
+  positive control = stubbing that method for entry 7186 only (−4125 bytes, debug call reappears).
+  Candidate takes `clock_worker` **delta −6 → 0** with the six instructions back, 20-file panel
+  19 SAME / 1 CHANGED / 0 regressions / **0 flips** (they re-land at the chain tail, hunks 5 → 6).
+* Everything banked in `rounds/round38/`; next acceptance bar: `_process_cancel_order`
+  `delta=0 hunks=0` judge Equal ⇒ broker 125→**126**/128, corpus 6613→**6614/6617**, no file decreases.
