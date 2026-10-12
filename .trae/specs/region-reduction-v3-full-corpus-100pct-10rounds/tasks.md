@@ -1678,3 +1678,36 @@ measurement). Corpus unchanged **6613/6617 (99.9395%), 400/402**, no gate label 
   19 SAME / 1 CHANGED / 0 regressions / **0 flips** (they re-land at the chain tail, hunks 5 → 6).
 * Everything banked in `rounds/round38/`; next acceptance bar: `_process_cancel_order`
   `delta=0 hunks=0` judge Equal ⇒ broker 125→**126**/128, corpus 6613→**6614/6617**, no file decreases.
+## §46 Round 38 final measurement — 40d reaches instruction parity on the target unit and is NOT landable
+
+`c1eba55fb9900412` = 40c + the [R39-B] three-part relaxation, with analyzer `f7d849e974904492`
+installed. Broker product 179364 bytes, **units 124/128**:
+
+| unit | allwin (targets blanked) | judge |
+|---|---|---|
+| `_process_cancel_order` | `delta=0 hunks=0` | **Different control flow** |
+| `_trade_status_handle` | `delta=0 hunks=0` | Equal (held) |
+| `_process_order` | `delta=-68 hunks=14` | Different (held) |
+| `_sync_worker` | `delta=-3 hunks=5` | Different (held) |
+| `ipo_stocks_order` | — | **Different — REGRESSED, was Equal** |
+
+Two findings, both recorded because they change how the next attempt must be judged:
+
+1. **Instruction parity is not equivalence.** The aligner blanks jump operands and drops
+   NOP/CACHE/EXTENDED_ARG, so `delta=0 hunks=0` says the opcode stream matches while the judge, which
+   compares the CFG (and patches unreachable code), still sees different control flow: the continue and
+   the body-end edge now land on blocks other than the original's. `unit_diff.py`'s `landings=` column,
+   not `allwin`, is the reading that must reach 0 before a gate is spent.
+2. **The predecessor relaxation over-fires.** Requiring "all predecessors belong to the region being
+   reduced" instead of "exactly one predecessor, the arm tail" claims chain-shared continue blocks in
+   `ipo_stocks_order` too — the file whose arm-tail continue landed at gate 30 — so that unit drops from
+   Equal to Different. The narrowing to measure next is the one the probe already prints per candidate:
+   require the shared predecessors to be arms of the SAME if/elif chain (`_r39_Tpreds ⊆ that chain's
+   then/else block sets`) rather than any member of `region.blocks`, and re-check `ipo_stocks_order`
+   FIRST (it is the cheap discriminator: a candidate that changes it is wrong regardless of the target
+   unit).
+
+Net for the campaign: `_process_cancel_order` is now reachable in the opcode stream, and the remaining
+work is (a) the landing-target/CFG shape and (b) not touching `ipo_stocks_order`. Nothing installed;
+repo byte-clean at gate-37 bytes; corpus stays 6613/6617 (99.9395%), 400/402, residual 2 files / 4
+units; next gate label remains 38 against `rounds/round37/after`.
