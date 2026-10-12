@@ -1477,3 +1477,29 @@ New measurements recorded in `rounds/round36/`:
 * `small34` witness corrected: gate 35's own JSON already read 1562/1568 and a per-row 35-vs-36 diff
   returns 0 differing rows, so it does not track the corpus flip count the way my note claimed.
 
+## §41 Round 36 LANDED — gate 36: R21-33 closed, 6611→6612/6617 (99.9244%), 399/402, residual 3 files / 5 units
+
+Two co-requisite halves (`rounds/round36/ADJUDICATION_GATE36_LANDED.md`):
+analyzer `35e227ac3e7b25af`→`efd455859b69d8a1` (`_is_while_true`: a header test whose landing block
+jumps back to that header keeps both exits inside the cycle ⇒ the loop is `while True` and the test
+is a nested `if`; the shape was decided by `compile()` on 3.11.7, not by reading) and generator
+`87910190b7ef7c35`→`37997bdac555b2e9` (`_loop_handle_no_exit_successors`: when that landing block is
+also entered from inside the then side it is the `if`'s merge, so render the then side with the
+SUITE renderer `_if_generate_branch_stmts(blocks=body_blocks − header − merge)` and emit the merge
+after the `If`). Hunk C's `_generate_block_statements` variant is falsified at −85/2 and is why the
+suite renderer is mandatory.
+
+`_trade_status_handle` −3/3 → 0/0 (broker 124→125/128); `_process_order` −465/4 → −68/14;
+`_process_cancel_order` −293/3 → **−1/3**; `_sync_worker` unchanged; the three green broker units
+still 0/0. Chain: regen ok=402 bad=0, verify 8/8 shards rc=0, report 文件级回退=0 UNIT_REGRESSIONS=0
+新增失败单元=0 翻正单元=1, checks quotation 153/153 · small34 1562→1563 (moves by exactly the flip)
+· selfcheck OK · pytest 2 failed 282 passed (the two residents). 20-file panel: 19 byte-identical,
+zero decreases.
+
+Residual sealed 08:03:51 with UNREGISTERED=0: 5 units — `_process_cancel_order` (now the cheapest in
+the corpus), `_process_order`, `_sync_worker`, `clock_worker`, `run_individual_transform`. Hunk A
+(gen `7344dcc566442e58`) was separately gate-certified corpus-wide at ZERO flips earlier in this
+round and stays banked; M1+M3b merged (`3d4f27de6d80ab6e`) measured as a pair at
+`clock_worker −113/7 → −3/8`, a relocation not a content loss, also banked. Next gate label 37
+against `rounds/round36/after`.
+

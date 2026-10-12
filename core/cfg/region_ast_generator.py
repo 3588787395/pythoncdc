@@ -13385,6 +13385,33 @@ AST 映射规则:
                                        'orelse': [{'type': 'Continue'}]})
                     return
                 if _else_is_continue and not _then_is_continue:
+                    # [R21-33c2] 落点块另有 from-then-侧 的前驱 => 它是本 if 的汇合点。
+                    # then 侧用循环体同款套件渲染器（会分发嵌套区域），汇合块紧随 If 之后。
+                    _r33c_loop = self._current_loop
+                    _r33c_join = (_then_succ is not None and _r33c_loop is not None
+                                  and getattr(_r33c_loop, 'body_blocks', None)
+                                  and any(p is not block and p is not _else_succ
+                                          and p.start_offset >= _then_succ.start_offset
+                                          for p in _else_succ.predecessors))
+                    if _r33c_join:
+                        _r33c_then_blocks = [b for b in _r33c_loop.body_blocks
+                                             if b is not block and b is not _else_succ
+                                             and b not in self.generated_blocks]
+                        _r33c_then_stmts = (self._if_generate_branch_stmts(
+                            blocks=_r33c_then_blocks) if _r33c_then_blocks else [])
+                        if _r33c_then_stmts:
+                            for _r33c_b in _r33c_then_blocks:
+                                self.generated_blocks.add(_r33c_b)
+                                self.generated_offsets.add(_r33c_b.start_offset)
+                            _hdr_stmts.append({'type': 'If', 'test': _expr,
+                                               'body': _r33c_then_stmts})
+                            _r33c_join_stmts = self._if_generate_branch_stmts(
+                                blocks=[_else_succ])
+                            if _r33c_join_stmts:
+                                _hdr_stmts.extend(_r33c_join_stmts)
+                                self.generated_blocks.add(_else_succ)
+                                self.generated_offsets.add(_else_succ.start_offset)
+                            return
                     _then_is_trivial = True
                     _then_nontrivial = [i for i in _then_succ.instructions
                                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]

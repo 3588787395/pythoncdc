@@ -5947,6 +5947,20 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         
         if cond_jump_instr is not None and cond_jump_instr.argval is not None:
             jump_target = self.cfg.get_block_by_offset(cond_jump_instr.argval)
+            # [R21-33b] 区域识别原则 1（自底向上）+ 判据只看自身边形状：header 块尾条件跳转的
+            # 落点若以回到本 header 的后边跳转结束，则该条件不是循环出口——两条路都留在环内，
+            # 循环本体只能是 while True，块尾条件是本体内嵌套的 if（_trade_status_handle 实测
+            # @46 POP_JUMP_FORWARD_IF_FALSE→@830，@830 末条 JUMP_BACKWARD→@46，@830 前驱
+            # {@46,@720,@722}）。误判成 while cond + else 会让 CPython 3.11 把条件编译两遍
+            # （顶部 POP_JUMP_FORWARD_IF_FALSE + 底部 POP_JUMP_BACKWARD_IF_TRUE）并在函数尾
+            # 追加 LOAD_CONST None/RETURN_VALUE，替换掉原有的无条件回边。
+            if (jump_target is not None and jump_target is not header
+                    and jump_target.instructions):
+                _r33_back = jump_target.instructions[-1]
+                if (_r33_back.opname.startswith('JUMP_BACKWARD')
+                        and _r33_back.argval is not None
+                        and self.cfg.get_block_by_offset(_r33_back.argval) == header):
+                    return True
             if jump_target is not None and jump_target == header:
                 if cond_jump_instr.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'):
                     has_non_trivial_body_stmts = False
