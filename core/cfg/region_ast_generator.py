@@ -43302,7 +43302,21 @@ AST 映射规则:
                     x.opname in cond_jump_ops for x in ai[:-1]):
                 return False
             for sb in (getattr(arm, 'successors', None) or set()):
-                if sb is not merge:
+                if sb is merge:
+                    continue
+                # [R21-55c] 臂的「非 merge 后继」若是异常入口块（首指令 PUSH_EXC_INFO /
+                # WITH_EXCEPT_START），它不是正常完成路径：CFG 给 try 范围内的**每个**块都
+                # 挂一条指向 handler 的边，于是纯值臂的后继集合里混进了 handler（本单元实测
+                # 臂 @1754/@1758 的后继 = {汇合块, handler @3026}）。既有判据「臂只落到 merge」
+                # 因此永远不成立，宿主调用跨度 (_ternary_host_call_prefix_span) 整体退回 None，
+                # 兄弟三元被降级成裸表达式语句、宿主语句消失。放行条件只读该后继的首指令
+                # opcode 类（结构事实，不读名字/偏移/计数器/跨层信息）；其余后继一律 return False，
+                # 保持既有「臂只落到 merge」判据 ⇒ 判据不成立时产物逐字节不变。
+                _r2155_sb_first = (sb.get_first_instruction()
+                                   if getattr(sb, 'instructions', None) else None)
+                if _r2155_sb_first is None:
+                    return False
+                if _r2155_sb_first.opname not in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START'):
                     return False
             visited.add(arm)
             arm_blocks.append(arm)
