@@ -227,6 +227,34 @@ _CLEANUP_EPILOGUE_NOISE = frozenset({'RESUME', 'NOP', 'CACHE', 'PUSH_NULL'})
 _CLEANUP_EPILOGUE_TERMINAL_OPS = frozenset({'RETURN_VALUE', 'RETURN_CONST'})
 
 
+# [B104-R2] 链式比较 while 条件「回边重检段」的纯值求值 opcode 集。
+#
+# CPython 3.11 rotate-while 在回边处逐段复制 while 条件求值：重检段 = 操作数
+# 装载/计算 + 链协议对（COPY(2)+COMPARE_OP/IS_OP/CONTAINS_OP）+ 条件跳出。
+# 3 元链的中间段只含装载与协议指令；4+ 元链 / 调用/下标/属性操作数（如
+# ``while 0 < x < 10 < x*2 < 100:``、``while 0 < x < f(y) < 100:``）的中间段
+# 还含操作数计算 opcode（BINARY_OP/CALL/BINARY_SUBSCR/LOAD_ATTR 等）——原
+# 白名单只覆盖 3 元形态（注册症状 = 4 元链中间段泄漏为体首幻影 if，e04 的
+# ``10 < True`` 折叠常量占位签名）。判据完备化：重检段 = 纯值求值段——本集合
+# 覆盖全部表达式求值 opcode；语句副作用 opcode（STORE_*/DELETE_*/RETURN_*/
+# IMPORT_*/异常帧/跳转控制/UNPACK_*）不在集合内 ⇒ 含用户语句的块不命中
+# （块内 opcode 序 + 块末条件跳转目标 = 纯协议清理块/越体，I.4 白名单）。
+_B104_CC_RECHECK_EVAL_OPS = frozenset({
+    'LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+    'LOAD_ATTR', 'LOAD_METHOD', 'LOAD_FROM_DICT_OR_GLOBALS',
+    'LOAD_FROM_DICT_OR_DEREF',
+    'COPY', 'SWAP', 'POP_TOP', 'NOP', 'CACHE', 'RESUME', 'PUSH_NULL',
+    'EXTENDED_ARG',
+    'COMPARE_OP', 'IS_OP', 'CONTAINS_OP',
+    'BINARY_OP', 'UNARY_OP', 'BINARY_SUBSCR', 'BINARY_SLICE',
+    'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP',
+    'BUILD_CONST_KEY_MAP', 'BUILD_STRING', 'BUILD_SLICE', 'LIST_TO_TUPLE',
+    'FORMAT_VALUE',
+    'PRECALL', 'CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_FUNCTION_EX',
+    'KW_NAMES',
+})
+
+
 def _cleanup_epilogue_pops(block):
     """块是否为纯清理尾声（POP_EXCEPT* [+ LOAD_CONST] + RETURN）；是则返回 POP_EXCEPT 个数。"""
     _ops = [i.opname for i in block.instructions if i.opname not in _CLEANUP_EPILOGUE_NOISE]
@@ -6796,6 +6824,55 @@ AST 映射规则:
                             self.generated_offsets.add(succ.start_offset)
         return sequential
 
+    def _b104r2_cond_expr_from_operand_block(self, block):
+        """[B104-R2a] 前置 and 操作数块 → 条件表达式 dict（混合条件组合用）。
+
+        识别条件：块末为条件跳转（POP_JUMP_* 族）；「条件求值段」= 栈净效应
+        最后回零点之后的指令段（前缀语句剥离，与识别侧
+        RegionAnalyzer._b104r2_cond_eval_seq 同判据——块内 opcode 序 + 栈效应，
+        I.4 白名单）；求值段经 expr_reconstructor 重建表达式。
+        归约方式：前置操作数块以「假 → 循环出口」跳转收尾（jumps_to_body
+        = False），按跳转极性定否：IF_FALSE 族（含 NONE_CHECK 族 if_true=
+        False）原样、IF_TRUE 族取 not（[R38] 同族极性还原口径）。
+        AST 映射：dict 表达式节点，由调用点按块序组合为
+        ast.BoolOp(And, [操作数..., Compare, ...])。求值段为空或重建失败返回
+        None（调用方跳过该操作数，保守）。
+        """
+        last = block.get_last_instruction()
+        if last is None or last.opname not in CONDITIONAL_JUMP_OPS:
+            return None
+        instrs = []
+        depths = []
+        depth = 0
+        for i in block.instructions:
+            if i is last:
+                break
+            if i.opname in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PUSH_NULL'):
+                continue
+            instrs.append(i)
+            push, pop = self.region_analyzer._stack_effect(i)
+            depth += push - pop
+            depths.append(depth)
+        start = 0
+        # 末条指令的栈深回零不计为前缀边界（与识别侧 _b104r2_cond_eval_seq
+        # 同判据）：链末段最终 COMPARE 消费待比较操作数后自然归零，属条件
+        # 求值段本体；只有其后仍有指令的回零点才是前置语句边界。
+        for k, d in enumerate(depths[:-1]):
+            if d == 0:
+                start = k + 1
+        cond_instrs = instrs[start:]
+        if not cond_instrs:
+            return None
+        expr = self.expr_reconstructor.reconstruct(cond_instrs)
+        if not expr:
+            return None
+        if last.opname in NONE_CHECK_OPS:
+            if_true = False
+        else:
+            if_true = 'IF_TRUE' in last.opname
+        negate = (False != if_true)
+        return _negate_expr(expr) if negate else expr
+
     def _loop_generate_while(self, region: LoopRegion, skip_store_targets: Set[str] = None) -> Dict[str, Any]:
         pre_stmts = []
 
@@ -7916,6 +7993,47 @@ AST 映射规则:
                         self.generated_offsets.add(_ccb.start_offset)
                     self.generated_blocks.add(cond_block)
                     self.generated_offsets.add(cond_block.start_offset)
+                    # [B104-R2a] 混合条件（链式比较 + and 操作数）组合：
+                    # 识别层 _b104r2_absorb_mixed_cc_chain /
+                    # _b104r2_absorb_leading_and_operands 认领链段与操作数块
+                    # 并经 metadata 引用（cc_mixed_cond_tail_blocks /
+                    # cc_mixed_cond_lead_blocks）。此处把各操作数块的「条件
+                    # 求值段」（块内 opcode 序 + 栈净效应——前缀语句剥离后
+                    # 的求值指令段，与识别侧 _b104r2_cond_eval_seq 同判据）
+                    # 重建为表达式，与 ast.Compare 按块序组合为
+                    # ast.BoolOp(And, [首操作数..., Compare, 尾操作数...])。
+                    # 极性：前置操作数块以「假 → 循环出口」跳转收尾
+                    # （POP_JUMP_FORWARD_IF_FALSE ⇒ 表达式原样；IF_TRUE/
+                    # NONE 族按极性取 not）。尾/首操作数块与桥块标记已生成
+                    # （每块唯一归属），其回边重检副本由下方抑制分支消费。
+                    _cc_mixed_tails = region.metadata.get('cc_mixed_cond_tail_blocks') or []
+                    _cc_mixed_leads = region.metadata.get('cc_mixed_cond_lead_blocks') or []
+                    if _cc_mixed_tails or _cc_mixed_leads:
+                        _cc_mixed_vals = []
+                        for _mb in list(_cc_mixed_leads) + [_cc_cond] + list(_cc_mixed_tails):
+                            if _mb is _cc_cond:
+                                _cc_mixed_vals.append(_cc_cond)
+                                continue
+                            _mb_expr = self._b104r2_cond_expr_from_operand_block(_mb)
+                            if _mb_expr is not None:
+                                _cc_mixed_vals.append(_mb_expr)
+                        if len(_cc_mixed_vals) >= 2:
+                            condition = {'type': 'BoolOp', 'op': 'and',
+                                         'values': _cc_mixed_vals}
+                        for _mb in list(_cc_mixed_tails):
+                            self.generated_blocks.add(_mb)
+                            self.generated_offsets.add(_mb.start_offset)
+                        # [B104-R2a] 首操作数块（region.entry）承载循环前的前置
+                        # 语句（``n = 0; while flag and 0 < x < 10:`` 的前缀并入
+                        # 首操作数块）——按源序提入 pre_stmts（位于 cond_block
+                        # 自身前缀之前，首块在块序上先于链头）；提取后标记已
+                        # 生成（每块唯一归属），防游离发射。
+                        for _mb in list(_cc_mixed_leads):
+                            _lead_pre_r2a, _ = self._if_extract_cond_instructions(_mb, None)
+                            if _lead_pre_r2a:
+                                pre_stmts[0:0] = _lead_pre_r2a
+                            self.generated_blocks.add(_mb)
+                            self.generated_offsets.add(_mb.start_offset)
                     # 区域归约算法原则 2（每块唯一归属）：CPython 在
                     # 回边处复制 while 条件求值。链式比较回边重检跨两块：header
                     # 尾部（首段 COPY+COMPARE_OP）+ back_edge（末段 COMPARE_OP）。
@@ -7935,11 +8053,23 @@ AST 映射规则:
                         # 判据只读块内 opcode 序 + 后继/区域成员关系（I.4 白名
                         # 单）；用户语句（CALL+POP_TOP 表达式、赋值）必含集合
                         # 外指令，不命中。
+                        # [B104-R2] 噪声集补 JUMP_FORWARD/JUMP_ABSOLUTE：清理段
+                        # 尾部跳转（``[POP_TOP; JUMP_FORWARD→循环出口]`` 位形，
+                        # 链+and 尾混合条件的回边重检清理块）同为纯协议指令，
+                        # 后继越体守卫不变；用户语句块含装载/调用/存储指令仍
+                        # 不命中。
+                        # [B104-R2a] 后继守卫放宽至「回边块」：混合条件回边重检
+                        # 链的透明连接块（``[JUMP_FORWARD→回边块]``，跳过共享清
+                        # 理块续接末操作数重检）是重检协议组件，非用户语句；
+                        # JUMP_BACKWARD 不在噪声集内 ⇒ continue 语句块不命中。
                         if all(i.opname in ('POP_TOP', 'SWAP', 'COPY', 'NOP', 'CACHE',
-                                           'RESUME', 'PUSH_NULL', 'EXTENDED_ARG')
+                                            'RESUME', 'PUSH_NULL', 'EXTENDED_ARG',
+                                            'JUMP_FORWARD', 'JUMP_ABSOLUTE')
                                for i in _b.instructions):
-                            if _b.successors and all(_s not in (region.blocks or set())
-                                                     for _s in _b.successors):
+                            if _b.successors and all(
+                                    (_s not in (region.blocks or set())
+                                     or _s is region.back_edge_block)
+                                    for _s in _b.successors):
                                 self.generated_blocks.add(_b)
                                 self.generated_offsets.add(_b.start_offset)
                                 continue
@@ -7957,21 +8087,83 @@ AST 映射规则:
                             _post_store = _b_non_jmp[_last_store_idx + 1:]
                             _is_recheck = any(i.opname in ('COPY', 'COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
                                               for i in _post_store)
+                            # [B104-R2a] 混合条件的回边重检与体语句同块时，
+                            # 重检尾可能是 and 操作数求值段（无 COPY/COMPARE，
+                            # 如 ``while flag and 0 < x < 10:`` 的 flag 重检）：
+                            # 以操作数块的「条件求值段」opcode 序同一性判定
+                            # （与识别侧 _b104r2_cond_eval_seq 同判据，I.4 白名
+                            # 单——块内 opcode 序 + 栈净效应），命中同按重检
+                            # 抑制处理（体语句提取 + 整块抑制）。
+                            if not _is_recheck and (_cc_mixed_tails or _cc_mixed_leads):
+                                _ps_ops_r2a = tuple(
+                                    i.opname for i in _post_store
+                                    if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                        'EXTENDED_ARG', 'PUSH_NULL'))
+                                for _mb_r2a in list(_cc_mixed_tails) + list(_cc_mixed_leads):
+                                    if (self.region_analyzer._b104r2_cond_eval_seq(_mb_r2a)
+                                            == _ps_ops_r2a):
+                                        _is_recheck = True
+                                        break
                             if _is_recheck:
-                                _store_instrs = _b_non_jmp[:_last_store_idx + 1]
-                                _store_stmt = self._build_store_statement(_store_instrs, block=_b)
-                                if _store_stmt:
-                                    _store_stmt.pop('_decorator_block', None)
-                                    recheck_store_stmts.append(_store_stmt)
+                                # [B104-R2] 回边重检与体语句同块的「多语句前缀」
+                                # 切分：按 STORE 边界分段（UNPACK_SEQUENCE 组整段
+                                # 保持），每段独立重建一条语句。原实现把「最后
+                                # STORE 之前」的整段交单次 _build_store_statement，
+                                # 体重含 2+ 条语句（如 ``x += 1; n += 1``）时除末条
+                                # 外整体蒸发。判据 = 块内 opcode 序的 STORE 边界
+                                # （与上方复合条件链块同一切分算法，I.4 白名单）；
+                                # 单语句位形分段结果与原整段逐位一致。
+                                _store_segs_b104r2 = []
+                                _cur_seg_b104r2 = []
+                                _unpack_remaining_b104r2 = 0
+                                for _i in _b_non_jmp[:_last_store_idx + 1]:
+                                    _cur_seg_b104r2.append(_i)
+                                    if _i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
+                                        _unpack_remaining_b104r2 = (_i.arg if _i.opname == 'UNPACK_SEQUENCE'
+                                                                    else (_i.argval & 0xFF) + 1 + ((_i.argval >> 8) & 0xFF))
+                                    if _i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                                     'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
+                                        if _unpack_remaining_b104r2 > 0:
+                                            _unpack_remaining_b104r2 -= 1
+                                            if _unpack_remaining_b104r2 == 0:
+                                                _store_segs_b104r2.append(_cur_seg_b104r2)
+                                                _cur_seg_b104r2 = []
+                                        else:
+                                            _store_segs_b104r2.append(_cur_seg_b104r2)
+                                            _cur_seg_b104r2 = []
+                                if _cur_seg_b104r2:
+                                    _store_segs_b104r2.append(_cur_seg_b104r2)
+                                for _seg_b104r2 in _store_segs_b104r2:
+                                    if not _seg_b104r2:
+                                        continue
+                                    _has_unpack_seg = any(i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')
+                                                          for i in _seg_b104r2)
+                                    if _has_unpack_seg:
+                                        _unpack_stmt = self._build_unpack_assign_from_segment(_seg_b104r2)
+                                        if _unpack_stmt:
+                                            recheck_store_stmts.append(_unpack_stmt)
+                                        continue
+                                    _store_stmt = self._build_store_statement(_seg_b104r2, block=_b)
+                                    if _store_stmt:
+                                        _store_stmt.pop('_decorator_block', None)
+                                        recheck_store_stmts.append(_store_stmt)
+                                    else:
+                                        _seg_stmt = self._build_statement(_seg_b104r2)
+                                        if _seg_stmt:
+                                            recheck_store_stmts.append(_seg_stmt)
                                 self.generated_blocks.add(_b)
                                 self.generated_offsets.add(_b.start_offset)
                                 continue
                         # Pure recheck: back_edge block with only COMPARE_OP + jump
                         if _b is region.back_edge_block:
+                            # [B104-R2] 白名单完备化：原固定元组只覆盖 3 元链的
+                            # 「装载+协议」段；4+ 元链/调用/算术操作数的回边重检
+                            # 段含 BINARY_OP/CALL/LOAD_ATTR 等操作数计算 opcode——
+                            # 改用 _B104_CC_RECHECK_EVAL_OPS（纯值求值段判据，见
+                            # 常量处注释；STORE/DELETE/RETURN 等语句 opcode 仍在
+                            # 集合外，含用户语句的回边块不命中）。
                             _has_only_compare = all(
-                                i.opname in ('LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME',
-                                             'LOAD_GLOBAL', 'LOAD_DEREF', 'COPY', 'SWAP',
-                                             'COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'POP_TOP')
+                                i.opname in _B104_CC_RECHECK_EVAL_OPS
                                 for i in _b_non_jmp)
                             if _has_only_compare:
                                 self.generated_blocks.add(_b)
@@ -7985,6 +8177,13 @@ AST 映射规则:
                         # 整块抑制。判据只读块内 opcode 序、跳转目标块指令序
                         # 与区域成员关系（I.4 白名单）；体内真实 if 的假出口
                         # 落在含 STORE/CALL 的合并块或回边链上，不命中。
+                        # [B104-R2] 白名单完备化（e04 注册占位签名复发根因）：
+                        # 原固定元组只覆盖 3 元链的「装载+协议」中间段；4+ 元
+                        # 链的操作数计算段（``x*2`` = BINARY_OP、``len(y)`` =
+                        # CALL 等）不在集合内 ⇒ 未被抑制的中间段被生成层以折
+                        # 叠常量占位重建为体首幻影 if（``10 < True``）。改用
+                        # _B104_CC_RECHECK_EVAL_OPS 纯值求值段判据（见常量处注
+                        # 释）——判据对任意链长/任意操作数表达式形态同判。
                         _b_jt_b104 = (self.cfg.get_block_by_offset(_b_last.argval)
                                       if _b_last.argval is not None else None)
                         _jt_is_cleanup_exit_b104 = (
@@ -7994,13 +8193,9 @@ AST 映射规则:
                                                      'JUMP_ABSOLUTE', 'NOP', 'CACHE',
                                                      'RESUME', 'PUSH_NULL',
                                                      'EXTENDED_ARG')
-                                        for i in _b_jt_b104.instructions)))
+                                         for i in _b_jt_b104.instructions)))
                         if (_jt_is_cleanup_exit_b104
-                                and all(i.opname in ('LOAD_CONST', 'LOAD_FAST',
-                                                     'LOAD_NAME', 'LOAD_GLOBAL',
-                                                     'LOAD_DEREF', 'COPY', 'SWAP',
-                                                     'COMPARE_OP', 'IS_OP',
-                                                     'CONTAINS_OP', 'POP_TOP')
+                                and all(i.opname in _B104_CC_RECHECK_EVAL_OPS
                                         for i in _b_non_jmp)):
                             self.generated_blocks.add(_b)
                             self.generated_offsets.add(_b.start_offset)
@@ -56757,14 +56952,44 @@ AST 映射规则:
                         _b105_next_is_store = _b105_ni.opname in (
                             'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
                         break
+                    # [B105-R2] 净栈深模拟完备化（嵌套海象根因）：原实现按
+                    # stmt_instrs（自上次刷出以来的累积段）求和，但累积段过滤
+                    # 了 PUSH_NULL（SKIP_OPS）——块内每处调用（``g(...)`` /
+                    # ``h(...)``）各带一条 PUSH_NULL(+1)，而 dis.stack_effect
+                    # 的 CALL 已按 3.11 空槽调用约定把 NULL 弹栈计入（-1），
+                    # 漏计 PUSH_NULL 使深度系统性低估 = 块内调用条数。单层
+                    # 海象（e06_call_arg ``f((n := x + 1), n)`` 块内无调用）
+                    # 恰为零差通过；嵌套海象（``g((a := h((b := h()))), a+b)``
+                    # 块内三处调用 → 差 3）使外层 COPY(1)+STORE 对的判据 ③ 误
+                    # 判为 0 ⇒ 误切分 → 外层调用 + 后续实参 + return 整体蒸发
+                    # （评审打回 B105-R2）。判据完备化（I.4 白名单：块内 opcode
+                    # 序 + CPython 值栈净效应）：净栈深改按**本块指令前缀**逐条
+                    # stack_effect 求和（绝对栈深，含 PUSH_NULL；基本块无内部
+                    # 跳转，前缀求和即该指令处的真值栈深；前置语句净效应归零
+                    # 不干扰）；块前缀不可得时回退原累积段模拟（行为逐位不变，
+                    # C3）。
                     _b105_depth = 0
                     _b105_depth_ok = True
-                    for _b105_di in stmt_instrs:
-                        _b105_eff = self._instruction_stack_effect(_b105_di)
-                        if _b105_eff is None:
-                            _b105_depth_ok = False
-                            break
-                        _b105_depth += _b105_eff
+                    try:
+                        _b105_prefix_idx = block.instructions.index(instr)
+                    except ValueError:
+                        _b105_prefix_idx = -1
+                    if _b105_prefix_idx >= 0:
+                        for _b105_di in block.instructions[:_b105_prefix_idx]:
+                            if _b105_di.opname in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'):
+                                continue
+                            _b105_eff = self._instruction_stack_effect(_b105_di)
+                            if _b105_eff is None:
+                                _b105_depth_ok = False
+                                break
+                            _b105_depth += _b105_eff
+                    else:
+                        for _b105_di in stmt_instrs:
+                            _b105_eff = self._instruction_stack_effect(_b105_di)
+                            if _b105_eff is None:
+                                _b105_depth_ok = False
+                                break
+                            _b105_depth += _b105_eff
                     if _b105_depth_ok:
                         _b105_depth -= 1  # 本 STORE 弹栈
                     if (not _b105_next_is_store and _b105_depth_ok
@@ -58693,20 +58918,22 @@ AST 映射规则:
     def _build_chained_complex_target_assign(self, instrs: List[Instruction]) -> Optional[Dict[str, Any]]:
         """[B107] 链式属性/下标目标赋值重建：``a[0] = b[1] = v`` / ``o.a = o.b = v``。
 
-        ①算法依据：区域归约四原则 + CPython 3.11 链式赋值编译协议——多目标
-        赋值把值复制给每个目标：``<value>; COPY 1×(N-1); <t1 前缀>;
-        STORE_SUBSCR|STORE_ATTR; <t2 前缀>; STORE_…; …``（STORE_SUBSCR 弹
-        [值, 容器, 键]、STORE_ATTR 弹 [值, 对象]，每个目标段净栈效应恰 -1，
-        末段后归零）。判据全为块内 opcode 序与 CPython 值栈净效应（I.4
-        白名单）。
+        ①算法依据：区域归约四原则 + CPython 3.11 链式赋值编译协议（交错
+        COPY 布局）——多目标赋值把值复制给每个非末段目标：
+        ``<value>; [COPY 1; <t1 前缀>; STORE_SUBSCR|STORE_ATTR]×(N-1);
+        <tN 前缀>; STORE_…``（每段自带前置 COPY 1，末段无 COPY 消费原值；
+        STORE_SUBSCR 弹 [值, 容器, 键]、STORE_ATTR 弹 [值, 对象]，非末段
+        STORE 后栈上仅剩供末段消费的原值份额（深度 1），末段后归零）。
+        判据全为块内 opcode 序与 CPython 值栈净效应（I.4 白名单）。
         ②归约顺序：自底向上——本方法在通用块语句走查的 STORE_SUBSCR/
         STORE_ATTR 归约点被调用；调用方已按「段后净栈深 > 0 ⇒ 值链延续」
         保持累积，本方法在末段（净栈深归零）把整条链归约为单一 Assign。
         ③唯一归属判定：值段边界 = 首个复杂 STORE 前最后一条「后继非
         STORE_* 的 COPY(1)」（排除 walrus 副作用对 COPY(1)+STORE_*）；从
         该 COPY 起正向模拟，每段以前缀指令 + STORE_SUBSCR/STORE_ATTR
-        收尾且段后深度 == 剩余段数，末段后深度必须恰为 0；复杂 STORE
-        数 ≥ 2 才认链（单段交回单目标构建器，行为逐位不变）。
+        收尾且非末段段后深度 == 1、[B107-R2] 末段后深度必须恰为 0（交错
+        COPY 协议不变式，见实现处注释；2 目标链与原「剩余段数」读法同值）；
+        复杂 STORE 数 ≥ 2 才认链（单段交回单目标构建器，行为逐位不变）。
         ④嵌套处理：值段经 expr_reconstructor 重建为单一 value 节点（可含
         Call/BinOp/walrus 等任意子表达式）；各目标段内容器/键经逆向需求
         模拟切分（镜像 _loop_find_cond_start_idx 的 need 算法）后重建为
@@ -58721,8 +58948,9 @@ AST 映射规则:
 
         C 条款：[C1] 只读传入指令序列的 opcode/oparg 与值栈净效应；
         [C2] 整条链归约为单一 Assign 黑箱，不拆散为兄弟语句；
-        [C3] 任一判据不满足（段后深度非零、复杂 STORE 数 < 2、值段重建
-        失败）返回 None 交回既有单目标路径，行为逐位保持。
+        [C3] 任一判据不满足（末段后深度非零、非末段段后深度 != 1、复杂
+        STORE 数 < 2、值段重建失败）返回 None 交回既有单目标路径，行为
+        逐位保持。
         """
         _b107_store_ops = ('STORE_SUBSCR', 'STORE_ATTR')
         _b107_complex_positions = [i for i, ins in enumerate(instrs)
@@ -58773,7 +59001,19 @@ AST 映射规则:
                 or len(_b107_segments) < 2
                 or _b107_seen_stores != len(_b107_complex_positions)):
             return None
-        # 段数一致性：段后深度 == 剩余段数（每段净 -1）。
+        # [B107-R2] 段数一致性（交错 COPY 协议不变式，3+ 目标根因）：CPython
+        # 3.11 链式复杂目标协议为**交错布局**——``值; [COPY 1; 目标前缀;
+        # STORE复杂]×(N-1); 目标前缀; STORE复杂``（每段自带前置 COPY，末段
+        # 消费原值）。原判据「段后深度 == 剩余段数」按「COPY×(N-1) 连续堆
+        # 叠 + 每段净 -1」立式——2 目标链两种读法同值（评审前全部登记探针
+        # 均为 2 目标，e06_chain_target/e09_attr_chain 恰好逐位通过）；3+
+        # 目标链第 1 段后实际深度 = 1（仅剩原值份额），剩余段数为 2+ ⇒ 判
+        # 恒不中 ⇒ 整链验证失败回退单目标路径，目标 2+ 整体蒸发（评审打回
+        # B107-R2 五单元同根）。正确不变式（I.4 白名单：块内 opcode 序 +
+        # CPython 值栈净效应）：非末段 STORE 后深度 == 1（段内 COPY 份额被
+        # 本段消费，栈上仅剩供末段消费的原值份额）；末段后 == 0（原值份额
+        # 被末段消费，全链栈归零）。2 目标链在新不变式下逐位同判（seg1 后
+        # == 1 == 原判据剩余段数 1；seg2 后 == 0）。
         for _b107_si, (_b107_ss, _b107_se) in enumerate(_b107_segments):
             _b107_d = 0
             for _b107_ii in range(0, _b107_se + 1):
@@ -58781,7 +59021,8 @@ AST 映射规则:
                 if _b107_eff is None:
                     return None
                 _b107_d += _b107_eff
-            if _b107_d != len(_b107_segments) - _b107_si - 1:
+            _b107_expected = (0 if _b107_si == len(_b107_segments) - 1 else 1)
+            if _b107_d != _b107_expected:
                 return None
         # 值段重建。
         _b107_value_instrs = instrs[:_b107_copy_boundary]

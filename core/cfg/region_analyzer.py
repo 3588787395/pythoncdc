@@ -4267,6 +4267,334 @@ class RegionAnalyzer:
         return 0
 
 
+    def _b104r2_cond_eval_seq(self, block: BasicBlock) -> Optional[Tuple[str, ...]]:
+        """[B104-R2a] 取块的「条件求值段」opcode 序（块内 opcode 序 + 栈净效应）。
+
+        算法依据：CPython 3.11 把前置语句（赋值/调用语句）与随后的条件求值
+        合并入同一基本块；前置语句的栈净效应归零，条件求值段从最后一次
+        「栈深回零点」之后开始（该点即条件操作数装载起点）。判据只读块内
+        opcode 序与指令栈效应（I.4 白名单），不读名字/常量/偏移。
+        返回 None 表示块内无有效条件求值段。
+        """
+        last_i = block.get_last_instruction()
+        seq: List[str] = []
+        depths: List[int] = []
+        depth = 0
+        for i in block.instructions:
+            if i is last_i:
+                break
+            if i.opname in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG'):
+                continue
+            seq.append(i.opname)
+            push, pop = self._stack_effect(i)
+            depth += push - pop
+            depths.append(depth)
+        if not seq:
+            return None
+        start = 0
+        # 末条指令的栈深回零不计为前缀边界：链末段的最终 COMPARE 消费待比较
+        # 操作数后自然归零（如 ``[LOAD_CONST 10, COMPARE_OP, PJF]``），它属于
+        # 条件求值段本体；只有其后仍有指令的回零点才是前置语句边界。
+        for k, d in enumerate(depths[:-1]):
+            if d == 0:
+                start = k + 1
+        part = tuple(seq[start:])
+        return part if part else None
+
+    def _b104r2_is_cleanup_to(self, block: BasicBlock, dest: BasicBlock) -> bool:
+        """[B104-R2a] 块是否为「纯协议清理块且落点为 dest」（块内 opcode 序）。
+
+        链式比较协议的中间段失败路径统一为 [POP_TOP; JUMP→循环出口]：POP_TOP
+        丢弃链留在栈上的待比较操作数。判据：块内指令全为栈操纵/噪声 + 无条件
+        跳转（或裸 POP_TOP 落穿），且其唯一后继即 dest。
+        """
+        if block is None or block is dest:
+            return False
+        if not block.instructions:
+            return False
+        has_jump = False
+        for i in block.instructions:
+            if i.opname in ('POP_TOP', 'NOP', 'CACHE', 'RESUME', 'PUSH_NULL',
+                            'EXTENDED_ARG'):
+                continue
+            if i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                has_jump = True
+                continue
+            return False
+        succs = [s for s in block.successors if s not in block.exception_successors]
+        if has_jump:
+            return len(succs) == 1 and succs[0] is dest
+        return len(succs) == 1 and succs[0] is dest
+
+    def _b104r2_cond_jump_exits_loop(self, block: BasicBlock, exit_block: BasicBlock,
+                                     header: BasicBlock) -> bool:
+        """[B104-R2a] 块末条件跳转是否「以失败离开循环」（and 协议收敛判据）。
+
+        and 条件链每个操作数/链段的失败边都指向同一循环出口（或经纯清理块
+        落到出口），末操作数的回边重检以 BACKWARD 条件跳转回 header。判据只
+        读块末 opcode + 跳转目标集合同一性（I.4 白名单）。
+        """
+        last = block.get_last_instruction()
+        if (last is None or last.argval is None
+                or last.opname not in CONDITIONAL_JUMP_OPS):
+            return False
+        jt = self.cfg.get_block_by_offset(last.argval)
+        if jt is None:
+            return False
+        if last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
+            return jt is header
+        return (jt is exit_block
+                or self._is_equivalent_exit_block(jt, exit_block)
+                or self._b104r2_is_cleanup_to(jt, exit_block))
+
+    def _b104r2_has_recheck_mirror(self, block: BasicBlock, header: BasicBlock,
+                                    body: Set[BasicBlock], exit_block: BasicBlock) -> bool:
+        """[B104-R2a] 块的回边重检副本存在性（rotate-while 复制协议，指令级）。
+
+        while 条件在回边处被 CPython 逐段复制：链头/and 操作数的重检副本落在
+        循环体——首组件并入 header 块尾（与体语句合块），其余组件为独立体块
+        ——其「条件求值段」opcode 序与原块一致、失败边以同一循环出口收敛（或
+        回边 BACKWARD 跳 header）。这是「循环条件操作数」与「外层 if 一次性
+        守卫」的判别元：外层 if 的条件每迭代不重测，体内无副本。判据 = 块内
+        opcode 序 + 跳转目标集合同一性 + 区域成员关系（I.4 白名单）。
+        """
+        part = self._b104r2_cond_eval_seq(block)
+        if not part:
+            return False
+        h_last = header.get_last_instruction()
+        if (h_last is not None and h_last.argval is not None
+                and h_last.opname in CONDITIONAL_JUMP_OPS
+                and self._b104r2_cond_eval_seq(header) == part
+                and self._b104r2_cond_jump_exits_loop(header, exit_block, header)):
+            return True
+        for b in body:
+            if b is header:
+                continue
+            if self._b104r2_cond_eval_seq(b) != part:
+                continue
+            if self._b104r2_cond_jump_exits_loop(b, exit_block, header):
+                return True
+        return False
+
+    def _b104r2_absorb_mixed_cc_chain(self, condition_block: BasicBlock,
+                                      header: BasicBlock, body: Set[BasicBlock]) -> Optional[Dict[str, Any]]:
+        """[B104-R2a] 混合条件（链式比较 + and 尾）协议吸收（识别层守卫）。
+
+        ①算法依据：区域归约原则 2（每块唯一归属）+ CPython 3.11 rotate-while
+        复合条件 lowering——``while <cc 链> and <尾操作数>:`` 的前置条件 =
+        链段序列（COPY(2)+COMPARE_OP 链 + 共享清理块 + 透明 JUMP_FORWARD 桥）
+        收敛入 and 尾块（尾块以 POP_JUMP_*_IF_FALSE → 循环出口收尾、
+        fall-through 入体）。链段未被循环认领时被 _identify_chained_compare_
+        regions 抢占为 IfRegion（then=尾块），循环头折叠为 ``if <链>:
+        while <尾>:``（H5 设计案例同形复发，C2/C3 破坏）。
+        ②归约顺序：识别层（Phase 1 循环识别内）先于 chained_compare/boolop
+        认领；链段/桥/清理块/尾操作数块整体并入 LoopRegion.region_blocks。
+        ③唯一归属判定（识别条件，全部 I.4 白名单）：
+          (a) 尾块前驱经「透明 JUMP_FORWARD 桥」到达链末段（桥内全为
+              无条件跳转/噪声）；
+          (b) 链末段以 FORWARD 条件/短路跳转收尾、fall-through 即桥；
+          (c) 自链末段按链协议逐段回溯：前驱 P 以 FORWARD 条件/短路跳转
+              收尾 ∧ P 的跳转目标 == 当前段跳出目标（中间段共享清理块
+              同一性）或 P 的跳转目标为纯清理块且落到当前段跳出目标
+              （末段直跳出口与中间段清理桥接），回溯至真链头
+              （_is_chained_compare_header，COPY(2)+COMPARE 对）；
+          (d) 全链段失败边收敛到尾块的失败目标（同一循环出口或经清理块/
+              等价平凡出口）——and 协议的失败路径同一性；
+          (e) 回边重检副本存在性（_b104r2_has_recheck_mirror，指令级）：
+              链头副本 = header 块尾、各后续段副本 = 体成员块、各 and 尾
+              操作数副本 = 体成员块或回边块——排除「外层 if 一次性守卫」
+              （无副本）与宿主混装；
+          (f) and 尾操作数逐块回溯吸收（fall-through 续接 + 共享失败出口
+              + 副本存在），多操作数尾（``链 and a and b``）同判。
+        ④嵌套处理：链段整体作循环条件组件由生成器 _loop_generate_while 的
+        cc 分支重建（Compare 子节点 + BoolOp(And) 组合），不展开为子区域。
+        ⑤AST 映射接口：返回 {'head','extras','ops','tails','connectors',
+        'claim_blocks'}，由调用点写入 condition_block/condition_chain_
+        blocks/metadata（chained_compare_ops + cc_mixed_cond_tail_blocks）。
+        ⑥反编译流程：仅 WHILE_LOOP 且 condition_block 已由块前驱搜索找到、
+        非 while-true 时调用（纯链条件走 while-true cc 回溯路径，不经过
+        本方法）；未命中返回 None，调用方行为逐位不变（C3 封闭）。
+        C1：判据只读本层块对象结构事实（块末 opcode/跳转目标集/栈效应/
+        区域成员关系）；C2：链段/尾块整体归 LoopRegion，链式比较/BoolOp
+        识别层不再重复认领；C3：任一判据不中即返回 None = 吸收前行为
+        逐位保持（守卫封闭）。
+        """
+        cond_last = condition_block.get_last_instruction()
+        if (cond_last is None or cond_last.argval is None
+                or cond_last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                            | SHORT_CIRCUIT_JUMP_OPS)):
+            return None
+        exit_block = self.cfg.get_block_by_offset(cond_last.argval)
+        if exit_block is None or exit_block in body or exit_block is header:
+            return None
+        # (f) 自尾块逐块回溯吸收 and 尾操作数，直至透明桥
+        tails: List[BasicBlock] = [condition_block]
+        _seen = {condition_block}
+        hop = None
+        cur = condition_block
+        while True:
+            _operand = None
+            for p in cur.predecessors:
+                if p in body or p is header or p in _seen:
+                    continue
+                pl = p.get_last_instruction()
+                if pl is None or pl.argval is None:
+                    continue
+                if pl.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                    if (hop is None
+                            and self.cfg.get_block_by_offset(pl.argval) is cur
+                            and all(i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                                 'NOP', 'CACHE', 'RESUME',
+                                                 'EXTENDED_ARG', 'POP_TOP')
+                                    for i in p.instructions)):
+                        hop = p
+                        _seen.add(hop)
+                elif pl.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
+                    p_jt = self.cfg.get_block_by_offset(pl.argval)
+                    if (cur in p.successors and p_jt is not None
+                            and (p_jt is exit_block
+                                 or self._is_equivalent_exit_block(p_jt, exit_block))):
+                        if _operand is None:
+                            _operand = p
+            if _operand is None:
+                break
+            if not self._b104r2_has_recheck_mirror(_operand, header, body, exit_block):
+                break
+            tails.insert(0, _operand)
+            _seen.add(_operand)
+            cur = _operand
+        if hop is None:
+            return None
+        # (a)(b) 桥前驱 = 链末段
+        seg_last = None
+        for p in hop.predecessors:
+            if p in body or p is header or p in _seen:
+                continue
+            pl = p.get_last_instruction()
+            if (pl is not None and pl.argval is not None
+                    and pl.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                    and hop in p.successors
+                    and seg_last is None):
+                seg_last = p
+        if seg_last is None:
+            return None
+        # (c) 链协议逐段回溯至真链头
+        segments: List[BasicBlock] = [seg_last]
+        _seen.add(seg_last)
+        cur = seg_last
+        while True:
+            curl = cur.get_last_instruction()
+            if (curl is None or curl.argval is None
+                    or curl.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                           | SHORT_CIRCUIT_JUMP_OPS)):
+                break
+            cur_jt = self.cfg.get_block_by_offset(curl.argval)
+            pred_c = None
+            for p in cur.predecessors:
+                if p in body or p is header or p in segments or p in _seen:
+                    continue
+                pl = p.get_last_instruction()
+                if (pl is None or pl.argval is None
+                        or pl.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                             | SHORT_CIRCUIT_JUMP_OPS)):
+                    continue
+                if cur not in p.successors:
+                    continue
+                p_jt = self.cfg.get_block_by_offset(pl.argval)
+                if p_jt is None:
+                    continue
+                if p_jt is cur_jt or self._b104r2_is_cleanup_to(p_jt, exit_block):
+                    pred_c = p
+                    break
+            if pred_c is None:
+                break
+            segments.append(pred_c)
+            _seen.add(pred_c)
+            cur = pred_c
+        head = segments[-1]
+        if not self._is_chained_compare_header(head):
+            return None
+        _cc_info = self._detect_chained_compare_pattern(head)
+        if not _cc_info or not _cc_info.get('extra_chain_blocks'):
+            return None
+        extras = list(_cc_info['extra_chain_blocks'])
+        ops = list(_cc_info['compare_ops'])
+        if set(segments) != ({head} | set(extras)):
+            return None
+        # (d) 全链段失败边收敛到循环出口
+        for s in [head] + extras:
+            if not self._b104r2_cond_jump_exits_loop(s, exit_block, header):
+                return None
+        # (e) 回边重检副本存在性：链头与各后续段均须在体内有重检副本
+        if not self._b104r2_has_recheck_mirror(head, header, body, exit_block):
+            return None
+        for e in extras:
+            if not self._b104r2_has_recheck_mirror(e, header, body, exit_block):
+                return None
+        connectors = [hop]
+        claim_blocks = [head] + list(extras) + [hop] + list(tails)
+        return {'head': head, 'extras': extras, 'ops': ops, 'tails': tails,
+                'connectors': connectors, 'claim_blocks': claim_blocks,
+                'exit_block': exit_block}
+
+    def _b104r2_absorb_leading_and_operands(self, chain_head: BasicBlock,
+                                            chain_final_seg: BasicBlock,
+                                            header: BasicBlock,
+                                            body: Set[BasicBlock]) -> List[BasicBlock]:
+        """[B104-R2a] 前置 and 操作数吸收（``while <a> and <cc 链>:`` 镜像序）。
+
+        纯链 while 的 while-true cc 回溯只认领链段；链头之前的前置 and 操作数
+        （``flag and 0 < x < 10``）以「FORWARD 条件跳转 → 循环出口 +
+        fall-through 续接链头」位形存在，未吸收则泄漏为外层 IfRegion，循环头
+        折叠为 ``if flag: while <链>:``。判据（I.4 白名单）：候选 P 以
+        FORWARD 条件/短路跳转收尾 ∧ P 的跳转目标 == 链末段跳出目标（同一
+        循环出口，and 失败路径同一性）∧ 链头 ∈ P 后继集（fall-through 续接）
+        ∧ 回边重检副本存在（_b104r2_has_recheck_mirror——外层 if 一次性守卫
+        无副本，被显式排除）。逐前驱回溯吸收多操作数（``a and b and 链``），
+        终止性由 _seen 有限集保证（无计数上限）。
+        C1：只读块末 opcode/跳转目标集/栈效应/成员关系；C3：任一判据不中
+        即停止吸收，未吸收块行为逐位不变。
+        """
+        final_last = chain_final_seg.get_last_instruction()
+        if (final_last is None or final_last.argval is None
+                or final_last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                              | SHORT_CIRCUIT_JUMP_OPS)):
+            return []
+        exit_block = self.cfg.get_block_by_offset(final_last.argval)
+        if exit_block is None or exit_block in body or exit_block is header:
+            return []
+        leads: List[BasicBlock] = []
+        _seen = {chain_head}
+        cur = chain_head
+        while True:
+            cand = None
+            for p in cur.predecessors:
+                if p in body or p is header or p in _seen:
+                    continue
+                pl = p.get_last_instruction()
+                if (pl is None or pl.argval is None
+                        or pl.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                             | SHORT_CIRCUIT_JUMP_OPS)):
+                    continue
+                if cur not in p.successors:
+                    continue
+                p_jt = self.cfg.get_block_by_offset(pl.argval)
+                if p_jt is None:
+                    continue
+                if not (p_jt is exit_block
+                        or self._is_equivalent_exit_block(p_jt, exit_block)):
+                    continue
+                if cand is None:
+                    cand = p
+            if cand is None:
+                break
+            if not self._b104r2_has_recheck_mirror(cand, header, body, exit_block):
+                break
+            leads.insert(0, cand)
+            _seen.add(cand)
+            cur = cand
+        return leads
+
     def _identify_loop_regions(self) -> List[Region]:
         """_identify_loop_regions - 循环区域识别（Loop Region Identification）
 
@@ -4459,6 +4787,9 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
             _cc_pre_loop_blocks: List[BasicBlock] = []
             _cc_chain_blocks: List[BasicBlock] = []
             _cc_ops: List[str] = []
+            # [B104-R2a] 混合条件（链式比较 + and 操作数）的尾/首操作数块
+            _cc_mixed_tail_blocks: List[BasicBlock] = []
+            _cc_mixed_lead_blocks: List[BasicBlock] = []
             if loop_type == RegionType.WHILE_LOOP:
                 for pred in sorted(header.predecessors, key=lambda p: p.start_offset):
                     if pred in body:
@@ -4614,6 +4945,19 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
                             _cc_pre_loop_blocks = list(_visited_walk)
                             _cc_chain_blocks = _chain_extra
                             _cc_ops = _chain_ops
+                            # [B104-R2a] 前置 and 操作数吸收（``while a and
+                            # <cc 链>:`` 镜像序）。while-true cc 回溯只认领链段，
+                            # 链头之前的 and 操作数（FORWARD 条件跳转 → 循环
+                            # 出口 + fall-through 续接链头）若不吸收则泄漏为
+                            # 外层 IfRegion，循环头折叠为 ``if a: while <链>:``。
+                            # 判据（I.4 白名单）与回边重检副本排除见
+                            # _b104r2_absorb_leading_and_operands；命中块并入
+                            # _cc_pre_loop_blocks（唯一归属 LoopRegion）。
+                            if _chain_extra:
+                                _cc_mixed_lead_blocks = self._b104r2_absorb_leading_and_operands(
+                                    _chain_head, _chain_extra[-1], header, body)
+                                if _cc_mixed_lead_blocks:
+                                    _cc_pre_loop_blocks.extend(_cc_mixed_lead_blocks)
                             break
             else_blocks, natural_exit = self._find_loop_else(header, body, loop_type, for_iter_exit, condition_block=condition_block)
             else_blocks = else_blocks or []
@@ -4886,6 +5230,28 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
                                             _next_cb = p
                                         break
                         _cb = _next_cb
+            # [B104-R2a] 混合条件（链式比较 + and 尾）协议吸收（识别层守卫）。
+            # ``while <cc 链> and <尾>:`` 的链段经「透明 JUMP_FORWARD 桥 + 共享
+            # 清理块」收敛入 and 尾块；条件块搜索只认领尾块（header 直接前驱），
+            # 链段未被循环归属 ⇒ 被 _identify_chained_compare_regions 抢占为
+            # IfRegion（then=尾块），循环头折叠为 ``if <链>: while <尾>:``
+            #（H5 设计案例同形复发，C2/C3 破坏）。判据（I.4 白名单）与回边
+            # 重检副本排除见 _b104r2_absorb_mixed_cc_chain：命中则链段/桥/尾
+            # 操作数块整体并入 region_blocks（唯一归属 LoopRegion），
+            # condition_block 改指真链头、metadata 记尾操作数块，交生成器
+            # _loop_generate_while 重建 BoolOp(And, [Compare, 尾...])；
+            # 未命中返回 None，本层行为逐位不变（C3 封闭）。
+            if (loop_type == RegionType.WHILE_LOOP and condition_block is not None
+                    and condition_block not in body and not is_while_true):
+                _r2a_mixed = self._b104r2_absorb_mixed_cc_chain(
+                    condition_block, header, body)
+                if _r2a_mixed is not None:
+                    _cc_pre_loop_blocks = list(_r2a_mixed['claim_blocks'])
+                    _cc_chain_blocks = list(_r2a_mixed['extras'])
+                    _cc_ops = list(_r2a_mixed['ops'])
+                    _cc_mixed_tail_blocks = list(_r2a_mixed['tails'])
+                    condition_block = _r2a_mixed['head']
+                    is_while_true = False
             # 区域归约算法原则 2（每块唯一归属）：链式比较 pre-loop
             # 条件链块（COPY+COMPARE_OP 首段 + 后续段 + JUMP_FORWARD 到 header）
             # 归属本 LoopRegion，阻止 _identify_chained_compare_regions 抢占为
@@ -5020,6 +5386,18 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
                 region.condition_chain_blocks = list(_cc_chain_blocks)
                 region.metadata['chained_compare_ops'] = list(_cc_ops)
                 region.metadata['is_chained_compare_cond'] = True
+                # [B104-R2a] 混合条件操作数块（链式比较 + and）经 metadata
+                # 引用（区域成员关系接口，I.4 白名单）：尾块在链后（BoolOp
+                # values 序 = [Compare, *尾]），首块在链前（[ *首, Compare]）。
+                # 生成器 _loop_generate_while 的 cc 分支据此把 ast.Compare 与
+                # 各操作数块的条件求值段组合为 ast.BoolOp(And)。
+                if _cc_mixed_tail_blocks:
+                    region.metadata['cc_mixed_cond_tail_blocks'] = list(_cc_mixed_tail_blocks)
+                if _cc_mixed_lead_blocks:
+                    region.metadata['cc_mixed_cond_lead_blocks'] = list(_cc_mixed_lead_blocks)
+                    # 原则 4（入口引用语义）：条件求值起点 = 首操作数块，
+                    # 父序列经该 entry 引用循环（链头不再是最前块）。
+                    region.entry = _cc_mixed_lead_blocks[0]
             if loop_type == RegionType.WHILE_LOOP and condition_block and condition_block == header:
                 region.metadata['is_degenerate_while'] = any(
                     i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF')

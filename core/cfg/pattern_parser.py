@@ -248,18 +248,33 @@ class PatternParser:
             # 此类块无 DEFINITIVE_PATTERN_OPS 也无 COMPARE_OP，需要专门识别。
             # 关键判据：条件跳转目标 >= case 的跳转目标（指向下一个 case/after-match），
             # 与 body 内 if 语句（跳转目标在 body 内）区分。
+            # [B103-R2] or 模式成功点（S 块）位形：``case 1|2|3 if g:`` 的
+            # 守卫块 = ``POP_TOP; LOAD g; POP_JUMP_*_IF_FALSE → 下一 case``
+            # ——前导 POP_TOP 是 or 臂链协议对主体副本的丢弃（所有臂成功汇
+            # 入 S 后丢弃被匹配值副本，与 _extract_case_pattern 的通配丢弃
+            # 同一栈协议；单字面量 ``case 1 if g:`` 无 S 点、守卫块以 LOAD
+            # 起始，故旧判据「首条 ∈ LOAD_VAR_OPS」恰漏 or+裸名守卫——比较
+            # 形守卫经 has_compare_and_jump 分支收集不受影响，形态敏感 = 评
+            # 审打回 B103-R2）。判据完备化（I.4 白名单：块内 opcode 序 + 跳
+            # 目标）：剥离前导 POP_TOP 丢弃段后再按真值守卫臂形态判定；丢弃
+            # 段只能是 POP_TOP 序列（守卫在基本块首个条件跳转处终结，体语句
+            # 不可能位于守卫块内），跳转目标纪律不变。
             if not is_pattern_block:
                 meaningful = [i for i in current.instructions
                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                if (len(meaningful) >= 2 and
-                        meaningful[0].opname in self.LOAD_VAR_OPS and
-                        meaningful[-1].opname in (('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE',
-                                                    'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE')
-                                                   + self.NONE_JUMP_OPS)):
-                    middle = meaningful[1:-1]
+                _b103r2_guard_ops = meaningful
+                while (_b103r2_guard_ops
+                        and _b103r2_guard_ops[0].opname == 'POP_TOP'):
+                    _b103r2_guard_ops = _b103r2_guard_ops[1:]
+                if (len(_b103r2_guard_ops) >= 2 and
+                        _b103r2_guard_ops[0].opname in self.LOAD_VAR_OPS and
+                        _b103r2_guard_ops[-1].opname in (('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE',
+                                                          'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE')
+                                                         + self.NONE_JUMP_OPS)):
+                    middle = _b103r2_guard_ops[1:-1]
                     middle_ok = all(m.opname in ('POP_TOP',) for m in middle) or not middle
                     if middle_ok:
-                        _simple_guard_jump_target = meaningful[-1].argval
+                        _simple_guard_jump_target = _b103r2_guard_ops[-1].argval
                         _simple_jumps_to_next_case = (
                             _simple_guard_jump_target is not None and
                             jump_target_offset is not None and
