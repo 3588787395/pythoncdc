@@ -385,3 +385,13 @@ site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py:1592
 | trade_live_broker `_process_order` | −68/14 | 三元被当语句发（臂是裸串→docstring 丢弃）＋ f-string 语句真丢失（type_str 死存储） | r64a |
 | quote `run_individual_transform` | 0/2（基 c069d359cbfe76b0） | warning 块位置错位 | r62a |
 | realtime_event_source `clock_worker` | −3/8（基 3d4f27de6d80ab6e） | 已复原内容但错位约 1k 偏移 | r63a |
+
+
+## gate-37 当前状态（2026-10-12 复核；短行优先被 residual_report 引用）
+
+| trade_live_broker `_process_cancel_order` | −1/3 | 35a 已修正体内 continue（−2/2），剩 @1826 正常出口跳转 + @1998 else 臂 continue | 待办 |
+|---|---|---|---|
+| trade_live_broker `_process_order` | −68/14（半件 9f229b71bb95ddb4 → −42/11） | 三元被误判成语句：analyzer R47 无值消费者门（CPDOM 为 None，两臂都带 try 的异常边后继），卡点是内部 TernaryRegion 不被派发 | 待办 |
+| trade_live_broker `_sync_worker` | −3/5 | 极性翻转 + sleep(60) 迁入臂内；gate37 的臂上提判据在此不触发 | r65a |
+| realtime_event_source `clock_worker` | −113/7（基 3d4f27de6d80ab6e → −3/8） | 内容已复原但错位约 1k 偏移 | r63a |
+
