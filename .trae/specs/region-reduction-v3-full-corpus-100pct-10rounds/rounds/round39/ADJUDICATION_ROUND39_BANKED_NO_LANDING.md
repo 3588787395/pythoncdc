@@ -275,3 +275,36 @@ as its end label. The proof it is not a genuine elif: `@7248`'s false exit `@749
 cost r78a `-269`). Second independent axis it names: `A`'s false exit must land on `C`'s test, i.e. the shape is
 `(A and B) or C`. So a *narrower* collection rule than `[R21-49]`'s — one keyed on that shared-block signature
 rather than on the whole chain — is the only untried route left on this unit.
+
+
+## 13. r83a (R21-53) — the narrow shared-exit collection rule is DEAD too: its product IS the −269 collapse
+
+The quota cap killed r83a at ≈21:00 mid-implementation, but it left the full evidence chain, which I re-measured:
+three analyzer candidates (`e8782b2787c01667`, `17276fc2b55c1440`, `b7e7ded85a3a8418`) and three products
+(`out_fix/`, `out_fix2/`, `out_fix4/`, all 18046 bytes vs the base's 21548).
+
+My readings on those bytes (base is 21548 bytes, `+2 / 2 windows / 7 landings`, judge 12/13):
+
+| product | `unit_diff` | judge |
+|---|---|---|
+| `out_fix`  | `prod=1155 delta=-269 hunks=4 landings=2` | 12/13 |
+| `out_fix2` | `prod=1155 delta=-269` (same)              | — |
+| `out_fix4` | `prod=1155 delta=-269`                     | — |
+
+So my §12 handover — "the shared-exit signature is the only untried route" — was wrong: the narrower rule
+collapses **identically** to [R21-49]'s whole-chain refusal. The deletion hunks are the same three
+(54 @7582..@7836, 55 @7960..@8276, 160 @8282..@9192), i.e. **any** rule that removes `@7248` from
+`@7186.elif_conditions` drags the 42-block `elif_final_else` with it and destroys the chain tail.
+
+r83a's premise work is still the most complete statement of the region shape we have, and it corrected two of
+my numbers (both accepted): `elif_final_else` is **42** blocks, not 44, and `@7248`'s successors are
+`[7270, 7492, 9218]` with true→7270 / false→7492. Its §2c original-bytecode readout also confirms axis 2 of
+the ticket exactly: `orig @7184 POP_JUMP_FORWARD_IF_FALSE -> 7216` — `A`'s false exit lands on `C`'s test, i.e.
+`(A and B) or C`, and the `@7248` arm's own merge is `@7582` while the chain's merge is `@7216`.
+
+**What is left on this unit after thirteen runs.** The two `JUMP_FORWARD -> @9206` are the single-end-label
+consequence of a flat chain whose tail-label is the `while self.active:` re-test, and *every* analyzer-side route
+that changes the chain's shape (declare, filter, collect, narrow-collect) collapses to −269/−274. That closes
+clock_worker's analyzer routes for this session; the only untried direction is emission-shape nesting for the flat
+chain — i.e. re-rendering `@7186` as a nested `else: If(…)` exactly as landed [R21-43] does, rather than refusing
+the collection. That is a NEW ticket, not this axis, and it belongs on the generator side.
