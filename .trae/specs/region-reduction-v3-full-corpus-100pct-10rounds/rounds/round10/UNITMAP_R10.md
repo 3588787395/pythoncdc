@@ -1,4 +1,4 @@
-# Round 10 单元图（修好仪器后的权威分派表）
+﻿# Round 10 单元图（修好仪器后的权威分派表）
 
 仪器：`D:/Temp/r9main/unitmap.py` → `D:/Temp/r9main/unitmap_r9.json` / `unitmap.txt`。
 基线＝`rounds/round9/after`（封表读数 6577/6617、386/402、40 失败单元／16 文件），
@@ -375,3 +375,13 @@ site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py:1592
 **方法固化**：今后任何「目标差计数」入档前，先做常数位移检验；
 未做该检验就写「N 处落点错」＝把一次位移摊成 N 个虚构缺陷（本轮我差点在 `etf_basket_order` 上这么记，
 后以块级置换改正，见 §十二）。
+
+
+## gate-36 当前状态（2026-10-12 复核，机制以实测为准；短行优先被 residual_report 引用）
+
+| trade_live_broker `_process_cancel_order` | −1/3 | continue 必须留在 Try.body 内（实测 164 vs 163 条指令） | r60a |
+|---|---|---|---|
+| trade_live_broker `_sync_worker` | −3/5 | 独占 continue 臂应先发（极性 @2 实测翻转） | r62a |
+| trade_live_broker `_process_order` | −68/14 | 三元被当语句发（臂是裸串→docstring 丢弃）＋ f-string 语句真丢失（type_str 死存储） | r64a |
+| quote `run_individual_transform` | 0/2（基 c069d359cbfe76b0） | warning 块位置错位 | r62a |
+| realtime_event_source `clock_worker` | −3/8（基 3d4f27de6d80ab6e） | 已复原内容但错位约 1k 偏移 | r63a |
