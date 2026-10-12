@@ -1,0 +1,278 @@
+python 3.11.7 (tags/v3.11.7:fa7a6f2, Dec  4 2023, 19:24:49) [MSC v.1937 64 bit (AMD64)]
+pyc magic=a70d0d0a (0x0da7 = 3.11) flags=00000000 ; interpreter 3.11 -> SAME minor version: byte compare is exact
+orig co_code len=2044 ; byte@1710=0x6e (JUMP_FORWARD) operand @1711=0x37 -> @1822
+verify: @44=NOP @46=LOAD_GLOBAL @1822=EXTENDED_ARG @1824=JUMP_BACKWARD->@44 @1826=JUMP_FORWARD->@2000 @2042=JUMP_BACKWARD->@46
+orig backward edges : ['@416->@44', '@924->@44', '@1824->@44', '@1998->@44', '@2042->@46']
+orig enters @1822   : ['@1710 JUMP_FORWARD']
+orig enters @1826   : ['@944 POP_JUMP_FORWARD_IF_FALSE', '@1606 JUMP_FORWARD']
+orig exc table      : b133413e00c13e1b421903c312433b4e1200c70f47004e1200ce122d4f0203cf01014f0203
+
+=== 3. shape family (whole-module compile, 25 shapes) ===
+S00_current_OKpy            len=2044/2040 diffs=85   first=95    exc=NE jmp=NE armB@1710->@1822  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b6 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=950 -> @1996
+S01_Ccont(E1 brief cand.)   len=2044/2040 diffs=32   first=95    exc=EQ jmp=NE armB@1710->@1826  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b6 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=950 -> @1996
+S02_Ccont+else_cont         len=2044/2044 diffs=1    first=1711  exc=EQ jmp=NE armB@1710->@1826  tail->@46(hdrtgt=44) || orig[1711]=37 prod[1711]=39 : ORIG @1710 JUMP_FORWARD arg=55 -> @1822  PROD @1710 JUMP_FORWARD arg=57 -> @1826
+S03_Ccont+tail+else_cont    len=2044/2048 diffs=66   first=95    exc=EQ jmp=NE armB@1710->@1826  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=ba : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=954 -> @2004
+S04_chain_tail+else_cont    len=2044/2044 diffs=1    first=1607  exc=EQ jmp=NE armB@1710->@1822  tail->@46(hdrtgt=44) || orig[1607]=6d prod[1607]=6b : ORIG @1606 JUMP_FORWARD arg=109 -> @1826  PROD @1606 JUMP_FORWARD arg=107 -> @1822
+S05_nested+else_cont        len=2044/2044 diffs=0    first=None  exc=EQ jmp=EQ armB@1710->@1822  tail->@46(hdrtgt=44) 
+S06_nested_err+else_cont    len=2044/2044 diffs=1    first=1711  exc=EQ jmp=NE armB@1710->@1826  tail->@46(hdrtgt=44) || orig[1711]=37 prod[1711]=39 : ORIG @1710 JUMP_FORWARD arg=55 -> @1822  PROD @1710 JUMP_FORWARD arg=57 -> @1826
+S07_nested_not+else_cont    len=2044/2042 diffs=177  first=95    exc=NE jmp=NE armB@1710->@None  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b7 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=951 -> @1998
+S08_nested+else_cont+tail   len=2044/2048 diffs=65   first=95    exc=EQ jmp=NE armB@1710->@1822  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=ba : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=954 -> @2004
+S09_nested_not+else+tail    len=2044/2046 diffs=179  first=95    exc=NE jmp=NE armB@1710->@None  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b9 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=953 -> @2002
+S10_B_cont+else_cont        len=2044/2046 diffs=178  first=95    exc=NE jmp=NE armB@1710->@None  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b9 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=953 -> @2002
+S11_elif_not+else_cont      len=2044/2042 diffs=177  first=95    exc=NE jmp=NE armB@1710->@None  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b7 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=951 -> @1998
+S12_neg_first+else_cont     len=2044/2038 diffs=521  first=95    exc=NE jmp=NE armB@1710->@None  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b5 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=949 -> @1994
+S13_nested_no_cont+else_cont len=2044/2038 diffs=189  first=95    exc=NE jmp=NE armB@1710->@None  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b5 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=949 -> @1994
+S14_nested+try_else         len=2044/2046 diffs=117  first=95    exc=NE jmp=NE armB@1710->@1822  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b9 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=953 -> @2002
+S15_nested+except_cont      len=2044/2042 diffs=72   first=95    exc=NE jmp=NE armB@1710->@1822  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b7 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=951 -> @1998
+S16_Ccont+try_else          len=2044/2046 diffs=118  first=95    exc=NE jmp=NE armB@1710->@1826  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b9 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=953 -> @2002
+S17_Ccont+except_cont       len=2044/2042 diffs=73   first=95    exc=NE jmp=NE armB@1710->@1826  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b7 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=951 -> @1998
+S18_nested_not+except_cont  len=2044/2040 diffs=138  first=95    exc=NE jmp=NE armB@1710->@None  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b6 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=950 -> @1996
+S19_cur+else_cont           len=2044/2040 diffs=115  first=95    exc=NE jmp=NE armB@1710->@1822  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b6 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=950 -> @1996
+S20_nested+else_cont+err_only len=2044/2040 diffs=31   first=95    exc=EQ jmp=NE armB@1710->@1822  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b6 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=950 -> @1996
+S21_nested_pass_then_err    len=2044/2044 diffs=2    first=1710  exc=EQ jmp=NE armB@1710->@None  tail->@46(hdrtgt=44) || orig[1710]=6e prod[1710]=09 : ORIG @1710 JUMP_FORWARD arg=55 -> @1822  PROD @1710 NOP arg=None -> @?
+S22_neg_nested+else_cont    len=2044/2040 diffs=493  first=95    exc=NE jmp=NE armB@1710->@None  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b6 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=950 -> @1996
+S23_nested+try_else_cont    len=2044/2042 diffs=115  first=95    exc=NE jmp=NE armB@1710->@1822  tail->@46(hdrtgt=44) || orig[95]=b8 prod[95]=b7 : ORIG @94 POP_JUMP_FORWARD_IF_FALSE arg=952 -> @2000  PROD @94 POP_JUMP_FORWARD_IF_FALSE arg=951 -> @1998
+S24_nested+after_try+err_only len=2044/2044 diffs=36   first=331   exc=EQ jmp=NE armB@1710->@1822  tail->@46(hdrtgt=44) || orig[331]=1f prod[331]=21 : ORIG @330 POP_JUMP_FORWARD_IF_FALSE arg=799 -> @1930  PROD @330 POP_JUMP_FORWARD_IF_FALSE arg=801 -> @1934
+
+=== 4. mini probes: which shape makes the arm-B jump land on the continue block? ===
+m1_elif_pass_errcont     len=274  back=@150->@2,@242->@2,@272->@4 fwd_onto_continue_block=none
+m2_nested_cont_sibling   len=274  back=@150->@2,@242->@2,@272->@4 fwd_onto_continue_block=['@120->@150']
+m3_nested_not_cont       len=272  back=@148->@2,@240->@2,@270->@4 fwd_onto_continue_block=none
+m4_chain_tail_cont       len=272  back=@150->@2,@240->@2,@270->@4 fwd_onto_continue_block=['@90->@150', '@120->@150']
+
+=== ranking (fewest co_code diffs first) ===
+S05_nested+else_cont        diffs=0    jumps_eq=True  exc_eq=True  first_diff=-1
+S04_chain_tail+else_cont    diffs=1    jumps_eq=False exc_eq=True  first_diff=1607
+S02_Ccont+else_cont         diffs=1    jumps_eq=False exc_eq=True  first_diff=1711
+S06_nested_err+else_cont    diffs=1    jumps_eq=False exc_eq=True  first_diff=1711
+S21_nested_pass_then_err    diffs=2    jumps_eq=False exc_eq=True  first_diff=1710
+S20_nested+else_cont+err_only diffs=31   jumps_eq=False exc_eq=True  first_diff=95
+S01_Ccont(E1 brief cand.)   diffs=32   jumps_eq=False exc_eq=True  first_diff=95
+S24_nested+after_try+err_only diffs=36   jumps_eq=False exc_eq=True  first_diff=331
+S08_nested+else_cont+tail   diffs=65   jumps_eq=False exc_eq=True  first_diff=95
+S03_Ccont+tail+else_cont    diffs=66   jumps_eq=False exc_eq=True  first_diff=95
+S15_nested+except_cont      diffs=72   jumps_eq=False exc_eq=False first_diff=95
+S17_Ccont+except_cont       diffs=73   jumps_eq=False exc_eq=False first_diff=95
+S00_current_OKpy            diffs=85   jumps_eq=False exc_eq=False first_diff=95
+S19_cur+else_cont           diffs=115  jumps_eq=False exc_eq=False first_diff=95
+S23_nested+try_else_cont    diffs=115  jumps_eq=False exc_eq=False first_diff=95
+S14_nested+try_else         diffs=117  jumps_eq=False exc_eq=False first_diff=95
+S16_Ccont+try_else          diffs=118  jumps_eq=False exc_eq=False first_diff=95
+S18_nested_not+except_cont  diffs=138  jumps_eq=False exc_eq=False first_diff=95
+S07_nested_not+else_cont    diffs=177  jumps_eq=False exc_eq=False first_diff=95
+S11_elif_not+else_cont      diffs=177  jumps_eq=False exc_eq=False first_diff=95
+S10_B_cont+else_cont        diffs=178  jumps_eq=False exc_eq=False first_diff=95
+S09_nested_not+else+tail    diffs=179  jumps_eq=False exc_eq=False first_diff=95
+S13_nested_no_cont+else_cont diffs=189  jumps_eq=False exc_eq=False first_diff=95
+S22_neg_nested+else_cont    diffs=493  jumps_eq=False exc_eq=False first_diff=95
+S12_neg_first+else_cont     diffs=521  jumps_eq=False exc_eq=False first_diff=95
+
+BEST = S05_nested+else_cont  (chain=nested tail=none else=err_cont) diffs=0
+
+the winning region text:
+    551 |                         if self.business_type in ('future', 'rzrq'):
+    552 |                             if error_dict.get('error_no') == 0:
+    553 |                                 strategy_log.info(f'后端服务 操作账户代码:【{order.symbol!s}】 订单编号:【{order.order_id!s}】 委托号: 【{entrust_no!s}】 发起撤单')
+    554 |                                 if self.business_type == 'rzrq' and 'entrust_no_old' in response.keys():
+    555 |                                     self.cancel_orders[str(response.get('entrust_no_old'))] = order
+    556 |                                     order.set_cancel_entrust_no(str(response.get('entrust_no_old')))
+    557 |                                 else:
+    558 |                                     self.cancel_orders[str(response.get('entrust_no'))] = order
+    559 |                                     order.set_cancel_entrust_no(str(response.get('entrust_no')))
+    560 |                                 self.on_order_response_list_handle()
+    561 |                                 self.on_trade_response_list_handle()
+    562 |                             else:
+    563 |                                 if error_dict.get('error_no') == T2SDK_RTNPACK_EMPTY and self.broker.trade_account.node_type == '7':
+    564 |                                     pass
+    565 |                                 else:
+    566 |                                     strategy_log.error(_('后端服务 撤单失败，错误原因：%s' % error_dict.get('error_info')))
+    567 |                                 continue
+    568 |                     except BaseException:
+    569 |                         strategy_log.error('后端服务 撤单失败，错误信息：%s' % get_traceback_message())
+    570 |                 else:
+    571 |                     strategy_log.error(_('当前订单状态不支持撤单'))
+    572 |                     continue
+    573 |             time.sleep(0.001)
+deep attribute comparison for S05_nested+else_cont:
+   co_code                EQ
+   co_exceptiontable      EQ
+   co_consts              EQ
+   co_names               EQ
+   co_varnames            EQ
+   co_freevars            EQ
+   co_cellvars            EQ
+   co_nlocals             EQ
+   co_stacksize           EQ
+   co_flags               EQ
+   co_argcount            EQ
+   co_posonlyargcount     EQ
+   co_kwonlyargcount      EQ
+   co_linetable           NE  (len 1046/1096)
+deep attribute comparison for S04_chain_tail+else_cont:
+   co_code                NE
+   co_exceptiontable      EQ
+   co_consts              EQ
+   co_names               EQ
+   co_varnames            EQ
+   co_freevars            EQ
+   co_cellvars            EQ
+   co_nlocals             EQ
+   co_stacksize           EQ
+   co_flags               EQ
+   co_argcount            EQ
+   co_posonlyargcount     EQ
+   co_kwonlyargcount      EQ
+   co_linetable           NE  (len 1046/1103)
+deep attribute comparison for S02_Ccont+else_cont:
+   co_code                NE
+   co_exceptiontable      EQ
+   co_consts              EQ
+   co_names               EQ
+   co_varnames            EQ
+   co_freevars            EQ
+   co_cellvars            EQ
+   co_nlocals             EQ
+   co_stacksize           EQ
+   co_flags               EQ
+   co_argcount            EQ
+   co_posonlyargcount     EQ
+   co_kwonlyargcount      EQ
+   co_linetable           NE  (len 1046/1096)
+len orig=2044 prod=2044 ; diff offsets (n=0): []
+sha256 co_code orig=b69a3df0465ee49dd9b9111f64c7ffe604dff88bb36894ccc5edc830b35b2342
+sha256 co_code prod=b69a3df0465ee49dd9b9111f64c7ffe604dff88bb36894ccc5edc830b35b2342
+exc orig=b133413e00c13e1b421903c312433b4e1200c70f47004e1200ce122d4f0203cf01014f0203
+exc prod=b133413e00c13e1b421903c312433b4e1200c70f47004e1200ce122d4f0203cf01014f0203
+jumps equal: True ; count 31 vs 31
+--- ORIG 1600..1720 ---
+  @1604  POP_TOP                          None
+  @1606  JUMP_FORWARD                     1826 -> @1826
+  @1608  LOAD_FAST                        error_dict
+  @1610  LOAD_METHOD                      get
+  @1632  LOAD_CONST                       error_no
+  @1634  PRECALL                          1
+  @1638  CALL                             1
+  @1648  LOAD_GLOBAL                      T2SDK_RTNPACK_EMPTY
+  @1660  COMPARE_OP                       ==
+  @1666  POP_JUMP_FORWARD_IF_FALSE        1712 -> @1712
+  @1668  LOAD_FAST                        self
+  @1670  LOAD_ATTR                        broker
+  @1680  LOAD_ATTR                        trade_account
+  @1690  LOAD_ATTR                        node_type
+  @1700  LOAD_CONST                       7
+  @1702  COMPARE_OP                       ==
+  @1708  POP_JUMP_FORWARD_IF_FALSE        1712 -> @1712
+  @1710  JUMP_FORWARD                     1822 -> @1822
+  @1712  LOAD_GLOBAL                      strategy_log
+--- PROD 1600..1720 ---
+  @1604  POP_TOP                          None
+  @1606  JUMP_FORWARD                     1826 -> @1826
+  @1608  LOAD_FAST                        error_dict
+  @1610  LOAD_METHOD                      get
+  @1632  LOAD_CONST                       error_no
+  @1634  PRECALL                          1
+  @1638  CALL                             1
+  @1648  LOAD_GLOBAL                      T2SDK_RTNPACK_EMPTY
+  @1660  COMPARE_OP                       ==
+  @1666  POP_JUMP_FORWARD_IF_FALSE        1712 -> @1712
+  @1668  LOAD_FAST                        self
+  @1670  LOAD_ATTR                        broker
+  @1680  LOAD_ATTR                        trade_account
+  @1690  LOAD_ATTR                        node_type
+  @1700  LOAD_CONST                       7
+  @1702  COMPARE_OP                       ==
+  @1708  POP_JUMP_FORWARD_IF_FALSE        1712 -> @1712
+  @1710  JUMP_FORWARD                     1822 -> @1822
+  @1712  LOAD_GLOBAL                      strategy_log
+--- ORIG 1810..2044 ---
+  @1810  CALL                             1
+  @1820  POP_TOP                          None
+  @1822  EXTENDED_ARG                     3
+  @1824  JUMP_BACKWARD                    44 -> @44
+  @1826  JUMP_FORWARD                     2000 -> @2000
+  @1828  PUSH_EXC_INFO                    None
+  @1830  LOAD_GLOBAL                      BaseException
+  @1842  CHECK_EXC_MATCH                  None
+  @1844  POP_JUMP_FORWARD_IF_FALSE        1922 -> @1922
+  @1846  POP_TOP                          None
+  @1848  LOAD_GLOBAL                      strategy_log
+  @1860  LOAD_ATTR                        error
+  @1870  LOAD_CONST                       后端服务 撤单失败，错误信息：%s
+  @1872  LOAD_GLOBAL                      get_traceback_message
+  @1884  PRECALL                          0
+  @1888  CALL                             0
+  @1898  BINARY_OP                        6
+  @1902  PRECALL                          1
+  @1906  CALL                             1
+  @1916  POP_TOP                          None
+  @1918  POP_EXCEPT                       None
+  @1920  JUMP_FORWARD                     2000 -> @2000
+  @1922  RERAISE                          0
+  @1924  COPY                             3
+  @1926  POP_EXCEPT                       None
+  @1928  RERAISE                          1
+  @1930  LOAD_GLOBAL                      strategy_log
+  @1942  LOAD_ATTR                        error
+  @1952  LOAD_GLOBAL                      _
+  @1964  LOAD_CONST                       当前订单状态不支持撤单
+  @1966  PRECALL                          1
+  @1970  CALL                             1
+  @1980  PRECALL                          1
+  @1984  CALL                             1
+  @1994  POP_TOP                          None
+  @1996  EXTENDED_ARG                     3
+  @1998  JUMP_BACKWARD                    44 -> @44
+  @2000  LOAD_GLOBAL                      time
+  @2012  LOAD_ATTR                        sleep
+  @2022  LOAD_CONST                       0.001
+  @2024  PRECALL                          1
+  @2028  CALL                             1
+  @2038  POP_TOP                          None
+  @2040  EXTENDED_ARG                     3
+  @2042  JUMP_BACKWARD                    46 -> @46
+--- PROD 1810..2044 ---
+  @1810  CALL                             1
+  @1820  POP_TOP                          None
+  @1822  EXTENDED_ARG                     3
+  @1824  JUMP_BACKWARD                    44 -> @44
+  @1826  JUMP_FORWARD                     2000 -> @2000
+  @1828  PUSH_EXC_INFO                    None
+  @1830  LOAD_GLOBAL                      BaseException
+  @1842  CHECK_EXC_MATCH                  None
+  @1844  POP_JUMP_FORWARD_IF_FALSE        1922 -> @1922
+  @1846  POP_TOP                          None
+  @1848  LOAD_GLOBAL                      strategy_log
+  @1860  LOAD_ATTR                        error
+  @1870  LOAD_CONST                       后端服务 撤单失败，错误信息：%s
+  @1872  LOAD_GLOBAL                      get_traceback_message
+  @1884  PRECALL                          0
+  @1888  CALL                             0
+  @1898  BINARY_OP                        6
+  @1902  PRECALL                          1
+  @1906  CALL                             1
+  @1916  POP_TOP                          None
+  @1918  POP_EXCEPT                       None
+  @1920  JUMP_FORWARD                     2000 -> @2000
+  @1922  RERAISE                          0
+  @1924  COPY                             3
+  @1926  POP_EXCEPT                       None
+  @1928  RERAISE                          1
+  @1930  LOAD_GLOBAL                      strategy_log
+  @1942  LOAD_ATTR                        error
+  @1952  LOAD_GLOBAL                      _
+  @1964  LOAD_CONST                       当前订单状态不支持撤单
+  @1966  PRECALL                          1
+  @1970  CALL                             1
+  @1980  PRECALL                          1
+  @1984  CALL                             1
+  @1994  POP_TOP                          None
+  @1996  EXTENDED_ARG                     3
+  @1998  JUMP_BACKWARD                    44 -> @44
+  @2000  LOAD_GLOBAL                      time
+  @2012  LOAD_ATTR                        sleep
+  @2022  LOAD_CONST                       0.001
+  @2024  PRECALL                          1
+  @2028  CALL                             1
+  @2038  POP_TOP                          None
+  @2040  EXTENDED_ARG                     3
+  @2042  JUMP_BACKWARD                    46 -> @46

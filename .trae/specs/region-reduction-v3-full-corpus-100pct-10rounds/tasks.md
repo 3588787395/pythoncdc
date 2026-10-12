@@ -1954,3 +1954,55 @@ Banked set for this axis, with what each proves: `ccd97ff680b7434c` (28 bytes, n
 (green unit restored, victim worse), `1bdc3206451cef57` (1 byte, `ipo` 419 bytes). None flips a unit;
 the decision waits on r68a's `compile()` answer to whether ANY source shape reproduces the original's
 target pattern (arm B into the shared continue block together with the body tail onto `NOP+2`).
+## §54 Round 38 — r68a settles it: the broker unit's byte is EXPRESSIBLE, and CPython's elif-chain law is the reason
+
+`D:/Temp/r68` (repo untouched, mirror untouched) enumerated 25 whole-module source shapes, compiled each
+on the interpreter that produced the corpus pyc (3.11.7, magic `0x0da7` → byte compare exact) and
+compared `co_code` byte-for-byte. **One shape reproduces the original bit-for-bit:**
+
+```
+S05_nested+else_cont   co_code 2044/2044, sha256 b69a3df0…b35b2342 EQUAL for orig and product
+                       co_exceptiontable EQ, co_consts EQ, co_names EQ, co_varnames EQ,
+                       free/cellvars EQ, nlocals/stacksize/flags/argcount EQ, jumps 31 vs 31 EQ
+                       (only co_linetable differs — line numbers, which the judge ignores)
+```
+
+The shape is NOT an `if/elif/else` chain. It is:
+
+```python
+if self.business_type in ('future', 'rzrq'):
+    if error_dict.get('error_no') == 0:
+        <arm A>
+    else:                                        # nested, not elif
+        if error_no == T2SDK_RTNPACK_EMPTY and …node_type == '7':
+            pass
+        else:
+            strategy_log.error(_('后端服务 撤单失败，错误原因：%s' % …))
+    continue                                     # sibling AFTER the inner If, inside the then-suite
+```
+
+with two coupled corrections: no `continue` after the `try`, and `if order in self.orders: … else:
+error(...); continue` ending with an explicit `continue`.
+
+**The law r68a derived, which explains every failure on this axis:** CPython gives a whole
+`if/elif/else` chain ONE end label, so all arms of a flat chain must share their exit target. The
+original needs two different ones — `@1826` for arm A (which skips the sleep) and `@1822` for arm B
+(which enters the shared continue block) — so any flat-chain rendering is off by exactly that, and
+`S02`/`S06`/`S04` (all flat variants) sit at 1 differing byte while every other perturbation
+(negation, `try/else`, `except: continue`, extra post-try continue) lands at 31-521 differing bytes.
+The generator's elif-chain folding is therefore the defect for this shape: when an arm's exit target
+must differ from the chain's, the third arm has to be emitted as a nested `if/else`.
+
+Two method traps worth remembering, both from r68a's own corrections:
+* the harness must compile the **whole module** — a module-level `import time` changes
+  `LOAD_METHOD`→`LOAD_ATTR` for `time.sleep(0.001)` (12 bytes), so an extracted snippet yields ~80
+  phantom differences;
+* `__pycache__/trade_live_brokerOK.cpython-311.pyc` in the tree is stale (787 diffs); the current
+  `OK.py` recompiled is 2040 bytes / 85 diffs (shape `S00`), i.e. the landed product is FURTHER from
+  the target than my session candidate — which is why candidate ranking here used `attrib_bytes.py`
+  against freshly regenerated products, not against `__pycache__`.
+
+r69a holds the recipe (nested third arm + the `Continue` as a sibling after the inner If, in the
+then-suite) with the acceptance bar: `_process_cancel_order` `co_code` diffs = 0, `ipo_stocks_order`
+and `_trade_status_handle` still 0, broker 125/128 → 126/128. Nothing installed by me; tree and mirror
+byte-clean at generator `20fa73b4e8231f0f` / analyzer `c069d359cbfe76b0`.
