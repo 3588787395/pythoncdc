@@ -2049,3 +2049,29 @@ a conditional expression used as a CALL argument reaches `compile()` with empty 
 `strategy_log.info(f'…')` statement missing), `trade_live_broker._sync_worker` (−3/5 relocations).
 Next gate label **39**, comparison input `rounds/round38/after` (8 shard reports, committed with this
 round so a later `residual_report.py` has something to read).
+## 56. Round 38 addendum — the single-half ablation that turns 6's "not measured" into a number (2026-10-12)
+
+After gate 38 was committed and pushed (`b2363b3e..3631c3cf`), the one open claim in
+`FIX_R21-43_r69a.md` 6 was closed by measurement instead of left as a caveat. Tool:
+`rounds/round38/ABLATE_r2143_without_r2140.py` — it deletes exactly the 31 lines of [R21-40] from the
+r69 mirror's `region_analyzer.py`, **self-validates** by requiring the resulting file hash to equal
+the gate-37 analyzer `c069d359cbfe76b0` (it did, `MATCH=True`), regenerates `trade_live_broker`,
+judges it, and restores the mirror byte-exactly (`hash f7d849e974904492` after restore).
+
+Readings, generator half [R21-43] WITHOUT the analyzer half:
+
+* judge `pyc_verify single --source D:/Temp/ABL_NO_R40_OK.py`: **125/128**, `_process_cancel_order`
+  still `Failure: Different control flow` (with `_process_order`, `_sync_worker`);
+* `attrib_bytes.py` per unit: `_process_cancel_order bytes_diff=27 len_delta=+4` versus the landed
+  pair's `bytes_diff=1 len_delta=+0`; `ipo_stocks_order` 0, `_process_order` 557, `_sync_worker` 1073,
+  `_trade_status_handle` 2 (pair: 3) — all judged Equal in either shape, another instance of co_code
+  parity being neither necessary nor sufficient;
+* the criterion does **fire** without the analyzer half (text diff vs the gate-37 product = 9 lines:
+  the `elif … : pass` arm becomes a nested `if/else` and the arm-tail `continue` appears), it just
+  overshoots because the loop's `back_edge_block` is still mis-designated.
+
+Conclusion recorded in 6: **[R21-40] and [R21-43] are true co-requisites** — neither half alone flips
+`_process_cancel_order`, and the pair is what gate 38 certified. For the next engineer: a criterion
+whose conjuncts read the *analyzer's declared* role (`back_edge_block`, `merge_block`) must be
+measured with and without the analyzer change that establishes that role, otherwise its apparent
+"over-fire" is a missing prerequisite rather than a defect.
