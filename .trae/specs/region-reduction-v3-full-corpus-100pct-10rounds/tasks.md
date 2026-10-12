@@ -2176,3 +2176,12 @@ still 12/13. Residual: **2 files / 2 units** (`clock_worker`, `_sync_worker`), n
 `rounds/round39/after`. New mandatory step now in force: before ANY install, regen all 402 products and byte-diff
 CR-stripped against `git archive HEAD` (~185 s), then judge only the changed files — the 20-file panel declared the
 first attempt clean while the corpus was already broken outside it.
+## 62. Round 40 opens: r79a's seven candidates measured, none flips `_sync_worker` (2026-10-12)
+
+Banked in `rounds/round39/r79/` and adjudicated in §16 with the seven sha16s and the per-unit verdicts. Reclaim
+guard + back-edge fold is therefore a closed axis with a verdict rather than an unmeasured stub, which is what the
+quota kill left behind. Broker totals in those runs (126/128) are an artifact of the candidates being built on the
+gate-38 analyzer; the `_sync_worker` column is the signal.
+Round 39 stays closed and landed (6615/6617, 400/402 files, gate 39 consumed). Remaining residual:
+`realtime_event_source.clock_worker` 12/13 and `trade_live_broker._sync_worker` 127/128 — both with long lists of
+falsified axes (§1–§16), so round 40 needs a new mechanism, not another attempt on a closed one.

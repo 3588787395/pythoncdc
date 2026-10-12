@@ -393,3 +393,31 @@ CR-stripped byte-diff vs `git archive HEAD`, judge only the changed files) repor
 `CHANGED = 1` = the victim — and the gate confirmed exactly one changed file. The 20-file panel had declared the
 first attempt clean while the corpus broke a file outside it; that panel design (residual + canaries) is the bias
 that hid it. Sweep cost ≈ 185 s, less than a gate, and it is now mandatory before any install.
+
+
+## 16. r79a's seven unmeasured candidates, measured by me in one sitting — `_sync_worker` does not flip in any of them
+
+r79a (R21-50, the `_sync_worker` BoolOp reclaim guard + back-edge fold) was killed by the Chat quota cap with a
+clean §0 premise check, seven whole-file analyzer candidates and no measurement table. I installed each of the
+seven over the landed generator `b4363f5858e58074` in my own mirror `D:/Temp/v40`, regenerated broker and judged it:
+
+| candidate | sha16 | `_sync_worker` verdict |
+|---|---|---|
+| A | `0d568cdd7fe0f167` | `Different control flow` |
+| B1 | `6059a31cf5afbb25` | `Different control flow` |
+| B1own | `55aad41d3ed5e2b9` | `Different control flow` |
+| B1gate | `01953113718b7883` | `Different control flow` |
+| AB | `583506e7035f438a` | `Different control flow` |
+| A_B1gate | `d8866fde16e5e2a6` | `Different control flow` |
+| A_B1own | `555b17f0a34b0ed4` | `Different control flow` |
+
+(The broker totals read 126/128 in these runs because each candidate is an analyzer built on the **gate-38** bytes,
+so it drops the just-landed [R21-55] diamond-join and `_process_order` fails again — that is expected and is not a
+property of the candidate; the meaningful column is the unit verdict, and `_sync_worker` never flips.)
+
+So the reclaim-guard + back-edge-fold axis is closed with a verdict, which is what r79a died before producing.
+`_sync_worker` stays at `delta=-3` and its reframing from §9 still stands: `-3` is the net of +221 inserted and
+−224 deleted over five windows, i.e. a restructured compound-while body, not a missing instruction.
+
+Recovering an engineer's work by measuring their candidate files directly is much cheaper than a fresh ticket:
+seven judge runs cost me two commands. Worth making standard when a run dies mid-measurement.
