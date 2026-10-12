@@ -2100,3 +2100,24 @@ one I re-measured in a clean mirror (`D:/Temp/v39`), not transcribed. Corpus sta
   merge=@7492)` analyzer-side at identification time, paired with the phantom-else rule.
 * Numbering collision recorded rather than hidden: R21-44 was taken by two engineers; from here I
   pre-assign numbers in every dispatch (45=r74a, 46=r75a, 47=r76a).
+## 58. Round 39 continued: r77a (R21-48) banked on a falsified pair, and my own brief's premise disproved in code (2026-10-12)
+
+Full numbers in `rounds/round39/ADJUDICATION_ROUND39_BANKED_NO_LANDING.md` §7. I measured its 2×2 in my own
+mirror: base `30a4d7827122e165` `delta=+2`, A `+3`, B `+2`, A+B `+3` — all judge **12/13**, so the predicted
+co-requisite pair is falsified and nothing was installed. Corpus still **6614/6617 (99.9547%), 400/402 files**,
+landed bytes unchanged, `git status --porcelain -- core/ site-packages/` = 0.
+
+Findings that outlive the dead candidate, both read from code by the engineer and endorsed by me:
+* `region_analyzer.py:18826` walks conditional-region candidates in **descending** offset order
+  (`sorted(..., reverse=True)`), so children precede parents. The "ordering wall" (parents precede children)
+  that ticket R20-4 recorded and that I re-quoted in this morning's dispatch briefs **does not exist** —
+  re-derive before citing it again.
+* `IfRegion@7248` is **built and then deleted** by the elif-chain filter (`region_analyzer.py:1672-1691`)
+  because `@7248 ∈ IF_ELIF_CHAIN@7186.elif_conditions`, and the chain's `elif_bodies=[[@7372,@7488]]`
+  omits `@7248`'s real true successor `@7270`. So the residual is a **mis-collected elif condition**, not a
+  missing synthetic declaration; the next ticket belongs to the `[R21-B4]` `_build_elif_region` family.
+
+Dispatch discipline learned this round: pre-assign ticket numbers (44 was claimed twice), demand the FIX doc
+before implementation (two engineers died with bytes and no doc), and never let an engineer inherit a claim
+from my own brief without re-measuring it — three of my claims were corrected by subordinates today, each
+time by a measurement rather than an argument.

@@ -97,3 +97,39 @@ BoolOp (the `debug()` result is `POP_TOP`-discarded, i.e. a statement — the ib
 
 Next gate label **39** still runs against `rounds/round38/after`; round 39 has not consumed it because
 nothing landed.
+
+
+## 7. r77a (R21-48) — killed by the subagent turn cap, but its two premise corrections are the round's best finding
+
+Delivered `rounds/round39/r77/` (6 candidates + a doc whose §4–§6 are placeholders) and left the mirror at the
+base bytes. I ran its 2×2 myself in `D:/Temp/v39`, judging and diffing each product:
+
+| variant | my `unit_diff` | my judge |
+|---|---|---|
+| base `30a4d7827122e165` | `delta=+2` (2 windows, 7 landings) | 12/13 |
+| A (elif-chain-filter guard) | `delta=+3` | 12/13 |
+| B (phantom-else rule) | `delta=+2` | 12/13 |
+| A+B | `delta=+3` | 12/13 |
+
+So the co-requisite pair it predicted (2 spurious jumps disappear → 13/13) is **falsified**: A costs a jump,
+B is neutral, and the pair is `delta=+3`. Banked, not installed.
+
+Two corrections it made to my own dispatch brief, both with probe output, and I endorse them because they
+are read from code rather than inferred:
+1. **There is no "ordering wall" in the conditional-region walk.** `region_analyzer.py:18826` sorts
+   `blocks_in_reverse` with `reverse=True`, i.e. **descending** offsets, so children (larger offsets, e.g.
+   `@7270`) precede parents (`@7248`) — which is the correct bottom-up reduction order. My brief asserted the
+   opposite (ascending, parents first) and told it to work "with" a wall that does not exist. Project memory
+   carries that claim from ticket R20-4, so it needs re-derivation before any future brief cites it.
+2. **`IfRegion@7248` is not never-built — it is built and then removed.** Probe:
+   `BUILD_BASIC_IF for @7248: then=[7270,7372,7488] else=[] merge=7492 → IF_THEN entry=7248`, after which the
+   elif-chain filter (`region_analyzer.py:1672-1691`) deletes it because `@7248 ∈ IF_ELIF_CHAIN@7186.elif_conditions`.
+   `block_to_region[@7248]` finally belongs to the enclosing `TryExceptRegion` (priority 70 > IF_THEN 25).
+   `IF_ELIF_CHAIN@7186.elif_bodies=[[@7372,@7488]]` omits `@7270`, `@7248`'s real true successor — i.e. `@7248`
+   is not an elif of that chain but the nested `if D` inside the `@7216` arm. That reframes the residual from
+   "declare a synthetic region" to "**the chain mis-collected an elif condition**", which is the same family as
+   the landed `[R21-B4]` refusal in `_build_elif_region` — the next ticket should attack the collection, not
+   the filter.
+
+Clock_worker has now had six tickets today: r73a, r74a, r75a, r76a, r77a, plus the re-anchor. Best banked
+state remains `30a4d7827122e165` at `delta=+2 / 2 windows / 7 landings`, judge 12/13, `changed files = 1`.
