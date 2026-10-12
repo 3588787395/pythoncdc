@@ -1543,3 +1543,58 @@ Residual after gate 37 (sealed 09:23:04, UNREGISTERED=0): 2 files / 4 units —
 `_process_order` −68/14, `_process_cancel_order` −1/3, `_sync_worker` −3/5, `clock_worker` −113/7.
 Next gate label 38 against `rounds/round37/after`.
 
+## §43 Round 38 — NO LANDING: r63a/r65a candidates measured, panelled and banked (2026-10-12)
+
+Repo stayed at gate-37 bytes (generator `20fa73b4e8231f0f`, analyzer `c069d359cbfe76b0`;
+`git status --porcelain -- core/ site-packages/` = 0 lines; mirror `D:/Temp/r30chk` restored and
+`cmp`-proved identical). Corpus state therefore unchanged: **6613/6617 (99.9395%), 400/402 files,
+residual 2 files / 4 units**. No gate consumed.
+
+Banked in `rounds/round38/` with the numbers that decide them:
+
+* `CANDIDATE_r38_P1P2_onto_landed_BANKED_not_landed.py` — **c4a934d595200c84** = landed + M1
+  (re-anchored onto the gate-37 bytes by r63a) + P1 (dominance decides which arm receives a leftover
+  block) + P2 (`_r63a_break_landing_is_inner_flow`, four sites, transplanted hunk-by-hunk by
+  `build_p2_onto_landed.py`). `clock_worker` **−113/7 → −6/5**; `realtime_event_source` 12/13, i.e.
+  **no flip**. Panel `r38r` over 20 files: **19 SAME, 1 CHANGED, 0 decreases, 0 flips** — the first
+  clock_worker candidate in this campaign that touched exactly one file corpus-wide (six duplicated
+  canaries `arg_checker`×3 = 49/39/43 and `profiler_func`×3 = 17/15/18 all byte-identical).
+  Fires without flips ⇒ banked, never installed.
+* The −6 residual is TWO named losses (`allwin_r63.py` = unit_diff with the small-window filter
+  removed): (A) the six instructions of `system_log.debug('获取重登信号量')` @7270..@7308 — the block
+  `@7270..@7370(17)` is declared as an IfRegion **condition** block
+  (`IfRegion condition_block=@7270..@7370(17) then=[7372,7488] else=[7492] merge=@7582..@7602`), and
+  the IfRegion path has **no consumer** of `_split_block_condition_prefix` (today: Assert :643,
+  Loop R23-B :7654, ternary :43118/:43533/:43599); the landed `guard_clause_prefix_end` exception is
+  BoolOp-only and this test is `login_semaphore.acquire(...) is False`, a plain Compare.
+  (B) `self.before_trading_date = now_date` @6778..@6782 is the **merge block** of
+  `IfRegion condition_block=@6690..@6700(4) then=[6702] else=[] merge=@6778..@6782(3)`; it is emitted
+  once but in the post-loop sequence (product @9170) instead of at the join. Windows #1/#3 are the
+  two `JUMP_FORWARD`s that the `pass`-rendered empty arms cost, and they vanish with #2/#4.
+* `build_cand_r38_R21-38d_if_cond_prefix.py` + three arms (helper `_r38_if_cond_prefix_stmts` reuses
+  the existing cutter and the existing `prefix_emitted_upto` ledger — no new predicate):
+  both hooks `50397af2773eb726` → product +1658 bytes, **11/13 (one green unit lost)**;
+  hook A only (region dispatcher :4423) `e1a984048121243b` → identical regression, so the over-fire
+  is entirely hook A; hook B only (arm renderer `_if_generate_branch_stmts` :28864)
+  `7135610877add4f1` → **inert**, all five windows byte-for-byte as P1+P2. Conclusion: the dual-role
+  block @7270 is reached by neither hook as placed, so a **dispatch census by ablation** (not line
+  markers — they miss multi-line dict literals) must name the method that renders `IfRegion@7270`
+  before a fourth consumer is placed.
+* r65a `rounds/round37/FIX_R21-39_r65a.md` + battery row G
+  (`D:/Temp/r65/DELIVER/G_shape_r65_battery_row.py`): `_sync_worker` is an **analyzer** ticket.
+  `while A or B or (C and D): time.sleep(60)` resolves to one shared body @704 and `compile()` on
+  this interpreter reproduces the original jump pattern one-to-one, while the product's nested-while
+  form does not; `sys.settrace` records **zero hits** at the landed polarity fast loop
+  `region_ast_generator.py:13440-13442` for this unit, so that mechanism is the wrong route. Break
+  points: `region_analyzer.py:28058-28060` (the OR operand was pre-claimed as a nested LoopRegion and
+  `interrupts_boolop_forward_chain` refuses absorption), `:27181-27192` (length-1 chain dropped),
+  `:28092-28103` (flat `all_same_target` cannot express `or … or (C and D)` — same structural reason
+  the landed `[R7-B45]` `(and or)` sibling exists), consumer `_build_boolop_expression` :39815 has no
+  nested rebuild. Broker stays **125/128**, `_sync_worker` **−3/5**; r65a installed nothing and did
+  not count population — stated, not guessed.
+
+Next-round work items, each with its acceptance measurement, are in
+`rounds/round38/ADJUDICATION_ROUND38_NO_LANDING.md` §4: (1) dispatch census for `IfRegion@7270`;
+(2) merge-block-carrying-statements population census + criterion for (B); (3) the two banked broker
+halves (`_process_order` −68/14 with r64a's analyzer half at −42/11, `_process_cancel_order` −1/3 with
+35a at −2/2) — neither flips alone.
