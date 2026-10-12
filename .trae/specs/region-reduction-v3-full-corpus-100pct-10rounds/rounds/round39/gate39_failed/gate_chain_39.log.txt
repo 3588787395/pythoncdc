@@ -1,0 +1,41 @@
+#### chain label=39 before=38 stages=regen,verify,report,checks
+
+==== STAGE_START regen ====
+[regen 0] done in 1 pass(es) ok=51 bad=0
+[regen 1] done in 1 pass(es) ok=102 bad=0
+[regen 2] done in 1 pass(es) ok=153 bad=0
+[regen 3] done in 1 pass(es) ok=204 bad=0
+[regen 4] done in 1 pass(es) ok=255 bad=0
+[regen 5] done in 1 pass(es) ok=306 bad=0
+[regen 6] done in 1 pass(es) ok=357 bad=0
+[regen 7] done in 1 pass(es) ok=402 bad=0
+[regen 合计] ok=402 bad=0（应 ok=402 bad=0）
+==== STAGE_END regen rc=0 191s ====
+
+==== STAGE_START verify ====
+[verify 0] rc=0 786/786
+[verify 1] rc=0 468/469
+[verify 2] rc=0 538/538
+[verify 3] rc=0 887/887
+[verify 4] rc=0 855/855
+[verify 5] rc=0 998/999
+[verify 6] rc=0 800/801
+[verify 7] rc=0 1282/1282
+==== STAGE_END verify rc=0 143s ====
+
+==== STAGE_START report ====
+[units] 6614/6617 -> 6614/6617  (99.9547%)   [files] 400 -> 399
+[gates] 文件级回退=1  UNIT_REGRESSIONS=1  新增失败单元=1  翻正单元=1
+   FILE-BROKE IQCommon/util/replace_utils.pyc
+   UNIT-DOWN IQCommon/util/replace_utils.pyc 9 -> 8
+   FIXED IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc <module>.TradeLiveBroker._process_order
+   NEW-FAIL IQCommon/util/replace_utils.pyc <module>.decrypt_database_url
+   UNIT-UP IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc 126 -> 127
+==== STAGE_END report rc=0 0s ====
+
+==== STAGE_START checks ====
+[quotation] rc=0 [single] status=success units=153/153 success_rate=100.00%
+[small34] rc=0 "units_success": 1566, "success": 32,
+[selfcheck] rc=0 [selfcheck] 自证：153/153 单元 Equal | [selfcheck] 变异「常量」抓到 1/153 单元 | [selfcheck] 变异「极性」抓到 1/153 单元 | [selfcheck] OK —— 判据可用
+[pytest] rc=1 2 failed, 282 passed, 2 xpassed in 7.07s
+==== STAGE_END checks rc=0 100s ====

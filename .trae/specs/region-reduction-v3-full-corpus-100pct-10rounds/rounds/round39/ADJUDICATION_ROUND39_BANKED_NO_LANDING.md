@@ -308,3 +308,51 @@ that changes the chain's shape (declare, filter, collect, narrow-collect) collap
 clock_worker's analyzer routes for this session; the only untried direction is emission-shape nesting for the flat
 chain — i.e. re-rendering `@7186` as a nested `else: If(…)` exactly as landed [R21-43] does, rather than refusing
 the collection. That is a NEW ticket, not this axis, and it belongs on the generator side.
+
+
+## 14. GATE 39 WAS RUN AND FAILED ON A COLLATERAL — the pair flips `_process_order` and breaks `replace_utils`; reverted, label 39 unconsumed
+
+I installed the R21-55 pair after verifying the flip in my own mirror (broker **127/128**, `_process_order`
+`orig=507 prod=507 delta=0 hunks=0`), ran the full chain (`rounds/round39/gate39_failed/gate_chain_39.log.txt`):
+
+```
+[regen 合计] ok=402 bad=0                    191s
+[verify 0..7] rc=0  786/786 468/469 538/538 887/887 855/855 998/999 800/801 1282/1282   143s
+[units] 6614/6617 -> 6614/6617  (99.9547%)   [files] 400 -> 399
+[gates] 文件级回退=1  UNIT_REGRESSIONS=1  新增失败单元=1  翻正单元=1
+   FIXED   trade_live_broker.pyc <module>.TradeLiveBroker._process_order      (126 -> 127)
+   FILE-BROKE IQCommon/util/replace_utils.pyc  9 -> 8   NEW-FAIL <module>.decrypt_database_url
+[quotation] 153/153   [small34] units_success 1566   [selfcheck] 153/153, 变异 1/153 + 1/153
+[pytest] 2 failed, 282 passed, 2 xpassed (the two permanent residents, zero new failures)
+```
+
+So the flip is real and the regression is real, in the same run. Reverted: `core/` back to
+`11324f276cce6d5b` / `f7d849e974904492` and the 402 products restored, because a file-level regression cannot
+land. **Gate label 39 stays unconsumed** (the campaign rule: re-run the label after the next candidate).
+
+**Which half, and why — measured in minutes, not guessed.** In my mirror with ONLY the analyzer half
+(`842e2748bcdfeb66`) installed, `replace_utils` reads **8/9** ⇒ A is the culprit, the generator half is
+exonerated. The text diff against the committed product is 3 lines and says everything:
+
+```
+             app_log.info('SM4解密执行完成，解密结果长度: {}'.format(len(decrypted_url) if decrypted_url else 0))
++            decrypted_url            <-- a bare expression statement emitted where nothing is emitted in the original
+             if not decrypted_url or '://' not in decrypted_url:
+-                return url
++                url                 <-- a RETURN_STATEMENT destroyed: the value is emitted, the `return` is not
+```
+
+The diamond-join recovery emits the join block's pushed value as a **statement** whenever it cannot prove the
+value is consumed by the join. In `replace_utils` the value is discarded (`POP_TOP`) in the first site and consumed
+by `RETURN_VALUE` in the second — so the rule needs a **consumption conjunct** before it may act: it may only
+recover a join whose value is actually bound/returned/passed, and must refuse when the consumer is `POP_TOP` or
+when the block's own terminator is a `RETURN`. That is the same stack-shape distinction I wrote in §11 for the ibc
+fold and it is implementable from opcode class alone.
+
+**Process lesson I am writing down for myself:** r85a's census was sound *for what it counted* (6 fires, all in
+`_process_order`) and its 20-file panel was clean, and BOTH were true — yet the corpus broke a file that is not in
+the panel. My standing pre-gate panel has to change: before asking for a gate, **regen all 402 products from the
+candidate and byte-diff against the committed ones** (no judging needed, ~200 s), then judge only the changed
+files. The panel's purpose is to catch collateral, and a 20-file panel by construction cannot catch collateral in
+the other 382. Related: `rounds/round38/PANEL_20files.txt` was itself created from residual + canaries, which is
+the bias that produced this miss.

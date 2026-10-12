@@ -23381,56 +23381,6 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             return 'not in' if instr.arg else 'in'
         return None
 
-    def _r2155_diamond_join_from_value_blocks(self, true_block, false_block):
-        """[R21-55] 结构判据：值钻石（三元表达式的两条臂）的汇合块由「显式无条件跳转 +
-        前驱唯一」确定，而不是由后支配树确定。
-
-        结构事实（只读本块/邻块的 opcode 类与前驱后继，不读函数名、绝对偏移、计数器、
-        跨区域/跨层次信息）：
-          ① true_block 末指令是无条件前跳（JUMP_FORWARD / JUMP_ABSOLUTE），目标块 J；
-          ② J 同时是 false_block 的后继（false 臂顺序落合到 J）；
-          ③ false_block 末指令不是条件/短路跳转，即 false 臂是值块而非另一条语句级分支；
-          ④ J 不是异常入口块（首指令非 PUSH_EXC_INFO / WITH_EXCEPT_START）；
-          ⑤ J 的前驱集合恰为 {true_block, false_block}，即 J 不被任何其他正常控制流进入。
-
-        为什么是「可证」而非「偏好」：调用方在进入本判据前已用 _is_ternary_block 校验两臂
-        均为单值块，①②⑤ 说明 J 只可能在这两条臂之后出现，且每条臂各带恰好一个栈上值进入
-        J——因此 J 就是该三元值的唯一消费点。异常边（try 范围内每个块都挂一条指向 handler
-        的边）为两臂各自引入一条绕过 J 的路径，使 find_nearest_common_post_dominator 返回
-        None；异常边不是正常完成路径，不改变「正常完成必到 J」这一结构事实。
-
-        保守性：任一条不成立即返回 None ⇒ 调用方保持 [R47 消费点守卫] 的原判决（拒绝创建
-        该 TernaryRegion），产物逐字节不变。①③ 各自独立排除语句级 if/else（臂以条件跳转
-        结尾）——实测同文件 market_fund_transfer:@126 即被 ①③ 双重复否。
-        本方法无副作用，可被探针包裹做点名数派并证惯性。
-        """
-        _JUMP_FWD = ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
-        _COND_TAIL = FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
-        _EXC_ENTRY = ('PUSH_EXC_INFO', 'WITH_EXCEPT_START')
-        _t_last = true_block.get_last_instruction()
-        if _t_last is None or not isinstance(_t_last.argval, int):
-            return None
-        if _t_last.opname not in _JUMP_FWD:
-            return None
-        _join = self.cfg.get_block_by_offset(_t_last.argval)
-        if _join is None or _join is true_block or _join is false_block:
-            return None
-        if _join not in list(false_block.successors or []):
-            return None
-        _f_last = false_block.get_last_instruction()
-        if _f_last is not None and _f_last.opname in _COND_TAIL:
-            return None
-        _j_first = _join.get_first_instruction()
-        if _j_first is not None and _j_first.opname in _EXC_ENTRY:
-            return None
-        _preds = [p for p in (_join.predecessors or []) if p is not None]
-        if len(_preds) != 2:
-            return None
-        if set(id(p) for p in _preds) != {id(true_block), id(false_block)}:
-            return None
-        return _join
-
-
     def _identify_ternary_regions(self, loop_regions: List[Region],
                                    try_regions: List[Region],
                                    with_regions: List[Region],
@@ -25310,22 +25260,6 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         if (any(i.opname == 'LOAD_ASSERTION_ERROR' for i in _eff)
                                 and any(i.opname == 'RAISE_VARARGS' for i in _eff)):
                             merge_block = _t_ft
-
-            # [R21-55] 汇合块由值钻石的显式跳转与前驱唯一性恢复，取代「只有后支配树
-            # 才能给出 merge」这一前提：try 范围内的异常边使 find_nearest_common_post_
-            # dominator 返回 None，[R47 消费点守卫] 随即整体拒绝该三元候选，区域交给
-            # IfRegion 按语句级归约——IfRegion 只能表示语句级 if，于是把宿主语句（一条
-            # f-string/format 调用）连同两个常量臂一起丢成空臂（实测 _process_order 的
-            # 14 个窗口 / -68 条指令全部由此产生）。判据与可证性见
-            # _r2155_diamond_join_from_value_blocks；任一条不成立即保持 [R47] 原判决。
-            # 挂载点必须在 value_target / merge_context 扫描之前：区域一旦补齐，其后
-            # merge_context 判定与 all_blocks.add(merge_block) 都要看到同一个汇合块
-            # （依「每块唯一归属」，汇合块归属本三元区域）。
-            if merge_block is None:
-                _r2155_join = self._r2155_diamond_join_from_value_blocks(
-                    true_block, false_block)
-                if _r2155_join is not None:
-                    merge_block = _r2155_join
 
             value_target = None
             merge_context = None  # 新增: 记录merge块的上下文类型

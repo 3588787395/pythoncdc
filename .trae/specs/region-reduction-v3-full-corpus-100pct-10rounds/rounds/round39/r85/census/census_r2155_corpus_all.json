@@ -1,0 +1,2858 @@
+{
+ "totals": {
+  "eval": 361,
+  "reject": 10,
+  "fire": 6
+ },
+ "files": {
+  "IQCommon/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/api/wrapper.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/api_data.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/local_finance.pyc": {
+   "eval": 2,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/logger/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/strategy/const.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/backtest_info_utils.pyc": {
+   "eval": 4,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/file_delete.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/strategy_info_utils.pyc": {
+   "eval": 2,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/const.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/base_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/market_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/fly_enum.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/modules/WEBCLIENT/web_socket_client.pyc": {
+   "eval": 4,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_basicdata/api_basicdata.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_db/api_db.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_basicdata/FLYMODULE/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_historyquote/api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_gtn_request/gtn_request.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_realquote/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/datetime_func.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/profiler_func.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/account/base_position.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/api/helper.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/commission.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/executor.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/strategy/strategy_loader.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/data/exrights_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_api/base_api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/individual_api_backtest.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/real_api_trade.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/quote/open_platform.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/account_model/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/api/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/position_model/live_option_position.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_event_source/factor_event_source.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_log/__init__.pyc": {
+   "eval": 2,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc": {
+   "eval": 12,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_risk_control/time_validator.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/function.pyc": {
+   "eval": 2,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade_account/trade_stock_account.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/decorator.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/profiler_func.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/fly_exception.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/inform_info.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/data/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/dumpload/load_algo.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/generalconf.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/simtradding/flyAccount.pyc": {
+   "eval": 8,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/api/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/arg_checker.pyc": {
+   "eval": 2,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/asset_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/pandas.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/logger/handlers.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/strategy/hg_api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/cgroup_utils.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/fileio_utils.pyc": {
+   "eval": 4,
+   "reject": 3,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/t2_utils.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/api/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/core/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/component_stocks_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/merger_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/interface.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/modules/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_basicdata/basic_data_source.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_db/db_utils.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_basicdata/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_historyquote/data_source_func.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_hqsdk_data_source/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_realquote/api_realquote.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/exception.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/pycompatibility.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/account/order.pyc": {
+   "eval": 4,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/config/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/data_pager.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/manager/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/strategy/strategy_universe.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/data/merger_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_api/empty_api_backtest.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/individual_api_trade.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/scheduler_api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/strategy/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/api/api_future.pyc": {
+   "eval": 2,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/position_model/live_stock_position.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_matcher/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_risk_calculation/function.pyc": {
+   "eval": 12,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_simulation/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc": {
+   "eval": 2,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/user_module.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/encrypt.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/pycompatibility.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/aes_encrypt.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/flydefine.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/login_time.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/data/quotation.pyc": {
+   "eval": 12,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/dumpload/load_daily.pyc": {
+   "eval": 8,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/logger.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/simtradding/pboxAccount_jupyterhub.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/api/base_api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/backtest/backtest.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/base_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/trading_dates_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/manager/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/strategy/jq_trans_module.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/common_func.pyc": {
+   "eval": 5,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/profiler_utils.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/trade_info_utils.pyc": {
+   "eval": 3,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/api/api_base.pyc": {
+   "eval": 8,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/core/asset.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/date_set_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/stock_industry_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/manager/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_client_db/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_db/iqdata_db_base.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_basicdata/api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_historyquote/enumerate.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_realquote/real_quote.pyc": {
+   "eval": 8,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/function_dict.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/trade_schedule.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/account/portfolio.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/config/config.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/engine/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/persist_helper.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/user_variables.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/data/trading_dates_mixin.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_api/empty_api_trade.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc": {
+   "eval": 6,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/account_model/future_account.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/api/api_option.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc": {
+   "eval": 2,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_finance/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_matcher/matcher.pyc": {
+   "eval": 5,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_risk_calculation/risk_calculation.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_simulation/broker.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/ptrade_future_broker.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/__init__.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/exception.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/record_store.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/common.pyc": {
+   "eval": 5,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/flyqueue.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/market_time.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/data/quote.pyc": {
+   "eval": 16,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/event/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/oauthenticator/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/simtradding/ptradeAccount.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/api/check_strategy.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/common/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/basic_data_source.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/enumerate.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/manager/instance.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/strategy/strategy.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/crypto_utils.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/pycompatibility.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/tradingday_info_utils.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/api/api_extra.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/core/base.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/default_basic_data.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/trading_dates_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/manager/data_info_manager.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_history_data_source/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_client_db/base_db_table.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_db/iqdata_db_helper.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_historyquote/history_bar_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source_api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/__init__.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/i18n.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/version.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/account/trade.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/const.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/engine/engine.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/plugin_manager.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/data/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/data/trading_dates_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/order_api_backtest.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/local_variables/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data_source/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/account_model/live_future_account.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/api/api_stock.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_finance/api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_persist/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_risk_control/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_simulation/live.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/ptrade_hks_broker.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/arg_checker.pyc": {
+   "eval": 2,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/global_variable.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/report.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/const.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/flytools.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/multiprocess_syn.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/data/quote_handler.pyc": {
+   "eval": 4,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/event/event.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/oauthenticator/hsid.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/simtradding/ptradeFutureAccount.pyc": {
+   "eval": 2,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/api/gtn_api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/common/config.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/const.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/exception.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/mq_connector.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/strategy/wizard_quant_api.pyc": {
+   "eval": 5,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/datetime_func.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/replace_utils.pyc": {
+   "eval": 6,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/user_info_utils.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/api/api_helper.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/core/data_cache.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/default_history_quote.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/engine/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/manager/plugin_manager.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_history_data_source/data_source_func.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_client_db/client_db.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_db_tools/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc": {
+   "eval": 18,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_local_finance/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/arg_checker.pyc": {
+   "eval": 2,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/logger/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/api/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/events/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/slippage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/data/asset_mixin.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/interface.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/const.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/local_variables/bar.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data_source/fly_bar_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/account_model/live_hks_account.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/position_model/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_control/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_finance/commission.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_persist/json_persistance.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_risk_control/base_validator.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/ptrade_option_broker.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/bcolz_help.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/i18n.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/scheduler.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/convert.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/function.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/op_station.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/dockerspawner/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/event/event_engine.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/oauthenticator/itn.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/simtradding/ptradeOptionAccount.pyc": {
+   "eval": 3,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/api/klinedata.pyc": {
+   "eval": 33,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/common/main.pyc": {
+   "eval": 5,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/exrights_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/generalconf.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/profiler_func.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/strategy/zt_api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/docker_info_utils.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/request_utils.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/wrapper_utils.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/api/get_block_stocks.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/core/data_manager.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/default_real_quote.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/engine/engine.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/manager/trading_day_manager.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_history_data_source/history_bar_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_client_db/const.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_db_tools/api_db.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_basicdata/data_source_func.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_historyquote/history_quote.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_local_finance/api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/base_http_client.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/logger/logger.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/__main__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/api/api_base.pyc": {
+   "eval": 2,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/asset.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/events/event.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/strategy/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/data/data_cache.pyc": {
+   "eval": 9,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/main.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/other_api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data_source/fly_data_source.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/account_model/live_option_account.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc": {
+   "eval": 3,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_debug/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_finance/slippage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_persist/recorder.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_risk_control/cash_validator.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/send_message_api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/cache_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/logger/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/trade_schedule.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/custom_tools.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/future_contract_info.pyc": {
+   "eval": 4,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/trading_schedule.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/dockerspawner/dockerspawner.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/event/event_priority.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/oauthenticator/oauth2.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/simtradding/request_data_transform.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/api/klinedataOK.pyc": {
+   "eval": 33,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/const.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/finance.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/graph.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/strategy/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/tools.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/email_utils.py.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": "AttributeError(\"'NoneType' object has no attribute 'code'\")"
+  },
+  "IQCommon/util/resource_utils.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/utils.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/config/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/Ashare_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/exrights_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/entry.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/modules/WEBCLIENT/gtn_client.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_history_data_source/history_data_source.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_client_db/dynamic_table.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_db_tools/db_base.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_basicdata/fly_enum.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_gtn_request/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_local_finance/const.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/calexrights_func.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/mysql_conn.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/account/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/api/api_extra.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/bar.pyc": {
+   "eval": 5,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/events/event_type.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/strategy/strategy.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/data/data_proxy.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/base.pyc": {
+   "eval": 5,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/real_api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/quote/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data_source/fly_quotation_func.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_event_source/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_finance/tax.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_progress/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_risk_control/position_validator.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/brokerFactory.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc": {
+   "eval": 15,
+   "reject": 7,
+   "fire": 6,
+   "sites": [
+    "_process_order:@2574(t@2642,f@2646->join@2648)",
+    "_process_order:@2430(t@2568,f@2572->join@2574)",
+    "_process_order:@2310(t@2390,f@2394->join@2396)",
+    "_process_order:@2236(t@2304,f@2308->join@2310)",
+    "_process_order:@2092(t@2230,f@2234->join@2236)",
+    "_process_order:@1634(t@1754,f@1758->join@1760)"
+   ],
+   "err": null
+  },
+  "IQEngine/utils/compile_help.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/logger/handlers.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/version.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/enums.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/future_param.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/tradingday_calendar.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/dumpload/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/event/event_type.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/server_version.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/api/klinedataOK_check.pyc": {
+   "eval": 33,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/history_bar_storage.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/i18n.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/strategy/common.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/trade_schedule.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/email_utils.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/semaphore_utils.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/version.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/config/config.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/future_info_cn.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/enumerate.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/modules/WEBCLIENT/ibrain_client.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_basicdata/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_db/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_db_tools/db_utils.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_historyquote/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_gtn_request/api.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_local_finance/finance_data_source.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/common_func.pyc": {
+   "eval": 7,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/path_func.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/account/base_account.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/api/fields.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/base.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/execution_context.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/strategy/strategy_context.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/data/default_info.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_api/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/real_api_backtest.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/quote/get_stock_status.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/position_model/live_hks_position.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_event_source/default_event_source.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_history_save/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_progress/system_progress.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_risk_control/price_validator.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/enums.pyc": {
+   "eval": 4,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade_account/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/datetime_func.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/option.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/__init__.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/errors.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/global_param.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/user_error.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/dumpload/_load_algo_recomp.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/g.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/simtradding/accountFactory.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": [],
+   "err": null
+  }
+ }
+}

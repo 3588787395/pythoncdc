@@ -1,0 +1,58 @@
+{
+ "totals": {
+  "eval": 47,
+  "reject": 7,
+  "fire": 6
+ },
+ "files": {
+  "IQData/plugins/plugin_system_realquote/real_quote.pyc": {
+   "eval": 8,
+   "reject": 0,
+   "fire": 0,
+   "sites": []
+  },
+  "IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": []
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc": {
+   "eval": 6,
+   "reject": 0,
+   "fire": 0,
+   "sites": []
+  },
+  "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc": {
+   "eval": 15,
+   "reject": 7,
+   "fire": 6,
+   "sites": [
+    "_process_order:@2574(t@2642,f@2646->join@2648)",
+    "_process_order:@2430(t@2568,f@2572->join@2574)",
+    "_process_order:@2310(t@2390,f@2394->join@2396)",
+    "_process_order:@2236(t@2304,f@2308->join@2310)",
+    "_process_order:@2092(t@2230,f@2234->join@2236)",
+    "_process_order:@1634(t@1754,f@1758->join@1760)"
+   ]
+  },
+  "IQEngine/plugins/plugin_system_matcher/matcher.pyc": {
+   "eval": 5,
+   "reject": 0,
+   "fire": 0,
+   "sites": []
+  },
+  "IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": []
+  },
+  "IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc": {
+   "eval": 12,
+   "reject": 0,
+   "fire": 0,
+   "sites": []
+  }
+ }
+}
