@@ -198,3 +198,45 @@ are still gate 38's (`11324f276cce6d5b` / `f7d849e974904492`, **6614/6617 = 99.9
 arm-tail emission shape for clock_worker's two spurious `JUMP_FORWARD`s (`@7252`/`@7590`, the `[R21-36]`
 family, base `30a4d7827122e165`), and `_process_order`'s two loss classes (ternary-as-CALL-argument reaching
 `compile()` with empty arms, plus one whole `strategy_log.info(f'…')` statement missing).
+
+
+## 11. My own root-cause reading of the last two windows (no engineer available — the 11th dispatch died instantly with no mirror and no python process)
+
+The `r80a` dispatch produced nothing (no `D:/Temp/r80`, zero python processes), so I did the measurement myself in
+`D:/Temp/r81` = repo bytes + base `30a4d7827122e165`, regenerated `realtime_event_source`, compiled the product,
+and mapped instruction offsets → source lines with `co_lines()`.
+
+**Both "spurious `JUMP_FORWARD`" windows land on the SAME target, prod `@9206`, which is line 216 =
+`while self.active:`'s condition re-test** (`LOAD_DEREF self / LOAD_ATTR active /
+POP_JUMP_BACKWARD_IF_TRUE 5614`). Mapping the two windows:
+
+```
+@7248 POP_JUMP_FORWARD_IF_FALSE -> 7254     line 249   if pre_before_trading <= now_time < pm_close or self.pre_before_trading_date == self.initial_trading_date:
+@7250 EXTENDED_ARG 3
+@7252 JUMP_FORWARD -> 9206                   line 250       pass
+...
+@7578 STORE_ATTR pre_before_trading_date     line 259
+@7588 EXTENDED_ARG 3
+@7590 JUMP_FORWARD -> 9206                   line 259
+@7592 LOAD_FAST now_date                     line 260   (sequential code continues)
+```
+
+So the residual is NOT an unknown threading bug: it is the **elif-chain end-label law** (r68a) showing up as two
+arm tails, and the reason those tails jump is that the emitted chain's end label is the loop re-test — plus, at
+line 249-250, our `then` arm is **`pass`**. An empty `then` where the original has the
+`system_log.debug('获取重登信号量')` statement is the direct, visible signature of the
+`inline_boolop_chains` fold swallowing `@7270` into the condition (`inline_blocks=[7248,7270]`, r78a's census),
+and the swallowed `debug()` reappears one arm later at emitted line 248 inside `elif now_date != self.first_run_date:`.
+
+**What this tells the next hand, and it is cheaper than another blind attempt:** the fix is not a suppression rule
+for the two jumps (they are the lawful consequence of the flat chain + the loop re-test being its end label). The
+fix is to un-swallow the `debug()` statement, which turns line 249's `pass` arm into a real arm and, per the
+landed `[R21-43]` precedent, most likely changes the chain's end-label placement too. Concretely: the
+condition-context ibc fold must refuse to absorb a member block whose value is consumed by a `POP_TOP`
+(discarded call) rather than by a following `POP_JUMP_*` — that is a stack-shape/opcode-class test on the member
+block itself, i.e. exactly the "correct at identification" kind the spec allows, and it is a *different* rule from
+`[R21-44]` conjunct ⑧ (which refuses whole sites) and from `[R21-49]` (which refused whole chains).
+Both of those failed because they deleted or re-parented the chain; this one edits only the fold's membership.
+
+Product bytes for anyone re-checking: `rounds/round39/r81_product_evt_base.py` is NOT committed (my mirror output);
+reproduce with `python -X utf8 pycdc.py --region -o out.py <abs pyc>` after installing `30a4d7827122e165`.
