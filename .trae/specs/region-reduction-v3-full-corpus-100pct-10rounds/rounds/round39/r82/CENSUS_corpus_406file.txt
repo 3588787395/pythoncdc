@@ -1,0 +1,5 @@
+files=406
+IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc  rec=4 mem=5 fire=1
+UNREADABLE=1
+CORPUS records=570 members=664 fire_records=1 fire_without_r2146_prefix=0
+HIT IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc :: <module>.RealtimeEventSource.clock_worker head=7248 op=and blocks=[7248, 7270] refused=[7270] r2146prefix=[7270]

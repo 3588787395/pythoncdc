@@ -240,3 +240,38 @@ Both of those failed because they deleted or re-parented the chain; this one edi
 
 Product bytes for anyone re-checking: `rounds/round39/r81_product_evt_base.py` is NOT committed (my mirror output);
 reproduce with `python -X utf8 pycdc.py --region -o out.py <abs pyc>` after installing `30a4d7827122e165`.
+
+
+## 12. My §11 hypothesis was WRONG in its central claim, and r82a proved it — recorded so nobody re-tries it
+
+§11 said the `inline_boolop_chains` fold swallowed the `system_log.debug('获取重登信号量')` statement, and that the
+`pass` arm at emitted line 249–250 was the evidence. r82a measured the same bytes and falsified the causal half of
+that: the statement **is** emitted — `system_log.debug(...)` compiles at prod `@7276`, emitted line 252 — because
+`[R21-46]` (`_r2146_ibc_member_has_stmt_prefix` + `_r2113_legs_back`, consumed at
+`region_ast_generator.py:20577`, i.e. r75a's own banked half that is present in base `30a4d782`) **already refuses
+that fold**. What I read correctly: `inline_blocks=[7248,7270]` holds, the `pass` arm holds, and the `debug()` does
+reappear one arm later. What I got wrong: concluding the fold deleted the statement. An empty `then` arm is not
+evidence of a swallowed statement when a veto already fires — it is evidence the arm is empty *for another reason*.
+
+r82a's measurements (its product byte-identical to my base product, so we measured the same bytes):
+
+| variant | delta | windows | landings | judge | changed files |
+|---|---|---|---|---|---|
+| base `30a4d7827122e165` | `+2` | 2 | 7 | 12/13 Different control flow | — |
+| A: my POP_TOP-membership rule, generator-side (`32595f2b7e21f8b9`) | `+2` | 2 | 7 | 12/13 | **0 / 20** (byte-identical) |
+| B: same rule at the analyzer home (r78a's `8d9993219d2f7418`) | `-269` | 4 | 2 | 12/13 | 1 (the target, worse) |
+
+Censuses make the redundancy quantitative: panel 20 files = 246 ibc records / 296 member evaluations, **1 fire**,
+`fire_only_new=0`; corpus-wide (406 pyc, analyzer-only) = 570 records / 664 members, **still 1 fire**, and that one
+record already satisfies `[R21-46]` ⇒ **the rule has no independent action surface anywhere in the corpus**. Banked,
+not installed. Probe inert 20/20. Membership for clock_worker: `regions=67 blocks=191 two_owner=148 zero_owner=14`
+identical base-vs-A (note r82a and r78a count `two_owner` by different rules, 148 vs 186 — cite the rule, not the
+number, when comparing).
+
+**The real discriminator, handed over by r82a and now the next ticket:** `@7248` is collected as `@7186`'s **elif
+condition**, which is what makes the *parent* arm (`IfRegion@7216`) empty and gives the flat chain the loop re-test
+as its end label. The proof it is not a genuine elif: `@7248`'s false exit `@7492` lies **inside
+`IfRegion@7216.then_blocks` and simultaneously inside `@7186.elif_final_else`** (that 44-block list whose refusal
+cost r78a `-269`). Second independent axis it names: `A`'s false exit must land on `C`'s test, i.e. the shape is
+`(A and B) or C`. So a *narrower* collection rule than `[R21-49]`'s — one keyed on that shared-block signature
+rather than on the whole chain — is the only untried route left on this unit.

@@ -1,0 +1,2 @@
+FIRE head=7248 op=and blocks=[7248, 7270] kept=[7248] dropped=[7270]
+EVAL_TOTAL 
