@@ -1790,3 +1790,38 @@ relocation left), `f7d849e974904492` + `a8155727b47e3bea` + `ccd97ff680b7434c` +
 (`_process_cancel_order` at opcode parity, 1 landing from Equal, the last of these regressing
 `ipo_stocks_order` until relaxation ③ is made chain-local), plus the inert pair `e845b06fc515c221` /
 `8b56ad6dfd874c01` and the over-firing `50397af2773eb726` / `e1a984048121243b`.
+## §49 Round 38 post-script — the remaining landing difference has a name: a spurious body-terminal `continue`
+
+Reading the 40d product's own source (`r39d_…trade_live_broker.py`, lines 527-575) settles §48's open
+question without further guessing:
+
+```
+527      while True:
+528          if len(self.pending_cancel_orders) > 0:
+…
+571              else:
+572                  strategy_log.error(_('当前订单状态不支持撤单'))
+573                  continue                       ← correct (the original's @1998 back edge)
+574          time.sleep(0.001)
+575          continue                               ← SPURIOUS: the body's implicit tail already jumps back
+```
+
+The `compile()` experiment in §48 predicts exactly this pair of behaviours: a `while True:` body whose
+last statement is `continue` emits ONE backward jump onto the loop-entry NOP, and a body that simply
+ends emits ONE backward jump onto NOP+2. Same instruction count (which is why the streams stay
+333/333 and every opcode tool reports zero windows), different jump target, different CFG ⇒ the judge's
+*Different control flow*. The original is the NOP+2 case (@46), the product is the NOP case (@44).
+
+So `_process_cancel_order` needs one suppression, not another emission: **do not emit a `Continue` as
+the loop body's terminal statement when the block that ends the body is the loop's own tail** (the
+structure the generator already knows as `back_edge_block` / the body's last block, which after the
+[R21-40] analyzer fix is `@2000..@2042`). Acceptance is unchanged and now fully specified: drop line 575's
+`continue`, keep line 573's, and the tail jump moves from `@44` to `@46` ⇒ `landings=0`,
+`_process_cancel_order` judge **Equal**, broker **125/128 → 126/128**, corpus **6613 → 6614/6617**,
+with `ipo_stocks_order` held (the relaxation-③ narrowing to chain-local predecessors must ship in the
+same candidate, since `c1eba55fb9900412` regresses it).
+
+Nothing installed this session: repo byte-clean (generator `20fa73b4e8231f0f`, analyzer
+`c069d359cbfe76b0`, `git status --porcelain -- core/ site-packages/` = 0 lines), mirror `cmp`-restored,
+and a cheap no-drift witness on the sealed in-place products reads quotation **153/153**, quote **92/92**,
+`realtime_event_source` **12/13**, `trade_live_broker` **125/128** — identical to the gate-37 seal.
