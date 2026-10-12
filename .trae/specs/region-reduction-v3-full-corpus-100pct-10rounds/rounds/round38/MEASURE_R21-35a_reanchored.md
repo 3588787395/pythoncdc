@@ -47,21 +47,51 @@ Window by window, with the instructions:
 windows → 2 same-class windows). This is why the campaign judges by windows + a flip, never by
 `abs(delta)`.
 
-## Why it is not the whole unit, and what the remaining two instructions actually are
+## The two surviving instructions, resolved against the original's jump targets
 
-CPython 3.11 duplicates the `finally` suite per exit edge of the `try`. The original's two copies are
-both followed by the arm's continuation (`JUMP_BACKWARD` = the `continue`), with a `JUMP_FORWARD`
-skipping the second copy on the normal path; the product emits the continuation on one copy only. So
-the residual is **per-exit-edge continuation threading**, which the AST cannot express: an emitted
-suite ends where the source ends it, and jump operands do not exist in the tree (the standing finding
-`[[pythoncdc-no-landing-channel-in-generator]]`, confirmed by three earlier tickets). Two candidate
-routes remain and neither is measured yet:
+`dump_finally_r38.py` prints the neighbourhood with jump operands resolved (the aligner blanks them,
+which is why the windows read as bare "missing jump" rows). Original, @1820 onward:
 
-* the generator emits only ONE copy of the `finally` suite while the original emits two ⇒ a
-  duplication rule (the same face that `handlers._target` was disproved for —
-  see `[[pythoncdc-falsified-residual-axes]]` §35 — so this must be *measured* as a per-edge copy,
-  not assumed);
-* the product's second copy is in a different suite, so its `continue` became fall-through.
+```
+@1820 POP_TOP                      strategy_log.error(_('后端服务 撤单失败，错误原因：%s' % …))
+@1824 JUMP_BACKWARD -> @44         continue                                   [both have this]
+@1826 JUMP_FORWARD  -> @2000       normal-completion edge of the try body     [PRODUCT LACKS]
+@1828 PUSH_EXC_INFO … BaseException handler … @1918 POP_EXCEPT @1920 JUMP_FORWARD -> @2000
+@1922 RERAISE / @1924 COPY / @1926 POP_EXCEPT / @1928 RERAISE
+@1930 … strategy_log.error(_('当前订单状态不支持撤单')) … @1994 POP_TOP
+@1998 JUMP_BACKWARD -> @44         continue at the end of the OUTER else arm  [PRODUCT LACKS]
+@2000 time.sleep(0.001) … @2042 JUMP_BACKWARD -> @46
+```
+
+and the product at the same place: `@1824 JUMP_BACKWARD` then **directly** `@1826 PUSH_EXC_INFO`, and
+its `elif … node_type == '7'` arm jumps `@1710 JUMP_FORWARD -> @1822`, i.e. onto the `continue`, while
+the original's same arm jumps **past the whole try/except** onto `time.sleep`.
+
+So the two losses are one statement and one edge:
+
+* **@1998 — a dropped trailing `continue`**: the original's outer `else` arm
+  (`else: strategy_log.error(_('当前订单状态不支持撤单'))`) ends with `continue`; the product renders
+  `…OK.py:569-571` without it, so that arm falls through into `time.sleep(0.001)`. Semantically equal,
+  byte-wise one `JUMP_BACKWARD` short, and the judge compares CFG ⇒ Different. This is the
+  arm-tail-continue family (#83), not a new axis.
+* **@1826 — the `try` body's normal-completion edge**: [R21-35a] moves the trailing `continue` INSIDE
+  the try arm, which is right for the arm that ends in `continue`, but it also makes the
+  `elif … node_type == '7': pass` arm's normal completion land on that `continue` instead of escaping
+  the try/except to the following statement. The original expresses both: the `pass` arm reaches
+  `@2000`, and a separate body-end edge `@1826` exists for it.
+
+Next measurement, in this order, both cheap: (1) restore the outer-else trailing `continue` (an
+arm-tail continue that is currently swallowed) and re-run `allwin_r63.py` on `_process_cancel_order`
+— that alone should remove the @1998 window; (2) then test whether [R21-35a]'s `continue` needs the
+distinction "arms of the try body whose normal-completion edge escapes the try must be sequenced
+AFTER the Try node, not folded into it", which is what the @1826 edge is asking for. Only (1) is a
+statement emission; (2) is an arm-membership rule inside `_generate_try`, and the standing
+no-landing-channel finding does NOT apply to it because it chooses a suite, not a jump target.
+
+Two candidate routes for a *pure* per-exit-edge duplication remain unmeasured and are recorded only as
+possibilities: CPython 3.11 duplicates the `finally` suite per exit edge of the `try`, and the AST
+cannot name jump operands (`[[pythoncdc-no-landing-channel-in-generator]]`), so a rule of the form
+"emit the second copy" must be rejected unless a source shape reproduces it.
 
 ## Decision
 
