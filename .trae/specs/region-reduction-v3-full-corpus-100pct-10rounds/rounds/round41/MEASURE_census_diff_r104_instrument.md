@@ -33,3 +33,17 @@ Score every candidate step of the ladder with `indeg-equal` as the pass/fail lin
 (~40 s) or a gate (~13 min). `indeg-equal=True, back-equal=True, opseq-equal=True` on `clock_worker` is a strong
 predictor of `13/13`; it is not a substitute for the judge, so installation still requires the judge line plus my
 402-file sweep.
+
+
+## `oracle_diff_r104.py` — the three axes in one command, both controls certified (07:36)
+
+`python -X utf8 rounds/round41/oracle_diff_r104.py <product.py>` prints oracle line-diff vs the 13/13 oracle,
+the `census_diff` verdict, and the judge line, in this order.
+
+| arm | `hunks_vs_ORACLE` (clock_worker, 254-line body) | census deltas | indeg/back/opseq | judge |
+|---|---|---|---|---|
+| POSITIVE: the oracle itself | **0** | `instrs=+0 back=+0 jsites=+0` | True / True / True | `status=success units=13/13` |
+| NEGATIVE: landed `realtime_event_sourceOK.py` | non-zero | `instrs=-112 … jsites=-9` | False | `12/13` |
+
+A rig whose positive control is green and whose negative control is red is usable; that is the state. Candidate
+adjudication is now one command instead of three, which is what makes a same-turn install+gate possible.
