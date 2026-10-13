@@ -205,3 +205,17 @@ Consequence for the other live engineer: r98a's leftover-operand work is still r
 broker flip path**. I keep it running as the generality check, and the merge plan is: install
 `ana 1471c92e` + `gen 0f4c3898` + r99a's reconnect half, require `gold_diff` = 0 hunks and judge
 `units=128/128` before touching the repo, then run `gate_chain.py 40 39`.
+## 11. My own 402-product certification of the pair (2026-10-13 10:48)
+
+Neither engineer swept the combination, so I ran it: `analyzer 1471c92eca157e46` + `generator 0f4c3898298e6f2e`,
+all 402 roster inputs regenerated in my mirror into `sp_out`, compared CR-stripped against HEAD extracted with
+`git archive HEAD site-packages`.
+
+```
+chunk 1: DONE files=402 same=401 changed=1 newprod=0 nooutput=0 elapsed=206s
+```
+
+and an independent re-walk of the two trees confirms the single changed file is the target
+(`trade_live_broker`), with no missing inputs and no stub products. So the pair is collateral-free corpus-wide -
+it is a safe platform for r99a's reconnect half, and the only thing standing between it and a flip is the two
+remaining GOLD hunks (one statement: position + `return`-vs-`break`).
