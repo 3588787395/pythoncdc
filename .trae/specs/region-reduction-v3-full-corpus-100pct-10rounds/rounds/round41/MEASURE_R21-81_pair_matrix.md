@@ -209,3 +209,23 @@ E answers the question I actually needed: does the R21-81 emitted-entry ledger r
 Numbers for the next hand, all on analyzer 3ad5ceaa: blunt pair 262 lines, -7, 5 hunks; ledger plus un-mark 266 lines, +17, 5 hunks; render-scoped claims 241 lines, -115, zero collateral. The oracle is 254 lines and 13/13, so the target of the fix is a single emission of the run with the arm terminating where the oracle does.
 
 Still nothing installed. Corpus 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, landed bytes unmoved, repo core/ clean, r111a (ticket R21-86) still live on the arm-continuation half.
+## Addendum 11 - r111a delivers R21-86: instruction gap closed to -6 with ZERO collateral, still 12/13, so banked as the new best-known arm (2026-10-14 01:34)
+
+Candidate generator `59a405837c22a4cb` (3,873,983 B, BOM intact, 100 percent CRLF, zero bare LF, zero CR CR LF, compile clean, idempotent patch), **generator-only on the pinned F5 analyzer** - the R21-79 analyzer half is NOT a co-requisite and measurably hurts when paired.
+
+| arm | ours (oracle 254) | instrs | back | jsites | hunks | judge |
+|---|---|---|---|---|---|---|
+| F5 base | 241 | -114 | +0 | -9 | 4 | 12/13 |
+| my blunt pair 71c6863e | 262 | -7 | +0 | +2 | 5 | 12/13 |
+| **R21-86 rule alone on F5** | **262** | **-6** | **+0** | **+2** | **4** | **12/13** |
+| R21-86 rule + R21-79 analyzer | 262 | -7 | +0 | +2 | 5 | 12/13 |
+
+Ablations r111a ran (all recorded): release without the 26911 honour returns base, honour without release returns base, so the conjunction is now carried by **one rule with two load-bearing halves**; extending the release to then_blocks buys nothing and was rejected. I independently scored the candidate myself at 01:33 and reproduced -6 with zero collateral.
+
+**Collateral: none.** Ten-file CR-stripped smoke: broker back at its committed 178823, klinedata 100737, quote, real_quote, quotation, order_api, replace_utils, function, handlers all byte-identical; only the victim differs, which is intended. Site A fires 17 times in the victim (all IfRegion@7604) and zero times in broker and klinedata, which is exactly why the blunt un-mark in addendum 8 damaged those two files and this rule does not.
+
+**Panel 20 by index: zero regression.** Rows 00-11 and 13-19 all success and byte-same (quotation 153/153, quote 92/92, klinedata 64/64, handlers 30/30, wizard 58/58, trade_info_utils 41/41, api_base 28/28, real_quote 45/45, strategy 27/27, order_api 37/37, broker 128/128, matcher 17/17, risk init 43/43, arg_checker 49/39/43, profiler 17/15/18); row 12 is the victim at 12/13. **Sweep: ROOT-joined, length asserted 402, sharded 100/100/100/102, MISSING/FAIL 0 in every shard, CHANGED_COUNT 1 = the victim only.**
+
+What still blocks the flip, stated by r111a and consistent with my own reads: the unit overshoots to 262 lines not from duplication (every run marker appears exactly once in both gold and product) but from eight lines of pre-existing step-3 and step-4 or-chain scaffolding in the base. So the instruction gap is now -6 and the surviving axis is the position of that scaffolding, which is addendum 9 half (a), the renderer position, not claims.
+
+Status: still no flip, so R21-86 is **banked, not installed**, and gate label 41 stays unconsumed. It is the best-known arm in the campaign by a wide margin - from -114 to -6 instructions with zero collateral, panel-clean and sweep-clean. Artifacts: rounds/round41/r111/ (candidate, patch, FIX, MEASURE) plus this table. Corpus 6616/6617 (99.9849 percent), 401/402 files, landed bytes unmoved, repo core/ clean.
