@@ -1,0 +1,37 @@
+unique regions=26 (analyze() top-level=26)
+
+=== A. block_to_region ownership 230..1214 ===
+
+=== B. region tree (dedup) ===
+  LoopRegion entry=@1890 hdr=@2072 cond=@1890 be=@2844 be_set=[2844] wt=False chain=[2026]
+      WithRegion entry=@2072
+      IfRegion entry=@2090
+          BoolOpRegion entry=@2090
+      IfRegion entry=@2214
+      IfRegion entry=@2378
+      IfRegion entry=@2492
+      IfRegion entry=@2580
+      IfRegion entry=@2668
+  LoopRegion entry=@232 hdr=@704 cond=@232 be=@704 be_set=[704] wt=False chain=[232, 364, 522, 544, 1214, 1890, 2026]
+      IfRegion entry=@522
+      IfRegion entry=@544
+      IfRegion entry=@1034
+      IfRegion entry=@1214
+          BoolOpRegion entry=@1214
+      IfRegion entry=@1388
+          BoolOpRegion entry=@1388
+      IfRegion entry=@1638
+      IfRegion entry=@1770
+  LoopRegion entry=@232 hdr=@232 cond=@- be=@2886 be_set=[2886] wt=True chain=[]
+  IfRegion entry=@0
+      Region entry=@0
+      Region entry=@120
+      Region entry=@150
+      Region entry=@172
+      Region entry=@202
+
+=== C. _detect_while_condition_boolop_chain on L2 condition_block ===
+  L2 found: entry=@232 cond=@232 body=[704, 876, 1034, 1056, 1212]
+  chain=[(232, 'or')]
+  L2 metadata keys=['break_blocks_precise', 'exit_successors', 'for_iter_exit', 'for_iter_fall_through', 'for_iter_setup', 'has_break_in_body', 'loop_body_full_set', 'natural_back_edge']
+    meta[natural_back_edge]=BasicBlock(13, offset=704-874, instrs=21)

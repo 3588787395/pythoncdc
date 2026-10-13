@@ -1,0 +1,186 @@
+code object: _sync_worker instr-count-in-dis=412
+cfg blocks=54 regions=26
+
+=== [1] BACKWARD-jump terminators (block_start -> target) ===
+  @704    n=21   POP_JUMP_BACKWARD_IF_TRUE          -> @704
+  @876    n=18   POP_JUMP_BACKWARD_IF_TRUE          -> @704
+  @1056   n=15   POP_JUMP_BACKWARD_IF_FALSE         -> @704
+  @2844   n=7    POP_JUMP_BACKWARD_IF_TRUE          -> @2072
+  @2886   n=8    JUMP_BACKWARD                      -> @232
+
+  distinct backward targets: 3
+  ** target @704 reached BACKWARD by 3 distinct blocks: [(704, 'POP_JUMP_BACKWARD_IF_TRUE'), (876, 'POP_JUMP_BACKWARD_IF_TRUE'), (1056, 'POP_JUMP_BACKWARD_IF_FALSE')]
+
+=== [2] all predecessors (forward+backward) of blocks in [704,1210] ===
+  @704    n=21   term=POP_JUMP_BACKWARD_IF_TRUE        -> @704    preds=[(232, 'FWD', 'POP_JUMP_FORWARD_IF_TRUE'), (364, 'FWD', 'POP_JUMP_FORWARD_IF_TRUE'), (700, 'FWD', 'JUMP_FORWARD'), (704, 'BWD', 'POP_JUMP_BACKWARD_IF_TRUE'), (876, 'BWD', 'POP_JUMP_BACKWARD_IF_TRUE'), (1056, 'BWD', 'POP_JUMP_BACKWARD_IF_FALSE')]
+  @876    n=18   term=POP_JUMP_BACKWARD_IF_TRUE        -> @704    preds=[(704, 'BWD', 'POP_JUMP_BACKWARD_IF_TRUE')]
+  @1034   n=4    term=POP_JUMP_FORWARD_IF_FALSE        -> @1212   preds=[(876, 'BWD', 'POP_JUMP_BACKWARD_IF_TRUE')]
+  @1056   n=15   term=POP_JUMP_BACKWARD_IF_FALSE       -> @704    preds=[(1034, 'FWD', 'POP_JUMP_FORWARD_IF_FALSE')]
+  @1210   n=1    term=JUMP_FORWARD                     -> @1214   preds=[(1056, 'BWD', 'POP_JUMP_BACKWARD_IF_FALSE')]
+
+=== [3] regions that own any block start in [704,1210] ===
+total regions incl children=70
+
+  block @704 owned by 9 region(s):
+     LoopRegion entry=232 type=RegionType.WHILE_LOOP
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+     IfRegion entry=544 type=RegionType.IF_THEN
+     LoopRegion entry=232 type=RegionType.WHILE_LOOP
+     LoopRegion entry=232 type=RegionType.WHILE_LOOP
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+     IfRegion entry=544 type=RegionType.IF_THEN
+     IfRegion entry=544 type=RegionType.IF_THEN
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+
+  block @876 owned by 9 region(s):
+     LoopRegion entry=232 type=RegionType.WHILE_LOOP
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+     IfRegion entry=544 type=RegionType.IF_THEN
+     LoopRegion entry=232 type=RegionType.WHILE_LOOP
+     LoopRegion entry=232 type=RegionType.WHILE_LOOP
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+     IfRegion entry=544 type=RegionType.IF_THEN
+     IfRegion entry=544 type=RegionType.IF_THEN
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+
+  block @1034 owned by 12 region(s):
+     LoopRegion entry=232 type=RegionType.WHILE_LOOP
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+     IfRegion entry=544 type=RegionType.IF_THEN
+     IfRegion entry=1034 type=RegionType.IF_THEN
+     LoopRegion entry=232 type=RegionType.WHILE_LOOP
+     LoopRegion entry=232 type=RegionType.WHILE_LOOP
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+     IfRegion entry=544 type=RegionType.IF_THEN
+     IfRegion entry=1034 type=RegionType.IF_THEN
+     IfRegion entry=1034 type=RegionType.IF_THEN
+     IfRegion entry=544 type=RegionType.IF_THEN
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+
+  block @1056 owned by 9 region(s):
+     LoopRegion entry=232 type=RegionType.WHILE_LOOP
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+     IfRegion entry=544 type=RegionType.IF_THEN
+     LoopRegion entry=232 type=RegionType.WHILE_LOOP
+     LoopRegion entry=232 type=RegionType.WHILE_LOOP
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+     IfRegion entry=544 type=RegionType.IF_THEN
+     IfRegion entry=544 type=RegionType.IF_THEN
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+
+  block @1210 owned by 7 region(s):
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+     IfRegion entry=544 type=RegionType.IF_THEN
+     LoopRegion entry=232 type=RegionType.WHILE_LOOP
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+     IfRegion entry=544 type=RegionType.IF_THEN
+     IfRegion entry=544 type=RegionType.IF_THEN
+     IfRegion entry=522 type=RegionType.IF_THEN_ELSE
+
+=== [4] every LOOP region (whole unit) ===
+
+  LOOP entry=@1890
+     LoopRegionentry=@1890
+     header=@2072 cond=@1890 merge=@None
+     back_edge_block=@2844 back_edge_blocks=[2844]
+     cond_chain=[2026]
+     body=[2072, 2090, 2114, 2136, 2168, 2192, 2198, 2200, 2206, 2208, 2214, 2374, 2378, 2382, 2492, 2540, 2580, 2628, 2668, 2844, 2884]
+     WithRegionentry=@2072
+     IfRegionentry=@2090
+       BoolOpRegionentry=@2090
+     IfRegionentry=@2214
+     IfRegionentry=@2378
+     IfRegionentry=@2492
+     IfRegionentry=@2580
+     IfRegionentry=@2668
+
+  LOOP entry=@232
+     LoopRegionentry=@232
+     header=@704 cond=@232 merge=@None
+     back_edge_block=@704 back_edge_blocks=[704]
+     cond_chain=[232, 364, 522, 544, 1214, 1890, 2026]
+     body=[704, 876, 1034, 1056, 1212]
+     has_break=True break_blocks=[2064, 2066, 2168]
+     IfRegionentry=@522
+       else_blocks=[702]
+     IfRegionentry=@544
+     IfRegionentry=@1034
+     IfRegionentry=@1214
+       BoolOpRegionentry=@1214
+     IfRegionentry=@1388
+       BoolOpRegionentry=@1388
+     IfRegionentry=@1638
+     IfRegionentry=@1770
+       else_blocks=[1876]
+
+  LOOP entry=@232
+     LoopRegionentry=@232
+     header=@232 cond=@None merge=@None
+     back_edge_block=@2886 back_edge_blocks=[2886]
+     is_while_true=True
+     body=[230, 232, 364, 522, 544, 700, 702, 704, 876, 1034, 1056, 1210, 1212, 1214, 1370, 1388, 1502, 1524, 1638, 1770, 1872, 1876, 1890, 2026, 2064, 2066, 2072, 2090, 2114, 2136, 2168, 2192, 2198, 2200, 2206, 2208, 2214, 2374, 2378, 2382, 2492, 2540, 2580, 2628, 2668, 2844, 2882, 2884, 2886]
+     has_break=True break_blocks=[1872]
+     LoopRegionentry=@232
+       header=@704 cond=@232 merge=@None
+       back_edge_block=@704 back_edge_blocks=[704]
+       cond_chain=[232, 364, 522, 544, 1214, 1890, 2026]
+       body=[704, 876, 1034, 1056, 1212]
+       has_break=True break_blocks=[2064, 2066, 2168]
+       IfRegionentry=@522
+         else_blocks=[702]
+       IfRegionentry=@544
+       IfRegionentry=@1034
+       IfRegionentry=@1214
+         BoolOpRegionentry=@1214
+       IfRegionentry=@1388
+         BoolOpRegionentry=@1388
+       IfRegionentry=@1638
+       IfRegionentry=@1770
+         else_blocks=[1876]
+     LoopRegionentry=@1890
+       header=@2072 cond=@1890 merge=@None
+       back_edge_block=@2844 back_edge_blocks=[2844]
+       cond_chain=[2026]
+       body=[2072, 2090, 2114, 2136, 2168, 2192, 2198, 2200, 2206, 2208, 2214, 2374, 2378, 2382, 2492, 2540, 2580, 2628, 2668, 2844, 2884]
+       WithRegionentry=@2072
+       IfRegionentry=@2090
+         BoolOpRegionentry=@2090
+       IfRegionentry=@2214
+       IfRegionentry=@2378
+       IfRegionentry=@2492
+       IfRegionentry=@2580
+       IfRegionentry=@2668
+
+  LOOP entry=@232
+     LoopRegionentry=@232
+     header=@704 cond=@232 merge=@None
+     back_edge_block=@704 back_edge_blocks=[704]
+     cond_chain=[232, 364, 522, 544, 1214, 1890, 2026]
+     body=[704, 876, 1034, 1056, 1212]
+     has_break=True break_blocks=[2064, 2066, 2168]
+     IfRegionentry=@522
+       else_blocks=[702]
+     IfRegionentry=@544
+     IfRegionentry=@1034
+     IfRegionentry=@1214
+       BoolOpRegionentry=@1214
+     IfRegionentry=@1388
+       BoolOpRegionentry=@1388
+     IfRegionentry=@1638
+     IfRegionentry=@1770
+       else_blocks=[1876]
+
+  LOOP entry=@1890
+     LoopRegionentry=@1890
+     header=@2072 cond=@1890 merge=@None
+     back_edge_block=@2844 back_edge_blocks=[2844]
+     cond_chain=[2026]
+     body=[2072, 2090, 2114, 2136, 2168, 2192, 2198, 2200, 2206, 2208, 2214, 2374, 2378, 2382, 2492, 2540, 2580, 2628, 2668, 2844, 2884]
+     WithRegionentry=@2072
+     IfRegionentry=@2090
+       BoolOpRegionentry=@2090
+     IfRegionentry=@2214
+     IfRegionentry=@2378
+     IfRegionentry=@2492
+     IfRegionentry=@2580
+     IfRegionentry=@2668
