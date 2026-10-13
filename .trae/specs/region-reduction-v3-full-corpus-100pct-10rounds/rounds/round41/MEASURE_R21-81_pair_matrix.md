@@ -255,3 +255,21 @@ Still nothing installed. Corpus 6616/6617 (99.9849 percent), 401/402 files, gate
 - r113a is mid-run on ticket R21-88. Its newest at-rest generator bytes a9275cbc1e39b215 score `ours=212`, `instrs=-282`, `back=-1`, `jsites=-33`, 6 hunks, judge 12/13 with zero collateral on broker, klinedata, quote and real_quote. That is the destructive ablation shape r112a already reported (fold plus narrow without the guard), so it is read as an in-flight intermediate, not a verdict, and the verdict belongs to r113a own MEASURE doc.
 - Best arm remains `[R21-86]`: analyzer 996a1b1acf143458 + generator 59a405837c22a4cb, `ours=262`, `instrs=-6`, `back=+0`, `jsites=+2`, 4 hunks, `indeg-equal=False`, judge 12/13, zero collateral, banked and not installed because `instrs=-6` is parity by cancellation (true tail deficit about -26).
 - Corpus unchanged at 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, landed bytes 1471c92eca157e46 plus 566ff5c502276e48 unmoved, repo core/ clean. Objective not achieved.
+
+## Addendum 14 - r109a closes R21-82 as a third independent falsification, and proves the quote and real_quote regressions are not ledger-caused (2026-10-14 04:30)
+
+r109a returned after a long silence with generator 67bdaf1833dfc0f7 (3,875,498 B), built on [R21-81] bytes 8da14b53, extending the emitted-entry ledger from the funnel to all 18 direct _generate_if, _generate_try, _generate_loop, _generate_with, _generate_match callers, recorded post-emission behind a non-empty guard, never at method entry. Idempotent, BOM plus all-CRLF preserved, compile clean, platform restored and re-hashed.
+
+| arm | analyzer | product | instrs | jsites | back | hunks | judge |
+|---|---|---|---|---|---|---|---|
+| R21-82 on F5 | 996a1b1acf143458 | 20628 / 7f3d1796815eb4f5, byte-identical to [R21-81] alone | -77 | -3 | +0 | 4 | 12/13 |
+| R21-82 on [R21-79] | 3ad5ceaa23135334 | 20484 / 74e52412d5875cc0, the known pair | -78 | -3 | +0 | 3 | 12/13 |
+
+Two findings, both negative and both load-bearing:
+
+1. The victim is byte-identical to the arm without the extension, so completing the ledger at the bypass call sites changes nothing. This is the third independent falsification of the ledger-completion hypothesis and it agrees with my own pre-claim arm (-485, 10/13) and post-claim arm (no victim movement, wider collateral) in addenda 1 and 2.
+2. The quote 92 to 89 and real_quote 45 to 42 regressions of [R21-81] persist byte-identically, so they are not caused by missing bypass records at all. The cause is the ledger rule itself, not where it is written. That closes the cheap repair route for the whole [R21-81] family and explains why [R21-86], which is a different rule, is the arm that reached zero collateral.
+
+Panel 20 and the 402 sweep were not run, per the stop rule that an arm failing the direction check owes no sweep. Judge stays 12/13 with indeg-equal False. Banked, not installed.
+
+Campaign best remains [R21-86]: analyzer 996a1b1acf143458 plus generator 59a405837c22a4cb at ours=262, instrs=-6, jsites=+2, back=+0, 4 hunks, 12/13, zero collateral, and understood as parity by cancellation over a tail deficit near -26. Live work is ticket R21-88 (r113a, tail ownership of the 7164 chain). Corpus 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, landed bytes unmoved, repo core/ clean.
