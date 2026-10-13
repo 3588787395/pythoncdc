@@ -83,3 +83,27 @@ Therefore the ticket's decision rule stands and is now sharpened: whoever takes 
 `POP_JUMP_FORWARD_IF_TRUE ->X` and a `POP_JUMP_BACKWARD_IF_TRUE ->X` for the same `X`), and only *then* look for an
 identification-time rule that renders it. If no such text exists, the correct conclusion is that `_sync_worker`
 needs a jump-threading/duplication capability in the emitter, and that is an architecture task, not a criterion.
+
+## Second addendum (me, 2026-10-13 08:22): my "missing duplication capability" claim is UNSUPPORTED, and the shape is corpus-unique
+
+I scanned the whole corpus (all 402 gate rows, every nested code object except each file's module-level object,
+6215 objects) for conditional-jump kinds:
+
+* **217 of those code objects contain `POP_JUMP_BACKWARD_IF_*` and are currently judged Equal** (216 excluding
+  `_sync_worker` itself, which the scan also counts). So the emitter produces backward conditional jumps
+  routinely — my addendum-1 conclusion that this unit needs a *new capability* was wrong, and it is withdrawn.
+  My first pass of this scan also mis-counted "failing: 0": the report stores failures as the whole line
+  `***<module>.TradeLiveBroker._sync_worker: Failure: Different control flow`, so a `endswith('.'+co_name)` test
+  never fires. The two failing units are exactly those two lines, and the gate's own reading stands
+  (6615/6617, 400/402 files).
+* The signature I actually care about — **one target receiving BOTH a forward and a backward conditional jump in the
+  same code object** — occurs in **exactly one unit in the entire corpus: `_sync_worker`** (targets `[704]`,
+  20 forward vs 3 backward conditional jumps). No positive control exists anywhere else.
+
+What that changes for the next hand: the question is no longer "can we duplicate legs?" but "what source construct
+makes CPython thread the *same* test chain twice with one copy entering from the latch?" — because no other unit in
+the corpus needed it, and 216 units already prove backward legs per se are fine. Two concrete probes, both cheap and
+neither a criterion-guess: (i) `compile()` a handful of whole-module variants where the loop test is also evaluated
+once *before* the loop (a pre-test plus `while <re-test>:`), which is the classic way a latch enters mid-chain; and
+(ii) re-read the original's `@700..@1210` region (the `del=61` window) for a second *entry point* into the chain
+rather than a literal duplication — if that region is an entry, the fix is a CFG/ownership matter, not a text matter.
