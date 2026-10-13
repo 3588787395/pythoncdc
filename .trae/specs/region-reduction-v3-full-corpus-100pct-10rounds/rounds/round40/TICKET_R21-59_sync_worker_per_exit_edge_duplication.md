@@ -530,3 +530,8 @@ Why this matters for round 40, and how to use it:
    product - `trade_live_brokerOK.py:848`, inside this very unit (grep of `while …<=…<…:` over all 402 `*OK.py`).
    So there is no green positive control for the shape: nothing else in the corpus proves we can render a duplicated
    `while`-test with a chained compare, which is why GOLD had to be built by hand.
+Reading after installing that battery in my mirror at the correct depth (`D:/Temp/r91m/.trae/.../round14/repro`, so
+`ROOT` resolves to the mirror): r91a's analyzer candidate `241905c2078f0270` leaves the battery at **RED=8/9, byte for
+byte the landed reading** - mounting the chain in `_sync_worker` does not reach any of the eight synthetic shapes. So
+the chain-mount half is not yet a generalization, and a candidate's battery score is now a required column in its
+halves table (baseline to beat: RED=8/9 with `r01_or_cc_return` green).
