@@ -51,3 +51,56 @@ closed axis changed *which region exists* (declaration, filter, collection, memb
 reordered the arms of the existing flat chain by the one structural fact that decides fall-through: **which arm's
 CFG exit is the chain's own end-label block**. That is a successor-comparison predicate over region data, not a
 name/offset/count rule, and it is the next thing to try (ticket R21-60).
+
+## Addendum (2026-10-13 08:34, orchestrator, my own mirror `D:/Temp/r91m`) - independent confirmation: [R21-58] costs a green unit
+
+I installed ONLY the re-anchored generator `db1f0e96072cdcb3` (copied content-addressed from
+`D:/Temp/r88/work/REANCHORED_r2158_db1f0e96072cdcb3.py`, sha16 re-verified after copy) over the landed analyzer
+`842e2748bcdfeb66` in a fresh mirror, regenerated the two files r88a's 402-product sweep flagged as CHANGED, and
+judged both with `scripts/pyc_verify.py single --source`:
+
+| file | product | units | verdict |
+|---|---|---|---|
+| `plugin_system_risk_calculation/function.pyc` | HEAD (landed bytes) | 15/15 `status=success` | green control |
+| `plugin_system_risk_calculation/function.pyc` | re-anchored `db1f0e96072cdcb3` | **14/15 `status=failure`** | `create_daily_stats: Failure: Different control flow` |
+| `plugin_system_event_source/realtime_event_source.pyc` | re-anchored `db1f0e96072cdcb3` | 12/13, clock_worker `len orig=1424 prod=1426 delta=2 hunks=2 landings=7` | unchanged best-known (still not Equal) |
+
+Provenance cross-check: my regenerated product is 29815 bytes on disk = 29355 CR-stripped, exactly r88a's
+`swept=29355B`, so his sweep and my run are the same candidate.
+
+**What is lost** (`unit_diff` on `create_daily_stats`: `del=32 ins=0` over `@196..@336`): the three assignments and
+the loop-exiting `break` that follow a nested `if/else` inside a `for ... else:` body are not emitted at all -
+
+```python
+for account in ('STOCK_account', ...):
+    if account in daily_result:
+        if is_csv:  daily_dts = [...]
+        else:       daily_dts = [local_to_utc(...)]
+        period_close = daily_result[account]['date'].strftime('%Y-%m-%dT07:00:00.000Z')   # DROPPED
+        period_label = daily_result[account]['date'].strftime('%Y-%m')                   # DROPPED
+        period_open  = daily_result[account]['date'].strftime('%Y-%m-%dT01:31:00.000Z')   # DROPPED
+        break                                                                            # DROPPED
+else:
+    daily_dts = None
+```
+
+so the emitted product ends the `if account in daily_result:` body at the `if is_csv/else` region, and the
+`for/else` header test compiles to `JUMP_BACKWARD` instead of `JUMP_FORWARD` (`orig[34..35]` vs `prod[34..35]`).
+The damage is not only the deleted statements: because the locals are never assigned, three later reads flip
+`LOAD_FAST period_close` -> `LOAD_GLOBAL period_close` (`@680`, `@684`, `@688`) - the drop silently changes scope.
+
+**Consequence for round 40, in force now:**
+1. The re-anchored chain is NOT a safe platform. Any clock_worker candidate built on `db1f0e96072cdcb3` (R21-60,
+   r89a) must also be measured against `function.pyc`, and installing it would read `文件级回退=1` at the gate -
+   the gate-39 `replace_utils` pattern repeated. My earlier "chain base is inert" certification is WITHDRAWN: I
+   judged broker, replace_utils and quote only, not the corpus. The 402-product CR-stripped sweep is what caught
+   it, which is exactly why it is now mandatory.
+2. The narrowing question is shape-shaped, not name-shaped: when a statement sequence follows a nested if/else
+   region that is itself the last statement of an enclosing conditional arm, and the enclosing container is a
+   `for ... else` whose `else` is reached by the loop's natural exit, [R21-58] currently claims those following
+   statements to the else/merge side and emits nothing for them. A correct identification-time rule keeps them in
+   the arm's own block sequence; the discriminator available at that point is block data (which arm falls through
+   into which block, and that the to-be-dropped blocks carry STORE_* and a BREAK-style terminator).
+3. Banked value: this shape (`for/else` + trailing statements after a nested if/else + `break`) is a positive
+   red for any future [R21-58]-style relaxation and belongs in the repro battery - 32 instructions, 4 statements,
+   plus a scope change. An easy-to-watch red.
