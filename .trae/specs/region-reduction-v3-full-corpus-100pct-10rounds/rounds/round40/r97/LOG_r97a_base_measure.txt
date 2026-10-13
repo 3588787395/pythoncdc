@@ -1,0 +1,7 @@
+product size=21548
+JUDGE| ***<module>.RealtimeEventSource.clock_worker: Failure: Different control flow
+JUDGE| [single] status=failure units=12/13 success_rate=92.31%
+UNITDIFF| len orig=1424 prod=1426 delta=2
+UNITDIFF| hunks=2 landings=7 judge_diff=True
+ALLWIN| len orig=1424 prod=1426 delta=2
+ALLWIN| hunks=2

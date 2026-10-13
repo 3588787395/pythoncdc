@@ -1,0 +1,27 @@
+files=402 units=6617  P(all-cond-shares-S): EVAL=188 FIRE=188 files=61   P2(forward-leg only): EVAL=45 FIRE=45 files=25  errors=0
+--- P2 fired files ---
+  FILE site-packages/IQCommon/api/klinedata.pyc                                 fires=4
+  FILE site-packages/IQCommon/profiler_func.pyc                                 fires=2
+  FILE site-packages/IQCommon/strategy/jq_trans_module.pyc                      fires=2
+  FILE site-packages/IQCommon/util/replace_utils.pyc                            fires=1
+  FILE site-packages/IQCommon/util/trade_info_utils.pyc                         fires=3
+  FILE site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc fires=2
+  FILE site-packages/IQData/utils/profiler_func.pyc                             fires=1
+  FILE site-packages/IQEngine/api/api_base.pyc                                  fires=1
+  FILE site-packages/IQEngine/core/bar.pyc                                      fires=1
+  FILE site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc fires=1
+  FILE site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc         fires=2
+  FILE site-packages/IQEngine/plugins/plugin_system_risk_control/time_validator.pyc fires=1
+  FILE site-packages/IQEngine/plugins/plugin_system_trade/function.pyc          fires=1
+  FILE site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc fires=4
+  FILE site-packages/IQEngine/utils/profiler_func.pyc                           fires=2
+  FILE site-packages/fly/common/custom_tools.pyc                                fires=2
+  FILE site-packages/fly/common/flytools.pyc                                    fires=1
+  FILE site-packages/fly/common/market_time.pyc                                 fires=5
+  FILE site-packages/fly/data/quotation.pyc                                     fires=1
+  FILE site-packages/fly/data/quote.pyc                                         fires=1
+  FILE site-packages/fly/data/quote_handler.pyc                                 fires=1
+  FILE site-packages/fly/dumpload/load_daily.pyc                                fires=1
+  FILE site-packages/fly/simtradding/flyAccount.pyc                             fires=3
+  FILE site-packages/fly/simtradding/ptradeAccount.pyc                          fires=1
+  FILE site-packages/fly/simtradding/ptradeFutureAccount.pyc                    fires=1
