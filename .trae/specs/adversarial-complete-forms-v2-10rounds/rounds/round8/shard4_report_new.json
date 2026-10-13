@@ -1,13 +1,13 @@
 {
- "elapsed_sec": 13.9,
+ "elapsed_sec": 15.6,
  "files_by_status": {
   "compile_error": 0,
   "error": 0,
-  "failure": 6,
-  "success": 45
+  "failure": 5,
+  "success": 46
  },
  "files_total": 51,
- "generated_at": "2026-10-13T19:23:22",
+ "generated_at": "2026-10-14T03:58:12",
  "interpreter": "3.11.7",
  "paths_by_status": {
   "compile_error": [],
@@ -17,8 +17,7 @@
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
-   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
-   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc"
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc"
   ],
   "success": [
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/execution_context.pyc",
@@ -62,6 +61,7 @@
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/__init__.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/bar.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/__init__.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/get_stock_status.pyc",
    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/open_platform.pyc",
@@ -635,16 +635,14 @@
   },
   {
    "detail": null,
-   "failures": [
-    "***<module>.PositionDict.__init__.<dictcomp>: Failure: Different bytecode"
-   ],
+   "failures": [],
    "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc",
    "pyc_sha": "b87e249e9157",
    "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/financeOK.py",
-   "source_sha": "463caf6f99cc",
-   "status": "failure",
-   "success_rate": 0.9924242424242424,
-   "units_success": 131,
+   "source_sha": "9313c65da754",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 132,
    "units_total": 132
   },
   {
@@ -701,7 +699,7 @@
   "compare_pyc_sha256": "9c7567bd6776b36b",
   "ruler_version": "pylingual-equivalence_check"
  },
- "success_rate": 0.9906432748538012,
- "units_success": 847,
+ "success_rate": 0.991812865497076,
+ "units_success": 848,
  "units_total": 855
 }
