@@ -156,3 +156,22 @@ r110a delivered `rounds/round41/r110/MEASURE_R21-84_walk_position.md` (206 lines
 I tested that sixth site immediately on the R21-79 analyzer arm: neutering only `:26911` (variant `924604fc9cb25317`, 3,869,890 B, BOM intact, zero bare LF, zero CR CR LF, compile clean, platform restored and re-hashed in the same command) leaves the victim at 20078 B, `instrs=-115`, `jsites=-9`, 4 hunks, `12/13` - byte-identical to the un-neutered analyzer-only arm - while **broker (179758 vs 178823) and klinedata (103412) both change**. So claim membership is now excluded a seventh time, and with r110a section 1 in hand the reason is clear: the guard is not the suppressor, the missing list membership is.
 
 Retarget recorded: the fix belongs in the analyzer arm-list assembly for `IfRegion@7604` else-arm (r110a section 6 phrases the requirement as (a) a branch may claim only blocks it renders and (b) residual `else_blocks` members with offset below the first grafted `elif_final_else` member - the 14 blocks, 112 instructions - must be reachable), which is ticket **R21-86** dispatched to r111a. Best-known arm is still `[R21-79]`+`[R21-81]` at `instrs=-78`, `jsites=-3`, `back=+0`, 3 hunks, `12/13`, with quote and real_quote regressions that an analyzer-side assembly fix must not be asked to mask.
+## Addendum 8 - CONFIRMED: the suppressor is the conjunction of two claim sites, and un-marking both recovers 108 of the 112 instructions (2026-10-14 01:55)
+
+r110a final report: 0 OUT flips out of 157 at `_generate_try_body:30068`, so that discard is a set operation, not a transition, and the run was never freed - my addendum 4 wording is superseded by addendum 7. Its un-claim experiment predicted that the suppressor is the pair. I tested it within minutes, all arms paired with analyzer `3ad5ceaa` (`[R21-79]`) in `D:/Temp/r91m`, platform restored and re-hashed every time:
+
+| generator arm | victim | instrs | jsites | back | hunks | judge | collateral vs committed |
+|---|---|---|---|---|---|---|---|
+| neuter the five in-method claims only | 20078 / 241 lines | -115 | -9 | +0 | 4 | 12/13 | none |
+| neuter `:26911` only (`924604fc`) | 20078 / 241 | -115 | -9 | +0 | 4 | 12/13 | broker, klinedata CHANGED |
+| **neuter `:22505` AND `:26911` (`71c6863e`)** | **21588 / 262 lines** | **-7** | **+2** | **+0** | 5 | 12/13 | broker 179758, klinedata 103412 CHANGED |
+| the pair plus four more in-method claims (`413c6130`)** | 21588 / 262 | -7 | +2 | +0 | 5 | 12/13 | same two files |
+
+The claim pair is the suppressor: neither site alone changes the victim, and both together move the instruction gap from -115 to **-7**, the first time this campaign has recovered essentially the whole dropped run. Two problems remain, both measured, and both are why nothing is installed:
+
+1. **Over-emission**: the unit is now 262 lines against the oracle 254 and `jsites` has flipped sign from -9 to **+2**, so part of the run prints twice. The two claim sites are what prevent the second print, so a blunt un-mark trades a drop for a duplicate.
+2. **Collateral**: `trade_live_broker` and `klinedata` products both change, expected because `:22502-22505` sits in the gate-29 or-chain branch and is not victim-unique.
+
+The rule therefore has to be render-scoped rather than removal-scoped: each claim may mark only the blocks the branch actually rendered - which for `IfRegion@7604` is the 8-block grafted `elif_final_else` arm (r110a measured zero of the 14 run targets inside it) - and every other member of `then_blocks` / `else_blocks` must stay unclaimed for the owning parent sequence. That is ticket **R21-86**, dispatched to r111a with this table as its baseline to narrow, the design constraints (region data only, no offsets, no thresholds), and the acceptance order: `instrs` and `jsites` to 0 from below without overshoot, then the 10-file collateral table with broker back at 178823 and klinedata unmoved, then the 20-file panel, then the ROOT-joined 402 sweep, then the judge.
+
+Both measured generator variants are banked at `rounds/round41/r111/` together with `build_and_measure_claim_pair.py`, which rebuilds and re-scores them from the landed bytes. Corpus still 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, repo `core/` at landed bytes.
