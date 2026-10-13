@@ -27,3 +27,23 @@ open and must be separated before another dispatch:
 Cheap discriminator for the next hand, no pipeline needed: compile each variant and diff the **block/edge census**
 (predecessors and landings per block, jump targets included) against the original code object's census for that
 region - not the text. Reading 2 is confirmed when no shape reproduces the original's jumper/label structure.
+
+## Census discriminator already run (14:51) - varC is ONE structural fact away, so reading 1 is live
+
+Comparing `dis` edge censuses (jump targets kept, unlike the text tools):
+
+| source | instrs | back-edges | fwd-edges | blocks with >=2 preds | top in-edge counts |
+|---|---|---|---|---|---|
+| **ORIGINAL pyc** `clock_worker` | **1442** | **4** | **119** | **15** | 6 -> @9194, 5 -> @4984, **4 -> @9144**, 3 -> @7164, 3 -> @6280, 2 -> @8588 |
+| `GOLD_realtime_event_source_PROOF` | 1443 | 4 | 121 | 11 | 10 -> @9066, 5, 5, 3, 3, 2 |
+| `GOLD_varA_holiday` | 1459 | 4 | 122 | 11 | 10 -> @9166, … |
+| `GOLD_varB` | 1440 | 5 | 121 | 12 | 10 -> @9166, … |
+| **`GOLD_varC`** | **1442** | **5** | **120** | **14** | 7 -> @9198, 5, 5, 3, 3, 2 -> @9148 |
+
+`GOLD_varC` already matches the original's **instruction count exactly (1442)** and is off by one back-edge
+(5 vs 4), one forward-edge (120 vs 119) and one multi-predecessor block (14 vs 15), while its loop re-entry has 7
+incoming jumps where the original has 6 and the original's loop tail `@9144` has 4 predecessors, which no variant
+reproduces. So the target is **not** hopeless: the remaining gap is a single, nameable structural fact —
+*thread one of the arms' exits so the re-entry label loses one jumper and the loop-tail label `@9144` gains the
+predecessors the original has, without adding a backward edge*. That is a shape question with a countable answer,
+not a text question, and it is the criterion the next candidate must be scored on before spending a judge run.
