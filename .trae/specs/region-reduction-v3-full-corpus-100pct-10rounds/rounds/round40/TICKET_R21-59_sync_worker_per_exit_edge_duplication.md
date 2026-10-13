@@ -365,3 +365,35 @@ backward-jumping blocks' fall-through/exit edges all converge on the region's de
 nested loops or body statements. Controls to reproduce before implementing: `while (a or b) and c:` (which puts its
 legs forward at the bottom and yields only ONE backward edge) must NOT be collected as a 3-leg or-chain, so the
 polarity mix of the backward edges is part of the criterion, not an afterthought.
+## Ninth addendum (2026-10-13 09:34, orchestrator) - the GOLD diff decomposed into FOUR independent emission differences
+
+I regenerated broker with r91a's analyzer `241905c2078f0270` over the **landed** generator `b4363f5858e58074`
+(`D:/Temp/r91m/out/broker_A62a_LANDEDGEN.py`; judge still `127/128`, my rig 5 windows) and diffed its
+`_sync_worker` text against `r91/broker_GOLD_PROOF.py` (128/128). Product 50 lines vs GOLD 45. The remaining gap is
+not one rule; it is four separable things, and any hand should treat them as a checklist:
+
+1. **Two legs short in the mounted condition.** Product:
+   `while int(..) < pre_before_trading or int(..) >= int(post_after_trading):`
+   GOLD: the same chain extended with `or holiday_sync_account == '0' and not is_trading_date(..)`.
+   So the analyzer now mounts 4 legs but `_loop_generate_while` prints only the first two - r91a measured
+   `bfw=[232,364]` with `IfRegion@522/@544` still siblings.
+2. **The latch copy still printed as body statements.** Inside the product's body:
+   `if holiday_sync_account == '0': continue` / a bare `is_trading_date(...)` call / `continue` - which GOLD has
+   absorbed into the condition. This is the second half of the same duplicated-test fact; without it the chain
+   would print twice.
+3. **A flattened `and`-chain that GOLD renders as nesting.** Product:
+   `if is_trading_date(..) and self.reconnect_flag is False and (..first_run_date.. or ..) and int(..) >= 900:`
+   with `break`; GOLD: four nested `if`s with `return` at the same place. Same end label law as §3 of the round
+   record (`if A and B and (C or D) and E:` at the loop tail is a *different* CFG from nested ifs when the original's
+   arms exit to different labels).
+4. **A mis-absorbed assignment.** Product prints a bare `sync_data_flag = 1` where GOLD prints
+   `time_difference = abs((now - self.sync_account_time).total_seconds())` + `if time_difference > sync_max_time:`
+   `sync_data_flag = 1`, and the product also keeps a trailing `if not pre <= int(..) < int(post): continue` +
+   `time_difference = ..` pair that GOLD does not have. Item 4 is the chained-compare latch of the *second* loop
+   (r91a's `if not <chain>: continue`, blocked by `_has_only_compare` rejecting `CALL`-bearing operands while the
+   prefix is a `POP_TOP` expression statement so the store-extractor never fires).
+
+Reading for the round: `_sync_worker` needs items 1+2 as a pair to move at all (they are one mechanism seen twice),
+items 3 and 4 are independent of that pair, and **all four must close for the judge to say Equal** because GOLD
+already proves the whole text is required for 128/128. Order of cost: 1+2 are the duplicated-test rule, 4 is the
+`_has_only_compare` conjunct, 3 is the flat-vs-nested `and`-chain choice (the most-explored family in this campaign).
