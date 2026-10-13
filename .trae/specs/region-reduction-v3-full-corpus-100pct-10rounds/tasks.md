@@ -2251,3 +2251,10 @@ positive-controlled (`_process_order` and `_process_cancel_order` both read `win
 `git archive` extraction fails on deep `.trae` paths, so scope it to `site-packages`; and a push loop that greps the
 log for a pattern starting with `-` cannot fail, so verify pushes with
 `git rev-list --count origin/rr-v3r01-f557fd..HEAD == 0`.
+
+## 64. Round 40 sealing state at 10:31: no flip, every half banked and re-measured, gate label 40 deliberately unconsumed (2026-10-13)
+
+Landed bytes unchanged (`b4363f5858e58074` / `842e2748bcdfeb66`); corpus **6615/6617 (99.9698 %)**, **400/402 files**,
+residual 2 files / 2 units; `core/` and `*OK.py` both clean; 12 commits pushed (verified by `rev-list --count
+origin/rr-v3r01-f557fd..HEAD == 0`). Full numbers, tables and my own corrections live in
+`rounds/round40/ADJUDICATION_ROUND40.md` sections 1-7 and `rounds/round40/TICKET_R21-59_*.md` addenda 6-16.

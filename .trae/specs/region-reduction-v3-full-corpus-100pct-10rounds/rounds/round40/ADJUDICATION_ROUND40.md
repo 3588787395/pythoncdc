@@ -138,3 +138,23 @@ enclosing loop is `two_owner` for the inner loop, not unowned.
 Engineers r93a (analyzer: generalize the while-condition chain assembly per `r90a` §8) and r94a (generator: consume the
 mounted chain and drop the latch copy, target = GOLD) are running. Nothing has been installed this round; `git status
 --porcelain -- core/` = 0 lines and no `*OK.py` is dirty.
+## 7. State at 2026-10-13 10:31 (sealing time; roster: sections 1-7 above, all numbers measured by me or re-measured by me)
+
+Nothing installed this round: landed bytes still generator `b4363f5858e58074` + analyzer `842e2748bcdfeb66`,
+corpus still **6615/6617 (99.9698 %)**, **400/402 files**, residual **2 files / 2 units**, **gate label 40
+unconsumed** (correct under the standing rule that a zero-flip candidate does not consume the label).
+`git status --porcelain -- core/` = 0 lines and `-- site-packages/ | grep OK.py` = 0 lines.
+
+Banked this round, each with my own re-measurement: `[R21-63] 675ec7afa414bbb5` (chain collateral removed, zero
+flips), `R21-64` analyzer `1471c92eca157e46` (loop-1 fold byte-identical to GOLD, windows 9->6, P fires 1/173,
+402-product sweep `CHANGED={trade_live_broker}`), `R21-62` analyzer `241905c2078f0270` (superseded by R21-64 - and my
+two attempts to union them failed `merge_hunks.py`'s faithfulness proof in both orders), `R21-60` falsified by census,
+`R21-59` addenda 6-16 (the duplication law, GOLD at 128/128, the three-mechanism decomposition, loop 2's P-negative
+edge set), `R21-68` clock_worker diagnosis (predicate C = 1 unique region in 1 file; the flip blocked at site 2).
+
+What a flip still requires, stated as the round's honest remaining distance: `_sync_worker` needs loop 2's sibling
+predicate (single-comparison loop test: unconditional forward entry + conditional backward latch), the removal of the
+folded condition's leftover operand statement, and the reconnect arm's `RETURN_VALUE` (`@1874`) rendered as a return
+rather than a loop exit - three separable halves, two of them still running as r95a/r98a/r96a. `clock_worker` needs
+predicate C's identification fix *and* a way to isolate site 2 that does not join the -269 over-fire class. Neither
+unit is expressible as a one-rule flip, which is why round 40 banks rather than lands.
