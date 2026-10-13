@@ -396,3 +396,20 @@ site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py:1592
 | realtime_event_source `clock_worker` | −113/7（基 3d4f27de6d80ab6e → −3/8） | 内容已复原但错位约 1k 偏移 | r63a |
 | realtime_event_source `clock_worker` | 12/13（** landed 基 1471c92eca157e46 + 566ff5c502276e48 **，gate 40 之后） | 落基实测：原 `@7972..@8586` = 源 498–524 一整块 **112 条指令被整块丢弃**（`if persist_flag is False:` 守卫 + `set_trade_stop_status` + 获取交易持久化对象超时，系统退出 + `event_queue.put((dt, SYSTEM_EXIT))` + `return` + `before_trading_date = now_date` + `try/except AttributeError` 归一 + `if =='0'/elif broker_persist is not None` 级联），各臂统一出口到回边/merge `@9194` 故无逐语句标号；Decompyle++ 亦丢同块 ⇒ 难区，非镜像伪影。**与 #13 早期登记「`if persist_flag is not False:` 110 条体被跳」同源**；此前 −3/8 与 +2/7 landings 读数均属 banked 基 675ec7af，勿再据此评分 | r103a / R21-76 |
 
+
+## 2026-10-14 register rows for the arms measured this session (gate 41 unconsumed, all banked, nothing installed)
+
+Scoring basis: every reading below comes from `rounds/round41/oracle_diff_r104.py` on a product regenerated in `D:/Temp/r91m`, with the mirror platform restored and re-hashed after each arm (`996a1b1acf143458` / `566ff5c502276e48`). Fields are ours (oracle unit body is 254 lines), `instrs`, `back`, `jsites`, `hunks_vs_ORACLE`, judge. The historical `-3/8` and `-113/7` rows in this file are superseded by these; do not score against them.
+
+| unit | platform (analyzer + generator) | ours | instrs | back | jsites | hunks | judge | conclusion |
+|---|---|---|---|---|---|---|---|---|
+| realtime_event_source `clock_worker` | 1471c92eca157e46 + 566ff5c502276e48 (landed, post gate 40) | 241 | -114 | +0 | -9 | 4 | 12/13 | the dropped block `@7972..@8586` (source 498-524) |
+| same unit | 996a1b1acf143458 + 566ff5c502276e48 (banked F5) | 241 | -114 | +0 | -9 | 4 | 12/13 | F5 fixes the wrapper semantics, drop unchanged |
+| same unit | 3ad5ceaa23135334 + 566ff5c502276e48 (`[R21-79]`) | 241 | -115 | +0 | -9 | 4 | 12/13 | arm release correct and collateral-free, zero flip, banked |
+| same unit | 996a1b1acf143458 + 8da14b53a94e07c3 (`[R21-81]`) | 248 | -77 | +0 | -3 | 4 | 12/13 | first positive movement, but quote 89/92 and real_quote 42/45 regress |
+| same unit | 3ad5ceaa + 8da14b53 (pair) | 248 | -78 | +0 | -3 | 3 | 12/13 | first sub-4-hunk reading, collateral unchanged from the ledger half |
+| same unit | 996a1b1acf143458 + **59a405837c22a4cb (`[R21-86]`, current best baseline)** | **262** | **-6** | **+0** | **+2** | **4** | **12/13** | best-known arm: panel 20 zero regression, ROOT-joined 402 sweep `CHANGED={realtime_event_source}`, zero collateral; banked because it does not flip |
+
+Pairing `[R21-86]` with the `[R21-79]` analyzer half is measurably worse (`instrs=-7`, 5 hunks), so the co-requisite of `[R21-86]` is the F5 analyzer `996a1b1acf143458`, not `3ad5ceaa23135334`.
+
+Remaining scoring criterion for the last unit: `ours` must converge from 262 down to 254 (the excess is 8 lines of misplaced step-3 and step-4 short-circuit or-chain scaffolding), `jsites` from `+2` back to `0`, and the judge must read `13/13`. `indeg-equal` is still `False` on the best arm, so oracle text parity alone would not be sufficient — the judge remains the criterion.
