@@ -2258,3 +2258,12 @@ Landed bytes unchanged (`b4363f5858e58074` / `842e2748bcdfeb66`); corpus **6615/
 residual 2 files / 2 units; `core/` and `*OK.py` both clean; 12 commits pushed (verified by `rev-list --count
 origin/rr-v3r01-f557fd..HEAD == 0`). Full numbers, tables and my own corrections live in
 `rounds/round40/ADJUDICATION_ROUND40.md` sections 1-7 and `rounds/round40/TICKET_R21-59_*.md` addenda 6-16.
+
+## 65. Round 40 CLOSED WITH A LANDING (2026-10-13)
+
+- gate 40 consumed: units 6615 -> 6616/6617 (99.9849%), files 400 -> 401, 文件级回退=0 UNIT_REGRESSIONS=0 新增失败单元=0 翻正单元=1
+- landed: analyzer `1471c92eca157e46` [R21-64] + generator `566ff5c502276e48` [R21-74]; `trade_live_broker.pyc` 127/128 -> 128/128 (whole file green)
+- verified by me before install: fast gate 128/128 + windows 4 + panel unchanged; my own 402 sweep MISSING/FAIL=0 CHANGED=1={trade_live_broker}
+- residual 1 file / 1 unit (`realtime_event_source.clock_worker` 12/13); next gate label 41 vs `rounds/round40/after`
+- banked this round, none installed: `9ba2d8afe9e96fc1` (terminator half), `675ec7afa414bbb5`, my guard variants `bd57b0f6e2d81b25`/`6660f3a5f9c2dc81`, `c93e8994893ee530` (predicate C, measured negative)
+- axes closed by census: R21-60 arm ordering, chained-compare in the loop condition, per-exit-edge duplication, sibling-eviction for ordering

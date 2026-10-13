@@ -324,3 +324,46 @@ never a zero-hunk GOLD diff.
 Round 40 closes sealed: **6615/6617 units (99.9698 %), 400/402 files, residual 2 files / 2 units**
 (`realtime_event_source.clock_worker` 12/13, `trade_live_broker._sync_worker`), gate label 40 unconsumed because
 no candidate measured a flip. `core/` clean at the landed bytes `842e2748bcdfeb66` / `b4363f5858e58074`.
+
+
+## 15. GATE 40 LANDED — `[R21-74]` flips `trade_live_broker._sync_worker`, the file goes green, corpus 6616/6617
+
+Installed pair (verified in my own mirror BEFORE installing, and by the gate after):
+`core/cfg/region_analyzer.py = 1471c92eca157e46` + `core/cfg/region_ast_generator.py = 566ff5c502276e48`.
+
+My independent verification, not the engineer's prose: fast gate read `[broker] [single] status=success
+units=128/128 success_rate=100.00%`, `_sync_worker` windows `5 -> 4`, battery `RED=8/9`, and the panel byte-unchanged
+(`realtime 12/13 function 15/15 replace_utils 9/9 quote 92/92 quotation 153/153 order_api 37/37`).
+My own corpus collateral sweep (`r91m/sweep_r102.py`, 402 products regenerated with the pair, CR-stripped against
+the committed files): `files_compared 402, MISSING/FAIL 0, CHANGED_COUNT 1 = {trade_live_broker}`.
+The sweep's first version was **vacuous** — `corpus402.txt` holds repo-relative paths, so with `cwd=mirror` every
+entry read `MISS` and printed `CHANGED_COUNT 0`; caught by inspecting the counts instead of trusting a zero
+([[feedback-artifact-counts-before-conclusions]], [[feedback-deform-test-must-prove-its-own-deform]]).
+
+Gate chain `gate_chain.py 40 39`, all four stages rc=0 (`CHAIN_DONE`):
+regen `ok=402 bad=0` in 453 s; verify 225 s; report; checks 158 s.
+- `[units] 6615/6617 -> 6616/6617 (99.9849%)   [files] 400 -> 401`
+- `[gates] 文件级回退=0  UNIT_REGRESSIONS=0  新增失败单元=0  翻正单元=1`
+- `[quotation] 153/153` · `[small34] units_success=1567 files=33` · `[selfcheck] 153/153, 常量 1/153, 极性 1/153`
+- `[pytest] 2 failed, 282 passed, 2 xpassed` = the standing two failures, zero new.
+
+**What the landed rule actually is** (measured correction to my own brief): `back_edge_stmts` is **empty** at this
+site. Loop 2's `While` is emitted early — at `block@232` — as loop 1's `_r58_collect_break_target_stmts` sequential
+tail; the guard run `@1214..@1876` is then dispatched, handled and appended at the END of `body_stmts`, which is the
+position defect, and the `break` comes from the arm renderer honouring `BlockRole.BREAK` on `@1872`, a zero-successor
+`LOAD_CONST None; RETURN_VALUE` sink that the existing `_break_to_return_map_w` fold cannot see because it only maps
+break blocks having a RETURN-role *successor*. `[R21-74]` records a child-node origin ledger in the collector,
+predicates `_r102_run_before_child` (forward-only exits into a declared child entry + exactly one zero-successor
+RETURN-class sink + no other BREAK-roled block), and at the dispatch site moves the freshly created run nodes to
+their own slot before the child node while reducing the sink's `Break` arm to the sink's `Return`.
+Fire census before editing: panel `fires=1`, corpus `files=402 evals=6617 fires=1`.
+
+Consequences for the campaign record: my brief's `back_edge_stmts` mechanism was wrong and the fix still landed —
+the value was the *oracle text diff plus the two probes*, which pinned the requirement to position + terminator
+without prescribing the path. `rounds/round40/r100m/` keeps the four measurements that bracketed it (my variants
+(a)/(b), r102a v1/v2) including the two negative probes: flat-chain-in-place judges `128/128` (nesting irrelevant),
+`return None -> return` alone still judges `127/128` (position mandatory).
+
+Residual after gate 40: **1 file / 1 unit** — `realtime_event_source.clock_worker` 12/13. `clock_worker` needs the
+predicate-C refusal and a positive declaration of `@7582`/`@9144` as sequential loop-tail statements in ONE candidate
+(§12), because the over-absorbing `elif_final_else` is currently the only reason those blocks are emitted at all.

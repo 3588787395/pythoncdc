@@ -468,6 +468,7 @@ class RegionASTGenerator:
         self._generating_regions: Set[int] = set()
         self._generated_regions: Set[int] = set()
         self._trailing_returns: List[Dict[str, Any]] = []
+        self._r102_child_node_origin: Dict[int, int] = {}
         self._loop_depth: int = 0
         self._current_loop: Optional['LoopRegion'] = None
         self._try_depth: int = 0
@@ -6912,10 +6913,20 @@ AST 映射规则:
                     self.generated_offsets.discard(bb.start_offset)
                     bb_ast = self._generate_region(bb_region)
                     if bb_ast:
+                        _r102_seq_before = len(sequential)
                         if isinstance(bb_ast, list):
                             sequential.extend(bb_ast)
                         else:
                             sequential.append(bb_ast)
+                        # [R21-74] 记录这些节点来自哪个子区域 entry（区域数据），
+                        # 供「顺序 body run 插入自身偏移槽」定位插入点。
+                        _r102_e_off = getattr(getattr(bb_region, 'entry', None), 'start_offset', None)
+                        if _r102_e_off is not None:
+                            for _r102_n in sequential[_r102_seq_before:]:
+                                try:
+                                    self._r102_child_node_origin[id(_r102_n)] = _r102_e_off
+                                except TypeError:
+                                    pass
                     processed.add(bb.start_offset)
                     for b in bb_region.blocks:
                         self.generated_blocks.add(b)
@@ -8115,6 +8126,27 @@ AST 映射规则:
                         self.generated_offsets.add(_ccb.start_offset)
                     self.generated_blocks.add(cond_block)
                     self.generated_offsets.add(cond_block.start_offset)
+                    # [R21-66 闩锁副本身份集] CPython 3.11 把 while 条件求值在回边处
+                    # 逐字复制一份（模板 `while a or b or c:`：入口副本腿前跳 body 首块，
+                    # 闩锁副本腿后跳同一块）。故「本 body 块的尾巴是不是条件副本」只能
+                    # 用**操作码名序列等值**判定：SEG = 本循环自己每一段条件求值
+                    # （condition_block + condition_chain_blocks）去掉噪声指令与末条条件
+                    # 跳转后的 opcode 名序列。EXTENDED_ARG 是跳转距离前缀（噪声），两端
+                    # 一并剔除后比较。纯块内数据，无函数名/文件名/绝对偏移/计数阈值。
+                    _r2166_seg_set = set()
+                    for _r2166_seg_blk in [cond_block] + list(_cc_chain):
+                        _r2166_seg_ins = [i for i in _r2166_seg_blk.instructions
+                                          if i.opname not in (
+                                              'RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                              'EXTENDED_ARG')]
+                        _r2166_seg_last = _r2166_seg_blk.get_last_instruction()
+                        if (_r2166_seg_last is not None
+                                and _r2166_seg_last.opname in CONDITIONAL_JUMP_OPS
+                                and _r2166_seg_ins
+                                and _r2166_seg_ins[-1] is _r2166_seg_last):
+                            _r2166_seg_ins = _r2166_seg_ins[:-1]
+                        if _r2166_seg_ins:
+                            _r2166_seg_set.add(tuple(i.opname for i in _r2166_seg_ins))
                     # 区域归约算法原则 2（每块唯一归属）：CPython 在
                     # 回边处复制 while 条件求值。链式比较回边重检跨两块：header
                     # 尾部（首段 COPY+COMPARE_OP）+ back_edge（末段 COMPARE_OP）。
@@ -8133,19 +8165,78 @@ AST 映射规则:
                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                         _b_non_jmp = [i for i in _b_instrs if i != _b_last]
                         _last_store_idx = -1
+                        # [R21-66 语句边界] STORE_* 与 POP_TOP 都是语句终结符：CPython 会把
+                        # 闩锁副本融合在前一条语句之后，前缀既可能是赋值（`x += 1`），也可能是
+                        # 纯表达式语句（`f()` 以 POP_TOP 丢弃结果）。边界集因此取两者并集。
+                        _r2166_bnd_idx = -1
                         for _si, _i in enumerate(_b_non_jmp):
                             if _i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                                 _last_store_idx = _si
+                                _r2166_bnd_idx = _si
+                            elif _i.opname == 'POP_TOP':
+                                _r2166_bnd_idx = _si
+                        # [R21-66 副本判据] 最后一条语句边界之后的求值尾段，逐字等于本循环
+                        # 条件的一段，才是 CPython 复制的 while 测试。**旧判据「尾部含
+                        # COMPARE_OP」不是副本判据**：`s = e()` 后随 `if s > k:` 的普通语句块
+                        # 同样含 COMPARE_OP，旧代码因此把整块抑制、把 store 追加到循环体末尾、
+                        # 并把该 if 的 then 块降级为无条件语句（实测 _sync_worker 第二循环 @2214
+                        # 尾巴 [LOAD_FAST, LOAD_GLOBAL, COMPARE_OP] != SEG=[16 段, 5 段]）。
+                        _r2166_tail = (_b_non_jmp[_r2166_bnd_idx + 1:]
+                                       if _r2166_bnd_idx >= 0 else [])
+                        _r2166_is_latch_copy = bool(_r2166_tail) and (
+                            tuple(i.opname for i in _r2166_tail
+                                  if i.opname != 'EXTENDED_ARG') in _r2166_seg_set)
+                        # [R21-66 闩锁终点] 副本沿链的终点必须是循环自己：本块后继里出现
+                        # back_edge_block（链的下一段所在块）或 header_block（重入测试块）。
+                        # 前后继关系判据，不看偏移、不看名字。
+                        _r2166_succ = list(_b.successors or [])
+                        _r2166_latch_end = (region.back_edge_block is not None
+                                            and region.back_edge_block in _r2166_succ) \
+                            or (region.header_block is not None
+                                and region.header_block in _r2166_succ)
                         if _last_store_idx >= 0:
                             _post_store = _b_non_jmp[_last_store_idx + 1:]
                             _is_recheck = any(i.opname in ('COPY', 'COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
                                               for i in _post_store)
-                            if _is_recheck:
+                            # [R21-66] 收紧：仅在尾段确为本循环条件副本时提取 store。
+                            # 边界必须是最后一条 STORE（否则前缀里含表达式语句，交给下面
+                            # 的 case A 分支重建），保持旧路径对其原有命中形态逐字节不变。
+                            if _is_recheck and _r2166_is_latch_copy \
+                                    and _r2166_bnd_idx == _last_store_idx:
                                 _store_instrs = _b_non_jmp[:_last_store_idx + 1]
                                 _store_stmt = self._build_store_statement(_store_instrs, block=_b)
                                 if _store_stmt:
                                     _store_stmt.pop('_decorator_block', None)
                                     recheck_store_stmts.append(_store_stmt)
+                                self.generated_blocks.add(_b)
+                                self.generated_offsets.add(_b.start_offset)
+                                continue
+                        # [R21-66 case A] 前缀是 POP_TOP 结束的表达式语句 + 闩锁副本尾段：
+                        # 提取语句为循环体语句（同既有 recheck_store_stmts 通道，位置在该块
+                        # 语句流原位——闩锁块按构造是循环体的最后一条语句块），整块标记已生成，
+                        # 副本本身归约掉（它由 while 条件语义承担，不得再打印）。
+                        # 判据（opcode 类 + 区域数据 + 前后继关系，无名字/偏移/阈值）：
+                        #   (1) 块尾是条件跳转（上方 :8130 已判）；
+                        #   (2) 块内无 STORE，最后语句边界是 POP_TOP（表达式语句）；
+                        #   (3) 边界后的尾段 == SEG 中某段（条件副本身份）；
+                        #   (4) 该块的后继含本循环的 back_edge_block 或 header_block，即副本
+                        #       沿链继续、终点是循环自身（闩锁），不是分支出口；
+                        #   (5) 本块不是循环 header_block（header 的副本尾巴由上面的 store
+                        #       通道处理，此处不接管，避免改动既有已验证形态）。
+                        # 语句重建只走既有三级重建 `_build_store_statement` → `_build_statement`；
+                        # 重建失败则整条规则不生效（不回改、不静默丢语句）。
+                        if (_r2166_is_latch_copy and _last_store_idx < 0
+                                and _r2166_bnd_idx >= 0
+                                and _b_non_jmp[_r2166_bnd_idx].opname == 'POP_TOP'
+                                and _b is not region.header_block
+                                and _r2166_latch_end):
+                            _r216a_stmt_instrs = _b_non_jmp[:_r2166_bnd_idx + 1]
+                            _r216a_stmt = self._build_store_statement(
+                                _r216a_stmt_instrs, block=_b) or self._build_statement(
+                                _r216a_stmt_instrs)
+                            if _r216a_stmt:
+                                _r216a_stmt.pop('_decorator_block', None)
+                                recheck_store_stmts.append(_r216a_stmt)
                                 self.generated_blocks.add(_b)
                                 self.generated_offsets.add(_b.start_offset)
                                 continue
@@ -8156,7 +8247,15 @@ AST 映射规则:
                                              'LOAD_GLOBAL', 'LOAD_DEREF', 'COPY', 'SWAP',
                                              'COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'POP_TOP')
                                 for i in _b_non_jmp)
-                            if _has_only_compare:
+                            # [R21-66 case C] 白名单只收 LOAD/COPY/SWAP/COMPARE 类，条件副本里
+                            # `int(x)` 这类带 CALL 载荷的操作数被白名单否决（实测 _sync_worker
+                            # 第二循环 back_edge @2844 = [LOAD_GLOBAL, LOAD_FAST, PRECALL, CALL,
+                            # COMPARE_OP] == SEG 的 chain 段）。补一条身份判据：整块非跳转序列逐字
+                            # 等于本循环条件的一段 ⇒ 它就是被复制的测试，纯重检，整块抑制。
+                            _r2166_pure_copy = bool(_b_non_jmp) and (
+                                tuple(i.opname for i in _b_non_jmp
+                                      if i.opname != 'EXTENDED_ARG') in _r2166_seg_set)
+                            if _has_only_compare or _r2166_pure_copy:
                                 self.generated_blocks.add(_b)
                                 self.generated_offsets.add(_b.start_offset)
                                 continue
@@ -8725,7 +8824,9 @@ AST 映射规则:
                                            and _r58_branch[0].get('type') == 'Continue'):
                                         _r58_branch.pop(0)
                             if _r58_branch:
-                                body_stmts.extend(_r58_branch)
+                                if not self._r102_place_body_run(
+                                        region, _r58_before, _r58_branch, body_stmts):
+                                    body_stmts.extend(_r58_branch)
                             body_blocks_no_header.clear()
                             body_blocks_no_header.extend(_r58_after)
                     nested_ast = self._generate_region(_r08_nested_loop_child)
@@ -8831,9 +8932,12 @@ AST 映射规则:
                                 while _branch_stmts_pre and isinstance(_branch_stmts_pre[0], dict) and _branch_stmts_pre[0].get('type') == 'Continue':
                                     _branch_stmts_pre.pop(0)
                         if _branch_stmts_pre:
-                            body_stmts.extend(_branch_stmts_pre)
+                            if not self._r102_place_body_run(
+                                    region, _before_pre, _branch_stmts_pre, body_stmts):
+                                body_stmts.extend(_branch_stmts_pre)
                         body_blocks_no_header.clear()
                         body_blocks_no_header.extend(_after_pre)
+            _r102_body_len_before = len(body_stmts)
             handled = self._loop_dispatch_block(
                 block, region, child_info, boolop_for_while,
                 body_stmts, body_blocks_no_header, back_edge_stmts, natural_back_edge,
@@ -8841,6 +8945,8 @@ AST 映射规则:
             )
             if not handled:
                 body_blocks_no_header.append(block)
+            else:
+                self._r102_reseat_body_run(region, block, body_stmts, _r102_body_len_before)
 
         self._loop_postprocess(region, body_stmts, body_blocks_no_header, back_edge_stmts, child_info, back_edge_source_blocks)
 
@@ -14613,6 +14719,172 @@ AST 映射规则:
             return True
         return False
 
+    # [R21-74] 「前向退出块序列 = 顺序 body 语句」判据。判据只读块数据（opcode 类 +
+    # 区域/后继结构），无名字、无绝对偏移键、无计数、无阈值：
+    #   1) 存在本 LoopRegion 的直接子 LoopRegion C，其 entry 偏移 E 属于 region.body_blocks
+    #      且 E > min(seeds 偏移) —— 该序列整体位于这个子区域之前；
+    #   2) 从 seeds 沿后继做前向闭包 S：S 内每块的后继只能落在 S 内、恰为 E、或落在其它
+    #      已声明区域的块里（那些区域已各自发射）；任何越过 E 的前向出边都说明该序列不是
+    #      「子区域之前的顺序代码」。真实回边的目标偏移在序列起点之前（向后跳回循环内），
+    #      与该「全部出边前向」形状互斥；
+    #   3) S 中恰有一个零后继、终止指令为 RETURN_VALUE/RETURN_CONST 的汇点块——真实回边块
+    #      的后继含循环头，绝不可能是零后继汇点；且 S 内除该汇点外没有任何 BREAK 角色块，
+    #      故这段刚建成的 AST 里出现的唯一 Break 只能来自该汇点块。Break 语义对它不成立
+    #      （它没有循环可退，零后继），按块数据归约为 Return；
+    #   4) body_stmts 中已存在来源偏移 >= E 的节点：即该子区域节点被提前发射（例如作为
+    #      兄弟循环的循环后顺序语句），把本序列留在尾部 extend 会把文本推到子区域之后。
+    # 归约方式：命中即把这段语句放到它自己的偏移槽（子区域节点之前）；不命中逐字节沿用
+    #   既有 extend / 追加行为（C3 保守）。
+    _R102_RET_CLASS = ('RETURN_VALUE', 'RETURN_CONST')
+
+    def _r102_run_before_child(self, region, seeds):
+        """返回 (子区域 entry 偏移, 汇点块) 或 None。只读区域/块数据。"""
+        if not seeds or not isinstance(region, LoopRegion):
+            return None
+        _o = lambda b: getattr(b, 'start_offset', None)  # noqa: E731
+        _run_offs = [x for x in (_o(b) for b in seeds) if x is not None]
+        if not _run_offs:
+            return None
+        _run_min = min(_run_offs)
+        _body_offs = set(_o(b) for b in (region.body_blocks or []))
+        _cand = []
+        for _c in (region.children or []):
+            if not isinstance(_c, LoopRegion) or _c.entry is None:
+                continue
+            _e = _o(_c.entry)
+            if _e is None or _e <= _run_min or _e not in _body_offs:
+                continue
+            _cand.append((_e, _c))
+        if not _cand:
+            return None
+        _entry_off, _child = min(_cand, key=lambda t: t[0])
+        _cblocks = set(_child.blocks or ())
+        _reserved = set()
+        for _a in ('header_block', 'condition_block', 'back_edge_block', 'entry'):
+            _b = getattr(region, _a, None)
+            if _b is not None:
+                _reserved.add(_b)
+        for _b in (getattr(region, 'back_edge_blocks', None) or []):
+            _reserved.add(_b)
+        for _b in (getattr(region, 'else_blocks', None) or []):
+            _reserved.add(_b)
+        for _ch in (region.children or []):
+            if _ch is _child:
+                continue
+            for _b in (_ch.blocks or []):
+                _reserved.add(_b)
+        _S = set(seeds)
+        _frontier = list(seeds)
+        while _frontier:
+            _b = _frontier.pop()
+            for _s in (getattr(_b, 'successors', []) or []):
+                _so = _o(_s)
+                if _so is None:
+                    return None
+                if _so == _entry_off or _s in _S or _s in _reserved or _s in _cblocks:
+                    continue
+                if _so > _entry_off:
+                    return None
+                _S.add(_s)
+                _frontier.append(_s)
+        _sinks = []
+        for _b in _S:
+            if (getattr(_b, 'successors', []) or []):
+                continue
+            _li = _b.get_last_instruction() if getattr(_b, 'instructions', None) else None
+            if _li is not None and _li.opname in self._R102_RET_CLASS:
+                _sinks.append(_b)
+        if len(_sinks) != 1:
+            return None
+        _sink = _sinks[0]
+        for _b in _S:
+            if _b is _sink:
+                continue
+            try:
+                _role = self.region_analyzer.get_block_role(_b)
+            except Exception:
+                _role = None
+            if _role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                return None
+        return (_entry_off, _sink)
+
+    def _r102_slot_of_child(self, body_stmts, entry_off):
+        """body_stmts 中第一个「来源子区域 entry 偏移 >= entry_off」节点的下标。"""
+        for _i, _n in enumerate(body_stmts):
+            _org = self._r102_child_node_origin.get(id(_n))
+            if _org is not None and _org >= entry_off:
+                return _i
+        return None
+
+    def _r102_fold_run_break_to_return(self, stmts, _ret):
+        """把该序列 AST 中「臂恰为单元素 Break」的 If 归约为 Return（该 Break 来自唯一
+        零后继 RETURN 类汇点块）。只在这段语句刚建成、放入 body_stmts 之前生效；其余形状
+        逐字节不变。"""
+        if not isinstance(stmts, list):
+            return
+        for _s in stmts:
+            if not isinstance(_s, dict):
+                continue
+            _t = _s.get('type')
+            if _t == 'If':
+                for _k in ('body', 'orelse'):
+                    _arm = _s.get(_k) or []
+                    if len(_arm) == 1 and isinstance(_arm[0], dict) and _arm[0].get('type') == 'Break':
+                        _s[_k] = [dict(_ret)]
+                    else:
+                        self._r102_fold_run_break_to_return(_arm, _ret)
+            elif _t in ('Try', 'With', 'For', 'While'):
+                for _k in ('body', 'orelse', 'finalbody'):
+                    self._r102_fold_run_break_to_return(_s.get(_k) or [], _ret)
+                for _h in (_s.get('handlers') or []):
+                    self._r102_fold_run_break_to_return(_h.get('body') or [], _ret)
+
+    def _r102_reseat_run_return_value(self, _sink):
+        _ret = self._generate_return_ast(_sink)
+        if _ret is None:
+            _ret = {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+        return _ret
+
+    def _r102_place_body_run(self, region, run_blocks, branch_stmts, body_stmts):
+        """flush 站点：把待发射的顺序 run 放到自身偏移槽（子区域节点之前）。"""
+        if not branch_stmts or not run_blocks:
+            return False
+        try:
+            _got = self._r102_run_before_child(region, run_blocks)
+            if _got is None:
+                return False
+            _entry_off, _sink = _got
+            _idx = self._r102_slot_of_child(body_stmts, _entry_off)
+            if _idx is None:
+                return False
+            self._r102_fold_run_break_to_return(branch_stmts, self._r102_reseat_run_return_value(_sink))
+            body_stmts[_idx:_idx] = list(branch_stmts)
+            return True
+        except Exception:
+            return False
+
+    def _r102_reseat_body_run(self, region, block, body_stmts, _before):
+        """dispatch 站点：dispatch 已把该 run 的语句追加到 body_stmts 尾部，而子区域节点
+        被更早发射（作为兄弟循环的循环后顺序语句）。命中判据时把这段刚追加的语句搬到它
+        自己的偏移槽（子区域节点之前），并按汇点块数据修正终止语义。"""
+        if _before >= len(body_stmts):
+            return
+        try:
+            _got = self._r102_run_before_child(region, [block])
+            if _got is None:
+                return
+            _entry_off, _sink = _got
+            _idx = self._r102_slot_of_child(body_stmts[:_before], _entry_off)
+            if _idx is None or _idx >= _before:
+                return
+            _moved = body_stmts[_before:]
+            del body_stmts[_before:]
+            self._r102_fold_run_break_to_return(_moved, self._r102_reseat_run_return_value(_sink))
+            body_stmts[_idx:_idx] = _moved
+        except Exception:
+            if len(body_stmts) < _before:
+                del body_stmts[:]
+
     def _loop_postprocess(self, region: LoopRegion, body_stmts: List[Dict[str, Any]],
                           body_blocks_no_header: List[BasicBlock],
                           back_edge_stmts: List[Dict[str, Any]],
@@ -14670,7 +14942,9 @@ AST 映射规则:
             if _last_body_type in ('Try', 'If', 'For', 'While', 'With'):
                 while branch_stmts and isinstance(branch_stmts[0], dict) and branch_stmts[0].get('type') == 'Continue':
                     branch_stmts.pop(0)
-        body_stmts.extend(branch_stmts)
+        if not self._r102_place_body_run(
+                region, body_blocks_no_header, branch_stmts, body_stmts):
+            body_stmts.extend(branch_stmts)
         if back_edge_source_blocks:
             _filtered_back_edge: List[Dict[str, Any]] = []
             _offset = 0
