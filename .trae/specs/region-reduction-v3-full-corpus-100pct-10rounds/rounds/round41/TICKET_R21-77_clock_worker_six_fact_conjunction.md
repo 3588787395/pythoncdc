@@ -81,3 +81,20 @@ whole-corpus sweep sees it, and it saw it before a gate was spent
 
 Hand-off state: no candidate is installable yet; the target (`13/13`, oracle byte-identical) and the scoring rig
 are both proven, and the remaining work is narrowing these three conjuncts to the victim file alone.
+
+
+## Addendum 3 (orchestrator, 08:20) — the conjunction's collateral is now clean; the flip is not
+
+Pinned reading of r104a's `f5b` (analyzer `996a1b1acf143458`, generator untouched at `566ff5c502276e48`; bytes were
+still moving, so this is a progress state and the candidate is banked as `CANDIDATE_r2177_f5b_996a1b1acf143458.py`):
+
+* its own sharded 402 sweep: `compared 101/101/101/99, miss=0`, `CHANGED_COUNT 0/0/1/0`, and the one changed file is
+  **`realtime_event_source.pyc`** — the `plugin_system_risk_calculation/__init__.pyc` and `fly/data/quote.pyc`
+  collateral from addendum 2 is gone, so the conjuncts are now victim-scoped.
+* my rig on its newest product (`out/pnl_realtime.py`): `hunks_vs_ORACLE=4`, `instrs=-114 jsites=-9`,
+  `indeg-equal=False`, judge `12/13` *Different control flow*.
+
+So this state is **installable in shape but not in substance**: zero collateral without yet reaching `13/13`, which is
+exactly the zero-flip condition the standing rule reverts. Remaining gap against the oracle is ladder steps 3–6
+(the `@7164` and `@6322`/`@6496` or-chains, the spurious `while True:` wrapper, and the `@8904` chained-compare
+fold that fixes the two jump targets `@8972`/`@8978`).
