@@ -1,0 +1,61 @@
+    def _sync_worker(self, engine):
+        """
+        同步线程
+        """
+        steps = self.engine.config.plugins.plugin_system_trade.account_sync_steps
+        engine.set_engine(engine)
+        if self.business_type == 'future':
+            pre_before_trading = future_pre_before_trading
+            post_after_trading = future_post_after_trading
+        elif self.business_type == 'hks':
+            pre_before_trading = hks_pre_before_trading
+            post_after_trading = hks_post_after_trading
+        else:
+            pre_before_trading = stock_pre_before_trading
+            post_after_trading = stock_post_after_trading
+        while True:
+            while int(datetime.datetime.now().strftime('%H%M')) < pre_before_trading or int(datetime.datetime.now().strftime('%H%M')) >= int(post_after_trading) or holiday_sync_account == '0' and not self.engine.data_proxy.is_trading_date(datetime.datetime.now().date()):
+                time.sleep(60)
+            while pre_before_trading <= int(datetime.datetime.now().strftime('%H%M')) < int(post_after_trading):
+                sync_data_flag = 0
+                with self.order_or_trade_lock:
+                    if self.receive_order_response_flag == 1 or self.receive_trade_response_flag == 1:
+                        sync_data_flag = 1
+                        self.receive_order_response_flag = 0
+                        self.receive_trade_response_flag = 0
+                sync_data_flag = 1
+                if sync_data_flag:
+                    self.sync_account()
+                    self.sync_account_time = datetime.datetime.now()
+                if len(self.on_order_response_list) > 0:
+                    on_order_response_handle(self.on_order_response_list)
+                if len(self.on_trade_response_list) > 0:
+                    on_trade_response_handle(self.on_trade_response_list)
+                time.sleep(steps)
+                if not pre_before_trading <= int(datetime.datetime.now().strftime('%H%M')) < int(post_after_trading):
+                    continue
+                time_difference = abs((datetime.datetime.now() - self.sync_account_time).total_seconds())
+            return int(datetime.datetime.now().strftime('%H%M')) >= int(post_after_trading)
+            continue
+            if holiday_sync_account == '0':
+                self.engine.data_proxy.is_trading_date(datetime.datetime.now().date())
+                continue
+            while False:
+                pass
+            if self.engine.data_proxy.is_trading_date(datetime.datetime.now().date()) and self.reconnect_flag is False and (datetime.datetime.now().date() == self.first_run_date and self.first_run_time < 900 or datetime.datetime.now().date() != self.first_run_date) and int(datetime.datetime.now().strftime('%H%M')) >= 900:
+                system_log.debug('后端服务操作账户开始执行自动重登录')
+                if not reconnect(self.broker.trade_account, self.trade_id):
+                    break
+                self.reconnect_flag = True
+            time.sleep(steps)
+    def _trade_status_handle(self, engine):
+        """
+        交易状态处理线程
+        """
+        engine.set_engine(engine)
+        while True:
+            self.trade_info = get_trade_status(self.trade_id, return_trade_info=True)
+            trade_status = self.trade_info[2]
+            if self.trade_status != trade_status:
+                self.trade_status = trade_status
+                if trade_status == TRADE_PAUSE:

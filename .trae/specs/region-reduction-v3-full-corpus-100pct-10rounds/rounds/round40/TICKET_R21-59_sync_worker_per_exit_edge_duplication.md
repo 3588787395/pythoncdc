@@ -638,3 +638,34 @@ What that means, and it changes the round's plan:
 4. Caveat I will not paper over: `1471c92eca157e46` was read from a **live** engineer mirror, so it is a moving hash -
    a real measurement of the bytes I hashed, not a verdict on r93a's final deliverable. When its report lands I
    re-measure the delivered file before anything is installed.
+## Sixteenth addendum (2026-10-13 10:16, orchestrator) - r93a DELIVERED and I corroborate it; my addendum 11 claim that "loop 2 is the same shape" is REFINED, not confirmed
+
+r93a delivered analyzer `1471c92eca157e46` (pair) / `0f767ea7b09e93a9` (Half-1 only), generator untouched. Its own
+measurements: loop 1 renders **byte-identical to GOLD**, the `del=61 @700..@1210` window is gone, predicate P census
+with its real function = **402 files / 173 evaluations / 1 fire**, full 402-product CR-stripped sweep
+**CHANGED = {trade_live_broker}**, six canaries at baseline, repro canary downgraded to `Different bytecode`, and
+**broker stays 127/128 failing only `_sync_worker`**.
+
+I measured the same bytes independently before its report arrived (my pinned snapshot at `rounds/round40/r93/`):
+`_sync_worker windows 9 -> 6`, repro `Different bytecode 1/2`, panel 12/13 · 15/15 · 9/9 · 92/92 · 153/153, battery
+`RED=8/9` unchanged. Agreement on every shared number.
+
+The refinement of my addendum 11: I wrote that loop 2 is "the same duplicated-test shape", implying P covers it.
+r93a measured otherwise and its numbers are specific - on loop 2 (`while pre_before_trading <= int(...) < int(post)`,
+`@1890/@2072`) **P provably does not fire**: `forward-legs-outside = []` and `back_edge = 2844 != header = 2072`.
+Reading the two together: loop 2's entry edge into its body start is an **unconditional** `JUMP_FORWARD @2064 -> @2072`
+(my own edge census showed exactly two in-edges to `@2072`, that JUMP_FORWARD and `@2880 POP_JUMP_BACKWARD_IF_TRUE`),
+because its condition is a single chained comparison rather than an or-chain. So the duplication law holds for both
+loops, but P's *forward conditional leg* conjunct only exists for or-chain tests. Loop 2 needs a sibling predicate -
+unconditional forward entry into the body start plus a conditional backward latch - which is the shape gate 36's
+`_is_while_true` already recognizes for `while True`. Owner: r95a (R21-66). My "any A-side candidate that leaves
+`@2832..@2884` as body statements is incomplete" warning stands; what was wrong is the implication that one rule for
+or-chain loops automatically covers single-comparison loops.
+
+Also measured by me and recorded honestly: two `merge_hunks.py` attempts to union r91a's `241905c2` with r93a's
+`1471c92e` both FAILED the tool's faithfulness proof in **both orders** (3 residual blocks unexplained each way,
+because each candidate's large insert lands inside the other's anchor context even though their landed-line footings
+are disjoint). The merged artifacts hashed to `20b38ff7cfdb9232` in both directions and I fastgated one of them:
+repro still `Different bytecode`, broker windows 6, panel intact - i.e. the unfaithful merge added nothing.
+Conclusion: do not union r91a with r93a; r93a's rule supersedes r91a's for this unit, and if both are ever wanted the
+transplant must be re-anchored by hand against the moved file, not spliced.
