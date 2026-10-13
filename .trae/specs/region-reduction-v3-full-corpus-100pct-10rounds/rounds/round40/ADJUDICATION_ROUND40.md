@@ -280,3 +280,47 @@ Nothing installed (zero flips => banked per the standing rule). Round 40 therefo
 **Security note for the record:** r100a reported that many of its tool outputs carried injected text instructing
 it to stop and switch files, which it correctly disregarded as untrusted. No credential or repo state was
 exposed by that event; flagged to the user.
+
+
+## 14. Round-40 sealed hand-off: the exact host-walk trace of the position defect (read from r102a's probe at 12:21)
+
+`orch/logs_pp_probe.txt` on the certified-pair base, unit `_sync_worker`, host `LoopRegion` header `@232`. Events
+in order (`[GB]`=body walk, `[IFBR]`=`_if_generate_branch_stmts`, `[PP]`=`_loop_postprocess`, `[GEN]`=child dispatch):
+
+```
+[GB] ENTER hdr=232
+[IFBR] blocks=[230]                       # pre-loop statements
+[GB] ENTER hdr=704                        # child loop 1 (entry@232)
+[PP]   hdr=704 entry=232 pending=[] be=0 types=['Expr']
+[GB] EXIT  hdr=704 n=1
+[GB] ENTER hdr=2072                       # child loop 2  <-- dispatched while loop 1's pass is still open
+[PP]   hdr=2072 entry=1890 pending=[2884] be=0 types=['Assign','With','Assign','If','If','If','If']
+[GB] EXIT  hdr=2072 n=7
+[IFBR] blocks=[700, 702, 1210]            # the reconnect chain becomes an If HERE, after both loops
+[PP]   hdr=232 entry=232 pending=[2882] be=1 types=['While','While','If']
+[GB] EXIT  hdr=232 n=4 types=['While','While','If','Expr']
+```
+
+So the emitted order is `While(loop1) While(loop2) If(chain) Expr(time.sleep(steps))`; GOLD needs
+`While(loop1) If(chain) While(loop2) Expr`. The chain is *not* in `back_edge_stmts` - `be=1` is only `@2882` -
+it is a host branch group `[700,702,1210]` that is produced **after** loop 2 was already dispatched.
+
+The decisive fact is the nesting: loop 2 (`hdr=2072`, `entry=1890`) is entered while loop 1's body pass
+(`hdr=704`) is still open - r100a's independent probe read the same thing as `[GEN LoopRegion@1890] depth=2`.
+Loop 2 is *not* a child of loop 1: `@1890` is the forward merge target of loop 1's reconnect guard run
+(`@1214 -> @1890`), and the host owns it. **Hypothesis for the next dispatch (never measured):** a loop body pass
+may dispatch only child regions whose `entry` lies in that region's own block set; refusing the dispatch otherwise
+leaves loop 2 to the host walk, which reaches it after the branch group `[700,702,1210]`, i.e. in GOLD's order.
+That criterion is block-set data only - no offsets as keys, no names, no counters - and it is the principle-2
+statement of the defect. Three sibling-eviction variants (evicting `@2064/@2168` from loop 2's
+`condition_chain_blocks` / `blocks` / `else_blocks`) were already measured **inert for ordering**, so do not re-run them.
+
+Platform for the next hand: analyzer `9ba2d8afe9e96fc1` (r100a, terminator half CLOSED, sweep 401 same / 1 changed)
++ generator `0f4c3898298e6f2e` + the position rule above. With the terminator already closed by r100a, the position
+rule alone should be the flip; my own probe (`r100/PROBE_source_flat_chain_in_place.py`, judged `128/128`) says the
+flat spelling is acceptable, so the acceptance test is `pyc_verify single --source <fresh product>` == `128/128`,
+never a zero-hunk GOLD diff.
+
+Round 40 closes sealed: **6615/6617 units (99.9698 %), 400/402 files, residual 2 files / 2 units**
+(`realtime_event_source.clock_worker` 12/13, `trade_live_broker._sync_worker`), gate label 40 unconsumed because
+no candidate measured a flip. `core/` clean at the landed bytes `842e2748bcdfeb66` / `b4363f5858e58074`.
