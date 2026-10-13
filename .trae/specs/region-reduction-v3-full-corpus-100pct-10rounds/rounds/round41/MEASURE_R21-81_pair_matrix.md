@@ -175,3 +175,20 @@ The claim pair is the suppressor: neither site alone changes the victim, and bot
 The rule therefore has to be render-scoped rather than removal-scoped: each claim may mark only the blocks the branch actually rendered - which for `IfRegion@7604` is the 8-block grafted `elif_final_else` arm (r110a measured zero of the 14 run targets inside it) - and every other member of `then_blocks` / `else_blocks` must stay unclaimed for the owning parent sequence. That is ticket **R21-86**, dispatched to r111a with this table as its baseline to narrow, the design constraints (region data only, no offsets, no thresholds), and the acceptance order: `instrs` and `jsites` to 0 from below without overshoot, then the 10-file collateral table with broker back at 178823 and klinedata unmoved, then the 20-file panel, then the ROOT-joined 402 sweep, then the judge.
 
 Both measured generator variants are banked at `rounds/round41/r111/` together with `build_and_measure_claim_pair.py`, which rebuilds and re-scores them from the landed bytes. Corpus still 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, repo `core/` at landed bytes.
+## Addendum 9 - render-scoping the claims by list membership is safe but inert: the truncation is inside the arm renderer (2026-10-14 01:12)
+
+Three more arms built by me from the landed bytes, all paired with analyzer 3ad5ceaa, each with the mirror platform restored and re-hashed inside the same command. Build scripts committed at `rounds/round41/r111/` (`build_and_measure_claim_pair.py`, `render_scoped_r2187.py`, `render_scoped_r2188.py`).
+
+| arm | what it changes | victim | instrs | jsites | hunks | judge | collateral (10-file smoke) |
+|---|---|---|---|---|---|---|---|
+| A dd3c0afa | claims 22500/22504 restricted to the rendered set (elif_conditions, elif_bodies, elif_final_else, chained_compare_blocks, the three or operands) | 241 lines | -115 | -9 | 4 | 12/13 | none |
+| B 4d75cf87 | A plus un-marking 26911 | 262 | -7 | +2 | 5 | 12/13 | broker, klinedata |
+| C 97ad4d9d | A plus the same render-scoped restriction at 26911 (claim only blocks inside the dispatched region own arm lists) | 241 | -115 | -9 | 4 | 12/13 | none |
+
+A and C are safe (zero collateral; the nine smoke files byte-identical to their committed products) and buy nothing. B buys 108 instructions and pays duplication plus two changed files.
+
+Reading of C: restricting the 26911 claim to the dispatched region own arm lists does **not** free the run, because the fourteen blocks really are members of that region arm lists - the dispatched region is `IfRegion@7634` and the run sits in its `then_blocks`, exactly as r107a measured for the tail release. So a render-scoped claim cannot be computed from list membership at all.
+
+**The operative defect is one level deeper than either claim: the else-arm rendering of `IfRegion@7634` stops at the nested `LoopRegion@7706` and never continues with the remaining members of its own `then_blocks`, while the claim loops mark the whole list consumed.** A fix therefore has two coupled halves: (a) the arm renderer must continue past a dispatched child region to the rest of the same arm, and (b) the claim must cover exactly the emitted set. Half (b) alone is proven inert here (A and C); half (a) approximated by brute un-marking is what produces the duplication and the two collateral files in B.
+
+That is the sharpest statement of the last-unit defect produced in 41 rounds, and it is what ticket R21-86 (r111a, live) has to implement. Status unchanged: corpus 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, landed bytes unmoved, nothing installed.
