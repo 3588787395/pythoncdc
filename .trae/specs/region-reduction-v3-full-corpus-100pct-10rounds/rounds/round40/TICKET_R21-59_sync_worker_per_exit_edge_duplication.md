@@ -175,3 +175,30 @@ Consequences to hand to the next attempt, in order, none of which is a criterion
    against this table, which is why this belongs in the ticket rather than in a new blind attempt.
 3. If (1) fails, the fallback conclusion is that no source text reproduces `@704/@876/@1056`, in which case the
    unit needs a **CFG-level representation** of multi-entry test chains (analyzer), not more emission rules.
+
+## Fifth addendum (me, 08:26): **the signature is reproducible** — it is a chained comparison in the loop condition
+
+I compiled four shapes and, for each, collected the set of targets reached by a forward conditional jump and by a
+backward conditional jump (block-level, from `dis`):
+
+| shape | blocks | fwd-targets | bwd-targets | targets hit **both** ways |
+|---|---|---|---|---|
+| `while active and pre <= t < post or holiday == '0':` | 14 | 6 | 1 | **48** — forward from block 22; backward from 110 and 124 |
+| `while pre <= t < post:` | 9 | 3 | 1 | none |
+| `while int(strftime) < pre or int(strftime) >= post or (int(strftime) in chain and not engine.ok()):` | 18 | 6 | 1 | **462** — forward from 0 and 134; **backward from 462, 636, 922** |
+| `while active:` + an `if not (pre <= t < post) and …:` body | 11 | 3 | 1 | none |
+
+Row 3 is the original's shape: chain head `@704` receives forward conditional jumps from `@232/@364/@700` **and**
+backward ones from three blocks (`@704`, `@876`, `@1056`). Both reproducing shapes contain a **chained comparison**
+(`a <= x < b`, i.e. one `COMPARE_OP` pair with a shared operand and its own short-circuit block), and neither
+without it produces the signature — including the two shapes whose legs are plain `<`/`>=` compares with the same
+repeated compute. That is the discriminator, and it survived four controls.
+
+So the unit's real defect statement is now concrete: the original loop test contains a chained comparison (our
+product emits 177 instructions for the same span instead of the 61-instruction three-block chain, which is what the
+`del=61` / `ins 177` window pair measures), and the pipeline has landed machinery in exactly this neighbourhood
+(`_identify_chained_compare_regions`, `[R21-13]` leg-lift veto, `[R21-19]` or-tail extension, `[R21-4701]` and-lift).
+The next attempt should therefore (i) verify the presence of a `COMPARE_OP`-pair pattern in `@704/@876` with the
+existing analyzer's own chained-compare detector, and (ii) if the region is not declared for a loop *condition*
+(the detector may only run for statement-level ifs), declare it there — which is an identification-time rule over
+opcode pairs, not a text guess.
