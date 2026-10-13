@@ -818,3 +818,28 @@ Consequence for how I will close the round, in priority order:
 3. `clock_worker` (r101a) also lives in `region_analyzer.py` but on the **landed** analyzer; if it lands a flip it must
    be ported onto the `1471c92e`-based analyzer the same way, or installed alone. Two flips in one round are welcome;
    the gate consumes whichever union I certify, and a candidate that only reaches a partial stays banked.
+## Twenty-second addendum (2026-10-13 11:11, orchestrator) - r99a's generator half measured by me: no gain AND a fresh regression, so the route is stopped
+
+I installed r99a's delivered generator `835f64cb4966fa43` over r93a's analyzer `1471c92eca157e46` (its own base is the
+**landed** generator) and ran the fast gate:
+
+```
+[broker]   127/128, sole failure _sync_worker   [_sync_worker windows] 6
+[hunks vs GOLD] 3   (@@ -19,6 +19,8 @@, @@ -32 +34,3 @@, @@ -41,3 +44,0 @@)
+[panel]    realtime_event_source  ***11/13***   <-- was 12/13: A NEW REGRESSION
+           function 15/15  replace_utils 9/9  quote 92/92  quotation 153/153  order_api 37/37
+[battery]  RED=8/9
+```
+
+Three independent reasons this route is dead as delivered, all measured not inferred:
+1. **No movement on its own target**: 3 hunks on that base is exactly what analyzer `1471c92e` + landed generator
+   already gave (addendum 18), so the reconnect change did not close the statement it was aimed at.
+2. **Collateral on the other residual file**: `realtime_event_source` falls 12/13 → **11/13**, i.e. it breaks a second
+   unit in the corpus's other failing file - a gate would read 新增失败单元≥1.
+3. **It cannot be combined with `0f4c3898` mechanically**: the rehearsed union failed `merge_hunks`' faithfulness
+   proof with 6 unexplained blocks inside 8126-8247, the very region r95a owns (addendum 21).
+
+Action taken: r99a stopped; its candidate and these numbers are banked (`rounds/round40/r99/`), not installed. The
+remaining route to a `_sync_worker` flip is r100a's analyzer declaration of the unowned `@1214..@1876` guard chain,
+which composes with the certified pair with no merge, and `clock_worker` is with r101a in the same file on the landed
+analyzer.
