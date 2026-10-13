@@ -691,3 +691,23 @@ and windows #5+#6 (the whole second loop rendered in the wrong place because its
 itself - the judge still says `Different control flow` for the unit, and the pair's 402-product sweep is
 `CHANGED = {trade_live_broker}`. When a half lands, the test is: does #5/#6 collapse (loop 2) and does #4 collapse
 (reconnect/exit)? A candidate that shrinks only window count without moving these two groups is not a flip.
+## Eighteenth addendum (2026-10-13 10:34, orchestrator) - DEFINITION OF DONE for `_sync_worker`: our folded product is 43 lines, GOLD is 45, and the whole gap is three textual facts
+
+I diffed `out/broker_R93.py` (landed generator + r93a's `1471c92e`, generated in my mirror) against
+`r91/broker_GOLD_PROOF.py` on the `_sync_worker` body. 25 diff lines, three facts, nothing else:
+
+1. **Reconnect block: position and terminator.** GOLD places it right after loop 1 as four nested `if`s ending in
+   `return`; ours places it later as one flat `if is_trading_date(..) and reconnect_flag is False and (…) and
+   int(strftime) >= 900:` ending in `break`. This is r96a's item C, and the bytecode fact behind it is unchanged: the
+   unit's only `RETURN_VALUE` is `@1874`.
+2. **`sync_data_flag = 1` printed unguarded.** GOLD has `time_difference = abs((now - sync_account_time)...)` +
+   `if time_difference > sync_max_time:` + the store under it (original `@2350/@2352/@2366/@2372/@2374`); ours prints
+   the bare store (the `@2374` site) with its guard gone.
+3. **Loop-2 latch still in the body.** Ours keeps `if not pre_before_trading <= int(strftime) < int(post): continue`
+   plus a second, misplaced `time_difference = abs(...)` after `time.sleep(steps)`; in the original that comparison is
+   loop 2's own duplicated re-test (`@2832..@2880`), not a body statement.
+
+Facts 2 and 3 are one region (`LoopRegion@1890`, `hdr=2072 cond=1890 be=2844`, `is_chained_compare_cond True` per
+r95a's dump) and belong to r95a/r98a; fact 1 belongs to r96a. When all three are gone the product *is* GOLD's text,
+which I have already measured at `128/128`, so the flip criterion for the merged candidate is simply: this diff
+reports zero hunks.
