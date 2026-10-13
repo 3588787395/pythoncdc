@@ -256,3 +256,30 @@ The rule as currently implemented takes ~100 more instructions out of the unit i
 
 1. The falsification test on this axis is now numeric rather than arguable - a correct variant must move `instrs` from -114 toward 0 with `back=+0` unmoved, and any variant whose `jsites` magnitude grows is folding in the wrong direction and owes no panel and no 402 sweep.
 2. With addendum 5 (r107a R21-79 tail claim measured at -115, banked) both live axes are currently *further* from the flip than the F5 base, so **gate label 41 stays unconsumed**: corpus 6616/6617 (99.9849 %), 401/402 files, `clock_worker` the sole failing unit, repo `core/` clean at landed bytes and pushed.
+
+## Addendum 7 - r106a self-corrected to INERT, and the PAIR matrix is now measured: the two analyzer halves are not additive (2026-10-14 01:16)
+
+r106a moved again: `996a1b1acf143458` -> `80384183996a455f` -> `c8fd738b922cd390` (addendum 6, `instrs=-210`) -> **`7e8350f7d52fe9a3`** (2,133,074 B). Pinned at `D:/Temp/pins/region_analyzer_r106a_7e8350f7d52fe9a3.py` and scored in `D:/Temp/r91m` (platform restored and re-hashed to `996a1b1acf143458` in the same command):
+
+```
+product 20190 B / sha16 192ba0f09e81bbd7   <-- byte-identical to the F5 base product
+[census] DELTAS instrs=-114 back=+0 jsites=-9   indeg-equal=False back-equal=True opseq-equal=False
+[judge]  12/13  Different control flow
+```
+
+So the destructive suppression of `c8fd738b` was withdrawn and the surviving rule changes **zero bytes** on the victim: `[R21-80]` is inert, which is the same verdict the campaign already has for four earlier variants on this file.
+
+Then the missing experiment: the two delivered halves had never been measured together, so I merged them myself with `git merge-file` (base `996a1b1acf143458`, ours = `[R21-79] 3ad5ceaa23135334`, theirs = `[R21-80] 7e8350f7d52fe9a3`) -> **`890a1593abfcfb6b`**, 2,138,950 B, 0 conflict markers, BOM intact, all-CRLF, `compile()` clean, `D:/Temp/merge_r108/merged.py`. Scored identically (mirror restored afterwards):
+
+| arm | product | instrs | jsites | hunks | judge |
+|---|---|---|---|---|---|
+| F5 base | 20190 / `192ba0f0` | -114 | -9 | 4 | 12/13 |
+| `[R21-79]` alone | 20078 / `25730af9` | -115 | -9 | 4 | 12/13 |
+| `[R21-80]` alone | 20190 / `192ba0f0` | -114 | -9 | 4 | 12/13 (inert) |
+| **PAIR `890a1593`** | 20078 / `25730af9` | **-115** | -9 | 4 | 12/13 |
+
+**The pair product is byte-identical to the `[R21-79]` half alone**, so the fold contributes nothing in combination either - the pair is superseded, not additive (`[[feedback-pair-interaction-suppression]]` holding for the fifth time). No panel, no 402 sweep and no gate window was spent on any of these arms, because none moves its own named fact: every arm is at `-114` or worse, never toward `0`.
+
+What that establishes, measured rather than argued: **no analyzer-only variant of the tail-release or the folded-join criterion can flip this unit.** The blocks of the dropped run are already owned - `@7972/@8294/@8350/@8354/@8400/@8450/@8186/@7634` sit inside `LoopRegion@5598.blocks` (41 in range) and `TryExceptRegion@6.blocks` (190) - and a round-40 census had already recorded that those declared child entries are **never dispatched**. Releasing an arm therefore cannot print them; only the emitter deciding to dispatch a nested region entry that lies in its parent body list can. That is ticket **R21-81**, dispatched to r108a on `region_ast_generator.py` (`566ff5c502276e48`, F5 analyzer as platform) with the four-row table above as its starting point and the rule "a variant is only worth a panel/sweep if `instrs` moves from -114 toward 0 with `back=+0` kept" as its cheap falsification test.
+
+Corpus unchanged: **6616/6617 (99.9849 %), 401/402 files**, `clock_worker` the sole failing unit, gate label **41 unconsumed**, repo `core/` clean at landed bytes (`1471c92eca157e46` + `566ff5c502276e48`) and pushed.
