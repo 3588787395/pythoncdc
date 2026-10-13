@@ -1,0 +1,25 @@
+{
+ "group": "bmatch",
+ "results": [
+  {
+   "probe": "r8v8rev_bmatch_guards_battery",
+   "verify": "REGEN_TIMEOUT(>120s) HANG"
+  },
+  {
+   "probe": "r8v8rev_bmatch_nestnoguard",
+   "verify": "REGEN_TIMEOUT(>120s) HANG"
+  },
+  {
+   "probe": "r8v8rev_bmatch_v1",
+   "regen_rc": 0,
+   "ok_size": 266,
+   "verify": "status=success units=2/2"
+  },
+  {
+   "probe": "r8v8rev_bmatch_v4",
+   "regen_rc": 0,
+   "ok_size": 222,
+   "verify": "status=success units=2/2"
+  }
+ ]
+}

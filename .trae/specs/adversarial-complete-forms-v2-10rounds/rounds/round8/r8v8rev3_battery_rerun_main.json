@@ -1,0 +1,47 @@
+{
+ "group": "main",
+ "results": [
+  {
+   "probe": "r8v8rev_b104_chain4_battery",
+   "regen_rc": 0,
+   "ok_size": 655,
+   "verify": "status=success units=6/6"
+  },
+  {
+   "probe": "r8v8rev_b105_walrus_battery",
+   "regen_rc": 0,
+   "ok_size": 432,
+   "verify": "status=success units=5/5"
+  },
+  {
+   "probe": "r8v8rev_b107_iso_battery",
+   "regen_rc": 0,
+   "ok_size": 378,
+   "verify": "status=success units=5/5"
+  },
+  {
+   "probe": "r8v8rev_b107_iso2_battery",
+   "regen_rc": 0,
+   "ok_size": 345,
+   "verify": "status=success units=4/4"
+  },
+  {
+   "probe": "r8v8rev_b107_mtarget3_battery",
+   "regen_rc": 0,
+   "ok_size": 405,
+   "verify": "status=success units=6/6"
+  },
+  {
+   "probe": "r8v8rev_bmatch_v3",
+   "regen_rc": 0,
+   "ok_size": 302,
+   "verify": "status=success units=2/2"
+  },
+  {
+   "probe": "r8v8rev_bmatch_or3iso",
+   "regen_rc": 0,
+   "ok_size": 831,
+   "verify": "status=success units=5/5"
+  }
+ ]
+}
