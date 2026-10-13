@@ -299,3 +299,69 @@ handed to the body, the fix is to extend the condition collection to the backwar
 Polarity reading: the two IF_TRUE legs and the one IF_FALSE leg together say the condition is not a pure `or`-chain;
 `while (A or B) and C:` and `while (A or B) and not C:` are the shapes to reproduce that mixture, so build the
 candidate texts from the two 3-leg rows above plus an `and`-tail control before writing the rule.
+
+## Eighth addendum (2026-10-13 08:46, orchestrator) - the CPython TEMPLATE is now pinned, and the product's wrong rendering is quoted
+
+I disassembled two reference shapes on 3.11.7. `while a or b or c: x = x + 1` compiles to:
+
+```
+  0 RESUME
+  2 LOAD_FAST  a        <- pre-header leg 1
+  4 POP_JUMP_FORWARD_IF_TRUE   14
+  6 LOAD_FAST  b        <- pre-header leg 2
+  8 POP_JUMP_FORWARD_IF_TRUE   14
+ 10 LOAD_FAST  c        <- pre-header leg 3
+ 12 POP_JUMP_FORWARD_IF_FALSE  36      <- exit
+ 14 LOAD_FAST  x        <- BODY START (target of every leg below)
+ 16 LOAD_CONST 1 / 18 BINARY_OP / 22 STORE_FAST x
+ 24 LOAD_FAST  a        <- bottom copy of the condition
+ 26 POP_JUMP_BACKWARD_IF_TRUE  14
+ 28 LOAD_FAST  b
+ 30 POP_JUMP_BACKWARD_IF_TRUE  14
+ 32 LOAD_FAST  c
+ 34 POP_JUMP_BACKWARD_IF_TRUE  14
+ 36 LOAD_FAST  x / 38 RETURN_VALUE
+```
+
+The block that starts the body therefore **ends with a `POP_JUMP_BACKWARD_IF_TRUE` whose target is itself** - which
+is exactly the original's `@704 n=21 ends POP_JUMP_BACKWARD_IF_TRUE->704, preds=[232,364,700,704,876,1056]`. So the
+original CFG of `_sync_worker`'s outer loop is now fully explained, edge by edge:
+
+| original | template role |
+|---|---|
+| @232 IF_TRUE->704, @364 fwd->704, @700 JUMP_FORWARD->704 | pre-header legs of the loop condition (CPython duplicates the condition above the body) |
+| @522 IF_FALSE->702, @544 IF_TRUE->1214, @702->1214, @1210->1214, @1212 NOP->1214 | the condition's exit path (= template `@12 IF_FALSE->36`) |
+| @704 body start, self-latching tail | body statements + the first bottom leg |
+| @876 IF_TRUE->704, @1056 IF_TRUE->704, @1208 IF_FALSE->704 | the remaining bottom legs (the IF_FALSE one says a leg is a negated test, `... or not D:`) |
+| @1214 IF_FALSE->1890, preds=[544,702,1210,1212] | loop exit / merge |
+
+And this is what our generator emits instead (`D:/Temp/r91m/out/broker_LANDED.py`, landed bytes, lines 839-848):
+
+```python
+        while True:
+            while int(datetime.datetime.now().strftime('%H%M')) < pre_before_trading:
+                time.sleep(60)
+                return int(datetime.datetime.now().strftime('%H%M')) >= int(post_after_trading)
+                continue
+                if holiday_sync_account == '0':
+                    continue
+                self.engine.data_proxy.is_trading_date(datetime.datetime.now().date())
+                continue
+            while pre_before_trading <= int(datetime.datetime.now().strftime('%H%M')) < int(post_after_trading):
+```
+
+i.e. the ONE loop condition that CPython duplicated (pre-header legs + bottom legs) is split into a `while True:`
+wrapper plus **separate `while` loops per leg**, and the leg tests that CPython places at the bottom are emitted as
+statements *inside* the body - including a bare `return <comparison>` followed by unreachable `continue`s. That is
+why the loss is a ~165-instruction relocation rather than a missing instruction, and why opcode parity
+(21 `COMPARE_OP` both sides) coexists with `Different control flow`.
+
+Rule the census should confirm or kill, stated in block data only (no names, no offsets, no counters):
+when a LoopRegion's body-start block B is (a) the target of a conditional **forward** jump from a block that lies
+before B and (b) the target of a conditional **backward** jump from a block inside the region's body, and the
+backward-jumping blocks' fall-through/exit edges all converge on the region's declared merge, then the blocks in
+(a) and (b) are the two copies of the SAME condition expression; they must be collected into the loop's condition
+(one BoolOp assembled from the leg tests, polarity read from the terminator class) instead of being turned into
+nested loops or body statements. Controls to reproduce before implementing: `while (a or b) and c:` (which puts its
+legs forward at the bottom and yields only ONE backward edge) must NOT be collected as a 3-leg or-chain, so the
+polarity mix of the backward edges is part of the criterion, not an afterthought.
