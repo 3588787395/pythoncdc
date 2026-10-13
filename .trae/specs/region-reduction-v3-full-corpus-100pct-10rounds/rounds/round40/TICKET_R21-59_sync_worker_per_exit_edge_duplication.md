@@ -255,3 +255,47 @@ Consequences, in force for this ticket:
    edge re-entering a *statement* (body start), which our product also produces once (@1980->1848), so the emitter
    demonstrably can do it. Nothing structural blocks the rule; it is identification-side coverage for the
    multi-exit case.
+
+## Seventh addendum (2026-10-13 08:44, orchestrator, 7 `compile()` shapes measured on 3.11.7) - the LAYOUT LAW, and with it the exact defect class
+
+I compiled loop shapes and counted, per target block, the conditional **backward** edges (rig inline; interpreter
+reported `3.11.7`, the same magic as the corpus pyc):
+
+| source shape | instrs | backward-conditional edges, grouped by target |
+|---|---|---|
+| `while a or b:` | 15 | target 10 <- @22 IF_TRUE, @26 IF_TRUE |
+| `while a and b:` | 15 | target 10 <- @26 IF_TRUE |
+| `while (a or b) and (c or d):` | 23 | target 18 <- @38 IF_TRUE, @42 IF_TRUE |
+| **`while a or b or c:`** | 19 | **target 14 <- @26 IF_TRUE, @30 IF_TRUE, @34 IF_TRUE** |
+| `while True: ... if a: continue / if b: break` | 15 | none (a `continue` is an unconditional `JUMP_BACKWARD`) |
+| `while a: ... if b: continue` | 14 | target 6 <- @24 IF_TRUE |
+| `while a or b: ... if c: continue` | 18 | target 10 <- @28 IF_TRUE, @32 IF_TRUE |
+
+**The law this gives:** in CPython 3.11 a `while` whose condition is an BoolOp is laid out with the FIRST leg's test
+above the body and every REMAINING leg *below* the body, each of them jumping **backward** to the **body-start
+block**. So the body-start block is entered forward (from the legs above it) *and* backward (from the legs below
+it), and an `or`-chain of N legs produces N-1 backward conditional edges onto that one block. A `continue` is
+unconditional and therefore cannot produce these edges - which retires r87a's "statement-level conditional jump"
+reading of this unit.
+
+Match that against the two censuses in this ticket:
+- original `@704` (which begins `time.sleep(60)`, 21 instructions, self-latch) is entered forward from @232/@364/@700
+  and backward from @876 IF_TRUE, @1056 IF_TRUE, @1208 IF_FALSE;
+- our product emits only 2 backward conditional edges (@1710->744, @1980->1848) instead of 4.
+
+So `_sync_worker` is: **a `while` loop whose condition is a mixed and/or BoolOp, with the leading legs rendered but
+the trailing legs (the ones CPython places below the body start) emitted as body statements instead of as part of
+the condition.** The target form is plain Python (`while leg_a or leg_b or leg_c:`), and since the generator emits
+AST, the form is expressible - this is a **condition-assembly / region-identification** defect in the same family as
+landed gate-36 `_is_while_true` and the landed or-chain rules [R21-13]/[R21-19], *not* a per-exit-edge emission
+defect and *not* a chained-comparison defect (sixth addendum).
+
+Census to confirm before editing (this is step 1 of r91a's work order, restated as one question): for the LoopRegion
+whose body starts at the block entered by @232's forward jump, list every block that jumps backward to that body
+start, with each one's terminator class and operand polarity, and check whether the region's collected condition
+contains those blocks' tests. If the collected condition holds only the leading legs and the trailing legs are
+handed to the body, the fix is to extend the condition collection to the backward-leg blocks - own block data
+(terminator opcode class + target identity + membership in the loop region), no names, no offsets, no thresholds.
+Polarity reading: the two IF_TRUE legs and the one IF_FALSE leg together say the condition is not a pure `or`-chain;
+`while (A or B) and C:` and `while (A or B) and not C:` are the shapes to reproduce that mixture, so build the
+candidate texts from the two 3-leg rows above plus an `and`-tail control before writing the rule.
