@@ -29,3 +29,32 @@ holiday block → drop the spurious duplicated tail → fix the `@7164` or-chain
   print a false `CHANGED=0`); assert `files_compared=402 MISSING/FAIL=0` before believing any zero.
 - Acceptance: `pyc_verify single --source <fresh product>` → `13/13`; then my own 402 sweep expecting
   `CHANGED={realtime_event_source}`; then `gate_chain 41 40` vs `rounds/round40/after`.
+
+
+## Addendum 1 (orchestrator, 07:50) — instrumented scoring, and two live readings on r104a's build
+
+Scoring is now one command: `python -X utf8 rounds/round41/oracle_diff_r104.py <product.py>` prints
+`hunks_vs_ORACLE` for `clock_worker` (against the 254-line oracle body), then the `census_diff` edge verdict, then the
+judge line. Certified: oracle → `0 / all-equal / units=13/13`; landed product → `4 / instrs=-112 jsites=-9 /
+indeg-equal=False / 12/13`.
+
+Measured on r104a's in-flight bytes (analyzer `521e9e3b3ca55f36`, product `out/rt_f5.py`) — a moving hash, so this is
+a progress reading and not a verdict:
+
+| arm | clock_worker lines | vs oracle 254 | instrs Δ | jsites Δ | indeg-equal | judge |
+|---|---|---|---|---|---|---|
+| landed base product | 244 | 4 hunks | −112 | −9 | False | 12/13 |
+| r104a f5 | **241** | 4 hunks | **−114** | −9 | False | 12/13 |
+
+So f5 has not yet closed a hunk and slightly widened the instruction gap; keep going down the ladder and re-score
+with the rig rather than with `delta`.
+
+**Repeating the sweep trap explicitly, because r104a's own list reproduces it:**
+`D:/Temp/r104/repro/corpus402.txt` contains **relative** paths (`abs=0 rel=0` on a `^D:/` grep), exactly like the
+repo list. Regenerating with `cwd=mirror` will therefore read every entry as MISS and print `CHANGED_COUNT 0` —
+a false clean sweep. Before trusting any zero, assert `files_compared=402` and `MISSING/FAIL=0`. I will run my own
+sweep (with the ROOT join) before installing anything, so this can only cost r104a wasted turns, not correctness.
+
+Install path when a `13/13` exists: `orchestrator/install_pair.py --ana <analyzer> --gen <generator>
+--gold-hunks <n> --units "13/13" --sweep "ok=402 bad=0 changed=1" --gate` (the rig now demands the judge line be
+`n/n`, and refuses otherwise — verified live this session on a `127/128` reading).
