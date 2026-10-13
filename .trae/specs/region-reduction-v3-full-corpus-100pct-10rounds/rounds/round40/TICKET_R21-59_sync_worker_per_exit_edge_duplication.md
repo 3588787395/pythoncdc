@@ -535,3 +535,33 @@ Reading after installing that battery in my mirror at the correct depth (`D:/Tem
 byte the landed reading** - mounting the chain in `_sync_worker` does not reach any of the eight synthetic shapes. So
 the chain-mount half is not yet a generalization, and a candidate's battery score is now a required column in its
 halves table (baseline to beat: RED=8/9 with `r01_or_cc_return` green).
+## Thirteenth addendum (2026-10-13 09:52, orchestrator) - CORRECTION to my own twelfth addendum: those 8 battery reds are a NEIGHBOURING axis, not a repro of mechanism A
+
+I read three of the battery sources before relying on that claim. All nine cases are `while True:` + `try:` wrapping an
+**`if/elif` chain whose arms are or-chains ending in a chained comparison**, e.g. `v1_while_try_cont.py`:
+
+```python
+while True:
+    try:
+        if dt_strf > '15:15:00' or dt_strf < '08:30:00' or '11:30:00' < dt_strf < '12:30:00':
+            time.sleep(60); continue
+        elif '08:30:00' <= dt_strf < '08:59:00':
+            time.sleep(30); continue
+        break
+    except Exception:
+        pass
+```
+
+So the test sits in an `IfRegion`, not in a `LoopRegion` condition, and CPython's duplicated-*while*-test layout is not
+what these cases exercise. My twelfth addendum therefore overstated the harness: the corrected statement is
+
+* **The battery is a NO-REGRESSION witness for this axis**, not its acceptance test: any mechanism-A candidate must
+  leave `RED=8/9 (r01_or_cc_return green)` unchanged or better, and a candidate that *increases* the red count is
+  collateral damage caught in 40 seconds rather than 190.
+* **Mechanism A's own acceptance repros are the two built this round**: r90a's `repro_rotated_while.pyc`
+  (`rounds/round40/r90/repro/`, judged `units=1/2 Different control flow`, a 12-line function that reproduces the
+  garbage in kind) and r91a's `true_source_sync_worker.py` / `broker_GOLD_PROOF.py` (128/128).
+* Round 14's conclusion quoted in addendum 12 ("Phase 2 chained-compare regions steal boolop-chain membership; the
+  blocker is parent **IfRegion** condition assembly") is about the `if/elif` family, which is a *sibling* of the
+  `while` family I mapped today: same steal mechanism, different owning region. The shared root is worth one
+  sentence in each ticket, but a fix for one does not buy the other, and I should not have implied it did.
