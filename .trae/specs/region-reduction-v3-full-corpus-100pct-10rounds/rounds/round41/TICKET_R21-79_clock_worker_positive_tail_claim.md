@@ -67,3 +67,34 @@ that, rewriting each script's mirror path prefix into a private merge tree and a
 pair-vs-base matrix before anything is considered for `install_pair.py`. Precedent for the discipline:
 unioning two halves that share a footing can fail the merge proof — supersede rather than union
 (`[[feedback-pair-interaction-suppression]]`, `[[pythoncdc-fix-agent-dispatch-hazards]]`).
+
+## Addendum 1 — r107a's first candidate measured by the orchestrator: fires, does not flip, worse by one instruction (2026-10-14 01:02)
+
+r107a delivered `CANDIDATE_r2179_3ad5ceaa23135334.py` (2,135,179 B, BOM intact) + `PATCH_R21-79_region_analyzer.py`.
+Measured in my own mirror `D:/Temp/r91m` (platform pinned to `996a1b1acf143458` + `566ff5c502276e48`, pristine copy
+`ana_base_996a1b1acf143458.py` restored and re-hashed in the same command, so the mirror is back at base):
+
+| reading | F5 base | r107a `3ad5ceaa` |
+|---|---|---|
+| product bytes / sha16 | 20190 / `192ba0f09e81bbd7` | 20078 / `25730af90ed6d1db` |
+| `hunks_vs_ORACLE` | 4 | **4** |
+| `DELTAS instrs` | -114 | **-115** |
+| `jsites` / `indeg-equal` | -9 / False | -9 / False |
+| judge | 12/13 Different control flow | **12/13 Different control flow** |
+| attribution (mine) | step1 tail @7972..@8586 open | step1 tail @7972..@8586 still open |
+
+So the rule as implemented moves bytes in the wrong direction: it removes 112 more characters of text while the
+112-instruction drop it was supposed to recover stays dropped, and the instruction gap widens by one.
+The ticket's primary acceptance condition (`instrs` moving from -114 toward 0) is therefore **not met** and the
+candidate is **banked, not installed** — no panel, no 402 sweep, no gate window spent, per
+`[[feedback-fires-without-flips]]`. Sweep/panel collateral testing is only owed to a candidate that closes its
+named fact.
+
+What this buys: it is the fifth distinct exclusion on the `elif_final_else` over-absorption axis. The measured
+shape that any further attempt must still explain is in `MEASURE_R21-79_fe_overabsorption_census.md` §2 — the
+chain's 42-block final-else is entered from its own merge `@7216` at `@7582`, and a refusal that simply drops
+those blocks from the arm (which is what a shrinking product indicates) does not make the emitter print them at
+their position, because they are simultaneously owned by `LoopRegion@5598` (103 blocks) and `TryExceptRegion@6`
+(190 blocks) as plain body blocks. The claim has to be *positive in both directions*: release the tail from the
+arm AND hand it to the sequential body list of the owning loop/try. That pairing is what is missing, not a
+narrower predicate.
