@@ -1,0 +1,58 @@
+[
+ {
+  "name": "b104_chain4_battery",
+  "pyc": "test_repros/round8/r8v8rev_b104_chain4_battery.pyc",
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ },
+ {
+  "name": "b105_walrus_battery",
+  "pyc": "test_repros/round8/r8v8rev_b105_walrus_battery.pyc",
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "b107_mtarget3_battery",
+  "pyc": "test_repros/round8/r8v8rev_b107_mtarget3_battery.pyc",
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ },
+ {
+  "name": "b107_iso_battery",
+  "pyc": "test_repros/round8/r8v8rev_b107_iso_battery.pyc",
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "b107_iso2_battery",
+  "pyc": "test_repros/round8/r8v8rev_b107_iso2_battery.pyc",
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "name": "bmatch_v3",
+  "pyc": "test_repros/round8/r8v8rev_bmatch_v3.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "bmatch_or3iso",
+  "pyc": "test_repros/round8/r8v8rev_bmatch_or3iso.pyc",
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ }
+]
