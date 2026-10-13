@@ -60,3 +60,26 @@ all seven of r79a's reclaim-guard / back-edge candidates — I judged every one:
 `Different control flow` in all seven (adjudication §16). r87a also proved the just-landed [R21-55]/[R21-56]
 machinery has **zero evaluations** inside this code object (§17), and that three hand-written "ideal" loop texts
 (`+68 / +19 / -71`) still judge `Different control flow`.
+
+## Addendum (me 2026-10-13 08:04): the first experiment is already run, and it is negative
+
+I compiled the two obvious shapes on 3.11.7 and counted conditional-jump kinds in the extracted function:
+
+| shape | instructions | `%H%M` loads | conditional jumps |
+|---|---|---|---|
+| A `while True:` + one flat `if A or B or (C and D):` body | 57 | 2 | `POP_JUMP_FORWARD_IF_TRUE` ×4, `POP_JUMP_FORWARD_IF_FALSE` ×1 |
+| B same test split into `_a=…; if _a: continue; _b=…; if _b: continue; if C and D:` | 63 | 2 | `POP_JUMP_FORWARD_IF_TRUE` ×2, `POP_JUMP_FORWARD_IF_FALSE` ×3 |
+
+**Neither emits a single `POP_JUMP_BACKWARD_IF_*`,** while the original contains
+`POP_JUMP_BACKWARD_IF_TRUE ->704` and `POP_JUMP_BACKWARD_IF_FALSE ->1212` in its second leg copy. Backward
+conditional jumps appear only when a path enters the chain *mid-way* with its remaining targets lying behind it, so
+the original's second copy is not produced by any shape I can obtain from a plain `while`/`continue`
+re-arrangement. Combined with r87a's three hand-written ideal loop texts (`+68 / +19 / -71`, all still
+`Different control flow`), the honest state is: **four independent text shapes have failed to reproduce the doubled
+legs**, which is evidence that the gap is a CFG-level duplication our pipeline does not currently generate at all.
+
+Therefore the ticket's decision rule stands and is now sharpened: whoever takes this unit must first produce a
+`compile()`-reproducible shape for the doubled legs (a text whose extracted function contains both a
+`POP_JUMP_FORWARD_IF_TRUE ->X` and a `POP_JUMP_BACKWARD_IF_TRUE ->X` for the same `X`), and only *then* look for an
+identification-time rule that renders it. If no such text exists, the correct conclusion is that `_sync_worker`
+needs a jump-threading/duplication capability in the emitter, and that is an architecture task, not a criterion.
