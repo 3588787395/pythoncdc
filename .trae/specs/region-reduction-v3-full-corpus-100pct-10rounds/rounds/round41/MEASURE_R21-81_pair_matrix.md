@@ -229,3 +229,22 @@ Ablations r111a ran (all recorded): release without the 26911 honour returns bas
 What still blocks the flip, stated by r111a and consistent with my own reads: the unit overshoots to 262 lines not from duplication (every run marker appears exactly once in both gold and product) but from eight lines of pre-existing step-3 and step-4 or-chain scaffolding in the base. So the instruction gap is now -6 and the surviving axis is the position of that scaffolding, which is addendum 9 half (a), the renderer position, not claims.
 
 Status: still no flip, so R21-86 is **banked, not installed**, and gate label 41 stays unconsumed. It is the best-known arm in the campaign by a wide margin - from -114 to -6 instructions with zero collateral, panel-clean and sweep-clean. Artifacts: rounds/round41/r111/ (candidate, patch, FIX, MEASURE) plus this table. Corpus 6616/6617 (99.9849 percent), 401/402 files, landed bytes unmoved, repo core/ clean.
+## Addendum 12 - [R21-87] is collateral-clean but proves the [R21-86] reading of -6 instructions was parity by cancellation (2026-10-14 04:05)
+
+r112a built a positive-polarity single-leg or-chain fold on top of [R21-86] and shipped generator ed07b60b970e545d. I re-scored it in my own mirror at 04:02 on analyzer 996a1b1acf143458: ours=257 (base 262, oracle 254), instrs=-26, back=+0, jsites=-2, hunks_vs_ORACLE=6, indeg-equal=False, judge 12/13, and all nine collateral files byte-identical (broker, klinedata, quote, real_quote, quotation, order_api, replace_utils, function, handlers). Panel 20 by index: 19 rows byte-same with unchanged units, row 12 the victim at 12/13. ROOT-joined 402 sweep: files_compared=402, MISSING/FAIL=0, CHANGED_COUNT=1 = the victim only. So the arm is collateral-clean and still does not flip, and by its own bar (instrs must move toward 0) it fails: it moves away.
+
+The informative part is the ablation table, because it redefines what the [R21-86] reading meant:
+
+| arm | ours | instrs | back | jsites | hunks |
+|---|---|---|---|---|---|
+| [R21-86] base | 262 | -6 | +0 | +2 | 4 |
+| fold only | 256 | -27 | +0 | -4 | 8 |
+| fold plus narrow, no guard | 212 | -282 | -1 | -33 | 6 |
+| guard applied after the marks | 262 | -6 | +0 | +2 | 4 (inert, base bytes) |
+| shipped fold with pre-mutation guard | 257 | -26 | +0 | -2 | 6 |
+
+Reading: the [R21-86] figure of -6 is scaffolding-masked parity, not near-parity. The nesting it introduces double-pays for the tests, so the deficit it hides is roughly -26 in the 7582 to 9194 tail, and correcting the text with the fold removes the mask and lets the true gap appear. That is the same asymmetry recorded in the standing rule that a text change is not unit movement, now in the opposite direction: a shorter oracle diff can accompany a worse unit, which is why the judge is the criterion and why instrs and jsites must be read together rather than as separate wins.
+
+Next axis, from r112a diagnosis plus my own reading of the same table: the 7164 chain owns the whole loop tail, so step-3 refuses the fold. That tail-ownership claim is the remaining mechanism, and it was measured destructive once before in the [R21-48] family, so it needs a new discriminator rather than a re-attempt. Ticket R21-88 is dispatched to r113a on the [R21-86] base (not on [R21-87], which is banked), with the requirement that instrs and jsites both move toward 0 together and that the [R21-86] base arm stays byte-reproducible.
+
+Still nothing installed. Corpus 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, landed bytes unmoved, repo core/ clean.
