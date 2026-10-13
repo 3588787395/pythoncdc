@@ -273,3 +273,26 @@ Two findings, both negative and both load-bearing:
 Panel 20 and the 402 sweep were not run, per the stop rule that an arm failing the direction check owes no sweep. Judge stays 12/13 with indeg-equal False. Banked, not installed.
 
 Campaign best remains [R21-86]: analyzer 996a1b1acf143458 plus generator 59a405837c22a4cb at ours=262, instrs=-6, jsites=+2, back=+0, 4 hunks, 12/13, zero collateral, and understood as parity by cancellation over a tail deficit near -26. Live work is ticket R21-88 (r113a, tail ownership of the 7164 chain). Corpus 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, landed bytes unmoved, repo core/ clean.
+
+## Addendum 15 - [R21-88] closes the tail-ownership axis and leaves exactly two named swallowed statements (2026-10-14 05:06)
+
+r113a shipped generator-only `47d44ec51fa325c5`, built idempotently from `[R21-86]` on the F5 analyzer, subsuming the `[R21-87]` fold, with no analyzer co-requisite. I scored its at-rest bytes myself at 04:48 before the report arrived and got the same reading: `ours=256` against the oracle 254, `instrs=-25`, `back=+0`, `jsites=-4`, `indeg-equal=False`, judge `12/13`, **zero collateral**.
+
+| arm | ours | instrs | back | jsites | hunks | judge |
+|---|---|---|---|---|---|---|
+| base [R21-86] | 262 | -6 | +0 | +2 | 4 | 12/13 |
+| pre-pass alone (ablation) | 262 | -6 | +0 | +2 | 5 | 12/13 |
+| fold plus transfer without the E seed, equal to [R21-87] shape | 257 | -26 | +0 | -2 | 6 | 12/13 |
+| mid-walk tail transfer, rejected shape | 212 | -282 | -1 | -33 | 6 | 12/13 |
+| fold plus chain continuation, no pre-pass | 258 | -22 | +0 | -1 | 6 | 12/13 |
+| **shipped [R21-88]** | **256** | **-25** | **+0** | **-4** | 8 local | **12/13** |
+
+Collateral is clean on every face: broker, klinedata, quote, real_quote, quotation identical in the smoke; order_api, handlers, replace_utils and risk function identical via panel and sweep; **panel 20 by index unchanged on all 20 rows** (broker 128/128 through profiler 18/18) with the victim the only differing row; **402-file ROOT-joined sweep `MISSING/FAIL=0`, `CHANGED={realtime_event_source.pyc}` only.**
+
+**Axis closed by this result:** the tail-ownership claim that blocked steps 3, 4 and 6 for four rounds is settled. The pre-pass moves blocks that are forward-reachable from the tail-leg entry out of the folding region and re-parents the entry-transferred regions, and all four sites `@6322`, `@6496`, `@7164`, `@7582` now render flat at parent level with `back=+0` and a two-line delta. Ownership is no longer the residual.
+
+**The residual is two named statements, not a family:** the -25 is (1) the test `if now_date != self.first_run_date`, whose body is swallowed by the fold arm walk, and (2) the first ladder test of the `@8904`/`@8948` chain, which renders as `else:` where the oracle has `elif check_trading_time(...)`. Both are walk-coverage items inside the fold implementation, and the standing bar for the next arm is the same: `instrs` and `jsites` toward 0 together with `back=+0`, zero collateral, then the judge.
+
+Best arm by judge-relevant distance is now a choice between two incomparable readings, which is itself worth recording: `[R21-86]` at `instrs=-6, jsites=+2` is parity by cancellation over a hidden tail deficit, `[R21-88]` at `instrs=-25, jsites=-4` is the honest structure with two named holes. The second is the one to continue from, because its residual is attributable and its `back=+0` and collateral profile are clean, while the first hides its error.
+
+Still nothing installed: `12/13` on both. Gate label 41 unconsumed, landed bytes unmoved, repo core/ clean, corpus 6616/6617 (99.9849 percent), 401/402 files. Remote verified by fetch plus rev-list at each step, including after two push attempts that exited 0 while the ref had not moved.
