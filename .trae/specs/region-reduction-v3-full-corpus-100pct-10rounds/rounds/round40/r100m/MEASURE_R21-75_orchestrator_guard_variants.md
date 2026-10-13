@@ -56,3 +56,15 @@ windows 7 / 46 lines / **1 hunk**; r102a v1 `91c16e16` -> independently the same
 r102a v2 `566ff5c5` + r100a -> windows 5, still 127/128. The position half is therefore *actuated* by four
 different hands, and what still blocks `128/128` is the attachment shape named above (loop 2 in the `else:`
 of the third guard test; innermost body after the if/else; `return None` instead of a bare `return`).
+
+
+## Two more measured facts before the round is handed over
+
+1. **`return None` is not the blocker.** Taking the last-measured product (`566ff5c5` + `9ba2d8af`) and changing
+   its single `return None` inside `_sync_worker` to a bare `return` still judges `127/128`
+   (`PROBE_bare_return_only_on_r102a_v2.py`). So the terminator token alone is not judge-visible here; position is
+   still required, exactly as my `PROBE_source_flat_chain_in_place.py` showed from the other direction.
+2. **r102a's v2 lost the position gain.** Its product under `9ba2d8af` prints loop 2 at line 842 *before* the
+   reconnect chain again (windows 5), i.e. v2 traded my variant (b)'s single-hunk state back. Therefore the best
+   known text state for this axis stays **analyzer `9ba2d8af` + generator `bd57b0f6` = 46 lines, 1 hunk**, and the
+   next hand should build on that pair rather than re-deriving the guard.
