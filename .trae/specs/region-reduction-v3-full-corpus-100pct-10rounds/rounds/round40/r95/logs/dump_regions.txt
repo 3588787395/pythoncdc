@@ -1,0 +1,95 @@
+unit=_sync_worker blocks=54
+
+### @0 n=19 owner=IfRegion@0
+  succ=[120, 150] preds=[]
+    @0      RESUME                           0
+    @2      LOAD_FAST                        self
+    @4      LOAD_ATTR                        engine
+    @14     LOAD_ATTR                        config
+    @24     LOAD_ATTR                        plugins
+    @34     LOAD_ATTR                        plugin_system_trade
+    @44     LOAD_ATTR                        account_sync_steps
+    @54     STORE_FAST                       steps
+    @56     LOAD_FAST                        engine
+    @58     LOAD_METHOD                      set_engine
+    @80     LOAD_FAST                        engine
+    @82     PRECALL                          1
+    @86     CALL                             1
+    @96     POP_TOP                          None
+    @98     LOAD_FAST                        self
+    @100    LOAD_ATTR                        business_type
+    @110    LOAD_CONST                       future
+    @112    COMPARE_OP                       ==
+    @118    POP_JUMP_FORWARD_IF_FALSE        150
+
+== regions ==
+LoopRegion@1890 hdr=2072 cond=1890 be=2844 bes=[2844] cc=[2026] ccexpr=False body=[2072, 2090, 2114, 2136, 2168, 2192, 2198, 2200, 2206, 2208, 2214, 2374, 2378, 2382, 2492, 2540, 2580, 2628, 2668, 2844, 2884] meta={'chained_compare_ops': ['<=', '<'], 'is_chained_compare_cond': True}
+  WithRegion@2072 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  IfRegion@2090 hdr=None cond=2114 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    BoolOpRegion@2090 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  IfRegion@2214 hdr=None cond=2214 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  IfRegion@2378 hdr=None cond=2378 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  IfRegion@2492 hdr=None cond=2492 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  IfRegion@2580 hdr=None cond=2580 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  IfRegion@2668 hdr=None cond=2668 be=None bes=[] cc=[] ccexpr=False body=[] meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': True}
+LoopRegion@232 hdr=704 cond=232 be=704 bes=[704] cc=[232, 364, 522, 544, 1214, 1890, 2026] ccexpr=False body=[704, 876, 1034, 1056, 1212] meta={}
+  IfRegion@522 hdr=None cond=522 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  IfRegion@544 hdr=None cond=544 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  IfRegion@1034 hdr=None cond=1034 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  IfRegion@1214 hdr=None cond=1370 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    BoolOpRegion@1214 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  IfRegion@1388 hdr=None cond=1524 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    BoolOpRegion@1388 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  IfRegion@1638 hdr=None cond=1638 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  IfRegion@1770 hdr=None cond=1770 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+LoopRegion@232 hdr=232 cond=None be=2886 bes=[2886] cc=[] ccexpr=False body=[230, 232, 364, 522, 544, 700, 702, 704, 876, 1034, 1056, 1210, 1212, 1214, 1370, 1388, 1502, 1524, 1638, 1770, 1872, 1876, 1890, 2026, 2064, 2066, 2072, 2090, 2114, 2136, 2168, 2192, 2198, 2200, 2206, 2208, 2214, 2374, 2378, 2382, 2492, 2540, 2580, 2628, 2668, 2844, 2882, 2884, 2886] meta={}
+  LoopRegion@232 hdr=704 cond=232 be=704 bes=[704] cc=[232, 364, 522, 544, 1214, 1890, 2026] ccexpr=False body=[704, 876, 1034, 1056, 1212] meta={}
+    IfRegion@522 hdr=None cond=522 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    IfRegion@544 hdr=None cond=544 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    IfRegion@1034 hdr=None cond=1034 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    IfRegion@1214 hdr=None cond=1370 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+      BoolOpRegion@1214 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    IfRegion@1388 hdr=None cond=1524 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+      BoolOpRegion@1388 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    IfRegion@1638 hdr=None cond=1638 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    IfRegion@1770 hdr=None cond=1770 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  LoopRegion@1890 hdr=2072 cond=1890 be=2844 bes=[2844] cc=[2026] ccexpr=False body=[2072, 2090, 2114, 2136, 2168, 2192, 2198, 2200, 2206, 2208, 2214, 2374, 2378, 2382, 2492, 2540, 2580, 2628, 2668, 2844, 2884] meta={'chained_compare_ops': ['<=', '<'], 'is_chained_compare_cond': True}
+    WithRegion@2072 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    IfRegion@2090 hdr=None cond=2114 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+      BoolOpRegion@2090 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    IfRegion@2214 hdr=None cond=2214 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    IfRegion@2378 hdr=None cond=2378 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    IfRegion@2492 hdr=None cond=2492 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    IfRegion@2580 hdr=None cond=2580 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+    IfRegion@2668 hdr=None cond=2668 be=None bes=[] cc=[] ccexpr=False body=[] meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': True}
+WithRegion@2072 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+BoolOpRegion@1214 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+BoolOpRegion@1388 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+BoolOpRegion@2090 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+IfRegion@2668 hdr=None cond=2668 be=None bes=[] cc=[] ccexpr=False body=[] meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': True}
+IfRegion@2580 hdr=None cond=2580 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+IfRegion@2492 hdr=None cond=2492 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+IfRegion@2378 hdr=None cond=2378 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+IfRegion@2214 hdr=None cond=2214 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+IfRegion@2090 hdr=None cond=2114 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  BoolOpRegion@2090 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+IfRegion@1770 hdr=None cond=1770 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+IfRegion@1638 hdr=None cond=1638 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+IfRegion@1388 hdr=None cond=1524 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  BoolOpRegion@1388 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+IfRegion@1214 hdr=None cond=1370 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  BoolOpRegion@1214 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+IfRegion@1034 hdr=None cond=1034 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+IfRegion@544 hdr=None cond=544 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+IfRegion@522 hdr=None cond=522 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+IfRegion@0 hdr=None cond=0 be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  Region@0 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  Region@120 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  Region@150 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  Region@172 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+  Region@202 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+Region@0 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+Region@120 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+Region@150 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+Region@172 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}
+Region@202 hdr=None cond=None be=None bes=[] cc=[] ccexpr=False body=[] meta={}

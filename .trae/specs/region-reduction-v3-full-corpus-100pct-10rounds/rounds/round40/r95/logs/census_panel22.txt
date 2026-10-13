@@ -1,0 +1,46 @@
+FILE site-packages/fly/data/quotation.pyc cc_loops=0 other_loops=22 A=0 B=0 C=0 | noncc A=0 B=1 C=0
+  OTHER unit=get_holiday_online loop@0 cond=@0 seglens=[21] A=[] B=[342] C=[]
+FILE site-packages/fly/data/quote.pyc cc_loops=0 other_loops=10 A=0 B=0 C=0 | noncc A=0 B=1 C=1
+  OTHER unit=run_tick_transform loop@1368 cond=@1368 seglens=[5, 6] A=[] B=[] C=[1594]
+  OTHER unit=run_individual_transform loop@586 cond=@586 seglens=[6] A=[] B=[1660] C=[]
+FILE site-packages/IQCommon/api/klinedata.pyc cc_loops=0 other_loops=11 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/logger/handlers.pyc cc_loops=0 other_loops=3 A=0 B=0 C=0 | noncc A=0 B=0 C=2
+  OTHER unit=_target loop@504 cond=@504 seglens=[2] A=[] B=[] C=[994]
+  OTHER unit=_target loop@90 cond=@90 seglens=[2] A=[] B=[] C=[390]
+FILE site-packages/IQCommon/strategy/wizard_quant_api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/trade_info_utils.pyc cc_loops=0 other_loops=4 A=0 B=0 C=0 | noncc A=0 B=4 C=2
+  OTHER unit=get_trade_status loop@270 cond=@270 seglens=[4] A=[] B=[458] C=[786]
+  OTHER unit=set_trade_status loop@250 cond=@250 seglens=[4] A=[] B=[382] C=[806]
+  OTHER unit=check_and_update_trade loop@10 cond=@10 seglens=[7] A=[] B=[236, 416] C=[]
+FILE site-packages/IQData/api/api_base.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc cc_loops=0 other_loops=8 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc cc_loops=1 other_loops=17 A=1 B=1 C=1 | noncc A=0 B=19 C=7
+  OTHER unit=get_ipo_stocks loop@590 cond=@590 seglens=[6] A=[] B=[676] C=[930]
+  OTHER unit=ipo_stocks_order loop@1088 cond=@1088 seglens=[6] A=[] B=[1174] C=[1428]
+  OTHER unit=get_crdt_enslosecu_stock_info loop@254 cond=@254 seglens=[7] A=[] B=[698, 1634] C=[1896]
+  OTHER unit=get_crdt_target_stockinfo loop@208 cond=@208 seglens=[7] A=[] B=[652, 1270] C=[1532]
+  OTHER unit=get_crdt_stock_info loop@208 cond=@208 seglens=[7] A=[] B=[1092] C=[1354]
+  OTHER unit=get_margin_contractreal loop@316 cond=@316 seglens=[11] A=[] B=[454, 1196] C=[]
+  OTHER unit=on_trade_response loop@0 cond=@0 seglens=[15] A=[] B=[440, 694, 1270, 1610] C=[]
+  OTHER unit=on_order_response loop@0 cond=@0 seglens=[15] A=[] B=[440, 694, 1270, 1624, 1716] C=[]
+  CC unit=_sync_worker loop@1890 cond=@1890 seglens=[6, 16] A=[2668] B=[2214] C=[2844]
+  OTHER unit=_process_tick_order loop@114 cond=@114 seglens=[3] A=[] B=[446] C=[]
+  OTHER unit=get_portfolio loop@1108 cond=@1108 seglens=[9] A=[] B=[] C=[1458]
+  OTHER unit=get_portfolio loop@414 cond=@414 seglens=[9] A=[] B=[] C=[676]
+FILE site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc cc_loops=0 other_loops=3 A=0 B=0 C=0 | noncc A=0 B=6 C=1
+  OTHER unit=events loop@102 cond=@102 seglens=[2] A=[] B=[140] C=[]
+  OTHER unit=clock_worker loop@5598 cond=@5598 seglens=[3] A=[] B=[5738, 5902, 6890, 8400, 8450] C=[9194]
+FILE site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc cc_loops=0 other_loops=2 A=0 B=0 C=0 | noncc A=0 B=0 C=1
+  OTHER unit=_save_testds_to_csv loop@108 cond=@108 seglens=[2] A=[] B=[] C=[248]
+FILE site-packages/IQCommon/arg_checker.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/arg_checker.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/arg_checker.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/profiler_func.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/profiler_func.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/profiler_func.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/replace_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+DONE files=22 cc_loops=1 other_loops=81 A=1 B=1 C=1 noncc_A=0 noncc_B=31 noncc_C=14 elapsed=37s

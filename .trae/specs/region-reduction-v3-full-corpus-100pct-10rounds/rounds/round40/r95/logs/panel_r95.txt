@@ -1,0 +1,15 @@
+IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc -> [single] status=failure units=127/128 success_rate=99.22%
+    resid: ***<module>.TradeLiveBroker._sync_worker: Failure: Different control flow
+IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc -> [single] status=failure units=12/13 success_rate=92.31%
+    resid: ***<module>.RealtimeEventSource.clock_worker: Failure: Different control flow
+IQCommon/util/replace_utils.pyc -> [single] status=success units=9/9 success_rate=100.00%
+IQEngine/plugins/plugin_system_risk_calculation/function.pyc -> [single] status=success units=15/15 success_rate=100.00%
+fly/data/quote.pyc -> [single] status=success units=92/92 success_rate=100.00%
+fly/data/quotation.pyc -> [single] status=success units=153/153 success_rate=100.00%
+IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc -> [single] status=success units=37/37 success_rate=100.00%
+IQCommon/arg_checker.pyc -> [single] status=success units=49/49 success_rate=100.00%
+IQData/utils/arg_checker.pyc -> [single] status=success units=39/39 success_rate=100.00%
+IQEngine/utils/arg_checker.pyc -> [single] status=success units=43/43 success_rate=100.00%
+IQCommon/profiler_func.pyc -> [single] status=success units=17/17 success_rate=100.00%
+IQData/utils/profiler_func.pyc -> [single] status=success units=15/15 success_rate=100.00%
+IQEngine/utils/profiler_func.pyc -> [single] status=success units=18/18 success_rate=100.00%

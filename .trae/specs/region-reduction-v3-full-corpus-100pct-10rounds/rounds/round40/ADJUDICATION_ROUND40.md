@@ -166,3 +166,27 @@ now: GOLD vs GOLD = **0**; the landed product vs GOLD = **4 hunks** (54 vs 45 li
 **3 hunks** (43 vs 45 lines, the three facts of addendum 18); and `_process_order` under the fold vs GOLD = 0, which
 is the sanity case since that unit is Equal on both sides. So the measured remaining distance for `_sync_worker` is
 exactly those 3 hunks, and the merged candidate is accepted only at 0.
+## 9. The pair `1471c92e` + `0f4c3898` measured in my mirror: 2 hunks from the 128/128 text (2026-10-13 10:42)
+
+r95a delivered generator `0f4c3898298e6f2e` (3 hunks inside `_loop_generate_while`'s chained-compare suppression,
+`region_ast_generator.py:8126-8174`, gated by `is_chained_compare_cond`), censused at 1 reachable LoopRegion in the
+panel and 1 in all 402 files (`loop@1890`), with the same 82/173 condition population r90a measured independently. It
+also corrects r91a's mechanism claim: the `sync_data_flag = 1` half was an **over-fire** of the landed `_is_recheck`
+("post-store contains a compare op"), which hoisted `@2214`'s store and deleted its `if`.
+
+My own reading of the PAIR (r93a's analyzer + r95a's generator, both hashed after copy):
+
+```
+[installed] gen=0f4c3898298e6f2e ana=1471c92eca157e46
+[repro]     Different bytecode 1/2        [battery]  RED=8/9
+[broker]    units=127/128, sole failure _sync_worker, windows 9 -> 5
+[panel]     realtime 12/13  replace_utils 9/9  function 15/15  quote 92/92  quotation 153/153  order_api 37/37
+gold_diff   ours=42 lines GOLD=45  hunks_vs_GOLD=2   (@@ -18,0 +19,8 @@  and  @@ -37,5 +44,0 @@)
+```
+
+So the distance to a flip is now two textual facts, each with an owner: the reconnect block's nesting plus `return`
+(r99a, replacing r96a which died at the turn cap with bytes that scored worse - 4 hunks, because they build on the
+landed analyzer and lack the fold), and five lines we emit that GOLD does not (r98a, the leftover latch/operand
+statements). Both halves are measured zero-collateral in their own sweeps (`changed = trade_live_broker` only), and
+neither flips alone, which is why the gate label stays unconsumed until the union is measured at
+`units=128/128`.
