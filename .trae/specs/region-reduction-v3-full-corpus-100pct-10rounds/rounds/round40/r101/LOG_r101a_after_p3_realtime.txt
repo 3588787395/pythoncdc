@@ -1,0 +1,11 @@
+product size=18046
+JUDGE| ***<module>.RealtimeEventSource.clock_worker: Failure: Different control flow
+JUDGE| [single] status=failure units=12/13 success_rate=92.31%
+UNITDIFF| len orig=1424 prod=1155 delta=-269
+UNITDIFF| hunks=4 landings=2 judge_diff=True
+ALLWIN| len orig=1424 prod=1155 delta=-269
+ALLWIN| == #1 delete orig[1099..1153 @7582..@7836] prod[1099..1099] del=54 ins=0
+ALLWIN| == #2 replace orig[1159..1160 @7878..@7878] prod[1105..1106] del=1 ins=1
+ALLWIN| == #3 delete orig[1173..1228 @7960..@8276] prod[1119..1119] del=55 ins=0
+ALLWIN| == #4 delete orig[1230..1390 @8282..@9192] prod[1121..1121] del=160 ins=0
+ALLWIN| hunks=4

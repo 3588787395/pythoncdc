@@ -1,0 +1,4 @@
+PANEL| IQEngine/plugins/plugin_system_risk_calculation/function.pyc size=30095 units=15/15  fails=
+PANEL| fly/data/quote.pyc size=93018 units=92/92  fails=
+PANEL| fly/data/quotation.pyc size=182759 units=153/153  fails=
+PANEL| IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc size=179288 units=127/128  fails=

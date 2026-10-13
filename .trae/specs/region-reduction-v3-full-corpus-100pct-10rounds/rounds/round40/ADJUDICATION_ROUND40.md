@@ -1,4 +1,4 @@
-# ADJUDICATION_ROUND40 — measured record of round 40 (gate label 40, input `rounds/round39/after`)
+﻿# ADJUDICATION_ROUND40 — measured record of round 40 (gate label 40, input `rounds/round39/after`)
 
 Standing state at the opening of this record: landed generator `b4363f5858e58074`, landed analyzer `842e2748bcdfeb66`,
 corpus **6615/6617 (99.9698 %)**, **400/402 files**, residual 2 files / 2 units
@@ -219,3 +219,29 @@ and an independent re-walk of the two trees confirms the single changed file is 
 (`trade_live_broker`), with no missing inputs and no stub products. So the pair is collateral-free corpus-wide -
 it is a safe platform for r99a's reconnect half, and the only thing standing between it and a flip is the two
 remaining GOLD hunks (one statement: position + `return`-vs-`break`).
+
+
+## 12. r101a (R21-73, `clock_worker` predicate C) delivered a MEASURED NEGATIVE - the site-2 transitivity question is answered NO
+
+Base platform reproduced on the engineer's own bytes (`842e2748bcdfeb66` analyzer + banked generator
+`675ec7afa414bbb5`): `function 15/15`, `replace_utils 9/9`, `trade_live_broker 127/128` (sole failure
+`_sync_worker`), `realtime_event_source 12/13` (sole failure `clock_worker`), `clock_worker` at
+`delta=+2 hunks=2 landings=7`.
+
+`[R21-73]` = `c93e8994893ee530`: predicate C refuses `@7248` as `elif_conditions[0]` inside `_check_elif_chain`
+(top-level only) and releases the over-absorbed `else_blocks`. Post-fix dump reads `elif_conditions=[]`,
+`elif_final_else=[]` - the double claim is gone exactly as designed, and the 402-product CR-stripped sweep reads
+`same=401 changed=1` (only `realtime_event_source`), i.e. zero collateral, as r97a's census predicted.
+
+**But the unit collapses instead of flipping**: `delta +2 -> -269`, `hunks 2 -> 4`, `landings 7 -> 2`, judge still
+*Different control flow*, file still 12/13. Three whole statement ranges disappear (`@7582..@7836`,
+`@7960..@8276`, `@8282..@9192`).
+
+**Answer to the open work order** (`TICKET_R21-71`: does fixing C re-anchor site 2 transitively through the shared
+over-absorbing `elif_final_else`?): **no, and it is worse than no.** The tail blocks are emitted today *only*
+because `elif_final_else` absorbs them; remove the absorption and no other analyzer channel claims them, so the
+generator loses them outright. Same -269/-274 over-fire class measured twice before in this campaign.
+
+Consequence: `clock_worker` needs **two rules in one candidate** - the C refusal *and* a positive declaration that
+owns `@7582` and `@9144` as sequential loop-tail statements - and neither exists yet. Recorded as a falsified
+remedy (it moved backwards on its own target), not a bankable co-requisite. Evidence: `rounds/round40/r101/`.
