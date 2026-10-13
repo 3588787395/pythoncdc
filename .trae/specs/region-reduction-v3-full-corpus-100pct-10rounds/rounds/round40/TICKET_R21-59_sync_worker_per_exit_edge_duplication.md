@@ -1,4 +1,4 @@
-# TICKET_R21-59 — `_sync_worker`: the gap is CPython's per-exit-edge duplication of the loop-condition legs, not a polarity or a missing statement
+﻿# TICKET_R21-59 — `_sync_worker`: the gap is CPython's per-exit-edge duplication of the loop-condition legs, not a polarity or a missing statement
 
 Written by the orchestrator from my own measurement, 2026-10-13 08:01 (container clock).
 Unit: `<module>.TradeLiveBroker._sync_worker`, `site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc`
@@ -585,7 +585,8 @@ python -X utf8 fastgate_r91m.py --gen CANDIDATE_GEN --ana CANDIDATE_ANA --full
 Landed baseline certified through it just now, including the trap that made the first version useless: the round-14
 battery derives `ROOT` from its own `__file__`, so running the **repo** copy grades the repo's landed bytes no matter
 which candidate is installed in the mirror - the battery had to be copied into the mirror at the same relative depth
-(`ROOT=D:\Temp91m` in the output is the proof it is really grading the mirror).
+(`ROOT=D:\Temp
+91m` in the output is the proof it is really grading the mirror).
 
 Acceptance line for the round, so nothing has to be re-argued when candidates arrive: mechanism A is closed when the
 repro reads **2/2**; the unit flips when broker reads **128/128** (GOLD already proves that text exists and is
@@ -843,3 +844,41 @@ Action taken: r99a stopped; its candidate and these numbers are banked (`rounds/
 remaining route to a `_sync_worker` flip is r100a's analyzer declaration of the unowned `@1214..@1876` guard chain,
 which composes with the certified pair with no merge, and `clock_worker` is with r101a in the same file on the landed
 analyzer.
+
+
+---
+
+## Addendum 23 (orchestrator, 2026-10-13 11:26) - my install bar was WRONG: `gold_diff = 0` is sufficient, NOT necessary
+
+Measured before any further candidate work. I took the judged-`128/128` GOLD file and replaced ONLY its
+8-line nested reconnect chain (`r91/broker_GOLD_PROOF.py` lines 842-849) with the **flattened** rendering our
+generator already produces (one `if A and B and (C or D) and E:` + 4 body lines, `return` kept in place), and
+judged that source against the corpus input:
+
+```
+python -X utf8 scripts/pyc_verify.py single site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc
+          --source D:/Temp/probe_flat_in_place.py
+[single] status=success units=128/128 success_rate=100.00%
+```
+
+Probe source banked at `rounds/round40/r100/PROBE_source_flat_chain_in_place.py`.
+
+**Consequence (this narrows the flip criterion, it does not relax the judge):** CPython's jump structure for
+`if A: if B: S` and `if A and B: S` is the same when the chain's shared end label is the next statement's
+entry, so the judge (CFG equivalence then bytecode) cannot tell the two source shapes apart. Therefore
+`_sync_worker` does **not** need the four-level nesting. The unit is exactly two textual facts away from
+`128/128`, both already visible in the product diff:
+
+1. the reconnect chain must be emitted **between loop 1 and loop 2** (its CFG position), not after loop 2;
+2. its terminal block must render as `return`, not as a loop exit (`break`).
+
+The flat-vs-nested third difference is NOT required. `gold_diff` stays a convenient single-number proxy but a
+candidate that leaves `hunks_vs_GOLD=2` can still be a genuine flip if the two hunks are only the nesting
+spelling - so **the install decision is `units=128/128` from the judge, always read from
+`pyc_verify single --source <fresh product>`, never from the hunk count.**
+
+Also measured, on the same day: the `r93a`+`r95a` certified pair plus r100a's `[R21-72]` declaration pass
+(`a72944ff87ff6028`, 265 diff lines, fires on the census's single corpus site) moves the product text
+(42 -> 43 lines, 178790 -> 178734 B) but the judge still reads 127/128 with the chain after loop 2, and the
+whole panel is byte-unchanged (`realtime 12/13`, `function 15/15`, `replace_utils 9/9`, `quote 92/92`,
+`quotation 153/153`, `order_api 37/37`, battery RED=8/9) - i.e. it is collateral-free and not yet there.
