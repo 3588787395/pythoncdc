@@ -245,3 +245,38 @@ generator loses them outright. Same -269/-274 over-fire class measured twice bef
 Consequence: `clock_worker` needs **two rules in one candidate** - the C refusal *and* a positive declaration that
 owns `@7582` and `@9144` as sequential loop-tail statements - and neither exists yet. Recorded as a falsified
 remedy (it moved backwards on its own target), not a bankable co-requisite. Evidence: `rounds/round40/r101/`.
+
+
+## 13. r100a delivered: the terminator half is SOLVED with zero collateral, and POSITION is proven generator-side
+
+Final candidate `9ba2d8afe9e96fc1` (`region_analyzer.py` only, on the certified pair base
+`1471c92eca157e46` + `0f4c3898298e6f2e`), delivered to `D:/Temp/r100/DELIVER`, bytes banked here.
+
+Census *before* editing, and it corrected my own ticket: the pre-narrowing predicate fired **2x** on the 20-file
+panel - the victim plus `wizard_quant_api::check_factor` (guards [10,62], arm [108]) which sits on a currently
+**Equal** file, i.e. real collateral. Conjunct ⑥ ("the arm contains a declared region entry") removed it:
+corpus **402 files / 6617 units / 1766 LoopRegions / 681 candidate sites / 1 fire**, exactly broker `@1214 -> @1890`.
+It also falsified my addendum wording "the last arm block ends in `RETURN_VALUE`": `@1876` falls through to the
+merge, and the true data form is "the run's unique successor-less block is a return".
+
+Ownership proof it measured (9 blocks host-owned before -> 0 after, hierarchy `@1214 -> @1370 -> {@1388,@1638,@1770}`,
+host `body_blocks` shrunk to `@1214`, sibling loop's double claims evicted). Result:
+
+* **Terminator fact CLOSED**: the arm's own `RETURN_VALUE` now renders as `return` instead of a loop exit.
+* Position fact NOT closed: `gold_diff 2 -> 2`, judge `127/128`, windows 5.
+* Collateral: **401 same / 1 changed = {trade_live_broker}**; panel all hold (`realtime 12/13`, `function 15/15`,
+  `replace_utils 9/9`, `quote 92/92`, `quotation 153/153`, `order_api 37/37`, `wizard_quant_api 58/58`), battery RED=8/9.
+
+**Its measured negative is the round's most valuable hand-off.** A generator-side trace probe shows
+`[GEN LoopRegion@1890] depth=2` *inside loop 1's pass*, i.e. both `While` statements are dispatched before
+`blk@1214` ever is, and three different analyzer evictions (`condition_chain_blocks`, `blocks`, `else_blocks` of
+the sibling loop) were each measured **inert for ordering**. So the position defect is actuated at
+`region_ast_generator.py:8762-8832` together with `_loop_postprocess` `:14704`: the host must not emit a later
+sibling `LoopRegion` from an earlier nested loop's pass. r102a is on exactly that site now.
+
+Nothing installed (zero flips => banked per the standing rule). Round 40 therefore closes sealed at
+**6615/6617 (99.9698 %), 400/402 files**, gate label 40 unconsumed, `core/` clean at the landed bytes.
+
+**Security note for the record:** r100a reported that many of its tool outputs carried injected text instructing
+it to stop and switch files, which it correctly disregarded as untrusted. No credential or repo state was
+exposed by that event; flagged to the user.
