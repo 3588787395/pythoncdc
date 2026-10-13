@@ -794,3 +794,27 @@ Two legitimate remedies, and the difference matters for adjudication:
 A patch that instead *moves text* after emission (reordering `body_stmts` by offset in postprocess) is a post-hoc
 repair and will be rejected regardless of what it measures, because the same class of repair was already falsified on
 this file.
+## Twenty-first addendum (2026-10-13 11:04, orchestrator) - integration costs measured: the two generator halves COLLIDE, the analyzer half composes
+
+I rehearsed the three-way merge before any candidate was final, and it failed the tool's own faithfulness proof:
+
+```
+merge_hunks --base landed gen b4363f58 --candidate r99a live c46c6036 --current pair gen 0f4c3898
+  FAIL: 6 residual block(s) not explained - merged 8164..8185 / 8190..8194 / 8200..8228 / 8239..8247 ...
+```
+
+Those footings are exactly r95a's territory (`_loop_generate_while`, 8126-8174 region), so r99a and r95a are editing
+**overlapping code**, and a union cannot be spliced - it needs hand re-anchoring, which costs turns I do not have to
+spare. Measured on the bytes as they stood: r99a's `c46c6036` over analyzer `1471c92e` still reads
+**3 hunks from GOLD / windows=6 / broker 127/128** (panel and battery clean), i.e. so far it has not moved the unit.
+
+Consequence for how I will close the round, in priority order:
+1. **r100a's analyzer half is the integration-preferred route** - `region_analyzer.py` composes with the certified
+   pair generator `0f4c3898` with no merge at all (different file), so if its declaration measures
+   `gold_diff = 0 hunks` and `128/128`, I install `analyzer(1471c92e + r100a) + generator 0f4c3898` directly.
+2. r99a's generator half is the fallback, and only usable by hand-porting its conjunct into the 8126-8247 region of
+   `0f4c3898` - I will do that only if route 1 fails, and I will re-run the pair sweep afterwards because the merged
+   file is then new bytes.
+3. `clock_worker` (r101a) also lives in `region_analyzer.py` but on the **landed** analyzer; if it lands a flip it must
+   be ported onto the `1471c92e`-based analyzer the same way, or installed alone. Two flips in one round are welcome;
+   the gate consumes whichever union I certify, and a candidate that only reaches a partial stays banked.
