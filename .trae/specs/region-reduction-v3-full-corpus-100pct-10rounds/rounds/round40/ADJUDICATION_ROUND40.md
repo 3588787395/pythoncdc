@@ -158,3 +158,11 @@ folded condition's leftover operand statement, and the reconnect arm's `RETURN_V
 rather than a loop exit - three separable halves, two of them still running as r95a/r98a/r96a. `clock_worker` needs
 predicate C's identification fix *and* a way to isolate site 2 that does not join the -269 over-fire class. Neither
 unit is expressible as a one-rule flip, which is why round 40 banks rather than lands.
+## 8. Landing criterion calibrated (2026-10-13 10:36)
+
+`rounds/round40/orchestrator/gold_diff_r91m.py` counts unified-diff hunks between a candidate product and the GOLD
+text of a unit; 0 hunks means the product *is* the text I judged `status=success units=128/128`. Three controls run
+now: GOLD vs GOLD = **0**; the landed product vs GOLD = **4 hunks** (54 vs 45 lines); r93a's folded product vs GOLD =
+**3 hunks** (43 vs 45 lines, the three facts of addendum 18); and `_process_order` under the fold vs GOLD = 0, which
+is the sanity case since that unit is Equal on both sides. So the measured remaining distance for `_sync_worker` is
+exactly those 3 hunks, and the merged candidate is accepted only at 0.
