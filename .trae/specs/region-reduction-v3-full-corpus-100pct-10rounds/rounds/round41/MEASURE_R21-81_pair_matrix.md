@@ -192,3 +192,20 @@ Reading of C: restricting the 26911 claim to the dispatched region own arm lists
 **The operative defect is one level deeper than either claim: the else-arm rendering of `IfRegion@7634` stops at the nested `LoopRegion@7706` and never continues with the remaining members of its own `then_blocks`, while the claim loops mark the whole list consumed.** A fix therefore has two coupled halves: (a) the arm renderer must continue past a dispatched child region to the rest of the same arm, and (b) the claim must cover exactly the emitted set. Half (b) alone is proven inert here (A and C); half (a) approximated by brute un-marking is what produces the duplication and the two collateral files in B.
 
 That is the sharpest statement of the last-unit defect produced in 41 rounds, and it is what ticket R21-86 (r111a, live) has to implement. Status unchanged: corpus 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, landed bytes unmoved, nothing installed.
+
+## Addendum 10 - two more arms: entry-owner discrimination is destructive, and un-marking on top of the ledger overshoots into over-emission (2026-10-14 01:26)
+
+Same rig style, same platform discipline (built from landed or banked bytes, installed only in D:/Temp/r91m, restored and re-hashed in the same command, analyzer arm 3ad5ceaa).
+
+| arm | what it changes | victim | instrs | jsites | back | hunks | judge | collateral |
+|---|---|---|---|---|---|---|---|---|
+| D f46945ef | A plus skip the nested-dispatch claim when the block is the entry of some other region | 4 lines | -1439 | -123 | back -4 | 1 | 9/13 | broker, klinedata, quote, real_quote all CHANGED |
+| E 0a8099a4 | the R21-81 ledger plus un-marking its three claim statements (22558, 22587, 26983) | 266 lines | **+17** | +5 | back +0 | 5 | 12/13 | broker, klinedata, quote, real_quote |
+
+D was my attempt at a principled discriminator at the nested-dispatch claim: skip claiming a block that is the ENTRY of a different region (principles 2 and 4 reading). It collapses the unit to 4 lines, 1439 instructions short with back edges broken and four files changed, so entry-ownership as computed from block_to_region is not a usable discriminator here - the same trap the round-40 census warned about when a symptom is turned into a rule.
+
+E answers the question I actually needed: does the R21-81 emitted-entry ledger remove the duplication that addendum 8 measured? No. Un-marking the three claim statements on top of the ledger takes the unit from 262 lines (the blunt pair) to 266 against the oracle 254, and the instruction gap crosses zero from -7 to **+17**: the run is now printed more than once. So the ledger does not act as a single-owner gate for these blocks, and the residual requirement is sharpened to: un-mark must be paired with **an explicit single owner** for the freed run (either the arm that contains it or the parent sequential list), not with a general emitted-entry ledger.
+
+Numbers for the next hand, all on analyzer 3ad5ceaa: blunt pair 262 lines, -7, 5 hunks; ledger plus un-mark 266 lines, +17, 5 hunks; render-scoped claims 241 lines, -115, zero collateral. The oracle is 254 lines and 13/13, so the target of the fix is a single emission of the run with the arm terminating where the oracle does.
+
+Still nothing installed. Corpus 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, landed bytes unmoved, repo core/ clean, r111a (ticket R21-86) still live on the arm-continuation half.
