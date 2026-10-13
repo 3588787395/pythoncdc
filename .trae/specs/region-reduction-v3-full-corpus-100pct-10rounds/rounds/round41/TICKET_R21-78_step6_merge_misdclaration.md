@@ -59,3 +59,35 @@ identification (or in an identification-terminal pass like F5's), never by rewri
 Scoring stays `rounds/round41/oracle_diff_r104.py <product>`: oracle `0 hunks / all-equal / 13/13`,
 F5 base `4 hunks / instrs=-114 jsites=-9 / indeg-equal=False / 12/13`. Step 6 is exactly the fact that moves
 `indeg` from `7→@9194, 2→@9144` to the original's `6, 4`.
+
+
+## Addendum 1 (orchestrator, 16:07) — my first implementation of the rule is a MEASURED FALSIFICATION
+
+I implemented the re-election in `analyze()` (mounted before `_b50_fix_try_hosted_ternary_normal_copies`,
+method `_r2178_reelect_guard_false_join_merge`) on the F5 base, and scored the regenerated product with
+`oracle_diff_r104.py`:
+
+| arm | product bytes | `clock_worker` lines / hunks vs oracle | instrs Δ | judge |
+|---|---|---|---|---|
+| F5 base | 20190 | 241 / 4 | −114 | `12/13` |
+| my v1 (loose rule) | **16520** | 168 / **30** | **−346** | **`11/13`** — `clock_worker` *and* `clock_worker.check_handle_date: Failure: Missing bytecode` |
+
+So the merge re-election keyed **only** on "condition block's false-leg join sits in `else_blocks` and the current
+merge is reachable from the then-arm" is wildly over-broad: that shape is the ordinary `if/else` case, and it
+destroyed whole nested code objects (−3.7 KB, a second unit broken). Reverted byte-exactly; the mirror is back at
+F5 `996a1b1acf143458`.
+
+Two things the next attempt must therefore add, and one trap to avoid:
+1. require the *whole guard run*, not a single condition block: ≥2 consecutive conditional-jump legs whose false
+   targets reach the **same** block (r100a's `_r2172_find_statement_guard_chain` already encodes exactly this
+   adjacency+shared-target shape — reuse it rather than re-deriving);
+2. require the current merge to be a **loop re-entry** (a block at a greater offset jumps backward into it) *and*
+   that the region's arm body contains no sequential statement of its own after the arm — otherwise an ordinary
+   post-if join is what gets elected;
+3. **do not assume `Cfg.get_block_by_offset` / `get_predecessors` exist by analogy** — my second edit aborted on a
+   non-unique anchor assertion before measuring, and the API probe above shows what the module actually exposes;
+   re-read the region-builder's own helper names, and prove collateral on the panel (my v1 would have failed the
+   panel at `11/13`) before ever reaching a sweep.
+
+Net: step 6 remains open, now with the loose form of the rule *measured and excluded*, which is the third time this
+campaign that an over-fire was caught by the panel rather than by a gate.
