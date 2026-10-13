@@ -190,3 +190,18 @@ landed analyzer and lack the fold), and five lines we emit that GOLD does not (r
 statements). Both halves are measured zero-collateral in their own sweeps (`changed = trade_live_broker` only), and
 neither flips alone, which is why the gate label stays unconsumed until the union is measured at
 `units=128/128`.
+## 10. The two remaining hunks are ONE statement (2026-10-13 10:44) - the flip path is `1471c92e` + `0f4c3898` + the reconnect move
+
+I printed our pair's product and GOLD side by side for the whole unit. Every line matches except the reconnect
+statement, which we emit **after** loop 2 (ours lines 37-41) as a flat `if A and B and (…) and C:` ending in `break`,
+while GOLD emits it **between loop 1 and loop 2** (GOLD lines 19-26) nested four deep ending in `return`. That is the
+whole of both hunks: `@@ -18,0 +19,8 @@` is GOLD's 8-line nested version at the right place, and `@@ -37,5 +44,0 @@`
+is our same 5 lines in the wrong place. So loop 2's body, latch and `sync_data_flag` guard are now **byte-identical to
+GOLD under the pair** - r95a's half closed them - and the unit's distance to `128/128` is a single statement's
+position plus terminator class, owned by r99a.
+
+Consequence for the other live engineer: r98a's leftover-operand work is still real for the 12-line repro (which reads
+`Different bytecode 1/2` under the pair, i.e. the synthetic loop-2 latch copy is still emitted), but it is **not on the
+broker flip path**. I keep it running as the generality check, and the merge plan is: install
+`ana 1471c92e` + `gen 0f4c3898` + r99a's reconnect half, require `gold_diff` = 0 hunks and judge
+`units=128/128` before touching the repo, then run `gate_chain.py 40 39`.
