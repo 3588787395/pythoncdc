@@ -565,3 +565,29 @@ what these cases exercise. My twelfth addendum therefore overstated the harness:
   blocker is parent **IfRegion** condition assembly") is about the `if/elif` family, which is a *sibling* of the
   `while` family I mapped today: same steal mechanism, different owning region. The shared root is worth one
   sentence in each ticket, but a fix for one does not buy the other, and I should not have implied it did.
+## Fourteenth addendum (2026-10-13 09:57, orchestrator) - the adjudication rigs are resident, and mechanism A's acceptance line is now one number
+
+Committed into `rounds/round40/orchestrator/`: `win_r91.py` (opcode-name-only window dump, positive-controlled at
+`windows=0` on two Equal units), `merge_measure_r91m.py` (content-anchored multi-candidate merge onto a moving base
+with the `merge_hunks.py` faithfulness proof, then install + regen + judge; self-tested to reproduce
+`675ec7afa414bbb5` byte-exactly from landed + `[R21-63]`), and `fastgate_r91m.py`, which grades ANY candidate pair in
+one command:
+
+```
+python -X utf8 fastgate_r91m.py --gen CANDIDATE_GEN --ana CANDIDATE_ANA --full
+[installed] gen=... ana=...
+[repro mechanism A]   <- the 12-line duplicated-while-test repro; 1/2 today, 2/2 means mechanism A is closed
+[battery no-regression] RED=8/9  <- neighbouring if/elif chained-compare family, must not get worse
+[broker] units=127/128 ... [_sync_worker windows] windows=9
+[panel realtime|function|replace_utils|quote|quotation|order_api] 12/13 15/15 9/9 92/92 153/153 37/37
+```
+
+Landed baseline certified through it just now, including the trap that made the first version useless: the round-14
+battery derives `ROOT` from its own `__file__`, so running the **repo** copy grades the repo's landed bytes no matter
+which candidate is installed in the mirror - the battery had to be copied into the mirror at the same relative depth
+(`ROOT=D:\Temp91m` in the output is the proof it is really grading the mirror).
+
+Acceptance line for the round, so nothing has to be re-argued when candidates arrive: mechanism A is closed when the
+repro reads **2/2**; the unit flips when broker reads **128/128** (GOLD already proves that text exists and is
+judge-Equal); and any candidate that raises the battery above RED=8/9 or drops a panel row is rejected before a
+190-second sweep is ever spent.
