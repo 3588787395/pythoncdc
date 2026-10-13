@@ -394,4 +394,5 @@ site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py:1592
 | trade_live_broker `_process_order` | −68/14（半件 9f229b71bb95ddb4 → −42/11） | 三元被误判成语句：analyzer R47 无值消费者门（CPDOM 为 None，两臂都带 try 的异常边后继），卡点是内部 TernaryRegion 不被派发 | 待办 |
 | trade_live_broker `_sync_worker` | −3/5 | 极性翻转 + sleep(60) 迁入臂内；gate37 的臂上提判据在此不触发 | r65a |
 | realtime_event_source `clock_worker` | −113/7（基 3d4f27de6d80ab6e → −3/8） | 内容已复原但错位约 1k 偏移 | r63a |
+| realtime_event_source `clock_worker` | 12/13（** landed 基 1471c92eca157e46 + 566ff5c502276e48 **，gate 40 之后） | 落基实测：原 `@7972..@8586` = 源 498–524 一整块 **112 条指令被整块丢弃**（`if persist_flag is False:` 守卫 + `set_trade_stop_status` + 获取交易持久化对象超时，系统退出 + `event_queue.put((dt, SYSTEM_EXIT))` + `return` + `before_trading_date = now_date` + `try/except AttributeError` 归一 + `if =='0'/elif broker_persist is not None` 级联），各臂统一出口到回边/merge `@9194` 故无逐语句标号；Decompyle++ 亦丢同块 ⇒ 难区，非镜像伪影。**与 #13 早期登记「`if persist_flag is not False:` 110 条体被跳」同源**；此前 −3/8 与 +2/7 landings 读数均属 banked 基 675ec7af，勿再据此评分 | r103a / R21-76 |
 
