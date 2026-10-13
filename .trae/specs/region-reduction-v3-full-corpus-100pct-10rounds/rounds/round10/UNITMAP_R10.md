@@ -384,7 +384,7 @@ site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py:1592
 | trade_live_broker `_sync_worker` | −3/5 | 独占 continue 臂应先发（极性 @2 实测翻转） | r62a |
 | trade_live_broker `_process_order` | −68/14 | 三元被当语句发（臂是裸串→docstring 丢弃）＋ f-string 语句真丢失（type_str 死存储） | r64a |
 | quote `run_individual_transform` | 0/2（基 c069d359cbfe76b0） | warning 块位置错位 | r62a |
-| realtime_event_source `clock_worker` | −3/8（基 3d4f27de6d80ab6e） | 已复原内容但错位约 1k 偏移 | r63a |
+| realtime_event_source `clock_worker` | −3/8（基 3d4f27de6d80ab6e；**历史读数，已被表末 12/13（landed 基）行取代，勿据此评分**） | 已复原内容但错位约 1k 偏移 | r63a |
 
 
 ## gate-37 当前状态（2026-10-12 复核；短行优先被 residual_report 引用）
