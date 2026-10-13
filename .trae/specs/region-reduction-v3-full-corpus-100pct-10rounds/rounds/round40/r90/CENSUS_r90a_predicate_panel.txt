@@ -1,0 +1,22 @@
+FILE fly/data/quotation.pyc loop_cond_evaluations=22 fires=0 elapsed=4s
+FILE fly/data/quote.pyc loop_cond_evaluations=10 fires=0 elapsed=6s
+FILE IQCommon/api/klinedata.pyc loop_cond_evaluations=11 fires=0 elapsed=9s
+FILE IQCommon/logger/handlers.pyc loop_cond_evaluations=3 fires=0 elapsed=9s
+FILE IQCommon/strategy/wizard_quant_api.pyc loop_cond_evaluations=0 fires=0 elapsed=10s
+FILE IQCommon/util/trade_info_utils.pyc loop_cond_evaluations=4 fires=0 elapsed=11s
+FILE IQData/api/api_base.pyc loop_cond_evaluations=1 fires=0 elapsed=12s
+FILE IQData/plugins/plugin_system_realquote/real_quote.pyc loop_cond_evaluations=8 fires=0 elapsed=13s
+FILE IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc loop_cond_evaluations=0 fires=0 elapsed=13s
+FILE IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc loop_cond_evaluations=0 fires=0 elapsed=13s
+FIRE IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc :: trade_live_broker.pyc :: unit=_sync_worker loop cond=@232 header=@704 forward-legs-outside=[364] latch-legs-in-body=[704, 876, 1056] owners=@364:two_owner(LoopRegion@232)
+FILE IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc loop_cond_evaluations=18 fires=1 elapsed=16s
+FILE IQEngine/plugins/plugin_system_matcher/matcher.pyc loop_cond_evaluations=0 fires=0 elapsed=16s
+FILE IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc loop_cond_evaluations=3 fires=0 elapsed=17s
+FILE IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc loop_cond_evaluations=2 fires=0 elapsed=17s
+FILE IQCommon/arg_checker.pyc loop_cond_evaluations=0 fires=0 elapsed=18s
+FILE IQData/utils/arg_checker.pyc loop_cond_evaluations=0 fires=0 elapsed=18s
+FILE IQEngine/utils/arg_checker.pyc loop_cond_evaluations=0 fires=0 elapsed=18s
+FILE IQCommon/profiler_func.pyc loop_cond_evaluations=0 fires=0 elapsed=18s
+FILE IQData/utils/profiler_func.pyc loop_cond_evaluations=0 fires=0 elapsed=18s
+FILE IQEngine/utils/profiler_func.pyc loop_cond_evaluations=0 fires=0 elapsed=18s
+DONE files=20 evaluations=82 fires=1 elapsed=18s

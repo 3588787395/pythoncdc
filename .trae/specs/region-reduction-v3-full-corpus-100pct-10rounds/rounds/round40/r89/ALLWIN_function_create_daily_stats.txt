@@ -1,0 +1,104 @@
+len orig=480 prod=448 delta=-32
+== #1 replace orig[34..35 @138..@138] prod[34..35] del=1 ins=1
+   - @124     CALL                           
+   - @134     BUILD_LIST                     
+   - @136     STORE_FAST                     daily_dts
+   - @138     JUMP_FORWARD                   
+   + @124     CALL                           
+   + @134     BUILD_LIST                     
+   + @136     STORE_FAST                     daily_dts
+   + @138     JUMP_BACKWARD                  
+== #2 delete orig[45..77 @196..@396] prod[45..45] del=32 ins=0
+   - @182     CALL                           
+   - @192     BUILD_LIST                     
+   - @194     STORE_FAST                     daily_dts
+   - @196     LOAD_FAST                      daily_result
+   - @198     LOAD_FAST                      account
+   - @200     BINARY_SUBSCR                  
+   - @210     LOAD_CONST                     'date'
+   - @212     BINARY_SUBSCR                  
+   - @222     LOAD_METHOD                    strftime
+   - @244     LOAD_CONST                     '%Y-%m-%dT07:00:00.000Z'
+   - @246     PRECALL                        
+   - @250     CALL                           
+   - @260     STORE_FAST                     period_close
+   - @262     LOAD_FAST                      daily_result
+   - @264     LOAD_FAST                      account
+   - @266     BINARY_SUBSCR                  
+   - @276     LOAD_CONST                     'date'
+   - @278     BINARY_SUBSCR                  
+   - @288     LOAD_METHOD                    strftime
+   - @310     LOAD_CONST                     '%Y-%m'
+   - @312     PRECALL                        
+   - @316     CALL                           
+   - @326     STORE_FAST                     period_label
+   - @328     LOAD_FAST                      daily_result
+   - @330     LOAD_FAST                      account
+   - @332     BINARY_SUBSCR                  
+   - @342     LOAD_CONST                     'date'
+   - @344     BINARY_SUBSCR                  
+   - @354     LOAD_METHOD                    strftime
+   - @376     LOAD_CONST                     '%Y-%m-%dT01:31:00.000Z'
+   - @378     PRECALL                        
+   - @382     CALL                           
+   - @392     STORE_FAST                     period_open
+   - @394     POP_TOP                        
+   - @396     JUMP_FORWARD                   
+   + @182     CALL                           
+   + @192     BUILD_LIST                     
+   + @194     STORE_FAST                     daily_dts
+== #3 replace orig[157..158 @680..@680] prod[125..126] del=1 ins=1
+   - @674     LIST_APPEND                    
+   - @676     LOAD_FAST                      orders
+   - @678     LIST_APPEND                    
+   - @680     LOAD_FAST                      period_close
+   + @472     LIST_APPEND                    
+   + @474     LOAD_FAST                      orders
+   + @476     LIST_APPEND                    
+   + @478     LOAD_GLOBAL                    period_close
+== #4 replace orig[159..160 @684..@684] prod[127..128] del=1 ins=1
+   - @678     LIST_APPEND                    
+   - @680     LOAD_FAST                      period_close
+   - @682     LIST_APPEND                    
+   - @684     LOAD_FAST                      period_label
+   + @476     LIST_APPEND                    
+   + @478     LOAD_GLOBAL                    period_close
+   + @490     LIST_APPEND                    
+   + @492     LOAD_GLOBAL                    period_label
+== #5 replace orig[161..162 @688..@688] prod[129..130] del=1 ins=1
+   - @682     LIST_APPEND                    
+   - @684     LOAD_FAST                      period_label
+   - @686     LIST_APPEND                    
+   - @688     LOAD_FAST                      period_open
+   + @490     LIST_APPEND                    
+   + @492     LOAD_GLOBAL                    period_label
+   + @504     LIST_APPEND                    
+   + @506     LOAD_GLOBAL                    period_open
+== #6 replace orig[367..368 @1512..@1512] prod[335..336] del=1 ins=1
+   - @1506    LIST_APPEND                    
+   - @1508    LOAD_FAST                      orders
+   - @1510    LIST_APPEND                    
+   - @1512    LOAD_FAST                      period_close
+   + @1334    LIST_APPEND                    
+   + @1336    LOAD_FAST                      orders
+   + @1338    LIST_APPEND                    
+   + @1340    LOAD_GLOBAL                    period_close
+== #7 replace orig[369..370 @1516..@1516] prod[337..338] del=1 ins=1
+   - @1510    LIST_APPEND                    
+   - @1512    LOAD_FAST                      period_close
+   - @1514    LIST_APPEND                    
+   - @1516    LOAD_FAST                      period_label
+   + @1338    LIST_APPEND                    
+   + @1340    LOAD_GLOBAL                    period_close
+   + @1352    LIST_APPEND                    
+   + @1354    LOAD_GLOBAL                    period_label
+== #8 replace orig[371..372 @1520..@1520] prod[339..340] del=1 ins=1
+   - @1514    LIST_APPEND                    
+   - @1516    LOAD_FAST                      period_label
+   - @1518    LIST_APPEND                    
+   - @1520    LOAD_FAST                      period_open
+   + @1352    LIST_APPEND                    
+   + @1354    LOAD_GLOBAL                    period_label
+   + @1366    LIST_APPEND                    
+   + @1368    LOAD_GLOBAL                    period_open
+hunks=8

@@ -1,0 +1,6 @@
+landed gate-39           gen=b4363f5858e58074 ana=842e2748bcdfeb66 rc=0 size=30095  [single] status=success units=15/15 success_rate=100.00%
+P1+P2 on g39             gen=411c2bd948cd33ad ana=842e2748bcdfeb66 rc=0 size=29815  ***<module>.create_daily_stats: Failure: Different control flow | [single] status=failure units=14/15 success_rate=93.33%
++R21-45 A+B              gen=945ffcd098db6b00 ana=842e2748bcdfeb66 rc=0 size=29815  ***<module>.create_daily_stats: Failure: Different control flow | [single] status=failure units=14/15 success_rate=93.33%
++R21-44                  gen=07deef97054dbadb ana=842e2748bcdfeb66 rc=0 size=29815  ***<module>.create_daily_stats: Failure: Different control flow | [single] status=failure units=14/15 success_rate=93.33%
++R21-46 A+B (=base)      gen=db1f0e96072cdcb3 ana=842e2748bcdfeb66 rc=0 size=29815  ***<module>.create_daily_stats: Failure: Different control flow | [single] status=failure units=14/15 success_rate=93.33%
+REANCHORED base          gen=db1f0e96072cdcb3 ana=842e2748bcdfeb66 rc=0 size=29815  ***<module>.create_daily_stats: Failure: Different control flow | [single] status=failure units=14/15 success_rate=93.33%

@@ -1,0 +1,2 @@
+files=402 regions=26480 blocks=37629 EVAL=1269 FIRE_TAIL=1 OK_TAIL=229 BOUNDARY_ONLY=27 TWO_FALL_END=0 UNCLASSIFIED=751 NO_END_LABEL=261 LT2=0 zero_owner=5471 two_owner=20424
+FIRE_TAIL site-packages/IQCommon/api/klinedata.pyc             _all_bars_of_cache         cond=148    end=250    [('then', ['INTERNAL_ONLY']), ('elif0', ['COND_ONLY', 'FALL_TO_END']), ('final_else', ['JUMP_TO_END'])]

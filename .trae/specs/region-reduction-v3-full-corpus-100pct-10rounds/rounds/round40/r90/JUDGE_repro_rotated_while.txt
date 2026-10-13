@@ -1,0 +1,4 @@
+  ***<module>.sync_worker: Failure: Different control flow
+[single] D:/Temp/r90/DELIVER/repro/repro_rotated_while.pyc
+[single] 产物 D:/Temp/r90/DELIVER/products/REPRO_r90a_rotated_while.py
+[single] status=failure units=1/2 success_rate=50.00%

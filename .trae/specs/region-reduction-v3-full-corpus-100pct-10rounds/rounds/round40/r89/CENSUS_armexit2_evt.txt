@@ -1,0 +1,6 @@
+CHAIN clock_worker                   cond=7634   end=9194   arms=3 [('then', ['JUMP_TO_END']), ('elif0', ['JUMP_TO_END']), ('final_else', ['FALL_TO_END', 'JUMP_TO_END'])]
+CHAIN clock_worker                   cond=7186   end=7216   arms=3 [('then', ['JUMP_TO_END']), ('elif0', ['INTERNAL_ONLY']), ('final_else', ['FALL_TO_OTHER:9194', 'JUMP_TO_OTHER:9194'])]
+CHAIN clock_worker                   cond=6280   end=9218   arms=2 [('then', ['COND_ONLY', 'JUMP_TO_OTHER:5598']), ('elif0', ['COND_ONLY', 'FALL_TO_OTHER:7164'])]
+CHAIN clock_worker                   cond=1742   end=4984   arms=3 [('then', ['JUMP_TO_END']), ('elif0', ['JUMP_TO_END']), ('final_else', ['FALL_TO_END', 'JUMP_TO_END'])]
+CHAIN events                         cond=140    end=738    arms=3 [('then', ['JUMP_TO_END']), ('elif0', ['JUMP_TO_OTHER:102']), ('final_else', ['JUMP_TO_END'])]
+files=1 regions=88 blocks=226 EVAL=5 FIRE_TAIL=0 OK_TAIL=0 BOUNDARY_ONLY=2 TWO_FALL_END=0 UNCLASSIFIED=3 NO_END_LABEL=0 LT2=0 zero_owner=9 two_owner=196
