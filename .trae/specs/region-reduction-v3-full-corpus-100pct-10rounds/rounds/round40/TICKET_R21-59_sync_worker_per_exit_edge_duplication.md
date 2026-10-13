@@ -762,3 +762,35 @@ Checklist for whoever implements it (acceptance already fixed by measurement):
   judge must read `128/128`; `_process_order` and the six panel rows must hold, plus the 402 sweep with
   `CHANGED = {trade_live_broker}` (the pair is already certified collateral-free by me, so any new changed file is
   this rule's collateral).
+## Twentieth addendum (2026-10-13 10:56, orchestrator) - the deferral site that puts the reconnect chain after loop 2
+
+I traced how the loop-body emitter sequences statements (`region_ast_generator.py`):
+
+- `_loop_generate_body` (`:8624`) keeps **two** lists: `body_stmts` and `back_edge_stmts`, plus
+  `body_blocks_no_header`;
+- `:8633 child_info = self._loop_collect_child_regions(region)`; `:8670+` a direct child `LoopRegion` is emitted as a
+  whole as soon as a body block equals its `entry/header/condition` block or one of its `BoolOpRegion` chain blocks
+  (`[Round 08 修复] _r08_nested_loop_child`) — which is how `LoopRegion@1890` gets emitted *while the outer body is
+  still being walked*;
+- blocks that "reach the back edge" are routed away from `body_stmts` into `back_edge_stmts`
+  (`:9365 _loop_process_natural_back_edge`, `:14187/:14249 _loop_process_back_edge_with_condition`), and
+  `_loop_postprocess` (`:8845` → `:14618`) then **appends `back_edge_stmts` at the END** of `body_stmts`
+  (`:14723/:14725/:14727`), or folds them into an if-body at `:14718`.
+
+So the reconnect chain `@1214..@1876` — which addendum 19 shows has **no declared region** (every block is
+`owner=LoopRegion@232`) and whose guard legs all jump `POP_JUMP_FORWARD_IF_FALSE -> @1890`, the next sibling region's
+entry — is being **deferred into `back_edge_stmts` and appended after the body**, which is precisely why the product
+prints it after loop 2, and why its terminal `RETURN_VALUE @1874` arrives wearing a loop-exit (`break`).
+
+Two legitimate remedies, and the difference matters for adjudication:
+- **(A, declaration — r100a)**: identify `@1214..@1876` as an `IfRegion` (entry `@1214`, merge `@1890`, then-side
+  ending in the return block). Then the generator has an abstract node to emit in block order and the arm's terminator
+  comes from its own blocks. This is principle-3/4 clean and is my preference.
+- **(B, role dispatch — r99a's risk area)**: refuse to defer a block into `back_edge_stmts` when its conditional-jump
+  target is a sibling region's entry rather than the loop's own back-edge/header. Legal only if keyed on successor
+  class (target is a region entry / not the header / not the back edge), and it is the over-fire-prone path — this is
+  the same deferral machinery whose neighbours measured −269/−274 across 23 currently-Green files, so (B) demands the
+  full 402 sweep before I even look at it.
+A patch that instead *moves text* after emission (reordering `body_stmts` by offset in postprocess) is a post-hoc
+repair and will be rejected regardless of what it measures, because the same class of repair was already falsified on
+this file.
