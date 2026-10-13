@@ -455,3 +455,38 @@ product computes it at the second loop's tail, after `time.sleep(steps)`, while 
 `_sync_worker` therefore needs items 1+2+3+4 together to read Equal, which GOLD already proves is a sufficient text
 (128/128) and which my `return`/`sync_data_flag` measurements above show is a *necessary* one too: each of the four
 differences is individually visible in the original's instruction stream.
+## Eleventh addendum (2026-10-13 09:44, orchestrator) - CORRECTION to my own addenda 9/10: the SECOND loop is the same duplicated-test shape, so the four items collapse into THREE mechanisms
+
+I traced every edge into the second loop's body start and disassembled both chained-compare clusters. The original
+contains **two** duplicated tests, not one:
+
+| | entry copy (above the body) | latch copy (below the body) |
+|---|---|---|
+| loop 1, `while A or B or (C and not D):` body start `@704` | `@232/@364/@700` conditional jumps **forward** into `@704`; `@522/@544/@702` to the exit | `@704` own tail `POP_JUMP_BACKWARD_IF_TRUE 704`, `@876` same, `@1056/@1208` `IF_FALSE 704` |
+| loop 2, `while pre_before_trading <= int(strftime) < int(post_after_trading):` body start `@2072` | `@2014 SWAP 2 / @2016 COPY 2 / @2018 COMPARE_OP <= / @2024 IF_FALSE 2066` then `@2054 COMPARE_OP < / @2062 IF_FALSE 2886 / @2064 JUMP_FORWARD 2072` | `@2832 SWAP 2 / @2834 COPY 2 / @2836 COMPARE_OP <= / @2842 IF_FALSE 2884` then `@2872 COMPARE_OP < / @2880 POP_JUMP_BACKWARD_IF_TRUE 2072 / @2882 JUMP_FORWARD 2886` |
+
+and the only two edges into `@2072` are `@2064 JUMP_FORWARD` (entry) and `@2880 POP_JUMP_BACKWARD_IF_TRUE` (latch),
+with both copies' false legs landing on `@2886` (`time.sleep(steps)`, then `@2928 JUMP_BACKWARD 232`).
+
+Consequences, correcting what I wrote an hour ago:
+1. **My "item 4" was half-mislabeled.** The product's `if not pre_before_trading <= int(strftime) < int(post):
+   continue` at the second loop's tail is **not** a separate chained-compare problem: it is the *latch copy* of loop
+   2's condition, i.e. the same mechanism as items 1 and 2. Any rule that handles only loop 1 will leave loop 2's
+   garbage in place and the unit will still read `Different control flow`.
+2. The remaining, genuinely separate part of old item 4 is **statement-sequence ownership**: the original computes
+   `time_difference = abs(...)` at `@2214..@2350`, guards `@2352 LOAD_FAST time_difference / @2354 LOAD_GLOBAL
+   sync_max_time / @2366 COMPARE_OP > / @2372 POP_JUMP_FORWARD_IF_FALSE 2378`, and stores `sync_data_flag = 1` at
+   `@2374/@2376` **under** that guard; the product emits an unguarded `sync_data_flag = 1` and relocates the compute
+   to after `time.sleep(steps)`. Note the *legitimate* second `sync_data_flag = 1` at `@2136` (line 1415, inside the
+   `receive_order_response_flag == 1 or receive_trade_response_flag == 1` test) is emitted correctly - the two sites
+   must not be conflated.
+3. So the honest decomposition is **three** mechanisms: **(A)** duplicated while-test (loops 1 and 2: fold the entry
+   legs into the region's condition AND drop the latch legs from the body sequence), **(B)** the `time_difference`
+   guard/assignment ownership, **(C)** the reconnect arm's terminal `RETURN_VALUE` (`@1874`, the unit's only one)
+   rendered as `break`. Owners: A = r93a/r94a (and, per this addendum, their rule must cover loop 2's chained
+   compare too, not just the or-chain), B = r95a, C = r96a.
+4. This matches r91a's independent observation that `@1890`'s chained compare is *detected but not declared* while
+   its latch copy `@2668` *is* declared as `IfRegion@2668` - "the mirror image of the same duplication disease in
+   the second loop". Two engineers and I now agree the second loop is the same axis; treat any A-side candidate
+   that leaves `@2832..@2884` rendered as body statements as incomplete, and measure loop 2 explicitly before
+   declaring A done.
