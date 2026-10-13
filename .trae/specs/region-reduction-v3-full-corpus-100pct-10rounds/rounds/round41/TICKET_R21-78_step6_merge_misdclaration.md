@@ -135,3 +135,42 @@ Base for the next attempt is unchanged: **F5 `996a1b1acf143458`** (mirror restor
 facts (steps 3, 4, and the positive tail claim for `@7972..@8586`) plus step 6's merge declaration, whose loose form
 (v1) is excluded, whose ③ form (v2/v3) is measured inert, and whose remaining blocker is now "print the conjunct
 verdict before writing the next variant".
+
+
+## Addendum 3 (orchestrator, 16:25) — the conjunct probe fired nothing useful because my premise was wrong: the fold data is already at the PARENT region
+
+I added the read-only conjunct diagnostic the previous addendum called for (`_r2178dbg`, mounted at the same
+identification-terminal point, writing to a text file), and **certified it inert first**: the probe's product is
+byte-identical to the F5 base (`20190` bytes, sha16 `192ba0f09e81bbd7` both with and without the probe). Its verdict:
+
+```
+R@8948  cond=8948 merge=9194 els=[8976, 9144] falsejoin=8976 nlegs=2 Mpreds=[8306,8544,8588,8688,8852,8980,9144] blocks=[8948,8964,8974,8976,8980,9144]
+R@8904  cond=8926 merge=9144 els=[]             falsejoin=9144 nlegs=3 Mpreds=[8904,8926,8964,8976]           blocks=[8904,8926,8948,8964,8974,8976,8980]
+R@7164  cond=7164 merge=7216 els=[]             falsejoin=7216 nlegs=1 blocks=[7164,7186,7202,7212,7214,7248,…]
+R@6322  cond=6322 merge=6374 els=[]             falsejoin=6374 nlegs=1
+R@6496  cond=6496 merge=6548 els=[]             falsejoin=6548 nlegs=1
+```
+
+Three corrections to what I had written in §§1-2 of this ticket:
+
+1. **Why v2/v3 were inert is now known and it is not the merge test.** `@8976` (the false-leg target) has
+   successors `[9144, 9218]` — the second is the enclosing `TryExceptRegion@6`'s exception continuation — so
+   "the stub's **unique** successor" can never hold inside a `try`. My v4 replaced it with a fall-through test and
+   mis-took "next block by offset" (`@8980`), and v5 took the smallest forward successor (`9144`, correct) — and
+   **v4 and v5 both still produce a byte-identical product**, so the re-election is not the lever at all.
+2. **The fold information already exists one level up.** `IfRegion@8904` already declares `merge_block=9144` with
+   `else_blocks=[]` and **three** conditional legs reaching `9144`, and its block set already contains
+   `@8948/@8964/@8976/@8980`. So the parent is correctly declared, and the child `@8948` is a *re-declaration of a
+   sub-chain inside it*. Step 6 is therefore about the **parent/child duplication of the same guard run** (the child
+   re-owns `@8964`, whose chained comparison the oracle wants ANDed into the parent's test), not about the child's
+   merge election. That also matches the numbers: `@8948`'s `nlegs=2` versus `@8904`'s `nlegs=3`.
+3. **Steps 3 and 4 are untouched by this rule**: `@7164`, `@6322`, `@6496` each report `else_blocks=[]`,
+   `merge ==` their own false target and `nlegs=1`. Nothing to re-elect there — their obstacle is the *missing
+   short-circuit tests* (3 declared `BOOL_OP` regions where ≥5 are needed) and the swallowed `system_log.debug`,
+   exactly as R21-77 addendum 4 said. My time would not have been better spent here; the axis needs a different
+   lever (chain-leg **population** at identification, per r93a's duplicated-test work), and this ticket should stop
+   pursuing merge re-election after five arms (`v1` destructive, `v2-v5` byte-inert).
+
+Net for the next hand: attack step 6 as "one guard run declared twice, parent and child", using the parent
+`IfRegion@8904`'s already-correct merge and 3 legs, and drop the merge-reelection idea. F5 base unchanged
+(`996a1b1acf143458`); my mirror is restored to it; the probe file lives at `D:/Temp/r91m/out/r2178dbg.txt`.
