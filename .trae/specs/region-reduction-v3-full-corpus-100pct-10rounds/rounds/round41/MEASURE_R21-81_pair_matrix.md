@@ -117,3 +117,21 @@ Sequence consequence: the try path frees the six blocks precisely so they can be
 Population caveat before editing: this site lives in the or-chain branch landed by gate 29, so it is not victim-unique. Count how often the two claim loops fire per file on the 20-file panel and on the 402 roster, narrow by the operand set, and re-prove quote 92/92, real_quote 45/45 and broker 128/128 unchanged before any sweep is believed.
 
 Synthesis for the round: step 1 of the six-fact ladder (the 112-instruction drop) and step 3 (the @7164 or-chain that swallowed the system_log.debug call) are the same over-claiming site. That is why two analyzer halves moved nothing while the generator dispatch ledger recovered 37 instructions - the residual was never about which legs are mounted, it is about who is allowed to print the blocks.
+## Addendum 5 - the named over-claim is safe to neutralize but buys nothing: sixth exclusion, and the drop is downstream of claim order (2026-10-14 01:27)
+
+I built the experiment directly from addendum 4. Using ast to find every loop inside `_if_generate_normal` (method spans 22014-23645) that iterates `region.then_blocks` or `region.else_blocks` and writes `generated_blocks`, six loops were found at 22498, 22502, 22527, 22531, 22538 and 22813, and five claim statements at 22501, 22505, 22530, 22534, 22539 were replaced by `pass` (indentation preserved, so the enclosing if statements keep valid bodies - my first attempt deleted whole loops and died with an expected-indented-block error at 22522, which is a rig bug, not a result). Variant `64d05383cbe48394`, 3,869,799 B, BOM intact, zero bare LF, zero CR CR LF, compile clean, paired with the `[R21-79]` analyzer 3ad5ceaa, mirror platform restored and re-hashed in the same command.
+
+| file | committed bytes | variant bytes | verdict |
+|---|---|---|---|
+| trade_live_broker | 178823 | 178823 | IDENTICAL |
+| plugin_system_risk_calculation/function | 30095 | 30095 | IDENTICAL |
+| fly/data/quote | 93018 | 93018 | IDENTICAL |
+| real_quote | 53841 | 53841 | IDENTICAL |
+| replace_utils | 13501 | 13501 | IDENTICAL |
+| realtime_event_source | (R21-79 arm) 20078 | 20078 | unchanged by the neutering |
+
+Victim readings with the neutering: `ours=241`, `hunks_vs_ORACLE=4`, `DELTAS instrs=-115`, `jsites=-9`, `back=+0`, judge `12/13` - byte-identical to the `[R21-79]` half alone. In other words the or-fold claim is **not** the mechanism that suppresses the six blocks: leaving them unclaimed changes nothing, while provably changing nothing else in the corpus either.
+
+That is a useful pair of facts to hand over. (1) The five claim statements are dead weight for this unit - neutralizing them is zero-collateral, which is itself a candidate co-requisite but not a fix, so it is recorded and not installed. (2) The drop must therefore be positional: after the try-body frees the blocks, no *later* walk revisits those offsets - the parent body sequence has already passed them. Claim order and walk order, not claim membership, are what the next rule has to address, which means instrumenting the parent walk itself (which list it is on, what index it is at, and what it skips) rather than any ledger.
+
+Exclusions now on this single unit, all measured this session: analyzer tail-release (correct, zero collateral, zero flip), analyzer folded-join (destructive then inert then redundant), generator pre-claim ledger (-485, 10/13), generator caller-side post-claim ledger (no victim movement, collateral widened), generator claim neutering (no victim movement, zero collateral). The best-known arm is still the `[R21-79]` + `[R21-81]` pair at `instrs=-78`, `jsites=-3`, `back=+0`, 3 hunks, 12/13.
