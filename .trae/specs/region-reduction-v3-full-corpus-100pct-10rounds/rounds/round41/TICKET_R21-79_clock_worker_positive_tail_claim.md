@@ -98,3 +98,13 @@ their position, because they are simultaneously owned by `LoopRegion@5598` (103 
 (190 blocks) as plain body blocks. The claim has to be *positive in both directions*: release the tail from the
 arm AND hand it to the sequential body list of the owning loop/try. That pairing is what is missing, not a
 narrower predicate.
+
+## Addendum 6 - r107a final report: the claim is CORRECT and zero-collateral, but the drop is one level up, so it stays banked (2026-10-14 01:28)
+
+r107a's numbers and mine agree exactly (`instrs -115`, `hunks_vs_ORACLE=4`, `indeg-equal=False`, judge `12/13`), which is what makes its *new* measurement trustworthy rather than prose. The claim fires as designed: on `IfRegion@7186` the `elif_final_else` drops **42 -> 1** (`@7492` only), `region.blocks` **48 -> 7**, **253 instructions freed**, 30 product lines re-positioned to ORACLE nesting; negative control `IfRegion@7634`'s 8-block arm correctly rejected. Collateral: panel 20 files **DIFFER=1 / identical=19** with every row unchanged (`broker 128/128`, `quote 92/92`, `quotation 153/153`, `order_api 37/37`, `function 43/43`, `replace_utils 9/9`), and the ROOT-joined 402 sweep reads `files_compared=402 MISSING/FAIL=0 CHANGED={realtime_event_source.pyc}`.
+
+And it does not flip, with the reason measured rather than guessed: the freed run `@7972..@8586` is *also* a member of the next chain level `IfRegion@7634`'s **then_blocks**, whose arm renders up to the nested `LoopRegion@7706` and stops; after the release those blocks' `block_to_region` owner is `TryExceptRegion@6`, so the parent sequential list misses them too. Both renderers decline, which is why releasing the arm removes 112 more characters of text instead of restoring 112 instructions.
+
+Two recorded corrections worth keeping: its first panel comparison mis-paired the three same-basename copies and printed 8 spurious DIFFs (fixed by index pairing, noted in the doc) - the same canary-basename trap as round 39. And this ticket's mechanism is now the **fifth** exclusion on the `elif_final_else` axis, so the axis itself is not the blocker: **ownership priority / arm-continuation** is.
+
+Status: banked as a co-requisite (`CANDIDATE_r2179_3ad5ceaa23135334.py`, `PATCH_R21-79_region_analyzer.py`, `FIX_R21-79_...md` under `rounds/round41/`), never installed. The forward path is ticket **R21-81** (r108a, generator-side: dispatch a nested region entry that lies inside a parent body list, reusing the resident `遇子区域入口时经 _generate_region 整树` channel documented at `region_ast_generator.py:54194` rather than minting a rival), with this analyzer half available as the labelled co-requisite arm.
