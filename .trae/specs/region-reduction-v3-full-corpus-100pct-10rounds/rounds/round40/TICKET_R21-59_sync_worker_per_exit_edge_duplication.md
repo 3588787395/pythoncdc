@@ -591,3 +591,50 @@ Acceptance line for the round, so nothing has to be re-argued when candidates ar
 repro reads **2/2**; the unit flips when broker reads **128/128** (GOLD already proves that text exists and is
 judge-Equal); and any candidate that raises the battery above RED=8/9 or drops a panel row is rejected before a
 190-second sweep is ever spent.
+## Fifteenth addendum (2026-10-13 10:04, orchestrator) - mechanism A is ALREADY effectively closed: r93a's analyzer renders the GOLD shape for BOTH loops, one stray statement from Equal
+
+I ran r93a's in-flight analyzer `1471c92eca157e46` (with the **landed** generator) through the fast gate, then dumped
+the 12-line repro. Result:
+
+```
+[installed] gen=b4363f5858e58074 ana=1471c92eca157e46
+[repro mechanism A] ***<module>.sync_worker: Failure: Different bytecode      <- was: Different control flow
+                    [single] status=failure units=1/2
+[battery no-regression] RED=8 / 9                                             <- neighbouring family untouched
+[broker] units=127/128, sole failure _sync_worker   [_sync_worker windows] 9 -> 6
+[panel] realtime 12/13  function 15/15  replace_utils 9/9  quote 92/92  quotation 153/153  order_api 37/37
+```
+
+and the repro product it emits is the GOLD text:
+
+```python
+    while True:
+        while int(datetime.datetime.now().strftime('%H%M')) < pre_before_trading or int(datetime.datetime.now().strftime('%H%M')) >= post_after_trading or holiday_sync_account == '0' and not engine.data_proxy.is_trading_date(datetime.datetime.now().date()):
+            time.sleep(60)
+        while pre_before_trading <= int(datetime.datetime.now().strftime('%H%M')) < int(post_after_trading):
+            time.sleep(1)
+            pre_before_trading                <- the ONLY remaining defect
+        time.sleep(2)
+```
+
+`orig instrs=170 prod instrs=172 delta=2`, **one** window: `+ @1106 POP_TOP`, `+ @1108 LOAD_FAST`.
+
+What that means, and it changes the round's plan:
+1. The judge's **CFG** comparison now PASSES on the repro (the verdict class changed from *Different control flow* to
+   *Different bytecode*), so the duplicated-while-test folding - both loops, the 4-leg or-chain with the `and not`
+   tail and the chained comparison - is correctly represented by r93a's rule. Mechanism A as I defined it (addendum
+   11) is done; my earlier statement that mounting the chain "reaches none of the synthetic shapes" applies to
+   r91a's candidate, not to this one.
+2. The entire residual is **one discarded-value statement**: a leg's operand is loaded and popped as a bare
+   expression statement after the loop body. That is the same stack-consumption distinction that gate 39's
+   `[R21-56] _r2156_tail_is_bounded_statements` was built to decide (recover/emit only when the value is bound,
+   returned, or passed; refuse when the consumer is `POP_TOP`) - the machinery exists, so this is a narrow conjunct,
+   not a new axis.
+3. Next hand's job, stated as one sentence: make the folded condition consume or drop the leftover leg operand so the
+   repro reads `units=2/2`, then measure broker - `windows 9 -> 6` on the real unit with the same rule is the reason
+   to expect a flip. Acceptance is already fixed: repro `2/2`, broker `128/128`, battery `RED<=8/9`, panel rows held,
+   then the 402 CR-stripped sweep with `CHANGED = {trade_live_broker}` expected (predicate P fires on 1 of 173 loop
+   conditions).
+4. Caveat I will not paper over: `1471c92eca157e46` was read from a **live** engineer mirror, so it is a moving hash -
+   a real measurement of the bytes I hashed, not a verdict on r93a's final deliverable. When its report lands I
+   re-measure the delivered file before anything is installed.
