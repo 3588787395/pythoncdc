@@ -198,3 +198,44 @@ already has the right merge and three legs, so the operand list is the only miss
 identification, which is also what steps 3 and 4 need (`@7164/@6322/@6496` each show `nlegs=1` where the oracle needs
 more short-circuit tests). Six arms are now excluded on this axis: v1 destructive (`11/13`), v2–v5 byte-inert merge
 re-elections, v6 destructive de-duplication. F5 base unchanged and the mirror is restored to `996a1b1acf143458`.
+
+
+## Addendum 5 (orchestrator, 16:29) — one measurement explains ALL FOUR open facts: the short-circuit chain mount stops at pure-jump stubs
+
+Second inert-certified probe (product sha16 `192ba0f09e81bbd7` with and without it, i.e. byte-identical), now
+counting legs **after folding a pure-jump false-leg stub into its fall-through target**, plus what is actually
+mounted in `inline_boolop_chains`:
+
+```
+IfR@8904 merge=9144 nblocks=7  n_cond_jumps=4  n_legs_to_merge=1   inline_boolop_chains={ blocks:[@8904-8924, @8926-8946], op:'and' }
+IfR@8948 merge=9194 nblocks=6  n_cond_jumps=2  n_legs_to_merge=1   inline_boolop_chains={}
+IfR@7164 merge=7216 nblocks=51 n_cond_jumps=21 n_legs_to_merge=2   inline_boolop_chains={}
+IfR@6496 merge=6548 nblocks=8  n_cond_jumps=3  n_legs_to_merge=2   inline_boolop_chains={}
+IfR@6322 merge=6374 nblocks=6  n_cond_jumps=3  n_legs_to_merge=2   inline_boolop_chains={}
+```
+
+This is the single datum that ties steps 3, 4 and 6 together, and it retires my v2–v6 framing:
+
+* At `@8904` the guard run has **four** conditional jumps but `inline_boolop_chains` holds exactly **two** legs
+  (`@8904`, `@8926`) — so the fold the oracle needs (`… and <@8948 test> and <@8964 chained comparison>`) never
+  happens because **the chain walk stops at `@8948`**, whose own conditional jump targets the stub `@8976`
+  (`@8976 → @9144 → and @9218` as the try continuation). The walk compares raw jump operands against the merge,
+  so a leg that reaches the merge *through a pure-jump stub* is not recognised as part of the chain.
+* The same signature — `n_cond_jumps` far above the mounted legs, `inline_boolop_chains` empty — is present at
+  `@7164` (21 conditional jumps, 2 legs after folding), `@6322` and `@6496`: **the identical defect** at the three
+  or-chain sites of steps 3 and 4.
+
+**Rule to write (general, region-data only, one predicate):** *when extending a short-circuit chain, treat a leg's
+conditional false target as the join `J` if the target block is a pure-jump stub whose single forward successor is
+`J`* — i.e. compare joins after stub folding instead of after raw operands. The existing helpers to change are the
+chain walkers (`_detect_while_boolop_forward_chain` / `_detect_while_condition_boolop_chain` /
+`_inline_and_chain_exits_agree` and `_r2172_cond_jump_target` in the banked `9ba2d8af` lineage), which all ask
+"does this leg jump to the merge/next block?" in the raw form.
+
+Caveat for whoever implements it: this broadens a **landed** family of predicates, so the fire census must run over
+all 402 files before any edit, and the panel must include `quote`, `risk_calculation/__init__` and the
+`arg_checker`/`profiler_func` duplicated canaries — the files that caught every over-fire in this campaign so far.
+
+Six arms on the ownership framing are excluded (v1 destructive `11/13`, v2–v5 inert merge re-elections, v6
+destructive de-duplication). The axis is now chain-mount leg recognition, not ownership. F5 base
+`996a1b1acf143458` unchanged; mirror restored; nothing installed.
