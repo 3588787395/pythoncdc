@@ -47,3 +47,33 @@ reproduces. So the target is **not** hopeless: the remaining gap is a single, na
 *thread one of the arms' exits so the re-entry label loses one jumper and the loop-tail label `@9144` gains the
 predecessors the original has, without adding a backward edge*. That is a shape question with a countable answer,
 not a text question, and it is the criterion the next candidate must be scored on before spending a judge run.
+
+## 13/13 REACHED by an oracle text (15:00, measured by me) — the last unit is provably expressible
+
+`python -X utf8 scripts/pyc_verify.py single …/realtime_event_source.pyc --source D:/Temp/r103/GOLD_varF.py`
+prints **`[single] status=success units=13/13 success_rate=100.00%`**. Banked as
+`rounds/round41/GOLD_realtime_event_source_13of13_PROOF.py`. varD/varE still read 12/13.
+
+Its `dis` census equals the original's on every count I compared: `instrs=1442 back-edges=4 jump-sources=123
+in-edge top = (6 -> @9194, 5 -> @4984, 4 -> @9144, 3 -> @7164)` — the original's distinctive **4 predecessors on the
+loop-tail label `@9144`** is reproduced, which no earlier variant had (varE had 7 jumpers into `@9194` and no `@9144`
+predecessors at all).
+
+**The single shape fact that did it** (whole varE -> varF diff, one statement):
+
+```
+- elif now_date == self.before_trading_date and now_date > self.after_trading_date:
+-     if delay_after_trading >= now_time >= after_trading:
+-         self._engine.set_current_stage(EventEnum.AFTER_TRADING_END)
+-         self.event_queue.put((dt, EventEnum.AFTER_TRADING_END))
+-         self.after_trading_date = now_date
++ elif now_date == self.before_trading_date and now_date > self.after_trading_date and delay_after_trading >= now_time >= after_trading:
++     self._engine.set_current_stage(EventEnum.AFTER_TRADING_END)
++     self.event_queue.put((dt, EventEnum.AFTER_TRADING_END))
++     self.after_trading_date = now_date
+```
+
+i.e. an `if` whose test is a **chained comparison** must be folded into its parent `elif`'s condition with `and`,
+rather than nested. So `clock_worker`'s defect is a *guard-folding* axis (an elif whose body opens with a
+chained-compare `if` gets nested instead of merged), not an inexpressible region — and the acceptance test for any
+candidate is now a scored distance to this proven-reachable oracle text plus the judge line `13/13`.
