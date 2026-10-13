@@ -248,3 +248,10 @@ Reading: the [R21-86] figure of -6 is scaffolding-masked parity, not near-parity
 Next axis, from r112a diagnosis plus my own reading of the same table: the 7164 chain owns the whole loop tail, so step-3 refuses the fold. That tail-ownership claim is the remaining mechanism, and it was measured destructive once before in the [R21-48] family, so it needs a new discriminator rather than a re-attempt. Ticket R21-88 is dispatched to r113a on the [R21-86] base (not on [R21-87], which is banked), with the requirement that instrs and jsites both move toward 0 together and that the [R21-86] base arm stays byte-reproducible.
 
 Still nothing installed. Corpus 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, landed bytes unmoved, repo core/ clean.
+
+## Addendum 13 - session end note: push confirmed, r113a still iterating, best arm unchanged (2026-10-14 04:24)
+
+- Remote ref verified by fetch plus rev-list, not by pipeline exit status: origin/rr-v3r01-f557fd advanced 4b869809 to b1d47fff with unpushed=0. Earlier retry loops exited 0 while the ref had not moved, so the verification step is mandatory before claiming a push.
+- r113a is mid-run on ticket R21-88. Its newest at-rest generator bytes a9275cbc1e39b215 score `ours=212`, `instrs=-282`, `back=-1`, `jsites=-33`, 6 hunks, judge 12/13 with zero collateral on broker, klinedata, quote and real_quote. That is the destructive ablation shape r112a already reported (fold plus narrow without the guard), so it is read as an in-flight intermediate, not a verdict, and the verdict belongs to r113a own MEASURE doc.
+- Best arm remains `[R21-86]`: analyzer 996a1b1acf143458 + generator 59a405837c22a4cb, `ours=262`, `instrs=-6`, `back=+0`, `jsites=+2`, 4 hunks, `indeg-equal=False`, judge 12/13, zero collateral, banked and not installed because `instrs=-6` is parity by cancellation (true tail deficit about -26).
+- Corpus unchanged at 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, landed bytes 1471c92eca157e46 plus 566ff5c502276e48 unmoved, repo core/ clean. Objective not achieved.
