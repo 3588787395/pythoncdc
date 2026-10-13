@@ -490,3 +490,43 @@ Consequences, correcting what I wrote an hour ago:
    the second loop". Two engineers and I now agree the second loop is the same axis; treat any A-side candidate
    that leaves `@2832..@2884` rendered as body statements as incomplete, and measure loop 2 explicitly before
    declaring A done.
+## Twelfth addendum (2026-10-13 09:48, orchestrator) - a RESIDENT 40-second acceptance harness for this axis already exists, and its baseline is 8 RED
+
+Task #38 (`R14-02: or-chain with chained-compare tail`) from round 14 was the same family, and its battery is still
+in the repo and still running:
+`python -X utf8 .trae/specs/region-reduction-v3-full-corpus-100pct-10rounds/rounds/round14/repro/run_repro.py`
+(compile each source with the 3.11 interpreter, decompile **the .pyc** through the pipeline, judge only pycdc
+products - judging a hand-written source against itself is vacuous, as that battery's own docstring says).
+
+Baseline I measured on the landed bytes just now, in 40 seconds:
+
+```
+r01_or_cc_return.py   success units=2/2        <- green today, was RED in round 14
+v1_while_try_cont.py  failure units=1/2
+v2_if_only_cont.py    failure units=1/2
+v3_try_no_while.py    failure units=1/2
+v4_cc_in_middle.py    failure units=1/2
+v5_two_elif_cc.py     failure units=1/2
+v6_guard_clause.py    failure units=1/2
+v7_ccarm_as_elif.py   failure units=1/2
+v8_two_cc_arms.py     failure units=1/2
+RED=8 / 9
+```
+
+Why this matters for round 40, and how to use it:
+1. It is a **second, much cheaper discriminator than the corpus sweep** (40 s vs ~190 s) that exercises exactly the
+   shapes this unit is made of: `while` + `continue` + a chained-compare or `or`-chain tail (`v1`, `v4`, `v7`, `v8`).
+   Run it on every candidate before asking for a sweep.
+2. Round 14's own conclusion was "condition text becomes correct; remaining blocker = parent IfRegion condition
+   assembly … root shared with #39: **Phase 2 chained-compare regions steal boolop-chain membership**" - which is the
+   same steal I measured today as `_detect_while_condition_boolop_chain(@232)` returning length 1 and
+   `interrupts_boolop_forward_chain` vetoing `@364`. So this is not a fresh axis with no history; it is round 14's
+   unfinished one, and any fix should be judged against those 8 reds, not only against `_sync_worker`.
+3. Reverse use, as an over-fit test: a candidate that flips `_sync_worker` while leaving all 8 battery reds red is
+   suspicious - it would mean the rule fires on exactly one CFG in the corpus (which is plausible here: predicate P
+   fires 1 of 173 loop conditions) and must be defended by the panel and the sweep, not by generality claims.
+   Conversely any battery red turning GREEN is evidence of a real generalization and should be reported.
+4. The corpus has **exactly one** `while` statement whose test contains a chained comparison in any committed
+   product - `trade_live_brokerOK.py:848`, inside this very unit (grep of `while …<=…<…:` over all 402 `*OK.py`).
+   So there is no green positive control for the shape: nothing else in the corpus proves we can render a duplicated
+   `while`-test with a chained compare, which is why GOLD had to be built by hand.
