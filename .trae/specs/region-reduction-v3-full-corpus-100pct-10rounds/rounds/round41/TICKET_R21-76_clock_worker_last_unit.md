@@ -39,3 +39,31 @@ patch, from region data only (no names/offsets/counters), correct-at-identificat
 Acceptance is the judge: `units=13/13`; collateral is my own 402-file CR-stripped sweep, which must read
 `files_compared=402 MISSING/FAIL=0 CHANGED=1={realtime_event_source}` — remember the sweep rig's relative-path trap
 that made a vacuum look like a zero-collateral pass.
+
+
+---
+
+## Addendum 1 (orchestrator, 2026-10-13 14:25) — the residual shape on the LANDED bytes is an 112-instruction DROP, not +2
+
+r103a measured the mandated platform `1471c92e` + `566ff5c5` and the picture changed materially. Recorded here
+because every prior ticket on this unit was measured on the banked generator `675ec7af`, i.e. a different base:
+
+- **A contiguous 112-instruction statement block is DROPPED entirely** by the decompiler: original offsets
+  `@7972..@8586`, source lines **498–524** of `clock_worker` — the `if persist_flag is False:` guard with
+  `set_trade_stop_status` / `system_log.error('获取交易持久化对象超时，系统退出')` /
+  `self.event_queue.put((dt, EventEnum.SYSTEM_EXIT))` / `return`, then `self.before_trading_date = now_date`,
+  the `try: server_restart_not_do_before … except AttributeError: '0'` normalisation, and the
+  `if server_restart_do_before_type == '0' / elif broker_persist is not None / …` cascade with
+  `put_before_trading_start()` in several arms.
+- Every `put_before_trading_start()` arm exits to the **loop back-edge / merge `@9194`** (the
+  `while self.active:` header re-check), so no per-statement label survives — the shared-body-entry failure the
+  ownership analysis describes, manifesting as a wholesale drop rather than as two spurious jumps.
+- **Corroboration that this is a hard region, not a mirror artifact:** Decompyle++ on the same `.pyc` drops the
+  *same* block and also reads 12/13.
+- Consequence for the ticket above: the `+2 / 2 windows / 7 landings` figures in "Target measurements" belong to the
+  `675ec7af` base. On the landed bytes the acceptance distance is **27 recovered source lines**, so a
+  refusal-plus-positive-claim candidate must be scored against the drop, and the GOLD oracle r103a is composing
+  (`D:/Temp/r103/GOLD_realtime_event_source_PROOF.py`) is the only meaningful target definition.
+- Action for me as adjudicator: re-measure the landed bytes myself before gating anything r103a delivers, and update
+  `residual_report.py`'s ledger row for this unit (its 台账 text still describes `−3/8` on base `3d4f27de6d80ab6e`,
+  which would make a future `UNREGISTERED` check pass on a stale mechanism description).
