@@ -669,3 +669,25 @@ are disjoint). The merged artifacts hashed to `20b38ff7cfdb9232` in both directi
 repro still `Different bytecode`, broker windows 6, panel intact - i.e. the unfaithful merge added nothing.
 Conclusion: do not union r91a with r93a; r93a's rule supersedes r91a's for this unit, and if both are ever wanted the
 transplant must be re-anchored by hand against the moved file, not spliced.
+## Seventeenth addendum (2026-10-13 10:33, orchestrator) - per-window attribution baseline under `1471c92e`, for crediting whichever half closes what
+
+I dumped `_sync_worker`'s windows under r93a's delivered analyzer with the landed generator (`orig 412 / prod 431`,
+`delta=+19`, 6 windows). The point of this table is attribution: GOLD's own residual is **four small windows**
+(`@542 +1`, `@696 -1`, `@700..@702 -2`, `@1210..@1212 -2`), and three of our six are already exactly GOLD's first
+three - so loop 1 is at GOLD parity and everything left belongs to loop 2 and the reconnect tail.
+
+| window | shape | whose job |
+|---|---|---|
+| #1 `@542 +1 ins` | matches GOLD #1 | already GOLD-parity (judge-patched / cosmetic) |
+| #2 `@696 -1 del` | matches GOLD #2 | already GOLD-parity |
+| #3 `@700..@702 -2 del` | matches GOLD #3 | already GOLD-parity |
+| #4 `@1206..@1210 +24 ins` | GOLD has `-2 del` here | loop-1 exit / reconnect boundary - r96a (return-vs-break) is the candidate mechanism |
+| #5 `@1382..@1214 -1/+163 replace` | GOLD has nothing here | the relocated second-loop body - r95a (loop-2 sibling predicate) |
+| #6 `@1890..@2884 -165 del` | GOLD has nothing here | same defect seen from the original's side - r95a |
+
+So the remaining distance is exactly two things: window #4 (24 instructions at the loop-1 exit, where GOLD deletes 2)
+and windows #5+#6 (the whole second loop rendered in the wrong place because its duplicated test is not folded).
+`delta` went from -2 (landed) to +19 because the fold emits the latch legs it now owns; that is not a regression in
+itself - the judge still says `Different control flow` for the unit, and the pair's 402-product sweep is
+`CHANGED = {trade_live_broker}`. When a half lands, the test is: does #5/#6 collapse (loop 2) and does #4 collapse
+(reconnect/exit)? A candidate that shrinks only window count without moving these two groups is not a flip.
