@@ -1,0 +1,53 @@
+{
+  "batch": "round8 回退整改批 FIX_R3（P0：shard4 finance.pyc 132→131 回退）",
+  "stamp": "p0r2",
+  "generated_at": "2026-10-14T02:30:00+08:00",
+  "regression": {
+    "unit": "<module>.PositionDict.__init__.<dictcomp>",
+    "file": "site-packages/IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc",
+    "before": "131/132 (键 symbol.replace('XSHE','SZ').replace('XSHG','SS') 整体蒸发 → 裸 symbol)",
+    "after": "132/132 success"
+  },
+  "introduction_commit_finding": {
+    "claimed": "6c4468ef（整改批）——主代理二分结论",
+    "measured": "865b901e（位C定稿）——worktree 直接实测",
+    "evidence": [
+      "worktree@49603022（core/ 与 865b901e 逐位相同，git diff 865b901e..49603022 -- core/ 为空）：当前 finance.pyc 实测 131/132，失败单元同 名",
+      "worktree@b09c23f3（865b901e 父提交）：finance.pyc 实测 132/132；最小复现 4 形全正确",
+      "865b901e..49603022..6c4468ef 全部提交的 tracked financeOK.py 均含键链（stale 旧轮产物）——主代理二分在 865b901e 读到 132/132 的『成功』实为 stale 基线产物的字节等价（committed 旧 OK 编译恰与原 pyc 同字节），非当时反编译器输出"
+    ],
+    "introduced_by": "865b901e [B106] comprehension_generator._find_dict_kv_split_point elif 链重构"
+  },
+  "fix": {
+    "file": "core/cfg/comprehension_generator.py",
+    "anchor": "_find_dict_kv_split_point :1664；[B106-R3] hunk :1683-1697（LOAD_METHOD 分支补 delta=1）",
+    "criterion": "I.4 白名单（块内 opcode 序 + CPython 3.11 值栈净效应）：LOAD_METHOD 弹 receiver、压 [self|NULL, method] 两槽，净 +1",
+    "diff_stat": "+14 行单 hunk，无回滚 B106 其余覆盖（PUSH_NULL/CALL_FUNCTION_EX/LIST_EXTEND 族维持）"
+  },
+  "readings": {
+    "minimal_repro_r8v8fb_finreg": {"before": "7/9（<module>.<dictcomp> + PositionDict.__init__.<dictcomp> 两单元 Different bytecode）", "after": "9/9 success"},
+    "finance_pyc": "131/132 → 132/132 success",
+    "release_face_6_probes": {"B104_main": "14/14", "B105_main": "13/13", "B105_call": "12/12", "B107_main": "14/14", "B103_main": "13/13", "B103_guard": "8/8", "total": "74/74", "evidence": "r8v8fixB_repro_p0r2.json"},
+    "variant_batteries": {"r8v8rev_b104_chain4": "6/6", "r8v8rev_b105_walrus": "5/5", "r8v8rev_b107_mtarget3": "6/6"},
+    "touched_domain_extra_batteries": {"r8v8fc_b106_star": "18/18", "r8v8rev_b106_mixed": "7/7", "r8v8fc_b113_flat": "21/21", "r8v8rev_b113_doubfor": "10/10", "r8v8fc_b96_async": "14/18（4 单元 b3/b7.inner.<listcomp> 为 B112 存量移交项，修复前后逐位一致，非本批引入）"},
+    "round1face_station": "417/423（与基线一致）",
+    "set34_shard0": {"units": "183/190", "NEWFAIL": 0, "note": "5 失败文件全在 failing_index.json 基线索引"},
+    "shard4_other_baseline_failures_unchanged": {"executor.pyc": "9/10", "strategy_universe.pyc": "10/11", "trading_dates_mixin.pyc": "13/14", "history_api.pyc": "18/19", "order_api.pyc": "34/37", "note": "与 shard4_report_new.json 逐位一致，无恶化"}
+  },
+  "simulation_parameters_star_form_note": {
+    "unit": "SimulationParameters.__init__",
+    "baseline_form": "datetime.datetime(*(x.timetuple()[:3]))",
+    "current_form": "datetime.datetime(*x.timetuple()[:3])",
+    "verdict": "字节等价（两种源形态编译为相同字节码），单元验证始终 PASS，非失败源；形态变化来源 = 865b901e [B106] star_args 实参序保真（c4_12 7/13→13/13、r5v5_07 4/13→13/13 放行面），非整改批 6c4468ef 外溢"
+  },
+  "iv2": {
+    "py_compile": "rc=0（core/cfg/comprehension_generator.py，唯一涉改文件）",
+    "import": "core.cfg.comprehension_generator 包导入 OK",
+    "probe_residue": "无（临时脚本均在 d:/Temp/opencode，repo 内零残留；r8v8fb_finreg.py 为任务交付的最小复现探针）",
+    "g3": "未新增 def（单 hunk 分支内修正），零前缀违规",
+    "g4": "零硬编码路径/偏移/计数",
+    "docstring_i7": "_find_dict_kv_split_point 存量无 docstring（[R40 fix] 行内注释风格），修复以 [B106-R3] 行内注释就地记录，无 docstring 需同步",
+    "bom": "文件首 3 字节 102,114,111（'fro'），单头无 BOM"
+  },
+  "regen_side_effect_cleanup": "本人新增 regen 副产物 8 件已还原（c4_04/c4_07/c4_09/c4_10/r5v5_09 + 3 电池 OK）；主代理 402 验证序产物（site-packages/**）保持原样"
+}

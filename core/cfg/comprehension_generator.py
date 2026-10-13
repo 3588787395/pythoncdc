@@ -1680,7 +1680,21 @@ class ComprehensionGenerator:
 
         for i, instr in enumerate(instrs):
             if instr.opname == 'LOAD_METHOD':
+                # [B106-R3] 3.11 方法调用协议：LOAD_METHOD 弹 receiver、压
+                # [self|NULL, method] 两槽，净栈 +1（与 [R40 fix] 的 CALL
+                # ``-(n+1)`` 口径配套：CALL 弹 n 实参 + method + self|NULL
+                # 共 n+2、压 1 个结果）。B106 elif 链重构时本分支只置标记未
+                # 定 delta，落入其后 ``stack_depth += delta`` 复用上一迭代
+                # 的 stale delta——方法链（``k.m1(...).m2(...)``）的第二个
+                # LOAD_METHOD 紧跟 CALL（delta = -(n+1)）之后，深度历史被
+                # 负值二次污染 ⇒ final_depth < 1 ⇒ 切分点 None ⇒ dictcomp
+                # 键整体蒸发（finance.pyc PositionDict 键链 132→131 回退
+                # 根因；单方法键/值侧链因 stale delta 恰为 +1 而侥幸存活）。
+                # 判据 = opcode 栈净效应（I.4 白名单）；B106 的
+                # PUSH_NULL/CALL_FUNCTION_EX/LIST_EXTEND 族覆盖维持不变
+                #（c4_12/r5v5_07/lambda 变体放行面，C3）。
                 _has_load_method = True
+                delta = 1
             elif instr.opname == 'CALL':
                 if _has_load_method:
                     # CALL with LOAD_METHOD: delta = -(n+1)
