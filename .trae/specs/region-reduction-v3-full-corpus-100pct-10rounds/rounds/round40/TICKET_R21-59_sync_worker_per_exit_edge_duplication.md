@@ -202,3 +202,56 @@ The next attempt should therefore (i) verify the presence of a `COMPARE_OP`-pair
 existing analyzer's own chained-compare detector, and (ii) if the region is not declared for a loop *condition*
 (the detector may only run for statement-level ifs), declare it there — which is an identification-time rule over
 opcode pairs, not a text guess.
+
+## Sixth addendum (2026-10-13 08:40, orchestrator, own rig `D:/Temp/r91m/win_r91.py` + opcode census) - my own chained-comparison premise is FALSIFIED, and the real shape is named
+
+I regenerated broker on the landed bytes (`b4363f5858e58074` / `842e2748bcdfeb66`) into
+`D:/Temp/r91m/out/broker_LANDED.py` (repo untouched: `git status --porcelain -- site-packages/ | grep -c OK.py` = 0)
+and aligned the two `_sync_worker` code objects on **opcode names only** (jump operands excluded, so shift shadows
+cannot inflate the windows). Windows=9, `orig instrs=412 prod instrs=410`:
+
+| # | tag | orig span | prod span | del | ins |
+|---|---|---|---|---|---|
+| 1 | delete | @362..@536 | - | 22 | 0 |
+| 2 | delete | @544..@702 | - | 18 | 0 |
+| 3-6 | insert/replace | - | @526..@726 | 1 | 26 |
+| 7 | insert | - | @726..@1026 | 0 | **196** |
+| 8 | replace | @1208..@1210 | @2156 | 2 | 1 |
+| 9 | delete | @1890..@2884 | - | **165** | 0 |
+
+So window #9 is not missing content - the 165 deleted instructions are the *loop body* (`sync_data_flag = 0`,
+`with self.order_or_trade_lock:`, the two flag comparisons, the stores, `time.sleep(steps)`), and window #7's 196
+inserted instructions contain that same body emitted ~1100 offsets earlier. The unit is an **ordering / placement**
+defect, not a "construct we cannot render" defect.
+
+The opcode census settles the chained-comparison question against me:
+
+| | ORIG | PROD |
+|---|---|---|
+| instructions | 412 | 410 |
+| `COMPARE_OP` count | 21 | 21 |
+| chained compares (`SWAP 2` + `COPY 2`) | **2** (@2014, @2832) | **3** (@686, @1344, @1662) |
+| conditional **backward** jumps | **4**: @874->704, @1032->704, @1208->704, @2880->2072 | **2**: @1710->744, @1980->1848 |
+
+Read that table twice: my fifth addendum claimed the loss was a chained comparison in the loop condition that we do
+not render. We render *more* chains than the original does (3 vs 2), and the parity of `COMPARE_OP` is exact. What
+we do not reproduce is the original's **three conditional backward edges into one shared earlier block @704**
+(the block that starts `time.sleep(60)` and carries 21 instructions) plus its fourth backward edge @2880->2072.
+That is the `[[pythoncdc-backedge-continue-family]]` shape: several `continue` statements in one loop body sharing a
+single re-entry target that is the loop's *condition* block, i.e. an inner loop whose body runs from @704 to @1210
+and whose continues re-enter @704, while our pipeline renders the re-entry once and threads the other two exits
+forward.
+
+Consequences, in force for this ticket:
+1. Do NOT write a criterion about chained comparisons for this unit; the census above is a measured negative.
+   r90a (R21-61) is briefed on that premise and its result must be adjudicated against this table.
+2. The target shape is countable and judge-visible: `_sync_worker` needs **3** conditional backward edges landing on
+   one block (the sleep(60) block) and a 4th to the body start, produced from *own block data* - a loop region whose
+   body contains several arms terminating in a backward edge to a block that is also the region's condition/test
+   block. The analyzer's `back_edge_block` designation (guard at `region_analyzer.py:4960`) is the place to census:
+   does the loop region covering @704..@1210 declare ONE back-edge block while three distinct blocks jump back to
+   @704? If yes, the loss is a declaration (per-exit-edge re-entry), not emission.
+3. Positive control to reuse: the original's `@2880 POP_JUMP_BACKWARD_IF_TRUE ->2072` shows a backward conditional
+   edge re-entering a *statement* (body start), which our product also produces once (@1980->1848), so the emitter
+   demonstrably can do it. Nothing structural blocks the rule; it is identification-side coverage for the
+   multi-exit case.
