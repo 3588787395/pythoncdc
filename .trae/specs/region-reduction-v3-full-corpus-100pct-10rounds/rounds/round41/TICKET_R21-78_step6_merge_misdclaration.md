@@ -174,3 +174,27 @@ Three corrections to what I had written in §§1-2 of this ticket:
 Net for the next hand: attack step 6 as "one guard run declared twice, parent and child", using the parent
 `IfRegion@8904`'s already-correct merge and 3 legs, and drop the merge-reelection idea. F5 base unchanged
 (`996a1b1acf143458`); my mirror is restored to it; the probe file lives at `D:/Temp/r91m/out/r2178dbg.txt`.
+
+
+## Addendum 4 (orchestrator, 16:27) — the parent/child duplication is real, but dropping the child is destructive
+
+Acting on addendum 3, I implemented the de-duplication (`_r2179_drop_duplicated_guard_chain_child_regions`: drop an
+`IfRegion` whose entry **and** condition block both lie in a parent `IfRegion`'s block set, where the parent has
+`else_blocks == []` and a different merge, re-assigning `block_to_region` and the parent's `children`). Unlike every
+earlier arm it **fires**:
+
+| arm | product bytes | `clock_worker` lines / hunks vs oracle 254 | instrs Δ | jsites Δ | judge |
+|---|---|---|---|---|---|
+| F5 base | 20190 | 241 / 4 | −114 | −9 | `12/13` |
+| v6 (drop the child chain region) | **21373** | **264 / 5** | **−203** | −19 | `12/13` |
+
+So the child is *not* redundant in the generator's eyes: deleting it adds lines while **losing** 89 more instructions
+than before and adding an extra hunk — it removes arms, not a duplicate. Conclusion: the parent's `nlegs=3` chain and
+the child's `nlegs=2` sub-chain are **both needed** (the parent folds the guard `and`-test, the child supplies the
+`elif`/nested structure), and step 6's lever is neither the child's merge nor the child's existence. Remaining
+candidates for the next hand, in the order the data suggests: (a) the child's **test assembly** — get the generator to
+AND the chained comparison into the parent's condition by way of the parent's `inline_boolop_chains` (the parent
+already has the right merge and three legs, so the operand list is the only missing datum); (b) leg **population** at
+identification, which is also what steps 3 and 4 need (`@7164/@6322/@6496` each show `nlegs=1` where the oracle needs
+more short-circuit tests). Six arms are now excluded on this axis: v1 destructive (`11/13`), v2–v5 byte-inert merge
+re-elections, v6 destructive de-duplication. F5 base unchanged and the mirror is restored to `996a1b1acf143458`.
