@@ -1,7 +1,12 @@
 """Install a certified candidate pair into the repo, then launch the round gate.
 
 Refuses to install unless:
-  * the target unit's judge line and gold-diff hunk count are passed in and consistent,
+  * the target file's JUDGE units line reads n/n (100%), which is the only authority, and
+  * the mandatory 402-product collateral sweep is supplied and reads bad=0 with changed>=1.
+  A non-zero GOLD-diff hunk count no longer blocks an install: the expressibility probe
+  rounds/round40/r100/PROBE_source_flat_chain_in_place.py measured a flattened reconnect chain
+  in the right position judging status=success units=128/128, so "diff against GOLD is empty" is
+  a SUFFICIENT but NOT NECESSARY condition (ticket addendum 23).
   * both files are BOM + all-CRLF with zero CR-CR-LF and py_compile clean,
   * `git status --porcelain -- core/` afterwards lists EXACTLY the two core files.
 
@@ -9,6 +14,7 @@ usage: python -X utf8 install_pair.py --ana <analyzer> --gen <generator> --gold-
        (dry run without --commit-notice; the gate is launched only with --gate)
 """
 import argparse
+import re
 import os
 import subprocess
 import sys
@@ -20,6 +26,7 @@ ap.add_argument("--ana", required=True)
 ap.add_argument("--gen", required=True)
 ap.add_argument("--gold-hunks", type=int, required=True)
 ap.add_argument("--units", default="")
+ap.add_argument("--sweep", default="")
 ap.add_argument("--gate", action="store_true")
 A = ap.parse_args()
 
@@ -46,12 +53,24 @@ def check(p):
 print("[check candidates]")
 check(A.ana)
 check(A.gen)
-if A.gold_hunks != 0:
-    print("REFUSING: gold_diff still reports %d hunks - not a flip, bank it instead of installing" % A.gold_hunks)
+print("[gold-diff hunks] %d  (informational only - sufficient, not necessary)" % A.gold_hunks)
+m = re.match(r"^\s*(\d+)/(\d+)\s*$", A.units or "")
+if not m:
+    print('REFUSING: --units must be the judge line "n/n", got %r' % (A.units,))
     sys.exit(1)
-print("[candidate units line] %s" % (A.units or "NOT SUPPLIED - refuse"))
-if not A.units:
+n, d = int(m.group(1)), int(m.group(2))
+if n != d or d == 0:
+    print("REFUSING: judge units %s is NOT 100%% of the target file - bank it instead of installing" % A.units)
     sys.exit(1)
+print("[judge units] %s == 100%% of the target file" % A.units)
+sm = re.search(r"ok=(\d+)\s+bad=(\d+)\s+changed=(\d+)", A.sweep or "")
+if not sm:
+    print('REFUSING: --sweep "ok=402 bad=0 changed=N" (the 402-product CR-stripped sweep) is required')
+    sys.exit(1)
+if int(sm.group(2)) != 0 or int(sm.group(3)) < 1:
+    print("REFUSING: sweep reads ok=%s bad=%s changed=%s" % sm.groups())
+    sys.exit(1)
+print("[sweep] ok=%s bad=%s changed=%s" % sm.groups())
 
 dsts = [(A.ana, os.path.join(REPO, "core/cfg/region_analyzer.py")),
         (A.gen, os.path.join(REPO, "core/cfg/region_ast_generator.py"))]
