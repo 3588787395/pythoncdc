@@ -104,3 +104,29 @@ The damage is not only the deleted statements: because the locals are never assi
 3. Banked value: this shape (`for/else` + trailing statements after a nested if/else + `break`) is a positive
    red for any future [R21-58]-style relaxation and belongs in the repro battery - 32 instructions, 4 statements,
    plus a scope change. An easy-to-watch red.
+
+## Addendum 2 (2026-10-13 09:25, orchestrator, mirror `D:/Temp/r91m`) - [R21-63] verified: the chain becomes installable, and clock_worker's residual changes shape
+
+r92a (dispatched onto the collateral I measured above) localized it by hunk ablation on the full chain and
+delivered generator `675ec7afa414bbb5` (`.../rounds/round40/r92/CANDIDATE_r2163_675ec7afa414bbb5.py`): the offender
+is hunk **H3**, whose `if _meaningful_instrs:` branch claims a block and `continue`s with no emission channel,
+skipping the pre-existing `_generate_block_statements` + `Break` path. Its conjunct hoists the lookup that the
+emission underneath already consumes, so the claim requires a non-empty entry list. I re-measured the candidate
+myself over the landed analyzer `842e2748bcdfeb66`:
+
+| file | landed HEAD control | full chain `db1f0e96` | **[R21-63] `675ec7af`** |
+|---|---|---|---|
+| `plugin_system_risk_calculation/function.pyc` | 15/15 | **14/15 (regression)** | **15/15 (collateral gone)** |
+| `realtime_event_source.pyc` | 12/13 | 12/13 | 12/13, sole failure still `clock_worker`, no new failure |
+| clock_worker shape, my opcode-name rig | `-113` (7 windows) | `+6` at the chain level | `+6`, **4 windows, all inserts**: @7184 +1, @7248 +2, @7582 +2, @7602 +1 |
+
+So the chain is now a *safe platform* and buys still exactly zero flips. Note the shape change my rig reads: with
+H3 narrowed, `clock_worker`'s loss is **only spurious insertions** - six instructions, all of them the arm-tail
+`JUMP_FORWARD`s landing on the `while self.active:` re-test - with no deletion window at all. That is the same
+residual r89a adjudicated as *demanded* by the chain's single end label, which is why R21-60 (arm permutation) is
+falsified and why closing these six needs the chain-boundary/fold axis (`[R21-49]`/`[R21-53]` surface, previously
+measured at -269), not another veto.
+
+Rig note, stated rather than hidden: my `win_r91.py` counts 1442 original instructions where the campaign's
+`unit_diff`/`allwin` count 1424, so its `delta` and window counts are not interchangeable with the engineers'
+numbers; both rigs agree on the verdict (12/13, `Different control flow`), and only the judge reading certifies.
