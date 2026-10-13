@@ -41,3 +41,23 @@ Verdict: pre-claiming emission is destructive, not merely imprecise - it suppres
 The reason is structural and it is the constraint the next attempt must respect: a structural generator can be entered and then bail (or return a Pass skeleton), so recording at entry asserts an emission that never happened, and the gate at region_ast_generator.py:26775 then refuses to render the block anywhere. Therefore the ledger may only be written where the non-emptiness of the produced source is known - the funnel knows it, the direct call sites must be fixed by recording at each CALLER after the result is inspected (the four/five/six/eight bypass call sites r108a counted), not by touching the four methods.
 
 Falsified shapes on this axis, all measured: entry-claim at the four methods (this addendum, -485/10-13); funnel-only (quote 89/92, real_quote 42/45, r108a); and before that the analyzer-only tail release and folded join. The remaining expressible shape is caller-side recording, which is exactly ticket R21-82 and task 157.
+## Addendum 2 - the ledger-completion hypothesis is falsified twice, so the drop is not missing records at the bypass sites (2026-10-14 01:20)
+
+I ran the second expressible shape myself after r109a showed no writes for 50 minutes: record POST-EMISSION at each caller, only where the produced source is known non-empty. Method: parse the candidate with ast, take every Assign whose value is a direct call to `_generate_if`/`_generate_try`/`_generate_loop`/`_generate_with`/`_generate_match` outside the funnel (16 sites), and insert `if <target>: self._r2181_note_emitted(getattr(<region arg>, "entry", None))` after the statement, indented from the statement START line (my first attempt indented from the statement end line and died with an unexpected indent at line 4451, which is a rig bug, not a result).
+
+Variant `2a8b1158cf21a201`, 3,875,760 B, BOM intact, zero bare LF, zero CR CR LF, compile clean, analyzer arm 3ad5ceaa as the co-requisite, platform restored and re-hashed in the same command:
+
+| reading | R21-79 + R21-81 pair | pair + caller-side records |
+|---|---|---|
+| realtime product | 20484 | 19494 |
+| instrs / jsites / back | -78 / -3 / +0 | **-78 / -3 / +0** (unchanged) |
+| hunks_vs_ORACLE | 3 | 3 |
+| judge | 12/13 | 12/13 |
+| broker / quote / real_quote vs committed | unmeasured | **all three CHANGED** |
+
+Two conclusions, both negative and both load-bearing:
+
+1. Recording at the 16 bypass call sites buys the victim **nothing**: instruction gap, jump-site gap and back-edge count are identical to the pair, and the judge line is unchanged. Whatever refuses to render the `@7972..@8586` entries is not the absence of a ledger record at those calls.
+2. It widens collateral instead (broker now differs from its committed product, on top of the quote and real_quote regressions r108a measured), so this variant is falsified for install on both counts.
+
+The completion hypothesis is therefore closed in both directions - pre-claim at the four methods (addendum, -485 / 10-of-13 / three files changed) and post-claim at the callers (this addendum, no victim movement / three files changed). What remains unexplained is the walk itself: the six entries are registered in `_nested_if_entry_generate`, they are in `LoopRegion@5598.body_blocks`, the `generated_blocks` gate at `region_ast_generator.py:26775` refuses them and the registered dispatch at `:26864` is unreachable, yet making the ledger complete does not make the dispatch reachable either. So the next attempt must instrument **which list the arm walk iterates and whether those entries are in it at all**, before writing any further rule about ledgers. Task 157 is rewritten accordingly.
