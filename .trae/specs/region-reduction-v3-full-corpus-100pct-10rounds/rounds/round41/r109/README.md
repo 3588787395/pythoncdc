@@ -1,0 +1,9 @@
+# r109-r110 lab scripts and raw logs (committed so the next hand does not rebuild rigs)
+
+- `dump_tail.py <lo> <hi>` - per-block census over an offset range: owner region, instruction count, tail opcode, successors, predecessors, plus every region holding blocks in the range with its arm lists. Run from the mirror root; edit its PYC constant for another victim.
+- `dump_fe.py` - full `elif_final_else` sets per chain with a flag for members that are other regions entries, and per-block owner/predOutsideFE detail for the two chains.
+- `try_nooverclaim.py` - builds and measures the neutering variant by ast: finds every loop in `_if_generate_normal` that iterates `then_blocks`/`else_blocks` and writes `generated_blocks`, replaces each bare claim statement with an indented `pass`, then regenerates realtime plus the collateral smoke files and scores them. Writes only into `D:/Temp/merge_r108` and the mirror, restores the platform in a finally block and re-hashes it.
+- `stack_r2184.py` - the same neutering applied to the `[R21-81]` candidate (addendum 6), with the panel-row smoke list built from ROOT-joined roster paths rather than hand-written pyc paths, which is the form that kept getting those wrong.
+- `generated_blocks_event_order.log` / `process_if_blocks_walk_census.log` - the two runtime monkeypatch censuses behind addenda 3 and 4. Both patch nothing on disk; mirror hashes were re-verified after each run.
+
+The open question for task 158 is recorded in `MEASURE_R21-81_pair_matrix.md` addenda 4-6: which walk first holds offsets 7972/8294/8350/8354/8400/8450 in a list and still emits no statements for them, given that claim membership was excluded in every combination tested.
