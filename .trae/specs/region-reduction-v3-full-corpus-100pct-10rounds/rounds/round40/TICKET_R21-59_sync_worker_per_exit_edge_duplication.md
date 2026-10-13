@@ -711,3 +711,54 @@ Facts 2 and 3 are one region (`LoopRegion@1890`, `hdr=2072 cond=1890 be=2844`, `
 r95a's dump) and belong to r95a/r98a; fact 1 belongs to r96a. When all three are gone the product *is* GOLD's text,
 which I have already measured at `128/128`, so the flip criterion for the merged candidate is simply: this diff
 reports zero hunks.
+## Nineteenth addendum (2026-10-13 10:52, orchestrator) - the last hunk is a DECLARATION GAP: the reconnect chain owns no region at all
+
+I ran r95a's read-only region dump (`rounds/round40/r95/dump_r95.py`, outside the analyzer so it cannot perturb the
+product) over `@1200..@1950` on the pair bytes (`gen 0f4c3898` + `ana 1471c92e`, hashes re-verified in my mirror):
+
+```
+### @1210 n=1  owner=LoopRegion@232        JUMP_FORWARD 1214
+### @1212 n=1  owner=LoopRegion@232        NOP
+### @1214 n=16 owner=LoopRegion@232        succ=[1370, 1890]  preds=[544,702,1210,1212]   POP_JUMP_FORWARD_IF_FALSE 1890
+### @1370 n=5  owner=LoopRegion@232        succ=[1388, 1890]  preds=[1214]                POP_JUMP_FORWARD_IF_FALSE 1890
+### @1388 n=12 owner=LoopRegion@232        succ=[1502, 1524]  preds=[1370]
+### @1502 n=5  owner=LoopRegion@232
+### @1524 n=12 owner=LoopRegion@232
+### @1638 n=15 owner=LoopRegion@232
+### @1770 n=15 owner=LoopRegion@232
+### @1872 n=2  owner=LoopRegion@232
+### @1876 n=3  owner=LoopRegion@232
+### @1890 n=17 owner=LoopRegion@1890        <- loop 2's own region starts here
+```
+
+Two facts, both new and both decisive for the last hunk:
+
+1. **No region is declared for the reconnect chain.** All eleven blocks `@1214..@1876` carry `owner=LoopRegion@232`,
+   i.e. they are unowned body blocks of the outer loop, while `@1890` begins a child `LoopRegion`. The generator
+   emits that child region before the unowned blocks that precede it in the block order, which is exactly why our
+   product prints the reconnect `if` **after** loop 2 while the bytecode places it before.
+2. **The chain's shape is an `and`-guard sequence whose false legs all land on the next sibling's entry.** `@1214`
+   (`is_trading_date(...)`) and `@1370` (`reconnect_flag is False`) both end in
+   `POP_JUMP_FORWARD_IF_FALSE -> @1890`, and their true legs continue into `@1388 -> @1502 -> @1524 -> @1638 -> @1770`
+   ending at `@1872/@1876` where the unit's only `RETURN_VALUE` (`@1874`) sits. So the chain has a common merge
+   (`@1890`) and a terminal return leg - the data an identification-time rule needs, all of it region-own block data:
+   entry block, the shared false-target across consecutive guard blocks, the true-leg succession, and the terminal
+   opcode class of the last block.
+
+Therefore the last hunk is **not** an emission-order tweak and **not** a `break`-vs-`return` patch at the emitter: it
+is the missing declaration of an `IfRegion` (entry `@1214`, merge `@1890`, then-side ending in the `RETURN_VALUE`
+block). Declaring it at identification time gives the generator a region to place *before* `LoopRegion@1890` and gives
+the arm's terminator as its own block data, which is where the `return` comes from. That is the same principle as the
+landed `[R21-55]` diamond-join recovery, and the failure mode to avoid is the post-hoc repair variant the campaign
+already falsified on this file.
+
+Checklist for whoever implements it (acceptance already fixed by measurement):
+- declare the guard chain as one `IfRegion` with merge = the shared false target (`@1890` class: the entry of the next
+  sibling region), keyed on consecutive blocks sharing a `POP_JUMP_*_IF_*` target plus a true-leg chain, with the
+  then-side's last block terminating in `RETURN_VALUE`;
+- the new region must be the sole owner of `@1214..@1876` (unique block membership; those blocks are currently claimed
+  by the loop body, so the loop's own block list must shrink accordingly);
+- after declaration, `dump` must show the blocks owned by the new region, `gold_diff` must go 2 → 0 hunks, and the
+  judge must read `128/128`; `_process_order` and the six panel rows must hold, plus the 402 sweep with
+  `CHANGED = {trade_live_broker}` (the pair is already certified collateral-free by me, so any new changed file is
+  this rule's collateral).
