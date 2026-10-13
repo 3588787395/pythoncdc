@@ -58,3 +58,26 @@ sweep (with the ROOT join) before installing anything, so this can only cost r10
 Install path when a `13/13` exists: `orchestrator/install_pair.py --ana <analyzer> --gen <generator>
 --gold-hunks <n> --units "13/13" --sweep "ok=402 bad=0 changed=1" --gate` (the rig now demands the judge line be
 `n/n`, and refuses otherwise — verified live this session on a `127/128` reading).
+
+
+## Addendum 2 (orchestrator, 07:58) — r104a's in-flight candidate carries measured collateral on two other files
+
+Reading its own sweep logs (`D:/Temp/r104/logs/sweep_f5_*.log`, analyzer at `da5d6b3717657f86`, bytes still moving,
+so this is a progress reading):
+
+| shard | `files_compared` | `MISSING/FAIL` | `CHANGED_COUNT` | changed files |
+|---|---|---|---|---|
+| 0+101 | 101 | 0 | 0 | — |
+| 102+101 | 101 | 0 | 0 | — |
+| 202+101 | 101 | 0 | **2** | `realtime_event_source.pyc`, `plugin_system_risk_calculation/__init__.pyc` |
+| 303+99 | 99 | 0 | **1** | `fly/data/quote.pyc` |
+
+Good news: its list handling is correct (`compared=101 miss=0`, no false zeros). The blocking fact is that the
+current conjunction changes **three** files, where the standing bar is `changed={realtime_event_source}` — so two
+conjuncts need narrowing (a risk-calculation `__init__` and `quote.pyc` are both currently-Equal files, i.e. any
+change there is a regression risk the gate would score). This is the panel-canaries lesson recurring: only the
+whole-corpus sweep sees it, and it saw it before a gate was spent
+([[feedback-panel-canaries-not-residual-shape]]).
+
+Hand-off state: no candidate is installable yet; the target (`13/13`, oracle byte-identical) and the scoring rig
+are both proven, and the remaining work is narrowing these three conjuncts to the victim file alone.
