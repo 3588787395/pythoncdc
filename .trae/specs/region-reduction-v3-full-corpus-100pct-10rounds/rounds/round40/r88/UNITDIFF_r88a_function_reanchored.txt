@@ -1,0 +1,40 @@
+len orig=480 prod=448 delta=-32
+== replace orig[34..35 @@138..@@138] prod[34..35] del=1 ins=1
+   - @138     JUMP_FORWARD                   
+   + @138     JUMP_BACKWARD                  
+== delete orig[45..77 @@196..@@396] prod[45..45] del=32 ins=0
+   - @196     LOAD_FAST                      daily_result
+   - @198     LOAD_FAST                      account
+   - @200     BINARY_SUBSCR                  
+   - @210     LOAD_CONST                     'date'
+   - @212     BINARY_SUBSCR                  
+   - @222     LOAD_METHOD                    strftime
+   - @244     LOAD_CONST                     '%Y-%m-%dT07:00:00.000Z'
+   - @246     PRECALL                        
+   - @250     CALL                           
+   - @260     STORE_FAST                     period_close
+   - @262     LOAD_FAST                      daily_result
+   - @264     LOAD_FAST                      account
+   - @266     BINARY_SUBSCR                  
+   - @276     LOAD_CONST                     'date'
+   - @278     BINARY_SUBSCR                  
+   - @288     LOAD_METHOD                    strftime
+== replace orig[157..158 @@680..@@680] prod[125..126] del=1 ins=1
+   - @680     LOAD_FAST                      period_close
+   + @478     LOAD_GLOBAL                    period_close
+== replace orig[159..160 @@684..@@684] prod[127..128] del=1 ins=1
+   - @684     LOAD_FAST                      period_label
+   + @492     LOAD_GLOBAL                    period_label
+== replace orig[161..162 @@688..@@688] prod[129..130] del=1 ins=1
+   - @688     LOAD_FAST                      period_open
+   + @506     LOAD_GLOBAL                    period_open
+== replace orig[367..368 @@1512..@@1512] prod[335..336] del=1 ins=1
+   - @1512    LOAD_FAST                      period_close
+   + @1340    LOAD_GLOBAL                    period_close
+== replace orig[369..370 @@1516..@@1516] prod[337..338] del=1 ins=1
+   - @1516    LOAD_FAST                      period_label
+   + @1354    LOAD_GLOBAL                    period_label
+== replace orig[371..372 @@1520..@@1520] prod[339..340] del=1 ins=1
+   - @1520    LOAD_FAST                      period_open
+   + @1368    LOAD_GLOBAL                    period_open
+hunks=8 landings=0 judge_diff=True
