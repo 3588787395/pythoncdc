@@ -77,3 +77,16 @@ re-hashed after every arm.
 
 **Objective status: not achieved.** 6616/6617 = 99.9849 %, one unit short of 100 %, with the instruction
 gap to the last unit narrowed from −114 to −78 and the first additive analyzer+generator pair measured.
+
+## 5. Engineer liveness at session end (recorded so the next hand does not wait)
+
+`r109a` (`[R21-82]`) has produced **no file writes for 30 minutes** (`D:/Temp/r109` newest mtime = its own
+mirror/copy step) and `Get-Process python` shows **no engineer-driven process** — only my probe. Precedent
+says a Chat quota cap kills an engineer with no report (r105a died mid-round exactly this way), so treat
+`[R21-82]` as **unconfirmed, not delivered**: do not wait on its notification. Re-dispatch from the pinned
+bytes rather than from its prose — analyzer `3ad5ceaa23135334`
+(`rounds/round41/CANDIDATE_r2179_3ad5ceaa23135334.py`), generator `8da14b53a94e07c3`
+(`rounds/round41/r108/CANDIDATE_r2181_8da14b53a94e07c3.py`) plus its
+`PATCH_R21-81_region_ast_generator.py`, and the single required change: write `_r2181_emitted_entries`
+at every structural emission site instead of only the `_generate_region` funnel. Task `#157` carries the
+bar in execution order.
