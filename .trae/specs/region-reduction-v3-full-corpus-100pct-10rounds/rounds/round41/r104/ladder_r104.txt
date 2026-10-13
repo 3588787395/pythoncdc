@@ -1,0 +1,6 @@
+GOLD_varA_holiday :: len orig=1424 prod=1437 delta=13 hunks=5 :: [single] status=failure units=12/13 success_rate=92.31%
+GOLD_varB :: len orig=1424 prod=1417 delta=-7 hunks=4 :: [single] status=failure units=12/13 success_rate=92.31%
+GOLD_varC :: len orig=1424 prod=1422 delta=-2 hunks=2 :: [single] status=failure units=12/13 success_rate=92.31%
+GOLD_varD :: len orig=1424 prod=1421 delta=-3 hunks=1 :: [single] status=failure units=12/13 success_rate=92.31%
+GOLD_varE :: len orig=1424 prod=1424 delta=0 hunks=0 :: [single] status=failure units=12/13 success_rate=92.31%
+GOLD_varF :: len orig=1424 prod=1424 delta=0 hunks=0 :: [single] status=success units=13/13 success_rate=100.00%

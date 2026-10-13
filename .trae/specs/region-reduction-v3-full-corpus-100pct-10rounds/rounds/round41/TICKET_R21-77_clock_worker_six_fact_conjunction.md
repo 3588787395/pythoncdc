@@ -98,3 +98,33 @@ So this state is **installable in shape but not in substance**: zero collateral 
 exactly the zero-flip condition the standing rule reverts. Remaining gap against the oracle is ladder steps 3–6
 (the `@7164` and `@6322`/`@6496` or-chains, the spurious `while True:` wrapper, and the `@8904` chained-compare
 fold that fixes the two jump targets `@8972`/`@8978`).
+
+
+## Addendum 4 (orchestrator, 08:30) — r104a delivered [R21-77-F5]: clean, real, and still zero-flip
+
+Delivered analyzer `996a1b1acf143458` (generator untouched at `566ff5c502276e48`, repo `core/` re-hashed by the
+engineer as unchanged), banked here as `CANDIDATE_r2177f5_996a1b1acf143458.py`.
+
+* **What it fixes is principled**: it replaces the landed wrapper-removal's `len(body_outer − body_inner) <= 2`
+  **counter** — itself a rule violation — with three structural clauses (the inner test-block exit cannot re-reach
+  the shared test block; every wrapper-exclusive body block is the shared test, or inside the real loop's own span
+  and is therefore **reclaimed** per principle 2, or is unreachable post-exit code; the wrapper's back-edge block
+  lies inside the real loop's body). Root cause it names: `WHILE` regions `@5598` and `@5614` are both driven by the
+  **same test block `@5598`** (`condition_block == header`), a principle-2 violation, and the wrapper over-absorbs
+  `@6690 @6702 @6778` plus `@9210 @9214`, which is *why* the holiday branch was `break`-stubbed and duplicated.
+* **Measured effect**: ladder step 5 collapses, plus step 1's holiday half and 4 of step 2's 5 lines —
+  `allwin −113/6`, `win_r91 −114/9 windows`, oracle text distance `+84/−74 → +66/−53`. Judge **still 12/13**.
+* **Collateral discipline worked**: its first variant `da5d6b3717657f86` broke two currently-Equal units
+  (`quote 92/92→91/92`, `risk __init__ 43/43→42/43`) and was falsified and not delivered; the delivered variant's
+  corpus sweep reads `files_compared=402 MISSING/FAIL=0 CHANGED=1={realtime_event_source}`, panel 20/20,
+  **broker 128/128 unmoved**, battery `RED=8/9`. Four of its six census fires are inert (zero product bytes).
+
+**Therefore F5 is a banked co-requisite, not a landing** (zero-flip rule), and the remaining distance is now
+explicitly four blocked facts: step 3 (`@7164` or-chain with the `system_log.debug` sitting in another region's
+merge — the same −6 falsified four ways), step 4 (`@6322`/`@6496`, same rule), step 6 (`@8904` chained-compare fold,
+blocked because `IF_THEN_ELSE @8948` declares the back edge `@9194` as its merge so the chain-continuation reading is
+not available from region data), and the 112-instruction `@7972..@8586` half of step 1 (reachable today only through
+the over-absorbing `elif_final_else`, so it needs a **positive tail claim**, not a narrower refusal).
+
+Next dispatch must build on F5 (`996a1b1acf143458`), not on the landed analyzer, and must treat step 6's merge
+declaration as an analyzer-side region-data problem with a named obstacle rather than as a text fix.
