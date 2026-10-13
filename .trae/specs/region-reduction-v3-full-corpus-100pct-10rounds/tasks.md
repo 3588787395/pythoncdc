@@ -2185,3 +2185,69 @@ gate-38 analyzer; the `_sync_worker` column is the signal.
 Round 39 stays closed and landed (6615/6617, 400/402 files, gate 39 consumed). Remaining residual:
 `realtime_event_source.clock_worker` 12/13 and `trade_live_broker._sync_worker` 127/128 — both with long lists of
 falsified axes (§1–§16), so round 40 needs a new mechanism, not another attempt on a closed one.
+
+## 63. Round 40 mid-record: the clock_worker platform contamination found and fixed, `_sync_worker` decomposed into four owned mechanisms (2026-10-13)
+
+Standing state unchanged at the time of writing: landed generator `b4363f5858e58074` + analyzer
+`842e2748bcdfeb66`, corpus **6615/6617 (99.9698 %)**, **400/402 files**, residual 2 files / 2 units, **gate label 40
+unconsumed** (input `rounds/round39/after`, 8 shards committed). `git status --porcelain -- core/` = 0 lines and
+`-- site-packages/ | grep OK.py` = 0 lines all session; nothing has been installed this round.
+
+What was measured, in order, all of it re-measured by me in my own mirror `D:/Temp/r91m`:
+
+1. **The re-anchored clock_worker chain `db1f0e96072cdcb3` is contaminated** (commit 272ac6d4):
+   `plugin_system_risk_calculation/function.pyc` 15/15 -> **14/15**, `create_daily_stats` loses a 32-instruction
+   statement run (three `period_*` assignments + the `break` that follow a nested `if/else` inside a
+   `for ... else:` body), the `for/else` header test becomes `JUMP_BACKWARD`, and three later reads flip
+   `LOAD_FAST` -> `LOAD_GLOBAL`, so the drop changes scope. My round-39 "chain base is inert" certification is
+   **withdrawn** in the record: I had judged three files, not the corpus. r88a's 402-product CR-stripped sweep
+   flagged the same file independently (`CHANGED=2`).
+2. **Attribution and recovery** (commits e9760285, 4db5c40b): r88a's step-wise ablation puts the collateral in
+   step 1 of the chain and inside one half - `[R21-24-M1]` alone gives all of step 1's gain with `function.pyc`
+   clean, `[R21-38-r63a]` alone buys nothing (-113) and carries the whole regression; and it predates gate 39
+   (`cf5868e68208adf6`, `30a4d7827122e165` on gate-38 bytes read 14/15) because that file is not in
+   `rounds/round38/PANEL_20files.txt`. r92a then localized it to one hunk (**H3**, a claim-without-emission branch)
+   and narrowed it: generator **`675ec7afa414bbb5`** = `[R21-63]`, which I re-measured to `function.pyc` 15/15,
+   `replace_utils` 9/9, broker 127/128, `realtime_event_source` 12/13 with no new failure, and r92a's sweep reads
+   `CHANGED=1` (target only). The chain is now a safe platform and **still buys zero flips** -> banked, not
+   installed. On this base my rig reads `clock_worker`'s whole loss as **6 spurious insertions in 4 windows**
+   (`@7184 +1, @7248 +2, @7582 +2, @7602 +1`), no deletion window.
+3. **Three axes closed with verdicts**: R21-60 arm ordering falsified by r89a (arm order already matches the
+   original's evaluation order; over **1269 `IF_ELIF_CHAIN` regions in all 402 files** the law's actionable case
+   fires 1x in already-green `klinedata` and **0x** in `clock_worker`; under the chain's true end label `9194` the
+   law *demands* both jumps). Chained-comparison-in-loop-condition falsified twice (my census: `COMPARE_OP` 21 vs
+   21 and our product renders **more** chains than CPython, 3 vs 2; r90a's detector: both fires are in the *other*
+   loop and the failing window has zero `SWAP`/`COPY`). Per-exit-edge duplication falsified (the 165-instruction
+   "deleted" span and the 196-instruction "inserted" span are the same loop body relocated ~1100 offsets).
+4. **The duplicated-while-test law and a GOLD oracle** (commits b7ff3eec, 7d04bfc6, 109df781): CPython 3.11 emits a
+   `while <BoolOp>:` test twice - entry copy above the body (legs forward to the body start, last leg forward to the
+   exit) and latch copy below it (legs **backward** to the same body start), so the body-start block ends with a
+   backward jump to itself (template `while a or b or c:` -> `@4/@8 FORWARD_IF_TRUE 14`, `@12 IF_FALSE 36`, body 14,
+   `@26/@30/@34 BACKWARD_IF_TRUE 14`), while a `continue` is an **unconditional** `JUMP_BACKWARD`. r91a spliced the
+   reconstructed loop into the landed product and I judged it: **`status=success units=128/128`**
+   (`rounds/round40/r91/broker_GOLD_PROOF.py`, 408 vs 412 instructions, 4 small windows). So `_sync_worker` is
+   reachable and the target text is both sufficient and necessary.
+5. **`_sync_worker` decomposed into four mechanisms, each visible in the original's instructions, each with an
+   owner** (addenda 9 and 10 to `TICKET_R21-59_*`, commits 5e9b700d, b1ccc84d): (1) the mounted 4-leg chain prints
+   only 2 legs; (2) the latch copy is printed as body statements; (3) the reconnect arm's terminal
+   `RETURN_VALUE` (the unit's ONLY return, at `@1874`, context `CALL 2 | POP_JUMP_FORWARD_IF_TRUE 1876 | LOAD_CONST
+   None | RETURN_VALUE`) is rendered as `break`; (4) `if time_difference > sync_max_time:` (`@2350/@2352/@2366/
+   @2372/@2374/@2376`) is lost while the *legitimate* `sync_data_flag = 1` at `@2136` (line 1415) is fine, and the
+   `abs(...)` compute is misplaced to after `time.sleep(steps)` rather than missing. Owners: r93a (analyzer chain
+   assembly), r94a (generator consumption + latch drop, base analyzer `241905c2078f0270`), r96a (item 3,
+   R21-67), r95a (item 4, landed base). r91a's analyzer candidate `241905c2078f0270` mounts the chain
+   (`op_chain=[(232,or),(364,or),(522,and),(544,or)]`, windows 9->5, product 400) with the panel clean but has no
+   corpus certification and no flip.
+6. **clock_worker hedge**: r97a dispatched as **R21-68, diagnosis only** (no candidate, no sweeps) on the three
+   landings that collapse onto one wrong target (prod idx 1392 = the `while self.active:` re-test `@9206`, where the
+   original has three distinct targets at idx 1040/1115/1384), and forced to answer the mechanism question
+   (chain-boundary fold vs `back_edge_block` mis-designation at `region_analyzer.py:4958-4992` vs arm membership)
+   before anyone spends an implementation, since the generator has no landing channel and re-nesting is provably
+   `co_code`-free (the `[R21-54]` reading).
+
+Tooling corrections banked in `ADJUDICATION_ROUND40.md` section 5: my `win_r91.py` aligns on opcode names only and is
+positive-controlled (`_process_order` and `_process_cancel_order` both read `windows=0`) but counts 1442 where
+`allwin`/`unit_diff` count 1424, so its deltas are not interchangeable and only the judge certifies; whole-repo
+`git archive` extraction fails on deep `.trae` paths, so scope it to `site-packages`; and a push loop that greps the
+log for a pattern starting with `-` cannot fail, so verify pushes with
+`git rev-list --count origin/rr-v3r01-f557fd..HEAD == 0`.
