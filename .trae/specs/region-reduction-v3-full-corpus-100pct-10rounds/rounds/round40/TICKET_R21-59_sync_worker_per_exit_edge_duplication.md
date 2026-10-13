@@ -129,3 +129,49 @@ above (whose latch is unconditional) cannot produce it. Treat this as the constr
 name such a construct, the honest verdict is that `_sync_worker` needs the CFG to expose a second entry edge rather
 than a new source text — an analyzer/emission ownership question, and the `del=61` window `@700..@1210` is where to
 look for it (that region is the one the scan flags as absent from our product).
+
+## Fourth addendum (me, 08:25): the block graph of the missing region — this is NOT a duplicated or-chain, it is a chained comparison whose latches jump backward into the chain head
+
+I derived basic blocks straight from `dis` (block starts = jump targets + successors of terminators) for the
+**original** `_sync_worker` and printed the edges. The `del=61` window `@700..@1210` is this graph:
+
+```
+@232  n=15 last=POP_JUMP_FORWARD_IF_TRUE  ->704   preds=[230,2886]        succs=[364,704]
+@364  n=18 last=POP_JUMP_FORWARD_IF_TRUE  ->704   preds=[232]             succs=[522,704]
+@522  n=4  last=POP_JUMP_FORWARD_IF_FALSE ->702   preds=[364]             succs=[544,702]
+@544  n=16 last=POP_JUMP_FORWARD_IF_TRUE  ->1214  preds=[522]             succs=[700,1214]
+@700  n=1  last=JUMP_FORWARD              ->704   preds=[544]
+@702  n=1  last=JUMP_FORWARD              ->1214  preds=[522]
+@704  n=21 last=POP_JUMP_BACKWARD_IF_TRUE ->704   preds=[232,364,700,704,876,1056]  succs=[704,876]
+@876  n=18 last=POP_JUMP_BACKWARD_IF_TRUE ->704   preds=[704]             succs=[704,1034]
+@1056 n=15 last=POP_JUMP_BACKWARD_IF_FALSE->704   preds=[1034]            succs=[704,1210]
+@1210 n=1  last=JUMP_FORWARD              ->1214  preds=[1056]
+@1212 n=1  last=NOP                              preds=[1034]            succs=[1214]
+@1214 n=16 last=POP_JUMP_FORWARD_IF_FALSE ->1890  preds=[544,702,1210,1212] succs=[1370,1890]
+```
+
+What that says, and it contradicts my earlier framing: three blocks (`@704`, `@876`, `@1056`) each end in a
+**backward conditional jump whose target is their own chain head `@704`**, and `@704` is also reached by forward
+conditional jumps from `@232`/`@364`/`@700`. A block that ends with `POP_JUMP_BACKWARD_IF_<c> -> <its own region
+head>` and falls through to another test block is CPython's layout for a **short-circuit comparison chain evaluated
+as a loop condition** — and the sizes line up with a chained comparison: `@232`/`@364` are the two
+`int(datetime.now().strftime('%H%M')) < / >=` legs (15 and 18 instructions, matching the `dis` line groups for
+lines 1382/1383), `@704`/`@876` are 21/18-instruction blocks with the same repeated `%H%M` compute, and
+`@1056` (15) ends with `POP_JUMP_BACKWARD_IF_FALSE`, i.e. the opposite sense.
+
+So the thing we do not emit is **not** "a second copy of the `or` chain" (which is why no hand-written loop text has
+reproduced it and why seven shapes failed): it is a test chain that **enters mid-way from its own latch**, which in
+3.11 is what `while a <= x < b or ...:` style chained comparisons plus a loop-carried re-test produce.
+
+Consequences to hand to the next attempt, in order, none of which is a criterion guess:
+1. Reproduce the graph with `compile()` on a **chained comparison inside a loop condition**, e.g.
+   `while pre <= t < post or ...:` (and the `int(...strftime('%H%M'))` compute repeated in each leg), and check the
+   specific signature: a block ending `POP_JUMP_BACKWARD_IF_*` whose target is a block that also receives forward
+   conditional jumps. Seven prior shapes failed because all of them used plain `and/or` tests with unconditional
+   latches.
+2. Once such a text exists, the decompiler-side question becomes concrete and local: our `region_analyzer` must
+   represent a test chain whose latch re-enters at a non-head block (an entry-edge structure), and our
+   `IfExp`/BoolOp assembly must render the *repeated compute* legs rather than sharing one. Both are checkable
+   against this table, which is why this belongs in the ticket rather than in a new blind attempt.
+3. If (1) fails, the fallback conclusion is that no source text reproduces `@704/@876/@1056`, in which case the
+   unit needs a **CFG-level representation** of multi-entry test chains (analyzer), not more emission rules.
