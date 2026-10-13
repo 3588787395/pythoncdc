@@ -239,3 +239,20 @@ all 402 files before any edit, and the panel must include `quote`, `risk_calcula
 Six arms on the ownership framing are excluded (v1 destructive `11/13`, v2–v5 inert merge re-elections, v6
 destructive de-duplication). The axis is now chain-mount leg recognition, not ownership. F5 base
 `996a1b1acf143458` unchanged; mirror restored; nothing installed.
+
+## Addendum 6 - orchestrator progress reading on r106a in-flight stub-folded-join bytes (2026-10-14 01:13): currently suppressing output, verdict withheld
+
+r106a is still iterating (its mirror analyzer moved `996a1b1acf143458` -> `80384183996a455f` -> `c8fd738b922cd390` inside this reading), so this is a **progress reading, not a verdict**. Its bytes were pinned content-addressed at `D:/Temp/pins/region_analyzer_r106a_c8fd738b922cd390.py` (2,132,223 B) and scored in my own mirror `D:/Temp/r91m` on the pinned platform (`c8fd738b` + landed generator `566ff5c502276e48`); the mirror was restored and re-hashed to `996a1b1acf143458` in the same command.
+
+| reading | F5 base | r106a `c8fd738b` (in flight) |
+|---|---|---|
+| product bytes / sha16 | 20190 / `192ba0f09e81bbd7` | 18955 / `61ee1bb22d56bb44` |
+| `DELTAS instrs` | -114 | **-210** |
+| `jsites` | -9 | **-22** |
+| `hunks_vs_ORACLE` | 4 | 4 (headers now `@@ -217,22 +210,0 @@`, `@@ -246,6 +218,10 @@`) |
+| judge | 12/13 Different control flow | 12/13 Different control flow |
+
+The rule as currently implemented takes ~100 more instructions out of the unit instead of restoring them: the folded join is being consumed to *suppress* legs rather than to mount them. Two consequences for the next hand:
+
+1. The falsification test on this axis is now numeric rather than arguable - a correct variant must move `instrs` from -114 toward 0 with `back=+0` unmoved, and any variant whose `jsites` magnitude grows is folding in the wrong direction and owes no panel and no 402 sweep.
+2. With addendum 5 (r107a R21-79 tail claim measured at -115, banked) both live axes are currently *further* from the flip than the F5 base, so **gate label 41 stays unconsumed**: corpus 6616/6617 (99.9849 %), 401/402 files, `clock_worker` the sole failing unit, repo `core/` clean at landed bytes and pushed.
