@@ -41,3 +41,18 @@ emission in `_r58_collect_break_target_stmts`. Adding r100a's terminator half re
 does not flip. The residual visible in the single hunk is the arm/merge attachment: loop 2 sits in the
 `else:` of the third guard test and the innermost body prints after the if/else as `return None`.
 Nothing installed from either hand.
+
+
+## r102a patch2 (pinned `566ff5c502276e48`, 3,869,919 B) - still no flip
+
+Cross-armed with r100a's terminator half in my mirror: broker `127/128`, `_sync_worker` windows `5`,
+battery `RED=8/9`, panel byte-unchanged (`realtime 12/13 function 15/15 replace_utils 9/9 quote 92/92
+quotation 153/153 order_api 37/37`). Repro arm unchanged (`1/2 Different bytecode`). Nothing installed; my
+mirror left at this last-measured arm so the next hand starts on bytes I have actually read.
+
+Round-40 final bank for the position axis, all measured by me: base `127/128 / windows 5 / 2 hunks`;
+my variant (a) `6660f3a5` -> windows 8 / 45 lines / 2 replacement hunks; my variant (b) `bd57b0f6` ->
+windows 7 / 46 lines / **1 hunk**; r102a v1 `91c16e16` -> independently the same 46 lines / 1 hunk;
+r102a v2 `566ff5c5` + r100a -> windows 5, still 127/128. The position half is therefore *actuated* by four
+different hands, and what still blocks `128/128` is the attachment shape named above (loop 2 in the `else:`
+of the third guard test; innermost body after the if/else; `return None` instead of a bare `return`).
