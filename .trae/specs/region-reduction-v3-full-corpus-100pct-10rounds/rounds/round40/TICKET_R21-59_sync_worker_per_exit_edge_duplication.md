@@ -397,3 +397,61 @@ Reading for the round: `_sync_worker` needs items 1+2 as a pair to move at all (
 items 3 and 4 are independent of that pair, and **all four must close for the judge to say Equal** because GOLD
 already proves the whole text is required for 128/128. Order of cost: 1+2 are the duplicated-test rule, 4 is the
 `_has_only_compare` conjunct, 3 is the flat-vs-nested `and`-chain choice (the most-explored family in this campaign).
+## Tenth addendum (2026-10-13 09:38, orchestrator) - items 3 and 4 corrected against the ORIGINAL's own bytecode
+
+I enumerated every `RETURN_VALUE` in the original `_sync_worker` and disassembled the reconnect / `time_difference`
+region. Two of my ninth-addendum readings need correcting, and the corrections make both items cheaper than they
+looked.
+
+**(a) There is exactly ONE `RETURN_VALUE` in the whole unit, at `@1874`, and its context is the reconnect call:**
+
+```
+@1850 LOAD_GLOBAL datetime ... @1862/@1874:  LOAD_ATTR trade_id | PRECALL 2 | CALL 2
+                                             | POP_JUMP_FORWARD_IF_TRUE 1876 | LOAD_CONST None | RETURN_VALUE
+```
+
+i.e. the original is `if not reconnect(self.broker.trade_account, self.trade_id): return` - the ONLY return in the
+function, sitting at the end of the reconnect region `@1214..@1890` (which is why `@1214`'s false exit jumps to
+`@1890`, the second loop's body, while its true side falls through the reconnect statements). The landed product
+emits `break` there instead. So item 3 is **not** a flat-vs-nested `and`-chain question at root: it is a
+**terminator-class mis-declaration** - the arm's terminal opcode is a `RETURN_VALUE` in the original and is rendered
+as a loop exit. (The flat-vs-nested difference in my ninth addendum is a consequence of the same region: GOLD nests
+precisely so the `return` sits at that depth.) This belongs to the `return None` vs break/continue terminator family
+already documented for other units, not to the elif end-label law.
+
+**(b) The `time_difference` pair is exactly where the original says it is, and there are TWO `sync_data_flag = 1`
+assignments to keep apart:**
+
+```
+@2350 STORE_FAST time_difference                <- time_difference = abs((now - self.sync_account_time).total_seconds())
+@2352 LOAD_FAST  time_difference     (line 1422)
+@2354 LOAD_GLOBAL sync_max_time
+@2366 COMPARE_OP >
+@2372 POP_JUMP_FORWARD_IF_FALSE 2378
+@2374 LOAD_CONST 1 -> @2376 STORE_FAST sync_data_flag   (line 1423)   <- the SECOND one, guarded
+@2378 LOAD_FAST sync_data_flag     (line 1425)
+@2380 POP_JUMP_FORWARD_IF_FALSE 2492            <- if sync_data_flag: sync_account() ...
+```
+
+and the FIRST `sync_data_flag = 1` is at `@2136..@2138 (line 1415)`, inside
+`if receive_order_response_flag == 1 or receive_trade_response_flag == 1:` (the `or` at `@2112/@2134`), right after
+`sync_data_flag = 0` at `@2072`. So the product's bare unguarded `sync_data_flag = 1` is the **line-1423** site with
+its `if time_difference > sync_max_time:` test lost, and the line-1415 site is emitted correctly - the two are not
+the same statement, which is the trap I nearly set for the next hand in addendum 9 (I described the missing
+`time_difference = abs(...)` as being *printed elsewhere*; it is actually printed at the **wrong position**: the
+product computes it at the second loop's tail, after `time.sleep(steps)`, while the original computes it at `@2214
+..@2350`, before the guard).
+
+**(c) Consequence for the round's division of labour.** Four separable mechanisms now have owners and none of them is
+"the unit needs a new construct":
+
+| item | mechanism | owner |
+|---|---|---|
+| 1 | mounted 4-leg while chain prints only 2 legs | r93a (analyzer) / r94a (generator) |
+| 2 | latch copy printed as body statements | r93a / r94a |
+| 3 | reconnect arm's terminal `RETURN_VALUE` rendered as a loop exit | unowned → dispatched as R21-67 |
+| 4 | `if time_difference > sync_max_time:` guard lost and its `abs(...)` compute misplaced | r95a |
+
+`_sync_worker` therefore needs items 1+2+3+4 together to read Equal, which GOLD already proves is a sufficient text
+(128/128) and which my `return`/`sync_data_flag` measurements above show is a *necessary* one too: each of the four
+differences is individually visible in the original's instruction stream.
