@@ -107,3 +107,25 @@ neither a criterion-guess: (i) `compile()` a handful of whole-module variants wh
 once *before* the loop (a pre-test plus `while <re-test>:`), which is the classic way a latch enters mid-chain; and
 (ii) re-read the original's `@700..@1210` region (the `del=61` window) for a second *entry point* into the chain
 rather than a literal duplication — if that region is an entry, the fix is a CFG/ownership matter, not a text matter.
+
+## Third addendum (me, 08:24): seven source shapes now known NOT to produce the signature — start from this list
+
+I compiled four more whole-module variants and scored them the same way (sets of forward- vs backward-conditional
+jump targets inside the extracted function):
+
+| shape | fwd cond jumps | bwd cond jumps | same-target both |
+|---|---|---|---|
+| pre-test then two `while active:` branches | 6 | 2 | **none** |
+| flag assigned before loop, re-assigned at the end of the body | 2 | 1 | none |
+| `while active:` + one `if <or-chain>:` body | 5 | 1 | none |
+| `while active:` with two `continue` guards then an `if C and D:` | 5 | 1 | none |
+
+Together with r87a's three hand-composed ideal loop texts (`+68 / +19 / -71`), **seven shapes are now eliminated**.
+What the signature requires, read off the original: block `704` is reached by a *forward* conditional jump from legs
+at low offsets and by a *backward* conditional jump from legs at higher offsets, i.e. the same test chain is entered
+from two places and one entry begins mid-chain. So the search is not "a text that duplicates a chain" but
+"a text whose *latch* is a conditional jump into the middle of the chain" — which is why `continue`-style variants
+above (whose latch is unconditional) cannot produce it. Treat this as the constraint, and if a next attempt cannot
+name such a construct, the honest verdict is that `_sync_worker` needs the CFG to expose a second entry edge rather
+than a new source text — an analyzer/emission ownership question, and the `del=61` window `@700..@1210` is where to
+look for it (that region is the one the scan flags as absent from our product).
