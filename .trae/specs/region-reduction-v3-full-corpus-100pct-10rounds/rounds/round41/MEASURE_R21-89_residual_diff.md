@@ -111,3 +111,32 @@ So the restored ladder condition recovered roughly half the missing instructions
 The engineer reported its own remaining defect as it stopped: the re-parenting of regions inside the claimed tail was too broad and broke a nested `and` expression, and the fix is to restrict the re-parent to the guard window itself. That is the next instruction, recorded as ticket R21-90 and dispatched to r116a on this candidate as the base.
 
 State of the campaign at this point: corpus 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, landed bytes unmoved, repo core/ clean, origin at the last pushed commit verified by fetch plus rev-list, objective not achieved.
+
+## R21-90 progress reading (2026-10-14 01:16): instrs -13 to -2, jsites -3 to 0, judge still 12/13
+
+r116a is iterating on `D:/Temp/r116` with `PATCH_R21-90_region_ast_generator.py` written and the live generator at
+`558192ecf6d5f8a0`. Scored by the orchestrator on analyzer `996a1b1acf143458`, mirror platform restored and
+re-hashed in the same command:
+
+| reading | [R21-89] `cb8c2c79` | [R21-90] live `558192ec` |
+|---|---|---|
+| ours (oracle 254) | 256 | 257 |
+| instrs | -13 | **-2** |
+| back | +0 | +0 |
+| jsites | -3 | **0** |
+| hunks_vs_ORACLE | 8 | 8 |
+| indeg-equal | False | False |
+| judge | 12/13 | **12/13** |
+
+This is a progress reading on bytes that may still move, not a verdict. What it establishes: the guard-window
+scoping recovered almost all of the remaining instruction loss - `jsites` is now exactly at parity and `instrs`
+is two away - so the unit is one or two instructions and one jump-target relation from the oracle. The judge
+still reports Different control flow because `indeg-equal` is False, i.e. some target still receives a
+different in-degree multiset, which is precisely the instrument the campaign built for this purpose
+(`rounds/round41/census_diff_r104.py` through `oracle_diff_r104.py`). No collateral check was run on this arm
+yet and nothing is installed: gate label 41 stays unconsumed and the corpus remains 6616/6617 (99.9849 percent),
+401/402 files.
+
+Next hand: re-hash the engineers live bytes before trusting any number here, run the 14-file collateral pass and
+the ROOT-joined 402 sweep only once `instrs` and `jsites` are both at 0, and treat judge `13/13` as the sole
+flip condition.
