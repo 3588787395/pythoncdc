@@ -92,9 +92,24 @@ else-declaration, not a tail claim.
 3. Re-measure with `block_diff_r118.py` first (it is cheaper than the judge and names the
    block pair directly): success = the unique-signature ORIG-ONLY/PROD-ONLY rows disappear and
    `indeg-equal` flips True.
-4. Only on judge `13/13`: install via
-   `install_pair.py --ana 996a1b1acf143458 --gen <candidate> --units "13/13" --sweep "ok=402 bad=0 changed=1" --gate`,
-   then panel 20 by index, all four sweep shards, `gate_chain.py 41 40`,
+4. Only on judge `13/13`: install with the rig's REAL signature (verified against
+   `D:/Temp/r91m/install_pair.py` at 01:42 UTC - it has NO `--sweep` flag and `--gold-hunks` is
+   **required**, and it refuses when that number is nonzero):
+
+   ```
+   python -X utf8 D:/Temp/r91m/install_pair.py --ana <analyzer file> --gen <generator file> \
+       --gold-hunks 0 --units "13/13" --gate
+   ```
+
+   **Trap to expect:** a genuine flip can still carry a nonzero GOLD *text* hunk count, because the
+   H1-H4 hunks proved here are text-only (`(A and B) or C` vs `A and B or C`, `return` vs
+   `return None`) and the judge ignores them. Zero-hunk-vs-GOLD is sufficient, NOT necessary - the
+   bar is judge `n/n`. If the rig refuses on that account, do not relax the byte checks: write the
+   two files directly and repeat exactly what the rig validates (BOM present, zero bare LF, zero
+   `\r\r\n`, `py_compile` clean, re-hash in place, and
+   `git status --porcelain -- core/` listing EXACTLY those two files), then let the gate certify.
+   Then panel 20 by index, all four sweep shards, `gate_chain.py 41 40` (BARE label for `before` -
+   `rounds/round40/after` is already committed, 8 shard files present),
    `residual_report.py 41 40` (`UNREGISTERED=0`), commit regenerated products +
    `rounds/round41/after` + push and verify the ref.
 
