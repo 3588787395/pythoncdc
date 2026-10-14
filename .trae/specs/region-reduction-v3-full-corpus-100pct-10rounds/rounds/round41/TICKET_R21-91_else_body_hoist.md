@@ -134,6 +134,50 @@ identically-signed blocks get paired arbitrarily. **Bar 1 is therefore exactly:
 `SIG-ONLY-ORIG=0`, `SIG-ONLY-PROD=0`, `blocks 176/176`, `instrs 1442`.** Hit that and the
 `indeg-equal` flip is expected; then confirm with the judge.
 
+## Addendum (01:52 UTC) - the residual is THREE rows, not one, and GOLD is an exact structural reference
+
+New instrument `gold_map_r119.py <product.py>` maps each mismatching block signature back to
+**source text on both sides**. Two facts it establishes first:
+
+```
+GOLD instrs=1442 blocks=176   (identical to the ORIGINAL pyc: 1442 / 176, and its block opname
+                               sequence matches the pyc element-for-element)
+site-packages/.../realtime_event_source.py  -> instrs=1330 blocks=160  NO match
+```
+
+So GOLD is a perfect source-level view of the original CFG (use it as the reference), and the
+on-disk `realtime_event_source.py` is **NOT** the original source - do not treat it as ground truth.
+
+`SIG-ONLY-GOLD=4 SIG-ONLY-PROD=3` on the `[R21-90]` product, all seven rows now named:
+
+```
+D1  GOLD  self.before_trading_date = now_date                      in=1 out=0 n=3
+    GOLD  time.sleep(FPS) | continue                               in=1 out=1 n=8
+    PROD  self.before_trading_date = now_date | time.sleep(FPS) | continue   in=1 out=1 n=11
+        -> the else-body hoist described above.
+
+D3  GOLD  (bare return)                                            in=0 out=0 n=2  LOAD_CONST RETURN_VALUE
+    PROD  (bare JUMP_FORWARD)                                      in=0 out=1 n=1  JUMP_FORWARD
+        -> the same hoist one site later: GOLD reaches the final `return` by FALL-THROUGH, our
+           product reaches it by a JUMP, i.e. we have a branch where GOLD has straight-line code.
+           Our `LOAD_CONST RETURN_VALUE` therefore reads in=1 where GOLD reads in=0.
+        -> D1 + D3 together explain the whole `instrs=-2`, so the census MUST count >=2 fires; a
+           criterion that fixes only site D1 will not flip the unit.
+
+D2  GOLD  ...EventEnum.HANDLE_DATA run + `else:`                    in=0 out=1 n=22
+    PROD  ...EventEnum.AFTER_TRADING_END run                        in=1 out=0 n=21
+        -> one instruction short AND the edge direction flipped. NOTE: block signatures are
+           opname-only, so this pairing is by shape not by identity - the two excerpts are
+           different arms. Treat D2 as "somewhere in the set_current_stage/event_queue.put/
+           <x>_date = now_date ladder followed by an `else:` clause, one instruction is missing"
+           and locate it by a per-arg block comparison (LOAD_METHOD/LOAD_ATTR argument names)
+           before writing any criterion for it. Do not guess a criterion from this row alone.
+```
+
+Consequence for the ticket: the target metric stays `SIG-ONLY-GOLD=0 SIG-ONLY-PROD=0`,
+`blocks 176/176`, `instrs 1442` - and reaching it requires D1 **and** D3 (same mechanism, two
+sites), while D2 must be located before anyone acts on it.
+
 ## State this ticket is written against
 
 Landed bytes unmoved: analyzer `fef59e95359f36fd`, generator `c3049a87daf59acc`,
