@@ -90,3 +90,12 @@ bytes rather than from its prose — analyzer `3ad5ceaa23135334`
 `PATCH_R21-81_region_ast_generator.py`, and the single required change: write `_r2181_emitted_entries`
 at every structural emission site instead of only the `_generate_region` funnel. Task `#157` carries the
 bar in execution order.
+
+## Late addendum (2026-10-14 01:02) - the round continued past this document
+
+This page stopped at the six-fact conjunction. The session kept going and the residual is now a single arm
+chain: `[R21-79]` to `[R21-81]` to `[R21-86]` to `[R21-87]` to `[R21-88]` to `[R21-89]`, currently at
+`ours=256`, `instrs=-13`, `back=+0`, `jsites=-3`, judge `12/13` with zero collateral. Read
+`MEASURE_R21-81_pair_matrix.md` addenda 8-15, `MEASURE_R21-89_residual_diff.md`, and `tasks.md` section 67 for
+the ladder, the falsified shapes and the one open defect (`[R21-90]`, guard-window scoping). Gate label 41 is
+still unconsumed and nothing was installed.

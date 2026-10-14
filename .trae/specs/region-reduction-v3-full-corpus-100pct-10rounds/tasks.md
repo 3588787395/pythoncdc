@@ -2280,3 +2280,40 @@ Six arms measured by the orchestrator in D:/Temp/r91m on the pinned platform F5 
 New instruments certified this session: rounds/round41/hunk_attribution_r107.py (labels each oracle-diff hunk by ladder step; oracle reads 0 hunks, F5 product reads step1/step3/step4/step6), and the cheap falsification rule that an arm is only worth a panel and a sweep if instrs moves toward 0 with back=+0 kept.
 
 Live at session end: r109a on R21-82 (write the emitted-entry ledger at every structural emission site) shows no file writes for 30 minutes and no python process, so it is recorded as unconfirmed rather than delivered, and task 157 carries the re-dispatch bytes. Repository stayed at landed bytes 1471c92eca157e46 plus 566ff5c502276e48 throughout, core/ clean at every checkpoint, all commits pushed and verified by fetch plus rev-list. Corpus unchanged at 6616/6617 (99.9849 percent), 401/402 files, clock_worker the sole failing unit; the objective is not achieved and nothing was marked complete.
+
+## 67. Round 41 arm ladder at session frontier (2026-10-14 01:02): clock_worker -114 to -13, zero collateral, still 12/13
+
+Every arm the round produced for the last failing unit, in the order the readings were taken, all scored with
+`rounds/round41/oracle_diff_r104.py` (oracle 254-line body; control reads `hunks=0 / instrs=+0 / back=+0 /
+jsites=+0 / indeg-equal=True / 13/13`) in the orchestrator mirror with the platform restored and re-hashed
+after each arm:
+
+| arm | analyzer | generator | ours | instrs | back | jsites | hunks | judge | collateral |
+|---|---|---|---|---|---|---|---|---|---|
+| landed (gate 40) | 1471c92eca157e46 | 566ff5c502276e48 | 241 | -114 | +0 | -9 | 4 | 12/13 | none |
+| [R21-79] tail release | 3ad5ceaa23135334 | landed | 241 | -115 | +0 | -9 | 4 | 12/13 | none |
+| [R21-80] folded join | 7e8350f7d52fe9a3 | landed | 241 | -114 | +0 | -9 | 4 | 12/13 | none (inert) |
+| [R21-81] dispatch ledger | 996a1b1acf143458 | 8da14b53a94e07c3 | 248 | -77 | +0 | -3 | 4 | 12/13 | quote 89/92, real_quote 42/45 |
+| [R21-86] render-scoped claim | 996a1b1acf143458 | 59a405837c22a4cb | 262 | -6 | +0 | +2 | 4 | 12/13 | none |
+| [R21-87] or-chain fold | 996a1b1acf143458 | ed07b60b970e545d | 257 | -26 | +0 | -2 | 6 | 12/13 | none |
+| [R21-88] tail ownership | 996a1b1acf143458 | 47d44ec51fa325c5 | 256 | -25 | +0 | -4 | 8 | 12/13 | none |
+| **[R21-89] ladder restore** | 996a1b1acf143458 | **cb8c2c7928672abd** | **256** | **-13** | **+0** | **-3** | 8 | **12/13** | **none (14-file pass)** |
+| falsified shapes | - | 52255f59 / 2a8b1158 / 64d05383 / 924604fc / 71c6863e / f46945ef / 97ad4d9d / 0a8099a4 | 4..266 | -1439..+17 | -4..+0 | -123..+5 | - | 9/13..12/13 | various |
+
+Two readings of this ladder have to travel with it. First, `[R21-86]` has the smallest `instrs` figure and is
+*not* the best structure: its `-6` is cancellation between a restored run and scaffolding that double-pays for
+tests, which is why the arms after it deliberately read worse on that number while being structurally nearer the
+oracle. Second, the honest frontier is `[R21-89]`: 13 instructions and 3 jump sites from the oracle in one
+unit, with zero collateral on a 14-file pass, unchanged panel 20 by index, and a ROOT-joined 402 sweep whose
+changed set is the victim alone.
+
+Open defect handed to `[R21-90]` (engineer r116a, base `[R21-89]`): the tail re-parent introduced by this
+lineage over-reaches into blocks carrying a nested `and` (BoolOp) expression and suppresses part of what it
+restores; the fix is to scope the re-parent to the guard window by a region-data relation (dominance or
+reachability between the guard block, its arm blocks and its merge), never by a distance, a counter or a
+threshold. r115a named this itself as the reason its own arm plateaued, and was stopped by its 150-use cap
+before it could land the narrowing.
+
+Compliance at this frontier: gate label 41 unconsumed, nothing installed (no arm reached judge `13/13`),
+landed bytes unmoved, `core/` clean, `origin/rr-v3r01-f557fd` verified equal to `HEAD` by fetch plus
+`rev-list` after every commit, corpus 6616/6617 (99.9849 percent), 401/402 files, objective not achieved.
