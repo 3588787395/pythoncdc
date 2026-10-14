@@ -178,6 +178,42 @@ Consequence for the ticket: the target metric stays `SIG-ONLY-GOLD=0 SIG-ONLY-PR
 `blocks 176/176`, `instrs 1442` - and reaching it requires D1 **and** D3 (same mechanism, two
 sites), while D2 must be located before anyone acts on it.
 
+### Second addendum (01:55 UTC) - D2 and D3 located with an ARGUMENT-aware block diff
+
+The previous rows were paired by opname signature, which is ambiguous across the sibling arms.
+Re-run with each block signed by `opname#argval` (same splitter, args included) - now the two sides
+name the SAME source text, so the pairing is identity and not shape:
+
+```
+ARGSIG-ONLY-GOLD=4  ARGSIG-ONLY-PROD=3   (GOLD 1442 instrs, PROD 1440)
+
+D1  GOLD  line 240  in=1 out=0 n=3   LOAD_FAST#now_date LOAD_DEREF#self STORE_ATTR#before_trading_date
+    GOLD  line 241  in=1 out=1 n=8   LOAD_GLOBAL#time LOAD_ATTR#sleep LOAD_GLOBAL#FPS PRECALL CALL POP_TOP EXTENDED_ARG JUMP_BACKWARD
+    PROD  line 240  in=1 out=1 n=11  (both fused into one block)
+
+D2  GOLD  line 300  in=1 out=1 n=22  set_current_stage(EventEnum.AFTER_TRADING_END) / event_queue.put(...) / after_trading_date = now_date  + the following `else:`
+    PROD  line 301  in=1 out=0 n=21  SAME three statements - one instruction missing AND the outgoing jump gone
+
+D3  GOLD  line 216  in=0 out=0 n=2   LOAD_CONST#None RETURN_VALUE          (reached by fall-through)
+    PROD  line 230  in=0 out=1 n=1   JUMP_FORWARD                          (a stray jump block we emit)
+                                    and our LOAD_CONST#None RETURN_VALUE therefore reads in=1
+```
+
+Read together, D2 and D3 are the **same edge-threading consequence as D1**: when an `else`/tail arm
+is hoisted into sequential code, the arm that used to *jump* to the shared continuation stops
+needing that jump (D2 loses its out-edge and one instruction) while a different seam gains a stray
+`JUMP_FORWARD` (D3). So the census must show fires at all three sites - `@240` (holiday guard),
+`@300` (`AFTER_TRADING_END` arm before an `else:`), and the loop-tail `return None` at `@216` -
+and a candidate that closes only `@240` will still read `instrs=-2 / SIG-ONLY 4/3` and stay 12/13.
+
+D2 is NOT the H5 nesting: `shape_r118.py` already proved fused and nested `elif` shapes compile to
+identical instruction counts, so the missing instruction at `@300` is the lost outgoing jump, not
+the chained-compare leg.
+
+The argument-aware variant is `block_diff_r118.py` with one change: build each block signature as
+`i.opname + "#" + str(i.argval)[:30]` for ops starting with LOAD_/STORE_/COMPARE_OP/IMPORT_/BINARY_OP
+(everything else opname-only). Run it on any product to reproduce the seven rows above verbatim.
+
 ## State this ticket is written against
 
 Landed bytes unmoved: analyzer `fef59e95359f36fd`, generator `c3049a87daf59acc`,
