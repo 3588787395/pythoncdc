@@ -98,6 +98,27 @@ else-declaration, not a tail claim.
    `residual_report.py 41 40` (`UNREGISTERED=0`), commit regenerated products +
    `rounds/round41/after` + push and verify the ref.
 
+## Rig control - the instrument is certified on a known-GREEN input
+
+`block_diff_r118.py` run on `GOLD_realtime_event_source_PROOF.py` (the file the judge accepts at
+13/13), 2026-10-14 01:39 UTC:
+
+```
+blocks orig=176 prod=176  instrs orig=1442 prod=1442  SIG-ONLY-ORIG=0 SIG-ONLY-PROD=0
+```
+
+and the same rig on the `[R21-90]` product:
+
+```
+blocks orig=176 prod=175  instrs orig=1442 prod=1440  SIG-ONLY-ORIG=4 SIG-ONLY-PROD=3
+```
+
+So `SIG-ONLY-*` is the trustworthy metric (zero on a unit the judge already passes), while the
+`degree mismatches on shared signatures` list is NOT - it prints even for GOLD because
+identically-signed blocks get paired arbitrarily. **Bar 1 is therefore exactly:
+`SIG-ONLY-ORIG=0`, `SIG-ONLY-PROD=0`, `blocks 176/176`, `instrs 1442`.** Hit that and the
+`indeg-equal` flip is expected; then confirm with the judge.
+
 ## State this ticket is written against
 
 Landed bytes unmoved: analyzer `fef59e95359f36fd`, generator `c3049a87daf59acc`,
