@@ -337,6 +337,47 @@ def _r2114_wrapper_is_sequential_loops(body_stmts):
 
 
 
+def _r2186_rendered_else_scope(region):
+    """[R21-86] The block scope of the else arm that `_if_generate_elif_chain` renders for
+    `region`: the elif tests, the elif bodies and the chain-tail else list.
+
+    When an if-region's else arm is produced by an elif chain, that chain's member lists ARE the
+    rendered arm -- nothing outside them is printed by this branch.  Membership only; no offsets,
+    no names, no instruction facts.
+    """
+    _scope = set()
+    for _c in (getattr(region, 'elif_conditions', None) or ()):
+        _scope.add(_c)
+    for _body in (getattr(region, 'elif_bodies', None) or ()):
+        if isinstance(_body, (list, tuple, set)):
+            _scope.update(_body)
+        else:
+            _scope.add(_body)
+    for _b in (getattr(region, 'elif_final_else', None) or ()):
+        _scope.add(_b)
+    return _scope
+
+
+def _r2186_has_inflight_owner(gen, region, block):
+    """[R21-86] True when some region OTHER than `region` that is currently on the generation
+    stack (an ancestor sequence whose block walk has not returned yet) still lists `block` as one
+    of its own arm members.
+
+    Releasing a block from a claim is only safe while an owning sequence can still reach it: the
+    ancestor walks iterate their arm lists and will emit the block there, exactly once.  Reads
+    arm membership plus `_generating_regions` (the in-flight stack) -- a pure structural relation,
+    not a jump target, offset, counter or name.
+    """
+    for _r in (gen.region_analyzer.regions or ()):
+        if _r is region or id(_r) not in gen._generating_regions:
+            continue
+        if block in (getattr(_r, 'then_blocks', None) or ()):
+            return True
+        if block in (getattr(_r, 'else_blocks', None) or ()):
+            return True
+    return False
+
+
 def _r2114_defer_to_unemitted_sibling_loop(gen, block, child):
     """[R21-14] True when marking `block` as generated on behalf of `child` would
     delete it from a SIBLING loop region that has not been emitted yet.
@@ -464,6 +505,8 @@ class RegionASTGenerator:
 
         self.regions: List[Region] = []
         self.generated_blocks: Set[BasicBlock] = set()
+        # [R21-86] blocks an arm renderer released to its owning parent sequence
+        self._r2186_released_blocks: Set[BasicBlock] = set()
         self.generated_offsets: Set[int] = set()
         self._generating_regions: Set[int] = set()
         self._generated_regions: Set[int] = set()
@@ -1954,6 +1997,8 @@ class RegionASTGenerator:
                 _r76g_emit({'type': 'If', 'test': _w['test'],
                             'body': _w['body'], 'orelse': []})
 
+        # [R21-88] tail-ownership re-declaration, identification-time, before any dispatch
+        self._r2188_tail_ownership_prepass()
         for region in top_level_regions:
             while _r76g_stack and (region.entry is None
                                    or region.entry not in _r76g_stack[-1]['extent']):
@@ -8484,7 +8529,17 @@ AST 映射规则:
             # 顶层 LoopRegion（parent is None）。嵌套 LoopRegion 的 else_blocks 属于
             # 父区域上下文（如外层 IfRegion 的 then 分支中的显式 return），不可跨区域
             # 启发式过滤。仅顶层 LoopRegion 才进入隐式 return 判定。
-            if not _non_trivial and region.parent is None:
+            # [R21-92 D3] the guard above restricted the implicit-tail test to a
+            # parent-less LoopRegion because a nested loop's else_blocks normally
+            # belong to an enclosing arm's context.  A loop that has no LoopRegion
+            # ancestor and whose else list is *only* the function-terminating
+            # `LOAD_CONST None; RETURN_VALUE` entered from the loop's own test block,
+            # while the loop body already contains a DIFFERENT block of that same
+            # terminating shape, has no source-level else clause at all: the two
+            # exits are CPython jump-threading the one function-ending return.  The
+            # predicate is pure block/region data (see _r2192_loop_else_is_implicit_tail).
+            if not _non_trivial and (region.parent is None
+                                     or self._r2192_loop_else_is_implicit_tail(region)):
                 # [修复] 判断while else中的return None是显式还是隐式：
                 # - 显式：while else块是函数中唯一的return None出口（如while13）
                 # - 隐式：存在其他独立的return None块（如wl23，编译器添加的隐式return）
@@ -19879,6 +19934,797 @@ AST 映射规则:
             return None
 
 
+    def _r2188_and_prefix_or_tail(self, region, cond_block, condition):
+        """[R21-88] positive-polarity `(A and B) or C` fold WITH chain-continuation read.
+
+        Same identification as the banked [R21-87] fold (six conjuncts, jump polarity +
+        region/block data only — no names, no absolute-offset keys, no counters, no
+        magnitude triggers): cond_block ends IF_FALSE -> T (T == region.merge_block,
+        region.else_blocks empty); T ends IF_FALSE -> E with exactly one remaining
+        successor inside region.then_blocks (the arm); one IfRegion Mr (condition_block
+        is entry) between them whose last test leg jumps IF_TRUE -> arm; a predecessor of
+        T from inside the Mr leg hands the and-leg's false path to the tail leg; the
+        three leg expressions A, B, C rebuild with the resident rulers.
+
+        [R21-88] delta (the difference from [R21-87]): where [R21-87] narrows the fold
+        to the arm window and re-declares the merge as E, orphaning any elif ladder
+        that E opens (the measured row-5 -26 tail cut), [R21-88] reads the
+        CONTINUATION fact from region data: if T is the condition block of its own
+        IfRegion Tr and Tr declares a non-empty else arm list starting no earlier
+        than E, the ladder belongs to this statement, and the fold inherits Tr's arm
+        declaration (then = arm window, else = Tr's else list, merge = Tr's merge),
+        marking only the leg blocks.  Ladder blocks stay unclaimed and are emitted
+        exactly once by this statement's own else walk.  A stray the Tr else list
+        cannot hold keeps the strict [R21-87] conservation refusal (this is what
+        makes the [R21-86] released reconnect run render inside the @7164 chain
+        instead of being orphaned the way the bare tail-transfer did — measured,
+        row v2: -282/-33).  Nothing is marked, un-marked or re-printed after
+        emission; one-way dataflow, unique emitter (principle 2), nested regions
+        stay abstract nodes (principles 3 and 4).
+
+        Reduction: test = BoolOp(or, [BoolOp(and, [A, B]), C]); region.then_blocks is
+        narrowed to the arm window; region.merge_block is re-declared to E; leg test
+        blocks and pure-connection blocks between the legs are marked generated_offsets/
+        generated_blocks — the same hand-back family as the landed
+        _r4701_and_lift_or_tail.  Any conjunct failing => return None and the existing
+        path is byte-identical to the base.
+        """
+        try:
+            if region is None or cond_block is None:
+                return None
+            if getattr(region, 'else_blocks', None):
+                return None
+            _tb = getattr(region, 'then_blocks', None)
+            if not _tb:
+                return None
+            _li = cond_block.get_last_instruction()
+            if (_li is None or getattr(_li, 'argval', None) is None
+                    or 'IF_FALSE' not in _li.opname
+                    or _li.opname in NONE_CHECK_OPS):
+                return None
+            _t_off = _li.argval
+            _t = self.cfg.get_block_by_offset(_t_off)
+            if _t is None or _t is not getattr(region, 'merge_block', None):
+                return None
+            if _t is cond_block or _t_off <= cond_block.start_offset:
+                return None
+            _ti = _t.get_last_instruction()
+            if (_ti is None or getattr(_ti, 'argval', None) is None
+                    or 'IF_FALSE' not in _ti.opname
+                    or _ti.opname in NONE_CHECK_OPS):
+                return None
+            _e_off = _ti.argval
+            if _e_off == _t_off:
+                return None
+            _e = self.cfg.get_block_by_offset(_e_off)
+            if _e is None:
+                return None
+            _arm_c = [s for s in (_t.successors or [])
+                      if s.start_offset != _e_off and s in _tb]
+            if len(_arm_c) != 1:
+                return None
+            _arm = _arm_c[0]
+            _m_c = [s for s in (cond_block.successors or [])
+                    if s.start_offset != _t_off
+                    and cond_block.start_offset < s.start_offset < _t_off]
+            _regions = self.region_analyzer.regions
+            _mr = None
+            _tr = None
+            for _r in _regions:
+                if not isinstance(_r, IfRegion):
+                    continue
+                if _r.entry is _t:
+                    _tr = _r
+                for _s in _m_c:
+                    if _r.entry is _s and getattr(_r, 'condition_block', None) is _s:
+                        _mr = _r
+            if _mr is None or _tr is None:
+                return None
+            if getattr(_tr, 'condition_block', None) is not _t:
+                return None
+            if len(_m_c) != 1:
+                return None
+            _m = _m_c[0]
+            _ccb = list(getattr(_mr, 'chained_compare_blocks', None) or [])
+            _leg = [_m] + _ccb
+            _lt = max(_leg, key=lambda b: b.start_offset)
+            _lti = _lt.get_last_instruction()
+            if (_lti is None or getattr(_lti, 'argval', None) is None
+                    or 'IF_TRUE' not in _lti.opname
+                    or _lti.opname in NONE_CHECK_OPS
+                    or _lti.argval != _arm.start_offset):
+                return None
+            if not any(p is not cond_block and p.start_offset >= _m.start_offset
+                       and p.start_offset < _t_off
+                       for p in (_t.predecessors or [])):
+                return None
+            _skip_ops = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')
+            _a = condition
+            if _a is None:
+                _a_instrs = [i for i in cond_block.instructions
+                             if i.opname not in _skip_ops and i is not _li]
+                _a = self.expr_reconstructor.reconstruct(_a_instrs) if _a_instrs else None
+            if _a is None:
+                return None
+            if _ccb and getattr(_mr, 'chained_compare_ops', None):
+                _b = self._build_chained_compare_from_region_data(_mr)
+            else:
+                _b_instrs = [i for i in _lt.instructions
+                             if i.opname not in _skip_ops and i is not _lti]
+                _b = self.expr_reconstructor.reconstruct(_b_instrs) if _b_instrs else None
+            if _b is None:
+                return None
+            _c_instrs = [i for i in _t.instructions
+                         if i.opname not in _skip_ops and i is not _ti]
+            _c = self.expr_reconstructor.reconstruct(_c_instrs) if _c_instrs else None
+            if _c is None:
+                return None
+            _cleanup_ops = ('POP_TOP', 'NOP', 'RESUME', 'CACHE', 'JUMP_FORWARD',
+                            'EXTENDED_ARG')
+            _mark = [_m, _t, _lt] + _ccb
+            for _pb in (list(getattr(region, 'blocks', None) or [])
+                        + list(getattr(_mr, 'blocks', None) or [])):
+                if _pb is None or _pb is _arm or _pb is _e:
+                    continue
+                if not (_m.start_offset <= _pb.start_offset < _t_off):
+                    continue
+                if all(i.opname in _cleanup_ops for i in _pb.instructions):
+                    _mark.append(_pb)
+            _arm_blocks = sorted((b for b in _tb
+                                   if _arm.start_offset <= b.start_offset < _e_off),
+                                  key=lambda b: b.start_offset)
+            if _arm not in _arm_blocks:
+                return None
+            # [R21-92 D1] the tail leg's own IfRegion Tr declares the SAME arm entry
+            # and the SAME merge this fold picks (Tr.condition_block is T, Tr.merge_block
+            # is E, no Tr else arm, no Tr elif ladder).  Two regions therefore own one
+            # statement: R reached the arm through the folded or-chain, Tr reached it
+            # as the leg test itself, and Tr's then-run continues past R's block list -
+            # the nested if-without-else it declares (cond C, merge M) with M strictly
+            # inside this window makes the original keep TWO merge blocks (M and E).
+            # R's flat then_blocks were built before that child region existed, so R
+            # under-declares the arm; Tr's declaration is the complete one and is pure
+            # region data (no names, no offsets as keys, no counters, no thresholds).
+            # Inherit it for the window only: blocks at or beyond E stay outside the arm
+            # (E is this statement's merge and is emitted after it), and nothing is
+            # re-claimed or un-marked - the nested region entry is dispatched exactly
+            # once by this arm's own walk (principle 2: unique emitter).
+            _r2192_tr_then = list(getattr(_tr, 'then_blocks', None) or [])
+            if (getattr(_tr, 'merge_block', None) is _e
+                    and getattr(_tr, 'condition_block', None) is _t
+                    and not getattr(_tr, 'else_blocks', None)
+                    and not getattr(_tr, 'elif_conditions', None)
+                    and _arm in _r2192_tr_then):
+                _r2192_deeper = [b for b in _r2192_tr_then
+                                 if b not in _arm_blocks
+                                 and _arm.start_offset <= b.start_offset < _e_off]
+                if _r2192_deeper:
+                    _arm_blocks = sorted(set(_arm_blocks) | set(_r2192_deeper),
+                                         key=lambda b: b.start_offset)
+            _r2188_keep = set(_arm_blocks) | set(_mark)
+            _r2188_stray = [b for b in _tb if b not in _r2188_keep]
+            # [R21-88] chain-continuation read: the tail leg T is itself the condition
+            # block of its own IfRegion Tr.  When Tr carries a non-empty else arm list
+            # that begins no earlier than this fold's merge E, the ladder E opens is a
+            # CONTINUATION of the folded statement, not separate code: the fold
+            # inherits Tr's arm declaration — then_blocks = this arm window,
+            # else_blocks = Tr's else list, merge_block = Tr's merge.  Leg blocks (T
+            # included) are marked; Tr's arm/else blocks are NOT marked, so the ladder
+            # is emitted exactly once by this statement's own else walk (principle 2:
+            # unique emitter; one-way dataflow at identification time; no un-mark and
+            # no re-print).  That removes the [R21-87] row-5 failure mode where the
+            # narrow merge:=E orphaned the elif tail (-26 instructions).  When strays
+            # exist that no Tr else list can hold, the strict [R21-87] conservation
+            # refusal still fires, so a chain that owns code it cannot render never
+            # folds.
+            _r2188_else = list(getattr(_tr, 'else_blocks', None) or [])
+            _r2188_chain = (
+                bool(_r2188_else)
+                and getattr(_tr, 'condition_block', None) is _t
+                and getattr(_tr, 'merge_block', None) is not None
+                and all(b in _r2188_keep
+                        or (_arm.start_offset <= b.start_offset < _e_off)
+                        for b in (getattr(_tr, 'then_blocks', None) or []))
+                and all(b is not None and b.start_offset >= _e_off
+                        for b in _r2188_else))
+            if _r2188_stray and not _r2188_chain:
+                return None
+            _seen = set()
+            for _mb in _mark:
+                if _mb in _seen:
+                    continue
+                _seen.add(_mb)
+                self.generated_blocks.add(_mb)
+                self.generated_offsets.add(_mb.start_offset)
+            region.then_blocks = _arm_blocks
+            if _r2188_chain:
+                region.else_blocks = _r2188_else
+                region.merge_block = _tr.merge_block
+                # The inherited ladder becomes part of THIS statement's own block
+                # record, so the region's post-generation claim covers it after the
+                # else walk emits it exactly once (unique emitter, principle 2).
+                _r2188_own = list(getattr(region, 'blocks', None) or [])
+                _r2188_owns = set(_r2188_own)
+                region.blocks = _r2188_own + [
+                    b for b in (getattr(_tr, 'blocks', None) or [])
+                    if b is not None and b not in _r2188_owns]
+            else:
+                region.merge_block = _e
+            _and_expr = {'type': 'BoolOp', 'op': 'and', 'values': [_a, _b]}
+            _or_expr = {'type': 'BoolOp', 'op': 'or', 'values': [_and_expr, _c]}
+            # [R21-89] fold-window guard completion, identification time, before the
+            # arm/else walks of this same statement start.
+            self._r2189_fold_window_guards(region, _arm_blocks, _e, _r2188_else,
+                                           bool(_r2188_chain))
+            return self._convert_lambda_function_objects(_or_expr)
+        except Exception:
+            return None
+
+    def _r2188_tail_ownership_prepass(self):
+        """[R21-88] tail-ownership re-declaration (identification time, before dispatch).
+
+        An or-chain region R whose arm declaration was over-extended by the bottom-up
+        reduction lists, in its own then_blocks, the very statements that follow the
+        folded chain in the dispatching parent sequence (code at or after the fold
+        merge E). The fold then cannot honour its arm-window conservation and refuses,
+        keeping the nested or-chain scaffolding alive. This pre-pass re-declares
+        ownership once, before anything is emitted:
+
+          (a) R matches the _r2188_and_prefix_or_tail shape conjuncts (1)-(5) —
+              jump polarity + region data only (R.else_blocks empty; cond leg ends
+              IF_FALSE->T == R.merge_block; T ends IF_FALSE->E, E != T; exactly one
+              other T-successor in R.then_blocks (the arm); exactly one Mr leg
+              region between, whose last test jumps IF_TRUE->arm);
+          (b) every R.then_blocks member at-or-after E is forward-reachable from E
+              through successor edges without crossing a window or leg block — the
+              reachability walk's domain floor is the E-offset, the region-data
+              statement of “code after this statement” (no magnitude comparison, no
+              absolute-offset key);
+          (c) a dispatching parent P exists: the nearest region.parent-chain ancestor
+              whose blocks/body_blocks/then_blocks/else_blocks contain R.entry.
+        Then the tail blocks are removed from R.then_blocks/R.blocks and inserted —
+        positionally, into the same list that holds R.entry and into P.blocks — and
+        every region whose entry was transferred is re-parented to P. Membership stays
+        unique throughout (blocks move, never duplicate); nothing has been claimed or
+        emitted yet at pre-pass time, so no un-mark, no re-print, one-way dataflow.
+        Any R failing (a)/(b)/(c) is left untouched and the product is byte-identical
+        to [R21-86].
+        """
+        try:
+            _regions = self.region_analyzer.regions
+        except Exception:
+            return
+        _cleanup_ops = ('POP_TOP', 'NOP', 'RESUME', 'CACHE', 'JUMP_FORWARD',
+                        'EXTENDED_ARG')
+        for _r in sorted(_regions, key=lambda x: (x.entry.start_offset
+                                                  if x.entry is not None else -1)):
+            try:
+                if not isinstance(_r, IfRegion) or _r.entry is None:
+                    continue
+                if getattr(_r, 'else_blocks', None):
+                    continue
+                _c = _r.condition_block
+                _tb = getattr(_r, 'then_blocks', None)
+                if _c is None or not _tb:
+                    continue
+                _li = _c.get_last_instruction()
+                if (_li is None or getattr(_li, 'argval', None) is None
+                        or 'IF_FALSE' not in _li.opname
+                        or _li.opname in NONE_CHECK_OPS):
+                    continue
+                _t = self.cfg.get_block_by_offset(_li.argval)
+                if _t is None or _t is not getattr(_r, 'merge_block', None):
+                    continue
+                _ti = _t.get_last_instruction()
+                if (_ti is None or getattr(_ti, 'argval', None) is None
+                        or 'IF_FALSE' not in _ti.opname
+                        or _ti.opname in NONE_CHECK_OPS):
+                    continue
+                _e = self.cfg.get_block_by_offset(_ti.argval)
+                if _e is None or _e is _t:
+                    continue
+                _e_off = _e.start_offset
+                _arm_c = [s for s in (_t.successors or [])
+                          if s.start_offset != _e_off and s in _tb]
+                if len(_arm_c) != 1:
+                    continue
+                _arm = _arm_c[0]
+                if _arm.start_offset >= _e_off:
+                    continue
+                _m_c = [s for s in (_c.successors or [])
+                        if s.start_offset != _t.start_offset
+                        and _c.start_offset < s.start_offset < _t.start_offset]
+                if len(_m_c) != 1:
+                    continue
+                _m = _m_c[0]
+                _mr = None
+                for _q in _regions:
+                    if (isinstance(_q, IfRegion) and _q.entry is _m
+                            and getattr(_q, 'condition_block', None) is _m):
+                        _mr = _q
+                if _mr is None:
+                    continue
+                _ccb = list(getattr(_mr, 'chained_compare_blocks', None) or [])
+                _lt = max([_m] + _ccb, key=lambda b: b.start_offset)
+                _lti = _lt.get_last_instruction()
+                if (_lti is None or getattr(_lti, 'argval', None) is None
+                        or 'IF_TRUE' not in _lti.opname
+                        or _lti.opname in NONE_CHECK_OPS
+                        or _lti.argval != _arm.start_offset):
+                    continue
+                _tail = [b for b in _tb if b is not None
+                         and b.start_offset >= _e_off]
+                if not _tail:
+                    continue
+                _win = set(b for b in _tb
+                           if _arm.start_offset <= b.start_offset < _e_off)
+                _leg = {_c, _t, _m, _lt} | set(_ccb)
+                for _pb in (getattr(_r, 'blocks', None) or []):
+                    if (_pb is not None and _pb is not _arm and _pb is not _e
+                            and _m.start_offset <= _pb.start_offset < _t.start_offset
+                            and all(i.opname in _cleanup_ops
+                                    for i in _pb.instructions)):
+                        _leg.add(_pb)
+                _reach = {_e}
+                _work = [_e]
+                while _work:
+                    _cur = _work.pop()
+                    for _s in (getattr(_cur, 'successors', None) or []):
+                        if _s is None or _s.start_offset < _e_off:
+                            continue
+                        if _s in _win or _s in _leg or _s in _reach:
+                            continue
+                        _reach.add(_s)
+                        _work.append(_s)
+                if not all(b in _reach for b in _tail):
+                    continue
+                _p = getattr(_r, 'parent', None)
+                _host_attrs = None
+                while _p is not None:
+                    _hits = []
+                    for _attr in ('body_blocks', 'then_blocks', 'else_blocks',
+                                  'blocks'):
+                        _lst = getattr(_p, _attr, None)
+                        if isinstance(_lst, list) and _r.entry in _lst:
+                            _hits.append(_attr)
+                    if _hits:
+                        # insert only into the list(s) that hold R.entry (the
+                        # sequence the folded statement belongs to) plus the
+                        # region's own blocks record; never into sibling arm
+                        # lists that do not contain R.entry.
+                        _host_attrs = _hits if 'blocks' in _hits else _hits + [
+                            a for a in ('blocks',)
+                            if isinstance(getattr(_p, a, None), list) and a not in _hits]
+                        break
+                    _p = getattr(_p, 'parent', None)
+                if _p is None or _host_attrs is None:
+                    continue
+                _ms = set()
+                _moved = []
+                for _b in (list(_tb) + list(getattr(_r, 'blocks', None) or [])):
+                    if (_b is not None and _b.start_offset >= _e_off
+                            and _b in _reach and _b not in _ms):
+                        _ms.add(_b)
+                        _moved.append(_b)
+                if not _moved:
+                    continue
+                _r.then_blocks = [b for b in _tb if b not in _ms]
+                _r.blocks = [b for b in (getattr(_r, 'blocks', None) or [])
+                             if b not in _ms]
+                for _attr in _host_attrs:
+                    _lst = getattr(_p, _attr)
+                    _have = set(id(x) for x in _lst)
+                    for _b in sorted(_moved, key=lambda x: x.start_offset):
+                        if id(_b) in _have:
+                            continue
+                        _have.add(id(_b))
+                        _idx = len(_lst)
+                        for _k in range(len(_lst)):
+                            if getattr(_lst[_k], 'start_offset', 0) > _b.start_offset:
+                                _idx = _k
+                                break
+                        _lst.insert(_idx, _b)
+                for _q in _regions:
+                    if _q is _r or _q is _mr or _q.entry is None:
+                        continue
+                    if _q.entry in _ms and getattr(_q, 'parent', None) is not _p:
+                        _old = _q.parent
+                        if _old is not None and isinstance(
+                                getattr(_old, 'children', None), list):
+                            try:
+                                _old.children.remove(_q)
+                            except Exception:
+                                pass
+                        _q.parent = _p
+                        if isinstance(getattr(_p, 'children', None), list):
+                            _p.children.append(_q)
+                if isinstance(getattr(_p, 'children', None), list):
+                    try:
+                        _p.children.sort(key=lambda x: (x.entry.start_offset
+                                                        if x.entry is not None else -1))
+                    except Exception:
+                        pass
+            except Exception:
+                continue
+
+    def _r2192_elif_chained_compare_tail(self, region, cond_block, condition):
+        """[R21-92 D2] fold a trailing chained-compare conjunct into the owning test.
+
+        CPython compiles `elif A and B and (lo <= x <= hi): arm ... else: tail` so the
+        and-chain legs A, B each jump IF_FALSE to the chain continuation F, and the
+        chained comparison keeps the same F: its legs' non-arm exits all land on F
+        (directly or through a POP_TOP/JUMP connector), and its arm is the elif body.
+        The bottom-up reduction nevertheless lifts that last conjunct into its own
+        IfRegion (entry == condition_block == the leg's fall-through successor, no
+        elif, no children), and the renderer then opens a nested `if lo <= x <= hi:`.
+        The nested form is only shape-equivalent when the chain has no else arm; with
+        an else arm CPython threads the arm's outgoing jump differently (measured
+        fused blocks=11 indeg=[4,2,1,1,1] vs split blocks=12 indeg=[3,2,1,1,1,1] at
+        identical instr/jsite/back counts), so the fold is a CFG fact, not a spelling.
+
+        Judgment (jump polarity + region data only - no names, no absolute offsets as
+        keys, no counters, no magnitude triggers):
+          (1) `condition` is already a BoolOp(and) of >= 2 conjuncts, i.e. this test
+              has been assembled from a short-circuit chain;
+          (2) cond_block ends in a non-none-check conditional IF_FALSE jump to F and
+              F is exactly this region's merge_block (the chain continuation);
+          (3) cond_block has exactly one other forward conditional successor S;
+          (4) S is the entry AND the condition_block of a different IfRegion Cr with
+              non-empty chained_compare_blocks, >= 2 chained_compare_ops, no
+              elif_conditions and no children - Cr is the lifted last conjunct;
+          (5) every Cr else block either is F or is a pure connector chain landing
+              exactly on F, and Cr's then list holds exactly one non-pure block (the
+              shared arm) - the same false exit and the same arm means the same
+              conjunct list, not a nested statement;
+          (6) the chained expression rebuilds from Cr's own region data.
+
+        Reduction: append the rebuilt Compare as the final `and` operand, and claim
+        only Cr's test/connector blocks (entry, chained_compare_blocks, pure then/else
+        connectors) as generated.  The arm block is never claimed here, so it stays
+        with this statement's own arm walk - one block, one emitter, no un-mark, no
+        post-hoc repair.
+        """
+        try:
+            if region is None or cond_block is None:
+                return None
+            if not (isinstance(condition, dict) and condition.get('type') == 'BoolOp'
+                    and condition.get('op') == 'and'
+                    and len(condition.get('values') or []) >= 2):
+                return None
+            _c = cond_block.get_last_instruction()
+            if (_c is None or getattr(_c, 'argval', None) is None
+                    or 'IF_FALSE' not in _c.opname or _c.opname in NONE_CHECK_OPS):
+                return None
+            _f_off = _c.argval
+            if getattr(region, 'merge_block', None) is None:
+                return None
+            if region.merge_block.start_offset != _f_off:
+                return None
+            _cs = list(getattr(cond_block, 'conditional_successors', None) or []) \
+                or list(cond_block.successors or [])
+            _fwd = [s for s in _cs if s.start_offset != _f_off
+                    and s.start_offset > cond_block.start_offset]
+            if len(_fwd) != 1:
+                return None
+            _s = _fwd[0]
+            _cr = None
+            for _r in self.region_analyzer.regions:
+                if (isinstance(_r, IfRegion) and _r is not region
+                        and _r.entry is _s and getattr(_r, 'condition_block', None) is _s):
+                    _cr = _r
+                    break
+            if _cr is None:
+                return None
+            _cc = list(getattr(_cr, 'chained_compare_blocks', None) or [])
+            if not _cc or len(getattr(_cr, 'chained_compare_ops', None) or []) < 2:
+                return None
+            if getattr(_cr, 'elif_conditions', None) or getattr(_cr, 'children', None):
+                return None
+            _pure_ops = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP', 'EXTENDED_ARG',
+                         'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD')
+
+            def _r2192_pure(b):
+                return bool(b.instructions) and all(i.opname in _pure_ops for i in b.instructions)
+
+            def _r2192_lands(b, off):
+                cur = b
+                seen = set()
+                while cur is not None and cur.start_offset not in seen:
+                    seen.add(cur.start_offset)
+                    if cur.start_offset == off:
+                        return True
+                    if not _r2192_pure(cur):
+                        return False
+                    _li = cur.get_last_instruction()
+                    if _li is None or getattr(_li, 'argval', None) is None:
+                        return False
+                    cur = self.cfg.get_block_by_offset(_li.argval)
+                return False
+
+            _eb = list(getattr(_cr, 'else_blocks', None) or [])
+            if not _eb or not all(_r2192_lands(b, _f_off) for b in _eb):
+                return None
+            _arm = [b for b in (getattr(_cr, 'then_blocks', None) or [])
+                    if not _r2192_pure(b)]
+            if len(_arm) != 1:
+                return None
+            _expr = self._build_chained_compare_from_region_data(_cr)
+            if _expr is None:
+                return None
+            _claim = [_s] + _cc
+            _claim += [b for b in (getattr(_cr, 'then_blocks', None) or []) if _r2192_pure(b)]
+            _claim += [b for b in _eb if b is not region.merge_block and _r2192_pure(b)]
+            for _b in _claim:
+                self.generated_blocks.add(_b)
+                self.generated_offsets.add(_b.start_offset)
+            return {'type': 'BoolOp', 'op': 'and',
+                    'values': list(condition['values']) + [_expr]}
+        except Exception:
+            return None
+
+    def _r2192_loop_else_is_implicit_tail(self, region):
+        """[R21-92 D3] the loop's else list is the function-ending return, not an else.
+
+        True only on block/region data:
+          (a) the loop has no LoopRegion ancestor (nothing encloses it but statement
+              structure, so its else list cannot be an inner arm's context);
+          (b) every else block is an exit block (no successors) whose whole instruction
+              stream is the terminating form `LOAD_CONST None; RETURN_VALUE` (or
+              `RETURN_CONST None`);
+          (c) each else block is entered only by this loop's own test block (entry or
+              condition_block) - nothing else in the function can reach it;
+          (d) the loop's body already contains a DIFFERENT exit block of that same
+              terminating form, so the else block duplicates the function's ending
+              return instead of being its unique continuation.  CPython jump-threading
+              emits one terminating block per loop exit edge; a real source-level
+              `while ...: else: return None` has no such duplicate inside the body.
+        """
+        try:
+            _eb = list(getattr(region, 'else_blocks', None) or [])
+            if not _eb:
+                return False
+            _p = getattr(region, 'parent', None)
+            while _p is not None:
+                if isinstance(_p, LoopRegion):
+                    return False
+                _p = getattr(_p, 'parent', None)
+            _enters = {region.entry.start_offset if region.entry else None,
+                       region.condition_block.start_offset
+                       if getattr(region, 'condition_block', None) else None} - {None}
+
+            def _r2192_terminating(b):
+                if b is None or (b.successors or []):
+                    return False
+                _ins = list(b.instructions)
+                return ((_ins[-1].opname == 'RETURN_VALUE' and len(_ins) == 2
+                         and _ins[0].opname == 'LOAD_CONST' and _ins[0].argval is None)
+                        or (_ins[-1].opname == 'RETURN_CONST' and len(_ins) == 1
+                            and _ins[-1].argval is None))
+
+            if not all(_r2192_terminating(b) for b in _eb):
+                return False
+            for b in _eb:
+                if not set(p.start_offset for p in (b.predecessors or [])) <= _enters:
+                    return False
+            _else_set = set(_eb)
+            for b in (getattr(region, 'body_blocks', None) or []):
+                if b not in _else_set and _r2192_terminating(b):
+                    return True
+            return False
+        except Exception:
+            return False
+
+    def _r2189_fold_window_guards(self, region, arm_blocks, e_block, inherited_else,
+                                  chain_inherited):
+        """[R21-89] complete the tests a fold-window walks but never declares.
+
+        An `(A and B) or C` fold rewrites THIS statement's own arm window (and, when the
+        tail leg carries an else list, the chain continuation it inherits from it).  A block
+        B inside one of those two lists can be a bare condition block: it holds one whole
+        boolean test and its last instruction is the conditional jump over its body, while
+        the bottom-up reduction declared no region for it and instead recorded the test as
+        an `elif_conditions` entry of a LEG region that this fold has just consumed (the
+        leg's test was lifted into the folded expression, so that region is never generated
+        and never walks its own elif list).  The branch walk `_process_if_blocks` then sends
+        B to `_generate_block_statements`, which drops the test as jump scaffolding and
+        emits no statement: the guard disappears, its body is hoisted one level, and the
+        continuation -- claimed as the `else` of the nested region built at B's fall-through
+        block -- re-renders as a mis-attached `else:`.  Measured faces on the `@`-chain: the
+        swallowed `if now_date != self.first_run_date:` guard inside the arm, and the
+        ladder leg `check_trading_time(...)` of the inherited continuation rendered as a
+        bare `else:`.
+
+        Identification-time re-declaration (the claim MOVES; nothing is copied, re-marked or
+        re-printed, and this runs before the statement's own walks begin):
+
+          (1) B and its list-successor F are consecutive members of one of the fold's own
+              window lists; B is not any region's entry or condition_block;
+          (2) B's last instruction (after the resident cleanup-noise filter) is a forward
+              conditional jump of IF_FALSE polarity whose target T is a block at-or-after B
+              and a member of the same list; `NONE_CHECK_OPS` excluded, `CONDITIONAL_JUMP_OPS`
+              required -- the same polarity/opcode-class conjuncts as
+              `_r2188_and_prefix_or_tail` conjunct (2)-(3) and `_r4701_and_lift_or_tail`;
+          (3) B is TEST-PURE: no non-jump instruction of B belongs to a statement-forming
+              opcode class (STORE_*/DELETE_*/RETURN/RAISE/JUMP_*/FOR_ITER/SETUP_*/YIELD*/
+              IMPORT_*/MAKE_FUNCTION/BREAK/CONTINUE/DUP_*/UNPACK/POP_*/append-family/SEND/
+              async/exception machinery), i.e. B carries no leading statement of its own --
+              a block with statements stays with the resident pre-statement extraction;
+          (4) F is a successor of B (its fall-through) and lies after B, and no other
+              successor of B besides T enters the window; the window win = list
+              members with offset in (B, T) is non-empty and contains F.
+
+        Then a new IfRegion N is declared for B: entry=condition_block=B,
+        then_blocks=win, merge_block=T.  Regions whose entry lies in win are re-parented to
+        N (the [R21-88] re-parent semantics, child list sorted by entry) so nested regions
+        stay single abstract nodes referenced by entry (principles 3/4), and N.parent is the
+        folded region, so the resident `get_entry_region_for_block` -> `_nested_if_entry_generate`
+        -> `_generate_region` -> `_generate_if` path emits the guard as one If node.  The
+        stale claim is removed in the same step: B is dropped from every region's
+        `elif_conditions` (with its parallel `elif_bodies` entry), which is also what lifts
+        the resident `_generate_if` refusal `region.entry in r.elif_conditions` -- a refusal
+        that is sound while the claimant still emits and dead once the fold has lifted that
+        claimant's test.
+
+        Continuation handling, decided by the window's own successor edges (no threshold, no
+        magnitude trigger):
+          (a) some block of win has T as a successor (the body flows INTO T): T is where the
+              parent sequence resumes.  T is left in the list for the parent walk, and any
+              region R with entry in win that claims `else_blocks == [T]` and nothing else
+              loses that claim (else_blocks := [], T dropped from R.blocks, R.merge_block :=
+              T): T is B's own jump target reached from every path of B's body, so it is
+              postdominator code, never an else arm.
+          (b) no block of win flows into T and every successor of win outside win lies at-or-
+              after T: T is B's alternative arm.  The arm claim MOVES with the blocks that
+              follow it: N.else_blocks = the list members at-or-after T and those members
+              leave the parent list (unique membership: they are now N's, and N is emitted by
+              the very walk that used to hold them), which is what lets the single-arm ladder
+              render as an `elif` leg of the folded statement instead of a bare `else:` body.
+
+        Any window or block failing (1)-(4), and every region that never reaches this fold,
+        is left exactly as [R21-88] declared it, so the product stays byte-identical.
+        """
+        try:
+            _noise = ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PRECALL', 'KW_NAMES',
+                      'COPY_FREE_VARS', 'MAKE_CELL')
+            _stmt_prefix = ('STORE_', 'DELETE_', 'RETURN', 'RAISE', 'JUMP_', 'FOR_ITER',
+                            'SETUP_', 'YIELD', 'IMPORT_', 'MAKE_FUNCTION', 'BREAK',
+                            'CONTINUE', 'DUP_', 'UNPACK', 'POP_', 'LIST_APPEND',
+                            'MAP_ADD', 'SET_ADD', 'CALL_INTRINSIC', 'SEND', 'GET_AITER',
+                            'GET_ANEXT', 'BEFORE_ASYNC_WITH', 'BEFORE_WITH',
+                            'WITH_EXCEPT_START', 'LOAD_BUILD_CLASS', 'END_FOR',
+                            'PUSH_EXC_INFO')
+            _regions = self.region_analyzer.regions
+            if e_block is None:
+                return
+            _owned = set()
+            for _q in _regions:
+                for _eb in (getattr(_q, 'entry', None), getattr(_q, 'condition_block', None)):
+                    if _eb is not None:
+                        _owned.add(_eb)
+            _wins = [('arm', list(arm_blocks or []))]
+            if chain_inherited:
+                _wins.append(('else', list(inherited_else or [])))
+            _decl = []
+            for _tag, _L in _wins:
+                if len(_L) < 3:
+                    continue
+                for _k in range(len(_L) - 1):
+                    _b, _f = _L[_k], _L[_k + 1]
+                    if (_b is None or _f is None or _b in _owned
+                            or _b in self.generated_blocks
+                            or _f.start_offset <= _b.start_offset):
+                        continue
+                    _ins = [x for x in (_b.instructions or [])
+                            if getattr(x, 'opname', None) not in _noise]
+                    if len(_ins) < 2:
+                        continue
+                    _li = _ins[-1]
+                    if ('IF_FALSE' not in str(_li.opname)
+                            or _li.opname in NONE_CHECK_OPS
+                            or _li.opname not in CONDITIONAL_JUMP_OPS
+                            or getattr(_li, 'argval', None) is None
+                            or any(str(x.opname).startswith(_stmt_prefix) or
+                                   x.opname in NONE_CHECK_OPS for x in _ins[:-1])):
+                        continue
+                    _t = self.cfg.get_block_by_offset(_li.argval)
+                    if _t is None or _t.start_offset <= _b.start_offset or _t not in _L:
+                        continue
+                    _sucs = [s for s in (getattr(_b, 'successors', None) or [])
+                             if s is not None]
+                    if _f not in _sucs:
+                        continue
+                    # the window is entered only through F: no other successor of B (besides
+                    # its jump target T) lands inside (F, T) -- e.g. a function-tail edge
+                    # outside the window does not disqualify the block
+                    if any(s is not _f and s is not _t and s is not _b
+                           and _f.start_offset <= s.start_offset < _t.start_offset
+                           for s in _sucs):
+                        continue
+                    _win = [x for x in _L if x is not None and x is not _b and x is not _t
+                            and _f.start_offset <= x.start_offset < _t.start_offset]
+                    if not _win or _f not in _win:
+                        continue
+                    _flows_in = any(_t is _s for _w in _win
+                                    for _s in (getattr(_w, 'successors', None) or []))
+                    _arm_tail = []
+                    if not _flows_in:
+                        _outside = [_s for _w in _win for _s in (getattr(_w, 'successors', None) or [])
+                                    if _s is not None and _s not in _win and _s is not _b]
+                        if not _outside or any(
+                                s.start_offset < _t.start_offset for s in _outside):
+                            continue
+                        _arm_tail = [x for x in _L if x is not None
+                                     and x.start_offset >= _t.start_offset]
+                        if not _arm_tail or _t not in _arm_tail:
+                            continue
+                    _decl.append((_tag, _L, _b, list(_win), _t, _flows_in, _arm_tail))
+                    _owned.add(_b)
+            for _tag, _L, _b, _win, _t, _flows_in, _arm_tail in _decl:
+                try:
+                    _ws = set(_win)
+                    _n = IfRegion(region_type=RegionType.IF, entry=_b, condition_block=_b,
+                                  then_blocks=list(_win),
+                                  else_blocks=([] if _flows_in else list(_arm_tail)),
+                                  merge_block=_t,
+                                  blocks=(set([_b]) | _ws
+                                          if _flows_in else (set([_b]) | _ws | set(_arm_tail))))
+                    _n.parent = region
+                    _regions.append(_n)
+                    for _q in _regions:
+                        if _q is _n or _q.entry is None or _q.entry not in _ws:
+                            # [R21-90] only the guard's OWN window is re-parented: the
+                            # claimed arm tail keeps its existing parent -- moving an
+                            # entry-tail region (or its BoolOp / chained-compare child)
+                            # out from under that parent breaks the tail's condition
+                            # extraction (the nested `and` leg lost its test)
+                            continue
+                        _old = getattr(_q, 'parent', None)
+                        if _old is not None and isinstance(getattr(_old, 'children', None), list):
+                            try:
+                                _old.children.remove(_q)
+                            except Exception:
+                                pass
+                        _q.parent = _n
+                        if isinstance(getattr(_n, 'children', None), list):
+                            _n.children.append(_q)
+                    if isinstance(getattr(_n, 'children', None), list):
+                        try:
+                            _n.children.sort(key=lambda x: (x.entry.start_offset
+                                                            if x.entry is not None else -1))
+                        except Exception:
+                            pass
+                    for _q in _regions:
+                        _ec = list(getattr(_q, 'elif_conditions', None) or [])
+                        if not _ec or _b not in _ec:
+                            continue
+                        _idx = _ec.index(_b)
+                        _eb = list(getattr(_q, 'elif_bodies', None) or [])
+                        _q.elif_conditions = [x for _j, x in enumerate(_ec) if _j != _idx]
+                        if _idx < len(_eb):
+                            _q.elif_bodies = [x for _j, x in enumerate(_eb) if _j != _idx]
+                    if not _flows_in:
+                        # No list surgery: the parent list keeps referencing win/T because
+                        # the resident dispatch gate requires the nested region's blocks to
+                        # be members of the walked list; those members are then covered by
+                        # N's own post-generation claim and skipped by the parent pass, so
+                        # each block still has exactly one emitter (principle 2).
+                        continue
+                    for _q in _regions:
+                        if (not isinstance(_q, IfRegion) or _q is _n or _q.entry is None
+                                or _q.entry not in _ws):
+                            continue
+                        if list(getattr(_q, 'else_blocks', None) or []) != [_t]:
+                            continue
+                        _q.else_blocks = []
+                        _qb = getattr(_q, 'blocks', None)
+                        _q.blocks = ([x for x in _qb if x is not _t] if isinstance(_qb, list)
+                                     else (set(_qb or []) - {_t}))
+                        _q.merge_block = _t
+                except Exception:
+                    continue
+        except Exception:
+            return
+
     def _r4701_and_lift_or_tail(self, region, cond_block, expr):
         """[R47-01] 负极性单腿 if 的内层短路 or 尾 ⇒ 整体 and 提升为一条测试。
 
@@ -22374,6 +23220,21 @@ AST 映射规则:
                                 self.generated_offsets.add(_d_cb.start_offset)
                 finally:
                     _cpg.discard(id(region))
+        # [R21-92 D2] a trailing chained-compare conjunct folded into the owning
+        # elif/if test at identification time, before the arm walk (criteria in
+        # _r2192_elif_chained_compare_tail).  Returns None otherwise => the
+        # existing nested-if path, byte-identical to the base.
+        _r2192_cc_tail = self._r2192_elif_chained_compare_tail(region, cond_block,
+                                                               condition)
+        if _r2192_cc_tail is not None:
+            condition = _r2192_cc_tail
+        # [R21-88] positive-polarity `(A and B) or C` fold with the
+        # chain-continuation read, applied at identification time after the
+        # and before the arm walk (criteria in _r2188_and_prefix_or_tail).
+        # Returns None otherwise => existing path, byte-identical to [R21-86].
+        _r2188_test = self._r2188_and_prefix_or_tail(region, cond_block, condition)
+        if _r2188_test is not None:
+            condition = _r2188_test
         self.generated_blocks.add(cond_block)
         if hasattr(region, 'elif_conditions') and region.elif_conditions:
             for elif_cond in region.elif_conditions:
@@ -22490,19 +23351,37 @@ AST 映射规则:
                     region.then_blocks = list(region.then_blocks) + [_r23_or_then]
                 then_stmts = self._process_if_blocks([_r23_or_then], region, branch='then')
                 region.then_blocks = _saved_then_blocks
+                _r2186_chain_borrowed = False
                 if not hasattr(region, 'elif_conditions') or not region.elif_conditions:
                     region.elif_conditions = _or_elif_ir.elif_conditions
                     region.elif_bodies = _or_elif_ir.elif_bodies
                     region.elif_final_else = getattr(_or_elif_ir, 'elif_final_else', None)
+                    _r2186_chain_borrowed = True
                 else_stmts = self._if_generate_elif_chain(region)
                 for b in region.then_blocks:
                     if b is not _r23_or_then and b is not _r23_or_else and b is not _r23_or_rhs:
                         if b not in self.generated_blocks and b not in (region.chained_compare_blocks or []):
                             self.generated_blocks.add(b)
+                # [R21-86 RENDER-SCOPED CLAIM] 本分支的 else 臂由 `_if_generate_elif_chain` 从
+                # *借来* 的后代 elif 链渲染；链的成员表就是被打印的臂，`else_blocks` 中不在该
+                # 臂内的块本分支一个也没输出。原则 2（每块唯一归属且归属者必须发射）要求这里
+                # 不得认领自己并未渲染的块：把它们留给真正遍历到它们的那条父序列发射一次。
+                # 认领条件（全部是本分支自己的结构事实，判定即在此处完成，不回读已生成的文本）：
+                #   ① 只有当 else 臂确实是借来的链时（本区原先没有 elif 链）才收窄；
+                #   ② 块必须落在该链的渲染范围（elif_conditions / elif_bodies / elif_final_else）
+                #      内，否则只有在某条仍在生成栈上的祖先序列把它列为自己的臂成员时才释放，
+                #      保证释放出去的块一定还会被发射一次（不会丢码）。
+                _r2186_scope = (_r2186_rendered_else_scope(region)
+                                if _r2186_chain_borrowed else None)
                 for b in region.else_blocks:
                     if b is not _r23_or_then and b is not _r23_or_else and b is not _r23_or_rhs:
                         if b not in self.generated_blocks:
-                            self.generated_blocks.add(b)
+                            if _r2186_scope is None or b in _r2186_scope:
+                                self.generated_blocks.add(b)
+                            elif _r2186_has_inflight_owner(self, region, b):
+                                self._r2186_released_blocks.add(b)
+                            else:
+                                self.generated_blocks.add(b)
             else:
                 _saved_then_blocks = region.then_blocks
                 if _r23_or_then and _r23_or_then not in region.then_blocks:
@@ -26905,8 +27784,13 @@ AST 映射规则:
                 #   `return (RI_STOCK_AM_OPEN < current_time < RI_STOCK_AM_CLOSE
                 #    or RI_STOCK_PM_OPEN < current_time < RI_STOCK_PM_CLOSE)`
                 #   —— 原 L394 的 24 条指令。
+                # [R21-86] 子区域的臂渲染器把自己没有渲染的 else_blocks 成员显式释放给了调用它的
+                # 序列（见 _if_generate_normal 的 RENDER-SCOPED CLAIM）。本行的全集认领若把它们
+                # 重新标记，父序列就永远走不到它们；其余块照旧认领，避免重复发射。
                 for _nb in _nr.blocks:
                     if (not _nr_ast and _nb is not _nr.entry and _nb in child_entries):
+                        continue
+                    if _nb in self._r2186_released_blocks:
                         continue
                     self.generated_blocks.add(_nb)
                     self.generated_offsets.add(_nb.start_offset)

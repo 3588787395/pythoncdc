@@ -5462,6 +5462,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         loop_regions = self._filter_regions(regions, LoopRegion)
         if len(loop_regions) >= 2:
             removal_set = set()
+            _r104_reclaim = []
             for i, lr_a in enumerate(loop_regions):
                 if id(lr_a) in removal_set:
                     continue
@@ -5482,21 +5483,54 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             removal_set.add(id(lr_b))
                         continue
                     if lr_a.is_while_true and cond_b and cond_b == lr_a.header_block:
-                        # [Round6-whileTrue 修复] 仅当内层循环 body 覆盖外层
-                        # while True 的几乎所有块时才移除外层循环。若外层 while True
-                        # 包含多个内层 while 循环（body 差异 > 2 块），外层循环
-                        # 非冗余——它是 `while True: while x: ...; while y: ...` 的
-                        # 外层包装，移除会丢失无限循环语义，导致末尾产生虚假
-                        # return None。
+                        # [Round6-whileTrue 修复] + [R21-77-F5]：外层 while True 与内层
+                        # 循环由同一个测试块驱动（outer.header_block 恰是 inner.condition_block，
+                        # CPython 3.11 把 `while <test>:` 的测试块同时用作回边目标与其后继代码
+                        # 入口，于是同一个 test 块会被建成两个 LoopRegion，违反原则 2）。
+                        # 原判据用「body 差集 <= 2 块」的计数阈值近似「外层没有自己的内容」，
+                        # 阈值既违反判据纪律，也在 realtime clock_worker 形态（差集 6 块：
+                        # 共享测试块 + 循环体内被外层多收的分支块 + 循环出口后的顺序块）误拒，
+                        # 留下虚假的 `while True:` 包装。改为结构判据 _r104_outer_wrapper_is_redundant。
                         _diff_a = body_a_set - body_b_set
-                        if body_a_set and body_b_set and len(_diff_a) <= 2:
+                        if (body_a_set and body_b_set and len(_diff_a) <= 2) or self._r104_outer_wrapper_is_redundant(lr_a, lr_b, body_a_set, body_b_set):
                             removal_set.add(id(lr_a))
+                            _r104_reclaim.append((lr_a, lr_b, body_a_set, body_b_set, bool(body_a_set and body_b_set and len(_diff_a) <= 2)))
                             continue
                     if lr_b.is_while_true and cond_a and cond_a == lr_b.header_block:
                         _diff_b = body_b_set - body_a_set
-                        if body_a_set and body_b_set and len(_diff_b) <= 2:
+                        if (body_a_set and body_b_set and len(_diff_b) <= 2) or self._r104_outer_wrapper_is_redundant(lr_b, lr_a, body_b_set, body_a_set):
                             removal_set.add(id(lr_b))
+                            _r104_reclaim.append((lr_b, lr_a, body_b_set, body_a_set, bool(body_a_set and body_b_set and len(_diff_b) <= 2)))
                             continue
+            if _r104_reclaim:
+                # [R21-77-F5] 原则 2 收尾：被移除外层包装后，外层多收的「夹在真实循环体
+                # 自身块之间」的块必须归还给那个唯一真实循环，否则它们在 inner 的 body 集合
+                # 之外，inner 发射时被当作不存在（realtime clock_worker 的 holiday 分支）。
+                for _lr_out, _lr_in, _bo, _bi, _landed_fired in _r104_reclaim:
+                    if _landed_fired:
+                        continue
+                    if id(_lr_out) not in removal_set:
+                        continue
+                    _idset = {id(x) for x in _bi}
+                    _ioffs = [getattr(b, 'start_offset', None) for b in _bi]
+                    _ioffs = [x for x in _ioffs if x is not None]
+                    if not _ioffs:
+                        continue
+                    _lo, _hi = min(_ioffs), max(_ioffs)
+                    _in_body = getattr(_lr_in, 'body_blocks', None)
+                    _in_blocks = getattr(_lr_in, 'blocks', None)
+                    _idb = {id(x) for x in (_in_body or ())}
+                    _add = [b for b in sorted(_bo - _bi, key=lambda x: getattr(x, 'start_offset', 0) or 0)
+                            if id(b) not in _idb and _lo <= (getattr(b, 'start_offset', None) or -1) <= _hi]
+                    for _b in _add:
+                        if _in_body is not None:
+                            (_in_body.add if isinstance(_in_body, (set, frozenset)) else _in_body.append)(_b)
+                        if _in_blocks is not None and not any(x is _b for x in _in_blocks):
+                            (_in_blocks.add if isinstance(_in_blocks, (set, frozenset)) else _in_blocks.append)(_b)
+                        if self.block_to_region.get(_b) is _lr_out:
+                            self.block_to_region[_b] = _lr_in
+                    if _add and isinstance(_in_body, list):
+                        _in_body.sort(key=lambda x: getattr(x, 'start_offset', 0) or 0)
             if removal_set:
                 regions = [r for r in regions if id(r) not in removal_set]
                 self.regions = [r for r in self.regions if id(r) not in removal_set]
@@ -5509,6 +5543,94 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             break
 
         return regions
+
+    def _r104_reaches(self, start, goal) -> bool:
+        """[R21-77-F5] 沿 block.successors 闭包判断 start 能否再次进入 goal。
+        只读块边数据（后继），无函数名/文件名/绝对偏移键/计数/阈值。"""
+        if start is None or goal is None:
+            return False
+        if start is goal:
+            return True
+        _seen = {id(start)}
+        _st = [start]
+        while _st:
+            _b = _st.pop()
+            for _s in (getattr(_b, 'successors', []) or []):
+                if _s is goal:
+                    return True
+                if id(_s) in _seen:
+                    continue
+                _seen.add(id(_s))
+                _st.append(_s)
+        return False
+
+    def _r104_outer_wrapper_is_redundant(self, outer, inner, body_outer, body_inner) -> bool:
+        """[R21-77-F5] 「外层 while True 是虚假包装」判据（区域归约原则 2：每块唯一归属）。
+
+        前提（由调用点保证）：outer.is_while_true 且 outer.header_block 就是 inner 的
+        condition_block —— 两个 LoopRegion 由同一个测试块驱动。
+
+        ① 内层循环的正常出口必须**回不到**该测试块。出口能回到测试块说明外层确实会
+           再起一轮（真实 `while True: while x: ...; while y: ...`：x 的出口落到 y，
+           y 的回边回到循环头），此时外层有无限语义，必须保留。
+        ② outer 相对 inner 的 body 差集里，每个块只能是
+           (a) 那个共享测试块本身（唯一归属应判给 inner），或
+           (b) 落在 inner body 偏移跨度之内的块（夹在真实循环体自身块之间，本就属于
+               这个唯一真实循环，由调用点收回归还 inner），或
+           (c) 跨度之外**且**回不到测试块的块（循环出口之后的顺序代码，外层只是多收了它，
+               它由外层结构的后续发射负责）。
+           出现其它形状 = 外层拥有自己的循环内容，判 False。
+        两条都读区域/块的边数据与已声明区域的 body 集合，不看名字、不看具体偏移值、不计数。
+        """
+        if not body_outer or not body_inner:
+            return False
+        _hdr = getattr(outer, 'header_block', None)
+        if _hdr is None or getattr(inner, 'condition_block', None) is not _hdr:
+            return False
+        _instrs = getattr(_hdr, 'instructions', None) or []
+        if not _instrs:
+            return False
+        _last = _hdr.get_last_instruction() if hasattr(_hdr, 'get_last_instruction') else _instrs[-1]
+        if _last is None or getattr(_last, 'argval', None) is None:
+            return False
+        try:
+            _exit_t = self.cfg.get_block_by_offset(_last.argval)
+        except Exception:
+            _exit_t = None
+        if _exit_t is None:
+            return False
+        if self._r104_reaches(_exit_t, _hdr):
+            return False
+        # ③ outer 回到自己 header 的唯一通路（back edge）必须落在 inner 的 body 之内：
+        #    外层「再起一轮」其实只是内层循环自己的尾部回到那个共享测试块，外层没有任何
+        #    属于自己的回路入口。真实 `while True:` 包装的 back edge 块位于 inner body 之外
+        #    （它自己那一段循环内容），不满足本条 —— 实测 quote::run_individual_transform
+        #    与 _save_testds_to_csv 正是这种真实包装，故必须保留。
+        _bes = list(getattr(outer, 'back_edge_blocks', None) or [])
+        _single = getattr(outer, 'back_edge_block', None)
+        if _single is not None:
+            _bes.append(_single)
+        if not _bes:
+            return False
+        for _be in _bes:
+            if _be not in body_inner:
+                return False
+        _offs = [getattr(b, 'start_offset', None) for b in body_inner]
+        _offs = [x for x in _offs if x is not None]
+        if not _offs:
+            return False
+        _lo, _hi = min(_offs), max(_offs)
+        for _b in (body_outer - body_inner):
+            _o = getattr(_b, 'start_offset', None)
+            if _o is None:
+                return False
+            if _b is _hdr:
+                continue
+            if _lo <= _o <= _hi:
+                continue
+            if self._r104_reaches(_b, _hdr):
+                return False
+        return True
 
     def _rebuild_block_roles_after_fake_loop_removal(self, regions: List[Region], fake_loop_ids: Set[int]) -> None:
         """

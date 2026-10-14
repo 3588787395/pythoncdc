@@ -2365,3 +2365,47 @@ Compliance here: gate label 41 still unconsumed, nothing installed, landed bytes
 `github:443` is dropping connections, so the push is retried by a background loop and verified by
 fetch plus `rev-list`, never by pipeline exit status.
 
+## 69. GATE 41 LANDED (2026-10-14 03:19 UTC) - corpus 6617/6617 = 100.0000 %, 402/402 files
+
+Engineer r118a delivered `[R21-92]` = analyzer `996a1b1acf143458` (the F5 half, co-requisite with
+`[R21-90]`) + generator `a981db88af309d32`, product `ec1b13cb31437222`. Three region-data arms, each
+censused before editing at **1/402** (D3 newly-reachable 1/402; the bare `parent is None` variant would
+have entered 14 sites in 9 panel files and was rejected on that measurement):
+
+- **D1** the if-elif ancestor `@6280` flat-owned the `@6496 -> @6518 -> @6548 -> @6690` subtree; the arm
+  run is inherited for the window only, so `assign@6778` and `sleep@6792` stay two distinct merges.
+  The "else-body" reading of this site is CLOSED-FALSE (original pyc: `6578 -> 6792`, `6700 -> 6778`,
+  `put@6702` falls through to `assign@6778` - the assignment is an if-without-else merge; forcing an
+  else adds a jump predecessor the original lacks and measured worse).
+- **D2** `@8904` ands-chain legs and the chained-compare region `@8948` share one false exit `9144` and
+  one arm `@8980`, so the chained conjunct folds into the owning `elif` test at identification time.
+- **D3** `LoopRegion@5598 else=[9214]` where `@9214` is entered only by `@5598` and the body already
+  holds a different `LOAD_CONST None; RETURN_VALUE` exit (`@9210`): CPython jump-threading of the
+  function-ending return, not a source `else:`; the implicit-tail filter was widened by that predicate.
+
+Arm matrix (all seven variants byte-distinct, `back=+0` throughout): base `-2 / 175 blocks / 12/13`;
+D1 `-2 / 176 / 12/13`; D2 `-2 / 174 / 12/13`; D3 `+0 / 176 / 12/13`; D1+D2 `-2 / 175 / indeg True / 12/13`;
+D1+D3 `+0 / 177 / 12/13`; D2+D3 `+0 / 175 / 12/13`; **all three `+0 / 176 / SIG-ONLY 0/0 / indeg-equal
+True / judge 13/13`**.
+
+Gate `gate_chain.py 41 40` (label before = 40): `regen rc=0 235s`, `verify rc=0 207s`, `report rc=0`,
+`checks rc=0 175s`, `CHAIN_DONE`. Sealed in `rounds/round41/after` (8 shards, 402 file rows):
+
+```
+units 6616/6617 -> 6617/6617 (100.0000%)   files 401 -> 402
+文件级回退=0  UNIT_REGRESSIONS=0  新增失败单元=0  翻正单元=1
+quotation 153/153   small34 units_success=1568 success=34/34
+pytest 2 failed, 282 passed, 2 xpassed   <- identical to the standing baseline (gate 31), zero NEW failures
+residual: 残余文件 0 个  残余单元 0 条  UNREGISTERED 行数=0
+```
+
+Collateral at install time: `git status --porcelain -- core/` = 2 (the pair) and
+`site-packages/` filtered to `*OK.py` = **1 line** - only `realtime_event_sourceOK.py` moved corpus-wide.
+Installed via the documented direct-write path because `install_pair.py` refuses a nonzero
+`--gold-hunks`, and the 5 residual GOLD hunks are text-only (`(A and B) or C` vs `A and B or C`,
+`return` vs `return None`) which the judge ignores; the byte checks it validates (BOM, zero bare LF,
+zero `
+`, `py_compile`, exactly two dirty core files) were repeated in full.
+
+Landed bytes are now analyzer `996a1b1acf143458` + generator `a981db88af309d32`. Undo path kept at
+`D:/Temp/mon/landed_ana_1471c92e.py` / `landed_gen_566ff5c5.py`.
