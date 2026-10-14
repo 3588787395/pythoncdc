@@ -10,7 +10,34 @@ and closes both jump axes (`instrs -2`, `back +0`, `jsites 0`), yet the judge st
 and the *edge structure* is not. Every previous hand pointed at the flat chained-compare
 leg (hunk H5). That pointer is wrong, and it is disproved below.
 
-## Proof 1 - H5 is CFG-inert (so it can never flip the judge)
+## CORRECTION at 01:58 UTC - the "H5 is inert" claim below is SCOPE-LIMITED and must not be acted on as written
+
+The synthetic in Proof 1 had **no `else:` clause** on the elif chain. Re-run with the shape the real
+site actually has (GOLD line 299 is a flat three-conjunct `elif ... and delay_after_trading >= now_time
+>= after_trading:` whose chain has `else: time.sleep(FPS)`, while the product splits it at lines 299-300
+into `elif A and B:` + a nested `if C:` and still carries the `else:`):
+
+```
+FUSED+else   instrs=39 blocks=11 jump-sites=9 back=0  indeg-multiset=[4,2,1,1,1]
+SPLIT+else   instrs=39 blocks=12 jump-sites=9 back=0  indeg-multiset=[3,2,1,1,1,1]
+```
+
+Identical instruction count, jump-site count and back-edge count - but a **different in-degree
+multiset and one extra block**. So the nesting IS CFG-visible at a site whose chain has an `else:`
+arm, which is precisely the D2 site, and restoring the flat three-conjunct `elif` is a candidate
+explanation for D2 (`GOLD@300 in=1 out=1 n=22` vs `PROD@301 in=1 out=0 n=21`).
+
+Consequences, in order:
+1. Do NOT skip the chained-compare leg on the strength of Proof 1. It is inert only for a chain with
+   no `else:` clause - the no-else control reads `[5,2,1,1,1,1,1,1,1]` on both shapes.
+2. The unit's remaining `indeg-equal=False` can be produced by this very hunk, so the else-hoist fix
+   and the flat-elif fix are two separate mechanisms and **both** may be required.
+3. Generalize the instrument, not the guess: any future "this hunk is text-only" claim must be tested
+   with the surrounding `else:`/`elif` structure present, because jump-threading differs once an arm
+   has to skip an else body.
+
+## Proof 1 (SCOPE-LIMITED, see the correction above) - H5 measured inert only when the chain has no else arm
+
 
 `D:/Temp/mon/shape_r118.py`, Python 3.11.7, compiling the two source shapes of the elif arm:
 

@@ -2322,7 +2322,9 @@ landed bytes unmoved, `core/` clean, `origin/rr-v3r01-f557fd` verified equal to 
 
 Two claims retired by measurement, one opened.
 
-**(a) H5 is CFG-inert.** `compile()` of the two source shapes of the chained-compare leg
+**(a) H5 is CFG-inert.**
+**(a-prime) CORRECTION at 01:58 UTC: the inertness above holds only for a chain with NO** `else:` arm. Re-run with the real site shape (a flat three-conjunct `elif ... and delay_after_trading >= now_time >= after_trading:` whose chain carries `else: time.sleep(FPS)`, against the product split into `elif A and B:` plus a nested `if C:` with the same `else:`): `FUSED instrs=39 blocks=11 jbsites=9 back=0 indeg=[4,2,1,1,1]` vs `SPLIT instrs=39 blocks=12 jbsites=9 back=0 indeg=[3,2,1,1,1,1]`. Same instruction and jump-site counts, DIFFERENT in-degree multiset and one extra block, so the nesting is CFG-visible exactly at the D2 site. The rule now recorded: never conclude text-only from a synthetic that drops the surrounding else/elif structure, because an arm that must skip an else body threads a different jump. So the else-hoist fix and the flat-elif restore are two mechanisms and both may be needed for 13/13.
+ `compile()` of the two source shapes of the chained-compare leg
 (`rounds/round41/shape_r118.py`, Python 3.11.7) gives byte-for-byte identical structure metrics:
 `instrs 54 / jsites 14 / back 0 / indeg [5,2,1,1,1,1,1,1,1]` for `elif A and B and (d >= x >= c):`
 and for `elif A and B:` plus a nested `if (d >= x >= c):`. So the parens-and-nesting hunks cannot
