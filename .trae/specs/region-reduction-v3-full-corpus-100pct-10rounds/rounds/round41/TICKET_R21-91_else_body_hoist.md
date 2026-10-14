@@ -298,7 +298,45 @@ one is the D2 site. The criterion to write is therefore the region-data analogue
 Caveat to honor: the 171 / 1 numbers are a PRODUCT-TEXT proxy, not the criterion and not a fire census -
 re-measure the predicate over analyzer region data before installing, exactly as the population law requires.
 
+
+## Fifth addendum (02:05 UTC) - mutation sweep results: D1-as-else is NOT the exact shape, and the cheap objective function is now known
+
+All rows are product-text MUTATION probes on scratch copies (`D:/Temp/mon/mut_*.py`) scored by
+re-compiling and diffing ARGUMENT-aware block signature multisets against GOLD
+(`GOLD-only` / `PROD-only` counts; GOLD has 170 blocks). The repo and all shipped products are
+untouched - hand-edited products can never be installed, this only ranks candidate source shapes.
+
+```
+product (R21-90)                    GOLD-only=4  PROD-only=3  blocks=169   (GOLD 170)
+D1 read as else-body                GOLD-only=3  PROD-only=3  blocks=170
+D1 read as assignment inside then   GOLD-only=4  PROD-only=3  blocks=169   <- INERT
+D2 flat three-conjunct elif         GOLD-only=3  PROD-only=1  blocks=168
+D1 + D2 combined                    GOLD-only=2  PROD-only=1  blocks=169   <- still not 0/0
+```
+
+What survives the combination:
+1. a content difference in the `self.event_queue.put((dt, EventEnum.BEFORE_TRADING_START))` run -
+   the same signature prefix appears on BOTH sides, so the two sides put a different number of
+   statements inside that block (block EXTENT, not just nesting), and
+2. GOLD`s isolated `LOAD_CONST#None RETURN_VALUE` block (D3) - unaffected by D1 or D2.
+
+Consequences, stated conservatively:
+- Do not ship "the assignment is the else body" as settled. It is the best single mutation measured
+  so far (closes one row and brings block count to GOLD`s 170) but it is not sufficient, and the
+  "inside then" reading is provably inert.
+- The search is cheap and should be done exhaustively before any gate: enumerate source shapes at the
+  two sites (then/else split, nested if, `elif` merge, and the loop-tail `return None` placement),
+  score each with this instrument in seconds, and only build a pipeline candidate for a shape that
+  reaches `GOLD-only=0 PROD-only=0 blocks=170/170`. That metric is a proxy for the judge, not the
+  judge: `0/0` is necessary-but-to-be-confirmed-sufficient, so a 13/13 judge read is still the gate
+  condition.
+- Note the instrument difference: the opname-only diff (earlier addenda) reported `in`/`out` degree,
+  the argument-aware multisets here do not. A future arm should compare BOTH - content and degree -
+  because D2 shows content parity is not enough (`instrs`, `jsites`, `back` were all equal while the
+  in-degree multiset differed).
+
 ## State this ticket is written against
+
 
 
 Landed bytes unmoved: analyzer `fef59e95359f36fd`, generator `c3049a87daf59acc`,
