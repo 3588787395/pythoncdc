@@ -427,7 +427,44 @@ Practical next step for whoever owns this site: read the parent region data for 
 that arm is the missing conditional. Do not ship a shape until the argument-aware proxy reads
 `0/0 blocks 170/170` - the proxy is cheap (seconds) and the gate is not (a 402-file regen).
 
+
+## Ninth addendum (02:15 UTC) - r117a CLOSED the else-body premise; D1 is a NESTING defect
+
+Engineer r117a finished (report transcribed from its output; deliverables in `D:/Temp/r117/DELIVER/`).
+Verdict BANKED, nothing installed, repo `core/cfg` never touched, mirror re-proved to
+`996a1b1acf143458` / `558192ecf6d5f8a0`.
+
+Ground truth from the ORIGINAL pyc dis, which settles the question my mutation sweep could not:
+
+```
+6578 POP_JUMP_IF_FALSE -> 6792        (outer if false: skips straight to the sleep)
+6700 POP_JUMP_IF_FALSE -> 6778        (holiday guard false: lands on the assignment)
+6702 put(...)  falls through          -> 6778 assignment
+6778 assignment falls through         -> 6792 sleep; continue
+```
+
+So `assign@6778` is the **merge of an if-without-else** - it is not an else body, and the analyzer already
+declares it that way. The census for the criterion I briefed (`F arm jumps to a shared merge M that T
+reaches by fall-through`) fired **0 times in all 20 panel files**, and at `@6690` specifically = no, so
+the briefed analyzer change is a corpus-wide no-op (byte-identical product). Two empirical probes:
+
+```
+probe A  correct NEST (assignment stays merge, nested inside the outer if)  blocks 175 -> 176, clears
+         the D1 rows (@449/@451/@240), SIG-ONLY 2/2, jsites unchanged      -> 12/13, indeg-equal False
+probe B  ticket else-body                                              jsites +1, SIG-ONLY 3/3  WORSE
+```
+
+That matches my own eighth addendum exactly (forcing an else gives the sleep merge a second jump
+predecessor the original lacks) - so the else-body reading is CLOSED-FALSE, and what remains at D1 is a
+**nesting** defect: the if-elif ancestor `@6280` flat-owns the `@6496 -> @6518 -> @6548 -> @6690` subtree,
+so `@6548` does not uniquely nest `@6690`/assign, and the product flattens the two merges into one block.
+
+Unit status after all measured work: three sites, and no single region-data criterion closes them -
+D1 nesting (generator/ancestor-ownership side), D2 flat chained-compare `elif`, D3 stray `JUMP_FORWARD`
+at the loop tail. `[R21-90]` remains the best banked arm (`instrs -2 / jsites 0 / zero collateral / 12/13`).
+
 ## State this ticket is written against
+
 
 
 
