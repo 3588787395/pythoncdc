@@ -241,6 +241,41 @@ The argument-aware variant is `block_diff_r118.py` with one change: build each b
 `i.opname + "#" + str(i.argval)[:30]` for ops starting with LOAD_/STORE_/COMPARE_OP/IMPORT_/BINARY_OP
 (everything else opname-only). Run it on any product to reproduce the seven rows above verbatim.
 
+## Third addendum (02:01 UTC) - the flat-elif restore is PROVEN to close D2, so TWO mechanisms are required
+
+Compile-only experiment on a scratch copy of the `[R21-90]` product (`D:/Temp/mon/mut_D2only_r119.py`;
+the repo and every shipped product are untouched - this is diagnosis, and hand-editing a product would
+violate the products-come-only-from-the-pipeline rule). The single edit rewrites product lines 299-303
+from
+
+```
+elif now_date == self.before_trading_date and now_date > self.after_trading_date:
+    if delay_after_trading >= now_time >= after_trading:
+        ...three statements...
+else:
+```
+
+to GOLD shape (flat three-conjunct `elif` + the same three statements, same `else:`), then re-runs the
+ARGUMENT-aware block diff against GOLD (`opname#argval` signatures):
+
+```
+product (R21-90)        ARGSIG-ONLY-GOLD=4  ARGSIG-ONLY-PROD=3   blocks 170 vs 169
+product + D2 fused      ARGSIG-ONLY-GOLD=3  ARGSIG-ONLY-PROD=1   blocks 170 vs 168
+```
+
+Reading: the restore closes one GOLD-only row and TWO PROD-only rows and removes the extra block, so
+`D2` is a genuine second mechanism, not a side effect of the else-hoist. What remains after it is
+exactly `D1` (2 GOLD rows + the fused 11-instruction PROD row) and `D3` (the stray `JUMP_FORWARD`).
+
+**Therefore a candidate that ships only the else-declaration fix cannot reach 13/13**, and the accept
+check must be the arg-aware diff going to `0 / 0` with `blocks 170/170`. Expect to need:
+1. the else-body declaration (D1 + D3), and
+2. absorbing a trailing chained-compare conjunct into the owning `elif` test instead of emitting a
+   nested `if` (D2). Both must be region-data-only criteria decided at identification time; neither may
+   key on names/offsets/counters, and the second must be censused for its corpus population before it is
+   written, because `elif A and B:` + `if C:` is a very common shape and an unscoped rule will over-fire.
+
+
 ## State this ticket is written against
 
 Landed bytes unmoved: analyzer `fef59e95359f36fd`, generator `c3049a87daf59acc`,
