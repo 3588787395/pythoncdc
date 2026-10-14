@@ -181,3 +181,46 @@ Two gates, each reusing an existing criterion rather than minting a new one:
 Readings after both gates: matcher 17/17, broker 128/128, realtime_event_source 13/13, quote_handler
 79/79, quotation 153/153, and the v2 target battery `nb_for` 2/2, `nb_with` 2/2, `nb_b99` 4/4.
 Analyzer hash chain: `c26ee206af0e2a0d -> 129bb0332df3601e -> b4fb55ad2b663f96 -> 3bf5f401614fa8e0`.
+
+## Gate 42: the merged tree certified against BOTH specs' faces
+
+Regenerated all 402 products from the merged bytes with the pipeline itself (`gate_round.py 42 41
+--stage regen` → `ok=402 bad=0`), then judged them (`--stage verify`). 7 products changed versus the
+v3 tip's committed bytes; none lost a unit.
+
+| face | reading |
+|---|---|
+| v3 gate 42 vs round41 | units 6617 → **6617/6617 (100.0000 %)**, files 402 → **402**, 文件级回退=0, UNIT_REGRESSIONS=0, 新增失败单元=0 |
+| residual table (`residual_report.py 42 41`) | 残余文件 0、残余单元 0、UNREGISTERED=0 |
+| v2 baseline (`baseline_snapshot.md` 6554/6617、369/402) | units 6554 → **6617**, files-success 369 → **402**, **REGRESSIONS=0**, 33 files improved (join overlap 402/402 verified first — an all-MISS join would have read as zero) |
+| quotation | 153/153 (v2 baseline was 152/153) |
+| small34 | units 1568/1568, 34/34 files success (v2 baseline 1505/1568) |
+| ruler selfcheck | 153/153 Equal, deform arms bite 1/153 (常量 and 极性) → judge not softened |
+| pytest 7 suites | 2 failed / 282 passed / 2 xpassed, failing names verified BY NAME = `test_B01_simple_if_then_else_merge`, `test_BOUNDARY_02_large_function` = the registered baseline roster ⇒ 0 new failures |
+
+## v2's own round-8 variant battery re-run on the merged pipeline
+
+`test_repros/round8/*.pyc` are gitignored, so the probe sources were re-compiled with the same
+interpreter (3.11.7) and judged with `pyc_verify single --source <fresh product>`
+(`D:/Temp/mon/v2_battery_r145.py`):
+
+- `b105_walrus` 5/5, `b107_iso` 5/5, `b107_iso2` 4/4, `b107_mtarget3` 6/6, `bmatch_v3` 2/2,
+  `bmatch_or3iso` 5/5, `bmatch_v1` 2/2 (size 266), `bmatch_v4` 2/2 (size 222) — identical to v2's
+  recorded readings, including the product byte sizes.
+- `bmatch_guards_battery` / `bmatch_nestnoguard` hang the regenerator; v2's own evidence
+  (`r8v8rev3_battery_rerun_bmatch.json`) already records them as `REGEN_TIMEOUT(>120s) HANG`, so this
+  reproduces v2's state rather than adding to it.
+- **`b104_chain4_battery` 4/6 where v2 recorded 6/6.** The two red units are `<module>.v2`
+  (`while 0 < x < 10 and flag:`) and `<module>.v4` (`while 0 < x < 10 < x*2 < 100:`). Attributed:
+  the v3 tip pipeline reads **2/6** on the same probe (it also loses `v1` and `v5`), so the merge
+  restores 2 of the 6; and my two reconciliation gates are provably inert here — four arms
+  (both on / each off / both off) produced the *same* product sha `fe532cc741fb`
+  (`attrib_r148.py`; the first attempt `attrib_r146.py` was VOID because its labels contained `:`
+  so no product file was written and every arm re-graded a stale artifact).
+  Mechanism, read off the product: the while-condition chain's back-edge recheck copy is emitted as
+  a body statement (`if 0 < x < 10:` / `if 0 < x and 10 < True and x*2 < True: ... elif 10 < True
+  and x*2 < True:`) instead of being suppressed as a pure recheck. This is the while-host
+  chained-compare family (`[B104]`'s `while 条件位` note routes it to `_identify_loop_regions`'s
+  pre-loop chain backtrace plus the generator's recheck suppression, both of which v3 reworked in
+  `[R21-65]`/`[R21-66]`). Registered as the merge's one open residual on v2's syntax face; the
+  402-file corpus does not exercise it, and no v2 rule was deleted to obtain the current readings.
