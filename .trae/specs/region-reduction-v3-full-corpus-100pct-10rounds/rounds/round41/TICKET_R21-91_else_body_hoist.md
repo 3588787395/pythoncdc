@@ -407,7 +407,28 @@ D2 and D3 stand as measured (flat chained-compare `elif`, and no `while ... else
 Acceptance proxy unchanged: argument-aware block multisets at `GOLD-only=0 PROD-only=0 blocks 170/170`,
 then judge `13/13` as the real condition.
 
+
+## Eighth addendum (02:13 UTC) - the D1 residue is a BLOCK BOUNDARY, and it pins the shape
+
+Content accounting at the holiday-guard site: GOLD has `assignment (n=3)` + `sleep; continue (n=8)` = 11
+instructions; the product has one fused block of the SAME 11 instructions and the same content. So nothing
+is lost or added there - the only difference is that GOLD has a block boundary between the assignment and
+the sleep, and a boundary exists only because a jump lands on the sleep block (`@241 in=1`).
+
+Therefore the source the pipeline must emit has an enclosing conditional such that one path SKIPS
+`self.before_trading_date = now_date` and lands directly on `time.sleep(FPS); continue`, while another
+path executes it. The two readings already refuted by mutation: the assignment as the else body (adds a
+`JUMP_FORWARD` GOLD lacks) and the assignment inside the then arm (inert, `4/3`), and the plain
+sequential placement the product uses reproduces GOLD`s text but not its partition, because the product
+hoists the enclosing conditional away and leaves nothing to jump over.
+
+Practical next step for whoever owns this site: read the parent region data for `IfRegion@6690` /
+`IfRegion@6548` and find the arm whose successors are {assignment, sleep} rather than {assignment};
+that arm is the missing conditional. Do not ship a shape until the argument-aware proxy reads
+`0/0 blocks 170/170` - the proxy is cheap (seconds) and the gate is not (a 402-file regen).
+
 ## State this ticket is written against
+
 
 
 
