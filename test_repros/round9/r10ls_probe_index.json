@@ -1,0 +1,44 @@
+[
+  {
+    "path": "test_repros/round9/r10ls_01_else_ctx.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10ls_02_elif_ctx.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10ls_03_except_ctx.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10ls_04_finally_ctx.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10ls_05_class_meth.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10ls_06_nested_for.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10ls_07_while_ctx.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10ls_08_deep_nest.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10ls_09_ctl_slice_in_bare.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10ls_10_ctl_plain_in_bare.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10ls_11_ctl_slice_assign.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10ls_12_ctl_slice_andnot.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10ls_13_ctl_single_chain.pyc"
+  },
+  {
+    "path": "test_repros/round9/r10ls_14_ctl_nonslice_pair.pyc"
+  }
+]

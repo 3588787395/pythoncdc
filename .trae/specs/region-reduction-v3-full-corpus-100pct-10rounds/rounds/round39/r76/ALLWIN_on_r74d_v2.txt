@@ -1,0 +1,30 @@
+installed D:/Temp/r76/work/CANDIDATE_r75ab_on_r74d_v2.py sha16=30a4d7827122e165
+product=D:/Temp/r76\out\on_r74d_v2\realtime_event_sourceOK.py size=21548
+---- unit_diff --all (summary) ----
+len orig=1424 prod=1426 delta=2
+== insert orig[1046..1046 @@7248..@-] prod[1046..1047] del=0 ins=1
+== insert orig[1099..1099 @@7582..@-] prod[1100..1101] del=0 ins=1
+hunks=2 landings=7 judge_diff=True
+---- allwin (unfiltered) ----
+len orig=1424 prod=1426 delta=2
+== #1 insert orig[1046..1046 @7248..-] prod[1046..1047] del=0 ins=1
+   - @7230    LOAD_ATTR                      initial_trading_date
+   - @7240    COMPARE_OP                     ==
+   - @7246    POP_JUMP_FORWARD_IF_FALSE      
+   + @7232    LOAD_ATTR                      initial_trading_date
+   + @7242    COMPARE_OP                     ==
+   + @7248    POP_JUMP_FORWARD_IF_FALSE      
+   + @7252    JUMP_FORWARD                   
+== #2 insert orig[1099..1099 @7582..-] prod[1100..1101] del=0 ins=1
+   - @7568    LOAD_FAST                      now_date
+   - @7570    LOAD_DEREF                     self
+   - @7572    STORE_ATTR                     pre_before_trading_date
+   + @7574    LOAD_FAST                      now_date
+   + @7576    LOAD_DEREF                     self
+   + @7578    STORE_ATTR                     pre_before_trading_date
+   + @7590    JUMP_FORWARD                   
+hunks=2
+---- judge ----
+***<module>.RealtimeEventSource.clock_worker: Failure: Different control flow
+[single] status=failure units=12/13 success_rate=92.31%
+

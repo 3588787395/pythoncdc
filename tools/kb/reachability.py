@@ -1,4 +1,4 @@
-"""白名单模块可达性分析：从入口 BFS import 图，回答"什么是程序、什么不是"。
+﻿"""白名单模块可达性分析：从入口 BFS import 图，回答"什么是程序、什么不是"。
 
 - 入口：pycdc.py、pycdas.py
 - 可达 = 程序代码；不可达 = 死模块（0 入边且从入口不可达）
@@ -10,7 +10,7 @@ import json
 from datetime import date
 from pathlib import Path
 
-ROOT = Path(r"F:\Downloads\pythoncdc-main")
+ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs" / "refactor" / "reachability.json"
 WL_DIRS = ["core", "parsers", "bytecode", "utils"]
 ENTRIES = ["pycdc", "pycdas"]

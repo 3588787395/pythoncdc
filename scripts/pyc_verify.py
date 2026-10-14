@@ -171,6 +171,8 @@ def cmd_single(args, compare_pyc) -> int:
         shutil.rmtree(tmp, ignore_errors=True)
     for line in row['failures']:
         print('  ' + line)
+    if not getattr(args, "source", None):
+        print("[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>")
     print('[single] %s' % row['pyc'])
     print('[single] 产物 %s' % row['source'])
     print('[single] status=%s units=%d/%d success_rate=%s' % (

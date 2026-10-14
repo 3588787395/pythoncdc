@@ -1,0 +1,471 @@
+FILE site-packages/IQCommon/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/api/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/api/base_api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/api/check_strategy.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/api/gtn_api.pyc cc_loops=0 other_loops=2 A=0 B=0 C=0 | noncc A=0 B=2 C=0
+  OTHER unit=send_by_post loop@128 cond=@128 seglens=[13] A=[] B=[304] C=[]
+  OTHER unit=send_by_get loop@128 cond=@128 seglens=[19] A=[] B=[336] C=[]
+FILE site-packages/IQCommon/api/klinedata.pyc cc_loops=0 other_loops=11 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/api/wrapper.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/arg_checker.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/backtest/backtest.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/common/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/common/config.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/common/main.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/const.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/data/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/data/api_data.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=1
+  OTHER unit=get_trend_data_common loop@438 cond=@438 seglens=[6, 8] A=[] B=[] C=[608]
+FILE site-packages/IQCommon/data/asset_storage.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/data/base_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/data/basic_data_source.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/data/const.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/data/exrights_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/data/finance.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=1 C=0
+  OTHER unit=get_finance_open_api_data loop@778 cond=@778 seglens=[14] A=[] B=[1240] C=[]
+FILE site-packages/IQCommon/data/history_bar_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/data/local_finance.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/data/pandas.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/data/trading_dates_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/enumerate.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/exception.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/generalconf.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/graph.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/i18n.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/logger/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/logger/handlers.pyc cc_loops=0 other_loops=3 A=0 B=0 C=0 | noncc A=0 B=0 C=2
+  OTHER unit=_target loop@504 cond=@504 seglens=[2] A=[] B=[] C=[994]
+  OTHER unit=_target loop@90 cond=@90 seglens=[2] A=[] B=[] C=[390]
+FILE site-packages/IQCommon/manager/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/manager/instance.pyc cc_loops=0 other_loops=3 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/mq_connector.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/profiler_func.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/strategy/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/strategy/common.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/strategy/const.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/strategy/hg_api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/strategy/jq_trans_module.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/strategy/strategy.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/strategy/wizard_quant_api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/strategy/zt_api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/tools.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/trade_schedule.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/backtest_info_utils.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=1
+  OTHER unit=backtest_download_result loop@482 cond=@482 seglens=[6, 13] A=[] B=[] C=[626]
+FILE site-packages/IQCommon/util/cgroup_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/common_func.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=1 C=0
+  OTHER unit=fill_kline_data_by_pre loop@0 cond=@0 seglens=[30] A=[] B=[236] C=[]
+FILE site-packages/IQCommon/util/crypto_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/datetime_func.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/docker_info_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/email_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/file_delete.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/fileio_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/profiler_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/pycompatibility.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/replace_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/request_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/resource_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/semaphore_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/strategy_info_utils.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=1
+  OTHER unit=content_trailing_handle loop@6 cond=@6 seglens=[5] A=[] B=[] C=[50]
+FILE site-packages/IQCommon/util/t2_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/trade_info_utils.pyc cc_loops=0 other_loops=4 A=0 B=0 C=0 | noncc A=0 B=4 C=2
+  OTHER unit=get_trade_status loop@270 cond=@270 seglens=[4] A=[] B=[458] C=[786]
+  OTHER unit=set_trade_status loop@250 cond=@250 seglens=[4] A=[] B=[382] C=[806]
+  OTHER unit=check_and_update_trade loop@10 cond=@10 seglens=[7] A=[] B=[236, 416] C=[]
+FILE site-packages/IQCommon/util/tradingday_info_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/user_info_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/util/wrapper_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/utils.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQCommon/version.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/api/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/api/api_base.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/api/api_extra.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/api/api_helper.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/api/get_block_stocks.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/config/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/config/config.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/const.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/core/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/core/asset.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/core/base.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/core/data_cache.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/core/data_manager.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/data/Ashare_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/data/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/data/base_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/data/component_stocks_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/data/date_set_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/data/default_basic_data.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/data/default_history_quote.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/data/default_real_quote.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/data/exrights_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/data/future_info_cn.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/data/market_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/data/merger_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/data/stock_industry_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/data/trading_dates_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/engine/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/engine/engine.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/entry.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/enumerate.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/fly_enum.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/interface.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/manager/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/manager/data_info_manager.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/manager/plugin_manager.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/manager/trading_day_manager.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/modules/WEBCLIENT/gtn_client.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/modules/WEBCLIENT/ibrain_client.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/modules/WEBCLIENT/web_socket_client.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/modules/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_history_data_source/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_history_data_source/data_source_func.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_history_data_source/history_bar_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_history_data_source/history_data_source.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_basicdata/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_basicdata/api_basicdata.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_basicdata/basic_data_source.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_client_db/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_client_db/base_db_table.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_client_db/client_db.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_client_db/const.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_client_db/dynamic_table.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_db/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_db/api_db.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_db/db_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_db/iqdata_db_base.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_db/iqdata_db_helper.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_db_tools/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_db_tools/api_db.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_db_tools/db_base.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_db_tools/db_utils.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_fly_basicdata/FLYMODULE/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_fly_basicdata/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_fly_basicdata/api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_fly_basicdata/data_source_func.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_fly_basicdata/fly_enum.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_fly_historyquote/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_fly_historyquote/api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_fly_historyquote/data_source_func.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_fly_historyquote/enumerate.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_fly_historyquote/history_bar_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_fly_historyquote/history_quote.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_gtn_request/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_gtn_request/api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_gtn_request/gtn_request.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_hqsdk_data_source/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source_api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_local_finance/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_local_finance/api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_local_finance/const.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_local_finance/finance_data_source.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_realquote/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_realquote/api_realquote.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc cc_loops=0 other_loops=8 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/__init__.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/arg_checker.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/base_http_client.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/calexrights_func.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/common_func.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=1 C=0
+  OTHER unit=fill_kline_data_by_pre loop@0 cond=@0 seglens=[30] A=[] B=[236] C=[]
+FILE site-packages/IQData/utils/datetime_func.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/exception.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/function_dict.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/i18n.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/logger/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/logger/logger.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=1
+  OTHER unit=_target loop@0 cond=@0 seglens=[2] A=[] B=[] C=[384]
+FILE site-packages/IQData/utils/mysql_conn.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/path_func.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/profiler_func.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/pycompatibility.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/utils/trade_schedule.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQData/version.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/__main__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/account/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/account/base_account.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/account/base_position.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/account/order.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/account/portfolio.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/account/trade.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/api/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/api/api_base.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/api/api_extra.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/api/fields.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/api/helper.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/config/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/config/config.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/const.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/asset.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/bar.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/base.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/commission.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/data_pager.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/engine/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/engine/engine.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/events/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/events/event.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/events/event_type.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/execution_context.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=1
+  OTHER unit=__exit__ loop@50 cond=@50 seglens=[6, 8] A=[] B=[] C=[162]
+FILE site-packages/IQEngine/core/executor.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/manager/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/persist_helper.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/plugin_manager.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/slippage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/strategy/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/strategy/strategy.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/strategy/strategy_context.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/strategy/strategy_loader.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/strategy/strategy_universe.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/core/user_variables.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/data/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/data/asset_mixin.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/data/data_cache.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/data/data_proxy.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/data/default_info.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/data/exrights_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/data/merger_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/data/trading_dates_mixin.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/data/trading_dates_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/interface.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/main.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_api/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_api/base_api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_api/empty_api_backtest.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_api/empty_api_trade.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/__init__.pyc cc_loops=0 other_loops=2 A=0 B=0 C=0 | noncc A=0 B=1 C=1
+  OTHER unit=_on_handle_order loop@0 cond=@0 seglens=[2] A=[] B=[] C=[258]
+  OTHER unit=_on_before_trading_start_trading_thread loop@0 cond=@0 seglens=[10] A=[] B=[132] C=[]
+FILE site-packages/IQEngine/plugins/plugin_fly_data/const.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc cc_loops=0 other_loops=10 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_backtest.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_trade.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_backtest.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/other_api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api_backtest.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api_trade.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/scheduler_api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/local_variables/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/local_variables/bar.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/quote/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/quote/get_stock_status.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/quote/open_platform.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/strategy/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data_source/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data_source/fly_bar_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data_source/fly_data_source.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_fly_data_source/fly_quotation_func.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/account_model/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/account_model/future_account.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_future_account.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_hks_account.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_option_account.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/api/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/api/api_future.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/api/api_option.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/api/api_stock.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/position_model/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc cc_loops=0 other_loops=4 A=0 B=0 C=0 | noncc A=0 B=4 C=4
+  OTHER unit=_close_holding loop@1600 cond=@1600 seglens=[2] A=[] B=[1754] C=[1850]
+  OTHER unit=_close_holding loop@676 cond=@676 seglens=[2] A=[] B=[830] C=[926]
+  OTHER unit=_close_holding loop@1056 cond=@1056 seglens=[2] A=[] B=[1210] C=[1306]
+  OTHER unit=_close_holding loop@132 cond=@132 seglens=[2] A=[] B=[286] C=[382]
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_hks_position.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_option_position.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_stock_position.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_control/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_debug/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_event_source/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_event_source/factor_event_source.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc cc_loops=0 other_loops=3 A=0 B=0 C=0 | noncc A=0 B=6 C=1
+  OTHER unit=events loop@102 cond=@102 seglens=[2] A=[] B=[140] C=[]
+  OTHER unit=clock_worker loop@5598 cond=@5598 seglens=[3] A=[] B=[5738, 5902, 6890, 8400, 8450] C=[9194]
+FILE site-packages/IQEngine/plugins/plugin_system_finance/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_finance/api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_finance/commission.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_finance/slippage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_finance/tax.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_history_save/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_matcher/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_persist/json_persistance.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_persist/recorder.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_progress/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_progress/system_progress.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc cc_loops=0 other_loops=2 A=0 B=0 C=0 | noncc A=0 B=0 C=1
+  OTHER unit=_save_testds_to_csv loop@108 cond=@108 seglens=[2] A=[] B=[] C=[248]
+FILE site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_risk_calculation/risk_calculation.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_risk_control/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_risk_control/base_validator.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_risk_control/cash_validator.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_risk_control/position_validator.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_risk_control/price_validator.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_risk_control/time_validator.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_simulation/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_simulation/broker.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_simulation/live.pyc cc_loops=0 other_loops=2 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_trade/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_trade/api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_trade/brokerFactory.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_trade/enums.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_trade/function.pyc cc_loops=0 other_loops=16 A=0 B=0 C=0 | noncc A=0 B=31 C=16
+  OTHER unit=his_lucky_info_qry loop@214 cond=@214 seglens=[6] A=[] B=[300, 410] C=[616]
+  OTHER unit=func_hks_price_gap_query loop@206 cond=@206 seglens=[6] A=[] B=[292, 402] C=[608]
+  OTHER unit=his_fundjour_qry loop@222 cond=@222 seglens=[6] A=[] B=[308, 418] C=[638]
+  OTHER unit=his_deliver_qry loop@222 cond=@222 seglens=[6] A=[] B=[308, 418] C=[638]
+  OTHER unit=capital_flow_his_query loop@246 cond=@246 seglens=[6] A=[] B=[332, 442] C=[648]
+  OTHER unit=capital_flow_today_query loop@246 cond=@246 seglens=[6] A=[] B=[332, 442] C=[648]
+  OTHER unit=schemes_detail_qry loop@216 cond=@216 seglens=[6] A=[] B=[302, 412] C=[628]
+  OTHER unit=schemes_info_qry loop@216 cond=@216 seglens=[6] A=[] B=[302, 412] C=[628]
+  OTHER unit=position_list_query loop@392 cond=@392 seglens=[6] A=[] B=[478, 588] C=[886]
+  OTHER unit=business_stibph_query loop@220 cond=@220 seglens=[6] A=[] B=[306, 416] C=[632]
+  OTHER unit=business_list_query loop@472 cond=@472 seglens=[7] A=[] B=[562] C=[1162]
+  OTHER unit=entrust_stibph_query loop@256 cond=@256 seglens=[6] A=[] B=[342, 452] C=[658]
+  OTHER unit=entrust_list_query loop@392 cond=@392 seglens=[6] A=[] B=[478, 588] C=[886]
+  OTHER unit=func_crdt_compact_get loop@202 cond=@202 seglens=[6] A=[] B=[288, 398] C=[604]
+  OTHER unit=etf_constituent_info loop@216 cond=@216 seglens=[6] A=[] B=[302, 412] C=[628]
+  OTHER unit=etf_info loop@224 cond=@224 seglens=[6] A=[] B=[310, 420] C=[636]
+FILE site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc cc_loops=0 other_loops=2 A=0 B=0 C=0 | noncc A=0 B=3 C=0
+  OTHER unit=get_vaild_account loop@0 cond=@0 seglens=[1, 47] A=[] B=[696, 794, 876] C=[]
+FILE site-packages/IQEngine/plugins/plugin_system_trade/ptrade_future_broker.pyc cc_loops=0 other_loops=2 A=0 B=0 C=0 | noncc A=0 B=3 C=0
+  OTHER unit=get_vaild_account loop@0 cond=@0 seglens=[1, 47] A=[] B=[516, 868, 994] C=[]
+FILE site-packages/IQEngine/plugins/plugin_system_trade/ptrade_hks_broker.pyc cc_loops=0 other_loops=3 A=0 B=0 C=0 | noncc A=0 B=2 C=1
+  OTHER unit=create_portfolio loop@862 cond=@862 seglens=[6, 17] A=[] B=[] C=[1166]
+  OTHER unit=get_vaild_account loop@0 cond=@0 seglens=[1, 47] A=[] B=[684, 808] C=[]
+FILE site-packages/IQEngine/plugins/plugin_system_trade/ptrade_option_broker.pyc cc_loops=0 other_loops=2 A=0 B=0 C=0 | noncc A=0 B=2 C=0
+  OTHER unit=get_vaild_account loop@0 cond=@0 seglens=[1, 47] A=[] B=[684, 810] C=[]
+FILE site-packages/IQEngine/plugins/plugin_system_trade/send_message_api.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc cc_loops=1 other_loops=17 A=1 B=1 C=1 | noncc A=0 B=19 C=7
+  OTHER unit=get_ipo_stocks loop@590 cond=@590 seglens=[6] A=[] B=[676] C=[930]
+  OTHER unit=ipo_stocks_order loop@1088 cond=@1088 seglens=[6] A=[] B=[1174] C=[1428]
+  OTHER unit=get_crdt_enslosecu_stock_info loop@254 cond=@254 seglens=[7] A=[] B=[698, 1634] C=[1896]
+  OTHER unit=get_crdt_target_stockinfo loop@208 cond=@208 seglens=[7] A=[] B=[652, 1270] C=[1532]
+  OTHER unit=get_crdt_stock_info loop@208 cond=@208 seglens=[7] A=[] B=[1092] C=[1354]
+  OTHER unit=get_margin_contractreal loop@316 cond=@316 seglens=[11] A=[] B=[454, 1196] C=[]
+  OTHER unit=on_trade_response loop@0 cond=@0 seglens=[15] A=[] B=[440, 694, 1270, 1610] C=[]
+  OTHER unit=on_order_response loop@0 cond=@0 seglens=[15] A=[] B=[440, 694, 1270, 1624, 1716] C=[]
+  CC unit=_sync_worker loop@1890 cond=@1890 seglens=[6, 16] A=[2668] B=[2214] C=[2844]
+  OTHER unit=_process_tick_order loop@114 cond=@114 seglens=[3] A=[] B=[446] C=[]
+  OTHER unit=get_portfolio loop@1108 cond=@1108 seglens=[9] A=[] B=[] C=[1458]
+  OTHER unit=get_portfolio loop@414 cond=@414 seglens=[9] A=[] B=[] C=[676]
+FILE site-packages/IQEngine/plugins/plugin_system_trade_account/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/plugins/plugin_system_trade_account/trade_stock_account.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/user_module.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/__init__.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/arg_checker.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/bcolz_help.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/cache_storage.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/compile_help.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/datetime_func.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/decorator.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/encrypt.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/exception.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/global_variable.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/i18n.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/logger/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/logger/handlers.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=1
+  OTHER unit=_target loop@0 cond=@0 seglens=[2] A=[] B=[] C=[366]
+FILE site-packages/IQEngine/utils/option.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/profiler_func.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/pycompatibility.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/record_store.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/report.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/scheduler.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/utils/trade_schedule.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/IQEngine/version.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/aes_encrypt.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/common.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/const.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/convert.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/custom_tools.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/enums.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/errors.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/fly_exception.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/flydefine.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/flyqueue.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/flytools.pyc cc_loops=0 other_loops=4 A=0 B=0 C=0 | noncc A=0 B=1 C=0
+  OTHER unit=get_host_mem loop@0 cond=@0 seglens=[26] A=[] B=[156] C=[]
+FILE site-packages/fly/common/function.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/future_contract_info.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/future_param.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/global_param.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/inform_info.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/login_time.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/market_time.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/multiprocess_syn.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/op_station.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/trading_schedule.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/tradingday_calendar.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/common/user_error.pyc cc_loops=0 other_loops=4 A=0 B=0 C=0 | noncc A=0 B=4 C=4
+  OTHER unit=get_backtest_user_error_info loop@348 cond=@348 seglens=[2] A=[] B=[490, 666] C=[888]
+  OTHER unit=get_backtest_user_error_info loop@240 cond=@240 seglens=[8] A=[] B=[] C=[292]
+  OTHER unit=get_user_error_info loop@308 cond=@308 seglens=[2] A=[] B=[450, 626] C=[848]
+  OTHER unit=get_user_error_info loop@200 cond=@200 seglens=[8] A=[] B=[] C=[252]
+FILE site-packages/fly/data/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/data/quotation.pyc cc_loops=0 other_loops=22 A=0 B=0 C=0 | noncc A=0 B=1 C=0
+  OTHER unit=get_holiday_online loop@0 cond=@0 seglens=[21] A=[] B=[342] C=[]
+FILE site-packages/fly/data/quote.pyc cc_loops=0 other_loops=10 A=0 B=0 C=0 | noncc A=0 B=1 C=1
+  OTHER unit=run_tick_transform loop@1368 cond=@1368 seglens=[5, 6] A=[] B=[] C=[1594]
+  OTHER unit=run_individual_transform loop@586 cond=@586 seglens=[6] A=[] B=[1660] C=[]
+FILE site-packages/fly/data/quote_handler.pyc cc_loops=0 other_loops=6 A=0 B=0 C=0 | noncc A=0 B=0 C=1
+  OTHER unit=get_index loop@124 cond=@124 seglens=[5] A=[] B=[] C=[218]
+FILE site-packages/fly/dockerspawner/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/dockerspawner/dockerspawner.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/dumpload/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/dumpload/load_algo.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/dumpload/load_daily.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/event/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/event/event.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/event/event_engine.pyc cc_loops=0 other_loops=1 A=0 B=0 C=0 | noncc A=0 B=0 C=1
+  OTHER unit=__run loop@0 cond=@0 seglens=[2] A=[] B=[] C=[150]
+FILE site-packages/fly/event/event_priority.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/event/event_type.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/g.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/generalconf.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/logger.pyc cc_loops=0 other_loops=2 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/oauthenticator/__init__.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/oauthenticator/hsid.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/oauthenticator/itn.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/oauthenticator/oauth2.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/server_version.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/simtradding/accountFactory.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/simtradding/flyAccount.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/simtradding/pboxAccount_jupyterhub.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/simtradding/ptradeAccount.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/simtradding/ptradeFutureAccount.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/simtradding/ptradeOptionAccount.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+FILE site-packages/fly/simtradding/request_data_transform.pyc cc_loops=0 other_loops=0 A=0 B=0 C=0 | noncc A=0 B=0 C=0
+DONE files=402 cc_loops=1 other_loops=172 A=1 B=1 C=1 noncc_A=0 noncc_B=87 noncc_C=48 elapsed=80s

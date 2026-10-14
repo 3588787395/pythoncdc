@@ -1,0 +1,19 @@
+HEAD(gate-39 committed) site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc units=12/13
+      FAIL ***<module>.RealtimeEventSource.clock_worker: Failure: Different control flow
+HEAD(gate-39 committed) site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc units=15/15
+HEAD(gate-39 committed) site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc units=127/128
+      FAIL ***<module>.TradeLiveBroker._sync_worker: Failure: Different control flow
+HEAD(gate-39 committed) site-packages/IQCommon/util/replace_utils.pyc                  units=9/9
+HEAD(gate-39 committed) site-packages/fly/data/quotation.pyc                           units=153/153
+HEAD(gate-39 committed) site-packages/fly/data/quote.pyc                               units=92/92
+HEAD(gate-39 committed) site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc units=37/37
+R89a-BASE(swept)   site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc units=12/13
+      FAIL ***<module>.RealtimeEventSource.clock_worker: Failure: Different control flow
+R89a-BASE(swept)   site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc units=14/15
+      FAIL ***<module>.create_daily_stats: Failure: Different control flow
+R89a-BASE(swept)   site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc units=127/128
+      FAIL ***<module>.TradeLiveBroker._sync_worker: Failure: Different control flow
+R89a-BASE(swept)   site-packages/IQCommon/util/replace_utils.pyc                  units=9/9
+R89a-BASE(swept)   site-packages/fly/data/quotation.pyc                           units=153/153
+R89a-BASE(swept)   site-packages/fly/data/quote.pyc                               units=92/92
+R89a-BASE(swept)   site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc units=37/37

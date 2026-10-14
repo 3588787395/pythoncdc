@@ -1,0 +1,51 @@
+{
+ "totals": {
+  "eval": 73,
+  "reject": 0,
+  "fire": 0
+ },
+ "files": {
+  "fly/data/quotation.pyc": {
+   "eval": 12,
+   "reject": 0,
+   "fire": 0,
+   "sites": []
+  },
+  "fly/data/quote.pyc": {
+   "eval": 16,
+   "reject": 0,
+   "fire": 0,
+   "sites": []
+  },
+  "IQCommon/api/klinedata.pyc": {
+   "eval": 33,
+   "reject": 0,
+   "fire": 0,
+   "sites": []
+  },
+  "IQCommon/logger/handlers.pyc": {
+   "eval": 0,
+   "reject": 0,
+   "fire": 0,
+   "sites": []
+  },
+  "IQCommon/strategy/wizard_quant_api.pyc": {
+   "eval": 1,
+   "reject": 0,
+   "fire": 0,
+   "sites": []
+  },
+  "IQCommon/util/trade_info_utils.pyc": {
+   "eval": 3,
+   "reject": 0,
+   "fire": 0,
+   "sites": []
+  },
+  "IQData/api/api_base.pyc": {
+   "eval": 8,
+   "reject": 0,
+   "fire": 0,
+   "sites": []
+  }
+ }
+}

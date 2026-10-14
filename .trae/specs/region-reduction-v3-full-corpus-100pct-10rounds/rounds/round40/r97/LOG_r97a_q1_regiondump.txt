@@ -1,0 +1,2632 @@
+[probe] unit=<module>.<module>.RealtimeEventSource.clock_worker bytes=9330 instrs=4665
+[probe] cfg blocks=191
+[probe] focus offsets present=[7164, 7186, 7216, 7248, 7270, 7492, 7582, 9194]
+
+===== ORIGINAL INSTRUCTION STREAM around the focus =====
+   @7124   LOAD_GLOBAL                    EventEnum
+   @7136   LOAD_ATTR                      SYSTEM_REBUILD
+   @7146   BUILD_TUPLE                    
+   @7148   PRECALL                        
+   @7152   CALL                           
+   @7162   POP_TOP                        
+   @7164   LOAD_FAST                      now_date
+   @7166   LOAD_DEREF                     self
+   @7168   LOAD_ATTR                      pre_before_trading_date
+   @7178   COMPARE_OP                     >
+   @7184   POP_JUMP_FORWARD_IF_FALSE      to 7216
+   @7186   LOAD_FAST                      pre_before_trading
+   @7188   LOAD_FAST                      now_time
+   @7190   SWAP                           
+   @7192   COPY                           
+   @7194   COMPARE_OP                     <=
+   @7200   POP_JUMP_FORWARD_IF_FALSE      to 7214
+   @7202   LOAD_FAST                      pm_close
+   @7204   COMPARE_OP                     <
+   @7210   POP_JUMP_FORWARD_IF_TRUE       to 7248
+   @7212   JUMP_FORWARD                   to 7216
+   @7214   POP_TOP                        
+   @7216   LOAD_DEREF                     self
+   @7218   LOAD_ATTR                      pre_before_trading_date
+   @7228   LOAD_DEREF                     self
+   @7230   LOAD_ATTR                      initial_trading_date
+   @7240   COMPARE_OP                     ==
+   @7246   POP_JUMP_FORWARD_IF_FALSE      to 7582
+   @7248   LOAD_FAST                      now_date
+   @7250   LOAD_DEREF                     self
+   @7252   LOAD_ATTR                      first_run_date
+   @7262   COMPARE_OP                     !=
+   @7268   POP_JUMP_FORWARD_IF_FALSE      to 7492
+   @7270   LOAD_GLOBAL                    NULL + system_log
+   @7282   LOAD_ATTR                      debug
+   @7292   LOAD_CONST                     '获取重登信号量'
+   @7294   PRECALL                        
+   @7298   CALL                           
+   @7308   POP_TOP                        
+   @7310   LOAD_GLOBAL                    NULL + login_semaphore
+   @7322   LOAD_ATTR                      acquire
+   @7332   LOAD_GLOBAL                    LOGIN_TIMEOUT
+   @7344   LOAD_CONST                     60
+   @7346   BINARY_OP                      *
+   @7350   KW_NAMES                       
+   @7352   PRECALL                        
+   @7356   CALL                           
+   @7366   LOAD_CONST                     False
+   @7368   IS_OP                          
+   @7370   POP_JUMP_FORWARD_IF_FALSE      to 7492
+   @7372   LOAD_GLOBAL                    NULL + system_log
+   @7384   LOAD_ATTR                      error
+   @7394   LOAD_CONST                     '获取重登信号量超时，系统退出'
+   @7396   PRECALL                        
+   @7400   CALL                           
+   @7410   POP_TOP                        
+   @7412   LOAD_DEREF                     self
+   @7414   LOAD_ATTR                      event_queue
+   @7424   LOAD_METHOD                    put
+   @7446   LOAD_FAST                      dt
+   @7448   LOAD_GLOBAL                    EventEnum
+   @7460   LOAD_ATTR                      SYSTEM_EXIT
+   @7470   BUILD_TUPLE                    
+   @7472   PRECALL                        
+   @7476   CALL                           
+   @7486   POP_TOP                        
+   @7488   LOAD_CONST                     None
+   @7490   RETURN_VALUE                   
+   @7492   LOAD_DEREF                     self
+   @7494   LOAD_ATTR                      event_queue
+   @7504   LOAD_METHOD                    put
+   @7526   LOAD_FAST                      dt
+   @7528   LOAD_GLOBAL                    EventEnum
+   @7540   LOAD_ATTR                      PRE_BEFORE_TRADING_START
+   @7550   BUILD_TUPLE                    
+   @7552   PRECALL                        
+   @7556   CALL                           
+   @7566   POP_TOP                        
+   @7568   LOAD_FAST                      now_date
+   @7570   LOAD_DEREF                     self
+   @7572   STORE_ATTR                     pre_before_trading_date
+   @7582   LOAD_FAST                      now_date
+   @7584   LOAD_DEREF                     self
+   @7586   LOAD_ATTR                      before_trading_date
+   @7596   COMPARE_OP                     >
+   @7602   POP_JUMP_FORWARD_IF_FALSE      to 7634
+   @7604   LOAD_FAST                      before_trading
+   @7606   LOAD_FAST                      now_time
+   @7608   SWAP                           
+   @7610   COPY                           
+   @7612   COMPARE_OP                     <=
+   @7618   POP_JUMP_FORWARD_IF_FALSE      to 7632
+   @7620   LOAD_FAST                      pm_close
+   @7622   COMPARE_OP                     <
+   @7628   POP_JUMP_FORWARD_IF_TRUE       to 7668
+   @7630   JUMP_FORWARD                   to 7634
+   @7632   POP_TOP                        
+   @7634   LOAD_DEREF                     self
+   @7636   LOAD_ATTR                      before_trading_date
+   @7646   LOAD_DEREF                     self
+   @7648   LOAD_ATTR                      initial_trading_date
+   @7658   COMPARE_OP                     ==
+   @7666   POP_JUMP_FORWARD_IF_FALSE      to 8592
+   @7668   LOAD_CONST                     None
+   @7670   STORE_FAST                     broker_persist
+   @7672   LOAD_CONST                     False
+   @7674   STORE_FAST                     persist_flag
+   @7676   LOAD_GLOBAL                    NULL + range
+   @7688   LOAD_CONST                     60
+   @7690   PRECALL                        
+   @7694   CALL                           
+   @7704   GET_ITER                       
+   @7706   FOR_ITER                       to 7972
+   @7708   STORE_FAST                     i
+   @7710   NOP                            
+   @7712   LOAD_GLOBAL                    NULL + jsonpickle
+   @7724   LOAD_ATTR                      decode
+   @7734   LOAD_DEREF                     self
+   @7736   LOAD_ATTR                      _engine
+   @7746   LOAD_ATTR                      persist_provider
+   @7756   LOAD_METHOD                    get_data
+   @7778   LOAD_CONST                     'broker'
+   @7780   PRECALL                        
+   @7784   CALL                           
+   @7794   PRECALL                        
+   @7798   CALL                           
+   @7808   STORE_FAST                     broker_persist
+   @7810   LOAD_CONST                     True
+   @7812   STORE_FAST                     persist_flag
+   @7814   POP_TOP                        
+   @7816   JUMP_FORWARD                   to 7972
+   @7818   PUSH_EXC_INFO                  
+   @7820   LOAD_GLOBAL                    BaseException
+   @7832   CHECK_EXC_MATCH                
+   @7834   POP_JUMP_FORWARD_IF_FALSE      to 7964
+   @7836   POP_TOP                        
+   @7838   LOAD_GLOBAL                    NULL + time
+   @7850   LOAD_ATTR                      sleep
+   @7860   LOAD_CONST                     1
+   @7862   PRECALL                        
+   @7866   CALL                           
+   @7876   POP_TOP                        
+   @7878   LOAD_FAST                      i
+   @7880   LOAD_CONST                     59
+   @7882   COMPARE_OP                     ==
+   @7888   POP_JUMP_FORWARD_IF_FALSE      to 7960
+   @7890   LOAD_GLOBAL                    NULL + system_log
+   @7902   LOAD_ATTR                      error
+   @7912   LOAD_CONST                     '获取持久化对象异常：%s'
+   @7914   LOAD_GLOBAL                    NULL + get_traceback_message
+   @7926   PRECALL                        
+   @7930   CALL                           
+   @7940   BINARY_OP                      %
+   @7944   PRECALL                        
+   @7948   CALL                           
+   @7958   POP_TOP                        
+   @7960   POP_EXCEPT                     
+   @7962   JUMP_BACKWARD                  to 7706
+   @7964   RERAISE                        
+   @7966   COPY                           
+   @7968   POP_EXCEPT                     
+   @7970   RERAISE                        
+   @7972   LOAD_FAST                      persist_flag
+   @7974   LOAD_CONST                     False
+   @7976   IS_OP                          
+   @7978   POP_JUMP_FORWARD_IF_FALSE      to 8170
+   @7980   LOAD_GLOBAL                    NULL + set_trade_stop_status
+   @7992   LOAD_DEREF                     self
+   @7994   LOAD_ATTR                      _engine
+   @8004   LOAD_ATTR                      config
+   @8014   LOAD_ATTR                      strategy
+   @8024   LOAD_ATTR                      trade_id
+   @8034   PRECALL                        
+   @8038   CALL                           
+   @8048   POP_TOP                        
+   @8050   LOAD_GLOBAL                    NULL + system_log
+   @8062   LOAD_ATTR                      error
+   @8072   LOAD_CONST                     '获取交易持久化对象超时，系统退出'
+   @8074   PRECALL                        
+   @8078   CALL                           
+   @8088   POP_TOP                        
+   @8090   LOAD_DEREF                     self
+   @8092   LOAD_ATTR                      event_queue
+   @8102   LOAD_METHOD                    put
+   @8124   LOAD_FAST                      dt
+   @8126   LOAD_GLOBAL                    EventEnum
+   @8138   LOAD_ATTR                      SYSTEM_EXIT
+   @8148   BUILD_TUPLE                    
+   @8150   PRECALL                        
+   @8154   CALL                           
+   @8164   POP_TOP                        
+   @8166   LOAD_CONST                     None
+   @8168   RETURN_VALUE                   
+   @8170   LOAD_FAST                      now_date
+   @8172   LOAD_DEREF                     self
+   @8174   STORE_ATTR                     before_trading_date
+   @8184   NOP                            
+   @8186   LOAD_GLOBAL                    NULL + str
+   @8198   LOAD_DEREF                     self
+   @8200   LOAD_ATTR                      _engine
+   @8210   LOAD_ATTR                      config
+   @8220   LOAD_ATTR                      user
+   @8230   LOAD_ATTR                      server_restart_not_do_before
+   @8240   PRECALL                        
+   @8244   CALL                           
+   @8254   STORE_FAST                     server_restart_do_before_type
+   @8256   JUMP_FORWARD                   to 8294
+   @8258   PUSH_EXC_INFO                  
+   @8260   LOAD_GLOBAL                    AttributeError
+   @8272   CHECK_EXC_MATCH                
+   @8274   POP_JUMP_FORWARD_IF_FALSE      to 8286
+   @8276   POP_TOP                        
+   @8278   LOAD_CONST                     '0'
+   @8280   STORE_FAST                     server_restart_do_before_type
+   @8282   POP_EXCEPT                     
+   @8284   JUMP_FORWARD                   to 8294
+   @8286   RERAISE                        
+   @8288   COPY                           
+   @8290   POP_EXCEPT                     
+   @8292   RERAISE                        
+   @8294   LOAD_FAST                      server_restart_do_before_type
+   @8296   LOAD_CONST                     '0'
+   @8298   COMPARE_OP                     ==
+   @8304   POP_JUMP_FORWARD_IF_FALSE      to 8350
+   @8306   LOAD_DEREF                     self
+   @8308   LOAD_METHOD                    put_before_trading_start
+   @8330   PRECALL                        
+   @8334   CALL                           
+   @8344   POP_TOP                        
+   @8348   JUMP_FORWARD                   to 9194
+   @8350   LOAD_FAST                      broker_persist
+   @8352   POP_JUMP_FORWARD_IF_NONE       to 8588
+   @8354   LOAD_FAST                      broker_persist
+   @8356   LOAD_METHOD                    get
+   @8378   LOAD_CONST                     'on_before_trading_start_time'
+   @8380   PRECALL                        
+   @8384   CALL                           
+   @8394   STORE_FAST                     on_before_trading_start_time_info
+   @8396   LOAD_FAST                      on_before_trading_start_time_info
+   @8398   POP_JUMP_FORWARD_IF_NONE       to 8588
+   @8400   LOAD_FAST                      now_date
+   @8402   LOAD_METHOD                    strftime
+   @8424   LOAD_CONST                     '%Y-%m-%d'
+   @8426   PRECALL                        
+   @8430   CALL                           
+   @8440   STORE_FAST                     today_date
+   @8442   LOAD_FAST                      today_date
+   @8444   LOAD_FAST                      on_before_trading_start_time_info
+   @8446   CONTAINS_OP                    
+   @8448   POP_JUMP_FORWARD_IF_FALSE      to 8548
+   @8450   LOAD_FAST                      on_before_trading_start_time_info
+   @8452   LOAD_FAST                      today_date
+   @8454   BINARY_SUBSCR                  
+   @8464   STORE_FAST                     today_info
+   @8466   LOAD_GLOBAL                    NULL + len
+   @8478   LOAD_FAST                      today_info
+   @8480   PRECALL                        
+   @8484   CALL                           
+   @8494   LOAD_CONST                     0
+   @8496   COMPARE_OP                     ==
+   @8502   POP_JUMP_FORWARD_IF_FALSE      to 8544
+   @8504   LOAD_DEREF                     self
+   @8506   LOAD_METHOD                    put_before_trading_start
+   @8528   PRECALL                        
+   @8532   CALL                           
+   @8542   POP_TOP                        
+   @8546   JUMP_FORWARD                   to 9194
+   @8548   LOAD_DEREF                     self
+   @8550   LOAD_METHOD                    put_before_trading_start
+   @8572   PRECALL                        
+   @8576   CALL                           
+   @8586   POP_TOP                        
+   @8590   JUMP_FORWARD                   to 9194
+   @8592   PUSH_NULL                      
+   @8594   LOAD_FAST                      check_trading_time
+   @8596   LOAD_FAST                      am_open
+   @8598   LOAD_FAST                      am_close
+   @8600   LOAD_FAST                      pm_open
+   @8602   LOAD_FAST                      pm_close
+   @8604   LOAD_FAST                      pm_over
+   @8606   LOAD_DEREF                     self
+   @8608   LOAD_ATTR                      _engine
+   @8618   LOAD_ATTR                      config
+   @8628   LOAD_ATTR                      strategy
+   @8638   LOAD_ATTR                      frequency
+   @8648   LOAD_FAST                      now_time
+   @8650   PRECALL                        
+   @8654   CALL                           
+   @8664   POP_JUMP_FORWARD_IF_FALSE      to 8904
+   @8666   PUSH_NULL                      
+   @8668   LOAD_FAST                      check_handle_date
+   @8670   LOAD_FAST                      now_date
+   @8672   PRECALL                        
+   @8676   CALL                           
+   @8686   POP_JUMP_FORWARD_IF_FALSE      to 8852
+   @8688   LOAD_DEREF                     self
+   @8690   LOAD_ATTR                      _engine
+   @8700   LOAD_METHOD                    set_current_stage
+   @8722   LOAD_GLOBAL                    EventEnum
+   @8734   LOAD_ATTR                      HANDLE_DATA
+   @8744   PRECALL                        
+   @8748   CALL                           
+   @8758   POP_TOP                        
+   @8760   LOAD_DEREF                     self
+   @8762   LOAD_ATTR                      event_queue
+   @8772   LOAD_METHOD                    put
+   @8794   LOAD_FAST                      dt
+   @8796   LOAD_GLOBAL                    EventEnum
+   @8808   LOAD_ATTR                      HANDLE_DATA
+   @8818   BUILD_TUPLE                    
+   @8820   PRECALL                        
+   @8824   CALL                           
+   @8834   POP_TOP                        
+   @8836   LOAD_FAST                      now_date
+   @8838   LOAD_DEREF                     self
+   @8840   STORE_ATTR                     handle_data_date
+   @8850   JUMP_FORWARD                   to 9194
+   @8852   LOAD_GLOBAL                    NULL + time
+   @8864   LOAD_ATTR                      sleep
+   @8874   LOAD_GLOBAL                    TIME_SLEEP_1M
+   @8886   PRECALL                        
+   @8890   CALL                           
+   @8900   POP_TOP                        
+   @8902   JUMP_FORWARD                   to 9194
+   @8904   LOAD_FAST                      now_date
+   @8906   LOAD_DEREF                     self
+   @8908   LOAD_ATTR                      before_trading_date
+   @8918   COMPARE_OP                     ==
+   @8924   POP_JUMP_FORWARD_IF_FALSE      to 9144
+   @8926   LOAD_FAST                      now_date
+   @8928   LOAD_DEREF                     self
+   @8930   LOAD_ATTR                      after_trading_date
+   @8940   COMPARE_OP                     >
+   @8946   POP_JUMP_FORWARD_IF_FALSE      to 9144
+   @8948   LOAD_FAST                      delay_after_trading
+   @8950   LOAD_FAST                      now_time
+   @8952   SWAP                           
+   @8954   COPY                           
+   @8956   COMPARE_OP                     >=
+   @8962   POP_JUMP_FORWARD_IF_FALSE      to 8976
+   @8964   LOAD_FAST                      after_trading
+   @8966   COMPARE_OP                     >=
+   @8972   POP_JUMP_FORWARD_IF_FALSE      to 9144
+   @8974   JUMP_FORWARD                   to 8980
+   @8976   POP_TOP                        
+   @8978   JUMP_FORWARD                   to 9144
+   @8980   LOAD_DEREF                     self
+   @8982   LOAD_ATTR                      _engine
+   @8992   LOAD_METHOD                    set_current_stage
+   @9014   LOAD_GLOBAL                    EventEnum
+   @9026   LOAD_ATTR                      AFTER_TRADING_END
+   @9036   PRECALL                        
+   @9040   CALL                           
+   @9050   POP_TOP                        
+   @9052   LOAD_DEREF                     self
+   @9054   LOAD_ATTR                      event_queue
+   @9064   LOAD_METHOD                    put
+   @9086   LOAD_FAST                      dt
+   @9088   LOAD_GLOBAL                    EventEnum
+   @9100   LOAD_ATTR                      AFTER_TRADING_END
+   @9110   BUILD_TUPLE                    
+   @9112   PRECALL                        
+   @9116   CALL                           
+   @9126   POP_TOP                        
+   @9128   LOAD_FAST                      now_date
+   @9130   LOAD_DEREF                     self
+   @9132   STORE_ATTR                     after_trading_date
+   @9142   JUMP_FORWARD                   to 9194
+   @9144   LOAD_GLOBAL                    NULL + time
+   @9156   LOAD_ATTR                      sleep
+   @9166   LOAD_GLOBAL                    FPS
+   @9178   PRECALL                        
+   @9182   CALL                           
+   @9192   POP_TOP                        
+   @9194   LOAD_DEREF                     self
+   @9196   LOAD_ATTR                      active
+   @9208   POP_JUMP_BACKWARD_IF_TRUE      to 5614
+   @9210   LOAD_CONST                     None
+   @9212   RETURN_VALUE                   
+   @9214   LOAD_CONST                     None
+   @9216   RETURN_VALUE                   
+   @9218   PUSH_EXC_INFO                  
+   @9220   LOAD_GLOBAL                    Exception
+   @9232   CHECK_EXC_MATCH                
+   @9234   POP_JUMP_FORWARD_IF_FALSE      to 9322
+   @9236   STORE_FAST                     ex
+   @9238   LOAD_GLOBAL                    NULL + system_log
+   @9250   LOAD_ATTR                      error
+   @9260   LOAD_GLOBAL                    NULL + get_traceback_message
+   @9272   PRECALL                        
+   @9276   CALL                           
+   @9286   PRECALL                        
+   @9290   CALL                           
+   @9300   POP_TOP                        
+   @9302   POP_EXCEPT                     
+   @9304   LOAD_CONST                     None
+   @9306   STORE_FAST                     ex
+   @9308   DELETE_FAST                    ex
+   @9310   LOAD_CONST                     None
+   @9312   RETURN_VALUE                   
+   @9314   LOAD_CONST                     None
+   @9316   STORE_FAST                     ex
+   @9318   DELETE_FAST                    ex
+   @9320   RERAISE                        
+   @9322   RERAISE                        
+   @9324   COPY                           
+   @9326   POP_EXCEPT                     
+   @9328   RERAISE                        
+
+===== BLOCK GRAPH (all blocks: tail class / jump / next-in-order) =====
+   @0      n=3   tail=NOP                            jump=-       preds=[]                           succs=[6]
+   @6      n=38  tail=POP_JUMP_FORWARD_IF_NOT_NONE   jump=-       preds=[0]                          succs=[300, 400, 9218]
+   @300    n=15  tail=JUMP_FORWARD                   jump=@778    preds=[6]                          succs=[778, 9218]
+   @400    n=49  tail=STORE_FAST                     jump=-       preds=[6]                          succs=[778, 9218]
+   @778    n=2   tail=POP_JUMP_FORWARD_IF_NOT_NONE   jump=-       preds=[300, 400]                   succs=[782, 882, 9218]
+   @782    n=15  tail=JUMP_FORWARD                   jump=@1260   preds=[778]                        succs=[1260, 9218]
+   @882    n=49  tail=STORE_FAST                     jump=-       preds=[778]                        succs=[1260, 9218]
+   @1260   n=2   tail=POP_JUMP_FORWARD_IF_NOT_NONE   jump=-       preds=[782, 882]                   succs=[1264, 1364, 9218]
+   @1264   n=15  tail=JUMP_FORWARD                   jump=@1742   preds=[1260]                       succs=[1742, 9218]
+   @1364   n=49  tail=STORE_FAST                     jump=-       preds=[1260]                       succs=[1742, 9218]
+   @1742   n=7   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@2838   preds=[1264, 1364]                 succs=[1782, 2838, 9218]
+   @1782   n=8   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@1940   preds=[1742]                       succs=[1838, 1940, 9218]
+   @1838   n=12  tail=JUMP_FORWARD                   jump=@1944   preds=[1782]                       succs=[1944, 9218]
+   @1940   n=2   tail=STORE_FAST                     jump=-       preds=[1782]                       succs=[1944, 9218]
+   @1944   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@2088   preds=[1838, 1940]                 succs=[1986, 2088, 9218]
+   @1986   n=12  tail=JUMP_FORWARD                   jump=@2092   preds=[1944]                       succs=[2092, 9218]
+   @2088   n=2   tail=STORE_FAST                     jump=-       preds=[1944]                       succs=[2092, 9218]
+   @2092   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@2236   preds=[1986, 2088]                 succs=[2134, 2236, 9218]
+   @2134   n=12  tail=JUMP_FORWARD                   jump=@2240   preds=[2092]                       succs=[2240, 9218]
+   @2236   n=2   tail=STORE_FAST                     jump=-       preds=[2092]                       succs=[2240, 9218]
+   @2240   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@2384   preds=[2134, 2236]                 succs=[2282, 2384, 9218]
+   @2282   n=12  tail=JUMP_FORWARD                   jump=@2388   preds=[2240]                       succs=[2388, 9218]
+   @2384   n=2   tail=STORE_FAST                     jump=-       preds=[2240]                       succs=[2388, 9218]
+   @2388   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@2532   preds=[2282, 2384]                 succs=[2430, 2532, 9218]
+   @2430   n=12  tail=JUMP_FORWARD                   jump=@2536   preds=[2388]                       succs=[2536, 9218]
+   @2532   n=2   tail=STORE_FAST                     jump=-       preds=[2388]                       succs=[2536, 9218]
+   @2536   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@2680   preds=[2430, 2532]                 succs=[2578, 2680, 9218]
+   @2578   n=12  tail=JUMP_FORWARD                   jump=@2684   preds=[2536]                       succs=[2684, 9218]
+   @2680   n=2   tail=STORE_FAST                     jump=-       preds=[2536]                       succs=[2684, 9218]
+   @2684   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@2830   preds=[2578, 2680]                 succs=[2726, 2830, 9218]
+   @2726   n=13  tail=JUMP_FORWARD                   jump=@4984   preds=[2684]                       succs=[4984, 9218]
+   @2830   n=4   tail=JUMP_FORWARD                   jump=@4984   preds=[2684]                       succs=[4984, 9218]
+   @2838   n=7   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@3934   preds=[1742]                       succs=[2878, 3934, 9218]
+   @2878   n=8   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@3036   preds=[2838]                       succs=[2934, 3036, 9218]
+   @2934   n=12  tail=JUMP_FORWARD                   jump=@3040   preds=[2878]                       succs=[3040, 9218]
+   @3036   n=2   tail=STORE_FAST                     jump=-       preds=[2878]                       succs=[3040, 9218]
+   @3040   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@3184   preds=[2934, 3036]                 succs=[3082, 3184, 9218]
+   @3082   n=12  tail=JUMP_FORWARD                   jump=@3188   preds=[3040]                       succs=[3188, 9218]
+   @3184   n=2   tail=STORE_FAST                     jump=-       preds=[3040]                       succs=[3188, 9218]
+   @3188   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@3332   preds=[3082, 3184]                 succs=[3230, 3332, 9218]
+   @3230   n=12  tail=JUMP_FORWARD                   jump=@3336   preds=[3188]                       succs=[3336, 9218]
+   @3332   n=2   tail=STORE_FAST                     jump=-       preds=[3188]                       succs=[3336, 9218]
+   @3336   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@3480   preds=[3230, 3332]                 succs=[3378, 3480, 9218]
+   @3378   n=12  tail=JUMP_FORWARD                   jump=@3484   preds=[3336]                       succs=[3484, 9218]
+   @3480   n=2   tail=STORE_FAST                     jump=-       preds=[3336]                       succs=[3484, 9218]
+   @3484   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@3628   preds=[3378, 3480]                 succs=[3526, 3628, 9218]
+   @3526   n=12  tail=JUMP_FORWARD                   jump=@3632   preds=[3484]                       succs=[3632, 9218]
+   @3628   n=2   tail=STORE_FAST                     jump=-       preds=[3484]                       succs=[3632, 9218]
+   @3632   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@3776   preds=[3526, 3628]                 succs=[3674, 3776, 9218]
+   @3674   n=12  tail=JUMP_FORWARD                   jump=@3780   preds=[3632]                       succs=[3780, 9218]
+   @3776   n=2   tail=STORE_FAST                     jump=-       preds=[3632]                       succs=[3780, 9218]
+   @3780   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@3926   preds=[3674, 3776]                 succs=[3822, 3926, 9218]
+   @3822   n=13  tail=JUMP_FORWARD                   jump=@4984   preds=[3780]                       succs=[4984, 9218]
+   @3926   n=4   tail=JUMP_FORWARD                   jump=@4984   preds=[3780]                       succs=[4984, 9218]
+   @3934   n=8   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@4092   preds=[2838]                       succs=[3990, 4092, 9218]
+   @3990   n=12  tail=JUMP_FORWARD                   jump=@4096   preds=[3934]                       succs=[4096, 9218]
+   @4092   n=2   tail=STORE_FAST                     jump=-       preds=[3934]                       succs=[4096, 9218]
+   @4096   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@4240   preds=[3990, 4092]                 succs=[4138, 4240, 9218]
+   @4138   n=12  tail=JUMP_FORWARD                   jump=@4244   preds=[4096]                       succs=[4244, 9218]
+   @4240   n=2   tail=STORE_FAST                     jump=-       preds=[4096]                       succs=[4244, 9218]
+   @4244   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@4388   preds=[4138, 4240]                 succs=[4286, 4388, 9218]
+   @4286   n=12  tail=JUMP_FORWARD                   jump=@4392   preds=[4244]                       succs=[4392, 9218]
+   @4388   n=2   tail=STORE_FAST                     jump=-       preds=[4244]                       succs=[4392, 9218]
+   @4392   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@4536   preds=[4286, 4388]                 succs=[4434, 4536, 9218]
+   @4434   n=12  tail=JUMP_FORWARD                   jump=@4540   preds=[4392]                       succs=[4540, 9218]
+   @4536   n=2   tail=STORE_FAST                     jump=-       preds=[4392]                       succs=[4540, 9218]
+   @4540   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@4684   preds=[4434, 4536]                 succs=[4582, 4684, 9218]
+   @4582   n=12  tail=JUMP_FORWARD                   jump=@4688   preds=[4540]                       succs=[4688, 9218]
+   @4684   n=2   tail=STORE_FAST                     jump=-       preds=[4540]                       succs=[4688, 9218]
+   @4688   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@4832   preds=[4582, 4684]                 succs=[4730, 4832, 9218]
+   @4730   n=12  tail=JUMP_FORWARD                   jump=@4836   preds=[4688]                       succs=[4836, 9218]
+   @4832   n=2   tail=STORE_FAST                     jump=-       preds=[4688]                       succs=[4836, 9218]
+   @4836   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@4980   preds=[4730, 4832]                 succs=[4878, 4980, 9218]
+   @4878   n=12  tail=JUMP_FORWARD                   jump=@4984   preds=[4836]                       succs=[4984, 9218]
+   @4980   n=2   tail=STORE_FAST                     jump=-       preds=[4836]                       succs=[4984, 9218]
+   @4984   n=34  tail=POP_JUMP_FORWARD_IF_FALSE      jump=@5278   preds=[2726, 2830, 3822, 3926, 4878, 4980] succs=[5270, 5278, 9218]
+   @5270   n=4   tail=JUMP_FORWARD                   jump=@5288   preds=[4984]                       succs=[5288, 9218]
+   @5278   n=5   tail=STORE_FAST                     jump=-       preds=[4984]                       succs=[5288, 9218]
+   @5288   n=28  tail=POP_JUMP_FORWARD_IF_FALSE      jump=@5594   preds=[5270, 5278]                 succs=[5492, 5594, 9218]
+   @5492   n=12  tail=JUMP_FORWARD                   jump=@5598   preds=[5288]                       succs=[5598, 9218]
+   @5594   n=2   tail=STORE_FAST                     jump=-       preds=[5288]                       succs=[5598, 9218]
+   @5598   n=4   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@9214   preds=[5492, 5594, 6792]           succs=[5614, 9214, 9218]
+   @5614   n=17  tail=POP_JUMP_FORWARD_IF_FALSE      jump=@5902   preds=[5598, 9194]                 succs=[5738, 5902, 9218]
+   @5738   n=23  tail=POP_JUMP_BACKWARD_IF_TRUE      jump=@5738   preds=[5614, 5738]                 succs=[5738, 5902, 9218]
+   @5902   n=26  tail=POP_JUMP_FORWARD_IF_FALSE      jump=@6280   preds=[5614, 5738]                 succs=[6058, 6280, 9218]
+   @6058   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@6280   preds=[5902]                       succs=[6090, 6280, 9218]
+   @6090   n=5   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@6280   preds=[6058]                       succs=[6112, 6280, 9218]
+   @6112   n=23  tail=POP_TOP                        jump=-       preds=[6090]                       succs=[6280, 9218]
+   @6280   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@6846   preds=[5902, 6058, 6090, 6112]     succs=[6322, 6846, 9218]
+   @6322   n=5   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@6374   preds=[6280]                       succs=[6344, 6374, 9218]
+   @6344   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@6372   preds=[6322]                       succs=[6360, 6372, 9218]
+   @6360   n=3   tail=POP_JUMP_FORWARD_IF_TRUE       jump=@6406   preds=[6344]                       succs=[6370, 6406, 9218]
+   @6370   n=1   tail=JUMP_FORWARD                   jump=@6374   preds=[6360]                       succs=[6374, 9218]
+   @6372   n=1   tail=POP_TOP                        jump=-       preds=[6344]                       succs=[6374, 9218]
+   @6374   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@6496   preds=[6322, 6370, 6372]           succs=[6406, 6496, 9218]
+   @6406   n=13  tail=STORE_ATTR                     jump=-       preds=[6360, 6374]                 succs=[6496, 9218]
+   @6496   n=5   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@6548   preds=[6374, 6406]                 succs=[6518, 6548, 9218]
+   @6518   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@6546   preds=[6496]                       succs=[6534, 6546, 9218]
+   @6534   n=3   tail=POP_JUMP_FORWARD_IF_TRUE       jump=@6580   preds=[6518]                       succs=[6544, 6580, 9218]
+   @6544   n=1   tail=JUMP_FORWARD                   jump=@6548   preds=[6534]                       succs=[6548, 9218]
+   @6546   n=1   tail=POP_TOP                        jump=-       preds=[6518]                       succs=[6548, 9218]
+   @6548   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@6792   preds=[6496, 6544, 6546]           succs=[6580, 6792, 9218]
+   @6580   n=1   tail=NOP                            jump=-       preds=[6534, 6548]                 succs=[6582]
+   @6582   n=9   tail=STORE_FAST                     jump=-       preds=[6580]                       succs=[6652, 6654]
+   @6652   n=1   tail=JUMP_FORWARD                   jump=@6690   preds=[6582]                       succs=[6690, 9218]
+   @6654   n=4   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@6682   preds=[6582]                       succs=[6672, 6682, 6684]
+   @6672   n=3   tail=STORE_FAST                     jump=-       preds=[6654]                       succs=[6678, 6684]
+   @6678   n=2   tail=JUMP_FORWARD                   jump=@6690   preds=[6672]                       succs=[6690, 9218]
+   @6682   n=1   tail=RERAISE                        jump=-       preds=[6654]                       succs=[6684]
+   @6684   n=3   tail=RERAISE                        jump=-       preds=[6654, 6672, 6682]           succs=[9218]
+   @6690   n=4   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@6778   preds=[6652, 6678]                 succs=[6702, 6778, 9218]
+   @6702   n=10  tail=POP_TOP                        jump=-       preds=[6690]                       succs=[6778, 9218]
+   @6778   n=3   tail=STORE_ATTR                     jump=-       preds=[6690, 6702]                 succs=[6792, 9218]
+   @6792   n=8   tail=JUMP_BACKWARD                  jump=@5598   preds=[6548, 6778]                 succs=[5598, 9218]
+   @6846   n=5   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@7164   preds=[6280]                       succs=[6868, 7164, 9218]
+   @6868   n=5   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@7164   preds=[6846]                       succs=[6890, 7164, 9218]
+   @6890   n=25  tail=POP_JUMP_FORWARD_IF_FALSE      jump=@7164   preds=[6868]                       succs=[7048, 7164, 9218]
+   @7048   n=16  tail=POP_TOP                        jump=-       preds=[6890]                       succs=[7164, 9218]
+   @7164   n=5   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@7216   preds=[6846, 6868, 6890, 7048]     succs=[7186, 7216, 9218] <== FOCUS
+   @7186   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@7214   preds=[7164]                       succs=[7202, 7214, 9218] <== FOCUS
+   @7202   n=3   tail=POP_JUMP_FORWARD_IF_TRUE       jump=@7248   preds=[7186]                       succs=[7212, 7248, 9218]
+   @7212   n=1   tail=JUMP_FORWARD                   jump=@7216   preds=[7202]                       succs=[7216, 9218]
+   @7214   n=1   tail=POP_TOP                        jump=-       preds=[7186]                       succs=[7216, 9218]
+   @7216   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@7582   preds=[7164, 7212, 7214]           succs=[7248, 7582, 9218] <== FOCUS
+   @7248   n=5   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@7492   preds=[7202, 7216]                 succs=[7270, 7492, 9218] <== FOCUS
+   @7270   n=17  tail=POP_JUMP_FORWARD_IF_FALSE      jump=@7492   preds=[7248]                       succs=[7372, 7492, 9218] <== FOCUS
+   @7372   n=16  tail=POP_TOP                        jump=-       preds=[7270]                       succs=[7488, 9218]
+   @7488   n=2   tail=RETURN_VALUE                   jump=-       preds=[7372]                       succs=[]
+   @7492   n=13  tail=STORE_ATTR                     jump=-       preds=[7248, 7270]                 succs=[7582, 9218] <== FOCUS
+   @7582   n=5   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@7634   preds=[7216, 7492]                 succs=[7604, 7634, 9218] <== FOCUS
+   @7604   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@7632   preds=[7582]                       succs=[7620, 7632, 9218]
+   @7620   n=3   tail=POP_JUMP_FORWARD_IF_TRUE       jump=@7668   preds=[7604]                       succs=[7630, 7668, 9218]
+   @7630   n=1   tail=JUMP_FORWARD                   jump=@7634   preds=[7620]                       succs=[7634, 9218]
+   @7632   n=1   tail=POP_TOP                        jump=-       preds=[7604]                       succs=[7634, 9218]
+   @7634   n=7   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@8592   preds=[7582, 7630, 7632]           succs=[7668, 8592, 9218]
+   @7668   n=9   tail=GET_ITER                       jump=-       preds=[7620, 7634]                 succs=[7706, 9218]
+   @7706   n=1   tail=FOR_ITER                       jump=@7972   preds=[7668, 7960]                 succs=[7708, 7972, 9218]
+   @7708   n=1   tail=STORE_FAST                     jump=-       preds=[7706]                       succs=[7710, 9218]
+   @7710   n=1   tail=NOP                            jump=-       preds=[7708]                       succs=[7712]
+   @7712   n=14  tail=STORE_FAST                     jump=-       preds=[7710]                       succs=[7814, 7818]
+   @7814   n=2   tail=JUMP_FORWARD                   jump=@7972   preds=[7712]                       succs=[7972, 9218]
+   @7818   n=4   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@7964   preds=[7712]                       succs=[7836, 7964, 7966]
+   @7836   n=11  tail=POP_JUMP_FORWARD_IF_FALSE      jump=@7960   preds=[7818]                       succs=[7890, 7960, 7966]
+   @7890   n=10  tail=POP_TOP                        jump=-       preds=[7836]                       succs=[7960, 7966]
+   @7960   n=2   tail=JUMP_BACKWARD                  jump=@7706   preds=[7836, 7890]                 succs=[7706, 9218]
+   @7964   n=1   tail=RERAISE                        jump=-       preds=[7818]                       succs=[7966]
+   @7966   n=3   tail=RERAISE                        jump=-       preds=[7818, 7836, 7890, 7964]     succs=[9218]
+   @7972   n=4   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@8170   preds=[7706, 7814]                 succs=[7980, 8170, 9218]
+   @7980   n=25  tail=POP_TOP                        jump=-       preds=[7972]                       succs=[8166, 9218]
+   @8166   n=2   tail=RETURN_VALUE                   jump=-       preds=[7980]                       succs=[]
+   @8170   n=3   tail=STORE_ATTR                     jump=-       preds=[7972]                       succs=[8184, 9218]
+   @8184   n=1   tail=NOP                            jump=-       preds=[8170]                       succs=[8186]
+   @8186   n=9   tail=STORE_FAST                     jump=-       preds=[8184]                       succs=[8256, 8258]
+   @8256   n=1   tail=JUMP_FORWARD                   jump=@8294   preds=[8186]                       succs=[8294, 9218]
+   @8258   n=4   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@8286   preds=[8186]                       succs=[8276, 8286, 8288]
+   @8276   n=3   tail=STORE_FAST                     jump=-       preds=[8258]                       succs=[8282, 8288]
+   @8282   n=2   tail=JUMP_FORWARD                   jump=@8294   preds=[8276]                       succs=[8294, 9218]
+   @8286   n=1   tail=RERAISE                        jump=-       preds=[8258]                       succs=[8288]
+   @8288   n=3   tail=RERAISE                        jump=-       preds=[8258, 8276, 8286]           succs=[9218]
+   @8294   n=4   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@8350   preds=[8256, 8282]                 succs=[8306, 8350, 9218]
+   @8306   n=7   tail=JUMP_FORWARD                   jump=@9194   preds=[8294]                       succs=[9194, 9218]
+   @8350   n=2   tail=POP_JUMP_FORWARD_IF_NONE       jump=-       preds=[8294]                       succs=[8354, 8588, 9218]
+   @8354   n=8   tail=POP_JUMP_FORWARD_IF_NONE       jump=-       preds=[8350]                       succs=[8400, 8588, 9218]
+   @8400   n=10  tail=POP_JUMP_FORWARD_IF_FALSE      jump=@8548   preds=[8354]                       succs=[8450, 8548, 9218]
+   @8450   n=11  tail=POP_JUMP_FORWARD_IF_FALSE      jump=@8544   preds=[8400]                       succs=[8504, 8544, 9218]
+   @8504   n=5   tail=POP_TOP                        jump=-       preds=[8450]                       succs=[8544, 9218]
+   @8544   n=2   tail=JUMP_FORWARD                   jump=@9194   preds=[8450, 8504]                 succs=[9194, 9218]
+   @8548   n=5   tail=POP_TOP                        jump=-       preds=[8400]                       succs=[8588, 9218]
+   @8588   n=2   tail=JUMP_FORWARD                   jump=@9194   preds=[8350, 8354, 8548]           succs=[9194, 9218]
+   @8592   n=16  tail=POP_JUMP_FORWARD_IF_FALSE      jump=@8904   preds=[7634]                       succs=[8666, 8904, 9218]
+   @8666   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@8852   preds=[8592]                       succs=[8688, 8852, 9218]
+   @8688   n=22  tail=JUMP_FORWARD                   jump=@9194   preds=[8666]                       succs=[9194, 9218]
+   @8852   n=7   tail=JUMP_FORWARD                   jump=@9194   preds=[8666]                       succs=[9194, 9218]
+   @8904   n=5   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@9144   preds=[8592]                       succs=[8926, 9144, 9218]
+   @8926   n=5   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@9144   preds=[8904]                       succs=[8948, 9144, 9218]
+   @8948   n=6   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@8976   preds=[8926]                       succs=[8964, 8976, 9218]
+   @8964   n=3   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@9144   preds=[8948]                       succs=[8974, 9144, 9218]
+   @8974   n=1   tail=JUMP_FORWARD                   jump=@8980   preds=[8964]                       succs=[8980, 9218]
+   @8976   n=2   tail=JUMP_FORWARD                   jump=@9144   preds=[8948]                       succs=[9144, 9218]
+   @8980   n=22  tail=JUMP_FORWARD                   jump=@9194   preds=[8974]                       succs=[9194, 9218]
+   @9144   n=6   tail=POP_TOP                        jump=-       preds=[8904, 8926, 8964, 8976]     succs=[9194, 9218]
+   @9194   n=4   tail=POP_JUMP_BACKWARD_IF_TRUE      jump=@5614   preds=[8306, 8544, 8588, 8688, 8852, 8980, 9144] succs=[5614, 9210, 9218] <== FOCUS
+   @9210   n=2   tail=RETURN_VALUE                   jump=-       preds=[9194]                       succs=[]
+   @9214   n=2   tail=RETURN_VALUE                   jump=-       preds=[5598]                       succs=[]
+   @9218   n=4   tail=POP_JUMP_FORWARD_IF_FALSE      jump=@9322   preds=[6, 300, 400, 778, 782, 882, 1260, 1264, 1364, 1742, 1782, 1838, 1940, 1944, 1986, 2088, 2092, 2134, 2236, 2240, 2282, 2384, 2388, 2430, 2532, 2536, 2578, 2680, 2684, 2726, 2830, 2838, 2878, 2934, 3036, 3040, 3082, 3184, 3188, 3230, 3332, 3336, 3378, 3480, 3484, 3526, 3628, 3632, 3674, 3776, 3780, 3822, 3926, 3934, 3990, 4092, 4096, 4138, 4240, 4244, 4286, 4388, 4392, 4434, 4536, 4540, 4582, 4684, 4688, 4730, 4832, 4836, 4878, 4980, 4984, 5270, 5278, 5288, 5492, 5594, 5598, 5614, 5738, 5902, 6058, 6090, 6112, 6280, 6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6652, 6678, 6684, 6690, 6702, 6778, 6792, 6846, 6868, 6890, 7048, 7164, 7186, 7202, 7212, 7214, 7216, 7248, 7270, 7372, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7814, 7960, 7966, 7972, 7980, 8170, 8256, 8282, 8288, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144, 9194] succs=[9236, 9322, 9324]
+   @9236   n=1   tail=STORE_FAST                     jump=-       preds=[9218]                       succs=[9238, 9324]
+   @9238   n=8   tail=POP_TOP                        jump=-       preds=[9236]                       succs=[9302, 9314]
+   @9302   n=6   tail=RETURN_VALUE                   jump=-       preds=[9238]                       succs=[]
+   @9314   n=4   tail=RERAISE                        jump=-       preds=[9238]                       succs=[9324]
+   @9322   n=1   tail=RERAISE                        jump=-       preds=[9218]                       succs=[9324]
+   @9324   n=3   tail=RERAISE                        jump=-       preds=[9218, 9236, 9314, 9322]     succs=[]
+
+===== REGION TREE =====
+* region LoopRegion type=FOR_LOOP entry=@7706 exit=@None n_blocks=10
+  blocks(sorted)=[7668, 7706, 7708, 7710, 7712, 7814, 7818, 7836, 7890, 7960]
+  header_block=@7706 condition_block=@None back_edge_block=@7960
+  is_while_true=False has_break=True else_is_follow=False
+  body_blocks=[7706, 7708, 7710, 7712, 7818, 7836, 7890, 7960]
+  else_blocks=[] init_blocks=[]
+  back_edge_blocks=[7960]
+  condition_chain_blocks=[]
+  condition_recheck_blocks=[]
+  break_blocks=[7814] pre_condition_blocks=[]
+  * region IfRegion type=IF_THEN entry=@7836 exit=@7960 n_blocks=2
+    blocks(sorted)=[7836, 7890]
+    condition_block=@7836  merge_block=@7960
+    then_blocks=[7890]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+* region LoopRegion type=WHILE_LOOP entry=@5614 exit=@None n_blocks=2
+  blocks(sorted)=[5614, 5738]
+  header_block=@5738 condition_block=@5614 back_edge_block=@5738
+  is_while_true=False has_break=False else_is_follow=False
+  body_blocks=[5738]
+  else_blocks=[] init_blocks=[]
+  back_edge_blocks=[5738]
+  condition_chain_blocks=[5614]
+  condition_recheck_blocks=[]
+  break_blocks=[] pre_condition_blocks=[]
+* region LoopRegion type=WHILE_LOOP entry=@5598 exit=@None n_blocks=100
+  blocks(sorted)=[5598, 5614, 5738, 5902, 6058, 6090, 6112, 6280, 6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6654, 6672, 6678, 6682, 6684, 6690, 6792, 6846, 6868, 6890, 7048, 7164, 7186, 7202, 7212, 7214, 7216, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7818, 7836, 7890, 7960, 7964, 7966, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8258, 8276, 8282, 8286, 8288, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144, 9194, 9210]
+  header_block=@5614 condition_block=@5598 back_edge_block=@9194
+  is_while_true=False has_break=True else_is_follow=False
+  body_blocks=[5614, 5738, 5902, 6058, 6090, 6112, 6280, 6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6654, 6672, 6678, 6682, 6684, 6792, 6846, 6868, 6890, 7048, 7164, 7186, 7202, 7212, 7214, 7216, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7818, 7836, 7890, 7960, 7964, 7966, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8258, 8276, 8282, 8286, 8288, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144, 9194]
+  else_blocks=[] init_blocks=[]
+  back_edge_blocks=[9194]
+  condition_chain_blocks=[5598]
+  condition_recheck_blocks=[]
+  break_blocks=[6690] pre_condition_blocks=[]
+  [FOCUS @7164 declared in this region]
+  [FOCUS @7186 declared in this region]
+  [FOCUS @7216 declared in this region]
+  [FOCUS @7248 declared in this region]
+  [FOCUS @7270 declared in this region]
+  [FOCUS @7492 declared in this region]
+  [FOCUS @7582 declared in this region]
+  [FOCUS @9194 declared in this region]
+  * region LoopRegion type=WHILE_LOOP entry=@5614 exit=@None n_blocks=2
+    blocks(sorted)=[5614, 5738]
+    header_block=@5738 condition_block=@5614 back_edge_block=@5738
+    is_while_true=False has_break=False else_is_follow=False
+    body_blocks=[5738]
+    else_blocks=[] init_blocks=[]
+    back_edge_blocks=[5738]
+    condition_chain_blocks=[5614]
+    condition_recheck_blocks=[]
+    break_blocks=[] pre_condition_blocks=[]
+  * region IfRegion type=IF_THEN entry=@5902 exit=@6280 n_blocks=4
+    blocks(sorted)=[5902, 6058, 6090, 6112]
+    condition_block=@6090  merge_block=@6280
+    then_blocks=[6112]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={1674147784336: "{'blocks': [BasicBlock(84, offset=5902-6056, instrs=26), BasicBlock(85, offset=6058-6088, instrs=6), BasicBlock(86, offset=6090-6110, instrs=5)], 'op': 'and'}"}
+    metadata keys={}
+  * region IfRegion type=IF_THEN entry=@6058 exit=@6280 n_blocks=3
+    blocks(sorted)=[6058, 6090, 6112]
+    condition_block=@6090  merge_block=@6280
+    then_blocks=[6112]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={1674147784336: "{'blocks': [BasicBlock(85, offset=6058-6088, instrs=6), BasicBlock(86, offset=6090-6110, instrs=5)], 'op': 'and'}"}
+    metadata keys={}
+    * region BoolOpRegion type=BOOL_OP entry=@6058 exit=@None n_blocks=2
+      blocks(sorted)=[6058, 6090]
+  * region IfRegion type=IF_ELIF_CHAIN entry=@6280 exit=@9218 n_blocks=22
+    blocks(sorted)=[6280, 6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6690, 6792, 6846, 6890, 7048]
+    condition_block=@6280  merge_block=@9218
+    then_blocks=[6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6690, 6792]
+    else_blocks=[6846, 6890, 7048]
+    elif_conditions=[6846]
+    elif_bodies=[[6890, 7048]]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN entry=@6322 exit=@6374 n_blocks=6
+    blocks(sorted)=[6322, 6344, 6360, 6370, 6372, 6406]
+    condition_block=@6322  merge_block=@6374
+    then_blocks=[6344, 6360, 6370, 6372, 6406]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN entry=@6344 exit=@6406 n_blocks=4
+    blocks(sorted)=[6344, 6360, 6370, 6374]
+    condition_block=@6344  merge_block=@6406
+    then_blocks=[6370, 6374]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'False'}
+  * region IfRegion type=IF_THEN entry=@6374 exit=@6496 n_blocks=2
+    blocks(sorted)=[6374, 6406]
+    condition_block=@6374  merge_block=@6496
+    then_blocks=[6406]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN entry=@6496 exit=@6548 n_blocks=8
+    blocks(sorted)=[6496, 6518, 6534, 6544, 6546, 6580, 6582, 6652]
+    condition_block=@6496  merge_block=@6548
+    then_blocks=[6518, 6534, 6544, 6546, 6580, 6582, 6652]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN entry=@6518 exit=@6580 n_blocks=4
+    blocks(sorted)=[6518, 6534, 6544, 6548]
+    condition_block=@6518  merge_block=@6580
+    then_blocks=[6544, 6548]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'True'}
+  * region IfRegion type=IF_THEN entry=@6548 exit=@6792 n_blocks=5
+    blocks(sorted)=[6548, 6580, 6582, 6652, 6690]
+    condition_block=@6548  merge_block=@6792
+    then_blocks=[6580, 6582, 6652, 6690]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN entry=@6690 exit=@6778 n_blocks=2
+    blocks(sorted)=[6690, 6702]
+    condition_block=@6690  merge_block=@6778
+    then_blocks=[6702]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN entry=@6890 exit=@7164 n_blocks=2
+    blocks(sorted)=[6890, 7048]
+    condition_block=@6890  merge_block=@7164
+    then_blocks=[7048]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN entry=@7164 exit=@7216 n_blocks=51
+    blocks(sorted)=[7164, 7186, 7202, 7212, 7214, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+    condition_block=@7164  merge_block=@7216
+    then_blocks=[7186, 7202, 7212, 7214, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+    [FOCUS @7164 declared in this region]
+    [FOCUS @7186 declared in this region]
+    [FOCUS @7248 declared in this region]
+    [FOCUS @7270 declared in this region]
+    [FOCUS @7492 declared in this region]
+    [FOCUS @7582 declared in this region]
+  * region IfRegion type=IF_ELIF_CHAIN entry=@7186 exit=@7216 n_blocks=48
+    blocks(sorted)=[7186, 7202, 7212, 7248, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+    condition_block=@7186  merge_block=@7216
+    then_blocks=[7212]
+    else_blocks=[7248, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+    elif_conditions=[7248]
+    elif_bodies=[[7372, 7488]]
+    elif_final_else=[7492, 7582, 7604, 7634, 7620, 7632, 7668, 8592, 7630, 7706, 8666, 8904, 7708, 7972, 8688, 8852, 8926, 9144, 7710, 7980, 8170, 8948, 7712, 8166, 8184, 8964, 8976, 7814, 8186, 8974, 8256, 8980, 8294, 8306, 8350, 8354, 8588, 8400, 8450, 8548, 8504, 8544]
+    inline_boolop_chains={1674147955600: "{'blocks': [BasicBlock(121, offset=7248-7268, instrs=5), BasicBlock(122, offset=7270-7370, instrs=17)], 'op': 'and'}"}
+    metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'False'}
+    [FOCUS @7186 declared in this region]
+    [FOCUS @7248 declared in this region]
+    [FOCUS @7492 declared in this region]
+    [FOCUS @7582 declared in this region]
+  * region IfRegion type=IF_THEN entry=@7216 exit=@7582 n_blocks=6
+    blocks(sorted)=[7216, 7248, 7270, 7372, 7488, 7492]
+    condition_block=@7216  merge_block=@7582
+    then_blocks=[7248, 7270, 7372, 7488, 7492]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+    [FOCUS @7216 declared in this region]
+    [FOCUS @7248 declared in this region]
+    [FOCUS @7270 declared in this region]
+    [FOCUS @7492 declared in this region]
+  * region IfRegion type=IF_THEN_ELSE entry=@7270 exit=@7582 n_blocks=4
+    blocks(sorted)=[7270, 7372, 7488, 7492]
+    condition_block=@7270  merge_block=@7582
+    then_blocks=[7372, 7488]
+    else_blocks=[7492]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+    [FOCUS @7270 declared in this region]
+    [FOCUS @7492 declared in this region]
+  * region IfRegion type=IF_THEN entry=@7582 exit=@7634 n_blocks=28
+    blocks(sorted)=[7582, 7604, 7620, 7630, 7632, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+    condition_block=@7582  merge_block=@7634
+    then_blocks=[7604, 7620, 7630, 7632, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+    [FOCUS @7582 declared in this region]
+  * region IfRegion type=IF_THEN_ELSE entry=@7604 exit=@7634 n_blocks=26
+    blocks(sorted)=[7604, 7620, 7630, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+    condition_block=@7604  merge_block=@7634
+    then_blocks=[7630]
+    else_blocks=[7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'False'}
+  * region IfRegion type=IF_ELIF_CHAIN entry=@7634 exit=@9194 n_blocks=36
+    blocks(sorted)=[7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+    condition_block=@7634  merge_block=@9194
+    then_blocks=[7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+    else_blocks=[8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+    elif_conditions=[8592]
+    elif_bodies=[[8666, 8688, 8852]]
+    elif_final_else=[8904, 8926, 9144, 8948, 8964, 8976, 8974, 8980]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region LoopRegion type=FOR_LOOP entry=@7706 exit=@None n_blocks=10
+    blocks(sorted)=[7668, 7706, 7708, 7710, 7712, 7814, 7818, 7836, 7890, 7960]
+    header_block=@7706 condition_block=@None back_edge_block=@7960
+    is_while_true=False has_break=True else_is_follow=False
+    body_blocks=[7706, 7708, 7710, 7712, 7818, 7836, 7890, 7960]
+    else_blocks=[] init_blocks=[]
+    back_edge_blocks=[7960]
+    condition_chain_blocks=[]
+    condition_recheck_blocks=[]
+    break_blocks=[7814] pre_condition_blocks=[]
+    * region IfRegion type=IF_THEN entry=@7836 exit=@7960 n_blocks=2
+      blocks(sorted)=[7836, 7890]
+      condition_block=@7836  merge_block=@7960
+      then_blocks=[7890]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+  * region IfRegion type=IF_THEN entry=@7972 exit=@8170 n_blocks=3
+    blocks(sorted)=[7972, 7980, 8166]
+    condition_block=@7972  merge_block=@8170
+    then_blocks=[7980, 8166]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@8294 exit=@9194 n_blocks=10
+    blocks(sorted)=[8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+    condition_block=@8294  merge_block=@9194
+    then_blocks=[8306]
+    else_blocks=[8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN entry=@8350 exit=@8588 n_blocks=7
+    blocks(sorted)=[8350, 8354, 8400, 8450, 8504, 8544, 8548]
+    condition_block=@8350  merge_block=@8588
+    then_blocks=[8354, 8400, 8450, 8504, 8544, 8548]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN entry=@8354 exit=@8588 n_blocks=6
+    blocks(sorted)=[8354, 8400, 8450, 8504, 8544, 8548]
+    condition_block=@8354  merge_block=@8588
+    then_blocks=[8400, 8450, 8504, 8544, 8548]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@8400 exit=@9194 n_blocks=6
+    blocks(sorted)=[8400, 8450, 8504, 8544, 8548, 8588]
+    condition_block=@8400  merge_block=@9194
+    then_blocks=[8450, 8504, 8544]
+    else_blocks=[8548, 8588]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN entry=@8450 exit=@8544 n_blocks=2
+    blocks(sorted)=[8450, 8504]
+    condition_block=@8450  merge_block=@8544
+    then_blocks=[8504]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@8666 exit=@9194 n_blocks=3
+    blocks(sorted)=[8666, 8688, 8852]
+    condition_block=@8666  merge_block=@9194
+    then_blocks=[8688]
+    else_blocks=[8852]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN entry=@8904 exit=@9144 n_blocks=7
+    blocks(sorted)=[8904, 8926, 8948, 8964, 8974, 8976, 8980]
+    condition_block=@8926  merge_block=@9144
+    then_blocks=[8948, 8964, 8974, 8976, 8980]
+    else_blocks=[]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={1674147964112: "{'blocks': [BasicBlock(161, offset=8904-8924, instrs=5), BasicBlock(162, offset=8926-8946, instrs=5)], 'op': 'and'}"}
+    metadata keys={}
+    * region BoolOpRegion type=BOOL_OP entry=@8904 exit=@None n_blocks=2
+      blocks(sorted)=[8904, 8926]
+  * region IfRegion type=IF_THEN_ELSE entry=@8948 exit=@9194 n_blocks=6
+    blocks(sorted)=[8948, 8964, 8974, 8976, 8980, 9144]
+    condition_block=@8948  merge_block=@9194
+    then_blocks=[8974, 8980]
+    else_blocks=[8976, 9144]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'False'}
+* region LoopRegion type=WHILE_LOOP entry=@5598 exit=@None n_blocks=103
+  blocks(sorted)=[5598, 5614, 5738, 5902, 6058, 6090, 6112, 6280, 6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6654, 6672, 6678, 6682, 6684, 6690, 6702, 6778, 6792, 6846, 6868, 6890, 7048, 7164, 7186, 7202, 7212, 7214, 7216, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7818, 7836, 7890, 7960, 7964, 7966, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8258, 8276, 8282, 8286, 8288, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144, 9194, 9210, 9214]
+  header_block=@5598 condition_block=@None back_edge_block=@6792
+  is_while_true=True has_break=True else_is_follow=False
+  body_blocks=[5598, 5614, 5738, 5902, 6058, 6090, 6112, 6280, 6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6654, 6672, 6678, 6682, 6684, 6690, 6702, 6778, 6792, 6846, 6868, 6890, 7048, 7164, 7186, 7202, 7212, 7214, 7216, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7818, 7836, 7890, 7960, 7964, 7966, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8258, 8276, 8282, 8286, 8288, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144, 9194, 9210, 9214]
+  else_blocks=[] init_blocks=[]
+  back_edge_blocks=[6792]
+  condition_chain_blocks=[]
+  condition_recheck_blocks=[]
+  break_blocks=[9214] pre_condition_blocks=[]
+  [FOCUS @7164 declared in this region]
+  [FOCUS @7186 declared in this region]
+  [FOCUS @7216 declared in this region]
+  [FOCUS @7248 declared in this region]
+  [FOCUS @7270 declared in this region]
+  [FOCUS @7492 declared in this region]
+  [FOCUS @7582 declared in this region]
+  [FOCUS @9194 declared in this region]
+  * region LoopRegion type=WHILE_LOOP entry=@5598 exit=@None n_blocks=100
+    blocks(sorted)=[5598, 5614, 5738, 5902, 6058, 6090, 6112, 6280, 6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6654, 6672, 6678, 6682, 6684, 6690, 6792, 6846, 6868, 6890, 7048, 7164, 7186, 7202, 7212, 7214, 7216, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7818, 7836, 7890, 7960, 7964, 7966, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8258, 8276, 8282, 8286, 8288, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144, 9194, 9210]
+    header_block=@5614 condition_block=@5598 back_edge_block=@9194
+    is_while_true=False has_break=True else_is_follow=False
+    body_blocks=[5614, 5738, 5902, 6058, 6090, 6112, 6280, 6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6654, 6672, 6678, 6682, 6684, 6792, 6846, 6868, 6890, 7048, 7164, 7186, 7202, 7212, 7214, 7216, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7818, 7836, 7890, 7960, 7964, 7966, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8258, 8276, 8282, 8286, 8288, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144, 9194]
+    else_blocks=[] init_blocks=[]
+    back_edge_blocks=[9194]
+    condition_chain_blocks=[5598]
+    condition_recheck_blocks=[]
+    break_blocks=[6690] pre_condition_blocks=[]
+    [FOCUS @7164 declared in this region]
+    [FOCUS @7186 declared in this region]
+    [FOCUS @7216 declared in this region]
+    [FOCUS @7248 declared in this region]
+    [FOCUS @7270 declared in this region]
+    [FOCUS @7492 declared in this region]
+    [FOCUS @7582 declared in this region]
+    [FOCUS @9194 declared in this region]
+    * region LoopRegion type=WHILE_LOOP entry=@5614 exit=@None n_blocks=2
+      blocks(sorted)=[5614, 5738]
+      header_block=@5738 condition_block=@5614 back_edge_block=@5738
+      is_while_true=False has_break=False else_is_follow=False
+      body_blocks=[5738]
+      else_blocks=[] init_blocks=[]
+      back_edge_blocks=[5738]
+      condition_chain_blocks=[5614]
+      condition_recheck_blocks=[]
+      break_blocks=[] pre_condition_blocks=[]
+    * region IfRegion type=IF_THEN entry=@5902 exit=@6280 n_blocks=4
+      blocks(sorted)=[5902, 6058, 6090, 6112]
+      condition_block=@6090  merge_block=@6280
+      then_blocks=[6112]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={1674147784336: "{'blocks': [BasicBlock(84, offset=5902-6056, instrs=26), BasicBlock(85, offset=6058-6088, instrs=6), BasicBlock(86, offset=6090-6110, instrs=5)], 'op': 'and'}"}
+      metadata keys={}
+    * region IfRegion type=IF_THEN entry=@6058 exit=@6280 n_blocks=3
+      blocks(sorted)=[6058, 6090, 6112]
+      condition_block=@6090  merge_block=@6280
+      then_blocks=[6112]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={1674147784336: "{'blocks': [BasicBlock(85, offset=6058-6088, instrs=6), BasicBlock(86, offset=6090-6110, instrs=5)], 'op': 'and'}"}
+      metadata keys={}
+      * region BoolOpRegion type=BOOL_OP entry=@6058 exit=@None n_blocks=2
+        blocks(sorted)=[6058, 6090]
+    * region IfRegion type=IF_ELIF_CHAIN entry=@6280 exit=@9218 n_blocks=22
+      blocks(sorted)=[6280, 6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6690, 6792, 6846, 6890, 7048]
+      condition_block=@6280  merge_block=@9218
+      then_blocks=[6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6690, 6792]
+      else_blocks=[6846, 6890, 7048]
+      elif_conditions=[6846]
+      elif_bodies=[[6890, 7048]]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region IfRegion type=IF_THEN entry=@6322 exit=@6374 n_blocks=6
+      blocks(sorted)=[6322, 6344, 6360, 6370, 6372, 6406]
+      condition_block=@6322  merge_block=@6374
+      then_blocks=[6344, 6360, 6370, 6372, 6406]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region IfRegion type=IF_THEN entry=@6344 exit=@6406 n_blocks=4
+      blocks(sorted)=[6344, 6360, 6370, 6374]
+      condition_block=@6344  merge_block=@6406
+      then_blocks=[6370, 6374]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'False'}
+    * region IfRegion type=IF_THEN entry=@6374 exit=@6496 n_blocks=2
+      blocks(sorted)=[6374, 6406]
+      condition_block=@6374  merge_block=@6496
+      then_blocks=[6406]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region IfRegion type=IF_THEN entry=@6496 exit=@6548 n_blocks=8
+      blocks(sorted)=[6496, 6518, 6534, 6544, 6546, 6580, 6582, 6652]
+      condition_block=@6496  merge_block=@6548
+      then_blocks=[6518, 6534, 6544, 6546, 6580, 6582, 6652]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region IfRegion type=IF_THEN entry=@6518 exit=@6580 n_blocks=4
+      blocks(sorted)=[6518, 6534, 6544, 6548]
+      condition_block=@6518  merge_block=@6580
+      then_blocks=[6544, 6548]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'True'}
+    * region IfRegion type=IF_THEN entry=@6548 exit=@6792 n_blocks=5
+      blocks(sorted)=[6548, 6580, 6582, 6652, 6690]
+      condition_block=@6548  merge_block=@6792
+      then_blocks=[6580, 6582, 6652, 6690]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region IfRegion type=IF_THEN entry=@6690 exit=@6778 n_blocks=2
+      blocks(sorted)=[6690, 6702]
+      condition_block=@6690  merge_block=@6778
+      then_blocks=[6702]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region IfRegion type=IF_THEN entry=@6890 exit=@7164 n_blocks=2
+      blocks(sorted)=[6890, 7048]
+      condition_block=@6890  merge_block=@7164
+      then_blocks=[7048]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region IfRegion type=IF_THEN entry=@7164 exit=@7216 n_blocks=51
+      blocks(sorted)=[7164, 7186, 7202, 7212, 7214, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+      condition_block=@7164  merge_block=@7216
+      then_blocks=[7186, 7202, 7212, 7214, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+      [FOCUS @7164 declared in this region]
+      [FOCUS @7186 declared in this region]
+      [FOCUS @7248 declared in this region]
+      [FOCUS @7270 declared in this region]
+      [FOCUS @7492 declared in this region]
+      [FOCUS @7582 declared in this region]
+    * region IfRegion type=IF_ELIF_CHAIN entry=@7186 exit=@7216 n_blocks=48
+      blocks(sorted)=[7186, 7202, 7212, 7248, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+      condition_block=@7186  merge_block=@7216
+      then_blocks=[7212]
+      else_blocks=[7248, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+      elif_conditions=[7248]
+      elif_bodies=[[7372, 7488]]
+      elif_final_else=[7492, 7582, 7604, 7634, 7620, 7632, 7668, 8592, 7630, 7706, 8666, 8904, 7708, 7972, 8688, 8852, 8926, 9144, 7710, 7980, 8170, 8948, 7712, 8166, 8184, 8964, 8976, 7814, 8186, 8974, 8256, 8980, 8294, 8306, 8350, 8354, 8588, 8400, 8450, 8548, 8504, 8544]
+      inline_boolop_chains={1674147955600: "{'blocks': [BasicBlock(121, offset=7248-7268, instrs=5), BasicBlock(122, offset=7270-7370, instrs=17)], 'op': 'and'}"}
+      metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'False'}
+      [FOCUS @7186 declared in this region]
+      [FOCUS @7248 declared in this region]
+      [FOCUS @7492 declared in this region]
+      [FOCUS @7582 declared in this region]
+    * region IfRegion type=IF_THEN entry=@7216 exit=@7582 n_blocks=6
+      blocks(sorted)=[7216, 7248, 7270, 7372, 7488, 7492]
+      condition_block=@7216  merge_block=@7582
+      then_blocks=[7248, 7270, 7372, 7488, 7492]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+      [FOCUS @7216 declared in this region]
+      [FOCUS @7248 declared in this region]
+      [FOCUS @7270 declared in this region]
+      [FOCUS @7492 declared in this region]
+    * region IfRegion type=IF_THEN_ELSE entry=@7270 exit=@7582 n_blocks=4
+      blocks(sorted)=[7270, 7372, 7488, 7492]
+      condition_block=@7270  merge_block=@7582
+      then_blocks=[7372, 7488]
+      else_blocks=[7492]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+      [FOCUS @7270 declared in this region]
+      [FOCUS @7492 declared in this region]
+    * region IfRegion type=IF_THEN entry=@7582 exit=@7634 n_blocks=28
+      blocks(sorted)=[7582, 7604, 7620, 7630, 7632, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+      condition_block=@7582  merge_block=@7634
+      then_blocks=[7604, 7620, 7630, 7632, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+      [FOCUS @7582 declared in this region]
+    * region IfRegion type=IF_THEN_ELSE entry=@7604 exit=@7634 n_blocks=26
+      blocks(sorted)=[7604, 7620, 7630, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+      condition_block=@7604  merge_block=@7634
+      then_blocks=[7630]
+      else_blocks=[7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'False'}
+    * region IfRegion type=IF_ELIF_CHAIN entry=@7634 exit=@9194 n_blocks=36
+      blocks(sorted)=[7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+      condition_block=@7634  merge_block=@9194
+      then_blocks=[7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+      else_blocks=[8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+      elif_conditions=[8592]
+      elif_bodies=[[8666, 8688, 8852]]
+      elif_final_else=[8904, 8926, 9144, 8948, 8964, 8976, 8974, 8980]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region LoopRegion type=FOR_LOOP entry=@7706 exit=@None n_blocks=10
+      blocks(sorted)=[7668, 7706, 7708, 7710, 7712, 7814, 7818, 7836, 7890, 7960]
+      header_block=@7706 condition_block=@None back_edge_block=@7960
+      is_while_true=False has_break=True else_is_follow=False
+      body_blocks=[7706, 7708, 7710, 7712, 7818, 7836, 7890, 7960]
+      else_blocks=[] init_blocks=[]
+      back_edge_blocks=[7960]
+      condition_chain_blocks=[]
+      condition_recheck_blocks=[]
+      break_blocks=[7814] pre_condition_blocks=[]
+      * region IfRegion type=IF_THEN entry=@7836 exit=@7960 n_blocks=2
+        blocks(sorted)=[7836, 7890]
+        condition_block=@7836  merge_block=@7960
+        then_blocks=[7890]
+        else_blocks=[]
+        elif_conditions=[]
+        elif_bodies=[]
+        elif_final_else=[]
+        inline_boolop_chains={}
+        metadata keys={}
+    * region IfRegion type=IF_THEN entry=@7972 exit=@8170 n_blocks=3
+      blocks(sorted)=[7972, 7980, 8166]
+      condition_block=@7972  merge_block=@8170
+      then_blocks=[7980, 8166]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region IfRegion type=IF_THEN_ELSE entry=@8294 exit=@9194 n_blocks=10
+      blocks(sorted)=[8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+      condition_block=@8294  merge_block=@9194
+      then_blocks=[8306]
+      else_blocks=[8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region IfRegion type=IF_THEN entry=@8350 exit=@8588 n_blocks=7
+      blocks(sorted)=[8350, 8354, 8400, 8450, 8504, 8544, 8548]
+      condition_block=@8350  merge_block=@8588
+      then_blocks=[8354, 8400, 8450, 8504, 8544, 8548]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region IfRegion type=IF_THEN entry=@8354 exit=@8588 n_blocks=6
+      blocks(sorted)=[8354, 8400, 8450, 8504, 8544, 8548]
+      condition_block=@8354  merge_block=@8588
+      then_blocks=[8400, 8450, 8504, 8544, 8548]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region IfRegion type=IF_THEN_ELSE entry=@8400 exit=@9194 n_blocks=6
+      blocks(sorted)=[8400, 8450, 8504, 8544, 8548, 8588]
+      condition_block=@8400  merge_block=@9194
+      then_blocks=[8450, 8504, 8544]
+      else_blocks=[8548, 8588]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region IfRegion type=IF_THEN entry=@8450 exit=@8544 n_blocks=2
+      blocks(sorted)=[8450, 8504]
+      condition_block=@8450  merge_block=@8544
+      then_blocks=[8504]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region IfRegion type=IF_THEN_ELSE entry=@8666 exit=@9194 n_blocks=3
+      blocks(sorted)=[8666, 8688, 8852]
+      condition_block=@8666  merge_block=@9194
+      then_blocks=[8688]
+      else_blocks=[8852]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={}
+    * region IfRegion type=IF_THEN entry=@8904 exit=@9144 n_blocks=7
+      blocks(sorted)=[8904, 8926, 8948, 8964, 8974, 8976, 8980]
+      condition_block=@8926  merge_block=@9144
+      then_blocks=[8948, 8964, 8974, 8976, 8980]
+      else_blocks=[]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={1674147964112: "{'blocks': [BasicBlock(161, offset=8904-8924, instrs=5), BasicBlock(162, offset=8926-8946, instrs=5)], 'op': 'and'}"}
+      metadata keys={}
+      * region BoolOpRegion type=BOOL_OP entry=@8904 exit=@None n_blocks=2
+        blocks(sorted)=[8904, 8926]
+    * region IfRegion type=IF_THEN_ELSE entry=@8948 exit=@9194 n_blocks=6
+      blocks(sorted)=[8948, 8964, 8974, 8976, 8980, 9144]
+      condition_block=@8948  merge_block=@9194
+      then_blocks=[8974, 8980]
+      else_blocks=[8976, 9144]
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+      inline_boolop_chains={}
+      metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'False'}
+* region TryExceptRegion type=TRY_EXCEPT entry=@7712 exit=@None n_blocks=14
+  blocks(sorted)=[6684, 7710, 7712, 7814, 7818, 7836, 7890, 7960, 7964, 7966, 8288, 9314, 9322, 9324]
+* region TryExceptRegion type=TRY_EXCEPT entry=@6582 exit=@None n_blocks=13
+  blocks(sorted)=[6580, 6582, 6652, 6654, 6672, 6678, 6682, 6684, 7966, 8288, 9314, 9322, 9324]
+* region TryExceptRegion type=TRY_EXCEPT entry=@8186 exit=@None n_blocks=13
+  blocks(sorted)=[6684, 7966, 8184, 8186, 8256, 8258, 8276, 8282, 8286, 8288, 9314, 9322, 9324]
+* region TryExceptRegion type=TRY_EXCEPT entry=@6 exit=@None n_blocks=190
+  blocks(sorted)=[6, 300, 400, 778, 782, 882, 1260, 1264, 1364, 1742, 1782, 1838, 1940, 1944, 1986, 2088, 2092, 2134, 2236, 2240, 2282, 2384, 2388, 2430, 2532, 2536, 2578, 2680, 2684, 2726, 2830, 2838, 2878, 2934, 3036, 3040, 3082, 3184, 3188, 3230, 3332, 3336, 3378, 3480, 3484, 3526, 3628, 3632, 3674, 3776, 3780, 3822, 3926, 3934, 3990, 4092, 4096, 4138, 4240, 4244, 4286, 4388, 4392, 4434, 4536, 4540, 4582, 4684, 4688, 4730, 4832, 4836, 4878, 4980, 4984, 5270, 5278, 5288, 5492, 5594, 5598, 5614, 5738, 5902, 6058, 6090, 6112, 6280, 6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6654, 6672, 6678, 6682, 6684, 6690, 6702, 6778, 6792, 6846, 6868, 6890, 7048, 7164, 7186, 7202, 7212, 7214, 7216, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7818, 7836, 7890, 7960, 7964, 7966, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8258, 8276, 8282, 8286, 8288, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144, 9194, 9210, 9214, 9218, 9236, 9238, 9302, 9314, 9322, 9324]
+  [FOCUS @7164 declared in this region]
+  [FOCUS @7186 declared in this region]
+  [FOCUS @7216 declared in this region]
+  [FOCUS @7248 declared in this region]
+  [FOCUS @7270 declared in this region]
+  [FOCUS @7492 declared in this region]
+  [FOCUS @7582 declared in this region]
+  [FOCUS @9194 declared in this region]
+  * region TryExceptRegion type=TRY_EXCEPT entry=@7712 exit=@None n_blocks=14
+    blocks(sorted)=[6684, 7710, 7712, 7814, 7818, 7836, 7890, 7960, 7964, 7966, 8288, 9314, 9322, 9324]
+  * region TryExceptRegion type=TRY_EXCEPT entry=@6582 exit=@None n_blocks=13
+    blocks(sorted)=[6580, 6582, 6652, 6654, 6672, 6678, 6682, 6684, 7966, 8288, 9314, 9322, 9324]
+  * region TryExceptRegion type=TRY_EXCEPT entry=@8186 exit=@None n_blocks=13
+    blocks(sorted)=[6684, 7966, 8184, 8186, 8256, 8258, 8276, 8282, 8286, 8288, 9314, 9322, 9324]
+  * region IfRegion type=IF_THEN_ELSE entry=@1782 exit=@1944 n_blocks=3
+    blocks(sorted)=[1782, 1838, 1940]
+    condition_block=@1782  merge_block=@1944
+    then_blocks=[1838]
+    else_blocks=[1940]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@1944 exit=@2092 n_blocks=3
+    blocks(sorted)=[1944, 1986, 2088]
+    condition_block=@1944  merge_block=@2092
+    then_blocks=[1986]
+    else_blocks=[2088]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@2092 exit=@2240 n_blocks=3
+    blocks(sorted)=[2092, 2134, 2236]
+    condition_block=@2092  merge_block=@2240
+    then_blocks=[2134]
+    else_blocks=[2236]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@2240 exit=@2388 n_blocks=3
+    blocks(sorted)=[2240, 2282, 2384]
+    condition_block=@2240  merge_block=@2388
+    then_blocks=[2282]
+    else_blocks=[2384]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@2388 exit=@2536 n_blocks=3
+    blocks(sorted)=[2388, 2430, 2532]
+    condition_block=@2388  merge_block=@2536
+    then_blocks=[2430]
+    else_blocks=[2532]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@2536 exit=@2684 n_blocks=3
+    blocks(sorted)=[2536, 2578, 2680]
+    condition_block=@2536  merge_block=@2684
+    then_blocks=[2578]
+    else_blocks=[2680]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@2684 exit=@4984 n_blocks=3
+    blocks(sorted)=[2684, 2726, 2830]
+    condition_block=@2684  merge_block=@4984
+    then_blocks=[2726]
+    else_blocks=[2830]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@2878 exit=@3040 n_blocks=3
+    blocks(sorted)=[2878, 2934, 3036]
+    condition_block=@2878  merge_block=@3040
+    then_blocks=[2934]
+    else_blocks=[3036]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@3040 exit=@3188 n_blocks=3
+    blocks(sorted)=[3040, 3082, 3184]
+    condition_block=@3040  merge_block=@3188
+    then_blocks=[3082]
+    else_blocks=[3184]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@3188 exit=@3336 n_blocks=3
+    blocks(sorted)=[3188, 3230, 3332]
+    condition_block=@3188  merge_block=@3336
+    then_blocks=[3230]
+    else_blocks=[3332]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@3336 exit=@3484 n_blocks=3
+    blocks(sorted)=[3336, 3378, 3480]
+    condition_block=@3336  merge_block=@3484
+    then_blocks=[3378]
+    else_blocks=[3480]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@3484 exit=@3632 n_blocks=3
+    blocks(sorted)=[3484, 3526, 3628]
+    condition_block=@3484  merge_block=@3632
+    then_blocks=[3526]
+    else_blocks=[3628]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@3632 exit=@3780 n_blocks=3
+    blocks(sorted)=[3632, 3674, 3776]
+    condition_block=@3632  merge_block=@3780
+    then_blocks=[3674]
+    else_blocks=[3776]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@3780 exit=@4984 n_blocks=3
+    blocks(sorted)=[3780, 3822, 3926]
+    condition_block=@3780  merge_block=@4984
+    then_blocks=[3822]
+    else_blocks=[3926]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@3934 exit=@4096 n_blocks=3
+    blocks(sorted)=[3934, 3990, 4092]
+    condition_block=@3934  merge_block=@4096
+    then_blocks=[3990]
+    else_blocks=[4092]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@4096 exit=@4244 n_blocks=3
+    blocks(sorted)=[4096, 4138, 4240]
+    condition_block=@4096  merge_block=@4244
+    then_blocks=[4138]
+    else_blocks=[4240]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@4244 exit=@4392 n_blocks=3
+    blocks(sorted)=[4244, 4286, 4388]
+    condition_block=@4244  merge_block=@4392
+    then_blocks=[4286]
+    else_blocks=[4388]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@4392 exit=@4540 n_blocks=3
+    blocks(sorted)=[4392, 4434, 4536]
+    condition_block=@4392  merge_block=@4540
+    then_blocks=[4434]
+    else_blocks=[4536]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@4540 exit=@4688 n_blocks=3
+    blocks(sorted)=[4540, 4582, 4684]
+    condition_block=@4540  merge_block=@4688
+    then_blocks=[4582]
+    else_blocks=[4684]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@4688 exit=@4836 n_blocks=3
+    blocks(sorted)=[4688, 4730, 4832]
+    condition_block=@4688  merge_block=@4836
+    then_blocks=[4730]
+    else_blocks=[4832]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+  * region IfRegion type=IF_THEN_ELSE entry=@4836 exit=@4984 n_blocks=3
+    blocks(sorted)=[4836, 4878, 4980]
+    condition_block=@4836  merge_block=@4984
+    then_blocks=[4878]
+    else_blocks=[4980]
+    elif_conditions=[]
+    elif_bodies=[]
+    elif_final_else=[]
+    inline_boolop_chains={}
+    metadata keys={}
+* region BoolOpRegion type=BOOL_OP entry=@6058 exit=@None n_blocks=2
+  blocks(sorted)=[6058, 6090]
+* region BoolOpRegion type=BOOL_OP entry=@6846 exit=@None n_blocks=2
+  blocks(sorted)=[6846, 6868]
+* region BoolOpRegion type=BOOL_OP entry=@8904 exit=@None n_blocks=2
+  blocks(sorted)=[8904, 8926]
+* region IfRegion type=IF_THEN_ELSE entry=@8948 exit=@9194 n_blocks=6
+  blocks(sorted)=[8948, 8964, 8974, 8976, 8980, 9144]
+  condition_block=@8948  merge_block=@9194
+  then_blocks=[8974, 8980]
+  else_blocks=[8976, 9144]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'False'}
+* region IfRegion type=IF_THEN entry=@8904 exit=@9144 n_blocks=7
+  blocks(sorted)=[8904, 8926, 8948, 8964, 8974, 8976, 8980]
+  condition_block=@8926  merge_block=@9144
+  then_blocks=[8948, 8964, 8974, 8976, 8980]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={1674147964112: "{'blocks': [BasicBlock(161, offset=8904-8924, instrs=5), BasicBlock(162, offset=8926-8946, instrs=5)], 'op': 'and'}"}
+  metadata keys={}
+  * region BoolOpRegion type=BOOL_OP entry=@8904 exit=@None n_blocks=2
+    blocks(sorted)=[8904, 8926]
+* region IfRegion type=IF_THEN_ELSE entry=@8666 exit=@9194 n_blocks=3
+  blocks(sorted)=[8666, 8688, 8852]
+  condition_block=@8666  merge_block=@9194
+  then_blocks=[8688]
+  else_blocks=[8852]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN entry=@8450 exit=@8544 n_blocks=2
+  blocks(sorted)=[8450, 8504]
+  condition_block=@8450  merge_block=@8544
+  then_blocks=[8504]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@8400 exit=@9194 n_blocks=6
+  blocks(sorted)=[8400, 8450, 8504, 8544, 8548, 8588]
+  condition_block=@8400  merge_block=@9194
+  then_blocks=[8450, 8504, 8544]
+  else_blocks=[8548, 8588]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN entry=@8354 exit=@8588 n_blocks=6
+  blocks(sorted)=[8354, 8400, 8450, 8504, 8544, 8548]
+  condition_block=@8354  merge_block=@8588
+  then_blocks=[8400, 8450, 8504, 8544, 8548]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN entry=@8350 exit=@8588 n_blocks=7
+  blocks(sorted)=[8350, 8354, 8400, 8450, 8504, 8544, 8548]
+  condition_block=@8350  merge_block=@8588
+  then_blocks=[8354, 8400, 8450, 8504, 8544, 8548]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@8294 exit=@9194 n_blocks=10
+  blocks(sorted)=[8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+  condition_block=@8294  merge_block=@9194
+  then_blocks=[8306]
+  else_blocks=[8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN entry=@7972 exit=@8170 n_blocks=3
+  blocks(sorted)=[7972, 7980, 8166]
+  condition_block=@7972  merge_block=@8170
+  then_blocks=[7980, 8166]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN entry=@7836 exit=@7960 n_blocks=2
+  blocks(sorted)=[7836, 7890]
+  condition_block=@7836  merge_block=@7960
+  then_blocks=[7890]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_ELIF_CHAIN entry=@7634 exit=@9194 n_blocks=36
+  blocks(sorted)=[7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+  condition_block=@7634  merge_block=@9194
+  then_blocks=[7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+  else_blocks=[8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+  elif_conditions=[8592]
+  elif_bodies=[[8666, 8688, 8852]]
+  elif_final_else=[8904, 8926, 9144, 8948, 8964, 8976, 8974, 8980]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@7604 exit=@7634 n_blocks=26
+  blocks(sorted)=[7604, 7620, 7630, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+  condition_block=@7604  merge_block=@7634
+  then_blocks=[7630]
+  else_blocks=[7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'False'}
+* region IfRegion type=IF_THEN entry=@7582 exit=@7634 n_blocks=28
+  blocks(sorted)=[7582, 7604, 7620, 7630, 7632, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+  condition_block=@7582  merge_block=@7634
+  then_blocks=[7604, 7620, 7630, 7632, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+  [FOCUS @7582 declared in this region]
+* region IfRegion type=IF_THEN_ELSE entry=@7270 exit=@7582 n_blocks=4
+  blocks(sorted)=[7270, 7372, 7488, 7492]
+  condition_block=@7270  merge_block=@7582
+  then_blocks=[7372, 7488]
+  else_blocks=[7492]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+  [FOCUS @7270 declared in this region]
+  [FOCUS @7492 declared in this region]
+* region IfRegion type=IF_THEN entry=@7216 exit=@7582 n_blocks=6
+  blocks(sorted)=[7216, 7248, 7270, 7372, 7488, 7492]
+  condition_block=@7216  merge_block=@7582
+  then_blocks=[7248, 7270, 7372, 7488, 7492]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+  [FOCUS @7216 declared in this region]
+  [FOCUS @7248 declared in this region]
+  [FOCUS @7270 declared in this region]
+  [FOCUS @7492 declared in this region]
+* region IfRegion type=IF_ELIF_CHAIN entry=@7186 exit=@7216 n_blocks=48
+  blocks(sorted)=[7186, 7202, 7212, 7248, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+  condition_block=@7186  merge_block=@7216
+  then_blocks=[7212]
+  else_blocks=[7248, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+  elif_conditions=[7248]
+  elif_bodies=[[7372, 7488]]
+  elif_final_else=[7492, 7582, 7604, 7634, 7620, 7632, 7668, 8592, 7630, 7706, 8666, 8904, 7708, 7972, 8688, 8852, 8926, 9144, 7710, 7980, 8170, 8948, 7712, 8166, 8184, 8964, 8976, 7814, 8186, 8974, 8256, 8980, 8294, 8306, 8350, 8354, 8588, 8400, 8450, 8548, 8504, 8544]
+  inline_boolop_chains={1674147955600: "{'blocks': [BasicBlock(121, offset=7248-7268, instrs=5), BasicBlock(122, offset=7270-7370, instrs=17)], 'op': 'and'}"}
+  metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'False'}
+  [FOCUS @7186 declared in this region]
+  [FOCUS @7248 declared in this region]
+  [FOCUS @7492 declared in this region]
+  [FOCUS @7582 declared in this region]
+* region IfRegion type=IF_THEN entry=@7164 exit=@7216 n_blocks=51
+  blocks(sorted)=[7164, 7186, 7202, 7212, 7214, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+  condition_block=@7164  merge_block=@7216
+  then_blocks=[7186, 7202, 7212, 7214, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+  [FOCUS @7164 declared in this region]
+  [FOCUS @7186 declared in this region]
+  [FOCUS @7248 declared in this region]
+  [FOCUS @7270 declared in this region]
+  [FOCUS @7492 declared in this region]
+  [FOCUS @7582 declared in this region]
+* region IfRegion type=IF_THEN entry=@6890 exit=@7164 n_blocks=2
+  blocks(sorted)=[6890, 7048]
+  condition_block=@6890  merge_block=@7164
+  then_blocks=[7048]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN entry=@6690 exit=@6778 n_blocks=2
+  blocks(sorted)=[6690, 6702]
+  condition_block=@6690  merge_block=@6778
+  then_blocks=[6702]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN entry=@6548 exit=@6792 n_blocks=5
+  blocks(sorted)=[6548, 6580, 6582, 6652, 6690]
+  condition_block=@6548  merge_block=@6792
+  then_blocks=[6580, 6582, 6652, 6690]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN entry=@6518 exit=@6580 n_blocks=4
+  blocks(sorted)=[6518, 6534, 6544, 6548]
+  condition_block=@6518  merge_block=@6580
+  then_blocks=[6544, 6548]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'True'}
+* region IfRegion type=IF_THEN entry=@6496 exit=@6548 n_blocks=8
+  blocks(sorted)=[6496, 6518, 6534, 6544, 6546, 6580, 6582, 6652]
+  condition_block=@6496  merge_block=@6548
+  then_blocks=[6518, 6534, 6544, 6546, 6580, 6582, 6652]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN entry=@6374 exit=@6496 n_blocks=2
+  blocks(sorted)=[6374, 6406]
+  condition_block=@6374  merge_block=@6496
+  then_blocks=[6406]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN entry=@6344 exit=@6406 n_blocks=4
+  blocks(sorted)=[6344, 6360, 6370, 6374]
+  condition_block=@6344  merge_block=@6406
+  then_blocks=[6370, 6374]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'False', 'merge_has_store': 'False', 'merge_only_simple_ops': 'False'}
+* region IfRegion type=IF_THEN entry=@6322 exit=@6374 n_blocks=6
+  blocks(sorted)=[6322, 6344, 6360, 6370, 6372, 6406]
+  condition_block=@6322  merge_block=@6374
+  then_blocks=[6344, 6360, 6370, 6372, 6406]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_ELIF_CHAIN entry=@6280 exit=@9218 n_blocks=22
+  blocks(sorted)=[6280, 6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6690, 6792, 6846, 6890, 7048]
+  condition_block=@6280  merge_block=@9218
+  then_blocks=[6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6690, 6792]
+  else_blocks=[6846, 6890, 7048]
+  elif_conditions=[6846]
+  elif_bodies=[[6890, 7048]]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN entry=@6058 exit=@6280 n_blocks=3
+  blocks(sorted)=[6058, 6090, 6112]
+  condition_block=@6090  merge_block=@6280
+  then_blocks=[6112]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={1674147784336: "{'blocks': [BasicBlock(85, offset=6058-6088, instrs=6), BasicBlock(86, offset=6090-6110, instrs=5)], 'op': 'and'}"}
+  metadata keys={}
+  * region BoolOpRegion type=BOOL_OP entry=@6058 exit=@None n_blocks=2
+    blocks(sorted)=[6058, 6090]
+* region IfRegion type=IF_THEN entry=@5902 exit=@6280 n_blocks=4
+  blocks(sorted)=[5902, 6058, 6090, 6112]
+  condition_block=@6090  merge_block=@6280
+  then_blocks=[6112]
+  else_blocks=[]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={1674147784336: "{'blocks': [BasicBlock(84, offset=5902-6056, instrs=26), BasicBlock(85, offset=6058-6088, instrs=6), BasicBlock(86, offset=6090-6110, instrs=5)], 'op': 'and'}"}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@5288 exit=@5598 n_blocks=3
+  blocks(sorted)=[5288, 5492, 5594]
+  condition_block=@5288  merge_block=@5598
+  then_blocks=[5492]
+  else_blocks=[5594]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@4984 exit=@5288 n_blocks=3
+  blocks(sorted)=[4984, 5270, 5278]
+  condition_block=@4984  merge_block=@5288
+  then_blocks=[5270]
+  else_blocks=[5278]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@4836 exit=@4984 n_blocks=3
+  blocks(sorted)=[4836, 4878, 4980]
+  condition_block=@4836  merge_block=@4984
+  then_blocks=[4878]
+  else_blocks=[4980]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@4688 exit=@4836 n_blocks=3
+  blocks(sorted)=[4688, 4730, 4832]
+  condition_block=@4688  merge_block=@4836
+  then_blocks=[4730]
+  else_blocks=[4832]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@4540 exit=@4688 n_blocks=3
+  blocks(sorted)=[4540, 4582, 4684]
+  condition_block=@4540  merge_block=@4688
+  then_blocks=[4582]
+  else_blocks=[4684]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@4392 exit=@4540 n_blocks=3
+  blocks(sorted)=[4392, 4434, 4536]
+  condition_block=@4392  merge_block=@4540
+  then_blocks=[4434]
+  else_blocks=[4536]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@4244 exit=@4392 n_blocks=3
+  blocks(sorted)=[4244, 4286, 4388]
+  condition_block=@4244  merge_block=@4392
+  then_blocks=[4286]
+  else_blocks=[4388]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@4096 exit=@4244 n_blocks=3
+  blocks(sorted)=[4096, 4138, 4240]
+  condition_block=@4096  merge_block=@4244
+  then_blocks=[4138]
+  else_blocks=[4240]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@3934 exit=@4096 n_blocks=3
+  blocks(sorted)=[3934, 3990, 4092]
+  condition_block=@3934  merge_block=@4096
+  then_blocks=[3990]
+  else_blocks=[4092]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@3780 exit=@4984 n_blocks=3
+  blocks(sorted)=[3780, 3822, 3926]
+  condition_block=@3780  merge_block=@4984
+  then_blocks=[3822]
+  else_blocks=[3926]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@3632 exit=@3780 n_blocks=3
+  blocks(sorted)=[3632, 3674, 3776]
+  condition_block=@3632  merge_block=@3780
+  then_blocks=[3674]
+  else_blocks=[3776]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@3484 exit=@3632 n_blocks=3
+  blocks(sorted)=[3484, 3526, 3628]
+  condition_block=@3484  merge_block=@3632
+  then_blocks=[3526]
+  else_blocks=[3628]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@3336 exit=@3484 n_blocks=3
+  blocks(sorted)=[3336, 3378, 3480]
+  condition_block=@3336  merge_block=@3484
+  then_blocks=[3378]
+  else_blocks=[3480]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@3188 exit=@3336 n_blocks=3
+  blocks(sorted)=[3188, 3230, 3332]
+  condition_block=@3188  merge_block=@3336
+  then_blocks=[3230]
+  else_blocks=[3332]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@3040 exit=@3188 n_blocks=3
+  blocks(sorted)=[3040, 3082, 3184]
+  condition_block=@3040  merge_block=@3188
+  then_blocks=[3082]
+  else_blocks=[3184]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@2878 exit=@3040 n_blocks=3
+  blocks(sorted)=[2878, 2934, 3036]
+  condition_block=@2878  merge_block=@3040
+  then_blocks=[2934]
+  else_blocks=[3036]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@2684 exit=@4984 n_blocks=3
+  blocks(sorted)=[2684, 2726, 2830]
+  condition_block=@2684  merge_block=@4984
+  then_blocks=[2726]
+  else_blocks=[2830]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@2536 exit=@2684 n_blocks=3
+  blocks(sorted)=[2536, 2578, 2680]
+  condition_block=@2536  merge_block=@2684
+  then_blocks=[2578]
+  else_blocks=[2680]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@2388 exit=@2536 n_blocks=3
+  blocks(sorted)=[2388, 2430, 2532]
+  condition_block=@2388  merge_block=@2536
+  then_blocks=[2430]
+  else_blocks=[2532]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@2240 exit=@2388 n_blocks=3
+  blocks(sorted)=[2240, 2282, 2384]
+  condition_block=@2240  merge_block=@2388
+  then_blocks=[2282]
+  else_blocks=[2384]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@2092 exit=@2240 n_blocks=3
+  blocks(sorted)=[2092, 2134, 2236]
+  condition_block=@2092  merge_block=@2240
+  then_blocks=[2134]
+  else_blocks=[2236]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@1944 exit=@2092 n_blocks=3
+  blocks(sorted)=[1944, 1986, 2088]
+  condition_block=@1944  merge_block=@2092
+  then_blocks=[1986]
+  else_blocks=[2088]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@1782 exit=@1944 n_blocks=3
+  blocks(sorted)=[1782, 1838, 1940]
+  condition_block=@1782  merge_block=@1944
+  then_blocks=[1838]
+  else_blocks=[1940]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_ELIF_CHAIN entry=@1742 exit=@4984 n_blocks=65
+  blocks(sorted)=[1742, 1782, 1838, 1940, 1944, 1986, 2088, 2092, 2134, 2236, 2240, 2282, 2384, 2388, 2430, 2532, 2536, 2578, 2680, 2684, 2726, 2830, 2838, 2878, 2934, 3036, 3040, 3082, 3184, 3188, 3230, 3332, 3336, 3378, 3480, 3484, 3526, 3628, 3632, 3674, 3776, 3780, 3822, 3926, 3934, 3990, 4092, 4096, 4138, 4240, 4244, 4286, 4388, 4392, 4434, 4536, 4540, 4582, 4684, 4688, 4730, 4832, 4836, 4878, 4980]
+  condition_block=@1742  merge_block=@4984
+  then_blocks=[1782, 1838, 1940, 1944, 1986, 2088, 2092, 2134, 2236, 2240, 2282, 2384, 2388, 2430, 2532, 2536, 2578, 2680, 2684, 2726, 2830]
+  else_blocks=[2838, 2878, 2934, 3036, 3040, 3082, 3184, 3188, 3230, 3332, 3336, 3378, 3480, 3484, 3526, 3628, 3632, 3674, 3776, 3780, 3822, 3926, 3934, 3990, 4092, 4096, 4138, 4240, 4244, 4286, 4388, 4392, 4434, 4536, 4540, 4582, 4684, 4688, 4730, 4832, 4836, 4878, 4980]
+  elif_conditions=[2838]
+  elif_bodies=[[2878, 2934, 3036, 3040, 3082, 3184, 3188, 3230, 3332, 3336, 3378, 3480, 3484, 3526, 3628, 3632, 3674, 3776, 3780, 3822, 3926]]
+  elif_final_else=[3934, 3990, 4092, 4096, 4138, 4240, 4244, 4286, 4388, 4392, 4434, 4536, 4540, 4582, 4684, 4688, 4730, 4832, 4836, 4878, 4980]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@1260 exit=@1742 n_blocks=3
+  blocks(sorted)=[1260, 1264, 1364]
+  condition_block=@1260  merge_block=@1742
+  then_blocks=[1264]
+  else_blocks=[1364]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@778 exit=@1260 n_blocks=3
+  blocks(sorted)=[778, 782, 882]
+  condition_block=@778  merge_block=@1260
+  then_blocks=[782]
+  else_blocks=[882]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region IfRegion type=IF_THEN_ELSE entry=@6 exit=@778 n_blocks=3
+  blocks(sorted)=[6, 300, 400]
+  condition_block=@6  merge_block=@778
+  then_blocks=[300]
+  else_blocks=[400]
+  elif_conditions=[]
+  elif_bodies=[]
+  elif_final_else=[]
+  inline_boolop_chains={}
+  metadata keys={}
+* region Region type=BASIC entry=@0 exit=@None n_blocks=1
+  blocks(sorted)=[0]
+
+===== BLOCK OWNERSHIP + ROLES (analyzer declares) =====
+   @7164   n=5   role=LOOP_BODY                  owner=TryExceptRegion type=TRY_EXCEPT       owner.entry=@6  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7216   fall=@7186 preds=[6846, 6868, 6890, 7048] succs=[7186, 7216, 9218]
+   @7184    (not a block start)
+   @7186   n=6   role=LOOP_BODY                  owner=TryExceptRegion type=TRY_EXCEPT       owner.entry=@6  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7214   fall=@7202 preds=[7164] succs=[7202, 7214, 9218]
+   @7216   n=6   role=LOOP_BODY                  owner=TryExceptRegion type=TRY_EXCEPT       owner.entry=@6  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7582   fall=@7248 preds=[7164, 7212, 7214] succs=[7248, 7582, 9218]
+   @7248   n=5   role=LOOP_BODY                  owner=TryExceptRegion type=TRY_EXCEPT       owner.entry=@6  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7492   fall=@7270 preds=[7202, 7216] succs=[7270, 7492, 9218]
+   @7270   n=17  role=LOOP_BODY                  owner=TryExceptRegion type=TRY_EXCEPT       owner.entry=@6  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7492   fall=@7372 preds=[7248] succs=[7372, 7492, 9218]
+   @7492   n=13  role=LOOP_BODY                  owner=TryExceptRegion type=TRY_EXCEPT       owner.entry=@6  tail=STORE_ATTR                   jump=@None   fall=@7582 preds=[7248, 7270] succs=[7582, 9218]
+   @7582   n=5   role=LOOP_BODY                  owner=TryExceptRegion type=TRY_EXCEPT       owner.entry=@6  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7634   fall=@7604 preds=[7216, 7492] succs=[7604, 7634, 9218]
+   @9194   n=4   role=LOOP_BACK_EDGE             owner=TryExceptRegion type=TRY_EXCEPT       owner.entry=@6  tail=POP_JUMP_BACKWARD_IF_TRUE    jump=@5614   fall=@9210 preds=[8306, 8544, 8588, 8688, 8852, 8980, 9144] succs=[5614, 9210, 9218]
+   @9206    (not a block start)
+
+===== EVERY LOOPREGION and IF_ELIF_CHAIN: declared roles =====
+  LOOP entry=@7706 header=@7706 cond=@None back_edge=@7960 back_edges=[7960] is_while_true=False exit=@None
+       body_blocks=[7706, 7708, 7710, 7712, 7818, 7836, 7890, 7960]
+       condition_chain_blocks=[] else=[] break=[7814]
+  LOOP entry=@5614 header=@5738 cond=@5614 back_edge=@5738 back_edges=[5738] is_while_true=False exit=@None
+       body_blocks=[5738]
+       condition_chain_blocks=[5614] else=[] break=[]
+  LOOP entry=@5598 header=@5614 cond=@5598 back_edge=@9194 back_edges=[9194] is_while_true=False exit=@None
+       body_blocks=[5614, 5738, 5902, 6058, 6090, 6112, 6280, 6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6654, 6672, 6678, 6682, 6684, 6792, 6846, 6868, 6890, 7048, 7164, 7186, 7202, 7212, 7214, 7216, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7818, 7836, 7890, 7960, 7964, 7966, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8258, 8276, 8282, 8286, 8288, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144, 9194]
+       condition_chain_blocks=[5598] else=[] break=[6690]
+  LOOP entry=@5598 header=@5598 cond=@None back_edge=@6792 back_edges=[6792] is_while_true=True exit=@None
+       body_blocks=[5598, 5614, 5738, 5902, 6058, 6090, 6112, 6280, 6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6654, 6672, 6678, 6682, 6684, 6690, 6702, 6778, 6792, 6846, 6868, 6890, 7048, 7164, 7186, 7202, 7212, 7214, 7216, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7818, 7836, 7890, 7960, 7964, 7966, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8258, 8276, 8282, 8286, 8288, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144, 9194, 9210, 9214]
+       condition_chain_blocks=[] else=[] break=[9214]
+  CHAIN entry=@7634 cond=@7634 merge=@9194 exit=@9194 elif_conditions=[8592] elif_final_else=[8904, 8926, 9144, 8948, 8964, 8976, 8974, 8980]
+  CHAIN entry=@7186 cond=@7186 merge=@7216 exit=@7216 elif_conditions=[7248] elif_final_else=[7492, 7582, 7604, 7634, 7620, 7632, 7668, 8592, 7630, 7706, 8666, 8904, 7708, 7972, 8688, 8852, 8926, 9144, 7710, 7980, 8170, 8948, 7712, 8166, 8184, 8964, 8976, 7814, 8186, 8974, 8256, 8980, 8294, 8306, 8350, 8354, 8588, 8400, 8450, 8548, 8504, 8544]
+  CHAIN entry=@6280 cond=@6280 merge=@9218 exit=@9218 elif_conditions=[6846] elif_final_else=[]
+  CHAIN entry=@1742 cond=@1742 merge=@4984 exit=@4984 elif_conditions=[2838] elif_final_else=[3934, 3990, 4092, 4096, 4138, 4240, 4244, 4286, 4388, 4392, 4434, 4536, 4540, 4582, 4684, 4688, 4730, 4832, 4836, 4878, 4980]
+  LOOP entry=@5614 header=@5738 cond=@5614 back_edge=@5738 back_edges=[5738] is_while_true=False exit=@None
+       body_blocks=[5738]
+       condition_chain_blocks=[5614] else=[] break=[]
+  CHAIN entry=@6280 cond=@6280 merge=@9218 exit=@9218 elif_conditions=[6846] elif_final_else=[]
+  CHAIN entry=@7186 cond=@7186 merge=@7216 exit=@7216 elif_conditions=[7248] elif_final_else=[7492, 7582, 7604, 7634, 7620, 7632, 7668, 8592, 7630, 7706, 8666, 8904, 7708, 7972, 8688, 8852, 8926, 9144, 7710, 7980, 8170, 8948, 7712, 8166, 8184, 8964, 8976, 7814, 8186, 8974, 8256, 8980, 8294, 8306, 8350, 8354, 8588, 8400, 8450, 8548, 8504, 8544]
+  CHAIN entry=@7634 cond=@7634 merge=@9194 exit=@9194 elif_conditions=[8592] elif_final_else=[8904, 8926, 9144, 8948, 8964, 8976, 8974, 8980]
+  LOOP entry=@7706 header=@7706 cond=@None back_edge=@7960 back_edges=[7960] is_while_true=False exit=@None
+       body_blocks=[7706, 7708, 7710, 7712, 7818, 7836, 7890, 7960]
+       condition_chain_blocks=[] else=[] break=[7814]
+  LOOP entry=@5598 header=@5614 cond=@5598 back_edge=@9194 back_edges=[9194] is_while_true=False exit=@None
+       body_blocks=[5614, 5738, 5902, 6058, 6090, 6112, 6280, 6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6654, 6672, 6678, 6682, 6684, 6792, 6846, 6868, 6890, 7048, 7164, 7186, 7202, 7212, 7214, 7216, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7818, 7836, 7890, 7960, 7964, 7966, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8258, 8276, 8282, 8286, 8288, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144, 9194]
+       condition_chain_blocks=[5598] else=[] break=[6690]
+  LOOP entry=@5614 header=@5738 cond=@5614 back_edge=@5738 back_edges=[5738] is_while_true=False exit=@None
+       body_blocks=[5738]
+       condition_chain_blocks=[5614] else=[] break=[]
+  CHAIN entry=@6280 cond=@6280 merge=@9218 exit=@9218 elif_conditions=[6846] elif_final_else=[]
+  CHAIN entry=@7186 cond=@7186 merge=@7216 exit=@7216 elif_conditions=[7248] elif_final_else=[7492, 7582, 7604, 7634, 7620, 7632, 7668, 8592, 7630, 7706, 8666, 8904, 7708, 7972, 8688, 8852, 8926, 9144, 7710, 7980, 8170, 8948, 7712, 8166, 8184, 8964, 8976, 7814, 8186, 8974, 8256, 8980, 8294, 8306, 8350, 8354, 8588, 8400, 8450, 8548, 8504, 8544]
+  CHAIN entry=@7634 cond=@7634 merge=@9194 exit=@9194 elif_conditions=[8592] elif_final_else=[8904, 8926, 9144, 8948, 8964, 8976, 8974, 8980]
+  LOOP entry=@7706 header=@7706 cond=@None back_edge=@7960 back_edges=[7960] is_while_true=False exit=@None
+       body_blocks=[7706, 7708, 7710, 7712, 7818, 7836, 7890, 7960]
+       condition_chain_blocks=[] else=[] break=[7814]
+
+===== PER-ARM VIEW of every IF_ELIF_CHAIN =====
+
+  chain entry=@6280 merge=@9218 cond=@6280 elif_final_else=[]
+   arm0-then cond=@6280   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6846    fall=@6322
+        body @6322   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6374    fall=@6344
+        body @6344   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6372    fall=@6360
+        body @6360   n=3   tail=POP_JUMP_FORWARD_IF_TRUE     jump=@6406    fall=@6370
+        body @6370   n=1   tail=JUMP_FORWARD                 jump=@6374    fall=@None
+        body @6372   n=1   tail=POP_TOP                      jump=@None    fall=@6374
+        body @6374   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6496    fall=@6406
+        body @6406   n=13  tail=STORE_ATTR                   jump=@None    fall=@6496
+        body @6496   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6548    fall=@6518
+        body @6518   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6546    fall=@6534
+        body @6534   n=3   tail=POP_JUMP_FORWARD_IF_TRUE     jump=@6580    fall=@6544
+        body @6544   n=1   tail=JUMP_FORWARD                 jump=@6548    fall=@None
+        body @6546   n=1   tail=POP_TOP                      jump=@None    fall=@6548
+        body @6548   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6792    fall=@6580
+        body @6580   n=1   tail=NOP                          jump=@None    fall=@6582
+        body @6582   n=9   tail=STORE_FAST                   jump=@None    fall=@6652
+        body @6652   n=1   tail=JUMP_FORWARD                 jump=@6690    fall=@None
+        body @6690   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6778    fall=@6702
+        body @6792   n=8   tail=JUMP_BACKWARD                jump=@5598    fall=@None <=TAIL
+        => arm tail block @6792 declared terminator=JUMP_BACKWARD jump=5598 fall=None
+   arm0 cond=@6846   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7164    fall=@6868
+        body @6890   n=25  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7164    fall=@7048
+        body @7048   n=16  tail=POP_TOP                      jump=@None    fall=@7164 <=TAIL
+        => arm tail block @7048 declared terminator=POP_TOP jump=None fall=7164
+
+  chain entry=@7186 merge=@7216 cond=@7186 elif_final_else=[7492, 7582, 7604, 7634, 7620, 7632, 7668, 8592, 7630, 7706, 8666, 8904, 7708, 7972, 8688, 8852, 8926, 9144, 7710, 7980, 8170, 8948, 7712, 8166, 8184, 8964, 8976, 7814, 8186, 8974, 8256, 8980, 8294, 8306, 8350, 8354, 8588, 8400, 8450, 8548, 8504, 8544]
+   arm0-then cond=@7186   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7214    fall=@7202
+        body @7212   n=1   tail=JUMP_FORWARD                 jump=@7216    fall=@None <=TAIL
+        => arm tail block @7212 declared terminator=JUMP_FORWARD jump=7216 fall=None
+   arm0 cond=@7248   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7492    fall=@7270
+        body @7372   n=16  tail=POP_TOP                      jump=@None    fall=@7488
+        body @7488   n=2   tail=RETURN_VALUE                 jump=@None    fall=@None <=TAIL
+        => arm tail block @7488 declared terminator=RETURN_VALUE jump=None fall=None
+   final-else cond=@7492   tail=STORE_ATTR                   jump=@None    fall=@7582
+        body @7492   n=13  tail=STORE_ATTR                   jump=@None    fall=@7582
+        body @7582   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7634    fall=@7604
+        body @7604   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7632    fall=@7620
+        body @7620   n=3   tail=POP_JUMP_FORWARD_IF_TRUE     jump=@7668    fall=@7630
+        body @7630   n=1   tail=JUMP_FORWARD                 jump=@7634    fall=@None
+        body @7632   n=1   tail=POP_TOP                      jump=@None    fall=@7634
+        body @7634   n=7   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8592    fall=@7668
+        body @7668   n=9   tail=GET_ITER                     jump=@None    fall=@7706
+        body @7706   n=1   tail=FOR_ITER                     jump=@7972    fall=@7708
+        body @7708   n=1   tail=STORE_FAST                   jump=@None    fall=@7710
+        body @7710   n=1   tail=NOP                          jump=@None    fall=@7712
+        body @7712   n=14  tail=STORE_FAST                   jump=@None    fall=@7814
+        body @7814   n=2   tail=JUMP_FORWARD                 jump=@7972    fall=@None
+        body @7972   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8170    fall=@7980
+        body @7980   n=25  tail=POP_TOP                      jump=@None    fall=@8166
+        body @8166   n=2   tail=RETURN_VALUE                 jump=@None    fall=@None
+        body @8170   n=3   tail=STORE_ATTR                   jump=@None    fall=@8184
+        body @8184   n=1   tail=NOP                          jump=@None    fall=@8186
+        body @8186   n=9   tail=STORE_FAST                   jump=@None    fall=@8256
+        body @8256   n=1   tail=JUMP_FORWARD                 jump=@8294    fall=@None
+        body @8294   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8350    fall=@8306
+        body @8306   n=7   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8350   n=2   tail=POP_JUMP_FORWARD_IF_NONE     jump=@None    fall=@8354
+        body @8354   n=8   tail=POP_JUMP_FORWARD_IF_NONE     jump=@None    fall=@8400
+        body @8400   n=10  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8548    fall=@8450
+        body @8450   n=11  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8544    fall=@8504
+        body @8504   n=5   tail=POP_TOP                      jump=@None    fall=@8544
+        body @8544   n=2   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8548   n=5   tail=POP_TOP                      jump=@None    fall=@8588
+        body @8588   n=2   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8592   n=16  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8904    fall=@8666
+        body @8666   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8852    fall=@8688
+        body @8688   n=22  tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8852   n=7   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8904   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8926
+        body @8926   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8948
+        body @8948   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8976    fall=@8964
+        body @8964   n=3   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8974
+        body @8974   n=1   tail=JUMP_FORWARD                 jump=@8980    fall=@None
+        body @8976   n=2   tail=JUMP_FORWARD                 jump=@9144    fall=@None
+        body @8980   n=22  tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @9144   n=6   tail=POP_TOP                      jump=@None    fall=@9194 <=TAIL
+        => arm tail block @9144 declared terminator=POP_TOP jump=None fall=9194
+
+  chain entry=@7634 merge=@9194 cond=@7634 elif_final_else=[8904, 8926, 9144, 8948, 8964, 8976, 8974, 8980]
+   arm0-then cond=@7634   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8592    fall=@7668
+        body @7668   n=9   tail=GET_ITER                     jump=@None    fall=@7706
+        body @7706   n=1   tail=FOR_ITER                     jump=@7972    fall=@7708
+        body @7708   n=1   tail=STORE_FAST                   jump=@None    fall=@7710
+        body @7710   n=1   tail=NOP                          jump=@None    fall=@7712
+        body @7712   n=14  tail=STORE_FAST                   jump=@None    fall=@7814
+        body @7814   n=2   tail=JUMP_FORWARD                 jump=@7972    fall=@None
+        body @7972   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8170    fall=@7980
+        body @7980   n=25  tail=POP_TOP                      jump=@None    fall=@8166
+        body @8166   n=2   tail=RETURN_VALUE                 jump=@None    fall=@None
+        body @8170   n=3   tail=STORE_ATTR                   jump=@None    fall=@8184
+        body @8184   n=1   tail=NOP                          jump=@None    fall=@8186
+        body @8186   n=9   tail=STORE_FAST                   jump=@None    fall=@8256
+        body @8256   n=1   tail=JUMP_FORWARD                 jump=@8294    fall=@None
+        body @8294   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8350    fall=@8306
+        body @8306   n=7   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8350   n=2   tail=POP_JUMP_FORWARD_IF_NONE     jump=@None    fall=@8354
+        body @8354   n=8   tail=POP_JUMP_FORWARD_IF_NONE     jump=@None    fall=@8400
+        body @8400   n=10  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8548    fall=@8450
+        body @8450   n=11  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8544    fall=@8504
+        body @8504   n=5   tail=POP_TOP                      jump=@None    fall=@8544
+        body @8544   n=2   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8548   n=5   tail=POP_TOP                      jump=@None    fall=@8588
+        body @8588   n=2   tail=JUMP_FORWARD                 jump=@9194    fall=@None <=TAIL
+        => arm tail block @8588 declared terminator=JUMP_FORWARD jump=9194 fall=None
+   arm0 cond=@8592   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8904    fall=@8666
+        body @8666   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8852    fall=@8688
+        body @8688   n=22  tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8852   n=7   tail=JUMP_FORWARD                 jump=@9194    fall=@None <=TAIL
+        => arm tail block @8852 declared terminator=JUMP_FORWARD jump=9194 fall=None
+   final-else cond=@8904   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8926
+        body @8904   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8926
+        body @8926   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8948
+        body @8948   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8976    fall=@8964
+        body @8964   n=3   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8974
+        body @8974   n=1   tail=JUMP_FORWARD                 jump=@8980    fall=@None
+        body @8976   n=2   tail=JUMP_FORWARD                 jump=@9144    fall=@None
+        body @8980   n=22  tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @9144   n=6   tail=POP_TOP                      jump=@None    fall=@9194 <=TAIL
+        => arm tail block @9144 declared terminator=POP_TOP jump=None fall=9194
+
+  chain entry=@6280 merge=@9218 cond=@6280 elif_final_else=[]
+   arm0-then cond=@6280   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6846    fall=@6322
+        body @6322   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6374    fall=@6344
+        body @6344   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6372    fall=@6360
+        body @6360   n=3   tail=POP_JUMP_FORWARD_IF_TRUE     jump=@6406    fall=@6370
+        body @6370   n=1   tail=JUMP_FORWARD                 jump=@6374    fall=@None
+        body @6372   n=1   tail=POP_TOP                      jump=@None    fall=@6374
+        body @6374   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6496    fall=@6406
+        body @6406   n=13  tail=STORE_ATTR                   jump=@None    fall=@6496
+        body @6496   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6548    fall=@6518
+        body @6518   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6546    fall=@6534
+        body @6534   n=3   tail=POP_JUMP_FORWARD_IF_TRUE     jump=@6580    fall=@6544
+        body @6544   n=1   tail=JUMP_FORWARD                 jump=@6548    fall=@None
+        body @6546   n=1   tail=POP_TOP                      jump=@None    fall=@6548
+        body @6548   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6792    fall=@6580
+        body @6580   n=1   tail=NOP                          jump=@None    fall=@6582
+        body @6582   n=9   tail=STORE_FAST                   jump=@None    fall=@6652
+        body @6652   n=1   tail=JUMP_FORWARD                 jump=@6690    fall=@None
+        body @6690   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6778    fall=@6702
+        body @6792   n=8   tail=JUMP_BACKWARD                jump=@5598    fall=@None <=TAIL
+        => arm tail block @6792 declared terminator=JUMP_BACKWARD jump=5598 fall=None
+   arm0 cond=@6846   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7164    fall=@6868
+        body @6890   n=25  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7164    fall=@7048
+        body @7048   n=16  tail=POP_TOP                      jump=@None    fall=@7164 <=TAIL
+        => arm tail block @7048 declared terminator=POP_TOP jump=None fall=7164
+
+  chain entry=@7186 merge=@7216 cond=@7186 elif_final_else=[7492, 7582, 7604, 7634, 7620, 7632, 7668, 8592, 7630, 7706, 8666, 8904, 7708, 7972, 8688, 8852, 8926, 9144, 7710, 7980, 8170, 8948, 7712, 8166, 8184, 8964, 8976, 7814, 8186, 8974, 8256, 8980, 8294, 8306, 8350, 8354, 8588, 8400, 8450, 8548, 8504, 8544]
+   arm0-then cond=@7186   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7214    fall=@7202
+        body @7212   n=1   tail=JUMP_FORWARD                 jump=@7216    fall=@None <=TAIL
+        => arm tail block @7212 declared terminator=JUMP_FORWARD jump=7216 fall=None
+   arm0 cond=@7248   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7492    fall=@7270
+        body @7372   n=16  tail=POP_TOP                      jump=@None    fall=@7488
+        body @7488   n=2   tail=RETURN_VALUE                 jump=@None    fall=@None <=TAIL
+        => arm tail block @7488 declared terminator=RETURN_VALUE jump=None fall=None
+   final-else cond=@7492   tail=STORE_ATTR                   jump=@None    fall=@7582
+        body @7492   n=13  tail=STORE_ATTR                   jump=@None    fall=@7582
+        body @7582   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7634    fall=@7604
+        body @7604   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7632    fall=@7620
+        body @7620   n=3   tail=POP_JUMP_FORWARD_IF_TRUE     jump=@7668    fall=@7630
+        body @7630   n=1   tail=JUMP_FORWARD                 jump=@7634    fall=@None
+        body @7632   n=1   tail=POP_TOP                      jump=@None    fall=@7634
+        body @7634   n=7   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8592    fall=@7668
+        body @7668   n=9   tail=GET_ITER                     jump=@None    fall=@7706
+        body @7706   n=1   tail=FOR_ITER                     jump=@7972    fall=@7708
+        body @7708   n=1   tail=STORE_FAST                   jump=@None    fall=@7710
+        body @7710   n=1   tail=NOP                          jump=@None    fall=@7712
+        body @7712   n=14  tail=STORE_FAST                   jump=@None    fall=@7814
+        body @7814   n=2   tail=JUMP_FORWARD                 jump=@7972    fall=@None
+        body @7972   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8170    fall=@7980
+        body @7980   n=25  tail=POP_TOP                      jump=@None    fall=@8166
+        body @8166   n=2   tail=RETURN_VALUE                 jump=@None    fall=@None
+        body @8170   n=3   tail=STORE_ATTR                   jump=@None    fall=@8184
+        body @8184   n=1   tail=NOP                          jump=@None    fall=@8186
+        body @8186   n=9   tail=STORE_FAST                   jump=@None    fall=@8256
+        body @8256   n=1   tail=JUMP_FORWARD                 jump=@8294    fall=@None
+        body @8294   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8350    fall=@8306
+        body @8306   n=7   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8350   n=2   tail=POP_JUMP_FORWARD_IF_NONE     jump=@None    fall=@8354
+        body @8354   n=8   tail=POP_JUMP_FORWARD_IF_NONE     jump=@None    fall=@8400
+        body @8400   n=10  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8548    fall=@8450
+        body @8450   n=11  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8544    fall=@8504
+        body @8504   n=5   tail=POP_TOP                      jump=@None    fall=@8544
+        body @8544   n=2   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8548   n=5   tail=POP_TOP                      jump=@None    fall=@8588
+        body @8588   n=2   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8592   n=16  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8904    fall=@8666
+        body @8666   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8852    fall=@8688
+        body @8688   n=22  tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8852   n=7   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8904   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8926
+        body @8926   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8948
+        body @8948   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8976    fall=@8964
+        body @8964   n=3   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8974
+        body @8974   n=1   tail=JUMP_FORWARD                 jump=@8980    fall=@None
+        body @8976   n=2   tail=JUMP_FORWARD                 jump=@9144    fall=@None
+        body @8980   n=22  tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @9144   n=6   tail=POP_TOP                      jump=@None    fall=@9194 <=TAIL
+        => arm tail block @9144 declared terminator=POP_TOP jump=None fall=9194
+
+  chain entry=@7634 merge=@9194 cond=@7634 elif_final_else=[8904, 8926, 9144, 8948, 8964, 8976, 8974, 8980]
+   arm0-then cond=@7634   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8592    fall=@7668
+        body @7668   n=9   tail=GET_ITER                     jump=@None    fall=@7706
+        body @7706   n=1   tail=FOR_ITER                     jump=@7972    fall=@7708
+        body @7708   n=1   tail=STORE_FAST                   jump=@None    fall=@7710
+        body @7710   n=1   tail=NOP                          jump=@None    fall=@7712
+        body @7712   n=14  tail=STORE_FAST                   jump=@None    fall=@7814
+        body @7814   n=2   tail=JUMP_FORWARD                 jump=@7972    fall=@None
+        body @7972   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8170    fall=@7980
+        body @7980   n=25  tail=POP_TOP                      jump=@None    fall=@8166
+        body @8166   n=2   tail=RETURN_VALUE                 jump=@None    fall=@None
+        body @8170   n=3   tail=STORE_ATTR                   jump=@None    fall=@8184
+        body @8184   n=1   tail=NOP                          jump=@None    fall=@8186
+        body @8186   n=9   tail=STORE_FAST                   jump=@None    fall=@8256
+        body @8256   n=1   tail=JUMP_FORWARD                 jump=@8294    fall=@None
+        body @8294   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8350    fall=@8306
+        body @8306   n=7   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8350   n=2   tail=POP_JUMP_FORWARD_IF_NONE     jump=@None    fall=@8354
+        body @8354   n=8   tail=POP_JUMP_FORWARD_IF_NONE     jump=@None    fall=@8400
+        body @8400   n=10  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8548    fall=@8450
+        body @8450   n=11  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8544    fall=@8504
+        body @8504   n=5   tail=POP_TOP                      jump=@None    fall=@8544
+        body @8544   n=2   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8548   n=5   tail=POP_TOP                      jump=@None    fall=@8588
+        body @8588   n=2   tail=JUMP_FORWARD                 jump=@9194    fall=@None <=TAIL
+        => arm tail block @8588 declared terminator=JUMP_FORWARD jump=9194 fall=None
+   arm0 cond=@8592   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8904    fall=@8666
+        body @8666   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8852    fall=@8688
+        body @8688   n=22  tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8852   n=7   tail=JUMP_FORWARD                 jump=@9194    fall=@None <=TAIL
+        => arm tail block @8852 declared terminator=JUMP_FORWARD jump=9194 fall=None
+   final-else cond=@8904   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8926
+        body @8904   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8926
+        body @8926   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8948
+        body @8948   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8976    fall=@8964
+        body @8964   n=3   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8974
+        body @8974   n=1   tail=JUMP_FORWARD                 jump=@8980    fall=@None
+        body @8976   n=2   tail=JUMP_FORWARD                 jump=@9144    fall=@None
+        body @8980   n=22  tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @9144   n=6   tail=POP_TOP                      jump=@None    fall=@9194 <=TAIL
+        => arm tail block @9144 declared terminator=POP_TOP jump=None fall=9194
+
+  chain entry=@7634 merge=@9194 cond=@7634 elif_final_else=[8904, 8926, 9144, 8948, 8964, 8976, 8974, 8980]
+   arm0-then cond=@7634   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8592    fall=@7668
+        body @7668   n=9   tail=GET_ITER                     jump=@None    fall=@7706
+        body @7706   n=1   tail=FOR_ITER                     jump=@7972    fall=@7708
+        body @7708   n=1   tail=STORE_FAST                   jump=@None    fall=@7710
+        body @7710   n=1   tail=NOP                          jump=@None    fall=@7712
+        body @7712   n=14  tail=STORE_FAST                   jump=@None    fall=@7814
+        body @7814   n=2   tail=JUMP_FORWARD                 jump=@7972    fall=@None
+        body @7972   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8170    fall=@7980
+        body @7980   n=25  tail=POP_TOP                      jump=@None    fall=@8166
+        body @8166   n=2   tail=RETURN_VALUE                 jump=@None    fall=@None
+        body @8170   n=3   tail=STORE_ATTR                   jump=@None    fall=@8184
+        body @8184   n=1   tail=NOP                          jump=@None    fall=@8186
+        body @8186   n=9   tail=STORE_FAST                   jump=@None    fall=@8256
+        body @8256   n=1   tail=JUMP_FORWARD                 jump=@8294    fall=@None
+        body @8294   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8350    fall=@8306
+        body @8306   n=7   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8350   n=2   tail=POP_JUMP_FORWARD_IF_NONE     jump=@None    fall=@8354
+        body @8354   n=8   tail=POP_JUMP_FORWARD_IF_NONE     jump=@None    fall=@8400
+        body @8400   n=10  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8548    fall=@8450
+        body @8450   n=11  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8544    fall=@8504
+        body @8504   n=5   tail=POP_TOP                      jump=@None    fall=@8544
+        body @8544   n=2   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8548   n=5   tail=POP_TOP                      jump=@None    fall=@8588
+        body @8588   n=2   tail=JUMP_FORWARD                 jump=@9194    fall=@None <=TAIL
+        => arm tail block @8588 declared terminator=JUMP_FORWARD jump=9194 fall=None
+   arm0 cond=@8592   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8904    fall=@8666
+        body @8666   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8852    fall=@8688
+        body @8688   n=22  tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8852   n=7   tail=JUMP_FORWARD                 jump=@9194    fall=@None <=TAIL
+        => arm tail block @8852 declared terminator=JUMP_FORWARD jump=9194 fall=None
+   final-else cond=@8904   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8926
+        body @8904   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8926
+        body @8926   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8948
+        body @8948   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8976    fall=@8964
+        body @8964   n=3   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8974
+        body @8974   n=1   tail=JUMP_FORWARD                 jump=@8980    fall=@None
+        body @8976   n=2   tail=JUMP_FORWARD                 jump=@9144    fall=@None
+        body @8980   n=22  tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @9144   n=6   tail=POP_TOP                      jump=@None    fall=@9194 <=TAIL
+        => arm tail block @9144 declared terminator=POP_TOP jump=None fall=9194
+
+  chain entry=@7186 merge=@7216 cond=@7186 elif_final_else=[7492, 7582, 7604, 7634, 7620, 7632, 7668, 8592, 7630, 7706, 8666, 8904, 7708, 7972, 8688, 8852, 8926, 9144, 7710, 7980, 8170, 8948, 7712, 8166, 8184, 8964, 8976, 7814, 8186, 8974, 8256, 8980, 8294, 8306, 8350, 8354, 8588, 8400, 8450, 8548, 8504, 8544]
+   arm0-then cond=@7186   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7214    fall=@7202
+        body @7212   n=1   tail=JUMP_FORWARD                 jump=@7216    fall=@None <=TAIL
+        => arm tail block @7212 declared terminator=JUMP_FORWARD jump=7216 fall=None
+   arm0 cond=@7248   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7492    fall=@7270
+        body @7372   n=16  tail=POP_TOP                      jump=@None    fall=@7488
+        body @7488   n=2   tail=RETURN_VALUE                 jump=@None    fall=@None <=TAIL
+        => arm tail block @7488 declared terminator=RETURN_VALUE jump=None fall=None
+   final-else cond=@7492   tail=STORE_ATTR                   jump=@None    fall=@7582
+        body @7492   n=13  tail=STORE_ATTR                   jump=@None    fall=@7582
+        body @7582   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7634    fall=@7604
+        body @7604   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7632    fall=@7620
+        body @7620   n=3   tail=POP_JUMP_FORWARD_IF_TRUE     jump=@7668    fall=@7630
+        body @7630   n=1   tail=JUMP_FORWARD                 jump=@7634    fall=@None
+        body @7632   n=1   tail=POP_TOP                      jump=@None    fall=@7634
+        body @7634   n=7   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8592    fall=@7668
+        body @7668   n=9   tail=GET_ITER                     jump=@None    fall=@7706
+        body @7706   n=1   tail=FOR_ITER                     jump=@7972    fall=@7708
+        body @7708   n=1   tail=STORE_FAST                   jump=@None    fall=@7710
+        body @7710   n=1   tail=NOP                          jump=@None    fall=@7712
+        body @7712   n=14  tail=STORE_FAST                   jump=@None    fall=@7814
+        body @7814   n=2   tail=JUMP_FORWARD                 jump=@7972    fall=@None
+        body @7972   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8170    fall=@7980
+        body @7980   n=25  tail=POP_TOP                      jump=@None    fall=@8166
+        body @8166   n=2   tail=RETURN_VALUE                 jump=@None    fall=@None
+        body @8170   n=3   tail=STORE_ATTR                   jump=@None    fall=@8184
+        body @8184   n=1   tail=NOP                          jump=@None    fall=@8186
+        body @8186   n=9   tail=STORE_FAST                   jump=@None    fall=@8256
+        body @8256   n=1   tail=JUMP_FORWARD                 jump=@8294    fall=@None
+        body @8294   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8350    fall=@8306
+        body @8306   n=7   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8350   n=2   tail=POP_JUMP_FORWARD_IF_NONE     jump=@None    fall=@8354
+        body @8354   n=8   tail=POP_JUMP_FORWARD_IF_NONE     jump=@None    fall=@8400
+        body @8400   n=10  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8548    fall=@8450
+        body @8450   n=11  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8544    fall=@8504
+        body @8504   n=5   tail=POP_TOP                      jump=@None    fall=@8544
+        body @8544   n=2   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8548   n=5   tail=POP_TOP                      jump=@None    fall=@8588
+        body @8588   n=2   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8592   n=16  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8904    fall=@8666
+        body @8666   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8852    fall=@8688
+        body @8688   n=22  tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8852   n=7   tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @8904   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8926
+        body @8926   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8948
+        body @8948   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@8976    fall=@8964
+        body @8964   n=3   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@9144    fall=@8974
+        body @8974   n=1   tail=JUMP_FORWARD                 jump=@8980    fall=@None
+        body @8976   n=2   tail=JUMP_FORWARD                 jump=@9144    fall=@None
+        body @8980   n=22  tail=JUMP_FORWARD                 jump=@9194    fall=@None
+        body @9144   n=6   tail=POP_TOP                      jump=@None    fall=@9194 <=TAIL
+        => arm tail block @9144 declared terminator=POP_TOP jump=None fall=9194
+
+  chain entry=@6280 merge=@9218 cond=@6280 elif_final_else=[]
+   arm0-then cond=@6280   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6846    fall=@6322
+        body @6322   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6374    fall=@6344
+        body @6344   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6372    fall=@6360
+        body @6360   n=3   tail=POP_JUMP_FORWARD_IF_TRUE     jump=@6406    fall=@6370
+        body @6370   n=1   tail=JUMP_FORWARD                 jump=@6374    fall=@None
+        body @6372   n=1   tail=POP_TOP                      jump=@None    fall=@6374
+        body @6374   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6496    fall=@6406
+        body @6406   n=13  tail=STORE_ATTR                   jump=@None    fall=@6496
+        body @6496   n=5   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6548    fall=@6518
+        body @6518   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6546    fall=@6534
+        body @6534   n=3   tail=POP_JUMP_FORWARD_IF_TRUE     jump=@6580    fall=@6544
+        body @6544   n=1   tail=JUMP_FORWARD                 jump=@6548    fall=@None
+        body @6546   n=1   tail=POP_TOP                      jump=@None    fall=@6548
+        body @6548   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6792    fall=@6580
+        body @6580   n=1   tail=NOP                          jump=@None    fall=@6582
+        body @6582   n=9   tail=STORE_FAST                   jump=@None    fall=@6652
+        body @6652   n=1   tail=JUMP_FORWARD                 jump=@6690    fall=@None
+        body @6690   n=4   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@6778    fall=@6702
+        body @6792   n=8   tail=JUMP_BACKWARD                jump=@5598    fall=@None <=TAIL
+        => arm tail block @6792 declared terminator=JUMP_BACKWARD jump=5598 fall=None
+   arm0 cond=@6846   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7164    fall=@6868
+        body @6890   n=25  tail=POP_JUMP_FORWARD_IF_FALSE    jump=@7164    fall=@7048
+        body @7048   n=16  tail=POP_TOP                      jump=@None    fall=@7164 <=TAIL
+        => arm tail block @7048 declared terminator=POP_TOP jump=None fall=7164
+
+  chain entry=@1742 merge=@4984 cond=@1742 elif_final_else=[3934, 3990, 4092, 4096, 4138, 4240, 4244, 4286, 4388, 4392, 4434, 4536, 4540, 4582, 4684, 4688, 4730, 4832, 4836, 4878, 4980]
+   arm0-then cond=@1742   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@2838    fall=@1782
+        body @1782   n=8   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@1940    fall=@1838
+        body @1838   n=12  tail=JUMP_FORWARD                 jump=@1944    fall=@None
+        body @1940   n=2   tail=STORE_FAST                   jump=@None    fall=@1944
+        body @1944   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@2088    fall=@1986
+        body @1986   n=12  tail=JUMP_FORWARD                 jump=@2092    fall=@None
+        body @2088   n=2   tail=STORE_FAST                   jump=@None    fall=@2092
+        body @2092   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@2236    fall=@2134
+        body @2134   n=12  tail=JUMP_FORWARD                 jump=@2240    fall=@None
+        body @2236   n=2   tail=STORE_FAST                   jump=@None    fall=@2240
+        body @2240   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@2384    fall=@2282
+        body @2282   n=12  tail=JUMP_FORWARD                 jump=@2388    fall=@None
+        body @2384   n=2   tail=STORE_FAST                   jump=@None    fall=@2388
+        body @2388   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@2532    fall=@2430
+        body @2430   n=12  tail=JUMP_FORWARD                 jump=@2536    fall=@None
+        body @2532   n=2   tail=STORE_FAST                   jump=@None    fall=@2536
+        body @2536   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@2680    fall=@2578
+        body @2578   n=12  tail=JUMP_FORWARD                 jump=@2684    fall=@None
+        body @2680   n=2   tail=STORE_FAST                   jump=@None    fall=@2684
+        body @2684   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@2830    fall=@2726
+        body @2726   n=13  tail=JUMP_FORWARD                 jump=@4984    fall=@None
+        body @2830   n=4   tail=JUMP_FORWARD                 jump=@4984    fall=@None <=TAIL
+        => arm tail block @2830 declared terminator=JUMP_FORWARD jump=4984 fall=None
+   arm0 cond=@2838   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@3934    fall=@2878
+        body @2878   n=8   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@3036    fall=@2934
+        body @2934   n=12  tail=JUMP_FORWARD                 jump=@3040    fall=@None
+        body @3036   n=2   tail=STORE_FAST                   jump=@None    fall=@3040
+        body @3040   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@3184    fall=@3082
+        body @3082   n=12  tail=JUMP_FORWARD                 jump=@3188    fall=@None
+        body @3184   n=2   tail=STORE_FAST                   jump=@None    fall=@3188
+        body @3188   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@3332    fall=@3230
+        body @3230   n=12  tail=JUMP_FORWARD                 jump=@3336    fall=@None
+        body @3332   n=2   tail=STORE_FAST                   jump=@None    fall=@3336
+        body @3336   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@3480    fall=@3378
+        body @3378   n=12  tail=JUMP_FORWARD                 jump=@3484    fall=@None
+        body @3480   n=2   tail=STORE_FAST                   jump=@None    fall=@3484
+        body @3484   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@3628    fall=@3526
+        body @3526   n=12  tail=JUMP_FORWARD                 jump=@3632    fall=@None
+        body @3628   n=2   tail=STORE_FAST                   jump=@None    fall=@3632
+        body @3632   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@3776    fall=@3674
+        body @3674   n=12  tail=JUMP_FORWARD                 jump=@3780    fall=@None
+        body @3776   n=2   tail=STORE_FAST                   jump=@None    fall=@3780
+        body @3780   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@3926    fall=@3822
+        body @3822   n=13  tail=JUMP_FORWARD                 jump=@4984    fall=@None
+        body @3926   n=4   tail=JUMP_FORWARD                 jump=@4984    fall=@None <=TAIL
+        => arm tail block @3926 declared terminator=JUMP_FORWARD jump=4984 fall=None
+   final-else cond=@3934   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@4092    fall=@3990
+        body @3934   n=8   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@4092    fall=@3990
+        body @3990   n=12  tail=JUMP_FORWARD                 jump=@4096    fall=@None
+        body @4092   n=2   tail=STORE_FAST                   jump=@None    fall=@4096
+        body @4096   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@4240    fall=@4138
+        body @4138   n=12  tail=JUMP_FORWARD                 jump=@4244    fall=@None
+        body @4240   n=2   tail=STORE_FAST                   jump=@None    fall=@4244
+        body @4244   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@4388    fall=@4286
+        body @4286   n=12  tail=JUMP_FORWARD                 jump=@4392    fall=@None
+        body @4388   n=2   tail=STORE_FAST                   jump=@None    fall=@4392
+        body @4392   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@4536    fall=@4434
+        body @4434   n=12  tail=JUMP_FORWARD                 jump=@4540    fall=@None
+        body @4536   n=2   tail=STORE_FAST                   jump=@None    fall=@4540
+        body @4540   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@4684    fall=@4582
+        body @4582   n=12  tail=JUMP_FORWARD                 jump=@4688    fall=@None
+        body @4684   n=2   tail=STORE_FAST                   jump=@None    fall=@4688
+        body @4688   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@4832    fall=@4730
+        body @4730   n=12  tail=JUMP_FORWARD                 jump=@4836    fall=@None
+        body @4832   n=2   tail=STORE_FAST                   jump=@None    fall=@4836
+        body @4836   n=6   tail=POP_JUMP_FORWARD_IF_FALSE    jump=@4980    fall=@4878
+        body @4878   n=12  tail=JUMP_FORWARD                 jump=@4984    fall=@None
+        body @4980   n=2   tail=STORE_FAST                   jump=@None    fall=@4984 <=TAIL
+        => arm tail block @4980 declared terminator=STORE_FAST jump=None fall=4984

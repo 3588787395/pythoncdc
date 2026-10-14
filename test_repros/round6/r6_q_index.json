@@ -1,0 +1,38 @@
+[
+ {
+  "path": "test_repros/round6/r6_q1_sinkjoin_spec.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_q1_sinkjoin_ctl.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_q2_whilehost_spec.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_q2_whilehost_ctl.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_q3_forhost_spec.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_q3_forhost_ctl.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_q4_tryhost_spec.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_q4_tryhost_ctl.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_q5_chain_sink_ctl.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_q5_chain_sink_spec.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_q6_widened_spec.pyc"
+ },
+ {
+  "path": "test_repros/round6/r6_q6_widened_ctl.pyc"
+ }
+]

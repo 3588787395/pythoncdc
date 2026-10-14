@@ -1,0 +1,6 @@
+[R39BPROBE] T@1558 tail=1472 Tgen=False Tinblocks=False Tinreg=False Tinbe=False Tpreds=[1314, 1472] pay=['JUMP_BACKWARD'] Llast=POP_TOP Tlast=JUMP_BACKWARD land=1090 hdr=1090 reentry=False
+[R39BPROBE] T@94 tail=60 Tgen=False Tinblocks=False Tinreg=False Tinbe=True Tpreds=[18, 60] pay=['JUMP_BACKWARD'] Llast=STORE_ATTR Tlast=JUMP_BACKWARD land=16 hdr=16 reentry=False
+[R39BPROBE] T@3024 tail=2912 Tgen=False Tinblocks=False Tinreg=False Tinbe=False Tpreds=[2912] pay=['JUMP_FORWARD'] Llast=POP_TOP Tlast=JUMP_FORWARD land=3128 hdr=46 reentry=False
+[R39BPROBE] T@1822 tail=1712 Tgen=False Tinblocks=False Tinreg=False Tinbe=False Tpreds=[1710, 1712] pay=['JUMP_BACKWARD'] Llast=POP_TOP Tlast=JUMP_BACKWARD land=44 hdr=46 reentry=True
+[R39BPROBE] T@1822 tail=1710 Tgen=False Tinblocks=False Tinreg=False Tinbe=False Tpreds=[1710, 1712] pay=['JUMP_BACKWARD'] Llast=JUMP_FORWARD Tlast=JUMP_BACKWARD land=44 hdr=46 reentry=True
+[R39BPROBE] T@1822 tail=1710 Tgen=False Tinblocks=False Tinreg=False Tinbe=False Tpreds=[1710, 1712] pay=['JUMP_BACKWARD'] Llast=JUMP_FORWARD Tlast=JUMP_BACKWARD land=44 hdr=46 reentry=True

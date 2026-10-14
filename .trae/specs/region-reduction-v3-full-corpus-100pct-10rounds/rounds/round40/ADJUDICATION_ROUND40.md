@@ -1,0 +1,369 @@
+﻿# ADJUDICATION_ROUND40 — measured record of round 40 (gate label 40, input `rounds/round39/after`)
+
+Standing state at the opening of this record: landed generator `b4363f5858e58074`, landed analyzer `842e2748bcdfeb66`,
+corpus **6615/6617 (99.9698 %)**, **400/402 files**, residual 2 files / 2 units
+(`realtime_event_source.clock_worker` 12/13, `trade_live_broker._sync_worker` 127/128). Gate label 40 unconsumed.
+Every number below is either my own measurement in `D:/Temp/r91m` (fresh mirror, landed bytes verified by sha16
+before use) or an engineer reading I re-measured. Nothing here is a plan.
+
+## 1. The clock_worker "platform" was contaminated, and my certification of it was the error
+
+`rounds/round40/MEASURE_R21-58_reanchor_by_orchestrator.md` (addendum 1). I installed the re-anchored chain
+`db1f0e96072cdcb3` alone over the landed analyzer, regenerated, and judged:
+
+| file | HEAD control | re-anchored chain |
+|---|---|---|
+| `plugin_system_risk_calculation/function.pyc` | **15/15 `status=success`** | **14/15**, `create_daily_stats: Different control flow` |
+| `realtime_event_source.pyc` | 12/13 | 12/13 (clock_worker `delta=+2 / 2 windows / 7 landings`, unchanged) |
+
+The lost code is a whole statement run (`unit_diff` `del=32 ins=0` at `@196..@336`): inside a `for … else:` body, the
+three `period_*` assignments and the `break` that follow a nested `if/else` are not emitted at all, the container's
+header test becomes `JUMP_BACKWARD` instead of `JUMP_FORWARD` (`@138`), and because the locals are never assigned,
+three later reads flip `LOAD_FAST period_close/label/open` → `LOAD_GLOBAL` (`@680/@684/@688`). A dropped statement
+sequence therefore also changed *scope* — which is why the judge calls it a control-flow difference rather than a
+text difference.
+
+**Withdrawal, in the record:** my round-39 statement that "the re-anchored chain base is inert" was based on judging
+broker, `replace_utils` and `quote` — three files, not the corpus. The 402-product CR-stripped sweep is what caught
+this, exactly as it caught `replace_utils` at gate 39 attempt 1.
+
+## 2. Attribution and recovery of the platform (r88a, r92a; both re-measured by me)
+
+r88a's step-wise ablation (each row resets BOTH core files, both sha16s logged) put the contamination in **step 1** of
+the chain and in one of its two halves only:
+
+| row | generator | `function.pyc` | clock_worker |
+|---|---|---|---|
+| landed | `b4363f5858e58074` | 15/15 | −113 |
+| step1 P1+P2 | `411c2bd948cd33ad` | **14/15** | −6 |
+| `[R21-24-M1]` alone | `e5849f71a6682aa1` | **15/15** | −6 (all of step 1's gain) |
+| `[R21-38-r63a]` alone | `1e1e0cdeecf7957b` | **14/15** | −113 (buys nothing alone) |
+| +`[R21-45]`/`[R21-44]`/`[R21-46]` | `945ffcd0…`/`07deef97…`/`db1f0e96…` | 14/15 | −4 / −5 / **+2** |
+
+and the regression predates gate 39 (`cf5868e68208adf6`, `30a4d7827122e165` on gate-38 bytes also read 14/15): the
+file simply is not in `rounds/round38/PANEL_20files.txt`, so no 20-file reading could ever have seen it.
+
+r92a then localized it to one hunk (**H3**, a claim-without-emission branch) and added a conjunct that requires the
+entry list the emission underneath already consumes. I re-measured that candidate myself over the landed analyzer:
+
+| file | landed | full chain `db1f0e96` | **`[R21-63]` `675ec7afa414bbb5`** |
+|---|---|---|---|
+| `function.pyc` | 15/15 | 14/15 | **15/15** |
+| `realtime_event_source.pyc` | 12/13 | 12/13 | 12/13, sole failure still `clock_worker` |
+| `replace_utils.pyc` | 9/9 | 9/9 | 9/9 |
+| `trade_live_broker.pyc` | 127/128 | 127/128 | 127/128, sole failure `_sync_worker` |
+
+r92a's own 402-product sweep reads `CHANGED=1` (the target only) versus the chain's `CHANGED=2`.
+**Conclusion: the chain is now a safe platform and still buys zero flips** — banked, not installed.
+
+Shape note from my rig on the narrowed chain: `clock_worker`'s whole loss becomes **6 spurious insertions in 4
+windows** (`@7184 +1`, `@7248 +2`, `@7582 +2`, `@7602 +1`) with no deletion window — all of them the arm-tail
+`JUMP_FORWARD`s landing on the `while self.active:` re-test.
+
+## 3. Axes closed with verdicts this round (no re-run)
+
+1. **R21-60 arm ordering / fall-through for `clock_worker` — FALSIFIED (r89a).** The rendered arm order already equals
+   the original's evaluation order (`7186/7202/7216 → 7248 → 7582`), so permuting arms only moves ~15 already-aligned
+   test instructions. Census over **1269 `IF_ELIF_CHAIN` regions in all 402 files**: `FIRE=1` in
+   `klinedata::_all_bars_of_cache` (that file is already 64/64), `FIRE=0` in `clock_worker`; class
+   `BOUNDARY_ONLY`, and under the chain's true end label `9194` (the original has exactly 6 jumps there) the law
+   *demands* both spurious jumps — one chain has one end label and one fall-through arm, so no tail choice reproduces
+   the original's two fall-throughs. The residual belongs to the chain-boundary/fold surface (`[R21-49]`/`[R21-53]`,
+   previously measured at −269), not to arm order.
+2. **Chained comparison in `_sync_worker`'s loop condition — FALSIFIED twice, independently.** My opcode census:
+   `COMPARE_OP` parity 21/21 and the product renders **more** chained compares than the original (3 vs 2). r90a's
+   detector run: 54 evaluations, 2 fires, **both in the second loop**, and the failing window `@232..@1212` contains
+   **zero** `SWAP`/`COPY`.
+3. **Per-exit-edge duplication for `_sync_worker` — FALSIFIED** by the same window analysis: the 165-instruction
+   "deleted" span and the 166-instruction "inserted" span are the *same* loop body relocated ~1100 offsets, so nothing
+   is unrendered.
+
+## 4. The duplicated-while-test law, and the GOLD oracle that proves the unit reachable
+
+Measured law on this interpreter (3.11.7), from `compile()` + `dis`: a `while <BoolOp>:` condition is emitted **twice**
+— an entry copy above the body whose legs jump *forward* to the body-start block (last leg forward to the exit), and a
+latch copy below the body whose legs jump *backward* to that same body-start block. Template
+`while a or b or c: x = x + 1`: `@4/@8 FORWARD_IF_TRUE 14`, `@12 FORWARD_IF_FALSE 36`, body at `14`, then
+`@26/@30/@34 BACKWARD_IF_TRUE 14`. Corollaries: an N-leg or-chain yields N−1 backward conditional edges onto the body
+start, and a `continue` is an **unconditional** `JUMP_BACKWARD`, so a backward *conditional* edge is never a continue.
+
+The original `_sync_worker` matches edge-for-edge (`@704` = body start beginning `time.sleep(60)`, entered forward from
+`@232/@364/@700` and backward from its own tail, `@876`, `@1056`; merge `@1214`), and r90a/r91a each reproduced it from
+a control `compile()` independently.
+
+**GOLD oracle** (`rounds/round40/r91/broker_GOLD_PROOF.py`, judged by me):
+
+```
+[single] status=success units=128/128 success_rate=100.00%
+```
+
+with my rig at 408 instructions vs the original's 412 in 4 small windows (`@542 +1`, `@696 −1`, `@700..@702 −2`,
+`@1210..@1212 −2`). Its loop text is one nested loop, `while A or B or (C and not D): time.sleep(60)`, inside the
+outer `while True:`. This is evidence and a target only — a hand-spliced product can never be shipped; the pipeline
+must produce it.
+
+Where the pipeline stops today (r91a's analyzer candidate `241905c2078f0270`, generator untouched; I re-measured it
+over the narrowed `[R21-63]` generator: broker still 127/128, `_sync_worker` 400 instructions, 5 windows):
+`_detect_while_condition_boolop_chain(@232)` returns length 1 because the chain head's fall-through `@364` is owned by
+the enclosing `while True` region and `interrupts_boolop_forward_chain` vetoes the walk
+(`region_analyzer.py:28155-28157`), so Step 5's `len(chain) >= 2` (`:26951-26953`) skips the fold; `all_same_target`
+(`:28189-28201`) is structurally unsatisfiable for an or-head + and-tail because `@522` jumps to the loop exit `@702`
+while `@232/@364` jump to the header `@704`; `[R7-B45]` covers only and-head + or-tail, which is why
+`_detect_while_condition_nested_and_or_chain` returns None at `:28288`; and the latch copy's legs are members of
+`loop.body_blocks`, so `_loop_generate_while` renders them as statements. With the chain mounted by r91a's analyzer the
+remaining blocker is measured: the generator consumes only `[232,364]` and leaves `IfRegion@522/@544` as siblings.
+
+Collateral estimate is not a guess: predicate **P** (a `LoopRegion` whose header receives a forward conditional jump
+from outside its own block set **and** a backward conditional jump from inside `body_blocks`) was censused over
+**82** loop conditions in the 20-file panel and **173** across all 402 files and fires **exactly once in both scopes**
+— on `_sync_worker`. Owner-counting rule (which reconciles my earlier 148-vs-186 discrepancy): a leg claimed by the
+enclosing loop is `two_owner` for the inner loop, not unowned.
+
+## 5. Tooling corrections recorded this round
+
+- My `win_r91.py` aligns on **opcode names only** (shifted jump operands cannot inflate windows) and is
+  positive-controlled: the two landed-Equal units `_process_order` and `_process_cancel_order` both read
+  `windows=0`. It counts 1442 original instructions for `clock_worker` where `unit_diff`/`allwin` count 1424, so its
+  `delta`/window numbers are **not interchangeable** with the engineers'; only the judge reading certifies.
+- `git archive HEAD` over the whole repo fails to extract in a scratch dir (`Can't unlink already-existing object` on
+  deep `.trae/...` paths). Scope it: `git archive HEAD site-packages | tar -x`, or compare per file with
+  `git show HEAD:<path>`. Never `cmp` a regenerated product against a checked-out one (checkout CRLF vs blob LF makes
+  every file read as a diff).
+- A background push loop that greps the log for `-> branch` is unfalsifiable if the pattern starts with `-`
+  (`grep: unknown option`). Verify by `git rev-list --count origin/<branch>..HEAD == 0` instead; that is how the
+  round's commits were confirmed (`PUSHED_BY_REF`).
+
+## 6. Open at the time of this writing
+
+Engineers r93a (analyzer: generalize the while-condition chain assembly per `r90a` §8) and r94a (generator: consume the
+mounted chain and drop the latch copy, target = GOLD) are running. Nothing has been installed this round; `git status
+--porcelain -- core/` = 0 lines and no `*OK.py` is dirty.
+## 7. State at 2026-10-13 10:31 (sealing time; roster: sections 1-7 above, all numbers measured by me or re-measured by me)
+
+Nothing installed this round: landed bytes still generator `b4363f5858e58074` + analyzer `842e2748bcdfeb66`,
+corpus still **6615/6617 (99.9698 %)**, **400/402 files**, residual **2 files / 2 units**, **gate label 40
+unconsumed** (correct under the standing rule that a zero-flip candidate does not consume the label).
+`git status --porcelain -- core/` = 0 lines and `-- site-packages/ | grep OK.py` = 0 lines.
+
+Banked this round, each with my own re-measurement: `[R21-63] 675ec7afa414bbb5` (chain collateral removed, zero
+flips), `R21-64` analyzer `1471c92eca157e46` (loop-1 fold byte-identical to GOLD, windows 9->6, P fires 1/173,
+402-product sweep `CHANGED={trade_live_broker}`), `R21-62` analyzer `241905c2078f0270` (superseded by R21-64 - and my
+two attempts to union them failed `merge_hunks.py`'s faithfulness proof in both orders), `R21-60` falsified by census,
+`R21-59` addenda 6-16 (the duplication law, GOLD at 128/128, the three-mechanism decomposition, loop 2's P-negative
+edge set), `R21-68` clock_worker diagnosis (predicate C = 1 unique region in 1 file; the flip blocked at site 2).
+
+What a flip still requires, stated as the round's honest remaining distance: `_sync_worker` needs loop 2's sibling
+predicate (single-comparison loop test: unconditional forward entry + conditional backward latch), the removal of the
+folded condition's leftover operand statement, and the reconnect arm's `RETURN_VALUE` (`@1874`) rendered as a return
+rather than a loop exit - three separable halves, two of them still running as r95a/r98a/r96a. `clock_worker` needs
+predicate C's identification fix *and* a way to isolate site 2 that does not join the -269 over-fire class. Neither
+unit is expressible as a one-rule flip, which is why round 40 banks rather than lands.
+## 8. Landing criterion calibrated (2026-10-13 10:36)
+
+`rounds/round40/orchestrator/gold_diff_r91m.py` counts unified-diff hunks between a candidate product and the GOLD
+text of a unit; 0 hunks means the product *is* the text I judged `status=success units=128/128`. Three controls run
+now: GOLD vs GOLD = **0**; the landed product vs GOLD = **4 hunks** (54 vs 45 lines); r93a's folded product vs GOLD =
+**3 hunks** (43 vs 45 lines, the three facts of addendum 18); and `_process_order` under the fold vs GOLD = 0, which
+is the sanity case since that unit is Equal on both sides. So the measured remaining distance for `_sync_worker` is
+exactly those 3 hunks, and the merged candidate is accepted only at 0.
+## 9. The pair `1471c92e` + `0f4c3898` measured in my mirror: 2 hunks from the 128/128 text (2026-10-13 10:42)
+
+r95a delivered generator `0f4c3898298e6f2e` (3 hunks inside `_loop_generate_while`'s chained-compare suppression,
+`region_ast_generator.py:8126-8174`, gated by `is_chained_compare_cond`), censused at 1 reachable LoopRegion in the
+panel and 1 in all 402 files (`loop@1890`), with the same 82/173 condition population r90a measured independently. It
+also corrects r91a's mechanism claim: the `sync_data_flag = 1` half was an **over-fire** of the landed `_is_recheck`
+("post-store contains a compare op"), which hoisted `@2214`'s store and deleted its `if`.
+
+My own reading of the PAIR (r93a's analyzer + r95a's generator, both hashed after copy):
+
+```
+[installed] gen=0f4c3898298e6f2e ana=1471c92eca157e46
+[repro]     Different bytecode 1/2        [battery]  RED=8/9
+[broker]    units=127/128, sole failure _sync_worker, windows 9 -> 5
+[panel]     realtime 12/13  replace_utils 9/9  function 15/15  quote 92/92  quotation 153/153  order_api 37/37
+gold_diff   ours=42 lines GOLD=45  hunks_vs_GOLD=2   (@@ -18,0 +19,8 @@  and  @@ -37,5 +44,0 @@)
+```
+
+So the distance to a flip is now two textual facts, each with an owner: the reconnect block's nesting plus `return`
+(r99a, replacing r96a which died at the turn cap with bytes that scored worse - 4 hunks, because they build on the
+landed analyzer and lack the fold), and five lines we emit that GOLD does not (r98a, the leftover latch/operand
+statements). Both halves are measured zero-collateral in their own sweeps (`changed = trade_live_broker` only), and
+neither flips alone, which is why the gate label stays unconsumed until the union is measured at
+`units=128/128`.
+## 10. The two remaining hunks are ONE statement (2026-10-13 10:44) - the flip path is `1471c92e` + `0f4c3898` + the reconnect move
+
+I printed our pair's product and GOLD side by side for the whole unit. Every line matches except the reconnect
+statement, which we emit **after** loop 2 (ours lines 37-41) as a flat `if A and B and (…) and C:` ending in `break`,
+while GOLD emits it **between loop 1 and loop 2** (GOLD lines 19-26) nested four deep ending in `return`. That is the
+whole of both hunks: `@@ -18,0 +19,8 @@` is GOLD's 8-line nested version at the right place, and `@@ -37,5 +44,0 @@`
+is our same 5 lines in the wrong place. So loop 2's body, latch and `sync_data_flag` guard are now **byte-identical to
+GOLD under the pair** - r95a's half closed them - and the unit's distance to `128/128` is a single statement's
+position plus terminator class, owned by r99a.
+
+Consequence for the other live engineer: r98a's leftover-operand work is still real for the 12-line repro (which reads
+`Different bytecode 1/2` under the pair, i.e. the synthetic loop-2 latch copy is still emitted), but it is **not on the
+broker flip path**. I keep it running as the generality check, and the merge plan is: install
+`ana 1471c92e` + `gen 0f4c3898` + r99a's reconnect half, require `gold_diff` = 0 hunks and judge
+`units=128/128` before touching the repo, then run `gate_chain.py 40 39`.
+## 11. My own 402-product certification of the pair (2026-10-13 10:48)
+
+Neither engineer swept the combination, so I ran it: `analyzer 1471c92eca157e46` + `generator 0f4c3898298e6f2e`,
+all 402 roster inputs regenerated in my mirror into `sp_out`, compared CR-stripped against HEAD extracted with
+`git archive HEAD site-packages`.
+
+```
+chunk 1: DONE files=402 same=401 changed=1 newprod=0 nooutput=0 elapsed=206s
+```
+
+and an independent re-walk of the two trees confirms the single changed file is the target
+(`trade_live_broker`), with no missing inputs and no stub products. So the pair is collateral-free corpus-wide -
+it is a safe platform for r99a's reconnect half, and the only thing standing between it and a flip is the two
+remaining GOLD hunks (one statement: position + `return`-vs-`break`).
+
+
+## 12. r101a (R21-73, `clock_worker` predicate C) delivered a MEASURED NEGATIVE - the site-2 transitivity question is answered NO
+
+Base platform reproduced on the engineer's own bytes (`842e2748bcdfeb66` analyzer + banked generator
+`675ec7afa414bbb5`): `function 15/15`, `replace_utils 9/9`, `trade_live_broker 127/128` (sole failure
+`_sync_worker`), `realtime_event_source 12/13` (sole failure `clock_worker`), `clock_worker` at
+`delta=+2 hunks=2 landings=7`.
+
+`[R21-73]` = `c93e8994893ee530`: predicate C refuses `@7248` as `elif_conditions[0]` inside `_check_elif_chain`
+(top-level only) and releases the over-absorbed `else_blocks`. Post-fix dump reads `elif_conditions=[]`,
+`elif_final_else=[]` - the double claim is gone exactly as designed, and the 402-product CR-stripped sweep reads
+`same=401 changed=1` (only `realtime_event_source`), i.e. zero collateral, as r97a's census predicted.
+
+**But the unit collapses instead of flipping**: `delta +2 -> -269`, `hunks 2 -> 4`, `landings 7 -> 2`, judge still
+*Different control flow*, file still 12/13. Three whole statement ranges disappear (`@7582..@7836`,
+`@7960..@8276`, `@8282..@9192`).
+
+**Answer to the open work order** (`TICKET_R21-71`: does fixing C re-anchor site 2 transitively through the shared
+over-absorbing `elif_final_else`?): **no, and it is worse than no.** The tail blocks are emitted today *only*
+because `elif_final_else` absorbs them; remove the absorption and no other analyzer channel claims them, so the
+generator loses them outright. Same -269/-274 over-fire class measured twice before in this campaign.
+
+Consequence: `clock_worker` needs **two rules in one candidate** - the C refusal *and* a positive declaration that
+owns `@7582` and `@9144` as sequential loop-tail statements - and neither exists yet. Recorded as a falsified
+remedy (it moved backwards on its own target), not a bankable co-requisite. Evidence: `rounds/round40/r101/`.
+
+
+## 13. r100a delivered: the terminator half is SOLVED with zero collateral, and POSITION is proven generator-side
+
+Final candidate `9ba2d8afe9e96fc1` (`region_analyzer.py` only, on the certified pair base
+`1471c92eca157e46` + `0f4c3898298e6f2e`), delivered to `D:/Temp/r100/DELIVER`, bytes banked here.
+
+Census *before* editing, and it corrected my own ticket: the pre-narrowing predicate fired **2x** on the 20-file
+panel - the victim plus `wizard_quant_api::check_factor` (guards [10,62], arm [108]) which sits on a currently
+**Equal** file, i.e. real collateral. Conjunct ⑥ ("the arm contains a declared region entry") removed it:
+corpus **402 files / 6617 units / 1766 LoopRegions / 681 candidate sites / 1 fire**, exactly broker `@1214 -> @1890`.
+It also falsified my addendum wording "the last arm block ends in `RETURN_VALUE`": `@1876` falls through to the
+merge, and the true data form is "the run's unique successor-less block is a return".
+
+Ownership proof it measured (9 blocks host-owned before -> 0 after, hierarchy `@1214 -> @1370 -> {@1388,@1638,@1770}`,
+host `body_blocks` shrunk to `@1214`, sibling loop's double claims evicted). Result:
+
+* **Terminator fact CLOSED**: the arm's own `RETURN_VALUE` now renders as `return` instead of a loop exit.
+* Position fact NOT closed: `gold_diff 2 -> 2`, judge `127/128`, windows 5.
+* Collateral: **401 same / 1 changed = {trade_live_broker}**; panel all hold (`realtime 12/13`, `function 15/15`,
+  `replace_utils 9/9`, `quote 92/92`, `quotation 153/153`, `order_api 37/37`, `wizard_quant_api 58/58`), battery RED=8/9.
+
+**Its measured negative is the round's most valuable hand-off.** A generator-side trace probe shows
+`[GEN LoopRegion@1890] depth=2` *inside loop 1's pass*, i.e. both `While` statements are dispatched before
+`blk@1214` ever is, and three different analyzer evictions (`condition_chain_blocks`, `blocks`, `else_blocks` of
+the sibling loop) were each measured **inert for ordering**. So the position defect is actuated at
+`region_ast_generator.py:8762-8832` together with `_loop_postprocess` `:14704`: the host must not emit a later
+sibling `LoopRegion` from an earlier nested loop's pass. r102a is on exactly that site now.
+
+Nothing installed (zero flips => banked per the standing rule). Round 40 therefore closes sealed at
+**6615/6617 (99.9698 %), 400/402 files**, gate label 40 unconsumed, `core/` clean at the landed bytes.
+
+**Security note for the record:** r100a reported that many of its tool outputs carried injected text instructing
+it to stop and switch files, which it correctly disregarded as untrusted. No credential or repo state was
+exposed by that event; flagged to the user.
+
+
+## 14. Round-40 sealed hand-off: the exact host-walk trace of the position defect (read from r102a's probe at 12:21)
+
+`orch/logs_pp_probe.txt` on the certified-pair base, unit `_sync_worker`, host `LoopRegion` header `@232`. Events
+in order (`[GB]`=body walk, `[IFBR]`=`_if_generate_branch_stmts`, `[PP]`=`_loop_postprocess`, `[GEN]`=child dispatch):
+
+```
+[GB] ENTER hdr=232
+[IFBR] blocks=[230]                       # pre-loop statements
+[GB] ENTER hdr=704                        # child loop 1 (entry@232)
+[PP]   hdr=704 entry=232 pending=[] be=0 types=['Expr']
+[GB] EXIT  hdr=704 n=1
+[GB] ENTER hdr=2072                       # child loop 2  <-- dispatched while loop 1's pass is still open
+[PP]   hdr=2072 entry=1890 pending=[2884] be=0 types=['Assign','With','Assign','If','If','If','If']
+[GB] EXIT  hdr=2072 n=7
+[IFBR] blocks=[700, 702, 1210]            # the reconnect chain becomes an If HERE, after both loops
+[PP]   hdr=232 entry=232 pending=[2882] be=1 types=['While','While','If']
+[GB] EXIT  hdr=232 n=4 types=['While','While','If','Expr']
+```
+
+So the emitted order is `While(loop1) While(loop2) If(chain) Expr(time.sleep(steps))`; GOLD needs
+`While(loop1) If(chain) While(loop2) Expr`. The chain is *not* in `back_edge_stmts` - `be=1` is only `@2882` -
+it is a host branch group `[700,702,1210]` that is produced **after** loop 2 was already dispatched.
+
+The decisive fact is the nesting: loop 2 (`hdr=2072`, `entry=1890`) is entered while loop 1's body pass
+(`hdr=704`) is still open - r100a's independent probe read the same thing as `[GEN LoopRegion@1890] depth=2`.
+Loop 2 is *not* a child of loop 1: `@1890` is the forward merge target of loop 1's reconnect guard run
+(`@1214 -> @1890`), and the host owns it. **Hypothesis for the next dispatch (never measured):** a loop body pass
+may dispatch only child regions whose `entry` lies in that region's own block set; refusing the dispatch otherwise
+leaves loop 2 to the host walk, which reaches it after the branch group `[700,702,1210]`, i.e. in GOLD's order.
+That criterion is block-set data only - no offsets as keys, no names, no counters - and it is the principle-2
+statement of the defect. Three sibling-eviction variants (evicting `@2064/@2168` from loop 2's
+`condition_chain_blocks` / `blocks` / `else_blocks`) were already measured **inert for ordering**, so do not re-run them.
+
+Platform for the next hand: analyzer `9ba2d8afe9e96fc1` (r100a, terminator half CLOSED, sweep 401 same / 1 changed)
++ generator `0f4c3898298e6f2e` + the position rule above. With the terminator already closed by r100a, the position
+rule alone should be the flip; my own probe (`r100/PROBE_source_flat_chain_in_place.py`, judged `128/128`) says the
+flat spelling is acceptable, so the acceptance test is `pyc_verify single --source <fresh product>` == `128/128`,
+never a zero-hunk GOLD diff.
+
+Round 40 closes sealed: **6615/6617 units (99.9698 %), 400/402 files, residual 2 files / 2 units**
+(`realtime_event_source.clock_worker` 12/13, `trade_live_broker._sync_worker`), gate label 40 unconsumed because
+no candidate measured a flip. `core/` clean at the landed bytes `842e2748bcdfeb66` / `b4363f5858e58074`.
+
+
+## 15. GATE 40 LANDED — `[R21-74]` flips `trade_live_broker._sync_worker`, the file goes green, corpus 6616/6617
+
+Installed pair (verified in my own mirror BEFORE installing, and by the gate after):
+`core/cfg/region_analyzer.py = 1471c92eca157e46` + `core/cfg/region_ast_generator.py = 566ff5c502276e48`.
+
+My independent verification, not the engineer's prose: fast gate read `[broker] [single] status=success
+units=128/128 success_rate=100.00%`, `_sync_worker` windows `5 -> 4`, battery `RED=8/9`, and the panel byte-unchanged
+(`realtime 12/13 function 15/15 replace_utils 9/9 quote 92/92 quotation 153/153 order_api 37/37`).
+My own corpus collateral sweep (`r91m/sweep_r102.py`, 402 products regenerated with the pair, CR-stripped against
+the committed files): `files_compared 402, MISSING/FAIL 0, CHANGED_COUNT 1 = {trade_live_broker}`.
+The sweep's first version was **vacuous** — `corpus402.txt` holds repo-relative paths, so with `cwd=mirror` every
+entry read `MISS` and printed `CHANGED_COUNT 0`; caught by inspecting the counts instead of trusting a zero
+([[feedback-artifact-counts-before-conclusions]], [[feedback-deform-test-must-prove-its-own-deform]]).
+
+Gate chain `gate_chain.py 40 39`, all four stages rc=0 (`CHAIN_DONE`):
+regen `ok=402 bad=0` in 453 s; verify 225 s; report; checks 158 s.
+- `[units] 6615/6617 -> 6616/6617 (99.9849%)   [files] 400 -> 401`
+- `[gates] 文件级回退=0  UNIT_REGRESSIONS=0  新增失败单元=0  翻正单元=1`
+- `[quotation] 153/153` · `[small34] units_success=1567 files=33` · `[selfcheck] 153/153, 常量 1/153, 极性 1/153`
+- `[pytest] 2 failed, 282 passed, 2 xpassed` = the standing two failures, zero new.
+
+**What the landed rule actually is** (measured correction to my own brief): `back_edge_stmts` is **empty** at this
+site. Loop 2's `While` is emitted early — at `block@232` — as loop 1's `_r58_collect_break_target_stmts` sequential
+tail; the guard run `@1214..@1876` is then dispatched, handled and appended at the END of `body_stmts`, which is the
+position defect, and the `break` comes from the arm renderer honouring `BlockRole.BREAK` on `@1872`, a zero-successor
+`LOAD_CONST None; RETURN_VALUE` sink that the existing `_break_to_return_map_w` fold cannot see because it only maps
+break blocks having a RETURN-role *successor*. `[R21-74]` records a child-node origin ledger in the collector,
+predicates `_r102_run_before_child` (forward-only exits into a declared child entry + exactly one zero-successor
+RETURN-class sink + no other BREAK-roled block), and at the dispatch site moves the freshly created run nodes to
+their own slot before the child node while reducing the sink's `Break` arm to the sink's `Return`.
+Fire census before editing: panel `fires=1`, corpus `files=402 evals=6617 fires=1`.
+
+Consequences for the campaign record: my brief's `back_edge_stmts` mechanism was wrong and the fix still landed —
+the value was the *oracle text diff plus the two probes*, which pinned the requirement to position + terminator
+without prescribing the path. `rounds/round40/r100m/` keeps the four measurements that bracketed it (my variants
+(a)/(b), r102a v1/v2) including the two negative probes: flat-chain-in-place judges `128/128` (nesting irrelevant),
+`return None -> return` alone still judges `127/128` (position mandatory).
+
+Residual after gate 40: **1 file / 1 unit** — `realtime_event_source.clock_worker` 12/13. `clock_worker` needs the
+predicate-C refusal and a positive declaration of `@7582`/`@9144` as sequential loop-tail statements in ONE candidate
+(§12), because the over-absorbing `elif_final_else` is currently the only reason those blocks are emitted at all.

@@ -1,0 +1,201 @@
+{
+ "elapsed_sec": 8.8,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 1,
+  "success": 12
+ },
+ "files_total": 13,
+ "generated_at": "2026-10-07T09:05:52",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc"
+  ],
+  "success": [
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/datetime_func.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/decorator.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/encrypt.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/exception.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/global_variable.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/i18n.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/logger/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/logger/handlers.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/option.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/pycompatibility.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/record_store.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/report.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/datetime_func.pyc",
+   "pyc_sha": "21dd0038b36e",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/datetime_funcOK.py",
+   "source_sha": "d9e61bf13fb3",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 17,
+   "units_total": 17
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/decorator.pyc",
+   "pyc_sha": "aca423e8a1f6",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/decoratorOK.py",
+   "source_sha": "93490244b8c6",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/encrypt.pyc",
+   "pyc_sha": "e24fb8a114a3",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/encryptOK.py",
+   "source_sha": "0b5378af83be",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 9,
+   "units_total": 9
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/exception.pyc",
+   "pyc_sha": "8375aa99af7e",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/exceptionOK.py",
+   "source_sha": "36fcbe205715",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 31,
+   "units_total": 31
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/global_variable.pyc",
+   "pyc_sha": "0337aa520d20",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/global_variableOK.py",
+   "source_sha": "534e89f230db",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 8,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/i18n.pyc",
+   "pyc_sha": "c32663bb712b",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/i18nOK.py",
+   "source_sha": "ef2c505baeff",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/logger/__init__.pyc",
+   "pyc_sha": "93fae940b589",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/logger/__init__OK.py",
+   "source_sha": "bbcb8334ab76",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 1,
+   "units_total": 1
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/logger/handlers.pyc",
+   "pyc_sha": "718a2b0d8db9",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/logger/handlersOK.py",
+   "source_sha": "77ed9cea1e3a",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 17,
+   "units_total": 17
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/option.pyc",
+   "pyc_sha": "01c1e1370ec6",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/optionOK.py",
+   "source_sha": "34a2d018bbc5",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 1,
+   "units_total": 1
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.ProfilerTool.show_func: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc",
+   "pyc_sha": "cc7920470c4d",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/profiler_funcOK.py",
+   "source_sha": "e299b419d3ef",
+   "status": "failure",
+   "success_rate": 0.9444444444444444,
+   "units_success": 17,
+   "units_total": 18
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/pycompatibility.pyc",
+   "pyc_sha": "9bb429498747",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/pycompatibilityOK.py",
+   "source_sha": "20b3a44e1fcc",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/record_store.pyc",
+   "pyc_sha": "577421a22480",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/record_storeOK.py",
+   "source_sha": "8b06ce94b367",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/report.pyc",
+   "pyc_sha": "9cd9ce249f90",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/utils/reportOK.py",
+   "source_sha": "92b16d0d26d0",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9920634920634921,
+ "units_success": 125,
+ "units_total": 126
+}

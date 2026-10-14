@@ -1,0 +1,127 @@
+len orig=507 prod=410 delta=-97
+== #1 delete orig[340..348 @2092..@2152] prod[340..340] del=8 ins=0
+   - @2076    CALL                           
+   - @2086    POP_TOP                        
+   - @2090    JUMP_FORWARD                   
+   - @2092    LOAD_GLOBAL                    NULL + strategy_log
+   - @2104    LOAD_ATTR                      info
+   - @2114    LOAD_CONST                     '生成订单，订单号：{order_id}，期权合约代码：{symbol}，方向：{side}{oper}，数量：{share}手, {hedge_type}'
+   - @2116    LOAD_METHOD                    format
+   - @2138    LOAD_FAST                      order
+   - @2140    LOAD_ATTR                      order_id
+   - @2150    LOAD_FAST                      order
+   - @2152    LOAD_ATTR                      symbol
+   + @2072    CALL                           
+   + @2082    POP_TOP                        
+   + @2084    JUMP_FORWARD                   
+== #2 delete orig[360..391 @2236..@2416] prod[352..352] del=31 ins=0
+   - @2230    LOAD_CONST                     '买入'
+   - @2232    JUMP_FORWARD                   
+   - @2234    LOAD_CONST                     '卖出'
+   - @2236    LOAD_FAST                      order
+   - @2238    LOAD_ATTR                      futures_direction
+   - @2248    LOAD_ATTR                      value
+   - @2258    LOAD_METHOD                    upper
+   - @2280    PRECALL                        
+   - @2284    CALL                           
+   - @2294    LOAD_CONST                     'OPEN'
+   - @2296    COMPARE_OP                     ==
+   - @2302    POP_JUMP_FORWARD_IF_FALSE      
+   - @2304    LOAD_CONST                     '开仓'
+   - @2306    JUMP_FORWARD                   
+   - @2308    LOAD_CONST                     '平仓'
+   - @2310    LOAD_FAST                      order
+   - @2312    LOAD_ATTR                      amount
+   - @2322    LOAD_FAST                      order
+   - @2324    LOAD_ATTR                      hedge_type
+   - @2334    LOAD_ATTR                      value
+   - @2344    LOAD_METHOD                    upper
+   - @2366    PRECALL                        
+   - @2370    CALL                           
+   - @2380    LOAD_CONST                     'SPECULATION'
+   - @2382    COMPARE_OP                     ==
+   - @2388    POP_JUMP_FORWARD_IF_FALSE      
+   - @2390    LOAD_CONST                     '非备兑类型委托'
+   - @2392    JUMP_FORWARD                   
+   - @2394    LOAD_CONST                     '备兑类型委托'
+   - @2396    KW_NAMES                       
+   - @2398    PRECALL                        
+   - @2402    CALL                           
+   - @2412    PRECALL                        
+   - @2416    CALL                           
+   + @2154    LOAD_CONST                     '买入'
+   + @2156    JUMP_FORWARD                   
+   + @2158    LOAD_CONST                     '卖出'
+== #3 delete orig[393..401 @2430..@2490] prod[354..354] del=8 ins=0
+   - @2416    CALL                           
+   - @2426    POP_TOP                        
+   - @2428    JUMP_FORWARD                   
+   - @2430    LOAD_GLOBAL                    NULL + strategy_log
+   - @2442    LOAD_ATTR                      info
+   - @2452    LOAD_CONST                     '生成订单，订单号：{order_id}，期货合约代码：{symbol}，方向：{side}{oper}，数量：{share}手'
+   - @2454    LOAD_METHOD                    format
+   - @2476    LOAD_FAST                      order
+   - @2478    LOAD_ATTR                      order_id
+   - @2488    LOAD_FAST                      order
+   - @2490    LOAD_ATTR                      symbol
+   + @2158    LOAD_CONST                     '卖出'
+   + @2160    POP_TOP                        
+   + @2164    JUMP_FORWARD                   
+== #4 delete orig[413..463 @2574..@2900] prod[366..366] del=50 ins=0
+   - @2568    LOAD_CONST                     '买入'
+   - @2570    JUMP_FORWARD                   
+   - @2572    LOAD_CONST                     '卖出'
+   - @2574    LOAD_FAST                      order
+   - @2576    LOAD_ATTR                      futures_direction
+   - @2586    LOAD_ATTR                      value
+   - @2596    LOAD_METHOD                    upper
+   - @2618    PRECALL                        
+   - @2622    CALL                           
+   - @2632    LOAD_CONST                     'OPEN'
+   - @2634    COMPARE_OP                     ==
+   - @2640    POP_JUMP_FORWARD_IF_FALSE      
+   - @2642    LOAD_CONST                     '开仓'
+   - @2644    JUMP_FORWARD                   
+   - @2646    LOAD_CONST                     '平仓'
+   - @2648    LOAD_FAST                      order
+   - @2650    LOAD_ATTR                      amount
+   - @2660    KW_NAMES                       
+   - @2662    PRECALL                        
+   - @2666    CALL                           
+   - @2676    PRECALL                        
+   - @2680    CALL                           
+   - @2690    POP_TOP                        
+   - @2692    LOAD_FAST                      order
+   - @2694    LOAD_METHOD                    set_entrust_no
+   - @2716    LOAD_FAST                      response
+   - @2718    LOAD_METHOD                    get
+   - @2740    LOAD_CONST                     'entrust_no'
+   - @2742    PRECALL                        
+   - @2746    CALL                           
+   - @2756    PRECALL                        
+   - @2760    CALL                           
+   - @2770    POP_TOP                        
+   - @2772    LOAD_FAST                      order
+   - @2774    LOAD_FAST                      self
+   - @2776    LOAD_ATTR                      close_orders
+   - @2786    LOAD_GLOBAL                    NULL + str
+   - @2798    LOAD_FAST                      order
+   - @2800    LOAD_ATTR                      entrust_reference
+   - @2810    PRECALL                        
+   - @2814    CALL                           
+   - @2824    STORE_SUBSCR                   
+   - @2828    LOAD_FAST                      self
+   - @2830    LOAD_METHOD                    on_order_response_list_handle
+   - @2852    LOAD_FAST                      order
+   - @2854    PRECALL                        
+   - @2858    CALL                           
+   - @2868    POP_TOP                        
+   - @2870    LOAD_FAST                      self
+   - @2872    LOAD_METHOD                    on_trade_response_list_handle
+   - @2894    LOAD_FAST                      order
+   - @2896    PRECALL                        
+   - @2900    CALL                           
+   + @2234    LOAD_CONST                     '买入'
+   + @2236    JUMP_FORWARD                   
+   + @2238    LOAD_CONST                     '卖出'
+hunks=4

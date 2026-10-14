@@ -1,0 +1,3 @@
+FIRE trade_live_broker.pyc :: _sync_worker :: cond=@232 hdr=@704 chain=[(232, 'or'), (364, 'or'), (522, 'and'), (544, 'and')]
+FILE D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc evals=18 fires=1
+=== DONE files=402 evaluations=173 fires=1 ===

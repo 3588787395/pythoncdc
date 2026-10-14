@@ -1,0 +1,355 @@
+{
+ "shard": [
+  3,
+  8
+ ],
+ "totals": {
+  "regions": 12,
+  "eligible": 4
+ },
+ "files": {
+  "IQCommon/api/check_strategy.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/common/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/basic_data_source.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/enumerate.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/manager/instance.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/strategy/strategy.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/crypto_utils.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/pycompatibility.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/tradingday_info_utils.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/api/api_extra.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/core/base.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/default_basic_data.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/trading_dates_storage.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/manager/data_info_manager.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_history_data_source/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_client_db/base_db_table.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_db/iqdata_db_helper.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_historyquote/history_bar_storage.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source_api.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/__init__.pyc": {
+   "regions": 1,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/i18n.pyc": {
+   "regions": 1,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/version.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/account/trade.pyc": {
+   "regions": 1,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/const.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/engine/engine.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/plugin_manager.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/data/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/data/trading_dates_storage.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/order_api_backtest.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/local_variables/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data_source/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/account_model/live_future_account.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/api/api_stock.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc": {
+   "regions": 1,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_finance/api.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_persist/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_risk_control/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_simulation/live.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/ptrade_hks_broker.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/arg_checker.pyc": {
+   "regions": 2,
+   "eligible": 4,
+   "sites": [
+    {
+     "co": "_is_valid_quarter",
+     "cond": 168,
+     "arm": 222,
+     "merge": 236,
+     "non_merge_succs": [
+      240
+     ]
+    },
+    {
+     "co": "_is_valid_quarter",
+     "cond": 168,
+     "arm": 232,
+     "merge": 236,
+     "non_merge_succs": [
+      240
+     ]
+    },
+    {
+     "co": "_is_valid_quarter",
+     "cond": 94,
+     "arm": 152,
+     "merge": 166,
+     "non_merge_succs": [
+      240
+     ]
+    },
+    {
+     "co": "_is_valid_quarter",
+     "cond": 94,
+     "arm": 162,
+     "merge": 166,
+     "non_merge_succs": [
+      240
+     ]
+    }
+   ],
+   "err": null
+  },
+  "IQEngine/utils/global_variable.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/report.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/const.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/flytools.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/multiprocess_syn.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/data/quote_handler.pyc": {
+   "regions": 4,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/event/event.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/oauthenticator/hsid.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/simtradding/ptradeFutureAccount.pyc": {
+   "regions": 2,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  }
+ }
+}

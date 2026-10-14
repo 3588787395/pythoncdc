@@ -1,0 +1,281 @@
+--- blocks (id offset n first last succ pred)
+blk ?   @0      n=19  RESUME                     POP_JUMP_FORWARD_IF_FALSE  succ=[120, 150] pred=[]
+blk ?   @120    n=5   LOAD_GLOBAL                JUMP_FORWARD               succ=[230] pred=[0]
+blk ?   @150    n=5   LOAD_FAST                  POP_JUMP_FORWARD_IF_FALSE  succ=[172, 202] pred=[0]
+blk ?   @172    n=5   LOAD_GLOBAL                JUMP_FORWARD               succ=[230] pred=[150]
+blk ?   @202    n=4   LOAD_GLOBAL                STORE_FAST                 succ=[230] pred=[150]
+blk ?   @230    n=1   NOP                        NOP                        succ=[232] pred=[120, 172, 202]
+blk ?   @232    n=15  LOAD_GLOBAL                POP_JUMP_FORWARD_IF_TRUE   succ=[364, 704] pred=[230, 2886]
+blk ?   @364    n=18  LOAD_GLOBAL                POP_JUMP_FORWARD_IF_TRUE   succ=[522, 704] pred=[232]
+blk ?   @522    n=4   LOAD_GLOBAL                POP_JUMP_FORWARD_IF_FALSE  succ=[544, 702] pred=[364]
+blk ?   @544    n=16  LOAD_FAST                  POP_JUMP_FORWARD_IF_TRUE   succ=[700, 1214] pred=[522]
+blk ?   @700    n=1   JUMP_FORWARD               JUMP_FORWARD               succ=[704] pred=[544]
+blk ?   @702    n=1   JUMP_FORWARD               JUMP_FORWARD               succ=[1214] pred=[522]
+blk ?   @704    n=21  LOAD_GLOBAL                POP_JUMP_BACKWARD_IF_TRUE  succ=[704, 876] pred=[232, 364, 700, 704, 876, 1056]
+blk ?   @876    n=18  LOAD_GLOBAL                POP_JUMP_BACKWARD_IF_TRUE  succ=[704, 1034] pred=[704]
+blk ?   @1034   n=4   LOAD_GLOBAL                POP_JUMP_FORWARD_IF_FALSE  succ=[1056, 1212] pred=[876]
+blk ?   @1056   n=15  LOAD_FAST                  POP_JUMP_BACKWARD_IF_FALSE succ=[704, 1210] pred=[1034]
+blk ?   @1210   n=1   JUMP_FORWARD               JUMP_FORWARD               succ=[1214] pred=[1056]
+blk ?   @1212   n=1   NOP                        NOP                        succ=[1214] pred=[1034]
+blk ?   @1214   n=16  LOAD_FAST                  POP_JUMP_FORWARD_IF_FALSE  succ=[1370, 1890] pred=[544, 702, 1210, 1212]
+blk ?   @1370   n=5   LOAD_FAST                  POP_JUMP_FORWARD_IF_FALSE  succ=[1388, 1890] pred=[1214]
+blk ?   @1388   n=12  LOAD_GLOBAL                POP_JUMP_FORWARD_IF_FALSE  succ=[1502, 1524] pred=[1370]
+blk ?   @1502   n=5   LOAD_FAST                  POP_JUMP_FORWARD_IF_TRUE   succ=[1524, 1638] pred=[1388]
+blk ?   @1524   n=12  LOAD_GLOBAL                POP_JUMP_FORWARD_IF_FALSE  succ=[1638, 1890] pred=[1388, 1502]
+blk ?   @1638   n=15  LOAD_GLOBAL                POP_JUMP_FORWARD_IF_FALSE  succ=[1770, 1890] pred=[1502, 1524]
+blk ?   @1770   n=15  LOAD_GLOBAL                POP_JUMP_FORWARD_IF_TRUE   succ=[1872, 1876] pred=[1638]
+blk ?   @1872   n=2   LOAD_CONST                 RETURN_VALUE               succ=[] pred=[1770]
+blk ?   @1876   n=3   LOAD_CONST                 STORE_ATTR                 succ=[1890] pred=[1770]
+blk ?   @1890   n=17  LOAD_FAST                  POP_JUMP_FORWARD_IF_FALSE  succ=[2026, 2066] pred=[1214, 1370, 1524, 1638, 1876]
+blk ?   @2026   n=7   LOAD_GLOBAL                POP_JUMP_FORWARD_IF_FALSE  succ=[2064, 2886] pred=[1890]
+blk ?   @2064   n=1   JUMP_FORWARD               JUMP_FORWARD               succ=[2072] pred=[2026]
+blk ?   @2066   n=3   POP_TOP                    JUMP_FORWARD               succ=[2886] pred=[1890]
+blk ?   @2072   n=5   LOAD_CONST                 BEFORE_WITH                succ=[2090] pred=[2064, 2844]
+blk ?   @2114   n=5   LOAD_FAST                  POP_JUMP_FORWARD_IF_FALSE  succ=[2136, 2168, 2192] pred=[2090]
+blk ?   @2136   n=8   LOAD_CONST                 STORE_ATTR                 succ=[2168, 2192] pred=[2090, 2114]
+blk ?   @2168   n=7   LOAD_CONST                 JUMP_FORWARD               succ=[2214] pred=[2114, 2136]
+blk ?   @2192   n=3   PUSH_EXC_INFO              POP_JUMP_FORWARD_IF_TRUE   succ=[2198, 2200, 2206] pred=[2090, 2114, 2136]
+blk ?   @2198   n=1   RERAISE                    RERAISE                    succ=[2200] pred=[2192]
+blk ?   @2200   n=3   COPY                       RERAISE                    succ=[] pred=[2192, 2198, 2206]
+blk ?   @2206   n=1   POP_TOP                    POP_TOP                    succ=[2200, 2208] pred=[2192]
+blk ?   @2214   n=19  LOAD_GLOBAL                POP_JUMP_FORWARD_IF_FALSE  succ=[2374, 2378] pred=[2168, 2208]
+blk ?   @2374   n=2   LOAD_CONST                 STORE_FAST                 succ=[2378] pred=[2214]
+blk ?   @2378   n=2   LOAD_FAST                  POP_JUMP_FORWARD_IF_FALSE  succ=[2382, 2492] pred=[2214, 2374]
+blk ?   @2382   n=12  LOAD_FAST                  STORE_ATTR                 succ=[2492] pred=[2378]
+blk ?   @2492   n=8   LOAD_GLOBAL                POP_JUMP_FORWARD_IF_FALSE  succ=[2540, 2580] pred=[2378, 2382]
+blk ?   @2540   n=6   LOAD_GLOBAL                POP_TOP                    succ=[2580] pred=[2492]
+blk ?   @2580   n=8   LOAD_GLOBAL                POP_JUMP_FORWARD_IF_FALSE  succ=[2628, 2668] pred=[2492, 2540]
+blk ?   @2628   n=6   LOAD_GLOBAL                POP_TOP                    succ=[2668] pred=[2580]
+blk ?   @2668   n=23  LOAD_GLOBAL                POP_JUMP_FORWARD_IF_FALSE  succ=[2844, 2884] pred=[2580, 2628]
+blk ?   @2844   n=7   LOAD_GLOBAL                POP_JUMP_BACKWARD_IF_TRUE  succ=[2072, 2882] pred=[2668]
+blk ?   @2882   n=1   JUMP_FORWARD               JUMP_FORWARD               succ=[2886] pred=[2844]
+blk ?   @2884   n=1   POP_TOP                    POP_TOP                    succ=[2886] pred=[2668]
+blk ?   @2886   n=8   LOAD_GLOBAL                JUMP_BACKWARD              succ=[232] pred=[2026, 2066, 2882, 2884]
+blk ?   @2090   n=6   POP_TOP                    POP_JUMP_FORWARD_IF_TRUE   succ=[2114, 2136, 2192] pred=[2072]
+blk ?   @2208   n=3   POP_EXCEPT                 POP_TOP                    succ=[2214] pred=[2206]
+--- block_to_region
+--- regions=26
+LoopRegion     entry=1890   cond=1890   rt=RegionType.WHILE_LOOP hdr=2072   merge=None   back=[2844] ccb=[2026] crb=[]
+      body=[2072, 2090, 2114, 2136, 2168, 2192, 2198, 2200, 2206, 2208, 2214, 2374, 2378, 2382, 2492, 2540, 2580, 2628, 2668, 2844, 2884]
+      else=[]
+      break_blocks           []
+      is_while_true          False
+      condition_chain_expr   None
+      metadata               {'for_iter_setup': 'None', 'for_iter_exit': 'None', 'for_iter_fall_through': 'None', 'chained_compare_ops': "['<=', '<']", 'is_chained_compare_cond': 'True', 'natural_back_edge': 'Block 49 (offset 2844-2880):\n        2844: LOAD_GLOBAL 27\n  ', 'loop_body_full_set': [1890, 2072, 2090, 2114, 2136, 21
+LoopRegion     entry=232    cond=232    rt=RegionType.WHILE_LOOP hdr=704    merge=None   back=[704] ccb=[232, 364, 522, 544, 1214, 1890, 2026] crb=[]
+      body=[704, 876, 1034, 1056, 1212]
+      else=[]
+      break_blocks           [2064, 2066, 2168]
+      is_while_true          False
+      condition_chain_expr   None
+      metadata               {'for_iter_setup': 'None', 'for_iter_exit': 'None', 'for_iter_fall_through': 'None', 'natural_back_edge': 'Block 13 (offset 704-874):\n  [LOOP HEADER, depth=2]\n  L1386 ', 'loop_body_full_set': [232, 704, 876, 1034, 1056, 1212], 'break_blocks_precise': [2064, 2066, 2168], 'has_break_in_body': 'True'
+LoopRegion     entry=232    cond=None   rt=RegionType.WHILE_LOOP hdr=232    merge=None   back=[2886] ccb=[] crb=[]
+      body=[230, 232, 364, 522, 544, 700, 702, 704, 876, 1034, 1056, 1210, 1212, 1214, 1370, 1388, 1502, 1524, 1638, 1770, 1872, 1876, 1890, 2026, 2064, 2066, 2072, 2090, 2114, 2136, 2168, 2192, 2198, 2200, 2206, 2208, 2214, 2374, 2378, 2382, 2492, 2540, 2580, 2628, 2668, 2844, 2882, 2884, 2886]
+      else=[]
+      break_blocks           [1872]
+      is_while_true          True
+      condition_chain_expr   None
+      metadata               {'for_iter_setup': 'None', 'for_iter_exit': 'None', 'for_iter_fall_through': 'None', 'natural_back_edge': 'Block 52 (offset 2886-2928):\n  L1437 > 2886: LOAD_GLOBAL 43\n', 'loop_body_full_set': [230, 232, 364, 522, 544, 700, 702, 704, 876, 1034, 1056, 1210, 1212, 1214, 1370, 1388, 1502, 1524, 1638, 
+WithRegion     entry=2072   cond=None   rt=RegionType.WITH hdr=None   merge=None   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      metadata               {}
+BoolOpRegion   entry=1214   cond=None   rt=RegionType.BOOL_OP hdr=None   merge=2026   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      metadata               {}
+BoolOpRegion   entry=1388   cond=None   rt=RegionType.BOOL_OP hdr=None   merge=2026   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      metadata               {}
+BoolOpRegion   entry=2090   cond=None   rt=RegionType.BOOL_OP hdr=None   merge=2168   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      metadata               {}
+IfRegion       entry=2668   cond=2668   rt=RegionType.IF_THEN hdr=None   merge=2072   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      inline_boolop_chains   {}
+      elif_conditions        []
+      elif_bodies            []
+      elif_final_else        []
+      metadata               {'then_all_chained_compare': 'False', 'is_empty_then_chained_compare': 'True', 'merge_has_store': 'True', 'merge_only_simple_ops': 'False'}
+IfRegion       entry=2580   cond=2580   rt=RegionType.IF_THEN hdr=None   merge=2668   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      inline_boolop_chains   {}
+      elif_conditions        []
+      elif_bodies            []
+      elif_final_else        []
+      metadata               {}
+IfRegion       entry=2492   cond=2492   rt=RegionType.IF_THEN hdr=None   merge=2580   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      inline_boolop_chains   {}
+      elif_conditions        []
+      elif_bodies            []
+      elif_final_else        []
+      metadata               {}
+IfRegion       entry=2378   cond=2378   rt=RegionType.IF_THEN hdr=None   merge=2492   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      inline_boolop_chains   {}
+      elif_conditions        []
+      elif_bodies            []
+      elif_final_else        []
+      metadata               {}
+IfRegion       entry=2214   cond=2214   rt=RegionType.IF_THEN hdr=None   merge=2378   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      inline_boolop_chains   {}
+      elif_conditions        []
+      elif_bodies            []
+      elif_final_else        []
+      metadata               {}
+IfRegion       entry=2090   cond=2114   rt=RegionType.IF_THEN hdr=None   merge=2168   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      inline_boolop_chains   {}
+      elif_conditions        []
+      elif_bodies            []
+      elif_final_else        []
+      metadata               {}
+IfRegion       entry=1770   cond=1770   rt=RegionType.IF_THEN_ELSE hdr=None   merge=1890   back=[] ccb=[] crb=[]
+      body=[]
+      else=[1876]
+      inline_boolop_chains   {}
+      elif_conditions        []
+      elif_bodies            []
+      elif_final_else        []
+      metadata               {}
+IfRegion       entry=1638   cond=1638   rt=RegionType.IF_THEN hdr=None   merge=1890   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      inline_boolop_chains   {}
+      elif_conditions        []
+      elif_bodies            []
+      elif_final_else        []
+      metadata               {}
+IfRegion       entry=1388   cond=1524   rt=RegionType.IF_THEN hdr=None   merge=1890   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      inline_boolop_chains   {}
+      elif_conditions        []
+      elif_bodies            []
+      elif_final_else        []
+      metadata               {}
+IfRegion       entry=1214   cond=1370   rt=RegionType.IF_THEN hdr=None   merge=1890   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      inline_boolop_chains   {2402883334928: {'blocks': [BasicBlock(19, offset=1214-1368, instrs=16), BasicBlock(20, offset=1370-1386, instrs=5)], 'op': 'and'}}
+      elif_conditions        []
+      elif_bodies            []
+      elif_final_else        []
+      metadata               {}
+IfRegion       entry=1034   cond=1034   rt=RegionType.IF_THEN hdr=None   merge=1214   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      inline_boolop_chains   {}
+      elif_conditions        []
+      elif_bodies            []
+      elif_final_else        []
+      metadata               {}
+IfRegion       entry=544    cond=544    rt=RegionType.IF_THEN hdr=None   merge=1214   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      inline_boolop_chains   {}
+      elif_conditions        []
+      elif_bodies            []
+      elif_final_else        []
+      metadata               {}
+IfRegion       entry=522    cond=522    rt=RegionType.IF_THEN_ELSE hdr=None   merge=1214   back=[] ccb=[] crb=[]
+      body=[]
+      else=[702]
+      inline_boolop_chains   {}
+      elif_conditions        []
+      elif_bodies            []
+      elif_final_else        []
+      metadata               {}
+IfRegion       entry=0      cond=0      rt=RegionType.IF_ELIF_CHAIN hdr=None   merge=230    back=[] ccb=[] crb=[]
+      body=[]
+      else=[150, 172, 202]
+      inline_boolop_chains   {}
+      elif_conditions        [150]
+      elif_bodies            [[BasicBlock(4, offset=172-200, instrs=5)]]
+      elif_final_else        [202]
+      metadata               {}
+Region         entry=0      cond=None   rt=RegionType.BASIC hdr=None   merge=None   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      metadata               {}
+Region         entry=120    cond=None   rt=RegionType.BASIC hdr=None   merge=None   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      metadata               {}
+Region         entry=150    cond=None   rt=RegionType.BASIC hdr=None   merge=None   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      metadata               {}
+Region         entry=172    cond=None   rt=RegionType.BASIC hdr=None   merge=None   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      metadata               {}
+Region         entry=202    cond=None   rt=RegionType.BASIC hdr=None   merge=None   back=[] ccb=[] crb=[]
+      body=[]
+      else=[]
+      metadata               {}
+--- block_to_region (owner per block)
+  @0      -> ENTRY
+  @120    -> ENTRY
+  @150    -> ENTRY
+  @172    -> ENTRY
+  @202    -> ENTRY
+  @230    -> NoneType
+  @232    -> ENTRY
+  @364    -> NoneType
+  @522    -> ENTRY
+  @544    -> ENTRY
+  @700    -> NoneType
+  @702    -> NoneType
+  @704    -> NoneType
+  @876    -> NoneType
+  @1034   -> ENTRY
+  @1056   -> NoneType
+  @1210   -> NoneType
+  @1212   -> NoneType
+  @1214   -> ENTRY
+  @1370   -> NoneType
+  @1388   -> ENTRY
+  @1502   -> NoneType
+  @1524   -> NoneType
+  @1638   -> ENTRY
+  @1770   -> ENTRY
+  @1872   -> NoneType
+  @1876   -> NoneType
+  @1890   -> ENTRY
+  @2026   -> NoneType
+  @2064   -> NoneType
+  @2066   -> NoneType
+  @2072   -> ENTRY
+  @2114   -> NoneType
+  @2136   -> NoneType
+  @2168   -> NoneType
+  @2192   -> NoneType
+  @2198   -> NoneType
+  @2200   -> NoneType
+  @2206   -> NoneType
+  @2214   -> ENTRY
+  @2374   -> NoneType
+  @2378   -> ENTRY
+  @2382   -> NoneType
+  @2492   -> ENTRY
+  @2540   -> NoneType
+  @2580   -> ENTRY
+  @2628   -> NoneType
+  @2668   -> ENTRY
+  @2844   -> NoneType
+  @2882   -> NoneType
+  @2884   -> NoneType
+  @2886   -> NoneType
+  @2090   -> ENTRY
+  @2208   -> NoneType

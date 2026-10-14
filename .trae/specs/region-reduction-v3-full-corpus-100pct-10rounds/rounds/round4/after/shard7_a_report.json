@@ -1,0 +1,227 @@
+{
+ "elapsed_sec": 14.8,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 1,
+  "success": 14
+ },
+ "files_total": 15,
+ "generated_at": "2026-10-07T09:06:52",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/flytools.pyc"
+  ],
+  "success": [
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/fly_exception.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/flydefine.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/flyqueue.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/function.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/future_param.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/global_param.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/inform_info.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/login_time.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/market_time.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/multiprocess_syn.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/op_station.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/trading_schedule.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/tradingday_calendar.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/fly_exception.pyc",
+   "pyc_sha": "6ce71f81e481",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/fly_exceptionOK.py",
+   "source_sha": "f765a6e131f2",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 9,
+   "units_total": 9
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/flydefine.pyc",
+   "pyc_sha": "09655897daa1",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/flydefineOK.py",
+   "source_sha": "063d477ca192",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 1,
+   "units_total": 1
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/flyqueue.pyc",
+   "pyc_sha": "974518566fe9",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/flyqueueOK.py",
+   "source_sha": "7d23a2d727d2",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.ProcessWrite.modify_batcktes_info: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/flytools.pyc",
+   "pyc_sha": "883f61a64cb2",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/flytoolsOK.py",
+   "source_sha": "6385518ab785",
+   "status": "failure",
+   "success_rate": 0.9848484848484849,
+   "units_success": 65,
+   "units_total": 66
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/function.pyc",
+   "pyc_sha": "2a3c629aed3d",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/functionOK.py",
+   "source_sha": "5df8477d1909",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
+   "pyc_sha": "882d3ccc0d31",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/future_contract_infoOK.py",
+   "source_sha": "9d5c91b4e6f6",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 29,
+   "units_total": 29
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/future_param.pyc",
+   "pyc_sha": "7ea95369e93b",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/future_paramOK.py",
+   "source_sha": "781afee69c26",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 16,
+   "units_total": 16
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/global_param.pyc",
+   "pyc_sha": "4317b81a67ad",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/global_paramOK.py",
+   "source_sha": "f1eb6243bb4d",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 10,
+   "units_total": 10
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/inform_info.pyc",
+   "pyc_sha": "bb0d9c3e807f",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/inform_infoOK.py",
+   "source_sha": "d1a5e81fe773",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/login_time.pyc",
+   "pyc_sha": "b1a347096002",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/login_timeOK.py",
+   "source_sha": "d80616cf37a6",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/market_time.pyc",
+   "pyc_sha": "0e041c7dd419",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/market_timeOK.py",
+   "source_sha": "3005d8722186",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 10,
+   "units_total": 10
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/multiprocess_syn.pyc",
+   "pyc_sha": "e980093152e1",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/multiprocess_synOK.py",
+   "source_sha": "ff943042c374",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 35,
+   "units_total": 35
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/op_station.pyc",
+   "pyc_sha": "5e09167a062b",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/op_stationOK.py",
+   "source_sha": "620d345cc8ff",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 21,
+   "units_total": 21
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/trading_schedule.pyc",
+   "pyc_sha": "175025cc65c4",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/trading_scheduleOK.py",
+   "source_sha": "cb08bda05d6a",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/tradingday_calendar.pyc",
+   "pyc_sha": "e026930677fe",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/common/tradingday_calendarOK.py",
+   "source_sha": "26a3de8861c6",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 31,
+   "units_total": 31
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9960159362549801,
+ "units_success": 250,
+ "units_total": 251
+}

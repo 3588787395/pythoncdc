@@ -1,0 +1,80 @@
+[
+ {
+  "path": "test_repros/round9/r9q_01_subscript_ternary_assign.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_02_assert_else_implicit_tail.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_03_nested_try_body_dumped_in_handler.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_05_chained_ternary_retry_try.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_12_chained_cmp_then_retry_try.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_13_tick_nested_except_return_and_elif.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_14_for_for_continue_double_in_try.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_18_nested_subscript_dict_ternary.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_21_while_try_dump_min.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_23_for_try_while_nested_dump.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_04_return_in_inner_except_within_outer_try.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_04_try_range_teardown_between_arms.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_05_guard_try_finally.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_06_boolop_while_try_merge.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_06_for_continue_in_nested_if_try.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_07_else_arm_pure_none_cond_false_edge.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_09_while_tail_test_dropped.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_10_elif_mid_arm_continue.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_11_two_try_ranges_share_teardown.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_15_try_except_else_finally.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_15_while_elif_else_return_sink.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_16_boolop_elif_and_leg.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_17_continue_through_handler.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_19_subscript_listcomp_assign.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_20_assert_in_while_tail.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9q_22_fstring_subscript_assign.pyc"
+ }
+]

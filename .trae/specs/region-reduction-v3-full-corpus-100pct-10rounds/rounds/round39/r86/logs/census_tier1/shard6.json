@@ -1,0 +1,874 @@
+{
+ "shard": [
+  6,
+  8
+ ],
+ "totals": {
+  "regions": 61,
+  "eligible": 62
+ },
+ "files": {
+  "IQCommon/api/klinedataOK.pyc": {
+   "regions": 33,
+   "eligible": 42,
+   "sites": [
+    {
+     "co": "get_kline_by_count_new",
+     "cond": 2928,
+     "arm": 3050,
+     "merge": 3068,
+     "non_merge_succs": [
+      3080
+     ]
+    },
+    {
+     "co": "get_kline_by_count_new",
+     "cond": 2928,
+     "arm": 3054,
+     "merge": 3068,
+     "non_merge_succs": [
+      3080
+     ]
+    },
+    {
+     "co": "get_kline_by_count_new",
+     "cond": 2894,
+     "arm": 2898,
+     "merge": 2916,
+     "non_merge_succs": [
+      3080
+     ]
+    },
+    {
+     "co": "get_kline_by_count_new",
+     "cond": 2894,
+     "arm": 2902,
+     "merge": 2916,
+     "non_merge_succs": [
+      3080
+     ]
+    },
+    {
+     "co": "get_kline_by_count_new",
+     "cond": 2708,
+     "arm": 2712,
+     "merge": 2730,
+     "non_merge_succs": [
+      3080
+     ]
+    },
+    {
+     "co": "get_kline_by_count_new",
+     "cond": 2708,
+     "arm": 2716,
+     "merge": 2730,
+     "non_merge_succs": [
+      3080
+     ]
+    },
+    {
+     "co": "get_kline_by_count_new",
+     "cond": 2560,
+     "arm": 2564,
+     "merge": 2602,
+     "non_merge_succs": [
+      3080
+     ]
+    },
+    {
+     "co": "get_kline_by_count_new",
+     "cond": 2560,
+     "arm": 2578,
+     "merge": 2602,
+     "non_merge_succs": [
+      3080
+     ]
+    },
+    {
+     "co": "get_kline_by_count_new",
+     "cond": 2142,
+     "arm": 2146,
+     "merge": 2184,
+     "non_merge_succs": [
+      3080
+     ]
+    },
+    {
+     "co": "get_kline_by_count_new",
+     "cond": 2142,
+     "arm": 2160,
+     "merge": 2184,
+     "non_merge_succs": [
+      3080
+     ]
+    },
+    {
+     "co": "get_kline_by_count_new",
+     "cond": 1368,
+     "arm": 1372,
+     "merge": 1410,
+     "non_merge_succs": [
+      3080
+     ]
+    },
+    {
+     "co": "get_kline_by_count_new",
+     "cond": 1368,
+     "arm": 1386,
+     "merge": 1410,
+     "non_merge_succs": [
+      3080
+     ]
+    },
+    {
+     "co": "get_kline_by_count",
+     "cond": 2184,
+     "arm": 2290,
+     "merge": 2308,
+     "non_merge_succs": [
+      2312
+     ]
+    },
+    {
+     "co": "get_kline_by_count",
+     "cond": 2184,
+     "arm": 2294,
+     "merge": 2308,
+     "non_merge_succs": [
+      2312
+     ]
+    },
+    {
+     "co": "get_kline_by_count",
+     "cond": 2144,
+     "arm": 2148,
+     "merge": 2166,
+     "non_merge_succs": [
+      2312
+     ]
+    },
+    {
+     "co": "get_kline_by_count",
+     "cond": 2144,
+     "arm": 2152,
+     "merge": 2166,
+     "non_merge_succs": [
+      2312
+     ]
+    },
+    {
+     "co": "get_kline_by_count",
+     "cond": 2002,
+     "arm": 2006,
+     "merge": 2044,
+     "non_merge_succs": [
+      2312
+     ]
+    },
+    {
+     "co": "get_kline_by_count",
+     "cond": 2002,
+     "arm": 2020,
+     "merge": 2044,
+     "non_merge_succs": [
+      2312
+     ]
+    },
+    {
+     "co": "get_kline_by_count",
+     "cond": 1590,
+     "arm": 1594,
+     "merge": 1632,
+     "non_merge_succs": [
+      2312
+     ]
+    },
+    {
+     "co": "get_kline_by_count",
+     "cond": 1590,
+     "arm": 1608,
+     "merge": 1632,
+     "non_merge_succs": [
+      2312
+     ]
+    },
+    {
+     "co": "get_kline_by_count",
+     "cond": 820,
+     "arm": 824,
+     "merge": 862,
+     "non_merge_succs": [
+      2312
+     ]
+    },
+    {
+     "co": "get_kline_by_count",
+     "cond": 820,
+     "arm": 838,
+     "merge": 862,
+     "non_merge_succs": [
+      2312
+     ]
+    },
+    {
+     "co": "get_kline_by_date_new",
+     "cond": 1374,
+     "arm": 1378,
+     "merge": 1396,
+     "non_merge_succs": [
+      1408
+     ]
+    },
+    {
+     "co": "get_kline_by_date_new",
+     "cond": 1374,
+     "arm": 1382,
+     "merge": 1396,
+     "non_merge_succs": [
+      1408
+     ]
+    },
+    {
+     "co": "get_kline_by_date_new",
+     "cond": 1228,
+     "arm": 1346,
+     "merge": 1364,
+     "non_merge_succs": [
+      1408
+     ]
+    },
+    {
+     "co": "get_kline_by_date_new",
+     "cond": 1228,
+     "arm": 1350,
+     "merge": 1364,
+     "non_merge_succs": [
+      1408
+     ]
+    },
+    {
+     "co": "get_kline_by_date_new",
+     "cond": 1194,
+     "arm": 1198,
+     "merge": 1216,
+     "non_merge_succs": [
+      1408
+     ]
+    },
+    {
+     "co": "get_kline_by_date_new",
+     "cond": 1194,
+     "arm": 1202,
+     "merge": 1216,
+     "non_merge_succs": [
+      1408
+     ]
+    },
+    {
+     "co": "get_kline_by_date_new",
+     "cond": 1008,
+     "arm": 1012,
+     "merge": 1030,
+     "non_merge_succs": [
+      1408
+     ]
+    },
+    {
+     "co": "get_kline_by_date_new",
+     "cond": 1008,
+     "arm": 1016,
+     "merge": 1030,
+     "non_merge_succs": [
+      1408
+     ]
+    },
+    {
+     "co": "get_kline_by_date_new",
+     "cond": 862,
+     "arm": 866,
+     "merge": 904,
+     "non_merge_succs": [
+      1408
+     ]
+    },
+    {
+     "co": "get_kline_by_date_new",
+     "cond": 862,
+     "arm": 880,
+     "merge": 904,
+     "non_merge_succs": [
+      1408
+     ]
+    },
+    {
+     "co": "get_kline_by_date_new",
+     "cond": 554,
+     "arm": 558,
+     "merge": 596,
+     "non_merge_succs": [
+      1408
+     ]
+    },
+    {
+     "co": "get_kline_by_date_new",
+     "cond": 554,
+     "arm": 572,
+     "merge": 596,
+     "non_merge_succs": [
+      1408
+     ]
+    },
+    {
+     "co": "get_kline_by_date_one",
+     "cond": 658,
+     "arm": 760,
+     "merge": 778,
+     "non_merge_succs": [
+      782
+     ]
+    },
+    {
+     "co": "get_kline_by_date_one",
+     "cond": 658,
+     "arm": 764,
+     "merge": 778,
+     "non_merge_succs": [
+      782
+     ]
+    },
+    {
+     "co": "get_kline_by_date_one",
+     "cond": 618,
+     "arm": 622,
+     "merge": 640,
+     "non_merge_succs": [
+      782
+     ]
+    },
+    {
+     "co": "get_kline_by_date_one",
+     "cond": 618,
+     "arm": 626,
+     "merge": 640,
+     "non_merge_succs": [
+      782
+     ]
+    },
+    {
+     "co": "get_kline_by_date_one",
+     "cond": 476,
+     "arm": 480,
+     "merge": 518,
+     "non_merge_succs": [
+      782
+     ]
+    },
+    {
+     "co": "get_kline_by_date_one",
+     "cond": 476,
+     "arm": 494,
+     "merge": 518,
+     "non_merge_succs": [
+      782
+     ]
+    },
+    {
+     "co": "get_kline_by_date_one",
+     "cond": 172,
+     "arm": 176,
+     "merge": 214,
+     "non_merge_succs": [
+      782
+     ]
+    },
+    {
+     "co": "get_kline_by_date_one",
+     "cond": 172,
+     "arm": 190,
+     "merge": 214,
+     "non_merge_succs": [
+      782
+     ]
+    }
+   ],
+   "err": null
+  },
+  "IQCommon/const.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/data/finance.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/graph.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/strategy/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/tools.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/util/email_utils.py.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": "AttributeError(\"'NoneType' object has no attribute 'code'\")"
+  },
+  "IQCommon/util/resource_utils.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQCommon/utils.pyc": {
+   "regions": 1,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/config/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/Ashare_storage.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/data/exrights_storage.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/entry.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/modules/WEBCLIENT/gtn_client.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_history_data_source/history_data_source.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_client_db/dynamic_table.pyc": {
+   "regions": 1,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_db_tools/db_base.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_fly_basicdata/fly_enum.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_gtn_request/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/plugins/plugin_system_local_finance/const.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/calexrights_func.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQData/utils/mysql_conn.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/account/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/api/api_extra.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/bar.pyc": {
+   "regions": 5,
+   "eligible": 4,
+   "sites": [
+    {
+     "co": "limit_up",
+     "cond": 4,
+     "arm": 42,
+     "merge": 68,
+     "non_merge_succs": [
+      70
+     ]
+    },
+    {
+     "co": "limit_up",
+     "cond": 4,
+     "arm": 46,
+     "merge": 68,
+     "non_merge_succs": [
+      70
+     ]
+    },
+    {
+     "co": "limit_down",
+     "cond": 4,
+     "arm": 42,
+     "merge": 68,
+     "non_merge_succs": [
+      70
+     ]
+    },
+    {
+     "co": "limit_down",
+     "cond": 4,
+     "arm": 46,
+     "merge": 68,
+     "non_merge_succs": [
+      70
+     ]
+    }
+   ],
+   "err": null
+  },
+  "IQEngine/core/events/event_type.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/core/strategy/strategy.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/data/data_proxy.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/base.pyc": {
+   "regions": 5,
+   "eligible": 4,
+   "sites": [
+    {
+     "co": "__init__",
+     "cond": 410,
+     "arm": 416,
+     "merge": 448,
+     "non_merge_succs": [
+      714
+     ]
+    },
+    {
+     "co": "__init__",
+     "cond": 410,
+     "arm": 446,
+     "merge": 448,
+     "non_merge_succs": [
+      714
+     ]
+    },
+    {
+     "co": "__init__",
+     "cond": 310,
+     "arm": 378,
+     "merge": 410,
+     "non_merge_succs": [
+      714
+     ]
+    },
+    {
+     "co": "__init__",
+     "cond": 310,
+     "arm": 408,
+     "merge": 410,
+     "non_merge_succs": [
+      714
+     ]
+    }
+   ],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/fly_api/real_api.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data/quote/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_fly_data_source/fly_quotation_func.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc": {
+   "regions": 1,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_event_source/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_finance/tax.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_progress/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_risk_control/position_validator.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/brokerFactory.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc": {
+   "regions": 14,
+   "eligible": 12,
+   "sites": [
+    {
+     "co": "_process_order",
+     "cond": 2574,
+     "arm": 2642,
+     "merge": 2648,
+     "non_merge_succs": [
+      3026
+     ]
+    },
+    {
+     "co": "_process_order",
+     "cond": 2574,
+     "arm": 2646,
+     "merge": 2648,
+     "non_merge_succs": [
+      3026
+     ]
+    },
+    {
+     "co": "_process_order",
+     "cond": 2430,
+     "arm": 2568,
+     "merge": 2574,
+     "non_merge_succs": [
+      3026
+     ]
+    },
+    {
+     "co": "_process_order",
+     "cond": 2430,
+     "arm": 2572,
+     "merge": 2574,
+     "non_merge_succs": [
+      3026
+     ]
+    },
+    {
+     "co": "_process_order",
+     "cond": 2310,
+     "arm": 2390,
+     "merge": 2396,
+     "non_merge_succs": [
+      3026
+     ]
+    },
+    {
+     "co": "_process_order",
+     "cond": 2310,
+     "arm": 2394,
+     "merge": 2396,
+     "non_merge_succs": [
+      3026
+     ]
+    },
+    {
+     "co": "_process_order",
+     "cond": 2236,
+     "arm": 2304,
+     "merge": 2310,
+     "non_merge_succs": [
+      3026
+     ]
+    },
+    {
+     "co": "_process_order",
+     "cond": 2236,
+     "arm": 2308,
+     "merge": 2310,
+     "non_merge_succs": [
+      3026
+     ]
+    },
+    {
+     "co": "_process_order",
+     "cond": 2092,
+     "arm": 2230,
+     "merge": 2236,
+     "non_merge_succs": [
+      3026
+     ]
+    },
+    {
+     "co": "_process_order",
+     "cond": 2092,
+     "arm": 2234,
+     "merge": 2236,
+     "non_merge_succs": [
+      3026
+     ]
+    },
+    {
+     "co": "_process_order",
+     "cond": 1634,
+     "arm": 1754,
+     "merge": 1760,
+     "non_merge_succs": [
+      3026
+     ]
+    },
+    {
+     "co": "_process_order",
+     "cond": 1634,
+     "arm": 1758,
+     "merge": 1760,
+     "non_merge_succs": [
+      3026
+     ]
+    }
+   ],
+   "err": null
+  },
+  "IQEngine/utils/compile_help.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/utils/logger/handlers.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "IQEngine/version.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/enums.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/future_param.pyc": {
+   "regions": 1,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/common/tradingday_calendar.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/dumpload/__init__.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/event/event_type.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  },
+  "fly/server_version.pyc": {
+   "regions": 0,
+   "eligible": 0,
+   "sites": [],
+   "err": null
+  }
+ }
+}

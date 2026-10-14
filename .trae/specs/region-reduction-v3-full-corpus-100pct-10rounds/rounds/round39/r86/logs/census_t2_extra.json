@@ -1,0 +1,229 @@
+{
+ "site-packages/IQCommon/api/klinedata.pyc": {
+  "calls": 66,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQCommon/api/klinedataOK.pyc": {
+  "calls": 66,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQCommon/api/klinedataOK_check.pyc": {
+  "calls": 66,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQCommon/arg_checker.pyc": {
+  "calls": 0,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQCommon/common/main.pyc": {
+  "calls": 10,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQCommon/util/replace_utils.pyc": {
+  "calls": 12,
+  "fired": 8,
+  "relaxed_fired": 4,
+  "permit": 0,
+  "refuse": 4,
+  "refuse_sites": [
+   {
+    "cond": 292,
+    "fired": true,
+    "relaxed": true,
+    "close": 428,
+    "tail_n": 2,
+    "tail_last": "POP_JUMP_FORWARD_IF_FALSE"
+   },
+   {
+    "cond": 442,
+    "fired": true,
+    "relaxed": true,
+    "close": 534,
+    "tail_n": 27,
+    "tail_last": "LOAD_FAST"
+   },
+   {
+    "cond": 292,
+    "fired": true,
+    "relaxed": true,
+    "close": 428,
+    "tail_n": 2,
+    "tail_last": "POP_JUMP_FORWARD_IF_FALSE"
+   },
+   {
+    "cond": 442,
+    "fired": true,
+    "relaxed": true,
+    "close": 534,
+    "tail_n": 27,
+    "tail_last": "LOAD_FAST"
+   }
+  ],
+  "permit_tails": []
+ },
+ "site-packages/IQCommon/util/strategy_info_utils.pyc": {
+  "calls": 4,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQCommon/util/trade_info_utils.pyc": {
+  "calls": 6,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc": {
+  "calls": 24,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQData/utils/arg_checker.pyc": {
+  "calls": 0,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQEngine/core/bar.pyc": {
+  "calls": 15,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc": {
+  "calls": 15,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQEngine/plugins/plugin_fly_data_source/fly_data_source.pyc": {
+  "calls": 3,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc": {
+  "calls": 44,
+  "fired": 3,
+  "relaxed_fired": 3,
+  "permit": 3,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": [
+   [
+    548,
+    null
+   ]
+  ]
+ },
+ "site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc": {
+  "calls": 27,
+  "fired": 21,
+  "relaxed_fired": 6,
+  "permit": 6,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": [
+   [
+    2092,
+    "JUMP_FORWARD"
+   ],
+   [
+    2430,
+    "POP_TOP"
+   ]
+  ]
+ },
+ "site-packages/IQEngine/utils/arg_checker.pyc": {
+  "calls": 0,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/fly/common/common.pyc": {
+  "calls": 10,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/fly/common/future_contract_info.pyc": {
+  "calls": 9,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/fly/data/quote.pyc": {
+  "calls": 27,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ },
+ "site-packages/fly/simtradding/flyAccount.pyc": {
+  "calls": 24,
+  "fired": 0,
+  "relaxed_fired": 0,
+  "permit": 0,
+  "refuse": 0,
+  "refuse_sites": [],
+  "permit_tails": []
+ }
+}

@@ -2665,7 +2665,12 @@ class ComprehensionGenerator:
             false_instrs = all_instrs[false_start:append_idx]
 
         # 重建条件表达式
-        cond_expr = self.expr_reconstructor.reconstruct(cond_instrs)
+        # [R21-2] 三元 test 若为共享假出口的布尔链，先按段折叠为 BoolOp(and)；
+        # 判据未命中（单操作数 / 链不纯 / 段重建失败）时逐字回落原 R10 单段路径。
+        cond_expr = self._r21_fold_boolop_test_chain(
+            all_instrs, last_filter_end + 1, cond_jump_idx, false_target_offset)
+        if cond_expr is None:
+            cond_expr = self.expr_reconstructor.reconstruct(cond_instrs)
         if cond_expr is None:
             return None
 
@@ -2734,6 +2739,73 @@ class ComprehensionGenerator:
             'body': true_expr,
             'orelse': false_expr,
         }
+
+    def _r21_fold_boolop_test_chain(self, all_instrs: List[Instruction],
+                                    seg_start: int,
+                                    cond_jump_idx: int,
+                                    false_target_offset: Any) -> Optional[Dict[str, Any]]:
+        """[R21-2] 推导式三元 test 的「共享假出口布尔链」折叠（and 链）。
+
+        [识别条件] 三元 test 指令区 [seg_start, cond_jump_idx) 内存在至少一条
+          「前向、假出口型（opname 含 IF_FALSE / IF_NONE）、argval == 末端跳转的
+          假出口偏移」的条件跳转，且末端跳转（索引 cond_jump_idx）本身也是假出口
+          型。这正是 CPython 3.11 为 ``X if (A and B) else Y`` 发射的结构：每条操
+          作数求值段之后各接一条指向同一 Else 出口的条件跳转。[R67-fix2]
+          （本文件 :2253-2302）已识别该链并把条件区延伸到链尾，但它把整段交给
+          通用重建器并假定「重建器会折叠为 BoolOp」——实测该假定不成立：
+          ExpressionReconstructor.reconstruct 收到含中间假出口跳转的整段时只产出
+          末端那一条 Compare，前段操作数连同其假出口跳转整段从产物消失
+          （wizard_quant_api `get_DMI.calculate_di` 两个 <genexpr> 副本各丢 14 条
+          指令 / 1 条 POP_JUMP_FORWARD_IF_FALSE，判据 Different control flow）。
+        [归约方式] 以每条中间假出口跳转为界把条件区切成 n 段（n = 中间跳转数 + 1），
+          每段自身是直线求值序列，逐段交回与单操作数情形完全相同的重建通道，再
+          以 {'type': 'BoolOp', 'op': 'and', 'values': [...]} 组合；n < 2、任一段为空
+          或任一段重建失败 ⇒ 返回 None，调用方逐字维持原单段路径（不猜、不降级）。
+          区内出现回跳（BACKWARD）条件跳转或混合极性（IF_TRUE）⇒ 链不纯，返回 None。
+        [AST 映射] ast.IfExp(test=ast.BoolOp(and, [Compare, Compare, ...]),
+          body=Then, orelse=Else)——与单操作数情形同一条 IfExp 通道，仅 test 子树
+          由单 Compare 变为 BoolOp；BoolOp dict 由 ast_converter._convert_boolop_full
+          (:1195) 与 code_generator (:5252/:5327) 既有通道发射。
+        [C1] 只读本推导式内层指令流的同层结构事实（opname / argval / 偏移），不读
+          用户名、不读文件名、无偏移魔数；[C2] 每段唯一归属于 BoolOp 的一个操作数，
+          中间假出口跳转不产生值、不归属任何节点，父区域不重入子区域；[C3] 严格附
+          加：单操作数（无中间同假出口跳转）返回 None，产物逐字节不变。
+        """
+        if cond_jump_idx >= len(all_instrs):
+            return None
+        _FALSE_EXIT = ('IF_FALSE', 'IF_NONE')
+        _tail = all_instrs[cond_jump_idx]
+        if _tail.opname not in CONDITIONAL_JUMP_OPS:
+            return None
+        if not any(_t in _tail.opname for _t in _FALSE_EXIT):
+            return None
+        _cuts = []
+        for _k in range(seg_start, cond_jump_idx):
+            _i = all_instrs[_k]
+            if _i.opname not in CONDITIONAL_JUMP_OPS:
+                continue
+            if 'BACKWARD' in _i.opname:
+                return None
+            if not any(_t in _i.opname for _t in _FALSE_EXIT):
+                return None
+            if _i.argval != false_target_offset:
+                return None
+            _cuts.append(_k)
+        if not _cuts:
+            return None
+        _bounds = [seg_start] + [_c + 1 for _c in _cuts] + [cond_jump_idx]
+        _values = []
+        for _s, _e in zip(_bounds[:-1], _bounds[1:]):
+            _seg = all_instrs[_s:_e]
+            if not _seg:
+                return None
+            _node = self.expr_reconstructor.reconstruct(_seg)
+            if _node is None:
+                return None
+            _values.append(_node)
+        if len(_values) < 2:
+            return None
+        return {'type': 'BoolOp', 'op': 'and', 'values': _values}
 
     def _detect_comp_ternary_as_filter(self, all_instrs: List[Instruction],
                                         store_idx: int,

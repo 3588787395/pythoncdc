@@ -1,0 +1,412 @@
+@0      #0    L1358  RESUME                       
+@2      #1    L1363  LOAD_FAST                    self
+@4      #2    L1363  LOAD_ATTR                    engine
+@14     #3    L1363  LOAD_ATTR                    config
+@24     #4    L1363  LOAD_ATTR                    plugins
+@34     #5    L1363  LOAD_ATTR                    plugin_system_trade
+@44     #6    L1363  LOAD_ATTR                    account_sync_steps
+@54     #7    L1363  STORE_FAST                   steps
+@56     #8    L1364  LOAD_FAST                    engine
+@58     #9    L1364  LOAD_METHOD                  set_engine
+@80     #10   L1364  LOAD_FAST                    engine
+@82     #11   L1364  PRECALL                      
+@86     #12   L1364  CALL                         
+@96     #13   L1364  POP_TOP                      
+@98     #14   L1367  LOAD_FAST                    self
+@100    #15   L1367  LOAD_ATTR                    business_type
+@110    #16   L1367  LOAD_CONST                   'future'
+@112    #17   L1367  COMPARE_OP                   ==
+@118    #18   L1367  POP_JUMP_FORWARD_IF_FALSE    to 150
+@120    #19   L1368  LOAD_GLOBAL                  future_pre_before_trading
+@132    #20   L1368  STORE_FAST                   pre_before_trading
+@134    #21   L1369  LOAD_GLOBAL                  future_post_after_trading
+@146    #22   L1369  STORE_FAST                   post_after_trading
+@148    #23   L1369  JUMP_FORWARD                 to 230
+@150    #24   L1370  LOAD_FAST                    self
+@152    #25   L1370  LOAD_ATTR                    business_type
+@162    #26   L1370  LOAD_CONST                   'hks'
+@164    #27   L1370  COMPARE_OP                   ==
+@170    #28   L1370  POP_JUMP_FORWARD_IF_FALSE    to 202
+@172    #29   L1371  LOAD_GLOBAL                  hks_pre_before_trading
+@184    #30   L1371  STORE_FAST                   pre_before_trading
+@186    #31   L1372  LOAD_GLOBAL                  hks_post_after_trading
+@198    #32   L1372  STORE_FAST                   post_after_trading
+@200    #33   L1372  JUMP_FORWARD                 to 230
+@202    #34   L1374  LOAD_GLOBAL                  stock_pre_before_trading
+@214    #35   L1374  STORE_FAST                   pre_before_trading
+@216    #36   L1375  LOAD_GLOBAL                  stock_post_after_trading
+@228    #37   L1375  STORE_FAST                   post_after_trading
+@230    #38   L1376  NOP                          
+@232    #39   L1382  LOAD_GLOBAL                  NULL + int
+@244    #40   L1382  LOAD_GLOBAL                  datetime
+@256    #41   L1382  LOAD_ATTR                    datetime
+@266    #42   L1382  LOAD_METHOD                  now
+@288    #43   L1382  PRECALL                      
+@292    #44   L1382  CALL                         
+@302    #45   L1382  LOAD_METHOD                  strftime
+@324    #46   L1382  LOAD_CONST                   '%H%M'
+@326    #47   L1382  PRECALL                      
+@330    #48   L1382  CALL                         
+@340    #49   L1382  PRECALL                      
+@344    #50   L1382  CALL                         
+@354    #51   L1382  LOAD_FAST                    pre_before_trading
+@356    #52   L1382  COMPARE_OP                   <
+@362    #53   L1382  POP_JUMP_FORWARD_IF_TRUE     to 704
+@364    #54   L1383  LOAD_GLOBAL                  NULL + int
+@376    #55   L1383  LOAD_GLOBAL                  datetime
+@388    #56   L1383  LOAD_ATTR                    datetime
+@398    #57   L1383  LOAD_METHOD                  now
+@420    #58   L1383  PRECALL                      
+@424    #59   L1383  CALL                         
+@434    #60   L1383  LOAD_METHOD                  strftime
+@456    #61   L1383  LOAD_CONST                   '%H%M'
+@458    #62   L1383  PRECALL                      
+@462    #63   L1383  CALL                         
+@472    #64   L1383  PRECALL                      
+@476    #65   L1383  CALL                         
+@486    #66   L1383  LOAD_GLOBAL                  NULL + int
+@498    #67   L1383  LOAD_FAST                    post_after_trading
+@500    #68   L1383  PRECALL                      
+@504    #69   L1383  CALL                         
+@514    #70   L1383  COMPARE_OP                   >=
+@520    #71   L1383  POP_JUMP_FORWARD_IF_TRUE     to 704
+@522    #72   L1385  LOAD_GLOBAL                  holiday_sync_account
+@534    #73   L1385  LOAD_CONST                   '0'
+@536    #74   L1385  COMPARE_OP                   ==
+@542    #75   L1385  POP_JUMP_FORWARD_IF_FALSE    to 702
+@544    #76   L1384  LOAD_FAST                    self
+@546    #77   L1384  LOAD_ATTR                    engine
+@556    #78   L1384  LOAD_ATTR                    data_proxy
+@566    #79   L1384  LOAD_METHOD                  is_trading_date
+@588    #80   L1384  LOAD_GLOBAL                  datetime
+@600    #81   L1384  LOAD_ATTR                    datetime
+@610    #82   L1384  LOAD_METHOD                  now
+@632    #83   L1384  PRECALL                      
+@636    #84   L1384  CALL                         
+@646    #85   L1384  LOAD_METHOD                  date
+@668    #86   L1384  PRECALL                      
+@672    #87   L1384  CALL                         
+@682    #88   L1384  PRECALL                      
+@686    #89   L1384  CALL                         
+@696    #90   L1385  EXTENDED_ARG                 
+@698    #91   L1385  POP_JUMP_FORWARD_IF_TRUE     to 1214
+@700    #92   L1385  JUMP_FORWARD                 to 704
+@702    #93   L1385  JUMP_FORWARD                 to 1214
+@704    #94   L1386  LOAD_GLOBAL                  NULL + time
+@716    #95   L1386  LOAD_ATTR                    sleep
+@726    #96   L1386  LOAD_CONST                   60
+@728    #97   L1386  PRECALL                      
+@732    #98   L1386  CALL                         
+@742    #99   L1386  POP_TOP                      
+@744    #100  L1382  LOAD_GLOBAL                  NULL + int
+@756    #101  L1382  LOAD_GLOBAL                  datetime
+@768    #102  L1382  LOAD_ATTR                    datetime
+@778    #103  L1382  LOAD_METHOD                  now
+@800    #104  L1382  PRECALL                      
+@804    #105  L1382  CALL                         
+@814    #106  L1382  LOAD_METHOD                  strftime
+@836    #107  L1382  LOAD_CONST                   '%H%M'
+@838    #108  L1382  PRECALL                      
+@842    #109  L1382  CALL                         
+@852    #110  L1382  PRECALL                      
+@856    #111  L1382  CALL                         
+@866    #112  L1382  LOAD_FAST                    pre_before_trading
+@868    #113  L1382  COMPARE_OP                   <
+@874    #114  L1382  POP_JUMP_BACKWARD_IF_TRUE    to 704
+@876    #115  L1383  LOAD_GLOBAL                  NULL + int
+@888    #116  L1383  LOAD_GLOBAL                  datetime
+@900    #117  L1383  LOAD_ATTR                    datetime
+@910    #118  L1383  LOAD_METHOD                  now
+@932    #119  L1383  PRECALL                      
+@936    #120  L1383  CALL                         
+@946    #121  L1383  LOAD_METHOD                  strftime
+@968    #122  L1383  LOAD_CONST                   '%H%M'
+@970    #123  L1383  PRECALL                      
+@974    #124  L1383  CALL                         
+@984    #125  L1383  PRECALL                      
+@988    #126  L1383  CALL                         
+@998    #127  L1383  LOAD_GLOBAL                  NULL + int
+@1010   #128  L1383  LOAD_FAST                    post_after_trading
+@1012   #129  L1383  PRECALL                      
+@1016   #130  L1383  CALL                         
+@1026   #131  L1383  COMPARE_OP                   >=
+@1032   #132  L1383  POP_JUMP_BACKWARD_IF_TRUE    to 704
+@1034   #133  L1385  LOAD_GLOBAL                  holiday_sync_account
+@1046   #134  L1385  LOAD_CONST                   '0'
+@1048   #135  L1385  COMPARE_OP                   ==
+@1054   #136  L1385  POP_JUMP_FORWARD_IF_FALSE    to 1212
+@1056   #137  L1384  LOAD_FAST                    self
+@1058   #138  L1384  LOAD_ATTR                    engine
+@1068   #139  L1384  LOAD_ATTR                    data_proxy
+@1078   #140  L1384  LOAD_METHOD                  is_trading_date
+@1100   #141  L1384  LOAD_GLOBAL                  datetime
+@1112   #142  L1384  LOAD_ATTR                    datetime
+@1122   #143  L1384  LOAD_METHOD                  now
+@1144   #144  L1384  PRECALL                      
+@1148   #145  L1384  CALL                         
+@1158   #146  L1384  LOAD_METHOD                  date
+@1180   #147  L1384  PRECALL                      
+@1184   #148  L1384  CALL                         
+@1194   #149  L1384  PRECALL                      
+@1198   #150  L1384  CALL                         
+@1208   #151  L1385  POP_JUMP_BACKWARD_IF_FALSE   to 704
+@1210   #152  L1385  JUMP_FORWARD                 to 1214
+@1212   #153  L1385  NOP                          
+@1214   #154  L1392  LOAD_FAST                    self
+@1216   #155  L1392  LOAD_ATTR                    engine
+@1226   #156  L1392  LOAD_ATTR                    data_proxy
+@1236   #157  L1392  LOAD_METHOD                  is_trading_date
+@1258   #158  L1392  LOAD_GLOBAL                  datetime
+@1270   #159  L1392  LOAD_ATTR                    datetime
+@1280   #160  L1392  LOAD_METHOD                  now
+@1302   #161  L1392  PRECALL                      
+@1306   #162  L1392  CALL                         
+@1316   #163  L1392  LOAD_METHOD                  date
+@1338   #164  L1392  PRECALL                      
+@1342   #165  L1392  CALL                         
+@1352   #166  L1392  PRECALL                      
+@1356   #167  L1392  CALL                         
+@1366   #168  L1392  EXTENDED_ARG                 
+@1368   #169  L1392  POP_JUMP_FORWARD_IF_FALSE    to 1890
+@1370   #170  L1392  LOAD_FAST                    self
+@1372   #171  L1392  LOAD_ATTR                    reconnect_flag
+@1382   #172  L1392  LOAD_CONST                   False
+@1384   #173  L1392  IS_OP                        
+@1386   #174  L1392  POP_JUMP_FORWARD_IF_FALSE    to 1890
+@1388   #175  L1394  LOAD_GLOBAL                  datetime
+@1400   #176  L1394  LOAD_ATTR                    datetime
+@1410   #177  L1394  LOAD_METHOD                  now
+@1432   #178  L1394  PRECALL                      
+@1436   #179  L1394  CALL                         
+@1446   #180  L1394  LOAD_METHOD                  date
+@1468   #181  L1394  PRECALL                      
+@1472   #182  L1394  CALL                         
+@1482   #183  L1394  LOAD_FAST                    self
+@1484   #184  L1394  LOAD_ATTR                    first_run_date
+@1494   #185  L1394  COMPARE_OP                   ==
+@1500   #186  L1394  POP_JUMP_FORWARD_IF_FALSE    to 1524
+@1502   #187  L1394  LOAD_FAST                    self
+@1504   #188  L1394  LOAD_ATTR                    first_run_time
+@1514   #189  L1394  LOAD_CONST                   900
+@1516   #190  L1394  COMPARE_OP                   <
+@1522   #191  L1394  POP_JUMP_FORWARD_IF_TRUE     to 1638
+@1524   #192  L1395  LOAD_GLOBAL                  datetime
+@1536   #193  L1395  LOAD_ATTR                    datetime
+@1546   #194  L1395  LOAD_METHOD                  now
+@1568   #195  L1395  PRECALL                      
+@1572   #196  L1395  CALL                         
+@1582   #197  L1395  LOAD_METHOD                  date
+@1604   #198  L1395  PRECALL                      
+@1608   #199  L1395  CALL                         
+@1618   #200  L1395  LOAD_FAST                    self
+@1620   #201  L1395  LOAD_ATTR                    first_run_date
+@1630   #202  L1395  COMPARE_OP                   !=
+@1636   #203  L1395  POP_JUMP_FORWARD_IF_FALSE    to 1890
+@1638   #204  L1396  LOAD_GLOBAL                  NULL + int
+@1650   #205  L1396  LOAD_GLOBAL                  datetime
+@1662   #206  L1396  LOAD_ATTR                    datetime
+@1672   #207  L1396  LOAD_METHOD                  now
+@1694   #208  L1396  PRECALL                      
+@1698   #209  L1396  CALL                         
+@1708   #210  L1396  LOAD_METHOD                  strftime
+@1730   #211  L1396  LOAD_CONST                   '%H%M'
+@1732   #212  L1396  PRECALL                      
+@1736   #213  L1396  CALL                         
+@1746   #214  L1396  PRECALL                      
+@1750   #215  L1396  CALL                         
+@1760   #216  L1396  LOAD_CONST                   900
+@1762   #217  L1396  COMPARE_OP                   >=
+@1768   #218  L1396  POP_JUMP_FORWARD_IF_FALSE    to 1890
+@1770   #219  L1397  LOAD_GLOBAL                  NULL + system_log
+@1782   #220  L1397  LOAD_ATTR                    debug
+@1792   #221  L1397  LOAD_CONST                   '后端服务操作账户开始执行自动重登录'
+@1794   #222  L1397  PRECALL                      
+@1798   #223  L1397  CALL                         
+@1808   #224  L1397  POP_TOP                      
+@1810   #225  L1399  LOAD_GLOBAL                  NULL + reconnect
+@1822   #226  L1399  LOAD_FAST                    self
+@1824   #227  L1399  LOAD_ATTR                    broker
+@1834   #228  L1399  LOAD_ATTR                    trade_account
+@1844   #229  L1399  LOAD_FAST                    self
+@1846   #230  L1399  LOAD_ATTR                    trade_id
+@1856   #231  L1399  PRECALL                      
+@1860   #232  L1399  CALL                         
+@1870   #233  L1399  POP_JUMP_FORWARD_IF_TRUE     to 1876
+@1872   #234  L1400  LOAD_CONST                   None
+@1874   #235  L1400  RETURN_VALUE                 
+@1876   #236  L1401  LOAD_CONST                   True
+@1878   #237  L1401  LOAD_FAST                    self
+@1880   #238  L1401  STORE_ATTR                   reconnect_flag
+@1890   #239  L1404  LOAD_FAST                    pre_before_trading
+@1892   #240  L1404  LOAD_GLOBAL                  NULL + int
+@1904   #241  L1404  LOAD_GLOBAL                  datetime
+@1916   #242  L1404  LOAD_ATTR                    datetime
+@1926   #243  L1404  LOAD_METHOD                  now
+@1948   #244  L1404  PRECALL                      
+@1952   #245  L1404  CALL                         
+@1962   #246  L1404  LOAD_METHOD                  strftime
+@1984   #247  L1404  LOAD_CONST                   '%H%M'
+@1986   #248  L1404  PRECALL                      
+@1990   #249  L1404  CALL                         
+@2000   #250  L1404  PRECALL                      
+@2004   #251  L1404  CALL                         
+@2014   #252  L1404  SWAP                         
+@2016   #253  L1404  COPY                         
+@2018   #254  L1404  COMPARE_OP                   <=
+@2024   #255  L1404  POP_JUMP_FORWARD_IF_FALSE    to 2066
+@2026   #256  L1404  LOAD_GLOBAL                  NULL + int
+@2038   #257  L1404  LOAD_FAST                    post_after_trading
+@2040   #258  L1404  PRECALL                      
+@2044   #259  L1404  CALL                         
+@2054   #260  L1404  COMPARE_OP                   <
+@2060   #261  L1404  EXTENDED_ARG                 
+@2062   #262  L1404  POP_JUMP_FORWARD_IF_FALSE    to 2886
+@2064   #263  L1404  JUMP_FORWARD                 to 2072
+@2066   #264  L1404  POP_TOP                      
+@2068   #265  L1404  EXTENDED_ARG                 
+@2070   #266  L1404  JUMP_FORWARD                 to 2886
+@2072   #267  L1411  LOAD_CONST                   0
+@2074   #268  L1411  STORE_FAST                   sync_data_flag
+@2076   #269  L1412  LOAD_FAST                    self
+@2078   #270  L1412  LOAD_ATTR                    order_or_trade_lock
+@2088   #271  L1412  BEFORE_WITH                  
+@2090   #272  L1412  POP_TOP                      
+@2092   #273  L1413  LOAD_FAST                    self
+@2094   #274  L1413  LOAD_ATTR                    receive_order_response_flag
+@2104   #275  L1413  LOAD_CONST                   1
+@2106   #276  L1413  COMPARE_OP                   ==
+@2112   #277  L1413  POP_JUMP_FORWARD_IF_TRUE     to 2136
+@2114   #278  L1413  LOAD_FAST                    self
+@2116   #279  L1413  LOAD_ATTR                    receive_trade_response_flag
+@2126   #280  L1413  LOAD_CONST                   1
+@2128   #281  L1413  COMPARE_OP                   ==
+@2134   #282  L1413  POP_JUMP_FORWARD_IF_FALSE    to 2168
+@2136   #283  L1415  LOAD_CONST                   1
+@2138   #284  L1415  STORE_FAST                   sync_data_flag
+@2140   #285  L1416  LOAD_CONST                   0
+@2142   #286  L1416  LOAD_FAST                    self
+@2144   #287  L1416  STORE_ATTR                   receive_order_response_flag
+@2154   #288  L1417  LOAD_CONST                   0
+@2156   #289  L1417  LOAD_FAST                    self
+@2158   #290  L1417  STORE_ATTR                   receive_trade_response_flag
+@2168   #291  L1412  LOAD_CONST                   None
+@2170   #292  L1412  LOAD_CONST                   None
+@2172   #293  L1412  LOAD_CONST                   None
+@2174   #294  L1412  PRECALL                      
+@2178   #295  L1412  CALL                         
+@2188   #296  L1412  POP_TOP                      
+@2190   #297  L1412  JUMP_FORWARD                 to 2214
+@2192   #298  L1412  PUSH_EXC_INFO                
+@2194   #299  L1412  WITH_EXCEPT_START            
+@2196   #300  L1412  POP_JUMP_FORWARD_IF_TRUE     to 2206
+@2198   #301  L1412  RERAISE                      
+@2200   #302  L      COPY                         
+@2202   #303  L      POP_EXCEPT                   
+@2204   #304  L      RERAISE                      
+@2206   #305  L1412  POP_TOP                      
+@2208   #306  L1412  POP_EXCEPT                   
+@2210   #307  L1412  POP_TOP                      
+@2212   #308  L1412  POP_TOP                      
+@2214   #309  L1420  LOAD_GLOBAL                  NULL + abs
+@2226   #310  L1420  LOAD_GLOBAL                  datetime
+@2238   #311  L1420  LOAD_ATTR                    datetime
+@2248   #312  L1420  LOAD_METHOD                  now
+@2270   #313  L1420  PRECALL                      
+@2274   #314  L1420  CALL                         
+@2284   #315  L1420  LOAD_FAST                    self
+@2286   #316  L1420  LOAD_ATTR                    sync_account_time
+@2296   #317  L1420  BINARY_OP                    -
+@2300   #318  L1420  LOAD_METHOD                  total_seconds
+@2322   #319  L1420  PRECALL                      
+@2326   #320  L1420  CALL                         
+@2336   #321  L1420  PRECALL                      
+@2340   #322  L1420  CALL                         
+@2350   #323  L1420  STORE_FAST                   time_difference
+@2352   #324  L1422  LOAD_FAST                    time_difference
+@2354   #325  L1422  LOAD_GLOBAL                  sync_max_time
+@2366   #326  L1422  COMPARE_OP                   >
+@2372   #327  L1422  POP_JUMP_FORWARD_IF_FALSE    to 2378
+@2374   #328  L1423  LOAD_CONST                   1
+@2376   #329  L1423  STORE_FAST                   sync_data_flag
+@2378   #330  L1425  LOAD_FAST                    sync_data_flag
+@2380   #331  L1425  POP_JUMP_FORWARD_IF_FALSE    to 2492
+@2382   #332  L1426  LOAD_FAST                    self
+@2384   #333  L1426  LOAD_METHOD                  sync_account
+@2406   #334  L1426  PRECALL                      
+@2410   #335  L1426  CALL                         
+@2420   #336  L1426  POP_TOP                      
+@2422   #337  L1428  LOAD_GLOBAL                  datetime
+@2434   #338  L1428  LOAD_ATTR                    datetime
+@2444   #339  L1428  LOAD_METHOD                  now
+@2466   #340  L1428  PRECALL                      
+@2470   #341  L1428  CALL                         
+@2480   #342  L1428  LOAD_FAST                    self
+@2482   #343  L1428  STORE_ATTR                   sync_account_time
+@2492   #344  L1430  LOAD_GLOBAL                  NULL + len
+@2504   #345  L1430  LOAD_FAST                    self
+@2506   #346  L1430  LOAD_ATTR                    on_order_response_list
+@2516   #347  L1430  PRECALL                      
+@2520   #348  L1430  CALL                         
+@2530   #349  L1430  LOAD_CONST                   0
+@2532   #350  L1430  COMPARE_OP                   >
+@2538   #351  L1430  POP_JUMP_FORWARD_IF_FALSE    to 2580
+@2540   #352  L1431  LOAD_GLOBAL                  NULL + on_order_response_handle
+@2552   #353  L1431  LOAD_FAST                    self
+@2554   #354  L1431  LOAD_ATTR                    on_order_response_list
+@2564   #355  L1431  PRECALL                      
+@2568   #356  L1431  CALL                         
+@2578   #357  L1431  POP_TOP                      
+@2580   #358  L1432  LOAD_GLOBAL                  NULL + len
+@2592   #359  L1432  LOAD_FAST                    self
+@2594   #360  L1432  LOAD_ATTR                    on_trade_response_list
+@2604   #361  L1432  PRECALL                      
+@2608   #362  L1432  CALL                         
+@2618   #363  L1432  LOAD_CONST                   0
+@2620   #364  L1432  COMPARE_OP                   >
+@2626   #365  L1432  POP_JUMP_FORWARD_IF_FALSE    to 2668
+@2628   #366  L1433  LOAD_GLOBAL                  NULL + on_trade_response_handle
+@2640   #367  L1433  LOAD_FAST                    self
+@2642   #368  L1433  LOAD_ATTR                    on_trade_response_list
+@2652   #369  L1433  PRECALL                      
+@2656   #370  L1433  CALL                         
+@2666   #371  L1433  POP_TOP                      
+@2668   #372  L1434  LOAD_GLOBAL                  NULL + time
+@2680   #373  L1434  LOAD_ATTR                    sleep
+@2690   #374  L1434  LOAD_FAST                    steps
+@2692   #375  L1434  PRECALL                      
+@2696   #376  L1434  CALL                         
+@2706   #377  L1434  POP_TOP                      
+@2708   #378  L1404  LOAD_FAST                    pre_before_trading
+@2710   #379  L1404  LOAD_GLOBAL                  NULL + int
+@2722   #380  L1404  LOAD_GLOBAL                  datetime
+@2734   #381  L1404  LOAD_ATTR                    datetime
+@2744   #382  L1404  LOAD_METHOD                  now
+@2766   #383  L1404  PRECALL                      
+@2770   #384  L1404  CALL                         
+@2780   #385  L1404  LOAD_METHOD                  strftime
+@2802   #386  L1404  LOAD_CONST                   '%H%M'
+@2804   #387  L1404  PRECALL                      
+@2808   #388  L1404  CALL                         
+@2818   #389  L1404  PRECALL                      
+@2822   #390  L1404  CALL                         
+@2832   #391  L1404  SWAP                         
+@2834   #392  L1404  COPY                         
+@2836   #393  L1404  COMPARE_OP                   <=
+@2842   #394  L1404  POP_JUMP_FORWARD_IF_FALSE    to 2884
+@2844   #395  L1404  LOAD_GLOBAL                  NULL + int
+@2856   #396  L1404  LOAD_FAST                    post_after_trading
+@2858   #397  L1404  PRECALL                      
+@2862   #398  L1404  CALL                         
+@2872   #399  L1404  COMPARE_OP                   <
+@2878   #400  L1404  EXTENDED_ARG                 
+@2880   #401  L1404  POP_JUMP_BACKWARD_IF_TRUE    to 2072
+@2882   #402  L1404  JUMP_FORWARD                 to 2886
+@2884   #403  L1404  POP_TOP                      
+@2886   #404  L1437  LOAD_GLOBAL                  NULL + time
+@2898   #405  L1437  LOAD_ATTR                    sleep
+@2908   #406  L1437  LOAD_FAST                    steps
+@2910   #407  L1437  PRECALL                      
+@2914   #408  L1437  CALL                         
+@2924   #409  L1437  POP_TOP                      
+@2926   #410  L1376  EXTENDED_ARG                 
+@2928   #411  L1376  JUMP_BACKWARD                to 232

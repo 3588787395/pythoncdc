@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """branch_conditions.py — 程序自身**每一分支判断条件**的跟踪与相似度比较
 
 对白名单 61 模块（core/ parsers/ bytecode/ utils/ + pycdc + pycdas，与
@@ -38,7 +38,7 @@ import re
 import sys
 from collections import Counter, defaultdict
 
-ROOT = r'F:\Downloads\pythoncdc-main'
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 OUT = os.path.join(ROOT, 'docs', 'refactor', 'branch-conditions.json')
 WL_DIRS = ['core', 'parsers', 'bytecode', 'utils']
 ENTRIES = ['pycdc', 'pycdas']

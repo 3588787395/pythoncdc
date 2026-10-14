@@ -1,0 +1,14 @@
+[
+ {
+  "path": "test_repros/round8/r8b121_01_except_arms_empty_else.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8b121_02_with_body_and_arms.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8b121_03_two_handlers.pyc"
+ },
+ {
+  "path": "test_repros/round8/r8b121_04_explicit_arms_plus_tail.pyc"
+ }
+]

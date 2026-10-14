@@ -1,0 +1,59 @@
+R2145EVAL mb=@222 np=2 term=POP_JUMP_FORWARD_IF_NOT_NONE rej=shape
+R2145EVAL mb=@336 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@18 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@96 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@182 np=3 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@240 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@322 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@408 np=3 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@518 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@574 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@630 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@710 np=2 term=RETURN_VALUE rej=shape
+R2145bEVAL eb=@28 nh=1 bare=True rej=None
+R2145bFIRE eb=@28 T=@48 try=@12
+R2145bEVAL eb=@116 nh=1 bare=True rej=None
+R2145bFIRE eb=@116 T=@136 try=@100
+R2145EVAL mb=@320 np=2 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@512 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@684 np=2 term=GET_ITER rej=shape
+R2145EVAL mb=@22 np=2 term=- rej=shape
+R2145bEVAL eb=@134 nh=1 bare=True rej=None
+R2145bFIRE eb=@134 T=@252 try=@24
+R2145bEVAL eb=@112 nh=1 bare=True rej=None
+R2145bFIRE eb=@112 T=@132 try=@38
+R2145bEVAL eb=@2420 nh=1 bare=True rej=None
+R2145bFIRE eb=@2420 T=@2440 try=@2346
+R2145EVAL mb=@3166 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@3274 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@3452 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@3560 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@3728 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@3836 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@3944 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@4052 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@4110 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@4168 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@4298 np=2 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@2642 np=7 term=FOR_ITER rej=shape
+R2145EVAL mb=@2642 np=7 term=FOR_ITER rej=shape
+R2145EVAL mb=@2642 np=7 term=FOR_ITER rej=shape
+R2145EVAL mb=@4324 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@4346 np=2 term=STORE_FAST rej=declared-head
+R2145bEVAL eb=@4426 nh=1 bare=True rej=None
+R2145bFIRE eb=@4426 T=@4446 try=@4352
+R2145EVAL mb=@4490 np=5 term=FOR_ITER rej=shape
+R2145EVAL mb=@4490 np=5 term=FOR_ITER rej=shape
+R2145EVAL mb=@394 np=2 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@8 np=3 term=FOR_ITER rej=shape
+R2145EVAL mb=@146 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@60 np=2 term=GET_ITER rej=shape
+R2145EVAL mb=@154 np=1 term=POP_JUMP_FORWARD_IF_NOT_NONE rej=shape
+R2145EVAL mb=@216 np=1 term=POP_JUMP_FORWARD_IF_NOT_NONE rej=shape
+R2145EVAL mb=@278 np=1 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@92 np=11 term=FOR_ITER rej=shape
+R2145EVAL mb=@92 np=11 term=FOR_ITER rej=shape
+R2145EVAL mb=@92 np=11 term=FOR_ITER rej=shape
+R2145EVAL mb=@92 np=11 term=FOR_ITER rej=shape
+R2145EVAL mb=@92 np=11 term=FOR_ITER rej=shape
+R2145EVAL mb=@114 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape

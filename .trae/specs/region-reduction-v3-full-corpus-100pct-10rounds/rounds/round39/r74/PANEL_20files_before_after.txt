@@ -1,0 +1,38 @@
+PANEL_20files (rounds/round38/PANEL_20files.txt) - R21-45 ticket r74, mirror D:/Temp/r74 (repo READ-ONLY)
+landed   = gate-38 bytes core/cfg/region_ast_generator.py 11324f276cce6d5b (analyzer f7d849e974904492)
+base     = anchored P1+P2 cf5868e68208adf6 (r73 banked whole-file candidate; my BASE)  products out/base_anchored
+r74a     = base + [R21-45]   (half A, join-claim merge)      sha16 5ade1c37c0c9bb8c   product 4182f600fddfda77
+r74e     = base + [R21-45b]  (half B, phantom try-else)      sha16 4e1a853a957a3fd8   product 0a900f18cdbd9550
+r74c     = base + A + B      (recommended deliverable)       sha16 f51f9de14d216cda   product 2dd5b660f3403f52
+r74d     = base + A + B + banked [R21-44] (triple)           sha16 3e7af79a63b5d0cf   product 4c450c6f035b6088
+
+#   file                                                                base sha16        r74c sha16         r74d sha16         units base  units r74c  changed
+1  fly/data/quotation.pyc                                                 302f449afc9245eb 302f449afc9245eb n/a              153/153  153/153  no
+2  fly/data/quote.pyc                                                     a39899ca939523e0 a39899ca939523e0 n/a              92/92    92/92    no
+3  IQCommon/api/klinedata.pyc                                             3253817d2a930f82 3253817d2a930f82 n/a              64/64    64/64    no
+4  IQCommon/logger/handlers.pyc                                           dd5f2d196248e9b1 dd5f2d196248e9b1 n/a              30/30    30/30    no
+5  IQCommon/strategy/wizard_quant_api.pyc                                 f0d81c252c7b3d4c f0d81c252c7b3d4c n/a              58/58    58/58    no
+6  IQCommon/util/trade_info_utils.pyc                                     a6b1797112fe623d a6b1797112fe623d n/a              41/41    41/41    no
+7  IQData/api/api_base.pyc                                                ec75d27dd3135041 ec75d27dd3135041 n/a              28/28    28/28    no
+8  IQData/plugins/plugin_system_realquote/real_quote.pyc                  4e2954762ccfe412 4e2954762ccfe412 n/a              45/45    45/45    no
+9  IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc                 795e9f0989de7fd4 795e9f0989de7fd4 n/a              27/27    27/27    no
+10 IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc                 1c7d6451e34eac79 1c7d6451e34eac79 n/a              37/37    37/37    no
+11 IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc             a6d6deb78a5a5eac a6d6deb78a5a5eac n/a              126/128  126/128  no
+12 IQEngine/plugins/plugin_system_matcher/matcher.pyc                     7f5ab1467621a033 7f5ab1467621a033 n/a              17/17    17/17    no
+13 IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc  585d39d826bd000f 2dd5b660f3403f52 4c450c6f035b6088 12/13    12/13    YES
+14 IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc           858bda4386a943dd 858bda4386a943dd n/a              43/43    43/43    no
+15 IQCommon/arg_checker.pyc                                               13ecf3d013261e2d 13ecf3d013261e2d n/a              49/49    49/49    no
+16 IQData/utils/arg_checker.pyc                                           ce082927d0b163b5 ce082927d0b163b5 n/a              39/39    39/39    no
+17 IQEngine/utils/arg_checker.pyc                                         9bb394516a5b8474 9bb394516a5b8474 n/a              43/43    43/43    no
+18 IQCommon/profiler_func.pyc                                             a6a1c48c4b16d331 a6a1c48c4b16d331 n/a              17/17    17/17    no
+19 IQData/utils/profiler_func.pyc                                         b8faf146c5594489 b8faf146c5594489 n/a              15/15    15/15    no
+20 IQEngine/utils/profiler_func.pyc                                       18a08e5a58d7edc7 18a08e5a58d7edc7 n/a              18/18    18/18    no
+
+panel unit total  base = r74c = 954/966  (r73 certified the same 954/966 on landed/anchored/R21-44)
+changed files base -> r74c  = 1  (realtime_event_source.pyc 22322 -> 21820 bytes)
+changed files base -> r74a  = 1  (22322 -> 21910)
+changed files base -> r74e  = 1  (22322 -> 22224)
+changed files base -> r74d  = 1  (22322 -> 21630)
+flips = 0; regressions = 0; 19/20 products byte-identical in every column (probe build == no-probe build, 20/20 cmp)
+broker canaries: 126/128 with ONLY _process_order + _sync_worker failing => ipo_stocks_order, _process_cancel_order,
+  _trade_status_handle, etf_purchase_redemption all still green; quote.pyc 92/92; quotation.pyc 153/153.

@@ -1,0 +1,55 @@
+orig window  n=53   prod window n=53
+     0 | LOAD_FAST now_date                 | LOAD_FAST now_date                
+     1 | LOAD_DEREF self                    | LOAD_DEREF self                   
+     2 | LOAD_ATTR first_run_date           | LOAD_ATTR first_run_date          
+     3 | COMPARE_OP !=                      | COMPARE_OP !=                     
+     4 | POP_JUMP_FORWARD_IF_FALSE ->@244   | POP_JUMP_FORWARD_IF_FALSE ->@338  
+     5 | LOAD_GLOBAL NULL + system_log      | LOAD_GLOBAL NULL + system_log     
+     6 | LOAD_ATTR debug                    | LOAD_ATTR debug                   
+     7 | LOAD_CONST '获取重登信号量'               | LOAD_CONST '获取重登信号量'              
+     8 | PRECALL                            | PRECALL                           
+     9 | CALL                               | CALL                              
+    10 | POP_TOP                            | POP_TOP                           
+    11 | LOAD_GLOBAL NULL + login_semaphore | LOAD_GLOBAL NULL + login_semaphore
+    12 | LOAD_ATTR acquire                  | LOAD_ATTR acquire                 
+    13 | LOAD_GLOBAL LOGIN_TIMEOUT          | LOAD_GLOBAL LOGIN_TIMEOUT         
+    14 | LOAD_CONST 60                      | LOAD_CONST 60                     
+    15 | BINARY_OP *                        | BINARY_OP *                       
+    16 | KW_NAMES                           | KW_NAMES                          
+    17 | PRECALL                            | PRECALL                           
+    18 | CALL                               | CALL                              
+    19 | LOAD_CONST False                   | LOAD_CONST False                  
+    20 | IS_OP                              | IS_OP                             
+    21 | POP_JUMP_FORWARD_IF_FALSE ->@244   | POP_JUMP_FORWARD_IF_FALSE ->@244  
+    22 | LOAD_GLOBAL NULL + system_log      | LOAD_GLOBAL NULL + system_log     
+    23 | LOAD_ATTR error                    | LOAD_ATTR error                   
+    24 | LOAD_CONST '获取重登信号量超时，系统退出'        | LOAD_CONST '获取重登信号量超时，系统退出'       
+    25 | PRECALL                            | PRECALL                           
+    26 | CALL                               | CALL                              
+    27 | POP_TOP                            | POP_TOP                           
+    28 | LOAD_DEREF self                    | LOAD_DEREF self                   
+    29 | LOAD_ATTR event_queue              | LOAD_ATTR event_queue             
+    30 | LOAD_METHOD put                    | LOAD_METHOD put                   
+    31 | LOAD_FAST dt                       | LOAD_FAST dt                      
+    32 | LOAD_GLOBAL EventEnum              | LOAD_GLOBAL EventEnum             
+    33 | LOAD_ATTR SYSTEM_EXIT              | LOAD_ATTR SYSTEM_EXIT             
+    34 | BUILD_TUPLE                        | BUILD_TUPLE                       
+    35 | PRECALL                            | PRECALL                           
+    36 | CALL                               | CALL                              
+    37 | POP_TOP                            | POP_TOP                           
+    38 | LOAD_CONST None                    | LOAD_CONST None                   
+    39 | RETURN_VALUE                       | RETURN_VALUE                      
+    40 | LOAD_DEREF self                    | LOAD_DEREF self                   
+    41 | LOAD_ATTR event_queue              | LOAD_ATTR event_queue             
+    42 | LOAD_METHOD put                    | LOAD_METHOD put                   
+    43 | LOAD_FAST dt                       | LOAD_FAST dt                      
+    44 | LOAD_GLOBAL EventEnum              | LOAD_GLOBAL EventEnum             
+    45 | LOAD_ATTR PRE_BEFORE_TRADING_START | LOAD_ATTR PRE_BEFORE_TRADING_START
+    46 | BUILD_TUPLE                        | BUILD_TUPLE                       
+    47 | PRECALL                            | PRECALL                           
+    48 | CALL                               | CALL                              
+    49 | POP_TOP                            | POP_TOP                           
+    50 | LOAD_FAST now_date                 | LOAD_FAST now_date                
+    51 | LOAD_DEREF self                    | LOAD_DEREF self                   
+    52 | STORE_ATTR pre_before_trading_date | STORE_ATTR pre_before_trading_date
+opname sequence identical = True

@@ -1,0 +1,4 @@
+  FIRE site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc :: <module>.<module>.RealtimeEventSource.clock_worker chain entry=@7186   merge=@7216   fall->elif=@7248   empty_arm=arm0 body=[7212] type=IF_ELIF_CHAIN
+  FIRE site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc :: <module>.<module>.RealtimeEventSource.clock_worker chain entry=@7186   merge=@7216   fall->elif=@7248   empty_arm=arm0 body=[7212] type=IF_ELIF_CHAIN
+  FIRE site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc :: <module>.<module>.RealtimeEventSource.clock_worker chain entry=@7186   merge=@7216   fall->elif=@7248   empty_arm=arm0 body=[7212] type=IF_ELIF_CHAIN
+files=122 files_with_fire=1 chain_regions_EVAL=1437 FIRE=3

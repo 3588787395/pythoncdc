@@ -1,0 +1,19 @@
+product size=21548
+JUDGE| ***<module>.RealtimeEventSource.clock_worker: Failure: Different control flow
+JUDGE| [single] status=failure units=12/13 success_rate=92.31%
+UNITDIFF| len orig=1424 prod=1426 delta=2
+UNITDIFF| hunks=2 landings=7 judge_diff=True
+ALLWIN| len orig=1424 prod=1426 delta=2
+ALLWIN| == #1 insert orig[1046..1046 @7248..-] prod[1046..1047] del=0 ins=1
+ALLWIN| == #2 insert orig[1099..1099 @7582..-] prod[1100..1101] del=0 ins=1
+ALLWIN| hunks=2
+WINR91| Traceback (most recent call last):
+WINR91| File "D:\Temp\r101\work\win_r91.py", line 40, in <module>
+WINR91| oi = [(i.offset, i.opname, i.argrepr) for i in dis.get_instructions(tgt)]
+WINR91| ^^^^^^^^^^^^^^^^^^^^^^^^^
+WINR91| File "D:\Python\Lib\dis.py", line 341, in get_instructions
+WINR91| co = _get_code_object(x)
+WINR91| ^^^^^^^^^^^^^^^^^^^
+WINR91| File "D:\Python\Lib\dis.py", line 180, in _get_code_object
+WINR91| raise TypeError("don't know how to disassemble %s objects" %
+WINR91| TypeError: don't know how to disassemble NoneType objects

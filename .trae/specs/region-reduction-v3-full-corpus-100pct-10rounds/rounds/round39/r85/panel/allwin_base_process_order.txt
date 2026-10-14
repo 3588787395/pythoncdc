@@ -1,0 +1,172 @@
+len orig=507 prod=439 delta=-68
+== #1 delete orig[266..281 @1638..@1710] prod[266..266] del=15 ins=0
+   - @1632    POP_JUMP_FORWARD_IF_FALSE      
+   - @1634    LOAD_CONST                     '股票'
+   - @1636    STORE_FAST                     type_str
+   - @1638    LOAD_GLOBAL                    NULL + strategy_log
+   - @1650    LOAD_ATTR                      info
+   - @1660    LOAD_GLOBAL                    NULL + _
+   - @1672    LOAD_CONST                     '生成订单，订单号：'
+   - @1674    LOAD_FAST                      order
+   - @1676    LOAD_ATTR                      order_id
+   - @1686    FORMAT_VALUE                   str
+   - @1688    LOAD_CONST                     ' '
+   - @1690    LOAD_FAST                      type_str
+   - @1692    FORMAT_VALUE                   str
+   - @1694    LOAD_CONST                     '代码：'
+   - @1696    LOAD_FAST                      order
+   - @1698    LOAD_ATTR                      symbol
+   - @1708    FORMAT_VALUE                   str
+   - @1710    LOAD_CONST                     ' 数量：'
+   + @1632    POP_JUMP_FORWARD_IF_FALSE      
+   + @1634    LOAD_CONST                     '股票'
+   + @1636    STORE_FAST                     type_str
+== #2 delete orig[287..288 @1754..@1754] prod[272..272] del=1 ins=0
+   - @1736    LOAD_ATTR                      BUY
+   - @1746    COMPARE_OP                     ==
+   - @1752    POP_JUMP_FORWARD_IF_FALSE      
+   - @1754    LOAD_CONST                     '买入'
+   + @1662    LOAD_ATTR                      BUY
+   + @1672    COMPARE_OP                     ==
+   + @1678    POP_JUMP_FORWARD_IF_FALSE      
+== #3 delete orig[289..299 @1758..@1796] prod[273..273] del=10 ins=0
+   - @1752    POP_JUMP_FORWARD_IF_FALSE      
+   - @1754    LOAD_CONST                     '买入'
+   - @1756    JUMP_FORWARD                   
+   - @1758    LOAD_CONST                     '卖出'
+   - @1760    FORMAT_VALUE                   str
+   - @1762    LOAD_FAST                      order_amount
+   - @1764    FORMAT_VALUE                   str
+   - @1766    BUILD_STRING                   
+   - @1768    PRECALL                        
+   - @1772    CALL                           
+   - @1782    PRECALL                        
+   - @1786    CALL                           
+   - @1796    POP_TOP                        
+   + @1672    COMPARE_OP                     ==
+   + @1678    POP_JUMP_FORWARD_IF_FALSE      
+   + @1682    JUMP_FORWARD                   
+== #4 delete orig[340..348 @2092..@2152] prod[314..314] del=8 ins=0
+   - @2076    CALL                           
+   - @2086    POP_TOP                        
+   - @2090    JUMP_FORWARD                   
+   - @2092    LOAD_GLOBAL                    NULL + strategy_log
+   - @2104    LOAD_ATTR                      info
+   - @2114    LOAD_CONST                     '生成订单，订单号：{order_id}，期权合约代码：{symbol}，方向：{side}{oper}，数量：{share}手, {hedge_type}'
+   - @2116    LOAD_METHOD                    format
+   - @2138    LOAD_FAST                      order
+   - @2140    LOAD_ATTR                      order_id
+   - @2150    LOAD_FAST                      order
+   - @2152    LOAD_ATTR                      symbol
+   + @1960    CALL                           
+   + @1970    POP_TOP                        
+   + @1974    JUMP_FORWARD                   
+== #5 delete orig[357..360 @2230..@2234] prod[323..323] del=3 ins=0
+   - @2220    LOAD_CONST                     'BUY'
+   - @2222    COMPARE_OP                     ==
+   - @2228    POP_JUMP_FORWARD_IF_FALSE      
+   - @2230    LOAD_CONST                     '买入'
+   - @2232    JUMP_FORWARD                   
+   - @2234    LOAD_CONST                     '卖出'
+   + @2034    LOAD_CONST                     'BUY'
+   + @2036    COMPARE_OP                     ==
+   + @2042    POP_JUMP_FORWARD_IF_FALSE      
+== #6 delete orig[369..370 @2304..@2304] prod[332..332] del=1 ins=0
+   - @2294    LOAD_CONST                     'OPEN'
+   - @2296    COMPARE_OP                     ==
+   - @2302    POP_JUMP_FORWARD_IF_FALSE      
+   - @2304    LOAD_CONST                     '开仓'
+   + @2102    LOAD_CONST                     'OPEN'
+   + @2104    COMPARE_OP                     ==
+   + @2110    POP_JUMP_FORWARD_IF_FALSE      
+== #7 delete orig[371..374 @2308..@2312] prod[333..333] del=3 ins=0
+   - @2302    POP_JUMP_FORWARD_IF_FALSE      
+   - @2304    LOAD_CONST                     '开仓'
+   - @2306    JUMP_FORWARD                   
+   - @2308    LOAD_CONST                     '平仓'
+   - @2310    LOAD_FAST                      order
+   - @2312    LOAD_ATTR                      amount
+   + @2104    COMPARE_OP                     ==
+   + @2110    POP_JUMP_FORWARD_IF_FALSE      
+   + @2112    JUMP_FORWARD                   
+== #8 delete orig[383..384 @2390..@2390] prod[342..342] del=1 ins=0
+   - @2380    LOAD_CONST                     'SPECULATION'
+   - @2382    COMPARE_OP                     ==
+   - @2388    POP_JUMP_FORWARD_IF_FALSE      
+   - @2390    LOAD_CONST                     '非备兑类型委托'
+   + @2174    LOAD_CONST                     'SPECULATION'
+   + @2176    COMPARE_OP                     ==
+   + @2182    POP_JUMP_FORWARD_IF_FALSE      
+== #9 delete orig[385..392 @2394..@2426] prod[343..343] del=7 ins=0
+   - @2388    POP_JUMP_FORWARD_IF_FALSE      
+   - @2390    LOAD_CONST                     '非备兑类型委托'
+   - @2392    JUMP_FORWARD                   
+   - @2394    LOAD_CONST                     '备兑类型委托'
+   - @2396    KW_NAMES                       
+   - @2398    PRECALL                        
+   - @2402    CALL                           
+   - @2412    PRECALL                        
+   - @2416    CALL                           
+   - @2426    POP_TOP                        
+   + @2176    COMPARE_OP                     ==
+   + @2182    POP_JUMP_FORWARD_IF_FALSE      
+   + @2184    JUMP_FORWARD                   
+== #10 replace orig[393..401 @2430..@2490] prod[344..345] del=8 ins=1
+   - @2416    CALL                           
+   - @2426    POP_TOP                        
+   - @2428    JUMP_FORWARD                   
+   - @2430    LOAD_GLOBAL                    NULL + strategy_log
+   - @2442    LOAD_ATTR                      info
+   - @2452    LOAD_CONST                     '生成订单，订单号：{order_id}，期货合约代码：{symbol}，方向：{side}{oper}，数量：{share}手'
+   - @2454    LOAD_METHOD                    format
+   - @2476    LOAD_FAST                      order
+   - @2478    LOAD_ATTR                      order_id
+   - @2488    LOAD_FAST                      order
+   - @2490    LOAD_ATTR                      symbol
+   + @2182    POP_JUMP_FORWARD_IF_FALSE      
+   + @2184    JUMP_FORWARD                   
+   + @2186    JUMP_FORWARD                   
+   + @2188    JUMP_FORWARD                   
+== #11 delete orig[410..413 @2568..@2572] prod[354..354] del=3 ins=0
+   - @2558    LOAD_CONST                     'BUY'
+   - @2560    COMPARE_OP                     ==
+   - @2566    POP_JUMP_FORWARD_IF_FALSE      
+   - @2568    LOAD_CONST                     '买入'
+   - @2570    JUMP_FORWARD                   
+   - @2572    LOAD_CONST                     '卖出'
+   + @2248    LOAD_CONST                     'BUY'
+   + @2250    COMPARE_OP                     ==
+   + @2256    POP_JUMP_FORWARD_IF_FALSE      
+== #12 delete orig[422..423 @2642..@2642] prod[363..363] del=1 ins=0
+   - @2632    LOAD_CONST                     'OPEN'
+   - @2634    COMPARE_OP                     ==
+   - @2640    POP_JUMP_FORWARD_IF_FALSE      
+   - @2642    LOAD_CONST                     '开仓'
+   + @2316    LOAD_CONST                     'OPEN'
+   + @2318    COMPARE_OP                     ==
+   + @2324    POP_JUMP_FORWARD_IF_FALSE      
+== #13 delete orig[424..433 @2646..@2690] prod[364..364] del=9 ins=0
+   - @2640    POP_JUMP_FORWARD_IF_FALSE      
+   - @2642    LOAD_CONST                     '开仓'
+   - @2644    JUMP_FORWARD                   
+   - @2646    LOAD_CONST                     '平仓'
+   - @2648    LOAD_FAST                      order
+   - @2650    LOAD_ATTR                      amount
+   - @2660    KW_NAMES                       
+   - @2662    PRECALL                        
+   - @2666    CALL                           
+   - @2676    PRECALL                        
+   - @2680    CALL                           
+   - @2690    POP_TOP                        
+   + @2318    COMPARE_OP                     ==
+   + @2324    POP_JUMP_FORWARD_IF_FALSE      
+   + @2326    JUMP_FORWARD                   
+== #14 insert orig[464..464 @2912..-] prod[395..396] del=0 ins=1
+   - @2896    PRECALL                        
+   - @2900    CALL                           
+   - @2910    POP_TOP                        
+   + @2534    PRECALL                        
+   + @2538    CALL                           
+   + @2548    POP_TOP                        
+   + @2550    JUMP_FORWARD                   
+hunks=14

@@ -1,0 +1,309 @@
+R2146CALL site=:20577 blocks=[166, 208] ret=False
+REC unit=<module>.one_prod_to_dataframe head=1410 op=and blocks=[1410, 1422] refused=[] r2146_pred=False
+REC unit=<module>.one_prod_to_dataframe head=1202 op=and blocks=[1202, 1214] refused=[] r2146_pred=False
+REC unit=<module>.one_prod_to_dataframe head=1410 op=and blocks=[1410, 1422] refused=[] r2146_pred=False
+REC unit=<module>.one_prod_to_dataframe head=994 op=and blocks=[994, 1006] refused=[] r2146_pred=False
+REC unit=<module>.one_prod_to_dataframe head=1410 op=and blocks=[1410, 1422] refused=[] r2146_pred=False
+REC unit=<module>.one_prod_to_dataframe head=800 op=and blocks=[800, 812] refused=[] r2146_pred=False
+REC unit=<module>.one_prod_to_dataframe head=1410 op=and blocks=[1410, 1422] refused=[] r2146_pred=False
+REC unit=<module>.one_prod_to_dataframe head=1410 op=and blocks=[1410, 1422] refused=[] r2146_pred=False
+REC unit=<module>.one_prod_to_dataframe head=592 op=and blocks=[592, 634] refused=[] r2146_pred=False
+REC unit=<module>.load_minute_or_day_kline head=354 op=and blocks=[354, 778] refused=[] r2146_pred=False
+REC unit=<module>.change_future_real_date head=36 op=and blocks=[36, 124] refused=[] r2146_pred=False
+REC unit=<module>.load_bars_from_hundsun head=1456 op=and blocks=[1456, 1498] refused=[] r2146_pred=False
+REC unit=<module>.load_bars_from_hundsun head=1290 op=and blocks=[1290, 1330] refused=[] r2146_pred=False
+REC unit=<module>.load_bars_from_hundsun head=0 op=and blocks=[0, 152] refused=[] r2146_pred=False
+REC unit=<module>._is_same_type_date head=322 op=and blocks=[322, 354] refused=[] r2146_pred=False
+REC unit=<module>._is_same_type_date head=186 op=and blocks=[186, 218] refused=[] r2146_pred=False
+REC unit=<module>._is_same_type_date head=14 op=and blocks=[14, 130] refused=[] r2146_pred=False
+REC unit=<module>.change_his_to_backward head=2594 op=and blocks=[2594, 2598] refused=[] r2146_pred=False
+REC unit=<module>.valuation head=0 op=and blocks=[0, 128] refused=[] r2146_pred=False
+REC unit=<module>.balance_statement head=282 op=and blocks=[282, 286] refused=[] r2146_pred=False
+REC unit=<module>.balance_statement head=140 op=and blocks=[140, 144] refused=[] r2146_pred=False
+REC unit=<module>.share_change head=134 op=and blocks=[134, 138] refused=[] r2146_pred=False
+REC unit=<module>.share_change head=0 op=and blocks=[0, 118] refused=[] r2146_pred=False
+REC unit=<module>.get_balance_statement head=400 op=and blocks=[400, 404, 408] refused=[] r2146_pred=False
+REC unit=<module>.get_balance_statement head=210 op=and blocks=[210, 218] refused=[] r2146_pred=False
+REC unit=<module>.get_income_statement head=400 op=and blocks=[400, 404, 408] refused=[] r2146_pred=False
+REC unit=<module>.get_income_statement head=210 op=and blocks=[210, 218] refused=[] r2146_pred=False
+REC unit=<module>.get_cashflow_statement head=400 op=and blocks=[400, 404, 408] refused=[] r2146_pred=False
+REC unit=<module>.get_cashflow_statement head=210 op=and blocks=[210, 218] refused=[] r2146_pred=False
+REC unit=<module>.get_growth_ability head=400 op=and blocks=[400, 404, 408] refused=[] r2146_pred=False
+REC unit=<module>.get_growth_ability head=210 op=and blocks=[210, 218] refused=[] r2146_pred=False
+REC unit=<module>.get_profit_ability head=400 op=and blocks=[400, 404, 408] refused=[] r2146_pred=False
+REC unit=<module>.get_profit_ability head=210 op=and blocks=[210, 218] refused=[] r2146_pred=False
+REC unit=<module>.get_eps head=400 op=and blocks=[400, 404, 408] refused=[] r2146_pred=False
+REC unit=<module>.get_eps head=210 op=and blocks=[210, 218] refused=[] r2146_pred=False
+REC unit=<module>.get_cash_collection_ability head=400 op=and blocks=[400, 404, 408] refused=[] r2146_pred=False
+REC unit=<module>.get_cash_collection_ability head=210 op=and blocks=[210, 218] refused=[] r2146_pred=False
+REC unit=<module>.get_operating_ability head=400 op=and blocks=[400, 404, 408] refused=[] r2146_pred=False
+REC unit=<module>.get_operating_ability head=210 op=and blocks=[210, 218] refused=[] r2146_pred=False
+REC unit=<module>.get_debt_paying_ability head=400 op=and blocks=[400, 404, 408] refused=[] r2146_pred=False
+REC unit=<module>.get_debt_paying_ability head=210 op=and blocks=[210, 218] refused=[] r2146_pred=False
+REC unit=<module>.get_share_change head=210 op=and blocks=[210, 218] refused=[] r2146_pred=False
+REC unit=<module>.get_valuation head=210 op=and blocks=[210, 218] refused=[] r2146_pred=False
+REC unit=<module>.get_valuation_new head=294 op=and blocks=[294, 302] refused=[] r2146_pred=False
+R2146CALL site=:20577 blocks=[166, 208] ret=False
+REC unit=<module>.check_stocks head=166 op=or blocks=[166, 208] refused=[] r2146_pred=False
+REC unit=<module>.get_opt_objects head=164 op=and blocks=[164, 232] refused=[] r2146_pred=False
+REC unit=<module>.get_opt_last_dates head=196 op=and blocks=[196, 264] refused=[] r2146_pred=False
+REC unit=<module>.get_opt_contracts head=196 op=and blocks=[196, 264] refused=[] r2146_pred=False
+CENSUS-LOOP file=fly/data/quotation.pyc records=48 members=57 fire_records=0 fire_only_new=0
+R2146CALL site=:20577 blocks=[166, 208] ret=False
+SUMMARY file=fly/data/quotation.pyc records=48 members=57 fire_records=0 fire_only_new=0 r2146_eval=1 r2146_fire=0
+R2146CALL site=:20577 blocks=[136, 178] ret=False
+R2146CALL site=:20577 blocks=[136, 178] ret=False
+REC unit=<module>.Quote.load_minute_or_day_kline head=366 op=and blocks=[366, 802] refused=[] r2146_pred=False
+REC unit=<module>.Quote.change_future_real_date head=36 op=and blocks=[36, 124] refused=[] r2146_pred=False
+REC unit=<module>.Quote.load_bars_from_hundsun head=1836 op=and blocks=[1836, 1898] refused=[] r2146_pred=False
+REC unit=<module>.Quote.load_bars_from_hundsun head=1650 op=and blocks=[1650, 1710] refused=[] r2146_pred=False
+R2146CALL site=:20577 blocks=[136, 178] ret=False
+REC unit=<module>.Quote.check_stocks head=136 op=or blocks=[136, 178] refused=[] r2146_pred=False
+REC unit=<module>.Quote.check_index_code head=658 op=or blocks=[658, 686] refused=[] r2146_pred=False
+REC unit=<module>.Quote.get_kline_from_zeromq head=280 op=and blocks=[280, 336] refused=[] r2146_pred=False
+REC unit=<module>.Quote.api_get_from_zeromq head=1532 op=and blocks=[1532, 1536] refused=[] r2146_pred=False
+REC unit=<module>.Quote.get_default_snapshot head=278 op=and blocks=[278, 306] refused=[] r2146_pred=False
+REC unit=<module>.Quote.check_limit head=1242 op=and blocks=[1242, 1254, 1266] refused=[] r2146_pred=False
+REC unit=<module>.Quote.check_limit head=1148 op=and blocks=[1148, 1160, 1172] refused=[] r2146_pred=False
+REC unit=<module>.Quote.get_merger_data head=356 op=and blocks=[356, 360] refused=[] r2146_pred=False
+REC unit=<module>.Quote.get_merger_data head=180 op=and blocks=[180, 184] refused=[] r2146_pred=False
+REC unit=<module>.Quote.get_merger_data head=0 op=and blocks=[0, 108] refused=[] r2146_pred=False
+CENSUS-LOOP file=fly/data/quote.pyc records=14 members=16 fire_records=0 fire_only_new=0
+R2146CALL site=:20577 blocks=[136, 178] ret=False
+SUMMARY file=fly/data/quote.pyc records=14 members=16 fire_records=0 fire_only_new=0 r2146_eval=1 r2146_fire=0
+REC unit=<module>.get_history_new head=622 op=and blocks=[622, 634, 676] refused=[] r2146_pred=False
+REC unit=<module>.get_history_new head=154 op=and blocks=[154, 298] refused=[] r2146_pred=False
+REC unit=<module>.get_history_new head=56 op=and blocks=[56, 98] refused=[] r2146_pred=False
+REC unit=<module>._all_bars_of_cache head=1012 op=and blocks=[1012, 1024] refused=[] r2146_pred=False
+REC unit=<module>._all_bars_of_cache head=326 op=and blocks=[326, 412] refused=[] r2146_pred=False
+REC unit=<module>.get_kline_by_count_new head=2742 op=and blocks=[2742, 2746, 2764] refused=[] r2146_pred=False
+REC unit=<module>.get_kline_by_count_new head=1420 op=and blocks=[1420, 1470] refused=[] r2146_pred=False
+REC unit=<module>.get_kline_by_count_new head=862 op=and blocks=[862, 976] refused=[] r2146_pred=False
+REC unit=<module>.get_kline_by_count head=868 op=and blocks=[868, 918] refused=[] r2146_pred=False
+REC unit=<module>.get_kline_by_date_new head=1042 op=and blocks=[1042, 1046, 1064] refused=[] r2146_pred=False
+REC unit=<module>.get_multiminute_his_data head=0 op=and blocks=[0, 68] refused=[] r2146_pred=False
+REC unit=<module>.get_multiminute_his_data_by_date head=112 op=and blocks=[112, 390] refused=[] r2146_pred=False
+REC unit=<module>.kline_datetime_list head=1412 op=and blocks=[1412, 1596] refused=[] r2146_pred=False
+REC unit=<module>.kline_datetime_list head=1248 op=and blocks=[1248, 1310] refused=[] r2146_pred=False
+REC unit=<module>.kline_datetime_list head=1034 op=and blocks=[1034, 1072] refused=[] r2146_pred=False
+REC unit=<module>.kline_datetime_list head=806 op=and blocks=[806, 920] refused=[] r2146_pred=False
+REC unit=<module>.kline_datetime_list head=556 op=and blocks=[556, 560, 602] refused=[] r2146_pred=False
+REC unit=<module>.get_exrights_data head=588 op=and blocks=[588, 626] refused=[] r2146_pred=False
+REC unit=<module>.get_exrights_data head=568 op=and blocks=[568, 580] refused=[] r2146_pred=False
+REC unit=<module>.get_kline_by_date_ndarray head=252 op=and blocks=[252, 296] refused=[] r2146_pred=False
+REC unit=<module>.get_all_real_minute_kline head=176 op=and blocks=[176, 354] refused=[] r2146_pred=False
+REC unit=<module>.klineCacheData_to_dict head=510 op=and blocks=[510, 522] refused=[] r2146_pred=False
+REC unit=<module>.get_history_common head=994 op=and blocks=[994, 1006] refused=[] r2146_pred=False
+REC unit=<module>.get_price_common head=1698 op=and blocks=[1698, 1710] refused=[] r2146_pred=False
+REC unit=<module>._is_same_type_date head=322 op=and blocks=[322, 354] refused=[] r2146_pred=False
+REC unit=<module>._is_same_type_date head=186 op=and blocks=[186, 218] refused=[] r2146_pred=False
+REC unit=<module>._is_same_type_date head=14 op=and blocks=[14, 130] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQCommon/api/klinedata.pyc records=27 members=31 fire_records=0 fire_only_new=0
+SUMMARY file=IQCommon/api/klinedata.pyc records=27 members=31 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+REC unit=<module>.TWHThreadController._target head=0 op=and blocks=[0, 46] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQCommon/logger/handlers.pyc records=1 members=1 fire_records=0 fire_only_new=0
+SUMMARY file=IQCommon/logger/handlers.pyc records=1 members=1 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+REC unit=<module>.filter_desicion head=690 op=and blocks=[690, 702] refused=[] r2146_pred=False
+REC unit=<module>.filter_desicion head=690 op=and blocks=[690, 702] refused=[] r2146_pred=False
+REC unit=<module>.filter_desicion head=690 op=and blocks=[690, 702] refused=[] r2146_pred=False
+REC unit=<module>.filter_desicion head=396 op=and blocks=[396, 400] refused=[] r2146_pred=False
+REC unit=<module>.filter_desicion head=690 op=and blocks=[690, 702] refused=[] r2146_pred=False
+REC unit=<module>.filter_desicion head=690 op=and blocks=[690, 702] refused=[] r2146_pred=False
+REC unit=<module>.filter_desicion head=690 op=and blocks=[690, 702] refused=[] r2146_pred=False
+REC unit=<module>.filter_desicion head=170 op=and blocks=[170, 174] refused=[] r2146_pred=False
+REC unit=<module>.filter_desicion head=690 op=and blocks=[690, 702] refused=[] r2146_pred=False
+REC unit=<module>.filter_desicion head=690 op=and blocks=[690, 702] refused=[] r2146_pred=False
+REC unit=<module>.filter_desicion head=690 op=and blocks=[690, 702] refused=[] r2146_pred=False
+REC unit=<module>.SH_ZB_stock_filter head=44 op=and blocks=[44, 70] refused=[] r2146_pred=False
+REC unit=<module>.get_data_flag.check_factor head=10 op=and blocks=[10, 62] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQCommon/strategy/wizard_quant_api.pyc records=13 members=13 fire_records=0 fire_only_new=0
+SUMMARY file=IQCommon/strategy/wizard_quant_api.pyc records=13 members=13 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+REC unit=<module>.get_trade_list head=1524 op=and blocks=[1524, 1536] refused=[] r2146_pred=False
+REC unit=<module>.get_trade_list head=1408 op=and blocks=[1408, 1428] refused=[] r2146_pred=False
+REC unit=<module>.get_trade_list head=1230 op=and blocks=[1230, 1250] refused=[] r2146_pred=False
+REC unit=<module>.get_trade_list head=1040 op=and blocks=[1040, 1064] refused=[] r2146_pred=False
+REC unit=<module>.get_trade_list head=1036 op=or blocks=[1036, 1040] refused=[] r2146_pred=False
+REC unit=<module>.get_trade_list head=864 op=and blocks=[864, 888] refused=[] r2146_pred=False
+REC unit=<module>.get_trade_list head=860 op=or blocks=[860, 864] refused=[] r2146_pred=False
+REC unit=<module>.get_trade_list head=180 op=and blocks=[180, 192] refused=[] r2146_pred=False
+REC unit=<module>.get_trade_unit_info head=1050 op=and blocks=[1050, 1088] refused=[] r2146_pred=False
+REC unit=<module>.check_trade head=250 op=and blocks=[250, 406] refused=[] r2146_pred=False
+REC unit=<module>.check_trade_name head=308 op=and blocks=[308, 334] refused=[] r2146_pred=False
+REC unit=<module>.check_and_update_trade head=260 op=and blocks=[260, 296] refused=[] r2146_pred=False
+REC unit=<module>.set_trade_status head=504 op=and blocks=[504, 542] refused=[] r2146_pred=False
+REC unit=<module>.query_trade_strategy_info head=362 op=and blocks=[362, 402, 422, 446] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQCommon/util/trade_info_utils.pyc records=14 members=16 fire_records=0 fire_only_new=0
+SUMMARY file=IQCommon/util/trade_info_utils.pyc records=14 members=16 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+REC unit=<module>.get_future_history_df head=3748 op=and blocks=[3748, 3896] refused=[] r2146_pred=False
+REC unit=<module>.get_future_history_df head=3586 op=and blocks=[3586, 3724, 3734] refused=[] r2146_pred=False
+REC unit=<module>.get_future_history_df head=3002 op=and blocks=[3002, 3066] refused=[] r2146_pred=False
+REC unit=<module>.get_future_history_df head=2192 op=and blocks=[2192, 2630] refused=[] r2146_pred=False
+REC unit=<module>.get_future_history_df head=1738 op=and blocks=[1738, 1798] refused=[] r2146_pred=False
+REC unit=<module>.get_future_history_df head=736 op=and blocks=[736, 778] refused=[] r2146_pred=False
+REC unit=<module>.get_future_history_df head=564 op=and blocks=[564, 722] refused=[] r2146_pred=False
+REC unit=<module>.get_future_history_df head=420 op=and blocks=[420, 440] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=7298 op=and blocks=[7298, 7320] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=7054 op=and blocks=[7054, 7066] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=6916 op=and blocks=[6916, 6928] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=6578 op=and blocks=[6578, 6590] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=4986 op=or blocks=[4986, 5044, 5052] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=4906 op=and blocks=[4906, 4972] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=4692 op=and blocks=[4692, 4696] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=4548 op=and blocks=[4548, 4552] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=4116 op=and blocks=[4116, 4120] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=3972 op=and blocks=[3972, 3976] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=3416 op=and blocks=[3416, 3862] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=2704 op=and blocks=[2704, 2818] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=2580 op=and blocks=[2580, 2622] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=2372 op=and blocks=[2372, 2454] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=2144 op=and blocks=[2144, 2148, 2190] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=848 op=and blocks=[848, 890] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=634 op=and blocks=[634, 834] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=520 op=and blocks=[520, 562] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=354 op=and blocks=[354, 450] refused=[] r2146_pred=False
+REC unit=<module>.get_history_df head=0 op=and blocks=[0, 154] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQData/api/api_base.pyc records=28 members=31 fire_records=0 fire_only_new=0
+SUMMARY file=IQData/api/api_base.pyc records=28 members=31 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+REC unit=<module>.RealQuoteData.api_get_from_zeromq head=1242 op=and blocks=[1242, 1246] refused=[] r2146_pred=False
+REC unit=<module>.RealQuoteData.one_prod_to_ndarray head=282 op=and blocks=[282, 302] refused=[] r2146_pred=False
+REC unit=<module>.RealQuoteData.get_kline_by_date_ndarray head=128 op=and blocks=[128, 184] refused=[] r2146_pred=False
+REC unit=<module>.RealQuoteData.get_real_minute_kline head=110 op=and blocks=[110, 270] refused=[] r2146_pred=False
+REC unit=<module>.RealQuoteData.get_kline_by_date head=212 op=and blocks=[212, 268] refused=[] r2146_pred=False
+REC unit=<module>.RealQuoteData.get_real_daily_kline head=334 op=and blocks=[334, 342] refused=[] r2146_pred=False
+REC unit=<module>.RealQuoteData.get_real_daily_kline head=264 op=and blocks=[264, 334, 342] refused=[] r2146_pred=False
+REC unit=<module>.RealQuoteData.api_get_from_zeromq_by_counts head=0 op=and blocks=[0, 90] refused=[] r2146_pred=False
+REC unit=<module>.RealQuoteData.check_limit head=1220 op=and blocks=[1220, 1232, 1244] refused=[] r2146_pred=False
+REC unit=<module>.RealQuoteData.check_limit head=1126 op=and blocks=[1126, 1138, 1150] refused=[] r2146_pred=False
+REC unit=<module>.RealQuoteData.get_subscribe_market_codes head=38 op=and blocks=[38, 94] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQData/plugins/plugin_system_realquote/real_quote.pyc records=11 members=14 fire_records=0 fire_only_new=0
+SUMMARY file=IQData/plugins/plugin_system_realquote/real_quote.pyc records=11 members=14 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+CENSUS-LOOP file=IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc records=0 members=0 fire_records=0 fire_only_new=0
+SUMMARY file=IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc records=0 members=0 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+REC unit=<module>.base_order head=256 op=and blocks=[256, 374] refused=[] r2146_pred=False
+REC unit=<module>.base_order head=0 op=and blocks=[0, 44] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc records=2 members=2 fire_records=0 fire_only_new=0
+SUMMARY file=IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc records=2 members=2 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+REC unit=<module>.TradeLiveBroker.on_pre_before_trading_start head=0 op=and blocks=[0, 24] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker._process_order head=686 op=and blocks=[686, 704] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker._process_order head=420 op=and blocks=[420, 456] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker._process_cancel_order head=998 op=and blocks=[998, 1100] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_schemedetail_status head=876 op=and blocks=[876, 928] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker._sync_worker head=1214 op=and blocks=[1214, 1370] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.on_order_response head=1624 op=and blocks=[1624, 1648] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.on_order_response head=440 op=and blocks=[440, 586] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.on_trade_response head=440 op=and blocks=[440, 586] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_trades head=382 op=and blocks=[382, 454] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_trades head=148 op=and blocks=[148, 248] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_etf_list_info head=0 op=and blocks=[0, 66] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_etf_constituent_list_info head=86 op=and blocks=[86, 156] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.etf_basket_order head=2558 op=and blocks=[2558, 2566] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.etf_basket_order head=2264 op=and blocks=[2264, 2310, 2354] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.etf_basket_order head=2018 op=and blocks=[2018, 2062] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.etf_basket_order head=1838 op=and blocks=[1838, 1882] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.etf_basket_order head=1656 op=and blocks=[1656, 1700] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_max_amount head=250 op=and blocks=[250, 262] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_margin_contract head=398 op=or blocks=[398, 422, 450, 478] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_margin_contract head=398 op=or blocks=[398, 422, 450, 478] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_margin_contractreal head=914 op=or blocks=[914, 938, 966, 994] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_margin_contractreal head=914 op=or blocks=[914, 938, 966, 994] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_margin_contractreal head=0 op=and blocks=[0, 24] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_crdt_stock_info head=530 op=or blocks=[530, 554, 582, 610] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_crdt_stock_info head=530 op=or blocks=[530, 554, 582, 610] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_crdt_target_stockinfo head=530 op=or blocks=[530, 554, 582, 610] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_crdt_target_stockinfo head=530 op=or blocks=[530, 554, 582, 610] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_crdt_enslosecu_stock_info head=576 op=or blocks=[576, 600, 628, 656] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_crdt_enslosecu_stock_info head=576 op=or blocks=[576, 600, 628, 656] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.ipo_stocks_order head=3378 op=and blocks=[3378, 3442] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.ipo_stocks_order head=3042 op=and blocks=[3042, 3054] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.ipo_stocks_order head=2998 op=and blocks=[2998, 3010] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.ipo_stocks_order head=2954 op=and blocks=[2954, 2966] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.ipo_stocks_order head=2814 op=and blocks=[2814, 2822, 2864] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.ipo_stocks_order head=2496 op=and blocks=[2496, 2504] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.ipo_stocks_order head=442 op=and blocks=[442, 454] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.ipo_stocks_order head=390 op=and blocks=[390, 442, 454] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_ipo_stocks head=1582 op=and blocks=[1582, 1594] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_ipo_stocks head=1538 op=and blocks=[1538, 1550] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_ipo_stocks head=1494 op=and blocks=[1494, 1506] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_ipo_stocks head=1366 op=and blocks=[1366, 1408] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_ipo_stocks head=1154 op=and blocks=[1154, 1366, 1408] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_ipo_stocks head=1110 op=and blocks=[1110, 1118] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.on_order_response_list_handle head=118 op=and blocks=[118, 192] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.on_trade_response_list_handle head=118 op=and blocks=[118, 192] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.permission_test head=286 op=and blocks=[286, 290] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_covered_amount head=438 op=and blocks=[438, 442] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.option_covered_trans head=892 op=and blocks=[892, 898, 904] refused=[] r2146_pred=False
+REC unit=<module>.TradeLiveBroker.get_hks_list head=0 op=and blocks=[0, 52] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc records=50 members=75 fire_records=0 fire_only_new=0
+SUMMARY file=IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc records=50 members=75 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+R2146CALL site=:20577 blocks=[1570, 1612] ret=False
+R2146CALL site=:20577 blocks=[2338, 2380] ret=False
+R2146CALL site=:20577 blocks=[2846, 2888] ret=False
+R2146CALL site=:20577 blocks=[1570, 1612] ret=False
+R2146CALL site=:20577 blocks=[2338, 2380] ret=False
+R2146CALL site=:20577 blocks=[2846, 2888] ret=False
+R2146CALL site=:20577 blocks=[1570, 1612] ret=False
+R2146CALL site=:20577 blocks=[2338, 2380] ret=False
+R2146CALL site=:20577 blocks=[2846, 2888] ret=False
+REC unit=<module>.DefaultMatcher.match head=2846 op=and blocks=[2846, 2888] refused=[] r2146_pred=False
+REC unit=<module>.DefaultMatcher.match head=2484 op=and blocks=[2484, 2526] refused=[] r2146_pred=False
+REC unit=<module>.DefaultMatcher.match head=2338 op=and blocks=[2338, 2380] refused=[] r2146_pred=False
+REC unit=<module>.DefaultMatcher.match head=2212 op=and blocks=[2212, 2254] refused=[] r2146_pred=False
+REC unit=<module>.DefaultMatcher.match head=1912 op=and blocks=[1912, 1954] refused=[] r2146_pred=False
+REC unit=<module>.DefaultMatcher.match head=1884 op=and blocks=[1884, 1896] refused=[] r2146_pred=False
+REC unit=<module>.DefaultMatcher.match head=1834 op=and blocks=[1834, 1884, 1896] refused=[] r2146_pred=False
+REC unit=<module>.DefaultMatcher.match head=1570 op=and blocks=[1570, 1612] refused=[] r2146_pred=False
+REC unit=<module>.DefaultMatcher.match head=1444 op=and blocks=[1444, 1486] refused=[] r2146_pred=False
+REC unit=<module>.DefaultMatcher.match head=1384 op=and blocks=[1384, 1432] refused=[] r2146_pred=False
+REC unit=<module>.DefaultMatcher.match head=1194 op=and blocks=[1194, 1236] refused=[] r2146_pred=False
+REC unit=<module>.DefaultMatcher.match head=1068 op=and blocks=[1068, 1110] refused=[] r2146_pred=False
+REC unit=<module>.DefaultMatcher.match head=732 op=and blocks=[732, 774] refused=[] r2146_pred=False
+REC unit=<module>.DefaultMatcher.match head=664 op=and blocks=[664, 706] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQEngine/plugins/plugin_system_matcher/matcher.pyc records=14 members=15 fire_records=0 fire_only_new=0
+R2146CALL site=:20577 blocks=[1570, 1612] ret=False
+R2146CALL site=:20577 blocks=[2338, 2380] ret=False
+R2146CALL site=:20577 blocks=[2846, 2888] ret=False
+SUMMARY file=IQEngine/plugins/plugin_system_matcher/matcher.pyc records=14 members=15 fire_records=0 fire_only_new=0 r2146_eval=3 r2146_fire=0
+R2146CALL site=:20577 blocks=[7248, 7270] ret=True
+R2146CALL site=:20577 blocks=[7248, 7270] ret=True
+R2146CALL site=:20577 blocks=[7248, 7270] ret=True
+REC unit=<module>.RealtimeEventSource.clock_worker head=8904 op=and blocks=[8904, 8926] refused=[] r2146_pred=False
+FIRE unit=<module>.RealtimeEventSource.clock_worker head=7248 op=and blocks=[7248, 7270] refused=[7270] r2146_pred=True
+REC unit=<module>.RealtimeEventSource.clock_worker head=6058 op=and blocks=[6058, 6090] refused=[] r2146_pred=False
+REC unit=<module>.RealtimeEventSource.clock_worker head=5902 op=and blocks=[5902, 6058, 6090] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc records=4 members=5 fire_records=1 fire_only_new=0
+R2146CALL site=:20577 blocks=[7248, 7270] ret=True
+SUMMARY file=IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc records=4 members=5 fire_records=1 fire_only_new=0 r2146_eval=1 r2146_fire=1
+REC unit=<module>.PluginRiskCalculation.end_date head=0 op=and blocks=[0, 16] refused=[] r2146_pred=False
+REC unit=<module>.PluginRiskCalculation.next_day head=0 op=or blocks=[0, 86] refused=[] r2146_pred=False
+REC unit=<module>.PluginRiskCalculation._on_publish_after_trading_end head=726 op=and blocks=[726, 840] refused=[] r2146_pred=False
+REC unit=<module>.PluginRiskCalculation.cleanup head=416 op=and blocks=[416, 420] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc records=4 members=4 fire_records=0 fire_only_new=0
+SUMMARY file=IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc records=4 members=4 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+REC unit=<module>.ArgumentChecker.is_in.check_is_in head=0 op=and blocks=[0, 8] refused=[] r2146_pred=False
+REC unit=<module>.ArgumentChecker.is_valid_date.check_is_valid_date head=0 op=and blocks=[0, 8] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQCommon/arg_checker.pyc records=2 members=2 fire_records=0 fire_only_new=0
+SUMMARY file=IQCommon/arg_checker.pyc records=2 members=2 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+REC unit=<module>.ArgumentChecker.is_in.check_is_in head=0 op=and blocks=[0, 8] refused=[] r2146_pred=False
+REC unit=<module>.ArgumentChecker.is_valid_date.check_is_valid_date head=0 op=and blocks=[0, 8] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQData/utils/arg_checker.pyc records=2 members=2 fire_records=0 fire_only_new=0
+SUMMARY file=IQData/utils/arg_checker.pyc records=2 members=2 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+REC unit=<module>.ArgumentChecker.is_in.check_is_in head=0 op=and blocks=[0, 8] refused=[] r2146_pred=False
+REC unit=<module>.ArgumentChecker.is_valid_date.check_is_valid_date head=0 op=and blocks=[0, 8] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQEngine/utils/arg_checker.pyc records=2 members=2 fire_records=0 fire_only_new=0
+SUMMARY file=IQEngine/utils/arg_checker.pyc records=2 members=2 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+REC unit=<module>.ProfilerTool.show_func head=144 op=or blocks=[144, 270] refused=[] r2146_pred=False
+REC unit=<module>.ProfilerTool.show_func head=116 op=and blocks=[116, 120] refused=[] r2146_pred=False
+REC unit=<module>.ProfilerTool.generate_profile.show_func head=152 op=or blocks=[152, 312] refused=[] r2146_pred=False
+REC unit=<module>.ProfilerTool.generate_profile.show_func head=132 op=and blocks=[132, 136] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQCommon/profiler_func.pyc records=4 members=4 fire_records=0 fire_only_new=0
+SUMMARY file=IQCommon/profiler_func.pyc records=4 members=4 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+REC unit=<module>.ProfilerTool.show_func head=144 op=or blocks=[144, 270] refused=[] r2146_pred=False
+REC unit=<module>.ProfilerTool.show_func head=116 op=and blocks=[116, 120] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQData/utils/profiler_func.pyc records=2 members=2 fire_records=0 fire_only_new=0
+SUMMARY file=IQData/utils/profiler_func.pyc records=2 members=2 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0
+REC unit=<module>.ProfilerTool.show_func head=144 op=and blocks=[144, 230] refused=[] r2146_pred=False
+REC unit=<module>.ProfilerTool.show_func head=116 op=and blocks=[116, 120] refused=[] r2146_pred=False
+REC unit=<module>.ProfilerTool.generate_profile.show_func head=152 op=or blocks=[152, 312] refused=[] r2146_pred=False
+REC unit=<module>.ProfilerTool.generate_profile.show_func head=132 op=and blocks=[132, 136] refused=[] r2146_pred=False
+CENSUS-LOOP file=IQEngine/utils/profiler_func.pyc records=4 members=4 fire_records=0 fire_only_new=0
+SUMMARY file=IQEngine/utils/profiler_func.pyc records=4 members=4 fire_records=0 fire_only_new=0 r2146_eval=0 r2146_fire=0

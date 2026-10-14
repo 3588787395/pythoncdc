@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "D:\Temp\r75\work\shape_proof.py", line 59, in <module>
+    assert start is not None, 'window start not found in product'
+           ^^^^^^^^^^^^^^^^^
+AssertionError: window start not found in product

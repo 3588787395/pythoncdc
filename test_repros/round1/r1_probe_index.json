@@ -1,0 +1,140 @@
+[
+ {
+  "path": "test_repros/round1/r1_43_cand_try_ifelse_hret_trailing.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_44_cand_cgroup_microcosm.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_47_cand_try_while_hret_trailing.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_48_cand_try_for_hret_trailing.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_49_cand_tryintry_hret_trailing.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_50_cand_method_hret_trailing.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_52_cand_hraise_trailing.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_53_cand_trystmt_hret_trailing.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_65_cand_while_try_sinkpair.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_73_cand_fortry_sinkpair.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_74_cand_whiletry_noelse.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_68_cand_for_arm_absorb.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_69_cand_for_nested_absorb.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_75_cand_try_arm_absorb.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_76_cand_while_arm_absorb.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_77_cand_nestedfn_arm_absorb.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_78_cand_method_arm_absorb.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_80_cand_try_arm_absorb_ctrl.pyc"
+ },
+ {
+  "path": "test_repros/round1/_search/handler_ifelse.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_30_cand_plain_ifelse_epi.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_31_cand_try_ifelse_epi.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_32_cand_try_nest_ifelse.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_33_cand_try_ifelse_then_stmt.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_34_cand_module_try_nest.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_35_cand_method_try_nest.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_36_cand_loop_try_nest.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_37_cand_try_elif_epi.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_38_cand_try_ifelse_hret.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_39_cand_try_nest_hret.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_40_cand_plain_ifelse_expret.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_41_cand_try_two_ifelse_hret.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_45_cand_hnoreturn_trailing.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_46_cand_notry_ifelse_trailing.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_51_cand_hret_trailing_nonnone.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_60_cand_tryret_hret.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_61_cand_tryret_hret_plainbody.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_62_cand_while_epi_dup.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_63_cand_while_epi_dup_fn.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_64_cand_while_if_sinkpair.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_72_cand_whiletry_sinkpair_fn.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_66_cand_else_absorb_siblings.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_67_cand_loop_else_absorb.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_70_cand_chain_controls.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_79_cand_flat_arm_absorb.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_81_cand_flat_arm_absorb2.pyc"
+ },
+ {
+  "path": "test_repros/round1/r1_42_self_product_cgroup.pyc"
+ }
+]

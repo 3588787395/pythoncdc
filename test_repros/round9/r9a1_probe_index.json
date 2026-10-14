@@ -1,0 +1,32 @@
+[
+ {
+  "path": "test_repros/round9/r9a1_01_backentry_looparm.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9a1_02_backentry_deeparm.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9a1_03_backentry_plainwhile.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9a1_04_pastconfluence_chain.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9a1_05_pastconfluence_share.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9a1_06_neg_plain_ifelse.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9a1_07_neg_continue_then_only.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9a1_08_backentry_multi.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9a1_09_pastconfluence_share_for.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9a1_10_backentry_deep3.pyc"
+ }
+]

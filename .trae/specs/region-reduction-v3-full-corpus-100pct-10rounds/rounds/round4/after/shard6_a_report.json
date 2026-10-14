@@ -1,0 +1,201 @@
+{
+ "elapsed_sec": 26.5,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 1,
+  "success": 12
+ },
+ "files_total": 13,
+ "generated_at": "2026-10-07T09:04:55",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc"
+  ],
+  "success": [
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/cash_validator.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/position_validator.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/price_validator.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/time_validator.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/broker.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/live.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/api.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/brokerFactory.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/enums.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/cash_validator.pyc",
+   "pyc_sha": "839bc340f052",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/cash_validatorOK.py",
+   "source_sha": "261e026e5f29",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 8,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/position_validator.pyc",
+   "pyc_sha": "c689aca3c6d9",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/position_validatorOK.py",
+   "source_sha": "3087b247a879",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/price_validator.pyc",
+   "pyc_sha": "2beb1fe0445c",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/price_validatorOK.py",
+   "source_sha": "cdf7026d5268",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/time_validator.pyc",
+   "pyc_sha": "296c64af0c65",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/time_validatorOK.py",
+   "source_sha": "f3a27b05033d",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 5,
+   "units_total": 5
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/__init__.pyc",
+   "pyc_sha": "3b44e6bb310c",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/__init__OK.py",
+   "source_sha": "6386e896568f",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/broker.pyc",
+   "pyc_sha": "9d76dad16d62",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/brokerOK.py",
+   "source_sha": "1473c0bfdd7b",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 38,
+   "units_total": 38
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/live.pyc",
+   "pyc_sha": "59cb762398a9",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/liveOK.py",
+   "source_sha": "d23799de350d",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 32,
+   "units_total": 32
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/__init__.pyc",
+   "pyc_sha": "d03dcf328618",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/__init__OK.py",
+   "source_sha": "8a3ae4c1fffc",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/api.pyc",
+   "pyc_sha": "1422faf3b9c6",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/apiOK.py",
+   "source_sha": "c9db12b954cf",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 57,
+   "units_total": 57
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/brokerFactory.pyc",
+   "pyc_sha": "46407daaba99",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/brokerFactoryOK.py",
+   "source_sha": "4b54708debaf",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 3,
+   "units_total": 3
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/enums.pyc",
+   "pyc_sha": "77fb67c95625",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/enumsOK.py",
+   "source_sha": "20c9fbbf7ebd",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 44,
+   "units_total": 44
+  },
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.reconnect: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
+   "pyc_sha": "b67c0b5dfb1e",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/functionOK.py",
+   "source_sha": "7d05a760daea",
+   "status": "failure",
+   "success_rate": 0.9859154929577465,
+   "units_success": 70,
+   "units_total": 71
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc",
+   "pyc_sha": "604512f76620",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_brokerOK.py",
+   "source_sha": "cedf457e9a9d",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 11,
+   "units_total": 11
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9965635738831615,
+ "units_success": 290,
+ "units_total": 291
+}

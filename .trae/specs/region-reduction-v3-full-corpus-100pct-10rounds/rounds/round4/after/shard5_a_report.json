@@ -1,0 +1,201 @@
+{
+ "elapsed_sec": 91.6,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 1,
+  "success": 12
+ },
+ "files_total": 13,
+ "generated_at": "2026-10-07T08:58:07",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc"
+  ],
+  "success": [
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_bar_storage.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_data_source.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_quotation_func.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/__init__.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/future_account.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_future_account.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_hks_account.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_option_account.pyc",
+   "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [
+    "***<module>.Strategy.tick_worker_thread: Failure: Different control flow"
+   ],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+   "pyc_sha": "8c19ea3751b0",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategyOK.py",
+   "source_sha": "a387e7e0f434",
+   "status": "failure",
+   "success_rate": 0.9629629629629629,
+   "units_success": 26,
+   "units_total": 27
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/__init__.pyc",
+   "pyc_sha": "e1c78d12ed15",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/__init__OK.py",
+   "source_sha": "a38150d288e8",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 7,
+   "units_total": 7
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_bar_storage.pyc",
+   "pyc_sha": "1ded979c1b4c",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_bar_storageOK.py",
+   "source_sha": "0b009b7a451a",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 9,
+   "units_total": 9
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_data_source.pyc",
+   "pyc_sha": "9b582f79dbea",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_data_sourceOK.py",
+   "source_sha": "7ffbe8a0da37",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 72,
+   "units_total": 72
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_quotation_func.pyc",
+   "pyc_sha": "d2d89ed56082",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_quotation_funcOK.py",
+   "source_sha": "e10bba07a488",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 8,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/__init__.pyc",
+   "pyc_sha": "3d6a3fd82028",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/__init__OK.py",
+   "source_sha": "3266ecc4d2c3",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 6,
+   "units_total": 6
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/__init__.pyc",
+   "pyc_sha": "1bfb9c3595d6",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/__init__OK.py",
+   "source_sha": "9d5f7cad4cf4",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 1,
+   "units_total": 1
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc",
+   "pyc_sha": "8a2960cd5ed1",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/benchmark_accountOK.py",
+   "source_sha": "938823e0deee",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 20,
+   "units_total": 20
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/future_account.pyc",
+   "pyc_sha": "d7675ae124bc",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/future_accountOK.py",
+   "source_sha": "eaefb8f4b9f6",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 35,
+   "units_total": 35
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_future_account.pyc",
+   "pyc_sha": "c956373f21fb",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_future_accountOK.py",
+   "source_sha": "0a55141ff0ab",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 26,
+   "units_total": 26
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_hks_account.pyc",
+   "pyc_sha": "47f186e8649f",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_hks_accountOK.py",
+   "source_sha": "26109273f545",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 23,
+   "units_total": 23
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_option_account.pyc",
+   "pyc_sha": "98f2311bbd6c",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_option_accountOK.py",
+   "source_sha": "3ef06f06efe2",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 26,
+   "units_total": 26
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc",
+   "pyc_sha": "f4ee631f3b74",
+   "source": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_accountOK.py",
+   "source_sha": "a1b31b92ea2f",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 35,
+   "units_total": 35
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 0.9966101694915255,
+ "units_success": 294,
+ "units_total": 295
+}

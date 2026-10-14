@@ -3129,6 +3129,479 @@ class RegionAnalyzer:
                 return _exit
         return None
 
+    # [r3-b100-armjoin] 块末终止 opcode（退出本作用域的前向流的那一类臂尾）。
+    _ARMJOIN_EXIT_OPS = frozenset({'RETURN_VALUE', 'RETURN_CONST',
+                                   'RAISE_VARARGS', 'RERAISE'})
+
+    def _armjoin_is_skip_edge(self, pred: BasicBlock, join: BasicBlock) -> bool:
+        """[r3-b100-armjoin] pred 是否以「跳过本条件结构的条件跳转边」进入 join。
+
+        判据只用块末指令 opcode 与跳转目标（理论基准 I.4 白名单）：pred 的
+        块末是前向条件跳转（POP_JUMP_FORWARD_IF_* / POP_JUMP_IF_*）或短路
+        跳转（JUMP_IF_FALSE_OR_POP / JUMP_IF_TRUE_OR_POP），且其跳转目标恰为
+        join。这类边是 CPython 为「条件不成立 ⇒ 直接落到该结构之后的语句」
+        发射的续行边，即父级作用域**绕过**本 if 链接入 join 的同层兄弟路径；
+        普通 fall-through（块末是语句指令）与清理边（POP_TOP/异常边）不
+        构成这种证据。零名字/偏移阈值/深度/计数判据。
+        """
+        _last = pred.get_last_instruction() if pred is not None else None
+        if _last is None or _last.argval != join.start_offset:
+            return False
+        return (_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                or _last.opname in SHORT_CIRCUIT_JUMP_OPS)
+
+    def _armjoin_is_dual_role_meeting(self, join: BasicBlock,
+                                      arm_of: Dict[BasicBlock, Set[int]]) -> bool:
+        """[r10-b133-armjoin-dualrole] join 是否恰是两条臂的「共落点」。
+
+        ═══════════════════════════════════════════════════════════════════════
+        标记 [R10-B133-ARMJOIN-DUALROLE]
+        ═══════════════════════════════════════════════════════════════════════
+
+        ①算法依据：No More Gotos §3（If 区域归约：merge = 两臂的唯一同层汇合
+          块）+ rules.md §1.2 原则2（每块唯一归属）/ 原则4（入口引用语义）+
+          §1.5 C3（汇合块被区域外路径引用时必须显式认领）。CPython 编译 if/
+          else 时，若汇合块 J 的一条臂以**无条件前向跳转**收尾（JUMP_FORWARD/
+          JUMP_ABSOLUTE 的落点恰为 J）、另一臂以 **fall-through** 收尾（臂尾
+          块块末既非任何跳转亦非终态，其唯一正常后继即 J），则 J 的两条入边
+          一条来自臂自身的显式声明、一条来自臂的自然续行——这正是 [R9-B124
+          elifchain-exit-in-armtail]（`region_ast_generator._split_arm_at_chain_exit`
+          条件 (b)）在发射端消费的同一结构签名，本方法把它补在归约端：两者
+          是同一条判据的两半，不是并行尺子。此形下 J 的 E 箱恒空（J 的两条
+          正常前驱全是本 if 自己的臂），(4) 永不成立，BFS 因此越出本 if 所属
+          的作用域，把**外层链**的汇合块（其 E 证据来自跨越外层结构的跳过边）
+          认领为 merge，真汇合块连同其后续被吸进臂块表。
+        ②归约顺序：自底向上——只在 `compute_arm_level_join` 的逐层 BFS 内、
+          对当前层候选调用一次；不回溯修正任何已归约区域（§1.3）。
+        ③唯一归属判定：存在前驱 P、Q（均在本 if 臂前向流 `arm_of` 内、均在
+          join 之前、均以正常后继边指向 join）使得 P 的块末是无条件前向跳转
+          且跳转目标恰为 join、Q 的块末既非无条件/条件/短路/后向跳转也非
+          return/raise 终态（即顺序边），且「跳转臂集合」与「直落臂集合」
+          不相交 ⇒ join 由两条不同臂的入边共落，是这两臂的同层汇合块。
+          两集合相交（同一臂既跳入又直落）时 join 只是该臂内部的结构汇合点，
+          不认领。
+        ④嵌套处理：调用方另以「join ∉ 臂内子区域块集」与「箱集合恰为两臂」
+          为门；本方法只看块末 opcode 与前驱/后继身份，不读嵌套深度、不读
+          区域类型、不数块、不读绝对偏移。
+        ⑤入口引用语义：认领成立时 join 作为 IfRegion.merge_block 被本 if 引用，
+          其语句由父级作用域按入口发射（原则4），臂块表在 join 之前停住
+          （发射端 [R9-B124] 切分器同判）。
+        ⑥反编译流程：region_analyzer 的 merge 选择 → IfRegion.merge_block →
+          `_collect_branch_blocks` 有界收集 → region_ast_generator 的
+          `_split_arm_at_chain_exit` / then-else 语句列表 → code_generator 发射。
+
+        C 条款：C1 只读本 if 两臂的出边与前驱集合；C2 不窥视子区域内部；
+        C3 把「汇合块仅有区域外 E 证据」的越权认领封闭为「共落点显式认领」。
+        零名字/偏移/计数/深度判据，零新增 self 状态。
+
+        :param join: 当前 BFS 层的汇合候选块
+        :param arm_of: 块 → 该块属于哪几条臂的前向流
+        :return: join 是否为两条臂的共落点
+        """
+        _jump_arms: Set[int] = set()
+        _fall_arms: Set[int] = set()
+        for _p in (join.predecessors or []):
+            _ai = arm_of.get(_p)
+            if not _ai:
+                continue
+            if _p.start_offset >= join.start_offset:
+                continue
+            _pexc = set(getattr(_p, 'exception_successors', None) or ())
+            if join not in (_p.successors or ()) or join in _pexc:
+                continue
+            _nn = [i for i in _p.instructions if i.opname not in _R20_NOISE_OPS]
+            if not _nn:
+                continue
+            _tail = _nn[-1]
+            if (_tail.opname in _R20_FWD_JUMPS
+                    and isinstance(getattr(_tail, 'argval', None), int)
+                    and _tail.argval == join.start_offset):
+                _jump_arms |= _ai
+            elif (_tail.opname not in _R20_FWD_JUMPS
+                    and _tail.opname not in CONDITIONAL_JUMP_OPS
+                    and _tail.opname not in SHORT_CIRCUIT_JUMP_OPS
+                    and _tail.opname not in FORWARD_JUMP_OPS
+                    and _tail.opname not in BACKWARD_JUMP_OPS
+                    and _tail.opname not in self._ARMJOIN_EXIT_OPS):
+                _fall_arms |= _ai
+        return bool(_jump_arms) and bool(_fall_arms) and not (_jump_arms & _fall_arms)
+
+    def _compute_arm_level_join(self, then_succ: BasicBlock,
+                                else_succ: BasicBlock,
+                                struct_blocks: Set[BasicBlock],
+                                current_merge: Optional[BasicBlock]) -> Optional[BasicBlock]:
+        """[r3-b100-armjoin] 求 if/elif 链各臂的「同层最近汇合块」（宿主无感）。
+
+        ①算法依据：No More Gotos §3（If 区域归约：merge = 两臂的唯一同层
+          汇合点）+ rules.md §1.2 原则2（每块唯一归属）/ 原则3（嵌套即抽象
+          节点）/ 原则4（入口引用语义）+ §1.5 C1（归约只读本区域的出边）与
+          C3（汇合块被区域外路径引用时必须显式认领）。本方法是 R24A/B3
+          （continue 臂 → merge=对侧臂入口）、`_compute_in_loop_if_merge`
+          （循环宿主、臂尾 JUMP_FORWARD 目标）、`_r57e_in_loop_branch_convergence`
+          （两臂唯一公共前向跳转目标）这一族 merge 守卫的**封闭补全**，不是
+          旁路：三者都只认「臂以无条件前向跳转收尾」这一种臂尾形态，且只在
+          merge 落在循环块集之外时才重算；本方法把判据换成「沿臂的前向流走
+          到第一个由两条不同控制路径汇入、且其中一条是本作用域兄弟路径的
+          块」，对宿主是循环体 / try 体 / 函数体的三种情形同判，臂尾形态含
+          fall-through（空体 `pass` 的 NOP 块）、无条件跳转、回边、
+          return/raise 四类。臂尾的两两组合另见 (4b)（单臂汇入 + 其余臂终态
+          收束）与 (4c)（双臂共落同一块：一臂无条件前向跳入、另一臂
+          fall-through 入，E 箱恒空）两个显式例外，二者都不是旁路。
+          宿主是循环体 / try 体 / 函数体的三种情形同判。
+        ②归约顺序：自底向上——本区域在内层归约完成后、`_collect_branch_blocks`
+          有界收集之前调用一次；不回溯修正已归约区域（§1.3 单向数据流）。
+          命中即作为 IfRegion.merge_block 交付父级，父级据此把公共尾块归还
+          给本作用域的兄弟语句序列。
+        ③唯一归属判定：候选块 J 的归属由「J 的正常前驱集合按路径身份分箱」
+          唯一决定：箱数 ≥ 2（两条不同控制路径汇入）**且** E 箱非空（其中
+          一条来自本 if 之外的同层兄弟路径）才是本 if 与父级作用域的汇合块；
+          箱数 = 1 时 J 是某一条臂的内部块（内层结构的汇合点，属子区域，
+          原则3），E 箱为空时 J 只被本 if 自己的臂汇入（链尾出口形），两种
+          情形本方法都不认领，继续沿 BFS 向外走；唯一例外是 (4c)「双臂共落点」
+          （该形 E 箱恒空而 J 确是两臂的同层最近汇合块），该形按 (4c)
+          显式认领。认领的 J 既不在任何臂闭包
+          内、也不在本 if 的条件结构块集内，故它归父级作用域的兄弟序列
+          （原则2）。退化 merge（current_merge 就等于某条臂入口）由上游
+          continue/break 守卫判定，本方法直接返回 None，不重复认领。
+        ④嵌套处理：判据不读嵌套深度、不读语句条数、不读区域类型名、不读
+          文件名/函数名/绝对偏移；只读块末 opcode、前驱/后继集合、异常边。
+          臂闭包遇到本区域的条件结构块（elif 条件）时**沿其继续展开**但
+          不把它当候选，因此 elif 链任意层数同一判据；宿主是循环体、try 体
+          还是函数体，同样只由「前向边」关系决定，无需按宿主干支。
+          触发条件对嵌套无感：一条臂的前向流在本作用域内无出口（return/
+          raise 终态，或只有回边/异常边可用 = continue/break）——这正是
+          NCPD 把 merge 后推到作用域尾（循环头 / try 体尾 / 函数尾）或判为
+          None 的唯一成因。由归纳（一层正确 + 组合封闭）得任意深度同判。
+        ⑤入口引用语义：命中后 IfRegion 以 J 为出口引用（merge_block=J），
+          J 的语句由父级序列作为兄弟节点发射，臂体在 J 处停止收集；
+          J 的前驱关系即父级引用它的入口语义（原则4）。
+        ⑥反编译流程：region_analyzer 的 merge 选择 → IfRegion.merge_block →
+          _collect_branch_blocks 有界收集 → region_ast_generator 的
+          then/else 语句列表 → code_generator 发射。本方法只改 merge。
+
+        判据（全部取自白名单结构事实）：
+          (1) 前向流：自两条臂入口做**逐层**广度优先，只走「正常后继
+              （排除异常边目标）且目标起始偏移 > 当前块起始偏移（排除回边）」
+              的边；`_arm_of[块]` 记录该块属于哪几条臂的前向流。
+          (2) 臂收束：某块的块末 opcode ∈ {RETURN_VALUE, RETURN_CONST,
+              RAISE_VARARGS, RERAISE}，或它没有前向正常后继（只有回边/异常边
+              /空后继）⇒ 该臂不参与本作用域的前向汇合（return/raise/
+              continue/break 四形统一由块末 opcode 与后继关系判出）。
+          (3) 条件结构块（本 if 的 header 与各 elif 条件）沿其继续展开，但
+              本身不作汇合候选（原则3：链自身不是兄弟语句）。
+          (4) 汇合身份：候选 J 的**正常前驱**按 {臂 i 的前向流 / 条件结构块 /
+              结构外兄弟路径(E)} 分箱。接受 J 需同时满足：箱数 ≥ 2（两条不同
+              控制路径汇入）且 **E 箱非空**（紧随 if 链之后的同层兄弟路径接入
+              J，即 J 是 if 链与本作用域顺序流的汇合点）。箱数 = 1 ⇒ J 在单条
+              臂内部（子区域的汇合点，属子区域，原则2/3），拒绝并继续向外走；
+              E 箱为空 ⇒ 该块只被本 if 自己的臂汇入（`if A / elif B / else C`
+              的链尾出口即此形，实测 IQCommon/util/cgroup_utils.
+              set_cgroup_config 的 if@4），其 merge 由链构造器/退化 merge 守卫
+              给出，本方法不介入。分箱在**整层展开完成后**统一进行，故同层
+              块的前向流归属已知，子区域汇合块不会被误认领。
+          (4c) 双臂共落点例外（[r10-b133-armjoin-dualrole]，(4) 缺的另一半
+              成员条件）：`len(_arms)==2` 且 J 的前驱分箱恰为 {0,1}（两臂各出
+              一条入边，**无** E/S/N 箱）且 J 不在任何臂内嵌套子区域内部
+              （J ∉ _sub_arm，原则3）且 `_armjoin_is_dual_role_meeting(J)` 成立
+              ——一臂的块末是无条件前向跳转且落点恰为 J、另一臂的块末是顺序
+              指令（既非任何跳转亦非 return/raise 终态）而 J 即其唯一正常后继，
+              两条入边分属两条不同臂。此时 J 就是两臂的**同层最近汇合块**：
+              臂自身的跳转与臂的自然续行落在同一块，源码里 if 之后就那一条
+              兄弟语句。E 箱在此恒空（J 的正常前驱全是本 if 自己的臂），(4)
+              永不成立，旧行为是 BFS 越出本 if 所属作用域、把跨越外层结构的
+              外层链汇合块认领为 merge（实测 fly/dumpload/load_daily.pyc
+              :: <module> 的 if@740：@2478 因 {0,1} 且 E 空被拒，@2768 因
+              外层 if@104 的跳过边 @104→@2768 被认领），真汇合块连同其后续被
+              `_collect_branch_blocks` 吸进 else 臂 ⇒ if 之后不再有兄弟语句。
+              本例外与发射端 [R9-B124 elifchain-exit-in-armtail]（其条件 (b)
+              正是「链内某臂以无条件前向跳转落在 merge_block」）是同一条结构
+              判据的两半：归约端认领、发射端切开，不另立并行尺子。判据只用
+              块末 opcode 与前驱/后继身份，零名字/偏移/计数/深度。
+          (4b) 单臂汇入的同层兄弟例外（[r3-b100-armjoin-tailexit]，(4) 中
+              缺失的成员条件）：其余臂的前向流已在本作用域内**终态收束**
+              （_term_exhausted：块末为 return/raise 终态 opcode = 控制流从
+              本作用域永久消失）时，汇入 J 的臂只剩一条，J 的
+              箱数必然 = 1，(4) 的「箱数 ≥ 2 且 E 箱非空」在此永不成立——
+              于是本方法越过 J、在更外层把**外层链**的汇合块（其 E 证据来自
+              外层 if/elif 的跳过边，不是本 if 的同层兄弟路径）认领为 merge，
+              臂跳转外推。补齐条件：汇入臂 i 的**直落尾块**（自臂入口沿
+              「块末非任何跳转/终态、且恰有一个前向正常后继」的链走到的臂
+              自身序列最后一块；链不经跳转故该块不在任何嵌套结构内部）以
+              **无条件前向跳转**（JUMP_FORWARD/JUMP_ABSOLUTE）收尾且落点恰为
+              J——这条跳转即该臂显式声明的作用域出口。此时若其余臂全部
+              _term_exhausted，J 即同层最近汇合块（_arm_declared_exit）。
+              尾块块末若是条件/短路/后向跳转或终态 ⇒ 该臂仍在本作用域内
+              展开（嵌套结构自身或臂体未结束），不成立。
+              [r3-b103-armjoin-termexit] 收束**种类**是本例外的成员条件之一，
+              (2) 的两种收束不可混用：靠回边/异常边收束的臂（continue/break）
+              并未离开本作用域，它把控制交回**外层结构**（循环头）继续迭代，
+              本 if 所在的同层层序因此尚未结束；该臂尾的无条件跳转落点是
+              **外层区域自己的出口**（跨区跳转，如 break 跳出 for 环后的块），
+              而不是紧随本 if 链的同层兄弟语句——按 §1.5 C1（归约只读本区域
+              的出边）/C2（外层区域是黑箱）与 §1.2 原则3，这种汇合块属外层
+              区域，由既有循环守卫族（R24A/B3、_compute_in_loop_if_merge、
+              _r57e_in_loop_branch_convergence）判定，(4b) 不介入。只有终态
+              收束（return/raise）才使本 if 只剩一条活臂、从而令该臂自声明的
+              出口成为唯一同层汇合块。实测两侧：反例 IQEngine/utils/logger.
+              handlers.perform_rollover（同形副本 IQCommon/logger/handlers.
+              perform_rollover）的 `for x in xrange(…): if exists(src): break
+              / else: … return None`，臂 (82,86) 中 86 只有回边 ⇒ 不得认领
+              114（break 的落点 = for 区域出口）；正例 IQCommon/util/
+              strategy_info_utils.get_strategy，臂 (990,1038) 中 1038 块末
+              RETURN_VALUE ⇒ 认领 1088。判据只用块末 opcode 与前驱/后继关系，
+              不读区域类型名/嵌套深度/语句条数/文件名/绝对偏移。
+          (5) 最近性：J 取首个存在合格汇合块的层内起始偏移最小者（逐层即
+              最小跳数，无需任何深度/计数上限）。
+          (6) 只在现 merge 确实越过同层汇合时替换：
+              · current_merge 为 None ⇒ 还需 (2) 至少命中一条臂（缺陷签名），
+                否则两臂均继续的 merge=None 形态交由下游 sink 守卫判定；
+              · current_merge == J ⇒ 返回 None（零行为差）；
+              · current_merge 落在「自臂入口的前向可达集」内 ⇒ 它是前向可达
+                的汇合点（NCPD 的正常结论），返回 None 逐字保留原判；
+              · 否则（current_merge 是回边目标 / 作用域出口 / 函数尾，前向流
+                根本到不了它）⇒ 以 J 为 merge。
+              current_merge 恰等于某条臂入口时直接返回 None：退化 merge 由
+              上游 continue/break 守卫（R24A/B3 形态）判定，不在此重复认领。
+
+        C 条款：C1 只读本区域两臂的同层出边与前驱集合；C2 不窥视任何子
+        区域内部（子区域的汇合块按 (4) 单箱拒绝、按 (4c) 只认两臂共落点）；C3 显式认领「汇合块被
+        区域外兄弟路径引用」（(4) 的 E 箱）**且**在区域外证据出现之前先认
+        领区域内的共落点（(4c)），不再让 merge 越过本作用域。零深度阈值、
+        零计数上限、零名字/偏移特判。
+        """
+        _arms = [a for a in (then_succ, else_succ) if a is not None]
+        if not _arms:
+            return None
+        if current_merge is not None and current_merge in _arms:
+            # 退化 merge（对侧臂入口）：上游 continue/break 守卫的判定域。
+            return None
+        _struct = set(struct_blocks or ()) | set(_arms)
+
+        def _normal_succ(_b):
+            _exc = getattr(_b, 'exception_successors', None) or set()
+            return [s for s in (_b.successors or []) if s not in _exc]
+
+        def _forward_reachable(_seeds):
+            _seen = set()
+            _q = list(_seeds)
+            while _q:
+                _cur = _q.pop(0)
+                for _s in _normal_succ(_cur):
+                    if _s in _seen or _s.start_offset <= _cur.start_offset:
+                        continue
+                    _seen.add(_s)
+                    _q.append(_s)
+            return _seen
+
+        # 逐层前向广度优先：_arm_of[块] = 该块属于哪几条臂的前向流。
+        _arm_of = {}
+        _sub_arm = {}           # 臂内子区域的内部块 → 所属臂序号（广度优先后填）
+        for _i, _a in enumerate(_arms):
+            _arm_of[_a] = {_i}
+        _cur_layer = list(_arms)
+        _exhausted = set()      # 前向流收束（终态 opcode / 只有回边）的臂序号
+        # [r3-b103-armjoin-termexit] 收束方式的分野：_exhausted 含两种臂尾，
+        # _term_exhausted 只含「块末为终态 opcode（return/raise）」那一种。
+        # 靠回边收束（continue/break）的臂并未离开本作用域——它把控制交回
+        # **外层结构**（循环头）继续迭代，本 if 的层序仍未结束；它的臂尾
+        # 无条件跳转落点是**外层区域自己的出口**（跨区跳转），不是紧随本
+        # if 链的同层兄弟语句。终态收束才是真正「从本作用域消失」。
+        _term_exhausted = set()
+        _layers = []            # 逐层候选发现序（广度优先跑完后再判汇合身份）
+        _join = None
+
+        def _pred_labels(_j):
+            """J 的正常前驱按路径身份分箱（臂序号 / 条件结构块 / 结构外兄弟）。"""
+            _labels = set()
+            for _p in (_j.predecessors or []):
+                if _j not in _normal_succ(_p):
+                    continue
+                if _p.start_offset >= _j.start_offset:
+                    continue
+                _ai = _arm_of.get(_p)
+                if _ai:
+                    _labels |= _ai
+                elif _p in _struct:
+                    _labels.add('S')
+                elif _p in _sub_arm:
+                    # 经异常边/清理边接入的臂内子区域块（臂内 with/try 的
+                    # handler、finally、POP_TOP 尾声）：按区域成员关系折算回
+                    # 它所属那条臂的箱，否则会被误判为同层兄弟路径。
+                    _labels |= _sub_arm[_p]
+                elif (self._armjoin_is_skip_edge(_p, _j)):
+                    _labels.add('E')
+                else:
+                    # 既不在臂流内、也不是条件结构块、其块末也不是「跳过本
+                    # 结构的条件跳转边」：它不构成父级作用域绕过 if 链的续行
+                    # 路径（实测 IQCommon/data/finance.
+                    # func_get_fundamentals_daily_data 的 if@180：候选 450 的
+                    # 前驱 444 是臂内 with 区域的 POP_TOP 尾声块），记为中性
+                    # 箱 N，不满足 E 要求。
+                    _labels.add('N')
+            return _labels
+
+        def _arm_declared_exit(_i):
+            """[r3-b100-armjoin-tailexit] 臂 _i 的直落尾块声明的作用域出口块。
+
+            自臂入口沿「块末既非条件跳转、亦非短路跳转/后向跳转/终态，且
+            恰有一个前向正常后继」的直落链走到臂尾块 T——链上不经任何跳转，
+            故 T 必是本作用域里臂自身序列的最后一块（不在任何嵌套结构内部，
+            原则3）。若 T 的块末是无条件前向跳转（JUMP_FORWARD/JUMP_ABSOLUTE），
+            其落点即臂 _i 自己显式声明的作用域出口：紧随本 if 链之后的同层
+            兄弟语句入口。判据只读块末 opcode 与前驱/后继关系，零名字/偏移
+            阈值/深度/计数判据。
+            """
+            _cur = _arms[_i]
+            while True:
+                if _cur in _sub_arm:
+                    # 直落链已走进臂内嵌套子区域（try/with/循环体…）的内部：
+                    # 该处的前向跳转属于子区域自身，不是臂在本作用域的出口。
+                    return None
+                _last = _cur.get_last_instruction()
+                if _last is None:
+                    return None
+                _op = _last.opname
+                if _op in _R20_FWD_JUMPS:
+                    return self._get_jump_forward_target(_cur)
+                if (_op in CONDITIONAL_JUMP_OPS
+                        or _op in SHORT_CIRCUIT_JUMP_OPS
+                        or _op in BACKWARD_JUMP_OPS
+                        or _op in self._ARMJOIN_EXIT_OPS):
+                    return None
+                _fwd = [s for s in _normal_succ(_cur)
+                        if s.start_offset > _cur.start_offset]
+                if len(_fwd) != 1:
+                    return None
+                _cur = _fwd[0]
+
+        while _cur_layer:
+            _next_layer = []
+            _newly = []
+            for _cur in _cur_layer:
+                _last = _cur.get_last_instruction()
+                _terminal = (_last is not None
+                             and _last.opname in self._ARMJOIN_EXIT_OPS)
+                _fwd = [s for s in _normal_succ(_cur)
+                        if s.start_offset > _cur.start_offset]
+                for _ai in sorted(_arm_of.get(_cur, ())):
+                    if _terminal or not _fwd:
+                        # 该臂以 return/raise 终态，或只有回边（continue/break）
+                        # /异常边可走：它不参与本作用域的前向汇合。
+                        _exhausted.add(_ai)
+                        if _terminal:
+                            # [r3-b103-armjoin-termexit] 终态收束（块末 ∈
+                            # _ARMJOIN_EXIT_OPS）：控制流从本作用域**永久**消失。
+                            # 只有这一种收束能为 (4b) 提供「本 if 只剩一条活臂」
+                            # 的成员证据；靠回边收束的臂仍由外层结构（循环）持有，
+                            # 交 §1.5 C2（外层区域是黑箱）/ C1（其出口不属本区域
+                            # 的出边），由既有循环守卫族处理，(4b) 不介入。
+                            _term_exhausted.add(_ai)
+                        continue
+                    for _s in _fwd:
+                        if _s in _arm_of:
+                            _arm_of[_s].add(_ai)
+                            continue
+                        _arm_of[_s] = {_ai}
+                        _next_layer.append(_s)
+                        if _s not in _struct:
+                            # 本 if 的条件结构块（header / elif 条件）沿其继续
+                            # 展开，但本身不作汇合候选（原则3：链自身不是
+                            # 兄弟语句）。
+                            _newly.append(_s)
+            _layers.append(sorted(_newly, key=lambda b: b.start_offset))
+            _cur_layer = _next_layer
+
+        # 广度优先已走完整个前向流：先按**区域成员关系**把「臂内子区域的
+        # 内部块」折算回它所属的那条臂（这些块只能经异常边/清理边进入，
+        # 正常流广度优先收不到，会被误判成同层兄弟路径），再按层序（最小
+        # 跳数）取最近的合格汇合块。
+        for _x in self.regions:
+            _xe = getattr(_x, 'entry', None)
+            if _xe is None:
+                continue
+            for _ai in tuple(_arm_of.get(_xe, ())):
+                for _b in (_x.blocks or ()):
+                    if _b is _xe:
+                        continue
+                    _sub_arm.setdefault(_b, set()).add(_ai)
+
+        # [r3-b100-armjoin-tailexit] 两臂各自声明的作用域出口（直落链走完后
+        # 才判定，此时 _sub_arm 已按区域成员关系填好）。
+        _arm_exit = {i: _arm_declared_exit(i) for i in range(len(_arms))}
+
+        for _layer in _layers:
+            for _s in _layer:
+                _lbl = _pred_labels(_s)
+                # (4) 两条以上不同控制路径汇入，且其中至少一条来自本 if 的
+                # 前向流之外（E 箱）——即「紧随 if 链之后的同层兄弟路径」确实
+                # 接入该块。箱数 = 1 ⇒ 单臂内部（子区域出口，原则2/3）的汇合
+                # 点；E 箱为空 ⇒ 该块只被本 if 自己的臂汇入（链尾出口形，如
+                # `if A / elif B / else C` 中 C 的出口），两种都不认领：前者
+                # 属子区域，后者的 merge 由链构造器按既有判据给出。实测反例
+                # IQCommon/util/cgroup_utils.set_cgroup_config 的 if@4（认领
+                # 1562 会把 elif 链降级成 else: if）、IQCommon/data/finance.
+                # func_get_fundamentals_daily_data 的 if@180（臂内 with 区域
+                # 的 POP_TOP 尾声块 444 折算回臂箱后 E 箱为空）、
+                # r1_65_cand_while_try_sinkpair 的 if@0（臂内 while 区域的
+                # handler 尾声块 142 同理）。
+                if len(_lbl) >= 2 and 'E' in _lbl:
+                    _join = _s
+                    break
+                # [r10-b133-armjoin-dualrole] (4c) 双臂共落点：J 恰是两条臂的
+                # 同层汇合块（一臂以无条件前向跳转落在 J，另一臂 fall-through
+                # 落在 J，两箱分属两臂，J 不在任何臂内子区域内部）时认领 J。
+                # 该形 E 箱恒空，(4) 永不成立，旧行为是继续向外走到跨越本作用域
+                # 的块（其 E 证据来自外层链的跳过边）并把它当 merge。
+                if (len(_arms) == 2 and _lbl == {0, 1}
+                        and _s not in _sub_arm
+                        and self._armjoin_is_dual_role_meeting(_s, _arm_of)):
+                    _join = _s
+                    break
+                # [r3-b100-armjoin-tailexit] 单臂汇入 + 其余臂已在作用域内
+                # 收束时，臂自身无条件前向跳转的落点即同层最近汇合块；它比
+                # 后一层「与外层链其他臂汇合」的块更近，先到先得，故须在 E
+                # 判据之后、进入下一层之前判定。
+                # [r3-b103-armjoin-termexit] 收束条件收紧为「终态收束」：其余
+                # 臂必须以 return/raise 块末（_term_exhausted）消失，不能只是
+                # 走回边（continue/break）。回边臂把控制交回**外层结构**继续
+                # 迭代，本 if 的同层层序还没结束，此时臂尾无条件跳转的落点是
+                # 外层区域自己的出口（实测 break 跳出 for 环）——跨区目标，不
+                # 是紧随本 if 链的同层兄弟语句（§1.5 C1 只读本区域的出边、
+                # C2 外层区域是黑箱、§1.2 原则3）。实测反例
+                # IQEngine/utils/logger.handlers.perform_rollover 与 IQCommon/
+                # logger/handlers.perform_rollover 的 `for …: if exists(src):
+                # break / else: … return`：臂 (82,86) 的 86 只有回边（循环续行），
+                # 82 的 JUMP_FORWARD 114 即 break 的落点 = 外层 for 区域的出口，
+                # 认领它会把 for-else 支体（88..112）吸进 break 臂。正例
+                # IQCommon/util/strategy_info_utils.get_strategy 的臂 (990,1038)：
+                # 1038 块末 RETURN_VALUE（1086）= 终态收束，1088 确是同层兄弟
+                # 语句入口 ⇒ 判据成立。判据仍只读块末 opcode 与前驱/后继关系。
+                _solo = next(iter(_lbl)) if len(_lbl) == 1 else None
+                if (isinstance(_solo, int) and len(_arms) == 2
+                        and _arm_exit.get(_solo) is _s
+                        and all(_k in _term_exhausted or _k == _solo
+                                for _k in range(len(_arms)))):
+                    _join = _s
+                    break
+            if _join is not None:
+                break
+
+        if _join is None:
+            return None
+        if current_merge is _join:
+            return None
+        if current_merge is None:
+            # 缺陷签名：必须确有一条臂的前向流在本作用域内收束（return/raise
+            # /continue/break），否则 merge=None 是「两臂各自继续」的既有形态，
+            # 由下游 sink 守卫判定，本判据不介入。
+            if not _exhausted:
+                return None
+        elif current_merge in _forward_reachable(_arms):
+            # 现 merge 在臂的前向流里：它是前向可达的汇合点（NCPD 正常结论），
+            # 逐字保留（严格附加，零行为差）。
+            return None
+        return _join
+
     def _r57e_in_loop_branch_convergence(self, then_succ: BasicBlock, else_succ: BasicBlock,
                                          loop_region, exclude: Set[BasicBlock],
                                          current_merge: Optional[BasicBlock] = None) -> Optional[BasicBlock]:
@@ -5000,6 +5473,37 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
             self._current_loop_blocks = body
             back_edges_for_header = [src for src, tgt in self.loop_analyzer.back_edges if tgt == header]
             _else_blocks_set = set(else_blocks) if else_blocks else set()
+            # [R21-40] 上面的 :4960 守卫只在 condition_block 就是 header 时排除「continue 落点」回边块，
+            # 但本文件大量循环把条件求值放在 header 块里而 condition_block=None（实测 _process_cancel_order
+            # 的循环 header=@46，末指令 POP_JUMP_FORWARD_IF_FALSE，condition_block=None）。漏掉这一形态时，
+            # :4992 的选择键按「体内指令条数」排序，会把 `else: 语句; continue` 臂块（其回边操作数落在
+            # header 之前的纯噪声再入块 @44 上）选成循环的自然回边，真正的循环尾（操作数正好落在 header 上）
+            # 反被标成 CONTINUE ⇒ 臂尾的 continue 无人发射。
+            # 判据与 :4961-4966 逐字相同（header 的纯噪声单后继前驱 = CPython 的 continue 再入块），只是把
+            # 它补到被漏掉的那一形态上；此处不新增谓词，也不读名字/偏移/计数阈值。
+            # 保守性：header 末指令不是条件跳转、再入块集合为空、或过滤后候选为空时一律不改
+            # back_edges_for_header ⇒ 与修改前逐字节相同。
+            _r40_hdr_last = header.get_last_instruction()
+            if (condition_block is not header and back_edges_for_header and _r40_hdr_last is not None
+                    and _r40_hdr_last.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                _r40_ph_set = set()
+                for _r40_ph in header.predecessors:
+                    if (_r40_ph.start_offset < header.start_offset
+                            and all(i.opname in NOISE_OPS for i in _r40_ph.instructions)
+                            and len(_r40_ph.successors) == 1 and header in _r40_ph.successors):
+                        _r40_ph_set.add(_r40_ph)
+                if _r40_ph_set:
+                    _r40_kept = []
+                    for _r40_src in back_edges_for_header:
+                        _r40_last = _r40_src.get_last_instruction()
+                        if (_r40_last and _r40_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')):
+                            _r40_tgt = (self.cfg.get_block_by_offset(_r40_last.argval)
+                                        if _r40_last.argval is not None else None)
+                            if _r40_tgt in _r40_ph_set:
+                                continue
+                        _r40_kept.append(_r40_src)
+                    if _r40_kept:
+                        back_edges_for_header = _r40_kept
             if condition_block == header:
                 _ph_set = set()
                 for _ph in header.predecessors:
@@ -5556,6 +6060,7 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
         loop_regions = self._filter_regions(regions, LoopRegion)
         if len(loop_regions) >= 2:
             removal_set = set()
+            _r104_reclaim = []
             for i, lr_a in enumerate(loop_regions):
                 if id(lr_a) in removal_set:
                     continue
@@ -5576,21 +6081,54 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
                             removal_set.add(id(lr_b))
                         continue
                     if lr_a.is_while_true and cond_b and cond_b == lr_a.header_block:
-                        # [Round6-whileTrue 修复] 仅当内层循环 body 覆盖外层
-                        # while True 的几乎所有块时才移除外层循环。若外层 while True
-                        # 包含多个内层 while 循环（body 差异 > 2 块），外层循环
-                        # 非冗余——它是 `while True: while x: ...; while y: ...` 的
-                        # 外层包装，移除会丢失无限循环语义，导致末尾产生虚假
-                        # return None。
+                        # [Round6-whileTrue 修复] + [R21-77-F5]：外层 while True 与内层
+                        # 循环由同一个测试块驱动（outer.header_block 恰是 inner.condition_block，
+                        # CPython 3.11 把 `while <test>:` 的测试块同时用作回边目标与其后继代码
+                        # 入口，于是同一个 test 块会被建成两个 LoopRegion，违反原则 2）。
+                        # 原判据用「body 差集 <= 2 块」的计数阈值近似「外层没有自己的内容」，
+                        # 阈值既违反判据纪律，也在 realtime clock_worker 形态（差集 6 块：
+                        # 共享测试块 + 循环体内被外层多收的分支块 + 循环出口后的顺序块）误拒，
+                        # 留下虚假的 `while True:` 包装。改为结构判据 _r104_outer_wrapper_is_redundant。
                         _diff_a = body_a_set - body_b_set
-                        if body_a_set and body_b_set and len(_diff_a) <= 2:
+                        if (body_a_set and body_b_set and len(_diff_a) <= 2) or self._r104_outer_wrapper_is_redundant(lr_a, lr_b, body_a_set, body_b_set):
                             removal_set.add(id(lr_a))
+                            _r104_reclaim.append((lr_a, lr_b, body_a_set, body_b_set, bool(body_a_set and body_b_set and len(_diff_a) <= 2)))
                             continue
                     if lr_b.is_while_true and cond_a and cond_a == lr_b.header_block:
                         _diff_b = body_b_set - body_a_set
-                        if body_a_set and body_b_set and len(_diff_b) <= 2:
+                        if (body_a_set and body_b_set and len(_diff_b) <= 2) or self._r104_outer_wrapper_is_redundant(lr_b, lr_a, body_b_set, body_a_set):
                             removal_set.add(id(lr_b))
+                            _r104_reclaim.append((lr_b, lr_a, body_b_set, body_a_set, bool(body_a_set and body_b_set and len(_diff_b) <= 2)))
                             continue
+            if _r104_reclaim:
+                # [R21-77-F5] 原则 2 收尾：被移除外层包装后，外层多收的「夹在真实循环体
+                # 自身块之间」的块必须归还给那个唯一真实循环，否则它们在 inner 的 body 集合
+                # 之外，inner 发射时被当作不存在（realtime clock_worker 的 holiday 分支）。
+                for _lr_out, _lr_in, _bo, _bi, _landed_fired in _r104_reclaim:
+                    if _landed_fired:
+                        continue
+                    if id(_lr_out) not in removal_set:
+                        continue
+                    _idset = {id(x) for x in _bi}
+                    _ioffs = [getattr(b, 'start_offset', None) for b in _bi]
+                    _ioffs = [x for x in _ioffs if x is not None]
+                    if not _ioffs:
+                        continue
+                    _lo, _hi = min(_ioffs), max(_ioffs)
+                    _in_body = getattr(_lr_in, 'body_blocks', None)
+                    _in_blocks = getattr(_lr_in, 'blocks', None)
+                    _idb = {id(x) for x in (_in_body or ())}
+                    _add = [b for b in sorted(_bo - _bi, key=lambda x: getattr(x, 'start_offset', 0) or 0)
+                            if id(b) not in _idb and _lo <= (getattr(b, 'start_offset', None) or -1) <= _hi]
+                    for _b in _add:
+                        if _in_body is not None:
+                            (_in_body.add if isinstance(_in_body, (set, frozenset)) else _in_body.append)(_b)
+                        if _in_blocks is not None and not any(x is _b for x in _in_blocks):
+                            (_in_blocks.add if isinstance(_in_blocks, (set, frozenset)) else _in_blocks.append)(_b)
+                        if self.block_to_region.get(_b) is _lr_out:
+                            self.block_to_region[_b] = _lr_in
+                    if _add and isinstance(_in_body, list):
+                        _in_body.sort(key=lambda x: getattr(x, 'start_offset', 0) or 0)
             if removal_set:
                 regions = [r for r in regions if id(r) not in removal_set]
                 self.regions = [r for r in self.regions if id(r) not in removal_set]
@@ -5603,6 +6141,94 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
                             break
 
         return regions
+
+    def _r104_reaches(self, start, goal) -> bool:
+        """[R21-77-F5] 沿 block.successors 闭包判断 start 能否再次进入 goal。
+        只读块边数据（后继），无函数名/文件名/绝对偏移键/计数/阈值。"""
+        if start is None or goal is None:
+            return False
+        if start is goal:
+            return True
+        _seen = {id(start)}
+        _st = [start]
+        while _st:
+            _b = _st.pop()
+            for _s in (getattr(_b, 'successors', []) or []):
+                if _s is goal:
+                    return True
+                if id(_s) in _seen:
+                    continue
+                _seen.add(id(_s))
+                _st.append(_s)
+        return False
+
+    def _r104_outer_wrapper_is_redundant(self, outer, inner, body_outer, body_inner) -> bool:
+        """[R21-77-F5] 「外层 while True 是虚假包装」判据（区域归约原则 2：每块唯一归属）。
+
+        前提（由调用点保证）：outer.is_while_true 且 outer.header_block 就是 inner 的
+        condition_block —— 两个 LoopRegion 由同一个测试块驱动。
+
+        ① 内层循环的正常出口必须**回不到**该测试块。出口能回到测试块说明外层确实会
+           再起一轮（真实 `while True: while x: ...; while y: ...`：x 的出口落到 y，
+           y 的回边回到循环头），此时外层有无限语义，必须保留。
+        ② outer 相对 inner 的 body 差集里，每个块只能是
+           (a) 那个共享测试块本身（唯一归属应判给 inner），或
+           (b) 落在 inner body 偏移跨度之内的块（夹在真实循环体自身块之间，本就属于
+               这个唯一真实循环，由调用点收回归还 inner），或
+           (c) 跨度之外**且**回不到测试块的块（循环出口之后的顺序代码，外层只是多收了它，
+               它由外层结构的后续发射负责）。
+           出现其它形状 = 外层拥有自己的循环内容，判 False。
+        两条都读区域/块的边数据与已声明区域的 body 集合，不看名字、不看具体偏移值、不计数。
+        """
+        if not body_outer or not body_inner:
+            return False
+        _hdr = getattr(outer, 'header_block', None)
+        if _hdr is None or getattr(inner, 'condition_block', None) is not _hdr:
+            return False
+        _instrs = getattr(_hdr, 'instructions', None) or []
+        if not _instrs:
+            return False
+        _last = _hdr.get_last_instruction() if hasattr(_hdr, 'get_last_instruction') else _instrs[-1]
+        if _last is None or getattr(_last, 'argval', None) is None:
+            return False
+        try:
+            _exit_t = self.cfg.get_block_by_offset(_last.argval)
+        except Exception:
+            _exit_t = None
+        if _exit_t is None:
+            return False
+        if self._r104_reaches(_exit_t, _hdr):
+            return False
+        # ③ outer 回到自己 header 的唯一通路（back edge）必须落在 inner 的 body 之内：
+        #    外层「再起一轮」其实只是内层循环自己的尾部回到那个共享测试块，外层没有任何
+        #    属于自己的回路入口。真实 `while True:` 包装的 back edge 块位于 inner body 之外
+        #    （它自己那一段循环内容），不满足本条 —— 实测 quote::run_individual_transform
+        #    与 _save_testds_to_csv 正是这种真实包装，故必须保留。
+        _bes = list(getattr(outer, 'back_edge_blocks', None) or [])
+        _single = getattr(outer, 'back_edge_block', None)
+        if _single is not None:
+            _bes.append(_single)
+        if not _bes:
+            return False
+        for _be in _bes:
+            if _be not in body_inner:
+                return False
+        _offs = [getattr(b, 'start_offset', None) for b in body_inner]
+        _offs = [x for x in _offs if x is not None]
+        if not _offs:
+            return False
+        _lo, _hi = min(_offs), max(_offs)
+        for _b in (body_outer - body_inner):
+            _o = getattr(_b, 'start_offset', None)
+            if _o is None:
+                return False
+            if _b is _hdr:
+                continue
+            if _lo <= _o <= _hi:
+                continue
+            if self._r104_reaches(_b, _hdr):
+                return False
+        return True
 
     def _rebuild_block_roles_after_fake_loop_removal(self, regions: List[Region], fake_loop_ids: Set[int]) -> None:
         """
@@ -6159,6 +6785,20 @@ condition_block/else_blocks 集合成员、前驱集合、异常边、try_offset
         
         if cond_jump_instr is not None and cond_jump_instr.argval is not None:
             jump_target = self.cfg.get_block_by_offset(cond_jump_instr.argval)
+            # [R21-33b] 区域识别原则 1（自底向上）+ 判据只看自身边形状：header 块尾条件跳转的
+            # 落点若以回到本 header 的后边跳转结束，则该条件不是循环出口——两条路都留在环内，
+            # 循环本体只能是 while True，块尾条件是本体内嵌套的 if（_trade_status_handle 实测
+            # @46 POP_JUMP_FORWARD_IF_FALSE→@830，@830 末条 JUMP_BACKWARD→@46，@830 前驱
+            # {@46,@720,@722}）。误判成 while cond + else 会让 CPython 3.11 把条件编译两遍
+            # （顶部 POP_JUMP_FORWARD_IF_FALSE + 底部 POP_JUMP_BACKWARD_IF_TRUE）并在函数尾
+            # 追加 LOAD_CONST None/RETURN_VALUE，替换掉原有的无条件回边。
+            if (jump_target is not None and jump_target is not header
+                    and jump_target.instructions):
+                _r33_back = jump_target.instructions[-1]
+                if (_r33_back.opname.startswith('JUMP_BACKWARD')
+                        and _r33_back.argval is not None
+                        and self.cfg.get_block_by_offset(_r33_back.argval) == header):
+                    return True
             if jump_target is not None and jump_target == header:
                 if cond_jump_instr.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'):
                     has_non_trivial_body_stmts = False
@@ -11918,7 +12558,7 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
         行为，组合段产出完整表达式 dict（属性链/下标/调用/deref 全保留），
         无法识别时回退 'Exception'，绝不静默退化为裸 except。
         """
-        def _collect_body(entry):
+        def _collect_body_raw(entry, _r2116_pe_stop=False):
             _blocks: List[BasicBlock] = []
             _visited: Set[BasicBlock] = set()
             _worklist = [entry]
@@ -11956,6 +12596,40 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                         _last.opname == 'JUMP_FORWARD'
                         or _last.opname in BACKWARD_JUMP_OPS):
                     continue
+                # [R21-16 variant D] POP_EXCEPT 之后只剩 `as` 变量清理且本块不以跳转/返回收尾
+                # => 该 handler 的语句已发完，其后继属于 try 语句**之后**的代码。仅在二次走查
+                # (_r2116_pe_stop) 中生效：首次走查维持既有行为，以免截断 [W21]/[W27] 记录的
+                # 合法尾块分裂（无条件截断实测让 gate 28 翻正的 run_tick_socket 回退）。
+                if _r2116_pe_stop and _has_pop_except and _last is not None and (
+                        _last.opname not in ('JUMP_FORWARD', 'RETURN_VALUE', 'RETURN_CONST', 'RERAISE')
+                        and _last.opname not in BACKWARD_JUMP_OPS):
+                    _r2116_ops = [i.opname for i in _current.instructions
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if 'POP_EXCEPT' in _r2116_ops and all(
+                            o in ('LOAD_CONST', 'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                  'STORE_DEREF', 'DELETE_FAST', 'DELETE_NAME', 'DELETE_GLOBAL',
+                                  'DELETE_DEREF', 'POP_TOP', 'SWAP', 'COPY')
+                            for o in _r2116_ops[_r2116_ops.index('POP_EXCEPT') + 1:]):
+                        # [R21-16 fix #2b] the handler's own terminator may be a
+                        # continue/break emitted as a standalone backward-jump block
+                        # immediately after the POP_EXCEPT cleanup block (quote
+                        # .run_individual_transform inner handler: POP_EXCEPT block
+                        # @1024 -> JUMP_BACKWARD block @1032). That block belongs to
+                        # the handler, but its backward edge must NOT be followed (it
+                        # re-enters the loop and swallows pre-entry blocks). Append it
+                        # without expanding, so the handler keeps its `continue`.
+                        for _r2116_s in _current.successors:
+                            if _r2116_s in _current.exception_successors:
+                                continue
+                            if _r2116_s in _visited:
+                                continue
+                            _r2116_sl = _r2116_s.get_last_instruction()
+                            if _r2116_sl is not None and _r2116_sl.opname in BACKWARD_JUMP_OPS and all(
+                                    _i.opname in ('RESUME', 'NOP', 'CACHE') or _i is _r2116_sl
+                                    for _i in _r2116_s.instructions):
+                                _visited.add(_r2116_s)
+                                _blocks.append(_r2116_s)
+                        continue
                 for _succ in _current.successors:
                     # [Phase 3 adv17_try_except_star] 不跟踪异常后继
                     # （exception_successors）。except* handler body 的异常后继
@@ -11984,6 +12658,19 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                                 continue
                         _worklist.append(_succ)
             return _blocks
+
+        def _collect_body(entry):
+            """[R21-16] 二次走查：常规走查若把前于 handler 入口的块纳入 handler body，说明控制流
+            沿循环回边吞掉了 try body（实测 fly/data/quote.pyc ::Quote.run_individual_transform 的
+            TryExceptRegion@686 try_blocks=[]，handler body 含 586/638/640/684 < 入口 754），
+            此时改用带 pe_tail 截断的走查；只在测得矛盾时改变形状，否则原样返回。"""
+            _first = _collect_body_raw(entry)
+            _ent = getattr(entry, 'start_offset', None)
+            if _ent is None:
+                return _first
+            if any(getattr(b, 'start_offset', _ent) < _ent for b in _first):
+                return _collect_body_raw(entry, True)
+            return _first
 
         exc_type = None
         exc_name = None
@@ -12271,26 +12958,145 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                         return True
         return False
 
+    def _try_nested_loop_body_blocks(self, scan_blocks) -> Set[BasicBlock]:
+        """_try_nested_loop_body_blocks — 由边与支配事实给出「嵌在本 try 体内的循环」块集。
+
+        ═══════════════════════════════════════════════════════════════════════
+        标记 [R10-B133-trytail-edgeloop]
+        ═══════════════════════════════════════════════════════════════════════
+
+        ①算法依据：No More Gotos §附录（自然循环 = 回边闭包）+ rules.md §1.2
+          原则1（自底向上）/ 原则3（嵌套即抽象节点）+ §1.3 单向数据流。
+          「某 try 体块尾是 return/break/continue」这一 veto 只有在**该块自身
+          就是 try 体的收尾**时才成立；块若落在嵌于 try 体内的循环里，它的
+          return 只离开本函数、它的回边只续行本循环，try 体另有一条正常完成
+          路径（循环耗尽/条件为假/break）通向 try 体尾，else 子句照旧存在。
+          旧实现读 `self.regions` 里的 LoopRegion.blocks，而本判据的唯一消费
+          点（`_find_try_else_blocks` ← `_identify_try_except_regions`
+          ← `analyze`）跑在区域表填充之前，读到的永远是空集 ⇒ veto 从不豁免。
+          本方法改读**同一阶段已经算好**的边/支配事实：`loop_analyzer` 的循环
+          头集合（回边目标 ∪ FOR_ITER/GET_ANEXT 块）与前驱/后继边集合。
+        ②归约顺序：自底向上——循环头是已归约的内层结构入口，本方法只消费它的
+          边关系，不回溯修正任何区域（§1.3）。调用点在 try 区域识别阶段之内，
+          返回值只用于本次扫描，不写回任何 self 状态。
+        ③唯一归属判定：块 B 属于「嵌在本 try 体内的循环」当且仅当存在循环头 H
+          满足：H ∈ 本次扫描的 try 体块集（循环整体被本 try 体覆盖 = 嵌套方向
+          的唯一结构证据）∧ H 支配 B ∧ B 自「循环体入口」起沿正常后继、只经过
+          仍在扫描块集内的块前向可达。循环体入口 = H 的正常后继中**能回到 H**
+          者（回边闭包由 H 沿前驱反向可达求得）；H 那条回不到 H 的后继即循环
+          的正常出口（FOR_ITER 耗尽边 / while 条件为假边 / break 落点），它被
+          排除在种子之外，故循环之后的 try 体块不计入，veto 面不被放宽。
+          入口之内不再做回指过滤：循环体内的死胡同块（`return` 这类无后继者）
+          本就回不到 H，若按回指过滤把它们漏掉，try 体的收尾就会被误判成异常
+          收尾——那正是本判据要封闭的缺陷面。
+        ④嵌套处理：判据对循环体内部结构无感——内层循环的头同样落在 H 的有界
+          前向闭包里时，其体块由同一条闭包自然覆盖，不另立规则、不读深度、不数
+          块。外层循环（本 try 区域宿身其中者）其头不在扫描块集内，整条被排除：
+          try 体外层的循环成员身份不改变本区域的 veto。
+        ⑤入口引用语义：返回值只用作「块 B 属循环体」的身份断言；循环仍由既有
+          LoopRegion 识别路径按入口交付抽象节点，本方法不建区域、不改指针。
+        ⑥反编译流程：region_analyzer 的 try 区域识别 →
+          `_try_body_terminates_abnormally` 的循环成员豁免 →
+          `_find_try_else_blocks` 的 else 块认定 → region_ast_generator 的
+          `ast.Try.orelse`（`else: break` 一类语句）→ code_generator 发射。
+
+        C 条款：C1 只读本区域 try 体块集的出边/入边与支配关系；C2 不窥视任何
+        子区域内部、不与 `self.regions` 比较；C3 豁免面由「循环头 ∈ try 体块集
+        ∧ 种子 = 能回到循环头的后继 ∧ 有界前向闭包」显式闭合，无静默跳过、
+        无新增 self 状态、无名字/偏移/计数判据。
+
+        :param scan_blocks: 本次扫描的 try 体块集（已按异常表身份收窄）
+        :return: 嵌在本 try 体内的循环的成员块集
+        """
+        _scan = set(scan_blocks)
+        _body: Set[BasicBlock] = set()
+        if not _scan:
+            return _body
+
+        def _succs(_b):
+            _exc = set(getattr(_b, 'exception_successors', None) or ())
+            return [s for s in (_b.successors or []) if s not in _exc]
+
+        for _h in self.loop_analyzer.loop_headers:
+            if _h not in _scan:
+                # 循环头不被本 try 体覆盖：该循环不是嵌在本 try 体内的结构。
+                continue
+            # 回边闭包：能沿正常后继回到 _h 的块（含 _h 自身）。
+            _cycle = {_h}
+            _rev = [_h]
+            while _rev:
+                _cur = _rev.pop()
+                for _p in (_cur.predecessors or []):
+                    if _p in _cycle or _cur not in _succs(_p):
+                        continue
+                    _cycle.add(_p)
+                    _rev.append(_p)
+            _body.add(_h)
+            # 种子 = 循环头的后继中能回到循环头者（= 循环体入口）。回到不了
+            # 循环头的那条边就是循环的正常出口（FOR_ITER 耗尽边 / while 条件
+            # 为假边），其目标块属 try 体在循环之后的续行，不计入循环成员。
+            _walk = [_s for _s in _succs(_h)
+                     if _s in _scan and _s in _cycle and _h.dominates(_s)]
+            for _s in _walk:
+                _body.add(_s)
+            while _walk:
+                _cur = _walk.pop()
+                for _s in _succs(_cur):
+                    if _s in _body or _s not in _scan or not _h.dominates(_s):
+                        continue
+                    _body.add(_s)
+                    _walk.append(_s)
+        return _body
+
     def _try_body_terminates_abnormally(self, try_region) -> bool:
-        """[TRY_EXCEPT_ELSE_MISORDER fix] Check if the try body terminates abnormally.
+        """[TRY_EXCEPT_ELSE_MISORDER fix] 判断 try 体是否以异常方式收尾（无 else 子句）。
 
-        CPython try/except/else semantics: the else clause runs ONLY when the try
-        block completes normally (no exception AND no return/break/continue). If the
-        try body ends with a return, break, or continue, there is no else clause --
-        any code between the try body and the first handler is still part of the try
-        body or is dead code, NOT else code.
+        ═══════════════════════════════════════════════════════════════════════
+        标记 [R10-B133-trytail-edgeloop]（循环成员豁免改由边/支配事实给出）
+        ═══════════════════════════════════════════════════════════════════════
 
-        Algorithm: examine try body blocks for terminal instructions that indicate
-        abnormal termination. A try body block that ends with RETURN_VALUE or
-        RETURN_CONST (return), JUMP_BACKWARD (continue/break to loop), or
-        JUMP_FORWARD to a loop header (break) indicates abnormal termination.
-        RERAISE/PUSH_EXC_INFO/POP_EXCEPT blocks are exception framework code,
-        not user code, and are excluded from this check.
+        CPython try/except/else 语义：else 子句只在 try 体**正常完成**（既无异常
+        也无 return/break/continue）时执行；若 try 体的收尾本身就是 return/
+        break/continue，源码里就没有 else 子句，try 体尾与第一个 handler 之间的
+        代码属于 try 体或死代码，不是 else。
 
-        This is a structural control-flow判据: CPython's compiler emits JUMP_FORWARD
-        past the else/handlers ONLY when the try body falls through normally. When
-        the try body has a return, the RETURN instruction replaces the JUMP_FORWARD,
-        and no else clause exists in the source.
+        ①算法依据：No More Gotos 区域归约 + rules.md §1.2 原则2/原则3、§1.5 C1。
+          扫描集合 = 本区域 try 体块（按异常表身份收窄，[R71-exctable]），
+          逐块读**块末 opcode**：RETURN_VALUE/RETURN_CONST（return）、
+          JUMP_BACKWARD/JUMP_BACKWARD_NO_INTERRUPT（continue 或循环尾跳）、
+          JUMP_FORWARD 且落点是某循环的 header_block（break）⇒ try 体异常收尾。
+          异常框架块（RERAISE/PUSH_EXC_INFO/POP_EXCEPT/CHECK_EXC_MATCH/
+          CHECK_EG_MATCH/WITH_EXCEPT_START）是 CPython 脚手架，不是用户代码，
+          不参与判定。
+        ②归约顺序：自底向上——内层循环/条件区域先于本判定归约并作为抽象节点
+          存在；本判定只消费块末 opcode、前驱/后继与回边闭包，不回溯修正任何
+          已归约区域（§1.3 单向数据流）。
+        ③唯一归属判定：块的两条豁免身份互斥且显式——
+          (a) 块内含异常框架指令 ⇒ 属 CPython 异常机制，不属 try 体语句；
+          (b) 块 ∈ `_try_nested_loop_body_blocks`（循环头本身是本 try 体成员，
+              块在该循环的回边闭包前向流内）⇒ 该块的 return 是**循环体内的
+              return**、回边是循环续行，try 体另有正常完成路径通向自身尾部，
+              不构成 try 体的异常收尾。
+          [R119b] 第三条豁免：JUMP_BACKWARD 落点块含 FOR_ITER 或含正向条件跳转
+          且有 ≥2 前驱 ⇒ 该边是循环回边（continue），不是 try 出口。
+        ④嵌套处理：判据对嵌套无感——循环/条件嵌套任意深，豁免身份 (b) 都由
+          「循环头 ∈ try 体块集 ∧ 回边闭包」同一条边关系判出；不读嵌套深度、
+          不数块、不读偏移。旧实现把 (b) 写成 `self.regions` 的 LoopRegion
+          成员查询，而本方法的唯一调用点（`_find_try_else_blocks` ←
+          `_identify_try_except_regions`）跑在区域表填充之前，`self.regions`
+          恒为空 ⇒ 该豁免此前从未生效，嵌套在 try 体内的循环里的 return 被
+          误判为 try 体异常收尾，`ast.Try.orelse` 整条被抑制。现改读同一阶段
+          已算好的 `loop_analyzer` 循环头与前驱/后继边，豁免真正可用。
+        ⑤入口引用语义：返回值只决定本 try 区域是否继续识别 else 子句块；else
+          块一旦认定，仍由既有 `_find_try_else_blocks` 闭包与发射端按入口引用
+          循环子区域，本方法不引用任何区域入口。
+        ⑥反编译流程：region_analyzer 的 try 区域识别 → `_find_try_else_blocks`
+          → `region.has_else` / `region.else_blocks` → region_ast_generator 的
+          `ast.Try.orelse`（如 `else: break`）→ code_generator 发射。
+
+        这是结构性控制流判据：CPython 只在 try 体正常 fall-through 时才发射越过
+        else/handler 的 JUMP_FORWARD；try 体尾部本身是 return 时该跳转被 RETURN
+        取代，源码里不存在 else 子句。
         """
         try_blocks = getattr(try_region, 'try_blocks', [])
         if not try_blocks:
@@ -12305,7 +13111,8 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
         # 归约方式：只有在收窄后集合非空时才用它替换扫描集合；收窄集合为空
         #   则保持原集合与原行为。下方 RETURN/JUMP_BACKWARD/JUMP_FORWARD 判据
         #   逐条不变。不读异常表 offset 区间数值、不读块 offset 常量、无阈值、
-        #   无名字白名单、无新增 self 状态、无跨层 region 比较。
+        #   无名字白名单、无新增 self 状态、无跨层 region 比较（循环成员身份由
+        #   _try_nested_loop_body_blocks 的边/支配闭包给出，见 [R10-B133]）。
         # AST 映射：决定 _find_try_else_blocks 是否继续识别 ast.Try.orelse。
         _he = set(getattr(try_region, 'handler_entry_blocks', []) or [])
         if _he:
@@ -12326,9 +13133,11 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
             'RERAISE', 'PUSH_EXC_INFO', 'POP_EXCEPT', 'CHECK_EXC_MATCH',
             'CHECK_EG_MATCH', 'WITH_EXCEPT_START',
         })
-        _loop_region_blocks = set()
-        for _lr in self._filter_regions(self.regions, LoopRegion):
-            _loop_region_blocks.update(_lr.blocks)
+        # [R10-B133-trytail-edgeloop] 循环成员豁免：此前读 self.regions 里的
+        # LoopRegion.blocks，而调用点（_identify_try_except_regions 之内）跑在
+        # 区域表填充之前 ⇒ 恒为空集，豁免从未生效。现由 _try_nested_loop_body_blocks
+        # 用同一阶段已算好的循环头 + 前驱/后继边 + 支配关系给出。
+        _loop_region_blocks = self._try_nested_loop_body_blocks(try_blocks)
         for block in try_blocks:
             non_noise = [i for i in block.instructions
                          if i.opname not in NOISE_OPS]
@@ -12788,6 +13597,14 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                 if _cur is merge_point:
                     return True
                 if _cur in set(try_region.try_blocks or []):
+                    continue
+                _r3i_last = None
+                for _r3i_i in reversed(_cur.instructions):
+                    if _r3i_i.opname in ('RESUME', 'NOP', 'CACHE'):
+                        continue
+                    _r3i_last = _r3i_i
+                    break
+                if _r3i_last is not None and _r3i_last.opname in BACKWARD_JUMP_OPS:
                     continue
                 for _succ in _cur.successors:
                     if _succ in _cur.exception_successors:
@@ -19058,17 +19875,25 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         #      放行，命中时逐位保持旧行为。
         claimed = set()
         protected = set()
+        # [B104-R3 合并调和] released = 因本收窄而「新得」放行面的块集（v2 [B104] 放行、
+        # v3 旧 blanket 会跳过的差集）。只对这个集合附加「值上下文链头不认领」门，
+        # 使 v2 的嵌套链式比较覆盖与 v3 的 blanket 行为在非嵌套面上逐位共存。
+        released = set()
         for region in loop_regions:
             if getattr(region, 'region_type', None) == RegionType.WHILE_LOOP:
                 protected.update(region.blocks or set())
             else:
+                _b104r3_bound = set()
                 for attr in ('header_block', 'condition_block', 'back_edge_block'):
                     b = getattr(region, attr, None)
                     if b is not None:
                         protected.add(b)
-                protected.update(getattr(region, 'condition_chain_blocks', None) or [])
-                protected.update(region.else_blocks or [])
-                protected.update(getattr(region, 'init_blocks', None) or [])
+                        _b104r3_bound.add(b)
+                for _attr_b104r3 in ('condition_chain_blocks', 'else_blocks', 'init_blocks'):
+                    _seq_b104r3 = getattr(region, _attr_b104r3, None) or []
+                    protected.update(_seq_b104r3)
+                    _b104r3_bound.update(_seq_b104r3)
+                released.update(set(region.blocks or set()) - _b104r3_bound)
         for region in try_regions:
             protected.update(region.blocks or set())
         for region in match_regions:
@@ -19080,6 +19905,7 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             protected.update(getattr(region, 'exception_blocks', None) or [])
             if getattr(region, 'entry', None) is not None:
                 protected.add(region.entry)
+            released.update(getattr(region, 'with_blocks', None) or [])
 
         chained_compare_regions = []
         blocks_in_order = self.cfg.get_blocks_in_order()
@@ -19090,6 +19916,23 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 continue
             if block in protected:
                 continue
+            # [B104-R3 合并调和] 放行面只覆盖**条件位**嵌套链式比较（v2 [B104] 的靶形：
+            # for/with 体内 ``if 0 < x < 10 < x*2:``）。**值位**链式比较
+            # （``is_first_five_trading_days = a <= b <= c``）按本文件既有 [Round4-04] 口径
+            # 恒以 SHORT_CIRCUIT_JUMP_OPS（留值短路跳转）收尾，其归属是宿主语句自身的
+            # 值上下文 IfRegion + _generate_value_context_chain_compare_assign 路径；
+            # 若在此认领为独立链式比较区域，宿主 for 体的语句流被抽走，赋值与其后的 if
+            # 一起被生成层上提到循环体更早的位置（实测 matcher::DefaultMatcher.match
+            # 17->16，Different control flow）。故对 released 集合（本次收窄「新得」的块）
+            # 维持 v3 blanket 的跳过，其余块逐位维持 v2 [B104] 的放行行为。
+            # C1：只读本块末指令 opcode 族（[Round4-04] 同一判据词汇）+ 区域成员关系；
+            # C2：条件位链头（POP_JUMP_IF_* 收尾）不被本门命中，v2 嵌套覆盖保真；
+            # C3：门只收窄 released 差集，非嵌套面（v3 已判定正确者）行为逐位不变。
+            if block in released:
+                _b104r3_last = block.get_last_instruction()
+                if (_b104r3_last is not None
+                        and _b104r3_last.opname in SHORT_CIRCUIT_JUMP_OPS):
+                    continue
             if not self._is_chained_compare_header(block):
                 continue
 
@@ -20940,6 +21783,29 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                     if _merge_e is not None and merge is not getattr(_loop, 'header_block', None):
                         merge = _merge_e
 
+            # [r3-b100-armjoin] 臂的同层最近汇合块重算（宿主区域无感：循环体
+            # / try 体 / 函数体同一判据，判据与不触发条件全部写在
+            # _compute_arm_level_join 的六项 docstring；本处是它在
+            # _identify_conditional_regions 里的唯一消费点）。破口 B100 的
+            # 机制：一条臂以 return/raise/continue/break 离开本作用域的前向
+            # 流时，NCPD 只能给出更晚的公共后必经块（循环头 / try 体尾 /
+            # 函数尾）或 None，_collect_branch_blocks 遂越过紧随 if 链之后
+            # 的同层兄弟汇合块把它吸收进臂，臂跳转外推（实测
+            # IQCommon/util/email_utils.send_email off130 674→1120、
+            # IQData/utils/calexrights_func.change_his_to_forward off1022
+            # 1328→2148、IQCommon/data/finance.get_fields off92 236→742）。
+            # R24A/B3 家族（continue 臂 → merge=对侧臂入口）与
+            # _compute_in_loop_if_merge / _r57e_in_loop_branch_convergence
+            # 是本判据在「臂尾恰为无条件前向跳转」这一子集上的既往形态，
+            # 此处封闭其另一侧（fall-through 臂尾与非循环宿主），不旁路、
+            # 不重复认领：current_merge 已是前向汇合点时逐字保持原判。
+            _r100_join = self._compute_arm_level_join(
+                then_succ, else_succ,
+                {block, then_succ, else_succ, _else_succ_original} | chain_blocks,
+                merge)
+            if _r100_join is not None:
+                merge = _r100_join
+
             # 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
             # 当 then_succ 以 JUMP_BACKWARD 终止、且目标为包围循环的循环头（continue
             # 语义）时，then 分支退出当前循环迭代、永不与对侧分支在循环内汇聚，故
@@ -22280,6 +23146,80 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             _arm_shared = set(then_blocks) & set(else_blocks)
             if _arm_shared:
                 then_blocks = [b for b in then_blocks if b not in _arm_shared]
+        # [r26a FIX_R21-8 判据 · 「体只有一条回边」的 if 形状是空体 while 循环]
+        # 区域归约算法原则 1（块 = 前导语句 + 恰好一个终结子）＋ No More Gotos
+        # §4.2（自然循环：回边 n→d 中 d DOM n，d 即 header）＋ 原则 2（每块唯一
+        # 归属）＋ 原则 3（嵌套即抽象节点）：CPython 把【空体 while】`while cond:
+        # pass` 编成「条件块 C：…；POP_JUMP_*_IF_FALSE → E（循环出口）；真分支
+        # 落到的唯一体块 B：一条无条件回跳 JUMP_BACKWARD → C」。本判据在条件区域
+        # 识别步【建区的当下】识别这一形状：若 B 回跳的目标恰是 C 自身的入口，
+        # 则该结构没有「跳过一段语句后继续执行」的 if 语义，只有「条件为真就
+        # 重测条件」的循环语义——它是一个自然循环（header = C，back_edge = B，
+        # body = ∅）。原判据缺失时它被建成 IfRegion(IF_THEN, entry=C, then=[B],
+        # merge=E)，AST 一一映射成 `if cond: continue`，而 `continue` 按 CPython
+        # 的语义落到【外层循环】的入口，于是 B 的回跳目标从 C 退化为外层 while 的
+        # 条件块（_process_tick_order：orig @178 JUMP_BACKWARD→@130，prod 落成
+        # @114；指令序列逐条相同，只有这一个跳转槽错位的同形换位）。
+        # 判据（取材面仅为本区域自身的 entry/then/merge 三块与它们自身的末指令
+        # opname/argval 与体块指令集合，不读 .successors、不读 get_block_by_offset、
+        # 不读兄弟/父区域、不读名字与常量、不依赖区域处理顺序）：
+        #   ① else_blocks 为空（空体 while 没有 else 臂；有 else 即普通 if/else）；
+        #   ② then_blocks 恰为单块 B，且 B 去掉编译噪声后只剩一条无条件跳转，
+        #      其目标 == 本区域入口 C 的 start_offset（回跳到条件自身 ⇒ B 体内
+        #      没有任何语句，if 的「跳过语句」语义无从谈起）；
+        #   ③ C 的末指令是【前向】IF_FALSE 条件跳转，目标 == merge 的 start_offset
+        #      （假分支一次性离开循环 ⇒ merge 就是循环出口 E）。
+        # 真分支方向（②回跳 C）与假分支方向（③前跳 E）互反，正是 while 的
+        # 双出口定义；普通 `if cond: continue` 的回跳目标必是外层循环入口
+        # ≠ C（本判据在其余 13 个面板文件上命中数见交付文档的 fire census）。
+        # 命中即就地建 LoopRegion(WHILE_LOOP, entry=header=condition=C,
+        # back_edge_block=B, body_blocks=[C, B])，块集合与原 IfRegion 完全相同
+        # （原则 2 不变），区域类型 WHILE_LOOP → ast.While 单射（生成器
+        # _generate_loop 已有 body_stmts 空 ⇒ Pass 的分支，故 emits `while C: pass`），
+        # 不新增区域类型、不新增 AST 节点类型、无跨级回补、不回溯修正已建区域。
+        if ((not else_blocks) and len(then_blocks) == 1 and block is not None
+                and all_condition_blocks == {block}):
+            _r26a_then = then_blocks[0]
+            _r26a_c_last = block.get_last_instruction()
+            _r26a_b_last = _r26a_then.get_last_instruction()
+            _r26a_bare = frozenset({'NOP', 'CACHE', 'RESUME', 'PUSH_NULL', 'EXTENDED_ARG'})
+            _r26a_back = frozenset({'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                    'JUMP_ABSOLUTE'})
+            if (_r26a_c_last is not None and merge is not None
+                    and _r26a_c_last.opname in ('POP_JUMP_FORWARD_IF_FALSE',
+                                                'POP_JUMP_IF_FALSE')
+                    and isinstance(_r26a_c_last.argval, int)
+                    and _r26a_c_last.argval == merge.start_offset
+                    and _r26a_b_last is not None
+                    and _r26a_b_last.opname in _r26a_back
+                    and isinstance(_r26a_b_last.argval, int)
+                    and _r26a_b_last.argval == block.start_offset
+                    and all(_r26a_i.opname in (_r26a_bare | _r26a_back)
+                            for _r26a_i in _r26a_then.instructions)
+                    and any(_r26a_i.opname in _r26a_back
+                            for _r26a_i in _r26a_then.instructions)):
+                _r26a_loop = LoopRegion(
+                    region_type=RegionType.WHILE_LOOP, entry=block,
+                    blocks=all_condition_blocks | {block, _r26a_then},
+                    header_block=block, back_edge_block=_r26a_then,
+                    is_while_true=False, has_break=False, else_is_follow=False)
+                _r26a_loop.body_blocks = sorted([block, _r26a_then],
+                                                key=lambda b: b.start_offset)
+                _r26a_loop.condition_block = block
+                _r26a_loop.else_blocks = []
+                _r26a_loop.init_blocks = []
+                _r26a_loop.back_edge_blocks = {_r26a_then}
+                _r26a_loop.break_blocks = []
+                _r26a_loop.continue_map = {}
+                _r26a_loop.condition_chain_blocks = []
+                _r26a_loop.condition_recheck_blocks = set()
+                _r26a_loop.metadata.update({
+                    'for_iter_setup': None, 'for_iter_exit': None,
+                    'for_iter_fall_through': None, 'natural_back_edge': _r26a_then,
+                    'has_break_in_body': False, 'break_blocks_precise': [],
+                    'exit_successors': None, 'is_degenerate_while': False})
+                return _r26a_loop
+
         region_type = RegionType.IF_THEN_ELSE if else_blocks else RegionType.IF_THEN
         all_blocks = all_condition_blocks | set(then_blocks) | set(else_blocks)
         # 主条件的 inline_boolop_chain 也存入 IF_THEN /
@@ -22367,6 +23307,47 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         _generate_if 中 _d2_has_non_if_trailing 守卫：orelse 含非 If 尾随节点
         时不展平为 elif，作为 else 块整体渲染。本方法遵循区域归约算法 4 核心原则:
         自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 入口引用语义。
+
+        ── [R3-B109 修复·elif 臂 or 链成员真边同一性核验] 六项（本票改动面）──
+        ①算法依据：No More Gotos §3「If/BoolOp 区域归约」——or 短路链的定义是
+          「全体成员的真边汇入同一个链体入口」；本方法内嵌 _check_elif_chain 的
+          elif 臂 or 链收集据此核验每个候选成员。违反面（rules.md §1.2 原则2/
+          原则4 + §1.5 C1）：负极性单臂 `if not A(): <臂体>` 的臂头 IF_TRUE 边是
+          「跳过臂体直达作用域续行块」的**出口边**，旧码先 append 后在两个分支里
+          一律 break（21677-21681 的核验结果被丢弃），链长按未核验的收集计，于是
+          把出口边折进 elif 条件（`not A` → `A or B`），臂体被无条件执行、终态汇合
+          块丢失臂前驱（order_api.base_order 终态块 preds [154,196] → [196]，
+          future_order/option_order 臂体 −16/−9 指令）。本分支是
+          `_compute_arm_level_join` 判据 (4)「箱数 = 1 ⇒ 拒绝」正确弃权之后链构造侧
+          必须对齐的另一侧（同一块两侧结论必须一致），并与主条件侧的同名核验
+          （`_identify_conditional_regions` 的 `_or_ft_fallthrough != _then_entry_offset`
+          断链，19232）对称——同一判据此前只在主条件侧被 honour。
+        ②归约顺序：自底向上，内层区域先归约。核验发生在 _check_elif_chain 为下
+          一条 elif 臂展开短路链时（该臂所属外层区域尚未建区、臂内子区域已在
+          self.regions 中），命中即在识别阶段定形：链不成立 → 不写
+          inline_boolop_chains、不改 inner_condition_block；无发射后回溯修正
+          （§1.3 单向数据流）。
+        ③唯一归属判定：链体入口 T := 臂头块块末跳转的操作数落点。候选成员只有
+          在其**真边**（IF_TRUE 族 = 跳转目标 / IF_FALSE 族 = 非跳转后继）恰为 T
+          时才是链成员（归本链、由 chain_blocks 唯一认领）；否则它是臂体内下一条
+          语句的条件测试块，归该臂的 then 体子区域。T 若同时被链外同层前向路径
+          汇入（臂体末尾落穿），它是父级兄弟序列的汇合块，不属本链（原则2）。
+        ④嵌套处理：核验只读块末 opcode 与两条后继的归属，不读深度/语句条数/
+          区域类型名/名字/绝对偏移；臂体内再嵌套 if/elif/while/try/with 时同一
+          判据逐层成立，嵌套区域仍作为抽象节点由 bodies 引用其入口，链不展开子
+          区域内部（原则3、C2）。由归纳（一层正确 + 组合封闭）得任意深度同判。
+        ⑤入口引用语义：核验通过 → `inline_boolop_chain = {'blocks': _or_chain,
+          'op': 'or'}`，inner_condition_block 引用链末块入口，AST 端
+          `_if_generate_elif_chain` 以 BoolOp(or, […]) 重建臂条件；核验不过 →
+          inner_condition_block 保持臂头块本身，臂以自身条件块入口引用，AST 端按
+          臂头 IF_TRUE 与 then/else 归属对该臂取反（`elif not A():`），T 由父级
+          序列作为兄弟语句发射（臂跳保留为「→T」的入口引用）。
+        ⑥反编译流程：region_analyzer._build_elif_region(_check_elif_chain) →
+          IfRegion.inline_boolop_chains（本形不写入）→ region_ast_generator
+          ._if_generate_elif_chain → code_generator 发射 → pyc 逐指令比对。
+        C 条款：C1 只读臂头块与链成员块的同层出边；C2 不窥视子区域内部；
+        C3 对「臂头真边落点非链体入口而是作用域续行块」显式拒绝认领。
+        零深度阈值、零计数上限、零名字/偏移/操作码字面量特判。
         """
         # When collecting inner elif branch blocks inside a loop, the loop's
         # boundary_stop (which includes break/return exit blocks and the loop header)
@@ -22872,6 +23853,29 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 if _te_non_conditional is not None:
                     return None
 
+            # [r12-t1221 elif-arm-entry-own-region] 臂候选必须是「只由本链头所属区域进入」的块。
+            # ①算法依据：No More Gotos 原则 2（每块唯一归属）+ 原则 4（父层只引用子区域入口）。
+            #   elif 臂的条件块在字节上只被上一条臂的假边进入；若候选还有来自链外区域的前驱，
+            #   它就是一条**后继语句**的测试块，不是臂。
+            # ②归约顺序：本判据在 _check_elif_chain 接受首个臂候选处生效，先于链的 blocks 汇总，
+            #   因此链的成员表从一开始就不含该语句块（实测被误收的 matcher @2164 一旦在删除侧
+            #   豁免，block_to_region 仍归链，区域活着却永不分派 —— 见 rounds/round12/DIAG_T1212 §9）。
+            # ③唯一归属判定：只读 header_ 与候选的 block_to_region 归属（既有表，识别期已填实，
+            #   实测 n_preds=6 非空），不用偏移/指令数/名字（rules.md §1.4 G4）。
+            # ④嵌套处理：递归层同样经过本判据；父层收到 None 时按既有路径把剩余块交 final_else。
+            # ⑤入口引用语义：拒绝后 @2164 保留其 IfRegion(entry=2164, merge=2464) 抽象节点，
+            #   父层按入口引用它，不展开内部块。
+            # ⑥反编译流程：IQEngine/plugins/plugin_system_matcher/matcher.pyc ::
+            #   DefaultMatcher.match 的 else 臂里 `if order.asset.symbol[:3] in ('688','689'):`
+            #   （头测试 10 指令，原判据未过时被 IF_ELIF_CHAIN@2038 吞成 elif，整条语句消失）。
+            # 控制实测（惰性探针 t1220，产物逐字节相同）：真 elif 1570/2038/2338/2846 的每条前驱
+            #   都归 header_ 的 BoolOpRegion，判据全过；@2164 的前驱含 LoopRegion@6 与兄弟
+            #   BoolOpRegion@1884，判据拒绝。
+            _r1221_howner = self.block_to_region.get(header_)
+            if _r1221_howner is not None:
+                for _r1221_p in (first_else.predecessors or []):
+                    if self.block_to_region.get(_r1221_p) is not _r1221_howner:
+                        return None
             conditions = [first_else]
             bodies = []
             final_else = []
@@ -22968,16 +23972,39 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                         _ft_last = _ft_next.get_last_instruction()
                         if _ft_last is None or _ft_last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
                             break
-                        _or_chain.append(_ft_next)
-                        _or_visited.add(_ft_next.start_offset)
+                        # [R3-B109 修复·elif 臂 or 链成员真边同一性核验] 成员资格先核验后入链：
+                        # or 短路链的全部成员，其「真边」必须汇入同一个链体入口 _or_body_block
+                        # （IF_TRUE 族成员 = 跳转目标，IF_FALSE 族成员 = 非跳转后继/落穿）。
+                        # 核验不过 ⇒ _ft_next 是**下一条语句的条件测试**（臂体首条件），不是
+                        # 本链的操作数：`if not A(): if B: X else: Y` 里 A 的真边是「跳过臂体直达
+                        # 作用域续行块」的出口边，与 B 的真边（→X）并不同 sink。旧码先 append
+                        # 再在两个分支里一律 break，核验结果被丢弃，于是把出口边折进链条件
+                        # （`not A` → `A or B`），臂体两臂无条件执行、终态汇合块丢臂前驱
+                        # （order_api.future_order/option_order −16/−9 指令）。判据只读块末
+                        # opcode 与后继归属，零名字/偏移/计数特判。
                         if 'IF_FALSE' in _ft_last.opname:
                             _or_ft = next((s for s in _ft_next.conditional_successors if s.start_offset != _ft_last.argval), None)
-                            if _or_ft is not None and _or_ft == _or_body_block:
+                            if _or_ft is None or _or_ft.start_offset != _or_body_block.start_offset:
                                 break
-                            else:
-                                break
+                            _or_chain.append(_ft_next)
+                            _or_visited.add(_ft_next.start_offset)
+                            break
+                        if _ft_last.argval != _or_body_block.start_offset:
+                            break
+                        _or_chain.append(_ft_next)
+                        _or_visited.add(_ft_next.start_offset)
                         _or_current = _ft_next
                     if len(_or_chain) >= 2:
+                        # [R3-B109 修复·elif 臂 or 链成员真边同一性核验] 只有上一步逐成员核验
+                        # 通过的块集才是 or 短路链：全体成员的真边汇入同一个链体入口
+                        # _or_body_block。核验不过 ⇒ 臂头 IF_TRUE 的那条边是**跳过臂体直达作用域
+                        # 续行块**的出口边（`if not A(): <臂体>`；该续行块同时被臂体末尾落穿汇入，
+                        # 实测 order_api.base_order 终态块 preds=[154,196]），不是链成员真边，
+                        # 于是整链弃权：inner_condition_block 保持臂头块本身，inline_boolop_chain
+                        # 不记录，臂以 `elif not A():` 的单臂条件入链、终态汇合块归还父级兄弟序列
+                        # （原则2 每块唯一归属 / 原则4 入口引用语义 / C1 局部消费）。
+                        # 旧码在 21677-21681 处已写出同一判据，却先 append 后在两个分支里一律
+                        # break，核验结果被丢弃，链长按未核验的收集计。
                         inner_condition_block = _or_chain[-1]
                         inline_boolop_chain = {'blocks': _or_chain, 'op': 'or'}
             inner_cond_succs = list(inner_condition_block.conditional_successors)
@@ -23321,6 +24348,27 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                                         'RAISE_VARARGS', 'RERAISE'))
                 if not _d2_terminal:
                     return None
+                # [r20u T20-9 判据 · 终态豁免的反例：then 臂越过 inner_merge 落到 merge_]
+                # 判据⑤ 把 inner_merge 的终态（RETURN/RAISE/RERAISE）当作「整条 if 的共享
+                # 退出」而放行 elif 展平。共享退出成立的前提是【then 臂也汇聚到 inner_merge】。
+                # 若 then 臂自身的末指令是一条前向跳转且落点正是外层合并点 merge_，而 merge_
+                # 排在 inner_merge 之后（then 臂【越过】inner_merge），则 inner_merge 位于 else
+                # 臂内部，是 else 臂里那个嵌套 if 自己的汇合点，其后紧跟的终态块是 else 臂的
+                # 尾随语句，不是本 if 的共享退出（get_tick_direction：then 臂 @942
+                # JUMP_FORWARD->1106=merge_，inner_merge=1102 即 `return redata`，嵌套链的
+                # @956/@1024/@1036 三臂皆汇于 1102）。此时与判据①②③⑤ 同构地弃权：调用方按
+                # IF_THEN_ELSE 建区，嵌套 if 作子 IfRegion、终态块留作 else 臂兄弟节点
+                # （原则 2 每块唯一归属 / 原则 3 嵌套即抽象节点）。取材面仅为本区域自身的
+                # then_blocks 末指令类别与跳转落点、inner_merge/merge_ 偏移序；不读兄弟区域
+                # 成员、不读名字/常量、无跨级回补。
+                if (_d2_terminal and inner_merge.start_offset < merge_.start_offset):
+                    for _t9_tb in then_blocks:
+                        _t9_last = _t9_tb.get_last_instruction()
+                        if (_t9_last is not None
+                                and _t9_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                and _t9_last.argval is not None
+                                and _t9_last.argval == merge_.start_offset):
+                            return None
             # [R48-C 同层谓词 · 链汇合的前驱侧对偶] 区域归约算法原则 1（块 = 前导
             # 语句 + 恰好一个终结子）＋原则 2（每块唯一归属且归属者必须发射）：
             # inner_merge 是 first_else 两臂的声称汇合块，故 first_else 的 then 臂
@@ -23528,6 +24576,70 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         elif_info = _check_elif_chain(block, else_blocks, merge)
         if elif_info is None:
             return None
+        # [r24b FIX_R21-6 判据 · merge=None 链的臂间汇合点不一致 ⇒ 弃权 elif 展平]
+        # 区域归约算法原则 1（块 = 前导语句 + 恰好一个终结子）＋ No More Gotos §3
+        # （If 区域归约）＋原则 2（每块唯一归属）：一条【扁平】elif 链的所有非终态臂
+        # 必然汇合于【同一个】出口块——CPython 把 if/elif/…/else 的每个臂末都跳向链的
+        # 唯一出口。当 post-dominator 因某臂以 RETURN/RAISE 终结而把 merge 判为 None 时，
+        # 若本区域自身的各臂末指令跳出本区域后落在【两个不同】的块上，则这些臂压根没有
+        # 共同汇合点，扁平链解释不成立：落在较早目标 T_early 上的臂其实属于一个更晚才
+        # 结束的嵌套子链（T_early 是该子链自己的汇合点，其后还跟着子链所在 else 侧的
+        # 尾随语句），而落在较晚目标 T_late 上的臂才是跳过了整个嵌套结构。强行展平会把
+        # T_early 及其尾随语句剔出本区域（原则 2 被破坏），尾随语句被外提为链的兄弟语句，
+        # 先前臂的臂末 JUMP_FORWARD 落点便从链出口 T_late 退化为被外提语句的入口 T_early
+        # （rzrq_credit_order：臂末 @2368 JUMP_FORWARD 应落 @2534，实际落 @2506）。
+        # 判据（三条全满足才弃权；取材面仅为本区域自身的 conditions/bodies/final_else/
+        # then_blocks 块表与其末指令的 opname/argval，不读兄弟区域、不读名字与常量、
+        # 不读绝对偏移、不依赖区域处理顺序）：
+        #   ① merge is None（汇合声明确实缺失，不是回补既有声明）；
+        #   ② 某臂以 RETURN_VALUE/RETURN_CONST/RAISE_VARARGS/RERAISE 终结——这正是
+        #      post-dominator 求不出汇合点的原因，也是它与「臂末回跳（JUMP_BACKWARD）
+        #      的循环内链」的区别；
+        #   ③ 至少两个臂各自以【前向】跳转离开本区域的结构块集，且这些落点不全相同
+        #      ⇒ 不存在单一汇合点（etf_basket_order 链@484 只有一个离开落点 {568} 且无
+        #      终态臂，klinedata get_kline_by_count_new 链@0 的臂末全部回跳，均不触发）。
+        # 返回 None 后调用方走既有的 _build_basic_if_region 回退按 IF_THEN_ELSE 建区：
+        # 嵌套子链保持为其自身的 IfRegion 抽象节点（原则 3），其汇合块与尾随语句留在
+        # else 侧体内，不新增区域类型、不新增 AST 节点类型、无跨级回补。
+        if merge is None:
+            _r24b_own = set()
+            if block is not None:
+                _r24b_own.add(block.start_offset)
+            for _r24b_coll in (then_blocks, elif_info.get("conditions", []),
+                               elif_info.get("final_else", [])):
+                for _r24b_b in (_r24b_coll or []):
+                    _r24b_own.add(_r24b_b.start_offset)
+            for _r24b_body in (elif_info.get("bodies") or []):
+                for _r24b_b in _r24b_body:
+                    _r24b_own.add(_r24b_b.start_offset)
+            _r24b_arms = [list(then_blocks or [])]
+            _r24b_arms.extend(list(_r24b_bd) for _r24b_bd in (elif_info.get("bodies") or []))
+            if elif_info.get("final_else"):
+                _r24b_arms.append(list(elif_info["final_else"]))
+            _r24b_has_sink = False
+            _r24b_exit_sets = []
+            for _r24b_arm in _r24b_arms:
+                _r24b_exits = set()
+                for _r24b_b in _r24b_arm:
+                    _r24b_li = _r24b_b.get_last_instruction()
+                    if _r24b_li is None:
+                        continue
+                    if _r24b_li.opname in ('RETURN_VALUE', 'RETURN_CONST',
+                                            'RAISE_VARARGS', 'RERAISE'):
+                        _r24b_has_sink = True
+                        continue
+                    if (_r24b_li.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                            or _r24b_li.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                        _r24b_t = (_r24b_li.argval
+                                   if isinstance(_r24b_li.argval, int) else None)
+                        if _r24b_t is not None and _r24b_t not in _r24b_own:
+                            _r24b_exits.add(_r24b_t)
+                if _r24b_exits:
+                    _r24b_exit_sets.append(_r24b_exits)
+            if (_r24b_has_sink and len(_r24b_exit_sets) >= 2
+                    and any(_r24b_s != _r24b_exit_sets[0] for _r24b_s in _r24b_exit_sets)):
+                return None
+
         # 区域归约算法原则 2（每块唯一归属）：当 merge=None 时，
         # _collect_branch_blocks 会过度收集 else_blocks，把 if-elif 结构之后
         # 的 post-if 块（如两分支都 sink 后的 `return X`）也纳入。这些块不
@@ -24099,6 +25211,56 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             return 'not in' if instr.arg else 'in'
         return None
 
+    def _r2155_diamond_join_from_value_blocks(self, true_block, false_block):
+        """[R21-55] 结构判据：值钻石（三元表达式的两条臂）的汇合块由「显式无条件跳转 +
+        前驱唯一」确定，而不是由后支配树确定。
+
+        结构事实（只读本块/邻块的 opcode 类与前驱后继，不读函数名、绝对偏移、计数器、
+        跨区域/跨层次信息）：
+          ① true_block 末指令是无条件前跳（JUMP_FORWARD / JUMP_ABSOLUTE），目标块 J；
+          ② J 同时是 false_block 的后继（false 臂顺序落合到 J）；
+          ③ false_block 末指令不是条件/短路跳转，即 false 臂是值块而非另一条语句级分支；
+          ④ J 不是异常入口块（首指令非 PUSH_EXC_INFO / WITH_EXCEPT_START）；
+          ⑤ J 的前驱集合恰为 {true_block, false_block}，即 J 不被任何其他正常控制流进入。
+
+        为什么是「可证」而非「偏好」：调用方在进入本判据前已用 _is_ternary_block 校验两臂
+        均为单值块，①②⑤ 说明 J 只可能在这两条臂之后出现，且每条臂各带恰好一个栈上值进入
+        J——因此 J 就是该三元值的唯一消费点。异常边（try 范围内每个块都挂一条指向 handler
+        的边）为两臂各自引入一条绕过 J 的路径，使 find_nearest_common_post_dominator 返回
+        None；异常边不是正常完成路径，不改变「正常完成必到 J」这一结构事实。
+
+        保守性：任一条不成立即返回 None ⇒ 调用方保持 [R47 消费点守卫] 的原判决（拒绝创建
+        该 TernaryRegion），产物逐字节不变。①③ 各自独立排除语句级 if/else（臂以条件跳转
+        结尾）——实测同文件 market_fund_transfer:@126 即被 ①③ 双重复否。
+        本方法无副作用，可被探针包裹做点名数派并证惯性。
+        """
+        _JUMP_FWD = ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+        _COND_TAIL = FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
+        _EXC_ENTRY = ('PUSH_EXC_INFO', 'WITH_EXCEPT_START')
+        _t_last = true_block.get_last_instruction()
+        if _t_last is None or not isinstance(_t_last.argval, int):
+            return None
+        if _t_last.opname not in _JUMP_FWD:
+            return None
+        _join = self.cfg.get_block_by_offset(_t_last.argval)
+        if _join is None or _join is true_block or _join is false_block:
+            return None
+        if _join not in list(false_block.successors or []):
+            return None
+        _f_last = false_block.get_last_instruction()
+        if _f_last is not None and _f_last.opname in _COND_TAIL:
+            return None
+        _j_first = _join.get_first_instruction()
+        if _j_first is not None and _j_first.opname in _EXC_ENTRY:
+            return None
+        _preds = [p for p in (_join.predecessors or []) if p is not None]
+        if len(_preds) != 2:
+            return None
+        if set(id(p) for p in _preds) != {id(true_block), id(false_block)}:
+            return None
+        return _join
+
+
     def _identify_ternary_regions(self, loop_regions: List[Region],
                                    try_regions: List[Region],
                                    with_regions: List[Region],
@@ -24286,7 +25448,32 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 # C2：真 ternary 条件恒以条件跳转收尾，不被本守卫命中；守卫未命中
                 #     时逐位维持既有 ternary 认领行为，BoolOp 与 ternary 各自独立保真；
                 # C3：守卫封闭 ternary 认领域，令值位 BoolOp 链步块唯一归 BoolOpRegion。
-                return False
+                # [B99 fix] 收窄（合并 v3 后必要）：本守卫的两条前提都写在 v2 原注释里
+                # （「值上下文 BoolOp 链步块」），原实现只读了「短路跳转收尾 + BoolOpRegion 成员」
+                # 两个事实，缺「值上下文」与「链步块（非链式比较链头）」两条，故在合并后覆盖面过宽。
+                # 实测（合并字节 + v3 blanket→released 调和后）：
+                #   守卫关闭 ⇒ matcher::DefaultMatcher.match 17/17，但 nb_b99
+                #   （for 体内 `return self.a or self.b`）4/4→3/4 ⇒ 守卫承重，只能收窄不可删除；
+                #   仅加「值上下文」一条 ⇒ matcher 仍 16/17，未翻正；
+                #   再加「非链式比较链头」一条 ⇒ matcher 与 nb_b99 同时保真。
+                # 上下文标志取本区域自身声明的事实，口径与同文件 [B99 残]/[Phase 7] 一致
+                # （`not getattr(region, 'is_condition_context', True)`）；链头判据复用既有
+                # _is_chained_compare_header（块内指令对）。两条判据均为同层结构事实（C1/C2/C3 不变）。
+                _b99_block_in_value_boolop = (
+                    any(isinstance(_r2, BoolOpRegion)
+                        and not getattr(_r2, 'is_condition_context', True)
+                        and block in (_r2.blocks or [])
+                        for _r2 in self.regions)
+                    # [Round4-04] 同一条款记录：值上下文链式比较的链头（本块含
+                    # COPY(2)+COMPARE_OP 对，如 ``is_first_five_trading_days = a <= b <= c``）
+                    # 末尾正是 JUMP_IF_FALSE_OR_POP，会被 _identify_boolop_regions 一并登记进
+                    # 值上下文 BoolOpRegion；它的归属是宿主语句的值上下文链式比较路径，不是
+                    # BoolOp 链步块，故本守卫对链头不生效（实测生效即吞掉 matcher::
+                    # DefaultMatcher.match 的 ``if symbol[:3]=='300' and ...`` 整条语句，
+                    # 17->16）。判据复用既有 _is_chained_compare_header（块内指令对，C1 同层事实）。
+                    and not self._is_chained_compare_header(block))
+                if _b99_block_in_value_boolop:
+                    return False
             if block not in self.block_to_region:
                 # 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
                 # 当 if 头块的【恰好一个】直接后继是 AssertRegion.entry（assert 条件块，
@@ -26007,6 +27194,22 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                                 and any(i.opname == 'RAISE_VARARGS' for i in _eff)):
                             merge_block = _t_ft
 
+            # [R21-55] 汇合块由值钻石的显式跳转与前驱唯一性恢复，取代「只有后支配树
+            # 才能给出 merge」这一前提：try 范围内的异常边使 find_nearest_common_post_
+            # dominator 返回 None，[R47 消费点守卫] 随即整体拒绝该三元候选，区域交给
+            # IfRegion 按语句级归约——IfRegion 只能表示语句级 if，于是把宿主语句（一条
+            # f-string/format 调用）连同两个常量臂一起丢成空臂（实测 _process_order 的
+            # 14 个窗口 / -68 条指令全部由此产生）。判据与可证性见
+            # _r2155_diamond_join_from_value_blocks；任一条不成立即保持 [R47] 原判决。
+            # 挂载点必须在 value_target / merge_context 扫描之前：区域一旦补齐，其后
+            # merge_context 判定与 all_blocks.add(merge_block) 都要看到同一个汇合块
+            # （依「每块唯一归属」，汇合块归属本三元区域）。
+            if merge_block is None:
+                _r2155_join = self._r2155_diamond_join_from_value_blocks(
+                    true_block, false_block)
+                if _r2155_join is not None:
+                    merge_block = _r2155_join
+
             value_target = None
             merge_context = None  # 新增: 记录merge块的上下文类型
             # Cross-block consumer instruction blocks.
@@ -27293,6 +28496,23 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                   经 block_to_region 归属表显式校验：仅允许未认领/本循环
                   condition_block 惯例/待超越残链三类，[C3]）。
           Step 6: 后处理优化——尝试扩展 boolop 区域以包含值块（value block）。
+          Step 4c: [R6-B111 armscope]「循环条件前缀剥链」步的归属门
+                  （`_boolop_member_is_loop_condition_entry`，本方法内唯一消费点）。
+                  ①算法依据：链成员被改判为某循环的条件前缀，其身份证据只能是
+                  该块正是该 LoopRegion 的 condition_block 角色块；从 condition_block
+                  沿「前驱以 POP_JUMP_*_IF_* 结尾」反向可达不构成归属。
+                  ②归约顺序：位于 Step 4 建区之后、Step 5 循环条件装配之前，只决定
+                  已建链是否被剥去前缀，不新建区域。
+                  ③唯一归属判定：门放行即成员仍由原 BoolOpRegion 唯一认领；门拦截
+                  时不得把它改投循环（否则外层 if 臂条件被双重认领，实测
+                  quote_handler.get_kline_local 的 344/382 即此形态）。
+                  ④嵌套处理：按对象同一性裁决，与循环/if 嵌套层数无关。
+                  ⑤入口引用语义：拦截后链的每条出口边都在链内取得落点，臂出口不必
+                  在函数尾另造 `LOAD_CONST None; RETURN_VALUE`（B111 的 +2 凭空 sink）。
+                  ⑥反编译流程：拦截 → 发射单条 `if A and B or C1 and C2:`，边归属
+                  复原；放行 → 原剥链行为逐位不变。
+                  C1 只读该循环角色字段与该块对象；C2 对外只交付布尔裁决；
+                  C3 该步是本判据的唯一消费点，无旁路、不补写任何语句。
 
         **归约顺序**
         Phase 2 的高层表达式级区域（analyze() 中显式调用顺序：
@@ -27576,7 +28796,11 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                                     _cq.append(_cp)
                     _found = False
                     for _cb, _ in br.op_chain[:-1]:
-                        if _cb.start_offset in _cond_chain_offsets and _cb not in _lr.blocks:
+                        # [R6-B111 armscope] 只有该成员正是本循环的 condition_block
+                        # 角色块时，它才是循环条件前缀；仅「反向可达」不构成归属。
+                        if (_cb.start_offset in _cond_chain_offsets
+                                and _cb not in _lr.blocks
+                                and self._boolop_member_is_loop_condition_entry(_cb, _lr)):
                             _found = True
                             break
                     if _found:
@@ -27754,6 +28978,9 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                     region.add_child(boolop_region)
                     boolop_regions.append(boolop_region)
                     region.is_while_true = False
+                    if self._r2164_duplicated_test_predicate(region):
+                        self._r2164_purge_latch_legs(region, boolop_region)
+                        continue
                     _rv2 = set()
                     _rq2 = [region.header_block]
                     _rvis2 = set()
@@ -27962,6 +29189,9 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
            [C2] 单 BoolOpRegion 黑箱组合 / [C3] 所有权显式守卫）。
         """
         BOOLOP_CHAIN_JUMPS = FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
+        _dup_chain = self._detect_duplicated_while_test_chain(cond_block, loop)
+        if _dup_chain and len(_dup_chain) >= 2:
+            return _dup_chain
         forward_chain = self._detect_while_boolop_forward_chain(cond_block, loop, BOOLOP_CHAIN_JUMPS)
         if forward_chain and len(forward_chain) >= 2:
             return forward_chain
@@ -28815,6 +30045,237 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             return None
         return and_members + or_members
 
+    def _r2164_duplicated_test_predicate(self, loop: 'LoopRegion') -> bool:
+        """[R21-64] Predicate P: a while whose test CPython duplicated. True iff loop
+        header receives (a) a FORWARD conditional jump from a block outside loop.blocks
+        (entry-copy leg) AND (b) a BACKWARD conditional jump from a block inside
+        loop.body_blocks (latch-copy leg). Read off CFG block data only: terminator
+        opcode class, conditional_successors membership, region block/body membership.
+        No names, no offsets, no counters, no thresholds."""
+        hdr = loop.header_block
+        if hdr is None or loop.condition_block is None:
+            return False
+        own = {b.start_offset for b in (loop.blocks or ())}
+        body = {b.start_offset for b in (loop.body_blocks or ())}
+        fwd_out = False
+        bwd_in = False
+        for b in self.cfg.get_blocks_in_order():
+            li = b.get_last_instruction()
+            if not li or li.argval is None or hdr not in b.conditional_successors:
+                continue
+            if li.opname in FORWARD_CONDITIONAL_JUMP_OPS and b.start_offset not in own:
+                fwd_out = True
+            elif li.opname in BACKWARD_CONDITIONAL_JUMP_OPS and b.start_offset in body:
+                bwd_in = True
+            if fwd_out and bwd_in:
+                break
+        return fwd_out and bwd_in
+
+    def _r2164_purge_latch_legs(self, loop: 'LoopRegion',
+                                boolop_region: 'BoolOpRegion') -> None:
+        """[R21-64 Half 2] A duplicated while test's LATCH copy is the mirror of the
+        ENTRY copy already folded into boolop_region.op_chain. Its legs live inside
+        loop.body_blocks and would otherwise be emitted as body statements. Remove them
+        from the body sequence at identification time. Proof of sameness, not preference:
+        a body block is a latch leg iff it carries no STORE and either
+          (a) it ends in a conditional jump (forward or backward) and its loaded names are
+              a non-empty subset of the assembled condition's loaded names — the same test
+              recomputed at the back edge; or
+          (b) it holds no load/store/call of its own (pure jump / noise), i.e. the latch
+              chain's exit stub.
+        The body-start header is never a leg: it also carries the loop body's real
+        statement, so its loads are not a subset of the condition's. Regions consisting
+        solely of purged legs are deregistered (每块唯一归属). Read only block opcode
+        classes, conditional successors and region membership — no names/offsets/counts.
+        """
+        hdr = loop.header_block
+        cond_vars = set()
+        for cb, _ in (getattr(boolop_region, 'op_chain', None) or []):
+            for i in cb.instructions:
+                if i.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF') and i.argval:
+                    cond_vars.add(i.argval)
+        LOAD_OPS = ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF')
+        STORE_OPS = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                     'STORE_ATTR', 'STORE_SUBSCR')
+        JUMP_OPS = ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD', 'NOP')
+        to_purge = []
+        for b in list(loop.body_blocks or []):
+            if b is hdr:
+                continue
+            li = b.get_last_instruction()
+            eff = [i for i in b.instructions if i.opname not in NOISE_OPS]
+            loads = {i.argval for i in eff if i.opname in LOAD_OPS and i.argval}
+            has_store = any(i.opname in STORE_OPS for i in eff)
+            if has_store:
+                continue
+            is_leg = (li is not None
+                      and li.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS)
+                      and bool(loads) and loads <= cond_vars)
+            is_stub = (not loads
+                       and all(i.opname in NOISE_OPS or i.opname in JUMP_OPS for i in eff))
+            if is_leg or is_stub:
+                to_purge.append(b)
+        if not to_purge:
+            return None
+        purge_set = set(to_purge)
+        for b in to_purge:
+            loop.body_blocks = [x for x in (loop.body_blocks or []) if x is not b]
+            try:
+                loop.blocks.discard(b)
+            except Exception:
+                pass
+            # re-claim the latch leg under the condition BoolOpRegion (the latch copy IS
+            # the condition's duplicate), so no ancestor loop emits it as a statement.
+            boolop_region.blocks.add(b)
+            self.block_to_region[b] = boolop_region
+        # deregister regions wholly made of purged latch blocks
+        wholly = []
+        for r in list(self.regions):
+            if r is loop or r is boolop_region:
+                continue
+            blks = set(getattr(r, 'blocks', None) or ())
+            if blks and blks <= purge_set:
+                wholly.append(r)
+        for r in wholly:
+            if r in self.regions:
+                self.regions.remove(r)
+            for b in set(getattr(r, 'blocks', None) or ()):
+                if self.block_to_region.get(b) is r:
+                    del self.block_to_region[b]
+            parent = getattr(r, 'parent', None)
+            if parent is not None and r in (parent.children or []):
+                parent.children.remove(r)
+        return None
+
+
+    def _detect_duplicated_while_test_chain(self, cond_block: BasicBlock,
+                                            loop: 'LoopRegion') -> Optional[List[Tuple[BasicBlock, str]]]:
+        """[R21-64] CPython 3.11 lays a `while <BoolOp>:` test out TWICE: an entry copy
+        above the body whose legs jump FORWARD to the body-start header, and a latch copy
+        below the body whose legs jump BACKWARD to that same header. Assemble the single
+        mixed `or`-head + `and`-tail condition chain [(or-leg,'or')..., (and-leg,'and')...]
+        for such a duplicated test, or None.
+
+        [识别条件 P] loop header 同时收到 (a) 一条来自 loop 自身块集之外的**正向**条件跳转
+        （entry-copy 腿，真出口=header）与 (b) 一条来自 loop body_blocks 之内的**反向**条件
+        跳转（latch-copy 腿）。二者齐备 ⇒ 该 while 的短路测试被复制。
+        [归约方式] 自 cond_block 沿 fall-through 收集全部「正向条件跳转目标==header」的腿
+        （or 头，≥2，均以真边进体）；随后自末条 or 腿的 fall-through 进入合取尾，逐腿收集
+        「正向条件跳转目标==循环出口」的腿（and 尾），出口一致性依 [R21-13] 同一事实双向
+        证明：各尾腿出口两两经纯跳转块等价（_is_equivalent_exit_block），且落在 body/own 之外；
+        当某尾腿的 fall-through（可经若干纯跳转块）抵达 header（真路径入体）即闭合。
+        合法性由结构事实决定而非归属：仅吸收「不在 body_blocks 且正向条件跳转目标恰为
+        header（or 头）或等价循环出口（and 尾）」的腿；吸收跳到他处的腿会把测试移出循环，
+        禁止——这正是 conjunctive 尾必须走出口一致判据、or 头必须走 header 判据的原因。
+        [C1] 只读块末 opcode 族 / conditional_successors / block_to_region 归属 / body_blocks /
+        header 与循环出口的等价关系；零名字、零常量、零偏移阈值、零计数器、跨层仅用 header
+        身份与 body 成员关系。
+        [C2] P 不成立或任一结构闭合校验失败即返回 None，调用方回退既有 walk，行为逐字节不变。
+        [C3] 无状态、无副作用、单出口。
+        """
+        hdr = loop.header_block
+        if hdr is None or cond_block is None:
+            return None
+        own = {b.start_offset for b in (loop.blocks or ())}
+        body = {b.start_offset for b in (loop.body_blocks or ())}
+        if not self._r2164_duplicated_test_predicate(loop):
+            return None
+
+        def _fallthrough(b, jt_off):
+            for s in b.conditional_successors:
+                if s.start_offset != jt_off:
+                    return s
+            return None
+
+        def _reaches(src, target):
+            # 沿单后继的纯跳转/噪声块上溯，判断 src 是否抵达 target。
+            seen = set()
+            stack = [src]
+            while stack:
+                cur = stack.pop()
+                if cur is target:
+                    return True
+                if cur is None or id(cur) in seen:
+                    continue
+                seen.add(id(cur))
+                succs = list(cur.successors)
+                if len(succs) != 1:
+                    continue
+                nxt = succs[0]
+                if nxt is target:
+                    return True
+                eff = [i for i in nxt.instructions if i.opname not in NOISE_OPS]
+                if eff and not all(i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD')
+                                   for i in eff):
+                    continue
+                stack.append(nxt)
+            return False
+
+        # ── or 头：自 cond_block 收「正向条件跳转目标==header」的连续腿 ──
+        or_head: List[Tuple[BasicBlock, str]] = []
+        visited = set()
+        cur = cond_block
+        tail_entry = None
+        while cur is not None and cur.start_offset not in visited:
+            li = cur.get_last_instruction()
+            if (not li or li.argval is None
+                    or li.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+                return None
+            if self.cfg.get_block_by_offset(li.argval) is not hdr:
+                break  # 离开 or 头，进入合取尾
+            if 'TRUE' not in li.opname:
+                return None  # or 腿必须真边进体（目标=header）
+            or_head.append((cur, 'or'))
+            visited.add(cur.start_offset)
+            succs = list(cur.conditional_successors)
+            if len(succs) != 2:
+                return None
+            ft = _fallthrough(cur, li.argval)
+            if ft is None or ft.start_offset in visited or ft.start_offset in body:
+                tail_entry = None
+                break
+            tail_entry = ft
+            cur = ft
+        if len(or_head) < 2 or tail_entry is None:
+            return None
+        # ── and 尾：合取腿正向条件跳转目标==循环出口，出口两两等价，真路径入体闭合 ──
+        and_tail: List[Tuple[BasicBlock, str]] = []
+        cur = tail_entry
+        exit_ref = None
+        while cur is not None and cur.start_offset not in visited:
+            if cur.start_offset in body or cur.start_offset == hdr.start_offset:
+                return None
+            li = cur.get_last_instruction()
+            if (not li or li.argval is None
+                    or li.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+                return None
+            tgt = self.cfg.get_block_by_offset(li.argval)
+            if tgt is None or tgt is hdr:
+                return None
+            if tgt.start_offset in own or tgt is loop.condition_block:
+                return None
+            if exit_ref is None:
+                exit_ref = tgt
+            elif not self._is_equivalent_exit_block(tgt, exit_ref):
+                return None
+            and_tail.append((cur, 'and'))
+            visited.add(cur.start_offset)
+            succs = list(cur.conditional_successors)
+            if len(succs) != 2:
+                return None
+            ft = _fallthrough(cur, li.argval)
+            if ft is None or ft.start_offset in visited:
+                return None
+            if _reaches(ft, hdr):
+                break  # 真路径入体，合取尾闭合
+            if ft.start_offset in body:
+                return None
+            cur = ft
+        if not and_tail:
+            return None
+        return or_head + and_tail
+
+
     def _detect_while_boolop_forward_chain(self, cond_block: BasicBlock, loop: LoopRegion, BOOLOP_CHAIN_JUMPS) -> Optional[List[Tuple[BasicBlock, str]]]:
         chain: List[Tuple[BasicBlock, str]] = []
         last = cond_block.get_last_instruction()
@@ -29294,7 +30755,244 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             fixed_chain.append((block, op_type))
         return fixed_chain
 
+    def _boolop_chain_exits_are_distinct_sinks(self, chain: List[Tuple[BasicBlock, str]]) -> bool:
+        """[R4-B116 sinkexit] 短路链出口是否为「≥2 个互不相同的终结隐式 return None 块」。
+
+        ①算法依据：CPython 3.11 的短路 BoolOp 在语句条件上下文中，全部操作数的
+        短路跳转汇入**同一个** merge/exit 标签；而「逐语句嵌套 if」为每个未覆盖的
+        出口各建一个块。块优化器不会把尾部相邻的两个 `LOAD_CONST None; RETURN_VALUE`
+        合并（b01/b03 实测同一份字节）。因此「链成员的短路目标落在 ≥2 个互不相同、
+        无后继、且以隐式 return None 收尾的块上」时，该结构在字节层面只能由
+        每个出口各自持有一个 return None 块的嵌套区域表达——单个 BoolOp 表达式区域
+        只有一个 merge，无法为第二条出口发射第二个 sink 块（B116 的 −2 即此）。
+        判据只读块末指令 opcode、后继集与隐式 return None 尾部（区域归约算法
+        允许的块级事实），不含任何名字/偏移/深度/宿主类型门控。
+        ②归约顺序：BoolOp 在 Conditional（IfRegion）之前识别，本判据是
+        `_create_boolop_region_from_chain` 创建前的最后一道不变量门（与 R38 操作数
+        纯度门同位）；返回 True 时链不建 BoolOpRegion，链成员块保持未认领，
+        由随后的 IfRegion 检测按语句级结构逐层认领。
+        ③唯一归属判定：折叠会令 off122 型第二出口掉成 `parent=None` 的孤儿 BASIC
+        区域（原则2 被破坏）；拒绝折叠后每个 sink 块由其所属内层 IfRegion 唯一认领，
+        每个出口块恰好一个 owning region。
+        ④嵌套处理：判据成立即承认「嵌套即抽象节点」（原则3）——外层 IfRegion 的
+        then 块是内层 IfRegion 的入口块，而非外层 BoolOpRegion 的操作数块。
+        ⑤入口引用语义：拒绝折叠后条件由外层 IfRegion 以自身入口块引用，内层 if
+        以其入口块引用（原则4）；链成员不再共享一个被改投的 merge 入口。
+        ⑥反编译流程：True → `_identify_boolop_regions` 该 walk 不产区域 →
+        IfRegion 建嵌套两臂 → generator 发射 `if A:` / `if not B:` 两层，
+        两对 None-return sink 各自发射，指令数复原。
+        C1 局部消费：只读被裁决链自身的成员块与它们的跳转目标块，不查全局状态。
+        C2 黑箱组合：判据不区分 and/or/mixed，也不假设链长度，仅按链成员目标集判定。
+        C3 守卫封闭：判定与拒绝同在 `_create_boolop_region_from_chain` 一处生效，
+        该方法是 BoolOpRegion 的唯一创建点，无旁路。
+        """
+        if len(chain) < 2:
+            return False
+        _BOOLOP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+        _targets: List[BasicBlock] = []
+        for _cb, _op in chain:
+            _cb_li = _cb.get_last_instruction()
+            if (_cb_li is None
+                    or getattr(_cb_li, 'argval', None) is None
+                    or _cb_li.opname not in _BOOLOP_JUMP_OPS):
+                return False
+            _tb = self.cfg.get_block_by_offset(_cb_li.argval)
+            if _tb is None:
+                return False
+            if not any(_tb is _d for _d in _targets):
+                _targets.append(_tb)
+        if len(_targets) < 2:
+            return False
+        for _d in _targets:
+            if list(_d.successors):
+                return False
+            if not self._check_block_has_trailing_return_none(_d):
+                return False
+        return True
+
+    def _boolop_member_is_loop_condition_entry(self, member: Optional[BasicBlock],
+                                               loop: Optional[LoopRegion]) -> bool:
+        """[R6-B111 armscope] 短路链成员可否被改判为「某循环的条件前缀」的唯一归属判据。
+
+        ①算法依据：区域归约算法原则 2（每块唯一归属）+ 原则 4（父只经入口引用
+        子）。`while A and B or C:` 的字节形态是「条件表达式链在循环体入口处结束」，
+        链成员被循环条件占用的**唯一身份证据**是该块本身就是该 LoopRegion 的
+        condition_block 角色块——角色块由建区步按循环入口/出口边选定，是区域对
+        「谁持有这条边」的正式裁决。反之，从 condition_block 出发沿「前驱以
+        POP_JUMP_*_IF_* 结尾」反向可达，只说明该块有一条边**通向**条件链，不说明
+        它归属该循环：一条 if 语句的短路链（`if A and B or C:`）后面只要出现任何
+        循环，其成员都会因这条反向可达性被误认为循环条件前缀。实测
+        quote_handler.get_kline_local：外层 if@344 的链成员 344/382 与循环
+        LoopRegion@710/1070/1430/1790/2150 的可达集相交（5 个循环全部命中），
+        于是主扫描装配好的 4 元链 [344 and, 382 or, 420 and, 458 and] 被剥掉首
+        成员，重建为残链 [382,420,458]；生成端只能把 344 作为**外层 if 的条件**
+        发射，而该 if 的臂出口（A 假边在原字节里落回链内 420）在源码里没有落点，
+        只能落到作用域尾 ⇒ 重编译在函数尾凭空生成 `LOAD_CONST None;
+        RETURN_VALUE`（+2 指令，off3534）并使终态 `return <expr>` 块少一条汇入边。
+        判据只读块身份（是否与角色块同一对象）与区域成员关系，无名字/偏移/深度/
+        计数门控，不区分 and/or/mixed 与链长度。
+        ②归约顺序：在 `_identify_boolop_regions` 的「循环条件前缀剥链」步被消费，
+        位置在主扫描建区**之后**、区域集合交还 IfRegion 检测**之前**，故它只能
+        撤销/维持剥链决定，不新增区域、不改变任何成员集合的其它部分。
+        ③唯一归属判定：命中（返回 True）才允许把链成员改判为该循环的条件前缀并
+        剥去前缀；返回 False 时成员留在原 BoolOpRegion 内，由该区域唯一认领
+        （原则 2）。被反向可达性冒充的 if 臂条件块因此不再被双重认领
+        （实测原状态 block_to_region[344]=IfRegion@32 同时 IfRegion@344 又把
+        382 列为成员——一块两主，正是本判据要禁止的形态）。
+        ④嵌套处理：判据按「成员 ↔ 该 LoopRegion 角色块」的对象同一性裁决，与
+        循环嵌套层数、宿主是 while/for/if 臂均无关（原则 3：抽象节点不被窥视，
+        只按其入口侧角色引用）；多层循环各自只认自己的 condition_block。
+        ⑤入口引用语义：True 时循环以其条件入口引用该成员（父引用子入口，原则 4）；
+        False 时循环不引用该块，链以自身 entry 被父级 IfRegion 引用，链的每条出口
+        边都仍在链内取得落点，臂出口不再需要在函数尾另造 sink。
+        ⑥反编译流程：True → 原剥链行为逐位不变（发射 `while <前缀> and <残链>:`）；
+        False → 不剥链，发射单条 `if A and B or C1 and C2:`，重编译复原
+        `344→420 / 382→496 / 420→500 / 458→500` 四条边，凭空尾 sink 消失。
+        C1 局部消费：只读该 LoopRegion 的角色字段与该块对象，不查全局状态。
+        C2 黑箱组合：对外只交付一个布尔裁决，不暴露链/循环内部结构。
+        C3 守卫封闭：本判据是「循环条件前缀剥链」步的唯一身份门，该步在
+        `_identify_boolop_regions` 一处、别无旁路；返回 False 即完全维持原链，
+        不引入第二处发射或补写语句。
+        """
+        if member is None or loop is None:
+            return False
+        _cond = getattr(loop, 'condition_block', None)
+        return _cond is not None and _cond is member
+
+    def _loop_tail_exit_sink_pair(self) -> Set[BasicBlock]:
+        """[R5-B119 loopsink] 循环/for-iter 区域的「相邻双隐式 return None 尾 sink」不变式。
+
+        ①算法依据：CPython 3.11 在函数尾声为**每一条**指向「隐式 return None」
+        落点的跳转边各materialize一份 `LOAD_CONST None; RETURN_VALUE`（B99 的
+        off404 preds=[390] 回边正落 + off408 preds=[90] while 头测假边、B102 的
+        off268 preds=[156] elif 假边 + off272 preds=[198] FOR_ITER 耗尽边实测都
+        是两条独立单前驱块）。sink 块无后继、恰好一个前驱、且该前驱的本块末指令
+        是一条把控制权**送出自身所属区域**的条件跳转（POP_JUMP_*_IF_* / FOR_ITER）
+        时，sink 是「区域出口的落点」而不是语句：发射一条 `return None` 语句会把
+        两条出口边并成同一落点（B99 −2 指令）或改变二者的落点次序（B102 的
+        268/272 目标互换）。二者在源码层不可辨识（同 R4-B116 建区门的
+        b01/b03 逐字节相同事实），故唯一正确的发射形态是**不发射**，让重编译在
+        函数尾按边数再生 sink 副本。判据只读块末 opcode、前驱/后继集、异常边与
+        区域成员关系，无名字/偏移/深度/宿主类型门控。
+        ②归约顺序：区域识别完成后方可评估（读 block_to_region），本判据不参与
+        识别，只在生成端取语句时被消费，故不改变任何区域的成员集合。
+        ③唯一归属判定：两块 sink 各自被其所属区域唯一认领（`block_to_region`），
+        且每条边都有**自己**的落点块；把二块并为一条语句即破坏原则2（两块一语句），
+        本判据以「整对不发射」恢复每块唯一归属，不向任何区域追加或转移块。
+        ④嵌套处理：判据按 sink 块自己的前驱所属区域裁决，与宿主是 while/for/
+        elif 链及其嵌套层数无关（原则3 抽象节点不被窥视，只消费 entry 侧边）。
+        ⑤入口引用语义：sink 无后继 ⇒ 它是本作用域的终止落点，父级只经其所属区域
+        的出口边引用它（原则4）；异常边不在前驱白名单内（handler 落点是真语句）。
+        ⑥反编译流程：命中对 → 生成端 `_generate_block_statements` 单一漏斗把该块
+        登记 generated 并发射空语句列表 → 重编译在函数尾按边数产出 2 份 sink，
+        指令数与边归属复原（B99/B102 的 −2 / 目标互换同时消除）。
+        C1 局部消费：只读本 CFG 的块序与块级事实 + block_to_region，不查全局状态。
+        C2 黑箱组合：对外只交付一个块集合（出口落点接口），不暴露区域内部结构。
+        C3 守卫封闭：要求二块是本 CFG 中偏移最大的**相邻**二块（函数尾声落点），
+        且每条边都来自区域内块的**区域出口角色**（LoopRegion 的 condition_block /
+        header_block / back_edge_block 之一，即 while 头测假边、回边正落或
+        FOR_ITER 耗尽边）——本对中至少一条必须是循环出口边，纯 if 链的臂尾
+        `return None`（两条边都来自条件块且无循环角色）不在本判据面内，它属
+        R4-B116 建区门已闭的短路面，本票实测：把它一并放行会让
+        quotation.get_stock_exrights 由 Equal 转 Different（出口边→落点块的
+        认领被误删），故按 C3 收窄。被区域外路径引用的出口块不在此列
+        （须显式认领），故判据只在「函数尾隐式返回」这一语义位置生效，
+        消费点唯一（单一漏斗）。
+        """
+        _cached = getattr(self, '_loop_tail_sink_pair_cache', None)
+        if _cached is not None:
+            return _cached
+        _out: Set[BasicBlock] = set()
+        _EXIT_JUMP_OPS = ('POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
+                          'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
+                          'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                          'FOR_ITER')
+
+        def _is_trivial_sink(_b: BasicBlock) -> bool:
+            if _b is None or list(_b.successors) or len(_b.instructions) != 2:
+                return False
+            if not self._check_block_has_trailing_return_none(_b):
+                return False
+            _first = _b.instructions[0]
+            return (_first.opname == 'LOAD_CONST' and _first.argval is None
+                    and _b.instructions[-1].opname == 'RETURN_VALUE')
+
+        def _exit_edge_owner(_b: BasicBlock):
+            _preds = list(_b.predecessors)
+            if len(_preds) != 1:
+                return None
+            _p = _preds[0]
+            _li = _p.get_last_instruction()
+            if _li is None or _li.opname not in _EXIT_JUMP_OPS:
+                return None
+            if _li.argval != _b.start_offset:
+                # 回边测试块的正落（fall-through）也算送出自身的边：此时
+                # 目标不是 argval，而是本块的直接后继偏移。
+                _fs = list(_p.successors)
+                if not any(_s is _b and _s.start_offset > _p.start_offset for _s in _fs):
+                    return None
+            _own = self.block_to_region.get(_p)
+            if _own is None or _p not in set(_own.blocks or ()):
+                return None
+            if _b not in set(_own.blocks or ()):
+                return None
+            _roles = {id(_own.condition_block) if getattr(_own, 'condition_block', None) else None,
+                      id(_own.header_block) if getattr(_own, 'header_block', None) else None,
+                      id(getattr(_own, 'back_edge_block', None) or None)}
+            _is_region_exit = (isinstance(_own, LoopRegion)
+                               and id(_p) in _roles
+                               and _li.opname in ('FOR_ITER',) + _EXIT_JUMP_OPS)
+            return (_own, _is_region_exit)
+
+        try:
+            _ordered = sorted(self.cfg.blocks.values(), key=lambda _b: _b.start_offset)
+        except Exception:
+            _ordered = []
+        if len(_ordered) >= 2:
+            _t1, _t2 = _ordered[-2], _ordered[-1]
+            _e1 = _exit_edge_owner(_t1) if _is_trivial_sink(_t1) else None
+            _e2 = _exit_edge_owner(_t2) if _is_trivial_sink(_t2) else None
+            if (_t1 is not _t2 and _e1 is not None and _e2 is not None
+                    and (_e1[1] or _e2[1])):
+                _out = {_t1, _t2}
+        self._loop_tail_sink_pair_cache = _out
+        return _out
+
     def _create_boolop_region_from_chain(self, chain: List[Tuple[BasicBlock, str]], claimed: Set[BasicBlock]) -> Optional[BoolOpRegion]:
+        """把已检测到的短路链归约为单个 BoolOpRegion —— BoolOpRegion 的唯一创建点。
+
+        ①算法依据：No More Gotos 的短路条件归约——POP_JUMP_IF_* / *_OR_POP 链对应
+        Python `and`/`or` 的短路语义；链成员按各自短路跳转目标串联，出口汇合点由
+        `_boolop_resolve_merge` 给出 merge，是否处于条件上下文由
+        `_boolop_check_condition_context` 判定，三元（IfExp）操作数由 W14-A / Edit H
+        分支做值块扩展，链式比较操作数由 R113 分支补齐 SWAP+POP_TOP 清理块。
+        ②归约顺序：BoolOp 先于 Conditional（IfRegion）识别，本方法由
+        `_identify_boolop_regions` 的装配步调用，看到的链只应含表达式级块。三道
+        创建前不变量门任一成立即 `return None`，块集原样交还后续 IfRegion 的
+        语句级归约：R14b（首块属性链前缀的存储目标被后续操作数读取 → 前缀是独立
+        语句）、R38（非首成员含 STORE_* → 链跨越语句边界）、[R4-B116 sinkexit]
+        （成员短路目标为 ≥2 个互不相同、无后继、以隐式 return None 收尾的 sink 块
+        → 单个 merge 无法承载两条出口）。
+        ③唯一归属判定：`region_blocks` = 链成员 ∪ merge ∪ 链式比较清理块 ∪ 三元
+        值块（值块仅在 `not in self.block_to_region` 时纳入）；认领时条件上下文
+        覆盖 `block_to_region`，非条件上下文只认领尚无归属的块，并同步登记
+        `claimed`——已被其它区域拥有的块不被抢占（原则2）。
+        ④嵌套处理：链成员的 body 语句块不属于本区域，由父 IfRegion 认领；
+        [R4-B116 sinkexit] 命中时整条链不折叠，嵌套 if 由 IfRegion 逐层抽象为
+        子区域节点（原则3），每条出口恰好归属一个 owning region。
+        ⑤入口引用语义：`entry` 为链首块 `start_block`，父区域的条件表达式只引用
+        该入口，链内操作数块对父区域不可见；`op_chain` 保留每个成员的短路算子
+        （'and'/'or'），`merge_block`/`value_target` 记录出口与赋值目标。
+        ⑥反编译流程：BoolOpRegion(op_chain, merge_block, value_target,
+        is_augassign, …) → `region_ast_generator._generate_boolop` 发射
+        ast.BoolOp / 链式 Compare / AugAssign；条件上下文时由所属 IfRegion 取作
+        test，非条件上下文时由赋值语句取作 value。
+        C1 局部消费：只读链成员块与它们的目标/后继块的块级事实（末指令 opcode、
+        指令集、后继集、`block_to_region` 归属），无宿主名字/深度/计数门控。
+        C2 黑箱组合：对外只产出一个 Region 对象，父层只见 entry。
+        C3 守卫封闭：本方法是 BoolOpRegion 的唯一创建点（`_identify_boolop_regions`
+        的全部调用点均经此），拒绝即整条链不产区域，不存在旁路创建。
+        """
         chain = self._normalize_none_check_op_types(chain)
         # [R14b·W14-D 门控细化] 属性链回溯放行（首成员尾部为
         # LOAD_ATTR/LOAD_METHOD 的真值测试）时，若首块前置语句的存储目标被
@@ -29657,6 +31355,12 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 continue
             if any(_detector_r38.is_any_store(i) for i in _pcb.instructions):
                 return None
+        # [R4-B116 sinkexit] 出口不变量门：链成员的短路目标若是 ≥2 个互不相同、
+        # 无后继、以隐式 return None 收尾的 sink 块，则单个 BoolOpRegion（唯一
+        # merge）无法为第二条出口发射第二个 sink —— 该形态是可编译为同一字节串的
+        # 「逐语句嵌套 if」，交还 IfRegion 层级按原则2/原则3 逐层认领。
+        if self._boolop_chain_exits_are_distinct_sinks(chain):
+            return None
         region = BoolOpRegion(
             region_type=RegionType.BOOL_OP,
             entry=start_block,
@@ -29900,8 +31604,10 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 # 反向排除 B（第二 run 只有一名操作数）：`X and Y or Z`
                 #   （实测 `IQEngine/core/bar._history_bars`）虽满足 (1)-(4)，但其
                 #   J=Z 的 normal 后继是 then 体而非同出口的下一名操作数，条件 (5)
-                #   失败，故本候选在该处保持 head 现状（官方尺 58/58）；三操作数混合
-                #   链被截断成 `if not (X and Y)` 属 BoolOp 统一阶段的其他族缺陷，
+                #   失败——该形态由下方 (5b) single-operand-second-run 同族臂另行判定
+                #   （同一处 _r54_mixed 决策点，不另起第二套口径；本候选在此处保持
+                #   head 现状，实测该单元 84/85 → 85/85 由 (5b) 记录完整链后达成）。
+                #   三操作数混合链被截断成 `if not (X and Y)` 属 BoolOp 统一阶段的其他族缺陷，
                 #   不在本 hunk 内顺手改。
 
                 _r54_mixed = False
@@ -29944,13 +31650,38 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                                 and getattr(_r54_k_last, 'argval', None) is not None
                                 and self.cfg.get_block_by_offset(_r54_k_last.argval)
                                 is _r54_tj)
+                            # [r1301-b134 single-operand-second-run] 区域归约算法原则 1（自底向上）+ 原则 2
+                            # （每块唯一归属）+ 原则 4（入口引用语义）：and→or 混合链的第二 run 只有一名操作数
+                            # 时，条件 (5) 的「J 与 K 同出口」形态按构造不存在——第二 run 的末名操作数其短路边
+                            # 就是该 run 的假出口，落空边就是 then 体，没有「同出口的下一名操作数」可查。此时
+                            # 用同一批边事实改判，识别条件（[C1] 只读边/归属事实：来块身份 + 两条成功沿同落一块；
+                            # 无函数名、无常量、无绝对偏移、无指令计数）：
+                            #   (5b-1) J 的落空边 K 恰为 F 的短路边目标 T_F——两条 run 的成功沿汇合到同一个体块
+                            #          入口（and-run 经 B 的短路真边入体，or-run 经 C 的落空边入体）；
+                            #   (5b-2) J 的前驱恰为 {本块, F}（_r1234_pair_join）——该二入纯汇合点除本对操作数外
+                            #          无别的主，不可能是另一条语句的入口，收它作下一 run 的头不违反原则 2；
+                            #   (5b-3) T_F 的前驱恰为 {F, J}——体块也只由这两条成功沿进入；链出口 T_J 另在体块
+                            #          之后（(4) 已要求），故 T_F 是体、T_J 是出口，两侧不混同。
+                            # 归约方式：命中即与 (5) 同等放行 `_cond_start_offset` 的栈深回溯（复用本分支已有回溯
+                            # 体，与 R38/W14/R54-A 同一机制），使块内先于该操作数的语句不再被 `_sb_has_body` 当作
+                            # if 体，链得以在首操作数块启动；不命中则与本方法现状逐字节一致。判定发生在链识别时，
+                            # 不回看任何已渲染区域、不重写或吸收别的区域已认领的块（非事后修补）。
+                            # AST 映射：链 [(A,'and'), (B,'or')] 由既有 _try_unify_mixed_boolop_chain 的 run 子
+                            # walk 收齐 or-run 末名操作数 C，再经 _create_boolop_region_from_chain 归约为单个
+                            # BoolOpRegion；父 IfRegion 得到单个 BoolOp 测试 `if A and B or C: body`，A 的假边落到
+                            # C 的测试块（正是区域已声明的 merge），不再拆成 `if A: if B or C:`（实测
+                            # IQEngine/core/bar.BarData._history_bars 84/85 → 85/85）。
+                            _r54_one_operand_run = bool(
+                                _r54_k is _r54_tf
+                                and self._r1234_pair_join(_r54_j, start_block, _r54_f)
+                                and self._r1234_pair_join(_r54_tf, _r54_f, _r54_j))
                             _r54_mixed = bool(
                                 _r54_tf is not None and _r54_tf is not _r54_j
                                 and _r54_tf.start_offset > _r54_j.start_offset
                                 and _r54_f_ft is _r54_j
                                 and _r54_tj is not None and _r54_tj is not _r54_tf
                                 and _r54_tj.start_offset > _r54_tf.start_offset
-                                and _r54_k_shares_exit)
+                                and (_r54_k_shares_exit or _r54_one_operand_run))
                 if _r54_mixed or (_prev_instrs and _prev_instrs[-1].opname in ('LOAD_FAST', 'LOAD_NAME',
                                                                   'LOAD_GLOBAL', 'LOAD_DEREF',
                                                                   'LOAD_ATTR', 'LOAD_METHOD')):
@@ -31472,6 +33203,30 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                         return True
         return False
 
+    def _r1234_pair_join(self, tgt, a, b):
+        # [r12-t1234 pair-join] 目标块是否「恰由这两个操作数块进入」的二入汇合点。
+        # 判定只用入边身份（predecessors 与来块一一对应），不看偏移/指令数/名字（rules.md §1.4 G4）。
+        # [C3] 本方法是「二入纯汇合点」的唯一判据：情形 (1) 的返回处与
+        # _detect_boolop_conditional_chain 的 (5b) single-operand-second-run
+        # 臂共用它，不另设第二套口径。
+        # [C1] 局部消费：读到的就是本轮 walk 的 current 与 candidate 两块，不回看区域。
+        # 反例控制（实测）：bar/quotation/handlers/wizard_quant_api/realtime_event_source/
+        #   klinedata/trade_info_utils/strategy/quote/trade_live_broker 产物逐字节不变；
+        #   matcher 的 17/17 亦不变。
+        if tgt is None or a is None or b is None or a is b:
+            return False
+        preds = getattr(tgt, 'predecessors', None)
+        if not preds:
+            return False
+        want = {a.start_offset, b.start_offset}
+        got = set()
+        for p in preds:
+            off = getattr(p, 'start_offset', None)
+            if off is None:
+                return False
+            got.add(off)
+        return got == want
+
     def _b1b_loop_body_run_continuation(self, cur_block: BasicBlock, cur_last,
                                         cand_block: BasicBlock,
                                         has_or_member: bool = False) -> bool:
@@ -31503,8 +33258,12 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
               等非条件块），walk 经 current 的真边（fall-through）抵达
               candidate 本身就是 and-run 续接签名；纯 and 链（尚无 or 成员）
               维持原拒绝，普通循环体内 ``if a and b:`` 的装配路径行为不变。
-          current 与 candidate 同为 TRUE 族的组合不是任何合法降级续接，拒绝
-          （纯 or 链在循环体内仍走既有 IfRegion or 链路径，行为不变）。
+          current 与 candidate 同为 TRUE 族且两条跳边同目标时，按该共享目标的
+          身份分判（[R5-B100-armjoin-trueentry] _boolop_shared_target_is_join）：
+          目标被非成员前驱以无条件跳边/自然直落认领为出口（本层汇合块）⇒ 放行，
+          该对成员是同一条负极性 or-run 的操作数，消费端 R14c 整体取反成立；
+          目标只被条件测试边进入（run 的真入口 / 臂体首块）⇒ 维持原拒绝，
+          纯 or 链在循环体内仍走既有 IfRegion or 链路径，行为不变。
         归约方式（[C2] 黑箱组合 + [C3] 孤儿显式认领）：命中即允许链 walk 越过
         body_blocks 守卫把 candidate 吸收为下一链成员；不命中维持原 break。
         吸收后的完整链交 _create_boolop_region_from_chain 统一归约为单个
@@ -31514,6 +33273,26 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         [and,and,or,or]）由消费端 _build_boolop_expression_inner 的 or_groups
         分组重建为单个 ast.BoolOp，循环体内层 `if a and b or c:` /
         `if b or c and a: break` 不再拆裂为嵌套 if、or 尾操作数不再丢失。
+
+        ── [R5-B100-armjoin-trueentry] 六项（本票改动面：TRUE/TRUE 同目标成员对）──
+        ①算法依据（原则 4 入口引用语义）：current 与 candidate 同为正向 TRUE 族跳转、
+          两条跳边共享同一目标 T 时，合法性完全取决于 T 的身份（判据见
+          _boolop_shared_target_is_join）：T 若被非成员前驱以无条件跳边/自然直落认领为
+          出口，则该对成员本就是同一条负极性 or-run（源文 `not (A or B)`）的相邻操作数。
+        ②归约顺序（原则 1 自底向上）：本判定发生在链 walk 之内、区域创建之前，只读已
+          归约为块粒度的两块与其共享目标的入边事实，不参与任何区域重建。
+        ③唯一归属判定（原则 2 每块唯一归属）：判 True 即把 candidate 收为本 run 的下一
+          成员，其后由 _create_boolop_region_from_chain 独占认领；判 False 维持原 break，
+          candidate 仍由它自己的 IfRegion 独占，不存在两块两主或无主块。
+        ④嵌套处理（原则 3 嵌套即抽象节点）：T 只被条件测试边进入时（T 是嵌套结构或臂体
+          入口）一律拒绝并入，嵌套条件体不会被折进布尔条件。
+        ⑤入口引用语义：命中后区域以 T 为汇合块被引用（臂体经 run 的落空侧进入、出口
+          引用 T），消费端 R14c 发射 `not (A or B)`，两臂入口不互换、臂体不丢失。
+        ⑥反编译流程 + C1/C2/C3：完整 op_chain 由 _build_boolop_expression_inner 重建为
+          单个 ast.BoolOp。[C1] 判据只读白名单结构事实（块末 opcode、后继/前驱关系、
+          异常边、本 run 自身成员集），无深度/数量/操作数上限，无文件名、函数名、偏移
+          特判；[C2] 纯查询，不写任何区域字段；[C3] 目标缺失、前驱仅经异常边、判据不
+          命中时一律 return False，产物与入轮逐字节一致。
         """
         if cur_last is None or getattr(cur_last, 'argval', None) is None:
             return False
@@ -31573,7 +33352,15 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             return False
         if not _cur_true and _cand_true:
             # (1) and→or 边界：candidate 落空边汇聚到 current 假出口 Y（下一 run 头）
-            return _cand_ft is _cur_tgt and _tgt_is_cond
+            # [r12-t1234 pair-join] 情形 (1) 的第二个放行形：候选汇合块 Y 不必自己是条件测试块，
+            #   只要 Y 的前驱**恰为** (current, candidate) 这一对操作数块——二入纯汇合点在结构上
+            #   不可能是另一条语句的入口，故把 candidate 收为同一短路链的下一成员不违反原则 2。
+            #   实测拦下的正是这一条：bar 的 Y=@140 与 strategy_universe 的 Y=@156 都不以正向条件
+            #   跳转结尾，原判据一律拒绝，于是外层 IfRegion 声明的 merge（已等于原始落点）在尾巴
+            #   附着时从不被读取，产物把尾巴落到内层语句末（304 / 198）。
+            return ((_cand_ft is _cur_tgt and _tgt_is_cond)
+                    or (_cand_ft is _cur_tgt
+                        and self._r1234_pair_join(_cur_tgt, cur_block, cand_block)))
         if not _cur_true and not _cand_true:
             # (3) and-run 续接：假边共享同一「下一 run 头」失败出口
             if _cand_tgt is not _cur_tgt:
@@ -31585,6 +33372,76 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             # candidate 经 current 真边（fall-through）抵达即 and-run 续接；
             # 纯 and 链维持原拒绝（排除普通 and 链共用的语句 merge 块）。
             return bool(has_or_member)
+        # [R5-B100-armjoin-trueentry] current 与 candidate 同为正向 TRUE 族跳转、且两条
+        # 跳边共享同一目标 T（纯 or-run 在跳转语境下的降级形状）时，按 T 的身份分判
+        # （见 _boolop_shared_target_is_join）：T 是本层汇合块（假出口）⇒ 放行，两名成员
+        # 成为同一条 or-run 的负极性操作数，消费端 R14c 整体取反正确；T 只被条件测试边
+        # 进入（run 的真入口 / 臂体首块）⇒ 维持原拒绝，交消费端正极性路径。
+        if (_cur_true and _cand_true
+                and _cand_tgt is _cur_tgt
+                and self._boolop_shared_target_is_join(
+                    _cur_tgt, (cur_block, cand_block))):
+            return True
+        return False
+
+    def _boolop_shared_target_is_join(self, target: BasicBlock,
+                                      member_blocks) -> bool:
+        """[R5-B100-armjoin-trueentry] or-run 成员共享跳转目标 T 的身份判别器。
+
+        ①算法依据（原则 4 入口引用语义）：CPython 把跳转语境里的 or-run 编成
+          「每名成员块尾一条正向条件跳边指向同一块 T，落空边接下一成员」。仅凭
+          opcode 形状无法区分两种截然不同的 T：(i) T 是本层汇合块 / 该 run 的假
+          出口——源文为 `if not (A or B ...)`，全员 TRUE 边即「跳过臂体」的出口，
+          消费端整体取反（R14c）成立；(ii) T 是 run 的真入口（臂体首块）——源文
+          为 `if A or B`，成员 TRUE 边进入臂体、落空侧才是假出口，此时取反会互换
+          两臂入口并丢掉臂体。判别只用前驱/后继与块末 opcode：(i) 中 T 必被链外
+          同层块认领为出口——某个非成员前驱以无条件跳边（JUMP_FORWARD /
+          JUMP_BACKWARD）或自然直落进入 T（兄弟臂尾汇到同一汇合点）；(ii) 中 T 的
+          全部入边都是条件测试边（成员自身或同一 run 的续接腿），没有任何块把 T
+          当出口跳进。
+        ②归约顺序（原则 1 自底向上）：在链 walk 判定 (current, candidate) 是否构成
+          同一 run 的续接对时调用；两块已归约为块粒度，T 的前驱集由建图阶段给出，
+          本判别只读已成立的后继/前驱关系，不参与区域重建。
+        ③唯一归属判定（原则 2 每块唯一归属）：证据只来自 T 自身的入边与入边块的
+          块末 opcode；成员集合取自本 run 自身的块，不把祖先区域的成员关系当外部
+          证据（承 [r1-b98-elsescope] 教训），也不以后继穷尽当终态证据（承
+          [r3-b103-armjoin-termexit] 教训）。
+        ④嵌套处理（原则 3 嵌套即抽象节点）：判据对 T 内部结构无感；若 T 是嵌套
+          结构入口，其入边仍只有测试边，返回 False，嵌套体由 IfRegion 独占。
+        ⑤入口引用语义：True ⇒ 区域把 T 当汇合块引用（臂体经 run 落空侧进入，出口
+          引用 T）；False ⇒ T 是臂体入口，父级不得整链取反。
+        ⑥反编译流程 + C1/C2/C3：命中时链 walk 放行该成员对，BoolOpRegion 得到完整
+          op_chain，消费端按 R14c 发射 `not (A or B)`；未命中逐字节维持原 break 行为。
+          [C1] 只读白名单事实（块末 opcode、后继/前驱关系、异常边、区域成员集合），
+          无深度/数量/操作数上限，无文件名、函数名或偏移特判；[C2] 纯查询，不写任何
+          区域字段；[C3] 证据不足（前驱集为空、仅异常边入块、目标缺失）一律返回
+          False 保守弃权。
+        """
+        if target is None:
+            return False
+        _members = set(member_blocks or ())
+        for _p in sorted(set(getattr(target, 'predecessors', None) or ()),
+                         key=lambda b: b.start_offset):
+            if _p is target or _p in _members:
+                continue
+            _exc = set(getattr(_p, 'exception_successors', None) or ())
+            _norm = [s for s in (_p.successors or ()) if s not in _exc]
+            if target not in _norm:
+                continue
+            _pl = _p.get_last_instruction()
+            if _pl is None:
+                continue
+            if _pl.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                # 条件测试边进入 T：该前驱是本 run 的成员或续接腿，不构成出口证据
+                continue
+            if getattr(_pl, 'argval', None) == target.start_offset:
+                # 无条件跳边落入 T：T 是链外同层块的出口 ⇒ 本层汇合块
+                return True
+            if _pl.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                  'JUMP_BACKWARD',
+                                  'JUMP_BACKWARD_NO_INTERRUPT'):
+                # 非跳转收尾、自然直落进 T：同样是汇合证据
+                return True
         return False
 
     def _is_valid_2elem_mixed_chain(self, chain: List[Tuple[BasicBlock, str]]) -> bool:

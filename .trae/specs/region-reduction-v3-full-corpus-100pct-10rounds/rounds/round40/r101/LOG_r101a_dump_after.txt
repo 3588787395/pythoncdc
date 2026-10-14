@@ -1,0 +1,5837 @@
+== unit=clock_worker ==
+@0 n=3 tail=NOP succ=[6]
+@6 n=38 tail=POP_JUMP_FORWARD_IF_NOT_NONE succ=[300, 400, 9218]
+@300 n=15 tail=JUMP_FORWARD succ=[778, 9218]
+@400 n=49 tail=STORE_FAST succ=[778, 9218]
+@778 n=2 tail=POP_JUMP_FORWARD_IF_NOT_NONE succ=[782, 882, 9218]
+@782 n=15 tail=JUMP_FORWARD succ=[1260, 9218]
+@882 n=49 tail=STORE_FAST succ=[1260, 9218]
+@1260 n=2 tail=POP_JUMP_FORWARD_IF_NOT_NONE succ=[1264, 1364, 9218]
+@1264 n=15 tail=JUMP_FORWARD succ=[1742, 9218]
+@1364 n=49 tail=STORE_FAST succ=[1742, 9218]
+@1742 n=7 tail=POP_JUMP_FORWARD_IF_FALSE succ=[1782, 2838, 9218]
+@1782 n=8 tail=POP_JUMP_FORWARD_IF_FALSE succ=[1838, 1940, 9218]
+@1838 n=12 tail=JUMP_FORWARD succ=[1944, 9218]
+@1940 n=2 tail=STORE_FAST succ=[1944, 9218]
+@1944 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[1986, 2088, 9218]
+@1986 n=12 tail=JUMP_FORWARD succ=[2092, 9218]
+@2088 n=2 tail=STORE_FAST succ=[2092, 9218]
+@2092 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[2134, 2236, 9218]
+@2134 n=12 tail=JUMP_FORWARD succ=[2240, 9218]
+@2236 n=2 tail=STORE_FAST succ=[2240, 9218]
+@2240 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[2282, 2384, 9218]
+@2282 n=12 tail=JUMP_FORWARD succ=[2388, 9218]
+@2384 n=2 tail=STORE_FAST succ=[2388, 9218]
+@2388 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[2430, 2532, 9218]
+@2430 n=12 tail=JUMP_FORWARD succ=[2536, 9218]
+@2532 n=2 tail=STORE_FAST succ=[2536, 9218]
+@2536 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[2578, 2680, 9218]
+@2578 n=12 tail=JUMP_FORWARD succ=[2684, 9218]
+@2680 n=2 tail=STORE_FAST succ=[2684, 9218]
+@2684 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[2726, 2830, 9218]
+@2726 n=13 tail=JUMP_FORWARD succ=[4984, 9218]
+@2830 n=4 tail=JUMP_FORWARD succ=[4984, 9218]
+@2838 n=7 tail=POP_JUMP_FORWARD_IF_FALSE succ=[2878, 3934, 9218]
+@2878 n=8 tail=POP_JUMP_FORWARD_IF_FALSE succ=[2934, 3036, 9218]
+@2934 n=12 tail=JUMP_FORWARD succ=[3040, 9218]
+@3036 n=2 tail=STORE_FAST succ=[3040, 9218]
+@3040 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[3082, 3184, 9218]
+@3082 n=12 tail=JUMP_FORWARD succ=[3188, 9218]
+@3184 n=2 tail=STORE_FAST succ=[3188, 9218]
+@3188 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[3230, 3332, 9218]
+@3230 n=12 tail=JUMP_FORWARD succ=[3336, 9218]
+@3332 n=2 tail=STORE_FAST succ=[3336, 9218]
+@3336 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[3378, 3480, 9218]
+@3378 n=12 tail=JUMP_FORWARD succ=[3484, 9218]
+@3480 n=2 tail=STORE_FAST succ=[3484, 9218]
+@3484 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[3526, 3628, 9218]
+@3526 n=12 tail=JUMP_FORWARD succ=[3632, 9218]
+@3628 n=2 tail=STORE_FAST succ=[3632, 9218]
+@3632 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[3674, 3776, 9218]
+@3674 n=12 tail=JUMP_FORWARD succ=[3780, 9218]
+@3776 n=2 tail=STORE_FAST succ=[3780, 9218]
+@3780 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[3822, 3926, 9218]
+@3822 n=13 tail=JUMP_FORWARD succ=[4984, 9218]
+@3926 n=4 tail=JUMP_FORWARD succ=[4984, 9218]
+@3934 n=8 tail=POP_JUMP_FORWARD_IF_FALSE succ=[3990, 4092, 9218]
+@3990 n=12 tail=JUMP_FORWARD succ=[4096, 9218]
+@4092 n=2 tail=STORE_FAST succ=[4096, 9218]
+@4096 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[4138, 4240, 9218]
+@4138 n=12 tail=JUMP_FORWARD succ=[4244, 9218]
+@4240 n=2 tail=STORE_FAST succ=[4244, 9218]
+@4244 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[4286, 4388, 9218]
+@4286 n=12 tail=JUMP_FORWARD succ=[4392, 9218]
+@4388 n=2 tail=STORE_FAST succ=[4392, 9218]
+@4392 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[4434, 4536, 9218]
+@4434 n=12 tail=JUMP_FORWARD succ=[4540, 9218]
+@4536 n=2 tail=STORE_FAST succ=[4540, 9218]
+@4540 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[4582, 4684, 9218]
+@4582 n=12 tail=JUMP_FORWARD succ=[4688, 9218]
+@4684 n=2 tail=STORE_FAST succ=[4688, 9218]
+@4688 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[4730, 4832, 9218]
+@4730 n=12 tail=JUMP_FORWARD succ=[4836, 9218]
+@4832 n=2 tail=STORE_FAST succ=[4836, 9218]
+@4836 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[4878, 4980, 9218]
+@4878 n=12 tail=JUMP_FORWARD succ=[4984, 9218]
+@4980 n=2 tail=STORE_FAST succ=[4984, 9218]
+@4984 n=34 tail=POP_JUMP_FORWARD_IF_FALSE succ=[5270, 5278, 9218]
+@5270 n=4 tail=JUMP_FORWARD succ=[5288, 9218]
+@5278 n=5 tail=STORE_FAST succ=[5288, 9218]
+@5288 n=28 tail=POP_JUMP_FORWARD_IF_FALSE succ=[5492, 5594, 9218]
+@5492 n=12 tail=JUMP_FORWARD succ=[5598, 9218]
+@5594 n=2 tail=STORE_FAST succ=[5598, 9218]
+@5598 n=4 tail=POP_JUMP_FORWARD_IF_FALSE succ=[5614, 9214, 9218]
+@5614 n=17 tail=POP_JUMP_FORWARD_IF_FALSE succ=[5738, 5902, 9218]
+@5738 n=23 tail=POP_JUMP_BACKWARD_IF_TRUE succ=[5738, 5902, 9218]
+@5902 n=26 tail=POP_JUMP_FORWARD_IF_FALSE succ=[6058, 6280, 9218]
+@6058 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[6090, 6280, 9218]
+@6090 n=5 tail=POP_JUMP_FORWARD_IF_FALSE succ=[6112, 6280, 9218]
+@6112 n=23 tail=POP_TOP succ=[6280, 9218]
+@6280 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[6322, 6846, 9218]
+@6322 n=5 tail=POP_JUMP_FORWARD_IF_FALSE succ=[6344, 6374, 9218]
+@6344 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[6360, 6372, 9218]
+@6360 n=3 tail=POP_JUMP_FORWARD_IF_TRUE succ=[6370, 6406, 9218]
+@6370 n=1 tail=JUMP_FORWARD succ=[6374, 9218]
+@6372 n=1 tail=POP_TOP succ=[6374, 9218]
+@6374 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[6406, 6496, 9218]
+@6406 n=13 tail=STORE_ATTR succ=[6496, 9218]
+@6496 n=5 tail=POP_JUMP_FORWARD_IF_FALSE succ=[6518, 6548, 9218]
+@6518 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[6534, 6546, 9218]
+@6534 n=3 tail=POP_JUMP_FORWARD_IF_TRUE succ=[6544, 6580, 9218]
+@6544 n=1 tail=JUMP_FORWARD succ=[6548, 9218]
+@6546 n=1 tail=POP_TOP succ=[6548, 9218]
+@6548 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[6580, 6792, 9218]
+@6580 n=1 tail=NOP succ=[6582]
+@6582 n=9 tail=STORE_FAST succ=[6652, 6654]
+@6652 n=1 tail=JUMP_FORWARD succ=[6690, 9218]
+@6654 n=4 tail=POP_JUMP_FORWARD_IF_FALSE succ=[6672, 6682, 6684]
+@6672 n=3 tail=STORE_FAST succ=[6678, 6684]
+@6678 n=2 tail=JUMP_FORWARD succ=[6690, 9218]
+@6682 n=1 tail=RERAISE succ=[6684]
+@6684 n=3 tail=RERAISE succ=[9218]
+@6690 n=4 tail=POP_JUMP_FORWARD_IF_FALSE succ=[6702, 6778, 9218]
+@6702 n=10 tail=POP_TOP succ=[6778, 9218]
+@6778 n=3 tail=STORE_ATTR succ=[6792, 9218]
+@6792 n=8 tail=JUMP_BACKWARD succ=[5598, 9218]
+@6846 n=5 tail=POP_JUMP_FORWARD_IF_FALSE succ=[6868, 7164, 9218]
+@6868 n=5 tail=POP_JUMP_FORWARD_IF_FALSE succ=[6890, 7164, 9218]
+@6890 n=25 tail=POP_JUMP_FORWARD_IF_FALSE succ=[7048, 7164, 9218]
+@7048 n=16 tail=POP_TOP succ=[7164, 9218]
+@7164 n=5 tail=POP_JUMP_FORWARD_IF_FALSE succ=[7186, 7216, 9218]
+@7186 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[7202, 7214, 9218]
+@7202 n=3 tail=POP_JUMP_FORWARD_IF_TRUE succ=[7212, 7248, 9218]
+@7212 n=1 tail=JUMP_FORWARD succ=[7216, 9218]
+@7214 n=1 tail=POP_TOP succ=[7216, 9218]
+@7216 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[7248, 7582, 9218]
+@7248 n=5 tail=POP_JUMP_FORWARD_IF_FALSE succ=[7270, 7492, 9218]
+@7270 n=17 tail=POP_JUMP_FORWARD_IF_FALSE succ=[7372, 7492, 9218]
+@7372 n=16 tail=POP_TOP succ=[7488, 9218]
+@7488 n=2 tail=RETURN_VALUE succ=[]
+@7492 n=13 tail=STORE_ATTR succ=[7582, 9218]
+@7582 n=5 tail=POP_JUMP_FORWARD_IF_FALSE succ=[7604, 7634, 9218]
+@7604 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[7620, 7632, 9218]
+@7620 n=3 tail=POP_JUMP_FORWARD_IF_TRUE succ=[7630, 7668, 9218]
+@7630 n=1 tail=JUMP_FORWARD succ=[7634, 9218]
+@7632 n=1 tail=POP_TOP succ=[7634, 9218]
+@7634 n=7 tail=POP_JUMP_FORWARD_IF_FALSE succ=[7668, 8592, 9218]
+@7668 n=9 tail=GET_ITER succ=[7706, 9218]
+@7706 n=1 tail=FOR_ITER succ=[7708, 7972, 9218]
+@7708 n=1 tail=STORE_FAST succ=[7710, 9218]
+@7710 n=1 tail=NOP succ=[7712]
+@7712 n=14 tail=STORE_FAST succ=[7814, 7818]
+@7814 n=2 tail=JUMP_FORWARD succ=[7972, 9218]
+@7818 n=4 tail=POP_JUMP_FORWARD_IF_FALSE succ=[7836, 7964, 7966]
+@7836 n=11 tail=POP_JUMP_FORWARD_IF_FALSE succ=[7890, 7960, 7966]
+@7890 n=10 tail=POP_TOP succ=[7960, 7966]
+@7960 n=2 tail=JUMP_BACKWARD succ=[7706, 9218]
+@7964 n=1 tail=RERAISE succ=[7966]
+@7966 n=3 tail=RERAISE succ=[9218]
+@7972 n=4 tail=POP_JUMP_FORWARD_IF_FALSE succ=[7980, 8170, 9218]
+@7980 n=25 tail=POP_TOP succ=[8166, 9218]
+@8166 n=2 tail=RETURN_VALUE succ=[]
+@8170 n=3 tail=STORE_ATTR succ=[8184, 9218]
+@8184 n=1 tail=NOP succ=[8186]
+@8186 n=9 tail=STORE_FAST succ=[8256, 8258]
+@8256 n=1 tail=JUMP_FORWARD succ=[8294, 9218]
+@8258 n=4 tail=POP_JUMP_FORWARD_IF_FALSE succ=[8276, 8286, 8288]
+@8276 n=3 tail=STORE_FAST succ=[8282, 8288]
+@8282 n=2 tail=JUMP_FORWARD succ=[8294, 9218]
+@8286 n=1 tail=RERAISE succ=[8288]
+@8288 n=3 tail=RERAISE succ=[9218]
+@8294 n=4 tail=POP_JUMP_FORWARD_IF_FALSE succ=[8306, 8350, 9218]
+@8306 n=7 tail=JUMP_FORWARD succ=[9194, 9218]
+@8350 n=2 tail=POP_JUMP_FORWARD_IF_NONE succ=[8354, 8588, 9218]
+@8354 n=8 tail=POP_JUMP_FORWARD_IF_NONE succ=[8400, 8588, 9218]
+@8400 n=10 tail=POP_JUMP_FORWARD_IF_FALSE succ=[8450, 8548, 9218]
+@8450 n=11 tail=POP_JUMP_FORWARD_IF_FALSE succ=[8504, 8544, 9218]
+@8504 n=5 tail=POP_TOP succ=[8544, 9218]
+@8544 n=2 tail=JUMP_FORWARD succ=[9194, 9218]
+@8548 n=5 tail=POP_TOP succ=[8588, 9218]
+@8588 n=2 tail=JUMP_FORWARD succ=[9194, 9218]
+@8592 n=16 tail=POP_JUMP_FORWARD_IF_FALSE succ=[8666, 8904, 9218]
+@8666 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[8688, 8852, 9218]
+@8688 n=22 tail=JUMP_FORWARD succ=[9194, 9218]
+@8852 n=7 tail=JUMP_FORWARD succ=[9194, 9218]
+@8904 n=5 tail=POP_JUMP_FORWARD_IF_FALSE succ=[8926, 9144, 9218]
+@8926 n=5 tail=POP_JUMP_FORWARD_IF_FALSE succ=[8948, 9144, 9218]
+@8948 n=6 tail=POP_JUMP_FORWARD_IF_FALSE succ=[8964, 8976, 9218]
+@8964 n=3 tail=POP_JUMP_FORWARD_IF_FALSE succ=[8974, 9144, 9218]
+@8974 n=1 tail=JUMP_FORWARD succ=[8980, 9218]
+@8976 n=2 tail=JUMP_FORWARD succ=[9144, 9218]
+@8980 n=22 tail=JUMP_FORWARD succ=[9194, 9218]
+@9144 n=6 tail=POP_TOP succ=[9194, 9218]
+@9194 n=4 tail=POP_JUMP_BACKWARD_IF_TRUE succ=[5614, 9210, 9218]
+@9210 n=2 tail=RETURN_VALUE succ=[]
+@9214 n=2 tail=RETURN_VALUE succ=[]
+@9218 n=4 tail=POP_JUMP_FORWARD_IF_FALSE succ=[9236, 9322, 9324]
+@9236 n=1 tail=STORE_FAST succ=[9238, 9324]
+@9238 n=8 tail=POP_TOP succ=[9302, 9314]
+@9302 n=6 tail=RETURN_VALUE succ=[]
+@9314 n=4 tail=RERAISE succ=[9324]
+@9322 n=1 tail=RERAISE succ=[9324]
+@9324 n=3 tail=RERAISE succ=[]
+
+== regions ==
+
+LoopRegion@Block 132 (offset 7706-7706):
+  [LOOP HEADER, depth=3]
+      > 7706: FOR_ITER 132
+  Predecessors: 137, 131
+  Successors: 172, 140, 133 type=RegionType.FOR_LOOP exit=None cond=None merge=None hdr=Block 132 (offset 7706-7706):
+  [LOOP HEADER, depth=3]
+      > 7706: FOR_ITER 132
+  Predecessors: 137, 131
+  Successors: 172, 140, 133 be=Block 137 (offset 7960-7962):
+      > 7960: POP_EXCEPT
+        7962: JUMP_BACKWARD 129
+  Predecessors: 136, 135
+  Successors: 172, 132
+
+  IfRegion@Block 135 (offset 7836-7888):
+        7836: POP_TOP
+  L495   7838: LOAD_GLOBAL 67
+        7850: LOAD_ATTR 48
+        7860: LOAD_CONST 36
+        7862: PRECALL 1
+        7866: CALL 1
+        7876: POP_TOP
+  L496   7878: LOAD_FAST 48
+        7880: LOAD_CONST 37
+        7882: COMPARE_OP 2
+        7888: POP_JUMP_FORWARD_IF_FALSE 35
+  Predecessors: 134
+  Successors: 136, 137, 139 type=RegionType.IF_THEN exit=None cond=Block 135 (offset 7836-7888):
+        7836: POP_TOP
+  L495   7838: LOAD_GLOBAL 67
+        7850: LOAD_ATTR 48
+        7860: LOAD_CONST 36
+        7862: PRECALL 1
+        7866: CALL 1
+        7876: POP_TOP
+  L496   7878: LOAD_FAST 48
+        7880: LOAD_CONST 37
+        7882: COMPARE_OP 2
+        7888: POP_JUMP_FORWARD_IF_FALSE 35
+  Predecessors: 134
+  Successors: 136, 137, 139 merge=Block 137 (offset 7960-7962):
+      > 7960: POP_EXCEPT
+        7962: JUMP_BACKWARD 129
+  Predecessors: 136, 135
+  Successors: 172, 132 hdr=None be=None
+     then_blocks=[7890]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+LoopRegion@Block 82 (offset 5614-5736):
+  [LOOP HEADER, depth=2]
+  L400 > 5614: LOAD_GLOBAL 62
+        5626: LOAD_ATTR 31
+        5636: LOAD_METHOD 45
+        5658: PRECALL 0
+        5662: CALL 0
+        5672: STORE_FAST 41
+  L403   5674: LOAD_FAST 41
+        5676: LOAD_METHOD 46
+        5698: LOAD_CONST 18
+        5700: LOAD_CONST 18
+        5702: KW_NAMES 19
+        5704: PRECALL 2
+        5708: CALL 2
+        5718: LOAD_DEREF 0
+        5720: LOAD_ATTR 47
+        5730: COMPARE_OP 1
+        5736: POP_JUMP_FORWARD_IF_FALSE 82
+  Predecessors: 81, 169
+  Successors: 172, 83, 84 type=RegionType.WHILE_LOOP exit=None cond=Block 82 (offset 5614-5736):
+  [LOOP HEADER, depth=2]
+  L400 > 5614: LOAD_GLOBAL 62
+        5626: LOAD_ATTR 31
+        5636: LOAD_METHOD 45
+        5658: PRECALL 0
+        5662: CALL 0
+        5672: STORE_FAST 41
+  L403   5674: LOAD_FAST 41
+        5676: LOAD_METHOD 46
+        5698: LOAD_CONST 18
+        5700: LOAD_CONST 18
+        5702: KW_NAMES 19
+        5704: PRECALL 2
+        5708: CALL 2
+        5718: LOAD_DEREF 0
+        5720: LOAD_ATTR 47
+        5730: COMPARE_OP 1
+        5736: POP_JUMP_FORWARD_IF_FALSE 82
+  Predecessors: 81, 169
+  Successors: 172, 83, 84 merge=None hdr=Block 83 (offset 5738-5900):
+  [LOOP HEADER, depth=3]
+  L404 > 5738: LOAD_GLOBAL 67
+        5750: LOAD_ATTR 48
+        5760: LOAD_CONST 20
+        5762: PRECALL 1
+        5766: CALL 1
+        5776: POP_TOP
+  L405   5778: LOAD_GLOBAL 62
+        5790: LOAD_ATTR 31
+        5800: LOAD_METHOD 45
+        5822: PRECALL 0
+        5826: CALL 0
+        5836: STORE_FAST 41
+  L403   5838: LOAD_FAST 41
+        5840: LOAD_METHOD 46
+        5862: LOAD_CONST 18
+        5864: LOAD_CONST 18
+        5866: KW_NAMES 19
+        5868: PRECALL 2
+        5872: CALL 2
+        5882: LOAD_DEREF 0
+        5884: LOAD_ATTR 47
+        5894: COMPARE_OP 1
+        5900: POP_JUMP_BACKWARD_IF_TRUE 82
+  Predecessors: 82, 83
+  Successors: 172, 83, 84 be=Block 83 (offset 5738-5900):
+  [LOOP HEADER, depth=3]
+  L404 > 5738: LOAD_GLOBAL 67
+        5750: LOAD_ATTR 48
+        5760: LOAD_CONST 20
+        5762: PRECALL 1
+        5766: CALL 1
+        5776: POP_TOP
+  L405   5778: LOAD_GLOBAL 62
+        5790: LOAD_ATTR 31
+        5800: LOAD_METHOD 45
+        5822: PRECALL 0
+        5826: CALL 0
+        5836: STORE_FAST 41
+  L403   5838: LOAD_FAST 41
+        5840: LOAD_METHOD 46
+        5862: LOAD_CONST 18
+        5864: LOAD_CONST 18
+        5866: KW_NAMES 19
+        5868: PRECALL 2
+        5872: CALL 2
+        5882: LOAD_DEREF 0
+        5884: LOAD_ATTR 47
+        5894: COMPARE_OP 1
+        5900: POP_JUMP_BACKWARD_IF_TRUE 82
+  Predecessors: 82, 83
+  Successors: 172, 83, 84
+
+LoopRegion@Block 81 (offset 5598-5612):
+  [LOOP HEADER, depth=1]
+  L399 > 5598: LOAD_DEREF 0
+        5600: LOAD_ATTR 44
+        5610: EXTENDED_ARG 7
+        5612: POP_JUMP_FORWARD_IF_FALSE 1800
+  Predecessors: 80, 110, 79
+  Successors: 82, 171, 172 type=RegionType.WHILE_LOOP exit=None cond=Block 81 (offset 5598-5612):
+  [LOOP HEADER, depth=1]
+  L399 > 5598: LOAD_DEREF 0
+        5600: LOAD_ATTR 44
+        5610: EXTENDED_ARG 7
+        5612: POP_JUMP_FORWARD_IF_FALSE 1800
+  Predecessors: 80, 110, 79
+  Successors: 82, 171, 172 merge=None hdr=Block 82 (offset 5614-5736):
+  [LOOP HEADER, depth=2]
+  L400 > 5614: LOAD_GLOBAL 62
+        5626: LOAD_ATTR 31
+        5636: LOAD_METHOD 45
+        5658: PRECALL 0
+        5662: CALL 0
+        5672: STORE_FAST 41
+  L403   5674: LOAD_FAST 41
+        5676: LOAD_METHOD 46
+        5698: LOAD_CONST 18
+        5700: LOAD_CONST 18
+        5702: KW_NAMES 19
+        5704: PRECALL 2
+        5708: CALL 2
+        5718: LOAD_DEREF 0
+        5720: LOAD_ATTR 47
+        5730: COMPARE_OP 1
+        5736: POP_JUMP_FORWARD_IF_FALSE 82
+  Predecessors: 81, 169
+  Successors: 172, 83, 84 be=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172
+
+  LoopRegion@Block 82 (offset 5614-5736):
+  [LOOP HEADER, depth=2]
+  L400 > 5614: LOAD_GLOBAL 62
+        5626: LOAD_ATTR 31
+        5636: LOAD_METHOD 45
+        5658: PRECALL 0
+        5662: CALL 0
+        5672: STORE_FAST 41
+  L403   5674: LOAD_FAST 41
+        5676: LOAD_METHOD 46
+        5698: LOAD_CONST 18
+        5700: LOAD_CONST 18
+        5702: KW_NAMES 19
+        5704: PRECALL 2
+        5708: CALL 2
+        5718: LOAD_DEREF 0
+        5720: LOAD_ATTR 47
+        5730: COMPARE_OP 1
+        5736: POP_JUMP_FORWARD_IF_FALSE 82
+  Predecessors: 81, 169
+  Successors: 172, 83, 84 type=RegionType.WHILE_LOOP exit=None cond=Block 82 (offset 5614-5736):
+  [LOOP HEADER, depth=2]
+  L400 > 5614: LOAD_GLOBAL 62
+        5626: LOAD_ATTR 31
+        5636: LOAD_METHOD 45
+        5658: PRECALL 0
+        5662: CALL 0
+        5672: STORE_FAST 41
+  L403   5674: LOAD_FAST 41
+        5676: LOAD_METHOD 46
+        5698: LOAD_CONST 18
+        5700: LOAD_CONST 18
+        5702: KW_NAMES 19
+        5704: PRECALL 2
+        5708: CALL 2
+        5718: LOAD_DEREF 0
+        5720: LOAD_ATTR 47
+        5730: COMPARE_OP 1
+        5736: POP_JUMP_FORWARD_IF_FALSE 82
+  Predecessors: 81, 169
+  Successors: 172, 83, 84 merge=None hdr=Block 83 (offset 5738-5900):
+  [LOOP HEADER, depth=3]
+  L404 > 5738: LOAD_GLOBAL 67
+        5750: LOAD_ATTR 48
+        5760: LOAD_CONST 20
+        5762: PRECALL 1
+        5766: CALL 1
+        5776: POP_TOP
+  L405   5778: LOAD_GLOBAL 62
+        5790: LOAD_ATTR 31
+        5800: LOAD_METHOD 45
+        5822: PRECALL 0
+        5826: CALL 0
+        5836: STORE_FAST 41
+  L403   5838: LOAD_FAST 41
+        5840: LOAD_METHOD 46
+        5862: LOAD_CONST 18
+        5864: LOAD_CONST 18
+        5866: KW_NAMES 19
+        5868: PRECALL 2
+        5872: CALL 2
+        5882: LOAD_DEREF 0
+        5884: LOAD_ATTR 47
+        5894: COMPARE_OP 1
+        5900: POP_JUMP_BACKWARD_IF_TRUE 82
+  Predecessors: 82, 83
+  Successors: 172, 83, 84 be=Block 83 (offset 5738-5900):
+  [LOOP HEADER, depth=3]
+  L404 > 5738: LOAD_GLOBAL 67
+        5750: LOAD_ATTR 48
+        5760: LOAD_CONST 20
+        5762: PRECALL 1
+        5766: CALL 1
+        5776: POP_TOP
+  L405   5778: LOAD_GLOBAL 62
+        5790: LOAD_ATTR 31
+        5800: LOAD_METHOD 45
+        5822: PRECALL 0
+        5826: CALL 0
+        5836: STORE_FAST 41
+  L403   5838: LOAD_FAST 41
+        5840: LOAD_METHOD 46
+        5862: LOAD_CONST 18
+        5864: LOAD_CONST 18
+        5866: KW_NAMES 19
+        5868: PRECALL 2
+        5872: CALL 2
+        5882: LOAD_DEREF 0
+        5884: LOAD_ATTR 47
+        5894: COMPARE_OP 1
+        5900: POP_JUMP_BACKWARD_IF_TRUE 82
+  Predecessors: 82, 83
+  Successors: 172, 83, 84
+
+  IfRegion@Block 84 (offset 5902-6056):
+  L406 > 5902: LOAD_FAST 41
+        5904: LOAD_DEREF 0
+        5906: STORE_ATTR 47
+  L407   5916: LOAD_FAST 41
+        5918: LOAD_METHOD 36
+        5940: PRECALL 0
+        5944: CALL 0
+        5954: STORE_FAST 34
+  L408   5956: LOAD_FAST 41
+        5958: LOAD_METHOD 33
+        5980: PRECALL 0
+        5984: CALL 0
+        5994: STORE_FAST 42
+  L412   5996: LOAD_FAST 34
+        5998: LOAD_FAST 42
+        6000: LOAD_ATTR 49
+        6010: LOAD_FAST 42
+        6012: LOAD_ATTR 50
+        6022: BUILD_TUPLE 3
+        6024: STORE_FAST 43
+  L413   6026: LOAD_FAST 42
+        6028: LOAD_ATTR 49
+        6038: LOAD_FAST 40
+        6040: LOAD_ATTR 49
+        6050: COMPARE_OP 2
+        6056: POP_JUMP_FORWARD_IF_FALSE 111
+  Predecessors: 82, 83
+  Successors: 88, 172, 85 type=RegionType.IF_THEN exit=None cond=Block 86 (offset 6090-6110):
+  L415   6090: LOAD_FAST 43
+        6092: LOAD_DEREF 0
+        6094: LOAD_ATTR 51
+        6104: COMPARE_OP 3
+        6110: POP_JUMP_FORWARD_IF_FALSE 84
+  Predecessors: 85
+  Successors: 88, 172, 87 merge=Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 hdr=None be=None
+     then_blocks=[6112]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     inline_boolop_chains={1580114921104: ['blocks', 'op']}
+     meta={}
+
+  IfRegion@Block 85 (offset 6058-6088):
+  L414   6058: LOAD_FAST 42
+        6060: LOAD_ATTR 50
+        6070: LOAD_FAST 40
+        6072: LOAD_ATTR 50
+        6082: COMPARE_OP 2
+        6088: POP_JUMP_FORWARD_IF_FALSE 95
+  Predecessors: 84
+  Successors: 88, 172, 86 type=RegionType.IF_THEN exit=None cond=Block 86 (offset 6090-6110):
+  L415   6090: LOAD_FAST 43
+        6092: LOAD_DEREF 0
+        6094: LOAD_ATTR 51
+        6104: COMPARE_OP 3
+        6110: POP_JUMP_FORWARD_IF_FALSE 84
+  Predecessors: 85
+  Successors: 88, 172, 87 merge=Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 hdr=None be=None
+     then_blocks=[6112]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     inline_boolop_chains={1580114921104: ['blocks', 'op']}
+     meta={}
+
+    BoolOpRegion@Block 85 (offset 6058-6088):
+  L414   6058: LOAD_FAST 42
+        6060: LOAD_ATTR 50
+        6070: LOAD_FAST 40
+        6072: LOAD_ATTR 50
+        6082: COMPARE_OP 2
+        6088: POP_JUMP_FORWARD_IF_FALSE 95
+  Predecessors: 84
+  Successors: 88, 172, 86 type=RegionType.BOOL_OP exit=None cond=None merge=Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 hdr=None be=None
+
+  IfRegion@Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 type=RegionType.IF_ELIF_CHAIN exit=None cond=Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 merge=Block 172 (offset 9218-9234):
+        9218: PUSH_EXC_INFO
+  L577   9220: LOAD_GLOBAL 202
+        9232: CHECK_EXC_MATCH
+        9234: POP_JUMP_FORWARD_IF_FALSE 43
+  Predecessors: 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 137, 139, 140, 141, 142, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 177, 179, 180, 184, 188, 189
+  Successors: 176, 173, 175 hdr=None be=None
+     then_blocks=[6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6690, 6792]
+     else_blocks=[6846, 6890, 7048]
+     elif_conditions=[6846]
+     elif_bodies=[[6890, 7048]]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 89 (offset 6322-6342):
+  L426   6322: LOAD_FAST 34
+        6324: LOAD_DEREF 0
+        6326: LOAD_ATTR 60
+        6336: COMPARE_OP 4
+        6342: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 88
+  Successors: 90, 172, 94 type=RegionType.IF_THEN exit=None cond=Block 89 (offset 6322-6342):
+  L426   6322: LOAD_FAST 34
+        6324: LOAD_DEREF 0
+        6326: LOAD_ATTR 60
+        6336: COMPARE_OP 4
+        6342: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 88
+  Successors: 90, 172, 94 merge=Block 94 (offset 6374-6404):
+  L427 > 6374: LOAD_DEREF 0
+        6376: LOAD_ATTR 60
+        6386: LOAD_DEREF 0
+        6388: LOAD_ATTR 61
+        6398: COMPARE_OP 2
+        6404: POP_JUMP_FORWARD_IF_FALSE 45
+  Predecessors: 89, 92, 93
+  Successors: 96, 172, 95 hdr=None be=None
+     then_blocks=[6344, 6360, 6370, 6372, 6406]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 90 (offset 6344-6358):
+        6344: LOAD_FAST 35
+        6346: LOAD_FAST 42
+        6348: SWAP 2
+        6350: COPY 2
+        6352: COMPARE_OP 1
+        6358: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 89
+  Successors: 91, 172, 93 type=RegionType.IF_THEN exit=None cond=Block 90 (offset 6344-6358):
+        6344: LOAD_FAST 35
+        6346: LOAD_FAST 42
+        6348: SWAP 2
+        6350: COPY 2
+        6352: COMPARE_OP 1
+        6358: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 89
+  Successors: 91, 172, 93 merge=Block 95 (offset 6406-6486):
+  L428 > 6406: LOAD_DEREF 0
+        6408: LOAD_ATTR 52
+        6418: LOAD_METHOD 53
+        6440: LOAD_FAST 41
+        6442: LOAD_GLOBAL 108
+        6454: LOAD_ATTR 62
+        6464: BUILD_TUPLE 2
+        6466: PRECALL 1
+        6470: CALL 1
+        6480: POP_TOP
+  L429   6482: LOAD_FAST 34
+        6484: LOAD_DEREF 0
+        6486: STORE_ATTR 60
+  Predecessors: 91, 94
+  Successors: 96, 172 hdr=None be=None
+     then_blocks=[6370, 6374]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': False}
+
+  IfRegion@Block 94 (offset 6374-6404):
+  L427 > 6374: LOAD_DEREF 0
+        6376: LOAD_ATTR 60
+        6386: LOAD_DEREF 0
+        6388: LOAD_ATTR 61
+        6398: COMPARE_OP 2
+        6404: POP_JUMP_FORWARD_IF_FALSE 45
+  Predecessors: 89, 92, 93
+  Successors: 96, 172, 95 type=RegionType.IF_THEN exit=None cond=Block 94 (offset 6374-6404):
+  L427 > 6374: LOAD_DEREF 0
+        6376: LOAD_ATTR 60
+        6386: LOAD_DEREF 0
+        6388: LOAD_ATTR 61
+        6398: COMPARE_OP 2
+        6404: POP_JUMP_FORWARD_IF_FALSE 45
+  Predecessors: 89, 92, 93
+  Successors: 96, 172, 95 merge=Block 96 (offset 6496-6516):
+  L432 > 6496: LOAD_FAST 34
+        6498: LOAD_DEREF 0
+        6500: LOAD_ATTR 63
+        6510: COMPARE_OP 4
+        6516: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 94, 95
+  Successors: 97, 172, 101 hdr=None be=None
+     then_blocks=[6406]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 96 (offset 6496-6516):
+  L432 > 6496: LOAD_FAST 34
+        6498: LOAD_DEREF 0
+        6500: LOAD_ATTR 63
+        6510: COMPARE_OP 4
+        6516: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 94, 95
+  Successors: 97, 172, 101 type=RegionType.IF_THEN exit=None cond=Block 96 (offset 6496-6516):
+  L432 > 6496: LOAD_FAST 34
+        6498: LOAD_DEREF 0
+        6500: LOAD_ATTR 63
+        6510: COMPARE_OP 4
+        6516: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 94, 95
+  Successors: 97, 172, 101 merge=Block 101 (offset 6548-6578):
+  L434 > 6548: LOAD_DEREF 0
+        6550: LOAD_ATTR 63
+        6560: LOAD_DEREF 0
+        6562: LOAD_ATTR 61
+        6572: COMPARE_OP 2
+        6578: POP_JUMP_FORWARD_IF_FALSE 106
+  Predecessors: 96, 99, 100
+  Successors: 102, 172, 110 hdr=None be=None
+     then_blocks=[6518, 6534, 6544, 6546, 6580, 6582, 6652]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 97 (offset 6518-6532):
+  L433   6518: LOAD_FAST 27
+        6520: LOAD_FAST 42
+        6522: SWAP 2
+        6524: COPY 2
+        6526: COMPARE_OP 1
+        6532: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 96
+  Successors: 98, 172, 100 type=RegionType.IF_THEN exit=None cond=Block 97 (offset 6518-6532):
+  L433   6518: LOAD_FAST 27
+        6520: LOAD_FAST 42
+        6522: SWAP 2
+        6524: COPY 2
+        6526: COMPARE_OP 1
+        6532: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 96
+  Successors: 98, 172, 100 merge=Block 102 (offset 6580-6580):
+  L438 > 6580: NOP
+  Predecessors: 98, 101
+  Successors: 178 hdr=None be=None
+     then_blocks=[6544, 6548]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': True}
+
+  IfRegion@Block 101 (offset 6548-6578):
+  L434 > 6548: LOAD_DEREF 0
+        6550: LOAD_ATTR 63
+        6560: LOAD_DEREF 0
+        6562: LOAD_ATTR 61
+        6572: COMPARE_OP 2
+        6578: POP_JUMP_FORWARD_IF_FALSE 106
+  Predecessors: 96, 99, 100
+  Successors: 102, 172, 110 type=RegionType.IF_THEN exit=None cond=Block 101 (offset 6548-6578):
+  L434 > 6548: LOAD_DEREF 0
+        6550: LOAD_ATTR 63
+        6560: LOAD_DEREF 0
+        6562: LOAD_ATTR 61
+        6572: COMPARE_OP 2
+        6578: POP_JUMP_FORWARD_IF_FALSE 106
+  Predecessors: 96, 99, 100
+  Successors: 102, 172, 110 merge=Block 110 (offset 6792-6844):
+  L451 > 6792: LOAD_GLOBAL 67
+        6804: LOAD_ATTR 48
+        6814: LOAD_GLOBAL 136
+        6826: PRECALL 1
+        6830: CALL 1
+        6840: POP_TOP
+  L452   6842: EXTENDED_ARG 2
+        6844: JUMP_BACKWARD 624
+  Predecessors: 109, 101
+  Successors: 81, 172 hdr=None be=None
+     then_blocks=[6580, 6582, 6652, 6690]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 107 (offset 6690-6700):
+  L442 > 6690: LOAD_FAST 44
+        6692: LOAD_CONST 22
+        6694: COMPARE_OP 2
+        6700: POP_JUMP_FORWARD_IF_FALSE 38
+  Predecessors: 179, 180
+  Successors: 172, 108, 109 type=RegionType.IF_THEN exit=None cond=Block 107 (offset 6690-6700):
+  L442 > 6690: LOAD_FAST 44
+        6692: LOAD_CONST 22
+        6694: COMPARE_OP 2
+        6700: POP_JUMP_FORWARD_IF_FALSE 38
+  Predecessors: 179, 180
+  Successors: 172, 108, 109 merge=Block 109 (offset 6778-6782):
+  L449 > 6778: LOAD_FAST 34
+        6780: LOAD_DEREF 0
+        6782: STORE_ATTR 63
+  Predecessors: 107, 108
+  Successors: 172, 110 hdr=None be=None
+     then_blocks=[6702]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 113 (offset 6890-7046):
+  L457   6890: LOAD_GLOBAL 61
+        6902: LOAD_FAST 42
+        6904: PRECALL 1
+        6908: CALL 1
+        6918: LOAD_METHOD 71
+        6940: LOAD_CONST 24
+        6942: PRECALL 1
+        6946: CALL 1
+        6956: LOAD_CONST 18
+        6958: BINARY_SUBSCR
+        6968: LOAD_METHOD 46
+        6990: LOAD_CONST 25
+        6992: LOAD_CONST 26
+        6994: PRECALL 2
+        6998: CALL 2
+        7008: LOAD_CONST 4
+        7010: LOAD_CONST 27
+        7012: BUILD_SLICE 2
+        7014: BINARY_SUBSCR
+        7024: STORE_FAST 45
+  L459   7026: LOAD_FAST 45
+        7028: LOAD_DEREF 0
+        7030: LOAD_ATTR 72
+        7040: COMPARE_OP 5
+        7046: POP_JUMP_FORWARD_IF_FALSE 58
+  Predecessors: 112
+  Successors: 114, 115, 172 type=RegionType.IF_THEN exit=None cond=Block 113 (offset 6890-7046):
+  L457   6890: LOAD_GLOBAL 61
+        6902: LOAD_FAST 42
+        6904: PRECALL 1
+        6908: CALL 1
+        6918: LOAD_METHOD 71
+        6940: LOAD_CONST 24
+        6942: PRECALL 1
+        6946: CALL 1
+        6956: LOAD_CONST 18
+        6958: BINARY_SUBSCR
+        6968: LOAD_METHOD 46
+        6990: LOAD_CONST 25
+        6992: LOAD_CONST 26
+        6994: PRECALL 2
+        6998: CALL 2
+        7008: LOAD_CONST 4
+        7010: LOAD_CONST 27
+        7012: BUILD_SLICE 2
+        7014: BINARY_SUBSCR
+        7024: STORE_FAST 45
+  L459   7026: LOAD_FAST 45
+        7028: LOAD_DEREF 0
+        7030: LOAD_ATTR 72
+        7040: COMPARE_OP 5
+        7046: POP_JUMP_FORWARD_IF_FALSE 58
+  Predecessors: 112
+  Successors: 114, 115, 172 merge=Block 115 (offset 7164-7184):
+  L469 > 7164: LOAD_FAST 34
+        7166: LOAD_DEREF 0
+        7168: LOAD_ATTR 60
+        7178: COMPARE_OP 4
+        7184: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 112, 113, 114, 111
+  Successors: 120, 172, 116 hdr=None be=None
+     then_blocks=[7048]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 115 (offset 7164-7184):
+  L469 > 7164: LOAD_FAST 34
+        7166: LOAD_DEREF 0
+        7168: LOAD_ATTR 60
+        7178: COMPARE_OP 4
+        7184: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 112, 113, 114, 111
+  Successors: 120, 172, 116 type=RegionType.IF_THEN exit=None cond=Block 115 (offset 7164-7184):
+  L469 > 7164: LOAD_FAST 34
+        7166: LOAD_DEREF 0
+        7168: LOAD_ATTR 60
+        7178: COMPARE_OP 4
+        7184: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 112, 113, 114, 111
+  Successors: 120, 172, 116 merge=Block 120 (offset 7216-7246):
+  L470 > 7216: LOAD_DEREF 0
+        7218: LOAD_ATTR 60
+        7228: LOAD_DEREF 0
+        7230: LOAD_ATTR 61
+        7240: COMPARE_OP 2
+        7246: POP_JUMP_FORWARD_IF_FALSE 167
+  Predecessors: 115, 118, 119
+  Successors: 121, 172, 125 hdr=None be=None
+     then_blocks=[7186, 7202, 7212, 7214, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 116 (offset 7186-7200):
+        7186: LOAD_FAST 35
+        7188: LOAD_FAST 42
+        7190: SWAP 2
+        7192: COPY 2
+        7194: COMPARE_OP 1
+        7200: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 115
+  Successors: 172, 117, 119 type=RegionType.IF_ELIF_CHAIN exit=None cond=Block 116 (offset 7186-7200):
+        7186: LOAD_FAST 35
+        7188: LOAD_FAST 42
+        7190: SWAP 2
+        7192: COPY 2
+        7194: COMPARE_OP 1
+        7200: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 115
+  Successors: 172, 117, 119 merge=Block 120 (offset 7216-7246):
+  L470 > 7216: LOAD_DEREF 0
+        7218: LOAD_ATTR 60
+        7228: LOAD_DEREF 0
+        7230: LOAD_ATTR 61
+        7240: COMPARE_OP 2
+        7246: POP_JUMP_FORWARD_IF_FALSE 167
+  Predecessors: 115, 118, 119
+  Successors: 121, 172, 125 hdr=None be=None
+     then_blocks=[7212]
+     else_blocks=[7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': False}
+
+  IfRegion@Block 120 (offset 7216-7246):
+  L470 > 7216: LOAD_DEREF 0
+        7218: LOAD_ATTR 60
+        7228: LOAD_DEREF 0
+        7230: LOAD_ATTR 61
+        7240: COMPARE_OP 2
+        7246: POP_JUMP_FORWARD_IF_FALSE 167
+  Predecessors: 115, 118, 119
+  Successors: 121, 172, 125 type=RegionType.IF_THEN exit=None cond=Block 120 (offset 7216-7246):
+  L470 > 7216: LOAD_DEREF 0
+        7218: LOAD_ATTR 60
+        7228: LOAD_DEREF 0
+        7230: LOAD_ATTR 61
+        7240: COMPARE_OP 2
+        7246: POP_JUMP_FORWARD_IF_FALSE 167
+  Predecessors: 115, 118, 119
+  Successors: 121, 172, 125 merge=Block 125 (offset 7582-7602):
+  L482 > 7582: LOAD_FAST 34
+        7584: LOAD_DEREF 0
+        7586: LOAD_ATTR 63
+        7596: COMPARE_OP 4
+        7602: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 120, 124
+  Successors: 130, 172, 126 hdr=None be=None
+     then_blocks=[7248, 7270, 7372, 7488, 7492]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 121 (offset 7248-7268):
+  L472 > 7248: LOAD_FAST 34
+        7250: LOAD_DEREF 0
+        7252: LOAD_ATTR 70
+        7262: COMPARE_OP 3
+        7268: POP_JUMP_FORWARD_IF_FALSE 111
+  Predecessors: 120, 117
+  Successors: 122, 172, 124 type=RegionType.IF_THEN exit=None cond=Block 121 (offset 7248-7268):
+  L472 > 7248: LOAD_FAST 34
+        7250: LOAD_DEREF 0
+        7252: LOAD_ATTR 70
+        7262: COMPARE_OP 3
+        7268: POP_JUMP_FORWARD_IF_FALSE 111
+  Predecessors: 120, 117
+  Successors: 122, 172, 124 merge=Block 124 (offset 7492-7572):
+  L478 > 7492: LOAD_DEREF 0
+        7494: LOAD_ATTR 52
+        7504: LOAD_METHOD 53
+        7526: LOAD_FAST 41
+        7528: LOAD_GLOBAL 108
+        7540: LOAD_ATTR 62
+        7550: BUILD_TUPLE 2
+        7552: PRECALL 1
+        7556: CALL 1
+        7566: POP_TOP
+  L479   7568: LOAD_FAST 34
+        7570: LOAD_DEREF 0
+        7572: STORE_ATTR 60
+  Predecessors: 121, 122
+  Successors: 172, 125 hdr=None be=None
+     then_blocks=[7270, 7372, 7488]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 122 (offset 7270-7370):
+  L473   7270: LOAD_GLOBAL 113
+        7282: LOAD_ATTR 76
+        7292: LOAD_CONST 29
+        7294: PRECALL 1
+        7298: CALL 1
+        7308: POP_TOP
+  L474   7310: LOAD_GLOBAL 155
+        7322: LOAD_ATTR 78
+        7332: LOAD_GLOBAL 158
+        7344: LOAD_CONST 30
+        7346: BINARY_OP 5
+        7350: KW_NAMES 31
+        7352: PRECALL 1
+        7356: CALL 1
+        7366: LOAD_CONST 32
+        7368: IS_OP 0
+        7370: POP_JUMP_FORWARD_IF_FALSE 60
+  Predecessors: 121
+  Successors: 172, 123, 124 type=RegionType.IF_THEN_ELSE exit=None cond=Block 122 (offset 7270-7370):
+  L473   7270: LOAD_GLOBAL 113
+        7282: LOAD_ATTR 76
+        7292: LOAD_CONST 29
+        7294: PRECALL 1
+        7298: CALL 1
+        7308: POP_TOP
+  L474   7310: LOAD_GLOBAL 155
+        7322: LOAD_ATTR 78
+        7332: LOAD_GLOBAL 158
+        7344: LOAD_CONST 30
+        7346: BINARY_OP 5
+        7350: KW_NAMES 31
+        7352: PRECALL 1
+        7356: CALL 1
+        7366: LOAD_CONST 32
+        7368: IS_OP 0
+        7370: POP_JUMP_FORWARD_IF_FALSE 60
+  Predecessors: 121
+  Successors: 172, 123, 124 merge=Block 125 (offset 7582-7602):
+  L482 > 7582: LOAD_FAST 34
+        7584: LOAD_DEREF 0
+        7586: LOAD_ATTR 63
+        7596: COMPARE_OP 4
+        7602: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 120, 124
+  Successors: 130, 172, 126 hdr=None be=None
+     then_blocks=[7372, 7488]
+     else_blocks=[7492]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 125 (offset 7582-7602):
+  L482 > 7582: LOAD_FAST 34
+        7584: LOAD_DEREF 0
+        7586: LOAD_ATTR 63
+        7596: COMPARE_OP 4
+        7602: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 120, 124
+  Successors: 130, 172, 126 type=RegionType.IF_THEN exit=None cond=Block 125 (offset 7582-7602):
+  L482 > 7582: LOAD_FAST 34
+        7584: LOAD_DEREF 0
+        7586: LOAD_ATTR 63
+        7596: COMPARE_OP 4
+        7602: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 120, 124
+  Successors: 130, 172, 126 merge=Block 130 (offset 7634-7666):
+  L484 > 7634: LOAD_DEREF 0
+        7636: LOAD_ATTR 63
+        7646: LOAD_DEREF 0
+        7648: LOAD_ATTR 61
+        7658: COMPARE_OP 2
+        7664: EXTENDED_ARG 1
+        7666: POP_JUMP_FORWARD_IF_FALSE 462
+  Predecessors: 128, 129, 125
+  Successors: 131, 172, 157 hdr=None be=None
+     then_blocks=[7604, 7620, 7630, 7632, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 126 (offset 7604-7618):
+  L483   7604: LOAD_FAST 27
+        7606: LOAD_FAST 42
+        7608: SWAP 2
+        7610: COPY 2
+        7612: COMPARE_OP 1
+        7618: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 125
+  Successors: 129, 172, 127 type=RegionType.IF_THEN_ELSE exit=None cond=Block 126 (offset 7604-7618):
+  L483   7604: LOAD_FAST 27
+        7606: LOAD_FAST 42
+        7608: SWAP 2
+        7610: COPY 2
+        7612: COMPARE_OP 1
+        7618: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 125
+  Successors: 129, 172, 127 merge=Block 130 (offset 7634-7666):
+  L484 > 7634: LOAD_DEREF 0
+        7636: LOAD_ATTR 63
+        7646: LOAD_DEREF 0
+        7648: LOAD_ATTR 61
+        7658: COMPARE_OP 2
+        7664: EXTENDED_ARG 1
+        7666: POP_JUMP_FORWARD_IF_FALSE 462
+  Predecessors: 128, 129, 125
+  Successors: 131, 172, 157 hdr=None be=None
+     then_blocks=[7630]
+     else_blocks=[7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': False}
+
+  IfRegion@Block 130 (offset 7634-7666):
+  L484 > 7634: LOAD_DEREF 0
+        7636: LOAD_ATTR 63
+        7646: LOAD_DEREF 0
+        7648: LOAD_ATTR 61
+        7658: COMPARE_OP 2
+        7664: EXTENDED_ARG 1
+        7666: POP_JUMP_FORWARD_IF_FALSE 462
+  Predecessors: 128, 129, 125
+  Successors: 131, 172, 157 type=RegionType.IF_ELIF_CHAIN exit=None cond=Block 130 (offset 7634-7666):
+  L484 > 7634: LOAD_DEREF 0
+        7636: LOAD_ATTR 63
+        7646: LOAD_DEREF 0
+        7648: LOAD_ATTR 61
+        7658: COMPARE_OP 2
+        7664: EXTENDED_ARG 1
+        7666: POP_JUMP_FORWARD_IF_FALSE 462
+  Predecessors: 128, 129, 125
+  Successors: 131, 172, 157 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+     then_blocks=[7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+     else_blocks=[8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+     elif_conditions=[8592]
+     elif_bodies=[[8666, 8688, 8852]]
+     elif_final_else=[8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+     meta={}
+
+  LoopRegion@Block 132 (offset 7706-7706):
+  [LOOP HEADER, depth=3]
+      > 7706: FOR_ITER 132
+  Predecessors: 137, 131
+  Successors: 172, 140, 133 type=RegionType.FOR_LOOP exit=None cond=None merge=None hdr=Block 132 (offset 7706-7706):
+  [LOOP HEADER, depth=3]
+      > 7706: FOR_ITER 132
+  Predecessors: 137, 131
+  Successors: 172, 140, 133 be=Block 137 (offset 7960-7962):
+      > 7960: POP_EXCEPT
+        7962: JUMP_BACKWARD 129
+  Predecessors: 136, 135
+  Successors: 172, 132
+
+    IfRegion@Block 135 (offset 7836-7888):
+        7836: POP_TOP
+  L495   7838: LOAD_GLOBAL 67
+        7850: LOAD_ATTR 48
+        7860: LOAD_CONST 36
+        7862: PRECALL 1
+        7866: CALL 1
+        7876: POP_TOP
+  L496   7878: LOAD_FAST 48
+        7880: LOAD_CONST 37
+        7882: COMPARE_OP 2
+        7888: POP_JUMP_FORWARD_IF_FALSE 35
+  Predecessors: 134
+  Successors: 136, 137, 139 type=RegionType.IF_THEN exit=None cond=Block 135 (offset 7836-7888):
+        7836: POP_TOP
+  L495   7838: LOAD_GLOBAL 67
+        7850: LOAD_ATTR 48
+        7860: LOAD_CONST 36
+        7862: PRECALL 1
+        7866: CALL 1
+        7876: POP_TOP
+  L496   7878: LOAD_FAST 48
+        7880: LOAD_CONST 37
+        7882: COMPARE_OP 2
+        7888: POP_JUMP_FORWARD_IF_FALSE 35
+  Predecessors: 134
+  Successors: 136, 137, 139 merge=Block 137 (offset 7960-7962):
+      > 7960: POP_EXCEPT
+        7962: JUMP_BACKWARD 129
+  Predecessors: 136, 135
+  Successors: 172, 132 hdr=None be=None
+       then_blocks=[7890]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+  IfRegion@Block 140 (offset 7972-7978):
+  L498 > 7972: LOAD_FAST 47
+        7974: LOAD_CONST 32
+        7976: IS_OP 0
+        7978: POP_JUMP_FORWARD_IF_FALSE 95
+  Predecessors: 184, 132
+  Successors: 172, 141, 142 type=RegionType.IF_THEN exit=None cond=Block 140 (offset 7972-7978):
+  L498 > 7972: LOAD_FAST 47
+        7974: LOAD_CONST 32
+        7976: IS_OP 0
+        7978: POP_JUMP_FORWARD_IF_FALSE 95
+  Predecessors: 184, 132
+  Successors: 172, 141, 142 merge=Block 142 (offset 8170-8174):
+  L504 > 8170: LOAD_FAST 34
+        8172: LOAD_DEREF 0
+        8174: STORE_ATTR 63
+  Predecessors: 140
+  Successors: 186, 172 hdr=None be=None
+     then_blocks=[7980, 8166]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 147 (offset 8294-8304):
+  L511 > 8294: LOAD_FAST 49
+        8296: LOAD_CONST 22
+        8298: COMPARE_OP 2
+        8304: POP_JUMP_FORWARD_IF_FALSE 22
+  Predecessors: 188, 189
+  Successors: 172, 148, 149 type=RegionType.IF_THEN_ELSE exit=None cond=Block 147 (offset 8294-8304):
+  L511 > 8294: LOAD_FAST 49
+        8296: LOAD_CONST 22
+        8298: COMPARE_OP 2
+        8304: POP_JUMP_FORWARD_IF_FALSE 22
+  Predecessors: 188, 189
+  Successors: 172, 148, 149 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+     then_blocks=[8306]
+     else_blocks=[8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 149 (offset 8350-8352):
+  L515 > 8350: LOAD_FAST 46
+        8352: POP_JUMP_FORWARD_IF_NONE 117
+  Predecessors: 147
+  Successors: 172, 156, 150 type=RegionType.IF_THEN exit=None cond=Block 149 (offset 8350-8352):
+  L515 > 8350: LOAD_FAST 46
+        8352: POP_JUMP_FORWARD_IF_NONE 117
+  Predecessors: 147
+  Successors: 172, 156, 150 merge=Block 156 (offset 8588-8590):
+      > 8588: EXTENDED_ARG 1
+        8590: JUMP_FORWARD 301
+  Predecessors: 155, 149, 150
+  Successors: 169, 172 hdr=None be=None
+     then_blocks=[8354, 8400, 8450, 8504, 8544, 8548]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 150 (offset 8354-8398):
+  L516   8354: LOAD_FAST 46
+        8356: LOAD_METHOD 6
+        8378: LOAD_CONST 40
+        8380: PRECALL 1
+        8384: CALL 1
+        8394: STORE_FAST 50
+  L517   8396: LOAD_FAST 50
+        8398: POP_JUMP_FORWARD_IF_NONE 94
+  Predecessors: 149
+  Successors: 172, 156, 151 type=RegionType.IF_THEN exit=None cond=Block 150 (offset 8354-8398):
+  L516   8354: LOAD_FAST 46
+        8356: LOAD_METHOD 6
+        8378: LOAD_CONST 40
+        8380: PRECALL 1
+        8384: CALL 1
+        8394: STORE_FAST 50
+  L517   8396: LOAD_FAST 50
+        8398: POP_JUMP_FORWARD_IF_NONE 94
+  Predecessors: 149
+  Successors: 172, 156, 151 merge=Block 156 (offset 8588-8590):
+      > 8588: EXTENDED_ARG 1
+        8590: JUMP_FORWARD 301
+  Predecessors: 155, 149, 150
+  Successors: 169, 172 hdr=None be=None
+     then_blocks=[8400, 8450, 8504, 8544, 8548]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 151 (offset 8400-8448):
+  L518   8400: LOAD_FAST 34
+        8402: LOAD_METHOD 93
+        8424: LOAD_CONST 41
+        8426: PRECALL 1
+        8430: CALL 1
+        8440: STORE_FAST 51
+  L519   8442: LOAD_FAST 51
+        8444: LOAD_FAST 50
+        8446: CONTAINS_OP 0
+        8448: POP_JUMP_FORWARD_IF_FALSE 49
+  Predecessors: 150
+  Successors: 152, 155, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 151 (offset 8400-8448):
+  L518   8400: LOAD_FAST 34
+        8402: LOAD_METHOD 93
+        8424: LOAD_CONST 41
+        8426: PRECALL 1
+        8430: CALL 1
+        8440: STORE_FAST 51
+  L519   8442: LOAD_FAST 51
+        8444: LOAD_FAST 50
+        8446: CONTAINS_OP 0
+        8448: POP_JUMP_FORWARD_IF_FALSE 49
+  Predecessors: 150
+  Successors: 152, 155, 172 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+     then_blocks=[8450, 8504, 8544]
+     else_blocks=[8548, 8588]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 152 (offset 8450-8502):
+  L520   8450: LOAD_FAST 50
+        8452: LOAD_FAST 51
+        8454: BINARY_SUBSCR
+        8464: STORE_FAST 52
+  L521   8466: LOAD_GLOBAL 189
+        8478: LOAD_FAST 52
+        8480: PRECALL 1
+        8484: CALL 1
+        8494: LOAD_CONST 18
+        8496: COMPARE_OP 2
+        8502: POP_JUMP_FORWARD_IF_FALSE 20
+  Predecessors: 151
+  Successors: 153, 154, 172 type=RegionType.IF_THEN exit=None cond=Block 152 (offset 8450-8502):
+  L520   8450: LOAD_FAST 50
+        8452: LOAD_FAST 51
+        8454: BINARY_SUBSCR
+        8464: STORE_FAST 52
+  L521   8466: LOAD_GLOBAL 189
+        8478: LOAD_FAST 52
+        8480: PRECALL 1
+        8484: CALL 1
+        8494: LOAD_CONST 18
+        8496: COMPARE_OP 2
+        8502: POP_JUMP_FORWARD_IF_FALSE 20
+  Predecessors: 151
+  Successors: 153, 154, 172 merge=Block 154 (offset 8544-8546):
+      > 8544: EXTENDED_ARG 1
+        8546: JUMP_FORWARD 323
+  Predecessors: 152, 153
+  Successors: 169, 172 hdr=None be=None
+     then_blocks=[8504]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 158 (offset 8666-8686):
+  L534   8666: PUSH_NULL
+        8668: LOAD_FAST 36
+        8670: LOAD_FAST 34
+        8672: PRECALL 1
+        8676: CALL 1
+        8686: POP_JUMP_FORWARD_IF_FALSE 82
+  Predecessors: 157
+  Successors: 160, 172, 159 type=RegionType.IF_THEN_ELSE exit=None cond=Block 158 (offset 8666-8686):
+  L534   8666: PUSH_NULL
+        8668: LOAD_FAST 36
+        8670: LOAD_FAST 34
+        8672: PRECALL 1
+        8676: CALL 1
+        8686: POP_JUMP_FORWARD_IF_FALSE 82
+  Predecessors: 157
+  Successors: 160, 172, 159 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+     then_blocks=[8688]
+     else_blocks=[8852]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 161 (offset 8904-8924):
+  L544 > 8904: LOAD_FAST 34
+        8906: LOAD_DEREF 0
+        8908: LOAD_ATTR 63
+        8918: COMPARE_OP 2
+        8924: POP_JUMP_FORWARD_IF_FALSE 109
+  Predecessors: 157
+  Successors: 168, 162, 172 type=RegionType.IF_THEN exit=None cond=Block 162 (offset 8926-8946):
+  L545   8926: LOAD_FAST 34
+        8928: LOAD_DEREF 0
+        8930: LOAD_ATTR 99
+        8940: COMPARE_OP 4
+        8946: POP_JUMP_FORWARD_IF_FALSE 98
+  Predecessors: 161
+  Successors: 168, 163, 172 merge=Block 168 (offset 9144-9192):
+  L575 > 9144: LOAD_GLOBAL 67
+        9156: LOAD_ATTR 48
+        9166: LOAD_GLOBAL 136
+        9178: PRECALL 1
+        9182: CALL 1
+        9192: POP_TOP
+  Predecessors: 161, 162, 164, 166
+  Successors: 169, 172 hdr=None be=None
+     then_blocks=[8948, 8964, 8974, 8976, 8980]
+     else_blocks=[]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     inline_boolop_chains={1580115051856: ['blocks', 'op']}
+     meta={}
+
+    BoolOpRegion@Block 161 (offset 8904-8924):
+  L544 > 8904: LOAD_FAST 34
+        8906: LOAD_DEREF 0
+        8908: LOAD_ATTR 63
+        8918: COMPARE_OP 2
+        8924: POP_JUMP_FORWARD_IF_FALSE 109
+  Predecessors: 157
+  Successors: 168, 162, 172 type=RegionType.BOOL_OP exit=None cond=None merge=Block 168 (offset 9144-9192):
+  L575 > 9144: LOAD_GLOBAL 67
+        9156: LOAD_ATTR 48
+        9166: LOAD_GLOBAL 136
+        9178: PRECALL 1
+        9182: CALL 1
+        9192: POP_TOP
+  Predecessors: 161, 162, 164, 166
+  Successors: 169, 172 hdr=None be=None
+
+  IfRegion@Block 163 (offset 8948-8962):
+  L546   8948: LOAD_FAST 38
+        8950: LOAD_FAST 42
+        8952: SWAP 2
+        8954: COPY 2
+        8956: COMPARE_OP 5
+        8962: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 162
+  Successors: 172, 164, 166 type=RegionType.IF_THEN_ELSE exit=None cond=Block 163 (offset 8948-8962):
+  L546   8948: LOAD_FAST 38
+        8950: LOAD_FAST 42
+        8952: SWAP 2
+        8954: COPY 2
+        8956: COMPARE_OP 5
+        8962: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 162
+  Successors: 172, 164, 166 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+     then_blocks=[8974, 8980]
+     else_blocks=[8976, 9144]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': False}
+
+LoopRegion@Block 81 (offset 5598-5612):
+  [LOOP HEADER, depth=1]
+  L399 > 5598: LOAD_DEREF 0
+        5600: LOAD_ATTR 44
+        5610: EXTENDED_ARG 7
+        5612: POP_JUMP_FORWARD_IF_FALSE 1800
+  Predecessors: 80, 110, 79
+  Successors: 82, 171, 172 type=RegionType.WHILE_LOOP exit=None cond=None merge=None hdr=Block 81 (offset 5598-5612):
+  [LOOP HEADER, depth=1]
+  L399 > 5598: LOAD_DEREF 0
+        5600: LOAD_ATTR 44
+        5610: EXTENDED_ARG 7
+        5612: POP_JUMP_FORWARD_IF_FALSE 1800
+  Predecessors: 80, 110, 79
+  Successors: 82, 171, 172 be=Block 110 (offset 6792-6844):
+  L451 > 6792: LOAD_GLOBAL 67
+        6804: LOAD_ATTR 48
+        6814: LOAD_GLOBAL 136
+        6826: PRECALL 1
+        6830: CALL 1
+        6840: POP_TOP
+  L452   6842: EXTENDED_ARG 2
+        6844: JUMP_BACKWARD 624
+  Predecessors: 109, 101
+  Successors: 81, 172
+
+  LoopRegion@Block 81 (offset 5598-5612):
+  [LOOP HEADER, depth=1]
+  L399 > 5598: LOAD_DEREF 0
+        5600: LOAD_ATTR 44
+        5610: EXTENDED_ARG 7
+        5612: POP_JUMP_FORWARD_IF_FALSE 1800
+  Predecessors: 80, 110, 79
+  Successors: 82, 171, 172 type=RegionType.WHILE_LOOP exit=None cond=Block 81 (offset 5598-5612):
+  [LOOP HEADER, depth=1]
+  L399 > 5598: LOAD_DEREF 0
+        5600: LOAD_ATTR 44
+        5610: EXTENDED_ARG 7
+        5612: POP_JUMP_FORWARD_IF_FALSE 1800
+  Predecessors: 80, 110, 79
+  Successors: 82, 171, 172 merge=None hdr=Block 82 (offset 5614-5736):
+  [LOOP HEADER, depth=2]
+  L400 > 5614: LOAD_GLOBAL 62
+        5626: LOAD_ATTR 31
+        5636: LOAD_METHOD 45
+        5658: PRECALL 0
+        5662: CALL 0
+        5672: STORE_FAST 41
+  L403   5674: LOAD_FAST 41
+        5676: LOAD_METHOD 46
+        5698: LOAD_CONST 18
+        5700: LOAD_CONST 18
+        5702: KW_NAMES 19
+        5704: PRECALL 2
+        5708: CALL 2
+        5718: LOAD_DEREF 0
+        5720: LOAD_ATTR 47
+        5730: COMPARE_OP 1
+        5736: POP_JUMP_FORWARD_IF_FALSE 82
+  Predecessors: 81, 169
+  Successors: 172, 83, 84 be=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172
+
+    LoopRegion@Block 82 (offset 5614-5736):
+  [LOOP HEADER, depth=2]
+  L400 > 5614: LOAD_GLOBAL 62
+        5626: LOAD_ATTR 31
+        5636: LOAD_METHOD 45
+        5658: PRECALL 0
+        5662: CALL 0
+        5672: STORE_FAST 41
+  L403   5674: LOAD_FAST 41
+        5676: LOAD_METHOD 46
+        5698: LOAD_CONST 18
+        5700: LOAD_CONST 18
+        5702: KW_NAMES 19
+        5704: PRECALL 2
+        5708: CALL 2
+        5718: LOAD_DEREF 0
+        5720: LOAD_ATTR 47
+        5730: COMPARE_OP 1
+        5736: POP_JUMP_FORWARD_IF_FALSE 82
+  Predecessors: 81, 169
+  Successors: 172, 83, 84 type=RegionType.WHILE_LOOP exit=None cond=Block 82 (offset 5614-5736):
+  [LOOP HEADER, depth=2]
+  L400 > 5614: LOAD_GLOBAL 62
+        5626: LOAD_ATTR 31
+        5636: LOAD_METHOD 45
+        5658: PRECALL 0
+        5662: CALL 0
+        5672: STORE_FAST 41
+  L403   5674: LOAD_FAST 41
+        5676: LOAD_METHOD 46
+        5698: LOAD_CONST 18
+        5700: LOAD_CONST 18
+        5702: KW_NAMES 19
+        5704: PRECALL 2
+        5708: CALL 2
+        5718: LOAD_DEREF 0
+        5720: LOAD_ATTR 47
+        5730: COMPARE_OP 1
+        5736: POP_JUMP_FORWARD_IF_FALSE 82
+  Predecessors: 81, 169
+  Successors: 172, 83, 84 merge=None hdr=Block 83 (offset 5738-5900):
+  [LOOP HEADER, depth=3]
+  L404 > 5738: LOAD_GLOBAL 67
+        5750: LOAD_ATTR 48
+        5760: LOAD_CONST 20
+        5762: PRECALL 1
+        5766: CALL 1
+        5776: POP_TOP
+  L405   5778: LOAD_GLOBAL 62
+        5790: LOAD_ATTR 31
+        5800: LOAD_METHOD 45
+        5822: PRECALL 0
+        5826: CALL 0
+        5836: STORE_FAST 41
+  L403   5838: LOAD_FAST 41
+        5840: LOAD_METHOD 46
+        5862: LOAD_CONST 18
+        5864: LOAD_CONST 18
+        5866: KW_NAMES 19
+        5868: PRECALL 2
+        5872: CALL 2
+        5882: LOAD_DEREF 0
+        5884: LOAD_ATTR 47
+        5894: COMPARE_OP 1
+        5900: POP_JUMP_BACKWARD_IF_TRUE 82
+  Predecessors: 82, 83
+  Successors: 172, 83, 84 be=Block 83 (offset 5738-5900):
+  [LOOP HEADER, depth=3]
+  L404 > 5738: LOAD_GLOBAL 67
+        5750: LOAD_ATTR 48
+        5760: LOAD_CONST 20
+        5762: PRECALL 1
+        5766: CALL 1
+        5776: POP_TOP
+  L405   5778: LOAD_GLOBAL 62
+        5790: LOAD_ATTR 31
+        5800: LOAD_METHOD 45
+        5822: PRECALL 0
+        5826: CALL 0
+        5836: STORE_FAST 41
+  L403   5838: LOAD_FAST 41
+        5840: LOAD_METHOD 46
+        5862: LOAD_CONST 18
+        5864: LOAD_CONST 18
+        5866: KW_NAMES 19
+        5868: PRECALL 2
+        5872: CALL 2
+        5882: LOAD_DEREF 0
+        5884: LOAD_ATTR 47
+        5894: COMPARE_OP 1
+        5900: POP_JUMP_BACKWARD_IF_TRUE 82
+  Predecessors: 82, 83
+  Successors: 172, 83, 84
+
+    IfRegion@Block 84 (offset 5902-6056):
+  L406 > 5902: LOAD_FAST 41
+        5904: LOAD_DEREF 0
+        5906: STORE_ATTR 47
+  L407   5916: LOAD_FAST 41
+        5918: LOAD_METHOD 36
+        5940: PRECALL 0
+        5944: CALL 0
+        5954: STORE_FAST 34
+  L408   5956: LOAD_FAST 41
+        5958: LOAD_METHOD 33
+        5980: PRECALL 0
+        5984: CALL 0
+        5994: STORE_FAST 42
+  L412   5996: LOAD_FAST 34
+        5998: LOAD_FAST 42
+        6000: LOAD_ATTR 49
+        6010: LOAD_FAST 42
+        6012: LOAD_ATTR 50
+        6022: BUILD_TUPLE 3
+        6024: STORE_FAST 43
+  L413   6026: LOAD_FAST 42
+        6028: LOAD_ATTR 49
+        6038: LOAD_FAST 40
+        6040: LOAD_ATTR 49
+        6050: COMPARE_OP 2
+        6056: POP_JUMP_FORWARD_IF_FALSE 111
+  Predecessors: 82, 83
+  Successors: 88, 172, 85 type=RegionType.IF_THEN exit=None cond=Block 86 (offset 6090-6110):
+  L415   6090: LOAD_FAST 43
+        6092: LOAD_DEREF 0
+        6094: LOAD_ATTR 51
+        6104: COMPARE_OP 3
+        6110: POP_JUMP_FORWARD_IF_FALSE 84
+  Predecessors: 85
+  Successors: 88, 172, 87 merge=Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 hdr=None be=None
+       then_blocks=[6112]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       inline_boolop_chains={1580114921104: ['blocks', 'op']}
+       meta={}
+
+    IfRegion@Block 85 (offset 6058-6088):
+  L414   6058: LOAD_FAST 42
+        6060: LOAD_ATTR 50
+        6070: LOAD_FAST 40
+        6072: LOAD_ATTR 50
+        6082: COMPARE_OP 2
+        6088: POP_JUMP_FORWARD_IF_FALSE 95
+  Predecessors: 84
+  Successors: 88, 172, 86 type=RegionType.IF_THEN exit=None cond=Block 86 (offset 6090-6110):
+  L415   6090: LOAD_FAST 43
+        6092: LOAD_DEREF 0
+        6094: LOAD_ATTR 51
+        6104: COMPARE_OP 3
+        6110: POP_JUMP_FORWARD_IF_FALSE 84
+  Predecessors: 85
+  Successors: 88, 172, 87 merge=Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 hdr=None be=None
+       then_blocks=[6112]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       inline_boolop_chains={1580114921104: ['blocks', 'op']}
+       meta={}
+
+      BoolOpRegion@Block 85 (offset 6058-6088):
+  L414   6058: LOAD_FAST 42
+        6060: LOAD_ATTR 50
+        6070: LOAD_FAST 40
+        6072: LOAD_ATTR 50
+        6082: COMPARE_OP 2
+        6088: POP_JUMP_FORWARD_IF_FALSE 95
+  Predecessors: 84
+  Successors: 88, 172, 86 type=RegionType.BOOL_OP exit=None cond=None merge=Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 hdr=None be=None
+
+    IfRegion@Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 type=RegionType.IF_ELIF_CHAIN exit=None cond=Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 merge=Block 172 (offset 9218-9234):
+        9218: PUSH_EXC_INFO
+  L577   9220: LOAD_GLOBAL 202
+        9232: CHECK_EXC_MATCH
+        9234: POP_JUMP_FORWARD_IF_FALSE 43
+  Predecessors: 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 137, 139, 140, 141, 142, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 177, 179, 180, 184, 188, 189
+  Successors: 176, 173, 175 hdr=None be=None
+       then_blocks=[6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6690, 6792]
+       else_blocks=[6846, 6890, 7048]
+       elif_conditions=[6846]
+       elif_bodies=[[6890, 7048]]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 89 (offset 6322-6342):
+  L426   6322: LOAD_FAST 34
+        6324: LOAD_DEREF 0
+        6326: LOAD_ATTR 60
+        6336: COMPARE_OP 4
+        6342: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 88
+  Successors: 90, 172, 94 type=RegionType.IF_THEN exit=None cond=Block 89 (offset 6322-6342):
+  L426   6322: LOAD_FAST 34
+        6324: LOAD_DEREF 0
+        6326: LOAD_ATTR 60
+        6336: COMPARE_OP 4
+        6342: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 88
+  Successors: 90, 172, 94 merge=Block 94 (offset 6374-6404):
+  L427 > 6374: LOAD_DEREF 0
+        6376: LOAD_ATTR 60
+        6386: LOAD_DEREF 0
+        6388: LOAD_ATTR 61
+        6398: COMPARE_OP 2
+        6404: POP_JUMP_FORWARD_IF_FALSE 45
+  Predecessors: 89, 92, 93
+  Successors: 96, 172, 95 hdr=None be=None
+       then_blocks=[6344, 6360, 6370, 6372, 6406]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 90 (offset 6344-6358):
+        6344: LOAD_FAST 35
+        6346: LOAD_FAST 42
+        6348: SWAP 2
+        6350: COPY 2
+        6352: COMPARE_OP 1
+        6358: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 89
+  Successors: 91, 172, 93 type=RegionType.IF_THEN exit=None cond=Block 90 (offset 6344-6358):
+        6344: LOAD_FAST 35
+        6346: LOAD_FAST 42
+        6348: SWAP 2
+        6350: COPY 2
+        6352: COMPARE_OP 1
+        6358: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 89
+  Successors: 91, 172, 93 merge=Block 95 (offset 6406-6486):
+  L428 > 6406: LOAD_DEREF 0
+        6408: LOAD_ATTR 52
+        6418: LOAD_METHOD 53
+        6440: LOAD_FAST 41
+        6442: LOAD_GLOBAL 108
+        6454: LOAD_ATTR 62
+        6464: BUILD_TUPLE 2
+        6466: PRECALL 1
+        6470: CALL 1
+        6480: POP_TOP
+  L429   6482: LOAD_FAST 34
+        6484: LOAD_DEREF 0
+        6486: STORE_ATTR 60
+  Predecessors: 91, 94
+  Successors: 96, 172 hdr=None be=None
+       then_blocks=[6370, 6374]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': False}
+
+    IfRegion@Block 94 (offset 6374-6404):
+  L427 > 6374: LOAD_DEREF 0
+        6376: LOAD_ATTR 60
+        6386: LOAD_DEREF 0
+        6388: LOAD_ATTR 61
+        6398: COMPARE_OP 2
+        6404: POP_JUMP_FORWARD_IF_FALSE 45
+  Predecessors: 89, 92, 93
+  Successors: 96, 172, 95 type=RegionType.IF_THEN exit=None cond=Block 94 (offset 6374-6404):
+  L427 > 6374: LOAD_DEREF 0
+        6376: LOAD_ATTR 60
+        6386: LOAD_DEREF 0
+        6388: LOAD_ATTR 61
+        6398: COMPARE_OP 2
+        6404: POP_JUMP_FORWARD_IF_FALSE 45
+  Predecessors: 89, 92, 93
+  Successors: 96, 172, 95 merge=Block 96 (offset 6496-6516):
+  L432 > 6496: LOAD_FAST 34
+        6498: LOAD_DEREF 0
+        6500: LOAD_ATTR 63
+        6510: COMPARE_OP 4
+        6516: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 94, 95
+  Successors: 97, 172, 101 hdr=None be=None
+       then_blocks=[6406]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 96 (offset 6496-6516):
+  L432 > 6496: LOAD_FAST 34
+        6498: LOAD_DEREF 0
+        6500: LOAD_ATTR 63
+        6510: COMPARE_OP 4
+        6516: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 94, 95
+  Successors: 97, 172, 101 type=RegionType.IF_THEN exit=None cond=Block 96 (offset 6496-6516):
+  L432 > 6496: LOAD_FAST 34
+        6498: LOAD_DEREF 0
+        6500: LOAD_ATTR 63
+        6510: COMPARE_OP 4
+        6516: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 94, 95
+  Successors: 97, 172, 101 merge=Block 101 (offset 6548-6578):
+  L434 > 6548: LOAD_DEREF 0
+        6550: LOAD_ATTR 63
+        6560: LOAD_DEREF 0
+        6562: LOAD_ATTR 61
+        6572: COMPARE_OP 2
+        6578: POP_JUMP_FORWARD_IF_FALSE 106
+  Predecessors: 96, 99, 100
+  Successors: 102, 172, 110 hdr=None be=None
+       then_blocks=[6518, 6534, 6544, 6546, 6580, 6582, 6652]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 97 (offset 6518-6532):
+  L433   6518: LOAD_FAST 27
+        6520: LOAD_FAST 42
+        6522: SWAP 2
+        6524: COPY 2
+        6526: COMPARE_OP 1
+        6532: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 96
+  Successors: 98, 172, 100 type=RegionType.IF_THEN exit=None cond=Block 97 (offset 6518-6532):
+  L433   6518: LOAD_FAST 27
+        6520: LOAD_FAST 42
+        6522: SWAP 2
+        6524: COPY 2
+        6526: COMPARE_OP 1
+        6532: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 96
+  Successors: 98, 172, 100 merge=Block 102 (offset 6580-6580):
+  L438 > 6580: NOP
+  Predecessors: 98, 101
+  Successors: 178 hdr=None be=None
+       then_blocks=[6544, 6548]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': True}
+
+    IfRegion@Block 101 (offset 6548-6578):
+  L434 > 6548: LOAD_DEREF 0
+        6550: LOAD_ATTR 63
+        6560: LOAD_DEREF 0
+        6562: LOAD_ATTR 61
+        6572: COMPARE_OP 2
+        6578: POP_JUMP_FORWARD_IF_FALSE 106
+  Predecessors: 96, 99, 100
+  Successors: 102, 172, 110 type=RegionType.IF_THEN exit=None cond=Block 101 (offset 6548-6578):
+  L434 > 6548: LOAD_DEREF 0
+        6550: LOAD_ATTR 63
+        6560: LOAD_DEREF 0
+        6562: LOAD_ATTR 61
+        6572: COMPARE_OP 2
+        6578: POP_JUMP_FORWARD_IF_FALSE 106
+  Predecessors: 96, 99, 100
+  Successors: 102, 172, 110 merge=Block 110 (offset 6792-6844):
+  L451 > 6792: LOAD_GLOBAL 67
+        6804: LOAD_ATTR 48
+        6814: LOAD_GLOBAL 136
+        6826: PRECALL 1
+        6830: CALL 1
+        6840: POP_TOP
+  L452   6842: EXTENDED_ARG 2
+        6844: JUMP_BACKWARD 624
+  Predecessors: 109, 101
+  Successors: 81, 172 hdr=None be=None
+       then_blocks=[6580, 6582, 6652, 6690]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 107 (offset 6690-6700):
+  L442 > 6690: LOAD_FAST 44
+        6692: LOAD_CONST 22
+        6694: COMPARE_OP 2
+        6700: POP_JUMP_FORWARD_IF_FALSE 38
+  Predecessors: 179, 180
+  Successors: 172, 108, 109 type=RegionType.IF_THEN exit=None cond=Block 107 (offset 6690-6700):
+  L442 > 6690: LOAD_FAST 44
+        6692: LOAD_CONST 22
+        6694: COMPARE_OP 2
+        6700: POP_JUMP_FORWARD_IF_FALSE 38
+  Predecessors: 179, 180
+  Successors: 172, 108, 109 merge=Block 109 (offset 6778-6782):
+  L449 > 6778: LOAD_FAST 34
+        6780: LOAD_DEREF 0
+        6782: STORE_ATTR 63
+  Predecessors: 107, 108
+  Successors: 172, 110 hdr=None be=None
+       then_blocks=[6702]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 113 (offset 6890-7046):
+  L457   6890: LOAD_GLOBAL 61
+        6902: LOAD_FAST 42
+        6904: PRECALL 1
+        6908: CALL 1
+        6918: LOAD_METHOD 71
+        6940: LOAD_CONST 24
+        6942: PRECALL 1
+        6946: CALL 1
+        6956: LOAD_CONST 18
+        6958: BINARY_SUBSCR
+        6968: LOAD_METHOD 46
+        6990: LOAD_CONST 25
+        6992: LOAD_CONST 26
+        6994: PRECALL 2
+        6998: CALL 2
+        7008: LOAD_CONST 4
+        7010: LOAD_CONST 27
+        7012: BUILD_SLICE 2
+        7014: BINARY_SUBSCR
+        7024: STORE_FAST 45
+  L459   7026: LOAD_FAST 45
+        7028: LOAD_DEREF 0
+        7030: LOAD_ATTR 72
+        7040: COMPARE_OP 5
+        7046: POP_JUMP_FORWARD_IF_FALSE 58
+  Predecessors: 112
+  Successors: 114, 115, 172 type=RegionType.IF_THEN exit=None cond=Block 113 (offset 6890-7046):
+  L457   6890: LOAD_GLOBAL 61
+        6902: LOAD_FAST 42
+        6904: PRECALL 1
+        6908: CALL 1
+        6918: LOAD_METHOD 71
+        6940: LOAD_CONST 24
+        6942: PRECALL 1
+        6946: CALL 1
+        6956: LOAD_CONST 18
+        6958: BINARY_SUBSCR
+        6968: LOAD_METHOD 46
+        6990: LOAD_CONST 25
+        6992: LOAD_CONST 26
+        6994: PRECALL 2
+        6998: CALL 2
+        7008: LOAD_CONST 4
+        7010: LOAD_CONST 27
+        7012: BUILD_SLICE 2
+        7014: BINARY_SUBSCR
+        7024: STORE_FAST 45
+  L459   7026: LOAD_FAST 45
+        7028: LOAD_DEREF 0
+        7030: LOAD_ATTR 72
+        7040: COMPARE_OP 5
+        7046: POP_JUMP_FORWARD_IF_FALSE 58
+  Predecessors: 112
+  Successors: 114, 115, 172 merge=Block 115 (offset 7164-7184):
+  L469 > 7164: LOAD_FAST 34
+        7166: LOAD_DEREF 0
+        7168: LOAD_ATTR 60
+        7178: COMPARE_OP 4
+        7184: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 112, 113, 114, 111
+  Successors: 120, 172, 116 hdr=None be=None
+       then_blocks=[7048]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 115 (offset 7164-7184):
+  L469 > 7164: LOAD_FAST 34
+        7166: LOAD_DEREF 0
+        7168: LOAD_ATTR 60
+        7178: COMPARE_OP 4
+        7184: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 112, 113, 114, 111
+  Successors: 120, 172, 116 type=RegionType.IF_THEN exit=None cond=Block 115 (offset 7164-7184):
+  L469 > 7164: LOAD_FAST 34
+        7166: LOAD_DEREF 0
+        7168: LOAD_ATTR 60
+        7178: COMPARE_OP 4
+        7184: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 112, 113, 114, 111
+  Successors: 120, 172, 116 merge=Block 120 (offset 7216-7246):
+  L470 > 7216: LOAD_DEREF 0
+        7218: LOAD_ATTR 60
+        7228: LOAD_DEREF 0
+        7230: LOAD_ATTR 61
+        7240: COMPARE_OP 2
+        7246: POP_JUMP_FORWARD_IF_FALSE 167
+  Predecessors: 115, 118, 119
+  Successors: 121, 172, 125 hdr=None be=None
+       then_blocks=[7186, 7202, 7212, 7214, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 116 (offset 7186-7200):
+        7186: LOAD_FAST 35
+        7188: LOAD_FAST 42
+        7190: SWAP 2
+        7192: COPY 2
+        7194: COMPARE_OP 1
+        7200: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 115
+  Successors: 172, 117, 119 type=RegionType.IF_ELIF_CHAIN exit=None cond=Block 116 (offset 7186-7200):
+        7186: LOAD_FAST 35
+        7188: LOAD_FAST 42
+        7190: SWAP 2
+        7192: COPY 2
+        7194: COMPARE_OP 1
+        7200: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 115
+  Successors: 172, 117, 119 merge=Block 120 (offset 7216-7246):
+  L470 > 7216: LOAD_DEREF 0
+        7218: LOAD_ATTR 60
+        7228: LOAD_DEREF 0
+        7230: LOAD_ATTR 61
+        7240: COMPARE_OP 2
+        7246: POP_JUMP_FORWARD_IF_FALSE 167
+  Predecessors: 115, 118, 119
+  Successors: 121, 172, 125 hdr=None be=None
+       then_blocks=[7212]
+       else_blocks=[7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': False}
+
+    IfRegion@Block 120 (offset 7216-7246):
+  L470 > 7216: LOAD_DEREF 0
+        7218: LOAD_ATTR 60
+        7228: LOAD_DEREF 0
+        7230: LOAD_ATTR 61
+        7240: COMPARE_OP 2
+        7246: POP_JUMP_FORWARD_IF_FALSE 167
+  Predecessors: 115, 118, 119
+  Successors: 121, 172, 125 type=RegionType.IF_THEN exit=None cond=Block 120 (offset 7216-7246):
+  L470 > 7216: LOAD_DEREF 0
+        7218: LOAD_ATTR 60
+        7228: LOAD_DEREF 0
+        7230: LOAD_ATTR 61
+        7240: COMPARE_OP 2
+        7246: POP_JUMP_FORWARD_IF_FALSE 167
+  Predecessors: 115, 118, 119
+  Successors: 121, 172, 125 merge=Block 125 (offset 7582-7602):
+  L482 > 7582: LOAD_FAST 34
+        7584: LOAD_DEREF 0
+        7586: LOAD_ATTR 63
+        7596: COMPARE_OP 4
+        7602: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 120, 124
+  Successors: 130, 172, 126 hdr=None be=None
+       then_blocks=[7248, 7270, 7372, 7488, 7492]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 121 (offset 7248-7268):
+  L472 > 7248: LOAD_FAST 34
+        7250: LOAD_DEREF 0
+        7252: LOAD_ATTR 70
+        7262: COMPARE_OP 3
+        7268: POP_JUMP_FORWARD_IF_FALSE 111
+  Predecessors: 120, 117
+  Successors: 122, 172, 124 type=RegionType.IF_THEN exit=None cond=Block 121 (offset 7248-7268):
+  L472 > 7248: LOAD_FAST 34
+        7250: LOAD_DEREF 0
+        7252: LOAD_ATTR 70
+        7262: COMPARE_OP 3
+        7268: POP_JUMP_FORWARD_IF_FALSE 111
+  Predecessors: 120, 117
+  Successors: 122, 172, 124 merge=Block 124 (offset 7492-7572):
+  L478 > 7492: LOAD_DEREF 0
+        7494: LOAD_ATTR 52
+        7504: LOAD_METHOD 53
+        7526: LOAD_FAST 41
+        7528: LOAD_GLOBAL 108
+        7540: LOAD_ATTR 62
+        7550: BUILD_TUPLE 2
+        7552: PRECALL 1
+        7556: CALL 1
+        7566: POP_TOP
+  L479   7568: LOAD_FAST 34
+        7570: LOAD_DEREF 0
+        7572: STORE_ATTR 60
+  Predecessors: 121, 122
+  Successors: 172, 125 hdr=None be=None
+       then_blocks=[7270, 7372, 7488]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 122 (offset 7270-7370):
+  L473   7270: LOAD_GLOBAL 113
+        7282: LOAD_ATTR 76
+        7292: LOAD_CONST 29
+        7294: PRECALL 1
+        7298: CALL 1
+        7308: POP_TOP
+  L474   7310: LOAD_GLOBAL 155
+        7322: LOAD_ATTR 78
+        7332: LOAD_GLOBAL 158
+        7344: LOAD_CONST 30
+        7346: BINARY_OP 5
+        7350: KW_NAMES 31
+        7352: PRECALL 1
+        7356: CALL 1
+        7366: LOAD_CONST 32
+        7368: IS_OP 0
+        7370: POP_JUMP_FORWARD_IF_FALSE 60
+  Predecessors: 121
+  Successors: 172, 123, 124 type=RegionType.IF_THEN_ELSE exit=None cond=Block 122 (offset 7270-7370):
+  L473   7270: LOAD_GLOBAL 113
+        7282: LOAD_ATTR 76
+        7292: LOAD_CONST 29
+        7294: PRECALL 1
+        7298: CALL 1
+        7308: POP_TOP
+  L474   7310: LOAD_GLOBAL 155
+        7322: LOAD_ATTR 78
+        7332: LOAD_GLOBAL 158
+        7344: LOAD_CONST 30
+        7346: BINARY_OP 5
+        7350: KW_NAMES 31
+        7352: PRECALL 1
+        7356: CALL 1
+        7366: LOAD_CONST 32
+        7368: IS_OP 0
+        7370: POP_JUMP_FORWARD_IF_FALSE 60
+  Predecessors: 121
+  Successors: 172, 123, 124 merge=Block 125 (offset 7582-7602):
+  L482 > 7582: LOAD_FAST 34
+        7584: LOAD_DEREF 0
+        7586: LOAD_ATTR 63
+        7596: COMPARE_OP 4
+        7602: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 120, 124
+  Successors: 130, 172, 126 hdr=None be=None
+       then_blocks=[7372, 7488]
+       else_blocks=[7492]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 125 (offset 7582-7602):
+  L482 > 7582: LOAD_FAST 34
+        7584: LOAD_DEREF 0
+        7586: LOAD_ATTR 63
+        7596: COMPARE_OP 4
+        7602: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 120, 124
+  Successors: 130, 172, 126 type=RegionType.IF_THEN exit=None cond=Block 125 (offset 7582-7602):
+  L482 > 7582: LOAD_FAST 34
+        7584: LOAD_DEREF 0
+        7586: LOAD_ATTR 63
+        7596: COMPARE_OP 4
+        7602: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 120, 124
+  Successors: 130, 172, 126 merge=Block 130 (offset 7634-7666):
+  L484 > 7634: LOAD_DEREF 0
+        7636: LOAD_ATTR 63
+        7646: LOAD_DEREF 0
+        7648: LOAD_ATTR 61
+        7658: COMPARE_OP 2
+        7664: EXTENDED_ARG 1
+        7666: POP_JUMP_FORWARD_IF_FALSE 462
+  Predecessors: 128, 129, 125
+  Successors: 131, 172, 157 hdr=None be=None
+       then_blocks=[7604, 7620, 7630, 7632, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 126 (offset 7604-7618):
+  L483   7604: LOAD_FAST 27
+        7606: LOAD_FAST 42
+        7608: SWAP 2
+        7610: COPY 2
+        7612: COMPARE_OP 1
+        7618: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 125
+  Successors: 129, 172, 127 type=RegionType.IF_THEN_ELSE exit=None cond=Block 126 (offset 7604-7618):
+  L483   7604: LOAD_FAST 27
+        7606: LOAD_FAST 42
+        7608: SWAP 2
+        7610: COPY 2
+        7612: COMPARE_OP 1
+        7618: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 125
+  Successors: 129, 172, 127 merge=Block 130 (offset 7634-7666):
+  L484 > 7634: LOAD_DEREF 0
+        7636: LOAD_ATTR 63
+        7646: LOAD_DEREF 0
+        7648: LOAD_ATTR 61
+        7658: COMPARE_OP 2
+        7664: EXTENDED_ARG 1
+        7666: POP_JUMP_FORWARD_IF_FALSE 462
+  Predecessors: 128, 129, 125
+  Successors: 131, 172, 157 hdr=None be=None
+       then_blocks=[7630]
+       else_blocks=[7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': False}
+
+    IfRegion@Block 130 (offset 7634-7666):
+  L484 > 7634: LOAD_DEREF 0
+        7636: LOAD_ATTR 63
+        7646: LOAD_DEREF 0
+        7648: LOAD_ATTR 61
+        7658: COMPARE_OP 2
+        7664: EXTENDED_ARG 1
+        7666: POP_JUMP_FORWARD_IF_FALSE 462
+  Predecessors: 128, 129, 125
+  Successors: 131, 172, 157 type=RegionType.IF_ELIF_CHAIN exit=None cond=Block 130 (offset 7634-7666):
+  L484 > 7634: LOAD_DEREF 0
+        7636: LOAD_ATTR 63
+        7646: LOAD_DEREF 0
+        7648: LOAD_ATTR 61
+        7658: COMPARE_OP 2
+        7664: EXTENDED_ARG 1
+        7666: POP_JUMP_FORWARD_IF_FALSE 462
+  Predecessors: 128, 129, 125
+  Successors: 131, 172, 157 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+       then_blocks=[7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+       else_blocks=[8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+       elif_conditions=[8592]
+       elif_bodies=[[8666, 8688, 8852]]
+       elif_final_else=[8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+       meta={}
+
+    LoopRegion@Block 132 (offset 7706-7706):
+  [LOOP HEADER, depth=3]
+      > 7706: FOR_ITER 132
+  Predecessors: 137, 131
+  Successors: 172, 140, 133 type=RegionType.FOR_LOOP exit=None cond=None merge=None hdr=Block 132 (offset 7706-7706):
+  [LOOP HEADER, depth=3]
+      > 7706: FOR_ITER 132
+  Predecessors: 137, 131
+  Successors: 172, 140, 133 be=Block 137 (offset 7960-7962):
+      > 7960: POP_EXCEPT
+        7962: JUMP_BACKWARD 129
+  Predecessors: 136, 135
+  Successors: 172, 132
+
+      IfRegion@Block 135 (offset 7836-7888):
+        7836: POP_TOP
+  L495   7838: LOAD_GLOBAL 67
+        7850: LOAD_ATTR 48
+        7860: LOAD_CONST 36
+        7862: PRECALL 1
+        7866: CALL 1
+        7876: POP_TOP
+  L496   7878: LOAD_FAST 48
+        7880: LOAD_CONST 37
+        7882: COMPARE_OP 2
+        7888: POP_JUMP_FORWARD_IF_FALSE 35
+  Predecessors: 134
+  Successors: 136, 137, 139 type=RegionType.IF_THEN exit=None cond=Block 135 (offset 7836-7888):
+        7836: POP_TOP
+  L495   7838: LOAD_GLOBAL 67
+        7850: LOAD_ATTR 48
+        7860: LOAD_CONST 36
+        7862: PRECALL 1
+        7866: CALL 1
+        7876: POP_TOP
+  L496   7878: LOAD_FAST 48
+        7880: LOAD_CONST 37
+        7882: COMPARE_OP 2
+        7888: POP_JUMP_FORWARD_IF_FALSE 35
+  Predecessors: 134
+  Successors: 136, 137, 139 merge=Block 137 (offset 7960-7962):
+      > 7960: POP_EXCEPT
+        7962: JUMP_BACKWARD 129
+  Predecessors: 136, 135
+  Successors: 172, 132 hdr=None be=None
+         then_blocks=[7890]
+         else_blocks=[]
+         elif_conditions=[]
+         elif_bodies=[]
+         elif_final_else=[]
+         meta={}
+
+    IfRegion@Block 140 (offset 7972-7978):
+  L498 > 7972: LOAD_FAST 47
+        7974: LOAD_CONST 32
+        7976: IS_OP 0
+        7978: POP_JUMP_FORWARD_IF_FALSE 95
+  Predecessors: 184, 132
+  Successors: 172, 141, 142 type=RegionType.IF_THEN exit=None cond=Block 140 (offset 7972-7978):
+  L498 > 7972: LOAD_FAST 47
+        7974: LOAD_CONST 32
+        7976: IS_OP 0
+        7978: POP_JUMP_FORWARD_IF_FALSE 95
+  Predecessors: 184, 132
+  Successors: 172, 141, 142 merge=Block 142 (offset 8170-8174):
+  L504 > 8170: LOAD_FAST 34
+        8172: LOAD_DEREF 0
+        8174: STORE_ATTR 63
+  Predecessors: 140
+  Successors: 186, 172 hdr=None be=None
+       then_blocks=[7980, 8166]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 147 (offset 8294-8304):
+  L511 > 8294: LOAD_FAST 49
+        8296: LOAD_CONST 22
+        8298: COMPARE_OP 2
+        8304: POP_JUMP_FORWARD_IF_FALSE 22
+  Predecessors: 188, 189
+  Successors: 172, 148, 149 type=RegionType.IF_THEN_ELSE exit=None cond=Block 147 (offset 8294-8304):
+  L511 > 8294: LOAD_FAST 49
+        8296: LOAD_CONST 22
+        8298: COMPARE_OP 2
+        8304: POP_JUMP_FORWARD_IF_FALSE 22
+  Predecessors: 188, 189
+  Successors: 172, 148, 149 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+       then_blocks=[8306]
+       else_blocks=[8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 149 (offset 8350-8352):
+  L515 > 8350: LOAD_FAST 46
+        8352: POP_JUMP_FORWARD_IF_NONE 117
+  Predecessors: 147
+  Successors: 172, 156, 150 type=RegionType.IF_THEN exit=None cond=Block 149 (offset 8350-8352):
+  L515 > 8350: LOAD_FAST 46
+        8352: POP_JUMP_FORWARD_IF_NONE 117
+  Predecessors: 147
+  Successors: 172, 156, 150 merge=Block 156 (offset 8588-8590):
+      > 8588: EXTENDED_ARG 1
+        8590: JUMP_FORWARD 301
+  Predecessors: 155, 149, 150
+  Successors: 169, 172 hdr=None be=None
+       then_blocks=[8354, 8400, 8450, 8504, 8544, 8548]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 150 (offset 8354-8398):
+  L516   8354: LOAD_FAST 46
+        8356: LOAD_METHOD 6
+        8378: LOAD_CONST 40
+        8380: PRECALL 1
+        8384: CALL 1
+        8394: STORE_FAST 50
+  L517   8396: LOAD_FAST 50
+        8398: POP_JUMP_FORWARD_IF_NONE 94
+  Predecessors: 149
+  Successors: 172, 156, 151 type=RegionType.IF_THEN exit=None cond=Block 150 (offset 8354-8398):
+  L516   8354: LOAD_FAST 46
+        8356: LOAD_METHOD 6
+        8378: LOAD_CONST 40
+        8380: PRECALL 1
+        8384: CALL 1
+        8394: STORE_FAST 50
+  L517   8396: LOAD_FAST 50
+        8398: POP_JUMP_FORWARD_IF_NONE 94
+  Predecessors: 149
+  Successors: 172, 156, 151 merge=Block 156 (offset 8588-8590):
+      > 8588: EXTENDED_ARG 1
+        8590: JUMP_FORWARD 301
+  Predecessors: 155, 149, 150
+  Successors: 169, 172 hdr=None be=None
+       then_blocks=[8400, 8450, 8504, 8544, 8548]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 151 (offset 8400-8448):
+  L518   8400: LOAD_FAST 34
+        8402: LOAD_METHOD 93
+        8424: LOAD_CONST 41
+        8426: PRECALL 1
+        8430: CALL 1
+        8440: STORE_FAST 51
+  L519   8442: LOAD_FAST 51
+        8444: LOAD_FAST 50
+        8446: CONTAINS_OP 0
+        8448: POP_JUMP_FORWARD_IF_FALSE 49
+  Predecessors: 150
+  Successors: 152, 155, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 151 (offset 8400-8448):
+  L518   8400: LOAD_FAST 34
+        8402: LOAD_METHOD 93
+        8424: LOAD_CONST 41
+        8426: PRECALL 1
+        8430: CALL 1
+        8440: STORE_FAST 51
+  L519   8442: LOAD_FAST 51
+        8444: LOAD_FAST 50
+        8446: CONTAINS_OP 0
+        8448: POP_JUMP_FORWARD_IF_FALSE 49
+  Predecessors: 150
+  Successors: 152, 155, 172 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+       then_blocks=[8450, 8504, 8544]
+       else_blocks=[8548, 8588]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 152 (offset 8450-8502):
+  L520   8450: LOAD_FAST 50
+        8452: LOAD_FAST 51
+        8454: BINARY_SUBSCR
+        8464: STORE_FAST 52
+  L521   8466: LOAD_GLOBAL 189
+        8478: LOAD_FAST 52
+        8480: PRECALL 1
+        8484: CALL 1
+        8494: LOAD_CONST 18
+        8496: COMPARE_OP 2
+        8502: POP_JUMP_FORWARD_IF_FALSE 20
+  Predecessors: 151
+  Successors: 153, 154, 172 type=RegionType.IF_THEN exit=None cond=Block 152 (offset 8450-8502):
+  L520   8450: LOAD_FAST 50
+        8452: LOAD_FAST 51
+        8454: BINARY_SUBSCR
+        8464: STORE_FAST 52
+  L521   8466: LOAD_GLOBAL 189
+        8478: LOAD_FAST 52
+        8480: PRECALL 1
+        8484: CALL 1
+        8494: LOAD_CONST 18
+        8496: COMPARE_OP 2
+        8502: POP_JUMP_FORWARD_IF_FALSE 20
+  Predecessors: 151
+  Successors: 153, 154, 172 merge=Block 154 (offset 8544-8546):
+      > 8544: EXTENDED_ARG 1
+        8546: JUMP_FORWARD 323
+  Predecessors: 152, 153
+  Successors: 169, 172 hdr=None be=None
+       then_blocks=[8504]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 158 (offset 8666-8686):
+  L534   8666: PUSH_NULL
+        8668: LOAD_FAST 36
+        8670: LOAD_FAST 34
+        8672: PRECALL 1
+        8676: CALL 1
+        8686: POP_JUMP_FORWARD_IF_FALSE 82
+  Predecessors: 157
+  Successors: 160, 172, 159 type=RegionType.IF_THEN_ELSE exit=None cond=Block 158 (offset 8666-8686):
+  L534   8666: PUSH_NULL
+        8668: LOAD_FAST 36
+        8670: LOAD_FAST 34
+        8672: PRECALL 1
+        8676: CALL 1
+        8686: POP_JUMP_FORWARD_IF_FALSE 82
+  Predecessors: 157
+  Successors: 160, 172, 159 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+       then_blocks=[8688]
+       else_blocks=[8852]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={}
+
+    IfRegion@Block 161 (offset 8904-8924):
+  L544 > 8904: LOAD_FAST 34
+        8906: LOAD_DEREF 0
+        8908: LOAD_ATTR 63
+        8918: COMPARE_OP 2
+        8924: POP_JUMP_FORWARD_IF_FALSE 109
+  Predecessors: 157
+  Successors: 168, 162, 172 type=RegionType.IF_THEN exit=None cond=Block 162 (offset 8926-8946):
+  L545   8926: LOAD_FAST 34
+        8928: LOAD_DEREF 0
+        8930: LOAD_ATTR 99
+        8940: COMPARE_OP 4
+        8946: POP_JUMP_FORWARD_IF_FALSE 98
+  Predecessors: 161
+  Successors: 168, 163, 172 merge=Block 168 (offset 9144-9192):
+  L575 > 9144: LOAD_GLOBAL 67
+        9156: LOAD_ATTR 48
+        9166: LOAD_GLOBAL 136
+        9178: PRECALL 1
+        9182: CALL 1
+        9192: POP_TOP
+  Predecessors: 161, 162, 164, 166
+  Successors: 169, 172 hdr=None be=None
+       then_blocks=[8948, 8964, 8974, 8976, 8980]
+       else_blocks=[]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       inline_boolop_chains={1580115051856: ['blocks', 'op']}
+       meta={}
+
+      BoolOpRegion@Block 161 (offset 8904-8924):
+  L544 > 8904: LOAD_FAST 34
+        8906: LOAD_DEREF 0
+        8908: LOAD_ATTR 63
+        8918: COMPARE_OP 2
+        8924: POP_JUMP_FORWARD_IF_FALSE 109
+  Predecessors: 157
+  Successors: 168, 162, 172 type=RegionType.BOOL_OP exit=None cond=None merge=Block 168 (offset 9144-9192):
+  L575 > 9144: LOAD_GLOBAL 67
+        9156: LOAD_ATTR 48
+        9166: LOAD_GLOBAL 136
+        9178: PRECALL 1
+        9182: CALL 1
+        9192: POP_TOP
+  Predecessors: 161, 162, 164, 166
+  Successors: 169, 172 hdr=None be=None
+
+    IfRegion@Block 163 (offset 8948-8962):
+  L546   8948: LOAD_FAST 38
+        8950: LOAD_FAST 42
+        8952: SWAP 2
+        8954: COPY 2
+        8956: COMPARE_OP 5
+        8962: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 162
+  Successors: 172, 164, 166 type=RegionType.IF_THEN_ELSE exit=None cond=Block 163 (offset 8948-8962):
+  L546   8948: LOAD_FAST 38
+        8950: LOAD_FAST 42
+        8952: SWAP 2
+        8954: COPY 2
+        8956: COMPARE_OP 5
+        8962: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 162
+  Successors: 172, 164, 166 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+       then_blocks=[8974, 8980]
+       else_blocks=[8976, 9144]
+       elif_conditions=[]
+       elif_bodies=[]
+       elif_final_else=[]
+       meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': False}
+
+TryExceptRegion@Block 183 (offset 7712-7812):
+  L491   7712: LOAD_GLOBAL 167
+        7724: LOAD_ATTR 84
+        7734: LOAD_DEREF 0
+        7736: LOAD_ATTR 0
+        7746: LOAD_ATTR 85
+        7756: LOAD_METHOD 86
+        7778: LOAD_CONST 34
+        7780: PRECALL 1
+        7784: CALL 1
+        7794: PRECALL 1
+        7798: CALL 1
+        7808: STORE_FAST 46
+  L492   7810: LOAD_CONST 35
+        7812: STORE_FAST 47
+  Predecessors: 182
+  Successors: 184, 134 type=RegionType.TRY_EXCEPT exit=None cond=None merge=None hdr=None be=None
+
+TryExceptRegion@Block 178 (offset 6582-6650):
+  L439   6582: LOAD_GLOBAL 61
+        6594: LOAD_DEREF 0
+        6596: LOAD_ATTR 0
+        6606: LOAD_ATTR 1
+        6616: LOAD_ATTR 64
+        6626: LOAD_ATTR 65
+        6636: PRECALL 1
+        6640: CALL 1
+        6650: STORE_FAST 44
+  Predecessors: 102
+  Successors: 179, 103 type=RegionType.TRY_EXCEPT exit=None cond=None merge=None hdr=None be=None
+
+TryExceptRegion@Block 187 (offset 8186-8254):
+  L507   8186: LOAD_GLOBAL 61
+        8198: LOAD_DEREF 0
+        8200: LOAD_ATTR 0
+        8210: LOAD_ATTR 1
+        8220: LOAD_ATTR 64
+        8230: LOAD_ATTR 91
+        8240: PRECALL 1
+        8244: CALL 1
+        8254: STORE_FAST 49
+  Predecessors: 186
+  Successors: 188, 143 type=RegionType.TRY_EXCEPT exit=None cond=None merge=None hdr=None be=None
+
+TryExceptRegion@Block 177 (offset 6-298):
+  L125     6: LOAD_DEREF 0
+          8: LOAD_ATTR 0
+         18: LOAD_ATTR 1
+         28: LOAD_ATTR 2
+         38: LOAD_ATTR 3
+         48: STORE_FAST 1
+  L130    50: LOAD_DEREF 0
+         52: LOAD_ATTR 0
+         62: LOAD_ATTR 1
+         72: LOAD_ATTR 4
+         82: LOAD_ATTR 5
+         92: LOAD_METHOD 6
+        114: LOAD_CONST 1
+        116: PRECALL 1
+        120: CALL 1
+  L129   130: STORE_FAST 2
+  L132   132: LOAD_DEREF 0
+        134: LOAD_ATTR 0
+        144: LOAD_ATTR 1
+        154: LOAD_ATTR 4
+        164: LOAD_ATTR 5
+        174: LOAD_METHOD 6
+        196: LOAD_CONST 2
+        198: PRECALL 1
+        202: CALL 1
+  L131   212: STORE_FAST 3
+  L135   214: LOAD_DEREF 0
+        216: LOAD_ATTR 0
+        226: LOAD_ATTR 1
+        236: LOAD_ATTR 4
+        246: LOAD_ATTR 5
+        256: LOAD_METHOD 6
+        278: LOAD_CONST 3
+        280: PRECALL 1
+        284: CALL 1
+  L134   294: STORE_FAST 4
+  L137   296: LOAD_FAST 2
+        298: POP_JUMP_FORWARD_IF_NOT_NONE 50
+  Predecessors: 1
+  Successors: 2, 3, 172 type=RegionType.TRY_EXCEPT exit=None cond=None merge=None hdr=None be=None
+
+  TryExceptRegion@Block 183 (offset 7712-7812):
+  L491   7712: LOAD_GLOBAL 167
+        7724: LOAD_ATTR 84
+        7734: LOAD_DEREF 0
+        7736: LOAD_ATTR 0
+        7746: LOAD_ATTR 85
+        7756: LOAD_METHOD 86
+        7778: LOAD_CONST 34
+        7780: PRECALL 1
+        7784: CALL 1
+        7794: PRECALL 1
+        7798: CALL 1
+        7808: STORE_FAST 46
+  L492   7810: LOAD_CONST 35
+        7812: STORE_FAST 47
+  Predecessors: 182
+  Successors: 184, 134 type=RegionType.TRY_EXCEPT exit=None cond=None merge=None hdr=None be=None
+
+  TryExceptRegion@Block 178 (offset 6582-6650):
+  L439   6582: LOAD_GLOBAL 61
+        6594: LOAD_DEREF 0
+        6596: LOAD_ATTR 0
+        6606: LOAD_ATTR 1
+        6616: LOAD_ATTR 64
+        6626: LOAD_ATTR 65
+        6636: PRECALL 1
+        6640: CALL 1
+        6650: STORE_FAST 44
+  Predecessors: 102
+  Successors: 179, 103 type=RegionType.TRY_EXCEPT exit=None cond=None merge=None hdr=None be=None
+
+  TryExceptRegion@Block 187 (offset 8186-8254):
+  L507   8186: LOAD_GLOBAL 61
+        8198: LOAD_DEREF 0
+        8200: LOAD_ATTR 0
+        8210: LOAD_ATTR 1
+        8220: LOAD_ATTR 64
+        8230: LOAD_ATTR 91
+        8240: PRECALL 1
+        8244: CALL 1
+        8254: STORE_FAST 49
+  Predecessors: 186
+  Successors: 188, 143 type=RegionType.TRY_EXCEPT exit=None cond=None merge=None hdr=None be=None
+
+  IfRegion@Block 11 (offset 1782-1836):
+  L214   1782: LOAD_GLOBAL 56
+        1794: STORE_FAST 26
+  L217   1796: LOAD_GLOBAL 59
+        1808: LOAD_FAST 19
+        1810: LOAD_GLOBAL 60
+        1822: PRECALL 2
+        1826: CALL 2
+        1836: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 10
+  Successors: 172, 12, 13 type=RegionType.IF_THEN_ELSE exit=None cond=Block 11 (offset 1782-1836):
+  L214   1782: LOAD_GLOBAL 56
+        1794: STORE_FAST 26
+  L217   1796: LOAD_GLOBAL 59
+        1808: LOAD_FAST 19
+        1810: LOAD_GLOBAL 60
+        1822: PRECALL 2
+        1826: CALL 2
+        1836: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 10
+  Successors: 172, 12, 13 merge=Block 14 (offset 1944-1984):
+  L224 > 1944: LOAD_GLOBAL 59
+        1956: LOAD_FAST 20
+        1958: LOAD_GLOBAL 60
+        1970: PRECALL 2
+        1974: CALL 2
+        1984: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 12, 13
+  Successors: 16, 172, 15 hdr=None be=None
+     then_blocks=[1838]
+     else_blocks=[1940]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 14 (offset 1944-1984):
+  L224 > 1944: LOAD_GLOBAL 59
+        1956: LOAD_FAST 20
+        1958: LOAD_GLOBAL 60
+        1970: PRECALL 2
+        1974: CALL 2
+        1984: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 12, 13
+  Successors: 16, 172, 15 type=RegionType.IF_THEN_ELSE exit=None cond=Block 14 (offset 1944-1984):
+  L224 > 1944: LOAD_GLOBAL 59
+        1956: LOAD_FAST 20
+        1958: LOAD_GLOBAL 60
+        1970: PRECALL 2
+        1974: CALL 2
+        1984: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 12, 13
+  Successors: 16, 172, 15 merge=Block 17 (offset 2092-2132):
+  L231 > 2092: LOAD_GLOBAL 59
+        2104: LOAD_FAST 21
+        2106: LOAD_GLOBAL 60
+        2118: PRECALL 2
+        2122: CALL 2
+        2132: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 16, 15
+  Successors: 18, 19, 172 hdr=None be=None
+     then_blocks=[1986]
+     else_blocks=[2088]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 17 (offset 2092-2132):
+  L231 > 2092: LOAD_GLOBAL 59
+        2104: LOAD_FAST 21
+        2106: LOAD_GLOBAL 60
+        2118: PRECALL 2
+        2122: CALL 2
+        2132: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 16, 15
+  Successors: 18, 19, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 17 (offset 2092-2132):
+  L231 > 2092: LOAD_GLOBAL 59
+        2104: LOAD_FAST 21
+        2106: LOAD_GLOBAL 60
+        2118: PRECALL 2
+        2122: CALL 2
+        2132: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 16, 15
+  Successors: 18, 19, 172 merge=Block 20 (offset 2240-2280):
+  L238 > 2240: LOAD_GLOBAL 59
+        2252: LOAD_FAST 22
+        2254: LOAD_GLOBAL 60
+        2266: PRECALL 2
+        2270: CALL 2
+        2280: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 18, 19
+  Successors: 172, 21, 22 hdr=None be=None
+     then_blocks=[2134]
+     else_blocks=[2236]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 20 (offset 2240-2280):
+  L238 > 2240: LOAD_GLOBAL 59
+        2252: LOAD_FAST 22
+        2254: LOAD_GLOBAL 60
+        2266: PRECALL 2
+        2270: CALL 2
+        2280: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 18, 19
+  Successors: 172, 21, 22 type=RegionType.IF_THEN_ELSE exit=None cond=Block 20 (offset 2240-2280):
+  L238 > 2240: LOAD_GLOBAL 59
+        2252: LOAD_FAST 22
+        2254: LOAD_GLOBAL 60
+        2266: PRECALL 2
+        2270: CALL 2
+        2280: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 18, 19
+  Successors: 172, 21, 22 merge=Block 23 (offset 2388-2428):
+  L245 > 2388: LOAD_GLOBAL 59
+        2400: LOAD_FAST 23
+        2402: LOAD_GLOBAL 60
+        2414: PRECALL 2
+        2418: CALL 2
+        2428: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 21, 22
+  Successors: 24, 25, 172 hdr=None be=None
+     then_blocks=[2282]
+     else_blocks=[2384]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 23 (offset 2388-2428):
+  L245 > 2388: LOAD_GLOBAL 59
+        2400: LOAD_FAST 23
+        2402: LOAD_GLOBAL 60
+        2414: PRECALL 2
+        2418: CALL 2
+        2428: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 21, 22
+  Successors: 24, 25, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 23 (offset 2388-2428):
+  L245 > 2388: LOAD_GLOBAL 59
+        2400: LOAD_FAST 23
+        2402: LOAD_GLOBAL 60
+        2414: PRECALL 2
+        2418: CALL 2
+        2428: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 21, 22
+  Successors: 24, 25, 172 merge=Block 26 (offset 2536-2576):
+  L252 > 2536: LOAD_GLOBAL 59
+        2548: LOAD_FAST 24
+        2550: LOAD_GLOBAL 60
+        2562: PRECALL 2
+        2566: CALL 2
+        2576: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 24, 25
+  Successors: 172, 27, 28 hdr=None be=None
+     then_blocks=[2430]
+     else_blocks=[2532]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 26 (offset 2536-2576):
+  L252 > 2536: LOAD_GLOBAL 59
+        2548: LOAD_FAST 24
+        2550: LOAD_GLOBAL 60
+        2562: PRECALL 2
+        2566: CALL 2
+        2576: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 24, 25
+  Successors: 172, 27, 28 type=RegionType.IF_THEN_ELSE exit=None cond=Block 26 (offset 2536-2576):
+  L252 > 2536: LOAD_GLOBAL 59
+        2548: LOAD_FAST 24
+        2550: LOAD_GLOBAL 60
+        2562: PRECALL 2
+        2566: CALL 2
+        2576: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 24, 25
+  Successors: 172, 27, 28 merge=Block 29 (offset 2684-2724):
+  L259 > 2684: LOAD_GLOBAL 59
+        2696: LOAD_FAST 25
+        2698: LOAD_GLOBAL 60
+        2710: PRECALL 2
+        2714: CALL 2
+        2724: POP_JUMP_FORWARD_IF_FALSE 52
+  Predecessors: 27, 28
+  Successors: 172, 30, 31 hdr=None be=None
+     then_blocks=[2578]
+     else_blocks=[2680]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 29 (offset 2684-2724):
+  L259 > 2684: LOAD_GLOBAL 59
+        2696: LOAD_FAST 25
+        2698: LOAD_GLOBAL 60
+        2710: PRECALL 2
+        2714: CALL 2
+        2724: POP_JUMP_FORWARD_IF_FALSE 52
+  Predecessors: 27, 28
+  Successors: 172, 30, 31 type=RegionType.IF_THEN_ELSE exit=None cond=Block 29 (offset 2684-2724):
+  L259 > 2684: LOAD_GLOBAL 59
+        2696: LOAD_FAST 25
+        2698: LOAD_GLOBAL 60
+        2710: PRECALL 2
+        2714: CALL 2
+        2724: POP_JUMP_FORWARD_IF_FALSE 52
+  Predecessors: 27, 28
+  Successors: 172, 30, 31 merge=Block 75 (offset 4984-5268):
+  L371 > 4984: LOAD_GLOBAL 62
+        4996: LOAD_ATTR 36
+        5006: LOAD_METHOD 37
+        5028: PRECALL 0
+        5032: CALL 0
+        5042: STORE_FAST 34
+  L374   5044: LOAD_GLOBAL 62
+        5056: LOAD_ATTR 31
+        5066: LOAD_METHOD 38
+        5088: LOAD_FAST 34
+        5090: LOAD_FAST 27
+        5092: PRECALL 2
+        5096: CALL 2
+        5106: LOAD_GLOBAL 63
+        5118: LOAD_ATTR 39
+  L375   5128: LOAD_CONST 13
+  L374   5130: KW_NAMES 14
+        5132: PRECALL 1
+        5136: CALL 1
+        5146: BINARY_OP 0
+  L375   5150: LOAD_METHOD 33
+        5172: PRECALL 0
+        5176: CALL 0
+  L374   5186: STORE_FAST 35
+  L378   5188: LOAD_DEREF 0
+        5190: LOAD_ATTR 0
+        5200: LOAD_ATTR 1
+        5210: LOAD_ATTR 2
+        5220: LOAD_ATTR 40
+        5230: LOAD_GLOBAL 82
+        5242: LOAD_ATTR 42
+        5252: LOAD_ATTR 27
+        5262: COMPARE_OP 2
+        5268: POP_JUMP_FORWARD_IF_FALSE 4
+  Predecessors: 73, 74, 52, 53, 30, 31
+  Successors: 172, 76, 77 hdr=None be=None
+     then_blocks=[2726]
+     else_blocks=[2830]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 33 (offset 2878-2932):
+  L267   2878: LOAD_GLOBAL 70
+        2890: STORE_FAST 26
+  L270   2892: LOAD_GLOBAL 59
+        2904: LOAD_FAST 12
+        2906: LOAD_GLOBAL 60
+        2918: PRECALL 2
+        2922: CALL 2
+        2932: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 32
+  Successors: 34, 35, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 33 (offset 2878-2932):
+  L267   2878: LOAD_GLOBAL 70
+        2890: STORE_FAST 26
+  L270   2892: LOAD_GLOBAL 59
+        2904: LOAD_FAST 12
+        2906: LOAD_GLOBAL 60
+        2918: PRECALL 2
+        2922: CALL 2
+        2932: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 32
+  Successors: 34, 35, 172 merge=Block 36 (offset 3040-3080):
+  L277 > 3040: LOAD_GLOBAL 59
+        3052: LOAD_FAST 13
+        3054: LOAD_GLOBAL 60
+        3066: PRECALL 2
+        3070: CALL 2
+        3080: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 34, 35
+  Successors: 172, 37, 38 hdr=None be=None
+     then_blocks=[2934]
+     else_blocks=[3036]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 36 (offset 3040-3080):
+  L277 > 3040: LOAD_GLOBAL 59
+        3052: LOAD_FAST 13
+        3054: LOAD_GLOBAL 60
+        3066: PRECALL 2
+        3070: CALL 2
+        3080: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 34, 35
+  Successors: 172, 37, 38 type=RegionType.IF_THEN_ELSE exit=None cond=Block 36 (offset 3040-3080):
+  L277 > 3040: LOAD_GLOBAL 59
+        3052: LOAD_FAST 13
+        3054: LOAD_GLOBAL 60
+        3066: PRECALL 2
+        3070: CALL 2
+        3080: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 34, 35
+  Successors: 172, 37, 38 merge=Block 39 (offset 3188-3228):
+  L284 > 3188: LOAD_GLOBAL 59
+        3200: LOAD_FAST 14
+        3202: LOAD_GLOBAL 60
+        3214: PRECALL 2
+        3218: CALL 2
+        3228: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 37, 38
+  Successors: 40, 41, 172 hdr=None be=None
+     then_blocks=[3082]
+     else_blocks=[3184]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 39 (offset 3188-3228):
+  L284 > 3188: LOAD_GLOBAL 59
+        3200: LOAD_FAST 14
+        3202: LOAD_GLOBAL 60
+        3214: PRECALL 2
+        3218: CALL 2
+        3228: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 37, 38
+  Successors: 40, 41, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 39 (offset 3188-3228):
+  L284 > 3188: LOAD_GLOBAL 59
+        3200: LOAD_FAST 14
+        3202: LOAD_GLOBAL 60
+        3214: PRECALL 2
+        3218: CALL 2
+        3228: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 37, 38
+  Successors: 40, 41, 172 merge=Block 42 (offset 3336-3376):
+  L291 > 3336: LOAD_GLOBAL 59
+        3348: LOAD_FAST 15
+        3350: LOAD_GLOBAL 60
+        3362: PRECALL 2
+        3366: CALL 2
+        3376: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 40, 41
+  Successors: 172, 43, 44 hdr=None be=None
+     then_blocks=[3230]
+     else_blocks=[3332]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 42 (offset 3336-3376):
+  L291 > 3336: LOAD_GLOBAL 59
+        3348: LOAD_FAST 15
+        3350: LOAD_GLOBAL 60
+        3362: PRECALL 2
+        3366: CALL 2
+        3376: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 40, 41
+  Successors: 172, 43, 44 type=RegionType.IF_THEN_ELSE exit=None cond=Block 42 (offset 3336-3376):
+  L291 > 3336: LOAD_GLOBAL 59
+        3348: LOAD_FAST 15
+        3350: LOAD_GLOBAL 60
+        3362: PRECALL 2
+        3366: CALL 2
+        3376: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 40, 41
+  Successors: 172, 43, 44 merge=Block 45 (offset 3484-3524):
+  L298 > 3484: LOAD_GLOBAL 59
+        3496: LOAD_FAST 16
+        3498: LOAD_GLOBAL 60
+        3510: PRECALL 2
+        3514: CALL 2
+        3524: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 43, 44
+  Successors: 172, 46, 47 hdr=None be=None
+     then_blocks=[3378]
+     else_blocks=[3480]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 45 (offset 3484-3524):
+  L298 > 3484: LOAD_GLOBAL 59
+        3496: LOAD_FAST 16
+        3498: LOAD_GLOBAL 60
+        3510: PRECALL 2
+        3514: CALL 2
+        3524: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 43, 44
+  Successors: 172, 46, 47 type=RegionType.IF_THEN_ELSE exit=None cond=Block 45 (offset 3484-3524):
+  L298 > 3484: LOAD_GLOBAL 59
+        3496: LOAD_FAST 16
+        3498: LOAD_GLOBAL 60
+        3510: PRECALL 2
+        3514: CALL 2
+        3524: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 43, 44
+  Successors: 172, 46, 47 merge=Block 48 (offset 3632-3672):
+  L305 > 3632: LOAD_GLOBAL 59
+        3644: LOAD_FAST 17
+        3646: LOAD_GLOBAL 60
+        3658: PRECALL 2
+        3662: CALL 2
+        3672: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 46, 47
+  Successors: 49, 50, 172 hdr=None be=None
+     then_blocks=[3526]
+     else_blocks=[3628]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 48 (offset 3632-3672):
+  L305 > 3632: LOAD_GLOBAL 59
+        3644: LOAD_FAST 17
+        3646: LOAD_GLOBAL 60
+        3658: PRECALL 2
+        3662: CALL 2
+        3672: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 46, 47
+  Successors: 49, 50, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 48 (offset 3632-3672):
+  L305 > 3632: LOAD_GLOBAL 59
+        3644: LOAD_FAST 17
+        3646: LOAD_GLOBAL 60
+        3658: PRECALL 2
+        3662: CALL 2
+        3672: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 46, 47
+  Successors: 49, 50, 172 merge=Block 51 (offset 3780-3820):
+  L312 > 3780: LOAD_GLOBAL 59
+        3792: LOAD_FAST 18
+        3794: LOAD_GLOBAL 60
+        3806: PRECALL 2
+        3810: CALL 2
+        3820: POP_JUMP_FORWARD_IF_FALSE 52
+  Predecessors: 49, 50
+  Successors: 172, 52, 53 hdr=None be=None
+     then_blocks=[3674]
+     else_blocks=[3776]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 51 (offset 3780-3820):
+  L312 > 3780: LOAD_GLOBAL 59
+        3792: LOAD_FAST 18
+        3794: LOAD_GLOBAL 60
+        3806: PRECALL 2
+        3810: CALL 2
+        3820: POP_JUMP_FORWARD_IF_FALSE 52
+  Predecessors: 49, 50
+  Successors: 172, 52, 53 type=RegionType.IF_THEN_ELSE exit=None cond=Block 51 (offset 3780-3820):
+  L312 > 3780: LOAD_GLOBAL 59
+        3792: LOAD_FAST 18
+        3794: LOAD_GLOBAL 60
+        3806: PRECALL 2
+        3810: CALL 2
+        3820: POP_JUMP_FORWARD_IF_FALSE 52
+  Predecessors: 49, 50
+  Successors: 172, 52, 53 merge=Block 75 (offset 4984-5268):
+  L371 > 4984: LOAD_GLOBAL 62
+        4996: LOAD_ATTR 36
+        5006: LOAD_METHOD 37
+        5028: PRECALL 0
+        5032: CALL 0
+        5042: STORE_FAST 34
+  L374   5044: LOAD_GLOBAL 62
+        5056: LOAD_ATTR 31
+        5066: LOAD_METHOD 38
+        5088: LOAD_FAST 34
+        5090: LOAD_FAST 27
+        5092: PRECALL 2
+        5096: CALL 2
+        5106: LOAD_GLOBAL 63
+        5118: LOAD_ATTR 39
+  L375   5128: LOAD_CONST 13
+  L374   5130: KW_NAMES 14
+        5132: PRECALL 1
+        5136: CALL 1
+        5146: BINARY_OP 0
+  L375   5150: LOAD_METHOD 33
+        5172: PRECALL 0
+        5176: CALL 0
+  L374   5186: STORE_FAST 35
+  L378   5188: LOAD_DEREF 0
+        5190: LOAD_ATTR 0
+        5200: LOAD_ATTR 1
+        5210: LOAD_ATTR 2
+        5220: LOAD_ATTR 40
+        5230: LOAD_GLOBAL 82
+        5242: LOAD_ATTR 42
+        5252: LOAD_ATTR 27
+        5262: COMPARE_OP 2
+        5268: POP_JUMP_FORWARD_IF_FALSE 4
+  Predecessors: 73, 74, 52, 53, 30, 31
+  Successors: 172, 76, 77 hdr=None be=None
+     then_blocks=[3822]
+     else_blocks=[3926]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 54 (offset 3934-3988):
+  L319 > 3934: LOAD_GLOBAL 56
+        3946: STORE_FAST 26
+  L322   3948: LOAD_GLOBAL 59
+        3960: LOAD_FAST 5
+        3962: LOAD_GLOBAL 60
+        3974: PRECALL 2
+        3978: CALL 2
+        3988: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 32
+  Successors: 56, 172, 55 type=RegionType.IF_THEN_ELSE exit=None cond=Block 54 (offset 3934-3988):
+  L319 > 3934: LOAD_GLOBAL 56
+        3946: STORE_FAST 26
+  L322   3948: LOAD_GLOBAL 59
+        3960: LOAD_FAST 5
+        3962: LOAD_GLOBAL 60
+        3974: PRECALL 2
+        3978: CALL 2
+        3988: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 32
+  Successors: 56, 172, 55 merge=Block 57 (offset 4096-4136):
+  L329 > 4096: LOAD_GLOBAL 59
+        4108: LOAD_FAST 6
+        4110: LOAD_GLOBAL 60
+        4122: PRECALL 2
+        4126: CALL 2
+        4136: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 56, 55
+  Successors: 58, 59, 172 hdr=None be=None
+     then_blocks=[3990]
+     else_blocks=[4092]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 57 (offset 4096-4136):
+  L329 > 4096: LOAD_GLOBAL 59
+        4108: LOAD_FAST 6
+        4110: LOAD_GLOBAL 60
+        4122: PRECALL 2
+        4126: CALL 2
+        4136: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 56, 55
+  Successors: 58, 59, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 57 (offset 4096-4136):
+  L329 > 4096: LOAD_GLOBAL 59
+        4108: LOAD_FAST 6
+        4110: LOAD_GLOBAL 60
+        4122: PRECALL 2
+        4126: CALL 2
+        4136: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 56, 55
+  Successors: 58, 59, 172 merge=Block 60 (offset 4244-4284):
+  L336 > 4244: LOAD_GLOBAL 59
+        4256: LOAD_FAST 7
+        4258: LOAD_GLOBAL 60
+        4270: PRECALL 2
+        4274: CALL 2
+        4284: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 58, 59
+  Successors: 172, 61, 62 hdr=None be=None
+     then_blocks=[4138]
+     else_blocks=[4240]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 60 (offset 4244-4284):
+  L336 > 4244: LOAD_GLOBAL 59
+        4256: LOAD_FAST 7
+        4258: LOAD_GLOBAL 60
+        4270: PRECALL 2
+        4274: CALL 2
+        4284: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 58, 59
+  Successors: 172, 61, 62 type=RegionType.IF_THEN_ELSE exit=None cond=Block 60 (offset 4244-4284):
+  L336 > 4244: LOAD_GLOBAL 59
+        4256: LOAD_FAST 7
+        4258: LOAD_GLOBAL 60
+        4270: PRECALL 2
+        4274: CALL 2
+        4284: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 58, 59
+  Successors: 172, 61, 62 merge=Block 63 (offset 4392-4432):
+  L343 > 4392: LOAD_GLOBAL 59
+        4404: LOAD_FAST 8
+        4406: LOAD_GLOBAL 60
+        4418: PRECALL 2
+        4422: CALL 2
+        4432: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 61, 62
+  Successors: 64, 65, 172 hdr=None be=None
+     then_blocks=[4286]
+     else_blocks=[4388]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 63 (offset 4392-4432):
+  L343 > 4392: LOAD_GLOBAL 59
+        4404: LOAD_FAST 8
+        4406: LOAD_GLOBAL 60
+        4418: PRECALL 2
+        4422: CALL 2
+        4432: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 61, 62
+  Successors: 64, 65, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 63 (offset 4392-4432):
+  L343 > 4392: LOAD_GLOBAL 59
+        4404: LOAD_FAST 8
+        4406: LOAD_GLOBAL 60
+        4418: PRECALL 2
+        4422: CALL 2
+        4432: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 61, 62
+  Successors: 64, 65, 172 merge=Block 66 (offset 4540-4580):
+  L350 > 4540: LOAD_GLOBAL 59
+        4552: LOAD_FAST 9
+        4554: LOAD_GLOBAL 60
+        4566: PRECALL 2
+        4570: CALL 2
+        4580: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 64, 65
+  Successors: 172, 67, 68 hdr=None be=None
+     then_blocks=[4434]
+     else_blocks=[4536]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 66 (offset 4540-4580):
+  L350 > 4540: LOAD_GLOBAL 59
+        4552: LOAD_FAST 9
+        4554: LOAD_GLOBAL 60
+        4566: PRECALL 2
+        4570: CALL 2
+        4580: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 64, 65
+  Successors: 172, 67, 68 type=RegionType.IF_THEN_ELSE exit=None cond=Block 66 (offset 4540-4580):
+  L350 > 4540: LOAD_GLOBAL 59
+        4552: LOAD_FAST 9
+        4554: LOAD_GLOBAL 60
+        4566: PRECALL 2
+        4570: CALL 2
+        4580: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 64, 65
+  Successors: 172, 67, 68 merge=Block 69 (offset 4688-4728):
+  L357 > 4688: LOAD_GLOBAL 59
+        4700: LOAD_FAST 10
+        4702: LOAD_GLOBAL 60
+        4714: PRECALL 2
+        4718: CALL 2
+        4728: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 67, 68
+  Successors: 172, 70, 71 hdr=None be=None
+     then_blocks=[4582]
+     else_blocks=[4684]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 69 (offset 4688-4728):
+  L357 > 4688: LOAD_GLOBAL 59
+        4700: LOAD_FAST 10
+        4702: LOAD_GLOBAL 60
+        4714: PRECALL 2
+        4718: CALL 2
+        4728: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 67, 68
+  Successors: 172, 70, 71 type=RegionType.IF_THEN_ELSE exit=None cond=Block 69 (offset 4688-4728):
+  L357 > 4688: LOAD_GLOBAL 59
+        4700: LOAD_FAST 10
+        4702: LOAD_GLOBAL 60
+        4714: PRECALL 2
+        4718: CALL 2
+        4728: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 67, 68
+  Successors: 172, 70, 71 merge=Block 72 (offset 4836-4876):
+  L364 > 4836: LOAD_GLOBAL 59
+        4848: LOAD_FAST 11
+        4850: LOAD_GLOBAL 60
+        4862: PRECALL 2
+        4866: CALL 2
+        4876: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 70, 71
+  Successors: 73, 74, 172 hdr=None be=None
+     then_blocks=[4730]
+     else_blocks=[4832]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+  IfRegion@Block 72 (offset 4836-4876):
+  L364 > 4836: LOAD_GLOBAL 59
+        4848: LOAD_FAST 11
+        4850: LOAD_GLOBAL 60
+        4862: PRECALL 2
+        4866: CALL 2
+        4876: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 70, 71
+  Successors: 73, 74, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 72 (offset 4836-4876):
+  L364 > 4836: LOAD_GLOBAL 59
+        4848: LOAD_FAST 11
+        4850: LOAD_GLOBAL 60
+        4862: PRECALL 2
+        4866: CALL 2
+        4876: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 70, 71
+  Successors: 73, 74, 172 merge=Block 75 (offset 4984-5268):
+  L371 > 4984: LOAD_GLOBAL 62
+        4996: LOAD_ATTR 36
+        5006: LOAD_METHOD 37
+        5028: PRECALL 0
+        5032: CALL 0
+        5042: STORE_FAST 34
+  L374   5044: LOAD_GLOBAL 62
+        5056: LOAD_ATTR 31
+        5066: LOAD_METHOD 38
+        5088: LOAD_FAST 34
+        5090: LOAD_FAST 27
+        5092: PRECALL 2
+        5096: CALL 2
+        5106: LOAD_GLOBAL 63
+        5118: LOAD_ATTR 39
+  L375   5128: LOAD_CONST 13
+  L374   5130: KW_NAMES 14
+        5132: PRECALL 1
+        5136: CALL 1
+        5146: BINARY_OP 0
+  L375   5150: LOAD_METHOD 33
+        5172: PRECALL 0
+        5176: CALL 0
+  L374   5186: STORE_FAST 35
+  L378   5188: LOAD_DEREF 0
+        5190: LOAD_ATTR 0
+        5200: LOAD_ATTR 1
+        5210: LOAD_ATTR 2
+        5220: LOAD_ATTR 40
+        5230: LOAD_GLOBAL 82
+        5242: LOAD_ATTR 42
+        5252: LOAD_ATTR 27
+        5262: COMPARE_OP 2
+        5268: POP_JUMP_FORWARD_IF_FALSE 4
+  Predecessors: 73, 74, 52, 53, 30, 31
+  Successors: 172, 76, 77 hdr=None be=None
+     then_blocks=[4878]
+     else_blocks=[4980]
+     elif_conditions=[]
+     elif_bodies=[]
+     elif_final_else=[]
+     meta={}
+
+BoolOpRegion@Block 85 (offset 6058-6088):
+  L414   6058: LOAD_FAST 42
+        6060: LOAD_ATTR 50
+        6070: LOAD_FAST 40
+        6072: LOAD_ATTR 50
+        6082: COMPARE_OP 2
+        6088: POP_JUMP_FORWARD_IF_FALSE 95
+  Predecessors: 84
+  Successors: 88, 172, 86 type=RegionType.BOOL_OP exit=None cond=None merge=Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 hdr=None be=None
+
+BoolOpRegion@Block 111 (offset 6846-6866):
+  L454 > 6846: LOAD_DEREF 0
+        6848: LOAD_ATTR 69
+        6858: LOAD_CONST 23
+        6860: COMPARE_OP 2
+        6866: POP_JUMP_FORWARD_IF_FALSE 148
+  Predecessors: 88
+  Successors: 112, 115, 172 type=RegionType.BOOL_OP exit=None cond=None merge=Block 115 (offset 7164-7184):
+  L469 > 7164: LOAD_FAST 34
+        7166: LOAD_DEREF 0
+        7168: LOAD_ATTR 60
+        7178: COMPARE_OP 4
+        7184: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 112, 113, 114, 111
+  Successors: 120, 172, 116 hdr=None be=None
+
+BoolOpRegion@Block 161 (offset 8904-8924):
+  L544 > 8904: LOAD_FAST 34
+        8906: LOAD_DEREF 0
+        8908: LOAD_ATTR 63
+        8918: COMPARE_OP 2
+        8924: POP_JUMP_FORWARD_IF_FALSE 109
+  Predecessors: 157
+  Successors: 168, 162, 172 type=RegionType.BOOL_OP exit=None cond=None merge=Block 168 (offset 9144-9192):
+  L575 > 9144: LOAD_GLOBAL 67
+        9156: LOAD_ATTR 48
+        9166: LOAD_GLOBAL 136
+        9178: PRECALL 1
+        9182: CALL 1
+        9192: POP_TOP
+  Predecessors: 161, 162, 164, 166
+  Successors: 169, 172 hdr=None be=None
+
+IfRegion@Block 163 (offset 8948-8962):
+  L546   8948: LOAD_FAST 38
+        8950: LOAD_FAST 42
+        8952: SWAP 2
+        8954: COPY 2
+        8956: COMPARE_OP 5
+        8962: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 162
+  Successors: 172, 164, 166 type=RegionType.IF_THEN_ELSE exit=None cond=Block 163 (offset 8948-8962):
+  L546   8948: LOAD_FAST 38
+        8950: LOAD_FAST 42
+        8952: SWAP 2
+        8954: COPY 2
+        8956: COMPARE_OP 5
+        8962: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 162
+  Successors: 172, 164, 166 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+   then_blocks=[8974, 8980]
+   else_blocks=[8976, 9144]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': False}
+
+IfRegion@Block 161 (offset 8904-8924):
+  L544 > 8904: LOAD_FAST 34
+        8906: LOAD_DEREF 0
+        8908: LOAD_ATTR 63
+        8918: COMPARE_OP 2
+        8924: POP_JUMP_FORWARD_IF_FALSE 109
+  Predecessors: 157
+  Successors: 168, 162, 172 type=RegionType.IF_THEN exit=None cond=Block 162 (offset 8926-8946):
+  L545   8926: LOAD_FAST 34
+        8928: LOAD_DEREF 0
+        8930: LOAD_ATTR 99
+        8940: COMPARE_OP 4
+        8946: POP_JUMP_FORWARD_IF_FALSE 98
+  Predecessors: 161
+  Successors: 168, 163, 172 merge=Block 168 (offset 9144-9192):
+  L575 > 9144: LOAD_GLOBAL 67
+        9156: LOAD_ATTR 48
+        9166: LOAD_GLOBAL 136
+        9178: PRECALL 1
+        9182: CALL 1
+        9192: POP_TOP
+  Predecessors: 161, 162, 164, 166
+  Successors: 169, 172 hdr=None be=None
+   then_blocks=[8948, 8964, 8974, 8976, 8980]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   inline_boolop_chains={1580115051856: ['blocks', 'op']}
+   meta={}
+
+  BoolOpRegion@Block 161 (offset 8904-8924):
+  L544 > 8904: LOAD_FAST 34
+        8906: LOAD_DEREF 0
+        8908: LOAD_ATTR 63
+        8918: COMPARE_OP 2
+        8924: POP_JUMP_FORWARD_IF_FALSE 109
+  Predecessors: 157
+  Successors: 168, 162, 172 type=RegionType.BOOL_OP exit=None cond=None merge=Block 168 (offset 9144-9192):
+  L575 > 9144: LOAD_GLOBAL 67
+        9156: LOAD_ATTR 48
+        9166: LOAD_GLOBAL 136
+        9178: PRECALL 1
+        9182: CALL 1
+        9192: POP_TOP
+  Predecessors: 161, 162, 164, 166
+  Successors: 169, 172 hdr=None be=None
+
+IfRegion@Block 158 (offset 8666-8686):
+  L534   8666: PUSH_NULL
+        8668: LOAD_FAST 36
+        8670: LOAD_FAST 34
+        8672: PRECALL 1
+        8676: CALL 1
+        8686: POP_JUMP_FORWARD_IF_FALSE 82
+  Predecessors: 157
+  Successors: 160, 172, 159 type=RegionType.IF_THEN_ELSE exit=None cond=Block 158 (offset 8666-8686):
+  L534   8666: PUSH_NULL
+        8668: LOAD_FAST 36
+        8670: LOAD_FAST 34
+        8672: PRECALL 1
+        8676: CALL 1
+        8686: POP_JUMP_FORWARD_IF_FALSE 82
+  Predecessors: 157
+  Successors: 160, 172, 159 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+   then_blocks=[8688]
+   else_blocks=[8852]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 152 (offset 8450-8502):
+  L520   8450: LOAD_FAST 50
+        8452: LOAD_FAST 51
+        8454: BINARY_SUBSCR
+        8464: STORE_FAST 52
+  L521   8466: LOAD_GLOBAL 189
+        8478: LOAD_FAST 52
+        8480: PRECALL 1
+        8484: CALL 1
+        8494: LOAD_CONST 18
+        8496: COMPARE_OP 2
+        8502: POP_JUMP_FORWARD_IF_FALSE 20
+  Predecessors: 151
+  Successors: 153, 154, 172 type=RegionType.IF_THEN exit=None cond=Block 152 (offset 8450-8502):
+  L520   8450: LOAD_FAST 50
+        8452: LOAD_FAST 51
+        8454: BINARY_SUBSCR
+        8464: STORE_FAST 52
+  L521   8466: LOAD_GLOBAL 189
+        8478: LOAD_FAST 52
+        8480: PRECALL 1
+        8484: CALL 1
+        8494: LOAD_CONST 18
+        8496: COMPARE_OP 2
+        8502: POP_JUMP_FORWARD_IF_FALSE 20
+  Predecessors: 151
+  Successors: 153, 154, 172 merge=Block 154 (offset 8544-8546):
+      > 8544: EXTENDED_ARG 1
+        8546: JUMP_FORWARD 323
+  Predecessors: 152, 153
+  Successors: 169, 172 hdr=None be=None
+   then_blocks=[8504]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 151 (offset 8400-8448):
+  L518   8400: LOAD_FAST 34
+        8402: LOAD_METHOD 93
+        8424: LOAD_CONST 41
+        8426: PRECALL 1
+        8430: CALL 1
+        8440: STORE_FAST 51
+  L519   8442: LOAD_FAST 51
+        8444: LOAD_FAST 50
+        8446: CONTAINS_OP 0
+        8448: POP_JUMP_FORWARD_IF_FALSE 49
+  Predecessors: 150
+  Successors: 152, 155, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 151 (offset 8400-8448):
+  L518   8400: LOAD_FAST 34
+        8402: LOAD_METHOD 93
+        8424: LOAD_CONST 41
+        8426: PRECALL 1
+        8430: CALL 1
+        8440: STORE_FAST 51
+  L519   8442: LOAD_FAST 51
+        8444: LOAD_FAST 50
+        8446: CONTAINS_OP 0
+        8448: POP_JUMP_FORWARD_IF_FALSE 49
+  Predecessors: 150
+  Successors: 152, 155, 172 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+   then_blocks=[8450, 8504, 8544]
+   else_blocks=[8548, 8588]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 150 (offset 8354-8398):
+  L516   8354: LOAD_FAST 46
+        8356: LOAD_METHOD 6
+        8378: LOAD_CONST 40
+        8380: PRECALL 1
+        8384: CALL 1
+        8394: STORE_FAST 50
+  L517   8396: LOAD_FAST 50
+        8398: POP_JUMP_FORWARD_IF_NONE 94
+  Predecessors: 149
+  Successors: 172, 156, 151 type=RegionType.IF_THEN exit=None cond=Block 150 (offset 8354-8398):
+  L516   8354: LOAD_FAST 46
+        8356: LOAD_METHOD 6
+        8378: LOAD_CONST 40
+        8380: PRECALL 1
+        8384: CALL 1
+        8394: STORE_FAST 50
+  L517   8396: LOAD_FAST 50
+        8398: POP_JUMP_FORWARD_IF_NONE 94
+  Predecessors: 149
+  Successors: 172, 156, 151 merge=Block 156 (offset 8588-8590):
+      > 8588: EXTENDED_ARG 1
+        8590: JUMP_FORWARD 301
+  Predecessors: 155, 149, 150
+  Successors: 169, 172 hdr=None be=None
+   then_blocks=[8400, 8450, 8504, 8544, 8548]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 149 (offset 8350-8352):
+  L515 > 8350: LOAD_FAST 46
+        8352: POP_JUMP_FORWARD_IF_NONE 117
+  Predecessors: 147
+  Successors: 172, 156, 150 type=RegionType.IF_THEN exit=None cond=Block 149 (offset 8350-8352):
+  L515 > 8350: LOAD_FAST 46
+        8352: POP_JUMP_FORWARD_IF_NONE 117
+  Predecessors: 147
+  Successors: 172, 156, 150 merge=Block 156 (offset 8588-8590):
+      > 8588: EXTENDED_ARG 1
+        8590: JUMP_FORWARD 301
+  Predecessors: 155, 149, 150
+  Successors: 169, 172 hdr=None be=None
+   then_blocks=[8354, 8400, 8450, 8504, 8544, 8548]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 147 (offset 8294-8304):
+  L511 > 8294: LOAD_FAST 49
+        8296: LOAD_CONST 22
+        8298: COMPARE_OP 2
+        8304: POP_JUMP_FORWARD_IF_FALSE 22
+  Predecessors: 188, 189
+  Successors: 172, 148, 149 type=RegionType.IF_THEN_ELSE exit=None cond=Block 147 (offset 8294-8304):
+  L511 > 8294: LOAD_FAST 49
+        8296: LOAD_CONST 22
+        8298: COMPARE_OP 2
+        8304: POP_JUMP_FORWARD_IF_FALSE 22
+  Predecessors: 188, 189
+  Successors: 172, 148, 149 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+   then_blocks=[8306]
+   else_blocks=[8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 140 (offset 7972-7978):
+  L498 > 7972: LOAD_FAST 47
+        7974: LOAD_CONST 32
+        7976: IS_OP 0
+        7978: POP_JUMP_FORWARD_IF_FALSE 95
+  Predecessors: 184, 132
+  Successors: 172, 141, 142 type=RegionType.IF_THEN exit=None cond=Block 140 (offset 7972-7978):
+  L498 > 7972: LOAD_FAST 47
+        7974: LOAD_CONST 32
+        7976: IS_OP 0
+        7978: POP_JUMP_FORWARD_IF_FALSE 95
+  Predecessors: 184, 132
+  Successors: 172, 141, 142 merge=Block 142 (offset 8170-8174):
+  L504 > 8170: LOAD_FAST 34
+        8172: LOAD_DEREF 0
+        8174: STORE_ATTR 63
+  Predecessors: 140
+  Successors: 186, 172 hdr=None be=None
+   then_blocks=[7980, 8166]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 135 (offset 7836-7888):
+        7836: POP_TOP
+  L495   7838: LOAD_GLOBAL 67
+        7850: LOAD_ATTR 48
+        7860: LOAD_CONST 36
+        7862: PRECALL 1
+        7866: CALL 1
+        7876: POP_TOP
+  L496   7878: LOAD_FAST 48
+        7880: LOAD_CONST 37
+        7882: COMPARE_OP 2
+        7888: POP_JUMP_FORWARD_IF_FALSE 35
+  Predecessors: 134
+  Successors: 136, 137, 139 type=RegionType.IF_THEN exit=None cond=Block 135 (offset 7836-7888):
+        7836: POP_TOP
+  L495   7838: LOAD_GLOBAL 67
+        7850: LOAD_ATTR 48
+        7860: LOAD_CONST 36
+        7862: PRECALL 1
+        7866: CALL 1
+        7876: POP_TOP
+  L496   7878: LOAD_FAST 48
+        7880: LOAD_CONST 37
+        7882: COMPARE_OP 2
+        7888: POP_JUMP_FORWARD_IF_FALSE 35
+  Predecessors: 134
+  Successors: 136, 137, 139 merge=Block 137 (offset 7960-7962):
+      > 7960: POP_EXCEPT
+        7962: JUMP_BACKWARD 129
+  Predecessors: 136, 135
+  Successors: 172, 132 hdr=None be=None
+   then_blocks=[7890]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 130 (offset 7634-7666):
+  L484 > 7634: LOAD_DEREF 0
+        7636: LOAD_ATTR 63
+        7646: LOAD_DEREF 0
+        7648: LOAD_ATTR 61
+        7658: COMPARE_OP 2
+        7664: EXTENDED_ARG 1
+        7666: POP_JUMP_FORWARD_IF_FALSE 462
+  Predecessors: 128, 129, 125
+  Successors: 131, 172, 157 type=RegionType.IF_ELIF_CHAIN exit=None cond=Block 130 (offset 7634-7666):
+  L484 > 7634: LOAD_DEREF 0
+        7636: LOAD_ATTR 63
+        7646: LOAD_DEREF 0
+        7648: LOAD_ATTR 61
+        7658: COMPARE_OP 2
+        7664: EXTENDED_ARG 1
+        7666: POP_JUMP_FORWARD_IF_FALSE 462
+  Predecessors: 128, 129, 125
+  Successors: 131, 172, 157 merge=Block 169 (offset 9194-9208):
+  L399 > 9194: LOAD_DEREF 0
+        9196: LOAD_ATTR 44
+        9206: EXTENDED_ARG 7
+        9208: POP_JUMP_BACKWARD_IF_TRUE 1798
+  Predecessors: 160, 167, 168, 148, 154, 156, 159
+  Successors: 170, 82, 172 hdr=None be=None
+   then_blocks=[7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+   else_blocks=[8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+   elif_conditions=[8592]
+   elif_bodies=[[8666, 8688, 8852]]
+   elif_final_else=[8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+   meta={}
+
+IfRegion@Block 126 (offset 7604-7618):
+  L483   7604: LOAD_FAST 27
+        7606: LOAD_FAST 42
+        7608: SWAP 2
+        7610: COPY 2
+        7612: COMPARE_OP 1
+        7618: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 125
+  Successors: 129, 172, 127 type=RegionType.IF_THEN_ELSE exit=None cond=Block 126 (offset 7604-7618):
+  L483   7604: LOAD_FAST 27
+        7606: LOAD_FAST 42
+        7608: SWAP 2
+        7610: COPY 2
+        7612: COMPARE_OP 1
+        7618: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 125
+  Successors: 129, 172, 127 merge=Block 130 (offset 7634-7666):
+  L484 > 7634: LOAD_DEREF 0
+        7636: LOAD_ATTR 63
+        7646: LOAD_DEREF 0
+        7648: LOAD_ATTR 61
+        7658: COMPARE_OP 2
+        7664: EXTENDED_ARG 1
+        7666: POP_JUMP_FORWARD_IF_FALSE 462
+  Predecessors: 128, 129, 125
+  Successors: 131, 172, 157 hdr=None be=None
+   then_blocks=[7630]
+   else_blocks=[7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': False}
+
+IfRegion@Block 125 (offset 7582-7602):
+  L482 > 7582: LOAD_FAST 34
+        7584: LOAD_DEREF 0
+        7586: LOAD_ATTR 63
+        7596: COMPARE_OP 4
+        7602: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 120, 124
+  Successors: 130, 172, 126 type=RegionType.IF_THEN exit=None cond=Block 125 (offset 7582-7602):
+  L482 > 7582: LOAD_FAST 34
+        7584: LOAD_DEREF 0
+        7586: LOAD_ATTR 63
+        7596: COMPARE_OP 4
+        7602: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 120, 124
+  Successors: 130, 172, 126 merge=Block 130 (offset 7634-7666):
+  L484 > 7634: LOAD_DEREF 0
+        7636: LOAD_ATTR 63
+        7646: LOAD_DEREF 0
+        7648: LOAD_ATTR 61
+        7658: COMPARE_OP 2
+        7664: EXTENDED_ARG 1
+        7666: POP_JUMP_FORWARD_IF_FALSE 462
+  Predecessors: 128, 129, 125
+  Successors: 131, 172, 157 hdr=None be=None
+   then_blocks=[7604, 7620, 7630, 7632, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 122 (offset 7270-7370):
+  L473   7270: LOAD_GLOBAL 113
+        7282: LOAD_ATTR 76
+        7292: LOAD_CONST 29
+        7294: PRECALL 1
+        7298: CALL 1
+        7308: POP_TOP
+  L474   7310: LOAD_GLOBAL 155
+        7322: LOAD_ATTR 78
+        7332: LOAD_GLOBAL 158
+        7344: LOAD_CONST 30
+        7346: BINARY_OP 5
+        7350: KW_NAMES 31
+        7352: PRECALL 1
+        7356: CALL 1
+        7366: LOAD_CONST 32
+        7368: IS_OP 0
+        7370: POP_JUMP_FORWARD_IF_FALSE 60
+  Predecessors: 121
+  Successors: 172, 123, 124 type=RegionType.IF_THEN_ELSE exit=None cond=Block 122 (offset 7270-7370):
+  L473   7270: LOAD_GLOBAL 113
+        7282: LOAD_ATTR 76
+        7292: LOAD_CONST 29
+        7294: PRECALL 1
+        7298: CALL 1
+        7308: POP_TOP
+  L474   7310: LOAD_GLOBAL 155
+        7322: LOAD_ATTR 78
+        7332: LOAD_GLOBAL 158
+        7344: LOAD_CONST 30
+        7346: BINARY_OP 5
+        7350: KW_NAMES 31
+        7352: PRECALL 1
+        7356: CALL 1
+        7366: LOAD_CONST 32
+        7368: IS_OP 0
+        7370: POP_JUMP_FORWARD_IF_FALSE 60
+  Predecessors: 121
+  Successors: 172, 123, 124 merge=Block 125 (offset 7582-7602):
+  L482 > 7582: LOAD_FAST 34
+        7584: LOAD_DEREF 0
+        7586: LOAD_ATTR 63
+        7596: COMPARE_OP 4
+        7602: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 120, 124
+  Successors: 130, 172, 126 hdr=None be=None
+   then_blocks=[7372, 7488]
+   else_blocks=[7492]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 121 (offset 7248-7268):
+  L472 > 7248: LOAD_FAST 34
+        7250: LOAD_DEREF 0
+        7252: LOAD_ATTR 70
+        7262: COMPARE_OP 3
+        7268: POP_JUMP_FORWARD_IF_FALSE 111
+  Predecessors: 120, 117
+  Successors: 122, 172, 124 type=RegionType.IF_THEN exit=None cond=Block 121 (offset 7248-7268):
+  L472 > 7248: LOAD_FAST 34
+        7250: LOAD_DEREF 0
+        7252: LOAD_ATTR 70
+        7262: COMPARE_OP 3
+        7268: POP_JUMP_FORWARD_IF_FALSE 111
+  Predecessors: 120, 117
+  Successors: 122, 172, 124 merge=Block 124 (offset 7492-7572):
+  L478 > 7492: LOAD_DEREF 0
+        7494: LOAD_ATTR 52
+        7504: LOAD_METHOD 53
+        7526: LOAD_FAST 41
+        7528: LOAD_GLOBAL 108
+        7540: LOAD_ATTR 62
+        7550: BUILD_TUPLE 2
+        7552: PRECALL 1
+        7556: CALL 1
+        7566: POP_TOP
+  L479   7568: LOAD_FAST 34
+        7570: LOAD_DEREF 0
+        7572: STORE_ATTR 60
+  Predecessors: 121, 122
+  Successors: 172, 125 hdr=None be=None
+   then_blocks=[7270, 7372, 7488]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 120 (offset 7216-7246):
+  L470 > 7216: LOAD_DEREF 0
+        7218: LOAD_ATTR 60
+        7228: LOAD_DEREF 0
+        7230: LOAD_ATTR 61
+        7240: COMPARE_OP 2
+        7246: POP_JUMP_FORWARD_IF_FALSE 167
+  Predecessors: 115, 118, 119
+  Successors: 121, 172, 125 type=RegionType.IF_THEN exit=None cond=Block 120 (offset 7216-7246):
+  L470 > 7216: LOAD_DEREF 0
+        7218: LOAD_ATTR 60
+        7228: LOAD_DEREF 0
+        7230: LOAD_ATTR 61
+        7240: COMPARE_OP 2
+        7246: POP_JUMP_FORWARD_IF_FALSE 167
+  Predecessors: 115, 118, 119
+  Successors: 121, 172, 125 merge=Block 125 (offset 7582-7602):
+  L482 > 7582: LOAD_FAST 34
+        7584: LOAD_DEREF 0
+        7586: LOAD_ATTR 63
+        7596: COMPARE_OP 4
+        7602: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 120, 124
+  Successors: 130, 172, 126 hdr=None be=None
+   then_blocks=[7248, 7270, 7372, 7488, 7492]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 116 (offset 7186-7200):
+        7186: LOAD_FAST 35
+        7188: LOAD_FAST 42
+        7190: SWAP 2
+        7192: COPY 2
+        7194: COMPARE_OP 1
+        7200: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 115
+  Successors: 172, 117, 119 type=RegionType.IF_ELIF_CHAIN exit=None cond=Block 116 (offset 7186-7200):
+        7186: LOAD_FAST 35
+        7188: LOAD_FAST 42
+        7190: SWAP 2
+        7192: COPY 2
+        7194: COMPARE_OP 1
+        7200: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 115
+  Successors: 172, 117, 119 merge=Block 120 (offset 7216-7246):
+  L470 > 7216: LOAD_DEREF 0
+        7218: LOAD_ATTR 60
+        7228: LOAD_DEREF 0
+        7230: LOAD_ATTR 61
+        7240: COMPARE_OP 2
+        7246: POP_JUMP_FORWARD_IF_FALSE 167
+  Predecessors: 115, 118, 119
+  Successors: 121, 172, 125 hdr=None be=None
+   then_blocks=[7212]
+   else_blocks=[7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': False}
+
+IfRegion@Block 115 (offset 7164-7184):
+  L469 > 7164: LOAD_FAST 34
+        7166: LOAD_DEREF 0
+        7168: LOAD_ATTR 60
+        7178: COMPARE_OP 4
+        7184: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 112, 113, 114, 111
+  Successors: 120, 172, 116 type=RegionType.IF_THEN exit=None cond=Block 115 (offset 7164-7184):
+  L469 > 7164: LOAD_FAST 34
+        7166: LOAD_DEREF 0
+        7168: LOAD_ATTR 60
+        7178: COMPARE_OP 4
+        7184: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 112, 113, 114, 111
+  Successors: 120, 172, 116 merge=Block 120 (offset 7216-7246):
+  L470 > 7216: LOAD_DEREF 0
+        7218: LOAD_ATTR 60
+        7228: LOAD_DEREF 0
+        7230: LOAD_ATTR 61
+        7240: COMPARE_OP 2
+        7246: POP_JUMP_FORWARD_IF_FALSE 167
+  Predecessors: 115, 118, 119
+  Successors: 121, 172, 125 hdr=None be=None
+   then_blocks=[7186, 7202, 7212, 7214, 7248, 7270, 7372, 7488, 7492, 7582, 7604, 7620, 7630, 7632, 7634, 7668, 7706, 7708, 7710, 7712, 7814, 7972, 7980, 8166, 8170, 8184, 8186, 8256, 8294, 8306, 8350, 8354, 8400, 8450, 8504, 8544, 8548, 8588, 8592, 8666, 8688, 8852, 8904, 8926, 8948, 8964, 8974, 8976, 8980, 9144]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 113 (offset 6890-7046):
+  L457   6890: LOAD_GLOBAL 61
+        6902: LOAD_FAST 42
+        6904: PRECALL 1
+        6908: CALL 1
+        6918: LOAD_METHOD 71
+        6940: LOAD_CONST 24
+        6942: PRECALL 1
+        6946: CALL 1
+        6956: LOAD_CONST 18
+        6958: BINARY_SUBSCR
+        6968: LOAD_METHOD 46
+        6990: LOAD_CONST 25
+        6992: LOAD_CONST 26
+        6994: PRECALL 2
+        6998: CALL 2
+        7008: LOAD_CONST 4
+        7010: LOAD_CONST 27
+        7012: BUILD_SLICE 2
+        7014: BINARY_SUBSCR
+        7024: STORE_FAST 45
+  L459   7026: LOAD_FAST 45
+        7028: LOAD_DEREF 0
+        7030: LOAD_ATTR 72
+        7040: COMPARE_OP 5
+        7046: POP_JUMP_FORWARD_IF_FALSE 58
+  Predecessors: 112
+  Successors: 114, 115, 172 type=RegionType.IF_THEN exit=None cond=Block 113 (offset 6890-7046):
+  L457   6890: LOAD_GLOBAL 61
+        6902: LOAD_FAST 42
+        6904: PRECALL 1
+        6908: CALL 1
+        6918: LOAD_METHOD 71
+        6940: LOAD_CONST 24
+        6942: PRECALL 1
+        6946: CALL 1
+        6956: LOAD_CONST 18
+        6958: BINARY_SUBSCR
+        6968: LOAD_METHOD 46
+        6990: LOAD_CONST 25
+        6992: LOAD_CONST 26
+        6994: PRECALL 2
+        6998: CALL 2
+        7008: LOAD_CONST 4
+        7010: LOAD_CONST 27
+        7012: BUILD_SLICE 2
+        7014: BINARY_SUBSCR
+        7024: STORE_FAST 45
+  L459   7026: LOAD_FAST 45
+        7028: LOAD_DEREF 0
+        7030: LOAD_ATTR 72
+        7040: COMPARE_OP 5
+        7046: POP_JUMP_FORWARD_IF_FALSE 58
+  Predecessors: 112
+  Successors: 114, 115, 172 merge=Block 115 (offset 7164-7184):
+  L469 > 7164: LOAD_FAST 34
+        7166: LOAD_DEREF 0
+        7168: LOAD_ATTR 60
+        7178: COMPARE_OP 4
+        7184: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 112, 113, 114, 111
+  Successors: 120, 172, 116 hdr=None be=None
+   then_blocks=[7048]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 107 (offset 6690-6700):
+  L442 > 6690: LOAD_FAST 44
+        6692: LOAD_CONST 22
+        6694: COMPARE_OP 2
+        6700: POP_JUMP_FORWARD_IF_FALSE 38
+  Predecessors: 179, 180
+  Successors: 172, 108, 109 type=RegionType.IF_THEN exit=None cond=Block 107 (offset 6690-6700):
+  L442 > 6690: LOAD_FAST 44
+        6692: LOAD_CONST 22
+        6694: COMPARE_OP 2
+        6700: POP_JUMP_FORWARD_IF_FALSE 38
+  Predecessors: 179, 180
+  Successors: 172, 108, 109 merge=Block 109 (offset 6778-6782):
+  L449 > 6778: LOAD_FAST 34
+        6780: LOAD_DEREF 0
+        6782: STORE_ATTR 63
+  Predecessors: 107, 108
+  Successors: 172, 110 hdr=None be=None
+   then_blocks=[6702]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 101 (offset 6548-6578):
+  L434 > 6548: LOAD_DEREF 0
+        6550: LOAD_ATTR 63
+        6560: LOAD_DEREF 0
+        6562: LOAD_ATTR 61
+        6572: COMPARE_OP 2
+        6578: POP_JUMP_FORWARD_IF_FALSE 106
+  Predecessors: 96, 99, 100
+  Successors: 102, 172, 110 type=RegionType.IF_THEN exit=None cond=Block 101 (offset 6548-6578):
+  L434 > 6548: LOAD_DEREF 0
+        6550: LOAD_ATTR 63
+        6560: LOAD_DEREF 0
+        6562: LOAD_ATTR 61
+        6572: COMPARE_OP 2
+        6578: POP_JUMP_FORWARD_IF_FALSE 106
+  Predecessors: 96, 99, 100
+  Successors: 102, 172, 110 merge=Block 110 (offset 6792-6844):
+  L451 > 6792: LOAD_GLOBAL 67
+        6804: LOAD_ATTR 48
+        6814: LOAD_GLOBAL 136
+        6826: PRECALL 1
+        6830: CALL 1
+        6840: POP_TOP
+  L452   6842: EXTENDED_ARG 2
+        6844: JUMP_BACKWARD 624
+  Predecessors: 109, 101
+  Successors: 81, 172 hdr=None be=None
+   then_blocks=[6580, 6582, 6652, 6690]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 97 (offset 6518-6532):
+  L433   6518: LOAD_FAST 27
+        6520: LOAD_FAST 42
+        6522: SWAP 2
+        6524: COPY 2
+        6526: COMPARE_OP 1
+        6532: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 96
+  Successors: 98, 172, 100 type=RegionType.IF_THEN exit=None cond=Block 97 (offset 6518-6532):
+  L433   6518: LOAD_FAST 27
+        6520: LOAD_FAST 42
+        6522: SWAP 2
+        6524: COPY 2
+        6526: COMPARE_OP 1
+        6532: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 96
+  Successors: 98, 172, 100 merge=Block 102 (offset 6580-6580):
+  L438 > 6580: NOP
+  Predecessors: 98, 101
+  Successors: 178 hdr=None be=None
+   then_blocks=[6544, 6548]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': True}
+
+IfRegion@Block 96 (offset 6496-6516):
+  L432 > 6496: LOAD_FAST 34
+        6498: LOAD_DEREF 0
+        6500: LOAD_ATTR 63
+        6510: COMPARE_OP 4
+        6516: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 94, 95
+  Successors: 97, 172, 101 type=RegionType.IF_THEN exit=None cond=Block 96 (offset 6496-6516):
+  L432 > 6496: LOAD_FAST 34
+        6498: LOAD_DEREF 0
+        6500: LOAD_ATTR 63
+        6510: COMPARE_OP 4
+        6516: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 94, 95
+  Successors: 97, 172, 101 merge=Block 101 (offset 6548-6578):
+  L434 > 6548: LOAD_DEREF 0
+        6550: LOAD_ATTR 63
+        6560: LOAD_DEREF 0
+        6562: LOAD_ATTR 61
+        6572: COMPARE_OP 2
+        6578: POP_JUMP_FORWARD_IF_FALSE 106
+  Predecessors: 96, 99, 100
+  Successors: 102, 172, 110 hdr=None be=None
+   then_blocks=[6518, 6534, 6544, 6546, 6580, 6582, 6652]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 94 (offset 6374-6404):
+  L427 > 6374: LOAD_DEREF 0
+        6376: LOAD_ATTR 60
+        6386: LOAD_DEREF 0
+        6388: LOAD_ATTR 61
+        6398: COMPARE_OP 2
+        6404: POP_JUMP_FORWARD_IF_FALSE 45
+  Predecessors: 89, 92, 93
+  Successors: 96, 172, 95 type=RegionType.IF_THEN exit=None cond=Block 94 (offset 6374-6404):
+  L427 > 6374: LOAD_DEREF 0
+        6376: LOAD_ATTR 60
+        6386: LOAD_DEREF 0
+        6388: LOAD_ATTR 61
+        6398: COMPARE_OP 2
+        6404: POP_JUMP_FORWARD_IF_FALSE 45
+  Predecessors: 89, 92, 93
+  Successors: 96, 172, 95 merge=Block 96 (offset 6496-6516):
+  L432 > 6496: LOAD_FAST 34
+        6498: LOAD_DEREF 0
+        6500: LOAD_ATTR 63
+        6510: COMPARE_OP 4
+        6516: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 94, 95
+  Successors: 97, 172, 101 hdr=None be=None
+   then_blocks=[6406]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 90 (offset 6344-6358):
+        6344: LOAD_FAST 35
+        6346: LOAD_FAST 42
+        6348: SWAP 2
+        6350: COPY 2
+        6352: COMPARE_OP 1
+        6358: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 89
+  Successors: 91, 172, 93 type=RegionType.IF_THEN exit=None cond=Block 90 (offset 6344-6358):
+        6344: LOAD_FAST 35
+        6346: LOAD_FAST 42
+        6348: SWAP 2
+        6350: COPY 2
+        6352: COMPARE_OP 1
+        6358: POP_JUMP_FORWARD_IF_FALSE 6
+  Predecessors: 89
+  Successors: 91, 172, 93 merge=Block 95 (offset 6406-6486):
+  L428 > 6406: LOAD_DEREF 0
+        6408: LOAD_ATTR 52
+        6418: LOAD_METHOD 53
+        6440: LOAD_FAST 41
+        6442: LOAD_GLOBAL 108
+        6454: LOAD_ATTR 62
+        6464: BUILD_TUPLE 2
+        6466: PRECALL 1
+        6470: CALL 1
+        6480: POP_TOP
+  L429   6482: LOAD_FAST 34
+        6484: LOAD_DEREF 0
+        6486: STORE_ATTR 60
+  Predecessors: 91, 94
+  Successors: 96, 172 hdr=None be=None
+   then_blocks=[6370, 6374]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={'then_all_chained_compare': False, 'is_empty_then_chained_compare': False, 'merge_has_store': False, 'merge_only_simple_ops': False}
+
+IfRegion@Block 89 (offset 6322-6342):
+  L426   6322: LOAD_FAST 34
+        6324: LOAD_DEREF 0
+        6326: LOAD_ATTR 60
+        6336: COMPARE_OP 4
+        6342: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 88
+  Successors: 90, 172, 94 type=RegionType.IF_THEN exit=None cond=Block 89 (offset 6322-6342):
+  L426   6322: LOAD_FAST 34
+        6324: LOAD_DEREF 0
+        6326: LOAD_ATTR 60
+        6336: COMPARE_OP 4
+        6342: POP_JUMP_FORWARD_IF_FALSE 15
+  Predecessors: 88
+  Successors: 90, 172, 94 merge=Block 94 (offset 6374-6404):
+  L427 > 6374: LOAD_DEREF 0
+        6376: LOAD_ATTR 60
+        6386: LOAD_DEREF 0
+        6388: LOAD_ATTR 61
+        6398: COMPARE_OP 2
+        6404: POP_JUMP_FORWARD_IF_FALSE 45
+  Predecessors: 89, 92, 93
+  Successors: 96, 172, 95 hdr=None be=None
+   then_blocks=[6344, 6360, 6370, 6372, 6406]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 type=RegionType.IF_ELIF_CHAIN exit=None cond=Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 merge=Block 172 (offset 9218-9234):
+        9218: PUSH_EXC_INFO
+  L577   9220: LOAD_GLOBAL 202
+        9232: CHECK_EXC_MATCH
+        9234: POP_JUMP_FORWARD_IF_FALSE 43
+  Predecessors: 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 137, 139, 140, 141, 142, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 177, 179, 180, 184, 188, 189
+  Successors: 176, 173, 175 hdr=None be=None
+   then_blocks=[6322, 6344, 6360, 6370, 6372, 6374, 6406, 6496, 6518, 6534, 6544, 6546, 6548, 6580, 6582, 6652, 6690, 6792]
+   else_blocks=[6846, 6890, 7048]
+   elif_conditions=[6846]
+   elif_bodies=[[6890, 7048]]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 85 (offset 6058-6088):
+  L414   6058: LOAD_FAST 42
+        6060: LOAD_ATTR 50
+        6070: LOAD_FAST 40
+        6072: LOAD_ATTR 50
+        6082: COMPARE_OP 2
+        6088: POP_JUMP_FORWARD_IF_FALSE 95
+  Predecessors: 84
+  Successors: 88, 172, 86 type=RegionType.IF_THEN exit=None cond=Block 86 (offset 6090-6110):
+  L415   6090: LOAD_FAST 43
+        6092: LOAD_DEREF 0
+        6094: LOAD_ATTR 51
+        6104: COMPARE_OP 3
+        6110: POP_JUMP_FORWARD_IF_FALSE 84
+  Predecessors: 85
+  Successors: 88, 172, 87 merge=Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 hdr=None be=None
+   then_blocks=[6112]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   inline_boolop_chains={1580114921104: ['blocks', 'op']}
+   meta={}
+
+  BoolOpRegion@Block 85 (offset 6058-6088):
+  L414   6058: LOAD_FAST 42
+        6060: LOAD_ATTR 50
+        6070: LOAD_FAST 40
+        6072: LOAD_ATTR 50
+        6082: COMPARE_OP 2
+        6088: POP_JUMP_FORWARD_IF_FALSE 95
+  Predecessors: 84
+  Successors: 88, 172, 86 type=RegionType.BOOL_OP exit=None cond=None merge=Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 hdr=None be=None
+
+IfRegion@Block 84 (offset 5902-6056):
+  L406 > 5902: LOAD_FAST 41
+        5904: LOAD_DEREF 0
+        5906: STORE_ATTR 47
+  L407   5916: LOAD_FAST 41
+        5918: LOAD_METHOD 36
+        5940: PRECALL 0
+        5944: CALL 0
+        5954: STORE_FAST 34
+  L408   5956: LOAD_FAST 41
+        5958: LOAD_METHOD 33
+        5980: PRECALL 0
+        5984: CALL 0
+        5994: STORE_FAST 42
+  L412   5996: LOAD_FAST 34
+        5998: LOAD_FAST 42
+        6000: LOAD_ATTR 49
+        6010: LOAD_FAST 42
+        6012: LOAD_ATTR 50
+        6022: BUILD_TUPLE 3
+        6024: STORE_FAST 43
+  L413   6026: LOAD_FAST 42
+        6028: LOAD_ATTR 49
+        6038: LOAD_FAST 40
+        6040: LOAD_ATTR 49
+        6050: COMPARE_OP 2
+        6056: POP_JUMP_FORWARD_IF_FALSE 111
+  Predecessors: 82, 83
+  Successors: 88, 172, 85 type=RegionType.IF_THEN exit=None cond=Block 86 (offset 6090-6110):
+  L415   6090: LOAD_FAST 43
+        6092: LOAD_DEREF 0
+        6094: LOAD_ATTR 51
+        6104: COMPARE_OP 3
+        6110: POP_JUMP_FORWARD_IF_FALSE 84
+  Predecessors: 85
+  Successors: 88, 172, 87 merge=Block 88 (offset 6280-6320):
+  L423 > 6280: LOAD_DEREF 0
+        6282: LOAD_METHOD 59
+        6304: PRECALL 0
+        6308: CALL 0
+        6318: EXTENDED_ARG 1
+        6320: POP_JUMP_FORWARD_IF_FALSE 262
+  Predecessors: 84, 85, 86, 87
+  Successors: 89, 172, 111 hdr=None be=None
+   then_blocks=[6112]
+   else_blocks=[]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   inline_boolop_chains={1580114921104: ['blocks', 'op']}
+   meta={}
+
+IfRegion@Block 78 (offset 5288-5490):
+  L386 > 5288: LOAD_GLOBAL 63
+        5300: LOAD_ATTR 39
+        5310: LOAD_CONST 17
+        5312: KW_NAMES 14
+        5314: PRECALL 1
+        5318: CALL 1
+        5328: STORE_FAST 37
+  L388   5330: LOAD_GLOBAL 62
+        5342: LOAD_ATTR 31
+        5352: LOAD_METHOD 38
+        5374: LOAD_FAST 34
+  L389   5376: LOAD_FAST 28
+  L388   5378: PRECALL 2
+        5382: CALL 2
+  L390   5392: LOAD_FAST 37
+  L388   5394: BINARY_OP 0
+  L390   5398: LOAD_METHOD 33
+        5420: PRECALL 0
+        5424: CALL 0
+  L387   5434: STORE_FAST 38
+  L393   5436: LOAD_GLOBAL 86
+        5448: STORE_FAST 39
+  L394   5450: LOAD_GLOBAL 59
+        5462: LOAD_FAST 39
+        5464: LOAD_GLOBAL 60
+        5476: PRECALL 2
+        5480: CALL 2
+        5490: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 76, 77
+  Successors: 80, 172, 79 type=RegionType.IF_THEN_ELSE exit=None cond=Block 78 (offset 5288-5490):
+  L386 > 5288: LOAD_GLOBAL 63
+        5300: LOAD_ATTR 39
+        5310: LOAD_CONST 17
+        5312: KW_NAMES 14
+        5314: PRECALL 1
+        5318: CALL 1
+        5328: STORE_FAST 37
+  L388   5330: LOAD_GLOBAL 62
+        5342: LOAD_ATTR 31
+        5352: LOAD_METHOD 38
+        5374: LOAD_FAST 34
+  L389   5376: LOAD_FAST 28
+  L388   5378: PRECALL 2
+        5382: CALL 2
+  L390   5392: LOAD_FAST 37
+  L388   5394: BINARY_OP 0
+  L390   5398: LOAD_METHOD 33
+        5420: PRECALL 0
+        5424: CALL 0
+  L387   5434: STORE_FAST 38
+  L393   5436: LOAD_GLOBAL 86
+        5448: STORE_FAST 39
+  L394   5450: LOAD_GLOBAL 59
+        5462: LOAD_FAST 39
+        5464: LOAD_GLOBAL 60
+        5476: PRECALL 2
+        5480: CALL 2
+        5490: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 76, 77
+  Successors: 80, 172, 79 merge=Block 81 (offset 5598-5612):
+  [LOOP HEADER, depth=1]
+  L399 > 5598: LOAD_DEREF 0
+        5600: LOAD_ATTR 44
+        5610: EXTENDED_ARG 7
+        5612: POP_JUMP_FORWARD_IF_FALSE 1800
+  Predecessors: 80, 110, 79
+  Successors: 82, 171, 172 hdr=None be=None
+   then_blocks=[5492]
+   else_blocks=[5594]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 75 (offset 4984-5268):
+  L371 > 4984: LOAD_GLOBAL 62
+        4996: LOAD_ATTR 36
+        5006: LOAD_METHOD 37
+        5028: PRECALL 0
+        5032: CALL 0
+        5042: STORE_FAST 34
+  L374   5044: LOAD_GLOBAL 62
+        5056: LOAD_ATTR 31
+        5066: LOAD_METHOD 38
+        5088: LOAD_FAST 34
+        5090: LOAD_FAST 27
+        5092: PRECALL 2
+        5096: CALL 2
+        5106: LOAD_GLOBAL 63
+        5118: LOAD_ATTR 39
+  L375   5128: LOAD_CONST 13
+  L374   5130: KW_NAMES 14
+        5132: PRECALL 1
+        5136: CALL 1
+        5146: BINARY_OP 0
+  L375   5150: LOAD_METHOD 33
+        5172: PRECALL 0
+        5176: CALL 0
+  L374   5186: STORE_FAST 35
+  L378   5188: LOAD_DEREF 0
+        5190: LOAD_ATTR 0
+        5200: LOAD_ATTR 1
+        5210: LOAD_ATTR 2
+        5220: LOAD_ATTR 40
+        5230: LOAD_GLOBAL 82
+        5242: LOAD_ATTR 42
+        5252: LOAD_ATTR 27
+        5262: COMPARE_OP 2
+        5268: POP_JUMP_FORWARD_IF_FALSE 4
+  Predecessors: 73, 74, 52, 53, 30, 31
+  Successors: 172, 76, 77 type=RegionType.IF_THEN_ELSE exit=None cond=Block 75 (offset 4984-5268):
+  L371 > 4984: LOAD_GLOBAL 62
+        4996: LOAD_ATTR 36
+        5006: LOAD_METHOD 37
+        5028: PRECALL 0
+        5032: CALL 0
+        5042: STORE_FAST 34
+  L374   5044: LOAD_GLOBAL 62
+        5056: LOAD_ATTR 31
+        5066: LOAD_METHOD 38
+        5088: LOAD_FAST 34
+        5090: LOAD_FAST 27
+        5092: PRECALL 2
+        5096: CALL 2
+        5106: LOAD_GLOBAL 63
+        5118: LOAD_ATTR 39
+  L375   5128: LOAD_CONST 13
+  L374   5130: KW_NAMES 14
+        5132: PRECALL 1
+        5136: CALL 1
+        5146: BINARY_OP 0
+  L375   5150: LOAD_METHOD 33
+        5172: PRECALL 0
+        5176: CALL 0
+  L374   5186: STORE_FAST 35
+  L378   5188: LOAD_DEREF 0
+        5190: LOAD_ATTR 0
+        5200: LOAD_ATTR 1
+        5210: LOAD_ATTR 2
+        5220: LOAD_ATTR 40
+        5230: LOAD_GLOBAL 82
+        5242: LOAD_ATTR 42
+        5252: LOAD_ATTR 27
+        5262: COMPARE_OP 2
+        5268: POP_JUMP_FORWARD_IF_FALSE 4
+  Predecessors: 73, 74, 52, 53, 30, 31
+  Successors: 172, 76, 77 merge=Block 78 (offset 5288-5490):
+  L386 > 5288: LOAD_GLOBAL 63
+        5300: LOAD_ATTR 39
+        5310: LOAD_CONST 17
+        5312: KW_NAMES 14
+        5314: PRECALL 1
+        5318: CALL 1
+        5328: STORE_FAST 37
+  L388   5330: LOAD_GLOBAL 62
+        5342: LOAD_ATTR 31
+        5352: LOAD_METHOD 38
+        5374: LOAD_FAST 34
+  L389   5376: LOAD_FAST 28
+  L388   5378: PRECALL 2
+        5382: CALL 2
+  L390   5392: LOAD_FAST 37
+  L388   5394: BINARY_OP 0
+  L390   5398: LOAD_METHOD 33
+        5420: PRECALL 0
+        5424: CALL 0
+  L387   5434: STORE_FAST 38
+  L393   5436: LOAD_GLOBAL 86
+        5448: STORE_FAST 39
+  L394   5450: LOAD_GLOBAL 59
+        5462: LOAD_FAST 39
+        5464: LOAD_GLOBAL 60
+        5476: PRECALL 2
+        5480: CALL 2
+        5490: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 76, 77
+  Successors: 80, 172, 79 hdr=None be=None
+   then_blocks=[5270]
+   else_blocks=[5278]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 72 (offset 4836-4876):
+  L364 > 4836: LOAD_GLOBAL 59
+        4848: LOAD_FAST 11
+        4850: LOAD_GLOBAL 60
+        4862: PRECALL 2
+        4866: CALL 2
+        4876: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 70, 71
+  Successors: 73, 74, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 72 (offset 4836-4876):
+  L364 > 4836: LOAD_GLOBAL 59
+        4848: LOAD_FAST 11
+        4850: LOAD_GLOBAL 60
+        4862: PRECALL 2
+        4866: CALL 2
+        4876: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 70, 71
+  Successors: 73, 74, 172 merge=Block 75 (offset 4984-5268):
+  L371 > 4984: LOAD_GLOBAL 62
+        4996: LOAD_ATTR 36
+        5006: LOAD_METHOD 37
+        5028: PRECALL 0
+        5032: CALL 0
+        5042: STORE_FAST 34
+  L374   5044: LOAD_GLOBAL 62
+        5056: LOAD_ATTR 31
+        5066: LOAD_METHOD 38
+        5088: LOAD_FAST 34
+        5090: LOAD_FAST 27
+        5092: PRECALL 2
+        5096: CALL 2
+        5106: LOAD_GLOBAL 63
+        5118: LOAD_ATTR 39
+  L375   5128: LOAD_CONST 13
+  L374   5130: KW_NAMES 14
+        5132: PRECALL 1
+        5136: CALL 1
+        5146: BINARY_OP 0
+  L375   5150: LOAD_METHOD 33
+        5172: PRECALL 0
+        5176: CALL 0
+  L374   5186: STORE_FAST 35
+  L378   5188: LOAD_DEREF 0
+        5190: LOAD_ATTR 0
+        5200: LOAD_ATTR 1
+        5210: LOAD_ATTR 2
+        5220: LOAD_ATTR 40
+        5230: LOAD_GLOBAL 82
+        5242: LOAD_ATTR 42
+        5252: LOAD_ATTR 27
+        5262: COMPARE_OP 2
+        5268: POP_JUMP_FORWARD_IF_FALSE 4
+  Predecessors: 73, 74, 52, 53, 30, 31
+  Successors: 172, 76, 77 hdr=None be=None
+   then_blocks=[4878]
+   else_blocks=[4980]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 69 (offset 4688-4728):
+  L357 > 4688: LOAD_GLOBAL 59
+        4700: LOAD_FAST 10
+        4702: LOAD_GLOBAL 60
+        4714: PRECALL 2
+        4718: CALL 2
+        4728: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 67, 68
+  Successors: 172, 70, 71 type=RegionType.IF_THEN_ELSE exit=None cond=Block 69 (offset 4688-4728):
+  L357 > 4688: LOAD_GLOBAL 59
+        4700: LOAD_FAST 10
+        4702: LOAD_GLOBAL 60
+        4714: PRECALL 2
+        4718: CALL 2
+        4728: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 67, 68
+  Successors: 172, 70, 71 merge=Block 72 (offset 4836-4876):
+  L364 > 4836: LOAD_GLOBAL 59
+        4848: LOAD_FAST 11
+        4850: LOAD_GLOBAL 60
+        4862: PRECALL 2
+        4866: CALL 2
+        4876: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 70, 71
+  Successors: 73, 74, 172 hdr=None be=None
+   then_blocks=[4730]
+   else_blocks=[4832]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 66 (offset 4540-4580):
+  L350 > 4540: LOAD_GLOBAL 59
+        4552: LOAD_FAST 9
+        4554: LOAD_GLOBAL 60
+        4566: PRECALL 2
+        4570: CALL 2
+        4580: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 64, 65
+  Successors: 172, 67, 68 type=RegionType.IF_THEN_ELSE exit=None cond=Block 66 (offset 4540-4580):
+  L350 > 4540: LOAD_GLOBAL 59
+        4552: LOAD_FAST 9
+        4554: LOAD_GLOBAL 60
+        4566: PRECALL 2
+        4570: CALL 2
+        4580: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 64, 65
+  Successors: 172, 67, 68 merge=Block 69 (offset 4688-4728):
+  L357 > 4688: LOAD_GLOBAL 59
+        4700: LOAD_FAST 10
+        4702: LOAD_GLOBAL 60
+        4714: PRECALL 2
+        4718: CALL 2
+        4728: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 67, 68
+  Successors: 172, 70, 71 hdr=None be=None
+   then_blocks=[4582]
+   else_blocks=[4684]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 63 (offset 4392-4432):
+  L343 > 4392: LOAD_GLOBAL 59
+        4404: LOAD_FAST 8
+        4406: LOAD_GLOBAL 60
+        4418: PRECALL 2
+        4422: CALL 2
+        4432: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 61, 62
+  Successors: 64, 65, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 63 (offset 4392-4432):
+  L343 > 4392: LOAD_GLOBAL 59
+        4404: LOAD_FAST 8
+        4406: LOAD_GLOBAL 60
+        4418: PRECALL 2
+        4422: CALL 2
+        4432: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 61, 62
+  Successors: 64, 65, 172 merge=Block 66 (offset 4540-4580):
+  L350 > 4540: LOAD_GLOBAL 59
+        4552: LOAD_FAST 9
+        4554: LOAD_GLOBAL 60
+        4566: PRECALL 2
+        4570: CALL 2
+        4580: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 64, 65
+  Successors: 172, 67, 68 hdr=None be=None
+   then_blocks=[4434]
+   else_blocks=[4536]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 60 (offset 4244-4284):
+  L336 > 4244: LOAD_GLOBAL 59
+        4256: LOAD_FAST 7
+        4258: LOAD_GLOBAL 60
+        4270: PRECALL 2
+        4274: CALL 2
+        4284: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 58, 59
+  Successors: 172, 61, 62 type=RegionType.IF_THEN_ELSE exit=None cond=Block 60 (offset 4244-4284):
+  L336 > 4244: LOAD_GLOBAL 59
+        4256: LOAD_FAST 7
+        4258: LOAD_GLOBAL 60
+        4270: PRECALL 2
+        4274: CALL 2
+        4284: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 58, 59
+  Successors: 172, 61, 62 merge=Block 63 (offset 4392-4432):
+  L343 > 4392: LOAD_GLOBAL 59
+        4404: LOAD_FAST 8
+        4406: LOAD_GLOBAL 60
+        4418: PRECALL 2
+        4422: CALL 2
+        4432: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 61, 62
+  Successors: 64, 65, 172 hdr=None be=None
+   then_blocks=[4286]
+   else_blocks=[4388]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 57 (offset 4096-4136):
+  L329 > 4096: LOAD_GLOBAL 59
+        4108: LOAD_FAST 6
+        4110: LOAD_GLOBAL 60
+        4122: PRECALL 2
+        4126: CALL 2
+        4136: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 56, 55
+  Successors: 58, 59, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 57 (offset 4096-4136):
+  L329 > 4096: LOAD_GLOBAL 59
+        4108: LOAD_FAST 6
+        4110: LOAD_GLOBAL 60
+        4122: PRECALL 2
+        4126: CALL 2
+        4136: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 56, 55
+  Successors: 58, 59, 172 merge=Block 60 (offset 4244-4284):
+  L336 > 4244: LOAD_GLOBAL 59
+        4256: LOAD_FAST 7
+        4258: LOAD_GLOBAL 60
+        4270: PRECALL 2
+        4274: CALL 2
+        4284: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 58, 59
+  Successors: 172, 61, 62 hdr=None be=None
+   then_blocks=[4138]
+   else_blocks=[4240]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 54 (offset 3934-3988):
+  L319 > 3934: LOAD_GLOBAL 56
+        3946: STORE_FAST 26
+  L322   3948: LOAD_GLOBAL 59
+        3960: LOAD_FAST 5
+        3962: LOAD_GLOBAL 60
+        3974: PRECALL 2
+        3978: CALL 2
+        3988: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 32
+  Successors: 56, 172, 55 type=RegionType.IF_THEN_ELSE exit=None cond=Block 54 (offset 3934-3988):
+  L319 > 3934: LOAD_GLOBAL 56
+        3946: STORE_FAST 26
+  L322   3948: LOAD_GLOBAL 59
+        3960: LOAD_FAST 5
+        3962: LOAD_GLOBAL 60
+        3974: PRECALL 2
+        3978: CALL 2
+        3988: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 32
+  Successors: 56, 172, 55 merge=Block 57 (offset 4096-4136):
+  L329 > 4096: LOAD_GLOBAL 59
+        4108: LOAD_FAST 6
+        4110: LOAD_GLOBAL 60
+        4122: PRECALL 2
+        4126: CALL 2
+        4136: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 56, 55
+  Successors: 58, 59, 172 hdr=None be=None
+   then_blocks=[3990]
+   else_blocks=[4092]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 51 (offset 3780-3820):
+  L312 > 3780: LOAD_GLOBAL 59
+        3792: LOAD_FAST 18
+        3794: LOAD_GLOBAL 60
+        3806: PRECALL 2
+        3810: CALL 2
+        3820: POP_JUMP_FORWARD_IF_FALSE 52
+  Predecessors: 49, 50
+  Successors: 172, 52, 53 type=RegionType.IF_THEN_ELSE exit=None cond=Block 51 (offset 3780-3820):
+  L312 > 3780: LOAD_GLOBAL 59
+        3792: LOAD_FAST 18
+        3794: LOAD_GLOBAL 60
+        3806: PRECALL 2
+        3810: CALL 2
+        3820: POP_JUMP_FORWARD_IF_FALSE 52
+  Predecessors: 49, 50
+  Successors: 172, 52, 53 merge=Block 75 (offset 4984-5268):
+  L371 > 4984: LOAD_GLOBAL 62
+        4996: LOAD_ATTR 36
+        5006: LOAD_METHOD 37
+        5028: PRECALL 0
+        5032: CALL 0
+        5042: STORE_FAST 34
+  L374   5044: LOAD_GLOBAL 62
+        5056: LOAD_ATTR 31
+        5066: LOAD_METHOD 38
+        5088: LOAD_FAST 34
+        5090: LOAD_FAST 27
+        5092: PRECALL 2
+        5096: CALL 2
+        5106: LOAD_GLOBAL 63
+        5118: LOAD_ATTR 39
+  L375   5128: LOAD_CONST 13
+  L374   5130: KW_NAMES 14
+        5132: PRECALL 1
+        5136: CALL 1
+        5146: BINARY_OP 0
+  L375   5150: LOAD_METHOD 33
+        5172: PRECALL 0
+        5176: CALL 0
+  L374   5186: STORE_FAST 35
+  L378   5188: LOAD_DEREF 0
+        5190: LOAD_ATTR 0
+        5200: LOAD_ATTR 1
+        5210: LOAD_ATTR 2
+        5220: LOAD_ATTR 40
+        5230: LOAD_GLOBAL 82
+        5242: LOAD_ATTR 42
+        5252: LOAD_ATTR 27
+        5262: COMPARE_OP 2
+        5268: POP_JUMP_FORWARD_IF_FALSE 4
+  Predecessors: 73, 74, 52, 53, 30, 31
+  Successors: 172, 76, 77 hdr=None be=None
+   then_blocks=[3822]
+   else_blocks=[3926]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 48 (offset 3632-3672):
+  L305 > 3632: LOAD_GLOBAL 59
+        3644: LOAD_FAST 17
+        3646: LOAD_GLOBAL 60
+        3658: PRECALL 2
+        3662: CALL 2
+        3672: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 46, 47
+  Successors: 49, 50, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 48 (offset 3632-3672):
+  L305 > 3632: LOAD_GLOBAL 59
+        3644: LOAD_FAST 17
+        3646: LOAD_GLOBAL 60
+        3658: PRECALL 2
+        3662: CALL 2
+        3672: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 46, 47
+  Successors: 49, 50, 172 merge=Block 51 (offset 3780-3820):
+  L312 > 3780: LOAD_GLOBAL 59
+        3792: LOAD_FAST 18
+        3794: LOAD_GLOBAL 60
+        3806: PRECALL 2
+        3810: CALL 2
+        3820: POP_JUMP_FORWARD_IF_FALSE 52
+  Predecessors: 49, 50
+  Successors: 172, 52, 53 hdr=None be=None
+   then_blocks=[3674]
+   else_blocks=[3776]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 45 (offset 3484-3524):
+  L298 > 3484: LOAD_GLOBAL 59
+        3496: LOAD_FAST 16
+        3498: LOAD_GLOBAL 60
+        3510: PRECALL 2
+        3514: CALL 2
+        3524: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 43, 44
+  Successors: 172, 46, 47 type=RegionType.IF_THEN_ELSE exit=None cond=Block 45 (offset 3484-3524):
+  L298 > 3484: LOAD_GLOBAL 59
+        3496: LOAD_FAST 16
+        3498: LOAD_GLOBAL 60
+        3510: PRECALL 2
+        3514: CALL 2
+        3524: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 43, 44
+  Successors: 172, 46, 47 merge=Block 48 (offset 3632-3672):
+  L305 > 3632: LOAD_GLOBAL 59
+        3644: LOAD_FAST 17
+        3646: LOAD_GLOBAL 60
+        3658: PRECALL 2
+        3662: CALL 2
+        3672: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 46, 47
+  Successors: 49, 50, 172 hdr=None be=None
+   then_blocks=[3526]
+   else_blocks=[3628]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 42 (offset 3336-3376):
+  L291 > 3336: LOAD_GLOBAL 59
+        3348: LOAD_FAST 15
+        3350: LOAD_GLOBAL 60
+        3362: PRECALL 2
+        3366: CALL 2
+        3376: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 40, 41
+  Successors: 172, 43, 44 type=RegionType.IF_THEN_ELSE exit=None cond=Block 42 (offset 3336-3376):
+  L291 > 3336: LOAD_GLOBAL 59
+        3348: LOAD_FAST 15
+        3350: LOAD_GLOBAL 60
+        3362: PRECALL 2
+        3366: CALL 2
+        3376: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 40, 41
+  Successors: 172, 43, 44 merge=Block 45 (offset 3484-3524):
+  L298 > 3484: LOAD_GLOBAL 59
+        3496: LOAD_FAST 16
+        3498: LOAD_GLOBAL 60
+        3510: PRECALL 2
+        3514: CALL 2
+        3524: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 43, 44
+  Successors: 172, 46, 47 hdr=None be=None
+   then_blocks=[3378]
+   else_blocks=[3480]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 39 (offset 3188-3228):
+  L284 > 3188: LOAD_GLOBAL 59
+        3200: LOAD_FAST 14
+        3202: LOAD_GLOBAL 60
+        3214: PRECALL 2
+        3218: CALL 2
+        3228: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 37, 38
+  Successors: 40, 41, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 39 (offset 3188-3228):
+  L284 > 3188: LOAD_GLOBAL 59
+        3200: LOAD_FAST 14
+        3202: LOAD_GLOBAL 60
+        3214: PRECALL 2
+        3218: CALL 2
+        3228: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 37, 38
+  Successors: 40, 41, 172 merge=Block 42 (offset 3336-3376):
+  L291 > 3336: LOAD_GLOBAL 59
+        3348: LOAD_FAST 15
+        3350: LOAD_GLOBAL 60
+        3362: PRECALL 2
+        3366: CALL 2
+        3376: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 40, 41
+  Successors: 172, 43, 44 hdr=None be=None
+   then_blocks=[3230]
+   else_blocks=[3332]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 36 (offset 3040-3080):
+  L277 > 3040: LOAD_GLOBAL 59
+        3052: LOAD_FAST 13
+        3054: LOAD_GLOBAL 60
+        3066: PRECALL 2
+        3070: CALL 2
+        3080: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 34, 35
+  Successors: 172, 37, 38 type=RegionType.IF_THEN_ELSE exit=None cond=Block 36 (offset 3040-3080):
+  L277 > 3040: LOAD_GLOBAL 59
+        3052: LOAD_FAST 13
+        3054: LOAD_GLOBAL 60
+        3066: PRECALL 2
+        3070: CALL 2
+        3080: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 34, 35
+  Successors: 172, 37, 38 merge=Block 39 (offset 3188-3228):
+  L284 > 3188: LOAD_GLOBAL 59
+        3200: LOAD_FAST 14
+        3202: LOAD_GLOBAL 60
+        3214: PRECALL 2
+        3218: CALL 2
+        3228: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 37, 38
+  Successors: 40, 41, 172 hdr=None be=None
+   then_blocks=[3082]
+   else_blocks=[3184]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 33 (offset 2878-2932):
+  L267   2878: LOAD_GLOBAL 70
+        2890: STORE_FAST 26
+  L270   2892: LOAD_GLOBAL 59
+        2904: LOAD_FAST 12
+        2906: LOAD_GLOBAL 60
+        2918: PRECALL 2
+        2922: CALL 2
+        2932: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 32
+  Successors: 34, 35, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 33 (offset 2878-2932):
+  L267   2878: LOAD_GLOBAL 70
+        2890: STORE_FAST 26
+  L270   2892: LOAD_GLOBAL 59
+        2904: LOAD_FAST 12
+        2906: LOAD_GLOBAL 60
+        2918: PRECALL 2
+        2922: CALL 2
+        2932: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 32
+  Successors: 34, 35, 172 merge=Block 36 (offset 3040-3080):
+  L277 > 3040: LOAD_GLOBAL 59
+        3052: LOAD_FAST 13
+        3054: LOAD_GLOBAL 60
+        3066: PRECALL 2
+        3070: CALL 2
+        3080: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 34, 35
+  Successors: 172, 37, 38 hdr=None be=None
+   then_blocks=[2934]
+   else_blocks=[3036]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 29 (offset 2684-2724):
+  L259 > 2684: LOAD_GLOBAL 59
+        2696: LOAD_FAST 25
+        2698: LOAD_GLOBAL 60
+        2710: PRECALL 2
+        2714: CALL 2
+        2724: POP_JUMP_FORWARD_IF_FALSE 52
+  Predecessors: 27, 28
+  Successors: 172, 30, 31 type=RegionType.IF_THEN_ELSE exit=None cond=Block 29 (offset 2684-2724):
+  L259 > 2684: LOAD_GLOBAL 59
+        2696: LOAD_FAST 25
+        2698: LOAD_GLOBAL 60
+        2710: PRECALL 2
+        2714: CALL 2
+        2724: POP_JUMP_FORWARD_IF_FALSE 52
+  Predecessors: 27, 28
+  Successors: 172, 30, 31 merge=Block 75 (offset 4984-5268):
+  L371 > 4984: LOAD_GLOBAL 62
+        4996: LOAD_ATTR 36
+        5006: LOAD_METHOD 37
+        5028: PRECALL 0
+        5032: CALL 0
+        5042: STORE_FAST 34
+  L374   5044: LOAD_GLOBAL 62
+        5056: LOAD_ATTR 31
+        5066: LOAD_METHOD 38
+        5088: LOAD_FAST 34
+        5090: LOAD_FAST 27
+        5092: PRECALL 2
+        5096: CALL 2
+        5106: LOAD_GLOBAL 63
+        5118: LOAD_ATTR 39
+  L375   5128: LOAD_CONST 13
+  L374   5130: KW_NAMES 14
+        5132: PRECALL 1
+        5136: CALL 1
+        5146: BINARY_OP 0
+  L375   5150: LOAD_METHOD 33
+        5172: PRECALL 0
+        5176: CALL 0
+  L374   5186: STORE_FAST 35
+  L378   5188: LOAD_DEREF 0
+        5190: LOAD_ATTR 0
+        5200: LOAD_ATTR 1
+        5210: LOAD_ATTR 2
+        5220: LOAD_ATTR 40
+        5230: LOAD_GLOBAL 82
+        5242: LOAD_ATTR 42
+        5252: LOAD_ATTR 27
+        5262: COMPARE_OP 2
+        5268: POP_JUMP_FORWARD_IF_FALSE 4
+  Predecessors: 73, 74, 52, 53, 30, 31
+  Successors: 172, 76, 77 hdr=None be=None
+   then_blocks=[2726]
+   else_blocks=[2830]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 26 (offset 2536-2576):
+  L252 > 2536: LOAD_GLOBAL 59
+        2548: LOAD_FAST 24
+        2550: LOAD_GLOBAL 60
+        2562: PRECALL 2
+        2566: CALL 2
+        2576: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 24, 25
+  Successors: 172, 27, 28 type=RegionType.IF_THEN_ELSE exit=None cond=Block 26 (offset 2536-2576):
+  L252 > 2536: LOAD_GLOBAL 59
+        2548: LOAD_FAST 24
+        2550: LOAD_GLOBAL 60
+        2562: PRECALL 2
+        2566: CALL 2
+        2576: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 24, 25
+  Successors: 172, 27, 28 merge=Block 29 (offset 2684-2724):
+  L259 > 2684: LOAD_GLOBAL 59
+        2696: LOAD_FAST 25
+        2698: LOAD_GLOBAL 60
+        2710: PRECALL 2
+        2714: CALL 2
+        2724: POP_JUMP_FORWARD_IF_FALSE 52
+  Predecessors: 27, 28
+  Successors: 172, 30, 31 hdr=None be=None
+   then_blocks=[2578]
+   else_blocks=[2680]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 23 (offset 2388-2428):
+  L245 > 2388: LOAD_GLOBAL 59
+        2400: LOAD_FAST 23
+        2402: LOAD_GLOBAL 60
+        2414: PRECALL 2
+        2418: CALL 2
+        2428: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 21, 22
+  Successors: 24, 25, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 23 (offset 2388-2428):
+  L245 > 2388: LOAD_GLOBAL 59
+        2400: LOAD_FAST 23
+        2402: LOAD_GLOBAL 60
+        2414: PRECALL 2
+        2418: CALL 2
+        2428: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 21, 22
+  Successors: 24, 25, 172 merge=Block 26 (offset 2536-2576):
+  L252 > 2536: LOAD_GLOBAL 59
+        2548: LOAD_FAST 24
+        2550: LOAD_GLOBAL 60
+        2562: PRECALL 2
+        2566: CALL 2
+        2576: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 24, 25
+  Successors: 172, 27, 28 hdr=None be=None
+   then_blocks=[2430]
+   else_blocks=[2532]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 20 (offset 2240-2280):
+  L238 > 2240: LOAD_GLOBAL 59
+        2252: LOAD_FAST 22
+        2254: LOAD_GLOBAL 60
+        2266: PRECALL 2
+        2270: CALL 2
+        2280: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 18, 19
+  Successors: 172, 21, 22 type=RegionType.IF_THEN_ELSE exit=None cond=Block 20 (offset 2240-2280):
+  L238 > 2240: LOAD_GLOBAL 59
+        2252: LOAD_FAST 22
+        2254: LOAD_GLOBAL 60
+        2266: PRECALL 2
+        2270: CALL 2
+        2280: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 18, 19
+  Successors: 172, 21, 22 merge=Block 23 (offset 2388-2428):
+  L245 > 2388: LOAD_GLOBAL 59
+        2400: LOAD_FAST 23
+        2402: LOAD_GLOBAL 60
+        2414: PRECALL 2
+        2418: CALL 2
+        2428: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 21, 22
+  Successors: 24, 25, 172 hdr=None be=None
+   then_blocks=[2282]
+   else_blocks=[2384]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 17 (offset 2092-2132):
+  L231 > 2092: LOAD_GLOBAL 59
+        2104: LOAD_FAST 21
+        2106: LOAD_GLOBAL 60
+        2118: PRECALL 2
+        2122: CALL 2
+        2132: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 16, 15
+  Successors: 18, 19, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 17 (offset 2092-2132):
+  L231 > 2092: LOAD_GLOBAL 59
+        2104: LOAD_FAST 21
+        2106: LOAD_GLOBAL 60
+        2118: PRECALL 2
+        2122: CALL 2
+        2132: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 16, 15
+  Successors: 18, 19, 172 merge=Block 20 (offset 2240-2280):
+  L238 > 2240: LOAD_GLOBAL 59
+        2252: LOAD_FAST 22
+        2254: LOAD_GLOBAL 60
+        2266: PRECALL 2
+        2270: CALL 2
+        2280: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 18, 19
+  Successors: 172, 21, 22 hdr=None be=None
+   then_blocks=[2134]
+   else_blocks=[2236]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 14 (offset 1944-1984):
+  L224 > 1944: LOAD_GLOBAL 59
+        1956: LOAD_FAST 20
+        1958: LOAD_GLOBAL 60
+        1970: PRECALL 2
+        1974: CALL 2
+        1984: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 12, 13
+  Successors: 16, 172, 15 type=RegionType.IF_THEN_ELSE exit=None cond=Block 14 (offset 1944-1984):
+  L224 > 1944: LOAD_GLOBAL 59
+        1956: LOAD_FAST 20
+        1958: LOAD_GLOBAL 60
+        1970: PRECALL 2
+        1974: CALL 2
+        1984: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 12, 13
+  Successors: 16, 172, 15 merge=Block 17 (offset 2092-2132):
+  L231 > 2092: LOAD_GLOBAL 59
+        2104: LOAD_FAST 21
+        2106: LOAD_GLOBAL 60
+        2118: PRECALL 2
+        2122: CALL 2
+        2132: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 16, 15
+  Successors: 18, 19, 172 hdr=None be=None
+   then_blocks=[1986]
+   else_blocks=[2088]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 11 (offset 1782-1836):
+  L214   1782: LOAD_GLOBAL 56
+        1794: STORE_FAST 26
+  L217   1796: LOAD_GLOBAL 59
+        1808: LOAD_FAST 19
+        1810: LOAD_GLOBAL 60
+        1822: PRECALL 2
+        1826: CALL 2
+        1836: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 10
+  Successors: 172, 12, 13 type=RegionType.IF_THEN_ELSE exit=None cond=Block 11 (offset 1782-1836):
+  L214   1782: LOAD_GLOBAL 56
+        1794: STORE_FAST 26
+  L217   1796: LOAD_GLOBAL 59
+        1808: LOAD_FAST 19
+        1810: LOAD_GLOBAL 60
+        1822: PRECALL 2
+        1826: CALL 2
+        1836: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 10
+  Successors: 172, 12, 13 merge=Block 14 (offset 1944-1984):
+  L224 > 1944: LOAD_GLOBAL 59
+        1956: LOAD_FAST 20
+        1958: LOAD_GLOBAL 60
+        1970: PRECALL 2
+        1974: CALL 2
+        1984: POP_JUMP_FORWARD_IF_FALSE 51
+  Predecessors: 12, 13
+  Successors: 16, 172, 15 hdr=None be=None
+   then_blocks=[1838]
+   else_blocks=[1940]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 10 (offset 1742-1780):
+  L212 > 1742: LOAD_GLOBAL 50
+        1754: LOAD_ATTR 26
+        1764: LOAD_ATTR 27
+        1774: LOAD_FAST 1
+        1776: CONTAINS_OP 0
+        1778: EXTENDED_ARG 2
+        1780: POP_JUMP_FORWARD_IF_FALSE 528
+  Predecessors: 8, 9
+  Successors: 32, 11, 172 type=RegionType.IF_ELIF_CHAIN exit=None cond=Block 10 (offset 1742-1780):
+  L212 > 1742: LOAD_GLOBAL 50
+        1754: LOAD_ATTR 26
+        1764: LOAD_ATTR 27
+        1774: LOAD_FAST 1
+        1776: CONTAINS_OP 0
+        1778: EXTENDED_ARG 2
+        1780: POP_JUMP_FORWARD_IF_FALSE 528
+  Predecessors: 8, 9
+  Successors: 32, 11, 172 merge=Block 75 (offset 4984-5268):
+  L371 > 4984: LOAD_GLOBAL 62
+        4996: LOAD_ATTR 36
+        5006: LOAD_METHOD 37
+        5028: PRECALL 0
+        5032: CALL 0
+        5042: STORE_FAST 34
+  L374   5044: LOAD_GLOBAL 62
+        5056: LOAD_ATTR 31
+        5066: LOAD_METHOD 38
+        5088: LOAD_FAST 34
+        5090: LOAD_FAST 27
+        5092: PRECALL 2
+        5096: CALL 2
+        5106: LOAD_GLOBAL 63
+        5118: LOAD_ATTR 39
+  L375   5128: LOAD_CONST 13
+  L374   5130: KW_NAMES 14
+        5132: PRECALL 1
+        5136: CALL 1
+        5146: BINARY_OP 0
+  L375   5150: LOAD_METHOD 33
+        5172: PRECALL 0
+        5176: CALL 0
+  L374   5186: STORE_FAST 35
+  L378   5188: LOAD_DEREF 0
+        5190: LOAD_ATTR 0
+        5200: LOAD_ATTR 1
+        5210: LOAD_ATTR 2
+        5220: LOAD_ATTR 40
+        5230: LOAD_GLOBAL 82
+        5242: LOAD_ATTR 42
+        5252: LOAD_ATTR 27
+        5262: COMPARE_OP 2
+        5268: POP_JUMP_FORWARD_IF_FALSE 4
+  Predecessors: 73, 74, 52, 53, 30, 31
+  Successors: 172, 76, 77 hdr=None be=None
+   then_blocks=[1782, 1838, 1940, 1944, 1986, 2088, 2092, 2134, 2236, 2240, 2282, 2384, 2388, 2430, 2532, 2536, 2578, 2680, 2684, 2726, 2830]
+   else_blocks=[2838, 2878, 2934, 3036, 3040, 3082, 3184, 3188, 3230, 3332, 3336, 3378, 3480, 3484, 3526, 3628, 3632, 3674, 3776, 3780, 3822, 3926, 3934, 3990, 4092, 4096, 4138, 4240, 4244, 4286, 4388, 4392, 4434, 4536, 4540, 4582, 4684, 4688, 4730, 4832, 4836, 4878, 4980]
+   elif_conditions=[2838]
+   elif_bodies=[[2878, 2934, 3036, 3040, 3082, 3184, 3188, 3230, 3332, 3336, 3378, 3480, 3484, 3526, 3628, 3632, 3674, 3776, 3780, 3822, 3926]]
+   elif_final_else=[3934, 3990, 4092, 4096, 4138, 4240, 4244, 4286, 4388, 4392, 4434, 4536, 4540, 4582, 4684, 4688, 4730, 4832, 4836, 4878, 4980]
+   meta={}
+
+IfRegion@Block 7 (offset 1260-1262):
+  L184 > 1260: LOAD_FAST 4
+        1262: POP_JUMP_FORWARD_IF_NOT_NONE 50
+  Predecessors: 5, 6
+  Successors: 8, 9, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 7 (offset 1260-1262):
+  L184 > 1260: LOAD_FAST 4
+        1262: POP_JUMP_FORWARD_IF_NOT_NONE 50
+  Predecessors: 5, 6
+  Successors: 8, 9, 172 merge=Block 10 (offset 1742-1780):
+  L212 > 1742: LOAD_GLOBAL 50
+        1754: LOAD_ATTR 26
+        1764: LOAD_ATTR 27
+        1774: LOAD_FAST 1
+        1776: CONTAINS_OP 0
+        1778: EXTENDED_ARG 2
+        1780: POP_JUMP_FORWARD_IF_FALSE 528
+  Predecessors: 8, 9
+  Successors: 32, 11, 172 hdr=None be=None
+   then_blocks=[1264]
+   else_blocks=[1364]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 4 (offset 778-780):
+  L161 > 778: LOAD_FAST 3
+        780: POP_JUMP_FORWARD_IF_NOT_NONE 50
+  Predecessors: 2, 3
+  Successors: 172, 5, 6 type=RegionType.IF_THEN_ELSE exit=None cond=Block 4 (offset 778-780):
+  L161 > 778: LOAD_FAST 3
+        780: POP_JUMP_FORWARD_IF_NOT_NONE 50
+  Predecessors: 2, 3
+  Successors: 172, 5, 6 merge=Block 7 (offset 1260-1262):
+  L184 > 1260: LOAD_FAST 4
+        1262: POP_JUMP_FORWARD_IF_NOT_NONE 50
+  Predecessors: 5, 6
+  Successors: 8, 9, 172 hdr=None be=None
+   then_blocks=[782]
+   else_blocks=[882]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+IfRegion@Block 177 (offset 6-298):
+  L125     6: LOAD_DEREF 0
+          8: LOAD_ATTR 0
+         18: LOAD_ATTR 1
+         28: LOAD_ATTR 2
+         38: LOAD_ATTR 3
+         48: STORE_FAST 1
+  L130    50: LOAD_DEREF 0
+         52: LOAD_ATTR 0
+         62: LOAD_ATTR 1
+         72: LOAD_ATTR 4
+         82: LOAD_ATTR 5
+         92: LOAD_METHOD 6
+        114: LOAD_CONST 1
+        116: PRECALL 1
+        120: CALL 1
+  L129   130: STORE_FAST 2
+  L132   132: LOAD_DEREF 0
+        134: LOAD_ATTR 0
+        144: LOAD_ATTR 1
+        154: LOAD_ATTR 4
+        164: LOAD_ATTR 5
+        174: LOAD_METHOD 6
+        196: LOAD_CONST 2
+        198: PRECALL 1
+        202: CALL 1
+  L131   212: STORE_FAST 3
+  L135   214: LOAD_DEREF 0
+        216: LOAD_ATTR 0
+        226: LOAD_ATTR 1
+        236: LOAD_ATTR 4
+        246: LOAD_ATTR 5
+        256: LOAD_METHOD 6
+        278: LOAD_CONST 3
+        280: PRECALL 1
+        284: CALL 1
+  L134   294: STORE_FAST 4
+  L137   296: LOAD_FAST 2
+        298: POP_JUMP_FORWARD_IF_NOT_NONE 50
+  Predecessors: 1
+  Successors: 2, 3, 172 type=RegionType.IF_THEN_ELSE exit=None cond=Block 177 (offset 6-298):
+  L125     6: LOAD_DEREF 0
+          8: LOAD_ATTR 0
+         18: LOAD_ATTR 1
+         28: LOAD_ATTR 2
+         38: LOAD_ATTR 3
+         48: STORE_FAST 1
+  L130    50: LOAD_DEREF 0
+         52: LOAD_ATTR 0
+         62: LOAD_ATTR 1
+         72: LOAD_ATTR 4
+         82: LOAD_ATTR 5
+         92: LOAD_METHOD 6
+        114: LOAD_CONST 1
+        116: PRECALL 1
+        120: CALL 1
+  L129   130: STORE_FAST 2
+  L132   132: LOAD_DEREF 0
+        134: LOAD_ATTR 0
+        144: LOAD_ATTR 1
+        154: LOAD_ATTR 4
+        164: LOAD_ATTR 5
+        174: LOAD_METHOD 6
+        196: LOAD_CONST 2
+        198: PRECALL 1
+        202: CALL 1
+  L131   212: STORE_FAST 3
+  L135   214: LOAD_DEREF 0
+        216: LOAD_ATTR 0
+        226: LOAD_ATTR 1
+        236: LOAD_ATTR 4
+        246: LOAD_ATTR 5
+        256: LOAD_METHOD 6
+        278: LOAD_CONST 3
+        280: PRECALL 1
+        284: CALL 1
+  L134   294: STORE_FAST 4
+  L137   296: LOAD_FAST 2
+        298: POP_JUMP_FORWARD_IF_NOT_NONE 50
+  Predecessors: 1
+  Successors: 2, 3, 172 merge=Block 4 (offset 778-780):
+  L161 > 778: LOAD_FAST 3
+        780: POP_JUMP_FORWARD_IF_NOT_NONE 50
+  Predecessors: 2, 3
+  Successors: 172, 5, 6 hdr=None be=None
+   then_blocks=[300]
+   else_blocks=[400]
+   elif_conditions=[]
+   elif_bodies=[]
+   elif_final_else=[]
+   meta={}
+
+Region@Block 1 (offset 0-4):
+  [ENTRY]
+          0: MAKE_CELL 0
+  L120     2: RESUME 0
+  L124     4: NOP
+  Successors: 177 type=RegionType.BASIC exit=None cond=None merge=None hdr=None be=None

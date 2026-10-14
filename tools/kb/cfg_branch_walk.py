@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """cfg_branch_walk.py — 整个 CFG 图的**全部分支点**枚举（含所有子分支、所有层级）
 
 与 cfg_anatomy.py 的区别：那份测的是「单元里是否存在某形态」（一层、布尔存在性）；
@@ -24,7 +24,7 @@ import sys
 import time
 import types
 
-ROOT = r'F:\Downloads\pythoncdc-main'
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 SITE = os.path.join(ROOT, 'site-packages')
 OUT = os.path.join(ROOT, 'docs', 'refactor', 'cfg-branch-walk.json')
 

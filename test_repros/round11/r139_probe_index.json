@@ -1,0 +1,50 @@
+[
+  {
+    "path": "test_repros/round11/r139_01_call_in_or.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_02_no_call.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_03_tail_stmt.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_04_and_or.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_05_or_and.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_06_not_or.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_07_ctl_plain_and.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_08_ctl_ret_body_tail.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_09_assign_body_last.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_10_or_lead_assign.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_11_nested_assign.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_12_name_precedestore.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_13_cmp_noprecedestore.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_14_name_assign_body.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_15_cmp_assign_body.pyc"
+  },
+  {
+    "path": "test_repros/round11/r139_16_call_first_operand.pyc"
+  }
+]

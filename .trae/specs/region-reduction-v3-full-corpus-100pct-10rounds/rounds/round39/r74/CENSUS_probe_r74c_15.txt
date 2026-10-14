@@ -1,0 +1,17 @@
+R2145EVAL mb=@16 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@16 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@208 np=2 term=RETURN_VALUE rej=shape
+R2145bEVAL eb=@134 nh=1 bare=True rej=None
+R2145bFIRE eb=@134 T=@186 try=@80
+R2145EVAL mb=@186 np=3 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145bEVAL eb=@238 nh=1 bare=True rej=None
+R2145bFIRE eb=@238 T=@290 try=@94
+R2145EVAL mb=@290 np=4 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145EVAL mb=@290 np=4 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145bEVAL eb=@134 nh=1 bare=True rej=None
+R2145bFIRE eb=@134 T=@204 try=@80
+R2145EVAL mb=@204 np=5 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145EVAL mb=@72 np=3 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145EVAL mb=@72 np=3 term=POP_JUMP_FORWARD_IF_TRUE rej=shape
+R2145EVAL mb=@38 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@882 np=2 term=RAISE_VARARGS rej=shape

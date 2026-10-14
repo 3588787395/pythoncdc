@@ -1,0 +1,426 @@
+len orig=404 prod=472 delta=68
+== #1 delete orig[90..92 @700..@702] prod[90..90] del=2 ins=0
+   - @682     PRECALL                        
+   - @686     CALL                           
+   - @698     POP_JUMP_FORWARD_IF_TRUE       
+   - @700     JUMP_FORWARD                   
+   - @702     JUMP_FORWARD                   
+   + @684     PRECALL                        
+   + @688     CALL                           
+   + @698     POP_JUMP_FORWARD_IF_TRUE       
+== #2 insert orig[150..150 @1210..-] prod[148..171] del=0 ins=23
+   - @1194    PRECALL                        
+   - @1198    CALL                           
+   - @1208    POP_JUMP_BACKWARD_IF_FALSE     
+   + @1190    PRECALL                        
+   + @1194    CALL                           
+   + @1204    POP_JUMP_BACKWARD_IF_FALSE     
+   + @1206    LOAD_FAST                      pre_before_trading
+   + @1208    LOAD_GLOBAL                    NULL + int
+   + @1220    LOAD_GLOBAL                    datetime
+   + @1232    LOAD_ATTR                      datetime
+   + @1242    LOAD_METHOD                    now
+   + @1264    PRECALL                        
+   + @1268    CALL                           
+   + @1278    LOAD_METHOD                    strftime
+   + @1300    LOAD_CONST                     '%H%M'
+   + @1302    PRECALL                        
+   + @1306    CALL                           
+   + @1316    PRECALL                        
+   + @1320    CALL                           
+   + @1330    SWAP                           
+   + @1332    COPY                           
+   + @1334    COMPARE_OP                     <=
+   + @1340    POP_JUMP_FORWARD_IF_FALSE      
+   + @1342    LOAD_GLOBAL                    NULL + int
+   + @1354    LOAD_FAST                      post_after_trading
+   + @1356    PRECALL                        
+   + @1360    CALL                           
+   + @1370    COMPARE_OP                     <
+   + @1378    POP_JUMP_FORWARD_IF_FALSE      
+== #3 insert orig[151..151 @1214..-] prod[172..381] del=0 ins=209
+   - @1198    CALL                           
+   - @1208    POP_JUMP_BACKWARD_IF_FALSE     
+   - @1210    JUMP_FORWARD                   
+   + @1370    COMPARE_OP                     <
+   + @1378    POP_JUMP_FORWARD_IF_FALSE      
+   + @1380    JUMP_FORWARD                   
+   + @1382    POP_TOP                        
+   + @1386    JUMP_FORWARD                   
+   + @1388    LOAD_CONST                     0
+   + @1390    STORE_FAST                     sync_data_flag
+   + @1392    LOAD_FAST                      self
+   + @1394    LOAD_ATTR                      order_or_trade_lock
+   + @1404    BEFORE_WITH                    
+   + @1406    POP_TOP                        
+   + @1408    LOAD_FAST                      self
+   + @1410    LOAD_ATTR                      receive_order_response_flag
+   + @1420    LOAD_CONST                     1
+   + @1422    COMPARE_OP                     ==
+   + @1428    POP_JUMP_FORWARD_IF_TRUE       
+   + @1430    LOAD_FAST                      self
+   + @1432    LOAD_ATTR                      receive_trade_response_flag
+   + @1442    LOAD_CONST                     1
+   + @1444    COMPARE_OP                     ==
+   + @1450    POP_JUMP_FORWARD_IF_FALSE      
+   + @1452    LOAD_CONST                     1
+   + @1454    STORE_FAST                     sync_data_flag
+   + @1456    LOAD_CONST                     0
+   + @1458    LOAD_FAST                      self
+   + @1460    STORE_ATTR                     receive_order_response_flag
+   + @1470    LOAD_CONST                     0
+   + @1472    LOAD_FAST                      self
+   + @1474    STORE_ATTR                     receive_trade_response_flag
+   + @1484    LOAD_CONST                     None
+   + @1486    LOAD_CONST                     None
+   + @1488    LOAD_CONST                     None
+   + @1490    PRECALL                        
+   + @1494    CALL                           
+   + @1504    POP_TOP                        
+   + @1506    JUMP_FORWARD                   
+   + @1508    PUSH_EXC_INFO                  
+   + @1510    WITH_EXCEPT_START              
+   + @1512    POP_JUMP_FORWARD_IF_TRUE       
+   + @1514    RERAISE                        
+   + @1516    COPY                           
+   + @1518    POP_EXCEPT                     
+   + @1520    RERAISE                        
+   + @1522    POP_TOP                        
+   + @1524    POP_EXCEPT                     
+   + @1526    POP_TOP                        
+   + @1528    POP_TOP                        
+   + @1530    LOAD_CONST                     1
+   + @1532    STORE_FAST                     sync_data_flag
+   + @1534    LOAD_FAST                      sync_data_flag
+   + @1536    POP_JUMP_FORWARD_IF_FALSE      
+   + @1538    LOAD_FAST                      self
+   + @1540    LOAD_METHOD                    sync_account
+   + @1562    PRECALL                        
+   + @1566    CALL                           
+   + @1576    POP_TOP                        
+   + @1578    LOAD_GLOBAL                    datetime
+   + @1590    LOAD_ATTR                      datetime
+   + @1600    LOAD_METHOD                    now
+   + @1622    PRECALL                        
+   + @1626    CALL                           
+   + @1636    LOAD_FAST                      self
+   + @1638    STORE_ATTR                     sync_account_time
+   + @1648    LOAD_GLOBAL                    NULL + len
+   + @1660    LOAD_FAST                      self
+   + @1662    LOAD_ATTR                      on_order_response_list
+   + @1672    PRECALL                        
+   + @1676    CALL                           
+   + @1686    LOAD_CONST                     0
+   + @1688    COMPARE_OP                     >
+   + @1694    POP_JUMP_FORWARD_IF_FALSE      
+   + @1696    LOAD_GLOBAL                    NULL + on_order_response_handle
+   + @1708    LOAD_FAST                      self
+   + @1710    LOAD_ATTR                      on_order_response_list
+   + @1720    PRECALL                        
+   + @1724    CALL                           
+   + @1734    POP_TOP                        
+   + @1736    LOAD_GLOBAL                    NULL + len
+   + @1748    LOAD_FAST                      self
+   + @1750    LOAD_ATTR                      on_trade_response_list
+   + @1760    PRECALL                        
+   + @1764    CALL                           
+   + @1774    LOAD_CONST                     0
+   + @1776    COMPARE_OP                     >
+   + @1782    POP_JUMP_FORWARD_IF_FALSE      
+   + @1784    LOAD_GLOBAL                    NULL + on_trade_response_handle
+   + @1796    LOAD_FAST                      self
+   + @1798    LOAD_ATTR                      on_trade_response_list
+   + @1808    PRECALL                        
+   + @1812    CALL                           
+   + @1822    POP_TOP                        
+   + @1824    LOAD_GLOBAL                    NULL + time
+   + @1836    LOAD_ATTR                      sleep
+   + @1846    LOAD_FAST                      steps
+   + @1848    PRECALL                        
+   + @1852    CALL                           
+   + @1862    POP_TOP                        
+   + @1864    LOAD_FAST                      pre_before_trading
+   + @1866    LOAD_GLOBAL                    NULL + int
+   + @1878    LOAD_GLOBAL                    datetime
+   + @1890    LOAD_ATTR                      datetime
+   + @1900    LOAD_METHOD                    now
+   + @1922    PRECALL                        
+   + @1926    CALL                           
+   + @1936    LOAD_METHOD                    strftime
+   + @1958    LOAD_CONST                     '%H%M'
+   + @1960    PRECALL                        
+   + @1964    CALL                           
+   + @1974    PRECALL                        
+   + @1978    CALL                           
+   + @1988    SWAP                           
+   + @1990    COPY                           
+   + @1992    COMPARE_OP                     <=
+   + @1998    POP_JUMP_FORWARD_IF_FALSE      
+   + @2000    LOAD_GLOBAL                    NULL + int
+   + @2012    LOAD_FAST                      post_after_trading
+   + @2014    PRECALL                        
+   + @2018    CALL                           
+   + @2028    COMPARE_OP                     <
+   + @2034    POP_JUMP_FORWARD_IF_TRUE       
+   + @2036    JUMP_FORWARD                   
+   + @2038    POP_TOP                        
+   + @2042    JUMP_BACKWARD                  
+   + @2044    LOAD_GLOBAL                    NULL + abs
+   + @2056    LOAD_GLOBAL                    datetime
+   + @2068    LOAD_ATTR                      datetime
+   + @2078    LOAD_METHOD                    now
+   + @2100    PRECALL                        
+   + @2104    CALL                           
+   + @2114    LOAD_FAST                      self
+   + @2116    LOAD_ATTR                      sync_account_time
+   + @2126    BINARY_OP                      -
+   + @2130    LOAD_METHOD                    total_seconds
+   + @2152    PRECALL                        
+   + @2156    CALL                           
+   + @2166    PRECALL                        
+   + @2170    CALL                           
+   + @2180    STORE_FAST                     time_difference
+   + @2182    LOAD_FAST                      pre_before_trading
+   + @2184    LOAD_GLOBAL                    NULL + int
+   + @2196    LOAD_GLOBAL                    datetime
+   + @2208    LOAD_ATTR                      datetime
+   + @2218    LOAD_METHOD                    now
+   + @2240    PRECALL                        
+   + @2244    CALL                           
+   + @2254    LOAD_METHOD                    strftime
+   + @2276    LOAD_CONST                     '%H%M'
+   + @2278    PRECALL                        
+   + @2282    CALL                           
+   + @2292    PRECALL                        
+   + @2296    CALL                           
+   + @2306    SWAP                           
+   + @2308    COPY                           
+   + @2310    COMPARE_OP                     <=
+   + @2316    POP_JUMP_FORWARD_IF_FALSE      
+   + @2318    LOAD_GLOBAL                    NULL + int
+   + @2330    LOAD_FAST                      post_after_trading
+   + @2332    PRECALL                        
+   + @2336    CALL                           
+   + @2346    COMPARE_OP                     <
+   + @2354    POP_JUMP_BACKWARD_IF_TRUE      
+   + @2356    JUMP_FORWARD                   
+   + @2358    POP_TOP                        
+   + @2360    LOAD_GLOBAL                    NULL + int
+   + @2372    LOAD_GLOBAL                    datetime
+   + @2384    LOAD_ATTR                      datetime
+   + @2394    LOAD_METHOD                    now
+   + @2416    PRECALL                        
+   + @2420    CALL                           
+   + @2430    LOAD_METHOD                    strftime
+   + @2452    LOAD_CONST                     '%H%M'
+   + @2454    PRECALL                        
+   + @2458    CALL                           
+   + @2468    PRECALL                        
+   + @2472    CALL                           
+   + @2482    LOAD_FAST                      pre_before_trading
+   + @2484    COMPARE_OP                     <
+   + @2490    POP_JUMP_FORWARD_IF_FALSE      
+   + @2494    LOAD_GLOBAL                    NULL + int
+   + @2506    LOAD_GLOBAL                    datetime
+   + @2518    LOAD_ATTR                      datetime
+   + @2528    LOAD_METHOD                    now
+   + @2550    PRECALL                        
+   + @2554    CALL                           
+   + @2564    LOAD_METHOD                    strftime
+   + @2586    LOAD_CONST                     '%H%M'
+   + @2588    PRECALL                        
+   + @2592    CALL                           
+   + @2602    PRECALL                        
+   + @2606    CALL                           
+   + @2616    LOAD_FAST                      pre_before_trading
+   + @2618    COMPARE_OP                     <
+   + @2624    POP_JUMP_BACKWARD_IF_TRUE      
+   + @2626    LOAD_GLOBAL                    holiday_sync_account
+   + @2638    LOAD_CONST                     '0'
+   + @2640    COMPARE_OP                     ==
+   + @2646    POP_JUMP_FORWARD_IF_FALSE      
+   + @2648    LOAD_FAST                      self
+   + @2650    LOAD_ATTR                      engine
+   + @2660    LOAD_ATTR                      data_proxy
+   + @2670    LOAD_METHOD                    is_trading_date
+   + @2692    LOAD_GLOBAL                    datetime
+   + @2704    LOAD_ATTR                      datetime
+   + @2714    LOAD_METHOD                    now
+   + @2736    PRECALL                        
+   + @2740    CALL                           
+   + @2750    LOAD_METHOD                    date
+   + @2772    PRECALL                        
+   + @2776    CALL                           
+   + @2786    PRECALL                        
+   + @2790    CALL                           
+   + @2800    POP_JUMP_FORWARD_IF_TRUE       
+== #4 delete orig[235..397 @1890..@2884] prod[465..465] del=162 ins=0
+   - @1876    LOAD_CONST                     True
+   - @1878    LOAD_FAST                      self
+   - @1880    STORE_ATTR                     reconnect_flag
+   - @1890    LOAD_FAST                      pre_before_trading
+   - @1892    LOAD_GLOBAL                    NULL + int
+   - @1904    LOAD_GLOBAL                    datetime
+   - @1916    LOAD_ATTR                      datetime
+   - @1926    LOAD_METHOD                    now
+   - @1948    PRECALL                        
+   - @1952    CALL                           
+   - @1962    LOAD_METHOD                    strftime
+   - @1984    LOAD_CONST                     '%H%M'
+   - @1986    PRECALL                        
+   - @1990    CALL                           
+   - @2000    PRECALL                        
+   - @2004    CALL                           
+   - @2014    SWAP                           
+   - @2016    COPY                           
+   - @2018    COMPARE_OP                     <=
+   - @2024    POP_JUMP_FORWARD_IF_FALSE      
+   - @2026    LOAD_GLOBAL                    NULL + int
+   - @2038    LOAD_FAST                      post_after_trading
+   - @2040    PRECALL                        
+   - @2044    CALL                           
+   - @2054    COMPARE_OP                     <
+   - @2062    POP_JUMP_FORWARD_IF_FALSE      
+   - @2064    JUMP_FORWARD                   
+   - @2066    POP_TOP                        
+   - @2070    JUMP_FORWARD                   
+   - @2072    LOAD_CONST                     0
+   - @2074    STORE_FAST                     sync_data_flag
+   - @2076    LOAD_FAST                      self
+   - @2078    LOAD_ATTR                      order_or_trade_lock
+   - @2088    BEFORE_WITH                    
+   - @2090    POP_TOP                        
+   - @2092    LOAD_FAST                      self
+   - @2094    LOAD_ATTR                      receive_order_response_flag
+   - @2104    LOAD_CONST                     1
+   - @2106    COMPARE_OP                     ==
+   - @2112    POP_JUMP_FORWARD_IF_TRUE       
+   - @2114    LOAD_FAST                      self
+   - @2116    LOAD_ATTR                      receive_trade_response_flag
+   - @2126    LOAD_CONST                     1
+   - @2128    COMPARE_OP                     ==
+   - @2134    POP_JUMP_FORWARD_IF_FALSE      
+   - @2136    LOAD_CONST                     1
+   - @2138    STORE_FAST                     sync_data_flag
+   - @2140    LOAD_CONST                     0
+   - @2142    LOAD_FAST                      self
+   - @2144    STORE_ATTR                     receive_order_response_flag
+   - @2154    LOAD_CONST                     0
+   - @2156    LOAD_FAST                      self
+   - @2158    STORE_ATTR                     receive_trade_response_flag
+   - @2168    LOAD_CONST                     None
+   - @2170    LOAD_CONST                     None
+   - @2172    LOAD_CONST                     None
+   - @2174    PRECALL                        
+   - @2178    CALL                           
+   - @2188    POP_TOP                        
+   - @2190    JUMP_FORWARD                   
+   - @2192    PUSH_EXC_INFO                  
+   - @2194    WITH_EXCEPT_START              
+   - @2196    POP_JUMP_FORWARD_IF_TRUE       
+   - @2198    RERAISE                        
+   - @2200    COPY                           
+   - @2202    POP_EXCEPT                     
+   - @2204    RERAISE                        
+   - @2206    POP_TOP                        
+   - @2208    POP_EXCEPT                     
+   - @2210    POP_TOP                        
+   - @2212    POP_TOP                        
+   - @2214    LOAD_GLOBAL                    NULL + abs
+   - @2226    LOAD_GLOBAL                    datetime
+   - @2238    LOAD_ATTR                      datetime
+   - @2248    LOAD_METHOD                    now
+   - @2270    PRECALL                        
+   - @2274    CALL                           
+   - @2284    LOAD_FAST                      self
+   - @2286    LOAD_ATTR                      sync_account_time
+   - @2296    BINARY_OP                      -
+   - @2300    LOAD_METHOD                    total_seconds
+   - @2322    PRECALL                        
+   - @2326    CALL                           
+   - @2336    PRECALL                        
+   - @2340    CALL                           
+   - @2350    STORE_FAST                     time_difference
+   - @2352    LOAD_FAST                      time_difference
+   - @2354    LOAD_GLOBAL                    sync_max_time
+   - @2366    COMPARE_OP                     >
+   - @2372    POP_JUMP_FORWARD_IF_FALSE      
+   - @2374    LOAD_CONST                     1
+   - @2376    STORE_FAST                     sync_data_flag
+   - @2378    LOAD_FAST                      sync_data_flag
+   - @2380    POP_JUMP_FORWARD_IF_FALSE      
+   - @2382    LOAD_FAST                      self
+   - @2384    LOAD_METHOD                    sync_account
+   - @2406    PRECALL                        
+   - @2410    CALL                           
+   - @2420    POP_TOP                        
+   - @2422    LOAD_GLOBAL                    datetime
+   - @2434    LOAD_ATTR                      datetime
+   - @2444    LOAD_METHOD                    now
+   - @2466    PRECALL                        
+   - @2470    CALL                           
+   - @2480    LOAD_FAST                      self
+   - @2482    STORE_ATTR                     sync_account_time
+   - @2492    LOAD_GLOBAL                    NULL + len
+   - @2504    LOAD_FAST                      self
+   - @2506    LOAD_ATTR                      on_order_response_list
+   - @2516    PRECALL                        
+   - @2520    CALL                           
+   - @2530    LOAD_CONST                     0
+   - @2532    COMPARE_OP                     >
+   - @2538    POP_JUMP_FORWARD_IF_FALSE      
+   - @2540    LOAD_GLOBAL                    NULL + on_order_response_handle
+   - @2552    LOAD_FAST                      self
+   - @2554    LOAD_ATTR                      on_order_response_list
+   - @2564    PRECALL                        
+   - @2568    CALL                           
+   - @2578    POP_TOP                        
+   - @2580    LOAD_GLOBAL                    NULL + len
+   - @2592    LOAD_FAST                      self
+   - @2594    LOAD_ATTR                      on_trade_response_list
+   - @2604    PRECALL                        
+   - @2608    CALL                           
+   - @2618    LOAD_CONST                     0
+   - @2620    COMPARE_OP                     >
+   - @2626    POP_JUMP_FORWARD_IF_FALSE      
+   - @2628    LOAD_GLOBAL                    NULL + on_trade_response_handle
+   - @2640    LOAD_FAST                      self
+   - @2642    LOAD_ATTR                      on_trade_response_list
+   - @2652    PRECALL                        
+   - @2656    CALL                           
+   - @2666    POP_TOP                        
+   - @2668    LOAD_GLOBAL                    NULL + time
+   - @2680    LOAD_ATTR                      sleep
+   - @2690    LOAD_FAST                      steps
+   - @2692    PRECALL                        
+   - @2696    CALL                           
+   - @2706    POP_TOP                        
+   - @2708    LOAD_FAST                      pre_before_trading
+   - @2710    LOAD_GLOBAL                    NULL + int
+   - @2722    LOAD_GLOBAL                    datetime
+   - @2734    LOAD_ATTR                      datetime
+   - @2744    LOAD_METHOD                    now
+   - @2766    PRECALL                        
+   - @2770    CALL                           
+   - @2780    LOAD_METHOD                    strftime
+   - @2802    LOAD_CONST                     '%H%M'
+   - @2804    PRECALL                        
+   - @2808    CALL                           
+   - @2818    PRECALL                        
+   - @2822    CALL                           
+   - @2832    SWAP                           
+   - @2834    COPY                           
+   - @2836    COMPARE_OP                     <=
+   - @2842    POP_JUMP_FORWARD_IF_FALSE      
+   - @2844    LOAD_GLOBAL                    NULL + int
+   - @2856    LOAD_FAST                      post_after_trading
+   - @2858    PRECALL                        
+   - @2862    CALL                           
+   - @2872    COMPARE_OP                     <
+   - @2880    POP_JUMP_BACKWARD_IF_TRUE      
+   - @2882    JUMP_FORWARD                   
+   - @2884    POP_TOP                        
+   + @3466    LOAD_CONST                     True
+   + @3468    LOAD_FAST                      self
+   + @3470    STORE_ATTR                     reconnect_flag
+hunks=4

@@ -1,0 +1,22 @@
+[
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc",
+  "rel": "fly/simtradding/ptradeAccount.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
+  "rel": "IQEngine/plugins/plugin_system_trade/function.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+  "rel": "fly/data/quote_handler.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/IQEngine/core/bar.pyc",
+  "rel": "IQEngine/core/bar.pyc"
+ },
+ {
+  "path": "D:/admin/.qoder/worktrees/app/f557fd/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+  "rel": "fly/data/quotation.pyc"
+ }
+]

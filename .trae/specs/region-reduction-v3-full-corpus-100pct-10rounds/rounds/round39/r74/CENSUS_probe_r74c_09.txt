@@ -1,0 +1,23 @@
+R2145bEVAL eb=@338 nh=1 bare=True rej=None
+R2145bFIRE eb=@338 T=@366 try=@278
+R2145EVAL mb=@318 np=1 term=STORE_FAST rej=shape
+R2145bEVAL eb=@404 nh=1 bare=True rej=None
+R2145bFIRE eb=@404 T=@442 try=@334
+R2145EVAL mb=@706 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@982 np=2 term=STORE_FAST rej=other-arm-member
+R2145EVAL mb=@994 np=2 term=JUMP_FORWARD rej=shape
+R2145EVAL mb=@1072 np=2 term=POP_TOP rej=None
+R2145FIRE mb=@1072 region=@1014
+R2145EVAL mb=@1220 np=2 term=SWAP rej=shape
+R2145EVAL mb=@266 np=2 term=POP_JUMP_FORWARD_IF_NOT_NONE rej=shape
+R2145EVAL mb=@20 np=1 term=STORE_FAST rej=shape
+R2145EVAL mb=@926 np=2 term=JUMP_FORWARD rej=shape
+R2145EVAL mb=@926 np=2 term=JUMP_FORWARD rej=shape
+R2145EVAL mb=@926 np=2 term=JUMP_FORWARD rej=shape
+R2145EVAL mb=@64 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@64 np=2 term=RETURN_VALUE rej=shape
+R2145EVAL mb=@780 np=2 term=POP_TOP rej=other-arm-member
+R2145EVAL mb=@674 np=2 term=JUMP_FORWARD rej=shape
+R2145EVAL mb=@1286 np=11 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@1246 np=2 term=POP_TOP rej=other-arm-member
+R2145EVAL mb=@1142 np=2 term=JUMP_FORWARD rej=shape

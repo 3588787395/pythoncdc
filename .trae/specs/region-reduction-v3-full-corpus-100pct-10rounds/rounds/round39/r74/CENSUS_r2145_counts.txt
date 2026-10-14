@@ -1,0 +1,25 @@
+half A ([R21-45] join-claim merge) evaluations=1477 fires=5
+  rejections: {'shape': 1433, 'other-arm-member': 37, 'None': 5, 'declared-head': 2}
+  file 4: ['R2145FIRE mb=@452 region=@382']
+  file 6: ['R2145FIRE mb=@236 region=@178', 'R2145FIRE mb=@1276 region=@1156']
+  file 9: ['R2145FIRE mb=@1072 region=@1014']
+  file 13: ['R2145FIRE mb=@6778 region=@6690']
+half B ([R21-45b] phantom try-else) evaluations=106 fires=77
+  rejections: {'None': 77, 'handler-exit-not-shared': 23, 'not-bare-jump': 6}
+  file 1: ['R2145bFIRE eb=@270 T=@604 try=@184', 'R2145bFIRE eb=@322 T=@544 try=@114', 'R2145bFIRE eb=@100 T=@198 try=@58', 'R2145bFIRE eb=@242 T=@340 try=@200']
+  file 2: ['R2145bFIRE eb=@312 T=@410 try=@270', 'R2145bFIRE eb=@454 T=@552 try=@412', 'R2145bFIRE eb=@226 T=@330 try=@8', 'R2145bFIRE eb=@352 T=@582 try=@232', 'R2145bFIRE eb=@692 T=@1532 try=@632', 'R2145bFIRE eb=@896 T=@1590 try=@810', 'R2145bFIRE eb=@1778 T=@2472 try=@1692']
+  file 3: ['R2145bFIRE eb=@578 T=@1012 try=@520', 'R2145bFIRE eb=@830 T=@1012 try=@752', 'R2145bFIRE eb=@618 T=@730 try=@450', 'R2145bFIRE eb=@1204 T=@1346 try=@926', 'R2145bFIRE eb=@810 T=@952 try=@532', 'R2145bFIRE eb=@674 T=@816 try=@396']
+  file 4: ['R2145bFIRE eb=@878 T=@994 try=@520', 'R2145bFIRE eb=@142 T=@236 try=@6']
+  file 5: ['R2145bFIRE eb=@28 T=@48 try=@12', 'R2145bFIRE eb=@116 T=@136 try=@100', 'R2145bFIRE eb=@134 T=@252 try=@24', 'R2145bFIRE eb=@112 T=@132 try=@38', 'R2145bFIRE eb=@2420 T=@2440 try=@2346', 'R2145bFIRE eb=@4426 T=@4446 try=@4352']
+  file 6: ['R2145bFIRE eb=@484 T=@594 try=@256', 'R2145bFIRE eb=@1734 T=@1844 try=@180', 'R2145bFIRE eb=@826 T=@2626 try=@646', 'R2145bFIRE eb=@3128 T=@3270 try=@2784', 'R2145bFIRE eb=@270 T=@358 try=@110', 'R2145bFIRE eb=@3776 T=@3874 try=@538', 'R2145bFIRE eb=@1186 T=@1296 try=@828', 'R2145bFIRE eb=@1912 T=@2030 try=@1844', 'R2145bFIRE eb=@646 T=@806 try=@266', 'R2145bFIRE eb=@478 T=@618 try=@200']
+  file 8: ['R2145bFIRE eb=@358 T=@578 try=@164', 'R2145bFIRE eb=@372 T=@488 try=@252', 'R2145bFIRE eb=@556 T=@1242 try=@516', 'R2145bFIRE eb=@122 T=@220 try=@80', 'R2145bFIRE eb=@1724 T=@1836 try=@408', 'R2145bFIRE eb=@100 T=@198 try=@58', 'R2145bFIRE eb=@512 T=@790 try=@484', 'R2145bFIRE eb=@1180 T=@1282 try=@1040']
+  file 9: ['R2145bFIRE eb=@338 T=@366 try=@278', 'R2145bFIRE eb=@404 T=@442 try=@334']
+  file 11: ['R2145bFIRE eb=@1560 T=@1662 try=@78', 'R2145bFIRE eb=@402 T=@440 try=@342', 'R2145bFIRE eb=@2338 T=@2376 try=@2278', 'R2145bFIRE eb=@402 T=@440 try=@342', 'R2145bFIRE eb=@1956 T=@1994 try=@1896', 'R2145bFIRE eb=@230 T=@304 try=@4', 'R2145bFIRE eb=@532 T=@606 try=@306', 'R2145bFIRE eb=@230 T=@304 try=@4', 'R2145bFIRE eb=@1362 T=@1950 try=@1062', 'R2145bFIRE eb=@1808 T=@1950 try=@1508', 'R2145bFIRE eb=@150 T=@170 try=@106', 'R2145bFIRE eb=@500 T=@602 try=@440', 'R2145bFIRE eb=@500 T=@602 try=@440', 'R2145bFIRE eb=@972 T=@1050 try=@944', 'R2145bFIRE eb=@222 T=@322 try=@120']
+  file 13: ['R2145bFIRE eb=@6652 T=@6690 try=@6582', 'R2145bFIRE eb=@8256 T=@8294 try=@8186']
+  file 14: ['R2145bFIRE eb=@86 T=@204 try=@4', 'R2145bFIRE eb=@630 T=@782 try=@548']
+  file 15: ['R2145bFIRE eb=@134 T=@186 try=@80', 'R2145bFIRE eb=@238 T=@290 try=@94', 'R2145bFIRE eb=@134 T=@204 try=@80']
+  file 16: ['R2145bFIRE eb=@134 T=@250 try=@80', 'R2145bFIRE eb=@238 T=@354 try=@94', 'R2145bFIRE eb=@134 T=@268 try=@80']
+  file 17: ['R2145bFIRE eb=@134 T=@250 try=@80', 'R2145bFIRE eb=@238 T=@354 try=@94', 'R2145bFIRE eb=@134 T=@268 try=@80']
+  file 18: ['R2145bFIRE eb=@16 T=@52 try=@4', 'R2145bFIRE eb=@98 T=@134 try=@86']
+  file 19: ['R2145bFIRE eb=@48 T=@84 try=@36']
+  file 20: ['R2145bFIRE eb=@16 T=@52 try=@4']

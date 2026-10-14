@@ -1,0 +1,7 @@
+def f(t, sv, lv):
+    if t == 'a':
+        return 1
+    elif t == 'b':
+        if sv is None or lv is None:
+            return None
+        return down(sv, lv)

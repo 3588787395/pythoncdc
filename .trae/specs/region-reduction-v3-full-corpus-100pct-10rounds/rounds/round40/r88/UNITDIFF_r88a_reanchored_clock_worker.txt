@@ -1,0 +1,9 @@
+len orig=1424 prod=1426 delta=2
+   ~ orig[1028] @7184   POP_JUMP_FORWARD_IF_FALSE  ->idx1040   | prod[1028] @7186   POP_JUMP_FORWARD_IF_FALSE  ->idx1392  
+   ~ orig[1037] @7210   POP_JUMP_FORWARD_IF_TRUE   ->idx1046   | prod[1037] @7212   POP_JUMP_FORWARD_IF_TRUE   ->idx1046  
+   ~ orig[1045] @7246   POP_JUMP_FORWARD_IF_FALSE  ->idx1099   | prod[1045] @7248   POP_JUMP_FORWARD_IF_FALSE  ->idx1047  
+   ~ orig[1050] @7268   POP_JUMP_FORWARD_IF_FALSE  ->idx1086   | prod[1051] @7274   POP_JUMP_FORWARD_IF_FALSE  ->idx1101  
+   ~ orig[1103] @7602   POP_JUMP_FORWARD_IF_FALSE  ->idx1115   | prod[1105] @7614   POP_JUMP_FORWARD_IF_FALSE  ->idx1392  
+   ~ orig[1358] @8972   POP_JUMP_FORWARD_IF_FALSE  ->idx1384   | prod[1360] @8984   POP_JUMP_FORWARD_IF_FALSE  ->idx1385  
+   ~ orig[1361] @8978   JUMP_FORWARD               ->idx1384   | prod[1363] @8990   JUMP_FORWARD               ->idx1392  
+hunks=2 landings=7 judge_diff=True

@@ -1,0 +1,17 @@
+orig instrs=1442 prod instrs=1448 delta=6
+
+== #1 insert orig[@7184..@7178] prod[@7184..@7184] del=0 ins=1
+   + @7184   EXTENDED_ARG                      
+
+== #2 insert orig[@7248..@7246] prod[@7250..@7248] del=0 ins=2
+   + @7250   EXTENDED_ARG                      
+   + @7252   JUMP_FORWARD                      
+
+== #3 insert orig[@7582..@7572] prod[@7588..@7582] del=0 ins=2
+   + @7588   EXTENDED_ARG                      
+   + @7590   JUMP_FORWARD                      
+
+== #4 insert orig[@7602..@7596] prod[@7612..@7602] del=0 ins=1
+   + @7612   EXTENDED_ARG                      
+
+windows=4

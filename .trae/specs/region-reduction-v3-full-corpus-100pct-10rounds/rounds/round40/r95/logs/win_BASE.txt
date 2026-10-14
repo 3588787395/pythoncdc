@@ -1,0 +1,435 @@
+orig instrs=412 prod instrs=410 delta=-2
+
+== #1 delete orig[@362..@536] prod[@362..@542] del=22 ins=0
+   - @362    POP_JUMP_FORWARD_IF_TRUE           line? 
+   - @364    LOAD_GLOBAL                        line? 
+   - @376    LOAD_GLOBAL                        line? 
+   - @388    LOAD_ATTR                          line? 
+   - @398    LOAD_METHOD                        line? 
+   - @420    PRECALL                            line? 
+   - @424    CALL                               line? 
+   - @434    LOAD_METHOD                        line? 
+   - @456    LOAD_CONST                         line? 
+   - @458    PRECALL                            line? 
+   - @462    CALL                               line? 
+   - @472    PRECALL                            line? 
+   - @476    CALL                               line? 
+   - @486    LOAD_GLOBAL                        line? 
+   - @498    LOAD_FAST                          line? 
+   - @500    PRECALL                            line? 
+   - @504    CALL                               line? 
+   - @514    COMPARE_OP                         line? 
+   - @520    POP_JUMP_FORWARD_IF_TRUE           line? 
+   - @522    LOAD_GLOBAL                        line? 
+   - @534    LOAD_CONST                         line? 
+   - @536    COMPARE_OP                         line? 
+
+== #2 delete orig[@544..@702] prod[@364..@704] del=18 ins=0
+   - @544    LOAD_FAST                          line? 
+   - @546    LOAD_ATTR                          line? 
+   - @556    LOAD_ATTR                          line? 
+   - @566    LOAD_METHOD                        line? 
+   - @588    LOAD_GLOBAL                        line? 
+   - @600    LOAD_ATTR                          line? 
+   - @610    LOAD_METHOD                        line? 
+   - @632    PRECALL                            line? 
+   - @636    CALL                               line? 
+   - @646    LOAD_METHOD                        line? 
+   - @668    PRECALL                            line? 
+   - @672    CALL                               line? 
+   - @682    PRECALL                            line? 
+   - @686    CALL                               line? 
+   - @696    EXTENDED_ARG                       line? 
+   - @698    POP_JUMP_FORWARD_IF_TRUE           line? 
+   - @700    JUMP_FORWARD                       line? 
+   - @702    JUMP_FORWARD                       line? 
+
+== #3 insert orig[@866..@856] prod[@526..@866] del=0 ins=1
+   + @526    LOAD_GLOBAL                       
+
+== #4 insert orig[@868..@866] prod[@540..@868] del=0 ins=2
+   + @540    PRECALL                           
+   + @544    CALL                              
+
+== #5 replace orig[@874..@874] prod[@560..@876] del=1 ins=2
+   - @874    POP_JUMP_BACKWARD_IF_TRUE          line? 
+   + @560    RETURN_VALUE                      
+   + @562    LOAD_FAST                         
+
+== #6 insert orig[@998..@988] prod[@686..@998] del=0 ins=4
+   + @686    SWAP                              
+   + @688    COPY                              
+   + @690    COMPARE_OP                        
+   + @696    POP_JUMP_FORWARD_IF_FALSE         
+
+== #7 insert orig[@1026..@1016] prod[@726..@1026] del=0 ins=196
+   + @726    COMPARE_OP                        
+   + @732    EXTENDED_ARG                      
+   + @734    POP_JUMP_FORWARD_IF_FALSE         
+   + @736    JUMP_FORWARD                      
+   + @738    POP_TOP                           
+   + @740    EXTENDED_ARG                      
+   + @742    JUMP_FORWARD                      
+   + @744    LOAD_CONST                        
+   + @746    STORE_FAST                        
+   + @748    LOAD_FAST                         
+   + @750    LOAD_ATTR                         
+   + @760    BEFORE_WITH                       
+   + @762    POP_TOP                           
+   + @764    LOAD_FAST                         
+   + @766    LOAD_ATTR                         
+   + @776    LOAD_CONST                        
+   + @778    COMPARE_OP                        
+   + @784    POP_JUMP_FORWARD_IF_TRUE          
+   + @786    LOAD_FAST                         
+   + @788    LOAD_ATTR                         
+   + @798    LOAD_CONST                        
+   + @800    COMPARE_OP                        
+   + @806    POP_JUMP_FORWARD_IF_FALSE         
+   + @808    LOAD_CONST                        
+   + @810    STORE_FAST                        
+   + @812    LOAD_CONST                        
+   + @814    LOAD_FAST                         
+   + @816    STORE_ATTR                        
+   + @826    LOAD_CONST                        
+   + @828    LOAD_FAST                         
+   + @830    STORE_ATTR                        
+   + @840    LOAD_CONST                        
+   + @842    LOAD_CONST                        
+   + @844    LOAD_CONST                        
+   + @846    PRECALL                           
+   + @850    CALL                              
+   + @860    POP_TOP                           
+   + @862    JUMP_FORWARD                      
+   + @864    PUSH_EXC_INFO                     
+   + @866    WITH_EXCEPT_START                 
+   + @868    POP_JUMP_FORWARD_IF_TRUE          
+   + @870    RERAISE                           
+   + @872    COPY                              
+   + @874    POP_EXCEPT                        
+   + @876    RERAISE                           
+   + @878    POP_TOP                           
+   + @880    POP_EXCEPT                        
+   + @882    POP_TOP                           
+   + @884    POP_TOP                           
+   + @886    LOAD_CONST                        
+   + @888    STORE_FAST                        
+   + @890    LOAD_FAST                         
+   + @892    POP_JUMP_FORWARD_IF_FALSE         
+   + @894    LOAD_FAST                         
+   + @896    LOAD_METHOD                       
+   + @918    PRECALL                           
+   + @922    CALL                              
+   + @932    POP_TOP                           
+   + @934    LOAD_GLOBAL                       
+   + @946    LOAD_ATTR                         
+   + @956    LOAD_METHOD                       
+   + @978    PRECALL                           
+   + @982    CALL                              
+   + @992    LOAD_FAST                         
+   + @994    STORE_ATTR                        
+   + @1004   LOAD_GLOBAL                       
+   + @1016   LOAD_FAST                         
+   + @1018   LOAD_ATTR                         
+   + @1028   PRECALL                           
+   + @1032   CALL                              
+   + @1042   LOAD_CONST                        
+   + @1044   COMPARE_OP                        
+   + @1050   POP_JUMP_FORWARD_IF_FALSE         
+   + @1052   LOAD_GLOBAL                       
+   + @1064   LOAD_FAST                         
+   + @1066   LOAD_ATTR                         
+   + @1076   PRECALL                           
+   + @1080   CALL                              
+   + @1090   POP_TOP                           
+   + @1092   LOAD_GLOBAL                       
+   + @1104   LOAD_FAST                         
+   + @1106   LOAD_ATTR                         
+   + @1116   PRECALL                           
+   + @1120   CALL                              
+   + @1130   LOAD_CONST                        
+   + @1132   COMPARE_OP                        
+   + @1138   POP_JUMP_FORWARD_IF_FALSE         
+   + @1140   LOAD_GLOBAL                       
+   + @1152   LOAD_FAST                         
+   + @1154   LOAD_ATTR                         
+   + @1164   PRECALL                           
+   + @1168   CALL                              
+   + @1178   POP_TOP                           
+   + @1180   LOAD_GLOBAL                       
+   + @1192   LOAD_ATTR                         
+   + @1202   LOAD_FAST                         
+   + @1204   PRECALL                           
+   + @1208   CALL                              
+   + @1218   POP_TOP                           
+   + @1220   LOAD_FAST                         
+   + @1222   LOAD_GLOBAL                       
+   + @1234   LOAD_GLOBAL                       
+   + @1246   LOAD_ATTR                         
+   + @1256   LOAD_METHOD                       
+   + @1278   PRECALL                           
+   + @1282   CALL                              
+   + @1292   LOAD_METHOD                       
+   + @1314   LOAD_CONST                        
+   + @1316   PRECALL                           
+   + @1320   CALL                              
+   + @1330   PRECALL                           
+   + @1334   CALL                              
+   + @1344   SWAP                              
+   + @1346   COPY                              
+   + @1348   COMPARE_OP                        
+   + @1354   POP_JUMP_FORWARD_IF_FALSE         
+   + @1356   LOAD_GLOBAL                       
+   + @1368   LOAD_FAST                         
+   + @1370   PRECALL                           
+   + @1374   CALL                              
+   + @1384   COMPARE_OP                        
+   + @1390   POP_JUMP_FORWARD_IF_TRUE          
+   + @1392   JUMP_FORWARD                      
+   + @1394   POP_TOP                           
+   + @1396   EXTENDED_ARG                      
+   + @1398   JUMP_BACKWARD                     
+   + @1400   LOAD_GLOBAL                       
+   + @1412   LOAD_GLOBAL                       
+   + @1424   LOAD_ATTR                         
+   + @1434   LOAD_METHOD                       
+   + @1456   PRECALL                           
+   + @1460   CALL                              
+   + @1470   LOAD_FAST                         
+   + @1472   LOAD_ATTR                         
+   + @1482   BINARY_OP                         
+   + @1486   LOAD_METHOD                       
+   + @1508   PRECALL                           
+   + @1512   CALL                              
+   + @1522   PRECALL                           
+   + @1526   CALL                              
+   + @1536   STORE_FAST                        
+   + @1538   LOAD_FAST                         
+   + @1540   LOAD_GLOBAL                       
+   + @1552   LOAD_GLOBAL                       
+   + @1564   LOAD_ATTR                         
+   + @1574   LOAD_METHOD                       
+   + @1596   PRECALL                           
+   + @1600   CALL                              
+   + @1610   LOAD_METHOD                       
+   + @1632   LOAD_CONST                        
+   + @1634   PRECALL                           
+   + @1638   CALL                              
+   + @1648   PRECALL                           
+   + @1652   CALL                              
+   + @1662   SWAP                              
+   + @1664   COPY                              
+   + @1666   COMPARE_OP                        
+   + @1672   POP_JUMP_FORWARD_IF_FALSE         
+   + @1674   LOAD_GLOBAL                       
+   + @1686   LOAD_FAST                         
+   + @1688   PRECALL                           
+   + @1692   CALL                              
+   + @1702   COMPARE_OP                        
+   + @1708   EXTENDED_ARG                      
+   + @1710   POP_JUMP_BACKWARD_IF_TRUE         
+   + @1712   JUMP_FORWARD                      
+   + @1714   POP_TOP                           
+   + @1716   LOAD_GLOBAL                       
+   + @1728   LOAD_GLOBAL                       
+   + @1740   LOAD_ATTR                         
+   + @1750   LOAD_METHOD                       
+   + @1772   PRECALL                           
+   + @1776   CALL                              
+   + @1786   LOAD_METHOD                       
+   + @1808   LOAD_CONST                        
+   + @1810   PRECALL                           
+   + @1814   CALL                              
+   + @1824   PRECALL                           
+   + @1828   CALL                              
+   + @1838   LOAD_FAST                         
+   + @1840   COMPARE_OP                        
+   + @1846   POP_JUMP_FORWARD_IF_FALSE         
+   + @1848   NOP                               
+   + @1850   LOAD_GLOBAL                       
+   + @1862   LOAD_GLOBAL                       
+   + @1874   LOAD_ATTR                         
+   + @1884   LOAD_METHOD                       
+   + @1906   PRECALL                           
+   + @1910   CALL                              
+   + @1920   LOAD_METHOD                       
+   + @1942   LOAD_CONST                        
+   + @1944   PRECALL                           
+   + @1948   CALL                              
+   + @1958   PRECALL                           
+   + @1962   CALL                              
+   + @1972   LOAD_FAST                         
+
+== #8 replace orig[@1208..@1210] prod[@2156..@1212] del=2 ins=1
+   - @1208   POP_JUMP_BACKWARD_IF_FALSE         line? 
+   - @1210   JUMP_FORWARD                       line? 
+   + @2156   POP_JUMP_FORWARD_IF_TRUE          
+
+== #9 delete orig[@1890..@2884] prod[@2836..@2886] del=165 ins=0
+   - @1890   LOAD_FAST                          line? 
+   - @1892   LOAD_GLOBAL                        line? 
+   - @1904   LOAD_GLOBAL                        line? 
+   - @1916   LOAD_ATTR                          line? 
+   - @1926   LOAD_METHOD                        line? 
+   - @1948   PRECALL                            line? 
+   - @1952   CALL                               line? 
+   - @1962   LOAD_METHOD                        line? 
+   - @1984   LOAD_CONST                         line? 
+   - @1986   PRECALL                            line? 
+   - @1990   CALL                               line? 
+   - @2000   PRECALL                            line? 
+   - @2004   CALL                               line? 
+   - @2014   SWAP                               line? 
+   - @2016   COPY                               line? 
+   - @2018   COMPARE_OP                         line? 
+   - @2024   POP_JUMP_FORWARD_IF_FALSE          line? 
+   - @2026   LOAD_GLOBAL                        line? 
+   - @2038   LOAD_FAST                          line? 
+   - @2040   PRECALL                            line? 
+   - @2044   CALL                               line? 
+   - @2054   COMPARE_OP                         line? 
+   - @2060   EXTENDED_ARG                       line? 
+   - @2062   POP_JUMP_FORWARD_IF_FALSE          line? 
+   - @2064   JUMP_FORWARD                       line? 
+   - @2066   POP_TOP                            line? 
+   - @2068   EXTENDED_ARG                       line? 
+   - @2070   JUMP_FORWARD                       line? 
+   - @2072   LOAD_CONST                         line? 
+   - @2074   STORE_FAST                         line? 
+   - @2076   LOAD_FAST                          line? 
+   - @2078   LOAD_ATTR                          line? 
+   - @2088   BEFORE_WITH                        line? 
+   - @2090   POP_TOP                            line? 
+   - @2092   LOAD_FAST                          line? 
+   - @2094   LOAD_ATTR                          line? 
+   - @2104   LOAD_CONST                         line? 
+   - @2106   COMPARE_OP                         line? 
+   - @2112   POP_JUMP_FORWARD_IF_TRUE           line? 
+   - @2114   LOAD_FAST                          line? 
+   - @2116   LOAD_ATTR                          line? 
+   - @2126   LOAD_CONST                         line? 
+   - @2128   COMPARE_OP                         line? 
+   - @2134   POP_JUMP_FORWARD_IF_FALSE          line? 
+   - @2136   LOAD_CONST                         line? 
+   - @2138   STORE_FAST                         line? 
+   - @2140   LOAD_CONST                         line? 
+   - @2142   LOAD_FAST                          line? 
+   - @2144   STORE_ATTR                         line? 
+   - @2154   LOAD_CONST                         line? 
+   - @2156   LOAD_FAST                          line? 
+   - @2158   STORE_ATTR                         line? 
+   - @2168   LOAD_CONST                         line? 
+   - @2170   LOAD_CONST                         line? 
+   - @2172   LOAD_CONST                         line? 
+   - @2174   PRECALL                            line? 
+   - @2178   CALL                               line? 
+   - @2188   POP_TOP                            line? 
+   - @2190   JUMP_FORWARD                       line? 
+   - @2192   PUSH_EXC_INFO                      line? 
+   - @2194   WITH_EXCEPT_START                  line? 
+   - @2196   POP_JUMP_FORWARD_IF_TRUE           line? 
+   - @2198   RERAISE                            line? 
+   - @2200   COPY                               line? 
+   - @2202   POP_EXCEPT                         line? 
+   - @2204   RERAISE                            line? 
+   - @2206   POP_TOP                            line? 
+   - @2208   POP_EXCEPT                         line? 
+   - @2210   POP_TOP                            line? 
+   - @2212   POP_TOP                            line? 
+   - @2214   LOAD_GLOBAL                        line? 
+   - @2226   LOAD_GLOBAL                        line? 
+   - @2238   LOAD_ATTR                          line? 
+   - @2248   LOAD_METHOD                        line? 
+   - @2270   PRECALL                            line? 
+   - @2274   CALL                               line? 
+   - @2284   LOAD_FAST                          line? 
+   - @2286   LOAD_ATTR                          line? 
+   - @2296   BINARY_OP                          line? 
+   - @2300   LOAD_METHOD                        line? 
+   - @2322   PRECALL                            line? 
+   - @2326   CALL                               line? 
+   - @2336   PRECALL                            line? 
+   - @2340   CALL                               line? 
+   - @2350   STORE_FAST                         line? 
+   - @2352   LOAD_FAST                          line? 
+   - @2354   LOAD_GLOBAL                        line? 
+   - @2366   COMPARE_OP                         line? 
+   - @2372   POP_JUMP_FORWARD_IF_FALSE          line? 
+   - @2374   LOAD_CONST                         line? 
+   - @2376   STORE_FAST                         line? 
+   - @2378   LOAD_FAST                          line? 
+   - @2380   POP_JUMP_FORWARD_IF_FALSE          line? 
+   - @2382   LOAD_FAST                          line? 
+   - @2384   LOAD_METHOD                        line? 
+   - @2406   PRECALL                            line? 
+   - @2410   CALL                               line? 
+   - @2420   POP_TOP                            line? 
+   - @2422   LOAD_GLOBAL                        line? 
+   - @2434   LOAD_ATTR                          line? 
+   - @2444   LOAD_METHOD                        line? 
+   - @2466   PRECALL                            line? 
+   - @2470   CALL                               line? 
+   - @2480   LOAD_FAST                          line? 
+   - @2482   STORE_ATTR                         line? 
+   - @2492   LOAD_GLOBAL                        line? 
+   - @2504   LOAD_FAST                          line? 
+   - @2506   LOAD_ATTR                          line? 
+   - @2516   PRECALL                            line? 
+   - @2520   CALL                               line? 
+   - @2530   LOAD_CONST                         line? 
+   - @2532   COMPARE_OP                         line? 
+   - @2538   POP_JUMP_FORWARD_IF_FALSE          line? 
+   - @2540   LOAD_GLOBAL                        line? 
+   - @2552   LOAD_FAST                          line? 
+   - @2554   LOAD_ATTR                          line? 
+   - @2564   PRECALL                            line? 
+   - @2568   CALL                               line? 
+   - @2578   POP_TOP                            line? 
+   - @2580   LOAD_GLOBAL                        line? 
+   - @2592   LOAD_FAST                          line? 
+   - @2594   LOAD_ATTR                          line? 
+   - @2604   PRECALL                            line? 
+   - @2608   CALL                               line? 
+   - @2618   LOAD_CONST                         line? 
+   - @2620   COMPARE_OP                         line? 
+   - @2626   POP_JUMP_FORWARD_IF_FALSE          line? 
+   - @2628   LOAD_GLOBAL                        line? 
+   - @2640   LOAD_FAST                          line? 
+   - @2642   LOAD_ATTR                          line? 
+   - @2652   PRECALL                            line? 
+   - @2656   CALL                               line? 
+   - @2666   POP_TOP                            line? 
+   - @2668   LOAD_GLOBAL                        line? 
+   - @2680   LOAD_ATTR                          line? 
+   - @2690   LOAD_FAST                          line? 
+   - @2692   PRECALL                            line? 
+   - @2696   CALL                               line? 
+   - @2706   POP_TOP                            line? 
+   - @2708   LOAD_FAST                          line? 
+   - @2710   LOAD_GLOBAL                        line? 
+   - @2722   LOAD_GLOBAL                        line? 
+   - @2734   LOAD_ATTR                          line? 
+   - @2744   LOAD_METHOD                        line? 
+   - @2766   PRECALL                            line? 
+   - @2770   CALL                               line? 
+   - @2780   LOAD_METHOD                        line? 
+   - @2802   LOAD_CONST                         line? 
+   - @2804   PRECALL                            line? 
+   - @2808   CALL                               line? 
+   - @2818   PRECALL                            line? 
+   - @2822   CALL                               line? 
+   - @2832   SWAP                               line? 
+   - @2834   COPY                               line? 
+   - @2836   COMPARE_OP                         line? 
+   - @2842   POP_JUMP_FORWARD_IF_FALSE          line? 
+   - @2844   LOAD_GLOBAL                        line? 
+   - @2856   LOAD_FAST                          line? 
+   - @2858   PRECALL                            line? 
+   - @2862   CALL                               line? 
+   - @2872   COMPARE_OP                         line? 
+   - @2878   EXTENDED_ARG                       line? 
+   - @2880   POP_JUMP_BACKWARD_IF_TRUE          line? 
+   - @2882   JUMP_FORWARD                       line? 
+   - @2884   POP_TOP                            line? 
+
+windows=9

@@ -1,0 +1,23 @@
+len orig=1424 prod=1419 delta=-5
+== #1 insert orig[1046..1046 @7248..-] prod[1046..1047] del=0 ins=1
+   - @7230    LOAD_ATTR                      initial_trading_date
+   - @7240    COMPARE_OP                     ==
+   - @7246    POP_JUMP_FORWARD_IF_FALSE      
+   + @7232    LOAD_ATTR                      initial_trading_date
+   + @7242    COMPARE_OP                     ==
+   + @7248    POP_JUMP_FORWARD_IF_FALSE      
+   + @7252    JUMP_FORWARD                   
+== #2 delete orig[1051..1057 @7270..@7308] prod[1052..1052] del=6 ins=0
+   - @7252    LOAD_ATTR                      first_run_date
+   - @7262    COMPARE_OP                     !=
+   - @7268    POP_JUMP_FORWARD_IF_FALSE      
+   - @7270    LOAD_GLOBAL                    NULL + system_log
+   - @7282    LOAD_ATTR                      debug
+   - @7292    LOAD_CONST                     '获取重登信号量'
+   - @7294    PRECALL                        
+   - @7298    CALL                           
+   - @7308    POP_TOP                        
+   + @7258    LOAD_ATTR                      first_run_date
+   + @7268    COMPARE_OP                     !=
+   + @7274    POP_JUMP_FORWARD_IF_FALSE      
+hunks=2

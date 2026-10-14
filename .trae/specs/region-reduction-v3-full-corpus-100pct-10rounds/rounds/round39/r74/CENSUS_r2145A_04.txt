@@ -1,0 +1,14 @@
+R2145EVAL mb=@324 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@378 np=2 term=JUMP_FORWARD rej=shape
+R2145EVAL mb=@212 np=2 term=JUMP_FORWARD rej=shape
+R2145EVAL mb=@412 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@928 np=2 term=POP_JUMP_FORWARD_IF_FALSE rej=shape
+R2145EVAL mb=@982 np=2 term=JUMP_FORWARD rej=shape
+R2145EVAL mb=@142 np=2 term=JUMP_FORWARD rej=shape
+R2145EVAL mb=@302 np=1 term=GET_ITER rej=shape
+R2145EVAL mb=@200 np=2 term=JUMP_BACKWARD rej=shape
+R2145EVAL mb=@252 np=1 term=- rej=shape
+R2145EVAL mb=@452 np=2 term=POP_TOP rej=None
+R2145FIRE mb=@452 region=@382
+R2145EVAL mb=@682 np=2 term=POP_JUMP_BACKWARD_IF_TRUE rej=shape
+R2145EVAL mb=@102 np=2 term=RETURN_VALUE rej=shape

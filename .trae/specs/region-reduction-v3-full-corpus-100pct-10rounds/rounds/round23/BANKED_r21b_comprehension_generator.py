@@ -1,0 +1,2747 @@
+from typing import List, Dict, Any, Optional, Tuple, Union
+
+from .basic_block import Instruction
+from .region_analyzer import (
+    CONDITIONAL_JUMP_OPS,
+)
+
+# [Round6-B30] async 挂起轮询协议操作码全集（CPython 3.11）：
+# GET_ANEXT/GET_AWAITABLE 取得挂起协程后以 LOAD_CONST None + SEND 启动，
+# YIELD_VALUE 交出控制权、RESUME 恢复、JUMP_BACKWARD_NO_INTERRUPT 回环
+# 轮询；CLEANUP_THROW/END_ASYNC_FOR 为协议尾（3.12+ 替代形态 / 迭代耗尽
+# 清理），CACHE/EXTENDED_ARG/NOP 为填充噪声。本集合是推导式子句头识别
+# （_find_async_clause_heads 协议尾）与语句级 async for/await 轮询块识别
+# （region_ast_generator 挂起协议块消费）的唯一事实源。
+ASYNC_POLL_PROTOCOL_OPS = frozenset({
+    'SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT',
+    'CLEANUP_THROW', 'END_ASYNC_FOR', 'CACHE', 'EXTENDED_ARG', 'NOP',
+})
+
+
+def is_async_poll_protocol_block(instrs: List[Instruction]) -> bool:
+    """[Round6-B30] 判定指令序列是否构成 async 挂起轮询协议块。
+
+    [识别条件] 序列非空，去噪后全部操作码 ∈ ASYNC_POLL_PROTOCOL_OPS，
+    且含 SEND（挂起启动）与 JUMP_BACKWARD_NO_INTERRUPT（轮询回环，其
+    argval 落在本序列指令偏移内 = 自循环）。用户 await 的恢复点块
+    （STORE/CALL 等用户指令）不满足全成员判定，天然排除。
+    [归约方式] 纯操作码形态判定：只读指令操作码与跳转 argval 同块性，
+    不读常量值/用户名，无偏移魔数；协议块整体消费、不重组内部。
+    [AST 映射] 无独立映射；消费方将该块标记已生成且不产出任何语句
+    （挂起协议不是用户源码）。
+    [C1] 仅读本序列操作码/偏移（同层结构事实）；[C2] 判定失败即返回
+    False，调用方维持原路径；[C3] 无状态、无副作用。
+    """
+    if not instrs:
+        return False
+    if not all(i.opname in ASYNC_POLL_PROTOCOL_OPS for i in instrs):
+        return False
+    if not any(i.opname == 'SEND' for i in instrs):
+        return False
+    _offsets = {i.offset for i in instrs}
+    return any(i.opname == 'JUMP_BACKWARD_NO_INTERRUPT' and i.argval in _offsets
+               for i in instrs)
+
+
+def _and_operand_raw_text(cond: Dict[str, Any]) -> Optional[str]:
+    """把 and 链断行处的操作数渲染成「带续行换行」的原始文本。
+
+    [识别条件] 推导式过滤条件里，某操作数的条件跳转是 POP_JUMP_FORWARD_IF_FALSE
+      （目标是循环体末尾那条 JUMP_BACKWARD 的偏移，而不是循环头），而其后的
+      操作数仍是 POP_JUMP_BACKWARD_IF_FALSE（目标是循环头）：CPython 3.11 按
+      BoolOp 各操作数所处的源码物理行选择跳转方向——操作数 i 与其后所有操作数
+      同处一行时回跳循环头，一旦之后存在行界则前跳循环体末尾。因此「前向」
+      就是原源码在该操作数之后换过行的指令侧证据。
+    [归约方式] 用与发射侧完全相同的两个对象（CFGASTConverter._convert_expression
+      把 dict 转 ASTNode、CodeGenerator._generate_expression 以 and 的父优先级
+      渲染）拿到该操作数的原文，尾部追加换行与续行缩进；转换或渲染抛错一律
+      返回 None，由调用方保持单行原状，不做降级、不猜文本。
+    [AST 映射] 返回值只作为 Name.id 的内容使用：发射侧对 Name 原样输出 id，
+      换行因此精确落在 and 两侧操作数之间；外层仍是 BoolOp(and, values)，
+      重编译回同一 BoolOp，语义与单行版逐字节等价，只有行界不同。
+    """
+    try:
+        from .code_generator import CodeGenerator
+        from .ast_converter import CFGASTConverter
+        node = CFGASTConverter(verbose=False)._convert_expression(cond)
+        if node is None:
+            return None
+        gen = CodeGenerator()
+        text = gen._generate_expression(node, gen._precedence['and'])
+    except Exception:
+        return None
+    if not text:
+        return None
+    # 续行缩进 15 空格 + 发射侧操作符前的那个分隔空格 = 成行后 16 列。
+    return text + '\n' + ' ' * 15
+
+
+def parse_comprehension_code_object(code_obj: Any,
+                                    iter_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """[Round2-B96] 把推导式 code object（<listcomp>/<dictcomp>/<setcomp>/
+    <genexpr>）解析为推导式表达式 dict（ListComp/SetComp/DictComp/
+    GeneratorExp），供 dict→AST 转换层（ast_converter）在收到
+    ``Call(func=ComprehensionObject(code), args=[iter])`` 泄漏形态时
+    恢复推导式节点使用。
+
+    [识别条件] code object 的编译器合成名 ∈ {<listcomp>, <dictcomp>,
+    <setcomp>, <genexpr>}（与 generate_comprehension_function、
+    region_analyzer 侧 _const_code_is_async_comprehension 同一编译器
+    合成事实，非用户标识符白名单）；is_async 由内层 code object 的
+    GET_AITER/GET_ANEXT/END_ASYNC_FOR 协议指令元数据判定
+    （_parse_comprehension_inner_impl 既有判据）。
+    [归约方式] 自底向上：对 code object 独立建 CFG（CFGBuilder.build），
+    归约顺序 = 内层 clause 先归约（多 for/async 混合 clause 走
+    _parse_multi_for_comprehension，单 clause 走单 for 路径），目标/
+    元素/filter 全部从内层指令流结构化提取；迭代对象 = 调用方传入的
+    iter_expr（推导式调用指令的实参，即外层 iterable 构造表达式）。
+    [AST 映射] 返回值是 dict 形式的推导式表达式（'type': 'ListComp'/
+    'SetComp'/'DictComp'/'GeneratorExp' + generators[].is_async），
+    由调用方经 ast_converter._convert_expression 落到对应 ASTNode。
+    [反编译流程] 位于表达式重建管线末端：区域装配层产出
+    ComprehensionObject 泄漏 dict → 本函数解析内层 code object →
+    ast_converter 生成 AST → code_generator 发射。
+    [C1] 只读 code object 自身指令流（内层 CFG）与调用方 iter_expr，
+    不读宿主块/区域信息；[C2] 内层推导式整体黑箱解析，宿主只见
+    返回的表达式 dict；[C3] 解析失败返回 None，调用方保持原路径
+    （不静默降级为占位表达式）。
+    """
+    from .ast_generator_v2 import ExpressionReconstructor
+    er = ExpressionReconstructor(None)
+    cg = ComprehensionGenerator(er)
+    return cg.parse_comprehension_inner(code_obj, iter_expr)
+
+
+class ComprehensionGenerator:
+    def __init__(self, expr_reconstructor):
+        self.expr_reconstructor = expr_reconstructor
+
+    def convert_comprehension_objects(self, expr: Dict[str, Any],
+                                      cond_block) -> Dict[str, Any]:
+        if not expr or not isinstance(expr, dict):
+            return expr
+
+        if expr.get('type') == 'ComprehensionObject':
+            comp_code = expr.get('code')
+            if comp_code:
+                iter_expr = self.extract_comp_iter_expr(cond_block)
+                comp_ast = self.parse_comprehension_inner(comp_code, iter_expr)
+                if comp_ast:
+                    return comp_ast
+
+        for key in ('value', 'func', 'left', 'right', 'comparators', 'args', 'elt'):
+            val = expr.get(key)
+            if val is None:
+                continue
+            if isinstance(val, dict):
+                converted = self.convert_comprehension_objects(val, cond_block)
+                if converted is not None and converted is not val:
+                    expr[key] = converted
+            elif isinstance(val, list):
+                new_list = []
+                changed = False
+                for item in val:
+                    if isinstance(item, dict):
+                        converted_item = self.convert_comprehension_objects(item, cond_block)
+                        new_list.append(converted_item if converted_item else item)
+                        if converted_item is not None and converted_item is not item:
+                            changed = True
+                    else:
+                        new_list.append(item)
+                if changed:
+                    expr[key] = new_list
+
+        return expr
+
+    def extract_comp_iter_expr(self, cond_block) -> Dict[str, Any]:
+        instrs = cond_block.instructions
+        for idx, instr in enumerate(instrs):
+            if instr.opname == 'GET_ITER':
+                if idx > 0:
+                    prev_instr = instrs[idx - 1]
+                    if prev_instr.opname in ('LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_NAME',
+                                             'LOAD_DEREF', 'LOAD_ATTR'):
+                        var_name = getattr(prev_instr, 'argval', None)
+                        if var_name:
+                            return {'type': 'Name', 'id': var_name, 'ctx': 'Load'}
+        return {'type': 'Name', 'id': '<iterator>', 'ctx': 'Load'}
+
+    def try_generate_comprehension_assign(self, block, region_ast_gen=None) -> Optional[List[Dict[str, Any]]]:
+        SKIP_OPS = frozenset({'RESUME', 'NOP', 'CACHE', 'PUSH_NULL'})
+        instrs = [i for i in block.instructions if i.opname not in SKIP_OPS]
+
+        comp_indices = []
+        for idx, instr in enumerate(instrs):
+            if instr.opname == 'MAKE_FUNCTION':
+                if idx > 0 and instrs[idx - 1].opname == 'LOAD_CONST':
+                    code_val = instrs[idx - 1].argval
+                    if hasattr(code_val, 'co_name') and code_val.co_name in (
+                            '<listcomp>', '<dictcomp>', '<setcomp>', '<genexpr>'):
+                        comp_indices.append((idx, code_val, instr.arg))
+
+        if not comp_indices:
+            return None
+
+        # async comprehension 的 await 模板 (GET_AWAITABLE + SEND +
+        # YIELD_VALUE + RESUME + JUMP_BACKWARD_NO_INTERRUPT + STORE_*) 跨多个
+        # 基本块。先把后续 fallthrough 块的指令合并进来，并把它们标记为已生成，
+        # 避免被外层 _generate_block_statements 当作独立语句重复处理。
+        _has_async_comp = False
+        for _ci, _cc, _ in comp_indices:
+            for _idx in range(_ci + 1, len(instrs)):
+                if instrs[_idx].opname == 'GET_AITER':
+                    _has_async_comp = True
+                    break
+        _extra_async_blocks = []
+        if _has_async_comp and region_ast_gen is not None:
+            _cur = block
+            _seen = {block.start_offset}
+            # 最多延伸 4 个 fallthrough 块（足够覆盖 SEND/YIELD/RESUME/JUMP_BACK
+            # + STORE_* + trailing return）
+            for _ in range(4):
+                _succs = [s for s in _cur.successors
+                          if s.start_offset not in _seen
+                          and s.start_offset > _cur.start_offset]
+                if len(_succs) != 1:
+                    break
+                _nb = _succs[0]
+                _seen.add(_nb.start_offset)
+                _extra_async_blocks.append(_nb)
+                _cur = _nb
+        if _extra_async_blocks:
+            for _eb in _extra_async_blocks:
+                for _i in _eb.instructions:
+                    if _i.opname not in SKIP_OPS:
+                        instrs.append(_i)
+
+        _chained_pairs = []
+        if len(comp_indices) >= 2:
+            for _cci in range(len(comp_indices) - 1):
+                _ci1, _cc1, _cf1 = comp_indices[_cci]
+                _ci2, _cc2, _cf2 = comp_indices[_cci + 1]
+                # 识别条件（一个 region 只归约成一种 AST 节点，判据必须是结构性的）：
+                # 相邻两个 MAKE_FUNCTION 对究竟该不该焊接，取决于「第二个 code 对象是不
+                # 是前一个推导式的 iterable 的一部分」，而这一点在字节码上是可判定的——
+                # 推导式的**可调用对象**先装载，其**可迭代对象**随后装载，两者之间不出
+                # 现该推导式自己的调用闭合。于是扫描 _ci1 之后的第一个 GET_ITER
+                # （= 该推导式 iterable 构造链的起点，记为 _first_get_iter）：
+                #   真嵌套  内层 code 的 MAKE_FUNCTION 索引 _ci2 < _first_get_iter，
+                #           即内层是在外层 iterable 构造**期间**装载的
+                #           （LOAD_CONST 外; MAKE_FUNCTION 外; LOAD_CONST 内;
+                #            MAKE_FUNCTION 内; LOAD_FAST it; GET_ITER; CALL; ...）；
+                #   兄弟    第二个 code 的装载出现在第一个推导式调用链开始之后
+                #           （_ci2 > _first_get_iter，实测更在其 CALL 之后），它属于另一
+                #           个表达式，绝不能塞进前一个推导式的 iter 槽。
+                # 旧实现只从 _ci1+1 找 _first_call_end，再对 instrs[_first_call_end:_ci2]
+                # 施加「是否只有闭包装载」弱检验，该检验双向失效：真嵌套时切片为空
+                # （all([]) 恒真），兄弟时切片恰含兄弟自己的 LOAD_CONST <code>，被
+                # LOAD_CONST+co_name 那个 disjunct 放过。故改为上面的装载次序判据。
+                _first_call_end = None
+                _first_get_iter = None
+                for _fci in range(_ci1 + 1, len(instrs)):
+                    if instrs[_fci].opname == 'GET_ITER':
+                        _first_get_iter = _fci
+                        for _fci2 in range(_fci + 1, min(_fci + 4, len(instrs))):
+                            if instrs[_fci2].opname == 'CALL':
+                                _first_call_end = _fci2 + 1
+                                break
+                        break
+                if _first_call_end is None or _first_get_iter is None:
+                    continue
+                if _ci2 >= _first_get_iter:
+                    continue
+                # 通过装载次序判据后，原「闭包装载」检验恒真（_first_call_end 必然大于
+                # _first_get_iter，切片必为空），故删除，不改变可焊接集合的宽度。
+                _found_getiter = False
+                for _ai in instrs[_first_call_end:]:
+                    if _ai.opname == 'GET_ITER':
+                        _found_getiter = True
+                        break
+                    if _ai.opname in ('STORE_FAST', 'STORE_NAME', 'POP_TOP'):
+                        break
+                if _found_getiter:
+                    _has_closure_flag2 = bool(_cf2 & 0x08)
+                    _no_closure_flag1 = not bool(_cf1 & 0x08)
+                    if _no_closure_flag1 and _has_closure_flag2:
+                        continue
+                    _chained_pairs.append(_cci)
+
+        all_stmts = []
+        prev_end = 0
+        _skip_next = False
+
+        for _comp_loop_idx, (comp_idx, comp_code, _) in enumerate(comp_indices):
+            if _skip_next:
+                _skip_next = False
+                continue
+            if _comp_loop_idx in _chained_pairs:
+                _ci1, _cc1, _ = comp_indices[_comp_loop_idx]
+                _ci2, _cc2, _ = comp_indices[_comp_loop_idx + 1]
+                _inner_get_iter = None
+                for _igi in range(_ci1 + 1, len(instrs)):
+                    if instrs[_igi].opname == 'GET_ITER':
+                        _inner_get_iter = _igi
+                        break
+                _inner_iter_instrs_raw = instrs[_ci1 + 1:_inner_get_iter] if _inner_get_iter else []
+                _cso = frozenset({'MAKE_CELL', 'LOAD_CLOSURE', 'COPY_FREE_VARS'})
+                _real_iter_instrs = []
+                _in_cl = False
+                for _iii in _inner_iter_instrs_raw:
+                    if _iii.opname in _cso:
+                        _in_cl = True
+                        continue
+                    if _iii.opname == 'BUILD_TUPLE' and _in_cl:
+                        _in_cl = False
+                        continue
+                    _in_cl = False
+                    if _iii.opname == 'LOAD_CONST' and hasattr(_iii.argval, 'co_name'):
+                        continue
+                    _real_iter_instrs.append(_iii)
+                _inner_iter_expr = self.expr_reconstructor.reconstruct(_real_iter_instrs) if _real_iter_instrs else {'type': 'Name', 'id': '<iterator>'}
+                _inner_comp_ast = self.parse_comprehension_inner(_cc1, _inner_iter_expr)
+                _outer_get_iter = None
+                for _ogi in range(_ci2 + 1, len(instrs)):
+                    if instrs[_ogi].opname == 'GET_ITER':
+                        _outer_get_iter = _ogi
+                        break
+                if _inner_comp_ast is not None and _outer_get_iter is not None:
+                    _outer_comp_ast = self.parse_comprehension_inner(_cc2, _inner_comp_ast)
+                    if _outer_comp_ast is not None:
+                        _outer_call_end = _outer_get_iter + 1
+                        for _oci in range(_outer_get_iter + 1, len(instrs)):
+                            if instrs[_oci].opname in ('PRECALL', 'CALL'):
+                                _outer_call_end = _oci + 1
+                                if instrs[_oci].opname == 'CALL':
+                                    break
+                        _ow_post = instrs[_outer_call_end:]
+                        _ow_meaningful = [i for i in _ow_post if i.opname not in SKIP_OPS]
+                        _ow_closure = frozenset({'LOAD_CLOSURE', 'COPY_FREE_VARS', 'MAKE_CELL'})
+                        _ow_clean = [i for i in _ow_meaningful if i.opname not in _ow_closure and not (i.opname == 'BUILD_TUPLE' and any(j.opname in _ow_closure for j in _ow_meaningful[:_ow_meaningful.index(i)]))]
+                        # 归约方式 / 不变式：焊接只允许认领「推导式自身」的指令。_ow_clean
+                        # 里只要还剩任何**消费者** op——容器构建（BUILD_TUPLE/LIST/SET/MAP、
+                        # dict 字面量的 BUILD_CONST_KEY_MAP）、推导式累加（MAP_ADD/
+                        # LIST_APPEND/SET_ADD）、容器合并（LIST_EXTEND/SET_UPDATE/DICT_UPDATE/
+                        # DICT_MERGE）、调用（CALL/CALL_FUNCTION/CALL_METHOD/
+                        # CALL_FUNCTION_KW/CALL_FUNCTION_EX）、运算与下标（BINARY_OP/
+                        # BINARY_SUBSCR）——本块最外层表达式的**节点类型**就是那个消费者的
+                        # 类型（Dict/Call/…），而不是其中一个子推导式的 ListComp 类型；
+                        # 此时不得声明自己没翻译的指令（prev_end = len(instrs) 是「全吃了」
+                        # 的记账），必须 return None 放弃焊接、把整块交回通用
+                        # ExpressionReconstructor：它在 core/cfg/ast_generator_v2.py 的
+                        # BUILD_CONST_KEY_MAP 分支（弹键元组 + 弹 count 个值）与 CALL 分支
+                        # （推导式 Iter/ComprehensionObject 合并）里本来就能正确合成父节点。
+                        # 白名单成员即该不变式的机器可读形式，缺一个成员就漏一类宿主表达式。
+                        _expr_build = frozenset({'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP', 'BUILD_CONST_KEY_MAP', 'BINARY_OP', 'BINARY_SUBSCR', 'MAP_ADD', 'LIST_APPEND', 'SET_ADD', 'LIST_EXTEND', 'SET_UPDATE', 'DICT_UPDATE', 'DICT_MERGE', 'CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX'})
+                        if any(i.opname in _expr_build for i in _ow_clean):
+                            return None
+                        _store_instr = None
+                        for _si in _ow_post:
+                            if _si.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
+                                _store_instr = _si
+                                break
+                        if _store_instr:
+                            if _store_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                all_stmts.append({'type': 'Assign', 'targets': [{'type': 'Name', 'id': _store_instr.argval, 'ctx': 'Store'}], 'value': _outer_comp_ast})
+                            prev_end = instrs.index(_store_instr) + 1
+                        else:
+                            _last_i = instrs[-1]
+                            if _last_i.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                all_stmts.append({'type': 'Return', 'value': _outer_comp_ast})
+                            else:
+                                all_stmts.append({'type': 'Expr', 'value': _outer_comp_ast})
+                            prev_end = len(instrs)
+                    else:
+                        prev_end = len(instrs)
+                else:
+                    prev_end = len(instrs)
+                _skip_next = True
+                continue
+            pre_comp_instrs = instrs[prev_end:comp_idx - 1]
+            _closure_setup_ops = frozenset({'MAKE_CELL', 'LOAD_CLOSURE', 'COPY_FREE_VARS'})
+            # [Round5-B23] 闭包装载序列的识别改为「局部状态机」：closure 系 op
+            # （LOAD_CLOSURE/MAKE_CELL/COPY_FREE_VARS）开启序列，紧随其后的
+            # BUILD_TUPLE 闭合该序列（= MAKE_FUNCTION 的闭包元组）。旧实现要求
+            # 「BUILD_TUPLE 之前全部指令都是 closure 系」才认领，本块只要混入
+            # 任何先导指令（async/生成器函数前导 RETURN_GENERATOR 的伴声
+            # POP_TOP、先前语句的残留）即失配，闭包元组的 BUILD_TUPLE 被当作
+            # 值生产指令留在 pre_comp 段，随后 L306 终止符守卫（末条非
+            # STORE/POP_TOP/IMPORT）把整块判 return None —— 推导式识别被整体
+            # 跳过，函数体落入通用重建坍缩为 `await <iterable>()`（r5_10
+            # a_async_multi/a_await_body 的 MAKE_FUNCTION 8 闭包形态）。
+            # 识别条件：closure 系 op 与 BUILD_TUPLE 的紧邻相邻性（同层结构
+            # 事实）；用户数据的 BUILD_TUPLE 前驱是 LOAD_*/CALL 等，不会被误认。
+            # [C1] 只读本块指令流；[C3] 终止符守卫保持原判据宽度，仅消除
+            # 闭包元组的误报。
+            _filtered = []
+            _in_closure_seq = False
+            for _pi in pre_comp_instrs:
+                if _pi.opname in _closure_setup_ops:
+                    _in_closure_seq = True
+                    continue
+                if _pi.opname == 'BUILD_TUPLE' and _in_closure_seq:
+                    _in_closure_seq = False
+                    continue
+                _in_closure_seq = False
+                _filtered.append(_pi)
+            pre_comp_instrs = _filtered
+            # 区域归约算法原则 3（嵌套即抽象节点）：当 comprehension 是
+            # 更大表达式的子节点时（如 `return (sum(items), len(items), [listcomp])`），
+            # pre_comp_instrs 会包含未被 STORE/POP_TOP/IMPORT 消费的值生产指令
+            # （LOAD_GLOBAL/CALL/BUILD_* 等），这些值留在栈上与 comprehension 一起
+            # 被后续 BUILD_TUPLE 消费。此时不应将 comprehension 作为独立语句提取，
+            # 应返回 None 让标准 expr_reconstructor.reconstruct 路径处理整个块
+            # （正确重建 Return(Tuple([...]))）。判据：pre_comp_instrs 末尾指令不是
+            # 语句终止符（STORE/POP_TOP/IMPORT）时，说明栈上仍有未消费值。
+            if pre_comp_instrs:
+                _pre_last = pre_comp_instrs[-1]
+                if _pre_last.opname not in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                             'STORE_DEREF', 'POP_TOP', 'IMPORT_NAME',
+                                             'IMPORT_FROM'):
+                    return None
+            if pre_comp_instrs:
+                pre_stmts = self._generate_pre_comp_stmts(pre_comp_instrs, instrs, prev_end, region_ast_gen=region_ast_gen)
+                all_stmts.extend(pre_stmts)
+
+            # async comprehension 外层使用 GET_AITER 而非 GET_ITER。
+            # 字节码: MAKE_FUNCTION, LOAD_* iter, GET_AITER, PRECALL, CALL,
+            # GET_AWAITABLE, LOAD_CONST None, SEND, YIELD_VALUE, RESUME,
+            # JUMP_BACKWARD_NO_INTERRUPT, STORE_* result
+            get_iter_idx = None
+            _async_iter = False
+            for idx in range(comp_idx + 1, len(instrs)):
+                if instrs[idx].opname in ('GET_ITER', 'GET_AITER'):
+                    get_iter_idx = idx
+                    _async_iter = (instrs[idx].opname == 'GET_AITER')
+                    break
+
+            if get_iter_idx is None:
+                continue
+
+            iter_instrs = instrs[comp_idx + 1:get_iter_idx]
+            iter_expr = self.expr_reconstructor.reconstruct(iter_instrs)
+            if iter_expr is None:
+                iter_expr = {'type': 'Name', 'id': '<iterator>'}
+
+            # [R35] Fix: is_method_form causes false Call wrapping in comprehensions.
+            # When LOAD_ATTR is followed by GET_ITER (not CALL), the attribute is
+            # being iterated, not called. The is_method_form flag is a compiler
+            # optimization hint (arg & 1), not a definitive indicator of a method
+            # call. Strip it from the iter expression to prevent downstream code
+            # (ast_generator_v2.py lines ~24022) from wrapping Attribute in Call.
+            if isinstance(iter_expr, dict) and iter_expr.get('type') == 'Attribute':
+                iter_expr.pop('is_method_form', None)
+
+            comp_ast = self.parse_comprehension_inner(comp_code, iter_expr)
+            if comp_ast is None:
+                continue
+
+            gen_call_end = get_iter_idx + 1
+            for idx in range(get_iter_idx + 1, len(instrs)):
+                if instrs[idx].opname in ('PRECALL', 'CALL'):
+                    gen_call_end = idx + 1
+                    if instrs[idx].opname == 'CALL':
+                        break
+
+            # async comprehension 在 CALL 后有一段 await 循环
+            # (GET_AWAITABLE + LOAD_CONST None + SEND + YIELD_VALUE + RESUME +
+            # JUMP_BACKWARD_NO_INTERRUPT)。这段是 CPython 自动生成的 await
+            # 模板，重建时归约到 await 表达式语句的语义内（listcomp 已含 is_async），
+            # 不产生独立语句，但要跳过这些指令避免误归约。
+            if _async_iter:
+                _async_end = gen_call_end
+                _send_idx = None
+                for idx in range(gen_call_end, min(gen_call_end + 8, len(instrs))):
+                    if instrs[idx].opname == 'SEND':
+                        _send_idx = idx
+                        break
+                if _send_idx is not None:
+                    # SEND 后是 YIELD_VALUE, RESUME, JUMP_BACKWARD_NO_INTERRUPT
+                    for idx in range(_send_idx + 1, min(_send_idx + 5, len(instrs))):
+                        if instrs[idx].opname == 'JUMP_BACKWARD_NO_INTERRUPT':
+                            _async_end = idx + 1
+                            break
+                        if instrs[idx].opname in ('STORE_FAST', 'STORE_NAME',
+                                                   'STORE_GLOBAL', 'STORE_DEREF'):
+                            _async_end = idx
+                            break
+                    gen_call_end = _async_end
+
+            wrapper_call = None
+            wrapper_end = gen_call_end
+            if gen_call_end < len(instrs):
+                post_instrs = instrs[gen_call_end:]
+                is_wrapper = False
+                if len(post_instrs) >= 2:
+                    maybe_precall = post_instrs[0]
+                    maybe_call = post_instrs[1]
+                    if (maybe_precall.opname == 'PRECALL' and
+                        maybe_call.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD')):
+                        is_wrapper = True
+                if not is_wrapper and len(post_instrs) >= 1:
+                    if post_instrs[0].opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD'):
+                        is_wrapper = True
+                if is_wrapper:
+                    func_name = None
+                    is_method_call = False
+                    for back in range(comp_idx - 1, -1, -1):
+                        if instrs[back].opname in ('LOAD_GLOBAL', 'LOAD_NAME'):
+                            func_name = instrs[back].argval
+                            break
+                        if instrs[back].opname == 'LOAD_METHOD':
+                            func_name = instrs[back].argval
+                            is_method_call = True
+                            break
+                    if func_name is not None:
+                        if is_method_call:
+                            obj_name = None
+                            for back2 in range(back - 1, -1, -1):
+                                if instrs[back2].opname in ('LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_NAME', 'LOAD_DEREF'):
+                                    obj_name = instrs[back2].argval
+                                    break
+                            if obj_name:
+                                wrapper_call = {
+                                    'type': 'Call',
+                                    'func': {
+                                        'type': 'Attribute',
+                                        'value': {'type': 'Name', 'id': obj_name, 'ctx': 'Load'},
+                                        'attr': func_name,
+                                        'ctx': 'Load',
+                                    },
+                                    'args': [comp_ast],
+                                    'kwargs': [],
+                                }
+                            else:
+                                wrapper_call = {
+                                    'type': 'Call',
+                                    'func': {'type': 'Name', 'id': func_name, 'ctx': 'Load'},
+                                    'args': [comp_ast],
+                                    'kwargs': [],
+                                }
+                        else:
+                            wrapper_call = {
+                                'type': 'Call',
+                                'func': {'type': 'Name', 'id': func_name, 'ctx': 'Load'},
+                                'args': [comp_ast],
+                                'kwargs': [],
+                            }
+                        for wi in range(gen_call_end, min(gen_call_end + 3, len(instrs))):
+                            if instrs[wi].opname in ('PRECALL', 'CALL'):
+                                wrapper_end = wi + 1
+                                if instrs[wi].opname == 'CALL':
+                                    break
+
+            comp_value = wrapper_call if wrapper_call is not None else comp_ast
+
+            # 区域归约算法原则 3（嵌套即抽象节点）：post-wrapper
+            # 指令含表达式构建指令（BUILD_TUPLE/BINARY_OP 等）时，comprehension
+            # 是更大表达式的子节点（如 `return ([listcomp], max(items))` 中
+            # listcomp 被后续 BUILD_TUPLE 2 消费）。返回 None 让标准
+            # expr_reconstructor.reconstruct 路径处理整个块。
+            if wrapper_end < len(instrs):
+                _post_wrapper = instrs[wrapper_end:]
+                _closure_setup = frozenset({'MAKE_CELL', 'LOAD_CLOSURE', 'COPY_FREE_VARS'})
+                _pw_filtered = []
+                _in_closure_seq = False
+                for _pw in _post_wrapper:
+                    if _pw.opname in _closure_setup:
+                        _in_closure_seq = True
+                        continue
+                    if (_pw.opname == 'BUILD_TUPLE' and _in_closure_seq
+                            and _pw.arg is not None and _pw.arg <= 2):
+                        _in_closure_seq = False
+                        continue
+                    _in_closure_seq = False
+                    _pw_filtered.append(_pw)
+                _expr_building_ops = frozenset({
+                    'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP',
+                    'BUILD_CONST_KEY_MAP', 'BINARY_OP', 'BINARY_SUBSCR',
+                    'BUILD_SLICE', 'FORMAT_VALUE', 'BUILD_STRING',
+                })
+                if any(i.opname in _expr_building_ops for i in _pw_filtered):
+                    return None
+
+            store_instr = None
+            for instr in instrs[wrapper_end:]:
+                if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                    'STORE_SUBSCR', 'STORE_ATTR'):
+                    store_instr = instr
+                    break
+
+            if store_instr:
+                store_idx = instrs.index(store_instr)
+                if store_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    all_stmts.append({
+                        'type': 'Assign',
+                        'targets': [{'type': 'Name', 'id': store_instr.argval, 'ctx': 'Store'}],
+                        'value': comp_value,
+                    })
+                elif store_instr.opname == 'STORE_SUBSCR':
+                    # [R34 fix] 推导式赋值目标是下标（`d[k] = [listcomp]` 编译为
+                    # <listcomp> + LOAD cont + LOAD key + STORE_SUBSCR）。旧实现只
+                    # 认 STORE_FAST 系列，下标目标被跳过 → 退化为裸 Expr(listcomp)
+                    # 且 STORE_SUBSCR 丢失（graph._process_task_queue 的 else 子句
+                    # node_dict[node] = [...listcomp...]）。重建 Subscript 目标：
+                    # 目标窗口 = wrapper_end..store_idx 的 [容器, 键] LOAD 指令。
+                    _tgt_instrs = instrs[wrapper_end:store_idx]
+                    _tgt_cont = None
+                    _tgt_key = None
+                    if len(_tgt_instrs) >= 2:
+                        _tgt_cont = self.expr_reconstructor.reconstruct([_tgt_instrs[-2]])
+                        _tgt_key = self.expr_reconstructor.reconstruct([_tgt_instrs[-1]])
+                    if _tgt_cont is not None and _tgt_key is not None:
+                        all_stmts.append({
+                            'type': 'Assign',
+                            'targets': [{
+                                'type': 'Subscript',
+                                'value': _tgt_cont,
+                                'slice': _tgt_key,
+                                'ctx': 'Store',
+                            }],
+                            'value': comp_value,
+                        })
+                elif store_instr.opname == 'STORE_ATTR':
+                    # [R34 fix] 推导式赋值目标是属性（`self.items = [listcomp]`
+                    # 编译为 <listcomp> + LOAD obj + STORE_ATTR items）。
+                    _tgt_instrs = instrs[wrapper_end:store_idx]
+                    _tgt_obj = None
+                    if _tgt_instrs:
+                        _tgt_obj = self.expr_reconstructor.reconstruct([_tgt_instrs[-1]])
+                    if _tgt_obj is not None:
+                        all_stmts.append({
+                            'type': 'Assign',
+                            'targets': [{
+                                'type': 'Attribute',
+                                'value': _tgt_obj,
+                                'attr': store_instr.argval,
+                                'ctx': 'Store',
+                            }],
+                            'value': comp_value,
+                        })
+                prev_end = store_idx + 1
+            else:
+                # [Round 9 fix] 先判「推导式值被丢弃」：wrapper 之后若出现
+                # POP_TOP，说明推导式是语句级表达式（值随即丢弃），块末的
+                # LOAD_CONST None + RETURN_VALUE 才是该 return 的真实值（None）。
+                # 旧实现只看块末指令是否为 RETURN_VALUE 就认定「推导式就是返回
+                # 值」，于是
+                #   if ev in self.h:
+                #       [handler(ev) for handler in self.h[ev]]
+                #       return
+                # 形状的块被反演成 `return [handler(ev) for ...]`（返回列表而非
+                # None），并把真正的 return 与后续语句挤出结构之外
+                # （event_engine.__process 生成 `return [...]` + 伪造
+                # `else: return None` + 死代码重复一条推导式）。
+                # 依区域归约算法原则 3（嵌套即抽象节点）：POP_TOP 是语句终结符，
+                # 把 wrapper 段（表达式）与其后的语句段切开，两段各自归约。
+                # [Round5-B24] 判据收窄（栈顶来源/前驱形态）：只有 POP_TOP
+                # **紧邻** wrapper 段末（instrs[wrapper_end] 即 POP_TOP）时，
+                # 它弹出的才是推导式值本身 —— 判「推导式值被丢弃」；POP_TOP
+                # 位于其后若干语句之间时，弹出的是那些语句自己的值（如
+                # try/finally 清理段的 append(...) 返回值），推导式值仍悬挂
+                # 栈上，交由后置 RETURN 语义分支与 [Round5-B24] 后继块判据
+                # 归约。旧 any(全窗扫描) 会把「清理语句的 POP_TOP」误读成
+                # 「推导式值被丢弃」，是 r5_09 t_try_finally 的 return 剥除
+                # 共因之一。R9 原形（推导式; POP_TOP; LOAD_CONST None;
+                # RETURN_VALUE 单块）中 POP_TOP 恰紧邻 wrapper 段末，收窄后
+                # 仍命中（不关闭 R9）。
+                _r9_pop_after_wrapper = (
+                    wrapper_end < len(instrs)
+                    and instrs[wrapper_end].opname == 'POP_TOP')
+                last_instr = instrs[-1]
+                if _r9_pop_after_wrapper:
+                    all_stmts.append({'type': 'Expr', 'value': comp_value})
+                    prev_end = wrapper_end
+                elif last_instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    # [识别条件] 本块自身的指令结构事实：store_instr 为空（推导式之后
+                    #   无 STORE_* 目标）、last_instr 是本块最后一条 RETURN_VALUE/
+                    #   RETURN_CONST、且本块 comp_indices 清单里当前项已是**尾项**
+                    #   （其后不再有同块的 MAKE_FUNCTION <listcomp>/<genexpr> 项）——
+                    #   此时 comp_value 就是本块 return 的完整值表达式，与同 else 族
+                    #   L242-246（_chained_pairs 尾项记账）、L565/L568/L571（_ret_succ
+                    #   与兜底分支）的记账完全同型。
+                    # [归约方式] 尾项才把记账推进到块末 prev_end = len(instrs)，使
+                    #   remaining 段为空、不再落入 _generate_remaining_stmts 对同一块
+                    #   的第二次重建；旧实现漏推进记账，前缀为空时 all_stmts 变成
+                    #   [Return(comp_value)] + 整块重建的第二条 Return，逐字重复发射
+                    #   （broker get_orders/get_trades/get_open_orders 的 <listcomp>
+                    #   单元被判 Extra/Different bytecode）。非尾项（嵌套外层在后）
+                    #   则保持记账不动，交由下一轮 pre_comp 终止符守卫把整块判回通用
+                    #   重建路径，避免把嵌套推导式拆成两条 Return。
+                    # [AST 映射] 尾项 ⇒ 单发 ast.Return(ListComp/Call(comp_value))；
+                    #   非尾项 ⇒ 本块整体 return None，由 expr_reconstructor 发射
+                    #   ast.Return(ListComp(iter=ListComp)) 的嵌套形态。
+                    all_stmts.append({'type': 'Return', 'value': comp_value})
+                    if _comp_loop_idx == len(comp_indices) - 1:
+                        prev_end = len(instrs)
+                elif (region_ast_gen is not None and block.successors):
+                    _ret_succ = None
+                    _last_off = last_instr.offset if hasattr(last_instr, 'offset') else 0
+                    _fall_through_off = _last_off + 2
+                    for _s in block.successors:
+                        if _s.start_offset != _fall_through_off:
+                            continue
+                        _s_skip = [i for i in _s.instructions if i.opname not in SKIP_OPS]
+                        if (len(_s_skip) == 1
+                                and _s_skip[0].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                            _ret_succ = _s
+                            break
+                    # [R12 fix] 宽指令 fall-through 落点修正（merger_storage
+                    # .get_merger_date_info：`return {dictcomp}` 的 try 体被
+                    # 异常表边界切成两块 —— wrapper CALL 在块末，RETURN_VALUE
+                    # 在唯一后继块）。旧判据用 _last_off + 2 计算 fall-through
+                    # 落点，对带 CACHE 的宽指令（3.11 的 CALL 宽 10 字节，
+                    # 下一块起点 = +10）必然失配 → 推导式被降级为裸 Expr +
+                    # 伪造 `return None`（orig=32 decomp=34, true_diffs=22）。
+                    # 识别条件：块末指令非跳转（值消费型指令如 CALL，控制流
+                    # 直落下一块），在前向 后继 中找平凡 return 块（异常表
+                    # 产生的 handler 边以 PUSH_EXC_INFO 开头、含多条指令，
+                    # 天然不满足平凡判据，故多后继无歧义）；
+                    # 归约方式：该后继即 fall-through 块，过滤噪声后仅含一条
+                    # RETURN_VALUE/RETURN_CONST 时，推导式值即 return 值；
+                    # AST 映射：Return(comp_value)，后继块标记 generated，
+                    # 由 try 体归约吞并（原则 3：嵌套即抽象节点，不重复发射）。
+                    if (_ret_succ is None
+                            and not last_instr.opname.startswith('JUMP')
+                            and not last_instr.opname.startswith('POP_JUMP')):
+                        for _s in block.successors:
+                            if _s.start_offset <= _last_off:
+                                continue
+                            _s_skip = [i for i in _s.instructions
+                                       if i.opname not in SKIP_OPS]
+                            if (len(_s_skip) == 1
+                                    and _s_skip[0].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                                _ret_succ = _s
+                                break
+                    if _ret_succ is not None:
+                        all_stmts.append({'type': 'Return', 'value': comp_value})
+                        region_ast_gen.generated_blocks.add(_ret_succ)
+                        region_ast_gen.generated_offsets.add(_ret_succ.start_offset)
+                        prev_end = len(instrs)
+                    elif (_comp_loop_idx == len(comp_indices) - 1
+                          and not last_instr.opname.startswith('JUMP')
+                          and not last_instr.opname.startswith('POP_JUMP')
+                          and self._find_returns_pending_value_successor(block) is not None):
+                        # [Round5-B24] try/finally 包 `return <推导式>`：本块末条
+                        # 指令是推导式值消费型 CALL（值悬挂栈上），其前向正常
+                        # 后继块是 finally 清理段的正常路径副本 —— return 值压栈
+                        # 穿越清理段、由清理段末尾的 RETURN_VALUE 返回（3.11
+                        # 异常表把 try 体在保护区间末尾切块的必然布局）。旧实现
+                        # 在此分支无条件降级 Expr 语句，return 被剥除、值被
+                        # POP_TOP 丢弃、函数改返回 None（r5_09 t_try_finally）。
+                        # 识别条件/归约方式/AST 映射见
+                        # _find_returns_pending_value_successor 三要素注记。
+                        # 不标记后继块为已生成：它仍由 try 区域装配认领为
+                        # finalbody 语句源（原则 3 嵌套即抽象节点）。
+                        all_stmts.append({'type': 'Return', 'value': comp_value})
+                        prev_end = len(instrs)
+                    else:
+                        all_stmts.append({'type': 'Expr', 'value': comp_value})
+                        prev_end = len(instrs)
+                else:
+                    all_stmts.append({'type': 'Expr', 'value': comp_value})
+                    prev_end = len(instrs)
+
+        remaining_instrs = instrs[prev_end:]
+        if remaining_instrs:
+            remaining_stmts = self._generate_remaining_stmts(remaining_instrs, region_ast_gen=region_ast_gen)
+            all_stmts.extend(remaining_stmts)
+
+        # async comprehension 跨块的 fallthrough 已被合并处理，
+        # 标记延伸块为已生成，避免外层 _generate_block_statements 重复处理。
+        if _extra_async_blocks and region_ast_gen is not None:
+            for _eb in _extra_async_blocks:
+                region_ast_gen.generated_blocks.add(_eb)
+                region_ast_gen.generated_offsets.add(_eb.start_offset)
+
+        return all_stmts if all_stmts else None
+
+    def _find_returns_pending_value_successor(self, block):
+        """[Round5-B24] 识别「返回值穿越清理段」的前向正常后继块（try/finally 包
+        `return <推导式>` 的字节码布局特征）。
+
+        [识别条件] 本块末条指令为值消费型指令（推导式值悬挂栈上，控制流直落）
+        时，检查其前向正常后继块是否满足：
+          (a) 非异常帧头——首条有意义指令 ∈ {PUSH_EXC_INFO, CHECK_EXC_MATCH,
+              CHECK_EG_MATCH} 的块是 handler/异常路径边，不是正常出口；
+          (b) 块体线性——除末条 RETURN_VALUE 外不含任何跳转指令（清理段
+              的用户语句可含调用/属性链，但不回跳不分叉）；
+          (c) 栈效应判据——从栈深 0 起对块内指令按 dis.stack_effect 线性
+              模拟（未知操作码即放弃）：模拟过程中任何时刻不得下溢（下溢=
+              提前消费了悬挂值），且模拟至末条 RETURN_VALUE 前栈深恰为 0，
+              即 RETURN 弹出的操作数不是本块产生的值，而是进入本块前悬挂的
+              调用方值（推导式返回值）。
+        反例甄别（同一判据双向排除）：`LOAD_CONST None; RETURN_VALUE`
+        （隐式 return None 块，末条前栈深 1）、`LOAD_FAST x; RETURN_VALUE`
+        （返回块内产值）、`cleanup; POP_TOP; LOAD y; RETURN_VALUE`（返回
+        块内产值）末条前栈深均非 0，不命中。
+        [归约方式] 该后继块即 try/finally 正常路径清理副本（3.11 异常表把
+        try 体在其保护区间末尾切块，return 值保持压栈穿越清理段，由清理段
+        末尾的 RETURN_VALUE 返回）；推导式值即函数返回值，其消费 RETURN
+        位于后继块而非本块，故本块的推导式表达式归约为 Return 而非 Expr。
+        [AST 映射] Return(comp_value)；重编译后 return 值再次压栈穿越
+        finally 清理段，与原字节码同构（try/finally 与 try/except/finally
+        双形同法：异常边后继被 (a) 排除，正常边后继即清理副本）。
+        [C1] 只读本块与其直接后继的指令流与栈效应，不读区域标签/行表；
+        [C2] 后继块作为清理段整体模拟（黑箱），不窥视其语句归约内部；
+        [C3] (a)(b)(c) 三重守卫显式排除 handler 边、分叉清理段与返回块内
+        产值三类反例，未命中即放弃（交回 Expr 降级原路径）。
+        """
+        try:
+            import dis as _dis
+        except Exception:
+            return None
+        _noise = ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PUSH_NULL')
+        _frame_heads = {'PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'}
+        _jump_prefixes = ('JUMP', 'POP_JUMP')
+        # [Round5-B24] 异常帧簿记 op：POP_EXCEPT 弹的是异常帧伪状态（不承载
+        # 用户值，except handler 内 `return <值>` 经 SWAP 2 + POP_EXCEPT 把
+        # 值留在栈上后剥除帧状态），栈模拟中按 0 处理。SWAP/COPY/RERAISE
+        # 同属帧簿记（异常表把 handler 的 comp 块与清理段切成多个块时，
+        # 中间块可能只含簿记 op）。
+        _frame_bookkeeping = {'POP_EXCEPT', 'COPY', 'SWAP', 'RERAISE'}
+        _last_off = None
+        for _i in reversed(block.instructions):
+            if _i.opname in _noise:
+                continue
+            _last_off = _i.offset if hasattr(_i, 'offset') else None
+            break
+        for s in block.successors:
+            # [Round5-B24] 异常表会把 handler 的「值就位段」与「清理段」切成
+            # 多个块，二者之间可能隔着一个纯簿记块（仅 POP_EXCEPT/COPY/SWAP
+            # 等，无用户值操作）。沿前向正常边穿越簿记块（有界 4 跳、逐跳
+            # 排除异常帧头后继），对首个含用户操作的块做判据检查。
+            _chain_blk = s
+            _user_instrs = [i for i in _chain_blk.instructions if i.opname not in _noise]
+            _hops = 0
+            while (_user_instrs
+                   and all(i.opname in _frame_bookkeeping for i in _user_instrs)
+                   and _hops < 4):
+                _fwd = [t for t in _chain_blk.successors
+                        if getattr(t, 'start_offset', 0) > getattr(_chain_blk, 'start_offset', 0)
+                        and not [j for j in t.instructions[:1] if j.opname in _frame_heads]]
+                if len(_fwd) != 1:
+                    _user_instrs = None
+                    break
+                _chain_blk = _fwd[0]
+                _user_instrs = [i for i in _chain_blk.instructions if i.opname not in _noise]
+                _hops += 1
+            if not _user_instrs:
+                continue
+            s_instrs = _user_instrs
+            # (a) 异常帧头排除
+            if s_instrs[0].opname in _frame_heads:
+                continue
+            # 前向边（正常出口只能向前汇入）
+            s_off = getattr(_chain_blk, 'start_offset', None)
+            if s_off is None or (_last_off is not None and s_off <= _last_off):
+                continue
+            if s_instrs[-1].opname != 'RETURN_VALUE':
+                continue
+            # (b) 线性块：末条 RETURN_VALUE 之前不得有任何跳转
+            if any(i.opname.startswith(_jump_prefixes) for i in s_instrs[:-1]):
+                continue
+            # (c) 栈效应模拟：末条前栈深恰为 0 且全程无下溢
+            depth = 0
+            underflow = False
+            supported = True
+            for i in s_instrs[:-1]:
+                if i.opname in _frame_bookkeeping:
+                    continue
+                try:
+                    try:
+                        eff = _dis.stack_effect(_dis.opmap[i.opname], i.arg if i.arg is not None else 0)
+                    except ValueError:
+                        # 无操作数指令（POP_TOP/RETURN_VALUE 等）不接受 oparg
+                        eff = _dis.stack_effect(_dis.opmap[i.opname])
+                except (KeyError, ValueError):
+                    supported = False
+                    break
+                depth += eff
+                if depth < 0:
+                    underflow = True
+                    break
+            if not supported or underflow or depth != 0:
+                continue
+            return _chain_blk
+        return None
+
+    def _generate_pre_comp_stmts(self, pre_instrs, all_instrs, start_idx, region_ast_gen=None):
+        stmts = []
+        current_instrs = []
+        _import_pending = False
+        _import_module = ''
+        _import_pairs = []  # [(imported_name, stored_name), ...]
+        _import_is_from = False
+
+        def _flush_import():
+            """Build and append Import/ImportFrom node from collected _import_pairs."""
+            nonlocal _import_pending, _import_module, _import_pairs, _import_is_from
+            if not _import_pending:
+                return
+            if _import_is_from:
+                names_list = []
+                for _imp_n, _sto_n in _import_pairs:
+                    _alias = _sto_n if _sto_n != _imp_n else None
+                    names_list.append({'name': _imp_n, 'asname': _alias})
+                stmts.append({'type': 'ImportFrom', 'module': _import_module, 'names': names_list})
+            else:
+                # Plain import: _import_pairs has (module, stored_name)
+                for _imp_n, _sto_n in _import_pairs:
+                    # `import os.path` stores `os` (top-level module).
+                    # `import os.path as path` stores `os.path` as `path`.
+                    # When stored_name == first component of module name,
+                    # it's a plain `import module.submodule` (no asname).
+                    _top_level = _imp_n.split('.')[0]
+                    _alias = _sto_n if _sto_n != _top_level else None
+                    stmts.append({'type': 'Import', 'names': [{'name': _imp_n, 'asname': _alias}]})
+            _import_pending = False
+            _import_module = ''
+            _import_pairs = []
+            _import_is_from = False
+
+        for instr in pre_instrs:
+            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            if instr.opname == 'POP_TOP':
+                # [R32-C 同层判据 · 原则 1 块 = 前导语句 + 尾终止] POP_TOP 是「栈上的值被
+                # 丢弃」的语句终止符，不是填充指令 —— 调用方把「pre_comp_instrs 末尾是
+                # STORE/POP_TOP/IMPORT」当作语句边界，本扫描器却把同一 op 当噪声滤掉，
+                # 两侧必须同层一致。它闭合此前累积的栈上表达式并作为 Expr 语句发射；累积
+                # 段为空（该行没有值被丢弃）时与既有行为逐字节相同。
+                if current_instrs:
+                    _r32c_expr = self.expr_reconstructor.reconstruct(current_instrs)
+                    if _r32c_expr:
+                        stmts.append({'type': 'Expr', 'value': _r32c_expr})
+                current_instrs = []
+                continue
+            if instr.opname == 'IMPORT_NAME':
+                # Flush previous import if any
+                _flush_import()
+                # IMPORT_NAME 前的 LOAD_CONST (level=0) + LOAD_CONST (fromlist 元组)
+                # 是 import 的参数，不是独立语句——直接丢弃。
+                current_instrs = []
+                _import_pending = True
+                _import_module = instr.argval if instr.argval else ''
+                _import_pairs = []
+                _import_is_from = False
+                continue
+            if instr.opname == 'IMPORT_FROM':
+                _import_is_from = True
+                _import_pairs.append((instr.argval if instr.argval else '', instr.argval if instr.argval else ''))
+                continue
+            if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                if _import_pending:
+                    stored_name = instr.argval
+                    if _import_is_from and _import_pairs:
+                        # Update last pair's stored_name
+                        _imp_n, _ = _import_pairs[-1]
+                        _import_pairs[-1] = (_imp_n, stored_name)
+                    else:
+                        # Plain import: (module, stored_name)
+                        _import_pairs.append((_import_module, stored_name))
+                    continue
+                current_instrs.append(instr)
+                if region_ast_gen is not None:
+                    store_stmt = region_ast_gen._build_store_statement(current_instrs)
+                    if store_stmt:
+                        stmts.append(store_stmt)
+                else:
+                    value_instrs = current_instrs[:-1]
+                    store_instr = current_instrs[-1]
+                    if value_instrs:
+                        value_expr = self.expr_reconstructor.reconstruct(value_instrs)
+                        if value_expr:
+                            stmts.append({
+                                'type': 'Assign',
+                                'targets': [{'type': 'Name', 'id': store_instr.argval, 'ctx': 'Store'}],
+                                'value': value_expr,
+                            })
+                current_instrs = []
+                continue
+        # Non-import instruction: flush any pending import
+            _flush_import()
+            current_instrs.append(instr)
+        # Flush any remaining import
+        _flush_import()
+        return stmts
+
+    def _generate_remaining_stmts(self, remaining_instrs, region_ast_gen=None):
+        # [R33] 推导式后的剩余指令可能包含类定义（LOAD_BUILD_CLASS +
+        # MAKE_FUNCTION + CALL + STORE_*）或函数定义（MAKE_FUNCTION +
+        # CALL + STORE_*）。直接用 expr_reconstructor.reconstruct + Assign
+        # 会将 __build_class__ 调用包装为 Assign(value=Call(__build_class__))
+        # 而非 ClassDef。当 region_ast_gen 可用时，委托其 _build_store_statement
+        # 进行高级语句识别（ClassDef/FunctionDef/装饰器/walrus 等），
+        # 与 _generate_pre_comp_stmts 保持一致。
+        stmts = []
+        current_instrs = []
+        _import_pending = False
+        _import_module = ''
+        _import_pairs = []
+        _import_is_from = False
+
+        def _flush_import():
+            nonlocal _import_pending, _import_module, _import_pairs, _import_is_from
+            if not _import_pending:
+                return
+            if _import_is_from:
+                names_list = []
+                for _imp_n, _sto_n in _import_pairs:
+                    _alias = _sto_n if _sto_n != _imp_n else None
+                    names_list.append({'name': _imp_n, 'asname': _alias})
+                stmts.append({'type': 'ImportFrom', 'module': _import_module, 'names': names_list})
+            else:
+                for _imp_n, _sto_n in _import_pairs:
+                    _top_level = _imp_n.split('.')[0]
+                    _alias = _sto_n if _sto_n != _top_level else None
+                    stmts.append({'type': 'Import', 'names': [{'name': _imp_n, 'asname': _alias}]})
+            _import_pending = False
+            _import_module = ''
+            _import_pairs = []
+            _import_is_from = False
+
+        for instr in remaining_instrs:
+            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            # [R34 fix] POP_TOP 是表达式语句终结符（如 `value_list.append(nodes)`
+            # 编译为 <expr_instrs> + POP_TOP）。旧实现直接丢弃 POP_TOP，把
+            # current_instrs 与后续语句指令混合，导致尾部语句（含 STORE_SUBSCR
+            # 赋值）被整体 reconstruct、退化为裸 Name 表达式（graph._process_task_queue
+            # 的 try 块内 append + 2 个下标赋值被吞成 `task_id`）。镜像
+            # _build_statements_from_instructions 的边界处理：POP_TOP 时把累积
+            # 指令重建为 Expr 语句并清空。
+            if instr.opname == 'POP_TOP':
+                if current_instrs:
+                    value_expr = self.expr_reconstructor.reconstruct(current_instrs)
+                    if value_expr is not None:
+                        stmts.append({'type': 'Expr', 'value': value_expr})
+                    current_instrs = []
+                continue
+            if instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                _flush_import()
+                if current_instrs:
+                    value_expr = self.expr_reconstructor.reconstruct(current_instrs)
+                    if value_expr:
+                        stmts.append({'type': 'Return', 'value': value_expr})
+                    current_instrs = []
+                continue
+            if instr.opname == 'IMPORT_NAME':
+                _flush_import()
+                current_instrs = []
+                _import_pending = True
+                _import_module = instr.argval if instr.argval else ''
+                _import_pairs = []
+                _import_is_from = False
+                continue
+            if instr.opname == 'IMPORT_FROM':
+                _import_is_from = True
+                _import_pairs.append((instr.argval if instr.argval else '', instr.argval if instr.argval else ''))
+                continue
+            if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                if _import_pending:
+                    stored_name = instr.argval
+                    if _import_is_from and _import_pairs:
+                        _imp_n, _ = _import_pairs[-1]
+                        _import_pairs[-1] = (_imp_n, stored_name)
+                    else:
+                        _import_pairs.append((_import_module, stored_name))
+                    continue
+                current_instrs.append(instr)
+                if region_ast_gen is not None:
+                    store_stmt = region_ast_gen._build_store_statement(current_instrs)
+                    if store_stmt:
+                        stmts.append(store_stmt)
+                else:
+                    value_instrs = current_instrs[:-1]
+                    store_instr = current_instrs[-1]
+                    if value_instrs:
+                        value_expr = self.expr_reconstructor.reconstruct(value_instrs)
+                        if value_expr:
+                            stmts.append({
+                                'type': 'Assign',
+                                'targets': [{'type': 'Name', 'id': store_instr.argval, 'ctx': 'Store'}],
+                                'value': value_expr,
+                            })
+                current_instrs = []
+                continue
+            # [R34 fix] 下标/属性赋值（STORE_SUBSCR/STORE_ATTR）不是 STORE_FAST
+            # 系列，旧实现把它们堆积进 current_instrs，与后续指令混合后整体
+            # reconstruct 退化为裸表达式。镜像 _build_statements_from_instructions
+            # 的 L23180/L23186 处理：委托 _build_subscript_assign/_build_attr_assign
+            # 重建 Assign 语句。
+            if instr.opname == 'STORE_SUBSCR':
+                _flush_import()
+                if region_ast_gen is not None:
+                    _ss_stmt = region_ast_gen._build_subscript_assign(current_instrs + [instr])
+                    if _ss_stmt:
+                        stmts.append(_ss_stmt)
+                else:
+                    _ss_val_instrs = current_instrs[:-2]
+                    _ss_cont_instrs = current_instrs[-2:-1]
+                    _ss_idx_instrs = current_instrs[-1:]
+                    _ss_val = self.expr_reconstructor.reconstruct(_ss_val_instrs) if _ss_val_instrs else None
+                    _ss_cont = self.expr_reconstructor.reconstruct(_ss_cont_instrs) if _ss_cont_instrs else None
+                    _ss_idx = self.expr_reconstructor.reconstruct(_ss_idx_instrs) if _ss_idx_instrs else None
+                    if _ss_val is not None and _ss_cont is not None and _ss_idx is not None:
+                        stmts.append({
+                            'type': 'Assign',
+                            'targets': [{
+                                'type': 'Subscript',
+                                'value': _ss_cont,
+                                'slice': _ss_idx,
+                                'ctx': 'Store',
+                            }],
+                            'value': _ss_val,
+                        })
+                current_instrs = []
+                continue
+            if instr.opname == 'STORE_ATTR':
+                _flush_import()
+                if region_ast_gen is not None:
+                    _sa_stmt = region_ast_gen._build_attr_assign(current_instrs + [instr])
+                    if _sa_stmt:
+                        stmts.append(_sa_stmt)
+                current_instrs = []
+                continue
+            _flush_import()
+            current_instrs.append(instr)
+        _flush_import()
+        if current_instrs:
+            value_expr = self.expr_reconstructor.reconstruct(current_instrs)
+            if value_expr:
+                stmts.append({'type': 'Expr', 'value': value_expr})
+        return stmts
+
+    def parse_comprehension_inner(self, code_obj: Any,
+                                  iter_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        try:
+            from .cfg_builder import CFGBuilder
+            builder = CFGBuilder()
+            nested_cfg = builder.build(code_obj)
+        except Exception:
+            return None
+
+        _orig_cfg = self.expr_reconstructor.cfg
+        self.expr_reconstructor.cfg = nested_cfg
+        try:
+            return self._parse_comprehension_inner_impl(code_obj, iter_expr, nested_cfg)
+        finally:
+            self.expr_reconstructor.cfg = _orig_cfg
+
+    def _parse_comprehension_inner_impl(self, code_obj, iter_expr, nested_cfg):
+
+        all_instrs = []
+        for b in nested_cfg.get_blocks_in_order():
+            all_instrs.extend(b.instructions)
+        all_instrs.sort(key=lambda i: i.offset)
+
+        # [Round5-03] 多 for 子句检测：统计 FOR_ITER 数量。
+        # 多 for 子句（如 `{x+y for x in a for y in b}`）字节码含多个 FOR_ITER，
+        # 每个 FOR_ITER 后接 STORE_* target，最后一个 FOR_ITER 的 body 含 element + APPEND。
+        # 单 for 路径保留原逻辑；多 for 走新路径分别提取每个 generator。
+        # [Round5-B23] async for 子句（GET_ANEXT 协议块）与同步 FOR_ITER 子句
+        # 一并计入 clause 头：clause 头总数 > 1 即多 clause 路径（`async for x
+        # in ait for y in b` 的内层只有 1 个 FOR_ITER + 1 个 GET_ANEXT，旧判据
+        # 漏判走单 for 路径，异步 clause 目标被同步 FOR_ITER 的名袋/前缀解析
+        # 错误认领）。
+        for_iter_indices = [i for i, instr in enumerate(all_instrs) if instr.opname == 'FOR_ITER']
+        _async_head_indices = self._find_async_clause_heads(all_instrs)
+        if len(for_iter_indices) + len(_async_head_indices) > 1:
+            return self._parse_multi_for_comprehension(code_obj, all_instrs, iter_expr,
+                                                       for_iter_indices, _async_head_indices)
+
+        target_name = self._find_comp_target_names(all_instrs, first_only=True)
+        if target_name is None:
+            return None
+
+        target = self._build_comprehension_target(all_instrs)
+        if target is None:
+            return None
+
+        append_op, append_idx = self._find_comp_append_op(all_instrs)
+        if append_op is None:
+            return None
+
+        _, store_idx = self._find_comp_append_op(all_instrs, target_name)
+        if store_idx is None:
+            return None
+
+        # 优先尝试 Pattern B：三元作 if-filter。
+        # 模式: ``[elt for x in iter if (a if c else b)]``
+        # 区分依据: BOTH 真假分支以 BACKWARD 条件跳转（filter skip）结束。
+        # 依「父引用子入口」：父推导式通过 merge 块的 elt 指令引用三元
+        # 子节点作为 if-filter 条件，元素独立重建。
+        _ternary_filter_info = self._detect_comp_ternary_as_filter(
+            all_instrs, store_idx, append_idx)
+        if _ternary_filter_info is not None:
+            _tf_expr, _tf_elt_start = _ternary_filter_info
+            _tf_ifs = [_tf_expr]
+            if append_op == 'MAP_ADD':
+                _tf_key, _tf_val = self._split_dict_comp_kv(
+                    all_instrs, _tf_elt_start, append_idx)
+                if _tf_key is None:
+                    _tf_key = {'type': 'Name', 'id': target_name, 'ctx': 'Load'}
+                if _tf_val is None:
+                    _tf_val = {'type': 'Constant', 'value': None}
+                _tf_elt = (_tf_key, _tf_val)
+            else:
+                _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
+                _tf_elt = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
+                if _tf_elt is None:
+                    _tf_elt = {'type': 'Name', 'id': target_name, 'ctx': 'Load'}
+            _tf_is_async = 0
+            for _instr in all_instrs:
+                if _instr.opname in ('GET_AITER', 'GET_ANEXT', 'END_ASYNC_FOR'):
+                    _tf_is_async = 1
+                    break
+            _tf_generators = [{
+                'type': 'comprehension',
+                'target': target,
+                'iter': iter_expr,
+                'ifs': _tf_ifs,
+                'is_async': _tf_is_async,
+            }]
+            return self._build_comp_result(code_obj, _tf_elt, _tf_generators)
+
+        # 检测三元模式：条件跳转的目标在LIST_APPEND之前
+        ternary_info = self._detect_comp_ternary(all_instrs, store_idx, append_idx)
+        if ternary_info is not None:
+            if append_op == 'MAP_ADD':
+                # [Round7-08] Dict comprehension with ternary: ternary can be either key
+                # or value. Distinguish by checking if there are meaningful instructions
+                # between the ternary merge point and MAP_ADD:
+                # - If yes → ternary is the KEY, those trailing instructions are the value
+                # - If no  → ternary is the VALUE, key (if any) was pushed before the cond
+                value_expr = self._extract_dict_comp_value_after_ternary(
+                    all_instrs, store_idx, append_idx)
+                if value_expr is not None:
+                    elt_expr = (ternary_info, value_expr)
+                else:
+                    key_expr = self._extract_dict_comp_key_before_ternary(
+                        all_instrs, store_idx, append_idx)
+                    if key_expr is not None:
+                        elt_expr = (key_expr, ternary_info)
+                    else:
+                        elt_expr = ternary_info
+            else:
+                elt_expr = ternary_info
+            # ternary + filter 共存时也提取 filter。
+            # _extract_comp_ifs 看到 FORWARD ternary 跳转会 break（不 return），
+            # 已收集的 BACKWARD filter segments 会被处理为 ifs。
+            ifs, _ = self._extract_comp_ifs(all_instrs, store_idx, append_idx)
+        else:
+            ifs, elt_start_idx = self._extract_comp_ifs(all_instrs, store_idx, append_idx)
+            if append_op == 'MAP_ADD':
+                key_expr, value_expr = self._split_dict_comp_kv(all_instrs, elt_start_idx, append_idx)
+                if key_expr is None:
+                    key_expr = {'type': 'Name', 'id': target_name, 'ctx': 'Load'}
+                if value_expr is None:
+                    value_expr = {'type': 'Constant', 'value': None}
+                elt_expr = (key_expr, value_expr)
+            else:
+                elt_instrs = all_instrs[elt_start_idx:append_idx]
+                elt_expr = self.expr_reconstructor.reconstruct(elt_instrs)
+                if elt_expr is None:
+                    elt_expr = {'type': 'Name', 'id': target_name, 'ctx': 'Load'}
+
+        is_async = 0
+        for instr in all_instrs:
+            # async comprehension 内层用 GET_ANEXT 而非 FOR_ITER，
+            # 外层用 GET_AITER 而非 GET_ITER。任一出现即标记 is_async=1。
+            if instr.opname in ('GET_AITER', 'GET_ANEXT', 'END_ASYNC_FOR'):
+                is_async = 1
+                break
+
+        generators = [{
+            'type': 'comprehension',
+            'target': target,
+            'iter': iter_expr,
+            'ifs': ifs,
+            'is_async': is_async,
+        }]
+
+        return self._build_comp_result(code_obj, elt_expr, generators)
+
+    def _find_async_clause_heads(self, all_instrs: List[Instruction]) -> List[Tuple[int, int]]:
+        """[Round5-B23] 识别推导式 code object 内 async for 子句头（GET_ANEXT 取值协议块）。
+
+        [识别条件] 3.11 async-for 取值协议：GET_ANEXT; LOAD_CONST None; SEND;
+        （YIELD_VALUE; RESUME; JUMP_BACKWARD_NO_INTERRUPT 回环），其后第一条
+        STORE_*/UNPACK_SEQUENCE/UNPACK_EX 即该 clause 目标存储序列起点
+        （协议尾可含 END_ASYNC_FOR/CLEANUP_THROW——3.12+ 以 CLEANUP_THROW
+        替代部分协议尾，同法计入）。每 async clause 恰有一个 GET_ANEXT 协议
+        块，其回跳边（JUMP_BACKWARD/JUMP_BACKWARD_NO_INTERRUPT 目标 =
+        GET_ANEXT 偏移）与过滤跳转（POP_JUMP_BACKWARD_IF_FALSE 目标 =
+        GET_ANEXT 偏移）共同构成该 clause 的循环头语义，与同步 clause 的
+        FOR_ITER 头同构。
+        [归约方式] 线性扫描：GET_ANEXT 后跳过 CACHE/EXTENDED_ARG/NOP 取
+        LOAD_CONST(None)+SEND 协议头，再跳过协议尾指令集取第一条目标存储
+        序列指令；返回 [(头索引, 目标存储序列起点索引), ...] 按偏移序。
+        [AST 映射] 无独立映射；供 _parse_multi_for_comprehension 统一 clause
+        装配（该 clause 的 is_async=1、target 自目标序列起点结构化解析）。
+        [C1] 仅读本推导式指令流（操作码形态/常量值）；[C2] 协议块整体消费，
+        不重组其内部；[C3] 头判据失败即不认领（返回空表，走既有单 for 路径）。
+        """
+        heads: List[Tuple[int, int]] = []
+        n = len(all_instrs)
+        _skip = ('CACHE', 'EXTENDED_ARG', 'NOP')
+        # [Round6-B30] 协议尾集合由 ASYNC_POLL_PROTOCOL_OPS 派生（去掉头部
+        # 启动指令 SEND），与语句级挂起轮询块识别共享同一事实源。
+        _tail_ops = ASYNC_POLL_PROTOCOL_OPS - {'SEND'}
+        for i, instr in enumerate(all_instrs):
+            if instr.opname != 'GET_ANEXT':
+                continue
+            j = i + 1
+            while j < n and all_instrs[j].opname in _skip:
+                j += 1
+            if j + 1 >= n:
+                continue
+            if all_instrs[j].opname != 'LOAD_CONST' or all_instrs[j].argval is not None:
+                continue
+            j += 1
+            while j < n and all_instrs[j].opname in _skip:
+                j += 1
+            if j >= n or all_instrs[j].opname != 'SEND':
+                continue
+            pos = j + 1
+            target_pos = None
+            while pos < n:
+                op = all_instrs[pos].opname
+                if op in _tail_ops:
+                    pos += 1
+                    continue
+                if op in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL',
+                          'UNPACK_SEQUENCE', 'UNPACK_EX'):
+                    target_pos = pos
+                break
+            if target_pos is not None:
+                heads.append((i, target_pos))
+        return heads
+
+    def _parse_multi_for_comprehension(self, code_obj, all_instrs, iter_expr, for_iter_indices,
+                                       async_clause_heads=None):
+        """[Round5-03] 多 for 子句推导式重建。
+
+        字节码结构（以 `{x+y for x in a for y in b}` 为例）:
+            BUILD_SET 0
+            LOAD_FAST .0           <- 外部传入的迭代器（对应第一个 for 的 iter）
+            FOR_ITER (outer)       <- for_iter_indices[0]
+            STORE_FAST x           <- 第一个 for 的 target
+            LOAD_GLOBAL b
+            GET_ITER
+            FOR_ITER (inner)       <- for_iter_indices[1]
+            STORE_FAST y           <- 第二个 for 的 target
+            <element>
+            SET_ADD
+            JUMP_BACKWARD to inner FOR_ITER
+            JUMP_BACKWARD to outer FOR_ITER
+
+        生成多个 generator，按外→内顺序。第一个 generator 的 iter 是 iter_expr
+        （外部传入），后续 generator 的 iter 由 LOAD_* + GET_ITER 重建。
+        元素表达式从最内层 FOR_ITER 的 STORE_* 之后、APPEND 之前提取。
+
+        [Round5-B20] 每个 clause 的过滤条件按归属 clause 各自提取：
+        [识别条件] clause k 的过滤跳转链全部回跳 clause k 自己的 FOR_ITER
+        偏移，且位于该 clause 目标存储序列之后、下一 clause FOR_ITER 之前
+        （最内层则位于 APPEND 之前）；[归约方式] 非最内层 clause 以
+        [seq_end_k, fi_{k+1}) 为窗复用 _extract_comp_ifs 的段机制（BACKWARD
+        回跳段=and 成员、前向 IF_TRUE+回向 IF_FALSE=or 过滤，[R10]/[B6-comp]
+        判据沿用），最内层保持原窗 [store, APPEND)，互不重叠（[C3] 守卫）；
+        [AST 映射] 过滤表达式依序挂到对应 comprehension.ifs，多过滤按既有
+        and/or 合并规则合并。 [C1] 窗口边界只由本指令流的 FOR_ITER 偏移与
+        存储序列末端决定，不读父/邻区域信息。
+
+        [Round5-B23] async 子句统一装配：clause 头 = 同步 FOR_ITER ∪ async
+        GET_ANEXT 协议块（_find_async_clause_heads），按偏移序合并为同一
+        clause 序列。async clause 的目标存储序列位于 GET_ANEXT; LOAD_CONST
+        None; SEND; (YIELD_VALUE; RESUME; JUMP_BACKWARD_NO_INTERRUPT) 协议块
+        之后（CLEANUP_THROW/END_ASYNC_FOR 兼容计入协议尾），其过滤跳转回跳
+        该 GET_ANEXT 偏移、iter 表达式窗锚点为 GET_AITER（同步 clause 锚点
+        为 GET_ITER）——两种头的窗口语义完全同构，判据仅按头种类选择锚点
+        操作码；is_async 标志沿 clause 归位（async 头 → 1，同步头 → 0），
+        不再整推导式统一标记。 [C1] 只读本推导式指令流；[C2] GET_ANEXT/
+        SEND 协议块作为取值协议整体消费（等价于同步路径的 FOR_ITER 头）；
+        [C3] 头种类只改变锚点操作码选择，过滤窗/存储序列窗互不重叠守卫
+        与 B20 相同。
+        """
+        append_op, append_idx = self._find_comp_append_op(all_instrs)
+        if append_op is None:
+            return None
+
+        # [Round5-B23] 统一 clause 头：同步 FOR_ITER ∪ async GET_ANEXT 协议块。
+        _async_heads = list(async_clause_heads or [])
+        _async_target_pos = {h: tp for h, tp in _async_heads}
+        _async_head_set = {h for h, _ in _async_heads}
+        heads = sorted(list(for_iter_indices) + [h for h, _ in _async_heads])
+        if not heads:
+            return None
+
+        generators = []
+        _seq_ends = []
+        # [Round5-B20] 上一 clause 过滤段之后的窗起点（= 本 clause iter 表达式的
+        # 指令窗起点）。每个非最内层 clause 的过滤谓词链挂在该 clause 的
+        # FOR_ITER 之后、下一 clause FOR_ITER 之前：clause k 的过滤跳转全部
+        # 回跳 clause k 自己的 FOR_ITER 偏移，最后一个过滤跳转之后的指令才是
+        # 下一 clause 的可迭代对象求值序列。故 clause k 的 ifs 提取窗取
+        # [seq_end_k, fi_{k+1})，_extract_comp_ifs 返回的 elt_start 恰为
+        # clause k+1 的 iter 窗起点。 [Round5-B23] 下一 clause 头为 async 时，
+        # 锚点偏移取其 GET_ANEXT 偏移（async clause 的过滤跳转回跳该偏移，
+        # 语义与 FOR_ITER 锚点同构）。
+        _next_iter_start = None
+        for gen_idx, head_idx in enumerate(heads):
+            _is_async_clause = head_idx in _async_head_set
+            if _is_async_clause:
+                _target_pos = _async_target_pos[head_idx]
+            else:
+                _target_pos = head_idx + 1
+            # [Round5-B21] target 按存储序列结构解析（支持嵌套元组/星号），
+            # 不再要求 FOR_ITER 后恰为单条 STORE_*。
+            target, seq_end = self._parse_target_store_sequence(all_instrs, _target_pos)
+            if target is None:
+                return None
+            _seq_ends.append(seq_end)
+
+            # 本 clause 的 iter 窗起点 = 上一 clause 过滤段之后的位置
+            # （gen_idx==0 时用外部传入 iter_expr，不读该值）。
+            _iter_start = _next_iter_start
+
+            # [Round5-B20] 非最内层 clause 的过滤条件：窗口 [seq_end, 下一
+            # 头)。_extract_comp_ifs 的段机制按同层结构事实甄别过滤段
+            # （BACKWARD 回跳段）与三元/or 过滤（[R10]/[B6-comp] 判据沿用，
+            # append 锚点换成下一 clause 头偏移）；其返回的窗起点
+            # 即本 clause 过滤段之后的位置 = 下一 clause 的 iter 窗起点。
+            # 最内层 clause 的 ifs 由后置既有逻辑提取（窗口到 APPEND 为止），
+            # 此处置空占位，避免同一过滤被双重归属（[C3] 显式守卫）。
+            ifs = []
+            if gen_idx + 1 < len(heads):
+                ifs, _next_iter_start = self._extract_comp_ifs(
+                    all_instrs, seq_end - 1, heads[gen_idx + 1])
+
+            if gen_idx == 0:
+                # 第一个 for 的 iter 来自外部传入
+                gen_iter_expr = iter_expr
+            else:
+                # 后续 for 的 iter 来自「上一 clause 过滤段之后」到本 clause
+                # 迭代协议锚点之间的 LOAD_* + 锚点序列。 [Round5-B20] 窗起点
+                # 不再回扫 STORE（有过滤时会把过滤跳转误收进 iter 窗），改用
+                # 上一 clause 过滤提取返回的窗起点。 [Round5-B23] async clause
+                # 的锚点为 GET_AITER（async-for 在 comp 内对非首个 clause 需要
+                # 显式建立 async 迭代器；首个 clause 的迭代器由外层 GET_AITER
+                # 建立后传入 .0，故 gen_idx==0 不回扫），同步 clause 锚点仍为
+                # GET_ITER。
+                anchor_op = 'GET_AITER' if _is_async_clause else 'GET_ITER'
+                anchor_idx = None
+                for j in range(head_idx - 1, -1, -1):
+                    if all_instrs[j].opname == anchor_op:
+                        anchor_idx = j
+                        break
+                    if all_instrs[j].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
+                        break
+                    if _iter_start is not None and j < _iter_start:
+                        break
+                if anchor_idx is None or _iter_start is None:
+                    return None
+                # iter 表达式指令范围：从过滤段之后到锚点之前
+                iter_instrs = [i for i in all_instrs[_iter_start:anchor_idx]
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                gen_iter_expr = self.expr_reconstructor.reconstruct(iter_instrs) if iter_instrs else None
+                if gen_iter_expr is None:
+                    gen_iter_expr = {'type': 'Name', 'id': '<iterator>'}
+
+            generators.append({
+                'type': 'comprehension',
+                'target': target,
+                'iter': gen_iter_expr,
+                'ifs': list(ifs),
+                'is_async': 1 if _is_async_clause else 0,
+            })
+
+        # 最内层 clause 的目标存储序列末端（用于元素提取）。
+        # [Round5-B23] 最内层头可为 async 头：目标序列起点由
+        # _async_target_pos 给出，seq_end 由统一解析记录。
+        innermost_store_idx = _seq_ends[-1] - 1
+        # 元素提取：从 innermost_store_idx + 1 到 append_idx
+        elt_start_idx = innermost_store_idx + 1
+
+        # 优先尝试 Pattern B：三元作 if-filter。
+        # 同 _parse_comprehension_inner 中的 Pattern B 逻辑，但作用域是
+        # 最内层 for body。依「父引用子入口」原则同上。
+        _ternary_filter_info = self._detect_comp_ternary_as_filter(
+            all_instrs, innermost_store_idx, append_idx)
+        if _ternary_filter_info is not None:
+            _tf_expr, _tf_elt_start = _ternary_filter_info
+            generators[-1]['ifs'] = [_tf_expr]
+            if append_op == 'MAP_ADD':
+                _tf_key, _tf_val = self._split_dict_comp_kv(
+                    all_instrs, _tf_elt_start, append_idx)
+                if _tf_key is None:
+                    _tf_key = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
+                if _tf_val is None:
+                    _tf_val = {'type': 'Constant', 'value': None}
+                elt_expr = (_tf_key, _tf_val)
+            else:
+                _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
+                elt_expr = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
+                if elt_expr is None:
+                    elt_expr = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
+            return self._build_comp_result(code_obj, elt_expr, generators)
+
+        # 检测三元 / ifs（在最内层 for body 内）
+        ternary_info = self._detect_comp_ternary(all_instrs, innermost_store_idx, append_idx)
+        if ternary_info is not None:
+            if append_op == 'MAP_ADD':
+                # [Round7-08] Ternary could be key or value - see parse_comprehension_inner.
+                value_expr = self._extract_dict_comp_value_after_ternary(
+                    all_instrs, innermost_store_idx, append_idx)
+                if value_expr is not None:
+                    elt_expr = (ternary_info, value_expr)
+                else:
+                    key_expr = self._extract_dict_comp_key_before_ternary(
+                        all_instrs, innermost_store_idx, append_idx)
+                    if key_expr is not None:
+                        elt_expr = (key_expr, ternary_info)
+                    else:
+                        elt_expr = ternary_info
+            else:
+                elt_expr = ternary_info
+            # ternary + filter 共存时也提取 filter，
+            # 挂到最内层 generator。
+            ifs, _ = self._extract_comp_ifs(all_instrs, innermost_store_idx, append_idx)
+            if ifs:
+                generators[-1]['ifs'] = ifs
+        else:
+            ifs, elt_start_idx = self._extract_comp_ifs(all_instrs, innermost_store_idx, append_idx)
+            if append_op == 'MAP_ADD':
+                key_expr, value_expr = self._split_dict_comp_kv(all_instrs, elt_start_idx, append_idx)
+                if key_expr is None:
+                    key_expr = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
+                if value_expr is None:
+                    value_expr = {'type': 'Constant', 'value': None}
+                elt_expr = (key_expr, value_expr)
+            else:
+                elt_instrs = all_instrs[elt_start_idx:append_idx]
+                elt_expr = self.expr_reconstructor.reconstruct(elt_instrs)
+                if elt_expr is None:
+                    elt_expr = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
+            # 把 ifs 挂到最内层 generator
+            if ifs:
+                generators[-1]['ifs'] = ifs
+
+        return self._build_comp_result(code_obj, elt_expr, generators)
+
+    def _split_dict_comp_kv(self, all_instrs: List[Instruction], start_idx: int, end_idx: int) -> Tuple[Optional[Dict], Optional[Dict]]:
+        if start_idx >= end_idx:
+            return None, None
+
+        instrs_to_split = all_instrs[start_idx:end_idx]
+        if not instrs_to_split:
+            return None, None
+
+        # [Round10-05] 识别 walrus 副作用块（COPY 1 + STORE_*）。
+        # walrus 的 STORE_* 必须保留，让 expr_reconstructor 把 COPY+STORE
+        # 序列识别为 NamedExpr（无论 walrus 落在 key 还是 value 位置）。
+        # 仅过滤非 walrus 的 STORE_*（如 UNPACK_SEQUENCE 的多目标 store、
+        # 迭代变量 store），它们不属于 key/value 表达式。
+        _walrus_store_indices = set()
+        for _i in range(len(instrs_to_split) - 1):
+            _cur = instrs_to_split[_i]
+            _nxt = instrs_to_split[_i + 1]
+            if (_cur.opname == 'COPY' and _cur.arg == 1
+                    and _nxt.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL')
+                    and _nxt.argval != '.0'):
+                _walrus_store_indices.add(_i + 1)
+
+        filtered_instrs = [
+            instr for idx, instr in enumerate(instrs_to_split)
+            if not (instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL')
+                    and idx not in _walrus_store_indices)
+        ]
+
+        if not filtered_instrs:
+            return None, None
+
+        map_add_instr = all_instrs[end_idx] if end_idx < len(all_instrs) else None
+        if map_add_instr and map_add_instr.opname == 'MAP_ADD':
+            num_values = map_add_instr.arg
+        else:
+            num_values = 1
+
+        best_key_end = self._find_dict_kv_split_point(filtered_instrs, num_values)
+
+        if best_key_end is not None and best_key_end > 0:
+            key_instrs = filtered_instrs[:best_key_end]
+            value_instrs = filtered_instrs[best_key_end:]
+        else:
+            key_instrs = []
+            value_instrs = filtered_instrs
+
+        key_expr = self.expr_reconstructor.reconstruct(key_instrs) if key_instrs else None
+        value_expr = self.expr_reconstructor.reconstruct(value_instrs) if value_instrs else None
+
+        # [Round10-05] walrus 的 COPY+STORE 已由 expr_reconstructor 识别为
+        # NamedExpr（reconstruct 中 COPY 1 + STORE_* 会生成 NamedExpr 节点），
+        # 无需根据 _walrus_var 手动包裹 value_expr。这样 key 位置和 value 位置
+        # 的 walrus 都能被正确归约到对应的表达式上。
+
+        return key_expr, value_expr
+
+    def _find_dict_kv_split_point(self, instrs: List[Instruction], num_values: int) -> Optional[int]:
+        if len(instrs) < 2:
+            return None
+
+        # [R40 fix] Track LOAD_METHOD calling convention to correct CALL
+        # stack delta. In Python 3.11, LOAD_METHOD pushes NULL+method
+        # (delta +1: pops obj, pushes 2). CALL n then pops n+2 (n args +
+        # callable + NULL) and pushes 1, delta = -(n+1). Without
+        # LOAD_METHOD (e.g. LOAD_ATTR), CALL n pops n+1 (n args +
+        # callable), delta = -n. The original _get_stack_delta returns
+        # -(n)+1 for CALL, which is incorrect for both cases and causes
+        # dict comp key/value split point detection to fail when the key
+        # contains a method call (e.g. {v.strftime('%Y-%m-%d'): k}).
+        stack_depth = 0
+        depth_history = []
+        _has_load_method = False
+
+        for i, instr in enumerate(instrs):
+            if instr.opname == 'LOAD_METHOD':
+                _has_load_method = True
+            elif instr.opname == 'CALL':
+                if _has_load_method:
+                    # CALL with LOAD_METHOD: delta = -(n+1)
+                    delta = -(instr.arg + 1)
+                else:
+                    # CALL without LOAD_METHOD: delta = -(n)
+                    delta = -instr.arg
+                _has_load_method = False
+                stack_depth += delta
+                depth_history.append((i, stack_depth))
+                continue
+            delta = self._get_stack_delta(instr)
+            stack_depth += delta
+            depth_history.append((i, stack_depth))
+
+        final_depth = stack_depth
+        if final_depth < 1:
+            return None
+
+        # Find the LAST transition from depth==1 to depth>1.
+        # For dict comprehension {key: value}, key_expr is evaluated first
+        # (depth reaches 1), then value_expr starts (depth goes to 2).
+        # The split point is after the last instruction that leaves depth==1
+        # before value_expr begins.
+        # - Simple key {a: b}: depth [(0,1),(1,2)] → last transition at i=0 → split at 1
+        # - Compound key {a+b: c}: depth [(0,1),(1,2),(2,1),(3,2)] → last transition at i=2 → split at 3
+        # Region reduction: key_expr and value_expr are sibling sub-nodes of the
+        # dict comp element; the split point is the boundary where the parent
+        # (MAP_ADD) references child entry points (key entry / value entry).
+        last_transition_idx = None
+        for i in range(len(depth_history) - 1):
+            idx, depth = depth_history[i]
+            next_idx, next_depth = depth_history[i + 1]
+            if depth == 1 and next_depth > 1:
+                last_transition_idx = i
+
+        if last_transition_idx is not None:
+            return last_transition_idx + 1
+
+        best_split = None
+        for split_pos in range(1, len(instrs)):
+            key_part = instrs[:split_pos]
+            value_part = instrs[split_pos:]
+
+            key_test = self.expr_reconstructor.reconstruct(key_part)
+            value_test = self.expr_reconstructor.reconstruct(value_part)
+
+            if key_test and value_test:
+                has_operation = any(
+                    inp.opname in ('BINARY_OP', 'COMPARE_OP', 'UNARY_NOT', 'UNARY_NEGATIVE',
+                                   'UNARY_POSITIVE', 'BINARY_SUBSCR', 'CALL')
+                    for inp in value_part
+                )
+                if has_operation or len(value_part) >= 2:
+                    best_split = split_pos
+                    break
+
+        return best_split
+
+    def _get_stack_delta(self, instr: Instruction) -> int:
+        if instr.opname.startswith('LOAD_') and not instr.opname.startswith('LOAD_ATTR'):
+            return 1
+        elif instr.opname in ('BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET', 'BUILD_STRING'):
+            return 1 - instr.arg if instr.arg else 0
+        elif instr.opname == 'BUILD_MAP':
+            return 1 - 2 * instr.arg if instr.arg else 1
+        elif instr.opname in ('BINARY_OP', 'COMPARE_OP'):
+            return -1
+        elif instr.opname in ('UNARY_NOT', 'UNARY_NEGATIVE', 'UNARY_POSITIVE'):
+            return 0
+        elif instr.opname == 'BINARY_SUBSCR':
+            return -1
+        elif instr.opname == 'CALL':
+            return -(instr.arg) + 1
+        elif instr.opname == 'FORMAT_VALUE':
+            return 0
+        elif instr.opname == 'COPY':
+            # [Round10-05] COPY 总是向栈压入一个已有元素的副本，栈深度 +1。
+            # 用于 walrus (x := expr) 的 COPY 1 + STORE_x 模式：COPY 压栈、
+            # STORE 弹栈，净效果为 0，但中间状态需正确跟踪以便定位 key/value
+            # 边界（边界应落在 STORE 之后，使 walrus 整体归属 key 或 value）。
+            return 1
+        elif instr.opname.startswith('POP_') or instr.opname == 'POP_TOP':
+            return -1
+        elif instr.opname.startswith('STORE_'):
+            return -1
+        else:
+            return 0
+
+    def _find_comp_target_names(self, all_instrs: List[Instruction], first_only: bool = False) -> Union[Optional[str], List[str]]:
+        """收集推导式 code object 内的迭代目标名（名袋，仅作回退用途）。
+
+        [识别条件] 名袋 = 全部 STORE_FAST/STORE_DEREF/STORE_NAME 的 argval
+        （排除 .0），但排除 walrus 副作用块内的 STORE： walrus 在 3.11 编译为
+        ``COPY 1; STORE_*``，其 STORE 紧跟 COPY 之后且位于 elt/if 表达式窗内，
+        不属于迭代目标存储序列（与 _split_dict_comp_kv 的 [Round10-05] 守卫
+        同一结构事实）。迭代目标的 STORE 来自 FOR_ITER/UNPACK 链，其后继前
+        指令不是 COPY。
+        [归约方式] 线性扫描去重收集；first_only 时返回首个非 .0 的 STORE 名。
+        [AST 映射] 无独立映射，仅供 _build_comprehension_target 回退路径与
+        target_name 定位使用。
+
+        [C1] 仅读本推导式指令流（L(A)）；[C3] walrus STORE 经显式守卫
+        （前驱 COPY arg==1）排除，防止表达式内绑定被吸收为幻影迭代目标。
+        """
+        names = []
+        _walrus_store_indices = set()
+        for _i in range(len(all_instrs) - 1):
+            _cur = all_instrs[_i]
+            _nxt = all_instrs[_i + 1]
+            if (_cur.opname == 'COPY' and _cur.arg == 1
+                    and _nxt.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL')
+                    and _nxt.argval != '.0'):
+                _walrus_store_indices.add(_i + 1)
+        for idx, instr in enumerate(all_instrs):
+            if instr.opname in ('STORE_FAST', 'STORE_DEREF', 'STORE_NAME'):
+                if idx in _walrus_store_indices:
+                    continue
+                if instr.argval != '.0' and instr.argval not in names:
+                    if first_only:
+                        return instr.argval
+                    names.append(instr.argval)
+        return names if not first_only else None
+
+    def _parse_target_store_sequence(self, all_instrs: List[Instruction], pos: int) -> Tuple[Optional[Dict], int]:
+        """[Round5-B21/B22] 按 UNPACK_SEQUENCE/UNPACK_EX 的栈结构递归解析 for-target 存储序列。
+
+        [识别条件] 目标存储序列 = FOR_ITER 之后由 STORE_* 与
+        UNPACK_SEQUENCE/UNPACK_EX 构成的前缀：叶目标是一条 STORE_*；元组目标
+        以 UNPACK_SEQUENCE n 开头，其后恰好 n 个子目标按左→右存储序展开；星号
+        目标以 UNPACK_EX arg 开头（低 8 位 = 星号前元素数，高 8 位 = 星号后
+        元素数），星号位本身是一个子目标。EXTENDED_ARG 为纯 arg 前缀，跳过。
+        walrus 的 ``COPY 1; STORE_*`` 副作用块不属于该前缀（其 STORE 位于
+        elt/if 表达式窗、且前驱是 COPY 而非 UNPACK/FOR_ITER），结构上不可达，
+        故不会被吸收为迭代目标。
+        [归约方式] 对前缀做确定性递归下降：遇 STORE_* 产出 Name 叶并前进一步；
+        遇 UNPACK_* 按其 arity/星号位递归消费对应个数的子目标后组合成
+        Tuple/Starred 节点；解析失败（前缀断裂）返回 None。
+        [AST 映射] Name(id, ctx=Store) / Tuple(elts=[...], ctx=Store) /
+        Starred(value=目标, ctx=Store)，嵌套深度与星号组合不限。
+
+        [C1] 仅读本推导式指令流的同层结构事实（操作码形态/栈效应）；
+        [C2] 子目标作为黑箱递归组合，父层不窥视子层内部。
+        """
+        n = len(all_instrs)
+        while pos < n and all_instrs[pos].opname == 'EXTENDED_ARG':
+            pos += 1
+        if pos >= n:
+            return None, pos
+        instr = all_instrs[pos]
+        if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
+            if instr.argval == '.0':
+                return None, pos
+            return {'type': 'Name', 'id': instr.argval, 'ctx': 'Store'}, pos + 1
+        if instr.opname == 'UNPACK_SEQUENCE':
+            arity = instr.arg
+            pos += 1
+            elts = []
+            for _ in range(arity):
+                elt, pos = self._parse_target_store_sequence(all_instrs, pos)
+                if elt is None:
+                    return None, pos
+                elts.append(elt)
+            return {'type': 'Tuple', 'elts': elts, 'ctx': 'Store'}, pos
+        if instr.opname == 'UNPACK_EX':
+            before = instr.arg & 0xFF
+            after = (instr.arg >> 8) & 0xFF
+            pos += 1
+            elts = []
+            for _ in range(before):
+                elt, pos = self._parse_target_store_sequence(all_instrs, pos)
+                if elt is None:
+                    return None, pos
+                elts.append(elt)
+            starred, pos = self._parse_target_store_sequence(all_instrs, pos)
+            if starred is None:
+                return None, pos
+            elts.append({'type': 'Starred', 'value': starred, 'ctx': 'Store'})
+            for _ in range(after):
+                elt, pos = self._parse_target_store_sequence(all_instrs, pos)
+                if elt is None:
+                    return None, pos
+                elts.append(elt)
+            return {'type': 'Tuple', 'elts': elts, 'ctx': 'Store'}, pos
+        return None, pos
+
+    def _build_comprehension_target(self, all_instrs: List[Instruction]) -> Optional[Dict]:
+        """构造推导式迭代目标 AST（B21/B22：结构化解包解析，名袋仅作回退）。
+
+        [识别条件] 同步推导式的目标存储序列紧跟 FOR_ITER 之后（含嵌套
+        UNPACK_SEQUENCE/UNPACK_EX 与星号位）；异步推导式（GET_ANEXT/SEND
+        布局，无 FOR_ITER）暂无该前缀锚点。
+        [归约方式] 优先以 _parse_target_store_sequence 从 FOR_ITER 之后做
+        结构化递归解析；仅当找不到 FOR_ITER 或前缀断裂（异步布局等结构未
+        覆盖形态）时回退到 _find_comp_target_names 名袋（已带 walrus COPY
+        守卫），与旧行为兼容。
+        [AST 映射] 单目标 → Name；解包 → Tuple（嵌套 Tuple/Starred 依
+        UNPACK 结构保留）；不再按名袋一律拍平为顶层 Tuple。
+
+        [C1] 结构判据只读本推导式指令流；[C2] 嵌套子目标黑箱递归；
+        [C3] 名袋回退路径以 walrus COPY 守卫显式排除表达式内绑定。
+        """
+        for i, instr in enumerate(all_instrs):
+            if instr.opname == 'FOR_ITER':
+                target, _seq_end = self._parse_target_store_sequence(all_instrs, i + 1)
+                if target is not None:
+                    return target
+                break
+
+        target_names = self._find_comp_target_names(all_instrs)
+
+        if len(target_names) == 1:
+            return {
+                'type': 'Name',
+                'id': target_names[0],
+                'ctx': 'Store'
+            }
+        elif len(target_names) > 1:
+            return {
+                'type': 'Tuple',
+                'elts': [
+                    {'type': 'Name', 'id': name, 'ctx': 'Store'}
+                    for name in target_names
+                ],
+                'ctx': 'Store'
+            }
+        else:
+            return None
+
+    def _find_comp_append_op(self, all_instrs: List[Instruction], target_name: str = None) -> Tuple[Optional[str], Optional[int]]:
+        if target_name:
+            for idx, instr in enumerate(all_instrs):
+                if instr.opname in ('STORE_FAST', 'STORE_DEREF', 'STORE_NAME') and instr.argval == target_name:
+                    return 'STORE', idx
+        for idx, instr in enumerate(all_instrs):
+            if instr.opname in ('LIST_APPEND', 'SET_ADD', 'MAP_ADD', 'DICT_MERGE'):
+                return instr.opname, idx
+        for idx, instr in enumerate(all_instrs):
+            if instr.opname == 'YIELD_VALUE':
+                return 'YIELD_VALUE', idx
+        return None, None
+
+    def _extract_comp_ifs(self, all_instrs: List[Instruction], store_idx: int,
+                          append_idx: int) -> Tuple[List[Dict], int]:
+        ifs = []
+        seg_ops = []
+        elt_start_idx = store_idx + 1
+        # 获取LIST_APPEND指令的偏移量，用于区分过滤条件和三元条件
+        append_offset = all_instrs[append_idx].offset if append_idx < len(all_instrs) else float('inf')
+        segments = []
+        current_start = store_idx + 1
+        for idx in range(store_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.opname in CONDITIONAL_JUMP_OPS:
+                # 区分三元条件和过滤条件：
+                # - 过滤条件：跳转目标在LIST_APPEND之后（跳过元素表达式）
+                # - 三元条件：跳转目标在LIST_APPEND之前（跳转到false值）
+                # 三元条件不应被提取为过滤条件，而应作为元素表达式的一部分
+                if hasattr(instr, 'argval') and instr.argval is not None:
+                    if instr.argval < append_offset and 'BACKWARD' not in instr.opname:
+                        # [R10] OR-filter pattern: if there's a BACKWARD conditional
+                        # jump between this FORWARD jump and its target, this FORWARD
+                        # jump is part of an OR filter (e.g. `if cond1 or cond2`),
+                        # not a ternary. Collect it as a filter segment instead of
+                        # breaking for ternary detection.
+                        has_backward_after = False
+                        for inner_idx in range(idx + 1, append_idx):
+                            inner_instr = all_instrs[inner_idx]
+                            if inner_instr.offset >= instr.argval:
+                                break
+                            if inner_instr.opname in CONDITIONAL_JUMP_OPS and 'BACKWARD' in inner_instr.opname:
+                                has_backward_after = True
+                                break
+                        # [B6-comp 混合过滤器甄别扩展] and→or 边界成员的前向假边
+                        # 直达 or 尾成员（目标块仍是条件块），or 尾成员的「假边跳
+                        # 回 FOR_ITER」回跳位于目标偏移之后且与求值指令同块（前驱
+                        # 指令非跳转即同块，[C1] 同层结构事实）。命中即仍按过滤
+                        # 器段收集，不 break 出循环（不命中维持 R10 原判据，
+                        # [C3] 显式守卫）。
+                        if not has_backward_after:
+                            for inner_idx in range(idx + 1, append_idx):
+                                inner_instr = all_instrs[inner_idx]
+                                if inner_instr.offset < instr.argval:
+                                    continue
+                                if inner_instr.offset >= append_offset:
+                                    break
+                                if inner_instr.opname in CONDITIONAL_JUMP_OPS and 'BACKWARD' in inner_instr.opname:
+                                    if inner_idx > 0:
+                                        prev_instr = all_instrs[inner_idx - 1]
+                                        if (prev_instr.opname not in CONDITIONAL_JUMP_OPS
+                                                and prev_instr.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                                                              'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                                              'RETURN_VALUE', 'RETURN_CONST')):
+                                            has_backward_after = True
+                                            break
+                        if not has_backward_after:
+                            # FORWARD ternary cond 跳转 — break
+                            # 出循环让已收集的 filter segments 被处理，而非 return
+                            # 丢弃 filters。elt_start_idx 保持为 current_start
+                            # （最后一个 filter 之后，ternary cond 之前），由
+                            # parse_comprehension_inner 决定是否使用 ternary_info
+                            # 作为 elt（若使用则 elt_start_idx 不被使用）。
+                            break
+                segments.append((current_start, idx, instr))
+                current_start = idx + 1
+
+        if segments:
+            # [Round09] Detect chained comparison filter: when segment 0 contains
+            # COPY(arg=2)+COMPARE_OP/IS_OP/CONTAINS_OP and subsequent segments
+            # also contain COMPARE_OP/IS_OP/CONTAINS_OP, these form a chained
+            # comparison like `a <= b <= c`. Merge them into a single Compare node
+            # instead of BoolOp(and, a<=b, c).
+            _cc_chain_end = -1
+            for _cc_si in range(len(segments)):
+                _cc_seg_s, _cc_seg_e, _cc_jmp = segments[_cc_si]
+                _cc_instrs = all_instrs[_cc_seg_s:_cc_seg_e]
+                _cc_has_copy_compare = any(
+                    _cc_instrs[ci].opname == 'COPY' and _cc_instrs[ci].arg == 2
+                    and _cc_instrs[ci + 1].opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
+                    for ci in range(len(_cc_instrs) - 1))
+                if _cc_has_copy_compare:
+                    _cc_chain_end = _cc_si
+                    for _cc_next in range(_cc_si + 1, len(segments)):
+                        _cc_ns, _cc_ne, _cc_njmp = segments[_cc_next]
+                        _cc_ninstrs = all_instrs[_cc_ns:_cc_ne]
+                        _cc_has_cmp = any(
+                            i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
+                            for i in _cc_ninstrs)
+                        if _cc_has_cmp:
+                            _cc_chain_end = _cc_next
+                        else:
+                            break
+                    break
+            if _cc_chain_end > 0:
+                _cc_first_seg_s, _cc_first_seg_e, _cc_first_jmp = segments[0]
+                _cc_first_instrs = all_instrs[_cc_first_seg_s:_cc_first_seg_e]
+                _cc_first_expr = self.expr_reconstructor.reconstruct(_cc_first_instrs)
+                if _cc_first_expr and _cc_first_expr.get('type') == 'Compare' and len(_cc_first_expr.get('ops', [])) == 1:
+                    _cc_ops = list(_cc_first_expr.get('ops', []))
+                    _cc_left = _cc_first_expr.get('left')
+                    _cc_comps = list(_cc_first_expr.get('comparators', []))
+                    for _cc_next in range(1, _cc_chain_end + 1):
+                        _cc_ns, _cc_ne, _cc_njmp = segments[_cc_next]
+                        _cc_ninstrs = all_instrs[_cc_ns:_cc_ne]
+                        _cc_ninstrs_no_jmp = [i for i in _cc_ninstrs if i.opname not in CONDITIONAL_JUMP_OPS]
+                        _cc_has_cmp = any(i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP') for i in _cc_ninstrs_no_jmp)
+                        if _cc_has_cmp:
+                            _cc_cmp_instr = None
+                            for i in _cc_ninstrs_no_jmp:
+                                if i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+                                    _cc_cmp_instr = i
+                                    break
+                            _cc_op_str = (_cc_cmp_instr.argval if _cc_cmp_instr.opname == 'COMPARE_OP'
+                                          else ('is' if _cc_cmp_instr.arg == 0 else 'is not')
+                                          if _cc_cmp_instr.opname == 'IS_OP'
+                                          else ('in' if _cc_cmp_instr.arg == 0 else 'not in'))
+                            _cc_ops.append(_cc_op_str)
+                            _cc_cmp_idx = _cc_ninstrs_no_jmp.index(_cc_cmp_instr)
+                            _cc_before_cmp = _cc_ninstrs_no_jmp[:_cc_cmp_idx]
+                            _cc_comp_expr = self.expr_reconstructor.reconstruct(_cc_before_cmp) if _cc_before_cmp else None
+                            if _cc_comp_expr:
+                                _cc_comps.append(_cc_comp_expr)
+                    if len(_cc_ops) >= 2 and len(_cc_comps) == len(_cc_ops) and _cc_left:
+                        _cc_compare = {'type': 'Compare', 'left': _cc_left,
+                                       'ops': _cc_ops, 'comparators': _cc_comps}
+                        ifs = [_cc_compare]
+                        elt_start_idx = segments[_cc_chain_end][1] + 1
+                        return ifs, elt_start_idx
+
+            # [R10] Detect OR-filter pattern: FORWARD IF_TRUE segment followed by
+            # BACKWARD IF_FALSE segment means `if cond1 or cond2` filter.
+            # CPython compiles `if cond1 or cond2` as:
+            #   cond1 → POP_JUMP_FORWARD_IF_TRUE body (skip to body if cond1 true)
+            #   cond2 → POP_JUMP_BACKWARD_IF_FALSE loop (skip iteration if cond2 false)
+            # For OR filters, do NOT invert IF_TRUE conditions, combine with 'or'.
+            is_or_pattern = False
+            if len(segments) >= 2:
+                has_forward_if_true = False
+                has_backward_if_false = False
+                for _, _, jump_instr in segments:
+                    if 'FORWARD' in jump_instr.opname and 'IF_TRUE' in jump_instr.opname:
+                        has_forward_if_true = True
+                    if 'BACKWARD' in jump_instr.opname and 'IF_FALSE' in jump_instr.opname:
+                        has_backward_if_false = True
+                if has_forward_if_true and has_backward_if_false:
+                    is_or_pattern = True
+
+            for seg_start, seg_end, jump_instr in segments:
+                cond_instrs = all_instrs[seg_start:seg_end]
+                if cond_instrs:
+                    cond_expr = self.expr_reconstructor.reconstruct(cond_instrs)
+                    if cond_expr:
+                        # [识别条件] None 恒等条件跳转 POP_JUMP_*_IF_NONE /
+                        #   IF_NOT_NONE：CPython 把 `x is None` / `x is not None`
+                        #   折叠成单条跳转，指令流里不再有 COMPARE_OP/IS_OP，
+                        #   重建出来的 cond_expr 只有裸 x。
+                        # [归约方式] 仅在非 OR 过滤（is_or_pattern 为假，即跳转
+                        #   落空侧=跳过本轮，极性与 _fallthrough_cond_for_jump
+                        #   同向）时按 opname 极性补回恒等比较：IF_NOT_NONE →
+                        #   x is None、IF_NONE → x is not None。OR 过滤的前向
+                        #   跳转 taken 侧是进循环体，极性相反，保持原样不改。
+                        # [AST 映射] Compare(left=x, ops=[Is/IsNot],
+                        #   comparators=[Constant(None)])；禁止降级成
+                        #   UnaryOp('not', x)——None 之外还有 0/''/[] 等 falsy，
+                        #   真值取反语义不等价，字节码也会退化成
+                        #   UNARY_NOT + POP_JUMP_*_IF_FALSE。
+                        if not is_or_pattern and 'IF_NOT_NONE' in jump_instr.opname:
+                            cond_expr = {'type': 'Compare', 'left': cond_expr,
+                                         'ops': [{'type': 'Is'}],
+                                         'comparators': [{'type': 'Constant', 'value': None}]}
+                        elif not is_or_pattern and 'IF_NONE' in jump_instr.opname:
+                            cond_expr = {'type': 'Compare', 'left': cond_expr,
+                                         'ops': [{'type': 'IsNot'}],
+                                         'comparators': [{'type': 'Constant', 'value': None}]}
+                        elif 'IF_TRUE' in jump_instr.opname:
+                            if is_or_pattern and 'FORWARD' in jump_instr.opname:
+                                pass
+                            else:
+                                cond_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': cond_expr}
+                        ifs.append(cond_expr)
+                        # [B6-comp 混合 op 标注] 逐段按跳转方向标注组别 op：
+                        # 前向 IF_TRUE=or 成员（真→进循环体）；回向 IF_TRUE=
+                        # 取反 and 成员（not X：真→跳过本轮）；其余（前向/回向
+                        # IF_FALSE、NONE 检查）=and 成员。与 BoolOpRegion
+                        # op_chain 的方向标注同源（[C1] 同层块末 opcode 事实）。
+                        seg_ops.append('or' if ('FORWARD' in jump_instr.opname
+                                                and 'IF_TRUE' in jump_instr.opname) else 'and')
+            elt_start_idx = current_start
+
+        # Multiple if conditions in comprehension are connected by 'and' (short-circuit).
+        # In Python bytecode, `if a and b` and `if a if b` produce identical bytecode,
+        # so we combine multiple conditions into a single BoolOp to match the more common
+        # source form and produce correct BoolOp AST nodes.
+        # [R10] OR-filter pattern uses 'or' instead.
+        if len(ifs) > 1:
+            is_or_pattern = False
+            if segments:
+                has_forward_if_true = False
+                has_backward_if_false = False
+                for _, _, jump_instr in segments:
+                    if 'FORWARD' in jump_instr.opname and 'IF_TRUE' in jump_instr.opname:
+                        has_forward_if_true = True
+                    if 'BACKWARD' in jump_instr.opname and 'IF_FALSE' in jump_instr.opname:
+                        has_backward_if_false = True
+                if has_forward_if_true and has_backward_if_false:
+                    is_or_pattern = True
+            op = 'or' if is_or_pattern else 'and'
+            # [B6-comp 混合 op 分组] 识别条件：段跳转方向标注（seg_ops）与
+            # ifs 一一对应且存在 and→or / or→and 组别边界（混合 and/or 过滤
+            # 链，r1_21 实测 `if a and b or c`）。归约方式：or_groups 分组
+            # ——and 绑定比 or 紧，连续同 op 段合并为 BoolOp、组间以 'or'
+            # 连接，与 _build_boolop_expression_inner 的 segment 算法同一
+            # 语义（[C2] 单 BoolOp 黑箱组合）。AST 映射：
+            # ``A and B or C`` → BoolOp(or, [BoolOp(and,[A,B]), C])。
+            # 全部段同 op 时走既有单 op 路径（逐位不变）。
+            _b6_seg_ops = seg_ops if len(seg_ops) == len(ifs) else []
+            _b6_mixed = bool(_b6_seg_ops) and any(o != _b6_seg_ops[0] for o in _b6_seg_ops)
+            if not _b6_mixed:
+                # [识别条件] 仅 and 链：segments 与 ifs 一一对应时，数出前缀里连续的
+                #   「POP_JUMP_FORWARD_IF_FALSE」段数 p。该形态只在原源码把 and 链拆到
+                #   两行时出现（同一行上 CPython 两条都回跳循环头），而单行产物必然
+                #   两条都回跳，故 p>0 恒为当前失配单元，p==0 的单元（含全部金丝雀）
+                #   一个字节都不改。
+                # [归约方式] 把第 p-1 个操作数渲染成「原文 + 换行 + 续行缩进」的原始
+                #   文本（_and_operand_raw_text，渲染失败返回 None 则保持单行），
+                #   换行正好落在第 p-1 与第 p 个操作数之间，使重编译时这两行分界
+                #   复现原 pyc 的前向/回跳方向。
+                # [AST 映射] 外层仍是 BoolOp(op, values)，仅 values[p-1] 换成
+                #   Name(原始文本)——发射侧对 Name 原样输出 id，重编译回
+                #   BoolOp(and, [...])，与单行版同一 AST 形状。
+                if op == 'and' and segments and len(segments) == len(ifs):
+                    split_at = 0
+                    for _, _, lead_jump in segments[:-1]:
+                        if 'FORWARD' in lead_jump.opname and 'IF_FALSE' in lead_jump.opname:
+                            split_at += 1
+                        else:
+                            break
+                    if split_at:
+                        raw_text = _and_operand_raw_text(ifs[split_at - 1])
+                        if raw_text is not None:
+                            ifs = list(ifs)
+                            ifs[split_at - 1] = {'type': 'Name', 'id': raw_text}
+                ifs = [{'type': 'BoolOp', 'op': op, 'values': ifs}]
+            else:
+                or_groups = []
+                cur_op = None
+                cur_vals = []
+                for val, o in zip(ifs, _b6_seg_ops):
+                    if cur_op is None:
+                        cur_op = o
+                        cur_vals = [val]
+                    elif o == cur_op:
+                        cur_vals.append(val)
+                    elif cur_op == 'and' and o == 'or':
+                        cur_vals.append(val)
+                        or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals})
+                        cur_op = None
+                        cur_vals = []
+                    else:
+                        or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals}
+                                         if len(cur_vals) > 1 else cur_vals[0])
+                        cur_op = o
+                        cur_vals = [val]
+                if cur_vals:
+                    or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals}
+                                     if len(cur_vals) > 1 else cur_vals[0])
+                result = None
+                for gnode in reversed(or_groups):
+                    result = gnode if result is None else {'type': 'BoolOp', 'op': 'or', 'values': [gnode, result]}
+                ifs = [result]
+
+        return ifs, elt_start_idx
+
+    def _extract_dict_comp_key_before_ternary(self, all_instrs: List[Instruction],
+                                               store_idx: int,
+                                               append_idx: int) -> Optional[Dict[str, Any]]:
+        """Extract the dict key when a ternary is the dict value in a dict comprehension.
+
+        When a dict comprehension has a ternary value (e.g., {k: v if v else 'N/A' for ...}),
+        the key is pushed on the stack before the ternary condition. This method finds
+        the key by using stack-effect-based backwards scanning from the conditional jump.
+        """
+        import dis
+        from .region_analyzer import CONDITIONAL_JUMP_OPS
+
+        # Find the conditional jump between store_idx+1 and append_idx
+        cond_jump_idx = None
+        for idx in range(store_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.opname in CONDITIONAL_JUMP_OPS:
+                cond_jump_idx = idx
+                break
+        if cond_jump_idx is None:
+            return None
+
+        # Use stack-effect-based backwards scan to find where the condition starts
+        needed = 1  # Need 1 stack element for the condition (the jump pops 1)
+        cond_start_idx = None
+        for idx in range(cond_jump_idx - 1, store_idx, -1):
+            instr = all_instrs[idx]
+            try:
+                effect = dis.stack_effect(instr.opcode, instr.arg)
+            except Exception:
+                effect = 0
+            needed -= effect
+            if needed <= 0:
+                cond_start_idx = idx
+                break
+        if cond_start_idx is None:
+            cond_start_idx = cond_jump_idx
+
+        # Key instructions are from store_idx+1 to cond_start_idx (exclusive)
+        # Skip STORE instructions
+        key_instrs = []
+        for idx in range(store_idx + 1, cond_start_idx):
+            instr = all_instrs[idx]
+            if instr.opname not in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
+                key_instrs.append(instr)
+
+        if not key_instrs:
+            return None
+
+        return self.expr_reconstructor.reconstruct(key_instrs)
+
+    def _extract_dict_comp_value_after_ternary(self, all_instrs: List[Instruction],
+                                                store_idx: int,
+                                                append_idx: int) -> Optional[Dict[str, Any]]:
+        """[Round7-08] Extract the dict value when a ternary is the dict KEY.
+
+        When a dict comprehension has a ternary key (e.g., `{(k if cond else m): v for ...}`),
+        after the ternary's JUMP_FORWARD merge point, the value expression is pushed onto
+        the stack before MAP_ADD consumes both. This method locates that merge point and
+        reconstructs the value expression from the instructions between it and MAP_ADD.
+
+        Returns None when there are no meaningful instructions between the merge point
+        and MAP_ADD (i.e., the ternary is the value, not the key).
+        """
+        # Find the conditional jump between store_idx+1 and append_idx
+        cond_jump_idx = None
+        for idx in range(store_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.opname in CONDITIONAL_JUMP_OPS:
+                cond_jump_idx = idx
+                break
+        if cond_jump_idx is None:
+            return None
+
+        false_target_offset = all_instrs[cond_jump_idx].argval
+
+        # Find JUMP_FORWARD within the true branch (between cond_jump and false_target)
+        merge_offset = None
+        for idx in range(cond_jump_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.offset >= false_target_offset:
+                break
+            if instr.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD'):
+                if hasattr(instr, 'argval') and instr.argval is not None:
+                    merge_offset = instr.argval
+                break
+        if merge_offset is None:
+            return None
+
+        # Collect meaningful instructions between merge_offset and append_idx
+        value_instrs = []
+        for idx in range(cond_jump_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.offset < merge_offset:
+                continue
+            if instr.offset >= all_instrs[append_idx].offset:
+                break
+            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            value_instrs.append(instr)
+        if not value_instrs:
+            return None
+
+        return self.expr_reconstructor.reconstruct(value_instrs)
+
+    def _detect_comp_ternary(self, all_instrs: List[Instruction],
+                             store_idx: int,
+                             append_idx: int) -> Optional[Dict[str, Any]]:
+        """检测推导式中的三元表达式模式
+
+        三元模式特征：条件跳转的目标在LIST_APPEND之前（跳转到false值），
+        而不是跳过整个元素表达式（过滤器模式）。
+        字节码模式：condition → POP_JUMP_IF_FALSE false_value → true_value → JUMP_FORWARD merge → false_value → LIST_APPEND 支持 ternary + filter 共存：BACKWARD filter 跳转
+        （跳回 FOR_ITER）会被跳过，继续寻找 FORWARD ternary cond 跳转。
+        cond_instrs 从最后一个 filter 跳转之后开始，避免包含 filter 指令。
+
+        [B6-comp]（Round 1 修复工程师二）混合 and/or 过滤链
+        ``[... if A and B or C]`` 的 and→or 边界成员假边直达 or 尾成员
+        （目标块仍是条件块），其「假边跳回 FOR_ITER」的回跳条件跳转位于
+        目标偏移之后且与求值指令同块（前驱非跳转即同块，[C1] 同层结构
+        事实）。识别条件=该「回跳条件 + 融合求值前缀」签名；归约方式=
+        判定为过滤器（返回 None 交回 _extract_comp_ifs 逐段提取 + or_groups
+        分组），不命中维持 R10/R67 原判据逐位不变（[C3] 显式守卫）。
+        AST 映射由 _extract_comp_ifs 的 BoolOp 组合承担。"""
+        append_offset = all_instrs[append_idx].offset if append_idx < len(all_instrs) else float('inf')
+
+        # 查找STORE和LIST_APPEND之间的条件跳转
+        cond_jump_idx = None
+        # 记录最后一个 BACKWARD filter 跳转的索引，
+        # cond_instrs 从此之后开始（跳过 filter 条件指令）。
+        last_filter_end = store_idx
+
+        # [R67-fix2 聚合布尔三元测试] 三元 test 为布尔运算链（A and B / A or B）时，CPython 3.11
+        # 为每个操作数各发一条条件跳转，且这些「假出口」共享同一目标偏移（见 dis 实证）。R10 的扫描
+        # 在第一条前向条件跳转处 break，cond_instrs 只截到第一个操作数，IfExp 的 test 因此丢掉其余
+        # 操作数，被丢的指令区段整段从产物消失。
+        # 识别条件（全部为本存储区内的结构判据，不涉及名字/文件/偏移阈值）：
+        #   ① j0 处为 CONDITIONAL_JUMP_OPS 中的前向跳转（opname 不含 BACKWARD）且目标
+        #      tgt0 = argval 满足 j0.offset < tgt0 < append_offset（三元特征：跳过 Then 分支落到
+        #      Else 值，而非跳出整个元素）；
+        #   ② j0 为「假出口」型跳转（IF_FALSE / IF_NONE，即真分支为空）；IF_TRUE 首跳不属于本规则，
+        #      沿用 R10 原路径；
+        #   ③ 在 (j0, tgt0) 区间内继续出现的条件跳转，其目标仍等于 tgt0 者并入链；
+        #      区间内若出现 BACKWARD 条件跳转（= if 过滤器语义，R10 甄别）或跳往其它目标者，
+        #      链不纯，整条三元返回 None 交回既有 genexpr 路径，保持原保守行为。
+        # 归约方式：cond_jump_idx 取链上最后一条跳转索引；条件指令区仍按
+        #   all_instrs[last_filter_end + 1 : cond_jump_idx] 切取（既有通道不变），于是链上每条
+        #   「操作数计算段 + 其共享假出口跳转」串成一条连续指令流；假出口本身不产生值，共享假出口
+        #   的连续条件跳转即在表达式重建器中折叠为 BoolOp。Else 分支定位（`for j in range
+        #   (cond_jump_idx+1, ...)` 找 pop_jump_if_true 目标）与 R5 表达式切片守卫均不改动。
+        # AST 映射：ast.IfExp(test=<BoolOp 折叠后的多操作数测试>, body=<Then 分支>, orelse=
+        #   <Else 常量>) —— 与单操作数情形同一条 ast.IfExp 通道，仅 test 子树由单 Compare 变为
+        #   BoolOp(and/or, [Compare, Compare, ...])。
+        def _r67_boolop_chain_end(instrs, start_i, stop_i, append_off):
+            """instrs[start_i] 为前向假出口型条件跳转时，返回与之共享假出口的最后一条条件跳转索引。
+
+            不满足 ①②③ 者返回 None（单操作数情形由调用方沿用 R10 原索引；链不纯者返回 None 保守放弃）。
+            """
+            j0 = start_i
+            op0 = instrs[j0].opname
+            if 'BACKWARD' in op0:
+                return None
+            if 'IF_FALSE' not in op0 and 'IF_NONE' not in op0:
+                return None
+            tgt0 = instrs[j0].argval if hasattr(instrs[j0], 'argval') else None
+            if tgt0 is None or tgt0 <= instrs[j0].offset or tgt0 >= append_off:
+                return None
+            last_j = j0
+            for k in range(j0 + 1, stop_i):
+                kin = instrs[k]
+                if kin.offset >= tgt0:
+                    break
+                if kin.opname not in CONDITIONAL_JUMP_OPS:
+                    continue
+                kt = kin.argval if hasattr(kin, 'argval') else None
+                if 'BACKWARD' in kin.opname or kt is None:
+                    return None
+                if kt == tgt0:
+                    last_j = k
+                else:
+                    return None
+            return last_j if last_j != j0 else None
+
+        for idx in range(store_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.opname in CONDITIONAL_JUMP_OPS:
+                # BACKWARD 条件跳转是过滤器模式（跳回 FOR_ITER
+                # 循环开始以跳过当前元素），不是三元模式。三元模式使用 FORWARD
+                # 跳转跳到 false 值（在 true 值之后、LIST_APPEND 之前）。
+                # 跳过 BACKWARD filter 跳转继续寻找 FORWARD
+                # ternary cond 跳转，支持 ternary + filter 共存。
+                if 'BACKWARD' in instr.opname:
+                    last_filter_end = idx
+                    continue
+                # 检查跳转目标是否在LIST_APPEND之前（三元模式）
+                if hasattr(instr, 'argval') and instr.argval is not None:
+                    if instr.argval < append_offset:
+                        # [R10] OR-filter pattern: FORWARD jump to body with BACKWARD
+                        # jump after it means this is `if cond1 or cond2` filter,
+                        # not ternary. CPython compiles OR in comprehension if-filter
+                        # as POP_JUMP_FORWARD_IF_TRUE (skip to body if cond1 true)
+                        # followed by POP_JUMP_BACKWARD_IF_FALSE (skip iteration if
+                        # cond2 false). Check for BACKWARD jump between here and
+                        # the forward jump target.
+                        has_backward_after = False
+                        for inner_idx in range(idx + 1, append_idx):
+                            inner_instr = all_instrs[inner_idx]
+                            if inner_instr.offset >= instr.argval:
+                                break
+                            if inner_instr.opname in CONDITIONAL_JUMP_OPS and 'BACKWARD' in inner_instr.opname:
+                                has_backward_after = True
+                                break
+                        # [B6-comp 混合过滤器甄别扩展] 混合链 and→or 边界成员的
+                        # 前向假边直达 or 尾成员（目标块自身仍是条件块），其
+                        # 「假边跳回 FOR_ITER」的回跳条件跳转位于目标偏移之后、
+                        # 且与操作数求值指令同块（前一条是非跳转指令——块为
+                        # 极大直线序列，前驱非跳转即同块，[C1] 同层结构事实）。
+                        # 该签名（回跳条件 + 融合求值前缀）是过滤器成员专属：
+                        # 纯三元假值块为直线求值、不含条件跳转；三元作过滤器的
+                        # 「回跳出口块」是裸跳转块（前驱是跳转，不同块）。命中即
+                        # 判过滤器（返回 None 交回 _extract_comp_ifs 逐段提取），
+                        # 不命中维持 R10/R67 原判据逐位不变（[C3] 显式守卫）。
+                        if not has_backward_after:
+                            for inner_idx in range(idx + 1, append_idx):
+                                inner_instr = all_instrs[inner_idx]
+                                if inner_instr.offset < instr.argval:
+                                    continue
+                                if inner_instr.offset >= append_offset:
+                                    break
+                                if inner_instr.opname in CONDITIONAL_JUMP_OPS and 'BACKWARD' in inner_instr.opname:
+                                    if inner_idx > 0:
+                                        prev_instr = all_instrs[inner_idx - 1]
+                                        if (prev_instr.opname not in CONDITIONAL_JUMP_OPS
+                                                and prev_instr.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                                                              'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                                              'RETURN_VALUE', 'RETURN_CONST')):
+                                            has_backward_after = True
+                                            break
+                        if has_backward_after:
+                            return None
+                        # [R67-fix2] 同假出口的布尔链：条件区延伸到链上最后一条跳转，
+                        # 使 reconstruct 收到全部操作数；单操作数时沿用 R10 原索引。
+                        _chain_end = _r67_boolop_chain_end(
+                            all_instrs, idx, append_idx, append_offset)
+                        cond_jump_idx = idx if _chain_end is None else _chain_end
+                        break
+                # 跳转目标在LIST_APPEND之后 → 过滤器模式，不是三元
+                return None
+
+        if cond_jump_idx is None:
+            return None
+
+        cond_instr = all_instrs[cond_jump_idx]
+        false_target_offset = cond_instr.argval
+
+        # 分离条件指令：从最后一个过滤器之后到条件跳转之前
+        # （[R67-fix2] cond_jump_idx 可为布尔链的最后一条共享假出口跳转，见上）。
+        # cond_instrs 从此之后开始（跳过 filter 条件指令）。
+        cond_instrs = all_instrs[last_filter_end + 1:cond_jump_idx]
+
+        # 找到true值和false值的指令范围
+        true_start = cond_jump_idx + 1
+        false_start = None
+        true_end = None
+        # [Round7-08] 记录 JUMP_FORWARD 的目标偏移量（merge point），
+        # false 值区域只到 merge point 之前，merge point 之后是后续表达式（如
+        # dict comprehension 的 value，紧跟在三元 key 之后压栈）。
+        merge_offset = None
+
+        # 在true值区域中查找JUMP_FORWARD（跳转到merge/LIST_APPEND）
+        for idx in range(true_start, append_idx):
+            instr = all_instrs[idx]
+            if instr.offset >= false_target_offset:
+                # 已到达false值区域
+                if false_start is None:
+                    false_start = idx
+                break
+            if instr.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD'):
+                true_end = idx
+                # false值从JUMP的目标偏移量开始
+                false_start = idx + 1
+                # 记录 merge point（JUMP 的目标偏移量）
+                if hasattr(instr, 'argval') and instr.argval is not None:
+                    merge_offset = instr.argval
+                break
+
+        if false_start is None:
+            return None
+
+        # true值指令：从true_start到true_end（不含JUMP）
+        if true_end is not None:
+            true_instrs = all_instrs[true_start:true_end]
+        else:
+            true_instrs = all_instrs[true_start:false_start]
+
+        # false值指令：从false_start到append_idx
+        # [Round7-08] 若有 merge_offset，false 值区域只到 merge_offset 之前。
+        # merge_offset 之后是指令属于后续表达式（如 dict comp 的 value），
+        # 不应作为 false 分支的一部分。
+        # _merge_block_idx 标记 merge_offset 处的指令索引，
+        # 用于检测 walrus(COPY 1 + STORE_*) 副作用模式。
+        _merge_block_idx = None
+        if merge_offset is not None:
+            false_end = false_start
+            for idx in range(false_start, append_idx):
+                if all_instrs[idx].offset >= merge_offset:
+                    _merge_block_idx = idx
+                    break
+                false_end = idx + 1
+            false_instrs = all_instrs[false_start:false_end]
+        else:
+            false_instrs = all_instrs[false_start:append_idx]
+
+        # 重建条件表达式
+        # [R21-2] 三元 test 若为共享假出口的布尔链，先按段折叠为 BoolOp(and)；
+        # 判据未命中（单操作数 / 链不纯 / 段重建失败）时逐字回落原 R10 单段路径。
+        cond_expr = self._r21_fold_boolop_test_chain(
+            all_instrs, last_filter_end + 1, cond_jump_idx, false_target_offset)
+        if cond_expr is None:
+            cond_expr = self.expr_reconstructor.reconstruct(cond_instrs)
+        if cond_expr is None:
+            return None
+
+        # 如果条件跳转是IF_TRUE（or条件），需要取反
+        if 'IF_TRUE' in cond_instr.opname:
+            cond_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': cond_expr}
+
+        # 重建true值表达式
+        true_expr = self.expr_reconstructor.reconstruct(true_instrs)
+        if true_expr is None:
+            return None
+
+        # 重建false值表达式。嵌套三元链归约（innermost→outermost）：CPython 对
+        # `a if c else (b if d else e)` 在 false 区域内再生成一次「条件 → 前向条件跳转
+        # → true 臂 → JUMP_FORWARD 到同一个 merge」，即 false 区域本身又是一个三元区域。
+        # 识别条件：false_instrs 内含至少一条前向条件跳转（BACKWARD 条件是推导式的 filter
+        # 回边，不算）。归约方式：以 false_start 为新的扫描起点递归调用本方法，先把内层
+        # 三元归约为一个 IfExp 抽象节点，再由外层持有为 orelse——内层区域整体作为父节点的
+        # 一个抽象结点，符合「每块唯一归属」。AST 映射：IfExp(test, body, IfExp(...))。
+        # 递归返回 None（内层并非三元，或通用重建器本就能处理）时逐字回落到原路径，
+        # 因此该判据是严格附加的，不改变任何现有可正常重建的产物结构。
+        false_expr = None
+        if any(_fi.opname in CONDITIONAL_JUMP_OPS and 'BACKWARD' not in _fi.opname
+               for _fi in false_instrs):
+            false_expr = self._detect_comp_ternary(all_instrs, false_start - 1, append_idx)
+        if false_expr is None:
+            false_expr = self.expr_reconstructor.reconstruct(false_instrs)
+            if false_expr is None:
+                return None
+
+        # walrus(ternary) 模式检测：ternary merge 块后跟
+        # COPY 1 + STORE_* 序列（walrus 副作用捕获），将 IfExp 包装为
+        # NamedExpr(target, IfExp)。
+        # 字节码: <ternary merge> → COPY 1 → STORE_* n → LIST_APPEND/SET_ADD/YIELD_VALUE
+        # 依「每块唯一归属」：COPY+STORE 块属于父推导式的 walrus 表达式，
+        # 通过 NamedExpr 包装让 walrus 副作用保留在元素表达式中，避免
+        # walrus 副作用指令被父推导式重复或丢失。
+        if _merge_block_idx is not None:
+            _post_merge = all_instrs[_merge_block_idx:append_idx]
+            if (len(_post_merge) >= 2
+                    and _post_merge[0].opname == 'COPY'
+                    and _post_merge[0].arg == 1
+                    and _post_merge[1].opname in (
+                        'STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL')
+                    and _post_merge[1].argval != '.0'):
+                _walrus_target_name = _post_merge[1].argval
+                return {
+                    'type': 'NamedExpr',
+                    'target': {
+                        'type': 'Name',
+                        'id': _walrus_target_name,
+                        'ctx': 'Store',
+                    },
+                    'value': {
+                        'type': 'IfExp',
+                        'test': cond_expr,
+                        'body': true_expr,
+                        'orelse': false_expr,
+                    },
+                }
+
+        # 构建IfExp节点
+        return {
+            'type': 'IfExp',
+            'test': cond_expr,
+            'body': true_expr,
+            'orelse': false_expr,
+        }
+
+    def _r21_fold_boolop_test_chain(self, all_instrs: List[Instruction],
+                                    seg_start: int,
+                                    cond_jump_idx: int,
+                                    false_target_offset: Any) -> Optional[Dict[str, Any]]:
+        """[R21-2] 推导式三元 test 的「共享假出口布尔链」折叠（and 链）。
+
+        [识别条件] 三元 test 指令区 [seg_start, cond_jump_idx) 内存在至少一条
+          「前向、假出口型（opname 含 IF_FALSE / IF_NONE）、argval == 末端跳转的
+          假出口偏移」的条件跳转，且末端跳转（索引 cond_jump_idx）本身也是假出口
+          型。这正是 CPython 3.11 为 ``X if (A and B) else Y`` 发射的结构：每条操
+          作数求值段之后各接一条指向同一 Else 出口的条件跳转。[R67-fix2]
+          （本文件 :2253-2302）已识别该链并把条件区延伸到链尾，但它把整段交给
+          通用重建器并假定「重建器会折叠为 BoolOp」——实测该假定不成立：
+          ExpressionReconstructor.reconstruct 收到含中间假出口跳转的整段时只产出
+          末端那一条 Compare，前段操作数连同其假出口跳转整段从产物消失
+          （wizard_quant_api `get_DMI.calculate_di` 两个 <genexpr> 副本各丢 14 条
+          指令 / 1 条 POP_JUMP_FORWARD_IF_FALSE，判据 Different control flow）。
+        [归约方式] 以每条中间假出口跳转为界把条件区切成 n 段（n = 中间跳转数 + 1），
+          每段自身是直线求值序列，逐段交回与单操作数情形完全相同的重建通道，再
+          以 {'type': 'BoolOp', 'op': 'and', 'values': [...]} 组合；n < 2、任一段为空
+          或任一段重建失败 ⇒ 返回 None，调用方逐字维持原单段路径（不猜、不降级）。
+          区内出现回跳（BACKWARD）条件跳转或混合极性（IF_TRUE）⇒ 链不纯，返回 None。
+        [AST 映射] ast.IfExp(test=ast.BoolOp(and, [Compare, Compare, ...]),
+          body=Then, orelse=Else)——与单操作数情形同一条 IfExp 通道，仅 test 子树
+          由单 Compare 变为 BoolOp；BoolOp dict 由 ast_converter._convert_boolop_full
+          (:1195) 与 code_generator (:5252/:5327) 既有通道发射。
+        [C1] 只读本推导式内层指令流的同层结构事实（opname / argval / 偏移），不读
+          用户名、不读文件名、无偏移魔数；[C2] 每段唯一归属于 BoolOp 的一个操作数，
+          中间假出口跳转不产生值、不归属任何节点，父区域不重入子区域；[C3] 严格附
+          加：单操作数（无中间同假出口跳转）返回 None，产物逐字节不变。
+        """
+        if cond_jump_idx >= len(all_instrs):
+            return None
+        _FALSE_EXIT = ('IF_FALSE', 'IF_NONE')
+        _tail = all_instrs[cond_jump_idx]
+        if _tail.opname not in CONDITIONAL_JUMP_OPS:
+            return None
+        if not any(_t in _tail.opname for _t in _FALSE_EXIT):
+            return None
+        _cuts = []
+        for _k in range(seg_start, cond_jump_idx):
+            _i = all_instrs[_k]
+            if _i.opname not in CONDITIONAL_JUMP_OPS:
+                continue
+            if 'BACKWARD' in _i.opname:
+                return None
+            if not any(_t in _i.opname for _t in _FALSE_EXIT):
+                return None
+            if _i.argval != false_target_offset:
+                return None
+            _cuts.append(_k)
+        if not _cuts:
+            return None
+        _bounds = [seg_start] + [_c + 1 for _c in _cuts] + [cond_jump_idx]
+        _values = []
+        for _s, _e in zip(_bounds[:-1], _bounds[1:]):
+            _seg = all_instrs[_s:_e]
+            if not _seg:
+                return None
+            _node = self.expr_reconstructor.reconstruct(_seg)
+            if _node is None:
+                return None
+            _values.append(_node)
+        if len(_values) < 2:
+            return None
+        return {'type': 'BoolOp', 'op': 'and', 'values': _values}
+
+    def _detect_comp_ternary_as_filter(self, all_instrs: List[Instruction],
+                                        store_idx: int,
+                                        append_idx: int) -> Optional[Tuple[Dict[str, Any], int]]:
+        """ 检测推导式中「三元作 if-filter」模式。
+
+        模式: ``[elt for x in iter if (a if c else b)]``
+
+        字节码特征:
+            LOAD c
+            POP_JUMP_FORWARD_IF_FALSE false_branch   # FORWARD 三元 cond
+            LOAD a
+            POP_JUMP_BACKWARD_IF_FALSE FOR_ITER       # filter skip
+            JUMP_FORWARD merge
+            false_branch:
+            LOAD b
+            POP_JUMP_BACKWARD_IF_FALSE FOR_ITER       # filter skip
+            merge:
+            <elt 表达式指令>                          # 元素（不属于三元）
+            LIST_APPEND / YIELD_VALUE
+
+        区分依据: BOTH 真假分支均以 ``POP_JUMP_BACKWARD_IF_FALSE → FOR_ITER``
+        结束（filter skip 模式），且 merge 块与 LIST_APPEND 之间有元素指令。
+
+        返回 ``(ternary_expr, elt_start_idx)`` 或 None。
+        依「父引用子入口」：父推导式通过 merge 块的 elt 指令引用三元子节点
+        作为 if-filter 条件，元素独立重建。
+        """
+        append_offset = all_instrs[append_idx].offset if append_idx < len(all_instrs) else float('inf')
+        # async comprehension 内层用 GET_ANEXT 而非 FOR_ITER，
+        # filter skip 跳回目标可能是 GET_ANEXT/SEND 块而非 FOR_ITER。
+        # 此处不再强制要求 FOR_ITER 存在（async comp 由调用方上下文保证
+        # 是推导式）。依「算法驱动」：守卫只看 BACKWARD 跳转特征，
+        # 不硬编码跳转目标类型。
+
+        # 查找 FORWARD 条件跳转（三元 cond）
+        cond_jump_idx = None
+        last_filter_end = store_idx
+        for idx in range(store_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.opname in CONDITIONAL_JUMP_OPS:
+                if 'BACKWARD' in instr.opname:
+                    last_filter_end = idx
+                    continue
+                if hasattr(instr, 'argval') and instr.argval is not None:
+                    if instr.argval < append_offset:
+                        cond_jump_idx = idx
+                        break
+                    return None
+        if cond_jump_idx is None:
+            return None
+
+        cond_instr = all_instrs[cond_jump_idx]
+        false_target_offset = cond_instr.argval
+        cond_instrs = all_instrs[last_filter_end + 1:cond_jump_idx]
+
+        # 在真值区域中查找 JUMP_FORWARD（标记 true_end 与 merge_offset）
+        true_end = None
+        false_start = None
+        merge_offset = None
+        for idx in range(cond_jump_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.offset >= false_target_offset:
+                if false_start is None:
+                    false_start = idx
+                break
+            if instr.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD'):
+                true_end = idx
+                false_start = idx + 1
+                if hasattr(instr, 'argval') and instr.argval is not None:
+                    merge_offset = instr.argval
+                break
+        if true_end is None or false_start is None or merge_offset is None:
+            return None
+
+        true_instrs = all_instrs[cond_jump_idx + 1:true_end]
+        false_end = false_start
+        for idx in range(false_start, append_idx):
+            if all_instrs[idx].offset >= merge_offset:
+                break
+            false_end = idx + 1
+        false_instrs = all_instrs[false_start:false_end]
+
+        # 关键守卫: BOTH 真假分支必须以 BACKWARD 条件跳转（filter skip）结束。
+        # 否则不是 Pattern B（可能是普通元素三元 Pattern A，如 R9-19 walrus）。
+        if not true_instrs or not false_instrs:
+            return None
+        true_last = true_instrs[-1]
+        false_last = false_instrs[-1]
+        if (true_last.opname not in CONDITIONAL_JUMP_OPS
+                or 'BACKWARD' not in true_last.opname):
+            return None
+        if (false_last.opname not in CONDITIONAL_JUMP_OPS
+                or 'BACKWARD' not in false_last.opname):
+            return None
+
+        # 重建三元表达式（剥掉末尾 BACKWARD 跳转）
+        cond_expr = self.expr_reconstructor.reconstruct(cond_instrs)
+        if cond_expr is None:
+            return None
+        if 'IF_TRUE' in cond_instr.opname:
+            cond_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': cond_expr}
+        true_expr = self.expr_reconstructor.reconstruct(true_instrs[:-1])
+        if true_expr is None:
+            return None
+        false_expr = self.expr_reconstructor.reconstruct(false_instrs[:-1])
+        if false_expr is None:
+            return None
+
+        ternary_expr = {
+            'type': 'IfExp',
+            'test': cond_expr,
+            'body': true_expr,
+            'orelse': false_expr,
+        }
+
+        # elt_start_idx: merge_offset 之后的第一条指令（元素表达式起点）
+        elt_start_idx = None
+        for idx in range(false_end, append_idx):
+            if all_instrs[idx].offset >= merge_offset:
+                elt_start_idx = idx
+                break
+        if elt_start_idx is None:
+            return None
+
+        return (ternary_expr, elt_start_idx)
+
+    def _build_comp_result(self, code_obj: Any, elt_expr: Dict, generators: List[Dict]) -> Optional[Dict]:
+        func_name = code_obj.co_name
+        if func_name == '<listcomp>':
+            return {'type': 'ListComp', 'elt': elt_expr, 'generators': generators}
+        if func_name == '<setcomp>':
+            return {'type': 'SetComp', 'elt': elt_expr, 'generators': generators}
+        if func_name == '<dictcomp>':
+            if isinstance(elt_expr, tuple) and len(elt_expr) == 2:
+                key_expr, value_expr = elt_expr
+            else:
+                key_expr = elt_expr
+                value_expr = {'type': 'Constant', 'value': None}
+            return {'type': 'DictComp', 'key': key_expr, 'value': value_expr, 'generators': generators}
+        if func_name == '<genexpr>':
+            return {'type': 'GeneratorExp', 'elt': elt_expr, 'generators': generators}
+        return None
+
+    def generate_comprehension_function(self, cfg) -> Dict[str, Any]:
+        func_name = cfg.name
+        comp_type_map = {
+            '<listcomp>': 'ListComp',
+            '<dictcomp>': 'DictComp',
+            '<setcomp>': 'SetComp',
+            '<genexpr>': 'GeneratorExp',
+        }
+        comp_type = comp_type_map.get(func_name, 'ListComp')
+
+        code_obj = getattr(cfg, 'code', None)
+        if code_obj is not None:
+            iter_expr = {'type': 'Name', 'id': '.0', 'ctx': 'Load'}
+            comp_ast = self.parse_comprehension_inner(code_obj, iter_expr)
+            if comp_ast:
+                return {'type': 'Module', 'body': [{'type': 'Expr', 'value': comp_ast}]}
+
+        blocks = sorted(cfg.blocks.values(), key=lambda b: b.start_offset)
+        all_instrs = []
+        for block in blocks:
+            all_instrs.extend(block.instructions)
+
+        all_instrs = [i for i in all_instrs if i.opname not in ('RESUME', 'RETURN_VALUE', 'RETURN_CONST')]
+        expr = self.expr_reconstructor.reconstruct(all_instrs)
+        if expr:
+            return {'type': 'Module', 'body': [{'type': 'Expr', 'value': expr}]}
+
+        return {'type': 'Module', 'body': [{'type': 'Pass'}]}

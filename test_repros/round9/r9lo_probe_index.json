@@ -1,0 +1,20 @@
+[
+ {
+  "path": "test_repros/round9/r9lo_01_ortail_neg.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9lo_02_andor_mix.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9lo_03_armjoin_sibling.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9lo_04_ctl_plain_or.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9lo_05_ctl_or_continue.pyc"
+ },
+ {
+  "path": "test_repros/round9/r9lo_06_ctl_nested_if.pyc"
+ }
+]
