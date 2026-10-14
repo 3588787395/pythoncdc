@@ -1,0 +1,212 @@
+[
+ {
+  "pyc": "test_repros/round10/r10_04_import_try_cross.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/r10_04_import_try_cross.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/r10_04_import_try_crossOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/r10_06_import_deep_combo.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/r10_06_import_deep_combo.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/r10_06_import_deep_comboOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/r10_14_nonlocal_deep.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deep.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deepOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/r10_15_global_hosts.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/r10_15_global_hosts.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/r10_15_global_hostsOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/r10_16_scope_mix.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mix.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mixOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/r10_21_fin_loopctrl.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/r10_21_fin_loopctrl.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/r10_21_fin_loopctrlOK.py",
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/rv10_31_nonlocal_variant.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/rv10_31_nonlocal_variant.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/rv10_31_nonlocal_variantOK.py",
+   "[single] status=success units=13/13 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/rv10_32_augassign_variant.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/rv10_32_augassign_variant.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/rv10_32_augassign_variantOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round10/rv10_33_ternary_variant.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/rv10_33_ternary_variant.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/rv10_33_ternary_variantOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_posOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_07_ternary_nest.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nest.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nestOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_host.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_hostOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/rv8_01_chain3_subscript.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/rv8_01_chain3_subscript.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round8/rv8_01_chain3_subscriptOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/rv8_02_with_tryfin_constret.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/rv8_02_with_tryfin_constret.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round8/rv8_02_with_tryfin_constretOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round8/r8_06_augassign_ops.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 10,
+  "units_total": 10,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_ops.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round8/r8_06_augassign_opsOK.py",
+   "[single] status=success units=10/10 success_rate=100.00%"
+  ]
+ }
+]

@@ -1,0 +1,67 @@
+[
+ {
+  "name": "r3_e08_lambda_deep",
+  "pyc": "test_repros/round3/e08_g5_lambda_deep.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 30,
+  "units_total": 30,
+  "failures": []
+ },
+ {
+  "name": "r3_e09_comprehensions",
+  "pyc": "test_repros/round3/e09_g6_comprehensions.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 30,
+  "units_total": 30,
+  "failures": []
+ },
+ {
+  "name": "r3_e10_call_args",
+  "pyc": "test_repros/round3/e10_g7_call_args.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 32,
+  "units_total": 32,
+  "failures": []
+ },
+ {
+  "name": "r3_e11_fstrings",
+  "pyc": "test_repros/round3/e11_g8_fstrings.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "r3_e12d_awaits",
+  "pyc": "test_repros/round3/e12d_g9_awaits.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 11,
+  "failures": [
+   "***<module>.f_await_cond_pos: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r3_e12e_yield_from",
+  "pyc": "test_repros/round3/e12e_g9_yield_from.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "name": "r3_e12g_await_yield",
+  "pyc": "test_repros/round3/e12_g9_await_yield.pyc",
+  "regen_rc": 0,
+  "status": "compile_error",
+  "units_success": 0,
+  "units_total": 0,
+  "failures": []
+ }
+]

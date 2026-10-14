@@ -1,0 +1,103 @@
+[
+ {
+  "name": "r5_01_module_root",
+  "pyc": "test_repros/round5/r5v5_01_module_root.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r5_02_class_body",
+  "pyc": "test_repros/round5/r5v5_02_class_body.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 9,
+  "units_total": 9,
+  "failures": []
+ },
+ {
+  "name": "r5_03_annassign",
+  "pyc": "test_repros/round5/r5v5_03_annassign.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": []
+ },
+ {
+  "name": "r5_04_elif_cross",
+  "pyc": "test_repros/round5/r5v5_04_elif_cross.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r5_06_keywordargs",
+  "pyc": "test_repros/round5/r5v5_06_keywordargs_callsite.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "name": "r5_08_slice_callsite",
+  "pyc": "test_repros/round5/r5v5_08_slice_callsite.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": []
+ },
+ {
+  "name": "r5_10_fstring_cross",
+  "pyc": "test_repros/round5/r5v5_10_fstring_cross.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "r5_11_global_nonlocal",
+  "pyc": "test_repros/round5/r5v5_11_global_nonlocal_cross.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 15,
+  "units_total": 15,
+  "failures": []
+ },
+ {
+  "name": "r5_13_for_else_cross",
+  "pyc": "test_repros/round5/r5v5_13_for_else_cross.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 11,
+  "failures": [
+   "***<module>.fe_while_deep: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r5_b115_battery",
+  "pyc": "test_repros/round5/r5v5r_b115_if_while.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "r5_b116_bare",
+  "pyc": "test_repros/round5/r5v5r_b116_bare.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ }
+]

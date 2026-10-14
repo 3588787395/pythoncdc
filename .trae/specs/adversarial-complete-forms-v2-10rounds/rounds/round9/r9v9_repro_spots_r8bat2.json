@@ -1,0 +1,110 @@
+[
+ {
+  "name": "r8_b104_chain4",
+  "pyc": "test_repros/round8/r8v8rev_b104_chain4_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ },
+ {
+  "name": "r8_b105_walrus",
+  "pyc": "test_repros/round8/r8v8rev_b105_walrus_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r8_b107_iso",
+  "pyc": "test_repros/round8/r8v8rev_b107_iso_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r8_b107_iso2",
+  "pyc": "test_repros/round8/r8v8rev_b107_iso2_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "name": "r8_b107_mtarget3",
+  "pyc": "test_repros/round8/r8v8rev_b107_mtarget3_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ },
+ {
+  "name": "r8_bmatch_or3iso",
+  "pyc": "test_repros/round8/r8v8rev_bmatch_or3iso.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r8_bmatch_v1",
+  "pyc": "test_repros/round8/r8v8rev_bmatch_v1.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "r8_bmatch_v3",
+  "pyc": "test_repros/round8/r8v8rev_bmatch_v3.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "r8_bmatch_v4",
+  "pyc": "test_repros/round8/r8v8rev_bmatch_v4.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "r8_bmatch_or4",
+  "pyc": "test_repros/round8/r8v8rev3_bmatch_or4_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "name": "r8_b81_t2_wildguard",
+  "pyc": "test_repros/round8/r8v8fc_b81_t2_wildguard.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r8_b103_or_variants",
+  "pyc": "test_repros/round8/r8v8fc_b103_or_variants.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": []
+ }
+]

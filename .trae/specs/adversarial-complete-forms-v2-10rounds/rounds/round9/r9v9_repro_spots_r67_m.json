@@ -1,0 +1,74 @@
+[
+ {
+  "name": "r6_09_with_multimgr",
+  "pyc": "test_repros/round6/r6_09_with_multimgr.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": []
+ },
+ {
+  "name": "r6_15_yield_forms",
+  "pyc": "test_repros/round6/r6_15_yield_forms.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": []
+ },
+ {
+  "name": "r6_05_asyncwith_basic",
+  "pyc": "test_repros/round6/r6_05_asyncwith_basic.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ },
+ {
+  "name": "r7_b2a01",
+  "pyc": "test_repros/round7/r7v7_b2a01.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r7_b3a01",
+  "pyc": "test_repros/round7/r7v7_b3a01.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r7_b4c03",
+  "pyc": "test_repros/round7/r7v7_b4c03.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r7_b121_whilehdr",
+  "pyc": "test_repros/round7/r7v7r_b121_whilehdr.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r7_b117_f2tail",
+  "pyc": "test_repros/round7/r7v7r_b117_f2tail.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ }
+]

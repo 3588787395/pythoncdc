@@ -1,0 +1,56 @@
+[
+ {
+  "name": "r5_11_global_nonlocal",
+  "pyc": "test_repros/round5/r5v5_11_global_nonlocal_cross.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 15,
+  "units_total": 15,
+  "failures": []
+ },
+ {
+  "name": "r7_b2a01",
+  "pyc": "test_repros/round7/r7v7_b2a01.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r7_b3a01",
+  "pyc": "test_repros/round7/r7v7_b3a01.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r7_b4c03",
+  "pyc": "test_repros/round7/r7v7_b4c03.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r7_b121_whilehdr",
+  "pyc": "test_repros/round7/r7v7r_b121_whilehdr.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r7_b117_f2tail",
+  "pyc": "test_repros/round7/r7v7r_b117_f2tail.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ }
+]

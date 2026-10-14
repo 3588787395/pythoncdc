@@ -1,0 +1,110 @@
+[
+ {
+  "name": "r2_x01_if_deep",
+  "pyc": "test_repros/round2/x01_if_deep_hosts.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 4,
+  "units_total": 7,
+  "failures": [
+   "***<module>.if_in_while: Failure: Different control flow",
+   "***<module>.if_in_try: Failure: Different bytecode",
+   "***<module>.if_in_match: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r2_x08_stmt_leaves",
+  "pyc": "test_repros/round2/x08_stmt_leaves.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 8,
+  "failures": [
+   "***<module>.assert_leaf: Failure: Different control flow",
+   "***<module>.raise_leaf: Failure: Different control flow",
+   "***<module>.return_leaf: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r2_x09_funcdef_hosts",
+  "pyc": "test_repros/round2/x09_funcdef_hosts.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 10,
+  "units_total": 10,
+  "failures": []
+ },
+ {
+  "name": "r2_m09_module_deep",
+  "pyc": "test_repros/round2/m09_module_deep_cross.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": []
+ },
+ {
+  "name": "r2_c12_class_deep",
+  "pyc": "test_repros/round2/c12_class_deep_cross.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r2_x04_try_deep",
+  "pyc": "test_repros/round2/x04_try_deep_hosts.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 7,
+  "failures": [
+   "***<module>.try_in_if: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "r2_x06_match_deep",
+  "pyc": "test_repros/round2/x06_match_deep_hosts.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "name": "r3_e05_compare_chain",
+  "pyc": "test_repros/round3/e05_g3_compare_chain.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 11,
+  "failures": [
+   "***<module>.f_compare_is_chain: Failure: Different control flow",
+   "***<module>.f_compare_in_chain: Failure: Different control flow",
+   "***<module>.f_compare_in_cond: Failure: Different control flow",
+   "***<module>.f_compare_walrus_value: Failure: Different control flow",
+   "***<module>.f_compare_notin_chain: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r3_e06_op_leaves",
+  "pyc": "test_repros/round3/e06_g3_op_leaves.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "name": "r3_e07_star_slice",
+  "pyc": "test_repros/round3/e07_g4_star_slice_containers.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 15,
+  "units_total": 16,
+  "failures": [
+   "***<module>.f_slice_expr_bounds: Failure: Different control flow"
+  ]
+ }
+]

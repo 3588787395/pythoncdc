@@ -1,0 +1,64 @@
+[
+ {
+  "name": "n9_stmt_sweep",
+  "pyc": "test_repros/round9/n9v9_stmt_sweep.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 6,
+  "failures": [
+   "***<module>.assert_deep: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r3_e05_compare_chain",
+  "pyc": "test_repros/round3/e05_g3_compare_chain.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 3,
+  "units_total": 11,
+  "failures": [
+   "***<module>.f_compare_chain6: Failure: Different control flow",
+   "***<module>.f_compare_binop_inside: Failure: Different control flow",
+   "***<module>.f_compare_subscript_inside: Failure: Different control flow",
+   "***<module>.f_compare_is_chain: Failure: Different control flow",
+   "***<module>.f_compare_in_chain: Failure: Different control flow",
+   "***<module>.f_compare_in_cond: Failure: Different control flow",
+   "***<module>.f_compare_walrus_value: Failure: Different control flow",
+   "***<module>.f_compare_notin_chain: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r3_e10_call_args",
+  "pyc": "test_repros/round3/e10_g7_call_args.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 31,
+  "units_total": 32,
+  "failures": [
+   "***<module>.f_call_ternary_arg: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "r4_b109_loopelse",
+  "pyc": "test_repros/round4/r4v4r_b109_loopelse.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 8,
+  "units_total": 9,
+  "failures": [
+   "***<module>.nested_loop_else: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r5_13_for_else_cross",
+  "pyc": "test_repros/round5/r5v5_13_for_else_cross.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 11,
+  "failures": [
+   "***<module>.fe_while_deep: Failure: Different control flow"
+  ]
+ }
+]

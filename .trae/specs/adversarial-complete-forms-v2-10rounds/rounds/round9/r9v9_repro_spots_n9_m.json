@@ -1,0 +1,27 @@
+[
+ {
+  "name": "n9_b104_whilehost",
+  "pyc": "test_repros/round9/n9v9_b104_whilehost.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 9,
+  "failures": [
+   "***<module>.w3_plain: Failure: Different control flow",
+   "***<module>.w3_nostore: Failure: Different bytecode",
+   "***<module>.w3_deep: Failure: Different control flow",
+   "***<module>.w3_and: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "n9_stmt_sweep",
+  "pyc": "test_repros/round9/n9v9_stmt_sweep.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 6,
+  "failures": [
+   "***<module>.assert_deep: Failure: Different control flow"
+  ]
+ }
+]

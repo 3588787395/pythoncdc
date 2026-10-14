@@ -1,0 +1,198 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/tools.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/tools.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/site-packages/IQCommon/toolsOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_schedule.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_schedule.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_scheduleOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connector.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connector.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connectorOK.py",
+   "[single] status=success units=13/13 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategy.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategy.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategyOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 52,
+  "units_total": 52,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/schedulerOK.py",
+   "[single] status=success units=52/52 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 41,
+  "units_total": 41,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utilsOK.py",
+   "[single] status=success units=41/41 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deep.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deep.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/r10_14_nonlocal_deepOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mix.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mix.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/r10_16_scope_mixOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_01_simple_import.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/n10_01_simple_import.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/n10_01_simple_importOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_02_simple_fromimport.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/n10_02_simple_fromimport.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/n10_02_simple_fromimportOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_03_simple_global.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/n10_03_simple_global.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/n10_03_simple_globalOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/test_repros/round10/n10_04_simple_nonlocal.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round10/n10_04_simple_nonlocal.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round10/n10_04_simple_nonlocalOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 35,
+  "units_total": 35,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_accountOK.py",
+   "[single] status=success units=35/35 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 153,
+  "units_total": 153,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/site-packages/fly/data/quotationOK.py",
+   "[single] status=success units=153/153 success_rate=100.00%"
+  ]
+ }
+]

@@ -1,0 +1,58 @@
+[
+ {
+  "name": "r8_b104_chain5",
+  "pyc": "test_repros/round8/r8v8rev3_b104_chain5_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r8_b104_foror",
+  "pyc": "test_repros/round8/r8v8rev3_b104_foror_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r8_b104_opdeep",
+  "pyc": "test_repros/round8/r8v8rev3_b104_opdeep_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "name": "r8_b104_exprtail",
+  "pyc": "test_repros/round8/r8v8rev3_b104_exprtail_battery.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 4,
+  "units_total": 5,
+  "failures": [
+   "***<module>.v3: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r8_b105_walrus3",
+  "pyc": "test_repros/round8/r8v8rev3_b105_walrus3_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r8_b107_mixed4",
+  "pyc": "test_repros/round8/r8v8rev3_b107_mixed4_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ }
+]

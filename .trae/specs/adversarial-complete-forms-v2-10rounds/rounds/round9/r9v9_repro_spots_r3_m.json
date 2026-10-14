@@ -1,0 +1,107 @@
+[
+ {
+  "name": "r3_e05_compare_chain",
+  "pyc": "test_repros/round3/e05_g3_compare_chain.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 3,
+  "units_total": 11,
+  "failures": [
+   "***<module>.f_compare_chain6: Failure: Different control flow",
+   "***<module>.f_compare_binop_inside: Failure: Different control flow",
+   "***<module>.f_compare_subscript_inside: Failure: Different control flow",
+   "***<module>.f_compare_is_chain: Failure: Different control flow",
+   "***<module>.f_compare_in_chain: Failure: Different control flow",
+   "***<module>.f_compare_in_cond: Failure: Different control flow",
+   "***<module>.f_compare_walrus_value: Failure: Different control flow",
+   "***<module>.f_compare_notin_chain: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r3_e06_op_leaves",
+  "pyc": "test_repros/round3/e06_g3_op_leaves.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "name": "r3_e07_star_slice",
+  "pyc": "test_repros/round3/e07_g4_star_slice_containers.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 15,
+  "units_total": 16,
+  "failures": [
+   "***<module>.f_slice_expr_bounds: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r3_e08_lambda_deep",
+  "pyc": "test_repros/round3/e08_g5_lambda_deep.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 30,
+  "units_total": 30,
+  "failures": []
+ },
+ {
+  "name": "r3_e09_comprehensions",
+  "pyc": "test_repros/round3/e09_g6_comprehensions.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 30,
+  "units_total": 30,
+  "failures": []
+ },
+ {
+  "name": "r3_e10_call_args",
+  "pyc": "test_repros/round3/e10_g7_call_args.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 31,
+  "units_total": 32,
+  "failures": [
+   "***<module>.f_call_ternary_arg: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "r3_e11_fstrings",
+  "pyc": "test_repros/round3/e11_g8_fstrings.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "r3_e12d_awaits",
+  "pyc": "test_repros/round3/e12d_g9_awaits.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 11,
+  "failures": [
+   "***<module>.f_await_cond_pos: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r3_e12e_yield_from",
+  "pyc": "test_repros/round3/e12e_g9_yield_from.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "name": "r3_e12g_await_yield",
+  "pyc": "test_repros/round3/e12_g9_await_yield.pyc",
+  "regen_rc": 0,
+  "status": "compile_error",
+  "units_success": 0,
+  "units_total": 0,
+  "failures": []
+ }
+]

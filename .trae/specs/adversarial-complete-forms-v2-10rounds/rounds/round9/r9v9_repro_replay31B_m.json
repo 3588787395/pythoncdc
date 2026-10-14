@@ -1,0 +1,132 @@
+[
+ {
+  "name": "B77_face",
+  "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": []
+ },
+ {
+  "name": "B81_face",
+  "pyc": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "name": "B103_main",
+  "pyc": "test_repros/round4/c4_04_match_patterns.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "B103_guard",
+  "pyc": "test_repros/round4/r4v4r_b103_guard.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": []
+ },
+ {
+  "name": "B102_main",
+  "pyc": "test_repros/round4/c4_03_except_star.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "B102_except",
+  "pyc": "test_repros/round4/r4v4r_b102_except.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": []
+ },
+ {
+  "name": "B102_deep",
+  "pyc": "test_repros/round5/r5v5_14_except_star_deep.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 10,
+  "units_total": 10,
+  "failures": []
+ },
+ {
+  "name": "B113_min",
+  "pyc": "test_repros/round4/_scratch_m4/comp2.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 9,
+  "units_total": 9,
+  "failures": []
+ },
+ {
+  "name": "B113_host",
+  "pyc": "test_repros/round4/c4_05_multi_with.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "name": "B96_async",
+  "pyc": "test_repros/round3/e09b_g6_async_comps.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "B112_async",
+  "pyc": "test_repros/round4/c4_20_async_five.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 21,
+  "units_total": 24,
+  "failures": [
+   "***<module>.e05_async_compound.go: Failure: Different control flow",
+   "***<module>.e07_async_closure.outer.inner: Failure: Different control flow",
+   "***<module>.e07_async_closure.outer.inner.<listcomp>: Failure: Missing bytecode"
+  ]
+ },
+ {
+  "name": "B106_main",
+  "pyc": "test_repros/round4/c4_12_star_args.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "B106_call",
+  "pyc": "test_repros/round5/r5v5_07_starargs_callsite.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "B106_lam",
+  "pyc": "test_repros/round5/r5v5_15_lambda_combo.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 27,
+  "units_total": 27,
+  "failures": []
+ }
+]

@@ -1,0 +1,287 @@
+[
+ {
+  "pyc": "test_repros/round4/r4_or4_and2.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>.or4_and2: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.or4_and2: Failure: Different control flow",
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round4/r4_or4_and2.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round4/r4_or4_and2OK.py",
+   "[single] status=failure units=1/2 success_rate=50.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/n7_01_simple_ternary.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/n7_01_simple_ternary.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/n7_01_simple_ternaryOK.py",
+   "[single] status=success units=5/5 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/n7_02_simple_andor.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/n7_02_simple_andor.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/n7_02_simple_andorOK.py",
+   "[single] status=success units=5/5 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_01_ternary_args_index.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 9,
+  "units_total": 9,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_01_ternary_args_index.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_01_ternary_args_indexOK.py",
+   "[single] status=success units=9/9 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_02_ternary_containers.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_02_ternary_containers.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_02_ternary_containersOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_pos.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_03_ternary_stmt_posOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_04_ternary_binop_compare.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 7,
+  "failures": [
+   "***<module>.t_compare_lhs_only: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.t_compare_lhs_only: Failure: Different control flow",
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_04_ternary_binop_compare.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_04_ternary_binop_compareOK.py",
+   "[single] status=failure units=6/7 success_rate=85.71%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_05_ternary_comprehension.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 15,
+  "units_total": 16,
+  "failures": [
+   "***<module>.t_listcomp_ternary_filter.<listcomp>: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.t_listcomp_ternary_filter.<listcomp>: Failure: Different control flow",
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_05_ternary_comprehension.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_05_ternary_comprehensionOK.py",
+   "[single] status=failure units=15/16 success_rate=93.75%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_06_ternary_lambda_await.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 10,
+  "failures": [
+   "***<module>.t_await_ternary_branches: Failure: Different control flow",
+   "***<module>.t_await_assign_ternary: Failure: Different control flow",
+   "***<module>.t_await_deep_ternary: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.t_await_ternary_branches: Failure: Different control flow",
+   "  ***<module>.t_await_assign_ternary: Failure: Different control flow",
+   "  ***<module>.t_await_deep_ternary: Failure: Different control flow",
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_06_ternary_lambda_await.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_06_ternary_lambda_awaitOK.py",
+   "[single] status=failure units=7/10 success_rate=70.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_07_ternary_nest.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nest.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_07_ternary_nestOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_08_ternary_deep_host.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_host.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_08_ternary_deep_hostOK.py",
+   "[single] status=success units=8/8 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_09_chain_compare_basic.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_09_chain_compare_basic.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_09_chain_compare_basicOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_10_chain_compare_calls.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 8,
+  "failures": [
+   "***<module>.c_chain_and_combo: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.c_chain_and_combo: Failure: Different control flow",
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_10_chain_compare_calls.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_10_chain_compare_callsOK.py",
+   "[single] status=failure units=7/8 success_rate=87.50%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_11_boolop_mixed.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_11_boolop_mixed.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_11_boolop_mixedOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_12_boolop_nest.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 8,
+  "failures": [
+   "***<module>.b_nest_deep_right: Failure: Different control flow",
+   "***<module>.b_ternary_lhs_and: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.b_nest_deep_right: Failure: Different control flow",
+   "  ***<module>.b_ternary_lhs_and: Failure: Different control flow",
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_12_boolop_nest.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_12_boolop_nestOK.py",
+   "[single] status=failure units=6/8 success_rate=75.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_13_boolop_shortcut.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_13_boolop_shortcut.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_13_boolop_shortcutOK.py",
+   "[single] status=success units=7/7 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/r7_14_boolop_deep_host.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 9,
+  "failures": [
+   "***<module>.h_listcomp_filter_composite: Failure: Different bytecode",
+   "***<module>.h_listcomp_filter_composite.<listcomp>: Failure: Different control flow",
+   "***<module>.h_if_ternary_chain_composite: Failure: Different control flow",
+   "***<module>.h_return_composite: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>.h_listcomp_filter_composite: Failure: Different bytecode",
+   "  ***<module>.h_listcomp_filter_composite.<listcomp>: Failure: Different control flow",
+   "  ***<module>.h_if_ternary_chain_composite: Failure: Different control flow",
+   "  ***<module>.h_return_composite: Failure: Different control flow",
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/r7_14_boolop_deep_host.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/r7_14_boolop_deep_hostOK.py",
+   "[single] status=failure units=5/9 success_rate=55.56%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round7/rv7_01_quad_chain_container.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round7/rv7_01_quad_chain_container.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round7/rv7_01_quad_chain_containerOK.py",
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ }
+]

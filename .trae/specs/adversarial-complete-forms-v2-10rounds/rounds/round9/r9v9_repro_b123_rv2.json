@@ -1,0 +1,15 @@
+[
+ {
+  "name": "r8_b104_exprtail",
+  "pyc": "test_repros/round8/r8v8rev3_b104_exprtail_battery.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 5,
+  "failures": [
+   "***<module>.v1: Failure: Different control flow",
+   "***<module>.v2: Failure: Different control flow",
+   "***<module>.v3: Failure: Different control flow"
+  ]
+ }
+]

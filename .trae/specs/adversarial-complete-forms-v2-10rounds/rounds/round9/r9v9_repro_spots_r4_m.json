@@ -1,0 +1,121 @@
+[
+ {
+  "name": "r4_c4_01_elif",
+  "pyc": "test_repros/round4/c4_01_elif_chain.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "name": "r4_c4_02_loopelse",
+  "pyc": "test_repros/round4/c4_02_loop_else.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "name": "r4_c4_08_augassign",
+  "pyc": "test_repros/round4/c4_08_augassign.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "r4_c4_11_keyword",
+  "pyc": "test_repros/round4/c4_11_keyword_args.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "name": "r4_c4_13_slice",
+  "pyc": "test_repros/round4/c4_13_slice.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "r4_c4_14_relative",
+  "pyc": "test_repros/round4/c4_14_relative_import.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r4_c4_15_star_import",
+  "pyc": "test_repros/round4/c4_15_star_import.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "name": "r4_c4_16_global",
+  "pyc": "test_repros/round4/c4_16_global_nonlocal.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 21,
+  "units_total": 21,
+  "failures": []
+ },
+ {
+  "name": "r4_c4_17_fstring",
+  "pyc": "test_repros/round4/c4_17_fstring_conv.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 12,
+  "units_total": 12,
+  "failures": []
+ },
+ {
+  "name": "r4_c4_18_nested_comp",
+  "pyc": "test_repros/round4/c4_18_nested_comprehension.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 30,
+  "units_total": 30,
+  "failures": []
+ },
+ {
+  "name": "r4_b100_levels",
+  "pyc": "test_repros/round4/r4v4r_b100_levels.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r4_b101_star",
+  "pyc": "test_repros/round4/r4v4r_b101_star.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ },
+ {
+  "name": "r4_b109_loopelse",
+  "pyc": "test_repros/round4/r4v4r_b109_loopelse.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 8,
+  "units_total": 9,
+  "failures": [
+   "***<module>.nested_loop_else: Failure: Different control flow"
+  ]
+ }
+]

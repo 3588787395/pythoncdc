@@ -1,0 +1,16 @@
+[
+ {
+  "name": "B122_n1_nestnoguard",
+  "regen_rc": "HANG-75s-killed",
+  "elapsed_sec": 75.1,
+  "ok_size": 0,
+  "stdout_tail": ""
+ },
+ {
+  "name": "B122_v2_bmatch_guard",
+  "regen_rc": "HANG-75s-killed",
+  "elapsed_sec": 75.4,
+  "ok_size": 0,
+  "stdout_tail": ""
+ }
+]

@@ -1,0 +1,103 @@
+[
+ {
+  "name": "r8_b102_battery",
+  "pyc": "test_repros/round8/r8v8fc_b102_battery.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 8,
+  "units_total": 10,
+  "failures": [
+   "***<module>.ideg: Failure: Different bytecode",
+   "***<module>.pin: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "r8_b96_battery",
+  "pyc": "test_repros/round8/r8v8fc_b96_async_battery.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 14,
+  "units_total": 18,
+  "failures": [
+   "***<module>.b3: Failure: Different control flow",
+   "***<module>.b3.<listcomp>: Failure: Missing bytecode",
+   "***<module>.b7.inner: Failure: Different control flow",
+   "***<module>.b7.inner.<listcomp>: Failure: Missing bytecode"
+  ]
+ },
+ {
+  "name": "r8_b113_flat_battery",
+  "pyc": "test_repros/round8/r8v8fc_b113_flat_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 21,
+  "units_total": 21,
+  "failures": []
+ },
+ {
+  "name": "r8_b106_star_battery",
+  "pyc": "test_repros/round8/r8v8fc_b106_star_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 18,
+  "units_total": 18,
+  "failures": []
+ },
+ {
+  "name": "r8_b102_2eselsefin",
+  "pyc": "test_repros/round8/r8v8rev_b102_2eselsefin.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "name": "r8_b106_mixed",
+  "pyc": "test_repros/round8/r8v8rev_b106_mixed_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "name": "r8_b113_doubfor",
+  "pyc": "test_repros/round8/r8v8rev_b113_doubfor_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 10,
+  "units_total": 10,
+  "failures": []
+ },
+ {
+  "name": "r8_b104_chain4",
+  "pyc": "test_repros/round8/r8v8rev_b104_chain4_battery.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 4,
+  "units_total": 6,
+  "failures": [
+   "***<module>.v2: Failure: Different control flow",
+   "***<module>.v4: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r8_b105_walrus",
+  "pyc": "test_repros/round8/r8v8rev_b105_walrus_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r8_b107_iso",
+  "pyc": "test_repros/round8/r8v8rev_b107_iso_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ }
+]
