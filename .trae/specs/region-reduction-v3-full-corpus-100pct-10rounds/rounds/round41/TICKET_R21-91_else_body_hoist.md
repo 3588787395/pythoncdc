@@ -372,7 +372,43 @@ Reminder of what is NOT proved: `0/0` on this proxy has never been shown to impl
 judge compares the whole code object graph including handler tables), and none of these mutations is a
 shippable change - they only identify the source shapes the pipeline must be made to emit.
 
+
+## Seventh addendum (02:11 UTC) - D1 REFINED: the else-body reading is refuted at instruction level
+
+Instruction dump of the LAST surviving difference between the D1+D2+D3 mutation and GOLD, both at line 239:
+
+```
+GOLD 10 instrs : ... LOAD_METHOD#put ... CALL POP_TOP                       (no jump; falls through)
+MUT  11 instrs : ... LOAD_METHOD#put ... CALL POP_TOP JUMP_FORWARD 6794     (the else body forced a jump)
+GOLD  src      : self.event_queue.put((dt, EventEnum.BEFORE_TRADING_START)) | self.before_trading_date = now_date | time.sleep(FPS) | continue
+MUT   src      : self.event_queue.put((dt, EventEnum.BEFORE_TRADING_START)) | else: | self.before_trading_date = now_date | time.sleep(FPS) | continue
+```
+
+Read together with the GOLD block inventory at this site - `put` block (n=10, out=0) FALLING THROUGH
+into the assignment block (`@240`, n=3, in=1, out=0), which in turn falls through into the
+`time.sleep(FPS); continue` block (`@241`, n=8, in=1, out=1) - the original shape is therefore:
+
+- the assignment is NOT the else body (that reading adds a `JUMP_FORWARD` GOLD does not have, and it is
+  what the mutation above just proved), and
+- the assignment is NOT inside the then arm either (that mutation measured inert, `4/3`), and
+- the sequential-after-the-if placement the product uses is TEXTUALLY right; what the product loses is
+  the two BLOCK BOUNDARIES: GOLD has three blocks where the product has one fused block, and the
+  assignment and the sleep each carry exactly one incoming JUMP.
+
+So D1 is a JOIN/ENTRY-declaration defect, not an else-membership defect: some other arm of the enclosing
+region must land on the assignment, and another on `time.sleep(FPS)`, which is only expressible if the
+region declares those two blocks as distinct merge targets. This is the merge/positive-tail family the
+earlier rounds already touched at this file, and the previous engineer measured the relevant region as
+`IfRegion@6690, cond=6690, merge=6778` with `@6690/@6702/@6778` in the parent `IfRegion@6548.then_blocks`
+- re-read that triple with THIS requirement in mind: a single declared merge cannot produce two distinct
+jump targets, so the parent region must declare two joins (assignment, then sleep) rather than one.
+
+D2 and D3 stand as measured (flat chained-compare `elif`, and no `while ... else: return None`).
+Acceptance proxy unchanged: argument-aware block multisets at `GOLD-only=0 PROD-only=0 blocks 170/170`,
+then judge `13/13` as the real condition.
+
 ## State this ticket is written against
+
 
 
 
