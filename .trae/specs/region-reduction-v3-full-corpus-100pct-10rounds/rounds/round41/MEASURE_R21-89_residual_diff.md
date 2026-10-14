@@ -73,3 +73,20 @@ Bar unchanged: from `instrs=-25, jsites=-4, ours=256` both instruction metrics m
 `back=+0` kept and `ours` approaching 254 without overshoot; then the nine collateral files byte-identical,
 panel 20 by index unchanged, ROOT-joined 402 sweep `CHANGED={realtime_event_source.pyc}`, and **judge
 `13/13` is the only flip**.
+
+## Arithmetic attribution of the -25, measured 08:15 on the same arm
+
+Two readings of the same unit body were scored side by side after the classification above:
+
+| arm | ours | instrs | back | jsites | hunks | judge | collateral |
+|---|---|---|---|---|---|---|---|
+| [R21-88] base `47d44ec51fa325c5` | 256 | -25 | +0 | -4 | 8 | 12/13 | none (broker, klinedata, quote, real_quote, quotation, order_api, replace_utils, function, handlers all byte-identical) |
+| r115a in-flight `301e491d4da74670` (23:15 snapshot, not a verdict) | 244 | -96 | +0 | -7 | 8 | 12/13 | broker CHANGED |
+
+The base reading decomposes: two extra lines of text (`ours=256` against 254) while **25 instructions are missing**. Residual A removes one small guard (`if now_date != self.first_run_date:`, a compare plus a conditional jump, roughly three to five instructions). Residual B removes an entire test expression: the gold leg `elif check_trading_time(am_open, am_close, pm_open, pm_close, pm_over, self._engine.config.strategy.frequency, now_time)` is replaced in the product by a bare `else:`, so the whole call chain - `LOAD_GLOBAL check_trading_time`, seven argument loads including a two-level attribute access, `CALL`, and the conditional jump that the `else:` no longer needs - disappears. That accounts for the bulk of the -25, which makes **residual B the dominant instruction loss and residual A mostly a control-flow-shape loss**. Residual C (the dedent) changes nesting, not instruction count.
+
+Consequence for the remaining work, stated as a priority rather than a guess: a rule that restores the dropped ladder condition closes most of the instruction gap and is the only candidate to make `indeg-equal` flip, because a `POP_JUMP_FORWARD_IF_FALSE` whose target is an `else:` body versus an `elif` test changes the in-degree of exactly the blocks the judge compares. The `+2` lines of overshoot are the nested `if`/`if` decomposition of the following leg, so the same rule should also flatten that leg rather than nest it.
+
+Also worth keeping: the in-flight r115a state moved `ours` the other way (244, below the oracle) with `instrs=-96` and a broker change, i.e. its current shape removes more than it restores - a progress reading, not a verdict, recorded so the next hand does not mistake a falling `ours` for progress. `[[feedback-text-change-is-not-unit-movement]]` in force: `ours` approaching 254 from either direction is not the metric, `instrs` plus `jsites` plus the judge are.
+
+Compliance state at this moment: repo `core/` clean at landed bytes `1471c92eca157e46` / `566ff5c502276e48`, `origin/rr-v3r01-f557fd` = `31e590c9` with `unpushed=0` verified by fetch plus `rev-list`, corpus 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, objective not achieved.
