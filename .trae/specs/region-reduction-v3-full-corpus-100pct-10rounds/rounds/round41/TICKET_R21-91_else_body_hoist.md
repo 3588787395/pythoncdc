@@ -276,7 +276,30 @@ check must be the arg-aware diff going to `0 / 0` with `blocks 170/170`. Expect 
    written, because `elif A and B:` + `if C:` is a very common shape and an unscoped rule will over-fire.
 
 
+## Fourth addendum (02:02 UTC) - D2 scoping predicate with a measured corpus population
+
+Read-only text census over the current products (`site-packages/**/*OK.py`, 407 files scanned):
+
+```
+elif <test>:  immediately followed by a deeper-indented  if <test>:        -> 171 sites in 51 files
+   of which the nested if test is a CHAINED comparison (a >= x >= b style) -> 1 site
+      IQEngine/plugins/plugin_system_event_source/realtime_event_sourceOK.py:283
+      if delay_after_trading >= now_time >= after_trading:
+```
+
+So the blunt "flatten an elif whose arm starts with a nested if" rule is unusable (171 fires, 51 files),
+but narrowing it by the chained-compare shape gives a population of exactly ONE corpus-wide, and that
+one is the D2 site. The criterion to write is therefore the region-data analogue:
+
+  an elif arm whose test ends in a conjunct that is a Compare node with two or more operators (a chained
+  comparison), and whose arm body consists of that comparison test plus the following statements, absorbs
+  the chained comparison as the final conjunct of the owning elif test instead of emitting a nested if.
+
+Caveat to honor: the 171 / 1 numbers are a PRODUCT-TEXT proxy, not the criterion and not a fire census -
+re-measure the predicate over analyzer region data before installing, exactly as the population law requires.
+
 ## State this ticket is written against
+
 
 Landed bytes unmoved: analyzer `fef59e95359f36fd`, generator `c3049a87daf59acc`,
 `git status --porcelain -- core/` = 0. Gate label 41 unconsumed. Corpus 6616/6617 (99.9849 %),
