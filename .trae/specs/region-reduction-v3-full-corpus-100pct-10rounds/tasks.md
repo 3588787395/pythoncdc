@@ -2317,3 +2317,49 @@ before it could land the narrowing.
 Compliance at this frontier: gate label 41 unconsumed, nothing installed (no arm reached judge `13/13`),
 landed bytes unmoved, `core/` clean, `origin/rr-v3r01-f557fd` verified equal to `HEAD` by fetch plus
 `rev-list` after every commit, corpus 6616/6617 (99.9849 percent), 401/402 files, objective not achieved.
+
+## 68. Round 41 diagnosis replaced (2026-10-14 01:45): the last unit is an else-body hoist, and the axis every prior hand blamed is proved inert
+
+Two claims retired by measurement, one opened.
+
+**(a) H5 is CFG-inert.** `compile()` of the two source shapes of the chained-compare leg
+(`rounds/round41/shape_r118.py`, Python 3.11.7) gives byte-for-byte identical structure metrics:
+`instrs 54 / jsites 14 / back 0 / indeg [5,2,1,1,1,1,1,1,1]` for `elif A and B and (d >= x >= c):`
+and for `elif A and B:` plus a nested `if (d >= x >= c):`. So the parens-and-nesting hunks cannot
+move `indeg-equal`, cannot move the judge, and must not receive another arm. H1-H4 are likewise
+text-only (`(A and B) or C` vs `A and B or C`, `return` vs `return None`).
+
+**(b) A new instrument localized the real residue.** `rounds/round41/block_diff_r118.py <product.py>`
+splits `clock_worker` into basic blocks in the ORIGINAL pyc code object and in the product's compiled
+code object, signs each block by its opname sequence, and compares jump in/out degree. Control on the
+13/13 GOLD oracle: `blocks 176/176`, `instrs 1442/1442`, `SIG-ONLY-ORIG=0 SIG-ONLY-PROD=0`. On the
+`[R21-90]` product: `blocks 176/175`, `instrs 1442/1440`, `SIG-ONLY-ORIG=4 SIG-ONLY-PROD=3`, and the
+uniquely-signed rows are the assignment and the sleep/back-edge block that the original keeps separate
+(`n=3 in=1 out=0` falling through into `n=8 in=1 out=1`) while the product fuses into one `n=11` block.
+`shape2_r118.py` reproduces that pair only in the **else-body** shape (hoisted 4 blocks/26 instrs vs
+else-body 5 blocks/27 instrs), so `self.before_trading_date = now_date` is the `else` of
+`if holiday_not_do_before == '0'` (region data `IfRegion@6690, cond=6690, merge=6778`) and our pipeline
+hoists it into sequential parent code, deleting the merge's second predecessor. That is the whole of
+the remaining `indeg-equal=False`. Bar for the fix, from the GOLD control: `SIG-ONLY 0/0`,
+`blocks 176/176`, `instrs 1442`.
+
+**(c) `[R21-90]` certified and banked.** `ana 996a1b1acf143458` + `gen 558192ecf6d5f8a0`:
+`ours=257 instrs=-2 back=+0 jsites=+0` with the full collateral set passed (panel 20 by index, 19 rows
+`BYTES=SAME` including broker 128/128, quote 92/92, quotation 153/153, real_quote 45/45; ROOT-joined
+402 sweep `files_compared=402 MISSING/FAIL=0 CHANGED={realtime_event_source.pyc}`), judge `12/13 Different
+control flow` - so banked at `rounds/round41/MEASURE_R21-90_arm_certification.md` and never installed.
+Ladder: `-114 -> -26 -> -25 -> -13 -> -2`.
+
+Dispatched **r117a** on `rounds/round41/TICKET_R21-91_else_body_hoist.md` (region-data-only else
+declaration at identification time, census before editing, four-bar acceptance). Install path
+de-risked in advance: `install_pair.py` takes `--gold-hunks` (required, refuses nonzero) and has **no**
+`--sweep` flag, and zero-hunk-vs-GOLD is sufficient-not-necessary, so the ticket now carries the
+direct-write fallback that repeats the same byte checks; `gate_chain.py 41 40 --dry` prints a clean
+four-stage plan against the committed `rounds/round40/after` (8 shard files present).
+
+Compliance here: gate label 41 still unconsumed, nothing installed, landed bytes unmoved
+(analyzer `fef59e95359f36fd`, generator `c3049a87daf59acc`), `core/` clean, corpus 6616/6617
+(99.9849 percent), 401/402 files, **objective not achieved** - one unit, `clock_worker`, still failing.
+`github:443` is dropping connections, so the push is retried by a background loop and verified by
+fetch plus `rev-list`, never by pipeline exit status.
+
