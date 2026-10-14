@@ -335,7 +335,45 @@ Consequences, stated conservatively:
   because D2 shows content parity is not enough (`instrs`, `jsites`, `back` were all equal while the
   in-degree multiset differed).
 
+
+## Sixth addendum (02:08 UTC) - THREE source-shape facts account for six of the seven differing blocks
+
+Same mutation-probe instrument (argument-aware block multisets vs GOLD, scratch copies only, no product
+or repo file touched). D3 is now named: the product renders a **`while`/`else: return None`** clause
+(product lines 306-307) where GOLD has no while-else at all and the loop simply falls through to the
+function-ending implicit return - GOLD`s isolated `LOAD_CONST#None RETURN_VALUE` block sits on the
+`while self.active:` line, entered by fall-through only.
+
+```
+product (R21-90)          GOLD-only=4  PROD-only=3  blocks=169   (GOLD 170)
+D3 alone (drop else/return)  GOLD-only=3  PROD-only=3  blocks=170
+D1 + D2 + D3 combined     GOLD-only=1  PROD-only=1  blocks=170   <- block count now EXACTLY matches GOLD
+```
+
+So the three facts to implement are:
+1. **D1** - the assignment reached by a jump between an IfRegion cond and its merge must be declared as
+   the region`s else body, not hoisted into the parent sequential walk (measured: closes one GOLD-only
+   row and brings the block count to GOLD`s 170; the "assignment inside then" reading is inert).
+2. **D2** - an `elif` chain whose final conjunct is a chained comparison (`a >= x >= b`) must fold that
+   conjunct into the owning `elif` test instead of opening a nested `if` (measured: GOLD-only 4->3,
+   PROD-only 3->1; population of the shape is exactly 1 corpus-wide, see the fourth addendum).
+3. **D3** - a `while` loop whose fall-out path is the function end must not be rendered with an
+   `else: return None` clause (measured alone: GOLD-only 4->3 and blocks 169->170).
+
+What still separates the combined mutation from GOLD is ONE pair of blocks, both beginning
+`LOAD_DEREF#self LOAD_ATTR#event_queue LOAD_METHOD#put LOAD_FAST#dt LOAD_GLOBAL#EventEnum
+LOAD_ATTR#BEFORE_TRADING_START BUILD_TUPLE PRECALL CALL POP_TOP ...` - i.e. the block EXTENT of the
+`event_queue.put((dt, EventEnum.BEFORE_TRADING_START))` run differs (the two signatures share their
+prefix and differ in their tail). Next hand: print those two full signatures with per-instruction
+argvals and line attribution to see which extra/missing statement closes the run; do NOT spend a gate
+until the proxy reads `0/0` with `blocks 170/170`, then require judge `13/13` as the real condition.
+
+Reminder of what is NOT proved: `0/0` on this proxy has never been shown to imply judge `13/13` (the
+judge compares the whole code object graph including handler tables), and none of these mutations is a
+shippable change - they only identify the source shapes the pipeline must be made to emit.
+
 ## State this ticket is written against
+
 
 
 
