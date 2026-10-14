@@ -24,3 +24,14 @@ ignores them) repeating all of its byte checks.
 
 Objective audit: every roster pyc has a non-empty `*OK.py` produced by the pipeline (405/405 current-magic
 inputs measured, 0 zero-byte) and every unit is judged Equal - 6617/6617, 402/402 files, no residual.
+
+## Final completion audit (03:28 UTC), re-read from the sealed artifacts
+
+    shards=8  units=6617/6617 (100.0000%)  files_success=402  files_failure=0
+    products_missing_or_empty=0        (every gate row has a non-empty *OK.py on disk)
+    git: local == origin == 6fb49cba, unpushed=0
+         core/ dirty=0   site-packages *OK.py dirty=0   *.pyc dirty=0
+
+Both halves of the objective are therefore covered by the same instrument that certifies a round:
+decompilation (a non-empty pipeline-produced `*OK.py` exists for every roster input) and judgment
+(the sole judge returns Equal for every unit of every file). No requirement is left unverified.
