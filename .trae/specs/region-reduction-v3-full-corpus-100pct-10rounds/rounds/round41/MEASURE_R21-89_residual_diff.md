@@ -90,3 +90,24 @@ Consequence for the remaining work, stated as a priority rather than a guess: a 
 Also worth keeping: the in-flight r115a state moved `ours` the other way (244, below the oracle) with `instrs=-96` and a broker change, i.e. its current shape removes more than it restores - a progress reading, not a verdict, recorded so the next hand does not mistake a falling `ours` for progress. `[[feedback-text-change-is-not-unit-movement]]` in force: `ours` approaching 254 from either direction is not the metric, `instrs` plus `jsites` plus the judge are.
 
 Compliance state at this moment: repo `core/` clean at landed bytes `1471c92eca157e46` / `566ff5c502276e48`, `origin/rr-v3r01-f557fd` = `31e590c9` with `unpushed=0` verified by fetch plus `rev-list`, corpus 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, objective not achieved.
+
+## r115a outcome: residual B half-closed, instrs -25 to -13 with zero collateral, engineer stopped at its turn cap (2026-10-14 00:51)
+
+delivered generator `cb8c2c7928672abd` on the `[R21-88]` lineage, banked at `rounds/round41/r115/`. My own scoring, twice, and a 14-file collateral pass:
+
+| reading | [R21-88] base | [R21-89] `cb8c2c79` |
+|---|---|---|
+| ours (oracle 254) | 256 | 256 |
+| instrs | -25 | **-13** |
+| back | +0 | +0 |
+| jsites | -4 | **-3** |
+| hunks_vs_ORACLE | 8 | 8 |
+| indeg-equal | False | False |
+| judge | 12/13 | **12/13** |
+| collateral | none | **none** - api_base, broker (178823), risk function, handlers, klinedata (102772), order_api, quotation, quote (93018), real_quote (53841), replace_utils, strategy, trade_info_utils, wizard_quant_api all byte-identical to their committed products |
+
+So the restored ladder condition recovered roughly half the missing instructions with no damage anywhere else, exactly as the attribution predicted, and the arm is not installable because the unit is still `12/13`.
+
+The engineer reported its own remaining defect as it stopped: the re-parenting of regions inside the claimed tail was too broad and broke a nested `and` expression, and the fix is to restrict the re-parent to the guard window itself. That is the next instruction, recorded as ticket R21-90 and dispatched to r116a on this candidate as the base.
+
+State of the campaign at this point: corpus 6616/6617 (99.9849 percent), 401/402 files, gate label 41 unconsumed, landed bytes unmoved, repo core/ clean, origin at the last pushed commit verified by fetch plus rev-list, objective not achieved.
