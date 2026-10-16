@@ -1,0 +1,13 @@
+{
+ "pyc": "D:\\Temp\\opencode\\probe_break_raise.pyc",
+ "func": "g2",
+ "tree_g1": "def g1(ys):\n    for y in ys:\n        if y:\n            break\n    raise ValueError\n",
+ "tree_g2": "def g2(ys):\n    for y in ys:\n        assert y, 'done'\n",
+ "tree_g3": "def g3(ys):\n    while ys:\n        if ys.pop():\n            break\n    raise KeyError\n",
+ "r2off_g1": "def g1(ys):\n    for y in ys:\n        if y:\n            break\n    raise ValueError\n",
+ "r2off_g2": "def g2(ys):\n    for y in ys:\n        assert y, 'done'\n",
+ "r2off_g3": "def g3(ys):\n    while ys:\n        if ys.pop():\n            break\n    raise KeyError\n",
+ "same_g1": true,
+ "same_g2": true,
+ "same_g3": true
+}

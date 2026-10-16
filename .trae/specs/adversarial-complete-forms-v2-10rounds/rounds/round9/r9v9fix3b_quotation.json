@@ -1,0 +1,16 @@
+[
+ {
+  "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 153,
+  "units_total": 153,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/site-packages/fly/data/quotationOK.py",
+   "[single] status=success units=153/153 success_rate=100.00%"
+  ]
+ }
+]

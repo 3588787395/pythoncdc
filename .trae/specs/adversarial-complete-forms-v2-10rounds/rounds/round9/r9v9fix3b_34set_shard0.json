@@ -1,0 +1,94 @@
+{
+ "elapsed_sec": 4.2,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 0,
+  "success": 5
+ },
+ "files_total": 5,
+ "generated_at": "2026-10-17T01:01:55",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [],
+  "success": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utils.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/bar.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utils.pyc",
+   "pyc_sha": "23270e1e3181",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utilsOK.py",
+   "source_sha": "14352cdcb0d1",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 4,
+   "units_total": 4
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc",
+   "pyc_sha": "598639badc2a",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universeOK.py",
+   "source_sha": "890f3635c862",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 11,
+   "units_total": 11
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc",
+   "pyc_sha": "cf93b0e65afe",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_apiOK.py",
+   "source_sha": "99418bec3ce1",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 58,
+   "units_total": 58
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+   "pyc_sha": "26c46289e086",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/financeOK.py",
+   "source_sha": "10b7c570dd01",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 32,
+   "units_total": 32
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/bar.pyc",
+   "pyc_sha": "3db6e599ca1e",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/barOK.py",
+   "source_sha": "c011103e61f9",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 85,
+   "units_total": 85
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 1.0,
+ "units_success": 190,
+ "units_total": 190
+}

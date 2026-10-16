@@ -1,0 +1,204 @@
+[
+ {
+  "pyc": "test_repros/round2/c15_class_augassign.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/c15_class_augassign.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/c15_class_augassignOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/m01_docstring_order.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m01_docstring_order.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/m01_docstring_orderOK.py",
+   "[single] status=success units=5/5 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/m02_top_ifmain.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>: Failure: Different control flow",
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m02_top_ifmain.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/m02_top_ifmainOK.py",
+   "[single] status=failure units=2/3 success_rate=66.67%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/m03_module_ifchain.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m03_module_ifchain.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/m03_module_ifchainOK.py",
+   "[single] status=success units=1/1 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/m04_module_try.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m04_module_try.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/m04_module_tryOK.py",
+   "[single] status=success units=1/1 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/m05_module_match.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m05_module_match.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/m05_module_matchOK.py",
+   "[single] status=success units=1/1 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/m06_module_loops.pyc",
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 0,
+  "units_total": 1,
+  "failures": [
+   "***<module>: Failure: Different control flow"
+  ],
+  "tail": [
+   "  ***<module>: Failure: Different control flow",
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m06_module_loops.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/m06_module_loopsOK.py",
+   "[single] status=failure units=0/1 success_rate=0.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/m07_module_with.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m07_module_with.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/m07_module_withOK.py",
+   "[single] status=success units=1/1 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/m08_module_stmts.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m08_module_stmts.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/m08_module_stmtsOK.py",
+   "[single] status=success units=2/2 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/m09_module_deep_cross.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m09_module_deep_cross.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/m09_module_deep_crossOK.py",
+   "[single] status=success units=1/1 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/m10_module_order.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m10_module_order.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/m10_module_orderOK.py",
+   "[single] status=success units=6/6 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/m11_module_finonly.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 1,
+  "units_total": 1,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m11_module_finonly.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/m11_module_finonlyOK.py",
+   "[single] status=success units=1/1 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/m12_module_values.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/m12_module_values.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/m12_module_valuesOK.py",
+   "[single] status=success units=3/3 success_rate=100.00%"
+  ]
+ },
+ {
+  "pyc": "test_repros/round2/nc01_plain_class.pyc",
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": [],
+  "tail": [
+   "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
+   "[single] F:/Downloads/pythoncdc-main/test_repros/round2/nc01_plain_class.pyc",
+   "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/nc01_plain_classOK.py",
+   "[single] status=success units=4/4 success_rate=100.00%"
+  ]
+ }
+]

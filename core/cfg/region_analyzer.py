@@ -19111,12 +19111,6 @@ _region_overlaps_with_ternary 过滤与 TernaryRegion 重叠的 AssertRegion，
 （[Round4-12]，避免链式比较 assert 的中段 COMPARE_OP 块被误识别为独立
 AssertRegion）；message_block / chained_compare_blocks / boolop_chain_blocks
 仅当 `not in self.block_to_region` 时才登记，先到先得不覆盖既有归属。
-[B126-R1 认领集补守卫]：中段块常先被父 LoopRegion/IfRegion 登记（循环/条件
-识别先于 assert），block_to_region「先到先得」使本识别器的 chain 注册落空、
-[Round4-12] 守卫读到父区域即放行，同一中段块被二次识别为独立 AssertRegion
-（双归属，实测 assert_deep 块 64 = A1 链段同时成为 A2 条件块）。补救 = 本
-识别器自维护认领集（前序迭代 region.blocks 全集），候选块命中即跳过（同层
-区域成员关系，不读父区域语义）。
 与 IfRegion 边界：通过 LOAD_ASSERTION_ERROR 指令明确区分，本识别器先于
 IfRegion 运行以抢占识别权。与 BoolOpRegion 边界：assert 中的复合布尔条件
 可能被 BoolOpRegion 抢占，通过 condition_block 共享与父 region 挂载协调。
@@ -19188,21 +19182,6 @@ block_to_region「先到先得」（仅 not in 时登记，不覆盖既有归属
 _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局部引用。
         """
         regions = []
-        # [B126-R1 本识别器认领集] [Round4-12] 守卫只查 block_to_region——但
-        # 链式比较 assert 的中段 COMPARE_OP 块常先被父 LoopRegion/IfRegion
-        # 登记（循环/条件识别先于 assert，「先到先得」使 A1 的
-        # `for cb in chained_compare_blocks: if cb not in block_to_region`
-        # 注册落空），守卫读到父区域即放行，候选循环随后把同一中段块再次
-        # 识别为第二个独立 AssertRegion（实测 n9_stmt_sweep::assert_deep：
-        # 块 64 = A1.chained_compare_blocks[0] 同时是 A2 的
-        # condition_block，块 64/78 双归属；下游双 assert 生成吞并 while
-        # 回边载体块，产物 = 幻影 break + 死码 store + 幻影 for-else）。
-        # 本识别器自维护前序迭代认领集（entry + chain + message + boolop +
-        # passthrough = region.blocks），候选块命中即跳过——判据 = 本识别器
-        # 自建区域的成员关系（I.4 白名单，同层事实），不读父区域归属语义、
-        # 不读名字/偏移/阈值；父区域持有的块仍允许嵌套识别（嵌套即抽象
-        # 节点，仅排除「已被前序 assert 迭代消费」的块）。
-        _b126_claimed = set()
         for block in self.cfg.get_blocks_in_order():
             # [Round4-12] 跳过已被本识别器前序迭代识别为 AssertRegion 的块
             # （entry / chained_compare_block / message_block）——链式比较
@@ -19211,7 +19190,7 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             # （违反「每块唯一归属」）。父 IfRegion/LoopRegion 持有的块仍允许
             # 嵌套识别（嵌套即抽象节点）。
             _existing_region = self.block_to_region.get(block)
-            if isinstance(_existing_region, AssertRegion) or block in _b126_claimed:
+            if isinstance(_existing_region, AssertRegion):
                 continue
             last = block.get_last_instruction()
             if last is None or last.opname not in FORWARD_JUMP_OPS:
@@ -19363,10 +19342,6 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             )
             regions.append(region)
             self.regions.append(region)
-            # [B126-R1] 本识别器认领集更新（region.blocks = entry + message +
-            # chain + boolop + passthrough 的全集）——供候选循环守卫读取，
-            # 补 block_to_region「先到先得」被父区域先占时的登记落空。
-            _b126_claimed.update(region.blocks or set())
             if block not in self.block_to_region:
                 self.block_to_region[block] = region
             else:

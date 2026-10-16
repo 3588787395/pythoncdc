@@ -1,0 +1,23 @@
+{
+ "driver": "r9v9_station.py（六面，全部 17 分片复跑）",
+ "tree": "REVIEW2 R-1 方案 a 后（[B126-R1] 已移除，R2 保留）",
+ "faces": {
+  "round1face": "423/423",
+  "quotation": "153/153",
+  "round2face": "245/251",
+  "probe42": "179/196",
+  "residual": "420/446",
+  "oldface": "672/692"
+ },
+ "sum": "2092/2161",
+ "diffcheck_pass2fail": 0,
+ "diffcheck_fail2pass": 3,
+ "diffcheck_fail2pass_units": {
+  "r8_10_expr_cross_stmt.pyc": [
+   "<module>.r8_x_with_ternary"
+  ],
+  "x08_stmt_leaves.pyc": [
+   "<module>.raise_leaf"
+  ]
+ }
+}

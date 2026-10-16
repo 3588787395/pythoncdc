@@ -1,0 +1,82 @@
+[
+ {
+  "name": "B104_main",
+  "pyc": "test_repros/round4/c4_09_chained_compare.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "name": "r3_e05_compare_chain",
+  "pyc": "test_repros/round3/e05_g3_compare_chain.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 11,
+  "failures": [
+   "***<module>.f_compare_is_chain: Failure: Different control flow",
+   "***<module>.f_compare_in_chain: Failure: Different control flow",
+   "***<module>.f_compare_in_cond: Failure: Different control flow",
+   "***<module>.f_compare_walrus_value: Failure: Different control flow",
+   "***<module>.f_compare_notin_chain: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r3_e10_call_args",
+  "pyc": "test_repros/round3/e10_g7_call_args.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 32,
+  "units_total": 32,
+  "failures": []
+ },
+ {
+  "name": "r8_b104_chain4",
+  "pyc": "test_repros/round8/r8v8rev_b104_chain4_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ },
+ {
+  "name": "r8_b104_chain5",
+  "pyc": "test_repros/round8/r8v8rev3_b104_chain5_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r8_b104_foror",
+  "pyc": "test_repros/round8/r8v8rev3_b104_foror_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r8_b104_opdeep",
+  "pyc": "test_repros/round8/r8v8rev3_b104_opdeep_battery.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "name": "r8_b104_exprtail",
+  "pyc": "test_repros/round8/r8v8rev3_b104_exprtail_battery.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 4,
+  "units_total": 5,
+  "failures": [
+   "***<module>.v3: Failure: Different control flow"
+  ]
+ }
+]

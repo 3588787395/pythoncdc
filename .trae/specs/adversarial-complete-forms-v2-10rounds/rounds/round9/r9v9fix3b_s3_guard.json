@@ -1,0 +1,63 @@
+{
+ "driver": "r9v9rev2_guardcount.py（复核员工具，只读）",
+ "tree": "REVIEW2 R-1 方案 a 后（[B126-R1] 已移除；[B126-R2] 守卫在案）",
+ "counts": {
+  "r8_07_assert_forms::r8_assert_chain": {
+   "calls": 0,
+   "hits": 0,
+   "sites": []
+  },
+  "n9_stmt_sweep::assert_deep": {
+   "calls": 2,
+   "hits": 2,
+   "sites": [
+    [
+     76,
+     true
+    ],
+    [
+     74,
+     true
+    ]
+   ]
+  },
+  "x08_stmt_leaves::raise_leaf": {
+   "calls": 1,
+   "hits": 1,
+   "sites": [
+    [
+     42,
+     true
+    ]
+   ]
+  },
+  "probe_break_raise::g1": {
+   "calls": 1,
+   "hits": 0,
+   "sites": [
+    [
+     14,
+     false
+    ]
+   ]
+  },
+  "probe_break_raise::g2": {
+   "calls": 1,
+   "hits": 0,
+   "sites": [
+    [
+     14,
+     false
+    ]
+   ]
+  }
+ },
+ "raw_outputs": [
+  "r8_07_assert_forms::r8_assert_chain: guard calls=0 hits=0 sites=[]",
+  "n9_stmt_sweep::assert_deep: guard calls=2 hits=2 sites=[(76, True), (74, True)]",
+  "x08_stmt_leaves::raise_leaf: guard calls=1 hits=1 sites=[(42, True)]",
+  "probe_break_raise::g1: guard calls=1 hits=0 sites=[(14, False)]",
+  "probe_break_raise::g2: guard calls=1 hits=0 sites=[(14, False)]"
+ ],
+ "note": "R-3 证据：浅层 r8_assert_chain 调用计数 0 ⇒ 守卫不触发、「块归属不动」平凡成立；assert_deep/raise_leaf 为 R2 承重命中点；probe g1/g2 守卫不触发（g2 折叠与守卫无关）。"
+}

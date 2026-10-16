@@ -1,0 +1,73 @@
+[
+ {
+  "name": "n9_stmt_sweep",
+  "pyc": "test_repros/round9/n9v9_stmt_sweep.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ },
+ {
+  "name": "r8_07_assert_forms",
+  "pyc": "test_repros/round8/r8_07_assert_forms.pyc",
+  "regen_rc": 0,
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 11,
+  "failures": [
+   "***<module>.r8_assert_nested_func: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r8_10_expr_cross_stmt",
+  "pyc": "test_repros/round8/r8_10_expr_cross_stmt.pyc",
+  "regen_rc": 0,
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 9,
+  "units_total": 12,
+  "failures": [
+   "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+   "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+   "***<module>.r8_x_raise_ternary_class: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "x08_stmt_leaves",
+  "pyc": "test_repros/round2/x08_stmt_leaves.pyc",
+  "regen_rc": 0,
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 8,
+  "failures": [
+   "***<module>.assert_leaf: Failure: Different control flow",
+   "***<module>.return_leaf: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "probe_for_assert",
+  "pyc": "D:\\Temp\\opencode\\probe_for_assert.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "probe_break_raise",
+  "pyc": "D:\\Temp\\opencode\\probe_break_raise.pyc",
+  "regen_rc": 0,
+  "verify_rc": 1,
+  "status": "failure",
+  "units_success": 3,
+  "units_total": 4,
+  "failures": [
+   "***<module>.g2: Failure: Different control flow"
+  ]
+ }
+]

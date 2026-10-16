@@ -1,0 +1,84 @@
+{
+ "pre_dir": "d:\\Temp\\opencode\\r9v9_station_pre_b126",
+ "new_dir": "d:\\Temp\\opencode\\r9fix3b_station",
+ "pairs": {
+  "r9v9_full_oldface_c0-15.json": {
+   "added": {},
+   "removed": {}
+  },
+  "r9v9_full_oldface_c15-30.json": {
+   "added": {},
+   "removed": {}
+  },
+  "r9v9_full_oldface_c30-45.json": {
+   "added": {},
+   "removed": {
+    "r8_10_expr_cross_stmt.pyc": [
+     "<module>.r8_x_with_ternary"
+    ]
+   }
+  },
+  "r9v9_full_oldface_c45-59.json": {
+   "added": {},
+   "removed": {}
+  },
+  "r9v9_full_residual_c0-18.json": {
+   "added": {},
+   "removed": {}
+  },
+  "r9v9_full_residual_c18-36.json": {
+   "added": {},
+   "removed": {
+    "r8_10_expr_cross_stmt.pyc": [
+     "<module>.r8_x_with_ternary"
+    ]
+   }
+  },
+  "r9v9_full_residual_c36-54.json": {
+   "added": {},
+   "removed": {}
+  },
+  "r9v9_full_residual_c54-72.json": {
+   "added": {},
+   "removed": {}
+  },
+  "r9v9_regress_probe42_c0-14.json": {
+   "added": {},
+   "removed": {}
+  },
+  "r9v9_regress_probe42_c14-28.json": {
+   "added": {},
+   "removed": {}
+  },
+  "r9v9_regress_probe42_c28-42.json": {
+   "added": {},
+   "removed": {
+    "x08_stmt_leaves.pyc": [
+     "<module>.raise_leaf"
+    ]
+   }
+  },
+  "r9v9_regress_round2face_c0-15.json": {
+   "added": {},
+   "removed": {}
+  },
+  "r9v9_regress_round2face_c15-30.json": {
+   "added": {},
+   "removed": {}
+  },
+  "r9v9_regress_round2face_c30-45.json": {
+   "added": {},
+   "removed": {}
+  },
+  "r9v9_quotation_merged.json": {
+   "added": {},
+   "removed": {}
+  },
+  "r9v9_full_round1face_merged.json": {
+   "added": {},
+   "removed": {}
+  }
+ },
+ "added_pass2fail": 0,
+ "removed_fail2pass": 3
+}

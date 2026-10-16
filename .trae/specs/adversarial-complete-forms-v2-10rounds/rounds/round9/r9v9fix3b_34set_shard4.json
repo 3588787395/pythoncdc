@@ -1,0 +1,81 @@
+{
+ "elapsed_sec": 5.9,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 0,
+  "success": 4
+ },
+ "files_total": 4,
+ "generated_at": "2026-10-17T01:03:10",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [],
+  "success": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "pyc_sha": "5419f2a32c80",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utilsOK.py",
+   "source_sha": "ce1ad85fa354",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 41,
+   "units_total": 41
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
+   "pyc_sha": "882d3ccc0d31",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_infoOK.py",
+   "source_sha": "9f4372fae772",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 29,
+   "units_total": 29
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+   "pyc_sha": "8c19ea3751b0",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategyOK.py",
+   "source_sha": "795e9f0989de",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 27,
+   "units_total": 27
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
+   "pyc_sha": "883f61a64cb2",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytoolsOK.py",
+   "source_sha": "387dfc5239b8",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 66,
+   "units_total": 66
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 1.0,
+ "units_success": 163,
+ "units_total": 163
+}
