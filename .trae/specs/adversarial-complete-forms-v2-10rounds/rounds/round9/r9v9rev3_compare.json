@@ -1,0 +1,14 @@
+{
+ "checks": {
+  "s3_units": true,
+  "loops+family+sweep_subset": true,
+  "bearing_all10": true,
+  "station_residual_c54-72": true,
+  "station_oldface_c45-59": true,
+  "station_probe42_c28-42": true,
+  "34set_recompute": true
+ },
+ "all_match": true,
+ "differences": {},
+ "live_probes_checked": 19
+}

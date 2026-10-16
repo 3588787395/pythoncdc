@@ -1,0 +1,142 @@
+[
+ {
+  "name": "tools.pyc",
+  "pyc": "site-packages/IQCommon/tools.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ },
+ {
+  "name": "trade_schedule.pyc",
+  "pyc": "site-packages/IQCommon/trade_schedule.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ },
+ {
+  "name": "mq_connector.pyc",
+  "pyc": "site-packages/IQCommon/mq_connector.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "strategy.pyc",
+  "pyc": "site-packages/IQCommon/strategy/strategy.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "scheduler.pyc",
+  "pyc": "site-packages/IQEngine/utils/scheduler.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 52,
+  "units_total": 52,
+  "failures": []
+ },
+ {
+  "name": "trade_info_utils.pyc",
+  "pyc": "site-packages/IQCommon/util/trade_info_utils.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 41,
+  "units_total": 41,
+  "failures": []
+ },
+ {
+  "name": "r10_14_nonlocal_deep.pyc",
+  "pyc": "test_repros/round10/r10_14_nonlocal_deep.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "name": "r10_16_scope_mix.pyc",
+  "pyc": "test_repros/round10/r10_16_scope_mix.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "name": "n10_01_simple_import.pyc",
+  "pyc": "test_repros/round10/n10_01_simple_import.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "n10_02_simple_fromimport.pyc",
+  "pyc": "test_repros/round10/n10_02_simple_fromimport.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "n10_03_simple_global.pyc",
+  "pyc": "test_repros/round10/n10_03_simple_global.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "n10_04_simple_nonlocal.pyc",
+  "pyc": "test_repros/round10/n10_04_simple_nonlocal.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "option_account.pyc",
+  "pyc": "site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 35,
+  "units_total": 35,
+  "failures": []
+ },
+ {
+  "name": "quotation.pyc",
+  "pyc": "site-packages/fly/data/quotation.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 153,
+  "units_total": 153,
+  "failures": []
+ }
+]

@@ -1,0 +1,144 @@
+{
+ "guard_patched": true,
+ "units": {
+  "n9v9_stmt_sweep::assert_deep": {
+   "calls": 2,
+   "hits": 2,
+   "sites": [
+    [
+     76,
+     true
+    ],
+    [
+     74,
+     true
+    ]
+   ],
+   "asserts_count": 2,
+   "asserts": [
+    {
+     "entry": 48,
+     "condition": 48,
+     "message": 78,
+     "blocks": [
+      48,
+      64,
+      78
+     ]
+    },
+    {
+     "entry": 64,
+     "condition": 64,
+     "message": 78,
+     "blocks": [
+      64,
+      78
+     ]
+    }
+   ],
+   "loops": {
+    "RegionType.WHILE_LOOP@34": {
+     "has_break": false,
+     "break_blocks": []
+    },
+    "RegionType.FOR_LOOP@32": {
+     "has_break": false,
+     "break_blocks": []
+    }
+   }
+  },
+  "r8_07_assert_forms::r8_assert_chain": {
+   "calls": 0,
+   "hits": 0,
+   "sites": [],
+   "asserts_count": 1,
+   "asserts": [
+    {
+     "entry": 0,
+     "condition": 0,
+     "message": 32,
+     "blocks": [
+      0,
+      18,
+      32
+     ]
+    }
+   ]
+  },
+  "x08_stmt_leaves::raise_leaf": {
+   "calls": 1,
+   "hits": 1,
+   "sites": [
+    [
+     42,
+     true
+    ]
+   ],
+   "asserts_count": 0,
+   "asserts": [],
+   "loops": {
+    "RegionType.FOR_LOOP@34": {
+     "has_break": false,
+     "break_blocks": []
+    }
+   }
+  },
+  "probe_break_raise::g1": {
+   "calls": 1,
+   "hits": 0,
+   "sites": [
+    [
+     14,
+     false
+    ]
+   ],
+   "asserts_count": 0,
+   "asserts": [],
+   "loops": {
+    "RegionType.FOR_LOOP@6": {
+     "has_break": true,
+     "break_blocks": [
+      14
+     ]
+    }
+   }
+  },
+  "probe_break_raise::g2": {
+   "calls": 1,
+   "hits": 0,
+   "sites": [
+    [
+     14,
+     false
+    ]
+   ],
+   "asserts_count": 1,
+   "asserts": [
+    {
+     "entry": 8,
+     "condition": 8,
+     "message": 20,
+     "blocks": [
+      8,
+      20
+     ]
+    }
+   ],
+   "loops": {
+    "RegionType.FOR_LOOP@6": {
+     "has_break": true,
+     "break_blocks": [
+      14
+     ]
+    }
+   }
+  },
+  "r8_10_expr_cross_stmt::r8_x_with_ternary": {
+   "calls": 0,
+   "hits": 0,
+   "sites": [],
+   "asserts_count": 0,
+   "asserts": []
+  }
+ }
+}

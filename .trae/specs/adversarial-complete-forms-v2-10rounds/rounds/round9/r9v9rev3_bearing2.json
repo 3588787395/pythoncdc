@@ -1,0 +1,42 @@
+[
+ {
+  "name": "finance",
+  "pyc": "site-packages/IQCommon/data/finance.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 32,
+  "units_total": 32,
+  "failures": []
+ },
+ {
+  "name": "quote_handler",
+  "pyc": "site-packages/fly/data/quote_handler.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 79,
+  "units_total": 79,
+  "failures": []
+ },
+ {
+  "name": "realtime",
+  "pyc": "site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "quotation",
+  "pyc": "site-packages/fly/data/quotation.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 153,
+  "units_total": 153,
+  "failures": []
+ }
+]

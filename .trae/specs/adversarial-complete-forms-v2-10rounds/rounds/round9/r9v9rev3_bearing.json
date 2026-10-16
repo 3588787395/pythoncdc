@@ -1,0 +1,62 @@
+[
+ {
+  "name": "broker",
+  "pyc": "site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 128,
+  "units_total": 128,
+  "failures": []
+ },
+ {
+  "name": "matcher",
+  "pyc": "site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 17,
+  "units_total": 17,
+  "failures": []
+ },
+ {
+  "name": "nb_for",
+  "pyc": "D:\\Temp\\mon\\nb\\nb_for.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "nb_with",
+  "pyc": "D:\\Temp\\mon\\nb\\nb_with.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "nb_while",
+  "pyc": "D:\\Temp\\mon\\nb\\nb_while.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "nb_b99",
+  "pyc": "D:\\Temp\\mon\\nb\\nb_b99.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ }
+]

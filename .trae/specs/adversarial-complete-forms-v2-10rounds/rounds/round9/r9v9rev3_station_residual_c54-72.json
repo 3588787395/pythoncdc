@@ -1,0 +1,182 @@
+[
+ {
+  "name": "n10_03_simple_global.pyc",
+  "pyc": "test_repros/round10/n10_03_simple_global.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "n10_04_simple_nonlocal.pyc",
+  "pyc": "test_repros/round10/n10_04_simple_nonlocal.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r10_01_import_alias.pyc",
+  "pyc": "test_repros/round10/r10_01_import_alias.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "name": "r10_02_fromimport_alias.pyc",
+  "pyc": "test_repros/round10/r10_02_fromimport_alias.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r10_03_import_nested_hosts.pyc",
+  "pyc": "test_repros/round10/r10_03_import_nested_hosts.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r10_04_import_try_cross.pyc",
+  "pyc": "test_repros/round10/r10_04_import_try_cross.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r10_05_relative_star.pyc",
+  "pyc": "test_repros/round10/r10_05_relative_star.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "name": "r10_06_import_deep_combo.pyc",
+  "pyc": "test_repros/round10/r10_06_import_deep_combo.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r10_11_global_basic.pyc",
+  "pyc": "test_repros/round10/r10_11_global_basic.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "r10_12_global_deep.pyc",
+  "pyc": "test_repros/round10/r10_12_global_deep.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "name": "r10_13_nonlocal_basic.pyc",
+  "pyc": "test_repros/round10/r10_13_nonlocal_basic.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r10_14_nonlocal_deep.pyc",
+  "pyc": "test_repros/round10/r10_14_nonlocal_deep.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "name": "r10_15_global_hosts.pyc",
+  "pyc": "test_repros/round10/r10_15_global_hosts.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ },
+ {
+  "name": "r10_16_scope_mix.pyc",
+  "pyc": "test_repros/round10/r10_16_scope_mix.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "name": "r10_21_fin_loopctrl.pyc",
+  "pyc": "test_repros/round10/r10_21_fin_loopctrl.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "name": "rv10_31_nonlocal_variant.pyc",
+  "pyc": "test_repros/round10/rv10_31_nonlocal_variant.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "failures": []
+ },
+ {
+  "name": "rv10_32_augassign_variant.pyc",
+  "pyc": "test_repros/round10/rv10_32_augassign_variant.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": []
+ },
+ {
+  "name": "rv10_33_ternary_variant.pyc",
+  "pyc": "test_repros/round10/rv10_33_ternary_variant.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ }
+]

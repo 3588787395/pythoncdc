@@ -1,0 +1,102 @@
+[
+ {
+  "name": "r4_c4_02_loopelse",
+  "pyc": "test_repros/round4/c4_02_loop_else.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "name": "r4_b109_loopelse",
+  "pyc": "test_repros/round4/r4v4r_b109_loopelse.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 9,
+  "units_total": 9,
+  "failures": []
+ },
+ {
+  "name": "r5_13_for_else_cross",
+  "pyc": "test_repros/round5/r5v5_13_for_else_cross.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": []
+ },
+ {
+  "name": "r5_b115_battery",
+  "pyc": "test_repros/round5/r5v5r_b115_if_while.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "r5_b116_bare",
+  "pyc": "test_repros/round5/r5v5r_b116_bare.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "B99_min",
+  "pyc": "test_repros/round3/_scratch_b99/b99min.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 9,
+  "units_total": 9,
+  "failures": []
+ },
+ {
+  "name": "r7_b121_whilehdr",
+  "pyc": "test_repros/round7/r7v7r_b121_whilehdr.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "r7_b117_f2tail",
+  "pyc": "test_repros/round7/r7v7r_b117_f2tail.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "name": "n9_b104_whilehost",
+  "pyc": "test_repros/round9/n9v9_b104_whilehost.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 9,
+  "units_total": 9,
+  "failures": []
+ },
+ {
+  "name": "B104_main",
+  "pyc": "test_repros/round4/c4_09_chained_compare.pyc",
+  "regen_rc": 0,
+  "verify_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ }
+]

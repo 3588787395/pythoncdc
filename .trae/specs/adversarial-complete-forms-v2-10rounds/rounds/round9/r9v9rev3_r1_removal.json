@@ -1,0 +1,85 @@
+{
+ "removal_diff": {
+  "files_changed_in_core": [
+   "core/cfg/region_analyzer.py"
+  ],
+  "numstat": "1\t26\tcore/cfg/region_analyzer.py",
+  "hunks": [
+   "@@ -19111,12 +19111,6 @@ _region_overlaps_with_ternary 过滤与 TernaryRegion 重叠的 AssertRegion，",
+   "@@ -19188,21 +19182,6 @@ block_to_region「先到先得」（仅 not in 时登记，不覆盖既有归属",
+   "@@ -19211,7 +19190,7 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局",
+   "@@ -19363,10 +19342,6 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局"
+  ],
+  "plus_lines": [
+   "            if isinstance(_existing_region, AssertRegion):"
+  ],
+  "minus_count": 26
+ },
+ "r1_increment_in_3803fa73": {
+  "r1_hunk_headers": [
+   "@@ -19003,6 +19003,12 @@ _region_overlaps_with_ternary 过滤与 TernaryRegion 重叠的 AssertRegion，",
+   "@@ -19074,6 +19080,21 @@ block_to_region「先到先得」（仅 not in 时登记，不覆盖既有归属",
+   "@@ -19082,7 +19103,7 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局",
+   "@@ -19234,6 +19255,10 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局"
+  ],
+  "plus_count": 26,
+  "minus_lines": [
+   "            if isinstance(_existing_region, AssertRegion):"
+  ],
+  "no_other_feature_markers_in_r1_hunks": []
+ },
+ "verbatim_inverse_check": {
+  "removed_equals_r1_added_in_order": true,
+  "inserted_equals_r1_removed_in_order": true,
+  "removed_line_count": 26,
+  "r1_added_line_count": 26
+ },
+ "tree_grep_at_c1fa6fcf": {
+  "_b126_claimed": [],
+  "B126-R1": [],
+  "认领集_hits_analyzer": [
+   "c1fa6fcf:core/cfg/region_analyzer.py:19908:        （动态认领集），保证本方法后续遍历与下游识别不会再分配这些块（每块",
+   "c1fa6fcf:core/cfg/region_analyzer.py:19950:        跳过，本方法自建区域块由 claimed 动态认领集显式跳过；链追踪以",
+   "c1fa6fcf:core/cfg/region_analyzer.py:19956:        # [B104] 动态认领集与 Phase 1 结构保护集分离：claimed 仅承载本方法"
+  ],
+  "认领集_hits_analyzer_prev_3b0cc343": [
+   "3b0cc343:core/cfg/region_analyzer.py:19114:[B126-R1 认领集补守卫]：中段块常先被父 LoopRegion/IfRegion 登记（循环/条件",
+   "3b0cc343:core/cfg/region_analyzer.py:19118:识别器自维护认领集（前序迭代 region.blocks 全集），候选块命中即跳过（同层",
+   "3b0cc343:core/cfg/region_analyzer.py:19191:        # [B126-R1 本识别器认领集] [Round4-12] 守卫只查 block_to_region——但",
+   "3b0cc343:core/cfg/region_analyzer.py:19200:        # 本识别器自维护前序迭代认领集（entry + chain + message + boolop +",
+   "3b0cc343:core/cfg/region_analyzer.py:19366:            # [B126-R1] 本识别器认领集更新（region.blocks = entry + message +",
+   "3b0cc343:core/cfg/region_analyzer.py:19933:        （动态认领集），保证本方法后续遍历与下游识别不会再分配这些块（每块",
+   "3b0cc343:core/cfg/region_analyzer.py:19975:        跳过，本方法自建区域块由 claimed 动态认领集显式跳过；链追踪以",
+   "3b0cc343:core/cfg/region_analyzer.py:19981:        # [B104] 动态认领集与 Phase 1 结构保护集分离：claimed 仅承载本方法"
+  ],
+  "认领集_other_files_preexisting": [
+   "c1fa6fcf:core/cfg/region_ast_generator.py:4699:                    #   链的可认领集合，违反原则 4「父层只引用子区域入口」，实测把"
+  ],
+  "worktree_grep__b126_claimed": [],
+  "claimed_lines_in_file": []
+ },
+ "kept_guards_still_present_count": {
+  "_b126r2_raise_only_trampoline_exit": 3,
+  "_b124r1_chain_region_is_self_return": 3,
+  "_extract_recheck_store_stmts": 5,
+  "B126-R2": 3,
+  "B124-R1": 3,
+  "B104-R9": 5,
+  "B125-R1": 1
+ },
+ "removal_diff_touches_kept_tokens": [],
+ "guard_context_window_equal_pre_vs_final": true,
+ "guard_context_final": [
+  "            # assert (`assert 0 < a < 10`) 的中段 COMPARE_OP 块也以条件跳转",
+  "            # 结尾且后继链含 LOAD_ASSERTION_ERROR，会被误识别为独立 AssertRegion",
+  "            # （违反「每块唯一归属」）。父 IfRegion/LoopRegion 持有的块仍允许",
+  "            # 嵌套识别（嵌套即抽象节点）。",
+  "            _existing_region = self.block_to_region.get(block)",
+  "            if isinstance(_existing_region, AssertRegion):",
+  "                continue",
+  "            last = block.get_last_instruction()",
+  "            if last is None or last.opname not in FORWARD_JUMP_OPS:",
+  "                continue",
+  "            if len(block.conditional_successors) != 2:"
+ ]
+}

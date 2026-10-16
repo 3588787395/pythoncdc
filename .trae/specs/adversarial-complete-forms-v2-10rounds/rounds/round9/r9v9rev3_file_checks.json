@@ -1,0 +1,97 @@
+{
+ "fix_doc": {
+  "lines": 142,
+  "has_2161": 4,
+  "has_2182": 0,
+  "has_七面": 0,
+  "has_六面": 6,
+  "r3_wording_present": true,
+  "r3_guard_evidence_ref": true,
+  "g2_correction_present": true,
+  "nine3b_record_present": true
+ },
+ "aggregate_fix3b_round9": {
+  "faces": {
+   "oldface": "672/692",
+   "residual": "420/446",
+   "round1face": "423/423",
+   "probe42": "179/196",
+   "round2face": "245/251",
+   "quotation": "153/153"
+  },
+  "sum": "2092/2161"
+ },
+ "round9_copies_equal_temp_originals": {
+  "all_equal": true,
+  "per_file": {
+   "r9v9_full_oldface_c0-15.json": true,
+   "r9v9_full_oldface_c15-30.json": true,
+   "r9v9_full_oldface_c30-45.json": true,
+   "r9v9_full_oldface_c45-59.json": true,
+   "r9v9_full_residual_c0-18.json": true,
+   "r9v9_full_residual_c18-36.json": true,
+   "r9v9_full_residual_c36-54.json": true,
+   "r9v9_full_residual_c54-72.json": true,
+   "r9v9_full_round1face_c0-12.json": true,
+   "r9v9_full_round1face_c12-24.json": true,
+   "r9v9_regress_probe42_c0-14.json": true,
+   "r9v9_regress_probe42_c14-28.json": true,
+   "r9v9_regress_probe42_c28-42.json": true,
+   "r9v9_regress_round2face_c0-15.json": true,
+   "r9v9_regress_round2face_c15-30.json": true,
+   "r9v9_regress_round2face_c30-45.json": true,
+   "r9v9_quotation.json": true
+  }
+ },
+ "fix3b_vs_fix3_per_unit_changes": {
+  "identical_all_shards": true,
+  "diffs": {}
+ },
+ "diffcheck_vs_pre_b126_recomputed": {
+  "added_pass2fail": {},
+  "added_count": 0,
+  "removed_fail2pass": {
+   "r8_10_expr_cross_stmt.pyc": [
+    {
+     "shard": "r9v9fix3b_full_oldface_c30-45.json",
+     "fixed": [
+      "***<module>.r8_x_with_ternary: Failure: Different control flow"
+     ]
+    },
+    {
+     "shard": "r9v9fix3b_full_residual_c18-36.json",
+     "fixed": [
+      "***<module>.r8_x_with_ternary: Failure: Different control flow"
+     ]
+    }
+   ],
+   "x08_stmt_leaves.pyc": [
+    {
+     "shard": "r9v9fix3b_regress_probe42_c28-42.json",
+     "fixed": [
+      "***<module>.raise_leaf: Failure: Different control flow"
+     ]
+    }
+   ]
+  },
+  "removed_count": 3,
+  "expected_added": 0,
+  "expected_removed": 3
+ },
+ "hygiene": {
+  "bom_analyzer": {
+   "bom_start": true,
+   "bom_locations": 1
+  },
+  "bom_generator": {
+   "bom_start": true,
+   "bom_locations": 1
+  },
+  "commit_files": 39,
+  "commit_bad_files": [],
+  "fix3b_evidence_files": 37,
+  "debug_lines_in_batch_diff": [
+   "+                # （[T] 插桩：close op=RETURN_VALUE off=130），三元归约输出"
+  ]
+ }
+}
