@@ -7906,10 +7906,20 @@ condition_block/else_blocks 集合成员、前驱集合、异常边、try_offset
            has_break=False 触发 for-else 幻影、break/continue 结构塌陷
            （get_str_data / repro_101_04 形态）。判据：全部前驱 ∈ body_set
            ∧（末条为 JUMP_FORWARD/JUMP_ABSOLUTE 且目标是 natural_exit ∨
-           剥离 POP_TOP 清理尾部后 fall-through 紧邻 natural_exit，即原始
-           末条 offset+2 == natural_exit.start_offset）。不满足融合形态的
-           含用户代码后继仍按 R8 语义跳过（validate_data 场景保持不变，
-           site-packages round_08 复测 35/35 全通过）。
+            剥离 POP_TOP 清理尾部后 fall-through 紧邻 natural_exit，即原始
+            末条 offset+2 == natural_exit.start_offset）。不满足融合形态的
+            含用户代码后继仍按 R8 语义跳过（validate_data 场景保持不变，
+            site-packages round_08 复测 35/35 全通过）。
+
+        [B126-R2 异常路径尾闩守卫] R8「清理后继」（_s_meaningful 为空）注册
+        点补一条：清理蹦床沿单后继链（≤8 跳、每跳皆清理型）终结于纯 raise
+        块（RAISE_VARARGS/RERAISE），且终点及其其余前驱与本循环结构域完全
+        无关（∉ body/else、非 header/condition_block/natural_exit/
+        for_iter_exit）时，该蹦床是 assert 链失败消息路径等**异常尾闩**，
+        不是 break 出口——命中即跳过注册（判据细节见
+        _b126r2_raise_only_trampoline_exit docstring）。真 break 落点
+        （`for: if y: break` 后接 raise）其 raise 块与 natural_exit 重合或
+        含 header/结构块前驱，命中排除项，逐位维持既有行为。
         """
         break_blocks_set = set()
         continue_map = {}
@@ -8148,6 +8158,24 @@ condition_block/else_blocks 集合成员、前驱集合、异常边、try_offset
                                     break_blocks_set.add(s)
                                     continue
                                 continue
+                            # [B126-R2 异常路径尾闩守卫] 清理蹦床（仅 POP_TOP/
+                            # JUMP_FORWARD 等协议指令、零用户语义）沿单后继链
+                            # 终结于纯 raise 块、且该终结路径与本循环结构域
+                            # 完全无关（raise 块及其前驱均 ∉ body/else、非
+                            # header/条件块/出口）时，该蹦床是 assert 失败
+                            # 消息路径等**异常尾闩**，不是本循环的 break 落点。
+                            # 旧 [R8] 判据把它注册为 break 候选 ⇒ 外层 for 被
+                            # 误标 has_break = 幻影 for-else + 体内幻影 break
+                            # （assert_deep：for 内 while 的链式 assert 假边
+                            # 蹦床 74/76 → RAISE 块 78）。命中即不注册；真
+                            # break 落点（`for: if y: break` 后接 raise）其
+                            # raise 块与 natural_exit 重合或含 header/结构块
+                            # 前驱，命中排除项，逐位维持既有行为。
+                            if self._b126r2_raise_only_trampoline_exit(
+                                    s, body_set, header, natural_exit,
+                                    for_iter_exit, condition_block,
+                                    _else_only_set):
+                                continue
                             break_blocks_set.add(s)
                             _s_only_pop = (not _s_meaningful
                                            and any(i.opname == 'POP_TOP' for i in s.instructions
@@ -8372,6 +8400,86 @@ condition_block/else_blocks 集合成员、前驱集合、异常边、try_offset
                         _r102_stack.append((_ns, _depth + 1))
 
         return break_blocks_set, continue_map
+
+    def _b126r2_raise_only_trampoline_exit(self, s: BasicBlock,
+                                           body_set: Set[BasicBlock],
+                                           header: BasicBlock,
+                                           natural_exit: Optional[BasicBlock],
+                                           for_iter_exit: Optional[BasicBlock],
+                                           condition_block: Optional[BasicBlock],
+                                           else_only_set: Set[BasicBlock]) -> bool:
+        """[B126-R2] 判定清理蹦床块 s 是否为「异常路径尾闩」——不是本循环的 break 出口。
+
+        ①算法依据：No More Gotos「自然循环 + 结构化出口」——break 出口的语义
+        是控制流离开本循环并续行循环之后的代码；而 assert（链式比较条件 +
+        消息）的失败路径另编一条钻石：各链段假边经清理蹦床（POP_TOP 弹残值 /
+        JUMP_FORWARD 中转，仅协议指令、零用户语义）汇入含 LOAD_ASSERTION_ERROR
+        的纯 raise 块，该 raise 块与循环后续码无关。旧 [R8] 判据把「仅含清理
+        指令且落点在本循环 body 外」的蹦床一律注册为 break 候选——当链式
+        assert 位于外层 for、失败蹦床只经 RAISE 终结时，外层循环被误标
+        has_break ⇒ 幻影 for-else + 体内幻影 break（assert_deep：for 内 while
+        的链式 assert 假边蹦床 74/76 → RAISE 块 78）。
+        ②归约顺序：在 _detect_break_continue 的「清理后继」（[R8] 分支）
+        注册点内联调用；命中即跳过注册，不命中逐位维持既有行为（[R101]/[R8]
+        融合形、break 落点与 natural_exit 重合或经 body 前驱时均不受影响）。
+        ③唯一归属判定（判据 = 块对象结构事实，零名字/偏移/阈值/跨层反查）：
+        自 s 起沿单普通后继（排除异常边与已访问块）行走 ≤8 跳，每跳块须为
+        清理型（指令全在噪声/跳转/条件跳转/短路跳转/POP_TOP/EXTENDED_ARG，
+        同 [R8] 的 _s_meaningful 口径）；终点须为纯 raise 块（含 RAISE_VARARGS/
+        RERAISE）；且终点与本循环结构域无关——终点及其其余前驱均 ∉ body/
+        else、非 header/condition_block/natural_exit/for_iter_exit，终点的
+        其余前驱亦须为清理型。任一不满足 ⇒ False（维持注册）。
+        ④嵌套处理：只读传入的本循环结构域与蹦床自身后继/前驱集合，不感知
+        更外层嵌套；assert 链自身的识别归属由 _identify_assert_regions 独立
+        完成，本判定不引用其语义。
+        ⑤入口引用语义：不适用（服务于 break 候选过滤，不涉及区域 entry 引用）。
+        ⑥反编译流程：_detect_break_continue → break_blocks_set →
+        LoopRegion.break_blocks / has_break → _generate_loop 的 Break 与
+        orelse 渲染；返回 True 时该蹦床不入 break 集合。
+        [C1] 只读 s 后继链块与终点块的指令 opcode、成功/前驱集合及本循环
+        结构域成员关系；[C2] 不窥视区域内部（不读 AssertRegion/不受
+        block_to_region 影响）；[C3] 命中面为封闭守卫（单后继 + 清理族 +
+        raise 终结 + 域外前驱），未命中时调用方逐位维持 [R8] 既有注册。
+        """
+        def _pure_cleanup(b: BasicBlock) -> bool:
+            return not [i for i in b.instructions
+                        if i.opname not in NOISE_OPS
+                        and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                             'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                        and i.opname not in CONDITIONAL_JUMP_OPS
+                        and i.opname not in SHORT_CIRCUIT_JUMP_OPS
+                        and i.opname not in ('POP_TOP', 'EXTENDED_ARG')]
+
+        def _structurally_off_domain(b: BasicBlock) -> bool:
+            return (b in body_set or b in else_only_set or b == header
+                    or b == natural_exit or b == for_iter_exit
+                    or b == condition_block)
+
+        cur = s
+        seen = {s}
+        for _ in range(8):
+            if any(i.opname in ('RAISE_VARARGS', 'RERAISE') for i in cur.instructions):
+                if _structurally_off_domain(cur):
+                    return False
+                for p in cur.predecessors:
+                    if p is cur or p in seen:
+                        continue
+                    if _structurally_off_domain(p):
+                        return False
+                    if not _pure_cleanup(p):
+                        return False
+                return True
+            if not _pure_cleanup(cur):
+                return False
+            nxt = [x for x in cur.successors
+                   if x is not cur
+                   and x not in getattr(cur, 'exception_successors', set())
+                   and x not in seen]
+            if len(nxt) != 1:
+                return False
+            cur = nxt[0]
+            seen.add(cur)
+        return False
 
 
     def _collect_natural_loop_body(self, header: BasicBlock,

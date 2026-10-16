@@ -1,0 +1,81 @@
+{
+ "elapsed_sec": 3.7,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 0,
+  "success": 4
+ },
+ "files_total": 4,
+ "generated_at": "2026-10-16T23:41:11",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [],
+  "success": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/calexrights_func.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/calexrights_func.pyc",
+   "pyc_sha": "f06e2bb323b5",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/calexrights_funcOK.py",
+   "source_sha": "534ff37feb0d",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 8,
+   "units_total": 8
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
+   "pyc_sha": "c34a6044c924",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixinOK.py",
+   "source_sha": "3e848059b8ae",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 14,
+   "units_total": 14
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+   "pyc_sha": "461e3bc834bd",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quoteOK.py",
+   "source_sha": "4e2954762ccf",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 45,
+   "units_total": 45
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc",
+   "pyc_sha": "d14295469ce8",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/fly/loggerOK.py",
+   "source_sha": "bf0cab4a4a6a",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 64,
+   "units_total": 64
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 1.0,
+ "units_success": 131,
+ "units_total": 131
+}

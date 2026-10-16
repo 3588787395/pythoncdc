@@ -1,0 +1,81 @@
+{
+ "elapsed_sec": 11.9,
+ "files_by_status": {
+  "compile_error": 0,
+  "error": 0,
+  "failure": 0,
+  "success": 4
+ },
+ "files_total": 4,
+ "generated_at": "2026-10-16T23:42:04",
+ "interpreter": "3.11.7",
+ "paths_by_status": {
+  "compile_error": [],
+  "error": [],
+  "failure": [],
+  "success": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc"
+  ]
+ },
+ "rows": [
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+   "pyc_sha": "34dbb235b637",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_brokerOK.py",
+   "source_sha": "462d22276489",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 128,
+   "units_total": 128
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc",
+   "pyc_sha": "cc7920470c4d",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_funcOK.py",
+   "source_sha": "d65fdfdec8b1",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 18,
+   "units_total": 18
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc",
+   "pyc_sha": "c467794be513",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_baseOK.py",
+   "source_sha": "853015336935",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 28,
+   "units_total": 28
+  },
+  {
+   "detail": null,
+   "failures": [],
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
+   "pyc_sha": "b67c0b5dfb1e",
+   "source": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/functionOK.py",
+   "source_sha": "f34c63966015",
+   "status": "success",
+   "success_rate": 1.0,
+   "units_success": 71,
+   "units_total": 71
+  }
+ ],
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "success_rate": 1.0,
+ "units_success": 245,
+ "units_total": 245
+}

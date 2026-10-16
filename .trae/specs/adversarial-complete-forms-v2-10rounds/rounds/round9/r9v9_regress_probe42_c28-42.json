@@ -178,21 +178,19 @@
   "pyc": "test_repros/round2/x08_stmt_leaves.pyc",
   "verify_rc": 1,
   "status": "failure",
-  "units_success": 5,
+  "units_success": 6,
   "units_total": 8,
   "failures": [
    "***<module>.assert_leaf: Failure: Different control flow",
-   "***<module>.raise_leaf: Failure: Different control flow",
    "***<module>.return_leaf: Failure: Different control flow"
   ],
   "tail": [
    "  ***<module>.assert_leaf: Failure: Different control flow",
-   "  ***<module>.raise_leaf: Failure: Different control flow",
    "  ***<module>.return_leaf: Failure: Different control flow",
    "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
    "[single] F:/Downloads/pythoncdc-main/test_repros/round2/x08_stmt_leaves.pyc",
    "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round2/x08_stmt_leavesOK.py",
-   "[single] status=failure units=5/8 success_rate=62.50%"
+   "[single] status=failure units=6/8 success_rate=75.00%"
   ]
  },
  {

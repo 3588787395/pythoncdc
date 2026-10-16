@@ -1,0 +1,11 @@
+[
+ {
+  "name": "r3_e10_call_args",
+  "pyc": "test_repros/round3/e10_g7_call_args.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 32,
+  "units_total": 32,
+  "failures": []
+ }
+]

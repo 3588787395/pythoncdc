@@ -204,23 +204,21 @@
   "pyc": "F:/Downloads/pythoncdc-main/test_repros/round8/r8_10_expr_cross_stmt.pyc",
   "verify_rc": 1,
   "status": "failure",
-  "units_success": 8,
+  "units_success": 9,
   "units_total": 12,
   "failures": [
    "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
    "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
-   "***<module>.r8_x_raise_ternary_class: Failure: Different control flow",
-   "***<module>.r8_x_with_ternary: Failure: Different control flow"
+   "***<module>.r8_x_raise_ternary_class: Failure: Different control flow"
   ],
   "tail": [
    "  ***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
    "  ***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
    "  ***<module>.r8_x_raise_ternary_class: Failure: Different control flow",
-   "  ***<module>.r8_x_with_ternary: Failure: Different control flow",
    "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>",
    "[single] F:/Downloads/pythoncdc-main/test_repros/round8/r8_10_expr_cross_stmt.pyc",
    "[single] ���� F:/Downloads/pythoncdc-main/test_repros/round8/r8_10_expr_cross_stmtOK.py",
-   "[single] status=failure units=8/12 success_rate=66.67%"
+   "[single] status=failure units=9/12 success_rate=75.00%"
   ]
  },
  {
