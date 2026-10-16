@@ -1,0 +1,127 @@
+{
+ "small34": {
+  "units_success": 1568,
+  "units_total": 1568,
+  "files_by_status": {
+   "compile_error": 0,
+   "error": 0,
+   "failure": 0,
+   "success": 34
+  }
+ },
+ "quotation": {
+  "rc": 0,
+  "tail": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc\n[single] ���� F:/Downloads/pythoncdc-main/site-packages/fly/data/quotationOK.py\n[single] status=success units=153/153 success_rate=100.00%\n"
+ },
+ "pytest": {
+  "rc": 1,
+  "summary_line": "2 failed, 282 passed, 2 xpassed in 9.61s"
+ },
+ "iv2": {
+  "IMPORT_OK": true,
+  "COMPILE_OK": true,
+  "BOM_region_ast_generator.py": "one",
+  "BOM_region_analyzer.py": "unexpected:True",
+  "instrumentation_noncomment_hits": {
+   "region_ast_generator.py": 2,
+   "region_analyzer.py": 0
+  },
+  "G3_forbidden_prefix_new_defs": 0
+ },
+ "shards": [
+  {
+   "shard": 0,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 51
+   },
+   "units_success": 786,
+   "units_total": 786
+  },
+  {
+   "shard": 1,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 51
+   },
+   "units_success": 469,
+   "units_total": 469
+  },
+  {
+   "shard": 2,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 51
+   },
+   "units_success": 538,
+   "units_total": 538
+  },
+  {
+   "shard": 3,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 51
+   },
+   "units_success": 887,
+   "units_total": 887
+  },
+  {
+   "shard": 4,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 51
+   },
+   "units_success": 855,
+   "units_total": 855
+  },
+  {
+   "shard": 5,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 51
+   },
+   "units_success": 999,
+   "units_total": 999
+  },
+  {
+   "shard": 6,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 51
+   },
+   "units_success": 801,
+   "units_total": 801
+  },
+  {
+   "shard": 7,
+   "files_by_status": {
+    "compile_error": 0,
+    "error": 0,
+    "failure": 0,
+    "success": 45
+   },
+   "units_success": 1282,
+   "units_total": 1282
+  }
+ ],
+ "total": {
+  "units_success": 6617,
+  "units_total": 6617,
+  "files_failure": 0,
+  "elapsed_sec": 610.4
+ }
+}

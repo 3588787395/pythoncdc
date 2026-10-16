@@ -56,12 +56,12 @@
   - [x] 8.3 评审工程师复核；REVIEW2.md（首判打回 5 项（B104-R2a/R2b、B105-R2、B107-R2、B103-R2 域内缺口）→ 整改闭环 → §8 终审放行（A 零打回/B 逐位一致/C 新变体 7 探针域内全 PASS）；B122/B123 域外候选登记；8/8 移交项复核成立；49603022/458e740e）
   - [x] 8.4 主代理验证：验证序六步；VERIFICATION.md（两遍：首跑 shard4 REGRESSIONS=1（finance.pyc dictcomp 键蒸发，B106 stale delta）→ P0 修复② → 终验 402 八分片 REGRESSIONS=0 逐位基线一致 6554/6617、369/402；34 集 1505/1568 REGRESSIONS=0；quotation 152/153；tests 277/2 基线名单/2 xpassed；IV.2 全过；站桩 4 面 +6 改善 WORSE=0）
   - [x] 8.5 归档 rounds/round8/ + 提交并 push origin main
-- [ ] Task 9: Round 9 — 全台账 128 形态终局对抗复验（III.2–III.4 全形态各 ≥1 深层探针 + 负对照 + 站桩回归全重放）
-  - [ ] 9.1 评审工程师：128 形态终局复验（每形态结论 = 完备/破口/零能力三态之一，II.3 口径；完备宣告附 13 误解自查）+ 站桩回归全重放 + 合规审计终审；新发现即登记并本轮封闭；REVIEW.md + test_repros/round9/
-  - [ ] 9.2 修复工程师（可多位协同）：封闭终局复验发现；FIX.md
-  - [ ] 9.3 评审工程师复核；REVIEW2.md
-  - [ ] 9.4 主代理验证：验证序六步；VERIFICATION.md
-  - [ ] 9.5 归档 rounds/round9/ + 提交并 push origin main
+- [x] Task 9: Round 9 — 全台账 128 形态终局对抗复验（III.2–III.4 全形态各 ≥1 深层探针 + 负对照 + 站桩回归全重放）（三态 128 = 完备 101 / 破口 27 / 零能力 0；本轮封闭 B104 族 14 + B124 族 5 + B125 族 2 + B126 族 1 + 存量 B104-R4；移交 B127/B128/Yield 探针重建/B44 证据缺口 → Round 10；轮门禁达成）
+  - [x] 9.1 评审工程师：128 形态终局复验（每形态结论 = 完备/破口/零能力三态之一，II.3 口径；完备宣告附 13 误解自查）+ 站桩回归全重放 + 合规审计终审；新发现即登记并本轮封闭；REVIEW.md + test_repros/round9/（REVIEW_DRAFT.md：三态全落位、站桩全重放定格、合规六项过；登记 B124 双桶/B125/B126 破口族；探针 r9v9_repro_* 全量入库）
+  - [x] 9.2 修复工程师（可多位协同）：封闭终局复验发现；FIX.md（三段存证 58ed696b/3803fa73/42fe45fe：§0 B124 四臂归属拆双桶 + §1 B104 while 族 [B104-R9/R4]；§1.5 B124 [B124-R1/R2a/R2b] + §2 B125 [B125-R1]；§3 B126 [B126-R2]；§5 六面门禁 2092/2161 WORSE=0、34 集 NEWFAIL=0；FIX_R9.md 142 行）
+  - [x] 9.3 评审工程师复核；REVIEW2.md（首判打回 3 项：R-1 `_b126_claimed` 未声明活性改动（R1-off 臂证非必需）→ 9.3b 全量移除（逐字逆）；R-2 分母 2161/六面修正；R-3 证据补齐；REVIEW3.md 终审放行——VERBATIM_INVERSE=true、读数 live 抽验全对、承重面 432/432、不回退）
+  - [x] 9.4 主代理验证：验证序六步；VERIFICATION.md（基线 gate 42：34 集 1568/1568 REGRESSIONS=0 IMPROVED=33；402 八分片 6617/6617 REGRESSIONS=0×8 且产物零字节差异；quotation 153/153；tests 七套件 2 failed/282 passed/2 xpassed 基线名单；IV.2 全过；首跑驱动编码勘误与 shard7 拆分标签笔误修复记录在案）
+  - [x] 9.5 归档 rounds/round9/ + 提交并 push origin main
 - [ ] Task 10: Round 10 — 终审与台账定稿
   - [ ] 10.1 主代理全量终验：402 八分片 batch + compare REGRESSIONS=0 + quotation + tests + 34 小测试集 + IV.2 门禁自检；VERIFICATION.md
   - [ ] 10.2 wiki §8.2 复审六步全量重验与增量更新（评审工程师执行，主代理验收；旧 round10 已执行 v6 首跑，本轮为重验 + B77+ 增量）：grep 全部落地标记（含本规范各轮「代码已落地」声明核验，I.6）→ 台账（§5）全量更新（II.3 三态判定落位 + 组合级挂账分层）→ `tools/kb/syntax_coverage.py` 重跑 → 完备占比重算（II.1 口径）→ wiki 页面数字同步（禁手改、禁矛盾数字）→ log 记录

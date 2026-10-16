@@ -71,7 +71,7 @@ if __name__ == '__main__':
     regen_fail = {e['path'] for e in load(os.path.join(HERE, 'regen_shard7.json'))}
     paths = [p for p in paths if p not in regen_fail]
     halves = [paths[:CUT], paths[CUT:]]
-    reps = [run_half(h, 'a') for h in halves]
+    reps = [run_half(h, t) for h, t in zip(halves, ('a', 'b'))]
     m = merge(*reps)
     out = os.path.join(HERE, 'shard7_report_new.json')
     with open(out, 'w', encoding='utf-8') as f:
