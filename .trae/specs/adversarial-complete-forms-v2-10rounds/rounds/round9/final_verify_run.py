@@ -140,11 +140,19 @@ def main():
                                          or 'def _temp_' in l)]
     checks['G3_forbidden_prefix_new_defs'] = len(bad_def)
     summary['iv2'] = checks
+    with open(LOG, 'a', encoding='utf-8') as f:
+        f.write('=== IV2 ' + json.dumps(checks, ensure_ascii=False) + '\n')
+    print('IV2: ' + json.dumps(checks, ensure_ascii=False), flush=True)
     # 汇总
     tot_u = tot_s = tot_f = 0
     shard_rows = []
     for i in range(8):
-        rep = json.load(open(os.path.join(HERE, 'shard%d_report_new.json' % i), encoding='utf-8'))
+        try:
+            rep = json.load(open(os.path.join(HERE, 'shard%d_report_new.json' % i), encoding='utf-8'))
+        except FileNotFoundError:
+            shard_rows.append({'shard': i, 'MISSING': True})
+            print('shard%d: MISSING' % i, flush=True)
+            continue
         tot_u += rep['units_total']; tot_s += rep['units_success']
         tot_f += rep['files_by_status']['failure']
         shard_rows.append({'shard': i, 'files_by_status': rep['files_by_status'],

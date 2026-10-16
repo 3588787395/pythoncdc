@@ -16,6 +16,11 @@ BL = os.path.join(ROOT, '.trae', 'specs', 'adversarial-complete-forms-v2-10round
 BL42 = os.path.join(HERE, 'baseline42')
 
 
+def _p(s):
+    sys.stdout.buffer.write((s + '\n').encode('utf-8', 'replace'))
+    sys.stdout.buffer.flush()
+
+
 def shard_paths(n):
     with open(os.path.join(BL, 'shard%d.json' % n), encoding='utf-8-sig') as f:
         return [e['path'] for e in json.load(f)]
@@ -39,15 +44,15 @@ def cmd_regen(n, start, end):
             if r.returncode != 0 or not os.path.exists(ok):
                 failed.append({'path': pyc, 'rc': r.returncode,
                                'err': (r.stderr or r.stdout)[-400:]})
-                print('[FAIL] %s rc=%s' % (pyc, r.returncode))
+                _p('[FAIL] %s rc=%s' % (pyc, r.returncode))
         except subprocess.TimeoutExpired:
             failed.append({'path': pyc, 'rc': 'timeout', 'err': ''})
-            print('[TIMEOUT] %s' % pyc)
+            _p('[TIMEOUT] %s' % pyc)
     out = os.path.join(HERE, 'regen_shard%d.json' % n)
     with open(out, 'w', encoding='utf-8') as f:
         json.dump(failed, f, ensure_ascii=False, indent=1)
-    print('regen shard%d [%d:%d]: %d ok, %d failed -> %s'
-          % (n, start, end, len(paths) - len(failed), len(failed), out))
+    _p('regen shard%d [%d:%d]: %d ok, %d failed -> %s'
+       % (n, start, end, len(paths) - len(failed), len(failed), out))
 
 
 def _load(p, dflt):
@@ -70,14 +75,14 @@ def cmd_verify(n):
                         '--json', rep] + paths,
                        cwd=ROOT, capture_output=True, text=True, timeout=290,
                        encoding='utf-8', errors='replace')
-    print(r.stdout[-1500:])
+    _p(r.stdout[-1500:])
     if r.returncode != 0:
-        print('[VERIFY RC=%d] %s' % (r.returncode, r.stderr[-800:]))
+        _p('[VERIFY RC=%d] %s' % (r.returncode, r.stderr[-800:]))
         sys.exit(r.returncode)
     with open(rep, encoding='utf-8') as f:
         d = json.load(f)
-    print('shard%d NEW: %s units=%s/%s' % (n, d['files_by_status'],
-                                           d['units_success'], d['units_total']))
+    _p('shard%d NEW: %s units=%s/%s' % (n, d['files_by_status'],
+                                         d['units_success'], d['units_total']))
 
 
 def cmd_compare(n):
@@ -87,9 +92,9 @@ def cmd_compare(n):
                         '--before', old, '--after', new],
                        cwd=ROOT, capture_output=True, text=True, timeout=120,
                        encoding='utf-8', errors='replace')
-    print(r.stdout[-2500:])
+    _p(r.stdout[-2500:])
     if r.returncode != 0:
-        print('[COMPARE RC=%d] %s' % (r.returncode, r.stderr[-500:]))
+        _p('[COMPARE RC=%d] %s' % (r.returncode, r.stderr[-500:]))
 
 
 if __name__ == '__main__':

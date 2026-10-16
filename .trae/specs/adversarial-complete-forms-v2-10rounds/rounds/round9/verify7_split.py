@@ -14,6 +14,11 @@ BL = os.path.join(ROOT, '.trae', 'specs', 'adversarial-complete-forms-v2-10round
 CUT = 23
 
 
+def _p(s):
+    sys.stdout.buffer.write((s + '\n').encode('utf-8', 'replace'))
+    sys.stdout.buffer.flush()
+
+
 def load(p):
     with open(p, encoding='utf-8') as f:
         return json.load(f)
@@ -28,14 +33,14 @@ def run_half(paths, tag):
                         '--json', out] + paths,
                        cwd=ROOT, capture_output=True, text=True, timeout=290,
                        encoding='utf-8', errors='replace')
-    print(r.stdout[-600:])
+    _p(r.stdout[-600:])
     if r.returncode != 0:
-        print('[%s RC=%d] %s' % (tag, r.returncode, r.stderr[-500:]))
+        _p('[%s RC=%d] %s' % (tag, r.returncode, r.stderr[-500:]))
         sys.exit(r.returncode)
     d = load(out)
-    print('half %s: %s units=%s/%s elapsed=%.1fs' % (tag, d['files_by_status'],
-                                                     d['units_success'], d['units_total'],
-                                                     time.time() - t0))
+    _p('half %s: %s units=%s/%s elapsed=%.1fs' % (tag, d['files_by_status'],
+                                                  d['units_success'], d['units_total'],
+                                                  time.time() - t0))
     return d
 
 
@@ -71,5 +76,5 @@ if __name__ == '__main__':
     out = os.path.join(HERE, 'shard7_report_new.json')
     with open(out, 'w', encoding='utf-8') as f:
         json.dump(m, f, ensure_ascii=False, indent=1)
-    print('shard7 merged: %s units=%s/%s -> %s' % (m['files_by_status'],
-                                                   m['units_success'], m['units_total'], out))
+    _p('shard7 merged: %s units=%s/%s -> %s' % (m['files_by_status'],
+                                                m['units_success'], m['units_total'], out))
