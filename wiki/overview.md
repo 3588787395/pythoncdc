@@ -14,7 +14,7 @@ related:
   - "[[cfg-anatomy]]"
   - "[[decompile-invariant-completeness]]"
 created: 2026-09-28
-updated: 2026-09-29
+updated: 2026-10-17
 kind: overview
 file: pycdc.py
 ---
@@ -40,7 +40,7 @@ pythoncdc（Python 字节码反编译器，白名单源码 60 文件 / ≈ 22 �
 2. **区域归约 = 七阶段**（[[region-reduction-stages]]）：识别侧 25,538 行、生成侧 48,806 行；阶段归属靠"构造 vs 消费"区域对象区分；`_generate_block_statements_body` 单方法 4,022 行且读 42 个实例字段。
 3. **唯一确证重复是死副本**（[[duplicate-code-matrix]]）：`parsers/ast_builder_cleaned.py` 与在用的 `ast_builder.py` 有 212 个函数体逐字相同，但全仓引用数 = 0；另有 5 对"名字像实现不同"的文件已被明确标为不可误删。
 4. **缺陷模式层闭环已建立**（[[patch-semantic-clusters]] + `wiki/patterns/`）：9,098 个标记语义聚类为 16 类；if/loop/boolop 三类（2,936 个，32%）的泛化答案 = 5 张模式页（P-1~P-5，R23-R26 提炼）。新 bug 先查 patterns 区按症状命中先例，按边界判据修 region 判定，禁止 `_fix_/_patch_` 后处理。
-5. **程序自身分支规模与语法完备性已量化**（[[decompile-invariant-completeness]] + [[cfg-anatomy]] + [[branch-conditions]]）：反编译器自身 60 模块 / 6,923 单元共 **60,933 个分支点**（子分支 91.2%，最深支配深度 **164** 层）；**61,289 个分支判定条件逐条入库**（7 类判定点、结构归一化、同形簇 1,903 组、相似度可查——BOM 纠正后 region_ast_generator 以 30.1% 成为最大分支巢）；**语法完备性 = 路径层 128/128 = 100% × 不变式层（嵌套无感，形式层）**：完备 **128** / 破口 **0** / 零能力 **0** ⇒ **100%**（B1 族于对抗规范 Round 1 五臂封闭升格，2026-10-04 终审 v6 口径）；组合级对抗挂账 25 号未清零（权威清单 = spec rounds/round10/REVIEW.md 残留决策表）。except* 审计纠正：旧判零能力系用 3.12 操作码 PRELOAD_RERAISE 当 3.11 检测标准，实际全链已实现（识别 region_analyzer.py:9731 → 发射 code_generator.py:702 except*）。标准含 13 条误解清单（循环论证/有过就算/语料口径/无限分母等）与迭代机制（fix 批落位→复审→台账→重算）。
+5. **程序自身分支规模与语法完备性已量化**（[[decompile-invariant-completeness]] + [[cfg-anatomy]] + [[branch-conditions]]）：反编译器自身 60 模块 / 6,923 单元共 **60,933 个分支点**（子分支 91.2%，最深支配深度 **164** 层）；**61,289 个分支判定条件逐条入库**（7 类判定点、结构归一化、同形簇 1,903 组、相似度可查——BOM 纠正后 region_ast_generator 以 30.1% 成为最大分支巢）；**语法完备性 = 路径层 128/128 = 100% × 不变式层（嵌套无感，形式层）**：完备 **103** / 破口 **25** / 零能力 **0** ⇒ **80.47%**（对抗规范 v2 十轮三态落账终值，2026-10-17 复审 v7：round9 封闭 B104 族/B124/B125/B126 后升格 2 行）；组合级对抗挂账 25 号分层：清零 9 / 维持 16（残余转 B78–B97 续接编号；分层终表 = spec v2 rounds/round10/WIKI_REVIEW.md §3.3）。except* 审计纠正：旧判零能力系用 3.12 操作码 PRELOAD_RERAISE 当 3.11 检测标准，实际全链已实现（识别 region_analyzer.py:9731 → 发射 code_generator.py:702 except*）。标准含 13 条误解清单（循环论证/有过就算/语料口径/无限分母等）与迭代机制（fix 批落位→复审→台账→重算）。
 
 ## 维护约定
 

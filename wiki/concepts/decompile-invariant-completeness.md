@@ -9,7 +9,7 @@ related:
   - "[[branch-conditions]]"
   - "[[if-continue-sibling-loss]]"
 created: 2026-09-29
-updated: 2026-09-29
+updated: 2026-10-17
 kind: concept
 sources:
   - tools/kb/syntax_coverage.py
@@ -32,12 +32,12 @@ sources:
 > **完备占比 = 完备形态数 ÷ 128。分子判据 = 三路径存在 ∧ 嵌套无感不变式成立。**
 > 要求：程序对嵌套与不嵌套必须完全一样处理；处理对嵌套无感。
 
-| 层 | 当前读数（2026-10-04 终审更新） |
+| 层 | 当前读数（2026-10-17 复审更新，v7） |
 |---|---|
-| 路径存在（识别+归约+生成） | **128/128 = 100%** |
-| 嵌套无感不变式（形式层） | **完备 128 / 破口 0 / 零能力 0**（B1 族于对抗规范 Round 1 五臂封闭，Round 2–9 复验零漂移） |
-| 组合级对抗挂账 | **25 号未清零**（B42–B51/B56–B65/B69–B71/B73–B76 内未封闭部分 + 残留单元；权威清单 = `.trae/specs/harden-completed-forms-10rounds/rounds/round10/REVIEW.md` 残留决策表 + REVIEW2.md） |
-| **完备占比** | **128/128 = 100%**（形式层；组合级挂账透明挂账、未清零，不计入形式层分母） |
+| 路径存在（识别+归约+生成） | **128/128 = 100%**（工具实测；重跑 sha256 前后一致 `86539c44…`） |
+| 嵌套无感不变式（形式层） | **完备 103 / 破口 25 / 零能力 0**（对抗规范 v2 十轮三态落账终值：表A 14 + 表B 6 + 表C 5；round9 封闭 B104 族/B124/B125/B126 后升格 2 行；B1 族五臂封闭维持） |
+| 组合级对抗挂账 | **25 号分层：清零 9 / 维持 16**（B42–B51/B56–B65/B69–B71/B73–B76，扣除已划除 B45/B64；清零 = 对抗规范 Round 1 批次 A/B/C 8 项 + B50 同链实证；维持 16 项残余以 B78–B97 续接编号登记；分层终表 = `.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round10/WIKI_REVIEW.md` §3.3，原始清单 = harden spec `rounds/round10/REVIEW.md` §4.1 + `REVIEW2.md`） |
+| **完备占比** | **103/128 = 80.47%**（II.1 口径：完备形态数 ÷ 128；破口不计分子） |
 
 三维度禁止互替：**语法完备**（本文）/ **结构正确率**（sstrict 缺陷口径）/ **字节等价**（门禁口径，见 §9.2）。
 
@@ -110,9 +110,9 @@ sources:
 | T1 | 每形态有识别路径 | `RegionType` 枚举 19 类 `region_analyzer.py:170-189`；识别函数族：`_identify_conditional_regions:15981` / `_identify_loop_regions:3782` / `_identify_try_except_regions:7603` / `_identify_with_regions:12282` / `_identify_match_regions:12920` / `_identify_assert_regions:14799` / `_identify_boolop_regions:23420` / `_identify_ternary_regions:20515` / `_identify_chained_compare_regions:15495` / `_identify_sequence_regions:27519`；except\* 规则4 `:9731/:9813`、框架块 `:12701-12709` | **128/128** |
 | T2 | 每形态有归约路径 | `Region.add_child:221`；臂收集+汇合剪枝 W14-C `:27282/27304`；handler 归并 `:7891/:8724/:9342`；`_find_loop_else:5242` + clamp `:5105`；孤儿块释放+守卫 `region_ast_generator.py:1593-1663`、`region_analyzer.py:1410-1424` | **128/128** |
 | T3 | 每形态有生成路径 | dict 工厂：If `region_ast_generator.py:9575/18957/24043`、While `:5463/12086`、Try `:26901/27389`、Match `:31596`、elif `:17027/17261`、Break/Continue `:10198/:24098`、Lambda `:2250`、ListComp `comprehension_generator.py:2074`；`ast_converter.py` dict→AST；`code_generator.py` 发射 | **128/128**（`syntax-coverage.json` 实测） |
-| T4 | 归约只消费 L(A)（C1/C3） | continue 守卫 `_block_is_continue_target:10289` + `_loop_else_set` 排除 `:10423-10427`；共享尾守卫族 W14-C/fix3-T1T2T6/W23/R71-thenover（`region_analyzer.py:27282/27304/19602`、`region_ast_generator.py:12945-13075/18593/19185/22758`） | 守卫族已落地；**B1 破坏**（§6） |
+| T4 | 归约只消费 L(A)（C1/C3） | continue 守卫 `_block_is_continue_target:10289` + `_loop_else_set` 排除 `:10423-10427`；共享尾守卫族 W14-C/fix3-T1T2T6/W23/R71-thenover（`region_analyzer.py:27282/27304/19602`、`region_ast_generator.py:12945-13075/18593/19185/22758`） | 守卫族已落地；B1 族五臂封闭维持 + v2 三态落账（25 破口行均带行内编号，§5 判定列） |
 | T5 | 子区域黑箱消费（C2） | 孤儿块释放+合法子区域不释放守卫（R74 族） | 已落地 |
-| T6 | 非局部信息守卫封闭（C3） | 同 T4 守卫族 | 大族已落地；**B1 未封闭**（§6） |
+| T6 | 非局部信息守卫封闭（C3） | 同 T4 守卫族 | 大族已落地；B1 族 Round 1 封闭（§6）；v2 落账后剩余 25 破口行按 §8.3 状态机推进 |
 | T7 | 归纳基：单层正确 | 门禁旁证（§9.2）：官方 41 靶 0 ERR、字节等价 99.55% | 成立（语料口径仅旁证） |
 | T8 | 生成递归于区域树 | 生成器对 children 递归，`ast_converter.py` 消费 dict 树 | 成立 |
 
@@ -138,19 +138,19 @@ sources:
 | 形态 | 识别锚点 | 归约锚点 | 生成锚点 | 判定 |
 |---|---|---|---|---|
 | Module | 管线根 | 顶级区域列表 | `region_ast_generator.py:6728` | 完备 |
-| If | `IF/IF_THEN/IF_THEN_ELSE/IF_ELIF_CHAIN` `:173-176` | 臂收集+汇合剪枝 `:27282/27304` | `:9575/18957/24043` | 完备（B2 守卫族已落地） |
+| If | `IF/IF_THEN/IF_THEN_ELSE/IF_ELIF_CHAIN` `:173-176` | 臂收集+汇合剪枝 `:27282/27304` | `:9575/18957/24043` | **破口：B46 尾项 + B78**（v_b46_face 1/4 双树同败；B2 守卫族已落地） |
 | For / AsyncFor | `FOR_LOOP:178` | `_find_loop_else:5242`、clamp `:5105` | JSON 背书 | 完备 |
-| While | `WHILE_LOOP:177` | 同上 | `:5463/12086` | 完备 |
-| Break / Continue | `:184-185` | `BlockSemantics:199-201` | `:10198`/`:24098` | 完备（continue 守卫 `:10289/:10423-10427`） |
-| Try | `:179-180` | handler 归并 `:7891/:9342/:9915` | `:26901/27389` | 完备（孤儿 finally 帧 `:9017-9019`） |
+| While | `WHILE_LOOP:177` | 同上 | `:5463/12086` | **破口：B94**（if_in_while NOP 残段假循环，双树同败） |
+| Break / Continue | `:184-185` | `BlockSemantics:199-201` | `:10198`/`:24098` | **破口：B79（fin_continue 残余）+ B97（handler 臂 break）**（continue 守卫 `:10289/:10423-10427` 已落地；B71 批次封闭后残余转 B79） |
+| Try | `:179-180` | handler 归并 `:7891/:9342/:9915` | `:26901/27389` | **破口：B87/B73/B75**（try 宿主泄漏，双树存量；孤儿 finally 帧 `:9017-9019` 已落地） |
 | **TryStar（except\*）** | 规则4 `:9731/:9813`、框架块 `:12701-12709`、`exception_handler.py:93-276` | handler_type `'except_star'` 同路 `:8724`、多 handler 链 `:10424-10483` | `:26839-26843`、发射 `code_generator.py:702/2079` | **完备**（§7 纠正记录） |
-| With / AsyncWith | `WITH:181` | with 区域构造 | `:29499` | 完备 |
-| Match | `MATCH:182` | case-pattern 块族+框架块排除 `:14622-14623/:12731-12736` | `:31596` | 完备 |
-| Raise / Assert | `ASSERT:183` / JSON 背书 | JSON 背书 | JSON 背书 | 完备 |
-| Return / Pass / Expr | JSON 背书 | JSON 背书 | `has_trailing_return_none` `:212/217` | 完备 |
-| Delete / Assign / AugAssign / AnnAssign | JSON 背书 | JSON 背书 | `code_generator.py:1149` | 完备 |
-| Import / ImportFrom / Alias | JSON 背书 | JSON 背书 | JSON 背书 | 完备 |
-| Global / Nonlocal | JSON 背书 | JSON 背书 | JSON 背书 | 完备 |
+| With / AsyncWith | `WITH:181` | with 区域构造 | `:29499` | With **破口：B93**（with_in_match 幻影镜像 6/7 双树）；AsyncWith 完备 |
+| Match | `MATCH:182` | case-pattern 块族+框架块排除 `:14622-14623/:12731-12736` | `:31596` | **破口：B74 + B122**（B122 双探针 >75s 挂死维持） |
+| Raise / Assert | `ASSERT:183` / JSON 背书 | JSON 背书 | JSON 背书 | Raise **破口：B87 变体**（raise_leaf）；Assert **破口：B56**（B126 族 round9 封闭；B56 存量维持） |
+| Return / Pass / Expr | JSON 背书 | JSON 背书 | `has_trailing_return_none` `:212/217` | Return **破口：B88**（return_leaf 双树）；Pass、Expr 完备 |
+| Delete / Assign / AugAssign / AnnAssign | JSON 背书 | JSON 背书 | `code_generator.py:1149` | Delete **破口：B84**（del 蒸发）；Assign、AnnAssign 完备；**AugAssign 破口：B76 + B48 残留变体** |
+| Import / ImportFrom / Alias | JSON 背书 | JSON 背书 | JSON 背书 | Import **破口：B73**（try 四段 import 宿主泄漏）；ImportFrom、Alias 完备 |
+| Global / Nonlocal | JSON 背书 | JSON 背书 | JSON 背书 | Global **破口：B75**（try 宿主 global 声明错位）；Nonlocal 完备 |
 | FunctionDef / AsyncFunctionDef / ClassDef | JSON 背书 | 区域树子区域消费 | `AST*` 类族 `core/ast_nodes.py` | 完备 |
 | ExceptHandler | `exception_handler.py:262-276` 三分类 | `:1478-1479` 停止收集 | `ast_converter.py:1418-1420` | 完备 |
 | match_case / withitem | Match/With 区域内构 | 同区域 | `:31596`/`:29499` | 完备 |
@@ -159,45 +159,45 @@ sources:
 
 | 形态 | 识别/归约锚点 | 生成锚点 | 判定 |
 |---|---|---|---|
-| **BoolOp（and/or）** | `BOOL_OP:188`；`_build_boolop_expression:32662` | 同左 | **破口 B1**（§6） |
-| IfExp（三元） | `TERNARY:189` | `:12654` | 完备 |
-| Compare / BinOp / UnaryOp / Constant / Name / Attribute / Subscript / Starred / List / Tuple / Dict / Set / Slice / Index | 表达式栈重建（`:47610`）；`ASTCompare/ASTBinary` 类族 | JSON 背书 | 完备 |
+| **BoolOp（and/or）** | `BOOL_OP:188`；`_build_boolop_expression:32662` | 同左 | **破口：B98**（分组 boolop 保真；matrix 7/15、hosts 13/18、resid 2/5 双树同败；B1 族五臂封闭维持） |
+| IfExp（三元） | `TERNARY:189` | `:12654` | **破口：B123 + B124**（B124 族 round9 封闭留档；B123 存量 exprtail 钻石块集维持） |
+| Compare / BinOp / UnaryOp / Constant / Name / Attribute / Subscript / Starred / List / Tuple / Dict / Set / Slice / Index | 表达式栈重建（`:47610`）；`ASTCompare/ASTBinary` 类族 | JSON 背书 | Compare、BinOp 等 12 形态完备；**Slice 破口：B127**（切片边界表达式，round3 F4 补编号）；Index 完备 |
 | Lambda | JSON 背书 | `:2250`、`ast_generator_v2.py:4162` | 完备 |
-| ListComp / SetComp / DictComp / GeneratorExp / comprehension | `comprehension_generator.py` 专用管线 | `:2074`、`ast_generator_v2.py:4284` | 完备 |
+| ListComp / SetComp / DictComp / GeneratorExp / comprehension | `comprehension_generator.py` 专用管线 | `:2074`、`ast_generator_v2.py:4284` | **破口：ListComp B112②**（e07_async_closure 宿主双树）；SetComp/DictComp/GeneratorExp/comprehension 完备 |
 | Call / keyword / arguments / arg | `ASTCall` 族 | JSON 背书 | 完备 |
 | JoinedStr / FormattedValue | JSON 背书 | JSON 背书 | 完备 |
-| Await / Yield / YieldFrom | JSON 背书（async 管线 `:30154`） | JSON 背书 | 完备 |
+| Await / Yield / YieldFrom | JSON 背书（async 管线 `:30154`） | JSON 背书 | **破口：Await B112① + B128；Yield**（round3 F9 存量，探针重建待办）；YieldFrom 完备 |
 | NamedExpr（海象） | JSON 背书 | JSON 背书 | 完备 |
-| 上下文叶子 Load/Store/Del、操作符叶子（Add…NotIn 32 个） | 隐式/字面量词汇 | JSON 背书 | 完备 |
+| 上下文叶子 Load/Store/Del、操作符叶子（Add…NotIn 29 个） | 隐式/字面量词汇 | JSON 背书 | 完备（round9 口径注记：「32 叶」为旧口径，分母枚举 29 叶全绿） |
 
 ### 5.4 表C — 31 个扩展形态
 
 | 形态 | 锚点 | 判定 |
 |---|---|---|
 | elif 链 | `IF_ELIF_CHAIN:176`；`'_is_elif': True` `:17027/17261`、`:16454` | 完备 |
-| for-else / while-else | `_find_loop_else:5242`、clamp `:5105`；发射 `region_ast_generator.py:4974-5006`、`_loop_else_set:10423` | 完备 |
+| for-else / while-else | `_find_loop_else:5242`、clamp `:5105`；发射 `region_ast_generator.py:4974-5006`、`_loop_else_set:10423` | 完备（v2 合并期曾翻案 B125，round9 位B 封闭升回：b109 9/9 + r5_13 11/11） |
 | **except\* 异常组** | §7 全链四层表 | **完备**（纠正记录在案） |
-| match + 守卫 + 8 模式 | `MATCH:182`、`:31596`；`:14622-14623/:12731-12736`；模式解析 `pattern_parser.py` | 完备 |
+| match + 守卫 + 8 模式 | `MATCH:182`、`:31596`；`:14622-14623/:12731-12736`；模式解析 `pattern_parser.py` | **破口：match_statement（B74 + B122）**；守卫 + 8 模式完备 |
 | 多上下文 with / try_finally_only | `WITH` 管线 + withitem；`TRY_FINALLY:180` + `:9017-9019` | 完备 |
-| multi_target_assign / augmented_assign | `code_generator.py:1149` 对照路径 + `ASTAugAssign` 族 | 完备 |
-| chained_comparison / walrus / keyword_args / star_args / slice | Compare 链 / NamedExpr / `ASTCall`+arguments / Subscript | 完备 |
-| relative_import / star_import / global_nonlocal | `ASTImportFrom`/`ASTGlobal` 族 | 完备 |
+| multi_target_assign / augmented_assign | `code_generator.py:1149` 对照路径 + `ASTAugAssign` 族 | multi_target_assign 完备；**augmented_assign 破口：B76 + B48 残留变体** |
+| chained_comparison / walrus / keyword_args / star_args / slice | Compare 链 / NamedExpr / `ASTCall`+arguments / Subscript | chained_comparison 完备（v2 合并期曾翻案 B104 族，round9 位A 封闭升回：c4_09 14/14）、walrus、keyword_args、star_args 完备；**slice 破口：B127** |
+| relative_import / star_import / global_nonlocal | `ASTImportFrom`/`ASTGlobal` 族 | relative_import、star_import 完备；**global_nonlocal 破口：B75** |
 | fstring_conversion | `ASTConvert/ASTFormattedValue` 族 | 完备 |
 | nested_comprehension | `comprehension_generator.py:2074` 族 | 完备 |
 | decorator_with_args | `ASTDecoratorApplication` 族 | 完备 |
-| async 五件套（def/for/with/await_expr/yield_from） | `:30154` + JSON 背书 | 完备 |
+| async 五件套（def/for/with/await_expr/yield_from） | `:30154` + JSON 背书 | async_def/async_for/async_with/yield_from 完备；**await_expr 破口：B112① + B128** |
 
 ### 5.5 判定汇总
 
 | 维度 | 计数 |
 |---|---|
 | 路径存在（工具实测） | **128/128 = 100%** |
-| **完备** | **128**（B1 族封闭后升格；对抗 10 轮终审 syntax_coverage 复跑 128/128） |
-| **破口** | **0**（形式层；组合级对抗挂账 25 号未清零，见文首读数表） |
+| **完备** | **103**（表A 15 + 表B 25 + match 模式 8 + 操作符叶 29 + 表C 26；对抗规范 v2 十轮落账终值，round9 封闭 B104 族/B124/B125/B126 后升格 2 行） |
+| **破口** | **25**（表A 14 + 表B 6 + 表C 5；行内编号见各表判定列） |
 | **零能力** | **0** |
-| **完备占比** | **128/128 = 100%**（形式层） |
+| **完备占比** | **103/128 = 80.47%**（II.1 口径；破口不计分子） |
 
-残留 sstrict 67 缺陷单元未逐个归类守卫族：归类属 fix 批工作流，落位后按 §8 复审。对抗 10 轮登记的组合级挂账破口与 6 组零专攻形态组（Module 专攻、ClassDef 体专攻、AnnAssign、fstring_conversion、keyword_args/star_args、decorator_with_args）为终审透明遗留，按 §8.3 状态机继续推进。
+残留 sstrict 67 缺陷单元未逐个归类守卫族：归类属 fix 批工作流，落位后按 §8 复审。对抗规范 v2 十轮三态落账 = 上表（初判 101/27 → round9 位A/位B 修复升格 2 行 → 103/25/0；锚点与证据 = `.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round9/REVIEW_DRAFT.md` + `rounds/round10/WIKI_REVIEW.md`）。组合级挂账 25 号分层：清零 9 / 维持 16（残余以 B78–B97 续接编号登记；明细 = WIKI_REVIEW.md §3.3）。开放破口：B98/B123/B127/B128/Yield/B44/B122 与行内编号族，按 §8.3 状态机推进。
 
 ---
 
@@ -206,7 +206,7 @@ sources:
 ### B1a — `_cjb_skip_inline_if` 前导操作数丢弃（**已封闭**）
 
 - **破坏条款**：C1（读了"fall-through 恰是某区域 entry"这一跨块信息且未接回）
-- **历史确证**：`region_ast_generator.py:47629-47643` 丢弃版形态（round75 fix1 嫁接方案 `_graft_pending_operand` 仅存归档 spec、未落地）
+- **历史确证**：`region_ast_generator.py:47629-47643` 丢弃版形态（round75 fix1 嫁接方案 `_graft_pending_operand` 经 2026-10-17 全量 grep 更正：符号族在树——`region_ast_generator.py:43043` 定义 + `:43180` 调用（[R75 fix1]/[R76-A1] 区），2026-09-30 `c53df077` 在途快照引入、harden round1 审计在案；「路线废弃」判据不变，B1 封闭以五臂算法为准）
 - **封闭（对抗规范 Round 1）**：放弃嫁接路线，改由 `region_analyzer.py` 五臂算法封闭（臂 A/B/B2/C/D/E，or 裸尾续接判据 + `_sb_has_body` 同一谓词）；落地标记 = `[B1b fix]`/`[B1b fix-r2]`（`:17592/:19011/:27601` 等十余处）+ `_sb_has_body`；Round 2–9 守卫族回归攻击与 BoolOp 面攻击复验零漂移
 
 ### B1b — 语句上下文 or 臂第二丢弃入口（**已封闭**）
@@ -223,7 +223,30 @@ sources:
 | B3 | Loop 共享尾 | W14-C `region_analyzer.py:27282/27304/19602`、fix3-T1/T2 `region_ast_generator.py:12945-13075`、fix3-T6 `:18593`、W23 `:19185`、R71-thenover `:22758` |
 | B4 | 孤儿子 | `region_ast_generator.py:1593-1663`、`region_analyzer.py:1410-1424/:9017-9019` |
 
-**涉及形态**：BoolOp（and/or 链）+ if 复合条件连带。
+### B77+ 批次登记（对抗规范 v2，2026-10-17 落账）
+
+**已封闭（防回归监控）**：
+
+| 编号 | 形态/机制 | 封闭批次与落地标记 |
+|---|---|---|
+| B104 族（R2a/R3/R4/R9） | while 宿主链式比较/混合条件回边重检抑制 | round8 封闭 R2a/R3；round9 封闭 14 单元 + 存量 R4（`[B104-R9`、`_extract_recheck_store_stmts`、`[B104-R4]`） |
+| B124 族（R1/R2a/R2b） | 值位链式比较/IfExp 嵌套宿主重建（含 with-item 幻影 `context()`） | round9（`[B124-R1`、`_b124r1_chain_region_is_self_return`、`[B124-R2a`、`[B124-R2b`、`_ternary_host_call_prefix_span`）；IfExp 行留存 B123 存量维持破口 |
+| B125 | 嵌套循环宿主 while-else 蒸发 | round9（`[B125-R1`、`_child_region_blocks_r23`）；for_else 行升完备 |
+| B126 | assert 链吞并循环回边载体 | round9（`[B126-R2`、`_b126r2_raise_only_trampoline_exit`；`[B126-R1]`/`_b126_claimed` 经 9.3b 全量移除 = 0 命中）；Assert 行留存 B56 存量维持破口 |
+
+**开放中（§8.3 状态机）**：
+
+| 编号/行 | 形态 | 状态 |
+|---|---|---|
+| B98（R2/R3） | 分组 boolop 保真（matrix 7/15、hosts 13/18、resid 2/5） | 破口维持（BoolOp 行；R1 部分封闭） |
+| B122 | 字面量 case 臂嵌套 match（双探针 >75s 硬杀挂死） | 破口维持（存量非合并扰动） |
+| B127 | 切片边界表达式重建（round3 F4 补编号） | 已定位（round10 位D 移交） |
+| B128 | await 条件位重建（round3 F9 补编号；与 B112① 同域不同形） | 已定位（round10 位D 移交） |
+| Yield 行 | yield 实参/boolop 产物非法（e12b/c/f 探针 compile_error 空转） | 破口维持（探针重建待办） |
+| B44 | ≥3 层双入口归纳 | 已定位/证据缺口（round9 未抽验，不得以未测当维持判完备） |
+| 行内编号族 | B46 尾项（残余）、B79、B80、B82-v_swap、B84、B87 变体、B88、B93、B94、B97、B112①②、B123（B78–B97 续接面） | 已定位（round8–9 移交维持；读数 = `rounds/round9/REVIEW_DRAFT.md` §3.2） |
+
+**涉及形态**：BoolOp（and/or 链）+ if 复合条件连带（B1 族，已封闭）；v2 落账 25 破口行（表A 14 + 表B 6 + 表C 5，行内编号见 §5 各表判定列）与组合级 25 号分层（清零 9 / 维持 16，见 §5.5 与 `rounds/round10/WIKI_REVIEW.md` §3.3）。
 
 ---
 
@@ -248,13 +271,19 @@ sources:
 
 ### 8.1 落地标记表（复审 = grep 标记，零新脚本）
 
-| 编号 | 落地标记（树中出现 = 落地） | 状态（2026-10-04 终审） |
+| 编号 | 落地标记（树中出现 = 落地） | 状态（2026-10-17 复审） |
 |---|---|---|
-| B1a | `[B1b fix]`/`[B1b fix-r2]` 五臂封闭 + `_sb_has_body`（归档嫁接标记 `_graft_pending_operand` 已废弃不落地） | 已封闭（防回归监控） |
+| B1a | `[B1b fix]`/`[B1b fix-r2]` 五臂封闭 + `_sb_has_body`（嫁接标记族 `_graft_pending_operand`/`_leading_operand` 在树：`region_ast_generator.py:43032-43360` + 发射点 `:60525`；2026-10-17 全量 grep 更正——「废弃」指路线废弃、符号未清理） | 已封闭（防回归监控） |
 | B1b | 同上（与 B1a 同批封闭；Round 3 扩充认领豁免） | 已封闭（防回归监控） |
 | B2 | `_block_is_continue_target`（`:10289`） | 已落地（防回归监控） |
 | B3 | `[fix3-T1` / `[fix3-T6` / `[W23` / `[R71-thenover` 注记 + W14-C | 已落地（防回归监控） |
 | B4 | 孤儿块释放段 `:1593-1663` | 已落地（防回归监控） |
+| B104 族 | `[B104-R9`/`_extract_recheck_store_stmts`（R2a/R3/R4 沿袭） | 已封闭（防回归监控） |
+| B124 族 | `[B124-R1`/`_b124r1_chain_region_is_self_return`/`[B124-R2a`/`[B124-R2b`/`_ternary_host_call_prefix_span` | 已封闭（防回归监控） |
+| B125 | `[B125-R1`/`_child_region_blocks_r23` | 已封闭（防回归监控） |
+| B126 | `[B126-R2`/`_b126r2_raise_only_trampoline_exit`（`[B126-R1`/`_b126_claimed` = 0 命中） | 已封闭（防回归监控） |
+
+> **全量复核（2026-10-17，HEAD 3e0d6905）**：72 项落地标记逐项 grep = 71 PASS / 1 异常（`_graft_pending_operand` 在树，B1a 行括注已更正）+ 36 项补充枚举在案；机器可读 = `.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round10/r10v10_wiki_marks.json`。
 
 ### 8.2 复审六步（修复批落位后照单执行）
 
@@ -268,7 +297,7 @@ sources:
 
 ## 9. 口径演变史与正确性旁证
 
-### 9.1 完备占比口径演变（五次，全记录不删）
+### 9.1 完备占比口径演变（七次，全记录不删）
 
 | 版本 | 口径 | 读数 | 错误 |
 |---|---|---|---|
@@ -277,7 +306,8 @@ sources:
 | v3 | 97 节点+31 形态的词汇存在率 | 99.2%（"有过就算"） | 误解 2/5 |
 | v4 | 语料证据口径 + 无限分母 | "给不出占比" | 误解 3/4 |
 | **v5（2026-09-29）** | **路径 × 嵌套无感不变式** | **路径 100% / 不变式 127/1/0 ⇒ 99.2%** | — |
-| **v6（2026-10-04 终审，现行）** | **v5 口径 + 对抗分层** | **路径 100% / 形式层 128/0/0 ⇒ 100%；组合级对抗挂账 25 号透明挂账未清零** | — |
+| **v6（2026-10-04 终审）** | **v5 口径 + 对抗分层** | **路径 100% / 形式层 128/0/0 ⇒ 100%；组合级对抗挂账 25 号透明挂账未清零**（后被 v7 取代） | — |
+| **v7（2026-10-17 Round 10 复审，现行）** | v6 口径 + 对抗规范 v2 十轮三态落账 | **路径 100% / 形式层 103/25/0 ⇒ 80.47%**；组合级 25 号分层（清零 9 / 维持 16） | — |
 
 ### 9.2 正确性旁证（语料口径，仅证归纳基，不进完备分子）
 
@@ -337,4 +367,4 @@ IMPORT_OK / COMPILE_OK / repro match / 官方 41 靶 h62 / sstrict 34 pyc / batt
 
 ## 检索词
 
-反编译迭代总纲 / 嵌套无感 / 无感不变式 / C1 局部消费 / C2 黑箱组合 / C3 守卫封闭 / L(A) / 归纳论证 / 语法完备 / 128 形态 / 三级判定 / 完备 127 破口 1 / 99.2% / 十三条误解 / T1-T8 / 逐形态台账 / B1a _cjb_skip_inline_if / B1b neg75_jqcond2 / 落地标记 / 复审六步 / 破口状态机 / except* 纠正 / PRELOAD_RERAISE 3.12 / CHECK_EG_MATCH / PREP_RERAISE_STAR / is_except_star / 口径演变 v1-v5 / BOM 纠正 utf-8-sig / 60933 分支点 / 61289 判定条件 / 可用资源索引
+反编译迭代总纲 / 嵌套无感 / 无感不变式 / C1 局部消费 / C2 黑箱组合 / C3 守卫封闭 / L(A) / 归纳论证 / 语法完备 / 128 形态 / 三级判定 / 完备 127 破口 1 / 99.2% / 十三条误解 / T1-T8 / 逐形态台账 / B1a _cjb_skip_inline_if / B1b neg75_jqcond2 / 落地标记 / 复审六步 / 破口状态机 / except* 纠正 / PRELOAD_RERAISE 3.12 / CHECK_EG_MATCH / PREP_RERAISE_STAR / is_except_star / 口径演变 v1-v7 / BOM 纠正 utf-8-sig / 60933 分支点 / 61289 判定条件 / 103 完备 25 破口 / 80.47% / B104 B112 B122 B123 B124 B125 B126 B127 B128 / 25 号分层 清零 9 维持 16 / WIKI_REVIEW / 可用资源索引

@@ -1,5 +1,11 @@
 # Research Log
 
+## 2026-10-17（对抗规范 v2 Round 10：§8.2 六步全量重验 + 三态落账 v7）
+
+- **六步全量重验**（HEAD `3e0d6905`；origin/main `0ad55951`；实录 = `.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round10/WIKI_REVIEW.md`）：①round1–9 全批次提交在 origin/main 祖先链（13/13 核验）；②72 项落地标记 grep = **71 PASS / 1 异常**（`_graft_pending_operand` 在树）+ 36 项补充枚举；③台账全 128 三态落位：**完备 103 / 破口 25 / 零能力 0**（表A 14 + 表B 6 + 表C 5；round9 封闭 B104 族/B124/B125/B126 后自 101/27 升格 2 行：chained_comparison、for_else）；④`tools/kb/syntax_coverage.py` 重跑 128/128 = 100%，sha256 前后一致 `86539c44…`；⑤占比重算 **103/128 = 80.47%**，五页数字同步（总纲/overview/index/syntax-audit-ledger/branch-coverage）；⑥本条。
+- **口径 v7 取代 v6**：v6「形式层 128/0/0 ⇒ 100%」为对抗分层前的未落账读数；对抗规范 v2 十轮实测 25 行破口（round3/round4 已预告降级方向）本轮统一落账。组合级挂账 25 号分层：**清零 9**（对抗规范 Round 1 批次 A/B/C 8 项 = B46 尾项/B48 残留变体/B74/B71/B73/B75/B76/B65 + B50 同链实证）/ **维持 16**（B42/B43/B44/B47/B49/B51/B56–B63/B69/B70；残余以 B78–B97 续接编号登记）；另册口径差 B52/B53/B11-R2 待归档统一。开放破口：B98/B122/B127/B128/Yield/B44（§6 B77+ 表 + §8.3 状态机）。
+- **嫁接符号更正（只增不删）**：`_graft_pending_operand` 并非「树中零命中」——符号族在树（`core/cfg/region_ast_generator.py:43043/43180` + `_leading_operand`/`_cjb_skip_inline_if` 发射段 `:60503-60529`），随 `c53df077`（2026-09-30 harden round1 在途快照）引入；2026-10-04 条目所称「确证废弃」经本轮全量 grep 更正为「**路线废弃、符号未清理**」（历史条目保留原文）；B1 封闭判据不变（五臂算法）。
+
 ## 2026-10-04（对抗规范 Round 10 终审：B1 族升格 + 口径 v6）
 
 - **B1 族升格「已封闭」**（§8.2 复审六步全量执行）：①fix 批归档落位（round10 FIX.md，B72/B48/B46 部分封闭 +7 单元）→ ②grep 落地标记在树确认（本轮 `[B48]`×5/`[B46]`×5/`[B71]`×2/`[B72]`；历史 B1 族 `[B1b fix]`/`[B1b fix-r2]` + `_sb_has_body` 十余处——round75 归档嫁接方案 `_graft_pending_operand` 确证废弃，改由 Round 1 五臂算法路线封闭）→ ③台账 §5/§6/§8.1 更新（完备 127→128、破口 1→0，B1a/B1b 状态改「已封闭（防回归监控）」）→ ④`tools/kb/syntax_coverage.py` 重跑 **128/128 = 100%** → ⑤占比重算同步五页（总纲/branch-coverage/syntax-audit-ledger/overview/index，overview 乱行修复）→ ⑥本条 log。

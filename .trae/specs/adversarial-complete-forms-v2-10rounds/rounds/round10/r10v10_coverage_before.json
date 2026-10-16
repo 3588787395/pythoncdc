@@ -1,0 +1,13 @@
+{
+  "phase": "before",
+  "source": "docs/refactor/syntax-coverage.json",
+  "sha256": "86539c44fe6ae974fa5a03f2500f5d0fe99d4bac3d34f79b8ca6a766bfd4b9ae",
+  "size": 2724,
+  "denominator_total": 128,
+  "numerator_total": 128,
+  "coverage_pct": {
+    "ast_nodes": 100.0,
+    "extra_forms": 100.0,
+    "overall": 100.0
+  }
+}

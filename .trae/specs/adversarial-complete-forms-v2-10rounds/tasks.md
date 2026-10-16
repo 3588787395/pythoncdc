@@ -62,10 +62,10 @@
   - [x] 9.3 评审工程师复核；REVIEW2.md（首判打回 3 项：R-1 `_b126_claimed` 未声明活性改动（R1-off 臂证非必需）→ 9.3b 全量移除（逐字逆）；R-2 分母 2161/六面修正；R-3 证据补齐；REVIEW3.md 终审放行——VERBATIM_INVERSE=true、读数 live 抽验全对、承重面 432/432、不回退）
   - [x] 9.4 主代理验证：验证序六步；VERIFICATION.md（基线 gate 42：34 集 1568/1568 REGRESSIONS=0 IMPROVED=33；402 八分片 6617/6617 REGRESSIONS=0×8 且产物零字节差异；quotation 153/153；tests 七套件 2 failed/282 passed/2 xpassed 基线名单；IV.2 全过；首跑驱动编码勘误与 shard7 拆分标签笔误修复记录在案）
   - [x] 9.5 归档 rounds/round9/ + 提交并 push origin main
-- [ ] Task 10: Round 10 — 终审与台账定稿
-  - [ ] 10.1 主代理全量终验：402 八分片 batch + compare REGRESSIONS=0 + quotation + tests + 34 小测试集 + IV.2 门禁自检；VERIFICATION.md
-  - [ ] 10.2 wiki §8.2 复审六步全量重验与增量更新（评审工程师执行，主代理验收；旧 round10 已执行 v6 首跑，本轮为重验 + B77+ 增量）：grep 全部落地标记（含本规范各轮「代码已落地」声明核验，I.6）→ 台账（§5）全量更新（II.3 三态判定落位 + 组合级挂账分层）→ `tools/kb/syntax_coverage.py` 重跑 → 完备占比重算（II.1 口径）→ wiki 页面数字同步（禁手改、禁矛盾数字）→ log 记录
-  - [ ] 10.3 终归档 + 提交并 push origin main；汇报终态读数（单元级/文件级/完备占比/破口状态/注释合规过审面/站桩回归终读数）
+- [x] Task 10: Round 10 — 终审与台账定稿（三态 v7 落账：完备 103 / 破口 25 / 零能力 0 = 80.47%；组合级 25 号分层 清零 9 / 维持 16；402 终验零回归；wiki 六步全量重验完成）
+  - [x] 10.1 主代理全量终验：402 八分片 batch + compare REGRESSIONS=0 + quotation + tests + 34 小测试集 + IV.2 门禁自检；VERIFICATION.md（基线 gate 42：34 集 1568/1568 REGRESSIONS=0 IMPROVED=33；八分片 6617/6617 REGRESSIONS=0×8 且 402 产物零字节差异；quotation 153/153；tests 七套件 2 failed/282 passed/2 xpassed 基线名单；IV.2 全过含双单头 BOM + 插桩 tokenize 分类代码行 0 + G3/G4=0；614.3s；HERE 误写事故存证 + 修正 ea34ae03 后重跑，=9.4 逐位复现）
+  - [x] 10.2 wiki §8.2 复审六步全量重验与增量更新（评审工程师执行，主代理验收；旧 round10 已执行 v6 首跑，本轮为重验 + B77+ 增量）：grep 全部落地标记（含本规范各轮「代码已落地」声明核验，I.6）→ 台账（§5）全量更新（II.3 三态判定落位 + 组合级挂账分层）→ `tools/kb/syntax_coverage.py` 重跑 → 完备占比重算（II.1 口径）→ wiki 页面数字同步（禁手改、禁矛盾数字）→ log 记录（WIKI_REVIEW.md：六步全过；grep 72 项 71 PASS；异常 1 = `_graft_pending_operand` 应 0 实 3（树:43043/43174/43180，c53df077 快照引入、路线废弃符号未清，wiki 按在树事实更正、代码零改动）；三态 v6 128/0/0 → v7 103/25/0（升格 2 行 chained_comparison/for_else）= 80.47%；25 号分层 清零 9/维持 16；coverage sha 86539c44 前后一致零漂移；5 页 + log 数字同步；主代理验收：sha 复现 + grep 抽验全对 + 树面无 core 改动）
+  - [x] 10.3 终归档 + 提交并 push origin main；汇报终态读数（单元级/文件级/完备占比/破口状态/注释合规过审面/站桩回归终读数）（遗留裁决存此：全表重锚另立批次；B127/B128/Yield 探针重建/B44 证据缺口移交后续轮次（wiki §6 B77+ 登记）；25vs29 口径差保持另册如实登记（B52/B53/B11-R2 不并入）；`_graft_pending_operand` 符号清理留后续批次；cfg-anatomy L105 保持历史叙事）
 
 注：每轮内部流程同构 = 评审攻击 → 修复 → 评审复核 → 主代理验证 → 归档 push；轮主题可依 Round 1 覆盖矩阵盘点结果微调（空白格优先），但 10 轮总量、每轮门禁与验证序不变；轮与轮之间形态不重复（Round 7 回归重放除外）。
 
