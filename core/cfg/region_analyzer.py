@@ -19003,6 +19003,12 @@ _region_overlaps_with_ternary 过滤与 TernaryRegion 重叠的 AssertRegion，
 （[Round4-12]，避免链式比较 assert 的中段 COMPARE_OP 块被误识别为独立
 AssertRegion）；message_block / chained_compare_blocks / boolop_chain_blocks
 仅当 `not in self.block_to_region` 时才登记，先到先得不覆盖既有归属。
+[B126-R1 认领集补守卫]：中段块常先被父 LoopRegion/IfRegion 登记（循环/条件
+识别先于 assert），block_to_region「先到先得」使本识别器的 chain 注册落空、
+[Round4-12] 守卫读到父区域即放行，同一中段块被二次识别为独立 AssertRegion
+（双归属，实测 assert_deep 块 64 = A1 链段同时成为 A2 条件块）。补救 = 本
+识别器自维护认领集（前序迭代 region.blocks 全集），候选块命中即跳过（同层
+区域成员关系，不读父区域语义）。
 与 IfRegion 边界：通过 LOAD_ASSERTION_ERROR 指令明确区分，本识别器先于
 IfRegion 运行以抢占识别权。与 BoolOpRegion 边界：assert 中的复合布尔条件
 可能被 BoolOpRegion 抢占，通过 condition_block 共享与父 region 挂载协调。
@@ -19074,6 +19080,21 @@ block_to_region「先到先得」（仅 not in 时登记，不覆盖既有归属
 _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局部引用。
         """
         regions = []
+        # [B126-R1 本识别器认领集] [Round4-12] 守卫只查 block_to_region——但
+        # 链式比较 assert 的中段 COMPARE_OP 块常先被父 LoopRegion/IfRegion
+        # 登记（循环/条件识别先于 assert，「先到先得」使 A1 的
+        # `for cb in chained_compare_blocks: if cb not in block_to_region`
+        # 注册落空），守卫读到父区域即放行，候选循环随后把同一中段块再次
+        # 识别为第二个独立 AssertRegion（实测 n9_stmt_sweep::assert_deep：
+        # 块 64 = A1.chained_compare_blocks[0] 同时是 A2 的
+        # condition_block，块 64/78 双归属；下游双 assert 生成吞并 while
+        # 回边载体块，产物 = 幻影 break + 死码 store + 幻影 for-else）。
+        # 本识别器自维护前序迭代认领集（entry + chain + message + boolop +
+        # passthrough = region.blocks），候选块命中即跳过——判据 = 本识别器
+        # 自建区域的成员关系（I.4 白名单，同层事实），不读父区域归属语义、
+        # 不读名字/偏移/阈值；父区域持有的块仍允许嵌套识别（嵌套即抽象
+        # 节点，仅排除「已被前序 assert 迭代消费」的块）。
+        _b126_claimed = set()
         for block in self.cfg.get_blocks_in_order():
             # [Round4-12] 跳过已被本识别器前序迭代识别为 AssertRegion 的块
             # （entry / chained_compare_block / message_block）——链式比较
@@ -19082,7 +19103,7 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             # （违反「每块唯一归属」）。父 IfRegion/LoopRegion 持有的块仍允许
             # 嵌套识别（嵌套即抽象节点）。
             _existing_region = self.block_to_region.get(block)
-            if isinstance(_existing_region, AssertRegion):
+            if isinstance(_existing_region, AssertRegion) or block in _b126_claimed:
                 continue
             last = block.get_last_instruction()
             if last is None or last.opname not in FORWARD_JUMP_OPS:
@@ -19234,6 +19255,10 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             )
             regions.append(region)
             self.regions.append(region)
+            # [B126-R1] 本识别器认领集更新（region.blocks = entry + message +
+            # chain + boolop + passthrough 的全集）——供候选循环守卫读取，
+            # 补 block_to_region「先到先得」被父区域先占时的登记落空。
+            _b126_claimed.update(region.blocks or set())
             if block not in self.block_to_region:
                 self.block_to_region[block] = region
             else:
@@ -19840,7 +19865,10 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         chained_compare_blocks 内部结构；C3——须参考非局部信息：Phase 1 宿主区域
         的结构边界块由 protected 集合（区域成员关系 + 块身份，[B104] 收窄面）显式
         跳过，本方法自建区域块由 claimed 动态认领集显式跳过；链追踪以
-        「存在后向边」终止，避免侵入循环结构。
+        「存在后向边」终止，避免侵入循环结构；released 差集上的值位链头跳过门
+        （[B104-R3]）经 [B124-R1] 自足 return 形扩门
+        （_b124r1_chain_region_is_self_return：merge 块纯清理指令 + RETURN_VALUE
+        终结 ⇒ 恢复 v2 认领，其余值位形维持 v3 跳过）。
         """
         # [B104] 动态认领集与 Phase 1 结构保护集分离：claimed 仅承载本方法
         # 新建链式比较区域的块（防止链中段被再次作为链头重复建区，每块唯一
@@ -19916,23 +19944,6 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 continue
             if block in protected:
                 continue
-            # [B104-R3 合并调和] 放行面只覆盖**条件位**嵌套链式比较（v2 [B104] 的靶形：
-            # for/with 体内 ``if 0 < x < 10 < x*2:``）。**值位**链式比较
-            # （``is_first_five_trading_days = a <= b <= c``）按本文件既有 [Round4-04] 口径
-            # 恒以 SHORT_CIRCUIT_JUMP_OPS（留值短路跳转）收尾，其归属是宿主语句自身的
-            # 值上下文 IfRegion + _generate_value_context_chain_compare_assign 路径；
-            # 若在此认领为独立链式比较区域，宿主 for 体的语句流被抽走，赋值与其后的 if
-            # 一起被生成层上提到循环体更早的位置（实测 matcher::DefaultMatcher.match
-            # 17->16，Different control flow）。故对 released 集合（本次收窄「新得」的块）
-            # 维持 v3 blanket 的跳过，其余块逐位维持 v2 [B104] 的放行行为。
-            # C1：只读本块末指令 opcode 族（[Round4-04] 同一判据词汇）+ 区域成员关系；
-            # C2：条件位链头（POP_JUMP_IF_* 收尾）不被本门命中，v2 嵌套覆盖保真；
-            # C3：门只收窄 released 差集，非嵌套面（v3 已判定正确者）行为逐位不变。
-            if block in released:
-                _b104r3_last = block.get_last_instruction()
-                if (_b104r3_last is not None
-                        and _b104r3_last.opname in SHORT_CIRCUIT_JUMP_OPS):
-                    continue
             if not self._is_chained_compare_header(block):
                 continue
 
@@ -19945,9 +19956,41 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                 continue
             then_succ, else_succ = sorted(succs, key=lambda s: s.start_offset)
  
+            # _build_chained_compare_region 为纯构造（无 self 副作用），先建
+            # 后判：[B104-R3] 的「值位链头不认领」门需要区域 merge 块的形状
+            # 事实才能区分（见下），故移到构建之后；对未命中门的块逐位维持
+            # 既有放行行为（构建结果或 None，路径不变）。
             region = self._build_chained_compare_region(
                 block, block, set(), then_succ, else_succ, info
             )
+            if region is None:
+                continue
+            # [B104-R3 合并调和] 放行面只覆盖**条件位**嵌套链式比较（v2 [B104] 的靶形：
+            # for/with 体内 ``if 0 < x < 10 < x*2:``）。**值位**链式比较
+            # （``is_first_five_trading_days = a <= b <= c``）按本文件既有 [Round4-04] 口径
+            # 恒以 SHORT_CIRCUIT_JUMP_OPS（留值短路跳转）收尾，其归属是宿主语句自身的
+            # 值上下文 IfRegion + _generate_value_context_chain_compare_assign 路径；
+            # 若在此认领为独立链式比较区域，宿主 for 体的语句流被抽走，赋值与其后的 if
+            # 一起被生成层上提到循环体更早的位置（实测 matcher::DefaultMatcher.match
+            # 17->16，Different control flow）。故对 released 集合（本次收窄「新得」的块）
+            # 维持 v3 blanket 的跳过，其余块逐位维持 v2 [B104] 的放行行为。
+            # C1：只读本块末指令 opcode 族（[Round4-04] 同一判据词汇）+ 区域成员关系；
+            # C2：条件位链头（POP_JUMP_IF_* 收尾）不被本门命中，v2 嵌套覆盖保真；
+            # C3：门只收窄 released 差集，非嵌套面（v3 已判定正确者）行为逐位不变。
+            # [B124-R1 值位自足 return 形扩门] 值位门对**嵌套宿主下的自足 return 链**
+            # 过宽（round9 §0 四臂归属：e05::f_compare_chain6/binop/subscript 三单元 +
+            # c4_09::CCMP.m，关掉整门即全转 MATCH 而其余承重面不回退）。该形的 merge
+            # 块 = 纯链清理指令（SWAP/POP_TOP/COPY/NOP）+ RETURN_VALUE 终结——
+            # 链求值与 return 消费构成一条完整自足语句，认领不会抽走宿主语句流；
+            # 而 matcher 值位赋值形的 merge 块以 STORE_* 开头（[R50] 口径），认领会
+            # 抽走语句流，必须维持跳过。判据只读 merge 块自身的指令 opcode 序（块内
+            # 结构事实，I.4 白名单）；未命中时逐位保持既有跳过（守卫封闭，C3）。
+            if block in released:
+                _b104r3_last = block.get_last_instruction()
+                if (_b104r3_last is not None
+                        and _b104r3_last.opname in SHORT_CIRCUIT_JUMP_OPS
+                        and not self._b124r1_chain_region_is_self_return(region)):
+                    continue
             if region:
                 chained_compare_regions.append(region)
                 self.regions.append(region)
@@ -19957,6 +20000,53 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                         self.block_to_region[b] = region
 
         return chained_compare_regions
+
+    def _b124r1_chain_region_is_self_return(self, region) -> bool:
+        """[B124-R1] 判定链式比较区域的 merge 块是否为「链清理 + 编译器协议 + RETURN 终结」的自足形。
+
+        ①算法依据：No More Gotos「结构化控制流重构」章 + 原则 3（嵌套即抽象
+        节点）——CPython 3.11 把 ``return a < b < c < len(f.read())`` 的链求值
+        钻石（COPY(2)+COMPARE_OP 段 + SWAP/POP 清理）与 RETURN_VALUE 终结
+        编进汇合块序列；当宿主是 with 时，merge 块在 RETURN 前还编入 with
+        退出协议（``SWAP + LOAD_CONST None×3 + PRECALL + CALL + POP_TOP`` =
+        __exit__(None,None,None) 调用，纯编译器协议、零用户操作数）。merge
+        块中除链栈清理指令族（SWAP/POP_TOP/COPY/NOP）与该协议族（LOAD_CONST/
+        PRECALL/CALL）外无任何用户可见指令（无名字加载 LOAD_FAST/GLOBAL/
+        METHOD/ATTR/DEREF、无 STORE_*、无 COMPARE/BINARY 等用户操作），即链
+        求值被 return 语句就地整体消费、构成一条**自足语句**；与 [R50] 的值位
+        赋值形（merge 以 STORE_* 开头、后续语句续流同块）相对。判据 = merge
+        块自身的指令 opcode 序（块内结构事实），无名字/偏移/阈值/跨层反查。
+        ②归约顺序：自底向上——本判定服务于父级认领决策（[B104-R3] 门），
+        在链式比较区域构建完成后、登记前调用；不改变既有归约次序。
+        ③唯一归属判定：merge 块满足「RETURN_VALUE 终结 ∧ 其余指令全在
+        {SWAP, POP_TOP, COPY, NOP, LOAD_CONST, PRECALL, CALL} 清理/协议
+        族」⇒ 自足 return 形（True）；merge 缺失/空、终结非 RETURN_VALUE、
+        或含任何用户可见指令（STORE_*、名字加载、用户运算——[R50] 赋值形
+        即命中 STORE_*）⇒ False。
+        ④嵌套处理：本方法不感知嵌套；嵌套宿主（for→if→while 退化 while、
+        with 体）经由 released 差集传入本判定，形态判据与宿主深度无关
+        （浅层/深层同判，嵌套无感）。
+        ⑤入口引用语义：读 region.merge_block 的指令序列（区域出口接口，
+        父级只经此引用子区域出口），不读 region 其它内部结构。
+        ⑥反编译流程：识别层 Phase 2 表达式族识别
+        （_identify_chained_compare_regions）内联调用，服务于 [B104-R3]
+        值位门的放行/跳过决策；返回 True 时门放行（恢复 v2 认领覆盖），
+        False 时维持 v3 跳过。
+        [C1] 只读 region.merge_block 自身指令（区域对象即 L(A) 输入）；
+        [C2] 不窥视其它区域/兄弟块；[C3] 判据面为显式清理/协议 opcode 族 +
+        RETURN_VALUE 终结的封闭守卫，未命中时调用方逐位维持既有跳过行为。
+        """
+        merge = getattr(region, 'merge_block', None)
+        if merge is None or not merge.instructions:
+            return False
+        instrs = merge.instructions
+        if instrs[-1].opname != 'RETURN_VALUE':
+            return False
+        for ins in instrs[:-1]:
+            if ins.opname not in ('SWAP', 'POP_TOP', 'COPY', 'NOP',
+                                  'LOAD_CONST', 'PRECALL', 'CALL'):
+                return False
+        return True
 
     def _should_skip_block_for_if_region(self, block: BasicBlock, block_region,
                                           loop_regions: List, last_instr) -> bool:

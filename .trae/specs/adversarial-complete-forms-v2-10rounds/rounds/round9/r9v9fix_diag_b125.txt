@@ -1,0 +1,11 @@
+[A] while-else blk@64 gen=False child=False skipped=0
+[B] for breakblocks=[24]
+[B]   proc blk@24 gen=False
+[A] while-else blk@92 gen=False child=False skipped=0
+[B] for breakblocks=[24]
+[B]   proc blk@24 gen=False
+[A] while-else blk@38 gen=False child=False skipped=0
+[A] while-else blk@42 gen=False child=True skipped=0
+[B] for breakblocks=[42, 62]
+[B]   in-body skip blk@42
+[B]   proc blk@62 gen=False

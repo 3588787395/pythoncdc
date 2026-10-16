@@ -51,9 +51,43 @@
 - 承重面（`r9v9fix_bearing.json`）：broker 128/128、matcher 17/17、finance success（single 32/32，402 批量口径 132/132 由 34 集复核）、quote_handler 79/79、realtime 13/13、quotation 153/153、nb_for 2/2、nb_with 2/2、nb_b99 4/4 全绿。
 - I.4 白名单核验：全部判据 = 块内 opcode 序 + 语句终结 opcode 族（STORE_*/POP_TOP/UNPACK 计数）+ 既有 `_b104r2_cond_eval_seq`；零名字/偏移/阈值/跨层反查。G3：新增方法 `_extract_recheck_store_stmts` 无禁前缀。
 
-## §2 位B：B125 嵌套循环宿主 while-else 蒸发（2 单元）
+## §1.5 位0 续：B124 双桶修复（分析器桶 + 生成器桶，「代码已落地」）
 
-（待位A）
+**分析器桶（e05×3 + c4_09::CCMP.m，region_analyzer.py）**：根因 = [B104-R3] released 值位跳过门对「自足 return 链」形态过宽——该形链求值钻石的 merge 块 = 链清理指令（SWAP/POP_TOP/COPY/NOP；with 宿主另编入 `SWAP+LOAD_CONST None×3+PRECALL+CALL+POP_TOP` 退出协议）+ RETURN_VALUE 终结，链与 return 构成一条完整自足语句，认领不抽走宿主语句流；而 matcher 值位赋值形（merge 以 STORE_* 开头，[R50] 口径）认领会抽走语句流（实测 gate-off matcher 17→16，`r9v9fix_diag_gateoff.json`）。修复 = 门后移 + **[B124-R1 自足 return 形扩门**（`_b124r1_chain_region_is_self_return`：merge 块 RETURN_VALUE 终结 ∧ 其余指令全在 {SWAP, POP_TOP, COPY, NOP, LOAD_CONST, PRECALL, CALL} 清理/协议族（无名字加载/STORE/用户操作）⇒ 放行认领恢复 v2 覆盖；否则维持 v3 跳过）。`_build_chained_compare_region` 为纯构造（无 self 副作用），先建后判对未命中门的块逐位不变；`_identify_chained_compare_regions` docstring C3 段同步（I.7）。
+
+**生成器桶（e10::f_call_ternary_arg + r8_10::r8_x_with_ternary，region_ast_generator.py）**：根因 = [T19-4] 宿主调用前缀跨度两处越界（[T]/[W] 插桩实证，`r9v9fix_diag_t194.txt`/`r9v9fix_diag_withtern.txt`/`r9v9fix_diag_withitem.txt`）：① e10 形——旧 3.11 pyc 的 IfExp 编译约定为非弹跳 POP_JUMP + merge 处 SWAP(2)+POP_TOP 对清理保留测试副本，栈模拟按弹跳约定计残差，把该 POP_TOP 误当语句终结（close op=POP_TOP off=80）⇒ RETURN_VALUE 被切进尾段 ⇒ 产物 = `sink(a if b else c)` 裸表达式 + 幻影 `return None`；② r8_10 形——merge 链游走越过 BEFORE_WITH with 协议边界一路吞到函数尾 RETURN_VALUE@130 ⇒ 三元归约输出整条 Return ⇒ `_resolve_nested_ternary_context_expr` 只接受 Expr/Assign ⇒ 退化占位 `context()`。修复 = **[B124-R2a 连接清理对守卫**（闭合候选 POP_TOP 同块紧邻前指令为 SWAP(arg==2) ⇒ return None）+ **[B124-R2b with 协议边界守卫**（模拟体含 BEFORE_WITH/BEFORE_ASYNC_WITH ⇒ return None）；两守卫命中即退回无 [T19-4] 的既有路径（v2 覆盖在案，four-arm ma_v2g 实证该形正确渲染：e10 32/32、r8_10 9/12）。`_ternary_host_call_prefix_span` docstring 判据第 4 条同步（I.7）。
+
+**读数（before → after，证据 `r9v9fix_pre_b124_b126.json`（修复前）→ 修复后现值 = 同驱动重跑）**：
+
+| 探针 | before（合并树 §1 后） | after | 说明 |
+|---|---|---|---|
+| e05_g3_compare_chain | 3/11 | **6/11** | B124×3（chain6/binop/subscript）转 MATCH = v2 tip 同读数；余 5 败 = is/in/walrus/in_cond/notin（v2 tip 亦败，存量非合并新增） |
+| c4_09_chained_compare | 13/14 | **14/14** | CCMP.m（with 宿主值位链）翻正 |
+| e10_g7_call_args | 31/32 | **32/32** | f_call_ternary_arg 翻正 |
+| r8_10_expr_cross_stmt | 8/12 | **9/12** | r8_x_with_ternary 翻正；余 3 败 = assert/for_iter/raise_ternary（v2 tip 亦败，存量） |
+| b104_exprtail_battery | 4/5 | 4/5 | v3 = B123 存量，§4 移交 |
+
+- **B124 五单元全转 MATCH**（§0 四臂归属的 4+1 全部封闭；第五单元 r8_10::r8_x_with_ternary 同步翻正 ⇒ residual/oldface 两面的 WORSE=1 消除）。
+- 承重面（`r9v9fix2_bearing.json`）：broker 128/128、matcher 17/17（[B104-R3] 门保真）、finance 32/32、quote_handler 79/79、realtime 13/13、quotation 153/153、nb_for 2/2、nb_with 2/2、nb_while 2/2、nb_b99 4/4 全绿。
+- I.4 白名单核验：两处判据全部 = 块内指令 opcode 序（merge 块清理/协议族、SWAP(arg==2)+POP_TOP 邻接对、BEFORE_WITH 族）+ 区域成员关系；零名字/偏移/阈值/跨层反查。G3：新增方法 `_b124r1_chain_region_is_self_return` 无禁前缀；两守卫为既有方法内加性 return None（未新方法）。
+
+## §2 位B：B125 嵌套循环宿主 while-else 蒸发（2 单元，「代码已落地」）
+
+**根因（[A]/[B] 插桩实证，`r9v9fix_diag_b125.txt` + `dump_loop.py` 区域 dump）**：`_loop_generate_while` 的 else 块渲染（region_ast_generator.py:9056 一带）做「else 块由子区域持有 → 跳过并经其 entry 递归生成」的全局区域扫描时，**未区分祖先与子区域**——祖先循环的 blocks 是含全部嵌套后代块的超集，嵌套 while 的 else 块必然同时登记在祖先 blocks 里，被误判为「子区域持有」而跳过；`_r2114_else_owned_skipped == len(_filtered_else_blocks)` 随即触发 [R21-14] fallback 把 else_stmts 清空 ⇒ else 臂整臂蒸发。实测：nested_loop_else 的内层 while else 块 42 ∈ 外层 for blocks（`[A] while-else blk@42 gen=False child=True`）、fe_while_deep 的内层 else 块 70 ∈ 外层 while blocks；浅层同形（normal_while/while_else_not_returnnone，无祖先容器）全绿 ⇒ C2 嵌套破口（深层才错）。REVIEW §6 的「`_find_loop_else` break-only 守卫外推」方向不成立——`_find_loop_else` 实测两形均正确返回 else（b109 dump：while else=[42]；fe_while_deep dump：内层 else=[70]），外层 fe_while_deep else=None 是无 break 形的正确不可区分（顺序渲染字节码等价）。
+
+**修复（region_ast_generator.py，[B125-R1 祖先链排除]）**：全局扫描沿 `region.parent` 链收集祖先 id 集，祖先区域不再进入 `_child_region_blocks_r23`（祖先容器 ≠ 子持有证据；子/兄弟区域命中路径逐位不变）。判据 = 区域父子成员关系（I.4 白名单）；注释含识别条件/归约方式/AST 映射 + C1/C2/C3 三行声明。
+
+**读数（before → after）**：
+
+| 探针 | before | after | 门禁 |
+|---|---|---|---|
+| r4v4r_b109_loopelse | 8/9 | **9/9**（nested_loop_else 翻正） | c4_02 14/14 ✓ |
+| r5v5_13_for_else_cross | 10/11 | **11/11**（fe_while_deep 翻正） | r9_01 5/5、r9_09 4/4、r9_10 5/5 ✓ |
+| r9w16 while-else 族电池（13/14/17/18/08） | 新编译 | 全 2/2 | `r9v9fix_b125_family.json` |
+
+- **B125 两单元全转 MATCH**（v2 tip 双绿复核恢复）。
+- 存量登记（非 B125、双臂同败、如实移交）：r9w16_05_nested_in_for（无限 while-true-in-for，非 else 族）1/2、r6_q2_whilehost_spec（while 宿主 if/else+return，B94 邻接）1/2——[B125-R1] 关闭对照臂同败（`r9v9fix_b125_arm.py`），非本修复引入。
+- I.4 白名单核验：判据 = region.parent 链成员关系 + else 块表（区域结构事实）；G3/G4 无新增方法、无阈值。
 
 ## §3 位C：B126 assert 链归约吞 while 回边载体（1 单元）
 

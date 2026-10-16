@@ -1,0 +1,55 @@
+{
+ "arm": "off",
+ "base_shas": {
+  "region_analyzer.py": "3bf5f401614fa8e0",
+  "region_ast_generator.py": "d41cb33f8311dc1b"
+ },
+ "probes": {
+  "e05": {
+   "status": "failure",
+   "units_success": 6,
+   "units_total": 11,
+   "failures": [
+    "***<module>.f_compare_is_chain: Failure: Different control flow",
+    "***<module>.f_compare_in_chain: Failure: Different control flow",
+    "***<module>.f_compare_in_cond: Failure: Different control flow",
+    "***<module>.f_compare_walrus_value: Failure: Different control flow",
+    "***<module>.f_compare_notin_chain: Failure: Different control flow"
+   ],
+   "dump": {
+    "f_compare_chain6": "def f_compare_chain6(a, b, c, d, e, f):\n    for i in range(3):\n        if i and i:\n            return a < b <= c < d <= e < f\n    return False\n",
+    "f_compare_binop_inside": "def f_compare_binop_inside(a, b, c, d):\n    for i in range(3):\n        if i and i:\n            return a + 1 < b * 2 <= c - d\n    return False\n",
+    "f_compare_subscript_inside": "def f_compare_subscript_inside(xs, i, j):\n    for k in range(3):\n        if k and k:\n            return xs[0] < xs[i + 1] <= xs[j]\n    return False\n"
+   },
+   "product": "D:\\Temp\\opencode\\r92_products\\e05_gateoff.py"
+  },
+  "c4_09": {
+   "status": "success",
+   "units_success": 14,
+   "units_total": 14,
+   "failures": [],
+   "dump": {
+    "m": "class CCMP:\n    def m(self, a, b, c):\n        with open('a') as f:\n            return a < b < c < len(f.read())\n"
+   },
+   "product": "D:\\Temp\\opencode\\r92_products\\c4_09_gateoff.py"
+  },
+  "matcher": {
+   "status": "failure",
+   "units_success": 16,
+   "units_total": 17,
+   "failures": [
+    "***<module>.DefaultMatcher.match: Failure: Different control flow"
+   ],
+   "dump": {},
+   "product": "D:\\Temp\\opencode\\r92_products\\matcher_gateoff.py"
+  },
+  "nb_b99": {
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "dump": {},
+   "product": "D:\\Temp\\opencode\\r92_products\\nb_b99_gateoff.py"
+  }
+ }
+}

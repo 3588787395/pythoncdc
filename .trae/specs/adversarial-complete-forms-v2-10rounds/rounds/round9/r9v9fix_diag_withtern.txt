@@ -1,0 +1,2 @@
+[W] resolve enter with_entry=48
+[W] t_node type=Return stmts=['Return']

@@ -9053,8 +9053,32 @@ AST 映射规则:
                         if _child_r23.entry:
                             _child_entries_r23[_child_r23.entry] = _child_r23
             # 同时检查全局区域（可能有子区域未被 parent-children 关系覆盖）
+            # [B125-R1 祖先链排除] 识别条件——else 块可能同时登记在本循环
+            # **祖先**区域（parent 链上的 LoopRegion/IfRegion 等）的 blocks 里
+            # （祖先 blocks 是含全部嵌套后代块的超集，每块唯一归属按「最内层
+            # 归约优先」解释）。本扫描的原意是「else 块由**子**区域持有 → 跳过
+            # 并经其 entry 递归生成」；祖先容器不构成子持有证据——否则嵌套
+            # while-else 的 else 块被误跳过、`_r2114_else_owned_skipped ==
+            # len(_filtered_else_blocks)` 触发 fallback 清空 else（实测
+            # r4v4r_b109::nested_loop_else 的内层 while else 块 42 ∈ 外层 for
+            # blocks、r5v5_13::fe_while_deep 的内层 else 块 70 ∈ 外层 while
+            # blocks ⇒ else 臂整臂蒸发；浅层同形全绿 = C2 嵌套破口）。
+            # 归约方式——沿 region.parent 链收集祖先 id 集，本扫描对其跳过；
+            # 子/兄弟区域命中路径逐位不变。判据 = 区域父子成员关系
+            # （I.4 白名单），不读名字/偏移/深度阈值。
+            # AST 映射——嵌套 while 的 orelse 经 _generate_block_statements
+            # 正常发射；祖先对 else 块的容器关系不产生任何发射义务。
+            # [C1] 只读 region 自身 else 块表与父链成员关系；[C2] 祖先 blocks
+            # 超集不再跨界吞并子区域 else 发射（嵌套无感恢复）；[C3] 命中面
+            # 仅「else 块同时 ∈ 祖先 blocks」的嵌套形态，浅层（无祖先容器）
+            # 行为逐位不变。
+            _r125_ancestor_ids = set()
+            _r125_anc = getattr(region, 'parent', None)
+            while _r125_anc is not None:
+                _r125_ancestor_ids.add(id(_r125_anc))
+                _r125_anc = getattr(_r125_anc, 'parent', None)
             for _r in self.regions:
-                if _r is region:
+                if _r is region or id(_r) in _r125_ancestor_ids:
                     continue
                 if isinstance(_r, (LoopRegion, IfRegion, TryExceptRegion, WithRegion, MatchRegion)):
                     if any(_b in _filtered_else_blocks for _b in _r.blocks):
@@ -46530,6 +46554,14 @@ AST 映射规则:
           3. 同一条链继续模拟直到栈深回到 0（该语句整体被消费）；链上经过的全部
              块（条件块 + 两侧臂块 + merge 块，含同一语句内的兄弟三元）的指令，
              按 offset 排序，即整体归约为**一个**表达式的跨度。
+          4. [B124-R2a/R2b 两守卫]（round9 生成器桶）：闭合候选 POP_TOP 的同块
+             紧邻前指令是 SWAP(arg=2) ⇒ 该对是旧 3.11 IfExp 约定的连接清理
+             （保留测试副本的 SWAP+POP_TOP），非语句终结（e10 形实测否则会把
+             RETURN_VALUE 切进尾段 ⇒ 幻影 ``return None``）；模拟体含
+             BEFORE_WITH/BEFORE_ASYNC_WITH ⇒ 跨度越过 with 语句结构边界
+             （r8_10 形实测否则吞掉整条 with ⇒ 占位 ``context()``）。两者命中
+             一律 return None，行为退回无 [T19-4] 的既有路径（判据 = 块内
+             opcode 序，I.4 白名单）。
         模拟不可靠（效应不可得、栈下溢、臂非纯值块、链断裂/成环、跨度未闭合）
         一律返回 None。
         """
@@ -46641,7 +46673,21 @@ AST 映射规则:
             is_cond_jump = c_term.opname in cond_jump_ops
             body = c_instrs[:-1] if is_cond_jump else c_instrs
             d = cur_depth
+            _b124r2a_prev = None
             for ins in body:
+                # [B124-R2b with 协议边界守卫] BEFORE_WITH/BEFORE_ASYNC_WITH 是
+                # with 语句的结构边界（上下文表达式已被其前的 CALL 整体消费，
+                # 之后的 STORE/体/退出协议归属 with 语句自身），任何单表达式
+                # 跨度都不得穿越。实测 r8_10::r8_x_with_ternary（``with open(
+                # paths[0] if t else paths[1]) as fh:``）的宿主调用前缀跨度
+                # 沿 merge 链越过 BEFORE_WITH 一路吞到函数尾 RETURN_VALUE
+                # （[T] 插桩：close op=RETURN_VALUE off=130），三元归约输出
+                # 整条 Return，_resolve_nested_ternary_context_expr 只接受
+                # Expr/Assign 形态 ⇒ 退化为占位 ``context()``。守卫只读本块
+                # 指令 opcode（I.4 白名单），命中即 return None（此时尚未登记
+                # 任何块/偏移，行为逐位退回无 [T19-4] 的既有路径）。
+                if ins.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
+                    return None
                 eff = self._instruction_stack_effect(ins)
                 if eff is None or d + eff < 0:
                     return None
@@ -46652,11 +46698,29 @@ AST 映射规则:
                     # 语句在这里被整体消费（栈深回到 0）：跨度到此为止，
                     # 之后的指令属于下一条语句。终结指令必须是语句级消费者，
                     # 否则说明该表达式仍是更大表达式的子式，保守放弃。
+                    # [B124-R2a 连接清理对守卫] 栈模拟按弹跳约定（条件跳转
+                    # 弹出测试值）计残差；旧 3.11 pyc 的 IfExp 编译约定为
+                    # 非弹跳 POP_JUMP_FORWARD_IF_FALSE + merge 处 SWAP(2)+
+                    # POP_TOP 对清理保留的测试副本。该 POP_TOP 在模拟里被
+                    # 误当作语句终结（实测 e10::f_call_ternary_arg 的
+                    # ``return sink(a if b else c)``：close op=POP_TOP off=80，
+                    # RETURN_VALUE@82 被切进尾段 ⇒ 产物 = ``sink(...)`` 裸
+                    # 表达式 + 幻影 ``return None``）。判据 = 闭合候选 POP_TOP
+                    # 的同块紧邻前指令是 SWAP(arg=2)（块内指令序，I.4 白名
+                    # 单）⇒ 这是连接清理对而非语句终结，跨度未真正闭合 ⇒
+                    # return None，行为退回无 [T19-4] 的既有路径（v2 覆盖在
+                    # 案，four-arm ma_v2g 实证该形正确渲染）。
+                    if (ins.opname == 'POP_TOP'
+                            and _b124r2a_prev is not None
+                            and _b124r2a_prev.opname == 'SWAP'
+                            and _b124r2a_prev.arg == 2):
+                        return None
                     if not self._is_statement_close_op(ins.opname):
                         return None
                     closed = True
                     close_offset = ins.offset
                     break
+                _b124r2a_prev = ins
             if closed:
                 break
             if not is_cond_jump:

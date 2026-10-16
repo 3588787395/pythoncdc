@@ -1,0 +1,17 @@
+=== e10 regen stderr [T] lines ===
+[T] t194 enter region_cond=50
+[T] close op=POP_TOP off=80 dipped=True
+=== r8_10 regen stderr [T] lines ===
+[T] t194 enter region_cond=0
+[T] t194 enter region_cond=0
+[T] t194 enter region_cond=0
+[T] t194 enter region_cond=0
+[T] t194 enter region_cond=0
+[T] t194 enter region_cond=0
+[T] t194 enter region_cond=0
+[T] t194 enter region_cond=0
+[T] close op=RETURN_VALUE off=130 dipped=True
+[T] t194 enter region_cond=0
+[T] close op=RETURN_VALUE off=18 dipped=False
+[T] bail closed=True dipped=False
+[T] t194 enter region_cond=0
