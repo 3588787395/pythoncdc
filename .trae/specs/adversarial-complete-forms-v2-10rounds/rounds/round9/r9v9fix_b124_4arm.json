@@ -1,0 +1,397 @@
+{
+ "shas": {
+  "region_analyzer.py": "3bf5f401614fa8e0",
+  "region_ast_generator.py": "f81a931ffe641ccd"
+ },
+ "results": {
+  "control": {
+   "e05": {
+    "reading": "failure 3/11",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.f_compare_chain6: Failure: Different control flow",
+     "***<module>.f_compare_binop_inside: Failure: Different control flow",
+     "***<module>.f_compare_subscript_inside: Failure: Different control flow",
+     "***<module>.f_compare_is_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_cond: Failure: Different control flow",
+     "***<module>.f_compare_walrus_value: Failure: Different control flow",
+     "***<module>.f_compare_notin_chain: Failure: Different control flow"
+    ]
+   },
+   "e10": {
+    "reading": "failure 31/32",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.f_call_ternary_arg: Failure: Different bytecode"
+    ]
+   },
+   "r8_10": {
+    "reading": "failure 8/12",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+     "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+     "***<module>.r8_x_raise_ternary_class: Failure: Different control flow",
+     "***<module>.r8_x_with_ternary: Failure: Different control flow"
+    ]
+   }
+  },
+  "off_b104r3": {
+   "e05": {
+    "reading": "failure 6/11",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.f_compare_is_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_cond: Failure: Different control flow",
+     "***<module>.f_compare_walrus_value: Failure: Different control flow",
+     "***<module>.f_compare_notin_chain: Failure: Different control flow"
+    ]
+   },
+   "e10": {
+    "reading": "failure 31/32",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.f_call_ternary_arg: Failure: Different bytecode"
+    ]
+   },
+   "r8_10": {
+    "reading": "failure 8/12",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+     "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+     "***<module>.r8_x_raise_ternary_class: Failure: Different control flow",
+     "***<module>.r8_x_with_ternary: Failure: Different control flow"
+    ]
+   }
+  },
+  "off_b99": {
+   "e05": {
+    "reading": "failure 3/11",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.f_compare_chain6: Failure: Different control flow",
+     "***<module>.f_compare_binop_inside: Failure: Different control flow",
+     "***<module>.f_compare_subscript_inside: Failure: Different control flow",
+     "***<module>.f_compare_is_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_cond: Failure: Different control flow",
+     "***<module>.f_compare_walrus_value: Failure: Different control flow",
+     "***<module>.f_compare_notin_chain: Failure: Different control flow"
+    ]
+   },
+   "e10": {
+    "reading": "failure 31/32",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.f_call_ternary_arg: Failure: Different bytecode"
+    ]
+   },
+   "r8_10": {
+    "reading": "failure 8/12",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+     "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+     "***<module>.r8_x_raise_ternary_class: Failure: Different control flow",
+     "***<module>.r8_x_with_ternary: Failure: Different control flow"
+    ]
+   }
+  },
+  "off_h3": {
+   "e05": {
+    "reading": "failure 3/11",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.f_compare_chain6: Failure: Different control flow",
+     "***<module>.f_compare_binop_inside: Failure: Different control flow",
+     "***<module>.f_compare_subscript_inside: Failure: Different control flow",
+     "***<module>.f_compare_is_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_cond: Failure: Different control flow",
+     "***<module>.f_compare_walrus_value: Failure: Different control flow",
+     "***<module>.f_compare_notin_chain: Failure: Different control flow"
+    ]
+   },
+   "e10": {
+    "reading": "failure 31/32",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.f_call_ternary_arg: Failure: Different bytecode"
+    ]
+   },
+   "r8_10": {
+    "reading": "failure 8/12",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+     "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+     "***<module>.r8_x_raise_ternary_class: Failure: Different control flow",
+     "***<module>.r8_x_with_ternary: Failure: Different control flow"
+    ]
+   }
+  },
+  "off_b99_h3": {
+   "e05": {
+    "reading": "failure 3/11",
+    "b124_fail": [
+     "f_compare_chain6",
+     "f_compare_binop_inside",
+     "f_compare_subscript_inside"
+    ],
+    "failures": [
+     "***<module>.f_compare_chain6: Failure: Different control flow",
+     "***<module>.f_compare_binop_inside: Failure: Different control flow",
+     "***<module>.f_compare_subscript_inside: Failure: Different control flow",
+     "***<module>.f_compare_is_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_cond: Failure: Different control flow",
+     "***<module>.f_compare_walrus_value: Failure: Different control flow",
+     "***<module>.f_compare_notin_chain: Failure: Different control flow"
+    ]
+   },
+   "e10": {
+    "reading": "failure 31/32",
+    "b124_fail": [
+     "f_call_ternary_arg"
+    ],
+    "failures": [
+     "***<module>.f_call_ternary_arg: Failure: Different bytecode"
+    ]
+   },
+   "r8_10": {
+    "reading": "failure 8/12",
+    "b124_fail": [
+     "r8_x_with_ternary"
+    ],
+    "failures": [
+     "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+     "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+     "***<module>.r8_x_raise_ternary_class: Failure: Different control flow",
+     "***<module>.r8_x_with_ternary: Failure: Different control flow"
+    ]
+   }
+  },
+  "off_all3": {
+   "e05": {
+    "reading": "failure 6/11",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.f_compare_is_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_cond: Failure: Different control flow",
+     "***<module>.f_compare_walrus_value: Failure: Different control flow",
+     "***<module>.f_compare_notin_chain: Failure: Different control flow"
+    ]
+   },
+   "e10": {
+    "reading": "failure 31/32",
+    "b124_fail": [
+     "f_call_ternary_arg"
+    ],
+    "failures": [
+     "***<module>.f_call_ternary_arg: Failure: Different bytecode"
+    ]
+   },
+   "r8_10": {
+    "reading": "failure 8/12",
+    "b124_fail": [
+     "r8_x_with_ternary"
+    ],
+    "failures": [
+     "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+     "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+     "***<module>.r8_x_raise_ternary_class: Failure: Different control flow",
+     "***<module>.r8_x_with_ternary: Failure: Different control flow"
+    ]
+   }
+  },
+  "v3tip": {
+   "e05": {
+    "reading": "failure 4/11",
+    "b124_fail": [
+     "f_compare_chain6",
+     "f_compare_binop_inside",
+     "f_compare_subscript_inside"
+    ],
+    "failures": [
+     "***<module>.f_compare_chain6: Failure: Different control flow",
+     "***<module>.f_compare_binop_inside: Failure: Different control flow",
+     "***<module>.f_compare_subscript_inside: Failure: Different control flow",
+     "***<module>.f_compare_is_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_chain: Failure: Different control flow",
+     "***<module>.f_compare_walrus_value: Failure: Different control flow",
+     "***<module>.f_compare_notin_chain: Failure: Different control flow"
+    ]
+   },
+   "e10": {
+    "reading": "failure 31/32",
+    "b124_fail": [
+     "f_call_ternary_arg"
+    ],
+    "failures": [
+     "***<module>.f_call_ternary_arg: Failure: Different bytecode"
+    ]
+   },
+   "r8_10": {
+    "reading": "failure 8/12",
+    "b124_fail": [
+     "r8_x_with_ternary"
+    ],
+    "failures": [
+     "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+     "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+     "***<module>.r8_x_raise_ternary_class: Failure: Different control flow",
+     "***<module>.r8_x_with_ternary: Failure: Different control flow"
+    ]
+   }
+  },
+  "v2tip": {
+   "e05": {
+    "reading": "failure 6/11",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.f_compare_is_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_cond: Failure: Different control flow",
+     "***<module>.f_compare_walrus_value: Failure: Different control flow",
+     "***<module>.f_compare_notin_chain: Failure: Different control flow"
+    ]
+   },
+   "e10": {
+    "reading": "success 32/32",
+    "b124_fail": [],
+    "failures": []
+   },
+   "r8_10": {
+    "reading": "failure 9/12",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+     "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+     "***<module>.r8_x_raise_ternary_class: Failure: Different control flow"
+    ]
+   }
+  },
+  "v2a_mg": {
+   "e05": {
+    "reading": "failure 0/11",
+    "b124_fail": [
+     "f_compare_chain6",
+     "f_compare_binop_inside",
+     "f_compare_subscript_inside"
+    ],
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.f_compare_chain6: Failure: Missing bytecode",
+     "***<module>.f_compare_binop_inside: Failure: Missing bytecode",
+     "***<module>.f_compare_subscript_inside: Failure: Missing bytecode",
+     "***<module>.f_compare_is_chain: Failure: Missing bytecode",
+     "***<module>.f_compare_in_chain: Failure: Missing bytecode",
+     "***<module>.f_compare_in_cond: Failure: Missing bytecode",
+     "***<module>.f_compare_walrus_value: Failure: Missing bytecode",
+     "***<module>.f_compare_mixed_ops: Failure: Missing bytecode",
+     "***<module>.f_compare_chain_deep_host: Failure: Missing bytecode",
+     "***<module>.f_compare_notin_chain: Failure: Missing bytecode"
+    ]
+   },
+   "e10": {
+    "reading": "failure 0/32",
+    "b124_fail": [
+     "f_call_ternary_arg"
+    ],
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.Chain: Failure: Missing bytecode",
+     "***<module>.Chain.a: Failure: Missing bytecode",
+     "***<module>.Chain.b: Failure: Missing bytecode",
+     "***<module>.Chain.c: Failure: Missing bytecode",
+     "***<module>.f_kwargs_mixed: Failure: Missing bytecode",
+     "***<module>.f_kwargs_mixed.sink: Failure: Missing bytecode",
+     "***<module>.f_starargs_mixed: Failure: Missing bytecode",
+     "***<module>.f_starargs_mixed.sink: Failure: Missing bytecode",
+     "***<module>.f_dstar_mixed: Failure: Missing bytecode",
+     "***<module>.f_dstar_mixed.sink: Failure: Missing bytecode",
+     "***<module>.f_both_star_dstar: Failure: Missing bytecode",
+     "***<module>.f_both_star_dstar.sink: Failure: Missing bytecode",
+     "***<module>.f_call_chain: Failure: Missing bytecode",
+     "***<module>.f_call_chain.h: Failure: Missing bytecode",
+     "***<module>.f_call_chain.g: Failure: Missing bytecode",
+     "***<module>.f_method_chain: Failure: Missing bytecode",
+     "***<module>.f_call_lambda_arg: Failure: Missing bytecode",
+     "***<module>.f_call_lambda_arg.<lambda>: Failure: Missing bytecode",
+     "***<module>.f_call_comp_arg: Failure: Missing bytecode",
+     "***<module>.f_call_comp_arg.<listcomp>: Failure: Missing bytecode",
+     "***<module>.f_deco_with_args: Failure: Missing bytecode",
+     "***<module>.f_deco_with_args.deco: Failure: Missing bytecode",
+     "***<module>.f_deco_with_args.deco.wrap: Failure: Missing bytecode",
+     "***<module>.f_deco_with_args.deco.wrap.inner: Failure: Missing bytecode",
+     "***<module>.f_deco_with_args.base: Failure: Missing bytecode",
+     "***<module>.f_gen_call_chain: Failure: Missing bytecode",
+     "***<module>.f_gen_call_chain.g: Failure: Missing bytecode",
+     "***<module>.f_kwargs_deep_host: Failure: Missing bytecode",
+     "***<module>.f_kwargs_deep_host.sink: Failure: Missing bytecode",
+     "***<module>.f_call_ternary_arg: Failure: Missing bytecode",
+     "***<module>.f_call_ternary_arg.sink: Failure: Missing bytecode"
+    ]
+   },
+   "r8_10": {
+    "reading": "failure 0/12",
+    "b124_fail": [
+     "r8_x_with_ternary"
+    ],
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.r8_x_del_ternary: Failure: Missing bytecode",
+     "***<module>.r8_x_assert_ternary: Failure: Missing bytecode",
+     "***<module>.r8_x_ret_ternary_tuple: Failure: Missing bytecode",
+     "***<module>.r8_x_augassign_ternary: Failure: Missing bytecode",
+     "***<module>.r8_x_assign_ternary_chain: Failure: Missing bytecode",
+     "***<module>.r8_x_for_iter_ternary: Failure: Missing bytecode",
+     "***<module>.r8_x_raise_ternary_class: Failure: Missing bytecode",
+     "***<module>.r8_x_with_ternary: Failure: Missing bytecode",
+     "***<module>.r8_x_lambda_return_ternary: Failure: Missing bytecode",
+     "***<module>.r8_x_lambda_return_ternary.<lambda>: Failure: Missing bytecode",
+     "***<module>.r8_x_ret_nested_ternary: Failure: Missing bytecode"
+    ]
+   }
+  },
+  "ma_v2g": {
+   "e05": {
+    "reading": "failure 3/11",
+    "b124_fail": [
+     "f_compare_chain6",
+     "f_compare_binop_inside",
+     "f_compare_subscript_inside"
+    ],
+    "failures": [
+     "***<module>.f_compare_chain6: Failure: Different control flow",
+     "***<module>.f_compare_binop_inside: Failure: Different control flow",
+     "***<module>.f_compare_subscript_inside: Failure: Different control flow",
+     "***<module>.f_compare_is_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_chain: Failure: Different control flow",
+     "***<module>.f_compare_in_cond: Failure: Different control flow",
+     "***<module>.f_compare_walrus_value: Failure: Different control flow",
+     "***<module>.f_compare_notin_chain: Failure: Different control flow"
+    ]
+   },
+   "e10": {
+    "reading": "success 32/32",
+    "b124_fail": [],
+    "failures": []
+   },
+   "r8_10": {
+    "reading": "failure 9/12",
+    "b124_fail": [],
+    "failures": [
+     "***<module>.r8_x_assert_ternary: Failure detected at line number 9 and instruction offset 16: Different bytecode",
+     "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode",
+     "***<module>.r8_x_raise_ternary_class: Failure: Different control flow"
+    ]
+   }
+  }
+ },
+ "v3tip_shas": {}
+}

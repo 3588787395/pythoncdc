@@ -7378,6 +7378,82 @@ AST 映射规则:
         negate = (False != if_true)
         return _negate_expr(expr) if negate else expr
 
+    def _extract_recheck_store_stmts(self, prefix_instrs, block,
+                                     split_expr_stmts=False):
+        """回边重检块前缀语句的 STORE 边界多段抽取器。
+
+        ①算法依据：No More Gotos「区域归约算法四原则」之原则 2（每块唯一
+        归属）——闩锁块既含循环体语句（STORE 终结）又含条件重检副本，语句
+        段须完整提取入体、副本段归条件语义；本抽取器只按块内指令序列切分，
+        不读任何区域外信息。
+        ②归约顺序：自底向上——多语句前缀按语句终结符逐段切分（UNPACK_
+        SEQUENCE/UNPACK_EX 计数后移到真正末段），每段独立重建，顺序保持
+        块内原序。
+        ③唯一归属判定：段边界 = STORE_*/STORE_SUBSCR/STORE_ATTR 族指令
+        （UNPACK 展开计满后收段）；split_expr_stmts=True 时并入 POP_TOP
+        表达式语句终结符（[R21-66 语句边界] 同一词汇——``out.append(x)``
+        以 POP_TOP 丢弃结果结尾、后随 ``x += 1`` 的闩锁块，两语句须分段
+        重建，否则表达式语句被并入赋值段丢失，w3_nostore 实测）；段内
+        指令全部归属该语句；切分只依赖块内 opcode 序（I.4 白名单）。
+        ④嵌套处理：嵌套表达式（调用/下标/推导式载荷）都在段内指令中整体
+        交给三级重建器，不跨段拆散；UNPACK 多目标赋值经
+        _build_unpack_assign_from_segment 按整段重建。
+        ⑤入口引用语义：每段经 _build_store_statement → _build_statement
+        三级重建为语句 dict（Assign/Expr 等），失败则整段跳过（不回改、
+        不静默丢指令——重建失败时该块不被抑制）。
+        ⑥反编译流程：被 while 链式比较回边抑制环的两条路（[R21-66] 路 B 与
+        [B104-R2a] 路 A）共用；split_expr_stmts 仅路 B 传 True（路 A 维持
+        v2 原语义逐位不变），产物汇入 recheck_store_stmts，随循环体末尾
+        发射（闩锁块按构造是循环体的最后一条语句块）。
+        C 条款：C1——只读本块前缀指令序列；C2——重检副本段由调用方归约为
+        条件语义，本方法不感知；C3——切分边界即语句终结 opcode 族，封闭于
+        块内结构事实，无名字/偏移/阈值。
+        """
+        segs = []
+        cur = []
+        unpack_remaining = 0
+        for instr in prefix_instrs:
+            cur.append(instr)
+            if instr.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
+                unpack_remaining = (instr.arg if instr.opname == 'UNPACK_SEQUENCE'
+                                     else (instr.argval & 0xFF) + 1 + ((instr.argval >> 8) & 0xFF))
+            if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
+                if unpack_remaining > 0:
+                    unpack_remaining -= 1
+                    if unpack_remaining == 0:
+                        segs.append(cur)
+                        cur = []
+                else:
+                    segs.append(cur)
+                    cur = []
+            elif (split_expr_stmts and unpack_remaining == 0
+                  and instr.opname == 'POP_TOP'):
+                segs.append(cur)
+                cur = []
+        if cur:
+            segs.append(cur)
+        stmts = []
+        for seg in segs:
+            if not seg:
+                continue
+            has_unpack = any(i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')
+                             for i in seg)
+            if has_unpack:
+                unpack_stmt = self._build_unpack_assign_from_segment(seg)
+                if unpack_stmt:
+                    stmts.append(unpack_stmt)
+                continue
+            store_stmt = self._build_store_statement(seg, block=block)
+            if store_stmt:
+                store_stmt.pop('_decorator_block', None)
+                stmts.append(store_stmt)
+            else:
+                seg_stmt = self._build_statement(seg)
+                if seg_stmt:
+                    stmts.append(seg_stmt)
+        return stmts
+
     def _loop_generate_while(self, region: LoopRegion, skip_store_targets: Set[str] = None) -> Dict[str, Any]:
         pre_stmts = []
 
@@ -8564,6 +8640,35 @@ AST 映射规则:
                             _r2166_seg_ins = _r2166_seg_ins[:-1]
                         if _r2166_seg_ins:
                             _r2166_seg_set.add(tuple(i.opname for i in _r2166_seg_ins))
+                            # [B104-R9 语句前缀变体] CPython 3.11 旋转 while 的**入口**条件段块可携带
+                            # 循环前缀语句（``n = 0; while 0 < x < n < 100:`` 的初始化赋值被并入链头块，
+                            # 识别层条件块搜索以块为粒度），而**回边**副本所在体块的尾段按语句边界（末条
+                            # STORE_*/POP_TOP 之后）截取、永不含前缀语句 ⇒ 全块变体永不相等、副本身份
+                            # 判据永假（实测 chain4/e08_while 全族 latch_copy=False）。追加同一边界截取
+                            # 的段变体：对每个段块，取其末条 STORE_*/POP_TOP 语句边界之后的求值尾段为
+                            # 额外 SEG 项——与体块尾段的截取方式对称（同一终结 opcode 族，C1 同层事实），
+                            # 无语句前缀的段块边界为 -1、不产生新项，既有全块变体全部保留（加性扩门，
+                            # 命中面只增不减）。判据只读块内 opcode 序，无名字/偏移/阈值（I.4 白名单）。
+                            _seg_bnd_r9 = -1
+                            for _si_r9, _i_r9 in enumerate(_r2166_seg_ins):
+                                if _i_r9.opname in ('STORE_FAST', 'STORE_NAME',
+                                                    'STORE_GLOBAL', 'STORE_DEREF'):
+                                    _seg_bnd_r9 = _si_r9
+                                elif _i_r9.opname == 'POP_TOP':
+                                    _seg_bnd_r9 = _si_r9
+                            if 0 <= _seg_bnd_r9 < len(_r2166_seg_ins) - 1:
+                                _r2166_seg_set.add(
+                                    tuple(i.opname for i in _r2166_seg_ins[_seg_bnd_r9 + 1:]))
+                    # [B104-R9 混合操作数求值段集] 混合条件（链式比较 + and 操作数）的闩锁
+                    # 末块 = 末操作数求值的副本（如 ``and flag`` 的 LOAD_FAST 尾块、
+                    # ``and f'{x}':`` 的格式化求值尾块），不在 [cond_block]+chain 段集内。
+                    # 以识别层 [B104-R2a] 操作数块的条件求值段（_b104r2_cond_eval_seq，
+                    # 与路 A 同一判据）构造副本身份第二集，供回边纯重检（case C）判定。
+                    _r2166_mixed_seq_set = set()
+                    for _r2166_mb in list(_cc_mixed_tails) + list(_cc_mixed_leads):
+                        _r2166_ms = self.region_analyzer._b104r2_cond_eval_seq(_r2166_mb)
+                        if _r2166_ms:
+                            _r2166_mixed_seq_set.add(_r2166_ms)
                     # 区域归约算法原则 2（每块唯一归属）：CPython 在
                     # 回边处复制 while 条件求值。链式比较回边重检跨两块：header
                     # 尾部（首段 COPY+COMPARE_OP）+ back_edge（末段 COMPARE_OP）。
@@ -8645,11 +8750,19 @@ AST 映射规则:
                                               for i in _post_store)
                             if _is_recheck and _r2166_is_latch_copy \
                                     and _r2166_bnd_idx == _last_store_idx:
-                                _store_instrs = _b_non_jmp[:_last_store_idx + 1]
-                                _store_stmt = self._build_store_statement(_store_instrs, block=_b)
-                                if _store_stmt:
-                                    _store_stmt.pop('_decorator_block', None)
-                                    recheck_store_stmts.append(_store_stmt)
+                                # [B104-R9] 多语句前缀：体块末条 STORE 之前可含多条赋值
+                                # （``x += 1; n += 1``），单段 _build_store_statement 只重建
+                                # 单语句会丢码；改用与路 A 同一的 STORE 边界多段抽取器
+                                # （_extract_recheck_store_stmts），单语句前缀逐字节同
+                                # 既有行为（一段一语句），多语句前缀逐段完整重建。
+                                # [B104-R4] POP_TOP 表达式语句终结符并入切分集
+                                # （split_expr_stmts=True）：``out.append(x); x += 1``
+                                # 的闩锁块两语句各自成段，表达式语句不再被并入赋值段
+                                # 丢失（w3_nostore 实测）；路 A 不传此参、v2 语义逐位不变。
+                                _store_stmts_r9 = self._extract_recheck_store_stmts(
+                                    _b_non_jmp[:_last_store_idx + 1], _b,
+                                    split_expr_stmts=True)
+                                recheck_store_stmts.extend(_store_stmts_r9)
                                 self.generated_blocks.add(_b)
                                 self.generated_offsets.add(_b.start_offset)
                                 continue
@@ -8669,44 +8782,11 @@ AST 映射规则:
                                         _b104r2_seq_hit = True
                                         break
                                 if _b104r2_seq_hit:
-                                    _store_segs_b104r2 = []
-                                    _cur_seg_b104r2 = []
-                                    _unpack_remaining_b104r2 = 0
-                                    for _i in _b_non_jmp[:_last_store_idx + 1]:
-                                        _cur_seg_b104r2.append(_i)
-                                        if _i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
-                                            _unpack_remaining_b104r2 = (_i.arg if _i.opname == 'UNPACK_SEQUENCE'
-                                                                        else (_i.argval & 0xFF) + 1 + ((_i.argval >> 8) & 0xFF))
-                                        if _i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
-                                                         'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
-                                            if _unpack_remaining_b104r2 > 0:
-                                                _unpack_remaining_b104r2 -= 1
-                                                if _unpack_remaining_b104r2 == 0:
-                                                    _store_segs_b104r2.append(_cur_seg_b104r2)
-                                                    _cur_seg_b104r2 = []
-                                            else:
-                                                _store_segs_b104r2.append(_cur_seg_b104r2)
-                                                _cur_seg_b104r2 = []
-                                    if _cur_seg_b104r2:
-                                        _store_segs_b104r2.append(_cur_seg_b104r2)
-                                    for _seg_b104r2 in _store_segs_b104r2:
-                                        if not _seg_b104r2:
-                                            continue
-                                        _has_unpack_seg = any(i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')
-                                                              for i in _seg_b104r2)
-                                        if _has_unpack_seg:
-                                            _unpack_stmt = self._build_unpack_assign_from_segment(_seg_b104r2)
-                                            if _unpack_stmt:
-                                                recheck_store_stmts.append(_unpack_stmt)
-                                            continue
-                                        _store_stmt = self._build_store_statement(_seg_b104r2, block=_b)
-                                        if _store_stmt:
-                                            _store_stmt.pop('_decorator_block', None)
-                                            recheck_store_stmts.append(_store_stmt)
-                                        else:
-                                            _seg_stmt = self._build_statement(_seg_b104r2)
-                                            if _seg_stmt:
-                                                recheck_store_stmts.append(_seg_stmt)
+                                    # [B104-R9] 抽取器因子化为 _extract_recheck_store_stmts
+                                    # （与 [R21-66] 路 B 共用；段切分/重建序与原内联实现逐位一致）
+                                    recheck_store_stmts.extend(
+                                        self._extract_recheck_store_stmts(
+                                            _b_non_jmp[:_last_store_idx + 1], _b))
                                     self.generated_blocks.add(_b)
                                     self.generated_offsets.add(_b.start_offset)
                                     continue
@@ -8755,9 +8835,15 @@ AST 映射规则:
                             # 第二循环 back_edge @2844 = [LOAD_GLOBAL, LOAD_FAST, PRECALL, CALL,
                             # COMPARE_OP] == SEG 的 chain 段）。补一条身份判据：整块非跳转序列逐字
                             # 等于本循环条件的一段 ⇒ 它就是被复制的测试，纯重检，整块抑制。
+                            # [B104-R9] 混合条件的闩锁末块 = 末操作数求值副本（``and flag`` 的
+                            # LOAD_FAST 尾块等），身份集并入 _r2166_mixed_seq_set（[B104-R2a]
+                            # 操作数块条件求值段，与路 A 同一判据）。
                             _r2166_pure_copy = bool(_b_non_jmp) and (
                                 tuple(i.opname for i in _b_non_jmp
-                                      if i.opname != 'EXTENDED_ARG') in _r2166_seg_set)
+                                      if i.opname != 'EXTENDED_ARG') in _r2166_seg_set
+                                or tuple(i.opname for i in _b_non_jmp
+                                         if i.opname != 'EXTENDED_ARG')
+                                in _r2166_mixed_seq_set)
                             if _has_only_compare or _r2166_pure_copy:
                                 self.generated_blocks.add(_b)
                                 self.generated_offsets.add(_b.start_offset)

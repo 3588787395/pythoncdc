@@ -1,0 +1,78 @@
+[
+ {
+  "name": "B104_main",
+  "pyc": "test_repros/round4/c4_09_chained_compare.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 12,
+  "units_total": 14,
+  "failures": [
+   "***<module>.e08_while: Failure: Different control flow",
+   "***<module>.CCMP.m: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r8_b104_chain4",
+  "pyc": "test_repros/round8/r8v8rev_b104_chain4_battery.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 4,
+  "units_total": 6,
+  "failures": [
+   "***<module>.v2: Failure: Different control flow",
+   "***<module>.v4: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r8_b104_chain5",
+  "pyc": "test_repros/round8/r8v8rev3_b104_chain5_battery.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 5,
+  "failures": [
+   "***<module>.v1: Failure: Different control flow",
+   "***<module>.v2: Failure: Different bytecode",
+   "***<module>.v4: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r8_b104_opdeep",
+  "pyc": "test_repros/round8/r8v8rev3_b104_opdeep_battery.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 4,
+  "failures": [
+   "***<module>.v1: Failure: Different control flow",
+   "***<module>.v2: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r8_b104_exprtail",
+  "pyc": "test_repros/round8/r8v8rev3_b104_exprtail_battery.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 5,
+  "failures": [
+   "***<module>.v1: Failure: Different control flow",
+   "***<module>.v2: Failure: Different control flow",
+   "***<module>.v3: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "n9_b104_whilehost",
+  "pyc": "test_repros/round9/n9v9_b104_whilehost.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 9,
+  "failures": [
+   "***<module>.w3_plain: Failure: Different control flow",
+   "***<module>.w3_nostore: Failure: Different bytecode",
+   "***<module>.w3_deep: Failure: Different control flow",
+   "***<module>.w3_and: Failure: Different control flow"
+  ]
+ }
+]

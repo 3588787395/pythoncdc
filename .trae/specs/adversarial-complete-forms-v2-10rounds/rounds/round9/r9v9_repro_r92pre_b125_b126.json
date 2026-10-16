@@ -1,0 +1,44 @@
+[
+ {
+  "name": "r4_b109_loopelse",
+  "pyc": "test_repros/round4/r4v4r_b109_loopelse.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 8,
+  "units_total": 9,
+  "failures": [
+   "***<module>.nested_loop_else: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r5_13_for_else_cross",
+  "pyc": "test_repros/round5/r5v5_13_for_else_cross.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 11,
+  "failures": [
+   "***<module>.fe_while_deep: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r4_c4_02_loopelse",
+  "pyc": "test_repros/round4/c4_02_loop_else.pyc",
+  "regen_rc": 0,
+  "status": "success",
+  "units_success": 14,
+  "units_total": 14,
+  "failures": []
+ },
+ {
+  "name": "n9_stmt_sweep",
+  "pyc": "test_repros/round9/n9v9_stmt_sweep.pyc",
+  "regen_rc": 0,
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 6,
+  "failures": [
+   "***<module>.assert_deep: Failure: Different control flow"
+  ]
+ }
+]

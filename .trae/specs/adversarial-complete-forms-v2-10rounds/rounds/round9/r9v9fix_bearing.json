@@ -1,0 +1,74 @@
+[
+ {
+  "name": "broker",
+  "pyc": "site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+  "status": "success",
+  "units_success": 128,
+  "units_total": 128,
+  "regen_ok": true
+ },
+ {
+  "name": "matcher",
+  "pyc": "site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc",
+  "status": "success",
+  "units_success": 17,
+  "units_total": 17,
+  "regen_ok": true
+ },
+ {
+  "name": "finance",
+  "pyc": "site-packages/IQCommon/data/finance.pyc",
+  "status": "success",
+  "units_success": 32,
+  "units_total": 32,
+  "regen_ok": true
+ },
+ {
+  "name": "quote_handler",
+  "pyc": "site-packages/fly/data/quote_handler.pyc",
+  "status": "success",
+  "units_success": 79,
+  "units_total": 79,
+  "regen_ok": true
+ },
+ {
+  "name": "realtime",
+  "pyc": "site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+  "status": "success",
+  "units_success": 13,
+  "units_total": 13,
+  "regen_ok": true
+ },
+ {
+  "name": "quotation",
+  "pyc": "site-packages/fly/data/quotation.pyc",
+  "status": "success",
+  "units_success": 153,
+  "units_total": 153,
+  "regen_ok": true
+ },
+ {
+  "name": "nb_for",
+  "pyc": "D:\\Temp\\mon\\nb\\nb_for.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "regen_ok": true
+ },
+ {
+  "name": "nb_with",
+  "pyc": "D:\\Temp\\mon\\nb\\nb_with.pyc",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "regen_ok": true
+ },
+ {
+  "name": "nb_b99",
+  "pyc": "D:\\Temp\\mon\\nb\\nb_b99.pyc",
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "regen_ok": true
+ }
+]
