@@ -1,0 +1,117 @@
+{
+ "purpose": "Round9 REVIEW2 arms: [B126-R1] _b126_claimed is undeclared active code; [B126-R2] guard is load-bearing",
+ "method": "armtree = byte copy of workspace; patch r9v9rev2_patch.py; regen pycdc+pyc_verify; restore; attr via r9v9rev2_attr.py; guard via r9v9rev2_guardcount.py",
+ "guardcount_HEAD": {
+  "n9v9_stmt_sweep::assert_deep": {
+   "calls": 2,
+   "hits": 2,
+   "sites": [
+    [
+     76,
+     true
+    ],
+    [
+     74,
+     true
+    ]
+   ]
+  },
+  "r8_07_assert_forms::r8_assert_chain": {
+   "calls": 0,
+   "hits": 0,
+   "sites": []
+  }
+ },
+ "arm_R2OFF_n9_stmt_sweep": {
+  "reading": "5/6",
+  "failure": "<module>.assert_deep: Failure: Different control flow",
+  "reproduces": "r9v9_repro_fix3_b126_pre.json pre-state"
+ },
+ "arm_R1OFF_readings": {
+  "n9_stmt_sweep_assert_deep": "6/6 status=success",
+  "r8_07_assert_forms": "10/11 (r8_assert_nested_func residual, same as HEAD)",
+  "r8_10_expr_cross_stmt": "9/12 (same failure set as HEAD)",
+  "x08_stmt_leaves": "6/8 (assert_leaf+return_leaf residual, same as HEAD)"
+ },
+ "arm_R1OFF_outputs_byte_identical_to_HEAD": {
+  "n9_stmt_sweep": {
+   "head_sha256": "6a3c4a5970cfb247a805295b35519b82361b044c3ef9e767354d9aef1e74af49",
+   "r1off_sha256": "6a3c4a5970cfb247a805295b35519b82361b044c3ef9e767354d9aef1e74af49",
+   "diff_lines": 0
+  },
+  "r8_07_assert_forms": {
+   "head_sha256": "2fb1be988033b05e465d8f3a6a073c358bfdcc5dde919345d6d8c64276a4e5d2",
+   "r1off_sha256": "2fb1be988033b05e465d8f3a6a073c358bfdcc5dde919345d6d8c64276a4e5d2",
+   "diff_lines": 0
+  },
+  "r8_10_expr_cross_stmt": {
+   "head_sha256": "2465aa4b5ad270e5a13eb242804b2533955c9481b8ae9403a60070f976c5c3e8",
+   "r1off_sha256": "2465aa4b5ad270e5a13eb242804b2533955c9481b8ae9403a60070f976c5c3e8",
+   "diff_lines": 0
+  },
+  "x08_stmt_leaves": {
+   "head_sha256": "0354ffe838d0ea61b8fce2c5ed11d70fa5df5752bcbbd85fce08464c47a62293",
+   "r1off_sha256": "0354ffe838d0ea61b8fce2c5ed11d70fa5df5752bcbbd85fce08464c47a62293",
+   "diff_lines": 0
+  }
+ },
+ "attr_assert_deep": {
+  "HEAD": {
+   "asserts": 1,
+   "blocks": 11,
+   "loops": 2
+  },
+  "R1OFF": {
+   "asserts": 2,
+   "blocks": 11,
+   "loops": 2
+  },
+  "note": "R1 suppresses the second AssertRegion(A2); no output effect on tested units"
+ },
+ "git_archaeology": {
+  "git_log_S_b126_claimed": "only 3803fa73 introduced it; 42fe45fe did not touch it",
+  "3803fa73_message": "B126 诊断已启动（diag_b126）待续作; claims 唯改 region_analyzer.py +126（B124-R1）",
+  "42fe45fe_message": "declares only [B126-R2] guard; 唯改 region_analyzer.py +112/-4",
+  "FIX_R9_section3": "declares E6 守卫单点，不做认领扩展; no mention of _b126_claimed/B126-R1 anywhere in FIX_R9.md"
+ },
+ "diffcheck_pre_vs_final": {
+  "added_pass2fail": 0,
+  "removed_fail2pass": 3,
+  "units": [
+   "oldface:r8_x_with_ternary",
+   "residual:r8_x_with_ternary",
+   "probe42:raise_leaf"
+  ]
+ },
+ "station_faces_aggregate": {
+  "round1face": "423/423",
+  "round2face": "245/251",
+  "probe42": "179/196",
+  "residual": "420/446",
+  "oldface": "672/692",
+  "quotation": "153/153",
+  "sum": "2092/2161",
+  "FIX_R9_doc_denominator": "2182 (差异 21，文档笔误)"
+ },
+ "shards_34set": {
+  "files": "34/34 success",
+  "units": "1568/1568",
+  "failure": 0,
+  "compile_error": 0
+ },
+ "blacklist_scan": {
+  "probe_names_in_logic": 0,
+  "co_name": 0,
+  "filename": 0,
+  "offset_numeric_cmp": 0,
+  "identity_index": 0,
+  "new_self_state": 0,
+  "debug_prints": 0,
+  "note": "only I.7 comment mentions allowed"
+ },
+ "rollback_check": {
+  "deleted_lines_total": 64,
+  "deleted_lines_matching_B99_R21_H1-H4_released": 0,
+  "B104-R3_gate": "present and additively extended (and not _b124r1_chain_region_is_self_return(region))"
+ }
+}

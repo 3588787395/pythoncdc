@@ -1,0 +1,147 @@
+{
+ "pyc": "test_repros\\round9\\n9v9_stmt_sweep.pyc",
+ "func": "assert_deep",
+ "blocks": [
+  {
+   "offset": 0,
+   "last": "GET_ITER",
+   "role": "BlockRole.NORMAL",
+   "owner": "LoopRegion",
+   "owner_entry": 32
+  },
+  {
+   "offset": 32,
+   "last": "FOR_ITER",
+   "role": "BlockRole.LOOP_HEADER",
+   "owner": "LoopRegion",
+   "owner_entry": 32
+  },
+  {
+   "offset": 34,
+   "last": "POP_JUMP_FORWARD_IF_FALSE",
+   "role": "BlockRole.LOOP_CONDITION",
+   "owner": "LoopRegion",
+   "owner_entry": 34
+  },
+  {
+   "offset": 48,
+   "last": "POP_JUMP_FORWARD_IF_FALSE",
+   "role": "BlockRole.LOOP_HEADER",
+   "owner": "LoopRegion",
+   "owner_entry": 34
+  },
+  {
+   "offset": 64,
+   "last": "POP_JUMP_FORWARD_IF_TRUE",
+   "role": "BlockRole.LOOP_BODY",
+   "owner": "LoopRegion",
+   "owner_entry": 34
+  },
+  {
+   "offset": 74,
+   "last": "JUMP_FORWARD",
+   "role": "BlockRole.LOOP_BODY",
+   "owner": "LoopRegion",
+   "owner_entry": 34
+  },
+  {
+   "offset": 76,
+   "last": "POP_TOP",
+   "role": "BlockRole.LOOP_BODY",
+   "owner": "LoopRegion",
+   "owner_entry": 34
+  },
+  {
+   "offset": 78,
+   "last": "RAISE_VARARGS",
+   "role": "BlockRole.LOOP_BODY",
+   "owner": "LoopRegion",
+   "owner_entry": 34
+  },
+  {
+   "offset": 98,
+   "last": "POP_JUMP_BACKWARD_IF_TRUE",
+   "role": "BlockRole.LOOP_BACK_EDGE",
+   "owner": "LoopRegion",
+   "owner_entry": 34
+  },
+  {
+   "offset": 120,
+   "last": "JUMP_BACKWARD",
+   "role": "BlockRole.LOOP_BACK_EDGE",
+   "owner": "LoopRegion",
+   "owner_entry": 32
+  },
+  {
+   "offset": 122,
+   "last": "RETURN_VALUE",
+   "role": "BlockRole.LOOP_ELSE",
+   "owner": "LoopRegion",
+   "owner_entry": 32
+  }
+ ],
+ "loops": [
+  {
+   "type": "LoopRegion",
+   "rt": "RegionType.WHILE_LOOP",
+   "entry": 34,
+   "blocks": [
+    34,
+    48,
+    64,
+    74,
+    76,
+    78,
+    98
+   ],
+   "break_blocks": [],
+   "has_break": false,
+   "else_blocks": []
+  },
+  {
+   "type": "LoopRegion",
+   "rt": "RegionType.FOR_LOOP",
+   "entry": 32,
+   "blocks": [
+    0,
+    32,
+    34,
+    48,
+    64,
+    98,
+    120,
+    122
+   ],
+   "break_blocks": [],
+   "has_break": false,
+   "else_blocks": [
+    122
+   ]
+  }
+ ],
+ "asserts": [
+  {
+   "entry": 48,
+   "condition": 48,
+   "message": 78,
+   "chain": [
+    64
+   ],
+   "blocks": [
+    48,
+    64,
+    78
+   ]
+  },
+  {
+   "entry": 64,
+   "condition": 64,
+   "message": 78,
+   "chain": [],
+   "blocks": [
+    64,
+    78
+   ]
+  }
+ ]
+}

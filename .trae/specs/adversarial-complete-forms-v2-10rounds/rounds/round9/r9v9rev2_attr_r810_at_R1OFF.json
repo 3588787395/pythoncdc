@@ -1,0 +1,50 @@
+{
+ "pyc": "test_repros\\round8\\r8_10_expr_cross_stmt.pyc",
+ "func": "r8_x_assert_ternary",
+ "blocks": [
+  {
+   "offset": 0,
+   "last": "POP_JUMP_FORWARD_IF_FALSE",
+   "role": "BlockRole.NORMAL",
+   "owner": "IfRegion",
+   "owner_entry": 0
+  },
+  {
+   "offset": 6,
+   "last": "JUMP_FORWARD",
+   "role": "BlockRole.PURE_JUMP",
+   "owner": "IfRegion",
+   "owner_entry": 0
+  },
+  {
+   "offset": 10,
+   "last": "LOAD_FAST",
+   "role": "BlockRole.PURE_JUMP",
+   "owner": "IfRegion",
+   "owner_entry": 0
+  },
+  {
+   "offset": 12,
+   "last": "POP_JUMP_FORWARD_IF_TRUE",
+   "role": "BlockRole.IF_CONDITION",
+   "owner": "IfRegion",
+   "owner_entry": 0
+  },
+  {
+   "offset": 22,
+   "last": "RAISE_VARARGS",
+   "role": "BlockRole.IF_THEN",
+   "owner": "IfRegion",
+   "owner_entry": 0
+  },
+  {
+   "offset": 26,
+   "last": "RETURN_VALUE",
+   "role": "BlockRole.RETURN",
+   "owner": "Region",
+   "owner_entry": 26
+  }
+ ],
+ "loops": [],
+ "asserts": []
+}
