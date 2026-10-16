@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Round9 shard7 拆分验证（单批 290s 超时 → 两半各自 batch 后合并为 shard7_report_new.json）。
+"""Round10 shard7 拆分验证（单批 290s 超时 → 两半各自 batch 后合并为 shard7_report_new.json）。
 用法: python verify7_split.py   （归档工具，不进 scripts/）
 """
 import json

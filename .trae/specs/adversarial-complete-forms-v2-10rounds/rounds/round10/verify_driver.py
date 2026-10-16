@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Round9 主代理全量验证驱动（round8 同款复制；compare 基线改为 merge gate 42 = baseline42）。
+"""Round10 主代理全量验证驱动（round8/9 同款；compare 基线 = merge gate 42 = baseline42）。
 用法:
   python verify_driver.py regen <shard> [start] [end]   # 重生成该分片全部 OK.py（覆盖写，失败记录）
   python verify_driver.py verify <shard>               # pyc_verify batch 该分片 → shardN_report_new.json

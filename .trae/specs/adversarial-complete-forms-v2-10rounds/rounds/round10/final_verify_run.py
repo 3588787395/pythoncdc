@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Round9 主代理终验编排（任务 9.4 验证序六步；基线 = merge gate 42）。
+"""Round10 主代理终审全量终验编排（任务 10.1 验证序六步；基线 = merge gate 42 冻结树）。
 顺序：regen 0-7 → verify 0-6 + shard7 拆分 → compare×8（vs baseline42）→ small34（拆两半）
 → quotation 单验 → pytest 七套件 → IV.2 门禁自检 → 汇总 summary JSON。
 所有子命令超时上限沿用 verify_driver（regen 每文件 90s / verify 290s）。
@@ -11,7 +11,7 @@ import sys
 import time
 
 ROOT = r'F:\Downloads\pythoncdc-main'
-HERE = os.path.join(ROOT, '.trae', 'specs', 'adversarial-complete-forms-v2-10rounds', 'rounds', 'round9')
+HERE = os.path.join(ROOT, '.trae', 'specs', 'adversarial-complete-forms-v2-10rounds', 'rounds', 'round10')
 BL = os.path.join(ROOT, '.trae', 'specs', 'adversarial-complete-forms-v2-10rounds', 'baseline')
 LOG = os.path.join(HERE, 'final_verify_log.txt')
 
