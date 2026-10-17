@@ -1,0 +1,59 @@
+# Tasks
+
+- [x] Task 0: 规范定稿与基线快照：三件套落盘并本地提交（前缀 `rr-v3r00:`）；gate 42 基线复读（402 = 6617/6617；34 集 1568/1568；quotation 153/153；tests 七套件基线名单；wiki v7 = 103/25/0）与承接名单（25 行破口 + 组合级 25 号 清零 9/维持 16 + 移交项 B127/B128/Yield-F9/B44）落盘 `baseline/`（readings.md/breaches_25rows.md/combos_25.md/transfers.md + kit/ 5 脚本 + baseline42 8 件；关键数字三项核对全过；B127 15/16、B128 10/11 与 FIX_R9.md 逐字一致）
+- [ ] Task 1: Round 1 — 破口现状全量复现与证据重建（评审工程师 + 主代理验收）
+  - [ ] 1.1 探针重建：B127（slice 悬挂链）、B128（await×条件）、Yield-F9（存量探针重建，round3 移交）；逐项复跑给出终判（真实破口 / 已封闭待复验）
+  - [ ] 1.2 B44 证据缺口抽验（r7_11/r7_12 BoolOp 重复/三层/深右嵌套实测）
+  - [ ] 1.3 25 行破口逐行现状定案表（行 × 族锚点 × 现状三分：真实破口 / 证据缺口 / 已封闭待复验），Σ 核对 = 25 行
+  - [ ] 1.4 组合级 25 号现状复核（清零 9 抽样复核 + 维持 16 逐项实跑 + B52/B53/B11-R2 并入现状）
+  - [ ] 1.5 `rounds/round1/BREACH_RECON.md` + 移交真实破口清单至各批次（标行归属）；主代理验收后提交并 push（`rr-v3r01:`）
+- [ ] Task 2: Round 2 — 条件合并块族封闭（→ 升格行：If / BoolOp / IfExp）
+  - [ ] 2.1 评审攻击：B98（镜像极性）/ B43（链式比较×BoolOp 汇合块）/ B44（重复/三层/深右嵌套）/ B46 尾项 / B78 / B123（三元嵌套）/ B51（if 三元链复合值）/ B42（参数栈位/比较 LHS/推导式 filter）/ B49（t_host_for_else 前驱集归属）现状探针 + 合成新变体
+  - [ ] 2.2 修复：通用机制全族封闭（I.4 白名单判据；涉改 region_analyzer / region_ast_generator）
+  - [ ] 2.3 复核：原探针 + ≥2 合成交叉变体 + 负对照全过；站桩回归不变差
+  - [ ] 2.4 主代理验证序六步 + push（`rr-v3r02:`）
+- [ ] Task 3: Round 3 — try-raise-assert-宿主族封闭（→ 升格行：Try / Raise / Assert / Import / Global）
+  - [ ] 3.1 评审攻击：B87（try 体嵌套宿主变体）/ B73（try 四段 import 宿主泄漏）/ B75（try 宿主 global）/ B56（assert 幻影 else）/ B58（raise×三元类）/ B63（空 try/fin 尾随段）/ B69（emptyfin_in_if）现状探针 + 合成新变体
+  - [ ] 3.2 修复：通用机制全族封闭
+  - [ ] 3.3 复核：原探针 + 合成交叉变体 + 负对照全过；站桩回归不变差
+  - [ ] 3.4 主代理验证序六步 + push（`rr-v3r03:`）
+- [ ] Task 4: Round 4 — await-挂起链族封闭（→ 升格行：Await / ListComp / await_expr）
+  - [ ] 4.1 评审攻击：B112①（await 链消费门）/ B112②（推导式挂起变体）/ B128（await×条件）/ B47（await×三元臂 外提越 POP_JUMP 对）现状探针 + 合成新变体
+  - [ ] 4.2 修复：通用机制全族封闭（await 链消费门 = 区域级机制，非个案）
+  - [ ] 4.3 复核：原探针 + 合成交叉变体 + 负对照全过；站桩回归不变差
+  - [ ] 4.4 主代理验证序六步 + push（`rr-v3r04:`）
+- [ ] Task 5: Round 5 — match-with 幻影族封闭（→ 升格行：Match / With）
+  - [ ] 5.1 评审攻击：B74（match 深层变体）/ B122（match 域外候选转正）/ B93（with-in-match 幻影镜像）/ B61（深宿主 match guard）/ B70（while True+with 幻影 break）现状探针 + 合成新变体
+  - [ ] 5.2 修复：通用机制全族封闭
+  - [ ] 5.3 复核：原探针 + 合成交叉变体 + 负对照全过；站桩回归不变差
+  - [ ] 5.4 主代理验证序六步 + push（`rr-v3r05:`）
+- [ ] Task 6: Round 6 — 循环控制族封闭（→ 升格行：Break / Continue / While）
+  - [ ] 6.1 评审攻击：B79（break 三分支族）/ B94（while NOP 残段）/ B97（handler break）/ B71 残余（fin_continue 转 B79 续接）现状探针 + 合成新变体
+  - [ ] 6.2 修复：通用机制全族封闭
+  - [ ] 6.3 复核：原探针 + 合成交叉变体 + 负对照全过；站桩回归不变差
+  - [ ] 6.4 主代理验证序六步 + push（`rr-v3r06:`）
+- [ ] Task 7: Round 7 — 赋值-删除-return-slice 族封闭（→ 升格行：AugAssign / Delete / Return / Slice）
+  - [ ] 7.1 评审攻击：B76（augassign×BoolOp RHS 体蒸发残留）/ B48 残留变体（t_host_while_body 等）/ B84（del/with 吞并）/ B88（return 嵌套宿主）/ B62（return(call+BoolOp) 尾语句蒸发）/ B127（slice 悬挂链）/ B59（dh_for_else_del）/ B60（dh_with_assert）现状探针 + 合成新变体
+  - [ ] 7.2 修复：通用机制全族封闭
+  - [ ] 7.3 复核：原探针 + 合成交叉变体 + 负对照全过；站桩回归不变差
+  - [ ] 7.4 主代理验证序六步 + push（`rr-v3r07:`）
+- [ ] Task 8: Round 8 — 全行对抗终审与三态 v8 判定（评审工程师执行，主代理验收）
+  - [ ] 8.1 25 行逐行终审：每行 ≥1 深层（≥3 级）探针 + 负对照 + 13 误解自查；组合级 25 号终表（含 B52/B53/B11-R2 并入如实处置）；REVIEW.md
+  - [ ] 8.2 复核/打回整改闭环；REVIEW2.md；三态 v8 表（目标 完备 128 / 破口 0 / 零能力 0）
+  - [ ] 8.3 主代理验收（抽验探针 + 数目核对）后提交并 push（`rr-v3r08:`）
+- [ ] Task 9: Round 9 — wiki 台账 v8 落账（§8.2 六步；评审工程师执行，主代理验收）
+  - [ ] 9.1 fix 批归档落位确认 + grep 落地标记全表（含各批「代码已落地」声明核验）
+  - [ ] 9.2 台账 §5 全量更新（128/0/0 = 100%；行内编号清理）+ §6/§8.1 更新（破口清零终态）
+  - [ ] 9.3 `tools/kb/syntax_coverage.py` 重跑（sha 存证）+ 占比重算（128/128）+ 5 页数字同步 + `wiki/log.md` 记录
+  - [ ] 9.4 WIKI_REVIEW.md + 主代理验收后提交并 push（`rr-v3r09:`）
+- [ ] Task 10: Round 10 — 主代理全量终验 + 终归档
+  - [ ] 10.1 验证序六步（34 集 / 402 八分片 REGRESSIONS=0 / quotation 153/153 / tests 基线 / IV.2 全过 / regen 零字节差异）+ VERIFICATION.md
+  - [ ] 10.2 终归档 `rounds/round10/` + 提交并 push origin main
+  - [ ] 10.3 终态读数汇报（三态 128/0/0 = 100%；组合级清零；通用性审计面；站桩回归终读数）
+
+# Task Dependencies
+
+- Task 0–10 严格顺序依赖（前序未过门禁禁止开启下一项）
+- Round 2–7 默认串行（涉改文件存在重叠）；若确证两批「族不相交 ∧ 涉改文件不相交」方可并行
+- Task 8 依赖 Task 1–7 全部完成且每行探针齐备
+- Task 9 依赖 Task 8 放行；Task 10 依赖 Task 9 完成
