@@ -1,12 +1,12 @@
 # Tasks
 
 - [x] Task 0: 规范定稿与基线快照：三件套落盘并本地提交（前缀 `rr-v3r00:`）；gate 42 基线复读（402 = 6617/6617；34 集 1568/1568；quotation 153/153；tests 七套件基线名单；wiki v7 = 103/25/0）与承接名单（25 行破口 + 组合级 25 号 清零 9/维持 16 + 移交项 B127/B128/Yield-F9/B44）落盘 `baseline/`（readings.md/breaches_25rows.md/combos_25.md/transfers.md + kit/ 5 脚本 + baseline42 8 件；关键数字三项核对全过；B127 15/16、B128 10/11 与 FIX_R9.md 逐字一致）
-- [ ] Task 1: Round 1 — 破口现状全量复现与证据重建（评审工程师 + 主代理验收）
-  - [ ] 1.1 探针重建：B127（slice 悬挂链）、B128（await×条件）、Yield-F9（存量探针重建，round3 移交）；逐项复跑给出终判（真实破口 / 已封闭待复验）
-  - [ ] 1.2 B44 证据缺口抽验（r7_11/r7_12 BoolOp 重复/三层/深右嵌套实测）
-  - [ ] 1.3 25 行破口逐行现状定案表（行 × 族锚点 × 现状三分：真实破口 / 证据缺口 / 已封闭待复验），Σ 核对 = 25 行
-  - [ ] 1.4 组合级 25 号现状复核（清零 9 抽样复核 + 维持 16 逐项实跑 + B52/B53/B11-R2 并入现状）
-  - [ ] 1.5 `rounds/round1/BREACH_RECON.md` + 移交真实破口清单至各批次（标行归属）；主代理验收后提交并 push（`rr-v3r01:`）
+- [x] Task 1: Round 1 — 破口现状全量复现与证据重建（评审工程师 + 主代理验收）（BREACH_RECON.md 171 行：工作量 = 46 探针 10 个 run；三分 = 真实破口 20 / 已封闭待复验 5 / 证据缺口 0 = Σ25；零 pass→fail；主代理独立复跑 v_b46_face(3 fails=1/4) + e01(8 fails=7/15) 与报告一致）
+  - [x] 1.1 探针重建：B127（slice 悬挂链）→ **真实破口 15/16**（f_slice_expr_bounds）；B128（await×条件）→ **真实破口 10/11**（f_await_cond_pos 幻影 await 重复）；Yield-F9 → **真实破口**（存量探针退化复现；重建 7 探针：assign/from 绿，arg/boolop/ret/cond 产物非法、prec 语义漂移 `(yield i)+1`→`yield i+1`）
+  - [x] 1.2 B44 证据缺口抽验：r7_11 **7/7 全绿**（b_and_or_repeat 翻正）、r7_12 **6/8**（b_nest_three_layers 翻正；残余 b_nest_deep_right；b_ternary_lhs_and 归 If 行 B46 变体）→ 终判：真实破口（部分封闭）
+  - [x] 1.3 25 行破口逐行现状定案表（Σ=25 ✓）：**真实破口 20**（表A 11 + 表B 6 + 表C 3）+ **已封闭待复验 5**（Delete / AugAssign / Global + 表C 镜像 augmented_assign / global_nonlocal——锚点全绿、台账 stale）+ 证据缺口 0
+  - [x] 1.4 组合级 25 号现状复核：清零 9 **9/9 全数证实**（残余按口径转 B79/B80/B82）；维持 16 = **14 维持红 + B49/B63 已翻正**（台账 stale）；另册 B52/B53/B11-R2 维持红
+  - [x] 1.5 `rounds/round1/BREACH_RECON.md`（§0 探针工作流 + §1 移交终判 + §2 定案表 + §3 组合现状 + §4 行→批次映射 + §5 异常 10 项）+ 证据 10 JSON + `rec1_run.py` + `test_repros/round1/`（rec1_ 前缀）；主代理裁决登记：① c13::CMisc.boom 主判归 R3（raise 尾闩主形态；循环侧残余若 R3 后仍红转 R6 复评）② v_b75_face::v_swap_arm_returns（B82-v_swap）纳入 R3 范围 ③ B49/B63 翻正留 Round 8 终表裁决 ④ B51/B52 同单元口径差留 Round 8 统一；已提交并 push（`rr-v3r01:`）
 - [ ] Task 2: Round 2 — 条件合并块族封闭（→ 升格行：If / BoolOp / IfExp）
   - [ ] 2.1 评审攻击：B98（镜像极性）/ B43（链式比较×BoolOp 汇合块）/ B44（重复/三层/深右嵌套）/ B46 尾项 / B78 / B123（三元嵌套）/ B51（if 三元链复合值）/ B42（参数栈位/比较 LHS/推导式 filter）/ B49（t_host_for_else 前驱集归属）现状探针 + 合成新变体
   - [ ] 2.2 修复：通用机制全族封闭（I.4 白名单判据；涉改 region_analyzer / region_ast_generator）

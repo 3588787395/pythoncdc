@@ -1,0 +1,42 @@
+[
+ {
+  "name": "b127_e07",
+  "pyc_src_rel": "test_repros/round3/e07_g4_star_slice_containers.pyc",
+  "pyc_src_sha": "35e59c2e94946266",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round1/rec1_b127_e07_e07_g4_star_slice_containers.pyc",
+  "mtime": "2026-10-17T08:20:42",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "ff7c2e350d290d96",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_b127_e07_e07_g4_star_slice_containers.pyc (Python 3.11)\n\ndef f_star_call(a, rest, kw):\n    def sink(x, *rs, flag=False, **ks):\n        return x + sum(rs) + (1 if flag else 0) + len(ks)\n    for i in range(3):\n        if i and i:\n            return sink(a, *rest, flag=True, **(kw))\n    return 0\ndef f_star_call_mixed(a, rest, kw):\n    def sink(x, y, *rs, z=1, **ks):\n        return x + y + sum(rs) + z + len(ks)\n    for i in range(3):\n        if i and i:\n            return sink(a, 2, *rest, z=3, **(kw))\n    return 0\ndef f_star_assign(xs):\n    for i in range(3):\n        if i and i:\n            a, *b = xs\n            return (a, b)\n    return 0\ndef f_star_assign_head(xs):\n    for i in range(3):\n        if i and i:\n            *a, b = xs\n            return (a, b)\n    return 0\ndef f_star_assign_mid(xs):\n    for i in range(3):\n        if i and i:\n            a, *b, c = xs\n            return (a, b, c)\n    return 0\ndef f_slice_nested_sub(m, i, j):\n    for k in range(3):\n        if k and k:\n            return m[i:j, k] + m[1:2, 3]\n    return 0\ndef f_slice_steps(xs, w):\n    for i in range(3):\n        if i and i:\n            return xs[::-1] + xs[::w] + xs[1:-1:2]\n    return 0\ndef f_slice_expr_bounds(xs, a, b):\n    for i in range(3):\n        if i and i:\n            b\n    return 0\ndef f_container_nest3(d):\n    for i in range(3):\n        if i and i:\n            return {'a': [1, (2, {3, 4})], 'b': {'c': [5, 6]}}[d]\n    return 0\ndef f_container_mixed(a, b):\n    for i in range(3):\n        if i and i:\n            return ([a, (b, [a])], {a: {b: [1, 2]}}, {a, (b,)})\n    return 0\ndef f_subscript_deep(m, i, j):\n    for k in range(3):\n        if k and k:\n            return m[i][j][k] + m[i][j:k]\n    return 0\ndef f_tuple_in_call(a, b, c):\n    def sink(t):\n        return sum(t)\n    for i in range(3):\n        if i and i:\n            return sink((a, b, c)) + sink([a, b])\n    return 0\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.f_slice_expr_bounds: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round1/rec1_b127_e07_e07_g4_star_slice_containers.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round1/rec1_b127_e07_e07_g4_star_slice_containersOK.py\n[single] status=failure units=15/16 success_rate=93.75%",
+  "status": "failure",
+  "units_success": 15,
+  "units_total": 16,
+  "failures": [
+   "***<module>.f_slice_expr_bounds: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "b128_e12d",
+  "pyc_src_rel": "test_repros/round3/e12d_g9_awaits.pyc",
+  "pyc_src_sha": "ea7bd83daae1c092",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round1/rec1_b128_e12d_e12d_g9_awaits.pyc",
+  "mtime": "2026-10-17T08:20:43",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "8a7fcc3a0d577dd7",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_b128_e12d_e12d_g9_awaits.pyc (Python 3.11)\n\nasync def f_await_assign_rhs(a, src):\n    async with acm9():\n        for i in range(3):\n            if i:\n                v = await src(i)\n                return v\n    return 0\nasync def f_await_return(a, src):\n    async for i in src(a):\n        if i:\n            return await src(i)\n    return 0\nasync def f_await_cond_pos(a, src):\n    async for i in src(a):\n        await src(i)\n        if await src(i):\n            return i\n    return 0\nasync def f_await_call_arg(a, src):\n    def sink(x):\n        return x + 1\n    async for i in src(a):\n        if i:\n            return sink(await src(i))\n    return 0\nasync def f_await_deep3(a, src):\n    async with acm9():\n        async for i in src(a):\n            if i:\n                return await src(i) + 1\n    return 0\nasync def f_await_boolop(a, src):\n    async for i in src(a):\n        if await src(i) or a:\n            return i\n    return 0\nclass acm9:\n    async def __aenter__(self):\n        return self\n    async def __aexit__(self, *e):\n        return False\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.f_await_cond_pos: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round1/rec1_b128_e12d_e12d_g9_awaits.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round1/rec1_b128_e12d_e12d_g9_awaitsOK.py\n[single] status=failure units=10/11 success_rate=90.91%",
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 11,
+  "failures": [
+   "***<module>.f_await_cond_pos: Failure: Different control flow"
+  ]
+ }
+]

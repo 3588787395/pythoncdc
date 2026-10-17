@@ -1,0 +1,38 @@
+[
+ {
+  "name": "B122_n1_nestnoguard",
+  "pyc_src_rel": "test_repros/round8/r8v8rev_bmatch_nestnoguard.pyc",
+  "pyc_src_sha": "e95ebd700d0953b1",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round1/rec1_B122_n1_nestnoguard_r8v8rev_bmatch_nestnoguard.pyc",
+  "mtime": "2026-10-17T08:35:05",
+  "regen_rc": -9,
+  "regen_tail": "TIMEOUT",
+  "ok_exists": true,
+  "ok_sha": "e3b0c44298fc1c14",
+  "ok_text": "",
+  "verify_rc": null,
+  "verify_out": "SKIPPED: regen HANG(60s)",
+  "status": "hang",
+  "units_success": null,
+  "units_total": null,
+  "failures": []
+ },
+ {
+  "name": "B122_v2_bmatch_guard",
+  "pyc_src_rel": "test_repros/round8/r8v8rev_bmatch_guards_battery.pyc",
+  "pyc_src_sha": "f805ea5816d6cd47",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round1/rec1_B122_v2_bmatch_guard_r8v8rev_bmatch_guards_battery.pyc",
+  "mtime": "2026-10-17T08:36:05",
+  "regen_rc": -9,
+  "regen_tail": "TIMEOUT",
+  "ok_exists": true,
+  "ok_sha": "e3b0c44298fc1c14",
+  "ok_text": "",
+  "verify_rc": null,
+  "verify_out": "SKIPPED: regen HANG(60s)",
+  "status": "hang",
+  "units_success": null,
+  "units_total": null,
+  "failures": []
+ }
+]

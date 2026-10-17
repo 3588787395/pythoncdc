@@ -1,0 +1,51 @@
+[
+ {
+  "name": "v_b46_face",
+  "pyc_src_rel": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.pyc",
+  "pyc_src_sha": "fa4abb01bb798512",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round1/rec1_v_b46_face_v_b46_face.pyc",
+  "mtime": "2026-10-17T08:41:50",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "109a595ad0124afa",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_v_b46_face_v_b46_face.pyc (Python 3.11)\n\n__doc__ = 'rv2 变体面 B46 尾项（r7_07 t_nest_in_condition 邻域）：条件位融合三元'\ndef v_while_cond_nest(n, a, b, c, d, f1, f2):\n    if (c if f2 else d):\n        if f1:\n            if a:\n                pass\n        elif b:\n            pass\n        else:\n            pass\n    return n\ndef v_if_cond_nest(a, b, c, d, f1, f2):\n    if (c if f2 else d):\n        if f1:\n            if a:\n                pass\n        elif b:\n            pass\n        else:\n            return 0\ndef n_for_body_nest(xs, f1, f2):\n    out = []\n    for x in xs:\n        if not f2 or x:\n            x if f1 else 0\n        else:\n            2\n    return out\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.v_while_cond_nest: Failure: Different control flow\n  ***<module>.v_if_cond_nest: Failure: Different control flow\n  ***<module>.n_for_body_nest: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round1/rec1_v_b46_face_v_b46_face.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round1/rec1_v_b46_face_v_b46_faceOK.py\n[single] status=failure units=1/4 success_rate=25.00%",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 4,
+  "failures": [
+   "***<module>.v_while_cond_nest: Failure: Different control flow",
+   "***<module>.v_if_cond_nest: Failure: Different control flow",
+   "***<module>.n_for_body_nest: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "e01_b98matrix",
+  "pyc_src_rel": "test_repros/round3/e01_g1_b98_matrix.pyc",
+  "pyc_src_sha": "ef2a32a20b39f485",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round1/rec1_e01_b98matrix_e01_g1_b98_matrix.pyc",
+  "mtime": "2026-10-17T08:41:51",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "12a9b5f8b6460875",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_e01_b98matrix_e01_g1_b98_matrix.pyc (Python 3.11)\n\ndef f_or_in_and_deep(a, b, c):\n    acc = []\n    for i in range(3):\n        if i % 2 == 0 and len(acc) < 4:\n            r = (a or b) and c\n            acc.append(r)\n            while False:\n                pass\n    return acc\ndef f_and_in_or_deep(a, b, c):\n    acc = []\n    for i in range(3):\n        if i and len(acc) < 4:\n            r = a or b and c\n            acc.append(r)\n            while False:\n                pass\n    return acc\ndef f_or_in_and_pair_deep(a, b, c, d):\n    acc = []\n    for i in range(3):\n        if i and len(acc) < 4:\n            r = b if not a else c\n            acc.append(r)\n            while False:\n                pass\n    return acc\ndef f_b98_ternary_cross(a, b, c, d):\n    for i in range(3):\n        if i and i < 4:\n            if d:\n                (a or b) and c\n            else:\n                return 0\n            return None\n    return 1\ndef f_b98_compare_cross(a, b, c):\n    for i in range(3):\n        if i and i:\n            (a or b) and c\n            return None\n    return False\ndef f_b98_walrus_cross(a, b, c):\n    for i in range(3):\n        if i:\n            if (w := (a or b) and c):\n                pass\n    return 0\ndef f_b98_if_cond_pos(a, b, c):\n    for i in range(3):\n        if (a or b) and c and i:\n            return i\n    return 0\ndef f_b98_while_cond_pos(a, b, c):\n    n = 0\n    while (a or b) and c:\n        if n > 2:\n            break\n        n += 1\n    return n\ndef f_b98_return_pos(a, b, c):\n    for i in range(3):\n        if i == 1:\n            return (a or b) and c\n    return 0\ndef f_b98_call_arg_pos(a, b, c):\n    def sink(x):\n        return x + 1\n    for i in range(3):\n        if i:\n            if (a or b) and c:\n                pass\n    return 0\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if not (a and b):\n                if c:\n                    if d:\n                        pass\n                else:\n                    return i\n    return 0\ndef f_b98_not_wrapped(a, b, c):\n    for i in range(3):\n        if i:\n            pass\n    return 0\ndef f_b98_and_tail_or_group(a, b, c, d):\n    acc = []\n    for i in range(3):\n        if i and len(acc) < 3:\n            if (a or b) and (c or d) and a:\n                pass\n            acc.append(r)\n            while False:\n                pass\n    return acc\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.f_or_in_and_pair_deep: Failure: Different control flow\n  ***<module>.f_b98_ternary_cross: Failure: Different control flow\n  ***<module>.f_b98_compare_cross: Failure: Different bytecode\n  ***<module>.f_b98_walrus_cross: Failure: Different control flow\n  ***<module>.f_b98_call_arg_pos: Failure: Different control flow\n  ***<module>.f_b98_or_tail_and_group: Failure: Different control flow\n  ***<module>.f_b98_not_wrapped: Failure: Different control flow\n  ***<module>.f_b98_and_tail_or_group: Failure: Different bytecode\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round1/rec1_e01_b98matrix_e01_g1_b98_matrix.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round1/rec1_e01_b98matrix_e01_g1_b98_matrixOK.py\n[single] status=failure units=7/15 success_rate=46.67%",
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 15,
+  "failures": [
+   "***<module>.f_or_in_and_pair_deep: Failure: Different control flow",
+   "***<module>.f_b98_ternary_cross: Failure: Different control flow",
+   "***<module>.f_b98_compare_cross: Failure: Different bytecode",
+   "***<module>.f_b98_walrus_cross: Failure: Different control flow",
+   "***<module>.f_b98_call_arg_pos: Failure: Different control flow",
+   "***<module>.f_b98_or_tail_and_group: Failure: Different control flow",
+   "***<module>.f_b98_not_wrapped: Failure: Different control flow",
+   "***<module>.f_b98_and_tail_or_group: Failure: Different bytecode"
+  ]
+ }
+]
