@@ -32358,6 +32358,19 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                                         and (_r3k_next_t is _r3k_t0
                                              or self._is_equivalent_exit_block(_r3k_t0, _r3k_next_t))):
                                     _r3k_or_member = True
+                                else:
+                                    # [B1b fix-r3] or-run 终段成员：假边离开本
+                                    # 链（假目标 ≠ T0），真边 fall-through 回
+                                    # 流到段公共成功汇聚点（体入口）——源文
+                                    # ``(A and B) or C or D`` 的最后一个 or 操
+                                    # 作数（真 = 成功沿落空边到体，假 = 退出条件
+                                    # 链）。[C1] 只读块末 opcode 与后继身份。
+                                    _r3k_ft_ft = next(
+                                        (s for s in _r3k_ft.conditional_successors
+                                         if s.start_offset != _r3k_ft_li.argval), None)
+                                    if (_r3k_ft_ft is not None
+                                            and _r3k_ft_ft is _r3k_body_t):
+                                        _r3k_or_member = True
                                 break
                             if (_r3k_ft_li is None
                                     or _r3k_ft_li.opname not in ('POP_JUMP_FORWARD_IF_TRUE',
@@ -32740,7 +32753,8 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                                 break
                             if not self._b1b_loop_body_run_continuation(
                                     current, last, ft_succ,
-                                    has_or_member=any(op == 'or' for _, op in chain)):
+                                    has_or_member=any(op == 'or' for _, op in chain),
+                                    prev_and=len(chain) >= 2 and chain[-2][1] == 'and'):
                                 break
             # [R64-diag1 closed-shared-exit-prefix] Region-reduction principle 2
             # (one owner per block at this level) + principle 3 (a nested if is an
@@ -33402,7 +33416,8 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
 
     def _b1b_loop_body_run_continuation(self, cur_block: BasicBlock, cur_last,
                                         cand_block: BasicBlock,
-                                        has_or_member: bool = False) -> bool:
+                                        has_or_member: bool = False,
+                                        prev_and: bool = False) -> bool:
         """[B1b fix] 判定循环体内 (current, candidate) 是否构成同一 BoolOp 短路链的
         CPython 降级续接对——skip_claimed_check 路径与 _try_unify_mixed_boolop_chain
         认领守卫共用的 body_blocks 结构豁免。
@@ -33414,6 +33429,14 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
           (1) and→or 边界（current FALSE 族、candidate TRUE 族）：candidate 的
               fall-through 恰为 Y——Y 是下一 or run 的头，必须仍以正向条件跳转
               结尾（排除 `1 if a and b else 2` 的假值块 JUMP_FORWARD 形）；
+          (1') and-run 尾→or-run 头边界（current 与 candidate 均 TRUE 族且真边
+              目标同一，prev_and=True）：链内末 and 组（current 的入链标记为
+              'and'，即 chain[-2] 为 'and'；current 是该组的尾操作数）成功后
+              沿 current 真边跳到 or-run 的公共成功汇聚点 Y，candidate 经
+              current 落空边顺序抵达、即 or-run 头——源文
+              ``(A and B) or C ...`` 的 CPython 降级形状（A/B 假边跳
+              过 and 组余部直达 or-run 头）。纯 or 链（prev_and=False）及其它
+              TRUE/TRUE 成员对维持原拒绝路径，行为不变；
           (2) or-run 续接（current TRUE 族、candidate FALSE 族）：沿 candidate
               的 fall-through 走 F-run（≤8 步、带 visited），run 成员全部以
               FALSE 族正向跳转落到同一假出口 Z（Z 不得是 Y），run 末成员的
@@ -33545,6 +33568,17 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             # candidate 经 current 真边（fall-through）抵达即 and-run 续接；
             # 纯 and 链维持原拒绝（排除普通 and 链共用的语句 merge 块）。
             return bool(has_or_member)
+        # [B1b fix-r3] (1') and-run 尾→or-run 头边界：current 是链内末 and 组
+        # 的尾操作数（prev_and=True），其真边与 candidate 的真边共享同一成功
+        # 汇聚点 Y（or-run 真出口 / 体入口），candidate 经 current 落空边顺序
+        # 抵达——``(A and B) or C ...`` 的 CPython 降级形状（A/B 假边跳过 and
+        # 组余部直达 or-run 头）。candidate 是 or-run 头本身而非嵌套 if 条件
+        # 块：其真目标 Y 同时被 current 真边引用（同一短路链的成员对），嵌套
+        # if 的内层条件块真目标是内层体、不会与本链成员的真边共享。
+        # [C1] 只读块末 opcode 极性、后继目标身份与链末标记（同层结构事实）；
+        # [C3] prev_and 缺失（纯 or 链 / 链首对）维持下方 R5-B100 判据。
+        if (_cur_true and _cand_true and _cand_tgt is _cur_tgt and prev_and):
+            return True
         # [R5-B100-armjoin-trueentry] current 与 candidate 同为正向 TRUE 族跳转、且两条
         # 跳边共享同一目标 T（纯 or-run 在跳转语境下的降级形状）时，按 T 的身份分判
         # （见 _boolop_shared_target_is_join）：T 是本层汇合块（假出口）⇒ 放行，两名成员
@@ -33742,7 +33776,8 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                         pass  # loop-else 豁免：跳过 body 专用加强，交标准验收
                     elif not self._b1b_loop_body_run_continuation(
                             last_block, last_instr, ft_succ,
-                            has_or_member=any(op == 'or' for _, op in result)):
+                            has_or_member=any(op == 'or' for _, op in result),
+                            prev_and=len(result) >= 2 and result[-2][1] == 'and'):
                         break
                 elif isinstance(_ft_reg, TryExceptRegion):
                     # [R2-B9 fix] TryRegion 范围认领豁免（[B1b fix-r2] 循环
@@ -33844,6 +33879,9 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         # 引入新状态（C3 封闭）。
         _b99_prefix_visited = {start_block.start_offset}
         _b99_prefixes: List[Tuple[BasicBlock, str]] = []
+        # [B98-V3R2 fix] 前缀段计数：R565 共享 merge 判据（本方法下方 34065 起）
+        # 只对链的真实成员生效，见该处注释。无吸收时保持 0，切片为原链。
+        _b99_n_prefix = 0
         if _b99_absorb:
             _b99_anchor_last = start_block.get_last_instruction()
             _b99_ft = None
@@ -33877,6 +33915,7 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                     _b99_cur = _b99_pred_hit
             if _b99_prefixes:
                 _b99_prefixes.reverse()
+                _b99_n_prefix = len(_b99_prefixes)
         current = start_block
         visited = set()
         _is_first_iter = True
@@ -34027,9 +34066,26 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             # 中断；控制流 ``if a and b and c:`` 用 POP_JUMP_FORWARD_IF_FALSE
             # 不走 SHORT_CIRCUIT_JUMP_OPS 路径，亦不受影响。
             _cur_jt = self.cfg.get_block_by_offset(last.argval) if last.argval is not None else None
-            if (len(chain) >= 1 and last.opname in SHORT_CIRCUIT_JUMP_OPS
+            # [B98-V3R2 fix] R565 共享 merge 判据只对链的真实成员生效。B99 前缀段
+            # 与锚点分属不同操作符组（吸收判据已保证前缀跳转目标 == 锚点落空后继，
+            # 33902 处结构验证），两组短路口按组不同——把前缀段当首块比较必然判不等，
+            # 合法值链 `return sink((a or b) and c)` 的 [or 前缀 + and 锚点] 在锚点
+            # 首迭代即被截断（前缀交 IfRegion，值链蒸发为 `if …: pass`）。
+            # ①算法依据：值上下文短路链的「同 merge」不变量只约束同一操作符 run 的
+            #   成员；前缀组由 B99 吸收判据独立验证，不参与该比较。
+            # ②归约方式：把链按前缀数切分为「前缀段 | 真实成员段」，共享 merge 判据
+            #   读取真实成员段首块；锚点尚未入链时判据不适用（跳过本轮比较）。
+            # ③唯一归属判定：不改变任何块的归属——只在既有 walk 内选择比较基准。
+            # ④嵌套处理：前缀段仍由链首引用（原则 3/4），嵌套结构判定不受影响。
+            # ⑤入口引用语义：BoolOpRegion 以链首（前缀头）为 entry，行为与
+            #   `return (a or b) and c` 的既有成功形态一致。
+            # ⑥反编译流程：完整链交 _create_boolop_region_from_chain 统一归约。
+            # [C1] 只读本 walk 自身成员列表与前缀计数（同层结构事实）；[C2] 纯查询，
+            # 不写区域字段；[C3] 无前缀时切片为原链，行为逐字节不变。
+            _r565_chain = chain[_b99_n_prefix:] if _b99_n_prefix else chain
+            if (len(_r565_chain) >= 1 and last.opname in SHORT_CIRCUIT_JUMP_OPS
                     and _cur_jt is not None):
-                _first_last = chain[0][0].get_last_instruction()
+                _first_last = _r565_chain[0][0].get_last_instruction()
                 _first_jt = (self.cfg.get_block_by_offset(_first_last.argval)
                              if _first_last and _first_last.argval is not None
                              else None)

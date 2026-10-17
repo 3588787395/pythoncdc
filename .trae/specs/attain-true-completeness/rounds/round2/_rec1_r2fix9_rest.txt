@@ -1,0 +1,15 @@
+﻿[name] regen_rc=0 status=success units=7/7
+[name] regen_rc=0 status=failure units=15/16
+    ***<module>.t_listcomp_ternary_filter.<listcomp>: Failure: Different control flow
+[name] regen_rc=0 status=failure units=7/8
+    ***<module>.c_chain_and_combo: Failure: Different control flow
+[name] regen_rc=0 status=failure units=6/8
+    ***<module>.b_ternary_lhs_and: Failure: Different control flow
+    ***<module>.b_nest_not_layers: Failure: Different control flow
+[name] regen_rc=0 status=failure units=4/5
+    ***<module>.v3: Failure: Different control flow
+[name] regen_rc=0 status=failure units=1/4
+    ***<module>.v_while_cond_nest: Failure: Different control flow
+    ***<module>.v_if_cond_nest: Failure: Different control flow
+    ***<module>.n_for_body_nest: Failure: Different control flow
+-> units=40/48  (6 probes)  rec1_probes_r2fix9_rest.json

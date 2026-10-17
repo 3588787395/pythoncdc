@@ -1,0 +1,35 @@
+﻿  1           0 RESUME                   0
+
+  2           2 LOAD_GLOBAL              1 (NULL + C)
+             14 PRECALL                  0
+             18 CALL                     0
+             28 BEFORE_WITH
+             30 STORE_FAST               0 (cm)
+
+  3          32 NOP
+
+  2          34 LOAD_CONST               0 (None)
+             36 LOAD_CONST               0 (None)
+             38 LOAD_CONST               0 (None)
+             40 PRECALL                  2
+             44 CALL                     2
+             54 POP_TOP
+             56 LOAD_CONST               1 (1)
+             58 RETURN_VALUE
+        >>   60 PUSH_EXC_INFO
+             62 WITH_EXCEPT_START
+             64 POP_JUMP_FORWARD_IF_TRUE     4 (to 74)
+             66 RERAISE                  2
+        >>   68 COPY                     3
+             70 POP_EXCEPT
+             72 RERAISE                  1
+        >>   74 POP_TOP
+             76 POP_EXCEPT
+             78 POP_TOP
+             80 POP_TOP
+             82 LOAD_CONST               0 (None)
+             84 RETURN_VALUE
+ExceptionTable:
+  30 to 32 -> 60 [1] lasti
+  60 to 66 -> 68 [3] lasti
+  74 to 74 -> 68 [3] lasti

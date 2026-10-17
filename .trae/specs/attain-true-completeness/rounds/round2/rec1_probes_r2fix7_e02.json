@@ -1,0 +1,22 @@
+[
+ {
+  "name": "e02",
+  "pyc_src_rel": "test_repros/round3/e02_g1_b98_hosts.pyc",
+  "pyc_src_sha": "f59ba0b4ed4973a5",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round2/rec1_e02_e02_g1_b98_hosts.pyc",
+  "mtime": "2026-10-17T10:58:37",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "7291338e17adb04e",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_e02_e02_g1_b98_hosts.pyc (Python 3.11)\n\n_P, _Q, _R, _S = 1, 2, 3, 4\nM1 = (_P or _Q) and _R\nM2 = _P or _Q and _R\nclass CB98:\n    C1 = (_P or _Q) and _R\n    C2 = _P or _Q and _R\n    def m_handler(self, a, b, c):\n        try:\n            for i in range(3):\n                if i:\n                    return (a or b) and c\n        except ValueError:\n            return (a or b) and c if a else -1\n        return 0\n    def m_class_body_host(self, a, b, c):\n        for i in range(2):\n            if i:\n                return a or b and c\n        return 0\ndef f_comp_cond_host(a, b, c, xs):\n    for i in range(2):\n        if i:\n            return [x for x in xs if (a or b) and c]\n    return []\ndef f_genexp_cond_host(a, b, c, xs):\n    for i in range(2):\n        if i:\n            return sum((1 for x in xs if (a or b) and c))\n    return 0\ndef f_dictcomp_value_host(a, b, c, xs):\n    for i in range(2):\n        if i:\n            return {b if not a else c: None for x in xs if x}\n    return {}\ndef f_nested_func_host(a, b, c):\n    def inner():\n        for i in range(3):\n            if i:\n                return (a or b) and c\n        return 0\n    for j in range(2):\n        if j:\n            return inner()\n    return 0\ndef f_match_arm_host(a, b, c, cmd):\n    for i in range(2):\n        if i:\n            match cmd:\n                case 1:\n                    return (a or b) and c\n                case _:\n                    return a or b and c\n    return 0\ndef f_with_body_host(a, b, c):\n    class CM:\n        def __enter__(self):\n            return self\n        def __exit__(self, *e):\n            return False\n    with CM() as cm:\n        for i in range(2):\n            if i:\n                return (a or b) and c\n    return 0\ndef f_try_body_host(a, b, c):\n    try:\n        for i in range(2):\n            if i:\n                return (a or b) and c\n    except KeyError:\n        return -1\n    return 0\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.f_dictcomp_value_host.<dictcomp>: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_e02_e02_g1_b98_hosts.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_e02_e02_g1_b98_hostsOK.py\n[single] status=failure units=17/18 success_rate=94.44%",
+  "status": "failure",
+  "units_success": 17,
+  "units_total": 18,
+  "failures": [
+   "***<module>.f_dictcomp_value_host.<dictcomp>: Failure: Different control flow"
+  ]
+ }
+]

@@ -1,0 +1,5 @@
+﻿=== REGEN0 rc=0 36.4s
+=== REGEN1 rc=0 25.8s
+=== REGEN2 rc=0 23.0s
+=== REGEN3 rc=0 23.7s
+=== REGEN4 rc=1 8.6s

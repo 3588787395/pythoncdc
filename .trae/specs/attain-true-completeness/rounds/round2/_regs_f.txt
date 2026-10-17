@@ -1,0 +1,4 @@
+﻿---- regions (production) ----
+  IfRegion entry=@0 condition_block=@0 merge_block=@32 else=[28] blocks=[0, 18, 28, 32]
+---- generated_blocks ----
+[0, 18, 28, 32]

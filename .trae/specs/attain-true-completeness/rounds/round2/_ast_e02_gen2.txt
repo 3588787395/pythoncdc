@@ -1,0 +1,166 @@
+﻿TYPE <class 'dict'>
+== type == 'FunctionDef'
+== name == 'f_genexp_cond_host'
+== args == {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'a'}, {'type': 'arg', 'arg': 'b'}, {'type': 'arg', 'arg': 'c'}, {'type': 'arg', 'arg': 'xs'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}
+== body == 2 items
+{'type': 'For', 'target': {'type': 'Name', 'id': 'i', 'ctx': 'Store'}, 'iter': {'type': 'Call', 'func': {'type': 'Name', 'id': 'range', 'ctx': 'Load', 'lineno': 36}, 'args': [{'type': 'Constant', 'value': 2, 'lineno': None}], 'kwargs': [], 'lineno': None}, 'body': [{'type': 'If', 'test': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': 37}, 'body': [{'type': 'Return', 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'sum', 'ctx': 'Load', 'lineno': 38}, 'args': [{'type': 'GeneratorExp', 'elt': {'type': 'Constant', 'value': 1, 'lineno': None}, 'generators': [{'type': 'comprehension', 'target': {'type': 'Name', 'id': 'x', 'ctx': 'Store'}, 'iter': {'type': 'Name', 'id': 'xs', 'ctx': 'Load', 'lineno': None}, 'ifs': [{'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'BoolOp', 'op':
+{'type': 'Return', 'value': {'type': 'Constant', 'value': 0, 'lineno': 39}}
+== decorator_list == 0 items
+== returns == None
+==== FULL JSON ====
+{
+ "type": "FunctionDef",
+ "name": "f_genexp_cond_host",
+ "args": {
+  "type": "arguments",
+  "posonlyargs": [],
+  "args": [
+   {
+    "type": "arg",
+    "arg": "a"
+   },
+   {
+    "type": "arg",
+    "arg": "b"
+   },
+   {
+    "type": "arg",
+    "arg": "c"
+   },
+   {
+    "type": "arg",
+    "arg": "xs"
+   }
+  ],
+  "vararg": null,
+  "kwonlyargs": [],
+  "kw_defaults": [],
+  "kwarg": null,
+  "defaults": []
+ },
+ "body": [
+  {
+   "type": "For",
+   "target": {
+    "type": "Name",
+    "id": "i",
+    "ctx": "Store"
+   },
+   "iter": {
+    "type": "Call",
+    "func": {
+     "type": "Name",
+     "id": "range",
+     "ctx": "Load",
+     "lineno": 36
+    },
+    "args": [
+     {
+      "type": "Constant",
+      "value": 2,
+      "lineno": null
+     }
+    ],
+    "kwargs": [],
+    "lineno": null
+   },
+   "body": [
+    {
+     "type": "If",
+     "test": {
+      "type": "Name",
+      "id": "i",
+      "ctx": "Load",
+      "lineno": 37
+     },
+     "body": [
+      {
+       "type": "Return",
+       "value": {
+        "type": "Call",
+        "func": {
+         "type": "Name",
+         "id": "sum",
+         "ctx": "Load",
+         "lineno": 38
+        },
+        "args": [
+         {
+          "type": "GeneratorExp",
+          "elt": {
+           "type": "Constant",
+           "value": 1,
+           "lineno": null
+          },
+          "generators": [
+           {
+            "type": "comprehension",
+            "target": {
+             "type": "Name",
+             "id": "x",
+             "ctx": "Store"
+            },
+            "iter": {
+             "type": "Name",
+             "id": "xs",
+             "ctx": "Load",
+             "lineno": null
+            },
+            "ifs": [
+             {
+              "type": "BoolOp",
+              "op": "and",
+              "values": [
+               {
+                "type": "BoolOp",
+                "op": "or",
+                "values": [
+                 {
+                  "type": "Name",
+                  "id": "a",
+                  "ctx": "Load",
+                  "lineno": null
+                 },
+                 {
+                  "type": "Name",
+                  "id": "b",
+                  "ctx": "Load",
+                  "lineno": null
+                 }
+                ]
+               },
+               {
+                "type": "Name",
+                "id": "c",
+                "ctx": "Load",
+                "lineno": null
+               }
+              ]
+             }
+            ],
+            "is_async": 0
+           }
+          ]
+         }
+        ],
+        "kwargs": [],
+        "lineno": null
+       }
+      }
+     ],
+     "orelse": []
+    }
+   ]
+  },
+  {
+   "type": "Return",
+   "value": {
+    "type": "Constant",
+    "value": 0,
+    "lineno": 39
+   }
+  }
+ ],
+ "decorator_list": [],
+ "returns": null
+}

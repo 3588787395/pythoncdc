@@ -1,0 +1,74 @@
+﻿锛岄暅鍍?return_pos 褰㈡€併€?
+      淇浜岋紙鐢熸垚绔?`_generate_boolop_impl` P2-1 鍒嗘敮锛夛細杩唬鍣ㄦ媶闄?杩斿洖灏捐瘑鍒€斺€旀眹鍚堝潡灏?`[娑堣垂娈? SWAP n, POP_TOP, RETURN_VALUE]` 涓?POP_TOP 涓哄€掓暟绗簩鏉℃椂锛屾垚瀵瑰墺灏炬媶闄ゅ鍚庢妸琛ㄨ揪寮忔暣浣撳綊绾︿负 `Return(value=expr)`锛堝師鍒ゆ嵁鎶?CALL 缁撴灉褰撹涓㈠純琛ㄨ揪寮忚鍙?鈫?`sink(...)` 涓?return銆佸鍑?`return None`锛夈€?
+      淇涓夛紙`_try_build_orprefix_and_boolop_from_ternary`锛夛細B98-R1 闀滃儚鎶樺彔澧炲叏閾惧ご鍓嶇紑鍙樹綋锛堥摼棣?== 涓夊厓鏉′欢鍧椼€佹鎴愬憳 == true 鍊煎潡銆佸叡浜?merge锛夛紝鐩存帴浠?`_build_boolop_expression` 榛戠閲嶅缓锛涘舰鐘朵笉杩囧洖閫€ IfExp锛圕3锛夈€傛椤逛负淇涓€鐨勫洖褰掓秷闄わ細鍏ㄩ摼澶磋繘鍏ュ悗 compare_cross / ternary_cross 鐨勯暅鍍?TernaryRegion 鎵句笉鍒版棫褰㈡€?anchor-entry BoolOpRegion銆?
+      楠岃瘉锛氫腑闂存€佹浘鍑虹幇 compare_cross / ternary_cross 鍥為€€锛坮2fix6 棣栬窇 13/15锛夛紝缁忎复鏃朵腑鍜屼慨澶嶄竴纭褰掑洜锛圔oolOpRegion entry=48 anchor-only 鏃堕暅鍍忓懡涓?vs entry=44 鍏ㄩ摼鏃朵笉鍛戒腑锛夛紝钀戒慨澶嶄笁鍚庡璺?stamp r2fix6 鈫?15/15銆?
+
+e01 杩涘害锛歳2pre2 7/15 鈫?r2fix1 8/15 鈫?r2fix2 10/15 鈫?r2fix3 11/15 鈫?r2fix4 12/15 鈫?r2fix5 13/15 鈫?r2fix6 15/15锛坋01 鍏ㄧ豢锛夈€?
+
+
+7. e02 瀹夸富鏃忥紙r2fix7 18/18锛夛細鏈壒鏍瑰洜涓夊锛屽叏閮ㄨ惤鍦ㄦ棦鏈夈€岃瀺鍚?or-鍓嶇紑閾俱€嶆棌锛?
+   a) m_handler锛?
+eturn ((a or b) and c) if a else -1锛夛細鍊艰彵褰?Return 閽╁瓙锛坮2fix3锛?
+      宸茶兘鎶?except 鍐呮潯浠跺悎骞跺潡鎶樻垚 Return(IfExp(...))锛屼絾浣撻儴鐢?
+      _build_value_block_expr(@86) 闀滃儚閲嶅缓 TernaryRegion@86 鏃舵湭鍛戒腑 orprefix
+      鎶樺彔鈥斺€擾try_build_orprefix_and_boolop_from_ternary 鍏ㄩ摼澶村彉浣撶殑娆℃垚鍛?
+      鍒ゆ嵁鏇捐姹?op_chain[1][1] == 'and'锛涜閾剧敱 _detect_boolop_conditional_chain
+      鐨勩€屼笁鍏冨舰鐘舵娴嬨€嶅垎鏀敓鎴愶紙region_analyzer.py 32687-32699锛氶潪棣栨垚鍛?
+      op_type 缁ф壙 chain[0][1]锛孞IFOP 鍧楀緱鍒?'or' 鏍囩锛夛紝鏍囩骞堕潪鐪熷疄绠楀瓙銆?
+      淇锛氬叏閾惧彉浣撴敼浠ラ摼鎴愬憳鍏崇郴锛堥摼棣?=鏉′欢鍧椼€佹鎴愬憳==true 鍊煎潡銆佸叡浜?merge锛?
+      涓哄垽鎹紝绠楀瓙璇箟瀹屽叏浜?_build_boolop_expression 榛戠缁撴灉鐨勫舰鐘舵牎楠?
+      锛圓nd[Or[..], ..]锛夋壙鎷咃紱褰㈢姸涓嶈繃鍥為€€ IfExp锛圕3锛夈€備骇鍑?
+      Return(IfExp(a, BoolOp(and,[BoolOp(or,[a,b]),c]), -1))銆?
+   b) f_with_body_host锛坵ith+for 鍐?
+eturn (a or b) and c锛夛細P2-1 鏃?target 甯冨皵
+      璺緞鎶娿€岃凯浠ｅ櫒鎷嗛櫎 + __exit__ 璋冪敤銆嶅熬锛圼SWAP 2, POP_TOP] 鎷嗚凯浠ｅ櫒锛沎SWAP 2,
+      LOAD None脳3, PRECALL, CALL, POP_TOP] 璋?__exit__锛夎褰撹鍙ユ秷璐癸紝瀵艰嚧 return
+      鏁村彞涓㈠け锛坮egen 鍙墿 if i: pass锛夈€傛棦鏈?_teardown_ret_p21 浠呰瘑鍒?
+      [鎷嗛櫎, SWAP n, POP_TOP, RETURN] 鐩搁偦褰㈡€併€傛柊澧?with-exit 鍙樹綋
+      _wex_ret_p21锛氶 POP_TOP == len-2 涓旀湯涓?RETURN_VALUE銆佸叾鍓嶄袱鏉′负
+      CALL/PRECALL 鏃讹紝鍥炴函杩炵画 LOAD_CONST None(argval None) >=2 鐣屽畾 __exit__
+      瀹炲弬娈典笌鍙€?SWAP锛屽墺闄ゆ媶闄ゆ鍚庝綑娈典互 P2-1 鍒濆鏍堥噸寤轰负 Return 鍊笺€?
+   c) 鎺ㄥ寮忓厓绱?鍊间綅铻嶅悎锛坒_comp_cond_host.<listcomp> / f_genexp_cond_host.<genexpr>
+      杩囨护鏉′欢銆乫_dictcomp_value_host.<dictcomp> 鍊间綅锛夛細comprehension_generator
+      涓ゅ鐙珛缂洪櫡锛?
+      鈶?_extract_comp_ifs B6 娣峰悎鍒嗙粍鍙鐩?A and B or C锛坅nd 缁勫唴銆乷r 鎺ョ粍闂达級锛?
+         瀵瑰伓褰?(A or B) and C锛坰eg0 鍓嶅悜 IF_TRUE 璺宠浆鐩爣==鍚庣画娈佃捣濮嬶紝鐪熷€艰竟
+         璺宠繃涓棿鎴愬憳鐩磋揪鍚庣画鏉′欢妫€鏌ワ級鎸?or鈫抋nd 杈圭晫璇垎缁勪负 A or (B and C)銆?
+         鏂板 or-鍓嶇紑鏀矾锛氳瘑鍒潯浠?is_or_pattern 涓斿瓨鍦ㄨ竟鐣?t锛堝墠 t-1 娈佃烦杞潎
+         涓哄墠鍚?IF_TRUE 涓旂洰鏍囧悓涓虹 t 娈佃捣濮嬪亸绉汇€乼 娈佃捣鍏ㄩ儴 'and'锛夛紱褰掔害 =
+         And[Or[鍓?t 娈礭, ...]锛涗笉鍛戒腑閫愪綅鍥炶惤鍘?B6 鍒嗙粍锛圕3锛夈€傛棤鎷彿婧愮爜
+         A or B and C 鐨?A 鐪熻竟鐩磋揪鍏冪礌浜у嚭銆佺洰鏍囬潪娈佃捣濮嬶紝澶╃劧涓嶅懡涓€?
+      鈶?_detect_comp_ternary 瀵硅〃杈惧紡浣嶅悓鍨嬭瀺鍚堬紙a; PJIF_TRUE c; b; JIFOP merge;
+         c; 杩藉姞鐐癸級鎸?IF_TRUE 鍙栧弽瑙ｆ垚鍋囦笁鍏? if not a else c锛坆 涓虹湡鏃朵涪澶?
+         c 妫€鏌ワ級銆傛柊澧炶瘑鍒潯浠?棣栨潯浠惰烦杞负鍓嶅悜 IF_TRUE銆佺湡鍊煎尯鏈寚浠や负
+         keep-or-pop 鏃忎笖鐩爣==杩藉姞鐐瑰亸绉汇€佺湡鍊煎尯鏃犲叾瀹冩潯浠惰烦杞紱褰掔害 =
+         鐩存帴杩斿洖 BoolOp(and, [BoolOp(or,[A,B]), C])锛涗笉鍛戒腑閫愬瓧鍥炶惤鏃㈡湁
+         鍙栧弽璺緞锛圕3锛夈€傚彟淇?_extract_dict_comp_key_before_ternary 鐨?cond
+         瀹氫綅锛氳烦杩?BACKWARD 鏉′欢璺宠浆锛堣繃婊ゅ櫒鍥炶烦锛夊啀鍙栭涓墠鍚戣烦杞紝閿獥
+         涓嶅啀涓虹┖銆侀敭涓嶅啀涓㈠け锛堟棤杩囨护鍣ㄥ墠瀵兼椂琛屼负閫愪綅涓嶅彉锛夈€?
+      楠岃瘉锛歟02 stamp r2fix7b_e02 18/18锛堝惈 f_comp_cond_host / f_genexp_cond_host /
+      f_dictcomp_value_host 鍏ㄧ豢锛夛紱鍥炲綊 e01 r2fix7_e01 15/15銆佽礋瀵圭収 60/60
+      锛坮2fix7_negctl锛屾敞鎰?rv8/r10 鎺㈤拡鍦?round8/round10 鐩綍锛宺ound7 璺緞浼氶潤榛?None锛夈€?
+
+e02 杩涘害锛歳2pre2 13/18 鈫?r2fix7 18/18锛坋02 鍏ㄧ豢锛夈€?
+8. b98_resid 鍊奸摼鏃忥紙r2fix8 5/5锛沞01 鍥炲綊 15/15銆佽礋瀵圭収 60/60锛夛細鏈壒鏍瑰洜 =
+   BoolOp 鍊奸摼涓夌被銆宬eep-or-pop/杈圭晫璺宠浆銆嶆贩鍚堝舰鎬佺己鍒嗙粍閲嶅缓鈥斺€?
+   鎵佸钩 or_groups 瀵瑰悓鏍囩搴忓垪閲嶇粨鍚堛€丅45 skip 杈圭畻娉曡骞跺熬鍊笺€?
+   鏂板 _try_build_keeppop_target_grouped锛堟爣璁?[B98-V3R2 keep-or-pop 鐩爣鏀舵暃鍒嗙粍]锛夛紝
+   鎸夋垚鍛樿烦杞洰鏍囧垎娈靛彸鎶樺彔锛屼笁褰㈡€侊細
+   a) r_e3锛坅 or (b and (c or d))锛夊叏鍛?keep-or-pop 涓旂洰鏍囧叏涓?merge锛氫繚鐣欐瀬鎬?
+      鍙虫姌鍙狅紙JITOP鈫?or'銆丣IFOP鈫?and'锛夛紝灏惧€煎潡鎺ュ叆鎶樺彔缁堢锛?
+   b) r_g2锛?a and (b or c)) or (d and e)锛夐鎴愬憳 PF 璺宠繃涓钀戒簬閾惧唴鎴愬憳
+      锛坅nd 缁勫亣杈圭洿杈?or 灏炬眰鍊艰捣鐐癸級銆佷腑娈?JT 鐩爣 merge銆佹湯娈?keep+灏惧€硷紱
+   c) r_d1锛?(a or b) and c) or d锛夐鎴愬憳 PT 鐪熻竟钀戒簬閾惧唴鎴愬憳銆佷腑娈?PF
+      钀戒簬灏惧€煎潡锛堝熬鍊?d 涔熸槸 B45 璇苟瀵硅薄锛氣啋 (a or b) and (c or d)锛夛紱
+      璇嗗埆鏉′欢鍧囦负鍚屽眰缁撴瀯浜嬪疄锛堝潡鏈?opcode 鏃?+ 璺宠浆鐩爣 + 鍚庣户闆嗗悎锛?
+      I.4 鐧藉悕鍗曪級锛涙帴鍏ョ偣鍦?_build_boolop_expression_inner 鐨?B98 灏惧€艰竟鐣?
+      瀹堝崼涔嬪悗銆丅45 skip 杈归噸寤轰箣鍓嶏紙B45 浼氬厛鎵嬭寤?r_d1锛夛紱鏈懡涓?
+      閲嶅缓澶辫触杩斿洖 None 閫愪綅鍥炶惤锛涙潯浠朵笂涓嬫枃涓嶆帴鎵嬶紙C3锛夈€?
+   楠岃瘉锛歜98_resid stamp r2fix8_b98 5/5锛坮_d1/r_d2/r_e3/r_g2 鍏ㄧ豢锛夛紱鍚岃窇 e01 15/15锛?
+   璐熷鐓?r2fix8_negctl 60/60銆?
+
+b98_resid 杩涘害锛歳2fix7_rest 2/5 鈫?r2fix8 5/5锛堟湰鎵瑰叏缁匡級銆?
+
+

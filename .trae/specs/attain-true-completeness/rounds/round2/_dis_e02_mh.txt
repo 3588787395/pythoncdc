@@ -1,0 +1,68 @@
+﻿==== m_handler ====
+-- block @0 --
+   @0    RESUME                       0
+   @2    NOP                         
+-- block @34 --
+   @34   FOR_ITER                     12 -> @60
+-- block @36 --
+   @36   STORE_FAST                   4
+   @38   LOAD_FAST                    4
+   @40   POP_JUMP_FORWARD_IF_FALSE    8 -> @58
+-- block @42 --
+   @42   LOAD_FAST                    1
+   @44   POP_JUMP_FORWARD_IF_TRUE     2 -> @50
+-- block @46 --
+   @46   LOAD_FAST                    2
+   @48   JUMP_IF_FALSE_OR_POP         1 -> @52
+-- block @50 --
+   @50   LOAD_FAST                    3
+-- block @52 --
+   @52   SWAP                         2
+   @54   POP_TOP                     
+-- block @58 --
+   @58   JUMP_BACKWARD                13 -> @34
+-- block @60 --
+   @60   JUMP_FORWARD                 26 -> @114
+-- block @62 --
+   @62   PUSH_EXC_INFO               
+   @64   LOAD_GLOBAL                  2
+   @76   CHECK_EXC_MATCH             
+   @78   POP_JUMP_FORWARD_IF_FALSE    13 -> @106
+-- block @80 --
+   @80   POP_TOP                     
+   @82   LOAD_FAST                    1
+   @84   POP_JUMP_FORWARD_IF_FALSE    6 -> @98
+-- block @86 --
+   @86   LOAD_FAST                    1
+   @88   POP_JUMP_FORWARD_IF_TRUE     2 -> @94
+-- block @90 --
+   @90   LOAD_FAST                    2
+   @92   JUMP_IF_FALSE_OR_POP         1 -> @96
+-- block @94 --
+   @94   LOAD_FAST                    3
+-- block @96 --
+   @96   JUMP_FORWARD                 1 -> @100
+-- block @98 --
+   @98   LOAD_CONST                   2
+-- block @100 --
+   @100  SWAP                         2
+-- block @106 --
+   @106  RERAISE                      0
+-- block @108 --
+   @108  COPY                         3
+   @110  POP_EXCEPT                  
+   @112  RERAISE                      1
+-- block @114 --
+   @114  LOAD_CONST                   3
+   @116  RETURN_VALUE                
+-- block @4 --
+   @4    LOAD_GLOBAL                  1
+   @16   LOAD_CONST                   1
+   @18   PRECALL                      1
+   @22   CALL                         1
+   @32   GET_ITER                    
+-- block @56 --
+   @56   RETURN_VALUE                
+-- block @102 --
+   @102  POP_EXCEPT                  
+   @104  RETURN_VALUE                

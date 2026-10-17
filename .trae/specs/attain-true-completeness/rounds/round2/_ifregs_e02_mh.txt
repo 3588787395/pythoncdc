@@ -1,0 +1,12 @@
+﻿IfRegion entry=@80 cond=@80
+  cond : [POP_TOP, LOAD_FAST(1), POP_JUMP_FORWARD_IF_FALSE(6)]
+  then : [86, 90, 94, 96]
+  else : [98]
+  merge: @100 [SWAP(2)]
+  cond jt last: POP_JUMP_FORWARD_IF_FALSE
+IfRegion entry=@36 cond=@36
+  cond : [STORE_FAST(4), LOAD_FAST(4), POP_JUMP_FORWARD_IF_FALSE(8)]
+  then : [42, 46, 50, 52, 56]
+  else : []
+  merge: @58 [JUMP_BACKWARD(13)]
+  cond jt last: POP_JUMP_FORWARD_IF_FALSE

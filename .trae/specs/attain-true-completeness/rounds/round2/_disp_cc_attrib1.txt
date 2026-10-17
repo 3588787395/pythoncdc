@@ -1,0 +1,21 @@
+﻿> _generate_region(LoopRegion@32)
+  > _generate_region(IfRegion@34 merge=@68)
+    > _generate_if(IfRegion@34 merge=@68)
+      > _if_generate_normal(IfRegion@34 merge=@68)
+        > _build_boolop_expression(BoolOpRegion@48 merge=@54)
+        < _build_boolop_expression -> BoolOp
+        > _build_boolop_expression(BoolOpRegion@48 merge=@54)
+        < _build_boolop_expression -> BoolOp
+        > _generate_block_statements(block@68)
+          > _generate_block_statements_body(block@68)
+          < _generate_block_statements_body -> []
+        < _generate_block_statements -> []
+      < _if_generate_normal -> If
+    < _generate_if -> If
+  < _generate_region -> If
+  > _generate_block_statements(block@70)
+    > _generate_block_statements_body(block@70)
+    < _generate_block_statements_body -> [Return]
+  < _generate_block_statements -> [Return]
+< _generate_region -> [For,Return]
+DONE <class 'dict'>

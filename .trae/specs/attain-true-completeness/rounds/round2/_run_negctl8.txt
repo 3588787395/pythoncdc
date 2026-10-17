@@ -1,0 +1,10 @@
+﻿[r7_07] regen_rc=0 status=success units=7/7
+[r7_08] regen_rc=0 status=success units=8/8
+[rv8_01] regen_rc=0 status=success units=7/7
+[rv8_02] regen_rc=0 status=success units=7/7
+[r10_04] regen_rc=0 status=success units=3/3
+[r10_15] regen_rc=0 status=success units=6/6
+[r10_21] regen_rc=0 status=success units=4/4
+[rv10_32] regen_rc=0 status=success units=8/8
+[r8_06] regen_rc=0 status=success units=10/10
+-> units=60/60  (9 probes)  rec1_probes_r2fix8_negctl.json

@@ -1,0 +1,95 @@
+﻿TYPE <class 'dict'>
+== type == 'FunctionDef'
+== name == 'chain_three_ternary'
+== args == {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'a'}, {'type': 'arg', 'arg': 'b'}, {'type': 'arg', 'arg': 'x'}, {'type': 'arg', 'arg': 'y'}, {'type': 'arg', 'arg': 'm'}, {'type': 'arg', 'arg': 'n'}, {'type': 'arg', 'arg': 'c1'}, {'type': 'arg', 'arg': 'c2'}, {'type': 'arg', 'arg': 'c3'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}
+== body == 1 items
+{'type': 'If', 'test': {'type': 'Name', 'id': 'c3', 'ctx': 'Load', 'lineno': None}, 'body': [{'type': 'Expr', 'value': {'type': 'Name', 'id': 'm', 'ctx': 'Load', 'lineno': None}}], 'orelse': [{'type': 'Expr', 'value': {'type': 'Name', 'id': 'n', 'ctx': 'Load', 'lineno': None}}]}
+== decorator_list == 0 items
+== returns == None
+==== FULL JSON ====
+{
+ "type": "FunctionDef",
+ "name": "chain_three_ternary",
+ "args": {
+  "type": "arguments",
+  "posonlyargs": [],
+  "args": [
+   {
+    "type": "arg",
+    "arg": "a"
+   },
+   {
+    "type": "arg",
+    "arg": "b"
+   },
+   {
+    "type": "arg",
+    "arg": "x"
+   },
+   {
+    "type": "arg",
+    "arg": "y"
+   },
+   {
+    "type": "arg",
+    "arg": "m"
+   },
+   {
+    "type": "arg",
+    "arg": "n"
+   },
+   {
+    "type": "arg",
+    "arg": "c1"
+   },
+   {
+    "type": "arg",
+    "arg": "c2"
+   },
+   {
+    "type": "arg",
+    "arg": "c3"
+   }
+  ],
+  "vararg": null,
+  "kwonlyargs": [],
+  "kw_defaults": [],
+  "kwarg": null,
+  "defaults": []
+ },
+ "body": [
+  {
+   "type": "If",
+   "test": {
+    "type": "Name",
+    "id": "c3",
+    "ctx": "Load",
+    "lineno": null
+   },
+   "body": [
+    {
+     "type": "Expr",
+     "value": {
+      "type": "Name",
+      "id": "m",
+      "ctx": "Load",
+      "lineno": null
+     }
+    }
+   ],
+   "orelse": [
+    {
+     "type": "Expr",
+     "value": {
+      "type": "Name",
+      "id": "n",
+      "ctx": "Load",
+      "lineno": null
+     }
+    }
+   ]
+  }
+ ],
+ "decorator_list": [],
+ "returns": null
+}

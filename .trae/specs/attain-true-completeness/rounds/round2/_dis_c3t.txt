@@ -1,0 +1,39 @@
+﻿==== chain_three_ternary ====
+-- block @0 --
+   @0    RESUME                       0
+   @2    LOAD_FAST                    6
+   @4    POP_JUMP_FORWARD_IF_FALSE    2 -> @10
+-- block @6 --
+   @6    LOAD_FAST                    0
+   @8    JUMP_FORWARD                 1 -> @12
+-- block @10 --
+   @10   LOAD_FAST                    1
+-- block @12 --
+   @12   LOAD_FAST                    7
+   @14   POP_JUMP_FORWARD_IF_FALSE    2 -> @20
+-- block @16 --
+   @16   LOAD_FAST                    2
+   @18   JUMP_FORWARD                 1 -> @22
+-- block @20 --
+   @20   LOAD_FAST                    3
+-- block @22 --
+   @22   SWAP                         2
+   @24   COPY                         2
+   @26   COMPARE_OP                   1
+   @32   JUMP_IF_FALSE_OR_POP         9 -> @52
+-- block @34 --
+   @34   LOAD_FAST                    8
+   @36   POP_JUMP_FORWARD_IF_FALSE    2 -> @42
+-- block @38 --
+   @38   LOAD_FAST                    4
+   @40   JUMP_FORWARD                 1 -> @44
+-- block @42 --
+   @42   LOAD_FAST                    5
+-- block @44 --
+   @44   COMPARE_OP                   0
+   @50   JUMP_FORWARD                 2 -> @56
+-- block @52 --
+   @52   SWAP                         2
+   @54   POP_TOP                     
+-- block @56 --
+   @56   RETURN_VALUE                

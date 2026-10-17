@@ -1,0 +1,2 @@
+﻿TernaryRegion entry=@12 cond=@12 merge=@34 vt=None
+TernaryRegion entry=@0 cond=@0 merge=@12 vt=None

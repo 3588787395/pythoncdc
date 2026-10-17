@@ -1,0 +1,4 @@
+﻿BoolOpRegion entry=@0 merge=@16 is_cond_ctx=None
+   chain (0, or)  block@0 last=JUMP_IF_TRUE_OR_POP arg=5
+   chain (6, and)  block@6 last=JUMP_IF_FALSE_OR_POP arg=3
+   chain (10, or)  block@10 last=JUMP_IF_TRUE_OR_POP arg=1

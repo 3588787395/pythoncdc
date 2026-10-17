@@ -1,0 +1,7 @@
+﻿BoolOpRegion entry=@42 merge=@56 is_cond_ctx=None
+   chain (42, or)  block@42 last=POP_JUMP_FORWARD_IF_TRUE arg=2
+   chain (46, or)  block@46 last=JUMP_IF_FALSE_OR_POP arg=1
+BoolOpRegion entry=@86 merge=@96 is_cond_ctx=None
+   chain (86, or)  block@86 last=POP_JUMP_FORWARD_IF_TRUE arg=2
+   chain (90, or)  block@90 last=JUMP_IF_FALSE_OR_POP arg=1
+TernaryRegion entry=@86 cond=@86 tv=@90 fv=@94 merge=@96 mt=None vt=None mc=None

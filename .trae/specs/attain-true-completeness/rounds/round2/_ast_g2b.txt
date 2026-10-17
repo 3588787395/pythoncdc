@@ -1,0 +1,105 @@
+﻿TYPE <class 'dict'>
+== type == 'FunctionDef'
+== name == 'r_g2'
+== args == {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'a'}, {'type': 'arg', 'arg': 'b'}, {'type': 'arg', 'arg': 'c'}, {'type': 'arg', 'arg': 'd'}, {'type': 'arg', 'arg': 'e'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}
+== body == 1 items
+{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': 14}, {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}]}, {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'd', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'e', 'ctx': 'Load', 'lineno': None}]}]}}
+== decorator_list == 0 items
+== returns == None
+==== FULL JSON ====
+{
+ "type": "FunctionDef",
+ "name": "r_g2",
+ "args": {
+  "type": "arguments",
+  "posonlyargs": [],
+  "args": [
+   {
+    "type": "arg",
+    "arg": "a"
+   },
+   {
+    "type": "arg",
+    "arg": "b"
+   },
+   {
+    "type": "arg",
+    "arg": "c"
+   },
+   {
+    "type": "arg",
+    "arg": "d"
+   },
+   {
+    "type": "arg",
+    "arg": "e"
+   }
+  ],
+  "vararg": null,
+  "kwonlyargs": [],
+  "kw_defaults": [],
+  "kwarg": null,
+  "defaults": []
+ },
+ "body": [
+  {
+   "type": "Return",
+   "value": {
+    "type": "BoolOp",
+    "op": "or",
+    "values": [
+     {
+      "type": "BoolOp",
+      "op": "and",
+      "values": [
+       {
+        "type": "Name",
+        "id": "a",
+        "ctx": "Load",
+        "lineno": 14
+       },
+       {
+        "type": "BoolOp",
+        "op": "or",
+        "values": [
+         {
+          "type": "Name",
+          "id": "b",
+          "ctx": "Load",
+          "lineno": null
+         },
+         {
+          "type": "Name",
+          "id": "c",
+          "ctx": "Load",
+          "lineno": null
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "BoolOp",
+      "op": "and",
+      "values": [
+       {
+        "type": "Name",
+        "id": "d",
+        "ctx": "Load",
+        "lineno": null
+       },
+       {
+        "type": "Name",
+        "id": "e",
+        "ctx": "Load",
+        "lineno": null
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "decorator_list": [],
+ "returns": null
+}

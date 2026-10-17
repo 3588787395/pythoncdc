@@ -1,0 +1,9 @@
+﻿r7_07=test_repros/round7/r7_07_ternary_nest.pyc
+r7_08=test_repros/round7/r7_08_ternary_deep_host.pyc
+rv8_01=test_repros/round8/rv8_01_chain3_subscript.pyc
+rv8_02=test_repros/round8/rv8_02_with_tryfin_constret.pyc
+r10_04=test_repros/round10/r10_04_import_try_cross.pyc
+r10_15=test_repros/round10/r10_15_global_hosts.pyc
+r10_21=test_repros/round10/r10_21_fin_loopctrl.pyc
+rv10_32=test_repros/round10/rv10_32_augassign_variant.pyc
+r8_06=test_repros/round8/r8_06_augassign_ops.pyc

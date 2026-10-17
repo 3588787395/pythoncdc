@@ -1,0 +1,8 @@
+﻿---- regions (production) ----
+  LoopRegion entry=@32 header_block=@32 back_edge_block=@76 blocks=[0, 32, 34, 40, 52, 56, 60, 64, 66, 68, 70, 76, 78]
+  BoolOpRegion entry=@56 merge_block=@66 op_chain=[(56, 'or'), (60, 'and')] is_cond_ctx=False blocks=[56, 60, 64, 66]
+  TernaryRegion entry=@56 condition_block=@56 merge_block=@66 true_value_block=@60 false_value_block=@64 blocks=[56, 60, 64, 66]
+  IfRegion entry=@52 condition_block=@52 merge_block=@70 then=[56, 60, 64, 66] else=[68] blocks=[52, 56, 60, 64, 66, 68]
+  IfRegion entry=@34 condition_block=@40 ibc={'blocks': [BasicBlock(3, offset=34-38, instrs=3), BasicBlock(4, offset=40-50, instrs=4)], 'op': 'and'} then=[52, 56, 60, 64, 66, 68, 70] else=[76] blocks=[34, 40, 52, 56, 60, 64, 66, 68, 70]
+---- generated_blocks ----
+[0, 32, 34, 40, 52, 56, 60, 64, 66, 68, 70, 76, 78]

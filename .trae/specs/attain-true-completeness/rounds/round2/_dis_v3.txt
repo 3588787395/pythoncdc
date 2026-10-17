@@ -1,0 +1,69 @@
+﻿==== v3 ====
+-- block @0 --
+   @0    RESUME                       0
+   @2    LOAD_CONST                   1
+   @4    STORE_FAST                   2
+   @6    LOAD_CONST                   1
+   @8    LOAD_FAST                    0
+   @10   SWAP                         2
+   @12   COPY                         2
+   @14   COMPARE_OP                   0
+   @20   POP_JUMP_FORWARD_IF_FALSE    6 -> @34
+-- block @22 --
+   @22   LOAD_CONST                   2
+   @24   COMPARE_OP                   0
+   @30   POP_JUMP_FORWARD_IF_FALSE    43 -> @118
+-- block @32 --
+   @32   JUMP_FORWARD                 2 -> @38
+-- block @34 --
+   @34   POP_TOP                     
+   @36   JUMP_FORWARD                 40 -> @118
+-- block @38 --
+   @38   LOAD_FAST                    1
+   @40   POP_JUMP_FORWARD_IF_FALSE    3 -> @48
+-- block @42 --
+   @42   LOAD_FAST                    1
+   @44   POP_JUMP_FORWARD_IF_FALSE    36 -> @118
+-- block @46 --
+   @46   JUMP_FORWARD                 2 -> @52
+-- block @48 --
+   @48   LOAD_FAST                    0
+   @50   POP_JUMP_FORWARD_IF_FALSE    33 -> @118
+-- block @52 --
+   @52   LOAD_FAST                    0
+   @54   LOAD_CONST                   3
+   @56   BINARY_OP                    13
+   @60   STORE_FAST                   0
+   @62   LOAD_FAST                    2
+   @64   LOAD_CONST                   3
+   @66   BINARY_OP                    13
+   @70   STORE_FAST                   2
+   @72   LOAD_CONST                   1
+   @74   LOAD_FAST                    0
+   @76   SWAP                         2
+   @78   COPY                         2
+   @80   COMPARE_OP                   0
+   @86   POP_JUMP_FORWARD_IF_FALSE    6 -> @100
+-- block @88 --
+   @88   LOAD_CONST                   2
+   @90   COMPARE_OP                   0
+   @96   POP_JUMP_FORWARD_IF_FALSE    10 -> @118
+-- block @98 --
+   @98   JUMP_FORWARD                 2 -> @104
+-- block @100 --
+   @100  POP_TOP                     
+   @102  JUMP_FORWARD                 7 -> @118
+-- block @104 --
+   @104  LOAD_FAST                    1
+   @106  POP_JUMP_FORWARD_IF_FALSE    3 -> @114
+-- block @108 --
+   @108  LOAD_FAST                    1
+   @110  POP_JUMP_BACKWARD_IF_TRUE    30 -> @52
+-- block @112 --
+   @112  JUMP_FORWARD                 2 -> @118
+-- block @114 --
+   @114  LOAD_FAST                    0
+   @116  POP_JUMP_BACKWARD_IF_TRUE    33 -> @52
+-- block @118 --
+   @118  LOAD_FAST                    2
+   @120  RETURN_VALUE                

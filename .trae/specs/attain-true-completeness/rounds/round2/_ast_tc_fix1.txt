@@ -1,0 +1,166 @@
+﻿TYPE <class 'dict'>
+== type == 'FunctionDef'
+== name == 'f_b98_ternary_cross'
+== args == {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'a'}, {'type': 'arg', 'arg': 'b'}, {'type': 'arg', 'arg': 'c'}, {'type': 'arg', 'arg': 'd'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}
+== body == 2 items
+{'type': 'For', 'target': {'type': 'Name', 'id': 'i', 'ctx': 'Store'}, 'iter': {'type': 'Call', 'func': {'type': 'Name', 'id': 'range', 'ctx': 'Load', 'lineno': 38}, 'args': [{'type': 'Constant', 'value': 3, 'lineno': None}], 'kwargs': [], 'lineno': None}, 'body': [{'type': 'If', 'test': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': 39}, {'type': 'Compare', 'left': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': 40}, 'ops': ['<'], 'comparators': [{'type': 'Constant', 'value': 4, 'lineno': None}], 'lineno': None}]}, 'body': [{'type': 'Return', 'value': {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'd', 'ctx': 'Load', 'lineno': 41}, 'body': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'BoolOp', 'op': 'or', 'values': [{'type': '
+{'type': 'Return', 'value': {'type': 'Constant', 'value': 1, 'lineno': 42}}
+== decorator_list == 0 items
+== returns == None
+==== FULL JSON ====
+{
+ "type": "FunctionDef",
+ "name": "f_b98_ternary_cross",
+ "args": {
+  "type": "arguments",
+  "posonlyargs": [],
+  "args": [
+   {
+    "type": "arg",
+    "arg": "a"
+   },
+   {
+    "type": "arg",
+    "arg": "b"
+   },
+   {
+    "type": "arg",
+    "arg": "c"
+   },
+   {
+    "type": "arg",
+    "arg": "d"
+   }
+  ],
+  "vararg": null,
+  "kwonlyargs": [],
+  "kw_defaults": [],
+  "kwarg": null,
+  "defaults": []
+ },
+ "body": [
+  {
+   "type": "For",
+   "target": {
+    "type": "Name",
+    "id": "i",
+    "ctx": "Store"
+   },
+   "iter": {
+    "type": "Call",
+    "func": {
+     "type": "Name",
+     "id": "range",
+     "ctx": "Load",
+     "lineno": 38
+    },
+    "args": [
+     {
+      "type": "Constant",
+      "value": 3,
+      "lineno": null
+     }
+    ],
+    "kwargs": [],
+    "lineno": null
+   },
+   "body": [
+    {
+     "type": "If",
+     "test": {
+      "type": "BoolOp",
+      "op": "and",
+      "values": [
+       {
+        "type": "Name",
+        "id": "i",
+        "ctx": "Load",
+        "lineno": 39
+       },
+       {
+        "type": "Compare",
+        "left": {
+         "type": "Name",
+         "id": "i",
+         "ctx": "Load",
+         "lineno": 40
+        },
+        "ops": [
+         "<"
+        ],
+        "comparators": [
+         {
+          "type": "Constant",
+          "value": 4,
+          "lineno": null
+         }
+        ],
+        "lineno": null
+       }
+      ]
+     },
+     "body": [
+      {
+       "type": "Return",
+       "value": {
+        "type": "IfExp",
+        "test": {
+         "type": "Name",
+         "id": "d",
+         "ctx": "Load",
+         "lineno": 41
+        },
+        "body": {
+         "type": "BoolOp",
+         "op": "and",
+         "values": [
+          {
+           "type": "BoolOp",
+           "op": "or",
+           "values": [
+            {
+             "type": "Name",
+             "id": "a",
+             "ctx": "Load",
+             "lineno": null
+            },
+            {
+             "type": "Name",
+             "id": "b",
+             "ctx": "Load",
+             "lineno": null
+            }
+           ]
+          },
+          {
+           "type": "Name",
+           "id": "c",
+           "ctx": "Load",
+           "lineno": null
+          }
+         ]
+        },
+        "orelse": {
+         "type": "Constant",
+         "value": 0,
+         "lineno": null
+        }
+       }
+      }
+     ],
+     "orelse": []
+    }
+   ]
+  },
+  {
+   "type": "Return",
+   "value": {
+    "type": "Constant",
+    "value": 1,
+    "lineno": 42
+   }
+  }
+ ],
+ "decorator_list": [],
+ "returns": null
+}

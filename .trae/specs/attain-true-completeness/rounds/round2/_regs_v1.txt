@@ -1,0 +1,9 @@
+﻿---- regions (production) ----
+  LoopRegion entry=@0 condition_block=@0 header_block=@44 back_edge_block=@96 blocks=[0, 22, 32, 38, 44, 80, 90, 92, 96]
+  IfRegion entry=@44 condition_block=@44 merge_block=@102 then=[90] blocks=[44, 80, 90]
+  IfRegion entry=@38 condition_block=@38 merge_block=@102 blocks=[38]
+  Region entry=@34 blocks=[34]
+  Region entry=@102 blocks=[102]
+  Region entry=@34 blocks=[34]
+---- generated_blocks ----
+[0, 22, 32, 34, 38, 44, 80, 90, 92, 96, 102]

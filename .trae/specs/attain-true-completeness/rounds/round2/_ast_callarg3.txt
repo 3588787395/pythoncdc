@@ -1,0 +1,185 @@
+﻿TYPE <class 'dict'>
+== type == 'FunctionDef'
+== name == 'f_b98_call_arg_pos'
+== args == {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'a'}, {'type': 'arg', 'arg': 'b'}, {'type': 'arg', 'arg': 'c'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}
+== body == 3 items
+{'type': 'FunctionDef', 'name': 'sink', 'args': {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'x'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}, 'body': [{'type': 'Return', 'value': {'type': 'BinOp', 'left': {'type': 'Name', 'id': 'x', 'ctx': 'Load', 'lineno': 87}, 'op': '+', 'right': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}}], 'decorator_list': [], 'returns': None}
+{'type': 'For', 'target': {'type': 'Name', 'id': 'i', 'ctx': 'Store'}, 'iter': {'type': 'Call', 'func': {'type': 'Name', 'id': 'range', 'ctx': 'Load', 'lineno': 88}, 'args': [{'type': 'Constant', 'value': 3, 'lineno': None}], 'kwargs': [], 'lineno': None}, 'body': [{'type': 'If', 'test': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': 89}, 'body': [{'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'sink', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}], 'kwargs': [], 'lineno': None}}, {'type': 'Return', 
+{'type': 'Return', 'value': {'type': 'Constant', 'value': 0, 'lineno': 91}}
+== decorator_list == 0 items
+== returns == None
+==== FULL JSON ====
+{
+ "type": "FunctionDef",
+ "name": "f_b98_call_arg_pos",
+ "args": {
+  "type": "arguments",
+  "posonlyargs": [],
+  "args": [
+   {
+    "type": "arg",
+    "arg": "a"
+   },
+   {
+    "type": "arg",
+    "arg": "b"
+   },
+   {
+    "type": "arg",
+    "arg": "c"
+   }
+  ],
+  "vararg": null,
+  "kwonlyargs": [],
+  "kw_defaults": [],
+  "kwarg": null,
+  "defaults": []
+ },
+ "body": [
+  {
+   "type": "FunctionDef",
+   "name": "sink",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "x"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "Return",
+     "value": {
+      "type": "BinOp",
+      "left": {
+       "type": "Name",
+       "id": "x",
+       "ctx": "Load",
+       "lineno": 87
+      },
+      "op": "+",
+      "right": {
+       "type": "Constant",
+       "value": 1,
+       "lineno": null
+      },
+      "lineno": null
+     }
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  },
+  {
+   "type": "For",
+   "target": {
+    "type": "Name",
+    "id": "i",
+    "ctx": "Store"
+   },
+   "iter": {
+    "type": "Call",
+    "func": {
+     "type": "Name",
+     "id": "range",
+     "ctx": "Load",
+     "lineno": 88
+    },
+    "args": [
+     {
+      "type": "Constant",
+      "value": 3,
+      "lineno": null
+     }
+    ],
+    "kwargs": [],
+    "lineno": null
+   },
+   "body": [
+    {
+     "type": "If",
+     "test": {
+      "type": "Name",
+      "id": "i",
+      "ctx": "Load",
+      "lineno": 89
+     },
+     "body": [
+      {
+       "type": "Expr",
+       "value": {
+        "type": "Call",
+        "func": {
+         "type": "Name",
+         "id": "sink",
+         "ctx": "Load",
+         "lineno": null
+        },
+        "args": [
+         {
+          "type": "BoolOp",
+          "op": "and",
+          "values": [
+           {
+            "type": "BoolOp",
+            "op": "or",
+            "values": [
+             {
+              "type": "Name",
+              "id": "a",
+              "ctx": "Load",
+              "lineno": null
+             },
+             {
+              "type": "Name",
+              "id": "b",
+              "ctx": "Load",
+              "lineno": null
+             }
+            ]
+           },
+           {
+            "type": "Name",
+            "id": "c",
+            "ctx": "Load",
+            "lineno": null
+           }
+          ]
+         }
+        ],
+        "kwargs": [],
+        "lineno": null
+       }
+      },
+      {
+       "type": "Return",
+       "value": {
+        "type": "Constant",
+        "value": null
+       }
+      }
+     ],
+     "orelse": []
+    }
+   ]
+  },
+  {
+   "type": "Return",
+   "value": {
+    "type": "Constant",
+    "value": 0,
+    "lineno": 91
+   }
+  }
+ ],
+ "decorator_list": [],
+ "returns": null
+}

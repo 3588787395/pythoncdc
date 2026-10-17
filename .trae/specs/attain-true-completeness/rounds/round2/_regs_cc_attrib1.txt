@@ -1,0 +1,7 @@
+﻿---- regions (production) ----
+  LoopRegion entry=@32 header_block=@32 back_edge_block=@68 blocks=[0, 32, 34, 40, 44, 48, 52, 54, 66, 68, 70]
+  BoolOpRegion entry=@48 merge_block=@54 op_chain=[(48, 'and')] is_cond_ctx=False blocks=[48, 52, 54]
+  TernaryRegion entry=@44 condition_block=@44 merge_block=@54 true_value_block=@48 false_value_block=@52 vt='__compare_target__' ctx='compare' blocks=[44, 48, 52, 54]
+  IfRegion entry=@34 condition_block=@40 ibc={'blocks': [BasicBlock(3, offset=34-38, instrs=3), BasicBlock(4, offset=40-42, instrs=2)], 'op': 'and'} then=[44, 48, 52, 54, 66] else=[68] blocks=[34, 40, 44, 48, 52, 54, 66]
+---- generated_blocks ----
+[0, 32, 34, 40, 44, 48, 52, 54, 66, 68, 70]

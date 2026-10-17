@@ -1,0 +1,4 @@
+﻿[e01] regen_rc=0 status=failure units=13/15
+    ***<module>.f_b98_ternary_cross: Failure: Different control flow
+    ***<module>.f_b98_compare_cross: Failure: Different control flow
+-> units=13/15  (1 probes)  rec1_probes_r2fix6.json

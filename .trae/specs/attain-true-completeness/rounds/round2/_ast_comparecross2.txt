@@ -1,0 +1,143 @@
+﻿TYPE <class 'dict'>
+== type == 'FunctionDef'
+== name == 'f_b98_compare_cross'
+== args == {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'a'}, {'type': 'arg', 'arg': 'b'}, {'type': 'arg', 'arg': 'c'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}
+== body == 2 items
+{'type': 'For', 'target': {'type': 'Name', 'id': 'i', 'ctx': 'Store'}, 'iter': {'type': 'Call', 'func': {'type': 'Name', 'id': 'range', 'ctx': 'Load', 'lineno': 46}, 'args': [{'type': 'Constant', 'value': 3, 'lineno': None}], 'kwargs': [], 'lineno': None}, 'body': [{'type': 'If', 'test': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': 47}, {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': 48}]}, 'body': [{'type': 'Return', 'value': {'type': 'Compare', 'left': {'type': 'IfExp', 'test': {'type': 'UnaryOp', 'op': 'not', 'operand': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': 49}}, 'body': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, 'orelse': {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}}, 'ops': ['>'], 'co
+{'type': 'Return', 'value': {'type': 'Constant', 'value': False, 'lineno': 50}}
+== decorator_list == 0 items
+== returns == None
+==== FULL JSON ====
+{
+ "type": "FunctionDef",
+ "name": "f_b98_compare_cross",
+ "args": {
+  "type": "arguments",
+  "posonlyargs": [],
+  "args": [
+   {
+    "type": "arg",
+    "arg": "a"
+   },
+   {
+    "type": "arg",
+    "arg": "b"
+   },
+   {
+    "type": "arg",
+    "arg": "c"
+   }
+  ],
+  "vararg": null,
+  "kwonlyargs": [],
+  "kw_defaults": [],
+  "kwarg": null,
+  "defaults": []
+ },
+ "body": [
+  {
+   "type": "For",
+   "target": {
+    "type": "Name",
+    "id": "i",
+    "ctx": "Store"
+   },
+   "iter": {
+    "type": "Call",
+    "func": {
+     "type": "Name",
+     "id": "range",
+     "ctx": "Load",
+     "lineno": 46
+    },
+    "args": [
+     {
+      "type": "Constant",
+      "value": 3,
+      "lineno": null
+     }
+    ],
+    "kwargs": [],
+    "lineno": null
+   },
+   "body": [
+    {
+     "type": "If",
+     "test": {
+      "type": "BoolOp",
+      "op": "and",
+      "values": [
+       {
+        "type": "Name",
+        "id": "i",
+        "ctx": "Load",
+        "lineno": 47
+       },
+       {
+        "type": "Name",
+        "id": "i",
+        "ctx": "Load",
+        "lineno": 48
+       }
+      ]
+     },
+     "body": [
+      {
+       "type": "Return",
+       "value": {
+        "type": "Compare",
+        "left": {
+         "type": "IfExp",
+         "test": {
+          "type": "UnaryOp",
+          "op": "not",
+          "operand": {
+           "type": "Name",
+           "id": "a",
+           "ctx": "Load",
+           "lineno": 49
+          }
+         },
+         "body": {
+          "type": "Name",
+          "id": "b",
+          "ctx": "Load",
+          "lineno": null
+         },
+         "orelse": {
+          "type": "Name",
+          "id": "c",
+          "ctx": "Load",
+          "lineno": null
+         }
+        },
+        "ops": [
+         ">"
+        ],
+        "comparators": [
+         {
+          "type": "Constant",
+          "value": 2,
+          "lineno": null
+         }
+        ],
+        "lineno": null
+       }
+      }
+     ],
+     "orelse": []
+    }
+   ]
+  },
+  {
+   "type": "Return",
+   "value": {
+    "type": "Constant",
+    "value": false,
+    "lineno": 50
+   }
+  }
+ ],
+ "decorator_list": [],
+ "returns": null
+}

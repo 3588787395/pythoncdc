@@ -1,0 +1,14 @@
+﻿  ***<module>.f_or_in_and_deep: Failure: Different control flow
+  ***<module>.f_or_in_and_pair_deep: Failure: Different control flow
+  ***<module>.f_b98_ternary_cross: Failure: Different control flow
+  ***<module>.f_b98_compare_cross: Failure: Different control flow
+  ***<module>.f_b98_walrus_cross: Failure: Different control flow
+  ***<module>.f_b98_return_pos: Failure: Different control flow
+  ***<module>.f_b98_call_arg_pos: Failure: Different control flow
+  ***<module>.f_b98_or_tail_and_group: Failure: Different control flow
+  ***<module>.f_b98_not_wrapped: Failure: Different control flow
+  ***<module>.f_b98_and_tail_or_group: Failure: Different bytecode
+[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>
+[single] F:/Downloads/pythoncdc-main/test_repros/round3/e01_g1_b98_matrix.pyc
+[single] 浜х墿 F:/Downloads/pythoncdc-main/test_repros/round3/e01_g1_b98_matrixOK.py
+[single] status=failure units=5/15 success_rate=33.33%

@@ -1,0 +1,45 @@
+﻿> _generate_region(WithRegion@0)
+  > _generate_region(LoopRegion@80)
+    > _generate_region(IfRegion@82 merge=@178)
+      > _generate_if(IfRegion@82 merge=@178)
+        > _if_generate_normal(IfRegion@82 merge=@178)
+          > _generate_boolop(BoolOpRegion@88 merge=@102)
+          > _generate_boolop_impl(BoolOpRegion@88 merge=@102)
+          > _build_boolop_expression(BoolOpRegion@88 merge=@102 CALLER=_r2_disp.py:73(wrapper))
+          < _build_boolop_expression -> BoolOp
+          > _generate_block_statements(block@102 CALLER=_r2_disp.py:73(wrapper))
+          > _generate_block_statements_body(block@102)
+          < _generate_block_statements_body -> [Return]
+          < _generate_block_statements -> [Return]
+          < _generate_boolop_impl -> [Expr,Return]
+          < _generate_boolop -> [Expr,Return]
+        < _if_generate_normal -> If
+      < _generate_if -> If
+    < _generate_region -> If
+  < _generate_region -> For
+> _generate_block_statements(block@0 CALLER=region_ast_generator.py:4326(_build_class_def))
+  > _generate_block_statements_body(block@0)
+> _generate_block_statements(block@0 CALLER=region_ast_generator.py:2562(_build_function_def))
+  > _generate_block_statements_body(block@0)
+  < _generate_block_statements_body -> [Return]
+< _generate_block_statements -> [Return]
+> _generate_region(Region@0)
+< _generate_region -> []
+> _generate_block_statements(block@0 CALLER=region_ast_generator.py:2562(_build_function_def))
+  > _generate_block_statements_body(block@0)
+  < _generate_block_statements_body -> [Return]
+< _generate_block_statements -> [Return]
+> _generate_region(Region@0)
+< _generate_region -> []
+  < _generate_block_statements_body -> [Assign,Assign,FunctionDef,FunctionDef,Return]
+< _generate_block_statements -> [Assign,Assign,FunctionDef,FunctionDef,Return]
+> _generate_region(Region@0)
+< _generate_region -> []
+< _generate_region -> [ClassDef,With]
+> _generate_region(Region@178)
+  > _generate_block_statements(block@178 CALLER=region_ast_generator.py:4881(_generate_region))
+    > _generate_block_statements_body(block@178)
+    < _generate_block_statements_body -> [Return]
+  < _generate_block_statements -> [Return]
+< _generate_region -> [Return]
+DONE <class 'dict'>

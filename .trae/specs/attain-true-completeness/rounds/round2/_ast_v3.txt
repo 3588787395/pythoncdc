@@ -1,0 +1,139 @@
+﻿TYPE <class 'dict'>
+== type == 'FunctionDef'
+== name == 'v3'
+== args == {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'x'}, {'type': 'arg', 'arg': 'y'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}
+== body == 2 items
+{'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'n', 'ctx': 'Store'}], 'value': {'type': 'Constant', 'value': 0, 'lineno': 21}}
+{'type': 'While', 'test': {'type': 'Compare', 'left': {'type': 'Constant', 'value': 0, 'lineno': 22}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'x', 'ctx': 'Load', 'lineno': None}, {'type': 'Constant', 'value': 10, 'lineno': None}]}, 'body': [{'type': 'If', 'test': {'type': 'Name', 'id': 'y', 'ctx': 'Load', 'lineno': None}, 'body': [{'type': 'Continue'}], 'orelse': []}, {'type': 'Expr', 'value': {'type': 'Name', 'id': 'y', 'ctx': 'Load', 'lineno': None}}, {'type': 'Continue'}, {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'x', 'ctx': 'Store'}, 'op': '+', 'value': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}, {'type': 'AugAssign', 'target': {'type': 'Name', 'id': 'n', 'ctx': 'Store'}, 'op': '+', 'value': {'type': 'Constant', 'value': 1, 'lineno'
+== decorator_list == 0 items
+== returns == None
+==== FULL JSON ====
+{
+ "type": "FunctionDef",
+ "name": "v3",
+ "args": {
+  "type": "arguments",
+  "posonlyargs": [],
+  "args": [
+   {
+    "type": "arg",
+    "arg": "x"
+   },
+   {
+    "type": "arg",
+    "arg": "y"
+   }
+  ],
+  "vararg": null,
+  "kwonlyargs": [],
+  "kw_defaults": [],
+  "kwarg": null,
+  "defaults": []
+ },
+ "body": [
+  {
+   "type": "Assign",
+   "targets": [
+    {
+     "type": "Name",
+     "id": "n",
+     "ctx": "Store"
+    }
+   ],
+   "value": {
+    "type": "Constant",
+    "value": 0,
+    "lineno": 21
+   }
+  },
+  {
+   "type": "While",
+   "test": {
+    "type": "Compare",
+    "left": {
+     "type": "Constant",
+     "value": 0,
+     "lineno": 22
+    },
+    "ops": [
+     "<",
+     "<"
+    ],
+    "comparators": [
+     {
+      "type": "Name",
+      "id": "x",
+      "ctx": "Load",
+      "lineno": null
+     },
+     {
+      "type": "Constant",
+      "value": 10,
+      "lineno": null
+     }
+    ]
+   },
+   "body": [
+    {
+     "type": "If",
+     "test": {
+      "type": "Name",
+      "id": "y",
+      "ctx": "Load",
+      "lineno": null
+     },
+     "body": [
+      {
+       "type": "Continue"
+      }
+     ],
+     "orelse": []
+    },
+    {
+     "type": "Expr",
+     "value": {
+      "type": "Name",
+      "id": "y",
+      "ctx": "Load",
+      "lineno": null
+     }
+    },
+    {
+     "type": "Continue"
+    },
+    {
+     "type": "AugAssign",
+     "target": {
+      "type": "Name",
+      "id": "x",
+      "ctx": "Store"
+     },
+     "op": "+",
+     "value": {
+      "type": "Constant",
+      "value": 1,
+      "lineno": null
+     },
+     "lineno": null
+    },
+    {
+     "type": "AugAssign",
+     "target": {
+      "type": "Name",
+      "id": "n",
+      "ctx": "Store"
+     },
+     "op": "+",
+     "value": {
+      "type": "Constant",
+      "value": 1,
+      "lineno": null
+     },
+     "lineno": null
+    }
+   ]
+  }
+ ],
+ "decorator_list": [],
+ "returns": null
+}

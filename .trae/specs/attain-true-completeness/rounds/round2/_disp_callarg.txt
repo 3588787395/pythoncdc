@@ -1,0 +1,33 @@
+﻿> _generate_region(LoopRegion@38)
+> _generate_block_statements(block@0)
+  > _generate_block_statements_body(block@0)
+  < _generate_block_statements_body -> [Return]
+< _generate_block_statements -> [Return]
+> _generate_region(Region@0)
+< _generate_region -> []
+  > _generate_region(IfRegion@40 merge=@80)
+    > _generate_if(IfRegion@40 merge=@80)
+      > _if_generate_normal(IfRegion@40 merge=@80)
+        > _generate_boolop(BoolOpRegion@46 merge=@60)
+          > _generate_boolop_impl(BoolOpRegion@46 merge=@60)
+          > _build_boolop_expression(BoolOpRegion@46 merge=@60)
+          < _build_boolop_expression -> BoolOp
+          > _generate_block_statements(block@60)
+          > _generate_block_statements_body(block@60)
+          < _generate_block_statements_body -> [Return]
+          < _generate_block_statements -> [Return]
+          < _generate_boolop_impl -> [Expr,Return]
+        < _generate_boolop -> [Expr,Return]
+        > _generate_block_statements(block@80)
+          > _generate_block_statements_body(block@80)
+          < _generate_block_statements_body -> []
+        < _generate_block_statements -> []
+      < _if_generate_normal -> If
+    < _generate_if -> If
+  < _generate_region -> If
+  > _generate_block_statements(block@82)
+    > _generate_block_statements_body(block@82)
+    < _generate_block_statements_body -> [Return]
+  < _generate_block_statements -> [Return]
+< _generate_region -> [FunctionDef,For,Return]
+DONE <class 'dict'>

@@ -1,0 +1,8 @@
+﻿32383             # 褰掑睘锛夛細IF_NONE/IF_NOT_NONE 鐨?op_type 闇€瑕佹牴鎹烦杞洰鏍囧垽鏂€?
+32393             #   or 鐭矾 -> op_type='or'
+32395             #   and 鐭矾 -> op_type='and'锛堜絾杩欐槸 or 閾剧殑鏈€鍚庢搷浣滄暟锛?
+32404                         op_type = 'and'  # jump target 鏄潯浠惰烦杞?-> exit -> and 鐭矾
+32406                         op_type = 'or'   # jump target 涓嶆槸鏉′欢璺宠浆 -> body -> or 鐭矾
+32408                     op_type = 'and'  # 榛樿
+32410                 op_type = 'and' if 'FALSE' in last.opname else 'or'
+32477             chain.append((current, op_type))

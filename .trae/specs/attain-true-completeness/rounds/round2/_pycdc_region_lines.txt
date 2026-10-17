@@ -1,0 +1,4 @@
+﻿84                     from core.cfg.region_ast_generator import RegionASTGenerator
+89                     gen = RegionASTGenerator(cfg, top_level_code=actual_code if actual_code.co_name == '<module>' else None)
+90                     ast_dict = gen.generate()
+94                     source = code_gen.generate(py_ast)

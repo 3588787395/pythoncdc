@@ -1,0 +1,5 @@
+﻿29313             if len(boolop_region.op_chain) >= 2:
+29314                 last_chain_block, _ = boolop_region.op_chain[-1]
+29322                     chain_blocks_set = {b for b, _ in boolop_region.op_chain}
+29336                                 boolop_region.op_chain.append((ft_succ, boolop_region.op_chain[-1][1]))
+29341     def _detect_while_condition_boolop_chain(self, cond_block: BasicBlock, loop: LoopRegion) -> Optional[List[Tuple[BasicBlock, str]]]:

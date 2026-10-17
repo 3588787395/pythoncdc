@@ -1,0 +1,9 @@
+﻿32542                     current = _hop_target
+32696                                             op_type = chain[0][1]
+32698                                             op_type = _actual_op
+32701                                             current = _merge
+32837                 if op_type == prev_op and first_jump_target and cur_jump_target and first_jump_target != cur_jump_target:
+32847                     _normal_or = (op_type == 'or' and 'TRUE' in chain[0][0].get_last_instruction().opname and 'FALSE' in last.opname)
+32848                     _not_or_chain = (op_type == 'or' and all(
+32958                 current = _await_cond
+32960                 current = ft_succ

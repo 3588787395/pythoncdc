@@ -1,0 +1,103 @@
+﻿==== <listcomp> ====
+-- block @0 --
+   @0    COPY_FREE_VARS               3
+   @2    RESUME                       0
+   @4    BUILD_LIST                   0
+   @6    LOAD_FAST                    0
+-- block @8 --
+   @8    FOR_ITER                     10 -> @30
+-- block @10 --
+   @10   STORE_FAST                   1
+   @12   LOAD_DEREF                   2
+   @14   POP_JUMP_FORWARD_IF_TRUE     2 -> @20
+-- block @16 --
+   @16   LOAD_DEREF                   3
+   @18   POP_JUMP_BACKWARD_IF_FALSE   6 -> @8
+-- block @20 --
+   @20   LOAD_DEREF                   4
+   @22   POP_JUMP_BACKWARD_IF_FALSE   8 -> @8
+-- block @24 --
+   @24   LOAD_FAST                    1
+   @26   LIST_APPEND                  2
+   @28   JUMP_BACKWARD                11 -> @8
+-- block @30 --
+   @30   RETURN_VALUE                
+==== f_with_body_host ====
+-- block @0 --
+   @0    RESUME                       0
+   @2    PUSH_NULL                   
+   @4    LOAD_BUILD_CLASS            
+   @6    LOAD_CONST                   1
+   @8    MAKE_FUNCTION                0
+   @10   LOAD_CONST                   2
+   @12   PRECALL                      2
+   @16   CALL                         2
+   @26   STORE_FAST                   3
+   @28   PUSH_NULL                   
+   @30   LOAD_FAST                    3
+   @32   PRECALL                      0
+   @36   CALL                         0
+   @46   BEFORE_WITH                 
+-- block @80 --
+   @80   FOR_ITER                     24 -> @130
+-- block @82 --
+   @82   STORE_FAST                   5
+   @84   LOAD_FAST                    5
+   @86   POP_JUMP_FORWARD_IF_FALSE    20 -> @128
+-- block @88 --
+   @88   LOAD_FAST                    0
+   @90   POP_JUMP_FORWARD_IF_TRUE     2 -> @96
+-- block @92 --
+   @92   LOAD_FAST                    1
+   @94   JUMP_IF_FALSE_OR_POP         1 -> @98
+-- block @96 --
+   @96   LOAD_FAST                    2
+-- block @98 --
+   @98   SWAP                         2
+   @100  POP_TOP                     
+-- block @128 --
+   @128  JUMP_BACKWARD                25 -> @80
+-- block @130 --
+   @130  NOP                         
+   @132  LOAD_CONST                   0
+   @134  LOAD_CONST                   0
+   @136  LOAD_CONST                   0
+   @138  PRECALL                      2
+   @142  CALL                         2
+   @152  POP_TOP                     
+   @154  JUMP_FORWARD                 11 -> @178
+-- block @156 --
+   @156  PUSH_EXC_INFO               
+   @158  WITH_EXCEPT_START           
+   @160  POP_JUMP_FORWARD_IF_TRUE     4 -> @170
+-- block @162 --
+   @162  RERAISE                      2
+-- block @164 --
+   @164  COPY                         3
+   @166  POP_EXCEPT                  
+   @168  RERAISE                      1
+-- block @170 --
+   @170  POP_TOP                     
+-- block @178 --
+   @178  LOAD_CONST                   4
+   @180  RETURN_VALUE                
+-- block @48 --
+   @48   STORE_FAST                   4
+   @50   LOAD_GLOBAL                  1
+   @62   LOAD_CONST                   3
+   @64   PRECALL                      1
+   @68   CALL                         1
+   @78   GET_ITER                    
+-- block @102 --
+   @102  SWAP                         2
+   @104  LOAD_CONST                   0
+   @106  LOAD_CONST                   0
+   @108  LOAD_CONST                   0
+   @110  PRECALL                      2
+   @114  CALL                         2
+   @124  POP_TOP                     
+   @126  RETURN_VALUE                
+-- block @172 --
+   @172  POP_EXCEPT                  
+   @174  POP_TOP                     
+   @176  POP_TOP                     

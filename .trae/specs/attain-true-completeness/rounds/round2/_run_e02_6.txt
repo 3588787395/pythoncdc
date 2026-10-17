@@ -1,0 +1,7 @@
+﻿[e02] regen_rc=0 status=failure units=13/18
+    ***<module>.CB98.m_handler: Failure: Different control flow
+    ***<module>.f_comp_cond_host.<listcomp>: Failure: Different control flow
+    ***<module>.f_genexp_cond_host.<genexpr>: Failure: Different control flow
+    ***<module>.f_dictcomp_value_host.<dictcomp>: Failure: Different control flow
+    ***<module>.f_with_body_host: Failure: Different control flow
+-> units=13/18  (1 probes)  rec1_probes_r2fix6_e02.json

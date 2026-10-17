@@ -1,0 +1,24 @@
+﻿==== chain_lhs_ternary_rhs_call ====
+-- block @0 --
+   @0    RESUME                       0
+   @2    LOAD_FAST                    3
+   @4    POP_JUMP_FORWARD_IF_FALSE    2 -> @10
+-- block @6 --
+   @6    LOAD_FAST                    0
+   @8    JUMP_FORWARD                 1 -> @12
+-- block @10 --
+   @10   LOAD_FAST                    1
+-- block @12 --
+   @12   LOAD_GLOBAL                  1
+   @24   LOAD_FAST                    4
+   @26   POP_JUMP_FORWARD_IF_FALSE    2 -> @32
+-- block @28 --
+   @28   LOAD_FAST                    2
+   @30   JUMP_FORWARD                 1 -> @34
+-- block @32 --
+   @32   LOAD_CONST                   1
+-- block @34 --
+   @34   PRECALL                      1
+   @38   CALL                         1
+   @48   COMPARE_OP                   0
+   @54   RETURN_VALUE                

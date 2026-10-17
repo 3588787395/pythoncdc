@@ -1,0 +1,42 @@
+﻿ 85           0 RESUME                   0
+
+ 86           2 LOAD_CONST               1 (<code object sink at 0x0000013BC1B18030, file "F:\Downloads\pythoncdc-main\test_repros\round3\e01_g1_b98_matrix.py", line 86>)
+              4 MAKE_FUNCTION            0
+              6 STORE_FAST               3 (sink)
+
+ 88           8 LOAD_GLOBAL              1 (NULL + range)
+             20 LOAD_CONST               2 (3)
+             22 PRECALL                  1
+             26 CALL                     1
+             36 GET_ITER
+        >>   38 FOR_ITER                21 (to 82)
+             40 STORE_FAST               4 (i)
+
+ 89          42 LOAD_FAST                4 (i)
+             44 POP_JUMP_FORWARD_IF_FALSE    17 (to 80)
+
+ 90          46 PUSH_NULL
+             48 LOAD_FAST                3 (sink)
+             50 LOAD_FAST                0 (a)
+             52 POP_JUMP_FORWARD_IF_TRUE     2 (to 58)
+             54 LOAD_FAST                1 (b)
+             56 JUMP_IF_FALSE_OR_POP     1 (to 60)
+        >>   58 LOAD_FAST                2 (c)
+        >>   60 PRECALL                  1
+             64 CALL                     1
+             74 SWAP                     2
+             76 POP_TOP
+             78 RETURN_VALUE
+
+ 89     >>   80 JUMP_BACKWARD           22 (to 38)
+
+ 91     >>   82 LOAD_CONST               3 (0)
+             84 RETURN_VALUE
+
+Disassembly of <code object sink at 0x0000013BC1B18030, file "F:\Downloads\pythoncdc-main\test_repros\round3\e01_g1_b98_matrix.py", line 86>:
+ 86           0 RESUME                   0
+
+ 87           2 LOAD_FAST                0 (x)
+              4 LOAD_CONST               1 (1)
+              6 BINARY_OP                0 (+)
+             10 RETURN_VALUE

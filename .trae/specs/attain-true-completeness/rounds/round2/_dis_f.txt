@@ -1,0 +1,18 @@
+﻿==== f ====
+-- block @0 --
+   @0    RESUME                       0
+   @2    LOAD_CONST                   1
+   @4    LOAD_FAST                    0
+   @6    SWAP                         2
+   @8    COPY                         2
+   @10   COMPARE_OP                   0
+   @16   JUMP_IF_FALSE_OR_POP         5 -> @28
+-- block @18 --
+   @18   LOAD_FAST                    1
+   @20   COMPARE_OP                   0
+   @26   JUMP_FORWARD                 2 -> @32
+-- block @28 --
+   @28   SWAP                         2
+   @30   POP_TOP                     
+-- block @32 --
+   @32   RETURN_VALUE                

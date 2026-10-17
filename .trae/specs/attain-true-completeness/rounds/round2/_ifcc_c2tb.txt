@@ -1,0 +1,7 @@
+﻿IfRegion entry=@22 cond=@22 merge=@48
+  blocks=[34, 44, 48, 22] then=[] else=[44]
+  cc_ops=['<', '<'] cc_blocks=[34] cc_left='LOAD_FAST'
+  cc_left_instrs=[] cc_comp_instrs=None
+  vt=None
+TernaryRegion entry=@12 cond=@12 merge=@22 vt='__compare_target__'
+TernaryRegion entry=@0 cond=@0 merge=@12 vt=None

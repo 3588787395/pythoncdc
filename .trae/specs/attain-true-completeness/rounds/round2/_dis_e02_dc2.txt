@@ -1,0 +1,26 @@
+﻿==== <dictcomp> ====
+-- block @0 --
+   @0    COPY_FREE_VARS               3
+   @2    RESUME                       0
+   @4    BUILD_MAP                    0
+   @6    LOAD_FAST                    0
+-- block @8 --
+   @8    FOR_ITER                     11 -> @32
+-- block @10 --
+   @10   STORE_FAST                   1
+   @12   LOAD_FAST                    1
+   @14   POP_JUMP_BACKWARD_IF_FALSE   4 -> @8
+-- block @16 --
+   @16   LOAD_FAST                    1
+   @18   LOAD_DEREF                   2
+   @20   POP_JUMP_FORWARD_IF_TRUE     2 -> @26
+-- block @22 --
+   @22   LOAD_DEREF                   3
+   @24   JUMP_IF_FALSE_OR_POP         1 -> @28
+-- block @26 --
+   @26   LOAD_DEREF                   4
+-- block @28 --
+   @28   MAP_ADD                      2
+   @30   JUMP_BACKWARD                12 -> @8
+-- block @32 --
+   @32   RETURN_VALUE                

@@ -1,0 +1,5 @@
+﻿IfRegion entry=@0 cond=@0 merge=@32
+  blocks=[0, 18, 28, 32] then=[] else=[28]
+  cc_ops=['<', '<'] cc_blocks=[18] cc_left='LOAD_CONST'
+  cc_left_instrs=['LOAD_FAST', 'LOAD_FAST'] cc_comp_instrs=None
+  vt=None

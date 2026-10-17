@@ -2322,32 +2322,70 @@ class ComprehensionGenerator:
                             ifs[split_at - 1] = {'type': 'Name', 'id': raw_text}
                 ifs = [{'type': 'BoolOp', 'op': op, 'values': ifs}]
             else:
-                or_groups = []
-                cur_op = None
-                cur_vals = []
-                for val, o in zip(ifs, _b6_seg_ops):
-                    if cur_op is None:
-                        cur_op = o
-                        cur_vals = [val]
-                    elif o == cur_op:
-                        cur_vals.append(val)
-                    elif cur_op == 'and' and o == 'or':
-                        cur_vals.append(val)
-                        or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals})
-                        cur_op = None
-                        cur_vals = []
-                    else:
+                # [B98-V3R2 or-prefix 过滤器组] 识别条件（I.4 白名单：段起始
+                # 偏移 + 段末跳转 opcode/目标）：is_or_pattern 成立，且存在
+                # 边界 t（2 <= t < len(segments)）——前 t-1 段的条件跳转均为
+                # FORWARD IF_TRUE 且目标同为第 t 段起始偏移（真值边落到后续
+                # 条件检查而非元素产出），第 t 段起全部段标注为 'and'（尾部
+                # 纯 and 链）。CPython 对显式括号的 ``(A or B) and C`` 生成该
+                # 形态：A 真→跳到 C 检查、B 假→跳过本轮、C 假→跳过本轮；
+                # 而无括号 ``A or B and C`` 的 A 真边直达元素产出（目标不是
+                # 段起始，也不满足 < 段数边界），不会命中（[C3] 显式封闭）。
+                # 归约方式：前 t 段合成 or 组 BoolOp(or, [...])，与后续 and
+                # 段整体由 'and' 连接（单 BoolOp，[C2]）。
+                # AST 映射：And[Or[A,B], C, ...]，重编译回同一字节码形态。
+                _b6_opr_t = None
+                if is_or_pattern and segments and len(segments) == len(ifs) and len(segments) >= 3:
+                    for _b6_opr_cand in range(2, len(segments)):
+                        _b6_opr_cand_off = all_instrs[segments[_b6_opr_cand][0]].offset
+                        _b6_opr_ok = True
+                        for _b6_opr_k in range(_b6_opr_cand - 1):
+                            _b6_opr_j = segments[_b6_opr_k][2]
+                            if not ('FORWARD' in _b6_opr_j.opname
+                                    and 'IF_TRUE' in _b6_opr_j.opname
+                                    and _b6_opr_j.argval == _b6_opr_cand_off):
+                                _b6_opr_ok = False
+                                break
+                        if not _b6_opr_ok:
+                            continue
+                        if any(_b6_seg_ops[_b6_opr_k2] != 'and'
+                               for _b6_opr_k2 in range(_b6_opr_cand, len(_b6_seg_ops))):
+                            continue
+                        _b6_opr_t = _b6_opr_cand
+                        break
+                if _b6_opr_t is not None:
+                    _b6_opr_vals = list(ifs[:_b6_opr_t])
+                    _b6_opr_node = ({'type': 'BoolOp', 'op': 'or', 'values': _b6_opr_vals}
+                                    if len(_b6_opr_vals) > 1 else _b6_opr_vals[0])
+                    ifs = [{'type': 'BoolOp', 'op': 'and',
+                            'values': [_b6_opr_node] + list(ifs[_b6_opr_t:])}]
+                else:
+                    or_groups = []
+                    cur_op = None
+                    cur_vals = []
+                    for val, o in zip(ifs, _b6_seg_ops):
+                        if cur_op is None:
+                            cur_op = o
+                            cur_vals = [val]
+                        elif o == cur_op:
+                            cur_vals.append(val)
+                        elif cur_op == 'and' and o == 'or':
+                            cur_vals.append(val)
+                            or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals})
+                            cur_op = None
+                            cur_vals = []
+                        else:
+                            or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals}
+                                             if len(cur_vals) > 1 else cur_vals[0])
+                            cur_op = o
+                            cur_vals = [val]
+                    if cur_vals:
                         or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals}
                                          if len(cur_vals) > 1 else cur_vals[0])
-                        cur_op = o
-                        cur_vals = [val]
-                if cur_vals:
-                    or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals}
-                                     if len(cur_vals) > 1 else cur_vals[0])
-                result = None
-                for gnode in reversed(or_groups):
-                    result = gnode if result is None else {'type': 'BoolOp', 'op': 'or', 'values': [gnode, result]}
-                ifs = [result]
+                    result = None
+                    for gnode in reversed(or_groups):
+                        result = gnode if result is None else {'type': 'BoolOp', 'op': 'or', 'values': [gnode, result]}
+                    ifs = [result]
 
         return ifs, elt_start_idx
 
@@ -2364,10 +2402,18 @@ class ComprehensionGenerator:
         from .region_analyzer import CONDITIONAL_JUMP_OPS
 
         # Find the conditional jump between store_idx+1 and append_idx
+        # [B98-V3R2 键窗前导过滤器跳转甄别] 识别条件（I.4 白名单：同层指令
+        # opcode）：三元条件跳转按定义是「前向跳到 false 值（true 值之后、
+        # 追加点之前）」，BACKWARD 条件跳转只能是 `if 过滤器`（跳回 FOR_ITER）。
+        # 寻找首个前向条件跳转作为三元 cond；不再把过滤器回跳误当 cond
+        # （否则反推的键窗为空 ⇒ 键丢失）。无过滤器前导时首个条件跳转即
+        # 前向跳转，逐位行为不变（[C3] 显式守卫）。
         cond_jump_idx = None
         for idx in range(store_idx + 1, append_idx):
             instr = all_instrs[idx]
             if instr.opname in CONDITIONAL_JUMP_OPS:
+                if 'BACKWARD' in instr.opname:
+                    continue
                 cond_jump_idx = idx
                 break
         if cond_jump_idx is None:
@@ -2663,6 +2709,43 @@ class ComprehensionGenerator:
             false_instrs = all_instrs[false_start:false_end]
         else:
             false_instrs = all_instrs[false_start:append_idx]
+
+        # [B98-V3R2 元素位融合 or-前缀] 识别条件（I.4 白名单：同层指令
+        # opcode/跳转目标）：首条三元条件跳转为前向 IF_TRUE；真值区末指令为
+        # keep-or-pop 族条件跳转（JUMP_IF_FALSE_OR_POP / JUMP_IF_TRUE_OR_POP）
+        # 且其跳转目标 == 追加点（MAP_ADD/LIST_APPEND/YIELD...）偏移；真值区
+        # 除末跳外无其它条件/keep-or-pop 跳转（中间或成员会引入更多条件
+        # 跳转，本支不命中、逐字回落既有 IF_TRUE 取反路径，[C3] 显式封闭）。
+        # 该形态即 CPython 对表达式位 `(A or B) and C` 的融合：A 真→C、
+        # B 真→（弹出 B）继续到 C、B 假→保留 B 为结果。若照 IF_TRUE 取反
+        # 解成 `B if not A else C`，B 为真时丢失 C 检查（假三元，element
+        # 位语义错位）。归约方式：cond=A、真值区操作数=B、else 值=C，重建
+        # BoolOp(and, [BoolOp(or,[A,B]), C])。
+        # AST 映射：IfExp(not A, B, C) 消解为 And[Or[A,B],C]，重编译回同一
+        # 字节流。
+        if ('IF_TRUE' in cond_instr.opname
+                and 'BACKWARD' not in cond_instr.opname
+                and true_instrs
+                and true_instrs[-1].opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
+                and true_instrs[-1].argval is not None
+                and append_idx < len(all_instrs)
+                and true_instrs[-1].argval == all_instrs[append_idx].offset
+                and not any(i.opname in CONDITIONAL_JUMP_OPS
+                            or i.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
+                            for i in true_instrs[:-1])):
+            _oip_cond = self.expr_reconstructor.reconstruct(cond_instrs)
+            _oip_true = self.expr_reconstructor.reconstruct(
+                [i for i in true_instrs[:-1]
+                 if i.opname not in CONDITIONAL_JUMP_OPS
+                 and i.opname not in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')])
+            _oip_false = self.expr_reconstructor.reconstruct(
+                [i for i in false_instrs
+                 if i.opname not in CONDITIONAL_JUMP_OPS
+                 and i.opname not in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')])
+            if _oip_cond is not None and _oip_true is not None and _oip_false is not None:
+                return {'type': 'BoolOp', 'op': 'and', 'values': [
+                    {'type': 'BoolOp', 'op': 'or', 'values': [_oip_cond, _oip_true]},
+                    _oip_false]}
 
         # 重建条件表达式
         # [R21-2] 三元 test 若为共享假出口的布尔链，先按段折叠为 BoolOp(and)；

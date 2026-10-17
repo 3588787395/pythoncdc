@@ -1,0 +1,5 @@
+﻿[name] regen_rc=0 status=success units=15/15
+[name] regen_rc=0 status=success units=18/18
+[name] regen_rc=0 status=success units=5/5
+[name] regen_rc=0 status=success units=4/4
+-> units=42/42  (4 probes)  rec1_probes_r2fix9_reg.json

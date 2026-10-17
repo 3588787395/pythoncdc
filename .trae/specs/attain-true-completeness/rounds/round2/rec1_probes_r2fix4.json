@@ -1,0 +1,24 @@
+[
+ {
+  "name": "e01",
+  "pyc_src_rel": "test_repros/round3/e01_g1_b98_matrix.pyc",
+  "pyc_src_sha": "ef2a32a20b39f485",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round2/rec1_e01_e01_g1_b98_matrix.pyc",
+  "mtime": "2026-10-17T09:25:09",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "e43b28d1dd58f08c",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_e01_e01_g1_b98_matrix.pyc (Python 3.11)\n\ndef f_or_in_and_deep(a, b, c):\n    acc = []\n    for i in range(3):\n        if i % 2 == 0 and len(acc) < 4:\n            r = (a or b) and c\n            acc.append(r)\n            while False:\n                pass\n    return acc\ndef f_and_in_or_deep(a, b, c):\n    acc = []\n    for i in range(3):\n        if i and len(acc) < 4:\n            r = a or b and c\n            acc.append(r)\n            while False:\n                pass\n    return acc\ndef f_or_in_and_pair_deep(a, b, c, d):\n    acc = []\n    for i in range(3):\n        if i and len(acc) < 4:\n            r = (a or b) and (c or d)\n            acc.append(r)\n            while False:\n                pass\n    return acc\ndef f_b98_ternary_cross(a, b, c, d):\n    for i in range(3):\n        if i and i < 4:\n            return (a or b) and c if d else 0\n    return 1\ndef f_b98_compare_cross(a, b, c):\n    for i in range(3):\n        if i and i:\n            return ((a or b) and c) > 2\n    return False\ndef f_b98_walrus_cross(a, b, c):\n    for i in range(3):\n        if i:\n            if (w := (a or b) and c):\n                pass\n    return 0\ndef f_b98_if_cond_pos(a, b, c):\n    for i in range(3):\n        if (a or b) and c and i:\n            return i\n    return 0\ndef f_b98_while_cond_pos(a, b, c):\n    n = 0\n    while (a or b) and c:\n        if n > 2:\n            break\n        n += 1\n    return n\ndef f_b98_return_pos(a, b, c):\n    for i in range(3):\n        if i == 1:\n            return (a or b) and c\n    return 0\ndef f_b98_call_arg_pos(a, b, c):\n    def sink(x):\n        return x + 1\n    for i in range(3):\n        if i:\n            if (a or b) and c:\n                pass\n    return 0\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i:\n            if not (a and b):\n                if c:\n                    if d:\n                        pass\n                else:\n                    return i\n    return 0\ndef f_b98_not_wrapped(a, b, c):\n    for i in range(3):\n        if i:\n            return 1 if not ((a or b) and c) else 2\n    return 0\ndef f_b98_and_tail_or_group(a, b, c, d):\n    acc = []\n    for i in range(3):\n        if i and len(acc) < 3:\n            r = (a or b) and (c or d) and a\n            acc.append(r)\n            while False:\n                pass\n    return acc\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.f_b98_walrus_cross: Failure: Different control flow\n  ***<module>.f_b98_call_arg_pos: Failure: Different control flow\n  ***<module>.f_b98_or_tail_and_group: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_e01_e01_g1_b98_matrix.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_e01_e01_g1_b98_matrixOK.py\n[single] status=failure units=12/15 success_rate=80.00%",
+  "status": "failure",
+  "units_success": 12,
+  "units_total": 15,
+  "failures": [
+   "***<module>.f_b98_walrus_cross: Failure: Different control flow",
+   "***<module>.f_b98_call_arg_pos: Failure: Different control flow",
+   "***<module>.f_b98_or_tail_and_group: Failure: Different control flow"
+  ]
+ }
+]

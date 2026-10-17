@@ -1,0 +1,63 @@
+==== g ====
+  1           0 RESUME                   0
+
+  2           2 LOAD_FAST                0 (a)
+              4 POP_JUMP_FORWARD_IF_TRUE     2 (to 10)
+              6 LOAD_FAST                1 (b)
+              8 JUMP_IF_FALSE_OR_POP     1 (to 12)
+        >>   10 LOAD_FAST                2 (c)
+        >>   12 LOAD_CONST               1 (2)
+             14 COMPARE_OP               4 (>)
+             20 RETURN_VALUE
+
+==== h ====
+  1           0 RESUME                   0
+
+  2           2 LOAD_FAST                0 (a)
+              4 POP_JUMP_FORWARD_IF_FALSE    12 (to 30)
+
+  3           6 LOAD_FAST                0 (a)
+              8 POP_JUMP_FORWARD_IF_FALSE    12 (to 34)
+
+  4          10 LOAD_FAST                0 (a)
+             12 POP_JUMP_FORWARD_IF_TRUE     2 (to 18)
+             14 LOAD_FAST                1 (b)
+             16 JUMP_IF_FALSE_OR_POP     1 (to 20)
+        >>   18 LOAD_FAST                2 (c)
+        >>   20 LOAD_CONST               1 (2)
+             22 COMPARE_OP               4 (>)
+             28 RETURN_VALUE
+
+  2     >>   30 LOAD_CONST               0 (None)
+             32 RETURN_VALUE
+
+  3     >>   34 LOAD_CONST               0 (None)
+             36 RETURN_VALUE
+
+==== i ====
+  1           0 RESUME                   0
+
+  2           2 LOAD_FAST                0 (a)
+              4 POP_JUMP_FORWARD_IF_FALSE    10 (to 26)
+
+  3           6 LOAD_FAST                0 (a)
+              8 POP_JUMP_FORWARD_IF_TRUE     2 (to 14)
+             10 LOAD_FAST                1 (b)
+             12 JUMP_IF_FALSE_OR_POP     1 (to 16)
+        >>   14 LOAD_FAST                2 (c)
+        >>   16 LOAD_CONST               1 (2)
+             18 COMPARE_OP               4 (>)
+             24 RETURN_VALUE
+
+  2     >>   26 LOAD_CONST               0 (None)
+             28 RETURN_VALUE
+
+==== j ====
+  1           0 RESUME                   0
+
+  2           2 LOAD_FAST                0 (a)
+              4 POP_JUMP_FORWARD_IF_TRUE     2 (to 10)
+              6 LOAD_FAST                1 (b)
+              8 JUMP_IF_FALSE_OR_POP     1 (to 12)
+        >>   10 LOAD_FAST                2 (c)
+        >>   12 RETURN_VALUE

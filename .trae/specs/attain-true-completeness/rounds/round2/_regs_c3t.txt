@@ -1,0 +1,18 @@
+﻿---- regions (production) ----
+  BoolOpRegion entry=@22 merge_block=@56 op_chain=[(22, 'and')] is_cond_ctx=False blocks=[22, 34, 52, 56]
+  TernaryRegion entry=@12 condition_block=@12 merge_block=@22 true_value_block=@16 false_value_block=@20 vt='__compare_target__' ctx='compare' blocks=[12, 16, 20, 22]
+  TernaryRegion entry=@0 condition_block=@0 merge_block=@12 true_value_block=@6 false_value_block=@10 blocks=[0, 6, 10, 12]
+  Region entry=@34 blocks=[34]
+  Region entry=@38 blocks=[38]
+  Region entry=@42 blocks=[42]
+  Region entry=@44 blocks=[44]
+  Region entry=@52 blocks=[52]
+  Region entry=@56 blocks=[56]
+  Region entry=@34 blocks=[34]
+  Region entry=@38 blocks=[38]
+  Region entry=@42 blocks=[42]
+  Region entry=@44 blocks=[44]
+  Region entry=@52 blocks=[52]
+  Region entry=@56 blocks=[56]
+---- generated_blocks ----
+[0, 6, 10, 12, 16, 20, 22, 34, 38, 42, 44, 52, 56]

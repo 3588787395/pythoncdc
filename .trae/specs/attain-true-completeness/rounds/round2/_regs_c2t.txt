@@ -1,0 +1,9 @@
+﻿---- regions (production) ----
+  IfRegion entry=@22 condition_block=@22 merge_block=@48 else=[44] blocks=[22, 34, 44, 48]
+  TernaryRegion entry=@12 condition_block=@12 merge_block=@22 true_value_block=@16 false_value_block=@20 vt='__compare_target__' ctx='compare' blocks=[12, 16, 20, 22]
+  TernaryRegion entry=@0 condition_block=@0 merge_block=@12 true_value_block=@6 false_value_block=@10 blocks=[0, 6, 10, 12]
+  Region entry=@34 blocks=[34]
+  Region entry=@44 blocks=[44]
+  Region entry=@48 blocks=[48]
+---- generated_blocks ----
+[0, 6, 10, 12, 16, 20, 22, 44]

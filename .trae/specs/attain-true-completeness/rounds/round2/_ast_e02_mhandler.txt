@@ -1,0 +1,197 @@
+﻿TYPE <class 'dict'>
+== type == 'FunctionDef'
+== name == 'm_handler'
+== args == {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'self'}, {'type': 'arg', 'arg': 'a'}, {'type': 'arg', 'arg': 'b'}, {'type': 'arg', 'arg': 'c'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}
+== body == 2 items
+{'type': 'Try', 'body': [{'type': 'For', 'target': {'type': 'Name', 'id': 'i', 'ctx': 'Store'}, 'iter': {'type': 'Call', 'func': {'type': 'Name', 'id': 'range', 'ctx': 'Load', 'lineno': 14}, 'args': [{'type': 'Constant', 'value': 3, 'lineno': None}], 'kwargs': [], 'lineno': None}, 'body': [{'type': 'If', 'test': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': 15}, 'body': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': 16}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}}], 'orelse': []}]}], 'handlers': [{'type': 'ExceptHandler', 'body': [{'type': 'If', 'test': {'type': 'Name', 'id': 'a', 'ctx'
+{'type': 'Return', 'value': {'type': 'Constant', 'value': 0, 'lineno': 19}}
+== decorator_list == 0 items
+== returns == None
+==== FULL JSON ====
+{
+ "type": "FunctionDef",
+ "name": "m_handler",
+ "args": {
+  "type": "arguments",
+  "posonlyargs": [],
+  "args": [
+   {
+    "type": "arg",
+    "arg": "self"
+   },
+   {
+    "type": "arg",
+    "arg": "a"
+   },
+   {
+    "type": "arg",
+    "arg": "b"
+   },
+   {
+    "type": "arg",
+    "arg": "c"
+   }
+  ],
+  "vararg": null,
+  "kwonlyargs": [],
+  "kw_defaults": [],
+  "kwarg": null,
+  "defaults": []
+ },
+ "body": [
+  {
+   "type": "Try",
+   "body": [
+    {
+     "type": "For",
+     "target": {
+      "type": "Name",
+      "id": "i",
+      "ctx": "Store"
+     },
+     "iter": {
+      "type": "Call",
+      "func": {
+       "type": "Name",
+       "id": "range",
+       "ctx": "Load",
+       "lineno": 14
+      },
+      "args": [
+       {
+        "type": "Constant",
+        "value": 3,
+        "lineno": null
+       }
+      ],
+      "kwargs": [],
+      "lineno": null
+     },
+     "body": [
+      {
+       "type": "If",
+       "test": {
+        "type": "Name",
+        "id": "i",
+        "ctx": "Load",
+        "lineno": 15
+       },
+       "body": [
+        {
+         "type": "Return",
+         "value": {
+          "type": "BoolOp",
+          "op": "and",
+          "values": [
+           {
+            "type": "BoolOp",
+            "op": "or",
+            "values": [
+             {
+              "type": "Name",
+              "id": "a",
+              "ctx": "Load",
+              "lineno": 16
+             },
+             {
+              "type": "Name",
+              "id": "b",
+              "ctx": "Load",
+              "lineno": null
+             }
+            ]
+           },
+           {
+            "type": "Name",
+            "id": "c",
+            "ctx": "Load",
+            "lineno": null
+           }
+          ]
+         }
+        }
+       ],
+       "orelse": []
+      }
+     ]
+    }
+   ],
+   "handlers": [
+    {
+     "type": "ExceptHandler",
+     "body": [
+      {
+       "type": "If",
+       "test": {
+        "type": "Name",
+        "id": "a",
+        "ctx": "Load",
+        "lineno": 18
+       },
+       "body": [
+        {
+         "type": "Expr",
+         "value": {
+          "type": "BoolOp",
+          "op": "and",
+          "values": [
+           {
+            "type": "BoolOp",
+            "op": "or",
+            "values": [
+             {
+              "type": "Name",
+              "id": "a",
+              "ctx": "Load",
+              "lineno": null
+             },
+             {
+              "type": "Name",
+              "id": "b",
+              "ctx": "Load",
+              "lineno": null
+             }
+            ]
+           },
+           {
+            "type": "Name",
+            "id": "c",
+            "ctx": "Load",
+            "lineno": null
+           }
+          ]
+         }
+        }
+       ],
+       "orelse": [
+        {
+         "type": "Return",
+         "value": {
+          "type": "Constant",
+          "value": -1,
+          "lineno": null
+         }
+        }
+       ]
+      }
+     ],
+     "exc_type": {
+      "type": "Name",
+      "id": "ValueError",
+      "ctx": "Load"
+     }
+    }
+   ]
+  },
+  {
+   "type": "Return",
+   "value": {
+    "type": "Constant",
+    "value": 0,
+    "lineno": 19
+   }
+  }
+ ],
+ "decorator_list": [],
+ "returns": null
+}

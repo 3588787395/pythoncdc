@@ -1,0 +1,3 @@
+﻿[e01_g1_b98_matrix] regen_rc=0 status=success units=15/15
+[b98_resid] regen_rc=0 status=success units=5/5
+-> units=20/20  (2 probes)  rec1_probes_r2fix8_b98.json

@@ -1,0 +1,48 @@
+﻿==== r_d1 ====
+-- block @0 --
+   @0    RESUME                       0
+   @2    LOAD_FAST                    0
+   @4    POP_JUMP_FORWARD_IF_TRUE     2 -> @10
+-- block @6 --
+   @6    LOAD_FAST                    1
+   @8    POP_JUMP_FORWARD_IF_FALSE    2 -> @14
+-- block @10 --
+   @10   LOAD_FAST                    2
+   @12   JUMP_IF_TRUE_OR_POP          1 -> @16
+-- block @14 --
+   @14   LOAD_FAST                    3
+-- block @16 --
+   @16   RETURN_VALUE                
+==== r_e3 ====
+-- block @0 --
+   @0    RESUME                       0
+   @2    LOAD_FAST                    0
+   @4    JUMP_IF_TRUE_OR_POP          5 -> @16
+-- block @6 --
+   @6    LOAD_FAST                    1
+   @8    JUMP_IF_FALSE_OR_POP         3 -> @16
+-- block @10 --
+   @10   LOAD_FAST                    2
+   @12   JUMP_IF_TRUE_OR_POP          1 -> @16
+-- block @14 --
+   @14   LOAD_FAST                    3
+-- block @16 --
+   @16   RETURN_VALUE                
+==== r_g2 ====
+-- block @0 --
+   @0    RESUME                       0
+   @2    LOAD_FAST                    0
+   @4    POP_JUMP_FORWARD_IF_FALSE    4 -> @14
+-- block @6 --
+   @6    LOAD_FAST                    1
+   @8    JUMP_IF_TRUE_OR_POP          5 -> @20
+-- block @10 --
+   @10   LOAD_FAST                    2
+   @12   JUMP_IF_TRUE_OR_POP          3 -> @20
+-- block @14 --
+   @14   LOAD_FAST                    3
+   @16   JUMP_IF_FALSE_OR_POP         1 -> @20
+-- block @18 --
+   @18   LOAD_FAST                    4
+-- block @20 --
+   @20   RETURN_VALUE                

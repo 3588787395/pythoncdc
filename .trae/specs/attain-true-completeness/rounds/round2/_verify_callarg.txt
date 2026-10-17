@@ -1,0 +1,9 @@
+﻿python : usage: pyc_verify.py [-h] [--pylingual PYLINGUAL]
+所在位置 行:1 字符: 1
++ python -X utf8 scripts\pyc_verify.py single test_repros\round3\e01_g1 ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (usage: pyc_veri...gual PYLINGUAL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+                     {single,batch,compare,selfcheck} ...
+pyc_verify.py: error: unrecognized arguments: f_b98_call_arg_pos

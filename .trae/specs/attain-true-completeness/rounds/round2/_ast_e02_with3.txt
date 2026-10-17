@@ -1,0 +1,221 @@
+﻿TYPE <class 'dict'>
+== type == 'FunctionDef'
+== name == 'f_with_body_host'
+== args == {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'a'}, {'type': 'arg', 'arg': 'b'}, {'type': 'arg', 'arg': 'c'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}
+== body == 3 items
+{'type': 'ClassDef', 'name': 'CM', 'bases': [], 'keywords': [], 'body': [{'type': 'FunctionDef', 'name': '__enter__', 'args': {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'self'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}, 'body': [{'type': 'Return', 'value': {'type': 'Name', 'id': 'self', 'ctx': 'Load', 'lineno': 75}}], 'decorator_list': [], 'returns': None}, {'type': 'FunctionDef', 'name': '__exit__', 'args': {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'self'}], 'vararg': 'e', 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}, 'body': [{'type': 'Return', 'value': {'type': 'Constant', 'value': False, 'lineno': 78}}], 'decorator_list': [], 'returns': None}], 'decorator_list
+{'type': 'With', 'items': [{'context_expr': {'type': 'Call', 'func': {'type': 'Name', 'id': 'CM', 'ctx': 'Load', 'lineno': None}, 'args': [], 'kwargs': [], 'lineno': None}, 'optional_vars': {'type': 'Name', 'id': 'cm', 'ctx': 'Store'}}], 'body': [{'type': 'For', 'target': {'type': 'Name', 'id': 'i', 'ctx': 'Store'}, 'iter': {'type': 'Call', 'func': {'type': 'Name', 'id': 'range', 'ctx': 'Load', 'lineno': 80}, 'args': [{'type': 'Constant', 'value': 2, 'lineno': None}], 'kwargs': [], 'lineno': None}, 'body': [{'type': 'If', 'test': {'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': 81}, 'body': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': 82}, {'type': 'Name', 'id': 'b'
+{'type': 'Return', 'value': {'type': 'Constant', 'value': 0, 'lineno': 83}}
+== decorator_list == 0 items
+== returns == None
+==== FULL JSON ====
+{
+ "type": "FunctionDef",
+ "name": "f_with_body_host",
+ "args": {
+  "type": "arguments",
+  "posonlyargs": [],
+  "args": [
+   {
+    "type": "arg",
+    "arg": "a"
+   },
+   {
+    "type": "arg",
+    "arg": "b"
+   },
+   {
+    "type": "arg",
+    "arg": "c"
+   }
+  ],
+  "vararg": null,
+  "kwonlyargs": [],
+  "kw_defaults": [],
+  "kwarg": null,
+  "defaults": []
+ },
+ "body": [
+  {
+   "type": "ClassDef",
+   "name": "CM",
+   "bases": [],
+   "keywords": [],
+   "body": [
+    {
+     "type": "FunctionDef",
+     "name": "__enter__",
+     "args": {
+      "type": "arguments",
+      "posonlyargs": [],
+      "args": [
+       {
+        "type": "arg",
+        "arg": "self"
+       }
+      ],
+      "vararg": null,
+      "kwonlyargs": [],
+      "kw_defaults": [],
+      "kwarg": null,
+      "defaults": []
+     },
+     "body": [
+      {
+       "type": "Return",
+       "value": {
+        "type": "Name",
+        "id": "self",
+        "ctx": "Load",
+        "lineno": 75
+       }
+      }
+     ],
+     "decorator_list": [],
+     "returns": null
+    },
+    {
+     "type": "FunctionDef",
+     "name": "__exit__",
+     "args": {
+      "type": "arguments",
+      "posonlyargs": [],
+      "args": [
+       {
+        "type": "arg",
+        "arg": "self"
+       }
+      ],
+      "vararg": "e",
+      "kwonlyargs": [],
+      "kw_defaults": [],
+      "kwarg": null,
+      "defaults": []
+     },
+     "body": [
+      {
+       "type": "Return",
+       "value": {
+        "type": "Constant",
+        "value": false,
+        "lineno": 78
+       }
+      }
+     ],
+     "decorator_list": [],
+     "returns": null
+    }
+   ],
+   "decorator_list": []
+  },
+  {
+   "type": "With",
+   "items": [
+    {
+     "context_expr": {
+      "type": "Call",
+      "func": {
+       "type": "Name",
+       "id": "CM",
+       "ctx": "Load",
+       "lineno": null
+      },
+      "args": [],
+      "kwargs": [],
+      "lineno": null
+     },
+     "optional_vars": {
+      "type": "Name",
+      "id": "cm",
+      "ctx": "Store"
+     }
+    }
+   ],
+   "body": [
+    {
+     "type": "For",
+     "target": {
+      "type": "Name",
+      "id": "i",
+      "ctx": "Store"
+     },
+     "iter": {
+      "type": "Call",
+      "func": {
+       "type": "Name",
+       "id": "range",
+       "ctx": "Load",
+       "lineno": 80
+      },
+      "args": [
+       {
+        "type": "Constant",
+        "value": 2,
+        "lineno": null
+       }
+      ],
+      "kwargs": [],
+      "lineno": null
+     },
+     "body": [
+      {
+       "type": "If",
+       "test": {
+        "type": "Name",
+        "id": "i",
+        "ctx": "Load",
+        "lineno": 81
+       },
+       "body": [
+        {
+         "type": "Return",
+         "value": {
+          "type": "BoolOp",
+          "op": "and",
+          "values": [
+           {
+            "type": "BoolOp",
+            "op": "or",
+            "values": [
+             {
+              "type": "Name",
+              "id": "a",
+              "ctx": "Load",
+              "lineno": 82
+             },
+             {
+              "type": "Name",
+              "id": "b",
+              "ctx": "Load",
+              "lineno": null
+             }
+            ]
+           },
+           {
+            "type": "Name",
+            "id": "c",
+            "ctx": "Load",
+            "lineno": null
+           }
+          ]
+         }
+        }
+       ],
+       "orelse": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "Return",
+   "value": {
+    "type": "Constant",
+    "value": 0,
+    "lineno": 83
+   }
+  }
+ ],
+ "decorator_list": [],
+ "returns": null
+}

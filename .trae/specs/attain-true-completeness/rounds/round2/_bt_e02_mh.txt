@@ -1,0 +1,15 @@
+﻿---- _detect_boolop_conditional_chain calls ----
+  start=@36 skip=True try_exempt=False claimed_n=22 -> None
+  start=@42 skip=True try_exempt=False claimed_n=22 -> [(42, 'or'), (46, 'or')]
+  start=@80 skip=True try_exempt=False claimed_n=22 -> None
+  start=@86 skip=True try_exempt=False claimed_n=22 -> [(86, 'or'), (90, 'or')]
+---- final regions ----
+  LoopRegion entry=@34 type=RegionType.FOR_LOOP
+  TryExceptRegion entry=@4 type=RegionType.TRY_EXCEPT
+  BoolOpRegion entry=@42 type=RegionType.BOOL_OP
+  BoolOpRegion entry=@86 type=RegionType.BOOL_OP
+  TernaryRegion entry=@86 type=RegionType.TERNARY
+  IfRegion entry=@80 type=RegionType.IF_THEN_ELSE
+  IfRegion entry=@36 type=RegionType.IF_THEN
+  Region entry=@0 type=RegionType.BASIC
+  Region entry=@114 type=RegionType.BASIC

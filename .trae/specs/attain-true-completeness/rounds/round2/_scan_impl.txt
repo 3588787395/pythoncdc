@@ -1,0 +1,14 @@
+﻿44952                         i.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS',
+45096                     # [BINARY_OP, STORE_FAST, LOAD_FAST, RETURN_VALUE]锛屽潡灏?
+45097                     # LOAD_FAST+RETURN_VALUE 琚彁鍓?return 鍚炴帀 鈫?鏁村彞 return
+45218                         # (not just SWAP for augassign 鈥?that's handled above).
+45461                         # source_end/BUILD_TUPLE/RETURN_VALUE锛夛紝蹇呴』璧颁笅鏂?R61
+45684                 _merge_return_followup = None  # [R36] RETURN_VALUE block reached via cleanup
+45688                     if _merge_non_noise and all(i.opname in ('RETURN_VALUE', 'RETURN_CONST', 'LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'
+45691                         if _last_merge and _last_merge.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+45694                     # block (SWAP 2; POP_TOP) whose successor is RETURN_VALUE.
+45697                     # cleanup both lead to a RETURN_VALUE block. Follow the
+45701                         if _merge_last and _merge_last.opname not in ('RETURN_VALUE', 'RETURN_CONST', 'JUMP_BACKWARD',
+45707                                 if _ms_non_noise and all(i.opname in ('RETURN_VALUE', 'RETURN_CONST', 'LOAD_CONST',
+45712                                     if _ms_last and _ms_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+45739                     results.append({'type': 'Return', 'value': boolop_expr})

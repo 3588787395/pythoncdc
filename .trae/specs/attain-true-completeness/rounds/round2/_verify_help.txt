@@ -1,0 +1,16 @@
+﻿usage: pyc_verify.py [-h] [--pylingual PYLINGUAL]
+                     {single,batch,compare,selfcheck} ...
+
+鍞竴鍒ゆ嵁锛氶檮浠?pylingual 鐨?compare_pyc
+
+positional arguments:
+  {single,batch,compare,selfcheck}
+    single              楠岃瘉涓€涓?pyc锛堥粯璁ょ敤鍚屽悕 OK.py 浜х墿锛?
+    batch               鎸夌储寮曟垨娓呭崟鎵归噺楠岃瘉锛屼骇鍑哄敮涓€鎶ュ憡
+    compare             涓や唤 batch 鎶ュ憡涔嬮棿鐨?Movement Matrix
+    selfcheck           灏哄瓙鑷锛氳嚜姣斿叏绛?+ 鍙樺紓蹇呮姄
+
+options:
+  -h, --help            show this help message and exit
+  --pylingual PYLINGUAL
+                        闄勪欢 pylingual 浠撳簱鏍圭洰褰?

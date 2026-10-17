@@ -1,0 +1,20 @@
+[
+ {
+  "name": "name",
+  "pyc_src_rel": "test_repros/round7/rv7_02_compare_chain_ternary.pyc",
+  "pyc_src_sha": "786a6174b9d027be",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round2/rec1_name_rv7_02_compare_chain_ternary.pyc",
+  "mtime": "2026-10-17T11:47:00",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "8b98a2a78dffeb59",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_name_rv7_02_compare_chain_ternary.pyc (Python 3.11)\n\ndef chain_two_ternary(a, b, x, y, c, c1, c2):\n    return (a if c1 else b) < (x if c2 else y) < c\ndef chain_three_ternary(a, b, x, y, m, n, c1, c2, c3):\n    return (a if c1 else b) <= (x if c2 else y) < (m if c3 else n)\ndef chain_lhs_ternary_rhs_call(a, b, x, c1, c2):\n    return (a if c1 else b) < abs(x if c2 else 0)\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_name_rv7_02_compare_chain_ternary.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_name_rv7_02_compare_chain_ternaryOK.py\n[single] status=success units=4/4 success_rate=100.00%",
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ }
+]

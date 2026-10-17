@@ -1,0 +1,3 @@
+﻿header? True
+  compare_ops = ['<', '<']
+  extra_chain_blocks = [34]

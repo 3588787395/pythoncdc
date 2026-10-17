@@ -1,0 +1,9 @@
+﻿[GBB] block=@0 instrs=[('RESUME', 0), ('LOAD_FAST', 'x'), ('LOAD_CONST', 1), ('BINARY_OP', 0), ('RETURN_VALUE', None)]
+[GBB]  -> [{"type": "Return", "value": {"type": "BinOp", "left": {"type": "Name", "id": "x", "ctx": "Load", "lineno": 87}, "op": "+", "right": {"type": "Constant", "value": 1, "lineno": null}, "lineno": null}}]
+[GBB] block=@60 instrs=[('RETURN_VALUE', None)]
+[GBB]  -> [{"type": "Return", "value": {"type": "Constant", "value": null}}]
+[GBB] block=@80 instrs=[('JUMP_BACKWARD', 38)]
+[GBB]  -> []
+[GBB] block=@82 instrs=[('LOAD_CONST', 0), ('RETURN_VALUE', None)]
+[GBB]  -> [{"type": "Return", "value": {"type": "Constant", "value": 0, "lineno": 91}}]
+DONE <class 'dict'>

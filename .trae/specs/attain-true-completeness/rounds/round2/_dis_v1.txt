@@ -1,0 +1,55 @@
+﻿==== v1 ====
+-- block @0 --
+   @0    RESUME                       0
+   @2    LOAD_CONST                   1
+   @4    STORE_FAST                   2
+   @6    LOAD_CONST                   1
+   @8    LOAD_FAST                    0
+   @10   SWAP                         2
+   @12   COPY                         2
+   @14   COMPARE_OP                   0
+   @20   POP_JUMP_FORWARD_IF_FALSE    6 -> @34
+-- block @22 --
+   @22   LOAD_CONST                   2
+   @24   COMPARE_OP                   0
+   @30   POP_JUMP_FORWARD_IF_FALSE    35 -> @102
+-- block @32 --
+   @32   JUMP_FORWARD                 2 -> @38
+-- block @34 --
+   @34   POP_TOP                     
+   @36   JUMP_FORWARD                 32 -> @102
+-- block @38 --
+   @38   LOAD_FAST                    0
+   @40   FORMAT_VALUE                 0
+   @42   POP_JUMP_FORWARD_IF_FALSE    29 -> @102
+-- block @44 --
+   @44   LOAD_FAST                    0
+   @46   LOAD_CONST                   3
+   @48   BINARY_OP                    13
+   @52   STORE_FAST                   0
+   @54   LOAD_FAST                    2
+   @56   LOAD_CONST                   3
+   @58   BINARY_OP                    13
+   @62   STORE_FAST                   2
+   @64   LOAD_CONST                   1
+   @66   LOAD_FAST                    0
+   @68   SWAP                         2
+   @70   COPY                         2
+   @72   COMPARE_OP                   0
+   @78   POP_JUMP_FORWARD_IF_FALSE    6 -> @92
+-- block @80 --
+   @80   LOAD_CONST                   2
+   @82   COMPARE_OP                   0
+   @88   POP_JUMP_FORWARD_IF_FALSE    6 -> @102
+-- block @90 --
+   @90   JUMP_FORWARD                 2 -> @96
+-- block @92 --
+   @92   POP_TOP                     
+   @94   JUMP_FORWARD                 3 -> @102
+-- block @96 --
+   @96   LOAD_FAST                    0
+   @98   FORMAT_VALUE                 0
+   @100  POP_JUMP_BACKWARD_IF_TRUE    29 -> @44
+-- block @102 --
+   @102  LOAD_FAST                    2
+   @104  RETURN_VALUE                
