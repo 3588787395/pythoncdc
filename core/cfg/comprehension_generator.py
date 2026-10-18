@@ -1202,8 +1202,20 @@ class ComprehensionGenerator:
                     _tf_val = {'type': 'Constant', 'value': None}
                 _tf_elt = (_tf_key, _tf_val)
             else:
-                _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
-                _tf_elt = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
+                # [B98-V3R2 修复] 元素窗自身含三元（filter 位三元与 elt 位
+                # 三元共存形，如 ``[(a if f1 else b) for x in xs if (a if c
+                # else b)]`` 及折叠 orelse 过滤器的 ``[x if flag else 0
+                # for x in xs if (x % 2 if flag else True)]``）：先以
+                # `_tf_elt_start - 1`（元素窗前一条 = 最后一条 filter 回跳）
+                # 为窗起点调用 `_detect_comp_ternary` 折叠元素位三元；返回
+                # None 时逐字回落 reconstruct 原路径（[C3] 显式守卫）。
+                _tf_elt = None
+                if _tf_elt_start > 0:
+                    _tf_elt = self._detect_comp_ternary(
+                        all_instrs, _tf_elt_start - 1, append_idx)
+                if _tf_elt is None:
+                    _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
+                    _tf_elt = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
                 if _tf_elt is None:
                     _tf_elt = {'type': 'Name', 'id': target_name, 'ctx': 'Load'}
             _tf_is_async = 0
@@ -1540,10 +1552,19 @@ class ComprehensionGenerator:
                     _tf_val = {'type': 'Constant', 'value': None}
                 elt_expr = (_tf_key, _tf_val)
             else:
-                _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
-                elt_expr = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
-                if elt_expr is None:
-                    elt_expr = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
+                # [B98-V3R2 修复] 同单 for 路径：元素窗自身含三元时先走
+                # `_detect_comp_ternary`（窗起点 `_tf_elt_start - 1`），
+                # None 时逐字回落 reconstruct 原路径（[C3] 显式守卫）。
+                _tf_elt = None
+                if _tf_elt_start > 0:
+                    _tf_elt = self._detect_comp_ternary(
+                        all_instrs, _tf_elt_start - 1, append_idx)
+                if _tf_elt is None:
+                    _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
+                    _tf_elt = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
+                if _tf_elt is None:
+                    _tf_elt = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
+                elt_expr = _tf_elt
             return self._build_comp_result(code_obj, elt_expr, generators)
 
         # 检测三元 / ifs（在最内层 for body 内）
@@ -2962,6 +2983,48 @@ class ComprehensionGenerator:
                     merge_offset = instr.argval
                 break
         if true_end is None or false_start is None or merge_offset is None:
+            # [B98-V3R2 修复] 折叠真值 orelse 的三元过滤器变体：
+            # ``[elt for x in iter if (a if c else True)]``。CPython 将 filter
+            # 位三元表达式的真值常量 orelse 折叠——cond 假路径直达通过点
+            # （元素表达式起点），无假臂指令、无真臂尾 JUMP_FORWARD 融合标记
+            # （Pattern B 型），真臂（含 filter 回跳）直接坠入通过点。
+            # 识别条件（I.4 白名单：本窗内 opcode/跳转目标）：
+            #   ① 无前导 filter 成员（last_filter_end 未被 BACKWARD 跳转推进，
+            #      排除 ``A and (b if c else True)`` 多成员混合形）；
+            #   ② cond 跳转为前向 IF_FALSE（IF_TRUE 是 R10 or-过滤器首成员
+            #      与 B6-comp 混合链真臂尾跳的形态，均排除）；
+            #   ③ 真臂（cond_jump 至 false_target 之间）非空、除末指令外无
+            #      条件跳转（直线求值），末指令为 BACKWARD IF_FALSE 型
+            #      filter 回跳（IF_TRUE 型真臂 = ``not b`` 极性，不在本支）；
+            #   ④ false_target 即通过点：其后至 append 间无 BACKWARD 条件
+            #      跳转（否则目标指向另一过滤器成员——B6-comp 混合链 or 尾
+            #      成员 / Pattern B 假臂，均非折叠形态）。
+            # 归约方式：IfExp(test=cond, body=真臂剥尾跳, orelse=Constant(True))
+            # ——filter 位真值常量折叠不可分辨（True/1/"x" 同码），取规范真值
+            # True。AST 映射：IfExp 过滤条件重编译回同一字节流（真值常量
+            # orelse 在 filter 位由 CPython 编译器折叠，[C1] 编译器结构保证）。
+            if (last_filter_end == store_idx
+                    and 'IF_FALSE' in cond_instr.opname
+                    and 'BACKWARD' not in cond_instr.opname):
+                _folded_arm = all_instrs[cond_jump_idx + 1:false_start]
+                _folded_pass_clean = not any(
+                    _fi.opname in CONDITIONAL_JUMP_OPS and 'BACKWARD' in _fi.opname
+                    for _fi in all_instrs[false_start:append_idx])
+                if (_folded_arm
+                        and _folded_arm[-1].opname in CONDITIONAL_JUMP_OPS
+                        and 'BACKWARD' in _folded_arm[-1].opname
+                        and 'IF_FALSE' in _folded_arm[-1].opname
+                        and not any(_ai.opname in CONDITIONAL_JUMP_OPS
+                                    for _ai in _folded_arm[:-1])
+                        and _folded_pass_clean):
+                    _fo_cond = self.expr_reconstructor.reconstruct(cond_instrs)
+                    _fo_true = self.expr_reconstructor.reconstruct(_folded_arm[:-1])
+                    if _fo_cond is not None and _fo_true is not None:
+                        return (
+                            {'type': 'IfExp', 'test': _fo_cond,
+                             'body': _fo_true,
+                             'orelse': {'type': 'Constant', 'value': True}},
+                            false_start)
             return None
 
         true_instrs = all_instrs[cond_jump_idx + 1:true_end]

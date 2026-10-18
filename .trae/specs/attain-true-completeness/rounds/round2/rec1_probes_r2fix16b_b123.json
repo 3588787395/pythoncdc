@@ -1,0 +1,20 @@
+[
+ {
+  "name": "exprtail",
+  "pyc_src_rel": "test_repros/round8/r8v8rev3_b104_exprtail_battery.pyc",
+  "pyc_src_sha": "e0c2369d4370c671",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round2/rec1_exprtail_r8v8rev3_b104_exprtail_battery.pyc",
+  "mtime": "2026-10-18T16:23:45",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "b39358d4cabadc8d",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_exprtail_r8v8rev3_b104_exprtail_battery.pyc (Python 3.11)\n\ndef v1(x, r):\n    n = 0\n    while 0 < x < 10 and f'{x}':\n        x += 1\n        n += 1\n    return n\ndef v2(x, q, r):\n    n = 0\n    while 0 < x < 10 and {k: x for k in r}:\n        x += 1\n        n += 1\n    return n\ndef v3(x, y):\n    n = 0\n    while 0 < x < 10 and (y if y else x):\n        x += 1\n        n += 1\n    return n\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_exprtail_r8v8rev3_b104_exprtail_battery.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_exprtail_r8v8rev3_b104_exprtail_batteryOK.py\n[single] status=success units=5/5 success_rate=100.00%",
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ }
+]

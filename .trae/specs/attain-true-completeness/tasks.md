@@ -7,11 +7,11 @@
   - [x] 1.3 25 行破口逐行现状定案表（Σ=25 ✓）：**真实破口 20**（表A 11 + 表B 6 + 表C 3）+ **已封闭待复验 5**（Delete / AugAssign / Global + 表C 镜像 augmented_assign / global_nonlocal——锚点全绿、台账 stale）+ 证据缺口 0
   - [x] 1.4 组合级 25 号现状复核：清零 9 **9/9 全数证实**（残余按口径转 B79/B80/B82）；维持 16 = **14 维持红 + B49/B63 已翻正**（台账 stale）；另册 B52/B53/B11-R2 维持红
   - [x] 1.5 `rounds/round1/BREACH_RECON.md`（§0 探针工作流 + §1 移交终判 + §2 定案表 + §3 组合现状 + §4 行→批次映射 + §5 异常 10 项）+ 证据 10 JSON + `rec1_run.py` + `test_repros/round1/`（rec1_ 前缀）；主代理裁决登记：① c13::CMisc.boom 主判归 R3（raise 尾闩主形态；循环侧残余若 R3 后仍红转 R6 复评）② v_b75_face::v_swap_arm_returns（B82-v_swap）纳入 R3 范围 ③ B49/B63 翻正留 Round 8 终表裁决 ④ B51/B52 同单元口径差留 Round 8 统一；已提交并 push（`rr-v3r01:`）
-- [ ] Task 2: Round 2 — 条件合并块族封闭（→ 升格行：If / BoolOp / IfExp）
-  - [ ] 2.1 评审攻击：B98（镜像极性）/ B43（链式比较×BoolOp 汇合块）/ B44（重复/三层/深右嵌套）/ B46 尾项 / B78 / B123（三元嵌套）/ B51（if 三元链复合值）/ B42（参数栈位/比较 LHS/推导式 filter）/ B49（t_host_for_else 前驱集归属）现状探针 + 合成新变体
-  - [ ] 2.2 修复：通用机制全族封闭（I.4 白名单判据；涉改 region_analyzer / region_ast_generator）
-  - [ ] 2.3 复核：原探针 + ≥2 合成交叉变体 + 负对照全过；站桩回归不变差
-  - [ ] 2.4 主代理验证序六步 + push（`rr-v3r02:`）
+- [x] Task 2: Round 2 — 条件合并块族封闭（→ 升格行：If / BoolOp / IfExp）（修复工程师续作 + 主代理验收）（FIX.md 终稿：17 项修复；十探针 63/90 → 90/90；54 hunks +2426/−56 涉 4 文件；402 八分片 6617/6617 DEGRADED=0 逐位一致；34 集 1568/1568；IV.2 全绿；tests 基线名单一致；site-packages 零字节差异；主代理独立复跑十探针/负对照/合成三组全绿 + 回归对比取证 `_r2fix18_regcmp.json` / `rec1_probes_r2fix17|18_*.json`）
+  - [x] 2.1 评审攻击：B98（镜像极性）/ B43（链式比较×BoolOp 汇合块）/ B44（重复/三层/深右嵌套）/ B46 尾项 / B78 / B123（三元嵌套）/ B51（if 三元链复合值）/ B42（参数栈位/比较 LHS/推导式 filter）/ B49（t_host_for_else 前驱集归属）现状探针 + 合成新变体；首攻 r2synth1 暴露 5 个域外单元如实登记 **B129**（B98 值链裸宿主位）/ **B130**（双栈三元简单比较）——主代理裁决：存量缺口（修复前后行为一致，非回归），归 Round 8 全行对抗终审封闭
+  - [x] 2.2 修复：17 项通用机制全族封闭（I.4 白名单判据；涉改 region_ast_generator / region_analyzer / comprehension_generator / code_generator（IfExp 括号守卫）；G3=0 / G4=0）
+  - [x] 2.3 复核：原探针 90/90 + 合成非语料 16 探针 79/79 + 负对照 60/60；站桩回归不变差（402 单元数无降、34 集 REGRESSIONS=0、402 产物位字节一致）
+  - [x] 2.4 主代理验证序六步 + push（`rr-v3r02:`）
 - [ ] Task 3: Round 3 — try-raise-assert-宿主族封闭（→ 升格行：Try / Raise / Assert / Import / Global）
   - [ ] 3.1 评审攻击：B87（try 体嵌套宿主变体）/ B73（try 四段 import 宿主泄漏）/ B75（try 宿主 global）/ B56（assert 幻影 else）/ B58（raise×三元类）/ B63（空 try/fin 尾随段）/ B69（emptyfin_in_if）现状探针 + 合成新变体
   - [ ] 3.2 修复：通用机制全族封闭

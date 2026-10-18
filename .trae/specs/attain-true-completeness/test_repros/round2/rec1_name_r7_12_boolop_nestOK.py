@@ -13,9 +13,6 @@ def b_nest_with_chain(a, b, c, d, e):
 def b_nest_with_ternary(a, b, c, d, flag):
     return a and b if flag else c or d
 def b_ternary_lhs_and(a, b, c, d, flag):
-    if flag:
-        return a
-    else:
-        return b and d
+    return a if flag else b and d
 def b_nest_not_layers(a, b, c):
-    return a or b and not c
+    return not (a or b and not c)

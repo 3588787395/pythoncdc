@@ -11,7 +11,7 @@ def c_index_chain(xs, ys, zs, i, j, k):
 def c_index_call_chain(xs, i, ys, j):
     return xs[i] < ys.pop(j) < 10
 def c_chain_and_combo(a, b, c, d):
-    return a < b < c
+    return a < b < c and d
 def c_chain_or_and_combo(a, b, c, d, e):
     return a < b < c or d < e < a
 def c_method_chain(obj, other):

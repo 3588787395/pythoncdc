@@ -5566,7 +5566,16 @@ class CodeGenerator:
                     if_code = self._generate_expression(if_clause, 0)
                     # 推导式 if 条件是 IfExp 时必须加括号
                     # （见 _generate_comprehensions_from_dict 同名修复）。
-                    if hasattr(if_clause, '_node_type') and if_clause._node_type == 'IfExp':
+                    # [B98-V3R2 修复] AST 对象路径原判据 `hasattr(if_clause,
+                    # '_node_type')` 恒 False（ASTNode.__slots__ 无该槽，
+                    # ASTIfExp 持 _type: NodeType.NODE_CONDITIONALEXP），
+                    # 括号守卫从未生效——filter 位 IfExp 经 ast_converter 转
+                    # ASTIfExp 后输出 `if a if c else b` 语法错误。判据改为
+                    # isinstance(if_clause, ASTIfExp)（[C1] 节点类型同层事实）；
+                    # dict 分支与遗留 _node_type 判据原样保留。
+                    if isinstance(if_clause, ASTIfExp):
+                        if_code = f'({if_code})'
+                    elif hasattr(if_clause, '_node_type') and if_clause._node_type == 'IfExp':
                         if_code = f'({if_code})'
                     elif isinstance(if_clause, dict) and if_clause.get('type') == 'IfExp':
                         if_code = f'({if_code})'

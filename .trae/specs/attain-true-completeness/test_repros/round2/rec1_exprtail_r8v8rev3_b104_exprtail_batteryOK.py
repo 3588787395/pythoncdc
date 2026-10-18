@@ -15,10 +15,7 @@ def v2(x, q, r):
     return n
 def v3(x, y):
     n = 0
-    while 0 < x < 10:
-        if y:
-            continue
-        y
-        continue
+    while 0 < x < 10 and (y if y else x):
         x += 1
         n += 1
+    return n

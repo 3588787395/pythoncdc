@@ -1,0 +1,43 @@
+[
+ {
+  "name": "r7_10",
+  "pyc_src_rel": "test_repros/round7/r7_10_chain_compare_calls.pyc",
+  "pyc_src_sha": "57a30c2e84658379",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round2/rec1_r7_10_r7_10_chain_compare_calls.pyc",
+  "mtime": "2026-10-18T13:48:54",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "d6d415cf3bc1d0fb",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_r7_10_r7_10_chain_compare_calls.pyc (Python 3.11)\n\n__doc__ = 'R7-10 链式比较求值语义面（链内调用/下标/布尔组合）。'\ndef c_call_chain(a, b, c):\n    return len(a) < len(b) < len(c)\ndef c_call_chain_mixed(a, b):\n    return a.count(1) <= b.count(1) != -1\ndef c_index_chain(xs, ys, zs, i, j, k):\n    return xs[i] < ys[j] < zs[k]\ndef c_index_call_chain(xs, i, ys, j):\n    return xs[i] < ys.pop(j) < 10\ndef c_chain_and_combo(a, b, c, d):\n    return a < b < c\ndef c_chain_or_and_combo(a, b, c, d, e):\n    return a < b < c or d < e < a and a\ndef c_method_chain(obj, other):\n    return obj.key < other.key < obj.limit\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.c_chain_and_combo: Failure: Different control flow\n  ***<module>.c_chain_or_and_combo: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_r7_10_r7_10_chain_compare_calls.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_r7_10_r7_10_chain_compare_callsOK.py\n[single] status=failure units=6/8 success_rate=75.00%",
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 8,
+  "failures": [
+   "***<module>.c_chain_and_combo: Failure: Different control flow",
+   "***<module>.c_chain_or_and_combo: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "r7_12",
+  "pyc_src_rel": "test_repros/round7/r7_12_boolop_nest.pyc",
+  "pyc_src_sha": "f69583856ec66f5f",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round2/rec1_r7_12_r7_12_boolop_nest.pyc",
+  "mtime": "2026-10-18T13:48:55",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "84332e0b241462dc",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_r7_12_r7_12_boolop_nest.pyc (Python 3.11)\n\n__doc__ = 'R7-12 BoolOp 嵌套 BoolOp（≥3 层）+ 链式比较/三元内嵌。'\ndef b_nest_three_layers(a, b, c, d):\n    return a and b and (c or d)\ndef b_nest_deep_right(a, b, c, d):\n    return a and (b or c and d)\ndef b_nest_deep_mixed(a, b, c, d, e):\n    return (a or b and c) and (d or e)\ndef b_nest_with_chain(a, b, c, d, e):\n    return a < b and c < d < e and e\ndef b_nest_with_ternary(a, b, c, d, flag):\n    return a and b if flag else c or d\ndef b_ternary_lhs_and(a, b, c, d, flag):\n    return a if flag else b and d\ndef b_nest_not_layers(a, b, c):\n    return not (a or b and not c)\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.b_nest_with_chain: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_r7_12_r7_12_boolop_nest.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_r7_12_r7_12_boolop_nestOK.py\n[single] status=failure units=7/8 success_rate=87.50%",
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 8,
+  "failures": [
+   "***<module>.b_nest_with_chain: Failure: Different control flow"
+  ]
+ }
+]

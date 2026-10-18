@@ -1,0 +1,2552 @@
+diff --git a/core/cfg/code_generator.py b/core/cfg/code_generator.py
+index c91be42c..85a86ba3 100644
+--- a/core/cfg/code_generator.py
++++ b/core/cfg/code_generator.py
+@@ -5569 +5569,10 @@ class CodeGenerator:
+-                    if hasattr(if_clause, '_node_type') and if_clause._node_type == 'IfExp':
++                    # [B98-V3R2 淇] AST 瀵硅薄璺緞鍘熷垽鎹?`hasattr(if_clause,
++                    # '_node_type')` 鎭?False锛圓STNode.__slots__ 鏃犺妲斤紝
++                    # ASTIfExp 鎸?_type: NodeType.NODE_CONDITIONALEXP锛夛紝
++                    # 鎷彿瀹堝崼浠庢湭鐢熸晥鈥斺€攆ilter 浣?IfExp 缁?ast_converter 杞?+                    # ASTIfExp 鍚庤緭鍑?`if a if c else b` 璇硶閿欒銆傚垽鎹敼涓?+                    # isinstance(if_clause, ASTIfExp)锛圼C1] 鑺傜偣绫诲瀷鍚屽眰浜嬪疄锛夛紱
++                    # dict 鍒嗘敮涓庨仐鐣?_node_type 鍒ゆ嵁鍘熸牱淇濈暀銆?+                    if isinstance(if_clause, ASTIfExp):
++                        if_code = f'({if_code})'
++                    elif hasattr(if_clause, '_node_type') and if_clause._node_type == 'IfExp':
+diff --git a/core/cfg/comprehension_generator.py b/core/cfg/comprehension_generator.py
+index 365625e0..4c90c373 100644
+--- a/core/cfg/comprehension_generator.py
++++ b/core/cfg/comprehension_generator.py
+@@ -1205,2 +1205,14 @@ class ComprehensionGenerator:
+-                _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
+-                _tf_elt = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
++                # [B98-V3R2 淇] 鍏冪礌绐楄嚜韬惈涓夊厓锛坒ilter 浣嶄笁鍏冧笌 elt 浣?+                # 涓夊厓鍏卞瓨褰紝濡?``[(a if f1 else b) for x in xs if (a if c
++                # else b)]`` 鍙婃姌鍙?orelse 杩囨护鍣ㄧ殑 ``[x if flag else 0
++                # for x in xs if (x % 2 if flag else True)]``锛夛細鍏堜互
++                # `_tf_elt_start - 1`锛堝厓绱犵獥鍓嶄竴鏉?= 鏈€鍚庝竴鏉?filter 鍥炶烦锛?+                # 涓虹獥璧风偣璋冪敤 `_detect_comp_ternary` 鎶樺彔鍏冪礌浣嶄笁鍏冿紱杩斿洖
++                # None 鏃堕€愬瓧鍥炶惤 reconstruct 鍘熻矾寰勶紙[C3] 鏄惧紡瀹堝崼锛夈€?+                _tf_elt = None
++                if _tf_elt_start > 0:
++                    _tf_elt = self._detect_comp_ternary(
++                        all_instrs, _tf_elt_start - 1, append_idx)
++                if _tf_elt is None:
++                    _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
++                    _tf_elt = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
+@@ -1543,4 +1555,13 @@ class ComprehensionGenerator:
+-                _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
+-                elt_expr = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
+-                if elt_expr is None:
+-                    elt_expr = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
++                # [B98-V3R2 淇] 鍚屽崟 for 璺緞锛氬厓绱犵獥鑷韩鍚笁鍏冩椂鍏堣蛋
++                # `_detect_comp_ternary`锛堢獥璧风偣 `_tf_elt_start - 1`锛夛紝
++                # None 鏃堕€愬瓧鍥炶惤 reconstruct 鍘熻矾寰勶紙[C3] 鏄惧紡瀹堝崼锛夈€?+                _tf_elt = None
++                if _tf_elt_start > 0:
++                    _tf_elt = self._detect_comp_ternary(
++                        all_instrs, _tf_elt_start - 1, append_idx)
++                if _tf_elt is None:
++                    _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
++                    _tf_elt = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
++                if _tf_elt is None:
++                    _tf_elt = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
++                elt_expr = _tf_elt
+@@ -2325,15 +2346,58 @@ class ComprehensionGenerator:
+-                or_groups = []
+-                cur_op = None
+-                cur_vals = []
+-                for val, o in zip(ifs, _b6_seg_ops):
+-                    if cur_op is None:
+-                        cur_op = o
+-                        cur_vals = [val]
+-                    elif o == cur_op:
+-                        cur_vals.append(val)
+-                    elif cur_op == 'and' and o == 'or':
+-                        cur_vals.append(val)
+-                        or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals})
+-                        cur_op = None
+-                        cur_vals = []
+-                    else:
++                # [B98-V3R2 or-prefix 杩囨护鍣ㄧ粍] 璇嗗埆鏉′欢锛圛.4 鐧藉悕鍗曪細娈佃捣濮?+                # 鍋忕Щ + 娈垫湯璺宠浆 opcode/鐩爣锛夛細is_or_pattern 鎴愮珛锛屼笖瀛樺湪
++                # 杈圭晫 t锛? <= t < len(segments)锛夆€斺€斿墠 t-1 娈电殑鏉′欢璺宠浆鍧囦负
++                # FORWARD IF_TRUE 涓旂洰鏍囧悓涓虹 t 娈佃捣濮嬪亸绉伙紙鐪熷€艰竟钀藉埌鍚庣画
++                # 鏉′欢妫€鏌ヨ€岄潪鍏冪礌浜у嚭锛夛紝绗?t 娈佃捣鍏ㄩ儴娈垫爣娉ㄤ负 'and'锛堝熬閮?+                # 绾?and 閾撅級銆侰Python 瀵规樉寮忔嫭鍙风殑 ``(A or B) and C`` 鐢熸垚璇?+                # 褰㈡€侊細A 鐪熲啋璺冲埌 C 妫€鏌ャ€丅 鍋団啋璺宠繃鏈疆銆丆 鍋団啋璺宠繃鏈疆锛?+                # 鑰屾棤鎷彿 ``A or B and C`` 鐨?A 鐪熻竟鐩磋揪鍏冪礌浜у嚭锛堢洰鏍囦笉鏄?+                # 娈佃捣濮嬶紝涔熶笉婊¤冻 < 娈垫暟杈圭晫锛夛紝涓嶄細鍛戒腑锛圼C3] 鏄惧紡灏侀棴锛夈€?+                # 褰掔害鏂瑰紡锛氬墠 t 娈靛悎鎴?or 缁?BoolOp(or, [...])锛屼笌鍚庣画 and
++                # 娈垫暣浣撶敱 'and' 杩炴帴锛堝崟 BoolOp锛孾C2]锛夈€?+                # AST 鏄犲皠锛欰nd[Or[A,B], C, ...]锛岄噸缂栬瘧鍥炲悓涓€瀛楄妭鐮佸舰鎬併€?+                _b6_opr_t = None
++                if is_or_pattern and segments and len(segments) == len(ifs) and len(segments) >= 3:
++                    for _b6_opr_cand in range(2, len(segments)):
++                        _b6_opr_cand_off = all_instrs[segments[_b6_opr_cand][0]].offset
++                        _b6_opr_ok = True
++                        for _b6_opr_k in range(_b6_opr_cand - 1):
++                            _b6_opr_j = segments[_b6_opr_k][2]
++                            if not ('FORWARD' in _b6_opr_j.opname
++                                    and 'IF_TRUE' in _b6_opr_j.opname
++                                    and _b6_opr_j.argval == _b6_opr_cand_off):
++                                _b6_opr_ok = False
++                                break
++                        if not _b6_opr_ok:
++                            continue
++                        if any(_b6_seg_ops[_b6_opr_k2] != 'and'
++                               for _b6_opr_k2 in range(_b6_opr_cand, len(_b6_seg_ops))):
++                            continue
++                        _b6_opr_t = _b6_opr_cand
++                        break
++                if _b6_opr_t is not None:
++                    _b6_opr_vals = list(ifs[:_b6_opr_t])
++                    _b6_opr_node = ({'type': 'BoolOp', 'op': 'or', 'values': _b6_opr_vals}
++                                    if len(_b6_opr_vals) > 1 else _b6_opr_vals[0])
++                    ifs = [{'type': 'BoolOp', 'op': 'and',
++                            'values': [_b6_opr_node] + list(ifs[_b6_opr_t:])}]
++                else:
++                    or_groups = []
++                    cur_op = None
++                    cur_vals = []
++                    for val, o in zip(ifs, _b6_seg_ops):
++                        if cur_op is None:
++                            cur_op = o
++                            cur_vals = [val]
++                        elif o == cur_op:
++                            cur_vals.append(val)
++                        elif cur_op == 'and' and o == 'or':
++                            cur_vals.append(val)
++                            or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals})
++                            cur_op = None
++                            cur_vals = []
++                        else:
++                            or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals}
++                                             if len(cur_vals) > 1 else cur_vals[0])
++                            cur_op = o
++                            cur_vals = [val]
++                    if cur_vals:
+@@ -2342,9 +2406,4 @@ class ComprehensionGenerator:
+-                        cur_op = o
+-                        cur_vals = [val]
+-                if cur_vals:
+-                    or_groups.append({'type': 'BoolOp', 'op': cur_op, 'values': cur_vals}
+-                                     if len(cur_vals) > 1 else cur_vals[0])
+-                result = None
+-                for gnode in reversed(or_groups):
+-                    result = gnode if result is None else {'type': 'BoolOp', 'op': 'or', 'values': [gnode, result]}
+-                ifs = [result]
++                    result = None
++                    for gnode in reversed(or_groups):
++                        result = gnode if result is None else {'type': 'BoolOp', 'op': 'or', 'values': [gnode, result]}
++                    ifs = [result]
+@@ -2366,0 +2426,6 @@ class ComprehensionGenerator:
++        # [B98-V3R2 閿獥鍓嶅杩囨护鍣ㄨ烦杞攧鍒玗 璇嗗埆鏉′欢锛圛.4 鐧藉悕鍗曪細鍚屽眰鎸囦护
++        # opcode锛夛細涓夊厓鏉′欢璺宠浆鎸夊畾涔夋槸銆屽墠鍚戣烦鍒?false 鍊硷紙true 鍊间箣鍚庛€?+        # 杩藉姞鐐逛箣鍓嶏級銆嶏紝BACKWARD 鏉′欢璺宠浆鍙兘鏄?`if 杩囨护鍣╜锛堣烦鍥?FOR_ITER锛夈€?+        # 瀵绘壘棣栦釜鍓嶅悜鏉′欢璺宠浆浣滀负涓夊厓 cond锛涗笉鍐嶆妸杩囨护鍣ㄥ洖璺宠褰?cond
++        # 锛堝惁鍒欏弽鎺ㄧ殑閿獥涓虹┖ 鈬?閿涪澶憋級銆傛棤杩囨护鍣ㄥ墠瀵兼椂棣栦釜鏉′欢璺宠浆鍗?+        # 鍓嶅悜璺宠浆锛岄€愪綅琛屼负涓嶅彉锛圼C3] 鏄惧紡瀹堝崼锛夈€?@@ -2370,0 +2436,2 @@ class ComprehensionGenerator:
++                if 'BACKWARD' in instr.opname:
++                    continue
+@@ -2666,0 +2734,37 @@ class ComprehensionGenerator:
++        # [B98-V3R2 鍏冪礌浣嶈瀺鍚?or-鍓嶇紑] 璇嗗埆鏉′欢锛圛.4 鐧藉悕鍗曪細鍚屽眰鎸囦护
++        # opcode/璺宠浆鐩爣锛夛細棣栨潯涓夊厓鏉′欢璺宠浆涓哄墠鍚?IF_TRUE锛涚湡鍊煎尯鏈寚浠や负
++        # keep-or-pop 鏃忔潯浠惰烦杞紙JUMP_IF_FALSE_OR_POP / JUMP_IF_TRUE_OR_POP锛?+        # 涓斿叾璺宠浆鐩爣 == 杩藉姞鐐癸紙MAP_ADD/LIST_APPEND/YIELD...锛夊亸绉伙紱鐪熷€煎尯
++        # 闄ゆ湯璺冲鏃犲叾瀹冩潯浠?keep-or-pop 璺宠浆锛堜腑闂存垨鎴愬憳浼氬紩鍏ユ洿澶氭潯浠?+        # 璺宠浆锛屾湰鏀笉鍛戒腑銆侀€愬瓧鍥炶惤鏃㈡湁 IF_TRUE 鍙栧弽璺緞锛孾C3] 鏄惧紡灏侀棴锛夈€?+        # 璇ュ舰鎬佸嵆 CPython 瀵硅〃杈惧紡浣?`(A or B) and C` 鐨勮瀺鍚堬細A 鐪熲啋C銆?+        # B 鐪熲啋锛堝脊鍑?B锛夌户缁埌 C銆丅 鍋団啋淇濈暀 B 涓虹粨鏋溿€傝嫢鐓?IF_TRUE 鍙栧弽
++        # 瑙ｆ垚 `B if not A else C`锛孊 涓虹湡鏃朵涪澶?C 妫€鏌ワ紙鍋囦笁鍏冿紝element
++        # 浣嶈涔夐敊浣嶏級銆傚綊绾︽柟寮忥細cond=A銆佺湡鍊煎尯鎿嶄綔鏁?B銆乪lse 鍊?C锛岄噸寤?+        # BoolOp(and, [BoolOp(or,[A,B]), C])銆?+        # AST 鏄犲皠锛欼fExp(not A, B, C) 娑堣В涓?And[Or[A,B],C]锛岄噸缂栬瘧鍥炲悓涓€
++        # 瀛楄妭娴併€?+        if ('IF_TRUE' in cond_instr.opname
++                and 'BACKWARD' not in cond_instr.opname
++                and true_instrs
++                and true_instrs[-1].opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
++                and true_instrs[-1].argval is not None
++                and append_idx < len(all_instrs)
++                and true_instrs[-1].argval == all_instrs[append_idx].offset
++                and not any(i.opname in CONDITIONAL_JUMP_OPS
++                            or i.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
++                            for i in true_instrs[:-1])):
++            _oip_cond = self.expr_reconstructor.reconstruct(cond_instrs)
++            _oip_true = self.expr_reconstructor.reconstruct(
++                [i for i in true_instrs[:-1]
++                 if i.opname not in CONDITIONAL_JUMP_OPS
++                 and i.opname not in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')])
++            _oip_false = self.expr_reconstructor.reconstruct(
++                [i for i in false_instrs
++                 if i.opname not in CONDITIONAL_JUMP_OPS
++                 and i.opname not in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')])
++            if _oip_cond is not None and _oip_true is not None and _oip_false is not None:
++                return {'type': 'BoolOp', 'op': 'and', 'values': [
++                    {'type': 'BoolOp', 'op': 'or', 'values': [_oip_cond, _oip_true]},
++                    _oip_false]}
++
+@@ -2881,0 +2986,42 @@ class ComprehensionGenerator:
++            # [B98-V3R2 淇] 鎶樺彔鐪熷€?orelse 鐨勪笁鍏冭繃婊ゅ櫒鍙樹綋锛?+            # ``[elt for x in iter if (a if c else True)]``銆侰Python 灏?filter
++            # 浣嶄笁鍏冭〃杈惧紡鐨勭湡鍊煎父閲?orelse 鎶樺彔鈥斺€攃ond 鍋囪矾寰勭洿杈鹃€氳繃鐐?+            # 锛堝厓绱犺〃杈惧紡璧风偣锛夛紝鏃犲亣鑷傛寚浠ゃ€佹棤鐪熻噦灏?JUMP_FORWARD 铻嶅悎鏍囪
++            # 锛圥attern B 鍨嬶級锛岀湡鑷傦紙鍚?filter 鍥炶烦锛夌洿鎺ュ潬鍏ラ€氳繃鐐广€?+            # 璇嗗埆鏉′欢锛圛.4 鐧藉悕鍗曪細鏈獥鍐?opcode/璺宠浆鐩爣锛夛細
++            #   鈶?鏃犲墠瀵?filter 鎴愬憳锛坙ast_filter_end 鏈 BACKWARD 璺宠浆鎺ㄨ繘锛?+            #      鎺掗櫎 ``A and (b if c else True)`` 澶氭垚鍛樻贩鍚堝舰锛夛紱
++            #   鈶?cond 璺宠浆涓哄墠鍚?IF_FALSE锛圛F_TRUE 鏄?R10 or-杩囨护鍣ㄩ鎴愬憳
++            #      涓?B6-comp 娣峰悎閾剧湡鑷傚熬璺崇殑褰㈡€侊紝鍧囨帓闄わ級锛?+            #   鈶?鐪熻噦锛坈ond_jump 鑷?false_target 涔嬮棿锛夐潪绌恒€侀櫎鏈寚浠ゅ鏃?+            #      鏉′欢璺宠浆锛堢洿绾挎眰鍊硷級锛屾湯鎸囦护涓?BACKWARD IF_FALSE 鍨?+            #      filter 鍥炶烦锛圛F_TRUE 鍨嬬湡鑷?= ``not b`` 鏋佹€э紝涓嶅湪鏈敮锛夛紱
++            #   鈶?false_target 鍗抽€氳繃鐐癸細鍏跺悗鑷?append 闂存棤 BACKWARD 鏉′欢
++            #      璺宠浆锛堝惁鍒欑洰鏍囨寚鍚戝彟涓€杩囨护鍣ㄦ垚鍛樷€斺€擝6-comp 娣峰悎閾?or 灏?+            #      鎴愬憳 / Pattern B 鍋囪噦锛屽潎闈炴姌鍙犲舰鎬侊級銆?+            # 褰掔害鏂瑰紡锛欼fExp(test=cond, body=鐪熻噦鍓ュ熬璺? orelse=Constant(True))
++            # 鈥斺€攆ilter 浣嶇湡鍊煎父閲忔姌鍙犱笉鍙垎杈紙True/1/"x" 鍚岀爜锛夛紝鍙栬鑼冪湡鍊?+            # True銆侫ST 鏄犲皠锛欼fExp 杩囨护鏉′欢閲嶇紪璇戝洖鍚屼竴瀛楄妭娴侊紙鐪熷€煎父閲?+            # orelse 鍦?filter 浣嶇敱 CPython 缂栬瘧鍣ㄦ姌鍙狅紝[C1] 缂栬瘧鍣ㄧ粨鏋勪繚璇侊級銆?+            if (last_filter_end == store_idx
++                    and 'IF_FALSE' in cond_instr.opname
++                    and 'BACKWARD' not in cond_instr.opname):
++                _folded_arm = all_instrs[cond_jump_idx + 1:false_start]
++                _folded_pass_clean = not any(
++                    _fi.opname in CONDITIONAL_JUMP_OPS and 'BACKWARD' in _fi.opname
++                    for _fi in all_instrs[false_start:append_idx])
++                if (_folded_arm
++                        and _folded_arm[-1].opname in CONDITIONAL_JUMP_OPS
++                        and 'BACKWARD' in _folded_arm[-1].opname
++                        and 'IF_FALSE' in _folded_arm[-1].opname
++                        and not any(_ai.opname in CONDITIONAL_JUMP_OPS
++                                    for _ai in _folded_arm[:-1])
++                        and _folded_pass_clean):
++                    _fo_cond = self.expr_reconstructor.reconstruct(cond_instrs)
++                    _fo_true = self.expr_reconstructor.reconstruct(_folded_arm[:-1])
++                    if _fo_cond is not None and _fo_true is not None:
++                        return (
++                            {'type': 'IfExp', 'test': _fo_cond,
++                             'body': _fo_true,
++                             'orelse': {'type': 'Constant', 'value': True}},
++                            false_start)
+diff --git a/core/cfg/region_analyzer.py b/core/cfg/region_analyzer.py
+index 50c126c6..b5ab3ecf 100644
+--- a/core/cfg/region_analyzer.py
++++ b/core/cfg/region_analyzer.py
+@@ -4851,0 +4852,174 @@ class RegionAnalyzer:
++    def _b123_absorb_ifexp_tail_diamond(self, tramp: BasicBlock,
++                                         chain_last: BasicBlock,
++                                         header: BasicBlock,
++                                         body: Set[BasicBlock]) -> Optional[Dict[str, Any]]:
++        """[B123-V3R2] and 灏?IfExp 閽荤煶鎿嶄綔鏁板惛鏀讹紙while 澶撮摼寮忔瘮杈?+ IfExp 灏撅級銆?+
++        鈶犵畻娉曚緷鎹細``while <cc 閾? and (Y if c2 else Z):`` 鐨勫熬鎿嶄綔鏁版槸
++        澶氬潡閽荤煶锛坱est/then/else锛夛紝瓒呭嚭 _b104r2 鍗曞潡灏惧惛鏀跺垽鎹煙鈥斺€擟Python
++        lowering锛氶摼鏈澶辫触杈规敹鏁涘惊鐜嚭鍙ｃ€佺湡鍊肩粡閫忔槑妗ョ画鍏ラ捇鐭?test 鍧?+        锛圼eval c2, POP_JUMP_FORWARD_IF_FALSE鈫抏lse 鑷俔锛夛紝then/else 涓ゅ€艰噦
++        鍚勮嚜 [eval 鍊? POP_JUMP_FORWARD_IF_FALSE鈫掑惊鐜嚭鍙锛坅nd 澶辫触璺緞
++        鍚屼竴鎬э級+ fall-through 鐩磋惤 header 鎴栫粡閫忔槑韫﹀簥缁叆锛? tramp 涓?+        娓革級锛涗笉鍚告敹鍒?else 鑷傚潡婕忓嚭涓洪噸鍙?IfRegion锛屽惊鐜ご閫€鍖栦负绾摼銆?+        IfExp 閽荤煶娉勬紡涓轰綋锛坋xprtail v3锛夈€?+        鈶″綊绾﹂『搴忥細while-true cc 鍥炴函瀹氫綅閾惧ご鍚庤皟鐢紙涓?+        _b104r2_absorb_leading_and_operands 鐨勯暅鍍忓簭瀵瑰伓锛夛紱鍛戒腑鍧楀苟鍏?+        _cc_pre_loop_blocks锛堝敮涓€褰掑睘 LoopRegion锛夈€?+        鈶㈠敮涓€褰掑睘鍒ゅ畾锛堣瘑鍒潯浠讹紝鍏ㄩ儴 I.4 鐧藉悕鍗曪級锛?+          (a) arm1 = tramp 鐨勯潪浣撳唴鍓嶉┍锛屼互 POP_JUMP_FORWARD_IF_FALSE 鏀跺熬
++              涓斿け璐ヨ竟鏀舵暃寰幆鍑哄彛锛坃b104r2_cond_jump_exits_loop锛屼笌閾炬湯
++              娈靛嚭鍙ｅ悓涓€锛夛紝鍊欓€夊敮涓€锛?+          (b) test = arm1 鐨勯潪浣撳唴鍓嶉┍锛屼互 POP_JUMP_FORWARD_IF_FALSE 鏀?+              灏俱€乫all-through == arm1銆佽烦杞洰鏍?= arm2锛坋lse 鑷傦紝闈炰綋鍐?+              闈?header锛夛紝鍊欓€夊敮涓€锛?+          (c) arm2 鍚?arm1 鍑哄彛鍗忚锛涗袱鑷?fall-through 鐩磋惤 header 鎴栫粡
++              閫忔槑璺宠浆韫﹀簥缁叆寰幆锛?+          (d) test/then/else 姹傚€肩獥锛堝墺鍣０涓庡熬鏉′欢璺宠浆锛変负绾€兼眰鍊硷紙鏃?+              STORE_*/DELETE_*/POP_TOP/IMPORT/RETURN/鍐呴儴璺宠浆锛夛紱
++          (e) 鍥炶竟閲嶆鍓湰锛歵hen/else 鍚勬湁 _b104r2_has_recheck_mirror锛?+              test 鐨勯暅鍍?= 浣撳唴鍧楋紙鈮爃eader锛夋眰鍊兼鍚屽簭锛屽叾 jt/ft 鍙屽悗缁?+              鍧囦互鍥炶竟鏉′欢璺宠浆 鈫?header 鏀跺熬銆乯t 娈靛簭 == else 娈靛簭銆乫t
++              娈靛簭 == then 娈靛簭锛坮otate-while 閽荤煶涓夊壇鏈級銆?+        鈶ｅ祵濂楀鐞嗭細閽荤煶鏁翠綋浣滃惊鐜潯浠跺熬鎿嶄綔鏁扮敱 _loop_generate_while 鐨?+        cc 鍒嗘敮閲嶅缓 IfExp 骞跺叆 BoolOp(And)锛屼笉灞曞紑涓哄瓙鍖哄煙銆?+        鈶ST 鏄犲皠鎺ュ彛锛氳繑鍥?{'test','then','else','claim_blocks'}锛岀敱璋冪敤
++        鐐瑰啓鍏?metadata锛坈c_mixed_cond_tail_diamond锛夈€?+        鈶ュ弽缂栬瘧娴佺▼锛氫粎 while-true cc 鍥炴函鍛戒腑閾惧ご鍚庤皟鐢紱鏈懡涓繑鍥?+        None锛岃皟鐢ㄦ柟琛屼负閫愪綅涓嶅彉锛圕3 灏侀棴锛夈€侰1/C2/C3 鍚?_b104r2銆?+        """
++        _chain_last_li = chain_last.get_last_instruction()
++        if (_chain_last_li is None or _chain_last_li.argval is None
++                or _chain_last_li.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
++                                                 | SHORT_CIRCUIT_JUMP_OPS)):
++            return None
++        exit_block = self.cfg.get_block_by_offset(_chain_last_li.argval)
++        if exit_block is None or exit_block in body or exit_block is header:
++            return None
++        _arm1_cands = []
++        for p in tramp.predecessors:
++            if p in body or p is header:
++                continue
++            pl = p.get_last_instruction()
++            if (pl is not None and pl.argval is not None
++                    and pl.opname == 'POP_JUMP_FORWARD_IF_FALSE'
++                    and self._b104r2_cond_jump_exits_loop(p, exit_block, header)):
++                _arm1_cands.append(p)
++        if len(_arm1_cands) != 1:
++            return None
++        arm1 = _arm1_cands[0]
++        _test_cands = []
++        for p in arm1.predecessors:
++            if p in body or p is header or p is tramp:
++                continue
++            pl = p.get_last_instruction()
++            if (pl is None or pl.argval is None
++                    or pl.opname != 'POP_JUMP_FORWARD_IF_FALSE'):
++                continue
++            p_jt = self.cfg.get_block_by_offset(pl.argval)
++            if p_jt is None or p_jt is arm1 or p_jt in body or p_jt is header:
++                continue
++            if arm1 not in p.successors:
++                continue
++            _test_cands.append((p, p_jt))
++        if len(_test_cands) != 1:
++            return None
++        test, arm2 = _test_cands[0]
++        a2_last = arm2.get_last_instruction()
++        if (a2_last is None or a2_last.argval is None
++                or a2_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
++                or not self._b104r2_cond_jump_exits_loop(arm2, exit_block, header)):
++            return None
++        for arm in (arm1, arm2):
++            _ft_arm = None
++            for s in arm.successors:
++                if s in (arm.exception_successors or ()):
++                    continue
++                if s is header:
++                    _ft_arm = s
++                    break
++            if _ft_arm is None:
++                for s in arm.successors:
++                    if s in (arm.exception_successors or ()):
++                        continue
++                    sl = s.get_last_instruction()
++                    if (sl is not None and sl.argval is not None
++                            and sl.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
++                            and self.cfg.get_block_by_offset(sl.argval) is header):
++                        _ft_arm = s
++                        break
++            if _ft_arm is None:
++                return None
++        _PURE_BAD_PREFIX = ('STORE_', 'DELETE_', 'IMPORT_', 'RETURN_')
++
++        def _val_window_ok(block):
++            ins = [i for i in block.instructions
++                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
++                                       'EXTENDED_ARG')]
++            if len(ins) < 2 or ins[-1].opname != 'POP_JUMP_FORWARD_IF_FALSE':
++                return False
++            for i in ins[:-1]:
++                if any(i.opname.startswith(_p) for _p in _PURE_BAD_PREFIX):
++                    return False
++                if i.opname == 'POP_TOP':
++                    return False
++                if i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
++                                | BACKWARD_CONDITIONAL_JUMP_OPS
++                                | FORWARD_JUMP_OPS | BACKWARD_JUMP_OPS
++                                | SHORT_CIRCUIT_JUMP_OPS):
++                    return False
++            return True
++
++        if not (_val_window_ok(test) and _val_window_ok(arm1)
++                and _val_window_ok(arm2)):
++            return None
++        if not self._b104r2_has_recheck_mirror(arm1, header, body, exit_block):
++            return None
++        if not self._b104r2_has_recheck_mirror(arm2, header, body, exit_block):
++            return None
++        _test_seq = self._b104r2_cond_eval_seq(test)
++        _then_seq = self._b104r2_cond_eval_seq(arm1)
++        _else_seq = self._b104r2_cond_eval_seq(arm2)
++        if not _test_seq or not _then_seq or not _else_seq:
++            return None
++        _test_mirror_ok = False
++        for b in body:
++            if b is header:
++                continue
++            if self._b104r2_cond_eval_seq(b) != _test_seq:
++                continue
++            bl = b.get_last_instruction()
++            if (bl is None or bl.argval is None
++                    or bl.opname != 'POP_JUMP_FORWARD_IF_FALSE'):
++                continue
++            b_jt = self.cfg.get_block_by_offset(bl.argval)
++            b_ft = None
++            for s in b.successors:
++                if s in (b.exception_successors or ()) or s is b_jt:
++                    continue
++                b_ft = s
++                break
++            jt_ok = False
++            ft_ok = False
++            if b_jt is not None:
++                jl = b_jt.get_last_instruction()
++                if (jl is not None and jl.argval is not None
++                        and jl.opname in BACKWARD_CONDITIONAL_JUMP_OPS
++                        and self.cfg.get_block_by_offset(jl.argval) is header
++                        and self._b104r2_cond_eval_seq(b_jt) == _else_seq):
++                    jt_ok = True
++            if b_ft is not None:
++                fl = b_ft.get_last_instruction()
++                if (fl is not None and fl.argval is not None
++                        and fl.opname in BACKWARD_CONDITIONAL_JUMP_OPS
++                        and self.cfg.get_block_by_offset(fl.argval) is header
++                        and self._b104r2_cond_eval_seq(b_ft) == _then_seq):
++                    ft_ok = True
++            if jt_ok and ft_ok:
++                _test_mirror_ok = True
++                break
++        if not _test_mirror_ok:
++            return None
++        return {'test': test, 'then': arm1, 'else': arm2,
++                'claim_blocks': [test, arm1, arm2]}
++
+@@ -5265,0 +5440,2 @@ WithRegion/MatchRegion/AssertRegion 缁?add_child/entry 鎶借薄鑺傜偣鎸傚埌 LoopR
++            # [B123-V3R2] and 灏?IfExp 閽荤煶鎿嶄綔鏁帮紙test/then/else 涓夊潡锛?+            _cc_mixed_tail_diamond: Optional[Dict[str, Any]] = None
+@@ -5433,0 +5610,14 @@ WithRegion/MatchRegion/AssertRegion 缁?add_child/entry 鎶借薄鑺傜偣鎸傚埌 LoopR
++                            # [B123-V3R2] and 灏?IfExp 閽荤煶鎿嶄綔鏁板惛鏀?+                            # 锛坄`while <cc 閾? and (Y if c2 else Z):``锛夈€?+                            # 鍒ゆ嵁锛圛.4 鐧藉悕鍗曪級涓庡洖杈归噸妫€鍓湰鎺掗櫎瑙?+                            # _b123_absorb_ifexp_tail_diamond锛涘懡涓垯閽荤煶涓夊潡
++                            # 骞跺叆 _cc_pre_loop_blocks锛堝敮涓€褰掑睘 LoopRegion锛夛紝
++                            # metadata 璁伴捇鐭筹紝浜ょ敓鎴愬櫒 _loop_generate_while
++                            # 閲嶅缓 BoolOp(And, [Compare, IfExp])锛涙湭鍛戒腑
++                            # 鏈眰琛屼负閫愪綅涓嶅彉锛圕3 灏侀棴锛夈€?+                            _b123_diamond = self._b123_absorb_ifexp_tail_diamond(
++                                _cc_pred, _chain_extra[-1], header, body)
++                            if _b123_diamond is not None:
++                                _cc_mixed_tail_diamond = _b123_diamond
++                                _cc_pre_loop_blocks.extend(
++                                    _b123_diamond['claim_blocks'])
+@@ -5904,0 +6095,5 @@ WithRegion/MatchRegion/AssertRegion 缁?add_child/entry 鎶借薄鑺傜偣鎸傚埌 LoopR
++                # [B123-V3R2] and 灏?IfExp 閽荤煶鎿嶄綔鏁帮紙鍖哄煙鎴愬憳鍏崇郴鎺ュ彛锛夛細
++                # 鐢熸垚鍣?_loop_generate_while 鐨?cc 鍒嗘敮鎹閲嶅缓 IfExp 骞跺叆
++                # BoolOp(And) 鏈綅锛屼綋鍐呴捇鐭抽噸妫€闀滃儚鎸夋搴忔姂鍒躲€?+                if _cc_mixed_tail_diamond:
++                    region.metadata['cc_mixed_cond_tail_diamond'] = _cc_mixed_tail_diamond
+@@ -32360,0 +32556,13 @@ _region_overlaps_with_ternary 鍚堟硶宓屽鐗逛緥鏄惧紡瀹堝崼锛屾棤鍏跺畠闈炲眬
++                                else:
++                                    # [B1b fix-r3] or-run 缁堟鎴愬憳锛氬亣杈圭寮€鏈?+                                    # 閾撅紙鍋囩洰鏍?鈮?T0锛夛紝鐪熻竟 fall-through 鍥?+                                    # 娴佸埌娈靛叕鍏辨垚鍔熸眹鑱氱偣锛堜綋鍏ュ彛锛夆€斺€旀簮鏂?+                                    # ``(A and B) or C or D`` 鐨勬渶鍚庝竴涓?or 鎿?+                                    # 浣滄暟锛堢湡 = 鎴愬姛娌胯惤绌鸿竟鍒颁綋锛屽亣 = 閫€鍑烘潯浠?+                                    # 閾撅級銆俒C1] 鍙鍧楁湯 opcode 涓庡悗缁ц韩浠姐€?+                                    _r3k_ft_ft = next(
++                                        (s for s in _r3k_ft.conditional_successors
++                                         if s.start_offset != _r3k_ft_li.argval), None)
++                                    if (_r3k_ft_ft is not None
++                                            and _r3k_ft_ft is _r3k_body_t):
++                                        _r3k_or_member = True
+@@ -32743 +32951,2 @@ _region_overlaps_with_ternary 鍚堟硶宓屽鐗逛緥鏄惧紡瀹堝崼锛屾棤鍏跺畠闈炲眬
+-                                    has_or_member=any(op == 'or' for _, op in chain)):
++                                    has_or_member=any(op == 'or' for _, op in chain),
++                                    prev_and=len(chain) >= 2 and chain[-2][1] == 'and'):
+@@ -33405 +33614,2 @@ _region_overlaps_with_ternary 鍚堟硶宓屽鐗逛緥鏄惧紡瀹堝崼锛屾棤鍏跺畠闈炲眬
+-                                        has_or_member: bool = False) -> bool:
++                                        has_or_member: bool = False,
++                                        prev_and: bool = False) -> bool:
+@@ -33416,0 +33627,8 @@ _region_overlaps_with_ternary 鍚堟硶宓屽鐗逛緥鏄惧紡瀹堝崼锛屾棤鍏跺畠闈炲眬
++          (1') and-run 灏锯啋or-run 澶磋竟鐣岋紙current 涓?candidate 鍧?TRUE 鏃忎笖鐪熻竟
++              鐩爣鍚屼竴锛宲rev_and=True锛夛細閾惧唴鏈?and 缁勶紙current 鐨勫叆閾炬爣璁颁负
++              'and'锛屽嵆 chain[-2] 涓?'and'锛沜urrent 鏄缁勭殑灏炬搷浣滄暟锛夋垚鍔熷悗
++              娌?current 鐪熻竟璺冲埌 or-run 鐨勫叕鍏辨垚鍔熸眹鑱氱偣 Y锛宑andidate 缁?+              current 钀界┖杈归『搴忔姷杈俱€佸嵆 or-run 澶粹€斺€旀簮鏂?+              ``(A and B) or C ...`` 鐨?CPython 闄嶇骇褰㈢姸锛圓/B 鍋囪竟璺?+              杩?and 缁勪綑閮ㄧ洿杈?or-run 澶达級銆傜函 or 閾撅紙prev_and=False锛夊強鍏跺畠
++              TRUE/TRUE 鎴愬憳瀵圭淮鎸佸師鎷掔粷璺緞锛岃涓轰笉鍙橈紱
+@@ -33547,0 +33766,11 @@ _region_overlaps_with_ternary 鍚堟硶宓屽鐗逛緥鏄惧紡瀹堝崼锛屾棤鍏跺畠闈炲眬
++        # [B1b fix-r3] (1') and-run 灏锯啋or-run 澶磋竟鐣岋細current 鏄摼鍐呮湯 and 缁?+        # 鐨勫熬鎿嶄綔鏁帮紙prev_and=True锛夛紝鍏剁湡杈逛笌 candidate 鐨勭湡杈瑰叡浜悓涓€鎴愬姛
++        # 姹囪仛鐐?Y锛坥r-run 鐪熷嚭鍙?/ 浣撳叆鍙ｏ級锛宑andidate 缁?current 钀界┖杈归『搴?+        # 鎶佃揪鈥斺€擿`(A and B) or C ...`` 鐨?CPython 闄嶇骇褰㈢姸锛圓/B 鍋囪竟璺宠繃 and
++        # 缁勪綑閮ㄧ洿杈?or-run 澶达級銆俢andidate 鏄?or-run 澶存湰韬€岄潪宓屽 if 鏉′欢
++        # 鍧楋細鍏剁湡鐩爣 Y 鍚屾椂琚?current 鐪熻竟寮曠敤锛堝悓涓€鐭矾閾剧殑鎴愬憳瀵癸級锛屽祵濂?+        # if 鐨勫唴灞傛潯浠跺潡鐪熺洰鏍囨槸鍐呭眰浣撱€佷笉浼氫笌鏈摼鎴愬憳鐨勭湡杈瑰叡浜€?+        # [C1] 鍙鍧楁湯 opcode 鏋佹€с€佸悗缁х洰鏍囪韩浠戒笌閾炬湯鏍囪锛堝悓灞傜粨鏋勪簨瀹烇級锛?+        # [C3] prev_and 缂哄け锛堢函 or 閾?/ 閾鹃瀵癸級缁存寔涓嬫柟 R5-B100 鍒ゆ嵁銆?+        if (_cur_true and _cand_true and _cand_tgt is _cur_tgt and prev_and):
++            return True
+@@ -33745 +33974,2 @@ _region_overlaps_with_ternary 鍚堟硶宓屽鐗逛緥鏄惧紡瀹堝崼锛屾棤鍏跺畠闈炲眬
+-                            has_or_member=any(op == 'or' for _, op in result)):
++                            has_or_member=any(op == 'or' for _, op in result),
++                            prev_and=len(result) >= 2 and result[-2][1] == 'and'):
+@@ -33846,0 +34077,3 @@ _region_overlaps_with_ternary 鍚堟硶宓屽鐗逛緥鏄惧紡瀹堝崼锛屾棤鍏跺畠闈炲眬
++        # [B98-V3R2 fix] 鍓嶇紑娈佃鏁帮細R565 鍏变韩 merge 鍒ゆ嵁锛堟湰鏂规硶涓嬫柟 34065 璧凤級
++        # 鍙閾剧殑鐪熷疄鎴愬憳鐢熸晥锛岃璇ュ娉ㄩ噴銆傛棤鍚告敹鏃朵繚鎸?0锛屽垏鐗囦负鍘熼摼銆?+        _b99_n_prefix = 0
+@@ -33879,0 +34113 @@ _region_overlaps_with_ternary 鍚堟硶宓屽鐗逛緥鏄惧紡瀹堝崼锛屾棤鍏跺畠闈炲眬
++                _b99_n_prefix = len(_b99_prefixes)
+@@ -34030 +34264,18 @@ _region_overlaps_with_ternary 鍚堟硶宓屽鐗逛緥鏄惧紡瀹堝崼锛屾棤鍏跺畠闈炲眬
+-            if (len(chain) >= 1 and last.opname in SHORT_CIRCUIT_JUMP_OPS
++            # [B98-V3R2 fix] R565 鍏变韩 merge 鍒ゆ嵁鍙閾剧殑鐪熷疄鎴愬憳鐢熸晥銆侭99 鍓嶇紑娈?+            # 涓庨敋鐐瑰垎灞炰笉鍚屾搷浣滅缁勶紙鍚告敹鍒ゆ嵁宸蹭繚璇佸墠缂€璺宠浆鐩爣 == 閿氱偣钀界┖鍚庣户锛?+            # 33902 澶勭粨鏋勯獙璇侊級锛屼袱缁勭煭璺彛鎸夌粍涓嶅悓鈥斺€旀妸鍓嶇紑娈靛綋棣栧潡姣旇緝蹇呯劧鍒や笉绛夛紝
++            # 鍚堟硶鍊奸摼 `return sink((a or b) and c)` 鐨?[or 鍓嶇紑 + and 閿氱偣] 鍦ㄩ敋鐐?+            # 棣栬凯浠ｅ嵆琚埅鏂紙鍓嶇紑浜?IfRegion锛屽€奸摼钂稿彂涓?`if 鈥? pass`锛夈€?+            # 鈶犵畻娉曚緷鎹細鍊间笂涓嬫枃鐭矾閾剧殑銆屽悓 merge銆嶄笉鍙橀噺鍙害鏉熷悓涓€鎿嶄綔绗?run 鐨?+            #   鎴愬憳锛涘墠缂€缁勭敱 B99 鍚告敹鍒ゆ嵁鐙珛楠岃瘉锛屼笉鍙備笌璇ユ瘮杈冦€?+            # 鈶″綊绾︽柟寮忥細鎶婇摼鎸夊墠缂€鏁板垏鍒嗕负銆屽墠缂€娈?| 鐪熷疄鎴愬憳娈点€嶏紝鍏变韩 merge 鍒ゆ嵁
++            #   璇诲彇鐪熷疄鎴愬憳娈甸鍧楋紱閿氱偣灏氭湭鍏ラ摼鏃跺垽鎹笉閫傜敤锛堣烦杩囨湰杞瘮杈冿級銆?+            # 鈶㈠敮涓€褰掑睘鍒ゅ畾锛氫笉鏀瑰彉浠讳綍鍧楃殑褰掑睘鈥斺€斿彧鍦ㄦ棦鏈?walk 鍐呴€夋嫨姣旇緝鍩哄噯銆?+            # 鈶ｅ祵濂楀鐞嗭細鍓嶇紑娈典粛鐢遍摼棣栧紩鐢紙鍘熷垯 3/4锛夛紝宓屽缁撴瀯鍒ゅ畾涓嶅彈褰卞搷銆?+            # 鈶ゅ叆鍙ｅ紩鐢ㄨ涔夛細BoolOpRegion 浠ラ摼棣栵紙鍓嶇紑澶达級涓?entry锛岃涓轰笌
++            #   `return (a or b) and c` 鐨勬棦鏈夋垚鍔熷舰鎬佷竴鑷淬€?+            # 鈶ュ弽缂栬瘧娴佺▼锛氬畬鏁撮摼浜?_create_boolop_region_from_chain 缁熶竴褰掔害銆?+            # [C1] 鍙鏈?walk 鑷韩鎴愬憳鍒楄〃涓庡墠缂€璁℃暟锛堝悓灞傜粨鏋勪簨瀹烇級锛沎C2] 绾煡璇紝
++            # 涓嶅啓鍖哄煙瀛楁锛沎C3] 鏃犲墠缂€鏃跺垏鐗囦负鍘熼摼锛岃涓洪€愬瓧鑺備笉鍙樸€?+            _r565_chain = chain[_b99_n_prefix:] if _b99_n_prefix else chain
++            if (len(_r565_chain) >= 1 and last.opname in SHORT_CIRCUIT_JUMP_OPS
+@@ -34032 +34283 @@ _region_overlaps_with_ternary 鍚堟硶宓屽鐗逛緥鏄惧紡瀹堝崼锛屾棤鍏跺畠闈炲眬
+-                _first_last = chain[0][0].get_last_instruction()
++                _first_last = _r565_chain[0][0].get_last_instruction()
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 999b3e20..16bb9eb5 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -4786,0 +4787,28 @@ class RegionASTGenerator:
++            # [B98-V3R2] stacked-operand ternary: the ternary's value is an
++            # On-stack operand of a ternary-operand chained compare (left or
++            # middle operand provided through the region merge chain). Don't
++            # emit the ternary standalone 鈥?its IfExp is built by the compare
++            # consumer (_try_build_ternary_operand_chained_compare) from the
++            # region graph. Hand off to the merge-host structure region
++            # (IfRegion/BoolOpRegion whose entry is this merge_block), which is
++            # where the consumer fires (_generate_if R82 branch /
++            # _generate_boolop R106 fallback); this mirrors the [R59-B Fix2]
++            # claim one level up. The consumer marks the consumed blocks
++            # (incl. this region's) when it fires; non-matching shapes fall
++            # through unchanged (C3).
++            if not should_skip:
++                _b98v3_host = self._ternary_chain_compare_host(region)
++                if _b98v3_host is not None:
++                    _b98v3_ast = None
++                    if region.merge_block is not None:
++                        for _b98v3_sr in self.regions:
++                            if (_b98v3_sr is not region
++                                    and isinstance(_b98v3_sr, (
++                                        IfRegion, LoopRegion, TryExceptRegion,
++                                        MatchRegion, AssertRegion, BoolOpRegion))
++                                    and _b98v3_sr.entry is region.merge_block
++                                    and id(_b98v3_sr) not in self._generated_regions
++                                    and id(_b98v3_sr) not in self._generating_regions):
++                                _b98v3_ast = self._generate_region(_b98v3_sr)
++                                break
++                    return _b98v3_ast
+@@ -8596 +8624,2 @@ AST 鏄犲皠瑙勫垯:
+-                    if _cc_mixed_tails or _cc_mixed_leads:
++                    _cc_tail_dia = region.metadata.get('cc_mixed_cond_tail_diamond') or None
++                    if _cc_mixed_tails or _cc_mixed_leads or _cc_tail_dia:
+@@ -8607,0 +8637,18 @@ AST 鏄犲皠瑙勫垯:
++                        # [B123-V3R2] and 灏?IfExp 閽荤煶鎿嶄綔鏁帮細璇嗗埆灞?+                        # _b123_absorb_ifexp_tail_diamond 宸查獙涓夊潡绾€兼眰鍊?+                        # 涓庡嚭鍙ｅ崗璁紱姝ゅ缁?_b123_ifexp_from_tail_diamond
++                        # 榛戠閲嶅缓 IfExp 杩藉姞涓?BoolOp 鏈綅鎿嶄綔鏁帮紝澶辫触鏃?+                        # 鏁板€煎簭鍒楃己璇ユ搷浣滄暟锛坈ondition 淇濇寔鏃㈡湁閫€鍖栧舰鎬侊紝
++                        # C2/C3锛夈€備笁鍧椾竴骞剁櫥璁?generated锛堝敮涓€褰掑睘锛夈€?+                        if _cc_tail_dia is not None:
++                            _dia_ifexp = self._b123_ifexp_from_tail_diamond(_cc_tail_dia)
++                            if _dia_ifexp is not None:
++                                _cc_mixed_vals.append(_dia_ifexp)
++                                if len(_cc_mixed_vals) >= 2:
++                                    condition = {'type': 'BoolOp', 'op': 'and',
++                                                 'values': _cc_mixed_vals}
++                            for _db in (_cc_tail_dia['test'],
++                                        _cc_tail_dia['then'],
++                                        _cc_tail_dia['else']):
++                                self.generated_blocks.add(_db)
++                                self.generated_offsets.add(_db.start_offset)
+@@ -8679,0 +8727,79 @@ AST 鏄犲皠瑙勫垯:
++                    # [B123-V3R2] and 灏鹃捇鐭崇殑浣撳唴閲嶆闀滃儚闆嗭紙rotate-while
++                    # 閽荤煶涓夊壇鏈?+ 閫忔槑韫﹀簥锛夛細arm 闀滃儚 = 浠ュ洖杈规潯浠惰烦杞?鈫?+                    # header 鏀跺熬涓旀眰鍊兼搴?== then/else 娈靛簭锛泃est 闀滃儚 =
++                    # 姹傚€兼搴?== test 娈靛簭涓斿叾 jt/ft 鍙屽悗缁у潎涓恒€屽洖杈规潯浠?+                    # 璺宠浆 鈫?header 鏀跺熬 + 娈靛簭瀵逛綅銆嶇殑 arm 闀滃儚锛涢€忔槑韫﹀簥 =
++                    # 鍏ㄥ崗璁櫔澹版寚浠や笖鍚庣户鍏ㄨ惤闀滃儚闆嗐€傚垽鎹彧璇诲潡鍐?opcode
++                    # 搴忎笌璺宠浆鐩爣鍚屼竴鎬э紙I.4 鐧藉悕鍗曪級锛屼笉鍛戒腑涓虹┖闆嗐€佽涓?+                    # 閫愪綅涓嶅彉锛圕3锛夈€?+                    _b123_mirror_blocks = set()
++                    if _cc_tail_dia is not None:
++                        _b123_tseq = self.region_analyzer._b104r2_cond_eval_seq(
++                            _cc_tail_dia['test'])
++                        _b123_hseq = self.region_analyzer._b104r2_cond_eval_seq(
++                            _cc_tail_dia['then'])
++                        _b123_eseq = self.region_analyzer._b104r2_cond_eval_seq(
++                            _cc_tail_dia['else'])
++                        _b123_arm_seqs = {_b123_hseq, _b123_eseq}
++                        for _b in region.body_blocks:
++                            if _b is region.header_block:
++                                continue
++                            _bl = _b.get_last_instruction()
++                            if (_bl is None or _bl.argval is None
++                                    or _bl.opname not in CONDITIONAL_JUMP_OPS):
++                                continue
++                            _bseq = self.region_analyzer._b104r2_cond_eval_seq(_b)
++                            if not _bseq:
++                                continue
++                            if (_bl.opname in BACKWARD_CONDITIONAL_JUMP_OPS
++                                    and self.cfg.get_block_by_offset(_bl.argval)
++                                    is region.header_block
++                                    and _bseq in _b123_arm_seqs):
++                                _b123_mirror_blocks.add(_b)
++                                continue
++                            if (_bseq == _b123_tseq
++                                    and _bl.opname == 'POP_JUMP_FORWARD_IF_FALSE'):
++                                _b_jt = self.cfg.get_block_by_offset(_bl.argval)
++                                _b_ft = None
++                                for _s in _b.successors:
++                                    if _s in (_b.exception_successors or ()):
++                                        continue
++                                    if _s is _b_jt:
++                                        continue
++                                    _b_ft = _s
++                                    break
++                                _jt_ok = False
++                                _ft_ok = False
++                                if _b_jt is not None:
++                                    _jl = _b_jt.get_last_instruction()
++                                    if (_jl is not None and _jl.argval is not None
++                                            and _jl.opname in BACKWARD_CONDITIONAL_JUMP_OPS
++                                            and self.cfg.get_block_by_offset(_jl.argval)
++                                            is region.header_block
++                                            and self.region_analyzer._b104r2_cond_eval_seq(_b_jt)
++                                            == _b123_eseq):
++                                        _jt_ok = True
++                                if _b_ft is not None:
++                                    _fl = _b_ft.get_last_instruction()
++                                    if (_fl is not None and _fl.argval is not None
++                                            and _fl.opname in BACKWARD_CONDITIONAL_JUMP_OPS
++                                            and self.cfg.get_block_by_offset(_fl.argval)
++                                            is region.header_block
++                                            and self.region_analyzer._b104r2_cond_eval_seq(_b_ft)
++                                            == _b123_hseq):
++                                        _ft_ok = True
++                                if _jt_ok and _ft_ok:
++                                    _b123_mirror_blocks.add(_b)
++                        for _b in region.body_blocks:
++                            if (_b in _b123_mirror_blocks
++                                    or _b is region.header_block):
++                                continue
++                            if all(i.opname in ('POP_TOP', 'SWAP', 'COPY', 'NOP',
++                                                'CACHE', 'RESUME', 'PUSH_NULL',
++                                                'EXTENDED_ARG', 'JUMP_FORWARD',
++                                                'JUMP_ABSOLUTE')
++                                   for i in _b.instructions):
++                                if (_b.successors
++                                        and all(_s in _b123_mirror_blocks
++                                                for _s in _b.successors)):
++                                    _b123_mirror_blocks.add(_b)
+@@ -8682,0 +8809,7 @@ AST 鏄犲皠瑙勫垯:
++                        if _b in _b123_mirror_blocks:
++                            # [B123-V3R2] 閽荤煶閲嶆闀滃儚锛氬惊鐜潯浠堕噸姹傚€煎崗璁?+                            # 缁勪欢锛岄潪鐢ㄦ埛璇彞锛屾暣鍧楁姂鍒讹紙While 閲嶇紪璇戣嚜鐒?+                            # 鍐嶇敓锛夈€傚垽鎹涓婃柟闀滃儚闆嗘瀯寤恒€?+                            self.generated_blocks.add(_b)
++                            self.generated_offsets.add(_b.start_offset)
++                            continue
+@@ -9347,0 +9481,36 @@ AST 鏄犲皠瑙勫垯:
++        # [B123-V3R2] and 灏鹃捇鐭冲舰鎬佺殑寰幆鍑哄彛褰掑睘锛氬嚭鍙ｅ潡锛坱hen/else 鑷?+        # 鐨勫叡浜亣鍊肩洰鏍囷紝濡?``while <cc> and (y if y else x):`` 涔嬪悗鐨?+        # ``return n``锛夊父琚垎鏋愬眰鍒ょ粰姘镐笉娲惧彂鐨勮噦鍐?IfRegion锛坋lse=鍑哄彛
++        # 鍧楋級锛屼氦鐖剁骇浼氶潤榛樿捀鍙戯紙涓?B78 瀹夸富 F 鍧楀悓鏋勶級銆傚凡鐢熸垚鍒欎笉鍔?+        # 鍙戯紱鏈敓鎴愪笖涓虹洿绾胯鍙ュ潡锛堟棤浠讳綍鎺у埗璺宠浆/寰幆鎸囦护锛夋椂鐢辨湰寰幆
++        # 鍦?While 涔嬪悗鍔犲彂骞剁櫥璁帮紱鏈敓鎴愪笖鍚帶鍒惰烦杞紙缁撴瀯鍖栧悗缁級鈫?涓?+        # 鍔犲彂锛堥槻鍚炲悗缁?if/loop 澶达紝浜ゅ師璺緞锛孋3锛夈€傚垽鎹?= 鍧楀唴 opcode
++        # 鏃?+ 鍖哄煙鎴愬憳鍏崇郴锛圛.4 鐧藉悕鍗曪級锛涗粎閽荤煶鍏冩暟鎹懡涓椂鎵ц銆?+        _b123_dia = region.metadata.get('cc_mixed_cond_tail_diamond') or None
++        if _b123_dia is not None:
++            _b123_exit = None
++            _b123_tl = _b123_dia['then'].get_last_instruction()
++            if (_b123_tl is not None and _b123_tl.argval is not None
++                    and _b123_tl.opname == 'POP_JUMP_FORWARD_IF_FALSE'):
++                _b123_exit = self.cfg.get_block_by_offset(_b123_tl.argval)
++            if (_b123_exit is not None
++                    and _b123_exit not in (region.blocks or set())
++                    and _b123_exit not in self.generated_blocks):
++                _b123_ec = [i for i in _b123_exit.instructions
++                            if i.opname not in ('RESUME', 'NOP', 'CACHE',
++                                                'PUSH_NULL', 'EXTENDED_ARG')]
++                _b123_plain = not any(
++                    i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
++                                 | BACKWARD_CONDITIONAL_JUMP_OPS
++                                 | FORWARD_JUMP_OPS | BACKWARD_JUMP_OPS
++                                 | SHORT_CIRCUIT_JUMP_OPS
++                                 | {'FOR_ITER', 'SEND'})
++                    for i in _b123_ec)
++                if _b123_plain and _b123_ec:
++                    _b123_es = self._generate_block_statements(_b123_exit)
++                    if _b123_es:
++                        _sequential_after_loop = (list(_sequential_after_loop)
++                                                 + list(_b123_es))
++                    self.generated_blocks.add(_b123_exit)
++                    self.generated_offsets.add(_b123_exit.start_offset)
++
+@@ -15798,0 +15968,11 @@ AST 鏄犲皠瑙勫垯:
++        # [B78-V3R2] 宓屽涓夊厓瀹夸富鎶樺彔锛坕f / while / 鍊兼秷璐逛笁瀹夸富锛夛細
++        # ``X if (Y if c2 else Z) else W`` 澶勪簬瀹夸富浣嶇疆鏃讹紝缂栬瘧鍣ㄦ妸鐪熷€?+        # 鍑哄彛鐩磋繛瀹夸富鐩爣銆佸父閲?orelse 鑷傛姌鍙犱负鐩存帴璺宠浆鈥斺€斿垎鏋愬眰鏈強姝?+        # 褰紝鏁撮摼琚垏鎴?IfRegion 璇彞閾撅紙if/while 瀹夸富鐨勪綋涓庡嚭鍙ｈ鍚告敹銆?+        # 鍊煎涓荤殑娑堣垂璇彞钂稿彂锛夈€傛湰璋冪敤鎶婃寚绾瑰懡涓殑閾炬暣浣撳綊绾︿负鍗曚竴
++        # If/While/娑堣垂璇彞锛涜缁嗚瘑鍒潯浠?褰掔害鏂瑰紡/AST 鏄犲皠瑙?+        # _try_build_b78_nested_ternary_host 鏂囨。銆傛寚绾逛笉涓繑鍥?None 閫愪綅
++        # 鍥炶惤鏃㈡湁娲惧彂锛坋lif 閾?/ normal锛孋3锛夈€?+        _b78_host_stmt = self._try_build_b78_nested_ternary_host(region)
++        if _b78_host_stmt is not None:
++            return _b78_host_stmt
+@@ -15984 +16164,49 @@ AST 鏄犲皠瑙勫垯:
+-        return self._if_generate_normal(region)
++        # [B98-V3R2] 鍊艰彵褰?Return 鎶樺彔锛歚return ((a or b) and c) if d else 0`
++        # 澶勪簬寰幆浣撳唴鏃讹紝涓よ噦鍙栧€兼眹鍚堝悗鐨勮繑鍥炴甯﹁凯浠ｅ櫒鎷嗛櫎瀵癸紙SWAP 2;
++        # POP_TOP; RETURN_VALUE锛夛紝涓夊厓璇嗗埆鏈強姝ゅ舰锛屽尯鍩熻鍒荤敾涓?+        # IF_THEN_ELSE鈥斺€旇嫢鎸?if/else 璇彞鍙戝皠锛宼hen 鑷傚€奸€€鍖栦负瑁?Expr銆?+        # 杩斿洖鍊艰捀鍙戯紙瀹炴祴 4 鏉¤鍙ラ敊浣嶏級銆傛湰璋冪敤灏嗘寚绾瑰懡涓殑鑿卞舰鏁翠綋褰掔害
++        # 涓?Return(IfExp)锛涜缁嗚瘑鍒潯浠?褰掔害鏂瑰紡/AST 鏄犲皠瑙?+        # _try_build_value_diamond_return 鏂囨。銆?+        _r98_diamond_ret = self._try_build_value_diamond_return(region)
++        if _r98_diamond_ret is not None:
++            return _r98_diamond_ret
++        _r98_if_stmt = self._if_generate_normal(region)
++        # [B98-V3R2] 鍊艰澧冭瀺鍚堝竷灏旈摼 IfRegion 杩樺師涓鸿祴鍊硷細`r = (a or b) and
++        # (c or d) and a` 鍏ㄩ摼琚唴鑱斿竷灏旀潯浠堕噸寤烘満鍒舵敹鏁涗负
++        # If(test=And[Or[a,b],Or[c,d],a], body=[Pass])锛屼絾鍧楀熬 STORE r 娑堣垂鐨?+        # 姝ｆ槸璇?test 鍊尖€斺€旀湰鍖哄煙涓嶆槸璇彞 if 鑰屾槸鍊肩敓浜ц€呫€傝瘑鍒潯浠讹紙鍚屽眰
++        # 缁撴瀯浜嬪疄锛夛細鍙戝皠缁撴灉鎭颁负 If(test 闈炵┖, body=[Pass], 鏃?orelse)锛?+        # 涓?merge_block 棣栨潯闈炲櫔澹版寚浠ゆ槸鐩存帴娑堣垂鏍堥《鍊肩殑 STORE_*(Name 鐩爣锛?+        # 闈炶櫄鎷熷悕)鈥斺€旇鍙?if 鐨勬潯浠跺€艰 POP_JUMP 寮瑰嚭锛屾眹鍚堝潡涓嶅彲鑳戒互
++        # STORE 鐩存敹鏍堜笂鍊硷紝鏁呰 STORE 鐨勫€煎繀鏉ヨ嚜鏈尯鍩熻〃杈惧紡銆傚綊绾︽柟寮忥細
++        # 鎸夊師鍒?2/3锛堟瘡鍧楀敮涓€褰掑睘 / 宓屽鍗虫娊璞¤妭鐐癸級鎶?test 琛ㄨ揪寮忎綔涓哄€硷紝
++        # 鍖哄煙褰掔害涓哄崟涓€ Assign锛涗笉鍛戒腑鏃堕€愪綅淇濇寔鏃㈡湁鍙戝皠銆侫ST 鏄犲皠锛?+        # If(test=T, body=[Pass]) 鈫?Assign(target=STORE 鐩爣, value=T)銆?+        if (isinstance(_r98_if_stmt, dict)
++                and _r98_if_stmt.get('type') == 'If'
++                and _r98_if_stmt.get('test') is not None):
++            _r98_body = _r98_if_stmt.get('body') or []
++            _r98_pass_only = (len(_r98_body) == 1
++                              and isinstance(_r98_body[0], dict)
++                              and _r98_body[0].get('type') == 'Pass')
++            _r98_mb = getattr(region, 'merge_block', None)
++            if _r98_pass_only and not _r98_if_stmt.get('orelse') and _r98_mb is not None:
++                _r98_first = None
++                for _r98_i in _r98_mb.instructions:
++                    if _r98_i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
++                        _r98_first = _r98_i
++                        break
++                if (_r98_first is not None
++                        and _r98_first.opname in ('STORE_FAST', 'STORE_NAME',
++                                                  'STORE_GLOBAL', 'STORE_DEREF')
++                        and _r98_first.argval
++                        and not str(_r98_first.argval).startswith('__')):
++                    return [{
++                        'type': 'Assign',
++                        'targets': [{'type': 'Name',
++                                     'id': _r98_first.argval,
++                                     'ctx': 'Store'}],
++                        'value': _r98_if_stmt['test'],
++                    }]
++        return _r98_if_stmt
+@@ -17929,0 +18158,13 @@ AST 鏄犲皠瑙勫垯:
++        # [B98-V3R2] ternary-operand chained compare: the first-segment block
++        # holds no value LOADs (operands are On-stack ternary results provided
++        # by TernaryRegions merging into the first-compare block / its condition
++        # block). All operand extractors above require in-block LOAD_* and fail
++        # for this shape (rv7_02 chain_two_ternary / chain_three_ternary).
++        # See _try_build_ternary_operand_chained_compare for the structural
++        # guards; non-matching shapes fall through unchanged (C3).
++        _ternary_compare = self._try_build_ternary_operand_chained_compare(
++            region.condition_block,
++            ops=list(region.chained_compare_ops) if region.chained_compare_ops else None,
++            chain_blocks=list(_cc_chain_blocks) if _cc_chain_blocks else None)
++        if _ternary_compare is not None:
++            return _ternary_compare
+@@ -17944,0 +18186,425 @@ AST 鏄犲皠瑙勫垯:
++    def _try_build_ternary_operand_chained_compare(self, cc_block,
++                                                   ops: Optional[List[str]] = None,
++                                                   chain_blocks: Optional[List] = None,
++                                                   merge_hint=None) -> Optional[Dict[str, Any]]:
++        """[B98-V3R2 ternary-operand chained compare] 閲嶅缓銆屽乏/涓鎿嶄綔鏁颁负鏍堜笂
++        涓夊厓缁撴灉銆嶇殑閾惧紡姣旇緝銆?+
++        鈶犵畻娉曚緷鎹細No More Gotos銆屽尯鍩熷綊绾︾畻娉曞洓鍘熷垯銆嶁€斺€旇嚜搴曞悜涓婂綊绾︼細
++        ``T1 < T2 < c``锛圱1/T2 涓轰笁鍏?IfExp锛変腑锛岄娈垫瘮杈冨潡涓嶅惈鎿嶄綔鏁?LOAD锛?+        宸︽搷浣滄暟 T1 涓庝腑娈垫搷浣滄暟 T2 鍧囦负鏍堜笂鍊硷細T2 鐢?TernaryRegion
++        (merge_block is 棣栨鍧? 浜х敓锛孴1 鐢?TernaryRegion(merge_block is
++        T2.condition_block) 浜х敓銆傛棦鏈夊叏閮?``_try_build_*`` 鎿嶄綔鏁版彁鍙栧櫒閮戒互
++        銆岄娈靛潡鍐呮湁 LOAD_*銆嶄负鍓嶆彁锛屼簬姝ゅ舰鎬佹暣浣撳け閰嶈繑鍥?None锛屾瘮杈冭〃杈惧紡
++        钂稿彂銆佷笁鍏冩畫鐗囧婕忥紙rv7_02 chain_two_ternary 瀹炶瘉锛歚a if c1 else b`
++        瑁?Expr + `if (x if c2 else y): pass`锛夈€?+
++        鈶″綊绾﹂『搴忥細鍏堢粡鍖哄煙 merge 閾鹃€嗗悜閽夊嚭鏍堜笂鎿嶄綔鏁版彁渚涜€咃紙T2 鈫?T1锛夛紝
++        鍐嶆妸涓や釜涓夊厓鍖哄煙鍚勫綊绾︿负鍗曚釜 IfExp 瀛愯妭鐐癸紱闅忓悗閫愭鎺ヤ笂鍚庣画閾炬鍧楃殑
++        姣旇緝鎿嶄綔鏁帮紙閾炬鍧楀唴鐨?LOAD 鍓嶇紑 / 姹囪仛浜庤鍧楃殑鍊奸捇鐭冲唴鑱斾笁鍏?/
++        merge_block is 璇ュ潡鐨勪笁鍏冨尯鍩燂級銆?+
++        鈶㈠敮涓€褰掑睘鍒ゅ畾锛堣瘑鍒潯浠讹紝鍏ㄩ儴鍚屽眰鍧楃粨鏋勪簨瀹烇級锛?+          (1) 棣栨鍧楅潪鍣０鎸囦护棣栦袱鏉℃伆涓?``SWAP 2; COPY 2``锛堟爤涓婃伆涓ゅ€?=
++              宸︽搷浣滄暟 + 涓鎿嶄綔鏁帮級锛岀涓夋潯涓?COMPARE_OP/IS_OP/CONTAINS_OP锛?+              鍧楁湯涓?SHORT_CIRCUIT_JUMP_OPS锛堝€间笂涓嬫枃鐭矾璺宠浆锛夛紱
++          (2) 璺宠浆鐩爣鍧楁伆涓?``SWAP; POP_TOP`` 涓ゆ寚浠わ紙鏍堟繁淇 cleanup锛夛紱
++          (3) merge 鍧楁湯涓?RETURN_VALUE/RETURN_CONST 鎴栧惈 STORE_*锛堝€间笂涓嬫枃锛?+              鏉′欢娴嬭瘯璇涓嶅懡涓紝淇濇寔鍘熸湁娴嬭瘯鍙戝皠璺緞锛夛紱
++          (4) 鎭版湁涓や釜涓夊厓鎻愪緵鑰?T1/T2 涓斾簩鑰呮潯浠跺潡鍓嶅 preload 涓虹┖
++              锛堟潯浠跺潡鍏ュ彛鏍堟伆涓哄悇鑷笅灞傚€硷級锛?+          (5) 姣忎釜閾炬鍧楁伆鍚竴鏉℃瘮杈冩寚浠わ紝涓斿叾鎿嶄綔鏁版垨涓哄潡鍐?LOAD 鍓嶇紑銆?+              鎴栦负鍊奸捇鐭冲唴鑱斾笁鍏冦€佹垨涓?merge_block is 璇ュ潡鐨勪笁鍏冨尯鍩熴€?+        鍛戒腑鍗抽噸寤?Compare 骞舵爣璁拌娑堣垂鍧楋紱浠讳竴涓嶆垚绔嬭繑鍥?None锛圕3 鍥為€€锛夈€?+
++        鈶ｅ祵濂楀鐞嗭細T1/T2 涓庨摼娈靛唴鑱斾笁鍏冨潎浣滀负涓嶅彲鎷嗚В瀛愯妭鐐圭粡
++        ``_build_nested_ternary_expr`` / ``_extract_inline_ternary_operand_at``
++        閲嶅缓涓?IfExp锛屼笉浜х敓鐙珛璇彞銆?+
++        鈶ゅ叆鍙ｅ紩鐢ㄨ涔夛細璋冪敤鏂癸紙IfRegion 鍊间笂涓嬫枃 / BoolOpRegion 鎿嶄綔鏁帮級
++        寮曠敤鏈柟娉曡繑鍥炵殑鍗曚釜 Compare 鎶借薄鑺傜偣锛涜娑堣垂鐨勪笁鍏冨尯鍩熷潡銆侀摼娈靛潡涓?+        cleanup 鍧楁湰鏂规硶鍐呮爣璁?generated锛坢erge 鍧椾粛褰掕皟鐢ㄦ柟锛夈€?+
++        鈶ュ弽缂栬瘧娴佺▼锛氱敱 ``_build_chained_compare_from_region_data``锛圛fRegion
++        閾捐矾锛変笌 ``_try_build_chained_compare_in_boolop``锛圔oolOp 鎿嶄綔鏁伴摼璺級
++        璋冪敤锛岃繑鍥為潪 None 鍗虫帴绠°€?+
++        C 鏉℃锛歔C1] 鍙棣栨鍧楁寚浠ゅ簭銆乧leanup 鍧楁寚浠ゅ簭銆乵erge 鍧楁湯鎸囦护銆?+        鍖哄煙 merge 閾句笌鍧楀墠椹卞悗缁э紱[C2] 涓夊厓瀛愯〃杈惧紡缁忔棦鏈夋瀯閫犲櫒榛戠閲嶅缓锛?+        杈撳嚭鍗曚竴 Compare 鑺傜偣锛沎C3] 浜旀潯瀹堝崼鍏ㄥ懡涓墠鍙戝皠锛屽惁鍒欒繑鍥?None
++        浜ゅ洖鏃㈡湁璺緞锛岃涓洪€愪綅涓嶅彉銆?+        """
++        if cc_block is None:
++            return None
++        _noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
++        _cmp_ops_set = ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
++        cc_instrs = [i for i in cc_block.instructions if i.opname not in _noise]
++        if len(cc_instrs) < 4:
++            return None
++        _swap, _copy, _cmp = cc_instrs[0], cc_instrs[1], cc_instrs[2]
++        if (_swap.opname != 'SWAP' or _swap.arg != 2
++                or _copy.opname != 'COPY' or _copy.arg != 2
++                or _cmp.opname not in _cmp_ops_set):
++            return None
++        _cc_last = cc_block.get_last_instruction()
++        if _cc_last is None or _cc_last.opname not in SHORT_CIRCUIT_JUMP_OPS:
++            return None
++        if not isinstance(_cc_last.argval, int):
++            return None
++        _cleanup = self.cfg.get_block_by_offset(_cc_last.argval)
++        if _cleanup is None or _cleanup is cc_block:
++            return None
++        _cu_ops = [i.opname for i in _cleanup.instructions
++                   if i.opname not in _noise]
++        if _cu_ops != ['SWAP', 'POP_TOP']:
++            return None
++        _merge = merge_hint
++        if _merge is None:
++            for _s in sorted(list(_cleanup.successors or ()),
++                             key=lambda b: b.start_offset):
++                _merge = _s
++                break
++        if _merge is None:
++            return None
++        _mlast = _merge.get_last_instruction()
++        _m_is_value = (_mlast is not None
++                       and _mlast.opname in ('RETURN_VALUE', 'RETURN_CONST'))
++        if not _m_is_value:
++            _m_is_value = any(
++                i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
++                             'STORE_DEREF')
++                for i in (_merge.instructions or []))
++        if not _m_is_value:
++            return None
++        _t2 = None
++        for _r in self.regions:
++            if (isinstance(_r, TernaryRegion)
++                    and getattr(_r, 'merge_block', None) is cc_block
++                    and _r.entry is not cc_block):
++                _t2 = _r
++                break
++        if _t2 is None:
++            return None
++        _t1 = None
++        for _r in self.regions:
++            if (isinstance(_r, TernaryRegion)
++                    and getattr(_r, 'merge_block', None) is _t2.condition_block
++                    and _r is not _t2
++                    and _r.entry is not cc_block):
++                _t1 = _r
++                break
++        if _t1 is None:
++            return None
++        if self._compute_ternary_cond_preload_exprs(_t1):
++            return None
++        if self._compute_ternary_cond_preload_exprs(_t2):
++            return None
++        _left_expr = self._build_nested_ternary_expr(_t1)
++        _mid_expr = self._build_nested_ternary_expr(_t2)
++        if _left_expr is None or _mid_expr is None:
++            return None
++        _op1 = self.region_analyzer._chain_compare_op_str(_cmp)
++        if _op1 is None:
++            return None
++        _exc_cc = set(getattr(cc_block, 'exception_successors', None) or ())
++        _fall = None
++        for _s in sorted(list(cc_block.successors or ()),
++                         key=lambda b: b.start_offset):
++            if _s is _cleanup or _s in _exc_cc:
++                continue
++            _fall = _s
++            break
++        if _fall is None:
++            return None
++        if not chain_blocks:
++            _seen = set()
++            _frontier = [_fall]
++            _found = []
++            while _frontier and len(_seen) < 64:
++                _b = _frontier.pop(0)
++                if (_b is None or _b in _seen or _b is _merge
++                        or _b is _cleanup or _b is cc_block):
++                    continue
++                _seen.add(_b)
++                _beff = [i for i in _b.instructions if i.opname not in _noise]
++                if any(i.opname in _cmp_ops_set for i in _beff):
++                    _found.append(_b)
++                _bexc = set(getattr(_b, 'exception_successors', None) or ())
++                for _s in (_b.successors or ()):
++                    if _s not in _seen and _s not in _bexc:
++                        _frontier.append(_s)
++            _found.sort(key=lambda b: b.start_offset)
++            chain_blocks = _found
++        if not chain_blocks:
++            return None
++        _chain_ops = []
++        for _cb in chain_blocks:
++            _cb_cmp = None
++            for _i in _cb.instructions:
++                if _i.opname in _cmp_ops_set:
++                    _cb_cmp = _i
++                    break
++            if _cb_cmp is None:
++                return None
++            _cb_op = self.region_analyzer._chain_compare_op_str(_cb_cmp)
++            if _cb_op is None:
++                return None
++            _chain_ops.append(_cb_op)
++        _all_ops = [_op1] + _chain_ops
++        if ops is not None and list(ops) != _all_ops:
++            return None
++        if len(_all_ops) < 2:
++            return None
++        _comparators = [_mid_expr]
++        _consumed = list(_t1.blocks) + list(_t2.blocks)
++        for _cb in chain_blocks:
++            _expr = None
++            for _r in self.regions:
++                if (isinstance(_r, TernaryRegion)
++                        and getattr(_r, 'merge_block', None) is _cb
++                        and _r.entry is not _cb):
++                    _expr = self._build_nested_ternary_expr(_r)
++                    if _expr is not None:
++                        _consumed.extend(list(_r.blocks))
++                    break
++            if _expr is None:
++                _pre = []
++                for _i in _cb.instructions:
++                    if _i.opname in _noise or _i.opname in ('SWAP', 'COPY',
++                                                            'POP_TOP'):
++                        continue
++                    if _i.opname in _cmp_ops_set:
++                        break
++                    if _i.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD',
++                                     'JUMP_ABSOLUTE'):
++                        continue
++                    _pre.append(_i)
++                if _pre:
++                    _expr = self.expr_reconstructor.reconstruct(_pre)
++            if _expr is None:
++                _expr, _dia_blocks = self._extract_inline_ternary_operand_at(_cb)
++                if _expr is not None:
++                    _consumed.extend(_dia_blocks)
++            if _expr is None:
++                return None
++            _comparators.append(_expr)
++        if len(_comparators) != len(_all_ops):
++            return None
++        _consumed.append(_cleanup)
++        _consumed.extend(chain_blocks)
++        for _b in _consumed:
++            if _b is None or _b is _merge:
++                continue
++            self.generated_blocks.add(_b)
++            try:
++                self.generated_offsets.add(_b.start_offset)
++            except Exception:
++                pass
++        return {
++            'type': 'Compare',
++            'left': _left_expr,
++            'ops': list(_all_ops),
++            'comparators': _comparators,
++        }
++
++    def _extract_inline_ternary_operand_at(self, join_block):
++        """[B98-V3R2] 浠庢眹鑱氬潡鍐呰仈閲嶅缓鏈垚鍖哄煙鐨勫€奸捇鐭充笁鍏冩搷浣滄暟銆?+
++        褰撻摼娈靛潡鐨勬瘮杈冩搷浣滄暟鏄竴涓湭琚尯鍩熷垎鏋愮櫥璁颁负 TernaryRegion 鐨勫唴鑱?+        涓夊厓锛堝 ``T1 <= T2 < (m if c3 else n)`` 涓浜屼釜姣旇緝鍧?``COMPARE_OP``
++        涔嬪墠娌℃湁浠讳綍 LOAD鈥斺€旀搷浣滄暟缁忓€奸捇鐭充粠鐩搁偦鍧楀埌杈撅級鏃讹紝鎸夊潡缁撴瀯鍐呰仈閲嶅缓銆?+
++        鍊奸捇鐭冲垽鎹紙鍏ㄩ儴鍚屽眰鍧楃粨鏋勪簨瀹烇級锛?+          鈶?姹囪仛鍧楋紙閾炬姣旇緝鍧楋級鎭版湁涓や釜闈炲紓甯稿墠椹憋細鐪熷€艰矾寰勫潡锛堟湯鎸囦护涓?+             鎸囧悜姹囪仛鍧楃殑 JUMP_FORWARD/JUMP_ABSOLUTE锛変笌鍋囧€艰矾寰勫潡锛堥『搴忚惤鍏?+             姹囪仛鍧楋級锛?+          鈶?涓よ矾寰勫潡鏈夊叡鍚屽墠椹?p锛宲 鏈寚浠や负鏉′欢璺宠浆涓斿叾姝ｅ父鍚庣户闆嗗悎鎭颁负
++             {鐪熷€艰矾寰勫潡, 鍋囧€艰矾寰勫潡}锛?+          鈶?涓夋鎸囦护锛坧 鍘昏烦杞?/ 鐪熷€煎潡鍘昏烦杞?/ 鍋囧€煎潡锛夊潎鍙粡
++             expr_reconstructor 閲嶅缓涓鸿〃杈惧紡銆?+        鍛戒腑杩斿洖 (IfExp, [p, 鐪熷€煎潡, 鍋囧€煎潡])锛涗换涓€涓嶆垚绔嬭繑鍥?(None, [])銆?+
++        [C1] 鍙鏈潡鍓嶉┍銆侀偦鍧楁湯鎸囦护涓庡悗缁ч泦鍚堬紱[C2] 涓夋缁?reconstructor
++        榛戠閲嶅缓涓哄崟涓€ IfExp锛沎C3] 涓夋潯鍏ㄥ懡涓墠杩斿洖锛屽惁鍒?(None, [])锛?+        璋冪敤鏂圭户缁洖钀芥棦鏈夎矾寰勩€?+        """
++        if join_block is None:
++            return None, []
++        _noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
++        _t_block = None
++        _f_block = None
++        _exc = set(getattr(join_block, 'exception_successors', None) or ())
++        _preds = [p for p in (join_block.predecessors or ())
++                  if p is not None and p not in _exc and p is not join_block]
++        for _p in _preds:
++            _last = _p.get_last_instruction()
++            if _last is None:
++                continue
++            if _last.opname in (CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
++                continue
++            if (_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
++                    and _last.argval == join_block.start_offset):
++                if _t_block is None:
++                    _t_block = _p
++                continue
++            if _last.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD',
++                                'JUMP_ABSOLUTE', 'RETURN_VALUE',
++                                'RETURN_CONST'):
++                continue
++            if _f_block is None and join_block in (_p.successors or ()):
++                _f_block = _p
++        if _t_block is None or _f_block is None:
++            return None, []
++        _t_preds = set(p for p in (_t_block.predecessors or ()) if p is not None)
++        _f_preds = set(p for p in (_f_block.predecessors or ()) if p is not None)
++        _cond_block = None
++        for _p in (_t_preds & _f_preds):
++            if _p is _t_block or _p is _f_block:
++                continue
++            _pl = _p.get_last_instruction()
++            if (_pl is None
++                    or _pl.opname not in (CONDITIONAL_JUMP_OPS
++                                          | SHORT_CIRCUIT_JUMP_OPS)):
++                continue
++            _pexc = set(getattr(_p, 'exception_successors', None) or ())
++            _psuccs = [s for s in (_p.successors or ()) if s not in _pexc]
++            if set(id(s) for s in _psuccs) != {id(_t_block), id(_f_block)}:
++                continue
++            _cond_block = _p
++            break
++        if _cond_block is None:
++            return None, []
++        _ci = [i for i in _cond_block.instructions if i.opname not in _noise]
++        _cj = _cond_block.get_last_instruction()
++        _ci = [i for i in _ci if i is not _cj]
++        _ti = [i for i in _t_block.instructions if i.opname not in _noise]
++        _tj = _t_block.get_last_instruction()
++        _ti = [i for i in _ti if i is not _tj]
++        _fi = [i for i in _f_block.instructions if i.opname not in _noise]
++        _test = self.expr_reconstructor.reconstruct(_ci) if _ci else None
++        _body = self.expr_reconstructor.reconstruct(_ti) if _ti else None
++        _orelse = self.expr_reconstructor.reconstruct(_fi) if _fi else None
++        if _test is None or _body is None or _orelse is None:
++            return None, []
++        return ({'type': 'IfExp', 'test': _test, 'body': _body,
++                 'orelse': _orelse},
++                [_cond_block, _t_block, _f_block])
++
++    def _is_ternary_chain_compare_host_block(self, block):
++        """[B98-V3R2] 鍒ゅ畾鍧楁槸鍚︿负銆屼笁鍏冩搷浣滄暟閾惧紡姣旇緝銆嶉娈靛潡锛屾槸鍒欒繑鍥炲叾
++        閾惧紡姣旇緝鐨?merge 鍧楋紝鍚﹀垯 None銆?+
++        璇嗗埆鏉′欢锛堝叏閮ㄥ悓灞傚潡缁撴瀯浜嬪疄锛屼笌
++        ``_try_build_ternary_operand_chained_compare`` 鐨勫畧鍗?(1)(2)(3) 涓€鑷达級锛?+          鈶?闈炲櫔澹版寚浠ら涓ゆ潯鎭颁负 ``SWAP 2; COPY 2``锛岀涓夋潯涓?+             COMPARE_OP/IS_OP/CONTAINS_OP锛屽潡鏈负 SHORT_CIRCUIT_JUMP_OPS锛?+          鈶?璺宠浆鐩爣鍧楁伆涓?``SWAP; POP_TOP`` 涓ゆ寚浠わ紱
++          鈶?鍏跺敮涓€鍚庣户 merge 鍧楁湯涓?RETURN_VALUE/RETURN_CONST 鎴栧惈 STORE_*
++             锛堝€间笂涓嬫枃锛夛紱
++          鈶?鏈潡鏄煇涓?IfRegion/BoolOpRegion 鐨勬垚鍛樺潡锛堝瓨鍦ㄦ秷璐瑰尯鍩燂級銆?+        """
++        if block is None:
++            return None
++        _noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
++        _cmp_ops_set = ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
++        hi = [i for i in block.instructions if i.opname not in _noise]
++        if len(hi) < 4:
++            return None
++        if (hi[0].opname != 'SWAP' or hi[0].arg != 2
++                or hi[1].opname != 'COPY' or hi[1].arg != 2
++                or hi[2].opname not in _cmp_ops_set):
++            return None
++        hl = block.get_last_instruction()
++        if hl is None or hl.opname not in SHORT_CIRCUIT_JUMP_OPS:
++            return None
++        if not isinstance(hl.argval, int):
++            return None
++        cleanup = self.cfg.get_block_by_offset(hl.argval)
++        if cleanup is None or cleanup is block:
++            return None
++        cu = [i.opname for i in cleanup.instructions if i.opname not in _noise]
++        if cu != ['SWAP', 'POP_TOP']:
++            return None
++        merge2 = None
++        for s in sorted(list(cleanup.successors or ()),
++                        key=lambda b: b.start_offset):
++            merge2 = s
++            break
++        if merge2 is None:
++            return None
++        ml = merge2.get_last_instruction()
++        _value_ctx = (
++            (ml is not None and ml.opname in ('RETURN_VALUE', 'RETURN_CONST'))
++            or any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
++                                'STORE_DEREF')
++                   for i in (merge2.instructions or [])))
++        if not _value_ctx:
++            return None
++        for r in self.regions:
++            if (isinstance(r, (IfRegion, BoolOpRegion))
++                    and block in (r.blocks or ())):
++                return merge2
++        return None
++
++    def _ternary_chain_compare_host(self, region: TernaryRegion):
++        """[B98-V3R2] 鍒ゅ畾涓夊厓鍖哄煙鏄惁涓恒€屼笁鍏冩搷浣滄暟閾惧紡姣旇緝銆嶇殑鏍堜笂鎿嶄綔鏁?+        鎻愪緵鑰咃紙宸?涓锛夛紝鏄垯杩斿洖娑堣垂瀹冪殑閾惧紡姣旇緝棣栨鍧楋紝鍚﹀垯 None銆?+
++        璇ュ垽瀹氱敤浜庤浣嶏細浣滀负鏍堜笂鎿嶄綔鏁扮殑涓夊厓涓嶅緱鐙珛鐢熸垚璇彞鈥斺€斿畠鐨勫€肩敱
++        ``_try_build_ternary_operand_chained_compare`` 缁忓尯鍩?merge 閾惧紩鐢?+        锛堢埗寮曠敤瀛愬叆鍙ｏ紱rv7_02 瀹炶瘉锛氱嫭绔嬬敓鎴愪細澶栨紡 `a if c1 else b` 瑁?+        Expr锛屼笌姣旇緝琛ㄨ揪寮忛噸澶嶏級銆?+
++        璇嗗埆鏉′欢锛堟部 merge 閾惧悜涓婇€愮骇楠岃瘉锛屽叏閮ㄥ悓灞傜粨鏋勪簨瀹烇級锛?+          鈶?鏈尯鍩熸潯浠跺潡鍓嶅 preload 涓虹┖锛堟潯浠跺潡鍏ュ彛鏍堟伆涓轰笅灞傚€硷級锛?+          鈶?merge 閾炬瘡涓€璺崇殑涓婂眰鏄?TernaryRegion锛堝叾 condition_block is
++             褰撳墠 merge 鍧楋級锛屼笖鍏舵潯浠跺潡 preload 涔熶负绌猴紱
++          鈶?閾鹃《 merge 鍧楀懡涓?``_is_ternary_chain_compare_host_block``锛?+          鈶?閾鹃《涓夊厓鎭版湁涓や釜鎻愪緵鑰咃細閾鹃《涓夊厓鑷韩锛堜腑娈碉級+ merge_block is
++             閾鹃《涓夊厓 condition_block 鐨勪笁鍏冨尯鍩燂紙宸︽搷浣滄暟锛夛紝涓旀湰鍖哄煙鏄?+             浜岃€呬箣涓€銆?+        浠讳竴涓嶆垚绔嬭繑鍥?None锛堜笉鍛戒腑鍗抽€愪綅鍥炶惤鏃㈡湁鐢熸垚璺緞锛孋3锛夈€?+        """
++        if not isinstance(region, TernaryRegion):
++            return None
++        if self._compute_ternary_cond_preload_exprs(region):
++            return None
++        _chain = [region]
++        cur = region.merge_block
++        _guard = 0
++        while cur is not None and _guard < 4:
++            _guard += 1
++            if self._is_ternary_chain_compare_host_block(cur) is not None:
++                _t2 = _chain[-1]
++                if getattr(_t2, 'merge_block', None) is not cur:
++                    return None
++                if self._compute_ternary_cond_preload_exprs(_t2):
++                    return None
++                _t1 = None
++                for r in self.regions:
++                    if (isinstance(r, TernaryRegion) and r is not _t2
++                            and getattr(r, 'merge_block', None) is _t2.condition_block
++                            and r.entry is not cur):
++                        _t1 = r
++                        break
++                if _t1 is None:
++                    return None
++                if self._compute_ternary_cond_preload_exprs(_t1):
++                    return None
++                if region is not _t1 and region is not _t2:
++                    return None
++                return cur
++            upper = None
++            for r in self.regions:
++                if (isinstance(r, TernaryRegion) and r is not region
++                        and getattr(r, 'condition_block', None) is cur):
++                    upper = r
++                    break
++            if upper is None:
++                return None
++            if self._compute_ternary_cond_preload_exprs(upper):
++                return None
++            _chain.append(upper)
++            cur = upper.merge_block
++        return None
++
+@@ -32292,0 +32959,33 @@ AST 鏄犲皠瑙勫垯:
++                    # [B98-V3R2 淇] and-or 鍊艰彵褰㈢殑 BoolOp/Ternary 鍚屽潡纰版挒
++                    # 锛坱ry 浣撴淳鍙戜晶锛夈€侭99 鍓嶇紑鍚告敹锛坃b99_n_prefix锛夊悗锛屽叏閾?+                    # BoolOpRegion 鐨?entry 浠?or 閿氬潡鍓嶇Щ鍒版潯浠跺潡锛屼笌闀滃儚
++                    # TernaryRegion 鍏变韩鍚屼竴 entry 涓斿潡闆嗗畬鍏ㄧ浉鍚?+                    # 锛坄recv.append((X and Y or Z)[0])` 褰㈡€侊細鏉′欢鍧?PJF鈫掑亣鑷傦紝
++                    # 鐪熻噦 JITOP鈫掓眹鍚堬紝姹囧悎鍧楀惈 [0] 涓嬫爣娑堣垂 + CALL锛夈€?+                    # 鏈壂鎻忔寜鍖哄煙鍒楄〃搴忓彇棣栦釜 entry 鍛戒腑锛圔oolOp 闃舵鍏堜簬
++                    # Ternary 闃舵锛夛紝BoolOpRegion 鎭掑厛鍛戒腑锛涜€屽叾鍊肩洰鏍囨壂鎻?+                    # 浼氳秺杩囨眹鍚堝潡鐨勬秷璐硅鍙ユ姄鍒颁笅娓?STORE锛堝亣 value_target锛夛紝
++                    # 鍊煎彂灏勬棦鏃犳硶琛ㄨ揪涓嬫爣娑堣垂璇彞锛屼篃鍚炴帀姹囧悎鍧楀唴瀹广€?+                    # 褰掔害鏂瑰紡锛氫笌 get_entry_region_for_block 鐨勫悓浼樺厛绾ц鍐?+                    # 锛圱ernary 鍚庢彃鍏ュ垪琛ㄣ€佺ǔ瀹氭帓搴忓悗鑳滃嚭锛夊榻愨€斺€旂鎾炴椂璺宠繃
++                    # BoolOpRegion锛岃鎵弿鑷劧鎺ㄨ繘鍒伴暅鍍?TernaryRegion锛岀敱
++                    # _generate_ternary + _try_build_andor_boolop_from_ternary
++                    # 鍏ㄩ摼鍙樹綋閲嶅缓 Or[And[X, Y], Z]锛屾眹鍚堝潡娑堣垂璇彞涓庡悗缁鍙?+                    # 鐢辨棦鏈?merge-consumer 鏈哄埗鍙戝皠锛坈b24db60 鍩虹嚎鍚岃矾寰勫凡楠岃瘉锛夈€?+                    # AST 鏄犲皠锛氬潡闆嗕笉鍙橈紝浠呮淳鍙戣€呮洿鎹紱BoolOpRegion 涓嶅啀鐙珛
++                    # 褰掔害锛屽叾 op_chain 鐢卞叏閾惧彉浣撴暣浣撻噸寤轰负 BoolOp(or,[BoolOp
++                    # (and,[X,Y]),Z])锛岃鍙ョ骇杈撳嚭涓庡熀绾夸竴瀛椾笉宸€?+                    # 鍙嶈瘉锛氭棤闀滃儚 TernaryRegion锛堢函 and / 绾?or 閾炬棤鐙珛鍋囪噦锛?+                    # 鎴栧潡闆嗕笉鍚岋紙宓屽鏉′欢閾撅級鏃跺垽鎹笉鍛戒腑锛孊oolOp 娲惧彂鍘熸牱淇濈暀銆?+                    if isinstance(nr, BoolOpRegion):
++                        _b98_v3r2_mirror = None
++                        for _tr in self.region_analyzer.regions:
++                            if (isinstance(_tr, TernaryRegion)
++                                    and _tr is not nr
++                                    and _tr.entry is block
++                                    and id(_tr) not in self._generated_regions
++                                    and set(_tr.blocks) == set(nr.blocks)):
++                                _b98_v3r2_mirror = _tr
++                                break
++                        if _b98_v3r2_mirror is not None:
++                            continue
+@@ -42188,0 +42888,12 @@ AST 鏄犲皠瑙勫垯:
++            # [B98-V3R2] ternary-operand chained compare as BoolOp operand:
++            # the R106 pattern detector walks fall-through successors expecting
++            # each chain block to hold its own operand LOADs. When a chain block
++            # hosts a ternary evaluation instead (e.g. `T1 <= T2 < (m if c3
++            # else n)`, chain_three_ternary), detection returns None although
++            # the first-segment block is a valid chained-compare header.
++            # Structural rebuild via the region graph + inline value diamond;
++            # non-matching shapes fall through unchanged (C3).
++            _ternary_cc = self._try_build_ternary_operand_chained_compare(
++                chain_block, merge_hint=getattr(region, 'merge_block', None))
++            if _ternary_cc is not None:
++                return _ternary_cc
+@@ -42280,0 +42992,34 @@ AST 鏄犲皠瑙勫垯:
++    def _b123_ifexp_from_tail_diamond(self, dia: Dict[str, Any]) -> Optional[Dict[str, Any]]:
++        """[B123-V3R2] and 灏鹃捇鐭筹紙test/then/else 涓夊潡锛夐噸寤?IfExp銆?+
++        鈶犵畻娉曚緷鎹細璇嗗埆灞?_b123_absorb_ifexp_tail_diamond 宸查獙涓夊潡姹傚€肩獥
++        涓虹函鍊兼眰鍊硷紙鏃犺鍙ョ粓缁撶/鍐呴儴璺宠浆锛? 灏炬潯浠惰烦杞?+        POP_JUMP_FORWARD_IF_FALSE鈥斺€斿€艰涔変负 IfExp(test, body=then,
++        orelse=else)锛岄噸缂栬瘧閫愪綅鍐嶇敓锛坮otate-while 鍥炶竟涓夊壇鏈敱 While 閲?+        缂栬瘧鑷劧鍐嶇敓锛夈€?+        鈶″綊绾﹂『搴忥細_loop_generate_while 鐨?cc 鍒嗘敮鍦ㄩ摼寮忔瘮杈?Compare 缁勫悎
++        瀹屾垚鍚庤皟鐢紝IfExp 杩藉姞涓?BoolOp(And) 鏈綅鎿嶄綔鏁般€?+        鈶㈠敮涓€褰掑睘鍒ゅ畾锛氫笁鍧楀凡鐢辫瘑鍒眰骞跺叆 LoopRegion锛堝敮涓€褰掑睘锛夛紝鏈柟娉?+        鍙鍧楀唴姹傚€肩獥锛屼笉鏍囪銆佷笉鏀圭姸鎬侊紙鏍囪鐢辫皟鐢ㄦ柟缁熶竴鎵ц锛夈€?+        鈶ｅ祵濂楀鐞嗭細閽荤煶鏁翠綋浣滃崟鎿嶄綔鏁帮紝涓嶅睍寮€涓哄瓙鍖哄煙銆?+        鈶ST 鏄犲皠鎺ュ彛锛欼fExp(test, body, orelse)锛涗换涓€绐楅噸寤哄け璐ヨ繑鍥?+        None锛堣皟鐢ㄦ柟淇濇寔鏃㈡湁閫€鍖栧舰鎬侊紝C2锛夈€?+        鈶ュ弽缂栬瘧娴佺▼锛氫粎 cc_mixed_cond_tail_diamond 鍏冩暟鎹懡涓椂琚皟鐢紱
++        涓嶅懡涓笉鎵ц锛圕3锛夈€?+        """
++
++        def _seg(block):
++            ins = [i for i in block.instructions
++                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
++                                       'EXTENDED_ARG')]
++            if len(ins) < 2 or ins[-1].opname != 'POP_JUMP_FORWARD_IF_FALSE':
++                return None
++            return self.expr_reconstructor.reconstruct(list(ins[:-1]))
++
++        _t = _seg(dia['test'])
++        _b = _seg(dia['then'])
++        _o = _seg(dia['else'])
++        if _t is None or _b is None or _o is None:
++            return None
++        return {'type': 'IfExp', 'test': _t, 'body': _b, 'orelse': _o}
++
+@@ -42480,0 +43226,235 @@ AST 鏄犲皠瑙勫垯:
++    def _try_build_keeppop_target_grouped(self, region: 'BoolOpRegion') -> Optional[Dict[str, Any]]:
++        """[B98-V3R2 keep-or-pop 鐩爣鏀舵暃鍒嗙粍] BoolOp 鍊奸摼鐨?keep-or-pop/杈圭晫璺宠浆
++        娣峰悎褰㈡€佹寜璺宠浆鐩爣鏀舵暃閲嶅缓锛堝彸鎶樺彔 + 杈圭晫鍒嗘锛夈€?+
++        绠楁硶瑙掕壊锛氭ā寮忔娴嬪櫒锛圥attern Detector锛? 琛ㄨ揪寮忛噸寤哄櫒銆?+
++        銆愬瓧鑺傜爜妯″紡銆慍Python 3.11 鍊间笂涓嬫枃甯冨皵閾句腑锛屾搷浣滄暟鐨勩€屼繚鐣欏€艰烦杞€?+        锛圝UMP_IF_TRUE_OR_POP / JUMP_IF_FALSE_OR_POP锛変笌銆屽脊鍑鸿烦杞€?+        锛圥OP_JUMP_FORWARD_IF_TRUE/FALSE锛夋贩鍚堝嚭鐜版椂锛岄摼鐨勭粨鍚堢粨鏋勭敱鍚勬垚鍛樼殑
++        璺宠浆鐩爣鍞竴纭畾锛?+        - 鍏ㄥ憳 keep-or-pop 涓旂洰鏍?= merge锛堟贩鍚堟瀬鎬э級濡?``a or (b and (c or d))``锛?+          @0 a JITOP鈫抦erge; @6 b JIFOP鈫抦erge; @10 c JITOP鈫抦erge; 灏惧€?d銆?+          鏋佹€у彸鎶樺彔锛欽ITOP鈫?or'锛堢湡鈫掍繚鐣欑粨鏋滐級銆丣IFOP鈫?and'锛堝亣鈫掍繚鐣欑粨鏋滐級銆?+        - 棣栨垚鍛?PF 璺宠繃涓钀戒簬閾惧唴鎴愬憳锛坅nd 缁勫亣杈圭洿杈?or 灏炬眰鍊艰捣鐐癸級
++          濡?``(a and (b or c)) or (d and e)``锛欯0 a PJIF_FALSE鈫扏14(d)锛?+          涓 @6/@10 涓?JT 鐩爣 merge锛堟垨瀛愮粍锛夛紱@14 JF鈫抦erge + 灏惧€?e銆?+        - 棣栨垚鍛?PT 鐪熻竟钀戒簬閾惧唴鎴愬憳銆佷腑娈?PF 钀戒簬灏惧€煎潡锛坥r 缁勭湡鍊艰澶栧眰
++          And 璺ㄨ秺锛夊 ``((a or b) and c) or d``锛欯0 a PJIF_TRUE鈫扏10(c)锛?+          @6 b PJIF_FALSE鈫扏14(d=灏惧€?锛汙10 c JITOP鈫抦erge锛涘熬鍊?d銆?+        鎵佸钩 or_groups 绠楁硶涓?B45 skip 杈圭畻娉曞浠ヤ笂褰㈡€佸垎鍒洜鏍囩姝т箟/灏惧€?+        璇苟鑰岄噸缁撳悎閿欒锛堝疄娴?``((a or b) and c) or d`` 鈫?+        ``(a or b) and (c or d)``銆乣`a or (b and (c or d))`` 鈫?``a or b and c or d``锛夈€?+        銆愬綊绾︽柟寮忋€戞寜璺宠浆鐩爣鍒嗘鍚庡彸鎶樺彔锛歬eep 鎴愬憳鎸夊叾淇濈暀鏋佹€э紙JT鈫抩r/
++        JF鈫抋nd锛夋妸鎿嶄綔鏁版姌鍒板彸渚э紱杈圭晫鎴愬憳锛圥F/PT锛夌‘瀹氬灞傝繛鎺ヨ瘝涓庡垎娈靛綊灞烇紱
++        灏惧€煎潡浣滀负鏈綅鎿嶄綔鏁版帴鍏ュ叾褰掑睘娈电殑鍙虫姌鍙犵粓绔€傛姌鍙犵粨鏋滆嫢琚眹鍚堝潡鐨?+        UNARY_NOT 娑堣垂锛坢erge 鎸囦护鍚?UNARY_NOT锛屽 ``not (a or (b and
++        not c))``锛夛紝鏁撮摼鍖?UnaryOp(Not, ...)鈥斺€斿垽鎹笌 or_groups 璺緞灏鹃儴
++        鐨?merge-not 鍖呰９闀滃儚锛堟湰 hook 鏃╅€€鍏堜簬璇ュ熬閮紝椤昏嚜甯﹀悓娆惧寘瑁癸級銆?+        銆怉ST 鏄犲皠銆態oolOp(op, values=[鎿嶄綔鏁? 鍙虫姌鍙犵粨鏋淽) 宓屽鈥斺€旂姝㈡墎骞?+        閲嶇粨鍚堬紙涓嶅悓鎷彿瀵瑰簲涓嶅悓璺宠浆鐩爣锛屽瓧鑺傜爜涓嶅悓锛夛紱merge 鍚?UNARY_NOT
++        鏃跺灞傚啀鍖?UnaryOp(Not, BoolOp)銆?+        銆怌1銆戝彧璇婚摼鎴愬憳鍧楁湯 opcode 鏃忋€佽烦杞洰鏍囧亸绉讳笌鍚庣户闆嗗悎锛堝悓灞傜粨鏋勪簨瀹烇級锛?+        闆跺悕瀛?甯搁噺/鍋忕Щ鐧藉悕鍗曪紱銆怌2銆戜换涓€鏍￠獙鎴栭噸寤哄け璐ュ嵆杩斿洖 None锛堝洖閫€
++        鏃㈡湁鍒嗙粍/鎵佸钩绠楁硶锛岃緭鍑轰笌鏈懡涓€愪綅涓€鑷达級锛涖€怌3銆戞棤鐘舵€併€佹棤鍓綔鐢紱
++        鏉′欢涓婁笅鏂囦笉鎺ユ墜锛堜繚鐣欐棦鏈夋潯浠堕噸寤鸿矾寰勶級銆?+        """
++        op_chain = getattr(region, 'op_chain', None)
++        if not op_chain or len(op_chain) < 2:
++            return None
++        if getattr(region, 'is_condition_context', False):
++            return None
++        merge = getattr(region, 'merge_block', None)
++        if merge is None:
++            return None
++        merge_off = merge.start_offset
++        chain_offsets = {b.start_offset for b, _ in op_chain}
++        idx_by_offset = {b.start_offset: i for i, (b, _) in enumerate(op_chain)}
++        STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
++
++        def _keep_kind(blk):
++            li = blk.get_last_instruction()
++            if (li is None or li.opname not in SHORT_CIRCUIT_JUMP_OPS
++                    or not isinstance(getattr(li, 'argval', None), int)):
++                return None
++            return 'or' if li.opname == 'JUMP_IF_TRUE_OR_POP' else 'and'
++
++        def _operand(blk):
++            nt = self._try_build_nested_ternary_in_boolop(blk, region)
++            if nt is not None:
++                return nt
++            cc = self._try_build_chained_compare_in_boolop(blk, region)
++            if cc is not None:
++                return cc
++            instrs = [i for i in blk.instructions
++                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++            last = blk.get_last_instruction()
++            if last and last.opname in STRIP_JUMP_OPS:
++                pure = [i for i in instrs if i != last]
++            else:
++                clean = []
++                for i in instrs:
++                    if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
++                                    'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
++                        break
++                    clean.append(i)
++                pure = clean if clean else (list(instrs[:1]) if instrs else [])
++            if not pure:
++                return self._try_build_await_boolop_operand(blk)
++            return self.expr_reconstructor.reconstruct(pure)
++
++        def _fold(entries, terminal):
++            expr = terminal
++            for _blk, _pol in reversed(entries):
++                _opr = _operand(_blk)
++                if _opr is None:
++                    return None
++                if expr is None:
++                    expr = _opr
++                else:
++                    expr = {'type': 'BoolOp', 'op': _pol, 'values': [_opr, expr]}
++            return expr
++
++        def _tail_operand(tail_off, last_blk):
++            _tb = self.cfg.get_block_by_offset(tail_off)
++            if (_tb is None or _tb.start_offset in chain_offsets
++                    or _tb is merge or _tb not in region.blocks):
++                return None
++            _last = last_blk.get_last_instruction()
++            if _last is None or _last.argval is None:
++                return None
++            _found = False
++            for _s in last_blk.conditional_successors:
++                if _s.start_offset != _last.argval:
++                    if _s.start_offset != tail_off:
++                        return None
++                    _found = True
++            if not _found:
++                return None
++            _ti = [i for i in _tb.instructions
++                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++            _clean = []
++            for i in _ti:
++                if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
++                                'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
++                    break
++                _clean.append(i)
++            if not _clean:
++                return None
++            return self.expr_reconstructor.reconstruct(_clean)
++
++        _kinds = [_keep_kind(b) for b, _ in op_chain]
++
++        def _wrap_merge_unary_not(expr):
++            # [B98-V3R2 fix] 姹囧悎鍧?UNARY_NOT 鏁撮摼鍖呰９锛氬€奸摼鏁翠綋缁撴灉琚?merge
++            # 鍧楃殑 UNARY_NOT 娑堣垂鏃讹紙濡?``not (a or (b and not c))`` 鐨?+            # ``@merge [UNARY_NOT, RETURN_VALUE]``锛夛紝keep-or-pop 鎶樺彔缁撴灉椤诲寘
++            # UnaryOp(Not, ...)銆傚垽鎹?= merge 鍧楁寚浠ゅ惈 UNARY_NOT锛堝潡鍐?opcode
++            # 鏃忥紝I.4 鐧藉悕鍗曪級锛屼笌 or_groups 璺緞灏鹃儴鍚屽悕鍒ゆ嵁闀滃儚锛涙湭鍛戒腑琛屼负
++            # 閫愪綅涓嶅彉锛圕3锛夈€傛鍖呰９鍏堜簬鏃╅€€杩斿洖锛屼慨澶嶆湰 hook 鏃╅€€缁曡繃
++            # ``_build_boolop_expression_inner`` 灏鹃儴 merge-not 鍖呰９瀵艰嚧鐨?+            # 澶栧眰 not 涓㈠け锛坮egression: b_nest_not_layers锛夈€?+            if expr is not None and merge is not None:
++                _mi = [i for i in merge.instructions
++                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++                if any(i.opname == 'UNARY_NOT' for i in _mi):
++                    return {'type': 'UnaryOp', 'op': 'not', 'operand': expr}
++            return expr
++
++        # 鈥斺€?褰㈡€?A锛氬叏鍛?keep-or-pop銆佺洰鏍?= merge銆佹贩鍚堟瀬鎬э紙鍙虫姌鍙狅級鈥斺€?+        if all(k is not None for k in _kinds):
++            _all_merge = all(b.get_last_instruction().argval == merge_off
++                             for b, _ in op_chain)
++            if _all_merge and 'or' in _kinds and 'and' in _kinds:
++                _tail = self._reconstruct_boolop_tail_value_operand(
++                    region, op_chain, op_chain[-1][0],
++                    require_not_chain_target=True)
++                if _tail is not None:
++                    _folded = _fold(list(zip([b for b, _ in op_chain], _kinds)),
++                                    _tail)
++                    if _folded is not None:
++                        return _wrap_merge_unary_not(_folded)
++        # 鈥斺€?褰㈡€?B锛氶鎴愬憳 PF 璺宠繃涓钀戒簬閾惧唴鎴愬憳锛堝灞?or锛屽垎娈甸噸寤猴級鈥斺€?+        _first_blk = op_chain[0][0]
++        _first_last = _first_blk.get_last_instruction()
++        if (_first_last is not None
++                and _first_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
++                and 'FALSE' in _first_last.opname
++                and isinstance(getattr(_first_last, 'argval', None), int)):
++            _j = idx_by_offset.get(_first_last.argval)
++            if _j is not None and _j >= 2:
++                _mid = op_chain[1:_j]
++                _seg2 = op_chain[_j:]
++                _mid_kinds = [_keep_kind(b) for b, _ in _mid]
++                _seg2_kinds = [_keep_kind(b) for b, _ in _seg2]
++                _mid_ok = (
++                    all(k == 'or' for k in _mid_kinds)
++                    and all(b.get_last_instruction().argval == merge_off
++                            for b, _ in _mid))
++                _seg2_ok = (
++                    all(k is not None for k in _seg2_kinds)
++                    and all(b.get_last_instruction().argval == merge_off
++                            for b, _ in _seg2))
++                if _mid_ok and _seg2_ok:
++                    _tail = self._reconstruct_boolop_tail_value_operand(
++                        region, op_chain, op_chain[-1][0],
++                        require_not_chain_target=True)
++                    if _tail is not None:
++                        _op0 = _operand(_first_blk)
++                        _mid_expr = _fold(list(zip([b for b, _ in _mid], _mid_kinds)), None)
++                        _seg2_expr = _fold(list(zip([b for b, _ in _seg2], _seg2_kinds)), _tail)
++                        if _op0 is not None and _mid_expr is not None and _seg2_expr is not None:
++                            _seg1 = {'type': 'BoolOp', 'op': 'and',
++                                     'values': [_op0, _mid_expr]}
++                            return _wrap_merge_unary_not(
++                                {'type': 'BoolOp', 'op': 'or',
++                                 'values': [_seg1, _seg2_expr]})
++        # 鈥斺€?褰㈡€?C锛氶鎴愬憳 PT 璺宠繃涓钀戒簬閾惧唴鎴愬憳銆佷腑娈?PF 钀戒簬灏惧€煎潡 鈥斺€?+        if (_first_last is not None
++                and _first_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
++                and 'TRUE' in _first_last.opname
++                and isinstance(getattr(_first_last, 'argval', None), int)):
++            _p = idx_by_offset.get(_first_last.argval)
++            if _p is not None and 2 <= _p <= len(op_chain) - 1:
++                _mid = op_chain[1:_p]
++                _seg2 = op_chain[_p:]
++
++                def _pf_target(blk):
++                    li = blk.get_last_instruction()
++                    if (li is None
++                            or li.opname not in FORWARD_CONDITIONAL_JUMP_OPS
++                            or 'FALSE' not in li.opname
++                            or not isinstance(getattr(li, 'argval', None), int)):
++                        return None
++                    return li.argval
++
++                _mid_targets = [_pf_target(b) for b, _ in _mid]
++                if all(t is not None for t in _mid_targets):
++                    _tail_off = _mid_targets[0]
++                    _mid_ok = all(t == _tail_off for t in _mid_targets)
++                    _seg2_kinds = [_keep_kind(b) for b, _ in _seg2]
++                    _seg2_ok = (
++                        all(k == 'or' for k in _seg2_kinds)
++                        and all(b.get_last_instruction().argval == merge_off
++                                for b, _ in _seg2))
++                    if _mid_ok and _seg2_ok:
++                        _tail = _tail_operand(_tail_off, op_chain[-1][0])
++                        if _tail is not None:
++                            _run_ops = [_operand(op_chain[_ri][0])
++                                        for _ri in range(_p)]
++                            _second_ops = [_operand(b) for b, _ in _seg2]
++                            if all(_o is not None for _o in _run_ops + _second_ops):
++                                _run_expr = (_run_ops[0] if len(_run_ops) == 1
++                                             else {'type': 'BoolOp', 'op': 'or',
++                                                   'values': _run_ops})
++                                _second_expr = (_second_ops[0] if len(_second_ops) == 1
++                                                else {'type': 'BoolOp', 'op': 'or',
++                                                      'values': _second_ops})
++                                _inner = {'type': 'BoolOp', 'op': 'and',
++                                          'values': [_run_expr, _second_expr]}
++                                _outer_op = ('or' if _seg2_kinds[-1] == 'or' else 'and')
++                                return _wrap_merge_unary_not(
++                                    {'type': 'BoolOp', 'op': _outer_op,
++                                     'values': [_inner, _tail]})
++        return None
++
+@@ -43469,0 +44450,9 @@ AST 鏄犲皠瑙勫垯:
++        # [B98-V3R2 keep-or-pop 鐩爣鏀舵暃鍒嗙粍] 娣峰悎 keep-or-pop/杈圭晫璺宠浆鍊奸摼
++        # 锛堝 ``a or (b and (c or d))`` / ``((a or b) and c) or d`` /
++        # ``(a and (b or c)) or (d and e)``锛夋寜鎴愬憳璺宠浆鐩爣鍒嗘鍙虫姌鍙犫€斺€?+        # 鎵佸钩 or_groups 瀵瑰叾閲嶇粨鍚堛€丅45 skip 杈圭畻娉曚細璇苟灏惧€硷紝鏁呴』鍏堟墜
++        # 閲嶅缓銆傚垽鎹笉鍛戒腑锛堣瑙?_try_build_keeppop_target_grouped锛夎繑鍥?None锛?+        # 璧版棦鏈夎矾寰勶紝琛屼负閫愪綅涓嶅彉銆?+        _v3r2_keeppop = self._try_build_keeppop_target_grouped(region)
++        if _v3r2_keeppop is not None:
++            return _v3r2_keeppop
+@@ -43705,0 +44695,21 @@ AST 鏄犲皠瑙勫垯:
++            # [B43-V3R2] 閾惧紡姣旇緝閽╁瓙鍛戒腑褰㈠垽鍒細entry 鍛戒腑锛坈hain_block 鏄摼
++            # IfRegion 鐨?entry/condition_block锛宖t 鍧楁槸閾惧唴鍚庣画 COMPARE 娈碉紝
++            # 蹇呴』璺宠繃鍚告敹鈥斺€旀棫琛屼负锛塿s merge 鍛戒腑锛坈hain_block 鏄摼 IfRegion
++            # 鐨?merge_block锛岄摼鍐呭潡鍏ㄩ儴浣嶄簬 chain_block 涔嬪墠锛宖t 鍧楁槸閾惧鐪?+            # 鎿嶄綔鏁帮紝涓嶅緱璺宠繃锛沗return a < b < c and d` 鐨?`and d` 灏炬搷浣滄暟
++            # 鍗虫褰紝璺宠繃鑷存暣娈典涪澶憋級銆傚垽鎹?= 鍖哄煙缁撴瀯韬唤锛坋ntry/merge 鎸囬拡
++            # 涓庨摼澶?opcode 褰㈡€侊級锛孖.4 鐧藉悕鍗曪紱R106 鐩存鍛戒腑锛坈hain_block 鑷韩
++            # 鏄摼澶达紝ft 鏄摼鍐呮锛夌淮鎸佽烦杩囥€?+            _cc_hook_skip_ft = False
++            if chained_compare_expr is not None:
++                if self.region_analyzer._is_chained_compare_header(chain_block):
++                    _cc_hook_skip_ft = True
++                else:
++                    for _r43 in self.regions:
++                        if (isinstance(_r43, IfRegion)
++                                and _r43.entry is chain_block
++                                and _r43.condition_block is chain_block
++                                and getattr(_r43, 'chained_compare_ops', None)
++                                and len(_r43.chained_compare_ops) >= 2):
++                            _cc_hook_skip_ft = True
++                            break
+@@ -43707 +44717 @@ AST 鏄犲皠瑙勫垯:
+-                    and chained_compare_expr is None
++                    and (chained_compare_expr is None or not _cc_hook_skip_ft)
+@@ -44940,0 +45951,112 @@ AST 鏄犲皠瑙勫垯:
++                                    # [B98-V3R2 fix] 杩唬鍣ㄦ媶闄?杩斿洖灏撅細寰幆浣撳唴
++                                    # `for ...: return sink((a or b) and c)` 鐨?+                                    # CPython 3.11 鎸囩汗鈥斺€旀眹鍚堝潡灏句笁杩?+                                    # [PRECALL/CALL 娑堣垂娈? SWAP n, POP_TOP,
++                                    # RETURN_VALUE]锛屼笖 POP_TOP 鏄獥鍙ｅ唴鍞竴
++                                    # POP_TOP 涓斾负鍊掓暟绗簩鏉℃寚浠ゃ€係WAP n+POP_TOP
++                                    # 鏄妸杩唬鍣紙鍙婂悓灞傜翱璁板€硷級鍘嬪湪杩斿洖鍊间箣涓嬬殑
++                                    # 鎷嗛櫎瀵癸細RETURN_VALUE 杩斿洖鐨勬鏄湰琛ㄨ揪寮忥紝
++                                    # POP_TOP 涓嶆槸璇彞杈圭晫锛堝師 P2-1 鍒ゆ嵁鍦ㄦ鎶?+                                    # CALL 缁撴灉褰撹涓㈠純鐨勮〃杈惧紡璇彞锛岄殢鍚?+                                    # RETURN_VALUE 鍗曠嫭鐢熸垚 鈫?`sink(...)` 涓?+                                    # return銆佸鍑?`return None`锛夈€?+                                    # 鈶犺瘑鍒潯浠讹紙I.4 鐧藉悕鍗曪細鍧楁湯涓夎繛 opcode +
++                                    #   鏍堜綅搴忥級锛歋WAP(arg>=2) 绱ч偦 POP_TOP 涓?+                                    #   POP_TOP 涔嬪悗鍞竴鎸囦护涓?RETURN_VALUE锛?+                                    # 鈶″綊绾︽柟寮忥細鎴愬鍓ュ熬鎷嗛櫎瀵癸紝鎶婅〃杈惧紡鏁翠綋
++                                    #   褰掔害涓?ast.Return(value=expr)鈥斺€斾笌
++                                    #   merge 鍧楀垎绂诲舰鎬侊紙SWAP/POP_TOP 鐙崰鍧椼€?+                                    #   RETURN_VALUE 涓虹嫭绔?merge锛夌殑鏃㈡湁
++                                    #   Return 褰掔害鍚屽瀷锛屼粎鍧楀唴鎸囦护鍒嗗尯涓嶅悓锛?+                                    # 鈶㈠敮涓€褰掑睘锛歊ETURN_VALUE 涓庢湰琛ㄨ揪寮忓悓灞?+                                    #   鏈尯鍩熶竴娆″綊绾︼紝鏃犲墿浣欐寚浠ゅ彂灏勶紱
++                                    # 鈶ST 鏄犲皠锛歴pliced expr 鈫?Return(value)锛?+                                    # 鈶や笉鍛戒腑锛堟棤 SWAP 鎴?POP_TOP 鍚庢湁鍏朵粬
++                                    #   璇彞/鏃?RETURN_VALUE锛夋椂閫愪綅璧板師 P2-1
++                                    #   璺緞銆?+                                    # [C1] 鍙 merge 鎸囦护搴忓垪涓庡尯鍩熸垚鍛樹簨瀹烇紱
++                                    # [C2] 涓嶆敼鍐欎换浣曞尯鍩?鍧楀瓧娈碉紱[C3] 鍛戒腑鎵?+                                    # 鍒囨崲鍙戝皠锛屾湭鍛戒腑琛屼负閫愪綅涓嶅彉銆?+                                    _teardown_ret_p21 = (
++                                        _first_pop_p21 == len(_mb_r67) - 2
++                                        and _first_pop_p21 > 0
++                                        and _mb_r67[-1].opname == 'RETURN_VALUE'
++                                        and _mb_r67[_first_pop_p21 - 1].opname == 'SWAP'
++                                        and (getattr(_mb_r67[_first_pop_p21 - 1],
++                                                     'arg', None) or 0) >= 2)
++                                    if _teardown_ret_p21:
++                                        _spliced_ret_p21 = self.expr_reconstructor.reconstruct(
++                                            _mb_r67[:_first_pop_p21 - 1],
++                                            initial_stack=_init_stack_p21)
++                                        if _spliced_ret_p21 is not None:
++                                            results.append({'type': 'Return',
++                                                            'value': _spliced_ret_p21})
++                                            self._generated_regions.add(id(region))
++                                            return results
++                                    # [B98-V3R2 fix] with-exit 鎷嗛櫎-杩斿洖灏撅細
++                                    # `with CM(): for ...: return (a or b) and c`
++                                    # 鐨勬眹鍚堝潡灏?[SWAP 2, LOAD_CONST None 脳3,
++                                    # PRECALL 2, CALL 2, POP_TOP, RETURN_VALUE]
++                                    # 鈥斺€旇繑鍥炲墠璋冪敤 __exit__(None, None, None)锛?+                                    # None脳3 甯搁噺蹇収 + PRECALL/CALL 涓?SWAP 2
++                                    # 鏋勬垚鎷嗛櫎娈碉紝RETURN_VALUE 杩斿洖鐨勬鏄叾涓嬪帇鐫€
++                                    # 鐨勬湰琛ㄨ揪寮忥紙鍊煎厛绠楀嚭銆佺粡 SWAP 鍘嬪埌 __exit__
++                                    # 涔嬩笅锛屾槸 CPython 3.11 with+return 涓旇繑鍥?+                                    # 鍊煎凡灏变綅鏃剁殑鍥哄畾甯冨眬锛夈€傚師鍒ゆ嵁鎶?CALL 褰撹
++                                    # 涓㈠純鐨勮〃杈惧紡璇彞閲嶅缓锛坒unc=None 鐨勪吉 Call锛?+                                    # 涓?RETURN 鍗曠嫭閲嶅缓鎴?Return(None) 鈫?+                                    # `return (a or b) and c` 鏁村彞涓㈠け銆?+                                    # 鈶犺瘑鍒潯浠讹紙I.4 鐧藉悕鍗曪細opcode/甯搁噺鍊?鏍堜綅
++                                    #   搴忥級锛氱獥鍙ｅ熬涓?CALL 涓斿墠缃繛缁?鈮? 涓?+                                    #   LOAD_CONST None锛坃_exit__ 涓夊厓蹇収 + 甯?+                                    #   鐗堟湰锛夛紱SWAP(arg鈮?) 鍙嚭鐜板湪甯搁噺娈典箣鍓嶏紱
++                                    #   POP_TOP 涓哄€掓暟绗簩鏉′笖鍏跺悗鍞竴鎸囦护涓?+                                    #   RETURN_VALUE銆傜湡瀹炶〃杈惧紡璇彞 `f(None,
++                                    #   None); return X` 鍦ㄦ湰绐楀彛涓嶅彲鑳藉嚭鐜扳€斺€?+                                    #   RETURN 鐨勮繑鍥炲€煎繀椤诲凡鍘嬪湪鍏朵笅锛堝€煎悗鍙栫殑
++                                    #   鍐欐硶 POP_TOP 涓?RETURN 涔嬮棿杩樻湁鍙?X 鎸囦护锛?+                                    #   涓嶆弧瓒冲€掓暟绗簩鏉★級锛屾晠鎸囩汗鏃犳涔夈€?+                                    # 鈶″綊绾︽柟寮忥細鍓ラ櫎 [SWAP?, None脳k, PRECALL,
++                                    #   CALL] 鎷嗛櫎娈碉紝浣欐浠?initial stack 榛戠
++                                    #   閲嶅缓锛堜綑娈典负绌烘椂杩斿洖鍊煎嵆 initial 鏍堥《
++                                    #   boolop_expr锛夈€?+                                    # 鈶㈠敮涓€褰掑睘锛氫笌 _teardown_ret_p21 鍚屽瀷鈥斺€?+                                    #   鍛戒腑鍗充竴娆″綊绾﹀彂灏?Return锛屾棤鍓╀綑鎸囦护锛?+                                    #   涓嶅懡涓€愪綅璧板師 P2-1 璺緞銆?+                                    # [C1] 鍙 merge 鍧楁寚浠ゅ簭鍒椾笌甯搁噺浜嬪疄锛?+                                    # [C2] 浣欐浜?expr_reconstructor 榛戠閲嶅缓锛?+                                    # [C3] 鍛戒腑鍒囨崲鍙戝皠銆佹湭鍛戒腑琛屼负閫愪綅涓嶅彉銆?+                                    _wex_ret_p21 = False
++                                    _wex_cut_p21 = None
++                                    if (_first_pop_p21 == len(_mb_r67) - 2
++                                            and _first_pop_p21 > 0
++                                            and _mb_r67[-1].opname == 'RETURN_VALUE'
++                                            and _mb_r67[_first_pop_p21 - 1].opname == 'CALL'
++                                            and _mb_r67[_first_pop_p21 - 2].opname == 'PRECALL'):
++                                        _wex_k = _first_pop_p21 - 3
++                                        _wex_nones_p21 = 0
++                                        while (_wex_k >= 0
++                                               and _mb_r67[_wex_k].opname == 'LOAD_CONST'
++                                               and getattr(_mb_r67[_wex_k], 'argval', None) is None):
++                                            _wex_nones_p21 += 1
++                                            _wex_k -= 1
++                                        if _wex_nones_p21 >= 2:
++                                            _wex_cut_p21 = _wex_k + 1
++                                            if (_wex_k >= 0
++                                                    and _mb_r67[_wex_k].opname == 'SWAP'
++                                                    and (getattr(_mb_r67[_wex_k], 'arg', None) or 0) >= 2):
++                                                _wex_cut_p21 = _wex_k
++                                            _wex_ret_p21 = True
++                                    if _wex_ret_p21:
++                                        if _wex_cut_p21 == 0:
++                                            _wex_expr_p21 = (_init_stack_p21[-1]
++                                                             if _init_stack_p21 else None)
++                                        else:
++                                            _wex_expr_p21 = self.expr_reconstructor.reconstruct(
++                                                _mb_r67[:_wex_cut_p21],
++                                                initial_stack=_init_stack_p21)
++                                        if _wex_expr_p21 is not None:
++                                            results.append({'type': 'Return',
++                                                            'value': _wex_expr_p21})
++                                            self._generated_regions.add(id(region))
++                                            return results
+@@ -45996,0 +47119,388 @@ AST 鏄犲皠瑙勫垯:
++    def _build_value_block_expr(self, block: 'BasicBlock') -> Optional[Dict]:
++        """_build_value_block_expr 鈥?鍊煎潡 鈫?琛ㄨ揪寮忥紙鍚瀺鍚堝竷灏旈摼瑙佽瘉锛夈€?+
++        鈶犵畻娉曚緷鎹細No More Gotos 绔犺妭銆屽尯鍩熷綊绾︾畻娉曞洓鍘熷垯銆嶁€斺€斿€煎潡鍐呭祵涓夊厓
++        鏉′欢鐢?IfExp 鎶借薄鑺傜偣鏁翠綋鎵胯浇锛堝祵濂楀嵆鎶借薄鑺傜偣锛夛紝`(a or b) and c`
++        褰㈡€佺殑铻嶅悎甯冨皵閾鹃暅鍍忔瀬鎬х敱瑙佽瘉閲嶅缓绔嬫柟锛堝悓 _generate_ternary 椤跺眰
++        澶勭悊锛岀埗寮曠敤瀛愬叆鍙ｏ細澶栧眰鍊间綅寮曠敤瀛愪笁鍏冨尯鍩熸暣鏍戦噸寤猴級銆?+        鈶″綊绾﹂『搴忥細鑷簳鍚戜笂锛屽唴灞傚厛褰掔害鈥斺€斿厛鍙栨湰鍧楀叆鍙ｇ殑 TernaryRegion
++        锛堟棤鍊兼秷璐圭洰鏍囥€佹棤 store/return 璇彞钀借剼锛夛紝閲嶅缓鏉′欢锛涘啀閫掑綊閲嶅缓
++        true/false 鍊煎潡琛ㄨ揪寮忥紙鍙啀宓屼笁鍏冿級锛涙渶鍚庢寜 orprefix / andor 瑙佽瘉
++        椤哄簭鎶樺彔铻嶅悎甯冨皵閾撅紝鏈懡涓椂鎸夋潯浠舵瀬鎬ц繕鍘?R38 not 鍖呰９鍚庣粍鍚?IfExp銆?+        鈶㈠敮涓€褰掑睘鍒ゅ畾锛氭湰鏂规硶鍙鍚屽眰缁撴瀯浜嬪疄鈥斺€攔egion.entry is block 鐨?+        TernaryRegion锛坈ondition/true/false 瀛楁鍚屽眰锛夛紱value_target 闈炵┖鎴?+        merge_context 涓鸿鍙ョ被锛?store'/'yield'/'compare'鈥︼級鐨勪笁鍏冨甫璇彞
++        钀借剼锛屼笉鍦ㄦ湰鎶借薄锛堝€间綅锛夊唴閲嶅缓锛屼氦鏃㈡湁璇彞閫氶亾銆傛湭鍛戒腑涓夊厓鏃舵寜
++        鏃㈡湁 _build_ternary_value_expr 閫愪綅鍥為€€銆?+        鈶ｅ祵濂楀鐞嗭細true/false 鍊煎潡缁忔湰鏂规硶閫掑綊閲嶅缓锛屽祵濂椾笁鍏冧綔涓烘娊璞¤妭鐐?+        鏁翠綋鎶樺彔锛涚函 JUMP_FORWARD 杩炴帴鍧楃粡 _build_ternary_value_expr 鐨勬棦
++        鏈夎窡闅忛€昏緫澶勭悊銆?+        鈶ゅ叆鍙ｅ紩鐢ㄨ涔夛細杩斿洖鍊?鈫?澶栧眰 IfExp.body/orelse 鎴栬璇佸竷灏旈摼鐨勬搷浣?+        鏁帮紱涓嶅彂灏勮鍙ャ€佷笉鐧昏 generated锛堝潡褰掑睘鐢辫皟鐢ㄦ柟鍐冲畾锛夈€?+        鈶ュ弽缂栬瘧娴佺▼锛氬尯鍩熺敓鎴愬眰鍊艰〃杈惧紡閲嶅缓杈呭姪锛屼緵鍊艰彵褰?Return 鎶樺彔
++        锛坃try_build_value_diamond_return锛変笌鏃㈡湁宓屽涓夊厓璺緞澶嶇敤銆?+
++        C 鏉℃锛歔C1] 鍙 L(A) = 鍧楀叆鍙ｅ尯鍩熻韩浠?+ 鍘熷瓙鍖哄煙 condition/true/
++        false/condition_chain_blocks/chained_compare_ops 鍚屽眰瀛楁 + 鏉′欢鍧楁湯
++        璺宠浆 opcode 鏃忥紱[C2] true/false 鍊肩粡鏈柟娉曢€掑綊榛戠杩斿洖锛屼笉绐ヨ瀛愬潡
++        鎸囦护搴忥紱[C3] 瑙佽瘉鍛戒腑/鍥為€€鏉′欢涓?_generate_ternary 椤跺眰閫愭潯鍚屽垽鎹紝
++        涓嶅懡涓嵆鎸夋棦鏈夐暅鍍忛噸寤猴紝琛屼负灏侀棴銆?+
++        杈撳叆濂戠害:
++          - 鎺ユ敹 BasicBlock
++          - 鍏抽敭瀛楁: 鍏ュ彛鍖哄煙锛圱ernaryRegion.entry/condition_block/
++            true_value_block/false_value_block/condition_chain_blocks锛?+
++        AST 鏄犲皠瑙勫垯:
++          - 铻嶅悎甯冨皵閾鹃暅鍍忓懡涓?鈫?BoolOp锛坈ertified 鍏ㄩ摼琛ㄨ揪寮忥級
++          - 鍏朵綑 鈫?IfExp(test, body, orelse)锛圱RUE 鏋佹€т笖鏃犺璇佸懡涓椂 test
++            鍔?not 杩樺師锛?+          - 闈炰笁鍏冨€煎潡 鈫?_build_ternary_value_expr 閫愪綅鍥為€€
++
++        瀛楄妭鐮佷竴鑷存€х害鏉?
++          - 瑙佽瘉鍛戒腑杈撳嚭閲嶇紪璇戝鐜板叡浜潡甯冨眬锛堜笌 _generate_ternary 涓€鑷达級
++          - 鏈懡涓椂闀滃儚 IfExp 閲嶇紪璇戜骇鐢熺嫭绔?else 鍧楋紙鏃㈡湁琛屼负锛岄€愪綅淇濇寔锛?+        """
++        if block is None:
++            return None
++        _reg = None
++        for _r in self.regions:
++            if (isinstance(_r, TernaryRegion) and _r.entry is block
++                    and not getattr(_r, 'value_target', None)
++                    and getattr(_r, 'merge_context', None) in (None, 'return')):
++                _reg = _r
++                break
++        if _reg is not None and _reg.condition_block is not None:
++            _cb = _reg.condition_block
++            _ci = [i for i in _cb.instructions
++                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++            _cl = _cb.get_last_instruction()
++            if _cl is not None and _cl.opname in (FORWARD_CONDITIONAL_JUMP_OPS
++                                                  | SHORT_CIRCUIT_JUMP_OPS):
++                _ci = [i for i in _ci if i is not _cl]
++            _cond_expr = self.expr_reconstructor.reconstruct(_ci) if _ci else None
++            _tb = getattr(_reg, 'true_value_block', None)
++            _fb = getattr(_reg, 'false_value_block', None)
++            if _cond_expr is not None and _tb is not None and _fb is not None:
++                _te = self._build_value_block_expr(_tb)
++                _fe = self._build_value_block_expr(_fb)
++                if _te is not None and _fe is not None:
++                    _orpr = self._try_build_orprefix_and_boolop_from_ternary(
++                        _reg, _cond_expr, _tb, _fb)
++                    if _orpr is not None:
++                        return _orpr
++                    _ador = self._try_build_andor_boolop_from_ternary(
++                        _reg, _cond_expr, _tb, _fb)
++                    if _ador is not None:
++                        return _ador
++                    if (_cl is not None
++                            and _cl.opname in _TRUE_POLARITY_COND_JUMP_OPS
++                            and not (getattr(_reg, 'condition_chain_blocks', None)
++                                     and len(_reg.condition_chain_blocks) > 1)
++                            and not getattr(_reg, 'chained_compare_ops', None)):
++                        _cond_expr = {
++                            'type': 'UnaryOp',
++                            'op': 'not',
++                            'operand': _cond_expr,
++                        }
++                    return {
++                        'type': 'IfExp',
++                        'test': _cond_expr,
++                        'body': _te,
++                        'orelse': _fe,
++                    }
++        return self._build_ternary_value_expr(block)
++
++    def _try_build_value_diamond_return(self, region: 'IfRegion'):
++        """_try_build_value_diamond_return 鈥?鍊艰彵褰?IfRegion 鈫?Return(IfExp)銆?+
++        鈶犵畻娉曚緷鎹細No More Gotos 绔犺妭銆屽尯鍩熷綊绾︾畻娉曞洓鍘熷垯銆嶁€斺€擿return X if d
++        else 0` 鐨勪袱鑷傚彇鍊肩粡 if/else 鑿卞舰姹囧悎鍚庣敱寰幆杩唬鍣ㄦ媶闄ゆ
++        锛圫WAP 2; POP_TOP; RETURN_VALUE锛夌洿鎺ヨ繑鍥烇紱璇ヨ彵褰㈡槸鍊肩敓浜х粨鏋勶紝
++        搴斿綊绾︿负鍗曚竴 ast.Return(IfExp)锛堣嚜搴曞悜涓婂綊绾︼細涓よ噦鍊煎厛琛岄噸寤猴紝
++        杩斿洖璇彞澶栧３鐢?Return 鑺傜偣鎵胯浇锛岃凯浠ｅ櫒鎷嗛櫎鐢遍噸缂栬瘧鑷劧鍐嶇敓锛夈€?+        鈶″綊绾﹂『搴忥細鑷簳鍚戜笂锛屽唴灞傚厛褰掔害鈥斺€旀潯浠惰〃杈惧紡锛堝幓鎺夋湯璺宠浆閲嶅缓锛?+        涓庝袱鑷傚€艰〃杈惧紡锛坃build_value_block_expr锛屽惈铻嶅悎甯冨皵閾捐璇侀€掑綊锛?+        鍏ㄩ儴灏辩华鍚庢墠鍙戝皠 Return锛涗换涓€澶辫触鍘熸牱杩斿洖 None 浜ゆ棦鏈夎矾寰勩€?+        鈶㈠敮涓€褰掑睘鍒ゅ畾锛氳瘑鍒潯浠讹紙鍏ㄩ儴鍚屽眰缁撴瀯浜嬪疄锛夆€斺€斿尯鍩熷甫 else_blocks锛?+        merge_block 闈炲櫔澹版寚浠ゆ伆涓?[SWAP(2), 娓呯悊椤? RETURN_VALUE]锛圕Python
++        3.11 寰幆鍐?return 鐨勮凯浠ｅ櫒鎷嗛櫎锛氭竻鐞嗛」 POP_TOP锛沞xcept 澶勭悊鍣ㄥ唴
++        return 鐨勫鐞嗗櫒鎷嗛櫎锛氭竻鐞嗛」 POP_EXCEPT锛夛紝鎴?merge 鎭?[SWAP(2)] 涓?+        姝ｅ父鍚庣户娓呯悊鍧楅潪鍣０鎭?[POP_TOP|POP_EXCEPT, RETURN_VALUE]锛堟帓闄?+        寮傚父杈瑰垏鍧楀舰鎬侊級锛屾垨 merge 闈炲櫔澹版伆 [RETURN_VALUE]锛堝嚱鏁扮骇瑁歌繑鍥?+        灏惧彉浣擄細IfExp 涓よ噦鍊兼眹鍚堝悗鐢卞崟鏉?RETURN 娑堣垂锛屾棤鎷嗛櫎瀵癸紱鍛戒腑鍚?+        闄勫姞 then 鑷傛祦瀹堝崼鈥斺€旀湯鏉￠潪鍣０鎸囦护涓?JUMP_FORWARD 涓旇惤鐐?IS
++        merge锛屽瓧闈?if/else-return 鐨勮噦鍐?RETURN 鏀跺熬褰㈡€佽鎺掗櫎锛夛紱
++        condition_block 鏈烦杞殑钀界偣鍗?else 鍊煎潡銆?+        fall-through 鍗?then 鍊煎潡锛涗袱鍊煎潡缁忓€艰〃杈惧紡閲嶅缓鍧囬潪绌恒€傚懡涓嵆
++        region.blocks 涓?merge_block锛堝強娓呯悊鍧楋級鐧昏 generated锛堟瘡鍧楀敮涓€
++        褰掑睘锛夛紝鍚﹀垯涓嶆爣璁般€佷笉鏀圭姸鎬併€?+        鈶ｅ祵濂楀鐞嗭細涓よ噦鍊煎潡缁?_build_value_block_expr 閫掑綊鏁存爲閲嶅缓锛?+        鍐呭祵涓夊厓/铻嶅悎甯冨皵閾句綔涓烘娊璞¤妭鐐规暣浣撴姌鍙狅紝涓嶆媶鏁ｄ负璇彞銆?+        鈶ゅ叆鍙ｅ紩鐢ㄨ涔夛細Return.value = IfExp锛堟潯浠跺潡璺宠浆鏂瑰悜鍐冲畾 test 鏋佹€э紝
++        TRUE 鏋佹€ф棌杩樺師 not 鍖呰９锛夛紱then 鍊煎潡 鈫?body锛宔lse 鍊煎潡 鈫?orelse銆?+        鈶ュ弽缂栬瘧娴佺▼锛氬尯鍩熺敓鎴愬眰 IfRegion 鍒嗘敮锛坃generate_if 鍦?while 鍗囩骇
++        涓庡父瑙勭敓鎴愪箣鍓嶈皟鐢級锛涢潪 None 鍗虫帴绠℃湰鍖哄煙銆?+
++        C 鏉℃锛歔C1] 鍙 L(A) = 鏈尯鍩?else_blocks/condition_block/
++        merge_block 鐨勫悓灞傜粨鏋勪笌鎸囦护 opcode/arg 浜嬪疄锛沎C2] 涓よ噦鍊肩粡
++        _build_value_block_expr 榛戠閲嶅缓锛屼笉绐ヨ瀛愬尯鍩熷唴閮紱[C3] 鎸囩汗涓?+        涓夋潯鍚屾椂鎴愮珛鐨勬樉寮忓皝闂紙鎭颁笁鏉″熬鎸囦护鎴栧叾鍒囧潡褰㈡€?/ 璺宠浆钀界偣褰掑睘 /
++        涓よ噦鍊奸潪绌猴級锛屼笉鍛戒腑杩斿洖 None锛岃涓洪€愪綅淇濇寔銆?+
++        杈撳叆濂戠害:
++          - 鎺ユ敹 Region 瀛愮被: IfRegion锛堝甫 else_blocks 鐨勮彵褰級
++          - 鍏抽敭瀛楁: condition_block, else_blocks, merge_block, blocks
++
++        AST 鏄犲皠瑙勫垯:
++          - 杈撳嚭 AST 鑺傜偣: [ast.Return(value=ast.IfExp(test, then, else))]
++          - 瀛楁瀵瑰簲:
++            condition_block锛堝幓鏈烦杞級鈫?IfExp.test锛圱RUE 鏋佹€ф棌鍔?not锛?+            cond 鏈烦杞?fall-through 鍊煎潡 鈫?IfExp.body
++            cond 鏈烦杞惤鐐癸紙=else 鍧楋級鈫?IfExp.orelse
++
++        瀛楄妭鐮佷竴鑷存€х害鏉?
++          - IfExp 閲嶇紪璇戜骇鐢?POP_JUMP_IF_FALSE 鈫?else 鍊煎潡 + JUMP_FORWARD 甯冨眬锛?+            寰幆鍐?RETURN 鍓嶇殑 SWAP 2; POP_TOP 杩唬鍣ㄦ媶闄や笌 except 澶勭悊鍣ㄥ唴
++            RETURN 鍓嶇殑 SWAP 2; POP_EXCEPT 澶勭悊鍣ㄦ媶闄ゅ潎鐢辩紪璇戝櫒鑷劧鍐嶇敓
++          - 瑁歌繑鍥炲熬鍙樹綋閲嶇紪璇戜骇鐢熶袱鑷傛眹鍚堢殑鍗曟潯 RETURN_VALUE锛堜笌 IfExp 婧?+            甯冨眬閫愭寚浠や竴鑷达級
++          - 浠呭綋鍓嶈堪鎸囩汗鍏ㄤ腑鎵嶆帴绠★紝閬垮厤涓庢棦鏈?if/else 璇彞璺緞鍐茬獊
++        """
++        if not getattr(region, 'else_blocks', None):
++            return None
++        if getattr(region, 'elif_conditions', None):
++            return None
++        _mb = getattr(region, 'merge_block', None)
++        if _mb is None:
++            return None
++        _mi = [i for i in _mb.instructions
++               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++        _tail_ok = (
++            len(_mi) == 3
++            and _mi[0].opname == 'SWAP' and _mi[0].arg == 2
++            and _mi[1].opname in ('POP_TOP', 'POP_EXCEPT')
++            and _mi[2].opname == 'RETURN_VALUE')
++        _tail_extra_blocks = []
++        if not _tail_ok and (len(_mi) == 1
++                             and _mi[0].opname == 'SWAP' and _mi[0].arg == 2):
++            # [B98-V3R2 fix] except 澶勭悊鍣ㄥ唴 return 鐨勬媶闄ゅ熬琚紓甯歌竟鍒囧潡锛?+            # SWAP 2 鐙崰 merge 鍧楋紝鍚庣户娓呯悊鍧楁伆涓?[POP_EXCEPT,
++            # RETURN_VALUE]锛圥OP_EXCEPT 涓㈠純澶勭悊鍣ㄧ姸鎬侊紝鍏朵笅鍘嬬潃鐨勬鏄袱鑷?+            # 鍊尖€斺€斾笌 SWAP 2; POP_TOP; RETURN_VALUE 鍚屽竷灞€锛屼粎娓呯悊椤逛笉鍚屼笖
++            # 鍥犺鍚庣户鍧楀悓鏃舵槸 RERAISE 钀藉湴鍧楄€岃鍒囨垚鐙珛鍧楋級銆傝瘑鍒潯浠朵负
++            # 绾粨鏋勪簨瀹烇細merge 闈炲櫔澹版伆涓€鏉?SWAP(arg=2)銆佹部姝ｅ父鍚庣户鎵惧埌鐨?+            # 闈炲櫔澹版伆 [POP_EXCEPT, RETURN_VALUE]銆傚懡涓悗璇ユ竻鐞嗗潡闅忔湰鍖哄煙
++            # 涓€骞剁櫥璁?generated锛堟瘡鍧楀敮涓€褰掑睘锛夈€?+            for _ts in _mb.successors:
++                _tsi = [i for i in _ts.instructions
++                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++                if (len(_tsi) == 2
++                        and _tsi[0].opname in ('POP_TOP', 'POP_EXCEPT')
++                        and _tsi[1].opname == 'RETURN_VALUE'):
++                    _tail_ok = True
++                    _tail_extra_blocks.append(_ts)
++                    break
++        _tail_plain_ret = False
++        if not _tail_ok:
++            # [B98-V3R2 fix] 鍑芥暟绾ц８杩斿洖灏惧彉浣擄細merge 闈炲櫔澹版伆
++            # [RETURN_VALUE]锛坄return a if flag else b and d`鈥斺€擨fExp 涓よ噦
++            # 鍊兼眹鍚堝悗鐢卞崟鏉?RETURN 娑堣垂锛屾棤寰幆杩唬鍣?except 澶勭悊鍣ㄦ媶闄?+            # 瀵癸級銆傚悓灞傜粨鏋勫弽璇侊細瀛楅潰 `if c: return x else: return y` 涓よ噦
++            # 鍚勪互 RETURN_VALUE 鏀跺熬銆佹棤鍏叡姹囧悎鍧楋紝鍑芥暟闅愬紡鏀跺熬涓?+            # [LOAD_CONST None, RETURN_VALUE] 涓ゆ潯鎸囦护锛屽潎涓嶆弧瓒虫伆涓€鏉?+            # RETURN_VALUE 鐨勬寚绾癸紱鍛戒腑鍚庣敱涓嬫柟 then 鑷傛祦瀹堝崼鍐嶆帓闄や换浣?+            # 闈炴眹鍚堝舰鎬侊紙琛屼负灏侀棴锛夈€?+            if len(_mi) == 1 and _mi[0].opname == 'RETURN_VALUE':
++                _tail_ok = True
++                _tail_plain_ret = True
++        if not _tail_ok:
++            return None
++        _cb = getattr(region, 'condition_block', None)
++        if _cb is None:
++            return None
++        _cl = _cb.get_last_instruction()
++        if (_cl is None or _cl.opname not in FORWARD_CONDITIONAL_JUMP_OPS
++                or _cl.argval is None):
++            return None
++        _else_block = self.cfg.get_block_by_offset(_cl.argval)
++        if _else_block is None or _else_block is _cb:
++            return None
++        _then_block = None
++        for _s in _cb.conditional_successors:
++            if _s.start_offset != _cl.argval:
++                _then_block = _s
++                break
++        if _then_block is None:
++            return None
++        if _tail_plain_ret:
++            # [B98-V3R2 fix] 瑁歌繑鍥炲熬娴佸畧鍗細IfExp 鐨?then 鑷傛湯鏉￠潪鍣０鎸囦护
++            # 鎭掍负 JUMP_FORWARD 涓旇惤鐐?IS merge锛堣烦杩?else 鑷傜洿杈炬眹鍚堢偣锛?+            # 鍊肩敱鍗曟潯 RETURN_VALUE 娑堣垂锛夈€傚瓧闈?if/else-return 鐨?then 鑷?+            # 浠?RETURN_VALUE 鏀跺熬銆佹棤姝よ烦杞紝琚帓闄わ紱鏈懡涓€愪綅鍥炶惤鏃㈡湁
++            # if/else 鍙戝皠锛堟瘡鍧楀敮涓€褰掑睘涓嶅彈褰卞搷锛夈€?+            _ti_plain = [i for i in _then_block.instructions
++                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++            if not (_ti_plain and _ti_plain[-1].opname == 'JUMP_FORWARD'
++                    and _ti_plain[-1].argval is not None
++                    and self.cfg.get_block_by_offset(_ti_plain[-1].argval) is _mb):
++                return None
++        _ci = [i for i in _cb.instructions
++               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++        _ci = [i for i in _ci if i is not _cl]
++        _test = self.expr_reconstructor.reconstruct(_ci) if _ci else None
++        if _test is None:
++            return None
++        if _cl.opname in _TRUE_POLARITY_COND_JUMP_OPS:
++            _test = {'type': 'UnaryOp', 'op': 'not', 'operand': _test}
++        _then_val = self._build_value_block_expr(_then_block)
++        _else_val = self._build_value_block_expr(_else_block)
++        if _then_val is None or _else_val is None:
++            return None
++        for _b in region.blocks:
++            self.generated_blocks.add(_b)
++            self.generated_offsets.add(_b.start_offset)
++        self.generated_blocks.add(_mb)
++        self.generated_offsets.add(_mb.start_offset)
++        for _tb in _tail_extra_blocks:
++            self.generated_blocks.add(_tb)
++            self.generated_offsets.add(_tb.start_offset)
++        return [{
++            'type': 'Return',
++            'value': {
++                'type': 'IfExp',
++                'test': _test,
++                'body': _then_val,
++                'orelse': _else_val,
++            },
++        }]
++
++    def _try_build_notwrapped_fused_value_ternary(self, region: 'TernaryRegion',
++                                                  outer: 'TernaryRegion') -> Optional[List[Dict]]:
++        """_try_build_notwrapped_fused_value_ternary 鈥?not 鍖呰９铻嶅悎鍊间笁鍏冭繕鍘熴€?+
++        鈶犵畻娉曚緷鎹細No More Gotos 绔犺妭銆屽尯鍩熷綊绾︾畻娉曞洓鍘熷垯銆嶁€斺€旀簮鐮?+        ``V_t if not ((A or B) and C) else V_f`` 鐨?not 琚?CPython 鎶樺彔杩?+        and 閾捐烦杞瀬鎬э紙and-LHS 鐨勬垨涓嶆垚绔嬬洿鎺ヨ烦 true 鍊艰噦銆乤nd-RHS 鎴愮珛鐩存帴
++        璺?false 鍊艰噦锛夛紝鏃?UNARY_NOT 鎸囦护锛涙潯浠跺潡 40 鐨?IF_TRUE 璺冲悜 and-RHS
++        锛圕 鍧楋級銆乷r 缁勫悶骞跺潡 44 鐨?IF_FALSE 璺冲悜 true 鍊艰噦鈥斺€旇繖涓庡悓褰㈡鏋佹€?+        涓夊厓 `V_f if ((A or B) and C) else V_t` 涓ユ牸闀滃儚锛岄』鎸?OR 缁勮璇?+        锛坃build_boolop_expression锛? and-RHS 鏉′欢閫掑綊閲嶅缓骞惰ˉ not 鍖呰９锛?+        閲嶇紪璇戞墠閫愭寚浠や竴鑷达紙鍚?R38 璐熸瀬鎬ц繕鍘熺殑闀滃儚瀵瑰伓锛夈€?+        鈶″綊绾﹂『搴忥細鑷簳鍚戜笂锛屽唴灞傚厛褰掔害鈥斺€擮R 缁勬暣鏍戯紙瑙佽瘉鍖哄煙 black-box锛夈€?+        and-RHS 鏉′欢锛堝幓鏈烦杞崟琛ㄨ揪寮忥級銆佷袱鑷傚€煎厛閲嶅缓锛屾渶鍚庣粍鍚?IfExp銆?+        鈶㈠敮涓€褰掑睘鍒ゅ畾锛氳瘑鍒潯浠讹紙鍏ㄩ儴鍚屽眰缁撴瀯浜嬪疄锛夆€斺€斿灞備笁鍏?outer 鐨?+        true_value_block IS 鏈尯鍩?entry锛圕luster-6 鎶戝埗鍒ゆ嵁鍛戒腑鐨勫悓涓€褰㈡€侊級銆?+        outer.false_value_block IS 鏈尯鍩?true_value_block銆佷袱鍖哄煙鍏变韩
++        merge_block銆乷uter 鏉′欢鍧楁湯鎸囦护涓?TRUE 鏋佹€ф棌涓旇惤鐐?IS 鏈尯鍩?entry锛?+        鏈尯鍩熸潯浠跺潡鏈寚浠や负 TRUE 鏋佹€ф棌涓旇惤鐐?IS 鏈尯鍩?false_value_block锛?+        OR 缁?BoolOpRegion 婊¤冻 entry IS outer.condition_block銆?+        merge_block IS 鏈尯鍩?true_value_block銆乷p_chain 鍏?'or'銆備换涓€涓嶆弧瓒?+        鍗宠繑鍥?None锛堜繚鎸佸師鎶戝埗琛屼负锛夈€?+        鈶ｅ祵濂楀鐞嗭細涓よ噦鍊肩粡 _build_ternary_value_expr 閫掑綊閲嶅缓锛汷R 缁勭粡
++        _build_boolop_expression 鏁存爲閲嶅缓锛堝祵濂楀嵆鎶借薄鑺傜偣锛夈€?+        鈶ゅ叆鍙ｅ紩鐢ㄨ涔夛細Return/Expr.value = IfExp(test=not(And[Or缁? C]),
++        body=鏈尯鍩?true 鍊? orelse=鏈尯鍩?false 鍊?锛沵erge 鍧楀惈 RETURN 鏃朵互
++        Return 鏀跺彛锛堝惊鐜唴杩斿洖鐨勮凯浠ｅ櫒鎷嗛櫎鐢遍噸缂栬瘧鑷劧鍐嶇敓锛夈€?+        鈶ュ弽缂栬瘧娴佺▼锛歘generate_ternary 鐨?Cluster-6 宓屽鎶戝埗 guard 鍐呪€斺€?+        鍛戒腑鏈璇佹椂鎺ョ鏁存爲鍙戝皠骞剁櫥璁板叏閮ㄧ浉鍏冲潡銆?+
++        C 鏉℃锛歔C1] 鍙 L(A) = 鍖哄煙琛ㄨ韩浠介摼锛坋ntry/true_value_block/
++        false_value_block/merge_block IS 鍚屼竴鎬э級+ 鏉′欢鍧楁湯璺宠浆 opcode 鏃忎笌
++        钀界偣 + BoolOpRegion.op_chain 鐨?op 瀛楃锛沎C2] OR 缁勪笌涓よ噦鍊肩粡
++        _build_boolop_expression/_build_ternary_value_expr 榛戠閲嶅缓锛?+        [C3] 涓夊鍧楄韩浠界瓑寮?+ 涓ゅ鏋佹€?钀界偣 + op_chain 鍏?'or' 鍚屾椂鎴愮珛鎵?+        鎺ョ锛屽惁鍒欒繑鍥?None锛岃涓轰笌鍘熸姂鍒惰矾寰勯€愪綅涓€鑷淬€?+
++        杈撳叆濂戠害:
++          - 鎺ユ敹 Region 瀛愮被: TernaryRegion 脳 2
++          - 鍏抽敭瀛楁: entry/condition_block/true_value_block/false_value_block/
++            merge_block/op_chain锛圔oolOpRegion锛?blocks
++
++        AST 鏄犲皠瑙勫垯:
++          - 杈撳嚭: [Return|Expr(value=IfExp(UnaryOp(not, BoolOp(and,
++            [BoolOp(or, A..B), C])), V_t, V_f))]
++          - 瀛楁瀵瑰簲:
++            outer.condition_block 鍘绘湯璺宠浆 + BoolOpRegion 瑙佽瘉 鈫?not 鍐呴儴 and 閾?+            region.true_value_block 鈫?IfExp.body锛況egion.false_value_block 鈫?+            IfExp.orelse锛沵erge 鍧?RETURN 鏃?鈫?Return 鏀跺彛
++
++        瀛楄妭鐮佷竴鑷存€х害鏉?
++          - IfExp 閲嶇紪璇戜骇鐢?[A PJIF_TRUE鈫扖; B PJIF_FALSE鈫扸_t; C PJIF_TRUE鈫扸_f;
++            V_t; JUMP; V_f; ...RETURN] 甯冨眬锛屼笌鍘熷瓧鑺傜爜閫愭寚浠や竴鑷?+          - 浠呭綋涓夊鍧楄韩浠界瓑寮忓叏涓墠鎺ョ锛涗笉鍛戒腑杩斿洖 None
++        """
++        if region.entry is None or getattr(region, 'value_target', None):
++            return None
++        if getattr(outer, 'value_target', None):
++            return None
++        _mb = getattr(region, 'merge_block', None)
++        if _mb is None or getattr(outer, 'merge_block', None) is not _mb:
++            return None
++        if outer.true_value_block is not region.entry:
++            return None
++        if outer.false_value_block is not region.true_value_block:
++            return None
++        _ocb = getattr(outer, 'condition_block', None)
++        _ccb = getattr(region, 'condition_block', None)
++        if _ocb is None or _ccb is None:
++            return None
++        _ocl = _ocb.get_last_instruction()
++        if (_ocl is None or _ocl.opname not in _TRUE_POLARITY_COND_JUMP_OPS
++                or _ocl.argval is None):
++            return None
++        if self.cfg.get_block_by_offset(_ocl.argval) is not region.entry:
++            return None
++        _ccl = _ccb.get_last_instruction()
++        if (_ccl is None or _ccl.opname not in _TRUE_POLARITY_COND_JUMP_OPS
++                or _ccl.argval is None):
++            return None
++        if self.cfg.get_block_by_offset(_ccl.argval) is not region.false_value_block:
++            return None
++        _bo = None
++        for _r in self.regions:
++            if (isinstance(_r, BoolOpRegion) and _r.entry is _ocb
++                    and _r.merge_block is region.true_value_block
++                    and getattr(_r, 'op_chain', None)
++                    and all(op == 'or' for _, op in _r.op_chain)):
++                _bo = _r
++                break
++        if _bo is None:
++            return None
++        _or_expr = self._build_boolop_expression(_bo)
++        if _or_expr is None:
++            return None
++        _ci = [i for i in _ccb.instructions
++               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++        _ci = [i for i in _ci if i is not _ccl]
++        _rhs_expr = self.expr_reconstructor.reconstruct(_ci) if _ci else None
++        if _rhs_expr is None:
++            return None
++        _te = self._build_ternary_value_expr(region.true_value_block)
++        _fe = self._build_ternary_value_expr(region.false_value_block)
++        if _te is None or _fe is None:
++            return None
++        _test = _negate_expr({
++            'type': 'BoolOp',
++            'op': 'and',
++            'values': [_or_expr, _rhs_expr],
++        })
++        _ifexp = {
++            'type': 'IfExp',
++            'test': _test,
++            'body': _te,
++            'orelse': _fe,
++        }
++        _mi = [i for i in _mb.instructions
++               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++        _has_ret = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST')
++                       for i in _mi)
++        for _b in list(region.blocks) + list(outer.blocks) + list(_bo.blocks):
++            self.generated_blocks.add(_b)
++            self.generated_offsets.add(_b.start_offset)
++        self.generated_blocks.add(_mb)
++        self.generated_offsets.add(_mb.start_offset)
++        if _has_ret:
++            return [{'type': 'Return', 'value': _ifexp}]
++        return [{'type': 'Expr', 'value': _ifexp}]
++
+@@ -46913,0 +48424,36 @@ AST 鏄犲皠瑙勫垯:
++        if boolop_region is None:
++            # [B98-V3R2 fix] 鍏ㄩ摼澶村墠缂€鍙樹綋锛坅nd 鏋佹€ч暅鍍忥級锛歝ond 鍓嶇紑鍧?+            # 锛堟湰涓夊厓鏉′欢鍧楋級琚?B99 鍓嶇紑鍚告敹杩?BoolOpRegion 閾鹃鈥斺€?+            # op_chain=[(cond,'and'),(true_block,'or')]锛宔ntry=cond_block銆?+            # 涓庢棫褰㈡€侊紙anchor-only锛宔ntry=true_block锛夊悓绛惧悕鍚岃涔夛紝浠呴摼棣?+            # 褰掑睘涓嶅悓锛欱99 鍓嶇紑鍚告敹锛堜慨澶嶄竴锛変娇 `(x and [x] or [0])[0]` 鍊间綅
++            # 娑堣垂閾剧殑閿氱偣璧版煡閫氳繃鍏变韩 merge 鍒ゆ嵁锛岄摼棣栦粠 true 鍊煎潡鎵╄嚦 cond
++            # 鍧楋紝鏃у舰鎬佹煡鎵撅紙entry is true_block锛夊け閰?鈬?鏈柟娉曟暣浣撳洖閫€ IfExp
++            # 鈬?璇彞钂稿彂锛坮egression: trade_info_utils.get_last_stat 8 鍙ヨ繛涓級銆?+            # 璇嗗埆鏉′欢锛圛.4 鐧藉悕鍗曪細閾炬垚鍛樺叧绯?+ 鍏变韩 merge锛夛細閾鹃 == 鏈笁鍏?+            # 鏉′欢鍧椼€侀摼棣栨搷浣滅 'and'锛圛F_FALSE 鏋佹€э紝涓庝笂鏂?cond_last 鍒ゆ嵁
++            # 鍚屾棌锛夈€佹鎴愬憳 == 鏈笁鍏?true 鍊煎潡涓旀搷浣滅 'or'锛涢摼鍊间氦
++            # _build_boolop_expression 榛戠閲嶅缓锛圕2锛夛紝褰㈢姸鏍￠獙锛堜袱鎿嶄綔鏁?or銆?+            # 鍏堕鎿嶄綔鏁颁负涓ゆ搷浣滄暟 and鈥斺€斿嵆 Or[And[cond,X],Y] 鍏ㄩ摼褰級涓嶈繃鍒?+            # 鎸夋棫琛屼负鍥為€€ IfExp锛圕3 鏄惧紡灏侀棴锛夈€?+            for r in self.regions:
++                if (isinstance(r, BoolOpRegion) and r.entry is cond_block
++                        and r.op_chain and len(r.op_chain) >= 2
++                        and r.op_chain[0][0] is cond_block
++                        and r.op_chain[0][1] == 'and'
++                        and r.op_chain[1][0] is true_block
++                        and r.op_chain[1][1] == 'or'
++                        and r.merge_block is not None
++                        and r.merge_block is region.merge_block):
++                    _r98r7_expr = self._build_boolop_expression(r)
++                    if (isinstance(_r98r7_expr, dict)
++                            and _r98r7_expr.get('type') == 'BoolOp'
++                            and _r98r7_expr.get('op') == 'or'
++                            and len(_r98r7_expr.get('values') or []) == 2
++                            and isinstance(_r98r7_expr['values'][0], dict)
++                            and _r98r7_expr['values'][0].get('type') == 'BoolOp'
++                            and _r98r7_expr['values'][0].get('op') == 'and'
++                            and len(_r98r7_expr['values'][0].get('values') or []) == 2
++                            and _r98r7_expr['values'][1] is not None):
++                        return _r98r7_expr
++                    return None
+@@ -47024,0 +48571 @@ AST 鏄犲皠瑙勫垯:
++        _r98r6_full_chain = False
+@@ -47029,0 +48577,22 @@ AST 鏄犲皠瑙勫垯:
++        if boolop_region is None:
++            # [B98-V3R2 fix] 鍏ㄩ摼澶村墠缂€鍙樹綋锛歰r 鍓嶇紑鍧楋紙鏈笁鍏冩潯浠跺潡锛夎
++            # B99 鍓嶇紑鍚告敹杩?BoolOpRegion 閾鹃鈥斺€攐p_chain=[(cond,'or'),
++            # (true_block,'and')]锛宔ntry=cond_block銆備笌鏃у舰鎬侊紙anchor-only锛?+            # entry=true_block锛夊悓绛惧悕鍚岃涔夛紝浠呴摼棣栧綊灞炰笉鍚岋細鍊肩粡閾鹃鍧楃殑
++            # 鍓嶇紑鍚告敹閲嶅缓鍚庝笌鏃у舰鎬佺殑浜屾鎶樺彔缁撴灉鎭掔瓑锛堝悓涓?And[Or[a,b],c]锛夈€?+            # 璇嗗埆鏉′欢锛圛.4 鐧藉悕鍗曪細閾炬垚鍛樺叧绯?+ 鍏变韩 merge锛夛細閾鹃 == 鏈笁鍏?+            # 鏉′欢鍧椼€侀摼棣栨搷浣滅 'or'銆佹鎴愬憳 == 鏈笁鍏?true 鍊煎潡锛涙鎿嶄綔绗?+            # 涓嶅弬涓庡垽鎹紙涓夊厓褰㈢姸妫€娴嬮摼鐨?op 鏍囩鐢遍摼棣栫户鎵匡紝璇箟鐢遍噸寤?+            # 缁撴灉鐨勫舰鐘舵牎楠屾壙鎷咃級锛涢摼鍊间氦 _build_boolop_expression 榛戠
++            # 閲嶅缓锛圕2锛夛紝褰㈢姸鏍￠獙锛堜袱鎿嶄綔鏁?and銆佸叾棣栨搷浣滄暟涓轰袱鎿嶄綔鏁?or锛?+            # 涓嶈繃鍒欐寜鏃ц涓哄洖閫€ IfExp锛圕3 鏄惧紡灏侀棴锛夈€?+            for r in self.regions:
++                if (isinstance(r, BoolOpRegion) and r.entry is cond_block
++                        and r.op_chain and len(r.op_chain) >= 2
++                        and r.op_chain[0][0] is cond_block
++                        and r.op_chain[0][1] == 'or'
++                        and r.op_chain[1][0] is true_block
++                        and r.merge_block is region.merge_block):
++                    boolop_region = r
++                    _r98r6_full_chain = True
++                    break
+@@ -47031,0 +48601,15 @@ AST 鏄犲皠瑙勫垯:
++        if _r98r6_full_chain:
++            _r98r6_expr = self._build_boolop_expression(boolop_region)
++            _r98r6_or = None
++            if (isinstance(_r98r6_expr, dict)
++                    and _r98r6_expr.get('type') == 'BoolOp'
++                    and _r98r6_expr.get('op') == 'and'
++                    and len(_r98r6_expr.get('values') or []) == 2
++                    and isinstance(_r98r6_expr['values'][0], dict)):
++                _r98r6_or = _r98r6_expr['values'][0]
++            if (isinstance(_r98r6_or, dict)
++                    and _r98r6_or.get('type') == 'BoolOp'
++                    and _r98r6_or.get('op') == 'or'
++                    and len(_r98r6_or.get('values') or []) == 2):
++                return _r98r6_expr
++            return None
+@@ -47436,0 +49021,13 @@ AST 鏄犲皠瑙勫垯:
++                        # [B98-V3R2] not 鍖呰９铻嶅悎鍊间笁鍏冿細`V_t if not ((A or B)
++                        # and C) else V_f` 鐨?not 鎶樺彔杩?and 閾炬瀬鎬э紝澶栧眰闀滃儚
++                        # 涓夊厓锛坃r锛変笌鐪熷疄鍊间笁鍏冿紙region锛夊叡浜?merge銆佷笖
++                        # _r.true_value_block IS region.entry鈥斺€斿懡涓湰 guard 鐨?+                        # 缁撴瀯鎭版槸璇ュ舰鎬併€傚厛灏濊瘯鎸?OR 缁勮璇?+ and-RHS 閫掑綊 +
++                        # not 琛ュ寘瑁规暣浣撻噸寤猴紙杩斿洖璇彞鍒楄〃鍗虫帴绠★級锛涗笉鍛戒腑
++                        # 杩斿洖 None锛屼繚鎸佸師鎶戝埗琛屼负閫愪綅涓嶅彉銆傝缁嗚瘑鍒潯浠?
++                        # 褰掔害鏂瑰紡/AST 鏄犲皠瑙?_try_build_notwrapped_fused_value_
++                        # ternary 鏂囨。銆?+                        _nw_fused = self._try_build_notwrapped_fused_value_ternary(
++                            region, _r)
++                        if _nw_fused is not None:
++                            return _nw_fused
+@@ -48336,0 +49934,28 @@ AST 鏄犲皠瑙勫垯:
++            # [B98-V3R2] store 璇鍒嗙粍甯冨皵鍊煎叏閾鹃噸寤猴細`r = (a or b) and
++            # (c or d)` 鐨勮瀺鍚堝竷灏旈摼琚垎鏋愬眰鍚屾椂鍒荤敾涓洪暅鍍忔瀬鎬?TernaryRegion
++            # 锛堟潯浠跺潡 IF_TRUE 鎹峰緞锛歝ond=a锛宼vb=b锛宖vb=c锛宮erge=STORE r锛変笌
++            # 瑕嗙洊鍏ㄩ摼鐨?BoolOpRegion锛坋ntry 鍚屾湰鍖哄煙銆乵erge 鍚?STORE 鍧椼€?+            # value_target 鍚?r锛夈€俹rprefix 闀滃儚瑙佽瘉浠呰鐩栥€宱r 鍓嶇紑 + 鍗?and
++            # 涓ゆ搷浣滄暟銆嶏紝鏈舰鎬侊紙or 缁?鈭?and 缁勫弻鍒嗙粍锛変笉鍛戒腑锛岃嫢鎸?IfExp
++            # 鍙戝皠鍒?r 鍙墿 `b if not a else c`锛坄(c or d)` 鏁寸粍钂稿彂锛岃涔変笌
++            # 鎺у埗娴佸弻閿欙級銆傝瘑鍒潯浠讹紙鍚屽眰缁撴瀯浜嬪疄锛夛細merge_context=='store'
++            # 涓?value_target 闈炵┖锛涘瓨鍦?BoolOpRegion 鍏?entry 鍗虫湰鍖哄煙
++            # entry銆乵erge_block 鍗虫湰鍖哄煙 merge_block銆乿alue_target 鐩稿悓
++            # 鈥斺€斿嵆銆屾暣鏉¤瀺鍚堥摼 = 鏈尯鍩熺殑鍊兼祦銆嶃€傚綊绾︽柟寮忥細鎸夊師鍒?3锛堝祵濂?+            # 鍗虫娊璞¤妭鐐癸級鍙?_build_boolop_expression 榛戠閲嶅缓鐨勫叏閾捐〃杈惧紡
++            # 浣滀负鍊硷紱涓よ璇侊紙orprefix/andor锛夊凡鍛戒腑鏃朵笉浠嬪叆锛堣涓洪€愪綅
++            # 淇濇寔锛夈€侫ST 鏄犲皠锛欰ssign(r, BoolOp) 鑰岄潪 Assign(r, IfExp)銆?+            if (_b98_andor_expr is None and _andor_expr is None
++                    and getattr(region, 'merge_context', None) == 'store'):
++                _b98r2_vt = getattr(region, 'value_target', None)
++                if _b98r2_vt and not str(_b98r2_vt).startswith('__'):
++                    for _b98r2_bo in self.regions:
++                        if (isinstance(_b98r2_bo, BoolOpRegion)
++                                and getattr(_b98r2_bo, 'entry', None) is region.entry
++                                and getattr(_b98r2_bo, 'merge_block', None) is region.merge_block
++                                and getattr(_b98r2_bo, 'value_target', None) == _b98r2_vt):
++                            _b98r2_expr = self._build_boolop_expression(_b98r2_bo)
++                            if _b98r2_expr is not None:
++                                ternary_expr = _b98r2_expr
++                            break
++
+@@ -48407,2 +50032,38 @@ AST 鏄犲皠瑙勫垯:
+-            if (merge_ctx is None and not region.value_target
+-                    and region.merge_block is not None):
++            #
++            # [B98-V3R2] compare 璇骞跺叆鏈秷璐圭锛歮erge_ctx=='compare' 涓?+            # value_target=='__compare_target__' 琛ㄧず鍖哄煙鍊艰 merge 鍧楃殑
++            # COMPARE_OP 鏃忎綔涓烘搷浣滄暟娑堣垂锛坄return (X) > 2` / `r = (X) == y`
++            # 绛夛級锛岃€岄潪 if/while 鏉′欢娴嬭瘯銆傛棫琛屼负瀵硅褰㈡€佹暣浣撹捀鍙戝嚭瑁?+            # Expr(X)锛屾瘮杈冩寚浠や笌澶栧洿璇彞甯藉叏閮ㄤ涪澶憋紙f_b98_compare_cross /
++            # exprtail v3 瀹炶瘉锛夈€?+            # 璇嗗埆鏉′欢锛堝叏閮ㄥ悓灞傚潡缁撴瀯浜嬪疄锛夛細
++            #   鈶爉erge_ctx=='compare' 涓?value_target=='__compare_target__'锛?+            #   鈶erge 鍧楃殑姝ｅ父鍚庣户鏃犱竴浠?POP_JUMP_* 缁堢粨鈥斺€旀潯浠舵祴璇曞満鏅殑
++            #     鍊兼秷璐瑰繀浠ユ潯浠惰烦杞敹灏撅紙娴嬭瘯璇锛夛紝姝ゆ椂淇濇寔鏃㈡湁琛屼负浜ょ敱
++            #     鏉′欢璇彞鐢熸垚鍣ㄥ鐞嗭紱
++            #   鈶try_build_ternary_merge_consumer_expr 鑳介噸寤哄嚭娑堣垂琛ㄨ揪寮?+            #     锛堝惈鏍堟繁淇灏惧 SWAP n; POP_TOP 鐨勫墺绂伙級銆?+            # 褰掔害鏂瑰紡锛氫笌 merge_ctx None 娑堣垂绔悓涓€鍙戝皠閫氶亾锛圧eturn/Expr
++            # 璇彞甯?+ R68 杩斿洖姹囩偣琛ュ叏 + post_extra 缁帴锛夈€?+            # AST 鏄犲皠锛歳eturn (X) > 2 鈫?ast.Return(ast.Compare(X, >, 2))锛?+            # 璇彞浣?鈫?ast.Expr(ast.Compare(...))銆?+            # [C1] 鍒ゆ嵁鍙 ctx 鏍囪 + 鍧楁湯 opcode 鏃?+ 鍚庣户闆嗗悎锛沎C2] 娑堣垂
++            # 琛ㄨ揪寮忕粡 reconstructor 榛戠閲嶅缓锛沎C3] 鏉′欢璺宠浆瀹堝崼鏄惧紡鎺掗櫎
++            # 娴嬭瘯璇锛屼笉鏀瑰叾鏃㈡湁鍙戝皠璺緞銆?+            _b98r2_cmp_ctx = (
++                merge_ctx == 'compare'
++                and getattr(region, 'value_target', None) == '__compare_target__'
++                and region.merge_block is not None)
++            if _b98r2_cmp_ctx:
++                _b98r2_exc = set(getattr(region.merge_block,
++                                         'exception_successors', None) or ())
++                for _b98r2_s in (region.merge_block.successors or ()):
++                    if _b98r2_s in _b98r2_exc:
++                        continue
++                    _b98r2_sl = _b98r2_s.get_last_instruction()
++                    if (_b98r2_sl is not None
++                            and _b98r2_sl.opname.startswith('POP_JUMP_')):
++                        _b98r2_cmp_ctx = False
++                        break
++            if ((merge_ctx is None and not region.value_target) or _b98r2_cmp_ctx) \
++                    and region.merge_block is not None:
+@@ -48509,12 +50170,13 @@ AST 鏄犲皠瑙勫垯:
+-                _consumer_stmt = self._build_ternary_no_target_consumer_stmt(
+-                    region, ternary_expr)
+-                if _consumer_stmt is not None:
+-                    results.append(_consumer_stmt)
+-                    _post_extra = getattr(
+-                        region, 'post_consumer_extra_stmts', None)
+-                    if _post_extra:
+-                        self._emit_post_extra_with_if_upgrade(
+-                            results, _post_extra, region)
+-                    for block in region.blocks:
+-                        self.generated_blocks.add(block)
+-                    return results
++                if not _b98r2_cmp_ctx:
++                    _consumer_stmt = self._build_ternary_no_target_consumer_stmt(
++                        region, ternary_expr)
++                    if _consumer_stmt is not None:
++                        results.append(_consumer_stmt)
++                        _post_extra = getattr(
++                            region, 'post_consumer_extra_stmts', None)
++                        if _post_extra:
++                            self._emit_post_extra_with_if_upgrade(
++                                results, _post_extra, region)
++                        for block in region.blocks:
++                            self.generated_blocks.add(block)
++                        return results
+@@ -51155,0 +52818,720 @@ AST 鏄犲皠瑙勫垯:
++    def _try_build_b78_nested_ternary_host(self, region: 'IfRegion') -> Optional[Dict[str, Any]]:
++        """[B78-V3R2] 宓屽涓夊厓瀹夸富鎶樺彔锛歚`X if (Y if c2 else Z) else W`` 鍦?+        if 鏉′欢浣?/ while 鏉′欢浣?/ 鍊兼秷璐逛綅涓夊涓讳笅鐨勫叏閾鹃噸寤恒€?+
++        鈺愨晲鈺?1. 绠楁硶渚濇嵁 鈺愨晲鈺?+        CPython 缂栬瘧瀹夸富浣嶇疆鐨勫祵濂?IfExp 鏃舵妸鐪熷€煎嚭鍙ｇ洿杩炲涓荤洰鏍囷紙鏃犱腑鎬?+        姹囧悎鍧楋級锛屼笖甯搁噺 orelse 鑷傝鎶樺彔涓虹洿鎺ヨ烦杞紙鍚屾瀬鎬у父閲忎笉鍙垎杈紝
++        0/None/False 涓?1/True 绛夐噸缂栬瘧閫愪綅鐩稿悓锛屽彇瑙勮寖甯搁噺 0 / 1锛夛細
++          - if 瀹夸富锛坄`if X if (Y if c2 else Z) else 0: T``锛夛細T2 鍙岃噦
++            [eval Y/Z, POP_JUMP_FORWARD_IF_FALSE鈫抩relse 韫﹀簥鈫扚]锛岀湡鍊肩画鍏?+            T1 姹傚€煎潡 K锛堜袱鑷?fall-through 缁忚功搴婂叡浜級锛汿1 鍙岃噦
++            [eval X1/X2, POP_JUMP_FORWARD_IF_FALSE鈫扚] + fall-through 韫﹀簥
++            [JUMP_FORWARD鈫扵]锛涘灞?orelse = 鎶樺彔鍋囧€煎父閲忥紙鈫?锛夈€?+          - while 瀹夸富锛坄`while X if (Y if c2 else Z) else 0: body``锛夛細
++            棣栨姹傚€奸摼涓?if 瀹夸富閫愬舰鐩稿悓锛圱1 鍙岃噦 PJF鈫扚銆佺湡鍊肩粡鍏变韩韫﹀簥
++            姹囧叆浣撳叆鍙?T锛夛紱浣撳熬鍧楁惡甯﹂噸姹傚€奸暅鍍忛摼锛坮oot 鍧楀熬 = cb2 鍊?+            鎸囩汗鍚庣紑銆乥t2/bf2/K 韫﹀簥鍚屾瀯銆乀1 闀滃儚鑷備互
++            POP_JUMP_BACKWARD_IF_TRUE鈫扵 鏀跺熬銆佹姌鍙犲父閲忓亣鍑哄彛缁?NOP 閫氳繃
++            鐐圭洿钀?F锛夛紝鐢?While 閲嶇紪璇戣嚜鐒跺啀鐢熴€?+          - 鍊煎涓伙紙璋冪敤瀹炲弬 / return 鍊肩瓑锛夛細T2 鐨?orelse 琚湡鍊煎父閲忔姌鍙?+            锛坈2 鍋?鈫?璺宠繃鍊煎姞杞界洿鍏?T1 姹傚€煎潡 K锛夋垨鏄惧紡鍊艰噦锛堝崟琛ㄨ揪寮?+
++            POP_JUMP_FORWARD_IF_FALSE鈫扥v銆佺湡鍊肩画鍏?K锛夛紱澶栧眰 orelse 鏄惧紡
++            锛圤v 鍊煎潡娴佸叆娑堣垂鑰?C锛夛紱T1 鍙岃噦 [eval X1/X2, JUMP_FORWARD鈫扖]銆?+
++        鈺愨晲鈺?2. 褰掔害椤哄簭 鈺愨晲鈺?+        鑷簳鍚戜笂锛歟xpr_reconstructor 鍏堥€愯噦閲嶅缓 T2锛坱est/Y/Z|鎶樺彔甯搁噺锛夈€?+        T1锛坱est/X1/X2锛変笌鏄惧紡 orelse 鍊?/ 鍊煎涓诲墠缂€鍏勫紵锛屽啀瑁呴厤澶栧眰
++        IfExp(test=T2, body=T1, orelse=Const(0)|鏄惧紡鍊?锛屾渶鍚庢寜瀹夸富瑁呴厤
++        If / While / 娑堣垂璇彞锛圕all/BUILD_*/鈥?缁?reconstruct 浠?+        initial_stack=鍓嶇紑鍏勫紵+[鍏ㄩ摼琛ㄨ揪寮廬 榛戠閲嶅缓锛夈€?+
++        鈺愨晲鈺?3. 鍞竴褰掑睘鍒ゅ畾 鈺愨晲鈺?+        鏈柟娉曟暣閾炬秷璐癸細T2/T1 鏉′欢鍧椼€佸弻鑷傚潡銆佽功搴婂潡銆丱v 鍊煎潡銆佸€煎涓绘秷璐?+        鑰呭潡銆亀hile 瀹夸富鐨?LoopRegion 鍏ㄦ垚鍛橈紙浣撳潡 + 閲嶆眰鍊奸暅鍍忔満姊帮紝鍖哄煙
++        鎴愬憳鍏崇郴锛夛紱F锛坕f merge / while 鍑哄彛锛夊凡鐢熸垚鍒欎笉鍐嶅姞鍙戯紝鏈敓鎴愪笖
++        涓虹洿绾胯鍙ュ潡锛堟棤鎺у埗璺宠浆/寰幆鎸囦护锛夋椂鐢辨湰鎶樺彔鍦ㄥ涓昏鍙ュ悗鍔犲彂骞?+        鐧昏锛團 甯歌鍒嗘瀽灞傚垽缁欐案涓嶆淳鍙戠殑鍏勫紵 IfRegion锛屼氦鐖剁骇浼氶潤榛樿捀
++        鍙戯級锛屾湭鐢熸垚涓斿惈鎺у埗璺宠浆锛堢粨鏋勫寲鍚庣画锛夆啋 鏀惧純鎶樺彔閫愪綅鍥炶惤锛堥槻鍚?+        鍚庣画 if/loop 澶达級銆傚€煎涓?entry 鍓嶇紑涓殑 STORE_* 浠呭綋涓哄涓?+        LoopRegion 鐨?for 鐩爣锛坢etadata.for_target_names 鈭?+        for_target_consumed_offsets锛屽尯鍩熸垚鍛樺叧绯伙級鎵嶈眮鍏嶄负寰幆鏈哄埗鍧椼€?+
++        鈺愨晲鈺?4. 宓屽澶勭悊 鈺愨晲鈺?+        閾句笂琚垎鏋愬眰璇垏鎴?IfRegion/TernaryRegion 鐨勬垚鍛樹笉娲惧彂鈥斺€斿叾鍧楅殢閾?+        鏁存壒鐧昏 generated锛屽凡瀛樺湪鐨?TernaryRegion锛坋ntry==K锛変笌 while 瀹夸富
++        鐨?LoopRegion锛坋ntry==T锛塱d 涓€骞剁櫥璁?_generated_regions 闃查噸娲惧彂
++        锛堝師鍒?3/4锛氬涓昏妭鐐规暣浣撳紩鐢ㄩ摼琛ㄨ揪寮忥級銆?+
++        鈺愨晲鈺?5. 鍏ュ彛寮曠敤璇箟 鈺愨晲鈺?+        瀹夸富璇彞锛圛f / While / 娑堣垂 Expr / Return锛夐€氳繃鏈柟娉曚骇鍑虹殑鍗曚竴
++        鑺傜偣寮曠敤鍏ㄩ摼琛ㄨ揪寮忥紝閾炬垚鍛樹笉浠ョ嫭绔嬭鍙ュ嚭鐜帮紱if 瀹夸富鐨?then 浣撳潡 T
++        缁?_process_if_blocks 浠?entry 閿氱偣鍙戝皠銆?+
++        鈺愨晲鈺?6. 鍙嶇紪璇戞祦绋?鈺愨晲鈺?+        鎸傜偣锛歘generate_if 椤剁锛堝厛浜?elif 閾句笌 _if_generate_normal 娲惧彂锛夈€?+        瀹夸富鍒ゅ埆锛歟ntry==condition_block锛坕f/while 瀹夸富锛夋椂锛宨f 涓?while
++        鐨勯娆℃眰鍊奸摼閫愬舰鐩稿悓锛屽厛鎸夎鎸囩汗鎻愬彇鍏变韩鐪熷€艰惤鐐?T锛屽啀浠ャ€屽洖杈归暅
++        鍍忚噦銆嶅垎娲锯€斺€擳 瀛樺湪璧峰亸绉绘洿澶х殑鍓嶉┍浠ュ洖杈规潯浠惰烦杞啋T 鏀跺熬銆佷笖鍏?+        鍊煎墠缂€涓?bt1/bf1 鍊煎墠缂€ (opname,argval) 閫愪綅鐩稿悓锛堝惊鐜熬閲嶆眰鍊煎悓
++        涓€澶栧眰涓夊厓 X 鐨?a/b 鍊艰噦锛夆啋 while锛屽惁鍒?if锛沞ntry鈮?+        condition_block 涓?entry 灏句负 T2 娴嬭瘯锛堝€煎涓伙級銆傛寚绾逛笉涓垨浠讳竴
++        閲嶅缓澶辫触杩斿洖 None 閫愪綅鍥炶惤銆?+
++        C 鏉℃锛歔C1] 鍒ゆ嵁鍙鍧楁湯 opcode 鏃忋€佽烦杞洰鏍囧亸绉汇€佸墠椹卞悗缁с€佸尯鍩?+        鎴愬憳鍏崇郴涓?LoopRegion 鍏冩暟鎹紙I.4 鐧藉悕鍗曪紝闆舵枃浠跺悕/琛屽彿/灏哄闃堝€硷級锛?+        [C2] 浠讳竴鑷?娴嬭瘯/娑堣垂閲嶅缓澶辫触鍗宠繑鍥?None锛沎C3] 闈炲懡涓舰鐘讹紙鍗曞眰鏉′欢
++        涓夊厓銆丅oolOp 鐭矾閾俱€佹櫘閫?if 浣撱€乷relse 涓哄彉閲忕殑鏈姌鍙犲舰鎬併€侀潪鐩寸嚎
++        寰幆浣擄級琛屼负閫愪綅涓嶅彉銆?+        """
++        _noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')
++
++        def _clean(block):
++            return [i for i in (block.instructions or ())
++                    if i.opname not in _noise]
++
++        def _lastop(block):
++            c = _clean(block)
++            return c[-1] if c else None
++
++        def _ft(block):
++            # 鏈潯涓烘潯浠惰烦杞椂 fall-through = 鎺掗櫎璺宠浆鐩爣鍚庣殑鍞竴姝ｅ父鍚庣户锛?+            # 鍚﹀垯锛圫TORE/POP_TOP 鏀跺熬鐨勭洿绾垮潡锛夊敮涓€姝ｅ父鍚庣户鍗抽『搴忓悗缁с€?+            last = _lastop(block)
++            jt = None
++            if (last is not None and last.argval is not None
++                    and last.opname in (FORWARD_CONDITIONAL_JUMP_OPS
++                                       | BACKWARD_CONDITIONAL_JUMP_OPS)):
++                jt = self.cfg.get_block_by_offset(last.argval)
++            exc = set(getattr(block, 'exception_successors', None) or ())
++            cands = [s for s in (block.successors or ())
++                     if s not in exc and s is not jt]
++            if len(cands) == 1:
++                return cands[0]
++            return None
++
++        def _jt_of(block):
++            last = _lastop(block)
++            if (last is None or last.argval is None
++                    or last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
++                                            | BACKWARD_CONDITIONAL_JUMP_OPS
++                                            | FORWARD_JUMP_OPS
++                                            | BACKWARD_JUMP_OPS)):
++                return None
++            return self.cfg.get_block_by_offset(last.argval)
++
++        def _tramp(block):
++            # 鍗?JUMP_FORWARD/JUMP_ABSOLUTE 韫﹀簥鍧?鈫?鐩爣锛涘惁鍒?None銆?+            c = _clean(block)
++            if (len(c) == 1
++                    and c[0].opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')):
++                return self.cfg.get_block_by_offset(c[0].argval)
++            return None
++
++        def _value_expr(block):
++            # 鍗曡〃杈惧紡鍊煎潡锛歔eval V, <璺宠浆>]锛屽墺绂诲熬璺宠浆閲嶅缓 V銆?+            c = _clean(block)
++            if len(c) < 2:
++                return None
++            last = c[-1]
++            if (last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
++                                    | BACKWARD_CONDITIONAL_JUMP_OPS
++                                    | FORWARD_JUMP_OPS
++                                    | BACKWARD_JUMP_OPS)):
++                return None
++            if any(i.opname.startswith('STORE_') for i in c[:-1]):
++                return None
++            return self.expr_reconstructor.reconstruct(list(c[:-1]))
++
++        def _test_expr(block):
++            # 鏉′欢鍧楋細[eval test, <鏉′欢璺宠浆>]锛屽墺绂诲熬鏉′欢璺宠浆閲嶅缓 test銆?+            c = _clean(block)
++            if len(c) < 2:
++                return None
++            last = c[-1]
++            if (last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
++                                    | BACKWARD_CONDITIONAL_JUMP_OPS)):
++                return None
++            if any(i.opname.startswith('STORE_') for i in c[:-1]):
++                return None
++            return self.expr_reconstructor.reconstruct(list(c[:-1]))
++
++        cond_block = getattr(region, 'condition_block', None)
++        _r_merge = getattr(region, 'merge_block', None)
++        if cond_block is None or region.entry is None or _r_merge is None:
++            return None
++        _r_blocks = set(region.blocks or ())
++
++        if region.entry is cond_block:
++            # 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲 瀛愬舰 A/B锛歩f / while 瀹夸富 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲
++            cb2 = region.entry
++            cb2_last = _lastop(cb2)
++            if (cb2_last is None
++                    or cb2_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
++                    or cb2_last.argval is None):
++                return None
++            test2 = _test_expr(cb2)
++            if test2 is None:
++                return None
++            bf2 = _jt_of(cb2)
++            bt2 = _ft(cb2)
++            if bf2 is None or bt2 is None or bf2 is bt2:
++                return None
++            if not {id(bt2), id(bf2)} <= {id(b) for b in _r_blocks}:
++                return None
++            v_true2 = _value_expr(bt2)
++            v_false2 = _value_expr(bf2)
++            if v_true2 is None or v_false2 is None:
++                return None
++            bt2_last = _lastop(bt2)
++            bf2_last = _lastop(bf2)
++            if (bt2_last is None or bf2_last is None
++                    or bt2_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
++                    or bf2_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'):
++                return None
++            jtt2 = _jt_of(bt2)
++            if jtt2 is None or _jt_of(bf2) is not jtt2:
++                return None
++            F = _tramp(jtt2)
++            if F is None or F is not _r_merge:
++                return None
++            ft_bt2 = _ft(bt2)
++            ft_bf2 = _ft(bf2)
++            if ft_bt2 is None or ft_bf2 is None:
++                return None
++            K = _tramp(ft_bt2)
++            if K is None or K not in _r_blocks:
++                return None
++            if ft_bf2 is not K and _tramp(ft_bf2) is not K:
++                return None
++            k_last = _lastop(K)
++            if (k_last is None
++                    or k_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
++                    or k_last.argval is None):
++                return None
++            test1 = _test_expr(K)
++            if test1 is None:
++                return None
++            bf1 = _jt_of(K)
++            bt1 = _ft(K)
++            if bf1 is None or bt1 is None or bf1 is bt1:
++                return None
++            if not {id(bt1), id(bf1)} <= {id(b) for b in _r_blocks}:
++                return None
++            v_true1 = _value_expr(bt1)
++            v_false1 = _value_expr(bf1)
++            if v_true1 is None or v_false1 is None:
++                return None
++            # 鈹€鈹€ 瀹夸富鍒ゅ埆锛圼B78-V3R2 fix]锛屽悓灞傜粨鏋勪簨瀹烇級锛?+            # if 涓?while 瀹夸富鐨?*棣栨姹傚€奸摼閫愬舰鐩稿悓**锛圱1 鍙岃噦
++            # POP_JUMP_FORWARD_IF_FALSE鈫扚銆佺湡鍊?fall-through 缁忓叡浜功搴婃眹鍏?+            # 鍚屼竴钀界偣锛夛紝鍏堟寜璇ユ寚绾规彁鍙?T锛涘啀浠ャ€屽洖杈归暅鍍忚噦銆嶅垎娲撅細T 瀛樺湪
++            # 璧峰亸绉绘洿澶х殑鍓嶉┍ p锛宲 浠ュ洖杈规潯浠惰烦杞敹灏句笖鐩爣 IS T锛屼笖 p 鐨?+            # 鍊煎墠缂€涓?bt1/bf1 鐨勫€煎墠缂€ (opname,argval) 閫愪綅鐩稿悓锛堝惊鐜熬
++            # 閲嶆眰鍊煎悓涓€澶栧眰涓夊厓 X 鐨?a/b 鍊艰噦锛夆啋 while 瀹夸富锛涘惁鍒?if 瀹夸富
++            # 锛堢湡 if 瀹夸富 then 浣撴棤鍥炶竟锛涗綋鍐呭祵濂?while 鐨勫洖杈瑰潡闈炴潯浠惰烦
++            # 杞敹灏句笖鍊煎墠缂€涓嶄笌鏈摼 a/b 鑷傞噸鍚堬紝鍧囦笉璇垽锛夈€傗攢鈹€
++            T = None
++            arm_fts = []
++            for _arm in (bt1, bf1):
++                _al = _lastop(_arm)
++                if (_al is None or _al.opname != 'POP_JUMP_FORWARD_IF_FALSE'
++                        or _jt_of(_arm) is not F):
++                    return None
++                _aft = _ft(_arm)
++                if _aft is None:
++                    return None
++                _t_eff = _tramp(_aft) or _aft
++                if T is None:
++                    T = _t_eff
++                elif T is not _t_eff:
++                    return None
++                arm_fts.append(_aft)
++            if T is None or T is F or T is K or T is cb2:
++                return None
++
++            def _vfp(instrs):
++                # 鍊兼寚绾癸細(opname, argval)锛涜烦杞被鍙繚 opname锛堟柟鍚?鐩爣鍙紓锛?+                _out = []
++                for _i in instrs:
++                    if _i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
++                                     | BACKWARD_CONDITIONAL_JUMP_OPS
++                                     | FORWARD_JUMP_OPS
++                                     | BACKWARD_JUMP_OPS):
++                        _out.append((_i.opname, None))
++                    else:
++                        _out.append((_i.opname, _i.argval))
++                return _out
++
++            _b78_is_while = False
++            for _p in (T.predecessors or ()):
++                if _p is None or _p.start_offset <= T.start_offset:
++                    continue
++                _pl = _lastop(_p)
++                if (_pl is None or _pl.argval is None
++                        or _pl.opname not in BACKWARD_CONDITIONAL_JUMP_OPS
++                        or self.cfg.get_block_by_offset(_pl.argval) is not T):
++                    continue
++                _pc = _clean(_p)
++                if len(_pc) < 2:
++                    continue
++                for _orig in (bt1, bf1):
++                    _oc = _clean(_orig)
++                    if (len(_pc) == len(_oc)
++                            and _vfp(_pc[:-1]) == _vfp(_oc[:-1])):
++                        _b78_is_while = True
++                        break
++                if _b78_is_while:
++                    break
++            t2_expr = {'type': 'IfExp', 'test': test2,
++                       'body': v_true2, 'orelse': v_false2}
++            t1_expr = {'type': 'IfExp', 'test': test1,
++                       'body': v_true1, 'orelse': v_false1}
++            full_test = {'type': 'IfExp', 'test': t2_expr, 'body': t1_expr,
++                         'orelse': {'type': 'Constant', 'value': 0}}
++            chain_consumed = [cb2, bt2, bf2, jtt2, ft_bt2, ft_bf2, K, bt1, bf1]
++            chain_consumed.extend(arm_fts)
++
++            if not _b78_is_while:
++                # 鈹€鈹€ if 瀹夸富 鈹€鈹€
++                if _tramp(T) is not None:
++                    return None
++                # [C2] 鍖哄煙鍧楅泦鎭颁负閾炬垚鍛?+ then 鍏ュ彛 T锛歵hen 澶氬潡/寮傚舰鍧?+                # 浜よ繕鍘?if 娲惧彂锛堥槻鍗婂悶浣擄紝C3锛夈€?+                if set(region.blocks or ()) - set(chain_consumed) - {T}:
++                    return None
++                # F 褰掑睘锛堝悓灞傜粨鏋勪簨瀹烇級锛欶 宸茬敓鎴?鈫?鐖惰矾寰勫凡娑堣垂锛屼笉鍔犲彂锛?+                # F 鏈敓鎴愪笖涓虹洿绾胯鍙ュ潡锛堟棤浠讳綍鎺у埗璺宠浆/寰幆鎸囦护锛夆啋 鐢辨湰
++                # 鎶樺彔鍦?If 涔嬪悗鍔犲彂骞剁櫥璁帮紙F 甯歌鍒嗘瀽灞傚垽缁欐案涓嶆淳鍙戠殑鍏勫紵
++                # IfRegion锛屼氦鐖剁骇浼氶潤榛樿捀鍙戯紝v_if_cond_nest 瀹炴祴 return 涓?+                # 澶憋級锛汧 鏈敓鎴愪笖鍚帶鍒惰烦杞紙缁撴瀯鍖栧悗缁級鈫?鏀惧純鎶樺彔閫愪綅
++                # 鍥炶惤锛堥槻鍚炲悗缁?if/loop 澶达級銆傚叏閮ㄦ牎楠屽厛琛岋紝鏍囪鍚庣疆
++                # 锛圕3 鏃犲崐閫斿壇浣滅敤锛夈€?+                f_stmts = []
++                _f_own = False
++                if F not in self.generated_blocks:
++                    _fc = _clean(F)
++                    if any(_i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
++                                         | BACKWARD_CONDITIONAL_JUMP_OPS
++                                         | FORWARD_JUMP_OPS
++                                         | BACKWARD_JUMP_OPS
++                                         | {'FOR_ITER', 'SEND'})
++                           for _i in _fc):
++                        return None
++                    if _fc:
++                        f_stmts = self._generate_block_statements(F)
++                        if f_stmts is None:
++                            return None
++                    _f_own = True
++                for _b in chain_consumed:
++                    self.generated_blocks.add(_b)
++                    self.generated_offsets.add(_b.start_offset)
++                if _f_own:
++                    self.generated_blocks.add(F)
++                    self.generated_offsets.add(F.start_offset)
++                self._generated_regions.add(id(region))
++                # then 浣?T 涓嶉鏍囪锛堥鏍囪浼氫娇 _process_if_blocks 璺宠繃
++                # 璇ュ潡銆佷綋閫€鍖栦负 pass锛夛紝浜ゅ叾鎸?entry 閿氱偣鍙戝皠骞剁粺涓€褰掑睘銆?+                body_stmts = self._process_if_blocks([T], region, branch='then')
++                _host = {'type': 'If', 'test': full_test,
++                         'body': body_stmts if body_stmts else [{'type': 'Pass'}],
++                         'orelse': []}
++                if f_stmts:
++                    return [_host] + list(f_stmts)
++                return _host
++
++            # 鈹€鈹€ while 瀹夸富 鈹€鈹€
++            loop_region = None
++            for _r in self.regions:
++                if (isinstance(_r, LoopRegion)
++                        and (_r.entry is T
++                             or getattr(_r, 'header_block', None) is T)):
++                    loop_region = _r
++                    break
++            if loop_region is None or id(loop_region) in self._generated_regions:
++                return None
++            if getattr(loop_region, 'else_blocks', None):
++                return None
++            _loop_set = set(loop_region.blocks or ())
++            if F in _loop_set:
++                return None
++            # [C2] 鍖哄煙鍧楅泦 = 棣栨眰鍊奸摼 + 寰幆鎴愬憳锛堝尯鍩熸垚鍛樺叧绯伙級銆?+            if set(region.blocks or ()) - set(chain_consumed) - _loop_set:
++                return None
++            # 閲嶆眰鍊奸暅鍍忔満姊拌蛋鏌ワ紙鍊兼寚绾归€愪綅鐩稿悓 + 鍧楁湯璺宠浆鏃忥紱鍏ㄩ儴鎴愬憳椤?+            # 鍦ㄥ惊鐜垚鍛橀泦鍐咃級銆俽oot 鍊欓€夋寜鍋忕Щ搴忛€愪釜灏濊瘯鈥斺€斾綋璇彞鍧楀彲鑳?+            # 鍋跺悎 cb2 鍊兼寚绾瑰悗缂€锛岄敊閰嶅€欓€夊湪閾捐蛋鏌ヤ腑鑷劧澶遍厤锛圕2锛夈€?+            _cb2_fp = _vfp(_clean(cb2))
++            _root_cands = []
++            for _lb in sorted(_loop_set, key=lambda b: b.start_offset):
++                _lc = _clean(_lb)
++                if len(_lc) < len(_cb2_fp):
++                    continue
++                if _vfp(_lc[len(_lc) - len(_cb2_fp):]) == _cb2_fp:
++                    _root_cands.append((_lb, len(_lc) - len(_cb2_fp)))
++
++            def _walk_mirror(_root):
++                # 浠?root 璧烽獙璇佷綋灏鹃噸姹傚€奸暅鍍忛摼锛涜繑鍥炴満姊板潡闆嗘垨 None銆?+                _mach = {_root}
++                _m_bt2 = _ft(_root)
++                _m_bf2 = _jt_of(_root)
++                if (_m_bt2 is None or _m_bf2 is None
++                        or _m_bt2 not in _loop_set or _m_bf2 not in _loop_set
++                        or _vfp(_clean(_m_bt2)) != _vfp(_clean(bt2))
++                        or _vfp(_clean(_m_bf2)) != _vfp(_clean(bf2))):
++                    return None
++                _mach.add(_m_bt2)
++                _mach.add(_m_bf2)
++                # 鍏变韩鎶樺彔甯搁噺鍋囧嚭鍙ｉ€氳繃鐐癸細F / 韫﹀簥鈫扚 / NOP 鍧楃洿钀?F
++                _pass = _jt_of(_m_bt2)
++                if _pass is None or _pass is not _jt_of(_m_bf2):
++                    return None
++                if _pass is not F:
++                    if _pass not in _loop_set:
++                        return None
++                    if _tramp(_pass) is F:
++                        _mach.add(_pass)
++                    elif (not _clean(_pass)) and _ft(_pass) is F:
++                        _mach.add(_pass)
++                    else:
++                        return None
++                # m_bt2 鐪熷€肩画鍏ヨ功搴?鈫?m_K锛堝€兼寚绾瑰悓 K锛?+                _m_tr = _ft(_m_bt2)
++                if _m_tr is None:
++                    return None
++                _m_K = _tramp(_m_tr) or _m_tr
++                if (_m_K is None or _m_K not in _loop_set
++                        or _vfp(_clean(_m_K)) != _vfp(_clean(K))):
++                    return None
++                if _m_tr is not _m_K:
++                    _mach.add(_m_tr)
++                _mach.add(_m_K)
++                # m_bf2 鐪熷€肩画鍏?m_K锛堢洿钀芥垨缁忚功搴婏級
++                _mbf2_ft = _ft(_m_bf2)
++                if _mbf2_ft is None:
++                    return None
++                if _mbf2_ft is _m_K:
++                    pass
++                elif _tramp(_mbf2_ft) is _m_K:
++                    _mach.add(_mbf2_ft)
++                else:
++                    return None
++                # T1 闀滃儚鑷?脳2锛氬€煎墠缂€ (opname,argval) 鍚屾簮 + 鍥炶竟鏉′欢璺宠浆
++                # 鈫扵 鏀跺熬锛涘亣鍊煎嚭鍙ｇ粡韫﹀簥/鐩磋惤 鈫扚銆?+                for _m_arm, _o_arm in ((_ft(_m_K), bt1), (_jt_of(_m_K), bf1)):
++                    if _m_arm is None or _m_arm not in _loop_set:
++                        return None
++                    _ac = _clean(_m_arm)
++                    _oc = _clean(_o_arm)
++                    if (len(_ac) < 2 or len(_ac) != len(_oc)
++                            or _vfp(_ac[:-1]) != _vfp(_oc[:-1])):
++                        return None
++                    _alst = _ac[-1]
++                    if (_alst.argval is None
++                            or _alst.opname not in BACKWARD_CONDITIONAL_JUMP_OPS
++                            or self.cfg.get_block_by_offset(_alst.argval) is not T):
++                        return None
++                    _aft2 = _ft(_m_arm)
++                    if _aft2 is None or not (_aft2 is F or _tramp(_aft2) is F):
++                        return None
++                    _mach.add(_m_arm)
++                    if _aft2 is not F:
++                        _mach.add(_aft2)
++                return _mach
++
++            _mach = None
++            _chosen = None
++            for _cand, _ck in _root_cands:
++                _m = _walk_mirror(_cand)
++                if _m is not None:
++                    _mach = _m
++                    _chosen = (_cand, _ck)
++                    break
++            if _mach is None:
++                return None
++            _root, _root_k = _chosen
++            # 浣撳垏鍒嗭細寰幆鎴愬憳 鈭?鏈烘 = 浣撳潡銆備綋鍧楅』涓虹洿绾胯鍙ュ潡锛堟棤浠讳綍
++            # 鎺у埗璺宠浆/寰幆鎸囦护锛変笖鍋忕Щ鍏堜簬 root锛堜綋鍦ㄩ噸姹傚€奸摼涔嬪墠锛夛紝
++            # 鍚﹀垯浜よ繕鍘熸淳鍙戯紙C3锛岄槻鍚?if/loop/continue 浣擄級銆?+            _body_blocks = sorted(_loop_set - _mach,
++                                   key=lambda b: b.start_offset)
++            _body_stmts = []
++            for _bb in _body_blocks:
++                if _bb.start_offset > _root.start_offset:
++                    return None
++                _bc = _clean(_bb)
++                if any(_i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
++                                     | BACKWARD_CONDITIONAL_JUMP_OPS
++                                     | FORWARD_JUMP_OPS
++                                     | BACKWARD_JUMP_OPS
++                                     | {'FOR_ITER', 'SEND'})
++                       for _i in _bc):
++                    return None
++                _bs = self._generate_stmts_from_instrs(list(_bc), _bb)
++                if _bs is None:
++                    return None
++                _body_stmts.extend(_bs)
++            # root 鍧楀墠缂€锛堜綋灏捐鍙ワ級鍦ㄤ綋鍧椾箣鍚庛€侀噸姹傚€兼満姊颁箣鍓嶅彂灏勩€?+            _body_prefix = list(_clean(_root)[:_root_k])
++            if _body_prefix:
++                _ps = self._generate_stmts_from_instrs(
++                    list(_body_prefix), _root)
++                if _ps is None:
++                    return None
++                _body_stmts.extend(_ps)
++            # F 褰掑睘锛堝悓 if 瀹夸富锛夛細鐩寸嚎鍒欐湰鎶樺彔鍔犲彂骞剁櫥璁帮紱宸茬敓鎴愪笉鍔犲彂锛?+            # 缁撴瀯鍖栧悗缁斁寮冩姌鍙狅紙C3锛夈€傛牎楠屽厛琛屻€佹爣璁板悗缃€?+            f_stmts = []
++            _f_own = False
++            if F not in self.generated_blocks:
++                _fc = _clean(F)
++                if any(_i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
++                                     | BACKWARD_CONDITIONAL_JUMP_OPS
++                                     | FORWARD_JUMP_OPS
++                                     | BACKWARD_JUMP_OPS
++                                     | {'FOR_ITER', 'SEND'})
++                       for _i in _fc):
++                    return None
++                if _fc:
++                    f_stmts = self._generate_block_statements(F)
++                    if f_stmts is None:
++                        return None
++                _f_own = True
++            for _b in chain_consumed:
++                self.generated_blocks.add(_b)
++                self.generated_offsets.add(_b.start_offset)
++            for _b in _loop_set:
++                self.generated_blocks.add(_b)
++                self.generated_offsets.add(_b.start_offset)
++            if _f_own:
++                self.generated_blocks.add(F)
++                self.generated_offsets.add(F.start_offset)
++            self._generated_regions.add(id(region))
++            self._generated_regions.add(id(loop_region))
++            _host = {'type': 'While', 'test': full_test,
++                     'body': _body_stmts if _body_stmts else [{'type': 'Pass'}],
++                     'orelse': []}
++            if f_stmts:
++                return [_host] + list(f_stmts)
++            return _host
++
++        # 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲 瀛愬舰 C锛氬€兼秷璐瑰涓?鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲
++        P = region.entry
++        p_last = _lastop(P)
++        if (p_last is None
++                or p_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
++                or p_last.argval is None):
++            return None
++        Bt2 = cond_block
++        bt2_last = _lastop(Bt2)
++        if (bt2_last is None
++                or bt2_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
++                or bt2_last.argval is None):
++            return None
++        v_true2 = _value_expr(Bt2)
++        if v_true2 is None:
++            return None
++        Ov = _jt_of(Bt2)
++        else_blocks = list(getattr(region, 'else_blocks', None) or [])
++        if Ov is None or len(else_blocks) != 1 or Ov is not else_blocks[0]:
++            return None
++        C = _r_merge
++        if C is None or Ov is C:
++            return None
++        if not {id(Bt2), id(Ov)} <= {id(b) for b in _r_blocks}:
++            return None
++        ov_ft = _ft(Ov)
++        if not (ov_ft is C or (ov_ft is not None and _tramp(ov_ft) is C)
++                or _jt_of(Ov) is C):
++            return None
++        v_ov = _value_expr(Ov)
++        if v_ov is None:
++            ov_c = _clean(Ov)
++            if ov_c and all(not i.opname.startswith('STORE_') for i in ov_c):
++                v_ov = self.expr_reconstructor.reconstruct(list(ov_c))
++        if v_ov is None:
++            return None
++        # T2 娴嬭瘯杈圭晫锛歅 灏惧墠鍚戞爤鍥炴函锛坣eeded=1锛夊垎绂绘祴璇曚笌鍓嶇紑鍏勫紵/璇彞銆?+        pclean = _clean(P)
++        if len(pclean) < 2:
++            return None
++        _needed = 1
++        _cond_start = None
++        for _k in range(len(pclean) - 2, -1, -1):
++            _ci = pclean[_k]
++            if _ci.opname.startswith('STORE_'):
++                _cond_start = _k + 1
++                break
++            _push = 0
++            _pop = 0
++            if _ci.opname in ('LOAD_ATTR', 'LOAD_METHOD'):
++                _push = 1
++                _pop = 1
++            elif _ci.opname.startswith('LOAD_') or _ci.opname == 'COPY':
++                _push = 1
++            elif _ci.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
++                _push = 1
++                _pop = 2
++            elif _ci.opname in ('BINARY_SUBSCR', 'BINARY_OP'):
++                _push = 1
++                _pop = 2
++            elif _ci.opname.startswith('UNARY_'):
++                _push = 1
++                _pop = 1
++            elif _ci.opname == 'CALL':
++                _push = 1
++                _pop = (_ci.arg or 0) + 1
++            elif _ci.opname.startswith('BUILD_'):
++                _push = 1
++                _pop = (_ci.arg or 0)
++            _needed = _needed - _push + _pop
++            if _needed <= 0:
++                _cond_start = _k
++                break
++        if _cond_start is None or _cond_start >= len(pclean) - 1:
++            return None
++        test2_instrs = pclean[_cond_start:len(pclean) - 1]
++        prefix_instrs = pclean[:_cond_start]
++        if not test2_instrs:
++            return None
++        test2 = self.expr_reconstructor.reconstruct(list(test2_instrs))
++        if test2 is None:
++            return None
++        # 鍓嶇紑 STORE 瀹堝崼锛氫粎瀹夸富 LoopRegion 鐨?for 鐩爣璞佸厤锛堝尯鍩熸垚鍛樺叧绯伙級銆?+        _prefix_stores = [i for i in prefix_instrs
++                          if i.opname.startswith('STORE_')]
++        if _prefix_stores:
++            _host_loop = None
++            for _r in self.regions:
++                if (isinstance(_r, LoopRegion)
++                        and P in (_r.blocks or ())):
++                    _host_loop = _r
++                    break
++            if _host_loop is None:
++                return None
++            _ftn = ((_host_loop.metadata or {}).get('for_target_names'))
++            _ftc = ((_host_loop.metadata or {})
++                    .get('for_target_consumed_offsets'))
++            if not _ftn or _ftc is None:
++                return None
++            for _si in _prefix_stores:
++                if (_si.argval not in _ftn or _si.offset not in _ftc):
++                    return None
++        # T2 鍋囪噦锛氭姌鍙犵湡鍊煎父閲忥紙c2 鍋?鈫?鐩村叆 T1 姹傚€煎潡锛夋垨鏄惧紡鍊艰噦銆?+        Bf2c = _jt_of(P)
++        K = _ft(Bt2)
++        if K is None or Bf2c is None:
++            return None
++        K_eff = _tramp(K) or K
++        t2_orelse = None
++        if Bf2c is K_eff:
++            t2_orelse = {'type': 'Constant', 'value': 1}
++        else:
++            bf2c_last = _lastop(Bf2c)
++            if (bf2c_last is None
++                    or bf2c_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
++                    or _jt_of(Bf2c) is not Ov):
++                return None
++            v_false2 = _value_expr(Bf2c)
++            if v_false2 is None:
++                return None
++            bf2_ft = _ft(Bf2c)
++            if bf2_ft is None:
++                return None
++            if not (bf2_ft is K_eff or _tramp(bf2_ft) is K_eff):
++                return None
++            t2_orelse = v_false2
++        if K_eff not in _r_blocks:
++            return None
++        k_last = _lastop(K_eff)
++        if (k_last is None
++                or k_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
++                or k_last.argval is None):
++            return None
++        test1 = _test_expr(K_eff)
++        if test1 is None:
++            return None
++        Bf1 = _jt_of(K_eff)
++        Bt1 = _ft(K_eff)
++        if Bf1 is None or Bt1 is None or Bf1 is Bt1:
++            return None
++        if not {id(Bt1), id(Bf1)} <= {id(b) for b in _r_blocks}:
++            return None
++        v_true1 = _value_expr(Bt1)
++        v_false1 = _value_expr(Bf1)
++        if v_true1 is None or v_false1 is None:
++            return None
++        if _jt_of(Bt1) is not C or _jt_of(Bf1) is not C:
++            return None
++        # 娑堣垂鑰?C锛氬€兼秷璐?opcode 鏃忓湪鍦恒€?+        c_clean = _clean(C)
++        if not c_clean:
++            return None
++        _consumer_ops = ('PRECALL', 'CALL', 'BUILD_LIST', 'BUILD_TUPLE',
++                         'BUILD_SET', 'BUILD_MAP', 'BUILD_CONST_KEY_MAP',
++                         'MAKE_FUNCTION', 'BINARY_OP', 'BINARY_SUBSCR',
++                         'COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'FORMAT_VALUE',
++                         'BUILD_STRING', 'GET_AWAITABLE', 'UNARY_NOT',
++                         'UNARY_NEGATIVE', 'UNARY_INVERT')
++        if not any(i.opname in _consumer_ops for i in c_clean):
++            return None
++        while (c_clean and c_clean[-1].opname in
++               ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')):
++            c_clean = c_clean[:-1]
++        _is_ret = False
++        if c_clean and c_clean[-1].opname in ('RETURN_VALUE', 'RETURN_CONST'):
++            _is_ret = True
++            c_clean = c_clean[:-1]
++            if (c_clean and c_clean[-1].opname == 'LOAD_CONST'
++                    and c_clean[-1].argval is None):
++                return None
++        if not _is_ret and c_clean and c_clean[-1].opname == 'POP_TOP':
++            c_clean = c_clean[:-1]
++        if not c_clean:
++            return None
++        for _mi, _m in enumerate(c_clean):
++            if _m.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST'):
++                if _mi + 1 < len(c_clean):
++                    return None
++                break
++        # 鍓嶇紑鍏勫紵琛ㄨ揪寮忥紙鍓ョ宸茶眮鍏?for 鐩爣 STORE 鍚庢寜鍏勫紵鍒囧垎閲嶅缓锛夈€?+        prefix_exprs = []
++        _prefix_no_stores = [i for i in prefix_instrs
++                             if not i.opname.startswith('STORE_')]
++        if _prefix_no_stores:
++            for sl in self._split_preload_into_siblings(list(_prefix_no_stores)):
++                e = self.expr_reconstructor.reconstruct(list(sl))
++                if e is None:
++                    return None
++                prefix_exprs.append(e)
++        t2_expr = {'type': 'IfExp', 'test': test2, 'body': v_true2,
++                   'orelse': t2_orelse}
++        t1_expr = {'type': 'IfExp', 'test': test1, 'body': v_true1,
++                   'orelse': v_false1}
++        full_expr = {'type': 'IfExp', 'test': t2_expr, 'body': t1_expr,
++                     'orelse': v_ov}
++        cons_expr = self.expr_reconstructor.reconstruct(
++            list(c_clean), initial_stack=list(prefix_exprs) + [full_expr])
++        if cons_expr is None:
++            return None
++        consumed = [P, Bt2, Ov, C, Bt1, Bf1]
++        if Bf2c is not K_eff:
++            consumed.append(Bf2c)
++        if K is not K_eff:
++            consumed.append(K)
++        consumed.append(K_eff)
++        for b in consumed:
++            self.generated_blocks.add(b)
++        for b in (region.blocks or []):
++            self.generated_blocks.add(b)
++        self._generated_regions.add(id(region))
++        for _r in self.regions:
++            if (isinstance(_r, TernaryRegion)
++                    and _r.entry is not None and _r.entry is K_eff
++                    and id(_r) not in self._generated_regions):
++                self._generated_regions.add(id(_r))
++                break
++        if _is_ret:
++            return {'type': 'Return', 'value': cons_expr}
++        return {'type': 'Expr', 'value': cons_expr}
++
+@@ -51298,2 +53680,5 @@ AST 鏄犲皠瑙勫垯:
+-        # 澶勭悊 if-body 鍜?orelse
+-        self.generated_blocks.add(_if_body_block)
++        # [B98-V3R2] 澶勭悊 if-body 鍜?orelse锛氬厛澶勭悊鍐嶆爣璁般€俖process_if_blocks 鐨?+        # 鎵弿寰幆瀵瑰凡鍦?generated_blocks 鐨勫潡鐩存帴 continue锛?28711锛夛紝鍘?+        # 銆屽厛鏍囪鍚庡鐞嗐€嶄娇鍒嗘敮浣撻鍧楄璺宠繃鈥斺€旂┖浣撻€€鍖栦负 Pass锛坵alrus 浜ゅ弶褰?+        # `if (w := ...): return w` 涓?return锛夈€侾IB 澶勭悊鍚庤嚜琛岀櫥璁板叾娑堣垂鐨勫潡锛?+        # 杩斿洖鍚庢澶勮ˉ鐧昏鍏滃簳锛堝嚭鍙?鏈秷璐瑰潡锛夈€?@@ -51300,0 +53686,2 @@ AST 鏄犲皠瑙勫垯:
++        self.generated_blocks.add(_if_body_block)
++        self.generated_offsets.add(_if_body_block.start_offset)
+@@ -51303 +53689,0 @@ AST 鏄犲皠瑙勫垯:
+-            self.generated_blocks.add(_orelse_block)
+@@ -51304,0 +53691,2 @@ AST 鏄犲皠瑙勫垯:
++            self.generated_blocks.add(_orelse_block)
++            self.generated_offsets.add(_orelse_block.start_offset)
+@@ -53825,0 +56214,15 @@ AST 鏄犲皠瑙勫垯:
++        # [B98-V3R2] CPython 3.11 鏍堟繁淇灏惧鍓ョ锛歮erge 鍧楀熬鎴愬鍑虹幇
++        # `SWAP n; POP_TOP` 鏃讹紝璇ュ鏄紪璇戝櫒鍦ㄦ秷璐规寚浠わ紙COMPARE_OP 绛夛級涔嬪悗
++        # 涓㈠純涓€涓€屾繁搴︿慨姝ｆЫ銆嶇殑纭畾鎬т骇鐗┾€斺€擲WAP 鎶婇《鍊间笌妲戒綅浜ゆ崲銆?+        # POP_TOP 涓㈠純妲戒綅锛屽噣璇箟 = 淇濈暀椤跺€硷紙鏃犳搷浣滐級銆備笉鍓ョ鏃朵笅鏂?+        # _has_control_flow_or_store 瀹堝崼锛堝惈 SWAP锛変細鎷掔粷閲嶅缓锛屾瘮杈冩秷璐?+        # 鏁翠綋钂稿彂鍑鸿８ Expr锛坒_b98_compare_cross / exprtail v3 瀹炶瘉锛夈€?+        # 褰掔害鏂瑰紡锛氭垚瀵瑰墺闄わ紙浠呭綋 POP_TOP 鎭板湪 SWAP 涔嬪悗涓斾綅浜庡熬绔級锛?+        # 鍏跺悗鎸囦护娴佺殑閲嶅缓缁撴灉涓庡師鏂囪涔夐€愪綅涓€鑷淬€?+        # [C1] 鍒ゆ嵁浠呰鏈潡鎸囦护搴忓熬閮ㄤ袱 opcode锛沎C2] 鍓ラ櫎鑷熬鍚戝ご鍗曢亶锛?+        # 涓嶈法鍧楋紱[C3] 浠呭熬瀵瑰舰鎬侊紝闈炲熬閮ㄥ鐨?SWAP 浠嶇敱鍘熷畧鍗嫆缁濄€?+        while (len(merge_all) >= 2
++               and merge_all[-1].opname == 'POP_TOP'
++               and merge_all[-2].opname == 'SWAP'):
++            merge_all = merge_all[:-2]
++

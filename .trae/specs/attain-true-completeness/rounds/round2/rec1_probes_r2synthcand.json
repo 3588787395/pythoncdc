@@ -1,0 +1,24 @@
+[
+ {
+  "name": "cand",
+  "pyc_src_rel": "@_r2_synth_cand.pyc",
+  "pyc_src_sha": "c829593b12ad9131",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round2/_r2_synth_cand.pyc",
+  "mtime": "2026-10-18T18:16:53",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "4669db28f3392ba3",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: _r2_synth_cand.pyc (Python 3.11)\n\n__doc__ = 'R2 synthetic replacement candidates (test batch).'\ndef x1_compare_cross(p, q, r):\n    (p or q) and r\ndef x2_call_in_if(p, q, r, flag):\n    def sink(x):\n        return x\n    if flag:\n        (p or q) and r\n    else:\n        return 0\ndef x3_walrus_for(p, q, r):\n    for i in range(2):\n        w = (p or q) and r\n        return w\n    return -1\ndef x4_chain_mixed_ops(m, n, o, p, q, g1, g2):\n    return (m if g1 else n) > (o if g2 else p) >= q\ndef x5_chain_eq_ne(m, n, o, p, q, r, g1, g2, g3):\n    return (m if g1 else n) == (o if g2 else p) != (q if g3 else r)\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.x1_compare_cross: Failure: Different control flow\n  ***<module>.x2_call_in_if: Failure: Different control flow\n  ***<module>.x3_walrus_for: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/_r2_synth_cand.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/_r2_synth_candOK.py\n[single] status=failure units=4/7 success_rate=57.14%",
+  "status": "failure",
+  "units_success": 4,
+  "units_total": 7,
+  "failures": [
+   "***<module>.x1_compare_cross: Failure: Different control flow",
+   "***<module>.x2_call_in_if: Failure: Different control flow",
+   "***<module>.x3_walrus_for: Failure: Different control flow"
+  ]
+ }
+]

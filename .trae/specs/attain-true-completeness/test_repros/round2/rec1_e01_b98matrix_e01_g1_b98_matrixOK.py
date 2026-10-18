@@ -23,7 +23,7 @@ def f_or_in_and_pair_deep(a, b, c, d):
     acc = []
     for i in range(3):
         if i and len(acc) < 4:
-            r = b if not a else c
+            r = (a or b) and (c or d)
             acc.append(r)
             while False:
                 pass
@@ -31,23 +31,18 @@ def f_or_in_and_pair_deep(a, b, c, d):
 def f_b98_ternary_cross(a, b, c, d):
     for i in range(3):
         if i and i < 4:
-            if d:
-                (a or b) and c
-            else:
-                return 0
-            return None
+            return (a or b) and c if d else 0
     return 1
 def f_b98_compare_cross(a, b, c):
     for i in range(3):
         if i and i:
-            (a or b) and c
-            return None
+            return ((a or b) and c) > 2
     return False
 def f_b98_walrus_cross(a, b, c):
     for i in range(3):
         if i:
             if (w := (a or b) and c):
-                pass
+                return w
     return 0
 def f_b98_if_cond_pos(a, b, c):
     for i in range(3):
@@ -71,30 +66,23 @@ def f_b98_call_arg_pos(a, b, c):
         return x + 1
     for i in range(3):
         if i:
-            if (a or b) and c:
-                pass
+            return sink((a or b) and c)
     return 0
 def f_b98_or_tail_and_group(a, b, c, d):
     for i in range(3):
-        if i:
-            if not (a and b):
-                if c:
-                    if d:
-                        pass
-                else:
-                    return i
+        if i and (a and b or c or d):
+            return i
     return 0
 def f_b98_not_wrapped(a, b, c):
     for i in range(3):
         if i:
-            pass
+            return 1 if not ((a or b) and c) else 2
     return 0
 def f_b98_and_tail_or_group(a, b, c, d):
     acc = []
     for i in range(3):
         if i and len(acc) < 3:
-            if (a or b) and (c or d) and a:
-                pass
+            r = (a or b) and (c or d) and a
             acc.append(r)
             while False:
                 pass

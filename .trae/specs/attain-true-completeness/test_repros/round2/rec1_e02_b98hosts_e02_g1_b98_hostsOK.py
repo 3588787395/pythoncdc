@@ -13,10 +13,7 @@ class CB98:
                 if i:
                     return (a or b) and c
         except ValueError:
-            if a:
-                (a or b) and c
-            else:
-                return -1
+            return (a or b) and c if a else -1
         return 0
     def m_class_body_host(self, a, b, c):
         for i in range(2):
@@ -26,17 +23,17 @@ class CB98:
 def f_comp_cond_host(a, b, c, xs):
     for i in range(2):
         if i:
-            return [x for x in xs if a or b and c]
+            return [x for x in xs if (a or b) and c]
     return []
 def f_genexp_cond_host(a, b, c, xs):
     for i in range(2):
         if i:
-            return sum((1 for x in xs if a or b and c))
+            return sum((1 for x in xs if (a or b) and c))
     return 0
 def f_dictcomp_value_host(a, b, c, xs):
     for i in range(2):
         if i:
-            return {b if not a else c: None for x in xs if x}
+            return {x: (a or b) and c for x in xs if x}
     return {}
 def f_nested_func_host(a, b, c):
     def inner():
@@ -66,8 +63,7 @@ def f_with_body_host(a, b, c):
     with CM() as cm:
         for i in range(2):
             if i:
-                if (a or b) and c:
-                    pass
+                return (a or b) and c
     return 0
 def f_try_body_host(a, b, c):
     try:

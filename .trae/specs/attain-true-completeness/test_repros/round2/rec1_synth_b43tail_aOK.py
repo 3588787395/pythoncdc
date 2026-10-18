@@ -1,0 +1,14 @@
+# Source Generated with Decompyle++ (Python version)
+# File: rec1_synth_b43tail_a.pyc (Python 3.11)
+
+__doc__ = 'R2 合成变体 F8a（B43 链式比较 and 尾操作数族 item 15 交叉变体，非语料）。'
+def k_and_tail(lo, mid, hi, flag):
+    return lo < mid < hi and flag
+def k_store_tail(a, b, c, d):
+    t = a < b < c and d
+    return t
+def k_if_cond(a, b, c, d):
+    if a < b < c:
+        if d:
+            return 1
+    return 0

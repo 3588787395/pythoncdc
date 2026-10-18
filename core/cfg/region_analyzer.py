@@ -4849,6 +4849,180 @@ class RegionAnalyzer:
                 return True
         return False
 
+    def _b123_absorb_ifexp_tail_diamond(self, tramp: BasicBlock,
+                                         chain_last: BasicBlock,
+                                         header: BasicBlock,
+                                         body: Set[BasicBlock]) -> Optional[Dict[str, Any]]:
+        """[B123-V3R2] and 尾 IfExp 钻石操作数吸收（while 头链式比较 + IfExp 尾）。
+
+        ①算法依据：``while <cc 链> and (Y if c2 else Z):`` 的尾操作数是
+        多块钻石（test/then/else），超出 _b104r2 单块尾吸收判据域——CPython
+        lowering：链末段失败边收敛循环出口、真值经透明桥续入钻石 test 块
+        （[eval c2, POP_JUMP_FORWARD_IF_FALSE→else 臂]），then/else 两值臂
+        各自 [eval 值, POP_JUMP_FORWARD_IF_FALSE→循环出口]（and 失败路径
+        同一性）+ fall-through 直落 header 或经透明蹦床续入（= tramp 上
+        游）；不吸收则 else 臂块漏出为重叠 IfRegion，循环头退化为纯链、
+        IfExp 钻石泄漏为体（exprtail v3）。
+        ②归约顺序：while-true cc 回溯定位链头后调用（与
+        _b104r2_absorb_leading_and_operands 的镜像序对偶）；命中块并入
+        _cc_pre_loop_blocks（唯一归属 LoopRegion）。
+        ③唯一归属判定（识别条件，全部 I.4 白名单）：
+          (a) arm1 = tramp 的非体内前驱，以 POP_JUMP_FORWARD_IF_FALSE 收尾
+              且失败边收敛循环出口（_b104r2_cond_jump_exits_loop，与链末
+              段出口同一），候选唯一；
+          (b) test = arm1 的非体内前驱，以 POP_JUMP_FORWARD_IF_FALSE 收
+              尾、fall-through == arm1、跳转目标 = arm2（else 臂，非体内
+              非 header），候选唯一；
+          (c) arm2 同 arm1 出口协议；两臂 fall-through 直落 header 或经
+              透明跳转蹦床续入循环；
+          (d) test/then/else 求值窗（剥噪声与尾条件跳转）为纯值求值（无
+              STORE_*/DELETE_*/POP_TOP/IMPORT/RETURN/内部跳转）；
+          (e) 回边重检副本：then/else 各有 _b104r2_has_recheck_mirror；
+              test 的镜像 = 体内块（≠header）求值段同序，其 jt/ft 双后继
+              均以回边条件跳转 → header 收尾、jt 段序 == else 段序、ft
+              段序 == then 段序（rotate-while 钻石三副本）。
+        ④嵌套处理：钻石整体作循环条件尾操作数由 _loop_generate_while 的
+        cc 分支重建 IfExp 并入 BoolOp(And)，不展开为子区域。
+        ⑤AST 映射接口：返回 {'test','then','else','claim_blocks'}，由调用
+        点写入 metadata（cc_mixed_cond_tail_diamond）。
+        ⑥反编译流程：仅 while-true cc 回溯命中链头后调用；未命中返回
+        None，调用方行为逐位不变（C3 封闭）。C1/C2/C3 同 _b104r2。
+        """
+        _chain_last_li = chain_last.get_last_instruction()
+        if (_chain_last_li is None or _chain_last_li.argval is None
+                or _chain_last_li.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                                 | SHORT_CIRCUIT_JUMP_OPS)):
+            return None
+        exit_block = self.cfg.get_block_by_offset(_chain_last_li.argval)
+        if exit_block is None or exit_block in body or exit_block is header:
+            return None
+        _arm1_cands = []
+        for p in tramp.predecessors:
+            if p in body or p is header:
+                continue
+            pl = p.get_last_instruction()
+            if (pl is not None and pl.argval is not None
+                    and pl.opname == 'POP_JUMP_FORWARD_IF_FALSE'
+                    and self._b104r2_cond_jump_exits_loop(p, exit_block, header)):
+                _arm1_cands.append(p)
+        if len(_arm1_cands) != 1:
+            return None
+        arm1 = _arm1_cands[0]
+        _test_cands = []
+        for p in arm1.predecessors:
+            if p in body or p is header or p is tramp:
+                continue
+            pl = p.get_last_instruction()
+            if (pl is None or pl.argval is None
+                    or pl.opname != 'POP_JUMP_FORWARD_IF_FALSE'):
+                continue
+            p_jt = self.cfg.get_block_by_offset(pl.argval)
+            if p_jt is None or p_jt is arm1 or p_jt in body or p_jt is header:
+                continue
+            if arm1 not in p.successors:
+                continue
+            _test_cands.append((p, p_jt))
+        if len(_test_cands) != 1:
+            return None
+        test, arm2 = _test_cands[0]
+        a2_last = arm2.get_last_instruction()
+        if (a2_last is None or a2_last.argval is None
+                or a2_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
+                or not self._b104r2_cond_jump_exits_loop(arm2, exit_block, header)):
+            return None
+        for arm in (arm1, arm2):
+            _ft_arm = None
+            for s in arm.successors:
+                if s in (arm.exception_successors or ()):
+                    continue
+                if s is header:
+                    _ft_arm = s
+                    break
+            if _ft_arm is None:
+                for s in arm.successors:
+                    if s in (arm.exception_successors or ()):
+                        continue
+                    sl = s.get_last_instruction()
+                    if (sl is not None and sl.argval is not None
+                            and sl.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                            and self.cfg.get_block_by_offset(sl.argval) is header):
+                        _ft_arm = s
+                        break
+            if _ft_arm is None:
+                return None
+        _PURE_BAD_PREFIX = ('STORE_', 'DELETE_', 'IMPORT_', 'RETURN_')
+
+        def _val_window_ok(block):
+            ins = [i for i in block.instructions
+                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                       'EXTENDED_ARG')]
+            if len(ins) < 2 or ins[-1].opname != 'POP_JUMP_FORWARD_IF_FALSE':
+                return False
+            for i in ins[:-1]:
+                if any(i.opname.startswith(_p) for _p in _PURE_BAD_PREFIX):
+                    return False
+                if i.opname == 'POP_TOP':
+                    return False
+                if i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                | BACKWARD_CONDITIONAL_JUMP_OPS
+                                | FORWARD_JUMP_OPS | BACKWARD_JUMP_OPS
+                                | SHORT_CIRCUIT_JUMP_OPS):
+                    return False
+            return True
+
+        if not (_val_window_ok(test) and _val_window_ok(arm1)
+                and _val_window_ok(arm2)):
+            return None
+        if not self._b104r2_has_recheck_mirror(arm1, header, body, exit_block):
+            return None
+        if not self._b104r2_has_recheck_mirror(arm2, header, body, exit_block):
+            return None
+        _test_seq = self._b104r2_cond_eval_seq(test)
+        _then_seq = self._b104r2_cond_eval_seq(arm1)
+        _else_seq = self._b104r2_cond_eval_seq(arm2)
+        if not _test_seq or not _then_seq or not _else_seq:
+            return None
+        _test_mirror_ok = False
+        for b in body:
+            if b is header:
+                continue
+            if self._b104r2_cond_eval_seq(b) != _test_seq:
+                continue
+            bl = b.get_last_instruction()
+            if (bl is None or bl.argval is None
+                    or bl.opname != 'POP_JUMP_FORWARD_IF_FALSE'):
+                continue
+            b_jt = self.cfg.get_block_by_offset(bl.argval)
+            b_ft = None
+            for s in b.successors:
+                if s in (b.exception_successors or ()) or s is b_jt:
+                    continue
+                b_ft = s
+                break
+            jt_ok = False
+            ft_ok = False
+            if b_jt is not None:
+                jl = b_jt.get_last_instruction()
+                if (jl is not None and jl.argval is not None
+                        and jl.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                        and self.cfg.get_block_by_offset(jl.argval) is header
+                        and self._b104r2_cond_eval_seq(b_jt) == _else_seq):
+                    jt_ok = True
+            if b_ft is not None:
+                fl = b_ft.get_last_instruction()
+                if (fl is not None and fl.argval is not None
+                        and fl.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                        and self.cfg.get_block_by_offset(fl.argval) is header
+                        and self._b104r2_cond_eval_seq(b_ft) == _then_seq):
+                    ft_ok = True
+            if jt_ok and ft_ok:
+                _test_mirror_ok = True
+                break
+        if not _test_mirror_ok:
+            return None
+        return {'test': test, 'then': arm1, 'else': arm2,
+                'claim_blocks': [test, arm1, arm2]}
+
     def _b104r2_absorb_mixed_cc_chain(self, condition_block: BasicBlock,
                                       header: BasicBlock, body: Set[BasicBlock]) -> Optional[Dict[str, Any]]:
         """[B104-R2a] 混合条件（链式比较 + and 尾）协议吸收（识别层守卫）。
@@ -5263,6 +5437,8 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
             # [B104-R2a] 混合条件（链式比较 + and 操作数）的尾/首操作数块
             _cc_mixed_tail_blocks: List[BasicBlock] = []
             _cc_mixed_lead_blocks: List[BasicBlock] = []
+            # [B123-V3R2] and 尾 IfExp 钻石操作数（test/then/else 三块）
+            _cc_mixed_tail_diamond: Optional[Dict[str, Any]] = None
             if loop_type == RegionType.WHILE_LOOP:
                 for pred in sorted(header.predecessors, key=lambda p: p.start_offset):
                     if pred in body:
@@ -5431,6 +5607,20 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
                                     _chain_head, _chain_extra[-1], header, body)
                                 if _cc_mixed_lead_blocks:
                                     _cc_pre_loop_blocks.extend(_cc_mixed_lead_blocks)
+                            # [B123-V3R2] and 尾 IfExp 钻石操作数吸收
+                            # （``while <cc 链> and (Y if c2 else Z):``）。
+                            # 判据（I.4 白名单）与回边重检副本排除见
+                            # _b123_absorb_ifexp_tail_diamond；命中则钻石三块
+                            # 并入 _cc_pre_loop_blocks（唯一归属 LoopRegion），
+                            # metadata 记钻石，交生成器 _loop_generate_while
+                            # 重建 BoolOp(And, [Compare, IfExp])；未命中
+                            # 本层行为逐位不变（C3 封闭）。
+                            _b123_diamond = self._b123_absorb_ifexp_tail_diamond(
+                                _cc_pred, _chain_extra[-1], header, body)
+                            if _b123_diamond is not None:
+                                _cc_mixed_tail_diamond = _b123_diamond
+                                _cc_pre_loop_blocks.extend(
+                                    _b123_diamond['claim_blocks'])
                             break
             else_blocks, natural_exit = self._find_loop_else(header, body, loop_type, for_iter_exit, condition_block=condition_block)
             else_blocks = else_blocks or []
@@ -5902,6 +6092,11 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
                     # 原则 4（入口引用语义）：条件求值起点 = 首操作数块，
                     # 父序列经该 entry 引用循环（链头不再是最前块）。
                     region.entry = _cc_mixed_lead_blocks[0]
+                # [B123-V3R2] and 尾 IfExp 钻石操作数（区域成员关系接口）：
+                # 生成器 _loop_generate_while 的 cc 分支据此重建 IfExp 并入
+                # BoolOp(And) 末位，体内钻石重检镜像按段序抑制。
+                if _cc_mixed_tail_diamond:
+                    region.metadata['cc_mixed_cond_tail_diamond'] = _cc_mixed_tail_diamond
             if loop_type == RegionType.WHILE_LOOP and condition_block and condition_block == header:
                 region.metadata['is_degenerate_while'] = any(
                     i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF')

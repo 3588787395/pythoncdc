@@ -1,0 +1,58 @@
+[
+ {
+  "name": "r7_12",
+  "pyc_src_rel": "test_repros/round7/r7_12_boolop_nest.pyc",
+  "pyc_src_sha": "f69583856ec66f5f",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round2/rec1_r7_12_r7_12_boolop_nest.pyc",
+  "mtime": "2026-10-17T13:19:22",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "0f8fae3dd105e7a0",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_r7_12_r7_12_boolop_nest.pyc (Python 3.11)\n\n__doc__ = 'R7-12 BoolOp 嵌套 BoolOp（≥3 层）+ 链式比较/三元内嵌。'\ndef b_nest_three_layers(a, b, c, d):\n    return a and b and (c or d)\ndef b_nest_deep_right(a, b, c, d):\n    return a and (b or c and d)\ndef b_nest_deep_mixed(a, b, c, d, e):\n    return (a or b and c) and (d or e)\ndef b_nest_with_chain(a, b, c, d, e):\n    return a < b and c < d < e\ndef b_nest_with_ternary(a, b, c, d, flag):\n    return a and b if flag else c or d\ndef b_ternary_lhs_and(a, b, c, d, flag):\n    if flag:\n        return a\n    else:\n        return b and d\ndef b_nest_not_layers(a, b, c):\n    return not (a or b and not c)\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.b_ternary_lhs_and: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_r7_12_r7_12_boolop_nest.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_r7_12_r7_12_boolop_nestOK.py\n[single] status=failure units=7/8 success_rate=87.50%",
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 8,
+  "failures": [
+   "***<module>.b_ternary_lhs_and: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "b98_resid",
+  "pyc_src_rel": "test_repros/round3/_scratch_b98/resid.pyc",
+  "pyc_src_sha": "3bee35ad9c3f7417",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round2/rec1_b98_resid_resid.pyc",
+  "mtime": "2026-10-17T13:19:24",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "49b2f00b5e427351",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_b98_resid_resid.pyc (Python 3.11)\n\ndef r_d1(a, b, c, d):\n    return (a or b) and c or d\ndef r_d2(a, b, c, d):\n    return a and (b or c) and d\ndef r_e3(a, b, c, d):\n    return a or b and (c or d)\ndef r_g2(a, b, c, d, e):\n    return a and (b or c) or d and e\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_b98_resid_resid.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_b98_resid_residOK.py\n[single] status=success units=5/5 success_rate=100.00%",
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "e01_b98matrix",
+  "pyc_src_rel": "test_repros/round3/e01_g1_b98_matrix.pyc",
+  "pyc_src_sha": "ef2a32a20b39f485",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round2/rec1_e01_b98matrix_e01_g1_b98_matrix.pyc",
+  "mtime": "2026-10-17T13:19:25",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "43d8fae55447d634",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_e01_b98matrix_e01_g1_b98_matrix.pyc (Python 3.11)\n\ndef f_or_in_and_deep(a, b, c):\n    acc = []\n    for i in range(3):\n        if i % 2 == 0 and len(acc) < 4:\n            r = (a or b) and c\n            acc.append(r)\n            while False:\n                pass\n    return acc\ndef f_and_in_or_deep(a, b, c):\n    acc = []\n    for i in range(3):\n        if i and len(acc) < 4:\n            r = a or b and c\n            acc.append(r)\n            while False:\n                pass\n    return acc\ndef f_or_in_and_pair_deep(a, b, c, d):\n    acc = []\n    for i in range(3):\n        if i and len(acc) < 4:\n            r = (a or b) and (c or d)\n            acc.append(r)\n            while False:\n                pass\n    return acc\ndef f_b98_ternary_cross(a, b, c, d):\n    for i in range(3):\n        if i and i < 4:\n            return (a or b) and c if d else 0\n    return 1\ndef f_b98_compare_cross(a, b, c):\n    for i in range(3):\n        if i and i:\n            return ((a or b) and c) > 2\n    return False\ndef f_b98_walrus_cross(a, b, c):\n    for i in range(3):\n        if i:\n            if (w := (a or b) and c):\n                return w\n    return 0\ndef f_b98_if_cond_pos(a, b, c):\n    for i in range(3):\n        if (a or b) and c and i:\n            return i\n    return 0\ndef f_b98_while_cond_pos(a, b, c):\n    n = 0\n    while (a or b) and c:\n        if n > 2:\n            break\n        n += 1\n    return n\ndef f_b98_return_pos(a, b, c):\n    for i in range(3):\n        if i == 1:\n            return (a or b) and c\n    return 0\ndef f_b98_call_arg_pos(a, b, c):\n    def sink(x):\n        return x + 1\n    for i in range(3):\n        if i:\n            return sink((a or b) and c)\n    return 0\ndef f_b98_or_tail_and_group(a, b, c, d):\n    for i in range(3):\n        if i and (a and b or c or d):\n            return i\n    return 0\ndef f_b98_not_wrapped(a, b, c):\n    for i in range(3):\n        if i:\n            return 1 if not ((a or b) and c) else 2\n    return 0\ndef f_b98_and_tail_or_group(a, b, c, d):\n    acc = []\n    for i in range(3):\n        if i and len(acc) < 3:\n            r = (a or b) and (c or d) and a\n            acc.append(r)\n            while False:\n                pass\n    return acc\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_e01_b98matrix_e01_g1_b98_matrix.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round2/rec1_e01_b98matrix_e01_g1_b98_matrixOK.py\n[single] status=success units=15/15 success_rate=100.00%",
+  "status": "success",
+  "units_success": 15,
+  "units_total": 15,
+  "failures": []
+ }
+]

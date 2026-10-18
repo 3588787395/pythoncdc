@@ -8621,7 +8621,8 @@ AST 映射规则:
                     # （每块唯一归属），其回边重检副本由下方抑制分支消费。
                     _cc_mixed_tails = region.metadata.get('cc_mixed_cond_tail_blocks') or []
                     _cc_mixed_leads = region.metadata.get('cc_mixed_cond_lead_blocks') or []
-                    if _cc_mixed_tails or _cc_mixed_leads:
+                    _cc_tail_dia = region.metadata.get('cc_mixed_cond_tail_diamond') or None
+                    if _cc_mixed_tails or _cc_mixed_leads or _cc_tail_dia:
                         _cc_mixed_vals = []
                         for _mb in list(_cc_mixed_leads) + [_cc_cond] + list(_cc_mixed_tails):
                             if _mb is _cc_cond:
@@ -8633,6 +8634,24 @@ AST 映射规则:
                         if len(_cc_mixed_vals) >= 2:
                             condition = {'type': 'BoolOp', 'op': 'and',
                                          'values': _cc_mixed_vals}
+                        # [B123-V3R2] and 尾 IfExp 钻石操作数：识别层
+                        # _b123_absorb_ifexp_tail_diamond 已验三块纯值求值
+                        # 与出口协议；此处经 _b123_ifexp_from_tail_diamond
+                        # 黑箱重建 IfExp 追加为 BoolOp 末位操作数，失败时
+                        # 数值序列缺该操作数（condition 保持既有退化形态，
+                        # C2/C3）。三块一并登记 generated（唯一归属）。
+                        if _cc_tail_dia is not None:
+                            _dia_ifexp = self._b123_ifexp_from_tail_diamond(_cc_tail_dia)
+                            if _dia_ifexp is not None:
+                                _cc_mixed_vals.append(_dia_ifexp)
+                                if len(_cc_mixed_vals) >= 2:
+                                    condition = {'type': 'BoolOp', 'op': 'and',
+                                                 'values': _cc_mixed_vals}
+                            for _db in (_cc_tail_dia['test'],
+                                        _cc_tail_dia['then'],
+                                        _cc_tail_dia['else']):
+                                self.generated_blocks.add(_db)
+                                self.generated_offsets.add(_db.start_offset)
                         for _mb in list(_cc_mixed_tails):
                             self.generated_blocks.add(_mb)
                             self.generated_offsets.add(_mb.start_offset)
@@ -8705,8 +8724,94 @@ AST 映射规则:
                     # 判据：body 块以条件跳转结尾，且末条 STORE 之后含 COPY/
                     # COMPARE_OP（重检）→ 提取 store、整块标记已生成；back_edge
                     # 块仅含 COMPARE_OP + 条件跳转（纯重检）→ 整块标记已生成。
+                    # [B123-V3R2] and 尾钻石的体内重检镜像集（rotate-while
+                    # 钻石三副本 + 透明蹦床）：arm 镜像 = 以回边条件跳转 →
+                    # header 收尾且求值段序 == then/else 段序；test 镜像 =
+                    # 求值段序 == test 段序且其 jt/ft 双后继均为「回边条件
+                    # 跳转 → header 收尾 + 段序对位」的 arm 镜像；透明蹦床 =
+                    # 全协议噪声指令且后继全落镜像集。判据只读块内 opcode
+                    # 序与跳转目标同一性（I.4 白名单），不命中为空集、行为
+                    # 逐位不变（C3）。
+                    _b123_mirror_blocks = set()
+                    if _cc_tail_dia is not None:
+                        _b123_tseq = self.region_analyzer._b104r2_cond_eval_seq(
+                            _cc_tail_dia['test'])
+                        _b123_hseq = self.region_analyzer._b104r2_cond_eval_seq(
+                            _cc_tail_dia['then'])
+                        _b123_eseq = self.region_analyzer._b104r2_cond_eval_seq(
+                            _cc_tail_dia['else'])
+                        _b123_arm_seqs = {_b123_hseq, _b123_eseq}
+                        for _b in region.body_blocks:
+                            if _b is region.header_block:
+                                continue
+                            _bl = _b.get_last_instruction()
+                            if (_bl is None or _bl.argval is None
+                                    or _bl.opname not in CONDITIONAL_JUMP_OPS):
+                                continue
+                            _bseq = self.region_analyzer._b104r2_cond_eval_seq(_b)
+                            if not _bseq:
+                                continue
+                            if (_bl.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                                    and self.cfg.get_block_by_offset(_bl.argval)
+                                    is region.header_block
+                                    and _bseq in _b123_arm_seqs):
+                                _b123_mirror_blocks.add(_b)
+                                continue
+                            if (_bseq == _b123_tseq
+                                    and _bl.opname == 'POP_JUMP_FORWARD_IF_FALSE'):
+                                _b_jt = self.cfg.get_block_by_offset(_bl.argval)
+                                _b_ft = None
+                                for _s in _b.successors:
+                                    if _s in (_b.exception_successors or ()):
+                                        continue
+                                    if _s is _b_jt:
+                                        continue
+                                    _b_ft = _s
+                                    break
+                                _jt_ok = False
+                                _ft_ok = False
+                                if _b_jt is not None:
+                                    _jl = _b_jt.get_last_instruction()
+                                    if (_jl is not None and _jl.argval is not None
+                                            and _jl.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                                            and self.cfg.get_block_by_offset(_jl.argval)
+                                            is region.header_block
+                                            and self.region_analyzer._b104r2_cond_eval_seq(_b_jt)
+                                            == _b123_eseq):
+                                        _jt_ok = True
+                                if _b_ft is not None:
+                                    _fl = _b_ft.get_last_instruction()
+                                    if (_fl is not None and _fl.argval is not None
+                                            and _fl.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                                            and self.cfg.get_block_by_offset(_fl.argval)
+                                            is region.header_block
+                                            and self.region_analyzer._b104r2_cond_eval_seq(_b_ft)
+                                            == _b123_hseq):
+                                        _ft_ok = True
+                                if _jt_ok and _ft_ok:
+                                    _b123_mirror_blocks.add(_b)
+                        for _b in region.body_blocks:
+                            if (_b in _b123_mirror_blocks
+                                    or _b is region.header_block):
+                                continue
+                            if all(i.opname in ('POP_TOP', 'SWAP', 'COPY', 'NOP',
+                                                'CACHE', 'RESUME', 'PUSH_NULL',
+                                                'EXTENDED_ARG', 'JUMP_FORWARD',
+                                                'JUMP_ABSOLUTE')
+                                   for i in _b.instructions):
+                                if (_b.successors
+                                        and all(_s in _b123_mirror_blocks
+                                                for _s in _b.successors)):
+                                    _b123_mirror_blocks.add(_b)
                     for _b in region.body_blocks:
                         if _b in self.generated_blocks:
+                            continue
+                        if _b in _b123_mirror_blocks:
+                            # [B123-V3R2] 钻石重检镜像：循环条件重求值协议
+                            # 组件，非用户语句，整块抑制（While 重编译自然
+                            # 再生）。判据见上方镜像集构建。
+                            self.generated_blocks.add(_b)
+                            self.generated_offsets.add(_b.start_offset)
                             continue
                         # [B104] 链式比较短路清理块（体成员位形）：块内指令全为
                         # 栈操纵（POP_TOP/SWAP/COPY + 噪声），且全部后继越出
@@ -9372,6 +9477,42 @@ AST 映射规则:
         else:
             _sequential_after_loop = else_stmts
             else_stmts = []
+
+        # [B123-V3R2] and 尾钻石形态的循环出口归属：出口块（then/else 臂
+        # 的共享假值目标，如 ``while <cc> and (y if y else x):`` 之后的
+        # ``return n``）常被分析层判给永不派发的臂内 IfRegion（else=出口
+        # 块），交父级会静默蒸发（与 B78 宿主 F 块同构）。已生成则不加
+        # 发；未生成且为直线语句块（无任何控制跳转/循环指令）时由本循环
+        # 在 While 之后加发并登记；未生成且含控制跳转（结构化后续）→ 不
+        # 加发（防吞后续 if/loop 头，交原路径，C3）。判据 = 块内 opcode
+        # 族 + 区域成员关系（I.4 白名单）；仅钻石元数据命中时执行。
+        _b123_dia = region.metadata.get('cc_mixed_cond_tail_diamond') or None
+        if _b123_dia is not None:
+            _b123_exit = None
+            _b123_tl = _b123_dia['then'].get_last_instruction()
+            if (_b123_tl is not None and _b123_tl.argval is not None
+                    and _b123_tl.opname == 'POP_JUMP_FORWARD_IF_FALSE'):
+                _b123_exit = self.cfg.get_block_by_offset(_b123_tl.argval)
+            if (_b123_exit is not None
+                    and _b123_exit not in (region.blocks or set())
+                    and _b123_exit not in self.generated_blocks):
+                _b123_ec = [i for i in _b123_exit.instructions
+                            if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                'PUSH_NULL', 'EXTENDED_ARG')]
+                _b123_plain = not any(
+                    i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                 | BACKWARD_CONDITIONAL_JUMP_OPS
+                                 | FORWARD_JUMP_OPS | BACKWARD_JUMP_OPS
+                                 | SHORT_CIRCUIT_JUMP_OPS
+                                 | {'FOR_ITER', 'SEND'})
+                    for i in _b123_ec)
+                if _b123_plain and _b123_ec:
+                    _b123_es = self._generate_block_statements(_b123_exit)
+                    if _b123_es:
+                        _sequential_after_loop = (list(_sequential_after_loop)
+                                                 + list(_b123_es))
+                    self.generated_blocks.add(_b123_exit)
+                    self.generated_offsets.add(_b123_exit.start_offset)
 
         result = {
             'type': 'While',
@@ -15824,6 +15965,17 @@ AST 映射规则:
           - 本方法遵循区域归约算法 4 核心原则:
             自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
         """
+        # [B78-V3R2] 嵌套三元宿主折叠（if / while / 值消费三宿主）：
+        # ``X if (Y if c2 else Z) else W`` 处于宿主位置时，编译器把真值
+        # 出口直连宿主目标、常量 orelse 臂折叠为直接跳转——分析层未及此
+        # 形，整链被切成 IfRegion 语句链（if/while 宿主的体与出口被吸收、
+        # 值宿主的消费语句蒸发）。本调用把指纹命中的链整体归约为单一
+        # If/While/消费语句；详细识别条件/归约方式/AST 映射见
+        # _try_build_b78_nested_ternary_host 文档。指纹不中返回 None 逐位
+        # 回落既有派发（elif 链 / normal，C3）。
+        _b78_host_stmt = self._try_build_b78_nested_ternary_host(region)
+        if _b78_host_stmt is not None:
+            return _b78_host_stmt
         if region.region_type.name == 'IF_ELIF_CHAIN':
             return self._if_generate_full_elif_chain(region)
         # [R36] Skip IfRegions whose entry is owned by a BoolOpRegion.
@@ -32804,6 +32956,39 @@ AST 映射规则:
                     if (_nr_parent is not None and _nr_parent is not region
                             and getattr(_nr_parent, 'entry', None) is block):
                         continue
+                    # [B98-V3R2 修复] and-or 值菱形的 BoolOp/Ternary 同块碰撞
+                    # （try 体派发侧）。B99 前缀吸收（_b99_n_prefix）后，全链
+                    # BoolOpRegion 的 entry 从 or 锚块前移到条件块，与镜像
+                    # TernaryRegion 共享同一 entry 且块集完全相同
+                    # （`recv.append((X and Y or Z)[0])` 形态：条件块 PJF→假臂，
+                    # 真臂 JITOP→汇合，汇合块含 [0] 下标消费 + CALL）。
+                    # 本扫描按区域列表序取首个 entry 命中（BoolOp 阶段先于
+                    # Ternary 阶段），BoolOpRegion 恒先命中；而其值目标扫描
+                    # 会越过汇合块的消费语句抓到下游 STORE（假 value_target），
+                    # 值发射既无法表达下标消费语句，也吞掉汇合块内容。
+                    # 归约方式：与 get_entry_region_for_block 的同优先级裁决
+                    # （Ternary 后插入列表、稳定排序后胜出）对齐——碰撞时跳过
+                    # BoolOpRegion，让扫描自然推进到镜像 TernaryRegion，由
+                    # _generate_ternary + _try_build_andor_boolop_from_ternary
+                    # 全链变体重建 Or[And[X, Y], Z]，汇合块消费语句与后续语句
+                    # 由既有 merge-consumer 机制发射（cb24db60 基线同路径已验证）。
+                    # AST 映射：块集不变，仅派发者更换；BoolOpRegion 不再独立
+                    # 归约，其 op_chain 由全链变体整体重建为 BoolOp(or,[BoolOp
+                    # (and,[X,Y]),Z])，语句级输出与基线一字不差。
+                    # 反证：无镜像 TernaryRegion（纯 and / 纯 or 链无独立假臂）
+                    # 或块集不同（嵌套条件链）时判据不命中，BoolOp 派发原样保留。
+                    if isinstance(nr, BoolOpRegion):
+                        _b98_v3r2_mirror = None
+                        for _tr in self.region_analyzer.regions:
+                            if (isinstance(_tr, TernaryRegion)
+                                    and _tr is not nr
+                                    and _tr.entry is block
+                                    and id(_tr) not in self._generated_regions
+                                    and set(_tr.blocks) == set(nr.blocks)):
+                                _b98_v3r2_mirror = _tr
+                                break
+                        if _b98_v3r2_mirror is not None:
+                            continue
                     for b in nr.blocks:
                         self.generated_blocks.discard(b)
                     if isinstance(nr, TernaryRegion) and not getattr(nr, 'value_target', None) and not nr.merge_block:
@@ -42804,6 +42989,40 @@ AST 映射规则:
             return None
         return {'type': 'IfExp', 'test': cond_expr, 'body': true_expr, 'orelse': false_expr}
 
+    def _b123_ifexp_from_tail_diamond(self, dia: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """[B123-V3R2] and 尾钻石（test/then/else 三块）重建 IfExp。
+
+        ①算法依据：识别层 _b123_absorb_ifexp_tail_diamond 已验三块求值窗
+        为纯值求值（无语句终结符/内部跳转）+ 尾条件跳转
+        POP_JUMP_FORWARD_IF_FALSE——值语义为 IfExp(test, body=then,
+        orelse=else)，重编译逐位再生（rotate-while 回边三副本由 While 重
+        编译自然再生）。
+        ②归约顺序：_loop_generate_while 的 cc 分支在链式比较 Compare 组合
+        完成后调用，IfExp 追加为 BoolOp(And) 末位操作数。
+        ③唯一归属判定：三块已由识别层并入 LoopRegion（唯一归属），本方法
+        只读块内求值窗，不标记、不改状态（标记由调用方统一执行）。
+        ④嵌套处理：钻石整体作单操作数，不展开为子区域。
+        ⑤AST 映射接口：IfExp(test, body, orelse)；任一窗重建失败返回
+        None（调用方保持既有退化形态，C2）。
+        ⑥反编译流程：仅 cc_mixed_cond_tail_diamond 元数据命中时被调用；
+        不命中不执行（C3）。
+        """
+
+        def _seg(block):
+            ins = [i for i in block.instructions
+                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                       'EXTENDED_ARG')]
+            if len(ins) < 2 or ins[-1].opname != 'POP_JUMP_FORWARD_IF_FALSE':
+                return None
+            return self.expr_reconstructor.reconstruct(list(ins[:-1]))
+
+        _t = _seg(dia['test'])
+        _b = _seg(dia['then'])
+        _o = _seg(dia['else'])
+        if _t is None or _b is None or _o is None:
+            return None
+        return {'type': 'IfExp', 'test': _t, 'body': _b, 'orelse': _o}
+
     def _b45_rebuild_boolop_chain_slice(self, region: 'BoolOpRegion',
                                         chain_slice: List[Tuple['BasicBlock', str]],
                                         excluded_offsets: Set[int]) -> Optional[Dict[str, Any]]:
@@ -43028,9 +43247,13 @@ AST 映射规则:
         ``(a or b) and (c or d)``、``a or (b and (c or d))`` → ``a or b and c or d``）。
         【归约方式】按跳转目标分段后右折叠：keep 成员按其保留极性（JT→or/
         JF→and）把操作数折到右侧；边界成员（PF/PT）确定外层连接词与分段归属；
-        尾值块作为末位操作数接入其归属段的右折叠终端。
+        尾值块作为末位操作数接入其归属段的右折叠终端。折叠结果若被汇合块的
+        UNARY_NOT 消费（merge 指令含 UNARY_NOT，如 ``not (a or (b and
+        not c))``），整链包 UnaryOp(Not, ...)——判据与 or_groups 路径尾部
+        的 merge-not 包裹镜像（本 hook 早退先于该尾部，须自带同款包裹）。
         【AST 映射】BoolOp(op, values=[操作数, 右折叠结果]) 嵌套——禁止扁平
-        重结合（不同括号对应不同跳转目标，字节码不同）。
+        重结合（不同括号对应不同跳转目标，字节码不同）；merge 含 UNARY_NOT
+        时外层再包 UnaryOp(Not, BoolOp)。
         【C1】只读链成员块末 opcode 族、跳转目标偏移与后继集合（同层结构事实），
         零名字/常量/偏移白名单；【C2】任一校验或重建失败即返回 None（回退
         既有分组/扁平算法，输出与未命中逐位一致）；【C3】无状态、无副作用；
@@ -43121,6 +43344,23 @@ AST 映射规则:
             return self.expr_reconstructor.reconstruct(_clean)
 
         _kinds = [_keep_kind(b) for b, _ in op_chain]
+
+        def _wrap_merge_unary_not(expr):
+            # [B98-V3R2 fix] 汇合块 UNARY_NOT 整链包裹：值链整体结果被 merge
+            # 块的 UNARY_NOT 消费时（如 ``not (a or (b and not c))`` 的
+            # ``@merge [UNARY_NOT, RETURN_VALUE]``），keep-or-pop 折叠结果须包
+            # UnaryOp(Not, ...)。判据 = merge 块指令含 UNARY_NOT（块内 opcode
+            # 族，I.4 白名单），与 or_groups 路径尾部同名判据镜像；未命中行为
+            # 逐位不变（C3）。此包裹先于早退返回，修复本 hook 早退绕过
+            # ``_build_boolop_expression_inner`` 尾部 merge-not 包裹导致的
+            # 外层 not 丢失（regression: b_nest_not_layers）。
+            if expr is not None and merge is not None:
+                _mi = [i for i in merge.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                if any(i.opname == 'UNARY_NOT' for i in _mi):
+                    return {'type': 'UnaryOp', 'op': 'not', 'operand': expr}
+            return expr
+
         # —— 形态 A：全员 keep-or-pop、目标 = merge、混合极性（右折叠）——
         if all(k is not None for k in _kinds):
             _all_merge = all(b.get_last_instruction().argval == merge_off
@@ -43133,7 +43373,7 @@ AST 映射规则:
                     _folded = _fold(list(zip([b for b, _ in op_chain], _kinds)),
                                     _tail)
                     if _folded is not None:
-                        return _folded
+                        return _wrap_merge_unary_not(_folded)
         # —— 形态 B：首成员 PF 跳过中段落于链内成员（外层 or，分段重建）——
         _first_blk = op_chain[0][0]
         _first_last = _first_blk.get_last_instruction()
@@ -43166,8 +43406,9 @@ AST 映射规则:
                         if _op0 is not None and _mid_expr is not None and _seg2_expr is not None:
                             _seg1 = {'type': 'BoolOp', 'op': 'and',
                                      'values': [_op0, _mid_expr]}
-                            return {'type': 'BoolOp', 'op': 'or',
-                                    'values': [_seg1, _seg2_expr]}
+                            return _wrap_merge_unary_not(
+                                {'type': 'BoolOp', 'op': 'or',
+                                 'values': [_seg1, _seg2_expr]})
         # —— 形态 C：首成员 PT 跳过中段落于链内成员、中段 PF 落于尾值块 ——
         if (_first_last is not None
                 and _first_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
@@ -43212,8 +43453,9 @@ AST 映射规则:
                                 _inner = {'type': 'BoolOp', 'op': 'and',
                                           'values': [_run_expr, _second_expr]}
                                 _outer_op = ('or' if _seg2_kinds[-1] == 'or' else 'and')
-                                return {'type': 'BoolOp', 'op': _outer_op,
-                                        'values': [_inner, _tail]}
+                                return _wrap_merge_unary_not(
+                                    {'type': 'BoolOp', 'op': _outer_op,
+                                     'values': [_inner, _tail]})
         return None
 
     def _resolve_boolop_tail_value_block(self, region: 'BoolOpRegion',
@@ -44450,8 +44692,29 @@ AST 映射规则:
                         break
                 if not _w14_mid_ok:
                     _w14_mid_uniform_t = None
+            # [B43-V3R2] 链式比较钩子命中形判别：entry 命中（chain_block 是链
+            # IfRegion 的 entry/condition_block，ft 块是链内后续 COMPARE 段，
+            # 必须跳过吸收——旧行为）vs merge 命中（chain_block 是链 IfRegion
+            # 的 merge_block，链内块全部位于 chain_block 之前，ft 块是链外真
+            # 操作数，不得跳过；`return a < b < c and d` 的 `and d` 尾操作数
+            # 即此形，跳过致整段丢失）。判据 = 区域结构身份（entry/merge 指针
+            # 与链头 opcode 形态），I.4 白名单；R106 直检命中（chain_block 自身
+            # 是链头，ft 是链内段）维持跳过。
+            _cc_hook_skip_ft = False
+            if chained_compare_expr is not None:
+                if self.region_analyzer._is_chained_compare_header(chain_block):
+                    _cc_hook_skip_ft = True
+                else:
+                    for _r43 in self.regions:
+                        if (isinstance(_r43, IfRegion)
+                                and _r43.entry is chain_block
+                                and _r43.condition_block is chain_block
+                                and getattr(_r43, 'chained_compare_ops', None)
+                                and len(_r43.chained_compare_ops) >= 2):
+                            _cc_hook_skip_ft = True
+                            break
             if (nested_ternary is None
-                    and chained_compare_expr is None
+                    and (chained_compare_expr is None or not _cc_hook_skip_ft)
                     and last_instr and last_instr.opname in STRIP_JUMP_OPS and last_instr.argval is not None):
                 ft_succs = sorted(chain_block.conditional_successors, key=lambda s: s.start_offset)
                 ft_block = next((s for s in ft_succs
@@ -46964,7 +47227,11 @@ AST 映射规则:
         3.11 循环内 return 的迭代器拆除：清理项 POP_TOP；except 处理器内
         return 的处理器拆除：清理项 POP_EXCEPT），或 merge 恰 [SWAP(2)] 且
         正常后继清理块非噪声恰 [POP_TOP|POP_EXCEPT, RETURN_VALUE]（排除
-        异常边切块形态）；condition_block 末跳转的落点即 else 值块、
+        异常边切块形态），或 merge 非噪声恰 [RETURN_VALUE]（函数级裸返回
+        尾变体：IfExp 两臂值汇合后由单条 RETURN 消费，无拆除对；命中后
+        附加 then 臂流守卫——末条非噪声指令为 JUMP_FORWARD 且落点 IS
+        merge，字面 if/else-return 的臂内 RETURN 收尾形态被排除）；
+        condition_block 末跳转的落点即 else 值块、
         fall-through 即 then 值块；两值块经值表达式重建均非空。命中即
         region.blocks 与 merge_block（及清理块）登记 generated（每块唯一
         归属），否则不标记、不改状态。
@@ -46996,6 +47263,8 @@ AST 映射规则:
           - IfExp 重编译产生 POP_JUMP_IF_FALSE → else 值块 + JUMP_FORWARD 布局；
             循环内 RETURN 前的 SWAP 2; POP_TOP 迭代器拆除与 except 处理器内
             RETURN 前的 SWAP 2; POP_EXCEPT 处理器拆除均由编译器自然再生
+          - 裸返回尾变体重编译产生两臂汇合的单条 RETURN_VALUE（与 IfExp 源
+            布局逐指令一致）
           - 仅当前述指纹全中才接管，避免与既有 if/else 语句路径冲突
         """
         if not getattr(region, 'else_blocks', None):
@@ -47032,6 +47301,19 @@ AST 映射规则:
                     _tail_ok = True
                     _tail_extra_blocks.append(_ts)
                     break
+        _tail_plain_ret = False
+        if not _tail_ok:
+            # [B98-V3R2 fix] 函数级裸返回尾变体：merge 非噪声恰
+            # [RETURN_VALUE]（`return a if flag else b and d`——IfExp 两臂
+            # 值汇合后由单条 RETURN 消费，无循环迭代器/except 处理器拆除
+            # 对）。同层结构反证：字面 `if c: return x else: return y` 两臂
+            # 各以 RETURN_VALUE 收尾、无公共汇合块，函数隐式收尾为
+            # [LOAD_CONST None, RETURN_VALUE] 两条指令，均不满足恰一条
+            # RETURN_VALUE 的指纹；命中后由下方 then 臂流守卫再排除任何
+            # 非汇合形态（行为封闭）。
+            if len(_mi) == 1 and _mi[0].opname == 'RETURN_VALUE':
+                _tail_ok = True
+                _tail_plain_ret = True
         if not _tail_ok:
             return None
         _cb = getattr(region, 'condition_block', None)
@@ -47051,6 +47333,18 @@ AST 映射规则:
                 break
         if _then_block is None:
             return None
+        if _tail_plain_ret:
+            # [B98-V3R2 fix] 裸返回尾流守卫：IfExp 的 then 臂末条非噪声指令
+            # 恒为 JUMP_FORWARD 且落点 IS merge（跳过 else 臂直达汇合点，
+            # 值由单条 RETURN_VALUE 消费）。字面 if/else-return 的 then 臂
+            # 以 RETURN_VALUE 收尾、无此跳转，被排除；未命中逐位回落既有
+            # if/else 发射（每块唯一归属不受影响）。
+            _ti_plain = [i for i in _then_block.instructions
+                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            if not (_ti_plain and _ti_plain[-1].opname == 'JUMP_FORWARD'
+                    and _ti_plain[-1].argval is not None
+                    and self.cfg.get_block_by_offset(_ti_plain[-1].argval) is _mb):
+                return None
         _ci = [i for i in _cb.instructions
                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
         _ci = [i for i in _ci if i is not _cl]
@@ -48127,6 +48421,42 @@ AST 映射规则:
                     and r.op_chain):
                 boolop_region = r
                 break
+        if boolop_region is None:
+            # [B98-V3R2 fix] 全链头前缀变体（and 极性镜像）：cond 前缀块
+            # （本三元条件块）被 B99 前缀吸收进 BoolOpRegion 链首——
+            # op_chain=[(cond,'and'),(true_block,'or')]，entry=cond_block。
+            # 与旧形态（anchor-only，entry=true_block）同签名同语义，仅链首
+            # 归属不同：B99 前缀吸收（修复一）使 `(x and [x] or [0])[0]` 值位
+            # 消费链的锚点走查通过共享 merge 判据，链首从 true 值块扩至 cond
+            # 块，旧形态查找（entry is true_block）失配 ⇒ 本方法整体回退 IfExp
+            # ⇒ 语句蒸发（regression: trade_info_utils.get_last_stat 8 句连丢）。
+            # 识别条件（I.4 白名单：链成员关系 + 共享 merge）：链首 == 本三元
+            # 条件块、链首操作符 'and'（IF_FALSE 极性，与上方 cond_last 判据
+            # 同族）、次成员 == 本三元 true 值块且操作符 'or'；链值交
+            # _build_boolop_expression 黑箱重建（C2），形状校验（两操作数 or、
+            # 其首操作数为两操作数 and——即 Or[And[cond,X],Y] 全链形）不过则
+            # 按旧行为回退 IfExp（C3 显式封闭）。
+            for r in self.regions:
+                if (isinstance(r, BoolOpRegion) and r.entry is cond_block
+                        and r.op_chain and len(r.op_chain) >= 2
+                        and r.op_chain[0][0] is cond_block
+                        and r.op_chain[0][1] == 'and'
+                        and r.op_chain[1][0] is true_block
+                        and r.op_chain[1][1] == 'or'
+                        and r.merge_block is not None
+                        and r.merge_block is region.merge_block):
+                    _r98r7_expr = self._build_boolop_expression(r)
+                    if (isinstance(_r98r7_expr, dict)
+                            and _r98r7_expr.get('type') == 'BoolOp'
+                            and _r98r7_expr.get('op') == 'or'
+                            and len(_r98r7_expr.get('values') or []) == 2
+                            and isinstance(_r98r7_expr['values'][0], dict)
+                            and _r98r7_expr['values'][0].get('type') == 'BoolOp'
+                            and _r98r7_expr['values'][0].get('op') == 'and'
+                            and len(_r98r7_expr['values'][0].get('values') or []) == 2
+                            and _r98r7_expr['values'][1] is not None):
+                        return _r98r7_expr
+                    return None
         if boolop_region is None:
             return None
         if any(op != 'or' for _, op in boolop_region.op_chain):
@@ -52484,6 +52814,726 @@ AST 映射规则:
             return results
 
         return None
+
+    def _try_build_b78_nested_ternary_host(self, region: 'IfRegion') -> Optional[Dict[str, Any]]:
+        """[B78-V3R2] 嵌套三元宿主折叠：``X if (Y if c2 else Z) else W`` 在
+        if 条件位 / while 条件位 / 值消费位三宿主下的全链重建。
+
+        ═══ 1. 算法依据 ═══
+        CPython 编译宿主位置的嵌套 IfExp 时把真值出口直连宿主目标（无中性
+        汇合块），且常量 orelse 臂被折叠为直接跳转（同极性常量不可分辨，
+        0/None/False 与 1/True 等重编译逐位相同，取规范常量 0 / 1）：
+          - if 宿主（``if X if (Y if c2 else Z) else 0: T``）：T2 双臂
+            [eval Y/Z, POP_JUMP_FORWARD_IF_FALSE→orelse 蹦床→F]，真值续入
+            T1 求值块 K（两臂 fall-through 经蹦床共享）；T1 双臂
+            [eval X1/X2, POP_JUMP_FORWARD_IF_FALSE→F] + fall-through 蹦床
+            [JUMP_FORWARD→T]；外层 orelse = 折叠假值常量（→0）。
+          - while 宿主（``while X if (Y if c2 else Z) else 0: body``）：
+            首次求值链与 if 宿主逐形相同（T1 双臂 PJF→F、真值经共享蹦床
+            汇入体入口 T）；体尾块携带重求值镜像链（root 块尾 = cb2 值
+            指纹后缀、bt2/bf2/K 蹦床同构、T1 镜像臂以
+            POP_JUMP_BACKWARD_IF_TRUE→T 收尾、折叠常量假出口经 NOP 通过
+            点直落 F），由 While 重编译自然再生。
+          - 值宿主（调用实参 / return 值等）：T2 的 orelse 被真值常量折叠
+            （c2 假 → 跳过值加载直入 T1 求值块 K）或显式值臂（单表达式 +
+            POP_JUMP_FORWARD_IF_FALSE→Ov、真值续入 K）；外层 orelse 显式
+            （Ov 值块流入消费者 C）；T1 双臂 [eval X1/X2, JUMP_FORWARD→C]。
+
+        ═══ 2. 归约顺序 ═══
+        自底向上：expr_reconstructor 先逐臂重建 T2（test/Y/Z|折叠常量）、
+        T1（test/X1/X2）与显式 orelse 值 / 值宿主前缀兄弟，再装配外层
+        IfExp(test=T2, body=T1, orelse=Const(0)|显式值)，最后按宿主装配
+        If / While / 消费语句（Call/BUILD_*/… 经 reconstruct 以
+        initial_stack=前缀兄弟+[全链表达式] 黑箱重建）。
+
+        ═══ 3. 唯一归属判定 ═══
+        本方法整链消费：T2/T1 条件块、双臂块、蹦床块、Ov 值块、值宿主消费
+        者块、while 宿主的 LoopRegion 全成员（体块 + 重求值镜像机械，区域
+        成员关系）；F（if merge / while 出口）已生成则不再加发，未生成且
+        为直线语句块（无控制跳转/循环指令）时由本折叠在宿主语句后加发并
+        登记（F 常被分析层判给永不派发的兄弟 IfRegion，交父级会静默蒸
+        发），未生成且含控制跳转（结构化后续）→ 放弃折叠逐位回落（防吞
+        后续 if/loop 头）。值宿主 entry 前缀中的 STORE_* 仅当为宿主
+        LoopRegion 的 for 目标（metadata.for_target_names ∩
+        for_target_consumed_offsets，区域成员关系）才豁免为循环机制块。
+
+        ═══ 4. 嵌套处理 ═══
+        链上被分析层误切成 IfRegion/TernaryRegion 的成员不派发——其块随链
+        整批登记 generated，已存在的 TernaryRegion（entry==K）与 while 宿主
+        的 LoopRegion（entry==T）id 一并登记 _generated_regions 防重派发
+        （原则 3/4：宿主节点整体引用链表达式）。
+
+        ═══ 5. 入口引用语义 ═══
+        宿主语句（If / While / 消费 Expr / Return）通过本方法产出的单一
+        节点引用全链表达式，链成员不以独立语句出现；if 宿主的 then 体块 T
+        经 _process_if_blocks 以 entry 锚点发射。
+
+        ═══ 6. 反编译流程 ═══
+        挂点：_generate_if 顶端（先于 elif 链与 _if_generate_normal 派发）。
+        宿主判别：entry==condition_block（if/while 宿主）时，if 与 while
+        的首次求值链逐形相同，先按该指纹提取共享真值落点 T，再以「回边镜
+        像臂」分派——T 存在起偏移更大的前驱以回边条件跳转→T 收尾、且其
+        值前缀与 bt1/bf1 值前缀 (opname,argval) 逐位相同（循环尾重求值同
+        一外层三元 X 的 a/b 值臂）→ while，否则 if；entry≠
+        condition_block 且 entry 尾为 T2 测试（值宿主）。指纹不中或任一
+        重建失败返回 None 逐位回落。
+
+        C 条款：[C1] 判据只读块末 opcode 族、跳转目标偏移、前驱后继、区域
+        成员关系与 LoopRegion 元数据（I.4 白名单，零文件名/行号/尺寸阈值）；
+        [C2] 任一臂/测试/消费重建失败即返回 None；[C3] 非命中形状（单层条件
+        三元、BoolOp 短路链、普通 if 体、orelse 为变量的未折叠形态、非直线
+        循环体）行为逐位不变。
+        """
+        _noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')
+
+        def _clean(block):
+            return [i for i in (block.instructions or ())
+                    if i.opname not in _noise]
+
+        def _lastop(block):
+            c = _clean(block)
+            return c[-1] if c else None
+
+        def _ft(block):
+            # 末条为条件跳转时 fall-through = 排除跳转目标后的唯一正常后继；
+            # 否则（STORE/POP_TOP 收尾的直线块）唯一正常后继即顺序后继。
+            last = _lastop(block)
+            jt = None
+            if (last is not None and last.argval is not None
+                    and last.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                       | BACKWARD_CONDITIONAL_JUMP_OPS)):
+                jt = self.cfg.get_block_by_offset(last.argval)
+            exc = set(getattr(block, 'exception_successors', None) or ())
+            cands = [s for s in (block.successors or ())
+                     if s not in exc and s is not jt]
+            if len(cands) == 1:
+                return cands[0]
+            return None
+
+        def _jt_of(block):
+            last = _lastop(block)
+            if (last is None or last.argval is None
+                    or last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                            | BACKWARD_CONDITIONAL_JUMP_OPS
+                                            | FORWARD_JUMP_OPS
+                                            | BACKWARD_JUMP_OPS)):
+                return None
+            return self.cfg.get_block_by_offset(last.argval)
+
+        def _tramp(block):
+            # 单 JUMP_FORWARD/JUMP_ABSOLUTE 蹦床块 → 目标；否则 None。
+            c = _clean(block)
+            if (len(c) == 1
+                    and c[0].opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')):
+                return self.cfg.get_block_by_offset(c[0].argval)
+            return None
+
+        def _value_expr(block):
+            # 单表达式值块：[eval V, <跳转>]，剥离尾跳转重建 V。
+            c = _clean(block)
+            if len(c) < 2:
+                return None
+            last = c[-1]
+            if (last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                    | BACKWARD_CONDITIONAL_JUMP_OPS
+                                    | FORWARD_JUMP_OPS
+                                    | BACKWARD_JUMP_OPS)):
+                return None
+            if any(i.opname.startswith('STORE_') for i in c[:-1]):
+                return None
+            return self.expr_reconstructor.reconstruct(list(c[:-1]))
+
+        def _test_expr(block):
+            # 条件块：[eval test, <条件跳转>]，剥离尾条件跳转重建 test。
+            c = _clean(block)
+            if len(c) < 2:
+                return None
+            last = c[-1]
+            if (last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                    | BACKWARD_CONDITIONAL_JUMP_OPS)):
+                return None
+            if any(i.opname.startswith('STORE_') for i in c[:-1]):
+                return None
+            return self.expr_reconstructor.reconstruct(list(c[:-1]))
+
+        cond_block = getattr(region, 'condition_block', None)
+        _r_merge = getattr(region, 'merge_block', None)
+        if cond_block is None or region.entry is None or _r_merge is None:
+            return None
+        _r_blocks = set(region.blocks or ())
+
+        if region.entry is cond_block:
+            # ══════════ 子形 A/B：if / while 宿主 ══════════
+            cb2 = region.entry
+            cb2_last = _lastop(cb2)
+            if (cb2_last is None
+                    or cb2_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
+                    or cb2_last.argval is None):
+                return None
+            test2 = _test_expr(cb2)
+            if test2 is None:
+                return None
+            bf2 = _jt_of(cb2)
+            bt2 = _ft(cb2)
+            if bf2 is None or bt2 is None or bf2 is bt2:
+                return None
+            if not {id(bt2), id(bf2)} <= {id(b) for b in _r_blocks}:
+                return None
+            v_true2 = _value_expr(bt2)
+            v_false2 = _value_expr(bf2)
+            if v_true2 is None or v_false2 is None:
+                return None
+            bt2_last = _lastop(bt2)
+            bf2_last = _lastop(bf2)
+            if (bt2_last is None or bf2_last is None
+                    or bt2_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
+                    or bf2_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'):
+                return None
+            jtt2 = _jt_of(bt2)
+            if jtt2 is None or _jt_of(bf2) is not jtt2:
+                return None
+            F = _tramp(jtt2)
+            if F is None or F is not _r_merge:
+                return None
+            ft_bt2 = _ft(bt2)
+            ft_bf2 = _ft(bf2)
+            if ft_bt2 is None or ft_bf2 is None:
+                return None
+            K = _tramp(ft_bt2)
+            if K is None or K not in _r_blocks:
+                return None
+            if ft_bf2 is not K and _tramp(ft_bf2) is not K:
+                return None
+            k_last = _lastop(K)
+            if (k_last is None
+                    or k_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
+                    or k_last.argval is None):
+                return None
+            test1 = _test_expr(K)
+            if test1 is None:
+                return None
+            bf1 = _jt_of(K)
+            bt1 = _ft(K)
+            if bf1 is None or bt1 is None or bf1 is bt1:
+                return None
+            if not {id(bt1), id(bf1)} <= {id(b) for b in _r_blocks}:
+                return None
+            v_true1 = _value_expr(bt1)
+            v_false1 = _value_expr(bf1)
+            if v_true1 is None or v_false1 is None:
+                return None
+            # ── 宿主判别（[B78-V3R2 fix]，同层结构事实）：
+            # if 与 while 宿主的**首次求值链逐形相同**（T1 双臂
+            # POP_JUMP_FORWARD_IF_FALSE→F、真值 fall-through 经共享蹦床汇入
+            # 同一落点），先按该指纹提取 T；再以「回边镜像臂」分派：T 存在
+            # 起偏移更大的前驱 p，p 以回边条件跳转收尾且目标 IS T，且 p 的
+            # 值前缀与 bt1/bf1 的值前缀 (opname,argval) 逐位相同（循环尾
+            # 重求值同一外层三元 X 的 a/b 值臂）→ while 宿主；否则 if 宿主
+            # （真 if 宿主 then 体无回边；体内嵌套 while 的回边块非条件跳
+            # 转收尾且值前缀不与本链 a/b 臂重合，均不误判）。──
+            T = None
+            arm_fts = []
+            for _arm in (bt1, bf1):
+                _al = _lastop(_arm)
+                if (_al is None or _al.opname != 'POP_JUMP_FORWARD_IF_FALSE'
+                        or _jt_of(_arm) is not F):
+                    return None
+                _aft = _ft(_arm)
+                if _aft is None:
+                    return None
+                _t_eff = _tramp(_aft) or _aft
+                if T is None:
+                    T = _t_eff
+                elif T is not _t_eff:
+                    return None
+                arm_fts.append(_aft)
+            if T is None or T is F or T is K or T is cb2:
+                return None
+
+            def _vfp(instrs):
+                # 值指纹：(opname, argval)；跳转类只保 opname（方向/目标可异）
+                _out = []
+                for _i in instrs:
+                    if _i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                     | BACKWARD_CONDITIONAL_JUMP_OPS
+                                     | FORWARD_JUMP_OPS
+                                     | BACKWARD_JUMP_OPS):
+                        _out.append((_i.opname, None))
+                    else:
+                        _out.append((_i.opname, _i.argval))
+                return _out
+
+            _b78_is_while = False
+            for _p in (T.predecessors or ()):
+                if _p is None or _p.start_offset <= T.start_offset:
+                    continue
+                _pl = _lastop(_p)
+                if (_pl is None or _pl.argval is None
+                        or _pl.opname not in BACKWARD_CONDITIONAL_JUMP_OPS
+                        or self.cfg.get_block_by_offset(_pl.argval) is not T):
+                    continue
+                _pc = _clean(_p)
+                if len(_pc) < 2:
+                    continue
+                for _orig in (bt1, bf1):
+                    _oc = _clean(_orig)
+                    if (len(_pc) == len(_oc)
+                            and _vfp(_pc[:-1]) == _vfp(_oc[:-1])):
+                        _b78_is_while = True
+                        break
+                if _b78_is_while:
+                    break
+            t2_expr = {'type': 'IfExp', 'test': test2,
+                       'body': v_true2, 'orelse': v_false2}
+            t1_expr = {'type': 'IfExp', 'test': test1,
+                       'body': v_true1, 'orelse': v_false1}
+            full_test = {'type': 'IfExp', 'test': t2_expr, 'body': t1_expr,
+                         'orelse': {'type': 'Constant', 'value': 0}}
+            chain_consumed = [cb2, bt2, bf2, jtt2, ft_bt2, ft_bf2, K, bt1, bf1]
+            chain_consumed.extend(arm_fts)
+
+            if not _b78_is_while:
+                # ── if 宿主 ──
+                if _tramp(T) is not None:
+                    return None
+                # [C2] 区域块集恰为链成员 + then 入口 T：then 多块/异形块
+                # 交还原 if 派发（防半吞体，C3）。
+                if set(region.blocks or ()) - set(chain_consumed) - {T}:
+                    return None
+                # F 归属（同层结构事实）：F 已生成 → 父路径已消费，不加发；
+                # F 未生成且为直线语句块（无任何控制跳转/循环指令）→ 由本
+                # 折叠在 If 之后加发并登记（F 常被分析层判给永不派发的兄弟
+                # IfRegion，交父级会静默蒸发，v_if_cond_nest 实测 return 丢
+                # 失）；F 未生成且含控制跳转（结构化后续）→ 放弃折叠逐位
+                # 回落（防吞后续 if/loop 头）。全部校验先行，标记后置
+                # （C3 无半途副作用）。
+                f_stmts = []
+                _f_own = False
+                if F not in self.generated_blocks:
+                    _fc = _clean(F)
+                    if any(_i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                         | BACKWARD_CONDITIONAL_JUMP_OPS
+                                         | FORWARD_JUMP_OPS
+                                         | BACKWARD_JUMP_OPS
+                                         | {'FOR_ITER', 'SEND'})
+                           for _i in _fc):
+                        return None
+                    if _fc:
+                        f_stmts = self._generate_block_statements(F)
+                        if f_stmts is None:
+                            return None
+                    _f_own = True
+                for _b in chain_consumed:
+                    self.generated_blocks.add(_b)
+                    self.generated_offsets.add(_b.start_offset)
+                if _f_own:
+                    self.generated_blocks.add(F)
+                    self.generated_offsets.add(F.start_offset)
+                self._generated_regions.add(id(region))
+                # then 体 T 不预标记（预标记会使 _process_if_blocks 跳过
+                # 该块、体退化为 pass），交其按 entry 锚点发射并统一归属。
+                body_stmts = self._process_if_blocks([T], region, branch='then')
+                _host = {'type': 'If', 'test': full_test,
+                         'body': body_stmts if body_stmts else [{'type': 'Pass'}],
+                         'orelse': []}
+                if f_stmts:
+                    return [_host] + list(f_stmts)
+                return _host
+
+            # ── while 宿主 ──
+            loop_region = None
+            for _r in self.regions:
+                if (isinstance(_r, LoopRegion)
+                        and (_r.entry is T
+                             or getattr(_r, 'header_block', None) is T)):
+                    loop_region = _r
+                    break
+            if loop_region is None or id(loop_region) in self._generated_regions:
+                return None
+            if getattr(loop_region, 'else_blocks', None):
+                return None
+            _loop_set = set(loop_region.blocks or ())
+            if F in _loop_set:
+                return None
+            # [C2] 区域块集 = 首求值链 + 循环成员（区域成员关系）。
+            if set(region.blocks or ()) - set(chain_consumed) - _loop_set:
+                return None
+            # 重求值镜像机械走查（值指纹逐位相同 + 块末跳转族；全部成员须
+            # 在循环成员集内）。root 候选按偏移序逐个尝试——体语句块可能
+            # 偶合 cb2 值指纹后缀，错配候选在链走查中自然失配（C2）。
+            _cb2_fp = _vfp(_clean(cb2))
+            _root_cands = []
+            for _lb in sorted(_loop_set, key=lambda b: b.start_offset):
+                _lc = _clean(_lb)
+                if len(_lc) < len(_cb2_fp):
+                    continue
+                if _vfp(_lc[len(_lc) - len(_cb2_fp):]) == _cb2_fp:
+                    _root_cands.append((_lb, len(_lc) - len(_cb2_fp)))
+
+            def _walk_mirror(_root):
+                # 从 root 起验证体尾重求值镜像链；返回机械块集或 None。
+                _mach = {_root}
+                _m_bt2 = _ft(_root)
+                _m_bf2 = _jt_of(_root)
+                if (_m_bt2 is None or _m_bf2 is None
+                        or _m_bt2 not in _loop_set or _m_bf2 not in _loop_set
+                        or _vfp(_clean(_m_bt2)) != _vfp(_clean(bt2))
+                        or _vfp(_clean(_m_bf2)) != _vfp(_clean(bf2))):
+                    return None
+                _mach.add(_m_bt2)
+                _mach.add(_m_bf2)
+                # 共享折叠常量假出口通过点：F / 蹦床→F / NOP 块直落 F
+                _pass = _jt_of(_m_bt2)
+                if _pass is None or _pass is not _jt_of(_m_bf2):
+                    return None
+                if _pass is not F:
+                    if _pass not in _loop_set:
+                        return None
+                    if _tramp(_pass) is F:
+                        _mach.add(_pass)
+                    elif (not _clean(_pass)) and _ft(_pass) is F:
+                        _mach.add(_pass)
+                    else:
+                        return None
+                # m_bt2 真值续入蹦床 → m_K（值指纹同 K）
+                _m_tr = _ft(_m_bt2)
+                if _m_tr is None:
+                    return None
+                _m_K = _tramp(_m_tr) or _m_tr
+                if (_m_K is None or _m_K not in _loop_set
+                        or _vfp(_clean(_m_K)) != _vfp(_clean(K))):
+                    return None
+                if _m_tr is not _m_K:
+                    _mach.add(_m_tr)
+                _mach.add(_m_K)
+                # m_bf2 真值续入 m_K（直落或经蹦床）
+                _mbf2_ft = _ft(_m_bf2)
+                if _mbf2_ft is None:
+                    return None
+                if _mbf2_ft is _m_K:
+                    pass
+                elif _tramp(_mbf2_ft) is _m_K:
+                    _mach.add(_mbf2_ft)
+                else:
+                    return None
+                # T1 镜像臂 ×2：值前缀 (opname,argval) 同源 + 回边条件跳转
+                # →T 收尾；假值出口经蹦床/直落 →F。
+                for _m_arm, _o_arm in ((_ft(_m_K), bt1), (_jt_of(_m_K), bf1)):
+                    if _m_arm is None or _m_arm not in _loop_set:
+                        return None
+                    _ac = _clean(_m_arm)
+                    _oc = _clean(_o_arm)
+                    if (len(_ac) < 2 or len(_ac) != len(_oc)
+                            or _vfp(_ac[:-1]) != _vfp(_oc[:-1])):
+                        return None
+                    _alst = _ac[-1]
+                    if (_alst.argval is None
+                            or _alst.opname not in BACKWARD_CONDITIONAL_JUMP_OPS
+                            or self.cfg.get_block_by_offset(_alst.argval) is not T):
+                        return None
+                    _aft2 = _ft(_m_arm)
+                    if _aft2 is None or not (_aft2 is F or _tramp(_aft2) is F):
+                        return None
+                    _mach.add(_m_arm)
+                    if _aft2 is not F:
+                        _mach.add(_aft2)
+                return _mach
+
+            _mach = None
+            _chosen = None
+            for _cand, _ck in _root_cands:
+                _m = _walk_mirror(_cand)
+                if _m is not None:
+                    _mach = _m
+                    _chosen = (_cand, _ck)
+                    break
+            if _mach is None:
+                return None
+            _root, _root_k = _chosen
+            # 体切分：循环成员 − 机械 = 体块。体块须为直线语句块（无任何
+            # 控制跳转/循环指令）且偏移先于 root（体在重求值链之前），
+            # 否则交还原派发（C3，防吞 if/loop/continue 体）。
+            _body_blocks = sorted(_loop_set - _mach,
+                                   key=lambda b: b.start_offset)
+            _body_stmts = []
+            for _bb in _body_blocks:
+                if _bb.start_offset > _root.start_offset:
+                    return None
+                _bc = _clean(_bb)
+                if any(_i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                     | BACKWARD_CONDITIONAL_JUMP_OPS
+                                     | FORWARD_JUMP_OPS
+                                     | BACKWARD_JUMP_OPS
+                                     | {'FOR_ITER', 'SEND'})
+                       for _i in _bc):
+                    return None
+                _bs = self._generate_stmts_from_instrs(list(_bc), _bb)
+                if _bs is None:
+                    return None
+                _body_stmts.extend(_bs)
+            # root 块前缀（体尾语句）在体块之后、重求值机械之前发射。
+            _body_prefix = list(_clean(_root)[:_root_k])
+            if _body_prefix:
+                _ps = self._generate_stmts_from_instrs(
+                    list(_body_prefix), _root)
+                if _ps is None:
+                    return None
+                _body_stmts.extend(_ps)
+            # F 归属（同 if 宿主）：直线则本折叠加发并登记；已生成不加发；
+            # 结构化后续放弃折叠（C3）。校验先行、标记后置。
+            f_stmts = []
+            _f_own = False
+            if F not in self.generated_blocks:
+                _fc = _clean(F)
+                if any(_i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                     | BACKWARD_CONDITIONAL_JUMP_OPS
+                                     | FORWARD_JUMP_OPS
+                                     | BACKWARD_JUMP_OPS
+                                     | {'FOR_ITER', 'SEND'})
+                       for _i in _fc):
+                    return None
+                if _fc:
+                    f_stmts = self._generate_block_statements(F)
+                    if f_stmts is None:
+                        return None
+                _f_own = True
+            for _b in chain_consumed:
+                self.generated_blocks.add(_b)
+                self.generated_offsets.add(_b.start_offset)
+            for _b in _loop_set:
+                self.generated_blocks.add(_b)
+                self.generated_offsets.add(_b.start_offset)
+            if _f_own:
+                self.generated_blocks.add(F)
+                self.generated_offsets.add(F.start_offset)
+            self._generated_regions.add(id(region))
+            self._generated_regions.add(id(loop_region))
+            _host = {'type': 'While', 'test': full_test,
+                     'body': _body_stmts if _body_stmts else [{'type': 'Pass'}],
+                     'orelse': []}
+            if f_stmts:
+                return [_host] + list(f_stmts)
+            return _host
+
+        # ══════════ 子形 C：值消费宿主 ══════════
+        P = region.entry
+        p_last = _lastop(P)
+        if (p_last is None
+                or p_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
+                or p_last.argval is None):
+            return None
+        Bt2 = cond_block
+        bt2_last = _lastop(Bt2)
+        if (bt2_last is None
+                or bt2_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
+                or bt2_last.argval is None):
+            return None
+        v_true2 = _value_expr(Bt2)
+        if v_true2 is None:
+            return None
+        Ov = _jt_of(Bt2)
+        else_blocks = list(getattr(region, 'else_blocks', None) or [])
+        if Ov is None or len(else_blocks) != 1 or Ov is not else_blocks[0]:
+            return None
+        C = _r_merge
+        if C is None or Ov is C:
+            return None
+        if not {id(Bt2), id(Ov)} <= {id(b) for b in _r_blocks}:
+            return None
+        ov_ft = _ft(Ov)
+        if not (ov_ft is C or (ov_ft is not None and _tramp(ov_ft) is C)
+                or _jt_of(Ov) is C):
+            return None
+        v_ov = _value_expr(Ov)
+        if v_ov is None:
+            ov_c = _clean(Ov)
+            if ov_c and all(not i.opname.startswith('STORE_') for i in ov_c):
+                v_ov = self.expr_reconstructor.reconstruct(list(ov_c))
+        if v_ov is None:
+            return None
+        # T2 测试边界：P 尾前向栈回溯（needed=1）分离测试与前缀兄弟/语句。
+        pclean = _clean(P)
+        if len(pclean) < 2:
+            return None
+        _needed = 1
+        _cond_start = None
+        for _k in range(len(pclean) - 2, -1, -1):
+            _ci = pclean[_k]
+            if _ci.opname.startswith('STORE_'):
+                _cond_start = _k + 1
+                break
+            _push = 0
+            _pop = 0
+            if _ci.opname in ('LOAD_ATTR', 'LOAD_METHOD'):
+                _push = 1
+                _pop = 1
+            elif _ci.opname.startswith('LOAD_') or _ci.opname == 'COPY':
+                _push = 1
+            elif _ci.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+                _push = 1
+                _pop = 2
+            elif _ci.opname in ('BINARY_SUBSCR', 'BINARY_OP'):
+                _push = 1
+                _pop = 2
+            elif _ci.opname.startswith('UNARY_'):
+                _push = 1
+                _pop = 1
+            elif _ci.opname == 'CALL':
+                _push = 1
+                _pop = (_ci.arg or 0) + 1
+            elif _ci.opname.startswith('BUILD_'):
+                _push = 1
+                _pop = (_ci.arg or 0)
+            _needed = _needed - _push + _pop
+            if _needed <= 0:
+                _cond_start = _k
+                break
+        if _cond_start is None or _cond_start >= len(pclean) - 1:
+            return None
+        test2_instrs = pclean[_cond_start:len(pclean) - 1]
+        prefix_instrs = pclean[:_cond_start]
+        if not test2_instrs:
+            return None
+        test2 = self.expr_reconstructor.reconstruct(list(test2_instrs))
+        if test2 is None:
+            return None
+        # 前缀 STORE 守卫：仅宿主 LoopRegion 的 for 目标豁免（区域成员关系）。
+        _prefix_stores = [i for i in prefix_instrs
+                          if i.opname.startswith('STORE_')]
+        if _prefix_stores:
+            _host_loop = None
+            for _r in self.regions:
+                if (isinstance(_r, LoopRegion)
+                        and P in (_r.blocks or ())):
+                    _host_loop = _r
+                    break
+            if _host_loop is None:
+                return None
+            _ftn = ((_host_loop.metadata or {}).get('for_target_names'))
+            _ftc = ((_host_loop.metadata or {})
+                    .get('for_target_consumed_offsets'))
+            if not _ftn or _ftc is None:
+                return None
+            for _si in _prefix_stores:
+                if (_si.argval not in _ftn or _si.offset not in _ftc):
+                    return None
+        # T2 假臂：折叠真值常量（c2 假 → 直入 T1 求值块）或显式值臂。
+        Bf2c = _jt_of(P)
+        K = _ft(Bt2)
+        if K is None or Bf2c is None:
+            return None
+        K_eff = _tramp(K) or K
+        t2_orelse = None
+        if Bf2c is K_eff:
+            t2_orelse = {'type': 'Constant', 'value': 1}
+        else:
+            bf2c_last = _lastop(Bf2c)
+            if (bf2c_last is None
+                    or bf2c_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
+                    or _jt_of(Bf2c) is not Ov):
+                return None
+            v_false2 = _value_expr(Bf2c)
+            if v_false2 is None:
+                return None
+            bf2_ft = _ft(Bf2c)
+            if bf2_ft is None:
+                return None
+            if not (bf2_ft is K_eff or _tramp(bf2_ft) is K_eff):
+                return None
+            t2_orelse = v_false2
+        if K_eff not in _r_blocks:
+            return None
+        k_last = _lastop(K_eff)
+        if (k_last is None
+                or k_last.opname != 'POP_JUMP_FORWARD_IF_FALSE'
+                or k_last.argval is None):
+            return None
+        test1 = _test_expr(K_eff)
+        if test1 is None:
+            return None
+        Bf1 = _jt_of(K_eff)
+        Bt1 = _ft(K_eff)
+        if Bf1 is None or Bt1 is None or Bf1 is Bt1:
+            return None
+        if not {id(Bt1), id(Bf1)} <= {id(b) for b in _r_blocks}:
+            return None
+        v_true1 = _value_expr(Bt1)
+        v_false1 = _value_expr(Bf1)
+        if v_true1 is None or v_false1 is None:
+            return None
+        if _jt_of(Bt1) is not C or _jt_of(Bf1) is not C:
+            return None
+        # 消费者 C：值消费 opcode 族在场。
+        c_clean = _clean(C)
+        if not c_clean:
+            return None
+        _consumer_ops = ('PRECALL', 'CALL', 'BUILD_LIST', 'BUILD_TUPLE',
+                         'BUILD_SET', 'BUILD_MAP', 'BUILD_CONST_KEY_MAP',
+                         'MAKE_FUNCTION', 'BINARY_OP', 'BINARY_SUBSCR',
+                         'COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'FORMAT_VALUE',
+                         'BUILD_STRING', 'GET_AWAITABLE', 'UNARY_NOT',
+                         'UNARY_NEGATIVE', 'UNARY_INVERT')
+        if not any(i.opname in _consumer_ops for i in c_clean):
+            return None
+        while (c_clean and c_clean[-1].opname in
+               ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')):
+            c_clean = c_clean[:-1]
+        _is_ret = False
+        if c_clean and c_clean[-1].opname in ('RETURN_VALUE', 'RETURN_CONST'):
+            _is_ret = True
+            c_clean = c_clean[:-1]
+            if (c_clean and c_clean[-1].opname == 'LOAD_CONST'
+                    and c_clean[-1].argval is None):
+                return None
+        if not _is_ret and c_clean and c_clean[-1].opname == 'POP_TOP':
+            c_clean = c_clean[:-1]
+        if not c_clean:
+            return None
+        for _mi, _m in enumerate(c_clean):
+            if _m.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST'):
+                if _mi + 1 < len(c_clean):
+                    return None
+                break
+        # 前缀兄弟表达式（剥离已豁免 for 目标 STORE 后按兄弟切分重建）。
+        prefix_exprs = []
+        _prefix_no_stores = [i for i in prefix_instrs
+                             if not i.opname.startswith('STORE_')]
+        if _prefix_no_stores:
+            for sl in self._split_preload_into_siblings(list(_prefix_no_stores)):
+                e = self.expr_reconstructor.reconstruct(list(sl))
+                if e is None:
+                    return None
+                prefix_exprs.append(e)
+        t2_expr = {'type': 'IfExp', 'test': test2, 'body': v_true2,
+                   'orelse': t2_orelse}
+        t1_expr = {'type': 'IfExp', 'test': test1, 'body': v_true1,
+                   'orelse': v_false1}
+        full_expr = {'type': 'IfExp', 'test': t2_expr, 'body': t1_expr,
+                     'orelse': v_ov}
+        cons_expr = self.expr_reconstructor.reconstruct(
+            list(c_clean), initial_stack=list(prefix_exprs) + [full_expr])
+        if cons_expr is None:
+            return None
+        consumed = [P, Bt2, Ov, C, Bt1, Bf1]
+        if Bf2c is not K_eff:
+            consumed.append(Bf2c)
+        if K is not K_eff:
+            consumed.append(K)
+        consumed.append(K_eff)
+        for b in consumed:
+            self.generated_blocks.add(b)
+        for b in (region.blocks or []):
+            self.generated_blocks.add(b)
+        self._generated_regions.add(id(region))
+        for _r in self.regions:
+            if (isinstance(_r, TernaryRegion)
+                    and _r.entry is not None and _r.entry is K_eff
+                    and id(_r) not in self._generated_regions):
+                self._generated_regions.add(id(_r))
+                break
+        if _is_ret:
+            return {'type': 'Return', 'value': cons_expr}
+        return {'type': 'Expr', 'value': cons_expr}
 
     def _try_build_ternary_as_if_cond(self, region: TernaryRegion,
                                        ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
