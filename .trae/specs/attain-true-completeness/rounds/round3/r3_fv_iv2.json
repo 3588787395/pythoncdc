@@ -1,0 +1,36 @@
+{
+ "IMPORT_OK": true,
+ "COMPILE_OK": {
+  "region_ast_generator.py": "compile_ok",
+  "region_ast_generator.py:py_compile": "ok",
+  "region_ast_generator.py:bom": "efbbbf single-head",
+  "region_analyzer.py": "compile_ok",
+  "region_analyzer.py:py_compile": "ok",
+  "region_analyzer.py:bom": "efbbbf single-head"
+ },
+ "repro_ref": {
+  "note": "repro 全 match 已在 R3 修复/复核批实测（r3q6b 邻域 79/86、r3sb3 合成 45/45、负对照 r3q6c 62/62、承重面 quotation 153/153）；终验为复检登记。",
+  "evidence": [
+   "rec1_probes_r3q6b.json",
+   "rec1_probes_r3sb3.json",
+   "rec1_probes_r3q6c.json"
+  ]
+ },
+ "G0": {
+  "docstring_six_template": {
+   "_try_emit_assert_from_if_region": "has_docstring_len_584",
+   "_consume_try_arm_finally_copy_if": "has_docstring_len_1870",
+   "_is_protected_statement_nop": "has_docstring_len_681",
+   "_while_pred_has_body_retest": "has_docstring_len_359"
+  },
+  "new_self_state_added_lines": [],
+  "whitelist_path_strings": [],
+  "start_offset_threshold_lines": [],
+  "ast_parse": "ok"
+ },
+ "G3_forbidden_prefix_new_defs": [],
+ "G4_suspect_lines": [],
+ "impact_face_ref": {
+  "note": "八分片 compare（baseline42=gate42 vs 本轮重生成）REGRESSIONS=0 逐位一致；small34 REGRESSIONS=0 IMPROVED=33；见 final_verify_log.txt / final_verify_summary.json"
+ }
+}

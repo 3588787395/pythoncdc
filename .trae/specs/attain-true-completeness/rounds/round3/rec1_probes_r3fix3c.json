@@ -1,0 +1,20 @@
+[
+ {
+  "name": "c13",
+  "pyc_src_rel": "test_repros/round2/c13_class_misc.pyc",
+  "pyc_src_sha": "78eea14ccccbf8dc",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_c13_c13_class_misc.pyc",
+  "mtime": "2026-10-19T01:25:17",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "8264d1e50593a53f",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_c13_c13_class_misc.pyc (Python 3.11)\n\n__doc__ = 'c13: class-level del/assert/raise/pass/Expr statements.'\nclass CMisc:\n    TMP = 1\n    del TMP\n    KEEP = 2\n    assert KEEP\n    def boom(self):\n        for i in range(2):\n            if i > 0:\n                while True:\n                    if i:\n                        break\n    print = staticmethod(print)\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_c13_c13_class_misc.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_c13_c13_class_miscOK.py\n[single] status=success units=3/3 success_rate=100.00%",
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ }
+]

@@ -1,0 +1,22 @@
+[
+ {
+  "name": "b134b",
+  "pyc_src_rel": "@rec1_synth_b134b.pyc",
+  "pyc_src_sha": "76635f537bc83713",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_synth_b134b.pyc",
+  "mtime": "2026-10-19T08:37:12",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "6f1fef7ad56b5aa7",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_synth_b134b.pyc (Python 3.11)\n\ndef s_b134b(i, j):\n    if i and j:\n        while i:\n            j -= 1\n            if j:\n                i\n                continue\n            return j\n    return j\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.s_b134b: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_synth_b134b.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_synth_b134bOK.py\n[single] status=failure units=1/2 success_rate=50.00%",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>.s_b134b: Failure: Different control flow"
+  ]
+ }
+]

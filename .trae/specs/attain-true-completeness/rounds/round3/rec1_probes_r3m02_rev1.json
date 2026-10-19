@@ -1,0 +1,238 @@
+[
+ {
+  "name": "m02",
+  "pyc_src_rel": "test_repros/round2/m02_top_ifmain.pyc",
+  "pyc_src_sha": "54c5bb9418635888",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_m02_m02_top_ifmain.pyc",
+  "mtime": "2026-10-19T03:03:36",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "1ae46a6f3f923430",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_m02_m02_top_ifmain.pyc (Python 3.11)\n\n__doc__ = 'm02: top-level if-main with deep body.'\nimport sys\ndef _run(n):\n    total = 0\n    for i in range(n):\n        try:\n            if i % 2:\n                total += i\n            else:\n                total -= i\n        finally:\n            total = total\n    return total\ndef _main(argv):\n    with open(argv[0]) if argv else sys.stdin as fh:\n        data = fh\n    return data if data else None\nif __name__ == '__main__':\n    if len(sys.argv) > 1:\n        for k in range(3):\n            while k:\n                try:\n                    pass\n                except ValueError:\n                    k -= 1\n                    k\n                    _run(k)\n                    k -= 1\n                    continue\n                finally:\n                    k -= 1\n    else:\n        _main([])\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_m02_m02_top_ifmain.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_m02_m02_top_ifmainOK.py\n[single] status=failure units=2/3 success_rate=66.67%",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "a00",
+  "pyc_src_rel": "@lad_00.pyc",
+  "pyc_src_sha": "d2ec3e99325cb4ba",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/lad_00.pyc",
+  "mtime": "2026-10-19T03:03:38",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "e0df6cd5032f1e14",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: lad_00.pyc (Python 3.11)\n\n__doc__ = 'm02 module-level block verbatim (control).'\nimport sys\ndef _run(n):\n    total = 0\n    return total\nif __name__ == '__main__':\n    if len(sys.argv) > 1:\n        for k in range(3):\n            while k:\n                try:\n                    pass\n                except ValueError:\n                    k -= 1\n                    k\n                    continue\n                    _run(k)\n                    k -= 1\n                    continue\n                finally:\n                    k -= 1\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_00.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_00OK.py\n[single] status=failure units=1/2 success_rate=50.00%",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "a01",
+  "pyc_src_rel": "@lad_01.pyc",
+  "pyc_src_sha": "8e7a022f225e1fbb",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/lad_01.pyc",
+  "mtime": "2026-10-19T03:03:39",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "fffa747144dae3c4",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: lad_01.pyc (Python 3.11)\n\ndef _run(k):\n    return k\nk = 2\nwhile k:\n    try:\n        _run(k)\n    except ValueError:\n        pass\n    finally:\n        k -= 1\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_01.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_01OK.py\n[single] status=failure units=1/2 success_rate=50.00%",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "a06",
+  "pyc_src_rel": "@lad_06.pyc",
+  "pyc_src_sha": "e03c6d8e13130bda",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/lad_06.pyc",
+  "mtime": "2026-10-19T03:03:40",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "2ccd91a13e686d2c",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: lad_06.pyc (Python 3.11)\n\ntry:\n    pass\nexcept ValueError:\n    def _run(k):\n        return k\n    for k in range(3):\n        while k:\n            pass\n        k -= 1\nfinally:\n    k -= 1\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_06.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_06OK.py\n[single] status=failure units=1/2 success_rate=50.00%",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "a07",
+  "pyc_src_rel": "@lad_07.pyc",
+  "pyc_src_sha": "9cb9bd9655c4f703",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/lad_07.pyc",
+  "mtime": "2026-10-19T03:03:41",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "d68988b5ca6b31b9",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: lad_07.pyc (Python 3.11)\n\n__doc__ = 'if + for + while + try full (m02 minus _main).'\nimport sys\ndef _run(k):\n    return k\nif __name__ == '__main__':\n    if len(sys.argv) > 1:\n        for k in range(3):\n            while k:\n                try:\n                    pass\n                except ValueError:\n                    k -= 1\n                    k\n                    continue\n                    _run(k)\n                    k -= 1\n                    continue\n                finally:\n                    k -= 1\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_07.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_07OK.py\n[single] status=failure units=1/2 success_rate=50.00%",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "b09",
+  "pyc_src_rel": "@lad_09.pyc",
+  "pyc_src_sha": "7265d15730a74fe7",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/lad_09.pyc",
+  "mtime": "2026-10-19T03:03:42",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "cd3e591f568f0ae0",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: lad_09.pyc (Python 3.11)\n\ndef _run(k):\n    return k\nk = 2\nwhile k:\n    try:\n        _run(k)\n    except ValueError:\n        pass\nprint(k)\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_09.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_09OK.py\n[single] status=failure units=1/2 success_rate=50.00%",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "b10",
+  "pyc_src_rel": "@lad_10.pyc",
+  "pyc_src_sha": "0f959db065490252",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/lad_10.pyc",
+  "mtime": "2026-10-19T03:03:43",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "5fd2f610a61c5751",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: lad_10.pyc (Python 3.11)\n\ndef _run(k):\n    return k\nfor k in range(3):\n    try:\n        _run(k)\n    except ValueError:\n        pass\nprint(k)\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_10.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_10OK.py\n[single] status=failure units=1/2 success_rate=50.00%",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "b12",
+  "pyc_src_rel": "@lad_12.pyc",
+  "pyc_src_sha": "3300e59c9907ceb9",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/lad_12.pyc",
+  "mtime": "2026-10-19T03:03:45",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "cb1fc6535e9035c6",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: lad_12.pyc (Python 3.11)\n\ndef _run(k):\n    return k\ndef f(k):\n    while k:\n        try:\n            _run(k)\n        except ValueError:\n            continue\n    return k\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_12.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_12OK.py\n[single] status=success units=3/3 success_rate=100.00%",
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "c14",
+  "pyc_src_rel": "@lad_14.pyc",
+  "pyc_src_sha": "8e5beea45ba4b65a",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/lad_14.pyc",
+  "mtime": "2026-10-19T03:03:46",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "c441552bd7731176",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: lad_14.pyc (Python 3.11)\n\ndef _run(k):\n    return k\nk = 2\nwhile k:\n    try:\n        _run(k)\n    except ValueError:\n        x = 1\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_14.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_14OK.py\n[single] status=failure units=1/2 success_rate=50.00%",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "c15",
+  "pyc_src_rel": "@lad_15.pyc",
+  "pyc_src_sha": "040de8d98a635c01",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/lad_15.pyc",
+  "mtime": "2026-10-19T03:03:47",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "7a4485d063ea227d",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: lad_15.pyc (Python 3.11)\n\ndef _run(k):\n    return k\nk = 2\nwhile k:\n    try:\n        _run(k)\n    except ValueError:\n        x = 1\nprint(k)\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_15.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_15OK.py\n[single] status=failure units=1/2 success_rate=50.00%",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "c16",
+  "pyc_src_rel": "@lad_16.pyc",
+  "pyc_src_sha": "754f399c4aa32cfa",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/lad_16.pyc",
+  "mtime": "2026-10-19T03:03:48",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "e1a8e4a138a8a163",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: lad_16.pyc (Python 3.11)\n\ndef _run(k):\n    return k\ndef f(k):\n    while k:\n        try:\n            _run(k)\n        except ValueError:\n            x = 1\n            break\n    return k\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_16.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_16OK.py\n[single] status=success units=3/3 success_rate=100.00%",
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "c17",
+  "pyc_src_rel": "@lad_17.pyc",
+  "pyc_src_sha": "fdf098e6f2712d9f",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/lad_17.pyc",
+  "mtime": "2026-10-19T03:03:49",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "d1c4ad0d94dd7f1a",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: lad_17.pyc (Python 3.11)\n\ndef _run(k):\n    return k\nk = 2\nwhile k:\n    try:\n        _run(k)\n        x = 5\n    except ValueError:\n        pass\nprint(k)\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_17.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/lad_17OK.py\n[single] status=failure units=1/2 success_rate=50.00%",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>: Failure: Different control flow"
+  ]
+ }
+]

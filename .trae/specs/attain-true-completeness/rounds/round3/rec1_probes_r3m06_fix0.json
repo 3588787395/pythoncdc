@@ -1,0 +1,22 @@
+[
+ {
+  "name": "m06",
+  "pyc_src_rel": "test_repros/round2/m06_module_loops.pyc",
+  "pyc_src_sha": "bcbf09ce199fdeff",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_m06_m06_module_loops.pyc",
+  "mtime": "2026-10-19T03:04:43",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "1690c5d22e19ca1c",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_m06_m06_module_loops.pyc (Python 3.11)\n\n__doc__ = 'm06: module-level for/while with else clauses and loop control.'\nTOTAL = 0\nfor i in range(5):\n    if i == 3:\n        continue\n    elif i == 4:\n        break\n    else:\n        TOTAL += i\n        continue\nelse:\n    TOTAL = -1\ni = 0\nwhile i < 3:\n    i += 1\n    for j in range(i):\n        if j:\n            continue\n    else:\n        TOTAL += j\n    TOTAL += 100\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_m06_m06_module_loops.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_m06_m06_module_loopsOK.py\n[single] status=failure units=0/1 success_rate=0.00%",
+  "status": "failure",
+  "units_success": 0,
+  "units_total": 1,
+  "failures": [
+   "***<module>: Failure: Different control flow"
+  ]
+ }
+]

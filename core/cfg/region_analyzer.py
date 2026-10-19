@@ -5462,7 +5462,29 @@ WithRegion/MatchRegion/AssertRegion 经 add_child/entry 抽象节点挂到 LoopR
                     header_last = header.get_last_instruction()
                     if header_last and header_last.opname in CONDITIONAL_JUMP_OPS:
                         condition_block = header
-                if condition_block is None and is_while_true:
+                # [B131-V3R3] 外部前驱条件采纳门（底部闩锁存在性）：只有
+                # 循环体携带条件反向跳转闩锁（BACKWARD_CONDITIONAL_JUMP_OPS，
+                # 源块 ∈ body、目标 == header）时，header 才可能不是条件块本身
+                # （rotate-while 入口 guard 形：条件在体外前驱、体内底部再检）；
+                # 回边全部为无条件 JUMP_BACKWARD（continue 语义边，模式 C
+                # while True + break）时循环无重检，体外带跳出条件的前驱是
+                # 宿主 if 的条件块（`if gate: while True:` 形），不是循环条件。
+                # 此时保持 while_true、condition_block=None，宿主 if 由
+                # _identify_conditional_regions 归约、循环嵌套为其分支
+                # （c13::CMisc.boom 的 `while True: if i: break else: continue`：
+                # 误采纳 if 条件块@36 后发射 `while i > 0:`，continue/break
+                # 结构损毁）。判据只读回边源块末条 opcode 与其跳转目标块
+                # 同一性（I.4 白名单）。
+                _b131_bottom_latch = False
+                for _b131_src in back_edge_sources:
+                    _b131_last = _b131_src.get_last_instruction()
+                    if (_b131_last is not None
+                            and _b131_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                            and _b131_last.argval is not None
+                            and self.cfg.get_block_by_offset(_b131_last.argval) is header):
+                        _b131_bottom_latch = True
+                        break
+                if condition_block is None and is_while_true and _b131_bottom_latch:
                     for pred in sorted(header.predecessors, key=lambda p: p.start_offset):
                         if pred in body:
                             continue
@@ -22259,7 +22281,39 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                                 and not _elif_body
                             )
                             if not _elif:
-                                merge = else_succ
+                                # [B133-V3R3] then 臂为 continue 汇聚（回跳循环头）
+                                # 时，既有归约把 merge 取 else_succ（对侧=post-if
+                                # 顺序语句）——该判据对「else_succ 是退出本循环的
+                                # break 纯桥」形态失效：桥块成为 if 的 merge/post-if，
+                                # _collect_branch_blocks(entry==merge) 返回空 else，
+                                # break 连同桥语句整体蒸发（m06 内层 `if j: continue
+                                # / else: break`：merge=140=桥，else=[]，重编译后 j
+                                # 假路径 fall-through 进 for-else，控制流改变）。
+                                # 识别条件（I.4 结构事实）：else_succ 是纯清理跳桥
+                                # ——块内除结尾无条件 JUMP_FORWARD/JUMP_ABSOLUTE 外
+                                # 仅 POP_TOP/噪声指令，且跳转目标不在本循环体
+                                # body_blocks（越出循环体=break 语义）。
+                                # 归约方式：merge 取跳转目标（break 落点=if 的真实
+                                # 汇合点），else_succ 保留在 else_blocks，由
+                                # _build_basic_if_region 物化 orelse=[Break]（AST
+                                # 映射：If(body=[Continue], orelse=[Break])；裸
+                                # `break` 与 `else: break` 重编译逐字节等价）。
+                                # 其余情形维持原判（C3）。
+                                _es_last = else_succ.get_last_instruction()
+                                _es_bridge = None
+                                if (_es_last is not None
+                                        and _es_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                        and _es_last.argval is not None
+                                        and all(
+                                            i.offset == _es_last.offset
+                                            or i.opname in NOISE_OPS
+                                            or i.opname in ('POP_TOP', 'EXTENDED_ARG')
+                                            for i in else_succ.instructions)):
+                                    _es_tgt = self.cfg.get_block_by_offset(_es_last.argval)
+                                    if (_es_tgt is not None
+                                            and _es_tgt not in (getattr(_loop, 'body_blocks', None) or [])):
+                                        _es_bridge = _es_tgt
+                                merge = _es_bridge if _es_bridge is not None else else_succ
                         # [spf-r01-fix4] 对称检测：当 else_succ 是 continue sink
                         # 且 then_succ 以 JUMP_FORWARD 结尾（if-not 链式比较模式）时，
                         # else 分支是 else: pass（在循环内编译为 JUMP_BACKWARD 回边），
@@ -29533,6 +29587,81 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         self._current_boolop_regions = boolop_regions
         return boolop_regions
 
+    def _while_pred_has_body_retest(self, pred: BasicBlock, loop: LoopRegion,
+                                    pred_last) -> bool:
+        """[B134-V3R3] 循环体外前驱的条件求值必须在循环体内被逐迭代重检。
+
+        CPython 对 while 条件做「入口求值 + 体内复制重检」：连续 and 操作数
+        在体内各有一份同谓词、同跳转极性（假边→循环出口）的重检块。
+        ``if A: while B:`` 的 A 假出口与 while 假出口同块，后向回溯会把它
+        当作 and 链首操作数吸收，发射 ``while A and B``（外层 if 消失，
+        x08::assert_leaf / return_leaf 形态）。判据（同层结构事实）：pred
+        去噪后、最后一个 STORE_* 之后的谓词指令序列 [(opname, argval)…]
+        须与某体内块同段序列相等且跳转极性相同；否则 pred 是外层守卫/if
+        条件块，不是循环条件操作数。
+        """
+        seq = []
+        for i in pred.instructions:
+            if i.opname in NOISE_OPS:
+                continue
+            if i.opname.startswith('STORE_'):
+                seq = []
+                continue
+            if i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                            | SHORT_CIRCUIT_JUMP_OPS
+                            | BACKWARD_CONDITIONAL_JUMP_OPS):
+                continue
+            seq.append((i.opname, getattr(i, 'argval', None)))
+        if not seq:
+            return False
+        pol = 'FALSE' if 'FALSE' in pred_last.opname else 'TRUE'
+        for bb in (loop.body_blocks or ()):
+            last = bb.get_last_instruction()
+            if last is None or last.opname not in (
+                    FORWARD_CONDITIONAL_JUMP_OPS
+                    | BACKWARD_CONDITIONAL_JUMP_OPS):
+                continue
+            if ('FALSE' if 'FALSE' in last.opname else 'TRUE') != pol:
+                continue
+            # 重检块的跳转方向必须离开循环（假边/真边→循环出口）；
+            # 体内嵌套 if 的同极性测试（跳转仍落体内）不构成条件重检。
+            # [B134-V3R3 修订·出口块并入 loop.blocks 的形态] 循环退出块在与
+            # 外层 if 合并（同时是外层 IfRegion 的 merge）时可能被 LoopRegion
+            # 一并纳入 loop.blocks（future_position._close_holding 形态）；
+            # 「迭代内成员」判定改用 body_blocks ∪ {header, condition,
+            # back_edge}，嵌套 if 的同极性跳转（目标为体内块）仍被排除。
+            if last.argval is None:
+                continue
+            _rt_jt = self.cfg.get_block_by_offset(last.argval)
+            if _rt_jt is None:
+                continue
+            if (_rt_jt in (loop.body_blocks or ())
+                    or _rt_jt is loop.header_block
+                    or _rt_jt is loop.condition_block
+                    or _rt_jt is loop.back_edge_block):
+                continue
+            bseq = []
+            for i in bb.instructions:
+                if i.opname in NOISE_OPS:
+                    continue
+                if i.opname.startswith('STORE_'):
+                    bseq = []
+                    continue
+                if i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                | SHORT_CIRCUIT_JUMP_OPS
+                                | BACKWARD_CONDITIONAL_JUMP_OPS):
+                    continue
+                bseq.append((i.opname, getattr(i, 'argval', None)))
+            # [B134-V3R3 修订·体内语句与重检同块] CPython 3.11 单语句循环体
+            # 会把体语句（如 sleep(5)）与操作数 1 的重检复制并入同一基本
+            # 块（体语句在前、重检谓词在后），此时 bseq 是「体语句 + 谓词」
+            # 的拼接；谓词仍以**后缀**形式逐位存在且其跳转已满足极性/出口
+            # 判据。后缀相等即认领（x08 形态由极性/出口判据另行排除：其体
+            # 内重检跳转均落回循环内）。
+            if len(bseq) >= len(seq) and bseq[-len(seq):] == seq:
+                return True
+        return False
+
     def _detect_while_condition_boolop_chain(self, cond_block: BasicBlock, loop: LoopRegion) -> Optional[List[Tuple[BasicBlock, str]]]:
         """检测 while 条件的 and/or 复合链，返回 [(block, op)] 或 None。
 
@@ -29821,6 +29950,13 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                                       and _ri.argval}
                         if _pred_vars and not _pred_vars.intersection(_reeval_vars):
                             break
+            # [B134-V3R3 修复·外部前驱须被循环逐次重检] 循环体外的前驱
+            # 只有其条件求值确实出现在循环体内重检链中时，才是 while 条件
+            # 操作数；否则它是外层 if/守卫条件块（A 假边 == 循环出口，
+            # 满足出口前驱判据），吸收会抹掉外层 IfRegion。
+            if (pred not in loop.blocks
+                    and not self._while_pred_has_body_retest(pred, loop, pred_last)):
+                break
             pred_op = 'and' if 'FALSE' in pred_last.opname else 'or'
             if pred_op != op_type:
                 # 区域归约算法原则 2（每块唯一归属）+ 原则 4

@@ -1,0 +1,20 @@
+[
+ {
+  "name": "x08",
+  "pyc_src_rel": "test_repros/round2/x08_stmt_leaves.pyc",
+  "pyc_src_sha": "31896918c9355f92",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_x08_x08_stmt_leaves.pyc",
+  "mtime": "2026-10-19T08:17:17",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "cc251066bfe57b29",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_x08_x08_stmt_leaves.pyc (Python 3.11)\n\n__doc__ = 'x08: statement-form leaves in deep hosts.'\ndef assert_leaf():\n    for i in range(1):\n        if i:\n            while i:\n                if not i:\n                    pass\n    return 1\ndef raise_leaf():\n    try:\n        for i in range(1):\n            if i:\n                try:\n                    raise ValueError(i)\n                finally:\n                    F = i\n    except ValueError:\n        R = 1\n    return 2\ndef return_leaf():\n    for i in range(1):\n        if i:\n            while i:\n                if i:\n                    return i\ndef delete_leaf():\n    obj = [1, 2, 3]\n    for i in range(1):\n        if i:\n            try:\n                del obj[0]\n            finally:\n                pass\n    return obj\ndef assign_leaves():\n    out = []\n    for i in range(1):\n        if i:\n            out += [x for x in range(2)]\n            aug = 0\n            aug += i\n            ann = i\n            ann += aug\n            out.append((aug, ann))\n    return out\ndef import_leaf():\n    global IMPORT_G\n    for i in range(1):\n        if i:\n            with _A():\n                import json as _j\n                IMPORT_G = _j\n    return 3\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_x08_x08_stmt_leaves.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_x08_x08_stmt_leavesOK.py\n[single] status=success units=8/8 success_rate=100.00%",
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": []
+ }
+]

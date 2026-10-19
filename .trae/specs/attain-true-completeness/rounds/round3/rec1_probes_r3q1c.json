@@ -1,0 +1,121 @@
+[
+ {
+  "name": "r8_07",
+  "pyc_src_rel": "test_repros/round8/r8_07_assert_forms.pyc",
+  "pyc_src_sha": "7a27de948755df1d",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_r8_07_r8_07_assert_forms.pyc",
+  "mtime": "2026-10-19T07:26:13",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "7126eab0ceac9ef4",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_r8_07_r8_07_assert_forms.pyc (Python 3.11)\n\n__doc__ = 'R8-07 Assert forms: plain / msg / call / compare chain / BoolOp / loop / False / nested func / ternary cross.'\ndef r8_assert_plain(x):\n    assert x > 0\n    return x\ndef r8_assert_msg(x):\n    assert x != 0, 'x must not be zero'\n    return 10 // x\ndef r8_assert_call(f, x):\n    assert f(x), 'call failed'\n    return x\ndef r8_assert_chain(a, b, c):\n    assert a < b < c, 'chain violated'\n    return c\ndef r8_assert_boolop(a, b, flag):\n    assert a and b or flag, 'boolop failed'\n    return flag\ndef r8_assert_in_loop(xs):\n    for x in xs:\n        assert x >= 0, 'negative element'\n    return len(xs)\ndef r8_assert_false(x):\n    assert False, 'unreachable'\ndef r8_assert_nested_func(x, y):\n    def inner(v):\n        assert v is not None, 'none not allowed'\n        return v + 1\n    y or 0\ndef r8_assert_ternary_cross(a, b, t):\n    if not (a if t else b) < 10:\n        assert False, 'ternary compare assert'\n    return a + b\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.r8_assert_nested_func: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_r8_07_r8_07_assert_forms.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_r8_07_r8_07_assert_formsOK.py\n[single] status=failure units=10/11 success_rate=90.91%",
+  "status": "failure",
+  "units_success": 10,
+  "units_total": 11,
+  "failures": [
+   "***<module>.r8_assert_nested_func: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "x08",
+  "pyc_src_rel": "test_repros/round2/x08_stmt_leaves.pyc",
+  "pyc_src_sha": "31896918c9355f92",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_x08_x08_stmt_leaves.pyc",
+  "mtime": "2026-10-19T07:26:14",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "3177f6c13d2c969f",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_x08_x08_stmt_leaves.pyc (Python 3.11)\n\n__doc__ = 'x08: statement-form leaves in deep hosts.'\ndef assert_leaf():\n    for i in range(1):\n        while i and i:\n            if not i:\n                pass\n    return 1\ndef raise_leaf():\n    try:\n        for i in range(1):\n            if i:\n                try:\n                    raise ValueError(i)\n                finally:\n                    F = i\n    except ValueError:\n        R = 1\n    return 2\ndef return_leaf():\n    for i in range(1):\n        while i and i:\n            if i:\n                return i\ndef delete_leaf():\n    obj = [1, 2, 3]\n    for i in range(1):\n        if i:\n            try:\n                del obj[0]\n            finally:\n                pass\n    return obj\ndef assign_leaves():\n    out = []\n    for i in range(1):\n        if i:\n            out += [x for x in range(2)]\n            aug = 0\n            aug += i\n            ann = i\n            ann += aug\n            out.append((aug, ann))\n    return out\ndef import_leaf():\n    global IMPORT_G\n    for i in range(1):\n        if i:\n            with _A():\n                import json as _j\n                IMPORT_G = _j\n    return 3\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.assert_leaf: Failure: Different control flow\n  ***<module>.return_leaf: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_x08_x08_stmt_leaves.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_x08_x08_stmt_leavesOK.py\n[single] status=failure units=6/8 success_rate=75.00%",
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 8,
+  "failures": [
+   "***<module>.assert_leaf: Failure: Different control flow",
+   "***<module>.return_leaf: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "v_b73",
+  "pyc_src_rel": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc",
+  "pyc_src_sha": "29e682fed614345b",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_v_b73_v_b73_face.pyc",
+  "mtime": "2026-10-19T07:26:15",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "7cf3a34bd7081be5",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_v_b73_v_b73_face.pyc (Python 3.11)\n\n__doc__ = 'rv2 变体面 B73（r10_04 imp_try_sections 邻域）：finally 条件段外推 / 无 finally 负对照'\ndef v_imp_cond_fin(path):\n    try:\n        from m4 import opener\n        fh = opener(path)\n    except OSError as e:\n        from m4 import fallback as fb\n        fb(str(e))\n        from m6 import closer\n        if fh:\n            return closer(fh)\n        else:\n            return None\n    else:\n        from m5 import reader\n        data = reader(fh)\n    finally:\n        from m6 import closer\n        if fh:\n            closer(fh)\n    return data\ndef n_imp_nofin(path):\n    try:\n        from m4 import opener\n        return opener(path)\n    except OSError as e:\n        from m4 import fallback as fb\n        return fb(str(e))\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.v_imp_cond_fin: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_v_b73_v_b73_face.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_v_b73_v_b73_faceOK.py\n[single] status=failure units=2/3 success_rate=66.67%",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>.v_imp_cond_fin: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "v_b75",
+  "pyc_src_rel": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc",
+  "pyc_src_sha": "272f036a855a835c",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_v_b75_v_b75_face.pyc",
+  "mtime": "2026-10-19T07:26:17",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "0213b7e1fe61f4cb",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_v_b75_v_b75_face.pyc (Python 3.11)\n\nglobal _CACHE\n__doc__ = 'rv2 变体面 B75（r10_15 g_in_try_except 邻域）：两臂 return 互换 / finally 无条件段'\n_CACHE = {}\ndef v_swap_arm_returns(key):\n    if _CACHE:\n        print('hit')\n        return 'miss'\n    else:\n        return 'miss'\n    try:\n        pass\n    except KeyError:\n        _CACHE[key]\n        if _CACHE:\n            return print('hit')\n        else:\n            return None\n    finally:\n        if _CACHE:\n            print('hit')\ndef n_fin_noseg(key):\n    try:\n        return _CACHE[key]\n    except KeyError:\n        return 'miss'\n    finally:\n        print('done')\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.v_swap_arm_returns: Failure: Different bytecode\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_v_b75_v_b75_face.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_v_b75_v_b75_faceOK.py\n[single] status=failure units=2/3 success_rate=66.67%",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>.v_swap_arm_returns: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "rv9_01",
+  "pyc_src_rel": "test_repros/round9/rv9_01_b68_nonfin_tail.pyc",
+  "pyc_src_sha": "cfd48d0d353f5566",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_rv9_01_rv9_01_b68_nonfin_tail.pyc",
+  "mtime": "2026-10-19T07:26:18",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "dfd8a60606594640",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_rv9_01_rv9_01_b68_nonfin_tail.pyc (Python 3.11)\n\n__doc__ = \"\"\"rv9_01: B68 boundary attacks (round9 re-review, 9.3).\n\nUnits:\n  nonfin_tail_break   - non-empty finally + trailing break (gate must refuse release)\n  nonfin_tail_cont    - non-empty finally + trailing continue in while host\n  emptyfin_ifelse_ret - empty finally + trailing if/else dual-arm return\n  emptyfin_in_if      - empty finally nested inside if host\n\"\"\"\ndef nonfin_tail_break(xs, a):\n    for x in xs:\n        try:\n            f(x)\n        finally:\n            g(x)\n        if a(x):\n            break\n    return 1\ndef nonfin_tail_cont(xs, a):\n    while xs:\n        try:\n            f(xs)\n        finally:\n            g(xs)\n        if a(1):\n            continue\n        xs.pop()\n    return 2\ndef emptyfin_ifelse_ret(a):\n    try:\n        pass\n    finally:\n        pass\n    if a:\n        return 3\n    else:\n        return 4\ndef emptyfin_in_if(a):\n    if a:\n        try:\n            pass\n        finally:\n            pass\n        return 6\n    else:\n        return 7\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_rv9_01_rv9_01_b68_nonfin_tail.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_rv9_01_rv9_01_b68_nonfin_tailOK.py\n[single] status=success units=5/5 success_rate=100.00%",
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ },
+ {
+  "name": "rv9_02",
+  "pyc_src_rel": "test_repros/round9/rv9_02_b66_with_nest.pyc",
+  "pyc_src_sha": "61ce0b0161e4ad46",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_rv9_02_rv9_02_b66_with_nest.pyc",
+  "mtime": "2026-10-19T07:26:19",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "86a57d022f2a5ae1",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_rv9_02_rv9_02_b66_with_nest.pyc (Python 3.11)\n\n__doc__ = \"\"\"rv9_02: B66 boundary attacks (round9 re-review, 9.3).\n\nUnits:\n  cont_in_with_nested_loop - continue inside nested loop hosted by with (cross-layer)\n  cont_in_with_no_else     - with host, guard if has no else arm\n  with_whole_body_pass     - with as entire loop body (false-trigger boundary)\n  while_with_whole_body    - while True + with whole body (false-trigger boundary)\n\"\"\"\ndef cont_in_with_nested_loop(xs, p, a):\n    for x in xs:\n        with open(p) as f:\n            for y in f:\n                if a(y):\n                    continue\n                use(y)\n                continue\n    return 8\ndef cont_in_with_no_else(xs, p, a):\n    for x in xs:\n        with open(p) as f:\n            if a(f, x):\n                continue\n    return 9\ndef with_whole_body_pass(xs, p):\n    for x in xs:\n        with open(p) as f:\n            pass\n    return 14\ndef while_with_whole_body(p):\n    while True:\n        with open(p) as f:\n            break\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.while_with_whole_body: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_rv9_02_rv9_02_b66_with_nest.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_rv9_02_rv9_02_b66_with_nestOK.py\n[single] status=failure units=4/5 success_rate=80.00%",
+  "status": "failure",
+  "units_success": 4,
+  "units_total": 5,
+  "failures": [
+   "***<module>.while_with_whole_body: Failure: Different control flow"
+  ]
+ }
+]

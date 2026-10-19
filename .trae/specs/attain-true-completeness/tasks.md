@@ -12,11 +12,11 @@
   - [x] 2.2 修复：17 项通用机制全族封闭（I.4 白名单判据；涉改 region_ast_generator / region_analyzer / comprehension_generator / code_generator（IfExp 括号守卫）；G3=0 / G4=0）
   - [x] 2.3 复核：原探针 90/90 + 合成非语料 16 探针 79/79 + 负对照 60/60；站桩回归不变差（402 单元数无降、34 集 REGRESSIONS=0、402 产物位字节一致）
   - [x] 2.4 主代理验证序六步 + push（`rr-v3r02:`）
-- [ ] Task 3: Round 3 — try-raise-assert-宿主族封闭（→ 升格行：Try / Raise / Assert / Import / Global）
-  - [ ] 3.1 评审攻击：B87（try 体嵌套宿主变体）/ B73（try 四段 import 宿主泄漏）/ B75（try 宿主 global）/ B56（assert 幻影 else）/ B58（raise×三元类）/ B63（空 try/fin 尾随段）/ B69（emptyfin_in_if）现状探针 + 合成新变体
-  - [ ] 3.2 修复：通用机制全族封闭
-  - [ ] 3.3 复核：原探针 + 合成交叉变体 + 负对照全过；站桩回归不变差
-  - [ ] 3.4 主代理验证序六步 + push（`rr-v3r03:`）
+- [x] Task 3: Round 3 — try-raise-assert-宿主族封闭（→ 升格行：Try / Raise / Assert / Import / Global）（修复工程师接力 + 主代理验收）（FIX.md 终稿 210 行 §0-§6：13 项修复；域内红单元 12/12 翻绿（m06 0/1→1/1、x04 6/7→7/7、x02 5/7→6/7、x01 4/7→5/7、v_b73 2/3→3/3、v_b75 2/3→3/3、r8_07 10/11→11/11、x08 6/8→8/8、r8_10 9/12→11/12、c13 2/3→3/3、rv9_01 4/5→5/5）；2 文件 25 hunks +736/−13，标记 [Bn-V3R3] 25 处；402 八分片 6617/6617 REGRESSIONS=0、small34 1568/1568 IMPROVED=33、quotation 153/153、tests 基线名单、IV.2 全绿（BOM 单头）、site-packages 零字节差异；主代理独立复跑：核心探针两组 27/30 + 36/37（余项均域外）、负对照九件 60/60、合成 22 探针 45/45、自产回归对比 `_r3acc_regcmp.json` DEGRADED=0）
+  - [x] 3.1 评审攻击：B87（try 体嵌套宿主变体）/ B73（try 四段 import 宿主泄漏）/ B75（try 宿主 global）/ B56（assert 幻影 else）/ B58（raise×三元类）/ B63（空 try/fin 尾随段）/ B69（emptyfin_in_if）现状探针 + 合成新变体；主代理裁决：**c04::CTryNest（5/6）与 m02 `<module>`（B132，2/3）两项 park**（TryExceptRegion 配对/层级核心污染同族，生成层局部补丁 6 轮证不可收敛）——归 Round 8 全行对抗终审统一处置（以 c04_findings.md A-D 候选 + TryE@110 字段清单为起点）；域外残余如实登记：B57、x01::if_in_while（R6/B94）、x01::if_in_match（R5/B122）、rv9_02（B70）
+  - [x] 3.2 修复：13 项通用机制全族封闭（B87 NOP 保真×2 + r08 重入复检、B69 merge 归真臂、B73 finally 副本透明中继、B75/B82 臂返回等值+副本消费、B56 STORE 前缀装箱、B131 while-True 折叠、B133 for/while-else 归属、B134 出口前驱守卫（+修订×2）、B63 空 fin 尾段、B135 assert 失败臂归约、B136 preload 栈效应门；I.4 白名单判据；G3=0 / G4=0）
+  - [x] 3.3 复核：原探针（非 park）全绿 + 合成 22 探针 45/45 + 负对照八件 62/62（九件口径 60/60）；站桩回归不变差（402 单元数无降、34 集 REGRESSIONS=0、字节复原核验 trade_live_broker 128/128 + future_position 83/83）
+  - [x] 3.4 主代理验证序六步 + push（`rr-v3r03:`）
 - [ ] Task 4: Round 4 — await-挂起链族封闭（→ 升格行：Await / ListComp / await_expr）
   - [ ] 4.1 评审攻击：B112①（await 链消费门）/ B112②（推导式挂起变体）/ B128（await×条件）/ B47（await×三元臂 外提越 POP_JUMP 对）现状探针 + 合成新变体
   - [ ] 4.2 修复：通用机制全族封闭（await 链消费门 = 区域级机制，非个案）

@@ -1,0 +1,20 @@
+[
+ {
+  "name": "b134b",
+  "pyc_src_rel": "@rec1_synth_b134b.pyc",
+  "pyc_src_sha": "a8cde5fa2ba2f0e4",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_synth_b134b.pyc",
+  "mtime": "2026-10-19T08:38:54",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "948cafab147a1b1e",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_synth_b134b.pyc (Python 3.11)\n\ndef s_b134b(i, s):\n    if i:\n        while i:\n            s += 1\n            i -= 2\n    return s\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_synth_b134b.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_synth_b134bOK.py\n[single] status=success units=2/2 success_rate=100.00%",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ }
+]

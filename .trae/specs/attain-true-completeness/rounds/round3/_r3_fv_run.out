@@ -1,0 +1,39 @@
+=== REGEN0 rc=0 28.8s
+=== REGEN1 rc=0 24.1s
+=== REGEN2 rc=0 21.2s
+=== REGEN3 rc=0 23.2s
+=== REGEN4 rc=0 22.2s
+=== REGEN5 rc=0 27.1s
+=== REGEN6 rc=0 29.8s
+=== REGEN7 rc=0 29.5s
+=== VERIFY0 rc=0 25.2s
+=== COMPARE0 rc=0 0.8s
+=== VERIFY1 rc=0 14.0s
+=== COMPARE1 rc=0 0.8s
+=== VERIFY2 rc=0 8.9s
+=== COMPARE2 rc=0 0.8s
+=== VERIFY3 rc=0 14.1s
+=== COMPARE3 rc=0 0.9s
+=== VERIFY4 rc=0 15.6s
+=== COMPARE4 rc=0 0.8s
+=== VERIFY5 rc=0 17.3s
+=== COMPARE5 rc=0 0.8s
+=== VERIFY6 rc=0 24.7s
+=== COMPARE6 rc=0 0.8s
+=== VERIFY7-SPLIT rc=0 31.4s
+=== COMPARE7 rc=0 0.8s
+=== SMALL34-A rc=0 24.2s
+=== SMALL34-B rc=0 35.1s
+=== SMALL34-CMP rc=0 0.7s
+=== QUOTATION rc=0 8.5s
+=== TESTS7 rc=1 9.4s
+IV2: {"IMPORT_OK": true, "COMPILE_OK": true, "BOM_region_ast_generator.py": "one", "BOM_region_analyzer.py": "one", "instrumentation_hits": {"region_ast_generator.py": {"code": [], "in_string": [21465, 22200, 53675]}, "region_analyzer.py": {"code": [], "in_string": []}}, "G3_forbidden_prefix_new_defs": 0}
+shard0: {'compile_error': 0, 'error': 0, 'failure': 0, 'success': 51} units=786/786
+shard1: {'compile_error': 0, 'error': 0, 'failure': 0, 'success': 51} units=469/469
+shard2: {'compile_error': 0, 'error': 0, 'failure': 0, 'success': 51} units=538/538
+shard3: {'compile_error': 0, 'error': 0, 'failure': 0, 'success': 51} units=887/887
+shard4: {'compile_error': 0, 'error': 0, 'failure': 0, 'success': 51} units=855/855
+shard5: {'compile_error': 0, 'error': 0, 'failure': 0, 'success': 51} units=999/999
+shard6: {'compile_error': 0, 'error': 0, 'failure': 1, 'success': 50} units=800/801
+shard7: {'compile_error': 0, 'error': 0, 'failure': 0, 'success': 45} units=1282/1282
+FINAL: units=6616/6617 files_failure=1 total_elapsed=446s

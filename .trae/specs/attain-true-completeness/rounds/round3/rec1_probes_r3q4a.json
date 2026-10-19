@@ -1,0 +1,20 @@
+[
+ {
+  "name": "r8_07",
+  "pyc_src_rel": "test_repros/round8/r8_07_assert_forms.pyc",
+  "pyc_src_sha": "7a27de948755df1d",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_r8_07_r8_07_assert_forms.pyc",
+  "mtime": "2026-10-19T08:06:20",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "d19e22c747a9e164",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_r8_07_r8_07_assert_forms.pyc (Python 3.11)\n\n__doc__ = 'R8-07 Assert forms: plain / msg / call / compare chain / BoolOp / loop / False / nested func / ternary cross.'\ndef r8_assert_plain(x):\n    assert x > 0\n    return x\ndef r8_assert_msg(x):\n    assert x != 0, 'x must not be zero'\n    return 10 // x\ndef r8_assert_call(f, x):\n    assert f(x), 'call failed'\n    return x\ndef r8_assert_chain(a, b, c):\n    assert a < b < c, 'chain violated'\n    return c\ndef r8_assert_boolop(a, b, flag):\n    assert a and b or flag, 'boolop failed'\n    return flag\ndef r8_assert_in_loop(xs):\n    for x in xs:\n        assert x >= 0, 'negative element'\n    return len(xs)\ndef r8_assert_false(x):\n    assert False, 'unreachable'\ndef r8_assert_nested_func(x, y):\n    def inner(v):\n        assert v is not None, 'none not allowed'\n        return v + 1\n    return inner(x) + (y or 0)\ndef r8_assert_ternary_cross(a, b, t):\n    if not (a if t else b) < 10:\n        assert False, 'ternary compare assert'\n    return a + b\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_r8_07_r8_07_assert_forms.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_r8_07_r8_07_assert_formsOK.py\n[single] status=success units=11/11 success_rate=100.00%",
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": []
+ }
+]

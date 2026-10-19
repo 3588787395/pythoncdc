@@ -1,0 +1,20 @@
+[
+ {
+  "name": "v_b73",
+  "pyc_src_rel": ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc",
+  "pyc_src_sha": "29e682fed614345b",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_v_b73_v_b73_face.pyc",
+  "mtime": "2026-10-19T07:40:43",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "3ceff262a0ef9354",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_v_b73_v_b73_face.pyc (Python 3.11)\n\n__doc__ = 'rv2 变体面 B73（r10_04 imp_try_sections 邻域）：finally 条件段外推 / 无 finally 负对照'\ndef v_imp_cond_fin(path):\n    try:\n        from m4 import opener\n        fh = opener(path)\n    except OSError as e:\n        from m4 import fallback as fb\n        return fb(str(e))\n    else:\n        from m5 import reader\n        data = reader(fh)\n    finally:\n        from m6 import closer\n        if fh:\n            closer(fh)\n    return data\ndef n_imp_nofin(path):\n    try:\n        from m4 import opener\n        return opener(path)\n    except OSError as e:\n        from m4 import fallback as fb\n        return fb(str(e))\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_v_b73_v_b73_face.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_v_b73_v_b73_faceOK.py\n[single] status=success units=3/3 success_rate=100.00%",
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ }
+]

@@ -1,0 +1,38 @@
+[
+ {
+  "name": "r10_21",
+  "pyc_src_rel": "test_repros/round10/r10_21_fin_loopctrl.pyc",
+  "pyc_src_sha": "6dd911f8746b6612",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_r10_21_r10_21_fin_loopctrl.pyc",
+  "mtime": "2026-10-19T00:23:15",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "d21757a8568e2529",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_r10_21_r10_21_fin_loopctrl.pyc (Python 3.11)\n\n__doc__ = 'r10_21: R-1 观察项探针 — finally 体仅含 continue/break（B68 门控 machinery 集重叠面）'\ndef fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r < 0:\n                raise ValueError(r)\n        finally:\n            if r < 0:\n                continue\n        out.append(r)\n    return out\ndef fin_break(rows):\n    total = 0\n    for r in rows:\n        try:\n            total += r\n        finally:\n            if total > 100:\n                break\n    return total\ndef fin_continue_stmt(rows):\n    out = []\n    i = 0\n    while i < len(rows):\n        try:\n            v = rows[i]\n        finally:\n            i += 1\n            if v is None:\n                continue\n        out.append(v)\n    return out\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_r10_21_r10_21_fin_loopctrl.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_r10_21_r10_21_fin_loopctrlOK.py\n[single] status=success units=4/4 success_rate=100.00%",
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "name": "rv10_32",
+  "pyc_src_rel": "test_repros/round10/rv10_32_augassign_variant.pyc",
+  "pyc_src_sha": "46857f08816d101f",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_rv10_32_rv10_32_augassign_variant.pyc",
+  "mtime": "2026-10-19T00:23:16",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "adce512a7e8702da",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_rv10_32_rv10_32_augassign_variant.pyc (Python 3.11)\n\n__doc__ = 'rv10_32: B48 守卫边界外推 — attr/subscr 目标/冷门算子/BoolOp RHS/Assign 负对照'\nclass Box:\n    def __init__(self, v):\n        self.v = v\ndef v_aug_attr_ternary(c, t, d):\n    \"\"\"attr 目标增强赋值 × 三元 RHS（守卫限定 name 目标——边界外形态）\"\"\"\n    b = Box(1)\n    b.v += t if c else d\n    return b.v\ndef v_aug_subscr_ternary(xs, c, t, d):\n    \"\"\"subscr 目标增强赋值 × 三元 RHS（边界外形态）\"\"\"\n    xs[0] += t if c else d\n    return xs\ndef v_aug_cold_ops(x, c, t, d):\n    \"\"\"冷门算子 >>= %= //= × 三元 RHS（oparg 映射覆盖面）\"\"\"\n    x >>= t if c else d\n    y = x\n    y %= t if c else d\n    z = y\n    z //= t if c else d\n    return (x, y, z)\ndef v_aug_boolop_rhs(x, a, b):\n    \"\"\"BoolOp RHS 非三元——负对照（旧路径）\"\"\"\n    x += a or b\n    return x\ndef v_aug_plain_ternary(c, t, d):\n    \"\"\"普通 Assign 三元——负对照（不得误判 AugAssign）\"\"\"\n    x = t if c else d\n    return x\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_rv10_32_rv10_32_augassign_variant.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_rv10_32_rv10_32_augassign_variantOK.py\n[single] status=success units=8/8 success_rate=100.00%",
+  "status": "success",
+  "units_success": 8,
+  "units_total": 8,
+  "failures": []
+ }
+]

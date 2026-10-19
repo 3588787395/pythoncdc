@@ -1,0 +1,41 @@
+[
+ {
+  "name": "x04",
+  "pyc_src_rel": "test_repros/round2/x04_try_deep_hosts.pyc",
+  "pyc_src_sha": "63b7a840b7a94235",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_x04_x04_try_deep_hosts.pyc",
+  "mtime": "2026-10-18T23:52:48",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "1164a9559c6e7584",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_x04_x04_try_deep_hosts.pyc (Python 3.11)\n\n__doc__ = 'x04: Try as innermost leaf, host depth >= 3.'\ndef try_in_if():\n    try:\n        while False:\n            pass\n        try:\n            R = 1\n        finally:\n            F = 1\n    except ValueError:\n        R = 2\n    return 1\ndef try_in_for():\n    for i in range(1):\n        try:\n            for j in range(1):\n                try:\n                    R = j\n                except ValueError:\n                    R = 0\n        finally:\n            F = i\n    return 2\ndef try_in_while():\n    while True:\n        try:\n            while False:\n                pass\n            while True:\n                try:\n                    R = 1\n                finally:\n                    F = 1\n        except ValueError:\n            R = 2\ndef try_in_with():\n    with _A() as a:\n        try:\n            with _A() as b:\n                try:\n                    R = (a, b)\n                finally:\n                    F = 1\n        except ValueError:\n            R = 2\n    return 4\ndef try_in_match():\n    if 1 == 1:\n        try:\n            if 1 == 1:\n                try:\n                    R = 1\n                finally:\n                    F = 1\n        except ValueError:\n            R = 2\n    return 5\ndef try_shallow():\n    try:\n        R = 1\n    except ValueError:\n        R = 2\n    finally:\n        F = 3\n    return 0\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_x04_x04_try_deep_hosts.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_x04_x04_try_deep_hostsOK.py\n[single] status=success units=7/7 success_rate=100.00%",
+  "status": "success",
+  "units_success": 7,
+  "units_total": 7,
+  "failures": []
+ },
+ {
+  "name": "x01",
+  "pyc_src_rel": "test_repros/round2/x01_if_deep_hosts.pyc",
+  "pyc_src_sha": "525be91cf83ddb42",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_x01_x01_if_deep_hosts.pyc",
+  "mtime": "2026-10-18T23:52:50",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "9cc7ec5ddc7657e1",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_x01_x01_if_deep_hosts.pyc (Python 3.11)\n\n__doc__ = 'x01: If as innermost leaf, host depth >= 3.'\ndef if_in_for():\n    for i in range(1):\n        if i:\n            for j in range(1):\n                if j:\n                    R = j\n    return 1\ndef if_in_while():\n    while False:\n        pass\n    while False:\n        pass\n    while True:\n        1\ndef if_in_try():\n    try:\n        while False:\n            pass\n        try:\n            while False:\n                pass\n            R = 1\n        finally:\n            F = 1\n    except ValueError:\n        R = 2\n    return 3\ndef if_in_with():\n    with _A() as a:\n        if a:\n            with _A() as b:\n                if b:\n                    R = 1\n    return 4\ndef if_in_match():\n    match (1, 2):\n        case [a, b]:\n            if a and b == 2:\n                if b:\n                    R = b\n            else:\n                pass\n        case _:\n            return 5\ndef if_shallow():\n    R = 1\n    return 0\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.if_in_while: Failure: Different control flow\n  ***<module>.if_in_match: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_x01_x01_if_deep_hosts.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_x01_x01_if_deep_hostsOK.py\n[single] status=failure units=5/7 success_rate=71.43%",
+  "status": "failure",
+  "units_success": 5,
+  "units_total": 7,
+  "failures": [
+   "***<module>.if_in_while: Failure: Different control flow",
+   "***<module>.if_in_match: Failure: Different control flow"
+  ]
+ }
+]

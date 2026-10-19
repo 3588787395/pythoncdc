@@ -1,0 +1,22 @@
+[
+ {
+  "name": "r8_10",
+  "pyc_src_rel": "test_repros/round8/r8_10_expr_cross_stmt.pyc",
+  "pyc_src_sha": "917cf426acebf9af",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round3/rec1_r8_10_r8_10_expr_cross_stmt.pyc",
+  "mtime": "2026-10-19T08:30:00",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "7009d9e9621f64bb",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_r8_10_r8_10_expr_cross_stmt.pyc (Python 3.11)\n\n__doc__ = 'R8-10 Cross with Round 7 expression face: ternary inside del subscript / assert / return tuple / augassign (B48) / chained assign / for-iter / raise class / with / lambda / nested ternary return.'\ndef r8_x_del_ternary(xs, t):\n    del xs[t if t >= 0 else 0]\n    return xs\ndef r8_x_assert_ternary(a, b, t):\n    assert (a if t else b) < 10\n    return 0\ndef r8_x_ret_ternary_tuple(a, b, t):\n    return (a if t else b, b if t else a)\ndef r8_x_augassign_ternary(x, a, b, t):\n    x += a if t else b\n    return x\ndef r8_x_assign_ternary_chain(d, t, a, b):\n    d['k1'] = d['k2'] = a if t else b\n    return d\ndef r8_x_for_iter_ternary(xs, ys, t):\n    for v in xs if t else ys:\n        total += v\n    return total\ndef r8_x_raise_ternary_class(x):\n    raise (ValueError if x > 0 else TypeError)('ternary exception class')\ndef r8_x_with_ternary(paths, t):\n    with open(paths[0] if t else paths[1]) as fh:\n        return fh.read(2)\ndef r8_x_lambda_return_ternary(a, b):\n    f = lambda v: (v, a if v else b)\n    return f(1)\ndef r8_x_ret_nested_ternary(a, b, t, u):\n    return (a if t else b) if u else b if t else a\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_r8_10_r8_10_expr_cross_stmt.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round3/rec1_r8_10_r8_10_expr_cross_stmtOK.py\n[single] status=failure units=11/12 success_rate=91.67%",
+  "status": "failure",
+  "units_success": 11,
+  "units_total": 12,
+  "failures": [
+   "***<module>.r8_x_for_iter_ternary: Failure: Different bytecode"
+  ]
+ }
+]
