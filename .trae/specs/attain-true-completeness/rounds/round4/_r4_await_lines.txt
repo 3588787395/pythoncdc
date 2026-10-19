@@ -1,0 +1,149 @@
+484     # 控制流 JUMP*·POP_JUMP* / 协议 SEND·GET_AWAITABLE·FOR_ITER / 异常
+506         'SEND', 'GET_AWAITABLE', 'GET_ANEXT', 'FOR_ITER',
+2033                     # [Round6-B31] 识别条件：块是 await 挂起协议链 owner（末端
+10338             # 块为某条 await 挂起链（setup 含 GET_AWAITABLE → SEND 轮询
+10347             # GET_AWAITABLE 前缀归约为 await 值表达式，非 await 前缀
+10354                                        if any(i.opname == 'GET_AWAITABLE'
+11310         """ 重建 await setup 块（含 GET_AWAITABLE）为 ``await <expr>`` 语句。
+11314             await_setup block : ... <expr> ... ; GET_AWAITABLE ; LOAD_CONST None
+11320         await_setup 块唯一归属 Await 表达式：GET_AWAITABLE 之前的指令归约为
+11321         await 的 value 表达式，GET_AWAITABLE + LOAD_CONST None + SEND/YIELD_VALUE
+11331             重建的语句列表（非空），或 None（块不含 GET_AWAITABLE / 重建失败）。
+11333         if not any(i.opname == 'GET_AWAITABLE' for i in block.instructions):
+11352             if _instr.opname == 'GET_AWAITABLE':
+11378                     #   await_setup block (含 GET_AWAITABLE)
+11403         """[Round6-B31] 收集 block 所属的 await 挂起协议链。
+11406             setup 块（含 GET_AWAITABLE + LOAD_CONST None）
+11412         持有者（owner）是不再含 GET_AWAITABLE 的末端 resume 块。
+11415         GET_AWAITABLE——链头资格（向前枚举起点须 _is_setup）将 yield from
+11418         「poll 前驱 → 含 GET_AWAITABLE 的 setup」），再自链头向前枚举
+11425         （向前枚举起点 cur 须含 GET_AWAITABLE，见 R6-F2），再逐环短路
+11433             return any(i.opname == 'GET_AWAITABLE' for i in b.instructions)
+11488         # [Round6-B31] 以身份集合去重：自 owner 回溯所得前缀与自链头前向
+11492         # 须自身含 GET_AWAITABLE（_is_setup）。识别条件——``yield from
+11496         # await 链 setup 含 GET_AWAITABLE、yield from setup 含
+11498         # GET_AWAITABLE，向前方向若不设同等资格，会自「yield-from setup」
+11500         # 收链因无 GET_AWAITABLE setup 必然失败——两侧不对称导致 defer
+11504         # 归约方式：链头不含 GET_AWAITABLE 即返回 None，门控不 fire，块
+11505         # 走既有发射路径（与 B31 前行为逐位一致）。[C1] 只读 cur 块内操
+11508         # 链头必含 GET_AWAITABLE（编译器为 await 补发），yield from 协议
+11509         # 链头含 GET_YIELD_FROM_ITER 不含 GET_AWAITABLE——两者按该操作
+11539         """[Round6-B31] 只读判定：await 挂起协议链 owner 是否呈延续形态。
+11577         指令集（SWAP/LOAD_CONST/PRECALL/CALL/POP_TOP/GET_AWAITABLE/
+11588                   'POP_TOP', 'GET_AWAITABLE', 'SEND',
+11616         """[Round6-B31] 只读判定：代码常量是否为编译器合成的 async 推导式。
+11623         「GET_AWAITABLE 由编译器为 async 推导式调用自动补发」使用。
+11624         [AST 映射] 命中时剥除该调用后的 GET_AWAITABLE（重编译推导式
+11628         命中仅授权调用方 gate 剥除编译器自动补发的 GET_AWAITABLE；
+11638         """[Round6-B31] await 表达式跨挂起点栈穿透门控。
+11649         RESUME/NOP/CACHE/PUSH_NULL 与 GET_AWAITABLE 后的 LOAD_CONST None
+11653         调用自动补发的 GET_AWAITABLE」（MAKE_FUNCTION 的代码常量为
+11657         （GET_AWAITABLE 由 ExpressionReconstructor 包装为 Await），位形
+11676         # 「SWAP 保存挂起值 + LOAD_CONST None×3 实参 + CALL + GET_AWAITABLE」
+11685                 and 'GET_AWAITABLE' in _b34_ops
+11713                 if i.opname == 'GET_AWAITABLE' and _prev_call and _inline_fn_awaited:
+11715                     # GET_AWAITABLE（重编译推导式源码时自动再生），非用户级
+11721                 _prev_awaitable = (i.opname == 'GET_AWAITABLE')
+11744         绑定后 junction 尾无 GET_AWAITABLE，且其后继恰有一条纯用户 await
+11745         协议链（setup GET_AWAITABLE → poll → resume，链成员无 BEFORE_*）。
+11749         Expr(f)；B31 gate 对 junction 链被 B29 排除（成员含 BEFORE_*）、
+11755         剥 RESUME/NOP/CACHE/PUSH_NULL/EXTENDED_ARG 与 GET_AWAITABLE 后
+11763         调用段与挂起后续算段由同一栈式重建自然拼接，GET_AWAITABLE 由
+11774         # 链归 B31 gate，禁双路径重叠。
+11780         # 发射（镜像 B31 gate 的每块唯一归属改判）。
+11790         # 同时含 region.target 的 STORE_* 与 GET_AWAITABLE——体首块兼
+11800             if any(i.opname == 'GET_AWAITABLE' for i in _m.instructions)
+11806         # junction 自身含 GET_AWAITABLE：await setup 内联于 junction，
+11808         if any(i.opname == 'GET_AWAITABLE' for i in owner.instructions
+11830             # 发射点冲突检查只看链 owner 的真实发射（B31 gate 成功发射才
+11846         # 用户段（整体跳过 poll 块，剥噪声与 GET_AWAITABLE 后的
+11847         # LOAD_CONST None 发送值——挂起协议不是用户源码，镜像 B31）+
+11866                 _prev_awaitable = (i.opname == 'GET_AWAITABLE')
+11875         # （B31 gate 同语义的空列表改判）。
+12032         GET_AWAITABLE → poll → owner：去噪 ⊆ {POP_TOP, RETURN_*} 且含
+12131         'GET_ITER', 'GET_AWAITABLE', 'GET_ANEXT', 'GET_AITER',
+12417         # while 循环 header 若为 await setup 块（含 GET_AWAITABLE，后继为 SEND
+12421         # 留在栈顶被重建为 Expr(Constant(None))，GET_AWAITABLE 前的 g() 丢失）。
+12424         if any(i.opname == 'GET_AWAITABLE' for i in hdr.instructions):
+12945             # （前驱指令，可能含 ASYNC_GEN_WRAP）归约为 yield 的 value 表达式，
+26372           1. 从 setup_block 提取 GET_AWAITABLE 之前的指令作为 await 的内层表达式；
+26394         # 从 setup_block 提取 GET_AWAITABLE 之前的指令作为 await 的内层表达式
+26397         # 截断到 GET_AWAITABLE 之前
+26400             if instr.opname == 'GET_AWAITABLE':
+26448         # left 来自 setup_block 中 GET_AWAITABLE 之前的指令（前向栈模拟后栈底），
+26552         （truthy 测试），await 内层表达式位于 setup_block 中 GET_AWAITABLE 之前。
+26585             if instr.opname == 'GET_AWAITABLE':
+27919             #   setup_block: ...<expr>... ; GET_AWAITABLE ; LOAD_CONST None
+27923             # GET_AWAITABLE 之前的指令。若 cond_block 含 COMPARE_OP，则条件为
+28836             setup_block (含 GET_AWAITABLE/GET_YIELD_FROM_ITER, 末尾 LOAD_CONST None)
+28839             → terminator_block (无 GET_AWAITABLE/GET_YIELD_FROM_ITER，含 STORE_* 赋值目标)
+28856         # 入口块必须含 GET_AWAITABLE (await setup) 或 GET_YIELD_FROM_ITER (yield-from setup)
+28859             if i.opname == 'GET_AWAITABLE':
+28860                 _setup_op = 'GET_AWAITABLE'
+28867         _setup_ops = ('GET_AWAITABLE', 'GET_YIELD_FROM_ITER')
+28903             # - 含 GET_AWAITABLE/GET_YIELD_FROM_ITER → 另一个 setup，继续链
+38136         # 字节码模式: <value_instrs> + ASYNC_GEN_WRAP? + YIELD_VALUE +
+38138         # 依「每块唯一归属」: yield 表达式指令（LOAD + ASYNC_GEN_WRAP +
+38655             # 累积的 stmt_instrs（前驱指令，可能含 ASYNC_GEN_WRAP）是 yield
+38664             #   async gen `yield x` -> LOAD_FAST x + ASYNC_GEN_WRAP + YIELD_VALUE
+38666             # ASYNC_GEN_WRAP 是 async gen 协议的包装指令（reconstruct 中为
+38993         _proto = {'PUSH_EXC_INFO', 'WITH_EXCEPT_START', 'GET_AWAITABLE',
+39227         GET_AWAITABLE+SWAP 机器形态，链上 SEND 轮询自循环 → 函数尾
+39250         # （blk@[LOAD_CONST×3, PRECALL, CALL, GET_AWAITABLE]），链存在性
+39252         if 'GET_AWAITABLE' not in _e_opset:
+39255                             'GET_AWAITABLE', 'POP_TOP', 'NOP', 'RESUME',
+39271                         'GET_AWAITABLE', 'SWAP', 'PRECALL', 'CALL',
+39466         #   - GET_AWAITABLE+... 终结: ternary 是 await 参数 → Expr(Await(IfExp))
+39498         穿越 ``__aexit__`` await 链：SWAP+LOAD_CONST×3+CALL+GET_AWAITABLE
+39502         GET_AWAITABLE）、纯栈清理块（POP_TOP/NOP），命中 RETURN 机器
+39510         [C2] 链形态唯一（GET_AWAITABLE 仅由 __aexit__/用户 await 产生，
+39536                           'GET_AWAITABLE', 'POP_TOP', 'NOP', 'RESUME', 'CACHE',
+39565                 if _mach and 'GET_AWAITABLE' in _opset:
+40024             # 字节码模式：BEFORE_ASYNC_WITH → GET_AWAITABLE → SEND/YIELD 循环
+40675                             # LOAD_CONST None×3 + CALL + GET_AWAITABLE 挂起
+40682                             # 仅 SWAP/LOAD_CONST/CALL/GET_AWAITABLE 等，无
+40702                         # （SWAP+CALL+GET_AWAITABLE 调用块 → SEND 轮询块 →
+40723                                          'CALL', 'GET_AWAITABLE', 'POP_TOP', 'NOP',
+40796                 # 字节码模式：BEFORE_ASYNC_WITH → GET_AWAITABLE → SEND/YIELD 循环
+41394             # LOAD_CONST×3+CALL+GET_AWAITABLE 机器块 → SEND 轮询自循环 →
+41403             # （机器形态含 GET_AWAITABLE+SWAP），走查命中终结块即标记链
+41404             # 块 + exc 块已生成（链存在性自证——GET_AWAITABLE 机器形态
+41421                     if not ('GET_AWAITABLE' in _c_opset and 'SWAP' in _c_opset):
+41424                                         'CALL', 'GET_AWAITABLE', 'POP_TOP', 'NOP',
+43550                             and not any(i.opname == 'GET_AWAITABLE' for i in s.instructions)), None)
+44322                                   and not any(inst.opname == 'GET_AWAITABLE'
+44373                                  and not any(i.opname == 'GET_AWAITABLE'
+45163                                  # [Round 2 修复] 跳过 await setup 块（含 GET_AWAITABLE）：
+45166                                  and not any(i.opname == 'GET_AWAITABLE' for i in s.instructions)), None)
+45241                                  and not any(i.opname == 'GET_AWAITABLE' for i in s.instructions)), None)
+50554             # consumer ops (CALL / GET_AWAITABLE / BEFORE_WITH / BUILD_* etc.)
+50558             #            consumer ops (CALL/GET_AWAITABLE/BEFORE_WITH/...)>
+50627                     # For await pattern (GET_AWAITABLE in
+50633                         if 'GET_AWAITABLE' in _mb_instrs:
+50657                     # 识别条件: 既有 merge 块末条 RETURN 与 GET_AWAITABLE 轮询两条
+51337                     # holds GET_AWAITABLE + LOAD_CONST None; the SEND/YIELD_VALUE/
+52056                         #   err 4:  x = await (ternary)    -> before_store: GET_AWAITABLE, LOAD_CONST None, SEND, YIELD_VALUE, RESUME, JUMP_BACKWARD_N
+52065                                      or i.opname in ('GET_AWAITABLE', 'GET_YIELD_FROM_ITER',
+54014                          'BUILD_STRING', 'GET_AWAITABLE', 'UNARY_NOT',
+55074             #   ASYNC_GEN_WRAP + YIELD_VALUE + (RESUME) + POP_TOP (yield cleanup)
+55083             #   1. yield 表达式部分：ASYNC_GEN_WRAP + YIELD_VALUE + (RESUME) + POP_TOP
+55164         # merge_block 含 GET_AWAITABLE（消费 ternary 结果产生 awaitable），
+55167         # 依「父引用子入口」：父 Await 通过 merge_block 的 GET_AWAITABLE 引用
+55169         # 注意：剥离 implicit return None 后 merge_instrs 可能只剩 [GET_AWAITABLE]，
+55173         # 扩展：return await (ternary)。当 GET_AWAITABLE 之后的
+55179         # 引用 ternary 子节点（经 GET_AWAITABLE+SEND 协议）。
+55189         # wrapping+RETURN_VALUE 引用 ternary 子节点（经 GET_AWAITABLE+SEND
+55193         if any(i.opname == 'GET_AWAITABLE' for i in merge_instrs):
+56730         # or direct GET_AWAITABLE) are followed by SEND/YIELD_VALUE polling
+56776         # Strip trailing GET_AWAITABLE + LOAD_CONST None
+56777         # (await protocol). GET_AWAITABLE wraps the preceding expression in an
+56784         # 字节码模式: <consumer ops (CALL/BUILD_*/...)> + GET_AWAITABLE 0
+56786         # 依「自底向上归约」: GET_AWAITABLE 之前的指令归约为 await 的 value
+56787         # 表达式，GET_AWAITABLE + LOAD_CONST None + SEND/YIELD_VALUE 是 await
+56793                 and merge_all[-2].opname == 'GET_AWAITABLE'):
+57137         # Wrap in Await if GET_AWAITABLE was stripped.
+60463         # 参数 + CALL + GET_AWAITABLE」跨块重构后的伪影——引用加载在协
+60656         ②归约顺序：自底向上，内层区域先归约——跨块守卫（[B31] await 链门控、
+60726         # [Round6-B31] await 表达式跨挂起点栈穿透门控：挂起协议链成员的
+63302         # await setup 块（含 GET_AWAITABLE，后继为 SEND 轮询自循环）的重建逻辑
+65132           await_setup block (含 GET_AWAITABLE) - 当前 block 参数

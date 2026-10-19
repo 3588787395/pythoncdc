@@ -1,0 +1,94 @@
+=== <module> (flags=0) ===
+  0           0 RESUME                   0
+
+  2           2 LOAD_CONST               0 (<code object f_yield_arg at 0x0000015586296010, file ".trae/specs/attain-true-completeness/test_repros/round1\rec1_yf9_arg.py", line 2>)
+              4 MAKE_FUNCTION            0
+              6 STORE_NAME               0 (f_yield_arg)
+              8 LOAD_CONST               1 (None)
+             10 RETURN_VALUE
+
+Disassembly of <code object f_yield_arg at 0x0000015586296010, file ".trae/specs/attain-true-completeness/test_repros/round1\rec1_yf9_arg.py", line 2>:
+  2           0 RETURN_GENERATOR
+              2 POP_TOP
+              4 RESUME                   0
+
+  3           6 LOAD_CONST               1 (<code object sink at 0x00000155862556B0, file ".trae/specs/attain-true-completeness/test_repros/round1\rec1_yf9_arg.py", line 3>)
+              8 MAKE_FUNCTION            0
+             10 STORE_FAST               1 (sink)
+
+  5          12 LOAD_GLOBAL              1 (NULL + range)
+             24 LOAD_CONST               2 (3)
+             26 PRECALL                  1
+             30 CALL                     1
+             40 GET_ITER
+        >>   42 FOR_ITER                19 (to 82)
+             44 STORE_FAST               2 (i)
+
+  6          46 LOAD_FAST                2 (i)
+             48 POP_JUMP_FORWARD_IF_FALSE    15 (to 80)
+
+  7          50 PUSH_NULL
+             52 LOAD_FAST                1 (sink)
+             54 LOAD_FAST                2 (i)
+             56 YIELD_VALUE
+             58 RESUME                   1
+             60 PRECALL                  1
+             64 CALL                     1
+             74 YIELD_VALUE
+             76 RESUME                   1
+             78 POP_TOP
+        >>   80 JUMP_BACKWARD           20 (to 42)
+
+  8     >>   82 LOAD_CONST               0 (None)
+             84 RETURN_VALUE
+
+Disassembly of <code object sink at 0x00000155862556B0, file ".trae/specs/attain-true-completeness/test_repros/round1\rec1_yf9_arg.py", line 3>:
+  3           0 RESUME                   0
+
+  4           2 LOAD_FAST                0 (x)
+              4 RETURN_VALUE
+=== f_yield_arg (flags=35) ===
+  2           0 RETURN_GENERATOR
+              2 POP_TOP
+              4 RESUME                   0
+
+  3           6 LOAD_CONST               1 (<code object sink at 0x00000155862556B0, file ".trae/specs/attain-true-completeness/test_repros/round1\rec1_yf9_arg.py", line 3>)
+              8 MAKE_FUNCTION            0
+             10 STORE_FAST               1 (sink)
+
+  5          12 LOAD_GLOBAL              1 (NULL + range)
+             24 LOAD_CONST               2 (3)
+             26 PRECALL                  1
+             30 CALL                     1
+             40 GET_ITER
+        >>   42 FOR_ITER                19 (to 82)
+             44 STORE_FAST               2 (i)
+
+  6          46 LOAD_FAST                2 (i)
+             48 POP_JUMP_FORWARD_IF_FALSE    15 (to 80)
+
+  7          50 PUSH_NULL
+             52 LOAD_FAST                1 (sink)
+             54 LOAD_FAST                2 (i)
+             56 YIELD_VALUE
+             58 RESUME                   1
+             60 PRECALL                  1
+             64 CALL                     1
+             74 YIELD_VALUE
+             76 RESUME                   1
+             78 POP_TOP
+        >>   80 JUMP_BACKWARD           20 (to 42)
+
+  8     >>   82 LOAD_CONST               0 (None)
+             84 RETURN_VALUE
+
+Disassembly of <code object sink at 0x00000155862556B0, file ".trae/specs/attain-true-completeness/test_repros/round1\rec1_yf9_arg.py", line 3>:
+  3           0 RESUME                   0
+
+  4           2 LOAD_FAST                0 (x)
+              4 RETURN_VALUE
+=== f_yield_arg.<locals>.sink (flags=19) ===
+  3           0 RESUME                   0
+
+  4           2 LOAD_FAST                0 (x)
+              4 RETURN_VALUE

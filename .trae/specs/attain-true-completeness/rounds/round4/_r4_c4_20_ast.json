@@ -1,0 +1,1011 @@
+{
+ "type": "Module",
+ "body": [
+  {
+   "type": "FunctionDef",
+   "name": "sync_gen",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "n"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "Expr",
+     "value": {
+      "type": "Yield",
+      "value": {
+       "type": "Name",
+       "id": "n",
+       "ctx": "Load",
+       "lineno": 2
+      },
+      "lineno": null
+     }
+    },
+    {
+     "type": "Expr",
+     "value": {
+      "type": "YieldFrom",
+      "value": {
+       "type": "Call",
+       "func": {
+        "type": "Name",
+        "id": "range",
+        "ctx": "Load",
+        "lineno": 3
+       },
+       "args": [
+        {
+         "type": "Name",
+         "id": "n",
+         "ctx": "Load",
+         "lineno": null
+        }
+       ],
+       "kwargs": [],
+       "lineno": null
+      }
+     }
+    },
+    {
+     "type": "Return",
+     "value": {
+      "type": "Constant",
+      "value": null
+     }
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  },
+  {
+   "type": "FunctionDef",
+   "name": "e01_await",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "x"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "AsyncFunctionDef",
+     "name": "go",
+     "args": {
+      "type": "arguments",
+      "posonlyargs": [],
+      "args": [],
+      "vararg": null,
+      "kwonlyargs": [],
+      "kw_defaults": [],
+      "kwarg": null,
+      "defaults": []
+     },
+     "body": [
+      {
+       "type": "Return",
+       "value": {
+        "type": "Await",
+        "value": {
+         "type": "Name",
+         "id": "x",
+         "ctx": "Load",
+         "lineno": 8
+        },
+        "lineno": null
+       }
+      }
+     ],
+     "decorator_list": [],
+     "returns": null
+    },
+    {
+     "type": "Return",
+     "value": {
+      "type": "Name",
+      "id": "go",
+      "ctx": "Load",
+      "lineno": 9
+     }
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  },
+  {
+   "type": "FunctionDef",
+   "name": "e02_async_for",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "gen"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "AsyncFunctionDef",
+     "name": "go",
+     "args": {
+      "type": "arguments",
+      "posonlyargs": [],
+      "args": [],
+      "vararg": null,
+      "kwonlyargs": [],
+      "kw_defaults": [],
+      "kwarg": null,
+      "defaults": []
+     },
+     "body": [
+      {
+       "type": "AsyncFor",
+       "target": {
+        "type": "Name",
+        "id": "v",
+        "ctx": "Store"
+       },
+       "iter": {
+        "type": "Name",
+        "id": "gen",
+        "ctx": "Load",
+        "lineno": 14
+       },
+       "body": [
+        {
+         "type": "Expr",
+         "value": {
+          "type": "Yield",
+          "value": {
+           "type": "Name",
+           "id": "v",
+           "ctx": "Load",
+           "lineno": 15
+          },
+          "lineno": null
+         }
+        }
+       ]
+      }
+     ],
+     "decorator_list": [],
+     "returns": null
+    },
+    {
+     "type": "Return",
+     "value": {
+      "type": "Name",
+      "id": "go",
+      "ctx": "Load",
+      "lineno": 16
+     }
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  },
+  {
+   "type": "FunctionDef",
+   "name": "e03_async_with",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "ctx"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "AsyncFunctionDef",
+     "name": "go",
+     "args": {
+      "type": "arguments",
+      "posonlyargs": [],
+      "args": [],
+      "vararg": null,
+      "kwonlyargs": [],
+      "kw_defaults": [],
+      "kwarg": null,
+      "defaults": []
+     },
+     "body": [
+      {
+       "type": "AsyncWith",
+       "items": [
+        {
+         "context_expr": {
+          "type": "Name",
+          "id": "ctx",
+          "ctx": "Load",
+          "lineno": 21
+         },
+         "optional_vars": {
+          "type": "Name",
+          "id": "c",
+          "ctx": "Store"
+         }
+        }
+       ],
+       "body": [
+        {
+         "type": "Return",
+         "value": {
+          "type": "Name",
+          "id": "c",
+          "ctx": "Load",
+          "lineno": 22
+         }
+        }
+       ]
+      }
+     ],
+     "decorator_list": [],
+     "returns": null
+    },
+    {
+     "type": "Return",
+     "value": {
+      "type": "Name",
+      "id": "go",
+      "ctx": "Load",
+      "lineno": 23
+     }
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  },
+  {
+   "type": "FunctionDef",
+   "name": "e04_await_deep",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "x"
+     },
+     {
+      "type": "arg",
+      "arg": "ys"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "AsyncFunctionDef",
+     "name": "go",
+     "args": {
+      "type": "arguments",
+      "posonlyargs": [],
+      "args": [],
+      "vararg": null,
+      "kwonlyargs": [],
+      "kw_defaults": [],
+      "kwarg": null,
+      "defaults": []
+     },
+     "body": [
+      {
+       "type": "Assign",
+       "targets": [
+        {
+         "type": "Name",
+         "id": "r",
+         "ctx": "Store"
+        }
+       ],
+       "value": {
+        "type": "Constant",
+        "value": 0,
+        "lineno": 28
+       }
+      },
+      {
+       "type": "For",
+       "target": {
+        "type": "Name",
+        "id": "y",
+        "ctx": "Store"
+       },
+       "iter": {
+        "type": "Name",
+        "id": "ys",
+        "ctx": "Load",
+        "lineno": 29
+       },
+       "body": [
+        {
+         "type": "If",
+         "test": {
+          "type": "Name",
+          "id": "y",
+          "ctx": "Load",
+          "lineno": 30
+         },
+         "body": [
+          {
+           "type": "Assign",
+           "targets": [
+            {
+             "type": "Name",
+             "id": "r",
+             "ctx": "Store"
+            }
+           ],
+           "value": {
+            "type": "BinOp",
+            "left": {
+             "type": "Await",
+             "value": {
+              "type": "Name",
+              "id": "x",
+              "ctx": "Load",
+              "lineno": 31
+             },
+             "lineno": null
+            },
+            "op": "+",
+            "right": {
+             "type": "Await",
+             "value": {
+              "type": "Name",
+              "id": "x",
+              "ctx": "Load",
+              "lineno": null
+             },
+             "lineno": null
+            },
+            "lineno": null
+           }
+          }
+         ],
+         "orelse": []
+        }
+       ]
+      },
+      {
+       "type": "Return",
+       "value": {
+        "type": "Name",
+        "id": "r",
+        "ctx": "Load",
+        "lineno": 32
+       }
+      }
+     ],
+     "decorator_list": [],
+     "returns": null
+    },
+    {
+     "type": "Return",
+     "value": {
+      "type": "Name",
+      "id": "go",
+      "ctx": "Load",
+      "lineno": 33
+     }
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  },
+  {
+   "type": "FunctionDef",
+   "name": "e05_async_compound",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "gen"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "AsyncFunctionDef",
+     "name": "go",
+     "args": {
+      "type": "arguments",
+      "posonlyargs": [],
+      "args": [],
+      "vararg": null,
+      "kwonlyargs": [],
+      "kw_defaults": [],
+      "kwarg": null,
+      "defaults": []
+     },
+     "body": [
+      {
+       "type": "AsyncFor",
+       "target": {
+        "type": "Name",
+        "id": "v",
+        "ctx": "Store"
+       },
+       "iter": {
+        "type": "Name",
+        "id": "gen",
+        "ctx": "Load",
+        "lineno": 38
+       },
+       "body": [
+        {
+         "type": "AsyncWith",
+         "items": [
+          {
+           "context_expr": {
+            "type": "Name",
+            "id": "v",
+            "ctx": "Load",
+            "lineno": 39
+           },
+           "optional_vars": {
+            "type": "Name",
+            "id": "c",
+            "ctx": "Store"
+           }
+          }
+         ],
+         "body": [
+          {
+           "type": "Expr",
+           "value": {
+            "type": "Await",
+            "value": {
+             "type": "Name",
+             "id": "c",
+             "ctx": "Load",
+             "lineno": 40
+            },
+            "lineno": null
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "decorator_list": [],
+     "returns": null
+    },
+    {
+     "type": "Return",
+     "value": {
+      "type": "Name",
+      "id": "go",
+      "ctx": "Load",
+      "lineno": 41
+     }
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  },
+  {
+   "type": "FunctionDef",
+   "name": "e06_async_deep",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "gen"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "AsyncFunctionDef",
+     "name": "go",
+     "args": {
+      "type": "arguments",
+      "posonlyargs": [],
+      "args": [],
+      "vararg": null,
+      "kwonlyargs": [],
+      "kw_defaults": [],
+      "kwarg": null,
+      "defaults": []
+     },
+     "body": [
+      {
+       "type": "If",
+       "test": {
+        "type": "Name",
+        "id": "gen",
+        "ctx": "Load",
+        "lineno": 46
+       },
+       "body": [
+        {
+         "type": "AsyncFor",
+         "target": {
+          "type": "Name",
+          "id": "v",
+          "ctx": "Store"
+         },
+         "iter": {
+          "type": "Name",
+          "id": "gen",
+          "ctx": "Load",
+          "lineno": 47
+         },
+         "body": [
+          {
+           "type": "Expr",
+           "value": {
+            "type": "Await",
+            "value": {
+             "type": "Name",
+             "id": "v",
+             "ctx": "Load",
+             "lineno": 48
+            },
+            "lineno": null
+           }
+          }
+         ]
+        }
+       ],
+       "orelse": []
+      },
+      {
+       "type": "Return",
+       "value": {
+        "type": "Constant",
+        "value": 0,
+        "lineno": 49
+       }
+      }
+     ],
+     "decorator_list": [],
+     "returns": null
+    },
+    {
+     "type": "Return",
+     "value": {
+      "type": "Name",
+      "id": "go",
+      "ctx": "Load",
+      "lineno": 50
+     }
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  },
+  {
+   "type": "ClassDef",
+   "name": "CAA",
+   "bases": [],
+   "keywords": [],
+   "body": [
+    {
+     "type": "AsyncFunctionDef",
+     "name": "m",
+     "args": {
+      "type": "arguments",
+      "posonlyargs": [],
+      "args": [
+       {
+        "type": "arg",
+        "arg": "self"
+       },
+       {
+        "type": "arg",
+        "arg": "ctx"
+       }
+      ],
+      "vararg": null,
+      "kwonlyargs": [],
+      "kw_defaults": [],
+      "kwarg": null,
+      "defaults": []
+     },
+     "body": [
+      {
+       "type": "AsyncWith",
+       "items": [
+        {
+         "context_expr": {
+          "type": "Name",
+          "id": "ctx",
+          "ctx": "Load",
+          "lineno": 55
+         },
+         "optional_vars": {
+          "type": "Name",
+          "id": "c",
+          "ctx": "Store"
+         }
+        }
+       ],
+       "body": [
+        {
+         "type": "Return",
+         "value": {
+          "type": "Await",
+          "value": {
+           "type": "Name",
+           "id": "c",
+           "ctx": "Load",
+           "lineno": 56
+          },
+          "lineno": null
+         }
+        }
+       ]
+      }
+     ],
+     "decorator_list": [],
+     "returns": null
+    }
+   ],
+   "decorator_list": []
+  },
+  {
+   "type": "FunctionDef",
+   "name": "e07_async_closure",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "gen"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "FunctionDef",
+     "name": "outer",
+     "args": {
+      "type": "arguments",
+      "posonlyargs": [],
+      "args": [],
+      "vararg": null,
+      "kwonlyargs": [],
+      "kw_defaults": [],
+      "kwarg": null,
+      "defaults": []
+     },
+     "body": [
+      {
+       "type": "AsyncFunctionDef",
+       "name": "inner",
+       "args": {
+        "type": "arguments",
+        "posonlyargs": [],
+        "args": [],
+        "vararg": null,
+        "kwonlyargs": [],
+        "kw_defaults": [],
+        "kwarg": null,
+        "defaults": []
+       },
+       "body": [
+        {
+         "type": "Return",
+         "value": {
+          "type": "Call",
+          "func": {
+           "type": "Name",
+           "id": "gen",
+           "ctx": "Load",
+           "lineno": null
+          },
+          "args": [],
+          "kwargs": [],
+          "lineno": null
+         }
+        }
+       ],
+       "decorator_list": [],
+       "returns": null
+      },
+      {
+       "type": "Return",
+       "value": {
+        "type": "Name",
+        "id": "inner",
+        "ctx": "Load",
+        "lineno": 63
+       }
+      }
+     ],
+     "decorator_list": [],
+     "returns": null
+    },
+    {
+     "type": "Return",
+     "value": {
+      "type": "Name",
+      "id": "outer",
+      "ctx": "Load",
+      "lineno": 64
+     }
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  },
+  {
+   "type": "FunctionDef",
+   "name": "e08_yield_from",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "n"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "FunctionDef",
+     "name": "go",
+     "args": {
+      "type": "arguments",
+      "posonlyargs": [],
+      "args": [],
+      "vararg": null,
+      "kwonlyargs": [],
+      "kw_defaults": [],
+      "kwarg": null,
+      "defaults": []
+     },
+     "body": [
+      {
+       "type": "Expr",
+       "value": {
+        "type": "YieldFrom",
+        "value": {
+         "type": "Call",
+         "func": {
+          "type": "Name",
+          "id": "range",
+          "ctx": "Load",
+          "lineno": 69
+         },
+         "args": [
+          {
+           "type": "Name",
+           "id": "n",
+           "ctx": "Load",
+           "lineno": null
+          }
+         ],
+         "kwargs": [],
+         "lineno": null
+        }
+       }
+      },
+      {
+       "type": "Expr",
+       "value": {
+        "type": "YieldFrom",
+        "value": {
+         "type": "Call",
+         "func": {
+          "type": "Name",
+          "id": "sync_gen",
+          "ctx": "Load",
+          "lineno": 70
+         },
+         "args": [
+          {
+           "type": "Name",
+           "id": "n",
+           "ctx": "Load",
+           "lineno": null
+          }
+         ],
+         "kwargs": [],
+         "lineno": null
+        }
+       }
+      },
+      {
+       "type": "Return",
+       "value": {
+        "type": "Constant",
+        "value": null
+       }
+      }
+     ],
+     "decorator_list": [],
+     "returns": null
+    },
+    {
+     "type": "Return",
+     "value": {
+      "type": "Name",
+      "id": "go",
+      "ctx": "Load",
+      "lineno": 71
+     }
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  },
+  {
+   "type": "FunctionDef",
+   "name": "e09_async_await_yieldfrom",
+   "args": {
+    "type": "arguments",
+    "posonlyargs": [],
+    "args": [
+     {
+      "type": "arg",
+      "arg": "gen"
+     }
+    ],
+    "vararg": null,
+    "kwonlyargs": [],
+    "kw_defaults": [],
+    "kwarg": null,
+    "defaults": []
+   },
+   "body": [
+    {
+     "type": "AsyncFunctionDef",
+     "name": "go",
+     "args": {
+      "type": "arguments",
+      "posonlyargs": [],
+      "args": [],
+      "vararg": null,
+      "kwonlyargs": [],
+      "kw_defaults": [],
+      "kwarg": null,
+      "defaults": []
+     },
+     "body": [
+      {
+       "type": "Assign",
+       "targets": [
+        {
+         "type": "Name",
+         "id": "r",
+         "ctx": "Store"
+        }
+       ],
+       "value": {
+        "type": "Constant",
+        "value": 0,
+        "lineno": 76
+       }
+      },
+      {
+       "type": "AsyncFor",
+       "target": {
+        "type": "Name",
+        "id": "v",
+        "ctx": "Store"
+       },
+       "iter": {
+        "type": "Name",
+        "id": "gen",
+        "ctx": "Load",
+        "lineno": 77
+       },
+       "body": [
+        {
+         "type": "Assign",
+         "targets": [
+          {
+           "type": "Name",
+           "id": "r",
+           "ctx": "Store"
+          }
+         ],
+         "value": {
+          "type": "Await",
+          "value": {
+           "type": "Name",
+           "id": "v",
+           "ctx": "Load",
+           "lineno": 78
+          },
+          "lineno": null
+         }
+        }
+       ]
+      },
+      {
+       "type": "Return",
+       "value": {
+        "type": "Name",
+        "id": "r",
+        "ctx": "Load",
+        "lineno": 79
+       }
+      }
+     ],
+     "decorator_list": [],
+     "returns": null
+    },
+    {
+     "type": "Return",
+     "value": {
+      "type": "Name",
+      "id": "go",
+      "ctx": "Load",
+      "lineno": 80
+     }
+    }
+   ],
+   "decorator_list": [],
+   "returns": null
+  }
+ ]
+}

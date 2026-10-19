@@ -1,0 +1,38 @@
+[
+ {
+  "name": "synth_b47",
+  "pyc_src_rel": "test_repros/round4/rec1_synth_b47_ternary.pyc",
+  "pyc_src_sha": "e870878cc08d2bbe",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round4/rec1_synth_b47_rec1_synth_b47_ternary.pyc",
+  "mtime": "2026-10-19T13:34:41",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "66e73de7258e32a8",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_synth_b47_rec1_synth_b47_ternary.pyc (Python 3.11)\n\n__doc__ = 'R4 synth: 三元臂 await 交叉变体（B47 族）。'\nasync def s_true_arm(io, flag):\n    return await io.a() if flag else None\nasync def s_false_arm(io, flag, xs):\n    v = xs[0] if flag else await io.b()\n    return v\nasync def s_both_binop(io, flag):\n    r = await io.a() + 1 if flag else await io.b() + 2\n    return r\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_synth_b47_rec1_synth_b47_ternary.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_synth_b47_rec1_synth_b47_ternaryOK.py\n[single] status=success units=4/4 success_rate=100.00%",
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ },
+ {
+  "name": "synth_yf9",
+  "pyc_src_rel": "test_repros/round4/rec1_synth_yf9_ctx.pyc",
+  "pyc_src_sha": "e4bad6a858ff8d1e",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round4/rec1_synth_yf9_rec1_synth_yf9_ctx.pyc",
+  "mtime": "2026-10-19T13:34:44",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "735829aa051c99ce",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_synth_yf9_rec1_synth_yf9_ctx.pyc (Python 3.11)\n\n__doc__ = 'R4 synth: yield 语境/优先级交叉变体（YF9 族）。'\ndef s_nested_yield(xs):\n    for i in xs:\n        yield (yield i) + 1\ndef s_compare(xs):\n    for i in xs:\n        if (yield i) < 3:\n            yield i\ndef s_shift(xs):\n    for i in xs:\n        v = (yield i) << 2\n        yield v\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_synth_yf9_rec1_synth_yf9_ctx.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_synth_yf9_rec1_synth_yf9_ctxOK.py\n[single] status=success units=4/4 success_rate=100.00%",
+  "status": "success",
+  "units_success": 4,
+  "units_total": 4,
+  "failures": []
+ }
+]

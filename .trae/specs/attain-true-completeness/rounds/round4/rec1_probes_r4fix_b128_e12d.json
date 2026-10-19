@@ -1,0 +1,20 @@
+[
+ {
+  "name": "e12d",
+  "pyc_src_rel": "test_repros/round3/e12d_g9_awaits.pyc",
+  "pyc_src_sha": "ea7bd83daae1c092",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round4/rec1_e12d_e12d_g9_awaits.pyc",
+  "mtime": "2026-10-19T12:59:40",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "24c3c43e0188ae63",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_e12d_e12d_g9_awaits.pyc (Python 3.11)\n\nasync def f_await_assign_rhs(a, src):\n    async with acm9():\n        for i in range(3):\n            if i:\n                v = await src(i)\n                return v\n    return 0\nasync def f_await_return(a, src):\n    async for i in src(a):\n        if i:\n            return await src(i)\n    return 0\nasync def f_await_cond_pos(a, src):\n    async for i in src(a):\n        if await src(i):\n            return i\n    return 0\nasync def f_await_call_arg(a, src):\n    def sink(x):\n        return x + 1\n    async for i in src(a):\n        if i:\n            return sink(await src(i))\n    return 0\nasync def f_await_deep3(a, src):\n    async with acm9():\n        async for i in src(a):\n            if i:\n                return await src(i) + 1\n    return 0\nasync def f_await_boolop(a, src):\n    async for i in src(a):\n        if await src(i) or a:\n            return i\n    return 0\nclass acm9:\n    async def __aenter__(self):\n        return self\n    async def __aexit__(self, *e):\n        return False\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_e12d_e12d_g9_awaits.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_e12d_e12d_g9_awaitsOK.py\n[single] status=success units=11/11 success_rate=100.00%",
+  "status": "success",
+  "units_success": 11,
+  "units_total": 11,
+  "failures": []
+ }
+]

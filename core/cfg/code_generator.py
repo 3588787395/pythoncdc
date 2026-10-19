@@ -1337,6 +1337,10 @@ class CodeGenerator:
         test_code = self._generate_expression(node.test, 0)
         if isinstance(node.test, ASTIfExp):
             test_code = f'({test_code})'
+        # [YF9-V3R4] `if (yield x):` 的括号是语法必需（裸 yield 条件非法）；
+        # 仅 ASTYield 命中，其余条件逐位不变。
+        if isinstance(node.test, ASTYield):
+            test_code = f'({test_code})'
         self._write_line(f'if {test_code}:')
         
         # [关键修复] 增加if深度计数
@@ -1993,6 +1997,10 @@ class CodeGenerator:
         test_code = self._generate_expression(node.get('test') if isinstance(node, dict) else node.test, 0)
         test_obj = node.get('test') if isinstance(node, dict) else node.test
         if isinstance(test_obj, ASTIfExp):
+            test_code = f'({test_code})'
+        # [YF9-V3R4] `while (yield x):` 的括号是语法必需（裸 yield 条件非法）；
+        # 与 _generate_if 同判据，仅 ASTYield 命中。
+        if isinstance(test_obj, ASTYield):
             test_code = f'({test_code})'
         self._write_line(f'while {test_code}:')
 
@@ -2673,6 +2681,11 @@ class CodeGenerator:
         if node.value is not None:
             # [关键修复] 使用0作为parent_precedence，避免返回值被添加括号
             value_code = self._generate_expression(node.value, 0)
+            # [YF9-V3R4] `return (yield x)` 的括号是语法必需（3.11 起
+            # `return yield x` 为 SyntaxError）；仅 ASTYield 命中，
+            # IfExp/lambda 等既有返回值逐位不变。
+            if isinstance(node.value, ASTYield):
+                value_code = f'({value_code})'
             # [关键修复] 生成return None以保持字节码一致性
             if value_code == 'None':
                 self._write_line('return None')
@@ -3637,15 +3650,29 @@ class CodeGenerator:
                 value = node.get('value')
                 if value is not None:
                     value_code = self._generate_expression(value, 0)
-                    return f'yield {value_code}'
-                return 'yield'
+                    _yield_code = f'yield {value_code}'
+                else:
+                    _yield_code = 'yield'
+                # [YF9-V3R4] yield 与 lambda 同为表达式语法的最高层（最低绑定）
+                # 位：`(yield i) + 1` 的左操作数不带括号会被重解析为
+                # `yield (i + 1)`（+ 被并入 yield 值），字节码不一致。父上下文
+                # 要求优先级高于 lambda 时补括号；语句级/赋值右值（parent=0）
+                # 与 Call 实参（parent=0 后由 Call 分支显式补括号）逐位不变。
+                if parent_precedence > 0 and self._precedence['lambda'] < parent_precedence:
+                    return f'({_yield_code})'
+                return _yield_code
             elif node_type == 'YieldFrom':
                 # [Round6-07] yield from 表达式 dict 处理（`x = yield from g()` 作赋值右值）
                 value = node.get('value')
                 if value is not None:
                     value_code = self._generate_expression(value, 0)
-                    return f'yield from {value_code}'
-                return 'yield from'
+                    _yield_code = f'yield from {value_code}'
+                else:
+                    _yield_code = 'yield from'
+                # [YF9-V3R4] 同 Yield：操作数位形按 lambda 优先级补括号。
+                if parent_precedence > 0 and self._precedence['lambda'] < parent_precedence:
+                    return f'({_yield_code})'
+                return _yield_code
             else:
                 # [修复-L13/L17/L18] 基础表达式类型必须正确处理
                 # Constant和Name是最常用的，必须直接处理避免泄露
@@ -3892,7 +3919,10 @@ class CodeGenerator:
                     result = f'yield {value_code}'
                 else:
                     result = 'yield'
-            current_precedence = self._precedence['atom']
+            # [YF9-V3R4] yield/yield from 与 lambda 同层：操作数位形由
+            # 尾部优先级判定补括号（`(yield i) + 1`），语句级与赋值右值
+            # （parent=0）逐位不变。
+            current_precedence = self._precedence['lambda']
         
         elif isinstance(node, ASTFunctionDef):
             # ASTFunctionDef 作为表达式出现时的回退处理
@@ -4212,6 +4242,11 @@ class CodeGenerator:
             return self._precedence['if']
         if isinstance(node, ASTLambda):
             return self._precedence['lambda']
+        # [YF9-V3R4] ASTYield 与 lambda 同层（表达式语法最高层）：镜像
+        # dict-based 路径判定，供 _generate_binary/_generate_compare 为
+        # yield 操作数补括号（`(yield i) + 1`）。
+        if isinstance(node, ASTYield):
+            return self._precedence['lambda']
         if isinstance(node, ASTCompare):
             return self._precedence['==']
         if isinstance(node, ASTUnary):
@@ -4355,6 +4390,11 @@ class CodeGenerator:
         for arg in pparams:
             # [关键修复] 使用0作为parent_precedence，避免参数被添加括号
             arg_code = self._generate_expression(arg, 0)
+            # [YF9-V3R4] yield/yield from 作调用实参必须括号包裹（`f((yield x))`）：
+            # 裸 yield 实参是语法错误（Round7-11 dict 路径同判据的 AST 镜像；
+            # 仅 ASTYield 命中，其余实参逐位不变）。
+            if isinstance(arg, ASTYield):
+                arg_code = f'({arg_code})'
             args_code.append(arg_code)
 
         # [关键修复] 处理关键字参数 (kwparams)
@@ -4366,18 +4406,28 @@ class CodeGenerator:
             if kw_name and kw_value:
                 # [关键修复] 使用0作为parent_precedence，避免关键字参数值被添加括号
                 kw_value_code = self._generate_expression(kw_value, 0)
+                # [YF9-V3R4] 关键字实参值为 yield 时同样必须括号包裹
+                # （`f(k=(yield x))`）。
+                if isinstance(kw_value, ASTYield):
+                    kw_value_code = f'({kw_value_code})'
                 args_code.append(f'{kw_name}={kw_value_code}')
 
         # [关键修复] 处理 *args 参数
         var = node.var if hasattr(node, 'var') else None
         if var:
             var_code = self._generate_expression(var)
+            # [YF9-V3R4] `*(yield x)` 解包实参必须括号包裹。
+            if isinstance(var, ASTYield):
+                var_code = f'({var_code})'
             args_code.append(f'*{var_code}')
 
         # [关键修复] 处理 **kwargs 参数
         kw = node.kw if hasattr(node, 'kw') else None
         if kw:
             kw_code = self._generate_expression(kw)
+            # [YF9-V3R4] `**(yield x)` 解包实参必须括号包裹。
+            if isinstance(kw, ASTYield):
+                kw_code = f'({kw_code})'
             args_code.append(f'**{kw_code}')
 
         return f'{func_code}({", ".join(args_code)})'
@@ -5260,6 +5310,10 @@ class CodeGenerator:
             return self._precedence['not']
         if node_type == 'Compare':
             return self._precedence['==']
+        # [YF9-V3R4] yield/yield from 与 lambda 同层（表达式语法最高层）：
+        # 作二元/比较/布尔/下标等操作数时按最低优先级补括号。
+        if node_type in ('Yield', 'YieldFrom'):
+            return self._precedence['lambda']
         if node_type in ('Constant', 'Name', 'Attribute', 'Tuple', 'List', 'Dict', 'Set',
                          'JoinedStr', 'FormattedValue', 'ListComp', 'SetComp', 'DictComp',
                          'GeneratorExp', 'GenExpr', 'Lambda', 'Subscript', 'Call'):

@@ -1,0 +1,20 @@
+[
+ {
+  "name": "c4_20",
+  "pyc_src_rel": "test_repros/round4/c4_20_async_five.pyc",
+  "pyc_src_sha": "9c6de4f8f589db48",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round4/rec1_c4_20_c4_20_async_five.pyc",
+  "mtime": "2026-10-19T12:48:21",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "67f259e07c44cc07",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_c4_20_c4_20_async_five.pyc (Python 3.11)\n\ndef sync_gen(n):\n    yield n\n    yield from range(n)\ndef e01_await(x):\n    async def go():\n        return await x\n    return go\ndef e02_async_for(gen):\n    async def go():\n        async for v in gen:\n            yield v\n    return go\ndef e03_async_with(ctx):\n    async def go():\n        async with ctx as c:\n            return c\n    return go\ndef e04_await_deep(x, ys):\n    async def go():\n        r = 0\n        for y in ys:\n            if y:\n                r = await x + await x\n        return r\n    return go\ndef e05_async_compound(gen):\n    async def go():\n        async for v in gen:\n            async with v as c:\n                yield await c\n    return go\ndef e06_async_deep(gen):\n    async def go():\n        if gen:\n            async for v in gen:\n                await v\n        return 0\n    return go\nclass CAA:\n    async def m(self, ctx):\n        async with ctx as c:\n            return await c\ndef e07_async_closure(gen):\n    def outer():\n        async def inner():\n            return [v async for v in gen]\n        return inner\n    return outer\ndef e08_yield_from(n):\n    def go():\n        yield from range(n)\n        yield from sync_gen(n)\n    return go\ndef e09_async_await_yieldfrom(gen):\n    async def go():\n        r = 0\n        async for v in gen:\n            r = await v\n        return r\n    return go\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_c4_20_c4_20_async_five.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_c4_20_c4_20_async_fiveOK.py\n[single] status=success units=24/24 success_rate=100.00%",
+  "status": "success",
+  "units_success": 24,
+  "units_total": 24,
+  "failures": []
+ }
+]

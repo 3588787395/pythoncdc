@@ -44,6 +44,10 @@ class ExpressionReconstructor:
         # 默认 False ⇒ 所有既有调用路径行为不变；只由 reconstruct 的
         # fold_cond_jump_ternary 形参按需开启。
         self._fold_cond_jump_ternary = False
+        # [B112-V3R4] 上一显著操作码（跳过 PRECALL/CACHE 等编译器填充）：
+        # 供 CALL(0) 推导式调用分支区分同步（GET_ITER）与 async（GET_AITER，
+        # 本逐指令扫描层不产生栈节点）两形态。
+        self._b112_prev_pos_op = None
 
     def reset(self):
         """重置状态"""
@@ -54,6 +58,7 @@ class ExpressionReconstructor:
         self.copy_depth = 0
         self._jump_since_last_compare = False
         self._ternary_region = None
+        self._b112_prev_pos_op = None
         # [T19-4] 复位为默认关闭：只有 reconstruct(fold_cond_jump_ternary=True)
         # 在 reset 之后显式开启，避免直接循环调用 _process_instruction 的路径
         # 继承上一次归约的开关。
@@ -264,6 +269,12 @@ class ExpressionReconstructor:
         （不吞并已知 opcode，不产生幻影节点）。
         """
         opname = instr.opname
+
+        # [B112-V3R4] 追踪上一显著操作码（跳过编译器填充指令），供 CALL(0)
+        # 推导式调用分支的 async 形态判定（见 CALL 分支）。
+        _b112_prev_op = self._b112_prev_pos_op
+        if opname not in ('PRECALL', 'CACHE', 'NOP', 'EXTENDED_ARG', 'RESUME'):
+            self._b112_prev_pos_op = opname
 
         # [三元区域] 先把可能已抵达汇合点的三元区域闭合，再处理当前指令，
         # 否则未归约的条件节点会停留在栈上，破坏 MAP_ADD / BUILD_* 等
@@ -1354,6 +1365,23 @@ class ExpressionReconstructor:
             #   CALL(0)        → 应该将ComprehensionObject+Iter合并为GeneratorExp
             # 此时argc=0，但栈上有[callable, ComprehensionObject, Iter]
             # 需要特殊处理：不弹出Iter作为func，而是合并ComprehensionObject+Iter
+            # [B112-V3R4] async 推导式调用走同一归约：async for 推导式的迭代
+            # 对象经 GET_AITER（而非 GET_ITER）转换，本逐指令扫描层对
+            # GET_AITER 不产生栈节点（迭代对象原值留栈）。判据 = CALL(0) ∧
+            # 紧邻下方为 ComprehensionObject ∧ 上一显著操作码为 GET_AITER
+            # （跳过 PRECALL/CACHE 等编译器填充；GET_AITER;PRECALL;CALL(0)
+            # 三连是编译器仅为推导式调用发射的合成形态，用户源码不可达）。
+            # 归约方式与同步路径逐字同构：把栈顶迭代对象补包为 Iter 后走
+            # 同一合并分支；is_async 由内层 code object 的 GET_ANEXT 事实
+            # 在 parse_comprehension_inner 中判定，无需外传标志。
+            if (argc == 0 and
+                len(self.stack) >= 2 and
+                self.stack[-2].get('type') == 'ComprehensionObject' and
+                self.stack[-1].get('type') != 'Iter' and
+                _b112_prev_op == 'GET_AITER'):
+                _b112_iter_val = self.stack.pop()
+                self.stack.append({'type': 'Iter', 'value': _b112_iter_val,
+                                   'lineno': None})
             if (argc == 0 and 
                 len(self.stack) >= 2 and
                 self.stack[-1].get('type') == 'Iter' and

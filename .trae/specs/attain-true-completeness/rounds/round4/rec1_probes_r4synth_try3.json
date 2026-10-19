@@ -1,0 +1,23 @@
+[
+ {
+  "name": "synth_b112a",
+  "pyc_src_rel": "test_repros/round4/rec1_synth_b112a_asyncgen.pyc",
+  "pyc_src_sha": "d8070efaa484824b",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round4/rec1_synth_b112a_rec1_synth_b112a_asyncgen.pyc",
+  "mtime": "2026-10-19T13:47:51",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "ea30f4be68ae94d7",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_synth_b112a_rec1_synth_b112a_asyncgen.pyc (Python 3.11)\n\n__doc__ = 'R4 synth: async 生成器 yield-of-await 交叉变体（B112① 族）。'\nasync def agen(n):\n    for i in range(n):\n        yield i\nasync def s_plain(gen, u):\n    async for x in gen:\n        pass\nasync def s_cond_host(gen, u, flag):\n    async for x in gen:\n        if flag:\n            yield await u(x)\nclass acm10:\n    async def __aenter__(self):\n        return self\n    async def __aexit__(self, *e):\n        return False\nasync def s_with_host(gen, u):\n    async with acm10():\n        async for x in gen:\n            pass\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.s_plain: Failure: Different control flow\n  ***<module>.s_with_host: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_synth_b112a_rec1_synth_b112a_asyncgen.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_synth_b112a_rec1_synth_b112a_asyncgenOK.py\n[single] status=failure units=6/8 success_rate=75.00%",
+  "status": "failure",
+  "units_success": 6,
+  "units_total": 8,
+  "failures": [
+   "***<module>.s_plain: Failure: Different control flow",
+   "***<module>.s_with_host: Failure: Different control flow"
+  ]
+ }
+]

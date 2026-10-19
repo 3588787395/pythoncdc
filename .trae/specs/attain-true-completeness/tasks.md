@@ -17,11 +17,11 @@
   - [x] 3.2 修复：13 项通用机制全族封闭（B87 NOP 保真×2 + r08 重入复检、B69 merge 归真臂、B73 finally 副本透明中继、B75/B82 臂返回等值+副本消费、B56 STORE 前缀装箱、B131 while-True 折叠、B133 for/while-else 归属、B134 出口前驱守卫（+修订×2）、B63 空 fin 尾段、B135 assert 失败臂归约、B136 preload 栈效应门；I.4 白名单判据；G3=0 / G4=0）
   - [x] 3.3 复核：原探针（非 park）全绿 + 合成 22 探针 45/45 + 负对照八件 62/62（九件口径 60/60）；站桩回归不变差（402 单元数无降、34 集 REGRESSIONS=0、字节复原核验 trade_live_broker 128/128 + future_position 83/83）
   - [x] 3.4 主代理验证序六步 + push（`rr-v3r03:`）
-- [ ] Task 4: Round 4 — await-挂起链族封闭（→ 升格行：Await / ListComp / await_expr）
-  - [ ] 4.1 评审攻击：B112①（await 链消费门）/ B112②（推导式挂起变体）/ B128（await×条件）/ B47（await×三元臂 外提越 POP_JUMP 对）现状探针 + 合成新变体
-  - [ ] 4.2 修复：通用机制全族封闭（await 链消费门 = 区域级机制，非个案）
-  - [ ] 4.3 复核：原探针 + 合成交叉变体 + 负对照全过；站桩回归不变差
-  - [ ] 4.4 主代理验证序六步 + push（`rr-v3r04:`）
+- [x] Task 4: Round 4 — await-挂起链族封闭（→ 升格行：Await / ListComp / await_expr）（FIX.md 终稿 133 行 §0-§6：5 项修复 + 3 项合成补强；域内红单元 4 族全清：c4_20 21/24→24/24（e05=B112①、e07×2=B112②）、e12d 10/11→11/11（B128）、r7_06 7/10→10/10（B47）、yf9 prec 1/2→2/2 + 四 csv compile_error 复核为真实缺陷全部转绿（arg 3/3、ret 2/2、cond 2/2、boolop 2/2）；3 文件 +447/−13，标记 [Bn-V3R4] 25 行；G3=0 / G4=0 / I.4 白名单判据；E 全量 402 文件 6617/6617 八分片 REGRESSIONS=0、small34 1568/1568 IMPROVED=33、quotation 153/153、tests 七套件基线名单一致、IV.2 全绿（BOM 单头）、site-packages 零字节差异；合成门禁 5 探针 31/31（首跑暴露 3 族内缺口已补强归零）；残余登记：yield-三元臂值位形区域装配局限（域外）、r5_10 附注）
+  - [x] 4.1 评审攻击：B112①（await 链消费门）/ B112②（推导式挂起变体）/ B128（await×条件）/ B47（await×三元臂 外提越 POP_JUMP 对）现状探针 + 合成新变体；合成首跑 r4synth_try1 暴露 3 族内缺口（b112a::s_plain/s_with_host 回边落点被吞 + b47::s_false_arm 赋值位形 STORE/LOAD 尾对混入）——CFG dump + 生成侧 ADD 栈追踪（`_r4_synth_b112a_trace4.py`）定位根因后补强归零；yf9 s_ternary_arm 变体失败证为区域装配层域外局限（探针换同族 s_shift，残余登记 §6）
+  - [x] 4.2 修复：5 项通用机制 + 3 项补强全族封闭（B112① 门+谓词+loop 消费发射、B112② 表达式重建层 GET_AITER、B128 条件归属 IfRegion、B47 三元臂链流、YF9 优先级+语境括号；I.4 白名单判据；G3=0 / G4=0）
+  - [x] 4.3 复核：原探针全绿 + 合成 5 探针 31/31 + 负对照九件 60/60 + 邻域 16 探针 79/86（与基线逐位一致）；站桩回归不变差（402 八分片 REGRESSIONS=0、34 集 REGRESSIONS=0 IMPROVED=33 复跑复现）
+  - [x] 4.4 主代理验证序六步 + push（`rr-v3r04:`）：核 worktree/diffstat（3 文件 +447/−13、标记 [Bn-V3R4] 25 行）/FIX.md 终稿 132 行 §0-§6/summary 全绿/IV.2（BOM 单头、G3=0）/site-packages 零字节；独立复跑核心 13 探针 68/68 + 19/19、负对照九件 60/60、合成 5 探针 31/31、sanity 49/49（r5_10/e09b/r8_08/n9v9/r7_08）；自产回归对比 `_r4acc_regcmp.json` DEGRADED=0
 - [ ] Task 5: Round 5 — match-with 幻影族封闭（→ 升格行：Match / With）
   - [ ] 5.1 评审攻击：B74（match 深层变体）/ B122（match 域外候选转正）/ B93（with-in-match 幻影镜像）/ B61（深宿主 match guard）/ B70（while True+with 幻影 break）现状探针 + 合成新变体
   - [ ] 5.2 修复：通用机制全族封闭

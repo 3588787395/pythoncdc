@@ -1,0 +1,217 @@
+199     IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion,
+473     _ALL_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, BoolOpRegion, TernaryRegion)
+474     _STRUCTURAL_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion)
+475     _NESTED_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, BoolOpRegion, TernaryRegion)
+481         LoopRegion, TryExceptRegion, WithRegion, MatchRegion)
+567         # [R08b 扩展] 同一记录亦用于 WithRegion：generate() 入口处理的
+568         # WithRegion 分支发射 entry_block 的 BEFORE_WITH 前置赋值后登记，
+569         # _generate_with 的 pre-BEFORE_WITH 前缀提取据此跳过，消除
+1279                     # R08b 在 WithRegion 分支的登记语义一致）。
+1284                 elif _entry_region and isinstance(_entry_region, WithRegion):
+1291                     # 由 _generate_with 的 class_def_instrs 统一处理，避免重复生成
+1301                         # 这些指令由 _generate_with 的 class_def_instrs 统一处理
+1391                     # _generate_with 的 pre-BEFORE_WITH 前缀提取据此跳过，
+1600         with_regions = [r for r in self.regions if isinstance(r, WithRegion)]
+1975             if isinstance(_cl_region, (IfRegion, LoopRegion, WithRegion, TernaryRegion, BoolOpRegion, MatchRegion, AssertRegion, TryExceptRegion)):
+4006           (4) block 或 succ 至少一个归属某个 WithRegion 块集合（with
+4019           opcode、普通后继集合、后继末指令/回边目标、WithRegion 成员
+4060             if isinstance(_b66_r, WithRegion) and (block in _b66_r.blocks
+4609         _generate_try/_generate_with/_generate_match/_generate_assert/
+4628           （同为 WithRegion/IfRegion/LoopRegion/TryExceptRegion 等结构区域
+4674             if isinstance(region.parent, WithRegion) and region.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'NOP')
+4685             # 协议形态（_consume_async_with_protocol_if 判定）时，由该
+4700         elif isinstance(region, WithRegion):
+4701             return self._generate_with(region)
+4737             # 守卫：ternary 的 merge_block 是某个 WithRegion 的 entry
+4738             # 时，ternary 作为 with 上下文管理器表达式，由 _generate_with 通过
+4740             # 依「父引用子入口」原则，父 WithRegion 引用 ternary 的归约结果。
+4741             # merge_block 本身是 WithRegion.entry 时，归
+4742             # 属该 WithRegion（父引用子入口），不应标记为 generated——否则
+4743             # _generate_with 的子区域处理检测到 child.entry in generated_blocks
+4744             # 会跳过整个 WithRegion，导致 `with a as x, (b if c else d) as y: pass`
+4746             # 依「每块唯一归属」: merge_block 归属 WithRegion（作为其 entry），
+4749             # 等所有 ternary merge_block 作为嵌套 WithRegion entry 的形态。
+4755             # 此时 ternary 正常生成，WithRegion 由 _generate_try_body 的
+4759                     if (r is not region and isinstance(r, WithRegion)
+4848             # 同时是某个 WithRegion 的 entry、且 merge_block 在 STORE_* 之后
+4851             # WithRegion 必须由本处一并归约并随 ternary 一起返回。此前仅
+4853             # 其余父序列中该 WithRegion 整体丢失（with 头被 ternary 的
+4856             # 结果，ternary 顺延引用其 merge_block 上共享入口的 WithRegion
+4861                     if (isinstance(_r2w, WithRegion)
+5778   - 循环体内的子区域（IfRegion / LoopRegion / TryExceptRegion / WithRegion /
+6087                              (block_region.parent is not None and isinstance(block_region, (WithRegion, TryExceptRegion))))):
+6615             # （TryExceptRegion/WithRegion/LoopRegion/MatchRegion/IfRegion）的 entry，
+9243                     if isinstance(_child_r23, (LoopRegion, TryExceptRegion, WithRegion, MatchRegion)):
+9279                 if isinstance(_r, (LoopRegion, IfRegion, TryExceptRegion, WithRegion, MatchRegion)):
+9811                     if isinstance(_er_pre, (TryExceptRegion, WithRegion, LoopRegion, MatchRegion, IfRegion)):
+9894         child_with_regions: List[WithRegion] = []
+9899             if isinstance(child, WithRegion):
+10295             if _entry_region and isinstance(_entry_region, WithRegion) and _entry_region.entry == block:
+10301             if _target_region and isinstance(_target_region, (TryExceptRegion, WithRegion)) and _target_region.entry == block and block not in self.generated_bl
+10676         for _r in region.iter_descendants((WithRegion,)):
+11296                 elif isinstance(_header_region, WithRegion) and _header_region.entry == block:
+11670         # 唯一归属 WithRegion 装配路径（as 绑定经 Round5-08 SEND 跳出
+11671         # 目标块首指令判定），gate 拒捕，交由 _generate_with 处理。
+12945             # （前驱指令，可能含 ASYNC_GEN_WRAP）归约为 yield 的 value 表达式，
+14386         if not isinstance(_block_region, WithRegion):
+15256                 if isinstance(_cr, WithRegion) and hasattr(_cr, 'entry') and _cr.entry == block:
+15266             if (_entry_region and isinstance(_entry_region, WithRegion)
+15436         if entry_region and isinstance(entry_region, WithRegion) and entry_region.entry == block:
+15472         if entry_region and isinstance(entry_region, WithRegion) and entry_region.entry == block and block not in self.generated_blocks:
+15661         if isinstance(block_region, WithRegion):
+15936             # Same as R24-N1 fix for TryExceptRegion: if the WithRegion's
+17262         # TryExceptRegion/WithRegion/LoopRegion/MatchRegion 等结构区域的入口。
+17273                 if isinstance(_ec_entry_region, (TryExceptRegion, WithRegion, LoopRegion, MatchRegion)):
+17661                     if not isinstance(_nr, (TryExceptRegion, WithRegion, MatchRegion)):
+18117                 if not isinstance(_nr, (TryExceptRegion, WithRegion, MatchRegion)):
+20545                 # 同时是未生成 WithRegion 的 entry（如 `mode = 'w' if f else 'a'`
+20549                 # 检查）随后跳过 WithRegion，with 语句整体丢失（with 头被吞、
+20550                 # body 悬空）。修复：此处立即解除 WithRegion 块的 generated
+20557                         if (isinstance(_r2w, WithRegion)
+20743             if not isinstance(child, (TryExceptRegion, WithRegion, LoopRegion, IfRegion)):
+20824             elif isinstance(child, (LoopRegion, TryExceptRegion, WithRegion)):
+21176             # 第一阶段收集复合子区域（TryExceptRegion/WithRegion/LoopRegion），
+21254                 if not isinstance(child, (TryExceptRegion, WithRegion, LoopRegion)):
+26115                 if not isinstance(_nr, (TryExceptRegion, WithRegion, MatchRegion)):
+29082            TryExceptRegion/WithRegion 的 entry（try/with 外壳优先，沿用 R1 既有
+29120             if not isinstance(_r2_b107_r, (TryExceptRegion, WithRegion)):
+29213            WithRegion/MatchRegion/BoolOpRegion/TernaryRegion）作为单个抽象
+29255                 if isinstance(child, (LoopRegion, TryExceptRegion, WithRegion, MatchRegion)):
+30582             if nested and isinstance(nested, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, TernaryRegion, BoolOpRegion)):
+30802                     # （如 WithRegion）标记为 generated，否则 else 分支内容会被丢失。
+30839                     # WithRegion, etc.). This happens when the loop's else_blocks
+30869                         if _sr and isinstance(_sr, (TryExceptRegion, WithRegion,
+31041                                                                WithRegion, MatchRegion)):
+32591         WithRegion 归约结果。
+33148                 if isinstance(nr, (LoopRegion, IfRegion, WithRegion, MatchRegion, BoolOpRegion, TernaryRegion, AssertRegion)):
+33219                     # 可能同时是 WithRegion 的 entry（如 `mode = w if flag else a`
+33222                     # 生成后标记了 merge_block 为 generated，WithRegion 的入口被
+33224                     # merge_block 是否也是某个 WithRegion 的 entry，若是则解除
+33225                     # WithRegion 入口及 body 块的 generated 标记，并立即生成
+33226                     # WithRegion 作为后续语句追加到 try body。
+33230                             if (isinstance(_owr, WithRegion)
+33658             | _generate_with | WithRegion | Try/If/Loop/With | WithCleanup过滤 |
+34119             （或 RETURN_VALUE）；结构化子区域（IfRegion/WithRegion 等）
+34168            d. 复合体门控：修剪后的序列须含 WithRegion 子结构、≥2 个结构化
+34186         IfRegion⊂WithRegion 不拆散），线性段逐块裸语句发射；纯框架块
+34406                 if isinstance(r2, (IfRegion, WithRegion, LoopRegion, TernaryRegion)):
+34453             # 含 WithRegion 子结构、或 ≥2 个结构化子区域、或存在不属于任何
+34460                 if isinstance(r2, (IfRegion, WithRegion, LoopRegion, TernaryRegion)):
+34473             _has_with_child = any(issubclass(t2, WithRegion) for t2, _ in _child_entries)
+34531           - try_blocks 中的 IfRegion/LoopRegion/WithRegion: 通过块→区域映射识别入口，递归生成
+34538             生成（IfRegion⊂WithRegion 等复合块不再拆散），线性段由
+34564             `region_ast_generator.py` L599-634 增加「顶级祖先」检查修复，根因是 WithRegion
+34578             （与 R07 Pattern T 的 _generate_with / _process_if_blocks 守卫同
+34584             post-try 检测 vs _generate_with / _process_if_blocks 标记循环）。
+34603             IfRegion/LoopRegion/WithRegion/TernaryRegion/内层 Try 由父层按
+35223                     # 检查此块是否是嵌套LoopRegion/IfRegion/WithRegion/TernaryRegion的入口
+35229                     if _hb_region and isinstance(_hb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion)):
+35242                     # 检查此块是否属于某个嵌套LoopRegion/IfRegion/WithRegion/TernaryRegion
+35245                         if nr is region or not isinstance(nr, (LoopRegion, IfRegion, WithRegion, TernaryRegion)):
+35251                             # 被祖先 WithRegion.blocks 吸收），并非 nr 对该块
+35712                     if nested_region and nested_region is not region and isinstance(nested_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegi
+35885                     # （IfRegion⊂WithRegion 等）经入口引用语义整树派发，with 头/体
+35913                     # （如 IfRegion 的 BoolOp 条件块、WithRegion 成员）的块同属
+35952                                 and isinstance(_nb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion))
+35957                                         or not isinstance(_cr, (LoopRegion, IfRegion, WithRegion, TernaryRegion))):
+35961                         if _nb_region and isinstance(_nb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion)):
+36097                                 and isinstance(_fb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion))
+36102                                         or not isinstance(_cr, (LoopRegion, IfRegion, WithRegion, TernaryRegion))):
+36106                         if _fb_region and isinstance(_fb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion)):
+37019                     # 回当前循环 header）且链头/后继任一归属 WithRegion——
+38136         # 字节码模式: <value_instrs> + ASYNC_GEN_WRAP? + YIELD_VALUE +
+38138         # 依「每块唯一归属」: yield 表达式指令（LOAD + ASYNC_GEN_WRAP +
+38655             # 累积的 stmt_instrs（前驱指令，可能含 ASYNC_GEN_WRAP）是 yield
+38664             #   async gen `yield x` -> LOAD_FAST x + ASYNC_GEN_WRAP + YIELD_VALUE
+38666             # ASYNC_GEN_WRAP 是 async gen 协议的包装指令（reconstruct 中为
+38972     def _consume_async_with_protocol_if(self, with_region, if_region):
+39032         识别条件——IfRegion 与某 async WithRegion 的 blocks 有非空交集
+39035         _consume_async_with_protocol_if 判定其为 with 自身异常协议
+39051             if not isinstance(_r, WithRegion) or not getattr(_r, 'is_async', False):
+39059         return self._consume_async_with_protocol_if(_best, if_region)
+39301         """过滤IfRegion在WithRegion内的then/else_blocks中的with清理代码。
+39399     def _extract_async_with_return_value(self, block):
+39422     def _resolve_nested_ternary_context_expr(self, with_region: WithRegion) -> Dict[str, Any]:
+39426         依「父引用子入口」原则：父 WithRegion 通过 entry block 引用嵌套
+39427         TernaryRegion 的归约出口（merge_block == WithRegion.entry）。
+39459         # 父 WithRegion 通过 entry block 反向引用嵌套
+39582     def _extract_async_enter_chain_target(self, region: WithRegion):
+39587         WithRegion 链，每层 entry 块含 BEFORE_ASYNC_WITH；各层的
+39642     def _b86_complete_with_items(self, region: 'WithRegion') -> None:
+39655         ②归约顺序：本方法在 _generate_with 的体装配之前执行（item 补全
+39668         WithRegion 自己的 items，本方法绝不越过子区域边界认领（原则 3）。
+39670         由 _generate_with 的既有 items 装配循环消费为 withitem 节点。
+39671         ⑥反编译流程：_generate_with 装配前置步骤，服务任意宿主（模块
+39843     def _generate_with(self, region: WithRegion) -> Dict[str, Any]:
+39844         """_generate_with — WithRegion → ast.With 映射
+39865         引用本区域仅经 WithRegion.entry 的归约结果（返回单个 ast.With 字典）。
+39877           - 接收 Region 子类: WithRegion
+39891           - 嵌套区域（IfRegion/LoopRegion/TryExceptRegion/WithRegion）: 递归调用 _generate_region
+39903             with 与 try-except 并列时 WithRegion 误消费 try handler entry，导致
+39913           - if-drop Defect 3：WithRegion.cleanup_blocks 误消费 with 语句
+39917             守卫块当线性清理块收集，导致 _generate_with 将其标记为 generated，
+39921             _generate_with 的 with_cleanup_blocks 集合因此不再含 post-with if 守卫，
+39925             函数体顺序扫描。generate() 入口处理的 WithRegion 分支发射该前缀后
+39973                 # 检测 WithRegion 是否嵌套在 IfRegion 内：WithRegion.entry 在 IfRegion.blocks 中
+40080                 # _consume_async_with_protocol_if/_walk_async_pending_return
+40104                         if isinstance(_block_in_descendant, LoopRegion) and isinstance(region, WithRegion) and region.is_async and _block_in_descendant.entry an
+40109                     if isinstance(_block_in_descendant, WithRegion) and id(_block_in_descendant) not in self._generated_regions:
+40113                         if _desc_parent is not None and isinstance(_desc_parent, WithRegion) and id(_desc_parent) not in self._generated_regions and _desc_paren
+40126                         if isinstance(region, WithRegion) and region.is_async and _block_in_descendant.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME
+40136                 # 可能命中包含本 WithRegion 的祖先结构化区域（如外层
+40139                 # 若不排除，_generate_with 会把祖先当作 nested region 走
+40154                             # 时挂在各层 WithRegion.blocks；W11-A 的「候选区域
+40182                 if nested_region and nested_region != region and nested_region is not region.parent and isinstance(nested_region, (IfRegion, LoopRegion, TryExce
+40183                     if isinstance(nested_region, LoopRegion) and isinstance(region, WithRegion) and region.is_async and nested_region.entry and all(i.opname in 
+40188                     if _direct_child is not nested_region and isinstance(_direct_child, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertR
+40208                 if nested_region and nested_region != region and nested_region is not region.parent and isinstance(nested_region, (IfRegion, LoopRegion, TryExce
+40210                         # [修复] TryExceptRegion在WithRegion内时，else_blocks可能包含with清理代码
+40261                         # [修复] IfRegion在WithRegion内时，then/else_blocks可能包含with清理代码
+40269                         if isinstance(nested_region, WithRegion) and nested_region.entry == block:
+40291                         if isinstance(nested_region, IfRegion) and self._consume_async_with_protocol_if(region, nested_region):
+40293                             # 不发射（判据见 _consume_async_with_protocol_if）
+40324                         # 且其 merge_block 是某 WithRegion 的 entry 时，merge_block
+40325                         # 归属该 WithRegion（父引用子入口），不标记为 generated——
+40326                         # 否则 WithRegion 子区域处理检测到 child.entry in
+40327                         # generated_blocks 会跳过整个 WithRegion，导致 multi-with
+40329                         # WithRegion，其余 ternary 块归属 TernaryRegion。
+40333                                 if (_wr is not nested_region and isinstance(_wr, WithRegion)
+40349                             # [修复] TryExceptRegion在WithRegion内时，else_blocks可能包含with清理代码
+40395                             # [修复] IfRegion在WithRegion内时，then/else_blocks可能包含with清理代码
+40406                             if isinstance(nested_region, IfRegion) and self._consume_async_with_protocol_if(region, nested_region):
+40409                                 # _consume_async_with_protocol_if）
+40615                             _ret_path = self.region_analyzer._find_async_with_return_path(
+40619                                 _ret_value = self._extract_async_with_return_value(_ret_block)
+40686                             # WithRegion）。判据只读指令操作码形态（同层事实），
+40839                 if isinstance(child, (TryExceptRegion, IfRegion, LoopRegion, WithRegion)):
+40853                     - WithRegion: 嵌套的 with 语句（上下文管理器嵌套）
+40933                         for line in f:           # LoopRegion 作为 WithRegion 的子区域
+40938                         if condition:             # IfRegion 作为 WithRegion 的子区域
+40950                         with inner():            # 内层WithRegion作为外层的子区域
+40965                     WithRegion (entry=with_setup_block)
+40975                     _generate_with(with_region):
+41037                         if isinstance(child, LoopRegion) and isinstance(child.parent, WithRegion) and child.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'R
+41202             # segment in the WithRegion entry block before BEFORE_WITH that
+41212             # [R08b fix] 该前缀已由 generate() 入口处理的 WithRegion 分支发射过
+41359                             # 父 WithRegion 通过 entry block 反向引用嵌套
+41361                             # 依「父引用子入口」：WithRegion.entry == TernaryRegion.merge_block。
+41376                             if isinstance(_r, WithRegion) and _r is not region:
+42139                 if nested_region and nested_region is not region and isinstance(nested_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, 
+42410                         # WithRegion 首Claim，match 体块 block_to_region 指向
+42411                         # 祖先 WithRegion）：case 体块 ∈ 祖先 with_blocks 时按
+42413                         # 主 = 正在生成的 MatchRegion，WithRegion 仅是块集
+42420                         elif (isinstance(nested_region, WithRegion)
+42787             if isinstance(r, (LoopRegion, IfRegion, TryExceptRegion, WithRegion)) and r.entry and r.entry.start_offset > _subject_instr.offset:
+52671                                 if (isinstance(_r, WithRegion)
+52705                             # merge_block 同时是 WithRegion 的 entry；STORE_* 之后的
+52707                             # WithRegion，不应被 ternary 发射为独立 Expr 语句。
+54790             IfRegion, LoopRegion, TryExceptRegion, WithRegion,
+55074             #   ASYNC_GEN_WRAP + YIELD_VALUE + (RESUME) + POP_TOP (yield cleanup)
+55083             #   1. yield 表达式部分：ASYNC_GEN_WRAP + YIELD_VALUE + (RESUME) + POP_TOP
+59717         generated_blocks 不输出语句（语义已由父 WithRegion 表达）；LOOP_EXIT
+59784             generated_blocks，不输出语句——其语义已由父 WithRegion 表达。
+59979         出口块归父序列所有（原则 3/4），WithRegion 只通过 exit_block 字段
+59987             if not isinstance(r, WithRegion):
+60090         出口块是 WithRegion 之外、父序列之内的源码（_with_jump_exit_blocks 的
+60175         ④嵌套处理：与宿主（WithRegion 体尾 / TryExceptRegion handler 臂尾 /
+63661                     # 当前循环 header）且链头/后继任一归属 WithRegion——

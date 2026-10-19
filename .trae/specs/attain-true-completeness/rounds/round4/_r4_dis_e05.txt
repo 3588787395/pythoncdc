@@ -1,0 +1,176 @@
+=== e05_async_compound flags=3 nlocals=2 varnames=('gen', 'go') ===
+              0 MAKE_CELL                0 (gen)
+
+ 36           2 RESUME                   0
+
+ 37           4 LOAD_CLOSURE             0 (gen)
+              6 BUILD_TUPLE              1
+              8 LOAD_CONST               1 (<code object go at 0x000001EEEA131140, file "f:\Downloads\pythoncdc-main\test_repros\round4\c4_20_async_five.py", line 37>)
+             10 MAKE_FUNCTION            8 (closure)
+             12 STORE_FAST               1 (go)
+
+ 41          14 LOAD_FAST                1 (go)
+             16 RETURN_VALUE
+
+Disassembly of <code object go at 0x000001EEEA131140, file "f:\Downloads\pythoncdc-main\test_repros\round4\c4_20_async_five.py", line 37>:
+              0 COPY_FREE_VARS           1
+
+ 37           2 RETURN_GENERATOR
+              4 POP_TOP
+              6 RESUME                   0
+
+ 38           8 LOAD_DEREF               2 (gen)
+             10 GET_AITER
+        >>   12 GET_ANEXT
+             14 LOAD_CONST               0 (None)
+        >>   16 SEND                     3 (to 24)
+             18 YIELD_VALUE
+             20 RESUME                   3
+             22 JUMP_BACKWARD_NO_INTERRUPT     4 (to 16)
+        >>   24 STORE_FAST               0 (v)
+
+ 39          26 LOAD_FAST                0 (v)
+             28 BEFORE_ASYNC_WITH
+             30 GET_AWAITABLE            1
+             32 LOAD_CONST               0 (None)
+        >>   34 SEND                     3 (to 42)
+             36 YIELD_VALUE
+             38 RESUME                   3
+             40 JUMP_BACKWARD_NO_INTERRUPT     4 (to 34)
+        >>   42 STORE_FAST               1 (c)
+
+ 40          44 LOAD_FAST                1 (c)
+             46 GET_AWAITABLE            0
+             48 LOAD_CONST               0 (None)
+        >>   50 SEND                     3 (to 58)
+             52 YIELD_VALUE
+             54 RESUME                   3
+             56 JUMP_BACKWARD_NO_INTERRUPT     4 (to 50)
+        >>   58 ASYNC_GEN_WRAP
+             60 YIELD_VALUE
+             62 RESUME                   1
+             64 POP_TOP
+
+ 39          66 LOAD_CONST               0 (None)
+             68 LOAD_CONST               0 (None)
+             70 LOAD_CONST               0 (None)
+             72 PRECALL                  2
+             76 CALL                     2
+             86 GET_AWAITABLE            2
+             88 LOAD_CONST               0 (None)
+        >>   90 SEND                     3 (to 98)
+             92 YIELD_VALUE
+             94 RESUME                   3
+             96 JUMP_BACKWARD_NO_INTERRUPT     4 (to 90)
+        >>   98 POP_TOP
+            100 JUMP_FORWARD            17 (to 136)
+        >>  102 PUSH_EXC_INFO
+            104 WITH_EXCEPT_START
+            106 GET_AWAITABLE            2
+            108 LOAD_CONST               0 (None)
+        >>  110 SEND                     3 (to 118)
+            112 YIELD_VALUE
+            114 RESUME                   3
+            116 JUMP_BACKWARD_NO_INTERRUPT     4 (to 110)
+        >>  118 POP_JUMP_FORWARD_IF_TRUE     4 (to 128)
+            120 RERAISE                  2
+        >>  122 COPY                     3
+            124 POP_EXCEPT
+            126 RERAISE                  1
+        >>  128 POP_TOP
+            130 POP_EXCEPT
+            132 POP_TOP
+            134 POP_TOP
+        >>  136 JUMP_BACKWARD           63 (to 12)
+
+ 38     >>  138 END_ASYNC_FOR
+            140 LOAD_CONST               0 (None)
+            142 RETURN_VALUE
+ExceptionTable:
+  12 to 22 -> 138 [1]
+  42 to 64 -> 102 [2] lasti
+  102 to 120 -> 122 [4] lasti
+  128 to 128 -> 122 [4] lasti
+=== e05_async_compound.<locals>.go flags=531 nlocals=2 varnames=('v', 'c') ===
+              0 COPY_FREE_VARS           1
+
+ 37           2 RETURN_GENERATOR
+              4 POP_TOP
+              6 RESUME                   0
+
+ 38           8 LOAD_DEREF               2 (gen)
+             10 GET_AITER
+        >>   12 GET_ANEXT
+             14 LOAD_CONST               0 (None)
+        >>   16 SEND                     3 (to 24)
+             18 YIELD_VALUE
+             20 RESUME                   3
+             22 JUMP_BACKWARD_NO_INTERRUPT     4 (to 16)
+        >>   24 STORE_FAST               0 (v)
+
+ 39          26 LOAD_FAST                0 (v)
+             28 BEFORE_ASYNC_WITH
+             30 GET_AWAITABLE            1
+             32 LOAD_CONST               0 (None)
+        >>   34 SEND                     3 (to 42)
+             36 YIELD_VALUE
+             38 RESUME                   3
+             40 JUMP_BACKWARD_NO_INTERRUPT     4 (to 34)
+        >>   42 STORE_FAST               1 (c)
+
+ 40          44 LOAD_FAST                1 (c)
+             46 GET_AWAITABLE            0
+             48 LOAD_CONST               0 (None)
+        >>   50 SEND                     3 (to 58)
+             52 YIELD_VALUE
+             54 RESUME                   3
+             56 JUMP_BACKWARD_NO_INTERRUPT     4 (to 50)
+        >>   58 ASYNC_GEN_WRAP
+             60 YIELD_VALUE
+             62 RESUME                   1
+             64 POP_TOP
+
+ 39          66 LOAD_CONST               0 (None)
+             68 LOAD_CONST               0 (None)
+             70 LOAD_CONST               0 (None)
+             72 PRECALL                  2
+             76 CALL                     2
+             86 GET_AWAITABLE            2
+             88 LOAD_CONST               0 (None)
+        >>   90 SEND                     3 (to 98)
+             92 YIELD_VALUE
+             94 RESUME                   3
+             96 JUMP_BACKWARD_NO_INTERRUPT     4 (to 90)
+        >>   98 POP_TOP
+            100 JUMP_FORWARD            17 (to 136)
+        >>  102 PUSH_EXC_INFO
+            104 WITH_EXCEPT_START
+            106 GET_AWAITABLE            2
+            108 LOAD_CONST               0 (None)
+        >>  110 SEND                     3 (to 118)
+            112 YIELD_VALUE
+            114 RESUME                   3
+            116 JUMP_BACKWARD_NO_INTERRUPT     4 (to 110)
+        >>  118 POP_JUMP_FORWARD_IF_TRUE     4 (to 128)
+            120 RERAISE                  2
+        >>  122 COPY                     3
+            124 POP_EXCEPT
+            126 RERAISE                  1
+        >>  128 POP_TOP
+            130 POP_EXCEPT
+            132 POP_TOP
+            134 POP_TOP
+        >>  136 JUMP_BACKWARD           63 (to 12)
+
+ 38     >>  138 END_ASYNC_FOR
+            140 LOAD_CONST               0 (None)
+            142 RETURN_VALUE
+ExceptionTable:
+  12 to 22 -> 138 [1]
+  42 to 64 -> 102 [2] lasti
+  102 to 120 -> 122 [4] lasti
+  128 to 128 -> 122 [4] lasti
+ET 12-24 -> 138 depth 1 lasti 0
+ET 42-66 -> 102 depth 2 lasti 1
+ET 102-122 -> 122 depth 4 lasti 1
+ET 128-130 -> 122 depth 4 lasti 1

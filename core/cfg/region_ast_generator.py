@@ -10422,6 +10422,26 @@ AST 映射规则:
         # 守卫），不阻断用户 await 恢复点块（含 STORE/CALL 不满足全成员
         # 判定）；[C3] 判定失败维持原分发路径，既有行为逐位不变。
         if region.is_async and is_async_poll_protocol_block(block.instructions):
+            # [B112-V3R4] async 生成器 yield-of-await 落点链：本 poll 的
+            # SEND 目标为落点块（去噪后 ASYNC_GEN_WRAP; YIELD_VALUE;
+            # POP_TOP[; 回边跳转]）时，落点语句属循环体（`yield await x`
+            # 是体语句），必须在 poll 被协议消费之前经 B112 门发射；
+            # 否则落点块随后被 _generate_loop 收尾扫登记为已生成，
+            # yield 语句静默蒸发（直落 body 形态 synth 实测）。门命中
+            # 即整链唯一归属落点（setup/poll/落点一并登记）；未命中
+            # （非 yield-of-await 轮询）行为逐位不变（C3 守卫封闭）。
+            if block not in self.generated_blocks:
+                _b112_land_tgt = None
+                for _b112_li in block.instructions:
+                    if _b112_li.opname == 'SEND' and _b112_li.argval is not None:
+                        _b112_land_tgt = self.cfg.get_block_by_offset(_b112_li.argval)
+                        break
+                if (_b112_land_tgt is not None
+                        and _b112_land_tgt not in self.generated_blocks):
+                    _b112_land_stmts = self._b112_async_gen_yield_await_gate(
+                        _b112_land_tgt)
+                    if _b112_land_stmts:
+                        body_stmts.extend(_b112_land_stmts)
             self.generated_blocks.add(block)
             self.generated_offsets.add(block.start_offset)
             return True
@@ -11399,6 +11419,56 @@ AST 映射规则:
                         _aw_stmts.append(_aw_stmt)
         return _aw_stmts if _aw_stmts else None
 
+    def _b128_await_owner_if_condition(self, block: BasicBlock) -> Optional[BasicBlock]:
+        """[B128-V3R4] 只读判定：await setup 块的挂起结果是否由 IfRegion 条件消费。
+
+        [识别条件] block 含 GET_AWAITABLE（await setup 块，与
+        _reconstruct_await_block_stmts 同一入口资格），其后继中的 poll 块
+        （is_async_poll_protocol_block 判定）以 SEND argval 指向的 resume
+        块（owner）是某个已登记 IfRegion 的入口/条件块
+        （IfRegion.is_block_entry：condition_block 或 entry）——即
+        ``if await ...:`` 位形：await 结果自 poll 恢复后被条件跳转消费，
+        条件表达式唯一归属该 IfRegion（_if_extract_cond_instructions /
+        _if_extract_condition_from_instructions 重建 cond_instrs 并生成
+        If.test）。
+        [归约方式] 无副作用；供 _generate_block_statements_body 在调用
+        _reconstruct_await_block_stmts 之前分流——命中即 defer（块标记已
+        生成、不发射语句；等价的消费发生在 IfRegion 条件重建路径），避免
+        setup 块被独立重建为裸 ``Expr(Await(...))`` 与 if 条件重复发射
+        （e12d::f_await_cond_pos 幻影 await 双发的根因：owner @74 是
+        IfRegion 条件块，setup @40 仍被块级扫描发射一次）。
+        [AST 映射] await 表达式只作为 If.test 子节点出现；块级不再有
+        独立 Expr 语句。
+        [C1] 只读块后继/指令操作码（SEND argval）与区域登记关系（同层
+        事实），零名字/常量/偏移白名单；[C2] 谓词无归约产物、不持有/
+        登记任何块——命中仅授权调用方 defer；[C3] 双向可区分：owner 不在
+        任何 IfRegion 入口（赋值/return/表达式语句/with 体消费等）判
+        None，这些位形维持 _reconstruct_await_block_stmts 既有发射路径
+        逐位不变。
+        """
+        if not any(i.opname == 'GET_AWAITABLE' for i in block.instructions):
+            return None
+        _owner = None
+        for _succ in (getattr(block, 'successors', None) or []):
+            if _succ is block:
+                continue
+            if not is_async_poll_protocol_block(_succ.instructions):
+                continue
+            for _i in _succ.instructions:
+                if _i.opname == 'SEND' and _i.argval is not None:
+                    _r = self.cfg.get_block_by_offset(_i.argval)
+                    if _r is not None and _r is not _succ:
+                        _owner = _r
+                    break
+            if _owner is not None:
+                break
+        if _owner is None:
+            return None
+        for _reg in self.regions:
+            if isinstance(_reg, IfRegion) and _reg.is_block_entry(_owner):
+                return _owner
+        return None
+
     def _collect_await_protocol_chain(self, block: BasicBlock):
         """[Round6-B31] 收集 block 所属的 await 挂起协议链。
 
@@ -11690,6 +11760,37 @@ AST 映射规则:
             return None
         if block is not owner:
             return []
+        merged = self._b31_await_chain_stream(members)
+        stmts = self._build_statements_from_instructions(merged, block=owner)
+        if not stmts:
+            return None
+        for m in members:
+            self.generated_blocks.add(m)
+            self.generated_offsets.add(m.start_offset)
+            for i in m.instructions:
+                self.generated_offsets.add(i.offset)
+        return stmts
+
+    def _b31_await_chain_stream(self, members: List[BasicBlock]) -> List[Instruction]:
+        """[Round6-B31] 只读装配：await 协议链成员块的单一合并指令流。
+
+        [识别条件] members 为 _collect_await_protocol_chain 返回的链成员
+        （setup/poll/resume 交替），调用方须已通过链资格守卫。
+        [归约方式] 跳过 poll 块（SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_
+        NO_INTERRUPT 轮询协议非用户源码），逐块逐指令合并；剥去
+        RESUME/NOP/CACHE/PUSH_NULL 编译器噪声；剥去 GET_AWAITABLE 后
+        紧随的 LOAD_CONST None（挂起协议的发送值）；MAKE_FUNCTION 的
+        代码常量为编译器合成推导式时，其后调用若带编译器自动补发的
+        GET_AWAITABLE 一并剥除（见 _const_code_is_async_comprehension）。
+        [AST 映射] 无独立映射；返回的指令流交调用方经语句重建
+        （_b31_await_chain_gate → _build_statements_from_instructions）
+        或表达式重建（_b47_await_arm_value_expr → expr_reconstructor）
+        得到内嵌 Await 节点的结果。
+        [C1] 只读链成员指令操作码与 LOAD_CONST 操作数（同层事实）；
+        [C2] 纯装配无副作用、不持有/登记任何块；[C3] 无状态纯函数化
+        装配——同一 members 输入恒得同一指令流，门控与三元臂两调用方
+        行为各自逐位保持。
+        """
         merged: List[Instruction] = []
         _prev_awaitable = False
         _prev_call = False
@@ -11726,15 +11827,180 @@ AST 映射规则:
                     _inline_fn_awaited = _inline_fn_pending
                     _inline_fn_pending = False
                 merged.append(i)
-        stmts = self._build_statements_from_instructions(merged, block=owner)
-        if not stmts:
+        return merged
+
+    def _b112_async_gen_yield_await_gate(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
+        """[B112-V3R4] async 生成器 yield-of-await 落点链消费门。
+
+        ①算法依据（识别条件，I.4 白名单：块内 opcode 形态 + 前驱后继边 +
+        登记状态）：CPython 把 async 生成器内 ``yield await <expr>`` 编译为
+        setup 块（含 GET_AWAITABLE + LOAD_CONST None 发送值）→ poll 块
+        （SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT 自循环，
+        is_async_poll_protocol_block 判定）→ 落点块（去噪后为
+        ASYNC_GEN_WRAP; YIELD_VALUE; POP_TOP——await 结果由 ASYNC_GEN_WRAP
+        包装后立即作 async 生成器 yield，yield 发送值被 POP_TOP 丢弃＝
+        语句形态；body 直落形态下 CFG 把循环回边 JUMP_BACKWARD 并入落点
+        块，去噪 4 条且尾指令为跳转——回边不属本语句，合并时剥除）。链判据全为结构事实：落点块的 SEND 前驱唯一、该 poll
+        的 GET_AWAITABLE 前驱唯一（且为 poll 的正常前驱）。setup 块可兼作
+        外围协议链的 resume（junction，首条去噪指令为 STORE_* 且自身被
+        某 SEND 轮询指向）——该 STORE_* 是外围协议绑定（如 async with as
+        目标），不属本语句，合并时剥除（与 Round5-08 SEND 跳出目标块首
+        指令判定同源）。旧路径对落点块无 YIELD_VALUE 语句边界处理（语句
+        重建漏斗未映射 ASYNC_GEN_WRAP+YIELD_VALUE 组合），await 结果在
+        setup 块被独立重建为裸 ``await c``，yield 蒸发（e05 blk@42/@58）。
+        ②归约顺序：自底向上——本门在链成员块的语句重建漏斗最前分流
+        （_generate_block_statements_body 中紧随 B31 门之后），命中即整链
+        归约为单条 Expr(Yield(Await(...))) 语句，先于通用语句重建与各跨块
+        守卫。
+        ③唯一归属判定：每块唯一归属改判——整条链唯一归属落点块：落点块被
+        调用时合并 setup 与落点指令流重建语句并登记全链块/偏移；setup/poll
+        被调用时仅返回空列表（束流 defer，不发射、不标记——不标记保证落点
+        块后续调用仍能见全链）；重建结果末语句非 Expr(Yield) 即返回 None
+        回退既有路径（C1 无半应用）。
+        ④嵌套处理：不递归子区域；合并流仅含 setup/poll/落点三块自身指令
+        （剥 RESUME/NOP/CACHE/PUSH_NULL 与 GET_AWAITABLE 后 LOAD_CONST
+        None 发送值），外围 aenter/aexit 协议链与 async-for 迭代链不并入
+        （落点形态锚定使外围协议块天然不命中）。
+        ⑤入口引用语义：AST 映射 Expr(Yield(value=Await(...)))——
+        GET_AWAITABLE 由 ExpressionReconstructor 包装为 Await 子节点，
+        ASYNC_GEN_WRAP 为内部 no-op；子表达式引用经栈式重建自然建立，
+        无名字/常量/偏移白名单。
+        ⑥反编译流程：async 生成器 yield-of-await 语句的单一漏斗——B31 门
+        对本形态不成立（链回溯经 junction 攀升至外围协议链后被 B29/回溯
+        失败拒绝），本门以落点块的 ASYNC_GEN_WRAP+YIELD_VALUE+POP_TOP 形态
+        锚定，避免 await 结果被写成裸 ``await c`` 而 yield 流失。
+
+        C 条款：[C1] 判据全命中才改判归属并发射，链不闭合/前驱多义/重建
+        非预期形态即返回 None 逐位回退既有路径；[C2] 与 B31 门同构（合并
+        流重建、每块唯一归属、登记口径一致），被 defer 的成员块不标记，
+        保证落点块后续调用得见链；[C3] 落点形态判据与既有路径互斥——非
+        ASYNC_GEN_WRAP 落点（普通 yield/STORE/RETURN 消费形态）判 False，
+        行为逐位不变；无状态、无副作用。
+        """
+        _b112_noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+        _b112_store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                           'STORE_DEREF')
+
+        def _b112_denoise(b: BasicBlock) -> List[Instruction]:
+            return [i for i in b.instructions if i.opname not in _b112_noise]
+
+        def _b112_is_landing(b: BasicBlock) -> bool:
+            _d = _b112_denoise(b)
+            if (_d and len(_d) == 3
+                    and _d[0].opname == 'ASYNC_GEN_WRAP'
+                    and _d[1].opname == 'YIELD_VALUE'
+                    and _d[2].opname == 'POP_TOP'):
+                return True
+            # [B112-V3R4] 落点块亦可吸收循环回边：body 直落（无 if 守卫
+            # 切块）时 CFG 把 ``JUMP_BACKWARD[_NO_INTERRUPT]``/``JUMP_FORWARD``
+            # 并入落点块（``async for x in g: yield await u(x)`` 形态，
+            # 去噪 4 条）。该跳转是外围循环的回边、不属本语句——landing
+            # 尾部恰为回边跳转即命中，合并流重建前剥除。
+            return (_d and len(_d) == 4
+                    and _d[0].opname == 'ASYNC_GEN_WRAP'
+                    and _d[1].opname == 'YIELD_VALUE'
+                    and _d[2].opname == 'POP_TOP'
+                    and _d[3].opname in ('JUMP_BACKWARD',
+                                         'JUMP_BACKWARD_NO_INTERRUPT',
+                                         'JUMP_FORWARD'))
+
+        def _b112_poll_targeting(cur: BasicBlock) -> List[BasicBlock]:
+            _out = []
+            for _pred in (getattr(cur, 'predecessors', None) or []):
+                if _pred is cur:
+                    continue
+                if not is_async_poll_protocol_block(_pred.instructions):
+                    continue
+                for _i in _pred.instructions:
+                    if _i.opname == 'SEND' and _i.argval is not None:
+                        if self.cfg.get_block_by_offset(_i.argval) is cur:
+                            _out.append(_pred)
+                        break
+            return _out
+
+        def _b112_setup_of(p: BasicBlock) -> List[BasicBlock]:
+            _out = []
+            for _pred in (getattr(p, 'predecessors', None) or []):
+                if _pred is p:
+                    continue
+                if p not in (getattr(_pred, 'successors', None) or []):
+                    continue
+                if any(_j.opname == 'GET_AWAITABLE' for _j in _pred.instructions):
+                    _out.append(_pred)
+            return _out
+
+        _b112_owner = None
+        _b112_poll = None
+        if _b112_is_landing(block):
+            _b112_owner = block
+            _polls = _b112_poll_targeting(block)
+            if len(_polls) != 1:
+                return None
+            _b112_poll = _polls[0]
+        elif is_async_poll_protocol_block(block.instructions):
+            _tgt = None
+            for _i in block.instructions:
+                if _i.opname == 'SEND' and _i.argval is not None:
+                    _tgt = self.cfg.get_block_by_offset(_i.argval)
+                    break
+            if _tgt is None or not _b112_is_landing(_tgt):
+                return None
+            _b112_owner, _b112_poll = _tgt, block
+        else:
+            for _succ in block.successors:
+                if _succ is block:
+                    continue
+                if not is_async_poll_protocol_block(_succ.instructions):
+                    continue
+                _t2 = None
+                for _i in _succ.instructions:
+                    if _i.opname == 'SEND' and _i.argval is not None:
+                        _t2 = self.cfg.get_block_by_offset(_i.argval)
+                        break
+                if _t2 is not None and _b112_is_landing(_t2):
+                    _b112_owner, _b112_poll = _t2, _succ
+                    break
+            if _b112_owner is None:
+                return None
+        _setups = _b112_setup_of(_b112_poll)
+        if len(_setups) != 1:
             return None
-        for m in members:
-            self.generated_blocks.add(m)
-            self.generated_offsets.add(m.start_offset)
-            for i in m.instructions:
-                self.generated_offsets.add(i.offset)
-        return stmts
+        if block is not _b112_owner:
+            return []
+        _b112_setup = _setups[0]
+        merged: List[Instruction] = []
+        _prev_awaitable = False
+        for _m in (_b112_setup, _b112_owner):
+            for _i in _m.instructions:
+                if _i.opname in _b112_noise:
+                    continue
+                if _prev_awaitable and _i.opname == 'LOAD_CONST' and _i.argval is None:
+                    _prev_awaitable = False
+                    continue
+                _prev_awaitable = (_i.opname == 'GET_AWAITABLE')
+                merged.append(_i)
+        if (merged and merged[0].opname in _b112_store_ops
+                and _b112_poll_targeting(_b112_setup)):
+            merged = merged[1:]
+        # [B112-V3R4] 落点块吸收的循环回边跳转（直落 body 形态）不属本
+        # 语句，重建前剥除尾部跳转。
+        if merged and merged[-1].opname in ('JUMP_BACKWARD',
+                                            'JUMP_BACKWARD_NO_INTERRUPT',
+                                            'JUMP_FORWARD'):
+            merged = merged[:-1]
+        _b112_stmts = self._build_statements_from_instructions(merged, block=_b112_owner)
+        if not _b112_stmts:
+            return None
+        _b112_last = _b112_stmts[-1]
+        if not (_b112_last.get('type') == 'Expr'
+                and (_b112_last.get('value') or {}).get('type') == 'Yield'):
+            return None
+        for _m in (_b112_setup, _b112_poll, _b112_owner):
+            self.generated_blocks.add(_m)
+            self.generated_offsets.add(_m.start_offset)
+            for _i in _m.instructions:
+                self.generated_offsets.add(_i.offset)
+        return _b112_stmts
 
     def _b33_await_owner_merged_stmts(self, region, block):
         """[Round6-B33] 上下文协议链 owner（junction）的挂起值全链合并重建。
@@ -48003,6 +48269,71 @@ AST 映射规则:
             return [{'type': 'Return', 'value': _ifexp}]
         return [{'type': 'Expr', 'value': _ifexp}]
 
+    def _b47_await_arm_value_expr(self, block: 'BasicBlock') -> Optional[Dict]:
+        """[B47-V3R4] 三元臂值表达式：await 挂起链经链流合并重建臂值。
+
+        [识别条件] block 为 await 挂起协议链的 setup 块
+        （_collect_await_protocol_chain 自 block 成链），且链 owner
+        （末端 resume 块）呈延续形态（_b31_continuation_owner）——
+        即 ``await <expr> if cond else ...`` / ``... else await <expr> + n``
+        位形：臂值块含 GET_AWAITABLE，await 结果自 poll 恢复后在
+        owner 继续参与（跳向三元汇合块 / 二元运算 / 直接返回）。
+        排除两类机器链：含 BEFORE_WITH/BEFORE_ASYNC_WITH 的 with 协议链
+        归属 WithRegion；链头呈 SWAP + CALL + GET_AWAITABLE + ≥3×
+        LOAD_CONST None 的 __aexit__ 消费链归属挂起值生产块所在区域
+        （与 _b31_await_chain_gate 的 B29/B34 守卫同源、同判据）。
+        [归约方式] 复用 _b31_await_chain_stream 合并链成员为单一指令流
+        （跳过 poll、剥协议指令与编译器噪声），再剥除流尾纯控制终结符
+        （JUMP_*/RETURN_VALUE/RETURN_CONST——臂值必须留在栈上，终结符
+        不产栈值：真臂经 JUMP_FORWARD 跳汇合块、假臂落 RETURN），经
+        expr_reconstructor 栈式重建为内嵌 Await 的表达式。旧路径
+        （_build_ternary_value_expr 直接 raw reconstruct 臂块指令）会把
+        GET_AWAITABLE 后协议的 LOAD_CONST None 当栈顶产物，臂值被常量
+        None 顶替（r7_06 三个 async 三元单元根因）。
+        [AST 映射] 命中时返回 IfExp 的 body（真臂）或 orelse（假臂）
+        子节点：Await/Call/BinOp 等按合并流自然重建，无逐位形补丁。
+        [C1] 只读链成员指令与操作码（同层事实），零名字/常量白名单；
+        [C2] 谓词+装配无副作用、不持有/登记任何块——命中仅授权调用方
+        返回重建结果；[C3] 双向可区分：非 await setup 块或不呈延续形态
+        的链（简单绑定/丢弃）返回 None，_build_ternary_value_expr 走
+        既有 raw 路径逐位不变。
+        """
+        chain = self._collect_await_protocol_chain(block)
+        if chain is None:
+            return None
+        members, owner = chain
+        if any(i.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH')
+               for m in members for i in m.instructions):
+            return None
+        _head = members[0]
+        _hops = [i.opname for i in _head.instructions]
+        if ('SWAP' in _hops and 'CALL' in _hops and 'GET_AWAITABLE' in _hops
+                and sum(1 for i in _head.instructions
+                        if i.opname == 'LOAD_CONST' and i.argval is None) >= 3):
+            return None
+        if not self._b31_continuation_owner(owner):
+            return None
+        merged = self._b31_await_chain_stream(members)
+        while merged and merged[-1].opname in (
+                'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                'RETURN_VALUE', 'RETURN_CONST'):
+            merged.pop()
+        # [B47-V3R4] 赋值位形（``v = xs[0] if c else await io.b()``）的假臂
+        # 直接落入汇合块——owner 即 merge 块（[STORE_FAST v, LOAD_FAST v,
+        # RETURN] 形态），合并流尾部混入区域的消费对「STORE 目标 → 重载
+        # 目标」。臂值必须留在栈上，STORE 弹出臂值是区域级 Assign 的消费
+        # （value 已由 IfExp 装配），此处剥除同目标 STORE_X/LOAD_X 尾对；
+        # 非同目标或非相邻尾对不剥（C3）。
+        if (len(merged) >= 2
+                and merged[-2].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                and merged[-1].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF')
+                and merged[-2].argval == merged[-1].argval):
+            merged.pop()
+            merged.pop()
+        if not merged:
+            return None
+        return self.expr_reconstructor.reconstruct(merged)
+
     def _build_ternary_value_expr(self, block: 'BasicBlock') -> Optional[Dict]:
         """从基本块重建三元表达式的true/false值表达式
 
@@ -48056,6 +48387,12 @@ AST 映射规则:
             _target_block = self.cfg.get_block_by_offset(_pure_jump_instrs[0].argval)
             if _target_block is not None and _target_block is not block:
                 return self._build_ternary_value_expr(_target_block)
+        # [B47-V3R4] 臂值块是 await 挂起协议链 setup（``await x if c else y``
+        # 位形）时经链流合并重建臂表达式（含 Await 子节点）；非链块返回
+        # None 落回既有 raw 路径。
+        _b47_arm = self._b47_await_arm_value_expr(block)
+        if _b47_arm is not None:
+            return _b47_arm
         instrs = [i for i in block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE')]
         last = block.get_last_instruction()
         if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
@@ -60731,6 +61068,15 @@ AST 映射规则:
         _b31_gate = self._b31_await_chain_gate(block)
         if _b31_gate is not None:
             return _b31_gate
+        # [B112-V3R4] async 生成器 yield-of-await 落点链消费门：async 生成器
+        # 内 ``yield await <expr>`` 的落点块（去噪后恰为 ASYNC_GEN_WRAP;
+        # YIELD_VALUE; POP_TOP）整链唯一归属落点——落点块调用时合并
+        # setup+落点指令流重建 Expr(Yield(Await(...)))，setup/poll 成员
+        # 束流 defer（不发射、不标记）（识别条件/归约方式见
+        # _b112_async_gen_yield_await_gate）。
+        _b112_gate = self._b112_async_gen_yield_await_gate(block)
+        if _b112_gate is not None:
+            return _b112_gate
         # [R2-SWAP] 循环内跨块延迟返回识别：`return X`（X 在 for 体内、
         # 且函数带 try/finally）时 CPython 生成 <eval X>; SWAP(2); POP_TOP
         # （丢弃迭代器、返回值保留在栈上），finally 内联与 RETURN_VALUE
@@ -63303,6 +63649,12 @@ AST 映射规则:
         # 提取为 _reconstruct_await_block_stmts，供 _generate_block_statements 与
         # _loop_extract_self_loop_stmts 共用——await setup 块唯一归属 Await 表达式，
         # 无论该块是普通 body 块还是 while 循环 header（如 ``while a: await g()``）。
+        # [B128-V3R4] 但 if 条件位形（``if await ...:``，owner=IfRegion 条件块）
+        # 的 await 唯一归属 IfRegion 条件重建路径：块级扫描在此 defer（标记块、
+        # 不发射），否则与 if 条件重复发射幻影 ``await ...``。
+        if self._b128_await_owner_if_condition(block) is not None:
+            self.generated_blocks.add(block)
+            return stmts
         _await_result = self._reconstruct_await_block_stmts(block)
         if _await_result is not None:
             stmts.extend(_await_result)

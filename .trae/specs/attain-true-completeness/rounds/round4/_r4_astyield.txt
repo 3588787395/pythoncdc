@@ -1,0 +1,140 @@
+4481:                 return ""
+4482:             
+4483:             return f"{indent}return {value_code}"
+4484:         else:
+4485:             # [关键修复] 当返回值为None时，显式生成return None
+4486:             # 这样反编译后的代码与原始代码的字节码匹配
+4487:             return f"{indent}return None"
+4488: 
+4489: 
+4490: class ASTYield(ASTNode):
+4491:     """Yield语句节点"""
+4492:     
+4493:     def __init__(self, value: Optional['ASTNode'] = None, is_from: bool = False):
+4494:         super().__init__(NodeType.NODE_YIELD)
+4495:         self._value = value
+4496:         self._is_from = is_from
+4497:     
+4498:     @property
+4499:     def value(self) -> Optional['ASTNode']:
+4500:         return self._value
+4501:     
+4502:     @property
+4503:     def is_from(self) -> bool:
+4504:         return self._is_from
+4505:     
+4506:     def to_code(self, indent_level=0):
+4507:         """生成yield语句代码"""
+4508:         indent = "    " * indent_level
+4509:         prefix = "yield from " if self._is_from else "yield "
+4510:         if self._value is not None:
+4511:             if hasattr(self._value, 'to_code'):
+4512:                 value_code = self._value.to_code()
+4513:             else:
+4514:                 value_code = str(self._value)
+4515:             return f"{indent}{prefix}{value_code}"
+4516:         else:
+4517:             return f"{indent}{prefix.strip()}"
+4518: 
+4519: 
+4520: class ASTFormattedValue(ASTNode):
+4521:     """格式化值节点（用于f-string）- 性能优化版本"""
+4522:     
+4523:     # 添加__slots__优化
+4524:     __slots__ = ('_value', '_conversion', '_format_spec')
+4525:     
+4526:     def __init__(self, value: 'ASTNode', conversion: int = 0, format_spec: Optional['ASTNode'] = None):
+4527:         super().__init__(NodeType.NODE_FORMATTED_VALUE)
+4528:         self._value = value
+4529:         self._conversion = conversion  # 0=无, 1=str, 2=repr, 3=ascii
+4530:         self._format_spec = format_spec
+4531:     
+4532:     @property
+4533:     def value(self) -> 'ASTNode':
+4534:         return self._value
+4535:     
+4536:     @property
+4537:     def conversion(self) -> int:
+4538:         return self._conversion
+4539:     
+4540:     @property
+4541:     def format_spec(self) -> Optional['ASTNode']:
+4542:         return self._format_spec
+4543:     
+4544:     def to_code(self, indent_level=0):
+4545:         """生成格式化值代码"""
+4546:         value_code = self._value.to_code() if hasattr(self._value, 'to_code') else str(self._value)
+4547:         
+4548:         # 添加转换说明符
+4549:         conversion_map = {1: "!s", 2: "!r", 3: "!a"}
+4550:         conversion_suffix = conversion_map.get(self._conversion, "")
+4551:         
+4552:         if self._format_spec:
+4553:             # [关键修复] 处理格式说明符，提取原始字符串值（去除引号）
+4554:             if isinstance(self._format_spec, ASTJoinedStr):
+4555:                 # 嵌套f-string作为格式说明符
+4556:                 format_code = self._format_spec.to_code(indent_level)
+4557:                 # 去掉外层的f"和"，只保留内容（先检查三引号，再检查单引号）
+4558:                 if format_code.startswith('f"""') and format_code.endswith('"""'):
+4559:                     format_code = format_code[4:-3]
+4560:                 elif format_code.startswith("f'''") and format_code.endswith("'''"):
+4561:                     format_code = format_code[4:-3]
+4562:                 elif format_code.startswith('f"') and format_code.endswith('"'):
+4563:                     format_code = format_code[2:-1]
+4564:                 elif format_code.startswith("f'") and format_code.endswith("'"):
+4565:                     format_code = format_code[2:-1]
+4566:             elif isinstance(self._format_spec, ASTObject):
+4567:                 # 字符串常量作为格式说明符
+4568:                 obj = self._format_spec.value
+4569:                 if isinstance(obj, str):
+4570:                     format_code = obj  # 直接使用原始字符串值，不带引号
+4571:                 else:
+4572:                     format_code = self._format_spec.to_code() if hasattr(self._format_spec, 'to_code') else str(self._format_spec)
+4573:             else:
+4574:                 format_code = self._format_spec.to_code() if hasattr(self._format_spec, 'to_code') else str(self._format_spec)
+4575:             return f"{{{value_code}{conversion_suffix}:{format_code}}}"
+4576:         else:
+4577:             return f"{{{value_code}{conversion_suffix}}}"
+4578: 
+4579: 
+4580: class ASTJoinedStr(ASTNode):
+4581:     """连接的字符串节点（用于f-string）"""
+4582:     
+4583:     def __init__(self, values: List['ASTNode'] = None):
+4584:         super().__init__(NodeType.NODE_JOINED_STR)
+4585:         self._values = values if values is not None else []
+4586:     
+4587:     @property
+4588:     def values(self) -> List['ASTNode']:
+4589:         return self._values
+4590:     
+4591:     def to_code(self, indent_level=0):
+4592:         """生成f-string代码"""
+4593:         ast_debug_# DEBUG: print(f"[DEBUG ASTJoinedStr] _values: {self._values}", flush=True)
+4594:         if not self._values:
+4595:             return '""'
+4596:         
+4597:         parts = []
+4598:         for value in self._values:
+4599:             ast_debug_# DEBUG: print(f"[DEBUG ASTJoinedStr] value: {value}, type: {type(value).__name__}", flush=True)
+4600:             # 处理 ASTObject 类型的字符串
+4601:             if isinstance(value, ASTObject):
+4602:                 if isinstance(value.object, str):
+4603:                     parts.append(value.object)
+4604:                 elif hasattr(value.object, 'value') and isinstance(value.object.value, str):
+4605:                     parts.append(value.object.value)
+4606:             # 处理 ASTConstant 类型的字符串
+4607:             elif isinstance(value, ASTConstant) and isinstance(value.value, str):
+4608:                 parts.append(value.value)
+4609:             elif isinstance(value, ASTFormattedValue):
+4610:                 # 格式化值部分
+4611:                 parts.append(value.to_code())
+4612:             elif isinstance(value, ASTAttribute):
+4613:                 # 属性访问，如 self.name
+4614:                 parts.append(f"{{{value.to_code()}}}")
+4615:             else:
+4616:                 # 其他表达式
+4617:                 value_code = value.to_code() if hasattr(value, 'to_code') else str(value)
+4618:                 parts.append(f"{{{value_code}}}")
+4619:         
+4620:         # 构建f-string

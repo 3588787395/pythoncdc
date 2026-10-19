@@ -1,0 +1,38 @@
+[
+ {
+  "name": "r8_08",
+  "pyc_src_rel": "test_repros/round8/r8_08_raise_forms.pyc",
+  "pyc_src_sha": "f91bdd9288502fc6",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round4/rec1_r8_08_r8_08_raise_forms.pyc",
+  "mtime": "2026-10-19T12:51:13",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "b2e2f23a36c257ac",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_r8_08_r8_08_raise_forms.pyc (Python 3.11)\n\n__doc__ = 'R8-08 Raise forms: bare reraise / instance / class / from / call arg / except chain / deep host / f-string msg.'\ndef r8_raise_reraise(xs, i):\n    try:\n        return xs[i]\n    except IndexError:\n        raise\ndef r8_raise_instance(x):\n    if x < 0:\n        raise ValueError('negative')\n    return x\ndef r8_raise_class(x):\n    if x is None:\n        raise KeyError\n    return 1\ndef r8_raise_from(a, b):\n    try:\n        return a / b\n    except ZeroDivisionError as exc:\n        raise ValueError('bad divisor') from exc\ndef r8_raise_call(f, x):\n    v = f(x)\n    if v is None:\n        raise RuntimeError(f(x))\n    return v\ndef r8_raise_in_except_chain(xs, i):\n    try:\n        return xs[i]\n    except IndexError:\n        try:\n            return xs[i - 1]\n        except IndexError:\n            raise ValueError('both failed')\ndef r8_raise_deep_host(x, n):\n    for _ in range(n):\n        if x == 0:\n            raise ArithmeticError('zero in loop')\n        x -= 1\n    return x\ndef r8_raise_fstring(a, b):\n    if a > b:\n        raise ValueError(f'{a} > {b}')\n    return b - a\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_r8_08_r8_08_raise_forms.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_r8_08_r8_08_raise_formsOK.py\n[single] status=success units=9/9 success_rate=100.00%",
+  "status": "success",
+  "units_success": 9,
+  "units_total": 9,
+  "failures": []
+ },
+ {
+  "name": "n9v9",
+  "pyc_src_rel": "test_repros/round9/n9v9_stmt_sweep.pyc",
+  "pyc_src_sha": "42e80709998e8884",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round4/rec1_n9v9_n9v9_stmt_sweep.pyc",
+  "mtime": "2026-10-19T12:51:15",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "3b63bc70535f5f39",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_n9v9_n9v9_stmt_sweep.pyc (Python 3.11)\n\ndef raise_deep(a, b):\n    for i in range(3):\n        try:\n            if a > b:\n                raise ValueError(i)\n        except ValueError:\n            a -= 1\n    return a\ndef raise_from(a, b):\n    with open('x') as f:\n        try:\n            raise KeyError(a) from TypeError(b)\n        except KeyError:\n            return a\n    return b\ndef assert_deep(a, b):\n    for i in range(3):\n        while a < b:\n            assert 0 < a < b, a\n            a += 1\n    return a\ndef pass_arms(a, b):\n    try:\n        if a > b:\n            pass\n        else:\n            a = b\n    except OSError:\n        pass\n    finally:\n        pass\n    return a\ndef expr_stmt_deep(a, b, sink):\n    for i in range(2):\n        with open('y') as f:\n            sink(f.read())\n            f'got {a} and {b!r}'\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_n9v9_n9v9_stmt_sweep.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_n9v9_n9v9_stmt_sweepOK.py\n[single] status=success units=6/6 success_rate=100.00%",
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ }
+]

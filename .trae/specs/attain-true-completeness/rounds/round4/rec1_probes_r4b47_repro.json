@@ -1,0 +1,24 @@
+[
+ {
+  "name": "r7_06",
+  "pyc_src_rel": "test_repros/round7/r7_06_ternary_lambda_await.pyc",
+  "pyc_src_sha": "6aa2a07020ae138a",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round4/rec1_r7_06_r7_06_ternary_lambda_await.pyc",
+  "mtime": "2026-10-19T13:05:47",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "22932587d079eb34",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_r7_06_r7_06_ternary_lambda_await.pyc (Python 3.11)\n\n__doc__ = 'R7-06 lambda 体与 await 右侧三元位置面。'\ndef t_lambda_ternary(flag):\n    f = lambda x: x if flag else -x\n    return f(3)\ndef t_lambda_ternary_two_args(flag):\n    g = lambda a, b: a if flag else b\n    return g(1, 2)\ndef t_lambda_in_arg_ternary(xs, flag):\n    return list(map(lambda v: v if flag else 0, xs))\nasync def t_await_ternary_branches(io, flag):\n    return None if flag else None\nasync def t_await_assign_ternary(io, b, flag):\n    x = None if flag else b\n    return x\nasync def t_await_deep_ternary(io, flag, n):\n    r = None if flag else None\n    return r\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.t_await_ternary_branches: Failure: Different control flow\n  ***<module>.t_await_assign_ternary: Failure: Different control flow\n  ***<module>.t_await_deep_ternary: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_r7_06_r7_06_ternary_lambda_await.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round4/rec1_r7_06_r7_06_ternary_lambda_awaitOK.py\n[single] status=failure units=7/10 success_rate=70.00%",
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 10,
+  "failures": [
+   "***<module>.t_await_ternary_branches: Failure: Different control flow",
+   "***<module>.t_await_assign_ternary: Failure: Different control flow",
+   "***<module>.t_await_deep_ternary: Failure: Different control flow"
+  ]
+ }
+]
