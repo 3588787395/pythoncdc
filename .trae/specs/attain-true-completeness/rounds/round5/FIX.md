@@ -194,6 +194,7 @@ stamps：`rec1_probes_r5pre1.json`（B122 双 HANG）、`rec1_probes_r5pre2.json
 - pytest 七套件：**2 failed / 282 passed / 2 xpassed**（失败名单= `test_B01_simple_if_then_else_merge` + `test_BOUNDARY_02_large_function`，与基线逐位一致）。
 - IV.2：IMPORT_OK/COMPILE_OK、BOM 单头（region_ast_generator/region_analyzer）、`G3_forbidden_prefix_new_defs=0`、instrumentation code 命中 0（in_string 仅既有字符串文本）、site-packages 无新增零字节文件。
 - 首跑（B70g 宽守卫树）记录：6610/6617、files_failure=3、small34 1566/1568 —— 回归已按 §4 收窄修复，二跑归零。
+- **站点包快照刷新（提交后复核发现）**：E 门禁后对两个真实模块重生成 `site-packages/IQEngine/utils/__init__OK.py`（33/33）与 `site-packages/IQData/plugins/plugin_system_client_db/client_dbOK.py`（9/9）——当前树相对 BASE 71fda309 各减少 1/2 处死代码 `return None`（with 出口 return 后的不可达尾行；无新增行；pyc_verify 双 100%），属 R5 with 出口分类收窄的连带净改善；快照按新输出刷新（`rr-v3r05a`），证据 `_r5_snapref_base_init.txt`/`_r5_snapref_cur_init.txt`/`_r5_snapref_base_clientdb.txt`/`_r5_snapref_cur_clientdb.txt` + `_r5_cmp_base.py`（BASE worktree 对照：base≠cur、cur==工作树）。该两文件不在 402 集，首跑/二跑 6617/6617 读数不受影响。
 
 ## §6 落地声明
 
@@ -203,3 +204,4 @@ stamps：`rec1_probes_r5pre1.json`（B122 双 HANG）、`rec1_probes_r5pre2.json
 - x02::for_in_match：原裁决归 R6；B61k 同源修复后 6/7→7/7，裁决项提前关闭（邻域 79/86→82/86 的 +2 中占 1）。
 - 本轮无新增拖延破口；E 门禁首跑自捕获的 B70g 宽守卫误触发已在提交前收窄并双门禁复验（三文件单验 + E 二跑 + 合成 65/65）。
 - 变更面：3 文件 **+1178/−85**，标记 `[Bn-V3R5]` 27 处，新增方法 7 个（六项 docstring），G3=0 / G4=0 / I.4 白名单判据；只改 `core/cfg/**`。
+- 提交后快照刷新（2 个 site-packages 真实模块 3 处死代码 `return None` 移除，pyc_verify 双 100%）见 §5，随 `rr-v3r05a` 入库。
