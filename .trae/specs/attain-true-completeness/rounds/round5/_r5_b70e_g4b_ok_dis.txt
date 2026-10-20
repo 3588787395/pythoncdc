@@ -1,0 +1,246 @@
+==================== g4b_wt_with_continue ====================
+  5           0 RESUME                   0
+
+  6     >>    2 NOP
+
+  7           4 LOAD_GLOBAL              1 (NULL + open)
+             16 LOAD_FAST                0 (p)
+             18 PRECALL                  1
+             22 CALL                     1
+             32 BEFORE_WITH
+             34 STORE_FAST               2 (f)
+
+  8          36 LOAD_FAST                1 (a)
+             38 POP_JUMP_FORWARD_IF_FALSE    13 (to 66)
+
+  9          40 NOP
+
+  7          42 LOAD_CONST               0 (None)
+             44 LOAD_CONST               0 (None)
+             46 LOAD_CONST               0 (None)
+             48 PRECALL                  2
+             52 CALL                     2
+             62 POP_TOP
+             64 JUMP_BACKWARD           32 (to 2)
+
+  8     >>   66 NOP
+
+  7          68 LOAD_CONST               0 (None)
+             70 LOAD_CONST               0 (None)
+             72 LOAD_CONST               0 (None)
+             74 PRECALL                  2
+             78 CALL                     2
+             88 POP_TOP
+             90 JUMP_FORWARD            11 (to 114)
+        >>   92 PUSH_EXC_INFO
+             94 WITH_EXCEPT_START
+             96 POP_JUMP_FORWARD_IF_TRUE     4 (to 106)
+             98 RERAISE                  2
+        >>  100 COPY                     3
+            102 POP_EXCEPT
+            104 RERAISE                  1
+        >>  106 POP_TOP
+            108 POP_EXCEPT
+            110 POP_TOP
+            112 POP_TOP
+
+ 10     >>  114 NOP
+
+ 12         116 LOAD_CONST               3 (4)
+            118 RETURN_VALUE
+ExceptionTable:
+  34 to 40 -> 92 [1] lasti
+  92 to 98 -> 100 [3] lasti
+  106 to 106 -> 100 [3] lasti
+==================== g4b_while_cond_with ====================
+ 13           0 RESUME                   0
+
+ 14           2 LOAD_FAST                0 (p)
+              4 POP_JUMP_FORWARD_IF_FALSE    42 (to 90)
+
+ 15     >>    6 LOAD_GLOBAL              1 (NULL + open)
+             18 LOAD_FAST                0 (p)
+             20 PRECALL                  1
+             24 CALL                     1
+             34 BEFORE_WITH
+             36 STORE_FAST               1 (f)
+
+ 16          38 NOP
+
+ 15          40 LOAD_CONST               0 (None)
+             42 LOAD_CONST               0 (None)
+             44 LOAD_CONST               0 (None)
+             46 PRECALL                  2
+             50 CALL                     2
+             60 POP_TOP
+             62 JUMP_FORWARD            11 (to 86)
+        >>   64 PUSH_EXC_INFO
+             66 WITH_EXCEPT_START
+             68 POP_JUMP_FORWARD_IF_TRUE     4 (to 78)
+             70 RERAISE                  2
+        >>   72 COPY                     3
+             74 POP_EXCEPT
+             76 RERAISE                  1
+        >>   78 POP_TOP
+             80 POP_EXCEPT
+             82 POP_TOP
+             84 POP_TOP
+
+ 14     >>   86 LOAD_FAST                0 (p)
+             88 POP_JUMP_BACKWARD_IF_TRUE    42 (to 6)
+
+ 17     >>   90 LOAD_CONST               1 (5)
+             92 RETURN_VALUE
+ExceptionTable:
+  36 to 36 -> 64 [1] lasti
+  64 to 70 -> 72 [3] lasti
+  78 to 78 -> 72 [3] lasti
+==================== g4b_wt_with_noas ====================
+ 18           0 RESUME                   0
+
+ 19           2 NOP
+
+ 20     >>    4 LOAD_GLOBAL              1 (NULL + open)
+             16 LOAD_FAST                0 (p)
+             18 PRECALL                  1
+             22 CALL                     1
+             32 BEFORE_WITH
+             34 POP_TOP
+
+ 21          36 NOP
+
+ 20          38 LOAD_CONST               0 (None)
+             40 LOAD_CONST               0 (None)
+             42 LOAD_CONST               0 (None)
+             44 PRECALL                  2
+             48 CALL                     2
+             58 POP_TOP
+             60 JUMP_FORWARD            11 (to 84)
+        >>   62 PUSH_EXC_INFO
+             64 WITH_EXCEPT_START
+             66 POP_JUMP_FORWARD_IF_TRUE     4 (to 76)
+             68 RERAISE                  2
+        >>   70 COPY                     3
+             72 POP_EXCEPT
+             74 RERAISE                  1
+        >>   76 POP_TOP
+             78 POP_EXCEPT
+             80 POP_TOP
+             82 POP_TOP
+
+ 19     >>   84 JUMP_BACKWARD           41 (to 4)
+ExceptionTable:
+  34 to 34 -> 62 [1] lasti
+  62 to 68 -> 70 [3] lasti
+  76 to 76 -> 70 [3] lasti
+==================== g4b_wt_nested_with ====================
+ 22           0 RESUME                   0
+
+ 23     >>    2 NOP
+
+ 24     >>    4 LOAD_GLOBAL              1 (NULL + open)
+             16 LOAD_FAST                0 (p)
+             18 PRECALL                  1
+             22 CALL                     1
+             32 BEFORE_WITH
+             34 STORE_FAST               2 (f)
+             36 LOAD_GLOBAL              1 (NULL + open)
+             48 LOAD_FAST                0 (p)
+             50 PRECALL                  1
+             54 CALL                     1
+             64 BEFORE_WITH
+             66 STORE_FAST               3 (g)
+
+ 25          68 LOAD_FAST                1 (a)
+             70 POP_JUMP_FORWARD_IF_FALSE    24 (to 120)
+
+ 26          72 NOP
+
+ 24          74 LOAD_CONST               0 (None)
+             76 LOAD_CONST               0 (None)
+             78 LOAD_CONST               0 (None)
+             80 PRECALL                  2
+             84 CALL                     2
+             94 POP_TOP
+             96 LOAD_CONST               0 (None)
+             98 LOAD_CONST               0 (None)
+            100 LOAD_CONST               0 (None)
+            102 PRECALL                  2
+            106 CALL                     2
+            116 POP_TOP
+            118 JUMP_BACKWARD           59 (to 2)
+
+ 25     >>  120 NOP
+
+ 24         122 LOAD_CONST               0 (None)
+            124 LOAD_CONST               0 (None)
+            126 LOAD_CONST               0 (None)
+            128 PRECALL                  2
+            132 CALL                     2
+            142 POP_TOP
+            144 JUMP_FORWARD            11 (to 168)
+        >>  146 PUSH_EXC_INFO
+            148 WITH_EXCEPT_START
+            150 POP_JUMP_FORWARD_IF_TRUE     4 (to 160)
+            152 RERAISE                  2
+        >>  154 COPY                     3
+            156 POP_EXCEPT
+            158 RERAISE                  1
+        >>  160 POP_TOP
+            162 POP_EXCEPT
+            164 POP_TOP
+            166 POP_TOP
+        >>  168 LOAD_CONST               0 (None)
+            170 LOAD_CONST               0 (None)
+            172 LOAD_CONST               0 (None)
+            174 PRECALL                  2
+            178 CALL                     2
+            188 POP_TOP
+            190 JUMP_FORWARD            11 (to 214)
+        >>  192 PUSH_EXC_INFO
+            194 WITH_EXCEPT_START
+            196 POP_JUMP_FORWARD_IF_TRUE     4 (to 206)
+            198 RERAISE                  2
+        >>  200 COPY                     3
+            202 POP_EXCEPT
+            204 RERAISE                  1
+        >>  206 POP_TOP
+            208 POP_EXCEPT
+            210 POP_TOP
+            212 POP_TOP
+
+ 23     >>  214 JUMP_BACKWARD          106 (to 4)
+ExceptionTable:
+  34 to 64 -> 192 [1] lasti
+  66 to 72 -> 146 [2] lasti
+  74 to 94 -> 192 [1] lasti
+  122 to 144 -> 192 [1] lasti
+  146 to 152 -> 154 [4] lasti
+  154 to 158 -> 192 [1] lasti
+  160 to 160 -> 154 [4] lasti
+  162 to 166 -> 192 [1] lasti
+  192 to 198 -> 200 [3] lasti
+  206 to 206 -> 200 [3] lasti
+==================== <module> ====================
+  0           0 RESUME                   0
+
+  4           2 LOAD_CONST               0 ('rec1_synth g4b: B70 family — while True + with with real break/continue + while-cond mirror.')
+              4 STORE_NAME               0 (__doc__)
+
+  5           6 LOAD_CONST               1 (<code object g4b_wt_with_continue at 0x000001E2C5CABB90, file "g4b_ok", line 5>)
+              8 MAKE_FUNCTION            0
+             10 STORE_NAME               1 (g4b_wt_with_continue)
+
+ 13          12 LOAD_CONST               2 (<code object g4b_while_cond_with at 0x000001E2C5E5F1B0, file "g4b_ok", line 13>)
+             14 MAKE_FUNCTION            0
+             16 STORE_NAME               2 (g4b_while_cond_with)
+
+ 18          18 LOAD_CONST               3 (<code object g4b_wt_with_noas at 0x000001E2C5E8AAB0, file "g4b_ok", line 18>)
+             20 MAKE_FUNCTION            0
+             22 STORE_NAME               3 (g4b_wt_with_noas)
+
+ 22          24 LOAD_CONST               4 (<code object g4b_wt_nested_with at 0x000001E2C5DE28D0, file "g4b_ok", line 22>)
+             26 MAKE_FUNCTION            0
+             28 STORE_NAME               4 (g4b_wt_nested_with)
+             30 LOAD_CONST               5 (None)
+             32 RETURN_VALUE

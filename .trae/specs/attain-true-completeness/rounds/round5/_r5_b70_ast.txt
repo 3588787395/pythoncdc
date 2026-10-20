@@ -1,0 +1,21 @@
+=== _generate_with WithRegion@4 ===
+With
+ body:[
+    Break
+ ]
+ items:[
+    None
+ ]
+=== _generate_loop LoopRegion@4 ===
+[
+  While
+   body:[
+      With
+       body:[
+          Break
+       ]
+       items:[
+          None
+       ]
+   ]
+]

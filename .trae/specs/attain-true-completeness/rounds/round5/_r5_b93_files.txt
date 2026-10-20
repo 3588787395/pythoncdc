@@ -1,0 +1,5 @@
+﻿.trae/specs/attain-true-completeness\tasks.md
+.trae/specs/attain-true-completeness\baseline\breaches_25rows.md
+.trae/specs/attain-true-completeness\rounds\round1\BREACH_RECON.md
+.trae/specs/attain-true-completeness\rounds\round5\FIX.md
+.trae/specs/attain-true-completeness\rounds\round5\_r5_b93_recon.txt

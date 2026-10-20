@@ -1,0 +1,6 @@
+﻿[c420] regen_rc=0 status=success units=24/24
+[e12d] regen_rc=0 status=success units=11/11
+[r706] regen_rc=0 status=success units=10/10
+[r510] regen_rc=0 status=success units=13/13
+[e09b] regen_rc=0 status=success units=13/13
+-> units=71/71  (5 probes)  rec1_probes_r5post6_r4prot.json

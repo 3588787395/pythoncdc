@@ -1,0 +1,169 @@
+﻿code=g2a_with_hosts_match qualname=g2a_with_hosts_match flags=3
+=== disassembly ===
+    0 RESUME                         0
+    2 LOAD_GLOBAL                    'open'
+   14 LOAD_FAST                      'p'
+   16 PRECALL                        1
+   20 CALL                           1
+   30 BEFORE_WITH                    None
+   32 STORE_FAST                     'f'
+   34 LOAD_FAST                      'v'
+   36 LOAD_GLOBAL                    'int'
+   48 LOAD_CONST                     ()
+   50 MATCH_CLASS                    1
+   52 COPY                           1
+   54 POP_JUMP_FORWARD_IF_NONE       218
+   56 UNPACK_SEQUENCE                1
+   60 STORE_FAST                     'n'
+   62 LOAD_FAST                      'n'
+   64 LOAD_CONST                     0
+   66 COMPARE_OP                     '>'
+   72 POP_JUMP_FORWARD_IF_FALSE      220
+   74 LOAD_GLOBAL                    'open'
+   86 LOAD_FAST                      'p'
+   88 PRECALL                        1
+   92 CALL                           1
+  102 BEFORE_WITH                    None
+  104 STORE_FAST                     'g'
+  106 LOAD_FAST                      'flag'
+  108 POP_JUMP_FORWARD_IF_FALSE      168
+  110 LOAD_FAST                      'n'
+  112 LOAD_FAST                      'f'
+  114 LOAD_FAST                      'g'
+  116 BUILD_TUPLE                    3
+  118 SWAP                           2
+  120 LOAD_CONST                     None
+  122 LOAD_CONST                     None
+  124 LOAD_CONST                     None
+  126 PRECALL                        2
+  130 CALL                           2
+  140 POP_TOP                        None
+  142 SWAP                           2
+  144 LOAD_CONST                     None
+  146 LOAD_CONST                     None
+  148 LOAD_CONST                     None
+  150 PRECALL                        2
+  154 CALL                           2
+  164 POP_TOP                        None
+  166 RETURN_VALUE                   None
+  168 NOP                            None
+  170 LOAD_CONST                     None
+  172 LOAD_CONST                     None
+  174 LOAD_CONST                     None
+  176 PRECALL                        2
+  180 CALL                           2
+  190 POP_TOP                        None
+  192 JUMP_FORWARD                   216
+  194 PUSH_EXC_INFO                  None
+  196 WITH_EXCEPT_START              None
+  198 POP_JUMP_FORWARD_IF_TRUE       208
+  200 RERAISE                        2
+  202 COPY                           3
+  204 POP_EXCEPT                     None
+  206 RERAISE                        1
+  208 POP_TOP                        None
+  210 POP_EXCEPT                     None
+  212 POP_TOP                        None
+  214 POP_TOP                        None
+  216 JUMP_FORWARD                   250
+  218 POP_TOP                        None
+  220 NOP                            None
+  222 NOP                            None
+  224 LOAD_CONST                     None
+  226 LOAD_CONST                     None
+  228 LOAD_CONST                     None
+  230 PRECALL                        2
+  234 CALL                           2
+  244 POP_TOP                        None
+  246 LOAD_CONST                     -1
+  248 RETURN_VALUE                   None
+  250 LOAD_CONST                     None
+  252 LOAD_CONST                     None
+  254 LOAD_CONST                     None
+  256 PRECALL                        2
+  260 CALL                           2
+  270 POP_TOP                        None
+  272 JUMP_FORWARD                   296
+  274 PUSH_EXC_INFO                  None
+  276 WITH_EXCEPT_START              None
+  278 POP_JUMP_FORWARD_IF_TRUE       288
+  280 RERAISE                        2
+  282 COPY                           3
+  284 POP_EXCEPT                     None
+  286 RERAISE                        1
+  288 POP_TOP                        None
+  290 POP_EXCEPT                     None
+  292 POP_TOP                        None
+  294 POP_TOP                        None
+  296 LOAD_CONST                     0
+  298 RETURN_VALUE                   None
+=== blocks ===
+block@0     succ=['@32'] exc=[]
+   [('LOAD_GLOBAL', 'open'), ('LOAD_FAST', 'p'), ('PRECALL', 1), ('CALL', 1), ('BEFORE_WITH', None)]
+block@32    succ=['@56', '@218', '@274'] exc=['@274']
+   [('STORE_FAST', 'f'), ('LOAD_FAST', 'v'), ('LOAD_GLOBAL', 'int'), ('LOAD_CONST', ()), ('MATCH_CLASS', 1), ('COPY', 1), ('POP_JUMP_FORWARD_IF_NONE', 218)]
+block@56    succ=['@74', '@220', '@274'] exc=['@274']
+   [('UNPACK_SEQUENCE', 1), ('STORE_FAST', 'n'), ('LOAD_FAST', 'n'), ('LOAD_CONST', 0), ('COMPARE_OP', '>'), ('POP_JUMP_FORWARD_IF_FALSE', 220)]
+block@74    succ=['@104', '@274'] exc=['@274']
+   [('LOAD_GLOBAL', 'open'), ('LOAD_FAST', 'p'), ('PRECALL', 1), ('CALL', 1), ('BEFORE_WITH', None)]
+block@104   succ=['@110', '@168', '@194'] exc=['@194']
+   [('STORE_FAST', 'g'), ('LOAD_FAST', 'flag'), ('POP_JUMP_FORWARD_IF_FALSE', 168)]
+block@110   succ=['@118', '@194'] exc=['@194']
+   [('LOAD_FAST', 'n'), ('LOAD_FAST', 'f'), ('LOAD_FAST', 'g'), ('BUILD_TUPLE', 3)]
+block@118   succ=['@142', '@274'] exc=['@274']
+   [('SWAP', 2), ('LOAD_CONST', None), ('LOAD_CONST', None), ('LOAD_CONST', None), ('PRECALL', 2), ('CALL', 2), ('POP_TOP', None)]
+block@142   succ=[] exc=[]
+   [('SWAP', 2), ('LOAD_CONST', None), ('LOAD_CONST', None), ('LOAD_CONST', None), ('PRECALL', 2), ('CALL', 2), ('POP_TOP', None), ('RETURN_VALUE', None)]
+block@168   succ=['@170'] exc=[]
+   []
+block@170   succ=['@216', '@274'] exc=['@274']
+   [('LOAD_CONST', None), ('LOAD_CONST', None), ('LOAD_CONST', None), ('PRECALL', 2), ('CALL', 2), ('POP_TOP', None), ('JUMP_FORWARD', 216)]
+block@194   succ=['@202', '@208', '@200'] exc=['@202']
+   [('PUSH_EXC_INFO', None), ('WITH_EXCEPT_START', None), ('POP_JUMP_FORWARD_IF_TRUE', 208)]
+block@200   succ=['@202'] exc=['@202']
+   [('RERAISE', 2)]
+block@202   succ=['@274'] exc=['@274']
+   [('COPY', 3), ('POP_EXCEPT', None), ('RERAISE', 1)]
+block@208   succ=['@210', '@202'] exc=['@202']
+   [('POP_TOP', None)]
+block@210   succ=['@216', '@274'] exc=['@274']
+   [('POP_EXCEPT', None), ('POP_TOP', None), ('POP_TOP', None)]
+block@216   succ=['@250', '@274'] exc=['@274']
+   [('JUMP_FORWARD', 250)]
+block@218   succ=['@220', '@274'] exc=['@274']
+   [('POP_TOP', None)]
+block@220   succ=['@224', '@274'] exc=['@274']
+   []
+block@224   succ=[] exc=[]
+   [('LOAD_CONST', None), ('LOAD_CONST', None), ('LOAD_CONST', None), ('PRECALL', 2), ('CALL', 2), ('POP_TOP', None), ('LOAD_CONST', -1), ('RETURN_VALUE', None)]
+block@250   succ=['@296'] exc=[]
+   [('LOAD_CONST', None), ('LOAD_CONST', None), ('LOAD_CONST', None), ('PRECALL', 2), ('CALL', 2), ('POP_TOP', None), ('JUMP_FORWARD', 296)]
+block@274   succ=['@282', '@288', '@280'] exc=['@282']
+   [('PUSH_EXC_INFO', None), ('WITH_EXCEPT_START', None), ('POP_JUMP_FORWARD_IF_TRUE', 288)]
+block@280   succ=['@282'] exc=['@282']
+   [('RERAISE', 2)]
+block@282   succ=[] exc=[]
+   [('COPY', 3), ('POP_EXCEPT', None), ('RERAISE', 1)]
+block@288   succ=['@282', '@290'] exc=['@282']
+   [('POP_TOP', None)]
+block@290   succ=['@296'] exc=[]
+   [('POP_EXCEPT', None), ('POP_TOP', None), ('POP_TOP', None)]
+block@296   succ=[] exc=[]
+   [('LOAD_CONST', 0), ('RETURN_VALUE', None)]
+=== regions (3) ===
+WithRegion entry=@0
+  blocks=['@0', '@32', '@56', '@104', '@110', '@118', '@142', '@168', '@170', '@200', '@202', '@208', '@210', '@216', '@218', '@220', '@224', '@250', '@274', '@280', '@282', '@288', '@290']
+WithRegion entry=@74
+  blocks=['@74', '@104', '@110', '@118', '@142', '@168', '@170', '@194', '@202', '@274', '@282']
+MatchRegion entry=@32
+  merge_block=@296
+  subject_block=@32
+  case_blocks=['@32', '@220']
+  case_bodies=[['@74', '@104', '@110', '@118', '@142', '@168', '@170', '@194', '@200', '@202', '@208', '@210', '@216', '@250'], ['@220', '@224']]
+  case_guards=[{'type': 'Compare', 'left': {'type': 'Name', 'id': 'n'}, 'ops': [{'type': 'CompareOp', 'op': '>'}], 'right': {'type': 'Constant', 'value': 0}}, None]
+  case_patterns=[{'type': 'MatchClass', 'cls': {'type': 'Name', 'id': 'int'}, 'patterns': [{'type': 'MatchAs', 'name': 'n'}]}, {'type': 'MatchAs'}]
+  blocks=['@32', '@56', '@74', '@104', '@110', '@118', '@142', '@168', '@170', '@194', '@200', '@202', '@208', '@210', '@216', '@218', '@220', '@224', '@250', '@296']
+  WithRegion entry=@74
+    blocks=['@74', '@104', '@110', '@118', '@142', '@168', '@170', '@194', '@202', '@274', '@282']
+=== ast ===
+{'type': 'FunctionDef', 'name': 'g2a_with_hosts_match', 'args': {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'v'}, {'type': 'arg', 'arg': 'p'}, {'type': 'arg', 'arg': 'flag'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}, 'body': [{'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'open', 'ctx': 'Load', 'lineno': 17}, 'args': [{'type': 'Name', 'id': 'p', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}}, {'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'MatchClass', 'cls': {'type': 'Constant', 'value': (), 'lineno': None}, 'subject': {'type': 'Name', 'id': 'int', 'ctx': 'Load', 'lineno': 19}, 'lineno': None}, 'ops': ['is not'], 'comparators': [{'type': 'Constant', 'value': None, 'lineno': None}], 'lineno': None}, 'body': [{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'n', 'ctx': 'Load', 'lineno': None}, 'ops': ['>'], 'comparators': [{'type': 'Constant', 'value': 0, 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'open', 'ctx': 'Load', 'lineno': 20}, 'args': [{'type': 'Name', 'id': 'p', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}}, {'type': 'If', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 21}, 'body': [{'type': 'Return', 'value': {'type': 'Tuple', 'elts': [{'type': 'Name', 'id': 'n', 'ctx': 'Load', 'lineno': 22}, {'type': 'Name', 'id': 'f', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'g', 'ctx': 'Load', 'lineno': None}], 'ctx': 'Load', 'lineno': None}}], 'orelse': []}, {'type': 'Return', 'value': {'type': 'Constant', 'value': 0, 'lineno': 25}}], 'orelse': []}, {'type': 'While', 'test': {'type': 'Constant', 'value': False}, 'body': [{'type': 'Pass'}]}, {'type': 'While', 'test': {'type': 'Constant', 'value': False}, 'body': [{'type': 'Pass'}]}, {'type': 'Return', 'value': {'type': 'Constant', 'value': -1, 'lineno': None}}], 'orelse': []}], 'decorator_list': [], 'returns': None}

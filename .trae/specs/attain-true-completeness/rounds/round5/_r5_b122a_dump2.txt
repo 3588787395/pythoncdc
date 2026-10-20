@@ -1,0 +1,86 @@
+=== id-call=1 parents=0 existing=0 ===
+--- CFG blocks (in order), analyzer@16aefa2d1d0 ---
+  [0] RESUME(0); LOAD_CONST(<code object n1 at 0x0000016AEEE666A0, file "test_repros\round8\r8v8rev_bmatch_nestnoguard.py", line 1>); MAKE_FUNCTION(0); STORE_NAME('n1'); LOAD_CONST; RETURN_VALUE | succ=[]
+=== id-call=2 parents=2 existing=1 ===
+--- CFG blocks (in order), analyzer@16af1317750 ---
+  [0] RESUME(0); LOAD_CONST(0); STORE_FAST('r'); LOAD_FAST('x'); LOAD_CONST(1); COMPARE_OP('=='); POP_JUMP_FORWARD_IF_FALSE(44) | succ=[18, 44]
+  [18] LOAD_FAST('y'); LOAD_CONST(2); COMPARE_OP('=='); POP_JUMP_FORWARD_IF_FALSE(36) | succ=[30, 36]
+  [30] LOAD_CONST(21); STORE_FAST('r'); JUMP_FORWARD(50) | succ=[50]
+  [36] NOP; LOAD_CONST(22); STORE_FAST('r'); JUMP_FORWARD(50) | succ=[50]
+  [44] NOP; LOAD_CONST(9); STORE_FAST('r') | succ=[50]
+  [50] LOAD_FAST('r'); RETURN_VALUE | succ=[]
+  existing: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+  parent: IfRegion subj=None case_blocks=[] merge=50 entry=18
+    blocks=[18, 30, 36]
+  parent: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+  new: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+=== id-call=3 parents=1 existing=2 ===
+  existing: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+  existing: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+  parent: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+  new: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+=== id-call=4 parents=1 existing=3 ===
+  existing: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+  existing: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+  existing: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+  parent: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+  new: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+=== id-call=5 parents=1 existing=4 ===
+  existing: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+  existing: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+  existing: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+  existing: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+  parent: MatchRegion subj=0 case_blocks=[0, 44] merge=50 entry=0
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50]
+SystemExit 0
+calls=5

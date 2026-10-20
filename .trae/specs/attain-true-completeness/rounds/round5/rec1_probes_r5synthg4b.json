@@ -1,0 +1,23 @@
+[
+ {
+  "name": "g4b",
+  "pyc_src_rel": "test_repros/round5/rec1_synth_g4b_b70_whiletrue_with.pyc",
+  "pyc_src_sha": "e948bcc03f2e82d3",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round5/rec1_g4b_rec1_synth_g4b_b70_whiletrue_with.pyc",
+  "mtime": "2026-10-19T22:03:36",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "42f344e87ca4bc7b",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_g4b_rec1_synth_g4b_b70_whiletrue_with.pyc (Python 3.11)\n\n__doc__ = 'rec1_synth g4b: B70 family — while True + with with real break/continue + while-cond mirror.'\ndef g4b_wt_with_continue(p, a):\n    while True:\n        with open(p) as f:\n            if a:\n                continue\n        while False:\n            pass\n        return 4\ndef g4b_while_cond_with(p):\n    while p:\n        with open(p) as f:\n            pass\n    return 5\ndef g4b_wt_with_noas(p):\n    while True:\n        with open(p):\n            pass\ndef g4b_wt_nested_with(p, a):\n    while True:\n        with open(p) as f, open(p) as g:\n            if a:\n                continue\n    return 6\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.g4b_wt_with_continue: Failure: Different control flow\n  ***<module>.g4b_wt_nested_with: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_g4b_rec1_synth_g4b_b70_whiletrue_with.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_g4b_rec1_synth_g4b_b70_whiletrue_withOK.py\n[single] status=failure units=3/5 success_rate=60.00%",
+  "status": "failure",
+  "units_success": 3,
+  "units_total": 5,
+  "failures": [
+   "***<module>.g4b_wt_with_continue: Failure: Different control flow",
+   "***<module>.g4b_wt_nested_with: Failure: Different control flow"
+  ]
+ }
+]

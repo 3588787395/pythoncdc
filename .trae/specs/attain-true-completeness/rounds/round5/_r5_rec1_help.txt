@@ -1,0 +1,13 @@
+﻿Round 1 鎺㈤拡椹卞姩锛堝彧璇讳睛瀵熻疆锛夆€斺€擱V2 鍙ｅ緞锛氬厛 regen锛坧ycdc -o锛夊啀 verify single銆?
+
+绾緥锛氫笉鍔?core/**銆佷笉鍔?wiki/**銆佷笉鏀?tests/**銆佷笉 git 鍐欐搷浣溿€?
+鎵€鏈夋帰閽堝壇鏈笌浜х墿钀藉湪鏈鑼冪洰褰?`test_repros/round1/`锛坰tage锛夛紝
+婧愭爲 test_repros/ 鐨勫師浠跺彧璇诲紩鐢紙鎷疯礉杩?stage 鍚庤繍琛岋紝缁濅笉鍥炲啓婧愭爲锛夈€?
+
+鐢ㄦ硶锛?
+  python -X utf8 rec1_run.py --stage <dir> --log <dir> --stamp <name>       name1=test_repros/round3/e07_g4_star_slice_containers.pyc [name2=...]
+
+姣忎釜 entry 杈撳嚭锛?
+  [name] regen_rc=<rc> status=<success|failure|compile_error|error> units=U/T
+杈撳嚭 JSON锛?log>/rec1_probes_<stamp>.json锛堝惈姣忎釜鎺㈤拡鐨勫畬鏁?stdout/stderr 鏂囨湰涓?sha锛夈€?
+

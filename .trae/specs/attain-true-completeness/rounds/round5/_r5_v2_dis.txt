@@ -1,0 +1,36 @@
+﻿ 13           0 RESUME                   0
+
+ 15           2 LOAD_CONST               1 (0)
+              4 STORE_FAST               4 (r)
+
+ 16           6 LOAD_FAST                0 (x)
+
+ 17           8 LOAD_CONST               2 (1)
+             10 COMPARE_OP               2 (==)
+             16 POP_JUMP_FORWARD_IF_FALSE    15 (to 48)
+
+ 18          18 LOAD_FAST                1 (y)
+
+ 19          20 LOAD_CONST               3 (2)
+             22 COMPARE_OP               2 (==)
+             28 POP_JUMP_FORWARD_IF_FALSE     5 (to 40)
+             30 LOAD_FAST                2 (g)
+             32 POP_JUMP_FORWARD_IF_FALSE     3 (to 40)
+
+ 20          34 LOAD_CONST               4 (21)
+             36 STORE_FAST               4 (r)
+             38 JUMP_FORWARD             7 (to 54)
+
+ 21     >>   40 NOP
+
+ 22          42 LOAD_CONST               5 (22)
+             44 STORE_FAST               4 (r)
+             46 JUMP_FORWARD             3 (to 54)
+
+ 23     >>   48 NOP
+
+ 24          50 LOAD_CONST               6 (9)
+             52 STORE_FAST               4 (r)
+
+ 25     >>   54 LOAD_FAST                4 (r)
+             56 RETURN_VALUE

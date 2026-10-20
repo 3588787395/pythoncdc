@@ -1,0 +1,72 @@
+co_name=while_with_whole_body varnames=('p', 'f')
+=== CFG blocks ===
+BLK@0..2 succ=[4] pred=[]
+   0 RESUME 0
+   2 NOP None
+BLK@4..32 succ=[34] pred=[0, 84]
+   4 LOAD_GLOBAL open
+   16 LOAD_FAST p
+   18 PRECALL 1
+   22 CALL 1
+   32 BEFORE_WITH None
+BLK@34..34 succ=[36, 62] pred=[4]
+   34 STORE_FAST f
+BLK@36..60 succ=[84] pred=[34]
+   36 NOP None
+   38 LOAD_CONST None
+   40 LOAD_CONST None
+   42 LOAD_CONST None
+   44 PRECALL 2
+   48 CALL 2
+   58 POP_TOP None
+   60 JUMP_FORWARD 84
+BLK@62..66 succ=[68, 70, 76] pred=[34]
+   62 PUSH_EXC_INFO None
+   64 WITH_EXCEPT_START None
+   66 POP_JUMP_FORWARD_IF_TRUE 76
+BLK@68..68 succ=[70] pred=[62]
+   68 RERAISE 2
+BLK@70..74 succ=[] pred=[62, 68, 76]
+   70 COPY 3
+   72 POP_EXCEPT None
+   74 RERAISE 1
+BLK@76..76 succ=[78, 70] pred=[62]
+   76 POP_TOP None
+BLK@78..82 succ=[84] pred=[76]
+   78 POP_EXCEPT None
+   80 POP_TOP None
+   82 POP_TOP None
+BLK@84..84 succ=[4] pred=[36, 78]
+   84 JUMP_BACKWARD 4
+=== regions ===
+REGION LoopRegion entry=4 blocks=[4, 62, 68, 70, 76, 84, 34, 36, 78] parent=None
+   header_block=4
+   body_blocks=[4, 34, 36, 62, 68, 70, 76, 78, 84]
+   break_blocks=[]
+   else_blocks=[]
+REGION WithRegion entry=4 blocks=[4, 62, 70, 34, 36] parent=LoopRegion
+   exit_block=84
+   with_blocks=[34]
+REGION Region entry=0 blocks=[0] parent=None
+=== block_to_region ===
+blk@0 -> Region
+blk@4 -> LoopRegion
+blk@34 -> LoopRegion
+blk@36 -> LoopRegion
+blk@62 -> LoopRegion
+blk@68 -> LoopRegion
+blk@70 -> LoopRegion
+blk@76 -> LoopRegion
+blk@78 -> LoopRegion
+blk@84 -> LoopRegion
+=== block roles ===
+blk@0 role=BlockRole.PURE_JUMP
+blk@4 role=BlockRole.LOOP_HEADER
+blk@34 role=BlockRole.LOOP_BODY
+blk@36 role=BlockRole.LOOP_BODY
+blk@62 role=BlockRole.LOOP_BODY
+blk@68 role=BlockRole.LOOP_BODY
+blk@70 role=BlockRole.LOOP_BODY
+blk@76 role=BlockRole.LOOP_BODY
+blk@78 role=BlockRole.LOOP_BODY
+blk@84 role=BlockRole.LOOP_BACK_EDGE

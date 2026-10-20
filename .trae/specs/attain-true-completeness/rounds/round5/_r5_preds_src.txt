@@ -1,0 +1,405 @@
+----- lines 15993-16070 -----
+15993:     def _is_match_subject_block(self, block: 'BasicBlock') -> bool:
+15994:         """检测块是否是 match 语句的 subject 块（字面量模式）
+15995: 
+15996:         算法依据：match-case 中 subject 只加载一次，通过 COPY 复制给每个 case 比较；
+15997:         而 if-elif 每次比较都重新加载 subject，字节码中不含 COPY。
+15998:         因此 COPY + 比较 + 条件跳转 的组合是 match-case 的确定性特征。
+15999: 
+16000:         检测条件：
+16001:         1. 块中包含 COPY 指令
+16002:         2. COPY 之后紧跟比较操作（COMPARE_OP/IS_OP）或 None 检查（POP_JUMP_IF_NOT_NONE）
+16003:         3. 块以条件跳转结尾
+16004:         4. 块中不含 MATCH_CLASS/MATCH_MAPPING/MATCH_SEQUENCE/MATCH_KEYS（那些由 _has_match_op 处理）
+16005:         5. COPY 不是异常处理的一部分（后面不跟 PUSH_EXC_INFO）
+16006:         """
+16007:         if block is None:
+16008:             return False
+16009:         # 已由 _has_match_op 处理的结构型模式，此处不重复
+16010:         if self._has_match_op(block):
+16011:             return False
+16012: 
+16013:         # [Phase 3 adv17_try_except_star] except* 框架块（含 CHECK_EG_MATCH
+16014:         # 或 PREP_RERAISE_STAR）不是 match subject 块。except* 的清理块
+16015:         # LIST_APPEND + PREP_RERAISE_STAR + COPY + POP_JUMP_IF_NOT_NONE
+16016:         # 会被误识别为 match subject（模式2: COPY + POP_JUMP_IF_NOT_NONE），
+16017:         # 但实际是 except* 的异常组清理逻辑。
+16018:         if self._is_except_star_framework_block(block):
+16019:             return False
+16020: 
+16021:         instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
+16022:         if not instrs:
+16023:             return False
+16024: 
+16025:         # 块必须以条件跳转结尾
+16026:         last = instrs[-1]
+16027:         if last.opname not in CONDITIONAL_JUMP_OPS:
+16028:             return False
+16029: 
+16030:         # 如果有 SWAP 指令，很可能是链式比较 a < b < c，不是 match
+16031:         has_swap = any(instr.opname == 'SWAP' for instr in instrs)
+16032:         if has_swap:
+16033:             return False
+16034: 
+16035:         # 查找 COPY 指令的位置
+16036:         copy_idx = None
+16037:         for i, instr in enumerate(instrs):
+16038:             if instr.opname == 'COPY':
+16039:                 copy_idx = i
+16040:                 break
+16041: 
+16042:         if copy_idx is None:
+16043:             return False
+16044: 
+16045:         # COPY 后面不能是 PUSH_EXC_INFO（异常处理模式）
+16046:         if copy_idx + 1 < len(instrs) and instrs[copy_idx + 1].opname == 'PUSH_EXC_INFO':
+16047:             return False
+16048: 
+16049:         # COPY 后面紧跟 STORE_FAST/STORE_NAME 是 walrus 运算符 (:=) 模式，不是 match subject
+16050:         if copy_idx + 1 < len(instrs) and instrs[copy_idx + 1].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL'):
+16051:             return False
+16052: 
+16053:         # COPY 之后必须紧跟比较操作或 None 检查
+16054:         # 模式1: COPY + LOAD_CONST + COMPARE_OP/IS_OP + ... + 条件跳转
+16055:         # 模式2: COPY + POP_JUMP_IF_NOT_NONE（case None 模式）
+16056:         after_copy = instrs[copy_idx + 1:]
+16057: 
+16058:         # 模式2: COPY + POP_JUMP_IF_NOT_NONE
+16059:         if (len(after_copy) >= 1 and
+16060:             after_copy[0].opname in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE')):
+16061:             return True
+16062: 
+16063:         # 模式1: COPY + LOAD_CONST + COMPARE_OP/IS_OP
+16064:         if (len(after_copy) >= 2 and
+16065:             after_copy[0].opname == 'LOAD_CONST' and
+16066:             after_copy[1].opname in ('COMPARE_OP', 'IS_OP')):
+16067:             return True
+16068: 
+16069:         # 也处理 COPY + LOAD_NAME(True/False) + IS_OP 的情况
+16070:         if (len(after_copy) >= 2 and
+----- lines 17722-17790 -----
+17722:     def _is_simple_match_case_block(self, block):
+17723:         """
+17724:         检测简单match/case模式块（无MATCH_CLASS等显式匹配指令的case分支）。
+17725:         
+17726:         === 反编译逻辑 ===
+17727:         CPython为 match/case 语句生成两种模式：
+17728:         1. 完整模式：使用 MATCH_CLASS/MATCH_SEQUENCE 等显式匹配指令（由 _has_match_op 检测）
+17729:         2. 简单模式：仅用 COMPARE_OP/IS_OP + 条件跳转实现常量/类型匹配
+17730:         
+17731:         本方法检测第2种模式。关键字节码特征：
+17732:         
+17733:         [真match/case - 有NOP前缀]
+17734:           Block@N: NOP              ← match case标记（Python 3.10+）
+17735:                    COPY(subject)    ← 复制被匹配对象
+17736:                    LOAD_CONST(pattern) ← 加载模式值
+17737:                    COMPARE_OP(==)   ← 比较
+17738:                    POP_JUMP_IF_FALSE → next_case_or_body
+17739:                    
+17740:         [假match - 链式比较chain block，如 a < b < c 的第二比较]
+17741:           Block@N: LOAD_CONST(10)   ← 直接加载比较常数（无COPY，无subject load）
+17742:                    COMPARE_OP(<)     ← 比较
+17743:                    POP_JUMP_IF_FALSE → exit
+17744:                    JUMP_FORWARD → body
+17745:                    
+17746:         [假match - 简单 if x is None]
+17747:           Block@N: LOAD_FAST(x)
+17748:                    POP_JUMP_IF_NOT_NONE → else_path
+17749:                    (jump目标无NOP前缀)
+17750:         
+17751:         排除规则（按优先级）：
+17752:         1. 有 MATCH_OP → False（完整模式，不归此类）
+17753:         2. 无 meaningful 指令 → False
+17754:         3. 最后一条非条件跳转 → False
+17755:         4. 有 SWAP → False（链式比较 a < b < c 使用 SWAP 交换操作数）
+17756:         5. 以 LOAD_CONST 开头且无 COPY/subject-load → False（链式比较chain block）
+17757:         6. jump target 无 NOP 前缀 + 单 load op + is_none_check → False（简单 if x is None）
+17758:         """
+17759:         if block is None:
+17760:             return False
+17761:         if self._has_match_op(block):
+17762:             return False
+17763:         meaningful = [i for i in block.instructions if i.opname not in NOISE_OPS]
+17764:         if not meaningful:
+17765:             return False
+17766:         last = meaningful[-1]
+17767:         if last.opname not in CONDITIONAL_JUMP_OPS:
+17768:             return False
+17769:         # 如果有 SWAP 指令，很可能是链式比较 a < b < c，不是 match
+17770:         has_swap = any(instr.opname == 'SWAP' for instr in meaningful)
+17771:         if has_swap:
+17772:             return False
+17773:         # [聚类4 修复] COPY 后紧跟 STORE_* 是 walrus 运算符 (:=) 模式，不是 match case。
+17774:         # 例如 ``if (n := await g()) > 0:`` 的条件块：
+17775:         #   COPY + STORE_FAST(n) + LOAD_CONST(0) + COMPARE_OP(>) + POP_JUMP_IF_FALSE
+17776:         # 此模式与 _is_match_subject_block 的 walrus 排除（行 6844-6846）一致。
+17777:         for idx in range(len(meaningful) - 1):
+17778:             if (meaningful[idx].opname == 'COPY' and
+17779:                 meaningful[idx + 1].opname in ('STORE_FAST', 'STORE_NAME',
+17780:                                                'STORE_GLOBAL', 'STORE_DEREF')):
+17781:                 return False
+17782:         # 如果以 LOAD_CONST 开头且无 COPY 和 subject-load，是链式比较chain block（如 a < b < c 的第二比较）
+17783:         first_meaningful = meaningful[0]
+17784:         if first_meaningful.opname == 'LOAD_CONST':
+17785:             has_copy = any(i.opname == 'COPY' for i in meaningful)
+17786:             has_subject_load = any(i.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') for i in meaningful)
+17787:             if not has_copy and not has_subject_load:
+17788:                 return False
+17789:         jt = self.cfg.get_block_by_offset(last.argval)
+17790:         if jt is None:
+----- lines 17848-17930 -----
+17848:     def _is_wildcard_match_block(self, block):
+17849:         """
+17850:         检测 `match x: case _:` 通配符模式块。
+17851: 
+17852:         反编译逻辑：
+17853:         ==========
+17854:         字节码特征（CPython 3.11+）：
+17855:           match x:                →  LOAD_x, POP_TOP, <body>
+17856:             case _:
+17857:               <body>
+17858: 
+17859:         简单体（无嵌套控制流）：
+17860:           RESUME, LOAD_NAME(x), POP_TOP, LOAD_CONST(1), STORE_NAME(y), RETURN_VALUE
+17861: 
+17862:         嵌套控制流体（if/for/while/try 在 case _体内）：
+17863:           RESUME, LOAD_NAME(x), POP_TOP, LOAD_NAME(cond), POP_JUMP_IF_FALSE, ...
+17864: 
+17865:         区分特征：
+17866:         1. 前两条有效指令是 LOAD_* + POP_TOP（subject加载后丢弃，通配符不绑定）
+17867:         2. 无COPY指令（通配符不需要复制subject给case比较）
+17868:         3. 无MATCH_*操作码（非结构型模式）
+17869:         4. 前驱块不是短路跳转（排除boolop短路链的末端）
+17870: 
+17871:         边界条件：
+17872:         - case _: 后面可以跟任意合法的Python语句（包括if/for/while/try等）
+17873:         - 因此rest部分允许条件跳转、循环回边等操作码
+17874:         - 但不允许GET_ITER/FOR_ITER（那属于for循环头部，不是match body起始）
+17875:         """
+17876:         if block is None:
+17877:             return False
+17878:         if self._has_match_op(block):
+17879:             return False
+17880:         instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
+17881:         if len(instrs) < 2:
+17882:             return False
+17883:         # 区域归约算法原则 3（嵌套即抽象节点）：循环体内的 match
+17884:         # subject 块以 FOR_ITER 的 STORE_NAME <loop_var> 开头（循环变量赋值）。
+17885:         # 跳过前导 STORE_* 以识别其后的 LOAD subject + POP_TOP（通配符丢弃）。
+17886:         _start = 0
+17887:         _STORE_OPS = ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF')
+17888:         while _start < len(instrs) and instrs[_start].opname in _STORE_OPS:
+17889:             _start += 1
+17890:         if _start + 1 >= len(instrs):
+17891:             return False
+17892:         has_load = instrs[_start].opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')
+17893:         if not has_load:
+17894:             return False
+17895:         has_pop_top = instrs[_start + 1].opname == 'POP_TOP'
+17896:         if not has_pop_top:
+17897:             return False
+17898:         no_copy = not any(i.opname == 'COPY' for i in instrs)
+17899:         if not no_copy:
+17900:             return False
+17901:         # [Round 01 P0 fix] match-case 假阳性防护：结构性判据——
+17902:         # 真正的 match-case 是函数/模块级的顶层结构，subject 块的**直接前驱**
+17903:         # 要么是函数入口（RESUME），要么是前一条语句的出口。若块的前驱含
+17904:         # 条件跳转（POP_JUMP_IF_*），说明本块是 if/elif/else 分支的 fall-through
+17905:         # 目标，不是 match subject 块。match-case 的 subject 加载不会被
+17906:         # 条件跳转的前驱"选择"——match 必须执行，不存在"条件性地进入 match"。
+17907:         # 此判据排除了 `if cond: value_expr; more_code` 中 value_expr 的
+17908:         # POP_TOP 被误判为通配符 case 的 subject 丢弃（repro_01 的
+17909:         # `item; if fp is not None:` 被误判为 `match item: case _:`）。
+17910:         # 前驱条件跳转检查必须在 rest 判空之前执行：当块仅含 LOAD_* + POP_TOP
+17911:         # （rest 为空）时，若前驱以条件跳转结尾，说明本块是 if 分支的 fall-through
+17912:         # 目标（如 `if len(x) == 0: nd_array_or_dict`），不是 match subject。
+17913:         for pred in block.predecessors:
+17914:             pred_last = pred.get_last_instruction()
+17915:             if pred_last and pred_last.opname in CONDITIONAL_JUMP_OPS:
+17916:                 return False
+17917:         for pred in block.predecessors:
+17918:             pred_last = pred.get_last_instruction()
+17919:             if pred_last and pred_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+17920:                 return False
+17921:         rest = instrs[_start + 2:]
+17922:         if not rest:
+17923:             return True
+17924:         loop_header_ops = frozenset({'GET_ITER', 'FOR_ITER', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'})
+17925:         has_loop_header = any(i.opname in loop_header_ops for i in rest[:3]) if len(rest) >= 3 else False
+17926:         if has_loop_header:
+17927:             return False
+17928:         return True
+17929: 
+17930:     def _is_none_match_block(self, block):
+----- lines 17930-18010 -----
+17930:     def _is_none_match_block(self, block):
+17931:         """
+17932:         检测 `match x: case None:` 模式的None匹配块。
+17933:         
+17934:         === 反编译逻辑 ===
+17935:         CPython 对 `if x is None:` 和 `match x: case None:` 生成相似但可区分的字节码：
+17936:         
+17937:         [match x: case None: - 真正的match]
+17938:           Block@N: LOAD_FAST(x)       ← 加载被匹配对象
+17939:                    POP_JUMP_IF_NOT_NONE → offset_M
+17940:           Block@M: NOP                ← match case 分隔标记（关键区分点！）
+17941:                    ...case body...
+17942:                    
+17943:         [if x is None: - 普通条件语句]
+17944:           Block@N: LOAD_FAST(x)       ← 加载变量
+17945:                    POP_JUMP_IF_NOT_NONE → offset_M   (同上)
+17946:           Block@M: LOAD_CONST(...)    ← 直接开始else/then体（无NOP！）
+17947:                    ...body...
+17948:         
+17949:         核心区分特征：jump target (offset_M) 是否有 NOP 前缀。
+17950:         - 有 NOP → match/case 的 case 分隔标记（Python 3.10+ 编译器生成）
+17951:         - 无 NOP → 普通 if 语句的分支入口
+17952:         
+17953:         额外排除条件：
+17954:         - 前驱块以短路跳转结尾（and/or短路求值）→ 不是 match
+17955:         - 包含 COPY/SWAP → 复杂表达式，不是简单 None 匹配
+17956:         """
+17957:         if block is None:
+17958:             return False
+17959:         if self._has_match_op(block):
+17960:             return False
+17961:         instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
+17962:         if len(instrs) < 2:
+17963:             return False
+17964:         has_load = instrs[0].opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')
+17965:         if not has_load:
+17966:             return False
+17967:         is_none_check = instrs[1].opname in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE')
+17968:         if not is_none_check:
+17969:             return False
+17970:         no_copy = not any(i.opname == 'COPY' for i in instrs)
+17971:         if not no_copy:
+17972:             return False
+17973:         has_swap = any(instr.opname == 'SWAP' for instr in instrs)
+17974:         if has_swap:
+17975:             return False
+17976:         for pred in block.predecessors:
+17977:             pred_last = pred.get_last_instruction()
+17978:             if pred_last and pred_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+17979:                 return False
+17980:             # `and` 短路逻辑中的 `if x is None and y is None:` 使用
+17981:             # 连续 POP_JUMP_FORWARD_IF_NOT_NONE 跳转。后续条件块（如 end_year）
+17982:             # 的前驱是上一个条件块（如 start_year），其末尾是
+17983:             # POP_JUMP_FORWARD_IF_NOT_NONE。真正的 match-case None 块的前驱
+17984:             # 是 subject 加载块，不会是另一个 POP_JUMP_FORWARD_IF_NOT_NONE 块。
+17985:             if pred_last and pred_last.opname in (
+17986:                 'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE',
+17987:                 'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_IF_NONE',
+17988:             ):
+17989:                 return False
+17990:         # 区域归约算法原则 1（自底向上归约）：
+17991:         # `if x is None and y is None:` 的 `and` 短路逻辑使用连续的
+17992:         # POP_JUMP_FORWARD_IF_NOT_NONE 跳转。每个条件块的 fall-through
+17993:         # 后继是下一个条件块（也以 POP_JUMP_FORWARD_IF_NOT_NONE 结尾）。
+17994:         # 原实现只检查 jump target 的 NOP 前缀，把这种短路逻辑错误识别
+17995:         # 为 `match x: case None:`（如 get_balance_statement 的
+17996:         # `if date is None and start_year is None and end_year is None:`）。
+17997:         # 修正：如果 block 的 fall-through 后继也以
+17998:         # POP_JUMP_FORWARD_IF_NOT_NONE/POP_JUMP_IF_NOT_NONE 结尾（and 短路），
+17999:         # 或以 POP_JUMP_FORWARD_IF_FALSE/POP_JUMP_IF_FALSE 结尾（if-elif 链），
+18000:         # 则不是 match-case，而是复合条件的第一个条件块。
+18001:         last_instr = block.get_last_instruction()
+18002:         if last_instr and last_instr.argval is not None:
+18003:             jt = self.cfg.get_block_by_offset(last_instr.argval)
+18004:             if jt is not None:
+18005:                 ft_successors = [s for s in block.successors if s is not jt]
+18006:                 if ft_successors:
+18007:                     ft = ft_successors[0]
+18008:                     ft_last = ft.get_last_instruction()
+18009:                     if ft_last and ft_last.opname in (
+18010:                         'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE',
+----- lines 18874-18944 -----
+18874:     def _is_case_pattern_block(self, block: 'BasicBlock') -> bool:
+18875:         # [Phase 3 adv17_try_except_star] except* 框架块不是 case pattern 块
+18876:         if self._is_except_star_framework_block(block):
+18877:             return False
+18878:         if self._has_match_op(block):
+18879:             return True
+18880:         if any(i.opname in ('GET_LEN', 'UNPACK_SEQUENCE') for i in block.instructions):
+18881:             pattern_related = (NOISE_OPS |
+18882:                 {'GET_LEN', 'UNPACK_SEQUENCE', 'COMPARE_OP', 'LOAD_CONST',
+18883:                  'POP_TOP', 'COPY', 'SWAP',
+18884:                  'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+18885:                  'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'} |
+18886:                 FORWARD_CONDITIONAL_JUMP_OPS)
+18887:             if all(i.opname in pattern_related for i in block.instructions):
+18888:                 # 区域归约算法原则 2（每块唯一归属）：
+18889:                 # for 循环 `for k, v in ...:` 的循环体入口块含 UNPACK_SEQUENCE
+18890:                 # + STORE_FAST + 后续 if 条件（如 `if k != 'fields':`），
+18891:                 # 全部指令都在 pattern_related 集合中，会被误识别为 match-case
+18892:                 # 的 case pattern 块（如 multi_prod_to_dataframe 的
+18893:                 # `for k, v in data.items(): if k != 'fields': ...`）。
+18894:                 # 关键区分：match-case 的 UNPACK_SEQUENCE 前驱含 MATCH_SEQUENCE/
+18895:                 # MATCH_CLASS；for 循环的 UNPACK_SEQUENCE 前驱以 FOR_ITER 结尾。
+18896:                 # 当块含 UNPACK_SEQUENCE 但无 MATCH_* 操作码，且任一前驱以
+18897:                 # FOR_ITER 结尾时，此块是 for 循环体入口，不是 match case pattern。
+18898:                 if not self._has_match_op(block):
+18899:                     for pred in block.predecessors:
+18900:                         pred_last = pred.get_last_instruction()
+18901:                         if pred_last and pred_last.opname == 'FOR_ITER':
+18902:                             return False
+18903:                     has_match_pred = any(self._has_match_op(pred) for pred in block.predecessors)
+18904:                     if not has_match_pred:
+18905:                         return False
+18906:                 return True
+18907:         meaningful = [i for i in block.instructions if i.opname not in NOISE_OPS]
+18908:         has_copy = any(i.opname == 'COPY' for i in meaningful)
+18909:         for idx, instr in enumerate(meaningful):
+18910:             if (instr.opname == 'COPY' and
+18911:                 idx + 1 < len(meaningful) and meaningful[idx + 1].opname == 'LOAD_CONST' and
+18912:                 idx + 2 < len(meaningful) and meaningful[idx + 2].opname in ('COMPARE_OP', 'IS_OP') and
+18913:                 idx + 3 < len(meaningful) and meaningful[idx + 3].opname in CONDITIONAL_JUMP_OPS):
+18914:                 return True
+18915:             if has_copy and (instr.opname == 'LOAD_CONST' and
+18916:                 idx + 1 < len(meaningful) and meaningful[idx + 1].opname in ('COMPARE_OP', 'IS_OP') and
+18917:                 idx + 2 < len(meaningful) and meaningful[idx + 2].opname in CONDITIONAL_JUMP_OPS):
+18918:                 copy_indices = [j for j in range(idx) if meaningful[j].opname == 'COPY']
+18919:                 # [Round 30] 语句边界不只名字绑定存储：STORE_ATTR / STORE_SUBSCR
+18920:                 # （属性、下标赋值）同样是语句终止指令。原判据漏掉二者时，
+18921:                 # `self.x += a + b` 的 COPY（属性增量赋值的副本）与后面**另一条
+18922:                 # 语句**的 `LOAD_CONST 0; COMPARE_OP ==; POP_JUMP_IF_FALSE` 之间
+18923:                 # 看似无存储，于是 COPY 被误当成 match subject 的副本，整块被
+18924:                 # 误判为 match 的 case pattern 块（order.pyc::fill 即此：块 214
+18925:                 # 是 `self._transaction_cost += ...` + `self._filled_amount = ...`
+18926:                 # + `if self.unfilled_amount == 0:` 三条语句，却生成了
+18927:                 # `match self: case _:`，并把前两条语句整体吞掉）。
+18928:                 _store_between_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+18929:                                       'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR')
+18930:                 has_store_between = any(
+18931:                     meaningful[k].opname in _store_between_ops
+18932:                     for ci in copy_indices for k in range(ci + 1, idx))
+18933:                 if has_store_between:
+18934:                     continue
+18935:                 if meaningful[idx + 1].opname == 'IS_OP':
+18936:                     return True
+18937:                 if meaningful[idx + 1].opname == 'COMPARE_OP' and meaningful[idx + 1].argval in ('==', '!='):
+18938:                     return True
+18939:             if (instr.opname == 'COPY' and
+18940:                 idx + 1 < len(meaningful) and meaningful[idx + 1].opname in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE')):
+18941:                 return True
+18942:         return False
+18943: 
+18944:     def _has_match_op(self, block):
+----- lines 18944-18960 -----
+18944:     def _has_match_op(self, block):
+18945:         if block is None:
+18946:             return False
+18947:         return any(i.opname in ('MATCH_CLASS', 'MATCH_MAPPING', 'MATCH_SEQUENCE', 'MATCH_KEYS')
+18948:                   for i in block.instructions)
+18949: 
+18950:     def _mr_head_has_capture_binding(self, block):
+18951:         """[B16] 判定 case 头块是否携带捕获绑定（allow_in_header_block 的门槛）。
+18952: 
+18953:         【识别条件】块首条非 NOISE 指令为 STORE_*（捕获头直存被匹配值副本，
+18954:         CPython case 入口协议），或块内存在 COPY 紧跟 STORE_*（捕获绑定对）。
+18955:         守卫引用捕获名的前提是捕获绑定存在于本块——纯字面量/值模式头
+18956:         （LOAD subject; LOAD_CONST; COMPARE，无任何 STORE）不含守卫材料，
+18957:         其 LOAD+COMPARE 序列就是模式本体。
+18958: 
+18959:         【归约方式】纯块内操作码序列判据。
+18960: 

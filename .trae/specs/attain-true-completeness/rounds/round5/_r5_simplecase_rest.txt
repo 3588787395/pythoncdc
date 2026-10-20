@@ -1,0 +1,59 @@
+17790:         if jt is None:
+17791:             return False
+17792:         has_nop_prefix = False
+17793:         for instr in jt.instructions:
+17794:             if instr.opname == 'NOP':
+17795:                 has_nop_prefix = True
+17796:             elif instr.opname not in NOISE_OPS:
+17797:                 break
+17798:         if has_nop_prefix:
+17799:             jt_meaningful = [i for i in jt.instructions if i.opname not in NOISE_OPS]
+17800:             jt_has_case_pattern = False
+17801:             if jt_meaningful:
+17802:                 jt_ops = set(i.opname for i in jt_meaningful)
+17803:                 if 'COPY' in jt_ops and 'COMPARE_OP' in jt_ops:
+17804:                     jt_has_case_pattern = True
+17805:                 if any(i.opname in CONDITIONAL_JUMP_OPS for i in jt_meaningful):
+17806:                     jt_has_case_pattern = True
+17807:             if not jt_has_case_pattern:
+17808:                 if self._is_literal_default_block(jt, set()):
+17809:                     jt_has_case_pattern = True
+17810:                 if not jt_has_case_pattern:
+17811:                     has_nop_prefix = False
+17812:         has_compare = any(i.opname in ('COMPARE_OP', 'IS_OP') for i in meaningful)
+17813:         has_none_check = last.opname in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE',
+17814:                                           'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_IF_NONE')
+17815:         if not has_compare and not has_none_check:
+17816:             return False
+17817:         if has_compare and not has_none_check:
+17818:             has_copy_instr = any(i.opname == 'COPY' for i in meaningful)
+17819:             for i in meaningful:
+17820:                 if i.opname == 'COMPARE_OP':
+17821:                     cmp_op = i.argval
+17822:                     if isinstance(cmp_op, str) and cmp_op not in ('==',):
+17823:                         if not has_copy_instr:
+17824:                             return False
+17825:             load_const_vals = [i.argval for i in meaningful if i.opname == 'LOAD_CONST']
+17826:             if any(v is None or v is True or v is False for v in load_const_vals):
+17827:                 return False
+17828:         simple_ops = frozenset({
+17829:             'COPY', 'LOAD_CONST', 'COMPARE_OP', 'IS_OP',
+17830:             'LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF',
+17831:             'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+17832:             'POP_TOP', 'SWAP',
+17833:         }) | NOISE_OPS | CONDITIONAL_JUMP_OPS
+17834:         if not all(i.opname in simple_ops for i in meaningful):
+17835:             return False
+17836:         if not has_nop_prefix:
+17837:             if has_none_check and not has_compare:
+17838:                 load_ops = [i for i in meaningful if i.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')]
+17839:                 other_ops = [i for i in meaningful if i.opname not in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') and i.opname not in CONDITIONAL_JUMP_OPS]
+17840:                 if len(load_ops) == 1 and (not other_ops or all(o.opname in ('POP_TOP',) for o in other_ops)):
+17841:                     return False
+17842:             elif has_compare and not has_none_check:
+17843:                 has_copy = any(i.opname == 'COPY' for i in meaningful)
+17844:                 if not has_copy:
+17845:                     return False
+17846:         return True
+17847: 
+17848:     def _is_wildcard_match_block(self, block):

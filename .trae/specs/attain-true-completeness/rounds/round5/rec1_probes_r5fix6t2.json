@@ -1,0 +1,38 @@
+[
+ {
+  "name": "g1a",
+  "pyc_src_rel": "test_repros/round5/rec1_synth_g1a_guard_depth.pyc",
+  "pyc_src_sha": "921bf6f7bd802b8c",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round5/rec1_g1a_rec1_synth_g1a_guard_depth.pyc",
+  "mtime": "2026-10-20T11:24:49",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "b8ad7490823294ec",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_g1a_rec1_synth_g1a_guard_depth.pyc (Python 3.11)\n\n__doc__ = 'rec1_synth g1a: match×guard depth family — or-guard chains at depth + assert-in-case discrimination (B61a).'\ndef g1_for_with_or_guard(v, flag, xs, sink):\n    for x in xs:\n        with open('p') as f:\n            match v:\n                case int(n) if n > 0 or flag:\n                    assert n < 1000\n                    sink.append(n)\n                case int(n):\n                    sink.append(-n)\n                case _:\n                    sink.append(0)\n    return len(sink)\ndef g1_if_or_chain3_assert(v, flag, sink):\n    if flag:\n        match v:\n            case int(n) if n > 0 or n < -10 or flag:\n                assert n < 500, 'large'\n                sink.append(n)\n            case _:\n                sink.append(0)\n    return 1\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_g1a_rec1_synth_g1a_guard_depth.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_g1a_rec1_synth_g1a_guard_depthOK.py\n[single] status=success units=3/3 success_rate=100.00%",
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "b74e",
+  "pyc_src_rel": "test_repros/round5/rec1_synth_b74e_guard_battery2.pyc",
+  "pyc_src_sha": "7ec4ec463bb524dd",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round5/rec1_b74e_rec1_synth_b74e_guard_battery2.pyc",
+  "mtime": "2026-10-20T11:24:51",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "521bfb7d937af556",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_b74e_rec1_synth_b74e_guard_battery2.pyc (Python 3.11)\n\n__doc__ = 'R5 synth family 1b: guard battery variants (guard + multi-statement body, guard on default, mixed arms).'\ndef gb2_guard_body_chain(x, g, sink):\n    r = 0\n    match x:\n        case 1 if g:\n            r = 1\n            sink.append(r)\n            r += 1\n        case 2:\n            r = 2\n        case _ if not g:\n            r = -1\n    return r\ndef gb2_nested_guard(x, y, g):\n    r = 0\n    match x:\n        case 5:\n            match y:\n                case 6 if g:\n                    r = 56\n                case _:\n                    r = 50\n        case _:\n            r = 9\n    return r\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_b74e_rec1_synth_b74e_guard_battery2.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_b74e_rec1_synth_b74e_guard_battery2OK.py\n[single] status=success units=3/3 success_rate=100.00%",
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ }
+]

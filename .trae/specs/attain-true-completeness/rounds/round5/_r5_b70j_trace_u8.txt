@@ -1,0 +1,3 @@
+﻿W blocks [0, 72, 120, 146, 152, 154, 160, 192, 200, 214, 34, 66, 74, 96, 162]
+current_loop None
+result None

@@ -1,0 +1,13 @@
+﻿) as b:
+        R = (a, b)
+    return 4
+def with_in_match():
+    _A()
+    _A()
+    R = (a, b)
+    return 5
+def with_shallow():
+    with _A() as a:
+        R = a
+    return 0
+

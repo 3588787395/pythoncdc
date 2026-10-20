@@ -1,0 +1,86 @@
+﻿code=miw qualname=miw flags=3
+=== disassembly ===
+    0 RESUME                         0
+    2 LOAD_GLOBAL                    '_B'
+   14 PRECALL                        0
+   18 CALL                           0
+   28 BEFORE_WITH                    None
+   30 STORE_FAST                     'a'
+   32 LOAD_FAST                      'v'
+   34 COPY                           1
+   36 LOAD_CONST                     1
+   38 COMPARE_OP                     '=='
+   44 POP_JUMP_FORWARD_IF_FALSE      54
+   46 POP_TOP                        None
+   48 LOAD_FAST                      'a'
+   50 STORE_FAST                     'R'
+   52 JUMP_FORWARD                   72
+   54 LOAD_CONST                     2
+   56 COMPARE_OP                     '=='
+   62 POP_JUMP_FORWARD_IF_FALSE      72
+   64 LOAD_FAST                      'a'
+   66 POP_JUMP_FORWARD_IF_FALSE      72
+   68 LOAD_CONST                     2
+   70 STORE_FAST                     'R'
+   72 LOAD_CONST                     None
+   74 LOAD_CONST                     None
+   76 LOAD_CONST                     None
+   78 PRECALL                        2
+   82 CALL                           2
+   92 POP_TOP                        None
+   94 JUMP_FORWARD                   118
+   96 PUSH_EXC_INFO                  None
+   98 WITH_EXCEPT_START              None
+  100 POP_JUMP_FORWARD_IF_TRUE       110
+  102 RERAISE                        2
+  104 COPY                           3
+  106 POP_EXCEPT                     None
+  108 RERAISE                        1
+  110 POP_TOP                        None
+  112 POP_EXCEPT                     None
+  114 POP_TOP                        None
+  116 POP_TOP                        None
+  118 LOAD_CONST                     2
+  120 RETURN_VALUE                   None
+=== blocks ===
+block@0     succ=['@30'] exc=[]
+   [('LOAD_GLOBAL', '_B'), ('PRECALL', 0), ('CALL', 0), ('BEFORE_WITH', None)]
+block@30    succ=['@46', '@54', '@96'] exc=['@96']
+   [('STORE_FAST', 'a'), ('LOAD_FAST', 'v'), ('COPY', 1), ('LOAD_CONST', 1), ('COMPARE_OP', '=='), ('POP_JUMP_FORWARD_IF_FALSE', 54)]
+block@46    succ=['@72', '@96'] exc=['@96']
+   [('POP_TOP', None), ('LOAD_FAST', 'a'), ('STORE_FAST', 'R'), ('JUMP_FORWARD', 72)]
+block@54    succ=['@64', '@72', '@96'] exc=['@96']
+   [('LOAD_CONST', 2), ('COMPARE_OP', '=='), ('POP_JUMP_FORWARD_IF_FALSE', 72)]
+block@64    succ=['@68', '@72', '@96'] exc=['@96']
+   [('LOAD_FAST', 'a'), ('POP_JUMP_FORWARD_IF_FALSE', 72)]
+block@68    succ=['@72', '@96'] exc=['@96']
+   [('LOAD_CONST', 2), ('STORE_FAST', 'R')]
+block@72    succ=['@118'] exc=[]
+   [('LOAD_CONST', None), ('LOAD_CONST', None), ('LOAD_CONST', None), ('PRECALL', 2), ('CALL', 2), ('POP_TOP', None), ('JUMP_FORWARD', 118)]
+block@96    succ=['@102', '@104', '@110'] exc=['@104']
+   [('PUSH_EXC_INFO', None), ('WITH_EXCEPT_START', None), ('POP_JUMP_FORWARD_IF_TRUE', 110)]
+block@102   succ=['@104'] exc=['@104']
+   [('RERAISE', 2)]
+block@104   succ=[] exc=[]
+   [('COPY', 3), ('POP_EXCEPT', None), ('RERAISE', 1)]
+block@110   succ=['@104', '@112'] exc=['@104']
+   [('POP_TOP', None)]
+block@112   succ=['@118'] exc=[]
+   [('POP_EXCEPT', None), ('POP_TOP', None), ('POP_TOP', None)]
+block@118   succ=[] exc=[]
+   [('LOAD_CONST', 2), ('RETURN_VALUE', None)]
+=== regions (3) ===
+WithRegion entry=@0
+  blocks=['@0', '@30', '@46', '@54', '@64', '@68', '@72', '@96', '@102', '@104', '@110', '@112']
+MatchRegion entry=@30
+  merge_block=@72
+  subject_block=@30
+  case_blocks=['@30', '@54']
+  case_bodies=[['@46'], ['@68']]
+  case_guards=[None, {'type': 'Name', 'id': 'a'}]
+  case_patterns=[{'type': 'MatchValue', 'value': {'type': 'Constant', 'value': 1}}, {'type': 'MatchValue', 'value': {'type': 'Constant', 'value': 2}}]
+  blocks=['@30', '@46', '@54', '@64', '@68', '@72']
+Region entry=@118
+  blocks=['@118']
+=== ast ===
+{'type': 'FunctionDef', 'name': 'miw', 'args': {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'v'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}, 'body': [{'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': '_B', 'ctx': 'Load', 'lineno': 16}, 'args': [], 'kwargs': [], 'lineno': None}}, {'type': 'Match', 'subject': {'type': 'Name', 'id': 'v', 'ctx': 'Load', 'lineno': 17}, 'cases': [{'type': 'Case', 'pattern': {'type': 'MatchValue', 'value': {'type': 'Constant', 'value': 1}}, 'body': [{'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'R', 'ctx': 'Store'}], 'value': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': 19}}]}, {'type': 'Case', 'pattern': {'type': 'MatchValue', 'value': {'type': 'Constant', 'value': 2}}, 'body': [{'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'R', 'ctx': 'Store'}], 'value': {'type': 'Constant', 'value': 2, 'lineno': 21}}], 'guard': {'type': 'Name', 'id': 'a'}}]}], 'decorator_list': [], 'returns': None}

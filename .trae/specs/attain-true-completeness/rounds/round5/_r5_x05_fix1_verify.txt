@@ -1,0 +1,3 @@
+﻿[single] F:/Downloads/pythoncdc-main/test_repros/round2/x05_with_deep_hosts.pyc
+[single] 浜х墿 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/rounds/round5/_r5_x05_fix1_ok.py
+[single] status=success units=7/7 success_rate=100.00%

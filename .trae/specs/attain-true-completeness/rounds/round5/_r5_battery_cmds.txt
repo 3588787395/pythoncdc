@@ -1,0 +1,40 @@
+=== rec1_probes_r5fix4neg.json ===
+r707=test_repros/round7/r7_07_ternary_nest.pyc units=7/7 
+r708=test_repros/round7/r7_08_with_tryfin_constret.pyc units=None/None 
+rv801=test_repros/round8/rv8_01_chain3_subscript.pyc units=7/7 
+rv802=test_repros/round8/rv8_02_with_tryfin_constret.pyc units=7/7 
+r806=test_repros/round8/r8_06_augassign_ops.pyc units=10/10 
+r1004=test_repros/round10/r10_04_import_try_cross.pyc units=3/3 
+r1015=test_repros/round10/r10_15_global_hosts.pyc units=6/6 
+r1021=test_repros/round10/r10_21_fin_loopctrl.pyc units=4/4 
+rv1032=test_repros/round10/rv10_32_augassign_variant.pyc units=8/8 
+=== rec1_probes_r5fix4neg3.json ===
+r708=test_repros/round7/r7_08_ternary_deep_host.pyc units=8/8 
+=== rec1_probes_r5fix4r4prot.json ===
+c420=test_repros/round4/c4_20_async_five.pyc units=24/24 
+e12d=test_repros/round3/e12d_g9_awaits.pyc units=11/11 
+r706=test_repros/round7/r7_06_ternary_lambda_await.pyc units=10/10 
+r510=test_repros/round5/r5_10_comp_async.pyc units=13/13 
+e09b=test_repros/round3/e09b_g6_async_comps.pyc units=13/13 
+=== rec1_probes_r5fix4b122.json ===
+b122a=test_repros/round8/r8v8rev_bmatch_nestnoguard.pyc units=2/2 
+b122b=test_repros/round8/r8v8rev_bmatch_guards_battery.pyc units=5/5 
+x01=test_repros/round2/x01_if_deep_hosts.pyc units=6/7 ***<module>.if_in_while: Failure: Different control flow
+x05=test_repros/round2/x05_with_deep_hosts.pyc units=7/7 
+=== rec1_probes_r5fix4neigh.json ===
+x02=test_repros/round2/x02_for_deep_hosts.pyc units=6/7 ***<module>.for_in_match: Failure: Different control flow
+x01=test_repros/round2/x01_if_deep_hosts.pyc units=6/7 ***<module>.if_in_while: Failure: Different control flow
+x04=test_repros/round2/x04_try_deep_hosts.pyc units=7/7 
+c04=test_repros/round2/c04_class_try.pyc units=5/6 ***<module>.CTryNest: Failure: Different control flow
+c13=test_repros/round2/c13_class_misc.pyc units=3/3 
+m02=test_repros/round2/m02_top_ifmain.pyc units=2/3 ***<module>: Failure: Different control flow
+m06=test_repros/round2/m06_module_loops.pyc units=1/1 
+r807=test_repros/round8/r8_07_assert_forms.pyc units=11/11 
+r810=test_repros/round8/r8_10_expr_cross_stmt.pyc units=11/12 ***<module>.r8_x_for_iter_ternary: Failure: Different bytecode
+rv901=test_repros/round9/rv9_01_b68_nonfin_tail.pyc units=5/5 
+rv902=test_repros/round9/rv9_02_b66_with_nest.pyc units=5/5 
+r1004=test_repros/round10/r10_04_import_try_cross.pyc units=3/3 
+r1015=test_repros/round10/r10_15_global_hosts.pyc units=6/6 
+r1021=test_repros/round10/r10_21_fin_loopctrl.pyc units=4/4 
+vb73=.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc units=3/3 
+vb75=.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc units=3/3 

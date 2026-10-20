@@ -1,0 +1,221 @@
+﻿==================== rec1_synth_g1a_guard_depth.py ====================
+--- orig
++++ regen
+@@ -1,4 +1,5 @@
+-"""rec1_synth g1a: match脳guard depth family 鈥?or-guard chains at depth + assert-in-case discrimination (B61a)."""
++# Source Generated with Decompyle++ (Python version)
++# File: rec1_g1a_rec1_synth_g1a_guard_depth.pyc (Python 3.11)
+ 
+-
++__doc__ = 'rec1_synth g1a: match脳guard depth family 鈥?or-guard chains at depth + assert-in-case discrimination (B61a).'
+ def g1_for_with_or_guard(v, flag, xs, sink):
+@@ -15,4 +16,2 @@
+     return len(sink)
+-
+-
+ def g1_if_or_chain3_assert(v, flag, sink):
+
+==================== rec1_synth_g1b_guard_depth.py ====================
+--- orig
++++ regen
+@@ -1,4 +1,5 @@
+-"""rec1_synth g1b: match脳guard depth family 鈥?guards in while/try hosts (cross variants)."""
++# Source Generated with Decompyle++ (Python version)
++# File: rec1_g1b_rec1_synth_g1b_guard_depth.pyc (Python 3.11)
+ 
+-
++__doc__ = 'rec1_synth g1b: match脳guard depth family 鈥?guards in while/try hosts (cross variants).'
+ def g1b_while_guard(v, flag, sink):
+@@ -14,4 +15,2 @@
+     return len(sink)
+-
+-
+ def g1b_try_guard(v, sink):
+
+==================== rec1_synth_g2a_with_match_cross.py ====================
+--- orig
++++ regen
+@@ -1,4 +1,5 @@
+-"""rec1_synth g2a: with脳match bidirectional host family 鈥?match case bodies host with (B93)."""
++# Source Generated with Decompyle++ (Python version)
++# File: rec1_g2a_rec1_synth_g2a_with_match_cross.pyc (Python 3.11)
+ 
+-
++__doc__ = 'rec1_synth g2a: with脳match bidirectional host family 鈥?match case bodies host with (B93).'
+ def g2a_match_hosts_with(v, p):
+@@ -12,5 +13,3 @@
+         case _:
+-            return None
+-
+-
++            pass
+ def g2a_with_hosts_match(v, p, flag):
+@@ -22,4 +21,5 @@
+                         return (n, f, g)
++                    return None
+             case _:
+                 return -1
+-    return 0
++        return 0
+
+==================== rec1_synth_g2b_with_match_cross.py ====================
+--- orig
++++ regen
+@@ -1,4 +1,5 @@
+-"""rec1_synth g2b: with脳match bidirectional host family 鈥?4-deep match-in-with-in-match cross."""
++# Source Generated with Decompyle++ (Python version)
++# File: rec1_g2b_rec1_synth_g2b_with_match_cross.pyc (Python 3.11)
+ 
+-
++__doc__ = 'rec1_synth g2b: with脳match bidirectional host family 鈥?4-deep match-in-with-in-match cross.'
+ def g2b_deep_cross(v, p, flag):
+@@ -11,7 +12,7 @@
+                     case _:
++                        while False:
++                            pass
+                         return (flag, f)
+         case _:
+-            return None
+-
+-
++            pass
+ def g2b_with_match_with(v, p):
+@@ -22,4 +23,5 @@
+                     return (a, b, f, g)
++                    return None
+             case _:
+                 return (f,)
+-    return ()
++        return ()
+
+==================== rec1_synth_g3a_b61_deephost.py ====================
+--- orig
++++ regen
+@@ -1,4 +1,5 @@
+-"""rec1_synth g3a: B61 deep-host family 鈥?mapping **rest capture + fused body-head + guard/assert."""
++# Source Generated with Decompyle++ (Python version)
++# File: rec1_g3a_rec1_synth_g3a_b61_deephost.pyc (Python 3.11)
+ 
+-
++__doc__ = 'rec1_synth g3a: B61 deep-host family 鈥?mapping **rest capture + fused body-head + guard/assert.'
+ def g3a_rest_multi(v):
+@@ -9,3 +10,4 @@
+                     del rest['tmp']
+-                return (op, rest)
++                else:
++                    return (op, rest)
+             case [a, b]:
+@@ -15,5 +17,2 @@
+                 raise TypeError('bad shape')
+-    return None
+-
+-
+ def g3a_guard_assert(v, sink):
+
+==================== rec1_synth_g3b_b61_deephost.py ====================
+--- orig
++++ regen
+@@ -1,4 +1,5 @@
+-"""rec1_synth g3b: B61 deep-host family 鈥?rest-capture in with/try hosts (cross variants)."""
++# Source Generated with Decompyle++ (Python version)
++# File: rec1_g3b_rec1_synth_g3b_b61_deephost.pyc (Python 3.11)
+ 
+-
++__doc__ = 'rec1_synth g3b: B61 deep-host family 鈥?rest-capture in with/try hosts (cross variants).'
+ def g3b_with_rest(v, p):
+@@ -7,5 +8,6 @@
+             case {'op': op, **rest}:
+-                if 'tmp' in rest:
+-                    del rest['tmp']
++                'tmp' in rest
++                del rest['tmp']
+                 return (op, rest, f)
++                return None(None, None)
+             case _:
+@@ -13,5 +15,2 @@
+                 raise TypeError(v)
+-    return None
+-
+-
+ def g3b_try_guard_default(v, sink):
+
+==================== rec1_synth_b74d_guard_depth.py ====================
+--- orig
++++ regen
+@@ -1,4 +1,5 @@
+-"""R5 synth family 1a: match guard depth (or-pattern + sequence star + mapping rest + class as, all guarded)."""
++# Source Generated with Decompyle++ (Python version)
++# File: rec1_b74d_rec1_synth_b74d_guard_depth.pyc (Python 3.11)
+ 
+-
++__doc__ = 'R5 synth family 1a: match guard depth (or-pattern + sequence star + mapping rest + class as, all guarded).'
+ def gd_or_seq_guard(x, g):
+@@ -13,8 +14,6 @@
+     return r
+-
+-
+ def gd_map_class_guard(x, g):
+     match x:
+-        case {"op": op, **kw} if op:
+-            return op, len(kw)
++        case {'op': op, **kw} if op:
++            return (op, len(kw))
+         case int() as v if v > 0:
+@@ -22,2 +21,2 @@
+         case _:
+-            return None
++            pass
+
+==================== rec1_synth_b74e_guard_battery2.py ====================
+--- orig
++++ regen
+@@ -1,4 +1,5 @@
+-"""R5 synth family 1b: guard battery variants (guard + multi-statement body, guard on default, mixed arms)."""
++# Source Generated with Decompyle++ (Python version)
++# File: rec1_b74e_rec1_synth_b74e_guard_battery2.pyc (Python 3.11)
+ 
+-
++__doc__ = 'R5 synth family 1b: guard battery variants (guard + multi-statement body, guard on default, mixed arms).'
+ def gb2_guard_body_chain(x, g, sink):
+@@ -15,4 +16,2 @@
+     return r
+-
+-
+ def gb2_nested_guard(x, y, g):
+
+==================== rec1_synth_b70a_wt_with_bc.py ====================
+--- orig
++++ regen
+@@ -1,4 +1,5 @@
+-"""R5 synth family 4a: while True + with break/continue (B70 exit-path classification)."""
++# Source Generated with Decompyle++ (Python version)
++# File: rec1_b70a_rec1_synth_b70a_wt_with_bc.pyc (Python 3.11)
+ 
+-
++__doc__ = 'R5 synth family 4a: while True + with break/continue (B70 exit-path classification).'
+ def wbc(p, a, b):
+@@ -9,14 +10,13 @@
+             if b:
+-                continue
+-            use(f)
++                while False:
++                    pass
++            else:
++                use(f)
++            while False:
++                pass
+     return 1
+-
+-
+ def wbc_nested(p, q, a):
+-    while True:
+-        with open(p) as f:
+-            with open(q) as g:
+-                if a:
+-                    break
+-        break
++    with open(p) as f, open(q) as g:
++        if a:
++            pass
+     return 2
+

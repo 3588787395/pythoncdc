@@ -1,0 +1,5 @@
+collect#1 case=0 -> [0]
+guard#1 pb=[0] allow=False fail=44 -> {'type': 'Compare', 'left': {'type': 'Name', 'id': 'x'}, 'ops': [{'type': 'CompareOp', 'op': '=='}], 'right': {'type': 'Constant', 'value': 1}}
+collect#2 case=44 -> [44]
+guard#2 pb=[44] allow=False fail=50 -> None
+=== DONE ===

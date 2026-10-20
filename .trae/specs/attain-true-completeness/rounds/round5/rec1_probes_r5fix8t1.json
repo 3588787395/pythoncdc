@@ -1,0 +1,103 @@
+[
+ {
+  "name": "g2a",
+  "pyc_src_rel": "test_repros/round5/rec1_synth_g2a_with_match_cross.pyc",
+  "pyc_src_sha": "26da9953949a66b5",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round5/rec1_g2a_rec1_synth_g2a_with_match_cross.pyc",
+  "mtime": "2026-10-20T12:00:47",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "bdcae758cea7a9af",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_g2a_rec1_synth_g2a_with_match_cross.pyc (Python 3.11)\n\n__doc__ = 'rec1_synth g2a: with×match bidirectional host family — match case bodies host with (B93).'\ndef g2a_match_hosts_with(v, p):\n    match v:\n        case [a, b]:\n            with open(p) as f:\n                return (a, b, f)\n        case {'k': kv}:\n            with open(p) as g:\n                return (kv, g)\n        case _:\n            pass\ndef g2a_with_hosts_match(v, p, flag):\n    with open(p) as f:\n        match v:\n            case int(n) if n > 0:\n                with open(p) as g:\n                    if flag:\n                        return (n, f, g)\n            case _:\n                return -1\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.g2a_with_hosts_match: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_g2a_rec1_synth_g2a_with_match_cross.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_g2a_rec1_synth_g2a_with_match_crossOK.py\n[single] status=failure units=2/3 success_rate=66.67%",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>.g2a_with_hosts_match: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "g2b",
+  "pyc_src_rel": "test_repros/round5/rec1_synth_g2b_with_match_cross.pyc",
+  "pyc_src_sha": "4d8b95d6d385dba6",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round5/rec1_g2b_rec1_synth_g2b_with_match_cross.pyc",
+  "mtime": "2026-10-20T12:00:48",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "fa8795c38fa960f5",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_g2b_rec1_synth_g2b_with_match_cross.pyc (Python 3.11)\n\n__doc__ = 'rec1_synth g2b: with×match bidirectional host family — 4-deep match-in-with-in-match cross.'\ndef g2b_deep_cross(v, p, flag):\n    match v:\n        case {'op': op}:\n            with open(p) as f:\n                match op:\n                    case 'r':\n                        return (op, f)\n                    case _:\n                        while False:\n                            pass\n                        return (flag, f)\n        case _:\n            pass\ndef g2b_with_match_with(v, p):\n    with open(p) as f:\n        match v:\n            case [a, b]:\n                with open(p) as g:\n                    return (a, b, f, g)\n            case _:\n                return (f,)\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.g2b_with_match_with: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_g2b_rec1_synth_g2b_with_match_cross.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_g2b_rec1_synth_g2b_with_match_crossOK.py\n[single] status=failure units=2/3 success_rate=66.67%",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>.g2b_with_match_with: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "g3a",
+  "pyc_src_rel": "test_repros/round5/rec1_synth_g3a_b61_deephost.pyc",
+  "pyc_src_sha": "5f97cea8ed86cf59",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round5/rec1_g3a_rec1_synth_g3a_b61_deephost.pyc",
+  "mtime": "2026-10-20T12:00:49",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "8f5e4d629c96b803",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_g3a_rec1_synth_g3a_b61_deephost.pyc (Python 3.11)\n\n__doc__ = 'rec1_synth g3a: B61 deep-host family — mapping **rest capture + fused body-head + guard/assert.'\ndef g3a_rest_multi(v):\n    for x in range(1):\n        match v:\n            case {'op': op, **rest}:\n                if 'tmp' in rest:\n                    del rest['tmp']\n                else:\n                    return (op, rest)\n            case [a, b]:\n                return (a + b,)\n            case _:\n                assert v is not None\n                raise TypeError('bad shape')\ndef g3a_guard_assert(v, sink):\n    match v:\n        case int(n) if n > 10:\n            assert n < 1000, 'too large'\n            sink.append(n * 2)\n        case str(s):\n            sink.append(s)\n    return len(sink)\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.g3a_rest_multi: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_g3a_rec1_synth_g3a_b61_deephost.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_g3a_rec1_synth_g3a_b61_deephostOK.py\n[single] status=failure units=2/3 success_rate=66.67%",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>.g3a_rest_multi: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "g3b",
+  "pyc_src_rel": "test_repros/round5/rec1_synth_g3b_b61_deephost.pyc",
+  "pyc_src_sha": "40d7b840938e5840",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round5/rec1_g3b_rec1_synth_g3b_b61_deephost.pyc",
+  "mtime": "2026-10-20T12:00:50",
+  "regen_rc": 0,
+  "regen_tail": "<decompiled>:9: SyntaxWarning: 'NoneType' object is not callable; perhaps you missed a comma?",
+  "ok_exists": true,
+  "ok_sha": "b759a5efa19592f7",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_g3b_rec1_synth_g3b_b61_deephost.pyc (Python 3.11)\n\n__doc__ = 'rec1_synth g3b: B61 deep-host family — rest-capture in with/try hosts (cross variants).'\ndef g3b_with_rest(v, p):\n    with open(p) as f:\n        match v:\n            case {'op': op, **rest}:\n                'tmp' in rest\n                del rest['tmp']\n                return (op, rest, f)\n                return None(None, None)\n            case _:\n                assert v is not None\n                raise TypeError(v)\ndef g3b_try_guard_default(v, sink):\n    try:\n        match v:\n            case int(n) if n > 5:\n                assert n < 100\n                sink.append(n)\n            case _:\n                pass\n    finally:\n        sink.append('fin')\n    return len(sink)\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.g3b_with_rest: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_g3b_rec1_synth_g3b_b61_deephost.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_g3b_rec1_synth_g3b_b61_deephostOK.py\n[single] status=failure units=2/3 success_rate=66.67%\nF:\\Downloads\\pythoncdc-main\\.trae\\specs\\attain-true-completeness\\test_repros\\round5\\rec1_g3b_rec1_synth_g3b_b61_deephostOK.py:12: SyntaxWarning: 'NoneType' object is not callable; perhaps you missed a comma?\n  return None(None, None)",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>.g3b_with_rest: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "b70a",
+  "pyc_src_rel": "test_repros/round5/rec1_synth_b70a_wt_with_bc.pyc",
+  "pyc_src_sha": "e810871a594879d8",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round5/rec1_b70a_rec1_synth_b70a_wt_with_bc.pyc",
+  "mtime": "2026-10-20T12:00:51",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "ee96434c3a286a64",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_b70a_rec1_synth_b70a_wt_with_bc.pyc (Python 3.11)\n\n__doc__ = 'R5 synth family 4a: while True + with break/continue (B70 exit-path classification).'\ndef wbc(p, a, b):\n    while True:\n        with open(p) as f:\n            if a:\n                break\n            if b:\n                while False:\n                    pass\n            else:\n                use(f)\n            while False:\n                pass\n    return 1\ndef wbc_nested(p, q, a):\n    with open(p) as f, open(q) as g:\n        if a:\n            pass\n    return 2\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.wbc: Failure: Different control flow\n  ***<module>.wbc_nested: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_b70a_rec1_synth_b70a_wt_with_bc.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_b70a_rec1_synth_b70a_wt_with_bcOK.py\n[single] status=failure units=1/3 success_rate=33.33%",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 3,
+  "failures": [
+   "***<module>.wbc: Failure: Different control flow",
+   "***<module>.wbc_nested: Failure: Different control flow"
+  ]
+ }
+]

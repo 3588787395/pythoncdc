@@ -1,0 +1,7 @@
+collect_lit subject=18 -> REGION
+  case_blocks=[18, 40]
+  case_patterns=[{'type': 'MatchValue', 'value': {'type': 'Constant', 'value': 2}}, {'type': 'MatchAs'}]
+  case_guards=[{'type': 'Name', 'id': 'g'}, None]
+  case_bodies=[[30, 34], []]
+  merge=40 blocks=[18, 30, 34, 40]
+=== DONE ===

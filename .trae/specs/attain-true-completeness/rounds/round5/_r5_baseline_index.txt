@@ -1,0 +1,40 @@
+﻿== r5pre2 6
+  x05 = test_repros/round2/x05_with_deep_hosts.pyc -> failure 6/7
+  x01 = test_repros/round2/x01_if_deep_hosts.pyc -> failure 5/7
+  r809 = test_repros/round8/r8_09_deep_host_combo.pyc -> failure 7/10
+  r811 = test_repros/round8/r8_11_deep_host_combo2.pyc -> failure 5/6
+  rv902 = test_repros/round9/rv9_02_b66_with_nest.pyc -> failure 4/5
+  vb74 = .trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b74_face.pyc -> success 4/4
+== r5pre3_neg9 9
+  r707 = test_repros/round7/r7_07_ternary_nest.pyc -> success 7/7
+  r708 = test_repros/round7/r7_08_ternary_deep_host.pyc -> success 8/8
+  rv801 = test_repros/round8/rv8_01_chain3_subscript.pyc -> success 7/7
+  rv802 = test_repros/round8/rv8_02_with_tryfin_constret.pyc -> success 7/7
+  r806 = test_repros/round8/r8_06_augassign_ops.pyc -> success 10/10
+  r1004 = test_repros/round10/r10_04_import_try_cross.pyc -> success 3/3
+  r1015 = test_repros/round10/r10_15_global_hosts.pyc -> success 6/6
+  r1021 = test_repros/round10/r10_21_fin_loopctrl.pyc -> success 4/4
+  rv1032 = test_repros/round10/rv10_32_augassign_variant.pyc -> success 8/8
+== r5pre4_neigh 16
+  x02 = test_repros/round2/x02_for_deep_hosts.pyc -> failure 6/7
+  x01 = test_repros/round2/x01_if_deep_hosts.pyc -> failure 5/7
+  x04 = test_repros/round2/x04_try_deep_hosts.pyc -> success 7/7
+  c04 = test_repros/round2/c04_class_try.pyc -> failure 5/6
+  c13 = test_repros/round2/c13_class_misc.pyc -> success 3/3
+  m02 = test_repros/round2/m02_top_ifmain.pyc -> failure 2/3
+  m06 = test_repros/round2/m06_module_loops.pyc -> success 1/1
+  r807 = test_repros/round8/r8_07_assert_forms.pyc -> success 11/11
+  r810 = test_repros/round8/r8_10_expr_cross_stmt.pyc -> failure 11/12
+  rv901 = test_repros/round9/rv9_01_b68_nonfin_tail.pyc -> success 5/5
+  rv902 = test_repros/round9/rv9_02_b66_with_nest.pyc -> failure 4/5
+  r1004 = test_repros/round10/r10_04_import_try_cross.pyc -> success 3/3
+  r1015 = test_repros/round10/r10_15_global_hosts.pyc -> success 6/6
+  r1021 = test_repros/round10/r10_21_fin_loopctrl.pyc -> success 4/4
+  vb73 = .trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.pyc -> success 3/3
+  vb75 = .trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b75_face.pyc -> success 3/3
+== r5pre5_r4prot 5
+  c420 = test_repros/round4/c4_20_async_five.pyc -> success 24/24
+  e12d = test_repros/round3/e12d_g9_awaits.pyc -> success 11/11
+  r706 = test_repros/round7/r7_06_ternary_lambda_await.pyc -> success 10/10
+  r510 = test_repros/round5/r5_10_comp_async.pyc -> success 13/13
+  e09b = test_repros/round3/e09b_g6_async_comps.pyc -> success 13/13

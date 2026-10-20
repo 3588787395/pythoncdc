@@ -1,0 +1,143 @@
+﻿code=wbc_nested qualname=wbc_nested flags=3
+=== disassembly ===
+    0 RESUME                         0
+    2 NOP                            None
+    4 LOAD_GLOBAL                    'open'
+   16 LOAD_FAST                      'p'
+   18 PRECALL                        1
+   22 CALL                           1
+   32 BEFORE_WITH                    None
+   34 STORE_FAST                     'f'
+   36 LOAD_GLOBAL                    'open'
+   48 LOAD_FAST                      'q'
+   50 PRECALL                        1
+   54 CALL                           1
+   64 BEFORE_WITH                    None
+   66 STORE_FAST                     'g'
+   68 LOAD_FAST                      'a'
+   70 POP_JUMP_FORWARD_IF_FALSE      120
+   72 NOP                            None
+   74 LOAD_CONST                     None
+   76 LOAD_CONST                     None
+   78 LOAD_CONST                     None
+   80 PRECALL                        2
+   84 CALL                           2
+   94 POP_TOP                        None
+   96 LOAD_CONST                     None
+   98 LOAD_CONST                     None
+  100 LOAD_CONST                     None
+  102 PRECALL                        2
+  106 CALL                           2
+  116 POP_TOP                        None
+  118 JUMP_FORWARD                   216
+  120 NOP                            None
+  122 LOAD_CONST                     None
+  124 LOAD_CONST                     None
+  126 LOAD_CONST                     None
+  128 PRECALL                        2
+  132 CALL                           2
+  142 POP_TOP                        None
+  144 JUMP_FORWARD                   168
+  146 PUSH_EXC_INFO                  None
+  148 WITH_EXCEPT_START              None
+  150 POP_JUMP_FORWARD_IF_TRUE       160
+  152 RERAISE                        2
+  154 COPY                           3
+  156 POP_EXCEPT                     None
+  158 RERAISE                        1
+  160 POP_TOP                        None
+  162 POP_EXCEPT                     None
+  164 POP_TOP                        None
+  166 POP_TOP                        None
+  168 LOAD_CONST                     None
+  170 LOAD_CONST                     None
+  172 LOAD_CONST                     None
+  174 PRECALL                        2
+  178 CALL                           2
+  188 POP_TOP                        None
+  190 JUMP_FORWARD                   214
+  192 PUSH_EXC_INFO                  None
+  194 WITH_EXCEPT_START              None
+  196 POP_JUMP_FORWARD_IF_TRUE       206
+  198 RERAISE                        2
+  200 COPY                           3
+  202 POP_EXCEPT                     None
+  204 RERAISE                        1
+  206 POP_TOP                        None
+  208 POP_EXCEPT                     None
+  210 POP_TOP                        None
+  212 POP_TOP                        None
+  214 NOP                            None
+  216 LOAD_CONST                     2
+  218 RETURN_VALUE                   None
+=== blocks ===
+block@0     succ=['@34'] exc=[]
+   [('LOAD_GLOBAL', 'open'), ('LOAD_FAST', 'p'), ('PRECALL', 1), ('CALL', 1), ('BEFORE_WITH', None)]
+block@34    succ=['@66', '@192'] exc=['@192']
+   [('STORE_FAST', 'f'), ('LOAD_GLOBAL', 'open'), ('LOAD_FAST', 'q'), ('PRECALL', 1), ('CALL', 1), ('BEFORE_WITH', None)]
+block@66    succ=['@72', '@120', '@146'] exc=['@146']
+   [('STORE_FAST', 'g'), ('LOAD_FAST', 'a'), ('POP_JUMP_FORWARD_IF_FALSE', 120)]
+block@72    succ=['@74', '@146'] exc=['@146']
+   []
+block@74    succ=['@192', '@96'] exc=['@192']
+   [('LOAD_CONST', None), ('LOAD_CONST', None), ('LOAD_CONST', None), ('PRECALL', 2), ('CALL', 2), ('POP_TOP', None)]
+block@96    succ=['@216'] exc=[]
+   [('LOAD_CONST', None), ('LOAD_CONST', None), ('LOAD_CONST', None), ('PRECALL', 2), ('CALL', 2), ('POP_TOP', None), ('JUMP_FORWARD', 216)]
+block@120   succ=['@122'] exc=[]
+   []
+block@122   succ=['@168', '@192'] exc=['@192']
+   [('LOAD_CONST', None), ('LOAD_CONST', None), ('LOAD_CONST', None), ('PRECALL', 2), ('CALL', 2), ('POP_TOP', None), ('JUMP_FORWARD', 168)]
+block@146   succ=['@152', '@154', '@160'] exc=['@154']
+   [('PUSH_EXC_INFO', None), ('WITH_EXCEPT_START', None), ('POP_JUMP_FORWARD_IF_TRUE', 160)]
+block@152   succ=['@154'] exc=['@154']
+   [('RERAISE', 2)]
+block@154   succ=['@192'] exc=['@192']
+   [('COPY', 3), ('POP_EXCEPT', None), ('RERAISE', 1)]
+block@160   succ=['@162', '@154'] exc=['@154']
+   [('POP_TOP', None)]
+block@162   succ=['@168', '@192'] exc=['@192']
+   [('POP_EXCEPT', None), ('POP_TOP', None), ('POP_TOP', None)]
+block@168   succ=['@214'] exc=[]
+   [('LOAD_CONST', None), ('LOAD_CONST', None), ('LOAD_CONST', None), ('PRECALL', 2), ('CALL', 2), ('POP_TOP', None), ('JUMP_FORWARD', 214)]
+block@192   succ=['@198', '@200', '@206'] exc=['@200']
+   [('PUSH_EXC_INFO', None), ('WITH_EXCEPT_START', None), ('POP_JUMP_FORWARD_IF_TRUE', 206)]
+block@198   succ=['@200'] exc=['@200']
+   [('RERAISE', 2)]
+block@200   succ=[] exc=[]
+   [('COPY', 3), ('POP_EXCEPT', None), ('RERAISE', 1)]
+block@206   succ=['@200', '@208'] exc=['@200']
+   [('POP_TOP', None)]
+block@208   succ=['@214'] exc=[]
+   [('POP_EXCEPT', None), ('POP_TOP', None), ('POP_TOP', None)]
+block@214   succ=['@216'] exc=[]
+   []
+block@216   succ=[] exc=[]
+   [('LOAD_CONST', 2), ('RETURN_VALUE', None)]
+=== regions (8) ===
+WithRegion entry=@0
+  blocks=['@0', '@34', '@66', '@72', '@74', '@96', '@120', '@146', '@152', '@154', '@160', '@162', '@192', '@200', '@214']
+  Region entry=@198
+    blocks=['@198']
+  Region entry=@206
+    blocks=['@206']
+  Region entry=@208
+    blocks=['@208']
+IfRegion entry=@66
+  merge_block=@216
+  blocks=['@66', '@72', '@74', '@122', '@168']
+  Region entry=@122
+    blocks=['@122']
+  Region entry=@168
+    blocks=['@168']
+Region entry=@122
+  blocks=['@122']
+Region entry=@168
+  blocks=['@168']
+Region entry=@198
+  blocks=['@198']
+Region entry=@206
+  blocks=['@206']
+Region entry=@208
+  blocks=['@208']
+Region entry=@216
+  blocks=['@216']

@@ -1,0 +1,206 @@
+############################## g4b_wt_with_continue ##############################
+=== CFG blocks ===
+BLK@0..0 succ=[2] pred=[]
+   0 RESUME 0
+BLK@2..2 succ=[4] pred=[0, 42]
+   2 NOP None
+BLK@4..32 succ=[34] pred=[2, 110]
+   4 LOAD_GLOBAL open
+   16 LOAD_FAST p
+   18 PRECALL 1
+   22 CALL 1
+   32 BEFORE_WITH None
+BLK@34..38 succ=[40, 66, 94] pred=[4]
+   34 STORE_FAST f
+   36 LOAD_FAST a
+   38 POP_JUMP_FORWARD_IF_FALSE 66
+BLK@40..40 succ=[42, 94] pred=[34]
+   40 NOP None
+BLK@42..64 succ=[2] pred=[40]
+   42 LOAD_CONST None
+   44 LOAD_CONST None
+   46 LOAD_CONST None
+   48 PRECALL 2
+   52 CALL 2
+   62 POP_TOP None
+   64 JUMP_BACKWARD 2
+BLK@66..66 succ=[68, 94] pred=[34]
+   66 NOP None
+BLK@68..92 succ=[] pred=[66]
+   68 LOAD_CONST None
+   70 LOAD_CONST None
+   72 LOAD_CONST None
+   74 PRECALL 2
+   78 CALL 2
+   88 POP_TOP None
+   90 LOAD_CONST 4
+   92 RETURN_VALUE None
+BLK@94..98 succ=[102, 108, 100] pred=[34, 40, 66]
+   94 PUSH_EXC_INFO None
+   96 WITH_EXCEPT_START None
+   98 POP_JUMP_FORWARD_IF_TRUE 108
+BLK@100..100 succ=[102] pred=[94]
+   100 RERAISE 2
+BLK@102..106 succ=[] pred=[108, 94, 100]
+   102 COPY 3
+   104 POP_EXCEPT None
+   106 RERAISE 1
+BLK@108..108 succ=[102, 110] pred=[94]
+   108 POP_TOP None
+BLK@110..116 succ=[4] pred=[108]
+   110 POP_EXCEPT None
+   112 POP_TOP None
+   114 POP_TOP None
+   116 JUMP_BACKWARD 4
+=== regions ===
+REGION LoopRegion entry=4 blocks=[2, 4, 40, 66, 94, 100, 102, 108, 34, 42, 68, 110]
+   header=4 break_blocks=[]
+REGION WithRegion entry=4 blocks=[4, 40, 94, 102, 34]
+   with_blocks=[34, 40] cleanup=[] body_off=[34,42] parent=LoopRegion
+REGION IfRegion entry=34 blocks=[42, 34, 2, 40]
+   cond=34 n=3 offs=[34, 36, 38]
+   then=[40, 42, 2] else=[] parent=LoopRegion
+REGION Region entry=0 blocks=[0]
+=== block_to_region ===
+blk@0 -> Region
+blk@2 -> LoopRegion
+blk@4 -> LoopRegion
+blk@34 -> LoopRegion
+blk@40 -> LoopRegion
+blk@42 -> LoopRegion
+blk@66 -> LoopRegion
+blk@68 -> LoopRegion
+blk@94 -> LoopRegion
+blk@100 -> LoopRegion
+blk@102 -> LoopRegion
+blk@108 -> LoopRegion
+blk@110 -> LoopRegion
+############################## g4b_wt_nested_with ##############################
+=== CFG blocks ===
+BLK@0..2 succ=[4] pred=[]
+   0 RESUME 0
+   2 NOP None
+BLK@4..32 succ=[34] pred=[0, 214]
+   4 LOAD_GLOBAL open
+   16 LOAD_FAST p
+   18 PRECALL 1
+   22 CALL 1
+   32 BEFORE_WITH None
+BLK@34..64 succ=[66, 192] pred=[4]
+   34 STORE_FAST f
+   36 LOAD_GLOBAL open
+   48 LOAD_FAST p
+   50 PRECALL 1
+   54 CALL 1
+   64 BEFORE_WITH None
+BLK@66..70 succ=[72, 120, 146] pred=[34]
+   66 STORE_FAST g
+   68 LOAD_FAST a
+   70 POP_JUMP_FORWARD_IF_FALSE 120
+BLK@72..72 succ=[74, 146] pred=[66]
+   72 NOP None
+BLK@74..94 succ=[192, 96] pred=[72]
+   74 LOAD_CONST None
+   76 LOAD_CONST None
+   78 LOAD_CONST None
+   80 PRECALL 2
+   84 CALL 2
+   94 POP_TOP None
+BLK@96..118 succ=[216] pred=[74]
+   96 LOAD_CONST None
+   98 LOAD_CONST None
+   100 LOAD_CONST None
+   102 PRECALL 2
+   106 CALL 2
+   116 POP_TOP None
+   118 JUMP_FORWARD 216
+BLK@120..120 succ=[122] pred=[66]
+   120 NOP None
+BLK@122..144 succ=[168, 192] pred=[120]
+   122 LOAD_CONST None
+   124 LOAD_CONST None
+   126 LOAD_CONST None
+   128 PRECALL 2
+   132 CALL 2
+   142 POP_TOP None
+   144 JUMP_FORWARD 168
+BLK@146..150 succ=[160, 152, 154] pred=[66, 72]
+   146 PUSH_EXC_INFO None
+   148 WITH_EXCEPT_START None
+   150 POP_JUMP_FORWARD_IF_TRUE 160
+BLK@152..152 succ=[154] pred=[146]
+   152 RERAISE 2
+BLK@154..158 succ=[192] pred=[160, 146, 152]
+   154 COPY 3
+   156 POP_EXCEPT None
+   158 RERAISE 1
+BLK@160..160 succ=[162, 154] pred=[146]
+   160 POP_TOP None
+BLK@162..166 succ=[168, 192] pred=[160]
+   162 POP_EXCEPT None
+   164 POP_TOP None
+   166 POP_TOP None
+BLK@168..190 succ=[214] pred=[122, 162]
+   168 LOAD_CONST None
+   170 LOAD_CONST None
+   172 LOAD_CONST None
+   174 PRECALL 2
+   178 CALL 2
+   188 POP_TOP None
+   190 JUMP_FORWARD 214
+BLK@192..196 succ=[198, 200, 206] pred=[154, 34, 74, 122, 162]
+   192 PUSH_EXC_INFO None
+   194 WITH_EXCEPT_START None
+   196 POP_JUMP_FORWARD_IF_TRUE 206
+BLK@198..198 succ=[200] pred=[192]
+   198 RERAISE 2
+BLK@200..204 succ=[] pred=[192, 198, 206]
+   200 COPY 3
+   202 POP_EXCEPT None
+   204 RERAISE 1
+BLK@206..206 succ=[200, 208] pred=[192]
+   206 POP_TOP None
+BLK@208..212 succ=[214] pred=[206]
+   208 POP_EXCEPT None
+   210 POP_TOP None
+   212 POP_TOP None
+BLK@214..214 succ=[4] pred=[168, 208]
+   214 JUMP_BACKWARD 4
+BLK@216..218 succ=[] pred=[96]
+   216 LOAD_CONST 6
+   218 RETURN_VALUE None
+=== regions ===
+REGION LoopRegion entry=4 blocks=[4, 72, 120, 146, 152, 154, 160, 168, 192, 198, 200, 206, 214, 34, 66, 74, 96, 122, 162, 208]
+   header=4 break_blocks=[216]
+REGION WithRegion entry=4 blocks=[4, 72, 146, 154, 192, 200, 34, 66, 74, 96]
+   with_blocks=[66, 72, 74] cleanup=[96] body_off=[66,96] parent=LoopRegion
+REGION WithRegion entry=34 blocks=[72, 146, 154, 192, 200, 34, 66, 74, 96]
+   with_blocks=[66, 72, 74] cleanup=[96] body_off=[66,96] parent=LoopRegion
+REGION IfRegion entry=66 blocks=[66, 120, 122]
+   cond=66 n=3 offs=[66, 68, 70]
+   then=[] else=[120, 122] parent=LoopRegion
+REGION Region entry=0 blocks=[0]
+REGION Region entry=216 blocks=[216]
+=== block_to_region ===
+blk@0 -> Region
+blk@4 -> LoopRegion
+blk@34 -> LoopRegion
+blk@66 -> LoopRegion
+blk@72 -> LoopRegion
+blk@74 -> LoopRegion
+blk@96 -> LoopRegion
+blk@120 -> LoopRegion
+blk@122 -> LoopRegion
+blk@146 -> LoopRegion
+blk@152 -> LoopRegion
+blk@154 -> LoopRegion
+blk@160 -> LoopRegion
+blk@162 -> LoopRegion
+blk@168 -> LoopRegion
+blk@192 -> LoopRegion
+blk@198 -> LoopRegion
+blk@200 -> LoopRegion
+blk@206 -> LoopRegion
+blk@208 -> LoopRegion
+blk@214 -> LoopRegion
+blk@216 -> Region

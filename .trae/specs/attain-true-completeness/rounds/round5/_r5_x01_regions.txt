@@ -1,0 +1,6 @@
+MR entry=0 case_blocks=[0, 58]
+   patterns=[{'type': 'MatchSequence', 'patterns': [{'type': 'MatchAs', 'name': 'a'}, {'type': 'MatchAs', 'name': 'b'}]}, {'type': 'MatchAs'}]
+   guards=[None, None]
+   bodies=[[20, 32, 44, 48, 52, 54], [58]]
+   merge=None blocks=[0, 8, 20, 32, 44, 48, 52, 54, 56, 58]
+=== DONE ===

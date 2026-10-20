@@ -1,0 +1,10 @@
+﻿[r707] regen_rc=0 status=success units=7/7
+[r708] regen_rc=0 status=success units=8/8
+[rv801] regen_rc=0 status=success units=7/7
+[rv802] regen_rc=0 status=success units=7/7
+[r806] regen_rc=0 status=success units=10/10
+[r1004] regen_rc=0 status=success units=3/3
+[r1015] regen_rc=0 status=success units=6/6
+[r1021] regen_rc=0 status=success units=4/4
+[rv1032] regen_rc=0 status=success units=8/8
+-> units=60/60  (9 probes)  rec1_probes_r5post5_neg9.json

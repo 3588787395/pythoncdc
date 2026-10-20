@@ -1,0 +1,25 @@
+"""rec1_synth g2b: with×match bidirectional host family — 4-deep match-in-with-in-match cross."""
+
+
+def g2b_deep_cross(v, p, flag):
+    match v:
+        case {'op': op}:
+            with open(p) as f:
+                match op:
+                    case 'r':
+                        return (op, f)
+                    case _:
+                        return (flag, f)
+        case _:
+            return None
+
+
+def g2b_with_match_with(v, p):
+    with open(p) as f:
+        match v:
+            case [a, b]:
+                with open(p) as g:
+                    return (a, b, f, g)
+            case _:
+                return (f,)
+    return ()

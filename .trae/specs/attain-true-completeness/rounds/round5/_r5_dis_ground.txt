@@ -1,0 +1,83 @@
+﻿  0           0 RESUME                   0
+
+  2           2 LOAD_CONST               0 (<code object f at 0x000001A059979B00, file "x", line 2>)
+              4 MAKE_FUNCTION            0
+              6 STORE_NAME               0 (f)
+
+  9           8 LOAD_CONST               1 (<code object g at 0x000001A05990A790, file "x", line 9>)
+             10 MAKE_FUNCTION            0
+             12 STORE_NAME               1 (g)
+
+ 18          14 LOAD_CONST               2 (<code object h at 0x000001A05990A870, file "x", line 18>)
+             16 MAKE_FUNCTION            0
+             18 STORE_NAME               2 (h)
+             20 LOAD_CONST               3 (None)
+             22 RETURN_VALUE
+
+Disassembly of <code object f at 0x000001A059979B00, file "x", line 2>:
+  2           0 RESUME                   0
+
+  3           2 LOAD_FAST                0 (x)
+
+  4           4 STORE_FAST               1 (v)
+              6 LOAD_FAST                1 (v)
+              8 POP_JUMP_FORWARD_IF_NONE     2 (to 14)
+
+  5          10 LOAD_FAST                1 (v)
+             12 RETURN_VALUE
+
+  6     >>   14 NOP
+
+  7          16 LOAD_CONST               1 (0)
+             18 RETURN_VALUE
+
+Disassembly of <code object g at 0x000001A05990A790, file "x", line 9>:
+  9           0 RESUME                   0
+
+ 10           2 LOAD_CONST               1 (0)
+              4 STORE_FAST               1 (r)
+
+ 11           6 LOAD_FAST                0 (x)
+
+ 12           8 LOAD_CONST               2 (1)
+             10 COMPARE_OP               2 (==)
+             16 POP_JUMP_FORWARD_IF_FALSE     3 (to 24)
+
+ 13          18 LOAD_CONST               3 (21)
+             20 STORE_FAST               1 (r)
+             22 JUMP_FORWARD             3 (to 30)
+
+ 14     >>   24 NOP
+
+ 15          26 LOAD_CONST               4 (22)
+             28 STORE_FAST               1 (r)
+
+ 16     >>   30 LOAD_FAST                1 (r)
+             32 RETURN_VALUE
+
+Disassembly of <code object h at 0x000001A05990A870, file "x", line 18>:
+ 18           0 RESUME                   0
+
+ 19           2 LOAD_CONST               1 (0)
+              4 STORE_FAST               2 (r)
+
+ 20           6 LOAD_FAST                0 (x)
+
+ 21           8 LOAD_CONST               2 (1)
+             10 COMPARE_OP               2 (==)
+             16 POP_JUMP_FORWARD_IF_FALSE     5 (to 28)
+             18 LOAD_FAST                1 (g)
+             20 POP_JUMP_FORWARD_IF_FALSE     3 (to 28)
+
+ 22          22 LOAD_CONST               2 (1)
+             24 STORE_FAST               2 (r)
+             26 JUMP_FORWARD             3 (to 34)
+
+ 23     >>   28 NOP
+
+ 24          30 LOAD_CONST               3 (2)
+             32 STORE_FAST               2 (r)
+
+ 25     >>   34 LOAD_FAST                2 (r)
+             36 RETURN_VALUE
+PY 3.11.7 (tags/v3.11.7:fa7a6f2, Dec  4 2023, 19:24:49) [MSC v.1937 64 bit (AMD64)]

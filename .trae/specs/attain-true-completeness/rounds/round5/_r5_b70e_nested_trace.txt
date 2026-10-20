@@ -1,0 +1,94 @@
+GENERATE_REGION Region@0 -> []
+FILTER_IF if@34(with@4): then=[40, 42, 2] else=[] -> ft=[40, 2] fe=[] fb=False fc=True
+GENERATE_REGION IfRegion@34 -> {"type": "If", "test": {"type": "Name", "id": "a", "ctx": "Load", "lineno": 7}, "body": [{"type": "While", "test": {"type": "Constant", "value": false}, "body": [{"type": "Pass"}]}], "orelse": null}
+ARM_IS_PLACEHOLDER [{"type": "While", "test": {"type": "Constant", "value": false}, "body": [{"type": "Pass"}]}] -> True
+GENERATE_REGION WithRegion@4 -> {"type": "With", "items": [{"context_expr": {"type": "Call", "func": {"type": "Name", "id": "open", "ctx": "Load", "lineno": 6}, "args": [{"type": "Name", "id": "p", "ctx": "Load", "lineno": null}], "kwargs": [], "lineno": null}, "optional_vars": {"type": "Name", "id": "f", "ctx": "Store"}}], "body"
+GENERATE_REGION LoopRegion@4 -> [{"type": "While", "test": {"type": "Constant", "value": true}, "body": [{"type": "With", "items": [{"context_expr": {"type": "Call", "func": {"type": "Name", "id": "open", "ctx": "Load", "lineno": 6}, "args": [{"type": "Name", "id": "p", "ctx": "Load", "lineno": null}], "kwargs": [], "lineno": null
+GENERATE_REGION Region@90 -> [{"type": "Return", "value": {"type": "Constant", "value": 5, "lineno": 16}}]
+GENERATE_REGION Region@0 -> []
+GENERATE_REGION Region@0 -> []
+FILTER_IF if@66(with@4): then=[] else=[120, 122] -> ft=[] fe=[120] fb=False fc=False
+GENERATE_REGION IfRegion@66 -> {"type": "If", "test": {"type": "Name", "id": "a", "ctx": "Load", "lineno": 29}, "body": [{"type": "Break"}], "orelse": null}
+GENERATE_REGION Region@216 -> [{"type": "Return", "value": {"type": "Constant", "value": 6, "lineno": 31}}]
+GENERATE_REGION Region@0 -> []
+============================================================
+nested_with AST:
+{
+ "type": "FunctionDef",
+ "name": "g4b_wt_nested_with",
+ "args": {
+  "type": "arguments",
+  "posonlyargs": [],
+  "args": [
+   {
+    "type": "arg",
+    "arg": "p"
+   },
+   {
+    "type": "arg",
+    "arg": "a"
+   }
+  ],
+  "vararg": null,
+  "kwonlyargs": [],
+  "kw_defaults": [],
+  "kwarg": null,
+  "defaults": []
+ },
+ "body": [
+  {
+   "type": "Expr",
+   "value": {
+    "type": "Call",
+    "func": {
+     "type": "Name",
+     "id": "open",
+     "ctx": "Load",
+     "lineno": 27
+    },
+    "args": [
+     {
+      "type": "Name",
+      "id": "p",
+      "ctx": "Load",
+      "lineno": null
+     }
+    ],
+    "kwargs": [],
+    "lineno": null
+   }
+  },
+  {
+   "type": "Expr",
+   "value": {
+    "type": "Call",
+    "func": {
+     "type": "Name",
+     "id": "open",
+     "ctx": "Load",
+     "lineno": 28
+    },
+    "args": [
+     {
+      "type": "Name",
+      "id": "p",
+      "ctx": "Load",
+      "lineno": null
+     }
+    ],
+    "kwargs": [],
+    "lineno": null
+   }
+  },
+  {
+   "type": "Return",
+   "value": {
+    "type": "Constant",
+    "value": 6,
+    "lineno": 31
+   }
+  }
+ ],
+ "decorator_list": [],
+ "returns": null
+}

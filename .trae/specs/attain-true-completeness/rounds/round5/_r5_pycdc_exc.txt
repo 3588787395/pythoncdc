@@ -1,0 +1,116 @@
+﻿==== lines 415-470
+415                         co_name = actual_code.co_name
+416                         if verbose:
+417                             print(f"鎴愬姛鍒涘缓CodeType: {co_name}", file=sys.stderr)
+418                         
+419 
+420 
+421                     except Exception as code_err:
+422                         if verbose:
+423                             print(f"鍒涘缓CodeType澶辫触: {code_err}", file=sys.stderr)
+424                             import traceback as tb
+425                             tb.print_exc()
+426                         raise NotImplementedError(f"PYC浠ｇ爜瀵硅薄澶勭悊澶辫触: {code_err}")
+427 
+428                     source = generator.decompile(actual_code, co_name)
+429 
+430                     # [鍏抽敭淇] source鍙互鏄┖瀛楃涓诧紙绌烘ā鍧楋級锛岃繖鏄悎娉曠殑
+431                     if source is not None:
+432                         # 楠岃瘉鐢熸垚鐨勪唬鐮佽娉曟槸鍚︽纭紙绌哄瓧绗︿覆涔熸槸鍚堟硶鐨勶級
+433                         try:
+434                             if source:  # 闈炵┖鎵嶉渶瑕侀獙璇佽娉?
+435                                 compile(source, '<decompiled>', 'exec')
+436                             # 璇硶姝ｇ‘鎴栦负绌猴紝鍐欏叆杈撳嚭
+437                             output.write(source)
+438                             output.flush()
+439                             return True
+440                         except SyntaxError as e:
+441                             if cfg_hybrid:
+442                                 if verbose:
+443                                     print(f"CFG鏂规硶鐢熸垚鐨勪唬鐮佹湁璇硶閿欒: {e}锛屽洖閫€鍒颁紶缁熸柟娉?, file=sys.stderr)
+444                                 # 缁х画鎵ц浼犵粺鏂规硶
+445                             else:
+446                                 # 绾疌FG妯″紡锛氳緭鍑轰唬鐮佸苟鏄剧ず璀﹀憡
+447                                 if verbose:
+448                                     print(f"Warning: CFG鐢熸垚鐨勪唬鐮佹湁璇硶閿欒: {e}", file=sys.stderr)
+449                                 output.write(source)
+450                                 output.flush()
+451                                 return True
+452                     elif cfg_hybrid:
+453                         # CFG澶辫触锛屽洖閫€鍒颁紶缁熸柟娉?
+454                         if verbose:
+455                             print("CFG鏂规硶澶辫触锛屽洖閫€鍒颁紶缁熸柟娉?, file=sys.stderr)
+456                     else:
+457                         print("Error: CFG鍙嶇紪璇戝け璐?, file=sys.stderr)
+458                         return False
+459 
+460                 except Exception as e:
+461                     if cfg_hybrid:
+462                         if verbose:
+463                             print(f"CFG鏂规硶寮傚父: {e}锛屽洖閫€鍒颁紶缁熸柟娉?, file=sys.stderr)
+464                     else:
+465                         raise
+466 
+467             # 浼犵粺鍙嶇紪璇戞柟娉?
+468             bytecode = self.code_obj.code.get()._value if self.code_obj.code else b''
+469             version = (self.module.major_version, self.module.minor_version)
+470 
+==== lines 555-585
+555                         output.write(ascii_code)
+556                 output.flush()  # 纭繚鏁版嵁鍐欏叆鏂囦欢
+557             else:
+558                 code_gen.add_token("# Failed to build AST from bytecode")
+559                 code_gen.new_line()
+560                 
+561                 # 鍐欏叆杈撳嚭
+562                 output.write(code_gen.output.getvalue() if hasattr(code_gen.output, 'getvalue') else str(code_gen.output))
+563             return True
+564                 
+565         except Exception as e:
+566             try:
+567                 error_msg = str(e)
+568                 # 澶勭悊Unicode瀛楃
+569                 error_msg = error_msg.encode('ascii', 'replace').decode('ascii')
+570                 print(f"Error decompiling: {error_msg}")
+571             except Exception:
+572                 print("Error decompiling: Unknown error")
+573             import traceback
+574             import io
+575             # 鎹曡幏traceback骞跺鐞哢nicode瀛楃
+576             tb_buffer = io.StringIO()
+577             traceback.print_exc(file=tb_buffer)
+578             tb_str = tb_buffer.getvalue()
+579             tb_str = tb_str.encode('ascii', 'replace').decode('ascii')
+580             print(tb_str)
+581             return False
+582 
+583 
+584 def main():
+585     """涓诲嚱鏁?""
+==== lines 670-695
+670                   file=sys.stderr)
+671             print(f"Unicode: {module.is_unicode()}", file=sys.stderr)
+672         
+673         # 鍙嶇紪璇?
+674         if decompiler.decompile(output, use_cfg=args.cfg, cfg_hybrid=args.cfg_hybrid, use_region=args.region, verbose=args.verbose or args.cfg_verbose):
+675             if args.verbose:
+676                 print("Decompilation completed successfully", file=sys.stderr)
+677             return 0
+678         else:
+679             return 1
+680         
+681     except Exception as e:
+682         print(f"Error decompiling {args.input}: {e}", file=sys.stderr)
+683         import traceback
+684         traceback.print_exc()
+685         return 1
+686     finally:
+687         if args.output:
+688             output.close()
+689 
+690 
+691 def decompile_pyc(pyc_file: str, use_cfg: bool = False, cfg_hybrid: bool = False) -> str:
+692     """鍙嶇紪璇慞YC鏂囦欢骞惰繑鍥炴簮浠ｇ爜瀛楃涓?""
+693     import io
+694     
+695     # 鍒涘缓鍙嶇紪璇戝櫒

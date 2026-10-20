@@ -1,0 +1,167 @@
+﻿#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""鍞竴鐨勫弽缂栬瘧楠岃瘉鍒ゆ嵁銆?
+
+鍒ゆ嵁鏈韩涓嶅湪杩欓噷瀹炵幇锛氭湰鏂囦欢鍙仛瑁呰浇銆侀厤瀵逛笌鎶ュ憡锛岄€愭潯鍒ゅ畾鐢遍檮浠?pylingual 鐨?
+`pylingual/equivalence_check.py::compare_pyc` 鎵ц锛堥粯璁ゆ牴鐩綍
+`D:/Desktop/ptrade鐩稿叧/pylingual`锛屽彲鐢?--pylingual 鏀癸級銆傛姤鍛婂ご閮ㄥ啓涓嬭鏂囦欢鐨?
+sha256锛岃鏁板洜姝ゅ彲杩芥函鍒板叿浣撳瓧鑺傘€?
+
+compare_pyc 瀵规瘡涓?code object锛堝惈宓屽锛屽墠缂€鍛藉悕锛変骇鍑轰竴鏉?TestResult锛?
+  Missing bytecode / Extra bytecode / Different control flow / Different bytecode / Equal
+涓€涓枃浠跺叏閮?Equal 鎵嶇畻 success锛坧ylingual dev_scripts/cflow.py:86 鐨勫垽瀹氾級锛?
+鎴愬姛鐜?= 鐩哥瓑鍗曞厓鏁?/ 鍗曞厓鎬绘暟锛坧ylingual DecompilerResult.calculate_success_rate锛夈€?
+
+涓や釜浠呬负"鑳藉鍏?鑰屽瓨鍦ㄧ殑鍨墖锛屼笉鏀瑰彉浠讳綍鍒ゅ畾锛?
+  typing.override 鈥斺€?pylingual 鐢ㄤ簡 3.12 鎵嶆湁鐨勬爣鍑嗗簱绗﹀彿锛岃繍琛屾椂璇箟灏辨槸鎭掔瓑瑁呴グ鍣紱
+  pydot          鈥斺€?鍙湪 pylingual/control_flow_reconstruction/cfg.py 鐢?CFG 鏃剁敤鍒帮紝
+                     compare_pyc 璺緞涓婁笉浼氳皟鐢紙閭ｉ噷 iterate=False锛屼笉 visualize锛夈€?
+
+鐢ㄦ硶锛?
+  python scripts/pyc_verify.py single <a.pyc> [--source <x.py>]
+  python scripts/pyc_verify.py batch --index pyc_index.json --json verify/report.json
+  python scripts/pyc_verify.py compare --before old.json --after new.json
+  python scripts/pyc_verify.py selfcheck <a.pyc>
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import py_compile
+import re
+import shutil
+import sys
+import tempfile
+import time
+import types
+
+DEFAULT_PYLINGUAL = r'D:\Desktop\ptrade鐩稿叧\pylingual'
+CATEGORIES = ('success', 'failure', 'compile_error', 'error')
+
+
+# 鈹€鈹€鈹€ 瑁呰浇闄勪欢鍒ゆ嵁 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+
+def load_compare_pyc(root: str):
+    root = os.path.abspath(root)
+    if not os.path.isfile(os.path.join(root, 'pylingual', 'equivalence_check.py')):
+        sys.exit('[fatal] 鎵句笉鍒?pylingual 鍒ゆ嵁锛?s\\pylingual\\equivalence_check.py\n'
+                 '        鐢?--pylingual 鎸囧畾姝ｇ‘鐨勪粨搴撴牴鐩綍锛涙湰宸ュ叿涓嶆彁渚涗换浣曞鐢ㄥ垽鎹€? % root)
+    sys.path.insert(0, root)
+
+    import typing
+    if not hasattr(typing, 'override'):          # 3.11 缂?3.12 鐨勭鍙凤紱杩愯鏃惰涔変负鎭掔瓑
+        typing.override = lambda func: func
+    if 'pydot' not in sys.modules:               # 鍙 pylingual 鐨勭敾鍥惧嚱鏁颁娇鐢?
+        stub = types.ModuleType('pydot')
+        stub.graph_from_dot_data = lambda *a, **k: []
+        stub.Dot = stub.Node = stub.Edge = lambda *a, **k: None
+        sys.modules['pydot'] = stub
+    if 'pylingual' not in sys.modules:           # 缁曞紑 __init__.py锛堜細鎷夎捣鏁村 ML 鍙嶇紪璇戝櫒锛?
+        pkg = types.ModuleType('pylingual')
+        pkg.__path__ = [os.path.join(root, 'pylingual')]
+        sys.modules['pylingual'] = pkg
+
+    from pylingual.equivalence_check import compare_pyc
+    return compare_pyc
+
+
+def sha256(path: str, n: int = 64) -> str:
+    h = hashlib.sha256()
+    with open(path, 'rb') as f:
+        for chunk in iter(lambda: f.read(1 << 20), b''):
+            h.update(chunk)
+    return h.hexdigest()[:n]
+
+
+def ruler_stamp(root: str) -> dict:
+    eq = os.path.join(os.path.abspath(root), 'pylingual', 'equivalence_check.py')
+    return {'compare_pyc': eq.replace('\\', '/'),
+            'compare_pyc_sha256': sha256(eq, 16),
+            'ruler_version': 'pylingual-equivalence_check'}
+
+
+# 鈹€鈹€鈹€ 鍗曚釜 pyc 鐨勫垽瀹?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+
+def product_of(pyc: str) -> str | None:
+    return pyc[:-4] + 'OK.py' if pyc.lower().endswith('.pyc') else None
+
+
+def evaluate(pyc: str, source: str, tmpdir: str, compare_pyc) -> dict:
+    """璺戜竴娆?compare_pyc锛氶€愬崟鍏?verdict + 鏂囦欢绾ф《 + 鍗曞厓璁℃暟銆?""
+    row = {'pyc': pyc.replace('\\', '/'), 'source': source.replace('\\', '/'),
+           'pyc_sha': sha256(pyc, 12), 'source_sha': sha256(source, 12),
+           'status': None, 'units_total': 0, 'units_success': 0,
+           'success_rate': None, 'failures': [], 'detail': None}
+    recompiled = os.path.join(tmpdir, os.path.basename(pyc))
+    try:
+        py_compile.compile(source, cfile=recompiled, doraise=True, optimize=0)
+    except py_compile.PyCompileError as exc:
+        row['status'] = 'compile_error'
+        row['detail'] = str(exc).strip()[:400]
+        return row
+    except (SyntaxError, ValueError, OSError) as exc:
+        row['status'] = 'compile_error'
+        row['detail'] = '%s: %s' % (type(exc).__name__, exc)
+        return row
+
+    try:
+        results = compare_pyc(pyc, recompiled)
+    except Exception as exc:
+        row['status'] = 'error'
+        row['detail'] = '%s: %s' % (type(exc).__name__, exc)
+        row['failures'] = [row['detail']]
+        return row
+    finally:
+        if os.path.isfile(recompiled):
+            os.remove(recompiled)
+
+    row['units_total'] = len(results)
+    row['units_success'] = sum(1 for r in results if r.success)
+    if not results:
+        row['status'] = 'error'
+        row['detail'] = 'compare_pyc 鏈骇鍑轰换浣曞崟鍏冿紙璇绘暟鏃犳晥锛?
+        return row
+    row['success_rate'] = row['units_success'] / row['units_total']
+    row['status'] = 'success' if row['units_success'] == row['units_total'] else 'failure'
+    row['failures'] = [str(r) for r in results if not r.success]
+    return row
+
+
+# 鈹€鈹€鈹€ 鐩爣娓呭崟 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+
+def collect_targets(args) -> list[tuple[str, str]]:
+    pairs: list[tuple[str, str]] = []
+    if args.index:
+        with open(args.index, encoding='utf-8') as f:
+            entries = json.load(f)
+        for e in entries:
+            pairs.append((e['path'].replace('/', os.sep), e.get('source')))
+    for extra in getattr(args, 'pyc', []):
+        pairs.append((os.path.abspath(extra), None))
+    out = []
+    for pyc, src in pairs:
+        if not os.path.isfile(pyc):
+            sys.exit('[fatal] pyc 涓嶅瓨鍦細%s' % pyc)
+        src = src or product_of(pyc)
+        if not src or not os.path.isfile(src):
+            sys.exit('[fatal] 缂哄皯鍙嶇紪璇戜骇鐗╋細%s锛堟湡鏈?%sOK.py锛? % (pyc, pyc[:-4]))
+        out.append((pyc, src))
+    if getattr(args, 'limit', None):
+        out = out[:args.limit]
+    return out
+
+
+# 鈹€鈹€鈹€ 瀛愬懡浠?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+
+def cmd_single(args, compare_pyc) -> int:
+    pyc = os.path.abspath(args.pyc)
+    source = os.path.abspath(args.source or product_of(pyc))
+    if not os.path.isfile(source):
+        sys.exit('[fatal] 缂哄皯浜х墿 %s' % source)
+    tmp

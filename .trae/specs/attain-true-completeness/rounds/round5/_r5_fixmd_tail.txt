@@ -1,0 +1,39 @@
+﻿LEN 4244
+h2_match_guard锛圔61锛?|
+| rv902锛坱est_repros/round9/rv9_02_b66_with_nest.pyc锛?| 4/5 | while_with_whole_body锛圔70锛?|
+| vb74锛堚€?probes_rv2/v_b74_face.pyc锛?| 4/4 | 鈥旓紙淇濇寔锛?|
+| 璐熷鐓т節浠?| **60/60** | 鈥?|
+| 閭诲煙 16 鎺㈤拡 | **79/86** | x02 for_in_match銆亁01 if_in_while/if_in_match銆乧04 CTryNest銆乵02銆乺8_10 r8_x_for_iter_ternary銆乺v9_02 while_with_whole_body锛堜笌 R4 鍩虹嚎閫愪綅涓€鑷达級 |
+| R4 淇濇姢缁?5 浠?| **71/71** | 鈥旓紙c4_20 24/24銆乪12d 11/11銆乺7_06 10/10銆乺5_10 13/13銆乪09b 13/13锛?|
+
+stamps锛歚rec1_probes_r5pre1.json`锛圔122 鍙?HANG锛夈€乣rec1_probes_r5pre2.json`锛堢孩鍗曞厓+vb74锛夈€乣rec1_probes_r5pre3_neg9.json`銆乣rec1_probes_r5pre4_neigh.json`銆乣rec1_probes_r5pre5_r4prot.json`銆傞浂婕傜Щ纭锛涢浂 pass鈫抐ail銆?
+
+## 搂1 淇鏃ュ織锛堝閲忥紝闅忓仛闅忓啓锛?
+
+### B122-V3R5锛坆122a/b122b 鎸傛 + 骞诲奖 guard + 宓屽瀹堝崼瑁呴厤锛泂tamp=rec1_probes_r5_b122_fix.json锛?
+
+- 鏍瑰洜锛堟寕姝伙級锛歚analyze()` 鏀舵暃寰幆锛坮egion_analyzer L1643 鍖猴級涓?`_identify_nested_match_regions` 瀵?MatchRegion 鐖跺尯鍩熸壂鎻?case 浣撳潡锛屽€欓€?鍐呭眰閾鹃 case 澶达紙鍧?18锛屾棤 COPY 瀛楅潰閲忓ご锛夛紱绛栫暐 3 `_find_nested_match_subject(18)` 鍓嶉┍鍥炴函瓒婅繃鍐呭眰閾鹃鍛戒腑澶栧眰 subject=0锛堝灞傚悓褰級锛宍_collect_nested_literal_match(0)` 澶嶅埗澶栧眰 match 鍖哄煙锛涙柊鍖哄煙鎴愪负涓嬩竴杞?parent 鍐嶅懡涓悓涓€鍊欓€夆€斺€旀瘡杞柊澧炲悓鍨嬪尯鍩熶笉鏀舵暃锛坒aulthandler 鍛戒腑 L18147 `existing_match_blocks.update`锛夈€俠122b 棣栧嚱鏁?v1 鍚屽瀷锛坈and=18锛夈€?
+- 鏍瑰洜锛堝够褰?guard锛夛細澶栧眰 case 浣撻鍧?鍐呭眰 match 閾鹃锛堝潡 18 闈?pattern 鍧楋紝pb=[0]锛夛紝鍑芥暟搴忚█璧嬪€?`r=0` 鐨?STORE 浣裤€屾渶鍚?STORE銆嶉敋鍓嶇Щ锛涗富鎻愬彇璺緞鎸?[B16] 鎹曡幏鍚嶉噸璇讳緥澶栨嫆鏀?`x==1` 娈碉紝浣?`_extract_arithmetic_guard` 鍥為€€缂哄け璇ョ邯寰嬶紝浜у嚭骞诲奖 `case 1 if x == 1:`銆?
+- 鏍瑰洜锛堝祵濂楀畧鍗級锛歚_collect_nested_literal_match` 缂轰袱澶勶紙涓庨《灞?`_scan_literal_match_subjects` 鍚屽垽鎹弻瀹炵幇鏈悓姝ワ級锛?1) [B81] and-guard 閾捐В鏋愨€斺€旂湡鍊煎畧鍗噦鍧楄骞跺叆 case 浣擄紙鏃?COMPARE_OP 涓嶈鍙戝皠灞?guard_pattern_blocks 瑕嗙洊锛夆啋 骞诲奖 if/else 鍚為粯璁よ噦锛坴2 褰㈡€侊級锛?2) case 瀹堝崼鎻愬彇鈥斺€擿case_guards=[None]*n` 纭疆銆?
+- 淇锛? 澶勶紝鍧?I.4 鐧藉悕鍗曪細鍧楀唴 opcode 褰㈡€?璺宠浆鐩爣/鍧楀綊灞烇級锛?
+  1. `pattern_parser._extract_arithmetic_guard`锛氬洖閫€娈典负绾?`LOAD x; LOAD_CONST c; COMPARE_OP ==` 涓?x 闈炲厛鍓?STORE 鎹曡幏鍚嶉噸璇绘椂鎾ら攢锛堥暅鍍?[B16]锛夈€?
+  2. `region_analyzer._find_nested_match_subject`锛氬€欓€夊潡鑷韩婊¤冻銆屾棤 COPY + 鍚?LOAD_VAR + 鍚?COMPARE/IS_OP + 鏉′欢璺宠浆缁堢粨銆嶆椂鐩存帴璁ら涓?subject锛堥摼棣栬嚜 subject锛屼笉鍥炴函锛夈€?
+  3. `region_analyzer._identify_nested_match_regions`锛氬祵濂楀尯鍩熷叆鍙ｅ悓鍧楀幓閲嶏紙闀滃儚 L18573 鏉℃锛夆€斺€斿悓鍏ュ彛宸插瓨鍦?MatchRegion 鍗虫嫆缁濓紙鏀舵暃淇濋殰锛夈€?
+  4. `region_analyzer._collect_nested_literal_match`锛氱Щ妞?and-guard 閾捐В鏋愶紙鍚?`_scan_literal_match_subjects` B81 浠ｇ爜锛夛紱琛ラ綈閫?case 瀹堝崼鎻愬彇锛坈ollect_pattern_blocks+parse_case_guard锛宎llow 闂ㄦ涓?[B74] 鍚庢牎楠屽悓婧愶級锛沷r 缁勫悎骞舵惡甯﹀畧鍗紙缁勫彇棣栦釜闈?None锛夈€?
+- 璇绘暟锛歜122a HANG鈫?*2/2 success**锛坮egen_rc 0锛夛紱b122b HANG鈫?*5/5 success**锛涗骇鐗╀笌婧愰€愯涓€鑷达紙v1 `case 1 if g:`銆乿2 鍐呭眰 `case 2 if g:`銆乿3 or+guard銆乿4 return 浣擄級銆?
+- 鍥炲綊锛氶偦鍩?16=**79/86**锛堝け璐ラ泦/澶辫触鍚嶄笌鍩虹嚎閫愪綅涓€鑷达紝stamp=rec1_probes_r5post1_neigh.json锛夛紱璐熷鐓т節浠?**60/60**锛坮5post2_neg9锛夛紱R4 淇濇姢缁?**71/71**锛坮5post3_r4prot锛夈€?
+- 鍊欓€夊厛琛岄獙璇侊細CPython 3.11.7 compile+dis 瀵圭収锛坄_r5_dis_ground.txt`锛夌‘璇侀闈㈠瓧鑺傜爜褰㈡€侊紱缁撴瀯 dump锛坄_r5_v2_dis.txt`銆乣_r5_b122b_regions.txt`銆乣_r5_b122a_guard_trace.txt`锛夊畾浣嶄笁澶勬牴鍥犮€?
+
+## 搂2 鍙樻洿娓呭崟锛堝閲忥級
+
+- `core/cfg/region_analyzer.py`锛歚_find_nested_match_subject`锛?12 琛?B122 鑷?subject 璁ら锛夈€乣_identify_nested_match_regions`锛?12 琛屽叆鍙ｅ幓閲嶏級銆乣_collect_nested_literal_match`锛?30 琛?and-guard 閾捐В鏋愶紱+35 琛岄€?case 瀹堝崼鎻愬彇涓?or 缁勫畧鍗悎骞讹級銆?
+- `core/cfg/pattern_parser.py`锛歚_extract_arithmetic_guard`锛?18 琛屾ā寮忔瘮杈冩潗鏂欓殧绂伙級銆?
+
+## 搂3 鍓嶅悗璇绘暟锛堝緟鍐欙級
+
+## 搂4 澶嶆牳锛堝緟鍐欙級
+
+## 搂5 闂ㄧ璇绘暟锛堝緟鍐欙級
+
+## 搂6 钀藉湴澹版槑锛堝緟鍐欙級
+

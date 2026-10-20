@@ -1,0 +1,20 @@
+[
+ {
+  "name": "g4a",
+  "pyc_src_rel": "test_repros/round5/rec1_synth_g4a_b70_whiletrue_with.pyc",
+  "pyc_src_sha": "cd874f1c8c59f725",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round5/rec1_g4a_rec1_synth_g4a_b70_whiletrue_with.pyc",
+  "mtime": "2026-10-19T22:03:12",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "52821931e9a515db",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_g4a_rec1_synth_g4a_b70_whiletrue_with.pyc (Python 3.11)\n\n__doc__ = 'rec1_synth g4a: B70 family — while True + with whole-body forms.'\ndef g4a_wt_with_pass(p):\n    while True:\n        with open(p) as f:\n            pass\ndef g4a_wt_with_stmt(p):\n    while True:\n        with open(p) as f:\n            x = 1\ndef g4a_wt_with_break(p, a):\n    while True:\n        with open(p) as f:\n            if a:\n                break\n    return 3\ndef g4a_for_with_pass(xs, p):\n    for x in xs:\n        with open(p) as f:\n            pass\n    return 5\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_g4a_rec1_synth_g4a_b70_whiletrue_with.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_g4a_rec1_synth_g4a_b70_whiletrue_withOK.py\n[single] status=success units=5/5 success_rate=100.00%",
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ }
+]

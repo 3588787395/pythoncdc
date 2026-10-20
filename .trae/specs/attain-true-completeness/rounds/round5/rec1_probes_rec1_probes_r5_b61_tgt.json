@@ -1,0 +1,42 @@
+[
+ {
+  "name": "r809",
+  "pyc_src_rel": "test_repros/round8/r8_09_deep_host_combo.pyc",
+  "pyc_src_sha": "db6411429a7f6997",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round5/rec1_r809_r8_09_deep_host_combo.pyc",
+  "mtime": "2026-10-19T20:18:32",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "08d8b83609d8c243",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_r809_r8_09_deep_host_combo.pyc (Python 3.11)\n\n__doc__ = 'R8-09 Deep host combos: for-else+del+raise / try-finally return / while chained assign / with assert / match del-assign-raise / async / comprehension assert.'\ndef r8_dh_for_else_del(xs):\n    for i, v in enumerate(xs):\n        if v is None:\n            del xs[i]\n        return xs\n    raise ValueError('no None')\ndef r8_dh_try_finally_return(n):\n    try:\n        if n > 0:\n            return 'pos'\n        else:\n            raise ValueError('neg')\n    finally:\n        n = n\ndef r8_dh_while_assign_chain(xs):\n    out = {}\n    i = 0\n    while i < len(xs):\n        out[i] = out['last'] = xs[i]\n        i += 1\n    return out\ndef r8_dh_with_assert(path):\n    with open(path) as fh:\n        assert data, 'empty file'\n    return data\ndef r8_dh_match_multi(x):\n    match x:\n        case {'op': op, **rest}:\n            (rest,) = {}\n            if 'tmp' in rest:\n                del rest['tmp']\n            return (op, rest)\n        case [a, b]:\n            a, b = (b, a)\n            return (a, b)\n        case _:\n            assert x is not None\n            raise TypeError('bad shape')\nasync def r8_dh_async_raise(agen, lim):\n    total = 0\n    async for v in agen:\n        if v > lim:\n            raise OverflowError('too big')\n        total += v\n    return total\ndef r8_dh_comprehension_assert(xs):\n    keep = lambda v: v % 2 == 0\n    ys = [x for x in xs if keep(x)]\n    assert len(ys) <= len(xs), 'filter invariant'\n    return ys\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.r8_dh_for_else_del: Failure: Different control flow\n  ***<module>.r8_dh_with_assert: Failure: Different bytecode\n  ***<module>.r8_dh_match_multi: Failure: Different bytecode\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_r809_r8_09_deep_host_combo.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_r809_r8_09_deep_host_comboOK.py\n[single] status=failure units=7/10 success_rate=70.00%",
+  "status": "failure",
+  "units_success": 7,
+  "units_total": 10,
+  "failures": [
+   "***<module>.r8_dh_for_else_del: Failure: Different control flow",
+   "***<module>.r8_dh_with_assert: Failure: Different bytecode",
+   "***<module>.r8_dh_match_multi: Failure: Different bytecode"
+  ]
+ },
+ {
+  "name": "r811",
+  "pyc_src_rel": "test_repros/round8/r8_11_deep_host_combo2.pyc",
+  "pyc_src_sha": "f0f505c89bc33b7d",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round5/rec1_r811_r8_11_deep_host_combo2.pyc",
+  "mtime": "2026-10-19T20:18:33",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "d623b15357196271",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_r811_r8_11_deep_host_combo2.pyc (Python 3.11)\n\n__doc__ = 'R8-11 Deep host combos round 2: while-else raise / try full sections / nested try del / with multi / match guard assert-pass.'\ndef r8_dh2_while_else_raise(n, lim):\n    while n < lim:\n        n += 1\n    if n > 100:\n        raise OverflowError('runaway')\n    return n\ndef r8_dh2_try_full_sections(xs, i):\n    r = None\n    try:\n        r = xs[i]\n    except IndexError:\n        r = 'fallback'\n    else:\n        r = r * 2\n    finally:\n        probe = getattr(r, 'bit_length', None)\n    return r\ndef r8_dh2_nested_try_del(xs):\n    out = []\n    for i in range(len(xs)):\n        try:\n            if xs[i] < 0:\n                del xs[i]\n                out.append(-1)\n        except IndexError:\n            raise\n    return out\ndef r8_dh2_with_multi(a, b):\n    with open(a) as fa, open(b) as fb:\n        x = fa.read(1)\n        y = fb.read(1)\n    return (x, y)\ndef r8_dh2_match_guard(x):\n    match x:\n        case int() as v if v > 10:\n            assert v < 1000, 'too large'\n            return v * 2\n        case str() as s:\n            return len(s)\n        case _:\n            pass\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_r811_r8_11_deep_host_combo2.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_r811_r8_11_deep_host_combo2OK.py\n[single] status=success units=6/6 success_rate=100.00%",
+  "status": "success",
+  "units_success": 6,
+  "units_total": 6,
+  "failures": []
+ }
+]

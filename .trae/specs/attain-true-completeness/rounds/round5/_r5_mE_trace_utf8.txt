@@ -1,0 +1,62 @@
+﻿=== disassembly mE ===
+    0 RESUME                       0
+    2 LOAD_CONST                   0
+    4 STORE_FAST                   'r'
+    6 LOAD_FAST                    'x'
+    8 MATCH_SEQUENCE               None
+   10 POP_JUMP_FORWARD_IF_FALSE    96
+   12 GET_LEN                      None
+   14 LOAD_CONST                   1
+   16 COMPARE_OP                   '>='
+   22 POP_JUMP_FORWARD_IF_FALSE    96
+   24 UNPACK_EX                    1
+   26 LOAD_GLOBAL                  'int'
+   38 LOAD_CONST                   ()
+   40 MATCH_CLASS                  1
+   42 COPY                         1
+   44 POP_JUMP_FORWARD_IF_NONE     94
+   46 UNPACK_SEQUENCE              1
+   50 STORE_FAST                   'a'
+   52 STORE_FAST                   'rest'
+   54 LOAD_FAST                    'rest'
+   56 POP_JUMP_FORWARD_IF_FALSE    98
+   58 LOAD_FAST                    'a'
+   60 LOAD_GLOBAL                  'len'
+   72 LOAD_FAST                    'rest'
+   74 PRECALL                      1
+   78 CALL                         1
+   88 BUILD_TUPLE                  2
+   90 STORE_FAST                   'r'
+   92 JUMP_FORWARD                 104
+   94 POP_TOP                      None
+   96 POP_TOP                      None
+   98 NOP                          None
+  100 LOAD_CONST                   'other'
+  102 STORE_FAST                   'r'
+  104 LOAD_FAST                    'r'
+  106 RETURN_VALUE                 None
+
+=== parse_case_guard call ===
+blocks: [0, 12, 96, 98, 24, 46]
+allow_in_header: False fail_off: 98
+  block@0: [('LOAD_CONST', 0), ('STORE_FAST', 'r'), ('LOAD_FAST', 'x'), ('MATCH_SEQUENCE', None), ('POP_JUMP_FORWARD_IF_FALSE', 96)]
+  block@12: [('GET_LEN', None), ('LOAD_CONST', 1), ('COMPARE_OP', '>='), ('POP_JUMP_FORWARD_IF_FALSE', 96)]
+  block@96: [('POP_TOP', None)]
+  block@98: [('LOAD_CONST', 'other'), ('STORE_FAST', 'r')]
+  block@24: [('UNPACK_EX', 1), ('LOAD_GLOBAL', 'int'), ('LOAD_CONST', ()), ('MATCH_CLASS', 1), ('COPY', 1), ('POP_JUMP_FORWARD_IF_NONE', 94)]
+  block@46: [('UNPACK_SEQUENCE', 1), ('STORE_FAST', 'a'), ('STORE_FAST', 'rest'), ('LOAD_FAST', 'rest'), ('POP_JUMP_FORWARD_IF_FALSE', 98)]
+  => guard: {'type': 'Name', 'id': 'rest'}
+
+=== parse_case_guard call ===
+blocks: [98]
+allow_in_header: False fail_off: 104
+  block@98: [('LOAD_CONST', 'other'), ('STORE_FAST', 'r')]
+  => guard: None
+
+=== regions ===
+MatchRegion entry 0
+  case_blocks: [0, 98]
+  case_guards: [{'type': 'Name', 'id': 'rest'}, None]
+  case_patterns: [{'type': 'MatchSequence', 'patterns': [{'type': 'MatchAs'}, {'type': 'MatchStarred', 'pattern': {'type': 'MatchAs'}}]}, {'type': 'MatchAs'}]
+  case_bodies: [[58], [98]]
+

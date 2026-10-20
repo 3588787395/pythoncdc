@@ -1,0 +1,58 @@
+  > gen_region IfRegion entry=0
+    > gen_region WithRegion entry=14
+=== _generate_with entry=14 blocks=[14, 42, 84, 94, 124, 126, 132, 134, 140, 164, 170, 172, 178, 180] ===
+      > gen_region IfRegion entry=42
+        > gen_region WithRegion entry=56
+=== _generate_with entry=56 blocks=[56, 84, 94, 118, 126, 164, 172] ===
+!!!! re-enter WithRegion@14 call#2 stack:
+      | File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 25491, in _if_generate_normal
+    then_stmts = self._if_generate_then_branch(region)
+      | File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 20987, in _if_generate_then_branch
+    then_stmts = self._process_if_blocks(region.then_blocks, region, branch='then',
+      | File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 30662, in _process_if_blocks
+    _ast = self._generate_region(_region)
+      | File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 4701, in _generate_region
+    return self._generate_with(region)
+      | File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 40566, in _generate_with
+    generated = self._generate_region(nested_region, skip_store_targets=skip_targets)
+      | File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 4697, in _generate_region
+    return self._generate_if(region)
+      | File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 16608, in _generate_if
+    _r98_if_stmt = self._if_generate_normal(region)
+      | File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 25491, in _if_generate_normal
+    then_stmts = self._if_generate_then_branch(region)
+      | File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 20987, in _if_generate_then_branch
+    then_stmts = self._process_if_blocks(region.then_blocks, region, branch='then',
+      | File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 30662, in _process_if_blocks
+    _ast = self._generate_region(_region)
+      | File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 4701, in _generate_region
+    return self._generate_with(region)
+      | File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 40683, in _generate_with
+    generated = self._generate_region(nested_region, skip_store_targets=skip_targets)
+          > gen_region WithRegion entry=14
+=== _generate_with entry=14 blocks=[14, 42, 84, 94, 124, 126, 132, 134, 140, 164, 170, 172, 178, 180] ===
+  -> With items=["{'type': 'Call', 'func': {'type': 'Name', 'id': '_"]
+     stmt Assign
+            <- With items=["{'type': 'Call', 'func': {'type': 'Name', 'id': '_"]
+  -> With items=["{'type': 'Call', 'func': {'type': 'Name', 'id': '_"]
+     stmt With items=["{'type': 'Call', 'func': {'type': 'Name', 'id': '_"]
+          <- With items=["{'type': 'Call', 'func': {'type': 'Name', 'id': '_"]
+        <- If
+  -> With items=["{'type': 'Call', 'func': {'type': 'Name', 'id': '_"]
+     stmt If
+      <- With items=["{'type': 'Call', 'func': {'type': 'Name', 'id': '_"]
+    <- If
+  > gen_region Region entry=186
+    <- Return
+  > gen_region Region entry=118
+SystemExit 0
+Traceback (most recent call last):
+  File "F:\Downloads\pythoncdc-main\.trae\specs\attain-true-completeness\rounds\round5\_r5_x05_wtrace.py", line 136, in <module>
+    runpy.run_path(os.path.join(ROOT, 'pycdc.py'), run_name='__main__')
+  File "<frozen runpy>", line 291, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "F:\Downloads\pythoncdc-main\pycdc.py", line 730, in <module>
+    sys.exit(main())
+SystemExit: 0
+

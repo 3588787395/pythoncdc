@@ -1,0 +1,32 @@
+﻿[g1a] regen_rc=0 status=failure units=1/3
+    ***<module>.g1_for_with_or_guard: Failure: Different control flow
+    ***<module>.g1_if_or_chain3_assert: Failure: Different control flow
+[g1b] regen_rc=0 status=failure units=2/3
+    ***<module>.g1b_while_guard: Failure: Different control flow
+[g2a] regen_rc=0 status=failure units=2/3
+    ***<module>.g2a_with_hosts_match: Failure: Different control flow
+[g2b] regen_rc=0 status=failure units=2/3
+    ***<module>.g2b_with_match_with: Failure: Different control flow
+[g3a] regen_rc=0 status=failure units=2/3
+    ***<module>.g3a_rest_multi: Failure: Different control flow
+[g3b] regen_rc=0 status=failure units=2/3
+    ***<module>.g3b_with_rest: Failure: Different control flow
+[b74d] regen_rc=0 status=failure units=2/3
+    ***<module>.gd_or_seq_guard: Failure: Different control flow
+[b74e] regen_rc=0 status=failure units=2/3
+    ***<module>.gb2_guard_body_chain: Failure: Different control flow
+[b70a] regen_rc=0 status=failure units=1/3
+    ***<module>.wbc: Failure: Different control flow
+    ***<module>.wbc_nested: Failure: Different control flow
+[g4a] regen_rc=0 status=success units=5/5
+[g4b] regen_rc=0 status=success units=5/5
+[g5a] regen_rc=0 status=success units=3/3
+[g5b] regen_rc=0 status=success units=4/4
+[b93c] regen_rc=0 status=success units=3/3
+[b93d] regen_rc=0 status=success units=3/3
+[b61c] regen_rc=0 status=success units=3/3
+[b61d] regen_rc=0 status=success units=3/3
+[b70b] regen_rc=0 status=success units=3/3
+[b122c] regen_rc=0 status=success units=3/3
+[b122d] regen_rc=0 status=success units=3/3
+-> units=54/65  (20 probes)  rec1_probes_r5base_recheck.json

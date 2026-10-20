@@ -1,0 +1,38 @@
+﻿* | 涓?probe42 鍩虹嚎閫愪綅鎸佸钩 |
+| 3 | Break锛圓锛?| B79 | `v_b71_face` **3/4**锛歚v_nest_fin_continue` | **鐪熷疄鐮村彛** | B71 鏈綋宸叉竻銆佹畫浣欒浆 B79 缁帴锛堜笌娓呴浂鍙ｅ緞涓€鑷达級 |
+| 4 | Continue锛圓锛?| B97 | `x10` **2/3**锛歚h_basic` | **鐪熷疄鐮村彛** | 鎸佸钩 |
+| 5 | Try锛圓锛?| B87/B73/B75 | `c04` 5/6锛圕TryNest锛夈€乣m02` 2/3銆乣m06` 0/1銆乣x04` 6/7锛坱ry_in_if锛夈€乣x02` 5/7锛坒or_in_try锛?| **鐪熷疄鐮村彛** | B73锛坮10_04 3/3 缁匡級銆丅75锛坮10_15 6/6 缁匡級瀛愰敋鐐瑰凡缈绘锛涜绾㈢敱 B87 瀹夸富绯绘壙鎷?|
+| 6 | With锛圓锛?| B93 | `x05` **6/7**锛歚with_in_match` | **鐪熷疄鐮村彛** | 鎸佸钩 |
+| 7 | Match锛圓锛?| B74+B122 | `B122` 鍙屾帰閽?60s 纭潃 **HANG**锛堢淮鎸侊級锛沗x01::if_in_match` 绾紱`v_b74_face` **4/4 缁?*锛圔74 缈绘锛?| **鐪熷疄鐮村彛** | 琛岀孩 = B122 鎸傛 + match 瀹夸富鍗曞厓锛汢74 娓呴浂璇佸疄 |
+| 8 | Raise锛圓锛?| B87 鍙樹綋 | `x08::raise_leaf` **缈绘**锛圔126-R2 闄勫甫锛夛紱`r8_08` **9/9 缁?*锛涙畫浣欑孩锛歚r8_10::r8_x_raise_ternary_class`锛圔58锛夈€乣c13::CMisc.boom`锛坮aise 钂稿彂+寰幆闄嶇骇锛?| **鐪熷疄鐮村彛**锛堣瘉鎹噸缁勶級 | 鍘熼敋鐐瑰け鏁堬紱鏂扮孩鍗曞厓琛屽綊灞炶 搂5-9 |
+| 9 | Assert锛圓锛?| B56 | `x08::assert_leaf` 绾紱`r8_07` 10/11锛坮8_assert_nested_func锛夛紱`r8_10::r8_x_assert_ternary` 绾紱`n9v9_stmt_sweep` **6/6 缁?*锛圔126 缈绘锛?| **鐪熷疄鐮村彛** | B126 娓呴櫎璇佸疄 |
+| 10 | Return锛圓锛?| B88 | `x08::return_leaf` 绾紱`c13` 2/3锛圕Misc.boom锛夛紱`c02` 7/7 缁?| **鐪熷疄鐮村彛** | c02 閿氱偣寮曠敤宸茶繃鏃讹紙live 缁匡級 |
+| 11 | Delete锛圓锛?| B84 | `r8_04_delete_forms` **10/10 缁?*锛沗x08::delete_leaf` 缁匡紱`m01` 5/5銆乣m08` 2/2 缁匡紱c13 绾㈠崟鍏冮潪 del 褰㈡€?| **宸插皝闂緟澶嶉獙** | 鍙拌处銆宮01/m08/c13 del 钂稿彂銆嶅叏鏁扮炕姝ｏ紙搂5-1锛?|
+| 12 | AugAssign锛圓锛?| B76+B48 娈嬬暀鍙?
+======================================================================
+鏃?| Await / ListComp / await_expr / Yield | Await銆丩istComp銆乤wait_expr銆乊ield锛?锛?| c4_20::e05_async_compound.go锛圔112鈶狅級銆乧4_20::e07_async_closure.outer.inner(.listcomp)锛圔112鈶★級銆乪12d::f_await_cond_pos锛圔128锛夈€亂f9 arg/boolop/ret/cond/prec锛團9锛?| B112鈶犮€丅112鈶°€丅128銆丅47 |
+| **R5** match-with 骞诲奖鏃?| Match / With / match_statement | Match銆乄ith銆乵atch_statement锛?锛?| B122 鍙屾帰閽?HANG銆亁01::if_in_match銆亁05::with_in_match锛圔93锛?| B74銆愬凡娓吢峰楠屻€戙€丅122銆丅93銆丅61銆丅70 |
+| **R6** 寰幆鎺у埗鏃?| Break / Continue / While | Break銆丆ontinue銆乄hile锛?锛?| v_b71_face::v_nest_fin_continue锛圔79锛夈€亁10::h_basic锛圔97锛夈€亁01::if_in_while锛圔94锛?| B79銆丅94銆丅97銆丅71 娈嬩綑锛坒in_continue 杞?B79锛?|
+| **R7** 璧嬪€?鍒犻櫎-return-slice 鏃?| Delete / AugAssign / Return / Slice / augmented_assign / slice | Delete銆丄ugAssign銆丷eturn銆丼lice銆乤ugmented_assign銆乻lice锛?锛?| x08::return_leaf锛圔88锛夈€乧13::CMisc.boom銆乪07::f_slice_expr_bounds锛圔127锛夈€?12/#11 寰呭楠岋細rv10_32/r8_06/r8_04 鍏ㄧ豢銆?| B76銆愬凡娓吢峰楠屻€戙€丅48 娈嬬暀鍙樹綋銆愬凡娓吢峰楠屻€戙€丅84銆愬緟澶嶉獙銆戙€丅88銆丅62銆丅127銆丅59銆丅60 |
+
+> 褰掑睘瑁佸喅鐐癸細`c13::CMisc.boom`锛坮aise 钂稿彂 + while/break/continue 闄嶇骇娣峰悎瀹夸富锛夋í璺?Raise/Return/Break 琛屸€斺€旀寜浜х墿涓诲舰鎬佸缓璁綊 R3锛坮aise 灏鹃棭锛夋垨 R6锛堝惊鐜帶鍒讹級锛岀暀涓讳唬鐞嗚鍐筹紙搂5-9锛夛紱`x01::if_in_try` 褰?R3锛沗x01::if_in_match` 褰?R5锛沗v_b75_face::v_swap_arm_returns`锛圔82-v_swap锛夊缓璁殢 Try 琛屽叆 R3 璇勪及锛堝彴璐︽湭鍒?B82 浜?Task 3.1锛岄渶涓讳唬鐞嗙‘璁よ寖鍥达級銆偽?琛屽綊灞烇細3+6+4+3+3+6 = **25 鉁?*銆?
+
+---
+
+## 搂5 寮傚父/鐭涚浘锛堝璐﹀彂鐜帮紝濡傚疄鐧昏锛?
+
+1. **鍙拌处 4 琛岄敋鐐瑰凡澶辨晥/杞崲锛坮
+======================================================================
+await_expr / Yield | Await銆丩istComp銆乤wait_expr銆乊ield锛?锛?| c4_20::e05_async_compound.go锛圔112鈶狅級銆乧4_20::e07_async_closure.outer.inner(.listcomp)锛圔112鈶★級銆乪12d::f_await_cond_pos锛圔128锛夈€亂f9 arg/boolop/ret/cond/prec锛團9锛?| B112鈶犮€丅112鈶°€丅128銆丅47 |
+| **R5** match-with 骞诲奖鏃?| Match / With / match_statement | Match銆乄ith銆乵atch_statement锛?锛?| B122 鍙屾帰閽?HANG銆亁01::if_in_match銆亁05::with_in_match锛圔93锛?| B74銆愬凡娓吢峰楠屻€戙€丅122銆丅93銆丅61銆丅70 |
+| **R6** 寰幆鎺у埗鏃?| Break / Continue / While | Break銆丆ontinue銆乄hile锛?锛?| v_b71_face::v_nest_fin_continue锛圔79锛夈€亁10::h_basic锛圔97锛夈€亁01::if_in_while锛圔94锛?| B79銆丅94銆丅97銆丅71 娈嬩綑锛坒in_continue 杞?B79锛?|
+| **R7** 璧嬪€?鍒犻櫎-return-slice 鏃?| Delete / AugAssign / Return / Slice / augmented_assign / slice | Delete銆丄ugAssign銆丷eturn銆丼lice銆乤ugmented_assign銆乻lice锛?锛?| x08::return_leaf锛圔88锛夈€乧13::CMisc.boom銆乪07::f_slice_expr_bounds锛圔127锛夈€?12/#11 寰呭楠岋細rv10_32/r8_06/r8_04 鍏ㄧ豢銆?| B76銆愬凡娓吢峰楠屻€戙€丅48 娈嬬暀鍙樹綋銆愬凡娓吢峰楠屻€戙€丅84銆愬緟澶嶉獙銆戙€丅88銆丅62銆丅127銆丅59銆丅60 |
+
+> 褰掑睘瑁佸喅鐐癸細`c13::CMisc.boom`锛坮aise 钂稿彂 + while/break/continue 闄嶇骇娣峰悎瀹夸富锛夋í璺?Raise/Return/Break 琛屸€斺€旀寜浜х墿涓诲舰鎬佸缓璁綊 R3锛坮aise 灏鹃棭锛夋垨 R6锛堝惊鐜帶鍒讹級锛岀暀涓讳唬鐞嗚鍐筹紙搂5-9锛夛紱`x01::if_in_try` 褰?R3锛沗x01::if_in_match` 褰?R5锛沗v_b75_face::v_swap_arm_returns`锛圔82-v_swap锛夊缓璁殢 Try 琛屽叆 R3 璇勪及锛堝彴璐︽湭鍒?B82 浜?Task 3.1锛岄渶涓讳唬鐞嗙‘璁よ寖鍥达級銆偽?琛屽綊灞烇細3+6+4+3+3+6 = **25 鉁?*銆?
+
+---
+
+## 搂5 寮傚父/鐭涚浘锛堝璐﹀彂鐜帮紝濡傚疄鐧昏锛?
+
+1. **鍙拌处 4 琛岄敋鐐瑰凡澶辨晥/杞崲锛坮ound10 WIKI_REVIEW 鏈悓姝ワ級
+======================================================================

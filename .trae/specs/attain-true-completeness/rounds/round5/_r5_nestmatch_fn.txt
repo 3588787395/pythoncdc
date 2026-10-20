@@ -1,0 +1,220 @@
+18048:     def _identify_nested_match_regions(self, parent_regions: List[Region], existing_match_regions: List[Region]) -> List[Region]:
+18049:         """识别嵌套在父区域中的match语句区域
+18050: 
+18051:         【区域类型】 MATCH — 嵌套模式匹配区域（Nested Match Region）
+18052:         RegionType 枚举值: RegionType.MATCH（与顶层 MatchRegion 同类型）
+18053: 
+18054:         **算法依据**
+18055:         基于 "No More Gotos" 论文中"嵌套即抽象节点"原则的工程实现：当 match 语句
+18056:         嵌套在 if/for/try/with 等控制结构中时，父区域会在 Phase 1/2 中先占用 match
+18057:         的 blocks（subject_block 与 case_blocks 被父区域 block_to_region 标记为
+18058:         claimed），导致 _identify_match_regions 的 `block in claimed` 守卫拒绝
+18059:         这些块、无法识别嵌套 match。本方法在所有父区域识别完成后进行二次扫描，
+18060:         专门处理嵌套 match 场景，是区域归约算法对"嵌套即抽象节点"原则的补强——
+18061:         让嵌套 match 仍能形成独立子区域，而非被父区域"内联展开"。
+18062:         字节码模式映射（与顶层 _identify_match_regions 完全一致，区别仅在块已被
+18063:         父区域占用）：
+18064:           - 结构型模式 — _has_match_op 检测 MATCH_CLASS/SEQUENCE/MAPPING/KEYS。
+18065:           - 字面量模式 — _is_match_subject_block 检测 COPY + COMPARE_OP/IS_OP。
+18066:           - 简单 case 块 — _is_simple_match_case_block 检测 NOP 前缀的 case 块。
+18067:           - 通配符块 — _is_wildcard_match_block。
+18068:           - None 匹配块 — _is_none_match_block。
+18069:         归约过程：
+18070:           Step 1: 遍历 parent_regions（IfRegion/ForRegion/TryRegion/WithRegion 等），
+18071:                   按 len(blocks) 倒序排序（大区域优先，避免子区域块先被小父区域
+18072:                   吞并）。
+18073:           Step 2: 对每个 parent_region.blocks 进行 match 特征检测。
+18074:           Step 3: 发现候选 subject 块后，调用 _collect_nested_match_region 收集完整
+18075:                   case 链（结构型用 _mr_collect_case_body；字面量用 _collect_nested_
+18076:                   literal_match；简单 case 用 _find_nested_match_subject + 字面量收集）。
+18077:           Step 4: 验证嵌套约束：所有 match blocks 必须是 parent_blocks 的子集
+18078:                   （允许 merge 等汇合点超出，但 core_blocks = subject ∪ case_blocks
+18079:                   ∪ case_bodies 必须是子集），match 不能跨越父区域边界。
+18080:           Step 5: 创建子 MatchRegion 并注册到 block_to_region。
+18081: 
+18082:         **归约顺序**
+18083:         Phase 2.5（在所有高层区域 conditional_regions / loop_regions / try_regions /
+18084:         with_regions 识别完成之后执行；analyze() 中显式调用位置在 conditional_regions
+18085:         构建之后、elif_chain 清理之前）。这是区域归约的二次扫描阶段：第一次扫描
+18086:         （_identify_match_regions，Phase 1）只能识别未被父区域占用的顶层 match；
+18087:         本方法补足被父区域占用的嵌套 match。existing_match_regions 作为参数传入，
+18088:         本方法扫描时显式跳过已被现有 MatchRegion 占用的块（existing_match_blocks）。
+18089:         返回的 nested_regions 在 analyze() 中与原 match_regions 拼接为最终
+18090:         match_regions。
+18091: 
+18092:         **唯一归属判定**
+18093:         本方法是少数允许子区域 blocks 与父区域 blocks 重叠的识别方法——这是因为
+18094:         嵌套 match 的 subject_block / case_blocks 已被父区域 block_to_region 标记
+18095:         为 claimed，本方法必须重新登记才能让子 MatchRegion 拥有这些块。注册规则：
+18096:           - 跳过 existing_match_blocks（已被其它 MatchRegion 占用的块）。
+18097:           - 跳过 `self.block_to_region.get(block)` 为 MatchRegion 的块（同类型自洽）。
+18098:           - 注册时调用 `existing.preserves_against_nested_match()` 多态守卫：仅当
+18099:             existing 为 None 或 existing.preserves_against_nested_match() 返回
+18100:             False 时才覆盖（MatchRegion 覆写为 True，保留外层 match 占有的块；
+18101:             其它 Region 默认 False，允许覆盖）。
+18102:         这样既保证嵌套 match 拥有 subject_block / case_blocks（子区域唯一归属），
+18103:         又不破坏外层 match 已占有的块（外层唯一归属）。
+18104: 
+18105:         **嵌套处理**
+18106:         本方法本身就是嵌套处理——它专门识别嵌套在父区域（IfRegion/ForRegion/
+18107:         TryRegion/WithRegion）内部的 match。子 MatchRegion 通过 entry 块作为
+18108:         抽象节点参与父区域的归约；父区域的 then/else/body 引用本区域 entry，
+18109:         不展开本区域的 case_blocks / case_bodies。多层嵌套（match in if in for）
+18110:         通过 parent_regions 列表传入的所有父区域间接处理（每个父区域内部独立
+18111:         扫描）。多态分发点 preserves_against_nested_match 是本方法的核心协调点，
+18112:         由 MatchRegion 覆写为 True。
+18113: 
+18114:         **入口引用语义**
+18115:         入口块 = match subject 加载块（region.entry = subject_block）。当候选块是
+18116:         case pattern 块时，回溯前驱（必须在 parent_blocks 内）查找
+18117:         _is_case_pattern_block / _has_match_op 的块作为 subject_block。简单 case
+18118:         块（NOP 前缀的 default case）通过 _find_nested_match_subject 沿前驱链
+18119:         查找含 COPY / COMPARE_OP+LOAD+CONDITIONAL_JUMP 的 subject 块（偏移量必须
+18120:         小于 case 块）。父区域（如 IfRegion / ForRegion / TryRegion / WithRegion）
+18121:         通过 then/else/body 列表引用本 region 的 entry 块作为抽象节点；本 region
+18122:         的 case_blocks / case_bodies / merge_block / pattern_check_blocks 不出现
+18123:         在父区域 blocks 集合的展开中（嵌套即抽象节点，尽管 blocks 集合本身可能
+18124:         重叠，但语义上父区域仅引用 entry）。
+18125: 
+18126:         **反编译流程**
+18127:         对应生成方法: _generate_match（region_ast_generator.py）。AST 节点一一映射：
+18128:           RegionType.MATCH → ast.Match（与顶层 MatchRegion 相同）
+18129:         关键字段映射:
+18130:           subject     → Match.subject
+18131:           case_blocks → Match.cases（每个 case → match_case: pattern + guard + body）
+18132:         本方法返回的嵌套 MatchRegion 与顶层 MatchRegion 共用 _generate_match，
+18133:         作为父区域 AST 节点的子节点（如 If.body[0] = Match(...)）出现。本方法遵循
+18134:         区域归约算法 4 核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 /
+18135:         父引用子入口。
+18136: 
+18137:         Args:
+18138:             parent_regions: 已识别的父区域列表（可能包含嵌套 match 的区域）。
+18139:             existing_match_regions: 已识别的顶层 match 区域列表（用于跳过已占用块）。
+18140: 
+18141:         Returns:
+18142:             嵌套 MatchRegion 列表。
+18143:         """
+18144:         nested_regions = []
+18145:         existing_match_blocks = set()
+18146:         for mr in existing_match_regions:
+18147:             existing_match_blocks.update(mr.blocks)
+18148: 
+18149:         sorted_parent_regions = sorted(parent_regions, key=lambda r: len(r.blocks) if r.blocks else 0, reverse=True)
+18150: 
+18151:         for parent_region in sorted_parent_regions:
+18152:             if not parent_region or not parent_region.blocks:
+18153:                 continue
+18154: 
+18155:             # 扫描父区域内的blocks，寻找未识别的match模式
+18156:             parent_blocks = parent_region.blocks
+18157:             # [B16-F5] match×match 嵌套：父区域是 MatchRegion 时只扫描其
+18158:             # case 体块（嵌套 match 只可能出现在 case 体内——外层 case 匹配
+18159:             # 成功后才进入体内）。排除集 = 外层 match 的链块（subject/case
+18160:             # 头/pattern 检查/merge 等，即 blocks 减去全部 case 体块），外层
+18161:             # case 体块对其开放；其它 match 区域占有的块仍照常排除。
+18162:             # 判据为区域类型 + case 体归属（同层结构事实），非位置特例。
+18163:             if isinstance(parent_region, MatchRegion):
+18164:                 _body_blocks_of_parent = set()
+18165:                 for _body in (parent_region.case_bodies or []):
+18166:                     _body_blocks_of_parent.update(_body)
+18167:                 _chain_blocks_of_parent = parent_blocks - _body_blocks_of_parent
+18168:                 _scan_blocks = [b for b in self.cfg.get_blocks_in_order()
+18169:                                 if b in _body_blocks_of_parent]
+18170:                 _exclusion = (existing_match_blocks - _body_blocks_of_parent) | _chain_blocks_of_parent
+18171:             else:
+18172:                 _scan_blocks = self.cfg.get_blocks_in_order()
+18173:                 _exclusion = existing_match_blocks
+18174:             for block in _scan_blocks:
+18175:                 if block not in parent_blocks:
+18176:                     continue
+18177:                 if block in _exclusion:
+18178:                     continue
+18179:                 if isinstance(parent_region, MatchRegion):
+18180:                     # [B16-F5] case 体块被外层 MatchRegion 占有是常态，
+18181:                     # 不作为跳过条件（内层 match 要在体内重新归约）
+18182:                     pass
+18183:                 elif self.block_to_region.get(block) and isinstance(self.block_to_region.get(block), MatchRegion):
+18184:                     continue
+18185: 
+18186:                 # 检测match特征
+18187:                 is_structured = self._has_match_op(block)
+18188:                 is_case_pattern = self._is_case_pattern_block(block)
+18189:                 is_literal_subject = self._is_match_subject_block(block)
+18190:                 is_capture_guard = self._is_capture_guard_case_block(block)
+18191:                 is_simple_case = self._is_simple_match_case_block(block)
+18192:                 is_wildcard = self._is_wildcard_match_block(block)
+18193:                 is_none_match = self._is_none_match_block(block)
+18194: 
+18195:                 if not (is_structured or is_case_pattern or is_literal_subject or is_capture_guard or is_simple_case or is_wildcard or is_none_match):
+18196:                     continue
+18197: 
+18198:                 # 尝试收集match区域
+18199:                 nested_match = self._collect_nested_match_region(block, parent_blocks, _exclusion)
+18200:                 if nested_match:
+18201:                     nested_regions.append(nested_match)
+18202:                     # 更新已占用blocks集合
+18203:                     existing_match_blocks.update(nested_match.blocks)
+18204:                     # 注册到block_to_region（允许与父区域重叠）
+18205:                     for b in nested_match.blocks:
+18206:                         existing = self.block_to_region.get(b)
+18207:                         if existing is None or not existing.preserves_against_nested_match():
+18208:                             self.block_to_region[b] = nested_match
+18209: 
+18210:         return nested_regions
+18211: 
+18212:     def _collect_nested_match_region(self, candidate_block: 'BasicBlock', parent_blocks: set, exclude_blocks: set) -> Optional[MatchRegion]:
+18213:         """从候选块开始收集嵌套match区域
+18214: 
+18215:         反编译逻辑：
+18216:         根据候选块的类型，使用不同的收集策略：
+18217:         1. 结构型模式（有MATCH_*操作码）：调用_mr_collect_case_body()
+18218:         2. 字面量模式（COPY+比较）：调用_scan_literal_match_subjects的单例版本
+18219:         3. 简单case块（NOP前缀）：向前查找subject块再收集
+18220: 
+18221:         Args:
+18222:             candidate_block: 候选的match入口块
+18223:             parent_blocks: 父区域的blocks集合（边界约束）
+18224:             exclude_blocks: 已被其他match占用的blocks集合
+18225: 
+18226:         Returns:
+18227:             收集到的MatchRegion，如果无效则返回None
+18228:         """
+18229:         import dis
+18230: 
+18231:         # 策略1: 结构型模式匹配（有MATCH_*操作码）
+18232:         if self._has_match_op(candidate_block):
+18233:             subject_block = candidate_block
+18234:             if self._is_case_pattern_block(candidate_block):
+18235:                 for pred in sorted(candidate_block.predecessors, key=lambda p: p.start_offset):
+18236:                     last = pred.get_last_instruction()
+18237:                     if last and last.opname in CONDITIONAL_JUMP_OPS:
+18238:                         if (self._is_case_pattern_block(pred) or self._has_match_op(pred)) and pred in parent_blocks:
+18239:                             subject_block = pred
+18240:                             break
+18241: 
+18242:             case_blocks, case_patterns, case_bodies, merge, all_raw_blocks = self._mr_collect_case_body(subject_block)
+18243:             if not case_blocks:
+18244:                 return None
+18245: 
+18246:             # 验证所有blocks都在父区域内
+18247:             all_blocks = all_raw_blocks | {subject_block} | set(case_blocks)
+18248:             for body in case_bodies:
+18249:                 all_blocks.update(body)
+18250:             if merge:
+18251:                 all_blocks.add(merge)
+18252: 
+18253:             # 检查是否超出父区域边界
+18254:             if not all_blocks.issubset(parent_blocks):
+18255:                 # 放宽约束：允许部分超出（可能是汇合点）
+18256:                 core_blocks = {subject_block} | set(case_blocks)
+18257:                 for body in case_bodies:
+18258:                     core_blocks.update(body)
+18259:                 if not core_blocks.issubset(parent_blocks):
+18260:                     return None
+18261: 
+18262:             # 创建MatchRegion
+18263:             # [B16] 同上：头块不在任何 case body 中时允许提取同块守卫
+18264:             _guard_body_pool = set()
+18265:             for _body in case_bodies:
+18266:                 _guard_body_pool.update(_body)
+18267:             case_guards = []

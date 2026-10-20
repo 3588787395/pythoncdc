@@ -1,0 +1,15 @@
+﻿W blocks [0, 72, 120, 146, 152, 154, 160, 192, 200, 214, 34, 66, 74, 96, 162]
+IF entry 66 inW True merge 216 mergeInW False then [72, 74] else [122, 168]
+  cond 66 POP_JUMP_FORWARD_IF_FALSE 120 in FORWARD True
+  true 72 false 120
+   walk 0 72 noise
+   walk 1 74 cleanup
+   walk 2 96 cleanup
+    jump -> 216 T? True
+  truewalk jump
+   walk 0 120 noise
+   walk stop 122 seen False inW False
+  falsewalk None
+  arms noise/cleanup: [(72, 'noise'), (74, 'cleanup'), (122, 'cleanup'), (168, 'cleanup')]
+current_loop None
+result None

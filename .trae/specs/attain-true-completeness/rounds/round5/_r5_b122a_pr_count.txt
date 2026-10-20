@@ -1,0 +1,241 @@
+id-call=1 parents=0 existing=0 types=
+  id-call=1 ret=0
+id-call=2 parents=2 existing=1 types=IfRegion,MatchRegion
+collect#1 cand=18 parent_n=6 excl_n=2
+  collect#1 ret=REG blocks=6
+  id-call=2 ret=1
+id-call=3 parents=1 existing=2 types=MatchRegion
+collect#2 cand=18 parent_n=6 excl_n=2
+  collect#2 ret=REG blocks=6
+  id-call=3 ret=1
+id-call=4 parents=1 existing=3 types=MatchRegion
+collect#3 cand=18 parent_n=6 excl_n=2
+  collect#3 ret=REG blocks=6
+  id-call=4 ret=1
+id-call=5 parents=1 existing=4 types=MatchRegion
+collect#4 cand=18 parent_n=6 excl_n=2
+  collect#4 ret=REG blocks=6
+  id-call=5 ret=1
+id-call=6 parents=1 existing=5 types=MatchRegion
+collect#5 cand=18 parent_n=6 excl_n=2
+  collect#5 ret=REG blocks=6
+  id-call=6 ret=1
+id-call=7 parents=1 existing=6 types=MatchRegion
+collect#6 cand=18 parent_n=6 excl_n=2
+  collect#6 ret=REG blocks=6
+  id-call=7 ret=1
+id-call=8 parents=1 existing=7 types=MatchRegion
+collect#7 cand=18 parent_n=6 excl_n=2
+  collect#7 ret=REG blocks=6
+  id-call=8 ret=1
+id-call=9 parents=1 existing=8 types=MatchRegion
+collect#8 cand=18 parent_n=6 excl_n=2
+  collect#8 ret=REG blocks=6
+  id-call=9 ret=1
+id-call=10 parents=1 existing=9 types=MatchRegion
+collect#9 cand=18 parent_n=6 excl_n=2
+  collect#9 ret=REG blocks=6
+  id-call=10 ret=1
+id-call=11 parents=1 existing=10 types=MatchRegion
+collect#10 cand=18 parent_n=6 excl_n=2
+  collect#10 ret=REG blocks=6
+  id-call=11 ret=1
+id-call=12 parents=1 existing=11 types=MatchRegion
+collect#11 cand=18 parent_n=6 excl_n=2
+  collect#11 ret=REG blocks=6
+  id-call=12 ret=1
+id-call=13 parents=1 existing=12 types=MatchRegion
+collect#12 cand=18 parent_n=6 excl_n=2
+  collect#12 ret=REG blocks=6
+  id-call=13 ret=1
+id-call=14 parents=1 existing=13 types=MatchRegion
+collect#13 cand=18 parent_n=6 excl_n=2
+  collect#13 ret=REG blocks=6
+  id-call=14 ret=1
+id-call=15 parents=1 existing=14 types=MatchRegion
+collect#14 cand=18 parent_n=6 excl_n=2
+  collect#14 ret=REG blocks=6
+  id-call=15 ret=1
+id-call=16 parents=1 existing=15 types=MatchRegion
+collect#15 cand=18 parent_n=6 excl_n=2
+  collect#15 ret=REG blocks=6
+  id-call=16 ret=1
+id-call=17 parents=1 existing=16 types=MatchRegion
+collect#16 cand=18 parent_n=6 excl_n=2
+  collect#16 ret=REG blocks=6
+  id-call=17 ret=1
+id-call=18 parents=1 existing=17 types=MatchRegion
+collect#17 cand=18 parent_n=6 excl_n=2
+  collect#17 ret=REG blocks=6
+  id-call=18 ret=1
+id-call=19 parents=1 existing=18 types=MatchRegion
+collect#18 cand=18 parent_n=6 excl_n=2
+  collect#18 ret=REG blocks=6
+  id-call=19 ret=1
+id-call=20 parents=1 existing=19 types=MatchRegion
+collect#19 cand=18 parent_n=6 excl_n=2
+  collect#19 ret=REG blocks=6
+  id-call=20 ret=1
+id-call=21 parents=1 existing=20 types=MatchRegion
+collect#20 cand=18 parent_n=6 excl_n=2
+  collect#20 ret=REG blocks=6
+  id-call=21 ret=1
+id-call=22 parents=1 existing=21 types=MatchRegion
+collect#21 cand=18 parent_n=6 excl_n=2
+  collect#21 ret=REG blocks=6
+  id-call=22 ret=1
+id-call=23 parents=1 existing=22 types=MatchRegion
+collect#22 cand=18 parent_n=6 excl_n=2
+  collect#22 ret=REG blocks=6
+  id-call=23 ret=1
+id-call=24 parents=1 existing=23 types=MatchRegion
+collect#23 cand=18 parent_n=6 excl_n=2
+  collect#23 ret=REG blocks=6
+  id-call=24 ret=1
+id-call=25 parents=1 existing=24 types=MatchRegion
+collect#24 cand=18 parent_n=6 excl_n=2
+  collect#24 ret=REG blocks=6
+  id-call=25 ret=1
+id-call=26 parents=1 existing=25 types=MatchRegion
+collect#25 cand=18 parent_n=6 excl_n=2
+  collect#25 ret=REG blocks=6
+  id-call=26 ret=1
+id-call=27 parents=1 existing=26 types=MatchRegion
+collect#26 cand=18 parent_n=6 excl_n=2
+  collect#26 ret=REG blocks=6
+  id-call=27 ret=1
+id-call=28 parents=1 existing=27 types=MatchRegion
+collect#27 cand=18 parent_n=6 excl_n=2
+  collect#27 ret=REG blocks=6
+  id-call=28 ret=1
+id-call=29 parents=1 existing=28 types=MatchRegion
+collect#28 cand=18 parent_n=6 excl_n=2
+  collect#28 ret=REG blocks=6
+  id-call=29 ret=1
+id-call=30 parents=1 existing=29 types=MatchRegion
+collect#29 cand=18 parent_n=6 excl_n=2
+  collect#29 ret=REG blocks=6
+  id-call=30 ret=1
+id-call=31 parents=1 existing=30 types=MatchRegion
+collect#30 cand=18 parent_n=6 excl_n=2
+  collect#30 ret=REG blocks=6
+  id-call=31 ret=1
+id-call=32 parents=1 existing=31 types=MatchRegion
+collect#31 cand=18 parent_n=6 excl_n=2
+  collect#31 ret=REG blocks=6
+  id-call=32 ret=1
+id-call=33 parents=1 existing=32 types=MatchRegion
+collect#32 cand=18 parent_n=6 excl_n=2
+  collect#32 ret=REG blocks=6
+  id-call=33 ret=1
+id-call=34 parents=1 existing=33 types=MatchRegion
+collect#33 cand=18 parent_n=6 excl_n=2
+  collect#33 ret=REG blocks=6
+  id-call=34 ret=1
+id-call=35 parents=1 existing=34 types=MatchRegion
+collect#34 cand=18 parent_n=6 excl_n=2
+  collect#34 ret=REG blocks=6
+  id-call=35 ret=1
+id-call=36 parents=1 existing=35 types=MatchRegion
+collect#35 cand=18 parent_n=6 excl_n=2
+  collect#35 ret=REG blocks=6
+  id-call=36 ret=1
+id-call=37 parents=1 existing=36 types=MatchRegion
+collect#36 cand=18 parent_n=6 excl_n=2
+  collect#36 ret=REG blocks=6
+  id-call=37 ret=1
+id-call=38 parents=1 existing=37 types=MatchRegion
+collect#37 cand=18 parent_n=6 excl_n=2
+  collect#37 ret=REG blocks=6
+  id-call=38 ret=1
+id-call=39 parents=1 existing=38 types=MatchRegion
+collect#38 cand=18 parent_n=6 excl_n=2
+  collect#38 ret=REG blocks=6
+  id-call=39 ret=1
+id-call=40 parents=1 existing=39 types=MatchRegion
+collect#39 cand=18 parent_n=6 excl_n=2
+  collect#39 ret=REG blocks=6
+  id-call=40 ret=1
+id-call=41 parents=1 existing=40 types=MatchRegion
+collect#40 cand=18 parent_n=6 excl_n=2
+  collect#40 ret=REG blocks=6
+  id-call=41 ret=1
+id-call=42 parents=1 existing=41 types=MatchRegion
+collect#41 cand=18 parent_n=6 excl_n=2
+  collect#41 ret=REG blocks=6
+  id-call=42 ret=1
+id-call=43 parents=1 existing=42 types=MatchRegion
+collect#42 cand=18 parent_n=6 excl_n=2
+  collect#42 ret=REG blocks=6
+  id-call=43 ret=1
+id-call=44 parents=1 existing=43 types=MatchRegion
+collect#43 cand=18 parent_n=6 excl_n=2
+  collect#43 ret=REG blocks=6
+  id-call=44 ret=1
+id-call=45 parents=1 existing=44 types=MatchRegion
+collect#44 cand=18 parent_n=6 excl_n=2
+  collect#44 ret=REG blocks=6
+  id-call=45 ret=1
+id-call=46 parents=1 existing=45 types=MatchRegion
+collect#45 cand=18 parent_n=6 excl_n=2
+  collect#45 ret=REG blocks=6
+  id-call=46 ret=1
+id-call=47 parents=1 existing=46 types=MatchRegion
+collect#46 cand=18 parent_n=6 excl_n=2
+  collect#46 ret=REG blocks=6
+  id-call=47 ret=1
+id-call=48 parents=1 existing=47 types=MatchRegion
+collect#47 cand=18 parent_n=6 excl_n=2
+  collect#47 ret=REG blocks=6
+  id-call=48 ret=1
+id-call=49 parents=1 existing=48 types=MatchRegion
+collect#48 cand=18 parent_n=6 excl_n=2
+  collect#48 ret=REG blocks=6
+  id-call=49 ret=1
+id-call=50 parents=1 existing=49 types=MatchRegion
+collect#49 cand=18 parent_n=6 excl_n=2
+  collect#49 ret=REG blocks=6
+  id-call=50 ret=1
+id-call=51 parents=1 existing=50 types=MatchRegion
+collect#50 cand=18 parent_n=6 excl_n=2
+  collect#50 ret=REG blocks=6
+  id-call=51 ret=1
+id-call=52 parents=1 existing=51 types=MatchRegion
+collect#51 cand=18 parent_n=6 excl_n=2
+  collect#51 ret=REG blocks=6
+  id-call=52 ret=1
+id-call=53 parents=1 existing=52 types=MatchRegion
+collect#52 cand=18 parent_n=6 excl_n=2
+  collect#52 ret=REG blocks=6
+  id-call=53 ret=1
+id-call=54 parents=1 existing=53 types=MatchRegion
+collect#53 cand=18 parent_n=6 excl_n=2
+  collect#53 ret=REG blocks=6
+  id-call=54 ret=1
+id-call=55 parents=1 existing=54 types=MatchRegion
+collect#54 cand=18 parent_n=6 excl_n=2
+  collect#54 ret=REG blocks=6
+  id-call=55 ret=1
+id-call=56 parents=1 existing=55 types=MatchRegion
+collect#55 cand=18 parent_n=6 excl_n=2
+  collect#55 ret=REG blocks=6
+  id-call=56 ret=1
+id-call=57 parents=1 existing=56 types=MatchRegion
+collect#56 cand=18 parent_n=6 excl_n=2
+  collect#56 ret=REG blocks=6
+  id-call=57 ret=1
+id-call=58 parents=1 existing=57 types=MatchRegion
+collect#57 cand=18 parent_n=6 excl_n=2
+  collect#57 ret=REG blocks=6
+  id-call=58 ret=1
+id-call=59 parents=1 existing=58 types=MatchRegion
+collect#58 cand=18 parent_n=6 excl_n=2
+  collect#58 ret=REG blocks=6
+  id-call=59 ret=1
+id-call=60 parents=1 existing=59 types=MatchRegion
+collect#59 cand=18 parent_n=6 excl_n=2
+  collect#59 ret=REG blocks=6
+  id-call=60 ret=1
+id-call=61 parents=1 existing=60 types=MatchRegion
+SystemExit 0
+id-calls total=61 collect=59

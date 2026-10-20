@@ -1,0 +1,20 @@
+[
+ {
+  "name": "rv902",
+  "pyc_src_rel": "test_repros/round9/rv9_02_b66_with_nest.pyc",
+  "pyc_src_sha": "61ce0b0161e4ad46",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round5/rec1_rv902_rv9_02_b66_with_nest.pyc",
+  "mtime": "2026-10-19T21:12:24",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "3f4c8688c6ddc9b8",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_rv902_rv9_02_b66_with_nest.pyc (Python 3.11)\n\n__doc__ = \"\"\"rv9_02: B66 boundary attacks (round9 re-review, 9.3).\n\nUnits:\n  cont_in_with_nested_loop - continue inside nested loop hosted by with (cross-layer)\n  cont_in_with_no_else     - with host, guard if has no else arm\n  with_whole_body_pass     - with as entire loop body (false-trigger boundary)\n  while_with_whole_body    - while True + with whole body (false-trigger boundary)\n\"\"\"\ndef cont_in_with_nested_loop(xs, p, a):\n    for x in xs:\n        with open(p) as f:\n            for y in f:\n                if a(y):\n                    continue\n                use(y)\n                continue\n    return 8\ndef cont_in_with_no_else(xs, p, a):\n    for x in xs:\n        with open(p) as f:\n            if a(f, x):\n                continue\n    return 9\ndef with_whole_body_pass(xs, p):\n    for x in xs:\n        with open(p) as f:\n            pass\n    return 14\ndef while_with_whole_body(p):\n    while True:\n        with open(p) as f:\n            pass\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_rv902_rv9_02_b66_with_nest.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_rv902_rv9_02_b66_with_nestOK.py\n[single] status=success units=5/5 success_rate=100.00%",
+  "status": "success",
+  "units_success": 5,
+  "units_total": 5,
+  "failures": []
+ }
+]

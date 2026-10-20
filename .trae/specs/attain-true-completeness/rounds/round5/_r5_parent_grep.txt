@@ -1,0 +1,39 @@
+﻿221 def add_child(self, child: 'Region') -> None:
+231 child.parent = self
+1733 tr.parent = cr
+1735 cr.add_child(tr)
+1743 br.parent = cr
+1745 cr.add_child(br)
+1822 _ch.parent = None
+1878 _s_child.parent = _ibc_r
+1880 _ibc_r.add_child(_s_child)
+2136 _t.parent = None
+5321 涓嬫父璇嗗埆鍚庨€氳繃 add_child 鎸傚埌 LoopRegion.children锛屽叾鍧椾笉鍑虹幇鍦ㄧ埗鍖哄煙
+5353 WithRegion/MatchRegion/AssertRegion 缁?add_child/entry 鎶借薄鑺傜偣鎸傚埌 LoopRegion锛?
+11471 # [Round 32 fix] add_child 瀹堝崼鍚屾閰嶅/宓屽鍒ゅ埆锛?
+11474 # 鍗曞厓琚惛鏀讹級鎵嶈烦杩?add_child锛涚湡宓屽锛坱ry_offset_start
+11477 # 鏋勫缓 AST 鏍戯紝缂?add_child 鏃跺祵濂?try 浼氶€€鍖栦负 pass銆?
+11482 region_b.add_child(region_a)
+11504 # [Round 32 fix] add_child 瀹堝崼鍚屾閰嶅/宓屽鍒ゅ埆
+11511 region_b.add_child(region_a)
+11554 region_b.add_child(region_a)
+15487 region.parent = parent_region
+15488 parent_region.add_child(region)
+15598 MatchRegion 绛夐€氳繃 add_child 鎸傚埌 WithRegion.children銆?
+15632 鈥斺€攚ith body 鍐呭祵濂楀尯鍩熺粡 add_child/entry 鎶借薄鑺傜偣琚湰 WithRegion 娑堣垂锛岀埗
+16279 case_blocks 鍐呭祵濂楃殑 IfRegion / LoopRegion 绛夐€氳繃 add_child 鎸傚埌
+16294 add_child/entry 鎶借薄鑺傜偣琚?MatchRegion 娑堣垂锛岀埗鍖哄煙涓嶅睍寮€瀛?match 鍐呴儴锛汣3
+19664 region.parent = existing
+20228 TryExceptRegion / WithRegion / MatchRegion / AssertRegion 绛夐€氳繃 add_child
+20260 鍖哄煙缁?add_child/entry 鎶借薄鑺傜偣琚湰 IfRegion 娑堣垂锛岀埗鍖哄煙涓嶆劅鐭?
+20875 add_child 鎸傚埌鏈?IfRegion.children锛涙湰 IfRegion 鍦ㄧ埗鍖哄煙涓綔涓哄崟涓娊璞?
+20927 TernaryRegion 绛夌粡 add_child/entry 鎶借薄鑺傜偣琚埗鍖哄煙娑堣垂锛岀埗鍖哄煙涓嶅睍寮€
+23141 region.add_child(boolop_region)
+23143 region.add_child(boolop_region)
+23147 region.parent = mr_check_wild
+23148 mr_check_wild.add_child(region)
+29496 region.add_child(boolop_region)
+29538 boolop_region.parent = None
+29655 region.add_child(boolop_region)
+35415 best_parent.add_child(child)
+35428 ir.add_child(br)

@@ -1,0 +1,6 @@
+MR entry=0 case_blocks=[0, 94]
+   patterns=[{'type': 'MatchClass', 'cls': {'type': 'Name', 'id': 'int'}, 'as_name': 'v'}, {'type': 'MatchClass', 'cls': {'type': 'Name', 'id': 'str'}, 'as_name': 's'}]
+   guards=[{'type': 'Compare', 'left': {'type': 'Name', 'id': 'v'}, 'ops': [{'type': 'CompareOp', 'op': '>'}], 'right': {'type': 'Constant', 'value': 10}}, None]
+   bodies=[[60], [116]]
+   merge=None blocks=[0, 28, 46, 60, 80, 90, 94, 116, 152]
+=== DONE ===

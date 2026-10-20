@@ -22,11 +22,11 @@
   - [x] 4.2 修复：5 项通用机制 + 3 项补强全族封闭（B112① 门+谓词+loop 消费发射、B112② 表达式重建层 GET_AITER、B128 条件归属 IfRegion、B47 三元臂链流、YF9 优先级+语境括号；I.4 白名单判据；G3=0 / G4=0）
   - [x] 4.3 复核：原探针全绿 + 合成 5 探针 31/31 + 负对照九件 60/60 + 邻域 16 探针 79/86（与基线逐位一致）；站桩回归不变差（402 八分片 REGRESSIONS=0、34 集 REGRESSIONS=0 IMPROVED=33 复跑复现）
   - [x] 4.4 主代理验证序六步 + push（`rr-v3r04:`）：核 worktree/diffstat（3 文件 +447/−13、标记 [Bn-V3R4] 25 行）/FIX.md 终稿 132 行 §0-§6/summary 全绿/IV.2（BOM 单头、G3=0）/site-packages 零字节；独立复跑核心 13 探针 68/68 + 19/19、负对照九件 60/60、合成 5 探针 31/31、sanity 49/49（r5_10/e09b/r8_08/n9v9/r7_08）；自产回归对比 `_r4acc_regcmp.json` DEGRADED=0
-- [ ] Task 5: Round 5 — match-with 幻影族封闭（→ 升格行：Match / With）
-  - [ ] 5.1 评审攻击：B74（match 深层变体）/ B122（match 域外候选转正）/ B93（with-in-match 幻影镜像）/ B61（深宿主 match guard）/ B70（while True+with 幻影 break）现状探针 + 合成新变体
-  - [ ] 5.2 修复：通用机制全族封闭
-  - [ ] 5.3 复核：原探针 + 合成交叉变体 + 负对照全过；站桩回归不变差
-  - [ ] 5.4 主代理验证序六步 + push（`rr-v3r05:`）
+- [x] Task 5: Round 5 — match-with 幻影族封闭（→ 升格行：Match / With）（修复工程师续作 + 合成补强 + 主代理验收）（FIX.md 终稿 205 行 §0-§6：B122 三根因〔挂死收敛/幻影 guard/嵌套守卫〕+ B93 + B61 四点 + B70 双误触发 + 合成补强 B61i/j/k + B70g/h/i/j；域内红单元全清：b122a HANG→2/2、b122b HANG→5/5、x05 6/7→7/7、x01 5/7→6/7、r809 7/10→8/10、r811 5/6→6/6、rv902 4/5→5/5；3 文件 +1178/−85，标记 [Bn-V3R5] 27 处，7 新方法六项 docstring；合成非语料 20 探针 54/65→65/65；E 门禁首跑自捕获 B70g 宽守卫三文件误杀〔6610/6617〕→ 按 I.4 收窄为「宿主 with entry ∈ LoopRegion 体成员」→ 三文件单验 41/41+52/52+79/79 复原 → 二跑 402 八分片 6617/6617 REGRESSIONS=0、small34 1568/1568 IMPROVED=33、quotation 153/153、tests 基线名单、IV.2 全绿〔BOM 单头、G3=0〕；主代理独立复跑合成 65/65 + 邻域 82/86 + 负对照 60/60 + R4 保护 71/71 + 命名 43/46 + 终树重跑；x02::for_in_match 由 B61k 连带 6/7→7/7，原 R6 裁决提前关闭；残余=域外 x01::if_in_while〔R6〕、r809 两单元〔B59/B60→R7〕、r810〔R7〕、c04/m02 park〔R8/B132〕）
+  - [x] 5.1 评审攻击：B74（match 深层变体）/ B122（match 域外候选转正）/ B93（with-in-match 幻影镜像）/ B61（深宿主 match guard）/ B70（while True+with 幻影 break）现状探针 + 合成新变体；合成 20 探针（g1a-g5b 10 + b74d/b74e/b93c/b93d/b61c/b61d/b70a/b70b/b122c/b122d 10）首跑 r5synthall1=54/65，暴露 5 机制：structural 模式 or 守卫链锚点（g1a/g1b/b74d/b74e）、通配守卫 `case _ if not g`、星形序列绑定丢失、宿主内 match 装配（g2a/g2b/g3a/g3b）、B70 continue 变体（b70a）
+  - [x] 5.2 修复：通用机制全族封闭（B122 四点、B93、B61a-d + i-k、B70a/b + c-j；B70g 宽守卫经 E 门禁回归收窄为循环体内宿主判据，真实代码三文件复原）
+  - [x] 5.3 复核：原探针全绿（域内）+ 合成 20 探针 65/65 + 负对照九件 60/60 + R4 保护 71/71 + 邻域 82/86（较基线 81/86 仅 +x02 转绿；失败集 4 项均域外/park）+ 命名组 43/46（余 3 域外）；站桩回归不变差（E 二跑 402 八分片 6617/6617 REGRESSIONS=0、small34 1568/1568 IMPROVED=33、quotation 153/153）
+  - [x] 5.4 主代理验证序六步 + push（`rr-v3r05:`）：核 worktree/diffstat（3 文件 +1178/−85、标记 27 处、G3=0）/FIX.md 终稿 §0-§6/summary/IV.2（BOM 单头、site-packages 零字节差异）；独立复跑 synth 65/65 + neigh 82/86 + neg9 60/60 + r4prot 71/71 + named 43/46 与终树 r5fin_* 四组；E 首跑回归二分（B70g 宽守卫→收窄）与二跑取证（final_verify_summary.json，DEGRADED=0）
 - [ ] Task 6: Round 6 — 循环控制族封闭（→ 升格行：Break / Continue / While）
   - [ ] 6.1 评审攻击：B79（break 三分支族）/ B94（while NOP 残段）/ B97（handler break）/ B71 残余（fin_continue 转 B79 续接）现状探针 + 合成新变体
   - [ ] 6.2 修复：通用机制全族封闭

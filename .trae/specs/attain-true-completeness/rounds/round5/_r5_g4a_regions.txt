@@ -1,0 +1,67 @@
+=== blocks ===
+BLK@0..2 succ=[4] pred=[] role=BlockRole.PURE_JUMP
+    RESUME@0 | NOP@2
+BLK@4..32 succ=[34] pred=[0, 114] role=BlockRole.LOOP_HEADER
+    LOAD_GLOBAL@4 | LOAD_FAST@16 | PRECALL@18 | CALL@22 | BEFORE_WITH@32
+BLK@34..38 succ=[40, 66, 92] pred=[4] role=BlockRole.LOOP_BODY
+    STORE_FAST@34 | LOAD_FAST@36 | POP_JUMP_FORWARD_IF_FALSE@38->66
+BLK@40..40 succ=[42, 92] pred=[34] role=BlockRole.LOOP_BODY
+    NOP@40
+BLK@42..64 succ=[116] pred=[40] role=BlockRole.BREAK
+    LOAD_CONST@42 | LOAD_CONST@44 | LOAD_CONST@46 | PRECALL@48 | CALL@52 | POP_TOP@62 | JUMP_FORWARD@64->116
+BLK@66..90 succ=[114] pred=[34] role=BlockRole.LOOP_BODY
+    NOP@66 | LOAD_CONST@68 | LOAD_CONST@70 | LOAD_CONST@72 | PRECALL@74 | CALL@78 | POP_TOP@88 | JUMP_FORWARD@90->114
+BLK@92..96 succ=[106, 98, 100] pred=[40, 34] role=BlockRole.LOOP_BODY
+    PUSH_EXC_INFO@92 | WITH_EXCEPT_START@94 | POP_JUMP_FORWARD_IF_TRUE@96->106
+BLK@98..98 succ=[100] pred=[92] role=BlockRole.LOOP_BODY
+    RERAISE@98
+BLK@100..104 succ=[] pred=[106, 92, 98] role=BlockRole.LOOP_BODY
+    COPY@100 | POP_EXCEPT@102 | RERAISE@104
+BLK@106..106 succ=[108, 100] pred=[92] role=BlockRole.LOOP_BODY
+    POP_TOP@106
+BLK@108..112 succ=[114] pred=[106] role=BlockRole.LOOP_BODY
+    POP_EXCEPT@108 | POP_TOP@110 | POP_TOP@112
+BLK@114..114 succ=[4] pred=[66, 108] role=BlockRole.LOOP_BACK_EDGE
+    JUMP_BACKWARD@114->4
+BLK@116..118 succ=[] pred=[42] role=BlockRole.RETURN
+    LOAD_CONST@116 | RETURN_VALUE@118
+=== regions ===
+REGION LoopRegion entry@4 blocks=[4, 40, 66, 92, 98, 100, 106, 114, 34, 42, 108]
+    header_block=@4
+    else_blocks=[]
+    body_blocks=[4, 34, 40, 42, 66, 92, 98, 100, 106, 108, 114]
+    break_blocks=[116]
+REGION WithRegion entry@4 blocks=[4, 40, 92, 100, 34, 42]
+    with_blocks=[34, 40]
+    cleanup_blocks=[42]
+    exception_blocks=[92, 100]
+    exit_block=@116
+REGION IfRegion entry@34 blocks=[40, 34, 66]
+    condition_block=@34
+    then_blocks=[40]
+    else_blocks=[66]
+REGION Region entry@0 blocks=[0]
+REGION Region entry@116 blocks=[116]
+=== generated dict ===
+FunctionDef
+ body:[
+    While
+     body:[
+        With
+         body:[
+            If
+             body:[
+                While
+                 body:[
+                    Pass
+                 ]
+             ]
+             orelse:[
+             ]
+         ]
+         items:[
+            None
+         ]
+     ]
+    Return
+ ]

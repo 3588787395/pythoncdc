@@ -1,0 +1,16 @@
+﻿def with_in_match():
+    match 1:
+        case 1:
+            with _A() as a:
+                match 1:
+                    case 1:
+                        with _A() as b:
+                            R = (a, b)
+    return 5
+
+
+def with_shallow():
+    with _A() as a:
+        R = a
+    return 0
+

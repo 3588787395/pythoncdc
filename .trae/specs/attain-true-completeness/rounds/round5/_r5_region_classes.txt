@@ -1,0 +1,7 @@
+170: class RegionType(Enum):
+204: class Region:
+363: class IfRegion(Region):
+919:             self.blocks = self.blocks | inner.blocks
+983: class MatchRegion(Region):
+1197: class RegionAnalyzer:
+25760:         blocks = {condition_block, true_value_block, false_value_block,

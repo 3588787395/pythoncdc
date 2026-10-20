@@ -1,0 +1,17 @@
+Timeout (0:00:20)!
+Thread 0x0000454c (most recent call first):
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_analyzer.py", line 18147 in _identify_nested_match_regions
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_analyzer.py", line 1643 in analyze
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 972 in generate
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 2589 in _build_function_def
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 67126 in _build_store_statement
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 64826 in _generate_block_statements_body
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 60795 in _generate_block_statements
+  File "F:\Downloads\pythoncdc-main\core\cfg\region_ast_generator.py", line 1594 in generate
+  File "F:\Downloads\pythoncdc-main\pycdc.py", line 90 in decompile
+  File "F:\Downloads\pythoncdc-main\pycdc.py", line 674 in main
+  File "F:\Downloads\pythoncdc-main\pycdc.py", line 730 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 98 in _run_module_code
+  File "<frozen runpy>", line 291 in run_path
+  File "F:\Downloads\pythoncdc-main\.trae\specs\attain-true-completeness\rounds\round5\_r5_hang_trace.py", line 21 in <module>

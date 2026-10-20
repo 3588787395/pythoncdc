@@ -1,0 +1,55 @@
+############################## g4b_wt_with_continue ##############################
+LoopRegion entry=4 back_edge=42 break=[]
+WithRegion entry=4 parent=LoopRegion
+  with_blocks=[34, 40, 42, 66, 68]
+  cleanup=[] exception=[94, 102]
+  body_off=[34,94] exit_block=None exit_via_jump=False
+IfRegion entry=34 then=[40, 42, 2] else=[]
+############################## g4b_while_cond_with ##############################
+LoopRegion entry=0 back_edge=86 break=[]
+WithRegion entry=6 parent=LoopRegion
+  with_blocks=[36]
+  cleanup=[38] exception=[64, 72]
+  body_off=[36,38] exit_block=86 exit_via_jump=True
+############################## g4b_wt_with_noas ##############################
+LoopRegion entry=4 back_edge=84 break=[]
+WithRegion entry=4 parent=LoopRegion
+  with_blocks=[34]
+  cleanup=[36] exception=[62, 70]
+  body_off=[34,36] exit_block=84 exit_via_jump=True
+############################## g4b_wt_nested_with ##############################
+LoopRegion entry=4 back_edge=214 break=[216]
+WithRegion entry=4 parent=LoopRegion
+  with_blocks=[66, 72, 74]
+  cleanup=[96] exception=[146, 154, 192, 200]
+  body_off=[66,96] exit_block=216 exit_via_jump=True
+WithRegion entry=34 parent=LoopRegion
+  with_blocks=[66, 72, 74]
+  cleanup=[96] exception=[146, 154, 192, 200]
+  body_off=[66,96] exit_block=216 exit_via_jump=True
+IfRegion entry=66 then=[] else=[120, 122]
+############################## g4a_wt_with_pass ##############################
+LoopRegion entry=4 back_edge=84 break=[]
+WithRegion entry=4 parent=LoopRegion
+  with_blocks=[34]
+  cleanup=[36] exception=[62, 70]
+  body_off=[34,36] exit_block=84 exit_via_jump=True
+############################## g4a_wt_with_stmt ##############################
+LoopRegion entry=4 back_edge=86 break=[]
+WithRegion entry=4 parent=LoopRegion
+  with_blocks=[34]
+  cleanup=[40] exception=[64, 72]
+  body_off=[34,40] exit_block=86 exit_via_jump=True
+############################## g4a_wt_with_break ##############################
+LoopRegion entry=4 back_edge=114 break=[116]
+WithRegion entry=4 parent=LoopRegion
+  with_blocks=[34, 40]
+  cleanup=[42] exception=[92, 100]
+  body_off=[34,42] exit_block=116 exit_via_jump=True
+IfRegion entry=34 then=[40] else=[66]
+############################## g4a_for_with_pass ##############################
+LoopRegion entry=6 back_edge=90 break=[]
+WithRegion entry=8 parent=LoopRegion
+  with_blocks=[40]
+  cleanup=[74, 42] exception=[68, 76]
+  body_off=[40,42] exit_block=90 exit_via_jump=True

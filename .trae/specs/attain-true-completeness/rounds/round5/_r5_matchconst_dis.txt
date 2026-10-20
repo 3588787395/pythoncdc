@@ -1,0 +1,27 @@
+﻿==== m1
+  2           0 RESUME                   0
+
+  3           2 LOAD_CONST               1 (1)
+
+  4           4 LOAD_CONST               1 (1)
+              6 COMPARE_OP               2 (==)
+             12 POP_JUMP_FORWARD_IF_FALSE     2 (to 18)
+
+  5          14 LOAD_CONST               1 (1)
+             16 STORE_FAST               0 (x)
+
+  6     >>   18 LOAD_CONST               2 (5)
+             20 RETURN_VALUE
+==== i1
+  8           0 RESUME                   0
+
+  9           2 LOAD_CONST               1 (1)
+              4 LOAD_CONST               1 (1)
+              6 COMPARE_OP               2 (==)
+             12 POP_JUMP_FORWARD_IF_FALSE     2 (to 18)
+
+ 10          14 LOAD_CONST               1 (1)
+             16 STORE_FAST               0 (x)
+
+ 11     >>   18 LOAD_CONST               2 (5)
+             20 RETURN_VALUE

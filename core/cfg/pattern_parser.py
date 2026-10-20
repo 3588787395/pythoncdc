@@ -116,11 +116,6 @@ class PatternParser:
             jump_target_offset = last_instr.argval
 
         worklist = []
-        for succ in case_block.successors:
-            if jump_target_offset is not None and succ.start_offset == jump_target_offset:
-                continue
-            if succ not in visited:
-                worklist.append(succ)
         CASE_HEADER_OPS = frozenset({
             'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
             'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
@@ -128,6 +123,50 @@ class PatternParser:
         NEW_CASE_OPS = frozenset({
             'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
         })
+        DEFINITIVE_PATTERN_OPS = frozenset({
+            'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
+            'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
+            'GET_LEN', 'UNPACK_SEQUENCE', 'UNPACK_EX',
+            'UNPACK_EXTRACT',
+        })
+        # [B61e-V3R5] 种子后继筛选：case 头的失败边之外，只有「模式续块」
+        # （含 DEFINITIVE 模式 op）或「条件跳转终结块」（守卫/模式测试协议）
+        # 进入 worklist。case 体块（纯 LOAD_CONST; STORE; JUMP_FORWARD 或
+        # 裸 RETURN 落穿）不是模式材料——旧实现把体块种进 worklist，其
+        # STORE 把守卫提取器的「最后 STORE」锚推过守卫段（通配+守卫头
+        # ``case _ if not g:`` 的体块吞掉头内守卫）。判据 = 后继块指令
+        # opcode 集合（I.4 白名单）。[C1] 只读后继块；[C2] 不窥视区域树；
+        # [C3] 模式测试协议与 case 位置/嵌套深度无关。
+        _seed_visited = set()
+        for succ in case_block.successors:
+            if jump_target_offset is not None and succ.start_offset == jump_target_offset:
+                continue
+            if succ in visited or succ in _seed_visited:
+                continue
+            _seed_visited.add(succ)
+            _seed_meaningful = [i for i in succ.instructions
+                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            _seed_last = succ.get_last_instruction()
+            _seed_is_pattern = any(i.opname in DEFINITIVE_PATTERN_OPS
+                                   for i in _seed_meaningful)
+            _seed_is_test = (_seed_last is not None
+                             and _seed_last.opname in self.COND_JUMP_OPS)
+            # or 模式臂成功连接桩（POP_TOP/JUMP_FORWARD 序列）也是模式材料：
+            # 字面量 or 链的臂成功边经纯跳转桩汇入守卫块
+            # （``case 1 | 2 | 3 if g:`` 的 JUMP_FORWARD → S）。判据 = 纯
+            # 连接桩 opcode 集合，无值装载/存储（体块必含 STORE/RETURN）。
+            _seed_is_connector = (bool(_seed_meaningful)
+                                  and all(i.opname in ('POP_TOP', 'JUMP_FORWARD',
+                                                       'JUMP_ABSOLUTE')
+                                          for i in _seed_meaningful))
+            if not _seed_is_pattern and not _seed_is_test and not _seed_is_connector:
+                continue
+            worklist.append(succ)
+
+        # [B61e-V3R5] or 守卫臂链连续性：中间臂的 IF_TRUE 目标与前一臂相同
+        # （短路成功边共享 case 体入口）。标记此类块为守卫臂，使其越过
+        # 「跳转目标在体内」的体首 if 判据（or 臂的跳转目标恰是体入口）。
+        _chain_arm_like = set()
 
         while worklist:
             current = worklist.pop()
@@ -182,17 +221,19 @@ class PatternParser:
             is_pattern_block = False
             has_definitive_pattern = False
             is_guard_like = False
-            DEFINITIVE_PATTERN_OPS = frozenset({
-                'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
-                'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
-                'GET_LEN', 'UNPACK_SEQUENCE', 'UNPACK_EX',
-                'UNPACK_EXTRACT',
-            })
             for i in current.instructions:
                 if i.opname in DEFINITIVE_PATTERN_OPS:
                     is_pattern_block = True
                     has_definitive_pattern = True
                     break
+
+            # [B61e-V3R5] or 守卫臂链中间臂：前一臂（标记来源）的短路成功边
+            # 与本臂条件跳转目标相同（共享 case 体入口）——这是守卫臂链的
+            # 结构签名，而非体首 if（体首 if 的跳转目标只属于自身体，不与
+            # 前一臂共享）。臂块强制归模式/守卫材料。
+            if current in _chain_arm_like:
+                is_pattern_block = True
+                is_guard_like = True
 
             if not has_definitive_pattern:
                 meaningful = [i for i in current.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -307,9 +348,38 @@ class PatternParser:
                 visited.add(current)
                 blocks.append(current)
                 if not is_guard_like:
+                    # 区域归约算法：[B61e 模式续块扩展收窄]（非 guard_like 分支）。
+                    # 模式检查块的续块以条件跳转**终结**（模式测试协议：每个
+                    # 测试 opcode 之后跟失败边跳转）；case 体块以无条件跳转/
+                    # RETURN/裸落穿终结。原实现无差别扩展全部后继，纯赋值体块
+                    # （LOAD_CONST; STORE; JUMP_FORWARD）落入 store-only 判据被
+                    # 收进模式块序列，其 STORE 把守卫提取器的「最后 STORE」锚
+                    # 推过守卫段——真守卫整体丢失（``case Point(n) if n > 0 or
+                    # flag:`` 的守卫块被体块覆盖）。判据 = 后继块末指令 opcode
+                    # （I.4 白名单）且排除头块失败边/当前块条件跳转目标（离开
+                    # case 的边）。[C1] 只读后继块末指令；[C2] 不窥视区域树；
+                    # [C3] 模式测试协议与 case 位置/嵌套深度无关。
+                    cur_last = current.get_last_instruction()
+                    cur_jt_offset = None
+                    if cur_last and cur_last.opname in self.COND_JUMP_OPS:
+                        cur_jt_offset = cur_last.argval
                     for s in current.successors:
-                        if s not in visited:
-                            worklist.append(s)
+                        if s in visited:
+                            continue
+                        if jump_target_offset is not None and s.start_offset == jump_target_offset:
+                            continue
+                        if cur_jt_offset is not None and s.start_offset == cur_jt_offset:
+                            continue
+                        _s_last = s.get_last_instruction()
+                        if _s_last is None or _s_last.opname not in self.COND_JUMP_OPS:
+                            continue
+                        if (cur_jt_offset is not None
+                                and _s_last.argval == cur_jt_offset):
+                            # [B61e-V3R5] or 臂链连续性：后继条件跳转目标与
+                            # 当前臂的短路成功边相同 → 中间臂（共享 case 体
+                            # 入口），标记后由分类段强制归守卫材料。
+                            _chain_arm_like.add(s)
+                        worklist.append(s)
                 else:
                     cur_last = current.get_last_instruction()
                     cur_jt_offset = None
@@ -463,7 +533,14 @@ class PatternParser:
                     search_start = i + 1
                     _pattern_anchor_found = True
                     break
-        if not _pattern_anchor_found:
+        if not _pattern_anchor_found and not allow_in_header_block:
+            # [B103 t2/B61e-V3R5] 头块内守卫例外：allow_in_header_block=True
+            # 表示头块不归属任何 case 体（体以独立块收集），头块内不存在
+            # 体材料——此时守卫材料可以位于头块自身（通配无丢弃头
+            # ``case _ if not g:`` = LOAD g; IF_TRUE→merge，无 POP_TOP 丢弃、
+            # 无 STORE/模式锚）。(c) 锚把 search_start 移到头块终结跳转之后
+            # 会跳过守卫；allow=True 时保持 search_start=0，从头块首解析
+            # 守卫臂链。判据 = 区域归属（头块 ∉ 体块集），与位置/深度无关。
             # 区域归约算法：[B81 真 guard 锚点] (a)STORE/(b)模式终结锚均不存在
             # 时，头块是纯字面量/单例子检查（无捕获绑定、无 COPY 副本协议、无
             # MATCH_* 结构指令），其唯一条件跳转即模式检查自身的失败边（基本
@@ -892,6 +969,26 @@ class PatternParser:
                 if op in FAIL_OPS or op in TRUE_OPS:
                     expr = self._eval_guard_expr_stack(all_instrs[cur:j])
                     if expr is None:
+                        aborted = True
+                        break
+                    # [B122-V3R5] 模式比较材料隔离（镜像 [B16] 捕获名重读例外，
+                    # 判据与 _extract_case_guard_from_blocks 主路径同源）：函数
+                    # 序言赋值（``r = 0``）落入 pattern 块使「最后 STORE」锚
+                    # 前移后，纯 ``LOAD subj; LOAD_CONST c; COMPARE_OP ==``
+                    # 段是 case 模式自身的比较（``case 1`` 头材料），不是
+                    # 守卫臂——幻影 guard ``case 1 if x == 1:`` 的根因。左
+                    # 操作数不是先前 STORE 绑定的捕获名重读时撤销该段。
+                    # 判据只读 all_instrs 指令 opname/argval 序列（I.4 白名
+                    # 单：块内 opcode 形态）。
+                    if (not segments
+                            and j == cur + 3
+                            and all_instrs[cur].opname in self.LOAD_VAR_OPS
+                            and all_instrs[cur + 1].opname == 'LOAD_CONST'
+                            and all_instrs[cur + 2].opname == 'COMPARE_OP'
+                            and all_instrs[cur + 2].argval in ('==', 2)
+                            and not any(x.opname in self.STORE_OPS
+                                        and x.argval == all_instrs[cur].argval
+                                        for x in all_instrs[:cur])):
                         aborted = True
                         break
                     # [B103 fix] NONE 族跳转臂：表达式段被 IF_NONE/IF_NOT_NONE
@@ -2097,7 +2194,25 @@ class PatternParser:
                 seen_pattern_instr = True
             if instr.opname in self.LOAD_VAR_OPS:
                 if seen_pattern_instr:
-                    break
+                    # [B61h-V3R5] 嵌套类模式类引用：unpack 槽位上的子模式
+                    # ``int(a)`` 以 ``LOAD_GLOBAL int; LOAD_CONST ();
+                    # MATCH_CLASS`` 开头（类引用先于 MATCH_CLASS 装载）。
+                    # 旧实现把模式段后的首个 LOAD_VAR 一律视为 case 体变量
+                    # 装载而 break——嵌套类模式的类名与后续 MATCH_CLASS 槽位
+                    # 整体丢失（``[int(a), *rest]`` → ``[_, *_]``）。判据 =
+                    # LOAD_VAR [+ LOAD_CONST(tuple)] + MATCH_CLASS 同窗口指令
+                    # 形态（I.4 白名单）；非类模式 LOAD_VAR（体语句/守卫）行为
+                    # 不变。[C1] 只读本窗口指令；[C3] 类模式协议与嵌套深度
+                    # 无关。
+                    _is_nested_class_head = (
+                        in_unpack_context and bool(unpack_stack)
+                        and idx + 2 < len(filtered)
+                        and filtered[idx + 1].opname == 'LOAD_CONST'
+                        and isinstance(filtered[idx + 1].argval, tuple)
+                        and filtered[idx + 2].opname == 'MATCH_CLASS'
+                    )
+                    if not _is_nested_class_head:
+                        break
                 continue
             if instr.opname == 'RETURN_VALUE':
                 break
@@ -2190,16 +2305,32 @@ class PatternParser:
                     slot = unpack_stack.pop()
                     if slot == -1:
                         continue
-                    nested_instrs = filtered[idx:]
                     # [B14 修复] 内层 as 绑定的结构事实：子模式 MATCH_SEQUENCE
                     # 前紧邻 COPY 1（为内层 as 绑定保存子值副本）。有 COPY ⇒
                     # 内层槽位消耗完后的下一个 STORE 是内层 as 绑定；无 COPY ⇒
                     # 该 STORE 属于外层余下槽位（见方法 docstring 三要素）。
                     _own_as = idx > 0 and filtered[idx - 1].opname == 'COPY'
                     if instr.opname == 'MATCH_SEQUENCE':
+                        nested_instrs = filtered[idx:]
                         nested_pattern = self._extract_sequence_pattern(
                             nested_instrs, allow_own_as_store=_own_as)
                     else:
+                        # [B61h-V3R5] 类引用回卷：MATCH_CLASS 的类引用与
+                        # keyword 元组紧邻其前（``LOAD_VAR cls; LOAD_CONST
+                        # (kw,...); MATCH_CLASS``），_extract_class_pattern
+                        # 靠 MATCH_CLASS 前向回扫取类名。旧实现从 MATCH_CLASS
+                        # 起切窗口，类引用不可见 → 类模式退化为 MatchAs。
+                        # 仅回卷紧邻的 LOAD_CONST(tuple)+LOAD_VAR 形态（I.4
+                        # 白名单）；其余窗口从 MATCH_CLASS 起，行为不变。
+                        _nested_start = idx
+                        if (idx - 1 >= 0
+                                and filtered[idx - 1].opname == 'LOAD_CONST'
+                                and isinstance(filtered[idx - 1].argval, tuple)):
+                            _nested_start = idx - 1
+                        if (_nested_start - 1 >= 0
+                                and filtered[_nested_start - 1].opname in self.LOAD_VAR_OPS):
+                            _nested_start -= 1
+                        nested_instrs = filtered[_nested_start:]
                         nested_pattern = self._extract_class_pattern(nested_instrs)
                     slot_actions[slot] = {'type': 'nested', 'pattern': nested_pattern}
                     # 跳过内层子模式自身的槽位消费指令，外层继续绑定余下槽位

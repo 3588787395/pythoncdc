@@ -1,0 +1,10 @@
+﻿UNIT: ***<module>.with_in_match: Failure: Different control flow
+fields: ['bc_a', 'bc_b', 'failed_line_number', 'failed_offset', 'message', 'name_a', 'name_b', 'names', 'success']
+  bc_a = EditableBytecode<<module>.with_in_match,edited=False>[56 instructions,0 code objects]
+  bc_b = EditableBytecode<<module>.with_in_match,edited=False>[77 instructions,0 code objects]
+  failed_line_number = None
+  failed_offset = None
+  message = 'Different control flow'
+  name_a = '<module>.with_in_match'
+  name_b = '<module>.with_in_match'
+  success = False

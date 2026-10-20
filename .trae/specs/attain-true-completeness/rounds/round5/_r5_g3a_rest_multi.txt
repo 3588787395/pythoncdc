@@ -1,0 +1,136 @@
+﻿code=g3a_rest_multi qualname=g3a_rest_multi flags=3
+=== disassembly ===
+    0 RESUME                         0
+    2 LOAD_GLOBAL                    'range'
+   14 LOAD_CONST                     1
+   16 PRECALL                        1
+   20 CALL                           1
+   30 GET_ITER                       None
+   32 FOR_ITER                       208
+   34 STORE_FAST                     'x'
+   36 LOAD_FAST                      'v'
+   38 COPY                           1
+   40 MATCH_MAPPING                  None
+   42 POP_JUMP_FORWARD_IF_FALSE      124
+   44 GET_LEN                        None
+   46 LOAD_CONST                     1
+   48 COMPARE_OP                     '>='
+   54 POP_JUMP_FORWARD_IF_FALSE      124
+   56 LOAD_CONST                     ('op',)
+   58 MATCH_KEYS                     None
+   60 COPY                           1
+   62 POP_JUMP_FORWARD_IF_NONE       120
+   64 UNPACK_SEQUENCE                1
+   68 SWAP                           3
+   70 SWAP                           2
+   72 BUILD_MAP                      0
+   74 SWAP                           3
+   76 DICT_UPDATE                    2
+   78 UNPACK_SEQUENCE                1
+   82 COPY                           2
+   84 SWAP                           2
+   86 DELETE_SUBSCR                  None
+   88 STORE_FAST                     'rest'
+   90 STORE_FAST                     'op'
+   92 POP_TOP                        None
+   94 LOAD_CONST                     'tmp'
+   96 LOAD_FAST                      'rest'
+   98 CONTAINS_OP                    0
+  100 POP_JUMP_FORWARD_IF_FALSE      108
+  102 LOAD_FAST                      'rest'
+  104 LOAD_CONST                     'tmp'
+  106 DELETE_SUBSCR                  None
+  108 LOAD_FAST                      'op'
+  110 LOAD_FAST                      'rest'
+  112 BUILD_TUPLE                    2
+  114 SWAP                           2
+  116 POP_TOP                        None
+  118 RETURN_VALUE                   None
+  120 POP_TOP                        None
+  122 POP_TOP                        None
+  124 POP_TOP                        None
+  126 MATCH_SEQUENCE                 None
+  128 POP_JUMP_FORWARD_IF_FALSE      166
+  130 GET_LEN                        None
+  132 LOAD_CONST                     2
+  134 COMPARE_OP                     '=='
+  140 POP_JUMP_FORWARD_IF_FALSE      166
+  142 UNPACK_SEQUENCE                2
+  146 STORE_FAST                     'a'
+  148 STORE_FAST                     'b'
+  150 LOAD_FAST                      'a'
+  152 LOAD_FAST                      'b'
+  154 BINARY_OP                      0
+  158 BUILD_TUPLE                    1
+  160 SWAP                           2
+  162 POP_TOP                        None
+  164 RETURN_VALUE                   None
+  166 POP_TOP                        None
+  168 NOP                            None
+  170 LOAD_FAST                      'v'
+  172 POP_JUMP_FORWARD_IF_NOT_NONE   178
+  174 LOAD_ASSERTION_ERROR           None
+  176 RAISE_VARARGS                  1
+  178 LOAD_GLOBAL                    'TypeError'
+  190 LOAD_CONST                     'bad shape'
+  192 PRECALL                        1
+  196 CALL                           1
+  206 RAISE_VARARGS                  1
+  208 LOAD_CONST                     None
+  210 RETURN_VALUE                   None
+=== blocks ===
+block@0     succ=['@34', '@208'] exc=[]
+   [('LOAD_GLOBAL', 'range'), ('LOAD_CONST', 1), ('PRECALL', 1), ('CALL', 1), ('GET_ITER', None), ('FOR_ITER', 208)]
+block@34    succ=['@124', '@44'] exc=[]
+   [('STORE_FAST', 'x'), ('LOAD_FAST', 'v'), ('COPY', 1), ('MATCH_MAPPING', None), ('POP_JUMP_FORWARD_IF_FALSE', 124)]
+block@44    succ=['@124', '@56'] exc=[]
+   [('GET_LEN', None), ('LOAD_CONST', 1), ('COMPARE_OP', '>='), ('POP_JUMP_FORWARD_IF_FALSE', 124)]
+block@56    succ=['@120', '@64'] exc=[]
+   [('LOAD_CONST', ('op',)), ('MATCH_KEYS', None), ('COPY', 1), ('POP_JUMP_FORWARD_IF_NONE', 120)]
+block@64    succ=['@102', '@108'] exc=[]
+   [('UNPACK_SEQUENCE', 1), ('SWAP', 3), ('SWAP', 2), ('BUILD_MAP', 0), ('SWAP', 3), ('DICT_UPDATE', 2), ('UNPACK_SEQUENCE', 1), ('COPY', 2), ('SWAP', 2), ('DELETE_SUBSCR', None), ('STORE_FAST', 'rest'), ('STORE_FAST', 'op'), ('POP_TOP', None), ('LOAD_CONST', 'tmp'), ('LOAD_FAST', 'rest'), ('CONTAINS_OP', 0), ('POP_JUMP_FORWARD_IF_FALSE', 108)]
+block@102   succ=['@108'] exc=[]
+   [('LOAD_FAST', 'rest'), ('LOAD_CONST', 'tmp'), ('DELETE_SUBSCR', None)]
+block@108   succ=[] exc=[]
+   [('LOAD_FAST', 'op'), ('LOAD_FAST', 'rest'), ('BUILD_TUPLE', 2), ('SWAP', 2), ('POP_TOP', None), ('RETURN_VALUE', None)]
+block@120   succ=['@124'] exc=[]
+   [('POP_TOP', None), ('POP_TOP', None)]
+block@124   succ=['@130', '@166'] exc=[]
+   [('POP_TOP', None), ('MATCH_SEQUENCE', None), ('POP_JUMP_FORWARD_IF_FALSE', 166)]
+block@130   succ=['@142', '@166'] exc=[]
+   [('GET_LEN', None), ('LOAD_CONST', 2), ('COMPARE_OP', '=='), ('POP_JUMP_FORWARD_IF_FALSE', 166)]
+block@142   succ=[] exc=[]
+   [('UNPACK_SEQUENCE', 2), ('STORE_FAST', 'a'), ('STORE_FAST', 'b'), ('LOAD_FAST', 'a'), ('LOAD_FAST', 'b'), ('BINARY_OP', 0), ('BUILD_TUPLE', 1), ('SWAP', 2), ('POP_TOP', None), ('RETURN_VALUE', None)]
+block@166   succ=['@174', '@178'] exc=[]
+   [('POP_TOP', None), ('LOAD_FAST', 'v'), ('POP_JUMP_FORWARD_IF_NOT_NONE', 178)]
+block@174   succ=[] exc=[]
+   [('LOAD_ASSERTION_ERROR', None), ('RAISE_VARARGS', 1)]
+block@178   succ=[] exc=[]
+   [('LOAD_GLOBAL', 'TypeError'), ('LOAD_CONST', 'bad shape'), ('PRECALL', 1), ('CALL', 1), ('RAISE_VARARGS', 1)]
+block@208   succ=[] exc=[]
+   [('LOAD_CONST', None), ('RETURN_VALUE', None)]
+=== regions (3) ===
+LoopRegion entry=@0
+  blocks=['@0', '@34', '@44', '@56', '@64', '@102', '@108', '@120', '@124', '@130', '@142', '@208']
+  MatchRegion entry=@34
+    subject_block=@34
+    case_blocks=['@34', '@124', '@166']
+    case_bodies=[['@64', '@102', '@108'], ['@142'], ['@166', '@174', '@178']]
+    case_guards=[None, None, None]
+    case_patterns=[{'type': 'MatchMapping', 'keys': [{'type': 'Constant', 'value': 'op'}], 'patterns': [{'type': 'MatchAs', 'name': 'op'}], 'rest': 'rest'}, {'type': 'MatchSequence', 'patterns': [{'type': 'MatchAs', 'name': 'a'}, {'type': 'MatchAs', 'name': 'b'}]}, {'type': 'MatchAs'}]
+    blocks=['@34', '@44', '@56', '@64', '@102', '@108', '@120', '@124', '@130', '@142', '@166', '@174', '@178']
+    AssertRegion entry=@166
+      blocks=['@166', '@174']
+MatchRegion entry=@34
+  subject_block=@34
+  case_blocks=['@34', '@124', '@166']
+  case_bodies=[['@64', '@102', '@108'], ['@142'], ['@166', '@174', '@178']]
+  case_guards=[None, None, None]
+  case_patterns=[{'type': 'MatchMapping', 'keys': [{'type': 'Constant', 'value': 'op'}], 'patterns': [{'type': 'MatchAs', 'name': 'op'}], 'rest': 'rest'}, {'type': 'MatchSequence', 'patterns': [{'type': 'MatchAs', 'name': 'a'}, {'type': 'MatchAs', 'name': 'b'}]}, {'type': 'MatchAs'}]
+  blocks=['@34', '@44', '@56', '@64', '@102', '@108', '@120', '@124', '@130', '@142', '@166', '@174', '@178']
+  AssertRegion entry=@166
+    blocks=['@166', '@174']
+AssertRegion entry=@166
+  blocks=['@166', '@174']
+=== ast ===
+{'type': 'FunctionDef', 'name': 'g3a_rest_multi', 'args': {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'v'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}, 'body': [{'type': 'For', 'target': {'type': 'Name', 'id': 'x', 'ctx': 'Store'}, 'iter': {'type': 'Call', 'func': {'type': 'Name', 'id': 'range', 'ctx': 'Load', 'lineno': 5}, 'args': [{'type': 'Constant', 'value': 1, 'lineno': None}], 'kwargs': [], 'lineno': None}, 'body': [{'type': 'If', 'test': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'MatchMapping', 'subject': {'type': 'Name', 'id': 'v', 'ctx': 'Load', 'lineno': 6}, 'lineno': None}, {'type': 'Constant', 'value': 1, 'lineno': None}]}, 'body': [{'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Constant', 'value': ('op',), 'lineno': None}, 'ops': ['is not'], 'comparators': [{'type': 'Constant', 'value': None, 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Assign', 'targets': [{'type': 'Tuple', 'elts': [{'type': 'Name', 'id': 'rest', 'ctx': 'Store'}], 'ctx': 'Store'}], 'value': {'type': 'Dict', 'keys': [], 'values': [], 'lineno': None}}, {'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Constant', 'value': 'tmp', 'lineno': 8}, 'ops': ['in'], 'comparators': [{'type': 'Name', 'id': 'rest', 'ctx': 'Load', 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Delete', 'targets': [{'type': 'Subscript', 'value': {'type': 'Name', 'id': 'rest', 'ctx': 'Load', 'lineno': 9}, 'slice': {'type': 'Constant', 'value': 'tmp', 'lineno': None}, 'ctx': 'Del'}]}], 'orelse': []}, {'type': 'Return', 'value': {'type': 'Tuple', 'elts': [{'type': 'Name', 'id': 'op', 'ctx': 'Load', 'lineno': 10}, {'type': 'Name', 'id': 'rest', 'ctx': 'Load', 'lineno': None}], 'ctx': 'Load', 'lineno': None}}], 'orelse': []}], 'orelse': []}, {'type': 'If', 'test': {'type': 'Constant', 'value': 2, 'lineno': None}, 'body': [{'type': 'Return', 'value': {'type': 'Tuple', 'elts': [{'type': 'BinOp', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': 12}, 'op': '+', 'right': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, 'lineno': None}], 'ctx': 'Load', 'lineno': None}, 'lineno': None}], 'orelse': []}]}, {'type': 'If', 'test': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'v', 'ctx': 'Load', 'lineno': 14}, 'ops': ['is'], 'comparators': [{'type': 'Constant', 'value': None, 'lineno': None}], 'lineno': None}, 'body': [{'type': 'Raise', 'exc': {'type': 'Name', 'id': 'AssertionError', 'ctx': 'Load', 'lineno': None, '_from_load_assertion_error': True}, 'lineno': None}], 'orelse': [{'type': 'Raise', 'exc': {'type': 'Call', 'func': {'type': 'Name', 'id': 'TypeError', 'ctx': 'Load', 'lineno': 15}, 'args': [{'type': 'Constant', 'value': 'bad shape', 'lineno': None}], 'kwargs': [], 'lineno': None}, 'lineno': None}]}], 'decorator_list': [], 'returns': None}

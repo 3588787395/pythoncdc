@@ -1,0 +1,34 @@
+=== id-call=1 parents=0 existing=0 ===
+--- CFG blocks (in order) ---
+  [0] RESUME(0); LOAD_CONST(<code object n1 at 0x000002A85798A880, file "test_repros\round8\r8v8rev_bmatch_nestnoguard.py", line 1>); MAKE_FUNCTION(0); STORE_NAME('n1'); LOAD_CONST; RETURN_VALUE | succ=[]
+=== id-call=2 parents=2 existing=1 ===
+  parent: IfRegion subj=None blocks=[18, 30, 36]
+  parent: MatchRegion subj=0 blocks=[0, 18, 30, 36, 44, 50]
+    p.body[0]=[18, 30, 36]
+    p.body[1]=[44]
+  new REG subj=0 case_blocks=[0, 44] merge=50
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50] entry=0
+=== id-call=3 parents=1 existing=2 ===
+  parent: MatchRegion subj=0 blocks=[0, 18, 30, 36, 44, 50]
+    p.body[0]=[18, 30, 36]
+    p.body[1]=[44]
+  new REG subj=0 case_blocks=[0, 44] merge=50
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50] entry=0
+=== id-call=4 parents=1 existing=3 ===
+  parent: MatchRegion subj=0 blocks=[0, 18, 30, 36, 44, 50]
+    p.body[0]=[18, 30, 36]
+    p.body[1]=[44]
+  new REG subj=0 case_blocks=[0, 44] merge=50
+    body[0]=[18, 30, 36]
+    body[1]=[44]
+    blocks=[0, 18, 30, 36, 44, 50] entry=0
+=== id-call=5 parents=1 existing=4 ===
+  parent: MatchRegion subj=0 blocks=[0, 18, 30, 36, 44, 50]
+    p.body[0]=[18, 30, 36]
+    p.body[1]=[44]
+SystemExit 0
+calls=5

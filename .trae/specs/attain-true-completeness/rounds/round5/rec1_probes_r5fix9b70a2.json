@@ -1,0 +1,22 @@
+[
+ {
+  "name": "b70a",
+  "pyc_src_rel": "test_repros/round5/rec1_synth_b70a_wt_with_bc.pyc",
+  "pyc_src_sha": "e810871a594879d8",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round5/rec1_b70a_rec1_synth_b70a_wt_with_bc.pyc",
+  "mtime": "2026-10-20T12:37:18",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "e231f603063b471a",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_b70a_rec1_synth_b70a_wt_with_bc.pyc (Python 3.11)\n\n__doc__ = 'R5 synth family 4a: while True + with break/continue (B70 exit-path classification).'\ndef wbc(p, a, b):\n    while True:\n        with open(p) as f:\n            if a:\n                break\n            if b:\n                continue\n            use(f)\n    return 1\ndef wbc_nested(p, q, a):\n    with open(p) as f, open(q) as g:\n        if a:\n            pass\n    return 2\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.wbc_nested: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_b70a_rec1_synth_b70a_wt_with_bc.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round5/rec1_b70a_rec1_synth_b70a_wt_with_bcOK.py\n[single] status=failure units=2/3 success_rate=66.67%",
+  "status": "failure",
+  "units_success": 2,
+  "units_total": 3,
+  "failures": [
+   "***<module>.wbc_nested: Failure: Different control flow"
+  ]
+ }
+]

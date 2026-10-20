@@ -1,0 +1,18 @@
+[0] RESUME(0); LOAD_CONST(0); STORE_FAST('r'); LOAD_FAST('x'); LOAD_CONST(1); COMPARE_OP('=='); POP_JUMP_FORWARD_IF_FALSE(44)
+    preds=[]
+    _has_match_op=False _is_case_pattern_block=False _is_match_subject_block=False _is_capture_guard_case_block=False _is_simple_match_case_block=True _is_wildcard_match_block=False _is_none_match_block=False
+[18] LOAD_FAST('y'); LOAD_CONST(2); COMPARE_OP('=='); POP_JUMP_FORWARD_IF_FALSE(36)
+    preds=[0]
+    _has_match_op=False _is_case_pattern_block=False _is_match_subject_block=False _is_capture_guard_case_block=False _is_simple_match_case_block=True _is_wildcard_match_block=False _is_none_match_block=False
+[30] LOAD_CONST(21); STORE_FAST('r'); JUMP_FORWARD(50)
+    preds=[18]
+    _has_match_op=False _is_case_pattern_block=False _is_match_subject_block=False _is_capture_guard_case_block=False _is_simple_match_case_block=False _is_wildcard_match_block=False _is_none_match_block=False
+[36] NOP; LOAD_CONST(22); STORE_FAST('r'); JUMP_FORWARD(50)
+    preds=[18]
+    _has_match_op=False _is_case_pattern_block=False _is_match_subject_block=False _is_capture_guard_case_block=False _is_simple_match_case_block=False _is_wildcard_match_block=False _is_none_match_block=False
+[44] NOP; LOAD_CONST(9); STORE_FAST('r')
+    preds=[0]
+    _has_match_op=False _is_case_pattern_block=False _is_match_subject_block=False _is_capture_guard_case_block=False _is_simple_match_case_block=False _is_wildcard_match_block=False _is_none_match_block=False
+[50] LOAD_FAST('r'); RETURN_VALUE
+    preds=[30, 36, 44]
+    _has_match_op=False _is_case_pattern_block=False _is_match_subject_block=False _is_capture_guard_case_block=False _is_simple_match_case_block=False _is_wildcard_match_block=False _is_none_match_block=False

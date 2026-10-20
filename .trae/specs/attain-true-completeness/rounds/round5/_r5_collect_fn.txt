@@ -1,0 +1,109 @@
+18212:     def _collect_nested_match_region(self, candidate_block: 'BasicBlock', parent_blocks: set, exclude_blocks: set) -> Optional[MatchRegion]:
+18213:         """从候选块开始收集嵌套match区域
+18214: 
+18215:         反编译逻辑：
+18216:         根据候选块的类型，使用不同的收集策略：
+18217:         1. 结构型模式（有MATCH_*操作码）：调用_mr_collect_case_body()
+18218:         2. 字面量模式（COPY+比较）：调用_scan_literal_match_subjects的单例版本
+18219:         3. 简单case块（NOP前缀）：向前查找subject块再收集
+18220: 
+18221:         Args:
+18222:             candidate_block: 候选的match入口块
+18223:             parent_blocks: 父区域的blocks集合（边界约束）
+18224:             exclude_blocks: 已被其他match占用的blocks集合
+18225: 
+18226:         Returns:
+18227:             收集到的MatchRegion，如果无效则返回None
+18228:         """
+18229:         import dis
+18230: 
+18231:         # 策略1: 结构型模式匹配（有MATCH_*操作码）
+18232:         if self._has_match_op(candidate_block):
+18233:             subject_block = candidate_block
+18234:             if self._is_case_pattern_block(candidate_block):
+18235:                 for pred in sorted(candidate_block.predecessors, key=lambda p: p.start_offset):
+18236:                     last = pred.get_last_instruction()
+18237:                     if last and last.opname in CONDITIONAL_JUMP_OPS:
+18238:                         if (self._is_case_pattern_block(pred) or self._has_match_op(pred)) and pred in parent_blocks:
+18239:                             subject_block = pred
+18240:                             break
+18241: 
+18242:             case_blocks, case_patterns, case_bodies, merge, all_raw_blocks = self._mr_collect_case_body(subject_block)
+18243:             if not case_blocks:
+18244:                 return None
+18245: 
+18246:             # 验证所有blocks都在父区域内
+18247:             all_blocks = all_raw_blocks | {subject_block} | set(case_blocks)
+18248:             for body in case_bodies:
+18249:                 all_blocks.update(body)
+18250:             if merge:
+18251:                 all_blocks.add(merge)
+18252: 
+18253:             # 检查是否超出父区域边界
+18254:             if not all_blocks.issubset(parent_blocks):
+18255:                 # 放宽约束：允许部分超出（可能是汇合点）
+18256:                 core_blocks = {subject_block} | set(case_blocks)
+18257:                 for body in case_bodies:
+18258:                     core_blocks.update(body)
+18259:                 if not core_blocks.issubset(parent_blocks):
+18260:                     return None
+18261: 
+18262:             # 创建MatchRegion
+18263:             # [B16] 同上：头块不在任何 case body 中时允许提取同块守卫
+18264:             _guard_body_pool = set()
+18265:             for _body in case_bodies:
+18266:                 _guard_body_pool.update(_body)
+18267:             case_guards = []
+18268:             for _ci, _cb in enumerate(case_blocks):
+18269:                 _fail_off = (case_blocks[_ci + 1].start_offset
+18270:                              if _ci + 1 < len(case_blocks)
+18271:                              else (merge.start_offset if merge else None))
+18272:                 _pb = self.pattern_parser.collect_pattern_blocks(_cb, all_blocks)
+18273:                 _gd = self.pattern_parser.parse_case_guard(
+18274:                     _pb,
+18275:                     allow_in_header_block=(_cb not in _guard_body_pool
+18276:                                             and (self._mr_head_has_capture_binding(_cb)
+18277:                                                  or self._mr_head_has_wildcard_discard(_cb))),
+18278:                     fail_case_offset=_fail_off)
+18279:                 # [B74] 幻影 guard 封闭：case 体首块兼作 pattern 材料（如
+18280:                 # `case {"k": v}:` 的 UNPACK_SEQUENCE+STORE 捕获与体首 if
+18281:                 # 条件同块）时，guard 提取器在最后 STORE 之后扫到体首 if
+18282:                 # 的臂段，极性协议把「跳转目标 != fail 边」判为取反臂 →
+18283:                 # 幻影 guard + 幻影 else。结构事实：真 guard 臂的失败边指
+18284:                 # 向下一 case 头/merge（离开 case），绝不可能落入 case 体
+18285:                 # 块集；体首 if 语句的跳转目标必在体块集内。后校验重放提
+18286:                 # 取器的 search_start+首臂定位，臂终止跳转目标 ∈ 体块集即
+18287:                 # 撤销该 guard。六项模板与 [C1][C2][C3] 见
+18288:                 # _b74_guard_arm_targets_case_body docstring。
+18289:                 if (_gd is not None
+18290:                         and self._b74_guard_arm_targets_case_body(_pb, case_bodies,
+18291:                                                                  fail_case_offset=_fail_off)):
+18292:                     _gd = None
+18293:                 case_guards.append(_gd)
+18294:             region = MatchRegion(
+18295:                 region_type=RegionType.MATCH, entry=subject_block, blocks=all_blocks,
+18296:                 subject_block=subject_block, case_blocks=case_blocks,
+18297:                 case_patterns=case_patterns, case_guards=case_guards,
+18298:                 case_bodies=case_bodies, merge_block=merge)
+18299:             region.case_body_start_indices = self._mr_compute_case_body_start_indices(region)
+18300:             self.regions.append(region)
+18301:             return region
+18302: 
+18303:         # 策略2: 字面量模式匹配（COPY + LOAD_CONST + COMPARE_OP）
+18304:         if self._is_match_subject_block(candidate_block):
+18305:             return self._collect_nested_literal_match(candidate_block, parent_blocks, exclude_blocks)
+18306: 
+18307:         # 策略2b: 捕获+守卫 case 头（`case n if cond:`，[B16] 判据见
+18308:         # _is_capture_guard_case_block）——与字面量 subject 同走链收集
+18309:         if self._is_capture_guard_case_block(candidate_block):
+18310:             return self._collect_nested_literal_match(candidate_block, parent_blocks, exclude_blocks)
+18311: 
+18312:         # 策略3: 简单case块（NOP前缀的default case）
+18313:         if self._is_simple_match_case_block(candidate_block) or self._is_wildcard_match_block(candidate_block) or self._is_none_match_block(candidate_block):
+18314:             # 向前查找subject块
+18315:             subject_block = self._find_nested_match_subject(candidate_block, parent_blocks)
+18316:             if subject_block:
+18317:                 return self._collect_nested_literal_match(subject_block, parent_blocks, exclude_blocks)
+18318: 
+18319:         return None
+18320: 

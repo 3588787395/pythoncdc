@@ -1,0 +1,35 @@
+﻿FILTER if@34 with@4 loop=4 -> then=[] else=[66, 70, 96, 2] break=False cont=False
+FILTER if@34 with@4 loop=4 -> then=[] else=[66, 70, 96, 2] break=False cont=False
+FILTER if@66 with@4 loop=4 -> then=[70, 2] else=[96] break=False cont=True
+  backjump@2->header: True
+  tb@70 role=BlockRole.LOOP_BODY wc=False
+  tb@72 role=BlockRole.LOOP_BACK_EDGE wc=True
+  tb@2 role=BlockRole.LOOP_BODY wc=False
+IF@66 -> {'type': 'If', 'test': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': 9}, 'body': [{'type': 'While', 'test': {'type': 'Constant', 'value': False}, 'body': [{'type': 'Pass'}]}], 'orelse': [{'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'use', 'ctx': 'Load', 'lineno': 11}, 'args': [{'type': 'Name', 'id': 'f', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}}]}
+IF@66 -> {'type': 'If', 'test': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': 9}, 'body': [{'type': 'Continue'}], 'orelse': [{'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'use', 'ctx': 'Load', 'lineno': 11}, 'args': [{'type': 'Name', 'id': 'f', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}}]}
+IF@34 -> {'type': 'If', 'test': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': 7}, 'body': [{'type': 'Break'}], 'orelse': [{'type': 'If', 'test': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': 9}, 'body': [{'type': 'Continue'}], 'orelse': [{'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'use', 'ctx': 'Load', 'lineno': 11}, 'args': [{'type': 'Name', 'id': 'f', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}}]}]}
+WITH@4 -> {'type': 'With', 'items': [{'context_expr': {'type': 'Call', 'func': {'type': 'Name', 'id': 'open', 'ctx': 'Load', 'lineno': 6}, 'args': [{'type': 'Name', 'id': 'p', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}, 'optional_vars': {'type': 'Name', 'id': 'f', 'ctx': 'Store'}}], 'body': [{'type': 'If', 'test': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': 7}, 'body': [{'type': 'Break'}], 'orelse': [{'type': 'If', 'test': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': 9}, 'body': [{'type': 'Continue'}], 'orelse': [{'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Name', 'id': 'use', 'ctx': 'Load', 'lineno': 11}, 'args': [{'type': 'Name', 'id': 'f', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}}]}]}, {'type': 'While', 'test': {'type': 'Constant', 'value': False}, 'body': [{'type': 'Pass'}]}]}
+FILTER if@66 with@0 loop=None -> then=[72] else=[] break=False cont=False
+FILTER if@66 with@0 loop=None -> then=[72] else=[] break=False cont=False
+IF@66 -> {'type': 'If', 'test': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': 19}, 'body': [{'type': 'Pass'}], 'orelse': None}
+WITH@0 -> {'type': 'With', 'items': [{'context_expr': {'type': 'Call', 'func': {'type': 'Name', 'id': 'open', 'ctx': 'Load', 'lineno': 17}, 'args': [{'type': 'Name', 'id': 'p', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}, 'optional_vars': {'type': 'Name', 'id': 'f', 'ctx': 'Store'}}, {'context_expr': {'type': 'Call', 'func': {'type': 'Name', 'id': 'open', 'ctx': 'Load', 'lineno': 18}, 'args': [{'type': 'Name', 'id': 'q', 'ctx': 'Load', 'lineno': None}], 'kwargs': [], 'lineno': None}, 'optional_vars': {'type': 'Name', 'id': 'g', 'ctx': 'Store'}}], 'body': [{'type': 'If', 'test': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': 19}, 'body': [{'type': 'Pass'}], 'orelse': None}]}
+  1 # Source Generated with Decompyle++ (Python version)
+  2 # File: rec1_synth_b70a_wt_with_bc.pyc (Python 3.11)
+  3 
+  4 __doc__ = 'R5 synth family 4a: while True + with break/continue (B70 exit-path classification).'
+  5 def wbc(p, a, b):
+  6     while True:
+  7         with open(p) as f:
+  8             if a:
+  9                 break
+ 10             if b:
+ 11                 continue
+ 12             use(f)
+ 13             while False:
+ 14                 pass
+ 15     return 1
+ 16 def wbc_nested(p, q, a):
+ 17     with open(p) as f, open(q) as g:
+ 18         if a:
+ 19             pass
+ 20     return 2

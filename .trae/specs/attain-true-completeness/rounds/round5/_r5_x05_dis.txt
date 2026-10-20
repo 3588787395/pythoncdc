@@ -1,0 +1,81 @@
+﻿ 42           0 RESUME                   0
+
+ 43           2 LOAD_CONST               1 (1)
+
+ 44           4 LOAD_CONST               1 (1)
+              6 COMPARE_OP               2 (==)
+             12 POP_JUMP_FORWARD_IF_FALSE    86 (to 186)
+
+ 45          14 LOAD_GLOBAL              1 (NULL + _A)
+             26 PRECALL                  0
+             30 CALL                     0
+             40 BEFORE_WITH
+             42 STORE_FAST               0 (a)
+
+ 46          44 LOAD_CONST               1 (1)
+
+ 47          46 LOAD_CONST               1 (1)
+             48 COMPARE_OP               2 (==)
+             54 POP_JUMP_FORWARD_IF_FALSE    42 (to 140)
+
+ 48          56 LOAD_GLOBAL              1 (NULL + _A)
+             68 PRECALL                  0
+             72 CALL                     0
+             82 BEFORE_WITH
+             84 STORE_FAST               1 (b)
+
+ 49          86 LOAD_FAST                0 (a)
+             88 LOAD_FAST                1 (b)
+             90 BUILD_TUPLE              2
+             92 STORE_FAST               2 (R)
+
+ 48          94 LOAD_CONST               0 (None)
+             96 LOAD_CONST               0 (None)
+             98 LOAD_CONST               0 (None)
+            100 PRECALL                  2
+            104 CALL                     2
+            114 POP_TOP
+            116 JUMP_FORWARD            11 (to 140)
+        >>  118 PUSH_EXC_INFO
+            120 WITH_EXCEPT_START
+            122 POP_JUMP_FORWARD_IF_TRUE     4 (to 132)
+            124 RERAISE                  2
+        >>  126 COPY                     3
+            128 POP_EXCEPT
+            130 RERAISE                  1
+        >>  132 POP_TOP
+            134 POP_EXCEPT
+            136 POP_TOP
+            138 POP_TOP
+
+ 45     >>  140 LOAD_CONST               0 (None)
+            142 LOAD_CONST               0 (None)
+            144 LOAD_CONST               0 (None)
+            146 PRECALL                  2
+            150 CALL                     2
+            160 POP_TOP
+            162 JUMP_FORWARD            11 (to 186)
+        >>  164 PUSH_EXC_INFO
+            166 WITH_EXCEPT_START
+            168 POP_JUMP_FORWARD_IF_TRUE     4 (to 178)
+            170 RERAISE                  2
+        >>  172 COPY                     3
+            174 POP_EXCEPT
+            176 RERAISE                  1
+        >>  178 POP_TOP
+            180 POP_EXCEPT
+            182 POP_TOP
+            184 POP_TOP
+
+ 50     >>  186 LOAD_CONST               2 (5)
+            188 RETURN_VALUE
+ExceptionTable:
+  42 to 82 -> 164 [1] lasti
+  84 to 92 -> 118 [2] lasti
+  94 to 116 -> 164 [1] lasti
+  118 to 124 -> 126 [4] lasti
+  126 to 130 -> 164 [1] lasti
+  132 to 132 -> 126 [4] lasti
+  134 to 138 -> 164 [1] lasti
+  164 to 170 -> 172 [3] lasti
+  178 to 178 -> 172 [3] lasti
