@@ -1,0 +1,161 @@
+﻿--- PYC v_nest_fin_continue
+    0 RESUME                       0
+    2 BUILD_LIST                   0
+    4 STORE_FAST                   out
+    6 LOAD_FAST                    rows
+    8 GET_ITER                     None
+   10 FOR_ITER                     358
+   12 STORE_FAST                   r
+   14 NOP                          None
+   16 NOP                          None
+   18 LOAD_FAST                    r
+   20 LOAD_CONST                   0
+   22 COMPARE_OP                   ==
+   28 POP_JUMP_FORWARD_IF_FALSE    118
+   30 NOP                          None
+   32 LOAD_FAST                    out
+   34 LOAD_METHOD                  append
+   56 LOAD_CONST                   1
+   58 PRECALL                      1
+   62 CALL                         1
+   72 POP_TOP                      None
+   74 LOAD_FAST                    out
+   76 LOAD_METHOD                  append
+   98 LOAD_CONST                   2
+  100 PRECALL                      1
+  104 CALL                         1
+  114 POP_TOP                      None
+  116 JUMP_BACKWARD                10
+  118 NOP                          None
+  120 LOAD_FAST                    out
+  122 LOAD_METHOD                  append
+  144 LOAD_CONST                   1
+  146 PRECALL                      1
+  150 CALL                         1
+  160 POP_TOP                      None
+  162 JUMP_FORWARD                 216
+  164 PUSH_EXC_INFO                None
+  166 LOAD_FAST                    out
+  168 LOAD_METHOD                  append
+  190 LOAD_CONST                   1
+  192 PRECALL                      1
+  196 CALL                         1
+  206 POP_TOP                      None
+  208 RERAISE                      0
+  210 COPY                         3
+  212 POP_EXCEPT                   None
+  214 RERAISE                      1
+  216 NOP                          None
+  218 LOAD_FAST                    out
+  220 LOAD_METHOD                  append
+  242 LOAD_CONST                   2
+  244 PRECALL                      1
+  248 CALL                         1
+  258 POP_TOP                      None
+  260 JUMP_FORWARD                 314
+  262 PUSH_EXC_INFO                None
+  264 LOAD_FAST                    out
+  266 LOAD_METHOD                  append
+  288 LOAD_CONST                   2
+  290 PRECALL                      1
+  294 CALL                         1
+  304 POP_TOP                      None
+  306 RERAISE                      0
+  308 COPY                         3
+  310 POP_EXCEPT                   None
+  312 RERAISE                      1
+  314 LOAD_FAST                    out
+  316 LOAD_METHOD                  append
+  338 LOAD_FAST                    r
+  340 PRECALL                      1
+  344 CALL                         1
+  354 POP_TOP                      None
+  356 JUMP_BACKWARD                10
+  358 LOAD_FAST                    out
+  360 RETURN_VALUE                 None
+--- PYC v_nest_fin_continue exception table
+  18-30 -> 164 depth=1 lasti=False
+  32-74 -> 262 depth=1 lasti=False
+  120-164 -> 262 depth=1 lasti=False
+  164-210 -> 210 depth=2 lasti=True
+  210-216 -> 262 depth=1 lasti=False
+  262-308 -> 308 depth=2 lasti=True
+--- OK  v_nest_fin_continue
+    0 RESUME                       0
+    2 BUILD_LIST                   0
+    4 STORE_FAST                   out
+    6 LOAD_FAST                    rows
+    8 GET_ITER                     None
+   10 FOR_ITER                     350
+   12 STORE_FAST                   r
+   14 NOP                          None
+   16 LOAD_FAST                    r
+   18 LOAD_CONST                   0
+   20 COMPARE_OP                   ==
+   26 POP_JUMP_FORWARD_IF_FALSE    210
+   28 NOP                          None
+   30 LOAD_FAST                    out
+   32 LOAD_METHOD                  append
+   54 LOAD_CONST                   1
+   56 PRECALL                      1
+   60 CALL                         1
+   70 POP_TOP                      None
+   72 LOAD_FAST                    out
+   74 LOAD_METHOD                  append
+   96 LOAD_CONST                   1
+   98 PRECALL                      1
+  102 CALL                         1
+  112 POP_TOP                      None
+  114 LOAD_FAST                    out
+  116 LOAD_METHOD                  append
+  138 LOAD_CONST                   2
+  140 PRECALL                      1
+  144 CALL                         1
+  154 POP_TOP                      None
+  156 JUMP_FORWARD                 210
+  158 PUSH_EXC_INFO                None
+  160 LOAD_FAST                    out
+  162 LOAD_METHOD                  append
+  184 LOAD_CONST                   2
+  186 PRECALL                      1
+  190 CALL                         1
+  200 POP_TOP                      None
+  202 RERAISE                      0
+  204 COPY                         3
+  206 POP_EXCEPT                   None
+  208 RERAISE                      1
+  210 LOAD_FAST                    out
+  212 LOAD_METHOD                  append
+  234 LOAD_CONST                   1
+  236 PRECALL                      1
+  240 CALL                         1
+  250 POP_TOP                      None
+  252 JUMP_FORWARD                 306
+  254 PUSH_EXC_INFO                None
+  256 LOAD_FAST                    out
+  258 LOAD_METHOD                  append
+  280 LOAD_CONST                   1
+  282 PRECALL                      1
+  286 CALL                         1
+  296 POP_TOP                      None
+  298 RERAISE                      0
+  300 COPY                         3
+  302 POP_EXCEPT                   None
+  304 RERAISE                      1
+  306 LOAD_FAST                    out
+  308 LOAD_METHOD                  append
+  330 LOAD_FAST                    r
+  332 PRECALL                      1
+  336 CALL                         1
+  346 POP_TOP                      None
+  348 JUMP_BACKWARD                10
+  350 LOAD_FAST                    out
+  352 RETURN_VALUE                 None
+--- OK  v_nest_fin_continue exception table
+  16-28 -> 254 depth=1 lasti=False
+  30-114 -> 158 depth=1 lasti=False
+  114-158 -> 254 depth=1 lasti=False
+  158-204 -> 204 depth=2 lasti=True
+  204-210 -> 254 depth=1 lasti=False
+  254-300 -> 300 depth=2 lasti=True
+instr counts: pyc=74 ok=70

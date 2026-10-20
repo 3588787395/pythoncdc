@@ -13867,6 +13867,34 @@ AST 映射规则:
 
     def _loop_handle_header_no_condition(self, block: BasicBlock, body_stmts: List[Dict[str, Any]], region: LoopRegion = None) -> None:
         """处理无条件while header（如 while True 中带break的情形）"""
+        # [B137-V3R6] while True 体首 NOP 占位（x01::if_in_while）：
+        # 常量真循环头由 ``while True:`` 行再生一个 NOP（循环行），而编译器在
+        # 体入口另有 NOP（pass/恒真 if 折叠）。当自然回边目标即体首块、块首为
+        # NOP、且代码对象中其前一指令也是 NOP 时，体首 NOP 无语句可承载，须
+        # 发射 while False: pass 占位（重编译恰为单个 NOP）。判据仅用区域回边
+        # 块末跳转 argval、块后继数与相邻指令 opname（I.4 白名单）；不命中时
+        # 既有发射逐位不变（C3）。
+        if (region is not None
+                and getattr(region, 'is_while_true', False)
+                and block.instructions
+                and block.instructions[0].opname == 'NOP'
+                and not block.conditional_successors):
+            _r6_be = getattr(region, 'back_edge_block', None)
+            _r6_be_last = _r6_be.get_last_instruction() if _r6_be is not None else None
+            if (_r6_be_last is not None
+                    and _r6_be_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                    and _r6_be_last.argval == block.start_offset):
+                _r6_prev = None
+                for _r6_pi in dis.get_instructions(self.cfg.code):
+                    if _r6_pi.offset >= block.start_offset:
+                        break
+                    _r6_prev = _r6_pi
+                if _r6_prev is not None and _r6_prev.opname == 'NOP':
+                    body_stmts.append({
+                        'type': 'While',
+                        'test': {'type': 'Constant', 'value': False},
+                        'body': [{'type': 'Pass'}],
+                    })
         if region is not None:
             nested_if = None
             for _r in region.iter_descendants((IfRegion,)):
@@ -16313,7 +16341,15 @@ AST 映射规则:
                     else:
                         _be_all_in_then = False
                         break
-                if _be_all_in_then and _be_then_region:
+                # [B138-V3R6] 回边块同时是带 else 的 IfRegion.merge_block 时，
+                # 该块是 if-else 之后的顺延代码（CPython 把 merge 排在 else 之后），
+                # 不能并入 then 体；否则 `if c: A else: B; Z` 会被生成成
+                # `if c: A; Z else: B`，在 A 后多一次 JUMP_FORWARD 跳过 else，
+                # 与源程序字节码不符（r6_q2_whilehost_spec：step 必须在 if 之后）。
+                _be_post_if_merge = (_be_then_region is not None
+                                     and _be_then_region.else_blocks
+                                     and _be_then_region.merge_block is _be_block)
+                if _be_all_in_then and _be_then_region and not _be_post_if_merge:
                     _be_placed = False
                     for _si in range(len(body_stmts) - 1, -1, -1):
                         _bs = body_stmts[_si]
@@ -37275,6 +37311,13 @@ AST 映射规则:
             RETURN 终止块）由 _find_finally_normal_copy_blocks 的 W13 单块
             判据整体接管，异常副本静默登记不再逐块进入本方法。
         """
+        # [B140-V3R6] except handler 体内的 break：该块以无条件跳转指向所属
+        # 循环出口（analyzer 依「异常边 + 跳转极性 + 区域成员」判定并登记，
+        # 见 RegionAnalyzer._detect_handler_break_blocks）。handler 体块被
+        # TryExceptRegion 吸收，不在循环体内，既有循环角色标注看不到它，
+        # 此处按 break 语义发射（x10::h_basic，B97）。非命中时逐位不变（C3）。
+        if self.region_analyzer.is_handler_break_block(block):
+            return [{'type': 'Break'}]
         # [Phase 3 adv17_try_except_star] 检测是否是 except* 框架块
         _is_except_star_block = any(i.opname in ('CHECK_EG_MATCH', 'PREP_RERAISE_STAR') for i in block.instructions)
         _EXC_STAR_FRAMEWORK_OPS = ()
@@ -43246,6 +43289,30 @@ AST 映射规则:
                             self.generated_blocks.add(nested_region.header_block)
                         continue
                     elif block in nested_region.blocks:
+                        # [B141-V3R6] 宿主链 try→handler→with→match 时的 case
+                        # 体归属缺口：case 体块先被祖先 TryExceptRegion 认领
+                        # （block_to_region 指向祖先，祖先优先），nested_region
+                        # 既非 WithRegion 也非 MatchRegion ⇒ 既有 With 分支
+                        # 不命中 ⇒ 体块被无语句标记 generated ⇒ case 体退化为
+                        # pass（x10::h_basic 的 `R='t'/'R='o'` 丢失）。
+                        # 语义归属判据（I.4 区域成员）：块 ∈ 某 WithRegion 的
+                        # with_blocks，且该 WithRegion 与本 match 区块集相交
+                        # （宿主关系）⇒ 按普通块生成语句归本 case 体发射
+                        # （与 B103 with 宿主同构：语义归属优先于首 Claim 登记，
+                        # 「每块唯一归属」由正在生成的 MatchRegion 承担）。
+                        # [C1] 只读区域成员关系，无语料特判；[C2] 既有 With 分支
+                        # 与 Try 分支路径逐位不变；[C3] 非命中路径逐位不变。
+                        _b141_with_owner = None
+                        for _b141_wr in self.region_analyzer.regions:
+                            if not isinstance(_b141_wr, WithRegion) or _b141_wr is region:
+                                continue
+                            if block not in (getattr(_b141_wr, 'with_blocks', None) or []):
+                                continue
+                            if (_b141_wr.blocks and region.blocks
+                                    and not (set(_b141_wr.blocks) & set(region.blocks))):
+                                continue
+                            _b141_with_owner = _b141_wr
+                            break
                         if (isinstance(nested_region, TryExceptRegion) and
                             block in set(nested_region.try_blocks)):
                             stmts = self._generate_block_statements(block)
@@ -43263,7 +43330,8 @@ AST 映射规则:
                         # 引用；[C3] 首Claim 归属与语义归属的分离 = 识别顺序
                         # 协议，嵌套无感（try 宿主同形态自证）。
                         elif (isinstance(nested_region, WithRegion)
-                              and block in (getattr(nested_region, 'with_blocks', None) or [])):
+                              and block in (getattr(nested_region, 'with_blocks', None) or [])) \
+                                or _b141_with_owner is not None:
                             stmts = self._generate_block_statements(block)
                             body_stmts.extend(stmts)
                         elif isinstance(nested_region, LoopRegion):
@@ -64310,6 +64378,14 @@ AST 映射规则:
                         break
                 if not _bo_last_instr:
                     _has_boolop = False
+            # [B137-V3R6] 短路表达式必然产生两条条件后继（求真/求假路径）。
+            # 零到一条条件后继的块是循环回边块（JUMP_BACKWARD 曾被
+            # SHORT_CIRCUIT_JUMP_OPCODES 误纳入 is_short_circuit_jump），
+            # 若进入本路径会把整块语句重构结果无差别包成 Expr（x01::
+            # if_in_while 的 R = 1 变 Expr(Assign)）。判据仅用块内后继
+            # 数与跳转 opname（I.4 白名单），不命中时原路径逐位不变。
+            if _has_boolop and len(block.conditional_successors) < 2:
+                _has_boolop = False
             if _has_boolop:
                 _bo_all_instrs = [i for i in block.instructions
                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -64335,7 +64411,13 @@ AST 映射规则:
                                     'value': _bo_expr,
                                 }]
                     if _boolop_result is None and _bo_expr is not None:
-                        _boolop_result = [{'type': 'Expr', 'value': _bo_expr}]
+                        # [B137-V3R6] 重构结果已是语句节点（Assign 等）时
+                        # 直接发射，不得再包 Expr（Expr(Assign) 在
+                        # CFGCodeGenerator 中退化为常量表达式）。
+                        if _bo_expr.get('type') in ('Assign', 'AugAssign', 'AnnAssign'):
+                            _boolop_result = [_bo_expr]
+                        else:
+                            _boolop_result = [{'type': 'Expr', 'value': _bo_expr}]
         if _boolop_result is not None:
             stmts.extend(_boolop_result)
             self.generated_blocks.add(block)

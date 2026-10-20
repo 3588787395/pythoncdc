@@ -1,0 +1,95 @@
+{
+ "type": "FunctionDef",
+ "name": "r6_q2_whilehost_spec",
+ "args": {
+  "type": "arguments",
+  "posonlyargs": [],
+  "args": [
+   {
+    "type": "arg",
+    "arg": "x"
+   }
+  ],
+  "vararg": null,
+  "kwonlyargs": [],
+  "kw_defaults": [],
+  "kwarg": null,
+  "defaults": []
+ },
+ "body": [
+  {
+   "type": "While",
+   "test": {
+    "type": "Name",
+    "id": "x",
+    "ctx": "Load",
+    "lineno": 2
+   },
+   "body": [
+    {
+     "type": "If",
+     "test": {
+      "type": "Name",
+      "id": "x",
+      "ctx": "Load",
+      "lineno": 3
+     },
+     "body": [
+      {
+       "type": "Expr",
+       "value": {
+        "type": "Call",
+        "func": {
+         "type": "Name",
+         "id": "one",
+         "ctx": "Load",
+         "lineno": 4
+        },
+        "args": [],
+        "kwargs": [],
+        "lineno": null
+       }
+      },
+      {
+       "type": "Expr",
+       "value": {
+        "type": "Call",
+        "func": {
+         "type": "Name",
+         "id": "step",
+         "ctx": "Load",
+         "lineno": 8
+        },
+        "args": [],
+        "kwargs": [],
+        "lineno": null
+       }
+      }
+     ],
+     "orelse": [
+      {
+       "type": "Expr",
+       "value": {
+        "type": "Call",
+        "func": {
+         "type": "Name",
+         "id": "two",
+         "ctx": "Load",
+         "lineno": 6
+        },
+        "args": [],
+        "kwargs": [],
+        "lineno": null
+       }
+      },
+      {
+       "type": "Break"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "decorator_list": [],
+ "returns": null
+}

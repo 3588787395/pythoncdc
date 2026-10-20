@@ -1,0 +1,316 @@
+# Source Generated with Decompyle++ (Python version)
+# File: rec1_live_live.pyc (Python 3.11)
+
+import six
+import time
+try:
+    import jsonpickle
+except ImportError:
+    import json
+from threading import Thread
+from IQEngine.interface import AbstractBroker, AbstractPersistable
+from IQEngine.core.events import Event, EventEnum
+from IQEngine.account import Order, Trade
+from IQEngine.utils import create_portfolio
+from IQEngine.const import OrderProperty, OrderStatus
+from IQEngine.utils.i18n import get_local_text as _
+from IQCommon.logger import system_log
+from IQCommon.exception import get_traceback_message
+class DefaultLiveBroker(AbstractBroker, AbstractPersistable):
+    def __init__(self, engine):
+        self._engine = engine
+        self._orders = []
+        self._open_orders = []
+        self._delayed_orders = []
+        self._close_orders = {}
+        self._before_trading_start = False
+        self.sync_account_thread = Thread(target=self._sync_worker, args=(self._engine,))
+        self.sync_account_thread.daemon = True
+        self.sync_account_thread.start()
+        self._engine.event_bus.append_listener(EventEnum.BEFORE_TRADING_START, self.on_before_trading_start)
+        self._engine.event_bus.append_listener(EventEnum.HANDLE_DATA, self.on_handle_data)
+        self._engine.event_bus.append_listener(EventEnum.HANDLE_TICK, self.on_handle_tick)
+        self._engine.event_bus.append_listener(EventEnum.AFTER_TRADING_END, self.on_after_trading_end)
+        self._engine.event_bus.append_listener(EventEnum.ENTRUST_RESPONSE, self._on_entrust_rsp)
+        self._engine.event_bus.append_listener(EventEnum.WITHDRAW_RESPONSE, self._on_cancel_rsp)
+        self._engine.event_bus.append_listener(EventEnum.BUSINESS_RESPONSE, self._on_business_rsp)
+        self._engine.event_bus.append_listener(EventEnum.ACCOUNT_QUERY_RESPONSE, self._on_account_sync)
+    def get_portfolio(self):
+        return create_portfolio(self._engine)
+    def get_orders(self, symbol_or_order=None):
+        if symbol_or_order is None:
+            return self._orders
+        elif isinstance(symbol_or_order, six.string_types):
+            return [order for order in self._orders if order.symbol == symbol_or_order]
+        elif isinstance(symbol_or_order, Order):
+            return [order for order in self._orders if order == symbol_or_order]
+        else:
+            return []
+    def get_order_by_id(self, order_id):
+        if not isinstance(order_id, six.string_types):
+            return None
+        else:
+            for order in self._orders:
+                if order_id == order.order_id:
+                    return order
+    def get_open_orders(self, symbol=None):
+        if symbol is None:
+            return [order for account, order in self._open_orders]
+        else:
+            return [order for account, order in self._open_orders if order.symbol == symbol]
+    def save(self):
+        return {'open_orders': [o.load() for account, o in self._open_orders], 'delayed_orders': [o.load() for account, o in self._delayed_orders]}
+    def load(self, state):
+        self._open_orders = []
+        self._delayed_orders = []
+        self._orders = []
+        for v in state['open_orders']:
+            o = Order()
+            o.save(v)
+            account = self._engine.get_account(o.symbol)
+            self._open_orders.append((account, o))
+            self._orders.append(o)
+        for v in state['delayed_orders']:
+            o = Order()
+            o.save(v)
+            account = self._engine.get_account(o.symbol)
+            self._delayed_orders.append((account, o))
+            self._orders.append(o)
+    def submit_order(self, order):
+        account = self._engine.get_account(order.asset.symbol)
+        self._engine.event_bus.publish_event(Event(EventEnum.ORDER_PENDING_NEW, account=account, order=order))
+        if order.is_final():
+            return None
+        else:
+            self._orders.append(order)
+            if order.order_property == OrderProperty.CURRENT:
+                self._open_orders.append((account, order))
+            else:
+                self._delayed_orders.append((account, order))
+            self._process_order()
+    def cancel_order(self, order):
+        account = self._engine.get_account(order.symbol)
+        self._engine.event_bus.publish_event(Event(EventEnum.ORDER_PENDING_CANCEL, account=account, order=order))
+        if order.is_final():
+            return None
+        else:
+            self._engine.event_bus.publish_event(Event(EventEnum.ENTRUST_WITHDRAW, order=order))
+            order.active_cancel()
+            self._engine.event_bus.publish_event(Event(EventEnum.ON_ORDER_RSP, order=order))
+    def on_before_trading_start(self, event):
+        self._before_trading_start = True
+        for account, order in self._open_orders:
+            order.active()
+            self._engine.event_bus.publish_event(Event(EventEnum.ORDER_CREATION_PASS, account=account, order=order))
+    def on_after_trading_end(self, event):
+        self._before_trading_start = False
+        for account, order in self._open_orders:
+            order.mark_rejected(_('Order Rejected: {symbol} can not match. Market close.').format(symbol=order.symbol))
+            self._engine.event_bus.publish_event(Event(EventEnum.ORDER_UNSOLICITED_UPDATE, account=account, order=order))
+        self._open_orders = self._delayed_orders
+        self._delayed_orders = []
+        self._orders = []
+        self._close_orders = {}
+    def on_handle_data(self, event):
+        self._process_order()
+    def on_handle_tick(self, event):
+        symbols = event.tick.symbol
+        for symbol in symbols:
+            self._process_order(symbol)
+    def _process_order(self, symbol=None):
+        open_orders = self._open_orders
+        if symbol is not None:
+            open_orders = [(a, o) for a, o in self._open_orders if o.asset.symbol == symbol]
+        for account, order in open_orders:
+            order.active()
+            self._open_orders.remove((account, order))
+            self._close_orders[order.order_id] = order
+            self._engine.event_bus.publish_event(Event(EventEnum.SECURITY_ENTRUST, order=order))
+    def _on_entrust_rsp(self, event):
+        """
+        处理交易系统委托主推
+        :param event:
+        :return:
+        """
+        try:
+            order = self._close_orders.pop(event.order.order_id)
+        except KeyError:
+            system_log.error(get_traceback_message())
+            return None
+        order._entrust_no = event.order.entrust_no
+        order._status = OrderStatus.REPORTED
+        account = self._engine.get_account(order.symbol)
+        self._engine.event_bus.publish_event(Event(EventEnum.ORDER_CREATION_PASS, account=account, order=order))
+        self._engine.event_bus.publish_event(Event(EventEnum.ON_ORDER_RSP, order=order))
+    def _on_cancel_rsp(self, event):
+        """
+        处理交易系统撤单主推
+        :param event:
+        :return:
+        """
+        order = event.order
+        order._entrust_no = event.order.entrust_no
+        order._status = event.order.status
+        account = self._engine.get_account(order.symbol)
+        try:
+            self._open_orders.remove((account, order))
+        except ValueError:
+            system_log.error(get_traceback_message())
+            try:
+                self._delayed_orders.remove((account, order))
+            except ValueError:
+                system_log.error(get_traceback_message())
+        self._engine.event_bus.publish_event(Event(EventEnum.ORDER_CANCELLATION_PASS, account=account, order=order))
+        self._engine.event_bus.publish_event(Event(EventEnum.ON_ORDER_RSP, order=order))
+    def _on_business_rsp(self, event):
+        """
+        处理交易系统成交主推
+        :param event:
+        :return:
+        """
+        trade = event.trade
+        order = self.get_order_by_id(trade.order_id)
+        if order is None:
+            system_log.error('未找到匹配的订单，订单信息：order_id:{}, symbol:{}, entrust_direction:{}, futures_direction{}'.format(trade.order_id, trade.asset.symbol, trade.entrust_direction, trade.futures_direction))
+            return None
+        else:
+            order.fill(trade)
+            account = self._engine.get_account(order.asset.symbol)
+            self._engine.event_bus.publish_event(Event(EventEnum.ORDER_TRADE, account=account, trade=trade, order=order))
+            self._engine.event_bus.publish_event(Event(EventEnum.ON_TRADE_RSP, trade=trade, order=order))
+    def _on_account_sync(self, event):
+        """
+        {
+        "STOCK":
+            {
+            "total_cash": ,
+            "frozen_cash": ,
+            "transaction_cost": ,
+            "positions": {
+                "600570.XSHG": {
+                    "amount": ,
+                    "avg_price": ,
+                    "today_amount": ,
+                    "froze_amount": ,
+                    "transaction_cost": ,
+                },
+                "000060.XSHE": {
+                    "amount": ,
+                    "avg_price": ,
+                    "today_amount": ,
+                    "froze_amount": ,
+                    "transaction_cost": ,
+                    }
+                },
+            },
+        "FUTURE":
+            {
+            "total_cash": ,
+            "frozen_cash": ,
+            "transaction_cost": ,
+            "positions": {
+                "IF1709.CCFX": {
+                    "today_buy_amount": ,
+                    "today_sell_amount": ,
+                    "old_buy_amount": ,
+                    "old_sell_amount": ,
+                    "buy_transaction_cost": ,
+                    "sell_transaction_cost": ,
+                    "buy_realized_pnl": ,
+                    "sell_realized_pnl": ,
+                    "buy_avg_price": ,
+                    "sell_avg_price": ,
+                    "hold_margin": ,
+                    "buy_froze_amount": ,
+                    "sell_froze_amount": ,
+                    "position_type": ,
+                    "last_price": ,
+                },
+                "IC1709.CCFX": {
+                    "today_buy_amount": ,
+                    "today_sell_amount": ,
+                    "old_buy_amount": ,
+                    "old_sell_amount": ,
+                    "buy_transaction_cost": ,
+                    "sell_transaction_cost": ,
+                    "buy_realized_pnl": ,
+                    "sell_realized_pnl": ,
+                    "buy_avg_price": ,
+                    "sell_avg_price": ,
+                    "hold_margin": ,
+                    "buy_froze_amount": ,
+                    "sell_froze_amount": ,
+                    "position_type": ,
+                    "last_price": ,
+                    },
+                },
+            },
+        "OPTION":
+            {
+            "total_cash": ,
+            "frozen_cash": ,
+            "transaction_cost": ,
+            "positions": {
+                "10001470.XSHG": {
+                    "buy_amount": ,
+                    "sell_amount": ,
+                    "hold_margin": ,
+                    "hold_premium": ,
+                    "buy_froze_amount": ,
+                    "sell_froze_amount": ,
+                    "buy_transaction_cost": ,
+                    "sell_transaction_cost": ,
+                    "buy_realized_pnl": ,
+                    "sell_realized_pnl": ,
+                    "buy_avg_price": ,
+                    "sell_avg_price": ,
+                    "position_type": ,
+                    "last_price": ,
+                },
+            }
+        }
+        :param event:
+        :return:
+        """
+        accounts = event.accounts
+        for key, account in accounts.items():
+            try:
+                self._engine.portfolio.accounts[key].sync_account(account)
+            except Exception:
+                system_log.error(get_traceback_message())
+    def scheme_order(self, **kwargs):
+        """
+        算法方案创建
+        :return:
+        """
+        raise NotImplementedError
+    def scheme_control(self, **kwargs):
+        """
+        算法方案控制
+        :return:
+        """
+        raise NotImplementedError
+    def get_scheme_status(self, **kwargs):
+        """
+        获取方案状态
+        :return:
+        """
+        raise NotImplementedError
+    def get_schemedetail_status(self, **kwargs):
+        """
+        获取算法状态
+        :return:
+        """
+        raise NotImplementedError
+    def _sync_worker(self, engine):
+        """
+        同步线程
+        """
+        steps = engine.config.plugins.plugin_system_simulation.account_sync_steps
+        engine.set_engine(engine)
+        while True:
+            while not self._before_trading_start:
+                time.sleep(10)
+            while self._before_trading_start:
+                engine.event_bus.publish_event(Event(EventEnum.ACCOUNT_QUERY))
+                time.sleep(steps)

@@ -1,0 +1,63 @@
+co_name=r6_q2_whilehost_spec varnames=('x',)
+=== CFG blocks ===
+BLK@0..4 succ=[6, 108] pred=[]
+   0 RESUME 0
+   2 LOAD_FAST x
+   4 POP_JUMP_FORWARD_IF_FALSE 108
+BLK@6..8 succ=[10, 40] pred=[0, 72]
+   6 LOAD_FAST x
+   8 POP_JUMP_FORWARD_IF_FALSE 40
+BLK@10..38 succ=[72] pred=[6]
+   10 LOAD_GLOBAL one
+   22 PRECALL 0
+   26 CALL 0
+   36 POP_TOP None
+   38 JUMP_FORWARD 72
+BLK@40..70 succ=[] pred=[6]
+   40 LOAD_GLOBAL two
+   52 PRECALL 0
+   56 CALL 0
+   66 POP_TOP None
+   68 LOAD_CONST None
+   70 RETURN_VALUE None
+BLK@72..102 succ=[6, 104] pred=[10]
+   72 LOAD_GLOBAL step
+   84 PRECALL 0
+   88 CALL 0
+   98 POP_TOP None
+   100 LOAD_FAST x
+   102 POP_JUMP_BACKWARD_IF_TRUE 6
+BLK@104..106 succ=[] pred=[72]
+   104 LOAD_CONST None
+   106 RETURN_VALUE None
+BLK@108..110 succ=[] pred=[0]
+   108 LOAD_CONST None
+   110 RETURN_VALUE None
+=== regions ===
+REGION LoopRegion entry=0 blocks=[0, 6, 10, 40, 72, 104, 108] parent=None
+   header_block=6
+   body_blocks=[6, 10, 40, 72]
+   break_blocks=[]
+   condition_block=0
+   else_blocks=[108]
+REGION IfRegion entry=6 blocks=[6, 10, 40] parent=LoopRegion
+   merge_block=72
+   condition_block=6
+   else_blocks=[40]
+   then_blocks=[10]
+=== block_to_region ===
+blk@0 -> LoopRegion
+blk@6 -> LoopRegion
+blk@10 -> LoopRegion
+blk@40 -> LoopRegion
+blk@72 -> LoopRegion
+blk@104 -> LoopRegion
+blk@108 -> LoopRegion
+=== block roles ===
+blk@0 role=BlockRole.LOOP_CONDITION
+blk@6 role=BlockRole.LOOP_HEADER
+blk@10 role=BlockRole.LOOP_BODY
+blk@40 role=BlockRole.LOOP_BODY
+blk@72 role=BlockRole.LOOP_BACK_EDGE
+blk@104 role=BlockRole.RETURN
+blk@108 role=BlockRole.LOOP_ELSE

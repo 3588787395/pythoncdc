@@ -1,0 +1,25 @@
+co_name=if_in_while varnames=('R',)
+=== CFG blocks ===
+BLK@0..6 succ=[8] pred=[]
+   0 RESUME 0
+   2 NOP None
+   4 NOP None
+   6 NOP None
+BLK@8..14 succ=[8] pred=[0, 8]
+   8 NOP None
+   10 LOAD_CONST 1
+   12 STORE_FAST R
+   14 JUMP_BACKWARD 8
+=== regions ===
+REGION LoopRegion entry=8 blocks=[8] parent=None
+   header_block=8
+   body_blocks=[8]
+   break_blocks=[]
+   else_blocks=[]
+REGION Region entry=0 blocks=[0] parent=None
+=== block_to_region ===
+blk@0 -> Region
+blk@8 -> LoopRegion
+=== block roles ===
+blk@0 role=BlockRole.PURE_JUMP
+blk@8 role=BlockRole.LOOP_HEADER

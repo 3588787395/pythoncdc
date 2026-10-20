@@ -1,0 +1,135 @@
+co_name=r6_g2_hdrbreak_spec varnames=('cond', 'q', 'status', 'item')
+=== CFG blocks ===
+BLK@0..0 succ=[2] pred=[]
+   0 RESUME 0
+BLK@2..38 succ=[40, 386] pred=[0, 286]
+   2 LOAD_GLOBAL len
+   14 LOAD_FAST q
+   16 PRECALL 1
+   20 CALL 1
+   30 LOAD_CONST 0
+   32 COMPARE_OP >
+   38 POP_JUMP_FORWARD_IF_FALSE 386
+BLK@40..40 succ=[42] pred=[2, 318]
+   40 NOP None
+BLK@42..132 succ=[186, 134] pred=[40]
+   42 LOAD_GLOBAL lock
+   54 LOAD_METHOD acquire
+   76 PRECALL 0
+   80 CALL 0
+   90 POP_TOP None
+   92 LOAD_FAST q
+   94 LOAD_METHOD pop
+   116 LOAD_CONST 0
+   118 PRECALL 1
+   122 CALL 1
+   132 STORE_FAST item
+BLK@134..184 succ=[246] pred=[42]
+   134 LOAD_GLOBAL lock
+   146 LOAD_METHOD release
+   168 PRECALL 0
+   172 CALL 0
+   182 POP_TOP None
+   184 JUMP_FORWARD 246
+BLK@186..238 succ=[240] pred=[42]
+   186 PUSH_EXC_INFO None
+   188 LOAD_GLOBAL lock
+   200 LOAD_METHOD release
+   222 PRECALL 0
+   226 CALL 0
+   236 POP_TOP None
+   238 RERAISE 0
+BLK@240..244 succ=[] pred=[186]
+   240 COPY 3
+   242 POP_EXCEPT None
+   244 RERAISE 1
+BLK@246..248 succ=[254, 250] pred=[134]
+   246 LOAD_FAST item
+   248 POP_JUMP_FORWARD_IF_NOT_NONE 254
+BLK@250..252 succ=[] pred=[246]
+   250 LOAD_CONST None
+   252 RETURN_VALUE None
+BLK@254..284 succ=[286, 318] pred=[246]
+   254 LOAD_FAST status
+   256 LOAD_GLOBAL STOP
+   268 LOAD_GLOBAL DELETE
+   280 BUILD_TUPLE 2
+   282 CONTAINS_OP 0
+   284 POP_JUMP_FORWARD_IF_FALSE 318
+BLK@286..316 succ=[2] pred=[254]
+   286 LOAD_GLOBAL log
+   298 LOAD_CONST bad status
+   300 PRECALL 1
+   304 CALL 1
+   314 POP_TOP None
+   316 JUMP_BACKWARD 2
+BLK@318..384 succ=[386, 40] pred=[254]
+   318 LOAD_GLOBAL handle
+   330 LOAD_FAST item
+   332 PRECALL 1
+   336 CALL 1
+   346 POP_TOP None
+   348 LOAD_GLOBAL len
+   360 LOAD_FAST q
+   362 PRECALL 1
+   366 CALL 1
+   376 LOAD_CONST 0
+   378 COMPARE_OP >
+   384 POP_JUMP_BACKWARD_IF_TRUE 40
+BLK@386..418 succ=[] pred=[2, 318]
+   386 LOAD_GLOBAL nap
+   398 LOAD_CONST 1
+   400 PRECALL 1
+   404 CALL 1
+   414 POP_TOP None
+   416 LOAD_CONST None
+   418 RETURN_VALUE None
+=== regions ===
+REGION LoopRegion entry=2 blocks=[2, 40, 246, 254, 318, 42, 134] parent=LoopRegion
+   header_block=40
+   body_blocks=[40, 42, 134, 246, 254, 318]
+   break_blocks=[]
+   condition_block=2
+   else_blocks=[]
+REGION LoopRegion entry=2 blocks=[2, 40, 186, 240, 246, 250, 254, 286, 318, 386, 42, 134] parent=None
+   header_block=2
+   body_blocks=[2, 40, 42, 134, 186, 240, 246, 250, 254, 286, 318, 386]
+   break_blocks=[250]
+   else_blocks=[]
+REGION TryExceptRegion entry=42 blocks=[40, 186, 240, 42, 134] parent=LoopRegion
+   else_blocks=[]
+   finally_blocks=[186, 240]
+REGION IfRegion entry=246 blocks=[246, 250, 254, 286, 386] parent=LoopRegion
+   merge_block=386
+   condition_block=246
+   else_blocks=[254]
+   then_blocks=[250]
+REGION Region entry=0 blocks=[0] parent=None
+=== block_to_region ===
+blk@0 -> Region
+blk@2 -> LoopRegion
+blk@40 -> TryExceptRegion
+blk@42 -> TryExceptRegion
+blk@134 -> TryExceptRegion
+blk@186 -> TryExceptRegion
+blk@240 -> TryExceptRegion
+blk@246 -> LoopRegion
+blk@250 -> LoopRegion
+blk@254 -> LoopRegion
+blk@286 -> LoopRegion
+blk@318 -> LoopRegion
+blk@386 -> LoopRegion
+=== block roles ===
+blk@0 role=BlockRole.PURE_JUMP
+blk@2 role=BlockRole.LOOP_CONDITION
+blk@40 role=BlockRole.LOOP_HEADER
+blk@42 role=BlockRole.LOOP_BODY
+blk@134 role=BlockRole.LOOP_BODY
+blk@186 role=BlockRole.LOOP_BODY
+blk@240 role=BlockRole.LOOP_BODY
+blk@246 role=BlockRole.LOOP_BODY
+blk@250 role=BlockRole.BREAK
+blk@254 role=BlockRole.LOOP_BODY
+blk@286 role=BlockRole.CONTINUE
+blk@318 role=BlockRole.LOOP_BACK_EDGE
+blk@386 role=BlockRole.LOOP_BODY

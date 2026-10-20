@@ -1,0 +1,122 @@
+co_name=s_b140_break_in_finally_loop varnames=('n', 'out', 'i')
+=== CFG blocks ===
+BLK@0..34 succ=[36] pred=[]
+   0 RESUME 0
+   2 BUILD_LIST 0
+   4 STORE_FAST out
+   6 LOAD_GLOBAL range
+   18 LOAD_FAST n
+   20 PRECALL 1
+   24 CALL 1
+   34 GET_ITER None
+BLK@36..36 succ=[38, 164] pred=[0, 162]
+   36 FOR_ITER 164
+BLK@38..50 succ=[162, 52] pred=[36]
+   38 STORE_FAST i
+   40 LOAD_FAST i
+   42 LOAD_CONST 0
+   44 COMPARE_OP >
+   50 POP_JUMP_FORWARD_IF_FALSE 162
+BLK@52..62 succ=[64] pred=[150, 38]
+   52 LOAD_FAST i
+   54 LOAD_CONST 1
+   56 BINARY_OP 23
+   60 STORE_FAST i
+   62 NOP None
+BLK@64..104 succ=[122, 106] pred=[52]
+   64 LOAD_FAST out
+   66 LOAD_METHOD append
+   88 LOAD_FAST i
+   90 PRECALL 1
+   94 CALL 1
+   104 POP_TOP None
+BLK@106..116 succ=[118, 120] pred=[64]
+   106 LOAD_FAST i
+   108 LOAD_CONST 1
+   110 COMPARE_OP ==
+   116 POP_JUMP_FORWARD_IF_FALSE 120
+BLK@118..118 succ=[162] pred=[106]
+   118 JUMP_FORWARD 162
+BLK@120..120 succ=[150] pred=[106]
+   120 JUMP_FORWARD 150
+BLK@122..134 succ=[136, 142, 144] pred=[64]
+   122 PUSH_EXC_INFO None
+   124 LOAD_FAST i
+   126 LOAD_CONST 1
+   128 COMPARE_OP ==
+   134 POP_JUMP_FORWARD_IF_FALSE 142
+BLK@136..136 succ=[138, 144] pred=[122]
+   136 POP_TOP None
+BLK@138..140 succ=[162] pred=[136]
+   138 POP_EXCEPT None
+   140 JUMP_FORWARD 162
+BLK@142..142 succ=[144] pred=[122]
+   142 RERAISE 0
+BLK@144..148 succ=[] pred=[136, 142, 122]
+   144 COPY 3
+   146 POP_EXCEPT None
+   148 RERAISE 1
+BLK@150..160 succ=[52, 162] pred=[120]
+   150 LOAD_FAST i
+   152 LOAD_CONST 0
+   154 COMPARE_OP >
+   160 POP_JUMP_BACKWARD_IF_TRUE 52
+BLK@162..162 succ=[36] pred=[138, 150, 38, 118]
+   162 JUMP_BACKWARD 36
+BLK@164..166 succ=[] pred=[36]
+   164 LOAD_FAST out
+   166 RETURN_VALUE None
+=== regions ===
+REGION LoopRegion entry=38 blocks=[38, 52, 118, 120, 122, 136, 142, 144, 150, 64, 106, 138] parent=LoopRegion
+   header_block=52
+   body_blocks=[52, 64, 106, 118, 120, 122, 136, 138, 142, 144, 150]
+   break_blocks=[]
+   condition_block=38
+   else_blocks=[]
+REGION LoopRegion entry=36 blocks=[0, 36, 38, 52, 118, 120, 122, 136, 150, 162, 164, 64, 106, 138] parent=None
+   header_block=36
+   body_blocks=[36, 38, 52, 64, 106, 118, 120, 122, 136, 138, 150, 162]
+   break_blocks=[]
+   else_blocks=[164]
+REGION TryExceptRegion entry=64 blocks=[118, 120, 122, 136, 142, 144, 150, 162, 64, 106, 138] parent=LoopRegion
+   else_blocks=[]
+   finally_blocks=[122, 136, 144, 138, 162, 142]
+REGION IfRegion entry=106 blocks=[118, 106] parent=LoopRegion
+   merge_block=162
+   condition_block=106
+   else_blocks=[]
+   then_blocks=[118]
+=== block_to_region ===
+blk@0 -> LoopRegion
+blk@36 -> LoopRegion
+blk@38 -> LoopRegion
+blk@52 -> LoopRegion
+blk@64 -> TryExceptRegion
+blk@106 -> TryExceptRegion
+blk@118 -> TryExceptRegion
+blk@120 -> TryExceptRegion
+blk@122 -> TryExceptRegion
+blk@136 -> TryExceptRegion
+blk@138 -> TryExceptRegion
+blk@142 -> TryExceptRegion
+blk@144 -> TryExceptRegion
+blk@150 -> TryExceptRegion
+blk@162 -> TryExceptRegion
+blk@164 -> LoopRegion
+=== block roles ===
+blk@0 role=BlockRole.NORMAL
+blk@36 role=BlockRole.LOOP_HEADER
+blk@38 role=BlockRole.LOOP_CONDITION
+blk@52 role=BlockRole.LOOP_HEADER
+blk@64 role=BlockRole.LOOP_BODY
+blk@106 role=BlockRole.LOOP_BODY
+blk@118 role=BlockRole.PURE_BREAK
+blk@120 role=BlockRole.LOOP_BODY
+blk@122 role=BlockRole.LOOP_BODY
+blk@136 role=BlockRole.LOOP_BODY
+blk@138 role=BlockRole.BREAK
+blk@142 role=BlockRole.LOOP_BODY
+blk@144 role=BlockRole.LOOP_BODY
+blk@150 role=BlockRole.LOOP_BACK_EDGE
+blk@162 role=BlockRole.LOOP_BACK_EDGE
+blk@164 role=BlockRole.LOOP_ELSE

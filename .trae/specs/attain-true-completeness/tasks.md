@@ -27,11 +27,11 @@
   - [x] 5.2 修复：通用机制全族封闭（B122 四点、B93、B61a-d + i-k、B70a/b + c-j；B70g 宽守卫经 E 门禁回归收窄为循环体内宿主判据，真实代码三文件复原）
   - [x] 5.3 复核：原探针全绿（域内）+ 合成 20 探针 65/65 + 负对照九件 60/60 + R4 保护 71/71 + 邻域 82/86（较基线 81/86 仅 +x02 转绿；失败集 4 项均域外/park）+ 命名组 43/46（余 3 域外）；站桩回归不变差（E 二跑 402 八分片 6617/6617 REGRESSIONS=0、small34 1568/1568 IMPROVED=33、quotation 153/153）
   - [x] 5.4 主代理验证序六步 + push（`rr-v3r05:`）：核 worktree/diffstat（3 文件 +1178/−85、标记 27 处、G3=0）/FIX.md 终稿 §0-§6/summary/IV.2（BOM 单头、site-packages 快照按 R5 净改善刷新，见 FIX.md §5）；独立复跑 synth 65/65 + neigh 82/86 + neg9 60/60 + r4prot 71/71 + named 43/46 与终树 r5fin_* 四组；E 首跑回归二分（B70g 宽守卫→收窄）与二跑取证（final_verify_summary.json，DEGRADED=0）
-- [ ] Task 6: Round 6 — 循环控制族封闭（→ 升格行：Break / Continue / While）
-  - [ ] 6.1 评审攻击：B79（break 三分支族）/ B94（while NOP 残段）/ B97（handler break）/ B71 残余（fin_continue 转 B79 续接）现状探针 + 合成新变体
-  - [ ] 6.2 修复：通用机制全族封闭
-  - [ ] 6.3 复核：原探针 + 合成交叉变体 + 负对照全过；站桩回归不变差
-  - [ ] 6.4 主代理验证序六步 + push（`rr-v3r06:`）
+- [x] Task 6: Round 6 — 循环控制族封闭（→ 升格行：Break / Continue / While）（FIX.md 终稿 §0-§6：B137 while-NOP 占位 + 短路后继守卫〔B94，x01 6/7→7/7〕+ B139 header break/while-else 归属〔g2spec 1/2→2/2、q2spec 1/2→2/2〕+ B140 handler 内 break 检测〔B97，x10 2/3→3/3，含 for 出口判据〕+ B141 宿主链 try→handler→with→match 的 case 体归属〔B103 连带，x10 内 R='t'/'R='o' 恢复〕；2 文件 +227/−5，标记 [Bn-V3R6] 11 处，新破口自 B142 起，G3=0 / G4=0 / I.4 白名单；合成非语料 6 探针 22/23；主代理独立复跑邻域 83/86〔较基线 82/86 仅 +x01〕+ 命名 44/46〔+x01〕+ 负对照 60/60 + R4 保护 71/71 + R5 合成 65/65 + 三真实文件 172/172；E 门禁首跑自捕获 B139 放宽误杀两真实文件〔6615/6617〕→ 按 I.4 收窄回 has_break 守卫 → 单文件 32/32+128/128 复原 → 二跑 402 八分片 6617/6617 files_failure=0、small34 1568/1568、quotation success、tests 基线名单、IV.2 全绿〔BOM 单头、G3=0〕；残余登记：b71::v_nest_fin_continue〔B142，嵌套 finally 副本归属〕、finally 体内 break〔B143，finalbody 子区域派发〕）
+  - [x] 6.1 评审攻击：B79（break 三分支族）/ B94（while NOP 残段）/ B97（handler break）/ B71 残余（fin_continue 转 B79 续接）现状探针 + 合成新变体（基线 stamp r6pre1 17/22：x01 6/7、b71 3/4、x10 2/3、g2spec 1/2、q2spec 1/2；合成 6 探针 r6acc_synth1 21/23 → 补 for 出口目标后 r6acc_synth2 22/23）
+  - [x] 6.2 修复：通用机制全族封闭（B137/B139/B140/B141 四机制，见 FIX.md §1；B139 首版过宽由 E 门禁首跑自捕获并按 I.4 收窄）
+  - [x] 6.3 复核：原探针 21/22 + 合成 22/23 + 负对照 60/60 + 邻域 83/86 + 命名 44/46 + R4 保护 71/71 + R5 合成 65/65 + 三真实文件 172/172；站桩回归不变差（E 二跑 6617/6617 REGRESSIONS=0、small34 1568/1568、quotation success、tests 基线名单）
+  - [x] 6.4 主代理验证序六步 + push（`rr-v3r06:`）：核 diffstat（2 文件 +227/−5、标记 11 处、G3=0）/FIX.md 终稿 §0-§6/summary/IV.2；独立复跑 6 组回归 + 13 探针主集；E 首跑回归二分（B139 放宽 → 收窄）与二跑取证（final_verify_summary.json，files_failure=0）
 - [ ] Task 7: Round 7 — 赋值-删除-return-slice 族封闭（→ 升格行：AugAssign / Delete / Return / Slice）
   - [ ] 7.1 评审攻击：B76（augassign×BoolOp RHS 体蒸发残留）/ B48 残留变体（t_host_while_body 等）/ B84（del/with 吞并）/ B88（return 嵌套宿主）/ B62（return(call+BoolOp) 尾语句蒸发）/ B127（slice 悬挂链）/ B59（dh_for_else_del）/ B60（dh_with_assert）现状探针 + 合成新变体
   - [ ] 7.2 修复：通用机制全族封闭

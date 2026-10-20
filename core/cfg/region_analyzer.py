@@ -1244,6 +1244,12 @@ class RegionAnalyzer:
         self._current_boolop_regions: List[Region] = []
         self.peephole_library = PeepholePatternLibrary()
         self._peephole_matches: List[Dict[str, Any]] = []
+        # [B140-V3R6] except handler 体内的 break 块登记（偏移 → 块）。
+        # CPython 3.11 把 handler 内的 break 编译为 POP_EXCEPT + 无条件
+        # JUMP_FORWARD(所属循环出口)；该 handler 体块被 TryExceptRegion 吸收，
+        # 不在 LoopRegion.body_blocks 内，循环结构角色标注看不到它，break
+        # 退化为空 handler 体（pass）→ 控制流失配（x10::h_basic，B97）。
+        self._r6_handler_break_blocks: Dict[int, BasicBlock] = {}
 
     def _filter_regions(self, regions: List['Region'], region_class) -> List['Region']:
         """按精确类型过滤区域列表（使用 type() 而非 isinstance 以避免子类匹配）。"""
@@ -6661,8 +6667,16 @@ condition_block/else_blocks 集合成员、前驱集合、异常边、try_offset
                 _cond_last = lr.condition_block.get_last_instruction()
                 if _cond_last and _cond_last.opname in FORWARD_CONDITIONAL_JUMP_OPS and _cond_last.argval is not None:
                     _cond_exit = self.cfg.get_block_by_offset(_cond_last.argval)
-                    if _cond_exit and not self._check_block_has_trailing_return_none(_cond_exit):
-                        _cond_exit_targets.add(_cond_exit)
+                    if _cond_exit:
+                        # [B139-V3R6] 旋转 while 的 else 体（condition-false 目标）
+                        # 即使以隐式 return None 收尾，只要含实际语句就不是纯尾返回，
+                        # 应保留为真实 loop-else；仅纯 pass/return None 才按尾返回折叠。
+                        _cond_exit_contentful = not self._is_pass_or_return_none_block(_cond_exit)
+                        _cond_exit_break_path = (
+                            lr.has_break
+                            and not self._check_block_has_trailing_return_none(_cond_exit))
+                        if _cond_exit_contentful or _cond_exit_break_path:
+                            _cond_exit_targets.add(_cond_exit)
             # [R58-B] 识别条件——for-else 的 else 体是 break 桩：
             #   else 块 == 当前循环 metadata['for_iter_exit']（FOR_ITER
             #   耗尽落入的 `else: break` 跳出外层循环形态），且该块虽在
@@ -6777,6 +6791,25 @@ condition_block/else_blocks 集合成员、前驱集合、异常边、try_offset
                             _b109_conv_target = next(iter(_b109_targets))
                             if _b109_conv_target in lr.else_blocks:
                                 _r3_true_else.add(_b109_conv_target)
+            # [B139-V3R6] 循环 else 块若同时是子 IfRegion 的 merge_block，
+            # 该块属于循环 else 的顺延代码，不应再由 IfRegion 的 elif_final_else
+            # 或 blocks 归属（r6_g2_hdrbreak_spec：386 被 IfRegion@246 占用后
+            # 生成阶段误判已生成，else 体 nap(1) 丢失）。
+            for _eb in list(lr.else_blocks):
+                for _child in (lr.children or []):
+                    if not isinstance(_child, IfRegion):
+                        continue
+                    if getattr(_child, 'merge_block', None) is not _eb:
+                        continue
+                    if _child.entry in lr.else_blocks:
+                        continue
+                    _child.elif_final_else = [
+                        _b for _b in (_child.elif_final_else or []) if _b is not _eb]
+                    _child.else_blocks = [
+                        _b for _b in (_child.else_blocks or []) if _b is not _eb]
+                    _child.blocks.discard(_eb)
+                    if self.block_to_region.get(_eb) is _child:
+                        self.block_to_region[_eb] = lr
             spurious = [eb for eb in lr.else_blocks
                         if eb in parent_body
                         and eb not in _cond_exit_targets
@@ -36060,6 +36093,108 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
             region.precompute_analysis(self)
 
         self._precompute_break_jump_classification(all_regions)
+        self._detect_handler_break_blocks(all_regions)
+
+    def _detect_handler_break_blocks(self, all_regions: List[Region]) -> None:
+        """[B140-V3R6] except handler 体内的 break 识别（B97 通用机制）。
+
+        ①问题：CPython 3.11 把 `except` 臂内的 `break` 编译为 POP_EXCEPT +
+        无条件 JUMP_FORWARD(所属循环出口)。该 handler 体块被 TryExceptRegion
+        吸收（不在 LoopRegion.body_blocks 内），故循环结构角色标注
+        （_annotate_loop_structural_roles）看不到它，break 退化为空 handler
+        体（pass）→ 控制流失配（x10::h_basic：B97）。
+
+        ②判据（I.4 白名单：区域成员 + 异常边 + 跳转极性 + 指令集）：
+        1) 目标 try 区域的保护区落在该循环体内（try_blocks ∩ 循环体 ≠ ∅）；
+        2) handler 入口块由循环体块经异常边进入（异常边 = cfg 的
+           exception_successors，I.4「异常边」口径）；
+        3) handler 体块不在该循环体集合内（否则由既有角色标注负责，C3）；
+        4) 该块以无条件前向跳转（JUMP_FORWARD/JUMP_ABSOLUTE）结束，且目标
+           为该循环的出口块（condition 假边目标 / exit_block）；
+        5) 块内无 RETURN_VALUE/RETURN_CONST（return 不属 break 族）。
+
+        ③影响面：不命中时既有角色标注与发射逐位不变（C3）；命中时仅新增
+        handler-break 登记，由生成器在 handler 装配处发射 ast.Break。
+
+        ④C 条款：[C1] 仅用区域成员/异常边/跳转极性判定，不引入语料特判；
+        [C2] 命中的块仍按「每块唯一归属」由 handler 体发射一次；
+        [C3] 非命中路径逐位不变。
+        """
+        self._r6_handler_break_blocks = {}
+        for loop in all_regions:
+            if not isinstance(loop, LoopRegion):
+                continue
+            body = set(loop.body_blocks or [])
+            if loop.header_block is not None:
+                body.add(loop.header_block)
+            if loop.condition_block is not None:
+                body.add(loop.condition_block)
+            exits = self._r6_loop_exit_targets(loop, body)
+            if not exits:
+                continue
+            for tregion in all_regions:
+                if not isinstance(tregion, TryExceptRegion):
+                    continue
+                try_blocks = set(getattr(tregion, 'try_blocks', None) or [])
+                if not (try_blocks & body):
+                    continue
+                handler_entries = set(getattr(tregion, 'handler_entry_blocks', None) or [])
+                entered = False
+                for b in body:
+                    for e in (getattr(b, 'exception_successors', None) or ()):
+                        if e in handler_entries:
+                            entered = True
+                            break
+                    if entered:
+                        break
+                if not entered:
+                    continue
+                for _et, _en, hbs in (getattr(tregion, 'except_handlers', None) or []):
+                    for hb in (hbs or []):
+                        if hb in body:
+                            continue
+                        last = hb.get_last_instruction()
+                        if not (last and last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                and last.argval is not None):
+                            continue
+                        target = self.cfg.get_block_by_offset(last.argval)
+                        if target not in exits:
+                            continue
+                        if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                               for i in hb.instructions):
+                            continue
+                        self._r6_handler_break_blocks.setdefault(hb.start_offset, hb)
+
+    def _r6_loop_exit_targets(self, loop: LoopRegion, body: Set[BasicBlock]) -> Set[BasicBlock]:
+        """[B140-V3R6] 循环出口块集合（condition 假边目标 / FOR_ITER 耗尽目标 /
+        exit_block）。"""
+        targets: Set[BasicBlock] = set()
+        cond = loop.condition_block
+        if cond is not None:
+            last = cond.get_last_instruction()
+            if (last and last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                    and last.argval is not None):
+                tgt = self.cfg.get_block_by_offset(last.argval)
+                if tgt is not None and tgt not in body:
+                    targets.add(tgt)
+        # for 循环无 condition_block：出口为 FOR_ITER 耗尽目标（header 末指令）
+        header = loop.header_block
+        if header is not None:
+            hlast = header.get_last_instruction()
+            if hlast and hlast.opname == 'FOR_ITER' and hlast.argval is not None:
+                tgt = self.cfg.get_block_by_offset(hlast.argval)
+                if tgt is not None and tgt not in body:
+                    targets.add(tgt)
+        exit_block = getattr(loop, 'exit_block', None)
+        if exit_block is not None and exit_block not in body:
+            targets.add(exit_block)
+        return targets
+
+    def is_handler_break_block(self, block: BasicBlock) -> bool:
+        """[B140-V3R6] 该块是否为 except handler 体内的 break 块。"""
+        if block is None:
+            return False
+        return block.start_offset in self._r6_handler_break_blocks
 
     def _precompute_loop_analysis_data(self, region: LoopRegion) -> None:
         """预计算循环区域的详细分析数据

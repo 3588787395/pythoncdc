@@ -1,0 +1,34 @@
+{
+ "type": "FunctionDef",
+ "name": "r6_g2_hdrbreak_spec",
+ "args": {
+  "type": "arguments",
+  "posonlyargs": [],
+  "args": [
+   {
+    "type": "arg",
+    "arg": "cond"
+   },
+   {
+    "type": "arg",
+    "arg": "q"
+   },
+   {
+    "type": "arg",
+    "arg": "status"
+   }
+  ],
+  "vararg": null,
+  "kwonlyargs": [],
+  "kw_defaults": [],
+  "kwarg": null,
+  "defaults": []
+ },
+ "body": [
+  {
+   "type": "Pass"
+  }
+ ],
+ "decorator_list": [],
+ "returns": null
+}

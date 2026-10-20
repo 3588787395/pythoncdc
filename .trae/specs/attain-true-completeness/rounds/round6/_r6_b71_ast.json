@@ -1,0 +1,242 @@
+{
+ "type": "FunctionDef",
+ "name": "v_nest_fin_continue",
+ "args": {
+  "type": "arguments",
+  "posonlyargs": [],
+  "args": [
+   {
+    "type": "arg",
+    "arg": "rows"
+   }
+  ],
+  "vararg": null,
+  "kwonlyargs": [],
+  "kw_defaults": [],
+  "kwarg": null,
+  "defaults": []
+ },
+ "body": [
+  {
+   "type": "Assign",
+   "targets": [
+    {
+     "type": "Name",
+     "id": "out",
+     "ctx": "Store"
+    }
+   ],
+   "value": {
+    "type": "List",
+    "elts": [],
+    "ctx": "Load",
+    "lineno": 20
+   }
+  },
+  {
+   "type": "For",
+   "target": {
+    "type": "Name",
+    "id": "r",
+    "ctx": "Store"
+   },
+   "iter": {
+    "type": "Name",
+    "id": "rows",
+    "ctx": "Load",
+    "lineno": 21
+   },
+   "body": [
+    {
+     "type": "Try",
+     "body": [
+      {
+       "type": "If",
+       "test": {
+        "type": "Compare",
+        "left": {
+         "type": "Name",
+         "id": "r",
+         "ctx": "Load",
+         "lineno": 24
+        },
+        "ops": [
+         "=="
+        ],
+        "comparators": [
+         {
+          "type": "Constant",
+          "value": 0,
+          "lineno": null
+         }
+        ],
+        "lineno": null
+       },
+       "body": [
+        {
+         "type": "Try",
+         "body": [
+          {
+           "type": "Expr",
+           "value": {
+            "type": "Call",
+            "func": {
+             "type": "Attribute",
+             "value": {
+              "type": "Name",
+              "id": "out",
+              "ctx": "Load",
+              "lineno": 27
+             },
+             "attr": "append",
+             "ctx": "Load",
+             "lineno": null
+            },
+            "args": [
+             {
+              "type": "Constant",
+              "value": 1,
+              "lineno": null
+             }
+            ],
+            "kwargs": [],
+            "lineno": null
+           }
+          },
+          {
+           "type": "Expr",
+           "value": {
+            "type": "Call",
+            "func": {
+             "type": "Attribute",
+             "value": {
+              "type": "Name",
+              "id": "out",
+              "ctx": "Load",
+              "lineno": 27
+             },
+             "attr": "append",
+             "ctx": "Load",
+             "lineno": null
+            },
+            "args": [
+             {
+              "type": "Constant",
+              "value": 1,
+              "lineno": null
+             }
+            ],
+            "kwargs": [],
+            "lineno": null
+           }
+          }
+         ],
+         "handlers": [],
+         "finalbody": [
+          {
+           "type": "Expr",
+           "value": {
+            "type": "Call",
+            "func": {
+             "type": "Attribute",
+             "value": {
+              "type": "Name",
+              "id": "out",
+              "ctx": "Load",
+              "lineno": null
+             },
+             "attr": "append",
+             "ctx": "Load",
+             "lineno": null
+            },
+            "args": [
+             {
+              "type": "Constant",
+              "value": 2,
+              "lineno": null
+             }
+            ],
+            "kwargs": [],
+            "lineno": null
+           }
+          }
+         ]
+        }
+       ],
+       "orelse": []
+      }
+     ],
+     "handlers": [],
+     "finalbody": [
+      {
+       "type": "Expr",
+       "value": {
+        "type": "Call",
+        "func": {
+         "type": "Attribute",
+         "value": {
+          "type": "Name",
+          "id": "out",
+          "ctx": "Load",
+          "lineno": null
+         },
+         "attr": "append",
+         "ctx": "Load",
+         "lineno": null
+        },
+        "args": [
+         {
+          "type": "Constant",
+          "value": 1,
+          "lineno": null
+         }
+        ],
+        "kwargs": [],
+        "lineno": null
+       }
+      }
+     ]
+    },
+    {
+     "type": "Expr",
+     "value": {
+      "type": "Call",
+      "func": {
+       "type": "Attribute",
+       "value": {
+        "type": "Name",
+        "id": "out",
+        "ctx": "Load",
+        "lineno": 30
+       },
+       "attr": "append",
+       "ctx": "Load",
+       "lineno": null
+      },
+      "args": [
+       {
+        "type": "Name",
+        "id": "r",
+        "ctx": "Load",
+        "lineno": null
+       }
+      ],
+      "kwargs": [],
+      "lineno": null
+     }
+    }
+   ]
+  },
+  {
+   "type": "Return",
+   "value": {
+    "type": "Name",
+    "id": "out",
+    "ctx": "Load",
+    "lineno": 31
+   }
+  }
+ ],
+ "decorator_list": [],
+ "returns": null
+}

@@ -1,0 +1,277 @@
+co_name=h_basic varnames=('X', 'E', 'e', 'i', 'e2', 'R', 'F')
+=== CFG blocks ===
+BLK@0..2 succ=[4] pred=[]
+   0 RESUME 0
+   2 NOP None
+BLK@4..6 succ=[8, 14] pred=[0]
+   4 LOAD_CONST 1
+   6 STORE_FAST X
+BLK@8..12 succ=[320, 326] pred=[4]
+   8 LOAD_CONST 0
+   10 STORE_FAST E
+   12 JUMP_FORWARD 320
+BLK@14..30 succ=[146, 32, 314] pred=[4]
+   14 PUSH_EXC_INFO None
+   16 LOAD_GLOBAL ValueError
+   28 CHECK_EXC_MATCH None
+   30 POP_JUMP_FORWARD_IF_FALSE 146
+BLK@32..32 succ=[34, 314] pred=[14]
+   32 STORE_FAST e
+BLK@34..62 succ=[64, 138] pred=[32]
+   34 LOAD_GLOBAL range
+   46 LOAD_CONST 2
+   48 PRECALL 1
+   52 CALL 1
+   62 GET_ITER None
+BLK@64..64 succ=[66, 128, 138] pred=[34, 126]
+   64 FOR_ITER 128
+BLK@66..70 succ=[126, 72, 138] pred=[64]
+   66 STORE_FAST i
+   68 LOAD_FAST i
+   70 POP_JUMP_FORWARD_IF_FALSE 126
+BLK@72..74 succ=[138, 126, 76] pred=[66]
+   72 LOAD_FAST i
+   74 POP_JUMP_FORWARD_IF_FALSE 126
+BLK@76..76 succ=[78] pred=[122, 72]
+   76 NOP None
+BLK@78..86 succ=[90, 88] pred=[76]
+   78 LOAD_FAST i
+   80 LOAD_CONST 1
+   82 BINARY_OP 23
+   86 STORE_FAST i
+BLK@88..88 succ=[122, 138] pred=[78]
+   88 JUMP_FORWARD 122
+BLK@90..106 succ=[108, 114, 116] pred=[78]
+   90 PUSH_EXC_INFO None
+   92 LOAD_GLOBAL ValueError
+   104 CHECK_EXC_MATCH None
+   106 POP_JUMP_FORWARD_IF_FALSE 114
+BLK@108..108 succ=[116, 110] pred=[90]
+   108 POP_TOP None
+BLK@110..112 succ=[126, 138] pred=[108]
+   110 POP_EXCEPT None
+   112 JUMP_FORWARD 126
+BLK@114..114 succ=[116] pred=[90]
+   114 RERAISE 0
+BLK@116..120 succ=[138] pred=[90, 108, 114]
+   116 COPY 3
+   118 POP_EXCEPT None
+   120 RERAISE 1
+BLK@122..124 succ=[138, 126, 76] pred=[88]
+   122 LOAD_FAST i
+   124 POP_JUMP_BACKWARD_IF_TRUE 76
+BLK@126..126 succ=[64, 138] pred=[110, 122, 66, 72]
+   126 JUMP_BACKWARD 64
+BLK@128..136 succ=[320, 326] pred=[64]
+   128 POP_EXCEPT None
+   130 LOAD_CONST None
+   132 STORE_FAST e
+   134 DELETE_FAST e
+   136 JUMP_FORWARD 320
+BLK@138..144 succ=[314] pred=[34, 64, 88, 66, 72, 110, 116, 122, 126]
+   138 LOAD_CONST None
+   140 STORE_FAST e
+   142 DELETE_FAST e
+   144 RERAISE 1
+BLK@146..174 succ=[176, 312, 314] pred=[14]
+   146 LOAD_GLOBAL TypeError
+   158 LOAD_GLOBAL KeyError
+   170 BUILD_TUPLE 2
+   172 CHECK_EXC_MATCH None
+   174 POP_JUMP_FORWARD_IF_FALSE 312
+BLK@176..176 succ=[314, 178] pred=[146]
+   176 STORE_FAST e2
+BLK@178..204 succ=[206, 304] pred=[176]
+   178 LOAD_GLOBAL _A
+   190 PRECALL 0
+   194 CALL 0
+   204 BEFORE_WITH None
+BLK@206..228 succ=[230, 240, 272] pred=[178]
+   206 POP_TOP None
+   208 LOAD_FAST e2
+   210 LOAD_GLOBAL TypeError
+   222 LOAD_CONST ()
+   224 MATCH_CLASS 0
+   226 COPY 1
+   228 POP_JUMP_FORWARD_IF_NONE 240
+BLK@230..238 succ=[248, 272] pred=[206]
+   230 UNPACK_SEQUENCE 0
+   234 LOAD_CONST t
+   236 STORE_FAST R
+   238 JUMP_FORWARD 248
+BLK@240..246 succ=[248, 272] pred=[206]
+   240 POP_TOP None
+   242 NOP None
+   244 LOAD_CONST o
+   246 STORE_FAST R
+BLK@248..270 succ=[294, 304] pred=[230, 240]
+   248 LOAD_CONST None
+   250 LOAD_CONST None
+   252 LOAD_CONST None
+   254 PRECALL 2
+   258 CALL 2
+   268 POP_TOP None
+   270 JUMP_FORWARD 294
+BLK@272..276 succ=[286, 278, 280] pred=[206, 230, 240]
+   272 PUSH_EXC_INFO None
+   274 WITH_EXCEPT_START None
+   276 POP_JUMP_FORWARD_IF_TRUE 286
+BLK@278..278 succ=[280] pred=[272]
+   278 RERAISE 2
+BLK@280..284 succ=[304] pred=[286, 272, 278]
+   280 COPY 3
+   282 POP_EXCEPT None
+   284 RERAISE 1
+BLK@286..286 succ=[288, 280] pred=[272]
+   286 POP_TOP None
+BLK@288..292 succ=[294, 304] pred=[286]
+   288 POP_EXCEPT None
+   290 POP_TOP None
+   292 POP_TOP None
+BLK@294..302 succ=[320, 326] pred=[288, 248]
+   294 POP_EXCEPT None
+   296 LOAD_CONST None
+   298 STORE_FAST e2
+   300 DELETE_FAST e2
+   302 JUMP_FORWARD 320
+BLK@304..310 succ=[314] pred=[288, 248, 280, 178]
+   304 LOAD_CONST None
+   306 STORE_FAST e2
+   308 DELETE_FAST e2
+   310 RERAISE 1
+BLK@312..312 succ=[314] pred=[146]
+   312 RERAISE 0
+BLK@314..318 succ=[326] pred=[14, 32, 138, 146, 176, 304, 312]
+   314 COPY 3
+   316 POP_EXCEPT None
+   318 RERAISE 1
+BLK@320..324 succ=[340] pred=[294, 8, 128]
+   320 LOAD_CONST 9
+   322 STORE_FAST F
+   324 JUMP_FORWARD 340
+BLK@326..332 succ=[334] pred=[294, 8, 314, 128]
+   326 PUSH_EXC_INFO None
+   328 LOAD_CONST 9
+   330 STORE_FAST F
+   332 RERAISE 0
+BLK@334..338 succ=[] pred=[326]
+   334 COPY 3
+   336 POP_EXCEPT None
+   338 RERAISE 1
+BLK@340..342 succ=[] pred=[320]
+   340 LOAD_FAST X
+   342 RETURN_VALUE None
+=== regions ===
+REGION LoopRegion entry=72 blocks=[78, 88, 72, 76, 122] parent=IfRegion
+   header_block=76
+   body_blocks=[76, 78, 88, 122]
+   break_blocks=[]
+   condition_block=72
+   else_blocks=[]
+REGION LoopRegion entry=64 blocks=[34, 64, 66, 72, 88, 78, 76, 110, 108, 122, 126, 90] parent=TryExceptRegion
+   header_block=64
+   body_blocks=[64, 66, 72, 76, 78, 88, 90, 108, 110, 122, 126]
+   break_blocks=[]
+   else_blocks=[]
+REGION TryExceptRegion entry=78 blocks=[78, 110, 76, 90, 108, 114, 116, 138, 304, 312, 314, 326, 334] parent=TryExceptRegion
+   else_blocks=[]
+   finally_blocks=[]
+REGION TryExceptRegion entry=4 blocks=[0, 14, 32, 64, 66, 72, 76, 90, 108, 114, 116, 122, 126, 128, 138, 146, 176, 230, 240, 248, 272, 278, 280, 286, 294, 304, 312, 314, 320, 326, 334, 4, 8, 34, 78, 88, 110, 178, 206, 288] parent=None
+   else_blocks=[8]
+   finally_blocks=[326, 334]
+REGION WithRegion entry=178 blocks=[178, 206, 230, 240, 248, 272, 280, 304, 314, 326, 334] parent=TryExceptRegion
+   exit_block=294
+   with_blocks=[206, 230, 240]
+REGION MatchRegion entry=206 blocks=[230, 240, 248, 206] parent=None
+   merge_block=248
+REGION IfRegion entry=66 blocks=[78, 66, 88, 72, 76, 122] parent=LoopRegion
+   merge_block=126
+   condition_block=66
+   else_blocks=[]
+   then_blocks=[72, 76, 78, 88, 122]
+REGION Region entry=0 blocks=[0] parent=None
+REGION Region entry=340 blocks=[340] parent=None
+=== block_to_region ===
+blk@0 -> TryExceptRegion
+blk@4 -> TryExceptRegion
+blk@8 -> TryExceptRegion
+blk@14 -> TryExceptRegion
+blk@32 -> TryExceptRegion
+blk@34 -> TryExceptRegion
+blk@64 -> TryExceptRegion
+blk@66 -> TryExceptRegion
+blk@72 -> TryExceptRegion
+blk@76 -> TryExceptRegion
+blk@78 -> TryExceptRegion
+blk@88 -> TryExceptRegion
+blk@90 -> TryExceptRegion
+blk@108 -> TryExceptRegion
+blk@110 -> TryExceptRegion
+blk@114 -> TryExceptRegion
+blk@116 -> TryExceptRegion
+blk@122 -> TryExceptRegion
+blk@126 -> TryExceptRegion
+blk@128 -> TryExceptRegion
+blk@138 -> TryExceptRegion
+blk@146 -> TryExceptRegion
+blk@176 -> TryExceptRegion
+blk@178 -> TryExceptRegion
+blk@206 -> TryExceptRegion
+blk@230 -> TryExceptRegion
+blk@240 -> TryExceptRegion
+blk@248 -> TryExceptRegion
+blk@272 -> TryExceptRegion
+blk@278 -> TryExceptRegion
+blk@280 -> TryExceptRegion
+blk@286 -> TryExceptRegion
+blk@288 -> TryExceptRegion
+blk@294 -> TryExceptRegion
+blk@304 -> TryExceptRegion
+blk@312 -> TryExceptRegion
+blk@314 -> TryExceptRegion
+blk@320 -> TryExceptRegion
+blk@326 -> TryExceptRegion
+blk@334 -> TryExceptRegion
+blk@340 -> Region
+=== block roles ===
+blk@0 role=BlockRole.PURE_JUMP
+blk@4 role=BlockRole.TRY_BODY
+blk@8 role=BlockRole.TRY_ELSE
+blk@14 role=BlockRole.EXCEPT_HANDLER
+blk@32 role=BlockRole.EXCEPT_STORE
+blk@34 role=BlockRole.EXCEPT_STORE
+blk@64 role=BlockRole.LOOP_HEADER
+blk@66 role=BlockRole.LOOP_BODY
+blk@72 role=BlockRole.LOOP_CONDITION
+blk@76 role=BlockRole.LOOP_HEADER
+blk@78 role=BlockRole.LOOP_BODY
+blk@88 role=BlockRole.LOOP_BODY
+blk@90 role=BlockRole.LOOP_BODY
+blk@108 role=BlockRole.LOOP_BODY
+blk@110 role=BlockRole.LOOP_BODY
+blk@114 role=BlockRole.PURE_JUMP
+blk@116 role=BlockRole.RERAISE
+blk@122 role=BlockRole.LOOP_BACK_EDGE
+blk@126 role=BlockRole.LOOP_BACK_EDGE
+blk@128 role=BlockRole.EXCEPT_STORE
+blk@138 role=BlockRole.RERAISE
+blk@146 role=BlockRole.EXCEPT_HANDLER
+blk@176 role=BlockRole.EXCEPT_STORE
+blk@178 role=BlockRole.EXCEPT_STORE
+blk@206 role=BlockRole.EXCEPT_STORE
+blk@230 role=BlockRole.EXCEPT_STORE
+blk@240 role=BlockRole.EXCEPT_STORE
+blk@248 role=BlockRole.EXCEPT_STORE
+blk@272 role=BlockRole.NORMAL
+blk@278 role=BlockRole.TRY_BODY
+blk@280 role=BlockRole.TRY_BODY
+blk@286 role=BlockRole.TRY_BODY
+blk@288 role=BlockRole.TRY_BODY
+blk@294 role=BlockRole.EXCEPT_STORE
+blk@304 role=BlockRole.RERAISE
+blk@312 role=BlockRole.PURE_JUMP
+blk@314 role=BlockRole.RERAISE
+blk@320 role=BlockRole.NORMAL
+blk@326 role=BlockRole.FINALLY_BODY
+blk@334 role=BlockRole.FINALLY_BODY
+blk@340 role=BlockRole.RETURN

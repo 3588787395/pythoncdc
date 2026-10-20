@@ -1,0 +1,78 @@
+[
+ {
+  "name": "q2spec",
+  "pyc_src_rel": "@r6_q2_whilehost_spec.pyc",
+  "pyc_src_sha": "a8b51c9f28781cf6",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round6/r6_q2_whilehost_spec.pyc",
+  "mtime": "2026-10-20T17:09:40",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "0a1264da2aeaf4d4",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: r6_q2_whilehost_spec.pyc (Python 3.11)\n\ndef r6_q2_whilehost_spec(x):\n    while x:\n        if x:\n            one()\n        else:\n            two()\n            break\n        step()\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round6/r6_q2_whilehost_spec.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round6/r6_q2_whilehost_specOK.py\n[single] status=success units=2/2 success_rate=100.00%",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "q2ctl",
+  "pyc_src_rel": "@r6_q2_whilehost_ctl.pyc",
+  "pyc_src_sha": "70973d151d0c25bf",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round6/r6_q2_whilehost_ctl.pyc",
+  "mtime": "2026-10-20T17:09:42",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "b5580ab4bdf3de23",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: r6_q2_whilehost_ctl.pyc (Python 3.11)\n\ndef r6_q2_whilehost_ctl(x):\n    while x:\n        if x:\n            one()\n        else:\n            two()\n        step()\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round6/r6_q2_whilehost_ctl.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round6/r6_q2_whilehost_ctlOK.py\n[single] status=success units=2/2 success_rate=100.00%",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ },
+ {
+  "name": "g2spec",
+  "pyc_src_rel": "@r6_g2_hdrbreak_spec.pyc",
+  "pyc_src_sha": "31dab4661174a5d8",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round6/r6_g2_hdrbreak_spec.pyc",
+  "mtime": "2026-10-20T17:09:43",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "daec571a2b69879e",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: r6_g2_hdrbreak_spec.pyc (Python 3.11)\n\ndef r6_g2_hdrbreak_spec(cond, q, status):\n    pass\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.r6_g2_hdrbreak_spec: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round6/r6_g2_hdrbreak_spec.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round6/r6_g2_hdrbreak_specOK.py\n[single] status=failure units=1/2 success_rate=50.00%",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>.r6_g2_hdrbreak_spec: Failure: Different control flow"
+  ]
+ },
+ {
+  "name": "g2ctl",
+  "pyc_src_rel": "@r6_g2_hdrbreak_ctl.pyc",
+  "pyc_src_sha": "fe1d3a9ce489a88c",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round6/r6_g2_hdrbreak_ctl.pyc",
+  "mtime": "2026-10-20T17:09:44",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "694ec769bc8a0fb7",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: r6_g2_hdrbreak_ctl.pyc (Python 3.11)\n\ndef r6_g2_hdrbreak_ctl(cond, q, status):\n    nap(1)\n",
+  "verify_rc": 1,
+  "verify_out": "***<module>.r6_g2_hdrbreak_ctl: Failure: Different control flow\n[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round6/r6_g2_hdrbreak_ctl.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round6/r6_g2_hdrbreak_ctlOK.py\n[single] status=failure units=1/2 success_rate=50.00%",
+  "status": "failure",
+  "units_success": 1,
+  "units_total": 2,
+  "failures": [
+   "***<module>.r6_g2_hdrbreak_ctl: Failure: Different control flow"
+  ]
+ }
+]

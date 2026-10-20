@@ -1,0 +1,71 @@
+{
+ "type": "FunctionDef",
+ "name": "if_in_while",
+ "args": {
+  "type": "arguments",
+  "posonlyargs": [],
+  "args": [],
+  "vararg": null,
+  "kwonlyargs": [],
+  "kw_defaults": [],
+  "kwarg": null,
+  "defaults": []
+ },
+ "body": [
+  {
+   "type": "While",
+   "test": {
+    "type": "Constant",
+    "value": false
+   },
+   "body": [
+    {
+     "type": "Pass"
+    }
+   ]
+  },
+  {
+   "type": "While",
+   "test": {
+    "type": "Constant",
+    "value": false
+   },
+   "body": [
+    {
+     "type": "Pass"
+    }
+   ]
+  },
+  {
+   "type": "While",
+   "test": {
+    "type": "Constant",
+    "value": true
+   },
+   "body": [
+    {
+     "type": "Expr",
+     "value": {
+      "type": "Assign",
+      "targets": [
+       {
+        "type": "Name",
+        "id": "R",
+        "ctx": "Store",
+        "lineno": null
+       }
+      ],
+      "value": {
+       "type": "Constant",
+       "value": 1,
+       "lineno": 16
+      },
+      "lineno": null
+     }
+    }
+   ]
+  }
+ ],
+ "decorator_list": [],
+ "returns": null
+}
