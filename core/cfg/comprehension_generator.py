@@ -2225,7 +2225,26 @@ class ComprehensionGenerator:
                         _cc_compare = {'type': 'Compare', 'left': _cc_left,
                                        'ops': _cc_ops, 'comparators': _cc_comps}
                         ifs = [_cc_compare]
-                        elt_start_idx = segments[_cc_chain_end][1] + 1
+                        _cc_after_idx = segments[_cc_chain_end][1] + 1
+                        elt_start_idx = _cc_after_idx
+                        # [B151-V3R7] 链式比较之后仍有过滤项时的续解析。
+                        # 旧行为在此直接 return，把链式比较之后的过滤项
+                        # （`if 0 < x < lim and (flag or x % 2)` 的后半段）
+                        # 整段丢弃——推导式只剩 `0 < x < lim`，语义与控制流
+                        # 双错。归约方式：沿链式比较的真值续接点继续解析
+                        # 后续过滤项并以 'and' 串联（详见
+                        # _b151_parse_comp_filter_terms /
+                        # _b151_compose_comp_filter_terms 的六项 docstring）。
+                        # 无后续项或解析失败时逐位沿用旧结果（C3 封闭）。
+                        _b151_tail = self._b151_parse_comp_filter_terms(
+                            all_instrs, _cc_after_idx,
+                            segments[-1][1] + 1 if segments else _cc_after_idx)
+                        if _b151_tail is not None:
+                            _b151_expr = self._b151_compose_comp_filter_terms(
+                                _b151_tail)
+                            if _b151_expr is not None:
+                                ifs = [{'type': 'BoolOp', 'op': 'and',
+                                        'values': [_cc_compare, _b151_expr]}]
                         return ifs, elt_start_idx
 
             # [R10] Detect OR-filter pattern: FORWARD IF_TRUE segment followed by
@@ -2409,6 +2428,210 @@ class ComprehensionGenerator:
                     ifs = [result]
 
         return ifs, elt_start_idx
+
+    @staticmethod
+    def _b151_filter_stack_effect(instr) -> tuple:
+        """[B151-V3R7] 过滤项表达式反扫用的 (push, pop) 栈效应表。
+
+        ①算法依据：CPython 值栈纪律——表达式指令序列的净效果必须与
+        「条件跳转弹出 1 个值」对齐；反扫时以 needed=1 为起点逐条回退，
+        needed 首次 <= 0 处即该条件表达式的起点。
+        ②归约顺序：_b151_parse_comp_filter_terms 的反扫循环调用。
+        ③唯一归属判定：只按 opcode 族给表（LOAD_* 压 1；LOAD_ATTR/
+        LOAD_METHOD 压 1 弹 1；COMPARE_OP/IS_OP/CONTAINS_OP/BINARY_OP/
+        BINARY_SUBSCR 压 1 弹 2；UNARY_* 压 1 弹 1；BUILD_* 压 1 弹 arg；
+        FORMAT_VALUE 压 1 弹 1 或 2；CALL 压 1 弹 arg+1；PRECALL/POP_TOP
+        净 0；其余保守记 0）。
+        ④嵌套处理：不涉及嵌套。
+        ⑤AST 映射接口：返回 (push, pop) 二元组。
+        ⑥反编译流程：仅供反扫定位表达式起点，不参与表达式本身的归约
+        （表达式仍由 expr_reconstructor.reconstruct 生成）。
+        [C1] 只读 opcode 族与 arg，不读文件名/偏移阈/条数上限；
+        [C2] 纯静态表，无跨方法状态；[C3] 未列出的 opcode 保守记 0。
+        """
+        op = instr.opname
+        if op in ('LOAD_ATTR', 'LOAD_METHOD'):
+            return 1, 1
+        if op.startswith('LOAD_') or op == 'COPY':
+            return 1, 0
+        if op in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP',
+                  'BINARY_OP', 'BINARY_SUBSCR'):
+            return 1, 2
+        if op.startswith('UNARY_'):
+            return 1, 1
+        if op == 'FORMAT_VALUE':
+            return 1, 1 if (instr.arg or 0) < 2 else 2
+        if op == 'BUILD_STRING':
+            return 1, instr.arg or 0
+        if op == 'BUILD_CONST_KEY_MAP':
+            return 1, (instr.arg or 0) + 1
+        if op.startswith('BUILD_'):
+            return 1, instr.arg or 0
+        if op in ('PRECALL', 'POP_TOP'):
+            return 0, 0
+        if op == 'CALL':
+            return 1, (instr.arg or 0) + 1
+        return 0, 0
+
+    def _b151_parse_comp_filter_terms(self, all_instrs: List[Instruction],
+                                      start_idx: int,
+                                      end_idx: int) -> Optional[List[tuple]]:
+        """[B151-V3R7] 推导式过滤链的「项」级解析（链式比较之后的续段）。
+
+        ①算法依据：CPython 3.11 把推导式过滤条件编译成若干「项」：一段
+        表达式指令 + 一条条件跳转。项的跳转极性决定它在过滤链里的角色：
+          - POP_JUMP_FORWARD_IF_TRUE（真→前向跳过本 or 组）：or 组成员；
+          - POP_JUMP_FORWARD/BACKWARD_IF_FALSE（假→跳过本轮）：and 项，
+            同时是它所属 or 组的最后一个成员。
+        链式比较（`a < b < c`）的真值续接点是「比较链之后那条 JUMP_FORWARD
+        的目标」——它跳过比较链的假值清理块（POP_TOP + JUMP_FORWARD），
+        直接落到下一个过滤项的首条指令。
+        ②归约顺序：_extract_comp_ifs 的链式比较分支在 early-return 之前
+        调用；返回 None 表示「无后续项 / 形态不可判定」。
+        ③唯一归属判定（全套 I.4 白名单）：
+          (a) 续接点：start_idx 处若为 JUMP_FORWARD/JUMP_ABSOLUTE，则以其
+              argval（目标偏移）为续接偏移；否则以 start_idx 处的指令偏移
+              为续接偏移；目标偏移必须能在指令流中定位到下标。
+          (b) 项边界：续接下标之后的第一条 CONDITIONAL_JUMP_OPS 指令为该
+              项的判定跳转；该项的表达式指令由该跳转**反扫**确定（needed=1
+              起步回退，needed 首次 <= 0 处为表达式起点），反扫下界不越过
+              续接下标（不跨入前一项）。
+          (c) 表达���可重建：反扫得到的指令子序列必须能被
+              expr_reconstructor.reconstruct 归约成表达式节点，否则整体放弃。
+          (d) 链尾：反扫/扫描下界为 end_idx（元素表达式的起点），不把元素
+              表达式误当作过滤项。
+        ④嵌套处理：不展开子区域；只读同一 code object 的指令流。
+        ⑤AST 映射接口：返回 list[(expr_dict, jump_instr, expr_start_offset)]
+        或 None（不可判定）。
+        ⑥反编译流程：仅在链式比较分支被调用；返回 None 时调用方逐位沿用
+        旧结果（C3 封闭）。
+        [C1] 只读同层指令流的 opcode/argval/offset，不读文件名/函数名/
+        偏移阈/条数上限；[C2] 不新增跨块跨方法状态；[C3] 上述四条判据任一
+        不成立即返回 None。
+        """
+        if start_idx >= end_idx or start_idx >= len(all_instrs):
+            return None
+        cont_idx = start_idx
+        _first = all_instrs[start_idx]
+        if _first.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+            _tgt = _first.argval
+            if not isinstance(_tgt, int):
+                return None
+            _found = None
+            for _k in range(start_idx + 1, len(all_instrs)):
+                if all_instrs[_k].offset == _tgt:
+                    _found = _k
+                    break
+            if _found is None:
+                return None
+            cont_idx = _found
+        if cont_idx >= end_idx:
+            return None
+        terms: List[tuple] = []
+        idx = cont_idx
+        while idx < end_idx:
+            j = None
+            k = idx
+            while k < end_idx:
+                if all_instrs[k].opname in CONDITIONAL_JUMP_OPS:
+                    j = k
+                    break
+                k += 1
+            if j is None:
+                break
+            needed = 1
+            s = None
+            for t in range(j - 1, idx - 1, -1):
+                _push, _pop = self._b151_filter_stack_effect(all_instrs[t])
+                needed = needed - _push + _pop
+                if needed <= 0:
+                    s = t
+                    break
+            if s is None:
+                return None
+            _expr = self.expr_reconstructor.reconstruct(all_instrs[s:j])
+            if not _expr:
+                return None
+            terms.append((_expr, all_instrs[j], all_instrs[s].offset))
+            idx = j + 1
+        if not terms:
+            return None
+        return terms
+
+    def _b151_compose_comp_filter_terms(self, terms: List[tuple]
+                                        ) -> Optional[Dict[str, Any]]:
+        """[B151-V3R7] 把解析出的过滤项组合成单一过滤表达式。
+
+        ①算法依据：CPython 过滤链的求值语义——项按顺序求值，任一项为假
+        即跳过本轮；一个「or 组」的成员是「真→前向跳过本组剩余成员」的
+        项（POP_JUMP_FORWARD_IF_TRUE）与其后第一个「假→跳过本轮」的项。
+        由此可判定的组合规则：
+          (a) 一个 POP_JUMP_FORWARD_IF_TRUE 项开启一个 or 组；
+          (b) 该 or 组的范围：从该项起，到「其跳转目标是某个后续项的
+              表达式起点偏移」之前为止（这正是显式括号 `(A or B) and C`
+              的形态——A 的真边直连 C 的检查起点）；若其跳转目标不是任何
+              后续项的起点，则该 or 组延伸到过滤链末尾（`A or B and C`：
+              A 的真边直连元素产出点，or 组右操作数是 `B and C`）；
+          (c) or 组内：连续的 POP_JUMP_FORWARD_IF_TRUE 成员是 or 成员
+              （`A or B or C`），其后余下的项以 'and' 组合成 or 组的最后
+              一个操作数；
+          (d) or 组之外的项以 'and' 串联成过滤链。
+        ②归约顺序：_b151_parse_comp_filter_terms 之后调用；输入 None 时
+        调用方逐位沿用旧结果。
+        ③唯一归属判定（全套 I.4 白名单）：只读解析出的项元组（表达式、
+        条件跳转 opcode/argval、表达式起点偏移）——即同层指令流的结构事实；
+        不读文件名/函数名/偏移阈/条数上限。
+        ④嵌套处理：项内表达式已由 expr_reconstructor 归约完毕，本方法只
+        做 BoolOp 组合，不窥视表达式内部。
+        ⑤AST 映射接口：返回单个表达式节点（BoolOp(and, [...]) 或其成员
+        之一）；无法组合时返回 None。
+        ⑥反编译流程：仅在链式比较分支被调用；None 时调用方沿用旧结果。
+        [C1] 只读项元组；[C2] 不新增跨块跨方法状态；[C3] 组合规则逐条
+        封闭，未命中即返回 None。
+        """
+        if not terms:
+            return None
+
+        def _is_or_head(jump) -> bool:
+            return ('FORWARD' in jump.opname
+                    and 'IF_TRUE' in jump.opname)
+
+        n = len(terms)
+        and_items: List[Dict[str, Any]] = []
+        i = 0
+        while i < n:
+            _expr, _jump, _start = terms[i]
+            if not _is_or_head(_jump):
+                and_items.append(_expr)
+                i += 1
+                continue
+            # or 组：从当前项起，到「跳转目标是某个后续项起点」之前
+            grp: List[tuple] = []
+            j = i
+            tgt = _jump.argval
+            while j < n:
+                grp.append(terms[j])
+                j += 1
+                if j < n and isinstance(tgt, int) and terms[j][2] == tgt:
+                    break
+            last_true = -1
+            for q, (_e2, _j2, _s2) in enumerate(grp):
+                if _is_or_head(_j2):
+                    last_true = q
+            or_members = [grp[q][0] for q in range(0, last_true + 1)]
+            trailing = [grp[q][0] for q in range(last_true + 1, len(grp))]
+            if trailing:
+                final = ({'type': 'BoolOp', 'op': 'and', 'values': trailing}
+                         if len(trailing) > 1 else trailing[0])
+                or_expr = {'type': 'BoolOp', 'op': 'or',
+                           'values': or_members + [final]}
+            else:
+                or_expr = {'type': 'BoolOp', 'op': 'or', 'values': or_members}
+            and_items.append(or_expr)
+            i = j
+        if len(and_items) > 1:
+            return {'type': 'BoolOp', 'op': 'and', 'values': and_items}
+        return and_items[0]
 
     def _extract_dict_comp_key_before_ternary(self, all_instrs: List[Instruction],
                                                store_idx: int,

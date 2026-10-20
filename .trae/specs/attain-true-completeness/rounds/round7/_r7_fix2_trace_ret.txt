@@ -1,0 +1,116 @@
+=== AST ===
+  _r2188_tail_ownership_prepass -> None
+  _consume_top_level_async_protocol_if -> False
+  _consume_try_arm_finally_copy_if -> False
+  _try_build_b78_nested_ternary_host -> None
+  _try_emit_assert_from_if_region -> None
+  _generate_value_context_chain_compare_assign -> None
+  _detect_if_region_as_while_loop -> None
+  _try_build_value_diamond_return -> None
+  _boolop_merge_owner_for -> None
+  _boolop_merge_owner_for -> None
+  _boolop_merge_owner_for -> None
+  _if_extract_cond_instructions -> ([], [Instruction(2: LOAD_FAST 3)])
+  _try_build_await_condition -> None
+  _then_entry_offsets_excluding_connectors -> {10, 6}
+  _convert_lambda_function_objects -> {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 31}
+  _if_extract_condition_from_instructions -> {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 31}
+  _discover_predicate_and_chain -> None
+  _r2192_elif_chained_compare_tail -> None
+  _r2188_and_prefix_or_tail -> None
+  _expr_child_blocked_by_structural_sibling -> False
+  _is_statement_reduction_entry -> False
+  _has_boolop_tail_value_boundary -> False
+  _try_build_keeppop_target_grouped -> None
+  _build_boolop_skipedge_grouped -> None
+  _detect_boolop_grouping -> (False, None, [])
+  _try_build_and_inner_or_pattern -> None
+  _boolop_mixed_polarity_or_chain -> None
+  _try_build_nested_ternary_in_boolop -> None
+  _try_build_chained_compare_in_boolop -> None
+  _try_build_chained_compare_in_boolop -> None
+  _try_build_nested_ternary_in_boolop -> None
+  _try_build_chained_compare_in_boolop -> None
+  _build_boolop_expression_inner -> {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}
+  _graft_pending_operand -> {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}
+  _build_boolop_expression -> {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}
+  _generate_boolop_impl -> [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}]
+  _generate_boolop -> [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}]
+  _process_if_blocks -> [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}]
+  _if_generate_then_branch -> [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}]
+  _process_if_blocks -> []
+  _has_boolop_tail_value_boundary -> False
+  _try_build_keeppop_target_grouped -> None
+  _build_boolop_skipedge_grouped -> None
+  _detect_boolop_grouping -> (False, None, [])
+  _try_build_and_inner_or_pattern -> None
+  _boolop_mixed_polarity_or_chain -> None
+  _try_build_nested_ternary_in_boolop -> None
+  _try_build_walrus_chained_compare -> None
+  _try_build_literal_middle_from_blocks -> None
+  _try_build_literal_middle_chained_compare -> None
+  _try_build_method_call_chained_compare -> None
+  _try_build_call_middle_from_blocks -> None
+  _try_build_call_middle_chained_compare -> None
+  _try_build_attr_middle_from_blocks -> None
+  _try_build_attr_middle_chained_compare -> None
+  _try_build_complex_operand_chained_compare_from_blocks -> None
+  _try_build_ternary_operand_chained_compare -> None
+  _build_chained_compare_from_region_data -> {'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}
+  _try_build_chained_compare_in_boolop -> {'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}
+  _try_build_chained_compare_in_boolop -> None
+  _try_build_nested_ternary_in_boolop -> None
+  _try_build_walrus_chained_compare -> None
+  _try_build_literal_middle_from_blocks -> None
+  _try_build_literal_middle_chained_compare -> None
+  _try_build_method_call_chained_compare -> None
+  _try_build_call_middle_from_blocks -> None
+  _try_build_call_middle_chained_compare -> None
+  _try_build_attr_middle_from_blocks -> None
+  _try_build_attr_middle_chained_compare -> None
+  _try_build_complex_operand_chained_compare_from_blocks -> None
+  _try_build_ternary_operand_chained_compare -> None
+  _build_chained_compare_from_region_data -> {'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}
+  _try_build_chained_compare_in_boolop -> {'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}
+  _build_boolop_expression_inner -> {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}
+  _graft_pending_operand -> {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}
+  _build_boolop_expression -> {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}
+  _generate_boolop_impl -> [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}}]
+  _generate_boolop -> [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}}]
+  _generate_region -> [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}}]
+  _if_generate_else_branch -> [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}}]
+  _merge_block_is_then_exclusive -> False
+  _cond_block_branch_targets -> (BasicBlock(5, offset=14-28, instrs=6), BasicBlock(2, offset=6-8, instrs=2))
+  _r2121_shared_tail_sinks -> (None, None)
+  _if_generate_normal -> {'type': 'If', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 31}, 'body': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}], 'orelse': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}}]}
+  _generate_if -> {'type': 'If', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 31}, 'body': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}], 'orelse': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}}]}
+  _generate_region -> {'type': 'If', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 31}, 'body': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}], 'orelse': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}}]}
+  _normalize_stmt_node -> {'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}
+  _normalize_stmt_lists -> [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}]
+  _normalize_stmt_node -> {'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}}
+  _normalize_stmt_lists -> [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}}]
+  _normalize_stmt_node -> {'type': 'If', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 31}, 'body': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}], 'orelse': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}}]}
+  _normalize_stmt_lists -> [{'type': 'If', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 31}, 'body': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}], 'orelse': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}}]}]
+  _convert_lambda_function_objects -> {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 31}
+  _convert_lambda_function_objects -> {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}
+  _convert_lambda_function_objects -> {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}
+  _convert_lambda_function_objects -> {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}
+  _convert_lambda_function_objects -> {'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}
+  _convert_lambda_function_objects -> {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}
+  _convert_lambda_function_objects -> {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}
+  _convert_lambda_function_objects -> {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}
+  _convert_lambda_function_objects -> {'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}
+  _convert_lambda_function_objects -> {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}
+  _convert_lambda_function_objects -> {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}
+  _convert_lambda_function_objects -> {'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}}
+  _convert_lambda_function_objects -> {'type': 'If', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 31}, 'body': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}], 'orelse': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}}]}
+  _detect_docstring_statement -> None
+  _extract_function_args -> {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'a'}, {'type': 'arg', 'arg': 'b'}, {'type': 'arg', 'arg': 'c'}, {'type': 'arg', 'arg': 'flag'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}
+  _is_trailing_return_none_statement -> False
+  _build_function_def -> {'type': 'FunctionDef', 'name': 'h_return_composite', 'args': {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'a'}, {'type': 'arg', 'arg': 'b'}, {'type': 'arg', 'arg': 'c'}, {'type': 'arg', 'arg': 'flag'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}, 'body': [{'type': 'If', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 31}, 'body': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}]}}], 'orelse': [{'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'or', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}]}, {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': None}]}}]}], 'decorator_list': [], 'returns': None}
+=== SOURCE ===
+def h_return_composite(a, b, c, flag):
+    if flag:
+        return a and b
+    else:
+        return a < b < c or flag

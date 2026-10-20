@@ -8747,6 +8747,102 @@ condition_block/else_blocks 集合成员、前驱集合、异常边、try_offset
             seen.add(cur)
         return False
 
+    def _b144_break_only_target(self, source: BasicBlock, target: BasicBlock,
+                                fall_through: Optional[BasicBlock],
+                                back_edge_sources: List[BasicBlock],
+                                body_set: Set[BasicBlock]) -> bool:
+        """[B144-V3R7] 独占可达的 break 落点识别（for-else 体以 raise/return 收尾形态）。
+
+        ①算法依据：CPython 3.11 的 for 循环 `break` 编译为「迭代器清理
+        POP_TOP + 无条件前向跳转」，落点是**整个 for 语句之后**的代码块。
+        当 for-else 的 else 体以 raise/return 收尾（不向后 fall-through）时，
+        该落点既不在 FOR_ITER 耗尽出口的可达集（_exit_reachable）内，也
+        不是「循环体内 if 分支汇合块」（那类块可经 else 臂自 fall_through
+        直接到达）。唯一可判定的结构事实是：落点**仅经由本条 (source →
+        target) 无条件跳转边**可达，且落点**不可达任一回边源**——后者等价
+        「落点在循环体外」。两条合取成立时，target 必为 break 落点。
+        ②归约顺序：_collect_natural_loop_body 的 break 目标收集循环内调用；
+        仅在既有三条析取项之后**追加**一条（不改既有判据），命中块登记为
+        _break_targets 屏障，循环体收集随即排除该落点及其后继（原则 2
+        每块唯一归属）。
+        ③唯一归属判定（全部 I.4 白名单）：
+          (a) source 末条指令为无条件前向跳转（JUMP_FORWARD/JUMP_ABSOLUTE）
+              且其 argval 指向 target（跳转极性：前向 + 无条件）；
+          (a2) 紧邻该跳转的前一条指令为 POP_TOP——CPython 3.11 的 for 循环
+              `break` 签名（迭代器清理 POP_TOP + 无条件前向跳转）；无此前缀
+              的无条件前向跳转是**别的**控制流（如链式比较的真值路径跳到
+              `return` 块），不是 break（scheduler.pyc
+              is_run_interval_time_now 形态：比较链真值边 JUMP_FORWARD →
+              [POP_TOP, LOAD_CONST True, RETURN_VALUE] 块，该块是循环体内
+              的 return，不是 break 落点）。
+          (b) 去掉 (source → target) 这条边后，target 自 fall_through 不再
+              可达（可达集在 CFG **正常边**上 BFS，异常边不参与扩张）；
+          (c) target 正向不可达任一 back_edge_source（回边源集合取自
+              loop_analyzer.back_edges）——不可达 ⇒ target 在循环体外。
+        ④嵌套处理：不展开任何子区域；只读本层 CFG 块对象与回边源集合。
+        ⑤AST 映射接口：返回布尔值；命中时 target 进入 _break_targets，
+        _detect_break_continue 随后把该落点登记为 break_blocks，
+        LoopRegion.has_break=True，生成器据此保留 for 的 Break 与 orelse，
+        并把落点块归还给循环后的顺序代码。
+        ⑥反编译流程：仅在 for 循环体收集阶段调用；不命中返回 False，既有
+        行为逐位不变（C3 封闭）。[C1] 只读块自身末条 opcode/argval、CFG
+        正常后继可达性与回边源集合（同层结构事实），不读文件名/函数名/
+        偏移阈值/条数上限；[C2] 不新增跨层/跨方法状态；[C3] 守卫面仅
+        「落点独占可达且不可达回边源」这一形态，未命中时逐位不变。
+        """
+        if source is None or target is None or fall_through is None:
+            return False
+        _last = source.get_last_instruction()
+        if (_last is None
+                or _last.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                or _last.argval is None):
+            return False
+        if self.cfg.get_block_by_offset(_last.argval) is not target:
+            return False
+        if target in body_set:
+            return False
+        # (a2) CPython for-break 签名：跳转前紧邻的指令必须是迭代器清理
+        # POP_TOP。无此前缀的无条件前向跳转属别的控制流（比较链真值路径
+        # 跳到循环体内的 return 块等），不得判为 break 落点。
+        _sib = source.instructions[-2] if len(source.instructions) >= 2 else None
+        if _sib is None or _sib.opname != 'POP_TOP':
+            return False
+        # (b) 去掉 (source → target) 边后，target 自 fall_through 不可达
+        _visited = {fall_through}
+        _queue = [fall_through]
+        while _queue:
+            _cur = _queue.pop(0)
+            _cur_exc = getattr(_cur, 'exception_successors', None) or ()
+            for _succ in _cur.successors:
+                if _cur is source and _succ is target:
+                    continue
+                if _succ in _cur_exc:
+                    continue
+                if _succ in _visited:
+                    continue
+                _visited.add(_succ)
+                _queue.append(_succ)
+        if target in _visited:
+            return False
+        # (c) target 正向不可达任一回边源
+        if not back_edge_sources:
+            return False
+        _be_set = set(back_edge_sources)
+        _seen = {target}
+        _q2 = [target]
+        while _q2:
+            _cur = _q2.pop(0)
+            if _cur in _be_set:
+                return False
+            _cur_exc = getattr(_cur, 'exception_successors', None) or ()
+            for _succ in _cur.successors:
+                if _succ in _cur_exc:
+                    continue
+                if _succ in _seen:
+                    continue
+                _seen.add(_succ)
+                _q2.append(_succ)
+        return True
 
     def _collect_natural_loop_body(self, header: BasicBlock,
                                     back_edge_sources: List[BasicBlock],
@@ -8824,7 +8920,16 @@ condition_block/else_blocks 集合成员、前驱集合、异常边、try_offset
                                 # 一条无条件前向跳转）。①②仍在前，判据互不遮蔽。
                                 if (_bt in _exit_reachable
                                         or _bt not in _fwd_candidates
-                                        or _r20_is_break_stub_block(_bb)):
+                                        or _r20_is_break_stub_block(_bb)
+                                        # [B144-V3R7] 独占可达的 break 落点：
+                                        # for-else 体以 raise/return 收尾时，
+                                        # 落点既不在耗尽出口可达集内，又非体
+                                        # 内汇合块（仅经本条无条件跳转边可达
+                                        # 且不可达回边源）——见
+                                        # _b144_break_only_target。
+                                        or self._b144_break_only_target(
+                                            _bb, _bt, fall_through,
+                                            back_edge_sources, body)):
                                     _break_targets.add(_bt)
                 # [R102 for-else fix] 区域归约算法原则 2（每块唯一归属）：
                 # break 目标块是循环出口之后的代码（如 for-else 之后的 if-else

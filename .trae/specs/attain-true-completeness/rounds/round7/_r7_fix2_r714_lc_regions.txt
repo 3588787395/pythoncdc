@@ -1,0 +1,22 @@
+co_name=h_listcomp_filter_composite varnames=('xs', 'lim', 'flag')
+=== CFG blocks ===
+BLK@0..34 succ=[] pred=[]
+   0 MAKE_CELL lim
+   2 MAKE_CELL flag
+   4 RESUME 0
+   6 LOAD_CLOSURE flag
+   8 LOAD_CLOSURE lim
+   10 BUILD_TUPLE 2
+   12 LOAD_CONST <code object <listcomp> at 0x0000016F07B97330, file "r7_14_boolop_deep_host.py", line 17>
+   14 MAKE_FUNCTION 8
+   16 LOAD_FAST xs
+   18 GET_ITER None
+   20 PRECALL 0
+   24 CALL 0
+   34 RETURN_VALUE None
+=== regions ===
+REGION Region entry=0 blocks=[0] parent=None
+=== block_to_region ===
+blk@0 -> Region
+=== block roles ===
+blk@0 role=BlockRole.RETURN

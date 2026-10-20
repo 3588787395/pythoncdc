@@ -6,8 +6,10 @@ def r8_dh_for_else_del(xs):
     for i, v in enumerate(xs):
         if v is None:
             del xs[i]
-        return xs
-    raise ValueError('no None')
+            break
+    else:
+        raise ValueError('no None')
+    return xs
 def r8_dh_try_finally_return(n):
     try:
         if n > 0:
@@ -25,6 +27,7 @@ def r8_dh_while_assign_chain(xs):
     return out
 def r8_dh_with_assert(path):
     with open(path) as fh:
+        data = fh.read()
         assert data, 'empty file'
     return data
 def r8_dh_match_multi(x):

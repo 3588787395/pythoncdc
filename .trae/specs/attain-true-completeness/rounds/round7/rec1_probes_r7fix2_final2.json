@@ -1,0 +1,38 @@
+[
+ {
+  "name": "e07",
+  "pyc_src_rel": "test_repros/round3/e07_g4_star_slice_containers.pyc",
+  "pyc_src_sha": "35e59c2e94946266",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round7/rec1_e07_e07_g4_star_slice_containers.pyc",
+  "mtime": "2026-10-20T22:08:39",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "09e30e8e40b473fc",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_e07_e07_g4_star_slice_containers.pyc (Python 3.11)\n\ndef f_star_call(a, rest, kw):\n    def sink(x, *rs, flag=False, **ks):\n        return x + sum(rs) + (1 if flag else 0) + len(ks)\n    for i in range(3):\n        if i and i:\n            return sink(a, *rest, flag=True, **(kw))\n    return 0\ndef f_star_call_mixed(a, rest, kw):\n    def sink(x, y, *rs, z=1, **ks):\n        return x + y + sum(rs) + z + len(ks)\n    for i in range(3):\n        if i and i:\n            return sink(a, 2, *rest, z=3, **(kw))\n    return 0\ndef f_star_assign(xs):\n    for i in range(3):\n        if i and i:\n            a, *b = xs\n            return (a, b)\n    return 0\ndef f_star_assign_head(xs):\n    for i in range(3):\n        if i and i:\n            *a, b = xs\n            return (a, b)\n    return 0\ndef f_star_assign_mid(xs):\n    for i in range(3):\n        if i and i:\n            a, *b, c = xs\n            return (a, b, c)\n    return 0\ndef f_slice_nested_sub(m, i, j):\n    for k in range(3):\n        if k and k:\n            return m[i:j, k] + m[1:2, 3]\n    return 0\ndef f_slice_steps(xs, w):\n    for i in range(3):\n        if i and i:\n            return xs[::-1] + xs[::w] + xs[1:-1:2]\n    return 0\ndef f_slice_expr_bounds(xs, a, b):\n    for i in range(3):\n        if i and i:\n            return xs[a + 1:b * 2] + xs[a if b else 0:3]\n    return 0\ndef f_container_nest3(d):\n    for i in range(3):\n        if i and i:\n            return {'a': [1, (2, {3, 4})], 'b': {'c': [5, 6]}}[d]\n    return 0\ndef f_container_mixed(a, b):\n    for i in range(3):\n        if i and i:\n            return ([a, (b, [a])], {a: {b: [1, 2]}}, {a, (b,)})\n    return 0\ndef f_subscript_deep(m, i, j):\n    for k in range(3):\n        if k and k:\n            return m[i][j][k] + m[i][j:k]\n    return 0\ndef f_tuple_in_call(a, b, c):\n    def sink(t):\n        return sum(t)\n    for i in range(3):\n        if i and i:\n            return sink((a, b, c)) + sink([a, b])\n    return 0\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round7/rec1_e07_e07_g4_star_slice_containers.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round7/rec1_e07_e07_g4_star_slice_containersOK.py\n[single] status=success units=16/16 success_rate=100.00%",
+  "status": "success",
+  "units_success": 16,
+  "units_total": 16,
+  "failures": []
+ },
+ {
+  "name": "r714",
+  "pyc_src_rel": "test_repros/round7/r7_14_boolop_deep_host.pyc",
+  "pyc_src_sha": "415d31312d6f7fb3",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round7/rec1_r714_r7_14_boolop_deep_host.pyc",
+  "mtime": "2026-10-20T22:08:40",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "f7998a9277475420",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_r714_r7_14_boolop_deep_host.pyc (Python 3.11)\n\n__doc__ = 'R7-14 复合条件深层宿主面（BoolOp+三元+链式比较在 if/while/推导式过滤）。'\ndef h_if_composite(a, b, c, d, flag):\n    if a < b < c:\n        if flag and d:\n            return 1\n    return 0\ndef h_while_composite(n, a, b, flag):\n    while n > 0 and (a < b or flag):\n        n -= 1\n    return n\ndef h_listcomp_filter_composite(xs, lim, flag):\n    return [x for x in xs if 0 < x < lim and (flag or x % 2)]\ndef h_if_ternary_chain_composite(a, b, c, flag):\n    if (a if flag else b < c):\n        return 't'\n    return 'f'\ndef h_for_filter_and_ternary(xs, flag):\n    return [x if flag else -x for x in xs if x and flag]\ndef h_return_composite(a, b, c, flag):\n    return a and b if flag else a < b < c or flag\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round7/rec1_r714_r7_14_boolop_deep_host.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round7/rec1_r714_r7_14_boolop_deep_hostOK.py\n[single] status=success units=9/9 success_rate=100.00%",
+  "status": "success",
+  "units_success": 9,
+  "units_total": 9,
+  "failures": []
+ }
+]

@@ -1,0 +1,15 @@
+=== AST ===
+  _find_async_clause_heads -> []
+  _find_comp_target_names -> 'x'
+  _parse_target_store_sequence -> ({'type': 'Name', 'id': 'x', 'ctx': 'Store'}, 6)
+  _build_comprehension_target -> {'type': 'Name', 'id': 'x', 'ctx': 'Store'}
+  _find_comp_append_op -> ('LIST_APPEND', 25)
+  _find_comp_append_op -> ('STORE', 5)
+  _detect_comp_ternary_as_filter -> None
+  _detect_comp_ternary -> None
+  _extract_comp_ifs -> ([{'type': 'Compare', 'left': {'type': 'Constant', 'value': 0, 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'x', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'lim', 'ctx': 'Load', 'lineno': None}]}], 15)
+  _b113_extract_flat_clauses -> ([], 15)
+  _build_comp_result -> {'type': 'ListComp', 'elt': {'type': 'Name', 'id': 'x', 'ctx': 'Load', 'lineno': None}, 'generators': [{'type': 'comprehension', 'target': {'type': 'Name', 'id': 'x', 'ctx': 'Store'}, 'iter': {'type': 'Name', 'id': '.0', 'ctx': 'Load'}, 'ifs': [{'type': 'Compare', 'left': {'type': 'Constant', 'value': 0, 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'x', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'lim', 'ctx': 'Load', 'lineno': None}]}], 'is_async': 0}]}
+  _parse_comprehension_inner_impl -> {'type': 'ListComp', 'elt': {'type': 'Name', 'id': 'x', 'ctx': 'Load', 'lineno': None}, 'generators': [{'type': 'comprehension', 'target': {'type': 'Name', 'id': 'x', 'ctx': 'Store'}, 'iter': {'type': 'Name', 'id': '.0', 'ctx': 'Load'}, 'ifs': [{'type': 'Compare', 'left': {'type': 'Constant', 'value': 0, 'lineno': None}, 'ops': ['<', '<'], 'comparators': [{'type': 'Name', 'id': 'x', 'ctx': 'Load', 'lineno': None}, {'type': 'Name', 'id': 'lim', 'ctx': 'Load', 'lineno': None}]}], 'is_async': 0}]}
+=== SOURCE ===
+[x for x in .0 if 0 < x < lim]

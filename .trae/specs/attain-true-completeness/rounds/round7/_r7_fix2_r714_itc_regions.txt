@@ -1,0 +1,53 @@
+co_name=h_if_ternary_chain_composite varnames=('a', 'b', 'c', 'flag')
+=== CFG blocks ===
+BLK@0..4 succ=[6, 12] pred=[]
+   0 RESUME 0
+   2 LOAD_FAST flag
+   4 POP_JUMP_FORWARD_IF_FALSE 12
+BLK@6..8 succ=[10, 28] pred=[0]
+   6 LOAD_FAST a
+   8 POP_JUMP_FORWARD_IF_FALSE 28
+BLK@10..10 succ=[24] pred=[6]
+   10 JUMP_FORWARD 24
+BLK@12..22 succ=[24, 28] pred=[0]
+   12 LOAD_FAST b
+   14 LOAD_FAST c
+   16 COMPARE_OP <
+   22 POP_JUMP_FORWARD_IF_FALSE 28
+BLK@24..26 succ=[] pred=[10, 12]
+   24 LOAD_CONST t
+   26 RETURN_VALUE None
+BLK@28..30 succ=[] pred=[6, 12]
+   28 LOAD_CONST f
+   30 RETURN_VALUE None
+=== regions ===
+REGION IfRegion entry=6 blocks=[6, 10] parent=IfRegion
+   merge_block=28
+   condition_block=6
+   else_blocks=[]
+   then_blocks=[10]
+REGION IfRegion entry=0 blocks=[0, 6, 10, 12, 28] parent=None
+   merge_block=24
+   condition_block=0
+   else_blocks=[12]
+   then_blocks=[6, 10, 28]
+REGION Region entry=0 blocks=[0] parent=IfRegion
+REGION Region entry=6 blocks=[6] parent=IfRegion
+REGION Region entry=10 blocks=[10] parent=IfRegion
+REGION Region entry=12 blocks=[12] parent=IfRegion
+REGION Region entry=24 blocks=[24] parent=IfRegion
+REGION Region entry=28 blocks=[28] parent=IfRegion
+=== block_to_region ===
+blk@0 -> IfRegion
+blk@6 -> IfRegion
+blk@10 -> IfRegion
+blk@12 -> IfRegion
+blk@24 -> Region
+blk@28 -> IfRegion
+=== block roles ===
+blk@0 role=BlockRole.IF_CONDITION
+blk@6 role=BlockRole.IF_CONDITION
+blk@10 role=BlockRole.IF_THEN
+blk@12 role=BlockRole.IF_ELSE
+blk@24 role=BlockRole.RETURN
+blk@28 role=BlockRole.IF_THEN

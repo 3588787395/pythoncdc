@@ -1,0 +1,81 @@
+co_name=r8_dh_with_assert varnames=('path', 'fh', 'data')
+=== CFG blocks ===
+BLK@0..30 succ=[32] pred=[]
+   0 RESUME 0
+   2 LOAD_GLOBAL open
+   14 LOAD_FAST path
+   16 PRECALL 1
+   20 CALL 1
+   30 BEFORE_WITH None
+BLK@32..76 succ=[78, 98, 124] pred=[0]
+   32 STORE_FAST fh
+   34 LOAD_FAST fh
+   36 LOAD_METHOD read
+   58 PRECALL 0
+   62 CALL 0
+   72 STORE_FAST data
+   74 LOAD_FAST data
+   76 POP_JUMP_FORWARD_IF_TRUE 98
+BLK@78..96 succ=[124] pred=[32]
+   78 LOAD_ASSERTION_ERROR None
+   80 LOAD_CONST empty file
+   82 PRECALL 0
+   86 CALL 0
+   96 RAISE_VARARGS 1
+BLK@98..122 succ=[146] pred=[32]
+   98 NOP None
+   100 LOAD_CONST None
+   102 LOAD_CONST None
+   104 LOAD_CONST None
+   106 PRECALL 2
+   110 CALL 2
+   120 POP_TOP None
+   122 JUMP_FORWARD 146
+BLK@124..128 succ=[130, 132, 138] pred=[32, 78]
+   124 PUSH_EXC_INFO None
+   126 WITH_EXCEPT_START None
+   128 POP_JUMP_FORWARD_IF_TRUE 138
+BLK@130..130 succ=[132] pred=[124]
+   130 RERAISE 2
+BLK@132..136 succ=[] pred=[124, 130, 138]
+   132 COPY 3
+   134 POP_EXCEPT None
+   136 RERAISE 1
+BLK@138..138 succ=[140, 132] pred=[124]
+   138 POP_TOP None
+BLK@140..144 succ=[146] pred=[138]
+   140 POP_EXCEPT None
+   142 POP_TOP None
+   144 POP_TOP None
+BLK@146..148 succ=[] pred=[140, 98]
+   146 LOAD_FAST data
+   148 RETURN_VALUE None
+=== regions ===
+REGION WithRegion entry=0 blocks=[0, 78, 98, 124, 130, 132, 138, 32, 140] parent=None
+   exit_block=146
+   with_blocks=[32, 78]
+REGION AssertRegion entry=32 blocks=[32, 78] parent=WithRegion
+   condition_block=32
+REGION Region entry=146 blocks=[146] parent=None
+=== block_to_region ===
+blk@0 -> WithRegion
+blk@32 -> WithRegion
+blk@78 -> WithRegion
+blk@98 -> WithRegion
+blk@124 -> WithRegion
+blk@130 -> WithRegion
+blk@132 -> WithRegion
+blk@138 -> WithRegion
+blk@140 -> WithRegion
+blk@146 -> Region
+=== block roles ===
+blk@0 role=BlockRole.NORMAL
+blk@32 role=BlockRole.PURE_JUMP
+blk@78 role=BlockRole.NORMAL
+blk@98 role=BlockRole.WITH_EXIT_CALL
+blk@124 role=BlockRole.NORMAL
+blk@130 role=BlockRole.PURE_JUMP
+blk@132 role=BlockRole.RETURN
+blk@138 role=BlockRole.PURE_JUMP
+blk@140 role=BlockRole.NORMAL
+blk@146 role=BlockRole.RETURN

@@ -32,11 +32,11 @@
   - [x] 6.2 修复：通用机制全族封闭（B137/B139/B140/B141 四机制，见 FIX.md §1；B139 首版过宽由 E 门禁首跑自捕获并按 I.4 收窄）
   - [x] 6.3 复核：原探针 21/22 + 合成 22/23 + 负对照 60/60 + 邻域 83/86 + 命名 44/46 + R4 保护 71/71 + R5 合成 65/65 + 三真实文件 172/172；站桩回归不变差（E 二跑 6617/6617 REGRESSIONS=0、small34 1568/1568、quotation success、tests 基线名单）
   - [x] 6.4 主代理验证序六步 + push（`rr-v3r06:`）：核 diffstat（2 文件 +227/−5、标记 11 处、G3=0）/FIX.md 终稿 §0-§6/summary/IV.2；独立复跑 6 组回归 + 13 探针主集；E 首跑回归二分（B139 放宽 → 收窄）与二跑取证（final_verify_summary.json，files_failure=0）
-- [ ] Task 7: Round 7 — 赋值-删除-return-slice 族封闭（→ 升格行：AugAssign / Delete / Return / Slice）
-  - [ ] 7.1 评审攻击：B76（augassign×BoolOp RHS 体蒸发残留）/ B48 残留变体（t_host_while_body 等）/ B84（del/with 吞并）/ B88（return 嵌套宿主）/ B62（return(call+BoolOp) 尾语句蒸发）/ B127（slice 悬挂链）/ B59（dh_for_else_del）/ B60（dh_with_assert）现状探针 + 合成新变体
-  - [ ] 7.2 修复：通用机制全族封闭
-  - [ ] 7.3 复核：原探针 + 合成交叉变体 + 负对照全过；站桩回归不变差
-  - [ ] 7.4 主代理验证序六步 + push（`rr-v3r07:`）
+- [x] Task 7: Round 7 — 赋值-删除-return-slice 族封闭（→ 升格行：AugAssign / Delete / Return / Slice）（FIX.md 终稿 §0-§6：B144 for-else break 落点独占可达〔B59，r809 8/10→10/10〕+ B145 break 源块补发 break + del 归约 ast.Delete〔含 E 门禁首跑收窄：跳转须离开所属循环〕+ B146/B147 with 体内 assert 前缀归属〔B60，with 体 `data = fh.read()` 恢复〕+ B148 三元作切片边界的 cond 前缀折叠〔B127，e07 15/16→16/16〕+ B149 SWAP/POP_TOP/RETURN_VALUE 尾对剥离 + B150 双臂共享 RETURN 落点 ⇒ Return(IfExp)〔B62〕+ B151 列表推导过滤 and/or 分组重建〔B62〕+ B152 if 条件为三元时的体/else 派发〔B62，r714 5/9→9/9〕；3 文件 +785/−9，标记 [Bn-V3R7] 21 处，新破口 B144–B152，8 新方法六项 docstring，G3=0 / G4=0 / I.4 白名单；合成非语料 6 探针 22/22；待复验项维持绿：x08 8/8〔B88〕、rv10_32 8/8〔B76〕、r8_06 10/10、r7_08 8/8〔B48 残留〕、v_b76_face 4/4、c13 3/3；主代理独立复跑：主集 98/98 + 邻域 83/86〔逐位一致〕+ 命名 46/46〔+r809〕+ 负对照 60/60 + R4 保护 71/71 + R5 合成 65/65 + 三真实文件 172/172；E 门禁首跑自捕获 B145 误杀两真实文件〔function.pyc order_entrust_info_handle、trade_live_broker.pyc get_trades，6615/6617〕→ 按 I.4 收窄为「跳转须离开所属循环」→ 单文件 71/71+128/128 复原且 r809/合成仍绿 → 二跑 402 八分片 6617/6617 files_failure=0、small34 1568/1568、quotation success、tests 基线名单、IV.2 全绿〔BOM 单头、G3=0〕；残余承 R6：B142〔嵌套 finally 副本归属〕、B143〔finally 体内 break 的 finalbody 子区域派发〕）
+  - [x] 7.1 评审攻击：B76 / B48 残留变体 / B84 / B88 / B62 / B127 / B59 / B60 现状探针 + 合成新变体（基线 stamp r7pre1 9 探针 69/76：e07 15/16、r809 8/10、r714 5/9；待复验 6 件全绿；合成 6 探针 r7acc_synth1 22/22）
+  - [x] 7.2 修复：通用机制全族封闭（B144–B152 共 9 机制，见 FIX.md §1；B145 由 E 门禁首跑自捕获并按 I.4 收窄）
+  - [x] 7.3 复核：主探针 76/76 + 合成 22/22 + 负对照 60/60 + 邻域 83/86 + 命名 46/46 + R4 保护 71/71 + R5 合成 65/65 + 三真实文件 172/172；站桩回归不变差（E 二跑 6617/6617 REGRESSIONS=0、small34 1568/1568、quotation success、tests 基线名单）
+  - [x] 7.4 主代理验证序六步 + push（`rr-v3r07:`）：核 diffstat（3 文件 +785/−9、标记 21 处、G3=0）/FIX.md 终稿 §0-§6/summary/IV.2；独立复跑 7 组回归 + 15 探针主集 98/98；E 首跑回归二分（B145 过宽 → 收窄）与二跑取证（final_verify_summary.json，files_failure=0）
 - [ ] Task 8: Round 8 — 全行对抗终审与三态 v8 判定（评审工程师执行，主代理验收）
   - [ ] 8.1 25 行逐行终审：每行 ≥1 深层（≥3 级）探针 + 负对照 + 13 误解自查；组合级 25 号终表（含 B52/B53/B11-R2 并入如实处置）；REVIEW.md
   - [ ] 8.2 复核/打回整改闭环；REVIEW2.md；三态 v8 表（目标 完备 128 / 破口 0 / 零能力 0）

@@ -1,0 +1,85 @@
+co_name=f_slice_expr_bounds varnames=('xs', 'a', 'b', 'i')
+=== CFG blocks ===
+BLK@0..30 succ=[32] pred=[]
+   0 RESUME 0
+   2 LOAD_GLOBAL range
+   14 LOAD_CONST 3
+   16 PRECALL 1
+   20 CALL 1
+   30 GET_ITER None
+BLK@32..32 succ=[112, 34] pred=[0, 110]
+   32 FOR_ITER 112
+BLK@34..38 succ=[110, 40] pred=[32]
+   34 STORE_FAST i
+   36 LOAD_FAST i
+   38 POP_JUMP_FORWARD_IF_FALSE 110
+BLK@40..42 succ=[110, 44] pred=[34]
+   40 LOAD_FAST i
+   42 POP_JUMP_FORWARD_IF_FALSE 110
+BLK@44..78 succ=[80, 84] pred=[40]
+   44 LOAD_FAST xs
+   46 LOAD_FAST a
+   48 LOAD_CONST 1
+   50 BINARY_OP 0
+   54 LOAD_FAST b
+   56 LOAD_CONST 2
+   58 BINARY_OP 5
+   62 BUILD_SLICE 2
+   64 BINARY_SUBSCR None
+   74 LOAD_FAST xs
+   76 LOAD_FAST b
+   78 POP_JUMP_FORWARD_IF_FALSE 84
+BLK@80..82 succ=[86] pred=[44]
+   80 LOAD_FAST a
+   82 JUMP_FORWARD 86
+BLK@84..84 succ=[86] pred=[44]
+   84 LOAD_CONST 0
+BLK@86..108 succ=[] pred=[80, 84]
+   86 LOAD_CONST 3
+   88 BUILD_SLICE 2
+   90 BINARY_SUBSCR None
+   100 BINARY_OP 0
+   104 SWAP 2
+   106 POP_TOP None
+   108 RETURN_VALUE None
+BLK@110..110 succ=[32] pred=[34, 40]
+   110 JUMP_BACKWARD 32
+BLK@112..114 succ=[] pred=[32]
+   112 LOAD_CONST 0
+   114 RETURN_VALUE None
+=== regions ===
+REGION LoopRegion entry=32 blocks=[0, 32, 34, 40, 44, 80, 84, 86, 110, 112] parent=None
+   header_block=32
+   body_blocks=[32, 34, 40, 44, 80, 84, 86, 110]
+   break_blocks=[]
+   else_blocks=[112]
+REGION TernaryRegion entry=44 blocks=[86, 44, 80, 84] parent=LoopRegion
+   merge_block=86
+   condition_block=44
+REGION IfRegion entry=34 blocks=[34, 40, 44, 80, 84, 86] parent=LoopRegion
+   merge_block=110
+   condition_block=40
+   else_blocks=[]
+   then_blocks=[44, 80, 84, 86]
+=== block_to_region ===
+blk@0 -> LoopRegion
+blk@32 -> LoopRegion
+blk@34 -> LoopRegion
+blk@40 -> LoopRegion
+blk@44 -> LoopRegion
+blk@80 -> LoopRegion
+blk@84 -> LoopRegion
+blk@86 -> LoopRegion
+blk@110 -> LoopRegion
+blk@112 -> LoopRegion
+=== block roles ===
+blk@0 role=BlockRole.NORMAL
+blk@32 role=BlockRole.LOOP_HEADER
+blk@34 role=BlockRole.LOOP_BODY
+blk@40 role=BlockRole.LOOP_BODY
+blk@44 role=BlockRole.LOOP_BODY
+blk@80 role=BlockRole.LOOP_BODY
+blk@84 role=BlockRole.LOOP_BODY
+blk@86 role=BlockRole.LOOP_BODY
+blk@110 role=BlockRole.LOOP_BACK_EDGE
+blk@112 role=BlockRole.LOOP_ELSE

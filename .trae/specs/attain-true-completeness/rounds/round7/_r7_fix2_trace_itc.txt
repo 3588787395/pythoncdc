@@ -1,0 +1,59 @@
+=== AST ===
+  _r2188_tail_ownership_prepass -> None
+  _consume_top_level_async_protocol_if -> False
+  _consume_try_arm_finally_copy_if -> False
+  _try_build_b78_nested_ternary_host -> None
+  _try_emit_assert_from_if_region -> None
+  _if_extract_cond_instructions -> ([], [Instruction(2: LOAD_FAST 3)])
+  _try_build_await_condition -> None
+  _then_entry_offsets_excluding_connectors -> {28, 6}
+  _convert_lambda_function_objects -> {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 21}
+  _if_extract_condition_from_instructions -> {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 21}
+  _arm_loop_child_entry -> None
+  _try_generate_await_list_assign -> False
+  _process_if_blocks -> []
+  _if_generate_full_elif_chain -> {'type': 'If', 'test': {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 21}, 'body': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'orelse': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}], 'lineno': None}}, 'body': [{'type': 'Pass'}], 'orelse': []}
+  _generate_if -> {'type': 'If', 'test': {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 21}, 'body': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'orelse': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}], 'lineno': None}}, 'body': [{'type': 'Pass'}], 'orelse': []}
+  _generate_region -> {'type': 'If', 'test': {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 21}, 'body': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'orelse': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}], 'lineno': None}}, 'body': [{'type': 'Pass'}], 'orelse': []}
+  _rag_is_pure_exception_protocol_block -> False
+  _r8_b121_implicit_tail_landing_sinks -> set()
+  _collect_await_protocol_chain -> None
+  _b31_await_chain_gate -> None
+  _b112_async_gen_yield_await_gate -> None
+  _try_deferred_return_in_loop -> None
+  _b34c_finally_deferred_return -> None
+  _comp_delegate_for_block -> <core.cfg.region_ast_generator._ChainAwareStoreDelegate object at 0x0000024ED9FF5350>
+  _build_attr_target_unpack -> None
+  _b128_await_owner_if_condition -> None
+  _reconstruct_await_block_stmts -> None
+  _w14_has_following_code -> True
+  _generate_block_statements_body -> [{'type': 'Return', 'value': {'type': 'Constant', 'value': 't', 'lineno': 22}}]
+  _combine_annassign_statements -> [{'type': 'Return', 'value': {'type': 'Constant', 'value': 't', 'lineno': 22}}]
+  _with_jump_exit_blocks -> set()
+  _mark_with_exit_return_explicit -> None
+  _is_implicit_return_block -> False
+  _mark_shared_return_explicit -> None
+  _generate_block_statements -> [{'type': 'Return', 'value': {'type': 'Constant', 'value': 't', 'lineno': 22}}]
+  _generate_basic_region -> [{'type': 'Return', 'value': {'type': 'Constant', 'value': 't', 'lineno': 22}}]
+  _generate_region -> [{'type': 'Return', 'value': {'type': 'Constant', 'value': 't', 'lineno': 22}}]
+  _normalize_stmt_node -> {'type': 'Pass'}
+  _normalize_stmt_lists -> [{'type': 'Pass'}]
+  _normalize_stmt_lists -> []
+  _normalize_stmt_node -> {'type': 'If', 'test': {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 21}, 'body': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'orelse': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}], 'lineno': None}}, 'body': [{'type': 'Pass'}], 'orelse': []}
+  _normalize_stmt_node -> {'type': 'Return', 'value': {'type': 'Constant', 'value': 't', 'lineno': 22}}
+  _normalize_stmt_lists -> [{'type': 'If', 'test': {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 21}, 'body': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'orelse': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}], 'lineno': None}}, 'body': [{'type': 'Pass'}], 'orelse': []}, {'type': 'Return', 'value': {'type': 'Constant', 'value': 't', 'lineno': 22}}]
+  _convert_lambda_function_objects -> {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 21}
+  _convert_lambda_function_objects -> {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 21}, 'body': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'orelse': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}], 'lineno': None}}
+  _convert_lambda_function_objects -> {'type': 'Pass'}
+  _convert_lambda_function_objects -> {'type': 'If', 'test': {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 21}, 'body': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'orelse': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}], 'lineno': None}}, 'body': [{'type': 'Pass'}], 'orelse': []}
+  _convert_lambda_function_objects -> {'type': 'Constant', 'value': 't', 'lineno': 22}
+  _convert_lambda_function_objects -> {'type': 'Return', 'value': {'type': 'Constant', 'value': 't', 'lineno': 22}}
+  _detect_docstring_statement -> None
+  _extract_function_args -> {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'a'}, {'type': 'arg', 'arg': 'b'}, {'type': 'arg', 'arg': 'c'}, {'type': 'arg', 'arg': 'flag'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}
+  _is_trailing_return_none_statement -> False
+  _build_function_def -> {'type': 'FunctionDef', 'name': 'h_if_ternary_chain_composite', 'args': {'type': 'arguments', 'posonlyargs': [], 'args': [{'type': 'arg', 'arg': 'a'}, {'type': 'arg', 'arg': 'b'}, {'type': 'arg', 'arg': 'c'}, {'type': 'arg', 'arg': 'flag'}], 'vararg': None, 'kwonlyargs': [], 'kw_defaults': [], 'kwarg': None, 'defaults': []}, 'body': [{'type': 'If', 'test': {'type': 'IfExp', 'test': {'type': 'Name', 'id': 'flag', 'ctx': 'Load', 'lineno': 21}, 'body': {'type': 'Name', 'id': 'a', 'ctx': 'Load', 'lineno': None}, 'orelse': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'b', 'ctx': 'Load', 'lineno': None}, 'ops': ['<'], 'comparators': [{'type': 'Name', 'id': 'c', 'ctx': 'Load', 'lineno': None}], 'lineno': None}}, 'body': [{'type': 'Pass'}], 'orelse': []}, {'type': 'Return', 'value': {'type': 'Constant', 'value': 't', 'lineno': 22}}], 'decorator_list': [], 'returns': None}
+=== SOURCE ===
+def h_if_ternary_chain_composite(a, b, c, flag):
+    if (a if flag else b < c):
+        pass
+    return 't'

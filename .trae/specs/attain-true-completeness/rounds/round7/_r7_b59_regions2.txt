@@ -1,0 +1,62 @@
+co_name=r8_dh_for_else_del varnames=('xs', 'i', 'v')
+=== CFG blocks ===
+BLK@0..30 succ=[32] pred=[]
+   0 RESUME 0
+   2 LOAD_GLOBAL enumerate
+   14 LOAD_FAST xs
+   16 PRECALL 1
+   20 CALL 1
+   30 GET_ITER None
+BLK@32..32 succ=[34, 58] pred=[0, 56]
+   32 FOR_ITER 58
+BLK@34..44 succ=[46, 56] pred=[32]
+   34 UNPACK_SEQUENCE 2
+   38 STORE_FAST i
+   40 STORE_FAST v
+   42 LOAD_FAST v
+   44 POP_JUMP_FORWARD_IF_NOT_NONE 56
+BLK@46..54 succ=[88] pred=[34]
+   46 LOAD_FAST xs
+   48 LOAD_FAST i
+   50 DELETE_SUBSCR None
+   52 POP_TOP None
+   54 JUMP_FORWARD 88
+BLK@56..56 succ=[32] pred=[34]
+   56 JUMP_BACKWARD 32
+BLK@58..86 succ=[] pred=[32]
+   58 LOAD_GLOBAL ValueError
+   70 LOAD_CONST no None
+   72 PRECALL 1
+   76 CALL 1
+   86 RAISE_VARARGS 1
+BLK@88..90 succ=[] pred=[46]
+   88 LOAD_FAST xs
+   90 RETURN_VALUE None
+=== regions ===
+REGION LoopRegion entry=32 blocks=[0, 32, 34, 46, 56, 58] parent=None
+   header_block=32
+   body_blocks=[32, 34, 46, 56]
+   break_blocks=[88]
+   else_blocks=[58]
+REGION IfRegion entry=34 blocks=[34, 46] parent=LoopRegion
+   merge_block=88
+   condition_block=34
+   else_blocks=[]
+   then_blocks=[46]
+REGION Region entry=88 blocks=[88] parent=None
+=== block_to_region ===
+blk@0 -> LoopRegion
+blk@32 -> LoopRegion
+blk@34 -> LoopRegion
+blk@46 -> LoopRegion
+blk@56 -> LoopRegion
+blk@58 -> LoopRegion
+blk@88 -> Region
+=== block roles ===
+blk@0 role=BlockRole.NORMAL
+blk@32 role=BlockRole.LOOP_HEADER
+blk@34 role=BlockRole.LOOP_BODY
+blk@46 role=BlockRole.BREAK
+blk@56 role=BlockRole.LOOP_BACK_EDGE
+blk@58 role=BlockRole.LOOP_ELSE
+blk@88 role=BlockRole.RETURN

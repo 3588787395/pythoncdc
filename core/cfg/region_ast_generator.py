@@ -665,17 +665,24 @@ class RegionASTGenerator:
             return []
         depth = 0
         last_zero = -1
+        _underflow = False
         for idx, ins in enumerate(instrs[:-1]):
             effect = self._instruction_stack_effect(ins)
             if effect is None:
                 return []
             depth += effect
             if depth < 0:
-                # 栈下溢：说明入口深度假设不成立（例如块是异常处理器片段），
-                # 栈判据在此不适用，保守放弃切分。
-                return []
+                # 栈下溢：入口深度假设（= 0）不成立（例如块是异常处理器片段，
+                # 或块承接前驱压入的值——with 体首块承接 BEFORE_WITH 的
+                # __enter__ 结果与 __exit__ 方法）。旧实现直接放弃切分。
+                _underflow = True
+                break
             if depth == 0:
                 last_zero = idx
+        if _underflow:
+            # [B146-V3R7] 入口栈深非零的块（with 体首块形态）：按前驱链求
+            # 出真实入口深度后重做切分；不可判定时放弃（行为同旧实现）。
+            return self._b146_split_block_condition_prefix(block, instrs)
         if last_zero < 0:
             return []
         prefix = instrs[:last_zero + 1]
@@ -683,6 +690,149 @@ class RegionASTGenerator:
         if all(i.opname in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG') for i in prefix):
             return []
         return prefix
+
+    def _b146_split_block_condition_prefix(self, block: 'BasicBlock',
+                                           instrs: List['Instruction']
+                                           ) -> List['Instruction']:
+        """[B146-V3R7] 入口栈深非零的块的「前导语句 / 条件表达式」切分。
+
+        ①算法依据：CPython 的值栈纪律在**块边界**处不归零——块入口可承接
+        前驱压入的值。典型形态：`with open(p) as fh:` 的体首块以
+        `STORE_FAST fh` 开头，承接前驱 BEFORE_WITH 压入的 __enter__ 结果
+        与 __exit__ 方法（入口深度 2），首条指令弹掉 __enter__ 结果（深度
+        降到 1，__exit__ 方法留待 with 出口协议消费）。旧实现的「入口深度
+        = 0」假设在此下溢 ⇒ 放弃切分 ⇒ 块内已完结语句（如 `data = fh.read()`）
+        无人发射、整条消失。
+        ②归约顺序：_split_block_condition_prefix 的下溢分支调用；旧路径
+        （无下溢）逐位不变——本方法只在下溢时启用（C3 封闭）。
+        ③唯一归属判定（全部 I.4 白名单）：
+          (a) 入口深度 E = _b146_block_entry_stack_depth（前驱链栈效应求和）；
+              E 不可判定时放弃（返回空列表）。
+          (b) 前向模拟得深度序列 depths[]（depths[i] = 第 i 条体指令**之前**
+              的深度；depths[n] = 块末条件跳转之前的深度 H）。
+          (c) 语句基线 B = H - 1（块末条件跳转消费 1 个值，其余为块入口
+              承接值 / 语句基线）；已完结语句的边界 = 深度回到 B 的位置。
+          (d) 前导段 = body[j : i+1]，其中 i = 最后一个「之后深度回到 B」
+              的体指令下标，j = 第一个「之前深度等于 B」的下标（j 之前是
+              承接值的消费序言，如 with 目标绑定 STORE_FAST——它归 with
+              语句本身，不属 assert 前导段）。
+        ④嵌套处理：不涉及区域嵌套；只读本块指令与 CFG 前驱链。
+        ⑤AST 映射接口：返回前导语句的指令列表（可为空）；由既有
+        _collect_assert_prefix_stmts 归约为语句并交父序列在 Assert 之前发射。
+        ⑥反编译流程：仅在旧栈模拟因下溢放弃时调用；不可判定返回空列表，
+        行为与旧实现逐位一致。[C1] 只读块自身指令 opcode/argval、CFG 前驱
+        关系与 CPython 栈效应（同层结构事实），不读文件名/偏移阈值/条数上限；
+        [C2] 不新增跨层/跨方法状态；[C3] 守卫面仅「入口深度可判定且基线
+        深度可定位」这一形态，未命中时逐位不变。
+        """
+        entry_depth = self._b146_block_entry_stack_depth(block)
+        if entry_depth is None or entry_depth <= 0:
+            return []
+        body = instrs[:-1]
+        n = len(body)
+        if n <= 0:
+            return []
+        depths = [entry_depth]
+        _d = entry_depth
+        for ins in body:
+            effect = self._instruction_stack_effect(ins)
+            if effect is None:
+                return []
+            _d += effect
+            depths.append(_d)
+        h = depths[n]
+        baseline = h - 1
+        if baseline < 0:
+            return []
+        # (c) 最后一次「之后深度回到基线」的位置 = 已完结语句段的末端
+        _end = -1
+        for _i in range(n):
+            if depths[_i + 1] == baseline:
+                _end = _i
+        if _end < 0:
+            return []
+        # (d) 承接值消费序言的终点 = 第一个「之前深度等于基线」的位置
+        _start = 0
+        for _j in range(n + 1):
+            if depths[_j] == baseline:
+                _start = _j
+                break
+        if _start > _end:
+            return []
+        prefix = body[_start:_end + 1]
+        if not prefix:
+            return []
+        if all(i.opname in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG') for i in prefix):
+            return []
+        return prefix
+
+    def _b146_block_entry_stack_depth(self, block: Optional['BasicBlock'],
+                                      _cache: Optional[Dict[int, Optional[int]]] = None,
+                                      _visiting: Optional[Set[int]] = None
+                                      ) -> Optional[int]:
+        """[B146-V3R7] 块入口处的 CPython 值栈深度（前驱链栈效应求和）。
+
+        ①算法依据：CPython 3.11 的值栈纪律只在**语句**边界归零，块边界
+        不然——块入口承接前驱压入的值。要判断「以条件跳转收尾的直线块」
+        内哪些指令是已完结语句、哪些是尾部条件表达式，必须知道块入口的
+        真实深度。入口深度 = 前驱块入口深度 + 前驱块全部指令的栈效应之和。
+        ②归约顺序：_b146_split_block_condition_prefix 调用；只在旧栈模拟
+        因下溢放弃时启用（C3 封闭）。
+        ③唯一归属判定（全部 I.4 白名单）：
+          (a) 块为异常处理器入口（含 PUSH_EXC_INFO / WITH_EXCEPT_START）时
+              深度不由本判据给出（异常帧的栈基与正常路径不同）→ 不可判定；
+          (b) 块无前驱时为函数入口块 → 深度 0；
+          (c) 块有**唯一**前驱时递归求解（前驱深度 + 前驱指令栈效应之和）；
+          (d) 多个前驱（前驱栈效应不一致）→ 不可判定；
+          (e) 递归出现环 → 不可判定。
+        ④嵌套处理：不涉及区域嵌套；只读 CFG 块对象与其指令。
+        ⑤AST 映射接口：返回 Optional[int]（入口深度）；None 表示不可判定。
+        ⑥反编译流程：仅在栈模拟下溢时调用；不可判定时返回 None，调用方
+        放弃切分、行为与旧实现逐位一致。[C1] 只读块自身指令 opcode/argval
+        与 CFG 前驱关系（同层结构事实），不读文件名/函数名/偏移阈值/条数
+        上限；[C2] 不新增跨层/跨方法状态（缓存为方法内局部）；[C3] 守卫面
+        仅「单前驱 + 非异常处理器入口」，其余一律不可判定。
+        """
+        if block is None:
+            return None
+        if _cache is None:
+            _cache = {}
+        if _visiting is None:
+            _visiting = set()
+        key = block.start_offset
+        if key in _cache:
+            return _cache[key]
+        if key in _visiting:
+            return None
+        _visiting.add(key)
+        result: Optional[int] = None
+        try:
+            if any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START')
+                   for i in block.instructions):
+                result = None
+            else:
+                preds = list(block.predecessors)
+                if not preds:
+                    result = 0
+                elif len(preds) == 1:
+                    _p = preds[0]
+                    _pd = self._b146_block_entry_stack_depth(_p, _cache, _visiting)
+                    if _pd is not None:
+                        _eff = 0
+                        _ok = True
+                        for _ins in _p.instructions:
+                            _e = self._instruction_stack_effect(_ins)
+                            if _e is None:
+                                _ok = False
+                                break
+                            _eff += _e
+                        if _ok:
+                            result = _pd + _eff
+        finally:
+            _visiting.discard(key)
+        if result is not None:
+            _cache[key] = result
+        return result
 
     @staticmethod
     def _instruction_stack_effect(ins: 'Instruction') -> Optional[int]:
@@ -17813,15 +17963,82 @@ AST 映射规则:
                             if then_ft != then_ft_target:
                                 self.generated_blocks.add(then_ft)
                             body_stmts = self._process_if_blocks([elif_ft], region, branch='then')
+                            # [B152-V3R7] 「if 条件是三元表达式」形态的 if 体
+                            # 与 if 后兄弟语句复原。
+                            # ①算法依据：源码 `if <三元>: BODY` 编译后，
+                            #   三元的两臂汇合点恰是 if 的体块（分析层把该汇
+                            #   合点记作本 IfRegion 的 merge_block），而真值
+                            #   测试的假边落点是 if 之后的兄弟语句块。既有
+                            #   _process_if_blocks 按「merge 属 if 之后的兄
+                            #   弟语句」的约定跳过 merge ⇒ if 体空（Pass），
+                            #   且假边落点无人认领 ⇒ 该块整条丢失（实测
+                            #   h_if_ternary_chain_composite：`if a if flag
+                            #   else b < c:` 的体 `return "t"` 与其后
+                            #   `return "f"` 双双丢失）。
+                            # ②归约顺序：_if_generate_full_elif_chain 的
+                            #   「单 elif + 三元」分支在 body_stmts 为空时
+                            #   调用；不命中逐位沿用原结果（C3 封闭）。
+                            # ③唯一归属判定（全套 I.4 白名单）：
+                            #   (a) 形态签名：elif_ft 恰是本区域的
+                            #       merge_block，且不在本区域 blocks 集合内
+                            #       （即它在两臂之外，是 if 的体块）；
+                            #   (b) 体块非空：_generate_block_statements
+                            #       (elif_ft) 产出至少一条语句，否则不接管；
+                            #   (c) 假边落点：elif 臂末条跳转的 argval 所
+                            #       指块 P 存在且 P ≠ elif_ft；P 落在
+                            #       region.else_blocks 内 ⇒ P 是 else 体，
+                            #       否则 P 是 if 之后的兄弟语句。
+                            # ④嵌套处理：不展开任何子区域；只读本层 CFG
+                            #   块对象与本区域结构字段。
+                            # ⑤AST 映射接口：If(test=IfExp, body=体块
+                            #   语句, orelse=else 体语句) + if 后兄弟语句
+                            #   列表；无命中时原样返回。
+                            # ⑥反编译流程：仅在 elif-三元分支调用；命中
+                            #   时把体块/假边落点登记为 generated（原则 2
+                            #   每块唯一归属），避免其被独立重放。
+                            # [C1] 只读同层块对象（merge/exit/else_blocks
+                            #   成员关系）与块内指令，不读文件名/函数名/偏
+                            #   移阈/条数上限；[C2] 不新增跨块跨方法状态；
+                            # [C3] 三条判据任一不成立即逐位回落原结果。
+                            _b152_orelse = []
+                            _b152_post = []
+                            if (not body_stmts and elif_ft is not None
+                                    and getattr(region, 'merge_block', None) is elif_ft
+                                    and elif_ft not in (getattr(region, 'blocks', None) or [])):
+                                _b152_body = self._generate_block_statements(elif_ft)
+                                if _b152_body:
+                                    body_stmts = _b152_body
+                                    self.generated_blocks.add(elif_ft)
+                                    self.generated_offsets.add(elif_ft.start_offset)
+                                    _b152_p = None
+                                    if elif_last is not None and isinstance(elif_last.argval, int):
+                                        _b152_p = self.cfg.get_block_by_offset(elif_last.argval)
+                                    if (_b152_p is not None and _b152_p is not elif_ft
+                                            and _b152_p not in (getattr(region, 'else_blocks', None) or [])):
+                                        _b152_post = self._generate_block_statements(_b152_p)
+                                        if _b152_post:
+                                            self.generated_blocks.add(_b152_p)
+                                            self.generated_offsets.add(_b152_p.start_offset)
+                                    elif (_b152_p is not None and _b152_p is not elif_ft
+                                          and _b152_p in (getattr(region, 'else_blocks', None) or [])):
+                                        _b152_orelse = self._generate_block_statements(_b152_p)
+                                        if _b152_orelse:
+                                            self.generated_blocks.add(_b152_p)
+                                            self.generated_offsets.add(_b152_p.start_offset)
                             for b in region.blocks:
                                 if b not in self.generated_blocks:
                                     self.generated_blocks.add(b)
                             self._generating_regions.discard(region_id_t)
                             self._generated_regions.add(region_id_t)
-                            result = {'type': 'If', 'test': ternary_expr, 'body': body_stmts if body_stmts else [{'type': 'Pass'}], 'orelse': []}
+                            result = {'type': 'If', 'test': ternary_expr, 'body': body_stmts if body_stmts else [{'type': 'Pass'}], 'orelse': _b152_orelse}
+                            _b152_tail = []
+                            if _b152_orelse:
+                                _b152_tail = []
+                            elif _b152_post:
+                                _b152_tail = _b152_post
                             if pre_stmts_t:
-                                return pre_stmts_t + [result]
-                            return result
+                                return pre_stmts_t + [result] + _b152_tail
+                            return [result] + _b152_tail if _b152_tail else result
         region_id = id(region)
         self._generating_regions.add(region_id)
         # 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（入口引用语义）：
@@ -26806,7 +27023,107 @@ AST 映射规则:
                     else:
                         self.generated_blocks.add(_r2121_tail_sink)
                         self.generated_offsets.add(_r2121_tail_sink.start_offset)
+        # [B150-V3R7] 「双臂 return + 单一共享 RETURN_VALUE 汇点」折叠为三元返回。
+        _b150_folded = self._b150_fold_shared_return_diamond(region, if_result)
+        if _b150_folded is not None:
+            if_result = _b150_folded
         return if_result
+
+    def _b150_fold_shared_return_diamond(self, region: 'IfRegion',
+                                         if_result: Any) -> Any:
+        """[B150-V3R7] 双臂 return + 单一共享 RETURN_VALUE 汇点 ⇒ 三元返回折叠。
+
+        ①算法依据：CPython 3.11 把 `return (X if c else Y)` 编译成「条件块 →
+        假臂 → 真臂 → 汇合块(RETURN_VALUE)」的**单一**返回汇点：真臂以
+        JUMP_FORWARD 汇入、假臂顺序落入同一个 RETURN_VALUE 块。而源码级
+        `if c: return X` + `else: return Y` 编译出的是**两个**互不相干的
+        RETURN_VALUE 块（真臂自带 RETURN，假臂自带 RETURN），没有共享汇点。
+        因此「两臂各产出一个 return 值 + 两臂都汇入同一个以 RETURN_VALUE
+        收尾的块」这一 CFG 形态唯一地对应三元表达式，是可判定的结构事实。
+        ②归约顺序：_if_generate_normal 装配完 If 节点后调用；命中即把
+        If(test, body=[Return(X)], orelse=[Return(Y)]) 改写为
+        Return(IfExp(test, X, Y))；不命中逐位沿用原 If 节点（C3 封闭）。
+        ③唯一归属判定（全套 I.4 白名单）：
+          (a) 节点形：产物是单个 ast.If（dict），body 与 orelse 各恰含一条
+              Return 语句，且两条 Return 的 value 都是非 None 的表达式节点；
+          (b) 汇点形：region.merge_block 存在，其末条指令为 RETURN_VALUE /
+              RETURN_CONST，且该块**不属于**本 IfRegion 的 blocks 集合
+              （即它在两臂之外，是两臂之后的汇点）；
+          (c) 双臂可达：merge_block 的正常前驱集合同时与 region.then_blocks
+              和 region.else_blocks 相交（异常边不参与判定）——证明两臂
+              确实汇入同一个返回汇点，而非各自带 RETURN；
+          (d) 形态纯净：If 节点不带 _is_elif / _is_nested_if 标记（elif 链与
+              嵌套 if 语义不同，不折叠）。
+        ④嵌套处理：两臂内部的子区域（BoolOpRegion / 链式比较 IfRegion /
+          TernaryRegion）已在各臂归约时生成完毕，本方法只读取它们产出的
+          表达式节点并整体包进 IfExp，不窥视子区域内部，也不重复发射。
+        ⑤AST 映射接口：入参 (region, if_result)，返回改写后的语句字典
+          {'type': 'Return', 'value': {'type': 'IfExp', 'test': …,
+          'body': …, 'orelse': …}}；不命中返回 None。
+        ⑥反编译流程：仅在 _if_generate_normal 的出口调用一次；命中时把
+          merge_block 登记为 generated（该 RETURN_VALUE 已被折叠后的单一
+          return 语句消费，不得再作为独立语句重放），其余块归属不变。
+        [C1] 只读本 IfRegion 的 entry/then_blocks/else_blocks/merge_block
+          同层结构事实与两臂产出的 AST 形状，不读文件名/函数名/偏移阈/条数
+          上限；[C2] 不新增跨块跨方法状态；[C3] 四条判据任一不成立即逐位
+          回落到原 If 节点。
+        """
+        node = if_result
+        if isinstance(node, list):
+            if len(node) != 1:
+                return None
+            node = node[0]
+        if not isinstance(node, dict) or node.get('type') != 'If':
+            return None
+        if '_is_elif' in node or '_is_nested_if' in node:
+            return None
+        body = node.get('body') or []
+        orelse = node.get('orelse') or []
+        if len(body) != 1 or len(orelse) != 1:
+            return None
+        b_stmt, e_stmt = body[0], orelse[0]
+        if not (isinstance(b_stmt, dict) and b_stmt.get('type') == 'Return'):
+            return None
+        if not (isinstance(e_stmt, dict) and e_stmt.get('type') == 'Return'):
+            return None
+        b_val = b_stmt.get('value')
+        e_val = e_stmt.get('value')
+        if not isinstance(b_val, dict) or not isinstance(e_val, dict):
+            return None
+        test = node.get('test')
+        if not isinstance(test, dict):
+            return None
+        merge = getattr(region, 'merge_block', None)
+        if merge is None:
+            return None
+        if merge in (getattr(region, 'blocks', None) or []):
+            return None
+        m_last = merge.get_last_instruction()
+        if m_last is None or m_last.opname not in ('RETURN_VALUE', 'RETURN_CONST'):
+            return None
+        then_set = set(getattr(region, 'then_blocks', None) or [])
+        else_set = set(getattr(region, 'else_blocks', None) or [])
+        if not then_set or not else_set:
+            return None
+        _preds = []
+        for _p in (getattr(merge, 'predecessors', None) or []):
+            _p_exc = set(getattr(_p, 'exception_successors', None) or ())
+            if merge in _p_exc:
+                continue
+            _preds.append(_p)
+        if not (_preds and (set(_preds) & then_set) and (set(_preds) & else_set)):
+            return None
+        self.generated_blocks.add(merge)
+        self.generated_offsets.add(merge.start_offset)
+        return {
+            'type': 'Return',
+            'value': {
+                'type': 'IfExp',
+                'test': test,
+                'body': b_val,
+                'orelse': e_val,
+            },
+        }
 
     def _try_build_await_condition(self, region: IfRegion, cond_block: 'BasicBlock') -> Optional[Dict[str, Any]]:
         """尝试将 if 条件中的 await 模式重建为 `await <expr>` 条件表达式。
@@ -41097,6 +41414,18 @@ AST 映射规则:
                                     _then_body = generated.get('body', [])
                                     if self._break_continue_arm_is_placeholder(_then_body):
                                         generated['body'] = [{'type': 'Continue'}]
+                        # [B147-V3R7] with 体内 assert 入口块的前导语句消费
+                        # （原则 2 每块唯一归属 + 原则 3 嵌套即抽象节点）：
+                        # AssertRegion 只暴露一个 ast.Assert 抽象节点；其入口块
+                        # 内位于条件表达式之前的**已完结语句**（如
+                        # `data = fh.read()`）归父序列（with 体）在 Assert 之前
+                        # 发射——与 _process_if_blocks / _loop_handle_header 的
+                        # 既有 take 契约同构。旧路径无此 take ⇒ 该段暂存后无人
+                        # 消费、静默蒸发（with 体内 assert 前赋值整条消失）。
+                        if isinstance(nested_region, AssertRegion):
+                            _b147_prefix = self._take_assert_prefix_stmts(nested_region)
+                            if _b147_prefix:
+                                body_stmts.extend(_b147_prefix)
                         if generated:
                             if isinstance(generated, list):
                                 body_stmts.extend(generated)
@@ -55577,10 +55906,33 @@ AST 映射规则:
         # `self.x` 丢失为裸 `self`。依「自底向上归约」: LOAD_ATTR 是属性访问
         # 表达式的归约入口，必须与前驱 LOAD_* 一起 reconstruct 才能得到完整
         # Attribute 节点。加入复合判据，走完整 reconstruct 管线。
+        # [B148-V3R7] 值折叠算子族纳入「复合前缀」判据：BINARY_OP /
+        # BUILD_SLICE / BINARY_SUBSCR / COMPARE_OP / IS_OP / CONTAINS_OP /
+        # UNARY_* / FORMAT_VALUE 都是「消费栈上前 N 项、产出 1 项」的二元或
+        # 一元折叠算子。它们在 cond_block 前缀里出现时，前缀并不是若干个
+        # 独立 LOAD_*，而是若干个**完整子表达式**；旧实现把它们按简单逐条
+        # 扫描处理，产出的是折叠前的操作数碎片（BINARY_OP 的两个操作数、
+        # BUILD_SLICE 的两个界各自成为独立 preload 项），merge 消费端据此
+        # 重建时 initial_stack 与真实栈错位，整个消费表达式被重建为
+        # 「碎片 + 垃圾」的算术式（e07 f_slice_expr_bounds 实测：三元作为
+        # 切片下界时，merge 的 BUILD_SLICE/BINARY_SUBSCR 把 preload 碎片
+        # 当作界值消费，表达式整体坍缩为裸名 `b`）。
+        # 归约方式：走既有完整 reconstruct 管线——_split_preload_into_siblings
+        # 按真实栈效应把前缀切成「每个兄弟子表达式一条切片」，再逐条
+        # reconstruct（BINARY_OP→BinOp、BUILD_SLICE→Slice、
+        # BINARY_SUBSCR→Subscript 均由 expr_reconstructor 既有分支负责）。
+        # [C1] 判据只读同层 cond_block 前缀指令的 opcode 族（不读文件名、
+        # 偏移阈、条数上限）；[C2] 不新增跨块/跨方法状态；[C3] 前缀不含
+        # 折叠算子时逐位沿用旧路径（简单逐条 LOAD_*/COPY 扫描）。
         _has_compound = any(
             pi.opname in ('PRECALL', 'CALL', 'BUILD_TUPLE', 'BUILD_LIST',
                           'BUILD_MAP', 'BUILD_SET', 'BUILD_CONST_KEY_MAP',
-                          'LOAD_ATTR', 'LOAD_METHOD')
+                          'LOAD_ATTR', 'LOAD_METHOD',
+                          'BINARY_OP', 'BINARY_SUBSCR',
+                          'COMPARE_OP', 'IS_OP', 'CONTAINS_OP',
+                          'FORMAT_VALUE')
+            or pi.opname.startswith('BUILD_')
+            or pi.opname.startswith('UNARY_')
             for pi in _preload_instrs)
         if _has_compound:
             _sibling_slices = self._split_preload_into_siblings(_preload_instrs)
@@ -57812,6 +58164,25 @@ AST 映射规则:
             if (merge_all and merge_all[-1].opname == 'LOAD_CONST'
                     and merge_all[-1].argval is None):
                 merge_all.pop()
+        # [B149-V3R7] 尾随「SWAP n; POP_TOP」栈深修正对的后置剥离。
+        # 上方那对剥离只覆盖「merge 块以 POP_TOP 收尾（表达式语句语境）」；
+        # 当 merge 块以 `... ; SWAP n ; POP_TOP ; RETURN_VALUE` 收尾时
+        # （CPython 3.11 在 for/with 体内 return 时，先用 SWAP n+POP_TOP
+        # 丢弃外层上下文留在值栈上的迭代器/清理槽，再 RETURN_VALUE），
+        # 前置剥离因末条是 RETURN_VALUE 而不命中，RETURN 剥离后残留的
+        # SWAP n 又被 _has_control_flow_or_store 守卫（含 SWAP）拒绝重建，
+        # 于是整个 merge 消费表达式被降级为裸 Expr（e07 f_slice_expr_bounds
+        # 实测：三元作为切片下界时 merge 的值整体蒸发，只剩条件名 `b`）。
+        # 归约方式：RETURN 剥离之后再做一次同形尾对剥离（成对、仅当 POP_TOP
+        # 恰在 SWAP 之后且位于尾端）；该对语义为「保留栈顶值、丢弃其下一
+        # 层的上下文槽」，剥离后重建结果与原文语义逐位一致。
+        # [C1] 判据仅读本块指令序尾部两 opcode 与既有 RETURN 剥离结果；
+        # [C2] 剥除自尾向头单遍，不跨块；[C3] 仅尾对形态，无 RETURN 时
+        # 仍由前置剥离处理（行为逐位不变）。
+        while (len(merge_all) >= 2
+               and merge_all[-1].opname == 'POP_TOP'
+               and merge_all[-2].opname == 'SWAP'):
+            merge_all = merge_all[:-2]
         # Strip trailing GET_AWAITABLE + LOAD_CONST None
         # (await protocol). GET_AWAITABLE wraps the preceding expression in an
         # awaitable; LOAD_CONST None is the initial send-value for the await
@@ -61408,6 +61779,33 @@ AST 映射规则:
         self._r8_b121_sink_set_cache = _out
         return _out
 
+    def _b145_is_break_landing_block(self, block: BasicBlock) -> bool:
+        """[B145-V3R7] 块是否为某循环登记的 break 落点（循环之后的代码）。
+
+        ①算法依据：break 源块（循环体内、以无条件前向跳转跳出循环）与
+        break 落点（循环之后的代码块）都可能被标注 BlockRole.BREAK，但
+        二者语义相反——源块的用户语句之后须补发一条 `break` 语句；落点
+        是循环后的顺序代码，其自身的跳转不表达 break。落点的唯一结构
+        事实是：它被登记在某 LoopRegion.break_blocks 中（分析层
+        _detect_break_continue 的落点集合）。
+        ②归约顺序：_generate_block_statements_body 的 break 源块语句重建
+        路径调用；仅在需要决定「是否补发 break」时查询。
+        ③唯一归属判定（全部 I.4 白名单）：只读 LoopRegion.break_blocks 的
+        成员关系（区域成员关系事实），不读文件名/函数名/偏移阈值/条数上限。
+        ④嵌套处理：不展开任何子区域；只读本层区域列表。
+        ⑤AST 映射接口：返回布尔值；True ⇒ 该块是落点（不补发 break）。
+        ⑥反编译流程：仅在 break 源块语句重建路径调用；未命中返回 False，
+        既有行为逐位不变（C3 封闭）。[C1] 只读区域成员关系（同层事实）；
+        [C2] 不新增跨层/跨方法状态；[C3] 守卫面仅「以无条件前向跳转收尾的
+        BREAK 角色块」，未命中时逐位不变。
+        """
+        for _lr in self.region_analyzer.regions:
+            if not isinstance(_lr, LoopRegion):
+                continue
+            if block in (_lr.break_blocks or []):
+                return True
+        return False
+
     def _generate_block_statements(self, block: BasicBlock, _cjb_parent: BasicBlock = None) -> List[Dict[str, Any]]:
         """[Round 02 F5] 薄包装：块语句生成 + with 出口块 return 的指令背书。
 
@@ -62242,6 +62640,11 @@ AST 映射规则:
                                         'LOAD_ATTR', 'LOAD_METHOD', 'GET_ITER',
                                         'FOR_ITER', 'UNPACK_SEQUENCE',
                                         'STORE_SUBSCR', 'STORE_ATTR',
+                                        # [B145-V3R7] 删除语句族是用户语句（副作用），
+                                        # 缺失会使「del + break」块被误判为纯 break
+                                        # → del 语句整条丢失（r8_09 B59 形态）。
+                                        'DELETE_FAST', 'DELETE_NAME', 'DELETE_GLOBAL',
+                                        'DELETE_DEREF', 'DELETE_ATTR', 'DELETE_SUBSCR',
                                         'RAISE_VARARGS', 'YIELD_VALUE', 'YIELD_FROM'}
                     _has_side_effect = any(i.opname in _side_effect_ops
                                           for i in _meaningful
@@ -62632,7 +63035,52 @@ AST 映射规则:
                                 _break_user_stmts.append(_stmt)
                             _expr_instrs = []
                             continue
+                        # [B145-V3R7] 删除语句（del x[i] / del x.y）归约为
+                        # ast.Delete：与 STORE 分支同族的语句终结符，须在此
+                        # 独立成条——旧路径把 DELETE_* 混入表达式重建成
+                        # 裸 Expr（`del xs[i]` 退化为 `xs[i]`），语义错误。
+                        if (_instr.opname in ('DELETE_SUBSCR', 'DELETE_ATTR')
+                                and _expr_instrs):
+                            _del_stmts = self._build_delete_stmt(
+                                _instr, _expr_instrs + [_instr])
+                            if _del_stmts:
+                                if isinstance(_del_stmts, list):
+                                    _break_user_stmts.extend(_del_stmts)
+                                else:
+                                    _break_user_stmts.append(_del_stmts)
+                            _expr_instrs = []
+                            continue
                         _expr_instrs.append(_instr)
+                    # [B145-V3R7] 尾段**不**在此归约为表达式语句：break 角色
+                    # 块的尾段通常是循环条件重检表达式（如 while 回边块的
+                    # `i < 3` + POP_JUMP_BACKWARD_IF_TRUE），由条件重检归约
+                    # 路径处理；在此发射会多出一条裸 Expr（m06 回边块形态）。
+                # [B145-V3R7] break 源块补发 break 语句：本块以无条件前向
+                # 跳转跳出循环 ⇒ 其用户语句之后须有一条 break（源码语义
+                # `del xs[i]; break`）。判据：末条为 JUMP_FORWARD/
+                # JUMP_ABSOLUTE ∧ 本块不是任何循环登记的 break 落点
+                # （落点是循环后的代码，其跳转不表达 break）。
+                # [B145-V3R7 收窄] 跳转必须**离开所属循环**（目标块不在该
+                # 循环的块集/体集合内）：循环内的顺序跳转（if 臂汇合跳到
+                # merge 块、if 臂假边跳回边重检块 = continue 语义）不是
+                # break（E 门禁首跑误杀：function.pyc order_entrust_info_handle
+                # 与 trade_live_broker.pyc get_trades 各退一单元）。
+                _break_last = block.get_last_instruction()
+                if (_break_last is not None
+                        and _break_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                        and not self._b145_is_break_landing_block(block)):
+                    _break_leaves_loop = True
+                    if self._current_loop is not None and _break_last.argval is not None:
+                        _break_tgt = self.cfg.get_block_by_offset(_break_last.argval)
+                        if _break_tgt is not None:
+                            _cl_blocks = set(getattr(self._current_loop, 'blocks', None) or [])
+                            _cl_blocks |= set(getattr(self._current_loop, 'body_blocks', None) or [])
+                            _cl_cond = getattr(self._current_loop, 'condition_block', None)
+                            if _cl_cond is not None:
+                                _cl_blocks.add(_cl_cond)
+                            _break_leaves_loop = _break_tgt not in _cl_blocks
+                    if _break_leaves_loop:
+                        _break_user_stmts.append({'type': 'Break'})
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
                 return _break_user_stmts if _break_user_stmts else []
