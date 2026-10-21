@@ -3,6 +3,8 @@
 > 基于「No More Gotos」(Launez et al., 2013) 区域归约算法，结合 Python 3.11 字节码特性，
 > 经 quotation.pyc 迭代（R21-R26）与 2026-09-29 完备性审计实证总结。本文件是反编译器的强制性工程规范。
 > 完备性总纲（理论、128 形态台账、破口登记、迭代机制、可用资源）：`wiki/concepts/decompile-invariant-completeness.md`。
+>
+> **2026-10-21 更新（v3 十轮终审后）**：本轮 `attain-true-completeness` 十轮（R1 破口复现 → R2–R7 按 25 行逐族封闭 → R8 全行对抗终审 → R9 wiki 落账 → R10 终验归档）已把形式层三态推进到 **完备 128 / 破口 0 / 零能力 0 = 100%**（终验：402 八分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 基线名单、IV.2 全绿）。本次修订同步：锚点行号重核（`region_analyzer.py` 36,635 行 / `region_ast_generator.py` 69,979 行）、§3.3.1 补 R8 完成判据、§6.2–6.4 补 v3 轮次纪律（I.4 白名单证据 / `[Bn-V3Rn]` 标记族 / 合成非语料探针 / 25 行矩阵 + 组合终表）、§7.2 破口登记更新为已封闭、§8.1/§8.3 换成 v8 终读数。
 
 ---
 
@@ -79,20 +81,22 @@ if count > 100: ...    # 硬编码计数上限
 
 ## 三、区域类型与归约规则
 
-### 3.1 区域类型分类（对齐 `RegionType` 枚举 19 类，`region_analyzer.py:170-189`，锚点 2026-09-29 核实）
+### 3.1 区域类型分类（对齐 `RegionType` 枚举 19 类；锚点 **2026-10-21 逐条重核**，v3 十轮改动后重定位）
 
 | 区域类型 | 对应语法 | 识别函数（`region_analyzer.py` 锚点） |
 |---------|---------|--------------------------------------|
-| IfRegion（IF/IF_THEN/IF_THEN_ELSE/IF_ELIF_CHAIN） | `ast.If` / elif 链 | `_identify_conditional_regions` `:15981` |
-| LoopRegion（FOR_LOOP/WHILE_LOOP） | `ast.For`/`ast.While` | `_identify_loop_regions` `:3782`（for-else/while-else：`_find_loop_else` `:5242`） |
-| TryRegion（TRY_EXCEPT/TRY_FINALLY） | `ast.Try`（含 except\*） | `_identify_try_except_regions` `:7603`、空体 finally `:9016`、`_find_try_else_blocks` `:10647` |
-| WithRegion | `ast.With`/`ast.AsyncWith` | `_identify_with_regions` `:12282` |
-| MatchRegion | `ast.Match` + 8 模式 | `_identify_match_regions` `:12920`、嵌套 match `:14044`（模式解析 `core/cfg/pattern_parser.py`） |
-| AssertRegion | `ast.Assert` | `_identify_assert_regions` `:14799` |
-| BoolOpRegion | `ast.BoolOp` | `_identify_boolop_regions` `:23420` |
-| TernaryRegion | `ast.IfExp` | `_identify_ternary_regions` `:20515` |
-| 链式比较区域 | `ast.Compare` 链 | `_identify_chained_compare_regions` `:15495` |
-| SEQUENCE/BASIC/BREAK/CONTINUE/PASS/RETURN | 顺序/直线/跳转语义 | `_identify_sequence_regions` `:27519` + `BlockSemantics` `:199-201` |
+| IfRegion（IF/IF_THEN/IF_THEN_ELSE/IF_ELIF_CHAIN） | `ast.If` / elif 链 | `_identify_conditional_regions` `:21221`（链式判定 `_check_elif_chain` `:24427`；boolop 条件链 `_detect_boolop_conditional_chain` `:32488`） |
+| LoopRegion（FOR_LOOP/WHILE_LOOP） | `ast.For`/`ast.While` | `_identify_loop_regions` `:5267`（for-else/while-else：`_find_loop_else` `:7257`；try 内收敛 `_clamp_loop_else_to_enclosing_try` `:7120`） |
+| TryRegion（TRY_EXCEPT/TRY_FINALLY） | `ast.Try`（含 except\*） | `_identify_try_except_regions` `:10219`、else 段 `_find_try_else_blocks` `:13800`（finally 正常副本 `_find_finally_normal_copy_blocks` 在 `region_ast_generator.py:35000`） |
+| WithRegion | `ast.With`/`ast.AsyncWith` | `_identify_with_regions` `:15784` |
+| MatchRegion | `ast.Match` + 8 模式 | `_identify_match_regions` `:16486`、嵌套 match `_identify_nested_match_regions` `:18447`（模式解析 `core/cfg/pattern_parser.py`） |
+| AssertRegion | `ast.Assert` | `_identify_assert_regions` `:19784` |
+| BoolOpRegion | `ast.BoolOp` | `_identify_boolop_regions` `:29451` |
+| TernaryRegion | `ast.IfExp` | `_identify_ternary_regions` `:26247` |
+| 链式比较区域 | `ast.Compare` 链 | `_identify_chained_compare_regions` `:20595` |
+| SEQUENCE/BASIC/BREAK/CONTINUE/PASS/RETURN | 顺序/直线/跳转语义 | `_identify_sequence_regions` `:35588` + `BlockSemantics` |
+
+> 锚点维护规则：任何触及 `core/cfg/**` 的批次结束后，必须重核本表行号并随批次提交更新（v3 R2–R8 期间本表已滞后两轮，R9 落账时统一重核）。
 
 ### 3.2 IfRegion 归约规则
 
@@ -100,7 +104,7 @@ if count > 100: ...    # 硬编码计数上限
 - **then-region 边界止于 then 分支末尾的 JUMP_FORWARD 跳转点**
 - 循环体内 if/elif/else 链的**公共汇聚后继块保留为循环体兄弟语句**，不得并入 then 分支
 - else-region 边界**包含其体内所有语句**（含尾部 for 循环），不得把 else 体内尾随循环外提到 if/elif/else 之后
-- 判据：`_check_elif_chain`（`region_analyzer.py:18876`）中 `inner_merge ≠ merge_` 时阻止 elif 链构建，尾随语句保留 else 体内
+- 判据：`_check_elif_chain`（`region_analyzer.py:24427`）中 `inner_merge ≠ merge_` 时阻止 elif 链构建，尾随语句保留 else 体内
 
 #### 3.2.2 if-continue 兄弟语句（R23 修复；B2 守卫族）
 当 IfRegion.merge_block 是当前循环的 back_edge_block（纯 JUMP_BACKWARD）且无 else_blocks 时：
@@ -114,21 +118,22 @@ if count > 100: ...    # 硬编码计数上限
 3. `back_edge 仅含 JUMP_BACKWARD`（纯 continue 回边）
 4. `not else_stmts`（无 else，两分支均→回边）
 
-continue 侧守卫族（防回归锚点）：`_block_is_continue_target` `region_ast_generator.py:10289`、continue 目标排除 loop_else `:10423-10427`、`_loop_else_set` 交互 `:10455-10579`。
+continue 侧守卫族（防回归锚点，2026-10-21 重核）：`_block_is_continue_target` `region_ast_generator.py:14832`（调用点 `:13715-13733/:14205`）、continue 目标排除 loop_else `:14985-14988`、`_loop_else_set` 交互 `:14985-14990`。
 
 #### 3.2.3 'and' 复合条件处理（R26 缺陷3）
 - **统一不拆分**任何 `and` 复合条件，保持 `if A and B:` 形式
 - 禁止只对 if 首条拆分（外层 `if A:` + 内层 `if B:`）而 elif 保留冗余 `and`
-- 'and' 链检测（Step6）+ `main_inline_boolop_chain`（`region_analyzer.py:16782-17800`）存入 IfRegion
-- `generate()` 入口：当 IfRegion.entry 是 entry_block 且存在以 entry_block 为首块的 inline_boolop_chain 时，让 `_if_generate_normal`（`region_ast_generator.py:17949`）统一处理
+- 'and' 链检测（Step6）+ `main_inline_boolop_chain`（`region_analyzer.py:32488` 一带）存入 IfRegion
+- `generate()` 入口：当 IfRegion.entry 是 entry_block 且存在以 entry_block 为首块的 inline_boolop_chain 时，让 `_if_generate_normal`（`region_ast_generator.py:25234`）统一处理
 
 ### 3.3 LoopRegion 归约规则
 
-#### 3.3.1 while 条件 boolop 链（R24 缺陷B）
-`_detect_while_condition_boolop_chain`（`region_analyzer.py:23938`）反向链回溯：
+#### 3.3.1 while 条件 boolop 链（R24 缺陷B；v3 R8 修订 B162）
+`_detect_while_condition_boolop_chain`（`region_analyzer.py:30247`）反向链回溯：
 - **判据**：`if not cond_in_loop: break`
 - 合法 while-boolop 前驱的 fall-through 恒为下一条件块（在循环内，`cond_in_loop` 恒真）
 - `cond_in_loop=False` 仅出现在外层 if/elif/while 嵌套场景，此时前驱是外层 if/elif 条件块，须由 IfRegion 归约（原则2 + 原则3）
+- **链完成判据（R8/B162 修订，强制）**：多成员 or/and 链的**完成**以**链尾**为准——链尾块（`chain[-1][0]`，其 TRUE 边进入循环体）必须 fall-through 到 `loop.header_block`；**禁止**以链首 fall-through 等于 header 作为完成判据（该判据只在单成员链成立，多成员链会把整条 or/and 链误判为普通条件而丢链）。完成后走与单成员链同路的 Phase-7-E 归并与块重注册，不得另起分支。
 
 #### 3.3.2 循环后顺序语句
 - 循环正常退出后、且后继块仍位于外层 if/elif/else 同一子分支内（未被外层分支的 JUMP_FORWARD to return 截断）时
@@ -147,12 +152,12 @@ continue 侧守卫族（防回归锚点）：`_block_is_continue_target` `region
 
 **检测标准（3.11）**：`CHECK_EG_MATCH` / `PREP_RERAISE_STAR` / `is_except_star`。**禁止**用 `PRELOAD_RERAISE`（3.12 操作码）当 3.11 判据——曾因此误判"未实现"。
 
-| 层 | 锚点 |
+| 层 | 锚点（2026-10-21 重核） |
 |----|------|
-| 识别 | `region_analyzer.py:9731`（规则4 PUSH_EXC_INFO+CHECK_EG_MATCH→'except_star'）、`:9813/:10008`、框架清理块 `:12701-12709`、`exception_handler.py:93-276` |
-| 归约 | handler_type `'except_star'` 与普通 except 同路并入 TryRegion：`region_analyzer.py:7891/:8724/:9342/:9915`；多 handler 链 `:10424-10483` |
-| 生成 | `region_ast_generator.py:26839-26843`（is_except_star 标记）、`:27809-27816`（框架指令过滤：BUILD_LIST/LIST_APPEND/PREP_RERAISE_STAR/SWAP/COPY） |
-| 发射 | `code_generator.py:702/2079-2080`（`except_keyword = 'except*'`） |
+| 识别 | `region_analyzer.py:8043`（块含 CHECK_EG_MATCH ⇒ except\* 分支；3.11 操作码集合 `:1217`）、`exception_handler.py:50`（`_find_handler_type_load`：handler 异常类型 LOAD_GLOBAL 定位）、`:114`（`identify_try_except_simplified` handler 提取） |
+| 归约 | handler_type `'except_star'` 与普通 except 同路并入 TryRegion：`region_analyzer.py:10219`（Try 识别）/`:13800`（else 段）；except\* 框架指令上下文判定 `region_ast_generator.py:37923-37927`（CHECK_EG_MATCH/PREP_RERAISE_STAR） |
+| 生成 | `region_ast_generator.py:36425`（`handler_node['is_except_star'] = True`） |
+| 发射 | `code_generator.py:702`（**`except_keyword = 'except*'`**，`:713-717` 表头发射） |
 
 ---
 
@@ -214,7 +219,7 @@ def _identify_xxx_regions(self, ...):
 - **测试工程师**：反编译 + 字节码 diff + 最小复现实例（≥10个）+ 根因初判
 - **修复工程师**：按区域归约算法修复 + docstring 更新 + 回归验证
 
-### 6.2 验证清单（每轮必须，2026-09-29 更新为当前门禁）
+### 6.2 验证清单（每轮必须，2026-10-21 更新为 v3 终审门禁）
 
 1. IMPORT_OK（`import core.cfg.region_analyzer; import core.cfg.region_ast_generator`）
 2. COMPILE_OK（反编译产物 `compile()` 通过；BOM `efbbbf` 保持）
@@ -222,20 +227,28 @@ def _identify_xxx_regions(self, ...):
 4. **官方 41 靶 h62**：SAME/IMPROVED/REGRESSION/ERR 全 0 退化（regained/lost 均空）
 5. **sstrict 34 pyc / 1528 函数**：defects 不增，RESOLVED 只增真修复
 6. **battery 82** 复现 landed vs 基线 worse=0；**金丝雀 4/4** sha16 全中
+
+> 4–6 项为历史基线（round75/fix1 口径，留档监控）；**v3 十轮的实际放行门禁 = 第 11–14 项**（402 八分片 + small34 + quotation + pytest + IV.2 + 25 行矩阵/组合终表 + I.4 证据纪律 + 守卫过宽自捕获）。
 7. 归一化口径不退化（≥ 上轮）；L1 严格口径逐项核查
 8. G0 自检：三要素 docstring、无 self 新状态、无跨层 `X.entry in Y.blocks`、无 .py/函数名白名单、无 start_offset 阈值、ast+py_compile、git status 已跟踪程序文件零改动
 9. 反模式自检（G3 0 新增前缀方法，G4 0 硬编码深度上限）
 10. **影响面实测**：全部产物逐字节比对，只有目标单元 sha 变化（零回归的字节级证据）
+11. **v3 门禁（E 编排，强制）**：402 语料八分片 **6617/6617 files_failure=0**；small34 **1568/1568**；quotation **153/153（rc=0）**；pytest 七套件**基线名单一致**（2 failed 在放行名单）；IV.2 全绿（BOM 单头 / G3=0 / instrumentation code 命中 0）
+12. **v3 形态面（强制）**：25 行矩阵（每行 ≥1 深层 ≥3 级宿主探针 + 负对照）全绿；组合级 25 号终表 + 另册口径差并入全数处置；13 误解逐条自查零触犯
+13. **v3 证据纪律（强制）**：每个机制给出 **I.4 白名单证据**（opcode 顺序 / 跳转极性 / pred-succ / 异常边 / 区域成员 / 注册态）与 C1/C2/C3 归属；语义 hunk 标 `[Bn-V3Rn]`；新方法六项 docstring；**合成非语料探针**须同时交付（防止只在语料上成立）
+14. **守卫过宽自捕获**：任何新守卫若在 E 门禁首跑误杀既绿文件，必须按 I.4 收窄后二跑复原，并留二分记录（v3 R5/R6/R7 三次实例：B70g、B139、B145）
 
 ### 6.3 提交规则
-- 每轮必须 commit + push 到远程；commit message 前缀 `rr-rNN:`
+- 每轮必须 commit + push 到远程；commit message 前缀 `rr-rNN:`（v3 规范链用 `rr-v3rNN:`，如 `rr-v3r08:`）
 - 修复批归档（batches/fixN）必须包含：缺陷描述、修复方案、验证结果、反模式自检、**破口编号引用（B1/B1b/…）**
 - 包含：缺陷描述、修复方案、验证结果、反模式自检
+- **v3 补充**：每轮落 `rounds/roundN/FIX.md`（§0–§6 终稿）+ 全部 stamp JSON + 可复跑编排脚本（`final_verify_run_rN.py`）；`tasks.md` 对应 Task 全勾；锚点表（§3.1）随批次更新
 
-### 6.4 修复验收标准（2026-09-29 新增）
+### 6.4 修复验收标准（2026-09-29 新增，2026-10-21 增补）
 
 - 修复 = **封闭守卫、恢复 C1/C2/C3**，不是补语料个案；修完按 `wiki/concepts/decompile-invariant-completeness.md` §8 复审对应形态并更新台账
-- 落地归档必须写明"代码已落地"或"仅归档 spec 未落地"（防止把已验证 spec 误当已修复代码——B1 教训：fix1 嫁接方案在 jqop1.json 验证通过但代码未落地，树里 `region_ast_generator.py:47639-47643` 仍是丢弃版）
+- 落地归档必须写明"代码已落地"或"仅归档 spec 未落地"（防止把已验证 spec 误当已修复代码——B1 教训：fix1 嫁接方案在 jqop1.json 验证通过但代码未落地，树里 `region_ast_generator.py:47639-47643`（**历史行号，2026-10-21 树中该区段已无丢弃版**）曾是丢弃版）
+- **v3 增补**：① 判据必须可迁移到同族形态（禁止文件/行号/函数名白名单）；② 每处语义 hunk 标 `[Bn-V3Rn]` 且破口编号连续开档；③ 新方法六项 docstring + 命名不触 §2.1 前缀；④ 交付**合成非语料探针**证明机制不依赖既有语料；⑤ 守卫判据须能被 E 门禁反证（首跑误杀 ⇒ 收窄 ⇒ 二跑复原，二分记录入库）
 
 ---
 
@@ -251,35 +264,38 @@ def _identify_xxx_regions(self, ...):
 | R25 | build_future_fill_time else 块尾部 for 提升 | IfRegion | `_check_elif_chain` `inner_merge ≠ merge_` + `_generate_if` orelse 守卫 | 原则2+3 |
 | R26 | one_prod_to_dataframe and 部分提取 | IfRegion/BoolOp | 方案B 不拆分任何 and + generate() 入口复合 'and' 识别 | 原则1+4 |
 
-### 7.2 破口登记（2026-09-29 审计，现行）
+### 7.2 破口登记（2026-10-21 更新为 v8 终态；**形式层破口开档 = 0**）
 
 | 编号 | 状态 | 内容 | 锚点 |
 |------|------|------|------|
-| **B1a** | **已验证未落地** | BoolOp 前导操作数丢弃：`_cjb_skip_inline_if` 真 → extend pre_stmts → return，`_cjb_cond_expr` 丢失（`if A and B or C` 退化）。fix1 嫁接方案已验证但仅存归档 spec（round75/batches/fix1/specs/jqop1.json），代码未落地——**落地标记 `_graft_pending_operand` 树中零命中** | `region_ast_generator.py:47629-47643` |
-| **B1b** | **未定位（交 fix2+）** | 语句上下文 or 臂第二丢弃入口，未走 skip 分支，属 `_build_boolop_expression` 家族。归档复现：`fix1/synth/neg75_jqcond2.py/.pyc`（`if a and b or c:` → `if not (a and b):`，两臂逐字节相同均失败） | 待 fix2 定位 |
-| B2 | 已落地（防回归） | If×continue 守卫族 | `region_ast_generator.py:10289/10423-10427/10455-10579` |
-| B3 | 已落地（防回归） | 共享尾守卫族：W14-C、fix3-T1/T2/T6、W23、R71-thenover | `region_analyzer.py:27282/27304/19602`、`region_ast_generator.py:12945-13075/18593/19185/22758` |
-| B4 | 已落地（防回归） | 孤儿块释放 + 合法子区域守卫 | `region_ast_generator.py:1593-1663`、`region_analyzer.py:1410-1424/9017-9019` |
+| **B1a** | **已封闭（防回归监控）** | BoolOp 前导操作数丢弃：`_cjb_skip_inline_if` 真 → extend pre_stmts → return，`_cjb_cond_expr` 丢失（`if A and B or C` 退化）。**嫁接路线已废弃**，改由 `region_analyzer.py` 五臂算法封闭（臂 A/B/B2/C/D/E + `_sb_has_body` 同一谓词，落地标记 `[B1b fix]`/`[B1b fix-r2]`）；**注意：嫁接符号族 `_graft_pending_operand` 仍留在树中（路线废弃、符号未清理），不作为"已落地"判据** | 五臂算法 `region_analyzer.py:21221`（`_identify_conditional_regions`；`_sb_has_body` 同一谓词 `:21255-21258`）、`:32488`（`_detect_boolop_conditional_chain`；`[B1b fix]` 标记 `:32519/:32529/:33140/:33289`）；残留嫁接符号 `region_ast_generator.py:46040` |
+| **B1b** | **已封闭（防回归监控）** | 语句上下文 or 臂第二丢弃入口：与 B1a 同批五臂封闭 + B6 四上下文封闭；归档复现 `fix1/synth/neg75_jqcond2.py/.pyc` | 同上 |
+| B2 | 已落地（防回归） | If×continue 守卫族 | `region_ast_generator.py:14832`（`_block_is_continue_target` 定义）、调用点 `:13715-13733/:14205`、loop_else 交互 `:14985-14990` |
+| B3 | 已落地（防回归） | 共享尾守卫族：W14-C、fix3-T1/T2/T6、W23、R71-thenover | `region_analyzer.py:25199-25208/35351-35373`（W14-C）、`region_ast_generator.py:18379`（fix3-T1）、`:26060`（fix3-T6）、`:26894/62600`（W23）、`:31162-31167`（R71-thenover） |
+| B4 | 已落地（防回归） | 孤儿块释放 + 合法子区域守卫 | `region_analyzer.py:304-306/570-571/601`（孤儿块判据）、`:870`（合法子区域）、`region_ast_generator.py:2054-2106/20517-20520` |
+| **B129–B162** | **v2–v8 全部封闭** | v3 十轮新开破口族（条件合并 / try-raise-assert 宿主 / await 挂起链 / match-with 幻影 / 循环控制 / 赋值-删除-return-slice / 终审另册） | 各轮 `rounds/roundN/FIX.md` + `round8/REVIEW.md` |
+| **B142 / B143** | **稀窝登记（不升格）** | 嵌套 finally 副本归属 / finally 体内 break 的 finalbody 子区域派发：形态级非缺口，仅单一残余单元；修复窗口=后续轮次 | `round8/REVIEW.md` §6 |
 
-**破口状态机与复审六步**：`未定位 → 已定位(仅spec) → 已落地 → 已复审`，复审 = grep 落地标记 + 台账更新 + 占比重算，见 `wiki/concepts/decompile-invariant-completeness.md` §8。**B1a/B1b 验收**：两丢弃入口全部定位并接回；jq 65/65 保持；161 产物逐字节不变；neg75_jqcond2 3/3 success。
+**破口状态机与复审六步**：`未定位 → 已定位(仅spec) → 已落地 → 已复审`，复审 = grep 落地标记 + 台账更新 + 占比重算，见 `wiki/concepts/decompile-invariant-completeness.md` §8。**B1a/B1b 验收**：两丢弃入口全部定位并接回；jq 65/65 保持；161 产物逐字节不变；neg75_jqcond2 3/3 success。**v8 口径**：形式层三态 = 完备 128 / 破口 0 / 零能力 0。
 
 ---
 
-## 八、完备性与当前状态（2026-09-29 审计定稿）
+## 八、完备性与当前状态（2026-10-21 更新为 v8 终态）
 
 ### 8.1 完备性标准
 
 **完备占比 = 完备形态数 ÷ 128**（分母 = Python 3.11 语言语法面：97 ast 节点 + 31 扩展形态，永不取自实现枚举、永不取自语料、不随嵌套膨胀）。
 
-| 维度 | 读数 |
+| 维度 | 读数（v8） |
 |------|------|
-| 路径存在（识别+归约+生成） | **128/128 = 100%**（`tools/kb/syntax_coverage.py` → `docs/refactor/syntax-coverage.json`） |
-| 嵌套无感不变式 | **完备 127 / 破口 1（BoolOp B1）/ 零能力 0** |
-| **完备占比** | **127/128 = 99.2%**（路径 100% × 不变式扣减；与 R26 时代"99.2% 节点词汇率"数值巧合、含义不同） |
+| 路径存在（识别+归约+生成） | **128/128 = 100%**（`tools/kb/syntax_coverage.py` → `docs/refactor/syntax-coverage.json`；v8 重跑 sha256 前缀 `38003eb4…`） |
+| 嵌套无感不变式 | **完备 128 / 破口 0 / 零能力 0**（v3 十轮 R2–R8 封闭 v7 的 25 个破口行；组合级 25 号 + 另册 3 号 28 项全数处置；稀窝 B142/B143 属地登记不升格） |
+| **完备占比** | **128/128 = 100%**（路径 100% × 不变式全数；历史读数：v5 127/1/0=99.2% → v7 103/25/0=80.47% → v8 128/0/0=100%） |
 
 - except\* 全链已实现（见 3.5），**"唯一缺口 except\*"的旧结论作废**（根因 = 3.12 操作码误标）
 - 残留 sstrict 67 缺陷单元未逐个归类守卫族：归类属 fix 批工作流，落位后复审对应形态
 - 三维度禁止互替：语法完备（本节）/ 结构正确率（sstrict 口径）/ 字节等价（门禁口径）
+- 口径演变史与每版错误形态：总纲 §9.1（v1–v8 全记录不删）
 
 ### 8.2 历史快照（R26/quotation 时代，保留存档）
 
@@ -289,6 +305,34 @@ def _identify_xxx_regions(self, ...):
 | L1 严格口径 | 148/150 = 98.67%（2 项理论极限） |
 | 当轮 HEAD | `ece3c91` |
 
-### 8.3 当前门禁基线（round75/fix1 归档口径）
+### 8.3 当前门禁基线（v8 终态，2026-10-21 终验 `rr-v3r10`）
 
-官方 41 靶 h62 SAME=40/MOVED=1/ERR=0、fully matched 33/33；sstrict 34 pyc/1528 函数 defects 67；battery 82；金丝雀 4/4；影响面 161 产物仅 jq 一份 sha 变化（fix1 验证时）。
+| 门禁 | 终读数 |
+|------|--------|
+| 402 语料八分片 | **6617/6617 files_failure=0**（compile_error/error/failure 全 0；574s） |
+| small34 | **1568/1568**（34/34 files success） |
+| quotation | **153/153 success（rc=0，100.00%）** |
+| pytest 七套件 | **2 failed / 282 passed / 2 xpassed**（基线名单一致） |
+| IV.2 | 全绿（IMPORT_OK / COMPILE_OK / BOM 单头 / instrumentation code 0 / G3=0） |
+| 25 行矩阵 | **257/257**（34 探针，含负对照 60/60） |
+| 组合级 25 号 + 另册 3 号 | **241/242**（唯一红 = B142 属地稀窝） |
+| 7 组回归 | 86/86、46/46、60/60、71/71、65/65、172/172、98/98 |
+
+历史门禁快照：官方 41 靶 h62 SAME=40/MOVED=1/ERR=0、fully matched 33/33；sstrict 34 pyc/1528 函数 defects 67；battery 82；金丝雀 4/4（round75/fix1 归档口径，留档）。
+
+### 8.4 形态工作面（25 行）与落位（v8 终态）
+
+后续任何改动都应能回答"影响哪一行、该行判据是什么"。25 行工作面与逐行探针/负对照见
+`.trae/specs/attain-true-completeness/rounds/round8/REVIEW.md` §2（矩阵 257/257），组合级终表见同文件 §3。
+
+| 组 | 行 | v3 落位轮次 |
+|---|---|---|
+| R2 条件合并 | If / BoolOp / IfExp | R2（R3/R5/R7/R8 补变体） |
+| R3 异常与绑定 | Try / Raise / Assert / Import / Global | R3（R5/R8 补变体） |
+| R4 挂起链 | Await / ListComp / await_expr / Yield | R4（R7/R8 补变体） |
+| R5 模式与资源 | Match / With | R5（R8 补变体） |
+| R6 循环控制 | Break / Continue / While | R6 |
+| R7 赋值族 | Delete / AugAssign / Return / Slice | R7（R8 补变体） |
+| R8 终审 | augmented_assign / slice / match_statement / global_nonlocal 等镜像行 + 组合级另册 | R8（B153–B162） |
+
+行级要求（后续轮次沿用）：每行至少 1 个**深层（≥3 级宿主）**探针 + 1 个负对照；单点修复必须能外推到同族形态；镜像行（表A/表B/表C 同形不同面）须分别取证。
