@@ -1,0 +1,415 @@
+{
+  "impl_files_mentioning_three_states": [
+    {
+      "file": "core/cfg/pattern_parser.py",
+      "hits": {
+        "完备": 1,
+        "破口": 5,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "core/cfg/region_analyzer.py",
+      "hits": {
+        "完备": 5,
+        "破口": 14,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "core/cfg/region_ast_generator.py",
+      "hits": {
+        "完备": 7,
+        "破口": 11,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "raw/sources/core/cfg/pattern_parser.py",
+      "hits": {
+        "完备": 1,
+        "破口": 5,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "raw/sources/core/cfg/region_analyzer.py",
+      "hits": {
+        "完备": 5,
+        "破口": 14,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "raw/sources/core/cfg/region_ast_generator.py",
+      "hits": {
+        "完备": 7,
+        "破口": 11,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "scripts/pyc_verify.py",
+      "hits": {
+        "完备": 2,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "scripts/run_anti_patch_tests.py",
+      "hits": {
+        "完备": 7,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/test_control_flow_completeness_matrix.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/test_ternary_combinations.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/completeness/test_l1_basic_structures.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/completeness/test_l2_nested.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/control_flow_completeness/base.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/control_flow_completeness/run_completeness_suite.py",
+      "hits": {
+        "完备": 3,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/control_flow_matrix/base.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/control_flow_matrix/run_tests.py",
+      "hits": {
+        "完备": 4,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/control_flow_matrix/test_completeness_matrix.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/control_flow_matrix/validate_framework.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/control_flow_matrix/__init__.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/exhaustive/run_completeness_tests.py",
+      "hits": {
+        "完备": 6,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/exhaustive/run_phase6_matrix.py",
+      "hits": {
+        "完备": 6,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/exhaustive/run_phase6_tests.py",
+      "hits": {
+        "完备": 7,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/exhaustive/run_test_matrix.py",
+      "hits": {
+        "完备": 4,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/exhaustive/test_binary_combinations_supplement.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/exhaustive/test_deep_nesting_coverage.py",
+      "hits": {
+        "完备": 2,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/exhaustive/test_single_method_per_region.py",
+      "hits": {
+        "完备": 2,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/exhaustive/test_ternary_deep_nesting.py",
+      "hits": {
+        "完备": 2,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/exhaustive/L1_basic/test_L1_complete.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/exhaustive/P1_expressions/test_P1_complete.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tests/helpers/decompilation_helper.py",
+      "hits": {
+        "完备": 2,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "test_repros/round1/r1_01_stmt_andor3.py",
+      "hits": {
+        "完备": 0,
+        "破口": 1,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "test_repros/round3/gen_probes.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "test_repros/round5/gen_probes_r5v5.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "test_repros/round7/r7v7r_b121_whilehdr.py",
+      "hits": {
+        "完备": 0,
+        "破口": 1,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "test_repros/round7/r7v7r_b121_whilehdrOK.py",
+      "hits": {
+        "完备": 0,
+        "破口": 1,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tools/completeness/coverage_checker.py",
+      "hits": {
+        "完备": 1,
+        "破口": 1,
+        "零能力": 1
+      }
+    },
+    {
+      "file": "tools/completeness/jspace_generator.py",
+      "hits": {
+        "完备": 4,
+        "破口": 1,
+        "零能力": 1
+      }
+    },
+    {
+      "file": "tools/kb/branch_conditions.py",
+      "hits": {
+        "完备": 1,
+        "破口": 0,
+        "零能力": 0
+      }
+    },
+    {
+      "file": "tools/kb/syntax_coverage.py",
+      "hits": {
+        "完备": 2,
+        "破口": 0,
+        "零能力": 0
+      }
+    }
+  ],
+  "impl_files_with_state_assignment": [],
+  "space_forms_total": 39,
+  "space_forms_with_25row": 25,
+  "space_forms_NEW_no_row": 14,
+  "space_forms_NEW_list": [
+    "AnnAssign",
+    "AsyncFor",
+    "AsyncFunctionDef",
+    "AsyncWith",
+    "Decorator",
+    "DictComp",
+    "ExceptStar",
+    "GeneratorExp",
+    "JoinedStr",
+    "Lambda",
+    "NamedExpr",
+    "PEP604Union",
+    "SetComp",
+    "Starred"
+  ],
+  "round1_coverage_totals": {
+    "entries": 1556,
+    "covered": 976,
+    "uncovered": 580,
+    "coverage_pct": 62.724935732647815,
+    "families": 39,
+    "status_mismatch": 0
+  },
+  "round3_variant_totals": {
+    "rows": 25,
+    "declared_variants_total": 279,
+    "exercised_by_registered_probe_total": 118,
+    "exercised_by_space_evidence_total": 227,
+    "rows_with_gap": 24,
+    "rows_with_zero_exercised": 2,
+    "rows_f1_class_form_absent": 2,
+    "f1_class_rows": [
+      "global_nonlocal",
+      "slice"
+    ]
+  },
+  "round3_space_dimensions": {
+    "entries": 1556,
+    "forms": 39,
+    "form_variant_pairs": 299,
+    "form_variant_host_triples": 1251
+  },
+  "denominator_summary": {
+    "tool_rule_denominator": 97,
+    "published_denominator": {
+      "source": "Python 3.11 ast 模块（语言权威）",
+      "ast_node_types": 97,
+      "extra_syntax_forms": 31,
+      "total": 128
+    },
+    "true_syntactic_surface": 73,
+    "missing_lowercase_syntax_classes": [
+      "alias",
+      "arg",
+      "arguments",
+      "comprehension",
+      "keyword",
+      "match_case",
+      "withitem"
+    ],
+    "missing_never_recovered": [
+      "arg",
+      "arguments",
+      "keyword",
+      "withitem"
+    ],
+    "denominator_extra_non_syntax": 32,
+    "token_classes": 29,
+    "ctx_classes": 3,
+    "simulated_312_denominator": 102,
+    "simulated_312_added": [
+      "ParamSpec",
+      "TypeAlias",
+      "TypeParam",
+      "TypeVar",
+      "TypeVarTuple"
+    ],
+    "extra_forms_with_overlap": 27
+  },
+  "numerator_summary": {
+    "raw": 97,
+    "code_only_strict": 22,
+    "tier_counts": {
+      "T1_astX_code": 43,
+      "T2_quoted_string": 54,
+      "T3_comment_only": 0
+    },
+    "extra_forms_raw": 31,
+    "extra_forms_comment_only": [
+      "capture_pattern",
+      "or_pattern",
+      "value_pattern"
+    ]
+  }
+}

@@ -1,0 +1,1773 @@
+{
+  "space_entries": 1556,
+  "space_forms": 39,
+  "space_form_variant_pairs": 299,
+  "space_form_variant_host_triples": 1251,
+  "denominator_claim": 128,
+  "per_form": {
+    "AnnAssign": {
+      "variants": 4,
+      "hosts": 10,
+      "entries": 15
+    },
+    "Assert": {
+      "variants": 8,
+      "hosts": 11,
+      "entries": 46
+    },
+    "AsyncFor": {
+      "variants": 4,
+      "hosts": 9,
+      "entries": 21
+    },
+    "AsyncFunctionDef": {
+      "variants": 7,
+      "hosts": 7,
+      "entries": 25
+    },
+    "AsyncWith": {
+      "variants": 5,
+      "hosts": 10,
+      "entries": 24
+    },
+    "AugAssign": {
+      "variants": 20,
+      "hosts": 12,
+      "entries": 63
+    },
+    "Await": {
+      "variants": 8,
+      "hosts": 9,
+      "entries": 23
+    },
+    "BoolOp": {
+      "variants": 10,
+      "hosts": 14,
+      "entries": 85
+    },
+    "Break": {
+      "variants": 7,
+      "hosts": 10,
+      "entries": 32
+    },
+    "Continue": {
+      "variants": 8,
+      "hosts": 10,
+      "entries": 35
+    },
+    "Decorator": {
+      "variants": 6,
+      "hosts": 5,
+      "entries": 20
+    },
+    "Delete": {
+      "variants": 8,
+      "hosts": 11,
+      "entries": 24
+    },
+    "DictComp": {
+      "variants": 7,
+      "hosts": 10,
+      "entries": 23
+    },
+    "ExceptStar": {
+      "variants": 10,
+      "hosts": 10,
+      "entries": 96
+    },
+    "GeneratorExp": {
+      "variants": 5,
+      "hosts": 10,
+      "entries": 21
+    },
+    "Global": {
+      "variants": 5,
+      "hosts": 10,
+      "entries": 19
+    },
+    "If": {
+      "variants": 12,
+      "hosts": 15,
+      "entries": 118
+    },
+    "IfExp": {
+      "variants": 8,
+      "hosts": 13,
+      "entries": 28
+    },
+    "Import": {
+      "variants": 10,
+      "hosts": 12,
+      "entries": 47
+    },
+    "JoinedStr": {
+      "variants": 6,
+      "hosts": 11,
+      "entries": 32
+    },
+    "Lambda": {
+      "variants": 4,
+      "hosts": 10,
+      "entries": 18
+    },
+    "ListComp": {
+      "variants": 8,
+      "hosts": 12,
+      "entries": 40
+    },
+    "Match": {
+      "variants": 11,
+      "hosts": 11,
+      "entries": 37
+    },
+    "NamedExpr": {
+      "variants": 2,
+      "hosts": 13,
+      "entries": 14
+    },
+    "PEP604Union": {
+      "variants": 2,
+      "hosts": 6,
+      "entries": 12
+    },
+    "Raise": {
+      "variants": 9,
+      "hosts": 10,
+      "entries": 39
+    },
+    "Return": {
+      "variants": 12,
+      "hosts": 13,
+      "entries": 80
+    },
+    "SetComp": {
+      "variants": 4,
+      "hosts": 10,
+      "entries": 17
+    },
+    "Slice": {
+      "variants": 7,
+      "hosts": 9,
+      "entries": 25
+    },
+    "Starred": {
+      "variants": 6,
+      "hosts": 10,
+      "entries": 21
+    },
+    "Try": {
+      "variants": 12,
+      "hosts": 12,
+      "entries": 108
+    },
+    "While": {
+      "variants": 9,
+      "hosts": 11,
+      "entries": 45
+    },
+    "With": {
+      "variants": 10,
+      "hosts": 11,
+      "entries": 83
+    },
+    "Yield": {
+      "variants": 5,
+      "hosts": 12,
+      "entries": 18
+    },
+    "augmented_assign": {
+      "variants": 9,
+      "hosts": 12,
+      "entries": 49
+    },
+    "await_expr": {
+      "variants": 8,
+      "hosts": 10,
+      "entries": 21
+    },
+    "global_nonlocal": {
+      "variants": 5,
+      "hosts": 8,
+      "entries": 40
+    },
+    "match_statement": {
+      "variants": 9,
+      "hosts": 10,
+      "entries": 60
+    },
+    "slice": {
+      "variants": 9,
+      "hosts": 10,
+      "entries": 32
+    }
+  },
+  "rows": [
+    {
+      "no": 1,
+      "row": "If",
+      "units": "4/4",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "probes_rv2/v_b46_face.pyc"
+      ],
+      "probe_files": [
+        ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b46_face.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "IF"
+      ],
+      "declared_variants": 13,
+      "declared_variant_list": [
+        "IF/if-cond-await",
+        "IF/if-cond-boolop",
+        "IF/if-cond-compare-chain",
+        "IF/if-cond-ternary",
+        "IF/if-elif-chain",
+        "IF/if-else-arm",
+        "IF/if-empty-then",
+        "IF/if-in-handler",
+        "IF/if-in-loop",
+        "IF/if-in-match-case",
+        "IF/if-in-try",
+        "IF/if-in-with",
+        "IF/if-no-else"
+      ],
+      "exercised_by_registered_probe": 2,
+      "exercised_missing": [
+        "IF/if-cond-await",
+        "IF/if-cond-boolop",
+        "IF/if-cond-compare-chain",
+        "IF/if-elif-chain",
+        "IF/if-else-arm",
+        "IF/if-empty-then",
+        "IF/if-in-handler",
+        "IF/if-in-loop",
+        "IF/if-in-match-case",
+        "IF/if-in-try",
+        "IF/if-in-with"
+      ],
+      "exercised_by_space_evidence": 12,
+      "space_only_missing": [
+        "IF/if-empty-then"
+      ],
+      "form_node_instances_in_probe": 1,
+      "f1_class_form_absent": false,
+      "detail": {
+        "v_b46_face.py": {
+          "IF": [
+            "if-cond-ternary",
+            "if-no-else"
+          ]
+        }
+      },
+      "presence": {
+        "v_b46_face.py": {
+          "IF": 1
+        }
+      }
+    },
+    {
+      "no": 2,
+      "row": "BoolOp",
+      "units": "8/8",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round7/r7_12_boolop_nest.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round7/r7_12_boolop_nest.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "BOOLOP"
+      ],
+      "declared_variants": 13,
+      "declared_variant_list": [
+        "BOOLOP/boolop-and",
+        "BOOLOP/boolop-await-operand",
+        "BOOLOP/boolop-compare-operand",
+        "BOOLOP/boolop-in-guard",
+        "BOOLOP/boolop-in-if-cond",
+        "BOOLOP/boolop-in-while-cond",
+        "BOOLOP/boolop-mixed-and-or",
+        "BOOLOP/boolop-nested",
+        "BOOLOP/boolop-not-operand",
+        "BOOLOP/boolop-or",
+        "BOOLOP/boolop-ternary-operand",
+        "BOOLOP/boolop-three-plus",
+        "BOOLOP/boolop-two-operands"
+      ],
+      "exercised_by_registered_probe": 7,
+      "exercised_missing": [
+        "BOOLOP/boolop-await-operand",
+        "BOOLOP/boolop-in-guard",
+        "BOOLOP/boolop-in-if-cond",
+        "BOOLOP/boolop-in-while-cond",
+        "BOOLOP/boolop-ternary-operand",
+        "BOOLOP/boolop-three-plus"
+      ],
+      "exercised_by_space_evidence": 12,
+      "space_only_missing": [
+        "BOOLOP/boolop-mixed-and-or"
+      ],
+      "form_node_instances_in_probe": 16,
+      "f1_class_form_absent": false,
+      "detail": {
+        "r7_12_boolop_nest.py": {
+          "BOOLOP": [
+            "boolop-and",
+            "boolop-compare-operand",
+            "boolop-mixed-and-or",
+            "boolop-nested",
+            "boolop-not-operand",
+            "boolop-or",
+            "boolop-two-operands"
+          ]
+        }
+      },
+      "presence": {
+        "r7_12_boolop_nest.py": {
+          "BOOLOP": 16
+        }
+      }
+    },
+    {
+      "no": 3,
+      "row": "IfExp",
+      "units": "8/8",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round7/r7_08_ternary_deep_host.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round7/r7_08_ternary_deep_host.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "IFEXP"
+      ],
+      "declared_variants": 14,
+      "declared_variant_list": [
+        "IFEXP/ifexp-in-assert",
+        "IFEXP/ifexp-in-assign",
+        "IFEXP/ifexp-in-binop",
+        "IFEXP/ifexp-in-boolop",
+        "IFEXP/ifexp-in-call-arg",
+        "IFEXP/ifexp-in-del-target",
+        "IFEXP/ifexp-in-for-iter",
+        "IFEXP/ifexp-in-lambda",
+        "IFEXP/ifexp-in-listcomp-elt",
+        "IFEXP/ifexp-in-raise",
+        "IFEXP/ifexp-in-return",
+        "IFEXP/ifexp-in-subscript",
+        "IFEXP/ifexp-in-with-item",
+        "IFEXP/ifexp-nested-arms"
+      ],
+      "exercised_by_registered_probe": 3,
+      "exercised_missing": [
+        "IFEXP/ifexp-in-assert",
+        "IFEXP/ifexp-in-binop",
+        "IFEXP/ifexp-in-boolop",
+        "IFEXP/ifexp-in-del-target",
+        "IFEXP/ifexp-in-for-iter",
+        "IFEXP/ifexp-in-lambda",
+        "IFEXP/ifexp-in-listcomp-elt",
+        "IFEXP/ifexp-in-raise",
+        "IFEXP/ifexp-in-subscript",
+        "IFEXP/ifexp-in-with-item",
+        "IFEXP/ifexp-nested-arms"
+      ],
+      "exercised_by_space_evidence": 9,
+      "space_only_missing": [
+        "IFEXP/ifexp-in-assert",
+        "IFEXP/ifexp-in-del-target",
+        "IFEXP/ifexp-in-raise",
+        "IFEXP/ifexp-in-with-item",
+        "IFEXP/ifexp-nested-arms"
+      ],
+      "form_node_instances_in_probe": 13,
+      "f1_class_form_absent": false,
+      "detail": {
+        "r7_08_ternary_deep_host.py": {
+          "IFEXP": [
+            "ifexp-in-assign",
+            "ifexp-in-call-arg",
+            "ifexp-in-return"
+          ]
+        }
+      },
+      "presence": {
+        "r7_08_ternary_deep_host.py": {
+          "IFEXP": 13
+        }
+      }
+    },
+    {
+      "no": 4,
+      "row": "Try",
+      "units": "6/6",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round2/c04_class_try.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round2/c04_class_try.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "TRY"
+      ],
+      "declared_variants": 12,
+      "declared_variant_list": [
+        "TRY/try-handler-as",
+        "TRY/try-handler-tuple-type",
+        "TRY/try-handler-typed",
+        "TRY/try-in-class-body",
+        "TRY/try-in-func",
+        "TRY/try-nested-in-loop",
+        "TRY/try-nested-in-try",
+        "TRY/try-nested-in-with",
+        "TRY/try-no-handler",
+        "TRY/try-with-else",
+        "TRY/try-with-finally",
+        "TRY/try-with-handler"
+      ],
+      "exercised_by_registered_probe": 7,
+      "exercised_missing": [
+        "TRY/try-handler-as",
+        "TRY/try-handler-tuple-type",
+        "TRY/try-in-func",
+        "TRY/try-nested-in-loop",
+        "TRY/try-nested-in-with"
+      ],
+      "exercised_by_space_evidence": 12,
+      "space_only_missing": [],
+      "form_node_instances_in_probe": 4,
+      "f1_class_form_absent": false,
+      "detail": {
+        "c04_class_try.py": {
+          "TRY": [
+            "try-handler-typed",
+            "try-in-class-body",
+            "try-nested-in-try",
+            "try-no-handler",
+            "try-with-else",
+            "try-with-finally",
+            "try-with-handler"
+          ]
+        }
+      },
+      "presence": {
+        "c04_class_try.py": {
+          "TRY": 4
+        }
+      }
+    },
+    {
+      "no": 5,
+      "row": "Raise",
+      "units": "12/12",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round8/r8_10_expr_cross_stmt.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round8/r8_10_expr_cross_stmt.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "RAISE"
+      ],
+      "declared_variants": 10,
+      "declared_variant_list": [
+        "RAISE/raise-bare",
+        "RAISE/raise-exc-call",
+        "RAISE/raise-exc-class",
+        "RAISE/raise-from",
+        "RAISE/raise-in-finally",
+        "RAISE/raise-in-handler",
+        "RAISE/raise-in-loop",
+        "RAISE/raise-in-try-body",
+        "RAISE/raise-in-with",
+        "RAISE/raise-ternary-exc"
+      ],
+      "exercised_by_registered_probe": 2,
+      "exercised_missing": [
+        "RAISE/raise-bare",
+        "RAISE/raise-exc-class",
+        "RAISE/raise-from",
+        "RAISE/raise-in-finally",
+        "RAISE/raise-in-handler",
+        "RAISE/raise-in-loop",
+        "RAISE/raise-in-try-body",
+        "RAISE/raise-in-with"
+      ],
+      "exercised_by_space_evidence": 9,
+      "space_only_missing": [
+        "RAISE/raise-in-finally"
+      ],
+      "form_node_instances_in_probe": 1,
+      "f1_class_form_absent": false,
+      "detail": {
+        "r8_10_expr_cross_stmt.py": {
+          "RAISE": [
+            "raise-exc-call",
+            "raise-ternary-exc"
+          ]
+        }
+      },
+      "presence": {
+        "r8_10_expr_cross_stmt.py": {
+          "RAISE": 1
+        }
+      }
+    },
+    {
+      "no": 6,
+      "row": "Assert",
+      "units": "11/11",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round8/r8_07_assert_forms.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round8/r8_07_assert_forms.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "ASSERT"
+      ],
+      "declared_variants": 11,
+      "declared_variant_list": [
+        "ASSERT/assert-in-func",
+        "ASSERT/assert-in-handler",
+        "ASSERT/assert-in-loop",
+        "ASSERT/assert-in-try",
+        "ASSERT/assert-in-with",
+        "ASSERT/assert-msg-ternary",
+        "ASSERT/assert-plain",
+        "ASSERT/assert-test-boolop",
+        "ASSERT/assert-test-call",
+        "ASSERT/assert-test-ternary",
+        "ASSERT/assert-with-msg"
+      ],
+      "exercised_by_registered_probe": 7,
+      "exercised_missing": [
+        "ASSERT/assert-in-handler",
+        "ASSERT/assert-in-try",
+        "ASSERT/assert-in-with",
+        "ASSERT/assert-msg-ternary"
+      ],
+      "exercised_by_space_evidence": 8,
+      "space_only_missing": [
+        "ASSERT/assert-in-handler",
+        "ASSERT/assert-in-try",
+        "ASSERT/assert-msg-ternary"
+      ],
+      "form_node_instances_in_probe": 9,
+      "f1_class_form_absent": false,
+      "detail": {
+        "r8_07_assert_forms.py": {
+          "ASSERT": [
+            "assert-in-func",
+            "assert-in-loop",
+            "assert-plain",
+            "assert-test-boolop",
+            "assert-test-call",
+            "assert-test-ternary",
+            "assert-with-msg"
+          ]
+        }
+      },
+      "presence": {
+        "r8_07_assert_forms.py": {
+          "ASSERT": 9
+        }
+      }
+    },
+    {
+      "no": 7,
+      "row": "Import",
+      "units": "3/3",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "probes_rv2/v_b73_face.pyc"
+      ],
+      "probe_files": [
+        ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b73_face.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "IMPORT"
+      ],
+      "declared_variants": 12,
+      "declared_variant_list": [
+        "IMPORT/import-as",
+        "IMPORT/import-dotted",
+        "IMPORT/import-from",
+        "IMPORT/import-from-as",
+        "IMPORT/import-from-star",
+        "IMPORT/import-in-class-body",
+        "IMPORT/import-in-else-of-try",
+        "IMPORT/import-in-finally",
+        "IMPORT/import-in-func",
+        "IMPORT/import-in-handler",
+        "IMPORT/import-in-try",
+        "IMPORT/import-plain"
+      ],
+      "exercised_by_registered_probe": 7,
+      "exercised_missing": [
+        "IMPORT/import-as",
+        "IMPORT/import-dotted",
+        "IMPORT/import-from-star",
+        "IMPORT/import-in-class-body",
+        "IMPORT/import-plain"
+      ],
+      "exercised_by_space_evidence": 10,
+      "space_only_missing": [
+        "IMPORT/import-dotted",
+        "IMPORT/import-from-star"
+      ],
+      "form_node_instances_in_probe": 6,
+      "f1_class_form_absent": false,
+      "detail": {
+        "v_b73_face.py": {
+          "IMPORT": [
+            "import-from",
+            "import-from-as",
+            "import-in-else-of-try",
+            "import-in-finally",
+            "import-in-func",
+            "import-in-handler",
+            "import-in-try"
+          ]
+        }
+      },
+      "presence": {
+        "v_b73_face.py": {
+          "IMPORT": 6
+        }
+      }
+    },
+    {
+      "no": 8,
+      "row": "Global",
+      "units": "6/6",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round10/r10_15_global_hosts.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round10/r10_15_global_hosts.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "GLOBAL"
+      ],
+      "declared_variants": 7,
+      "declared_variant_list": [
+        "GLOBAL/global-at-module",
+        "GLOBAL/global-in-class-body",
+        "GLOBAL/global-in-func",
+        "GLOBAL/global-in-nested-func",
+        "GLOBAL/global-multiple",
+        "GLOBAL/global-single",
+        "GLOBAL/global-with-same-name-assign"
+      ],
+      "exercised_by_registered_probe": 4,
+      "exercised_missing": [
+        "GLOBAL/global-at-module",
+        "GLOBAL/global-in-class-body",
+        "GLOBAL/global-multiple"
+      ],
+      "exercised_by_space_evidence": 5,
+      "space_only_missing": [
+        "GLOBAL/global-in-class-body",
+        "GLOBAL/global-in-nested-func"
+      ],
+      "form_node_instances_in_probe": 5,
+      "f1_class_form_absent": false,
+      "detail": {
+        "r10_15_global_hosts.py": {
+          "GLOBAL": [
+            "global-in-func",
+            "global-in-nested-func",
+            "global-single",
+            "global-with-same-name-assign"
+          ]
+        }
+      },
+      "presence": {
+        "r10_15_global_hosts.py": {
+          "GLOBAL": 5
+        }
+      }
+    },
+    {
+      "no": 9,
+      "row": "global_nonlocal",
+      "units": "7/7",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round2/x04_try_deep_hosts.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round2/x04_try_deep_hosts.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "NONLOCAL"
+      ],
+      "declared_variants": 5,
+      "declared_variant_list": [
+        "NONLOCAL/nonlocal-in-class-in-func",
+        "NONLOCAL/nonlocal-in-func",
+        "NONLOCAL/nonlocal-in-nested-func",
+        "NONLOCAL/nonlocal-multiple",
+        "NONLOCAL/nonlocal-single"
+      ],
+      "exercised_by_registered_probe": 0,
+      "exercised_missing": [
+        "NONLOCAL/nonlocal-in-class-in-func",
+        "NONLOCAL/nonlocal-in-func",
+        "NONLOCAL/nonlocal-in-nested-func",
+        "NONLOCAL/nonlocal-multiple",
+        "NONLOCAL/nonlocal-single"
+      ],
+      "exercised_by_space_evidence": 0,
+      "space_only_missing": [
+        "NONLOCAL/nonlocal-in-class-in-func",
+        "NONLOCAL/nonlocal-in-func",
+        "NONLOCAL/nonlocal-in-nested-func",
+        "NONLOCAL/nonlocal-multiple",
+        "NONLOCAL/nonlocal-single"
+      ],
+      "form_node_instances_in_probe": 0,
+      "f1_class_form_absent": true,
+      "detail": {
+        "x04_try_deep_hosts.py": {
+          "NONLOCAL": []
+        }
+      },
+      "presence": {
+        "x04_try_deep_hosts.py": {
+          "NONLOCAL": 0
+        }
+      }
+    },
+    {
+      "no": 10,
+      "row": "Await",
+      "units": "24/24",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round4/c4_20_async_five.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round4/c4_20_async_five.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "AWAIT"
+      ],
+      "declared_variants": 12,
+      "declared_variant_list": [
+        "AWAIT/await-in-assign",
+        "AWAIT/await-in-async-closure",
+        "AWAIT/await-in-async-comp",
+        "AWAIT/await-in-async-def",
+        "AWAIT/await-in-async-for",
+        "AWAIT/await-in-async-method",
+        "AWAIT/await-in-async-with",
+        "AWAIT/await-in-binop",
+        "AWAIT/await-in-boolop",
+        "AWAIT/await-in-call-arg",
+        "AWAIT/await-in-cond",
+        "AWAIT/await-in-return"
+      ],
+      "exercised_by_registered_probe": 7,
+      "exercised_missing": [
+        "AWAIT/await-in-async-closure",
+        "AWAIT/await-in-async-comp",
+        "AWAIT/await-in-boolop",
+        "AWAIT/await-in-call-arg",
+        "AWAIT/await-in-cond"
+      ],
+      "exercised_by_space_evidence": 11,
+      "space_only_missing": [
+        "AWAIT/await-in-async-closure"
+      ],
+      "form_node_instances_in_probe": 7,
+      "f1_class_form_absent": false,
+      "detail": {
+        "c4_20_async_five.py": {
+          "AWAIT": [
+            "await-in-assign",
+            "await-in-async-def",
+            "await-in-async-for",
+            "await-in-async-method",
+            "await-in-async-with",
+            "await-in-binop",
+            "await-in-return"
+          ]
+        }
+      },
+      "presence": {
+        "c4_20_async_five.py": {
+          "AWAIT": 7
+        }
+      }
+    },
+    {
+      "no": 11,
+      "row": "ListComp",
+      "units": "9/9",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round7/r7_14_boolop_deep_host.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round7/r7_14_boolop_deep_host.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "LISTCOMP"
+      ],
+      "declared_variants": 14,
+      "declared_variant_list": [
+        "LISTCOMP/listcomp-async",
+        "LISTCOMP/listcomp-elt-await",
+        "LISTCOMP/listcomp-elt-boolop",
+        "LISTCOMP/listcomp-elt-ternary",
+        "LISTCOMP/listcomp-if-ternary",
+        "LISTCOMP/listcomp-in-annotation",
+        "LISTCOMP/listcomp-in-assign",
+        "LISTCOMP/listcomp-in-call-arg",
+        "LISTCOMP/listcomp-in-return",
+        "LISTCOMP/listcomp-multi-for",
+        "LISTCOMP/listcomp-multi-if",
+        "LISTCOMP/listcomp-nested-comp",
+        "LISTCOMP/listcomp-single-for",
+        "LISTCOMP/listcomp-with-if"
+      ],
+      "exercised_by_registered_probe": 3,
+      "exercised_missing": [
+        "LISTCOMP/listcomp-async",
+        "LISTCOMP/listcomp-elt-await",
+        "LISTCOMP/listcomp-elt-boolop",
+        "LISTCOMP/listcomp-if-ternary",
+        "LISTCOMP/listcomp-in-annotation",
+        "LISTCOMP/listcomp-in-assign",
+        "LISTCOMP/listcomp-in-call-arg",
+        "LISTCOMP/listcomp-multi-for",
+        "LISTCOMP/listcomp-multi-if",
+        "LISTCOMP/listcomp-nested-comp",
+        "LISTCOMP/listcomp-with-if"
+      ],
+      "exercised_by_space_evidence": 8,
+      "space_only_missing": [
+        "LISTCOMP/listcomp-elt-boolop",
+        "LISTCOMP/listcomp-if-ternary",
+        "LISTCOMP/listcomp-in-annotation",
+        "LISTCOMP/listcomp-multi-if",
+        "LISTCOMP/listcomp-nested-comp",
+        "LISTCOMP/listcomp-with-if"
+      ],
+      "form_node_instances_in_probe": 2,
+      "f1_class_form_absent": false,
+      "detail": {
+        "r7_14_boolop_deep_host.py": {
+          "LISTCOMP": [
+            "listcomp-elt-ternary",
+            "listcomp-in-return",
+            "listcomp-single-for"
+          ]
+        }
+      },
+      "presence": {
+        "r7_14_boolop_deep_host.py": {
+          "LISTCOMP": 2
+        }
+      }
+    },
+    {
+      "no": 12,
+      "row": "await_expr",
+      "units": "11/11",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round3/e12d_g9_awaits.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round3/e12d_g9_awaits.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "AWAITEXPR"
+      ],
+      "declared_variants": 9,
+      "declared_variant_list": [
+        "AWAITEXPR/awexpr-in-assign-rhs",
+        "AWAITEXPR/awexpr-in-binop",
+        "AWAITEXPR/awexpr-in-boolop",
+        "AWAITEXPR/awexpr-in-call-arg",
+        "AWAITEXPR/awexpr-in-compare",
+        "AWAITEXPR/awexpr-in-if-cond",
+        "AWAITEXPR/awexpr-in-listcomp-elt",
+        "AWAITEXPR/awexpr-in-return",
+        "AWAITEXPR/awexpr-in-while-cond"
+      ],
+      "exercised_by_registered_probe": 6,
+      "exercised_missing": [
+        "AWAITEXPR/awexpr-in-compare",
+        "AWAITEXPR/awexpr-in-listcomp-elt",
+        "AWAITEXPR/awexpr-in-while-cond"
+      ],
+      "exercised_by_space_evidence": 7,
+      "space_only_missing": [
+        "AWAITEXPR/awexpr-in-compare",
+        "AWAITEXPR/awexpr-in-while-cond"
+      ],
+      "form_node_instances_in_probe": 6,
+      "f1_class_form_absent": false,
+      "detail": {
+        "e12d_g9_awaits.py": {
+          "AWAITEXPR": [
+            "awexpr-in-assign-rhs",
+            "awexpr-in-binop",
+            "awexpr-in-boolop",
+            "awexpr-in-call-arg",
+            "awexpr-in-if-cond",
+            "awexpr-in-return"
+          ]
+        }
+      },
+      "presence": {
+        "e12d_g9_awaits.py": {
+          "AWAITEXPR": 6
+        }
+      }
+    },
+    {
+      "no": 13,
+      "row": "Yield",
+      "units": "4/4",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round4/rec1_synth_yf9_ctx.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round4/rec1_synth_yf9_ctx.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "YIELD"
+      ],
+      "declared_variants": 10,
+      "declared_variant_list": [
+        "YIELD/yield-as-arg",
+        "YIELD/yield-bare",
+        "YIELD/yield-from",
+        "YIELD/yield-in-assign",
+        "YIELD/yield-in-boolop",
+        "YIELD/yield-in-finally",
+        "YIELD/yield-in-loop",
+        "YIELD/yield-in-ternary",
+        "YIELD/yield-in-try-body",
+        "YIELD/yield-value"
+      ],
+      "exercised_by_registered_probe": 2,
+      "exercised_missing": [
+        "YIELD/yield-as-arg",
+        "YIELD/yield-bare",
+        "YIELD/yield-from",
+        "YIELD/yield-in-assign",
+        "YIELD/yield-in-boolop",
+        "YIELD/yield-in-finally",
+        "YIELD/yield-in-ternary",
+        "YIELD/yield-in-try-body"
+      ],
+      "exercised_by_space_evidence": 6,
+      "space_only_missing": [
+        "YIELD/yield-bare",
+        "YIELD/yield-in-finally",
+        "YIELD/yield-in-ternary",
+        "YIELD/yield-in-try-body"
+      ],
+      "form_node_instances_in_probe": 6,
+      "f1_class_form_absent": false,
+      "detail": {
+        "rec1_synth_yf9_ctx.py": {
+          "YIELD": [
+            "yield-in-loop",
+            "yield-value"
+          ]
+        }
+      },
+      "presence": {
+        "rec1_synth_yf9_ctx.py": {
+          "YIELD": 6
+        }
+      }
+    },
+    {
+      "no": 14,
+      "row": "Match",
+      "units": "3/3",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round5/rec1_synth_b122c_noguard_chain2.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round5/rec1_synth_b122c_noguard_chain2.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "MATCHPAT"
+      ],
+      "declared_variants": 12,
+      "declared_variant_list": [
+        "MATCHPAT/pat-capture",
+        "MATCHPAT/pat-class",
+        "MATCHPAT/pat-in-nested-match",
+        "MATCHPAT/pat-literal",
+        "MATCHPAT/pat-mapping",
+        "MATCHPAT/pat-nested-class",
+        "MATCHPAT/pat-or",
+        "MATCHPAT/pat-sequence",
+        "MATCHPAT/pat-singleton",
+        "MATCHPAT/pat-star",
+        "MATCHPAT/pat-wildcard",
+        "MATCHPAT/pat-with-guard"
+      ],
+      "exercised_by_registered_probe": 3,
+      "exercised_missing": [
+        "MATCHPAT/pat-capture",
+        "MATCHPAT/pat-class",
+        "MATCHPAT/pat-mapping",
+        "MATCHPAT/pat-nested-class",
+        "MATCHPAT/pat-or",
+        "MATCHPAT/pat-sequence",
+        "MATCHPAT/pat-singleton",
+        "MATCHPAT/pat-star",
+        "MATCHPAT/pat-with-guard"
+      ],
+      "exercised_by_space_evidence": 10,
+      "space_only_missing": [
+        "MATCHPAT/pat-nested-class",
+        "MATCHPAT/pat-singleton"
+      ],
+      "form_node_instances_in_probe": 11,
+      "f1_class_form_absent": false,
+      "detail": {
+        "rec1_synth_b122c_noguard_chain2.py": {
+          "MATCHPAT": [
+            "pat-in-nested-match",
+            "pat-literal",
+            "pat-wildcard"
+          ]
+        }
+      },
+      "presence": {
+        "rec1_synth_b122c_noguard_chain2.py": {
+          "MATCHPAT": 11
+        }
+      }
+    },
+    {
+      "no": 15,
+      "row": "With",
+      "units": "7/7",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round2/x05_with_deep_hosts.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round2/x05_with_deep_hosts.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "WITH"
+      ],
+      "declared_variants": 10,
+      "declared_variant_list": [
+        "WITH/with-as-target",
+        "WITH/with-body-nested-with",
+        "WITH/with-in-func",
+        "WITH/with-in-loop",
+        "WITH/with-in-match-case",
+        "WITH/with-in-try",
+        "WITH/with-item-call",
+        "WITH/with-item-ternary",
+        "WITH/with-multi-item",
+        "WITH/with-single-item"
+      ],
+      "exercised_by_registered_probe": 8,
+      "exercised_missing": [
+        "WITH/with-item-ternary",
+        "WITH/with-multi-item"
+      ],
+      "exercised_by_space_evidence": 10,
+      "space_only_missing": [],
+      "form_node_instances_in_probe": 11,
+      "f1_class_form_absent": false,
+      "detail": {
+        "x05_with_deep_hosts.py": {
+          "WITH": [
+            "with-as-target",
+            "with-body-nested-with",
+            "with-in-func",
+            "with-in-loop",
+            "with-in-match-case",
+            "with-in-try",
+            "with-item-call",
+            "with-single-item"
+          ]
+        }
+      },
+      "presence": {
+        "x05_with_deep_hosts.py": {
+          "WITH": 11
+        }
+      }
+    },
+    {
+      "no": 16,
+      "row": "match_statement",
+      "units": "7/7",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round2/x01_if_deep_hosts.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round2/x01_if_deep_hosts.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "MATCHSTMT"
+      ],
+      "declared_variants": 10,
+      "declared_variant_list": [
+        "MATCHSTMT/mcase-body-nested-if",
+        "MATCHSTMT/mhas-guard",
+        "MATCHSTMT/mhas-wildcard",
+        "MATCHSTMT/min-func",
+        "MATCHSTMT/min-loop",
+        "MATCHSTMT/min-try",
+        "MATCHSTMT/mmulti-case",
+        "MATCHSTMT/mnested-match",
+        "MATCHSTMT/msingle-case",
+        "MATCHSTMT/msubject-ternary"
+      ],
+      "exercised_by_registered_probe": 3,
+      "exercised_missing": [
+        "MATCHSTMT/mhas-guard",
+        "MATCHSTMT/mhas-wildcard",
+        "MATCHSTMT/min-loop",
+        "MATCHSTMT/min-try",
+        "MATCHSTMT/mmulti-case",
+        "MATCHSTMT/mnested-match",
+        "MATCHSTMT/msubject-ternary"
+      ],
+      "exercised_by_space_evidence": 9,
+      "space_only_missing": [
+        "MATCHSTMT/msubject-ternary"
+      ],
+      "form_node_instances_in_probe": 2,
+      "f1_class_form_absent": false,
+      "detail": {
+        "x01_if_deep_hosts.py": {
+          "MATCHSTMT": [
+            "mcase-body-nested-if",
+            "min-func",
+            "msingle-case"
+          ]
+        }
+      },
+      "presence": {
+        "x01_if_deep_hosts.py": {
+          "MATCHSTMT": 2
+        }
+      }
+    },
+    {
+      "no": 17,
+      "row": "Break",
+      "units": "3/3",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round2/x10_handler_hosts.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round2/x10_handler_hosts.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "BREAK"
+      ],
+      "declared_variants": 10,
+      "declared_variant_list": [
+        "BREAK/break-in-finally",
+        "BREAK/break-in-for",
+        "BREAK/break-in-handler",
+        "BREAK/break-in-if-arm",
+        "BREAK/break-in-match-case",
+        "BREAK/break-in-nested-loop",
+        "BREAK/break-in-try-body",
+        "BREAK/break-in-while",
+        "BREAK/break-in-with",
+        "BREAK/break-target-outer"
+      ],
+      "exercised_by_registered_probe": 6,
+      "exercised_missing": [
+        "BREAK/break-in-finally",
+        "BREAK/break-in-match-case",
+        "BREAK/break-in-try-body",
+        "BREAK/break-in-with"
+      ],
+      "exercised_by_space_evidence": 7,
+      "space_only_missing": [
+        "BREAK/break-in-finally",
+        "BREAK/break-in-match-case",
+        "BREAK/break-in-try-body"
+      ],
+      "form_node_instances_in_probe": 1,
+      "f1_class_form_absent": false,
+      "detail": {
+        "x10_handler_hosts.py": {
+          "BREAK": [
+            "break-in-for",
+            "break-in-handler",
+            "break-in-if-arm",
+            "break-in-nested-loop",
+            "break-in-while",
+            "break-target-outer"
+          ]
+        }
+      },
+      "presence": {
+        "x10_handler_hosts.py": {
+          "BREAK": 1
+        }
+      }
+    },
+    {
+      "no": 18,
+      "row": "Continue",
+      "units": "4/4",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round10/r10_21_fin_loopctrl.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round10/r10_21_fin_loopctrl.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "CONTINUE"
+      ],
+      "declared_variants": 10,
+      "declared_variant_list": [
+        "CONTINUE/continue-in-finally",
+        "CONTINUE/continue-in-for",
+        "CONTINUE/continue-in-handler",
+        "CONTINUE/continue-in-if-arm",
+        "CONTINUE/continue-in-match-case",
+        "CONTINUE/continue-in-nested-loop",
+        "CONTINUE/continue-in-try-body",
+        "CONTINUE/continue-in-while",
+        "CONTINUE/continue-in-with",
+        "CONTINUE/continue-target-outer"
+      ],
+      "exercised_by_registered_probe": 3,
+      "exercised_missing": [
+        "CONTINUE/continue-in-finally",
+        "CONTINUE/continue-in-handler",
+        "CONTINUE/continue-in-match-case",
+        "CONTINUE/continue-in-nested-loop",
+        "CONTINUE/continue-in-try-body",
+        "CONTINUE/continue-in-with",
+        "CONTINUE/continue-target-outer"
+      ],
+      "exercised_by_space_evidence": 8,
+      "space_only_missing": [
+        "CONTINUE/continue-in-finally",
+        "CONTINUE/continue-in-try-body"
+      ],
+      "form_node_instances_in_probe": 2,
+      "f1_class_form_absent": false,
+      "detail": {
+        "r10_21_fin_loopctrl.py": {
+          "CONTINUE": [
+            "continue-in-for",
+            "continue-in-if-arm",
+            "continue-in-while"
+          ]
+        }
+      },
+      "presence": {
+        "r10_21_fin_loopctrl.py": {
+          "CONTINUE": 2
+        }
+      }
+    },
+    {
+      "no": 19,
+      "row": "While",
+      "units": "7/7",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round2/x01_if_deep_hosts.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round2/x01_if_deep_hosts.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "WHILE"
+      ],
+      "declared_variants": 11,
+      "declared_variant_list": [
+        "WHILE/while-at-module",
+        "WHILE/while-body-nested-loop",
+        "WHILE/while-cond-await",
+        "WHILE/while-cond-boolop",
+        "WHILE/while-cond-compare-chain",
+        "WHILE/while-cond-ternary",
+        "WHILE/while-else",
+        "WHILE/while-in-func",
+        "WHILE/while-in-try",
+        "WHILE/while-true",
+        "WHILE/while-with-break"
+      ],
+      "exercised_by_registered_probe": 2,
+      "exercised_missing": [
+        "WHILE/while-at-module",
+        "WHILE/while-body-nested-loop",
+        "WHILE/while-cond-await",
+        "WHILE/while-cond-boolop",
+        "WHILE/while-cond-compare-chain",
+        "WHILE/while-cond-ternary",
+        "WHILE/while-else",
+        "WHILE/while-in-try",
+        "WHILE/while-true"
+      ],
+      "exercised_by_space_evidence": 9,
+      "space_only_missing": [
+        "WHILE/while-cond-await",
+        "WHILE/while-else"
+      ],
+      "form_node_instances_in_probe": 2,
+      "f1_class_form_absent": false,
+      "detail": {
+        "x01_if_deep_hosts.py": {
+          "WHILE": [
+            "while-in-func",
+            "while-with-break"
+          ]
+        }
+      },
+      "presence": {
+        "x01_if_deep_hosts.py": {
+          "WHILE": 2
+        }
+      }
+    },
+    {
+      "no": 20,
+      "row": "Delete",
+      "units": "10/10",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round8/r8_04_delete_forms.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round8/r8_04_delete_forms.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "DELETE"
+      ],
+      "declared_variants": 10,
+      "declared_variant_list": [
+        "DELETE/del-attribute",
+        "DELETE/del-in-loop",
+        "DELETE/del-in-try",
+        "DELETE/del-in-with",
+        "DELETE/del-multiple-targets",
+        "DELETE/del-name",
+        "DELETE/del-slice",
+        "DELETE/del-subscript",
+        "DELETE/del-ternary-target",
+        "DELETE/del-tuple-target"
+      ],
+      "exercised_by_registered_probe": 7,
+      "exercised_missing": [
+        "DELETE/del-in-try",
+        "DELETE/del-in-with",
+        "DELETE/del-ternary-target"
+      ],
+      "exercised_by_space_evidence": 8,
+      "space_only_missing": [
+        "DELETE/del-multiple-targets",
+        "DELETE/del-tuple-target"
+      ],
+      "form_node_instances_in_probe": 9,
+      "f1_class_form_absent": false,
+      "detail": {
+        "r8_04_delete_forms.py": {
+          "DELETE": [
+            "del-attribute",
+            "del-in-loop",
+            "del-multiple-targets",
+            "del-name",
+            "del-slice",
+            "del-subscript",
+            "del-tuple-target"
+          ]
+        }
+      },
+      "presence": {
+        "r8_04_delete_forms.py": {
+          "DELETE": 9
+        }
+      }
+    },
+    {
+      "no": 21,
+      "row": "AugAssign",
+      "units": "10/10",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round8/r8_06_augassign_ops.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round8/r8_06_augassign_ops.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "AUGASSIGN"
+      ],
+      "declared_variants": 20,
+      "declared_variant_list": [
+        "AUGASSIGN/aug-op-add",
+        "AUGASSIGN/aug-op-bitand",
+        "AUGASSIGN/aug-op-bitor",
+        "AUGASSIGN/aug-op-bitxor",
+        "AUGASSIGN/aug-op-floordiv",
+        "AUGASSIGN/aug-op-lshift",
+        "AUGASSIGN/aug-op-matmul",
+        "AUGASSIGN/aug-op-mod",
+        "AUGASSIGN/aug-op-mul",
+        "AUGASSIGN/aug-op-pow",
+        "AUGASSIGN/aug-op-rshift",
+        "AUGASSIGN/aug-op-sub",
+        "AUGASSIGN/aug-op-truediv",
+        "AUGASSIGN/aug-rhs-attr",
+        "AUGASSIGN/aug-rhs-call",
+        "AUGASSIGN/aug-rhs-subscript",
+        "AUGASSIGN/aug-rhs-ternary",
+        "AUGASSIGN/aug-target-attr",
+        "AUGASSIGN/aug-target-name",
+        "AUGASSIGN/aug-target-subscript"
+      ],
+      "exercised_by_registered_probe": 20,
+      "exercised_missing": [],
+      "exercised_by_space_evidence": 20,
+      "space_only_missing": [],
+      "form_node_instances_in_probe": 18,
+      "f1_class_form_absent": false,
+      "detail": {
+        "r8_06_augassign_ops.py": {
+          "AUGASSIGN": [
+            "aug-op-add",
+            "aug-op-bitand",
+            "aug-op-bitor",
+            "aug-op-bitxor",
+            "aug-op-floordiv",
+            "aug-op-lshift",
+            "aug-op-matmul",
+            "aug-op-mod",
+            "aug-op-mul",
+            "aug-op-pow",
+            "aug-op-rshift",
+            "aug-op-sub",
+            "aug-op-truediv",
+            "aug-rhs-attr",
+            "aug-rhs-call",
+            "aug-rhs-subscript",
+            "aug-rhs-ternary",
+            "aug-target-attr",
+            "aug-target-name",
+            "aug-target-subscript"
+          ]
+        }
+      },
+      "presence": {
+        "r8_06_augassign_ops.py": {
+          "AUGASSIGN": 18
+        }
+      }
+    },
+    {
+      "no": 22,
+      "row": "Return",
+      "units": "8/8",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round2/x08_stmt_leaves.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round2/x08_stmt_leaves.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "RETURN"
+      ],
+      "declared_variants": 13,
+      "declared_variant_list": [
+        "RETURN/return-await",
+        "RETURN/return-bare",
+        "RETURN/return-boolop",
+        "RETURN/return-in-finally",
+        "RETURN/return-in-handler",
+        "RETURN/return-in-loop",
+        "RETURN/return-in-match-case",
+        "RETURN/return-in-try-body",
+        "RETURN/return-in-with",
+        "RETURN/return-ternary",
+        "RETURN/return-tuple",
+        "RETURN/return-value",
+        "RETURN/return-yield"
+      ],
+      "exercised_by_registered_probe": 2,
+      "exercised_missing": [
+        "RETURN/return-await",
+        "RETURN/return-bare",
+        "RETURN/return-boolop",
+        "RETURN/return-in-finally",
+        "RETURN/return-in-handler",
+        "RETURN/return-in-match-case",
+        "RETURN/return-in-try-body",
+        "RETURN/return-in-with",
+        "RETURN/return-ternary",
+        "RETURN/return-tuple",
+        "RETURN/return-yield"
+      ],
+      "exercised_by_space_evidence": 11,
+      "space_only_missing": [
+        "RETURN/return-bare",
+        "RETURN/return-in-finally"
+      ],
+      "form_node_instances_in_probe": 7,
+      "f1_class_form_absent": false,
+      "detail": {
+        "x08_stmt_leaves.py": {
+          "RETURN": [
+            "return-in-loop",
+            "return-value"
+          ]
+        }
+      },
+      "presence": {
+        "x08_stmt_leaves.py": {
+          "RETURN": 7
+        }
+      }
+    },
+    {
+      "no": 23,
+      "row": "Slice",
+      "units": "16/16",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round3/e07_g4_star_slice_containers.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round3/e07_g4_star_slice_containers.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "SLICE"
+      ],
+      "declared_variants": 9,
+      "declared_variant_list": [
+        "SLICE/slice-expr-bound",
+        "SLICE/slice-in-assign-target",
+        "SLICE/slice-in-del-target",
+        "SLICE/slice-multidim",
+        "SLICE/slice-neg-bound",
+        "SLICE/slice-plain",
+        "SLICE/slice-starred",
+        "SLICE/slice-ternary-bound",
+        "SLICE/slice-with-step"
+      ],
+      "exercised_by_registered_probe": 6,
+      "exercised_missing": [
+        "SLICE/slice-in-assign-target",
+        "SLICE/slice-in-del-target",
+        "SLICE/slice-starred"
+      ],
+      "exercised_by_space_evidence": 8,
+      "space_only_missing": [
+        "SLICE/slice-starred"
+      ],
+      "form_node_instances_in_probe": 8,
+      "f1_class_form_absent": false,
+      "detail": {
+        "e07_g4_star_slice_containers.py": {
+          "SLICE": [
+            "slice-expr-bound",
+            "slice-multidim",
+            "slice-neg-bound",
+            "slice-plain",
+            "slice-ternary-bound",
+            "slice-with-step"
+          ]
+        }
+      },
+      "presence": {
+        "e07_g4_star_slice_containers.py": {
+          "SLICE": 8
+        }
+      }
+    },
+    {
+      "no": 24,
+      "row": "augmented_assign",
+      "units": "4/4",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "probes_rv2/v_b76_face.pyc"
+      ],
+      "probe_files": [
+        ".trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b76_face.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "AUGFORM"
+      ],
+      "declared_variants": 12,
+      "declared_variant_list": [
+        "AUGFORM/augform-in-class-body",
+        "AUGFORM/augform-in-comp-scope",
+        "AUGFORM/augform-in-handler",
+        "AUGFORM/augform-in-if-arm",
+        "AUGFORM/augform-in-loop-body",
+        "AUGFORM/augform-in-match-case",
+        "AUGFORM/augform-in-try-body",
+        "AUGFORM/augform-in-with-body",
+        "AUGFORM/augform-target-attr",
+        "AUGFORM/augform-target-chain",
+        "AUGFORM/augform-target-name",
+        "AUGFORM/augform-target-subscript"
+      ],
+      "exercised_by_registered_probe": 1,
+      "exercised_missing": [
+        "AUGFORM/augform-in-class-body",
+        "AUGFORM/augform-in-comp-scope",
+        "AUGFORM/augform-in-handler",
+        "AUGFORM/augform-in-if-arm",
+        "AUGFORM/augform-in-loop-body",
+        "AUGFORM/augform-in-match-case",
+        "AUGFORM/augform-in-try-body",
+        "AUGFORM/augform-in-with-body",
+        "AUGFORM/augform-target-attr",
+        "AUGFORM/augform-target-chain",
+        "AUGFORM/augform-target-subscript"
+      ],
+      "exercised_by_space_evidence": 9,
+      "space_only_missing": [
+        "AUGFORM/augform-in-comp-scope",
+        "AUGFORM/augform-in-with-body",
+        "AUGFORM/augform-target-chain"
+      ],
+      "form_node_instances_in_probe": 3,
+      "f1_class_form_absent": false,
+      "detail": {
+        "v_b76_face.py": {
+          "AUGFORM": [
+            "augform-target-name"
+          ]
+        }
+      },
+      "presence": {
+        "v_b76_face.py": {
+          "AUGFORM": 3
+        }
+      }
+    },
+    {
+      "no": 25,
+      "row": "slice",
+      "units": "5/5",
+      "verdict": "**完备**",
+      "probe_refs": [
+        "round8/r8v8rev3_b104_exprtail_battery.pyc"
+      ],
+      "probe_files": [
+        "test_repros/round8/r8v8rev3_b104_exprtail_battery.py"
+      ],
+      "probe_missing": [],
+      "families": [
+        "SLICEFORM"
+      ],
+      "declared_variants": 10,
+      "declared_variant_list": [
+        "SLICEFORM/sliceform-full",
+        "SLICEFORM/sliceform-in-assign-target",
+        "SLICEFORM/sliceform-in-call-arg",
+        "SLICEFORM/sliceform-in-del-target",
+        "SLICEFORM/sliceform-in-return",
+        "SLICEFORM/sliceform-in-subscript",
+        "SLICEFORM/sliceform-in-try-body",
+        "SLICEFORM/sliceform-nested-subscript",
+        "SLICEFORM/sliceform-single-bound",
+        "SLICEFORM/sliceform-step-only"
+      ],
+      "exercised_by_registered_probe": 0,
+      "exercised_missing": [
+        "SLICEFORM/sliceform-full",
+        "SLICEFORM/sliceform-in-assign-target",
+        "SLICEFORM/sliceform-in-call-arg",
+        "SLICEFORM/sliceform-in-del-target",
+        "SLICEFORM/sliceform-in-return",
+        "SLICEFORM/sliceform-in-subscript",
+        "SLICEFORM/sliceform-in-try-body",
+        "SLICEFORM/sliceform-nested-subscript",
+        "SLICEFORM/sliceform-single-bound",
+        "SLICEFORM/sliceform-step-only"
+      ],
+      "exercised_by_space_evidence": 9,
+      "space_only_missing": [
+        "SLICEFORM/sliceform-in-try-body"
+      ],
+      "form_node_instances_in_probe": 0,
+      "f1_class_form_absent": true,
+      "detail": {
+        "r8v8rev3_b104_exprtail_battery.py": {
+          "SLICEFORM": []
+        }
+      },
+      "presence": {
+        "r8v8rev3_b104_exprtail_battery.py": {
+          "SLICEFORM": 0
+        }
+      }
+    }
+  ],
+  "totals": {
+    "rows": 25,
+    "declared_variants_total": 279,
+    "exercised_by_registered_probe_total": 118,
+    "exercised_by_space_evidence_total": 227,
+    "rows_with_gap": 24,
+    "rows_with_zero_exercised": 2,
+    "rows_f1_class_form_absent": 2,
+    "f1_class_rows": [
+      "global_nonlocal",
+      "slice"
+    ]
+  }
+}

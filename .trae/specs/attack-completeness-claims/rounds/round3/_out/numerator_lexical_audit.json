@@ -1,0 +1,952 @@
+{
+  "source_files_scanned": 42,
+  "denominator_ast_size": 97,
+  "tier_counts": {
+    "T1_astX_code": 43,
+    "T2_quoted_string": 54,
+    "T3_comment_only": 0
+  },
+  "tier_T3_nodes": [],
+  "tier_map": {
+    "Add": "T2-字符串字面量类型标签",
+    "And": "T2-字符串字面量类型标签",
+    "AnnAssign": "T1-ast.X 代码引用",
+    "Assert": "T1-ast.X 代码引用",
+    "Assign": "T1-ast.X 代码引用",
+    "AsyncFor": "T2-字符串字面量类型标签",
+    "AsyncFunctionDef": "T1-ast.X 代码引用",
+    "AsyncWith": "T1-ast.X 代码引用",
+    "Attribute": "T1-ast.X 代码引用",
+    "AugAssign": "T1-ast.X 代码引用",
+    "Await": "T1-ast.X 代码引用",
+    "BinOp": "T1-ast.X 代码引用",
+    "BitAnd": "T2-字符串字面量类型标签",
+    "BitOr": "T2-字符串字面量类型标签",
+    "BitXor": "T2-字符串字面量类型标签",
+    "BoolOp": "T1-ast.X 代码引用",
+    "Break": "T1-ast.X 代码引用",
+    "Call": "T1-ast.X 代码引用",
+    "ClassDef": "T1-ast.X 代码引用",
+    "Compare": "T1-ast.X 代码引用",
+    "Constant": "T1-ast.X 代码引用",
+    "Continue": "T1-ast.X 代码引用",
+    "Del": "T2-字符串字面量类型标签",
+    "Delete": "T2-字符串字面量类型标签",
+    "Dict": "T1-ast.X 代码引用",
+    "DictComp": "T2-字符串字面量类型标签",
+    "Div": "T2-字符串字面量类型标签",
+    "Eq": "T2-字符串字面量类型标签",
+    "ExceptHandler": "T2-字符串字面量类型标签",
+    "Expr": "T1-ast.X 代码引用",
+    "FloorDiv": "T2-字符串字面量类型标签",
+    "For": "T1-ast.X 代码引用",
+    "FormattedValue": "T1-ast.X 代码引用",
+    "FunctionDef": "T1-ast.X 代码引用",
+    "GeneratorExp": "T1-ast.X 代码引用",
+    "Global": "T1-ast.X 代码引用",
+    "Gt": "T2-字符串字面量类型标签",
+    "GtE": "T2-字符串字面量类型标签",
+    "If": "T1-ast.X 代码引用",
+    "IfExp": "T1-ast.X 代码引用",
+    "Import": "T2-字符串字面量类型标签",
+    "ImportFrom": "T2-字符串字面量类型标签",
+    "In": "T2-字符串字面量类型标签",
+    "Index": "T2-字符串字面量类型标签",
+    "Invert": "T2-字符串字面量类型标签",
+    "Is": "T2-字符串字面量类型标签",
+    "IsNot": "T2-字符串字面量类型标签",
+    "JoinedStr": "T2-字符串字面量类型标签",
+    "LShift": "T2-字符串字面量类型标签",
+    "Lambda": "T2-字符串字面量类型标签",
+    "List": "T1-ast.X 代码引用",
+    "ListComp": "T2-字符串字面量类型标签",
+    "Load": "T1-ast.X 代码引用",
+    "Lt": "T2-字符串字面量类型标签",
+    "LtE": "T2-字符串字面量类型标签",
+    "MatMult": "T2-字符串字面量类型标签",
+    "Match": "T1-ast.X 代码引用",
+    "MatchAs": "T1-ast.X 代码引用",
+    "MatchClass": "T2-字符串字面量类型标签",
+    "MatchMapping": "T2-字符串字面量类型标签",
+    "MatchOr": "T2-字符串字面量类型标签",
+    "MatchSequence": "T2-字符串字面量类型标签",
+    "MatchSingleton": "T2-字符串字面量类型标签",
+    "MatchStar": "T2-字符串字面量类型标签",
+    "MatchValue": "T2-字符串字面量类型标签",
+    "Mod": "T2-字符串字面量类型标签",
+    "Module": "T2-字符串字面量类型标签",
+    "Mult": "T2-字符串字面量类型标签",
+    "Name": "T1-ast.X 代码引用",
+    "NamedExpr": "T2-字符串字面量类型标签",
+    "Nonlocal": "T1-ast.X 代码引用",
+    "Not": "T2-字符串字面量类型标签",
+    "NotEq": "T2-字符串字面量类型标签",
+    "NotIn": "T2-字符串字面量类型标签",
+    "Or": "T2-字符串字面量类型标签",
+    "Pass": "T1-ast.X 代码引用",
+    "Pow": "T2-字符串字面量类型标签",
+    "RShift": "T2-字符串字面量类型标签",
+    "Raise": "T2-字符串字面量类型标签",
+    "Return": "T1-ast.X 代码引用",
+    "Set": "T1-ast.X 代码引用",
+    "SetComp": "T2-字符串字面量类型标签",
+    "Slice": "T2-字符串字面量类型标签",
+    "Starred": "T2-字符串字面量类型标签",
+    "Store": "T1-ast.X 代码引用",
+    "Sub": "T1-ast.X 代码引用",
+    "Subscript": "T1-ast.X 代码引用",
+    "Try": "T1-ast.X 代码引用",
+    "TryStar": "T2-字符串字面量类型标签",
+    "Tuple": "T1-ast.X 代码引用",
+    "UAdd": "T2-字符串字面量类型标签",
+    "USub": "T2-字符串字面量类型标签",
+    "UnaryOp": "T1-ast.X 代码引用",
+    "While": "T1-ast.X 代码引用",
+    "With": "T1-ast.X 代码引用",
+    "Yield": "T2-字符串字面量类型标签",
+    "YieldFrom": "T1-ast.X 代码引用"
+  },
+  "ast_numerator_raw": 97,
+  "ast_numerator_code_only": 22,
+  "ast_numerator_code_only_strict": 22,
+  "ast_only_via_comment_or_string": [
+    "Add",
+    "And",
+    "AnnAssign",
+    "Assert",
+    "AsyncFor",
+    "AsyncWith",
+    "AugAssign",
+    "Await",
+    "BitAnd",
+    "BitOr",
+    "BitXor",
+    "Break",
+    "Continue",
+    "Del",
+    "Delete",
+    "DictComp",
+    "Div",
+    "Eq",
+    "ExceptHandler",
+    "FloorDiv",
+    "For",
+    "FormattedValue",
+    "Global",
+    "Gt",
+    "GtE",
+    "IfExp",
+    "Import",
+    "ImportFrom",
+    "In",
+    "Index",
+    "Invert",
+    "Is",
+    "IsNot",
+    "JoinedStr",
+    "LShift",
+    "Lambda",
+    "ListComp",
+    "Lt",
+    "LtE",
+    "MatMult",
+    "Match",
+    "MatchAs",
+    "MatchClass",
+    "MatchMapping",
+    "MatchOr",
+    "MatchSequence",
+    "MatchSingleton",
+    "MatchStar",
+    "MatchValue",
+    "Mod",
+    "Module",
+    "Mult",
+    "NamedExpr",
+    "Nonlocal",
+    "Not",
+    "NotEq",
+    "NotIn",
+    "Or",
+    "Pass",
+    "Pow",
+    "RShift",
+    "Raise",
+    "Return",
+    "SetComp",
+    "Slice",
+    "Starred",
+    "Try",
+    "TryStar",
+    "UAdd",
+    "USub",
+    "UnaryOp",
+    "While",
+    "With",
+    "Yield",
+    "YieldFrom"
+  ],
+  "ast_only_via_quoted_literal": [],
+  "ast_never_referenced": [],
+  "extra_forms_raw_count": 31,
+  "extra_forms_code_only_count": 28,
+  "extra_forms_code_keepstrings_count": 31,
+  "extra_forms_only_via_comment_or_string": [
+    "capture_pattern",
+    "or_pattern",
+    "value_pattern"
+  ],
+  "extra_forms_comment_only_evidence": [],
+  "extra_forms_detail": {
+    "elif_chain": {
+      "hint": [
+        "elif",
+        "elif_conditions",
+        "IfRegion"
+      ],
+      "hit_raw": [
+        "elif",
+        "elif_conditions",
+        "IfRegion"
+      ],
+      "hit_code": [
+        "elif",
+        "elif_conditions",
+        "IfRegion"
+      ],
+      "hit_code_keepstrings": [
+        "elif",
+        "elif_conditions",
+        "IfRegion"
+      ]
+    },
+    "for_else": {
+      "hint": [
+        "else_body",
+        "LOOP_ELSE"
+      ],
+      "hit_raw": [
+        "else_body",
+        "LOOP_ELSE"
+      ],
+      "hit_code": [
+        "else_body",
+        "LOOP_ELSE"
+      ],
+      "hit_code_keepstrings": [
+        "else_body",
+        "LOOP_ELSE"
+      ]
+    },
+    "multi_target_assign": {
+      "hint": [
+        "ASTStore",
+        "Tuple"
+      ],
+      "hit_raw": [
+        "ASTStore",
+        "Tuple"
+      ],
+      "hit_code": [
+        "ASTStore",
+        "Tuple"
+      ],
+      "hit_code_keepstrings": [
+        "ASTStore",
+        "Tuple"
+      ]
+    },
+    "multi_context_with": {
+      "hint": [
+        "should_merge_with",
+        "items"
+      ],
+      "hit_raw": [
+        "should_merge_with",
+        "items"
+      ],
+      "hit_code": [
+        "should_merge_with",
+        "items"
+      ],
+      "hit_code_keepstrings": [
+        "should_merge_with",
+        "items"
+      ]
+    },
+    "augmented_assign": {
+      "hint": [
+        "AugAssign",
+        "BINARY_OP",
+        "INPLACE"
+      ],
+      "hit_raw": [
+        "AugAssign",
+        "BINARY_OP",
+        "INPLACE"
+      ],
+      "hit_code": [
+        "AugAssign",
+        "BINARY_OP",
+        "INPLACE"
+      ],
+      "hit_code_keepstrings": [
+        "AugAssign",
+        "BINARY_OP",
+        "INPLACE"
+      ]
+    },
+    "walrus": {
+      "hint": [
+        "NamedExpr",
+        "COPY"
+      ],
+      "hit_raw": [
+        "NamedExpr",
+        "COPY"
+      ],
+      "hit_code": [
+        "NamedExpr",
+        "COPY"
+      ],
+      "hit_code_keepstrings": [
+        "NamedExpr",
+        "COPY"
+      ]
+    },
+    "decorator_with_args": {
+      "hint": [
+        "Decorator",
+        "decorator"
+      ],
+      "hit_raw": [
+        "Decorator",
+        "decorator"
+      ],
+      "hit_code": [
+        "Decorator",
+        "decorator"
+      ],
+      "hit_code_keepstrings": [
+        "Decorator",
+        "decorator"
+      ]
+    },
+    "keyword_args": {
+      "hint": [
+        "keywords",
+        "KW_NAMES"
+      ],
+      "hit_raw": [
+        "keywords",
+        "KW_NAMES"
+      ],
+      "hit_code": [
+        "keywords",
+        "KW_NAMES"
+      ],
+      "hit_code_keepstrings": [
+        "keywords",
+        "KW_NAMES"
+      ]
+    },
+    "star_args": {
+      "hint": [
+        "Starred",
+        "CALL_FUNCTION_EX",
+        "UNPACK"
+      ],
+      "hit_raw": [
+        "Starred",
+        "CALL_FUNCTION_EX",
+        "UNPACK"
+      ],
+      "hit_code": [
+        "CALL_FUNCTION_EX",
+        "UNPACK"
+      ],
+      "hit_code_keepstrings": [
+        "Starred",
+        "CALL_FUNCTION_EX",
+        "UNPACK"
+      ]
+    },
+    "chained_comparison": {
+      "hint": [
+        "CHAINED_COMPARE",
+        "Compare"
+      ],
+      "hit_raw": [
+        "CHAINED_COMPARE",
+        "Compare"
+      ],
+      "hit_code": [
+        "Compare"
+      ],
+      "hit_code_keepstrings": [
+        "CHAINED_COMPARE",
+        "Compare"
+      ]
+    },
+    "star_import": {
+      "hint": [
+        "ImportFrom",
+        "import_all",
+        "level"
+      ],
+      "hit_raw": [
+        "ImportFrom",
+        "level"
+      ],
+      "hit_code": [
+        "ImportFrom",
+        "level"
+      ],
+      "hit_code_keepstrings": [
+        "ImportFrom",
+        "level"
+      ]
+    },
+    "relative_import": {
+      "hint": [
+        "level",
+        "ImportFrom"
+      ],
+      "hit_raw": [
+        "level",
+        "ImportFrom"
+      ],
+      "hit_code": [
+        "level",
+        "ImportFrom"
+      ],
+      "hit_code_keepstrings": [
+        "level",
+        "ImportFrom"
+      ]
+    },
+    "global_nonlocal": {
+      "hint": [
+        "Global",
+        "Nonlocal",
+        "STORE_GLOBAL"
+      ],
+      "hit_raw": [
+        "Global",
+        "Nonlocal",
+        "STORE_GLOBAL"
+      ],
+      "hit_code": [
+        "Global",
+        "Nonlocal",
+        "STORE_GLOBAL"
+      ],
+      "hit_code_keepstrings": [
+        "Global",
+        "Nonlocal",
+        "STORE_GLOBAL"
+      ]
+    },
+    "slice": {
+      "hint": [
+        "Slice",
+        "BUILD_SLICE",
+        "slice"
+      ],
+      "hit_raw": [
+        "Slice",
+        "BUILD_SLICE",
+        "slice"
+      ],
+      "hit_code": [
+        "Slice",
+        "BUILD_SLICE",
+        "slice"
+      ],
+      "hit_code_keepstrings": [
+        "Slice",
+        "BUILD_SLICE",
+        "slice"
+      ]
+    },
+    "fstring_conversion": {
+      "hint": [
+        "FormattedValue",
+        "conversion",
+        "format_spec"
+      ],
+      "hit_raw": [
+        "FormattedValue",
+        "conversion",
+        "format_spec"
+      ],
+      "hit_code": [
+        "FormattedValue",
+        "conversion",
+        "format_spec"
+      ],
+      "hit_code_keepstrings": [
+        "FormattedValue",
+        "conversion",
+        "format_spec"
+      ]
+    },
+    "async_def": {
+      "hint": [
+        "AsyncFunctionDef",
+        "async"
+      ],
+      "hit_raw": [
+        "AsyncFunctionDef",
+        "async"
+      ],
+      "hit_code": [
+        "AsyncFunctionDef",
+        "async"
+      ],
+      "hit_code_keepstrings": [
+        "AsyncFunctionDef",
+        "async"
+      ]
+    },
+    "async_for": {
+      "hint": [
+        "AsyncFor",
+        "GET_AITER",
+        "GET_ANEXT"
+      ],
+      "hit_raw": [
+        "AsyncFor",
+        "GET_AITER",
+        "GET_ANEXT"
+      ],
+      "hit_code": [
+        "GET_AITER",
+        "GET_ANEXT"
+      ],
+      "hit_code_keepstrings": [
+        "AsyncFor",
+        "GET_AITER",
+        "GET_ANEXT"
+      ]
+    },
+    "async_with": {
+      "hint": [
+        "AsyncWith",
+        "BEFORE_ASYNC_WITH"
+      ],
+      "hit_raw": [
+        "AsyncWith",
+        "BEFORE_ASYNC_WITH"
+      ],
+      "hit_code": [
+        "BEFORE_ASYNC_WITH"
+      ],
+      "hit_code_keepstrings": [
+        "AsyncWith",
+        "BEFORE_ASYNC_WITH"
+      ]
+    },
+    "await_expr": {
+      "hint": [
+        "Await",
+        "GET_AWAITABLE",
+        "SEND"
+      ],
+      "hit_raw": [
+        "Await",
+        "GET_AWAITABLE",
+        "SEND"
+      ],
+      "hit_code": [
+        "Await",
+        "GET_AWAITABLE",
+        "SEND"
+      ],
+      "hit_code_keepstrings": [
+        "Await",
+        "GET_AWAITABLE",
+        "SEND"
+      ]
+    },
+    "yield_from": {
+      "hint": [
+        "YieldFrom",
+        "GET_YIELD_FROM_ITER",
+        "is_yield_from_loop"
+      ],
+      "hit_raw": [
+        "YieldFrom",
+        "GET_YIELD_FROM_ITER",
+        "is_yield_from_loop"
+      ],
+      "hit_code": [
+        "GET_YIELD_FROM_ITER",
+        "is_yield_from_loop"
+      ],
+      "hit_code_keepstrings": [
+        "YieldFrom",
+        "GET_YIELD_FROM_ITER",
+        "is_yield_from_loop"
+      ]
+    },
+    "nested_comprehension": {
+      "hint": [
+        "multi_for",
+        "comprehension",
+        "for_iter_indices"
+      ],
+      "hit_raw": [
+        "multi_for",
+        "comprehension",
+        "for_iter_indices"
+      ],
+      "hit_code": [
+        "multi_for",
+        "comprehension",
+        "for_iter_indices"
+      ],
+      "hit_code_keepstrings": [
+        "multi_for",
+        "comprehension",
+        "for_iter_indices"
+      ]
+    },
+    "try_finally_only": {
+      "hint": [
+        "finally",
+        "finalbody",
+        "has_finally"
+      ],
+      "hit_raw": [
+        "finally",
+        "finalbody",
+        "has_finally"
+      ],
+      "hit_code": [
+        "finally",
+        "finalbody",
+        "has_finally"
+      ],
+      "hit_code_keepstrings": [
+        "finally",
+        "finalbody",
+        "has_finally"
+      ]
+    },
+    "except_star": {
+      "hint": [
+        "is_except_star",
+        "PREP_RERAISE_STAR"
+      ],
+      "hit_raw": [
+        "is_except_star",
+        "PREP_RERAISE_STAR"
+      ],
+      "hit_code": [
+        "is_except_star",
+        "PREP_RERAISE_STAR"
+      ],
+      "hit_code_keepstrings": [
+        "is_except_star",
+        "PREP_RERAISE_STAR"
+      ]
+    },
+    "match_statement": {
+      "hint": [
+        "Match",
+        "MATCH_",
+        "MatchRegion"
+      ],
+      "hit_raw": [
+        "Match",
+        "MATCH_",
+        "MatchRegion"
+      ],
+      "hit_code": [
+        "Match",
+        "MATCH_",
+        "MatchRegion"
+      ],
+      "hit_code_keepstrings": [
+        "Match",
+        "MATCH_",
+        "MatchRegion"
+      ]
+    },
+    "case_guard": {
+      "hint": [
+        "guard",
+        "MatchCase"
+      ],
+      "hit_raw": [
+        "guard"
+      ],
+      "hit_code": [
+        "guard"
+      ],
+      "hit_code_keepstrings": [
+        "guard"
+      ]
+    },
+    "class_keyword_pattern": {
+      "hint": [
+        "MatchClass",
+        "MatchClass"
+      ],
+      "hit_raw": [
+        "MatchClass",
+        "MatchClass"
+      ],
+      "hit_code": [
+        "MatchClass",
+        "MatchClass"
+      ],
+      "hit_code_keepstrings": [
+        "MatchClass",
+        "MatchClass"
+      ]
+    },
+    "mapping_pattern": {
+      "hint": [
+        "MatchMapping",
+        "MatchMapping"
+      ],
+      "hit_raw": [
+        "MatchMapping",
+        "MatchMapping"
+      ],
+      "hit_code": [
+        "MatchMapping",
+        "MatchMapping"
+      ],
+      "hit_code_keepstrings": [
+        "MatchMapping",
+        "MatchMapping"
+      ]
+    },
+    "sequence_pattern": {
+      "hint": [
+        "MatchSequence",
+        "MatchSequence"
+      ],
+      "hit_raw": [
+        "MatchSequence",
+        "MatchSequence"
+      ],
+      "hit_code": [
+        "MatchSequence",
+        "MatchSequence"
+      ],
+      "hit_code_keepstrings": [
+        "MatchSequence",
+        "MatchSequence"
+      ]
+    },
+    "or_pattern": {
+      "hint": [
+        "MatchOr",
+        "MatchOr"
+      ],
+      "hit_raw": [
+        "MatchOr",
+        "MatchOr"
+      ],
+      "hit_code": [],
+      "hit_code_keepstrings": [
+        "MatchOr",
+        "MatchOr"
+      ]
+    },
+    "capture_pattern": {
+      "hint": [
+        "MatchAs",
+        "MatchStar"
+      ],
+      "hit_raw": [
+        "MatchAs",
+        "MatchStar"
+      ],
+      "hit_code": [],
+      "hit_code_keepstrings": [
+        "MatchAs",
+        "MatchStar"
+      ]
+    },
+    "value_pattern": {
+      "hint": [
+        "MatchValue",
+        "MatchValue",
+        "MatchSingleton"
+      ],
+      "hit_raw": [
+        "MatchValue",
+        "MatchValue",
+        "MatchSingleton"
+      ],
+      "hit_code": [],
+      "hit_code_keepstrings": [
+        "MatchValue",
+        "MatchValue",
+        "MatchSingleton"
+      ]
+    }
+  },
+  "extra_forms_classification": {
+    "elif_chain": "overlaps_node_in_97",
+    "for_else": "overlaps_node_in_97",
+    "multi_target_assign": "overlaps_node_in_97",
+    "multi_context_with": "overlaps_node_in_97",
+    "augmented_assign": "overlaps_node_in_97",
+    "walrus": "overlaps_node_in_97",
+    "decorator_with_args": "overlaps_node_in_97",
+    "keyword_args": "overlaps_node_in_97",
+    "star_args": "overlaps_node_in_97",
+    "chained_comparison": "overlaps_node_in_97",
+    "star_import": "compensates_dropped_lowercase_class",
+    "relative_import": "overlaps_node_in_97",
+    "global_nonlocal": "overlaps_node_in_97",
+    "slice": "overlaps_node_in_97",
+    "fstring_conversion": "overlaps_node_in_97",
+    "async_def": "overlaps_node_in_97",
+    "async_for": "overlaps_node_in_97",
+    "async_with": "overlaps_node_in_97",
+    "await_expr": "overlaps_node_in_97",
+    "yield_from": "overlaps_node_in_97",
+    "nested_comprehension": "compensates_dropped_lowercase_class",
+    "try_finally_only": "overlaps_node_in_97",
+    "except_star": "overlaps_node_in_97",
+    "match_statement": "overlaps_node_in_97",
+    "case_guard": "compensates_dropped_lowercase_class",
+    "class_keyword_pattern": "overlaps_node_in_97",
+    "mapping_pattern": "overlaps_node_in_97",
+    "sequence_pattern": "overlaps_node_in_97",
+    "or_pattern": "overlaps_node_in_97",
+    "capture_pattern": "overlaps_node_in_97",
+    "value_pattern": "overlaps_node_in_97"
+  },
+  "extra_forms_class_counts": {
+    "overlaps_node_in_97": 28,
+    "compensates_dropped_lowercase_class": 3,
+    "new_language_surface": 0
+  },
+  "extra_forms_mapped_to_denominator_nodes": {
+    "elif_chain": [
+      "If"
+    ],
+    "for_else": [
+      "For"
+    ],
+    "multi_target_assign": [
+      "Tuple"
+    ],
+    "multi_context_with": [
+      "With"
+    ],
+    "augmented_assign": [
+      "AugAssign"
+    ],
+    "walrus": [
+      "NamedExpr"
+    ],
+    "decorator_with_args": [
+      "Call"
+    ],
+    "keyword_args": [
+      "Call"
+    ],
+    "star_args": [
+      "Starred"
+    ],
+    "chained_comparison": [
+      "Compare"
+    ],
+    "star_import": [],
+    "relative_import": [
+      "ImportFrom"
+    ],
+    "global_nonlocal": [
+      "Global"
+    ],
+    "slice": [
+      "Slice"
+    ],
+    "fstring_conversion": [
+      "FormattedValue",
+      "JoinedStr"
+    ],
+    "async_def": [
+      "AsyncFunctionDef"
+    ],
+    "async_for": [
+      "AsyncFor"
+    ],
+    "async_with": [
+      "AsyncWith"
+    ],
+    "await_expr": [
+      "Await"
+    ],
+    "yield_from": [
+      "YieldFrom"
+    ],
+    "nested_comprehension": [],
+    "try_finally_only": [
+      "Try"
+    ],
+    "except_star": [],
+    "match_statement": [
+      "Match"
+    ],
+    "case_guard": [],
+    "class_keyword_pattern": [
+      "MatchClass"
+    ],
+    "mapping_pattern": [
+      "MatchMapping"
+    ],
+    "sequence_pattern": [
+      "MatchSequence"
+    ],
+    "or_pattern": [
+      "MatchOr"
+    ],
+    "capture_pattern": [
+      "MatchStar"
+    ],
+    "value_pattern": [
+      "MatchSingleton",
+      "MatchValue"
+    ]
+  },
+  "extra_forms_fully_covered_by_denominator": [
+    "async_def",
+    "async_for",
+    "async_with",
+    "augmented_assign",
+    "await_expr",
+    "capture_pattern",
+    "chained_comparison",
+    "class_keyword_pattern",
+    "decorator_with_args",
+    "elif_chain",
+    "for_else",
+    "fstring_conversion",
+    "global_nonlocal",
+    "keyword_args",
+    "mapping_pattern",
+    "match_statement",
+    "multi_context_with",
+    "multi_target_assign",
+    "or_pattern",
+    "relative_import",
+    "sequence_pattern",
+    "slice",
+    "star_args",
+    "try_finally_only",
+    "value_pattern",
+    "walrus",
+    "yield_from"
+  ],
+  "extra_forms_count_with_denominator_overlap": 27
+}
