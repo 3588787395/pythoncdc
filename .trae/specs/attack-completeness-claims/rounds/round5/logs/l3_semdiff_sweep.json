@@ -1,0 +1,349 @@
+{
+ "rows": [
+  {
+   "probe": "l3_b142_nested_finally_copy",
+   "func": "v_nest_fin_continue",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 2, \"differing\": [{\"kind\": \"return\", \"value\": [1, 2, 1, 2, 2, 1, 2, 5], \"log\": []}, {\"kind\": \"return\", \"value\": [1, 2, 1, 1, 2, 1, 2, 3], \"log\": []}]}"
+  },
+  {
+   "probe": "l3_b142_nested_finally_copy",
+   "func": "v_nest_fin_continue_cond",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 2, \"differing\": [{\"kind\": \"return\", \"value\": [1, 2, 1, 2, 2, 1, 2, 5], \"log\": []}, {\"kind\": \"return\", \"value\": [1, 2, 1, 1, 2, 1, 2, 3], \"log\": []}]}"
+  },
+  {
+   "probe": "l3_b143_break_in_finally",
+   "func": "o_break_in_finally",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 2, \"differing\": []}"
+  },
+  {
+   "probe": "l3_b143_break_in_finally",
+   "func": "o_break_in_finally_handler",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 2, \"differing\": []}"
+  },
+  {
+   "probe": "l3_b143b_break_in_finally_shapes",
+   "func": "b143_a_for_finally_ifarm",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 2, \"differing\": []}"
+  },
+  {
+   "probe": "l3_b143b_break_in_finally_shapes",
+   "func": "b143_b_orig_nested",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 2, \"differing\": [{\"kind\": \"return\", \"value\": [0, 1, 2, 1, 3, 2, 1], \"log\": []}]}"
+  },
+  {
+   "probe": "l3_b143b_break_in_finally_shapes",
+   "func": "b143_c_break_outside_arm",
+   "judge_fail": true,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 2, \"differing\": []}"
+  },
+  {
+   "probe": "l3_b143b_break_in_finally_shapes",
+   "func": "b143_d_if_else_arms",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 2, \"differing\": [{\"kind\": \"return\", \"value\": [0, 1, 2, 1, 3, 2, 1], \"log\": []}, {\"kind\": \"return\", \"value\": [0], \"log\": []}]}"
+  },
+  {
+   "probe": "l3_b143b_break_in_finally_shapes",
+   "func": "b143_e_while_else",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 2, \"differing\": [{\"kind\": \"return\", \"value\": [\"inner-done\", 0, \"inner-done\", 1, 2, 1, 3, 2, 1], \"log\": []}, {\"kind\": \"return\", \"value\": [\"inner-done\", 0, \"inner-done\"], \"log\": []}]}"
+  },
+  {
+   "probe": "l3_g1_r2_boolop_ternary_while",
+   "func": "r2_lt",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 2, \"differing\": [{\"kind\": \"raise\", \"value\": \"IndexError: list index out of range\", \"log\": []}, {\"kind\": \"raise\", \"value\": \"IndexError: list index out of range\", \"log\": []}]}"
+  },
+  {
+   "probe": "l3_g1_r2_boolop_ternary_while",
+   "func": "r2_nested_and_or",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 4, \"differing\": [{\"kind\": \"return\", \"value\": false, \"log\": []}, {\"kind\": \"return\", \"value\": false, \"log\": []}]}"
+  },
+  {
+   "probe": "l3_g2_r3_assert_try_else",
+   "func": "r3_assert_else",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 2, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g2_r3_assert_try_else",
+   "func": "r3_raise_from",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 2, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g3_r4_await_asyncwith_finally",
+   "func": "r4_asyncwith",
+   "judge_fail": true,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 1, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g3_r4_await_asyncwith_finally",
+   "func": "r4_await_in_for",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 1, \"differing\": [{\"kind\": \"return\", \"value\": [\"G3\", \"G-1\"], \"log\": [[\"get\", \"res\"], [\"get\", \"res\"]]}]}"
+  },
+  {
+   "probe": "l3_g4_r5_match_mapping_star_guard",
+   "func": "r5_match",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 2, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g4_r5_match_mapping_star_guard",
+   "func": "r5_match_mapping",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 2, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g5_r6_handler_continue",
+   "func": "r6_handler_continue",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 3, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g5_r6_handler_continue",
+   "func": "r6_handler_continue_while",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 3, \"differing\": [{\"kind\": \"return\", \"value\": [], \"log\": []}]}"
+  },
+  {
+   "probe": "l3_g5b_r6_handler_continue_matrix",
+   "func": "r6_for_bare_continue",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 3, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g5b_r6_handler_continue_matrix",
+   "func": "r6_for_stmt_continue",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 3, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g5b_r6_handler_continue_matrix",
+   "func": "r6_while_bare_continue",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 3, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g5b_r6_handler_continue_matrix",
+   "func": "r6_while_stmt_continue",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 3, \"differing\": [{\"kind\": \"return\", \"value\": [], \"log\": []}]}"
+  },
+  {
+   "probe": "l3_g5c_r6_handler_continue_observable",
+   "func": "r6_while_stmt_continue_obs",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 2, \"differing\": [{\"kind\": \"return\", \"value\": [3, -1], \"log\": []}]}"
+  },
+  {
+   "probe": "l3_g6_r7_del_ternary_slice",
+   "func": "r7_del_ternary_slice",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 1, \"differing\": [{\"kind\": \"return\", \"value\": [1], \"log\": []}]}"
+  },
+  {
+   "probe": "l3_g6_r7_del_ternary_slice",
+   "func": "r7_augassign_ternary_slice",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 1, \"differing\": [{\"kind\": \"raise\", \"value\": \"TypeError: 'int' object is not iterable\", \"log\": []}]}"
+  },
+  {
+   "probe": "l3_g7_r8_finally_conditional_return",
+   "func": "r8_fin_return",
+   "judge_fail": true,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 1, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g7_r8_finally_conditional_return",
+   "func": "r8_fin_return_nested",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 1, \"differing\": [{\"kind\": \"return\", \"value\": \"inner-body\", \"log\": []}]}"
+  },
+  {
+   "probe": "l3_g7b_r8_finally_sideeffect",
+   "func": "r8_fin_sideeffect",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 1, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g7b_r8_finally_sideeffect",
+   "func": "r8_fin_sideeffect_noloop",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 1, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g7b_r8_finally_sideeffect",
+   "func": "r8_fin_sideeffect_nested",
+   "judge_fail": true,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 1, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g7c_r8_finally_sideeffect_return",
+   "func": "r8_fin_sideeffect_return",
+   "judge_fail": true,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 1, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g7c_r8_finally_sideeffect_return",
+   "func": "r8_fin_sideeffect_return_raise",
+   "judge_fail": true,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 1, \"differing\": []}"
+  },
+  {
+   "probe": "l3_g7d_r8_finally_sideeffect_observable",
+   "func": "r8_fin_obs",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 3, \"differing\": [{\"kind\": \"return\", \"value\": [\"body\", \"fin\"], \"log\": []}, {\"kind\": \"return\", \"value\": [\"body\", \"fin\"], \"log\": []}]}"
+  },
+  {
+   "probe": "l3_g7d_r8_finally_sideeffect_observable",
+   "func": "r8_fin_obs_handler",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 3, \"differing\": [{\"kind\": \"return\", \"value\": [\"body\", \"fin\"], \"log\": []}, {\"kind\": \"return\", \"value\": [\"handler\", \"fin\"], \"log\": []}]}"
+  },
+  {
+   "probe": "l3_o1_overlay_six",
+   "func": "o1",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 1, \"differing\": [{\"kind\": \"return\", \"value\": [\"G3\", \"<AsyncCtx:ctx>\", 3, \"G1\", \"<AsyncCtx:ctx>\", -1], \"log\": [[\"aenter\", \"res\"], [\"enter\", \"ctx\"], [\"get\", \"res\"], [\"exit\", \"ctx\"], [\"enter\", \"ctx\"], [\"get\", \"res\"], [\"exit\", \"ctx\"], [\"aexit\", \"res\"]]}]}"
+  },
+  {
+   "probe": "l3_o1_overlay_six",
+   "func": "o1b",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 1, \"differing\": [{\"kind\": \"return\", \"value\": [\"G3\"], \"log\": [[\"aenter\", \"res\"], [\"get\", \"res\"], [\"aexit\", \"res\"]]}]}"
+  },
+  {
+   "probe": "l3_o2_overlay_boolop_ternary_await",
+   "func": "o2",
+   "judge_fail": true,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 2, \"differing\": []}"
+  },
+  {
+   "probe": "l3_o2_overlay_boolop_ternary_await",
+   "func": "o2b",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 2, \"differing\": [{\"kind\": \"return\", \"value\": 1, \"log\": []}]}"
+  },
+  {
+   "probe": "l3_o3_overlay_loopelse_break_finally",
+   "func": "o3",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 2, \"differing\": []}"
+  },
+  {
+   "probe": "l3_o3_overlay_loopelse_break_finally",
+   "func": "o3b",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 2, \"differing\": []}"
+  },
+  {
+   "probe": "l3_o3_overlay_loopelse_break_finally",
+   "func": "o3c",
+   "judge_fail": true,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 2, \"differing\": []}"
+  },
+  {
+   "probe": "l3_o4_overlay_matchguard_with_comp",
+   "func": "o4",
+   "judge_fail": false,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 1, \"differing\": []}"
+  },
+  {
+   "probe": "l3_o4_overlay_matchguard_with_comp",
+   "func": "o4b",
+   "judge_fail": false,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 2, \"differing\": [{\"kind\": \"return\", \"value\": [2, \"<Ctx:ctx>\"], \"log\": [[\"enter\", \"ctx\"], [\"exit\", \"ctx\"]]}, {\"kind\": \"return\", \"value\": [\"<Ctx:ctx>\", 2, 3, 2, 3, 4, 5, 6, 7, 8], \"log\": [[\"enter\", \"ctx\"], [\"exit\", \"ctx\"]]}]}"
+  },
+  {
+   "probe": "l3_o5_overlay_augassign_del_slice",
+   "func": "o5",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 1, \"differing\": [{\"kind\": \"return\", \"value\": 5, \"log\": []}]}"
+  },
+  {
+   "probe": "l3_o5_overlay_augassign_del_slice",
+   "func": "o5b",
+   "judge_fail": true,
+   "semdiff": "EQUAL",
+   "detail": "{\"cases\": 1, \"differing\": []}"
+  },
+  {
+   "probe": "l3_o6_overlay_match_in_with_after",
+   "func": "o6",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 1, \"differing\": [{\"kind\": \"return\", \"value\": [3, \"after\", -1, \"after\", 5, \"after\"], \"log\": [[\"enter\", \"ctx\"], [\"exit\", \"ctx\"], [\"enter\", \"ctx\"], [\"exit\", \"ctx\"], [\"enter\", \"ctx\"], [\"exit\", \"ctx\"]]}]}"
+  },
+  {
+   "probe": "l3_o6_overlay_match_in_with_after",
+   "func": "o6b",
+   "judge_fail": true,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 1, \"differing\": [{\"kind\": \"return\", \"value\": [3, \"tail\", \"<Ctx:ctx>\", -1, \"tail\", \"<Ctx:ctx>\", 5, \"tail\", \"<Ctx:ctx>\"], \"log\": [[\"enter\", \"ctx\"], [\"exit\", \"ctx\"], [\"enter\", \"ctx\"], [\"exit\", \"ctx\"], [\"enter\", \"ctx\"], [\"exit\", \"ctx\"]]}]}"
+  }
+ ],
+ "blind_spot_candidates": [
+  {
+   "probe": "l3_o4_overlay_matchguard_with_comp",
+   "func": "o4b",
+   "judge_fail": false,
+   "semdiff": "DIFFERENT",
+   "detail": "{\"cases\": 2, \"differing\": [{\"kind\": \"return\", \"value\": [2, \"<Ctx:ctx>\"], \"log\": [[\"enter\", \"ctx\"], [\"exit\", \"ctx\"]]}, {\"kind\": \"return\", \"value\": [\"<Ctx:ctx>\", 2, 3, 2, 3, 4, 5, 6, 7, 8], \"log\": [[\"enter\", \"ctx\"], [\"exit\", \"ctx\"]]}]}"
+  }
+ ]
+}

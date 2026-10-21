@@ -1,0 +1,6 @@
+# judge: python -X utf8 scripts/pyc_verify.py single F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_g5_r6_handler_continue.pyc --source F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_g5_r6_handler_continueOK.py
+# pyc_sha16=734f020b30a19650 ok_sha16=a8f81b273431d33e
+  ***<module>.r6_handler_continue_while: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g5_r6_handler_continue.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g5_r6_handler_continueOK.py
+[single] status=failure units=2/3 success_rate=66.67%

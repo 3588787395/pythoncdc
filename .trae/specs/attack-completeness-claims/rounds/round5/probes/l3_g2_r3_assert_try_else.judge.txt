@@ -1,0 +1,5 @@
+# judge: python -X utf8 scripts/pyc_verify.py single F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_g2_r3_assert_try_else.pyc --source F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_g2_r3_assert_try_elseOK.py
+# pyc_sha16=c55d317889cc72db ok_sha16=5e1eef29586e0957
+[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g2_r3_assert_try_else.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g2_r3_assert_try_elseOK.py
+[single] status=success units=3/3 success_rate=100.00%

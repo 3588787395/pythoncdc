@@ -1,0 +1,66 @@
+{
+ "generated_at": "2026-10-21T17:08:02",
+ "elapsed_sec": 3.6,
+ "probes": [
+  {
+   "name": "l3_b143b_break_in_finally_shapes.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round5/probes/l3_b143b_break_in_finally_shapes.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round5/probes/l3_b143b_break_in_finally_shapes.pyc",
+   "pyc_sha": "11b37b0a54241742",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "70d45327ad3a8279",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l3_b143b_break_in_finally_shapes.pyc (Python 3.11)\n\n__doc__ = \"\"\"L3 §5 — B143（finally 体内 break 的 finalbody 子区域派发）形态枚举。\n\n原始复现（B143 登记原文，attain-true-completeness/rounds/round6/FIX.md:93）：\n  `s_b140_break_in_finally_loop`（仓内原件：test_repros/round6/r6_synth_b140_nested_break.py:15）\n  根因自述：「finally 体（副本序列）中的嵌套 IfRegion 条件块与 break 臂块在\n  finalbody 装配时线性发射，break 未落在 if 臂内（`if i == 1: pass` + 臂外 break/continue）」。\n\n本探针枚举 finally 体内 break 的**宿主/位置**维���：\n  A  for 体 + finally + if 臂内 break                （单层循环）\n  B  for > while > try/finally + if 臂内 break       （B143 原件逐字复刻）\n  C  for > while > try/finally + **臂外**（finally 级）break\n  D  for 体 + finally + if/else 双臂（break / continue）\n  E  for > while > try/finally + while-else\n源语义要点：finally 体内的 break 必须（i）留在 finally 体内、\n  （ii）落在正确的 if 臂内、（iii）跳出**所属循环**（内层 while，不是外层 for）。\n\"\"\"\ndef b143_a_for_finally_ifarm(n):\n    out = []\n    for i in range(n):\n        try:\n            out.append(i)\n        finally:\n            if i == 1:\n                break\n    return out\ndef b143_b_orig_nested(n):\n    \"\"\"B143 原件逐字复刻：break 属于内层 while。\"\"\"\n    out = []\n    for i in range(n):\n        while i > 0:\n            i -= 1\n            try:\n                out.append(i)\n            finally:\n                if i == 1:\n                    pass\n                break\n                continue\n    return out\ndef b143_c_break_outside_arm(n):\n    \"\"\"臂外 break：finally 体里 if 之后再 break（不在任何 if 臂内）。\"\"\"\n    out = []\n    for i in range(n):\n        if i > 0:\n            i -= 1\n            try:\n                out.append(i)\n            finally:\n                if i == 1:\n                    out.append(-1)\n    return out\ndef b143_d_if_else_arms(n):\n    \"\"\"if/else 双臂：break 在 if 臂、continue 在 else 臂。\"\"\"\n    out = []\n    for i in range(n):\n        while True:\n            if i > 0:\n                i -= 1\n            else:\n                continue\n            try:\n                out.append(i)\n            finally:\n                if i == 1:\n                    pass\n                continue\n    return out\ndef b143_e_while_else(n):\n    \"\"\"while-else + finally 内 break。\"\"\"\n    out = []\n    for i in range(n):\n        while i > 0:\n            i -= 1\n            try:\n                out.append(i)\n            finally:\n                if i == 1:\n                    pass\n                break\n                continue\n        else:\n            out.append('inner-done')\n    return out\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 2,
+   "units_total": 6,
+   "failures": [
+    "***<module>.b143_b_orig_nested: Failure: Different control flow",
+    "***<module>.b143_c_break_outside_arm: Failure: Different control flow",
+    "***<module>.b143_d_if_else_arms: Failure: Different control flow",
+    "***<module>.b143_e_while_else: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.b143_b_orig_nested: Failure: Different control flow\n  ***<module>.b143_c_break_outside_arm: Failure: Different control flow\n  ***<module>.b143_d_if_else_arms: Failure: Different control flow\n  ***<module>.b143_e_while_else: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_b143b_break_in_finally_shapes.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_b143b_break_in_finally_shapesOK.py\n[single] status=failure units=2/6 success_rate=33.33%"
+  },
+  {
+   "name": "l3_g5b_r6_handler_continue_matrix.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g5b_r6_handler_continue_matrix.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g5b_r6_handler_continue_matrix.pyc",
+   "pyc_sha": "30c4f47f0624e204",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "bb2919a0ec04b541",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l3_g5b_r6_handler_continue_matrix.pyc (Python 3.11)\n\n__doc__ = \"\"\"L3 §3 通用性抽检（判别矩阵）— 族 R6：handler 内 continue 的失败因子判别。\n\nR6 落地声明（attain-true-completeness/rounds/round6/FIX.md:90）称\n「通用性实证：6 个非语料合成探针 22/23 覆盖 … handler break/continue（while + for）」。\n但仓内实际探针只有：\n  test_repros/round6/r6_synth_b140_handler_break.py:1  `s_b140_handler_break`      = while + handler break\n  test_repros/round6/r6_synth_b140_handler_break.py:22 `s_b140_handler_continue`   = for  + handler continue\n  ⇒ 「while × continue」这一格**未被覆盖**。\n\n本探针给出 2×2 判别矩阵（循环宿主 {for, while} × continue 前是否有语句），\n用于判别 §3 探针 `l3_g5_r6_handler_continue` 中 `r6_handler_continue_while` 失败的\n根因是「宿主是 while」还是「continue 前有语句」。\n\"\"\"\ndef r6_for_bare_continue(xs):\n    out = []\n    for x in xs:\n        try:\n            if x < 0:\n                raise ValueError(x)\n        except ValueError:\n            continue\n        out.append(x)\n    return out\ndef r6_for_stmt_continue(xs):\n    out = []\n    for x in xs:\n        try:\n            if x < 0:\n                raise ValueError(x)\n        except ValueError:\n            out.append(-1)\n            continue\n        out.append(x)\n    return out\ndef r6_while_bare_continue(xs):\n    out = []\n    i = 0\n    while i < len(xs):\n        try:\n            if xs[i] < 0:\n                raise ValueError(xs[i])\n        except ValueError:\n            continue\n        out.append(xs[i])\n        i += 1\n    return out\ndef r6_while_stmt_continue(xs):\n    out = []\n    i = 0\n    while i < len(xs):\n        try:\n            if xs[i] < 0:\n                raise ValueError(xs[i])\n        except ValueError:\n            i += 1\n        out.append(xs[i])\n        i += 1\n    return out\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 4,
+   "units_total": 5,
+   "failures": [
+    "***<module>.r6_while_stmt_continue: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.r6_while_stmt_continue: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g5b_r6_handler_continue_matrix.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g5b_r6_handler_continue_matrixOK.py\n[single] status=failure units=4/5 success_rate=80.00%"
+  },
+  {
+   "name": "l3_g7b_r8_finally_sideeffect.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g7b_r8_finally_sideeffect.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g7b_r8_finally_sideeffect.pyc",
+   "pyc_sha": "cbeb79f8eb15cf4a",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "b412c9050ab5b1e2",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l3_g7b_r8_finally_sideeffect.pyc (Python 3.11)\n\n__doc__ = \"\"\"L3 §3 通用性抽检（可观测化）— 族 R8：finally 体内 return 的**副本重复**是否可观测。\n\n`l3_g7_r8_finally_conditional_return` 的 finally 体只含 return，\n产品把 finally 体**复制**进 try 体与 handler 体时语义仍等价（return 值相同）⇒ 不可观测。\n本探针把 finally 体换成**带副作用**的语句（out.append），使「finally 体被执行了\n几次」成为可观测量；源语义：finally 体每个元素**恰好执行一次**。\n\n同时枚举 finally 体被复制的宿主：try 体 / handler 体 / else 体。\n\"\"\"\ndef r8_fin_sideeffect(xs):\n    out = []\n    for x in xs:\n        try:\n            if x:\n                return 'body'\n            else:\n                raise ValueError(x)\n        except ValueError:\n            return 'handler'\n        finally:\n            out.append('fin')\n    return out\ndef r8_fin_sideeffect_noloop(xs):\n    out = []\n    for x in xs:\n        try:\n            out.append(x)\n        except ValueError:\n            out.append(-1)\n        finally:\n            out.append('fin')\n    return out\ndef r8_fin_sideeffect_nested(xs):\n    out = []\n    for x in xs:\n        try:\n            out.append(x)\n        finally:\n            out.append('inner-fin')\n        out.append('outer-fin')\n    return out\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 3,
+   "units_total": 4,
+   "failures": [
+    "***<module>.r8_fin_sideeffect_nested: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.r8_fin_sideeffect_nested: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g7b_r8_finally_sideeffect.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g7b_r8_finally_sideeffectOK.py\n[single] status=failure units=3/4 success_rate=75.00%"
+  }
+ ]
+}

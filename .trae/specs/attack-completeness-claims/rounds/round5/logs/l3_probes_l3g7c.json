@@ -1,0 +1,26 @@
+{
+ "generated_at": "2026-10-21T17:09:56",
+ "elapsed_sec": 1.7,
+ "probes": [
+  {
+   "name": "l3_g7c_r8_finally_sideeffect_return.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g7c_r8_finally_sideeffect_return.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g7c_r8_finally_sideeffect_return.pyc",
+   "pyc_sha": "827aa5e90e2de04b",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "62a60a9a1f3a6717",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l3_g7c_r8_finally_sideeffect_return.pyc (Python 3.11)\n\n__doc__ = \"\"\"L3 §3 通用性抽检（可观测化·2）— 族 R8：finally 体含 **return + 副作用** 时的副本重复。\n\n机理：CPython 3.11 在 try 体含 `return`/`raise` 的正常出口路径上**内联**一份\nfinally 体的副本（与 finalbody 区域那份并存）。若归约把「正常路径副本」误当作\ntry 体/handler 体的语句（=B142 的同一根因：正常路径 finally 副本归属错误），\n则 finally 体的**副作用语句会被执行两次** ⇒ 可观测语义差。\n\n`l3_g7_r8_finally_conditional_return` 的 finally 体只含 return ⇒ 不可观测；\n`l3_g7b` 的 finally 体无控制转移 ⇒ 编译器不内联副本 ⇒ 也不可观测。\n本探针 finally 体同时含**副作用**与**return** ⇒ 副本重复可观测。\n\"\"\"\nLAST = []\ndef r8_fin_sideeffect_return(xs):\n    out = []\n    for x in xs:\n        try:\n            if x:\n                out.append('fin')\n                if x < 0:\n                    return 'finally'\n                else:\n                    return 'body'\n            else:\n                raise ValueError(x)\n        except ValueError:\n            out.append('fin')\n            if x < 0:\n                return 'finally'\n            else:\n                return 'handler'\n        finally:\n            out.append('fin')\n            if x < 0:\n                return 'finally'\n    return 'end'\ndef r8_fin_sideeffect_return_raise(xs):\n    out = []\n    for x in xs:\n        try:\n            if x:\n                out.append('fin')\n                if x < 0:\n                    return 'finally'\n                else:\n                    return 'body'\n            else:\n                raise ValueError(x)\n        except ValueError:\n            raise KeyError(x)\n        finally:\n            out.append('fin')\n            if x < 0:\n                return 'finally'\n    return 'end'\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 1,
+   "units_total": 3,
+   "failures": [
+    "***<module>.r8_fin_sideeffect_return: Failure: Different control flow",
+    "***<module>.r8_fin_sideeffect_return_raise: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.r8_fin_sideeffect_return: Failure: Different control flow\n  ***<module>.r8_fin_sideeffect_return_raise: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g7c_r8_finally_sideeffect_return.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g7c_r8_finally_sideeffect_returnOK.py\n[single] status=failure units=1/3 success_rate=33.33%"
+  }
+ ]
+}

@@ -1,0 +1,6 @@
+# judge: python -X utf8 scripts/pyc_verify.py single F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_g7b_r8_finally_sideeffect.pyc --source F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_g7b_r8_finally_sideeffectOK.py
+# pyc_sha16=cbeb79f8eb15cf4a ok_sha16=b412c9050ab5b1e2
+  ***<module>.r8_fin_sideeffect_nested: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g7b_r8_finally_sideeffect.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g7b_r8_finally_sideeffectOK.py
+[single] status=failure units=3/4 success_rate=75.00%

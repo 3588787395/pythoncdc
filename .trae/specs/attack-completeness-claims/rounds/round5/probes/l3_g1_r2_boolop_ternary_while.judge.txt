@@ -1,0 +1,7 @@
+# judge: python -X utf8 scripts/pyc_verify.py single F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_g1_r2_boolop_ternary_while.pyc --source F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_g1_r2_boolop_ternary_whileOK.py
+# pyc_sha16=755cbfbb147296bd ok_sha16=fe0ecc70b9241691
+  ***<module>.r2_lt: Failure: Different control flow
+  ***<module>.r2_nested_and_or: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g1_r2_boolop_ternary_while.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g1_r2_boolop_ternary_whileOK.py
+[single] status=failure units=1/3 success_rate=33.33%

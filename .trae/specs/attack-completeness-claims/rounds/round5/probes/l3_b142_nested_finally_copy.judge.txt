@@ -1,0 +1,7 @@
+# judge: python -X utf8 scripts/pyc_verify.py single F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_b142_nested_finally_copy.pyc --source F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_b142_nested_finally_copyOK.py
+# pyc_sha16=4ba425382385822f ok_sha16=d7521c813e5d91ed
+  ***<module>.v_nest_fin_continue: Failure: Different control flow
+  ***<module>.v_nest_fin_continue_cond: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_b142_nested_finally_copy.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_b142_nested_finally_copyOK.py
+[single] status=failure units=1/3 success_rate=33.33%

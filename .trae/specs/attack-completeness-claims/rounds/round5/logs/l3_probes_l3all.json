@@ -1,0 +1,25 @@
+{
+ "generated_at": "2026-10-21T17:01:29",
+ "elapsed_sec": 1.2,
+ "probes": [
+  {
+   "name": "l3_o3_overlay_loopelse_break_finally.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round5/probes/l3_o3_overlay_loopelse_break_finally.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round5/probes/l3_o3_overlay_loopelse_break_finally.pyc",
+   "pyc_sha": "186d05bd9e906060",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "26052c02d1e78c80",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l3_o3_overlay_loopelse_break_finally.pyc (Python 3.11)\n\n__doc__ = \"\"\"L3 §4 叠加攻击 (c) — for-else + break + finally + handler 同函数。\n\n关注：B144/B145（break 落点独占可达）、B140（handler break）、B155/B156\n     （臂尾回边）、B157（finally 归属唯一化）四族在同函数内的优先级；\n     源语义：for 的 else 仅在**无 break** 时执行。\n\n注：Python 语法不允许 try/except/else/finally 四段并存，故 (c) 拆为\n    try/except/finally 三段 + for-else 叠加。\n\"\"\"\ndef o3(xs):\n    out = []\n    for x in xs:\n        try:\n            if x < 0:\n                raise ValueError(x)\n            out.append(x)\n        except ValueError:\n            out.append(-1)\n        finally:\n            out.append(0)\n        break\n    else:\n        out.append('else')\n    return out\ndef o3b(xs):\n    \"\"\"无 break 版本：for-else 与 try/except/finally 同时存在。\"\"\"\n    out = []\n    for x in xs:\n        try:\n            out.append(x)\n        except ValueError:\n            out.append(-1)\n        finally:\n            out.append(0)\n    out.append('else')\n    return out\ndef o3c(xs):\n    \"\"\"for-else + try/except/else（无 finally）+ break 在 handler 内。\"\"\"\n    out = []\n    for x in xs:\n        try:\n            out.append(x)\n        except ValueError:\n            out.append(-1)\n            break\n        out.append(1)\n    out.append('else')\n    return out\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 3,
+   "units_total": 4,
+   "failures": [
+    "***<module>.o3c: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.o3c: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_o3_overlay_loopelse_break_finally.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_o3_overlay_loopelse_break_finallyOK.py\n[single] status=failure units=3/4 success_rate=75.00%"
+  }
+ ]
+}

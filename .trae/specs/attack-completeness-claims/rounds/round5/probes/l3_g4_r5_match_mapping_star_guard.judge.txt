@@ -1,0 +1,5 @@
+# judge: python -X utf8 scripts/pyc_verify.py single F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_g4_r5_match_mapping_star_guard.pyc --source F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_g4_r5_match_mapping_star_guardOK.py
+# pyc_sha16=05f3a71cdbc0af72 ok_sha16=fb984ad17fbd0478
+[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g4_r5_match_mapping_star_guard.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_g4_r5_match_mapping_star_guardOK.py
+[single] status=success units=3/3 success_rate=100.00%

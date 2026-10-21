@@ -1,0 +1,6 @@
+# judge: python -X utf8 scripts/pyc_verify.py single F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_o3_overlay_loopelse_break_finally.pyc --source F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_o3_overlay_loopelse_break_finallyOK.py
+# pyc_sha16=186d05bd9e906060 ok_sha16=26052c02d1e78c80
+  ***<module>.o3c: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_o3_overlay_loopelse_break_finally.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_o3_overlay_loopelse_break_finallyOK.py
+[single] status=failure units=3/4 success_rate=75.00%

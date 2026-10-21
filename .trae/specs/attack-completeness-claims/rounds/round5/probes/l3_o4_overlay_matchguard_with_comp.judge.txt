@@ -1,0 +1,6 @@
+# judge: python -X utf8 scripts/pyc_verify.py single F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_o4_overlay_matchguard_with_comp.pyc --source F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_o4_overlay_matchguard_with_compOK.py
+# pyc_sha16=e85830b15d978c04 ok_sha16=585f461f210887bb
+  ***<module>.o4b.<listcomp>: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_o4_overlay_matchguard_with_comp.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_o4_overlay_matchguard_with_compOK.py
+[single] status=failure units=4/5 success_rate=80.00%

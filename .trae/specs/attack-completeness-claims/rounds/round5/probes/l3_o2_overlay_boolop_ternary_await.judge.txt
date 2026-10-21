@@ -1,0 +1,7 @@
+# judge: python -X utf8 scripts/pyc_verify.py single F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_o2_overlay_boolop_ternary_await.pyc --source F:\Downloads\pythoncdc-main\.trae\specs\attack-completeness-claims\rounds\round5\probes\l3_o2_overlay_boolop_ternary_awaitOK.py
+# pyc_sha16=ace61f0eeeb3c5a6 ok_sha16=e361e161918c551a
+  ***<module>.o2: Failure: Different control flow
+  ***<module>.o2b: Failure: Different control flow
+[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_o2_overlay_boolop_ternary_await.pyc
+[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round5/probes/l3_o2_overlay_boolop_ternary_awaitOK.py
+[single] status=failure units=1/3 success_rate=33.33%
