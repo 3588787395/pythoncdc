@@ -1,5 +1,11 @@
 # Research Log
 
+## 2026-10-21（v3 attain-true-completeness 十轮终审：R8 全行对抗终审 + 三态落账 v8）
+
+- **R8 终审**（commit `b6e634b7`，实录 = `.trae/specs/attain-true-completeness/rounds/round8/REVIEW.md` + `REVIEW2.md`）：25 行矩阵 34 探针 **257/257**（每行 ≥1 深层宿主探针 + 负对照 60/60；13 误解 13/13 自查零触犯）；组合级 25 号终表 + 另册 B52/B53/B11-R2 并入 = `r8combo2` **241/242**（唯一红 = `v_nest_fin_continue` 属地 **B142 稀窝**，不升格）；E 门禁终跑 402 八分片 **6617/6617 files_failure=0**（574s）、IV.2 全绿；7 组回归终读数 86/86、46/46、60/60、71/71、65/65、172/172、98/98。本轮机制 B153–B162（4 文件 +516/−25，全 `[Bn-V3R8]` 标记）：c04/m02 三层 try 配对（B155/B156）、for-iter 三元（B153/B154）、系列深宿主组合（B157–B160）、BUILD_\* 链式后继排除与 while-or 链链尾完成判据（B162），另册两项翻正后另册清空。
+- **§8.2 复审六步（v8 落账）**：①fix 批落位确认——R1–R8 全批（rr-v3r01….rr-v3r08）均在 origin/main 祖先链；②grep 落地标记全表——`[Bn-V3Rn]` 标记族与 B129–B162 机制符号在树逐条核验（总纲 §6 B77+ 表 v8 终态列 + `round8/REVIEW.md`）；③台账 §5 全量更新——三态 **v8 = 完备 128 / 破口 0 / 零能力 0 ⇒ 100%**，§6 开放破口表全部封闭（v7 留档 + v8 终态列）、§8.1 口径史加 v8 行；④`tools/kb/syntax_coverage.py` 重跑 **128/128 = 100%**（sha256 `38003eb4…`，v7 为 `86539c44…`；JSON = `docs/refactor/syntax-coverage.json` denom/numer/pct 三读一致）；⑤占比重算同步五页——总纲/branch-coverage/syntax-audit-ledger 数字行更新，overview/index 无三态数字行（引用文本不涉改，核验一致）；⑥本条 log。
+- **口径 v8 取代 v7**：v7 的 25 个破口行（表A 14 + 表B 6 + 表C 5）与组合级维持 16 全数封闭；v3 十轮按 25 行工作面推进（R2 If/BoolOp/IfExp、R3 Try/Raise/Assert/Import/Global、R4 Await/ListComp/await_expr/Yield、R5 Match/With、R6 Break/Continue/While、R7 Delete/AugAssign/Return/Slice、R8 终审），E 门禁每轮全量。稀窝属地 B142（嵌套 finally 副本归属）/B143（finalbody 内 break 派发）维持登记不升格。三维度禁互替不变：语料回归（402）与对抗矩阵分账记账。
+
 ## 2026-10-17（对抗规范 v2 Round 10：§8.2 六步全量重验 + 三态落账 v7）
 
 - **六步全量重验**（HEAD `3e0d6905`；origin/main `0ad55951`；实录 = `.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round10/WIKI_REVIEW.md`）：①round1–9 全批次提交在 origin/main 祖先链（13/13 核验）；②72 项落地标记 grep = **71 PASS / 1 异常**（`_graft_pending_operand` 在树）+ 36 项补充枚举；③台账全 128 三态落位：**完备 103 / 破口 25 / 零能力 0**（表A 14 + 表B 6 + 表C 5；round9 封闭 B104 族/B124/B125/B126 后自 101/27 升格 2 行：chained_comparison、for_else）；④`tools/kb/syntax_coverage.py` 重跑 128/128 = 100%，sha256 前后一致 `86539c44…`；⑤占比重算 **103/128 = 80.47%**，五页数字同步（总纲/overview/index/syntax-audit-ledger/branch-coverage）；⑥本条。
