@@ -1,0 +1,42 @@
+{
+ "generated_at": "2026-10-21T16:27:51",
+ "elapsed_sec": 2.9,
+ "probes": [
+  {
+   "name": "l0_f1_minpair_same_file.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_f1_minpair_same_file.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_f1_minpair_same_file.pyc",
+   "pyc_sha": "f53a2871e1b3e858",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "782a7be1dcf3aca6",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_f1_minpair_same_file.pyc (Python 3.11)\n\n__doc__ = 'AT-02/AT-04 同文件最小对：m1 与 m2 唯一差异 = try 体末尾多一条 g(x)'\ndef m1(items, g):\n    for x in items:\n        try:\n            if x:\n                continue\n            g(0)\n            continue\n        finally:\n            g(0)\ndef m2(items, g):\n    for x in items:\n        try:\n            if x:\n                continue\n            g(x)\n        finally:\n            g(0)\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 2,
+   "units_total": 3,
+   "failures": [
+    "***<module>.m1: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.m1: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_f1_minpair_same_file.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_f1_minpair_same_fileOK.py\n[single] status=failure units=2/3 success_rate=66.67%"
+  },
+  {
+   "name": "l0_f2_minpair_for_else_same_file.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_f2_minpair_for_else_same_file.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_f2_minpair_for_else_same_file.pyc",
+   "pyc_sha": "647e0e95b042112b",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "0e285034b0409688",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_f2_minpair_for_else_same_file.pyc (Python 3.11)\n\n__doc__ = 'AT-04 同文件最小对：n1（for-else 被塌陷）与 n2（无 else）对照'\ndef n1(items, g):\n    for x in items:\n        try:\n            if x:\n                break\n            g(x)\n        finally:\n            g(0)\ndef n2(items, g):\n    for x in items:\n        try:\n            if x:\n                break\n            g(x)\n        finally:\n            g(0)\n        g(1)\n",
+   "verify_rc": 0,
+   "status": "success",
+   "units_success": 3,
+   "units_total": 3,
+   "failures": [],
+   "verify_tail": "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_f2_minpair_for_else_same_file.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_f2_minpair_for_else_same_fileOK.py\n[single] status=success units=3/3 success_rate=100.00%"
+  }
+ ]
+}

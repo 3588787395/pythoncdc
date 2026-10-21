@@ -1,0 +1,173 @@
+{
+ "generated_at": "2026-10-21T16:22:12",
+ "elapsed_sec": 21.1,
+ "probes": [
+  {
+   "name": "l0_e10_minpair_try_only_continue.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e10_minpair_try_only_continue.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e10_minpair_try_only_continue.pyc",
+   "pyc_sha": "283e1b6e9e2d3736",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "832778fb4a738fe4",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e10_minpair_try_only_continue.pyc (Python 3.11)\n\n__doc__ = 'AT-02/AT-04 最小对 B: try 体只有 continue（无 if）'\ndef e10(xs):\n    for a in xs:\n        try:\n            print('fin')\n        finally:\n            print('fin')\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 1,
+   "units_total": 2,
+   "failures": [
+    "***<module>.e10: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.e10: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e10_minpair_try_only_continue.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e10_minpair_try_only_continueOK.py\n[single] status=failure units=1/2 success_rate=50.00%"
+  },
+  {
+   "name": "l0_e1_proj_for_match.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e1_proj_for_match.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e1_proj_for_match.pyc",
+   "pyc_sha": "4025cc0270151982",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "7d74a18fbedbf96a",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e1_proj_for_match.pyc (Python 3.11)\n\n__doc__ = 'AT-02 二元投影 1/5: for x match（a2 的 match 子投影）'\ndef e1(v):\n    for x in v:\n        match x:\n            case 0 if x == 0:\n                continue\n            case _:\n                continue\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 1,
+   "units_total": 2,
+   "failures": [
+    "***<module>.e1: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.e1: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e1_proj_for_match.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e1_proj_for_matchOK.py\n[single] status=failure units=1/2 success_rate=50.00%"
+  },
+  {
+   "name": "l0_e2_proj_for_with.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e2_proj_for_with.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e2_proj_for_with.pyc",
+   "pyc_sha": "7ea52039e230d255",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "8c2d52b2c0eb6894",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e2_proj_for_with.pyc (Python 3.11)\n\n__doc__ = 'AT-02 二元投影 2/5: for x with（a2 的 with 子投影）'\ndef e2(v):\n    for x in v:\n        with open('f') as fh:\n            print(fh)\n",
+   "verify_rc": 0,
+   "status": "success",
+   "units_success": 2,
+   "units_total": 2,
+   "failures": [],
+   "verify_tail": "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e2_proj_for_with.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e2_proj_for_withOK.py\n[single] status=success units=2/2 success_rate=100.00%"
+  },
+  {
+   "name": "l0_e3_proj_while_try.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e3_proj_while_try.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e3_proj_while_try.pyc",
+   "pyc_sha": "4677f731d251ccb0",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "b3647b9b9b4f69c6",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e3_proj_while_try.pyc (Python 3.11)\n\n__doc__ = 'AT-02 二元投影 3/5: while x try（a4 的 while+try 子投影）'\ndef e3(xs):\n    while True:\n        try:\n            print(1)\n        except Exception:\n            return None\n",
+   "verify_rc": 0,
+   "status": "success",
+   "units_success": 2,
+   "units_total": 2,
+   "failures": [],
+   "verify_tail": "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e3_proj_while_try.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e3_proj_while_tryOK.py\n[single] status=success units=2/2 success_rate=100.00%"
+  },
+  {
+   "name": "l0_e4_proj_try_for.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e4_proj_try_for.py",
+   "status": "compile_error_src",
+   "detail": "PyCompileError:   File \"F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round2\\probes\\l0_e4_proj_try_for.py\", line 9\n    break\n    ^^^^^\nSyntaxError: 'break' outside loop\n"
+  },
+  {
+   "name": "l0_e5_proj_while_for.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e5_proj_while_for.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e5_proj_while_for.pyc",
+   "pyc_sha": "e6944f1062ef731d",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "9ea7603ea41427bf",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e5_proj_while_for.pyc (Python 3.11)\n\n__doc__ = 'AT-02 二元投影 5/5: while x for（a4 的 while+for 子投影）'\ndef e5(xs):\n    while True:\n        for x in xs:\n            print(x)\n",
+   "verify_rc": 0,
+   "status": "success",
+   "units_success": 2,
+   "units_total": 2,
+   "failures": [],
+   "verify_tail": "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e5_proj_while_for.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e5_proj_while_forOK.py\n[single] status=success units=2/2 success_rate=100.00%"
+  },
+  {
+   "name": "l0_e6_proj_if_for_else.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e6_proj_if_for_else.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e6_proj_if_for_else.pyc",
+   "pyc_sha": "2c7385e626fce99c",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "f87e6c33add1223e",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e6_proj_if_for_else.pyc (Python 3.11)\n\n__doc__ = 'AT-04 二元投影: if x for-else（b5 的 if+for-else 子投影）'\ndef e6(xs):\n    if xs:\n        for x in xs:\n            print(x)\n        print('else')\n        return None\n    else:\n        return None\n",
+   "verify_rc": 0,
+   "status": "success",
+   "units_success": 2,
+   "units_total": 2,
+   "failures": [],
+   "verify_tail": "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e6_proj_if_for_else.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e6_proj_if_for_elseOK.py\n[single] status=success units=2/2 success_rate=100.00%"
+  },
+  {
+   "name": "l0_e7_proj_try_for_else.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e7_proj_try_for_else.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e7_proj_try_for_else.pyc",
+   "pyc_sha": "0a6c9a57142b4ab0",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "bdadde087c0283ef",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e7_proj_try_for_else.pyc (Python 3.11)\n\n__doc__ = 'AT-04 二元投影: try x for-else（b5 的 try+for-else 子投影）'\ndef e7(xs):\n    try:\n        for x in xs:\n            print(x)\n        print('else')\n        return None\n    except Exception:\n        return None\n",
+   "verify_rc": 0,
+   "status": "success",
+   "units_success": 2,
+   "units_total": 2,
+   "failures": [],
+   "verify_tail": "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e7_proj_try_for_else.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e7_proj_try_for_elseOK.py\n[single] status=success units=2/2 success_rate=100.00%"
+  },
+  {
+   "name": "l0_e8_for_else_break_in_if_in_try.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e8_for_else_break_in_if_in_try.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e8_for_else_break_in_if_in_try.pyc",
+   "pyc_sha": "b4f87024c3a16db7",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "4d1c51f14555b1f1",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e8_for_else_break_in_if_in_try.pyc (Python 3.11)\n\n__doc__ = 'AT-04 语义强化: for-else 体含 break 时，else 归属错误即产生**可观测语义差**'\ndef e8(xs):\n    try:\n        if xs:\n            for x in xs:\n                if x:\n                    pass\n                print(x)\n            print('else')\n        return None\n    except Exception:\n        return None\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 1,
+   "units_total": 2,
+   "failures": [
+    "***<module>.e8: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.e8: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e8_for_else_break_in_if_in_try.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e8_for_else_break_in_if_in_tryOK.py\n[single] status=failure units=1/2 success_rate=50.00%"
+  },
+  {
+   "name": "l0_e9_minpair_try_only_if_continue.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e9_minpair_try_only_if_continue.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e9_minpair_try_only_if_continue.pyc",
+   "pyc_sha": "42cc5cc858324965",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "1ded1b142cc9fa9f",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e9_minpair_try_only_if_continue.pyc (Python 3.11)\n\n__doc__ = 'AT-02/AT-04 最小对 A: try 体只有 if+continue（无后续语句）'\ndef e9(items, g):\n    for x in items:\n        try:\n            if x:\n                continue\n            g(0)\n            continue\n        finally:\n            g(0)\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 1,
+   "units_total": 2,
+   "failures": [
+    "***<module>.e9: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.e9: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e9_minpair_try_only_if_continue.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e9_minpair_try_only_if_continueOK.py\n[single] status=failure units=1/2 success_rate=50.00%"
+  }
+ ]
+}

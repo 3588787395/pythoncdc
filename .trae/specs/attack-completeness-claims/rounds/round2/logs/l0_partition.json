@@ -1,0 +1,3630 @@
+[
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_a1_triple_if_for_try.pyc",
+  "code_objects": 2,
+  "double_claim_total": 10,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "a1",
+    "regions": 6,
+    "blocks_total": 14,
+    "blocks_in_block_to_region": 14,
+    "double_claim_blocks": [
+     {
+      "code": "a1",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a1",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a1",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a1",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a1",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a1",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a1",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a1",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a1",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a1",
+      "block_offset": 10,
+      "claimants": [
+       "IfRegion/IF_THEN",
+       "Region/BASIC"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": false
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_a2_triple_for_match_with.pyc",
+  "code_objects": 2,
+  "double_claim_total": 11,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "a2",
+    "regions": 3,
+    "blocks_total": 14,
+    "blocks_in_block_to_region": 14,
+    "double_claim_blocks": [
+     {
+      "code": "a2",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a2",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a2",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a2",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a2",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a2",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a2",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a2",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a2",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a2",
+      "block_offset": 22,
+      "claimants": [
+       "WithRegion/WITH",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "a2",
+      "block_offset": 22,
+      "claimants": [
+       "WithRegion/WITH",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": false
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_a3_triple_nested_finally_continue.pyc",
+  "code_objects": 2,
+  "double_claim_total": 11,
+  "tie_resolved_total": 4,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "a3",
+    "regions": 4,
+    "blocks_total": 15,
+    "blocks_in_block_to_region": 15,
+    "double_claim_blocks": [
+     {
+      "code": "a3",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a3",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a3",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a3",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a3",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a3",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a3",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "a3",
+      "block_offset": 18,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "a3",
+      "block_offset": 18,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "a3",
+      "block_offset": 18,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "a3",
+      "block_offset": 18,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     }
+    ],
+    "tie_resolved_blocks": [
+     {
+      "code": "a3",
+      "block_offset": 18,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "a3",
+      "block_offset": 18,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "a3",
+      "block_offset": 18,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "a3",
+      "block_offset": 18,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     }
+    ],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_a4_triple_while_try_for.pyc",
+  "code_objects": 2,
+  "double_claim_total": 6,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "a4",
+    "regions": 4,
+    "blocks_total": 13,
+    "blocks_in_block_to_region": 13,
+    "double_claim_blocks": [
+     {
+      "code": "a4",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "a4",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "a4",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "a4",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "a4",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "a4",
+      "block_offset": 2,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_b1_for_else_in_with.pyc",
+  "code_objects": 2,
+  "double_claim_total": 4,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "b1",
+    "regions": 3,
+    "blocks_total": 12,
+    "blocks_in_block_to_region": 12,
+    "double_claim_blocks": [
+     {
+      "code": "b1",
+      "block_offset": 32,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "b1",
+      "block_offset": 32,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "b1",
+      "block_offset": 32,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "b1",
+      "block_offset": 32,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_b2_for_else_in_match.pyc",
+  "code_objects": 2,
+  "double_claim_total": 4,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "b2",
+    "regions": 2,
+    "blocks_total": 7,
+    "blocks_in_block_to_region": 7,
+    "double_claim_blocks": [
+     {
+      "code": "b2",
+      "block_offset": 20,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "b2",
+      "block_offset": 20,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "b2",
+      "block_offset": 20,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "b2",
+      "block_offset": 20,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_b3_for_else_in_try_except.pyc",
+  "code_objects": 2,
+  "double_claim_total": 6,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "b3",
+    "regions": 4,
+    "blocks_total": 11,
+    "blocks_in_block_to_region": 11,
+    "double_claim_blocks": [
+     {
+      "code": "b3",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "b3",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "b3",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "b3",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "b3",
+      "block_offset": 0,
+      "claimants": [
+       "TryExceptRegion/TRY_EXCEPT",
+       "Region/BASIC"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "b3",
+      "block_offset": 0,
+      "claimants": [
+       "TryExceptRegion/TRY_EXCEPT",
+       "Region/BASIC"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_b4_nested_for_else.pyc",
+  "code_objects": 2,
+  "double_claim_total": 3,
+  "tie_resolved_total": 3,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "b4",
+    "regions": 2,
+    "blocks_total": 7,
+    "blocks_in_block_to_region": 7,
+    "double_claim_blocks": [
+     {
+      "code": "b4",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "b4",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "b4",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     }
+    ],
+    "tie_resolved_blocks": [
+     {
+      "code": "b4",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "b4",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "b4",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     }
+    ],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_b5_for_else_in_if_in_try.pyc",
+  "code_objects": 2,
+  "double_claim_total": 8,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "b5",
+    "regions": 5,
+    "blocks_total": 13,
+    "blocks_in_block_to_region": 13,
+    "double_claim_blocks": [
+     {
+      "code": "b5",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "b5",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "b5",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "b5",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "b5",
+      "block_offset": 0,
+      "claimants": [
+       "TryExceptRegion/TRY_EXCEPT",
+       "Region/BASIC"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "b5",
+      "block_offset": 0,
+      "claimants": [
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "b5",
+      "block_offset": 0,
+      "claimants": [
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "b5",
+      "block_offset": 0,
+      "claimants": [
+       "TryExceptRegion/TRY_EXCEPT",
+       "Region/BASIC"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_c1_outer_continue_inner_loop.pyc",
+  "code_objects": 2,
+  "double_claim_total": 7,
+  "tie_resolved_total": 3,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "c1",
+    "regions": 4,
+    "blocks_total": 11,
+    "blocks_in_block_to_region": 11,
+    "double_claim_blocks": [
+     {
+      "code": "c1",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "c1",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "c1",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "c1",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "c1",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "c1",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "c1",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [
+     {
+      "code": "c1",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "c1",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "c1",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     }
+    ],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_c2_inner_exit_to_outer_backedge.pyc",
+  "code_objects": 2,
+  "double_claim_total": 3,
+  "tie_resolved_total": 3,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "c2",
+    "regions": 2,
+    "blocks_total": 7,
+    "blocks_in_block_to_region": 7,
+    "double_claim_blocks": [
+     {
+      "code": "c2",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "c2",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "c2",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     }
+    ],
+    "tie_resolved_blocks": [
+     {
+      "code": "c2",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "c2",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "c2",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/FOR_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     }
+    ],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_c3_break_in_handler.pyc",
+  "code_objects": 2,
+  "double_claim_total": 1,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "c3",
+    "regions": 3,
+    "blocks_total": 11,
+    "blocks_in_block_to_region": 11,
+    "double_claim_blocks": [
+     {
+      "code": "c3",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_c4_finally_copy_continue.pyc",
+  "code_objects": 2,
+  "double_claim_total": 4,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "c4",
+    "regions": 2,
+    "blocks_total": 6,
+    "blocks_in_block_to_region": 6,
+    "double_claim_blocks": [
+     {
+      "code": "c4",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "c4",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "c4",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "c4",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_c5_continue_in_nested_try_finally.pyc",
+  "code_objects": 2,
+  "double_claim_total": 3,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "c5",
+    "regions": 3,
+    "blocks_total": 9,
+    "blocks_in_block_to_region": 9,
+    "double_claim_blocks": [
+     {
+      "code": "c5",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "c5",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "c5",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d1_repl_r19c23_continue_in_try_finally.pyc",
+  "code_objects": 2,
+  "double_claim_total": 4,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "f",
+    "regions": 3,
+    "blocks_total": 10,
+    "blocks_in_block_to_region": 10,
+    "double_claim_blocks": [
+     {
+      "code": "f",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "f",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "f",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "f",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d2_repl_r19c04_try_finally.pyc",
+  "code_objects": 2,
+  "double_claim_total": 5,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "f",
+    "regions": 3,
+    "blocks_total": 10,
+    "blocks_in_block_to_region": 10,
+    "double_claim_blocks": [
+     {
+      "code": "f",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "f",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "f",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "f",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "f",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d3_repl_r10_21_fin_loopctrl.pyc",
+  "code_objects": 4,
+  "double_claim_total": 25,
+  "tie_resolved_total": 2,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "fin_continue",
+    "regions": 3,
+    "blocks_total": 15,
+    "blocks_in_block_to_region": 15,
+    "double_claim_blocks": [
+     {
+      "code": "fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "fin_break",
+    "regions": 3,
+    "blocks_total": 13,
+    "blocks_in_block_to_region": 13,
+    "double_claim_blocks": [
+     {
+      "code": "fin_break",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_break",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_break",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_break",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "fin_continue_stmt",
+    "regions": 5,
+    "blocks_total": 14,
+    "blocks_in_block_to_region": 14,
+    "double_claim_blocks": [
+     {
+      "code": "fin_continue_stmt",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "LoopRegion/WHILE_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "fin_continue_stmt",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_continue_stmt",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_continue_stmt",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "LoopRegion/WHILE_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "fin_continue_stmt",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_continue_stmt",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "fin_continue_stmt",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "fin_continue_stmt",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "fin_continue_stmt",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "fin_continue_stmt",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "fin_continue_stmt",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "fin_continue_stmt",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": false
+     }
+    ],
+    "tie_resolved_blocks": [
+     {
+      "code": "fin_continue_stmt",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "LoopRegion/WHILE_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "fin_continue_stmt",
+      "block_offset": 10,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "LoopRegion/WHILE_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     }
+    ],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d4_repl_v_b71_face.pyc",
+  "code_objects": 4,
+  "double_claim_total": 25,
+  "tie_resolved_total": 4,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "v_fin_else_continue",
+    "regions": 3,
+    "blocks_total": 15,
+    "blocks_in_block_to_region": 15,
+    "double_claim_blocks": [
+     {
+      "code": "v_fin_else_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_fin_else_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_fin_else_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_fin_else_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_fin_else_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_fin_else_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_fin_else_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_fin_else_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_fin_else_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "v_nest_fin_continue",
+    "regions": 4,
+    "blocks_total": 16,
+    "blocks_in_block_to_region": 16,
+    "double_claim_blocks": [
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 30,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 30,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 30,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 30,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     }
+    ],
+    "tie_resolved_blocks": [
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 30,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 30,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 30,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "v_nest_fin_continue",
+      "block_offset": 30,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     }
+    ],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "n_fin_noctrl",
+    "regions": 3,
+    "blocks_total": 14,
+    "blocks_in_block_to_region": 14,
+    "double_claim_blocks": [
+     {
+      "code": "n_fin_noctrl",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "n_fin_noctrl",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "n_fin_noctrl",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "n_fin_noctrl",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "n_fin_noctrl",
+      "block_offset": 28,
+      "claimants": [
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_ELIF_CHAIN"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e10_minpair_try_only_continue.pyc",
+  "code_objects": 2,
+  "double_claim_total": 4,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "e10",
+    "regions": 2,
+    "blocks_total": 6,
+    "blocks_in_block_to_region": 6,
+    "double_claim_blocks": [
+     {
+      "code": "e10",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e10",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e10",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e10",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e11_proj_for_match_plain.pyc",
+  "code_objects": 2,
+  "double_claim_total": 3,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "e11",
+    "regions": 2,
+    "blocks_total": 6,
+    "blocks_in_block_to_region": 6,
+    "double_claim_blocks": [
+     {
+      "code": "e11",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e11",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e11",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e12_proj_for_match_continue.pyc",
+  "code_objects": 2,
+  "double_claim_total": 3,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "e12",
+    "regions": 2,
+    "blocks_total": 6,
+    "blocks_in_block_to_region": 6,
+    "double_claim_blocks": [
+     {
+      "code": "e12",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e12",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e12",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e13_proj_for_match_with.pyc",
+  "code_objects": 2,
+  "double_claim_total": 11,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "e13",
+    "regions": 3,
+    "blocks_total": 14,
+    "blocks_in_block_to_region": 14,
+    "double_claim_blocks": [
+     {
+      "code": "e13",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e13",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e13",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e13",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e13",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e13",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e13",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e13",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e13",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e13",
+      "block_offset": 22,
+      "claimants": [
+       "WithRegion/WITH",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e13",
+      "block_offset": 22,
+      "claimants": [
+       "WithRegion/WITH",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": false
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e1_proj_for_match.pyc",
+  "code_objects": 2,
+  "double_claim_total": 3,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "e1",
+    "regions": 2,
+    "blocks_total": 6,
+    "blocks_in_block_to_region": 6,
+    "double_claim_blocks": [
+     {
+      "code": "e1",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e1",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e1",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "MatchRegion/MATCH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e2_proj_for_with.pyc",
+  "code_objects": 2,
+  "double_claim_total": 4,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "e2",
+    "regions": 2,
+    "blocks_total": 12,
+    "blocks_in_block_to_region": 12,
+    "double_claim_blocks": [
+     {
+      "code": "e2",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e2",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e2",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e2",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "WithRegion/WITH"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e3_proj_while_try.pyc",
+  "code_objects": 2,
+  "double_claim_total": 3,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "e3",
+    "regions": 3,
+    "blocks_total": 10,
+    "blocks_in_block_to_region": 10,
+    "double_claim_blocks": [
+     {
+      "code": "e3",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e3",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e3",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/WHILE_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e4_proj_try_for.pyc",
+  "code_objects": 2,
+  "double_claim_total": 5,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "e4",
+    "regions": 3,
+    "blocks_total": 10,
+    "blocks_in_block_to_region": 10,
+    "double_claim_blocks": [
+     {
+      "code": "e4",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e4",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e4",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e4",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e4",
+      "block_offset": 0,
+      "claimants": [
+       "TryExceptRegion/TRY_EXCEPT",
+       "Region/BASIC"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e5_proj_while_for.pyc",
+  "code_objects": 2,
+  "double_claim_total": 3,
+  "tie_resolved_total": 3,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "e5",
+    "regions": 3,
+    "blocks_total": 5,
+    "blocks_in_block_to_region": 5,
+    "double_claim_blocks": [
+     {
+      "code": "e5",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/WHILE_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "e5",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/WHILE_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "e5",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/WHILE_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     }
+    ],
+    "tie_resolved_blocks": [
+     {
+      "code": "e5",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/WHILE_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "e5",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/WHILE_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     },
+     {
+      "code": "e5",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "LoopRegion/WHILE_LOOP"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true,
+      "resolution": "tie_priority_equal",
+      "dynamic_priority_applies": false,
+      "dynamic_scores": [
+       50.0,
+       50.0
+      ],
+      "scores_equal": true
+     }
+    ],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e6_proj_if_for_else.pyc",
+  "code_objects": 2,
+  "double_claim_total": 5,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "e6",
+    "regions": 4,
+    "blocks_total": 6,
+    "blocks_in_block_to_region": 6,
+    "double_claim_blocks": [
+     {
+      "code": "e6",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e6",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e6",
+      "block_offset": 6,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e6",
+      "block_offset": 0,
+      "claimants": [
+       "IfRegion/IF_THEN_ELSE",
+       "Region/BASIC"
+      ],
+      "canonical": "IfRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e6",
+      "block_offset": 0,
+      "claimants": [
+       "IfRegion/IF_THEN_ELSE",
+       "Region/BASIC"
+      ],
+      "canonical": "IfRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e7_proj_try_for_else.pyc",
+  "code_objects": 2,
+  "double_claim_total": 6,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "e7",
+    "regions": 4,
+    "blocks_total": 11,
+    "blocks_in_block_to_region": 11,
+    "double_claim_blocks": [
+     {
+      "code": "e7",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e7",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e7",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e7",
+      "block_offset": 4,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e7",
+      "block_offset": 0,
+      "claimants": [
+       "TryExceptRegion/TRY_EXCEPT",
+       "Region/BASIC"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e7",
+      "block_offset": 0,
+      "claimants": [
+       "TryExceptRegion/TRY_EXCEPT",
+       "Region/BASIC"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e8_for_else_break_in_if_in_try.pyc",
+  "code_objects": 2,
+  "double_claim_total": 11,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "e8",
+    "regions": 6,
+    "blocks_total": 16,
+    "blocks_in_block_to_region": 16,
+    "double_claim_blocks": [
+     {
+      "code": "e8",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e8",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e8",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e8",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e8",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e8",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e8",
+      "block_offset": 8,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": false
+     },
+     {
+      "code": "e8",
+      "block_offset": 0,
+      "claimants": [
+       "TryExceptRegion/TRY_EXCEPT",
+       "Region/BASIC"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e8",
+      "block_offset": 0,
+      "claimants": [
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e8",
+      "block_offset": 0,
+      "claimants": [
+       "TryExceptRegion/TRY_EXCEPT",
+       "IfRegion/IF_THEN_ELSE"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e8",
+      "block_offset": 0,
+      "claimants": [
+       "TryExceptRegion/TRY_EXCEPT",
+       "Region/BASIC"
+      ],
+      "canonical": "TryExceptRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ },
+ {
+  "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e9_minpair_try_only_if_continue.pyc",
+  "code_objects": 2,
+  "double_claim_total": 3,
+  "tie_resolved_total": 0,
+  "unowned_total": 0,
+  "rows": [
+   {
+    "code": "<module>",
+    "regions": 1,
+    "blocks_total": 1,
+    "blocks_in_block_to_region": 1,
+    "double_claim_blocks": [],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   },
+   {
+    "code": "e9",
+    "regions": 3,
+    "blocks_total": 9,
+    "blocks_in_block_to_region": 9,
+    "double_claim_blocks": [
+     {
+      "code": "e9",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e9",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     },
+     {
+      "code": "e9",
+      "block_offset": 0,
+      "claimants": [
+       "LoopRegion/FOR_LOOP",
+       "TryExceptRegion/TRY_FINALLY",
+       "IfRegion/IF_THEN"
+      ],
+      "canonical": "LoopRegion",
+      "canonical_is_first": true
+     }
+    ],
+    "tie_resolved_blocks": [],
+    "unowned_block_offsets": [],
+    "unowned_count": 0
+   }
+  ]
+ }
+]

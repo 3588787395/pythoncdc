@@ -1,0 +1,76 @@
+{
+ "generated_at": "2026-10-21T16:20:50",
+ "elapsed_sec": 5.1,
+ "probes": [
+  {
+   "name": "l0_d1_repl_r19c23_continue_in_try_finally.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d1_repl_r19c23_continue_in_try_finally.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d1_repl_r19c23_continue_in_try_finally.pyc",
+   "pyc_sha": "7e8c5160dac9fc08",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "a89820e1fcb8c9b5",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_d1_repl_r19c23_continue_in_try_finally.pyc (Python 3.11)\n\n__doc__ = '逐字复刻 r19c_23_neg_continue_in_try_finally（既有负对照形状）'\ndef f(items, g):\n    for x in items:\n        try:\n            if x:\n                continue\n            g(x)\n        finally:\n            g(0)\n",
+   "verify_rc": 0,
+   "status": "success",
+   "units_success": 2,
+   "units_total": 2,
+   "failures": [],
+   "verify_tail": "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d1_repl_r19c23_continue_in_try_finally.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d1_repl_r19c23_continue_in_try_finallyOK.py\n[single] status=success units=2/2 success_rate=100.00%"
+  },
+  {
+   "name": "l0_d2_repl_r19c04_try_finally.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d2_repl_r19c04_try_finally.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d2_repl_r19c04_try_finally.pyc",
+   "pyc_sha": "ba6b0b3b56b34779",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "2b6732fd887aa67f",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_d2_repl_r19c04_try_finally.pyc (Python 3.11)\n\n__doc__ = '逐字复刻 r19c_04_anchor_try_finally（既有锚点形状：if 内含 try/finally）'\ndef f(items, g):\n    for x in items:\n        if x:\n            try:\n                g(x)\n            finally:\n                g(0)\n            continue\n",
+   "verify_rc": 0,
+   "status": "success",
+   "units_success": 2,
+   "units_total": 2,
+   "failures": [],
+   "verify_tail": "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d2_repl_r19c04_try_finally.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d2_repl_r19c04_try_finallyOK.py\n[single] status=success units=2/2 success_rate=100.00%"
+  },
+  {
+   "name": "l0_d3_repl_r10_21_fin_loopctrl.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d3_repl_r10_21_fin_loopctrl.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d3_repl_r10_21_fin_loopctrl.pyc",
+   "pyc_sha": "10f716d529ce1487",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "ad2b02e92cd4758d",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_d3_repl_r10_21_fin_loopctrl.pyc (Python 3.11)\n\n__doc__ = '逐字复刻 r10_21_fin_loopctrl（finally 体含 continue/break）'\ndef fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r < 0:\n                raise ValueError(r)\n        finally:\n            if r < 0:\n                continue\n        out.append(r)\n    return out\ndef fin_break(rows):\n    total = 0\n    for r in rows:\n        try:\n            total += r\n        finally:\n            if total > 100:\n                break\n    return total\ndef fin_continue_stmt(rows):\n    out = []\n    i = 0\n    while i < len(rows):\n        try:\n            v = rows[i]\n        finally:\n            i += 1\n            if v is None:\n                continue\n        out.append(v)\n    return out\n",
+   "verify_rc": 0,
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "verify_tail": "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d3_repl_r10_21_fin_loopctrl.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d3_repl_r10_21_fin_loopctrlOK.py\n[single] status=success units=4/4 success_rate=100.00%"
+  },
+  {
+   "name": "l0_d4_repl_v_b71_face.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d4_repl_v_b71_face.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d4_repl_v_b71_face.pyc",
+   "pyc_sha": "e8ac0193f76bb6c7",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "0ee351930da39f6a",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_d4_repl_v_b71_face.pyc (Python 3.11)\n\n__doc__ = '逐字复刻 v_b71_face（B142 登记残余所在文件）'\ndef v_fin_else_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r < 0:\n                raise ValueError(r)\n        finally:\n            if r < 0:\n                continue\n            out.append(-r)\n        out.append(r)\n    return out\ndef v_nest_fin_continue(rows):\n    out = []\n    for r in rows:\n        try:\n            if r == 0:\n                try:\n                    out.append(1)\n                    out.append(1)\n                finally:\n                    out.append(2)\n        finally:\n            out.append(1)\n        out.append(r)\n    return out\ndef n_fin_noctrl(rows):\n    out = []\n    for r in rows:\n        try:\n            if r < 0:\n                raise ValueError(r)\n        finally:\n            if r < 0:\n                out.append(-r)\n        out.append(r)\n    return out\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 3,
+   "units_total": 4,
+   "failures": [
+    "***<module>.v_nest_fin_continue: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.v_nest_fin_continue: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d4_repl_v_b71_face.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_d4_repl_v_b71_faceOK.py\n[single] status=failure units=3/4 success_rate=75.00%"
+  }
+ ]
+}

@@ -1,0 +1,693 @@
+[
+ {
+  "pyc": "l0_a1_triple_if_for_try.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_a1_triple_if_for_try.pyc",
+  "code": "a1",
+  "calls": 2,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   4,
+   4
+  ]
+ },
+ {
+  "pyc": "l0_a2_triple_for_match_with.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_a2_triple_for_match_with.pyc",
+  "code": "a2",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_a3_triple_nested_finally_continue.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_a3_triple_nested_finally_continue.pyc",
+  "code": "a3",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   3
+  ]
+ },
+ {
+  "pyc": "l0_a4_triple_while_try_for.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_a4_triple_while_try_for.pyc",
+  "code": "a4",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_b1_for_else_in_with.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_b1_for_else_in_with.pyc",
+  "code": "b1",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_b2_for_else_in_match.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_b2_for_else_in_match.pyc",
+  "code": "b2",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_b3_for_else_in_try_except.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_b3_for_else_in_try_except.pyc",
+  "code": "b3",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_b4_nested_for_else.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_b4_nested_for_else.pyc",
+  "code": "b4",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_b5_for_else_in_if_in_try.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_b5_for_else_in_if_in_try.pyc",
+  "code": "b5",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   4
+  ]
+ },
+ {
+  "pyc": "l0_c1_outer_continue_inner_loop.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_c1_outer_continue_inner_loop.pyc",
+  "code": "c1",
+  "calls": 2,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   2,
+   2
+  ]
+ },
+ {
+  "pyc": "l0_c2_inner_exit_to_outer_backedge.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_c2_inner_exit_to_outer_backedge.pyc",
+  "code": "c2",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_c3_break_in_handler.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_c3_break_in_handler.pyc",
+  "code": "c3",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_c4_finally_copy_continue.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_c4_finally_copy_continue.pyc",
+  "code": "c4",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_c5_continue_in_nested_try_finally.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_c5_continue_in_nested_try_finally.pyc",
+  "code": "c5",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   2
+  ]
+ },
+ {
+  "pyc": "l0_d1_repl_r19c23_continue_in_try_finally.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_d1_repl_r19c23_continue_in_try_finally.pyc",
+  "code": "f",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   2
+  ]
+ },
+ {
+  "pyc": "l0_d2_repl_r19c04_try_finally.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_d2_repl_r19c04_try_finally.pyc",
+  "code": "f",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 1,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   2
+  ]
+ },
+ {
+  "pyc": "l0_d3_repl_r10_21_fin_loopctrl.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_d3_repl_r10_21_fin_loopctrl.pyc",
+  "code": "fin_continue",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   2
+  ]
+ },
+ {
+  "pyc": "l0_d3_repl_r10_21_fin_loopctrl.pyc",
+  "code": "fin_break",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   2
+  ]
+ },
+ {
+  "pyc": "l0_d3_repl_r10_21_fin_loopctrl.pyc",
+  "code": "fin_continue_stmt",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   4
+  ]
+ },
+ {
+  "pyc": "l0_d4_repl_v_b71_face.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_d4_repl_v_b71_face.pyc",
+  "code": "v_fin_else_continue",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   2
+  ]
+ },
+ {
+  "pyc": "l0_d4_repl_v_b71_face.pyc",
+  "code": "v_nest_fin_continue",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   3
+  ]
+ },
+ {
+  "pyc": "l0_d4_repl_v_b71_face.pyc",
+  "code": "n_fin_noctrl",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   2
+  ]
+ },
+ {
+  "pyc": "l0_e10_minpair_try_only_continue.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e10_minpair_try_only_continue.pyc",
+  "code": "e10",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e11_proj_for_match_plain.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e11_proj_for_match_plain.pyc",
+  "code": "e11",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e12_proj_for_match_continue.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e12_proj_for_match_continue.pyc",
+  "code": "e12",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e13_proj_for_match_with.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e13_proj_for_match_with.pyc",
+  "code": "e13",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e1_proj_for_match.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e1_proj_for_match.pyc",
+  "code": "e1",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e2_proj_for_with.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e2_proj_for_with.pyc",
+  "code": "e2",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e3_proj_while_try.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e3_proj_while_try.pyc",
+  "code": "e3",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e4_proj_try_for.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e4_proj_try_for.pyc",
+  "code": "e4",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e5_proj_while_for.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e5_proj_while_for.pyc",
+  "code": "e5",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e6_proj_if_for_else.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e6_proj_if_for_else.pyc",
+  "code": "e6",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   3
+  ]
+ },
+ {
+  "pyc": "l0_e7_proj_try_for_else.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e7_proj_try_for_else.pyc",
+  "code": "e7",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e8_for_else_break_in_if_in_try.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e8_for_else_break_in_if_in_try.pyc",
+  "code": "e8",
+  "calls": 2,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   4,
+   4
+  ]
+ },
+ {
+  "pyc": "l0_e9_minpair_try_only_if_continue.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_e9_minpair_try_only_if_continue.pyc",
+  "code": "e9",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   2
+  ]
+ },
+ {
+  "pyc": "l0_f1_minpair_same_file.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_f1_minpair_same_file.pyc",
+  "code": "m1",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   2
+  ]
+ },
+ {
+  "pyc": "l0_f1_minpair_same_file.pyc",
+  "code": "m2",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   2
+  ]
+ },
+ {
+  "pyc": "l0_f2_minpair_for_else_same_file.pyc",
+  "code": "<module>",
+  "calls": 0,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": []
+ },
+ {
+  "pyc": "l0_f2_minpair_for_else_same_file.pyc",
+  "code": "n1",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   2
+  ]
+ },
+ {
+  "pyc": "l0_f2_minpair_for_else_same_file.pyc",
+  "code": "n2",
+  "calls": 1,
+  "calls_with_empty_regions": 0,
+  "expansion_fired": 0,
+  "closer_loop_found": 0,
+  "regions_len_at_call": [
+   2
+  ]
+ }
+]

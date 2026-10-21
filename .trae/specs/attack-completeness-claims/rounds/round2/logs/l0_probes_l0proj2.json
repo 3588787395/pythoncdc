@@ -1,0 +1,154 @@
+{
+ "generated_at": "2026-10-21T16:23:30",
+ "elapsed_sec": 23.5,
+ "probes": [
+  {
+   "name": "l0_e10_minpair_try_only_continue.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e10_minpair_try_only_continue.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e10_minpair_try_only_continue.pyc",
+   "pyc_sha": "283e1b6e9e2d3736",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "832778fb4a738fe4",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e10_minpair_try_only_continue.pyc (Python 3.11)\n\n__doc__ = 'AT-02/AT-04 最小对 B: try 体只有 continue（无 if）'\ndef e10(xs):\n    for a in xs:\n        try:\n            print('fin')\n        finally:\n            print('fin')\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 1,
+   "units_total": 2,
+   "failures": [
+    "***<module>.e10: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.e10: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e10_minpair_try_only_continue.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e10_minpair_try_only_continueOK.py\n[single] status=failure units=1/2 success_rate=50.00%"
+  },
+  {
+   "name": "l0_e10_minpair_try_only_continueOK.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e10_minpair_try_only_continueOK.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e10_minpair_try_only_continueOK.pyc",
+   "pyc_sha": "77f1a5ce15d65f42",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "ab2ea5a6d4c0a30e",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e10_minpair_try_only_continueOK.pyc (Python 3.11)\n\n__doc__ = 'AT-02/AT-04 最小对 B: try 体只有 continue（无 if）'\ndef e10(xs):\n    for a in xs:\n        try:\n            print('fin')\n        finally:\n            print('fin')\n",
+   "verify_rc": 0,
+   "status": "success",
+   "units_success": 2,
+   "units_total": 2,
+   "failures": [],
+   "verify_tail": "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e10_minpair_try_only_continueOK.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e10_minpair_try_only_continueOKOK.py\n[single] status=success units=2/2 success_rate=100.00%"
+  },
+  {
+   "name": "l0_e11_proj_for_match_plain.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e11_proj_for_match_plain.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e11_proj_for_match_plain.pyc",
+   "pyc_sha": "5957cd2903ad5a05",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "e8c9e9e834588698",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e11_proj_for_match_plain.pyc (Python 3.11)\n\n__doc__ = 'AT-02 for x match 变量分离 1/3: case 体无 continue'\ndef e11(v):\n    for x in v:\n        match x:\n            case 0 if x == 0:\n                print('zero')\n                continue\n            case _:\n                print('other')\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 1,
+   "units_total": 2,
+   "failures": [
+    "***<module>.e11: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.e11: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e11_proj_for_match_plain.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e11_proj_for_match_plainOK.py\n[single] status=failure units=1/2 success_rate=50.00%"
+  },
+  {
+   "name": "l0_e12_proj_for_match_continue.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e12_proj_for_match_continue.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e12_proj_for_match_continue.pyc",
+   "pyc_sha": "1a3096c57d43a86b",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "4003ebcb1bbdc1e2",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e12_proj_for_match_continue.pyc (Python 3.11)\n\n__doc__ = 'AT-02 for x match 变量分离 2/3: case 体含 continue'\ndef e12(v):\n    for x in v:\n        match x:\n            case 0 if x == 0:\n                continue\n            case _:\n                continue\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 1,
+   "units_total": 2,
+   "failures": [
+    "***<module>.e12: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.e12: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e12_proj_for_match_continue.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e12_proj_for_match_continueOK.py\n[single] status=failure units=1/2 success_rate=50.00%"
+  },
+  {
+   "name": "l0_e13_proj_for_match_with.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e13_proj_for_match_with.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e13_proj_for_match_with.pyc",
+   "pyc_sha": "2e3359f5816d5a7c",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "629cdd8d79b51571",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e13_proj_for_match_with.pyc (Python 3.11)\n\n__doc__ = 'AT-02 for x match 变量分离 3/3: case 体含 with（a2 的 with 子投影在 match 内）'\ndef e13(v):\n    for x in v:\n        match x:\n            case 0 if x == 0:\n                with open('f') as fh:\n                    print(fh)\n                pass\n                continue\n            case _:\n                print('other')\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 1,
+   "units_total": 2,
+   "failures": [
+    "***<module>.e13: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.e13: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e13_proj_for_match_with.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e13_proj_for_match_withOK.py\n[single] status=failure units=1/2 success_rate=50.00%"
+  },
+  {
+   "name": "l0_e1_proj_for_match.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e1_proj_for_match.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e1_proj_for_match.pyc",
+   "pyc_sha": "4025cc0270151982",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "7d74a18fbedbf96a",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e1_proj_for_match.pyc (Python 3.11)\n\n__doc__ = 'AT-02 二元投影 1/5: for x match（a2 的 match 子投影）'\ndef e1(v):\n    for x in v:\n        match x:\n            case 0 if x == 0:\n                continue\n            case _:\n                continue\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 1,
+   "units_total": 2,
+   "failures": [
+    "***<module>.e1: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.e1: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e1_proj_for_match.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e1_proj_for_matchOK.py\n[single] status=failure units=1/2 success_rate=50.00%"
+  },
+  {
+   "name": "l0_e1_proj_for_matchOK.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e1_proj_for_matchOK.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e1_proj_for_matchOK.pyc",
+   "pyc_sha": "a570e22f96835592",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "d3a939aa3f6ddf3f",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e1_proj_for_matchOK.pyc (Python 3.11)\n\n__doc__ = 'AT-02 二元投影 1/5: for x match（a2 的 match 子投影）'\ndef e1(v):\n    for x in v:\n        match x:\n            case 0 if x == 0 and x == 0:\n                continue\n            case _:\n                continue\n",
+   "verify_rc": 1,
+   "status": "failure",
+   "units_success": 1,
+   "units_total": 2,
+   "failures": [
+    "***<module>.e1: Failure: Different control flow"
+   ],
+   "verify_tail": "***<module>.e1: Failure: Different control flow\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e1_proj_for_matchOK.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e1_proj_for_matchOKOK.py\n[single] status=failure units=1/2 success_rate=50.00%"
+  },
+  {
+   "name": "l0_e4_proj_try_for.py",
+   "src": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e4_proj_try_for.py",
+   "pyc": ".trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e4_proj_try_for.pyc",
+   "pyc_sha": "6a6705db941a22bb",
+   "regen_rc": 0,
+   "regen_tail": "",
+   "ok_exists": true,
+   "ok_sha": "30d5b5f67c9306d8",
+   "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: l0_e4_proj_try_for.pyc (Python 3.11)\n\n__doc__ = 'AT-02 二元投影 4/5（修正）: try x for（a4 的 try+for 子投影）'\ndef e4(xs):\n    try:\n        for x in xs:\n            print(x)\n    except Exception:\n        return None\n",
+   "verify_rc": 0,
+   "status": "success",
+   "units_success": 2,
+   "units_total": 2,
+   "failures": [],
+   "verify_tail": "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e4_proj_try_for.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round2/probes/l0_e4_proj_try_forOK.py\n[single] status=success units=2/2 success_rate=100.00%"
+  }
+ ]
+}
