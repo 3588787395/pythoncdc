@@ -9,11 +9,11 @@
   - [x] 0.3 攻击面登记表 `baseline/ATTACK_SURFACE.md`：L0–L6 每层的攻击目标、可证伪条件、产出文件、判据来源（不得写「待定」）
   - [x] 0.4 提交并 push（`rr-v4r00:`）
 
-- [ ] Task 1: 判定空间定义与覆盖检查器（攻击的前提工程）
-  - [ ] 1.1 枚举判定空间维度：形态（文法族）× 宿主上下文 × 深度档（≥3 级）× 变体槽，产出 `rounds/round1/JUDGMENT_SPACE.md`（条目编号 `JS-<层>-<序号>`，规模预计 ≥ 400 条）
-  - [ ] 1.2 实现覆盖检查器 `tools/completeness/coverage_checker.py`：输入判定空间清单 + 已覆盖证据索引，输出未覆盖形态清单与覆盖统计（**目标未覆盖 = 0**，未达 0 记为缺口）
-  - [ ] 1.3 校验判定空间条目与既有 25 行/组合级终表**双向对齐**（既有条目须在空间中，空间的每个条目须有归属行或显式标记为新面）
-  - [ ] 1.4 提交并 push（`rr-v4r01:`）
+- [x] Task 1: 判定空间定义与覆盖检查器（攻击的前提工程）（commit `fd2875c9`；空间 **1556 条** = 39 形态族（25 行 1197 + NEW 14 族 359），维度 form 39 / host 48 / depth 3 / variant 408；`rounds/round1/judgment_space.json` + `JUDGMENT_SPACE.md` 2095 行 + 计数规则；`tools/completeness/coverage_checker.py` 339 行（门禁模式 uncovered>0 退出码 1）+ `jspace_generator.py` 1329 行（空间唯一生成源）；**覆盖基线 covered 976 / uncovered 580 = 62.72%**（最差 ExceptStar 96/96、global_nonlocal 40/40）；25 行对齐 25/25 零缺失；**首条击穿 F1**（`rounds/round1/FINDING_F1_GLOBAL_NONLOCAL.md`）：v8 判 `global_nonlocal` 完备的登记探针 `x04_try_deep_hosts.py` 既不含 `nonlocal` 也不含 `global`，真 nonlocal 探针 r10_13/r10_14 未进入任何 stamp → 破口 B163 待立）
+  - [x] 1.1 枚举判定空间维度：形态（文法族）× 宿主上下文 × 深度档（≥3 级）× 变体槽，产出 `rounds/round1/JUDGMENT_SPACE.md`（条目编号 `JS-<层>-<序号>`，规模预计 ≥ 400 条）
+  - [x] 1.2 实现覆盖检查器 `tools/completeness/coverage_checker.py`：输入判定空间清单 + 已覆盖证据索引，输出未覆盖形态清单与覆盖统计（**目标未覆盖 = 0**，未达 0 记为缺口）
+  - [x] 1.3 校验判定空间条目与既有 25 行/组合级终表**双向对齐**（既有条目须在空间中，空间的每个条目须有归属行或显式标记为新面）
+  - [x] 1.4 提交并 push（`rr-v4r01:`）
 
 - [ ] Task 2: L0 理论层攻击（不变式与归纳论证）
   - [ ] 2.1 审计 C1/C2/C3：穷举「非局部信息通道」（块属性 / 区域外引用 / 跨区域共享状态 / 异常表归属 / offset 序假设 / 区域编号依赖 / 全局缓存），产出通道清单与「是否被守卫封闭」判定
