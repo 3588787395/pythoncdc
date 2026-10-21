@@ -11,6 +11,8 @@
   `python -X utf8 .trae\specs\attack-completeness-claims\rounds\round3\_scripts\variant_quantify.py`
   `python -X utf8 .trae\specs\attack-completeness-claims\rounds\round3\_scripts\three_state_and_reconcile.py`
 
+> **编号裁决**：本报告的临时破口号已被主代理统一注册表取代——见 ../round3/BREACH_REGISTRY.md（本报告临时号 → 正式号映射在注册表「来源临时号」列）。
+
 ---
 
 ## §0 结论摘要
