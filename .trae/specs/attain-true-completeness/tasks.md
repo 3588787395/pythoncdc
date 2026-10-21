@@ -46,10 +46,10 @@
   - [x] 9.2 台账 §5 全量更新（128/0/0 = 100%；行内编号清理）+ §6/§8.1 更新（破口清零终态）
   - [x] 9.3 `tools/kb/syntax_coverage.py` 重跑（sha 存证）+ 占比重算（128/128）+ 5 页数字同步 + `wiki/log.md` 记录
   - [x] 9.4 WIKI_REVIEW.md + 主代理验收后提交并 push（`rr-v3r09:`）
-- [ ] Task 10: Round 10 — 主代理全量终验 + 终归档
-  - [ ] 10.1 验证序六步（34 集 / 402 八分片 REGRESSIONS=0 / quotation 153/153 / tests 基线 / IV.2 全过 / regen 零字节差异）+ VERIFICATION.md
-  - [ ] 10.2 终归档 `rounds/round10/` + 提交并 push origin main
-  - [ ] 10.3 终态读数汇报（三态 128/0/0 = 100%；组合级清零；通用性审计面；站桩回归终读数）
+- [x] Task 10: Round 10 — 主代理全量终验 + 终归档（`rounds/round10/VERIFICATION.md`：402 八分片 6617/6617 files_failure=0〔574s〕、small34 1568/1568、quotation 153/153 rc=0、pytest 基线名单、IV.2 全绿〔BOM 单头/G3=0/instrumentation code 0〕、维度互证 257/257 + 241/242 + 7 组回归全数；终态 = 三态 v8 128/0/0 ⇒ 100%，破口开档 0，机制 B129–B162 标记 174 处，提交链 rr-v3r00…rr-v3r10 全部在 origin/main）
+  - [x] 10.1 验证序六步（34 集 / 402 八分片 REGRESSIONS=0 / quotation 153/153 / tests 基线 / IV.2 全过 / regen 零字节差异）+ VERIFICATION.md
+  - [x] 10.2 终归档 `rounds/round10/` + 提交并 push origin main
+  - [x] 10.3 终态读数汇报（三态 128/0/0 = 100%；组合级清零；通用性审计面；站桩回归终读数）
 
 # Task Dependencies
 
