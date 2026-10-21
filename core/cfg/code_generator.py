@@ -1192,6 +1192,79 @@ class CodeGenerator:
         else:
             self._write_line(f'{target_code}: {annotation_code}')
 
+    def _for_iter_expression_code(self, iter_node) -> str:
+        """_for_iter_expression_code — for/async for 迭代表达式渲染（条件表达式加括号）
+
+        ①算法依据：Python 文法 ``for_stmt: 'for' exprlist 'in' testlist ':' suite``
+        ——迭代表达式位于 ``testlist`` 槽。条件表达式（``a if c else b``）在该
+        槽可被文法解析，但与 ``:`` 的边界在叠加推导式/条件子句时易生歧义；
+        统一以括号显式标注条件表达式，使源码形态稳定为「迭代表达式 = 一个
+        带括号的 test」。CPython 对 ``for v in (a if c else b):`` 与
+        ``for v in a if c else b:`` 生成同序字节码，括号只影响可读性、不改
+        语义与字节码（与本仓推导式路径的 IfExp 括号规则一致）。
+
+        ②归约顺序：先按既有表达式通道渲染文本，再判定是否补括号，最后由调用
+        方拼接 ``for <target> in <expr>:``；不改动表达式内部结构。
+
+        ③唯一归属判定：需括号的唯一判据 = 迭代表达式节点本身是条件表达式
+        （``ASTIfExp`` 实例；dict 且 ``type == 'IfExp'``；``ASTExpr`` 包裹时
+        取其 value 再判）。其余节点（Name/Call/Attribute/Subscript/BoolOp/
+        容器字面量/Starred 等）不加括号，既有渲染逐位不变。
+
+        ④嵌套处理：嵌套条件表达式（``a if c else (b if d else e)``）的分支
+        括号由既有 IfExp 渲染器负责，本方法只对最外层节点判定一次。
+
+        ⑤入口引用语义：父 For/AsyncFor 节点通过 ``iter`` 槽引用迭代表达式；
+        本方法只读该槽，不触碰 target/body/orelse 等其它槽。
+
+        ⑥反编译流程：ASTFor / dict-For → iter 节点 → 表达式文本 →
+        （条件表达式 ? 补括号 : 原样）→ ``for <target> in <iter>:`` 源码行。
+
+        [B154-V3R8] r810：三元作 for-iter 时补括号（与
+        ``_generate_comprehension`` 推导式路径的 IfExp 括号规则对齐）。
+        C1：判据只读迭代表达式节点的类型（无偏移常量、无名字白名单、无形态
+        特判）；C2：不改表达式内部结构与既有渲染通道；C3：非条件表达式逐位
+        不变（既有 for 渲染输出零变化）。
+        """
+        code = self._generate_expression(iter_node, 0)
+        if self._is_conditional_expression_node(iter_node):
+            return '(%s)' % code
+        return code
+
+    def _is_conditional_expression_node(self, node) -> bool:
+        """_is_conditional_expression_node — 判定表达式节点是否为条件表达式（IfExp）
+
+        ①算法依据：Python 文法「条件表达式」节点类型唯一（ast.IfExp /
+           dict['type'] == 'IfExp'）；ASTExpr 包装器只承载一个 value 槽。
+
+        ②归约顺序：先判 ASTIfExp 实例 → 再判 dict 形态 → 再对 ASTExpr 取其
+           value 递归判定一次；不展开其它节点。
+
+        ③唯一归属判定：只读节点自身类型（isinstance / dict['type']）；无偏移
+           常量、无名字白名单、无阈值。
+
+        ④嵌套处理：ASTExpr 包裹一层即止（value 若仍是 ASTExpr 继续递归），
+           不进入其它表达式节点内部。
+
+        ⑤入口引用语义：供 _for_iter_expression_code 调用，只作布尔判定，不
+           生成语句。
+
+        ⑥反编译流程：ASTFor / dict-For 的 iter 槽 → 本判定 → 决定是否补括号。
+
+        [B154-V3R8] C1：只读节点类型；C2：不改任何渲染路径；C3：非 IfExp 形态
+        返回 False，既有渲染逐位不变。
+        """
+        if node is None:
+            return False
+        if isinstance(node, ASTIfExp):
+            return True
+        if isinstance(node, dict):
+            return node.get('type') == 'IfExp'
+        if isinstance(node, ASTExpr):
+            inner = getattr(node, 'value', None)
+            return self._is_conditional_expression_node(inner)
+        return False
+
     def _generate_for_dict(self, node: Dict[str, Any], async_prefix: str = '') -> None:
         target = node.get('target', {})
         iter_expr = node.get('iter', {})
@@ -1199,7 +1272,9 @@ class CodeGenerator:
         orelse = node.get('orelse', [])
         
         target_code = self._generate_for_target_from_dict(target)
-        iter_code = self._generate_expression(iter_expr, 0)
+        # [B154-V3R8] 迭代表达式为条件表达式时补括号（见
+        # _for_iter_expression_code 的六项归约说明）。
+        iter_code = self._for_iter_expression_code(iter_expr)
         
         self._write_line(f'{async_prefix}for {target_code} in {iter_code}:')
         
@@ -1839,7 +1914,9 @@ class CodeGenerator:
         # [关键修复] 使用0作为parent_precedence，避免循环变量被添加括号
         # 例如: for i in data: 而不是 for (i) in (data):
         target_code = self._generate_for_target(node.target)
-        iter_code = self._generate_expression(node.iter, 0)
+        # [B154-V3R8] 迭代表达式为条件表达式时补括号（见
+        # _for_iter_expression_code 的六项归约说明）。
+        iter_code = self._for_iter_expression_code(node.iter)
         # [关键修复] 根据is_async标记决定是for还是async for
         async_keyword = 'async for' if getattr(node, 'is_async', False) else 'for'
         self._write_line(f'{async_keyword} {target_code} in {iter_code}:')

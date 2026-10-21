@@ -23,13 +23,9 @@ if __name__ == '__main__':
         for k in range(3):
             while k:
                 try:
-                    pass
-                except ValueError:
-                    k -= 1
-                    k
                     _run(k)
-                    k -= 1
-                    continue
+                except ValueError:
+                    break
                 finally:
                     k -= 1
     else:

@@ -10397,6 +10397,25 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                         break
 
         paired_except_indices = set()
+        # [B157-V3R8] finally 归属唯一化：每个 except handler 只归属「保护跨度
+        # 最小且包含它」的 finally handler。
+        # 依据：CPython 3.11 的异常表布局中，内层 try 的 finally 副本位于外层
+        # try 的 handler 之前，其保护跨度（异常表条目合并后的 [try_start,
+        # try_end)）也更小。既有判据（纯跨度包含）会把**同一** except handler
+        # 同时认领给内层与外层两个 finally（c04 CTryNest：ValueError handler
+        # 同时被 span[14,46) 的内层 finally 与 span[14,100) 的外层 finally 认领
+        # ⇒ except 臂被提升到外层 try、内层 try 退化为 try/finally、else 体
+        # 降级为体内语句）。
+        # 归约方式：候选配对按 finally 保护跨度升序（跨度相同取 handler_start
+        # 升序——内层 finally 副本在布局中更早）择小唯一；跨度/包含关系均取自
+        # 异常表条目，无偏移常量、无名字白名单、无形态特判。
+        # C1：判据只读异常表条目派生的 try_start/try_end/handler_start；
+        # C2：既有 B102 退化链互斥判据与 inner_handler 判定逐位保留；
+        # C3：单一 finally 场景（无嵌套）配对结果与既有逐位一致。
+        _paired_owner: Dict[int, int] = {}
+        _finally_span_key = lambda _k: (
+            handler_infos[_k]['try_end'] - handler_infos[_k]['try_start'],
+            handler_infos[_k]['handler_start'])
         for i, info in enumerate(handler_infos):
             if info.get('handler_type') != 'finally':
                 continue
@@ -10443,7 +10462,17 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                                 (info['try_start'] < other['try_start'] and other['try_end'] <= info['try_end']
                                  and not _b102_deg_pair)):
                                 continue
-                        paired_except_indices.add(j)
+                        # [B157-V3R8] 唯一归属：同一 except handler 只归属跨度最小
+                        # 的包含型 finally（见本方法上方的归约说明）。
+                        _b157_cur = _paired_owner.get(j)
+                        if _b157_cur is None or _finally_span_key(i) < _finally_span_key(_b157_cur):
+                            _paired_owner[j] = i
+        paired_except_indices = set(_paired_owner.keys())
+        # 每个 finally handler 认领的 except handler 列表（供区域构造阶段按
+        # 归属关系取用，不再按跨度重新过滤）。
+        _finally_owned_excepts: Dict[int, List[int]] = {}
+        for _j, _i in _paired_owner.items():
+            _finally_owned_excepts.setdefault(_i, []).append(_j)
 
         for i, handler_info in enumerate(handler_infos):
             if handler_info.get('handler_type') == 'with' or i in paired_except_indices or i in inner_handler_indices:
@@ -10466,9 +10495,12 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
             except_try_start = try_start
             effective_try_end = try_end
             if handler_type == 'finally':
-                paired_except_infos = [handler_infos[j] for j in paired_except_indices
-                                       if (handler_infos[j]['try_start'] >= handler_info['try_start'] and
-                                           handler_infos[j]['try_end'] <= handler_info['try_end'])]
+                # [B157-V3R8] 本 finally 认领的 except handler 取自唯一归属表
+                # （_finally_owned_excepts），不再按跨度重新过滤——后者会把已被
+                # 内层 finally 认领的 handler 再次算进外层 finally（c04
+                # CTryNest 的 ValueError 臂被提升到外层 try）。
+                _owned_j = _finally_owned_excepts.get(i, [])
+                paired_except_infos = [handler_infos[j] for j in _owned_j]
                 if paired_except_infos:
                     except_try_start = min(pi['try_start'] for pi in paired_except_infos)
                     except_try_end = max(pi['try_end'] for pi in paired_except_infos)
@@ -10692,6 +10724,15 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                         _last_instr = _blk.get_last_instruction()
                         if _last_instr and _last_instr.opname in (
                                 'RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
+                            continue
+                        # [B155-V3R8] 臂尾回边块（POP_EXCEPT 之后、以回边跳转
+                        # 终结的块）= 内联 finally 副本 + 显式 break/continue 的
+                        # 跳转块：控制流离开 handler 臂，不应再沿回边走进外层
+                        # 循环体（m02 形态：try 体 `_run(k)` 调用与 for/while
+                        # 体整段被吞进 handler body，try 体退化为 pass）。本块
+                        # 自身仍归 handler 臂（生成层按循环归属发射
+                        # break/continue），但其后继不再跟随。
+                        if _last_instr and _last_instr.opname in BACKWARD_JUMP_OPS:
                             continue
                         for _succ in _blk.successors:
                             if _succ in _blk.exception_successors:
@@ -13061,12 +13102,18 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
         def _collect_body_raw(entry, _r2116_pe_stop=False):
             _blocks: List[BasicBlock] = []
             _visited: Set[BasicBlock] = set()
-            _worklist = [entry]
+            # [B155-V3R8] 臂尾状态标记：handler 臂内 POP_EXCEPT 之后的代码属于
+            # 「异常已处理」尾段（CPython 3.11 把 finally 体就地内联到臂的
+            # 退出路径上，其后紧跟 break/continue/return 的跳转）。
+            _worklist = [(entry, False)]
             while _worklist:
-                _current = _worklist.pop()
+                _current, _in_tail = _worklist.pop()
                 if _current in _visited:
                     continue
                 _visited.add(_current)
+                # [B155-V3R8] 臂尾状态标记：handler 臂内 POP_EXCEPT 之后的代码属于
+                # 「异常已处理」尾段（CPython 3.11 把 finally 体就地内联到臂的
+                # 退出路径上，其后紧跟 break/continue/return 的跳转）。
                 # [Phase 3 adv17_try_except_star] 边界检查：
                 # 遇到下一个 handler 的 CHECK_EG_MATCH / CHECK_EXC_MATCH
                 # 入口块或 except* 共享清理块（PREP_RERAISE_STAR）时停止，
@@ -13082,6 +13129,7 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                 if _last and _last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
                     continue
                 _has_pop_except = any(i.opname == 'POP_EXCEPT' for i in _current.instructions)
+                _is_tail = _in_tail or _has_pop_except
                 # [W21 fix] POP_EXCEPT + JUMP_FORWARD 结尾的块是 except handler
                 # 的正常退出路径——异常已处理完毕，JUMP_FORWARD 跳回 try 块之后
                 # 的代码。不应跟随此 JUMP_FORWARD 的目标，否则会把 try-except 之后
@@ -13095,6 +13143,20 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                 if _has_pop_except and _last and (
                         _last.opname == 'JUMP_FORWARD'
                         or _last.opname in BACKWARD_JUMP_OPS):
+                    continue
+                # [B155-V3R8] 臂尾（POP_EXCEPT 之后）的回边跳转块 = break/continue
+                # 跳转块：CPython 3.11 把 finally 体就地内联进臂的退出路径，回边
+                # 跳转与内联 finally 副本常落在**不同基本块**（异常表按保护区间
+                # 切块），既有 [W27] 只覆盖「同块 POP_EXCEPT+JUMP_BACKWARD」，
+                # 跨块形态下 BFS 会沿回边吞进整个外层循环体与 try 体（m02
+                # _run(k) 调用被吞、try 体退化为 pass）。归约方式：臂尾状态沿
+                # 正常边传播，臂尾块以回边跳转终结 ⇒ 控制离开 handler 臂，不再
+                # 跟随其后继（该跳转块本身仍纳入 body，由生成层按角色发
+                # break/continue 并丢弃内联 finally 副本）。
+                # C1：判据只读本块末 opcode 与臂尾状态（无偏移常量/无名字白名单/
+                # 无形态特判）；C2：臂内非尾段（POP_EXCEPT 之前）行为逐位不变；
+                # C3：臂尾回边块仍被收集进 body（仅停止扩展），不丢语句。
+                if _is_tail and _last is not None and _last.opname in BACKWARD_JUMP_OPS:
                     continue
                 # [R21-16 variant D] POP_EXCEPT 之后只剩 `as` 变量清理且本块不以跳转/返回收尾
                 # => 该 handler 的语句已发完，其后继属于 try 语句**之后**的代码。仅在二次走查
@@ -13156,7 +13218,9 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                             if any(i.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH',
                                                 'CHECK_EG_MATCH') for i in _succ.instructions):
                                 continue
-                        _worklist.append(_succ)
+                        # [B155-V3R8] 臂尾状态沿正常边传播（见 _collect_body_raw
+                        # 的臂尾回边判据说明）。
+                        _worklist.append((_succ, _is_tail))
             return _blocks
 
         def _collect_body(entry):
@@ -14260,6 +14324,31 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                     if instr.offset > try_body_max_end and instr.opname not in NOISE_OPS:
                         try_body_max_end = instr.offset
         if try_body_max_end <= 0:
+            # [B159-V3R8] 本区域的 try 体整体由**嵌套 try 区域**承载（内层 try
+            # 语句的块不在本区域 try_blocks 中——每块唯一归属），try 体末指令
+            # 须由内层区域块集补齐，否则 try_body_max_end = 0 → else 子句识别
+            # 失效（c04 CTryNest：外层 try 的 else 体 OUT = 5 被降级为 try 体
+            # 语句，内层 try 的 else 误判为空）。
+            # 判据（I.4 白名单）：另一 TryExceptRegion 的 try 保护跨度完整
+            # 包含于本区域跨度之内（区间包含判定，非 depth 数值比较）；只读
+            # 区域自身字段，无偏移常量、无名字白名单、无形态特判。
+            for _r2 in (self.regions or ()):
+                if not isinstance(_r2, TryExceptRegion) or _r2 is try_region:
+                    continue
+                _s2 = getattr(_r2, 'try_offset_start', None)
+                _e2 = getattr(_r2, 'try_offset_end', None)
+                if _s2 is None or _e2 is None:
+                    continue
+                if try_region.try_offset_start is None or try_region.try_offset_end is None:
+                    continue
+                if not (_s2 >= try_region.try_offset_start and
+                        _e2 <= try_region.try_offset_end):
+                    continue
+                for _b2 in (getattr(_r2, 'blocks', None) or ()):
+                    for _i2 in _b2.instructions:
+                        if _i2.offset > try_body_max_end and _i2.opname not in NOISE_OPS:
+                            try_body_max_end = _i2.offset
+        if try_body_max_end <= 0:
             return []
         handler_entries = getattr(try_region, 'handler_entry_blocks', [])
         if not handler_entries:
@@ -14329,10 +14418,16 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                     # 位于 (try_body_max_end, first_handler_entry) 区间内。
                     # 但它是 try 体的 continue 语句，不是 else 块。
                     # 判据：块只含 JUMP_BACKWARD（和噪声指令），不含其他有效指令。
+                    # [B160-V3R8] 推广为「纯跳转块」排除：try 体的正常出口
+                    # 跳转块（异常表按保护区间切块后可能独立成块，只含一条
+                    # JUMP_FORWARD）同样落在 (try_body_max_end,
+                    # first_handler_entry) 区间内，但它不是 else 子句——
+                    # else 体必含至少一条用户语句（c04 CTryNest 内层 try：
+                    # try 体的 JUMP_FORWARD 出口块被误认成 else 体）。
                     _non_jump_instrs = [i for i in _block_instrs
                                         if i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
                                                              'JUMP_FORWARD', 'JUMP_ABSOLUTE')]
-                    if not _non_jump_instrs and any(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT') for i in _block_instrs):
+                    if not _non_jump_instrs and _block_instrs:
                         continue
                     # finally 正常路径块排除：当 has_finally=True 时，
                     # CPython 将 finally 代码副本嵌入 else 块的 return 路径中。
@@ -28535,6 +28630,27 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                     # `def f() -> ternary: ...`）。否则会误设 merge_context='compare'，
                     # 把赋值/默认值场景的三元错认为 if 条件，导致退化。
                     elif instr.opname in ('BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET'):
+                        # [B162-V3R8] 链式后继三元排除：三元值并入中间容器
+        # （BUILD_* 先包前值）后再进入**下一枚链式 TernaryRegion 的条
+        # 件测试**（该后继三元 entry == merge_block，且本轮候选扫描为
+        # 逆序、后继三元已先注册进 block_to_region）时，merge 尾部的
+        # 条件跳转属于后继三元的 cond 链，而非把 BUILD_* 产物作为
+        # if/while 真值测试——merge_context 必须保持值链上下文（不归
+        # 类 'compare'）。rv7_04.dict3_nested_value 实证：T0@0 的
+        # merge=12 含 BUILD_LIST 1 + LOAD flag + PJF，被误标
+        # 'compare'/'__compare_target__' → 生成退化为裸 Expr(IfExp)，
+        # 整个 {'a': [...], 'b': ..., 'c': 3} 字典链丢失。
+        # [C1] 只读 region 归属（block_to_region）与 entry/merge 身份，
+        #     无行名/偏移常量特判；
+        # [C2] 无链式后继三元时逐位保留原判据（if/while 容器测试形态
+        #     归类 'compare' 的既有绿色形态不变）；
+        # [C3] 归类不改变归属，改动只在 merge_context/value_target 复位。
+                        _t3r8_chain_next = None
+                        if merge_block is not None:
+                            _t3r8_owner = self.block_to_region.get(merge_block)
+                            if (isinstance(_t3r8_owner, TernaryRegion)
+                                    and _t3r8_owner.entry is merge_block):
+                                _t3r8_chain_next = _t3r8_owner
                         # Use _mb_prefix (instructions before
                         # first STORE_*) to avoid false compare detection
                         # when merge_block contains a subsequent ternary's
@@ -28546,7 +28662,7 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                             for _i in _mb_prefix
                             if _i.opname not in NOISE_OPS
                         )
-                        if _mb_has_cond_jump:
+                        if _mb_has_cond_jump and _t3r8_chain_next is None:
                             true_non_noise = [i for i in true_block.instructions
                                              if i.opname not in NOISE_OPS]
                             false_non_noise = [i for i in false_block.instructions
@@ -30475,20 +30591,34 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
         #   context 由创建器按链形态推导），_loop_generate_while 重建
         #   ast.While.test（[C3] 链块归属由 Step 5 调用方所有权校验保证）。
         _b11_head_blk = chain[0][0] if chain else None
-        _b11_head_last = (_b11_head_blk.get_last_instruction()
-                          if _b11_head_blk is not None else None)
-        _b11_head_jt = (self.cfg.get_block_by_offset(_b11_head_last.argval)
-                        if (_b11_head_last is not None
-                            and _b11_head_last.argval is not None) else None)
-        _b11_head_ft = None
-        if _b11_head_jt is not None:
-            for _b11_hs in _b11_head_blk.conditional_successors:
-                if _b11_hs.start_offset != _b11_head_last.argval:
-                    _b11_head_ft = _b11_hs
+        # [B162-V3R8] 完成 B161 判据的代码落地：触发依据真正改取**链尾**
+        # 成员（= chain[-1]，backward walk 起点 = loop cond 块 = and 组尾，
+        # 其真边向循环体收束）fall-through == loop.header_block。单成员
+        # 链 chain[0] is chain[-1]，判据逐位不变（r3_33/r3_28 族零行为
+        # 差）；2+ 成员链（or4 型 and 尾多段：链首成员 fall-through 是
+        # 下一 and 段而非循环体）由本判据恢复触发 or 前缀续接，或前缀
+        # 成员收 [0,10,14,'or'] + [18,'and'] 后复用原链，交由 Step 5
+        # supersede/重挂原程。
+        # [C1] 仅用末 opcode/跳转目标/条件后继结构差异取链尾 fall-through；
+        # [C2] or 前缀续接复用原 seed/or-run/and-run 三门与归属校验，
+        #     无新增自由量、无行名/偏移特判；
+        # [C3] 链尾真边不指循环体（如 if A: while B: 顶置预制件形态）
+        #     时判据不触发，原位识别逐位不变。
+        _b11_tail_blk = chain[-1][0] if chain else None
+        _b11_tail_last = (_b11_tail_blk.get_last_instruction()
+                          if _b11_tail_blk is not None else None)
+        _b11_tail_jt = (self.cfg.get_block_by_offset(_b11_tail_last.argval)
+                        if (_b11_tail_last is not None
+                            and _b11_tail_last.argval is not None) else None)
+        _b11_tail_ft = None
+        if _b11_tail_jt is not None:
+            for _b11_ts in _b11_tail_blk.conditional_successors:
+                if _b11_ts.start_offset != _b11_tail_last.argval:
+                    _b11_tail_ft = _b11_ts
                     break
-        if (_b11_head_ft is not None
+        if (_b11_tail_ft is not None
                 and loop.header_block is not None
-                and _b11_head_ft is loop.header_block):
+                and _b11_tail_ft is loop.header_block):
             _b11_body_sem = set(loop.body_blocks or [])
             if loop.header_block is not None:
                 _b11_body_sem.add(loop.header_block)

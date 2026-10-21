@@ -6320,6 +6320,51 @@ AST 映射规则:
             _anc = getattr(_anc, 'parent', None)
         return False
 
+    def _ternary_for_iter_prefix_statements(self, ternary_stmts, expr_index):
+        """_ternary_for_iter_prefix_statements — 三元作 for-iter 时取回条件块前置语句
+
+        ①算法依据：区域归约算法「每块唯一归属」+「父引用子入口」——for 循环
+        通过 TernaryRegion 的 merge_block 引用三元子节点，迭代表达式本体是
+        三元归约结果（Expr/Return 的 value），而三元条件块内位于条件表达式
+        之前的语句（如 `total = 0` 的 LOAD_CONST/STORE_FAST 前缀）属于
+        **三元之前的独立语句**，必须先于 for 语句发射，不能随迭代表达式
+        一起被吞掉（No More Gotos 的「表达式归约不吞并前序语句」原则）。
+
+        ②归约顺序：先由 _generate_ternary 得到有序语句列表，再按序位切出
+        「表达式节点之前」的前置语句段；不重新解析指令、不重排语句。
+
+        ③唯一归属判定：前置语句段 = ternary_stmts[:expr_index]（expr_index
+        为 Expr/Return 节点在列表中的序位）；列表首元素即表达式节点时该段
+        为空，行为与既有路径逐位一致。
+
+        ④嵌套处理：本方法只看本 TernaryRegion 的归约结果列表，不窥视其它
+        区域；嵌套三元的内部语句由 _generate_ternary 自身递归归约，本方法
+        不重复展开。
+
+        ⑤入口引用语义：父 For 循环引用本方法返回的前置语句段，按既有
+        pre_stmts 通道（循环前置语句槽）在 for 语句之前发射；iter_expr
+        通道仍消费 Expr/Return 的 value，两条通道互不侵占。
+
+        ⑥反编译流程：TernaryRegion → [_pre_stmts…, Expr(IfExp)] →
+        本方法切出 pre_stmts → 父 For 循环 pre_stmts + ast.For。
+
+        [B153-V3R8] 修复 r810::r8_x_for_iter_ternary：`total = 0` 与三元
+        条件同处一个基本块（函数序言块），三元作 for-iter 时该前缀语句被
+        丢弃 → 重编译字节码缺 `LOAD_CONST 0 / STORE_FAST total`（Different
+        bytecode）。C1：判据只读本三元归约结果列表的元素类型与序位（无
+        偏移常量、无名字白名单、无形态特判）；C2：迭代表达式本体仍由既有
+        iter_expr 通道消费，本方法只搬运语句不修改其结构；C3：前置语句段
+        为空时（首元素即 Expr/Return）既有行为逐位不变。
+        """
+        if not ternary_stmts or expr_index <= 0:
+            return []
+        out = []
+        for _st in ternary_stmts[:expr_index]:
+            if isinstance(_st, dict) and _st.get('type') in ('Expr', 'Return'):
+                continue
+            out.append(_st)
+        return out
+
     def _loop_generate_for(self, region: LoopRegion) -> Dict[str, Any]:
         pre_stmts = []
 
@@ -6350,7 +6395,7 @@ AST 映射规则:
                 if _ternary_for_iter:
                     ternary_stmts = self._generate_ternary(r)
                     if ternary_stmts and len(ternary_stmts) > 0:
-                        for stmt in ternary_stmts:
+                        for _b153_si, stmt in enumerate(ternary_stmts):
                             if stmt.get('type') not in ('Expr', 'Return'):
                                 continue
                             _v = stmt.get('value')
@@ -6370,6 +6415,9 @@ AST 映射规则:
                             if _vtype in ('IfExp', 'Call', 'List', 'Tuple',
                                           'Set', 'Dict'):
                                 iter_expr = _v
+                                pre_stmts.extend(
+                                    self._ternary_for_iter_prefix_statements(
+                                        ternary_stmts, _b153_si))
                                 break
                     if iter_expr:
                         for b in r.blocks:
@@ -6454,7 +6502,7 @@ AST 映射规则:
             if isinstance(_fis_owner, TernaryRegion) and getattr(_fis_owner, 'merge_context', None) == 'iter':
                 ternary_stmts = self._generate_ternary(_fis_owner)
                 if ternary_stmts and len(ternary_stmts) > 0:
-                    for stmt in ternary_stmts:
+                    for _b153_si, stmt in enumerate(ternary_stmts):
                         if stmt.get('type') not in ('Expr', 'Return'):
                             continue
                         _v = stmt.get('value')
@@ -6467,6 +6515,8 @@ AST 映射规则:
                         if _v.get('type') in ('IfExp', 'Call', 'List', 'Tuple',
                                               'Set', 'Dict'):
                             iter_expr = _v
+                            pre_stmts.extend(self._ternary_for_iter_prefix_statements(
+                                ternary_stmts, _b153_si))
                             break
                 if iter_expr:
                     for b in _fis_owner.blocks:
@@ -34757,6 +34807,68 @@ AST 映射规则:
             exc_stream.extend(self._w13_data_stream(fb.instructions))
         return normal_stream == exc_stream
 
+    def _region_has_outer_handler_over_finally_copy(self, region):
+        """_region_has_outer_handler_over_finally_copy — 外层 try 包裹本区域判定
+
+        ①算法依据：CPython 3.11 异常表布局——外层 try 语句的 handler 会保护其
+           try 体（含内层 try 语句的 finally 体副本）未被内层自身 handler 保护
+           的区间；内层 try 语句自身的 finally 副本位于其 handler 之后、且由
+           内层 handler 的出口区间保护。故「本区域 finally 副本台账中的某块被
+           一个**外层** PUSH_EXC_INFO handler 保护」= 本区域 try 嵌套在外层 try
+           之内。
+
+        ②归约顺序：先取本区域 handler_entry_blocks 偏移集 → 再取本区域
+           finally_copy_blocks 台账成员块 → 再遍历异常表条目逐条判据。
+
+        ③唯一归属判定：条目 (start, end, target) 满足 (a) target 不在本区域
+           handler 入口偏移集内、(b) target 块以 PUSH_EXC_INFO 开头（真 handler
+           帧，排除清理尾 COPY/POP_EXCEPT/RERAISE）、(c) [start, end) 覆盖本
+           区域台账中的某个非 target 块 ⇒ 命中。判据只读异常表条目与本区域
+           自身字段，无偏移常量、无名字白名单、无阈值。
+
+        ④嵌套处理：只判定本区域自身；嵌套区域的台账由各自区域独立判定（原则 2
+           每块唯一归属）。
+
+        ⑤入口引用语义：父区域引用本区域入口；本方法只作身份裁决，不生成语句。
+
+        ⑥反编译流程：region_analyzer 建台账 → 本方法判定外层 try 存在 →
+           _count_nested_try_marker_levels 据此关闭 W13 下沉补偿。
+
+        [B158-V3R8] C1：只读异常表条目 + 本区域 handler 入口集 + finally 副本
+        台账；C2：不改任何既有发射路径（仅作 W13 的守卫）；C3：未命中时 W13
+        行为逐位不变。
+        """
+        handler_offsets = set()
+        for heb in (getattr(region, 'handler_entry_blocks', None) or ()):
+            handler_offsets.add(heb.start_offset)
+        ledger = getattr(region, 'finally_copy_blocks', None) or {}
+        ledger_blocks = []
+        for off in ledger:
+            blk = self.cfg.get_block_by_offset(off)
+            if blk is not None and blk.start_offset not in handler_offsets:
+                ledger_blocks.append(blk)
+        if not ledger_blocks:
+            return False
+        for entry in (getattr(self.cfg, 'exception_table', None) or ()):
+            target = entry.get('target')
+            if target is None or target in handler_offsets:
+                continue
+            tgt_blk = self.cfg.get_block_by_offset(target)
+            if tgt_blk is None:
+                continue
+            if not any(i.opname == 'PUSH_EXC_INFO' for i in tgt_blk.instructions):
+                continue
+            start = entry.get('start')
+            end = entry.get('end')
+            if start is None or end is None:
+                continue
+            for blk in ledger_blocks:
+                if blk is tgt_blk:
+                    continue
+                if any(start <= i.offset < end for i in blk.instructions):
+                    return True
+        return False
+
     def _count_nested_try_marker_levels(self, region):
         """[W13] 由 try 帧标记 NOP 游程长度推断嵌套 try 层数（超出单层部分）。
 
@@ -34772,9 +34884,26 @@ AST 映射规则:
         （单层 Try 语句自身重编译时再生一个标记）。仅当 region 同时具有
         except handlers 与 finally 时适用（纯嵌套 try-except 由
         nested_try_regions 机制处理）。
+
+        [B158-V3R8] 外层 try 存在守卫：本区域（try/except/finally 齐备）若被
+        另一个 try 语句**包裹**（外层 handler 保护着本区域的 finally 体副本），
+        则多出的标记 NOP 属于**外层** try 的帧标记，而不是本区域内的额外
+        内层 try 层数——此时不得按 W13 规则把 handlers 下沉到内层 Try
+        （c04 CTryNest：内层 try = try/except ValueError/finally MID，外层 try =
+        try/except NameError/else OUT/finally LEAF；标记 NOP 游程 = 2 = 外层
+        + 内层各一，若按 W13 下沉 handlers，内层 try 变成
+        `try: try: DEEP=1 except: DEEP=2 finally: MID` 多一层且 else 体降级）。
+        守卫判据（I.4 白名单）：存在异常表条目，其 target 为 PUSH_EXC_INFO
+        入口块（真 handler 帧）、target 偏移不在本区域 handler_entry_blocks
+        之中、且其保护区间覆盖本区域 finally_copy_blocks 台账中的某块 ⇒ 本
+        区域 try 嵌套于外层 try 之内。判据只读异常表条目与本区域自身台账，
+        无偏移常量、无名字白名单、无形态特判；未命中时 W13 行为逐位不变
+        （C3）。
         """
         if not (getattr(region, 'has_finally', False)
                 and getattr(region, 'except_handlers', None)):
+            return 0
+        if self._region_has_outer_handler_over_finally_copy(region):
             return 0
         heb_offs = {b.start_offset for b in region.handler_entry_blocks}
         extab = getattr(self.cfg, 'exception_table', None) or []
@@ -36030,6 +36159,47 @@ AST 映射规则:
                             break
                     if _in_other_nested:
                         continue
+                    # [B156-V3R8] handler arm tail "inlined finally copy + back-edge
+                    # jump" block = source-level explicit break / continue.
+                    # CPython 3.11 inlines the finally body into the except arm's
+                    # exit path: when the arm exits via break/continue the finally
+                    # copy sits between POP_EXCEPT and the back-edge jump, often in
+                    # a *separate* basic block (the exception table splits blocks at
+                    # protected-range boundaries). The existing role branches cannot
+                    # tell an explicit continue from the loop's natural iteration
+                    # (the latter is regenerated by the loop structure), so m02's
+                    # explicit break was dropped and the arm fell back to `pass`.
+                    # Criteria (I.4 whitelist: this region's own ledger + this
+                    # block's instructions + the arm's block structure only):
+                    #   (a) region.has_finally and finally_copy_blocks ledger
+                    #       contains this block (= inlined finally copy);
+                    #   (b) the block's last opcode is in BACKWARD_JUMP_OPS;
+                    #   (c) the block itself carries no POP_EXCEPT (= a separate
+                    #       tail block; the same-block form is handled by the
+                    #       existing W27 path);
+                    #   (d) the block is the *fall-through* successor of the arm's
+                    #       POP_EXCEPT exit block (that exit block does not end with
+                    #       a jump). The natural-iteration form reaches the finally
+                    #       normal copy through the exit block's JUMP_FORWARD and
+                    #       therefore fails this criterion.
+                    # Reduction: emit Continue when the back-edge target is the
+                    # owning loop's entry, Break when the target is outside the
+                    # owning loop's block scope; the inlined finally copy's own
+                    # statements are not re-emitted (the finally body is owned
+                    # solely by finalbody).
+                    # C1: criteria read only this region's ledger, this block's
+                    # instructions and the arm's block structure; C2: the finally
+                    # body / remaining arm statements keep their ownership; C3:
+                    # blocks failing any criterion keep the existing role branch
+                    # behaviour unchanged.
+                    if self._handler_arm_tail_is_inline_finally_exit(
+                            hb, region, handler_blocks):
+                        _b156_stmt = self._handler_arm_tail_loop_exit_statement(
+                            hb, region)
+                        if _b156_stmt is not None:
+                            handler_body.append(_b156_stmt)
+                            self.generated_blocks.add(hb)
+                            continue
                     # Pattern TE — handler 中的 continue/break/return。
                     # 区域归约算法原则 1（自底向上归约）+ 原则 3（嵌套即抽象节点）：
                     # handler 块可能以 JUMP_BACKWARD（continue）或 JUMP_FORWARD（break）
@@ -37575,6 +37745,120 @@ AST 映射规则:
                     and _b115_arm_seq[:len(_b115_body_seq)] == _b115_body_seq):
                 return True
         return False
+
+    def _handler_arm_tail_is_inline_finally_exit(self, hb, region, handler_blocks):
+        """_handler_arm_tail_is_inline_finally_exit — arm-tail inline-finally exit predicate
+
+        ①算法依据：No More Gotos 区域归约「每块唯一归属」+ CPython 3.11 finally
+           就地内联语义——except 臂以 break/continue 退出时，编译器把 finally 体
+           副本插在 POP_EXCEPT 与回边跳转之间；该副本位于独立基本块（异常表按
+           保护区间切块），归 finally 正常副本之外的「臂内联副本」。
+
+        ②归约顺序：先查本区域 finally_copy_blocks 台账 → 再查本块末 opcode →
+           再查本块是否含 POP_EXCEPT → 最后查本块是否为臂内 POP_EXCEPT 出口块的
+           顺序后继；四步全中才判定为「臂尾内联 finally 副本 + 回边跳转」。
+
+        ③唯一归属判定：判据只读 (a) 本区域自身台账 finally_copy_blocks 的键集、
+           (b) 本块自身指令（末 opcode / POP_EXCEPT 存在性）、(c) 臂内 POP_EXCEPT
+           出口块的末指令与后继集合；不跨层比较其它区域、不读绝对偏移常量、无
+           名字白名单、无阈值。
+
+        ④嵌套处理：只处理本 region's 臂块；嵌套 try 的臂尾副本登记在各自区域
+           的台账上，外层区域不认领内层副本（原则 2）。
+
+        ⑤入口引用语义：父 ExceptHandler 通过臂块引用本块的回边跳转；本方法只
+           作身份裁决，语句构造交 _handler_arm_tail_loop_exit_statement。
+
+        ⑥反编译流程：region_analyzer 建台账 → 本谓词定身份 → 生成层发射
+           Continue / Break。
+
+        [B156-V3R8] m02：`except ValueError: break` + `finally: k -= 1` 的臂尾
+        内联副本（POP_EXCEPT 后独立块，末为回边跳转）此前被误判为循环自然迭代
+        而丢失（handler 落 pass）。C1：只读本区域台账 + 本块指令 + 臂块结构；
+        C2：不改 finally 体与臂体其余语句归属；C3：判据任一不成立时既有角色
+        分支（CONTINUE/BREAK/RETURN）逐位不变。
+        """
+        if hb is None or not isinstance(region, TryExceptRegion):
+            return False
+        if not getattr(region, 'has_finally', False):
+            return False
+        ledger = getattr(region, 'finally_copy_blocks', None) or {}
+        if hb.start_offset not in ledger:
+            return False
+        last = hb.get_last_instruction()
+        if last is None or last.opname not in BACKWARD_JUMP_OPS:
+            return False
+        if any(i.opname == 'POP_EXCEPT' for i in hb.instructions):
+            return False
+        for b in (handler_blocks or ()):
+            if b is hb:
+                continue
+            if not any(i.opname == 'POP_EXCEPT' for i in b.instructions):
+                continue
+            b_last = b.get_last_instruction()
+            if b_last is not None and b_last.opname.startswith('JUMP'):
+                continue
+            if hb in (b.successors or ()):
+                return True
+        return False
+
+    def _handler_arm_tail_loop_exit_statement(self, hb, region):
+        """_handler_arm_tail_loop_exit_statement — arm-tail back-edge exit statement
+
+        ①算法依据：区域归约原则 3「嵌套即抽象节点」+ 循环出口语义——回边跳转
+           的目标决定它是所属循环的 continue（目标 = 循环入口）还是 break（目标
+           在所属循环块集之外）。CPython 把 break 编译为「跳出内层循环 → 外层
+           循环回边」的合并跳转（m02：break 跳出 while 后与 for 的回边合并为
+           一条 JUMP_BACKWARD→FOR_ITER），故必须按「目标是否属于内层循环」判定
+           而非按跳转方向判定。
+
+        ②归约顺序：先取回跳目标块 → 再取本块所属循环（当前循环上下文，缺失
+           时回退到 region 的父链 LoopRegion）→ 再按目标与循环入口/块集的关系
+           定 continue / break。
+
+        ③唯一归属判定：continue 判据 = 目标块是所属循环的入口块
+           （LoopRegion.is_block_entry）；break 判据 = 目标块不在所属循环及其
+           后代区域的块集内（与既有 Round6-B29 跨循环出口判据同口径）。两者
+           都不成立时返回 None（交既有路径）。
+
+        ④嵌套处理：所属循环由 region 父链 / 当前循环上下文给出，不窥视子区域
+           内部结构（后代区域块集仅用于判定目标是否仍在循环域内）。
+
+        ⑤入口引用语义：父 ExceptHandler 引用本语句（Continue / Break 节点），
+           回边由循环结构在重编译时自然再生。
+
+        ⑥反编译流程：谓词命中 → 本方法产出 {'type': 'Continue'} 或
+           {'type': 'Break'} → 臂体语句列表。
+
+        [B156-V3R8] C1：只读回跳目标、循环入口与循环块集（无偏移常量/无名字
+        白名单）；C2：不改循环结构本身的发射；C3：无法判定时返回 None，既有
+        发射路径逐位不变。
+        """
+        last = hb.get_last_instruction()
+        if last is None or last.argval is None:
+            return None
+        target = self.cfg.get_block_by_offset(last.argval)
+        if target is None:
+            return None
+        loop = getattr(self, '_current_loop', None)
+        if loop is None:
+            try:
+                loop = region.find_enclosing_parent((LoopRegion,))
+            except Exception:  # noqa: BLE001
+                loop = None
+        if loop is None:
+            return None
+        if loop.is_block_entry(target):
+            return {'type': 'Continue'}
+        scope = set(getattr(loop, 'blocks', None) or ())
+        try:
+            for desc in loop.iter_descendants():
+                scope |= set(desc.blocks)
+        except Exception:  # noqa: BLE001
+            pass
+        if target not in scope:
+            return {'type': 'Break'}
+        return None
 
     def _generate_handler_body_statements(self, block: BasicBlock) -> List[Dict[str, Any]]:
         """_generate_handler_body_statements — except handler / finally 副本体单块语句发射。

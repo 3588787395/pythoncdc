@@ -17,7 +17,8 @@ def r8_x_assign_ternary_chain(d, t, a, b):
     d['k1'] = d['k2'] = a if t else b
     return d
 def r8_x_for_iter_ternary(xs, ys, t):
-    for v in xs if t else ys:
+    total = 0
+    for v in (xs if t else ys):
         total += v
     return total
 def r8_x_raise_ternary_class(x):

@@ -1,0 +1,136 @@
+co_name=CTryNest varnames=()
+=== CFG blocks ===
+BLK@0..12 succ=[14] pred=[]
+   0 RESUME 0
+   2 LOAD_NAME __name__
+   4 STORE_NAME __module__
+   6 LOAD_CONST CTryNest
+   8 STORE_NAME __qualname__
+   10 NOP None
+   12 NOP None
+BLK@14..16 succ=[18, 20] pred=[0]
+   14 LOAD_CONST 1
+   16 STORE_NAME DEEP
+BLK@18..18 succ=[46, 52] pred=[14]
+   18 JUMP_FORWARD 46
+BLK@20..26 succ=[28, 38, 40] pred=[14]
+   20 PUSH_EXC_INFO None
+   22 LOAD_NAME ValueError
+   24 CHECK_EXC_MATCH None
+   26 POP_JUMP_FORWARD_IF_FALSE 38
+BLK@28..32 succ=[34, 40] pred=[20]
+   28 POP_TOP None
+   30 LOAD_CONST 2
+   32 STORE_NAME DEEP
+BLK@34..36 succ=[46, 52] pred=[28]
+   34 POP_EXCEPT None
+   36 JUMP_FORWARD 46
+BLK@38..38 succ=[40] pred=[20]
+   38 RERAISE 0
+BLK@40..44 succ=[52] pred=[20, 28, 38]
+   40 COPY 3
+   42 POP_EXCEPT None
+   44 RERAISE 1
+BLK@46..50 succ=[66, 74] pred=[18, 34]
+   46 LOAD_CONST 3
+   48 STORE_NAME MID
+   50 JUMP_FORWARD 66
+BLK@52..58 succ=[60] pred=[18, 34, 40]
+   52 PUSH_EXC_INFO None
+   54 LOAD_CONST 3
+   56 STORE_NAME MID
+   58 RERAISE 0
+BLK@60..64 succ=[74] pred=[52]
+   60 COPY 3
+   62 POP_EXCEPT None
+   64 RERAISE 1
+BLK@66..66 succ=[68] pred=[46]
+   66 NOP None
+BLK@68..72 succ=[100, 108] pred=[66]
+   68 LOAD_CONST 5
+   70 STORE_NAME OUT
+   72 JUMP_FORWARD 100
+BLK@74..80 succ=[82, 92, 94] pred=[60, 46]
+   74 PUSH_EXC_INFO None
+   76 LOAD_NAME NameError
+   78 CHECK_EXC_MATCH None
+   80 POP_JUMP_FORWARD_IF_FALSE 92
+BLK@82..86 succ=[94, 88] pred=[74]
+   82 POP_TOP None
+   84 LOAD_CONST 4
+   86 STORE_NAME DEEP
+BLK@88..90 succ=[100, 108] pred=[82]
+   88 POP_EXCEPT None
+   90 JUMP_FORWARD 100
+BLK@92..92 succ=[94] pred=[74]
+   92 RERAISE 0
+BLK@94..98 succ=[108] pred=[74, 82, 92]
+   94 COPY 3
+   96 POP_EXCEPT None
+   98 RERAISE 1
+BLK@100..106 succ=[] pred=[68, 88]
+   100 LOAD_CONST 6
+   102 STORE_NAME LEAF
+   104 LOAD_CONST None
+   106 RETURN_VALUE None
+BLK@108..114 succ=[116] pred=[94, 68, 88]
+   108 PUSH_EXC_INFO None
+   110 LOAD_CONST 6
+   112 STORE_NAME LEAF
+   114 RERAISE 0
+BLK@116..120 succ=[] pred=[108]
+   116 COPY 3
+   118 POP_EXCEPT None
+   120 RERAISE 1
+=== regions ===
+REGION TryExceptRegion entry=14 blocks=[20, 28, 38, 40, 46, 52, 60, 14, 18, 34] parent=None
+   else_blocks=[18]
+   finally_blocks=[52, 60]
+REGION TryExceptRegion entry=46 blocks=[20, 28, 38, 40, 46, 52, 60, 66, 74, 82, 92, 94, 100, 108, 116, 14, 18, 34, 68, 88] parent=None
+   else_blocks=[]
+   finally_blocks=[108, 116]
+REGION Region entry=0 blocks=[0] parent=None
+=== block_to_region ===
+blk@0 -> Region
+blk@14 -> TryExceptRegion
+blk@18 -> TryExceptRegion
+blk@20 -> TryExceptRegion
+blk@28 -> TryExceptRegion
+blk@34 -> TryExceptRegion
+blk@38 -> TryExceptRegion
+blk@40 -> TryExceptRegion
+blk@46 -> TryExceptRegion
+blk@52 -> TryExceptRegion
+blk@60 -> TryExceptRegion
+blk@66 -> TryExceptRegion
+blk@68 -> TryExceptRegion
+blk@74 -> TryExceptRegion
+blk@82 -> TryExceptRegion
+blk@88 -> TryExceptRegion
+blk@92 -> TryExceptRegion
+blk@94 -> TryExceptRegion
+blk@100 -> TryExceptRegion
+blk@108 -> TryExceptRegion
+blk@116 -> TryExceptRegion
+=== block roles ===
+blk@0 role=BlockRole.NORMAL
+blk@14 role=BlockRole.TRY_BODY
+blk@18 role=BlockRole.TRY_ELSE
+blk@20 role=BlockRole.EXCEPT_HANDLER
+blk@28 role=BlockRole.EXCEPT_STORE
+blk@34 role=BlockRole.EXCEPT_STORE
+blk@38 role=BlockRole.TRY_BODY
+blk@40 role=BlockRole.TRY_BODY
+blk@46 role=BlockRole.NORMAL
+blk@52 role=BlockRole.FINALLY_BODY
+blk@60 role=BlockRole.FINALLY_BODY
+blk@66 role=BlockRole.TRY_BODY
+blk@68 role=BlockRole.TRY_BODY
+blk@74 role=BlockRole.EXCEPT_HANDLER
+blk@82 role=BlockRole.EXCEPT_STORE
+blk@88 role=BlockRole.EXCEPT_STORE
+blk@92 role=BlockRole.TRY_BODY
+blk@94 role=BlockRole.TRY_BODY
+blk@100 role=BlockRole.RETURN
+blk@108 role=BlockRole.FINALLY_BODY
+blk@116 role=BlockRole.FINALLY_BODY

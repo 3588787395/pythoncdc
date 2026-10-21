@@ -1,0 +1,38 @@
+[
+ {
+  "name": "b53",
+  "pyc_src_rel": "test_repros/round7/rv7_04_dict3_ternary.pyc",
+  "pyc_src_sha": "cbaf768bc2c52a7f",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round8/rec1_b53_rv7_04_dict3_ternary.pyc",
+  "mtime": "2026-10-21T12:43:14",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "b4d5f6d82eeddc2d",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_b53_rv7_04_dict3_ternary.pyc (Python 3.11)\n\ndef dict3_two_ternary(v1, v2, v3, k1, k2, c1, c2):\n    return {'a': v1 if c1 else v2, 'b': k1 if c2 else k2, 'c': v3}\ndef dict3_nested_value(v1, v2, xs, flag, c1):\n    return {'a': [v1 if c1 else v2], 'b': xs[0] if flag else xs[-1], 'c': 3}\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round8/rec1_b53_rv7_04_dict3_ternary.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round8/rec1_b53_rv7_04_dict3_ternaryOK.py\n[single] status=success units=3/3 success_rate=100.00%",
+  "status": "success",
+  "units_success": 3,
+  "units_total": 3,
+  "failures": []
+ },
+ {
+  "name": "b11",
+  "pyc_src_rel": "test_repros/round4/r4_or4_and2.pyc",
+  "pyc_src_sha": "60e3ca7c8ebef515",
+  "staged_pyc": ".trae/specs/attain-true-completeness/test_repros/round8/rec1_b11_r4_or4_and2.pyc",
+  "mtime": "2026-10-21T12:43:15",
+  "regen_rc": 0,
+  "regen_tail": "",
+  "ok_exists": true,
+  "ok_sha": "c8ebe77dc146adab",
+  "ok_text": "# Source Generated with Decompyle++ (Python version)\n# File: rec1_b11_r4_or4_and2.pyc (Python 3.11)\n\ndef or4_and2(a, b, c, d, k, m):\n    \"\"\"while (a or b or c or d) and k < m and b: — or4 group with two and-tail conjuncts.\"\"\"\n    n = 0\n    while (a or b or c or d) and k < m and b:\n        n = n + 1\n        k = k + 1\n    return n\n",
+  "verify_rc": 0,
+  "verify_out": "[single] NOTE no --source: comparing the IN-PLACE *OK.py (this command only compares, never regenerates); after a pipeline change delete the old product, regenerate with pycdc.py -o, or pass --source <fresh product>\n[single] F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round8/rec1_b11_r4_or4_and2.pyc\n[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attain-true-completeness/test_repros/round8/rec1_b11_r4_or4_and2OK.py\n[single] status=success units=2/2 success_rate=100.00%",
+  "status": "success",
+  "units_success": 2,
+  "units_total": 2,
+  "failures": []
+ }
+]

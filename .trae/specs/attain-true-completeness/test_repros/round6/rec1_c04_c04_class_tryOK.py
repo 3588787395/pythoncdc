@@ -23,14 +23,14 @@ class CTryFin:
 class CTryNest:
     try:
         try:
-            try:
-                DEEP = 1
-            finally:
-                MID = 3
-            OUT = 5
+            DEEP = 1
         except ValueError:
             DEEP = 2
-        except NameError:
-            DEEP = 4
+        finally:
+            MID = 3
+    except NameError:
+        DEEP = 4
+    else:
+        OUT = 5
     finally:
         LEAF = 6
