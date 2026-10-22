@@ -1,0 +1,115 @@
+# Source Generated with Decompyle++ (Python version)
+# File: basic_data_source.pyc (Python 3.11)
+
+import os
+import collections
+from datetime import datetime, date as dt_date
+from IQCommon.util.pycompatibility import lru_cache
+from IQCommon.data.exrights_storage import ExrightsStorage
+from IQCommon.util.datetime_func import convert_date_to_date_int
+from IQCommon.tools import endswith_transe_2to4
+from IQCommon.util.common_func import asset_common
+class BasicDataSource(object):
+    __doc__ = """
+    基础数据源类,用来提供数据
+    """
+    _inited = False
+    def __init__(self, data_path=''):
+        '\n        Y'
+        self.data_path = data_path
+        self._inited = True
+        self._exrights = ExrightsStorage(os.path.join(data_path, 'exrights.pk'))
+        self._asset = asset_common
+    def get_dividend(self, symbol, query_date=None):
+        """
+        获取分红配股信息
+        :param symbol: 合约名称
+        :type symbol: : str
+
+        :param query_date:查询时间点
+        :type query_date: : datetime.date
+
+        :return value:分红配股信息
+        :type: : pd.DataFrame
+        """
+        if isinstance(query_date, dt_date):
+            query_date = convert_date_to_date_int(query_date)
+        return self._exrights.get_dividends(symbol, query_date)
+    def get_dict_assets(self):
+        return self._asset.get_dict_assets()
+    def assets_to_dict(self, assets):
+        """
+        将所有的二维列表形式的Asset对象转为dict类型
+        :param assets: 所有的Asset对象
+
+        :return: dict
+        """
+        asset_dict = collections.OrderedDict()
+        for asset_type_list in assets:
+            for asset in asset_type_list:
+                asset_dict[asset.symbol] = asset
+        return asset_dict
+    def get_security_info(self, symbols=None):
+        """
+        获取标的基础信息
+
+        :param symbols: 标的代码列表，['600570.XSHG', '000001.XSHE']
+        :type: list | str
+
+        :return: {'600570.XSHG': {'symbol': '600570.XSHG', 'name': '恒生电子', 'exchange': 'XSHG', ..., },
+                  '000001.XSHE': {'symbol': '000001.XSHE', 'name': '平安银行', 'exchange': 'XSHE', ..., },
+                   ...,
+                 }
+        :type: dict
+        """
+        if isinstance(symbols, list):
+            asset_dict = self.get_dict_assets()
+            result_dict = {}
+            for symbol in symbols:
+                symbol_trans = endswith_transe_2to4(symbol)
+                asset = asset_dict.get(symbol_trans, None)
+                if asset:
+                    tmp_dict = {}
+                    for key in asset._repr_attr_list:
+                        value = getattr(asset, key, None)
+                        tmp_dict[key] = value
+                    result_dict[symbol] = tmp_dict
+                    continue
+                result_dict[symbol] = {}
+            return result_dict
+        else:
+            return self.get_security_info_lru(symbols)
+    def get_security_info_lru(self, symbols=None):
+        """
+        获取标的基础信息
+
+        :param symbols: 标的代码
+        :type: None|str
+
+        :return: {'600570.XSHG': {'symbol': '600570.XSHG', 'name': '恒生电子', 'exchange': 'XSHG', ..., },
+                  '000001.XSHE': {'symbol': '000001.XSHE', 'name': '平安银行', 'exchange': 'XSHE', ..., },
+                   ...,
+                 }
+        :type: dict
+        """
+        asset_dict = self.get_dict_assets()
+        result_dict = {}
+        if symbols:
+            symbol_trans = endswith_transe_2to4(symbols)
+            asset = asset_dict.get(symbol_trans, None)
+            if asset:
+                tmp_dict = {}
+                for key in asset._repr_attr_list:
+                    value = getattr(asset, key, None)
+                    tmp_dict[key] = value
+                result_dict[symbols] = tmp_dict
+            else:
+                result_dict[symbols] = {}
+        else:
+            tmp_dict = {}
+            for symbol, asset in asset_dict.items():
+                for key in asset._repr_attr_list:
+                    value = getattr(asset, key, None)
+                    tmp_dict[key] = value
+                result_dict[symbol] = tmp_dict
+        return result_dict

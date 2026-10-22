@@ -1,0 +1,61 @@
+# Source Generated with Decompyle++ (Python version)
+# File: gtn_request.pyc (Python 3.11)
+
+from IQData.modules.WEBCLIENT.gtn_client import create_gtn_client
+import requests
+import json
+from IQCommon import pandas as pd
+from IQCommon.exception import get_traceback_message
+class GTNRequest:
+    def __init__(engine, self):
+        self._engine = engine
+        cfg = self._engine.config
+        self._id = cfg.plugins.plugin_system_gtn_request.id
+        self._secret = cfg.plugins.plugin_system_gtn_request.secret
+        self._gtn_url = cfg.plugins.plugin_system_gtn_request.gtn_url
+        self._gtn_client = create_gtn_client(self._id, self._secret)
+        self._service_url = cfg.plugins.plugin_system_gtn_request.service_url
+        self._app_key = cfg.plugins.plugin_system_gtn_request.app_key
+    def gtn_send_by_get(self, url, data):
+        return self._gtn_client.send_by_get(url, data)
+    def gtn_send_by_post(self, url, data):
+        return self._gtn_client.send_by_post(url, data)
+    def send_service(self, method, **kwargs):
+        url = ''.join((self._service_url, '/', method, '?app_key=', self._app_key))
+        data = {'app_key': self._app_key}
+        if len(kwargs) != 0:
+            data = {'params': kwargs, 'app_key': self._app_key}
+        response = requests.post(url, json=data)
+        if response.status_code == 200:
+            result = response.json()
+            if 'data' in result:
+                if result['data'] is None:
+                    return pd.DataFrame()
+                try:
+                    tmp = json.loads(result['data'])
+                except TypeError:
+                    system_log.error(get_traceback_message())
+                    tmp = result
+                data = tmp['data']
+                if isinstance(data, list):
+                    rsp_str = data
+                elif 'last_tradeday' in data:
+                    df = pd.DataFrame(columns=data['fields'].split(','), data=data['items'])
+                    df.set_index(['trading_day', 'stock_code'], inplace=True)
+                    return df
+                elif 'rows' in data:
+                    rsp_str = data['rows']
+                elif 'data' in data:
+                    if 'last_tradeday' in data['data']:
+                        df = pd.DataFrame(columns=data['data']['fields'].split(','), data=data['data']['items'])
+                        df.set_index(['trading_day', 'stock_code'], inplace=True)
+                        return df
+                    else:
+                        rsp_str = data['data']
+                else:
+                    return pd.DataFrame()
+                return pd.DataFrame(rsp_str)
+            else:
+                return pd.DataFrame()
+        else:
+            return pd.DataFrame()

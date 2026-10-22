@@ -1,0 +1,167 @@
+{
+ "retention_rule": "每族至多 3 个样本，pyc 互不相同；文件名 = md5(pyc|family)[:16] + \"_\" + family + \".py\"",
+ "authoritative_record": "rounds/round4/_out/mutation_results.jsonl 与 mutation_results_extra.jsonl（逐条含 pyc/family/status/units/site）",
+ "total_miss_rows": 1219,
+ "per_family_miss": {
+  "d_any_int_to_bool": 78,
+  "d_int_to_bool": 163,
+  "e_str_content": 1,
+  "g_rename_local": 34,
+  "h_arg_swap": 1,
+  "h_param_order": 306,
+  "i_int_to_float": 222,
+  "j_func_docstring": 216,
+  "n_dead_code": 166,
+  "u_ann_param": 4,
+  "w_global_stmt": 28
+ },
+ "kept": [
+  {
+   "family": "d_any_int_to_bool",
+   "file": "_probes/miss/miss_04387e166d3bcc88_d_any_int_to_bool.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round8\\r8_06_augassign_ops.pyc"
+  },
+  {
+   "family": "d_any_int_to_bool",
+   "file": "_probes/miss/miss_04e7420cb18ae076_d_any_int_to_bool.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/check_strategy.pyc"
+  },
+  {
+   "family": "d_any_int_to_bool",
+   "file": "_probes/miss/miss_08f16e3350836e4d_d_any_int_to_bool.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/zt_api.pyc"
+  },
+  {
+   "family": "d_int_to_bool",
+   "file": "_probes/miss/miss_00350ca18aab2256_d_int_to_bool.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/op_station.pyc"
+  },
+  {
+   "family": "d_int_to_bool",
+   "file": "_probes/miss/miss_0082229ee98ea4b7_d_int_to_bool.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/user_error.pyc"
+  },
+  {
+   "family": "d_int_to_bool",
+   "file": "_probes/miss/miss_00efda34f1b87877_d_int_to_bool.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc"
+  },
+  {
+   "family": "e_str_content",
+   "file": "_probes/miss/miss_9277a3ac5ad79508_e_str_content.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc"
+  },
+  {
+   "family": "g_rename_local",
+   "file": "_probes/miss/miss_0930e5aba699efd6_g_rename_local.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/empty_api_trade.pyc"
+  },
+  {
+   "family": "g_rename_local",
+   "file": "_probes/miss/miss_0f260367b9ba688a_g_rename_local.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/__init__.pyc"
+  },
+  {
+   "family": "g_rename_local",
+   "file": "_probes/miss/miss_11c0475245a02c66_g_rename_local.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_history_quote.pyc"
+  },
+  {
+   "family": "h_arg_swap",
+   "file": "_probes/miss/miss_b83fd86318abb63e_h_arg_swap.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utils.pyc"
+  },
+  {
+   "family": "h_param_order",
+   "file": "_probes/miss/miss_00f6b73df71e722b_h_param_order.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/itn.pyc"
+  },
+  {
+   "family": "h_param_order",
+   "file": "_probes/miss/miss_01b33eb21e166907_h_param_order.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/arg_checker.pyc"
+  },
+  {
+   "family": "h_param_order",
+   "file": "_probes/miss/miss_01bffe614b2716d7_h_param_order.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc"
+  },
+  {
+   "family": "i_int_to_float",
+   "file": "_probes/miss/miss_00e2b6adae6751a3_i_int_to_float.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/record_store.pyc"
+  },
+  {
+   "family": "i_int_to_float",
+   "file": "_probes/miss/miss_011b202ef1da91b8_i_int_to_float.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/data_proxy.pyc"
+  },
+  {
+   "family": "i_int_to_float",
+   "file": "_probes/miss/miss_01361f034180038a_i_int_to_float.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/enumerate.pyc"
+  },
+  {
+   "family": "j_func_docstring",
+   "file": "_probes/miss/miss_016ed79d8a8ec55e_j_func_docstring.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/const.pyc"
+  },
+  {
+   "family": "j_func_docstring",
+   "file": "_probes/miss/miss_0194e878ab73148c_j_func_docstring.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/profiler_func.pyc"
+  },
+  {
+   "family": "j_func_docstring",
+   "file": "_probes/miss/miss_01bbc14b343a7bb6_j_func_docstring.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc"
+  },
+  {
+   "family": "n_dead_code",
+   "file": "_probes/miss/miss_0012a3a88b6d886b_n_dead_code.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/api.pyc"
+  },
+  {
+   "family": "n_dead_code",
+   "file": "_probes/miss/miss_00201a1c98ba2a7c_n_dead_code.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/main.pyc"
+  },
+  {
+   "family": "n_dead_code",
+   "file": "_probes/miss/miss_00418d76b393a70e_n_dead_code.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/get_stock_status.pyc"
+  },
+  {
+   "family": "u_ann_param",
+   "file": "_probes/miss/miss_22d89e707ef583a4_u_ann_param.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc"
+  },
+  {
+   "family": "u_ann_param",
+   "file": "_probes/miss/miss_4bc4d6bbd43453c7_u_ann_param.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc"
+  },
+  {
+   "family": "u_ann_param",
+   "file": "_probes/miss/miss_92b75deaa3452fad_u_ann_param.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/crypto_utils.pyc"
+  },
+  {
+   "family": "w_global_stmt",
+   "file": "_probes/miss/miss_037bbccb441da949_w_global_stmt.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/enums.pyc"
+  },
+  {
+   "family": "w_global_stmt",
+   "file": "_probes/miss/miss_0b9bc4a8736e0482_w_global_stmt.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/const.pyc"
+  },
+  {
+   "family": "w_global_stmt",
+   "file": "_probes/miss/miss_1a801a23e392316c_w_global_stmt.py",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/pycompatibility.pyc"
+  }
+ ],
+ "dropped_count": 1190,
+ "removed_files": 1190
+}

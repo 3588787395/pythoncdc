@@ -1,0 +1,265 @@
+{
+ "corpus_features": {
+  "multi_func": 317,
+  "module_stmt": 214,
+  "class_level": 231,
+  "closure": 18,
+  "decorator": 159,
+  "multi_codeobj": 348
+ },
+ "families": {},
+ "scopes": {
+  "ALL": {
+   "a_num_int": {
+    "mutated": 222,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "b_cmp_polarity": {
+    "mutated": 148,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "c_del_assign": {
+    "mutated": 347,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "d_int_to_bool": {
+    "mutated": 163,
+    "missed": 163,
+    "miss_rate": 1.0
+   },
+   "e_str_content": {
+    "mutated": 334,
+    "missed": 1,
+    "miss_rate": 0.003
+   },
+   "f_stmt_swap": {
+    "mutated": 213,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "g_rename_local": {
+    "mutated": 336,
+    "missed": 34,
+    "miss_rate": 0.1012
+   },
+   "h_arg_swap": {
+    "mutated": 283,
+    "missed": 1,
+    "miss_rate": 0.0035
+   }
+  },
+  "multi_func": {
+   "a_num_int": {
+    "mutated": 200,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "b_cmp_polarity": {
+    "mutated": 145,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "c_del_assign": {
+    "mutated": 298,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "d_int_to_bool": {
+    "mutated": 149,
+    "missed": 149,
+    "miss_rate": 1.0
+   },
+   "e_str_content": {
+    "mutated": 284,
+    "missed": 1,
+    "miss_rate": 0.0035
+   },
+   "f_stmt_swap": {
+    "mutated": 184,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "g_rename_local": {
+    "mutated": 315,
+    "missed": 33,
+    "miss_rate": 0.1048
+   },
+   "h_arg_swap": {
+    "mutated": 262,
+    "missed": 1,
+    "miss_rate": 0.0038
+   }
+  },
+  "module_stmt": {
+   "a_num_int": {
+    "mutated": 138,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "b_cmp_polarity": {
+    "mutated": 87,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "c_del_assign": {
+    "mutated": 189,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "d_int_to_bool": {
+    "mutated": 111,
+    "missed": 111,
+    "miss_rate": 1.0
+   },
+   "e_str_content": {
+    "mutated": 187,
+    "missed": 1,
+    "miss_rate": 0.0053
+   },
+   "f_stmt_swap": {
+    "mutated": 133,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "g_rename_local": {
+    "mutated": 163,
+    "missed": 9,
+    "miss_rate": 0.0552
+   },
+   "h_arg_swap": {
+    "mutated": 146,
+    "missed": 0,
+    "miss_rate": 0.0
+   }
+  },
+  "class_level": {
+   "a_num_int": {
+    "mutated": 132,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "b_cmp_polarity": {
+    "mutated": 91,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "c_del_assign": {
+    "mutated": 217,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "d_int_to_bool": {
+    "mutated": 96,
+    "missed": 96,
+    "miss_rate": 1.0
+   },
+   "e_str_content": {
+    "mutated": 207,
+    "missed": 1,
+    "miss_rate": 0.0048
+   },
+   "f_stmt_swap": {
+    "mutated": 134,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "g_rename_local": {
+    "mutated": 226,
+    "missed": 30,
+    "miss_rate": 0.1327
+   },
+   "h_arg_swap": {
+    "mutated": 180,
+    "missed": 0,
+    "miss_rate": 0.0
+   }
+  },
+  "closure": {
+   "a_num_int": {
+    "mutated": 17,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "b_cmp_polarity": {
+    "mutated": 17,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "c_del_assign": {
+    "mutated": 18,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "d_int_to_bool": {
+    "mutated": 17,
+    "missed": 17,
+    "miss_rate": 1.0
+   },
+   "e_str_content": {
+    "mutated": 18,
+    "missed": 1,
+    "miss_rate": 0.0556
+   },
+   "f_stmt_swap": {
+    "mutated": 17,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "g_rename_local": {
+    "mutated": 18,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "h_arg_swap": {
+    "mutated": 18,
+    "missed": 0,
+    "miss_rate": 0.0
+   }
+  },
+  "decorator": {
+   "a_num_int": {
+    "mutated": 113,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "b_cmp_polarity": {
+    "mutated": 85,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "c_del_assign": {
+    "mutated": 154,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "d_int_to_bool": {
+    "mutated": 86,
+    "missed": 86,
+    "miss_rate": 1.0
+   },
+   "e_str_content": {
+    "mutated": 149,
+    "missed": 1,
+    "miss_rate": 0.0067
+   },
+   "f_stmt_swap": {
+    "mutated": 103,
+    "missed": 0,
+    "miss_rate": 0.0
+   },
+   "g_rename_local": {
+    "mutated": 159,
+    "missed": 10,
+    "miss_rate": 0.0629
+   },
+   "h_arg_swap": {
+    "mutated": 145,
+    "missed": 0,
+    "miss_rate": 0.0
+   }
+  }
+ }
+}

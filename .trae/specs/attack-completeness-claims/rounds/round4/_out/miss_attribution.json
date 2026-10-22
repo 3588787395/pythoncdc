@@ -1,0 +1,3801 @@
+{
+ "attribution": {
+  "d_int_to_bool": {
+   "COMPARATOR-BLIND": 154,
+   "PIPELINE-DEFECT": 9
+  },
+  "g_rename_local": {
+   "OUT-OF-INSTRUCTION": 30,
+   "NORMALIZED-AWAY": 4
+  },
+  "h_arg_swap": {
+   "NORMALIZED-AWAY": 1
+  },
+  "e_str_content": {
+   "NORMALIZED-AWAY": 1
+  }
+ },
+ "rows": [
+  {
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round10\\r10_21_fin_loopctrl.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r1:rec1_probes_rec1_combos2.json",
+   "status": "success",
+   "units": [
+    4,
+    4
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_952a9c82de9339c5_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_952a9c82de9339c5_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\m01_docstring_order.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r1:rec1_probes_rec1_rowsA2.json",
+   "status": "success",
+   "units": [
+    5,
+    5
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_3c97d8e84d0f75c5_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_3c97d8e84d0f75c5_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/market_time.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_a.json",
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_33dfaab6b08a1a66_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_33dfaab6b08a1a66_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/market_time.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:_shard7_a.json",
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_315f2f91341bcbd5_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_315f2f91341bcbd5_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_a.json",
+   "status": "success",
+   "units": [
+    79,
+    79
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_0e375e69093aee59_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "PIPELINE-DEFECT",
+   "judge_same": false,
+   "typesens_same": null,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_0e375e69093aee59_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_priority.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_b.json",
+   "status": "success",
+   "units": [
+    1,
+    1
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_59021d3fb9813ebd_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_59021d3fb9813ebd_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/pboxAccount_jupyterhub.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_b.json",
+   "status": "success",
+   "units": [
+    4,
+    4
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_9d20401c735d6e85_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_9d20401c735d6e85_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeOptionAccount.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_b.json",
+   "status": "success",
+   "units": [
+    38,
+    38
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_76b8dc0f6c5c2791_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_76b8dc0f6c5c2791_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    5,
+    5
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_043f438ac1692e69_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_043f438ac1692e69_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/arg_checker.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    49,
+    49
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_c47fc1e870dbf7fa_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_c47fc1e870dbf7fa_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/config.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    2,
+    2
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_ad64a22b9ef5fbf8_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_ad64a22b9ef5fbf8_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/local_finance.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    21,
+    21
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_11484d66bdf6f5ae_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "PIPELINE-DEFECT",
+   "judge_same": false,
+   "typesens_same": null,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_11484d66bdf6f5ae_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/enumerate.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    21,
+    21
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_95b80f0592a66f7f_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_95b80f0592a66f7f_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/graph.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    40,
+    40
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_80c7d811643cad04_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_80c7d811643cad04_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    30,
+    30
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_32e424516e06f570_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_32e424516e06f570_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connector.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    13,
+    13
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_e328fc3e6a3aff14_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_e328fc3e6a3aff14_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/common.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    3,
+    3
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_f166019384f9164b_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_f166019384f9164b_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/jq_trans_module.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    65,
+    65
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_e43bac212a977f39_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_e43bac212a977f39_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/zt_api.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    4,
+    4
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_f9827a8acd52fad1_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_f9827a8acd52fad1_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/backtest_info_utils.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_72fef4a17acea9dd_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_72fef4a17acea9dd_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/crypto_utils.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    9,
+    9
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_5935f58af368e053_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_5935f58af368e053_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utils.pyc",
+   "family": "h_arg_swap",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    4,
+    4
+   ],
+   "site": "swapped two call args",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_b83fd86318abb63e_h_arg_swap.py",
+   "cls": "MISS",
+   "attribution": "NORMALIZED-AWAY",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": false,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_b83fd86318abb63e_h_arg_swap.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/strategy_info_utils.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    30,
+    30
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_4839713f84ed1c71_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_4839713f84ed1c71_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/core/asset.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    62,
+    62
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_5426bf7df86faa38_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_5426bf7df86faa38_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/core/data_manager.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    11,
+    11
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_aaf8f5eeffec021f_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_aaf8f5eeffec021f_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_basic_data.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    14,
+    14
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_a532c9d7865b87aa_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_a532c9d7865b87aa_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/enumerate.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    14,
+    14
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_f5bb3aee3145ca3d_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_f5bb3aee3145ca3d_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_95d5199abbd9b32d_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_95d5199abbd9b32d_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/history_data_source.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    19,
+    19
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_d870f60bf1bd8ce9_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_d870f60bf1bd8ce9_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_bf8c661729fa7a01_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_bf8c661729fa7a01_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/iqdata_db_base.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    27,
+    27
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_382a7fdc6d307d3a_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "NORMALIZED-AWAY",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": false,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_382a7fdc6d307d3a_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    43,
+    43
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_acb505afda125410_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_acb505afda125410_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    26,
+    26
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_1c8fc4f92be1f4be_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_1c8fc4f92be1f4be_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    16,
+    16
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_8598caa2508a0c3a_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_8598caa2508a0c3a_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_c7559109860b2c77_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_c7559109860b2c77_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/calexrights_func.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    8,
+    8
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_49f5e9e83c339264_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_49f5e9e83c339264_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/trade_schedule.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    4,
+    4
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_ad838bf08d1be30c_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_ad838bf08d1be30c_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/plugin_manager.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_79ea2ac0e4080a35_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_79ea2ac0e4080a35_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    20,
+    20
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_4ac814adbd80b572_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "NORMALIZED-AWAY",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": false,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_4ac814adbd80b572_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    14,
+    14
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_d45fa514b199a07b_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_d45fa514b199a07b_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/base_api.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_f263479c9427944d_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_f263479c9427944d_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    63,
+    63
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_ada47eaba9de634c_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_ada47eaba9de634c_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_trade.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    4,
+    4
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_4bcdb5883df0ca56_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_4bcdb5883df0ca56_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    24,
+    24
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_586db5dde7e366c2_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_586db5dde7e366c2_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api_backtest.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    2,
+    2
+   ],
+   "site": "renamed local 'sids' -> 'sids_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_b3c5a4c16b9dd7d9_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_b3c5a4c16b9dd7d9_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    16,
+    16
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_36178aa3a9faddbb_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_36178aa3a9faddbb_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    132,
+    132
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_dedda8690e4753e0_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_dedda8690e4753e0_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_quotation_func.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    8,
+    8
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_68025bcbb1d100d8_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_68025bcbb1d100d8_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_be69b7e3ea6e3b93_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_be69b7e3ea6e3b93_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    13,
+    13
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_b02bcb034d43dffb_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "PIPELINE-DEFECT",
+   "judge_same": false,
+   "typesens_same": null,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_b02bcb034d43dffb_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/commission.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    25,
+    25
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_ceb22f727bd6e4e2_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_ceb22f727bd6e4e2_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_history_save/__init__.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_71beb2dba41fb105_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_71beb2dba41fb105_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    43,
+    43
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_dd1fb8a907eb0943_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "PIPELINE-DEFECT",
+   "judge_same": false,
+   "typesens_same": null,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_dd1fb8a907eb0943_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_8007cb636b447aec_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_8007cb636b447aec_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_931289c428aa4d7d_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_931289c428aa4d7d_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_future_broker.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_1b86e083897bd3c0_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_1b86e083897bd3c0_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/arg_checker.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    43,
+    43
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_34f97f072ceccbf8_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_34f97f072ceccbf8_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/trade_schedule.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    9,
+    9
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_d851da8568c323c8_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_d851da8568c323c8_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/enums.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    4,
+    4
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s0\\m_c97150dbd2d72b8f_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_c97150dbd2d72b8f_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round8\\r8_08_raise_forms.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r1:rec1_probes_rec1_combos2.json",
+   "status": "success",
+   "units": [
+    9,
+    9
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_dc945927ef7b3d5c_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_dc945927ef7b3d5c_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round8\\r8_04_delete_forms.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r1:rec1_probes_rec1_extra.json",
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_5053d519a0a6e136_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_5053d519a0a6e136_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round7\\r7_07_ternary_nest.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r1:rec1_probes_rec1_rowsA1.json",
+   "status": "success",
+   "units": [
+    7,
+    7
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_07141440467b1046_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_07141440467b1046_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round10\\rv10_32_augassign_variant.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r1:rec1_probes_rec1_rowsA2.json",
+   "status": "success",
+   "units": [
+    8,
+    8
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_490e23b4dc987cf7_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_490e23b4dc987cf7_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\m08_module_stmts.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r1:rec1_probes_rec1_rowsA2.json",
+   "status": "success",
+   "units": [
+    2,
+    2
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_537e8ada090395ae_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_537e8ada090395ae_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_a.json",
+   "status": "success",
+   "units": [
+    29,
+    29
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_d1e1bbe0fdc3a4df_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_d1e1bbe0fdc3a4df_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/tradingday_calendar.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_a.json",
+   "status": "success",
+   "units": [
+    31,
+    31
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_101c84b6a0526dd2_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_101c84b6a0526dd2_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_a.json",
+   "status": "success",
+   "units": [
+    153,
+    153
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_694f63c0154992be_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_694f63c0154992be_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_b.json",
+   "status": "success",
+   "units": [
+    64,
+    64
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_c28d0c79a88fce80_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_c28d0c79a88fce80_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/itn.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_b.json",
+   "status": "success",
+   "units": [
+    14,
+    14
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_c830e1e416a7e827_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_c830e1e416a7e827_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_b.json",
+   "status": "success",
+   "units": [
+    137,
+    137
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_cd34bb71457ba055_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_cd34bb71457ba055_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/request_data_transform.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_b.json",
+   "status": "success",
+   "units": [
+    265,
+    265
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_1e6d6655f697764c_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_1e6d6655f697764c_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    64,
+    64
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_792bca8a0634e633_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_792bca8a0634e633_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/main.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    34,
+    34
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_65332fe36bde829c_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_65332fe36bde829c_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/api_data.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    15,
+    15
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_147749bdcb07fc0c_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_147749bdcb07fc0c_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    32,
+    32
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_8b40051ecdac64cd_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "PIPELINE-DEFECT",
+   "judge_same": false,
+   "typesens_same": null,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_8b40051ecdac64cd_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/pandas.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    2,
+    2
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_ac8304ba6cd8cf83_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_ac8304ba6cd8cf83_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/profiler_func.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    17,
+    17
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_5419402a466aea69_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_5419402a466aea69_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/tools.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_f8205dbce4434da2_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_f8205dbce4434da2_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    8,
+    8
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_1db0964a6a418acc_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "PIPELINE-DEFECT",
+   "judge_same": false,
+   "typesens_same": null,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_1db0964a6a418acc_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/datetime_func.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    27,
+    27
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_d9fd13f73c93f6de_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_d9fd13f73c93f6de_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/resource_utils.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    2,
+    2
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_294228ccbfd51f7d_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_294228ccbfd51f7d_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/t2_utils.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    2,
+    2
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_629e9646025d3c46_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_629e9646025d3c46_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/user_info_utils.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    9,
+    9
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_eb6bee52ec65e75b_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "PIPELINE-DEFECT",
+   "judge_same": false,
+   "typesens_same": null,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_eb6bee52ec65e75b_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    28,
+    28
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_9422d2e284702a3a_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_9422d2e284702a3a_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_history_quote.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    4,
+    4
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_11c0475245a02c66_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_11c0475245a02c66_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/stock_industry_storage.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_b9a5dc5bbad98994_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_b9a5dc5bbad98994_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/data_info_manager.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_2e459439cd0e0458_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_2e459439cd0e0458_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/gtn_client.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    11,
+    11
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_96309266a3e75a71_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_96309266a3e75a71_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_7ff985662396de60_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_7ff985662396de60_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_base.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    34,
+    34
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_253a9d1e829d22c2_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_253a9d1e829d22c2_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_0f260367b9ba688a_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_0f260367b9ba688a_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    8,
+    8
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_387c9718cb03c26f_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_387c9718cb03c26f_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_3b346b97fda15782_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_3b346b97fda15782_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/enumerate.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    5,
+    5
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_59e757cfdb66909f_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_59e757cfdb66909f_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_quote.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    4,
+    4
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_83e4b70fa17dbe61_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_83e4b70fa17dbe61_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source_api.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    9,
+    9
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_f39ddc03fe0c12d5_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_f39ddc03fe0c12d5_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/api_realquote.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    13,
+    13
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_973b96d067a108a2_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_973b96d067a108a2_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/arg_checker.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    39,
+    39
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_4904ec4a4171e46c_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_4904ec4a4171e46c_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    29,
+    29
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_2dc1b09a30f34170_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_2dc1b09a30f34170_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/profiler_func.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    15,
+    15
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_be092b4dbeaef6a7_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_be092b4dbeaef6a7_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/asset.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    77,
+    77
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_97046e904624112f_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_97046e904624112f_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/engine/engine.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    68,
+    68
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_962fd2739a74c3f8_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_962fd2739a74c3f8_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/data_cache.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    13,
+    13
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_b313ddf8c00f07a1_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_b313ddf8c00f07a1_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/empty_api_backtest.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    62,
+    62
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_fa68ae00a1e1cf8b_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_fa68ae00a1e1cf8b_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/empty_api_backtest.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    62,
+    62
+   ],
+   "site": "renamed local 'etf_code' -> 'etf_code_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_b43f99272a6403b9_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "NORMALIZED-AWAY",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": false,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_b43f99272a6403b9_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/const.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    9,
+    9
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_2f706e5e524b4282_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_2f706e5e524b4282_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    19,
+    19
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_123c995288377bd4_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_123c995288377bd4_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/other_api.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    12,
+    12
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_0326aba0ce7aa7d0_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_0326aba0ce7aa7d0_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_bar_storage.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    9,
+    9
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_fe674c411ca9ff2c_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_fe674c411ca9ff2c_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_1c9f57a3da085fc0_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_1c9f57a3da085fc0_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/api_stock.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    11,
+    11
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_78004ccfa5d4b101_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_78004ccfa5d4b101_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_d7deee4d3c315556_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_d7deee4d3c315556_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/slippage.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    19,
+    19
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_26a782069810f003_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_26a782069810f003_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_1970b2be81fc7371_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_1970b2be81fc7371_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    15,
+    15
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_2312a9af2e321e9f_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_2312a9af2e321e9f_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_progress/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_94147f514b772b2e_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_94147f514b772b2e_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    15,
+    15
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_9f38830fade01001_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_9f38830fade01001_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/base_validator.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_b952b6f924dc1aa2_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_b952b6f924dc1aa2_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/api.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    57,
+    57
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_82a95d37c78d21a6_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_82a95d37c78d21a6_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    71,
+    71
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_8bc598573bb33298_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_8bc598573bb33298_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_hks_broker.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    9,
+    9
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_bd980c06ef338154_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_bd980c06ef338154_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    128,
+    128
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_06105c02d7869b58_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_06105c02d7869b58_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/datetime_func.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    17,
+    17
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_589c0aaaabed15a8_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_589c0aaaabed15a8_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    18,
+    18
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_f9160ba5f7d4f2db_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_f9160ba5f7d4f2db_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc",
+   "family": "e_str_content",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    18,
+    18
+   ],
+   "site": "str literal 'USER_STRATEGY_NAME' -> 'USER_STRATEGY_NAMEX'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_9277a3ac5ad79508_e_str_content.py",
+   "cls": "MISS",
+   "attribution": "NORMALIZED-AWAY",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": false,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_9277a3ac5ad79508_e_str_content.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/aes_encrypt.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    7,
+    7
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_a6692c9a5beaf923_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_a6692c9a5beaf923_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/convert.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    8,
+    8
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s1\\m_68923f945a98e6be_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_68923f945a98e6be_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:\\Downloads\\pythoncdc-main\\test_repros\\round8\\r8_06_augassign_ops.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r1:rec1_probes_rec1_extra2.json",
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_1612876e83f28ca8_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_1612876e83f28ca8_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_a.json",
+   "status": "success",
+   "units": [
+    66,
+    66
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_7aee9348673f6e35_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_7aee9348673f6e35_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_param.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_a.json",
+   "status": "success",
+   "units": [
+    16,
+    16
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_52731c3fe627bfa7_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_52731c3fe627bfa7_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/op_station.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_a.json",
+   "status": "success",
+   "units": [
+    21,
+    21
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_00350ca18aab2256_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_00350ca18aab2256_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/user_error.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_a.json",
+   "status": "success",
+   "units": [
+    4,
+    4
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_0082229ee98ea4b7_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_0082229ee98ea4b7_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_a.json",
+   "status": "success",
+   "units": [
+    92,
+    92
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_7c1561af51fdc605_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_7c1561af51fdc605_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/dockerspawner/dockerspawner.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_a.json",
+   "status": "success",
+   "units": [
+    26,
+    26
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_032ff231debb797b_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_032ff231debb797b_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_b.json",
+   "status": "success",
+   "units": [
+    27,
+    27
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_ca7f6b6765af9aa1_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_ca7f6b6765af9aa1_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_engine.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_b.json",
+   "status": "success",
+   "units": [
+    19,
+    19
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_6e94eccef0dceee1_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_6e94eccef0dceee1_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_b.json",
+   "status": "success",
+   "units": [
+    24,
+    24
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_c3667adb18fb4cc7_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_c3667adb18fb4cc7_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeFutureAccount.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:_shard7_b.json",
+   "status": "success",
+   "units": [
+    38,
+    38
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_d5cfa26bb2455531_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_d5cfa26bb2455531_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/__init__.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    2,
+    2
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_d7ca960240a54f69_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_d7ca960240a54f69_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/check_strategy.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    2,
+    2
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_9629955658c81504_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_9629955658c81504_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/const.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    44,
+    44
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_2accdc48946b71ed_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_2accdc48946b71ed_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/const.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    1,
+    1
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_768a86e88895be15_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_768a86e88895be15_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/history_bar_storage.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    4,
+    4
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_d4e1245bde2ff3cb_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_d4e1245bde2ff3cb_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/instance.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    34,
+    34
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_836b20db165f5b21_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_836b20db165f5b21_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    58,
+    58
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_00efda34f1b87877_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_00efda34f1b87877_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_schedule.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_e4410996834c7abe_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_e4410996834c7abe_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard0_report_new.json",
+   "status": "success",
+   "units": [
+    24,
+    24
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_365c07b07afb0369_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_365c07b07afb0369_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/fileio_utils.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    15,
+    15
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_6049d3206e6f4686_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_6049d3206e6f4686_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/replace_utils.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    9,
+    9
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_1273a7790cbc2e33_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_1273a7790cbc2e33_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    41,
+    41
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_4bb95af4cb97e1f5_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "PIPELINE-DEFECT",
+   "judge_same": false,
+   "typesens_same": null,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_4bb95af4cb97e1f5_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/wrapper_utils.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    18,
+    18
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_86fad2fd5ce89f98_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_86fad2fd5ce89f98_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_real_quote.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    13,
+    13
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_3a76b40895702095_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_3a76b40895702095_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_real_quote.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard1_report_new.json",
+   "status": "success",
+   "units": [
+    13,
+    13
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_fe6f25f525da0c54_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_fe6f25f525da0c54_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/interface.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    45,
+    45
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_840737aa11a15ed8_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_840737aa11a15ed8_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/plugin_manager.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    11,
+    11
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_14bf59a5db80bba8_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_14bf59a5db80bba8_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/ibrain_client.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_7a88aed166c93984_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_7a88aed166c93984_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/history_bar_storage.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    5,
+    5
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_c6cd789b06b6e45b_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_c6cd789b06b6e45b_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_95f06d1c12c9a1fc_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_95f06d1c12c9a1fc_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_utils.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    2,
+    2
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_7ef0224b410cb4c8_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_7ef0224b410cb4c8_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/data_source_func.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    24,
+    24
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_db35a094f8ecb707_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_db35a094f8ecb707_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_bar_storage.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    5,
+    5
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_99fe499d642eeaf9_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_99fe499d642eeaf9_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_c4d552f786228083_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_c4d552f786228083_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard2_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_b18c879dfd781a1a_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_b18c879dfd781a1a_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_1c8ead83edf327ad_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_1c8ead83edf327ad_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/finance_data_source.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    19,
+    19
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_ff948232eddcf110_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_ff948232eddcf110_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    45,
+    45
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_2933daf67a16d58e_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_2933daf67a16d58e_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/base_http_client.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    8,
+    8
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_ae7ed31504238bee_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_ae7ed31504238bee_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/base_http_client.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    8,
+    8
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_d207cfdd33dfc65f_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_d207cfdd33dfc65f_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/datetime_func.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    25,
+    25
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_2bd7efc2ab0675b6_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_2bd7efc2ab0675b6_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/portfolio.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    58,
+    58
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_8b021159e54e1bee_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_8b021159e54e1bee_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/api_base.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    49,
+    49
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_afc2712115e4c110_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_afc2712115e4c110_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/const.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    38,
+    38
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_cd5111c7549b0540_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_cd5111c7549b0540_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/bar.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    85,
+    85
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_47d87af0d874cf1d_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_47d87af0d874cf1d_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/data_pager.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard3_report_new.json",
+   "status": "success",
+   "units": [
+    9,
+    9
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_6c107ea780c606d8_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_6c107ea780c606d8_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/data_proxy.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    9,
+    9
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_882ae1cc37bd10c8_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_882ae1cc37bd10c8_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/interface.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    120,
+    120
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_4f333c94af5609c0_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_4f333c94af5609c0_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/interface.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    120,
+    120
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_a85998e067758be1_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "NORMALIZED-AWAY",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": false,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_a85998e067758be1_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/empty_api_trade.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "site": "renamed local 'commission_ratio' -> 'commission_ratio_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_0930e5aba699efd6_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_0930e5aba699efd6_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_backtest.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    3,
+    3
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_e6a876c1eaec476b_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_e6a876c1eaec476b_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_backtest.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    3,
+    3
+   ],
+   "site": "renamed local 'stocks' -> 'stocks_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_3264b09e33760a56_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_3264b09e33760a56_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_backtest.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_1b7cfe48f130fe29_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_1b7cfe48f130fe29_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    8,
+    8
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_7e27308b2bda2d89_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_7e27308b2bda2d89_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/scheduler_api.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard4_report_new.json",
+   "status": "success",
+   "units": [
+    15,
+    15
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_9728e662d4d3a66b_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_9728e662d4d3a66b_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    27,
+    27
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_b22fbf3980153fc0_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_b22fbf3980153fc0_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_data_source.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    72,
+    72
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_a60e285dc36940d9_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_a60e285dc36940d9_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_debug/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_f12aece873fa7066_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_f12aece873fa7066_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/api.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    5,
+    5
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_7a753d571a2177fd_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_7a753d571a2177fd_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_8fabbd011c2e197a_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_8fabbd011c2e197a_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_progress/system_progress.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    11,
+    11
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_bed09f40b46f66e0_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_bed09f40b46f66e0_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/risk_calculation.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard5_report_new.json",
+   "status": "success",
+   "units": [
+    29,
+    29
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_0b630ffff91893fb_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_0b630ffff91893fb_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    11,
+    11
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_19604a7dc631cda2_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "PIPELINE-DEFECT",
+   "judge_same": false,
+   "typesens_same": null,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_19604a7dc631cda2_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_option_broker.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    10,
+    10
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_a297c651b3faf0f1_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_a297c651b3faf0f1_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade_account/__init__.pyc",
+   "family": "g_rename_local",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "renamed local 'self' -> 'self_mut'",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_d48f173197f25b84_g_rename_local.py",
+   "cls": "MISS",
+   "attribution": "OUT-OF-INSTRUCTION",
+   "judge_same": true,
+   "typesens_same": true,
+   "full_same": true,
+   "raw_same": true,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_d48f173197f25b84_g_rename_local.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/__init__.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    33,
+    33
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_97974dab9be953ad_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_97974dab9be953ad_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/cache_storage.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    23,
+    23
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_d7874d74ef2f5094_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_d7874d74ef2f5094_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/logger/handlers.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    17,
+    17
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_9f34883a9e897b4d_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_9f34883a9e897b4d_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    52,
+    52
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_a1c4d7d01754169d_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_a1c4d7d01754169d_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/common.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_04150f5c46ad896b_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_04150f5c46ad896b_d_int_to_bool.py"
+  },
+  {
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/common/custom_tools.pyc",
+   "family": "d_int_to_bool",
+   "tag": "r8:shard6_report_new.json",
+   "status": "success",
+   "units": [
+    6,
+    6
+   ],
+   "site": "int literal 1 -> True (type-only change)",
+   "mutated": "d:\\Temp\\opencode\\r4mut\\s2\\m_e5a310f6baa0446d_d_int_to_bool.py",
+   "cls": "MISS",
+   "attribution": "COMPARATOR-BLIND",
+   "judge_same": true,
+   "typesens_same": false,
+   "full_same": null,
+   "raw_same": null,
+   "kept": ".trae/specs/attack-completeness-claims/rounds/round4/_probes/miss/miss_e5a310f6baa0446d_d_int_to_bool.py"
+  }
+ ]
+}

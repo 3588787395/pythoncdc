@@ -1,0 +1,609 @@
+# Source Generated with Decompyle++ (Python version)
+# File: basic_data_source.pyc (Python 3.11)
+
+import os
+import collections
+from IQCommon import pandas as pd
+import numpy as np
+import six
+from math import ceil
+from datetime import datetime, date as dt_date
+from IQData import enumerate, interface
+from IQData.utils.pycompatibility import lru_cache
+from IQCommon.logger import strategy_log, system_log
+from IQData.utils.datetime_func import change_dtlist_2_intlist
+from IQData.utils.common_func import change_symbol_suffix, get_kline_time_by_asset
+from IQData.data.future_info_cn import CN_FUTURE_INFO
+from . import data_source_func
+from IQCommon.data.exrights_storage import ExrightsStorage
+from IQData.utils.datetime_func import convert_date_to_date_int
+from IQCommon.tools import endswith_transe_2to4
+from IQCommon.exception import get_traceback_message
+EMPTY_DF = pd.DataFrame()
+class BasicDataSource(interface.AbstractBasicData):
+    __doc__ = """
+    基础数据源类,继承自AbstractBasicData类,用来提供数据
+    """
+    _inited = False
+    _BasicDataSource__last_instance = (None, None)
+    def __new__(cls, data_path=''):
+        """
+        实现单例模式—参数相同时
+
+        :return value：返回单例对象
+        :type: class `~HistoryDataSource`
+        """
+        last_path, instance = cls._BasicDataSource__last_instance
+        if data_path != last_path:
+            instance = super(BasicDataSource, cls).__new__(cls)
+            cls._BasicDataSource__last_instance = (data_path, instance)
+        return instance
+    def __init__(self, data_path=''):
+        """
+        """
+        if self._inited:
+            return None
+        else:
+            self.data_path = data_path
+            self._inited = True
+            self._exrights = None
+    def get_trade_calendar(self, start_date=None, end_date=None):
+        """
+        获取指定范围的交易日
+
+        :param start_date: 开始日期
+        :type start_date : : str
+
+        :param end_date: 结束日期
+        :type end_date : : str, 回测时为回测日期，其他为当天
+
+        :return: numpy.ndarray
+        """
+        df = self.get_all_trades_days_of_df()
+        tmp_index = df.index
+        if start_date and end_date:
+            start_date = int(start_date)
+            end_date = int(end_date)
+            tmp_index = df.ix[start_date:end_date].index
+        elif start_date and end_date is None:
+            start_date = int(start_date)
+            tmp_index = df.ix[start_date:].index
+        elif start_date is None and end_date:
+            end_date = int(end_date)
+            tmp_index = df.ix[:end_date].index
+        return np.array(tmp_index)
+    def assets_to_dict(self, assets):
+        """
+        将所有的二维列表形式的Asset对象转为dict类型
+        :param assets: 所有的Asset对象
+
+        :return: dict
+        """
+        asset_dict = collections.OrderedDict()
+        for asset_type_list in assets:
+            for asset in asset_type_list:
+                asset_dict[asset.symbol] = asset
+        return asset_dict
+    def get_security_info(self, symbols=None):
+        """
+        获取标的基础信息
+
+        :param symbols: 标的代码列表，['600570.XSHG', '000001.XSHE']
+        :type: list | str
+
+        :return: {'600570.XSHG': {'symbol': '600570.XSHG', 'name': '恒生电子', 'exchange': 'XSHG', ..., },
+                  '000001.XSHE': {'symbol': '000001.XSHE', 'name': '平安银行', 'exchange': 'XSHE', ..., },
+                   ...,
+                 }
+        :type: dict
+        """
+        if isinstance(symbols, list):
+            asset_dict = self.get_dict_assets()
+            result_dict = {}
+            for symbol in symbols:
+                symbol_trans = endswith_transe_2to4(symbol)
+                asset = asset_dict.get(symbol_trans, None)
+                if asset:
+                    tmp_dict = {}
+                    for key in asset._repr_attr_list:
+                        value = getattr(asset, key, None)
+                        tmp_dict[key] = value
+                    result_dict[symbol] = tmp_dict
+                    continue
+                result_dict[symbol] = {}
+            return result_dict
+        else:
+            return self.get_security_info_lru(symbols)
+    @lru_cache(None)
+    def get_security_info_lru(self, symbols=None):
+        """
+        获取标的基础信息
+
+        :param symbols: 标的代码
+        :type: None|str
+
+        :return: {'600570.XSHG': {'symbol': '600570.XSHG', 'name': '恒生电子', 'exchange': 'XSHG', ..., },
+                  '000001.XSHE': {'symbol': '000001.XSHE', 'name': '平安银行', 'exchange': 'XSHE', ..., },
+                   ...,
+                 }
+        :type: dict
+        """
+        asset_dict = self.get_dict_assets()
+        result_dict = {}
+        if symbols:
+            symbol_trans = endswith_transe_2to4(symbols)
+            asset = asset_dict.get(symbol_trans, None)
+            if asset:
+                tmp_dict = {}
+                for key in asset._repr_attr_list:
+                    value = getattr(asset, key, None)
+                    tmp_dict[key] = value
+                result_dict[symbols] = tmp_dict
+            else:
+                result_dict[symbols] = {}
+        else:
+            tmp_dict = {}
+            for symbol, asset in asset_dict.items():
+                for key in asset._repr_attr_list:
+                    value = getattr(asset, key, None)
+                    tmp_dict[key] = value
+                result_dict[symbol] = tmp_dict
+        return result_dict
+    def get_index_stocks(self, symbol, query_date=None):
+        """
+        获取指定指数成分股
+        :param symbol: 指数代码，如'000300.XBHS'
+        :type: str
+
+        :param query_date: 查询日期，格式：20180101, query_date为None时，获取最新的指数数据
+        :type: str
+
+        :return: 股票代码列表
+        :type: list
+        """
+        return data_source_func.dsf_get_index_stocks(symbol, query_date)
+    def get_industry_stocks(self, symbol, query_date=None):
+        """
+        获取行业包含股票
+        :param symbol: 行业代码，如'A01000.XBHS'
+        :type: str
+
+        :param query_date: 查询日期，格式：20180101, query_date为None时，返回最新内容
+        :type: str
+
+        :return: 股票代码列表
+        :type: list
+        """
+        return data_source_func.dsf_get_industry_stocks(symbol, query_date)
+    def get_block_stocks(self, symbol, query_date=None):
+        """
+        获取板块所包含股票
+        :param symbol: 板块代码，如'DY1172.XBHS'
+        :type: str
+
+        :param query_date: 查询日期，格式：20180101, query_date为None时，返回最新内容
+        :type: str
+
+        :return: 股票代码列表
+        :type: list
+        """
+        return data_source_func.dsf_get_block_stocks(symbol, query_date)
+    def get_stock_blocks(self, symbol, query_date=None):
+        """
+        获取股票所属板块
+        :param symbol: 获取股票所属板块
+        :type: str
+
+        :param query_date: query_date: 查询日期，格式：20180101, query_date为None时，返回最新内容
+        :type: str
+
+        :return: {'DY': [['DY1172.XBHS', '浙江板块']],
+                   'GN': [['003596.XBHS', '融资融券'],
+                         ['003631.XBHS', '转融券标的'],
+                         ['003637.XBHS', '互联网金融']]
+                   }
+        :type: dict
+        """
+        symbol = change_symbol_suffix(symbol)
+        return data_source_func.dsf_get_stock_blocks(symbol, query_date)
+    def get_trading_calendar(self, start_date=None, end_date=None):
+        """
+        获取交易日历
+        :return value: 所有交易日
+        :type: datetime of list
+        """
+        return data_source_func.dsf_get_trading_dates_storage(self.data_path).get_trading_calendar(start_date, end_date)
+    def _get_all_trading_dates_of_series(self):
+        """
+        获取交易日历(series格式)，用于查询时间段时切片(对象内部使用)
+        :return value: 所有交易日
+        :type: datetime of list
+        """
+        _all_trading_dates = self.get_trading_calendar()
+        _all_trading_dates_of_series = pd.Series(np.arange(len(_all_trading_dates)), index=_all_trading_dates)
+        return _all_trading_dates_of_series
+    @property
+    def calendar_list(self):
+        if not hasattr(self, '_calendar_list'):
+            self._calendar_list = pd.to_datetime(self.get_trading_calendar())
+        return self._calendar_list
+    @lru_cache(1000)
+    def get_pre_date(self, bar_count, cur_date, frequency, trading_time=''):
+        """
+        根据切片数量，当前时间，以及计算频率，获取开始时间点(对象内部使用)
+        :param bar_count: 切片数量
+        :type bar_count: : int
+
+        :param cur_date: 查询时间
+        :type cur_date: : datetime.date
+
+        :param frequency: 周期频率，`1d` 表示日周期, `1m` 表示分钟周期
+        :type frequency: : str
+
+        :return value: 数据存储类对象
+        :type: HistoryBarStorage
+
+        """
+        if trading_time:
+            if isinstance(cur_date, datetime):
+                min_datetime = int(datetime.strftime(cur_date, '%Y%m%d')) * 10000 + 800
+                _df_nan_data, _ = get_kline_time_by_asset(frequency, min_datetime, trading_time)
+                length = len(_df_nan_data[_df_nan_data['datetime'] > min_datetime])
+                if frequency[-1] == 'm':
+                    multi = 1 / length * int(frequency[:-1])
+                else:
+                    multi = 1
+        elif frequency == enumerate.Frequency.DAILY.value:
+            multi = 1
+        elif frequency == enumerate.Frequency.MINUTE.value:
+            multi = 0.004166666666666667
+        elif frequency == enumerate.Frequency.TICK.value:
+            multi = 0.00020833333333333332
+        elif frequency == '5m':
+            multi = 0.020833333333333332
+        elif frequency == '15m':
+            multi = 0.0625
+        elif frequency == '30m':
+            multi = 0.125
+        elif frequency == '60m':
+            multi = 0.25
+        elif frequency == '120m':
+            multi = 0.5
+        else:
+            multi = 1
+        pre_date_count = ceil(bar_count * multi)
+        calendar = self.calendar_list
+        i = calendar.searchsorted(cur_date) - pre_date_count
+        if i >= len(calendar):
+            return calendar[-1]
+        elif i < 0:
+            return calendar[0]
+        else:
+            return calendar[i]
+    def get_all_trades_days_of_df(self):
+        """
+        获取交易日历(dataframe)
+        :return value: 所有交易日,索引日期格式为intlist
+        :type: dataframe
+        """
+        df = self._get_all_trading_dates_of_series()
+        df.index = change_dtlist_2_intlist(df.index, enumerate.Frequency.DAILY.value)
+        return df
+    def get_all_trades_days(self):
+        """
+        获取所有交易日
+        :return value: 所有交易日
+        :type: numpy.ndarray(int)
+        """
+        df = self.get_all_trades_days_of_df()
+        return np.array(df.index)
+    def get_trade_days(self, start_date=None, end_date=None, count=None):
+        """
+        获取指定范围的交易日
+
+        :param start_date: 开始日期
+        :type start_date : : str
+
+        :param end_date: 结束日期
+        :type end_date : : str, 回测时为回测日期，其他为当天
+
+        :param count: 数量, 与 start_date，end_date 二选一, 不可同时使用，
+        提供的组合有：[(start_date, end_date), (start_date, count), (end_date, count)]
+        与end_date搭配使用时必须大于 0. 表示取 end_date 往前的 count 个交易日，包含 end_date 当天
+
+        :return: numpy.ndarray
+        """
+        df = self.get_all_trades_days_of_df()
+        tmp_index = df.index
+        if start_date and end_date:
+            start_date = int(start_date)
+            end_date = int(end_date)
+            tmp_index = df.ix[start_date:end_date].index
+        elif start_date and count is not None:
+            start_date = int(start_date)
+            count = int(count)
+            tmp_df = df.ix[start_date:]
+            if len(tmp_df) > count:
+                tmp_index = tmp_df.iloc[:count].index
+                if start_date in tmp_index:
+                    if count == 0:
+                        tmp_index = [start_date]
+                    else:
+                        tmp_index = tmp_index[:]
+                elif count == 0:
+                    tmp_index = [tmp_index[0]]
+                else:
+                    tmp_index = tmp_index[:]
+            else:
+                tmp_index = tmp_df.index
+        elif end_date and count is not None:
+            end_date = int(end_date)
+            count = int(count)
+            tmp_df = df.ix[:end_date]
+            if len(tmp_df) > count:
+                tmp_index = tmp_df.iloc[count * -1:].index
+                if end_date in tmp_index:
+                    if count == 0:
+                        tmp_index = [end_date]
+                    else:
+                        tmp_index = tmp_index[:]
+                elif count == 0:
+                    tmp_index = [tmp_index[-1]]
+                else:
+                    tmp_index = tmp_index[:]
+            else:
+                tmp_index = tmp_df.index
+        return np.array(tmp_index)
+    def get_all_assets(self):
+        """
+        获取所有资产对象
+        :return value: 合约对象集合
+        :type: class:`~AssetType` of list
+        """
+        return data_source_func.dsf_get_asset_storage(self.data_path).get_all_assets()
+    @lru_cache(True)
+    def get_dict_assets(self):
+        return data_source_func.dsf_get_asset_storage(self.data_path).get_dict_assets()
+    def get_000300_bar_of_range(self, frequency, start_date=None, end_date=None):
+        """
+        获取沪深300的数据
+        """
+        kline = data_source_func.dsf_get_000300_of_kline_data(frequency, start_date, end_date)
+        if not kline.empty and len(kline.index) != 0:
+            start = kline.index[0].strftime('%Y%m%d')
+            end = kline.index[-1].strftime('%Y%m%d')
+            return (int(start), int(end))
+        strategy_log.error('获取沪深300数据失败')
+        raise Exception('获取沪深300数据失败')
+    def available_data_range(self, frequency, start_date=None, end_date=None):
+        """
+        获取数据有效范围(暂时以沪深300为基准)
+        :param frequency: 周期频率，`1d` 表示日周期, `1m` 表示分钟周期
+        :type frequency: : str
+        
+        :return value:(开始时间，结束时间)
+        :type: (int, int)
+        """
+        start, end = self.get_000300_bar_of_range(frequency, start_date, end_date)
+        return (start, end)
+    def get_security_margin(self, symbol, query_date=None):
+        """
+        获取合约的保证金数据
+
+        :param symbol: 期货合约对象
+        :type symbol: : str
+
+        :param query_date: 指定时间
+        :type query_date: : str
+
+        :return value: 保证金数据
+        :type: dict
+        """
+        tmp_dict = self.get_security_info(symbol)[symbol]
+        try:
+            if tmp_dict:
+                return {'margin_type': enumerate.MarginType.BY_MONEY.value, 'long_margin_ratio': tmp_dict['margin_rate'], 'short_margin_ratio': tmp_dict['margin_rate']}
+            return dict()
+        except Exception as e:
+            system_log.error(get_traceback_message())
+            return dict()
+    def get_commission_info(self, symbol):
+        """
+        获取合约的手续费信息
+        :param symbol: 期货种类
+        :type symbol: : str
+        
+        :return value: 手续费信息
+        :type: dict
+        """
+        security_info = self.get_security_info(symbol)[symbol]
+        if len(security_info) > 0:
+            try:
+                trade_code = security_info['trade_code']
+                return CN_FUTURE_INFO[trade_code]['speculation']
+            except Exception as e:
+                system_log.error(get_traceback_message())
+                return {}
+        else:
+            return {}
+    def is_suspended(self, symbols, date=None):
+        """
+        是否停牌
+        :param symbol:合约名称
+        :type symbol: : str
+
+        :param date:指定日期
+        :type date: : int
+
+        :return value: 判断结果
+        :type: boolean True | False
+        """
+        symbols = [change_symbol_suffix(symbol) for symbol in symbols]
+        return data_source_func.dsf_is_suspended(symbols, date)
+    def is_st(self, symbols, date=None):
+        """
+        是否ST股
+        :param symbol:合约名称
+        :type symbol: : str
+
+        :param date:指定日期
+        :type date: : int
+
+        :return value: 判断结果
+        :type: boolean True | False
+        """
+        symbols = [change_symbol_suffix(symbol) for symbol in symbols]
+        return data_source_func.dsf_is_st_stock(symbols, date)
+    def is_delisting(self, symbols, date=None):
+        symbols = [change_symbol_suffix(symbol) for symbol in symbols]
+        return data_source_func.dsf_is_delisting(symbols, date)
+    @lru_cache(1000)
+    def get_merger_info(self, symbol):
+        """
+        获取合股数据
+        :param symbol: 合约代码
+        :type symbol: : str
+
+        :return value: 合股信息
+        :type: dict
+        """
+        tmp_symbol = change_symbol_suffix(symbol)
+        data = data_source_func.dsf_get_merger_data(old_secu_code=tmp_symbol)
+        if len(data) > 0:
+            return data.to_dict('index')[tmp_symbol]
+        else:
+            return {}
+    def get_dividend(self, symbol, query_date=None):
+        """
+        获取分红配股信息
+        :param symbol: 合约名称
+        :type symbol: : str
+
+        :param query_date:查询时间点
+        :type query_date: : datetime.date
+
+        :return value:分红配股信息
+        :type: : pd.DataFrame
+        """
+        if isinstance(query_date, dt_date):
+            query_date = convert_date_to_date_int(query_date)
+        if self._exrights is None:
+            self._exrights = ExrightsStorage(os.path.join(self.data_path, 'exrights.pk'))
+        return self._exrights.get_dividends(symbol, query_date)
+    def get_market_list(self):
+        """
+        返回当前市场列表目录
+        :return: DataFrame，包含市场编码，市场名称
+        """
+        return data_source_func.dsf_get_market_list()
+    def get_market_detail(self, finance_mic):
+        """
+        获取市场详细信息
+        :param finance_mic|str: 交易所识别码
+        :return: DataFrame，包含产品代码，产品名称，类型代码
+        """
+        return data_source_func.dsf_get_market_detail(finance_mic)
+    def get_industries(self, standard='zjh1', date=None):
+        """
+        获取指定日期某一标准的行业分类信息
+        :param standard|str: 行业分类标准，包括zjh1、zjh2、sw1、sw2、sw3
+        :param date|str: 日期，输入形式如'2018-06-20'，不输入默认为当前日期
+        :return: DataFrame，包含行业代码，行业名称
+        """
+        if standard not in ('zjh1', 'zjh2', 'sw1', 'sw2', 'sw3'):
+            system_log.error('输入的行业分类仅限于[zjh1, zjh2, sw1, sw2, sw3]')
+            return None
+        else:
+            date_today = datetime.now().strftime('%Y-%m-%d')
+            if date is None:
+                date = date_today
+            else:
+                try:
+                    dt = datetime.strptime(date, '%Y%m%d')
+                    date = dt.strftime('%Y-%m-%d')
+                except ValueError:
+                    system_log.warning('get_industries输入的date[%s]格式有误，返回为None' % date)
+                    return None
+                if date > date_today:
+                    system_log.warning('无法获取大于当前日期的数据，日期调整为当前日期')
+                    date = date_today
+            industries = data_source_func.dsf_get_industries(standard=standard, date=date)
+            return industries
+    def get_Ashares(self, date=None):
+        """
+        获取A股代码列表
+        :param date|str: 查询日期，例如'20080808'
+        :return: list，A股代码列表
+        """
+        date_today = datetime.now().strftime('%Y%m%d')
+        if date is None:
+            date = date_today
+        else:
+            try:
+                datetime.strptime(date, '%Y%m%d')
+            except ValueError:
+                strategy_log.error('get_Ashares输入的date[%s]格式有误，返回为[]' % date)
+                return []
+            if date > date_today:
+                strategy_log.warning('无法获取大于当前日期的数据，日期调整为当前日期')
+                date = date_today
+        Ashares = data_source_func.dsf_get_Ashares(date)
+        return Ashares
+    def get_Bshares(self, date=None):
+        """
+        获取B股代码列表
+        :param date|str: 查询日期，例如'20080808'
+        :return: B股代码列表
+        """
+        date_today = datetime.now().strftime('%Y%m%d')
+        if date is None:
+            date = date_today
+        else:
+            try:
+                datetime.strptime(date, '%Y%m%d')
+            except ValueError:
+                system_log.warning('get_Bshares输入的date[%s]格式有误，返回为[]' % date)
+                return []
+            if date > date_today:
+                system_log.warning('无法获取大于当前日期的数据，日期调整为当前日期')
+                date = date_today
+        Bshares = data_source_func.dsf_get_Bshares(date)
+        return Bshares
+    def get_valuation_info(self, count, date, stocks, filled=False):
+        """
+        获取估值信息
+        :param count: int 获取估值数据的天数，从date设置时间往前计数
+        :param date:  date 获取估值数据的时间
+        :param stocks: str/list 股票代码
+        :param filled: bool 填充数据标志
+        :return: dict[str: pd.DataFrame]
+        """
+        return data_source_func.dsf_get_valuation_info(count, date, stocks, filled)
+    def get_opt_objects(self, date):
+        """
+        获取期权标的
+        :param date: 日期, 字符串,用于获取某日期的ETF期权标的，默认返回当前交易日的期权标的
+        :return: []
+        """
+        return data_source_func.dsf_get_opt_objects(date)
+    def get_opt_last_dates(self, security, date):
+        """
+        获取期权标的到期日
+        :param date: 日期, 字符串,用于获取某日期的ETF期权标的到期日，默认返回当前交易日的到期日
+        :return: []
+        """
+        return data_source_func.dsf_get_opt_last_dates(security, date)
+    def get_opt_contracts(self, security, date):
+        """
+        获取期权标的某交易日处于挂牌期间的合约列表
+        :param date: 日期, 字符串,用于获取某日期的ETF期权标的到期日，默认返回当前交易日的到期日
+        :return: []
+        """
+        return data_source_func.dsf_get_opt_contracts(security, date)
+    def get_contract_info(self, contract):
+        """
+        获取期权合约信息
+        :param contract: 合约编号
+        :return: {}
+        """
+        return data_source_func.dsf_get_contract_info(contract)

@@ -1,0 +1,63 @@
+# Source Generated with Decompyle++ (Python version)
+# File: json_persistance.pyc (Python 3.11)
+
+import codecs
+import json
+import os
+from IQCommon.exception import get_traceback_message
+from IQCommon.logger import system_log
+from IQEngine.interface import AbstractPersist
+class JsonPersistance(AbstractPersist):
+    def __init__(file_path, self):
+        self._persist_data = {}
+        self._file_path = os.path.join(file_path, 'state.json')
+    def store(self, k, v):
+        """
+        存储持久化对象到内存
+
+        :param k: 键值
+        :type k: str
+        :param v: 调用对象的save方法后生成的字符串
+        :type v: str
+        :return:
+        """
+        self._persist_data[k] = v
+    def get_data(self, k):
+        """
+        获取持久化对象
+
+        :param k: 键值
+        :type k: str
+        :return: 持久化对象的值
+        :rtype: str
+        """
+        if not self._persist_data:
+            self.load_data()
+        return self._persist_data.get(k)
+    def load_data(self):
+        """
+        从json文件中获取所有的持久化对象内容，加载到内存
+
+        :return:
+        """
+        with codecs.open(self._file_path, 'r', encoding='utf-8') as f:
+            self._persist_data = json.load(f)
+            return None
+    def persist(self):
+        """
+        将内存中的持久化对象储存为json文件
+
+        :return:
+        """
+        try:
+            if self._persist_data != {}:
+                with codecs.open(self._file_path, 'w', encoding='utf-8') as f:
+                    json.dump(self._persist_data, f, ensure_ascii=False, indent=4)
+                    return None
+                return None
+            else:
+                system_log.warning('持久化信息为空，不执行持久化信息保存操作')
+                return None
+        except BaseException:
+            system_log.debug(f'持久化信息保存失败，持久化信息：{self._persist_data!s}，错误信息：{get_traceback_message()!s}')
+            return None

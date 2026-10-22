@@ -1,0 +1,432 @@
+{
+ "rows": [
+  {
+   "label": "E1-值类型 x=1->x=True",
+   "family": "d_int_to_bool",
+   "pyc": "site-packages/IQCommon/api/gtn_api.pyc",
+   "baseline": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_api.pyc --source F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_apiOK.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     5,
+     5
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_apiOK.py",
+     "[single] status=success units=5/5 success_rate=100.00%"
+    ]
+   },
+   "mutant": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_api.pyc --source d:\\Temp\\l2verify_ihjao4l7\\v_d_int_to_bool.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     5,
+     5
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+     "[single] 产物 d:/Temp/l2verify_ihjao4l7/v_d_int_to_bool.py",
+     "[single] status=success units=5/5 success_rate=100.00%"
+    ]
+   },
+   "site": "int literal 1 -> True (type-only change)",
+   "mutant_file": "tmp:v_d_int_to_bool.py"
+  },
+  {
+   "label": "E1b-值精度 x=1->x=1.0",
+   "family": "i_int_to_float",
+   "pyc": "site-packages/IQCommon/api/gtn_api.pyc",
+   "baseline": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_api.pyc --source F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_apiOK.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     5,
+     5
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_apiOK.py",
+     "[single] status=success units=5/5 success_rate=100.00%"
+    ]
+   },
+   "mutant": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_api.pyc --source d:\\Temp\\l2verify_ihjao4l7\\v_i_int_to_float.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     5,
+     5
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+     "[single] 产物 d:/Temp/l2verify_ihjao4l7/v_i_int_to_float.py",
+     "[single] status=success units=5/5 success_rate=100.00%"
+    ]
+   },
+   "site": "int literal 1 -> 1.0",
+   "mutant_file": "tmp:v_i_int_to_float.py"
+  },
+  {
+   "label": "E2-形参换序",
+   "family": "h_param_order",
+   "pyc": "site-packages/IQCommon/api/gtn_api.pyc",
+   "baseline": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_api.pyc --source F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_apiOK.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     5,
+     5
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_apiOK.py",
+     "[single] status=success units=5/5 success_rate=100.00%"
+    ]
+   },
+   "mutant": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_api.pyc --source d:\\Temp\\l2verify_ihjao4l7\\v_h_param_order.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     5,
+     5
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+     "[single] 产物 d:/Temp/l2verify_ihjao4l7/v_h_param_order.py",
+     "[single] status=success units=5/5 success_rate=100.00%"
+    ]
+   },
+   "site": "swapped formal params 'url' <-> 'params'",
+   "mutant_file": "tmp:v_h_param_order.py"
+  },
+  {
+   "label": "对照A-删赋值(应捕获)",
+   "family": "c_del_assign",
+   "pyc": "site-packages/IQCommon/api/gtn_api.pyc",
+   "baseline": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_api.pyc --source F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_apiOK.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     5,
+     5
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_apiOK.py",
+     "[single] status=success units=5/5 success_rate=100.00%"
+    ]
+   },
+   "mutant": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_api.pyc --source d:\\Temp\\l2verify_ihjao4l7\\v_c_del_assign.py",
+    "rc": 1,
+    "status": "failure",
+    "units": [
+     4,
+     5
+    ],
+    "verdict": "CAUGHT",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+     "[single] 产物 d:/Temp/l2verify_ihjao4l7/v_c_del_assign.py",
+     "[single] status=failure units=4/5 success_rate=80.00%"
+    ]
+   },
+   "site": "deleted one Assign stmt",
+   "mutant_file": "tmp:v_c_del_assign.py"
+  },
+  {
+   "label": "对照B-比较极性反转(应捕获)",
+   "family": "b_cmp_polarity",
+   "pyc": "site-packages/IQCommon/api/gtn_api.pyc",
+   "baseline": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_api.pyc --source F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_apiOK.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     5,
+     5
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_apiOK.py",
+     "[single] status=success units=5/5 success_rate=100.00%"
+    ]
+   },
+   "mutant": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_api.pyc --source d:\\Temp\\l2verify_ihjao4l7\\v_b_cmp_polarity.py",
+    "rc": 1,
+    "status": "failure",
+    "units": [
+     4,
+     5
+    ],
+    "verdict": "CAUGHT",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+     "[single] 产物 d:/Temp/l2verify_ihjao4l7/v_b_cmp_polarity.py",
+     "[single] status=failure units=4/5 success_rate=80.00%"
+    ]
+   },
+   "site": "Compare <= -> >=",
+   "mutant_file": "tmp:v_b_cmp_polarity.py"
+  },
+  {
+   "label": "函数docstring",
+   "family": "j_func_docstring",
+   "baseline": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_api.pyc --source F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\gtn_apiOK.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     5,
+     5
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_apiOK.py",
+     "[single] status=success units=5/5 success_rate=100.00%"
+    ]
+   },
+   "skipped": "family NA on this product"
+  },
+  {
+   "label": "E3a-空try体改handler体(期望漏检)",
+   "probe": "cp_try_pass_handler_body",
+   "expected": "MISS",
+   "baseline": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_try_pass_handler_body.pyc --source F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_try_pass_handler_bodyOK.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     2,
+     2
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_try_pass_handler_body.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_try_pass_handler_bodyOK.py",
+     "[single] status=success units=2/2 success_rate=100.00%"
+    ]
+   },
+   "mutant": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_try_pass_handler_body.pyc --source F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\mut\\cp_try_pass_handler_body_mut.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     2,
+     2
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_try_pass_handler_body.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/mut/cp_try_pass_handler_body_mut.py",
+     "[single] status=success units=2/2 success_rate=100.00%"
+    ]
+   },
+   "consistent": true
+  },
+  {
+   "label": "E3b-空try体改except类型(期望漏检)",
+   "probe": "cp_try_pass_except_type",
+   "expected": "MISS",
+   "baseline": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_try_pass_except_type.pyc --source F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_try_pass_except_typeOK.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     2,
+     2
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_try_pass_except_type.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_try_pass_except_typeOK.py",
+     "[single] status=success units=2/2 success_rate=100.00%"
+    ]
+   },
+   "mutant": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_try_pass_except_type.pyc --source F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\mut\\cp_try_pass_except_type_mut.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     2,
+     2
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_try_pass_except_type.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/mut/cp_try_pass_except_type_mut.py",
+     "[single] status=success units=2/2 success_rate=100.00%"
+    ]
+   },
+   "consistent": true
+  },
+  {
+   "label": "E3c-对照:try体有赋值改handler体(期望捕获)",
+   "probe": "cp_try_assign_handler_body",
+   "expected": "CAUGHT",
+   "baseline": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_try_assign_handler_body.pyc --source F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_try_assign_handler_bodyOK.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     2,
+     2
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_try_assign_handler_body.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_try_assign_handler_bodyOK.py",
+     "[single] status=success units=2/2 success_rate=100.00%"
+    ]
+   },
+   "mutant": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_try_assign_handler_body.pyc --source F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\mut\\cp_try_assign_handler_body_mut.py",
+    "rc": 1,
+    "status": "failure",
+    "units": [
+     1,
+     2
+    ],
+    "verdict": "CAUGHT",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_try_assign_handler_body.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/mut/cp_try_assign_handler_body_mut.py",
+     "[single] status=failure units=1/2 success_rate=50.00%"
+    ]
+   },
+   "consistent": true
+  },
+  {
+   "label": "E3d-对照:try体raise改handler体(期望捕获)",
+   "probe": "cp_try_raise_handler_body",
+   "expected": "CAUGHT",
+   "baseline": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_try_raise_handler_body.pyc --source F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_try_raise_handler_bodyOK.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     3,
+     3
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_try_raise_handler_body.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_try_raise_handler_bodyOK.py",
+     "[single] status=success units=3/3 success_rate=100.00%"
+    ]
+   },
+   "mutant": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_try_raise_handler_body.pyc --source F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\mut\\cp_try_raise_handler_body_mut.py",
+    "rc": 1,
+    "status": "failure",
+    "units": [
+     2,
+     3
+    ],
+    "verdict": "CAUGHT",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_try_raise_handler_body.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/mut/cp_try_raise_handler_body_mut.py",
+     "[single] status=failure units=2/3 success_rate=66.67%"
+    ]
+   },
+   "consistent": true
+  },
+  {
+   "label": "E3e-except元组换序(期望漏检)",
+   "probe": "cp_except_tuple_order",
+   "expected": "MISS",
+   "baseline": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_except_tuple_order.pyc --source F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_except_tuple_orderOK.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     4,
+     4
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_except_tuple_order.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_except_tuple_orderOK.py",
+     "[single] status=success units=4/4 success_rate=100.00%"
+    ]
+   },
+   "mutant": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_except_tuple_order.pyc --source F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\mut\\cp_except_tuple_order_mut.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     4,
+     4
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_except_tuple_order.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/mut/cp_except_tuple_order_mut.py",
+     "[single] status=success units=4/4 success_rate=100.00%"
+    ]
+   },
+   "consistent": true
+  },
+  {
+   "label": "对照F-函数docstring(期望漏检)",
+   "probe": "cp_docstring_func",
+   "expected": "MISS",
+   "baseline": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_docstring_func.pyc --source F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_docstring_funcOK.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     2,
+     2
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_docstring_func.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_docstring_funcOK.py",
+     "[single] status=success units=2/2 success_rate=100.00%"
+    ]
+   },
+   "mutant": {
+    "command": "-X utf8 F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py single F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\cp_docstring_func.pyc --source F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_probes\\mut\\cp_docstring_func_mut.py",
+    "rc": 0,
+    "status": "success",
+    "units": [
+     2,
+     2
+    ],
+    "verdict": "MISS",
+    "stdout_tail": [
+     "[single] F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/cp_docstring_func.pyc",
+     "[single] 产物 F:/Downloads/pythoncdc-main/.trae/specs/attack-completeness-claims/rounds/round4/_probes/mut/cp_docstring_func_mut.py",
+     "[single] status=success units=2/2 success_rate=100.00%"
+    ]
+   },
+   "consistent": true
+  }
+ ],
+ "summary": {
+  "cases": 12,
+  "miss": 7,
+  "caught": 4,
+  "skipped": 1,
+  "consistent_with_expectation": 6
+ }
+}

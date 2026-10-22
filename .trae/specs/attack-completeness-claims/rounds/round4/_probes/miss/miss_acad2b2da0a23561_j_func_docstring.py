@@ -1,0 +1,217 @@
+# Source Generated with Decompyle++ (Python version)
+# File: strategy.pyc (Python 3.11)
+
+import sys
+from IQCommon.exception import get_traceback_message
+from IQEngine import const
+from IQEngine.core.events import Event, EventEnum
+import IQEngine.core.execution_context as exc_ctxt
+from IQEngine.utils import exception, strategy_log
+from IQEngine.utils.decorator import run_when_strategy_not_hold
+from IQEngine.utils.scheduler import scheduler_clear, scheduler_sort_registry
+from IQCommon.logger import system_log
+class timeout(object):
+    def __init__(self, seconds, exception=None):
+        return None
+    def __enter__(self):
+        return None
+    def __exit__(self, *args, **kwargs):
+        return None
+    def __call__(self, func):
+        return func
+class Strategy(object):
+    __doc__ = """
+    函数注册与回调
+    """
+    def __init__(self, engine, context, ucontext):
+        '\n        @param engine: 策略引擎\n        @type engine: object\n        @param context: 系统上下文\n        @type context: object\n        @param ucontext: 用户策略上下文\n        @type ucontext: object\n        Y'
+        self._engine = engine
+        self._user_context = ucontext
+        self._current_universe = set()
+        self._initialize = context.get('initialize', None)
+        self._handle_auction = context.get('handle_auction', None)
+        self._handle_data = context.get('handle_data', None)
+        self._handle_tick = context.get('handle_tick', None)
+        self._on_order_response = context.get('on_order_response', None)
+        self._on_trade_response = context.get('on_trade_response', None)
+        self._before_trading_start = context.get('before_trading_start', None)
+        self._after_trading_end = context.get('after_trading_end', None)
+        self._finalized = context.get('finalized', None)
+        self._on_strategy_signal_response = context.get('on_strategy_signal_response', None)
+        if self._before_trading_start is not None:
+            self._engine.event_bus.prepend_listener(EventEnum.BEFORE_TRADING_START, self.on_before_trading_start)
+        if self._handle_auction is not None:
+            self._engine.event_bus.prepend_listener(EventEnum.HANDLE_AUCTION, self.on_handle_auction)
+        if self._handle_data is not None:
+            self._engine.event_bus.prepend_listener(EventEnum.HANDLE_DATA, self.on_handle_data)
+        if self._handle_tick is not None:
+            self._engine.event_bus.prepend_listener(EventEnum.HANDLE_TICK, self.on_handle_tick)
+        if self._on_order_response is not None:
+            self._engine.event_bus.prepend_listener(EventEnum.ON_ORDER_RSP, self.on_order_response)
+        if self._on_trade_response is not None:
+            self._engine.event_bus.prepend_listener(EventEnum.ON_TRADE_RSP, self.on_trade_response)
+        if self._after_trading_end is not None:
+            self._engine.event_bus.prepend_listener(EventEnum.AFTER_TRADING_END, self.on_after_trading_end)
+        if self._finalized is not None:
+            self._engine.event_bus.prepend_listener(EventEnum.SYSTEM_EXIT, self.on_finalized)
+        if self._on_strategy_signal_response is not None:
+            self._engine.event_bus.prepend_listener(EventEnum.ON_STRATEGY_SIGNAL_RSP, self.on_strategy_signal_response)
+        self._force_run_before_trading = self._engine.config.other.force_run_init_when_pt_resume
+        self._force_run_before_trading = False
+        self.func_map = [('before_trading_start', EventEnum.BEFORE_TRADING_START, self.on_before_trading_start), ('handle_auction', EventEnum.HANDLE_AUCTION, self.on_handle_auction), ('handle_data', EventEnum.HANDLE_DATA, self.on_handle_data), ('handle_tick', EventEnum.HANDLE_TICK, self.on_handle_tick), ('on_order_response', EventEnum.ON_ORDER_RSP, self.on_order_response), ('on_trade_response', EventEnum.ON_TRADE_RSP, self.on_trade_response), ('after_trading_end', EventEnum.AFTER_TRADING_END, self.on_after_trading_end), ('finalized', EventEnum.SYSTEM_EXIT, self.on_finalized), ('on_strategy_signal_response', EventEnum.ON_STRATEGY_SIGNAL_RSP, self.on_strategy_signal_response)]
+    @property
+    def user_context(self):
+        return self._user_context
+    def initialize(self):
+        """
+        回调用户策略的initialize函数
+        """
+        if not self._initialize:
+            return None
+        try:
+            with timeout(self._engine.config.strategy.func_time_out, exception.IQETimeoutError), exc_ctxt.ExecutionContext(const.ExecutionPhase.INITIALIZE), exception.ModifyExceptionFromType(const.ExcType.USER_EXC):
+                self._initialize(self._user_context)
+        except Exception:
+            strategy_log.error('策略initialize函数执行失败，错误原因：%s' % get_traceback_message())
+        self._engine.event_bus.publish_event(Event(EventEnum.USER_INIT))
+    @run_when_strategy_not_hold
+    def on_before_trading_start(self, event):
+        """
+        回调用户策略的before_trading_start函数
+        """
+        self._force_run_before_trading = False
+        try:
+            bar_dict = event.bar_dict
+            with timeout(self._engine.config.strategy.func_time_out, exception.IQETimeoutError):
+                with exc_ctxt.ExecutionContext(const.ExecutionPhase.BEFORE_TRADING_START), exception.ModifyExceptionFromType(const.ExcType.USER_EXC):
+                    self._before_trading_start(self._user_context, bar_dict)
+                return None
+        except Exception:
+            strategy_log.error('策略before_trading_start函数执行失败，错误原因：%s' % get_traceback_message())
+            return None
+    @run_when_strategy_not_hold
+    def on_handle_auction(self, event):
+        """
+        回调用户策略的handle_auction函数
+        """
+        if self._force_run_before_trading:
+            self.on_before_trading_start()
+            return None
+        bar_dict = event.bar_dict
+        try:
+            with timeout(self._engine.config.strategy.func_time_out, exception.IQETimeoutError), exc_ctxt.ExecutionContext(const.ExecutionPhase.ON_HANDLE_AUCTION), exception.ModifyExceptionFromType(const.ExcType.USER_EXC):
+                self._handle_auction(self._user_context, bar_dict)
+        except exception.IQETimeoutError as e:
+            system_log.error(get_traceback_message())
+            e.args = ("user function 'handle_auction' runs for more than {} seconds".format(self._engine.config.strategy.func_time_out),)
+            raise e
+    @run_when_strategy_not_hold
+    def on_handle_data(self, event):
+        """
+        回调用户策略的handle_data函数
+        """
+        if self._force_run_before_trading:
+            self._before_trading_start()
+            return None
+        bar_dict = event.bar_dict
+        try:
+            with timeout(self._engine.config.strategy.func_time_out, exception.IQETimeoutError), exc_ctxt.ExecutionContext(const.ExecutionPhase.ON_HANDLE_DATA), exception.ModifyExceptionFromType(const.ExcType.USER_EXC):
+                self._handle_data(self._user_context, bar_dict)
+        except Exception:
+            strategy_log.error('策略handle_data函数执行失败，错误原因：%s' % get_traceback_message())
+            return None
+    @run_when_strategy_not_hold
+    def on_handle_tick(self, event):
+        """
+        回调用户策略的handle_tick函数
+        """
+        if self._force_run_before_trading:
+            self._before_trading_start()
+            return None
+        tick = event.tick
+        try:
+            with timeout(self._engine.config.strategy.func_time_out, exception.IQETimeoutError), exc_ctxt.ExecutionContext(const.ExecutionPhase.ON_HANDLE_TICK), exception.ModifyExceptionFromType(const.ExcType.USER_EXC):
+                self._handle_tick(self._user_context, tick)
+        except Exception:
+            strategy_log.error('策略tick_data函数执行失败，错误原因：%s' % get_traceback_message())
+            return None
+    @run_when_strategy_not_hold
+    def on_order_response(self, event):
+        """
+        回调用户策略的on_order_response函数
+        """
+        if self._force_run_before_trading:
+            self._before_trading_start()
+            return None
+        try:
+            with timeout(self._engine.config.strategy.func_time_out, exception.IQETimeoutError), exc_ctxt.ExecutionContext(const.ExecutionPhase.ON_ORDER_RSP), exception.ModifyExceptionFromType(const.ExcType.USER_EXC):
+                self._on_order_response(self._user_context, event.order)
+        except Exception:
+            strategy_log.error('策略on_order_response函数执行失败，错误原因：%s' % get_traceback_message())
+            return None
+    @run_when_strategy_not_hold
+    def on_trade_response(self, event):
+        """
+        回调用户策略的on_trade_response函数
+        """
+        if self._force_run_before_trading:
+            self._before_trading_start()
+            return None
+        try:
+            with timeout(self._engine.config.strategy.func_time_out, exception.IQETimeoutError), exc_ctxt.ExecutionContext(const.ExecutionPhase.ON_TRADE_RSP), exception.ModifyExceptionFromType(const.ExcType.USER_EXC):
+                self._on_trade_response(self._user_context, event.trade)
+        except Exception:
+            strategy_log.error('策略on_trade_response函数执行失败，错误原因：%s' % get_traceback_message())
+            return None
+    @run_when_strategy_not_hold
+    def on_strategy_signal_response(self, event):
+        """
+        回调用户策略的on_strategy_signal_response函数
+        """
+        if self._force_run_before_trading:
+            self._before_trading_start()
+            return None
+        try:
+            with timeout(self._engine.config.strategy.func_time_out, exception.IQETimeoutError), exc_ctxt.ExecutionContext(const.ExecutionPhase.ON_STRATEGY_SIGNAL_RSP), exception.ModifyExceptionFromType(const.ExcType.USER_EXC):
+                self._on_strategy_signal_response(self._user_context, event.signal)
+        except Exception:
+            strategy_log.error('策略on_strategy_signal_response函数执行失败，错误原因：%s' % get_traceback_message())
+            return None
+    @run_when_strategy_not_hold
+    def on_after_trading_end(self, event):
+        """
+        回调用户策略的after_trading_end函数
+        """
+        try:
+            bar_dict = event.bar_dict
+            with timeout(self._engine.config.strategy.func_time_out, exception.IQETimeoutError):
+                with exc_ctxt.ExecutionContext(const.ExecutionPhase.AFTER_TRADING_END), exception.ModifyExceptionFromType(const.ExcType.USER_EXC):
+                    self._after_trading_end(self._user_context, bar_dict)
+                return None
+        except Exception:
+            strategy_log.error('策略after_trading_end函数执行失败，错误原因：%s' % get_traceback_message())
+            return None
+    @run_when_strategy_not_hold
+    def on_finalized(self, event):
+        """
+        回调用户策略的on_strategy_end函数
+        """
+        try:
+            with timeout(self._engine.config.strategy.func_time_out, exception.IQETimeoutError), exc_ctxt.ExecutionContext(const.ExecutionPhase.FINALIZED), exception.ModifyExceptionFromType(const.ExcType.USER_EXC):
+                self._finalized(self._user_context)
+        except exception.IQETimeoutError as e:
+            system_log.error(get_traceback_message())
+            e.args = ("user function 'finalized' runs for more than {} seconds".format(self._engine.config.strategy.func_time_out),)
+            raise e
+    def reload_strategy(self, context):
+        self._initialize = context.get('initialize', None)
+        for func_name, event, on_event_func in self.func_map:
+            func = context.get(func_name, None)
+            func_var = '_' + func_name
+            if getattr(self, func_var):
+                if func:
+                    setattr(self, func_var, func)
+                    continue
+                continue
+            if func:
+                setattr(self, func_var, func)

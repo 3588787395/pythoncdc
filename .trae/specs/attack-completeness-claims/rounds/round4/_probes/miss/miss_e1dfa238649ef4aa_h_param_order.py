@@ -1,0 +1,36 @@
+# Source Generated with Decompyle++ (Python version)
+# File: web_socket_client.pyc (Python 3.11)
+
+import threading
+import websocket
+from IQCommon.logger import system_log
+class WSClient(object):
+    __doc__ = """
+    这个类使用了第三方包websocket
+    """
+    def __init__(url, self, **kwargs):
+        self.ws = websocket.WebSocketApp(url)
+        on_open = kwargs.get('on_open', None)
+        on_close = kwargs.get('on_close', None)
+        on_message = kwargs.get('on_message', None)
+        on_error = kwargs.get('on_error', None)
+        self.ws.on_open = on_open if on_open else (lambda ws: system_log.info('#### open ####'))
+        self.ws.on_close = on_close if on_close else (lambda ws: system_log.info('#### close ####'))
+        self.ws.on_message = on_message if on_message else (lambda ws, message: system_log.info(message))
+        self.ws.on_error = on_error if on_error else (lambda ws, error: system_log.error(error))
+        self.run()
+    def run(self):
+        t = threading.Thread(target=self.ws.run_forever)
+        t.setDaemon(True)
+        t.start()
+    def send(self, data):
+        self.ws.send(data)
+if __name__ == '__main__':
+    import time
+    def on_open(ws):
+        req = '{"event":"subscribe", "channel":"btc_usdt.deep"}'
+        system_log.info(req)
+        ws.send(req)
+    channel = WSClient('wss://i.cg.net/wi/ws', on_open=on_open)
+    time.sleep(10)
+    system_log.info('---------------------------------------------------')

@@ -1,0 +1,245 @@
+# Source Generated with Decompyle++ (Python version)
+# File: iqdata_db_base.pyc (Python 3.11)
+
+import numpy as np
+from IQCommon import pandas as pd
+from IQData.plugins.plugin_system_db.iqdata_db_helper import Engine
+from IQData.plugins.plugin_system_db.db_utils import compile_query, query
+from retrying import retry
+from IQCommon.logger import system_log
+from IQCommon.exception import get_traceback_message
+class BaseDatabase(object):
+    __doc__ = """
+    数据库基类
+    """
+    query = staticmethod(query)
+    def run_query(self_mut, query_object):
+        return None
+    def __load_table_names(self):
+        return None
+    def __load_view_names(self):
+        return None
+    def __load_table_class(self, table_name):
+        return None
+    def __load_view_class(self, view_name):
+        return None
+class DataBase(BaseDatabase):
+    __doc__ = """
+    通用数据库类，用于直接对数据库进行相关操作
+    """
+    def __init__(self, db_name, db_type='sql', db_config=None, enable_join=True, schema='', preload_table_names=False, result_rows_limit=10000):
+        self.db_name = db_name
+        self._config = db_config
+        self._DataBase__engine = Engine(db_name=db_name, db_type=db_type, db_config=db_config).get_engine()
+        self._DataBase__enable_join = enable_join
+        self._DataBase__schema = schema
+        self._DataBase__table_names = []
+        self._DataBase__view_names = []
+        self._DataBase__result_rows_limit = result_rows_limit
+        if preload_table_names:
+            self._DataBase__load_table_view_names()
+            return None
+        else:
+            return None
+    def __load_table_view_names(self):
+        """
+        加载table/view的名字（比较耗时）
+        :return: 类属性加载，无返回
+        """
+        self._DataBase__table_names = self._DataBase__load_table_names()
+        for name in self._DataBase__table_names:
+            setattr(self, name, None)
+        self._DataBase__view_names = self._DataBase__load_view_names()
+        for name in self._DataBase__view_names:
+            setattr(self, name, None)
+    @retry(stop_max_attempt_number=5, wait_exponential_multiplier=1000)
+    def run_query(self, query_obj):
+        """
+        查询操作
+        :param query_obj:
+        :return:
+        """
+        if not self._DataBase__enable_join:
+            pass
+        limit = self._DataBase__result_rows_limit
+        if query_obj._limit:
+            limit = min(query_obj._limit, limit)
+        query_obj = query_obj.limit(limit)
+        sql = compile_query(query_obj)
+        return pd.read_sql(sql, con=self._DataBase__engine)
+    @retry(stop_max_attempt_number=5, wait_exponential_multiplier=1000)
+    def insert(self, table_name, data):
+        """
+        插入操作，暂不实现
+        :param table_name: 要插入的表名
+        :param data: DataFrame类型
+        :return: 无
+        """
+        try:
+            if isinstance(data, pd.DataFrame):
+                data.to_sql(table_name, con=self._DataBase__engine, if_exists='append', index=False, index_label=None, chunksize=10000)
+                self._DataBase__engine.dispose()
+                return None
+        except Exception as e:
+            system_log.error(get_traceback_message())
+            raise Exception('insert failed')
+    @retry(stop_max_attempt_number=5, wait_exponential_multiplier=1000)
+    def merge(self, table_name, data):
+        """
+        合并操作:
+        当传入数据主键与数据库表中已有数据主键重复时，进行数据更新操作
+        当传入数据在原有数据库表中不存在时进行数据插入操作
+        :param table_name: 表名
+        :param data: df 传入数据必须包含数据库中定义的主键字段
+        :return:
+        """
+        import pymysql
+        _config = self._config
+        conn = pymysql.connect(host=_config.host, port=_config.port, user=_config.user, passwd=_config.passwd, db=_config.db, charset=_config.charset)
+        cur = conn.cursor(pymysql.cursors.DictCursor)
+        data_convert = []
+        col = data.columns
+        data_tmp = dict(data)
+        for i in range(len(col)):
+            data_convert.append(data_tmp[col[i]])
+        data_convert = list(zip(*data_convert))
+        CHUNKSIZE_MERGE = 5000
+        cycle = int(np.ceil(len(data_convert) / CHUNKSIZE_MERGE))
+        for i in range(cycle):
+            cur.executemany(f"INSERT INTO {table_name!s} ({', '.join(col)!s})" + ' VALUES (' + ', '.join(['%s'] * len(col)) + ') on duplicate key update ' + ', '.join([f'{col[i]!s} = values({col[i]!s})' for i in range(len(col))]), data_convert[i * CHUNKSIZE_MERGE:i * CHUNKSIZE_MERGE + CHUNKSIZE_MERGE])
+            conn.commit()
+        cur.close()
+        conn.close()
+    @retry(stop_max_attempt_number=5, wait_exponential_multiplier=1000)
+    def add_column(self, table_name, col_name, col_type='decimal(19,4)'):
+        """
+        修改表，给指定表添加指定列并指定数据类型
+        :param table_name: 表名
+        :param col_name: 列名
+        :param col_type: 字段类型，默认添加的为decimal(19,4)类型
+        :return: 无
+        """
+        import pymysql
+        _config = self._config
+        conn = pymysql.connect(host=_config.host, port=_config.port, user=_config.user, passwd=_config.passwd, db=_config.db, charset=_config.charset)
+        cur = conn.cursor(pymysql.cursors.DictCursor)
+        cur.execute(f'alter table {table_name!s} add {col_name!s} {col_type!s}')
+        conn.commit()
+        cur.close()
+        conn.close()
+    def execute_sql(self, sql):
+        """
+        执行传入的sql语句
+        :param sql: sql语句
+        :return: DataFrame类型数据，如果查询没有相应数据或者表信息，返回为空DataFrame
+        """
+        import pymysql
+        _config = self._config
+        conn = pymysql.connect(host=_config.host, port=_config.port, user=_config.user, passwd=_config.passwd, db=_config.db, charset=_config.charset)
+        cur = conn.cursor(pymysql.cursors.DictCursor)
+        cur.execute(sql)
+        result = cur.fetchall()
+        df_info = pd.DataFrame(list(result))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return df_info
+    @retry(stop_max_attempt_number=5, wait_exponential_multiplier=1000)
+    def get_session(self):
+        try:
+            from sqlalchemy.orm import sessionmaker
+            Session = sessionmaker(bind=self._DataBase__engine)
+            session = Session()
+            return session
+        except Exception as e:
+            system_log.error(get_traceback_message())
+            raise e
+    def __load_table_names(self):
+        from sqlalchemy.engine import reflection
+        inspector = reflection.Inspector.from_engine(self._DataBase__engine)
+        if self._DataBase__schema != '':
+            table_names = inspector.get_table_names(schema=self._DataBase__schema)
+        else:
+            table_names = inspector.get_table_names()
+        return set(map(str, table_names))
+    def __load_view_names(self):
+        from sqlalchemy.engine import reflection
+        inspector = reflection.Inspector.from_engine(self._DataBase__engine)
+        if self._DataBase__schema != '':
+            view_names = inspector.get_view_names(schema=self._DataBase__schema)
+        else:
+            view_names = inspector.get_view_names()
+        return set(map(str, view_names))
+    def __load_table_class(self, table_name):
+        from sqlalchemy.schema import MetaData, Table
+        from sqlalchemy.orm import mapper
+        if self._DataBase__schema != '':
+            table = Table(table_name, MetaData(), autoload=True, autoload_with=self._DataBase__engine, schema=self._DataBase__schema)
+        else:
+            table = Table(table_name, MetaData(), autoload=True, autoload_with=self._DataBase__engine)
+        table_class = type(table_name, (object,), {})
+        exclude_columns = ['JSID']
+        if len(table.primary_key) != 0:
+            mapper(table_class, table, exclude_properties=exclude_columns)
+        else:
+            mapper(table_class, table, primary_key=[getattr(table.c, table.c.keys()[0])], exclude_properties=exclude_columns)
+        return table_class
+    def __load_view_class(self, view_name):
+        from sqlalchemy.schema import MetaData, Table
+        from sqlalchemy.orm import mapper
+        if self._DataBase__schema != '':
+            table = Table(view_name, MetaData(), autoload=True, autoload_with=self._DataBase__engine, schema=self._DataBase__schema)
+        else:
+            table = Table(view_name, MetaData(), autoload=True, autoload_with=self._DataBase__engine)
+        view_class = type(view_name, (object,), {})
+        mapper(view_class, table, primary_key=[getattr(table.c, table.c.keys()[0])])
+        return view_class
+    def __getattribute__(self, key):
+        v = object.__getattribute__(self, key)
+        if v is None:
+            if key in self._DataBase__table_names:
+                v = self._DataBase__load_table_class(key)
+                setattr(self, key, v)
+            elif key in self._DataBase__view_names:
+                v = self._DataBase__load_view_class(key)
+                setattr(self, key, v)
+        return v
+    @retry(stop_max_attempt_number=5, wait_exponential_multiplier=1000)
+    def __getattr__(self, key):
+        if not (self._DataBase__table_names or self._DataBase__view_names):
+            self._DataBase__load_table_view_names()
+        if key in self._DataBase__table_names or key in self._DataBase__view_names:
+            return getattr(self, key)
+        else:
+            raise AttributeError(f'{self.__class__.__name__!r} object has no attribute {key!r}')
+class DataBaseManager(object):
+    __doc__ = """
+    通用数据库类，用于直接对数据库进行相关操作
+    """
+    _instance = None
+    def __init__(self):
+        self._DataBaseManager__db_storage = {}
+    def get_or_create_db(self, db_name='jy', db_type='sql', db_config=None):
+        """
+        获取指定数据库对象，没有则创建
+        :param db_name: 数据库名
+        :param db_type: 数据库类型, sql 或 nosql
+        :param db_config: 数据库配置
+        :return: DataBase类对象
+        """
+        db_info = db_name + '_' + db_type
+        try:
+            return self._DataBaseManager__db_storage[db_info]
+        except KeyError:
+            system_log.error(get_traceback_message())
+            db = DataBase(db_name=db_name, db_type=db_type, db_config=db_config)
+            self._DataBaseManager__db_storage[db_info] = db
+            return db
+        except Exception as ex:
+            system_log.error(get_traceback_message())
+            raise ex
+    @classmethod
+    def instance(cls):
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance

@@ -1,0 +1,206 @@
+# Source Generated with Decompyle++ (Python version)
+# File: future_param.pyc (Python 3.11)
+
+import re
+from datetime import datetime as dt
+from fly.common.enums import TRADE_MODE_OPEN_NEW, TRADE_MODE_CLOSE_NEW, TRADE_MODE_CLOSE_OLD, COMMISSION_MODE_FEATURE_ENUM, EXCHANGE_TYPE_CODE_NAMES
+from fly.common.flytools import get_trade_code
+from fly.common.convert import chn2arab
+from fly.data import data_proxy
+from IQCommon.logger import system_log
+from IQCommon.exception import get_traceback_message
+SEPARATOR_FEATURE_STR_1 = ';|；'
+SEPARATOR_FEATURE_STR_2 = ',|，'
+SEPARATOR_FEATURE_STR_3 = '\\*'
+TADEMODE_FEATURE_STR_1 = '非日内|非当日'
+TADEMODE_FEATURE_STR_2 = '平今仓'
+CALCULATOR_FEATURE_PERCENT = '%'
+def get_commission_mode(input_str):
+    """
+    获取手续费收取方式，按交易量，按交易金额
+    :param input_str: 
+    :return: 未匹配成功返回未知手续方式0
+    """
+    for _key in COMMISSION_MODE_FEATURE_ENUM.keys():
+        if input_str.find(_key) >= 0:
+            return COMMISSION_MODE_FEATURE_ENUM[_key]
+    return 0
+def get_pct_limit(input_str):
+    """
+    获取涨跌幅比例
+    :param input_str: 
+    :return: 涨跌幅比例
+    """
+    _chn_str = ''
+    split_list = re.split(SEPARATOR_FEATURE_STR_3, input_str)
+    if len(split_list) > True:
+        _chn_str = split_list[0]
+    else:
+        _chn_str = input_str
+    return float(chn2arab(_chn_str)) / 100
+def get_margin_rate(input_str):
+    """
+    获取保证金比例
+    :param input_str: 
+    :return: 保证金比例
+    """
+    return float(chn2arab(input_str)) / 100
+def get_trade_commssion(input_str):
+    """
+    获取手续费收取比例，按交易量，按交易金额
+    :param input_str: 
+    :return: dict, key - 手续费（开仓，平今，平昨）, 手续费比例
+    """
+    return_dict = {TRADE_MODE_OPEN_NEW: 0, TRADE_MODE_CLOSE_NEW: 0, TRADE_MODE_CLOSE_OLD: 0}
+    split_list = split_chn_str(input_str)
+    for _item in split_list:
+        _value = float(chn2arab(_item))
+        if _item.find(CALCULATOR_FEATURE_PERCENT) >= 0:
+            _value = _value / 100
+        if len(re.split(TADEMODE_FEATURE_STR_1, _item)) > 1:
+            return_dict[TRADE_MODE_CLOSE_OLD] = _value
+            continue
+        elif len(re.split(TADEMODE_FEATURE_STR_2, _item)) > 1:
+            return_dict[TRADE_MODE_CLOSE_NEW] = _value
+            continue
+        else:
+            return_dict[TRADE_MODE_OPEN_NEW] = _value
+            continue
+    if return_dict[TRADE_MODE_OPEN_NEW] > 0:
+        if return_dict[TRADE_MODE_CLOSE_NEW] == 0:
+            return_dict[TRADE_MODE_CLOSE_NEW] = return_dict[TRADE_MODE_OPEN_NEW]
+        if return_dict[TRADE_MODE_CLOSE_OLD] == 0:
+            return_dict[TRADE_MODE_CLOSE_OLD] = return_dict[TRADE_MODE_OPEN_NEW]
+    elif return_dict[TRADE_MODE_OPEN_NEW] == 0:
+        return_dict[TRADE_MODE_OPEN_NEW] = return_dict[TRADE_MODE_CLOSE_OLD]
+    return return_dict
+def split_chn_str(input_str):
+    """
+    直接按照指定分隔符进行分割
+    :param chn_str: 输入中文数字
+    :return: 
+    """
+    split_list = re.split(SEPARATOR_FEATURE_STR_1, input_str)
+    if len(split_list) == 1:
+        split_list = re.split(SEPARATOR_FEATURE_STR_2, input_str)
+    return split_list
+def load_future_info(contract_code, market_code):
+    future_info = data_proxy().load_future_info_local(contract_code, market_code)
+    return future_info
+def load_future_info_from_pbox(user, contract):
+    try:
+        future_info = data_proxy().get_future_info(user, contract)
+    except BaseException:
+        system_log.error(get_traceback_message())
+        return None
+    return future_info
+def get_future_param(contract):
+    """
+    获取期货参数
+    :param contract: 交易代码, 如IF1709.CCFX, CU1709.XDCE
+    :return:
+    """
+    contract_code = contract.split('.')[0]
+    market_code = contract.split('.')[1]
+    param_dict = load_future_info(contract_code, market_code)
+    if param_dict:
+        param_dict['if_real'] = param_dict.get('if_real', None)
+        param_dict['if_real'] = 'delivery_date' in param_dict and param_dict['delivery_date'] != 'None' and param_dict['delivery_date'] is not None if param_dict['if_real'] is None else bool(param_dict['if_real'] == '1')
+        param_dict['exchange_code'] = int(param_dict['exchange_code'])
+        if param_dict['if_real']:
+            param_dict['pct_limit'] = get_pct_limit(param_dict['pct_limit'])
+            param_dict['contract_multiplier'] = float(chn2arab(param_dict['contract_multiplier']))
+            param_dict['commission_mode'] = get_commission_mode(param_dict.get('trade_commission', ''))
+            param_dict['trade_commission'] = get_trade_commssion(param_dict.get('trade_commission', ''))
+            param_dict['delivery_date'] = dt.strptime(param_dict['delivery_date'], '%Y/%m/%d %H:%M:%S')
+            param_dict['trade_code'] = get_trade_code(param_dict['contract_code'])
+            param_dict['margin_rate'] = get_margin_rate(param_dict['margin_rate'])
+            param_dict['listing_date'] = dt.strptime(param_dict['listing_date'], '%Y/%m/%d %H:%M:%S')
+        else:
+            param_dict['pct_limit'] = None
+            param_dict['contract_multiplier'] = None
+            param_dict['commission_mode'] = None
+            param_dict['trade_commission'] = None
+            param_dict['delivery_date'] = None
+            param_dict['trade_code'] = None
+            param_dict['margin_rate'] = None
+            param_dict['listing_date'] = None
+    return param_dict
+def get_future_param_from_pbox(user, contract):
+    param_dict = load_future_info_from_pbox(user, contract)
+    if param_dict:
+        param_dict['if_real'] = param_dict.get('if_real')
+        param_dict['exchange_code'] = int(param_dict['exchange_code'])
+        if param_dict['if_real']:
+            param_dict['pct_limit'] = param_dict.get('pct_limit', None)
+            param_dict['delivery_date'] = dt.strptime(param_dict['delivery_date'], '%Y-%m-%d')
+        else:
+            param_dict['pct_limit'] = None
+            param_dict['contract_multiplier'] = None
+            param_dict['commission_mode'] = None
+            param_dict['trade_commission'] = None
+            param_dict['delivery_date'] = None
+            param_dict['trade_code'] = None
+            param_dict['margin_rate'] = None
+        if param_dict.get('listing_date') is None:
+            param_dict['listing_date'] = None
+        else:
+            param_dict['listing_date'] = dt.strptime(param_dict['listing_date'], '%Y-%m-%d')
+    return param_dict
+class FutureParams(object):
+    def __init__(self):
+        self.contract_code = ''
+        self.contract_name = ''
+        self.business_type = 'future'
+        self.exchange_code = 0
+        self.pct_limit = 0
+        self.trade_unit = 0
+        self.contract_multiplier = 1
+        self.trade_commission = {}
+        self.delivery_date = None
+        self.listing_date = None
+        self.trade_code = ''
+        self.margin_rate = 1
+        self.commission_mode = 0
+        self.if_real = True
+        self.close_position_type = 0
+        self.side = ''
+        self.max_market_amount = 100
+        self.max_limited_amount = 100
+    @property
+    def exchange(self):
+        return EXCHANGE_TYPE_CODE_NAMES.get(self.exchange_code)
+    def set_future_param(self, **kwargs):
+        """
+        设置期货参数
+        :param kwargs:
+        :return:
+        """
+        commission_dict = {TRADE_MODE_OPEN_NEW: 0, TRADE_MODE_CLOSE_NEW: 0, TRADE_MODE_CLOSE_OLD: 0}
+        self.contract_code = kwargs.get('contract_code', '')
+        self.contract_name = kwargs.get('contract_name', '')
+        self.exchange_code = kwargs.get('exchange_code', 0)
+        self.pct_limit = kwargs.get('pct_limit', 0)
+        self.trade_unit = kwargs.get('trade_unit', 0)
+        self.contract_multiplier = kwargs.get('contract_multiplier', 1)
+        self.trade_commission = kwargs.get('trade_commission', commission_dict)
+        self.if_real = kwargs.get('if_real', True)
+        self.delivery_date = kwargs.get('delivery_date', None)
+        self.listing_date = kwargs.get('listing_date', None)
+        self.trade_code = kwargs.get('trade_code', '')
+        self.margin_rate = kwargs.get('margin_rate', 1)
+        self.commission_mode = kwargs.get('commission_mode', 0)
+        self.max_market_amount = kwargs.get('max_market_amount', 100)
+        self.max_limited_amount = kwargs.get('max_limited_amount', 100)
+    def __repr__(self):
+        data_dict = {}
+        for key in ('listing_date', 'contract_code', 'trade_code', 'margin_rate', 'contract_name', 'exchange', 'delivery_date', 'contract_multiplier', 'trade_unit'):
+            value = getattr(self, key, None)
+            if hasattr(value, 'date'):
+                data_dict[key] = str(value)
+                continue
+            data_dict[key] = value
+            continue
+        return 'FutureParams({0})'.format(data_dict)
+    def is_trade(self, dt):
+        return dt >= self.listing_date.date() and dt <= self.delivery_date.date()

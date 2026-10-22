@@ -1,0 +1,16 @@
+{
+ "corpus_in_shard": 5,
+ "elapsed": 93.9,
+ "families": [
+  "h_param_order",
+  "j_func_docstring",
+  "g3_kwparam_rename"
+ ],
+ "judge_runs": 7,
+ "miss": 7,
+ "nshards": 48,
+ "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_10.jsonl",
+ "sample_mod": 2,
+ "sample_offset": 0,
+ "shard": 10
+}

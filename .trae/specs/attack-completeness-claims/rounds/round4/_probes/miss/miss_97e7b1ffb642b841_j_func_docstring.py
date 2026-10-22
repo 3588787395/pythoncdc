@@ -1,0 +1,44 @@
+# Source Generated with Decompyle++ (Python version)
+# File: slippage.pyc (Python 3.11)
+
+import six
+from IQEngine.const import AssetType
+from IQEngine.interface import AbstractSlippage
+from IQCommon.logger import system_log
+class SlippageHelp(object):
+    __doc__ = """
+    滑点计算助手
+    """
+    def __init__(self):
+        self._slippages = {}
+    def set_slippage(self, slippage, slippage_type):
+        '\n        设置滑点\n        Y'
+        if not isinstance(slippage, AbstractSlippage):
+            return None
+        elif isinstance(slippage_type, six.string_types):
+            _type = slippage_type.upper()
+            if _type in (AssetType.STOCK.value, AssetType.FUTURE.value, AssetType.OPTION.value, AssetType.ETF.value, AssetType.LOF.value):
+                self._slippages[_type] = slippage
+                return None
+    def get_slippage(self, _type):
+        """
+
+        :param _type:
+        :return:
+        """
+        try:
+            return self._slippages[_type]
+        except KeyError:
+            system_log.warning('SlippageHelp模块获取滑点对象时出错，返回为None，params: %s' % _type)
+            return None
+    def calculate_trade_price(self, order, price):
+        """
+        计算交易价格
+        """
+        try:
+            return self._slippages[order.asset.type].calculate_trade_price(order, price)
+        except KeyError:
+            system_log.warning('SlippageHelp模块计算%s受滑点影响后的价格时出错，返回为0' % order.asset.symbol)
+            return price
+    def __repr__(self):
+        return str(self._slippages)

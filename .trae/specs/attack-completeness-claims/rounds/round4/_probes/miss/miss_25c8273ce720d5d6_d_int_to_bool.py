@@ -1,0 +1,520 @@
+# Source Generated with Decompyle++ (Python version)
+# File: bar.pyc (Python 3.11)
+
+import datetime
+import numpy as np
+import six
+from IQCommon.logger import system_log
+from IQEngine.const import BarDataEnum, ExecutionPhase, RunType
+from IQEngine.core.engine import Engine
+from IQEngine.core.events import EventEnum
+from IQEngine.core.execution_context import ExecutionContext
+from IQEngine.utils.datetime_func import convert_dt_to_int
+from IQEngine.utils.exception import user_exc
+from IQEngine.utils.i18n import get_local_text as _
+COLS = [BarDataEnum.DATETIME.value, BarDataEnum.OPEN.value, BarDataEnum.CLOSE.value, BarDataEnum.HIGH.value, BarDataEnum.LOW.value, BarDataEnum.AMOUNT.value, BarDataEnum.BALANCE.value, BarDataEnum.LAST.value]
+EMPTYDict = {col: np.nan for col in COLS}
+class BarData(object):
+    def __init__(self, data_proxy, asset, data, dt):
+        self._dt = dt
+        self._data = data if data is not None else EMPTYDict
+        self._prev_settlement = None
+        self._basis_spread = None
+        self._asset = asset
+        self._data_proxy = data_proxy
+        self._prev_close = None
+    @property
+    def symbol(self):
+        """
+        [str] 交易标的代码
+        """
+        return self._asset.symbol.replace('XSHE', 'SZ').replace('XSHG', 'SS')
+    @property
+    def name(self):
+        """
+        [str] 标的名称
+        """
+        return self._asset.name
+    @property
+    def open(self):
+        """
+        [float] 当前周期开盘价
+        """
+        return self._data['open']
+    @property
+    def close(self):
+        """
+        [float] 当前周期收盘价
+        """
+        return self._data['close']
+    @property
+    def price(self):
+        """
+        [float] 当前周期最新价
+        """
+        return self._data['price']
+    @property
+    def low(self):
+        """
+        [float] 当前周期最低价
+        """
+        return self._data['low']
+    @property
+    def high(self):
+        """
+        [float] 当前周期最高价
+        """
+        return self._data['high']
+    @property
+    def volume(self):
+        """
+        [float] 当前周期成交量
+        """
+        try:
+            return self._data['amount']
+        except (KeyError, ValueError):
+            return self._data['volume']
+    @property
+    def money(self):
+        """
+        [float] 当前周期成交额
+        """
+        try:
+            return self._data['balance']
+        except (KeyError, ValueError):
+            return self._data['money']
+    @property
+    def is_open(self):
+        """
+        [int64] 当前是否停牌
+        """
+        try:
+            return self._data['is_open']
+        except (KeyError, ValueError):
+            return int(self.volume > 0)
+    @property
+    def preclose(self):
+        """
+        [float] 昨收盘价(仅日线返回)
+        """
+        try:
+            return self._data['preclose']
+        except (KeyError, ValueError):
+            return float(0)
+    @property
+    def high_limit(self):
+        """
+        [float] 涨停价(仅日线返回)
+        """
+        try:
+            return self._data['high_limit']
+        except (KeyError, ValueError):
+            return float(0)
+    @property
+    def low_limit(self):
+        """
+        [float] 跌停价(仅日线返回)
+        """
+        try:
+            return self._data['low_limit']
+        except (KeyError, ValueError):
+            return float(0)
+    @property
+    def unlimited(self):
+        """
+        [float] 是否无涨跌停限制(仅日线返回)
+        """
+        try:
+            return self._data['unlimited']
+        except (KeyError, ValueError):
+            return float(0)
+    @property
+    def limit_up(self):
+        """
+        [float] 涨停价
+        """
+        try:
+            v = self._data['limit_up']
+            return v if v != 0 else np.nan
+        except (KeyError, ValueError):
+            return np.nan
+    @property
+    def limit_down(self):
+        """
+        [float] 跌停价
+        """
+        try:
+            v = self._data['limit_down']
+            return v if v != 0 else np.nan
+        except (KeyError, ValueError):
+            return np.nan
+    @property
+    def prev_close(self):
+        """
+        [float] 昨结价
+        """
+        try:
+            return self._data['prev_close']
+        except (ValueError, KeyError):
+            pass
+        if self._prev_close is None:
+            self._prev_close = self._data_proxy.get_prev_bar(self._asset.symbol, self._dt).close
+        return self._prev_close
+    """"""
+    @property
+    def last(self):
+        """
+        [float] 当前最新价
+        """
+        return self.close
+    @property
+    def total_turnover(self):
+        """
+        [float] 截止到当前的成交额
+        """
+        try:
+            return self._data['balance']
+        except (KeyError, ValueError):
+            return np.nan
+    @property
+    def discount_rate(self):
+        return self._data['discount_rate']
+    @property
+    def acc_net_value(self):
+        return self._data['acc_net_value']
+    @property
+    def unit_net_value(self):
+        return self._data['unit_net_value']
+    INDEX_MAP = {'IF': '000300.XSHG', 'IH': '000016.XSHG', 'IC': '000905.XSHG'}
+    """"""
+    @property
+    def settlement(self):
+        """
+        [float] 结算价（期货专用）
+        """
+        try:
+            return self._data['settlement']
+        except (KeyError, ValueError):
+            return np.nan
+    @property
+    def prev_settlement(self):
+        """
+        [float] 昨日结算价（期货专用）
+        """
+        try:
+            return self._data['prev_settlement']
+        except (ValueError, KeyError):
+            pass
+        if self._prev_settlement is None:
+            self._prev_settlement = self._data_proxy.get_prev_settlement(self._asset, self._dt)
+        return self._prev_settlement
+    @property
+    def open_interest(self):
+        """
+        [float] 截止到当前的持仓量（期货专用）
+        """
+        try:
+            return self._data['open_interest']
+        except (KeyError, ValueError):
+            return np.nan
+    @property
+    def prod_code(self):
+        """
+        [str]合约代码(实时行情专用)
+        """
+        try:
+            return self._data['prod_code']
+        except (KeyError, ValueError):
+            return ''
+    @property
+    def bid_grp(self):
+        """
+        [dict]买盘档位(实时行情专用)
+        """
+        try:
+            return self._data['bid_grp']
+        except (KeyError, ValueError):
+            return {}
+    @property
+    def offer_grp(self):
+        """
+        [dict]卖盘档位(实时行情专用)
+        """
+        try:
+            return self._data['offer_grp']
+        except (KeyError, ValueError):
+            return {}
+    @property
+    def amount_postion(self):
+        """
+        [int]持仓量(实时行情专用)
+        """
+        try:
+            return self._data['amount_postion']
+        except (KeyError, ValueError):
+            return np.nan
+    @property
+    def datetime(self):
+        if self._dt is not None:
+            return self._dt
+        else:
+            return None
+    @property
+    def asset(self):
+        return self._asset
+    @property
+    def is_trading(self):
+        """
+        [datetime.datetime] 时间戳
+        """
+        return self._data['amount'] > 0
+    @property
+    def isnan(self):
+        return np.isnan(self._data['close'])
+    @property
+    def suspended(self):
+        if self.isnan:
+            return True
+        else:
+            return self._data_proxy.is_suspended(self._asset.symbol, int(self._data['datetime']))
+    def _history_bars(self, intervals, field, frequency):
+        if frequency == 'daily':
+            frequency = '1d'
+        if frequency == 'minute':
+            frequency = '1m'
+        engine = Engine.instance()
+        dt = engine.calendar_dt
+        if engine.config.strategy.frequency == '1m' and frequency == '1d' or ExecutionContext.phase() == ExecutionPhase.BEFORE_TRADING_START:
+            dt = engine.data_proxy.get_previous_trading_date(engine.calendar_dt.date())
+        return engine.data_proxy.get_history(self.asset, intervals, convert_dt_to_int(dt), frequency, field)
+    def mavg(self, intervals, field='close', frequency='1d'):
+        bars = self._history_bars(intervals, field, frequency)
+        return bars.mean()
+    def vwap(self, intervals, frequency='1d'):
+        bars = self._history_bars(intervals, ['close', 'amount'], frequency)
+        sum_ = bars['amount'].sum()
+        if sum_ == 0:
+            return 0
+        else:
+            return np.dot(bars['close'], bars['amount']) / sum_
+    def stddev(self, intervals, field='close', frequency='1d'):
+        bars = self._history_bars(intervals, field, frequency)
+        return np.nanstd(bars, ddof=True)
+    def __repr__(self):
+        base = [('symbol', repr(self._asset.symbol)), ('name', repr(self._asset.name)), ('dt', repr(self._dt)), ('open', repr(self.open)), ('close', repr(self.close)), ('price', repr(self.price)), ('low', repr(self.low)), ('high', repr(self.high)), ('volume', repr(self.volume)), ('money', repr(self.money)), ('preclose', repr(self.preclose)), ('high_limit', repr(self.high_limit)), ('low_limit', repr(self.low_limit)), ('unlimited', repr(self.unlimited)), ('datetime', repr(self.datetime)), ('is_open', repr(self.is_open))]
+        """"""
+        return 'BarData({0})'.format(', '.join(('{0}: {1}'.format(k, v) for k, v in base)))
+    def __getitem__(self, key):
+        return self.__dict__[key]
+class TickBar(object):
+    def __init__(self, asset, data, dt):
+        """
+        Tick 对象
+        :param asset
+        :param data:
+        :param dt: datetime
+        """
+        self._dt = dt
+        self._tick_dict = data if data is not None else EMPTYDict
+        self._asset = asset
+        self._tick_dict = data
+        self._dt = dt
+    @property
+    def asset(self):
+        return self._asset
+    @property
+    def symbol(self):
+        """
+        [str] 标的代码
+        """
+        return self.asset.symbol
+    @property
+    def name(self):
+        return self.asset.name
+    @property
+    def datetime(self):
+        if self._dt is not None:
+            return self._dt
+        else:
+            return None
+    @property
+    def open(self):
+        """
+        [float] 当日开盘价
+        """
+        return self._tick_dict['open']
+    @property
+    def last(self):
+        """
+        [float] 当前最新价
+        """
+        return self._tick_dict['last']
+    @property
+    def close(self):
+        """
+        [close] 当前最新价，兼容撮合
+        """
+        return self.last
+    @property
+    def high(self):
+        """
+        [float] 截止到当前的最高价
+        """
+        return self._tick_dict['high']
+    @property
+    def low(self):
+        """
+        [float] 截止到当前的最低价
+        """
+        return self._tick_dict['low']
+    @property
+    def prev_close(self):
+        """
+       [float] 昨日收盘价
+       """
+        try:
+            return self._tick_dict['prev_close']
+        except (KeyError, ValueError):
+            return 0
+    @property
+    def volume(self):
+        """
+        [float] 截止到当前的成交量
+        """
+        try:
+            return self._tick_dict['amount']
+        except (KeyError, ValueError):
+            return 0
+    @property
+    def total_turnover(self):
+        """
+        [float] 截止到当前的成交额
+        """
+        try:
+            return self._tick_dict['total_turnover']
+        except (KeyError, ValueError):
+            return 0
+    @property
+    def open_interest(self):
+        """
+        [float] 截止到当前的持仓量（期货专用）
+        """
+        try:
+            return self._tick_dict['open_interest']
+        except (KeyError, ValueError):
+            return 0
+    @property
+    def prev_settlement(self):
+        """
+        [float] 昨日结算价（期货专用）
+        """
+        try:
+            return self._tick_dict['prev_settlement']
+        except (KeyError, ValueError):
+            return 0
+    @property
+    def asks(self):
+        try:
+            return self._tick_dict['asks']
+        except (KeyError, ValueError):
+            return [0] * 5
+    @property
+    def ask_vols(self):
+        try:
+            return self._tick_dict['ask_vols']
+        except (KeyError, ValueError):
+            return [0] * 5
+    @property
+    def bids(self):
+        try:
+            return self._tick_dict['bids']
+        except (KeyError, ValueError):
+            return [0] * 5
+    @property
+    def bid_vols(self):
+        try:
+            return self._tick_dict['bid_vols']
+        except (KeyError, ValueError):
+            return [0] * 5
+    @property
+    def limit_up(self):
+        try:
+            return self._tick_dict['limit_up']
+        except (KeyError, ValueError):
+            return 0
+    @property
+    def limit_down(self):
+        try:
+            return self._tick_dict['limit_down']
+        except (KeyError, ValueError):
+            return 0
+    @property
+    def isnan(self):
+        return np.isnan(self.last)
+    def __repr__(self):
+        items = []
+        for name in dir(self):
+            if name.startswith('_'):
+                continue
+            items.append((name, getattr(self, name)))
+            continue
+        return 'Tick({0})'.format(', '.join(('{0}: {1}'.format(k, v) for k, v in items)))
+    def __getitem__(self, key):
+        return getattr(self, key)
+class BarDict(object):
+    def __init__(self, engine, frequency):
+        self._dt = None
+        self._engine = engine
+        self._frequency = frequency
+        self._cache = {}
+        self.start_date_tmp = datetime.datetime.strptime(self._engine.config.strategy.start_date.strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
+    def update_dt(self, dt):
+        self._dt = dt
+        self._cache.clear()
+    def items(self):
+        return ((o, self.__getitem__(o)) for o in self._engine.universe)
+    def keys(self):
+        return (o for o in self._engine.universe)
+    def values(self):
+        return (self.__getitem__(o) for o in self._engine.universe)
+    def __contains__(self, o):
+        return o in self._engine.universe
+    def __len__(self):
+        return len(self._engine.universe)
+    def __getitem__(self, key):
+        if not isinstance(key, six.string_types):
+            raise user_exc(ValueError('标的参数 key {} 不支持'.format(key)))
+        asset = self._engine.data_proxy.get_assets(key)
+        if not asset:
+            raise user_exc(ValueError('标的参数 key {} 不支持'.format(key)))
+        try:
+            return self._cache[asset.symbol]
+        except KeyError:
+            try:
+                stage_tmp = self._engine.get_current_stage()
+                if EventEnum.BEFORE_TRADING_START == stage_tmp and self._dt == self.start_date_tmp:
+                    if self._frequency == '1d':
+                        dt_tmp = self._engine.data_proxy.get_previous_trading_date(self._dt)
+                        bar = self._engine.data_proxy.get_bar(asset, dt_tmp, self._frequency)
+                    elif self._engine.config.strategy.run_type.value == RunType.BACKTEST.value:
+                        bar = self._engine.data_proxy.get_bar(asset, self._dt, self._frequency)
+                    else:
+                        dt_tmp = self._engine.data_proxy.get_previous_trading_date(self._dt)
+                        dt_tmp = datetime.datetime.strptime(dt_tmp.strftime('%Y-%m-%d 15:00:00'), '%Y-%m-%d %H:%M:%S')
+                        bar = self._engine.data_proxy.get_bar(asset, dt_tmp, self._frequency)
+                else:
+                    bar = self._engine.data_proxy.get_bar(asset, self._dt, self._frequency)
+            except Exception as e:
+                system_log.exception(e)
+                raise user_exc(KeyError(_('标的{}, 数据获取异常').format(key)))
+            if bar is None:
+                return self._engine.data_proxy.BarData(self._engine.data_proxy, asset, EMPTYDict, self._dt)
+            self._cache[asset.symbol] = bar
+            return bar
+    @property
+    def dt(self):
+        return self._dt
+    def __repr__(self):
+        keys = list(self.keys())
+        s = ', '.join(keys[:10]) + (' ...' if len(keys) > 10 else '')
+        return '{}({})'.format(type(self).__name__, s)

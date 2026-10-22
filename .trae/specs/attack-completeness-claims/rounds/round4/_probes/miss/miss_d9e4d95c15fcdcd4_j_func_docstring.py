@@ -1,0 +1,64 @@
+# Source Generated with Decompyle++ (Python version)
+# File: exrights_storage.pyc (Python 3.11)
+
+import os
+import six
+from IQCommon import pandas as pd
+from datetime import datetime
+from IQData.data.base_storage import BaseStorage
+from IQCommon.logger import system_log
+from IQData.utils.pycompatibility import lru_cache
+from IQCommon.exception import get_traceback_message
+class ExrightsStorage(BaseStorage):
+    __doc__ = """
+    除权除息信息存储
+    """
+    _dividends = None
+    def __init__(self, path):
+        if self._dividends:
+            return None
+        else:
+            self.latest_day = datetime.now().strftime('%Y%m%d')
+            self.path = path
+            self.load()
+    def load(self):
+        try:
+            self._dividends = pd.read_pickle(self.path)
+            return None
+        except Exception as ex:
+            system_log.error('除权除息信息路径{}错误'.format(os.path.abspath(self.path)))
+            raise FileNotFoundError('除权除息信息路径{}错误,请改正后重试'.format(os.path.abspath(self.path)))
+    def reload(self):
+        tmp_now = datetime.now().strftime('%Y%m%d')
+        if self.latest_day != tmp_now:
+            self.load()
+            self.latest_day = tmp_now
+            return None
+        else:
+            return None
+    def get_dividends(self, symbols, date):
+        '\n        获取代码的分红配股信息\n        :param symbols: 代码或代码列表\n        :type list|str\n        :param date: 查询日期\n        :type int\n        :return: {}\n        Y'
+        if isinstance(symbols, six.string_types):
+            symbols = [symbols]
+        if date is None:
+            return self._get_all_dividend(symbols)
+        else:
+            return self._get_dividend(symbols, date)
+    def _get_all_dividend(self, symbols):
+        self.reload()
+        result = {}
+        for symbol in symbols:
+            try:
+                result[symbol] = self._dividends[symbol]
+            except KeyError:
+                pass
+        return result
+    def _get_dividend(self, symbols, date):
+        self.reload()
+        result = {}
+        for symbol in symbols:
+            try:
+                result[symbol] = self._dividends[symbol][date]
+            except KeyError:
+                pass
+        return result

@@ -1,0 +1,159 @@
+# Source Generated with Decompyle++ (Python version)
+# File: data_cache.pyc (Python 3.11)
+
+from cachetools import LRUCache
+from IQData.enumerate import DataType, StoreType
+from IQCommon.exception import get_traceback_message
+from IQCommon.logger import system_log
+class CacheContainer(object):
+    __doc__ = """
+    数据缓存容器
+    """
+    def __init__(maxsize, self=10000):
+        self._cache = LRUCache(maxsize)
+    def update(self, key, values):
+        self._cache[key] = values
+    def delete(self, key):
+        try:
+            del (self._cache[key])
+            return None
+        except KeyError:
+            system_log.error(get_traceback_message())
+            return None
+    def has_key(self, key):
+        try:
+            return (True, self._cache[key])
+        except KeyError:
+            system_log.error(get_traceback_message())
+            return (False, None)
+    def clear(self):
+        self._cache.clear()
+class CacheManager(object):
+    @staticmethod
+    def instance():
+        if not hasattr(CacheManager, '_instance'):
+            CacheManager._instance = CacheManager()
+            CacheManager._cache = CacheContainer()
+            from IQData.engine import Engine
+            CacheManager._root = Engine.instance().config.system.data_path
+            CacheManager._data = None
+            data_cache_enabled = Engine.instance().config.system.data_cache.enabled
+            if data_cache_enabled:
+                CacheManager._enabled = True
+            else:
+                CacheManager._enabled = False
+        return CacheManager._instance
+    def enable_cache(self):
+        """
+        启用缓存功能
+        :return:
+        """
+        self._enabled = True
+    def status(self):
+        """
+        查询缓存启用状态
+        :return:
+        """
+        return self._enabled
+    def disable_cache(self):
+        """
+        停用缓存功能
+        :return:
+        """
+        self._enabled = False
+    def clear_cache(self):
+        """
+        清空缓存数据
+        :return:
+        """
+        self._cache.clear()
+    def add_cache(self, data, symbol, frequency, start, end, target=None):
+        """
+        新增缓存
+        :return:
+        """
+        if self._enabled:
+            self._cache.update((symbol, frequency, start, end, target), data)
+            return None
+        else:
+            return None
+    def update_cache(self, data, symbol, frequency, start, end, target=None):
+        """
+        修改缓存
+        :return:
+        """
+        if self._enabled:
+            return self.add_cache(data, symbol, frequency, start, end, target)
+        else:
+            return None
+    def remove_cache(self, symbol, frequency, start, end, target=None):
+        """
+        删除缓存
+        :return:
+        """
+        if self._enabled:
+            self._cache.delete((symbol, frequency, start, end, target))
+            return None
+        else:
+            return None
+    def flush_cache(self, data, symbol, frequency, start, end, target=None, data_type=DataType.QUOTE, store_type=StoreType.BCOLZ):
+        """
+        持久化数据
+        :param data:
+        :param symbol:
+        :param frequency:
+        :param start:
+        :param end:
+        :param data_type:
+        :param store_type:
+        :return:
+        """
+        if self._enabled:
+            self.add_cache(data, symbol, frequency, start, end, target)
+            self._data.write_data(data, symbol, frequency, start, end, data_type, store_type)
+            return None
+        else:
+            return None
+    def has_cache(self, symbol, frequency, start, end, target=None):
+        """
+        是否命中缓存
+        :param symbol:
+        :param frequency:
+        :param start:
+        :param end:
+        :param target:
+        :return:
+        """
+        if self._enabled:
+            flag, data = self._cache.has_key((symbol, frequency, start, end, target))
+            if flag:
+                return (flag, data)
+            elif self.get_local_index(symbol, frequency, start, end, target):
+                data = self.get_local_data(symbol, frequency, start, end, target)
+                return (True, data)
+            else:
+                return (False, None)
+        else:
+            return (False, None)
+    def get_local_index(self, symbol, frequency, start, end, target=None):
+        """
+        查询索引记录
+        :param symbol:
+        :param frequency:
+        :param start:
+        :param end:
+        :param target:
+        :return:
+        """
+        return self._data.get_index(symbol, frequency, start, end, target)
+    def get_local_data(self, symbol, frequency, start, end, target=None):
+        """
+        查询数据
+        :param symbol:
+        :param frequency:
+        :param start:
+        :param end:
+        :param target:
+        :return:
+        """
+        return self._data.read_data(symbol, frequency, start, end, target)

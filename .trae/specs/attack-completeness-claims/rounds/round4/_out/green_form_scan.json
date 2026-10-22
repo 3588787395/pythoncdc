@@ -1,0 +1,33 @@
+{
+ "scanned": 416,
+ "module_level_global": 12,
+ "has_local_annotation": 1,
+ "has_func_docstring": 216,
+ "has_float_const": 59,
+ "examples": {
+  "has_func_docstring": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/base_api.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/check_strategy.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/wrapper.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/arg_checker.pyc"
+  ],
+  "module_level_global": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc"
+  ],
+  "has_float_const": [
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/config.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/const.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+   "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc"
+  ],
+  "has_local_annotation": [
+   "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\m08_module_stmts.pyc"
+  ]
+ }
+}

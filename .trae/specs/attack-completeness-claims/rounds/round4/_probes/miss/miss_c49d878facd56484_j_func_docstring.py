@@ -1,0 +1,237 @@
+# Source Generated with Decompyle++ (Python version)
+# File: calexrights_func.pyc (Python 3.11)
+
+from IQCommon import pandas as pd
+import numpy as np
+from IQData.enumerate import BarDataEnum
+from IQData.fly_enum import IS_OPEN
+from IQCommon.data import pyKLine
+kline = pyKLine.PyKLine()
+def change_his_to_dynamic_forward(data, ex_data, cur_date, tmp_index):
+    '\n    动态前复权数据处理函数\n    :param data:处理数据\n    :type data: :pandas.DataFrame\n\n    :param ex_data:除权数据\n    :type ex_data: :pandas.DataFrame\n    \n    :param cur_date:当周期时间点\n    :type cur_date: :str\n    \n    :param tmp_index:动态前复权的处理字段索引\n    :type tmp_index: :int of list | None\n    \n    :return value:处理后数据\n    :type: :pandas.DataFrame | type of data\n    Y'
+    series = ex_data
+    tmp_data = kline.get_dynamic_exright_df(data, series, cur_date, tmp_index)
+    return tmp_data
+def change_his_to_forward(data, ex_data):
+    """
+    前复权数据处理函数
+    :param data:处理数据
+    :type data: :pandas.DataFrame
+
+    :param ex_data:除权数据
+    :type ex_data: :pandas.DataFrame
+
+    :return value:处理后数据
+    :type: :pandas.DataFrame | type of data
+    """
+    start_date_index = data.index[0].tz_localize(None).strftime('%Y-%m-%d 00:00:00')
+    end_date_index = data.index[-1].tz_localize(None).strftime('%Y-%m-%d 00:00:00')
+    series = ex_data
+    if series.empty:
+        return data
+    elif series[start_date_index:].empty:
+        return data
+    elif start_date_index == end_date_index:
+        n = list(series[start_date_index:].index)[0]
+        if n == start_date_index:
+            if len(series[start_date_index:].index) > 1:
+                n = list(series[start_date_index:].index)[1]
+            else:
+                return data
+        data = cal_of_exrights(data, float(series.loc[n, 'exer_forward_a']), float(series.loc[n, 'exer_forward_b']))
+        return data
+    else:
+        pre_index = None
+        tmp_data = None
+        if len(series[start_date_index:].index) > 0:
+            tmp_start_index = series[start_date_index:].index[0]
+        else:
+            tmp_start_index = None
+    if len(series[end_date_index:].index) > 1:
+        tmp_end_index = series[end_date_index:].index[1]
+    else:
+        tmp_end_index = None
+    for n in list(series[tmp_start_index:tmp_end_index].index):
+        if data[pre_index:n].empty:
+            continue
+        if len(data[pre_index:n].index) == 1:
+            if list(data[pre_index:n].index)[0].tz_localize(None) == pd.Timestamp(start_date_index):
+                continue
+            elif list(data[pre_index:n].index)[0].tz_localize(None) == pd.Timestamp(end_date_index):
+                pass
+        if pre_index is None:
+            tmp_data = data[pre_index:n]
+            if tmp_data[n:].empty:
+                tmp_data = cal_of_exrights(data[pre_index:n], float(series.loc[n, 'exer_forward_a']), float(series.loc[n, 'exer_forward_b']))
+            else:
+                tmp_data = cal_of_exrights(data[pre_index:n][:-1], float(series.loc[n, 'exer_forward_a']), float(series.loc[n, 'exer_forward_b']))
+        else:
+            tmp = data[pre_index:n]
+            if tmp[n:].empty:
+                tmp = cal_of_exrights(data[pre_index:n], float(series.loc[n, 'exer_forward_a']), float(series.loc[n, 'exer_forward_b']))
+            else:
+                tmp = cal_of_exrights(data[pre_index:n][:-1], float(series.loc[n, 'exer_forward_a']), float(series.loc[n, 'exer_forward_b']))
+            tmp_data = tmp_data.append(tmp)
+        if pre_index != n:
+            pre_index = n
+    if pre_index:
+        tmp_data = tmp_data.append(data[pre_index:])
+    if tmp_data is not None:
+        data = tmp_data
+    return data
+def change_his_to_backward(data, ex_data):
+    """
+    后复权数据处理函数
+    :param data:处理数据
+    :type data: :pandas.DataFrame
+
+    :param ex_data:除权数据
+    :type ex_data: :pandas.DataFrame
+
+    :return value:处理后数据
+    :type: :pandas.DataFrame | type of data
+    """
+    if len(data) == 0:
+        return data
+    else:
+        start_date_index = data.index[0].tz_localize(None).strftime('%Y-%m-%d 00:00:00')
+        end_date_index = data.index[-1].tz_localize(None).strftime('%Y-%m-%d 00:00:00')
+        series = ex_data
+        if series.empty:
+            return data
+        elif series[:end_date_index].empty:
+            return data
+        elif start_date_index == end_date_index:
+            n = list(series[:end_date_index].index)[-1]
+            data = cal_of_exrights(data, float(series.loc[n, 'exer_backward_a']), float(series.loc[n, 'exer_backward_b']))
+            return data
+        elif len(series[:start_date_index].index) > 1:
+            if start_date_index in series.index:
+                if len(series[:start_date_index].index) >= 2:
+                    tmp_start_index = series[:start_date_index].index[-2]
+                else:
+                    tmp_start_index = None
+            else:
+                tmp_start_index = series[:start_date_index].index[-1]
+        else:
+            tmp_start_index = None
+        if len(series[end_date_index:].index) > 0:
+            tmp_end_index = series[end_date_index:].index[0]
+        else:
+            tmp_end_index = None
+        first_time = data.index[0].tz_localize(None).strftime('%H%M%S')
+        index_list = list(series[tmp_start_index:tmp_end_index].index)
+        pre_index = None
+        pre_data_index = None
+        tmp_data = None
+        for n in index_list:
+            if int(first_time) > 0:
+                cur_data_index = n.replace('00:00:00', '23:59:59')
+            else:
+                cur_data_index = n
+            if pre_index is None:
+                tmp_data = data[:cur_data_index].copy()
+            elif data[pre_data_index:cur_data_index].empty:
+                break
+            else:
+                if cur_data_index in data.index:
+                    tmp = cal_of_exrights(data[pre_data_index:cur_data_index][:-1], float(series.loc[pre_index, 'exer_backward_a']), float(series.loc[pre_index, 'exer_backward_b']))
+                else:
+                    tmp = cal_of_exrights(data[pre_data_index:cur_data_index], float(series.loc[pre_index, 'exer_backward_a']), float(series.loc[pre_index, 'exer_backward_b']))
+                tmp_data = tmp_data.append(tmp)
+            if pre_index != n:
+                pre_index = n
+            if pre_data_index != cur_data_index:
+                pre_data_index = cur_data_index
+        if pre_data_index and len(data[pre_data_index:]) > 0:
+            tmp_data = tmp_data.append(cal_of_exrights(data[pre_data_index:], float(series.loc[pre_index, 'exer_backward_a']), float(series.loc[pre_index, 'exer_backward_b'])))
+        if tmp_data is not None:
+            data = tmp_data
+        return data
+def save_is_open_and_money_and_volume_column(data):
+    """
+    除权数据处理时，临时保存不除权的数据
+    :param data:处理数据
+    :type data: :pandas.DataFrame
+
+    :return value:是否停牌字段，总交易额字段，总交易量字段
+    :type: :Series, Series, Series
+    """
+    tmp_is_open = pd.DataFrame()
+    tmp_money = pd.DataFrame()
+    tmp_volume = pd.DataFrame()
+    if isinstance(data, pd.DataFrame):
+        if IS_OPEN in data:
+            tmp_is_open = data[IS_OPEN]
+        if BarDataEnum.AMOUNT.value in data:
+            tmp_volume = data[BarDataEnum.AMOUNT.value]
+        if BarDataEnum.BALANCE.value in data:
+            tmp_money = data[BarDataEnum.BALANCE.value]
+    return (tmp_is_open, tmp_money, tmp_volume)
+def check_zero_of_data(data):
+    """
+    检查数据中是否含0的数据
+    :param data:处理数据
+    :type data: :pandas.DataFrame
+
+    :return value:包含 | 不包含
+    :type: :boolean True | False
+    """
+    if isinstance(data, pd.DataFrame):
+        if not data.empty and 0 in np.array(data[data.columns[0]]):
+            return True
+        return False
+    else:
+        return False
+def cal_of_data(data, xa, yb, check_zero=False):
+    """
+    矢量运算除权数据
+    :param data:处理数据
+    :type data: :pandas.DataFrame
+    
+    :param xa:因子a
+    :type xa: :float
+    
+    :param yb:因子b
+    :type yb: :float
+    
+    :param data:是否含0
+    :type data: :boolean True | False
+    
+    :return value:处理后数据
+    :type: :pandas.DataFrame | type of data
+    """
+    if isinstance(data, pd.DataFrame):
+        if check_zero:
+            for column in data.columns:
+                data[column] = np.where(data[column] == 0, data[column], data[column] * xa + yb)
+        else:
+            data = data * xa + yb
+        return data
+    else:
+        return data
+def cal_of_exrights(data, xa, yb):
+    """
+    计算除权数据，并保证部分数据不除权
+    :param data:处理数据
+    :type data: :pandas.DataFrame
+    
+    :param xa:因子a
+    :type xa: :float
+    
+    :param yb:因子b
+    :type yb: :float
+    
+    :return value:处理后数据
+    :type: :pandas.DataFrame | type of data
+    """
+    tmp_is_open, tmp_money, tmp_volume = save_is_open_and_money_and_volume_column(data)
+    check_zero = check_zero_of_data(data)
+    tmp_data = cal_of_data(data, xa, yb, check_zero)
+    if not tmp_is_open.empty:
+        tmp_data[IS_OPEN] = tmp_is_open
+    if not tmp_money.empty:
+        tmp_data[BarDataEnum.BALANCE.value] = tmp_money
+    if not tmp_volume.empty:
+        tmp_data[BarDataEnum.AMOUNT.value] = tmp_volume
+    return tmp_data

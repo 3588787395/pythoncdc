@@ -1,0 +1,468 @@
+# Source Generated with Decompyle++ (Python version)
+# File: hqsdk_data_source.pyc (Python 3.11)
+
+global snapshot_dict
+from datetime import timedelta, datetime
+import math
+import six
+import numpy as np
+from IQCommon import pandas as pd
+from IQData.plugins.plugin_system_hqsdk_data_source.HQSDK_PYD import HQSVR
+from IQCommon.logger import system_log
+from IQData.utils.datetime_func import convert_int_to_datetime, convert_int_to_date, convert_date_to_date_int
+from IQData.enumerate import H5_EMPTY_BAR_NP_ARRAY, LevelType
+from IQData.utils import add_profile
+snapshot_dict = {}
+def OnReceived(values):
+    '\n    接收主推数据,当订阅时传入错误代码时,没有主推数据,则不会触发该函数\n    :param values:主推数据\n    :return:\n    Y'
+    received_data = eval(values)
+    symbol = list(received_data.keys())[0]
+    snapshot_data = received_data[symbol]['tick']
+    snapshot_dict[symbol] = snapshot_data
+class HqsdkDataSource(object):
+    def __init__(self, level_type):
+        """
+        :param level_type: 行情级别
+        """
+        self.level_type = level_type
+        if self.level_type == LevelType.LEVEL1.value:
+            self.hq = HQSVR(0, 'configure_L1', OnReceived)
+            return None
+        elif self.level_type == LevelType.LEVEL2.value:
+            self.hq = HQSVR(0, 'configure_L2', OnReceived)
+            return None
+        else:
+            raise Exception('请配置正确的行情级别')
+    def subscribe(self, symbol):
+        """
+        订阅行情快照
+        :param symbol: str or list, 代码
+        """
+        if isinstance(symbol, str):
+            symbol = [symbol]
+        self.hq.subscribe_tick_by_symbols(symbol, 1)
+    def unsubscribe(self, symbol):
+        """
+        退订行情快照
+        :param symbol: str or list, 代码
+        """
+        if isinstance(symbol, str):
+            symbol = [symbol]
+        self.hq.subscribe_tick_by_symbols(symbol, 2)
+    def get_snapshot(self, symbol):
+        """
+        获取行情快照(从订阅主推里获取)
+        :param symbol | str: 代码
+        :return: dict
+        """
+        symbol = symbol.replace('SS', 'XSHG').replace('SZ', 'XSHE')
+        try:
+            snapshot = snapshot_dict[symbol]
+        except KeyError:
+            system_log.info('未取到代码{}的快照数据'.format(symbol))
+            empty_dict = {}
+            return empty_dict
+        nTimeStamp = int(snapshot[0])
+        trade_mins = int(snapshot[1])
+        trade_status = snapshot[2]
+        preclose_px = float(snapshot[3])
+        open_px = float(snapshot[4])
+        last_px = float(snapshot[5])
+        high_px = float(snapshot[6])
+        low_px = float(snapshot[7])
+        close_px = float(snapshot[8])
+        avg_px = float(snapshot[9])
+        wavg_px = float(snapshot[10])
+        business_count = int(snapshot[11])
+        business_amount = int(snapshot[12])
+        business_balance = int(snapshot[13])
+        up_px = float(snapshot[14])
+        down_px = float(snapshot[15])
+        current_amount = int(snapshot[16])
+        business_amount_in = int(snapshot[17])
+        business_amount_out = int(snapshot[18])
+        bid_grp_str = snapshot[19]
+        bid_grp = dict(map(lambda x: (int(x[0]), [float(x[1][0]), int(x[1][1]), int(x[1][2])]), bid_grp_str.items()))
+        offer_grp_str = snapshot[20]
+        offer_grp = dict(map(lambda x: (int(x[0]), [float(x[1][0]), int(x[1][1]), int(x[1][2])]), offer_grp_str.items()))
+        issueDate = int(snapshot[21])
+        amount = int(snapshot[22])
+        settlement = float(snapshot[23])
+        prev_settlement = float(snapshot[24])
+        turnover_ratio = float(snapshot[25])
+        business_balance_scale = int(snapshot[26])
+        exercise_date = int(snapshot[27])
+        exercise_price = float(snapshot[28])
+        contract_unit = int(snapshot[29])
+        contract_code = snapshot[30]
+        exercise_type = snapshot[31]
+        call_put = snapshot[32]
+        start_trade_date = int(snapshot[33])
+        end_trade_date = int(snapshot[34])
+        expire_date = int(snapshot[35])
+        security_status_flag = int(snapshot[36])
+        tick_size = float(snapshot[37])
+        symbol_snapshot = {'nTimeStamp': nTimeStamp, 'trade_mins': trade_mins, 'trade_status': trade_status, 'preclose_px': preclose_px, 'open_px': open_px, 'last_px': last_px, 'high_px': high_px, 'low_px': low_px, 'close_px': close_px, 'avg_px': avg_px, 'wavg_px': wavg_px, 'business_count': business_count, 'business_amount': business_amount, 'business_balance': business_balance, 'up_px': up_px, 'down_px': down_px, 'current_amount': current_amount, 'business_amount_in': business_amount_in, 'business_amount_out': business_amount_out, 'bid_grp': bid_grp, 'offer_grp': offer_grp, 'issueDate': issueDate, 'amount': amount, 'settlement': settlement, 'prev_settlement': prev_settlement, 'turnover_ratio': turnover_ratio, 'business_balance_scale': business_balance_scale, 'exercise_date': exercise_date, 'exercise_price': exercise_price, 'contract_unit': contract_unit, 'contract_code': contract_code, 'exercise_type': exercise_type, 'call_put': call_put, 'start_trade_date': start_trade_date, 'end_trade_date': end_trade_date, 'expire_date': expire_date, 'security_status_flag': security_status_flag, 'tick_size': tick_size}
+        return symbol_snapshot
+    def get_kline_by_offset_hqsdk(self, symbol, date, data_count, frequency, fq=0):
+        """
+        按照偏移取K线,H5跳过停牌数据.
+        :param symbol: str, 代码
+        :param date: datetime.datetime, 查询日期
+        :param data_count: int, 查询的根数
+        :param frequency: str, '1d'表示日线, '1m'表示分钟线
+        :param fq:int, 数据复权选项，0表示不复权, 1表示前复权, 2表示后复权
+        :return: numpy.ndarray, 返回查询日期往前data_count根K线,包括查询端点
+        """
+        kline_data_total = np.empty([0, 11])
+        N_COUNT_BY_OFFSET = 1440
+        search_direction = 1
+        fields = []
+        if data_count > N_COUNT_BY_OFFSET:
+            n_loop = math.ceil(data_count / N_COUNT_BY_OFFSET)
+            for i in range(n_loop):
+                if data_count >= N_COUNT_BY_OFFSET:
+                    cout_i = N_COUNT_BY_OFFSET
+                else:
+                    cout_i = data_count
+                data_count -= N_COUNT_BY_OFFSET
+                if frequency == '1d':
+                    min_time = 0
+                    date = int((date + timedelta(days=1)).strftime('%Y%m%d'))
+                    kline_str = self.hq.get_kline_by_offset(symbol, min_time, 6, search_direction, cout_i, fq, fields, date)
+                    kline_data = np.array(eval(kline_str)['data'][symbol])
+                    if kline_data.shape == ():
+                        kline_data = np.empty([0, 11])
+                    kline_data_total = np.concatenate((kline_data, kline_data_total))
+                    if len(kline_data_total) < N_COUNT_BY_OFFSET:
+                        system_log.info('函数入参data_count传入过大,系统未存储如此多的K线')
+                        break
+                    date = convert_int_to_datetime(int(kline_data_total[0][0]))
+                    date = date + timedelta(days=-1)
+                    continue
+                elif frequency == '1m':
+                    date = int((date + timedelta(minutes=1)).strftime('%Y%m%d%H%M'))
+                    min_time = date % 10000
+                    date = date // 10000
+                    kline_str = self.hq.get_kline_by_offset(symbol, min_time, 1, search_direction, cout_i, fq, fields, date)
+                    kline_data = np.array(eval(kline_str)['data'][symbol])
+                    if kline_data.shape == ():
+                        kline_data = np.empty([0, 11])
+                    kline_data_total = np.concatenate((kline_data, kline_data_total))
+                    if len(kline_data_total) < N_COUNT_BY_OFFSET:
+                        system_log.info('函数入参data_count传入过大,系统未存储如此多的K线')
+                        break
+                    date = convert_int_to_datetime(int(kline_data_total[0][0]))
+                    date = date + timedelta(minutes=-1)
+                    continue
+                else:
+                    system_log.info("暂不支持'1d','1m'之外的周期")
+                    return H5_EMPTY_BAR_NP_ARRAY
+        elif frequency == '1d':
+            min_time = 0
+            frequency = 6
+            date = int((date + timedelta(days=1)).strftime('%Y%m%d'))
+            kline_str = self.hq.get_kline_by_offset(symbol, min_time, frequency, search_direction, data_count, fq, fields, date)
+            kline_data_total = np.array(eval(kline_str)['data'][symbol])
+        elif frequency == '1m':
+            date = int((date + timedelta(minutes=1)).strftime('%Y%m%d%H%M'))
+            min_time = date % 10000
+            date = date // 10000
+            frequency = 1
+            kline_str = self.hq.get_kline_by_offset(symbol, min_time, frequency, search_direction, data_count, fq, fields, date)
+            kline_data_total = np.array(eval(kline_str)['data'][symbol])
+        else:
+            system_log.info("暂不支持'1d','1m'之外的周期")
+            return H5_EMPTY_BAR_NP_ARRAY
+        try:
+            date_time = kline_data_total[:, 0].astype(np.int64)
+            open = kline_data_total[:, 1].astype(float)
+            high = kline_data_total[:, 2].astype(float)
+            low = kline_data_total[:, 3].astype(float)
+            close = kline_data_total[:, 4].astype(float)
+            settlement = kline_data_total[:, 5].astype(float)
+            amount = kline_data_total[:, 6].astype(float)
+            business_amount = kline_data_total[:, 7].astype(float)
+            business_balance = kline_data_total[:, 8].astype(float)
+            turnover_ratio = kline_data_total[:, 9].astype(float)
+            preclose = kline_data_total[:, 10].astype(float)
+        except Exception:
+            system_log.info('未取到{}的K线数据,查看代码是否有误.如果是期货合约,查看期货是否过期'.format(symbol))
+            return H5_EMPTY_BAR_NP_ARRAY
+        dtype = [('datetime', np.int64), ('open', float), ('close', float), ('high', float), ('low', float), ('amount', float), ('balance', float), ('price', float), ('high_limit', float), ('low_limit', float), ('open_interest', float), ('basis_spread', float), ('settlement', float), ('prev_settlement', float)]
+        shape = (len(kline_data_total),)
+        kline_ndarray = np.empty(shape, dtype)
+        kline_ndarray['datetime'] = date_time
+        kline_ndarray['open'] = open
+        kline_ndarray['close'] = close
+        kline_ndarray['high'] = high
+        kline_ndarray['low'] = low
+        kline_ndarray['amount'] = business_amount
+        kline_ndarray['balance'] = business_balance
+        kline_ndarray['price'] = close
+        kline_ndarray['high_limit'] = 0
+        kline_ndarray['low_limit'] = 0
+        kline_ndarray['open_interest'] = 0
+        kline_ndarray['basis_spread'] = 0
+        kline_ndarray['settlement'] = 0
+        kline_ndarray['prev_settlement'] = 0
+        return kline_ndarray
+    def get_kline_by_date_hqsdk(self, symbol, start_date_int, end_date_int, frequency, fq=0):
+        """
+        按日期范围取K线,H5跳过停牌数据.
+        :param symbol:str, 代码
+        :param start_date_int: int, 开始日期,格式为YYYYMMDD或者YYYYMMDDHHMM
+        :param end_date_int: int, 结束日期,格式为YYYYMMDD或者YYYYMMDDHHMM
+        :param frequency: str, '1d'表示日线, '1m'表示分钟线
+        :param fq:int, 数据复权选项，0表示不复权, 1表示前复权, 2表示后复权
+        :return: numpy.ndarray, 返回开始日期和结束日期之间的K线,包括端点
+        """
+        kline_data_total = np.empty([0, 11])
+        N_COUNT_BY_DATE_DAILY = 2000
+        N_DAY_BY_DATE_MINUTE = 7
+        fields = []
+        if frequency == '1d':
+            start_date = convert_int_to_date(start_date_int)
+            end_date = convert_int_to_date(end_date_int)
+            day_count = (end_date - start_date).days + 1
+            if day_count <= N_COUNT_BY_DATE_DAILY:
+                kline_str = self.hq.get_kline_by_date(symbol, str(start_date_int), str(end_date_int), '6', fq, fields)
+                kline_data_total = np.array(eval(kline_str)['data'][symbol])
+            else:
+                n_loop = math.ceil(day_count / N_COUNT_BY_DATE_DAILY)
+                start_day_i = start_date
+                for i in range(n_loop):
+                    if i < n_loop - 1:
+                        end_day_i = start_day_i + timedelta(days=N_COUNT_BY_DATE_DAILY - 1)
+                    else:
+                        end_day_i = end_date
+                    kline_str = self.hq.get_kline_by_date(symbol, str(convert_date_to_date_int(start_day_i)), str(convert_date_to_date_int(end_day_i)), '6', fq, fields)
+                    kline_data = np.array(eval(kline_str)['data'][symbol])
+                    if kline_data.shape == ():
+                        kline_data = np.empty([0, 11])
+                    kline_data_total = np.concatenate((kline_data_total, kline_data))
+                    start_day_i = end_day_i + timedelta(days=1)
+        elif frequency == '1m':
+            start_day_int = start_date_int // 10000
+            end_day_int = end_date_int // 10000
+            start_day = convert_int_to_date(start_day_int)
+            end_day = convert_int_to_date(end_day_int)
+            day_count = (end_day - start_day).days + 1
+            if day_count <= N_DAY_BY_DATE_MINUTE:
+                kline_str = self.hq.get_kline_by_date(symbol, str(start_day_int), str(end_day_int), '1', fq, fields)
+                kline_data_total = np.array(eval(kline_str)['data'][symbol])
+            else:
+                n_loop = math.ceil(day_count / N_DAY_BY_DATE_MINUTE)
+                start_day_i = start_day
+                for i in range(n_loop):
+                    if i < n_loop - 1:
+                        end_day_i = start_day_i + timedelta(days=N_DAY_BY_DATE_MINUTE - 1)
+                    else:
+                        end_day_i = end_day
+                    kline_str = self.hq.get_kline_by_date(symbol, str(convert_date_to_date_int(start_day_i)), str(convert_date_to_date_int(end_day_i)), '1', fq, fields)
+                    kline_data = np.array(eval(kline_str)['data'][symbol])
+                    if kline_data.shape == ():
+                        kline_data = np.empty([0, 11])
+                    kline_data_total = np.concatenate((kline_data_total, kline_data))
+                    start_day_i = end_day_i + timedelta(days=1)
+        else:
+            system_log.info("暂不支持'1d','1m'之外的周期")
+            return H5_EMPTY_BAR_NP_ARRAY
+        try:
+            date_time = kline_data_total[:, 0].astype(np.int64)
+            open = kline_data_total[:, 1].astype(float)
+            high = kline_data_total[:, 2].astype(float)
+            low = kline_data_total[:, 3].astype(float)
+            close = kline_data_total[:, 4].astype(float)
+            settlement = kline_data_total[:, 5].astype(float)
+            amount = kline_data_total[:, 6].astype(float)
+            business_amount = kline_data_total[:, 7].astype(float)
+            business_balance = kline_data_total[:, 8].astype(float)
+            turnover_ratio = kline_data_total[:, 9].astype(float)
+            preclose = kline_data_total[:, 10].astype(float)
+        except Exception:
+            system_log.error('未取到{}的K线数据,查看代码是否有误.如果是期货合约,查看期货是否过期'.format(symbol))
+            return H5_EMPTY_BAR_NP_ARRAY
+        dtype = [('datetime', np.int64), ('open', float), ('close', float), ('high', float), ('low', float), ('amount', float), ('balance', float), ('price', float), ('high_limit', float), ('low_limit', float), ('open_interest', float), ('basis_spread', float), ('settlement', float), ('prev_settlement', float)]
+        shape = (len(kline_data_total),)
+        kline_ndarray = np.empty(shape, dtype)
+        kline_ndarray['datetime'] = date_time
+        kline_ndarray['open'] = open
+        kline_ndarray['close'] = close
+        kline_ndarray['high'] = high
+        kline_ndarray['low'] = low
+        kline_ndarray['amount'] = business_amount
+        kline_ndarray['balance'] = business_balance
+        kline_ndarray['price'] = close
+        kline_ndarray['high_limit'] = 0
+        kline_ndarray['low_limit'] = 0
+        kline_ndarray['open_interest'] = 0
+        kline_ndarray['basis_spread'] = 0
+        kline_ndarray['settlement'] = 0
+        kline_ndarray['prev_settlement'] = 0
+        if frequency == '1d':
+            return kline_ndarray
+        else:
+            pos_left = kline_ndarray['datetime'].searchsorted(start_date_int, 'left')
+            pos_right = kline_ndarray['datetime'].searchsorted(end_date_int, 'right')
+            kline_ndarray_min = kline_ndarray[pos_left:pos_right]
+            return kline_ndarray_min
+    def get_individual_entrust(self, stocks, data_count=50, start_pos=0, search_direction=1):
+        """
+        获取当日逐笔委托行情数据
+        :param stocks: str|list, 股票代码
+        :param data_count: int, 数据条数,默认为50,最大为200
+        :param start_pos: int, 起始位置,默认为0
+        :param search_direction: int, 搜索方向(1向前,2向后),默认为1
+        :return:
+        Pandas.panel对象
+        Items axis：股票代码列表；
+        Major_axis axis:数据索引为自然数列；
+        Minor_axis axis:包含以下信息：
+            nTimeStamp :时间戳毫秒级；
+            hq_px:价格；
+            business_amount:委托数量；
+            order_no :委托编号；
+            business_direction:委托方向，0:卖，1:买，2:借入，3:出借；
+            trans_kind:委托类别，1:市价委托，2:限价委托，3:本方最优；
+        """
+        if self.level_type == LevelType.LEVEL1.value:
+            system_log.info('LEVEL1行情下没有逐笔委托数据')
+            return pd.Panel()
+        elif data_count > 200:
+            data_count = 200
+            system_log.info('最多返回200条数据')
+        if isinstance(stocks, str):
+            stocks = [stocks]
+        individual_entrust_str = self.hq.get_order(stocks, start_pos, search_direction, data_count, 0)
+        individual_entrust_data = eval(individual_entrust_str)['data']['order']
+        individual_entrust_dict = {}
+        for s in stocks:
+            try:
+                individual_entrust = np.array(individual_entrust_data[s])
+            except KeyError:
+                system_log.info('未取到代码{}的数据.请确认传入的代码无误,注意上海市场没有逐笔委托数据'.format(s))
+                individual_entrust = None
+            if individual_entrust is not None:
+                nTimeStamp = individual_entrust[:, 0].astype(np.int64)
+                hq_px = individual_entrust[:, 1].astype(float)
+                business_amount = individual_entrust[:, 2].astype(np.int64)
+                order_no = individual_entrust[:, 3].astype(np.int64)
+                business_direction = individual_entrust[:, 4].astype(np.int64)
+                trans_kind = individual_entrust[:, 5].astype(np.int64)
+                dtype = np.dtype([('nTimeStamp', np.int64), ('hq_px', float), ('business_amount', np.int64), ('order_no', np.int64), ('business_direction', np.int64), ('trans_kind', np.int64)])
+                shape = (len(individual_entrust),)
+                individual_entrust_ndarray = np.empty(shape, dtype)
+                individual_entrust_ndarray['nTimeStamp'] = nTimeStamp
+                individual_entrust_ndarray['hq_px'] = hq_px
+                individual_entrust_ndarray['business_amount'] = business_amount
+                individual_entrust_ndarray['order_no'] = order_no
+                individual_entrust_ndarray['business_direction'] = business_direction
+                individual_entrust_ndarray['trans_kind'] = trans_kind
+                individual_entrust_df = pd.DataFrame(individual_entrust_ndarray)
+            else:
+                individual_entrust_df = pd.DataFrame()
+            individual_entrust_dict[s] = individual_entrust_df
+        panel = pd.Panel(individual_entrust_dict, dtype=object)
+        return panel
+    def get_individual_transaction(self, stocks, data_count=50, start_pos=0, search_direction=1):
+        """
+        获取当日逐笔成交行情数据
+        :param stocks: str|list, 股票代码
+        :param data_count: int, 数据条数,默认为50,最大为200
+        :param start_pos: int, 起始位置,默认为0
+        :param search_direction: int, 搜索方向(1向前,2向后),默认为1
+        :return:
+        Pandas.panel对象
+        Items axis：股票代码列表；
+        Major_axis axis:数据索引为自然数列；
+        Minor_axis axis:包含以下信息：
+            nTimeStamp :时间戳毫秒级；
+            hq_px:价格；
+            business_amount:成交量；
+            trade_index :成交编号；
+            business_direction:成交方向，0:卖，1:买
+        """
+        if self.level_type == LevelType.LEVEL1.value:
+            system_log.info('LEVEL1行情下没有逐笔成交数据')
+            return pd.Panel()
+        elif data_count > 200:
+            data_count = 200
+            system_log.info('最多返回200条数据')
+        if isinstance(stocks, str):
+            stocks = [stocks]
+        individual_transaction_str = self.hq.get_transaction(stocks, start_pos, search_direction, data_count, 0)
+        individual_transaction_data = eval(individual_transaction_str)['data']['transaction']
+        individual_transaction_dict = {}
+        for s in stocks:
+            try:
+                individual_transaction = np.array(individual_transaction_data[s])
+            except KeyError:
+                system_log.info('未取到代码{}的数据.请确认传入的代码无误.'.format(s))
+                individual_transaction = None
+            if individual_transaction is not None:
+                nTimeStamp = individual_transaction[:, 0].astype(np.int64)
+                hq_px = individual_transaction[:, 1].astype(float)
+                business_amount = individual_transaction[:, 2].astype(np.int64)
+                trade_index = individual_transaction[:, 3].astype(np.int64)
+                business_direction = individual_transaction[:, 4].astype(np.int64)
+                dtype = np.dtype([('nTimeStamp', np.int64), ('hq_px', float), ('business_amount', np.int64), ('trade_index', np.int64), ('business_direction', np.int64)])
+                shape = (len(individual_transaction),)
+                individual_transaction_ndarray = np.empty(shape, dtype)
+                individual_transaction_ndarray['nTimeStamp'] = nTimeStamp
+                individual_transaction_ndarray['hq_px'] = hq_px
+                individual_transaction_ndarray['business_amount'] = business_amount
+                individual_transaction_ndarray['trade_index'] = trade_index
+                individual_transaction_ndarray['business_direction'] = business_direction
+                individual_transaction_df = pd.DataFrame(individual_transaction_ndarray)
+            else:
+                individual_transaction_df = pd.DataFrame()
+            individual_transaction_dict[s] = individual_transaction_df
+        panel = pd.Panel(individual_transaction_dict, dtype=object)
+        return panel
+    def get_gear_price(self, sids):
+        """
+        获取指定代码的档位行情价格
+        :param sids: str| list,代码
+        :return: dict
+        """
+        default_grp = {'offer_grp': {}, 'bid_grp': {}}
+        if isinstance(sids, str):
+            snapshot = self.get_snapshot(sids)
+            if snapshot:
+                gear_grp = {'offer_grp': snapshot['offer_grp'], 'bid_grp': snapshot['bid_grp']}
+                return gear_grp
+            else:
+                system_log.info('未取到代码{}的档位行情,默认返回为空'.format(sids))
+                return default_grp
+        elif isinstance(sids, list):
+            gear_grp_dict = {}
+            for s in sids:
+                snapshot = self.get_snapshot(s)
+                if snapshot:
+                    gear_grp = {'offer_grp': snapshot['offer_grp'], 'bid_grp': snapshot['bid_grp']}
+                else:
+                    system_log.info('未取到代码{}的档位行情,默认返回为空'.format(s))
+                    gear_grp = default_grp
+                gear_grp_dict[s] = gear_grp
+            return gear_grp_dict
+    def get_stock_pool(self, markets):
+        """
+        获取市场所对应的股票池
+        :param markets: str|list, 市场
+        :return: list
+        """
+        if isinstance(markets, six.string_types):
+            markets = [markets]
+        stock_pool = self.hq.get_stock_pool(markets)
+        stock_pool_dict = eval(stock_pool)['data']['stock_pool']
+        stock_pool_list = []
+        for key, value in stock_pool_dict.items():
+            stock_pool_list.append(value)
+        return stock_pool_list
+    def get_snapshot_by_request(self, symbol):
+        """
+        以请求的方式去获取行情快照
+         :param symbol: str,list ,代码
+         :return: dict
+         """

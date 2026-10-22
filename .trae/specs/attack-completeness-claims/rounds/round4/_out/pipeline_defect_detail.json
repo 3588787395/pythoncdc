@@ -1,0 +1,514 @@
+{
+ "rows": [
+  {
+   "source": "miss_attribution.json",
+   "family": "d_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+   "site": "int literal 1 -> True (type-only change)",
+   "bucket": "JUMP-ATTRLIST-BLIND",
+   "detail": {
+    "code_object": "<module>.get_holiday_local",
+    "kind": "field",
+    "index": 49,
+    "diffs": [
+     {
+      "field": "is_jump_target",
+      "a": "True",
+      "b": "False"
+     }
+    ]
+   }
+  },
+  {
+   "source": "miss_attribution.json",
+   "family": "d_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/local_finance.pyc",
+   "site": "int literal 1 -> True (type-only change)",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution.json",
+   "family": "d_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+   "site": "int literal 1 -> True (type-only change)",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution.json",
+   "family": "d_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+   "site": "int literal 1 -> True (type-only change)",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution.json",
+   "family": "d_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+   "site": "int literal 1 -> True (type-only change)",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution.json",
+   "family": "d_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
+   "site": "int literal 1 -> True (type-only change)",
+   "bucket": "JUMP-ATTRLIST-BLIND",
+   "detail": {
+    "code_object": "<module>.delete_cgroup_config",
+    "kind": "field",
+    "index": 96,
+    "diffs": [
+     {
+      "field": "is_jump_target",
+      "a": "True",
+      "b": "False"
+     }
+    ]
+   }
+  },
+  {
+   "source": "miss_attribution.json",
+   "family": "d_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/user_info_utils.pyc",
+   "site": "int literal 1 -> True (type-only change)",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution.json",
+   "family": "d_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "site": "int literal 1 -> True (type-only change)",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution.json",
+   "family": "d_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc",
+   "site": "int literal 1 -> True (type-only change)",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "i_int_to_float",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+   "site": "int literal 2 -> 2.0",
+   "bucket": "JUMP-ATTRLIST-BLIND",
+   "detail": {
+    "code_object": "<module>.get_holiday_local",
+    "kind": "field",
+    "index": 49,
+    "diffs": [
+     {
+      "field": "is_jump_target",
+      "a": "True",
+      "b": "False"
+     }
+    ]
+   }
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "h_param_order",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+   "site": "swapped formal params 'data' <-> 'en_prod_code'",
+   "bucket": "JUMP-ATTRLIST-BLIND",
+   "detail": {
+    "code_object": "<module>.get_holiday_local",
+    "kind": "field",
+    "index": 49,
+    "diffs": [
+     {
+      "field": "is_jump_target",
+      "a": "True",
+      "b": "False"
+     }
+    ]
+   }
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "j_func_docstring",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+   "site": "func docstring '\\n    去除重复数据\\n    ' -> '\\n    去除重复数据\\n    Y'",
+   "bucket": "JUMP-ATTRLIST-BLIND",
+   "detail": {
+    "code_object": "<module>.get_holiday_local",
+    "kind": "field",
+    "index": 49,
+    "diffs": [
+     {
+      "field": "is_jump_target",
+      "a": "True",
+      "b": "False"
+     }
+    ]
+   }
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "n_dead_code",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+   "site": "inserted unreachable stmt",
+   "bucket": "JUMP-ATTRLIST-BLIND",
+   "detail": {
+    "code_object": "<module>.get_holiday_local",
+    "kind": "field",
+    "index": 49,
+    "diffs": [
+     {
+      "field": "is_jump_target",
+      "a": "True",
+      "b": "False"
+     }
+    ]
+   }
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "d_any_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/local_finance.pyc",
+   "site": "int literal 1 -> True (type+maybe-value change)",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "i_int_to_float",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/local_finance.pyc",
+   "site": "int literal 1 -> 1.0",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "h_param_order",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/local_finance.pyc",
+   "site": "swapped formal params 'security' <-> 'table'",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "j_func_docstring",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/local_finance.pyc",
+   "site": "func docstring '\\n    获取本地数据\\n    :par' -> '\\n    获取本地数据\\n    :par'",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "n_dead_code",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/local_finance.pyc",
+   "site": "inserted unreachable stmt",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "i_int_to_float",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+   "site": "int literal 1800 -> 1800.0",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "h_param_order",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+   "site": "swapped formal params 'self' <-> 'engine'",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "j_func_docstring",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+   "site": "func docstring '\\n        时钟线程\\n      ' -> '\\n        时钟线程\\n      '",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "d_any_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+   "site": "int literal 1 -> True (type+maybe-value change)",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "i_int_to_float",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+   "site": "int literal 1 -> 1.0",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "h_param_order",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+   "site": "swapped formal params 'self' <-> 'engine'",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "j_func_docstring",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+   "site": "func docstring '\\n        获取1990年到现在所' -> '\\n        获取1990年到现在所'",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "n_dead_code",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+   "site": "inserted unreachable stmt",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "d_any_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+   "site": "int literal 1 -> True (type+maybe-value change)",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "i_int_to_float",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+   "site": "int literal 1 -> 1.0",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "h_param_order",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+   "site": "swapped formal params 'security' <-> 'table'",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "j_func_docstring",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+   "site": "func docstring '\\n    财务数据获取接口：包括三大财报' -> '\\n    财务数据获取接口：包括三大财报'",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "n_dead_code",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+   "site": "inserted unreachable stmt",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "d_any_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
+   "site": "int literal 1 -> True (type+maybe-value change)",
+   "bucket": "JUMP-ATTRLIST-BLIND",
+   "detail": {
+    "code_object": "<module>.delete_cgroup_config",
+    "kind": "field",
+    "index": 96,
+    "diffs": [
+     {
+      "field": "is_jump_target",
+      "a": "True",
+      "b": "False"
+     }
+    ]
+   }
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "i_int_to_float",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
+   "site": "int literal 1 -> 1.0",
+   "bucket": "JUMP-ATTRLIST-BLIND",
+   "detail": {
+    "code_object": "<module>.delete_cgroup_config",
+    "kind": "field",
+    "index": 96,
+    "diffs": [
+     {
+      "field": "is_jump_target",
+      "a": "True",
+      "b": "False"
+     }
+    ]
+   }
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "h_param_order",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
+   "site": "swapped formal params 'user_id' <-> 'add_type'",
+   "bucket": "JUMP-ATTRLIST-BLIND",
+   "detail": {
+    "code_object": "<module>.delete_cgroup_config",
+    "kind": "field",
+    "index": 96,
+    "diffs": [
+     {
+      "field": "is_jump_target",
+      "a": "True",
+      "b": "False"
+     }
+    ]
+   }
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "j_func_docstring",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
+   "site": "func docstring '\\n    设置CGroup控制组配置\\n ' -> '\\n    设置CGroup控制组配置\\n '",
+   "bucket": "JUMP-ATTRLIST-BLIND",
+   "detail": {
+    "code_object": "<module>.delete_cgroup_config",
+    "kind": "field",
+    "index": 96,
+    "diffs": [
+     {
+      "field": "is_jump_target",
+      "a": "True",
+      "b": "False"
+     }
+    ]
+   }
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "u_ann_param",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
+   "site": "param annotation -> str",
+   "bucket": "JUMP-ATTRLIST-BLIND",
+   "detail": {
+    "code_object": "<module>.delete_cgroup_config",
+    "kind": "field",
+    "index": 96,
+    "diffs": [
+     {
+      "field": "is_jump_target",
+      "a": "True",
+      "b": "False"
+     }
+    ]
+   }
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "i_int_to_float",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/user_info_utils.pyc",
+   "site": "int literal 360022 -> 360022.0",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "h_param_order",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/user_info_utils.pyc",
+   "site": "swapped formal params 'user_id' <-> 'default_python_version'",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "j_func_docstring",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/user_info_utils.pyc",
+   "site": "func docstring '\\n    创建用户相关目录\\n    :p' -> '\\n    创建用户相关目录\\n    :p'",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "n_dead_code",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/user_info_utils.pyc",
+   "site": "inserted unreachable stmt",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "d_any_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "site": "int literal 1 -> True (type+maybe-value change)",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "i_int_to_float",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "site": "int literal 1 -> 1.0",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "h_param_order",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "site": "swapped formal params 'user_id' <-> 'op_station'",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "j_func_docstring",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "site": "func docstring '\\n    查询交易文件信息\\n    \\n ' -> '\\n    查询交易文件信息\\n    \\n '",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "n_dead_code",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "site": "inserted unreachable stmt",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "d_any_int_to_bool",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc",
+   "site": "int literal 1 -> True (type+maybe-value change)",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "i_int_to_float",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc",
+   "site": "int literal 1 -> 1.0",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  },
+  {
+   "source": "miss_attribution_extra.json",
+   "family": "h_param_order",
+   "pyc": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc",
+   "site": "swapped formal params 'self' <-> 'engine'",
+   "bucket": "JUMP-DIRECTION-BLIND",
+   "detail": null
+  }
+ ],
+ "count": 48,
+ "buckets": {
+  "JUMP-ATTRLIST-BLIND": 11,
+  "JUMP-DIRECTION-BLIND": 37
+ }
+}

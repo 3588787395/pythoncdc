@@ -1,0 +1,245 @@
+# Source Generated with Decompyle++ (Python version)
+# File: profiler_func.pyc (Python 3.11)
+
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
+import functools
+import linecache
+import os
+import sys
+from line_profiler import LineProfiler as CLineProfiler
+('USER_STRATEGY_NAME',)
+from IQEngine.const import USER_STRATEGY_NAME
+('get_traceback_message',)
+from IQCommon.exception import get_traceback_message
+('system_log',)
+from IQCommon.logger import system_log
+PY3 = sys.version_info[0] == 3
+PY35 = PY3 and sys.version_info[True] >= 5
+if PY35:
+    import inspect
+    try:
+        import line_profiler_py35
+    except ImportError:
+        system_log.error(get_traceback_message())
+        PY35 = False
+        line_profiler_py35 = None
+    else:
+        def is_coroutine(f):
+            return inspect.iscoroutinefunction(f)
+        wrap_coroutine = line_profiler_py35.wrap_coroutine
+if not PY35:
+    def is_coroutine(func):
+        return False
+    def wrap_coroutine(func):
+        return None
+CO_GENERATOR = 32
+def is_generator(f):
+    """
+    判断是否生成器
+    :param callable f: 被判断的对象
+    """
+    isgen = f.__code__.co_flags & CO_GENERATOR != 0
+    return isgen
+class ProfilerTool(CLineProfiler):
+    __doc__ = """
+    性能分析工具
+    """
+    def __init__(self, engine=None):
+        """
+        :param engine: 引擎
+        """
+        self._engine = engine
+        super(ProfilerTool, self).__init__()
+    def __call__(self, func):
+        """
+        添加被校验函数
+        :param callable func: 被校验的函数
+        """
+        self.add_function(func)
+        if is_coroutine(func):
+            wrapper = wrap_coroutine(func)
+        elif is_generator(func):
+            wrapper = self.wrap_generator(func)
+        else:
+            wrapper = self.wrap_function(func)
+        return wrapper
+    def wrap_generator(self, func):
+        """
+        生成器转化
+        """
+        @functools.wraps(func)
+        def wrapper(*args, **kwds):
+            g = func(*args, **(kwds))
+            self.enable_by_count()
+            try:
+                item = next(g)
+            finally:
+                self.disable_by_count()
+            input_item = yield item
+            while True:
+                self.enable_by_count()
+                try:
+                    item = g.send(input_item)
+                finally:
+                    self.disable_by_count()
+                input_item = yield item
+        return wrapper
+    def wrap_function(self, func):
+        """
+        函数转化:
+        """
+        @functools.wraps(func)
+        def wrapper(*args, **kwds):
+            self.enable_by_count()
+            try:
+                result = func(*args, **(kwds))
+            finally:
+                self.disable_by_count()
+            return result
+        return wrapper
+    def print_stats(self, stream=None, output_unit=None, stripzeros=False, json_format=False):
+        """
+        打印状态
+        """
+        if json_format:
+            result = self.generate_profile()
+            stream.write(result)
+            return None
+        else:
+            lstats = self.get_stats()
+            self.show_text(lstats.timings, lstats.unit, output_unit=output_unit, stream=stream, stripzeros=stripzeros)
+    """"""
+    def show_func(self, filename, start_lineno, func_name, timings, unit, output_unit=None, stream=None, stripzeros=False):
+        """
+        展示函数分析结果
+        """
+        if stream is None:
+            stream = sys.stdout
+        template = '%6s %9s %12s %8s %8s  %-s'
+        d = {}
+        total_time = 0.0
+        linenos = []
+        for lineno, nhits, time in timings:
+            total_time += time
+            linenos.append(lineno)
+        if stripzeros and total_time == 0:
+            return None
+        if output_unit is None:
+            output_unit = unit
+        scalar = unit / output_unit
+        stream.write("""Total time: %g s
+""" % (total_time * unit))
+        if filename == USER_STRATEGY_NAME and self._engine.source_code:
+            stream.write("""File: %s
+""" % filename)
+            stream.write(f'Function: {func_name!s} at line {start_lineno!s}\n')
+            all_lines = self._engine.source_code.split("""
+""")
+            all_lines = [line + """
+""" for line in all_lines]
+            sublines = inspect.getblock(all_lines[start_lineno - 1:])
+        elif os.path.exists(filename) or filename.startswith('<ipython-input-'):
+            stream.write("""File: %s
+""" % filename)
+            stream.write(f'Function: {func_name!s} at line {start_lineno!s}\n')
+            if os.path.exists(filename):
+                linecache.clearcache()
+            all_lines = linecache.getlines(filename)
+            sublines = inspect.getblock(all_lines[start_lineno - 1:])
+        else:
+            raise ValueError('source_code, filename参数不能同时为None')
+        for lineno, nhits, time in timings:
+            d[lineno] = (nhits, '%5.1f' % (time * scalar), '%5.1f' % (float(time) * scalar / nhits), '%5.1f' % (100 * time / total_time))
+        linenos = range(start_lineno, start_lineno + len(sublines))
+        empty = ('', '', '', '')
+        header = template % ('Line #', 'Hits', 'Time', 'Per Hit', '% Time', 'Line Contents')
+        stream.write("""
+""")
+        stream.write(header)
+        stream.write("""
+""")
+        stream.write('=' * len(header))
+        stream.write("""
+""")
+        for lineno, line in zip(linenos, sublines):
+            nhits, time, per_hit, percent = d.get(lineno, empty)
+            txt = template % (lineno, nhits, time, per_hit, percent, line.rstrip("""
+""").rstrip('\r'))
+            stream.write(txt)
+            stream.write("""
+""")
+        stream.write("""
+""")
+    def show_text(self, stats, unit, output_unit=None, stream=None, stripzeros=False):
+        """
+        展示结果
+        """
+        if stream is None:
+            stream = sys.stdout
+        if output_unit is not None:
+            stream.write("""Timer unit: %g s
+
+""" % output_unit)
+        else:
+            stream.write("""Timer unit: %g s
+
+""" % unit)
+        for (fn, lineno, name), timings in sorted(stats.items()):
+            self.show_func(fn, lineno, name, timings, unit, output_unit=output_unit, stream=stream, stripzeros=stripzeros)
+    def generate_profile(self):
+        lstats = self.get_stats()
+        unit = lstats.unit
+        stats = lstats.timings
+        profile_list = []
+        import sys
+        import os
+        import linecache
+        import inspect
+        import simplejson
+        def show_func(filename, start_lineno, func_name, timings, unit, stream=None, stripzeros=False):
+            dic = {}
+            if stream is None:
+                stream = sys.stdout
+            dic['Total'] = {}
+            dic['Line_profile'] = []
+            template = '%6s %9s %12s %8s %8s  %-s'
+            d = {}
+            total_time = 0.0
+            linenos = []
+            for lineno, nhits, time in timings:
+                total_time += time
+                linenos.append(lineno)
+            if stripzeros and total_time == 0:
+                return dic
+            dic['Total']['Total_time'] = total_time * unit
+            dic['Total']['unit'] = unit
+            dic['Total']['Columns'] = ['Line', 'Hits', 'Time', 'Per_Hit', 'Time_Percent', 'Line_Contents']
+            dic['Total']['Function'] = f'{func_name!s}   at line {start_lineno!s}'
+            if os.path.exists(filename) or filename.startswith('<ipython-input-'):
+                dic['Total']['File'] = filename
+                if os.path.exists(filename):
+                    linecache.clearcache()
+                all_lines = linecache.getlines(filename)
+                sublines = inspect.getblock(all_lines[start_lineno - 1:])
+            else:
+                dic['Total']['Warning'] = 'file is not exited'
+                nlines = max(linenos) - min(min(linenos), start_lineno) + 1
+                sublines = [''] * nlines
+            for lineno, nhits, time in timings:
+                d[lineno] = (nhits, time, '%5.1f' % (float(time) / nhits), '%5.1f' % (100 * time / total_time))
+            linenos = range(start_lineno, start_lineno + len(sublines))
+            empty = ('', '', '', '')
+            header = template % ('Line #', 'Hits', 'Time', 'Per Hit', '% Time', 'Line Contents')
+            for lineno, line in zip(linenos, sublines):
+                nhits, time, per_hit, percent = d.get(lineno, empty)
+                txt = template % (lineno, nhits, time, per_hit, percent, line.rstrip("""
+""").rstrip('\r'))
+                dic['Line_profile'].append([lineno, nhits, time, per_hit, percent, line.rstrip("""
+""").rstrip('\r')])
+            return dic
+        for (fn, lineno, name), timings in sorted(stats.items()):
+            profile_list.append(show_func(fn, lineno, name, stats[fn, lineno, name], unit, stream=None, stripzeros=None))
+        return simplejson.dumps(profile_list, encoding='utf-8')

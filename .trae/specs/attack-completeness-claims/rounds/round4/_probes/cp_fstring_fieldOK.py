@@ -1,0 +1,5 @@
+# Source Generated with Decompyle++ (Python version)
+# File: cp_fstring_field.pyc (Python 3.11)
+
+def f(a):
+    return f'v={a}'

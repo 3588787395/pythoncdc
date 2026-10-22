@@ -1,0 +1,148 @@
+{
+ "baseline_total": 422,
+ "baseline_green": 416,
+ "required_families": [
+  "a_num_int",
+  "b_cmp_polarity",
+  "c_del_assign",
+  "d_int_to_bool",
+  "e_str_content",
+  "f_stmt_swap",
+  "g_rename_local",
+  "h_arg_swap"
+ ],
+ "families": [
+  {
+   "family": "a_num_int",
+   "label": "(a) 数值字面量 1->2",
+   "required": true,
+   "mutated": 222,
+   "missed": 0,
+   "miss_rate": 0.0,
+   "caught_failure": 222,
+   "compile_error": 0,
+   "judge_error": 0,
+   "na": 194,
+   "miss_examples": []
+  },
+  {
+   "family": "b_cmp_polarity",
+   "label": "(b) 比较极性 a<b -> a>b",
+   "required": true,
+   "mutated": 148,
+   "missed": 0,
+   "miss_rate": 0.0,
+   "caught_failure": 148,
+   "compile_error": 0,
+   "judge_error": 0,
+   "na": 268,
+   "miss_examples": []
+  },
+  {
+   "family": "c_del_assign",
+   "label": "(c) 删一条赋值语句",
+   "required": true,
+   "mutated": 347,
+   "missed": 0,
+   "miss_rate": 0.0,
+   "caught_failure": 347,
+   "compile_error": 0,
+   "judge_error": 0,
+   "na": 69,
+   "miss_examples": []
+  },
+  {
+   "family": "d_int_to_bool",
+   "label": "(d) x=1 -> x=True（纯类型变，值不变）",
+   "required": true,
+   "mutated": 163,
+   "missed": 163,
+   "miss_rate": 1.0,
+   "caught_failure": 0,
+   "compile_error": 0,
+   "judge_error": 0,
+   "na": 253,
+   "miss_examples": [
+    "F:\\Downloads\\pythoncdc-main\\test_repros\\round10\\r10_21_fin_loopctrl.pyc",
+    "F:\\Downloads\\pythoncdc-main\\test_repros\\round2\\m01_docstring_order.pyc",
+    "F:/Downloads/pythoncdc-main/site-packages/fly/common/market_time.pyc",
+    "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+    "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_priority.pyc",
+    "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/pboxAccount_jupyterhub.pyc",
+    "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeOptionAccount.pyc",
+    "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc"
+   ]
+  },
+  {
+   "family": "e_str_content",
+   "label": "(e) 改字符串字面量内容",
+   "required": true,
+   "mutated": 334,
+   "missed": 1,
+   "miss_rate": 0.003,
+   "caught_failure": 333,
+   "compile_error": 0,
+   "judge_error": 0,
+   "na": 82,
+   "miss_examples": [
+    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc"
+   ]
+  },
+  {
+   "family": "f_stmt_swap",
+   "label": "(f) 交换两条独立语句顺序",
+   "required": true,
+   "mutated": 213,
+   "missed": 0,
+   "miss_rate": 0.0,
+   "caught_failure": 213,
+   "compile_error": 0,
+   "judge_error": 0,
+   "na": 203,
+   "miss_examples": []
+  },
+  {
+   "family": "g_rename_local",
+   "label": "(g) 改局部标识符名（未被使用时）",
+   "required": true,
+   "mutated": 336,
+   "missed": 34,
+   "miss_rate": 0.1012,
+   "caught_failure": 302,
+   "compile_error": 0,
+   "judge_error": 0,
+   "na": 80,
+   "miss_examples": [
+    "F:/Downloads/pythoncdc-main/site-packages/fly/common/market_time.pyc",
+    "F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connector.pyc",
+    "F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_basic_data.pyc",
+    "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/__init__.pyc",
+    "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/__init__.pyc",
+    "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/iqdata_db_base.pyc",
+    "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/__init__.pyc",
+    "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy.pyc"
+   ]
+  },
+  {
+   "family": "h_arg_swap",
+   "label": "(h) 交换两个实参顺序",
+   "required": true,
+   "mutated": 283,
+   "missed": 1,
+   "miss_rate": 0.0035,
+   "caught_failure": 282,
+   "compile_error": 0,
+   "judge_error": 0,
+   "na": 133,
+   "miss_examples": [
+    "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utils.pyc"
+   ]
+  }
+ ],
+ "required_total_mutated": 2046,
+ "required_total_missed": 199,
+ "required_miss_rate": 0.0973,
+ "total_mutated": 2046,
+ "total_missed": 199,
+ "overall_miss_rate": 0.0973
+}

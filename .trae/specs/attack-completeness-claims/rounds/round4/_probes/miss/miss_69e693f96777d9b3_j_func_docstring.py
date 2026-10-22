@@ -1,0 +1,116 @@
+# Source Generated with Decompyle++ (Python version)
+# File: strategy_loader.pyc (Python 3.11)
+
+import codecs
+import os
+import sys
+from IQEngine.utils.compile_help import compile_strategy
+from IQEngine import interface, const
+from IQEngine.utils.encrypt import AESEncrypt, DESEncrypt
+from IQCommon.logger import system_log
+class FileStrategyLoader(interface.AbstractStrategyLoader):
+    __doc__ = """
+    策略加载类，支持非加密的py文件加载
+    """
+    def __init__(self, strategy_file_path):
+        '\n        :param strategy_file_path: 文件全路径\n        Y'
+        self._strategy_file_path = strategy_file_path
+    def load(self, context):
+        """
+        策略读取并编译
+        :param context: 策略上下文
+        :return: 添加过用户策略函数后的策略上下文
+        """
+        with codecs.open(self._strategy_file_path, encoding='utf-8-sig') as f:
+            source_code = f.read()
+        return compile_strategy(source_code, self._strategy_file_path, context)
+class SourceCodeStrategyLoader(interface.AbstractStrategyLoader):
+    __doc__ = """
+    策略加载类，支持字符串加载
+    """
+    def __init__(self, code):
+        """
+        :param code: 字符串形式的用户策略
+        """
+        self._code = code
+    def load(self, context):
+        return compile_strategy(self._code, const.USER_STRATEGY_NAME, context)
+class SecurityFileStrategyLoader(interface.AbstractStrategyLoader):
+    __doc__ = """
+    策略加载类，支持AES、DES加密后的策略文件加载
+    """
+    def __init__(self, strategy_file_path, encrypt_type, encrypyt_key, encrypt_iv):
+        """
+        :param strategy_file_path: 文件全路径
+        :type str
+        :param encrypt_type: 加密类型（AES或DES）
+        :type str, 'AES'或'DES'
+        :param encrypyt_key: 加密密钥
+        :type str，AES为16位，DES为8位
+        :param encrypt_iv: 初始向量
+        :type str，AES为16位，DES为8位
+        """
+        self._strategy_file_path = strategy_file_path
+        self._encrypt_type = encrypt_type
+        self._encrypt_key = encrypyt_key
+        self._encrypt_iv = encrypt_iv
+    def load(self, context):
+        """
+        策略读取并编译
+        :param context: 策略上下文
+        :return: 添加过用户策略函数后的策略上下文
+        """
+        with codecs.open(self._strategy_file_path, encoding='utf-8') as f:
+            encrypt_code = f.read()
+        if self._encrypt_type == const.EncryptType.AES.value:
+            code = AESEncrypt().decrypt(encrypt_code, self._encrypt_key, self._encrypt_iv)
+        elif self._encrypt_type == const.EncryptType.DES.value:
+            code = DESEncrypt().decrypt(encrypt_code, self._encrypt_key, self._encrypt_iv)
+        else:
+            raise RuntimeError('解密文件格式有误，不支持%s解密方式' % self._encrypt_type)
+        return compile_strategy(code, self._strategy_file_path, context)
+class SecurityLibStrategyLoader(object):
+    __doc__ = """
+    策略加载类，加载已编译好的pyc和so文件
+    """
+    def __init__(self, strategy_file_path):
+        """
+        :param strategy_file_path: 文件全路径
+        """
+        self._strategy_file_path = strategy_file_path
+    def load(self, context):
+        path, filename = os.path.split(self._strategy_file_path)
+        sys.path.insert(0, path)
+        file_list = self.get_file_list(path)
+        if self.has_repeat_module(file_list):
+            system_log.warning('路径%s下存在多个相同模块，请注意加载正确性' % path)
+        module_name = os.path.splitext(filename)[0]
+        module = __import__(module_name)
+        for func in module.__dict__:
+            if func in context:
+                continue
+            context[func] = module.__dict__[func]
+            continue
+        return context
+    def get_file_list(self, dir):
+        """
+        获取指定目录下所有文件，子目录不查找
+        :param dir: 文件目录
+        :return: 文件列表
+        """
+        file_list = []
+        for file in os.listdir(dir):
+            if os.path.isfile(os.path.join(dir, file)):
+                file_list.append(file)
+        return file_list
+    def has_repeat_module(self, file_list):
+        """
+        判断是否有相同模块名的py、pyc、so文件
+        """
+        module = set()
+        for item in file_list:
+            module.add(os.path.splitext(item)[0])
+        if len(module) == len(file_list):
+            return False
+        else:
+            return True

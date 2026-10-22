@@ -1,0 +1,8 @@
+miss rows to attribute: 366
+
+d_int_to_bool        {'COMPARATOR-BLIND': 79, 'PIPELINE-DEFECT': 4}
+e_str_content        {'NORMALIZED-AWAY': 1}
+g_rename_local       {'OUT-OF-INSTRUCTION': 12, 'NORMALIZED-AWAY': 3}
+h_param_order        {'SLOT-INDEX-BLIND': 149, 'PIPELINE-DEFECT': 4, 'OUT-OF-INSTRUCTION': 3, 'NORMALIZED-AWAY': 3}
+j_func_docstring     {'OUT-OF-INSTRUCTION': 81, 'SLOT-INDEX-BLIND': 9, 'NORMALIZED-AWAY': 14, 'PIPELINE-DEFECT': 4}
+-> .trae\specs\attack-completeness-claims\rounds\round4\_out\mutate_miss_attribution.json

@@ -1,0 +1,989 @@
+{
+ "baseline_green": 207,
+ "baseline_provenance": {
+  "cli": 12,
+  "prior-round": 199
+ },
+ "baseline_total": 211,
+ "families": [
+  {
+   "caught": 112,
+   "family": "a_num_int",
+   "invalid": 0,
+   "judge_error": 0,
+   "label": "(a) 改数值：整数字面量 n -> n+1",
+   "miss_examples": [],
+   "miss_rate": 0.0,
+   "missed": 0,
+   "mutated": 112,
+   "na": 96,
+   "required": true
+  },
+  {
+   "caught": 78,
+   "family": "b_cmp_polarity",
+   "invalid": 0,
+   "judge_error": 0,
+   "label": "(b) 翻转比较：a<b <-> a>b（<=/>= 同理）",
+   "miss_examples": [],
+   "miss_rate": 0.0,
+   "missed": 0,
+   "mutated": 78,
+   "na": 130,
+   "required": true
+  },
+  {
+   "caught": 176,
+   "family": "c_del_assign",
+   "invalid": 0,
+   "judge_error": 0,
+   "label": "(c) 删语句：删除一条赋值语句",
+   "miss_examples": [],
+   "miss_rate": 0.0,
+   "missed": 0,
+   "mutated": 176,
+   "na": 32,
+   "required": true
+  },
+  {
+   "caught": 1,
+   "family": "d_int_to_bool",
+   "invalid": 0,
+   "judge_error": 0,
+   "label": "(d) x=1 改 x=True（纯类型变，值不变）",
+   "miss_examples": [
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\check_strategy.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\klinedata.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\arg_checker.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\common\\main.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\data\\history_bar_storage.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\data\\pandas.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\enumerate.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\logger\\handlers.pyc"
+   ],
+   "miss_rate": 0.9880952380952381,
+   "missed": 83,
+   "mutated": 84,
+   "na": 124,
+   "required": true
+  },
+  {
+   "caught": 165,
+   "family": "e_str_content",
+   "invalid": 0,
+   "judge_error": 0,
+   "label": "(e) 改字符串：字符串字面量内容 +X",
+   "miss_examples": [
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQEngine\\utils\\profiler_func.pyc"
+   ],
+   "miss_rate": 0.006024096385542169,
+   "missed": 1,
+   "mutated": 166,
+   "na": 42,
+   "required": true
+  },
+  {
+   "caught": 107,
+   "family": "f_stmt_swap",
+   "invalid": 0,
+   "judge_error": 0,
+   "label": "(f) 换语句序：交换两条相互独立的赋值语句",
+   "miss_examples": [],
+   "miss_rate": 0.0,
+   "missed": 0,
+   "mutated": 107,
+   "na": 101,
+   "required": true
+  },
+  {
+   "caught": 152,
+   "family": "g_rename_local",
+   "invalid": 0,
+   "judge_error": 0,
+   "label": "(g) 改标识符：函数内形参/局部一致改名",
+   "miss_examples": [
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQData\\data\\default_history_quote.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQData\\plugins\\plugin_system_client_db\\__init__.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQData\\plugins\\plugin_system_db\\iqdata_db_base.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQData\\plugins\\plugin_system_db_tools\\__init__.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQData\\plugins\\plugin_system_gtn_request\\__init__.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQData\\plugins\\plugin_system_local_finance\\__init__.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQData\\plugins\\plugin_system_realquote\\__init__.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQEngine\\core\\strategy\\strategy.pyc"
+   ],
+   "miss_rate": 0.08982035928143713,
+   "missed": 15,
+   "mutated": 167,
+   "na": 41,
+   "required": true
+  },
+  {
+   "caught": 141,
+   "family": "h_arg_swap",
+   "invalid": 0,
+   "judge_error": 0,
+   "label": "(h) 换实参序：交换同一调用的两个实参",
+   "miss_examples": [],
+   "miss_rate": 0.0,
+   "missed": 0,
+   "mutated": 141,
+   "na": 67,
+   "required": true
+  },
+  {
+   "caught": 10,
+   "family": "g3_kwparam_rename",
+   "invalid": 0,
+   "judge_error": 0,
+   "label": "g3_kwparam_rename",
+   "miss_examples": [],
+   "miss_rate": 0.0,
+   "missed": 0,
+   "mutated": 10,
+   "na": 201,
+   "required": false
+  },
+  {
+   "caught": 3,
+   "family": "h_param_order",
+   "invalid": 0,
+   "judge_error": 0,
+   "label": "h_param_order",
+   "miss_examples": [
+    "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\adversarial-complete-forms-v2-10rounds\\rounds\\round1\\probes_rv2\\v_b76_face.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\check_strategy.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\klinedata.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\arg_checker.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\common\\main.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\data\\asset_storage.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\data\\basic_data_source.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\data\\exrights_storage.pyc"
+   ],
+   "miss_rate": 0.9814814814814815,
+   "missed": 159,
+   "mutated": 162,
+   "na": 49,
+   "required": false
+  },
+  {
+   "caught": 0,
+   "family": "j_func_docstring",
+   "invalid": 0,
+   "judge_error": 0,
+   "label": "j_func_docstring",
+   "miss_examples": [
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\check_strategy.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\api\\klinedata.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\arg_checker.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\common\\main.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\data\\asset_storage.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\data\\basic_data_source.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\data\\exrights_storage.pyc",
+    "F:\\Downloads\\pythoncdc-main\\site-packages\\IQCommon\\data\\history_bar_storage.pyc"
+   ],
+   "miss_rate": 1.0,
+   "missed": 108,
+   "mutated": 108,
+   "na": 103,
+   "required": false
+  }
+ ],
+ "generated_at": "2026-10-22T15:20:16",
+ "interpreter": "3.11.7",
+ "judge_command": "python -X utf8 scripts/pyc_verify.py single <pyc> --source <mutated>",
+ "n_shards": 48,
+ "overall_miss_rate": 0.2791762013729977,
+ "required_families": [
+  "a_num_int",
+  "b_cmp_polarity",
+  "c_del_assign",
+  "d_int_to_bool",
+  "e_str_content",
+  "f_stmt_swap",
+  "g_rename_local",
+  "h_arg_swap"
+ ],
+ "required_miss_rate": 0.09602327837051407,
+ "required_total_missed": 99,
+ "required_total_mutated": 1031,
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b"
+ },
+ "sample_mod": 2,
+ "scope_products": 211,
+ "scope_records": 2508,
+ "scope_results_jsonl": ".trae/specs/attack-completeness-claims/rounds/round4/_out/mutate_results.jsonl",
+ "shard_meta": [
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 112.4,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 8,
+   "miss": 7,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_00.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 0
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 110.4,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 7,
+   "miss": 7,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_01.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 1
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 149.2,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 8,
+   "miss": 7,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_02.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 2
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 55.6,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 4,
+   "miss": 3,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_03.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 3
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 104.8,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 7,
+   "miss": 7,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_04.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 4
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 88.5,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 6,
+   "miss": 6,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_05.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 5
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 91.8,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 5,
+   "miss": 5,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_06.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 6
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 67.5,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 5,
+   "miss": 5,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_07.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 7
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 122.6,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 7,
+   "miss": 6,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_08.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 8
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 119.3,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 9,
+   "miss": 8,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_09.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 9
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 93.9,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 7,
+   "miss": 7,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_10.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 10
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 88.4,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 6,
+   "miss": 5,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_11.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 11
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 104.0,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 7,
+   "miss": 7,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_12.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 12
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 119.0,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 8,
+   "miss": 8,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_13.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 13
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 25.0,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 2,
+   "miss": 2,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_14.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 14
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 121.1,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 8,
+   "miss": 8,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_15.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 15
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 161.4,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 11,
+   "miss": 8,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_16.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 16
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 119.9,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 9,
+   "miss": 8,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_17.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 17
+  },
+  {
+   "corpus_in_shard": 5,
+   "elapsed": 75.9,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 5,
+   "miss": 5,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_18.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 18
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 126.3,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 4,
+   "miss": 4,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_19.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 19
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 106.0,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 6,
+   "miss": 6,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_20.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 20
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 28.8,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 2,
+   "miss": 2,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_21.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 21
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 92.0,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 5,
+   "miss": 4,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_22.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 22
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 51.1,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 4,
+   "miss": 4,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_23.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 23
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 60.8,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 5,
+   "miss": 5,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_24.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 24
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 31.9,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 2,
+   "miss": 2,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_25.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 25
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 77.3,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 5,
+   "miss": 5,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_26.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 26
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 71.9,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 6,
+   "miss": 6,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_27.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 27
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 84.5,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 7,
+   "miss": 7,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_28.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 28
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 46.8,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 4,
+   "miss": 4,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_29.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 29
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 74.7,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 7,
+   "miss": 7,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_30.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 30
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 67.7,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 4,
+   "miss": 4,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_31.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 31
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 54.9,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 4,
+   "miss": 4,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_32.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 32
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 33.5,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 2,
+   "miss": 2,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_33.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 33
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 80.8,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 7,
+   "miss": 7,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_34.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 34
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 105.1,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 6,
+   "miss": 5,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_35.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 35
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 72.8,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 4,
+   "miss": 4,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_36.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 36
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 54.5,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 4,
+   "miss": 4,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_37.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 37
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 102.3,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 7,
+   "miss": 6,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_38.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 38
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 99.5,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 4,
+   "miss": 4,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_39.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 39
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 81.7,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 6,
+   "miss": 6,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_40.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 40
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 72.7,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 6,
+   "miss": 6,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_41.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 41
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 96.4,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 7,
+   "miss": 7,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_42.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 42
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 85.1,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 7,
+   "miss": 7,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_43.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 43
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 59.0,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 4,
+   "miss": 4,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_44.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 44
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 90.8,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 7,
+   "miss": 7,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_45.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 45
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 84.2,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 7,
+   "miss": 7,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_46.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 46
+  },
+  {
+   "corpus_in_shard": 4,
+   "elapsed": 106.6,
+   "families": [
+    "h_param_order",
+    "j_func_docstring",
+    "g3_kwparam_rename"
+   ],
+   "judge_runs": 8,
+   "miss": 8,
+   "nshards": 48,
+   "out": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round4\\_out\\mutate_parts\\part_47.jsonl",
+   "sample_mod": 2,
+   "sample_offset": 0,
+   "shard": 47
+  }
+ ],
+ "total_missed": 366,
+ "total_mutated": 1311
+}

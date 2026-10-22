@@ -1,0 +1,40 @@
+# Source Generated with Decompyle++ (Python version)
+# File: resource_utils.pyc (Python 3.11)
+
+import ctypes
+import gc
+import os
+import psutil
+from IQCommon.exception import get_traceback_message
+from IQCommon.logger import system_log
+def release_memory_with_measurement():
+    """
+    释放内存并测量释放的内存大小
+    
+    该函数通过执行垃圾回收和调用系统malloc_trim函数来释放内存，
+    并测量实际释放的内存大小。函数会记录释放过程到系统日志中。
+    
+    :note: 该函数依赖于libc.so.6库的malloc_trim函数，在非Linux系统上可能失败
+    :note: 即使malloc_trim返回失败状态，仍可能实际释放了部分内存
+    """
+    process = psutil.Process(os.getpid())
+    before_mem = process.memory_info().rss
+    gc.collect()
+    try:
+        libc = ctypes.CDLL('libc.so.6')
+        result = libc.malloc_trim(0)
+        after_mem = process.memory_info().rss
+        released_mb = (before_mem - after_mem) / 1048576
+        if result == True:
+            system_log.info('malloc_trim: 成功释放内存至OS，释放了 {:.2f} MB'.format(released_mb))
+            return None
+        elif released_mb > 0:
+            system_log.info('malloc_trim: 未报告成功，但实际释放了 {:.2f} MB'.format(released_mb))
+            return None
+        else:
+            system_log.error('malloc_trim: 未释放内存')
+            return None
+    except BaseException:
+        error_msg = '调用malloc_trim失败，错误原因：{}'.format(get_traceback_message())
+        system_log.error(error_msg)
+        return None

@@ -1,0 +1,261 @@
+# Source Generated with Decompyle++ (Python version)
+# File: option_account.pyc (Python 3.11)
+
+import six
+from IQCommon.logger import user_log
+from IQEngine.account.base_account import BaseAccount
+from IQEngine.const import AccountType, EntrustDirection, FuturesDirection, HedgeType, OptionProperty
+from IQEngine.core.engine import Engine
+from IQEngine.core.events import EventEnum
+from IQEngine.utils.i18n import get_local_text as _
+class OptionAccount(BaseAccount):
+    def __init__(total_cash, self, positions, processed_trade=None):
+        super(OptionAccount, self).__init__(total_cash, positions, processed_trade)
+    def register_event(self):
+        """
+        注册事件
+        """
+        event_bus = Engine.instance().event_bus
+        event_bus.append_listener(EventEnum.ORDER_TRADE, self._on_trade)
+        event_bus.append_listener(EventEnum.ORDER_PENDING_NEW, self._on_order)
+        event_bus.append_listener(EventEnum.ORDER_CREATION_REJECT, self._on_order_unsolicited_update)
+        event_bus.append_listener(EventEnum.ORDER_UNSOLICITED_UPDATE, self._on_order_unsolicited_update)
+        event_bus.append_listener(EventEnum.ORDER_CANCELLATION_PASS, self._on_order_unsolicited_update)
+        event_bus.append_listener(EventEnum.SETTLEMENT, self._on_settlement)
+        if self.UPDATE_LAST_PRICE:
+            event_bus.append_listener(EventEnum.HANDLE_DATA, self._on_update_last_price)
+            event_bus.append_listener(EventEnum.HANDLE_TICK, self._on_update_last_price)
+            return None
+        else:
+            return None
+    """"""
+    def order(self, symbol, amount, entrust_direction, futures_direction=None, style=None, **kwargs):
+        """
+        期货下单函数
+        :param symbol: 期货代码
+        :param amount: 下单数量
+        :param entrust_direction:
+        :param futures_direction: 期货买卖方向
+        :param style: 下单方式，限价还是市价
+        :param kwargs:
+        :return:
+        """
+    def cancel_order(self, order):
+        return None
+    def save(self):
+        return {'positions': {symbol: position.load() for symbol, position in six.iteritems(self._positions)}, 'frozen_cash': self._frozen_cash, 'total_cash': self._total_cash, 'processed_trade': list(self._processed_trade), 'transaction_cost': self._transaction_cost}
+    def load(self, state):
+        self._frozen_cash = state['frozen_cash']
+        self._processed_trade = set(state['processed_trade'])
+        self._transaction_cost = state['transaction_cost']
+        margin_changed = 0
+        self._positions.clear()
+        for symbol, v in six.iteritems(state['positions']):
+            position = self._positions.get_or_create(symbol)
+            position.save(v)
+            if 'margin_rate' in v and abs(v['margin_rate'] - position.margin_rate) > 1e-06:
+                margin_changed += position.margin * (v['margin_rate'] - position.margin_rate) / position.margin_rate
+        self._total_cash = state['total_cash'] + margin_changed
+    def sync_account(self, account):
+        """
+        同步账户，接受与外围系统同步的账户信息，将当前的账户对象同步到最新状态
+        :param account:
+        OPTION 类型的同步格式：
+        {
+        "total_cash": ,
+        "frozen_cash": ,
+        "transaction_cost": ,
+        "positions": {
+            "10001470.XSHG": {
+                "buy_amount": ,
+                "sell_amount": ,
+                "hold_margin": ,
+                "hold_premium": ,
+                "position_type": ,
+                "buy_frozen_amount": ,
+                "sell_frozen_amount": ,
+                "buy_transaction_cost": ,
+                "sell_transaction_cost": ,
+                "buy_realized_pnl": ,
+                "sell_realized_pnl": ,
+                "buy_avg_price": ,
+                "sell_avg_price": ,
+            },
+        }
+        :return:
+        """
+        self._total_cash = account['total_cash']
+        self._frozen_cash = account['frozen_cash']
+        self._transaction_cost = account['transaction_cost']
+        positions = account['positions']
+        for key, value in positions.items():
+            position = self._positions.get_or_create(key)
+            position.sync_position(value)
+    @staticmethod
+    def cal_margin(asset, amount, price):
+        """
+        期权保证金计算
+        PS:
+        认沽，保证金 = min(价格 + max(保证金比例1 * 最新价 - max(最新价 - 行权价, 0), 保证金比例2 * 行权价), 行权价) * 合约乘数 * 数量
+        认购，保证金 = (价格 + max(保证金比例1 * 最新价 - max(行权价 - 最新价, 0), 保证金比例2 * 最新价) * 合约乘数) * 数量
+        :param asset: 代码对象
+        :param amount: 买卖数量
+        :param price: 买卖价格
+        :return:
+        """
+        last_price = Engine.instance().get_last_price(asset.symbol)
+        if asset.option_property == OptionProperty.CALL.value:
+            return min(price + max(asset.margin_rate1 * last_price - max(last_price - asset.exercise_price, 0), asset.margin_rate2 * asset.exercise_price), asset.exercise_price) * asset.contract_multiplier * amount
+        elif asset.option_property == OptionProperty.PUT.value:
+            return (price + max(asset.margin_rate1 * last_price - max(asset.exercise_price - last_price, 0), asset.margin_rate2 * last_price) * asset.contract_multiplier) * amount
+        else:
+            return 0
+    @staticmethod
+    def cal_premium(asset, amount, price):
+        """
+        期权权利金计算
+        PS:权利金 = 价格*数量*合约乘数
+        :param asset: 代码对象
+        :param amount: 期权数量
+        :param price:  期权价格
+        :return:
+        """
+        return amount * price * asset.contract_multiplier
+    @staticmethod
+    def _frozen_cash_of_order(order):
+        """
+        订单冻结资金
+        """
+        if order.hedge_type == HedgeType.COVERED:
+            return 0
+        elif order.futures_direction == FuturesDirection.OPEN:
+            if order.entrust_direction == EntrustDirection.BUY:
+                return OptionAccount.cal_premium(order.asset, order.unfilled_amount, order.frozen_price)
+            elif order.entrust_direction == EntrustDirection.SELL:
+                return OptionAccount.cal_margin(order.asset, order.unfilled_amount, order.frozen_price)
+            else:
+                return 0
+        else:
+            return 0
+    @staticmethod
+    def _frozen_cash_of_trade(trade):
+        """
+        交易冻结资金
+        """
+        if trade.hedge_type == HedgeType.COVERED:
+            return 0
+        elif trade.futures_direction == FuturesDirection.OPEN:
+            if trade.entrust_direction == EntrustDirection.BUY:
+                return OptionAccount.cal_premium(trade.asset, trade.amount, trade.frozen_price)
+            else:
+                return OptionAccount.cal_margin(trade.asset, trade.amount, trade.frozen_price)
+        else:
+            return 0
+    def update_account(self, orders, trades=list()):
+        """
+        更新账户状态
+        """
+        for trade in trades:
+            if trade.id in self._processed_trade:
+                continue
+            self._make_trade(trade)
+            continue
+        self._frozen_cash = sum((self._frozen_cash_of_order(order) for order in orders if order.is_active()))
+    def _on_trade(self, event):
+        if event.account != self:
+            return None
+        else:
+            self._make_trade(event.trade)
+    def _make_trade(self, trade):
+        if trade.id in self._processed_trade:
+            return None
+        else:
+            position = self._positions.get_or_create(trade.asset.symbol)
+            delta_cash = position.make_trade(trade)
+            self._transaction_cost += trade.transaction_cost
+            self._total_cash -= trade.transaction_cost
+            self._total_cash += delta_cash
+            self._frozen_cash -= self._frozen_cash_of_trade(trade)
+            self._processed_trade.add(trade.id)
+    def _on_order(self, event):
+        if event.account != self:
+            return None
+        else:
+            self._frozen_cash += self._frozen_cash_of_order(event.order)
+    def _on_order_unsolicited_update(self, event):
+        if self != event.account:
+            return None
+        else:
+            self._frozen_cash -= self._frozen_cash_of_order(event.order)
+    def _on_settlement(self, event):
+        trading_date = Engine.instance().trading_dt
+        next_trading_date = Engine.instance().data_proxy.get_next_trading_date(trading_date)
+        for position in list(self._positions.values()):
+            symbol = position.symbol
+            if next_trading_date.date() == position.exercise_date.date():
+                if position.buy_amount == 0 and position.sell_amount == 0:
+                    del (self._positions[symbol])
+                    continue
+                user_log.debug(_('{symbol} is expired, close all positions by system').format(symbol=symbol))
+                self._total_cash += position.market_value
+                del (self._positions[symbol])
+                continue
+                continue
+            position.make_settlement()
+        self._transaction_cost = 0
+        self._processed_trade.clear()
+    def _on_update_last_price(self, event):
+        for position in self._positions.values():
+            position.update_last_price()
+    @property
+    def type(self):
+        return AccountType.OPTION.value
+    @property
+    def total_value(self):
+        """
+        总权益
+        ps：总权益 = 可用资金 + 占用保证金 + 权利金
+        :return:
+        """
+        return self._total_cash + self.margin + self.premium
+    @property
+    def margin(self):
+        """
+        [float] 总保证金
+        """
+        return sum((position.margin for position in six.itervalues(self._positions)))
+    @property
+    def premium(self):
+        """
+        [float] 权利金
+        :return:
+        """
+        return sum((position.premium for position in six.itervalues(self._positions)))
+    @property
+    def riskdegree(self):
+        """
+        [float] 风险度
+        :return:
+        """
+        return 0.0
+    @property
+    def daily_pnl(self):
+        """
+        [float] 当日盈亏
+        """
+        return self.realized_pnl + self.holding_pnl - self.transaction_cost
+    @property
+    def holding_pnl(self):
+        """
+        [float] 持仓/浮动盈亏
+        """
+        return sum((position.holding_pnl for position in six.itervalues(self._positions)))
+    @property
+    def realized_pnl(self):
+        """
+        [float] 平仓盈亏
+        """
+        return sum((position.realized_pnl for position in six.itervalues(self._positions)))
+    @property
+    def _repr_attr_list(self):
+        return ['cash', 'total_cash', 'market_value', 'transaction_cost', 'frozen_cash', 'positions', 'type', 'total_value', 'margin', 'premium', 'daily_pnl', 'holding_pnl', 'realized_pnl']

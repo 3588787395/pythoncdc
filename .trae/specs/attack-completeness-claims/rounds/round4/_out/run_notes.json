@@ -1,0 +1,11 @@
+{
+ "sharding": "补测 20 族分 8 片跑（v2_shard0..7）；其中 shard1 / shard7 末尾在 pyc_verify.sha256 读文件阶段触发 MemoryError 并中断（中间产物已删除，合并记录未受影响）。",
+ "coverage_check": "合并文件逐族复核：20 个族各覆盖 416/416 个绿产物（distinct pyc = 416，无缺口）；8 个必需族同样为 416/416（3750 行 = 422 基线 + 8×416）。",
+ "intermediate_artifacts_removed": [
+  "_out/v2_shard*.jsonl",
+  "_out/v2_shard*.err",
+  "_out/v2_shard*.log",
+  "_out/_smoke.jsonl"
+ ],
+ "judge_path": "scripts/pyc_verify.py::evaluate（与 CLI `pyc_verify.py single` 同一条代码路径）；独立复跑见 _scripts/verify_l2_readings.py 与 _out/verify_l2_readings.json。"
+}

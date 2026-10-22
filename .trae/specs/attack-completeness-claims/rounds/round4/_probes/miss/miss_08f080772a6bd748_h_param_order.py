@@ -1,0 +1,40 @@
+# Source Generated with Decompyle++ (Python version)
+# File: history_bar_storage.pyc (Python 3.11)
+
+from IQCommon.enumerate import ASSET_TYPE_DICT
+from IQCommon.data.pyKLine import PyKLine
+from IQCommon.common import BinaryDIR
+class HistoryBarStorage(object):
+    __doc__ = """
+    K线存储类
+    """
+    def __init__(paramtuple, self, data_path=None):
+        self.assettype = paramtuple[0]
+        self._frequency = paramtuple[1]
+        self.kline_loader = PyKLine()
+        if data_path is None:
+            self.data_path = BinaryDIR
+        else:
+            self.data_path = data_path
+        try:
+            self.asset_type = ASSET_TYPE_DICT[self._frequency]
+            return None
+        except KeyError:
+            raise ValueError('Unsupport frequency {}'.format(self._frequency))
+    def get_bar(self, symbol, start_time, end_time):
+        """
+        获取指定合约的全部周期数据
+        :param symbol: 指定合约
+        :type symbol: : str
+
+        :param start_time: 开始时间
+        :type start_time: : str
+
+        :param end_time: 结束时间
+        :type end_time: : str
+
+        :return value: 合约数据
+        :type: numpy.ndarray
+        """
+        data_array = self.kline_loader.query_np(symbol, start_time, end_time, self.asset_type, self.data_path)
+        return data_array

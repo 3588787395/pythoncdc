@@ -1,0 +1,44 @@
+# Source Generated with Decompyle++ (Python version)
+# File: exrights_storage.pyc (Python 3.11)
+
+import os
+import six
+from IQCommon import pandas as pd
+from IQCommon.logger import system_log
+from IQEngine.utils.pycompatibility import lru_cache
+from IQCommon.exception import get_traceback_message
+class ExrightsStorage(object):
+    __doc__ = """
+    除权除息信息存储
+    """
+    def __init__(self, path):
+        try:
+            self._dividends = pd.read_pickle(path)
+            return None
+        except Exception as ex:
+            system_log.error('除权除息信息路径{}错误'.format(os.path.abspath(path)))
+            raise FileNotFoundError('除权除息信息路径{}错误,请改正后重试'.format(os.path.abspath(path)))
+    def get_dividends(self, symbols, date):
+        '\n        获取代码的分红配股信息\n        :param symbols: 代码或代码列表\n        :type list|str\n        :param date: 查询日期\n        :type int\n        :return: {}\n        Y'
+        if isinstance(symbols, six.string_types):
+            symbols = [symbols]
+        if date is None:
+            return self._get_all_dividend(symbols)
+        else:
+            return self._get_dividend(symbols, date)
+    def _get_all_dividend(self, symbols):
+        result = {}
+        for symbol in symbols:
+            try:
+                result[symbol] = self._dividends[symbol]
+            except KeyError:
+                system_log.error(get_traceback_message())
+        return result
+    def _get_dividend(self, symbols, date):
+        result = {}
+        for symbol in symbols:
+            try:
+                result[symbol] = self._dividends[symbol][date]
+            except KeyError:
+                system_log.error(get_traceback_message())
+        return result

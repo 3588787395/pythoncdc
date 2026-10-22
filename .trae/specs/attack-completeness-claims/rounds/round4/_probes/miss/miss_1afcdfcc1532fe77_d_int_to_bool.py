@@ -1,0 +1,46 @@
+# Source Generated with Decompyle++ (Python version)
+# File: data_manager.pyc (Python 3.11)
+
+class Filter(object):
+    __doc__ = """
+    筛选器
+    """
+    def __init__(self, table, index):
+        self._table = table
+        self._index = index
+    @property
+    def table(self):
+        return self._table
+    @property
+    def index(self):
+        return self._index
+class DateIndexItem(object):
+    __doc__ = """
+    日期索引
+    """
+    def __init__(self, start=0, end=0):
+        self.start = start
+        self.end = end
+    def __repr__(self):
+        return '({},{})'.format(self.start, self.end)
+class MergeDateItem(object):
+    @staticmethod
+    def merge(intervals):
+        """
+        :type intervals: List[Interval]
+        :rtype: List[Interval]
+        """
+        result = []
+        if not intervals:
+            return result
+        else:
+            intervals.sort(key=lambda x: x.start)
+            result.append(intervals[0])
+            for interval in intervals[True:]:
+                prev = result[-1]
+                if prev.end >= interval.start:
+                    prev.end = max(prev.end, interval.end)
+                    continue
+                result.append(interval)
+                continue
+            return result

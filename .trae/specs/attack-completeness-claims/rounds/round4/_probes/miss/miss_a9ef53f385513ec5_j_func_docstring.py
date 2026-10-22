@@ -1,0 +1,352 @@
+# Source Generated with Decompyle++ (Python version)
+# File: portfolio.pyc (Python 3.11)
+
+import six
+import copy
+import numpy as np
+try:
+    import jsonpickle
+except ImportError:
+    import json
+from IQEngine.core.engine import Engine
+from IQEngine.core.events import EventEnum
+from IQEngine.const import AccountType, DaysCount
+from IQEngine.utils import get_account_type, merge_dicts, datetime_func
+from IQEngine.core import BaseObject
+from IQCommon.api.klinedata import get_price_common
+from IQCommon.logger import system_log
+from IQCommon.exception import get_traceback_message
+from fly.common.tradingday_calendar import get_trade_days
+class Positions(dict):
+    def __init__(self, accounts):
+        super(Positions, self).__init__()
+        self._accounts = accounts
+    def __missing__(self, key):
+        account_type = get_account_type(key)
+        for _type in self._accounts:
+            if _type == account_type:
+                return self._accounts[account_type].positions[key]
+    def __contains__(self, item):
+        return item in self.keys()
+    def __repr__(self):
+        keys = []
+        for account in six.itervalues(self._accounts):
+            keys += account.positions.keys()
+        return str(sorted(keys))
+    def __len__(self):
+        return sum((len(account.positions) for account in six.itervalues(self._accounts)))
+    def __iter__(self):
+        keys = []
+        for account in six.itervalues(self._accounts):
+            keys += account.positions.keys()
+        for key in sorted(keys):
+            yield key
+    def items(self):
+        items = merge_dicts(*[account.positions.items() for account in six.itervalues(self._accounts)])
+        for k in sorted(items.keys()):
+            yield (k, items[k])
+    def keys(self):
+        keys = []
+        for account in six.itervalues(self._accounts):
+            keys += list(account.positions.keys())
+        return sorted(keys)
+    def values(self):
+        return [self[key] for key in self.keys()]
+class Portfolio(BaseObject):
+    def __init__(self, start_date, static_unit_net_value, units, accounts, register_event=True):
+        self._start_date = start_date
+        self._static_unit_net_value = static_unit_net_value
+        self._last_unit_net_value = static_unit_net_value
+        self._units = units
+        self._accounts = accounts
+        self._positions = None
+        if register_event:
+            self.register_event()
+            return None
+        else:
+            return None
+    def register_event(self):
+        '\n        注册事件\n        Y'
+        event_bus = Engine.instance().event_bus
+        event_bus.prepend_listener(EventEnum.PRE_BEFORE_TRADING_START, self._on_pre_before_trading)
+        event_bus.prepend_listener(EventEnum.POST_SETTLEMENT, self._on_post_settlement)
+    def order(self, symbol, amount, style, target=False):
+        return None
+    def save(self):
+        return {'start_date': self._start_date, 'static_unit_net_value': self._static_unit_net_value, 'last_unit_net_value': self._last_unit_net_value, 'units': self._units, 'accounts': {name: account.save() for name, account in six.iteritems(copy.deepcopy(self._accounts))}}
+    def load(self, state):
+        self._start_date = state['start_date']
+        self._static_unit_net_value = state['static_unit_net_value']
+        self._last_unit_net_value = state.get('last_unit_net_value', self._static_unit_net_value)
+        self._units = state['units']
+        for k, v in six.iteritems(state['accounts']):
+            self._accounts[k].load(v)
+    def _on_pre_before_trading(self, event):
+        if not np.isnan(self.unit_net_value):
+            self._static_unit_net_value = self.unit_net_value
+            return None
+        else:
+            self._static_unit_net_value = self._last_unit_net_value
+    def _on_post_settlement(self, event):
+        self._last_unit_net_value = self.unit_net_value
+    @property
+    def accounts(self):
+        """
+        账户汇总
+        :return: dict
+        """
+        return self._accounts
+    @property
+    def stock_account(self):
+        """
+        股票账户
+        :return: STOCK账户对象
+        """
+        return self._accounts.get(AccountType.STOCK.value, None)
+    @property
+    def future_account(self):
+        """
+        期货账户
+        :return: FUTURE账户对象
+        """
+        return self._accounts.get(AccountType.FUTURE.value, None)
+    @property
+    def option_account(self):
+        """
+        期权账户
+        :return: OPTION账户对象
+        """
+        return self._accounts.get(AccountType.OPTION.value, None)
+    @property
+    def hks_account(self):
+        """
+        港股通账户
+        :return: HKS账户对象
+        """
+        return self._accounts.get(AccountType.HKS.value, None)
+    @property
+    def start_date(self):
+        """
+        组合创建日期
+        :return: datetime.datetime
+        """
+        return self._start_date
+    @property
+    def units(self):
+        """
+        份额
+        :return: float
+        """
+        return self._units
+    @property
+    def unit_net_value(self):
+        """
+        浮动净值
+        :return: float
+        """
+        if self._units == 0:
+            return np.nan
+        else:
+            return self.total_value / self._units
+    @property
+    def static_unit_net_value(self):
+        """
+        昨结净值
+        :return:
+        """
+        return self._static_unit_net_value
+    @property
+    def daily_pnl(self):
+        """
+        当日盈亏
+        计算公式：总市值 - 昨结静值
+        :return: float
+        """
+        return self.total_value - self._static_unit_net_value * self.units
+    @property
+    def daily_returns(self):
+        """
+        当日收益: 根据持仓收益计算
+        :return: float
+        """
+        return 0 if self._static_unit_net_value == 0 else self.unit_net_value / self._static_unit_net_value - 1
+    @property
+    def daily_returns_benchmark(self):
+        """
+        基准当日收益
+        计算方法：回测当天交易日前复权收盘价/回测当前日期前一个交易日的前复权收盘价 -1
+        :return: float
+        """
+        benchmark = Engine.instance().config.strategy.benchmark
+        current_date = Engine.instance().trading_dt.date()
+        current_date_str = str(current_date).replace('-', '')
+        current_date_pre = Engine.instance().data_proxy.get_previous_trading_date(current_date)
+        current_date_pre_str = str(current_date_pre).replace('-', '')
+        price_current_date_pre = get_price_common(benchmark, current_date_pre_str, current_date_pre_str, '1d', fq='pre')['close'][0]
+        if not price_current_date_pre:
+            return 0
+        else:
+            price_today = get_price_common(benchmark, current_date_str, current_date_str, '1d', fq='pre')['close'][0]
+            return price_today / price_current_date_pre - 1
+    @property
+    def total_returns(self):
+        """
+        累计收益率
+        :return: float
+        """
+        return self.unit_net_value - 1
+    @property
+    def total_returns_benchmark_trade(self):
+        """
+        :return: 交易基准收益率。计算方法：基准代码最新价格 / 开启交易上一交易日基准代码价格 - 1
+        :return: float
+        """
+        engine = Engine.instance()
+        benchmark = engine.config.strategy.benchmark
+        start_date = datetime_func.convert_dt_to_int(engine.data_proxy.get_previous_trading_date(self._start_date))
+        start_date_str = str(start_date)
+        try:
+            price_df = get_price_common(benchmark, start_date_str, start_date_str, '1d', fq='pre')
+            init_price = price_df['close'][0]
+            if not init_price:
+                return 0
+        except BaseException:
+            try:
+                system_log.error('获取price失败:{}, {}'.format(benchmark, start_date_str))
+                system_log.error('获取close失败:{}'.format(price_df))
+                system_log.error(get_traceback_message())
+            except BaseException:
+                system_log.error(get_traceback_message())
+            return 0
+        last_price = engine.get_last_price(benchmark)
+        return last_price / init_price - 1
+    @property
+    def total_returns_benchmark_backtest(self):
+        """
+        :return: 回测基准收益率。计算方法：回测结束交易日前复权收盘价 / 回测开始日期前一个交易日的前复权收盘价 -1
+        :return: float
+        """
+        benchmark = Engine.instance().config.strategy.benchmark
+        current_date = Engine.instance().trading_dt.date()
+        current_date_str = str(current_date).replace('-', '')
+        start_date_pre = Engine.instance().data_proxy.get_previous_trading_date(self._start_date)
+        start_date_pre_str = str(start_date_pre).replace('-', '')
+        try:
+            price_today = get_price_common(benchmark, current_date_str, current_date_str, '1d', fq='price_dypre', backtest_date=int(current_date_str))['close'][0]
+        except BaseException:
+            system_log.error('获取price失败:{}, {}'.format(benchmark, current_date))
+            return 0
+        try:
+            price_start_date_pre = get_price_common(benchmark, start_date_pre_str, start_date_pre_str, '1d', fq='price_dypre', backtest_date=int(current_date_str))['close'][0]
+        except BaseException:
+            system_log.error('获取price失败:{}, {}'.format(benchmark, start_date_pre_str))
+            return 0
+        if not (price_today and price_start_date_pre):
+            return 0
+        else:
+            return price_today / price_start_date_pre - 1
+    @property
+    def benchmark_annualized_returns_trade(self):
+        """
+        累计年化收益率
+        :return: float
+        """
+        current_date = Engine.instance().trading_dt.date()
+        total_return = self.total_returns_benchmark_trade + 1
+        date_num = len(get_trade_days(self.start_date.strftime('%Y-%m-%d'), current_date.strftime('%Y-%m-%d')))
+        annualized_return = total_return ** (DaysCount.DAYS_A_YEAR.value / date_num) - 1
+        return annualized_return
+    @property
+    def benchmark_annualized_returns_backtest(self):
+        """
+        累计年化收益率
+        :return: float
+        """
+        current_date = Engine.instance().trading_dt.date()
+        total_return = self.total_returns_benchmark_backtest + 1
+        date_num = len(get_trade_days(self.start_date.strftime('%Y-%m-%d'), current_date.strftime('%Y-%m-%d')))
+        annualized_return = total_return ** (DaysCount.DAYS_A_YEAR.value / date_num) - 1
+        return annualized_return
+    @property
+    def annualized_returns(self):
+        """
+        累计年化收益率
+        :return: float
+        """
+        current_date = Engine.instance().trading_dt.date()
+        return self.unit_net_value ** (DaysCount.DAYS_A_YEAR.value / float((current_date - self.start_date).days + 1)) - 1
+    @property
+    def total_value(self):
+        """
+        总市值
+        :return: float
+        """
+        return sum((account.total_value for account in six.itervalues(self._accounts)))
+    @property
+    def portfolio_value(self):
+        """
+        总市值
+        :return: float
+        """
+        return self.total_value
+    @property
+    def positions(self):
+        """
+        持仓汇总
+        :return: dict
+        """
+        if self._positions is None:
+            self._positions = Positions(self._accounts)
+        return self._positions
+    @property
+    def cash(self):
+        """
+        可用资金
+        :return: float
+        """
+        return sum((account.cash for account in six.itervalues(self._accounts)))
+    @property
+    def transaction_cost(self):
+        """
+        交易费用
+        :return: float
+        """
+        return sum((account.transaction_cost for account in six.itervalues(self._accounts)))
+    @property
+    def market_value(self):
+        """
+        市值
+        :return: float
+        """
+        return sum((account.market_value for account in six.itervalues(self._accounts)))
+    @property
+    def pnl(self):
+        """
+        浮动盈亏
+        :return: float
+        """
+        return (self.unit_net_value - 1) * self.units
+    @property
+    def starting_cash(self):
+        """
+        起始资金
+        :return: float
+        """
+        return self.units
+    @property
+    def frozen_cash(self):
+        """
+        冻结资金
+        :return: float
+        """
+        return sum((account.frozen_cash for account in six.itervalues(self._accounts)))
+    @property
+    def risk_degree(self):
+        """
+        风险度
+        :return: float
+        """
+        return sum((account.risk_degree for account in six.itervalues(self._accounts)))
+    @property
+    def _repr_attr_list(self):
+        return ['frozen_cash', 'starting_cash', 'pnl', 'market_value', 'transaction_cost', 'cash', 'positions', 'portfolio_value', 'total_value', 'total_returns', 'annualized_returns', 'daily_returns', 'daily_pnl', 'start_date', 'stock_account', 'future_account', 'accounts', 'option_account', 'risk_degree', 'hks_account']

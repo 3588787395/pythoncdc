@@ -1,0 +1,142 @@
+# Source Generated with Decompyle++ (Python version)
+# File: gtn_client.pyc (Python 3.11)
+
+import json
+import os
+import time
+from IQCommon.common import NOTEBOOK_DIR_PATH
+from IQCommon.logger import system_log
+from IQData.utils.base_http_client import BaseHTTPClient, RequestChannel
+OPEN_TOKEN_PATH = os.path.join(NOTEBOOK_DIR_PATH, 'share', 'openapi_token.txt')
+class GTNClient(object):
+    __doc__ = """
+    面向GTN的HTTP客户端
+    """
+    def __init__(self, channel, id, secret):
+        self._library = BaseHTTPClient(channel)
+        self._id = id
+        self._secret = secret
+        self._token = None
+        self._token_url = []
+        self._next_address = False
+    def set_id(self, id):
+        """
+        设置用户名
+        """
+        self._id = id
+    def get_id(self):
+        """
+        获取用户名
+        """
+        return self._id
+    def set_secret(self, secret):
+        """
+        设置密码
+        """
+        self._secret = secret
+    def get_secret(self):
+        """
+        获取密码
+        """
+        return self._secret
+    def get_token(self):
+        token_value = ''
+        if not os.path.exists(OPEN_TOKEN_PATH):
+            return token_value
+        with open(OPEN_TOKEN_PATH, 'r') as f:
+            token_value = f.read()
+        return token_value
+    def send_by_get(self, url, data=None, request_times=0):
+        """
+        通过GET方式请求数据
+        :param url: 请求地址
+        :param data: 请求时携带的数据
+        :param request_times: 请求次数
+        """
+        token = self.get_token()
+        if not token:
+            system_log.error('token获取失败')
+            return ({'error_no': -1, 'error_info': 'token获取失败，无数据返回'}, {})
+        try:
+            headers = {'Authorization': 'Bearer %s' % token}
+            res = self._library.request(method='GET', url=url, params=data, headers=headers)
+            if res['status_code'] == 200:
+                body_dict = json.loads(res['body'])
+                if body_dict.get('error_code'):
+                    return ({'error_no': body_dict['error_code'], 'error_info': body_dict['error_info']}, {})
+                return ({'error_no': 0, 'error_info': ''}, body_dict)
+            elif res['status_code'] == 401:
+                system_log.error('token已过期，重新请求token')
+                if request_times < 2:
+                    time.sleep(10)
+                    request_times += True
+                    return self.send_by_get(url, data, request_times)
+                error_no = -1
+                error_info = 'token重新请求异常，内部错误号:%d' % res['status_code']
+                return ({'error_no': error_no, 'error_info': error_info}, {})
+            elif 400 <= res['status_code'] <= 499:
+                error_no = res['status_code']
+                error_info = res['body']
+                return ({'error_no': error_no, 'error_info': error_info}, {})
+            error_no = -1
+            error_info = '服务器处理异常，内部错误号:%d' % res['status_code']
+            return ({'error_no': error_no, 'error_info': error_info}, {})
+        except ConnectionRefusedError as e1:
+            error_no = -1
+            error_info = e1
+            return ({'error_no': error_no, 'error_info': error_info}, {})
+        except Exception as e2:
+            error_no = -1
+            error_info = e2
+            return ({'error_no': error_no, 'error_info': error_info}, {})
+    def send_by_post(self, url, data=None, request_times=0):
+        """
+        通过Post方式请求数据
+        :param url: 请求地址
+        :param data: 请求时携带的数据
+        :param request_times: 请求次数
+        return
+        """
+        token = self.get_token()
+        if not token:
+            system_log.error('token获取失败')
+            return ({'error_no': -1, 'error_info': 'token获取失败，无数据返回'}, {})
+        try:
+            headers = {'Content-Type': 'application/json'}
+            query_string = {'access_token': token}
+            res = self._library.request(method='POST', url=url, data=data, headers=headers, params=query_string)
+            if res['status_code'] == 200:
+                body_dict = json.loads(res['body'])
+                if body_dict.get('error_code'):
+                    return ({'error_no': body_dict['error_code'], 'error_info': body_dict['error_info']}, {})
+                return ({'error_no': 0, 'error_info': ''}, body_dict)
+            elif res['status_code'] == 401:
+                system_log.error('token已过期，重新请求token')
+                if token and request_times < 2:
+                    time.sleep(10)
+                    request_times += 1
+                    return self.send_by_post(url, data, request_times)
+                error_no = -1
+                error_info = 'token重新请求异常，内部错误号:%d' % res['status_code']
+                return ({'error_no': error_no, 'error_info': error_info}, {})
+            elif 400 <= res['status_code'] <= 499:
+                error_no = res['status_code']
+                error_info = res['body']
+                return ({'error_no': error_no, 'error_info': error_info}, {})
+            error_no = -1
+            error_info = '服务器处理异常，内部错误号:%d' % res['status_code']
+            return ({'error_no': error_no, 'error_info': error_info}, {})
+        except ConnectionRefusedError as e1:
+            error_no = -1
+            error_info = e1
+            return ({'error_no': error_no, 'error_info': error_info}, {})
+        except Exception as e2:
+            error_no = -1
+            error_info = e2
+            return ({'error_no': error_no, 'error_info': error_info}, {})
+def create_gtn_client(id, secret):
+    gtn_channel = RequestChannel()
+    gtn_client = GTNClient(gtn_channel, id, secret)
+    return gtn_client
+if __name__ == '__main__':
+    pass
