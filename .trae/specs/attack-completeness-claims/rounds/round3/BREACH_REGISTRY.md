@@ -47,3 +47,37 @@
 | B142 | 嵌套 finally 副本归属（`v_b71_face::v_nest_fin_continue`，本轮 `l0_d4_repl_v_b71_face.py` 复现原样红） | 开放（前规范即稀窝登记） |
 | B143 | finally 体内 break 的 finalbody 子区域派发 | 开放（前规范稀窝登记） |
 | B132 | c04/m02（Try 配对 / 模块级） | 前规范已封闭（B155/B156） |
+
+## §5 L3 机制层轮（round5）新增（B179–B194，接 B178）
+
+| 编号 | 根因 | 表现 | 状态 |
+|---|---|---|---|
+| B179 | 机制族通用性为 0：7 族中 **0 族达形态通用** | R2 形态特化（BoolOp keep-or-pop + merge_ctx 枚举）、R3 部分特化、R4 形态特化、R5 部分特化、R6 形态特化（R7/R8 同） | 开放 |
+| B180 | 块级抢归属（非优先级裁决）：同块被两区域争抢 | 新构型探针 R2/R4/R8 多例（while→if 丢语句、finally 移出+append 丢、嵌套 handler 体丢） | 开放 |
+| B181 | **B142 重新定性为形态级缺口**（前规范「稀窝」定性被证伪）：Continue 形态整条未产出 + finally 体互换重复；单层亦复现 | _b71_face::v_nest_fin_continue；执行级证实 finally 副本 3 次 | 开放（前规范定性作废） |
+| B182 | B143 定性为归约级缺口（Try/If/Break/While 形态齐全，仅 finalbody 派发顺序错） | finalbody 派发序错 | 开放（不计入形态级分子扣减） |
+| B183 | 标记计数口径不唯一（口径 A/B/C = 191/123/44+24…；174 全部差异落在 R5） | 三口径复算 | 定性登记 |
+| B184 | 守卫触发集未封闭 | R6 B140 五合取、12 调用点 continue 守卫无 loop 限定 | 开放 |
+| B185 | **「判绿 ⇒ 对」在单元粒度被实测击穿**（首次） | round5 o4b：函数级 code object 判 Equal，失败仅落嵌套 <listcomp>；另 8 单元「判红但执行级 EQUAL」 | 开放 |
+| B186 | R2 族形态特化致 while→if 化丢语句 | 新构型探针 | 开放 |
+| B187 | R4 族形态特化致 finally 移出后 append 丢失 | 新构型探针 | 开放 |
+| B188 | R6 handler-continue 触发集不对称 | 4 格中 1 格红 | 开放 |
+| B189 | R7 slice step 丢失（BUILD_SLICE 三元 vs 二元白名单） | 新构型探针 | 开放 |
+| B190 | R5×with 同体语句丢弃（新增） | 叠加探针 d′ | 开放 |
+| B191 | 口径层：6 族深度≥3 叠加塌成 pass | 叠加探针 a | 定性登记（与 B172 同族证据） |
+| B192 | 口径层：三元真值臂降级 + 极性反转；B151 丢合取项；augassign/del/slice 抢前缀 | 叠加探针 b/d/e | 定性登记 |
+| B193 | 守卫相互作用危险 H1–H11（含 H2: B152 与 B150 争同一 merge_block、B150 不查 generated_blocks；H11: with×match 同体语句丢） | 交互分析 | 开放 |
+| B194 | 判据层：判绿/判红与执行级语义不对应（8 单元判红但执行级 EQUAL；1 单元判绿但语义错） | round5 执行级差分 | 开放 |
+
+## §6 L2 判定层轮（round4）新增（B195–B201，接 B194）
+
+| 编号 | 根因 | 表现 | 状态 |
+|---|---|---|---|
+| B195 | 归一化删 handler 块 | 判据 equivalence_check.py patch 链含 fix_unreachable，handler 块被删后比较 | 开放 |
+| B196 | 无条件跳转只比 rgval | 属性不可见 | 开放 |
+| B197 | attr_list **无 arg 槽位** | 形参槽位不可见（形参换序漏检 159/162） | 开放 |
+| B198 | 常量用 == 比较 | 值语义不可见（x=1→x=True 漏检 **83/84 = 98.81%**） | 开放 |
+| B199 | 函数 docstring 不在指令流 | 函数 docstring 漏检 **108/108** | 开放 |
+| B200 | 判据与产品共目标函数（
+egion_ast_generator.py:7755/:14244/:21750、code_generator.py:5001 直接以判红为规则理由） | 共同原因 A1–A6 | 开放 |
+| B201 | 「已判绿」清单时效性漂移（4/211 = 1.90% 现已判红） | 清单陈旧 | 定性登记 |
