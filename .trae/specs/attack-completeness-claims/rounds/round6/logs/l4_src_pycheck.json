@@ -1,0 +1,418 @@
+{
+ "rows": [
+  {
+   "slug": "stdlib_dataclasses",
+   "src": "D:\\Python\\Lib\\dataclasses.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\dataclasses.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_contextlib",
+   "src": "D:\\Python\\Lib\\contextlib.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\contextlib.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_functools",
+   "src": "D:\\Python\\Lib\\functools.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\functools.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_enum",
+   "src": "D:\\Python\\Lib\\enum.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\enum.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_asyncio_taskgroups",
+   "src": "D:\\Python\\Lib\\asyncio\\taskgroups.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\taskgroups.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_asyncio_timeouts",
+   "src": "D:\\Python\\Lib\\asyncio\\timeouts.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\timeouts.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_json_encoder",
+   "src": "D:\\Python\\Lib\\json\\encoder.py",
+   "pyc": "D:\\Python\\Lib\\json\\__pycache__\\encoder.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_xml_ElementPath",
+   "src": "D:\\Python\\Lib\\xml\\etree\\ElementPath.py",
+   "pyc": "D:\\Python\\Lib\\xml\\etree\\__pycache__\\ElementPath.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_tomllib_parser",
+   "src": "D:\\Python\\Lib\\tomllib\\_parser.py",
+   "pyc": "D:\\Python\\Lib\\tomllib\\__pycache__\\_parser.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_re__parser",
+   "src": "D:\\Python\\Lib\\re\\_parser.py",
+   "pyc": "D:\\Python\\Lib\\re\\__pycache__\\_parser.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_statistics",
+   "src": "D:\\Python\\Lib\\statistics.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\statistics.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_difflib",
+   "src": "D:\\Python\\Lib\\difflib.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\difflib.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_http_cookiejar",
+   "src": "D:\\Python\\Lib\\http\\cookiejar.py",
+   "pyc": "D:\\Python\\Lib\\http\\__pycache__\\cookiejar.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_tarfile",
+   "src": "D:\\Python\\Lib\\tarfile.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\tarfile.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_subprocess",
+   "src": "D:\\Python\\Lib\\subprocess.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\subprocess.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_urllib_request",
+   "src": "D:\\Python\\Lib\\urllib\\request.py",
+   "pyc": "D:\\Python\\Lib\\urllib\\__pycache__\\request.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_unittest_case",
+   "src": "D:\\Python\\Lib\\unittest\\case.py",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\case.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_argparse",
+   "src": "D:\\Python\\Lib\\argparse.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\argparse.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_ipaddress",
+   "src": "D:\\Python\\Lib\\ipaddress.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\ipaddress.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_asyncio_base_events",
+   "src": "D:\\Python\\Lib\\asyncio\\base_events.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\base_events.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_asyncio_streams",
+   "src": "D:\\Python\\Lib\\asyncio\\streams.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\streams.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_typing",
+   "src": "D:\\Python\\Lib\\typing.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\typing.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_ast",
+   "src": "D:\\Python\\Lib\\ast.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\ast.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_csv",
+   "src": "D:\\Python\\Lib\\csv.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\csv.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "stdlib_asyncio_tasks",
+   "src": "D:\\Python\\Lib\\asyncio\\tasks.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\tasks.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "sp_anyio_fileio",
+   "src": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\_fileio.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\__pycache__\\_fileio.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "sp_anyio_sync",
+   "src": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\_synchronization.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\__pycache__\\_synchronization.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "sp_anyio_lowlevel",
+   "src": "D:\\Python\\Lib\\site-packages\\anyio\\lowlevel.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\anyio\\__pycache__\\lowlevel.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "sp_anyio_functools",
+   "src": "D:\\Python\\Lib\\site-packages\\anyio\\functools.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\anyio\\__pycache__\\functools.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "sp_packaging_specifiers",
+   "src": "D:\\Python\\Lib\\site-packages\\packaging\\specifiers.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\packaging\\__pycache__\\specifiers.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "sp_packaging_version",
+   "src": "D:\\Python\\Lib\\site-packages\\packaging\\version.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\packaging\\__pycache__\\version.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "sp_httpcore_models",
+   "src": "D:\\Python\\Lib\\site-packages\\httpcore\\_models.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\httpcore\\__pycache__\\_models.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "sp_starlette_formparsers",
+   "src": "D:\\Python\\Lib\\site-packages\\starlette\\formparsers.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\starlette\\__pycache__\\formparsers.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "sp_pydantic_dataclasses",
+   "src": "D:\\Python\\Lib\\site-packages\\pydantic\\_internal\\_dataclasses.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\pydantic\\_internal\\__pycache__\\_dataclasses.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "sp_pydantic_fields",
+   "src": "D:\\Python\\Lib\\site-packages\\pydantic\\fields.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\pydantic\\__pycache__\\fields.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "sp_pandas_indexing",
+   "src": "D:\\Python\\Lib\\site-packages\\pandas\\core\\indexing.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\pandas\\core\\__pycache__\\indexing.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "sp_sqlalchemy_collections",
+   "src": "D:\\Python\\Lib\\site-packages\\sqlalchemy\\orm\\collections.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\sqlalchemy\\orm\\__pycache__\\collections.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "sp_sympy_qexpr",
+   "src": "D:\\Python\\Lib\\site-packages\\sympy\\physics\\quantum\\qexpr.py",
+   "pyc": "D:\\Python\\Lib\\site-packages\\sympy\\physics\\quantum\\__pycache__\\qexpr.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "repo_core_config",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\config.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\core\\__pycache__\\config.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "repo_core_fast_stack",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\fast_stack.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\core\\__pycache__\\fast_stack.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "repo_core_object_pool",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\object_pool.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\core\\__pycache__\\object_pool.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "repo_core_cfg_basic_block",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\basic_block.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\__pycache__\\basic_block.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "repo_core_cfg_builder",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\cfg_builder.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\__pycache__\\cfg_builder.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "repo_parsers_ctx",
+   "src": "F:\\Downloads\\pythoncdc-main\\parsers\\context_manager.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\parsers\\__pycache__\\context_manager.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "repo_scripts_verify",
+   "src": "F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\scripts\\__pycache__\\pyc_verify.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  },
+  {
+   "slug": "repo_tools_syntax_cov",
+   "src": "F:\\Downloads\\pythoncdc-main\\tools\\kb\\syntax_coverage.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\tools\\kb\\__pycache__\\syntax_coverage.cpython-311.pyc",
+   "code_equal": true,
+   "consts_equal": true,
+   "names_equal": true,
+   "same_semantics": true
+  }
+ ]
+}

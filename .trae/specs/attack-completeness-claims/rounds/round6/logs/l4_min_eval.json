@@ -1,0 +1,49 @@
+{
+ "rows": [
+  {
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\repro\\min_csv.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\repro\\min_csv.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\repro\\min_csvOK.py",
+   "lines": 377,
+   "pycdc_rc": 0,
+   "verify_status": "failure",
+   "verify_units": "16/19",
+   "src_stdout": "True\n",
+   "prod_stdout": "EXC UnboundLocalError cannot access local variable 'start' where it is not associated with a value\n",
+   "src_rc": 0,
+   "prod_rc": 0,
+   "exec_equal": false,
+   "prod_stderr_tail": ""
+  },
+  {
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\repro\\min_difflib.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\repro\\min_difflib.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\repro\\min_difflibOK.py",
+   "lines": 779,
+   "pycdc_rc": 0,
+   "verify_status": "failure",
+   "verify_units": "9/16",
+   "src_stdout": "EXC NameError name '_calculate_ratio' is not defined\n",
+   "prod_stdout": "EXC NameError name 'b2j' is not defined\n",
+   "src_rc": 0,
+   "prod_rc": 0,
+   "exec_equal": false,
+   "prod_stderr_tail": ""
+  },
+  {
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\repro\\min_difflib2.py",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\repro\\min_difflib2.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\repro\\min_difflib2OK.py",
+   "lines": 779,
+   "pycdc_rc": 0,
+   "verify_status": "failure",
+   "verify_units": "9/16",
+   "src_stdout": "[Match(a=1, b=0, size=3), Match(a=4, b=4, size=0)]\n",
+   "prod_stdout": "EXC NameError name 'b2j' is not defined\n",
+   "src_rc": 0,
+   "prod_rc": 0,
+   "exec_equal": false,
+   "prod_stderr_tail": ""
+  }
+ ]
+}

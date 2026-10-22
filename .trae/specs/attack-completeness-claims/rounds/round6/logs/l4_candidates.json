@@ -1,0 +1,2436 @@
+{
+ "candidates": [
+  {
+   "path": "D:\\Python\\Lib\\typing.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\typing.cpython-311.pyc",
+   "features": [
+    "pep604",
+    "generator",
+    "fstring",
+    "annot",
+    "decorator_chain",
+    "match_stmt"
+   ],
+   "bytes": 123596,
+   "loc": 3520
+  },
+  {
+   "path": "D:\\Python\\Lib\\dataclasses.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\dataclasses.cpython-311.pyc",
+   "features": [
+    "dataclass",
+    "generator",
+    "fstring",
+    "annot",
+    "match_stmt"
+   ],
+   "bytes": 59800,
+   "loc": 1502
+  },
+  {
+   "path": "D:\\Python\\Lib\\ast.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\ast.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "generator",
+    "fstring",
+    "walrus"
+   ],
+   "bytes": 63196,
+   "loc": 1753
+  },
+  {
+   "path": "D:\\Python\\Lib\\inspect.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\inspect.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "generator",
+    "fstring",
+    "annot"
+   ],
+   "bytes": 127589,
+   "loc": 3344
+  },
+  {
+   "path": "D:\\Python\\Lib\\statistics.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\statistics.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "annot",
+    "walrus"
+   ],
+   "bytes": 49095,
+   "loc": 1391
+  },
+  {
+   "path": "D:\\Python\\Lib\\subprocess.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\subprocess.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "annot",
+    "walrus"
+   ],
+   "bytes": 90657,
+   "loc": 2210
+  },
+  {
+   "path": "D:\\Python\\Lib\\traceback.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\traceback.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "walrus",
+    "match_stmt"
+   ],
+   "bytes": 41396,
+   "loc": 1019
+  },
+  {
+   "path": "D:\\Python\\Lib\\urllib\\request.py",
+   "pyc": "D:\\Python\\Lib\\urllib\\__pycache__\\request.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "annot",
+    "walrus"
+   ],
+   "bytes": 104895,
+   "loc": 2792
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\proactor_events.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\proactor_events.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "fstring",
+    "annot"
+   ],
+   "bytes": 34158,
+   "loc": 895
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\taskgroups.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\taskgroups.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "fstring",
+    "annot"
+   ],
+   "bytes": 8705,
+   "loc": 235
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\tasks.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\tasks.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "generator",
+    "fstring"
+   ],
+   "bytes": 35423,
+   "loc": 991
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\timeouts.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\timeouts.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "fstring",
+    "annot"
+   ],
+   "bytes": 5489,
+   "loc": 169
+  },
+  {
+   "path": "D:\\Python\\Lib\\collections\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\collections\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "annot"
+   ],
+   "bytes": 53594,
+   "loc": 1577
+  },
+  {
+   "path": "D:\\Python\\Lib\\concurrent\\futures\\process.py",
+   "pyc": "D:\\Python\\Lib\\concurrent\\futures\\__pycache__\\process.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "walrus"
+   ],
+   "bytes": 36341,
+   "loc": 863
+  },
+  {
+   "path": "D:\\Python\\Lib\\contextlib.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\contextlib.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "generator",
+    "fstring"
+   ],
+   "bytes": 28205,
+   "loc": 792
+  },
+  {
+   "path": "D:\\Python\\Lib\\doctest.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\doctest.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot",
+    "walrus"
+   ],
+   "bytes": 109046,
+   "loc": 2831
+  },
+  {
+   "path": "D:\\Python\\Lib\\http\\client.py",
+   "pyc": "D:\\Python\\Lib\\http\\__pycache__\\client.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "annot"
+   ],
+   "bytes": 58802,
+   "loc": 1538
+  },
+  {
+   "path": "D:\\Python\\Lib\\http\\cookiejar.py",
+   "pyc": "D:\\Python\\Lib\\http\\__pycache__\\cookiejar.cpython-311.pyc",
+   "features": [
+    "pep604",
+    "generator",
+    "fstring"
+   ],
+   "bytes": 79643,
+   "loc": 2127
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\metadata\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\metadata\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "annot"
+   ],
+   "bytes": 32180,
+   "loc": 1089
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\metadata\\_itertools.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\metadata\\__pycache__\\_itertools.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "annot"
+   ],
+   "bytes": 2141,
+   "loc": 74
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\resources\\_common.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\resources\\__pycache__\\_common.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "annot"
+   ],
+   "bytes": 2998,
+   "loc": 108
+  },
+  {
+   "path": "D:\\Python\\Lib\\ipaddress.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\ipaddress.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "decorator_chain"
+   ],
+   "bytes": 77377,
+   "loc": 2303
+  },
+  {
+   "path": "D:\\Python\\Lib\\locale.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\locale.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "annot"
+   ],
+   "bytes": 80885,
+   "loc": 1791
+  },
+  {
+   "path": "D:\\Python\\Lib\\tarfile.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\tarfile.cpython-311.pyc",
+   "features": [
+    "pep604",
+    "generator",
+    "fstring"
+   ],
+   "bytes": 109127,
+   "loc": 2897
+  },
+  {
+   "path": "D:\\Python\\Lib\\tokenize.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\tokenize.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "walrus"
+   ],
+   "bytes": 27030,
+   "loc": 695
+  },
+  {
+   "path": "D:\\Python\\Lib\\tomllib\\_parser.py",
+   "pyc": "D:\\Python\\Lib\\tomllib\\__pycache__\\_parser.cpython-311.pyc",
+   "features": [
+    "pep604",
+    "fstring",
+    "annot"
+   ],
+   "bytes": 23322,
+   "loc": 692
+  },
+  {
+   "path": "D:\\Python\\Lib\\unittest\\case.py",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\case.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "annot"
+   ],
+   "bytes": 59982,
+   "loc": 1480
+  },
+  {
+   "path": "D:\\Python\\Lib\\unittest\\mock.py",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\mock.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "generator",
+    "fstring"
+   ],
+   "bytes": 106881,
+   "loc": 2991
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\etree\\ElementPath.py",
+   "pyc": "D:\\Python\\Lib\\xml\\etree\\__pycache__\\ElementPath.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring",
+    "walrus"
+   ],
+   "bytes": 14420,
+   "loc": 424
+  },
+  {
+   "path": "D:\\Python\\Lib\\argparse.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\argparse.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 102291,
+   "loc": 2631
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\base_events.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\base_events.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "fstring"
+   ],
+   "bytes": 76760,
+   "loc": 1948
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\base_futures.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\base_futures.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 2072,
+   "loc": 69
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\base_subprocess.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\base_subprocess.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "fstring"
+   ],
+   "bytes": 9154,
+   "loc": 286
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\base_tasks.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\base_tasks.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "fstring"
+   ],
+   "bytes": 2736,
+   "loc": 93
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\events.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\events.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "fstring"
+   ],
+   "bytes": 29269,
+   "loc": 843
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\futures.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\futures.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 14640,
+   "loc": 429
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\locks.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\locks.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "fstring"
+   ],
+   "bytes": 19601,
+   "loc": 588
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\queues.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\queues.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "fstring"
+   ],
+   "bytes": 8218,
+   "loc": 245
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\selector_events.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\selector_events.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "fstring"
+   ],
+   "bytes": 46396,
+   "loc": 1243
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\sslproto.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\sslproto.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 32427,
+   "loc": 923
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\staggered.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\staggered.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "annot"
+   ],
+   "bytes": 6141,
+   "loc": 150
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\streams.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\streams.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "fstring"
+   ],
+   "bytes": 28154,
+   "loc": 766
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\subprocess.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\subprocess.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "fstring"
+   ],
+   "bytes": 7910,
+   "loc": 229
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\windows_events.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\windows_events.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "fstring"
+   ],
+   "bytes": 35057,
+   "loc": 945
+  },
+  {
+   "path": "D:\\Python\\Lib\\bdb.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\bdb.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 33356,
+   "loc": 894
+  },
+  {
+   "path": "D:\\Python\\Lib\\compileall.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\compileall.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 20715,
+   "loc": 464
+  },
+  {
+   "path": "D:\\Python\\Lib\\copyreg.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\copyreg.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 7900,
+   "loc": 224
+  },
+  {
+   "path": "D:\\Python\\Lib\\ctypes\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\ctypes\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 18410,
+   "loc": 567
+  },
+  {
+   "path": "D:\\Python\\Lib\\datetime.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\datetime.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 94467,
+   "loc": 2636
+  },
+  {
+   "path": "D:\\Python\\Lib\\difflib.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\difflib.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 85364,
+   "loc": 2057
+  },
+  {
+   "path": "D:\\Python\\Lib\\dis.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\dis.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 29680,
+   "loc": 775
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\message.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\message.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 49151,
+   "loc": 1201
+  },
+  {
+   "path": "D:\\Python\\Lib\\enum.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\enum.cpython-311.pyc",
+   "features": [
+    "generator",
+    "annot"
+   ],
+   "bytes": 81014,
+   "loc": 2049
+  },
+  {
+   "path": "D:\\Python\\Lib\\functools.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\functools.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 39425,
+   "loc": 1013
+  },
+  {
+   "path": "D:\\Python\\Lib\\gzip.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\gzip.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 24742,
+   "loc": 669
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\resources\\_itertools.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\resources\\__pycache__\\_itertools.cpython-311.pyc",
+   "features": [
+    "generator",
+    "annot"
+   ],
+   "bytes": 919,
+   "loc": 36
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\resources\\_legacy.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\resources\\__pycache__\\_legacy.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 3615,
+   "loc": 122
+  },
+  {
+   "path": "D:\\Python\\Lib\\json\\encoder.py",
+   "pyc": "D:\\Python\\Lib\\json\\__pycache__\\encoder.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 16523,
+   "loc": 444
+  },
+  {
+   "path": "D:\\Python\\Lib\\mimetypes.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\mimetypes.cpython-311.pyc",
+   "features": [
+    "generator",
+    "walrus"
+   ],
+   "bytes": 23439,
+   "loc": 649
+  },
+  {
+   "path": "D:\\Python\\Lib\\modulefinder.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\modulefinder.cpython-311.pyc",
+   "features": [
+    "generator",
+    "annot"
+   ],
+   "bytes": 24365,
+   "loc": 667
+  },
+  {
+   "path": "D:\\Python\\Lib\\multiprocessing\\pool.py",
+   "pyc": "D:\\Python\\Lib\\multiprocessing\\__pycache__\\pool.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 33716,
+   "loc": 958
+  },
+  {
+   "path": "D:\\Python\\Lib\\multiprocessing\\process.py",
+   "pyc": "D:\\Python\\Lib\\multiprocessing\\__pycache__\\process.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "walrus"
+   ],
+   "bytes": 12578,
+   "loc": 440
+  },
+  {
+   "path": "D:\\Python\\Lib\\multiprocessing\\synchronize.py",
+   "pyc": "D:\\Python\\Lib\\multiprocessing\\__pycache__\\synchronize.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 12689,
+   "loc": 405
+  },
+  {
+   "path": "D:\\Python\\Lib\\optparse.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\optparse.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 62050,
+   "loc": 1682
+  },
+  {
+   "path": "D:\\Python\\Lib\\pdb.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\pdb.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 66595,
+   "loc": 1821
+  },
+  {
+   "path": "D:\\Python\\Lib\\pickle.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\pickle.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 66769,
+   "loc": 1821
+  },
+  {
+   "path": "D:\\Python\\Lib\\pickletools.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\pickletools.cpython-311.pyc",
+   "features": [
+    "generator",
+    "annot"
+   ],
+   "bytes": 96376,
+   "loc": 2891
+  },
+  {
+   "path": "D:\\Python\\Lib\\pkgutil.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\pkgutil.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 25354,
+   "loc": 717
+  },
+  {
+   "path": "D:\\Python\\Lib\\plistlib.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\plistlib.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 29265,
+   "loc": 912
+  },
+  {
+   "path": "D:\\Python\\Lib\\pprint.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\pprint.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 25160,
+   "loc": 672
+  },
+  {
+   "path": "D:\\Python\\Lib\\pydoc.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\pydoc.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 111986,
+   "loc": 2852
+  },
+  {
+   "path": "D:\\Python\\Lib\\quopri.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\quopri.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 7510,
+   "loc": 243
+  },
+  {
+   "path": "D:\\Python\\Lib\\random.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\random.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 33066,
+   "loc": 905
+  },
+  {
+   "path": "D:\\Python\\Lib\\re\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\re\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "decorator_chain"
+   ],
+   "bytes": 16263,
+   "loc": 375
+  },
+  {
+   "path": "D:\\Python\\Lib\\re\\_parser.py",
+   "pyc": "D:\\Python\\Lib\\re\\__pycache__\\_parser.cpython-311.pyc",
+   "features": [
+    "pep604",
+    "fstring"
+   ],
+   "bytes": 43529,
+   "loc": 1110
+  },
+  {
+   "path": "D:\\Python\\Lib\\rlcompleter.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\rlcompleter.cpython-311.pyc",
+   "features": [
+    "annot",
+    "walrus"
+   ],
+   "bytes": 8046,
+   "loc": 220
+  },
+  {
+   "path": "D:\\Python\\Lib\\shutil.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\shutil.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 56814,
+   "loc": 1531
+  },
+  {
+   "path": "D:\\Python\\Lib\\socket.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\socket.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 38287,
+   "loc": 968
+  },
+  {
+   "path": "D:\\Python\\Lib\\ssl.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\ssl.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "decorator_chain"
+   ],
+   "bytes": 55687,
+   "loc": 1571
+  },
+  {
+   "path": "D:\\Python\\Lib\\string.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\string.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 12095,
+   "loc": 310
+  },
+  {
+   "path": "D:\\Python\\Lib\\textwrap.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\textwrap.cpython-311.pyc",
+   "features": [
+    "generator",
+    "annot"
+   ],
+   "bytes": 20209,
+   "loc": 492
+  },
+  {
+   "path": "D:\\Python\\Lib\\tomllib\\_re.py",
+   "pyc": "D:\\Python\\Lib\\tomllib\\__pycache__\\_re.cpython-311.pyc",
+   "features": [
+    "pep604",
+    "annot"
+   ],
+   "bytes": 3050,
+   "loc": 108
+  },
+  {
+   "path": "D:\\Python\\Lib\\types.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\types.cpython-311.pyc",
+   "features": [
+    "async_def",
+    "generator"
+   ],
+   "bytes": 10372,
+   "loc": 306
+  },
+  {
+   "path": "D:\\Python\\Lib\\unittest\\loader.py",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\loader.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 23056,
+   "loc": 521
+  },
+  {
+   "path": "D:\\Python\\Lib\\urllib\\parse.py",
+   "pyc": "D:\\Python\\Lib\\urllib\\__pycache__\\parse.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 45296,
+   "loc": 1222
+  },
+  {
+   "path": "D:\\Python\\Lib\\warnings.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\warnings.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 21605,
+   "loc": 581
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\dom\\minidom.py",
+   "pyc": "D:\\Python\\Lib\\xml\\dom\\__pycache__\\minidom.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 70153,
+   "loc": 2014
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\etree\\ElementTree.py",
+   "pyc": "D:\\Python\\Lib\\xml\\etree\\__pycache__\\ElementTree.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 75887,
+   "loc": 2080
+  },
+  {
+   "path": "D:\\Python\\Lib\\zipfile.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\zipfile.cpython-311.pyc",
+   "features": [
+    "generator",
+    "fstring"
+   ],
+   "bytes": 95177,
+   "loc": 2570
+  },
+  {
+   "path": "D:\\Python\\Lib\\zoneinfo\\_common.py",
+   "pyc": "D:\\Python\\Lib\\zoneinfo\\__pycache__\\_common.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "walrus"
+   ],
+   "bytes": 5458,
+   "loc": 165
+  },
+  {
+   "path": "D:\\Python\\Lib\\zoneinfo\\_tzpath.py",
+   "pyc": "D:\\Python\\Lib\\zoneinfo\\__pycache__\\_tzpath.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "annot"
+   ],
+   "bytes": 5271,
+   "loc": 176
+  },
+  {
+   "path": "D:\\Python\\Lib\\zoneinfo\\_zoneinfo.py",
+   "pyc": "D:\\Python\\Lib\\zoneinfo\\__pycache__\\_zoneinfo.cpython-311.pyc",
+   "features": [
+    "fstring",
+    "walrus"
+   ],
+   "bytes": 25446,
+   "loc": 773
+  },
+  {
+   "path": "D:\\Python\\Lib\\_compression.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\_compression.cpython-311.pyc",
+   "features": [
+    "walrus"
+   ],
+   "bytes": 5843,
+   "loc": 163
+  },
+  {
+   "path": "D:\\Python\\Lib\\_strptime.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\_strptime.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 25856,
+   "loc": 580
+  },
+  {
+   "path": "D:\\Python\\Lib\\_weakrefset.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\_weakrefset.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 6098,
+   "loc": 206
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\coroutines.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\coroutines.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 3511,
+   "loc": 112
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\exceptions.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\exceptions.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 1814,
+   "loc": 63
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\format_helpers.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\format_helpers.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 2480,
+   "loc": 77
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\mixins.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\mixins.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 502,
+   "loc": 22
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\protocols.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\protocols.cpython-311.pyc",
+   "features": [
+    "annot"
+   ],
+   "bytes": 7173,
+   "loc": 217
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\runners.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\runners.cpython-311.pyc",
+   "features": [
+    "async_def"
+   ],
+   "bytes": 7053,
+   "loc": 212
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\threads.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\threads.cpython-311.pyc",
+   "features": [
+    "async_def"
+   ],
+   "bytes": 815,
+   "loc": 26
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\transports.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\transports.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 11057,
+   "loc": 336
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\trsock.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\trsock.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 2573,
+   "loc": 99
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\windows_utils.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\windows_utils.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 5233,
+   "loc": 174
+  },
+  {
+   "path": "D:\\Python\\Lib\\calendar.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\calendar.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 25508,
+   "loc": 769
+  },
+  {
+   "path": "D:\\Python\\Lib\\colorsys.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\colorsys.cpython-311.pyc",
+   "features": [
+    "annot"
+   ],
+   "bytes": 4228,
+   "loc": 167
+  },
+  {
+   "path": "D:\\Python\\Lib\\concurrent\\futures\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\concurrent\\futures\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 1611,
+   "loc": 54
+  },
+  {
+   "path": "D:\\Python\\Lib\\concurrent\\futures\\_base.py",
+   "pyc": "D:\\Python\\Lib\\concurrent\\futures\\__pycache__\\_base.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 23487,
+   "loc": 655
+  },
+  {
+   "path": "D:\\Python\\Lib\\configparser.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\configparser.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 56636,
+   "loc": 1383
+  },
+  {
+   "path": "D:\\Python\\Lib\\ctypes\\util.py",
+   "pyc": "D:\\Python\\Lib\\ctypes\\__pycache__\\util.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 14255,
+   "loc": 377
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\_encoded_words.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\_encoded_words.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 8774,
+   "loc": 234
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\_header_value_parser.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\_header_value_parser.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 109985,
+   "loc": 3004
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\feedparser.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\feedparser.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 23336,
+   "loc": 535
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\generator.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\generator.cpython-311.pyc",
+   "features": [
+    "annot"
+   ],
+   "bytes": 20698,
+   "loc": 510
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\header.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\header.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 24665,
+   "loc": 574
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\iterators.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\iterators.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 2197,
+   "loc": 69
+  },
+  {
+   "path": "D:\\Python\\Lib\\ensurepip\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\ensurepip\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 9946,
+   "loc": 294
+  },
+  {
+   "path": "D:\\Python\\Lib\\filecmp.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\filecmp.cpython-311.pyc",
+   "features": [
+    "annot"
+   ],
+   "bytes": 10491,
+   "loc": 314
+  },
+  {
+   "path": "D:\\Python\\Lib\\fnmatch.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\fnmatch.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 6184,
+   "loc": 186
+  },
+  {
+   "path": "D:\\Python\\Lib\\getopt.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\getopt.cpython-311.pyc",
+   "features": [
+    "annot"
+   ],
+   "bytes": 7704,
+   "loc": 216
+  },
+  {
+   "path": "D:\\Python\\Lib\\gettext.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\gettext.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 21966,
+   "loc": 647
+  },
+  {
+   "path": "D:\\Python\\Lib\\glob.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\glob.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 8932,
+   "loc": 252
+  },
+  {
+   "path": "D:\\Python\\Lib\\hashlib.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\hashlib.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 12080,
+   "loc": 316
+  },
+  {
+   "path": "D:\\Python\\Lib\\heapq.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\heapq.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 23627,
+   "loc": 604
+  },
+  {
+   "path": "D:\\Python\\Lib\\hmac.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\hmac.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 7936,
+   "loc": 220
+  },
+  {
+   "path": "D:\\Python\\Lib\\http\\server.py",
+   "pyc": "D:\\Python\\Lib\\http\\__pycache__\\server.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 49798,
+   "loc": 1320
+  },
+  {
+   "path": "D:\\Python\\Lib\\imaplib.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\imaplib.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 56514,
+   "loc": 1650
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 6265,
+   "loc": 177
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\metadata\\_meta.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\metadata\\__pycache__\\_meta.cpython-311.pyc",
+   "features": [
+    "annot"
+   ],
+   "bytes": 1181,
+   "loc": 48
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\resources\\abc.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\resources\\__pycache__\\abc.cpython-311.pyc",
+   "features": [
+    "annot"
+   ],
+   "bytes": 4722,
+   "loc": 152
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\resources\\readers.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\resources\\__pycache__\\readers.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 3679,
+   "loc": 123
+  },
+  {
+   "path": "D:\\Python\\Lib\\json\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\json\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 14379,
+   "loc": 360
+  },
+  {
+   "path": "D:\\Python\\Lib\\json\\decoder.py",
+   "pyc": "D:\\Python\\Lib\\json\\__pycache__\\decoder.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 12829,
+   "loc": 357
+  },
+  {
+   "path": "D:\\Python\\Lib\\json\\scanner.py",
+   "pyc": "D:\\Python\\Lib\\json\\__pycache__\\scanner.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 2498,
+   "loc": 74
+  },
+  {
+   "path": "D:\\Python\\Lib\\keyword.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\keyword.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 1124,
+   "loc": 64
+  },
+  {
+   "path": "D:\\Python\\Lib\\linecache.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\linecache.cpython-311.pyc",
+   "features": [
+    "walrus"
+   ],
+   "bytes": 5872,
+   "loc": 183
+  },
+  {
+   "path": "D:\\Python\\Lib\\logging\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\logging\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [
+    "walrus"
+   ],
+   "bytes": 83096,
+   "loc": 2274
+  },
+  {
+   "path": "D:\\Python\\Lib\\logging\\config.py",
+   "pyc": "D:\\Python\\Lib\\logging\\__pycache__\\config.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 37960,
+   "loc": 960
+  },
+  {
+   "path": "D:\\Python\\Lib\\multiprocessing\\queues.py",
+   "pyc": "D:\\Python\\Lib\\multiprocessing\\__pycache__\\queues.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 12402,
+   "loc": 380
+  },
+  {
+   "path": "D:\\Python\\Lib\\multiprocessing\\resource_tracker.py",
+   "pyc": "D:\\Python\\Lib\\multiprocessing\\__pycache__\\resource_tracker.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 10601,
+   "loc": 270
+  },
+  {
+   "path": "D:\\Python\\Lib\\multiprocessing\\util.py",
+   "pyc": "D:\\Python\\Lib\\multiprocessing\\__pycache__\\util.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 14563,
+   "loc": 492
+  },
+  {
+   "path": "D:\\Python\\Lib\\netrc.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\netrc.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 7121,
+   "loc": 193
+  },
+  {
+   "path": "D:\\Python\\Lib\\numbers.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\numbers.cpython-311.pyc",
+   "features": [
+    "decorator_chain"
+   ],
+   "bytes": 10741,
+   "loc": 394
+  },
+  {
+   "path": "D:\\Python\\Lib\\pathlib.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\pathlib.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 49972,
+   "loc": 1407
+  },
+  {
+   "path": "D:\\Python\\Lib\\platform.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\platform.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 43598,
+   "loc": 1326
+  },
+  {
+   "path": "D:\\Python\\Lib\\profile.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\profile.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 23494,
+   "loc": 612
+  },
+  {
+   "path": "D:\\Python\\Lib\\pstats.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\pstats.cpython-311.pyc",
+   "features": [
+    "dataclass"
+   ],
+   "bytes": 30136,
+   "loc": 781
+  },
+  {
+   "path": "D:\\Python\\Lib\\selectors.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\selectors.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 20294,
+   "loc": 624
+  },
+  {
+   "path": "D:\\Python\\Lib\\smtplib.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\smtplib.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 46558,
+   "loc": 1141
+  },
+  {
+   "path": "D:\\Python\\Lib\\socketserver.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\socketserver.cpython-311.pyc",
+   "features": [
+    "annot"
+   ],
+   "bytes": 28438,
+   "loc": 853
+  },
+  {
+   "path": "D:\\Python\\Lib\\sqlite3\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\sqlite3\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 2607,
+   "loc": 72
+  },
+  {
+   "path": "D:\\Python\\Lib\\stringprep.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\stringprep.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 13189,
+   "loc": 273
+  },
+  {
+   "path": "D:\\Python\\Lib\\sysconfig.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\sysconfig.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 31166,
+   "loc": 852
+  },
+  {
+   "path": "D:\\Python\\Lib\\tempfile.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\tempfile.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 31019,
+   "loc": 911
+  },
+  {
+   "path": "D:\\Python\\Lib\\threading.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\threading.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 59656,
+   "loc": 1669
+  },
+  {
+   "path": "D:\\Python\\Lib\\timeit.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\timeit.cpython-311.pyc",
+   "features": [
+    "annot"
+   ],
+   "bytes": 13901,
+   "loc": 383
+  },
+  {
+   "path": "D:\\Python\\Lib\\token.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\token.cpython-311.pyc",
+   "features": [
+    "walrus"
+   ],
+   "bytes": 2523,
+   "loc": 138
+  },
+  {
+   "path": "D:\\Python\\Lib\\tracemalloc.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\tracemalloc.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 18607,
+   "loc": 561
+  },
+  {
+   "path": "D:\\Python\\Lib\\unittest\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 4032,
+   "loc": 99
+  },
+  {
+   "path": "D:\\Python\\Lib\\unittest\\main.py",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\main.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 11693,
+   "loc": 279
+  },
+  {
+   "path": "D:\\Python\\Lib\\unittest\\runner.py",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\runner.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 9681,
+   "loc": 264
+  },
+  {
+   "path": "D:\\Python\\Lib\\unittest\\suite.py",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\suite.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 13891,
+   "loc": 380
+  },
+  {
+   "path": "D:\\Python\\Lib\\uuid.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\uuid.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 28333,
+   "loc": 737
+  },
+  {
+   "path": "D:\\Python\\Lib\\weakref.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\weakref.cpython-311.pyc",
+   "features": [
+    "generator"
+   ],
+   "bytes": 22187,
+   "loc": 675
+  },
+  {
+   "path": "D:\\Python\\Lib\\webbrowser.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\webbrowser.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 25825,
+   "loc": 736
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\dom\\domreg.py",
+   "pyc": "D:\\Python\\Lib\\xml\\dom\\__pycache__\\domreg.cpython-311.pyc",
+   "features": [
+    "annot"
+   ],
+   "bytes": 3550,
+   "loc": 100
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\dom\\expatbuilder.py",
+   "pyc": "D:\\Python\\Lib\\xml\\dom\\__pycache__\\expatbuilder.cpython-311.pyc",
+   "features": [
+    "annot"
+   ],
+   "bytes": 36732,
+   "loc": 966
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\sax\\saxutils.py",
+   "pyc": "D:\\Python\\Lib\\xml\\sax\\__pycache__\\saxutils.cpython-311.pyc",
+   "features": [
+    "annot"
+   ],
+   "bytes": 12624,
+   "loc": 370
+  },
+  {
+   "path": "D:\\Python\\Lib\\xmlrpc\\client.py",
+   "pyc": "D:\\Python\\Lib\\xmlrpc\\__pycache__\\client.cpython-311.pyc",
+   "features": [
+    "annot"
+   ],
+   "bytes": 50923,
+   "loc": 1533
+  },
+  {
+   "path": "D:\\Python\\Lib\\zoneinfo\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\zoneinfo\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [
+    "fstring"
+   ],
+   "bytes": 734,
+   "loc": 32
+  },
+  {
+   "path": "D:\\Python\\Lib\\__future__.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\__future__.cpython-311.pyc",
+   "features": [],
+   "bytes": 5365,
+   "loc": 148
+  },
+  {
+   "path": "D:\\Python\\Lib\\_compat_pickle.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\_compat_pickle.cpython-311.pyc",
+   "features": [],
+   "bytes": 9013,
+   "loc": 253
+  },
+  {
+   "path": "D:\\Python\\Lib\\_markupbase.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\_markupbase.cpython-311.pyc",
+   "features": [],
+   "bytes": 15049,
+   "loc": 397
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 1234,
+   "loc": 47
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\constants.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\constants.cpython-311.pyc",
+   "features": [],
+   "bytes": 1146,
+   "loc": 35
+  },
+  {
+   "path": "D:\\Python\\Lib\\asyncio\\log.py",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\log.cpython-311.pyc",
+   "features": [],
+   "bytes": 131,
+   "loc": 8
+  },
+  {
+   "path": "D:\\Python\\Lib\\base64.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\base64.cpython-311.pyc",
+   "features": [],
+   "bytes": 21635,
+   "loc": 608
+  },
+  {
+   "path": "D:\\Python\\Lib\\bisect.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\bisect.cpython-311.pyc",
+   "features": [],
+   "bytes": 3245,
+   "loc": 111
+  },
+  {
+   "path": "D:\\Python\\Lib\\bz2.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\bz2.cpython-311.pyc",
+   "features": [],
+   "bytes": 12191,
+   "loc": 345
+  },
+  {
+   "path": "D:\\Python\\Lib\\cProfile.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\cProfile.cpython-311.pyc",
+   "features": [],
+   "bytes": 6537,
+   "loc": 192
+  },
+  {
+   "path": "D:\\Python\\Lib\\cmd.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\cmd.cpython-311.pyc",
+   "features": [],
+   "bytes": 15274,
+   "loc": 402
+  },
+  {
+   "path": "D:\\Python\\Lib\\code.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\code.cpython-311.pyc",
+   "features": [],
+   "bytes": 10937,
+   "loc": 316
+  },
+  {
+   "path": "D:\\Python\\Lib\\codeop.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\codeop.cpython-311.pyc",
+   "features": [],
+   "bytes": 6067,
+   "loc": 161
+  },
+  {
+   "path": "D:\\Python\\Lib\\collections\\abc.py",
+   "pyc": "D:\\Python\\Lib\\collections\\__pycache__\\abc.cpython-311.pyc",
+   "features": [],
+   "bytes": 122,
+   "loc": 4
+  },
+  {
+   "path": "D:\\Python\\Lib\\concurrent\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\concurrent\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 39,
+   "loc": 2
+  },
+  {
+   "path": "D:\\Python\\Lib\\concurrent\\futures\\thread.py",
+   "pyc": "D:\\Python\\Lib\\concurrent\\futures\\__pycache__\\thread.cpython-311.pyc",
+   "features": [],
+   "bytes": 9007,
+   "loc": 237
+  },
+  {
+   "path": "D:\\Python\\Lib\\contextvars.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\contextvars.cpython-311.pyc",
+   "features": [],
+   "bytes": 133,
+   "loc": 5
+  },
+  {
+   "path": "D:\\Python\\Lib\\copy.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\copy.cpython-311.pyc",
+   "features": [],
+   "bytes": 8985,
+   "loc": 305
+  },
+  {
+   "path": "D:\\Python\\Lib\\csv.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\csv.cpython-311.pyc",
+   "features": [],
+   "bytes": 16474,
+   "loc": 445
+  },
+  {
+   "path": "D:\\Python\\Lib\\ctypes\\_endian.py",
+   "pyc": "D:\\Python\\Lib\\ctypes\\__pycache__\\_endian.cpython-311.pyc",
+   "features": [],
+   "bytes": 2596,
+   "loc": 79
+  },
+  {
+   "path": "D:\\Python\\Lib\\ctypes\\wintypes.py",
+   "pyc": "D:\\Python\\Lib\\ctypes\\__pycache__\\wintypes.cpython-311.pyc",
+   "features": [],
+   "bytes": 5830,
+   "loc": 203
+  },
+  {
+   "path": "D:\\Python\\Lib\\curses\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\curses\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 3470,
+   "loc": 102
+  },
+  {
+   "path": "D:\\Python\\Lib\\decimal.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\decimal.cpython-311.pyc",
+   "features": [],
+   "bytes": 331,
+   "loc": 12
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 1825,
+   "loc": 62
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\_parseaddr.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\_parseaddr.cpython-311.pyc",
+   "features": [],
+   "bytes": 18378,
+   "loc": 558
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\_policybase.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\_policybase.cpython-311.pyc",
+   "features": [],
+   "bytes": 15447,
+   "loc": 375
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\base64mime.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\base64mime.cpython-311.pyc",
+   "features": [],
+   "bytes": 3666,
+   "loc": 116
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\charset.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\charset.cpython-311.pyc",
+   "features": [],
+   "bytes": 17517,
+   "loc": 400
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\contentmanager.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\contentmanager.cpython-311.pyc",
+   "features": [],
+   "bytes": 10839,
+   "loc": 252
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\encoders.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\encoders.cpython-311.pyc",
+   "features": [],
+   "bytes": 1843,
+   "loc": 66
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\errors.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\errors.cpython-311.pyc",
+   "features": [],
+   "bytes": 3848,
+   "loc": 114
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\headerregistry.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\headerregistry.cpython-311.pyc",
+   "features": [],
+   "bytes": 21423,
+   "loc": 605
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\mime\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\email\\mime\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 0,
+   "loc": 1
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\mime\\base.py",
+   "pyc": "D:\\Python\\Lib\\email\\mime\\__pycache__\\base.cpython-311.pyc",
+   "features": [],
+   "bytes": 943,
+   "loc": 30
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\mime\\multipart.py",
+   "pyc": "D:\\Python\\Lib\\email\\mime\\__pycache__\\multipart.cpython-311.pyc",
+   "features": [],
+   "bytes": 1666,
+   "loc": 48
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\mime\\nonmultipart.py",
+   "pyc": "D:\\Python\\Lib\\email\\mime\\__pycache__\\nonmultipart.cpython-311.pyc",
+   "features": [],
+   "bytes": 710,
+   "loc": 22
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\mime\\text.py",
+   "pyc": "D:\\Python\\Lib\\email\\mime\\__pycache__\\text.cpython-311.pyc",
+   "features": [],
+   "bytes": 1476,
+   "loc": 42
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\parser.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\parser.cpython-311.pyc",
+   "features": [],
+   "bytes": 5168,
+   "loc": 131
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\policy.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\policy.cpython-311.pyc",
+   "features": [],
+   "bytes": 10607,
+   "loc": 225
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\quoprimime.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\quoprimime.cpython-311.pyc",
+   "features": [],
+   "bytes": 10164,
+   "loc": 301
+  },
+  {
+   "path": "D:\\Python\\Lib\\email\\utils.py",
+   "pyc": "D:\\Python\\Lib\\email\\__pycache__\\utils.cpython-311.pyc",
+   "features": [],
+   "bytes": 13793,
+   "loc": 372
+  },
+  {
+   "path": "D:\\Python\\Lib\\ensurepip\\__main__.py",
+   "pyc": "D:\\Python\\Lib\\ensurepip\\__pycache__\\__main__.cpython-311.pyc",
+   "features": [],
+   "bytes": 93,
+   "loc": 6
+  },
+  {
+   "path": "D:\\Python\\Lib\\fileinput.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\fileinput.cpython-311.pyc",
+   "features": [],
+   "bytes": 16156,
+   "loc": 443
+  },
+  {
+   "path": "D:\\Python\\Lib\\fractions.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\fractions.cpython-311.pyc",
+   "features": [],
+   "bytes": 29423,
+   "loc": 757
+  },
+  {
+   "path": "D:\\Python\\Lib\\getpass.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\getpass.cpython-311.pyc",
+   "features": [],
+   "bytes": 6175,
+   "loc": 186
+  },
+  {
+   "path": "D:\\Python\\Lib\\html\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\html\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 4907,
+   "loc": 133
+  },
+  {
+   "path": "D:\\Python\\Lib\\html\\entities.py",
+   "pyc": "D:\\Python\\Lib\\html\\__pycache__\\entities.cpython-311.pyc",
+   "features": [],
+   "bytes": 77893,
+   "loc": 2511
+  },
+  {
+   "path": "D:\\Python\\Lib\\html\\parser.py",
+   "pyc": "D:\\Python\\Lib\\html\\__pycache__\\parser.cpython-311.pyc",
+   "features": [],
+   "bytes": 17501,
+   "loc": 456
+  },
+  {
+   "path": "D:\\Python\\Lib\\http\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\http\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 8093,
+   "loc": 181
+  },
+  {
+   "path": "D:\\Python\\Lib\\http\\cookies.py",
+   "pyc": "D:\\Python\\Lib\\http\\__pycache__\\cookies.cpython-311.pyc",
+   "features": [],
+   "bytes": 21094,
+   "loc": 613
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\_abc.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\__pycache__\\_abc.cpython-311.pyc",
+   "features": [],
+   "bytes": 1906,
+   "loc": 55
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\abc.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\__pycache__\\abc.cpython-311.pyc",
+   "features": [],
+   "bytes": 11289,
+   "loc": 321
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\metadata\\_adapters.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\metadata\\__pycache__\\_adapters.cpython-311.pyc",
+   "features": [],
+   "bytes": 1930,
+   "loc": 69
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\metadata\\_collections.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\metadata\\__pycache__\\_collections.cpython-311.pyc",
+   "features": [],
+   "bytes": 773,
+   "loc": 31
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\metadata\\_functools.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\metadata\\__pycache__\\_functools.cpython-311.pyc",
+   "features": [],
+   "bytes": 2999,
+   "loc": 105
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\metadata\\_text.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\metadata\\__pycache__\\_text.cpython-311.pyc",
+   "features": [],
+   "bytes": 2265,
+   "loc": 100
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\readers.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\__pycache__\\readers.cpython-311.pyc",
+   "features": [],
+   "bytes": 339,
+   "loc": 13
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\resources\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\resources\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 542,
+   "loc": 37
+  },
+  {
+   "path": "D:\\Python\\Lib\\importlib\\resources\\_adapters.py",
+   "pyc": "D:\\Python\\Lib\\importlib\\resources\\__pycache__\\_adapters.cpython-311.pyc",
+   "features": [],
+   "bytes": 4674,
+   "loc": 171
+  },
+  {
+   "path": "D:\\Python\\Lib\\json\\tool.py",
+   "pyc": "D:\\Python\\Lib\\json\\__pycache__\\tool.cpython-311.pyc",
+   "features": [],
+   "bytes": 3424,
+   "loc": 86
+  },
+  {
+   "path": "D:\\Python\\Lib\\logging\\handlers.py",
+   "pyc": "D:\\Python\\Lib\\logging\\__pycache__\\handlers.cpython-311.pyc",
+   "features": [],
+   "bytes": 63818,
+   "loc": 1609
+  },
+  {
+   "path": "D:\\Python\\Lib\\lzma.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\lzma.cpython-311.pyc",
+   "features": [],
+   "bytes": 13633,
+   "loc": 357
+  },
+  {
+   "path": "D:\\Python\\Lib\\multiprocessing\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\multiprocessing\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 953,
+   "loc": 38
+  },
+  {
+   "path": "D:\\Python\\Lib\\multiprocessing\\connection.py",
+   "pyc": "D:\\Python\\Lib\\multiprocessing\\__pycache__\\connection.cpython-311.pyc",
+   "features": [],
+   "bytes": 33371,
+   "loc": 990
+  },
+  {
+   "path": "D:\\Python\\Lib\\multiprocessing\\context.py",
+   "pyc": "D:\\Python\\Lib\\multiprocessing\\__pycache__\\context.cpython-311.pyc",
+   "features": [],
+   "bytes": 11973,
+   "loc": 377
+  },
+  {
+   "path": "D:\\Python\\Lib\\multiprocessing\\popen_spawn_win32.py",
+   "pyc": "D:\\Python\\Lib\\multiprocessing\\__pycache__\\popen_spawn_win32.cpython-311.pyc",
+   "features": [],
+   "bytes": 4492,
+   "loc": 140
+  },
+  {
+   "path": "D:\\Python\\Lib\\multiprocessing\\reduction.py",
+   "pyc": "D:\\Python\\Lib\\multiprocessing\\__pycache__\\reduction.cpython-311.pyc",
+   "features": [],
+   "bytes": 9793,
+   "loc": 282
+  },
+  {
+   "path": "D:\\Python\\Lib\\multiprocessing\\resource_sharer.py",
+   "pyc": "D:\\Python\\Lib\\multiprocessing\\__pycache__\\resource_sharer.cpython-311.pyc",
+   "features": [],
+   "bytes": 5286,
+   "loc": 155
+  },
+  {
+   "path": "D:\\Python\\Lib\\multiprocessing\\spawn.py",
+   "pyc": "D:\\Python\\Lib\\multiprocessing\\__pycache__\\spawn.cpython-311.pyc",
+   "features": [],
+   "bytes": 9951,
+   "loc": 308
+  },
+  {
+   "path": "D:\\Python\\Lib\\nturl2path.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\nturl2path.cpython-311.pyc",
+   "features": [],
+   "bytes": 2968,
+   "loc": 82
+  },
+  {
+   "path": "D:\\Python\\Lib\\opcode.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\opcode.cpython-311.pyc",
+   "features": [],
+   "bytes": 10854,
+   "loc": 408
+  },
+  {
+   "path": "D:\\Python\\Lib\\operator.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\operator.cpython-311.pyc",
+   "features": [],
+   "bytes": 11432,
+   "loc": 468
+  },
+  {
+   "path": "D:\\Python\\Lib\\py_compile.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\py_compile.cpython-311.pyc",
+   "features": [],
+   "bytes": 8049,
+   "loc": 213
+  },
+  {
+   "path": "D:\\Python\\Lib\\pydoc_data\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\pydoc_data\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 0,
+   "loc": 1
+  },
+  {
+   "path": "D:\\Python\\Lib\\queue.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\queue.cpython-311.pyc",
+   "features": [],
+   "bytes": 11822,
+   "loc": 327
+  },
+  {
+   "path": "D:\\Python\\Lib\\re\\_casefix.py",
+   "pyc": "D:\\Python\\Lib\\re\\__pycache__\\_casefix.cpython-311.pyc",
+   "features": [],
+   "bytes": 5552,
+   "loc": 107
+  },
+  {
+   "path": "D:\\Python\\Lib\\re\\_compiler.py",
+   "pyc": "D:\\Python\\Lib\\re\\__pycache__\\_compiler.cpython-311.pyc",
+   "features": [],
+   "bytes": 26854,
+   "loc": 766
+  },
+  {
+   "path": "D:\\Python\\Lib\\re\\_constants.py",
+   "pyc": "D:\\Python\\Lib\\re\\__pycache__\\_constants.cpython-311.pyc",
+   "features": [],
+   "bytes": 6150,
+   "loc": 221
+  },
+  {
+   "path": "D:\\Python\\Lib\\reprlib.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\reprlib.cpython-311.pyc",
+   "features": [],
+   "bytes": 5604,
+   "loc": 168
+  },
+  {
+   "path": "D:\\Python\\Lib\\secrets.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\secrets.cpython-311.pyc",
+   "features": [],
+   "bytes": 2100,
+   "loc": 73
+  },
+  {
+   "path": "D:\\Python\\Lib\\shlex.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\shlex.cpython-311.pyc",
+   "features": [],
+   "bytes": 13851,
+   "loc": 351
+  },
+  {
+   "path": "D:\\Python\\Lib\\signal.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\signal.cpython-311.pyc",
+   "features": [],
+   "bytes": 2530,
+   "loc": 93
+  },
+  {
+   "path": "D:\\Python\\Lib\\sqlite3\\dbapi2.py",
+   "pyc": "D:\\Python\\Lib\\sqlite3\\__pycache__\\dbapi2.cpython-311.pyc",
+   "features": [],
+   "bytes": 3406,
+   "loc": 102
+  },
+  {
+   "path": "D:\\Python\\Lib\\struct.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\struct.cpython-311.pyc",
+   "features": [],
+   "bytes": 272,
+   "loc": 16
+  },
+  {
+   "path": "D:\\Python\\Lib\\tomllib\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\tomllib\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 318,
+   "loc": 11
+  },
+  {
+   "path": "D:\\Python\\Lib\\tomllib\\_types.py",
+   "pyc": "D:\\Python\\Lib\\tomllib\\__pycache__\\_types.cpython-311.pyc",
+   "features": [],
+   "bytes": 264,
+   "loc": 11
+  },
+  {
+   "path": "D:\\Python\\Lib\\unittest\\__main__.py",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\__main__.cpython-311.pyc",
+   "features": [],
+   "bytes": 490,
+   "loc": 19
+  },
+  {
+   "path": "D:\\Python\\Lib\\unittest\\_log.py",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\_log.cpython-311.pyc",
+   "features": [],
+   "bytes": 2832,
+   "loc": 87
+  },
+  {
+   "path": "D:\\Python\\Lib\\unittest\\result.py",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\result.cpython-311.pyc",
+   "features": [],
+   "bytes": 8762,
+   "loc": 245
+  },
+  {
+   "path": "D:\\Python\\Lib\\unittest\\signals.py",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\signals.cpython-311.pyc",
+   "features": [],
+   "bytes": 2474,
+   "loc": 72
+  },
+  {
+   "path": "D:\\Python\\Lib\\unittest\\util.py",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\util.cpython-311.pyc",
+   "features": [],
+   "bytes": 5385,
+   "loc": 171
+  },
+  {
+   "path": "D:\\Python\\Lib\\urllib\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\urllib\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 0,
+   "loc": 1
+  },
+  {
+   "path": "D:\\Python\\Lib\\urllib\\error.py",
+   "pyc": "D:\\Python\\Lib\\urllib\\__pycache__\\error.cpython-311.pyc",
+   "features": [],
+   "bytes": 2489,
+   "loc": 75
+  },
+  {
+   "path": "D:\\Python\\Lib\\urllib\\response.py",
+   "pyc": "D:\\Python\\Lib\\urllib\\__pycache__\\response.cpython-311.pyc",
+   "features": [],
+   "bytes": 2445,
+   "loc": 85
+  },
+  {
+   "path": "D:\\Python\\Lib\\wave.py",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\wave.cpython-311.pyc",
+   "features": [],
+   "bytes": 22453,
+   "loc": 636
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\xml\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 577,
+   "loc": 21
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\dom\\NodeFilter.py",
+   "pyc": "D:\\Python\\Lib\\xml\\dom\\__pycache__\\NodeFilter.cpython-311.pyc",
+   "features": [],
+   "bytes": 963,
+   "loc": 28
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\dom\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\xml\\dom\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 4159,
+   "loc": 141
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\dom\\minicompat.py",
+   "pyc": "D:\\Python\\Lib\\xml\\dom\\__pycache__\\minicompat.cpython-311.pyc",
+   "features": [],
+   "bytes": 3476,
+   "loc": 110
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\dom\\xmlbuilder.py",
+   "pyc": "D:\\Python\\Lib\\xml\\dom\\__pycache__\\xmlbuilder.cpython-311.pyc",
+   "features": [],
+   "bytes": 12774,
+   "loc": 388
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\etree\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\xml\\etree\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 1638,
+   "loc": 34
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\parsers\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\xml\\parsers\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 175,
+   "loc": 9
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\parsers\\expat.py",
+   "pyc": "D:\\Python\\Lib\\xml\\parsers\\__pycache__\\expat.cpython-311.pyc",
+   "features": [],
+   "bytes": 256,
+   "loc": 9
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\sax\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\xml\\sax\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 3749,
+   "loc": 108
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\sax\\_exceptions.py",
+   "pyc": "D:\\Python\\Lib\\xml\\sax\\__pycache__\\_exceptions.cpython-311.pyc",
+   "features": [],
+   "bytes": 4916,
+   "loc": 132
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\sax\\handler.py",
+   "pyc": "D:\\Python\\Lib\\xml\\sax\\__pycache__\\handler.cpython-311.pyc",
+   "features": [],
+   "bytes": 16004,
+   "loc": 388
+  },
+  {
+   "path": "D:\\Python\\Lib\\xml\\sax\\xmlreader.py",
+   "pyc": "D:\\Python\\Lib\\xml\\sax\\__pycache__\\xmlreader.cpython-311.pyc",
+   "features": [],
+   "bytes": 13064,
+   "loc": 381
+  },
+  {
+   "path": "D:\\Python\\Lib\\xmlrpc\\__init__.py",
+   "pyc": "D:\\Python\\Lib\\xmlrpc\\__pycache__\\__init__.cpython-311.pyc",
+   "features": [],
+   "bytes": 39,
+   "loc": 2
+  }
+ ],
+ "scanned": 398,
+ "skipped": {
+  "no_pyc": 119,
+  "too_big": 1
+ }
+}

@@ -1,0 +1,341 @@
+{
+ "rows": [
+  {
+   "slug": "stdlib_asyncio_tasks",
+   "src": "D:\\Python\\Lib\\asyncio\\tasks.py",
+   "pyc_src": "D:\\Python\\Lib\\asyncio\\__pycache__\\tasks.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_asyncio_tasks.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_asyncio_tasksOK.py",
+   "features": [
+    "async",
+    "装饰器",
+    "f-string",
+    "生成器",
+    "except*",
+    "asyncio"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 43,
+    "units_total": 53,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>._set_task_name: Failure: Different bytecode",
+     "***<module>.wait_for: Failure: Different control flow",
+     "***<module>._wait: Failure: Different bytecode",
+     "***<module>._wait._on_completion: Failure: Different control flow",
+     "***<module>.as_completed: Failure: Different bytecode",
+     "***<module>.as_completed._wait_for_one: Failure: Different control flow",
+     "***<module>.sleep: Failure: Different control flow",
+     "***<module>._wrap_awaitable: Failure: Different control flow",
+     "***<module>.gather._done_callback: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 2.0,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "sp_anyio_fileio",
+   "src": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\_fileio.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\__pycache__\\_fileio.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_fileio.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_fileioOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "async",
+    "f-string",
+    "dataclass",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 116,
+    "units_total": 124,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.AsyncFile: Failure: Different bytecode",
+     "***<module>.AsyncFile.__aiter__: Failure: Different control flow",
+     "***<module>._PathIterator: Failure: Different bytecode",
+     "***<module>._PathIterator.__anext__: Failure: Different control flow",
+     "***<module>.Path: Failure: Different control flow",
+     "***<module>.Path.iterdir: Failure: Different control flow",
+     "***<module>.Path.walk: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 1.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "sp_anyio_sync",
+   "src": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\_synchronization.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\__pycache__\\_synchronization.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_sync.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_syncOK.py",
+   "features": [
+    "装饰器",
+    "注解",
+    "async",
+    "海象",
+    "dataclass",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 94,
+    "units_total": 110,
+    "failures": [
+     "***<module>.EventStatistics: Failure detected at line number 19 and instruction offset 14: Different bytecode",
+     "***<module>.CapacityLimiterStatistics: Failure detected at line number 25 and instruction offset 14: Different bytecode",
+     "***<module>.LockStatistics: Failure detected at line number 40 and instruction offset 14: Different bytecode",
+     "***<module>.ConditionStatistics: Failure detected at line number 51 and instruction offset 14: Different bytecode",
+     "***<module>.SemaphoreStatistics: Failure detected at line number 60 and instruction offset 14: Different bytecode",
+     "***<module>.Event: Failure: Different bytecode",
+     "***<module>.EventAdapter: Failure: Different bytecode",
+     "***<module>.Lock: Failure: Different bytecode",
+     "***<module>.LockAdapter: Failure: Different bytecode",
+     "***<module>.Condition: Failure: Different bytecode",
+     "***<module>.Condition.wait: Failure: Different control flow",
+     "***<module>.Semaphore: Failure: Different bytecode",
+     "***<module>.SemaphoreAdapter: Failure: Different bytecode",
+     "***<module>.CapacityLimiter: Failure: Different bytecode",
+     "***<module>.CapacityLimiterAdapter: Failure: Different bytecode",
+     "***<module>.ResourceGuard: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 1.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "sp_anyio_lowlevel",
+   "src": "D:\\Python\\Lib\\site-packages\\anyio\\lowlevel.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\anyio\\__pycache__\\lowlevel.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_lowlevel.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_lowlevelOK.py",
+   "features": [
+    "注解",
+    "async",
+    "装饰器链",
+    "装饰器",
+    "f-string",
+    "dataclass",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.4,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 15,
+    "units_total": 20,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.EventLoopToken: Failure detected at line number 54 and instruction offset 14: Different bytecode",
+     "***<module>.RunvarToken: Failure: Different bytecode",
+     "***<module>.RunVar: Failure: Different bytecode",
+     "***<module>.RunVar.get: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 0.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "sp_anyio_functools",
+   "src": "D:\\Python\\Lib\\site-packages\\anyio\\functools.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\anyio\\__pycache__\\functools.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_functools.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_functoolsOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "async",
+    "海象",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 26,
+    "units_total": 34,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.AsyncCacheInfo: Failure detected at line number 28 and instruction offset 10: Different bytecode",
+     "***<module>.AsyncCacheParameters: Failure detected at line number 34 and instruction offset 10: Different bytecode",
+     "***<module>._LRUMethodWrapper: Failure: Different bytecode",
+     "***<module>.AsyncLRUCacheWrapper: Failure: Different bytecode",
+     "***<module>.AsyncLRUCacheWrapper.__call__: Failure: Different control flow",
+     "***<module>._LRUCacheWrapper: Failure: Different bytecode",
+     "***<module>.reduce: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 1.1,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "sp_packaging_specifiers",
+   "src": "D:\\Python\\Lib\\site-packages\\packaging\\specifiers.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\packaging\\__pycache__\\specifiers.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_packaging_specifiers.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_packaging_specifiersOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "装饰器链",
+    "f-string",
+    "海象",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "compile_error",
+    "units_success": 0,
+    "units_total": 0,
+    "failures": [],
+    "rc": 1,
+    "elapsed": 0.7,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "sp_packaging_version",
+   "src": "D:\\Python\\Lib\\site-packages\\packaging\\version.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\packaging\\__pycache__\\version.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_packaging_version.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_packaging_versionOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "装饰器链",
+    "f-string",
+    "海象",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "compile_error",
+    "units_success": 0,
+    "units_total": 0,
+    "failures": [],
+    "rc": 1,
+    "elapsed": 0.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "sp_httpcore_models",
+   "src": "D:\\Python\\Lib\\site-packages\\httpcore\\_models.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\httpcore\\__pycache__\\_models.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_httpcore_models.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_httpcore_modelsOK.py",
+   "features": [
+    "注解",
+    "async",
+    "装饰器",
+    "f-string",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.6,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 33,
+    "units_total": 41,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.ByteStream: Failure: Different bytecode",
+     "***<module>.Origin: Failure: Different bytecode",
+     "***<module>.URL: Failure: Different bytecode",
+     "***<module>.URL.__init__: Failure: Different control flow",
+     "***<module>.Request: Failure: Different bytecode",
+     "***<module>.Response: Failure: Different bytecode",
+     "***<module>.Proxy: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 1.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  }
+ ],
+ "start": 24,
+ "count": 8
+}

@@ -1,0 +1,2612 @@
+{
+ "rows": [
+  {
+   "slug": "repo_core_cfg_basic_block",
+   "tags": [
+    "C6"
+   ],
+   "units": [
+    {
+     "qualname": "BasicBlock",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 206,
+     "n_prod_instr": 202,
+     "diff_head": [
+      "--- delete (orig[76:77] -> prod[76:76])",
+      "  - LOAD_CONST ('block', 'BasicBlock', 'return', None)",
+      "--- replace (orig[78:79] -> prod[77:78])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "repo_core_cfg_builder",
+   "tags": [
+    "C2",
+    "C3",
+    "C6",
+    "C9"
+   ],
+   "units": [
+    {
+     "qualname": "ControlFlowGraph.to_dict",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 35,
+     "n_prod_instr": 37,
+     "diff_head": [
+      "--- insert (orig[34:34] -> prod[34:36])",
+      "  + POP_TOP None",
+      "  + LOAD_CONST None"
+     ]
+    },
+    {
+     "qualname": "CFGBuilder",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 138,
+     "n_prod_instr": 130,
+     "diff_head": [
+      "--- delete (orig[42:43] -> prod[42:42])",
+      "  - LOAD_CONST ('return', None)",
+      "--- replace (orig[44:45] -> prod[43:44])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "CFGBuilder.build",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 65,
+     "n_prod_instr": 62,
+     "diff_head": [
+      "--- delete (orig[9:10] -> prod[9:9])",
+      "  - LOAD_GLOBAL ControlFlowGraph",
+      "--- delete (orig[14:16] -> prod[13:13])",
+      "  - PRECALL 1"
+     ]
+    },
+    {
+     "qualname": "CFGBuilder._parse_instructions",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 127,
+     "n_prod_instr": 121,
+     "diff_head": [
+      "--- delete (orig[25:31] -> prod[25:25])",
+      "  - LOAD_GLOBAL isinstance",
+      "  - LOAD_FAST _argval",
+      "  - LOAD_GLOBAL tuple"
+     ]
+    },
+    {
+     "qualname": "CFGBuilder._build_basic_blocks",
+     "tags": [
+      "C3"
+     ],
+     "n_orig_instr": 224,
+     "n_prod_instr": 218,
+     "diff_head": [
+      "--- replace (orig[87:88] -> prod[87:88])",
+      "  - JUMP_IF_TRUE_OR_POP T",
+      "  + JUMP_IF_FALSE_OR_POP T",
+      "--- replace (orig[102:103] -> prod[102:103])"
+     ]
+    },
+    {
+     "qualname": "CFGBuilder._split_block_at_offset",
+     "tags": [
+      "C9"
+     ],
+     "n_orig_instr": 212,
+     "n_prod_instr": 60,
+     "diff_head": [
+      "--- delete (orig[31:33] -> prod[31:31])",
+      "  - POP_TOP None",
+      "  - JUMP_FORWARD T",
+      "--- delete (orig[60:66] -> prod[58:58])"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "repo_core_fast_stack",
+   "tags": [
+    "C2",
+    "C6"
+   ],
+   "units": [
+    {
+     "qualname": "FastStack",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 184,
+     "n_prod_instr": 180,
+     "diff_head": [
+      "--- delete (orig[63:64] -> prod[63:63])",
+      "  - LOAD_CONST ('return', None)",
+      "--- replace (orig[65:66] -> prod[64:65])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "FastStack.swap",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 78,
+     "n_prod_instr": 69,
+     "diff_head": [
+      "--- replace (orig[49:50] -> prod[49:50])",
+      "  - LOAD_FAST idx2",
+      "  + LOAD_FAST idx1",
+      "--- delete (orig[54:63] -> prod[54:54])"
+     ]
+    },
+    {
+     "qualname": "StackHistory",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 44,
+     "n_prod_instr": 43,
+     "diff_head": [
+      "--- delete (orig[38:39] -> prod[38:38])",
+      "  - LOAD_CONST ('return', None)",
+      "--- replace (orig[40:41] -> prod[39:40])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "DebugStack",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 82,
+     "n_prod_instr": 81,
+     "diff_head": [
+      "--- delete (orig[68:69] -> prod[68:68])",
+      "  - LOAD_CONST ('return', None)",
+      "--- replace (orig[70:71] -> prod[69:70])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "repo_tools_syntax_cov",
+   "tags": [
+    "C1"
+   ],
+   "units": [
+    {
+     "qualname": "main",
+     "tags": [
+      "C1"
+     ],
+     "n_orig_instr": 702,
+     "n_prod_instr": 700,
+     "diff_head": [
+      "--- delete (orig[295:296] -> prod[295:295])",
+      "  - BUILD_LIST 0",
+      "--- delete (orig[297:298] -> prod[296:296])",
+      "  - STORE_FAST extra_covered"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "sp_anyio_fileio",
+   "tags": [
+    "C1",
+    "C2",
+    "C6"
+   ],
+   "units": [
+    {
+     "qualname": "<module>",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 205,
+     "n_prod_instr": 181,
+     "diff_head": [
+      "--- replace (orig[125:133] -> prod[125:126])",
+      "  - NOP None",
+      "  - NOP None",
+      "  - NOP None"
+     ]
+    },
+    {
+     "qualname": "AsyncFile",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 114,
+     "n_prod_instr": 93,
+     "diff_head": [
+      "--- delete (orig[7:8] -> prod[7:7])",
+      "  - LOAD_CONST ('fp', 'IO[AnyStr]', 'return', 'None')",
+      "--- replace (orig[9:10] -> prod[8:9])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "AsyncFile.__aiter__",
+     "tags": [
+      "C1"
+     ],
+     "n_orig_instr": 26,
+     "n_prod_instr": 24,
+     "diff_head": [
+      "--- delete (orig[14:16] -> prod[14:14])",
+      "  - STORE_FAST line",
+      "  - LOAD_FAST line",
+      "--- replace (orig[17:18] -> prod[15:16])"
+     ]
+    },
+    {
+     "qualname": "_PathIterator",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 16,
+     "n_prod_instr": 15,
+     "diff_head": [
+      "--- replace (orig[6:7] -> prod[6:7])",
+      "  - LOAD_CONST 'Iterator[PathLike[str]]'",
+      "  + LOAD_CONST \"'Iterator[PathLike[str]]'\"",
+      "--- delete (orig[10:11] -> prod[10:10])"
+     ]
+    },
+    {
+     "qualname": "_PathIterator.__anext__",
+     "tags": [
+      "C1"
+     ],
+     "n_orig_instr": 30,
+     "n_prod_instr": 28,
+     "diff_head": [
+      "--- replace (orig[19:22] -> prod[19:20])",
+      "  - STORE_FAST nextval",
+      "  - LOAD_FAST nextval",
+      "  - POP_JUMP_FORWARD_IF_NOT_NONE T"
+     ]
+    },
+    {
+     "qualname": "Path",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 594,
+     "n_prod_instr": 482,
+     "diff_head": [
+      "--- delete (orig[14:15] -> prod[14:14])",
+      "  - LOAD_CONST ('args', 'str | PathLike[str]', 'return', 'None')",
+      "--- replace (orig[16:17] -> prod[15:16])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "sp_anyio_functools",
+   "tags": [
+    "C2",
+    "C5",
+    "C6"
+   ],
+   "units": [
+    {
+     "qualname": "<module>",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 296,
+     "n_prod_instr": 286,
+     "diff_head": [
+      "--- replace (orig[140:141] -> prod[140:141])",
+      "  - LOAD_CONST 'RunVar[WeakKeyDictionary[AsyncLRUCacheWrapper[Any, Any], OrderedDict[Hashable, tuple[_InitialMissingType, Lock, float | None] | tuple[Any,",
+      "  + LOAD_CONST \"'RunVar[WeakKeyDictionary[AsyncLRUCacheWrapper[Any, Any], OrderedDict[Hashable, tuple[_InitialMissingType, Lock, float | None] | tuple[Any",
+      "--- replace (orig[157:158] -> prod[157:158])"
+     ]
+    },
+    {
+     "qualname": "AsyncCacheInfo",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 28,
+     "n_prod_instr": 28,
+     "diff_head": [
+      "--- replace (orig[6:7] -> prod[6:7])",
+      "  - LOAD_CONST 'int'",
+      "  + LOAD_CONST \"'int'\"",
+      "--- replace (orig[10:11] -> prod[10:11])"
+     ]
+    },
+    {
+     "qualname": "AsyncCacheParameters",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 24,
+     "n_prod_instr": 24,
+     "diff_head": [
+      "--- replace (orig[6:7] -> prod[6:7])",
+      "  - LOAD_CONST 'int | None'",
+      "  + LOAD_CONST \"'int | None'\"",
+      "--- replace (orig[10:11] -> prod[10:11])"
+     ]
+    },
+    {
+     "qualname": "_LRUMethodWrapper",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 27,
+     "n_prod_instr": 22,
+     "diff_head": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - LOAD_CONST ('wrapper', 'AsyncLRUCacheWrapper[..., T]', 'instance', 'object')",
+      "--- replace (orig[7:8] -> prod[6:7])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "AsyncLRUCacheWrapper",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 33,
+     "n_prod_instr": 27,
+     "diff_head": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - LOAD_CONST ('func', 'Callable[P, Awaitable[T]]', 'maxsize', 'int | None', 'typed', 'bool', 'always_checkpoint', 'bool', 'ttl', 'int | None')",
+      "--- replace (orig[7:8] -> prod[6:7])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "AsyncLRUCacheWrapper.__call__",
+     "tags": [
+      "C5"
+     ],
+     "n_orig_instr": 383,
+     "n_prod_instr": 362,
+     "diff_head": [
+      "--- insert (orig[178:178] -> prod[178:179])",
+      "  + EXTENDED_ARG 1",
+      "--- insert (orig[180:180] -> prod[181:182])",
+      "  + EXTENDED_ARG 1"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "sp_anyio_lowlevel",
+   "tags": [
+    "C2",
+    "C6"
+   ],
+   "units": [
+    {
+     "qualname": "<module>",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 151,
+     "n_prod_instr": 147,
+     "diff_head": [
+      "--- delete (orig[72:73] -> prod[72:72])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[74:75] -> prod[73:74])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "EventLoopToken",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 18,
+     "n_prod_instr": 18,
+     "diff_head": [
+      "--- replace (orig[8:9] -> prod[8:9])",
+      "  - LOAD_CONST 'type[AsyncBackend]'",
+      "  + LOAD_CONST \"'type[AsyncBackend]'\"",
+      "--- replace (orig[12:13] -> prod[12:13])"
+     ]
+    },
+    {
+     "qualname": "RunvarToken",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 21,
+     "n_prod_instr": 18,
+     "diff_head": [
+      "--- delete (orig[7:8] -> prod[7:7])",
+      "  - LOAD_CONST ('var', 'RunVar[T]', 'value', 'T | Literal[_NoValueSet.NO_VALUE_SET]')",
+      "--- replace (orig[9:10] -> prod[8:9])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "RunVar",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 64,
+     "n_prod_instr": 56,
+     "diff_head": [
+      "--- replace (orig[13:14] -> prod[13:14])",
+      "  - LOAD_CONST 'Literal[_NoValueSet.NO_VALUE_SET]'",
+      "  + LOAD_CONST \"'Literal[_NoValueSet.NO_VALUE_SET]'\"",
+      "--- delete (orig[19:20] -> prod[19:19])"
+     ]
+    },
+    {
+     "qualname": "RunVar.get",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 3,
+     "n_prod_instr": 3,
+     "diff_head": []
+    }
+   ]
+  },
+  {
+   "slug": "sp_anyio_sync",
+   "tags": [
+    "C2",
+    "C6"
+   ],
+   "units": [
+    {
+     "qualname": "EventStatistics",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 14,
+     "n_prod_instr": 14,
+     "diff_head": [
+      "--- replace (orig[8:9] -> prod[8:9])",
+      "  - LOAD_CONST 'int'",
+      "  + LOAD_CONST \"'int'\""
+     ]
+    },
+    {
+     "qualname": "CapacityLimiterStatistics",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 26,
+     "n_prod_instr": 26,
+     "diff_head": [
+      "--- replace (orig[8:9] -> prod[8:9])",
+      "  - LOAD_CONST 'int'",
+      "  + LOAD_CONST \"'int'\"",
+      "--- replace (orig[12:13] -> prod[12:13])"
+     ]
+    },
+    {
+     "qualname": "LockStatistics",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 22,
+     "n_prod_instr": 22,
+     "diff_head": [
+      "--- replace (orig[8:9] -> prod[8:9])",
+      "  - LOAD_CONST 'bool'",
+      "  + LOAD_CONST \"'bool'\"",
+      "--- replace (orig[12:13] -> prod[12:13])"
+     ]
+    },
+    {
+     "qualname": "ConditionStatistics",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 18,
+     "n_prod_instr": 18,
+     "diff_head": [
+      "--- replace (orig[8:9] -> prod[8:9])",
+      "  - LOAD_CONST 'int'",
+      "  + LOAD_CONST \"'int'\"",
+      "--- replace (orig[12:13] -> prod[12:13])"
+     ]
+    },
+    {
+     "qualname": "SemaphoreStatistics",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 14,
+     "n_prod_instr": 14,
+     "diff_head": [
+      "--- replace (orig[8:9] -> prod[8:9])",
+      "  - LOAD_CONST 'int'",
+      "  + LOAD_CONST \"'int'\""
+     ]
+    },
+    {
+     "qualname": "Event",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 27,
+     "n_prod_instr": 22,
+     "diff_head": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - LOAD_CONST ('return', 'Event')",
+      "--- replace (orig[7:8] -> prod[6:7])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "sp_httpcore_models",
+   "tags": [
+    "C2",
+    "C6"
+   ],
+   "units": [
+    {
+     "qualname": "<module>",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 143,
+     "n_prod_instr": 138,
+     "diff_head": [
+      "--- delete (orig[63:64] -> prod[63:63])",
+      "  - LOAD_CONST ('value', 'bytes | str', 'name', 'str', 'return', 'bytes')",
+      "--- replace (orig[65:66] -> prod[64:65])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "ByteStream",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 25,
+     "n_prod_instr": 21,
+     "diff_head": [
+      "--- delete (orig[7:8] -> prod[7:7])",
+      "  - LOAD_CONST ('content', 'bytes', 'return', 'None')",
+      "--- replace (orig[9:10] -> prod[8:9])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "Origin",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 19,
+     "n_prod_instr": 16,
+     "diff_head": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - LOAD_CONST ('scheme', 'bytes', 'host', 'bytes', 'port', 'int', 'return', 'None')",
+      "--- replace (orig[7:8] -> prod[6:7])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "URL",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 40,
+     "n_prod_instr": 35,
+     "diff_head": [
+      "--- delete (orig[15:16] -> prod[15:15])",
+      "  - LOAD_CONST ('url', 'bytes | str', 'scheme', 'bytes | str', 'host', 'bytes | str', 'port', 'int | None', 'target', 'bytes | str', 'return', 'None')",
+      "--- replace (orig[17:18] -> prod[16:17])",
+      "  - MAKE_FUNCTION 7"
+     ]
+    },
+    {
+     "qualname": "URL.__init__",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 76,
+     "n_prod_instr": 75,
+     "diff_head": [
+      "--- delete (orig[26:30] -> prod[26:26])",
+      "  - LOAD_ATTR port",
+      "  - LOAD_FAST self",
+      "  - STORE_ATTR port"
+     ]
+    },
+    {
+     "qualname": "Request",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 22,
+     "n_prod_instr": 20,
+     "diff_head": [
+      "--- delete (orig[12:13] -> prod[12:12])",
+      "  - LOAD_CONST ('method', 'bytes | str', 'url', 'URL | bytes | str', 'headers', 'HeaderTypes', 'content', 'bytes | typing.Iterable[bytes] | typing.AsyncIt",
+      "--- replace (orig[14:15] -> prod[13:14])",
+      "  - MAKE_FUNCTION 6"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "sp_pandas_indexing",
+   "tags": [
+    "C14",
+    "C2",
+    "C6"
+   ],
+   "units": [
+    {
+     "qualname": "<module>",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 387,
+     "n_prod_instr": 379,
+     "diff_head": [
+      "--- delete (orig[347:348] -> prod[347:347])",
+      "  - LOAD_CONST ('ndim', 'int', 'loc', 'Hashable', 'return', 'tuple[Hashable | slice, ...]')",
+      "--- replace (orig[349:350] -> prod[348:349])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "IndexingMixin",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 37,
+     "n_prod_instr": 33,
+     "diff_head": [
+      "--- delete (orig[8:9] -> prod[8:8])",
+      "  - LOAD_CONST ('return', '_iLocIndexer')",
+      "--- replace (orig[10:11] -> prod[9:10])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "_LocationIndexer",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 151,
+     "n_prod_instr": 132,
+     "diff_head": [
+      "--- replace (orig[6:7] -> prod[6:7])",
+      "  - LOAD_CONST 'str'",
+      "  + LOAD_CONST \"'str'\"",
+      "--- replace (orig[12:13] -> prod[12:13])"
+     ]
+    },
+    {
+     "qualname": "_LocationIndexer._getitem_lowerdim",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 221,
+     "n_prod_instr": 211,
+     "diff_head": [
+      "--- delete (orig[50:60] -> prod[50:50])",
+      "  - LOAD_GLOBAL any",
+      "  - LOAD_CONST <code:<genexpr>>",
+      "  - MAKE_FUNCTION 0"
+     ]
+    },
+    {
+     "qualname": "_LocationIndexer._getitem_lowerdim.<genexpr>",
+     "tags": [
+      "C14"
+     ],
+     "n_orig_instr": null,
+     "n_prod_instr": null,
+     "diff_head": []
+    },
+    {
+     "qualname": "_LocationIndexer._getitem_nested_tuple",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 170,
+     "n_prod_instr": 166,
+     "diff_head": [
+      "--- replace (orig[73:74] -> prod[73:75])",
+      "  - JUMP_FORWARD T",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "sp_starlette_formparsers",
+   "tags": [
+    "C2",
+    "C6"
+   ],
+   "units": [
+    {
+     "qualname": "<module>",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 173,
+     "n_prod_instr": 172,
+     "diff_head": [
+      "--- delete (orig[142:143] -> prod[142:142])",
+      "  - LOAD_CONST ('src', 'bytes | bytearray', 'codec', 'str', 'return', 'str')",
+      "--- replace (orig[144:145] -> prod[143:144])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "MultipartPart",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 48,
+     "n_prod_instr": 48,
+     "diff_head": [
+      "--- replace (orig[8:9] -> prod[8:9])",
+      "  - LOAD_CONST 'bytes | None'",
+      "  + LOAD_CONST \"'bytes | None'\"",
+      "--- replace (orig[14:15] -> prod[14:15])"
+     ]
+    },
+    {
+     "qualname": "MultiPartException",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 11,
+     "n_prod_instr": 10,
+     "diff_head": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - LOAD_CONST ('message', 'str', 'return', 'None')",
+      "--- replace (orig[7:8] -> prod[6:7])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "FormParser",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 35,
+     "n_prod_instr": 28,
+     "diff_head": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - LOAD_CONST ('headers', 'Headers', 'stream', 'AsyncGenerator[bytes, None]', 'return', 'None')",
+      "--- replace (orig[7:8] -> prod[6:7])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "MultiPartParser",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 58,
+     "n_prod_instr": 48,
+     "diff_head": [
+      "--- delete (orig[16:17] -> prod[16:16])",
+      "  - LOAD_CONST ('headers', 'Headers', 'stream', 'AsyncGenerator[bytes, None]', 'max_files', 'int | float', 'max_fields', 'int | float', 'max_part_size', '",
+      "--- replace (orig[18:19] -> prod[17:18])",
+      "  - MAKE_FUNCTION 6"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_argparse",
+   "tags": [
+    "C10",
+    "C14",
+    "C2",
+    "C4"
+   ],
+   "units": [
+    {
+     "qualname": "HelpFormatter._format_actions_usage",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 423,
+     "n_prod_instr": 426,
+     "diff_head": [
+      "--- replace (orig[115:116] -> prod[115:131])",
+      "  - JUMP_FORWARD T",
+      "  + LOAD_GLOBAL range",
+      "  + LOAD_FAST start"
+     ]
+    },
+    {
+     "qualname": "HelpFormatter._iter_indented_subactions",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 42,
+     "n_prod_instr": 29,
+     "diff_head": [
+      "--- delete (orig[0:2] -> prod[0:0])",
+      "  - RETURN_GENERATOR None",
+      "  - POP_TOP None",
+      "--- delete (orig[11:22] -> prod[9:9])"
+     ]
+    },
+    {
+     "qualname": "_ActionsContainer.add_argument",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 181,
+     "n_prod_instr": 180,
+     "diff_head": [
+      "--- delete (orig[41:42] -> prod[41:41])",
+      "  - JUMP_FORWARD T"
+     ]
+    },
+    {
+     "qualname": "ArgumentParser.__init__",
+     "tags": [
+      "C10"
+     ],
+     "n_orig_instr": 160,
+     "n_prod_instr": 161,
+     "diff_head": [
+      "--- insert (orig[139:139] -> prod[139:151])",
+      "  + JUMP_FORWARD T",
+      "  + PUSH_EXC_INFO None",
+      "  + LOAD_GLOBAL AttributeError"
+     ]
+    },
+    {
+     "qualname": "ArgumentParser._parse_known_args",
+     "tags": [
+      "C2",
+      "C4"
+     ],
+     "n_orig_instr": 411,
+     "n_prod_instr": 411,
+     "diff_head": []
+    },
+    {
+     "qualname": "ArgumentParser._parse_known_args.consume_optional",
+     "tags": [
+      "C14"
+     ],
+     "n_orig_instr": null,
+     "n_prod_instr": null,
+     "diff_head": []
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_ast",
+   "tags": [
+    "C11",
+    "C14",
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "<module>",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 405,
+     "n_prod_instr": 405,
+     "diff_head": [
+      "--- replace (orig[218:219] -> prod[218:219])",
+      "  - LOAD_CONST Ellipsis",
+      "  + LOAD_CONST None",
+      "--- replace (orig[249:250] -> prod[249:250])"
+     ]
+    },
+    {
+     "qualname": "literal_eval._convert",
+     "tags": [
+      "C14"
+     ],
+     "n_orig_instr": null,
+     "n_prod_instr": null,
+     "diff_head": []
+    },
+    {
+     "qualname": "dump._format",
+     "tags": [
+      "C14"
+     ],
+     "n_orig_instr": null,
+     "n_prod_instr": null,
+     "diff_head": []
+    },
+    {
+     "qualname": "NodeVisitor.visit_Constant",
+     "tags": [
+      "C11"
+     ],
+     "n_orig_instr": 86,
+     "n_prod_instr": 86,
+     "diff_head": []
+    },
+    {
+     "qualname": "Ellipsis.__new__",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 28,
+     "n_prod_instr": 28,
+     "diff_head": [
+      "--- replace (orig[6:7] -> prod[6:7])",
+      "  - LOAD_CONST Ellipsis",
+      "  + LOAD_CONST None"
+     ]
+    },
+    {
+     "qualname": "_Unparser.visit_ImportFrom",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 50,
+     "n_prod_instr": 52,
+     "diff_head": [
+      "--- insert (orig[29:29] -> prod[29:31])",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_asyncio_base_events",
+   "tags": [
+    "C1",
+    "C10",
+    "C14",
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "Server",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 51,
+     "n_prod_instr": 52,
+     "diff_head": [
+      "--- replace (orig[5:6] -> prod[5:7])",
+      "  - NOP None",
+      "  + LOAD_CONST ''",
+      "  + STORE_NAME __doc__"
+     ]
+    },
+    {
+     "qualname": "Server.wait_closed",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 34,
+     "n_prod_instr": 36,
+     "diff_head": [
+      "--- insert (orig[34:34] -> prod[34:36])",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    },
+    {
+     "qualname": "BaseEventLoop.shutdown_asyncgens",
+     "tags": [
+      "C1"
+     ],
+     "n_orig_instr": 77,
+     "n_prod_instr": 46,
+     "diff_head": [
+      "--- delete (orig[14:45] -> prod[14:14])",
+      "  - LOAD_GLOBAL list",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR _asyncgens"
+     ]
+    },
+    {
+     "qualname": "BaseEventLoop.shutdown_asyncgens.<listcomp>",
+     "tags": [
+      "C14"
+     ],
+     "n_orig_instr": null,
+     "n_prod_instr": null,
+     "diff_head": []
+    },
+    {
+     "qualname": "BaseEventLoop.run_until_complete",
+     "tags": [
+      "C10"
+     ],
+     "n_orig_instr": 101,
+     "n_prod_instr": 103,
+     "diff_head": [
+      "--- replace (orig[57:58] -> prod[57:58])",
+      "  - POP_JUMP_FORWARD_IF_TRUE T",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "--- insert (orig[63:63] -> prod[63:64])"
+     ]
+    },
+    {
+     "qualname": "BaseEventLoop.close",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 63,
+     "n_prod_instr": 60,
+     "diff_head": [
+      "--- delete (orig[16:19] -> prod[16:16])",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR _debug",
+      "  - POP_JUMP_FORWARD_IF_FALSE T"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_asyncio_streams",
+   "tags": [
+    "C1",
+    "C2",
+    "C5"
+   ],
+   "units": [
+    {
+     "qualname": "FlowControlMixin.pause_writing",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 26,
+     "n_prod_instr": 26,
+     "diff_head": [
+      "--- replace (orig[3:4] -> prod[3:4])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    },
+    {
+     "qualname": "StreamWriter.drain",
+     "tags": [
+      "C5"
+     ],
+     "n_orig_instr": 47,
+     "n_prod_instr": 22,
+     "diff_head": [
+      "--- delete (orig[17:34] -> prod[17:17])",
+      "  - LOAD_ATTR _transport",
+      "  - LOAD_METHOD is_closing",
+      "  - PRECALL 0"
+     ]
+    },
+    {
+     "qualname": "StreamReader.feed_data",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 75,
+     "n_prod_instr": 75,
+     "diff_head": [
+      "--- replace (orig[3:4] -> prod[3:4])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    },
+    {
+     "qualname": "StreamReader._wait_for_data",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 64,
+     "n_prod_instr": 64,
+     "diff_head": [
+      "--- replace (orig[16:17] -> prod[16:17])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    },
+    {
+     "qualname": "StreamReader.readuntil",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 143,
+     "n_prod_instr": 144,
+     "diff_head": [
+      "--- insert (orig[69:69] -> prod[69:70])",
+      "  + JUMP_FORWARD T"
+     ]
+    },
+    {
+     "qualname": "StreamReader.read",
+     "tags": [
+      "C1"
+     ],
+     "n_orig_instr": 92,
+     "n_prod_instr": 89,
+     "diff_head": [
+      "--- delete (orig[34:36] -> prod[34:34])",
+      "  - STORE_FAST block",
+      "  - LOAD_FAST block",
+      "--- replace (orig[40:41] -> prod[38:39])"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_asyncio_taskgroups",
+   "tags": [
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "TaskGroup.__aexit__",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 167,
+     "n_prod_instr": 167,
+     "diff_head": [
+      "--- replace (orig[113:114] -> prod[113:114])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_asyncio_tasks",
+   "tags": [
+    "C1",
+    "C10",
+    "C11",
+    "C14",
+    "C2",
+    "C4"
+   ],
+   "units": [
+    {
+     "qualname": "<module>",
+     "tags": [
+      "C11"
+     ],
+     "n_orig_instr": 298,
+     "n_prod_instr": 298,
+     "diff_head": []
+    },
+    {
+     "qualname": "_set_task_name",
+     "tags": [
+      "C4"
+     ],
+     "n_orig_instr": 38,
+     "n_prod_instr": 38,
+     "diff_head": []
+    },
+    {
+     "qualname": "wait_for",
+     "tags": [
+      "C10"
+     ],
+     "n_orig_instr": 244,
+     "n_prod_instr": 229,
+     "diff_head": [
+      "--- delete (orig[112:113] -> prod[112:112])",
+      "  - NOP None",
+      "--- delete (orig[121:169] -> prod[120:120])",
+      "  - JUMP_FORWARD T"
+     ]
+    },
+    {
+     "qualname": "_wait",
+     "tags": [
+      "C1"
+     ],
+     "n_orig_instr": 141,
+     "n_prod_instr": 141,
+     "diff_head": [
+      "--- insert (orig[72:72] -> prod[72:74])",
+      "  + POP_TOP None",
+      "  + LOAD_FAST fs",
+      "--- insert (orig[92:92] -> prod[94:96])"
+     ]
+    },
+    {
+     "qualname": "_wait._on_completion",
+     "tags": [
+      "C14"
+     ],
+     "n_orig_instr": null,
+     "n_prod_instr": null,
+     "diff_head": []
+    },
+    {
+     "qualname": "as_completed",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 123,
+     "n_prod_instr": 125,
+     "diff_head": [
+      "--- insert (orig[2:2] -> prod[2:3])",
+      "  + MAKE_CELL f",
+      "--- replace (orig[77:78] -> prod[78:80])",
+      "  - BUILD_TUPLE 1"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_asyncio_timeouts",
+   "tags": [
+    "C6"
+   ],
+   "units": [
+    {
+     "qualname": "Timeout",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 79,
+     "n_prod_instr": 77,
+     "diff_head": [
+      "--- delete (orig[47:48] -> prod[47:47])",
+      "  - LOAD_CONST ('return', 'Timeout')",
+      "--- replace (orig[49:50] -> prod[48:49])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_contextlib",
+   "tags": [
+    "C10",
+    "C14",
+    "C2",
+    "C5"
+   ],
+   "units": [
+    {
+     "qualname": "_GeneratorContextManagerBase.__init__",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 40,
+     "n_prod_instr": 39,
+     "diff_head": [
+      "--- delete (orig[10:12] -> prod[10:10])",
+      "  - LOAD_FAST func",
+      "  - LOAD_FAST args",
+      "--- delete (orig[13:14] -> prod[11:11])"
+     ]
+    },
+    {
+     "qualname": "_GeneratorContextManager.__exit__",
+     "tags": [
+      "C10"
+     ],
+     "n_orig_instr": 160,
+     "n_prod_instr": 161,
+     "diff_head": [
+      "--- insert (orig[10:10] -> prod[10:23])",
+      "  + JUMP_FORWARD T",
+      "  + PUSH_EXC_INFO None",
+      "  + LOAD_GLOBAL StopIteration"
+     ]
+    },
+    {
+     "qualname": "_AsyncGeneratorContextManager.__aexit__",
+     "tags": [
+      "C5",
+      "C10"
+     ],
+     "n_orig_instr": 188,
+     "n_prod_instr": 165,
+     "diff_head": [
+      "--- replace (orig[18:41] -> prod[18:19])",
+      "  - NOP None",
+      "  - LOAD_GLOBAL RuntimeError",
+      "  - LOAD_CONST \"generator didn't stop\""
+     ]
+    },
+    {
+     "qualname": "ExitStack.__exit__._fix_exception_context",
+     "tags": [
+      "C14"
+     ],
+     "n_orig_instr": null,
+     "n_prod_instr": null,
+     "diff_head": []
+    },
+    {
+     "qualname": "AsyncExitStack.__aexit__",
+     "tags": [
+      "C2",
+      "C2"
+     ],
+     "n_orig_instr": 127,
+     "n_prod_instr": 127,
+     "diff_head": []
+    },
+    {
+     "qualname": "AsyncExitStack.__aexit__._fix_exception_context",
+     "tags": [
+      "C14"
+     ],
+     "n_orig_instr": null,
+     "n_prod_instr": null,
+     "diff_head": []
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_csv",
+   "tags": [
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "Sniffer._guess_quote_and_delimiter",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 208,
+     "n_prod_instr": 208,
+     "diff_head": []
+    },
+    {
+     "qualname": "Sniffer._guess_delimiter",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 419,
+     "n_prod_instr": 419,
+     "diff_head": [
+      "--- delete (orig[41:42] -> prod[41:41])",
+      "  - LOAD_CONST 0",
+      "--- delete (orig[44:45] -> prod[43:43])",
+      "  - STORE_FAST start"
+     ]
+    },
+    {
+     "qualname": "Sniffer.has_header",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 199,
+     "n_prod_instr": 200,
+     "diff_head": [
+      "--- replace (orig[173:178] -> prod[173:174])",
+      "  - LOAD_FAST hasHeader",
+      "  - LOAD_CONST 1",
+      "  - BINARY_OP 23"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_dataclasses",
+   "tags": [
+    "C14",
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "_get_field",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 203,
+     "n_prod_instr": 203,
+     "diff_head": []
+    },
+    {
+     "qualname": "_hash_add.<listcomp>",
+     "tags": [
+      "C14"
+     ],
+     "n_orig_instr": null,
+     "n_prod_instr": null,
+     "diff_head": []
+    },
+    {
+     "qualname": "_process_class",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 606,
+     "n_prod_instr": 599,
+     "diff_head": [
+      "--- insert (orig[158:158] -> prod[158:159])",
+      "  + JUMP_BACKWARD T",
+      "--- insert (orig[279:279] -> prod[280:281])",
+      "  + UNARY_NOT None"
+     ]
+    },
+    {
+     "qualname": "_add_slots",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 144,
+     "n_prod_instr": 148,
+     "diff_head": [
+      "--- insert (orig[75:75] -> prod[75:79])",
+      "  + LOAD_CONST 1",
+      "  + LOAD_FAST cls_dict",
+      "  + LOAD_CONST '__slots__'"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_difflib",
+   "tags": [
+    "C1",
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "<module>",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 154,
+     "n_prod_instr": 147,
+     "diff_head": [
+      "--- delete (orig[80:82] -> prod[80:80])",
+      "  - NOP None",
+      "  - NOP None",
+      "--- delete (orig[89:91] -> prod[87:87])"
+     ]
+    },
+    {
+     "qualname": "SequenceMatcher.__chain_b",
+     "tags": [
+      "C1"
+     ],
+     "n_orig_instr": 134,
+     "n_prod_instr": 128,
+     "diff_head": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - COPY 1",
+      "--- delete (orig[8:9] -> prod[7:7])",
+      "  - STORE_FAST b2j"
+     ]
+    },
+    {
+     "qualname": "SequenceMatcher.find_longest_match",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 407,
+     "n_prod_instr": 346,
+     "diff_head": [
+      "--- delete (orig[30:32] -> prod[30:30])",
+      "  - LOAD_FAST alo",
+      "  - LOAD_FAST blo",
+      "--- delete (orig[34:36] -> prod[32:32])"
+     ]
+    },
+    {
+     "qualname": "SequenceMatcher.get_matching_blocks",
+     "tags": [
+      "C1"
+     ],
+     "n_orig_instr": 196,
+     "n_prod_instr": 182,
+     "diff_head": [
+      "--- delete (orig[9:14] -> prod[9:9])",
+      "  - LOAD_ATTR a",
+      "  - PRECALL 1",
+      "  - CALL 1"
+     ]
+    },
+    {
+     "qualname": "SequenceMatcher.get_opcodes",
+     "tags": [
+      "C1"
+     ],
+     "n_orig_instr": 89,
+     "n_prod_instr": 85,
+     "diff_head": [
+      "--- delete (orig[8:9] -> prod[8:8])",
+      "  - COPY 1",
+      "--- delete (orig[10:11] -> prod[9:9])",
+      "  - STORE_FAST j"
+     ]
+    },
+    {
+     "qualname": "SequenceMatcher.get_grouped_opcodes",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 198,
+     "n_prod_instr": 200,
+     "diff_head": [
+      "--- insert (orig[198:198] -> prod[198:200])",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_functools",
+   "tags": [
+    "C10",
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "update_wrapper",
+     "tags": [
+      "C10"
+     ],
+     "n_orig_instr": 56,
+     "n_prod_instr": 57,
+     "diff_head": [
+      "--- insert (orig[12:12] -> prod[12:24])",
+      "  + JUMP_FORWARD T",
+      "  + PUSH_EXC_INFO None",
+      "  + LOAD_GLOBAL AttributeError"
+     ]
+    },
+    {
+     "qualname": "partial.__new__",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 54,
+     "n_prod_instr": 49,
+     "diff_head": [
+      "--- delete (orig[24:29] -> prod[24:24])",
+      "  - LOAD_FAST func",
+      "  - LOAD_ATTR keywords",
+      "  - DICT_UPDATE 1"
+     ]
+    },
+    {
+     "qualname": "partial.__call__",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 23,
+     "n_prod_instr": 18,
+     "diff_head": [
+      "--- delete (orig[2:7] -> prod[2:2])",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR keywords",
+      "  - DICT_UPDATE 1"
+     ]
+    },
+    {
+     "qualname": "partial.__reduce__",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 23,
+     "n_prod_instr": 8,
+     "diff_head": [
+      "--- delete (orig[1:12] -> prod[1:1])",
+      "  - LOAD_GLOBAL type",
+      "  - LOAD_FAST self",
+      "  - PRECALL 1"
+     ]
+    },
+    {
+     "qualname": "partial.__setstate__",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 108,
+     "n_prod_instr": 114,
+     "diff_head": [
+      "--- insert (orig[108:108] -> prod[108:114])",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None",
+      "  + LOAD_CONST None"
+     ]
+    },
+    {
+     "qualname": "partialmethod.__init__",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 58,
+     "n_prod_instr": 53,
+     "diff_head": [
+      "--- delete (orig[38:43] -> prod[38:38])",
+      "  - LOAD_FAST func",
+      "  - LOAD_ATTR keywords",
+      "  - DICT_UPDATE 1"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_http_cookiejar",
+   "tags": [
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "_timegm",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 84,
+     "n_prod_instr": 101,
+     "diff_head": [
+      "--- replace (orig[28:29] -> prod[28:30])",
+      "  - JUMP_FORWARD T",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    },
+    {
+     "qualname": "split_header_words",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 179,
+     "n_prod_instr": 179,
+     "diff_head": [
+      "--- replace (orig[6:7] -> prod[6:7])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    },
+    {
+     "qualname": "user_domain_match",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 55,
+     "n_prod_instr": 57,
+     "diff_head": [
+      "--- insert (orig[55:55] -> prod[55:57])",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    },
+    {
+     "qualname": "DefaultCookiePolicy.set_ok_version",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 47,
+     "n_prod_instr": 47,
+     "diff_head": [
+      "--- replace (orig[37:38] -> prod[37:38])",
+      "  - POP_JUMP_FORWARD_IF_TRUE T",
+      "  + POP_JUMP_FORWARD_IF_FALSE T"
+     ]
+    },
+    {
+     "qualname": "DefaultCookiePolicy.set_ok_path",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 42,
+     "n_prod_instr": 66,
+     "diff_head": [
+      "--- insert (orig[14:14] -> prod[14:38])",
+      "  + LOAD_FAST self",
+      "  + LOAD_ATTR strict_ns_set_path",
+      "  + POP_JUMP_FORWARD_IF_FALSE T"
+     ]
+    },
+    {
+     "qualname": "DefaultCookiePolicy.set_ok_domain",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 268,
+     "n_prod_instr": 271,
+     "diff_head": [
+      "--- insert (orig[49:49] -> prod[49:50])",
+      "  + EXTENDED_ARG 2",
+      "--- insert (orig[57:57] -> prod[58:59])",
+      "  + EXTENDED_ARG 2"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_ipaddress",
+   "tags": [
+    "C14",
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "_find_address_range",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 46,
+     "n_prod_instr": 44,
+     "diff_head": [
+      "--- delete (orig[12:13] -> prod[12:12])",
+      "  - COPY 1",
+      "--- delete (orig[14:15] -> prod[13:13])",
+      "  - STORE_FAST last"
+     ]
+    },
+    {
+     "qualname": "_BaseNetwork.address_exclude",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 175,
+     "n_prod_instr": 168,
+     "diff_head": [
+      "--- delete (orig[101:107] -> prod[101:101])",
+      "  - LOAD_FAST other",
+      "  - LOAD_METHOD subnet_of",
+      "  - LOAD_FAST s2"
+     ]
+    },
+    {
+     "qualname": "_BaseNetwork.is_private.<genexpr>",
+     "tags": [
+      "C14"
+     ],
+     "n_orig_instr": null,
+     "n_prod_instr": null,
+     "diff_head": []
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_json_encoder",
+   "tags": [
+    "C14",
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "_make_iterencode",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 106,
+     "n_prod_instr": 104,
+     "diff_head": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - MAKE_CELL _key_separator",
+      "--- delete (orig[67:68] -> prod[66:66])",
+      "  - LOAD_CLOSURE _key_separator"
+     ]
+    },
+    {
+     "qualname": "_make_iterencode._iterencode_list",
+     "tags": [
+      "C14"
+     ],
+     "n_orig_instr": null,
+     "n_prod_instr": null,
+     "diff_head": []
+    },
+    {
+     "qualname": "_make_iterencode._iterencode_dict",
+     "tags": [
+      "C14"
+     ],
+     "n_orig_instr": null,
+     "n_prod_instr": null,
+     "diff_head": []
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_re__parser",
+   "tags": [
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "SubPattern.getwidth",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 258,
+     "n_prod_instr": 250,
+     "diff_head": [
+      "--- delete (orig[8:9] -> prod[8:8])",
+      "  - COPY 1",
+      "--- delete (orig[10:11] -> prod[9:9])",
+      "  - STORE_FAST hi"
+     ]
+    },
+    {
+     "qualname": "Tokenizer.getuntil",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 59,
+     "n_prod_instr": 55,
+     "diff_head": [
+      "--- replace (orig[13:14] -> prod[13:31])",
+      "  - POP_JUMP_FORWARD_IF_NOT_NONE T",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "  + LOAD_FAST c"
+     ]
+    },
+    {
+     "qualname": "_class_escape",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 358,
+     "n_prod_instr": 365,
+     "diff_head": [
+      "--- insert (orig[131:131] -> prod[131:138])",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "  + LOAD_GLOBAL len",
+      "  + LOAD_FAST escape"
+     ]
+    },
+    {
+     "qualname": "_escape",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 454,
+     "n_prod_instr": 461,
+     "diff_head": [
+      "--- insert (orig[125:125] -> prod[125:132])",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "  + LOAD_GLOBAL len",
+      "  + LOAD_FAST escape"
+     ]
+    },
+    {
+     "qualname": "_parse_sub",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 188,
+     "n_prod_instr": 158,
+     "diff_head": [
+      "--- replace (orig[34:49] -> prod[34:35])",
+      "  - PUSH_NULL None",
+      "  - LOAD_FAST sourcematch",
+      "  - LOAD_CONST '|'"
+     ]
+    },
+    {
+     "qualname": "_parse",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 1756,
+     "n_prod_instr": 1727,
+     "diff_head": [
+      "--- replace (orig[56:57] -> prod[56:57])",
+      "  - POP_JUMP_FORWARD_IF_NONE T",
+      "  + POP_JUMP_FORWARD_IF_NOT_NONE T",
+      "--- replace (orig[62:63] -> prod[62:64])"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_statistics",
+   "tags": [
+    "C11",
+    "C14",
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "_sum",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 99,
+     "n_prod_instr": 99,
+     "diff_head": [
+      "--- replace (orig[70:71] -> prod[70:71])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    },
+    {
+     "qualname": "_ss",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 181,
+     "n_prod_instr": 181,
+     "diff_head": [
+      "--- replace (orig[124:125] -> prod[124:125])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    },
+    {
+     "qualname": "_exact_ratio",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 68,
+     "n_prod_instr": 68,
+     "diff_head": [
+      "--- replace (orig[25:26] -> prod[25:26])",
+      "  - LOAD_ASSERTION_ERROR None",
+      "  + LOAD_GLOBAL AssertionError"
+     ]
+    },
+    {
+     "qualname": "harmonic_mean",
+     "tags": [
+      "C11"
+     ],
+     "n_orig_instr": 170,
+     "n_prod_instr": 170,
+     "diff_head": []
+    },
+    {
+     "qualname": "NormalDist.samples",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 37,
+     "n_prod_instr": 31,
+     "diff_head": [
+      "--- delete (orig[2:3] -> prod[2:2])",
+      "  - MAKE_CELL sigma",
+      "--- delete (orig[18:21] -> prod[17:17])",
+      "  - LOAD_FAST self"
+     ]
+    },
+    {
+     "qualname": "NormalDist.samples.<listcomp>",
+     "tags": [
+      "C14"
+     ],
+     "n_orig_instr": null,
+     "n_prod_instr": null,
+     "diff_head": []
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_subprocess",
+   "tags": [
+    "C10",
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "call",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 48,
+     "n_prod_instr": 43,
+     "diff_head": [
+      "--- delete (orig[1:4] -> prod[1:1])",
+      "  - LOAD_GLOBAL Popen",
+      "  - LOAD_FAST popenargs",
+      "  - BUILD_MAP 0"
+     ]
+    },
+    {
+     "qualname": "run",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 153,
+     "n_prod_instr": 148,
+     "diff_head": [
+      "--- delete (orig[45:48] -> prod[45:45])",
+      "  - LOAD_GLOBAL Popen",
+      "  - LOAD_FAST popenargs",
+      "  - BUILD_MAP 0"
+     ]
+    },
+    {
+     "qualname": "Popen.__init__",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 755,
+     "n_prod_instr": 759,
+     "diff_head": [
+      "--- replace (orig[69:70] -> prod[69:71])",
+      "  - JUMP_FORWARD T",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    },
+    {
+     "qualname": "Popen.__exit__",
+     "tags": [
+      "C10"
+     ],
+     "n_orig_instr": 118,
+     "n_prod_instr": 121,
+     "diff_head": [
+      "--- replace (orig[114:115] -> prod[114:118])",
+      "  - RERAISE 0",
+      "  + POP_TOP None",
+      "  + POP_EXCEPT None"
+     ]
+    },
+    {
+     "qualname": "Popen._check_timeout",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 41,
+     "n_prod_instr": 44,
+     "diff_head": [
+      "--- insert (orig[14:14] -> prod[14:15])",
+      "  + LOAD_METHOD args",
+      "--- replace (orig[38:39] -> prod[39:40])",
+      "  - RAISE_VARARGS 1"
+     ]
+    },
+    {
+     "qualname": "Popen._on_error_fd_closer",
+     "tags": [
+      "C10"
+     ],
+     "n_orig_instr": 70,
+     "n_prod_instr": 73,
+     "diff_head": [
+      "--- insert (orig[29:29] -> prod[29:32])",
+      "  + POP_EXCEPT None",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_tarfile",
+   "tags": [
+    "C10",
+    "C11",
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "itn",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 118,
+     "n_prod_instr": 118,
+     "diff_head": []
+    },
+    {
+     "qualname": "copyfileobj",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 95,
+     "n_prod_instr": 10,
+     "diff_head": [
+      "--- replace (orig[5:9] -> prod[5:8])",
+      "  - LOAD_FAST length",
+      "  - LOAD_CONST 0",
+      "  - COMPARE_OP =="
+     ]
+    },
+    {
+     "qualname": "_Stream.__init__",
+     "tags": [
+      "C10"
+     ],
+     "n_orig_instr": 247,
+     "n_prod_instr": 250,
+     "diff_head": [
+      "--- insert (orig[240:240] -> prod[240:243])",
+      "  + POP_EXCEPT None",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    },
+    {
+     "qualname": "_Stream._init_read_gz",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 138,
+     "n_prod_instr": 146,
+     "diff_head": [
+      "--- insert (orig[104:104] -> prod[104:106])",
+      "  + JUMP_FORWARD T",
+      "  + JUMP_FORWARD T",
+      "--- insert (orig[122:122] -> prod[124:126])"
+     ]
+    },
+    {
+     "qualname": "_Stream._read",
+     "tags": [
+      "C11"
+     ],
+     "n_orig_instr": 112,
+     "n_prod_instr": 112,
+     "diff_head": []
+    },
+    {
+     "qualname": "_FileInFile.read",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 143,
+     "n_prod_instr": 132,
+     "diff_head": [
+      "--- delete (orig[25:26] -> prod[25:25])",
+      "  - EXTENDED_ARG 1",
+      "--- delete (orig[41:43] -> prod[40:40])",
+      "  - SWAP 2"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_tomllib_parser",
+   "tags": [
+    "C1",
+    "C2",
+    "C6",
+    "C9"
+   ],
+   "units": [
+    {
+     "qualname": "<module>",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 306,
+     "n_prod_instr": 281,
+     "diff_head": [
+      "--- delete (orig[173:174] -> prod[173:173])",
+      "  - LOAD_CONST ('fp', 'BinaryIO', 'parse_float', 'ParseFloat', 'return', 'dict[str, Any]')",
+      "--- replace (orig[175:176] -> prod[174:175])",
+      "  - MAKE_FUNCTION 6"
+     ]
+    },
+    {
+     "qualname": "loads",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 200,
+     "n_prod_instr": 200,
+     "diff_head": [
+      "--- insert (orig[35:35] -> prod[35:44])",
+      "  + LOAD_FAST char",
+      "  + LOAD_CONST '\\n'",
+      "  + COMPARE_OP =="
+     ]
+    },
+    {
+     "qualname": "Flags",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 37,
+     "n_prod_instr": 31,
+     "diff_head": [
+      "--- delete (orig[11:12] -> prod[11:11])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[13:14] -> prod[12:13])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    },
+    {
+     "qualname": "Flags.set",
+     "tags": [
+      "C1",
+      "C9"
+     ],
+     "n_orig_instr": 73,
+     "n_prod_instr": 65,
+     "diff_head": [
+      "--- delete (orig[5:10] -> prod[5:5])",
+      "  - LOAD_CONST None",
+      "  - LOAD_CONST -1",
+      "  - BUILD_SLICE 2"
+     ]
+    },
+    {
+     "qualname": "Flags.is_",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 67,
+     "n_prod_instr": 67,
+     "diff_head": [
+      "--- replace (orig[65:66] -> prod[65:66])",
+      "  - LOAD_CONST False",
+      "  + LOAD_CONST None"
+     ]
+    },
+    {
+     "qualname": "NestedDict",
+     "tags": [
+      "C6"
+     ],
+     "n_orig_instr": 22,
+     "n_prod_instr": 19,
+     "diff_head": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[7:8] -> prod[6:7])",
+      "  - MAKE_FUNCTION 4"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_typing",
+   "tags": [
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "<module>",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 1473,
+     "n_prod_instr": 1471,
+     "diff_head": [
+      "--- replace (orig[1450:1451] -> prod[1450:1451])",
+      "  - LOAD_CONST Ellipsis",
+      "  + LOAD_CONST None",
+      "--- replace (orig[1455:1456] -> prod[1455:1456])"
+     ]
+    },
+    {
+     "qualname": "_is_param_expr",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 15,
+     "n_prod_instr": 15,
+     "diff_head": [
+      "--- replace (orig[2:3] -> prod[2:3])",
+      "  - LOAD_CONST Ellipsis",
+      "  + LOAD_CONST None"
+     ]
+    },
+    {
+     "qualname": "_should_unflatten_callable_args",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 23,
+     "n_prod_instr": 23,
+     "diff_head": []
+    },
+    {
+     "qualname": "_type_repr",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 57,
+     "n_prod_instr": 55,
+     "diff_head": [
+      "--- replace (orig[37:40] -> prod[37:38])",
+      "  - LOAD_CONST Ellipsis",
+      "  - IS_OP 0",
+      "  - POP_JUMP_FORWARD_IF_FALSE T"
+     ]
+    },
+    {
+     "qualname": "_check_generic",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 45,
+     "n_prod_instr": 44,
+     "diff_head": [
+      "--- delete (orig[20:21] -> prod[20:20])",
+      "  - LOAD_GLOBAL TypeError",
+      "--- replace (orig[40:43] -> prod[39:40])",
+      "  - PRECALL 1"
+     ]
+    },
+    {
+     "qualname": "_unpack_args",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 40,
+     "n_prod_instr": 39,
+     "diff_head": [
+      "--- replace (orig[21:24] -> prod[21:22])",
+      "  - LOAD_CONST Ellipsis",
+      "  - IS_OP 0",
+      "  - POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_unittest_case",
+   "tags": [
+    "C2",
+    "C4"
+   ],
+   "units": [
+    {
+     "qualname": "_Outcome.testPartExecutor",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 132,
+     "n_prod_instr": 142,
+     "diff_head": [
+      "--- insert (orig[14:14] -> prod[14:20])",
+      "  + LOAD_FAST self",
+      "  + LOAD_ATTR success",
+      "  + JUMP_IF_FALSE_OR_POP T"
+     ]
+    },
+    {
+     "qualname": "TestCase._addExpectedFailure",
+     "tags": [
+      "C4"
+     ],
+     "n_orig_instr": 40,
+     "n_prod_instr": 40,
+     "diff_head": []
+    },
+    {
+     "qualname": "TestCase._addUnexpectedSuccess",
+     "tags": [
+      "C4"
+     ],
+     "n_orig_instr": 57,
+     "n_prod_instr": 57,
+     "diff_head": []
+    },
+    {
+     "qualname": "TestCase.run",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 318,
+     "n_prod_instr": 417,
+     "diff_head": [
+      "--- insert (orig[85:85] -> prod[85:99])",
+      "  + POP_TOP None",
+      "  + PUSH_NULL None",
+      "  + LOAD_FAST result"
+     ]
+    },
+    {
+     "qualname": "TestCase.doCleanups",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 64,
+     "n_prod_instr": 57,
+     "diff_head": [
+      "--- delete (orig[1:8] -> prod[1:1])",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR _outcome",
+      "  - JUMP_IF_TRUE_OR_POP T"
+     ]
+    },
+    {
+     "qualname": "TestCase.debug",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 91,
+     "n_prod_instr": 78,
+     "diff_head": [
+      "--- delete (orig[71:84] -> prod[71:71])",
+      "  - PUSH_NULL None",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR _callCleanup"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_urllib_request",
+   "tags": [
+    "C2",
+    "C9"
+   ],
+   "units": [
+    {
+     "qualname": "urlretrieve",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 202,
+     "n_prod_instr": 203,
+     "diff_head": [
+      "--- insert (orig[46:46] -> prod[46:47])",
+      "  + JUMP_FORWARD T"
+     ]
+    },
+    {
+     "qualname": "urlcleanup",
+     "tags": [
+      "C9"
+     ],
+     "n_orig_instr": 37,
+     "n_prod_instr": 33,
+     "diff_head": [
+      "--- insert (orig[1:1] -> prod[1:2])",
+      "  + NOP None",
+      "--- delete (orig[24:29] -> prod[25:25])",
+      "  - LOAD_GLOBAL _url_tempfiles"
+     ]
+    },
+    {
+     "qualname": "Request.header_items",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 17,
+     "n_prod_instr": 11,
+     "diff_head": [
+      "--- delete (orig[2:8] -> prod[2:2])",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR unredirected_hdrs",
+      "  - DICT_UPDATE 1"
+     ]
+    },
+    {
+     "qualname": "HTTPRedirectHandler.redirect_request",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 65,
+     "n_prod_instr": 65,
+     "diff_head": []
+    },
+    {
+     "qualname": "HTTPPasswordMgr.find_user_password",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 53,
+     "n_prod_instr": 52,
+     "diff_head": [
+      "--- delete (orig[41:42] -> prod[41:41])",
+      "  - SWAP 2",
+      "--- delete (orig[43:44] -> prod[42:42])",
+      "  - SWAP 2"
+     ]
+    },
+    {
+     "qualname": "parse_http_list",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 81,
+     "n_prod_instr": 80,
+     "diff_head": [
+      "--- delete (orig[6:7] -> prod[6:6])",
+      "  - COPY 1",
+      "--- delete (orig[8:9] -> prod[7:7])",
+      "  - STORE_FAST quote"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_xml_ElementPath",
+   "tags": [
+    "C2"
+   ],
+   "units": [
+    {
+     "qualname": "xpath_tokenizer",
+     "tags": [
+      "C2",
+      "C2"
+     ],
+     "n_orig_instr": 120,
+     "n_prod_instr": 120,
+     "diff_head": []
+    },
+    {
+     "qualname": "get_parent_map",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 31,
+     "n_prod_instr": 29,
+     "diff_head": [
+      "--- delete (orig[7:8] -> prod[7:7])",
+      "  - COPY 1",
+      "--- delete (orig[10:11] -> prod[9:9])",
+      "  - STORE_FAST parent_map"
+     ]
+    },
+    {
+     "qualname": "prepare_predicate",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 330,
+     "n_prod_instr": 335,
+     "diff_head": [
+      "--- delete (orig[10:29] -> prod[10:10])",
+      "  - NOP None",
+      "  - PUSH_NULL None",
+      "  - LOAD_FAST next"
+     ]
+    },
+    {
+     "qualname": "iterfind",
+     "tags": [
+      "C2"
+     ],
+     "n_orig_instr": 195,
+     "n_prod_instr": 177,
+     "diff_head": [
+      "--- delete (orig[36:37] -> prod[36:36])",
+      "  - EXTENDED_ARG 1",
+      "--- delete (orig[41:42] -> prod[40:40])",
+      "  - EXTENDED_ARG 1"
+     ]
+    }
+   ]
+  }
+ ],
+ "by_sample": {
+  "C6": 12,
+  "C2": 32,
+  "C3": 1,
+  "C9": 3,
+  "C1": 7,
+  "C5": 3,
+  "C14": 10,
+  "C10": 7,
+  "C4": 3,
+  "C11": 4
+ },
+ "by_unit": {
+  "C6": 31,
+  "C2": 100,
+  "C3": 1,
+  "C9": 3,
+  "C1": 10,
+  "C5": 3,
+  "C14": 13,
+  "C10": 9,
+  "C4": 4,
+  "C11": 4
+ }
+}

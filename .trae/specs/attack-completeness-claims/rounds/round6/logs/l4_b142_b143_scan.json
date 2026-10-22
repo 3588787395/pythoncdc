@@ -1,0 +1,719 @@
+{
+ "n_files": 29377,
+ "b142": {
+  "D:\\Python\\Lib\\mailbox.py": [
+   {
+    "kind": "B142",
+    "func": "set_sequences",
+    "line": 1177,
+    "try_line": 1173,
+    "nested_try": false,
+    "detail": "continue@1177 处于 try(finalbody@1173) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\pydoc.py": [
+   {
+    "kind": "B142",
+    "func": "ttypager",
+    "line": 1672,
+    "try_line": 1652,
+    "nested_try": false,
+    "detail": "continue@1672 处于 try(finalbody@1652) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\shutil.py": [
+   {
+    "kind": "B142",
+    "func": "_unpack_zipfile",
+    "line": 1223,
+    "try_line": 1217,
+    "nested_try": false,
+    "detail": "continue@1223 处于 try(finalbody@1217) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\socket.py": [
+   {
+    "kind": "B142",
+    "func": "_sendfile_use_send",
+    "line": 441,
+    "try_line": 428,
+    "nested_try": false,
+    "detail": "continue@441 处于 try(finalbody@428) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "_sendfile_use_sendfile",
+    "line": 394,
+    "try_line": 379,
+    "nested_try": false,
+    "detail": "continue@394 处于 try(finalbody@379) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\uu.py": [
+   {
+    "kind": "B142",
+    "func": "decode",
+    "line": 124,
+    "try_line": 115,
+    "nested_try": false,
+    "detail": "continue@124 处于 try(finalbody@115) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\asyncio\\base_events.py": [
+   {
+    "kind": "B142",
+    "func": "_connect_sock",
+    "line": 956,
+    "try_line": 949,
+    "nested_try": false,
+    "detail": "continue@956 处于 try(finalbody@949) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "create_server",
+    "line": 1506,
+    "try_line": 1495,
+    "nested_try": false,
+    "detail": "continue@1506 处于 try(finalbody@1495) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\distutils\\extension.py": [
+   {
+    "kind": "B142",
+    "func": "read_setup_file",
+    "line": 166,
+    "try_line": 158,
+    "nested_try": false,
+    "detail": "continue@166 处于 try(finalbody@158) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\distutils\\msvc9compiler.py": [
+   {
+    "kind": "B142",
+    "func": "query_vcvarsall",
+    "line": 274,
+    "try_line": 265,
+    "nested_try": false,
+    "detail": "continue@274 处于 try(finalbody@265) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\lib2to3\\tests\\data\\py3_test_grammar.py": [
+   {
+    "kind": "B142",
+    "func": "testContinueStmt",
+    "line": 443,
+    "try_line": 442,
+    "nested_try": false,
+    "detail": "continue@443 处于 try(finalbody@442) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\multiprocessing\\pool.py": [
+   {
+    "kind": "B142",
+    "func": "_handle_tasks",
+    "line": 552,
+    "try_line": 533,
+    "nested_try": false,
+    "detail": "continue@552 处于 try(finalbody@533) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\multiprocessing\\shared_memory.py": [
+   {
+    "kind": "B142",
+    "func": "__init__",
+    "line": 150,
+    "try_line": 139,
+    "nested_try": false,
+    "detail": "continue@150 处于 try(finalbody@139) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\anyio\\_core\\_sockets.py": [
+   {
+    "kind": "B142",
+    "func": "create_tcp_listener",
+    "line": 407,
+    "try_line": 378,
+    "nested_try": false,
+    "detail": "continue@407 处于 try(finalbody@378) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "create_tcp_listener",
+    "line": 407,
+    "try_line": 378,
+    "nested_try": false,
+    "detail": "continue@407 处于 try(finalbody@378) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\imageio\\plugins\\_freeimage.py": [
+   {
+    "kind": "B142",
+    "func": "set_meta_data",
+    "line": 766,
+    "try_line": 745,
+    "nested_try": false,
+    "detail": "continue@766 处于 try(finalbody@745) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "set_meta_data",
+    "line": 766,
+    "try_line": 745,
+    "nested_try": false,
+    "detail": "continue@766 处于 try(finalbody@745) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\jinja2\\environment.py": [
+   {
+    "kind": "B142",
+    "func": "compile_templates",
+    "line": 887,
+    "try_line": 878,
+    "nested_try": false,
+    "detail": "continue@887 处于 try(finalbody@878) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "compile_templates",
+    "line": 887,
+    "try_line": 878,
+    "nested_try": false,
+    "detail": "continue@887 处于 try(finalbody@878) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\jinja2\\ext.py": [
+   {
+    "kind": "B142",
+    "func": "find_backwards",
+    "line": 758,
+    "try_line": 750,
+    "nested_try": false,
+    "detail": "continue@758 处于 try(finalbody@750) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "find_backwards",
+    "line": 758,
+    "try_line": 750,
+    "nested_try": false,
+    "detail": "continue@758 处于 try(finalbody@750) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\matplotlib\\tests\\test_backends_interactive.py": [
+   {
+    "kind": "B142",
+    "func": "test_webagg",
+    "line": 500,
+    "try_line": 488,
+    "nested_try": false,
+    "detail": "continue@500 处于 try(finalbody@488) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "test_webagg",
+    "line": 500,
+    "try_line": 488,
+    "nested_try": false,
+    "detail": "continue@500 处于 try(finalbody@488) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\mpmath\\functions\\hypergeometric.py": [
+   {
+    "kind": "B142",
+    "func": "hypercomb",
+    "line": 189,
+    "try_line": 72,
+    "nested_try": false,
+    "detail": "continue@189 处于 try(finalbody@72) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "hypercomb",
+    "line": 189,
+    "try_line": 72,
+    "nested_try": false,
+    "detail": "continue@189 处于 try(finalbody@72) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\pip\\_internal\\utils\\unpacking.py": [
+   {
+    "kind": "B142",
+    "func": "untar_file",
+    "line": 201,
+    "try_line": 174,
+    "nested_try": false,
+    "detail": "continue@201 处于 try(finalbody@174) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "untar_file",
+    "line": 201,
+    "try_line": 174,
+    "nested_try": false,
+    "detail": "continue@201 处于 try(finalbody@174) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\pip\\_vendor\\distlib\\locators.py": [
+   {
+    "kind": "B142",
+    "func": "_fetch",
+    "line": 742,
+    "try_line": 738,
+    "nested_try": false,
+    "detail": "continue@742 处于 try(finalbody@738) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "_fetch",
+    "line": 742,
+    "try_line": 738,
+    "nested_try": false,
+    "detail": "continue@742 处于 try(finalbody@738) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\pip\\_vendor\\distlib\\wheel.py": [
+   {
+    "kind": "B142",
+    "func": "install",
+    "line": 577,
+    "try_line": 569,
+    "nested_try": false,
+    "detail": "continue@577 处于 try(finalbody@569) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "install",
+    "line": 577,
+    "try_line": 569,
+    "nested_try": false,
+    "detail": "continue@577 处于 try(finalbody@569) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\pluggy\\_callers.py": [
+   {
+    "kind": "B142",
+    "func": "_multicall",
+    "line": 160,
+    "try_line": 90,
+    "nested_try": false,
+    "detail": "continue@160 处于 try(finalbody@90) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "_multicall",
+    "line": 160,
+    "try_line": 90,
+    "nested_try": false,
+    "detail": "continue@160 处于 try(finalbody@90) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\pydantic\\plugin\\_loader.py": [
+   {
+    "kind": "B142",
+    "func": "get_plugins",
+    "line": 42,
+    "try_line": 38,
+    "nested_try": false,
+    "detail": "continue@42 处于 try(finalbody@38) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "get_plugins",
+    "line": 42,
+    "try_line": 38,
+    "nested_try": false,
+    "detail": "continue@42 处于 try(finalbody@38) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\pymupdf\\__init__.py": [
+   {
+    "kind": "B142",
+    "func": "fullcopy_page",
+    "line": 4726,
+    "try_line": 4707,
+    "nested_try": false,
+    "detail": "continue@4726 处于 try(finalbody@4707) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "fullcopy_page",
+    "line": 4726,
+    "try_line": 4707,
+    "nested_try": false,
+    "detail": "continue@4726 处于 try(finalbody@4707) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\pytz\\__init__.py": [
+   {
+    "kind": "B142",
+    "func": "_fill",
+    "line": 366,
+    "try_line": 362,
+    "nested_try": false,
+    "detail": "continue@366 处于 try(finalbody@362) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "_fill",
+    "line": 395,
+    "try_line": 391,
+    "nested_try": false,
+    "detail": "continue@395 处于 try(finalbody@391) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "_fill",
+    "line": 366,
+    "try_line": 362,
+    "nested_try": false,
+    "detail": "continue@366 处于 try(finalbody@362) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "_fill",
+    "line": 395,
+    "try_line": 391,
+    "nested_try": false,
+    "detail": "continue@395 处于 try(finalbody@391) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\setuptools\\command\\easy_install.py": [
+   {
+    "kind": "B142",
+    "func": "get_exe_prefixes",
+    "line": 1554,
+    "try_line": 1545,
+    "nested_try": false,
+    "detail": "continue@1554 处于 try(finalbody@1545) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "get_exe_prefixes",
+    "line": 1554,
+    "try_line": 1545,
+    "nested_try": false,
+    "detail": "continue@1554 处于 try(finalbody@1545) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\setuptools\\_distutils\\extension.py": [
+   {
+    "kind": "B142",
+    "func": "read_setup_file",
+    "line": 173,
+    "try_line": 165,
+    "nested_try": false,
+    "detail": "continue@173 处于 try(finalbody@165) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "read_setup_file",
+    "line": 173,
+    "try_line": 165,
+    "nested_try": false,
+    "detail": "continue@173 处于 try(finalbody@165) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\setuptools\\_distutils\\msvc9compiler.py": [
+   {
+    "kind": "B142",
+    "func": "query_vcvarsall",
+    "line": 297,
+    "try_line": 288,
+    "nested_try": false,
+    "detail": "continue@297 处于 try(finalbody@288) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "query_vcvarsall",
+    "line": 297,
+    "try_line": 288,
+    "nested_try": false,
+    "detail": "continue@297 处于 try(finalbody@288) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\sqlalchemy\\testing\\entities.py": [
+   {
+    "kind": "B142",
+    "func": "__eq__",
+    "line": 85,
+    "try_line": 66,
+    "nested_try": false,
+    "detail": "continue@85 处于 try(finalbody@66) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "__eq__",
+    "line": 85,
+    "try_line": 66,
+    "nested_try": false,
+    "detail": "continue@85 处于 try(finalbody@66) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\sqlalchemy\\util\\_collections.py": [
+   {
+    "kind": "B142",
+    "func": "_manage_size",
+    "line": 577,
+    "try_line": 561,
+    "nested_try": false,
+    "detail": "continue@577 处于 try(finalbody@561) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "_manage_size",
+    "line": 577,
+    "try_line": 561,
+    "nested_try": false,
+    "detail": "continue@577 处于 try(finalbody@561) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\tifffile\\tifffile.py": [
+   {
+    "kind": "B142",
+    "func": "_series_ome",
+    "line": 6359,
+    "try_line": 6354,
+    "nested_try": false,
+    "detail": "continue@6359 处于 try(finalbody@6354) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "_series_ome",
+    "line": 6359,
+    "try_line": 6354,
+    "nested_try": false,
+    "detail": "continue@6359 处于 try(finalbody@6354) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\torch\\cuda\\_graph_annotations.py": [
+   {
+    "kind": "B142",
+    "func": "resolve_pending_annotations",
+    "line": 286,
+    "try_line": 236,
+    "nested_try": false,
+    "detail": "continue@286 处于 try(finalbody@236) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "resolve_pending_annotations",
+    "line": 286,
+    "try_line": 236,
+    "nested_try": false,
+    "detail": "continue@286 处于 try(finalbody@236) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\torch\\distributed\\checkpoint\\_consolidate_hf_safetensors.py": [
+   {
+    "kind": "B142",
+    "func": "_process_output_file",
+    "line": 275,
+    "try_line": 251,
+    "nested_try": false,
+    "detail": "continue@275 处于 try(finalbody@251) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "_process_output_file",
+    "line": 275,
+    "try_line": 251,
+    "nested_try": false,
+    "detail": "continue@275 处于 try(finalbody@251) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\torch\\utils\\benchmark\\utils\\valgrind_wrapper\\timer_interface.py": [
+   {
+    "kind": "B142",
+    "func": "_invoke",
+    "line": 718,
+    "try_line": 620,
+    "nested_try": false,
+    "detail": "continue@718 处于 try(finalbody@620) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "_invoke",
+    "line": 718,
+    "try_line": 620,
+    "nested_try": false,
+    "detail": "continue@718 处于 try(finalbody@620) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\torch\\utils\\data\\datapipes\\iter\\combining.py": [
+   {
+    "kind": "B142",
+    "func": "get_next_element_by_instance",
+    "line": 216,
+    "try_line": 194,
+    "nested_try": false,
+    "detail": "continue@216 处于 try(finalbody@194) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "get_next_element_by_instance",
+    "line": 216,
+    "try_line": 194,
+    "nested_try": false,
+    "detail": "continue@216 处于 try(finalbody@194) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\win32comext\\ifilter\\demos\\filterDemo.py": [
+   {
+    "kind": "B142",
+    "func": "Parse",
+    "line": 114,
+    "try_line": 45,
+    "nested_try": false,
+    "detail": "continue@114 处于 try(finalbody@45) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "Parse",
+    "line": 114,
+    "try_line": 45,
+    "nested_try": false,
+    "detail": "continue@114 处于 try(finalbody@45) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\_pytest\\recwarn.py": [
+   {
+    "kind": "B142",
+    "func": "__exit__",
+    "line": 355,
+    "try_line": 317,
+    "nested_try": false,
+    "detail": "continue@355 处于 try(finalbody@317) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "__exit__",
+    "line": 355,
+    "try_line": 317,
+    "nested_try": false,
+    "detail": "continue@355 处于 try(finalbody@317) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\_pytest\\threadexception.py": [
+   {
+    "kind": "B142",
+    "func": "collect_thread_exception",
+    "line": 54,
+    "try_line": 43,
+    "nested_try": false,
+    "detail": "continue@54 处于 try(finalbody@43) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "collect_thread_exception",
+    "line": 54,
+    "try_line": 43,
+    "nested_try": false,
+    "detail": "continue@54 处于 try(finalbody@43) 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\_pytest\\unraisableexception.py": [
+   {
+    "kind": "B142",
+    "func": "collect_unraisable",
+    "line": 63,
+    "try_line": 52,
+    "nested_try": false,
+    "detail": "continue@63 处于 try(finalbody@52) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "collect_unraisable",
+    "line": 63,
+    "try_line": 52,
+    "nested_try": false,
+    "detail": "continue@63 处于 try(finalbody@52) 内"
+   }
+  ],
+  "F:\\Downloads\\pythoncdc-main\\core\\cfg\\ast_generator_v2.py": [
+   {
+    "kind": "B142",
+    "func": "_generate_for_loop_v2",
+    "line": 14974,
+    "try_line": 14854,
+    "nested_try": false,
+    "detail": "continue@14974 处于 try(finalbody@14854) 内"
+   },
+   {
+    "kind": "B142",
+    "func": "_generate_while_loop_v2",
+    "line": 16281,
+    "try_line": 15902,
+    "nested_try": false,
+    "detail": "continue@16281 处于 try(finalbody@15902) 内"
+   }
+  ],
+  "F:\\Downloads\\pythoncdc-main\\scripts\\core_bisect.py": [
+   {
+    "kind": "B142",
+    "func": "main",
+    "line": 104,
+    "try_line": 100,
+    "nested_try": false,
+    "detail": "continue@104 处于 try(finalbody@100) 内"
+   }
+  ],
+  "F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py": [
+   {
+    "kind": "B142",
+    "func": "cmd_selfcheck",
+    "line": 301,
+    "try_line": 291,
+    "nested_try": false,
+    "detail": "continue@301 处于 try(finalbody@291) 内"
+   }
+  ]
+ },
+ "b143": {
+  "D:\\Python\\Lib\\asyncio\\locks.py": [
+   {
+    "kind": "B143",
+    "func": "wait",
+    "line": 278,
+    "try_line": 263,
+    "nested_try": false,
+    "detail": "break@278 处于 finalbody@263 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\anyio\\to_interpreter.py": [
+   {
+    "kind": "B143",
+    "func": "run_sync",
+    "line": 223,
+    "try_line": 211,
+    "nested_try": false,
+    "detail": "break@223 处于 finalbody@211 内"
+   },
+   {
+    "kind": "B143",
+    "func": "run_sync",
+    "line": 223,
+    "try_line": 211,
+    "nested_try": false,
+    "detail": "break@223 处于 finalbody@211 内"
+   }
+  ],
+  "D:\\Python\\Lib\\site-packages\\click\\_termui_impl.py": [
+   {
+    "kind": "B143",
+    "func": "_pipepager",
+    "line": 513,
+    "try_line": 474,
+    "nested_try": false,
+    "detail": "break@513 处于 finalbody@474 内"
+   },
+   {
+    "kind": "B143",
+    "func": "_pipepager",
+    "line": 513,
+    "try_line": 474,
+    "nested_try": false,
+    "detail": "break@513 处于 finalbody@474 内"
+   }
+  ]
+ }
+}

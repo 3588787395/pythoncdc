@@ -1,0 +1,191 @@
+{
+ "rows": [
+  {
+   "name": "nest_if_90",
+   "desc": "if 缩进嵌套 90 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_if_90.py",
+   "src_lines": 94,
+   "src_bytes": 17779,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.93,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 1142
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 2.16
+   },
+   "fidelity": {
+    "src_depth": 95,
+    "prod_depth": 7,
+    "src_stmts": 94,
+    "prod_stmts": 5
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "1\n",
+    "prod_out": "1\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_if_120",
+   "desc": "if 缩进嵌套 120 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_if_120.py",
+   "src_lines": 124,
+   "src_bytes": 30889,
+   "src_compile": "PyCompileError: Sorry: IndentationError: too many levels of indentation (nest_if_120.py, line 102)",
+   "pycdc": {
+    "skipped": "源码不可编译"
+   },
+   "verdict": "SOURCE_LIMIT"
+  },
+  {
+   "name": "nest_if_var_10",
+   "desc": "if 缩进嵌套 10 层（各层副作用不同）",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_if_var_10.py",
+   "src_lines": 14,
+   "src_bytes": 421,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.85,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 268
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 2.64
+   },
+   "fidelity": {
+    "src_depth": 15,
+    "prod_depth": 7,
+    "src_stmts": 14,
+    "prod_stmts": 5
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "10\n",
+    "prod_out": "10\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_if_var_30",
+   "desc": "if 缩进嵌套 30 层（各层副作用不同）",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_if_var_30.py",
+   "src_lines": 34,
+   "src_bytes": 2361,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 3.92,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 488
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 5.36
+   },
+   "fidelity": {
+    "src_depth": 35,
+    "prod_depth": 7,
+    "src_stmts": 34,
+    "prod_stmts": 5
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "30\n",
+    "prod_out": "30\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_if_var_60",
+   "desc": "if 缩进嵌套 60 层（各层副作用不同）",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_if_var_60.py",
+   "src_lines": 64,
+   "src_bytes": 8271,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 3.65,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 818
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 3.26
+   },
+   "fidelity": {
+    "src_depth": 65,
+    "prod_depth": 7,
+    "src_stmts": 64,
+    "prod_stmts": 5
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "60\n",
+    "prod_out": "60\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_if_var_90",
+   "desc": "if 缩进嵌套 90 层（各层副作用不同）",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_if_var_90.py",
+   "src_lines": 94,
+   "src_bytes": 17781,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.74,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 1148
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 2.62
+   },
+   "fidelity": {
+    "src_depth": 95,
+    "prod_depth": 7,
+    "src_stmts": 94,
+    "prod_stmts": 5
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "90\n",
+    "prod_out": "90\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  }
+ ]
+}

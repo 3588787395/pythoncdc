@@ -1,0 +1,2011 @@
+{
+ "rows": [
+  {
+   "slug": "repo_core_cfg_basic_block",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\basic_block.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\__pycache__\\basic_block.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_cfg_basic_block.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_cfg_basic_blockOK.py",
+   "features": [
+    "装饰器",
+    "注解",
+    "f-string",
+    "dataclass"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 2.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 40,
+    "units_total": 41,
+    "failures": [
+     "***<module>.BasicBlock: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 3.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 40,
+   "units_total": 41,
+   "n_fail_units": 1
+  },
+  {
+   "slug": "repo_core_cfg_builder",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\cfg_builder.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\__pycache__\\cfg_builder.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_cfg_builder.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_cfg_builderOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "f-string"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 3.1,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 33,
+    "units_total": 43,
+    "failures": [
+     "***<module>.ControlFlowGraph.to_dict: Failure: Different bytecode",
+     "***<module>.CFGBuilder: Failure: Different bytecode",
+     "***<module>.CFGBuilder.build: Failure: Different bytecode",
+     "***<module>.CFGBuilder._parse_instructions: Failure: Different control flow",
+     "***<module>.CFGBuilder._build_basic_blocks: Failure: Different control flow",
+     "***<module>.CFGBuilder._split_block_at_offset: Failure: Different control flow",
+     "***<module>.CFGBuilder._r4g_stack_delta: Failure: Different control flow",
+     "***<module>.CFGBuilder._r4g_split_merge_target: Failure: Different control flow",
+     "***<module>.CFGPrinter.print_cfg: Failure: Different bytecode",
+     "***None: Failure: Extra bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 4.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 33,
+   "units_total": 43,
+   "n_fail_units": 10
+  },
+  {
+   "slug": "repo_core_config",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\config.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\core\\__pycache__\\config.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_config.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_configOK.py",
+   "features": [
+    "注解",
+    "装饰器"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "success",
+    "units_success": 15,
+    "units_total": 15,
+    "failures": [],
+    "rc": 0,
+    "elapsed": 1.7,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "success",
+   "units_success": 15,
+   "units_total": 15,
+   "n_fail_units": 0
+  },
+  {
+   "slug": "repo_core_fast_stack",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\fast_stack.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\core\\__pycache__\\fast_stack.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_fast_stack.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_fast_stackOK.py",
+   "features": [
+    "注解",
+    "f-string"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.4,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 53,
+    "units_total": 57,
+    "failures": [
+     "***<module>.FastStack: Failure: Different bytecode",
+     "***<module>.FastStack.swap: Failure: Different bytecode",
+     "***<module>.StackHistory: Failure: Different bytecode",
+     "***<module>.DebugStack: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 2.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 53,
+   "units_total": 57,
+   "n_fail_units": 4
+  },
+  {
+   "slug": "repo_core_object_pool",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\object_pool.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\core\\__pycache__\\object_pool.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_object_pool.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_object_poolOK.py",
+   "features": [
+    "注解"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "success",
+    "units_success": 30,
+    "units_total": 30,
+    "failures": [],
+    "rc": 0,
+    "elapsed": 1.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "success",
+   "units_success": 30,
+   "units_total": 30,
+   "n_fail_units": 0
+  },
+  {
+   "slug": "repo_parsers_ctx",
+   "src": "F:\\Downloads\\pythoncdc-main\\parsers\\context_manager.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\parsers\\__pycache__\\context_manager.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_parsers_ctx.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_parsers_ctxOK.py",
+   "features": [
+    "注解",
+    "f-string"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.0,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "success",
+    "units_success": 19,
+    "units_total": 19,
+    "failures": [],
+    "rc": 0,
+    "elapsed": 2.0,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "success",
+   "units_success": 19,
+   "units_total": 19,
+   "n_fail_units": 0
+  },
+  {
+   "slug": "repo_scripts_verify",
+   "src": "F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\scripts\\__pycache__\\pyc_verify.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_scripts_verify.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_scripts_verifyOK.py",
+   "features": [
+    "注解",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "compile_error",
+    "units_success": 0,
+    "units_total": 0,
+    "failures": [],
+    "rc": 1,
+    "elapsed": 3.0,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "compile_error",
+   "units_success": 0,
+   "units_total": 0,
+   "n_fail_units": 0
+  },
+  {
+   "slug": "repo_tools_syntax_cov",
+   "src": "F:\\Downloads\\pythoncdc-main\\tools\\kb\\syntax_coverage.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\tools\\kb\\__pycache__\\syntax_coverage.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_tools_syntax_cov.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_tools_syntax_covOK.py",
+   "features": [
+    "except*",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 13,
+    "units_total": 14,
+    "failures": [
+     "***<module>.main: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 1.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 13,
+   "units_total": 14,
+   "n_fail_units": 1
+  },
+  {
+   "slug": "sp_anyio_fileio",
+   "src": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\_fileio.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\__pycache__\\_fileio.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_fileio.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_fileioOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "async",
+    "f-string",
+    "dataclass",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 116,
+    "units_total": 124,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.AsyncFile: Failure: Different bytecode",
+     "***<module>.AsyncFile.__aiter__: Failure: Different control flow",
+     "***<module>._PathIterator: Failure: Different bytecode",
+     "***<module>._PathIterator.__anext__: Failure: Different control flow",
+     "***<module>.Path: Failure: Different control flow",
+     "***<module>.Path.iterdir: Failure: Different control flow",
+     "***<module>.Path.walk: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 1.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 116,
+   "units_total": 124,
+   "n_fail_units": 8
+  },
+  {
+   "slug": "sp_anyio_functools",
+   "src": "D:\\Python\\Lib\\site-packages\\anyio\\functools.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\anyio\\__pycache__\\functools.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_functools.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_functoolsOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "async",
+    "海象",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 26,
+    "units_total": 34,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.AsyncCacheInfo: Failure detected at line number 28 and instruction offset 10: Different bytecode",
+     "***<module>.AsyncCacheParameters: Failure detected at line number 34 and instruction offset 10: Different bytecode",
+     "***<module>._LRUMethodWrapper: Failure: Different bytecode",
+     "***<module>.AsyncLRUCacheWrapper: Failure: Different bytecode",
+     "***<module>.AsyncLRUCacheWrapper.__call__: Failure: Different control flow",
+     "***<module>._LRUCacheWrapper: Failure: Different bytecode",
+     "***<module>.reduce: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 1.1,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 26,
+   "units_total": 34,
+   "n_fail_units": 8
+  },
+  {
+   "slug": "sp_anyio_lowlevel",
+   "src": "D:\\Python\\Lib\\site-packages\\anyio\\lowlevel.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\anyio\\__pycache__\\lowlevel.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_lowlevel.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_lowlevelOK.py",
+   "features": [
+    "注解",
+    "async",
+    "装饰器链",
+    "装饰器",
+    "f-string",
+    "dataclass",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.4,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 15,
+    "units_total": 20,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.EventLoopToken: Failure detected at line number 54 and instruction offset 14: Different bytecode",
+     "***<module>.RunvarToken: Failure: Different bytecode",
+     "***<module>.RunVar: Failure: Different bytecode",
+     "***<module>.RunVar.get: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 0.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 15,
+   "units_total": 20,
+   "n_fail_units": 5
+  },
+  {
+   "slug": "sp_anyio_sync",
+   "src": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\_synchronization.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\__pycache__\\_synchronization.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_sync.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_anyio_syncOK.py",
+   "features": [
+    "装饰器",
+    "注解",
+    "async",
+    "海象",
+    "dataclass",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 94,
+    "units_total": 110,
+    "failures": [
+     "***<module>.EventStatistics: Failure detected at line number 19 and instruction offset 14: Different bytecode",
+     "***<module>.CapacityLimiterStatistics: Failure detected at line number 25 and instruction offset 14: Different bytecode",
+     "***<module>.LockStatistics: Failure detected at line number 40 and instruction offset 14: Different bytecode",
+     "***<module>.ConditionStatistics: Failure detected at line number 51 and instruction offset 14: Different bytecode",
+     "***<module>.SemaphoreStatistics: Failure detected at line number 60 and instruction offset 14: Different bytecode",
+     "***<module>.Event: Failure: Different bytecode",
+     "***<module>.EventAdapter: Failure: Different bytecode",
+     "***<module>.Lock: Failure: Different bytecode",
+     "***<module>.LockAdapter: Failure: Different bytecode",
+     "***<module>.Condition: Failure: Different bytecode",
+     "***<module>.Condition.wait: Failure: Different control flow",
+     "***<module>.Semaphore: Failure: Different bytecode",
+     "***<module>.SemaphoreAdapter: Failure: Different bytecode",
+     "***<module>.CapacityLimiter: Failure: Different bytecode",
+     "***<module>.CapacityLimiterAdapter: Failure: Different bytecode",
+     "***<module>.ResourceGuard: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 1.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 94,
+   "units_total": 110,
+   "n_fail_units": 16
+  },
+  {
+   "slug": "sp_httpcore_models",
+   "src": "D:\\Python\\Lib\\site-packages\\httpcore\\_models.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\httpcore\\__pycache__\\_models.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_httpcore_models.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_httpcore_modelsOK.py",
+   "features": [
+    "注解",
+    "async",
+    "装饰器",
+    "f-string",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.6,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 33,
+    "units_total": 41,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.ByteStream: Failure: Different bytecode",
+     "***<module>.Origin: Failure: Different bytecode",
+     "***<module>.URL: Failure: Different bytecode",
+     "***<module>.URL.__init__: Failure: Different control flow",
+     "***<module>.Request: Failure: Different bytecode",
+     "***<module>.Response: Failure: Different bytecode",
+     "***<module>.Proxy: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 1.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 33,
+   "units_total": 41,
+   "n_fail_units": 8
+  },
+  {
+   "slug": "sp_packaging_specifiers",
+   "src": "D:\\Python\\Lib\\site-packages\\packaging\\specifiers.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\packaging\\__pycache__\\specifiers.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_packaging_specifiers.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_packaging_specifiersOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "装饰器链",
+    "f-string",
+    "海象",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "compile_error",
+    "units_success": 0,
+    "units_total": 0,
+    "failures": [],
+    "rc": 1,
+    "elapsed": 0.7,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "compile_error",
+   "units_success": 0,
+   "units_total": 0,
+   "n_fail_units": 0
+  },
+  {
+   "slug": "sp_packaging_version",
+   "src": "D:\\Python\\Lib\\site-packages\\packaging\\version.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\packaging\\__pycache__\\version.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_packaging_version.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_packaging_versionOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "装饰器链",
+    "f-string",
+    "海象",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "compile_error",
+    "units_success": 0,
+    "units_total": 0,
+    "failures": [],
+    "rc": 1,
+    "elapsed": 0.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "compile_error",
+   "units_success": 0,
+   "units_total": 0,
+   "n_fail_units": 0
+  },
+  {
+   "slug": "sp_pandas_indexing",
+   "src": "D:\\Python\\Lib\\site-packages\\pandas\\core\\indexing.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\pandas\\core\\__pycache__\\indexing.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_pandas_indexing.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_pandas_indexingOK.py",
+   "features": [
+    "装饰器",
+    "注解",
+    "f-string",
+    "except*",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 3.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 97,
+    "units_total": 119,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.IndexingMixin: Failure: Different bytecode",
+     "***<module>._LocationIndexer: Failure: Different bytecode",
+     "***<module>._LocationIndexer._getitem_lowerdim: Failure: Different control flow",
+     "***<module>._LocationIndexer._getitem_lowerdim.<genexpr>: Failure: Missing bytecode",
+     "***<module>._LocationIndexer._getitem_nested_tuple: Failure: Different control flow",
+     "***<module>._LocationIndexer._getitem_nested_tuple.<genexpr>: Failure: Different control flow",
+     "***<module>._LocIndexer: Failure: Different bytecode",
+     "***<module>._LocIndexer._getitem_axis: Failure: Different control flow",
+     "***<module>._LocIndexer._convert_to_indexer: Failure: Different control flow",
+     "***<module>._iLocIndexer: Failure: Different bytecode",
+     "***<module>._iLocIndexer._validate_key: Failure: Different control flow",
+     "***<module>._iLocIndexer._setitem_new_column: Failure detected at line number 1424 and instruction offset 172: Different bytecode",
+     "***<module>._iLocIndexer._setitem_with_indexer_split_path: Failure: Different control flow",
+     "***<module>._iLocIndexer._setitem_single_column: Failure: Different control flow",
+     "***<module>._iLocIndexer._setitem_single_block: Failure: Different control flow",
+     "***<module>._iLocIndexer._align_series: Failure: Different control flow",
+     "***<module>._iLocIndexer._align_series.<genexpr>: Failure: Different control flow",
+     "***<module>._ScalarAccessIndexer: Failure: Different bytecode",
+     "***<module>._AtIndexer: Failure: Different bytecode",
+     "***<module>._iAtIndexer: Failure: Different bytecode",
+     "***<module>.check_dict_or_set_indexers: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 5.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 97,
+   "units_total": 119,
+   "n_fail_units": 22
+  },
+  {
+   "slug": "sp_pydantic_dataclasses",
+   "src": "D:\\Python\\Lib\\site-packages\\pydantic\\_internal\\_dataclasses.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\pydantic\\_internal\\__pycache__\\_dataclasses.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_pydantic_dataclasses.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_pydantic_dataclassesOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "f-string",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.7,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "compile_error",
+    "units_success": 0,
+    "units_total": 0,
+    "failures": [],
+    "rc": 1,
+    "elapsed": 1.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "compile_error",
+   "units_success": 0,
+   "units_total": 0,
+   "n_fail_units": 0
+  },
+  {
+   "slug": "sp_pydantic_fields",
+   "src": "D:\\Python\\Lib\\site-packages\\pydantic\\fields.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\pydantic\\__pycache__\\fields.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_pydantic_fields.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_pydantic_fieldsOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "装饰器链",
+    "f-string",
+    "海象",
+    "dataclass",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.7,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "compile_error",
+    "units_success": 0,
+    "units_total": 0,
+    "failures": [],
+    "rc": 1,
+    "elapsed": 1.7,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "compile_error",
+   "units_success": 0,
+   "units_total": 0,
+   "n_fail_units": 0
+  },
+  {
+   "slug": "sp_sqlalchemy_collections",
+   "src": "D:\\Python\\Lib\\site-packages\\sqlalchemy\\orm\\collections.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\sqlalchemy\\orm\\__pycache__\\collections.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_sqlalchemy_collections.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_sqlalchemy_collectionsOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "装饰器链",
+    "except*"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 2.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "compile_error",
+    "units_success": 0,
+    "units_total": 0,
+    "failures": [],
+    "rc": 1,
+    "elapsed": 1.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "compile_error",
+   "units_success": 0,
+   "units_total": 0,
+   "n_fail_units": 0
+  },
+  {
+   "slug": "sp_starlette_formparsers",
+   "src": "D:\\Python\\Lib\\site-packages\\starlette\\formparsers.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\starlette\\__pycache__\\formparsers.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_starlette_formparsers.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_starlette_formparsersOK.py",
+   "features": [
+    "装饰器",
+    "注解",
+    "async",
+    "f-string",
+    "dataclass",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 20,
+    "units_total": 25,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.MultipartPart: Failure detected at line number 34 and instruction offset 14: Different bytecode",
+     "***<module>.MultiPartException: Failure: Different bytecode",
+     "***<module>.FormParser: Failure: Different bytecode",
+     "***<module>.MultiPartParser: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 1.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 20,
+   "units_total": 25,
+   "n_fail_units": 5
+  },
+  {
+   "slug": "sp_sympy_qexpr",
+   "src": "D:\\Python\\Lib\\site-packages\\sympy\\physics\\quantum\\qexpr.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\sympy\\physics\\quantum\\__pycache__\\qexpr.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_sympy_qexpr.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_sympy_qexprOK.py",
+   "features": [
+    "装饰器",
+    "except*"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "success",
+    "units_success": 36,
+    "units_total": 36,
+    "failures": [],
+    "rc": 0,
+    "elapsed": 2.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "success",
+   "units_success": 36,
+   "units_total": 36,
+   "n_fail_units": 0
+  },
+  {
+   "slug": "stdlib_argparse",
+   "src": "D:\\Python\\Lib\\argparse.py",
+   "pyc_src": "D:\\Python\\Lib\\__pycache__\\argparse.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_argparse.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_argparseOK.py",
+   "features": [
+    "f-string",
+    "生成器"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 4.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 185,
+    "units_total": 192,
+    "failures": [
+     "***<module>.HelpFormatter._format_actions_usage: Failure: Different control flow",
+     "***<module>.HelpFormatter._iter_indented_subactions: Failure: Different control flow",
+     "***<module>._ActionsContainer.add_argument: Failure: Different control flow",
+     "***<module>.ArgumentParser.__init__: Failure: Different control flow",
+     "***<module>.ArgumentParser._parse_known_args: Failure: Different control flow",
+     "***<module>.ArgumentParser._parse_known_args.consume_optional: Failure: Different control flow",
+     "***<module>.ArgumentParser.parse_known_intermixed_args: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 6.1,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 185,
+   "units_total": 192,
+   "n_fail_units": 7
+  },
+  {
+   "slug": "stdlib_ast",
+   "src": "D:\\Python\\Lib\\ast.py",
+   "pyc_src": "D:\\Python\\Lib\\__pycache__\\ast.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_ast.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_astOK.py",
+   "features": [
+    "装饰器",
+    "海象",
+    "f-string",
+    "生成器",
+    "except*"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 3.4,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 170,
+    "units_total": 185,
+    "failures": [
+     "***<module>: Failure detected at line number 521 and instruction offset 410: Different bytecode",
+     "***<module>.literal_eval._convert: Failure: Different control flow",
+     "***<module>.dump._format: Failure detected at line number 139 and instruction offset 136: Different bytecode",
+     "***<module>.NodeVisitor.visit_Constant: Failure: Different control flow",
+     "***<module>.Ellipsis.__new__: Failure detected at line number 518 and instruction offset 10: Different bytecode",
+     "***<module>._Unparser.visit_ImportFrom: Failure: Different control flow",
+     "***<module>._Unparser.visit_AnnAssign: Failure: Different bytecode",
+     "***<module>._Unparser.visit_ExceptHandler: Failure: Different control flow",
+     "***<module>._Unparser.visit_ClassDef: Failure: Different bytecode",
+     "***<module>._Unparser.visit_If: Failure: Different control flow",
+     "***<module>._Unparser._str_literal_helper: Failure: Different bytecode",
+     "***<module>._Unparser._str_literal_helper.<lambda>: Failure: Missing bytecode",
+     "***<module>._Unparser.visit_JoinedStr: Failure: Different bytecode",
+     "***<module>._Unparser.visit_Constant: Failure: Different control flow",
+     "***<module>._Unparser.visit_Tuple: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 7.1,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 170,
+   "units_total": 185,
+   "n_fail_units": 15
+  },
+  {
+   "slug": "stdlib_asyncio_base_events",
+   "src": "D:\\Python\\Lib\\asyncio\\base_events.py",
+   "pyc_src": "D:\\Python\\Lib\\asyncio\\__pycache__\\base_events.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_asyncio_base_events.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_asyncio_base_eventsOK.py",
+   "features": [
+    "async",
+    "装饰器",
+    "f-string",
+    "asyncio"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 3.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 99,
+    "units_total": 119,
+    "failures": [
+     "***<module>.Server: Failure: Different bytecode",
+     "***<module>.Server.wait_closed: Failure: Different control flow",
+     "***<module>.BaseEventLoop.shutdown_asyncgens: Failure: Different control flow",
+     "***<module>.BaseEventLoop.shutdown_asyncgens.<listcomp>: Failure: Missing bytecode",
+     "***<module>.BaseEventLoop.run_until_complete: Failure: Different control flow",
+     "***<module>.BaseEventLoop.close: Failure: Different control flow",
+     "***<module>.BaseEventLoop._sock_sendfile_fallback: Failure: Different control flow",
+     "***<module>.BaseEventLoop._connect_sock: Failure: Different control flow",
+     "***<module>.BaseEventLoop.create_connection: Failure: Different control flow",
+     "***<module>.BaseEventLoop.sendfile: Failure: Different control flow",
+     "***<module>.BaseEventLoop._sendfile_fallback: Failure: Different control flow",
+     "***<module>.BaseEventLoop.create_datagram_endpoint: Failure: Different control flow",
+     "***<module>.BaseEventLoop.create_datagram_endpoint.<listcomp>: Failure: Different control flow",
+     "***<module>.BaseEventLoop._create_server_getaddrinfo: Failure: Different control flow",
+     "***<module>.BaseEventLoop.create_server: Failure: Different control flow",
+     "***<module>.BaseEventLoop.connect_accepted_socket: Failure: Different control flow",
+     "***<module>.BaseEventLoop.subprocess_shell: Failure: Different control flow",
+     "***<module>.BaseEventLoop.subprocess_exec: Failure: Different control flow",
+     "***<module>.BaseEventLoop.call_exception_handler: Failure: Different control flow",
+     "***<module>.BaseEventLoop._run_once: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 5.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 99,
+   "units_total": 119,
+   "n_fail_units": 20
+  },
+  {
+   "slug": "stdlib_asyncio_streams",
+   "src": "D:\\Python\\Lib\\asyncio\\streams.py",
+   "pyc_src": "D:\\Python\\Lib\\asyncio\\__pycache__\\streams.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_asyncio_streams.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_asyncio_streamsOK.py",
+   "features": [
+    "async",
+    "装饰器",
+    "f-string"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 53,
+    "units_total": 60,
+    "failures": [
+     "***<module>.FlowControlMixin.pause_writing: Failure detected at line number 106 and instruction offset 4: Different bytecode",
+     "***<module>.StreamWriter.drain: Failure: Different control flow",
+     "***<module>.StreamReader.feed_data: Failure detected at line number 403 and instruction offset 4: Different bytecode",
+     "***<module>.StreamReader._wait_for_data: Failure detected at line number 427 and instruction offset 28: Different bytecode",
+     "***<module>.StreamReader.readuntil: Failure: Different control flow",
+     "***<module>.StreamReader.read: Failure: Different control flow",
+     "***<module>.StreamReader.__anext__: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 2.7,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 53,
+   "units_total": 60,
+   "n_fail_units": 7
+  },
+  {
+   "slug": "stdlib_asyncio_taskgroups",
+   "src": "D:\\Python\\Lib\\asyncio\\taskgroups.py",
+   "pyc_src": "D:\\Python\\Lib\\asyncio\\__pycache__\\taskgroups.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_asyncio_taskgroups.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_asyncio_taskgroupsOK.py",
+   "features": [
+    "async",
+    "注解",
+    "f-string",
+    "ExceptionGroup",
+    "TaskGroup",
+    "asyncio"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.4,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 9,
+    "units_total": 10,
+    "failures": [
+     "***<module>.TaskGroup.__aexit__: Failure detected at line number 76 and instruction offset 210: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 2.4,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 9,
+   "units_total": 10,
+   "n_fail_units": 1
+  },
+  {
+   "slug": "stdlib_asyncio_tasks",
+   "src": "D:\\Python\\Lib\\asyncio\\tasks.py",
+   "pyc_src": "D:\\Python\\Lib\\asyncio\\__pycache__\\tasks.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_asyncio_tasks.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_asyncio_tasksOK.py",
+   "features": [
+    "async",
+    "装饰器",
+    "f-string",
+    "生成器",
+    "except*",
+    "asyncio"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 43,
+    "units_total": 53,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>._set_task_name: Failure: Different bytecode",
+     "***<module>.wait_for: Failure: Different control flow",
+     "***<module>._wait: Failure: Different bytecode",
+     "***<module>._wait._on_completion: Failure: Different control flow",
+     "***<module>.as_completed: Failure: Different bytecode",
+     "***<module>.as_completed._wait_for_one: Failure: Different control flow",
+     "***<module>.sleep: Failure: Different control flow",
+     "***<module>._wrap_awaitable: Failure: Different control flow",
+     "***<module>.gather._done_callback: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 2.0,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 43,
+   "units_total": 53,
+   "n_fail_units": 10
+  },
+  {
+   "slug": "stdlib_asyncio_timeouts",
+   "src": "D:\\Python\\Lib\\asyncio\\timeouts.py",
+   "pyc_src": "D:\\Python\\Lib\\asyncio\\__pycache__\\timeouts.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_asyncio_timeouts.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_asyncio_timeoutsOK.py",
+   "features": [
+    "装饰器",
+    "注解",
+    "async",
+    "f-string",
+    "asyncio"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.7,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 12,
+    "units_total": 13,
+    "failures": [
+     "***<module>.Timeout: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 1.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 12,
+   "units_total": 13,
+   "n_fail_units": 1
+  },
+  {
+   "slug": "stdlib_contextlib",
+   "src": "D:\\Python\\Lib\\contextlib.py",
+   "pyc_src": "D:\\Python\\Lib\\__pycache__\\contextlib.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_contextlib.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_contextlibOK.py",
+   "features": [
+    "装饰器",
+    "async",
+    "f-string"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 80,
+    "units_total": 86,
+    "failures": [
+     "***<module>._GeneratorContextManagerBase.__init__: Failure: Different bytecode",
+     "***<module>._GeneratorContextManager.__exit__: Failure: Different control flow",
+     "***<module>._AsyncGeneratorContextManager.__aexit__: Failure: Different control flow",
+     "***<module>.ExitStack.__exit__._fix_exception_context: Failure: Different control flow",
+     "***<module>.AsyncExitStack.__aexit__: Failure: Different control flow",
+     "***<module>.AsyncExitStack.__aexit__._fix_exception_context: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 2.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 80,
+   "units_total": 86,
+   "n_fail_units": 6
+  },
+  {
+   "slug": "stdlib_csv",
+   "src": "D:\\Python\\Lib\\csv.py",
+   "pyc_src": "D:\\Python\\Lib\\__pycache__\\csv.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_csv.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_csvOK.py",
+   "features": [
+    "装饰器",
+    "except*",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.1,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 29,
+    "units_total": 32,
+    "failures": [
+     "***<module>.Sniffer._guess_quote_and_delimiter: Failure: Different control flow",
+     "***<module>.Sniffer._guess_delimiter: Failure: Different control flow",
+     "***<module>.Sniffer.has_header: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 2.1,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 29,
+   "units_total": 32,
+   "n_fail_units": 3
+  },
+  {
+   "slug": "stdlib_dataclasses",
+   "src": "D:\\Python\\Lib\\dataclasses.py",
+   "pyc_src": "D:\\Python\\Lib\\__pycache__\\dataclasses.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_dataclasses.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_dataclassesOK.py",
+   "features": [
+    "装饰器",
+    "match",
+    "f-string",
+    "生成器"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 2.1,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 83,
+    "units_total": 87,
+    "failures": [
+     "***<module>._get_field: Failure: Different control flow",
+     "***<module>._hash_add.<listcomp>: Failure detected at line number 289 and instruction offset 12: Different bytecode",
+     "***<module>._process_class: Failure: Different control flow",
+     "***<module>._add_slots: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 3.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 83,
+   "units_total": 87,
+   "n_fail_units": 4
+  },
+  {
+   "slug": "stdlib_difflib",
+   "src": "D:\\Python\\Lib\\difflib.py",
+   "pyc_src": "D:\\Python\\Lib\\__pycache__\\difflib.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_difflib.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_difflibOK.py",
+   "features": [
+    "f-string",
+    "生成器"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 2.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 45,
+    "units_total": 62,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.SequenceMatcher.__chain_b: Failure: Different bytecode",
+     "***<module>.SequenceMatcher.find_longest_match: Failure: Different control flow",
+     "***<module>.SequenceMatcher.get_matching_blocks: Failure: Different bytecode",
+     "***<module>.SequenceMatcher.get_opcodes: Failure: Different bytecode",
+     "***<module>.SequenceMatcher.get_grouped_opcodes: Failure: Different control flow",
+     "***<module>.SequenceMatcher.quick_ratio: Failure: Different bytecode",
+     "***<module>.get_close_matches: Failure: Different control flow",
+     "***<module>.Differ._fancy_replace: Failure: Different control flow",
+     "***<module>.Differ._qformat: Failure: Different bytecode",
+     "***<module>.unified_diff: Failure: Different bytecode",
+     "***<module>.context_diff: Failure: Different bytecode",
+     "***<module>._mdiff: Failure: Different control flow",
+     "***<module>._mdiff._make_line: Failure: Different bytecode",
+     "***<module>._mdiff._line_pair_iterator: Failure: Different control flow",
+     "***<module>.HtmlDiff._line_wrapper: Failure: Different control flow",
+     "***<module>.HtmlDiff._collect_lines: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 3.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 45,
+   "units_total": 62,
+   "n_fail_units": 17
+  },
+  {
+   "slug": "stdlib_enum",
+   "src": "D:\\Python\\Lib\\enum.py",
+   "pyc_src": "D:\\Python\\Lib\\__pycache__\\enum.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_enum.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_enumOK.py",
+   "features": [
+    "装饰器",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 3.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "compile_error",
+    "units_success": 0,
+    "units_total": 0,
+    "failures": [],
+    "rc": 1,
+    "elapsed": 2.7,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "compile_error",
+   "units_success": 0,
+   "units_total": 0,
+   "n_fail_units": 0
+  },
+  {
+   "slug": "stdlib_functools",
+   "src": "D:\\Python\\Lib\\functools.py",
+   "pyc_src": "D:\\Python\\Lib\\__pycache__\\functools.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_functools.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_functoolsOK.py",
+   "features": [
+    "装饰器",
+    "f-string"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 2.1,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 79,
+    "units_total": 92,
+    "failures": [
+     "***<module>.update_wrapper: Failure: Different control flow",
+     "***<module>.partial.__new__: Failure: Different bytecode",
+     "***<module>.partial.__call__: Failure: Different bytecode",
+     "***<module>.partial.__reduce__: Failure: Different control flow",
+     "***<module>.partial.__setstate__: Failure: Different control flow",
+     "***<module>.partialmethod.__init__: Failure: Different bytecode",
+     "***<module>.partialmethod._make_unbound_method._method: Failure: Different bytecode",
+     "***<module>.lru_cache: Failure: Different bytecode",
+     "***<module>.lru_cache.<lambda>: Failure: Missing bytecode",
+     "***<module>._lru_cache_wrapper.wrapper: Failure detected at line number 405 and instruction offset 74: Different bytecode",
+     "***<module>._c3_merge: Failure: Different control flow",
+     "***<module>._c3_mro: Failure: Different control flow",
+     "***<module>._find_impl: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 3.1,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 79,
+   "units_total": 92,
+   "n_fail_units": 13
+  },
+  {
+   "slug": "stdlib_http_cookiejar",
+   "src": "D:\\Python\\Lib\\http\\cookiejar.py",
+   "pyc_src": "D:\\Python\\Lib\\http\\__pycache__\\cookiejar.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_http_cookiejar.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_http_cookiejarOK.py",
+   "features": [
+    "f-string",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 3.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 90,
+    "units_total": 105,
+    "failures": [
+     "***<module>._timegm: Failure: Different control flow",
+     "***<module>.split_header_words: Failure detected at line number 334 and instruction offset 8: Different bytecode",
+     "***<module>.user_domain_match: Failure: Different control flow",
+     "***<module>.DefaultCookiePolicy.set_ok_version: Failure: Different control flow",
+     "***<module>.DefaultCookiePolicy.set_ok_path: Failure: Different control flow",
+     "***<module>.DefaultCookiePolicy.set_ok_domain: Failure: Different control flow",
+     "***<module>.deepvalues: Failure: Different control flow",
+     "***<module>.CookieJar.add_cookie_header: Failure detected at line number 1109 and instruction offset 28: Different bytecode",
+     "***<module>.CookieJar._normalized_cookie_tuples: Failure: Different control flow",
+     "***<module>.CookieJar.make_cookies: Failure: Different control flow",
+     "***<module>.CookieJar.set_cookie_if_ok: Failure detected at line number 1307 and instruction offset 20: Different bytecode",
+     "***<module>.CookieJar.clear: Failure: Different control flow",
+     "***<module>.FileCookieJar.revert: Failure: Different control flow",
+     "***<module>.LWPCookieJar.as_lwp_str: Failure: Different control flow",
+     "***<module>.MozillaCookieJar.save: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 5.1,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 90,
+   "units_total": 105,
+   "n_fail_units": 15
+  },
+  {
+   "slug": "stdlib_ipaddress",
+   "src": "D:\\Python\\Lib\\ipaddress.py",
+   "pyc_src": "D:\\Python\\Lib\\__pycache__\\ipaddress.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_ipaddress.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_ipaddressOK.py",
+   "features": [
+    "装饰器",
+    "装饰器链",
+    "f-string",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 2.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 163,
+    "units_total": 166,
+    "failures": [
+     "***<module>._find_address_range: Failure: Different bytecode",
+     "***<module>._BaseNetwork.address_exclude: Failure: Different control flow",
+     "***<module>._BaseNetwork.is_private.<genexpr>: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 5.7,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 163,
+   "units_total": 166,
+   "n_fail_units": 3
+  },
+  {
+   "slug": "stdlib_json_encoder",
+   "src": "D:\\Python\\Lib\\json\\encoder.py",
+   "pyc_src": "D:\\Python\\Lib\\json\\__pycache__\\encoder.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_json_encoder.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_json_encoderOK.py",
+   "features": [
+    "f-string",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.6,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 12,
+    "units_total": 15,
+    "failures": [
+     "***<module>._make_iterencode: Failure: Different bytecode",
+     "***<module>._make_iterencode._iterencode_list: Failure: Different bytecode",
+     "***<module>._make_iterencode._iterencode_dict: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 2.1,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 12,
+   "units_total": 15,
+   "n_fail_units": 3
+  },
+  {
+   "slug": "stdlib_re__parser",
+   "src": "D:\\Python\\Lib\\re\\_parser.py",
+   "pyc_src": "D:\\Python\\Lib\\re\\__pycache__\\_parser.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_re__parser.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_re__parserOK.py",
+   "features": [
+    "装饰器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 5.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 35,
+    "units_total": 43,
+    "failures": [
+     "***<module>.SubPattern.getwidth: Failure: Different bytecode",
+     "***<module>.Tokenizer.getuntil: Failure: Different control flow",
+     "***<module>._class_escape: Failure: Different control flow",
+     "***<module>._escape: Failure: Different control flow",
+     "***<module>._parse_sub: Failure: Different control flow",
+     "***<module>._parse: Failure: Different control flow",
+     "***<module>._parse_flags: Failure: Different control flow",
+     "***<module>.parse_template.<listcomp>: Failure detected at line number 906 and instruction offset 10: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 5.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 35,
+   "units_total": 43,
+   "n_fail_units": 8
+  },
+  {
+   "slug": "stdlib_statistics",
+   "src": "D:\\Python\\Lib\\statistics.py",
+   "pyc_src": "D:\\Python\\Lib\\__pycache__\\statistics.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_statistics.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_statisticsOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "f-string",
+    "海象",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 71,
+    "units_total": 77,
+    "failures": [
+     "***<module>._sum: Failure detected at line number 169 and instruction offset 124: Different bytecode",
+     "***<module>._ss: Failure detected at line number 202 and instruction offset 220: Different bytecode",
+     "***<module>._exact_ratio: Failure detected at line number 256 and instruction offset 42: Different bytecode",
+     "***<module>.harmonic_mean: Failure: Different control flow",
+     "***<module>.NormalDist.samples: Failure: Different bytecode",
+     "***<module>.NormalDist.samples.<listcomp>: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 2.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 71,
+   "units_total": 77,
+   "n_fail_units": 6
+  },
+  {
+   "slug": "stdlib_subprocess",
+   "src": "D:\\Python\\Lib\\subprocess.py",
+   "pyc_src": "D:\\Python\\Lib\\__pycache__\\subprocess.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_subprocess.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_subprocessOK.py",
+   "features": [
+    "装饰器",
+    "海象",
+    "f-string",
+    "生成器"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 3.6,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 68,
+    "units_total": 78,
+    "failures": [
+     "***<module>.call: Failure: Different bytecode",
+     "***<module>.run: Failure: Different control flow",
+     "***<module>.Popen.__init__: Failure: Different control flow",
+     "***<module>.Popen.__exit__: Failure: Different control flow",
+     "***<module>.Popen._check_timeout: Failure: Different bytecode",
+     "***<module>.Popen._on_error_fd_closer: Failure: Different control flow",
+     "***<module>.Popen._execute_child: Failure detected at line number 1032 and instruction offset 2: Different bytecode",
+     "***<module>.Popen._execute_child: Failure: Different control flow",
+     "***<module>.Popen._internal_poll: Failure: Different control flow",
+     "***<module>.Popen._wait: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 5.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 68,
+   "units_total": 78,
+   "n_fail_units": 10
+  },
+  {
+   "slug": "stdlib_tarfile",
+   "src": "D:\\Python\\Lib\\tarfile.py",
+   "pyc_src": "D:\\Python\\Lib\\__pycache__\\tarfile.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_tarfile.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_tarfileOK.py",
+   "features": [
+    "装饰器",
+    "f-string",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 5.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 141,
+    "units_total": 160,
+    "failures": [
+     "***<module>.itn: Failure: Different control flow",
+     "***<module>.copyfileobj: Failure: Different control flow",
+     "***<module>._Stream.__init__: Failure: Different control flow",
+     "***<module>._Stream._init_read_gz: Failure: Different control flow",
+     "***<module>._Stream._read: Failure: Different control flow",
+     "***<module>._FileInFile.read: Failure: Different control flow",
+     "***<module>.tar_filter: Failure: Different bytecode",
+     "***<module>.data_filter: Failure: Different bytecode",
+     "***<module>.TarInfo.create_pax_header: Failure: Different control flow",
+     "***<module>.TarFile.__init__: Failure: Different control flow",
+     "***<module>.TarFile.close: Failure detected at line number 1421 and instruction offset 36: Different bytecode",
+     "***<module>.TarFile.gettarinfo: Failure: Different control flow",
+     "***<module>.TarFile.list: Failure: Different control flow",
+     "***<module>.TarFile.add: Failure: Different control flow",
+     "***<module>.TarFile.next: Failure: Different control flow",
+     "***<module>.TarFile._getmember: Failure: Different control flow",
+     "***<module>.TarFile._load: Failure: Different bytecode",
+     "***<module>.TarFile._check: Failure: Different control flow",
+     "***<module>.main: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 9.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 141,
+   "units_total": 160,
+   "n_fail_units": 19
+  },
+  {
+   "slug": "stdlib_tomllib_parser",
+   "src": "D:\\Python\\Lib\\tomllib\\_parser.py",
+   "pyc_src": "D:\\Python\\Lib\\tomllib\\__pycache__\\_parser.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_tomllib_parser.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_tomllib_parserOK.py",
+   "features": [
+    "注解",
+    "f-string",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 31,
+    "units_total": 43,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.loads: Failure: Different control flow",
+     "***<module>.Flags: Failure: Different bytecode",
+     "***<module>.Flags.set: Failure: Different bytecode",
+     "***<module>.Flags.is_: Failure detected at line number 129 and instruction offset 128: Different bytecode",
+     "***<module>.NestedDict: Failure: Different bytecode",
+     "***<module>.Output: Failure detected at line number 155 and instruction offset 10: Different bytecode",
+     "***<module>.key_value_rule: Failure: Different bytecode",
+     "***<module>.parse_inline_table: Failure: Different bytecode",
+     "***<module>.parse_basic_str: Failure: Different bytecode",
+     "***<module>.suffixed_err: Failure: Different bytecode",
+     "***<module>.make_safe_parse_float: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 3.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 31,
+   "units_total": 43,
+   "n_fail_units": 12
+  },
+  {
+   "slug": "stdlib_typing",
+   "src": "D:\\Python\\Lib\\typing.py",
+   "pyc_src": "D:\\Python\\Lib\\__pycache__\\typing.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_typing.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_typingOK.py",
+   "features": [
+    "装饰器",
+    "装饰器链",
+    "注解",
+    "f-string",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 3.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 285,
+    "units_total": 309,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>._is_param_expr: Failure detected at line number 81 and instruction offset 2: Different bytecode",
+     "***<module>._should_unflatten_callable_args: Failure: Different control flow",
+     "***<module>._type_repr: Failure: Different bytecode",
+     "***<module>._check_generic: Failure detected at line number 162 and instruction offset 34: Different bytecode",
+     "***<module>._unpack_args: Failure: Different control flow",
+     "***<module>._deduplicate: Failure detected at line number 184 and instruction offset 72: Different bytecode",
+     "***<module>.Concatenate: Failure: Different bytecode",
+     "***<module>.TypeVarTuple.__typing_prepare_subst__: Failure: Different bytecode",
+     "***<module>.ParamSpec.__typing_prepare_subst__: Failure: Different control flow",
+     "***<module>._GenericAlias.__init__.<genexpr>: Failure detected at line number 1034 and instruction offset 18: Different bytecode",
+     "***<module>._GenericAlias.__getitem__: Failure: Different control flow",
+     "***<module>._GenericAlias._determine_new_args: Failure: Different control flow",
+     "***<module>._GenericAlias.__mro_entries__: Failure: Different control flow",
+     "***<module>._CallableGenericAlias.__reduce__: Failure: Different control flow",
+     "***<module>._TupleType.__getitem__: Failure: Different bytecode",
+     "***<module>._ProtocolMeta.__instancecheck__: Failure: Different bytecode",
+     "***<module>._ProtocolMeta.__instancecheck__.<genexpr>: Failure: Different control flow",
+     "***<module>.Protocol.__init_subclass__: Failure: Different control flow",
+     "***<module>._make_nmtuple: Failure detected at line number 2182 and instruction offset 44: Different bytecode",
+     "***<module>.NamedTupleMeta.__new__: Failure: Different control flow",
+     "***<module>.IO: Failure: Different bytecode",
+     "***<module>.BinaryIO: Failure: Different bytecode",
+     "***<module>.TextIO: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 7.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 285,
+   "units_total": 309,
+   "n_fail_units": 24
+  },
+  {
+   "slug": "stdlib_unittest_case",
+   "src": "D:\\Python\\Lib\\unittest\\case.py",
+   "pyc_src": "D:\\Python\\Lib\\unittest\\__pycache__\\case.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_unittest_case.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_unittest_caseOK.py",
+   "features": [
+    "装饰器",
+    "f-string",
+    "生成器"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 2.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 123,
+    "units_total": 131,
+    "failures": [
+     "***<module>._Outcome.testPartExecutor: Failure: Different control flow",
+     "***<module>.TestCase._addExpectedFailure: Failure: Different bytecode",
+     "***<module>.TestCase._addUnexpectedSuccess: Failure: Different bytecode",
+     "***<module>.TestCase.run: Failure: Different control flow",
+     "***<module>.TestCase.doCleanups: Failure: Different control flow",
+     "***<module>.TestCase.debug: Failure: Different bytecode",
+     "***<module>.TestCase.assertSequenceEqual: Failure: Different control flow",
+     "***<module>.TestCase.assertCountEqual: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 4.0,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 123,
+   "units_total": 131,
+   "n_fail_units": 8
+  },
+  {
+   "slug": "stdlib_urllib_request",
+   "src": "D:\\Python\\Lib\\urllib\\request.py",
+   "pyc_src": "D:\\Python\\Lib\\urllib\\__pycache__\\request.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_urllib_request.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_urllib_requestOK.py",
+   "features": [
+    "装饰器",
+    "f-string",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 5.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 184,
+    "units_total": 194,
+    "failures": [
+     "***<module>.urlretrieve: Failure: Different control flow",
+     "***<module>.urlcleanup: Failure: Different bytecode",
+     "***<module>.Request.header_items: Failure: Different bytecode",
+     "***<module>.HTTPRedirectHandler.redirect_request: Failure: Different control flow",
+     "***<module>.HTTPPasswordMgr.find_user_password: Failure: Different bytecode",
+     "***<module>.parse_http_list: Failure: Different control flow",
+     "***<module>.FileHandler.open_local_file: Failure: Different control flow",
+     "***<module>.FTPHandler.ftp_open: Failure: Different control flow",
+     "***<module>.URLopener.retrieve: Failure: Different control flow",
+     "***<module>.FancyURLopener.http_error_302: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 7.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 184,
+   "units_total": 194,
+   "n_fail_units": 10
+  },
+  {
+   "slug": "stdlib_xml_ElementPath",
+   "src": "D:\\Python\\Lib\\xml\\etree\\ElementPath.py",
+   "pyc_src": "D:\\Python\\Lib\\xml\\etree\\__pycache__\\ElementPath.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_xml_ElementPath.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\stdlib_xml_ElementPathOK.py",
+   "features": [
+    "f-string",
+    "海象",
+    "生成器"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 35,
+    "units_total": 39,
+    "failures": [
+     "***<module>.xpath_tokenizer: Failure: Different control flow",
+     "***<module>.get_parent_map: Failure: Different bytecode",
+     "***<module>.prepare_predicate: Failure: Different control flow",
+     "***<module>.iterfind: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 2.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true,
+   "status": "failure",
+   "units_success": 35,
+   "units_total": 39,
+   "n_fail_units": 4
+  }
+ ]
+}

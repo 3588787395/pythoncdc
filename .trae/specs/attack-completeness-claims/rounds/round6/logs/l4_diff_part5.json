@@ -1,0 +1,203 @@
+{
+ "rows": [
+  {
+   "slug": "repo_core_object_pool",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\object_pool.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\core\\__pycache__\\object_pool.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_object_pool.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_object_poolOK.py",
+   "features": [
+    "注解"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "success",
+    "units_success": 30,
+    "units_total": 30,
+    "failures": [],
+    "rc": 0,
+    "elapsed": 1.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "repo_core_cfg_basic_block",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\basic_block.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\__pycache__\\basic_block.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_cfg_basic_block.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_cfg_basic_blockOK.py",
+   "features": [
+    "装饰器",
+    "注解",
+    "f-string",
+    "dataclass"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 2.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 40,
+    "units_total": 41,
+    "failures": [
+     "***<module>.BasicBlock: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 3.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "repo_core_cfg_builder",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\cfg_builder.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\core\\cfg\\__pycache__\\cfg_builder.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_cfg_builder.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_cfg_builderOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "f-string"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 3.1,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 33,
+    "units_total": 43,
+    "failures": [
+     "***<module>.ControlFlowGraph.to_dict: Failure: Different bytecode",
+     "***<module>.CFGBuilder: Failure: Different bytecode",
+     "***<module>.CFGBuilder.build: Failure: Different bytecode",
+     "***<module>.CFGBuilder._parse_instructions: Failure: Different control flow",
+     "***<module>.CFGBuilder._build_basic_blocks: Failure: Different control flow",
+     "***<module>.CFGBuilder._split_block_at_offset: Failure: Different control flow",
+     "***<module>.CFGBuilder._r4g_stack_delta: Failure: Different control flow",
+     "***<module>.CFGBuilder._r4g_split_merge_target: Failure: Different control flow",
+     "***<module>.CFGPrinter.print_cfg: Failure: Different bytecode",
+     "***None: Failure: Extra bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 4.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "repo_parsers_ctx",
+   "src": "F:\\Downloads\\pythoncdc-main\\parsers\\context_manager.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\parsers\\__pycache__\\context_manager.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_parsers_ctx.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_parsers_ctxOK.py",
+   "features": [
+    "注解",
+    "f-string"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.0,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "success",
+    "units_success": 19,
+    "units_total": 19,
+    "failures": [],
+    "rc": 0,
+    "elapsed": 2.0,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "repo_scripts_verify",
+   "src": "F:\\Downloads\\pythoncdc-main\\scripts\\pyc_verify.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\scripts\\__pycache__\\pyc_verify.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_scripts_verify.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_scripts_verifyOK.py",
+   "features": [
+    "注解",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "compile_error",
+    "units_success": 0,
+    "units_total": 0,
+    "failures": [],
+    "rc": 1,
+    "elapsed": 3.0,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "repo_tools_syntax_cov",
+   "src": "F:\\Downloads\\pythoncdc-main\\tools\\kb\\syntax_coverage.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\tools\\kb\\__pycache__\\syntax_coverage.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_tools_syntax_cov.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_tools_syntax_covOK.py",
+   "features": [
+    "except*",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 13,
+    "units_total": 14,
+    "failures": [
+     "***<module>.main: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 1.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  }
+ ],
+ "start": 40,
+ "count": 6
+}

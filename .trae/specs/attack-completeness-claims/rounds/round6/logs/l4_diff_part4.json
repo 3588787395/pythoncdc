@@ -1,0 +1,298 @@
+{
+ "rows": [
+  {
+   "slug": "sp_starlette_formparsers",
+   "src": "D:\\Python\\Lib\\site-packages\\starlette\\formparsers.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\starlette\\__pycache__\\formparsers.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_starlette_formparsers.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_starlette_formparsersOK.py",
+   "features": [
+    "装饰器",
+    "注解",
+    "async",
+    "f-string",
+    "dataclass",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 20,
+    "units_total": 25,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.MultipartPart: Failure detected at line number 34 and instruction offset 14: Different bytecode",
+     "***<module>.MultiPartException: Failure: Different bytecode",
+     "***<module>.FormParser: Failure: Different bytecode",
+     "***<module>.MultiPartParser: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 1.8,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "sp_pydantic_dataclasses",
+   "src": "D:\\Python\\Lib\\site-packages\\pydantic\\_internal\\_dataclasses.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\pydantic\\_internal\\__pycache__\\_dataclasses.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_pydantic_dataclasses.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_pydantic_dataclassesOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "f-string",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.7,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "compile_error",
+    "units_success": 0,
+    "units_total": 0,
+    "failures": [],
+    "rc": 1,
+    "elapsed": 1.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "sp_pydantic_fields",
+   "src": "D:\\Python\\Lib\\site-packages\\pydantic\\fields.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\pydantic\\__pycache__\\fields.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_pydantic_fields.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_pydantic_fieldsOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "装饰器链",
+    "f-string",
+    "海象",
+    "dataclass",
+    "生成器",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.7,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "compile_error",
+    "units_success": 0,
+    "units_total": 0,
+    "failures": [],
+    "rc": 1,
+    "elapsed": 1.7,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "sp_pandas_indexing",
+   "src": "D:\\Python\\Lib\\site-packages\\pandas\\core\\indexing.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\pandas\\core\\__pycache__\\indexing.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_pandas_indexing.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_pandas_indexingOK.py",
+   "features": [
+    "装饰器",
+    "注解",
+    "f-string",
+    "except*",
+    "PEP604"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 3.3,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 97,
+    "units_total": 119,
+    "failures": [
+     "***<module>: Failure: Different bytecode",
+     "***<module>.IndexingMixin: Failure: Different bytecode",
+     "***<module>._LocationIndexer: Failure: Different bytecode",
+     "***<module>._LocationIndexer._getitem_lowerdim: Failure: Different control flow",
+     "***<module>._LocationIndexer._getitem_lowerdim.<genexpr>: Failure: Missing bytecode",
+     "***<module>._LocationIndexer._getitem_nested_tuple: Failure: Different control flow",
+     "***<module>._LocationIndexer._getitem_nested_tuple.<genexpr>: Failure: Different control flow",
+     "***<module>._LocIndexer: Failure: Different bytecode",
+     "***<module>._LocIndexer._getitem_axis: Failure: Different control flow",
+     "***<module>._LocIndexer._convert_to_indexer: Failure: Different control flow",
+     "***<module>._iLocIndexer: Failure: Different bytecode",
+     "***<module>._iLocIndexer._validate_key: Failure: Different control flow",
+     "***<module>._iLocIndexer._setitem_new_column: Failure detected at line number 1424 and instruction offset 172: Different bytecode",
+     "***<module>._iLocIndexer._setitem_with_indexer_split_path: Failure: Different control flow",
+     "***<module>._iLocIndexer._setitem_single_column: Failure: Different control flow",
+     "***<module>._iLocIndexer._setitem_single_block: Failure: Different control flow",
+     "***<module>._iLocIndexer._align_series: Failure: Different control flow",
+     "***<module>._iLocIndexer._align_series.<genexpr>: Failure: Different control flow",
+     "***<module>._ScalarAccessIndexer: Failure: Different bytecode",
+     "***<module>._AtIndexer: Failure: Different bytecode",
+     "***<module>._iAtIndexer: Failure: Different bytecode",
+     "***<module>.check_dict_or_set_indexers: Failure: Different control flow"
+    ],
+    "rc": 1,
+    "elapsed": 5.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "sp_sqlalchemy_collections",
+   "src": "D:\\Python\\Lib\\site-packages\\sqlalchemy\\orm\\collections.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\sqlalchemy\\orm\\__pycache__\\collections.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_sqlalchemy_collections.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_sqlalchemy_collectionsOK.py",
+   "features": [
+    "注解",
+    "装饰器",
+    "装饰器链",
+    "except*"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 2.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "compile_error",
+    "units_success": 0,
+    "units_total": 0,
+    "failures": [],
+    "rc": 1,
+    "elapsed": 1.5,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "sp_sympy_qexpr",
+   "src": "D:\\Python\\Lib\\site-packages\\sympy\\physics\\quantum\\qexpr.py",
+   "pyc_src": "D:\\Python\\Lib\\site-packages\\sympy\\physics\\quantum\\__pycache__\\qexpr.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_sympy_qexpr.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\sp_sympy_qexprOK.py",
+   "features": [
+    "装饰器",
+    "except*"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "success",
+    "units_success": 36,
+    "units_total": 36,
+    "failures": [],
+    "rc": 0,
+    "elapsed": 2.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "repo_core_config",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\config.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\core\\__pycache__\\config.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_config.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_configOK.py",
+   "features": [
+    "注解",
+    "装饰器"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.9,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "success",
+    "units_success": 15,
+    "units_total": 15,
+    "failures": [],
+    "rc": 0,
+    "elapsed": 1.7,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  },
+  {
+   "slug": "repo_core_fast_stack",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\fast_stack.py",
+   "pyc_src": "F:\\Downloads\\pythoncdc-main\\core\\__pycache__\\fast_stack.cpython-311.pyc",
+   "pyc_copy": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_fast_stack.pyc",
+   "product": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\offcorpus\\repo_core_fast_stackOK.py",
+   "features": [
+    "注解",
+    "f-string"
+   ],
+   "origin": "real",
+   "notes": [],
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.4,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "verify": {
+    "status": "failure",
+    "units_success": 53,
+    "units_total": 57,
+    "failures": [
+     "***<module>.FastStack: Failure: Different bytecode",
+     "***<module>.FastStack.swap: Failure: Different bytecode",
+     "***<module>.StackHistory: Failure: Different bytecode",
+     "***<module>.DebugStack: Failure: Different bytecode"
+    ],
+    "rc": 1,
+    "elapsed": 2.2,
+    "timeout": false,
+    "stderr_tail": ""
+   },
+   "src_matches_pyc": true
+  }
+ ],
+ "start": 32,
+ "count": 8
+}

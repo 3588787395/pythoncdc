@@ -1,0 +1,3308 @@
+{
+ "results": [
+  {
+   "slug": "repo_core_cfg_basic_block",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "BasicBlock",
+     "n_orig_instr": 206,
+     "n_prod_instr": 202,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[76:77] -> prod[76:76])",
+      "  - LOAD_CONST ('block', 'BasicBlock', 'return', None)",
+      "--- replace (orig[78:79] -> prod[77:78])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[80:81] -> prod[79:79])",
+      "  - LOAD_CONST ('block', 'BasicBlock', 'return', None)",
+      "--- replace (orig[82:83] -> prod[80:81])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[84:85] -> prod[82:82])",
+      "  - LOAD_CONST ('block', 'BasicBlock', 'return', None)",
+      "--- replace (orig[86:87] -> prod[83:84])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[88:89] -> prod[85:85])",
+      "  - LOAD_CONST ('block', 'BasicBlock', 'return', None)",
+      "--- replace (orig[90:91] -> prod[86:87])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "repo_core_cfg_builder",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "ControlFlowGraph.to_dict",
+     "n_orig_instr": 35,
+     "n_prod_instr": 37,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[34:34] -> prod[34:36])",
+      "  + POP_TOP None",
+      "  + LOAD_CONST None"
+     ]
+    },
+    {
+     "qualname": "CFGBuilder",
+     "n_orig_instr": 138,
+     "n_prod_instr": 130,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[42:43] -> prod[42:42])",
+      "  - LOAD_CONST ('return', None)",
+      "--- replace (orig[44:45] -> prod[43:44])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[46:47] -> prod[45:45])",
+      "  - LOAD_CONST ('return', None)",
+      "--- replace (orig[48:49] -> prod[46:47])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[50:51] -> prod[48:48])",
+      "  - LOAD_CONST ('return', None)",
+      "--- replace (orig[52:53] -> prod[49:50])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[54:55] -> prod[51:51])",
+      "  - LOAD_CONST ('return', None)",
+      "--- replace (orig[56:57] -> prod[52:53])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "CFGBuilder.build",
+     "n_orig_instr": 65,
+     "n_prod_instr": 62,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[9:10] -> prod[9:9])",
+      "  - LOAD_GLOBAL ControlFlowGraph",
+      "--- delete (orig[14:16] -> prod[13:13])",
+      "  - PRECALL 1",
+      "  - CALL 1"
+     ]
+    },
+    {
+     "qualname": "CFGBuilder._parse_instructions",
+     "n_orig_instr": 127,
+     "n_prod_instr": 121,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[25:31] -> prod[25:25])",
+      "  - LOAD_GLOBAL isinstance",
+      "  - LOAD_FAST _argval",
+      "  - LOAD_GLOBAL tuple",
+      "  - PRECALL 2",
+      "  - CALL 2",
+      "  - POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    },
+    {
+     "qualname": "CFGBuilder._build_basic_blocks",
+     "n_orig_instr": 224,
+     "n_prod_instr": 218,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[87:88] -> prod[87:88])",
+      "  - JUMP_IF_TRUE_OR_POP T",
+      "  + JUMP_IF_FALSE_OR_POP T",
+      "--- replace (orig[102:103] -> prod[102:103])",
+      "  - JUMP_IF_TRUE_OR_POP T",
+      "  + JUMP_IF_FALSE_OR_POP T",
+      "--- replace (orig[117:122] -> prod[117:118])",
+      "  - STORE_FAST is_leader",
+      "  - LOAD_FAST i",
+      "  - LOAD_CONST 0",
+      "  - COMPARE_OP >",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + JUMP_IF_FALSE_OR_POP T",
+      "--- replace (orig[130:131] -> prod[126:127])",
+      "  - LOAD_ATTR BRANCH_INSTRUCTIONS",
+      "  + LOAD_ATTR RAISE_INSTRUCTIONS",
+      "--- delete (orig[132:134] -> prod[128:128])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  - LOAD_CONST True",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "CFGBuilder._split_block_at_offset",
+     "n_orig_instr": 212,
+     "n_prod_instr": 60,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[31:33] -> prod[31:31])",
+      "  - POP_TOP None",
+      "  - JUMP_FORWARD T",
+      "--- delete (orig[60:66] -> prod[58:58])",
+      "  - LOAD_FAST split_idx",
+      "  - POP_JUMP_FORWARD_IF_NONE T",
+      "  - LOAD_FAST split_idx",
+      "  - LOAD_CONST 0",
+      "  - COMPARE_OP ==",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "--- delete (orig[68:212] -> prod[60:60])",
+      "  - LOAD_FAST block_to_split",
+      "  - LOAD_ATTR instructions",
+      "  - LOAD_CONST None",
+      "  - LOAD_FAST split_idx",
+      "  - BUILD_SLICE 2",
+      "  - BINARY_SUBSCR None",
+      "  - ...(138 more)",
+      "  ...(截断)"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "repo_core_config",
+   "status": "success",
+   "units": []
+  },
+  {
+   "slug": "repo_core_fast_stack",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "FastStack",
+     "n_orig_instr": 184,
+     "n_prod_instr": 180,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[63:64] -> prod[63:63])",
+      "  - LOAD_CONST ('return', None)",
+      "--- replace (orig[65:66] -> prod[64:65])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[67:68] -> prod[66:66])",
+      "  - LOAD_CONST ('return', 'FastStack')",
+      "--- replace (orig[69:70] -> prod[67:68])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[162:163] -> prod[160:160])",
+      "  - LOAD_CONST ('return', None)",
+      "--- replace (orig[164:165] -> prod[161:162])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[166:167] -> prod[163:163])",
+      "  - LOAD_CONST ('return', None)",
+      "--- replace (orig[168:169] -> prod[164:165])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "FastStack.swap",
+     "n_orig_instr": 78,
+     "n_prod_instr": 69,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[49:50] -> prod[49:50])",
+      "  - LOAD_FAST idx2",
+      "  + LOAD_FAST idx1",
+      "--- delete (orig[54:63] -> prod[54:54])",
+      "  - BINARY_SUBSCR None",
+      "  - SWAP 2",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR _stack",
+      "  - LOAD_FAST idx1",
+      "  - STORE_SUBSCR None",
+      "  - ...(3 more)"
+     ]
+    },
+    {
+     "qualname": "StackHistory",
+     "n_orig_instr": 44,
+     "n_prod_instr": 43,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[38:39] -> prod[38:38])",
+      "  - LOAD_CONST ('return', None)",
+      "--- replace (orig[40:41] -> prod[39:40])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0"
+     ]
+    },
+    {
+     "qualname": "DebugStack",
+     "n_orig_instr": 82,
+     "n_prod_instr": 81,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[68:69] -> prod[68:68])",
+      "  - LOAD_CONST ('return', None)",
+      "--- replace (orig[70:71] -> prod[69:70])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "repo_core_object_pool",
+   "status": "success",
+   "units": []
+  },
+  {
+   "slug": "repo_parsers_ctx",
+   "status": "success",
+   "units": []
+  },
+  {
+   "slug": "repo_scripts_verify",
+   "status": "compile_error",
+   "units": []
+  },
+  {
+   "slug": "repo_tools_syntax_cov",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "main",
+     "n_orig_instr": 702,
+     "n_prod_instr": 700,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[295:296] -> prod[295:295])",
+      "  - BUILD_LIST 0",
+      "--- delete (orig[297:298] -> prod[296:296])",
+      "  - STORE_FAST extra_covered",
+      "--- replace (orig[469:470] -> prod[467:468])",
+      "  - LOAD_FAST extra_covered",
+      "  + LOAD_GLOBAL extra_covered",
+      "--- replace (orig[489:490] -> prod[487:488])",
+      "  - LOAD_FAST extra_covered",
+      "  + LOAD_GLOBAL extra_covered",
+      "--- replace (orig[555:556] -> prod[553:554])",
+      "  - LOAD_FAST extra_covered",
+      "  + LOAD_GLOBAL extra_covered"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "sp_anyio_fileio",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "<module>",
+     "n_orig_instr": 205,
+     "n_prod_instr": 181,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[125:133] -> prod[125:126])",
+      "  - NOP None",
+      "  - NOP None",
+      "  - NOP None",
+      "  - NOP None",
+      "  - NOP None",
+      "  - NOP None",
+      "  - ...(2 more)",
+      "  + LOAD_CONST (None, None, None, None, None, None)",
+      "--- replace (orig[134:135] -> prod[127:128])",
+      "  - MAKE_FUNCTION 5",
+      "  + MAKE_FUNCTION 1",
+      "--- replace (orig[139:148] -> prod[132:133])",
+      "  - NOP None",
+      "  - NOP None",
+      "  - NOP None",
+      "  - NOP None",
+      "  - NOP None",
+      "  - NOP None",
+      "  - ...(3 more)",
+      "  + LOAD_CONST (None, None, None, None, None, None, None)",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "AsyncFile",
+     "n_orig_instr": 114,
+     "n_prod_instr": 93,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[7:8] -> prod[7:7])",
+      "  - LOAD_CONST ('fp', 'IO[AnyStr]', 'return', 'None')",
+      "--- replace (orig[9:10] -> prod[8:9])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[11:12] -> prod[10:10])",
+      "  - LOAD_CONST ('name', 'str', 'return', 'object')",
+      "--- replace (orig[13:14] -> prod[11:12])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[16:17] -> prod[14:14])",
+      "  - LOAD_CONST ('return', 'IO[AnyStr]')",
+      "--- replace (orig[18:19] -> prod[15:16])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[22:23] -> prod[19:19])",
+      "  - LOAD_CONST ('return', 'AsyncIterator[AnyStr]')",
+      "--- replace (orig[24:25] -> prod[20:21])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "AsyncFile.__aiter__",
+     "n_orig_instr": 26,
+     "n_prod_instr": 24,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[14:16] -> prod[14:14])",
+      "  - STORE_FAST line",
+      "  - LOAD_FAST line",
+      "--- replace (orig[17:18] -> prod[15:16])",
+      "  - LOAD_FAST line",
+      "  + LOAD_GLOBAL line"
+     ]
+    },
+    {
+     "qualname": "_PathIterator",
+     "n_orig_instr": 16,
+     "n_prod_instr": 15,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[6:7] -> prod[6:7])",
+      "  - LOAD_CONST 'Iterator[PathLike[str]]'",
+      "  + LOAD_CONST \"'Iterator[PathLike[str]]'\"",
+      "--- delete (orig[10:11] -> prod[10:10])",
+      "  - LOAD_CONST ('return', 'Path')",
+      "--- replace (orig[12:13] -> prod[11:12])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0"
+     ]
+    },
+    {
+     "qualname": "_PathIterator.__anext__",
+     "n_orig_instr": 30,
+     "n_prod_instr": 28,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[19:22] -> prod[19:20])",
+      "  - STORE_FAST nextval",
+      "  - LOAD_FAST nextval",
+      "  - POP_JUMP_FORWARD_IF_NOT_NONE T",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "--- replace (orig[26:27] -> prod[24:25])",
+      "  - LOAD_FAST nextval",
+      "  + LOAD_GLOBAL nextval"
+     ]
+    },
+    {
+     "qualname": "Path",
+     "n_orig_instr": 594,
+     "n_prod_instr": 482,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[14:15] -> prod[14:14])",
+      "  - LOAD_CONST ('args', 'str | PathLike[str]', 'return', 'None')",
+      "--- replace (orig[16:17] -> prod[15:16])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[18:19] -> prod[17:17])",
+      "  - LOAD_CONST ('return', 'str')",
+      "--- replace (orig[20:21] -> prod[18:19])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[27:28] -> prod[25:25])",
+      "  - LOAD_CONST ('return', 'str')",
+      "--- replace (orig[29:30] -> prod[26:27])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[31:32] -> prod[28:28])",
+      "  - LOAD_CONST ('return', 'str')",
+      "--- replace (orig[33:34] -> prod[29:30])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "sp_anyio_functools",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "<module>",
+     "n_orig_instr": 296,
+     "n_prod_instr": 286,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[140:141] -> prod[140:141])",
+      "  - LOAD_CONST 'RunVar[WeakKeyDictionary[AsyncLRUCacheWrapper[Any, Any], OrderedDict[Hashable, tuple[_InitialMissingType, Lock, float | None] | tuple[Any,",
+      "  + LOAD_CONST \"'RunVar[WeakKeyDictionary[AsyncLRUCacheWrapper[Any, Any], OrderedDict[Hashable, tuple[_InitialMissingType, Lock, float | None] | tuple[Any",
+      "--- replace (orig[157:158] -> prod[157:158])",
+      "  - LOAD_CONST '_InitialMissingType'",
+      "  + LOAD_CONST \"'_InitialMissingType'\"",
+      "--- delete (orig[218:219] -> prod[218:218])",
+      "  - LOAD_CONST ('func', 'Callable[P, Coroutine[Any, Any, T]]', 'return', 'AsyncLRUCacheWrapper[P, T]')",
+      "--- replace (orig[220:221] -> prod[219:220])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[225:226] -> prod[224:224])",
+      "  - LOAD_CONST ('func', 'Callable[..., T]', 'return', 'functools._lru_cache_wrapper[T]')",
+      "--- replace (orig[227:228] -> prod[225:226])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[231:232] -> prod[229:229])",
+      "  - LOAD_CONST ('func', 'Callable[..., T] | Callable[P, Coroutine[Any, Any, T]]', 'return', 'AsyncLRUCacheWrapper[P, T] | functools._lru_cache_wrapper[T]'",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "AsyncCacheInfo",
+     "n_orig_instr": 28,
+     "n_prod_instr": 28,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[6:7] -> prod[6:7])",
+      "  - LOAD_CONST 'int'",
+      "  + LOAD_CONST \"'int'\"",
+      "--- replace (orig[10:11] -> prod[10:11])",
+      "  - LOAD_CONST 'int'",
+      "  + LOAD_CONST \"'int'\"",
+      "--- replace (orig[14:15] -> prod[14:15])",
+      "  - LOAD_CONST 'int | None'",
+      "  + LOAD_CONST \"'int | None'\"",
+      "--- replace (orig[18:19] -> prod[18:19])",
+      "  - LOAD_CONST 'int'",
+      "  + LOAD_CONST \"'int'\"",
+      "--- replace (orig[22:23] -> prod[22:23])",
+      "  - LOAD_CONST 'int | None'",
+      "  + LOAD_CONST \"'int | None'\""
+     ]
+    },
+    {
+     "qualname": "AsyncCacheParameters",
+     "n_orig_instr": 24,
+     "n_prod_instr": 24,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[6:7] -> prod[6:7])",
+      "  - LOAD_CONST 'int | None'",
+      "  + LOAD_CONST \"'int | None'\"",
+      "--- replace (orig[10:11] -> prod[10:11])",
+      "  - LOAD_CONST 'bool'",
+      "  + LOAD_CONST \"'bool'\"",
+      "--- replace (orig[14:15] -> prod[14:15])",
+      "  - LOAD_CONST 'bool'",
+      "  + LOAD_CONST \"'bool'\"",
+      "--- replace (orig[18:19] -> prod[18:19])",
+      "  - LOAD_CONST 'int | None'",
+      "  + LOAD_CONST \"'int | None'\""
+     ]
+    },
+    {
+     "qualname": "_LRUMethodWrapper",
+     "n_orig_instr": 27,
+     "n_prod_instr": 22,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - LOAD_CONST ('wrapper', 'AsyncLRUCacheWrapper[..., T]', 'instance', 'object')",
+      "--- replace (orig[7:8] -> prod[6:7])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[9:10] -> prod[8:8])",
+      "  - LOAD_CONST ('return', 'AsyncCacheInfo')",
+      "--- replace (orig[11:12] -> prod[9:10])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[13:14] -> prod[11:11])",
+      "  - LOAD_CONST ('return', 'AsyncCacheParameters')",
+      "--- replace (orig[15:16] -> prod[12:13])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[17:18] -> prod[14:14])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[19:20] -> prod[15:16])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "AsyncLRUCacheWrapper",
+     "n_orig_instr": 33,
+     "n_prod_instr": 27,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - LOAD_CONST ('func', 'Callable[P, Awaitable[T]]', 'maxsize', 'int | None', 'typed', 'bool', 'always_checkpoint', 'bool', 'ttl', 'int | None')",
+      "--- replace (orig[7:8] -> prod[6:7])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[9:10] -> prod[8:8])",
+      "  - LOAD_CONST ('return', 'AsyncCacheInfo')",
+      "--- replace (orig[11:12] -> prod[9:10])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[13:14] -> prod[11:11])",
+      "  - LOAD_CONST ('return', 'AsyncCacheParameters')",
+      "--- replace (orig[15:16] -> prod[12:13])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[17:18] -> prod[14:14])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[19:20] -> prod[15:16])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "AsyncLRUCacheWrapper.__call__",
+     "n_orig_instr": 383,
+     "n_prod_instr": 362,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[178:178] -> prod[178:179])",
+      "  + EXTENDED_ARG 1",
+      "--- insert (orig[180:180] -> prod[181:182])",
+      "  + EXTENDED_ARG 1",
+      "--- insert (orig[186:186] -> prod[188:189])",
+      "  + EXTENDED_ARG 1",
+      "--- insert (orig[213:213] -> prod[216:254])",
+      "  + LOAD_FAST lock",
+      "  + BEFORE_ASYNC_WITH None",
+      "  + GET_AWAITABLE 1",
+      "  + LOAD_CONST None",
+      "  + SEND T",
+      "  + YIELD_VALUE None",
+      "  + ...(32 more)",
+      "--- insert (orig[214:214] -> prod[255:330])",
+      "  + LOAD_FAST self",
+      "  + COPY 1",
+      "  + LOAD_ATTR _currsize",
+      "  + LOAD_CONST 1",
+      "  + BINARY_OP 13",
+      "  + SWAP 2",
+      "  + ...(69 more)",
+      "  ...(截断)"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "sp_anyio_lowlevel",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "<module>",
+     "n_orig_instr": 151,
+     "n_prod_instr": 147,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[72:73] -> prod[72:72])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[74:75] -> prod[73:74])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[76:77] -> prod[75:75])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[78:79] -> prod[76:77])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[80:81] -> prod[78:78])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[82:83] -> prod[79:80])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[104:105] -> prod[101:101])",
+      "  - LOAD_CONST ('return', 'EventLoopToken')",
+      "--- replace (orig[106:107] -> prod[102:103])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "EventLoopToken",
+     "n_orig_instr": 18,
+     "n_prod_instr": 18,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[8:9] -> prod[8:9])",
+      "  - LOAD_CONST 'type[AsyncBackend]'",
+      "  + LOAD_CONST \"'type[AsyncBackend]'\"",
+      "--- replace (orig[12:13] -> prod[12:13])",
+      "  - LOAD_CONST 'object'",
+      "  + LOAD_CONST \"'object'\""
+     ]
+    },
+    {
+     "qualname": "RunvarToken",
+     "n_orig_instr": 21,
+     "n_prod_instr": 18,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[7:8] -> prod[7:7])",
+      "  - LOAD_CONST ('var', 'RunVar[T]', 'value', 'T | Literal[_NoValueSet.NO_VALUE_SET]')",
+      "--- replace (orig[9:10] -> prod[8:9])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[11:12] -> prod[10:10])",
+      "  - LOAD_CONST ('return', 'RunvarToken[T]')",
+      "--- replace (orig[13:14] -> prod[11:12])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[15:16] -> prod[13:13])",
+      "  - LOAD_CONST ('exc_type', 'type[BaseException] | None', 'exc_val', 'BaseException | None', 'exc_tb', 'TracebackType | None', 'return', 'None')",
+      "--- replace (orig[17:18] -> prod[14:15])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0"
+     ]
+    },
+    {
+     "qualname": "RunVar",
+     "n_orig_instr": 64,
+     "n_prod_instr": 56,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[13:14] -> prod[13:14])",
+      "  - LOAD_CONST 'Literal[_NoValueSet.NO_VALUE_SET]'",
+      "  + LOAD_CONST \"'Literal[_NoValueSet.NO_VALUE_SET]'\"",
+      "--- delete (orig[19:20] -> prod[19:19])",
+      "  - LOAD_CONST ('name', 'str', 'default', 'T | Literal[_NoValueSet.NO_VALUE_SET]')",
+      "--- replace (orig[21:22] -> prod[20:21])",
+      "  - MAKE_FUNCTION 5",
+      "  + MAKE_FUNCTION 1",
+      "--- delete (orig[24:25] -> prod[23:23])",
+      "  - LOAD_CONST ('return', 'dict[RunVar[T], T]')",
+      "--- replace (orig[26:27] -> prod[24:25])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[31:32] -> prod[29:29])",
+      "  - LOAD_CONST ('default', 'D', 'return', 'T | D')",
+      "--- replace (orig[33:34] -> prod[30:31])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "RunVar.get",
+     "n_orig_instr": 3,
+     "n_prod_instr": 3,
+     "bytecode_equal": true,
+     "diff": []
+    }
+   ]
+  },
+  {
+   "slug": "sp_anyio_sync",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "EventStatistics",
+     "n_orig_instr": 14,
+     "n_prod_instr": 14,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[8:9] -> prod[8:9])",
+      "  - LOAD_CONST 'int'",
+      "  + LOAD_CONST \"'int'\""
+     ]
+    },
+    {
+     "qualname": "CapacityLimiterStatistics",
+     "n_orig_instr": 26,
+     "n_prod_instr": 26,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[8:9] -> prod[8:9])",
+      "  - LOAD_CONST 'int'",
+      "  + LOAD_CONST \"'int'\"",
+      "--- replace (orig[12:13] -> prod[12:13])",
+      "  - LOAD_CONST 'float'",
+      "  + LOAD_CONST \"'float'\"",
+      "--- replace (orig[16:17] -> prod[16:17])",
+      "  - LOAD_CONST 'tuple[object, ...]'",
+      "  + LOAD_CONST \"'tuple[object, ...]'\"",
+      "--- replace (orig[20:21] -> prod[20:21])",
+      "  - LOAD_CONST 'int'",
+      "  + LOAD_CONST \"'int'\""
+     ]
+    },
+    {
+     "qualname": "LockStatistics",
+     "n_orig_instr": 22,
+     "n_prod_instr": 22,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[8:9] -> prod[8:9])",
+      "  - LOAD_CONST 'bool'",
+      "  + LOAD_CONST \"'bool'\"",
+      "--- replace (orig[12:13] -> prod[12:13])",
+      "  - LOAD_CONST 'TaskInfo | None'",
+      "  + LOAD_CONST \"'TaskInfo | None'\"",
+      "--- replace (orig[16:17] -> prod[16:17])",
+      "  - LOAD_CONST 'int'",
+      "  + LOAD_CONST \"'int'\""
+     ]
+    },
+    {
+     "qualname": "ConditionStatistics",
+     "n_orig_instr": 18,
+     "n_prod_instr": 18,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[8:9] -> prod[8:9])",
+      "  - LOAD_CONST 'int'",
+      "  + LOAD_CONST \"'int'\"",
+      "--- replace (orig[12:13] -> prod[12:13])",
+      "  - LOAD_CONST 'LockStatistics'",
+      "  + LOAD_CONST \"'LockStatistics'\""
+     ]
+    },
+    {
+     "qualname": "SemaphoreStatistics",
+     "n_orig_instr": 14,
+     "n_prod_instr": 14,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[8:9] -> prod[8:9])",
+      "  - LOAD_CONST 'int'",
+      "  + LOAD_CONST \"'int'\""
+     ]
+    },
+    {
+     "qualname": "Event",
+     "n_orig_instr": 27,
+     "n_prod_instr": 22,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - LOAD_CONST ('return', 'Event')",
+      "--- replace (orig[7:8] -> prod[6:7])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[9:10] -> prod[8:8])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[11:12] -> prod[9:10])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[13:14] -> prod[11:11])",
+      "  - LOAD_CONST ('return', 'bool')",
+      "--- replace (orig[15:16] -> prod[12:13])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[17:18] -> prod[14:14])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[19:20] -> prod[15:16])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "sp_httpcore_models",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "<module>",
+     "n_orig_instr": 143,
+     "n_prod_instr": 138,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[63:64] -> prod[63:63])",
+      "  - LOAD_CONST ('value', 'bytes | str', 'name', 'str', 'return', 'bytes')",
+      "--- replace (orig[65:66] -> prod[64:65])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[67:68] -> prod[66:66])",
+      "  - LOAD_CONST ('value', 'URL | bytes | str', 'name', 'str', 'return', 'URL')",
+      "--- replace (orig[69:70] -> prod[67:68])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[73:74] -> prod[71:71])",
+      "  - LOAD_CONST ('value', 'HeadersAsMapping | HeadersAsSequence | None', 'name', 'str', 'return', 'list[tuple[bytes, bytes]]')",
+      "--- replace (orig[75:76] -> prod[72:73])",
+      "  - MAKE_FUNCTION 5",
+      "  + MAKE_FUNCTION 1",
+      "--- delete (orig[77:78] -> prod[74:74])",
+      "  - LOAD_CONST ('value', 'bytes | typing.Iterable[bytes] | typing.AsyncIterable[bytes] | None', 'name', 'str', 'return', 'typing.Iterable[bytes] | typing.",
+      "--- replace (orig[79:80] -> prod[75:76])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "ByteStream",
+     "n_orig_instr": 25,
+     "n_prod_instr": 21,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[7:8] -> prod[7:7])",
+      "  - LOAD_CONST ('content', 'bytes', 'return', 'None')",
+      "--- replace (orig[9:10] -> prod[8:9])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[11:12] -> prod[10:10])",
+      "  - LOAD_CONST ('return', 'typing.Iterator[bytes]')",
+      "--- replace (orig[13:14] -> prod[11:12])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[15:16] -> prod[13:13])",
+      "  - LOAD_CONST ('return', 'typing.AsyncIterator[bytes]')",
+      "--- replace (orig[17:18] -> prod[14:15])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[19:20] -> prod[16:16])",
+      "  - LOAD_CONST ('return', 'str')",
+      "--- replace (orig[21:22] -> prod[17:18])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "Origin",
+     "n_orig_instr": 19,
+     "n_prod_instr": 16,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - LOAD_CONST ('scheme', 'bytes', 'host', 'bytes', 'port', 'int', 'return', 'None')",
+      "--- replace (orig[7:8] -> prod[6:7])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[9:10] -> prod[8:8])",
+      "  - LOAD_CONST ('other', 'typing.Any', 'return', 'bool')",
+      "--- replace (orig[11:12] -> prod[9:10])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[13:14] -> prod[11:11])",
+      "  - LOAD_CONST ('return', 'str')",
+      "--- replace (orig[15:16] -> prod[12:13])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0"
+     ]
+    },
+    {
+     "qualname": "URL",
+     "n_orig_instr": 40,
+     "n_prod_instr": 35,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[15:16] -> prod[15:15])",
+      "  - LOAD_CONST ('url', 'bytes | str', 'scheme', 'bytes | str', 'host', 'bytes | str', 'port', 'int | None', 'target', 'bytes | str', 'return', 'None')",
+      "--- replace (orig[17:18] -> prod[16:17])",
+      "  - MAKE_FUNCTION 7",
+      "  + MAKE_FUNCTION 3",
+      "--- delete (orig[20:21] -> prod[19:19])",
+      "  - LOAD_CONST ('return', 'Origin')",
+      "--- replace (orig[22:23] -> prod[20:21])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[26:27] -> prod[24:24])",
+      "  - LOAD_CONST ('other', 'typing.Any', 'return', 'bool')",
+      "--- replace (orig[28:29] -> prod[25:26])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[30:31] -> prod[27:27])",
+      "  - LOAD_CONST ('return', 'bytes')",
+      "--- replace (orig[32:33] -> prod[28:29])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "URL.__init__",
+     "n_orig_instr": 76,
+     "n_prod_instr": 75,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[26:30] -> prod[26:26])",
+      "  - LOAD_ATTR port",
+      "  - LOAD_FAST self",
+      "  - STORE_ATTR port",
+      "  - LOAD_FAST parsed",
+      "--- replace (orig[31:32] -> prod[27:28])",
+      "  - JUMP_IF_TRUE_OR_POP T",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "--- insert (orig[33:33] -> prod[29:32])",
+      "  + POP_TOP None",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None",
+      "--- replace (orig[40:41] -> prod[39:42])",
+      "  - JUMP_FORWARD T",
+      "  + POP_TOP None",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None",
+      "--- replace (orig[42:45] -> prod[43:44])",
+      "  - BINARY_OP 0",
+      "  - LOAD_FAST self",
+      "  - STORE_ATTR target",
+      "  + POP_TOP None",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "Request",
+     "n_orig_instr": 22,
+     "n_prod_instr": 20,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[12:13] -> prod[12:12])",
+      "  - LOAD_CONST ('method', 'bytes | str', 'url', 'URL | bytes | str', 'headers', 'HeaderTypes', 'content', 'bytes | typing.Iterable[bytes] | typing.AsyncIt",
+      "--- replace (orig[14:15] -> prod[13:14])",
+      "  - MAKE_FUNCTION 6",
+      "  + MAKE_FUNCTION 2",
+      "--- delete (orig[16:17] -> prod[15:15])",
+      "  - LOAD_CONST ('return', 'str')",
+      "--- replace (orig[18:19] -> prod[16:17])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "sp_packaging_specifiers",
+   "status": "compile_error",
+   "units": []
+  },
+  {
+   "slug": "sp_packaging_version",
+   "status": "compile_error",
+   "units": []
+  },
+  {
+   "slug": "sp_pandas_indexing",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "<module>",
+     "n_orig_instr": 387,
+     "n_prod_instr": 379,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[347:348] -> prod[347:347])",
+      "  - LOAD_CONST ('ndim', 'int', 'loc', 'Hashable', 'return', 'tuple[Hashable | slice, ...]')",
+      "--- replace (orig[349:350] -> prod[348:349])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[351:352] -> prod[350:350])",
+      "  - LOAD_CONST ('ndim', 'int', 'axis', 'AxisInt', 'return', 'tuple')",
+      "--- replace (orig[353:354] -> prod[351:352])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[355:356] -> prod[353:353])",
+      "  - LOAD_CONST ('index', 'Index', 'return', 'np.ndarray')",
+      "--- replace (orig[357:358] -> prod[354:355])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[362:363] -> prod[359:359])",
+      "  - LOAD_CONST ('indexer', 'tuple', 'axes', 'list[Index]', 'return', 'tuple')",
+      "--- replace (orig[364:365] -> prod[360:361])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "IndexingMixin",
+     "n_orig_instr": 37,
+     "n_prod_instr": 33,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[8:9] -> prod[8:8])",
+      "  - LOAD_CONST ('return', '_iLocIndexer')",
+      "--- replace (orig[10:11] -> prod[9:10])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[15:16] -> prod[14:14])",
+      "  - LOAD_CONST ('return', '_LocIndexer')",
+      "--- replace (orig[17:18] -> prod[15:16])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[22:23] -> prod[20:20])",
+      "  - LOAD_CONST ('return', '_AtIndexer')",
+      "--- replace (orig[24:25] -> prod[21:22])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[29:30] -> prod[26:26])",
+      "  - LOAD_CONST ('return', '_iAtIndexer')",
+      "--- replace (orig[31:32] -> prod[27:28])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "_LocationIndexer",
+     "n_orig_instr": 151,
+     "n_prod_instr": 132,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[6:7] -> prod[6:7])",
+      "  - LOAD_CONST 'str'",
+      "  + LOAD_CONST \"'str'\"",
+      "--- replace (orig[12:13] -> prod[12:13])",
+      "  - LOAD_CONST 'AxisInt | None'",
+      "  + LOAD_CONST \"'AxisInt | None'\"",
+      "--- replace (orig[16:17] -> prod[16:17])",
+      "  - LOAD_CONST 'bool'",
+      "  + LOAD_CONST \"'bool'\"",
+      "--- delete (orig[22:23] -> prod[22:22])",
+      "  - LOAD_CONST ('axis', 'Axis | None', 'return', 'Self')",
+      "--- replace (orig[24:25] -> prod[23:24])",
+      "  - MAKE_FUNCTION 5",
+      "  + MAKE_FUNCTION 1",
+      "--- delete (orig[39:40] -> prod[38:38])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[41:42] -> prod[39:40])",
+      "  - MAKE_FUNCTION 5",
+      "  + MAKE_FUNCTION 1",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "_LocationIndexer._getitem_lowerdim",
+     "n_orig_instr": 221,
+     "n_prod_instr": 211,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[50:60] -> prod[50:50])",
+      "  - LOAD_GLOBAL any",
+      "  - LOAD_CONST <code:<genexpr>>",
+      "  - MAKE_FUNCTION 0",
+      "  - LOAD_FAST tup",
+      "  - GET_ITER None",
+      "  - PRECALL 0",
+      "  - ...(4 more)"
+     ]
+    },
+    {
+     "qualname": "_LocationIndexer._getitem_lowerdim.<genexpr>",
+     "note": "配对失败（原=0 产物=0）"
+    },
+    {
+     "qualname": "_LocationIndexer._getitem_nested_tuple",
+     "n_orig_instr": 170,
+     "n_prod_instr": 166,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[73:74] -> prod[73:75])",
+      "  - JUMP_FORWARD T",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None",
+      "--- delete (orig[96:101] -> prod[97:97])",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR axis",
+      "  - JUMP_IF_TRUE_OR_POP T",
+      "  - LOAD_CONST 0",
+      "  - STORE_FAST axis"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "sp_pydantic_dataclasses",
+   "status": "compile_error",
+   "units": []
+  },
+  {
+   "slug": "sp_pydantic_fields",
+   "status": "compile_error",
+   "units": []
+  },
+  {
+   "slug": "sp_sqlalchemy_collections",
+   "status": "compile_error",
+   "units": []
+  },
+  {
+   "slug": "sp_starlette_formparsers",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "<module>",
+     "n_orig_instr": 173,
+     "n_prod_instr": 172,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[142:143] -> prod[142:142])",
+      "  - LOAD_CONST ('src', 'bytes | bytearray', 'codec', 'str', 'return', 'str')",
+      "--- replace (orig[144:145] -> prod[143:144])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0"
+     ]
+    },
+    {
+     "qualname": "MultipartPart",
+     "n_orig_instr": 48,
+     "n_prod_instr": 48,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[8:9] -> prod[8:9])",
+      "  - LOAD_CONST 'bytes | None'",
+      "  + LOAD_CONST \"'bytes | None'\"",
+      "--- replace (orig[14:15] -> prod[14:15])",
+      "  - LOAD_CONST 'str'",
+      "  + LOAD_CONST \"'str'\"",
+      "--- replace (orig[25:26] -> prod[25:26])",
+      "  - LOAD_CONST 'bytearray'",
+      "  + LOAD_CONST \"'bytearray'\"",
+      "--- replace (orig[31:32] -> prod[31:32])",
+      "  - LOAD_CONST 'UploadFile | None'",
+      "  + LOAD_CONST \"'UploadFile | None'\"",
+      "--- replace (orig[42:43] -> prod[42:43])",
+      "  - LOAD_CONST 'list[tuple[bytes, bytes]]'",
+      "  + LOAD_CONST \"'list[tuple[bytes, bytes]]'\""
+     ]
+    },
+    {
+     "qualname": "MultiPartException",
+     "n_orig_instr": 11,
+     "n_prod_instr": 10,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - LOAD_CONST ('message', 'str', 'return', 'None')",
+      "--- replace (orig[7:8] -> prod[6:7])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0"
+     ]
+    },
+    {
+     "qualname": "FormParser",
+     "n_orig_instr": 35,
+     "n_prod_instr": 28,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - LOAD_CONST ('headers', 'Headers', 'stream', 'AsyncGenerator[bytes, None]', 'return', 'None')",
+      "--- replace (orig[7:8] -> prod[6:7])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[9:10] -> prod[8:8])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[11:12] -> prod[9:10])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[13:14] -> prod[11:11])",
+      "  - LOAD_CONST ('data', 'bytes', 'start', 'int', 'end', 'int', 'return', 'None')",
+      "--- replace (orig[15:16] -> prod[12:13])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[17:18] -> prod[14:14])",
+      "  - LOAD_CONST ('data', 'bytes', 'start', 'int', 'end', 'int', 'return', 'None')",
+      "--- replace (orig[19:20] -> prod[15:16])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "MultiPartParser",
+     "n_orig_instr": 58,
+     "n_prod_instr": 48,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[16:17] -> prod[16:16])",
+      "  - LOAD_CONST ('headers', 'Headers', 'stream', 'AsyncGenerator[bytes, None]', 'max_files', 'int | float', 'max_fields', 'int | float', 'max_part_size', '",
+      "--- replace (orig[18:19] -> prod[17:18])",
+      "  - MAKE_FUNCTION 6",
+      "  + MAKE_FUNCTION 2",
+      "--- delete (orig[20:21] -> prod[19:19])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[22:23] -> prod[20:21])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[24:25] -> prod[22:22])",
+      "  - LOAD_CONST ('data', 'bytes', 'start', 'int', 'end', 'int', 'return', 'None')",
+      "--- replace (orig[26:27] -> prod[23:24])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[28:29] -> prod[25:25])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[30:31] -> prod[26:27])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "sp_sympy_qexpr",
+   "status": "success",
+   "units": []
+  },
+  {
+   "slug": "stdlib_argparse",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "HelpFormatter._format_actions_usage",
+     "n_orig_instr": 423,
+     "n_prod_instr": 426,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[115:116] -> prod[115:131])",
+      "  - JUMP_FORWARD T",
+      "  + LOAD_GLOBAL range",
+      "  + LOAD_FAST start",
+      "  + LOAD_CONST 1",
+      "  + BINARY_OP 0",
+      "  + LOAD_FAST end",
+      "  + PRECALL 2",
+      "  + ...(10 more)",
+      "--- replace (orig[120:121] -> prod[135:136])",
+      "  - JUMP_FORWARD T",
+      "  + JUMP_BACKWARD T",
+      "--- replace (orig[158:159] -> prod[173:175])",
+      "  - JUMP_FORWARD T",
+      "  + EXTENDED_ARG 1",
+      "  + JUMP_BACKWARD T",
+      "--- delete (orig[163:178] -> prod[179:179])",
+      "  - LOAD_GLOBAL range",
+      "  - LOAD_FAST start",
+      "  - LOAD_CONST 1",
+      "  - BINARY_OP 0",
+      "  - LOAD_FAST end",
+      "  - PRECALL 2",
+      "  - ...(9 more)",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "HelpFormatter._iter_indented_subactions",
+     "n_orig_instr": 42,
+     "n_prod_instr": 29,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[0:2] -> prod[0:0])",
+      "  - RETURN_GENERATOR None",
+      "  - POP_TOP None",
+      "--- delete (orig[11:22] -> prod[9:9])",
+      "  - POP_TOP None",
+      "  - PUSH_NULL None",
+      "  - LOAD_FAST get_subactions",
+      "  - PRECALL 0",
+      "  - CALL 0",
+      "  - GET_YIELD_FROM_ITER None",
+      "  - ...(5 more)"
+     ]
+    },
+    {
+     "qualname": "_ActionsContainer.add_argument",
+     "n_orig_instr": 181,
+     "n_prod_instr": 180,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[41:42] -> prod[41:41])",
+      "  - JUMP_FORWARD T"
+     ]
+    },
+    {
+     "qualname": "ArgumentParser.__init__",
+     "n_orig_instr": 160,
+     "n_prod_instr": 161,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[139:139] -> prod[139:151])",
+      "  + JUMP_FORWARD T",
+      "  + PUSH_EXC_INFO None",
+      "  + LOAD_GLOBAL AttributeError",
+      "  + CHECK_EXC_MATCH None",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_TOP None",
+      "  + ...(6 more)",
+      "--- delete (orig[147:158] -> prod[159:159])",
+      "  - PUSH_EXC_INFO None",
+      "  - LOAD_GLOBAL AttributeError",
+      "  - CHECK_EXC_MATCH None",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  - POP_TOP None",
+      "  - POP_EXCEPT None",
+      "  - ...(5 more)"
+     ]
+    },
+    {
+     "qualname": "ArgumentParser._parse_known_args",
+     "n_orig_instr": 411,
+     "n_prod_instr": 411,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "ArgumentParser._parse_known_args.consume_optional",
+     "note": "配对失败（原=0 产物=0）"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_ast",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "<module>",
+     "n_orig_instr": 405,
+     "n_prod_instr": 405,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[218:219] -> prod[218:219])",
+      "  - LOAD_CONST Ellipsis",
+      "  + LOAD_CONST None",
+      "--- replace (orig[249:250] -> prod[249:250])",
+      "  - LOAD_CONST Ellipsis",
+      "  + LOAD_CONST None"
+     ]
+    },
+    {
+     "qualname": "literal_eval._convert",
+     "note": "配对失败（原=0 产物=0）"
+    },
+    {
+     "qualname": "dump._format",
+     "note": "配对失败（原=0 产物=0）"
+    },
+    {
+     "qualname": "NodeVisitor.visit_Constant",
+     "n_orig_instr": 86,
+     "n_prod_instr": 86,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "Ellipsis.__new__",
+     "n_orig_instr": 28,
+     "n_prod_instr": 28,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[6:7] -> prod[6:7])",
+      "  - LOAD_CONST Ellipsis",
+      "  + LOAD_CONST None"
+     ]
+    },
+    {
+     "qualname": "_Unparser.visit_ImportFrom",
+     "n_orig_instr": 50,
+     "n_prod_instr": 52,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[29:29] -> prod[29:31])",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_asyncio_base_events",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "Server",
+     "n_orig_instr": 51,
+     "n_prod_instr": 52,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[5:6] -> prod[5:7])",
+      "  - NOP None",
+      "  + LOAD_CONST ''",
+      "  + STORE_NAME __doc__"
+     ]
+    },
+    {
+     "qualname": "Server.wait_closed",
+     "n_orig_instr": 34,
+     "n_prod_instr": 36,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[34:34] -> prod[34:36])",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    },
+    {
+     "qualname": "BaseEventLoop.shutdown_asyncgens",
+     "n_orig_instr": 77,
+     "n_prod_instr": 46,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[14:45] -> prod[14:14])",
+      "  - LOAD_GLOBAL list",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR _asyncgens",
+      "  - PRECALL 1",
+      "  - CALL 1",
+      "  - STORE_FAST closing_agens",
+      "  - ...(25 more)",
+      "--- replace (orig[46:48] -> prod[15:17])",
+      "  - LOAD_FAST results",
+      "  - LOAD_FAST closing_agens",
+      "  + LOAD_GLOBAL results",
+      "  + LOAD_GLOBAL closing_agens"
+     ]
+    },
+    {
+     "qualname": "BaseEventLoop.shutdown_asyncgens.<listcomp>",
+     "note": "配对失败（原=0 产物=0）"
+    },
+    {
+     "qualname": "BaseEventLoop.run_until_complete",
+     "n_orig_instr": 101,
+     "n_prod_instr": 103,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[57:58] -> prod[57:58])",
+      "  - POP_JUMP_FORWARD_IF_TRUE T",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "--- insert (orig[63:63] -> prod[63:64])",
+      "  + JUMP_FORWARD T",
+      "--- insert (orig[64:64] -> prod[65:67])",
+      "  + POP_EXCEPT None",
+      "  + JUMP_FORWARD T",
+      "--- delete (orig[67:68] -> prod[70:70])",
+      "  - NOP None"
+     ]
+    },
+    {
+     "qualname": "BaseEventLoop.close",
+     "n_orig_instr": 63,
+     "n_prod_instr": 60,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[16:19] -> prod[16:16])",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR _debug",
+      "  - POP_JUMP_FORWARD_IF_FALSE T"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_asyncio_streams",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "FlowControlMixin.pause_writing",
+     "n_orig_instr": 26,
+     "n_prod_instr": 26,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[3:4] -> prod[3:4])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    },
+    {
+     "qualname": "StreamWriter.drain",
+     "n_orig_instr": 47,
+     "n_prod_instr": 22,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[17:34] -> prod[17:17])",
+      "  - LOAD_ATTR _transport",
+      "  - LOAD_METHOD is_closing",
+      "  - PRECALL 0",
+      "  - CALL 0",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  - LOAD_GLOBAL sleep",
+      "  - ...(11 more)",
+      "--- delete (orig[38:46] -> prod[21:21])",
+      "  - GET_AWAITABLE 0",
+      "  - LOAD_CONST None",
+      "  - SEND T",
+      "  - YIELD_VALUE None",
+      "  - RESUME 3",
+      "  - JUMP_BACKWARD_NO_INTERRUPT T",
+      "  - ...(2 more)"
+     ]
+    },
+    {
+     "qualname": "StreamReader.feed_data",
+     "n_orig_instr": 75,
+     "n_prod_instr": 75,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[3:4] -> prod[3:4])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    },
+    {
+     "qualname": "StreamReader._wait_for_data",
+     "n_orig_instr": 64,
+     "n_prod_instr": 64,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[16:17] -> prod[16:17])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    },
+    {
+     "qualname": "StreamReader.readuntil",
+     "n_orig_instr": 143,
+     "n_prod_instr": 144,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[69:69] -> prod[69:70])",
+      "  + JUMP_FORWARD T"
+     ]
+    },
+    {
+     "qualname": "StreamReader.read",
+     "n_orig_instr": 92,
+     "n_prod_instr": 89,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[34:36] -> prod[34:34])",
+      "  - STORE_FAST block",
+      "  - LOAD_FAST block",
+      "--- replace (orig[40:41] -> prod[38:39])",
+      "  - LOAD_FAST block",
+      "  + LOAD_GLOBAL block",
+      "--- insert (orig[45:45] -> prod[43:47])",
+      "  + LOAD_FAST n",
+      "  + LOAD_CONST 0",
+      "  + COMPARE_OP <",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "--- replace (orig[69:70] -> prod[71:77])",
+      "  - LOAD_GLOBAL bytes",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None",
+      "  ...(截断)"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_asyncio_taskgroups",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "TaskGroup.__aexit__",
+     "n_orig_instr": 167,
+     "n_prod_instr": 167,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[113:114] -> prod[113:114])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_asyncio_tasks",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "<module>",
+     "n_orig_instr": 298,
+     "n_prod_instr": 298,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "_set_task_name",
+     "n_orig_instr": 38,
+     "n_prod_instr": 38,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "wait_for",
+     "n_orig_instr": 244,
+     "n_prod_instr": 229,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[112:113] -> prod[112:112])",
+      "  - NOP None",
+      "--- delete (orig[121:169] -> prod[120:120])",
+      "  - JUMP_FORWARD T",
+      "  - PUSH_EXC_INFO None",
+      "  - LOAD_GLOBAL exceptions",
+      "  - LOAD_ATTR CancelledError",
+      "  - CHECK_EXC_MATCH None",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  - ...(42 more)",
+      "--- insert (orig[235:235] -> prod[186:220])",
+      "  + LOAD_GLOBAL exceptions",
+      "  + LOAD_ATTR CancelledError",
+      "  + CHECK_EXC_MATCH None",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_TOP None",
+      "  + LOAD_FAST fut",
+      "  + ...(28 more)",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "_wait",
+     "n_orig_instr": 141,
+     "n_prod_instr": 141,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[72:72] -> prod[72:74])",
+      "  + POP_TOP None",
+      "  + LOAD_FAST fs",
+      "--- insert (orig[92:92] -> prod[94:96])",
+      "  + POP_TOP None",
+      "  + LOAD_FAST fs",
+      "--- delete (orig[109:112] -> prod[113:113])",
+      "  - LOAD_GLOBAL set",
+      "  - PRECALL 0",
+      "  - CALL 0",
+      "--- delete (orig[113:114] -> prod[114:114])",
+      "  - STORE_FAST done",
+      "--- replace (orig[123:124] -> prod[123:124])",
+      "  - LOAD_FAST done",
+      "  + LOAD_GLOBAL done",
+      "--- replace (orig[137:138] -> prod[137:138])",
+      "  - LOAD_FAST done",
+      "  + LOAD_GLOBAL done",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "_wait._on_completion",
+     "note": "配对失败（原=0 产物=0）"
+    },
+    {
+     "qualname": "as_completed",
+     "n_orig_instr": 123,
+     "n_prod_instr": 125,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[2:2] -> prod[2:3])",
+      "  + MAKE_CELL f",
+      "--- replace (orig[77:78] -> prod[78:80])",
+      "  - BUILD_TUPLE 1",
+      "  + LOAD_CLOSURE f",
+      "  + BUILD_TUPLE 2",
+      "--- replace (orig[84:86] -> prod[86:88])",
+      "  - STORE_FAST f",
+      "  - LOAD_FAST f",
+      "  + STORE_DEREF f",
+      "  + LOAD_DEREF f"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_asyncio_timeouts",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "Timeout",
+     "n_orig_instr": 79,
+     "n_prod_instr": 77,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[47:48] -> prod[47:47])",
+      "  - LOAD_CONST ('return', 'Timeout')",
+      "--- replace (orig[49:50] -> prod[48:49])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[73:74] -> prod[72:72])",
+      "  - LOAD_CONST ('return', None)",
+      "--- replace (orig[75:76] -> prod[73:74])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_contextlib",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "_GeneratorContextManagerBase.__init__",
+     "n_orig_instr": 40,
+     "n_prod_instr": 39,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[10:12] -> prod[10:10])",
+      "  - LOAD_FAST func",
+      "  - LOAD_FAST args",
+      "--- delete (orig[13:14] -> prod[11:11])",
+      "  - SWAP 3",
+      "--- insert (orig[16:16] -> prod[13:14])",
+      "  + LOAD_CONST None",
+      "--- insert (orig[18:18] -> prod[16:17])",
+      "  + LOAD_CONST None"
+     ]
+    },
+    {
+     "qualname": "_GeneratorContextManager.__exit__",
+     "n_orig_instr": 160,
+     "n_prod_instr": 161,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[10:10] -> prod[10:23])",
+      "  + JUMP_FORWARD T",
+      "  + PUSH_EXC_INFO None",
+      "  + LOAD_GLOBAL StopIteration",
+      "  + CHECK_EXC_MATCH None",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_TOP None",
+      "  + ...(7 more)",
+      "--- delete (orig[23:35] -> prod[36:36])",
+      "  - RERAISE 0",
+      "  - COPY 3",
+      "  - POP_EXCEPT None",
+      "  - RERAISE 1",
+      "  - PUSH_EXC_INFO None",
+      "  - LOAD_GLOBAL StopIteration",
+      "  - ...(6 more)"
+     ]
+    },
+    {
+     "qualname": "_AsyncGeneratorContextManager.__aexit__",
+     "n_orig_instr": 188,
+     "n_prod_instr": 165,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[18:41] -> prod[18:19])",
+      "  - NOP None",
+      "  - LOAD_GLOBAL RuntimeError",
+      "  - LOAD_CONST \"generator didn't stop\"",
+      "  - PRECALL 1",
+      "  - CALL 1",
+      "  - RAISE_VARARGS 1",
+      "  - ...(17 more)",
+      "  + JUMP_FORWARD T",
+      "--- insert (orig[49:49] -> prod[27:38])",
+      "  + RERAISE 0",
+      "  + COPY 3",
+      "  + POP_EXCEPT None",
+      "  + RERAISE 1",
+      "  + NOP None",
+      "  + LOAD_GLOBAL RuntimeError",
+      "  + ...(5 more)",
+      "--- delete (orig[172:184] -> prod[161:161])",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR gen",
+      "  - LOAD_METHOD aclose",
+      "  - PRECALL 0",
+      "  - CALL 0",
+      "  - GET_AWAITABLE 0",
+      "  - ...(6 more)",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "ExitStack.__exit__._fix_exception_context",
+     "note": "配对失败（原=0 产物=0）"
+    },
+    {
+     "qualname": "AsyncExitStack.__aexit__",
+     "n_orig_instr": 127,
+     "n_prod_instr": 127,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "AsyncExitStack.__aexit__._fix_exception_context",
+     "note": "配对失败（原=0 产物=0）"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_csv",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "Sniffer._guess_quote_and_delimiter",
+     "n_orig_instr": 208,
+     "n_prod_instr": 208,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "Sniffer._guess_delimiter",
+     "n_orig_instr": 419,
+     "n_prod_instr": 419,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[41:42] -> prod[41:41])",
+      "  - LOAD_CONST 0",
+      "--- delete (orig[44:45] -> prod[43:43])",
+      "  - STORE_FAST start",
+      "--- insert (orig[419:419] -> prod[417:419])",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    },
+    {
+     "qualname": "Sniffer.has_header",
+     "n_orig_instr": 199,
+     "n_prod_instr": 200,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[173:178] -> prod[173:174])",
+      "  - LOAD_FAST hasHeader",
+      "  - LOAD_CONST 1",
+      "  - BINARY_OP 23",
+      "  - STORE_FAST hasHeader",
+      "  - JUMP_BACKWARD T",
+      "  + JUMP_FORWARD T",
+      "--- replace (orig[190:191] -> prod[186:187])",
+      "  - JUMP_BACKWARD T",
+      "  + JUMP_FORWARD T",
+      "--- insert (orig[196:196] -> prod[192:197])",
+      "  + LOAD_CONST 1",
+      "  + BINARY_OP 23",
+      "  + STORE_FAST hasHeader",
+      "  + JUMP_BACKWARD T",
+      "  + LOAD_FAST hasHeader"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_dataclasses",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "_get_field",
+     "n_orig_instr": 203,
+     "n_prod_instr": 203,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "_hash_add.<listcomp>",
+     "note": "配对失败（原=0 产物=0）"
+    },
+    {
+     "qualname": "_process_class",
+     "n_orig_instr": 606,
+     "n_prod_instr": 599,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[158:158] -> prod[158:159])",
+      "  + JUMP_BACKWARD T",
+      "--- insert (orig[279:279] -> prod[280:281])",
+      "  + UNARY_NOT None",
+      "--- delete (orig[280:289] -> prod[282:282])",
+      "  - LOAD_FAST order",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  - LOAD_FAST eq",
+      "  - POP_JUMP_FORWARD_IF_TRUE T",
+      "  - LOAD_GLOBAL ValueError",
+      "  - LOAD_CONST 'eq must be true if order is true'",
+      "  - ...(3 more)"
+     ]
+    },
+    {
+     "qualname": "_add_slots",
+     "n_orig_instr": 144,
+     "n_prod_instr": 148,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[75:75] -> prod[75:79])",
+      "  + LOAD_CONST 1",
+      "  + LOAD_FAST cls_dict",
+      "  + LOAD_CONST '__slots__'",
+      "  + STORE_SUBSCR None"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_difflib",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "<module>",
+     "n_orig_instr": 154,
+     "n_prod_instr": 147,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[80:82] -> prod[80:80])",
+      "  - NOP None",
+      "  - NOP None",
+      "--- delete (orig[89:91] -> prod[87:87])",
+      "  - NOP None",
+      "  - NOP None",
+      "--- delete (orig[98:100] -> prod[94:94])",
+      "  - NOP None",
+      "  - NOP None",
+      "--- delete (orig[134:135] -> prod[128:128])",
+      "  - DELETE_NAME re"
+     ]
+    },
+    {
+     "qualname": "SequenceMatcher.__chain_b",
+     "n_orig_instr": 134,
+     "n_prod_instr": 128,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - COPY 1",
+      "--- delete (orig[8:9] -> prod[7:7])",
+      "  - STORE_FAST b2j",
+      "--- replace (orig[18:19] -> prod[16:17])",
+      "  - LOAD_FAST b2j",
+      "  + LOAD_GLOBAL b2j",
+      "--- delete (orig[35:36] -> prod[33:33])",
+      "  - COPY 1",
+      "--- delete (orig[38:39] -> prod[35:35])",
+      "  - STORE_FAST junk",
+      "--- replace (orig[44:45] -> prod[40:41])",
+      "  - LOAD_FAST b2j",
+      "  + LOAD_GLOBAL b2j",
+      "--- replace (orig[57:58] -> prod[53:54])",
+      "  - LOAD_FAST junk",
+      "  + LOAD_GLOBAL junk",
+      "--- replace (orig[64:65] -> prod[60:61])",
+      "  - LOAD_FAST junk",
+      "  + LOAD_GLOBAL junk",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "SequenceMatcher.find_longest_match",
+     "n_orig_instr": 407,
+     "n_prod_instr": 346,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[30:32] -> prod[30:30])",
+      "  - LOAD_FAST alo",
+      "  - LOAD_FAST blo",
+      "--- delete (orig[34:36] -> prod[32:32])",
+      "  - STORE_FAST bestj",
+      "  - STORE_FAST besti",
+      "--- delete (orig[142:148] -> prod[138:138])",
+      "  - LOAD_FAST besti",
+      "  - LOAD_CONST 1",
+      "  - BINARY_OP 10",
+      "  - LOAD_FAST bestj",
+      "  - LOAD_CONST 1",
+      "  - BINARY_OP 10",
+      "--- delete (orig[152:158] -> prod[142:142])",
+      "  - STORE_FAST bestj",
+      "  - STORE_FAST besti",
+      "  - LOAD_FAST besti",
+      "  - LOAD_FAST alo",
+      "  - COMPARE_OP >",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "SequenceMatcher.get_matching_blocks",
+     "n_orig_instr": 196,
+     "n_prod_instr": 182,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[9:14] -> prod[9:9])",
+      "  - LOAD_ATTR a",
+      "  - PRECALL 1",
+      "  - CALL 1",
+      "  - LOAD_GLOBAL len",
+      "  - LOAD_FAST self",
+      "--- delete (orig[18:19] -> prod[13:13])",
+      "  - STORE_FAST la",
+      "--- replace (orig[20:21] -> prod[14:15])",
+      "  - LOAD_FAST la",
+      "  + LOAD_GLOBAL la",
+      "--- delete (orig[47:48] -> prod[41:41])",
+      "  - COPY 1",
+      "--- delete (orig[52:53] -> prod[45:45])",
+      "  - STORE_FAST x",
+      "--- replace (orig[57:58] -> prod[49:50])",
+      "  - LOAD_FAST x",
+      "  + LOAD_GLOBAL x",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "SequenceMatcher.get_opcodes",
+     "n_orig_instr": 89,
+     "n_prod_instr": 85,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[8:9] -> prod[8:8])",
+      "  - COPY 1",
+      "--- delete (orig[10:11] -> prod[9:9])",
+      "  - STORE_FAST j",
+      "--- delete (orig[12:13] -> prod[10:10])",
+      "  - COPY 1",
+      "--- delete (orig[15:16] -> prod[12:12])",
+      "  - STORE_FAST answer",
+      "--- replace (orig[54:55] -> prod[50:51])",
+      "  - LOAD_FAST answer",
+      "  + LOAD_GLOBAL answer",
+      "--- replace (orig[75:76] -> prod[71:72])",
+      "  - LOAD_FAST answer",
+      "  + LOAD_GLOBAL answer",
+      "--- replace (orig[87:88] -> prod[83:84])",
+      "  - LOAD_FAST answer",
+      "  + LOAD_GLOBAL answer"
+     ]
+    },
+    {
+     "qualname": "SequenceMatcher.get_grouped_opcodes",
+     "n_orig_instr": 198,
+     "n_prod_instr": 200,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[198:198] -> prod[198:200])",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_enum",
+   "status": "compile_error",
+   "units": []
+  },
+  {
+   "slug": "stdlib_functools",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "update_wrapper",
+     "n_orig_instr": 56,
+     "n_prod_instr": 57,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[12:12] -> prod[12:24])",
+      "  + JUMP_FORWARD T",
+      "  + PUSH_EXC_INFO None",
+      "  + LOAD_GLOBAL AttributeError",
+      "  + CHECK_EXC_MATCH None",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_TOP None",
+      "  + ...(6 more)",
+      "--- delete (orig[20:31] -> prod[32:32])",
+      "  - PUSH_EXC_INFO None",
+      "  - LOAD_GLOBAL AttributeError",
+      "  - CHECK_EXC_MATCH None",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  - POP_TOP None",
+      "  - POP_EXCEPT None",
+      "  - ...(5 more)"
+     ]
+    },
+    {
+     "qualname": "partial.__new__",
+     "n_orig_instr": 54,
+     "n_prod_instr": 49,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[24:29] -> prod[24:24])",
+      "  - LOAD_FAST func",
+      "  - LOAD_ATTR keywords",
+      "  - DICT_UPDATE 1",
+      "  - LOAD_FAST keywords",
+      "  - DICT_UPDATE 1"
+     ]
+    },
+    {
+     "qualname": "partial.__call__",
+     "n_orig_instr": 23,
+     "n_prod_instr": 18,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[2:7] -> prod[2:2])",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR keywords",
+      "  - DICT_UPDATE 1",
+      "  - LOAD_FAST keywords",
+      "  - DICT_UPDATE 1"
+     ]
+    },
+    {
+     "qualname": "partial.__reduce__",
+     "n_orig_instr": 23,
+     "n_prod_instr": 8,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[1:12] -> prod[1:1])",
+      "  - LOAD_GLOBAL type",
+      "  - LOAD_FAST self",
+      "  - PRECALL 1",
+      "  - CALL 1",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR func",
+      "  - ...(5 more)",
+      "--- replace (orig[16:22] -> prod[5:7])",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR __dict__",
+      "  - JUMP_IF_TRUE_OR_POP T",
+      "  - LOAD_CONST None",
+      "  - BUILD_TUPLE 4",
+      "  - BUILD_TUPLE 3",
+      "  + POP_TOP None",
+      "  + LOAD_CONST ((),)"
+     ]
+    },
+    {
+     "qualname": "partial.__setstate__",
+     "n_orig_instr": 108,
+     "n_prod_instr": 114,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[108:108] -> prod[108:114])",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    },
+    {
+     "qualname": "partialmethod.__init__",
+     "n_orig_instr": 58,
+     "n_prod_instr": 53,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[38:43] -> prod[38:38])",
+      "  - LOAD_FAST func",
+      "  - LOAD_ATTR keywords",
+      "  - DICT_UPDATE 1",
+      "  - LOAD_FAST keywords",
+      "  - DICT_UPDATE 1"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_http_cookiejar",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "_timegm",
+     "n_orig_instr": 84,
+     "n_prod_instr": 101,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[28:29] -> prod[28:30])",
+      "  - JUMP_FORWARD T",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None",
+      "--- replace (orig[30:31] -> prod[31:32])",
+      "  - LOAD_FAST mday",
+      "  + LOAD_FAST month",
+      "--- replace (orig[35:36] -> prod[36:37])",
+      "  - LOAD_CONST 31",
+      "  + LOAD_CONST 12",
+      "--- replace (orig[40:41] -> prod[41:44])",
+      "  - JUMP_FORWARD T",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None",
+      "  + NOP None",
+      "--- replace (orig[52:53] -> prod[55:57])",
+      "  - JUMP_FORWARD T",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "split_header_words",
+     "n_orig_instr": 179,
+     "n_prod_instr": 179,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[6:7] -> prod[6:7])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    },
+    {
+     "qualname": "user_domain_match",
+     "n_orig_instr": 55,
+     "n_prod_instr": 57,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[55:55] -> prod[55:57])",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    },
+    {
+     "qualname": "DefaultCookiePolicy.set_ok_version",
+     "n_orig_instr": 47,
+     "n_prod_instr": 47,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[37:38] -> prod[37:38])",
+      "  - POP_JUMP_FORWARD_IF_TRUE T",
+      "  + POP_JUMP_FORWARD_IF_FALSE T"
+     ]
+    },
+    {
+     "qualname": "DefaultCookiePolicy.set_ok_path",
+     "n_orig_instr": 42,
+     "n_prod_instr": 66,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[14:14] -> prod[14:38])",
+      "  + LOAD_FAST self",
+      "  + LOAD_ATTR strict_ns_set_path",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "  + LOAD_FAST self",
+      "  + LOAD_METHOD path_return_ok",
+      "  + LOAD_FAST cookie",
+      "  + ...(18 more)",
+      "--- replace (orig[30:39] -> prod[54:55])",
+      "  - LOAD_GLOBAL _debug",
+      "  - LOAD_CONST '   path attribute %s is not a prefix of request path %s'",
+      "  - LOAD_FAST cookie",
+      "  - LOAD_ATTR path",
+      "  - LOAD_FAST req_path",
+      "  - PRECALL 3",
+      "  - ...(3 more)",
+      "  + LOAD_CONST None",
+      "--- replace (orig[40:41] -> prod[56:57])",
+      "  - LOAD_CONST True",
+      "  + LOAD_CONST None",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "DefaultCookiePolicy.set_ok_domain",
+     "n_orig_instr": 268,
+     "n_prod_instr": 271,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[49:49] -> prod[49:50])",
+      "  + EXTENDED_ARG 2",
+      "--- insert (orig[57:57] -> prod[58:59])",
+      "  + EXTENDED_ARG 2",
+      "--- insert (orig[75:75] -> prod[77:78])",
+      "  + EXTENDED_ARG 1"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_ipaddress",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "_find_address_range",
+     "n_orig_instr": 46,
+     "n_prod_instr": 44,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[12:13] -> prod[12:12])",
+      "  - COPY 1",
+      "--- delete (orig[14:15] -> prod[13:13])",
+      "  - STORE_FAST last"
+     ]
+    },
+    {
+     "qualname": "_BaseNetwork.address_exclude",
+     "n_orig_instr": 175,
+     "n_prod_instr": 168,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[101:107] -> prod[101:101])",
+      "  - LOAD_FAST other",
+      "  - LOAD_METHOD subnet_of",
+      "  - LOAD_FAST s2",
+      "  - PRECALL 1",
+      "  - CALL 1",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "--- delete (orig[118:119] -> prod[112:112])",
+      "  - JUMP_FORWARD T"
+     ]
+    },
+    {
+     "qualname": "_BaseNetwork.is_private.<genexpr>",
+     "note": "配对失败（原=0 产物=0）"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_json_encoder",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "_make_iterencode",
+     "n_orig_instr": 106,
+     "n_prod_instr": 104,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - MAKE_CELL _key_separator",
+      "--- delete (orig[67:68] -> prod[66:66])",
+      "  - LOAD_CLOSURE _key_separator",
+      "--- replace (orig[79:80] -> prod[77:78])",
+      "  - BUILD_TUPLE 21",
+      "  + BUILD_TUPLE 20"
+     ]
+    },
+    {
+     "qualname": "_make_iterencode._iterencode_list",
+     "note": "配对失败（原=0 产物=0）"
+    },
+    {
+     "qualname": "_make_iterencode._iterencode_dict",
+     "note": "配对失败（原=0 产物=0）"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_re__parser",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "SubPattern.getwidth",
+     "n_orig_instr": 258,
+     "n_prod_instr": 250,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[8:9] -> prod[8:8])",
+      "  - COPY 1",
+      "--- delete (orig[10:11] -> prod[9:9])",
+      "  - STORE_FAST hi",
+      "--- delete (orig[70:71] -> prod[68:68])",
+      "  - UNPACK_SEQUENCE 2",
+      "--- delete (orig[72:73] -> prod[69:69])",
+      "  - STORE_FAST j",
+      "--- delete (orig[92:93] -> prod[88:88])",
+      "  - UNPACK_SEQUENCE 2",
+      "--- delete (orig[94:95] -> prod[89:89])",
+      "  - STORE_FAST j",
+      "--- delete (orig[170:171] -> prod[164:164])",
+      "  - UNPACK_SEQUENCE 2",
+      "--- delete (orig[172:173] -> prod[165:165])",
+      "  - STORE_FAST j"
+     ]
+    },
+    {
+     "qualname": "Tokenizer.getuntil",
+     "n_orig_instr": 59,
+     "n_prod_instr": 55,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[13:14] -> prod[13:31])",
+      "  - POP_JUMP_FORWARD_IF_NOT_NONE T",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "  + LOAD_FAST c",
+      "  + LOAD_FAST terminator",
+      "  + COMPARE_OP ==",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "  + LOAD_FAST result",
+      "  + ...(12 more)",
+      "--- delete (orig[36:57] -> prod[53:53])",
+      "  - LOAD_FAST c",
+      "  - LOAD_FAST terminator",
+      "  - COMPARE_OP ==",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  - LOAD_FAST result",
+      "  - POP_JUMP_FORWARD_IF_TRUE T",
+      "  - ...(15 more)"
+     ]
+    },
+    {
+     "qualname": "_class_escape",
+     "n_orig_instr": 358,
+     "n_prod_instr": 365,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[131:131] -> prod[131:138])",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "  + LOAD_GLOBAL len",
+      "  + LOAD_FAST escape",
+      "  + PRECALL 1",
+      "  + CALL 1",
+      "  + LOAD_CONST 10",
+      "  + ...(1 more)"
+     ]
+    },
+    {
+     "qualname": "_escape",
+     "n_orig_instr": 454,
+     "n_prod_instr": 461,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[125:125] -> prod[125:132])",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "  + LOAD_GLOBAL len",
+      "  + LOAD_FAST escape",
+      "  + PRECALL 1",
+      "  + CALL 1",
+      "  + LOAD_CONST 10",
+      "  + ...(1 more)"
+     ]
+    },
+    {
+     "qualname": "_parse_sub",
+     "n_orig_instr": 188,
+     "n_prod_instr": 158,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[34:49] -> prod[34:35])",
+      "  - PUSH_NULL None",
+      "  - LOAD_FAST sourcematch",
+      "  - LOAD_CONST '|'",
+      "  - PRECALL 1",
+      "  - CALL 1",
+      "  - POP_JUMP_FORWARD_IF_TRUE T",
+      "  - ...(9 more)",
+      "  + NOP None",
+      "--- delete (orig[92:108] -> prod[78:78])",
+      "  - LOAD_FAST items",
+      "  - GET_ITER None",
+      "  - FOR_ITER T",
+      "  - STORE_FAST item",
+      "  - LOAD_FAST item",
+      "  - LOAD_CONST 0",
+      "  - ...(10 more)"
+     ]
+    },
+    {
+     "qualname": "_parse",
+     "n_orig_instr": 1756,
+     "n_prod_instr": 1727,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[56:57] -> prod[56:57])",
+      "  - POP_JUMP_FORWARD_IF_NONE T",
+      "  + POP_JUMP_FORWARD_IF_NOT_NONE T",
+      "--- replace (orig[62:63] -> prod[62:64])",
+      "  - JUMP_BACKWARD T",
+      "  + JUMP_FORWARD T",
+      "  + JUMP_FORWARD T",
+      "--- replace (orig[158:171] -> prod[159:161])",
+      "  - POP_JUMP_FORWARD_IF_NOT_NONE T",
+      "  - LOAD_FAST source",
+      "  - LOAD_METHOD error",
+      "  - LOAD_CONST 'unterminated character set'",
+      "  - LOAD_FAST source",
+      "  - LOAD_METHOD tell",
+      "  - ...(7 more)",
+      "  + EXTENDED_ARG 2",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "--- insert (orig[465:465] -> prod[455:468])",
+      "  + JUMP_FORWARD T",
+      "  + LOAD_FAST source",
+      "  + LOAD_METHOD error",
+      "  + LOAD_CONST 'unterminated character set'",
+      "  + LOAD_FAST source",
+      "  + LOAD_METHOD tell",
+      "  + ...(7 more)",
+      "  ...(截断)"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_statistics",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "_sum",
+     "n_orig_instr": 99,
+     "n_prod_instr": 99,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[70:71] -> prod[70:71])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    },
+    {
+     "qualname": "_ss",
+     "n_orig_instr": 181,
+     "n_prod_instr": 181,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[124:125] -> prod[124:125])",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_TRUE T"
+     ]
+    },
+    {
+     "qualname": "_exact_ratio",
+     "n_orig_instr": 68,
+     "n_prod_instr": 68,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[25:26] -> prod[25:26])",
+      "  - LOAD_ASSERTION_ERROR None",
+      "  + LOAD_GLOBAL AssertionError"
+     ]
+    },
+    {
+     "qualname": "harmonic_mean",
+     "n_orig_instr": 170,
+     "n_prod_instr": 170,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "NormalDist.samples",
+     "n_orig_instr": 37,
+     "n_prod_instr": 31,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[2:3] -> prod[2:2])",
+      "  - MAKE_CELL sigma",
+      "--- delete (orig[18:21] -> prod[17:17])",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR _sigma",
+      "  - SWAP 2",
+      "--- delete (orig[22:23] -> prod[18:18])",
+      "  - STORE_DEREF sigma",
+      "--- replace (orig[25:27] -> prod[20:21])",
+      "  - LOAD_CLOSURE sigma",
+      "  - BUILD_TUPLE 3",
+      "  + BUILD_TUPLE 2"
+     ]
+    },
+    {
+     "qualname": "NormalDist.samples.<listcomp>",
+     "note": "配对失败（原=0 产物=0）"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_subprocess",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "call",
+     "n_orig_instr": 48,
+     "n_prod_instr": 43,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[1:4] -> prod[1:1])",
+      "  - LOAD_GLOBAL Popen",
+      "  - LOAD_FAST popenargs",
+      "  - BUILD_MAP 0",
+      "--- delete (orig[5:7] -> prod[2:2])",
+      "  - DICT_MERGE 1",
+      "  - CALL_FUNCTION_EX 1"
+     ]
+    },
+    {
+     "qualname": "run",
+     "n_orig_instr": 153,
+     "n_prod_instr": 148,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[45:48] -> prod[45:45])",
+      "  - LOAD_GLOBAL Popen",
+      "  - LOAD_FAST popenargs",
+      "  - BUILD_MAP 0",
+      "--- delete (orig[49:51] -> prod[46:46])",
+      "  - DICT_MERGE 1",
+      "  - CALL_FUNCTION_EX 1"
+     ]
+    },
+    {
+     "qualname": "Popen.__init__",
+     "n_orig_instr": 755,
+     "n_prod_instr": 759,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[69:70] -> prod[69:71])",
+      "  - JUMP_FORWARD T",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None",
+      "--- delete (orig[154:159] -> prod[155:155])",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR text_mode",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  - LOAD_FAST encoding",
+      "  - POP_JUMP_FORWARD_IF_NOT_NONE T",
+      "--- delete (orig[166:175] -> prod[162:162])",
+      "  - LOAD_CONST 0.25",
+      "  - LOAD_FAST self",
+      "  - STORE_ATTR _sigint_wait_secs",
+      "  - LOAD_CONST False",
+      "  - LOAD_FAST self",
+      "  - STORE_ATTR _closed_child_pipe_fds",
+      "  - ...(3 more)",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "Popen.__exit__",
+     "n_orig_instr": 118,
+     "n_prod_instr": 121,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[114:115] -> prod[114:118])",
+      "  - RERAISE 0",
+      "  + POP_TOP None",
+      "  + POP_EXCEPT None",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    },
+    {
+     "qualname": "Popen._check_timeout",
+     "n_orig_instr": 41,
+     "n_prod_instr": 44,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[14:14] -> prod[14:15])",
+      "  + LOAD_METHOD args",
+      "--- replace (orig[38:39] -> prod[39:40])",
+      "  - RAISE_VARARGS 1",
+      "  + POP_TOP None",
+      "--- insert (orig[41:41] -> prod[42:44])",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    },
+    {
+     "qualname": "Popen._on_error_fd_closer",
+     "n_orig_instr": 70,
+     "n_prod_instr": 73,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[29:29] -> prod[29:32])",
+      "  + POP_EXCEPT None",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_tarfile",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "itn",
+     "n_orig_instr": 118,
+     "n_prod_instr": 118,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "copyfileobj",
+     "n_orig_instr": 95,
+     "n_prod_instr": 10,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[5:9] -> prod[5:8])",
+      "  - LOAD_FAST length",
+      "  - LOAD_CONST 0",
+      "  - COMPARE_OP ==",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + LOAD_FAST bufsize",
+      "  + POP_JUMP_FORWARD_IF_TRUE T",
+      "  + NOP None",
+      "--- delete (orig[11:95] -> prod[10:10])",
+      "  - LOAD_FAST length",
+      "  - POP_JUMP_FORWARD_IF_NOT_NONE T",
+      "  - LOAD_GLOBAL shutil",
+      "  - LOAD_ATTR copyfileobj",
+      "  - LOAD_FAST src",
+      "  - LOAD_FAST dst",
+      "  - ...(78 more)"
+     ]
+    },
+    {
+     "qualname": "_Stream.__init__",
+     "n_orig_instr": 247,
+     "n_prod_instr": 250,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[240:240] -> prod[240:243])",
+      "  + POP_EXCEPT None",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    },
+    {
+     "qualname": "_Stream._init_read_gz",
+     "n_orig_instr": 138,
+     "n_prod_instr": 146,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[104:104] -> prod[104:106])",
+      "  + JUMP_FORWARD T",
+      "  + JUMP_FORWARD T",
+      "--- insert (orig[122:122] -> prod[124:126])",
+      "  + NOP None",
+      "  + JUMP_FORWARD T",
+      "--- insert (orig[138:138] -> prod[142:146])",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    },
+    {
+     "qualname": "_Stream._read",
+     "n_orig_instr": 112,
+     "n_prod_instr": 112,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "_FileInFile.read",
+     "n_orig_instr": 143,
+     "n_prod_instr": 132,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[25:26] -> prod[25:25])",
+      "  - EXTENDED_ARG 1",
+      "--- delete (orig[41:43] -> prod[40:40])",
+      "  - SWAP 2",
+      "  - COPY 2",
+      "--- delete (orig[45:48] -> prod[42:42])",
+      "  - LOAD_FAST stop",
+      "  - COMPARE_OP <",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "--- replace (orig[49:52] -> prod[43:44])",
+      "  - POP_TOP None",
+      "  - JUMP_FORWARD T",
+      "  - JUMP_FORWARD T",
+      "  + NOP None",
+      "--- insert (orig[71:71] -> prod[63:64])",
+      "  + JUMP_FORWARD T",
+      "--- insert (orig[89:89] -> prod[82:83])",
+      "  + BINARY_OP 0",
+      "  ...(截断)"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_tomllib_parser",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "<module>",
+     "n_orig_instr": 306,
+     "n_prod_instr": 281,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[173:174] -> prod[173:173])",
+      "  - LOAD_CONST ('fp', 'BinaryIO', 'parse_float', 'ParseFloat', 'return', 'dict[str, Any]')",
+      "--- replace (orig[175:176] -> prod[174:175])",
+      "  - MAKE_FUNCTION 6",
+      "  + MAKE_FUNCTION 2",
+      "--- delete (orig[180:181] -> prod[179:179])",
+      "  - LOAD_CONST ('s', 'str', 'parse_float', 'ParseFloat', 'return', 'dict[str, Any]')",
+      "--- replace (orig[182:183] -> prod[180:181])",
+      "  - MAKE_FUNCTION 6",
+      "  + MAKE_FUNCTION 2",
+      "--- delete (orig[209:210] -> prod[207:207])",
+      "  - LOAD_CONST ('src', 'str', 'pos', 'Pos', 'chars', 'Iterable[str]', 'return', 'Pos')",
+      "--- replace (orig[211:212] -> prod[208:209])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[213:214] -> prod[210:210])",
+      "  - LOAD_CONST ('src', 'str', 'pos', 'Pos', 'expect', 'str', 'error_on', 'frozenset[str]', 'error_on_eof', 'bool', 'return', 'Pos')",
+      "--- replace (orig[215:216] -> prod[211:212])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "loads",
+     "n_orig_instr": 200,
+     "n_prod_instr": 200,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[35:35] -> prod[35:44])",
+      "  + LOAD_FAST char",
+      "  + LOAD_CONST '\\n'",
+      "  + COMPARE_OP ==",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "  + LOAD_FAST pos",
+      "  + LOAD_CONST 1",
+      "  + ...(3 more)",
+      "--- delete (orig[53:62] -> prod[62:62])",
+      "  - LOAD_FAST char",
+      "  - LOAD_CONST '\\n'",
+      "  - COMPARE_OP ==",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  - LOAD_FAST pos",
+      "  - LOAD_CONST 1",
+      "  - ...(3 more)"
+     ]
+    },
+    {
+     "qualname": "Flags",
+     "n_orig_instr": 37,
+     "n_prod_instr": 31,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[11:12] -> prod[11:11])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[13:14] -> prod[12:13])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[15:16] -> prod[14:14])",
+      "  - LOAD_CONST ('key', 'Key', 'flag', 'int', 'return', 'None')",
+      "--- replace (orig[17:18] -> prod[15:16])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[19:20] -> prod[17:17])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[21:22] -> prod[18:19])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[23:24] -> prod[20:20])",
+      "  - LOAD_CONST ('key', 'Key', 'return', 'None')",
+      "--- replace (orig[25:26] -> prod[21:22])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "Flags.set",
+     "n_orig_instr": 73,
+     "n_prod_instr": 65,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[5:10] -> prod[5:5])",
+      "  - LOAD_CONST None",
+      "  - LOAD_CONST -1",
+      "  - BUILD_SLICE 2",
+      "  - BINARY_SUBSCR None",
+      "  - LOAD_FAST key",
+      "--- replace (orig[13:15] -> prod[8:9])",
+      "  - STORE_FAST key_parent",
+      "  - LOAD_FAST key_parent",
+      "  + LOAD_GLOBAL key_parent",
+      "--- delete (orig[70:72] -> prod[64:64])",
+      "  - POP_TOP None",
+      "  - LOAD_CONST None"
+     ]
+    },
+    {
+     "qualname": "Flags.is_",
+     "n_orig_instr": 67,
+     "n_prod_instr": 67,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[65:66] -> prod[65:66])",
+      "  - LOAD_CONST False",
+      "  + LOAD_CONST None"
+     ]
+    },
+    {
+     "qualname": "NestedDict",
+     "n_orig_instr": 22,
+     "n_prod_instr": 19,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[5:6] -> prod[5:5])",
+      "  - LOAD_CONST ('return', 'None')",
+      "--- replace (orig[7:8] -> prod[6:7])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0",
+      "--- delete (orig[12:13] -> prod[11:11])",
+      "  - LOAD_CONST ('key', 'Key', 'access_lists', 'bool', 'return', 'dict')",
+      "--- replace (orig[14:15] -> prod[12:13])",
+      "  - MAKE_FUNCTION 6",
+      "  + MAKE_FUNCTION 2",
+      "--- delete (orig[16:17] -> prod[14:14])",
+      "  - LOAD_CONST ('key', 'Key', 'return', 'None')",
+      "--- replace (orig[18:19] -> prod[15:16])",
+      "  - MAKE_FUNCTION 4",
+      "  + MAKE_FUNCTION 0"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_typing",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "<module>",
+     "n_orig_instr": 1473,
+     "n_prod_instr": 1471,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[1450:1451] -> prod[1450:1451])",
+      "  - LOAD_CONST Ellipsis",
+      "  + LOAD_CONST None",
+      "--- replace (orig[1455:1456] -> prod[1455:1456])",
+      "  - LOAD_CONST Ellipsis",
+      "  + LOAD_CONST None",
+      "--- delete (orig[1458:1460] -> prod[1458:1458])",
+      "  - LOAD_CONST 'kwargs'",
+      "  - LOAD_NAME Any",
+      "--- replace (orig[1467:1468] -> prod[1465:1466])",
+      "  - BUILD_TUPLE 12",
+      "  + BUILD_TUPLE 10"
+     ]
+    },
+    {
+     "qualname": "_is_param_expr",
+     "n_orig_instr": 15,
+     "n_prod_instr": 15,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[2:3] -> prod[2:3])",
+      "  - LOAD_CONST Ellipsis",
+      "  + LOAD_CONST None"
+     ]
+    },
+    {
+     "qualname": "_should_unflatten_callable_args",
+     "n_orig_instr": 23,
+     "n_prod_instr": 23,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "_type_repr",
+     "n_orig_instr": 57,
+     "n_prod_instr": 55,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[37:40] -> prod[37:38])",
+      "  - LOAD_CONST Ellipsis",
+      "  - IS_OP 0",
+      "  - POP_JUMP_FORWARD_IF_FALSE T",
+      "  + POP_JUMP_FORWARD_IF_NOT_NONE T"
+     ]
+    },
+    {
+     "qualname": "_check_generic",
+     "n_orig_instr": 45,
+     "n_prod_instr": 44,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[20:21] -> prod[20:20])",
+      "  - LOAD_GLOBAL TypeError",
+      "--- replace (orig[40:43] -> prod[39:40])",
+      "  - PRECALL 1",
+      "  - CALL 1",
+      "  - RAISE_VARARGS 1",
+      "  + POP_TOP None",
+      "--- insert (orig[45:45] -> prod[42:44])",
+      "  + LOAD_CONST None",
+      "  + RETURN_VALUE None"
+     ]
+    },
+    {
+     "qualname": "_unpack_args",
+     "n_orig_instr": 40,
+     "n_prod_instr": 39,
+     "bytecode_equal": false,
+     "diff": [
+      "--- replace (orig[21:24] -> prod[21:22])",
+      "  - LOAD_CONST Ellipsis",
+      "  - IS_OP 0",
+      "  - POP_JUMP_FORWARD_IF_TRUE T",
+      "  + POP_JUMP_FORWARD_IF_NONE T",
+      "--- insert (orig[38:38] -> prod[36:37])",
+      "  + JUMP_BACKWARD T"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_unittest_case",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "_Outcome.testPartExecutor",
+     "n_orig_instr": 132,
+     "n_prod_instr": 142,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[14:14] -> prod[14:20])",
+      "  + LOAD_FAST self",
+      "  + LOAD_ATTR success",
+      "  + JUMP_IF_FALSE_OR_POP T",
+      "  + LOAD_FAST old_success",
+      "  + LOAD_FAST self",
+      "  + STORE_ATTR success",
+      "--- replace (orig[115:116] -> prod[121:122])",
+      "  - JUMP_IF_FALSE_OR_POP T",
+      "  + POP_TOP None",
+      "--- insert (orig[117:117] -> prod[123:125])",
+      "  + POP_TOP None",
+      "  + LOAD_CONST None",
+      "--- replace (orig[124:125] -> prod[132:133])",
+      "  - JUMP_IF_FALSE_OR_POP T",
+      "  + POP_TOP None",
+      "--- insert (orig[126:126] -> prod[134:136])",
+      "  + POP_TOP None",
+      "  + LOAD_CONST None",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "TestCase._addExpectedFailure",
+     "n_orig_instr": 40,
+     "n_prod_instr": 40,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "TestCase._addUnexpectedSuccess",
+     "n_orig_instr": 57,
+     "n_prod_instr": 57,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "TestCase.run",
+     "n_orig_instr": 318,
+     "n_prod_instr": 417,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[85:85] -> prod[85:99])",
+      "  + POP_TOP None",
+      "  + PUSH_NULL None",
+      "  + LOAD_FAST result",
+      "  + LOAD_ATTR stopTest",
+      "  + LOAD_FAST self",
+      "  + PRECALL 1",
+      "  + ...(8 more)",
+      "--- insert (orig[261:261] -> prod[275:276])",
+      "  + POP_TOP None",
+      "--- insert (orig[282:282] -> prod[297:310])",
+      "  + PUSH_NULL None",
+      "  + LOAD_FAST result",
+      "  + LOAD_ATTR stopTest",
+      "  + LOAD_FAST self",
+      "  + PRECALL 1",
+      "  + CALL 1",
+      "  + ...(7 more)",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "TestCase.doCleanups",
+     "n_orig_instr": 64,
+     "n_prod_instr": 57,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[1:8] -> prod[1:1])",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR _outcome",
+      "  - JUMP_IF_TRUE_OR_POP T",
+      "  - LOAD_GLOBAL _Outcome",
+      "  - PRECALL 0",
+      "  - CALL 0",
+      "  - ...(1 more)",
+      "--- replace (orig[20:21] -> prod[13:14])",
+      "  - LOAD_FAST outcome",
+      "  + LOAD_GLOBAL outcome",
+      "--- replace (orig[61:62] -> prod[54:55])",
+      "  - LOAD_FAST outcome",
+      "  + LOAD_GLOBAL outcome"
+     ]
+    },
+    {
+     "qualname": "TestCase.debug",
+     "n_orig_instr": 91,
+     "n_prod_instr": 78,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[71:84] -> prod[71:71])",
+      "  - PUSH_NULL None",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR _callCleanup",
+      "  - LOAD_FAST function",
+      "  - BUILD_LIST 1",
+      "  - LOAD_FAST args",
+      "  - ...(7 more)"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_urllib_request",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "urlretrieve",
+     "n_orig_instr": 202,
+     "n_prod_instr": 203,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[46:46] -> prod[46:47])",
+      "  + JUMP_FORWARD T"
+     ]
+    },
+    {
+     "qualname": "urlcleanup",
+     "n_orig_instr": 37,
+     "n_prod_instr": 33,
+     "bytecode_equal": false,
+     "diff": [
+      "--- insert (orig[1:1] -> prod[1:2])",
+      "  + NOP None",
+      "--- delete (orig[24:29] -> prod[25:25])",
+      "  - LOAD_GLOBAL _url_tempfiles",
+      "  - LOAD_CONST None",
+      "  - LOAD_CONST None",
+      "  - BUILD_SLICE 2",
+      "  - DELETE_SUBSCR None"
+     ]
+    },
+    {
+     "qualname": "Request.header_items",
+     "n_orig_instr": 17,
+     "n_prod_instr": 11,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[2:8] -> prod[2:2])",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR unredirected_hdrs",
+      "  - DICT_UPDATE 1",
+      "  - LOAD_FAST self",
+      "  - LOAD_ATTR headers",
+      "  - DICT_UPDATE 1"
+     ]
+    },
+    {
+     "qualname": "HTTPRedirectHandler.redirect_request",
+     "n_orig_instr": 65,
+     "n_prod_instr": 65,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "HTTPPasswordMgr.find_user_password",
+     "n_orig_instr": 53,
+     "n_prod_instr": 52,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[41:42] -> prod[41:41])",
+      "  - SWAP 2",
+      "--- delete (orig[43:44] -> prod[42:42])",
+      "  - SWAP 2",
+      "--- delete (orig[45:46] -> prod[43:43])",
+      "  - SWAP 2",
+      "--- insert (orig[47:47] -> prod[44:46])",
+      "  + POP_TOP None",
+      "  + LOAD_CONST None"
+     ]
+    },
+    {
+     "qualname": "parse_http_list",
+     "n_orig_instr": 81,
+     "n_prod_instr": 80,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[6:7] -> prod[6:6])",
+      "  - COPY 1",
+      "--- delete (orig[8:9] -> prod[7:7])",
+      "  - STORE_FAST quote",
+      "--- insert (orig[61:61] -> prod[59:60])",
+      "  + JUMP_BACKWARD T"
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_xml_ElementPath",
+   "status": "failure",
+   "units": [
+    {
+     "qualname": "xpath_tokenizer",
+     "n_orig_instr": 120,
+     "n_prod_instr": 120,
+     "bytecode_equal": true,
+     "diff": []
+    },
+    {
+     "qualname": "get_parent_map",
+     "n_orig_instr": 31,
+     "n_prod_instr": 29,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[7:8] -> prod[7:7])",
+      "  - COPY 1",
+      "--- delete (orig[10:11] -> prod[9:9])",
+      "  - STORE_FAST parent_map"
+     ]
+    },
+    {
+     "qualname": "prepare_predicate",
+     "n_orig_instr": 330,
+     "n_prod_instr": 335,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[10:29] -> prod[10:10])",
+      "  - NOP None",
+      "  - PUSH_NULL None",
+      "  - LOAD_FAST next",
+      "  - PRECALL 0",
+      "  - CALL 0",
+      "  - STORE_FAST token",
+      "  - ...(13 more)",
+      "--- insert (orig[83:83] -> prod[64:82])",
+      "  + NOP None",
+      "  + PUSH_NULL None",
+      "  + LOAD_FAST next",
+      "  + PRECALL 0",
+      "  + CALL 0",
+      "  + STORE_FAST token",
+      "  + ...(12 more)",
+      "--- replace (orig[153:154] -> prod[152:153])",
+      "  - POP_JUMP_FORWARD_IF_TRUE T",
+      "  + POP_JUMP_FORWARD_IF_FALSE T",
+      "  ...(截断)"
+     ]
+    },
+    {
+     "qualname": "iterfind",
+     "n_orig_instr": 195,
+     "n_prod_instr": 177,
+     "bytecode_equal": false,
+     "diff": [
+      "--- delete (orig[36:37] -> prod[36:36])",
+      "  - EXTENDED_ARG 1",
+      "--- delete (orig[41:42] -> prod[40:40])",
+      "  - EXTENDED_ARG 1",
+      "--- delete (orig[102:117] -> prod[100:100])",
+      "  - NOP None",
+      "  - LOAD_FAST selector",
+      "  - LOAD_METHOD append",
+      "  - LOAD_GLOBAL ops",
+      "  - LOAD_FAST token",
+      "  - LOAD_CONST 0",
+      "  - ...(9 more)",
+      "--- delete (orig[162:167] -> prod[145:145])",
+      "  - JUMP_BACKWARD T",
+      "  - LOAD_FAST selector",
+      "  - LOAD_GLOBAL _cache",
+      "  - LOAD_FAST cache_key",
+      "  - STORE_SUBSCR None",
+      "  ...(截断)"
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,39 @@
+{
+ "rows": [
+  {
+   "name": "stmts_4000",
+   "desc": "函数 4000 条语句",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\stmts_4000.py",
+   "src_lines": 4003,
+   "src_bytes": 54925,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 89.84,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 59022
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 63.56
+   },
+   "fidelity": {
+    "src_depth": 6,
+    "prod_depth": 6,
+    "src_stmts": 4003,
+    "prod_stmts": 4003
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "7998000\n",
+    "prod_out": "7998000\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  }
+ ]
+}

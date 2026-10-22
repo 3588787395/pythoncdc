@@ -1,0 +1,683 @@
+{
+ "rows": [
+  {
+   "name": "giant_add_20000",
+   "desc": "巨型加法链 20000 项",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\giant_add_20000.py",
+   "src_lines": 3,
+   "src_bytes": 148921,
+   "src_compile": "PyCompileError: Sorry: RecursionError: maximum recursion depth exceeded during compilation",
+   "pycdc": {
+    "skipped": "源码不可编译"
+   },
+   "verdict": "SOURCE_LIMIT"
+  },
+  {
+   "name": "giant_add_5000",
+   "desc": "巨型加法链 5000 项",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\giant_add_5000.py",
+   "src_lines": 3,
+   "src_bytes": 33921,
+   "src_compile": "PyCompileError: Sorry: RecursionError: maximum recursion depth exceeded during compilation",
+   "pycdc": {
+    "skipped": "源码不可编译"
+   },
+   "verdict": "SOURCE_LIMIT"
+  },
+  {
+   "name": "giant_bool_5000",
+   "desc": "巨型布尔链 5000 项",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\giant_bool_5000.py",
+   "src_lines": 3,
+   "src_bytes": 45029,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.96,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 140
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 1.41
+   },
+   "fidelity": {
+    "src_depth": 6,
+    "prod_depth": 6,
+    "src_stmts": 3,
+    "prod_stmts": 3
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "True\n",
+    "prod_out": "True\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "giant_list_20000",
+   "desc": "巨型列表字面量 20000 项",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\giant_list_20000.py",
+   "src_lines": 3,
+   "src_bytes": 128936,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.25,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 129039
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 0.89
+   },
+   "fidelity": {
+    "src_depth": 7,
+    "prod_depth": 7,
+    "src_stmts": 3,
+    "prod_stmts": 3
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "20000 19999\n",
+    "prod_out": "20000 19999\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "giant_list_5000",
+   "desc": "巨型列表字面量 5000 项",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\giant_list_5000.py",
+   "src_lines": 3,
+   "src_bytes": 28936,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.95,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 29038
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 1.8
+   },
+   "fidelity": {
+    "src_depth": 7,
+    "prod_depth": 7,
+    "src_stmts": 3,
+    "prod_stmts": 3
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "5000 4999\n",
+    "prod_out": "5000 4999\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "giant_str_5000",
+   "desc": "巨型字符串拼接 5000 项",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\giant_str_5000.py",
+   "src_lines": 3,
+   "src_bytes": 30036,
+   "src_compile": "PyCompileError: Sorry: RecursionError: maximum recursion depth exceeded during compilation",
+   "pycdc": {
+    "skipped": "源码不可编译"
+   },
+   "verdict": "SOURCE_LIMIT"
+  },
+  {
+   "name": "nest_call_164",
+   "desc": "嵌套调用 164 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_call_164.py",
+   "src_lines": 662,
+   "src_bytes": 6776,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 2.49,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 6875
+   },
+   "verify": {
+    "status": "success",
+    "units": "167/167",
+    "elapsed": 4.17
+   },
+   "fidelity": {
+    "src_depth": 170,
+    "prod_depth": 170,
+    "src_stmts": 332,
+    "prod_stmts": 332
+   },
+   "exec": {
+    "src_rc": 1,
+    "prod_rc": 1,
+    "src_out": "",
+    "prod_out": "",
+    "prod_err": "                                                                                                                                                                   ^\nNameError: name 'v' is not defined\n",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_call_256",
+   "desc": "嵌套调用 256 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_call_256.py",
+   "src_lines": 1030,
+   "src_bytes": 10732,
+   "src_compile": "PyCompileError:   File \"F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_call_256.py\", line 1030\n    print(id255(id254(id253(id252",
+   "pycdc": {
+    "skipped": "源码不可编译"
+   },
+   "verdict": "SOURCE_LIMIT"
+  },
+  {
+   "name": "nest_if_120",
+   "desc": "if 缩进嵌套 120 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_if_120.py",
+   "src_lines": 124,
+   "src_bytes": 30889,
+   "src_compile": "PyCompileError: Sorry: IndentationError: too many levels of indentation (nest_if_120.py, line 102)",
+   "pycdc": {
+    "skipped": "源码不可编译"
+   },
+   "verdict": "SOURCE_LIMIT"
+  },
+  {
+   "name": "nest_if_90",
+   "desc": "if 缩进嵌套 90 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_if_90.py",
+   "src_lines": 94,
+   "src_bytes": 17779,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.93,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 1142
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 2.16
+   },
+   "fidelity": {
+    "src_depth": 95,
+    "prod_depth": 7,
+    "src_stmts": 94,
+    "prod_stmts": 5
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "1\n",
+    "prod_out": "1\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_if_var_10",
+   "desc": "if 缩进嵌套 10 层（各层副作用不同）",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_if_var_10.py",
+   "src_lines": 14,
+   "src_bytes": 421,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 3.84,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 268
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 11.12
+   },
+   "fidelity": {
+    "src_depth": 15,
+    "prod_depth": 7,
+    "src_stmts": 14,
+    "prod_stmts": 5
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "10\n",
+    "prod_out": "10\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_if_var_30",
+   "desc": "if 缩进嵌套 30 层（各层副作用不同）",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_if_var_30.py",
+   "src_lines": 34,
+   "src_bytes": 2361,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 2.02,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 488
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 7.39
+   },
+   "fidelity": {
+    "src_depth": 35,
+    "prod_depth": 7,
+    "src_stmts": 34,
+    "prod_stmts": 5
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "30\n",
+    "prod_out": "30\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_if_var_60",
+   "desc": "if 缩进嵌套 60 层（各层副作用不同）",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_if_var_60.py",
+   "src_lines": 64,
+   "src_bytes": 8271,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 2.66,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 818
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 6.2
+   },
+   "fidelity": {
+    "src_depth": 65,
+    "prod_depth": 7,
+    "src_stmts": 64,
+    "prod_stmts": 5
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "60\n",
+    "prod_out": "60\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_if_var_90",
+   "desc": "if 缩进嵌套 90 层（各层副作用不同）",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_if_var_90.py",
+   "src_lines": 94,
+   "src_bytes": 17781,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 2.97,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 1148
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 2.74
+   },
+   "fidelity": {
+    "src_depth": 95,
+    "prod_depth": 7,
+    "src_stmts": 94,
+    "prod_stmts": 5
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "90\n",
+    "prod_out": "90\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_paren_164",
+   "desc": "嵌套括号 164 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_paren_164.py",
+   "src_lines": 3,
+   "src_bytes": 363,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.25,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 136
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 2.53
+   },
+   "fidelity": {
+    "src_depth": 6,
+    "prod_depth": 6,
+    "src_stmts": 3,
+    "prod_stmts": 3
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "1\n",
+    "prod_out": "1\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_paren_256",
+   "desc": "嵌套括号 256 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_paren_256.py",
+   "src_lines": 3,
+   "src_bytes": 547,
+   "src_compile": "PyCompileError:   File \"F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_paren_256.py\", line 2\n    x = (((((((((((((((((((((((((((",
+   "pycdc": {
+    "skipped": "源码不可编译"
+   },
+   "verdict": "SOURCE_LIMIT"
+  },
+  {
+   "name": "nest_paren_512",
+   "desc": "嵌套括号 512 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_paren_512.py",
+   "src_lines": 3,
+   "src_bytes": 1059,
+   "src_compile": "PyCompileError:   File \"F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_paren_512.py\", line 2\n    x = (((((((((((((((((((((((((((",
+   "pycdc": {
+    "skipped": "源码不可编译"
+   },
+   "verdict": "SOURCE_LIMIT"
+  },
+  {
+   "name": "nest_sub_164",
+   "desc": "下标链 164 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_sub_164.py",
+   "src_lines": 3,
+   "src_bytes": 760,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.18,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 859
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 2.45
+   },
+   "fidelity": {
+    "src_depth": 170,
+    "prod_depth": 170,
+    "src_stmts": 3,
+    "prod_stmts": 3
+   },
+   "exec": {
+    "src_rc": 1,
+    "prod_rc": 1,
+    "src_out": "",
+    "prod_out": "",
+    "prod_err": "[137][138][139][140][141][142][143][144][145][146][147][148][149][150][151][152][153][154][155][156][157][158][159][160][161][162][163])\n          ~~~~^^^\nTypeError: 'int' object is not subscriptable\n",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_sub_256",
+   "desc": "下标链 256 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_sub_256.py",
+   "src_lines": 3,
+   "src_bytes": 1220,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.51,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 1319
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 2.82
+   },
+   "fidelity": {
+    "src_depth": 262,
+    "prod_depth": 262,
+    "src_stmts": 3,
+    "prod_stmts": 3
+   },
+   "exec": {
+    "src_rc": 1,
+    "prod_rc": 1,
+    "src_out": "",
+    "prod_out": "",
+    "prod_err": "[229][230][231][232][233][234][235][236][237][238][239][240][241][242][243][244][245][246][247][248][249][250][251][252][253][254][255])\n          ~~~~^^^\nTypeError: 'int' object is not subscriptable\n",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "stmts_1000",
+   "desc": "函数 1000 条语句",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\stmts_1000.py",
+   "src_lines": 1003,
+   "src_bytes": 12925,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 8.75,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 14022
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 7.2
+   },
+   "fidelity": {
+    "src_depth": 6,
+    "prod_depth": 6,
+    "src_stmts": 1003,
+    "prod_stmts": 1003
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "499500\n",
+    "prod_out": "499500\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "stmts_2000",
+   "desc": "函数 2000 条语句",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\stmts_2000.py",
+   "src_lines": 2003,
+   "src_bytes": 26925,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 19.87,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 29022
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 18.6
+   },
+   "fidelity": {
+    "src_depth": 6,
+    "prod_depth": 6,
+    "src_stmts": 2003,
+    "prod_stmts": 2003
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "1999000\n",
+    "prod_out": "1999000\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "stmts_3000",
+   "desc": "函数 3000 条语句",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\stmts_3000.py",
+   "src_lines": 3003,
+   "src_bytes": 40925,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 69.12,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 44022
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 37.79
+   },
+   "fidelity": {
+    "src_depth": 6,
+    "prod_depth": 6,
+    "src_stmts": 3003,
+    "prod_stmts": 3003
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "4498500\n",
+    "prod_out": "4498500\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "stmts_4000",
+   "desc": "函数 4000 条语句",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\stmts_4000.py",
+   "src_lines": 4003,
+   "src_bytes": 54925,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 89.84,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 59022
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 63.56
+   },
+   "fidelity": {
+    "src_depth": 6,
+    "prod_depth": 6,
+    "src_stmts": 4003,
+    "prod_stmts": 4003
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "7998000\n",
+    "prod_out": "7998000\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "stmts_520",
+   "desc": "函数 520 条语句",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\stmts_520.py",
+   "src_lines": 523,
+   "src_bytes": 6685,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 4.86,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 7301
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 5.08
+   },
+   "fidelity": {
+    "src_depth": 6,
+    "prod_depth": 6,
+    "src_stmts": 523,
+    "prod_stmts": 523
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "134940\n",
+    "prod_out": "134940\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  }
+ ]
+}

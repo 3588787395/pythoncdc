@@ -1,0 +1,180 @@
+{
+ "rows": [
+  {
+   "name": "nest_paren_164",
+   "desc": "嵌套括号 164 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_paren_164.py",
+   "src_lines": 3,
+   "src_bytes": 363,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.25,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 136
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 2.53
+   },
+   "fidelity": {
+    "src_depth": 6,
+    "prod_depth": 6,
+    "src_stmts": 3,
+    "prod_stmts": 3
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "1\n",
+    "prod_out": "1\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_paren_256",
+   "desc": "嵌套括号 256 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_paren_256.py",
+   "src_lines": 3,
+   "src_bytes": 547,
+   "src_compile": "PyCompileError:   File \"F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_paren_256.py\", line 2\n    x = (((((((((((((((((((((((((((",
+   "pycdc": {
+    "skipped": "源码不可编译"
+   },
+   "verdict": "SOURCE_LIMIT"
+  },
+  {
+   "name": "nest_paren_512",
+   "desc": "嵌套括号 512 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_paren_512.py",
+   "src_lines": 3,
+   "src_bytes": 1059,
+   "src_compile": "PyCompileError:   File \"F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_paren_512.py\", line 2\n    x = (((((((((((((((((((((((((((",
+   "pycdc": {
+    "skipped": "源码不可编译"
+   },
+   "verdict": "SOURCE_LIMIT"
+  },
+  {
+   "name": "nest_call_164",
+   "desc": "嵌套调用 164 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_call_164.py",
+   "src_lines": 662,
+   "src_bytes": 6776,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 2.49,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 6875
+   },
+   "verify": {
+    "status": "success",
+    "units": "167/167",
+    "elapsed": 4.17
+   },
+   "fidelity": {
+    "src_depth": 170,
+    "prod_depth": 170,
+    "src_stmts": 332,
+    "prod_stmts": 332
+   },
+   "exec": {
+    "src_rc": 1,
+    "prod_rc": 1,
+    "src_out": "",
+    "prod_out": "",
+    "prod_err": "                                                                                                                                                                   ^\nNameError: name 'v' is not defined\n",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_call_256",
+   "desc": "嵌套调用 256 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_call_256.py",
+   "src_lines": 1030,
+   "src_bytes": 10732,
+   "src_compile": "PyCompileError:   File \"F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_call_256.py\", line 1030\n    print(id255(id254(id253(id252",
+   "pycdc": {
+    "skipped": "源码不可编译"
+   },
+   "verdict": "SOURCE_LIMIT"
+  },
+  {
+   "name": "nest_sub_164",
+   "desc": "下标链 164 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_sub_164.py",
+   "src_lines": 3,
+   "src_bytes": 760,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.18,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 859
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 2.45
+   },
+   "fidelity": {
+    "src_depth": 170,
+    "prod_depth": 170,
+    "src_stmts": 3,
+    "prod_stmts": 3
+   },
+   "exec": {
+    "src_rc": 1,
+    "prod_rc": 1,
+    "src_out": "",
+    "prod_out": "",
+    "prod_err": "[137][138][139][140][141][142][143][144][145][146][147][148][149][150][151][152][153][154][155][156][157][158][159][160][161][162][163])\n          ~~~~^^^\nTypeError: 'int' object is not subscriptable\n",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "nest_sub_256",
+   "desc": "下标链 256 层",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\nest_sub_256.py",
+   "src_lines": 3,
+   "src_bytes": 1220,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.51,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 1319
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 2.82
+   },
+   "fidelity": {
+    "src_depth": 262,
+    "prod_depth": 262,
+    "src_stmts": 3,
+    "prod_stmts": 3
+   },
+   "exec": {
+    "src_rc": 1,
+    "prod_rc": 1,
+    "src_out": "",
+    "prod_out": "",
+    "prod_err": "[229][230][231][232][233][234][235][236][237][238][239][240][241][242][243][244][245][246][247][248][249][250][251][252][253][254][255])\n          ~~~~^^^\nTypeError: 'int' object is not subscriptable\n",
+    "equal": true
+   },
+   "verdict": "OK"
+  }
+ ]
+}

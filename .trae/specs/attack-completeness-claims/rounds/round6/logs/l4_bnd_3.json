@@ -1,0 +1,109 @@
+{
+ "rows": [
+  {
+   "name": "stmts_520",
+   "desc": "函数 520 条语句",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\stmts_520.py",
+   "src_lines": 523,
+   "src_bytes": 6685,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 4.86,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 7301
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 5.08
+   },
+   "fidelity": {
+    "src_depth": 6,
+    "prod_depth": 6,
+    "src_stmts": 523,
+    "prod_stmts": 523
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "134940\n",
+    "prod_out": "134940\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "stmts_1000",
+   "desc": "函数 1000 条语句",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\stmts_1000.py",
+   "src_lines": 1003,
+   "src_bytes": 12925,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 8.75,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 14022
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 7.2
+   },
+   "fidelity": {
+    "src_depth": 6,
+    "prod_depth": 6,
+    "src_stmts": 1003,
+    "prod_stmts": 1003
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "499500\n",
+    "prod_out": "499500\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "stmts_2000",
+   "desc": "函数 2000 条语句",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\stmts_2000.py",
+   "src_lines": 2003,
+   "src_bytes": 26925,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 19.87,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 29022
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 18.6
+   },
+   "fidelity": {
+    "src_depth": 6,
+    "prod_depth": 6,
+    "src_stmts": 2003,
+    "prod_stmts": 2003
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "1999000\n",
+    "prod_out": "1999000\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  }
+ ]
+}

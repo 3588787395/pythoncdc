@@ -1,0 +1,446 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repo_core_cfg_builder.pyc (Python 3.11)
+
+__doc__ = """
+CFG构建器模块 - 从Python字节码构建控制流图
+"""
+import dis
+import sys
+import types
+from typing import List, Dict, Set, Optional, Tuple, Any, Iterator
+from collections import defaultdict
+from .basic_block import BasicBlock, Instruction
+class ControlFlowGraph:
+    def __init__(self, name: str='<unknown>'):
+        self.name = name
+        self.blocks = {}
+        self.entry_block = None
+        self.exit_blocks = set()
+        self.offset_to_block = {}
+        self.exception_table = []
+        self.line_number_table = {}
+        self.annotations = {}
+    def add_block(self, block: BasicBlock) -> None:
+        self.blocks[block.id] = block
+        self.offset_to_block[block.start_offset] = block
+    def get_block_by_offset(self, offset: int) -> Optional[BasicBlock]:
+        if offset in self.offset_to_block:
+            return self.offset_to_block[offset]
+        else:
+            for block in self.blocks.values():
+                if block.start_offset <= offset <= block.end_offset:
+                    return block
+    def set_entry_block(self, block: BasicBlock) -> None:
+        self.entry_block = block
+        block.is_entry = True
+    def add_exit_block(self, block: BasicBlock) -> None:
+        self.exit_blocks.add(block)
+        block.is_exit = True
+    def get_blocks_in_order(self) -> List[BasicBlock]:
+        return sorted(self.blocks.values(), key=lambda b: b.start_offset)
+    def __iter__(self) -> Iterator[BasicBlock]:
+        return iter(self.get_blocks_in_order())
+    def __len__(self) -> int:
+        return len(self.blocks)
+    def __repr__(self):
+        return f'ControlFlowGraph({self.name}, {len(self.blocks)} blocks)'
+    def to_dict(self) -> Dict[str, Any]:
+        {'name': self.name, 'block_count': len(self.blocks), 'entry_block_id': self.entry_block.id if self.entry_block else None, 'exit_block_ids': [b.id for b in self.exit_blocks], 'blocks': [b.to_dict() for b in self.get_blocks_in_order()]}
+class CFGBuilder:
+    JUMP_INSTRUCTIONS = {'FOR_ITER', 'FOR_ITER_DICT', 'FOR_ITER_GEN', 'FOR_ITER_LIST', 'FOR_ITER_RANGE', 'FOR_ITER_TUPLE', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_FORWARD', 'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP', 'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE', 'SETUP_EXCEPT', 'SETUP_FINALLY'}
+    BRANCH_INSTRUCTIONS = {'FOR_ITER', 'FOR_ITER_DICT', 'FOR_ITER_GEN', 'FOR_ITER_LIST', 'FOR_ITER_RANGE', 'FOR_ITER_TUPLE', 'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP', 'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE'}
+    RETURN_INSTRUCTIONS = {'RETURN_CONST', 'RETURN_GENERATOR', 'RETURN_VALUE'}
+    RAISE_INSTRUCTIONS = {'RAISE', 'RAISE_VARARGS', 'RERAISE'}
+    RESUME_INSTRUCTIONS = {'CACHE', 'PUSH_NULL', 'RESUME'}
+    def __init__(self):
+        self.cfg = None
+        self.code_obj = None
+        self.instructions = []
+        self.jump_targets = set()
+    def build(self, code_obj: types.CodeType, name: Optional[str]=None) -> ControlFlowGraph:
+        BasicBlock.reset_id_counter()
+        self.code_obj = code_obj
+        self.cfg = name or code_obj.co_name
+        self.cfg.code = code_obj
+        self._parse_instructions()
+        self._identify_jump_targets()
+        self._build_basic_blocks()
+        self._parse_exception_table()
+        self._split_blocks_at_exception_boundaries()
+        self._connect_blocks()
+        self._split_blocks_at_short_circuit_merges()
+        self._identify_exit_blocks()
+        return self.cfg
+    def _parse_instructions(self):
+        self.instructions = []
+        try:
+            for instr in dis.get_instructions(self.code_obj):
+                _argval = instr.argval
+                if instr.opname == 'KW_NAMES' and instr.arg is not None:
+                    try:
+                        _resolved = self.code_obj.co_consts[instr.arg]
+                        if isinstance(_resolved, tuple):
+                            _argval = _resolved
+                    except (IndexError, TypeError):
+                        pass
+                instruction = Instruction(offset=instr.offset, opcode=instr.opcode, opname=instr.opname, arg=instr.arg, argval=_argval, starts_line=instr.starts_line, is_jump_target=instr.is_jump_target)
+                self.instructions.append(instruction)
+                if instr.starts_line:
+                    self.cfg.line_number_table[instr.offset] = instr.starts_line
+        except Exception as e:
+            print(f'Warning: Error parsing instructions: {e}')
+            return None
+    def _identify_jump_targets(self):
+        """
+        识别跳转目标，确定基本块边界。
+
+        1. 算法依据：每块唯一归属 — 块边界仅由跳转目标 + 跳转/return/raise 之后
+           位置确定；NOP 不是块边界（CPython 3.11+ 在 decorator 与 MAKE_FUNCTION
+           之间插入 NOP 仅用于行对齐，非跳转目标）。
+        2. 归约顺序：CFG 构建阶段（最早期），在 _build_basic_blocks 之前完成。
+        3. 唯一归属判定：每个指令偏移只能属于一个基本块；块边界由
+           is_jump_target + JUMP 指令目标 + BRANCH 下一指令偏移共同确定。
+        4. 嵌套处理：N/A（CFG 层级，无嵌套结构）。
+        5. 入口引用语义：N/A（CFG 层级，无 region 引用）。
+        6. 反编译流程：枚举指令 → 收集跳转目标集合 → 后续 _build_basic_blocks
+           据此切分基本块；NOP 不作为块边界，避免将
+           `LOAD_NAME decorator + LOAD_CONST defaults + MAKE_FUNCTION + CALL`
+           原子序列在 NOP 处切断（导致 decorator 丢失 / defaults 元组作为
+           装饰器 `@((...))` 泄漏）。
+        """
+        self.jump_targets = set()
+        for i, instr in enumerate(self.instructions):
+            if instr.is_jump_target:
+                self.jump_targets.add(instr.offset)
+            if instr.opname in self.JUMP_INSTRUCTIONS and instr.argval is not None and isinstance(instr.argval, int):
+                self.jump_targets.add(instr.argval)
+                if instr.opname in self.BRANCH_INSTRUCTIONS and i + 1 < len(self.instructions):
+                    next_offset = self.instructions[i + 1].offset
+                    self.jump_targets.add(next_offset)
+    def _build_basic_blocks(self):
+        if not self.instructions:
+            return None
+        entry_offset = self.instructions[0].offset
+        for i, instr in enumerate(self.instructions):
+            if instr.opname == 'RESUME':
+                entry_offset = instr.offset
+                break
+        current_block = BasicBlock(self.instructions[0].offset)
+        self.cfg.add_block(current_block)
+        self.cfg.set_entry_block(current_block)
+        for i, instr in enumerate(self.instructions):
+            is_leader = instr.offset in self.jump_targets or i > 0 and self.instructions[i - 1].opname in self.JUMP_INSTRUCTIONS and i > 0 and self.instructions[i - 1].opname in self.RETURN_INSTRUCTIONS and i > 0 and self.instructions[i - 1].opname in self.RAISE_INSTRUCTIONS and self.instructions[i - 1].opname in self.RAISE_INSTRUCTIONS
+            if i > 0 and self.instructions[i - 1].opname == 'RETURN_GENERATOR':
+                is_leader = True
+            if is_leader and i > 0:
+                current_block = BasicBlock(instr.offset)
+                self.cfg.add_block(current_block)
+            current_block.add_instruction(instr)
+        if entry_offset != self.instructions[0].offset:
+            for block in self.cfg.blocks.values():
+                if block.start_offset <= entry_offset <= block.end_offset:
+                    self.cfg.set_entry_block(block)
+                    break
+    def _connect_blocks(self):
+        blocks = self.cfg.get_blocks_in_order()
+        block_map = {b.start_offset: b for b in blocks}
+        for i, block in enumerate(blocks):
+            if not block.instructions:
+                continue
+            last_instr = block.get_last_instruction()
+            if last_instr is None:
+                continue
+            elif last_instr.opname in self.JUMP_INSTRUCTIONS:
+                if isinstance(last_instr.argval, int):
+                    target_offset = last_instr.argval
+                    if target_offset in block_map:
+                        block.add_successor(block_map[target_offset])
+                if last_instr.opname not in {'JUMP_ABSOLUTE', 'JUMP_BACKWARD', 'JUMP_FORWARD'} and i + 1 < len(blocks):
+                    block.add_successor(blocks[i + 1])
+                else:
+                    continue
+                continue
+            elif last_instr.opname == 'RETURN_GENERATOR':
+                if i + 1 < len(blocks):
+                    block.add_successor(blocks[i + 1])
+                else:
+                    continue
+                continue
+            elif last_instr.opname in self.RETURN_INSTRUCTIONS:
+                continue
+            elif last_instr.opname in self.RAISE_INSTRUCTIONS:
+                continue
+            elif i + 1 < len(blocks):
+                block.add_successor(blocks[i + 1])
+        self._connect_exception_edges(block_map)
+    def _connect_exception_edges(self, block_map: Dict[int, BasicBlock]) -> None:
+        if not self.cfg.exception_table:
+            return None
+        else:
+            offset_to_block = {}
+            for offset, block in block_map.items():
+                for i in range(offset, block.end_offset + 1):
+                    offset_to_block[i] = block
+            for entry in self.cfg.exception_table:
+                start_offset = entry['start']
+                end_offset = entry['end']
+                target_offset = entry['target']
+                for off in range(start_offset, end_offset):
+                    try_block = offset_to_block.get(off)
+                    handler_block = offset_to_block.get(target_offset)
+                    if try_block and handler_block:
+                        if handler_block not in try_block.successors:
+                            try_block.add_successor(handler_block)
+                        try_block.exception_successors.add(handler_block)
+                        handler_block.is_exception_handler = True
+    def _identify_exit_blocks(self):
+        for block in self.cfg.blocks.values():
+            if not block.successors and block.instructions:
+                last_instr = block.get_last_instruction()
+                if last_instr and last_instr.opname in self.RETURN_INSTRUCTIONS and last_instr.opname != 'RETURN_GENERATOR':
+                    self.cfg.add_exit_block(block)
+    def _split_blocks_at_exception_boundaries(self):
+        if not self.cfg.exception_table:
+            return None
+        else:
+            split_offsets = set()
+            for entry in self.cfg.exception_table:
+                split_offsets.add(entry['start'])
+                split_offsets.add(entry['end'])
+                split_offsets.add(entry['target'])
+            for offset in sorted(split_offsets):
+                self._split_block_at_offset(offset)
+    def _split_block_at_offset(self, offset: int) -> None:
+        block_to_split = None
+        for block in list(self.cfg.blocks.values()):
+            if block.start_offset < offset <= block.end_offset:
+                block_to_split = block
+        if block_to_split is None:
+            return None
+        else:
+            split_idx = None
+            for i, instr in enumerate(block_to_split.instructions):
+                if instr.offset == offset:
+                    split_idx = i
+                    break
+            return None
+            block_to_split.instructions = before_instrs
+            block_to_split.end_offset = before_instrs[-1].offset
+            new_block = BasicBlock(offset)
+            for instr in after_instrs:
+                new_block.add_instruction(instr)
+            new_block.predecessors = {block_to_split}
+            new_block.successors = set(block_to_split.successors)
+            for succ in block_to_split.successors:
+                succ.predecessors.discard(block_to_split)
+                succ.predecessors.add(new_block)
+            block_to_split.successors = {new_block}
+            for attr in ('dominators', 'post_dominators', 'dominated_blocks'):
+                setattr(new_block, attr, set())
+            new_block.immediate_dominator = None
+            new_block.immediate_post_dominator = None
+            new_block.loop_header = block_to_split.loop_header
+            new_block.loop_depth = block_to_split.loop_depth
+            new_block.is_exit = block_to_split.is_exit
+            new_block.exception_handler = False
+            if block_to_split.is_exit:
+                block_to_split.is_exit = False
+                if block_to_split in self.cfg.exit_blocks:
+                    self.cfg.exit_blocks.discard(block_to_split)
+            self.cfg.add_block(new_block)
+        if split_idx is None or split_idx == 0:
+            pass
+        if not (before_instrs and after_instrs):
+            pass
+    _R4G_SHORT_CIRCUIT_JUMPS = frozenset({'JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP'})
+    _R4G_VALUE_CONSUMERS = frozenset({'POP_TOP', 'RETURN_CONST', 'RETURN_VALUE', 'STORE_ATTR', 'STORE_DEREF', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_NAME', 'STORE_SUBSCR', 'YIELD_VALUE'})
+    def _r4g_stack_delta(self, instr) -> Tuple[int, int]:
+        """[R4-G] 归并值消费点定位专用栈效应，返回 (push, pop)。
+
+        覆盖面刻意收窄到「短路归并点之后可能出现的指令」，未列出的指令
+        返回 (0, 0)。与 region_analyzer._stack_effect 的关键差别：
+        POP_TOP 记为 (0, 1)——本 pass 正是要用「累积栈深首次转负」定位
+        归并值的消费指令。
+        """
+        op = instr.opname
+        arg = instr.arg or 0
+        arg = instr.arg or 0
+        if op == 'SWAP':
+            return (0, 0)
+        elif op in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME', 'PRECALL'):
+            return (0, 0)
+        elif op == 'POP_TOP':
+            return (0, 1)
+        elif op == 'COPY':
+            return (1, 0)
+        elif op in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+            return (0, 1)
+        elif op == 'STORE_ATTR':
+            return (0, 2)
+        elif op == 'STORE_SUBSCR':
+            return (0, 3)
+        elif op in ('RETURN_VALUE', 'YIELD_VALUE'):
+            return (0, 1)
+        elif op == 'RETURN_CONST':
+            return (0, 0)
+        elif op == 'LOAD_ATTR':
+            return (1, 1)
+        elif op == 'LOAD_METHOD':
+            return (2, 1)
+        elif op.startswith('LOAD_'):
+            return (1, 0)
+        elif op == 'BINARY_SUBSCR':
+            return (1, 2)
+        elif op in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'BINARY_OP'):
+            return (1, 2)
+        elif op.startswith('UNARY_'):
+            return (1, 1)
+        elif op == 'BUILD_STRING':
+            return (1, arg)
+        elif op == 'BUILD_MAP':
+            return (1, 2 * arg)
+        elif op.startswith('BUILD_'):
+            return (1, arg)
+        elif op == 'CALL':
+            return (1, arg + 2)
+        elif op == 'FORMAT_VALUE':
+            return (1, 1 if arg < 2 else 2)
+        elif op in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE', 'JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP'):
+            return (0, 1)
+        else:
+            return (0, 0)
+    def _r4g_split_merge_target(self, target: BasicBlock) -> None:
+        """[R4-G] 在归并值消费点之后切分短路归并目标块。"""
+        instrs = [i for i in target.instructions if i.opname not in ('CACHE', 'EXTENDED_ARG')]
+        if len(instrs) < 2:
+            return None
+        depth = 0
+        consume_idx = None
+        for k, instr in enumerate(instrs):
+            push, pop = self._r4g_stack_delta(instr)
+            depth += push - pop
+            if depth < 0:
+                consume_idx = k
+                break
+        if consume_idx is None:
+            return None
+        else:
+            consumer = instrs[consume_idx]
+            if consumer.opname not in self._R4G_VALUE_CONSUMERS:
+                return None
+            else:
+                if consume_idx + 1 >= len(instrs):
+                    return None
+                _tail = instrs[consume_idx + 1:]
+                _has_stmt = False
+                for _k, _ti in enumerate(_tail):
+                    _n = _ti.opname
+                    if _n in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR') or _n.startswith('DELETE_'):
+                        _has_stmt = True
+                        break
+                    elif _n in ('RETURN_VALUE', 'RETURN_CONST', 'YIELD_VALUE', 'RAISE_VARARGS'):
+                        _has_stmt = True
+                        break
+                    elif _n == 'POP_TOP' and _k > 0 and _tail[_k - 1].opname == 'CALL':
+                        _has_stmt = True
+                        break
+                    else:
+                        continue
+                if not _has_stmt:
+                    return None
+                else:
+                    split_offset = instrs[consume_idx + 1].offset
+                    if split_offset <= target.start_offset:
+                        return None
+                    for _entry in None:
+                        _s = _entry.get('start')
+                        _e = _entry.get('end')
+                        if not _s is not None or _e is None:
+                            continue
+                        elif _s <= split_offset < _e:
+                            return None
+                        else:
+                            continue
+                    self._split_block_at_offset(split_offset)
+    def _split_blocks_at_short_circuit_merges(self):
+        """[R4-G 修复] 对所有短路归并目标块执行消费点切分（见上方说明）。"""
+        if self.cfg is None:
+            return None
+        else:
+            targets = []
+            seen_ids = set()
+            for block in list(self.cfg.blocks.values()):
+                last = block.get_last_instruction()
+                if not last is not None or last.opname not in self._R4G_SHORT_CIRCUIT_JUMPS:
+                    continue
+                if not isinstance(last.argval, int):
+                    continue
+                target = self.cfg.get_block_by_offset(last.argval)
+                if not target is not None or id(target) in seen_ids:
+                    continue
+                seen_ids.add(id(target))
+                targets.append(target)
+                continue
+            for target in sorted(targets, key=lambda b: b.start_offset, reverse=True):
+                self._r4g_split_merge_target(target)
+    def _parse_exception_table(self):
+        if hasattr(self.code_obj, 'co_exceptiontable'):
+            try:
+                import dis
+                if hasattr(dis, '_parse_exception_table'):
+                    entries = list(dis._parse_exception_table(self.code_obj))
+                    for entry in entries:
+                        self.cfg.exception_table.append({'start': entry.start, 'end': entry.end, 'target': entry.target, 'depth': entry.depth, 'lasti': entry.lasti})
+            except Exception as e:
+                return None
+    def get_cfg(self) -> Optional[ControlFlowGraph]:
+        return self.cfg
+def build_cfg(code_obj: types.CodeType, name: Optional[str]=None) -> ControlFlowGraph:
+    builder = CFGBuilder()
+    cfg = builder.build(code_obj, name)
+    cfg.code = code_obj
+    return cfg
+def build_cfg_from_source(source: str, name: str='<module>') -> Optional[ControlFlowGraph]:
+    try:
+        code_obj = compile(source, name, 'exec')
+        return build_cfg(code_obj, name)
+    except SyntaxError:
+        return None
+def build_cfg_from_function(func: types.FunctionType) -> ControlFlowGraph:
+    return build_cfg(func.__code__, func.__name__)
+class CFGPrinter:
+    @staticmethod
+    def print_cfg(cfg: ControlFlowGraph, show_instructions: bool=True) -> None:
+        print(f"\n{'============================================================'}")
+        print(f'Control Flow Graph: {cfg.name}')
+        print(f"{'============================================================'}")
+        print(f'Total blocks: {len(cfg.blocks)}')
+        print(f"Entry block: {cfg.entry_block.id if cfg.entry_block else 'None'}")
+        print(f'Exit blocks: {[b.id for b in cfg.exit_blocks]}')
+        print(f"{'============================================================'}\n")
+        cfg.get_blocks_in_order()
+        print(f'Exit blocks: {[b.id for b in cfg.exit_blocks]}')
+        print(f"{'============================================================'}\n")
+        for block in cfg.get_blocks_in_order():
+            CFGPrinter.print_block(block, show_instructions)
+            print()
+    @staticmethod
+    def print_block(block: BasicBlock, show_instructions: bool=True) -> None:
+        print(str(block))
+    @staticmethod
+    def print_dot(cfg: ControlFlowGraph) -> str:
+        lines = [f'digraph "{cfg.name}" {{']
+        lines.append('    node [shape=box];')
+        for block in cfg.get_blocks_in_order():
+            label = f'Block {block.id}'
+            if block.is_entry:
+                label += '\\n[ENTRY]'
+            if block.is_exit:
+                label += '\\n[EXIT]'
+            lines.append(f'    block{block.id} [label="{label}"];')
+        for block in cfg.get_blocks_in_order():
+            for succ in block.successors:
+                lines.append(f'    block{block.id} -> block{succ.id};')
+        lines.append('}')
+        return """
+""".join(lines)

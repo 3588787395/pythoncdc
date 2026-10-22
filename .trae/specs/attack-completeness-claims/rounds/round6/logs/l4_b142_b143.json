@@ -1,0 +1,769 @@
+{
+ "results": [
+  {
+   "kind": "B142",
+   "module": "D:\\Python\\Lib\\site-packages\\pytz\\__init__.py",
+   "hits": [
+    {
+     "kind": "B142",
+     "func": "_fill",
+     "line": 366,
+     "try_line": 362,
+     "nested_try": false,
+     "detail": "continue@366 处于 try(finalbody@362) 内"
+    },
+    {
+     "kind": "B142",
+     "func": "_fill",
+     "line": 395,
+     "try_line": 391,
+     "nested_try": false,
+     "detail": "continue@395 处于 try(finalbody@391) 内"
+    },
+    {
+     "kind": "B142",
+     "func": "_fill",
+     "line": 366,
+     "try_line": 362,
+     "nested_try": false,
+     "detail": "continue@366 处于 try(finalbody@362) 内"
+    },
+    {
+     "kind": "B142",
+     "func": "_fill",
+     "line": 395,
+     "try_line": 391,
+     "nested_try": false,
+     "detail": "continue@395 处于 try(finalbody@391) 内"
+    }
+   ],
+   "slug": "b142___init__",
+   "pycdc": {
+    "rc": 0
+   },
+   "verify_status": "failure",
+   "compare": [
+    {
+     "func": "_fill",
+     "line": 366,
+     "detail": "continue@366 处于 try(finalbody@362) 内",
+     "src": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 1
+      },
+      {
+       "Try": 1,
+       "finalbody": 1,
+       "Continue": 1,
+       "Break": 0,
+       "handlers": 0
+      }
+     ],
+     "prod": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 1
+      },
+      {
+       "Try": 1,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 0
+      }
+     ]
+    },
+    {
+     "func": "_fill",
+     "line": 395,
+     "detail": "continue@395 处于 try(finalbody@391) 内",
+     "src": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 1
+      },
+      {
+       "Try": 1,
+       "finalbody": 1,
+       "Continue": 1,
+       "Break": 0,
+       "handlers": 0
+      }
+     ],
+     "prod": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 1
+      },
+      {
+       "Try": 1,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 0
+      }
+     ]
+    },
+    {
+     "func": "_fill",
+     "line": 366,
+     "detail": "continue@366 处于 try(finalbody@362) 内",
+     "src": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 1
+      },
+      {
+       "Try": 1,
+       "finalbody": 1,
+       "Continue": 1,
+       "Break": 0,
+       "handlers": 0
+      }
+     ],
+     "prod": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 1
+      },
+      {
+       "Try": 1,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 0
+      }
+     ]
+    },
+    {
+     "func": "_fill",
+     "line": 395,
+     "detail": "continue@395 处于 try(finalbody@391) 内",
+     "src": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 1
+      },
+      {
+       "Try": 1,
+       "finalbody": 1,
+       "Continue": 1,
+       "Break": 0,
+       "handlers": 0
+      }
+     ],
+     "prod": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 1
+      },
+      {
+       "Try": 1,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 0
+      }
+     ]
+    }
+   ],
+   "reproduced": false
+  },
+  {
+   "kind": "B142",
+   "module": "D:\\Python\\Lib\\socket.py",
+   "hits": [
+    {
+     "kind": "B142",
+     "func": "_sendfile_use_send",
+     "line": 441,
+     "try_line": 428,
+     "nested_try": false,
+     "detail": "continue@441 处于 try(finalbody@428) 内"
+    },
+    {
+     "kind": "B142",
+     "func": "_sendfile_use_sendfile",
+     "line": 394,
+     "try_line": 379,
+     "nested_try": false,
+     "detail": "continue@394 处于 try(finalbody@379) 内"
+    }
+   ],
+   "slug": "b142_socket",
+   "pycdc": {
+    "rc": 0
+   },
+   "verify_status": "failure",
+   "compare": [
+    {
+     "func": "_sendfile_use_send",
+     "line": 441,
+     "detail": "continue@441 处于 try(finalbody@428) 内",
+     "src": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 1,
+       "Break": 3,
+       "handlers": 1
+      }
+     ],
+     "prod": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 1,
+       "Break": 5,
+       "handlers": 1
+      }
+     ]
+    },
+    {
+     "func": "_sendfile_use_sendfile",
+     "line": 394,
+     "detail": "continue@394 处于 try(finalbody@379) 内",
+     "src": [
+      {
+       "Try": 4,
+       "finalbody": 1,
+       "Continue": 1,
+       "Break": 2,
+       "handlers": 4
+      },
+      {
+       "Try": 0,
+       "finalbody": 0,
+       "Continue": 0,
+       "Break": 0,
+       "handlers": 0
+      }
+     ],
+     "prod": [
+      {
+       "Try": 4,
+       "finalbody": 1,
+       "Continue": 0,
+       "Break": 4,
+       "handlers": 4
+      },
+      {
+       "Try": 0,
+       "finalbody": 0,
+       "Continue": 0,
+       "Break": 0,
+       "handlers": 0
+      }
+     ]
+    }
+   ],
+   "reproduced": true
+  },
+  {
+   "kind": "B142",
+   "module": "D:\\Python\\Lib\\asyncio\\base_events.py",
+   "hits": [
+    {
+     "kind": "B142",
+     "func": "_connect_sock",
+     "line": 956,
+     "try_line": 949,
+     "nested_try": false,
+     "detail": "continue@956 处于 try(finalbody@949) 内"
+    },
+    {
+     "kind": "B142",
+     "func": "create_server",
+     "line": 1506,
+     "try_line": 1495,
+     "nested_try": false,
+     "detail": "continue@1506 处于 try(finalbody@1495) 内"
+    }
+   ],
+   "slug": "b142_base_events",
+   "pycdc": {
+    "rc": 0
+   },
+   "verify_status": "failure",
+   "compare": [
+    {
+     "func": "_connect_sock",
+     "line": 956,
+     "detail": "continue@956 处于 try(finalbody@949) 内",
+     "src": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 1,
+       "Break": 1,
+       "handlers": 3
+      }
+     ],
+     "prod": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 1,
+       "Break": 1,
+       "handlers": 3
+      }
+     ]
+    },
+    {
+     "func": "create_server",
+     "line": 1506,
+     "detail": "continue@1506 处于 try(finalbody@1495) 内",
+     "src": [
+      {
+       "Try": 3,
+       "finalbody": 1,
+       "Continue": 1,
+       "Break": 0,
+       "handlers": 2
+      }
+     ],
+     "prod": [
+      {
+       "Try": 3,
+       "finalbody": 3,
+       "Continue": 1,
+       "Break": 0,
+       "handlers": 2
+      }
+     ]
+    }
+   ],
+   "reproduced": true
+  },
+  {
+   "kind": "B142",
+   "module": "D:\\Python\\Lib\\site-packages\\anyio\\_core\\_sockets.py",
+   "hits": [
+    {
+     "kind": "B142",
+     "func": "create_tcp_listener",
+     "line": 407,
+     "try_line": 378,
+     "nested_try": false,
+     "detail": "continue@407 处于 try(finalbody@378) 内"
+    },
+    {
+     "kind": "B142",
+     "func": "create_tcp_listener",
+     "line": 407,
+     "try_line": 378,
+     "nested_try": false,
+     "detail": "continue@407 处于 try(finalbody@378) 内"
+    }
+   ],
+   "slug": "b142__sockets",
+   "pycdc": {
+    "rc": 0
+   },
+   "verify_status": "failure",
+   "compare": [
+    {
+     "func": "create_tcp_listener",
+     "line": 407,
+     "detail": "continue@407 处于 try(finalbody@378) 内",
+     "src": [
+      {
+       "Try": 3,
+       "finalbody": 1,
+       "Continue": 1,
+       "Break": 0,
+       "handlers": 2
+      }
+     ],
+     "prod": [
+      {
+       "Try": 0,
+       "finalbody": 0,
+       "Continue": 0,
+       "Break": 0,
+       "handlers": 0
+      }
+     ]
+    },
+    {
+     "func": "create_tcp_listener",
+     "line": 407,
+     "detail": "continue@407 处于 try(finalbody@378) 内",
+     "src": [
+      {
+       "Try": 3,
+       "finalbody": 1,
+       "Continue": 1,
+       "Break": 0,
+       "handlers": 2
+      }
+     ],
+     "prod": [
+      {
+       "Try": 0,
+       "finalbody": 0,
+       "Continue": 0,
+       "Break": 0,
+       "handlers": 0
+      }
+     ]
+    }
+   ],
+   "reproduced": true
+  },
+  {
+   "kind": "B142",
+   "module": "D:\\Python\\Lib\\site-packages\\imageio\\plugins\\_freeimage.py",
+   "hits": [
+    {
+     "kind": "B142",
+     "func": "set_meta_data",
+     "line": 766,
+     "try_line": 745,
+     "nested_try": false,
+     "detail": "continue@766 处于 try(finalbody@745) 内"
+    },
+    {
+     "kind": "B142",
+     "func": "set_meta_data",
+     "line": 766,
+     "try_line": 745,
+     "nested_try": false,
+     "detail": "continue@766 处于 try(finalbody@745) 内"
+    }
+   ],
+   "slug": "b142__freeimage",
+   "pycdc": {
+    "rc": 0
+   },
+   "verify_status": "failure",
+   "compare": [
+    {
+     "func": "set_meta_data",
+     "line": 766,
+     "detail": "continue@766 处于 try(finalbody@745) 内",
+     "src": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 2
+      }
+     ],
+     "prod": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 2
+      }
+     ]
+    },
+    {
+     "func": "set_meta_data",
+     "line": 766,
+     "detail": "continue@766 处于 try(finalbody@745) 内",
+     "src": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 2
+      }
+     ],
+     "prod": [
+      {
+       "Try": 2,
+       "finalbody": 1,
+       "Continue": 2,
+       "Break": 0,
+       "handlers": 2
+      }
+     ]
+    }
+   ],
+   "reproduced": false
+  },
+  {
+   "kind": "B142",
+   "module": "D:\\Python\\Lib\\site-packages\\jinja2\\environment.py",
+   "hits": [
+    {
+     "kind": "B142",
+     "func": "compile_templates",
+     "line": 887,
+     "try_line": 878,
+     "nested_try": false,
+     "detail": "continue@887 处于 try(finalbody@878) 内"
+    },
+    {
+     "kind": "B142",
+     "func": "compile_templates",
+     "line": 887,
+     "try_line": 878,
+     "nested_try": false,
+     "detail": "continue@887 处于 try(finalbody@878) 内"
+    }
+   ],
+   "slug": "b142_environment",
+   "pycdc": {
+    "rc": 0
+   },
+   "verify_status": "compile_error",
+   "error": "parse: invalid syntax (<unknown>, line 371)"
+  },
+  {
+   "kind": "B143",
+   "module": "D:\\Python\\Lib\\site-packages\\anyio\\to_interpreter.py",
+   "hits": [
+    {
+     "kind": "B143",
+     "func": "run_sync",
+     "line": 223,
+     "try_line": 211,
+     "nested_try": false,
+     "detail": "break@223 处于 finalbody@211 内"
+    },
+    {
+     "kind": "B143",
+     "func": "run_sync",
+     "line": 223,
+     "try_line": 211,
+     "nested_try": false,
+     "detail": "break@223 处于 finalbody@211 内"
+    }
+   ],
+   "slug": "b143_to_interpreter",
+   "pycdc": {
+    "rc": 0
+   },
+   "verify_status": "failure",
+   "compare": [
+    {
+     "func": "run_sync",
+     "line": 223,
+     "detail": "break@223 处于 finalbody@211 内",
+     "src": [
+      {
+       "Try": 3,
+       "finalbody": 4,
+       "Continue": 0,
+       "Break": 1,
+       "handlers": 2
+      }
+     ],
+     "prod": [
+      {
+       "Try": 2,
+       "finalbody": 0,
+       "Continue": 0,
+       "Break": 0,
+       "handlers": 2
+      }
+     ]
+    },
+    {
+     "func": "run_sync",
+     "line": 223,
+     "detail": "break@223 处于 finalbody@211 内",
+     "src": [
+      {
+       "Try": 3,
+       "finalbody": 4,
+       "Continue": 0,
+       "Break": 1,
+       "handlers": 2
+      }
+     ],
+     "prod": [
+      {
+       "Try": 2,
+       "finalbody": 0,
+       "Continue": 0,
+       "Break": 0,
+       "handlers": 2
+      }
+     ]
+    }
+   ],
+   "reproduced": true
+  },
+  {
+   "kind": "B143",
+   "module": "D:\\Python\\Lib\\site-packages\\click\\_termui_impl.py",
+   "hits": [
+    {
+     "kind": "B143",
+     "func": "_pipepager",
+     "line": 513,
+     "try_line": 474,
+     "nested_try": false,
+     "detail": "break@513 处于 finalbody@474 内"
+    },
+    {
+     "kind": "B143",
+     "func": "_pipepager",
+     "line": 513,
+     "try_line": 474,
+     "nested_try": false,
+     "detail": "break@513 处于 finalbody@474 内"
+    }
+   ],
+   "slug": "b143__termui_impl",
+   "pycdc": {
+    "rc": 0
+   },
+   "verify_status": "compile_error",
+   "compare": [
+    {
+     "func": "_pipepager",
+     "line": 513,
+     "detail": "break@513 处于 finalbody@474 内",
+     "src": [
+      {
+       "Try": 3,
+       "finalbody": 2,
+       "Continue": 0,
+       "Break": 1,
+       "handlers": 4
+      }
+     ],
+     "prod": [
+      {
+       "Try": 2,
+       "finalbody": 3,
+       "Continue": 0,
+       "Break": 0,
+       "handlers": 3
+      }
+     ]
+    },
+    {
+     "func": "_pipepager",
+     "line": 513,
+     "detail": "break@513 处于 finalbody@474 内",
+     "src": [
+      {
+       "Try": 3,
+       "finalbody": 2,
+       "Continue": 0,
+       "Break": 1,
+       "handlers": 4
+      }
+     ],
+     "prod": [
+      {
+       "Try": 2,
+       "finalbody": 3,
+       "Continue": 0,
+       "Break": 0,
+       "handlers": 3
+      }
+     ]
+    }
+   ],
+   "reproduced": true
+  },
+  {
+   "kind": "B143",
+   "module": "D:\\Python\\Lib\\asyncio\\locks.py",
+   "hits": [
+    {
+     "kind": "B143",
+     "func": "wait",
+     "line": 278,
+     "try_line": 263,
+     "nested_try": false,
+     "detail": "break@278 处于 finalbody@263 内"
+    }
+   ],
+   "slug": "b143_locks",
+   "pycdc": {
+    "rc": 0
+   },
+   "verify_status": "failure",
+   "compare": [
+    {
+     "func": "wait",
+     "line": 278,
+     "detail": "break@278 处于 finalbody@263 内",
+     "src": [
+      {
+       "Try": 1,
+       "finalbody": 1,
+       "Continue": 0,
+       "Break": 0,
+       "handlers": 0
+      },
+      {
+       "Try": 3,
+       "finalbody": 4,
+       "Continue": 0,
+       "Break": 1,
+       "handlers": 1
+      },
+      {
+       "Try": 1,
+       "finalbody": 2,
+       "Continue": 0,
+       "Break": 0,
+       "handlers": 0
+      }
+     ],
+     "prod": [
+      {
+       "Try": 1,
+       "finalbody": 1,
+       "Continue": 0,
+       "Break": 0,
+       "handlers": 0
+      },
+      {
+       "Try": 3,
+       "finalbody": 5,
+       "Continue": 0,
+       "Break": 1,
+       "handlers": 1
+      },
+      {
+       "Try": 1,
+       "finalbody": 2,
+       "Continue": 0,
+       "Break": 0,
+       "handlers": 0
+      }
+     ]
+    }
+   ],
+   "reproduced": false
+  }
+ ]
+}

@@ -1,0 +1,420 @@
+{
+ "samples": [
+  {
+   "slug": "stdlib_difflib",
+   "dotted": "difflib",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\difflib.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\difflib.py",
+   "probes": [
+    {
+     "label": "SequenceMatcher.ratio",
+     "expr": "SequenceMatcher(None, 'abcd', 'bcde').ratio()"
+    },
+    {
+     "label": "SequenceMatcher.get_matching_blocks",
+     "expr": "SequenceMatcher(None, 'abcd', 'abed').get_matching_blocks()"
+    },
+    {
+     "label": "SequenceMatcher.get_opcodes",
+     "expr": "SequenceMatcher(None, 'abcd', 'abed').get_opcodes()"
+    },
+    {
+     "label": "get_close_matches",
+     "expr": "get_close_matches('appel', 'ape')"
+    },
+    {
+     "label": "unified_diff",
+     "expr": "unified_diff(['a\\n', 'b\\n'], ['a\\n', 'c\\n'])"
+    },
+    {
+     "label": "ndiff",
+     "expr": "ndiff(['a', 'b'], ['a', 'c'])"
+    },
+    {
+     "label": "set_seq2 后 ratio",
+     "code": "m = SequenceMatcher(None, 'abc', 'bcd')\nm.set_seq2('xyz')\nprint(m.ratio())\n"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_dataclasses",
+   "dotted": "dataclasses",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\dataclasses.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\dataclasses.py",
+   "probes": [
+    {
+     "label": "dataclass(order=True,eq=False) 冲突检查",
+     "code": "from dataclasses import dataclass\ntry:\n    @dataclass(order=True, eq=False)\n    class C:\n        a: int\n    print('NO-ERROR')\nexcept ValueError as e:\n    print('ValueError:', e)\n"
+    },
+    {
+     "label": "asdict",
+     "code": "from dataclasses import dataclass, asdict\n@dataclass\nclass D:\n    a: int = 1\n    b: str = 'x'\nprint(asdict(D(2)))\n"
+    },
+    {
+     "label": "fields 元数据",
+     "code": "from dataclasses import dataclass, fields\n@dataclass\nclass E:\n    a: int = 1\nprint([(f.name, f.type, f.default) for f in fields(E)])\nprint(E.__dataclass_fields__['a'].type)\n"
+    },
+    {
+     "label": "slots=True",
+     "code": "from dataclasses import dataclass\n@dataclass(slots=True)\nclass F:\n    a: int = 1\nprint(F.__slots__)\nprint(F(3).a)\n"
+    },
+    {
+     "label": "eq/repr",
+     "code": "from dataclasses import dataclass\n@dataclass\nclass G:\n    a: int = 1\nprint(G(1) == G(1), repr(G(1)))\n"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_contextlib",
+   "dotted": "contextlib",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\contextlib.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\contextlib.py",
+   "probes": [
+    {
+     "label": "contextmanager 副作用序",
+     "code": "from contextlib import contextmanager\n@contextmanager\ndef cm():\n    print('enter')\n    yield 1\n    print('exit')\nwith cm() as v:\n    print('body', v)\n"
+    },
+    {
+     "label": "suppress",
+     "code": "from contextlib import suppress\nwith suppress(ValueError):\n    raise ValueError('x')\nprint('suppressed')\n"
+    },
+    {
+     "label": "ExitStack 逆序退出",
+     "code": "from contextlib import ExitStack\nclass CM:\n    def __init__(self, n): self.n = n\n    def __enter__(self): print('enter', self.n); return self\n    def __exit__(self, *a): print('exit', self.n); return False\nwith ExitStack() as st:\n    st.enter_context(CM(1))\n    st.enter_context(CM(2))\nprint('done')\n"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_functools",
+   "dotted": "functools",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\functools.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\functools.py",
+   "probes": [
+    {
+     "label": "reduce",
+     "expr": "reduce(lambda a, b: a + b, [1, 2, 3])"
+    },
+    {
+     "label": "partial",
+     "expr": "partial(lambda a, b: a + b, 1)(2)"
+    },
+    {
+     "label": "lru_cache",
+     "expr": "lru_cache(maxsize=None)(lambda x: x * 2)(3)"
+    },
+    {
+     "label": "wraps 元数据",
+     "code": "from functools import wraps\ndef deco(f):\n    @wraps(f)\n    def inner(*a, **k):\n        return f(*a, **k) * 2\n    return inner\n@deco\ndef f(x):\n    'doc'\n    return x + 1\nprint(f(3), f.__name__, f.__doc__)\n"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_json_encoder",
+   "dotted": "json.encoder",
+   "pyc": "D:\\Python\\Lib\\json\\__pycache__\\encoder.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\json\\encoder.py",
+   "probes": [
+    {
+     "label": "JSONEncoder().encode",
+     "expr": "JSONEncoder().encode({'a': [1, 2], 'b': None, 'c': True})"
+    },
+    {
+     "label": "sort_keys+indent",
+     "expr": "JSONEncoder(sort_keys=True, indent=2).encode({'b': 1, 'a': 2})"
+    },
+    {
+     "label": "default=str",
+     "expr": "JSONEncoder(default=str).encode({1: 2})"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_ipaddress",
+   "dotted": "ipaddress",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\ipaddress.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\ipaddress.py",
+   "probes": [
+    {
+     "label": "ip_address",
+     "expr": "ip_address('192.168.0.1')"
+    },
+    {
+     "label": "ip_network",
+     "expr": "ip_network('10.0.0.0/8')"
+    },
+    {
+     "label": "is_private",
+     "expr": "ip_address('192.168.0.1').is_private"
+    },
+    {
+     "label": "address_exclude 版本冲突异常",
+     "code": "from ipaddress import ip_network\ntry:\n    ip_network('10.0.0.0/8').address_exclude(ip_network('192.168.0.0/24'))\nexcept TypeError as e:\n    print('TypeError:', e)\n"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_argparse",
+   "dotted": "argparse",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\argparse.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\argparse.py",
+   "probes": [
+    {
+     "label": "parse_args 正常路径",
+     "code": "from argparse import ArgumentParser\np = ArgumentParser(prog='t')\np.add_argument('--x', type=int)\np.add_argument('--y', default='d')\na = p.parse_args(['--x', '3'])\nprint(a.x, a.y)\n"
+    },
+    {
+     "label": "未知参数异常",
+     "code": "from argparse import ArgumentParser\np = ArgumentParser(prog='t')\np.add_argument('--x', type=int)\ntry:\n    p.parse_args(['--zz'])\nexcept SystemExit as e:\n    print('SystemExit', e.code)\n"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_subprocess",
+   "dotted": "subprocess",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\subprocess.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\subprocess.py",
+   "probes": [
+    {
+     "label": "list2cmdline",
+     "expr": "list2cmdline(['a b', 'c'])"
+    },
+    {
+     "label": "TimeoutExpired 类型",
+     "expr": "TimeoutExpired.__name__"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_tarfile",
+   "dotted": "tarfile",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\tarfile.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\tarfile.py",
+   "probes": [
+    {
+     "label": "TarInfo.tobuf",
+     "code": "from tarfile import TarInfo\nt = TarInfo('x.txt')\nt.size = 3\nprint(t.tobuf())\nprint(t.name, t.type, t.size)\n"
+    },
+    {
+     "label": "TarInfo 默认 type",
+     "expr": "TarInfo('n').type"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_typing",
+   "dotted": "typing",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\typing.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\typing.py",
+   "probes": [
+    {
+     "label": "get_args(Union)",
+     "expr": "get_args(Union[int, str])"
+    },
+    {
+     "label": "Optional[int]",
+     "expr": "Optional[int]"
+    },
+    {
+     "label": "get_type_hints",
+     "code": "def f(x: int) -> str:\n    return str(x)\nprint(get_type_hints(f))\n"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_statistics",
+   "dotted": "statistics",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\statistics.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\statistics.py",
+   "probes": [
+    {
+     "label": "mean",
+     "expr": "mean([1, 2, 3])"
+    },
+    {
+     "label": "median",
+     "expr": "median([1, 3, 2])"
+    },
+    {
+     "label": "NormalDist.zscore",
+     "expr": "NormalDist(1, 2).zscore(3)"
+    },
+    {
+     "label": "variance",
+     "expr": "variance([1, 2, 3, 4])"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_csv",
+   "dotted": "csv",
+   "pyc": "D:\\Python\\Lib\\__pycache__\\csv.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\csv.py",
+   "probes": [
+    {
+     "label": "Sniffer.has_header",
+     "code": "import csv\ns = 'a,b\\n1,2\\n3,4\\n'\nsn = csv.Sniffer()\nprint(sn.has_header(s))\nprint(sn.sniff(s).delimiter)\n"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_xml_ElementPath",
+   "dotted": "xml.etree.ElementPath",
+   "pyc": "D:\\Python\\Lib\\xml\\etree\\__pycache__\\ElementPath.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\xml\\etree\\ElementPath.py",
+   "probes": [
+    {
+     "label": "findall",
+     "code": "import xml.etree.ElementTree as ET\nel = ET.fromstring('<root><b id=\"1\">x</b><b id=\"2\">y</b></root>')\nprint(findall(el, './/b'))\n"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_tomllib_parser",
+   "dotted": "tomllib._parser",
+   "pyc": "D:\\Python\\Lib\\tomllib\\__pycache__\\_parser.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\tomllib\\_parser.py",
+   "probes": [
+    {
+     "label": "loads",
+     "expr": "loads('a = 1\\nb = \"x\"')"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_re__parser",
+   "dotted": "re._parser",
+   "pyc": "D:\\Python\\Lib\\re\\__pycache__\\_parser.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\re\\_parser.py",
+   "probes": [
+    {
+     "label": "parse groupindex",
+     "expr": "parse('(?P<x>a)|b', 0).groupindex"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_http_cookiejar",
+   "dotted": "http.cookiejar",
+   "pyc": "D:\\Python\\Lib\\http\\__pycache__\\cookiejar.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\http\\cookiejar.py",
+   "probes": [
+    {
+     "label": "user_domain_match",
+     "expr": "user_domain_match('www.example.com', '.example.com')"
+    },
+    {
+     "label": "CookieJar/Policy 构造",
+     "code": "from http.cookiejar import CookieJar, DefaultCookiePolicy\nj = CookieJar()\np = DefaultCookiePolicy()\nprint(type(j).__name__, p.set_ok_verifiability)\n"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_unittest_case",
+   "dotted": "unittest.case",
+   "pyc": "D:\\Python\\Lib\\unittest\\__pycache__\\case.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\unittest\\case.py",
+   "probes": [
+    {
+     "label": "assertEqual 失败信息",
+     "code": "import unittest\nclass T(unittest.TestCase):\n    def runTest(self):\n        pass\nt = T()\ntry:\n    t.assertEqual(1, 2)\nexcept AssertionError as e:\n    print('AssertionError:', e)\n"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_asyncio_timeouts",
+   "dotted": "asyncio.timeouts",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\timeouts.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\asyncio\\timeouts.py",
+   "probes": [
+    {
+     "label": "asyncio.timeout 超时",
+     "code": "import asyncio\nasync def main():\n    try:\n        async with asyncio.timeout(0.01):\n            await asyncio.sleep(1)\n    except TimeoutError:\n        print('TimeoutError raised')\n    print('after')\nasyncio.run(main())\n"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_asyncio_taskgroups",
+   "dotted": "asyncio.taskgroups",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\taskgroups.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\asyncio\\taskgroups.py",
+   "probes": [
+    {
+     "label": "TaskGroup 正常",
+     "code": "import asyncio\nasync def main():\n    async with asyncio.TaskGroup() as tg:\n        tg.create_task(asyncio.sleep(0.01))\n    print('tg done')\nasyncio.run(main())\n"
+    }
+   ]
+  },
+  {
+   "slug": "stdlib_asyncio_streams",
+   "dotted": "asyncio.streams",
+   "pyc": "D:\\Python\\Lib\\asyncio\\__pycache__\\streams.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\asyncio\\streams.py",
+   "probes": [
+    {
+     "label": "StreamReader.read",
+     "code": "import asyncio\nasync def main():\n    r = asyncio.StreamReader()\n    r.feed_data(b'hello')\n    r.feed_eof()\n    print(await r.read())\n    print(await r.readline())\nasyncio.run(main())\n"
+    }
+   ]
+  },
+  {
+   "slug": "sp_httpcore_models",
+   "dotted": "httpcore._models",
+   "pyc": "D:\\Python\\Lib\\site-packages\\httpcore\\__pycache__\\_models.cpython-311.pyc",
+   "src": "D:\\Python\\Lib\\site-packages\\httpcore\\_models.py",
+   "probes": [
+    {
+     "label": "URL 构造",
+     "expr": "URL('http://example.com/x')"
+    },
+    {
+     "label": "Request 构造",
+     "expr": "Request('GET', 'http://example.com').method"
+    }
+   ]
+  },
+  {
+   "slug": "repo_core_config",
+   "dotted": "core_config",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\core\\__pycache__\\config.cpython-311.pyc",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\config.py",
+   "probes": [
+    {
+     "label": "Config 状态",
+     "expr": "(Config.is_cfg_enabled(), Config.is_hybrid_mode())"
+    },
+    {
+     "label": "enable/disable 往返",
+     "code": "print(enable_cfg(verbose=False))\nprint(Config.is_cfg_enabled(), Config.is_hybrid_mode())\nprint(disable_cfg())\nprint(Config.is_cfg_enabled())\n"
+    }
+   ]
+  },
+  {
+   "slug": "repo_core_object_pool",
+   "dotted": "core_object_pool",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\core\\__pycache__\\object_pool.cpython-311.pyc",
+   "src": "F:\\Downloads\\pythoncdc-main\\core\\object_pool.py",
+   "probes": [
+    {
+     "label": "ObjectPool acquire/stats",
+     "code": "from collections import deque\np = ObjectPool(lambda: deque(), max_size=2)\na = p.acquire()\nprint(type(a).__name__, sorted(p.get_stats().keys()))\n"
+    },
+    {
+     "label": "NodeOperationContext",
+     "code": "with NodeOperationContext() as c:\n    print(type(c).__name__)\nprint('ctx-ok')\n"
+    }
+   ]
+  },
+  {
+   "slug": "repo_parsers_ctx",
+   "dotted": "parsers_context_manager",
+   "pyc": "F:\\Downloads\\pythoncdc-main\\parsers\\__pycache__\\context_manager.cpython-311.pyc",
+   "src": "F:\\Downloads\\pythoncdc-main\\parsers\\context_manager.py",
+   "probes": [
+    {
+     "label": "push/pop context",
+     "code": "cm = ContextManager()\ninfo = cm.push_context(ContextType.FUNCTION, 'f1')\nprint(info.name, cm.current_context_type())\nprint(cm.get_context_path())\nprint(cm.is_in_context(ContextType.FUNCTION))\n"
+    }
+   ]
+  }
+ ]
+}

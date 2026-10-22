@@ -1,0 +1,145 @@
+{
+ "rows": [
+  {
+   "name": "giant_add_5000",
+   "desc": "巨型加法链 5000 项",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\giant_add_5000.py",
+   "src_lines": 3,
+   "src_bytes": 33921,
+   "src_compile": "PyCompileError: Sorry: RecursionError: maximum recursion depth exceeded during compilation",
+   "pycdc": {
+    "skipped": "源码不可编译"
+   },
+   "verdict": "SOURCE_LIMIT"
+  },
+  {
+   "name": "giant_add_20000",
+   "desc": "巨型加法链 20000 项",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\giant_add_20000.py",
+   "src_lines": 3,
+   "src_bytes": 148921,
+   "src_compile": "PyCompileError: Sorry: RecursionError: maximum recursion depth exceeded during compilation",
+   "pycdc": {
+    "skipped": "源码不可编译"
+   },
+   "verdict": "SOURCE_LIMIT"
+  },
+  {
+   "name": "giant_bool_5000",
+   "desc": "巨型布尔链 5000 项",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\giant_bool_5000.py",
+   "src_lines": 3,
+   "src_bytes": 45029,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.96,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 140
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 1.41
+   },
+   "fidelity": {
+    "src_depth": 6,
+    "prod_depth": 6,
+    "src_stmts": 3,
+    "prod_stmts": 3
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "True\n",
+    "prod_out": "True\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "giant_str_5000",
+   "desc": "巨型字符串拼接 5000 项",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\giant_str_5000.py",
+   "src_lines": 3,
+   "src_bytes": 30036,
+   "src_compile": "PyCompileError: Sorry: RecursionError: maximum recursion depth exceeded during compilation",
+   "pycdc": {
+    "skipped": "源码不可编译"
+   },
+   "verdict": "SOURCE_LIMIT"
+  },
+  {
+   "name": "giant_list_5000",
+   "desc": "巨型列表字面量 5000 项",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\giant_list_5000.py",
+   "src_lines": 3,
+   "src_bytes": 28936,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 0.95,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 29038
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 1.8
+   },
+   "fidelity": {
+    "src_depth": 7,
+    "prod_depth": 7,
+    "src_stmts": 3,
+    "prod_stmts": 3
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "5000 4999\n",
+    "prod_out": "5000 4999\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  },
+  {
+   "name": "giant_list_20000",
+   "desc": "巨型列表字面量 20000 项",
+   "file": "F:\\Downloads\\pythoncdc-main\\.trae\\specs\\attack-completeness-claims\\rounds\\round6\\boundary\\giant_list_20000.py",
+   "src_lines": 3,
+   "src_bytes": 128936,
+   "src_compile": "ok",
+   "pycdc": {
+    "rc": 0,
+    "elapsed": 1.25,
+    "timeout": false,
+    "stderr_tail": "",
+    "product_bytes": 129039
+   },
+   "verify": {
+    "status": "success",
+    "units": "2/2",
+    "elapsed": 0.89
+   },
+   "fidelity": {
+    "src_depth": 7,
+    "prod_depth": 7,
+    "src_stmts": 3,
+    "prod_stmts": 3
+   },
+   "exec": {
+    "src_rc": 0,
+    "prod_rc": 0,
+    "src_out": "20000 19999\n",
+    "prod_out": "20000 19999\n",
+    "prod_err": "",
+    "equal": true
+   },
+   "verdict": "OK"
+  }
+ ]
+}
