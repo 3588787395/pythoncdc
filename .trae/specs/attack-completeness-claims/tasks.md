@@ -74,7 +74,7 @@
   - [x] 9.6 集成进 E 门禁编排：G1–G6 + 双读数 + 独立审计 + 原有回归门禁
     - [x] 9.6a `semantic_runner.py` 首次产出 J C1–C5 证据（样本 51 条：45 EQUAL / 6 DIFFERENT）；`coverage_c1c5_sample.json` 为 51/1556 covered；`gate_report.py` + `dual_readings.py` 汇总，`overall=BLOCKED`（G1/G2a/G2b/G2c/G3/G4/G6 阻断，G5 仅历史基线）；证据 `GATE_INTEGRATION.md`、`GATE_REPORT.md`、`gate_report.json`、`dual_readings.md`
     - [ ] 9.6b 独立第三方审计：当前只有代理内 6/51 确定性抽样，不是独立审计人签署；不得把本地审计当作独立审计
-  - [ ] 9.7 提交并 push（`rr-v4r09:`）
+  - [x] 9.7 提交并 push（`rr-v4r09:`）；归档读数见 `rounds/round9/SUMMARY.md`，G1–G6 当前 **BLOCKED**，不得写完备
 
 - [ ] Task 10: 新破口封闭与终验
   - [ ] 10.1 L0–L5 攻击登记的新破口（B163+）按族封闭，机制须为通用判据（I.4 证据齐备）

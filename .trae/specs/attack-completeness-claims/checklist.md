@@ -36,6 +36,7 @@
 - [x] 独立规则全集/`rule_manifest` 可运行：339 条规则、映射 339/339、unmapped/orphan 0；当前 G4 **INCONCLUSIVE**（无 traces，0 proved），见 `rounds/round9/RULE_MANIFEST.md`
 - [x] fuzz/最小化/canary 工具可运行：有界 24 例 `20 EQUAL / 4 DIFFERENT`，4/4 最小化；本地 bootstrap 24 条 `20 EQUAL / 4 DIFFERENT`，泄漏 0，G6 **FAIL**，见 `rounds/round9/FUZZ_CANARY.md`
 - [ ] 独立 C 角色 canary 保管与季度轮换：未满足，G6 不可 PASS
+- [ ] 独立第三方审计签署：当前只有 `gate_report` 的 6/51 确定性抽样，不构成独立审计
 
 ## 终验与台账（Task 10）
 - [ ] 新破口（B163+）全数封闭或如实挂账，机制通用且 I.4 证据齐备
