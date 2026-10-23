@@ -1,0 +1,87 @@
+{
+ "tool": "mutation_test",
+ "version": "1.0.0",
+ "case_id": "mutation-server-version",
+ "source": "F:\\Downloads\\pythoncdc-main\\site-packages\\fly\\server_versionOK.py",
+ "generated": 1,
+ "selected": 1,
+ "operators": [
+  "augassign",
+  "binop",
+  "boolop",
+  "compare",
+  "constant",
+  "if",
+  "return",
+  "unaryop",
+  "while"
+ ],
+ "baseline": {
+  "case_id": "mutation-server-version-baseline",
+  "status": "EQUAL",
+  "diffs": [],
+  "inconclusive": [],
+  "errors": [],
+  "tolerances": [
+   "$.metadata.code.co_filename",
+   "$.metadata.code.co_firstlineno",
+   "$.metadata.code.co_linetable"
+  ]
+ },
+ "summary": {
+  "KILLED": 1,
+  "MISSED": 0,
+  "EQUIVALENT": 0,
+  "FALSE_KILL": 0,
+  "INCONCLUSIVE": 0,
+  "ERROR": 0,
+  "evaluated": 1,
+  "mutation_score": 1.0,
+  "missed_rate": 0.0,
+  "equivalent_proven": 0,
+  "false_kill_rate": 0.0
+ },
+ "mutants": [
+  {
+   "mutation_id": "M0001",
+   "operator": "constant",
+   "description": "'PTrade1.0-QTV202401.05.035' -> 'PTrade1.0-QTV202401.05.035_mut'",
+   "lineno": 4,
+   "col_offset": 10,
+   "path": [
+    [
+     "body",
+     0
+    ],
+    [
+     "value",
+     null
+    ]
+   ],
+   "payload": {
+    "value": "PTrade1.0-QTV202401.05.035_mut"
+   },
+   "status": "KILLED",
+   "semantic_status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[0].v",
+     "kind": "value",
+     "original": "PTrade1.0-QTV202401.05.035",
+     "product": "PTrade1.0-QTV202401.05.035_mut",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.module_values.version.v",
+     "kind": "value",
+     "original": "PTrade1.0-QTV202401.05.035",
+     "product": "PTrade1.0-QTV202401.05.035_mut",
+     "dimension": "R5"
+    }
+   ],
+   "inconclusive": [],
+   "errors": []
+  }
+ ],
+ "status": "COMPLETE"
+}
