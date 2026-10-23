@@ -1,0 +1,534 @@
+{
+ "tool": "l5_drift_check.py",
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "range": [
+  325,
+  390
+ ],
+ "rows": [
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade_account/trade_stock_account.pyc",
+   "status": "success",
+   "units_success": 13,
+   "units_total": 13,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/user_module.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/__init__.pyc",
+   "status": "success",
+   "units_success": 33,
+   "units_total": 33,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/arg_checker.pyc",
+   "status": "success",
+   "units_success": 43,
+   "units_total": 43,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/bcolz_help.pyc",
+   "status": "success",
+   "units_success": 5,
+   "units_total": 5,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/cache_storage.pyc",
+   "status": "success",
+   "units_success": 23,
+   "units_total": 23,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/compile_help.pyc",
+   "status": "success",
+   "units_success": 2,
+   "units_total": 2,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/datetime_func.pyc",
+   "status": "success",
+   "units_success": 17,
+   "units_total": 17,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/decorator.pyc",
+   "status": "success",
+   "units_success": 3,
+   "units_total": 3,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/encrypt.pyc",
+   "status": "success",
+   "units_success": 9,
+   "units_total": 9,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/exception.pyc",
+   "status": "success",
+   "units_success": 31,
+   "units_total": 31,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/global_variable.pyc",
+   "status": "success",
+   "units_success": 8,
+   "units_total": 8,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/i18n.pyc",
+   "status": "success",
+   "units_success": 5,
+   "units_total": 5,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/logger/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/logger/handlers.pyc",
+   "status": "success",
+   "units_success": 17,
+   "units_total": 17,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/option.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc",
+   "status": "success",
+   "units_success": 18,
+   "units_total": 18,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/pycompatibility.pyc",
+   "status": "success",
+   "units_success": 6,
+   "units_total": 6,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/record_store.pyc",
+   "status": "success",
+   "units_success": 5,
+   "units_total": 5,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/report.pyc",
+   "status": "success",
+   "units_success": 5,
+   "units_total": 5,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+   "status": "success",
+   "units_success": 52,
+   "units_total": 52,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/trade_schedule.pyc",
+   "status": "success",
+   "units_success": 9,
+   "units_total": 9,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/version.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/aes_encrypt.pyc",
+   "status": "success",
+   "units_success": 7,
+   "units_total": 7,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/common.pyc",
+   "status": "success",
+   "units_success": 6,
+   "units_total": 6,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/const.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/convert.pyc",
+   "status": "success",
+   "units_success": 8,
+   "units_total": 8,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/custom_tools.pyc",
+   "status": "success",
+   "units_success": 6,
+   "units_total": 6,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/enums.pyc",
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/errors.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/fly_exception.pyc",
+   "status": "success",
+   "units_success": 9,
+   "units_total": 9,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flydefine.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flyqueue.pyc",
+   "status": "success",
+   "units_success": 7,
+   "units_total": 7,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
+   "status": "success",
+   "units_success": 66,
+   "units_total": 66,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/function.pyc",
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
+   "status": "success",
+   "units_success": 29,
+   "units_total": 29,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_param.pyc",
+   "status": "success",
+   "units_success": 16,
+   "units_total": 16,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/global_param.pyc",
+   "status": "success",
+   "units_success": 10,
+   "units_total": 10,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/inform_info.pyc",
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/login_time.pyc",
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/market_time.pyc",
+   "status": "success",
+   "units_success": 10,
+   "units_total": 10,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/multiprocess_syn.pyc",
+   "status": "success",
+   "units_success": 35,
+   "units_total": 35,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/op_station.pyc",
+   "status": "success",
+   "units_success": 21,
+   "units_total": 21,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/trading_schedule.pyc",
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/tradingday_calendar.pyc",
+   "status": "success",
+   "units_success": 31,
+   "units_total": 31,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/user_error.pyc",
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+   "status": "success",
+   "units_success": 153,
+   "units_total": 153,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc",
+   "status": "success",
+   "units_success": 92,
+   "units_total": 92,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+   "status": "success",
+   "units_success": 79,
+   "units_total": 79,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dockerspawner/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dockerspawner/dockerspawner.pyc",
+   "status": "success",
+   "units_success": 26,
+   "units_total": 26,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_algo.pyc",
+   "status": "success",
+   "units_success": 2,
+   "units_total": 2,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc",
+   "status": "success",
+   "units_success": 27,
+   "units_total": 27,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event.pyc",
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_engine.pyc",
+   "status": "success",
+   "units_success": 19,
+   "units_total": 19,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_priority.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_type.pyc",
+   "status": "success",
+   "units_success": 5,
+   "units_total": 5,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/g.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/generalconf.pyc",
+   "status": "success",
+   "units_success": 9,
+   "units_total": 9,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc",
+   "status": "success",
+   "units_success": 64,
+   "units_total": 64,
+   "failures": [],
+   "detail": ""
+  }
+ ]
+}

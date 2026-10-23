@@ -1,0 +1,534 @@
+{
+ "tool": "l5_drift_check.py",
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "range": [
+  130,
+  195
+ ],
+ "rows": [
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/api_db.pyc",
+   "status": "success",
+   "units_success": 8,
+   "units_total": 8,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_base.pyc",
+   "status": "success",
+   "units_success": 34,
+   "units_total": 34,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_utils.pyc",
+   "status": "success",
+   "units_success": 2,
+   "units_total": 2,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/FLYMODULE/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/__init__.pyc",
+   "status": "success",
+   "units_success": 6,
+   "units_total": 6,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/api.pyc",
+   "status": "success",
+   "units_success": 33,
+   "units_total": 33,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc",
+   "status": "success",
+   "units_success": 43,
+   "units_total": 43,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc",
+   "status": "success",
+   "units_success": 8,
+   "units_total": 8,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/data_source_func.pyc",
+   "status": "success",
+   "units_success": 24,
+   "units_total": 24,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/fly_enum.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/__init__.pyc",
+   "status": "success",
+   "units_success": 6,
+   "units_total": 6,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/api.pyc",
+   "status": "success",
+   "units_success": 11,
+   "units_total": 11,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/data_source_func.pyc",
+   "status": "success",
+   "units_success": 3,
+   "units_total": 3,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/enumerate.pyc",
+   "status": "success",
+   "units_success": 5,
+   "units_total": 5,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_bar_storage.pyc",
+   "status": "success",
+   "units_success": 5,
+   "units_total": 5,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc",
+   "status": "success",
+   "units_success": 26,
+   "units_total": 26,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_quote.pyc",
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/__init__.pyc",
+   "status": "success",
+   "units_success": 6,
+   "units_total": 6,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/api.pyc",
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/gtn_request.pyc",
+   "status": "success",
+   "units_success": 6,
+   "units_total": 6,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/__init__.pyc",
+   "status": "success",
+   "units_success": 6,
+   "units_total": 6,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source.pyc",
+   "status": "success",
+   "units_success": 16,
+   "units_total": 16,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source_api.pyc",
+   "status": "success",
+   "units_success": 9,
+   "units_total": 9,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/__init__.pyc",
+   "status": "success",
+   "units_success": 6,
+   "units_total": 6,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/api.pyc",
+   "status": "success",
+   "units_success": 2,
+   "units_total": 2,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/const.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/finance_data_source.pyc",
+   "status": "success",
+   "units_success": 19,
+   "units_total": 19,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/__init__.pyc",
+   "status": "success",
+   "units_success": 6,
+   "units_total": 6,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/api_realquote.pyc",
+   "status": "success",
+   "units_success": 13,
+   "units_total": 13,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+   "status": "success",
+   "units_success": 45,
+   "units_total": 45,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/__init__.pyc",
+   "status": "success",
+   "units_success": 17,
+   "units_total": 17,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/arg_checker.pyc",
+   "status": "success",
+   "units_success": 39,
+   "units_total": 39,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/base_http_client.pyc",
+   "status": "success",
+   "units_success": 8,
+   "units_total": 8,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/calexrights_func.pyc",
+   "status": "success",
+   "units_success": 8,
+   "units_total": 8,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc",
+   "status": "success",
+   "units_success": 29,
+   "units_total": 29,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/datetime_func.pyc",
+   "status": "success",
+   "units_success": 25,
+   "units_total": 25,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/exception.pyc",
+   "status": "success",
+   "units_success": 31,
+   "units_total": 31,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/function_dict.pyc",
+   "status": "success",
+   "units_success": 3,
+   "units_total": 3,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/i18n.pyc",
+   "status": "success",
+   "units_success": 5,
+   "units_total": 5,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/logger/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/logger/logger.pyc",
+   "status": "success",
+   "units_success": 28,
+   "units_total": 28,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/mysql_conn.pyc",
+   "status": "success",
+   "units_success": 6,
+   "units_total": 6,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/path_func.pyc",
+   "status": "success",
+   "units_success": 5,
+   "units_total": 5,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/profiler_func.pyc",
+   "status": "success",
+   "units_success": 15,
+   "units_total": 15,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/pycompatibility.pyc",
+   "status": "success",
+   "units_success": 6,
+   "units_total": 6,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/trade_schedule.pyc",
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/version.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/__main__.pyc",
+   "status": "success",
+   "units_success": 3,
+   "units_total": 3,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/base_account.pyc",
+   "status": "success",
+   "units_success": 12,
+   "units_total": 12,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/base_position.pyc",
+   "status": "success",
+   "units_success": 19,
+   "units_total": 19,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/order.pyc",
+   "status": "success",
+   "units_success": 68,
+   "units_total": 68,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/portfolio.pyc",
+   "status": "success",
+   "units_success": 58,
+   "units_total": 58,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/trade.pyc",
+   "status": "success",
+   "units_success": 23,
+   "units_total": 23,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/api_base.pyc",
+   "status": "success",
+   "units_success": 49,
+   "units_total": 49,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/api_extra.pyc",
+   "status": "success",
+   "units_success": 5,
+   "units_total": 5,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/fields.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/helper.pyc",
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/config/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/config/config.pyc",
+   "status": "success",
+   "units_success": 11,
+   "units_total": 11,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/const.pyc",
+   "status": "success",
+   "units_success": 38,
+   "units_total": 38,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/asset.pyc",
+   "status": "success",
+   "units_success": 77,
+   "units_total": 77,
+   "failures": [],
+   "detail": ""
+  }
+ ]
+}

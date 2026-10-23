@@ -1,0 +1,110 @@
+{
+ "tool": "l5_drift_check.py",
+ "ruler": {
+  "compare_pyc": "D:/Desktop/ptrade相关/pylingual/pylingual/equivalence_check.py",
+  "compare_pyc_sha256": "9c7567bd6776b36b",
+  "ruler_version": "pylingual-equivalence_check"
+ },
+ "range": [
+  390,
+  402
+ ],
+ "rows": [
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/__init__.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/hsid.pyc",
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/itn.pyc",
+   "status": "success",
+   "units_success": 14,
+   "units_total": 14,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/oauth2.pyc",
+   "status": "success",
+   "units_success": 12,
+   "units_total": 12,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/server_version.pyc",
+   "status": "success",
+   "units_success": 1,
+   "units_total": 1,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/accountFactory.pyc",
+   "status": "success",
+   "units_success": 3,
+   "units_total": 3,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc",
+   "status": "success",
+   "units_success": 24,
+   "units_total": 24,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/pboxAccount_jupyterhub.pyc",
+   "status": "success",
+   "units_success": 4,
+   "units_total": 4,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc",
+   "status": "success",
+   "units_success": 137,
+   "units_total": 137,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeFutureAccount.pyc",
+   "status": "success",
+   "units_success": 38,
+   "units_total": 38,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeOptionAccount.pyc",
+   "status": "success",
+   "units_success": 38,
+   "units_total": 38,
+   "failures": [],
+   "detail": ""
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/request_data_transform.pyc",
+   "status": "success",
+   "units_success": 265,
+   "units_total": 265,
+   "failures": [],
+   "detail": ""
+  }
+ ]
+}
