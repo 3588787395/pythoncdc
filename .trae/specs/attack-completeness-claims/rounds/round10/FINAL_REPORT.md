@@ -41,7 +41,7 @@ The only allowed positive statement is:
 - B142: **shape-level gap** after B181 (previous “rare residual” classification invalidated).
 - B143: **reduction-level gap**.
 - Four new fuzz findings: mapped to existing families (B203 / B207 / B210 / B197+B202), no new B number until dedup.
-- Six J sample R7 diffs: likely B199/B202 docstring/metadata family; unresolved.
+- Six J sample R7 diffs: **five are B142** (`v_b71_face::v_nest_fin_continue` code object; call probe shows R1 difference), **one is x01 structural** (`JS-IF-076`, `if_in_while` loses `break`); not a docstring-only family. See `ATTACK_RESULTS_AND_RECOMMENDATIONS.md`.
 
 Details: `BREACH_TRIAGE.md`.
 

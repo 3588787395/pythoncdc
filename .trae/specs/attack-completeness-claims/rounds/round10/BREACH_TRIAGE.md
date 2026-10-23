@@ -35,16 +35,18 @@ No B220+ is allocated until the dedup question is answered with a probe that dis
 
 ## J sample R7 findings
 
-| id | dimensions | visible product issue | likely family |
+| id | dimensions | visible product issue | family |
 |---|---|---|---|
-| `JS-IF-017` | R7 | module docstring emitted as `__doc__ = ...` | B199 / B202 |
-| `JS-IF-021` | R7 | metadata only | B199 / B202 |
-| `JS-IF-076` | R7 | metadata only | B199 / B202 |
-| `JS-IF-088` | R7 | metadata only | B199 / B202 |
-| `JS-IF-090` | R7 | metadata only | B199 / B202 |
-| `JS-IF-097` | R7 | metadata only | B199 / B202 |
+| `JS-IF-017` | R7 | `v_nest_fin_continue` code object differs (`co_consts[2].code_sha`); call probe shows R1 difference | **B142** |
+| `JS-IF-021` | R7 | same `v_b71_face` product; same code object difference | **B142** |
+| `JS-IF-076` | R7 ×5 | `x01_if_deep_hosts` products `if_in_while` / `if_in_try` / `if_shallow` have different `co_consts` code objects; `if_in_while` loses `break`; module-only R1–R6 equal | x01 structural |
+| `JS-IF-088` | R7 | same `v_b71_face` product; same code object difference | **B142** |
+| `JS-IF-090` | R7 | same `v_b71_face` product; same code object difference | **B142** |
+| `JS-IF-097` | R7 | same `v_b71_face` product; same code object difference | **B142** |
 
-Whether these are true semantic failures or accepted metadata differences is **unresolved**. Until resolved, G2a remains FAIL and no “semantic complete” claim is allowed.
+The earlier “module docstring / metadata only” triage is **retracted**. Five of six R7 records are B142 code-object differences; the sixth is an independent x01 structural difference. None is explained by module docstring alone. Call probe on `v_nest_fin_continue([[0, 1]])` gives original return length 5 vs product 7, so B142 is an executable semantic difference. `JS-IF-076` shows that module-only C4 misses function-body differences and only R7 catches them.
+
+Until the runner consumes `input_model.calls` and treats R7 code-object differences as blocking, G2a remains FAIL and no “semantic complete” claim is allowed. Details: `ATTACK_RESULTS_AND_RECOMMENDATIONS.md`.
 
 ## Closure criteria still missing
 

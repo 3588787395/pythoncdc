@@ -10,6 +10,7 @@
 | `rounds/round9/GATE_INTEGRATION.md` | how G1–G6 + dual readings + audit are integrated; sample boundary |
 | `rounds/round10/VERIFICATION.md` | v9 terminal verification; actual vs. not run |
 | `rounds/round10/FINAL_REPORT.md` | terminal verdict and blockers |
+| `rounds/round10/ATTACK_RESULTS_AND_RECOMMENDATIONS.md` | corrected R7 attribution, C4/R7 findings, prioritized method recommendations |
 | `rounds/round9/SUMMARY.md` | Task 9 snapshot (tools, fuzz, canary, gate) |
 
 ## Tools
@@ -51,6 +52,7 @@
 | `round10/BREACH_TRIAGE.md` | B163–B219 + fuzz maps |
 | `round10/ATTACK_CONCLUSIONS.md` | L0–L6 conclusions |
 | `round10/FINAL_REPORT.md` | terminal verdict |
+| `round10/ATTACK_RESULTS_AND_RECOMMENDATIONS.md` | attack results + corrected R7/B142 evidence + method recommendations |
 
 ## Historical inputs
 
