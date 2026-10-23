@@ -27,9 +27,9 @@
 - [x] 结论均以证据（产物 diff / 差分失败 / 覆盖缺口 / 反例）支撑，无主观断言
 
 ## 方法与工具（Task 8–9）
-- [ ] `COMPLETENESS_METHOD.md` 含四支柱（判定空间 / 语义差分判据 / 证明义务 / 持续证据）+ 可证伪门槛 + 双读数口径
-- [ ] 方法经攻击式评审（质询记录在案）并定稿
-- [ ] 实施路线图含每步验收读数与回退条件
+- [x] `COMPLETENESS_METHOD.md` 含四支柱（判定空间 / 语义差分判据 / 证明义务 / 持续证据）+ 可证伪门槛 + 双读数口径
+- [x] 方法经攻击式评审（质询记录在案）并定稿；三轮记录见 `rounds/round8/METHOD_REVIEW.md`
+- [x] 实施路线图含每步验收读数与回退条件：`rounds/round8/roadmap.md`
 - [ ] 工具落地：`semantic_diff.py` / `mutation_test.py` / `jspace_generator.py` 可运行并接入 E 门禁
 - [ ] 变异测试漏检率读数产出（目标 0；>0 即登记判据盲区）
 

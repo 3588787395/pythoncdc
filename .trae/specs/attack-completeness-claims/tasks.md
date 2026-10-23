@@ -57,21 +57,23 @@
   - [x] 7.5 提交并 push（`rr-v4r07b:`；`rr-v4r07` 已被 L4 登记追加占用，故用 b 后缀；B214–B219 + U-06 同轮落账）
 
 - [ ] Task 8: 真正完备的实现方法（方法层交付）
-  - [ ] 8.1 编写 `rounds/round8/COMPLETENESS_METHOD.md`：四支柱（判定空间 / 语义差分判据 / 证明义务 / 持续证据）+ 可证伪门槛 + 双读数口径定义
-  - [ ] 8.2 评审：方法 SHALL 经「攻击式评审」（由评审子代理以本规范 L0–L5 结论逐条质询），修订后定稿
-  - [ ] 8.3 产出实施路线图（工具落地顺序、每步验收读数、回退条件）
+  - [x] 8.1 编写 `rounds/round8/COMPLETENESS_METHOD.md`：四支柱（判定空间 / 语义差分判据 / 证明义务 / 持续证据）+ 可证伪门槛 + 双读数口径定义
+  - [x] 8.2 评审：方法 SHALL 经「攻击式评审」（由评审子代理以本规范 L0–L5 结论逐条质询），修订后定稿；三轮记录见 `rounds/round8/METHOD_REVIEW.md`
+  - [x] 8.3 产出实施路线图（工具落地顺序、每步验收读数、回退条件）：`rounds/round8/roadmap.md`
   - [ ] 8.4 提交并 push（`rr-v4r08:`）
 
 - [ ] Task 9: 方法核心工具落地（最小可用实现）
-  - [ ] 9.1 `tools/completeness/semantic_diff.py`：语义级差分比较器（沙箱执行 + 返回值/副作用/异常/顺序比对 + 容差声明）
-  - [ ] 9.2 `tools/completeness/mutation_test.py`：变异测试驱动（注入已知错误并统计判定器漏检率）
-  - [ ] 9.3 `tools/completeness/jspace_generator.py`：判定空间生成器（与 Task 1 清单同源，可重生成）
-  - [ ] 9.4 集成进 E 门禁编排（新增 4 个门禁项：攻击面回归 / 语义差分 / 变异测试 / 覆盖检查）
-  - [ ] 9.5 提交并 push（`rr-v4r09:`）
+  - [ ] 9.1 `tools/completeness/semantic_diff.py`：语义级差分比较器（沙箱执行 + 返回值/副作用/异常/顺序/元数据比对 + 容差声明）
+  - [ ] 9.2 `tools/completeness/mutation_test.py`：变异测试驱动（独立变异总体 + 等价证明 + 漏检/误杀统计）
+  - [ ] 9.3 `tools/completeness/jspace_generator.py` + 升级 `coverage_checker.py`：判定空间生成器 + C1–C5 五元组覆盖
+  - [ ] 9.4 `tools/completeness/rule_manifest.json` + 独立规则全集枚举 + 锚点双向对账 + 覆盖引理
+  - [ ] 9.5 `tools/completeness/fuzz_driver.py` + 最小化 + 24 条隐藏金丝雀（独立保管/轮换/泄漏扫描）
+  - [ ] 9.6 集成进 E 门禁编排：G1–G6 + 双读数 + 独立审计 + 原有回归门禁
+  - [ ] 9.7 提交并 push（`rr-v4r09:`）
 
 - [ ] Task 10: 新破口封闭与终验
   - [ ] 10.1 L0–L5 攻击登记的新破口（B163+）按族封闭，机制须为通用判据（I.4 证据齐备）
-  - [ ] 10.2 全量门禁：402 八分片 6617/6617 files_failure=0、small34 1568/1568、quotation 153/153、tests 基线名单、IV.2 全绿、新增 4 项（攻击面回归 / 语义差分 / 变异测试 / 覆盖检查 未覆盖 = 0）
+  - [ ] 10.2 全量门禁：402 八分片 6617/6617 files_failure=0、small34 1568/1568、quotation 153/153、tests 基线名单、IV.2 全绿、G1–G6（判定空间五元组 / 语义差分 J+402+真实项目 / 变异 / 规则覆盖 / 金丝雀）全部达标；未达标项显式挂账，不得写「完备」
   - [ ] 10.3 台账 v9 落账（双读数：形态基线 + 判定空间口径；§6 新破口登记；§8.1 口径史加 v9 行）+ `rules.md`（§2.4 新误解条目、§6.2 门禁项、§8 双读数）+ `wiki/log.md`
   - [ ] 10.4 终验与归档 `rounds/round10/`（VERIFICATION.md + 攻击结论总表 + 方法定稿索引），提交并 push
   - [ ] 10.5 终态读数汇报：攻击结论（各层击穿/未击穿/不可证伪）、新破口与封闭情况、判定空间覆盖率、语义差分失败数、变异漏检数、v9 双读数
