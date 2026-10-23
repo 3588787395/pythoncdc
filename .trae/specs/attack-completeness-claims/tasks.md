@@ -56,11 +56,11 @@
   - [x] 7.4 产出 `rounds/round7/ATTACK_L5_EVIDENCE.md` + 证据制度补强清单（10 条，交 Task 8/9/10）；发现并修正 `l5_corpus_scan.py` 把 0 字节源计为可用的缺陷（前 `available=5` → 后 `available=0`）
   - [x] 7.5 提交并 push（`rr-v4r07b:`；`rr-v4r07` 已被 L4 登记追加占用，故用 b 后缀；B214–B219 + U-06 同轮落账）
 
-- [ ] Task 8: 真正完备的实现方法（方法层交付）
+- [x] Task 8: 真正完备的实现方法（方法层交付）
   - [x] 8.1 编写 `rounds/round8/COMPLETENESS_METHOD.md`：四支柱（判定空间 / 语义差分判据 / 证明义务 / 持续证据）+ 可证伪门槛 + 双读数口径定义
   - [x] 8.2 评审：方法 SHALL 经「攻击式评审」（由评审子代理以本规范 L0–L5 结论逐条质询），修订后定稿；三轮记录见 `rounds/round8/METHOD_REVIEW.md`
   - [x] 8.3 产出实施路线图（工具落地顺序、每步验收读数、回退条件）：`rounds/round8/roadmap.md`
-  - [ ] 8.4 提交并 push（`rr-v4r08:`；已提交 `98e77821`，push 因 GitHub 网络失败待重试）
+  - [x] 8.4 提交并 push（`rr-v4r08:` `98e77821`；`rr-v4r08b:` `3f43c965`；origin/main 已同步）
 
 - [ ] Task 9: 方法核心工具落地（最小可用实现）
   - [ ] 9.1 `tools/completeness/semantic_diff.py`：语义级差分比较器（沙箱执行 + 返回值/副作用/异常/顺序/元数据比对 + 容差声明）
