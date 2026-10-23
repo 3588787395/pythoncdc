@@ -30,7 +30,8 @@
 - [x] `COMPLETENESS_METHOD.md` 含四支柱（判定空间 / 语义差分判据 / 证明义务 / 持续证据）+ 可证伪门槛 + 双读数口径
 - [x] 方法经攻击式评审（质询记录在案）并定稿；三轮记录见 `rounds/round8/METHOD_REVIEW.md`
 - [x] 实施路线图含每步验收读数与回退条件：`rounds/round8/roadmap.md`
-- [ ] 工具落地：`semantic_diff.py` / `mutation_test.py` / `jspace_generator.py` 可运行并接入 E 门禁
+- [x] 工具落地：`semantic_diff.py` / `mutation_test.py` / `jspace_generator.py` / `semantic_runner.py` 可运行并接入 `gate_report.py`
+- [ ] 全量 E 门禁绿：G1–G6 当前 `BLOCKED`（G1 51/1556、G2a 6 DIFF、G2b/G2c/G3 未建立、G4 INCONCLUSIVE、G6 20/24）
 - [ ] 变异测试漏检率读数产出（目标 0；>0 即登记判据盲区）
 - [x] 独立规则全集/`rule_manifest` 可运行：339 条规则、映射 339/339、unmapped/orphan 0；当前 G4 **INCONCLUSIVE**（无 traces，0 proved），见 `rounds/round9/RULE_MANIFEST.md`
 - [x] fuzz/最小化/canary 工具可运行：有界 24 例 `20 EQUAL / 4 DIFFERENT`，4/4 最小化；本地 bootstrap 24 条 `20 EQUAL / 4 DIFFERENT`，泄漏 0，G6 **FAIL**，见 `rounds/round9/FUZZ_CANARY.md`

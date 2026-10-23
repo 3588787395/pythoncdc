@@ -1,0 +1,19 @@
+{
+ "tool": "gate_report_selftest",
+ "checks": {
+  "g1_complete_pass": true,
+  "g1_partial_fail": true,
+  "g2a_sample_diff_fail": true,
+  "g2a_small_clean_unestablished": true,
+  "g3_clean_pass": true,
+  "g3_survived_fail": true,
+  "g4_inconclusive": true,
+  "g5_baseline_pass": true,
+  "g6_fail": true,
+  "g6_missing_unestablished": true,
+  "overall_blocked": true,
+  "failure_sampled": true
+ },
+ "passed": true,
+ "overall": "BLOCKED"
+}

@@ -71,7 +71,9 @@
     - [x] 9.5a `fuzz_driver.py` + `minimize.py` + `fuzz_selftest.py` 11/11；有界 24 例 `20 EQUAL / 4 DIFFERENT`，4/4 最小化；证据 `rounds/round9/FUZZ_CANARY.md`、`fuzz_report.jsonl`、`fuzz_summary.json`、`minimized/`
     - [x] 9.5b `canary_runner.py` + 本地 bootstrap 24 条：`20 EQUAL / 4 DIFFERENT`，泄漏扫描 0，G6 **FAIL**（`canary_not_equal`）；证据 `canary_report.json`、`canary_leak_scan.md`、`canary_manifest.json`
     - [ ] 9.5c 独立 C 角色保管与季度轮换：当前代理无法真实满足，G6 仍不可 PASS；不得把 local-bootstrap 记作独立 canary
-  - [ ] 9.6 集成进 E 门禁编排：G1–G6 + 双读数 + 独立审计 + 原有回归门禁
+  - [x] 9.6 集成进 E 门禁编排：G1–G6 + 双读数 + 独立审计 + 原有回归门禁
+    - [x] 9.6a `semantic_runner.py` 首次产出 J C1–C5 证据（样本 51 条：45 EQUAL / 6 DIFFERENT）；`coverage_c1c5_sample.json` 为 51/1556 covered；`gate_report.py` + `dual_readings.py` 汇总，`overall=BLOCKED`（G1/G2a/G2b/G2c/G3/G4/G6 阻断，G5 仅历史基线）；证据 `GATE_INTEGRATION.md`、`GATE_REPORT.md`、`gate_report.json`、`dual_readings.md`
+    - [ ] 9.6b 独立第三方审计：当前只有代理内 6/51 确定性抽样，不是独立审计人签署；不得把本地审计当作独立审计
   - [ ] 9.7 提交并 push（`rr-v4r09:`）
 
 - [ ] Task 10: 新破口封闭与终验
