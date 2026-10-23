@@ -81,3 +81,30 @@
 | B200 | 判据与产品共目标函数（
 egion_ast_generator.py:7755/:14244/:21750、code_generator.py:5001 直接以判红为规则理由） | 共同原因 A1–A6 | 开放 |
 | B201 | 「已判绿」清单时效性漂移（4/211 = 1.90% 现已判红） | 清单陈旧 | 定性登记 |
+
+
+## §7 L4 运行轮（round6）新增（B202–B213，接 B201）
+
+> 归属层除 B213 注明外均为 **L4 实现层**；状态除 B213 注明外均为 **开放**。全部可用 rounds/round6/ 下产物复现（ATTACK_L4_RUNTIME.md §6、tools/、repro/、boundary/、offcorpus/、logs/l4_failure_digest.md）。
+
+| 编号 | 根因 | 表现 | 状态 |
+|---|---|---|---|
+| B202 | 产物不可编译（L4 实现层） | docstring→`__doc__=` 丢值、`**dict`→`{*d: ...}`、三引号 f-string 未闭合；offcorpus 46 样例中 7 个（15.22%）不可编译；JS-DOC-*、JS-IMPORT-* | 开放 |
+| B203 | 局部写被改写为属性赋值或整条丢失 ⇒ NameError（L4 实现层） | difflib `_Machinery.__chain_b`（b2j = {}→self.b2j = {}）、get_matching_blocks/get_opcodes/find_longest_match（difflib.py 2064→779 行）；repro/min_difflib2.py；JS-LOCAL-*、JS-ARG-* | 开放 |
+| B204 | try/except/else 的 else 体并入主路径（L4 实现层） | csv.Sniffer.has_header 表头判定语义反转（源减/产物减）；repro/min_csv.py；JS-TRY-*、JS-EXCEPT-* | 开放 |
+| B205 | 前置校验/raise 删除 ⇒ 非法入参静默接受（L4 实现层） | dataclasses._process_class eq/order 校验消失：源 ValueError / 产物 no error；core/cfg/cfg_builder.py::_parse_instructions isinstance tuple 校验消失：新建异常类参数坍缩为 TypeError: alpha() takes 1 positional argument but 2 were given；JS-RAISE-*、JS-CHECK-*、JS-CLASS-ARGS-* | 开放 |
+| B206 | 逻辑分支极性反转（JUMP_IF_TRUE_OR_POP ↔ JUMP_IF_FALSE_OR_POP）（L4 实现层） | core/cfg/cfg_builder.py::_build_basic_blocks 2 处；JS-BOOLOP-*、JS-JUMP-* | 开放 |
+| B207 | finally 副本重复发射且脱离原保护路径（L4 实现层） | asyncio/base_events.py::create_server finalbody 1→3，部分副本在 if/else 外 ⇒ 常规路径也执行清理；B142 语料外同族；JS-FINALLY-*、JS-B142-* | 开放 |
+| B208 | continue 整条消失（L4 实现层） | socket.py::_sendfile_use_sendfile L394 continue 消失 ⇒ 落入 if 体引发 UnboundLocalError: local variable 'sent' referenced before assignment；同函数 raise TimeoutError('timed out')→pass；B142 语料外同族；JS-CONTINUE-*、JS-B142-* | 开放 |
+| B209 | 结构塌陷且当前判据不可证伪（L4 实现层） | 90 层嵌套 if → 单 and 长链（993 字符、两侧行长）字节码+语义均等价 ⇒ 深度 95→7、语句 94→5；boundary/nest_if_90OK.py；JS-IF-*、JS-BRANCH-*、JS-DEPTH-* | 开放 |
+| B210 | yield 常量整条丢失（json/encoder.py）（L4 实现层） | `yield '{'`/`yield '}'`/`yield ','` 丢失 ⇒ JSONEncoder(indent=2).encode 输出非法 JSON（'\n  "a"2,\n  "b"1\n'）；typing.get_args 返回 list 而非 tuple；JS-CONST-*、JS-STR-* | 开放 |
+| B211 | 类属性初始化丢失 ⇒ AttributeError（L4 实现层） | httpcore/_models.py::URL port 赋值丢失 ⇒ AttributeError: 'URL' object has no attribute 'port'（repr/dict 序列化）；JS-CLASS-* | 开放 |
+| B212 | 规模-耗时超线性（L4 实现层） | 4000 条语句 pycdc 89.84 s（1000 条 ≈11 s）≈ O(n^2)，大递归函数进不了 300 s 门禁；JS-SCALE-*、JS-BIGFNC-* | 开放 |
+| B213 | 口径/覆盖缺口（PEP 654 except*）（L4 口径层） | 真实语料（stdlib 795 文件+site-packages 14237 文件）ast.TryStar 命中 0；合成样 offcorpus/synth_except_star.py verify 4/4 通过——合成样可判但真实分布缺失无法证明 | 定性登记 |
+
+不新立编号、但须并入既有台账的两项：
+
+| 项 | 处置 |
+|---|---|
+| 「判据红 ≠ 语义错」：21 个判红样例里 **12 个（57.1%）** 在探针面语义相同 | 并入 **B201**（判据读数分层标注）的口径扩展：本轮补「**红也有假阳性**」的一侧读数 |
+| 「通用最小样例复现不了语料外缺陷」（9/10 不复现） | 并入 **B163/B168**（证据-形态错配）的口径扩展：**通用样例绿 ⇒ 该形态在真实上下文里对**，该推断**不成立** |
