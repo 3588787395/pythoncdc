@@ -1,0 +1,101 @@
+{
+ "tool": "minimize",
+ "version": "1.0.0",
+ "input": ".trae\\specs\\attack-completeness-claims\\rounds\\round9\\fuzz_report.jsonl",
+ "total_failures": 4,
+ "minimized": 4,
+ "results": [
+  {
+   "case_id": "FZ-raresyntax-015-11d70844",
+   "status": "DIFFERENT",
+   "minimized_status": "DIFFERENT",
+   "minimized_differences": [
+    "R6",
+    "R7"
+   ],
+   "original_lines": 6,
+   "minimized_lines": 3,
+   "removed_lines": 3,
+   "tests": 8,
+   "budget_exhausted": false,
+   "seed": 0,
+   "entrypoint": "main",
+   "source_sha256": "11d7084498d5896a23d217c1f4bb43a42753ce0c9a95439d5be9f529be0fa645",
+   "minimized_sha256": "996a3635c655761305e0e364558bded872bed5321239bfd2f7c69fe07953574a",
+   "first_diff_dimension": "R7",
+   "original_path": ".trae\\specs\\attack-completeness-claims\\rounds\\round9\\minimized\\FZ-raresyntax-015-11d70844.original.py",
+   "minimized_path": ".trae\\specs\\attack-completeness-claims\\rounds\\round9\\minimized\\FZ-raresyntax-015-11d70844.min.py",
+   "family": "rare_syntax",
+   "template": "starred-unpack"
+  },
+  {
+   "case_id": "FZ-semantictrap-020-1d4bb36d",
+   "status": "DIFFERENT",
+   "minimized_status": "DIFFERENT",
+   "minimized_differences": [
+    "R1",
+    "R7"
+   ],
+   "original_lines": 15,
+   "minimized_lines": 14,
+   "removed_lines": 1,
+   "tests": 43,
+   "budget_exhausted": false,
+   "seed": 0,
+   "entrypoint": "main",
+   "source_sha256": "1d4bb36d81a032b5c12718028c3d90b72097347bf9aec0934be6bb53b83af58c",
+   "minimized_sha256": "07fc6f5f680dababf6dde7634fcfe31f7374ab52652e8c4a57fc5a115959ccee",
+   "first_diff_dimension": "R7",
+   "original_path": ".trae\\specs\\attack-completeness-claims\\rounds\\round9\\minimized\\FZ-semantictrap-020-1d4bb36d.original.py",
+   "minimized_path": ".trae\\specs\\attack-completeness-claims\\rounds\\round9\\minimized\\FZ-semantictrap-020-1d4bb36d.min.py",
+   "family": "semantic_trap",
+   "template": "generator-send"
+  },
+  {
+   "case_id": "FZ-raresyntax-021-5433fdc8",
+   "status": "DIFFERENT",
+   "minimized_status": "DIFFERENT",
+   "minimized_differences": [
+    "R7"
+   ],
+   "original_lines": 2,
+   "minimized_lines": 2,
+   "removed_lines": 0,
+   "tests": 3,
+   "budget_exhausted": false,
+   "seed": 0,
+   "entrypoint": "main",
+   "source_sha256": "5433fdc8641d39e36b687d43ed464a8c7fca0cb07c0d91817662c8e57554f95f",
+   "minimized_sha256": "5433fdc8641d39e36b687d43ed464a8c7fca0cb07c0d91817662c8e57554f95f",
+   "first_diff_dimension": "R7",
+   "original_path": ".trae\\specs\\attack-completeness-claims\\rounds\\round9\\minimized\\FZ-raresyntax-021-5433fdc8.original.py",
+   "minimized_path": ".trae\\specs\\attack-completeness-claims\\rounds\\round9\\minimized\\FZ-raresyntax-021-5433fdc8.min.py",
+   "family": "rare_syntax",
+   "template": "annotations-posonly"
+  },
+  {
+   "case_id": "FZ-semantictrap-023-cb72b56d",
+   "status": "DIFFERENT",
+   "minimized_status": "DIFFERENT",
+   "minimized_differences": [
+    "R1",
+    "R5",
+    "R7"
+   ],
+   "original_lines": 14,
+   "minimized_lines": 10,
+   "removed_lines": 4,
+   "tests": 46,
+   "budget_exhausted": false,
+   "seed": 0,
+   "entrypoint": "main",
+   "source_sha256": "cb72b56d2d3a26e55bbc2b1417345ea303edb01bd8bbedff2c62c35a488a9bec",
+   "minimized_sha256": "5d240aba1a5eed55e87b130e2a839476a57a76904e824d7ebbb2bebb610d4a41",
+   "first_diff_dimension": "R7",
+   "original_path": ".trae\\specs\\attack-completeness-claims\\rounds\\round9\\minimized\\FZ-semantictrap-023-cb72b56d.original.py",
+   "minimized_path": ".trae\\specs\\attack-completeness-claims\\rounds\\round9\\minimized\\FZ-semantictrap-023-cb72b56d.min.py",
+   "family": "semantic_trap",
+   "template": "finally-return"
+  }
+ ]
+}

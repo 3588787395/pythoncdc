@@ -68,6 +68,9 @@
   - [x] 9.3 `tools/completeness/jspace_generator.py` + 升级 `coverage_checker.py`：J schema v2（p_j/pyc/expected_label/input_model/excluded）+ C1–C5 五元组；真实读数 1556 条中 covered_5tuple **0**、probe_only 1168（c3_product_missing）、uncovered 388（c1_source_missing）；合成自测 13/13 见 `rounds/round9/JSPACE_C1C5.md` 与 `coverage_checker_selftest.json`
   - [x] 9.4 `tools/completeness/rule_manifest.json` + 独立规则全集枚举 + 锚点双向对账 + 覆盖引理；独立枚举 339 条（5663 分支，15 `isinstance_ast` + 324 `opcode_eq`）、manifest 339/339、unmapped/orphan 0、proved 0/open 339；无 traces 故 G4 **INCONCLUSIVE**；自测 12/12 见 `rounds/round9/RULE_MANIFEST.md` 与 `rule_manifest_selftest.json`
   - [ ] 9.5 `tools/completeness/fuzz_driver.py` + 最小化 + 24 条隐藏金丝雀（独立保管/轮换/泄漏扫描）
+    - [x] 9.5a `fuzz_driver.py` + `minimize.py` + `fuzz_selftest.py` 11/11；有界 24 例 `20 EQUAL / 4 DIFFERENT`，4/4 最小化；证据 `rounds/round9/FUZZ_CANARY.md`、`fuzz_report.jsonl`、`fuzz_summary.json`、`minimized/`
+    - [x] 9.5b `canary_runner.py` + 本地 bootstrap 24 条：`20 EQUAL / 4 DIFFERENT`，泄漏扫描 0，G6 **FAIL**（`canary_not_equal`）；证据 `canary_report.json`、`canary_leak_scan.md`、`canary_manifest.json`
+    - [ ] 9.5c 独立 C 角色保管与季度轮换：当前代理无法真实满足，G6 仍不可 PASS；不得把 local-bootstrap 记作独立 canary
   - [ ] 9.6 集成进 E 门禁编排：G1–G6 + 双读数 + 独立审计 + 原有回归门禁
   - [ ] 9.7 提交并 push（`rr-v4r09:`）
 

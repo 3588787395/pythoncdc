@@ -1,0 +1,181 @@
+{
+ "tool": "canary_bootstrap",
+ "version": "1.0.0",
+ "custody": "local-bootstrap",
+ "count": 24,
+ "by_category": {
+  "rare_syntax": 8,
+  "deep_host": 8,
+  "semantic_trap": 8
+ },
+ "canaries": [
+  {
+   "canary_id": "CN-RARE-01",
+   "category": "rare_syntax",
+   "template": "walrus-comp",
+   "source_sha256": "a6e4ca7a27fa8f1303157b3da8cae1d9a64ca2c66b61032d410af310f222a858",
+   "feature_sha256": "79686014ca35beecec4520ce9b22156527b5655928f89640d847dbe9de9fe0be"
+  },
+  {
+   "canary_id": "CN-DEEP-01",
+   "category": "deep_host",
+   "template": "try-match-finally",
+   "source_sha256": "eca8e87ee0393e562b211c6010f87db5754a3d47e45abdc80310b45530e17302",
+   "feature_sha256": "e843927d8c29120156547123d2b596ac828c24a2f26a8dd3fd3ee388555f4639"
+  },
+  {
+   "canary_id": "CN-TRAP-01",
+   "category": "semantic_trap",
+   "template": "short-circuit",
+   "source_sha256": "4f622c4b689c8857f4f604b832d0ae4bee954c89ced8b58ad06fc5405bd05942",
+   "feature_sha256": "99d231249c0c8286d26592218361228117dd36cb1ec61874508d7f73ea46e93e"
+  },
+  {
+   "canary_id": "CN-RARE-02",
+   "category": "rare_syntax",
+   "template": "match-mapping",
+   "source_sha256": "f2999b24a5b62e114e9a412c1a697f79ee8dbac14a1378660d1c0a550c7f3dc3",
+   "feature_sha256": "26daf04daf8da1519d13eb5ad12ff4c6462538756ee5232c488697cae9598b09"
+  },
+  {
+   "canary_id": "CN-DEEP-02",
+   "category": "deep_host",
+   "template": "comp-in-try",
+   "source_sha256": "6a70b340259a5ee741644d679e6a04785553822b35816c535ca9da22cfe06438",
+   "feature_sha256": "ff469b0c397e3e67ca12cc0865e4c5805a991184862d0da0f0375076632deb2f"
+  },
+  {
+   "canary_id": "CN-TRAP-02",
+   "category": "semantic_trap",
+   "template": "alias-mutation",
+   "source_sha256": "964c08ab12290f2215685d396fc03156c20537e986c7cb6531f495a8023abae2",
+   "feature_sha256": "c6e217b5b1e25f86d629e77f9b6f8fe67571bf1576d53bea55ca90920e659a4f"
+  },
+  {
+   "canary_id": "CN-RARE-03",
+   "category": "rare_syntax",
+   "template": "except-star",
+   "source_sha256": "ea16c4015de622dee3db8cf5bba3229203fa906a28b8db4329c4853767b8be8d",
+   "feature_sha256": "2ffc451728ed0a8d7314fa8b74d1eb68c39112c0aae8e975941e6c8ba8fa6b1b"
+  },
+  {
+   "canary_id": "CN-DEEP-03",
+   "category": "deep_host",
+   "template": "with-for-context",
+   "source_sha256": "ce9f6ef829083cabb4ac7544d5d14074dfc5c72b9233a45248855513034ebffa",
+   "feature_sha256": "d2b79feceb08410ca90658a6bafd11c9d4cdd7373f9b16d4979f5480690a3d5b"
+  },
+  {
+   "canary_id": "CN-TRAP-03",
+   "category": "semantic_trap",
+   "template": "late-binding",
+   "source_sha256": "9e4b642f3f142f95a2c78c194cd9ec1acd14861f0c60a2f713921a32baea0c9e",
+   "feature_sha256": "1e7ad04bb03f6607b1d5de94c6380054e791d1edcea946402f26ae5b35370762"
+  },
+  {
+   "canary_id": "CN-RARE-04",
+   "category": "rare_syntax",
+   "template": "async-gen",
+   "source_sha256": "7e4a8bc2a002ffd5f333771a8858c0cf8f354ebd371354d2770d3cd0a14731c0",
+   "feature_sha256": "c5437e206882c4b3ba425e2de5304c965213b273e51405dd9398d2edc6003b15"
+  },
+  {
+   "canary_id": "CN-DEEP-04",
+   "category": "deep_host",
+   "template": "closure-default",
+   "source_sha256": "54d6594f1513eb14f856c8adc8664f4a8b865c7d66cea98b6a409e12fb1ad50e",
+   "feature_sha256": "82298cb6ce3a3cf3a7874080ce8ac3439956e2afabfa0b77fbe10ae36c90890b"
+  },
+  {
+   "canary_id": "CN-TRAP-04",
+   "category": "semantic_trap",
+   "template": "decorator-effects",
+   "source_sha256": "65cdd11d2b7320207a7c9c201fd6b45a4a5450464b6b4fa7ef35b0f34c029788",
+   "feature_sha256": "135a0c43566921edfe178403d3484a2e5e0d81cc94e7bb27d775f219c4850996"
+  },
+  {
+   "canary_id": "CN-RARE-05",
+   "category": "rare_syntax",
+   "template": "nested-fstring",
+   "source_sha256": "b23af2891832b7e7b6a325f434e8a13945ae93c029aa45ddf08369c3871fb68a",
+   "feature_sha256": "d9ab68cea5783b189d6efad3719fd1efc44fcaf434c531f98cab895774402ef6"
+  },
+  {
+   "canary_id": "CN-DEEP-05",
+   "category": "deep_host",
+   "template": "except-star-with",
+   "source_sha256": "a46886478a7640620353c043603ebc49943a85be128391ce300081851418dc0c",
+   "feature_sha256": "2dad7f1e83c80fe33846e51258587da743fc4f8735f786efd738e691fdc1bd1a"
+  },
+  {
+   "canary_id": "CN-TRAP-05",
+   "category": "semantic_trap",
+   "template": "exception-context",
+   "source_sha256": "93cbafc047dd379e4441173b9602fc0512c76374d308d38647efc6c78934e65f",
+   "feature_sha256": "1c1e8136da56b9a023d955cf4061fe55914153f12bcbe207bdfdc9a71aaeb193"
+  },
+  {
+   "canary_id": "CN-RARE-06",
+   "category": "rare_syntax",
+   "template": "starred-unpack",
+   "source_sha256": "85caef37559ad345a7d346274dadd5bba25cb6252617f5b52c42e179930a3fd8",
+   "feature_sha256": "3b147c845ae3e12999bf165b1ceee18624ee1c702064e0a8bd122384ad01566c"
+  },
+  {
+   "canary_id": "CN-DEEP-06",
+   "category": "deep_host",
+   "template": "lambda-comp",
+   "source_sha256": "ccc9fe5d9c97dae8c41dd421940744360eae3e516f9f374b903678f23fb29e78",
+   "feature_sha256": "bd06caeb8f592300f54aa6d84e8624f7794fa1ee6dfabfac1894db9fe38313ef"
+  },
+  {
+   "canary_id": "CN-TRAP-06",
+   "category": "semantic_trap",
+   "template": "float-edges",
+   "source_sha256": "08b79b74edf495ef347ff8d8911a1b51c9b216de55fa255729fd0ae2170eee73",
+   "feature_sha256": "ee1e9ed722654778e9ee1c143bbf5d2ba1f4f46fc7bade95c2f1c40739a75ae0"
+  },
+  {
+   "canary_id": "CN-RARE-07",
+   "category": "rare_syntax",
+   "template": "decorator-order",
+   "source_sha256": "ed9981b8e97566e38d173e092829c5502547c5f08c0d6316731c1dc902dae352",
+   "feature_sha256": "e449f1fbdd46237e61973b34cf726efd550538eb63efaa153e34231cbb868ff5"
+  },
+  {
+   "canary_id": "CN-DEEP-07",
+   "category": "deep_host",
+   "template": "loop-else-break",
+   "source_sha256": "3dcfd5ced1df74dc68586984ff57b84ec455c0f03818b3d2b6432db55ef0dbba",
+   "feature_sha256": "6ad61b32ca35a8815e907267b48a8f9a990308eea2c4106c12864b97ff1b78b9"
+  },
+  {
+   "canary_id": "CN-TRAP-07",
+   "category": "semantic_trap",
+   "template": "generator-send",
+   "source_sha256": "afefcc851ff9d508a76d6f6d094a3e730fea799110e01b8615a6eb7b06c4bd22",
+   "feature_sha256": "4d6037c891818dea2a626f0cbb2df0f7085a54f7f91bd7f82904292cf381cca7"
+  },
+  {
+   "canary_id": "CN-RARE-08",
+   "category": "rare_syntax",
+   "template": "annotations-posonly",
+   "source_sha256": "ae4ec48efc3bc6d8db74db5bcdeb5460644cf266297e83bb36c4614db7b7ec48",
+   "feature_sha256": "f01728e12d8c26fef8fb1611dadb5d7612f7f5a8c9d08fe76308922cb6f68cfb"
+  },
+  {
+   "canary_id": "CN-DEEP-08",
+   "category": "deep_host",
+   "template": "nested-class",
+   "source_sha256": "a2d63f1c5f27a46253281b6b31e36714d80b2252f3c80c98640404db96786731",
+   "feature_sha256": "412089bcae7b78f385c207b9c8b77d35653caa439cd7753e81c502337c3f6ad5"
+  },
+  {
+   "canary_id": "CN-TRAP-08",
+   "category": "semantic_trap",
+   "template": "finally-return",
+   "source_sha256": "98aea61df6c1f18f441209dca791fd76e22961c24ca981ba12d1b45f34fe125f",
+   "feature_sha256": "79ae6c4f9fa91436c8aab76533b02f005ba6f37ed07b04fa3ca6e8ab3d1c2551"
+  }
+ ]
+}

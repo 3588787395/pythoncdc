@@ -1,0 +1,478 @@
+{
+ "tool": "canary_runner",
+ "version": "1.0.0",
+ "canaries": 24,
+ "counts": {
+  "EQUAL": 20,
+  "DIFFERENT": 4
+ },
+ "equal": 20,
+ "custody": "local-bootstrap",
+ "rotation_ok": false,
+ "g6": "FAIL",
+ "reason": "canary_not_equal",
+ "scan_roots": [
+  "core",
+  "tools",
+  "tests",
+  "wiki",
+  "docs",
+  "rules.md",
+  ".trae\\specs\\attack-completeness-claims"
+ ],
+ "leak_hits": [],
+ "results": [
+  {
+   "canary_id": "CN-DEEP-01",
+   "category": "deep_host",
+   "source_sha256": "eca8e87ee0393e562b211c6010f87db5754a3d47e45abdc80310b45530e17302",
+   "seed_hash": "ba4d86e9fe89a7a1",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-DEEP-02",
+   "category": "deep_host",
+   "source_sha256": "6a70b340259a5ee741644d679e6a04785553822b35816c535ca9da22cfe06438",
+   "seed_hash": "8dbc28b211a314db",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-DEEP-03",
+   "category": "deep_host",
+   "source_sha256": "ce9f6ef829083cabb4ac7544d5d14074dfc5c72b9233a45248855513034ebffa",
+   "seed_hash": "39fca16691086d85",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-DEEP-04",
+   "category": "deep_host",
+   "source_sha256": "54d6594f1513eb14f856c8adc8664f4a8b865c7d66cea98b6a409e12fb1ad50e",
+   "seed_hash": "5555ce996ecf7dc8",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-DEEP-05",
+   "category": "deep_host",
+   "source_sha256": "a46886478a7640620353c043603ebc49943a85be128391ce300081851418dc0c",
+   "seed_hash": "ab46e3e791fdd839",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-DEEP-06",
+   "category": "deep_host",
+   "source_sha256": "ccc9fe5d9c97dae8c41dd421940744360eae3e516f9f374b903678f23fb29e78",
+   "seed_hash": "5511640a94c7e76e",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-DEEP-07",
+   "category": "deep_host",
+   "source_sha256": "3dcfd5ced1df74dc68586984ff57b84ec455c0f03818b3d2b6432db55ef0dbba",
+   "seed_hash": "a8dc7f38668277d5",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-DEEP-08",
+   "category": "deep_host",
+   "source_sha256": "a2d63f1c5f27a46253281b6b31e36714d80b2252f3c80c98640404db96786731",
+   "seed_hash": "bf62944e77b5acd1",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-RARE-01",
+   "category": "rare_syntax",
+   "source_sha256": "a6e4ca7a27fa8f1303157b3da8cae1d9a64ca2c66b61032d410af310f222a858",
+   "seed_hash": "b8a5c86042bb2850",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-RARE-02",
+   "category": "rare_syntax",
+   "source_sha256": "f2999b24a5b62e114e9a412c1a697f79ee8dbac14a1378660d1c0a550c7f3dc3",
+   "seed_hash": "8f7b6da40f4aebd6",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-RARE-03",
+   "category": "rare_syntax",
+   "source_sha256": "ea16c4015de622dee3db8cf5bba3229203fa906a28b8db4329c4853767b8be8d",
+   "seed_hash": "c94c5e40a1cc69fc",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-RARE-04",
+   "category": "rare_syntax",
+   "source_sha256": "7e4a8bc2a002ffd5f333771a8858c0cf8f354ebd371354d2770d3cd0a14731c0",
+   "seed_hash": "07ca1bafac2bb06f",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-RARE-05",
+   "category": "rare_syntax",
+   "source_sha256": "b23af2891832b7e7b6a325f434e8a13945ae93c029aa45ddf08369c3871fb68a",
+   "seed_hash": "bd48bf88812bddad",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-RARE-06",
+   "category": "rare_syntax",
+   "source_sha256": "85caef37559ad345a7d346274dadd5bba25cb6252617f5b52c42e179930a3fd8",
+   "seed_hash": "700066b5e957acbf",
+   "verdict": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_code.len",
+     "kind": "value",
+     "original": 72,
+     "product": 80,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_code.sha256",
+     "kind": "value",
+     "original": "644c99f38329d4c0d50c4983eba07627a0de070a3a3d9d1d16ffa6c90c7d8ec6",
+     "product": "0dcf9957f4bb16feb8c91c63e49d694031a89979bdab8507ff11655c8b11a753",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.len",
+     "kind": "value",
+     "original": 5,
+     "product": 4,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v",
+     "kind": "length",
+     "original": 5,
+     "product": 4,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[1]",
+     "kind": "type",
+     "original": "tuple",
+     "product": "code",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2]",
+     "kind": "type",
+     "original": "code",
+     "product": "int",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3]",
+     "kind": "type",
+     "original": "int",
+     "product": "str",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_names",
+     "kind": "length",
+     "original": 0,
+     "product": 1,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_nlocals",
+     "kind": "value",
+     "original": 5,
+     "product": 4,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_varnames",
+     "kind": "length",
+     "original": 5,
+     "product": 4,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_varnames[0]",
+     "kind": "value",
+     "original": "data",
+     "product": "first",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_varnames[1]",
+     "kind": "value",
+     "original": "first",
+     "product": "middle",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_varnames[2]",
+     "kind": "value",
+     "original": "middle",
+     "product": "last",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_varnames[3]",
+     "kind": "value",
+     "original": "last",
+     "product": "call",
+     "dimension": "R7"
+    },
+    {
+     "dimension": "R6",
+     "message": "one side raised while the other returned",
+     "detail": {
+      "original_exception": null,
+      "product_exception": {
+       "type": "builtins.NameError",
+       "args": {
+        "t": "tuple",
+        "v": [
+         {
+          "t": "str",
+          "v": "name 'data' is not defined"
+         }
+        ],
+        "len": 1,
+        "truncated": false
+       },
+       "message": "name 'data' is not defined"
+      }
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-RARE-07",
+   "category": "rare_syntax",
+   "source_sha256": "ed9981b8e97566e38d173e092829c5502547c5f08c0d6316731c1dc902dae352",
+   "seed_hash": "08c3a61f0584f62b",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-RARE-08",
+   "category": "rare_syntax",
+   "source_sha256": "ae4ec48efc3bc6d8db74db5bcdeb5460644cf266297e83bb36c4614db7b7ec48",
+   "seed_hash": "c96eda57b2d0e8f7",
+   "verdict": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_posonlyargcount",
+     "kind": "value",
+     "original": 1,
+     "product": 0,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.signature",
+     "kind": "value",
+     "original": "(x: int | None = None, /, *, y: 'int' = 5) -> int | None",
+     "product": "(x: int | None = None, *, y: 'int' = 5) -> int | None",
+     "dimension": "R7"
+    }
+   ],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-TRAP-01",
+   "category": "semantic_trap",
+   "source_sha256": "4f622c4b689c8857f4f604b832d0ae4bee954c89ced8b58ad06fc5405bd05942",
+   "seed_hash": "198587f188deb999",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-TRAP-02",
+   "category": "semantic_trap",
+   "source_sha256": "964c08ab12290f2215685d396fc03156c20537e986c7cb6531f495a8023abae2",
+   "seed_hash": "b4a3e9331b1ade54",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-TRAP-03",
+   "category": "semantic_trap",
+   "source_sha256": "9e4b642f3f142f95a2c78c194cd9ec1acd14861f0c60a2f713921a32baea0c9e",
+   "seed_hash": "b923b4afe1039956",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-TRAP-04",
+   "category": "semantic_trap",
+   "source_sha256": "65cdd11d2b7320207a7c9c201fd6b45a4a5450464b6b4fa7ef35b0f34c029788",
+   "seed_hash": "39e63acc8be10557",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-TRAP-05",
+   "category": "semantic_trap",
+   "source_sha256": "93cbafc047dd379e4441173b9602fc0512c76374d308d38647efc6c78934e65f",
+   "seed_hash": "009a25d646cf61a1",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-TRAP-06",
+   "category": "semantic_trap",
+   "source_sha256": "08b79b74edf495ef347ff8d8911a1b51c9b216de55fa255729fd0ae2170eee73",
+   "seed_hash": "5d5f177851276cbe",
+   "verdict": "EQUAL",
+   "diffs": [],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-TRAP-07",
+   "category": "semantic_trap",
+   "source_sha256": "afefcc851ff9d508a76d6f6d094a3e730fea799110e01b8615a6eb7b06c4bd22",
+   "seed_hash": "0d081791ba46a99d",
+   "verdict": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[1].code_sha",
+     "kind": "value",
+     "original": "8836ebb87a52a79c934968d5bfa8370cebcff5d7c0198260f5dc2b5622e0818a",
+     "product": "7b7722c267bea243a83ee8a618f45d9c59ab225782047a46a356772daf091609",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.call[0].return.v[0].v[2].v",
+     "kind": "value",
+     "original": "3",
+     "product": "2",
+     "dimension": "R1"
+    }
+   ],
+   "errors": []
+  },
+  {
+   "canary_id": "CN-TRAP-08",
+   "category": "semantic_trap",
+   "source_sha256": "98aea61df6c1f18f441209dca791fd76e22961c24ca981ba12d1b45f34fe125f",
+   "seed_hash": "4da49aef7fda2efd",
+   "verdict": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_code.len",
+     "kind": "value",
+     "original": 430,
+     "product": 310,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_code.sha256",
+     "kind": "value",
+     "original": "f390ba343833db1f42032130bcb9f789fb02959e57c4dfe1e6aef0dccb7852a8",
+     "product": "358c8378ebbfc1c07bfee4774ac28d4f7f95b68aea77992750fe75689876d393",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.len",
+     "kind": "value",
+     "original": 6,
+     "product": 5,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v",
+     "kind": "length",
+     "original": 6,
+     "product": 5,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].v",
+     "kind": "value",
+     "original": "ret",
+     "product": "fin",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[4].v",
+     "kind": "value",
+     "original": "fin",
+     "product": "outer",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_exceptiontable.len",
+     "kind": "value",
+     "original": 39,
+     "product": 31,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_exceptiontable.sha256",
+     "kind": "value",
+     "original": "961ff4966dc5b6a03c659a2562da2c84e9e3f1065902c0d46cde95de2da2b0eb",
+     "product": "e101cf299795c5b881754869dbd7e8803fedc434b2065928fed41cc5bbe7d9d8",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.module_values.events.len",
+     "kind": "value",
+     "original": 3,
+     "product": 6,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.events.v",
+     "kind": "length",
+     "original": 3,
+     "product": 6,
+     "dimension": "R5"
+    },
+    {
+     "path": "$.module_values.events.v[2]",
+     "kind": "type",
+     "original": "str",
+     "product": "tuple",
+     "dimension": "R5"
+    },
+    {
+     "path": "$.call[0].return",
+     "kind": "type",
+     "original": "tuple",
+     "product": "list",
+     "dimension": "R1"
+    }
+   ],
+   "errors": []
+  }
+ ]
+}

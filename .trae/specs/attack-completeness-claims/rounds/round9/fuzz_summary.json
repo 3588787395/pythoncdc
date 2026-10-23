@@ -1,0 +1,13 @@
+{
+ "tool": "fuzz_driver",
+ "version": "1.0.0",
+ "total": 24,
+ "counts": {
+  "EQUAL": 20,
+  "DIFFERENT": 4
+ },
+ "failures": 4,
+ "budget_seconds": 240.0,
+ "stopped": "case_limit",
+ "new_diff": 4
+}

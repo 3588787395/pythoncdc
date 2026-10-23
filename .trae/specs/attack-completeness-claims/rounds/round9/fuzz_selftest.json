@@ -1,0 +1,20 @@
+{
+ "tool": "fuzz_selftest",
+ "checks": {
+  "generator_deterministic": true,
+  "generator_9_cases": true,
+  "generator_3_families": true,
+  "generator_no_placeholder": true,
+  "generator_sources_compile": true,
+  "good_source_equal": true,
+  "ddmin_keeps_failure": true,
+  "ddmin_tests": true,
+  "canary_loader": true,
+  "leak_detected": true,
+  "leak_excluded": true
+ },
+ "passed": true,
+ "good_status": "EQUAL",
+ "reduced_lines": 2,
+ "ddmin_tests": 8
+}
