@@ -25,11 +25,14 @@ import argparse
 import ast
 import collections
 import glob
+import hashlib
 import json
 import os
 import sys
 
 SPEC_DIR = ".trae/specs/attain-true-completeness"
+J_SCHEMA_VERSION = "v2"
+GENERATOR_VERSION = "2.0.0"
 
 DEPTH_BUCKETS = ("d1 单层", "d2 双层", "d3plus 三层及以上")
 
@@ -1108,17 +1111,25 @@ def main(argv=None):
                     seq[f["code"]] += 1
                     eid = "JS-%s-%03d" % (f["code"], seq[f["code"]])
                     rel, nm = sorted(obs_f[(f["name"], vname, h, d)])[0]
+                    binding = probe_binding(rel)
                     entries.append({
                         "id": eid, "form": f["name"], "host": h, "depth": d,
                         "variant": vname, "row": f["row"],
                         "required_evidence": [{
                             "kind": "probe",
                             "pyc": rel,
-                            "note": "本单元专属见证探针（探针名 %s；登记于 %s）"
-                                    % (nm, "、".join(index[(rel, nm)]["stamps"][:2])),
+                            "note": "本单元专属见证探针（探针：%s；登记于 %s）"
+                                    % (nm, "；".join(index[(rel, nm)]["stamps"][:2])),
                         }],
                         "status": "covered",
                         "source": f["source"],
+                        "j_schema_version": J_SCHEMA_VERSION,
+                        "expected_label": {"form": f["name"], "variant": vname,
+                                           "host": h, "depth": d},
+                        "counterexample_hint": f["anchor"],
+                        "host_prelude": None,
+                        "excluded": [],
+                        **binding,
                     })
                 if not seen_depths:
                     if cap is not None and structural_added >= cap:
@@ -1126,6 +1137,7 @@ def main(argv=None):
                     structural_added += 1
                     seq[f["code"]] += 1
                     eid = "JS-%s-%03d" % (f["code"], seq[f["code"]])
+                    binding = probe_binding(f["anchor"])
                     entries.append({
                         "id": eid, "form": f["name"], "host": h, "depth": buckets[0],
                         "variant": vname, "row": f["row"],
@@ -1137,10 +1149,22 @@ def main(argv=None):
                         }],
                         "status": "uncovered",
                         "source": f["source"],
+                        "j_schema_version": J_SCHEMA_VERSION,
+                        "expected_label": {"form": f["name"], "variant": vname,
+                                           "host": h, "depth": buckets[0]},
+                        "counterexample_hint": f["anchor"],
+                        "host_prelude": None,
+                        "excluded": [],
+                        **binding,
                     })
 
     space = {
         "version": "v1",
+        "j_schema_version": J_SCHEMA_VERSION,
+        "generator_version": GENERATOR_VERSION,
+        "generator_sha256": sha256_file(__file__),
+        "seed": 0,
+        "excluded": [],
         "created": "2026-10-21",
         "generator": "tools/completeness/jspace_generator.py",
         "counting_rules": {
@@ -1151,6 +1175,7 @@ def main(argv=None):
             "cell": "条目 = (form, variant, host, depth)；族内按 variant 声明序 × 宿主声明序 × 深度档序展开",
             "structural": "结构性单元 = 该 (form,variant,host) 在证据索引中无任何观测时登记 1 条"
                           "（深度取该宿主最小档）；每族最多登记 structural_cap 条，整族零证据时不截断",
+            "c1c5": "C1 = p_j/p_j_sha256/p_j_lines; C2 = pyc/pyc_sha256/pyc_loadable; C3/C4/C5 must come from an external evidence record; missing means not covered_5tuple.",
         },
         "dimensions": {
             "form": [f["name"] for f in fams],
@@ -1240,6 +1265,49 @@ def build_stats(space, index_paths, index, obs=None, fams=None):
     }
 
 
+def sha256_file(path):
+    try:
+        h = hashlib.sha256()
+        with open(path, "rb") as fh:
+            for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    except OSError:
+        return None
+
+
+def probe_binding(pyc_rel):
+    pyc_path = pyc_rel if os.path.isfile(pyc_rel) else None
+    pyc_sha = sha256_file(pyc_path) if pyc_path else None
+    source_path = None
+    source_sha = None
+    source_lines = None
+    if isinstance(pyc_rel, str) and pyc_rel.lower().endswith(".pyc"):
+        candidate = pyc_rel[:-1]
+        if os.path.isfile(candidate):
+            source_path = candidate
+            source_sha = sha256_file(candidate)
+            try:
+                with open(candidate, "r", encoding="utf-8-sig", errors="replace") as fh:
+                    source_lines = len(fh.read().splitlines())
+            except OSError:
+                source_lines = None
+    return {
+        "p_j": source_path,
+        "p_j_sha256": source_sha,
+        "p_j_lines": source_lines,
+        "pyc": pyc_path or pyc_rel,
+        "pyc_sha256": pyc_sha,
+        "pyc_present": bool(pyc_path),
+        "pyc_loadable": None,
+        "input_model": {"kind": "module", "calls": [], "seed": 0,
+                        "note": "default module model; stronger calls require C4 evidence"},
+        "entrypoint": "module",
+        "host_prelude": None,
+        "host_prelude_reason": "host prelude is not derived from the probe source in J v2",
+    }
+
+
 ROWS25 = ["If", "BoolOp", "IfExp", "Try", "Raise", "Assert", "Import", "Global",
           "global_nonlocal", "Await", "ListComp", "await_expr", "Yield", "Match",
           "With", "match_statement", "Break", "Continue", "While", "Delete",
@@ -1274,6 +1342,10 @@ def write_md(path, space, stats):
     A("> 生成器：`tools/completeness/jspace_generator.py`（本表与 `judgment_space.json` 同源、可重生成）。")
     A("> 机读清单：`rounds/round1/judgment_space.json`；覆盖检查器：`tools/completeness/coverage_checker.py`；"
       "首跑基线：`rounds/round1/COVERAGE_BASELINE.md`。")
+    A("")
+    A("> J schema v2 note: each entry now carries p_j/p_j_sha256/p_j_lines, pyc/pyc_sha256, expected_label, input_model and excluded. "
+      "The `covered` field below is the legacy probe-observation status, NOT C1-C5 coverage. "
+      "Use `coverage_checker.py` and `COVERAGE_C1C5.md` for covered_5tuple/probe_only/unexecuted counts.")
     A("")
     A("## 0. 规模读数（本文件由生成器写出，数字与 JSON 逐项一致）")
     A("")

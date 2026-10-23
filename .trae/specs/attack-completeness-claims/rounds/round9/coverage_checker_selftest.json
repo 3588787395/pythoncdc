@@ -1,0 +1,40 @@
+{
+ "tool": "coverage_checker_selftest",
+ "checks": {
+  "total_9": true,
+  "covered_2": true,
+  "green_1": true,
+  "semantic_failure_1": true,
+  "probe_only": true,
+  "unexecuted": true,
+  "n_a": true,
+  "inconclusive": true,
+  "excluded": true,
+  "missing_source": true,
+  "bad_chain": true,
+  "bad_chain_reason": true,
+  "gate_fails": true
+ },
+ "passed": true,
+ "totals": {
+  "covered_5tuple": 2,
+  "probe_only": 1,
+  "unexecuted": 1,
+  "n/a": 1,
+  "inconclusive": 1,
+  "excluded": 1,
+  "uncovered": 2
+ },
+ "per_family": {
+  "If": {
+   "covered_5tuple": 2,
+   "total": 9,
+   "probe_only": 1,
+   "unexecuted": 1,
+   "n/a": 1,
+   "inconclusive": 1,
+   "excluded": 1,
+   "uncovered": 2
+  }
+ }
+}

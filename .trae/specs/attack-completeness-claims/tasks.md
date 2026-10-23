@@ -65,7 +65,7 @@
 - [ ] Task 9: 方法核心工具落地（最小可用实现）
   - [x] 9.1 `tools/completeness/semantic_diff.py`：语义级差分比较器（沙箱执行 + 返回值/副作用/异常/顺序/元数据比对 + 容差声明）；自测 17/17 见 `rounds/round9/SEMANTIC_DIFF.md` 与 `semantic_diff_selftest.json`
   - [x] 9.2 `tools/completeness/mutation_test.py`：变异测试驱动（独立 AST 变异总体 + `ast.unparse` 基线 EQUAL 前置 + 等价证明清单 + 漏检/误杀/inconclusive/error 统计）；自测 9/9 见 `rounds/round9/MUTATION_TEST.md` 与 `mutation_selftest.json`，真实 pyc 冒烟 1/1 killed 见 `mutation_smoke_server_version.json`
-  - [ ] 9.3 `tools/completeness/jspace_generator.py` + 升级 `coverage_checker.py`：判定空间生成器 + C1–C5 五元组覆盖
+  - [x] 9.3 `tools/completeness/jspace_generator.py` + 升级 `coverage_checker.py`：J schema v2（p_j/pyc/expected_label/input_model/excluded）+ C1–C5 五元组；真实读数 1556 条中 covered_5tuple **0**、probe_only 1168（c3_product_missing）、uncovered 388（c1_source_missing）；合成自测 13/13 见 `rounds/round9/JSPACE_C1C5.md` 与 `coverage_checker_selftest.json`
   - [ ] 9.4 `tools/completeness/rule_manifest.json` + 独立规则全集枚举 + 锚点双向对账 + 覆盖引理
   - [ ] 9.5 `tools/completeness/fuzz_driver.py` + 最小化 + 24 条隐藏金丝雀（独立保管/轮换/泄漏扫描）
   - [ ] 9.6 集成进 E 门禁编排：G1–G6 + 双读数 + 独立审计 + 原有回归门禁
