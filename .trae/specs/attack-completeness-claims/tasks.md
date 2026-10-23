@@ -60,7 +60,7 @@
   - [x] 8.1 编写 `rounds/round8/COMPLETENESS_METHOD.md`：四支柱（判定空间 / 语义差分判据 / 证明义务 / 持续证据）+ 可证伪门槛 + 双读数口径定义
   - [x] 8.2 评审：方法 SHALL 经「攻击式评审」（由评审子代理以本规范 L0–L5 结论逐条质询），修订后定稿；三轮记录见 `rounds/round8/METHOD_REVIEW.md`
   - [x] 8.3 产出实施路线图（工具落地顺序、每步验收读数、回退条件）：`rounds/round8/roadmap.md`
-  - [ ] 8.4 提交并 push（`rr-v4r08:`）
+  - [ ] 8.4 提交并 push（`rr-v4r08:`；已提交 `98e77821`，push 因 GitHub 网络失败待重试）
 
 - [ ] Task 9: 方法核心工具落地（最小可用实现）
   - [ ] 9.1 `tools/completeness/semantic_diff.py`：语义级差分比较器（沙箱执行 + 返回值/副作用/异常/顺序/元数据比对 + 容差声明）
