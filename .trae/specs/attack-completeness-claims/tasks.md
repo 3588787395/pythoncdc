@@ -63,7 +63,7 @@
   - [x] 8.4 提交并 push（`rr-v4r08:` `98e77821`；`rr-v4r08b:` `3f43c965`；origin/main 已同步）
 
 - [ ] Task 9: 方法核心工具落地（最小可用实现）
-  - [ ] 9.1 `tools/completeness/semantic_diff.py`：语义级差分比较器（沙箱执行 + 返回值/副作用/异常/顺序/元数据比对 + 容差声明）
+  - [x] 9.1 `tools/completeness/semantic_diff.py`：语义级差分比较器（沙箱执行 + 返回值/副作用/异常/顺序/元数据比对 + 容差声明）；自测 17/17 见 `rounds/round9/SEMANTIC_DIFF.md` 与 `semantic_diff_selftest.json`
   - [ ] 9.2 `tools/completeness/mutation_test.py`：变异测试驱动（独立变异总体 + 等价证明 + 漏检/误杀统计）
   - [ ] 9.3 `tools/completeness/jspace_generator.py` + 升级 `coverage_checker.py`：判定空间生成器 + C1–C5 五元组覆盖
   - [ ] 9.4 `tools/completeness/rule_manifest.json` + 独立规则全集枚举 + 锚点双向对账 + 覆盖引理

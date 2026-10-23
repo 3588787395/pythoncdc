@@ -1,0 +1,350 @@
+{
+ "tool": "semantic_diff_selftest",
+ "total": 17,
+ "passed": 17,
+ "failed": 0,
+ "results": [
+  {
+   "case_id": "equal-int",
+   "expected": "EQUAL",
+   "actual": "EQUAL",
+   "expected_dimensions": [],
+   "observed_dimensions": [],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "type-int-bool",
+   "expected": "DIFFERENT",
+   "actual": "DIFFERENT",
+   "expected_dimensions": [
+    "R1"
+   ],
+   "observed_dimensions": [
+    "R1",
+    "R7"
+   ],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "float-tolerance",
+   "expected": "EQUAL",
+   "actual": "EQUAL",
+   "expected_dimensions": [],
+   "observed_dimensions": [],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.call[0].return",
+    "$.metadata.code.co_consts.v[1]",
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "docstring-loss",
+   "expected": "DIFFERENT",
+   "actual": "DIFFERENT",
+   "expected_dimensions": [
+    "R7"
+   ],
+   "observed_dimensions": [
+    "R7"
+   ],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "format-only",
+   "expected": "EQUAL",
+   "actual": "EQUAL",
+   "expected_dimensions": [],
+   "observed_dimensions": [],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "signature-default",
+   "expected": "DIFFERENT",
+   "actual": "DIFFERENT",
+   "expected_dimensions": [
+    "R7"
+   ],
+   "observed_dimensions": [
+    "R7"
+   ],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "exception-message",
+   "expected": "DIFFERENT",
+   "actual": "DIFFERENT",
+   "expected_dimensions": [
+    "R6"
+   ],
+   "observed_dimensions": [
+    "R6",
+    "R7"
+   ],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "side-effect",
+   "expected": "DIFFERENT",
+   "actual": "DIFFERENT",
+   "expected_dimensions": [
+    "R5"
+   ],
+   "observed_dimensions": [
+    "R1",
+    "R5",
+    "R7"
+   ],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "stdout-order",
+   "expected": "DIFFERENT",
+   "actual": "DIFFERENT",
+   "expected_dimensions": [
+    "R2",
+    "R4"
+   ],
+   "observed_dimensions": [
+    "R2",
+    "R4",
+    "R7"
+   ],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "file-effect",
+   "expected": "DIFFERENT",
+   "actual": "DIFFERENT",
+   "expected_dimensions": [
+    "R5"
+   ],
+   "observed_dimensions": [
+    "R5",
+    "R7"
+   ],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "module-diff",
+   "expected": "DIFFERENT",
+   "actual": "DIFFERENT",
+   "expected_dimensions": [
+    "R5"
+   ],
+   "observed_dimensions": [
+    "R5",
+    "R7"
+   ],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "async-equal",
+   "expected": "EQUAL",
+   "actual": "EQUAL",
+   "expected_dimensions": [],
+   "observed_dimensions": [],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "class-equal",
+   "expected": "EQUAL",
+   "actual": "EQUAL",
+   "expected_dimensions": [],
+   "observed_dimensions": [],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "binding-inconclusive",
+   "expected": "INCONCLUSIVE",
+   "actual": "INCONCLUSIVE",
+   "expected_dimensions": [],
+   "observed_dimensions": [],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [
+    "original signature binding failed",
+    "original body not reached"
+   ],
+   "ok": true
+  },
+  {
+   "case_id": "product-import-failure",
+   "expected": "DIFFERENT",
+   "actual": "DIFFERENT",
+   "expected_dimensions": [
+    "LOAD"
+   ],
+   "observed_dimensions": [
+    "LOAD",
+    "R0",
+    "R2",
+    "R3",
+    "R4",
+    "R5"
+   ],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "pyc-equal",
+   "expected": "EQUAL",
+   "actual": "EQUAL",
+   "expected_dimensions": [],
+   "observed_dimensions": [],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ],
+   "errors": [],
+   "inconclusive": [],
+   "ok": true
+  },
+  {
+   "case_id": "missing-original",
+   "expected": "ERROR",
+   "actual": "ERROR",
+   "expected_dimensions": [],
+   "observed_dimensions": [],
+   "missing_dimensions": [],
+   "missing_tolerances": [],
+   "tolerances": [],
+   "errors": [
+    "target not found: d:\\Temp\\semantic_diff_selftest_ja_2cze9\\nope.py"
+   ],
+   "inconclusive": [],
+   "ok": true
+  }
+ ]
+}
