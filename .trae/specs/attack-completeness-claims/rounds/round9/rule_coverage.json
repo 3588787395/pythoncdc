@@ -1,0 +1,23 @@
+{
+ "tool": "rule_manifest",
+ "version": "1.0.0",
+ "universe_sha256": "59151f4e42bb444db1659975cc58fd0cf1473e5aa7beb4e59581c2a20c462b2f",
+ "manifest_sha256": "8c0ff1a1d017db3e0581319e6e692a8341d2eea7b39902c85691cd2bde322dee",
+ "total_rules": 339,
+ "manifest_rules": 339,
+ "unmapped_anchors": [],
+ "orphan_rules": [],
+ "anchor_orphans": [],
+ "proved": 0,
+ "tested_only": 0,
+ "open": 339,
+ "ready_proved": 0,
+ "not_ready_proved": 0,
+ "witness_errors": [],
+ "domain_errors": [],
+ "coverage_evaluable": false,
+ "empty_cov": null,
+ "coverage": {},
+ "g4": "INCONCLUSIVE",
+ "reason": "no_rule_traces"
+}

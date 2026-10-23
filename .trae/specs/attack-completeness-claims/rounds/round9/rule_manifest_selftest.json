@@ -1,0 +1,61 @@
+{
+ "tool": "rule_manifest_selftest",
+ "checks": {
+  "universe_count_2": true,
+  "universe_occurrences_2": true,
+  "universe_deterministic": true,
+  "generated_rules_2": true,
+  "pass": true,
+  "pass_ready_2": true,
+  "no_empty_cov": true,
+  "no_traces_inconclusive": true,
+  "orphan_fail": true,
+  "unmapped_fail": true,
+  "open_fail": true,
+  "empty_inconclusive": true
+ },
+ "passed": true,
+ "universe": {
+  "total_rules": 2,
+  "total_occurrences": 2,
+  "counts_by_kind": {
+   "isinstance_ast": 1,
+   "opcode_eq": 1
+  }
+ },
+ "pass_result": {
+  "tool": "rule_manifest",
+  "version": "1.0.0",
+  "universe_sha256": "d7a0165cae5eb21b10937b1fb95087b2a047829b4410ae41e144329e854cc2f5",
+  "manifest_sha256": "6eaa5c7c81545fdedb73ca8d2be82ebdac6b8ace6926cde70454f8a02a82e8b9",
+  "total_rules": 2,
+  "manifest_rules": 2,
+  "unmapped_anchors": [],
+  "orphan_rules": [],
+  "anchor_orphans": [],
+  "proved": 2,
+  "tested_only": 0,
+  "open": 0,
+  "ready_proved": 2,
+  "not_ready_proved": 0,
+  "witness_errors": [],
+  "domain_errors": [],
+  "coverage_evaluable": true,
+  "empty_cov": 0,
+  "coverage": {
+   "R-ONE": [
+    "J-1",
+    "J-2"
+   ],
+   "R-TWO": [
+    "J-1"
+   ]
+  },
+  "g4": "PASS",
+  "reason": "ok"
+ },
+ "no_traces": "no_rule_traces",
+ "orphan": "FAIL",
+ "gap": "FAIL",
+ "open": "FAIL"
+}

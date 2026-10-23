@@ -66,7 +66,7 @@
   - [x] 9.1 `tools/completeness/semantic_diff.py`：语义级差分比较器（沙箱执行 + 返回值/副作用/异常/顺序/元数据比对 + 容差声明）；自测 17/17 见 `rounds/round9/SEMANTIC_DIFF.md` 与 `semantic_diff_selftest.json`
   - [x] 9.2 `tools/completeness/mutation_test.py`：变异测试驱动（独立 AST 变异总体 + `ast.unparse` 基线 EQUAL 前置 + 等价证明清单 + 漏检/误杀/inconclusive/error 统计）；自测 9/9 见 `rounds/round9/MUTATION_TEST.md` 与 `mutation_selftest.json`，真实 pyc 冒烟 1/1 killed 见 `mutation_smoke_server_version.json`
   - [x] 9.3 `tools/completeness/jspace_generator.py` + 升级 `coverage_checker.py`：J schema v2（p_j/pyc/expected_label/input_model/excluded）+ C1–C5 五元组；真实读数 1556 条中 covered_5tuple **0**、probe_only 1168（c3_product_missing）、uncovered 388（c1_source_missing）；合成自测 13/13 见 `rounds/round9/JSPACE_C1C5.md` 与 `coverage_checker_selftest.json`
-  - [ ] 9.4 `tools/completeness/rule_manifest.json` + 独立规则全集枚举 + 锚点双向对账 + 覆盖引理
+  - [x] 9.4 `tools/completeness/rule_manifest.json` + 独立规则全集枚举 + 锚点双向对账 + 覆盖引理；独立枚举 339 条（5663 分支，15 `isinstance_ast` + 324 `opcode_eq`）、manifest 339/339、unmapped/orphan 0、proved 0/open 339；无 traces 故 G4 **INCONCLUSIVE**；自测 12/12 见 `rounds/round9/RULE_MANIFEST.md` 与 `rule_manifest_selftest.json`
   - [ ] 9.5 `tools/completeness/fuzz_driver.py` + 最小化 + 24 条隐藏金丝雀（独立保管/轮换/泄漏扫描）
   - [ ] 9.6 集成进 E 门禁编排：G1–G6 + 双读数 + 独立审计 + 原有回归门禁
   - [ ] 9.7 提交并 push（`rr-v4r09:`）

@@ -32,6 +32,7 @@
 - [x] 实施路线图含每步验收读数与回退条件：`rounds/round8/roadmap.md`
 - [ ] 工具落地：`semantic_diff.py` / `mutation_test.py` / `jspace_generator.py` 可运行并接入 E 门禁
 - [ ] 变异测试漏检率读数产出（目标 0；>0 即登记判据盲区）
+- [x] 独立规则全集/`rule_manifest` 可运行：339 条规则、映射 339/339、unmapped/orphan 0；当前 G4 **INCONCLUSIVE**（无 traces，0 proved），见 `rounds/round9/RULE_MANIFEST.md`
 
 ## 终验与台账（Task 10）
 - [ ] 新破口（B163+）全数封闭或如实挂账，机制通用且 I.4 证据齐备
