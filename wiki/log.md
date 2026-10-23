@@ -1,5 +1,12 @@
 # Research Log
 
+## 2026-10-23（attack-completeness-claims 终验：v9 双读数 + G1–G6 门禁）
+
+- **v8 100% 降级**：形态基线仍为 128/128，但只作历史回归口径；v9 判定空间 J v2 = **0/1556 covered**（9.3 全量），集成样本 **51/1556（3.28%）**、**45 EQUAL / 6 DIFFERENT**（6 条均 R7）；G4 339 条 **0 proved / 339 open**；G6 24 条 local-bootstrap **20/24**、泄漏 0；`overall=BLOCKED`（G1/G2a/G2b/G2c/G3/G4/G6；G5 baseline_only）。证据 = `.trae/specs/attack-completeness-claims/rounds/round9/GATE_REPORT.md` + `rounds/round10/FINAL_REPORT.md`。
+- **破口**：B163–B219 共 **57 项未封闭/定性挂账**；B142 由 B181 重新定性为形态级缺口（前规范「稀窝不升格」作废），B143 为归约级缺口。v9 新发现 4 个 fuzz 复现先映射 B203/B207/B210/B197+B202，未新开 B 号；J 样本 6 条 R7 DIFF 与 B199/B202 docstring 面同源，待去重。
+- **文档同步**：总纲 §0/§2.2/§3（13→17 误解）/§5.5/§6（B163–B219 汇总）/§8.4/§9.1；`rules.md` §2.4/§6.2/§7.2/§8.1/§8.3；`overview`/`index`/`syntax-audit-ledger`/`branch-coverage` 全部改为双读数并标注 v9 BLOCKED。**禁止**把 128/128、51/1556 样本或 local-bootstrap canary 写成完备。
+- **未做**：402/small34/quotation/pytest/IV.2 本轮未重跑；全量 J 语义差分、G2b/G2c、G3 全量、G4 traces、G6 独立保管均未建立；Task 10.1 的 B163+ 封闭为 0。终态只能表述为「形态基线达成（v8 口径）」。
+
 ## 2026-10-21（v3 attain-true-completeness 十轮终审：R8 全行对抗终审 + 三态落账 v8）
 
 - **R8 终审**（commit `b6e634b7`，实录 = `.trae/specs/attain-true-completeness/rounds/round8/REVIEW.md` + `REVIEW2.md`）：25 行矩阵 34 探针 **257/257**（每行 ≥1 深层宿主探针 + 负对照 60/60；13 误解 13/13 自查零触犯）；组合级 25 号终表 + 另册 B52/B53/B11-R2 并入 = `r8combo2` **241/242**（唯一红 = `v_nest_fin_continue` 属地 **B142 稀窝**，不升格）；E 门禁终跑 402 八分片 **6617/6617 files_failure=0**（574s）、IV.2 全绿；7 组回归终读数 86/86、46/46、60/60、71/71、65/65、172/172、98/98。本轮机制 B153–B162（4 文件 +516/−25，全 `[Bn-V3R8]` 标记）：c04/m02 三层 try 配对（B155/B156）、for-iter 三元（B153/B154）、系列深宿主组合（B157–B160）、BUILD_\* 链式后继排除与 while-or 链链尾完成判据（B162），另册两项翻正后另册清空。

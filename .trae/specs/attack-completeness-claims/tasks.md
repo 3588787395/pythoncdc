@@ -77,11 +77,11 @@
   - [x] 9.7 提交并 push（`rr-v4r09:`）；归档读数见 `rounds/round9/SUMMARY.md`，G1–G6 当前 **BLOCKED**，不得写完备
 
 - [ ] Task 10: 新破口封闭与终验
-  - [ ] 10.1 L0–L5 攻击登记的新破口（B163+）按族封闭，机制须为通用判据（I.4 证据齐备）
-  - [ ] 10.2 全量门禁：402 八分片 6617/6617 files_failure=0、small34 1568/1568、quotation 153/153、tests 基线名单、IV.2 全绿、G1–G6（判定空间五元组 / 语义差分 J+402+真实项目 / 变异 / 规则覆盖 / 金丝雀）全部达标；未达标项显式挂账，不得写「完备」
-  - [ ] 10.3 台账 v9 落账（双读数：形态基线 + 判定空间口径；§6 新破口登记；§8.1 口径史加 v9 行）+ `rules.md`（§2.4 新误解条目、§6.2 门禁项、§8 双读数）+ `wiki/log.md`
-  - [ ] 10.4 终验与归档 `rounds/round10/`（VERIFICATION.md + 攻击结论总表 + 方法定稿索引），提交并 push
-  - [ ] 10.5 终态读数汇报：攻击结论（各层击穿/未击穿/不可证伪）、新破口与封闭情况、判定空间覆盖率、语义差分失败数、变异漏检数、v9 双读数
+  - [ ] 10.1 L0–L5 攻击登记的新破口（B163+）按族封闭，机制须为通用判据（I.4 证据齐备）——**未完成**：B163–B219 共 57 项 0 封闭；4 个 fuzz 复现仅去重映射（B203/B207/B210/B197+B202），无产品修复/I.4 证据；见 `rounds/round10/BREACH_TRIAGE.md`
+  - [ ] 10.2 全量门禁：402 八分片 6617/6617 files_failure=0、small34 1568/1568、quotation 153/153、tests 基线名单、IV.2 全绿、G1–G6（判定空间五元组 / 语义差分 J+402+真实项目 / 变异 / 规则覆盖 / 金丝雀）全部达标；未达标项显式挂账，不得写「完备」——**未达标**：`overall=BLOCKED`；G1 全量 0/1556、G2a 6 DIFF、G2b/G2c/G3 UNESTABLISHED、G4 0/339、G6 20/24；G5 仅历史基线；见 `rounds/round10/VERIFICATION.md`
+  - [x] 10.3 台账 v9 落账（双读数：形态基线 + 判定空间口径；§6 新破口登记；§8.1 口径史加 v9 行）+ `rules.md`（§2.4 新误解条目、§6.2 门禁项、§8 双读数）+ `wiki/log.md`；总纲 §0/§2.2/§3/§5.5/§6/§8.4/§9.1 与 overview/index/台账页同步，禁止把 128 或样本写完备
+  - [x] 10.4 终验与归档 `rounds/round10/`（`VERIFICATION.md` + `ATTACK_CONCLUSIONS.md` + `BREACH_TRIAGE.md` + `METHOD_INDEX.md` + `FINAL_REPORT.md`），提交并 push（`rr-v4r10:`）
+  - [x] 10.5 终态读数汇报：形态基线 128/128（历史）/ J 样本 51 of 1556（3.28%）/ 全量 0 of 1556 / 语义 45 EQUAL + 6 DIFF / 规则 0 of 339 proved / fuzz 20/24 / canary 20/24 / G5 baseline_only / overall BLOCKED；B163–B219 0 封闭
 
 # Task Dependencies
 
