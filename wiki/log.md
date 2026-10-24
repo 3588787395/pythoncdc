@@ -67,3 +67,14 @@
 ## [2026-09-28] external delete | _real/a.py
 
 Deleted 1 source file and 0 wiki pages.
+
+
+## 2026-10-24 rr-v5r01..r08（achieve-any-syntax-completeness）
+
+- Task 0–3：测量口径修正、B142 嵌套 finally、x01 折叠行头族、B199 docstring（be256ae0 等）
+- Task 4：四 fuzz 族封闭 + deephost 臂锚（7d3432a1，fuzz 24/24）
+- Task 5：J 空间 c1/c2 补齐 + 1556 全量 C1–C5 + 三类清单（fa0bcd0a）
+- B214 except* 闩：尝试→回退（4a5017d8，恢复 406 基线），登记 OPEN
+- Task 6：G2b/G2c/G3样本/G4trace 实测读数（e6b603ee）
+- Task 7：G5 本树复跑 + G6 ASSURANCE_BLOCKED + 比较器完整性（4a07f00c）
+- Task 8：本双读数同步与终态归档

@@ -183,3 +183,11 @@
 ## Comparisons
 
 ## Synthesis
+
+## 双读数指针（rr-v5r08 终态，2026-10-24）
+
+- [[overview]] / [[log]] / [[concepts/decompile-invariant-completeness|不变量完备性]] /
+  [[concepts/syntax-audit-ledger|语法审计台账]] / [[concepts/branch-coverage|分支覆盖]]
+  均已追加 rr-v5r08 双读数（shape/judgment 两口径）。
+- 判定证据主目录：`.trae/specs/attack-completeness-claims/rounds/round9/`
+  （GATE_REPORT_V5R06、TASK5_THREE_LISTS、TASK6_GATES、TASK7_E_GATES）。

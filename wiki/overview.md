@@ -50,3 +50,11 @@ pythoncdc（Python 字节码反编译器，白名单源码 60 文件 / ≈ 22 �
 - 向量检索：应用端 embedding 凭据未配置时 `llm_wiki_embed_page` 返回 401，检索退化为纯关键词——模式页"检索词"小节即为该退化下的命中保障；配置后在 [[index]] 所列概念/热点/模式页上重跑 embed 即可。
 - 白名单：`core/ parsers/ bytecode/ utils/ + pycdc.py + pycdas.py`（经 `raw/sources/` junction 落地）；页面链接断链必须为 0。
 - 约定：页面 kebab-case 英文命名、正文中文、UTF-8 无 BOM；数字必须来自工具输出，禁止手改。
+
+
+## 双读数（rr-v5r08 终态，2026-10-24）
+
+- shape: 402 八分片 6617/6617、small34 1568/1568、quotation 153/153、fuzz 24/24 EQUAL、pytest 406 失败清单与冻结基线逐字节一致（rr-v5r05c..r07 树）
+- judgment: J 1556 全量 C1–C5：covered_equal 250 / uncovered 189（15 探针文件 25 失配单元）/module_only 675 / unjudgeable 442；G2b 57E/3D/342 环境；G2c 5E/24D/17 环境；G3 样本 32k/602m；G4 trace 187/339 命中 152 never-hit；G6 ASSURANCE_BLOCKED
+- 终态判定：product_complete = NOT PASS（BLOCKED）；六门禁无一宣称 PASS；G6 无独立 custody 记
+  ASSURANCE_BLOCKED。详见 `attack-completeness-claims/rounds/round9/GATE_REPORT_V5R06.md`。

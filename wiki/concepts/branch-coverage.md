@@ -33,3 +33,11 @@ kind: concept
 ## 检索词
 
 双读数 / 形态基线 128/128（历史 v8） / 判定空间 0/1556（全量）、51/1556（样本） / 语义差分 45 EQUAL / 6 DIFF / G4 INCONCLUSIVE / G6 FAIL / BLOCKED / 误解清单 17 条 / 落地标记 / 复审六步
+
+
+## 双读数（rr-v5r08 终态，2026-10-24）
+
+- shape: 402 八分片 6617/6617、small34 1568/1568、quotation 153/153、fuzz 24/24 EQUAL、pytest 406 失败清单与冻结基线逐字节一致（rr-v5r05c..r07 树）
+- judgment: J 1556 全量 C1–C5：covered_equal 250 / uncovered 189（15 探针文件 25 失配单元）/module_only 675 / unjudgeable 442；G2b 57E/3D/342 环境；G2c 5E/24D/17 环境；G3 样本 32k/602m；G4 trace 187/339 命中 152 never-hit；G6 ASSURANCE_BLOCKED
+- 反编译器自身行覆盖（G4 trace）：339 规则锚点行 187 命中 / 152 未执行；
+  ast_generator_v2 34、code_generator 35、region_ast_generator 46 条未执行为最大缺口簇。

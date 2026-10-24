@@ -74,7 +74,7 @@
 - [x] G2c 46 个真实 pyc 语义差分完成（FAIL 如实：24 DIFF 含 5 行为差逐条在案）
 - [ ] G3 变异测试完成，漏检 = 0（样本读数 missed 602/634；全量总体与调用模型补齐挂账）
 - [ ] G4 339 条规则 witness/trace 完成，`open = 0`
-- [ ] G1/G2a/G2b/G2c/G3/G4 复跑并更新 gate_report
+- [x] G1/G2a/G2b/G2c/G3/G4 复跑并更新 gate_report（GATE_REPORT_V5R06：overall BLOCKED，全部实测读数）
 - [ ] G5：402 八分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 基线、IV.2 全绿
 - [ ] 基本比较器独立复跑，读数与基线一致
 - [ ] G6 使用独立 custody；24/24 EQUAL、0 leak、轮换记录齐全

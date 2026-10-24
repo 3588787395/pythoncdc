@@ -423,3 +423,12 @@ IMPORT_OK / COMPILE_OK / repro match / 官方 41 靶 h62 / sstrict 34 pyc / batt
 ## 检索词
 
 反编译迭代总纲 / 嵌套无感 / 无感不变式 / C1 局部消费 / C2 黑箱组合 / C3 守卫封闭 / L(A) / 归纳论证 / 语法完备 / 128 形态 / 三级判定 / 完备 127 破口 1 / 99.2% / 十三条误解 / T1-T8 / 逐形态台账 / B1a _cjb_skip_inline_if / B1b neg75_jqcond2 / 落地标记 / 复审六步 / 破口状态机 / except* 纠正 / PRELOAD_RERAISE 3.12 / CHECK_EG_MATCH / PREP_RERAISE_STAR / is_except_star / 口径演变 v1-v7 / BOM 纠正 utf-8-sig / 60933 分支点 / 61289 判定条件 / 103 完备 25 破口 / 80.47% / B104 B112 B122 B123 B124 B125 B126 B127 B128 / 25 号分层 清零 9 维持 16 / WIKI_REVIEW / 可用资源索引
+
+
+## 双读数（rr-v5r08 终态，2026-10-24）
+
+- shape: 402 八分片 6617/6617、small34 1568/1568、quotation 153/153、fuzz 24/24 EQUAL、pytest 406 失败清单与冻结基线逐字节一致（rr-v5r05c..r07 树）
+- judgment: J 1556 全量 C1–C5：covered_equal 250 / uncovered 189（15 探针文件 25 失配单元）/module_only 675 / unjudgeable 442；G2b 57E/3D/342 环境；G2c 5E/24D/17 环境；G3 样本 32k/602m；G4 trace 187/339 命中 152 never-hit；G6 ASSURANCE_BLOCKED
+- 本轮修复族（已关闭）：x01 折叠常量控制行头（rr-v5r03）、B199 docstring、B203 starred-unpack 值段、
+  B210 send 绑定、B197/B202 posonly、B207 return-in-finally（无条件+条件臂）、dict `**` 配对、
+  R12-MATCHANCHOR（match 臂锚 +1 NOP）；B214 except* 出口闩（尝试→回退→登记 OPEN，行为等价级残差）。

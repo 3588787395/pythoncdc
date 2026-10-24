@@ -66,12 +66,12 @@
   - [x] 7.4 跑完整 G1–G5：product_complete=NOT PASS（BLOCKED）如实；G6 单列 ASSURANCE_BLOCKED；失败项挂账清单在案（TASK7_E_GATES.md）
   - [x] 7.5 提交并 push（`rr-v5r07:`）
 
-- [ ] Task 8: 终态台账与发布
-  - [ ] 8.1 更新 `rules.md`、`wiki/concepts/decompile-invariant-completeness.md`、`syntax-audit-ledger.md`、`branch-coverage.md`、`overview.md`、`index.md`、`log.md` 双读数
-  - [ ] 8.2 归档 `rounds/round11/`：VERIFICATION、GATE_REPORT、BREACH_TRIAGE、RELEASE_NOTES、REACHABILITY.md
-  - [ ] 8.3 终态报告写清：J 空间（五个维度）、语义差分、变异、规则覆盖、G5、G6/`ASSURANCE_BLOCKED`、B142/JS-IF-076/fuzz 关闭状态
-  - [ ] 8.4 最终检查：基本比较器 SHA 未变、tests 零改动、用户变更未回滚、scratch 未入库；无 B 编号/测试名专用分支
-  - [ ] 8.5 提交并 push（`rr-v5r08:`）
+- [x] Task 8: 终态台账与发布
+  - [x] 8.1 更新 `rules.md`、`wiki/concepts/decompile-invariant-completeness.md`、`syntax-audit-ledger.md`、`branch-coverage.md`、`overview.md`、`index.md`、`log.md` 双读数（shape/judgment 两口径，rr-v5r08）
+  - [x] 8.2 归档（实际轮次 round12/archive/）：VERIFICATION、GATE_REPORT_SNAPSHOT、BREACH_TRIAGE、RELEASE_NOTES、REACHABILITY.md、FINAL_REPORT
+  - [x] 8.3 终态报告写清（archive/FINAL_REPORT.md：product_complete=NOT PASS 如实，六门禁读数 + 关闭状态单列 + 修复挂账清单）
+  - [x] 8.4 最终检查：比较器 sha fe1902a9… 未变零 diff、tests/ 零改动、scratch 未入库、核心无 B 编号/测试名专用分支（唯一命中为证据引用注释）
+  - [x] 8.5 提交并 push（`rr-v5r08:`）
 
 # Task Dependencies
 

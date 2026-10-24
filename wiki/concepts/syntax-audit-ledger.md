@@ -22,3 +22,12 @@ kind: concept
 ## 检索词
 
 逐形态台账 / 128 形态 / 三锚点 / B1 / 表A 表B 表C
+
+
+## 双读数（rr-v5r08 终态，2026-10-24）
+
+- shape: 402 八分片 6617/6617、small34 1568/1568、quotation 153/153、fuzz 24/24 EQUAL、pytest 406 失败清单与冻结基线逐字节一致（rr-v5r05c..r07 树）
+- judgment: J 1556 全量 C1–C5：covered_equal 250 / uncovered 189（15 探针文件 25 失配单元）/module_only 675 / unjudgeable 442；G2b 57E/3D/342 环境；G2c 5E/24D/17 环境；G3 样本 32k/602m；G4 trace 187/339 命中 152 never-hit；G6 ASSURANCE_BLOCKED
+- uncovered 189 归并为 15 探针文件 25 失配单元（`TASK5_THREE_LISTS.md`）：最大族 JS-EXCEPTSTAR 96
+  （e03_deep 幻影 continue＝B214 行为等价级 OPEN + e08_match_host match 坍缩）、JS-IFEXP 12、
+  match 坍缩族（x02/x05/x08/x09/c4_04/r8_11/g2b/g3b）等。
