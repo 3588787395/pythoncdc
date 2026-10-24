@@ -52,13 +52,13 @@
 - [x] B200 台账截断已修复，编号/字段完整（Task 0.6，注册表行 6/83）
 
 ## fuzz 封闭（Task 4）
-- [ ] `FZ-raresyntax-015` starred-unpack 已修复并有通用判据
-- [ ] `FZ-semantictrap-020` generator-send 已修复并有通用判据
-- [ ] `FZ-raresyntax-021` annotations-posonly 已修复并有通用判据
-- [ ] `FZ-semantictrap-023` finally-return 已修复并有通用判据
-- [ ] 四个发现均有最小复现、合成变体、I.4 白名单证据
-- [ ] 去重后 B 编号/登记正确，未把“已去重”写成“已封闭”
-- [ ] 24 条 fuzz 达到 24/24 EQUAL
+- [x] `FZ-raresyntax-015` starred-unpack 已修复并有通用判据（607089e8 值段切分 + 1ff5d40a dict `**` 配对）
+- [x] `FZ-semantictrap-020` generator-send 已修复并有通用判据（0df50457 send 值绑定）
+- [x] `FZ-raresyntax-021` annotations-posonly 已修复并有通用判据（6d60cba0 `/` 签名链）
+- [x] `FZ-semantictrap-023` finally-return 已修复并有通用判据（280d2c59 + 1ff5d40a 条件臂变体）
+- [x] 四个发现均有最小复现、合成变体、I.4 白名单证据（probes_fz/p_fz_families.py 7/7 + semantic EQUAL；TASK4_6_CLOSURE.md）
+- [x] 去重后 B 编号/登记正确，未把“已去重”写成“已封闭”（B199→已修复；023/015/deephost 残余不新增编号，维持 B203/B210/B197-B202/B207-B142）
+- [x] 24 条 fuzz 达到 24/24 EQUAL（fuzz_summary.json EQUAL=24 failures=0；唯一结构残差 deephost-001 臂锚由 R12-MATCHANCHOR 剥离归约）
 
 ## J 空间（Task 5）
 - [ ] 388 条缺 source 已恢复/生成或登记 `unjudgeable`

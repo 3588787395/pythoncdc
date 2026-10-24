@@ -1,0 +1,18 @@
+{
+ "id": "P-FZ-FAMILIES-fresh",
+ "original": {
+  "path": "../../../../../../.trae/specs/achieve-any-syntax-completeness/rounds/round12/probes_fz/p_fz_families.py"
+ },
+ "product": {
+  "path": "../../../../../../.trae/specs/achieve-any-syntax-completeness/rounds/round12/probes_fz/p_fz_familiesOK.py"
+ },
+ "seed": 0,
+ "call_exprs": [
+  "fz1_unpack_after_stmt(3)",
+  "fz2_send_gen(4)",
+  "fz3_posonly(1, 2, 3, d=4)",
+  "fz3_posonly(10)",
+  "fz4_ret_in_fin([0, 1, 2])",
+  "main()"
+ ]
+}

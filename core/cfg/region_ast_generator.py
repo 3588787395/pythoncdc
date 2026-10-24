@@ -43959,6 +43959,43 @@ AST 映射规则:
             self.generated_blocks.add(blk)
         return [stmt]
 
+    def _match_arm_entry_block_without_marker(self, block):
+        """[R12-MATCHANCHOR] match case 臂入口块的编译器 NOP 标记剥离。
+
+        【识别条件】CPython 3.10+ match 语句为每个显式 case 臂的体入口发射
+        NOP 结构标记（region_analyzer._mr_block_has_explicit_case_marker 判
+        据：前导 POP_TOP/噪声后首个非噪声指令为 NOP）。该标记位于 case 行
+        位，由 match 源码重编译自然再生——臂体装配若再发射占位/单元语句即
+        重编译 +1 NOP（FZ-deephost-001 实测：尾通配臂 NOP 标记被行头游程
+        解析消费为 while 0: pass 幻影单元）。
+
+        【归约方式】臂入口块（region.case_bodies[i][0]，匹配装配期唯一归
+        属）携带标记时，构建剥离该 NOP 的虚拟块（前导 POP_TOP/噪声保留，
+        后继语句段原序不动）交语句生成；非入口块/无标记块原样返回。
+
+        [C1] 只读块指令序 + case_bodies 成员关系（L(A) 局部）；[C2] 虚拟
+        块仅替换本次委托入参，原块 generated 登记不变；[C3] NOP 标记是编
+        译器按 case 发射的结构事实，与 case 位置/嵌套深度无关。
+        """
+        try:
+            _instrs = list(block.instructions)
+            _i = 0
+            while _i < len(_instrs) and _instrs[_i].opname != 'NOP' and (
+                    _instrs[_i].opname in NOISE_OPS or _instrs[_i].opname == 'POP_TOP'):
+                _i += 1
+            if _i >= len(_instrs) or _instrs[_i].opname != 'NOP':
+                return block
+            from .basic_block import BasicBlock as _MB
+            _vb = _MB(_instrs[_i + 1].offset if _i + 1 < len(_instrs) else _instrs[_i].offset)
+            for _k in range(len(_instrs)):
+                if _k != _i:
+                    _vb.add_instruction(_instrs[_k])
+            _vb.successors = block.successors
+            _vb.predecessors = block.predecessors
+            return _vb
+        except Exception:
+            return block
+
     def _generate_match(self, region: MatchRegion) -> Dict[str, Any]:
         """_generate_match — MatchRegion → ast.Match 映射
 
@@ -44251,6 +44288,12 @@ AST 映射规则:
             'UNPACK_EXTRACT',
         })
         
+        _match_arm_entry_ids = set()
+        for _mci in range(num_cases):
+            _mcb = region.case_bodies[_mci] if _mci < len(region.case_bodies) else None
+            if _mcb:
+                _match_arm_entry_ids.add(id(_mcb[0]))
+
         for i in range(num_cases):
             pattern = region.case_patterns[i] if i < len(region.case_patterns) else None
             guard = region.case_guards[i] if i < len(region.case_guards) else None
@@ -44822,7 +44865,9 @@ AST 映射规则:
                             break
                         if (isinstance(nested_region, TryExceptRegion) and
                             block in set(nested_region.try_blocks)):
-                            stmts = self._generate_block_statements(block)
+                            _t_stmt_blk = (self._match_arm_entry_block_without_marker(block)
+                                           if id(block) in _match_arm_entry_ids else block)
+                            stmts = self._generate_block_statements(_t_stmt_blk)
                             body_stmts.extend(stmts)
                         # [B103 with 宿主 match 体块消费缺口] 与上方 Try 分支
                         # 同判据同构（with 先于 match 识别 ⇒ with 体块归
@@ -45002,7 +45047,9 @@ AST 映射规则:
                     virtual_block.predecessors = block.predecessors
                     stmts = self._generate_block_statements(virtual_block)
                 else:
-                    stmts = self._generate_block_statements(block)
+                    _p_stmt_blk = (self._match_arm_entry_block_without_marker(block)
+                                   if id(block) in _match_arm_entry_ids else block)
+                    stmts = self._generate_block_statements(_p_stmt_blk)
                 if stmts:
                     filtered = []
                     for s in stmts:
@@ -66579,10 +66626,6 @@ AST 映射规则:
                     # NOP@14 实测）——独立占位（pass / if C: pass）不再生
                     # 该 NOP；无后继时合并器退化为裸 pass（末位 1 NOP，
                     # 与旧形态逐位一致）。
-                    import sys as _s
-                    _cc2 = getattr(self.cfg, 'code', None)
-                    if _cc2 is not None and getattr(_cc2, 'co_name', '?') == '<module>':
-                        print(f'DBGPROT nop@{instr.offset}', file=_s.stderr)
                     stmts.append(self._folded_wrap_placeholder())
                 elif (instr.opname == 'NOP' and not stmt_instrs
                         and self._is_unaccounted_folded_head_nop(instr, block.instructions)):
@@ -66592,14 +66635,8 @@ AST 映射规则:
                     # 缺 NOP@2、if_in_while 缺体首 NOP@8）。行头游程统一解
                     # 析：假值单 NOP / 真值双 NOP 游程 / 包裹占位，残留常
                     # 量按表序消费（v1–v5 实测逐位还原）。
-                    import sys as _s
-                    _cc = getattr(self.cfg, 'code', None)
-                    if _cc is not None and getattr(_cc, 'co_name', '?') == '<module>':
-                        print(f'DBGHEAD nop@{instr.offset}', file=_s.stderr)
                     _ii1 = block.instructions.index(instr)
                     _units1, _ = self._emit_folded_nop_run_units(block.instructions, _ii1)
-                    if _cc is not None and getattr(_cc, 'co_name', '?') == '<module>':
-                        print(f'DBGHEAD units={_units1}', file=_s.stderr)
                     stmts.extend(_units1)
                 continue
 

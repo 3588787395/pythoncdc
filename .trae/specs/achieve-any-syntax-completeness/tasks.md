@@ -34,14 +34,14 @@
   - [x] 3.4 补 `if_in_while`、`if_in_try`、`if_shallow` 与 docstring 的调用级探针及至少一个合成变体（`probes_x01/p_x01_variants.py` v1–v5 + 调用级 case，semantic_diff EQUAL）
   - [x] 3.5 提交并 push（`rr-v5r03:`）
 
-- [ ] Task 4: 按族封闭四个 fuzz 发现
-  - [ ] 4.1 `FZ-raresyntax-015` starred-unpack（B203）：修复局部写丢失/NameError，补通用判据
-  - [ ] 4.2 `FZ-semantictrap-020` generator-send（B210）：修复 yield/separator 与 resume 语义
-  - [ ] 4.3 `FZ-raresyntax-021` annotations-posonly（B197/B202）：恢复 positional-only `/` 与签名元数据，补可调用探针
-  - [ ] 4.4 `FZ-semantictrap-023` finally-return（B207/B142）：修复 finally 延迟 return；与 Task 2 共享 finally 谱系判据
-  - [ ] 4.5 每个发现补族级谓词、最小复现、合成变体、I.4 白名单证据；单点补丁不计关闭
-  - [ ] 4.6 去重后决定是否新增 B 编号；重跑 24 条 fuzz，目标 24/24 EQUAL
-  - [ ] 4.7 提交并 push（`rr-v5r04:`）
+- [x] Task 4: 按族封闭四个 fuzz 发现
+  - [x] 4.1 `FZ-raresyntax-015` starred-unpack（B203）：修复局部写丢失/NameError，补通用判据（607089e8 值段切分；ast_converter dict 配对保 `**expr` 形，1ff5d40a）
+  - [x] 4.2 `FZ-semantictrap-020` generator-send（B210）：修复 yield/separator 与 resume 语义（0df50457 send 值绑定）
+  - [x] 4.3 `FZ-raresyntax-021` annotations-posonly（B197/B202）：恢复 positional-only `/` 与签名元数据，补可调用探针（6d60cba0 签名链贯通）
+  - [x] 4.4 `FZ-semantictrap-023` finally-return（B207/B142）：修复 finally 延迟 return；与 Task 2 共享 finally 谱系判据（280d2c59 无条件形 + 1ff5d40a 条件臂变体）
+  - [x] 4.5 每个发现补族级谓词、最小复现、合成变体、I.4 白名单证据；单点补丁不计关闭（probes_fz/p_fz_families.py 四族 7/7 + semantic EQUAL；probes_x01 v1–v5 EQUAL；证据 TASK4_4_DIAG/TASK4_6_CLOSURE）
+  - [x] 4.6 去重后决定是否新增 B 编号；重跑 24 条 fuzz，目标 24/24 EQUAL（不新增编号：023 归 B207 条件变体、015 全量归 dict `**` 配对族、deephost-001 臂锚归 R12-MATCHANCHOR；fuzz_summary.json EQUAL=24 failures=0）
+  - [x] 4.7 提交并 push（`rr-v5r04:`）
 
 - [ ] Task 5: 补齐 J 空间并跑全量 C1–C5
   - [ ] 5.1 对 388 条 `c1_source_missing` 逐条恢复 source 或生成等价 source；不能恢复的登记 `unjudgeable` 并说明原因

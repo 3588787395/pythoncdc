@@ -3,11 +3,10 @@
  "version": "1.0.0",
  "total": 24,
  "counts": {
-  "EQUAL": 21,
-  "DIFFERENT": 3
+  "EQUAL": 24
  },
- "failures": 3,
+ "failures": 0,
  "budget_seconds": 240.0,
  "stopped": "case_limit",
- "new_diff": 3
+ "new_diff": 0
 }
