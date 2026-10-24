@@ -46,7 +46,7 @@
 
 | 编号 | 内容 | 状态 |
 |---|---|---|
-| B142 | 嵌套 finally 副本归属（`v_b71_face::v_nest_fin_continue`，本轮 `l0_d4_repl_v_b71_face.py` 复现原样红） | 开放（前规范即稀窝登记） |
+| B142 | 嵌套 finally 副本归属（`v_b71_face::v_nest_fin_continue`，本轮 `l0_d4_repl_v_b71_face.py` 复现原样红） | **已修复（rr-v5r02，achieve-any-syntax-completeness Task 2）**：副本谱系签名 + 透明链搜索 + 属地继承守卫 + 台账优先重建 + fc 出口物化。验证：冻结比较器 4/4（修复前 3/4）；R1 `v_nest_fin_continue([[0,1]])/([[1,2]])` 返回序列逐项相等；族级判据与探针见 `.trae/specs/achieve-any-syntax-completeness/rounds/round12/probes_b142/README.md`。I.4 判据：全部为副本签名（opname+argval 连续子序列）/台账成员/出口可达/回边目标等区域与 CFG 结构事实，无 B 编号/测试名/输入值专用分支 |
 | B143 | finally 体内 break 的 finalbody 子区域派发 | 开放（前规范稀窝登记） |
 | B132 | c04/m02（Try 配对 / 模块级） | 前规范已封闭（B155/B156） |
 
@@ -56,7 +56,7 @@
 |---|---|---|---|
 | B179 | 机制族通用性为 0：7 族中 **0 族达形态通用** | R2 形态特化（BoolOp keep-or-pop + merge_ctx 枚举）、R3 部分特化、R4 形态特化、R5 部分特化、R6 形态特化（R7/R8 同） | 开放 |
 | B180 | 块级抢归属（非优先级裁决）：同块被两区域争抢 | 新构型探针 R2/R4/R8 多例（while→if 丢语句、finally 移出+append 丢、嵌套 handler 体丢） | 开放 |
-| B181 | **B142 重新定性为形态级缺口**（前规范「稀窝」定性被证伪）：Continue 形态整条未产出 + finally 体互换重复；单层亦复现 | _b71_face::v_nest_fin_continue；执行级证实 finally 副本 3 次 | 开放（前规范定性作废） |
+| B181 | **B142 重新定性为形态级缺口**（前规范「稀窝」定性被证伪）：Continue 形态整条未产出 + finally 体互换重复；单层亦复现 | _b71_face::v_nest_fin_continue；执行级证实 finally 副本 3 次 | **已随 B142 修复（rr-v5r02）**：continue 形态产出且字节级 4/4；break/三层/finally-return 变体挂账（见 probes_b142/README 影响面） |
 | B182 | B143 定性为归约级缺口（Try/If/Break/While 形态齐全，仅 finalbody 派发顺序错） | finalbody 派发序错 | 开放（不计入形态级分子扣减） |
 | B183 | 标记计数口径不唯一（口径 A/B/C = 191/123/44+24…；174 全部差异落在 R5） | 三口径复算 | 定性登记 |
 | B184 | 守卫触发集未封闭 | R6 B140 五合取、12 调用点 continue 守卫无 loop 限定 | 开放 |

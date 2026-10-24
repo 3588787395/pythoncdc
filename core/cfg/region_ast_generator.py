@@ -31922,6 +31922,118 @@ AST 映射规则:
                     stmts.append({'type': 'Continue'})
                     self.generated_blocks.add(_r39_T)
                     self.generated_offsets.add(_r39_T.start_offset)
+
+        # [B142-V5] 臂尾 finally 副本链出口（continue 回边保留）：
+        # ①算法依据：CPython 3.11 把 finally 体按出口路径就地内联；try 体内
+        # `if <cond>: continue` 的回边 JUMP_BACKWARD 位于**最后一份 finally
+        # 副本**（外层 try 的副本）块尾，而臂走查的 then_blocks 在副本链起点
+        # 之前就结束了（副本块由各 try region 的 finally_copy_blocks 台账唯一
+        # 归属）。回边若不物化，continue 整条消失（B142/B181 实测：Continue
+        # 形态整条未产出）。
+        # ②归约顺序：臂块发射完后，从臂内最后一个已发射块沿正常后继走「副本
+        # 链」——链上每块都必须是某 has_finally TryExceptRegion 的
+        # finally_copy_blocks 台账成员（发射端按 fc_keep 抑制其体，体语句由
+        # finalbody 唯一归属发射），直到以终结跳转收尾。
+        # ③唯一归属判定：JUMP_BACKWARD→当前循环 header/条件块 ⇒ Continue
+        # （回边由循环结构在重编译时自然再生）；JUMP_FORWARD/JUMP_ABSOLUTE
+        # 且块角色为 BREAK/PURE_BREAK ⇒ Break；链上任一块非台账成员（用户
+        # 代码）或无单一正常后继 ⇒ 不发射（既有行为逐位保持）。
+        # ④嵌套处理：副本链可跨内层与外层 try region 的台账（出口路径上内层
+        # 副本先于外层副本），与「每块唯一归属」一致——各副本块仍归各自
+        # region，本物化只消费其控制流事实，不认领块。
+        # ⑤入口引用语义：Continue/Break 节点挂在臂体末尾，链上副本块登记
+        # generated（抑制后续走查重复消费）。
+        # ⑥反编译流程：_process_if_blocks 臂装配尾部，发射端消费。
+        # C 条款：[C1] 判据只读台账成员关系 + 末指令 + 回边目标（无偏移/
+        # 名字特例）；[C2] 链上块体发射归属不变；[C3] 任一环节不成立时臂
+        # 语句列表逐位保持。
+        _b142_loop = getattr(self, '_current_loop', None)
+        _b142_hdr = getattr(_b142_loop, 'header_block', None) if _b142_loop else None
+        if (region is not None and blocks and _b142_hdr is not None
+                and not (isinstance(stmts, list) and stmts
+                         and isinstance(stmts[-1], dict)
+                         and stmts[-1].get('type') in ('Continue', 'Break', 'Return'))):
+            _b142_tail = None
+            for _b142_b in reversed(list(blocks)):
+                if _b142_b in self.generated_blocks:
+                    _b142_tail = _b142_b
+                    break
+            if _b142_tail is None:
+                # [B142-V5] 空语句臂（纯 NOP 胶水块不标记 generated）：臂末块
+                # 即出口起点，链结构（全 fc 台账成员 + 回边目标）本身即守卫。
+                _b142_sorted_tail = sorted(blocks, key=lambda b: b.start_offset)
+                if _b142_sorted_tail:
+                    _b142_tail = _b142_sorted_tail[-1]
+            if _b142_tail is not None and _b142_tail is not _b142_hdr:
+                _b142_fc_regions = [r for r in self.regions
+                                    if isinstance(r, TryExceptRegion)
+                                    and getattr(r, 'has_finally', False)]
+
+                def _b142_is_fc_member(_blk):
+                    return any(_blk.start_offset in (r.finally_copy_blocks or {})
+                               for r in _b142_fc_regions)
+
+                _b142_cur = _b142_tail
+                _b142_hops = 0
+                _b142_stmt = None
+                _b142_chain = []
+                _b142_be = set(getattr(_b142_loop, 'back_edge_blocks', None) or [])
+                if getattr(_b142_loop, 'back_edge_block', None) is not None:
+                    _b142_be.add(_b142_loop.back_edge_block)
+                while _b142_hops < 8:
+                    _b142_hops += 1
+                    _b142_last = _b142_cur.get_last_instruction()
+                    if _b142_last is None:
+                        break
+                    if _b142_last.opname == 'JUMP_BACKWARD' and isinstance(
+                            _b142_last.argval, int):
+                        _b142_tgt = self.cfg.get_block_by_offset(_b142_last.argval)
+                        # [B142-V5] 循环指定自然回边块（back_edge_block）不是
+                        # 源码级 continue：它是循环体正常完成的迭代边（嵌在
+                        # finally 正常副本块尾），物化成 Continue 会给重编译
+                        # 多出一条 JUMP_BACKWARD（g2_cont 实测 else 臂尾伪
+                        # continue）。显式 continue 的回边块不在指定集合。
+                        if _b142_cur in _b142_be:
+                            break
+                        if _b142_tgt is not None and (
+                                _b142_tgt is _b142_hdr
+                                or _b142_tgt is getattr(_b142_loop, 'condition_block', None)):
+                            _b142_stmt = {'type': 'Continue'}
+                        break
+                    if _b142_last.opname in ('RETURN_VALUE', 'RETURN_CONST',
+                                             'RERAISE', 'RAISE_VARARGS'):
+                        break
+                    if _b142_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                             'JUMP_BACKWARD_NO_INTERRUPT'):
+                        if isinstance(_b142_last.argval, int):
+                            _b142_tgt = self.cfg.get_block_by_offset(_b142_last.argval)
+                            if _b142_tgt is not None:
+                                _b142_role = self.region_analyzer.get_block_role(_b142_cur)
+                                if _b142_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                                    _b142_stmt = {'type': 'Break'}
+                                    break
+                                if _b142_tgt in self.generated_blocks or _b142_tgt is _b142_hdr:
+                                    break
+                                if not _b142_is_fc_member(_b142_tgt):
+                                    break
+                                _b142_chain.append(_b142_tgt)
+                                _b142_cur = _b142_tgt
+                                continue
+                        break
+                    _b142_succs = [s for s in _b142_cur.successors
+                                   if s not in (_b142_cur.exception_successors or ())]
+                    if len(_b142_succs) != 1:
+                        break
+                    _b142_next = _b142_succs[0]
+                    if not _b142_is_fc_member(_b142_next):
+                        break
+                    _b142_chain.append(_b142_next)
+                    _b142_cur = _b142_next
+                if _b142_stmt is not None:
+                    stmts.append(_b142_stmt)
+                    for _b142_cb in _b142_chain:
+                        self.generated_blocks.add(_b142_cb)
+                        self.generated_offsets.add(_b142_cb.start_offset)
         return stmts
 
     def _try_generate_conditional_break(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
@@ -62176,6 +62288,74 @@ AST 映射规则:
             self.generated_blocks.add(block)
             self.generated_offsets.add(block.start_offset)
             return []
+        # [B142-V5] finally 副本前置抑制门（单一漏斗）：块是任一 has_finally
+        # TryExceptRegion 的 finally_copy_blocks 台账成员时，其体语句由该
+        # region 的 finalbody 唯一归属发射（fc_keep 抑制语义），本块只余
+        # 控制流。终端为 RETURN_*/RERAISE 的副本仍走 body 层既有 [B34c]
+        # 延迟 return 路径（值重建），不在此拦截。判据只读台账成员关系 +
+        # 块末指令 + 回边目标（I.4 白名单）；非副本块恒不命中，行为逐位
+        # 保持（C3）。注意不按 find_enclosing_region 裁决：该接口
+        # require_finally 分支返回最后一个包含区域而非最内层，嵌套 try 下
+        # 会漏判内层台账成员（g2_cont 实测）。
+        _b142_gate_is_fc = any(
+            getattr(r, 'has_finally', False)
+            and (r.finally_copy_blocks or {}).get(block.start_offset) is not None
+            for r in self.region_analyzer.regions)
+        if _b142_gate_is_fc:
+            _b142_last = block.get_last_instruction()
+            _b142_ret_like = (_b142_last is not None
+                              and _b142_last.opname in ('RETURN_VALUE', 'RETURN_CONST',
+                                                        'RERAISE', 'RAISE_VARARGS'))
+            if not _b142_ret_like:
+                _b142_g_stmt = None
+                if _b142_last is not None and _b142_last.opname == 'JUMP_BACKWARD' \
+                        and isinstance(_b142_last.argval, int):
+                    _b142_g_loop = getattr(self, '_current_loop', None)
+                    _b142_g_tgt = self.cfg.get_block_by_offset(_b142_last.argval)
+                    _b142_g_be = set(getattr(_b142_g_loop, 'back_edge_blocks', None) or []) \
+                        if _b142_g_loop is not None else set()
+                    if _b142_g_loop is not None and getattr(_b142_g_loop, 'back_edge_block', None) is not None:
+                        _b142_g_be.add(_b142_g_loop.back_edge_block)
+                    if (_b142_g_loop is not None and block not in _b142_g_be
+                            and _b142_g_tgt is not None
+                            and (_b142_g_tgt is _b142_g_loop.header_block
+                                 or _b142_g_tgt is getattr(_b142_g_loop, 'condition_block', None))):
+                        _b142_g_stmt = [{'type': 'Continue'}]
+                elif _b142_last is not None and _b142_last.opname in (
+                        'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                    _b142_g_role = self.region_analyzer.get_block_role(block)
+                    _b142_g_is_break = _b142_g_role in (BlockRole.BREAK, BlockRole.PURE_BREAK)
+                    if not _b142_g_is_break and isinstance(_b142_last.argval, int):
+                        # [B142-V5] 副本块不在 loop.blocks 内时角色标注缺席
+                        # （循环 break 角色只标循环成员块；break 出口副本被
+                        # try region 台账认领后脱离循环块集，g2_brk 实测）。
+                        # 按 [B156] 同口径补判：跳转目标在所属循环块集（含
+                        # 后代区域）之外 ⇒ 循环出口 break。
+                        _b142_g_loop2 = getattr(self, '_current_loop', None)
+                        if _b142_g_loop2 is not None:
+                            _b142_g_tgt2 = self.cfg.get_block_by_offset(_b142_last.argval)
+                            if _b142_g_tgt2 is not None:
+                                _b142_g_scope = set(getattr(_b142_g_loop2, 'blocks', None) or ())
+                                try:
+                                    for _b142_desc in _b142_g_loop2.iter_descendants():
+                                        _b142_g_scope |= set(getattr(_b142_desc, 'blocks', None) or ())
+                                except Exception:  # noqa: BLE001
+                                    pass
+                                if _b142_g_tgt2 not in _b142_g_scope:
+                                    _b142_g_is_break = True
+                    if _b142_g_is_break:
+                        _b142_g_stmt = [{'type': 'Break'}]
+                    else:
+                        _b142_g_stmt = []
+                else:
+                    # 副本链中间块（块尾 POP_TOP 落入下一段副本链）：体语句
+                    # 归 finalbody 唯一归属，本块无源码语句，控制流由重编译
+                    # 自然再生。
+                    _b142_g_stmt = []
+                if _b142_g_stmt is not None:
+                    self.generated_blocks.add(block)
+                    self.generated_offsets.add(block.start_offset)
+                    return _b142_g_stmt
         stmts = self._generate_block_statements_body(block, _cjb_parent)
         stmts = self._combine_annassign_statements(stmts)
         # [Round6-B29] 协议调用伪影剔除（单一漏斗）：Expr(Await(Call(
@@ -64421,6 +64601,13 @@ AST 映射规则:
                                             inlined_result = [self._generate_return_ast(block)]
                                 else:
                                     inlined_result = [self._generate_return_ast(block)]
+                    elif is_finally_copy:
+                        # [B142-V5] 副本链中间块：体语句归 finalbody 唯一归属
+        # （fc_keep 抑制），块尾非终结跳转（如 POP_TOP 落入下一段副本链，
+        # v_nest_fin_continue/g2_cont 的内层副本块）——本块发射空语句序列，
+        # 控制流由重编译自然再生。判据 = fc 台账成员关系（上方已判定），
+        # 非副本块不命中，行为逐位保持（C3）。
+                        inlined_result = []
         if inlined_result is not None:
             stmts.extend(inlined_result)
             self.generated_blocks.add(block)

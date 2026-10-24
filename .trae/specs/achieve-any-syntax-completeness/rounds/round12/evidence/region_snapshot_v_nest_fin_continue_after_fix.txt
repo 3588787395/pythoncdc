@@ -1,0 +1,63 @@
+=== B142 region snapshot: v_nest_fin_continue (from .trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc) ===
+total regions (flat, analyzer.regions): 4
+[LoopRegion] entry=@10 exit=None
+  ALL blocks=['@0', '@10', '@12', '@18', '@30', '@32', '@74', '@118', '@120', '@216', '@314', '@358']
+  body_blocks=['@10', '@12', '@18', '@30', '@32', '@74', '@118', '@120', '@216', '@314']
+  [TryExceptRegion] entry=@30 exit=None
+    try_blocks=['@30', '@74', '@118']
+    finally_blocks=['@262', '@308']
+    finally_copy_blocks={'@74': 0, '@216': 0}
+    has_finally=True try_range=[18,216]
+    ALL blocks=['@18', '@30', '@32', '@74', '@118', '@120', '@164', '@210', '@216', '@262', '@308']
+    [TryExceptRegion] entry=@18 exit=None
+      try_blocks=['@18']
+      finally_blocks=['@164', '@210']
+      finally_copy_blocks={'@120': 0, '@32': 0}
+      has_finally=True try_range=[18,30]
+      ALL blocks=['@18', '@30', '@32', '@118', '@120', '@164', '@210']
+      [IfRegion] entry=@18 exit=@10
+        ALL blocks=['@18', '@30']
+[TryExceptRegion] entry=@18 exit=None
+  try_blocks=['@18']
+  finally_blocks=['@164', '@210']
+  finally_copy_blocks={'@120': 0, '@32': 0}
+  has_finally=True try_range=[18,30]
+  ALL blocks=['@18', '@30', '@32', '@118', '@120', '@164', '@210']
+  [IfRegion] entry=@18 exit=@10
+    ALL blocks=['@18', '@30']
+[TryExceptRegion] entry=@30 exit=None
+  try_blocks=['@30', '@74', '@118']
+  finally_blocks=['@262', '@308']
+  finally_copy_blocks={'@74': 0, '@216': 0}
+  has_finally=True try_range=[18,216]
+  ALL blocks=['@18', '@30', '@32', '@74', '@118', '@120', '@164', '@210', '@216', '@262', '@308']
+  [TryExceptRegion] entry=@18 exit=None
+    try_blocks=['@18']
+    finally_blocks=['@164', '@210']
+    finally_copy_blocks={'@120': 0, '@32': 0}
+    has_finally=True try_range=[18,30]
+    ALL blocks=['@18', '@30', '@32', '@118', '@120', '@164', '@210']
+    [IfRegion] entry=@18 exit=@10
+      ALL blocks=['@18', '@30']
+[IfRegion] entry=@18 exit=@10
+  ALL blocks=['@18', '@30']
+
+--- block_to_region full map ---
+@0: LoopRegion@10 (obj#2384)
+@10: LoopRegion@10 (obj#2384)
+@12: LoopRegion@10 (obj#2384)
+@18: TryExceptRegion@18 (obj#592)
+@30: TryExceptRegion@18 (obj#592)
+@32: TryExceptRegion@18 (obj#592)
+@74: TryExceptRegion@30 (obj#1488)
+@118: TryExceptRegion@18 (obj#592)
+@120: TryExceptRegion@18 (obj#592)
+@164: TryExceptRegion@18 (obj#592)
+@210: TryExceptRegion@18 (obj#592)
+@216: TryExceptRegion@30 (obj#1488)
+@262: TryExceptRegion@30 (obj#1488)
+@308: TryExceptRegion@30 (obj#1488)
+@314: LoopRegion@10 (obj#2384)
+@358: LoopRegion@10 (obj#2384)
+
+--- block roles mentioning finally/copy ---

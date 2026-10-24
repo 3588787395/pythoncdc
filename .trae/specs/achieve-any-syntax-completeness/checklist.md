@@ -34,14 +34,14 @@
 - [x] 四项口径自测（module-only / calls / R7 / timeout）全部通过
 
 ## B142（Task 2）
-- [ ] `v_nest_fin_continue([[0,1]])` 原件/产物返回序列逐项相等
-- [ ] `v_nest_fin_continue([[1,2]])` 原件/产物返回序列逐项相等
-- [ ] 内层 finally 正常路径副本归属内层，外层不重复认领
-- [ ] 内层 finally 异常路径顺序为内层→外层→传播
-- [ ] continue 回边保留，无双发/丢失/错层
-- [ ] B142 合成探针（双层 finally + continue/break）通过
-- [ ] B142 邻域与 402/small34 定向回归无回退
-- [ ] B142 状态更新为已修复，附 I.4 判据
+- [x] `v_nest_fin_continue([[0,1]])` 原件/产物返回序列逐项相等（R1_RESULT=EQUAL，8 组输入全 PASS）
+- [x] `v_nest_fin_continue([[1,2]])` 原件/产物返回序列逐项相等
+- [x] 内层 finally 正常路径副本归属内层，外层不重复认领（副本谱系签名 + 台账优先重建；冻结比较器 v_b71_face 4/4）
+- [x] 内层 finally 异常路径顺序为内层→外层→传播（G1 探针 p_g1_fin_paths 3/3 字节级 PASS）
+- [x] continue 回边保留，无双发/丢失/错层（fc 出口物化 + 循环指定回边排除）
+- [ ] B142 合成探针（双层 finally + continue/break）通过 —— 部分：G1 3/3、G2 continue 形 g2_cont 绿、G3 双层 g3_two_fin 绿；break 出口臂（g2_brk）与三层（g3_three_fin）变体挂账（见 rounds/round12/probes_b142/README 影响面；break 需条件识别支持一分支纯循环出口终结，上游 [R13-A3] 扩展 TEMP-DISABLED）
+- [x] B142 邻域与 402/small34 定向回归无回退（最终代码全量复跑：402 八分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 277 passed + 2 失败为基线既有（stash 对比同败）；`_b142_final_regression.txt`）
+- [x] B142 状态更新为已修复，附 I.4 判据（BREACH_REGISTRY §4 B142 / B181、BREACH_TRIAGE Headline）
 
 ## x01 / docstring / B200（Task 3）
 - [ ] `JS-IF-076` 的 `if_in_while` 中 `break` 保留

@@ -858,7 +858,18 @@ class TryExceptRegion(Region):
         for block in (self.finally_blocks or []):
             content_offsets.add(block.start_offset)
         if content_offsets:
-            return (min(content_offsets), max(content_offsets))
+            lo = min(content_offsets)
+            # [B142-V5] 声明保护跨度起点纳入范围：嵌套 try-in-try 时内层 try
+            # 的体块被内层 region 唯一归属，外层的 content_offsets 从内层之后
+            # 才开始（v_nest_fin_continue 外层 content 起点 @30 > 内层 @18），
+            # 依内容块的包含判定会使层级装配漏判「外层 ⊇ 内层」，内层被错误
+            # 挂到宿主循环、外层成为顶层兄弟（发射端派发次序颠倒）。try_
+            # offset_start 是异常表推导的结构保护起点，区域内嵌套结构的入口
+            # 必然 ≥ 它，纳入后包含判定恢复「嵌套即抽象节点」。
+            _declared_start = getattr(self, 'try_offset_start', None)
+            if _declared_start is not None:
+                lo = min(lo, _declared_start)
+            return (lo, max(content_offsets))
         return (self.try_offset_start, self.try_offset_end)
 
     def get_if_branch_boundary_stop(self, block) -> set:
@@ -1935,6 +1946,21 @@ class RegionAnalyzer:
                         self.block_to_region[block] = region
                     elif isinstance(existing, BoolOpRegion) and block in elif_boolop_entry_blocks:
                         pass
+                    # [B142-V5] finally 副本台账优先（副本谱系）：同一块被两个
+                    # TryExceptRegion 争抢时，finally_copy_blocks 台账持有方
+                    # 即该块的 finally 体副本谱系归属（副本由其体签名判定，
+                    # 见 _block_matches_other_finally_signature）。无台账优先
+                    # 时先到先得会让内层 region 占住外层副本（B142 实测 @74）
+                    # 或外层占住内层副本，发射端 fc_keep 抑制与 finalbody 唯一
+                    # 归属同时失效（finally 体互换重复）。判据只读双方台账键
+                    # 集（I.4 白名单），单方持有才改判，双向持有/双向无持有
+                    # 维持既有优先级裁决（C3）。
+                    elif (isinstance(existing, TryExceptRegion)
+                          and isinstance(region, TryExceptRegion)
+                          and existing is not region
+                          and block.start_offset in (region.finally_copy_blocks or {})
+                          and block.start_offset not in (existing.finally_copy_blocks or {})):
+                        self.block_to_region[block] = region
                     elif self._should_use_dynamic_priority(existing, region):
                         existing_score = self._compute_dynamic_region_score(block, existing)
                         candidate_score = self._compute_dynamic_region_score(block, region)
@@ -10626,6 +10652,19 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                                 succ.start_offset >= handler_entry_block.start_offset and succ != handler_entry_block
                                 for succ in block.successors
                             )
+                            # [B142-V5] 宿主链守卫：try_start 之前的 pre-try 块
+                            # 若沿正常边可达一个已被其他 TryExceptRegion 认领的
+                            # 块，则它是宿主结构（循环/函数序言）通向**内层嵌套
+                            # try** 的入口链，不是本 try 的体前胶水。场景：嵌套
+                            # try-in-try 中内层把异常表覆盖的全部体块认领后，
+                            # 外层 try_blocks 为空触发本扩张；无此守卫时
+                            # RESUME/FOR_ITER/STORE_FAST 序言链被抢进
+                            # try_blocks（g1_fin_normal 实测外层吞掉循环头，
+                            # for 结构整条蒸发）。判据 = 有界前向可达 + 区域
+                            # 归属（I.4 白名单），无偏移/名字特例。
+                            if not has_outer_branch and \
+                                    self._b142_reaches_foreign_try_block(block):
+                                continue
                             if not has_outer_branch:
                                 pre_handler_blocks.append(block)
                             continue
@@ -10931,6 +10970,17 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                     if _blk in self.block_to_region:
                         continue
                     _visited_np.add(_blk)
+                    # [B142-V5] 副本谱系属地继承：命中其他 try 的 finally 体
+                    # 签名的块归外层 finally 谱系（外层副本/异常路径体），本
+                    # region 不吸收也不沿伸——否则内层把外层副本吸收为自身
+                    # 正常路径（B142 实测 @74/@262/@308 被内层吞并，外层只剩
+                    # 孤块，finally 体互换重复）。判据见
+                    # _block_matches_other_finally_signature（C3：同签名不拦
+                    # 截，维持既有行为）。
+                    if self._block_matches_other_finally_signature(
+                            _blk, handler_entry_block.start_offset
+                            if handler_entry_block is not None else None):
+                        continue
                     _normal_path_blocks.add(_blk)
                     _last_instr = _blk.get_last_instruction()
                     if _last_instr and _last_instr.opname in (
@@ -11381,6 +11431,16 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                 _existing_region = self.block_to_region.get(block)
                 if _existing_region is not None and isinstance(_existing_region, TryExceptRegion) and _existing_region is not region:
                     continue
+                # [B142-V5] 副本谱系属地继承：命中其他 try 的 finally 体签名
+                # 的块归外层 finally 谱系（异常路径体以 RERAISE 终结，会被本
+                # region 误判为 cleanup——B142 实测内层经重抛蹦床 @210 的后继
+                # 把外层 finally 异常路径 @262/@308 吸收为 cleanup）。不登记、
+                # 不分类、不沿其 successors 扩展 search_blocks。判据见
+                # _block_matches_other_finally_signature（C3：同签名不拦截）。
+                if self._block_matches_other_finally_signature(
+                        block, handler_entry_block.start_offset
+                        if handler_entry_block is not None else None):
+                    continue
                 cleanup_visited.add(block.start_offset)
                 is_cleanup = False
                 has_reraise = any(instr.opname == 'RERAISE' for instr in block.instructions)
@@ -11821,7 +11881,143 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                 region_a.try_blocks = [b for b in region_a.try_blocks
                                        if b not in _removed_set]
 
+        # [B142-V5] 副本谱系结算：透明链与属地守卫改变了 try_blocks 的构成，
+        # 部分 finally 正常路径副本（如外层 try 的正常出口副本）不再经由
+        # source 后继到达（路径上的块已被内层 region 唯一归属）。此处对识别
+        # 结束后仍无主的块做一次谱系裁决：命中唯一 finally 体签名 + 终结跳转
+        # 收尾 + 可从该 region 出口源到达 ⇒ 登记为该 region 的 finally 副本
+        # （keep=0）。多签名同时命中（内外层 finally 体逐指令相同）⇒ 歧义
+        # 放弃（保守路径，C3）。
+        self._settle_unclaimed_finally_copies(new_regions)
+
         return new_regions
+
+    def _settle_unclaimed_finally_copies(self, new_regions) -> None:
+        """[B142-V5] 副本谱系结算遍——无主 finally 副本按签名归属其 try region。
+
+        ①算法依据：CPython 3.11 finally 体按出口路径就地内联为多份副本；
+        嵌套 try/finally 时内层 region 的唯一归属（副本台账 + 正常路径吸收）
+        会使外层副本对「source 直接后继」搜索不可达（v_nest_fin_continue 的
+        外层正常出口副本 @216 位于内层副本 @120 的后继链上）。依「每块唯一
+        归属」+「副本谱系」：无主且命中某 finally 体签名的块归该签名所属
+        region。
+        ②归约顺序：在全部 TryExceptRegion 创建后运行一遍；候选 = 当前无主
+        （block_to_region 无记录）、以终结跳转（JUMP_*/RETURN_*）收尾、有义
+        指令序列含某 finally 体签名的块。
+        ③唯一归属判定：候选块必须可从该 region 的出口源（try_blocks ∪
+        handler 体 ∪ finally 体）沿正常边到达；签名命中唯一的 handler 才登
+        记（多签名同时命中即歧义放弃）；已归属块绝不改判。
+        ④嵌套处理：候选遍历穿越已归属块（只算可达性，不认领），嵌套深度
+        无关；签名歧义（同体 finally）不登记，维持既有行为。
+        ⑤入口引用语义：登记只写 finally_copy_blocks / blocks /
+        block_to_region，发射端按既有 fc_keep 语义消费。
+        ⑥反编译流程位置：region_analyzer 识别尾部，供 region_ast_generator
+        的副本抑制与出口语句物化消费。
+
+        C 条款：[C1] 判据 = 签名连续子序列（opname+argval 口径）+ 终结跳转
+        + 出口可达 + 无主；[C2] 登记后发射端 fc_keep==0 抑制副本体、
+        finalbody 唯一归属不变；[C3] 歧义/已归属/无签名命中时行为逐位保持。
+        """
+        sig_owners = {}
+        for region in new_regions:
+            if not isinstance(region, TryExceptRegion) or not region.has_finally:
+                continue
+            if not region.finally_blocks:
+                continue
+            h_off = region.finally_blocks[0].start_offset
+            sig = self._finally_body_signature(h_off)
+            if not sig or len(sig) < 2:
+                continue
+            sig_owners.setdefault(sig, []).append(region)
+        if not sig_owners:
+            return
+        _terminators = ('JUMP_BACKWARD', 'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                        'JUMP_BACKWARD_NO_INTERRUPT',
+                        'RETURN_VALUE', 'RETURN_CONST')
+        # [B142-V5] 第二相：try_blocks 成员的跨谱系降级。内层 try_blocks 收集
+        # （异常表跨度 + pre-handler 扩张）可能把**外层** finally 的出口副本
+        # 收进内层 try_blocks（g2_cont 实测：外层 continue 路径副本 @80 落在
+        # 内层 try_blocks，发射端按内层体语句重复发射）。命中他区 finally 体
+        # 签名 + 终结跳转的 try_blocks 成员降级移交给他区台账（每块唯一
+        # 归属 + 副本谱系）。同签名歧义不降级（保守路径）。
+        for _region in list(new_regions):
+            if not isinstance(_region, TryExceptRegion):
+                continue
+            for _tb in list(getattr(_region, 'try_blocks', None) or []):
+                if not _tb.instructions:
+                    continue
+                _m_tb = [i for i in _tb.instructions
+                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                if not _m_tb:
+                    continue
+                if _m_tb[-1].opname not in _terminators:
+                    continue
+                _ops_tb = tuple((i.opname, getattr(i, 'argval', None)) for i in _m_tb)
+                _hits = 0
+                _hit_region = None
+                for sig, owners in sig_owners.items():
+                    if any(_ops_tb[_mi:_mi + len(sig)] == sig
+                           for _mi in range(len(_ops_tb) - len(sig) + 1)):
+                        _hits += 1
+                        _hit_region = owners[0] if len(owners) == 1 else None
+                if _hits != 1 or _hit_region is None or _hit_region is _region:
+                    continue
+                _region.try_blocks = [b for b in (_region.try_blocks or []) if b is not _tb]
+                _region.blocks.discard(_tb)
+                _hit_region.finally_copy_blocks[_tb.start_offset] = 0
+                _hit_region.blocks.add(_tb)
+                if self.block_to_region.get(_tb) is _region:
+                    self.block_to_region[_tb] = _hit_region
+        for block in self.cfg.blocks.values():
+            if self.block_to_region.get(block) is not None:
+                continue
+            if not block.instructions:
+                continue
+            _m = [i for i in block.instructions
+                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            if not _m:
+                continue
+            _last_op = _m[-1].opname
+            if _last_op not in _terminators:
+                continue
+            _ops_succ = tuple((i.opname, getattr(i, 'argval', None)) for i in _m)
+            _matched_regions = None
+            _match_hits = 0
+            for sig, owners in sig_owners.items():
+                _hit = any(
+                    _ops_succ[_mi:_mi + len(sig)] == sig
+                    for _mi in range(len(_ops_succ) - len(sig) + 1))
+                if _hit:
+                    _match_hits += 1
+                    _matched_regions = owners
+            if _match_hits != 1 or not _matched_regions:
+                continue
+            _region = _matched_regions[0]
+            # 出口可达性：候选块必须可从 region 的出口源块沿正常边到达
+            _exit_sources = list(getattr(_region, 'try_blocks', None) or [])
+            _exit_sources.extend(getattr(_region, 'finally_blocks', None) or [])
+            for _hbs in (getattr(_region, 'except_handlers', None) or []):
+                if isinstance(_hbs, (list, tuple)) and len(_hbs) >= 3 and _hbs[2]:
+                    _exit_sources.extend(_hbs[2])
+            _reach = set()
+            _stack = []
+            for _src in _exit_sources:
+                for _s in _src.successors:
+                    if _s.start_offset not in _reach:
+                        _stack.append(_s)
+            while _stack:
+                _cur = _stack.pop()
+                if _cur.start_offset in _reach:
+                    continue
+                _reach.add(_cur.start_offset)
+                for _s in _cur.successors:
+                    if _s.start_offset not in _reach:
+                        _stack.append(_s)
+            if block.start_offset not in _reach:
+                continue
+            _region.finally_copy_blocks[block.start_offset] = 0
+            _region.blocks.add(block)
+            self.block_to_region[block] = _region
 
     def _coalesce_split_try_except_finally_regions(self, try_regions: list) -> list:
         _inner_to_outer = {}
@@ -14496,6 +14692,170 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                     worklist.append(succ)
         return False
 
+    def _b142_reaches_foreign_try_block(self, start_block, max_hops: int = 16) -> bool:
+        """[B142-V5] 宿主链判定：start_block 沿正常边有界前向是否可达被其他
+        TryExceptRegion 认领的块。
+
+        判据只读 CFG 正常后继（排除异常边）与 block_to_region 归属事实；
+        跳数上限 16 防御环状 CFG（循环头链）。被本方法意图识别的形态：
+        try_start 之前的 RESUME/FOR_ITER/STORE_FAST 序言链，其唯一前向路径
+        汇入内层嵌套 try 的入口块（已被内层 region 认领）——这些块属于宿主
+        循环/函数结构，不是本 try 的体前胶水。无其他 try region 认领块时
+        恒 False，扩张行为逐位保持。
+        """
+        if start_block is None:
+            return False
+        _stack = [s for s in start_block.successors
+                  if s not in (start_block.exception_successors or ())]
+        _seen = {start_block.start_offset}
+        _hops = 0
+        while _stack and _hops < max_hops:
+            _hops += 1
+            _cur = _stack.pop()
+            if _cur.start_offset in _seen:
+                continue
+            _seen.add(_cur.start_offset)
+            _owner = self.block_to_region.get(_cur)
+            if isinstance(_owner, TryExceptRegion):
+                return True
+            for s in _cur.successors:
+                if s not in (_cur.exception_successors or ()):
+                    _stack.append(s)
+        return False
+
+    def _finally_body_signature(self, handler_offset: int):
+        """[B142-V5] finally 体签名：异常路径入口块 PUSH_EXC_INFO..RERAISE 之间
+        的 (opname, argval) 序列，作为该 finally 体在全部内联副本中的指纹。
+
+        判据只读块内 opcode/argval 事实（与 _collect_finally_body_blocks 的
+        B87 副本签名同一口径）；结果按 handler 偏移缓存（CFG 在 analyze
+        期间不变）。非 finally 形态（无 PUSH_EXC_INFO..RERAISE 帧）返回 None。
+        """
+        cached = getattr(self, '_b142_fin_sig_cache', None)
+        if cached is None:
+            cached = {}
+            self._b142_fin_sig_cache = cached
+        if handler_offset in cached:
+            return cached[handler_offset]
+        sig = None
+        blk = self.cfg.get_block_by_offset(handler_offset)
+        if blk is not None:
+            _m = [i for i in blk.instructions
+                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            _s = None
+            _e = None
+            for _si, _instr in enumerate(_m):
+                if _instr.opname == 'PUSH_EXC_INFO' and _s is None:
+                    _s = _si + 1
+                if _instr.opname == 'RERAISE' and _s is not None:
+                    _e = _si
+                    break
+            if _s is not None and _e is not None and _e > _s:
+                sig = tuple((i.opname, getattr(i, 'argval', None)) for i in _m[_s:_e])
+        cached[handler_offset] = sig
+        return sig
+
+    def _b142_arm_exits_via_finally_copy(self, block) -> bool:
+        """[B142-V5] 条件块的真臂是否经 finally 副本链退出（try 体出口形态）。
+
+        ①算法依据：CPython 3.11 把 finally 体按出口路径就地内联；try 体内
+        `if <cond>: continue/break/return` 的出口路径 = [finally 体副本 ...]
+        + 终结跳转，且这些副本块登记在各 try region 的 finally_copy_blocks
+        台账。真臂 fall-through 后继是台账成员 ⇒ 该条件是 try 体出口 if，
+        不是 match case（case 体是普通语句序列，其块不登记为 finally 副本）。
+        ②归约顺序：取块的条件跳转目标 jt；正常后继中排除 jt 后恰余一个
+        （真臂）时，检查其是否为任一 has_finally TryExceptRegion 的
+        finally_copy_blocks 台账成员。
+        ③唯一归属判定：只读台账键集与正常后继（排除异常边）；无条件跳转
+        或臂不唯一时恒 False（保守路径）。
+        ④嵌套处理：任意深度的 try region 台账均参与（出口链可跨内/外层
+        台账），与区域层级无关。
+        ⑤入口引用语义：只作 match 识别的否决，不改变归属。
+        ⑥反编译流程位置：_identify_nested_match_regions /
+        _scan_literal_match_subjects 的候选守卫。
+        C 条款：[C1] 全部判据为台账成员关系与 CFG 后继事实；[C2] 不命中时
+        match 识别路径逐位保持；[C3] 无 finally region 时恒 False。
+        """
+        if block is None:
+            return False
+        _last = block.get_last_instruction()
+        if _last is None or _last.opname not in CONDITIONAL_JUMP_OPS:
+            return False
+        _jt = self.cfg.get_block_by_offset(_last.argval) if isinstance(_last.argval, int) else None
+        _succs = [s for s in block.successors
+                  if s not in (block.exception_successors or ())]
+        _arms = [s for s in _succs if s is not _jt]
+        if len(_arms) != 1:
+            return False
+        return self._block_is_finally_copy_member(_arms[0])
+
+    def _block_is_finally_copy_member(self, block) -> bool:
+        """[B142-V5] 块是否为任一 has_finally TryExceptRegion 的 finally 副本
+        台账成员（发射端按 fc_keep 抑制体语句的块）。
+
+        判据只读各 try region 的 finally_copy_blocks 键集（I.4 白名单），
+        供字面量 match 识别的 try 体出口臂守卫消费；无 finally region 时
+        恒 False，行为逐位保持。
+        """
+        if block is None:
+            return False
+        for r in self.regions:
+            if (isinstance(r, TryExceptRegion)
+                    and getattr(r, 'has_finally', False)
+                    and block.start_offset in (r.finally_copy_blocks or {})):
+                return True
+        return False
+
+    def _block_matches_other_finally_signature(self, block, own_handler_offset: int) -> bool:
+        """[B142-V5] 副本谱系属地判据：block 的有义指令序列是否作为连续子序列
+        命中**其他** try 的 finally 体签名。
+
+        ①算法依据：CPython 3.11 把 finally 体按出口路径就地内联为多份副本，
+        嵌套 try/finally 时内层出口路径上先出现内层副本、后出现外层副本。
+        内层 region 的正常路径吸收（Pattern-A）沿出口链走查时会越过内层副本
+        继续吸收外层副本，破坏「每块唯一归属」与 finally 谱系（B142 实测：
+        内层吸收外层副本 @74 与异常路径 @262/@308，外层只剩孤块）。
+        ②归约顺序：对 self.handler_infos 中全部 handler_type=='finally' 且
+        handler_start != 本 region handler 的条目，取其体签名做连续子序列
+        匹配；签名长度 < 2 的条目不参与（与 B87 口径一致）。
+        ③唯一归属判定：判据只读 (a) 各 handler_info 的 handler_start 偏移，
+        (b) 各 finally 入口块 PUSH_EXC_INFO..RERAISE 的 (opname, argval)
+        序列，(c) 本块同口径序列。无名字/偏移常量/个案判据。
+        ④嵌套处理：任意深度嵌套均按「签名属于哪个 finally handler」判定，
+        与区域层级无关；同签名（内外层 finally 体逐指令相同）时签名命中
+        无法区分归属——此时不拦截（保守路径，维持既有吸收行为），由
+        block_to_region 重建的副本台账优先条款兜底。
+        ⑤入口引用语义：本判据只作吸收/登记的否决，不改变入口引用。
+        ⑥反编译流程位置：region_analyzer 识别阶段（副本搜索/正常路径吸收/
+        cleanup 收集三处守卫共用）。
+
+        C 条款：[C1] 全部判据为块指令与 handler_info 结构事实；[C2] 不命中
+        时三处守卫路径行为逐位保持；[C3] 同签名不拦截，不引入新的误吞面。
+        """
+        if block is None:
+            return False
+        infos = getattr(self, 'handler_infos', None) or []
+        if not infos:
+            return False
+        _m = [i for i in block.instructions
+              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        if not _m:
+            return False
+        _ops_succ = tuple((i.opname, getattr(i, 'argval', None)) for i in _m)
+        for info in infos:
+            if info.get('handler_type') != 'finally':
+                continue
+            h_off = info.get('handler_start')
+            if h_off is None or h_off == own_handler_offset:
+                continue
+            sig = self._finally_body_signature(h_off)
+            if not sig or len(sig) < 2:
+                continue
+            for _mi in range(len(_ops_succ) - len(sig) + 1):
+                if _ops_succ[_mi:_mi + len(sig)] == sig:
+                    return True
+        return False
+
     def _collect_finally_body_blocks(self, handler_entry: BasicBlock,
                                       try_blocks: List[BasicBlock] = None,
                                       except_handlers: List = None) -> Tuple[List[BasicBlock], Dict[int, int]]:
@@ -14812,12 +15172,50 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                                 if any(i.opname == 'POP_EXCEPT' for i in _block.instructions):
                                     _source_blocks.append(_block)
                 for _tb in _source_blocks:
-                    for _succ in _tb.successors:
+                    # [B142-V5] source 块自检：try_blocks 收集（异常表跨度 +
+                    # pre-handler 扩展）可能把 finally 正常路径副本本身收进
+                    # try_blocks（v_nest_fin_continue 外层的 @74——透明链与
+                    # 属地守卫使它不再作为任何 source 的可查后继出现）。副本
+                    # 登记后台账在发射端优先于 try 体走查（fc_keep==0 抑制），
+                    # 块仍留在 try_blocks 不影响唯一归属。
+                    if (_tb.start_offset not in _foff
+                            and _tb.start_offset not in copy_blocks
+                            and _tb.instructions):
+                        _m_tb = [i for i in _tb.instructions
+                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _ops_tb = tuple((i.opname, getattr(i, 'argval', None))
+                                        for i in _m_tb)
+                        if any(_ops_tb[_mi:_mi + len(_ops)] == _ops
+                               for _mi in range(len(_ops_tb) - len(_ops) + 1)):
+                            _op_tb = _ops_tb[-1][0] if _ops_tb else None
+                            if _op_tb in ('JUMP_BACKWARD', 'JUMP_FORWARD',
+                                          'JUMP_ABSOLUTE', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                          'RETURN_VALUE', 'RETURN_CONST'):
+                                copy_blocks[_tb.start_offset] = 0
+                    # [B142-V5] 透明链副本搜索 + 副本谱系属地继承：
+                    # 原实现只查 source 块的直接后继。CPython 3.11 在异常表
+                    # 条目边界会切分基本块（如 if 测试块与出口胶水 NOP 块），
+                    # 内层 finally 的正常路径副本与 try_blocks 之间隔一层纯
+                    # NOP 胶水块（v_nest_fin_continue：@18→@30(NOP)→@32 副本），
+                    # 直接后继查不到 ⇒ 副本不登记 ⇒ 被 Pattern-A 正常路径
+                    # 吸收为体语句重复发射。修复：沿透明块链（剥噪后无有义
+                    # 指令的纯胶水块）继续走查；命中本 region finally 体签名
+                    # 的块登记为副本（keep=0）；命中**其他** try 的 finally 体
+                    # 签名的块立即停止该分支——那是外层 try 的 finally 谱系
+                    # （属地继承），本 region 不得越权登记或吸收。
+                    _chain_stack = [(s, 0) for s in _tb.successors]
+                    while _chain_stack:
+                        _succ, _depth = _chain_stack.pop()
                         if _succ.start_offset in _foff:
                             continue
                         if _succ.start_offset in _checked:
                             continue
                         _checked.add(_succ.start_offset)
+                        # [B142-V5] 每块唯一归属：已被其他 try region 占有的块
+                        # 不参与本 region 的副本搜索（peer try 的体块/副本不抢）。
+                        _succ_owner = self.block_to_region.get(_succ)
+                        if isinstance(_succ_owner, TryExceptRegion):
+                            continue
                         if _succ.start_offset in copy_blocks:
                             continue
                         if not _succ.instructions:
@@ -14836,10 +15234,32 @@ sources 已过 is_dominator 过滤），无按名字/偏移魔数/深度的个�
                             # [B87] _ops_succ 元素已改为 (opname, argval) 对，
                             # 终结 opname 判定取对首元素，与上方签名口径配套。
                             _op = _ops_succ[-1][0] if _ops_succ else None
-                            if _op in ('JUMP_BACKWARD', 'JUMP_FORWARD',
-                                               'JUMP_ABSOLUTE', 'JUMP_BACKWARD_NO_INTERRUPT',
-                                               'RETURN_VALUE', 'RETURN_CONST'):
+                            _is_terminal_end = _op in (
+                                'JUMP_BACKWARD', 'JUMP_FORWARD',
+                                'JUMP_ABSOLUTE', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                'RETURN_VALUE', 'RETURN_CONST')
+                            if _is_terminal_end or _depth > 0:
+                                # [B142-V5] 直接后继维持既有终结符口径；透明链
+                                # 上（depth>0，越过胶水块到达）命中的副本允许
+                                # 无终结符——异常表边界切分使副本组首块以
+                                # POP_TOP 落入下一块（v_nest_fin_continue @32），
+                                # 该块仍是 finally 体副本（签名逐指令相同），
+                                # 不登记则被正常路径吸收为体语句重复发射。
                                 copy_blocks[_succ.start_offset] = 0
+                            # 副本块不越过续查：副本以终结跳转收尾或落入下一段
+                            # 出口链（归外层谱系，由属地守卫裁决）
+                            continue
+                        # [B142-V5] 属地继承守卫：命中其他 try 的 finally 体
+                        # 签名 ⇒ 该块归外层 try 的 finally 谱系，本 region 不
+                        # 登记也不越过（内层不得越权吸收外层副本）。
+                        if self._block_matches_other_finally_signature(
+                                _succ, handler_entry.start_offset):
+                            continue
+                        if not _m:
+                            # 透明胶水块（剥噪后无有义指令）：沿链续查副本
+                            _chain_stack.extend((s, _depth + 1) for s in _succ.successors)
+                            continue
+                        # 用户语句块：非副本，停止该分支（不越过用户代码找副本）
 
         return body_blocks, copy_blocks
 
@@ -18639,6 +19059,16 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
         """
         import dis
 
+        # [B142-V5] try 体出口臂守卫（与 _scan_literal_match_subjects 同族）：
+        # 候选块的真臂 fall-through 后继是某 has_finally try region 的
+        # finally_copy_blocks 台账成员 ⇒ 这是 try 体经 continue/break/return
+        # 退出的控制流出口形态（出口路径内联 finally 体副本），不是 match
+        # case 链。误建 match 会把 `if r == 0: continue` 发成
+        # `match r: case 0: pass`（continue 丢失）。判据 = fc 台账成员关系
+        # （I.4 白名单），无 finally region 时恒不命中，行为逐位保持。
+        if self._b142_arm_exits_via_finally_copy(candidate_block):
+            return None
+
         # 策略1: 结构型模式匹配（有MATCH_*操作码）
         if self._has_match_op(candidate_block):
             subject_block = candidate_block
@@ -19084,6 +19514,17 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             is_wildcard = self._is_wildcard_match_block(block)
             is_none_match = self._is_none_match_block(block)
             if not is_copy_subject and not is_capture_guard and not is_nop_case and not is_wildcard and not is_none_match:
+                continue
+            # [B142-V5] try 体出口臂守卫：字面量 match 的 case 臂（真臂
+            # fall-through 后继）若是某 has_finally try region 的
+            # finally_copy_blocks 台账成员——即 try 体经 continue/break/return
+            # 退出、出口路径上内联了 finally 体副本——这是 try 体的控制流
+            # 出口形态，不是 match case 链（case 体是普通语句序列，其块不会
+            # 登记为 finally 副本）。误建 match 会把 `if r == 0: continue`
+            # 发成 `match r: case 0: pass`（continue 丢失，B142 单层实测）。
+            # 判据见 _b142_arm_exits_via_finally_copy（fc 台账成员关系，
+            # I.4 白名单）。
+            if self._b142_arm_exits_via_finally_copy(block):
                 continue
             if block is None:
                 continue
@@ -35749,6 +36190,20 @@ _region_overlaps_with_ternary 合法嵌套特例显式守卫，无其它非局�
                     _non_if_candidates = [c for c in candidates if type(c) is not IfRegion]
                     _to_remove = set()
                     for _if_cand in _if_candidates:
+                        # [B142-V5] If 候选是 child 的后代时不得作父：IfRegion
+                        # 的块集 ⊆ child 的块集 ⇒ 该 if 结构整体位于 child
+                        # （如嵌套 try-finally 的内层 if，其 then 臂出口块同时
+                        # 是外层 try 的 entry——外层经 then_blocks 归属分支被
+                        # 提为候选）。若保留，外层 try 会以 IfRegion 为
+                        # best_parent，随后被「If 块 ⊆ try 块 ⇒ continue」守卫
+                        # 拒挂（层级守卫与候选选择互相矛盾），外层成为孤儿
+                        # 顶层区域，发射端派发次序颠倒（B142 实测外层 try 被
+                        # 嵌进内层 if 臂）。判据 = 区域块集包含（I.4 白名单），
+                        # 与下方既有 _ni_inside_ir 移除条款同族，嵌套无感。
+                        if _if_cand.blocks and child.blocks and (
+                                set(_if_cand.blocks) <= set(child.blocks)):
+                            _to_remove.add(id(_if_cand))
+                            continue
                         _if_branch_entries = set(_if_cand.then_blocks or []) | set(_if_cand.else_blocks or [])
                         for _non_if_cand in _non_if_candidates:
                             _ni_range = ranges[id(_non_if_cand)]

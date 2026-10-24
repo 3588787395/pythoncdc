@@ -4,6 +4,14 @@
 
 - **B163–B219: 57 identifiers, 0 formally closed in Task 10.**
 - B142: reclassified by B181 from “rare residual, not elevated” to **shape-level gap**.
+  **UPDATE (rr-v5r02, achieve-any-syntax-completeness Task 2): B142 fixed at family
+  level** — finally-copy lineage signature + transparent-chain search + ownership
+  inheritance + ledger-priority rebuild + fc exit materialization. Evidence: frozen
+  comparator 4/4 on `v_b71_face.pyc` (was 3/4); R1 `v_nest_fin_continue([[0,1]])/([[1,2]])`
+  return sequences equal item-by-item. Family predicate and probes:
+  `.trae/specs/achieve-any-syntax-completeness/rounds/round12/probes_b142/README.md`.
+  Remaining family members (break-exit arm, triple finally, finally-return) stay
+  tracked under B207/B208 and Task 4.4.
 - B143: **reduction-level gap** (shape pipeline exists; finalbody dispatch order is wrong).
 - No new B number was opened for the four Task 9.5 fuzz findings. They are mapped to existing families pending deduplication.
 - B200’s registry row is truncated in `rounds/round3/BREACH_REGISTRY.md`; the identifier is still counted, but its row needs repair before any closure claim.

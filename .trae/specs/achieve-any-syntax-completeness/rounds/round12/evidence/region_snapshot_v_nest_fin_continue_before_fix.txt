@@ -1,0 +1,44 @@
+=== B142 region snapshot: g2_brk (from .trae/specs/achieve-any-syntax-completeness/rounds/round12/probes_b142/p_g2_loopctrl.pyc) ===
+total regions (flat, analyzer.regions): 4
+[LoopRegion] entry=@10 exit=None
+  ALL blocks=['@0', '@10', '@12', '@18', '@30', '@120', '@162', '@258']
+  body_blocks=['@10', '@12', '@18', '@120', '@162', '@258']
+  [TryExceptRegion] entry=@18 exit=None
+    try_blocks=['@18', '@30', '@32', '@120']
+    finally_blocks=['@206', '@252']
+    finally_copy_blocks={'@32': 0, '@162': 0}
+    has_finally=True try_range=[18,162]
+    ALL blocks=['@18', '@30', '@32', '@120', '@162', '@206', '@252', '@356']
+[TryExceptRegion] entry=@18 exit=None
+  try_blocks=['@18', '@30', '@32', '@120']
+  finally_blocks=['@206', '@252']
+  finally_copy_blocks={'@32': 0, '@162': 0}
+  has_finally=True try_range=[18,162]
+  ALL blocks=['@18', '@30', '@32', '@120', '@162', '@206', '@252', '@356']
+[TryExceptRegion] entry=@162 exit=None
+  try_blocks=['@258']
+  finally_blocks=['@304', '@350']
+  finally_copy_blocks={'@258': 0, '@74': 0}
+  has_finally=True try_range=[18,258]
+  ALL blocks=['@18', '@30', '@32', '@74', '@120', '@162', '@206', '@252', '@258', '@304', '@350']
+[Region] entry=@356 exit=None
+  ALL blocks=['@356']
+
+--- block_to_region full map ---
+@0: LoopRegion@10 (obj#61104)
+@10: LoopRegion@10 (obj#61104)
+@12: LoopRegion@10 (obj#61104)
+@18: TryExceptRegion@18 (obj#59376)
+@30: TryExceptRegion@18 (obj#59376)
+@32: TryExceptRegion@18 (obj#59376)
+@74: TryExceptRegion@162 (obj#60208)
+@120: TryExceptRegion@18 (obj#59376)
+@162: TryExceptRegion@18 (obj#59376)
+@206: TryExceptRegion@18 (obj#59376)
+@252: TryExceptRegion@18 (obj#59376)
+@258: TryExceptRegion@162 (obj#60208)
+@304: TryExceptRegion@162 (obj#60208)
+@350: TryExceptRegion@162 (obj#60208)
+@356: TryExceptRegion@18 (obj#59376)
+
+--- block roles mentioning finally/copy ---
