@@ -61,13 +61,13 @@
 - [x] 24 条 fuzz 达到 24/24 EQUAL（fuzz_summary.json EQUAL=24 failures=0；唯一结构残差 deephost-001 臂锚由 R12-MATCHANCHOR 剥离归约）
 
 ## J 空间（Task 5）
-- [ ] 388 条缺 source 已恢复/生成或登记 `unjudgeable`
-- [ ] 12 条缺 pyc 已恢复/生成或登记 `unjudgeable`
-- [ ] 所有条目有 `input_model.calls`
-- [ ] 全量 J（1556 或 J v3）C1–C5 已跑完
-- [ ] `uncovered = 0`
-- [ ] `module_only = 0`
-- [ ] `unjudgeable = 0`；不为 0 时逐条挂账且不宣称完备
+- [x] 388 条缺 source 已恢复/生成或登记 `unjudgeable`（12 PEP604 生成 + 376 等价源；`c1_source_missing=0`）
+- [x] 12 条缺 pyc 已恢复/生成或登记 `unjudgeable`（PEP604 探针 pyc；`c2_pyc_missing=0`）
+- [x] 所有条目有 `input_model.calls`（449 非空 + 1107 显式降级空表并注明原因；`calls_missing=0` 按显式决定口径）
+- [x] 全量 J（1556 或 J v3）C1–C5 已跑完（8 分片合并 `semantic_j_sample.json`；judge=semantic_diff.py 哈希链 C5 全通）
+- [ ] `uncovered = 0`（现 189：15 探针文件 25 失配单元，最大族 JS-EXCEPTSTAR 96——逐条挂账 `TASK5_THREE_LISTS.md`，修复进入后续族任务，未宣称完备）
+- [ ] `module_only = 0`（现 675 降级条目按 Task 5.3 口径不入分子，逐条挂账）
+- [ ] `unjudgeable = 0`；不为 0 时逐条挂账且不宣称完备（现 442：424 语料环境缺依赖 + 18 原件超时；逐条原因在案）
 
 ## 门禁（Task 6–7）
 - [ ] G2b 402 语料语义差分完成并留逐样本证据

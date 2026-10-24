@@ -1,11 +1,17 @@
 {
- "total": 51,
+ "total": 1556,
  "verdicts": {
-  "EQUAL": 45,
-  "DIFFERENT": 6
+  "EQUAL": 925,
+  "ERROR": 424,
+  "INCONCLUSIVE": 18,
+  "DIFFERENT": 189
  },
- "skipped": {
-  "c1_source_missing": 49
+ "status": {
+  "probe_only": 719,
+  "unexecuted": 442,
+  "covered_5tuple": 395
  },
- "stopped": "skipped"
+ "module_only": 719,
+ "covered_5tuple": 395,
+ "merged_from_chunks": 8
 }

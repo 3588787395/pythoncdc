@@ -43,11 +43,11 @@
   - [x] 4.6 去重后决定是否新增 B 编号；重跑 24 条 fuzz，目标 24/24 EQUAL（不新增编号：023 归 B207 条件变体、015 全量归 dict `**` 配对族、deephost-001 臂锚归 R12-MATCHANCHOR；fuzz_summary.json EQUAL=24 failures=0）
   - [x] 4.7 提交并 push（`rr-v5r04:`）
 
-- [ ] Task 5: 补齐 J 空间并跑全量 C1–C5
-  - [ ] 5.1 对 388 条 `c1_source_missing` 逐条恢复 source 或生成等价 source；不能恢复的登记 `unjudgeable` 并说明原因
-  - [ ] 5.2 对 12 条 `c2_pyc_missing` 生成/恢复 pyc；不能恢复的登记 `unjudgeable`
-  - [ ] 5.3 为所有条目补 `input_model.calls`；无调用入口的条目降级，不得进入覆盖分子
-  - [ ] 5.4 跑全量 J（1556 条或审计后的 J v3）C1–C5；输出 `uncovered`、`module_only`、`unjudgeable` 三类清单
+- [x] Task 5: 补齐 J 空间并跑全量 C1–C5（接受度残差见 checklist：uncovered 189/25 单元、module_only 675、unjudgeable 442 逐条挂账）
+  - [x] 5.1 对 388 条 `c1_source_missing` 逐条恢复 source 或生成等价 source；不能恢复的登记 `unjudgeable` 并说明原因（12 条 PEP604 生成探针 + 376 条 pyc-only 语料恢复反编译等价源 `jspace_sources/`，全盘核查原发行无 .py；残余 0）
+  - [x] 5.2 对 12 条 `c2_pyc_missing` 生成/恢复 pyc；不能恢复的登记 `unjudgeable`（JS-PEP604-001..012 探针编译 pyc，`jspace_probes/`；残余 0）
+  - [x] 5.3 为所有条目补 `input_model.calls`；无调用入口的条目降级，不得进入覆盖分子（449 条结构派生 calls；1107 条显式 module_only 降级并登记 `excluded`）
+  - [x] 5.4 跑全量 J（1556 条或审计后的 J v3）C1–C5；输出 `uncovered`、`module_only`、`unjudgeable` 三类清单（1556 条全量 8 分片跑完；covered_equal 250 / uncovered 189 / module_only 675 / unjudgeable 442，见 `TASK5_THREE_LISTS.md`；checker 口径 covered_5tuple=395、GATE FAIL 如实记录）
   - [ ] 5.5 目标 G1：`uncovered = 0`、`module_only = 0`、`unjudgeable = 0`（若不为 0，必须逐条挂账且不得宣称完备）
   - [ ] 5.6 提交并 push（`rr-v5r05:`）
 
