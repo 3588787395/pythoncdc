@@ -1,0 +1,8 @@
+{
+  "case_id": "JS-IF-076-detail",
+  "original": {"pyc": "F:/Downloads/pythoncdc-main/test_repros/round2/x01_if_deep_hosts.pyc"},
+  "product": {"source": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round11/task1/j_sample_calls/semantic_products/JS-IF-076.py"},
+  "entrypoint": "module",
+  "call_exprs": ["if_in_for()", "if_in_try()", "if_shallow()", "if_in_match()"],
+  "timeout_s": 15
+}

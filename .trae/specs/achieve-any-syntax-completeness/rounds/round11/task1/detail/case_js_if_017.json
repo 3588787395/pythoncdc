@@ -1,0 +1,8 @@
+{
+  "case_id": "JS-IF-017-detail",
+  "original": {"pyc": "F:/Downloads/pythoncdc-main/.trae/specs/adversarial-complete-forms-v2-10rounds/rounds/round1/probes_rv2/v_b71_face.pyc"},
+  "product": {"source": "F:/Downloads/pythoncdc-main/.trae/specs/achieve-any-syntax-completeness/rounds/round11/task1/j_sample_calls/semantic_products/JS-IF-017.py"},
+  "entrypoint": "module",
+  "call_exprs": ["v_nest_fin_continue([[0, 1]])", "v_nest_fin_continue([0])"],
+  "timeout_s": 15
+}

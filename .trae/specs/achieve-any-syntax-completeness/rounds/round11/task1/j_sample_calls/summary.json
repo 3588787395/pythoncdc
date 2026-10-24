@@ -1,0 +1,13 @@
+{
+ "total": 51,
+ "verdicts": {
+  "EQUAL": 45,
+  "DIFFERENT": 6
+ },
+ "skipped": {
+  "c1_source_missing": 49
+ },
+ "stopped": "skipped",
+ "module_only": 45,
+ "covered_5tuple": 6
+}

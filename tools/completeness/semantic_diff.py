@@ -51,6 +51,10 @@ DEFAULT_METADATA_IGNORE = (
     "metadata.code.co_firstlineno",
     "metadata.code.co_linetable",
 )
+# R7 blocking (achieve-any-syntax-completeness Task 1.2): code-object fields whose
+# differences must always yield DIFFERENT.  They can never be silenced through
+# tolerance.ignore_metadata_fields; see TOLERANCE_REGISTRY.md in the spec root.
+PROTECTED_METADATA_FIELDS = ("co_code", "co_consts", "co_exceptiontable")
 CO_FIELDS = (
     "co_argcount", "co_posonlyargcount", "co_kwonlyargcount", "co_nlocals",
     "co_stacksize", "co_flags", "co_names", "co_varnames", "co_freevars",
@@ -639,10 +643,34 @@ def _run_worker(payload_path: str) -> int:
 
         old_trace = sys.gettrace()
         sys.settrace(tracer)
+        call_exprs = [str(expr) for expr in (payload.get("call_exprs") or [])
+                      if isinstance(expr, str) and expr.strip()]
         try:
             if kind == "module":
                 hit["value"] = True
                 result["ok"] = True
+                # input_model.calls (Task 1.1): call expressions evaluated in the
+                # module namespace so R1-R6 observe real invocations instead of a
+                # module-only import.
+                for index, expr in enumerate(call_exprs):
+                    state["call"] = index
+                    row = {
+                        "index": index, "label": expr, "expr": expr,
+                        "input_before": None, "input_after": None,
+                        "ok": False, "return": None,
+                        "exception": None, "stdout": "", "stderr": "", "events": [],
+                    }
+                    try:
+                        returned = eval(compile(expr, "<call_expr:%d>" % index, "eval"),
+                                        vars(module))
+                        row["ok"] = True
+                        row["return"] = canon(returned)
+                    except BaseException as exc:
+                        row["exception"] = exception_info(exc)
+                    row["stdout"] = _stream_text(events, index, "stdout")
+                    row["stderr"] = _stream_text(events, index, "stderr")
+                    row["events"] = _call_events(events, index)
+                    result["call_results"].append(row)
             else:
                 for index, call in enumerate(calls):
                     state["call"] = index
@@ -731,6 +759,7 @@ def _run_side(case: dict, side: str, sandbox: str, harness: str) -> dict:
         "calls": case.get("calls"), "args": case.get("args", []),
         "kwargs": case.get("kwargs", {}), "observe_globals": case.get("observe_globals"),
         "files": case.get("files"), "workdir": sandbox, "seed": case.get("seed", 0),
+        "call_exprs": case.get("call_exprs"),
     }
     payload_path = os.path.join(harness, "payload-%s.json" % side)
     result_path = os.path.join(harness, "result-%s.json" % side)
@@ -802,28 +831,64 @@ def _mark(diffs: list[dict], start: int, dimension: str) -> None:
         item["dimension"] = dimension
 
 
+def _unregistered_r7_ignores(fields: list[str]) -> list[str]:
+    """Fields whose ignore path would silence a protected code-object comparison.
+
+    A path is rejected when it names a protected field at any depth or when it
+    is an ancestor of one (e.g. `$.metadata.code`, `$.metadata`, `$`).
+    """
+    bad: list[str] = []
+    for field in fields:
+        text = str(field).strip()
+        if not text:
+            continue
+        path = text if text.startswith("$.") else "$.metadata." + text.removeprefix("metadata.")
+        if any(segment in PROTECTED_METADATA_FIELDS for segment in path.split(".")):
+            bad.append(text)
+            continue
+        for protected in PROTECTED_METADATA_FIELDS:
+            full = "$.metadata.code." + protected
+            if path == full or path.startswith(full + ".") or full.startswith(path + "."):
+                bad.append(text)
+                break
+    return bad
+
+
 def judge_case(case: dict, original: dict, product: dict, include_observations: bool = False) -> dict:
     tolerance = dict(case.get("tolerance") or {})
-    ignored = _ignore_set(list(DEFAULT_METADATA_IGNORE) + list(tolerance.get("ignore_metadata_fields") or []))
+    custom_ignores = [str(field) for field in (tolerance.get("ignore_metadata_fields") or [])]
+    unregistered = _unregistered_r7_ignores(custom_ignores)
+    if unregistered:
+        return _result(case, ERROR, [], [], [], original, product, include_observations,
+                       errors=["unregistered R7 tolerance (protected code-object fields): "
+                               + ", ".join(sorted(unregistered))])
+    applied_ignores = _ignore_set(custom_ignores)
+    ignored = _ignore_set(list(DEFAULT_METADATA_IGNORE)) | applied_ignores
     tolerated: list[str] = []
     diffs: list[dict] = []
     inconclusive: list[str] = []
     errors: list[str] = []
 
+    # Task 1.3: a timeout on either side is INCONCLUSIVE, never EQUAL/DIFFERENT
+    # and never coverage.
+    if original.get("timeout"):
+        inconclusive.append("original execution timed out")
+        return _result(case, INCONCLUSIVE, diffs, inconclusive, tolerated, original, product,
+                       include_observations, applied_ignores=applied_ignores)
     if not original.get("ok"):
         if original.get("harness_error"):
             errors.append("original worker/harness error")
-        elif original.get("timeout"):
-            errors.append("original execution timed out")
         else:
             errors.append("original artifact did not load/execute")
     if errors:
         return _result(case, ERROR, diffs, inconclusive, tolerated, original, product,
-                       include_observations, errors)
+                       include_observations, errors, applied_ignores=applied_ignores)
 
     if product.get("timeout"):
-        _add_diff(diffs, "TERMINATION", "product timed out while original finished")
-    elif not product.get("ok"):
+        inconclusive.append("product execution timed out")
+        return _result(case, INCONCLUSIVE, diffs, inconclusive, tolerated, original, product,
+                       include_observations, applied_ignores=applied_ignores)
+    if not product.get("ok"):
         if product.get("harness_error"):
             errors.append("product worker/harness error")
         else:
@@ -904,24 +969,25 @@ def judge_case(case: dict, original: dict, product: dict, include_observations: 
 
     if errors:
         return _result(case, ERROR, diffs, inconclusive, tolerated, original, product,
-                       include_observations, errors)
+                       include_observations, errors, applied_ignores=applied_ignores)
     if diffs:
         return _result(case, DIFFERENT, diffs, inconclusive, tolerated, original, product,
-                       include_observations)
+                       include_observations, applied_ignores=applied_ignores)
     if inconclusive:
         return _result(case, INCONCLUSIVE, diffs, inconclusive, tolerated, original, product,
-                       include_observations)
+                       include_observations, applied_ignores=applied_ignores)
     return _result(case, EQUAL, diffs, inconclusive, tolerated, original, product,
-                   include_observations)
+                   include_observations, applied_ignores=applied_ignores)
 
 
 def _result(case: dict, status: str, diffs: list[dict], inconclusive: list[str],
             tolerated: list[str], original: dict, product: dict, include_observations: bool,
-            errors: list[str] | None = None) -> dict:
+            errors: list[str] | None = None, applied_ignores: set[str] | None = None) -> dict:
     out = {
         "case_id": case.get("case_id") or case.get("id") or "case", "status": status,
         "diffs": diffs, "inconclusive": inconclusive, "errors": errors or [],
-        "tolerances": sorted(set(tolerated) | _ignore_set(list(DEFAULT_METADATA_IGNORE))),
+        "tolerances": sorted(set(tolerated) | _ignore_set(list(DEFAULT_METADATA_IGNORE))
+                             | (applied_ignores or set())),
     }
     if include_observations:
         out["observations"] = {"original": original, "product": product}

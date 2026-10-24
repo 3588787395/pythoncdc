@@ -102,6 +102,10 @@ def make_record(entry: dict, product_root: str, decompiler: str, timeout: float,
     pyc_sha = sha256_file(pyc)
     if not source_sha or not pyc_sha:
         return None, "hash_unreadable"
+    input_model = entry.get("input_model") if isinstance(entry.get("input_model"), dict) else {}
+    raw_calls = input_model.get("calls")
+    calls = [str(item).strip() for item in raw_calls
+             if isinstance(item, str) and str(item).strip()] if isinstance(raw_calls, list) else []
     product = os.path.join(product_root, eid.replace("/", "_") + ".py")
     product_abs = os.path.join(ROOT, product)
     ok, command, decompile_note = decompile(pyc, product_abs, decompiler, timeout)
@@ -111,6 +115,7 @@ def make_record(entry: dict, product_root: str, decompiler: str, timeout: float,
                "lines": len(open(source, "r", encoding="utf-8-sig", errors="replace").read().splitlines())},
         "c2": {"pyc_path": rel_or_abs(pyc), "sha256": pyc_sha,
                "python_version": sys.version.split()[0]},
+        "input_model": {"kind": input_model.get("kind") or "module", "calls": calls},
         "status": "probe_only",
         "note": decompile_note,
     }
@@ -127,12 +132,18 @@ def make_record(entry: dict, product_root: str, decompiler: str, timeout: float,
         "case_id": eid,
         "original": {"pyc": pyc},
         "product": {"source": product_abs},
-        "entrypoint": entry.get("entrypoint") or "module",
+        "entrypoint": "module",
         "args": [],
         "kwargs": {},
         "timeout_s": timeout,
         "_base": ROOT,
     }
+    if calls:
+        # Task 1.1: input_model.calls carries the callability dimension; the
+        # judge evaluates each expression in the module namespace.
+        case["call_exprs"] = calls
+    else:
+        case["entrypoint"] = entry.get("entrypoint") or "module"
     try:
         result = sd.compare_case(case)
     except BaseException as exc:
@@ -148,7 +159,15 @@ def make_record(entry: dict, product_root: str, decompiler: str, timeout: float,
     record["c5"] = {"source_sha256": source_sha, "pyc_sha256": pyc_sha,
                     "product_sha256": product_sha, "judge_sha256": judge_sha,
                     "runner_version": "semantic_runner/%s" % TOOL_VERSION}
-    record["status"] = "unexecuted" if verdict in (sd.INCONCLUSIVE, sd.ERROR) else "covered_5tuple"
+    if verdict in (sd.INCONCLUSIVE, sd.ERROR):
+        record["status"] = "unexecuted"
+    elif not calls:
+        # Task 1.1: module-only entries never count as covered_5tuple; the
+        # measured verdict stays recorded as defect evidence.
+        record["status"] = "probe_only"
+        record["reason"] = "module_only"
+    else:
+        record["status"] = "covered_5tuple"
     return record, verdict
 
 
@@ -197,19 +216,23 @@ def main(argv=None) -> int:
             skipped[reason] = skipped.get(reason, 0) + 1
             continue
         records.append(record)
-        print("[semantic_runner] %-16s %-16s %s" % (record["entry_id"],
-                                                    record.get("c4", {}).get("verdict", "-"),
-                                                    record.get("reason", "")))
+        print("[semantic_runner] %-16s %-16s %-14s %s" % (record["entry_id"],
+                                                          record.get("c4", {}).get("verdict", "-"),
+                                                          record.get("status", "-"),
+                                                          record.get("reason", "")))
     if len(entries) and len(records) < len(entries) and stopped == "case_limit":
         stopped = "skipped"
     counts = {}
     for record in records:
         verdict = record.get("c4", {}).get("verdict", "NO_C4")
         counts[verdict] = counts.get(verdict, 0) + 1
+    module_only = sum(1 for record in records if record.get("reason") == "module_only")
+    covered = sum(1 for record in records if record.get("status") == "covered_5tuple")
     payload = {"tool": "semantic_runner", "version": TOOL_VERSION, "space": norm_path(args.space),
                "judge_sha256": judge_sha, "records": records,
                "summary": {"total": len(records), "verdicts": counts, "skipped": skipped,
-                           "stopped": stopped}}
+                           "stopped": stopped, "module_only": module_only,
+                           "covered_5tuple": covered}}
     os.makedirs(os.path.dirname(os.path.abspath(args.out)) or ".", exist_ok=True)
     with open(args.out, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(payload, fh, ensure_ascii=False, indent=1)
@@ -218,8 +241,9 @@ def main(argv=None) -> int:
         with open(args.report, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(payload["summary"], fh, ensure_ascii=False, indent=1)
             fh.write("\n")
-    print("[semantic_runner] records=%d verdicts=%s skipped=%s stopped=%s"
-          % (len(records), counts, skipped, stopped))
+    print("[semantic_runner] records=%d verdicts=%s skipped=%s stopped=%s "
+          "module_only=%d covered_5tuple=%d"
+          % (len(records), counts, skipped, stopped, module_only, covered))
     return 0 if counts.get(sd.ERROR, 0) == 0 else 3
 
 

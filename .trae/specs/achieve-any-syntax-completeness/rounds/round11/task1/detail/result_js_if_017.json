@@ -1,0 +1,75 @@
+{
+ "tool": "semantic_diff",
+ "version": "1.0.0",
+ "summary": {
+  "total": 1,
+  "EQUAL": 0,
+  "DIFFERENT": 1,
+  "INCONCLUSIVE": 0,
+  "ERROR": 0
+ },
+ "results": [
+  {
+   "case_id": "JS-IF-017-detail",
+   "status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].code_sha",
+     "kind": "value",
+     "original": "938c6ca04b53606cd592e6e633b38845e5d3b6b55a6be6c5cf041fcdd8063f74",
+     "product": "323cb1d5aecdccf66f471a80252d8331c62405deccdeedad056dbbfe314f47bc",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.call[0].return.len",
+     "kind": "value",
+     "original": 3,
+     "product": 2,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v",
+     "kind": "length",
+     "original": 3,
+     "product": 2,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[0].return.v[1]",
+     "kind": "type",
+     "original": "int",
+     "product": "list",
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[1].return.len",
+     "kind": "value",
+     "original": 2,
+     "product": 5,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[1].return.v",
+     "kind": "length",
+     "original": 2,
+     "product": 5,
+     "dimension": "R1"
+    },
+    {
+     "path": "$.call[1].return.v[1].v",
+     "kind": "value",
+     "original": "2",
+     "product": "1",
+     "dimension": "R1"
+    }
+   ],
+   "inconclusive": [],
+   "errors": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ]
+  }
+ ]
+}

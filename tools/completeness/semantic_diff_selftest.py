@@ -120,15 +120,64 @@ def main() -> int:
         }
         cases.append((broken, sd.ERROR, [], []))
 
+        # Task 1 measurement semantics (achieve-any-syntax-completeness).
+        cases.append((pair(root, "module-only-equal", "x = 1\n", "x = 1\n",
+                           entrypoint="module"), sd.EQUAL, [], []))
+        cases.append((pair(root, "call-exprs-equal",
+                           "def g(x):\n    return x * 2\n",
+                           "def g(x):\n    return x * 2\n",
+                           entrypoint="module", call_exprs=["g(2)"]), sd.EQUAL, [], []))
+        cases.append((pair(root, "call-exprs-r1",
+                           "def g(x):\n    return x * 2\n",
+                           "def g(x):\n    return x * 3\n",
+                           entrypoint="module", call_exprs=["g(2)"]),
+                      sd.DIFFERENT, ["R1"], []))
+        cases.append((pair(root, "call-exprs-missing-function",
+                           "def g(x):\n    return x\n",
+                           "pass\n",
+                           entrypoint="module", call_exprs=["g(2)"]),
+                      sd.DIFFERENT, ["R6"], []))
+        cases.append((pair(root, "r7-plus-r1",
+                           "def g(x):\n    return x + 1\n",
+                           "def g(x):\n    y = x + 2\n    return y\n",
+                           entrypoint="module", call_exprs=["g(1)"]),
+                      sd.DIFFERENT, ["R1", "R7"], []))
+        cases.append((pair(root, "r7-protected-tolerance",
+                           "def g(x):\n    return x + 1\n",
+                           "def g(x):\n    return x + 2\n",
+                           entrypoint="module",
+                           tolerance={"ignore_metadata_fields": ["metadata.code.co_code"]}),
+                      sd.ERROR, [], []))
+        cases.append((pair(root, "r7-ancestor-tolerance",
+                           "def g(x):\n    return x + 1\n",
+                           "def g(x):\n    return x + 2\n",
+                           entrypoint="module",
+                           tolerance={"ignore_metadata_fields": ["$.metadata.code"]}),
+                      sd.ERROR, [], []))
+        cases.append((pair(root, "timeout-product",
+                           "x = 1\n",
+                           "import time\ntime.sleep(30)\n",
+                           entrypoint="module", timeout_s=1),
+                      sd.INCONCLUSIVE, [], [], ["product execution timed out"]))
+        cases.append((pair(root, "timeout-original",
+                           "import time\ntime.sleep(30)\n",
+                           "x = 1\n",
+                           entrypoint="module", timeout_s=1),
+                      sd.INCONCLUSIVE, [], [], ["original execution timed out"]))
+
         results = []
         failures = 0
-        for case, expected, dimensions, tolerances in cases:
+        for case, expected, dimensions, tolerances, *rest in cases:
+            expect_inconclusive = rest[0] if rest else []
             result = sd.compare_case(case)
             actual = result["status"]
             found = sorted({item.get("dimension") for item in result.get("diffs", [])})
             missing = [dim for dim in dimensions if dim not in found]
             missing_tol = [path for path in tolerances if not any(path in item for item in result.get("tolerances", []))]
-            ok = actual == expected and not missing and not missing_tol
+            missing_inconclusive = [text for text in expect_inconclusive
+                                    if not any(text in item for item in result.get("inconclusive", []))]
+            ok = (actual == expected and not missing and not missing_tol
+                  and not missing_inconclusive)
             if not ok:
                 failures += 1
             results.append({
@@ -139,6 +188,7 @@ def main() -> int:
                 "observed_dimensions": found,
                 "missing_dimensions": missing,
                 "missing_tolerances": missing_tol,
+                "missing_inconclusive": missing_inconclusive,
                 "tolerances": result.get("tolerances", []),
                 "errors": result.get("errors", []),
                 "inconclusive": result.get("inconclusive", []),

@@ -1,0 +1,61 @@
+{
+ "tool": "semantic_diff",
+ "version": "1.0.0",
+ "summary": {
+  "total": 1,
+  "EQUAL": 0,
+  "DIFFERENT": 1,
+  "INCONCLUSIVE": 0,
+  "ERROR": 0
+ },
+ "results": [
+  {
+   "case_id": "JS-IF-076-detail",
+   "status": "DIFFERENT",
+   "diffs": [
+    {
+     "path": "$.metadata.code.co_consts.v[2].code_sha",
+     "kind": "value",
+     "original": "e4ef787b5620d2761a1c3444472ad5086fc94d56812259315dc18adec284eded",
+     "product": "638a25f549b0d23cdd6b368a461f16de7612887263e99c7e4540a5dabddb348e",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[2].consts_len",
+     "kind": "value",
+     "original": 2,
+     "product": 4,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].code_sha",
+     "kind": "value",
+     "original": "b7a8bdfa5069503adaafae12cc9dcc7f83160723f2a287caa5f5374fd1c363e1",
+     "product": "4db091adc22c6360e33bae35c4014f1a5ffd57e825e8c17d9932579ec2ea3cf7",
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[3].consts_len",
+     "kind": "value",
+     "original": 4,
+     "product": 5,
+     "dimension": "R7"
+    },
+    {
+     "path": "$.metadata.code.co_consts.v[6].code_sha",
+     "kind": "value",
+     "original": "9d9747efa5081a74f139a1c85f3664f9fff653ce5ee520c9bc64362b1f4da3f7",
+     "product": "04d12b84323b5a1d4f4a1e3d53e732bf7f4a5cf99e1853a28f1e211dde26c1d8",
+     "dimension": "R7"
+    }
+   ],
+   "inconclusive": [],
+   "errors": [],
+   "tolerances": [
+    "$.metadata.code.co_filename",
+    "$.metadata.code.co_firstlineno",
+    "$.metadata.code.co_linetable"
+   ]
+  }
+ ]
+}
