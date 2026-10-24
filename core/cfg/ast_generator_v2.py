@@ -1150,9 +1150,18 @@ class ExpressionReconstructor:
                 values = list(target.get('values', []))
                 for src in sources:
                     if isinstance(src, dict) and src.get('type') == 'Dict':
-                        # 字面量 Dict：展开其项到 target
-                        keys.extend(src.get('keys', []))
-                        values.extend(src.get('values', []))
+                        # [FZ-015b-V5R04] 字面量 Dict 源保留 ``**src`` 形态：
+                        # 原件字节码 BUILD_MAP 0 + DICT_UPDATE(字面量) 只来自
+                        # ``{**{...}}`` 嵌套字面量展开——展开合并会改变重编译
+                        # 指令形（015 全量实测 {**{'k': last}} → {'k': last}，
+                        # co_code 72→68）。与 **expr 同型挂 Starred 键。
+                        keys.append({
+                            'type': 'Starred',
+                            'value': src,
+                            'ctx': 'Load',
+                            'lineno': instr.starts_line,
+                        })
+                        values.append(None)
                     elif isinstance(src, dict) and src.get('type') == 'DictMerge':
                         # 嵌套 DictMerge（罕见）：递归展开
                         sub_keys, sub_values = self._flatten_dict_merge_to_dict_items(src)

@@ -4785,6 +4785,20 @@ class CodeGenerator:
         """生成字典表达式"""
         items_code = []
         for key, value in zip(node.keys, node.values):
+            # [FZ-015b-V5R04] **expr 项（CPython AST：Starred 键 + None 值）：
+            # 渲染为 ``**expr``——与 dict 路径渲染器（Round8-05）同词汇。
+            # 此前 AST 路径把 Starred 键当普通键渲染/丢弃，
+            # ``{**{'k': v}}`` 退化为 ``{}``（015 全量实测）。
+            _is_starred_item = (
+                value is None
+                and ((isinstance(key, dict) and key.get('type') == 'Starred')
+                     or (hasattr(key, 'node_type') and getattr(key, 'node_type', None) == 'Starred')
+                     or type(key).__name__ == 'ASTStarred'))
+            if _is_starred_item:
+                _sv = key.get('value') if isinstance(key, dict) else getattr(key, 'value', None)
+                _sv_code = self._generate_expression(_sv, 0)
+                items_code.append(f'**{_sv_code}')
+                continue
             # [关键修复] 使用0作为parent_precedence，避免键值被添加括号
             key_code = self._generate_expression(key, 0)
             value_code = self._generate_expression(value, 0)

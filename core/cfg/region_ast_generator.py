@@ -33565,6 +33565,146 @@ AST 映射规则:
                 result.append(s); i += 1
         return result
 
+    def _b207_copy_chain(self, first: BasicBlock) -> Optional[List[BasicBlock]]:
+        """[B207] 从 first 起（值块之后的直落链）走查 finally 副本链：
+        逐块 finally 异常副本体指令级同构切片，链尾 RETURN_VALUE/RETURN_CONST
+        终结。返回链块列表（含链尾）或 None。判据见
+        ``_b207_return_in_finally_stmts``（I.4 白名单）。"""
+        _noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')
+        _regions = getattr(self.region_analyzer, 'regions', None) or ()
+        _frame_tail_ops = ('RERAISE', 'COPY', 'POP_EXCEPT', 'SWAP', 'POP_TOP')
+        _exc_seqs = []
+        for _rg in _regions:
+            if not getattr(_rg, 'has_finally', False):
+                continue
+            _fb = getattr(_rg, 'finally_blocks', None) or []
+            _seq = []
+            for _fb_b in _fb:
+                for _i in _fb_b.instructions:
+                    if _i.opname in _noise or _i.opname == 'PUSH_EXC_INFO':
+                        continue
+                    _seq.append(_i.opname)
+            while _seq and _seq[-1] in _frame_tail_ops:
+                _seq.pop()
+            if _seq:
+                _exc_seqs.append(_seq)
+
+        def _is_copy_slice(_blk):
+            _ops = [i.opname for i in _blk.instructions if i.opname not in _noise]
+            while _ops and _ops[-1] in _frame_tail_ops:
+                _ops.pop()
+            if not _ops:
+                return False
+            return any(any(_seq[j:j + len(_ops)] == _ops for j in range(len(_seq) - len(_ops) + 1))
+                       for _seq in _exc_seqs)
+
+        def _fall_through(_blk):
+            _lm = [i for i in _blk.instructions if i.opname not in _noise]
+            if not _lm:
+                return None
+            _expect = _lm[-1].offset + 2
+            for _s in (_blk.successors or []):
+                if _s.start_offset == _expect:
+                    return _s
+            return None
+
+        _chain = []
+        _cur = first
+        for _hop in range(8):
+            if _cur is None:
+                return None
+            _cur_run = [i for i in _cur.instructions if i.opname not in _noise]
+            if not _cur_run:
+                return None
+            _last = _cur_run[-1]
+            if _last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                _chain.append(_cur)
+                break
+            if not _is_copy_slice(_cur):
+                return None
+            _chain.append(_cur)
+            _cur = _fall_through(_cur)
+        else:
+            return None
+        if not _chain:
+            return None
+        _tail = _chain[-1]
+        _tail_last = _tail.get_last_instruction()
+        if _tail_last is None or _tail_last.opname not in ('RETURN_VALUE', 'RETURN_CONST'):
+            return None
+        _tail_run = [i for i in _tail.instructions
+                     if i.opname not in _noise and i is not _tail_last]
+        while _tail_run and _tail_run[-1].opname == 'POP_TOP':
+            _tail_run.pop()
+        if _tail_run:
+            _tail_re = self.expr_reconstructor.reconstruct(list(_tail_run))
+            if _tail_re is None:
+                return None
+        return _chain
+
+    def _b207_cond_return_in_finally_stmts(self, region: TryExceptRegion,
+                                            block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
+        """[FZ-023-V5R04][B207] return-in-finally 条件臂形态：
+        ``if <cond>: return <V>``（try/finally 内）。块以 POP_JUMP_*（前向
+        条件跳转）终结、其直落（跳转不取的路径）为未终结值运行、其后的
+        finally 副本链以 RETURN 终结 ⇒ 发射 ``if <cond>: return <V>``。
+        ①算法依据：CPython 零成本 finally 对条件 return 的内联布局——条件块
+          + then 值运行（无终结符）+ 副本链 + RETURN；跳转不取路径另行进入
+          副本链（for 继续）。产物为原件源码形态时重编译逐字节复现。
+        ②归约顺序：条件表达式取本块跳转前有效运行重建（POP_JUMP_*_IF_FALSE
+          直落=真极性，IF_TRUE 取反）；值块 + 副本链登记 generated。
+        ③唯一归属判定：块内 opcode 序 + 区域 finally_blocks 结构（I.4）。
+        ④嵌套处理：链允许跨多层 finally 副本。
+        ⑤入口引用语义：不改块图；条件块由调用方登记 generated。
+        ⑥反编译流程：_generate_try_body 块循环（无条件形态之前）。
+        C 条款：[C1] 只读结构事实；[C2] 非本形态即 None（原分发）；[C3] 任一
+          重建失败整体放弃。
+        """
+        _noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')
+        _last = block.get_last_instruction()
+        if _last is None or _last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return None
+        _fall = None
+        _expect = _last.offset + 2
+        for _s in (block.successors or []):
+            if _s.start_offset == _expect:
+                _fall = _s
+                break
+        if _fall is None:
+            return None
+        _vrun = [i for i in _fall.instructions if i.opname not in _noise]
+        if not _vrun:
+            return None
+        _STORE_OPS = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+        _terminators = set(_STORE_OPS) | {
+            'POP_TOP', 'RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS',
+            'IMPORT_NAME', 'IMPORT_FROM', 'IMPORT_STAR',
+            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+        } | set(FORWARD_CONDITIONAL_JUMP_OPS) | set(BACKWARD_CONDITIONAL_JUMP_OPS)
+        if any(i.opname in _terminators for i in _vrun):
+            return None
+        _val = self.expr_reconstructor.reconstruct(list(_vrun))
+        if _val is None:
+            return None
+        _chain = self._b207_copy_chain(_fall)
+        if _chain is None:
+            return None
+        # 条件表达式：跳转前有效运行；IF_FALSE 直落=真极性，IF_TRUE 取反。
+        _idx = block.instructions.index(_last)
+        _cond_run = [i for i in block.instructions[:_idx] if i.opname not in _noise]
+        _cond = self.expr_reconstructor.reconstruct(list(_cond_run)) if _cond_run else None
+        if _cond is None:
+            return None
+        if 'IF_TRUE' in _last.opname:
+            _cond = {'type': 'UnaryOp', 'op': 'Not', 'operand': _cond}
+        for _cb in _chain:
+            self.generated_blocks.add(_cb)
+            self.generated_offsets.add(_cb.start_offset)
+        self.generated_blocks.add(_fall)
+        self.generated_offsets.add(_fall.start_offset)
+        return [{'type': 'If', 'test': _cond,
+                 'body': [{'type': 'Return', 'value': _val}], 'orelse': []}]
+
     def _b207_return_in_finally_stmts(self, region: TryExceptRegion,
                                        block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
         """[FZ-023-V5R04][B207] return-in-finally 内联直落形态判定与归约。
@@ -33598,6 +33738,15 @@ AST 映射规则:
             return None
         if any(i.opname in _terminators for i in _run):
             return None
+        # 条件臂守卫：值块若被某前驱的**条件跳转**指入（``if c: return V``
+        # 的 then 臂），本归约不适用——无条件 Return 会吞掉 if 条件（023
+        # 全量/fz4 探针实测：unconditional return ('hit', i) 丢
+        # POP_JUMP_FORWARD_IF_FALSE）。条件臂的 return-in-finally 归约属
+        # if 臂装配路径（见 TASK4_4 diag 残余挂账）。
+        for _p in (block.predecessors or []):
+            _p_last = _p.get_last_instruction()
+            if _p_last is not None and _p_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                return None
         _val = self.expr_reconstructor.reconstruct(list(_run))
         if _val is None:
             return None
@@ -34501,6 +34650,14 @@ AST 映射规则:
             # C 条款：[C1] 只读块内 opcode 序 + finally_copy_blocks 台账；
             #   [C2] 无该形态时与旧路径逐位一致（谓词不命中即原分发）；
             #   [C3] 链上任一重建失败/非副本成员即整体放弃（不半应用）。
+            # 条件臂形态（``if <cond>: return V``）先行判定：条件块在此
+            # 发射 If 并登记 generated（值块/副本链由变体内部登记）。
+            _b207c_stmts = self._b207_cond_return_in_finally_stmts(region, block)
+            if _b207c_stmts is not None:
+                body_stmts.extend(_b207c_stmts)
+                self.generated_blocks.add(block)
+                self.generated_offsets.add(block.start_offset)
+                continue
             _b207_stmts = self._b207_return_in_finally_stmts(region, block)
             if _b207_stmts is not None:
                 body_stmts.extend(_b207_stmts)

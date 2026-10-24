@@ -1442,15 +1442,32 @@ class CFGASTConverter:
     
     def _convert_dict_full(self, expr_dict: Dict[str, Any]) -> ASTDict:
         """完整转换字典表达式"""
-        keys = [
-            self._convert_expression(k) for k in expr_dict.get('keys', [])
-        ]
-        keys = [k for k in keys if k is not None]
-        
-        values = [
-            self._convert_expression(v) for v in expr_dict.get('values', [])
-        ]
-        values = [v for v in values if v is not None]
+        # [FZ-015b-V5R04] **expr 项保对：CPython AST 用 Starred 键 + None 值
+        # 表示 dict 字面量的 ``**expr``——键值两列各自过滤 None 会把该对整对
+        # 蒸发（015 全量实测 {**{'k': last}} → {}）。Starred 键对按原对保留
+        # （键的 value 递归转换）；其余对维持原「转换后非 None」过滤语义。
+        keys = []
+        values = []
+        _raw_keys = expr_dict.get('keys', [])
+        _raw_values = expr_dict.get('values', [])
+        for _k, _v in zip(_raw_keys, _raw_values):
+            if isinstance(_k, dict) and _k.get('type') == 'Starred' and _v is None:
+                _sv = self._convert_expression(_k.get('value') or {})
+                keys.append({
+                    'type': 'Starred',
+                    'value': _sv,
+                    'ctx': 'Load',
+                })
+                values.append(None)
+                continue
+            _ck = self._convert_expression(_k)
+            if _ck is None:
+                continue
+            _cv = self._convert_expression(_v)
+            if _cv is None:
+                continue
+            keys.append(_ck)
+            values.append(_cv)
         
         return ASTDict(keys, values)
     
