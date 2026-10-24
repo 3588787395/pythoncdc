@@ -17,7 +17,7 @@
   - [x] 1.5 为新增口径补自测（module-only、calls、R7、timeout 四类）
   - [x] 1.6 提交并 push（`rr-v5r01:`）
 
-- [ ] Task 2: 修复 B142 嵌套 finally/continue（族级）
+- [x] Task 2: 修复 B142 嵌套 finally/continue（族级）
   - [x] 2.1 复现 `v_b71_face::v_nest_fin_continue`，记录区域快照：内层/外层 `try_blocks`、`finally_blocks`、`finally_copy_blocks`（快照/归属跟踪/字节码布局落盘 `_b142_snapshot_out.txt`、`_b142_trace_out.txt`）
   - [x] 2.2 实现 finally 副本谱系与属地继承：沿透明块链识别内层正常副本，外层不得重复认领；continue 回边保留（副本签名/透明链搜索/属地守卫/谱系结算/台账优先/宿主链守卫/声明跨度入范围 + 生成端 fc 前置抑制门与臂尾物化）
   - [x] 2.3 写明族级谓词与影响面：哪些区域组合由该规则覆盖；禁止按 B142/测试名/输入值写专用分支（`rounds/round12/probes_b142/README.md` §一）
@@ -25,7 +25,7 @@
   - [x] 2.5 补合成探针：内层 finally 正常/异常路径、continue/break、双层 finally 三组；每组至少一个变体（`rounds/round12/probes_b142/`，G1 3/3、G2 2/3、G3 2/3；break 出口臂与三层变体挂账）
   - [x] 2.6 跑 B142 邻域回归与 402/small34 定向回归，确认无回退（402 八分片 6617/6617、small34 1568/1568、quotation 153/153、pytest 277 passed + 2 基线既有失败（stash 对比同败）；p2_shapes 2/4→3/4 改进、p4 持平）
   - [x] 2.7 更新 `BREACH_TRIAGE.md` 与 `BREACH_REGISTRY.md`，B142 状态改为已修复（附 I.4 判据）
-  - [ ] 2.8 提交并 push（`rr-v5r02:`）
+  - [x] 2.8 提交并 push（`rr-v5r02:` ba3438ce，origin/main 已推送）
 
 - [ ] Task 3: 修复 x01 结构差与 docstring 保真（族级）
   - [ ] 3.1 复现 `JS-IF-076` 的 `if_in_while` / `if_in_try` / `if_shallow`，记录 5 条 R7 与产品结构差
