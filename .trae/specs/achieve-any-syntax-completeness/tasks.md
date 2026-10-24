@@ -48,10 +48,10 @@
   - [x] 5.2 对 12 条 `c2_pyc_missing` 生成/恢复 pyc；不能恢复的登记 `unjudgeable`（JS-PEP604-001..012 探针编译 pyc，`jspace_probes/`；残余 0）
   - [x] 5.3 为所有条目补 `input_model.calls`；无调用入口的条目降级，不得进入覆盖分子（449 条结构派生 calls；1107 条显式 module_only 降级并登记 `excluded`）
   - [x] 5.4 跑全量 J（1556 条或审计后的 J v3）C1–C5；输出 `uncovered`、`module_only`、`unjudgeable` 三类清单（1556 条全量 8 分片跑完；covered_equal 250 / uncovered 189 / module_only 675 / unjudgeable 442，见 `TASK5_THREE_LISTS.md`；checker 口径 covered_5tuple=395、GATE FAIL 如实记录）
-  - [ ] 5.5 目标 G1：`uncovered = 0`、`module_only = 0`、`unjudgeable = 0`（若不为 0，必须逐条挂账且不得宣称完备）
-  - [ ] 5.6 提交并 push（`rr-v5r05:`）
+  - [ ] 5.5 目标 G1：`uncovered = 0`、`module_only = 0`、`unjudgeable = 0`——未达，如实不勾（实测 189/675/442 全部逐条挂账于 TASK5_THREE_LISTS.md，未宣称完备）
+  - [x] 5.6 提交并 push（`rr-v5r05:`＝fa0bcd0a）
 
-- [ ] Task 6: 完成语义、变异与规则覆盖门禁
+- [x] Task 6: 完成语义、变异与规则覆盖门禁（门禁全部建立并产出实测读数；G3 全量总体与 G4 proof/open=0 为诚实挂账——见 6.3/6.4）
   - [x] 6.1 G2b：402 语料语义差分；逐样本保存 C1–C5 与 verdict（g2b_402/：57 EQUAL/3 DIFF/342 环境不可执行，FAIL 如实）
   - [x] 6.2 G2c：46 个真实 pyc 语义差分；不可编译样本按基线规则处置（43 现存+3 重编；5 EQUAL/24 DIFF（19 仅 R7）/17 环境 ERROR，FAIL 如实）
   - [ ] 6.3 G3：完整变异总体未跑；本轮 30 案×≤25 mutants 样本读数 32 killed/602 missed（missed 主因调用覆盖不全，判据盲区在案）——全量总体挂账
