@@ -65115,7 +65115,59 @@ AST 映射规则:
                             _unpack_ex_idx = _idx
                             break
                     if _unpack_ex_idx is not None:
+                        # [FZ-015-V5R04] 星号解包 value 段的前导完整语句切分
+                        # （B203 局部写丢失族）：value 段此前取「UNPACK_EX 之前
+                        # 的全部指令」——段内含完整前导语句（``data = [...]`` 的
+                        # BUILD_LIST/LIST_EXTEND/STORE_FAST data）时被整体吞入
+                        # reconstruct（其取末段加载为值），前导语句静默蒸发，
+                        # 运行期 NameError（015 实测 data = [3,4,5,6] 丢失、
+                        # varnames 4→3）。
+                        # ①算法依据：段内 STORE_* 族是语句终结符（UNPACK 展开计
+                        #   数后收段，与回边重检分段器/闩锁抽取器同一词汇）；
+                        #   COPY(1) 紧邻 STORE 是 walrus 签名（[聚类1] 判据），
+                        #   该 STORE 属表达式本体，不切分。
+                        # ②归约顺序：按终结符切分 → 完整前导段经
+                        #   _build_statements_from_instructions 三级重建（与
+                        #   trailing 段同一发射器）→ 末段（真值求值段）才进
+                        #   UNPACK value reconstruct。
+                        # ③唯一归属判定：段边界只读本段 opcode 序（I.4）。
+                        # ④嵌套处理：段内嵌套表达式整体入段，不跨段拆散。
+                        # ⑤入口引用语义：只改写本块语句流的切分点。
+                        # ⑥反编译流程：本站点（UNPACK_EX 优先路由）单点。
+                        # C 条款：[C1] 只读块内 opcode 序；[C2] 无前导完整语句
+                        #   时与旧形态逐位一致（单段）；[C3] 前导段重建失败时
+                        #   回退整段入 value（不臆造）。
                         _ua_value_instrs = _ua_all_instrs[:_unpack_ex_idx]
+                        _ua_prior_stmts: List[Dict[str, Any]] = []
+                        if _ua_value_instrs:
+                            _ua_segs: List[List[Instruction]] = []
+                            _ua_cur: List[Instruction] = []
+                            _ua_urem = 0
+                            for _ua_vi in _ua_value_instrs:
+                                _ua_cur.append(_ua_vi)
+                                if _ua_vi.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
+                                    _ua_urem = (_ua_vi.arg if _ua_vi.opname == 'UNPACK_SEQUENCE'
+                                                else (_ua_vi.argval & 0xFF) + 1 + ((_ua_vi.argval >> 8) & 0xFF))
+                                elif _ua_vi.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                    _ua_is_walrus_store = (len(_ua_cur) >= 2
+                                                           and _ua_cur[-2].opname == 'COPY'
+                                                           and _ua_cur[-2].argval == 1)
+                                    if _ua_urem > 0:
+                                        _ua_urem -= 1
+                                        if _ua_urem == 0 and not _ua_is_walrus_store:
+                                            _ua_segs.append(_ua_cur)
+                                            _ua_cur = []
+                                    elif not _ua_is_walrus_store:
+                                        _ua_segs.append(_ua_cur)
+                                        _ua_cur = []
+                            if _ua_cur:
+                                _ua_segs.append(_ua_cur)
+                            if len(_ua_segs) > 1:
+                                for _ua_seg in _ua_segs[:-1]:
+                                    _ua_seg_stmts = self._build_statements_from_instructions(_ua_seg, block)
+                                    if _ua_seg_stmts:
+                                        _ua_prior_stmts.extend(_ua_seg_stmts)
+                                _ua_value_instrs = _ua_segs[-1]
                         _ua_value_expr = self.expr_reconstructor.reconstruct(_ua_value_instrs) if _ua_value_instrs else None
                         _ua_unpack_instr = _ua_all_instrs[_unpack_ex_idx]
                         _ua_arg = _ua_unpack_instr.argval
@@ -65141,7 +65193,7 @@ AST 映射规则:
                                     _ua_elts.append({'type': 'Name', 'id': _ua_store_instr.argval, 'ctx': 'Store'})
                                 _ua_idx += 1
                         _ua_target = {'type': 'Tuple', 'elts': _ua_elts, 'ctx': 'Store'}
-                        _unpack_result = [{'type': 'Assign', 'targets': [_ua_target], 'value': _ua_value_expr}]
+                        _unpack_result = _ua_prior_stmts + [{'type': 'Assign', 'targets': [_ua_target], 'value': _ua_value_expr}]
                         # 区域归约算法原则 2（每块唯一归属）：UNPACK_EX 赋值
                         # 之后的剩余指令（如 `*a, b = items; return a, b` 中的
                         # LOAD_FAST/BUILD_TUPLE/RETURN_VALUE）属于同一块内的后续语句，
