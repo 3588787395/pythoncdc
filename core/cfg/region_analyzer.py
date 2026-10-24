@@ -8151,39 +8151,6 @@ condition_block/else_blocks 集合成员、前驱集合、异常边、try_offset
             return False
         return has_return
 
-    def _b214_is_except_star_exit_latch(self, block, body_set, header) -> bool:
-        """[B214-R5R05] 裸回边块是否为 except* 组重抛出口闩。
-
-        【识别条件】块剥噪后仅剩 JUMP_BACKWARD 且目标为循环 header（裸回
-        边），且存在 ∈ body_set 的前驱块包含 PREP_RERAISE_STAR——该指令仅
-        由 CPython 3.11 except* 组重抛装配（LIST_APPEND + PREP_RERAISE_STAR
-        + POP_JUMP_FORWARD_IF_NOT_NONE + POP_EXCEPT）发射，普通 try/except
-        或用户 continue 路径不含它。
-
-        【归约方式】命中 → 本块归 LOOP_BACK_EDGE（隐式回边，不生显式
-        continue 节点）；未命中 → 既有支配判定。
-
-        [C1] 只读块内 opcode 序 + 前驱成员关系（L(A) 局部）；[C2] 仅改
-        continue_map 分类，不改块图/区域结构；[C3] PREP_RERAISE_STAR 是
-        编译器按 except* 发射的结构事实，与嵌套深度无关。
-        """
-        last = block.get_last_instruction()
-        if not last or last.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
-            return False
-        if last.argval is None or self.cfg.get_block_by_offset(last.argval) is not header:
-            return False
-        _mean = [i for i in block.instructions
-                 if i.opname not in NOISE_OPS
-                 and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
-        if _mean:
-            return False
-        for pb in block.predecessors:
-            if pb not in body_set:
-                continue
-            if any(i.opname == 'PREP_RERAISE_STAR' for i in pb.instructions):
-                return True
-        return False
-
     def _detect_break_continue(self, loop_body: Set[BasicBlock], header: BasicBlock,
                                natural_exit: Optional[BasicBlock] = None,
                                natural_back_edge: Optional[BasicBlock] = None,
@@ -8597,21 +8564,9 @@ condition_block/else_blocks 集合成员、前驱集合、异常边、try_offset
             if _blk_meaningful:
                 continue_map[block] = 'CONTINUE'
             else:
-                if self.dom_analyzer.is_dominator(block, header):
-                    continue_map[block] = 'LOOP_BACK_EDGE'
-                elif self._b214_is_except_star_exit_latch(block, body_set, header):
-                    # [B214-R5R05] except* 组重抛出口闩（PREP_RERAISE_STAR 协议
-                    # 尾）裸 JUMP_BACKWARD 回边：双臂回边（try/except* 尾闩 +
-                    # if-false 闩）下本块不支配 header，旧判据归 CONTINUE →
-                    # 循环体装配发幻影 continue（c4_03_except_star::e03_deep
-                    # 实测：except* 尾闩 JUMP_BACKWARD 块被当用户 continue）。
-                    # 该闩是 except* 组重抛装配的正常出口段（前驱含
-                    # PREP_RERAISE_STAR——except* 专属协议指令，普通
-                    # try/except 的 continue 前驱只有 POP_EXCEPT，不受影
-                    # 响），重编译由 for+if+try/except* 结构自然再生回边。
-                    continue_map[block] = 'LOOP_BACK_EDGE'
-                else:
-                    continue_map[block] = 'CONTINUE'
+                continue_map[block] = ('LOOP_BACK_EDGE'
+                                       if self.dom_analyzer.is_dominator(block, header)
+                                       else 'CONTINUE')
 
         for block in loop_body:
             if block == header:

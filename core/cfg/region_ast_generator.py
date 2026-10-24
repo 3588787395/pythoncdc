@@ -15315,96 +15315,10 @@ AST 映射规则:
         if last_instr and last_instr.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT') and last_instr.argval is not None:
             target = self.cfg.get_block_by_offset(last_instr.argval)
             if target and target.loop_header:
-                # [B214-R5R05] except* 组重抛出口闩不是用户 continue。
-                if self._b214_is_except_star_exit_latch(block, tail_blocks):
-                    return False
                 return True
         role = self.region_analyzer.get_block_role(block)
         if role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
-            if self._b214_is_except_star_exit_latch(block, tail_blocks):
-                return False
             return True
-        return False
-
-    def _b214_is_except_star_exit_latch(self, block: BasicBlock, tail_blocks=None) -> bool:
-        """[B214-R5R05] except* 组重抛出口闩判定。
-
-        【识别条件】①剥噪/剥栈清理后仅剩 JUMP_BACKWARD；②tail_blocks 给
-        定时为末块；③直落前驱链（≤6 跳，普通后继 ≤1）达 PREP_RERAISE_STAR
-        ——except* 组重抛装配正常出口段，普通 try/except 与用户 continue
-        路径无此指令。
-
-        【归约方式】命中 → 不补显式 Continue，闩块登记 generated；回边与
-        栈清理由循环 + try/except* 结构重编译自然再生。
-
-        [C1] 只读 opcode 序与前驱/后继成员；[C2] 仅 continue 判定否决；
-        [C3] 编译器结构事实，嵌套无感。
-        """
-        if block is None:
-            return False
-        last_instr = block.get_last_instruction()
-        if not last_instr or last_instr.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
-            return False
-        mean = [i for i in block.instructions
-                if i.opname not in NOISE_OPS
-                and i.opname not in ('POP_TOP', 'POP_EXCEPT')
-                and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
-        if mean:
-            return False
-        if tail_blocks is not None and block.start_offset != max(
-                getattr(tb, 'start_offset', 0) for tb in tail_blocks):
-            return False
-        # (b) try 体正常出口闩：块偏移落在某 TryExceptRegion 的 try 跨度
-        # [try_offset_start, try_offset_end] 内（含端点——体末迭代闩紧跟末条
-        # 可抛指令），且不被任何异常表条目跨度 [start, end) 覆盖（try 体内
-        # 用户 continue 的闩会被表项覆盖，try 体正常出口闩在保护区外，
-        # c4_03_except_star::e03_deep 实测表项 42 to 60 → 64 不含闩 62）。
-        _ra = getattr(self, 'region_analyzer', None)
-        if _ra is not None:
-            _in_try_span = False
-            for _tr in (getattr(_ra, 'regions', None) or []):
-                if not isinstance(_tr, TryExceptRegion):
-                    continue
-                _ts = getattr(_tr, 'try_offset_start', None)
-                _te = getattr(_tr, 'try_offset_end', None)
-                if isinstance(_ts, int) and isinstance(_te, int) and _ts <= block.start_offset <= _te:
-                    _in_try_span = True
-                    break
-            if _in_try_span:
-                _covered = False
-                try:
-                    import dis as _dis
-                    _code = getattr(getattr(self.cfg, 'code', None), 'co_code', None)
-                    _co = getattr(self.cfg, 'code', None)
-                    if _co is not None:
-                        for _ent in _dis._parse_exception_table(_co):
-                            _st = getattr(_ent, 'start', None)
-                            _en = getattr(_ent, 'end', None)
-                            if isinstance(_st, int) and isinstance(_en, int) and _st <= block.start_offset < _en:
-                                _covered = True
-                                break
-                except Exception:
-                    _covered = True
-                if not _covered:
-                    return True
-        _seen = set()
-        _frontier = [pb for pb in (getattr(block, 'predecessors', None) or [])]
-        _hops = 0
-        while _frontier and _hops <= 6:
-            _nxt = []
-            for pb in _frontier:
-                if id(pb) in _seen:
-                    continue
-                _seen.add(id(pb))
-                if any(i.opname == 'PREP_RERAISE_STAR' for i in pb.instructions):
-                    return True
-                if _hops < 6:
-                    _exc = set(getattr(pb, 'exception_successors', None) or [])
-                    _normal = [s for s in (getattr(pb, 'successors', None) or []) if s not in _exc]
-                    if len(_normal) <= 1:
-                        _nxt.extend(getattr(pb, 'predecessors', None) or [])
-            _frontier = _nxt
-            _hops += 1
         return False
 
     def _is_loop_tail_convergence_block(self, block: BasicBlock) -> bool:
@@ -31653,16 +31567,8 @@ AST 映射规则:
                     #   下方 Continue 发射；其余抑制判据不变。
                     # AST 映射：本块 → ast.Continue（与 p1/u1/u4/check_python_code
                     #   源码中 if 体末尾的显式 continue 语句一一对应）。
-                    _b214_tail = None
-                    if isinstance(region, IfRegion):
-                        if block in (region.then_blocks or []):
-                            _b214_tail = region.then_blocks
-                        elif block in (region.else_blocks or []):
-                            _b214_tail = region.else_blocks
-                    _b214_is_latch = self._b214_is_except_star_exit_latch(block, tail_blocks=_b214_tail)
                     if ((not _r100_suppress or _r4h_explicit_continue)
-                            and not self._is_loop_tail_convergence_block(block)
-                            and not _b214_is_latch):
+                            and not self._is_loop_tail_convergence_block(block)):
                         stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
@@ -32567,9 +32473,7 @@ AST 映射规则:
                         if _b142_tgt is not None and (
                                 _b142_tgt is _b142_hdr
                                 or _b142_tgt is getattr(_b142_loop, 'condition_block', None)):
-                            # [B214-R5R05] except* 组重抛出口闩不是用户 continue。
-                            if not self._b214_is_except_star_exit_latch(_b142_cur, tail_blocks=blocks):
-                                _b142_stmt = {'type': 'Continue'}
+                            _b142_stmt = {'type': 'Continue'}
                         break
                     if _b142_last.opname in ('RETURN_VALUE', 'RETURN_CONST',
                                              'RERAISE', 'RAISE_VARARGS'):
@@ -64262,10 +64166,6 @@ AST 映射规则:
                                     _is_natural_be_gbs = False
                                     break
             if not _is_natural_be_gbs:
-                # [B214-R5R05] except* 组重抛出口闩不是用户 continue。
-                if self._b214_is_except_star_exit_latch(block, tail_blocks=blocks):
-                    self.generated_blocks.add(block)
-                    return []
                 return [{'type': 'Continue'}]
             return []
         elif block_role == BlockRole.CONTINUE:

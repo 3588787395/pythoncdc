@@ -125,3 +125,25 @@
 | B219 | **证据分母/重复计数**（口径层） | 405 stamp 文件 / 404 个不同 stamp 名 / **3342 条记录**（解析到产物 **3275** 条）/ **197 个唯一产物**（16.96 条/产物，解析后 16.62）；单 stamp 最多 29 产物、单产物最多 98 stamp；174 标记 / 197 产物 / 3342 记录三套分母并存；133 source-only 未判定 | 定性登记 |
 
 > 口径扩展：B219 是 **B178**（174 标记口径不唯一）在探针/产物层的扩展；U-06 是 **B170**（covered 只验探针存在）在检测器层的扩展。均不重复计数，但须在 v9 台账中并列登记。
+
+### B214 except* 出口闩幻影 continue（已登记 → 尝试修复 → 回退）
+
+- 发现：Task 5.4 全量 C4 中 JS-EXCEPTSTAR 96 条 DIFFERENT；根因 = e03_deep
+  单元 `for i: if i: try/except*:` 的 except* 组重抛出口闩（PREP_RERAISE_STAR
+  链尾 POP_TOP/POP_EXCEPT+JUMP_BACKWARD）被 continue 判定当作用户 continue
+  → 循环臂尾多发 `continue`（行为等价：臂尾 continue == 落空；pyc_verify
+  13/13 通过，仅 strict R7 字节差）。
+- 修复尝试（2f407046）：`_b214_is_except_star_exit_latch`（闩判定：裸回边 +
+  分支末位 + 前驱链达 PREP_RERAISE_STAR / try 跨度外出口），接入 4 个
+  continue 发射站点。e03_deep 修复成功（0 continue、13/13）。
+- 回退原因：提交后 pytest 出现 18 项新失败（while+continue 家族）——
+  `_block_is_continue_target` 签名在补丁周期中丢失 `tail_blocks` 形参产生
+  NameError，被宽 except 吞掉导致整循环丢失；修复 NameError 后 while+continue
+  形态仍出现 continue→pass/结构散架（站点交互未定位）。权衡：收益 = 2 个单元
+  的 strict-R7 字节差（行为等价、96 条 DIFFERENT 另一半 e08_match_host 属
+  match 坍缩族未修），代价 = 18 项绿基线回退 ⇒ 按「不并行打补丁/不动绿基线」
+  原则回退 core 双文件至 fa0bcd0a 形态。
+- 现状：**已回退（OPEN，行为等价级）**。e03_deep 幻影 continue 登记为
+  EXCEPTSTAR 族已知残差；修复需在 while+continue 全家族绿的前提下重做
+  （站点：_block_is_continue_target / R100 / PURE_CONTINUE-A3 / B142 物化，
+  判据见本条）。
