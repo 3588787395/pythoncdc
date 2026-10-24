@@ -3257,6 +3257,13 @@ class RegionASTGenerator:
         # C3：不改写守卫/区域边界，仅补一个无字节码的声明节点。
         if isinstance(code_obj, types.CodeType):
             _b116_arg_names = set()
+            # [FZ-021-V5R04] posonlyargs 同为形参（positional-only ``/`` 族）：
+            # 不计入会使签名已渲染的形参再被补一条 AnnAssign 声明（021 实测
+            # ``x: str`` 幽灵行）。
+            for _b116_a in (args.get('posonlyargs') or []):
+                _b116_a_name = _b116_a.get('arg') if isinstance(_b116_a, dict) else _b116_a
+                if _b116_a_name:
+                    _b116_arg_names.add(_b116_a_name)
             for _b116_a in (args.get('args') or []):
                 _b116_a_name = _b116_a.get('arg') if isinstance(_b116_a, dict) else _b116_a
                 if _b116_a_name:
@@ -3319,6 +3326,7 @@ class RegionASTGenerator:
                     filtered_body = (filtered_body[:_b116_insert_at]
                                      + _b116_ann_stmts
                                      + filtered_body[_b116_insert_at:])
+
 
         result = {
             'type': 'AsyncFunctionDef' if is_async else 'FunctionDef',
@@ -5078,10 +5086,29 @@ class RegionASTGenerator:
                 if _next_idx < len(varnames):
                     kwarg_name = varnames[_next_idx]
 
+        # [FZ-021-V5R04] positional-only 拆分（B197/B202 签名元数据族）：
+        # co_posonlyargcount 个前缀位置形参为仅限位置（``/`` 标记）。此前
+        # 全部落入 args、posonlyargs 恒空——产物签名丢 ``/``，重编译
+        # co_posonlyargcount 0≠1（strict R7 签名元数据差；pyc_verify 按值
+        # 归一口径对该元数据不敏感，semantic_diff R7 可见）。
+        # ①算法依据：code object 的 co_posonlyargcount 是形参槽位的结构事实。
+        # ②归约顺序：前缀切分，其余布局（kwonly/vararg/kwarg）不变。
+        # ③唯一归属判定：只读 co_posonlyargcount/co_argcount/co_varnames。
+        # ④嵌套处理：按当前 code object，嵌套无感。
+        # ⑤入口引用语义：仅切分 posonlyargs/args 两个列表；defaults 尾对齐
+        #   语义由下游 defaults 数量对齐逻辑保持。
+        # ⑥反编译流程：_generate_arguments / _generate_arguments_dict 在
+        #   posonlyargs 非空时发射 ``/``。
+        # C 条款：[C1] 只读 code object 结构字段；[C2] 无 posonly 时两列表与
+        #   旧形态逐位一致（posonlyargs 空列表）；[C3] 计数越界安全截断。
+        _posonly_count = getattr(code_obj, 'co_posonlyargcount', 0)
+        _posonly_args = pos_args[:_posonly_count]
+        _plain_args = pos_args[_posonly_count:]
+
         return {
             'type': 'arguments',
-            'posonlyargs': [],
-            'args': pos_args,
+            'posonlyargs': _posonly_args,
+            'args': _plain_args,
             'vararg': vararg_name,
             'kwonlyargs': kwonly_args,
             'kw_defaults': [],

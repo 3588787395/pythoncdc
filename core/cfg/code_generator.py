@@ -563,27 +563,45 @@ class CodeGenerator:
                 return arg_name
             return str(arg)
 
-        # 仅位置参数（Python 3.8+）
-        for arg in posonlyargs:
-            parts.append(_arg_with_annotation(arg))
+        # [FZ-021-V5R04] positional-only（``/``）族：默认值按 CPython 语义
+        # 尾对齐到 posonlyargs+args 的**合并**位置形参序列（defaults 绑定最后
+        # N 个位置形参，含 posonly 前缀）；posonlyargs 非空时在其后发射
+        # ``/``。此前 defaults 只对 args 尾对齐、posonlyargs 无默认值无分隔
+        # （``def f(x=None, /)`` 重编后 co_posonlyargcount 与默认值双双丢失）。
+        # ①算法依据：code object 的 co_posonlyargcount/co_argcount 与
+        #   MAKE_FUNCTION defaults 元组（末尾等长位置对齐）。
+        # ②归约顺序：合并序列逐名发射，注解/默认值同格。
+        # ③唯一归属判定：defaults 元素按末尾等长唯一对齐，无名字特判。
+        # ④嵌套处理：按当前 FunctionDef 的 args 字典，嵌套无感。
+        # ⑤入口引用语义：只读 posonlyargs/args/defaults 三个列表。
+        # ⑥反编译流程：FunctionDef/Lambda 签名渲染共用本发射器。
+        # C 条款：[C1] 只读 args 字典结构；[C2] 无 posonly 时与旧形态逐位
+        #   一致（defaults 对齐基准从 args_list 扩为 posonly+args，两者相等
+        #   时不变）；[C3] len(defaults) > 合并形参数时安全截断。
+        _all_pos_args = list(posonlyargs) + list(args_list)
+        _default_start = len(_all_pos_args) - len(defaults)
 
-        # 普通位置参数
-        for i, arg in enumerate(args_list):
+        def _render_pos_arg(arg, pos_idx):
             arg_name = arg.get('arg', '') if isinstance(arg, dict) else str(arg)
-
-            # 检查是否有默认值
-            default_idx = i - (len(args_list) - len(defaults))
+            default_idx = pos_idx - _default_start
             if 0 <= default_idx < len(defaults):
                 default = defaults[default_idx]
                 default_code = self._generate_expression(default) if isinstance(default, dict) else repr(default)
                 ann = arg.get('annotation') if isinstance(arg, dict) else None
                 if ann is not None:
                     ann_code = self._generate_expression(ann) if isinstance(ann, dict) else str(ann)
-                    parts.append(f'{arg_name}: {ann_code}={default_code}')
-                else:
-                    parts.append(f'{arg_name}={default_code}')
-            else:
-                parts.append(_arg_with_annotation(arg))
+                    return f'{arg_name}: {ann_code}={default_code}'
+                return f'{arg_name}={default_code}'
+            return _arg_with_annotation(arg)
+
+        for _pi, arg in enumerate(posonlyargs):
+            parts.append(_render_pos_arg(arg, _pi))
+        if posonlyargs:
+            parts.append('/')
+
+        # 普通位置参数
+        for _pi, arg in enumerate(args_list):
+            parts.append(_render_pos_arg(arg, len(posonlyargs) + _pi))
 
         # *args
         if vararg:
@@ -2259,6 +2277,8 @@ class CodeGenerator:
         # [关键修复] 将args、vararg、kwarg包装成字典传递给_generate_arguments
         # [关键修复] 包含默认值信息
         args_dict = {
+            # [FZ-021-V5R04] posonlyargs 透传（positional-only ``/`` 族）。
+            'posonlyargs': getattr(node, '_posonlyargs', []),
             'args': node.args if node.args else [],
             'vararg': getattr(node, '_vararg', None),
             'kwarg': getattr(node, '_kwarg', None),
@@ -5977,11 +5997,16 @@ class CodeGenerator:
             args_list = []
 
             # [关键修复] 处理仅限位置参数
+            # [FZ-021-V5R04] 默认值尾对齐基准扩为 posonlyargs+args 合并序列
+            # （CPython：defaults 绑定最后 N 个位置形参，含 posonly 前缀）；
+            # 无 posonly 时基准与旧形态相同，行为逐位一致。
             posonlyargs = args.get('posonlyargs', [])
             posonlyargcount = args.get('posonlyargcount', len(posonlyargs))
-            
+            _all_pos_args = list(posonlyargs) + list(args.get('args', []) or [])
+            _default_start = len(_all_pos_args) - len(args.get('defaults', []) or [])
+
             if posonlyargs:
-                for arg in posonlyargs:
+                for _pol_i, arg in enumerate(posonlyargs):
                     # 获取参数名和注解
                     if isinstance(arg, dict):
                         arg_name = arg.get('arg', str(arg))
@@ -6003,6 +6028,13 @@ class CodeGenerator:
                             annotation_code = str(annotation)
                         arg_name = f'{arg_name}: {annotation_code}'
                     
+                    # [FZ-021-V5R04] posonly 默认值（合并序列尾对齐）。
+                    _pol_didx = _pol_i - _default_start
+                    if 0 <= _pol_didx < len(args.get('defaults', []) or []):
+                        _pol_d = args['defaults'][_pol_didx]
+                        _pol_dcode = (self._generate_expression(_pol_d)
+                                      if isinstance(_pol_d, dict) else repr(_pol_d))
+                        arg_name = f'{arg_name}={_pol_dcode}'
                     args_list.append(arg_name)
                 
                 # 添加仅限位置参数分隔符 /

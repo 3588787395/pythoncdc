@@ -2511,6 +2511,7 @@ class ASTFunctionDef(ASTNode):
         self._has_implicit_return = False  # [新增] 是否有隐式return（函数末尾的隐式return None）
         self._if_chain_root = None  # [关键修复] 保存if链的根节点，用于else分支的生成
         self._defaults = []  # [关键修复] 位置参数默认值列表
+        self._posonlyargs = []  # [FZ-021-V5R04] positional-only 形参列表（``/``）
         self._kwonlyargs = []  # [关键修复] 关键字-only参数列表
         self._kw_defaults = []  # [关键修复] 关键字-only参数默认值列表
     

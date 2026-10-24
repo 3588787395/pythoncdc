@@ -263,6 +263,7 @@ class CFGASTConverter:
         kwonlyargs = []  # [关键修复] 初始化关键字-only参数列表
         kw_defaults = []  # [关键修复] 初始化关键字-only默认值列表
         
+        _posonlyargs = []
         if isinstance(raw_args, list):
             # 直接是参数名列表（从ASTGeneratorV2来的格式）
             args = raw_args
@@ -272,6 +273,8 @@ class CFGASTConverter:
             # 是字典格式，需要转换
             args_dict = self._convert_arguments(raw_args)
             # 从args_dict中提取参数列表和vararg/kwarg
+            # [FZ-021-V5R04] posonlyargs 同步提取（positional-only ``/`` 族）。
+            _posonlyargs = args_dict.get('posonlyargs', []) if isinstance(args_dict, dict) else []
             args = args_dict.get('args', []) if isinstance(args_dict, dict) else []
             vararg = args_dict.get('vararg') if isinstance(args_dict, dict) else None
             kwarg = args_dict.get('kwarg') if isinstance(args_dict, dict) else None
@@ -289,6 +292,9 @@ class CFGASTConverter:
         func_def = ASTFunctionDef(name=name, args=args, body=body, vararg=vararg, kwarg=kwarg, is_async=is_async)
         
         # [关键修复] 设置默认值信息
+        # [FZ-021-V5R04] positional-only 形参挂载（渲染端 ``/`` + defaults
+        # 尾对齐消费；缺省空列表与旧形态逐位一致）。
+        func_def._posonlyargs = _posonlyargs
         func_def._defaults = defaults
         func_def._kwonlyargs = kwonlyargs
         func_def._kw_defaults = kw_defaults
@@ -1680,6 +1686,10 @@ class CFGASTConverter:
         # [关键修复] 确保返回包含 vararg 和 kwarg 的字典
         if isinstance(args_dict, dict):
             result = {
+                # [FZ-021-V5R04] posonlyargs 透传：此前该键在 dict→AST 转换中
+                # 被静默丢弃，签名渲染端恒见空列表（positional-only ``/`` 丢
+                # 失，重编译 co_posonlyargcount 0≠N，strict R7 签名元数据红）。
+                'posonlyargs': args_dict.get('posonlyargs', []),
                 'args': args_dict.get('args', []),
                 'vararg': None,
                 'kwarg': None,
